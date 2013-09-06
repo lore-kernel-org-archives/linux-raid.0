@@ -1,77 +1,61 @@
-From: Tregaron Bayly <tbayly@bluehost.com>
-Subject: Re: Problem halting raid 1
-Date: Fri, 06 Sep 2013 10:09:20 -0600
-Message-ID: <5229FE30.2090502@bluehost.com>
-References: <CABcjxUOszUPsEJu_nCSRwzCCy5ijs9YUb0ia8HbZ6kzW-jCwWA@mail.gmail.com> <20130906221905.0eb57dc5@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH 1/2] DDF: brief_examine_subarrays_ddf: print array name
+Date: Fri,  6 Sep 2013 23:26:20 +0200
+Message-ID: <1378502781-849-1-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130906221905.0eb57dc5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: =?UTF-8?B?TWlndWVsIENvcmJlcsOhbiBSdWl6?= <migcorrui@gmail.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 09/06/2013 06:19 AM, NeilBrown wrote:
+Print an array name in brief output. Do this even if no name is set,
+faking a simple pseudo name (may happen for some BIOS RAIDs).
+This makes DDF and IMSM behave equally.
 
->> What I want to do is to completely remove the array so I can mount the
->> individual partitions anywhere else without the need of mdadm (and
->> access the data created when the array was running).
->
-> If the array uses 0.90 or 1.0 metadata, then having stopped the array you can
-> simply mount the component devices
->
-> If it uses 1.1 or 1.2 you can only access the data via md.
->
+SUSE's YaST2 needs this in order to detect MD arrays during
+installation.
 
-I've mounted filesystems outside of mdadm with version 1.1 and 1.2 metadata.  It just requires a little linux jiggery-pokery.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ super-ddf.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-1) Get the data offset using mdadm -E
-
-/dev/sda:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 0f9091ac:202b80dc:31e8820b:f2faeb31
-            Name : array_3529
-   Creation Time : Sat Jul 27 20:53:55 2013
-      Raid Level : raid1
-    Raid Devices : 2
-
-  Avail Dev Size : 4194041856 (1999.88 GiB 2147.35 GB)
-      Array Size : 2097020736 (1999.87 GiB 2147.35 GB)
-   Used Dev Size : 4194041472 (1999.87 GiB 2147.35 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-           State : clean
-     Device UUID : 7f91df10:05450594:32823f26:924d31ad
-
-     Update Time : Mon Sep  2 22:18:19 2013
-        Checksum : f9f956af - correct
-          Events : 69985
-
-
-    Device Role : Active device 0
-    Array State : A. ('A' == active, '.' == missing)
-
-2) Multiply the data offset by 512 to convert sectors to bytes
-
-262144 * 512 = 134217728
-
-3) Setup the disk as a loopback device with the data offset
-
-losetup --offset 134217728 /dev/loop1 /dev/sda
-
-4) Now use the loopback device - it looks just like the md device would.
-
-kpartx -a /dev/loop1
-mount -o ro /dev/mapper/loop1p1 /mnt/foo
-
-Of course you have to realize that any modifications you make to the filesystem are not mirrored - you will be forced to resync the mirror if you make any modifications to disk at all.
-
-My $0.02
-
-Tregaron
-
-
+diff --git a/super-ddf.c b/super-ddf.c
+index 8bba70a..72a8351 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -30,6 +30,7 @@
+ #include "mdmon.h"
+ #include "sha1.h"
+ #include <values.h>
++#include <ctype.h>
+ 
+ /* a non-official T10 name for creation GUIDs */
+ static char T10[] = "Linux-MD";
+@@ -1577,14 +1578,22 @@ static void brief_examine_subarrays_ddf(struct supertype *st, int verbose)
+ 		struct virtual_entry *ve = &ddf->virt->entries[i];
+ 		struct vcl vcl;
+ 		char nbuf1[64];
++		char namebuf[sizeof(ve->name)+1], *c;
+ 		if (all_ff(ve->guid))
+ 			continue;
+ 		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
+ 		ddf->currentconf =&vcl;
+ 		uuid_from_super_ddf(st, info.uuid);
+ 		fname_from_uuid(st, &info, nbuf1, ':');
+-		printf("ARRAY container=%s member=%d UUID=%s\n",
+-		       nbuf+5, i, nbuf1+5);
++		memcpy(namebuf, ve->name, sizeof(ve->name));
++		namebuf[sizeof(ve->name)] = '\0';
++		if (namebuf[0] == '\0')
++			sprintf(namebuf, "ddf_%d", i);
++		for (c = namebuf; c < namebuf + sizeof(ve->name); c++)
++			if (isspace(*c))
++				*c = '-';
++		printf("ARRAY /dev/md/%s container=%s member=%d UUID=%s\n",
++		       namebuf, nbuf+5, i, nbuf1+5);
+ 	}
+ }
+ 
+-- 
+1.7.3.4
