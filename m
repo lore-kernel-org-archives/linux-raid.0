@@ -1,64 +1,125 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 2/2] DDF: new algorithm for subarray UUID
-Date: Mon, 09 Sep 2013 20:37:10 +0200
-Message-ID: <522E1556.4030502@arcor.de>
-References: <1378502781-849-1-git-send-email-mwilck@arcor.de>	<1378502781-849-2-git-send-email-mwilck@arcor.de>	<522B7D2A.4000409@arcor.de> <20130909112041.4b8401f3@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH 2/2] DDF: handle fake RAIDs with changing subarray UUIDs
+Date: Mon,  9 Sep 2013 20:40:14 +0200
+Message-ID: <1378752014-8366-1-git-send-email-mwilck@arcor.de>
+References: <522E13EF.3080001@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130909112041.4b8401f3@notabene.brown>
+In-Reply-To: <522E13EF.3080001@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 09/09/2013 03:20 AM, NeilBrown wrote:
-> On Sat, 07 Sep 2013 21:23:22 +0200 Martin Wilck <mwilck@arcor.de> wrote:
-> 
->> On 09/06/2013 11:26 PM, mwilck@arcor.de wrote:
->>> Some fake RAID BIOSes (in particular, LSI ones) change the
->>> VD GUID at every boot. These GUIDs are not suitable for
->>> identifying an array. Luckily the header GUID appears to
->>> remain constant.
->>>
->>> We construct a pseudo-UUID from the header GUID and those
->>> properties of the subarray that we expect to remain constant.
->>
->> Thinking about it once more, it may actually be better to construct the
->> subarray UUID only from the container GUID and the member number (and
->> name), because if we implement Grow or Reshape for DDF, the other
->> properties might change.
->>
->> I'm open for comments and suggestions.
->>
->> Martin
-> 
-> I'd probably just base it on the container GUID and the member number.
-> Exclude even the name.
+Some fake RAID BIOSes (in particular, LSI ones) change the
+VD GUID at every boot. These GUIDs are not suitable for
+identifying an array. Luckily the header GUID appears to
+remain constant.
 
-Why that? Does it make sense to expect the UUID to remain the same when
-the array name has changed?
+We construct a pseudo-UUID from the header GUID and those
+properties of the subarray that we expect to remain constant.
+This is only array name and index; all else might change e.g.
+during grow.
 
-> It is unfortunate that this change will cause all existing DDF uuids to
-> change even for controllers where they are currently stable.
+Don't do this for all non-MD arrays, only for those known
+to use varying volume GUIDs.
 
-Only for "foreign" arrays not created by MD - but see below.
+This patch obsoletes my previous patch "DDF: new algorithm
+for subarray UUID"
 
-> Is it possible to detect whether a VD GUID is likely to change, and to only
-> use the new algorithm for those?
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ super-ddf.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 50 insertions(+), 5 deletions(-)
 
-I am going to submit a new patch soon where I built in a vendor "black
-list". This list currently contains only LSI, so the UUIDs of all
-non-LSI arrays will stay the same, and for LSI, to the best of our
-current knowledge, the UUIDs aren't constant anyway. I don't know
-whether all LSI fake RAIDs behave like this, nor whether the Option ROMs
-of other vendors do. Perhaps other people on this list can supply data
-points on this.
-
-Martin
-
-> 
-> Thanks,
-> NeilBrown
-
+diff --git a/super-ddf.c b/super-ddf.c
+index 72a8351..19d8494 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -1583,6 +1583,7 @@ static void brief_examine_subarrays_ddf(struct supertype *st, int verbose)
+ 			continue;
+ 		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
+ 		ddf->currentconf =&vcl;
++		vcl.vcnum = i;
+ 		uuid_from_super_ddf(st, info.uuid);
+ 		fname_from_uuid(st, &info, nbuf1, ':');
+ 		memcpy(namebuf, ve->name, sizeof(ve->name));
+@@ -1682,6 +1683,52 @@ static void detail_super_ddf(struct supertype *st, char *homehost)
+ 	 */
+ }
+ 
++static const char *vendors_with_variable_volume_UUID[] = {
++	"LSI      ",
++};
++
++static int volume_id_is_reliable(const struct ddf_super *ddf)
++{
++	int n = sizeof(vendors_with_variable_volume_UUID) / 
++		sizeof(vendors_with_variable_volume_UUID[0]);
++	int i;
++	for (i = 0; i < n; i++)
++		if (!memcmp(ddf->controller.guid,
++			vendors_with_variable_volume_UUID[i], 8))
++		return 0;
++	return 1;
++}
++
++static void uuid_of_ddf_subarray(const struct ddf_super *ddf,
++				 unsigned int vcnum, int uuid[4])
++{
++	char buf[DDF_GUID_LEN+18], sha[20], *p;
++	struct sha1_ctx ctx;
++	if (volume_id_is_reliable(ddf)) {
++		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, uuid);
++		return;
++	}
++	/*
++	 * Some fake RAID BIOSes (in particular, LSI ones) change the
++	 * VD GUID at every boot. These GUIDs are not suitable for
++	 * identifying an array. Luckily the header GUID appears to
++	 * remain constant.
++	 * We construct a pseudo-UUID from the header GUID and those
++	 * properties of the subarray that we expect to remain constant.
++	 */
++	memset(buf, 0, sizeof(buf));
++	p = buf;
++	memcpy(p, ddf->anchor.guid, DDF_GUID_LEN);
++	p += DDF_GUID_LEN;
++	memcpy(p, ddf->virt->entries[vcnum].name, 16);
++	p += 16;
++	*((__u16 *) p) = vcnum;
++	sha1_init_ctx(&ctx);
++	sha1_process_bytes(buf, sizeof(buf), &ctx);
++	sha1_finish_ctx(&ctx, sha);
++	memcpy(uuid, sha, 4*4);
++}
++
+ static void brief_detail_super_ddf(struct supertype *st)
+ {
+ 	struct mdinfo info;
+@@ -1693,7 +1740,7 @@ static void brief_detail_super_ddf(struct supertype *st)
+ 	else if (vcnum == DDF_NOTFOUND)
+ 		return;
+ 	else
+-		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, info.uuid);
++		uuid_of_ddf_subarray(ddf, vcnum, info.uuid);
+ 	fname_from_uuid(st, &info, nbuf,':');
+ 	printf(" UUID=%s", nbuf + 5);
+ }
+@@ -1836,13 +1883,11 @@ static void uuid_from_super_ddf(struct supertype *st, int uuid[4])
+ 	 */
+ 	struct ddf_super *ddf = st->sb;
+ 	struct vcl *vcl = ddf->currentconf;
+-	char *guid;
+ 
+ 	if (vcl)
+-		guid = vcl->conf.guid;
++		uuid_of_ddf_subarray(ddf, vcl->vcnum, uuid);
+ 	else
+-		guid = ddf->anchor.guid;
+-	uuid_from_ddf_guid(guid, uuid);
++		uuid_from_ddf_guid(ddf->anchor.guid, uuid);
+ }
+ 
+ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, char *map);
+-- 
+1.7.3.4
