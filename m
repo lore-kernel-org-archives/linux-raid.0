@@ -1,170 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] DDF: handle fake RAIDs with changing subarray UUIDs
-Date: Tue, 10 Sep 2013 09:48:55 +1000
-Message-ID: <20130910094855.21bab8dc@notabene.brown>
-References: <522E13EF.3080001@arcor.de>
-	<1378752014-8366-1-git-send-email-mwilck@arcor.de>
+Subject: Re: [PATCH 2/2] DDF: new algorithm for subarray UUID
+Date: Tue, 10 Sep 2013 09:51:26 +1000
+Message-ID: <20130910095126.2b07d8cd@notabene.brown>
+References: <1378502781-849-1-git-send-email-mwilck@arcor.de>
+	<1378502781-849-2-git-send-email-mwilck@arcor.de>
+	<522B7D2A.4000409@arcor.de>
+	<20130909112041.4b8401f3@notabene.brown>
+	<522E1556.4030502@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rJyDPIAY1AZ4lFxFkcuSP5c"; protocol="application/pgp-signature"
+ boundary="Sig_/J1H_naN0H.Gh1muW6N8AIIM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1378752014-8366-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <522E1556.4030502@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
+To: Martin Wilck <mwilck@arcor.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/rJyDPIAY1AZ4lFxFkcuSP5c
+--Sig_/J1H_naN0H.Gh1muW6N8AIIM
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon,  9 Sep 2013 20:40:14 +0200 mwilck@arcor.de wrote:
+On Mon, 09 Sep 2013 20:37:10 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> Some fake RAID BIOSes (in particular, LSI ones) change the
-> VD GUID at every boot. These GUIDs are not suitable for
-> identifying an array. Luckily the header GUID appears to
-> remain constant.
+> On 09/09/2013 03:20 AM, NeilBrown wrote:
+> > On Sat, 07 Sep 2013 21:23:22 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+> >=20
+> >> On 09/06/2013 11:26 PM, mwilck@arcor.de wrote:
+> >>> Some fake RAID BIOSes (in particular, LSI ones) change the
+> >>> VD GUID at every boot. These GUIDs are not suitable for
+> >>> identifying an array. Luckily the header GUID appears to
+> >>> remain constant.
+> >>>
+> >>> We construct a pseudo-UUID from the header GUID and those
+> >>> properties of the subarray that we expect to remain constant.
+> >>
+> >> Thinking about it once more, it may actually be better to construct the
+> >> subarray UUID only from the container GUID and the member number (and
+> >> name), because if we implement Grow or Reshape for DDF, the other
+> >> properties might change.
+> >>
+> >> I'm open for comments and suggestions.
+> >>
+> >> Martin
+> >=20
+> > I'd probably just base it on the container GUID and the member number.
+> > Exclude even the name.
 >=20
-> We construct a pseudo-UUID from the header GUID and those
-> properties of the subarray that we expect to remain constant.
-> This is only array name and index; all else might change e.g.
-> during grow.
->=20
-> Don't do this for all non-MD arrays, only for those known
-> to use varying volume GUIDs.
->=20
-> This patch obsoletes my previous patch "DDF: new algorithm
-> for subarray UUID"
->=20
-> Signed-off-by: Martin Wilck <mwilck@arcor.de>
+> Why that? Does it make sense to expect the UUID to remain the same when
+> the array name has changed?
 
-Thanks.  Applied.
+I would rather the UUID only changed when it absolutely has too.
+A name is just an attributed, not part of the core identity.
 
+
+>=20
+> > It is unfortunate that this change will cause all existing DDF uuids to
+> > change even for controllers where they are currently stable.
+>=20
+> Only for "foreign" arrays not created by MD - but see below.
+>=20
+> > Is it possible to detect whether a VD GUID is likely to change, and to =
+only
+> > use the new algorithm for those?
+>=20
+> I am going to submit a new patch soon where I built in a vendor "black
+> list". This list currently contains only LSI, so the UUIDs of all
+> non-LSI arrays will stay the same, and for LSI, to the best of our
+> current knowledge, the UUIDs aren't constant anyway. I don't know
+> whether all LSI fake RAIDs behave like this, nor whether the Option ROMs
+> of other vendors do. Perhaps other people on this list can supply data
+> points on this.
+
+Thanks.  I'm going with this patch for now.  I'm certainly keen to hear of
+any other data points which might suggest some improvement might be possibl=
+e.
+
+Thanks.
 NeilBrown
 
-
-> ---
->  super-ddf.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++---=
---
->  1 files changed, 50 insertions(+), 5 deletions(-)
->=20
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 72a8351..19d8494 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -1583,6 +1583,7 @@ static void brief_examine_subarrays_ddf(struct supe=
-rtype *st, int verbose)
->  			continue;
->  		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
->  		ddf->currentconf =3D&vcl;
-> +		vcl.vcnum =3D i;
->  		uuid_from_super_ddf(st, info.uuid);
->  		fname_from_uuid(st, &info, nbuf1, ':');
->  		memcpy(namebuf, ve->name, sizeof(ve->name));
-> @@ -1682,6 +1683,52 @@ static void detail_super_ddf(struct supertype *st,=
- char *homehost)
->  	 */
->  }
-> =20
-> +static const char *vendors_with_variable_volume_UUID[] =3D {
-> +	"LSI      ",
-> +};
-> +
-> +static int volume_id_is_reliable(const struct ddf_super *ddf)
-> +{
-> +	int n =3D sizeof(vendors_with_variable_volume_UUID) /=20
-> +		sizeof(vendors_with_variable_volume_UUID[0]);
-> +	int i;
-> +	for (i =3D 0; i < n; i++)
-> +		if (!memcmp(ddf->controller.guid,
-> +			vendors_with_variable_volume_UUID[i], 8))
-> +		return 0;
-> +	return 1;
-> +}
-> +
-> +static void uuid_of_ddf_subarray(const struct ddf_super *ddf,
-> +				 unsigned int vcnum, int uuid[4])
-> +{
-> +	char buf[DDF_GUID_LEN+18], sha[20], *p;
-> +	struct sha1_ctx ctx;
-> +	if (volume_id_is_reliable(ddf)) {
-> +		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, uuid);
-> +		return;
-> +	}
-> +	/*
-> +	 * Some fake RAID BIOSes (in particular, LSI ones) change the
-> +	 * VD GUID at every boot. These GUIDs are not suitable for
-> +	 * identifying an array. Luckily the header GUID appears to
-> +	 * remain constant.
-> +	 * We construct a pseudo-UUID from the header GUID and those
-> +	 * properties of the subarray that we expect to remain constant.
-> +	 */
-> +	memset(buf, 0, sizeof(buf));
-> +	p =3D buf;
-> +	memcpy(p, ddf->anchor.guid, DDF_GUID_LEN);
-> +	p +=3D DDF_GUID_LEN;
-> +	memcpy(p, ddf->virt->entries[vcnum].name, 16);
-> +	p +=3D 16;
-> +	*((__u16 *) p) =3D vcnum;
-> +	sha1_init_ctx(&ctx);
-> +	sha1_process_bytes(buf, sizeof(buf), &ctx);
-> +	sha1_finish_ctx(&ctx, sha);
-> +	memcpy(uuid, sha, 4*4);
-> +}
-> +
->  static void brief_detail_super_ddf(struct supertype *st)
->  {
->  	struct mdinfo info;
-> @@ -1693,7 +1740,7 @@ static void brief_detail_super_ddf(struct supertype=
- *st)
->  	else if (vcnum =3D=3D DDF_NOTFOUND)
->  		return;
->  	else
-> -		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, info.uuid);
-> +		uuid_of_ddf_subarray(ddf, vcnum, info.uuid);
->  	fname_from_uuid(st, &info, nbuf,':');
->  	printf(" UUID=3D%s", nbuf + 5);
->  }
-> @@ -1836,13 +1883,11 @@ static void uuid_from_super_ddf(struct supertype =
-*st, int uuid[4])
->  	 */
->  	struct ddf_super *ddf =3D st->sb;
->  	struct vcl *vcl =3D ddf->currentconf;
-> -	char *guid;
-> =20
->  	if (vcl)
-> -		guid =3D vcl->conf.guid;
-> +		uuid_of_ddf_subarray(ddf, vcl->vcnum, uuid);
->  	else
-> -		guid =3D ddf->anchor.guid;
-> -	uuid_from_ddf_guid(guid, uuid);
-> +		uuid_from_ddf_guid(ddf->anchor.guid, uuid);
->  }
-> =20
->  static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *i=
-nfo, char *map);
-
-
---Sig_/rJyDPIAY1AZ4lFxFkcuSP5c
+--Sig_/J1H_naN0H.Gh1muW6N8AIIM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUi5eZznsnt1WYoG5AQKOww/8DiKP9ygCSJ9pn3f++1IbdaBpnZBAHqCq
-D+14+OAKfzDynVsRleZaZ4MAMMk7QyMH7qX+fXQCgfkHIq2HjZLnjgwXMT4r/1cP
-820pM+0joWkBlScUaXL4LU/oCTAk4+mIFnq5JrPU30RqxXeBI5mCAYCWuAGo5MaA
-0Q/bSxsAxWYRahnxKnYrcUOBHqzehGLpJj8dovoqBTmY4rpatbo//XuDO/0Vtd0f
-HQeNF3AABM97mebu7QGEYF0EHTpzkbwTzLT5/WXUvfea2b+w86VYbDbWuNLWh9xO
-Kodt9LA6QOVSEmea9h5tNEO3BU8USuVUFF/akcJ0krJJqezLkmMeVs7GMS4pFdnu
-Ib8eTYMwER2Ii+gLWmLGjFKchFLmKhr+PFxsLUhPzuYdSaxDXdAAOoneFGJaqyVk
-+iBMe4mwmfZIjwseWHPdgwo5uuNbfCFTPTvt4sVd5EMK44mR6x8kgrruQz8NPZMm
-40C3EUz1OHohAOo1UYfg8md/lGRF+vFQSztXn1sqt3s+TZPuUXB2KUHfEhweOqUG
-RI/A+WT04UdFf4ZN3/vHBb84fNfjQJMN6A33w3bvZfDQhNsXCSJHdypJY8JI5kUT
-zQbkIpAwlLrqESi/HOEfhvhGUEdj6osDyiPopgOntPDxUnl8VhCh2JjSjQM7QdxW
-r76Plh5tK7E=
-=T+jR
+iQIVAwUBUi5e/jnsnt1WYoG5AQJ1Og//Wo1Naa3NFE2MzEgORKiIY2hXSm0sScJS
+cmPsptZB8IeJsNPLOWDZ3BGrGgB+viEHWCOAqUJPEE/TF47GDQ76M9J0fPYT5yeX
+QTJRv4/BhwbW2hGvPffSPrFL3ATEuLJ0h8rafcImwTAHHTfqXhtFeKl3fiTa1nGw
+CmdEmsdG+votpacKvII8o7kh/PQxcTUNObwZP/E5ryqIXktSgvPTb0DYfZNKWLAD
+eA7bzBT+pvH7u7B4F9Teero4V7y8eRoiAO+UhHlyTjdEKPpgAQozWhyYSD9obnSL
+Sh8xI5azHIDAA8T4QIsoxPQaYJM9XVN5JqTtanYv8yGZnGJixn6uMLt2QpvKd8dF
+q5qxevOqdXSUggbJig0c8F/Gh+1+TtS8DPc39yjpOmCF+/MqvfJ5/3IXpmB3IrRM
+fbVG4q4IHmiJMfB3hXBhbiFLYb1WyLSUXUOsfVTK6q/GRF7VATtbR1mUnTyCblam
+3WKg97dU8WANfqLCVX2MIgVJpwNazxMhxTQkznTIrUoYvFfsdR2q5uEQXhfvUFEt
+b2td+eXZ3V3/ADjEn8u1L8PG8aP2xMxLkpQIHwP8DjbAQQUk1rZF1GI6Fgg2D4ZZ
+dEeGjkLHQ+eyNAtGDIIOwU9IbkQdDMrK+o9X9UsS98A5C9HD8DcmcTgpedFHkRWK
+dlZB8aZGSSY=
+=rS4+
 -----END PGP SIGNATURE-----
 
---Sig_/rJyDPIAY1AZ4lFxFkcuSP5c--
+--Sig_/J1H_naN0H.Gh1muW6N8AIIM--
