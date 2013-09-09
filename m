@@ -1,104 +1,69 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] MAINTAINERS: update email for Dan Williams
-Date: Mon, 09 Sep 2013 15:12:03 -0700
-Message-ID: <20130909221154.4969.71486.stgit@dwillia2-mobl1.amr.corp.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Manage.c: fix small memory leak
+Date: Tue, 10 Sep 2013 09:33:28 +1000
+Message-ID: <20130910093328.76ba5449@notabene.brown>
+References: <20130905091634.4986.72835.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, Vinod Koul <vinod.koul@intel.com>, Linus Walleij <linus.walleij@linaro.org>, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, Jon Mason <jon.mason@intel.com>, Shaohua Li <shli@kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/GYB0PYb=3rzbJxoShzJPPv3"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130905091634.4986.72835.stgit@gklab-154-244.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
-Returned to intel.com
+--Sig_/GYB0PYb=3rzbJxoShzJPPv3
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Jon Mason <jon.mason@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Shaohua Li <shli@kernel.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- MAINTAINERS |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+On Thu, 05 Sep 2013 11:16:34 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index defc053..058fb68 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -914,24 +914,24 @@ F:	arch/arm/mach-pxa/colibri-pxa270-income.c
- 
- ARM/INTEL IOP32X ARM ARCHITECTURE
- M:	Lennert Buytenhek <kernel@wantstofly.org>
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- 
- ARM/INTEL IOP33X ARM ARCHITECTURE
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- 
- ARM/INTEL IOP13XX ARM ARCHITECTURE
- M:	Lennert Buytenhek <kernel@wantstofly.org>
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- 
- ARM/INTEL IQ81342EX MACHINE SUPPORT
- M:	Lennert Buytenhek <kernel@wantstofly.org>
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- 
-@@ -956,7 +956,7 @@ F:	drivers/pcmcia/pxa2xx_stargate2.c
- 
- ARM/INTEL XSC3 (MANZANO) ARM CORE
- M:	Lennert Buytenhek <kernel@wantstofly.org>
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
- 
-@@ -1363,7 +1363,7 @@ F:	drivers/platform/x86/asus*.c
- F:	drivers/platform/x86/eeepc*.c
- 
- ASYNCHRONOUS TRANSFERS/TRANSFORMS (IOAT) API
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- W:	http://sourceforge.net/projects/xscaleiop
- S:	Maintained
- F:	Documentation/crypto/async-tx-api.txt
-@@ -2638,7 +2638,7 @@ T:	git git://git.linaro.org/people/sumitsemwal/linux-dma-buf.git
- 
- DMA GENERIC OFFLOAD ENGINE SUBSYSTEM
- M:	Vinod Koul <vinod.koul@intel.com>
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- S:	Supported
- F:	drivers/dma/
- F:	include/linux/dma*
-@@ -4263,7 +4263,7 @@ F:	arch/x86/kernel/microcode_core.c
- F:	arch/x86/kernel/microcode_intel.c
- 
- INTEL I/OAT DMA DRIVER
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- S:	Maintained
- F:	drivers/dma/ioat*
- 
-@@ -4276,7 +4276,7 @@ F:	drivers/iommu/intel-iommu.c
- F:	include/linux/intel-iommu.h
- 
- INTEL IOP-ADMA DMA DRIVER
--M:	Dan Williams <djbw@fb.com>
-+M:	Dan Williams <dan.j.williams@intel.com>
- S:	Odd fixes
- F:	drivers/dma/iop-adma.c
- 
+> 'avail' is dynamically allocated, so it should be freed.
+>=20
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Manage.c |    1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/Manage.c b/Manage.c
+> index afa9b42..910caa6 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -853,6 +853,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			}
+>  			array_failed =3D !enough(array->level, array->raid_disks,
+>  					       array->layout, 1, avail);
+> +			free(avail);
+>  		} else
+>  			array_failed =3D 0;
+>  		if (array_failed) {
+
+Applied. Thanks.
+
+NeilBrown
+
+--Sig_/GYB0PYb=3rzbJxoShzJPPv3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUi5ayDnsnt1WYoG5AQJsHhAApet21/Slo+Y4UdCFNkLFz2YSXeS04jqc
+OuK2bEQ8aI/+K/DJWDt6GYIDyZJVcPsABDHJ1wQYYyPfL7PB4D6f9rNBlzx5EO3N
+F0ry2ezBxkrC34LGBIhsSMlNUJ2J9SuI4APohjgLShWJCzdqsbNhV3wljfK7Ddza
+2fy6d1gQtrakMcdFF7Hemid33sEBof4dvnHcub0WKNG/qCrbm0Qk4ZwhTx8b9j02
+Qnl332HNieYsqgysbQzGSulFVspglax6UgGTQSkVezxrgZ79WldM7kPu5tEUoSUq
+Z/6Qp0XVn70rYNN3hY6u6VfHrpV5ckdbLW3kmkeDbkf52RCZ2Tybs8thxtstf7oT
+V/8YmD+g5eO+ZkAJUaOXScazsWJYKmYJSqM3MJEXbXWTvufaeFBhy4VCOAHB2r4H
+fOILIgnG+Y8ISKuTBIMamRvjpY4BUC363q8rMCudwPK1NSG1Ib3GhDa/BTB9zzI2
+0h+U9GcDEIc7shvsQz7aJpQIjfIsXtR4mXuv1GUMCH25sTKO9VH6KGr/rV4KFW6a
+OUpUDoR6eIti0qcl8GrwP0zAUjkwYIr37z3USD0Au1kXrLdY/PW3rht35bZlC7ct
+4bhDSK908SERaEaAF7ATkG6LktFDfS12ffkxL1c7xeO6VxgJTFPfX1zfcCIj8wLo
+TnZxWs4WU9g=
+=ul2r
+-----END PGP SIGNATURE-----
+
+--Sig_/GYB0PYb=3rzbJxoShzJPPv3--
