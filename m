@@ -1,125 +1,145 @@
-From: mwilck@arcor.de
-Subject: [PATCH 2/2] DDF: handle fake RAIDs with changing subarray UUIDs
-Date: Mon,  9 Sep 2013 20:40:14 +0200
-Message-ID: <1378752014-8366-1-git-send-email-mwilck@arcor.de>
-References: <522E13EF.3080001@arcor.de>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: Re: Mixing WD red with older seagates
+Date: Mon, 09 Sep 2013 14:35:21 -0700
+Message-ID: <522E3F19.1010300@vorgon.com>
+References: <522D4369.80404@vorgon.com> <522D457D.1000900@smartguide.com.au> <BLU0-SMTP280B8900E5E83B76CADDD46983F0@phx.gbl> <CADNH=7F0URr9w-f0whhyDS5drKkxo87bMyFrp46cAfBVXZ98Pg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <522E13EF.3080001@arcor.de>
+In-Reply-To: <CADNH=7F0URr9w-f0whhyDS5drKkxo87bMyFrp46cAfBVXZ98Pg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Some fake RAID BIOSes (in particular, LSI ones) change the
-VD GUID at every boot. These GUIDs are not suitable for
-identifying an array. Luckily the header GUID appears to
-remain constant.
 
-We construct a pseudo-UUID from the header GUID and those
-properties of the subarray that we expect to remain constant.
-This is only array name and index; all else might change e.g.
-during grow.
 
-Don't do this for all non-MD arrays, only for those known
-to use varying volume GUIDs.
+On 9/9/2013 7:56 AM, Mathias Bur=C3=A9n wrote:
+> On 9 September 2013 15:38, Jonathan Wilson <piercing_male@hotmail.com=
+> wrote:
+>> On Mon, 2013-09-09 at 13:50 +1000, Tudor Holton wrote:
+>>> Completely anecdotal evidence, but I was mixing WD Reds and Seagate=
+s in
+>>> a QNAP RAID 6 each 3TB for a total of 6TB, and the Seagates kept ma=
+king
+>>> sounds like they were about to hurl.  Testing each drive individual=
+ly
+>>> with badblocks and smart came up with all drives OK.  But it kept
+>>> chucking the WDs one by one.  Eventually I removed the Seagates and
+>>> replaced them with WDs and since then no drives have been thrown ou=
+t.
+>>>
+>>> I can only theorise that there may be a timing issue between WD Red=
+s and
+>>> Seagate.
+>>
+>> I wonder if the vibrations of the Seagates was causing the reds to b=
+e
+>> thrown?
+>>
+>>  From what I've read (assuming I understand correctly) they are a lo=
+w-ish
+>> vibration drive with some fancy head positioning for alignment... bu=
+t
+>> should be limited to 5 at most, or at least are intended for upto 5
+>> drive systems, so I wonder if this means that more than 5 could suff=
+er
+>> from vibrations throwing disks out?
+>>
+>> All that said, I wonder just how sensitive drives are nowadays? Whil=
+e I
+>> have heard of tales of old where someone sneezing in the computer ro=
+om
+>> would cause large raid clusters to pop I don't know how true they ar=
+e or
+>> how sensitive drives are to the accumulative vibrations of many disk=
+s or
+>> if its more of a case that as the number of disks increases then the
+>> statistical chance of a drive failing increases to the point that it=
+ is
+>> more likely to happen in coincidence with an external event, such as=
+ a
+>> sneeze.
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> The sneeze story isn't true. Modern enterprise are sensitive, for
+> example some 24k RPM fans will cause drives to fail within time, but
+> 12k fans won't (40mm).
+>
+> However, if your room and your servers are normal, you've nothing to
+> worry about.
+>
+> Mathias
+> --
 
-This patch obsoletes my previous patch "DDF: new algorithm
-for subarray UUID"
+Sounds like what you guys are saying is that if I switch to the red, I=20
+need to replace all the seagate drives?
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- super-ddf.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 50 insertions(+), 5 deletions(-)
+And it kind of sounds like they are overly touchy. I would expect them=20
+to be more immune to vibrations.
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 72a8351..19d8494 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -1583,6 +1583,7 @@ static void brief_examine_subarrays_ddf(struct supertype *st, int verbose)
- 			continue;
- 		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
- 		ddf->currentconf =&vcl;
-+		vcl.vcnum = i;
- 		uuid_from_super_ddf(st, info.uuid);
- 		fname_from_uuid(st, &info, nbuf1, ':');
- 		memcpy(namebuf, ve->name, sizeof(ve->name));
-@@ -1682,6 +1683,52 @@ static void detail_super_ddf(struct supertype *st, char *homehost)
- 	 */
- }
- 
-+static const char *vendors_with_variable_volume_UUID[] = {
-+	"LSI      ",
-+};
-+
-+static int volume_id_is_reliable(const struct ddf_super *ddf)
-+{
-+	int n = sizeof(vendors_with_variable_volume_UUID) / 
-+		sizeof(vendors_with_variable_volume_UUID[0]);
-+	int i;
-+	for (i = 0; i < n; i++)
-+		if (!memcmp(ddf->controller.guid,
-+			vendors_with_variable_volume_UUID[i], 8))
-+		return 0;
-+	return 1;
-+}
-+
-+static void uuid_of_ddf_subarray(const struct ddf_super *ddf,
-+				 unsigned int vcnum, int uuid[4])
-+{
-+	char buf[DDF_GUID_LEN+18], sha[20], *p;
-+	struct sha1_ctx ctx;
-+	if (volume_id_is_reliable(ddf)) {
-+		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, uuid);
-+		return;
-+	}
-+	/*
-+	 * Some fake RAID BIOSes (in particular, LSI ones) change the
-+	 * VD GUID at every boot. These GUIDs are not suitable for
-+	 * identifying an array. Luckily the header GUID appears to
-+	 * remain constant.
-+	 * We construct a pseudo-UUID from the header GUID and those
-+	 * properties of the subarray that we expect to remain constant.
-+	 */
-+	memset(buf, 0, sizeof(buf));
-+	p = buf;
-+	memcpy(p, ddf->anchor.guid, DDF_GUID_LEN);
-+	p += DDF_GUID_LEN;
-+	memcpy(p, ddf->virt->entries[vcnum].name, 16);
-+	p += 16;
-+	*((__u16 *) p) = vcnum;
-+	sha1_init_ctx(&ctx);
-+	sha1_process_bytes(buf, sizeof(buf), &ctx);
-+	sha1_finish_ctx(&ctx, sha);
-+	memcpy(uuid, sha, 4*4);
-+}
-+
- static void brief_detail_super_ddf(struct supertype *st)
- {
- 	struct mdinfo info;
-@@ -1693,7 +1740,7 @@ static void brief_detail_super_ddf(struct supertype *st)
- 	else if (vcnum == DDF_NOTFOUND)
- 		return;
- 	else
--		uuid_from_ddf_guid(ddf->virt->entries[vcnum].guid, info.uuid);
-+		uuid_of_ddf_subarray(ddf, vcnum, info.uuid);
- 	fname_from_uuid(st, &info, nbuf,':');
- 	printf(" UUID=%s", nbuf + 5);
- }
-@@ -1836,13 +1883,11 @@ static void uuid_from_super_ddf(struct supertype *st, int uuid[4])
- 	 */
- 	struct ddf_super *ddf = st->sb;
- 	struct vcl *vcl = ddf->currentconf;
--	char *guid;
- 
- 	if (vcl)
--		guid = vcl->conf.guid;
-+		uuid_of_ddf_subarray(ddf, vcl->vcnum, uuid);
- 	else
--		guid = ddf->anchor.guid;
--	uuid_from_ddf_guid(guid, uuid);
-+		uuid_from_ddf_guid(ddf->anchor.guid, uuid);
- }
- 
- static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, char *map);
--- 
-1.7.3.4
+What I have is a 7' rack cabinet with a 2500w rack mount ups near the=20
+bottom. Above that a bit of space followed by a KBM switch and network=20
+switch. Then an HP laser printer on rails to pull it out for easier use=
+=2E=20
+Above that a 4u case with my main computer which has 4 wd drives, ( 2=20
+160Gb and a 500Gb). Right above that is the linux vdr computer with the=
+=20
+raid seagate drives.
+
+And after mdadm fails a drive, it is bad. SMART and other programs=20
+report it so. mdadm hasn't failed this one yet, but it is just a matter=
+=20
+of time. I get daily messages about the bad sectors.
+-----------------------------------------------------------
+
+This email was generated by the smartd daemon running on:
+
+    host name: x64VDR
+   DNS domain: tdl
+   NIS domain: (none)
+
+The following warning/error was logged by the smartd daemon:
+
+Device: /dev/sdc, 49 Currently unreadable (pending) sectors
+
+
+=46or details see host's SYSLOG.
+
+You can also use the smartctl utility for further investigation.
+The original email about this issue was sent at Fri Sep  6 23:56:48 201=
+3 MST
+Another email message will be sent in 24 hours if the problem persists.
+
+-----------------------------------------------------------
+
+This email was generated by the smartd daemon running on:
+
+    host name: x64VDR
+   DNS domain: tdl
+   NIS domain: (none)
+
+The following warning/error was logged by the smartd daemon:
+
+Device: /dev/sdc, 49 Offline uncorrectable sectors
+
+
+=46or details see host's SYSLOG.
+
+You can also use the smartctl utility for further investigation.
+The original email about this issue was sent at Fri Sep  6 23:56:58 201=
+3 MST
+Another email message will be sent in 24 hours if the problem persists.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
