@@ -1,108 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] DDF: brief_examine_subarrays_ddf: print array name
-Date: Mon, 9 Sep 2013 11:15:46 +1000
-Message-ID: <20130909111546.2e9551b1@notabene.brown>
+Subject: Re: [PATCH 2/2] DDF: new algorithm for subarray UUID
+Date: Mon, 9 Sep 2013 11:20:41 +1000
+Message-ID: <20130909112041.4b8401f3@notabene.brown>
 References: <1378502781-849-1-git-send-email-mwilck@arcor.de>
+	<1378502781-849-2-git-send-email-mwilck@arcor.de>
+	<522B7D2A.4000409@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3OSdDCJefyI5pPYCAODcr2P"; protocol="application/pgp-signature"
+ boundary="Sig_/l4C8K4MzXNNl8wK8HmOhNBD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1378502781-849-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <522B7D2A.4000409@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: mwilck@arcor.de
+To: Martin Wilck <mwilck@arcor.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/3OSdDCJefyI5pPYCAODcr2P
+--Sig_/l4C8K4MzXNNl8wK8HmOhNBD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri,  6 Sep 2013 23:26:20 +0200 mwilck@arcor.de wrote:
+On Sat, 07 Sep 2013 21:23:22 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> Print an array name in brief output. Do this even if no name is set,
-> faking a simple pseudo name (may happen for some BIOS RAIDs).
-> This makes DDF and IMSM behave equally.
+> On 09/06/2013 11:26 PM, mwilck@arcor.de wrote:
+> > Some fake RAID BIOSes (in particular, LSI ones) change the
+> > VD GUID at every boot. These GUIDs are not suitable for
+> > identifying an array. Luckily the header GUID appears to
+> > remain constant.
+> >=20
+> > We construct a pseudo-UUID from the header GUID and those
+> > properties of the subarray that we expect to remain constant.
 >=20
-> SUSE's YaST2 needs this in order to detect MD arrays during
-> installation.
+> Thinking about it once more, it may actually be better to construct the
+> subarray UUID only from the container GUID and the member number (and
+> name), because if we implement Grow or Reshape for DDF, the other
+> properties might change.
+>=20
+> I'm open for comments and suggestions.
+>=20
+> Martin
 
-Thanks, but I don't like this - I would really rather SUSE's YaST2 got fixe=
-d.
+I'd probably just base it on the container GUID and the member number.
+Exclude even the name.
 
-mdadm.conf is really for mdadm to read.  And the "--brief" output is meant
-for inclusion in mdadm.conf.
+It is unfortunate that this change will cause all existing DDF uuids to
+change even for controllers where they are currently stable.
 
-If other programs want to parse the output of mdadm, they should use
---export, not --brief.
+Is it possible to detect whether a VD GUID is likely to change, and to only
+use the new algorithm for those?
 
+Thanks,
 NeilBrown
 
->=20
-> Signed-off-by: Martin Wilck <mwilck@arcor.de>
-> ---
->  super-ddf.c |   13 +++++++++++--
->  1 files changed, 11 insertions(+), 2 deletions(-)
->=20
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 8bba70a..72a8351 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -30,6 +30,7 @@
->  #include "mdmon.h"
->  #include "sha1.h"
->  #include <values.h>
-> +#include <ctype.h>
-> =20
->  /* a non-official T10 name for creation GUIDs */
->  static char T10[] =3D "Linux-MD";
-> @@ -1577,14 +1578,22 @@ static void brief_examine_subarrays_ddf(struct su=
-pertype *st, int verbose)
->  		struct virtual_entry *ve =3D &ddf->virt->entries[i];
->  		struct vcl vcl;
->  		char nbuf1[64];
-> +		char namebuf[sizeof(ve->name)+1], *c;
->  		if (all_ff(ve->guid))
->  			continue;
->  		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
->  		ddf->currentconf =3D&vcl;
->  		uuid_from_super_ddf(st, info.uuid);
->  		fname_from_uuid(st, &info, nbuf1, ':');
-> -		printf("ARRAY container=3D%s member=3D%d UUID=3D%s\n",
-> -		       nbuf+5, i, nbuf1+5);
-> +		memcpy(namebuf, ve->name, sizeof(ve->name));
-> +		namebuf[sizeof(ve->name)] =3D '\0';
-> +		if (namebuf[0] =3D=3D '\0')
-> +			sprintf(namebuf, "ddf_%d", i);
-> +		for (c =3D namebuf; c < namebuf + sizeof(ve->name); c++)
-> +			if (isspace(*c))
-> +				*c =3D '-';
-> +		printf("ARRAY /dev/md/%s container=3D%s member=3D%d UUID=3D%s\n",
-> +		       namebuf, nbuf+5, i, nbuf1+5);
->  	}
->  }
-> =20
-
-
---Sig_/3OSdDCJefyI5pPYCAODcr2P
+--Sig_/l4C8K4MzXNNl8wK8HmOhNBD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUi0hQjnsnt1WYoG5AQKUTw//SL3DSH3WnODnwWZdoxwS/NixDPpDunUV
-HGNhNSTQDVS416BIhn4UXj3FbR9jr6+4HPv4O03qMX3wUiTQmB/B1vtIWB6IojrG
-FBKuSmIiS1WobGgnTmiDO+CcuyJIm05b7/MlHTwR2/BdsA7C95jCdc/tiUl9OtAN
-aD282mfkQpuV903s4Ct/iJGd8QGULueWoBfkkr9LQNnGX/yI6FwL8kSPAQfEB8Kr
-z9rHnB+U37MeSj2bL+SD6i8omdD+mLuRi7LjKydN/qGCOOcgs70l/5AwAeB7KPDl
-Yi34WDp04x9H4XjmmosDywiQ5kM8JFeLqYL3WwH2gay9AJdYlwhB4x5bN1Kf/zNv
-eSATxzCXgQF9BvtCbL8iHvuBX/B5SQhG//kq7o8TGQ7btRETTUQjc7eEqfiPNXWJ
-k4QkujcFlZoceW2MtOGVwUmNWPXiu/OK49rn1h1ptdngQZcLVH4LgawSLih/VrCN
-+nYGwSl9AFWuongD1jYfVlke8FlHtPS2YSh1uLKsGot0fEnxdf1WIaV9btdQeebl
-MHRqgRjH5OztyLSA7i9WGUz3hBn5t8gxtDHAE0lXg4wUm9B/6VTWPZqnWdtqt/3P
-XlvahCni1m/+rXtU/Y39UnzYVG34FQBCYAgO1JL/BQBmYDwTI3XjH7UsQLrX1V1d
-tXiZt+DZuo4=
-=DaPb
+iQIVAwUBUi0iaTnsnt1WYoG5AQIQcBAAklnAsmdmPfVSfxzhp7EvKKj5ja/ucUrf
+XB03pIGzyHuRLRhJ4qOEPXV9mWuF4a/SUgyTAbk0RbDU+FrvmN/4VlPMlKnAnm1P
+MAUVkPjP9W6goL9bEx/tFJJh58F+AqilGYi7wLZvG5+xfuLdZnli8u5HNi6BV5cV
+QyNY8nc3eAckPCZRG2WoxmftYYOxQ5ykxZYdUd2ViPpz/DS+SCJg1vHkCv2vkV+f
+kAX982koRimrvvHzGNGq2cVqlHJAV4rC8HmEGfopPpCTvrNnG8PY9vGYsVNKRJWT
+fGAbcrv8dVcf0UrNvzo+87U0rOedxnymt8gjW6IibCr2IcYqPHf5XHAYS/SSQCwv
+FVKZYXc2+RHO+2qoU7nlMvICJwUKKix7EvNZdkeKtNOLJQ6Dk+n9tzxUOKg8lGQ3
+t/C63YbwbglPdtnKnBCC55z6WsBvbGxH+BKwfAqxpnoaQeD/R3teUfNsYNoy54La
+mw7BuoH63NguKUvFpUvQHbJgZD6bRQlct7A8MhjMnOOmPda2bqmzLxv4zLWvvLnX
+Q6zu4IbzyQbkPDFD1AaEE8RJQmi32DbabdY42Q4JUwUChY9AiWcwYp8501ZJtIQP
+ae9zFugaMHROqltCXZO8UhTN/glfNE5iStNyLiyvxoZIyumK7kxes2OMug6E7RP0
+v5fTY0zNgZU=
+=SIqv
 -----END PGP SIGNATURE-----
 
---Sig_/3OSdDCJefyI5pPYCAODcr2P--
+--Sig_/l4C8K4MzXNNl8wK8HmOhNBD--
