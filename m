@@ -1,115 +1,99 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 3/3] raid5: relieve lock contention in
- get_active_stripe()
-Date: Tue, 10 Sep 2013 14:06:29 +1000
-Message-ID: <20130910140629.702683da@notabene.brown>
-References: <20130828143252.1d48b04b@notabene.brown>
-	<20130828063953.GD17163@kernel.org>
-	<20130903160858.2175a41b@notabene.brown>
-	<20130903070228.GA25041@kernel.org>
-	<20130904164132.177701e0@notabene.brown>
-	<20130905054035.GA30216@kernel.org>
-	<20130905162910.179ea808@notabene.brown>
-	<20130905091822.GA8401@kernel.org>
-	<20130909043318.GA27517@kernel.org>
-	<20130910111318.1d19e8d3@notabene.brown>
-	<20130910023555.GA17907@kernel.org>
+Subject: [PULL REQUEST] md update for v3.12
+Date: Tue, 10 Sep 2013 14:21:18 +1000
+Message-ID: <20130910142118.5ad5cd18@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/r8QVTGJEjaIgH0oi3hvAkwt"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130910023555.GA17907@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+ boundary="Sig_/2D_C6ZYY=Z8BZt.0c8JK.fq"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Dave Jones <davej@fedoraproject.org>, Max Filippov <jcmvbkbc@gmail.com>, Jim Kukunas <james.t.kukunas@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Yuanhan Liu <yuanhan.liu@linux.intel.com>, Ken Steele <ken@tilera.com>, Chris Metcalf <cmetcalf@tilera.com>
 List-Id: linux-raid.ids
 
---Sig_/r8QVTGJEjaIgH0oi3hvAkwt
+--Sig_/2D_C6ZYY=Z8BZt.0c8JK.fq
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Sep 2013 10:35:55 +0800 Shaohua Li <shli@kernel.org> wrote:
+The following changes since commit d8dfad3876e4386666b759da3c833d62fb8b2267:
 
-> On Tue, Sep 10, 2013 at 11:13:18AM +1000, NeilBrown wrote:
-> > On Mon, 9 Sep 2013 12:33:18 +0800 Shaohua Li <shli@kernel.org> wrote:
-> > >  		} else {
-> > > +			spin_lock(&conf->device_lock);
-> > > +
-> > >  			if (atomic_read(&sh->count)) {
-> > >  				BUG_ON(!list_empty(&sh->lru)
-> > >  				    && !test_bit(STRIPE_EXPANDING, &sh->state)
-> > > @@ -611,13 +725,14 @@ get_active_stripe(struct r5conf *conf, s
-> > >  					sh->group =3D NULL;
-> > >  				}
-> > >  			}
-> > > +			spin_unlock(&conf->device_lock);
-> >=20
-> > The device_lock is only really needed in the 'else' branch of the if
-> > statement.  So can we have it only there.  i.e. don't take the lock if
-> > sh->count is non-zero.
->=20
-> This is correct, I assume this isn't worthy optimizing before. Will fix s=
-oon.
+  Linux 3.11-rc7 (2013-08-25 17:43:22 -0700)
 
-It isn't really about optimising performance.  It is about making the code
-easier to understand.  If we keep the region covered by the lock as small as
-reasonably possible, it makes it more obvious to the reader which values are
-being protected.
+are available in the git repository at:
 
-=20
-> > > -	spin_lock_irqsave(&conf->device_lock, flags);
-> > > +	lock_all_device_hash_locks_irqsave(conf, &flags);
-> > >  	clear_bit(In_sync, &rdev->flags);
-> > >  	mddev->degraded =3D calc_degraded(conf);
-> > > -	spin_unlock_irqrestore(&conf->device_lock, flags);
-> > > +	unlock_all_device_hash_locks_irqrestore(conf, &flags);
-> > >  	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
-> >=20
-> > Why do you think you need to take all the hash locks here and elsewhere=
- when
-> > ->degraded is set?
-> > The lock is only need to ensure that the 'In_sync' flags are consistent=
- with
-> > the 'degraded' count.
-> > ->degraded isn't used in get_active_stripe so I cannot see how it is re=
-levant
-> > to the hash locks.
-> >=20
-> > We need to lock everything in raid5_quiesce().  I don't think we need to
-> > anywhere else.
->=20
-> init_stripe() accesses some filelds, don't need to protect?
+  git://neil.brown.name/md/ tags/md/3.12
 
-What fields?  Not ->degraded.
+for you to fetch changes up to bfc90cb0936f5b972706625f38f72c7cb726c20a:
 
-I think the fields that it accesses are effectively protected by the new
-seqlock.
-If you don't think so, please be explicit.
+  raid5: only wakeup necessary threads (2013-09-02 10:31:29 +1000)
 
+----------------------------------------------------------------
+md update for v3.12
 
-Thanks,
-NeilBrown
+Headline item is multithreading for RAID5 so that more
+IO/sec can be supported on fast (SSD) devices.
+Also TILE-Gx SIMD suppor for RAID6 calculations and an
+assortment of bug fixes.
 
---Sig_/r8QVTGJEjaIgH0oi3hvAkwt
+----------------------------------------------------------------
+Dave Jones (1):
+      md: Fix apparent cut-and-paste error in super_90_validate
+
+Ken Steele (1):
+      RAID: add tilegx SIMD implementation of raid6
+
+Max Filippov (1):
+      raid6/test: replace echo -e with printf
+
+NeilBrown (6):
+      md: don't call md_allow_write in get_bitmap_file.
+      md: fix safe_mode buglet.
+      md: Don't test all of mddev->flags at once.
+      md: avoid deadlock when dirty buffers during md_stop.
+      md/raid5: use seqcount to protect access to shape in make_request.
+      md/raid5: flush out all pending requests before proceeding with resha=
+pe.
+
+Shaohua Li (5):
+      raid5: make release_stripe lockless
+      raid5: fix stripe release order
+      raid5: offload stripe handle to workqueue
+      raid5: sysfs entry to control worker thread number
+      raid5: only wakeup necessary threads
+
+ drivers/md/md.c         |  54 +++++---
+ drivers/md/md.h         |   8 +-
+ drivers/md/raid5.c      | 362 ++++++++++++++++++++++++++++++++++++++++++++=
++---
+ drivers/md/raid5.h      |  22 +++
+ include/linux/raid/pq.h |   1 +
+ lib/raid6/Makefile      |   6 +
+ lib/raid6/algos.c       |   3 +
+ lib/raid6/test/Makefile |   9 +-
+ lib/raid6/tilegx.uc     |  86 ++++++++++++
+ 9 files changed, 510 insertions(+), 41 deletions(-)
+ create mode 100644 lib/raid6/tilegx.uc
+
+--Sig_/2D_C6ZYY=Z8BZt.0c8JK.fq
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUi6axTnsnt1WYoG5AQKyIg//ZMPPrQo7U63Ojm/6J7tctewWJIvQ1iyU
-5SW2pgDwsZJ/KTFfI/XBkoCIOABCL3jgtqgA9cL3oyJww1SGu7bnm8uY3ztSKe5B
-xC7gv6S64KGmpz3GQDpn0K/ywu221ghLM2YWyNs9moKucRcbknflKdKdLSm1V0GI
-jNVI01k/qhZTBTgC61t2TM3xW4m5ODynuUN0t1BHyGa6lBd+/CpcwzRPtoYIMRJw
-Mf54jGSMMjG4PQ9EYJKbQoMLrutclNDyCQdiwN4wZW9AwL/KKgI1Kif0Sl+VATeQ
-2Ih+9DeomDB+EwThTXSvT2jXMXAZ2KCo7EH+RIJhUEQKlbtrE7Aa4az+Oce4imO9
-1dWv9UnrYoXWRORbcVfRSIalqZQPczCuN+PFvwdOpvza4fv/vcNlktqF6/uxONGI
-MJIEi5dIILYuJ6AslVKbIjJIWvMLETKbT4kBlVTTA7wY9ohDTh5p2c4Sqbgb1Hra
-HQMSfkEtO2CiV4uyw3qtJP3aG3WyJncNfWzmguvik2zMN+lQsVgHWV1j66GXZoxm
-HAAFW/5OFCaFtSQ75ciO0ZY39u1DG0Y261iVOaOk5HtkcHbbtP02VKSAiNyBACBW
-34T5SgXrDPh0Ypj6/F+u3H6qOf3LUAEfRwZVYM6ZWtE7WZvyZH7LAEMfYkfkgjFX
-GUj+LwLGO4I=
-=DNnw
+iQIVAwUBUi6ePjnsnt1WYoG5AQLY+A//S72bG7plpMaYMdf2tPmnC1+mmkfioFmq
+S7rSf/BBoGjMnZqH/wwaRBJBJnq5rPhHwXoHSXDBCRBWb8c+XnJXAf38DzR4JD9i
+IdW08wVHW5OTQoltXVRqeGzIlLtDsO4U+wvwiTfnVbUVU6XJ6HEbUqvMWwatTiTq
+sAj/eQp774wgOR3rlcZadaSZVAduA5CwRV894LEQFIZv5XBC4EAAtKL7f4jJKjQN
+nzfXj+nUYn4wawx3VHW2iJ+OFH3hLQv8fRQetTdtunGeP9Ch4aBnmuw1msXB2cf0
+U+pKMImgxwdZ9SS7f+olEgun9ptrhCs35Hk9Y8eRX6T6kZnweaugv1oO9fhxnSUa
+y5kv4afHBl4QKA79A7dJWwX2RAgSci4JAyrP8BzFcO1jXSoxp2RLkPknKufn4ydD
+YNLTgxOouqiM8sWU92TvkyGTtHNlEaCmT/hCCZwCdcYlKaFFcwlaVamrZYPbcIuu
+Ez6+AbwV+w3NKml0wBE8Wla+49u0+nubqJFv/iNLfoc36sIaFvzh6vS7qWLvEFUA
+eprgdO0C4Vpkhs9I3GeJ+kQ7QERA0DbbP1DoWrn9gfy9Y9ryu2IFPW+c9D+jWjmO
+VTg5/QdL/L6fAxF9L6AbTOgFgZxL71oVID9Fu2Sixs8r+xMW2vs97WZuj7PYovUb
+RcddoXzbxS4=
+=GNKC
 -----END PGP SIGNATURE-----
 
---Sig_/r8QVTGJEjaIgH0oi3hvAkwt--
+--Sig_/2D_C6ZYY=Z8BZt.0c8JK.fq--
