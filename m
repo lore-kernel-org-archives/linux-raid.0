@@ -1,234 +1,187 @@
-From: y b <ycbzzjlby@gmail.com>
-Subject: Re: Subject: [PATCH] md: avoid deadlock when raid5 array has unack
- badblocks during md_stop_writes.
-Date: Tue, 10 Sep 2013 15:19:51 +0800
-Message-ID: <CAPoh-nYLbSL81V4zmLQ579+XMa2rsNFG-Drf6mVQQuCh6SYOKg@mail.gmail.com>
-References: <CAPoh-nY8wwu-2yYRbKycPX2gEUofQu6y29TOYhOm83C2au6ZQQ@mail.gmail.com>
-	<20130910153347.5fafb58b@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 3/3] raid5: relieve lock contention in
+ get_active_stripe()
+Date: Tue, 10 Sep 2013 17:28:36 +1000
+Message-ID: <20130910172836.43e23cbf@notabene.brown>
+References: <20130904164132.177701e0@notabene.brown>
+	<20130905054035.GA30216@kernel.org>
+	<20130905162910.179ea808@notabene.brown>
+	<20130905091822.GA8401@kernel.org>
+	<20130909043318.GA27517@kernel.org>
+	<20130910111318.1d19e8d3@notabene.brown>
+	<20130910023555.GA17907@kernel.org>
+	<20130910140629.702683da@notabene.brown>
+	<20130910042438.GA16797@kernel.org>
+	<20130910152032.48631492@notabene.brown>
+	<20130910065912.GA12038@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130910153347.5fafb58b@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/rbLlz33xCOTpiXEgsrZax5g"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20130910065912.GA12038@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-I use linux-next 2013-9-6 vesion and I can reproduce it when raid5
-array rescovering, so sync_blockdev may not work.
-Some disk-controller driver handle disk error in a slowerpath, may
-more than 5 seconds. if shutdown or set readonly array, we can met
-this situation.
+--Sig_/rbLlz33xCOTpiXEgsrZax5g
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-the detail message when I met this situation:
-[root@localhost ~]# cat /proc/version
-Linux version 3.11.0-next-20130906+ (root@localhost.localdomain) (gcc
-version 4.4.6 20110731 (Red Hat 4.4.6-3) (GCC) ) #4 SMP Tue Sep 10
-05:41:05 CST 2013
+On Tue, 10 Sep 2013 14:59:12 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-Sep 10 15:12:53 localhost kernel: [  266.455439] sd 2:0:0:0: [sdb] CDB:
-Sep 10 15:12:53 localhost kernel: [  266.455442] Read(10): 28 00 00 04
-90 00 00 04 00 00
-Sep 10 15:12:53 localhost kernel: [  266.455487] end_request: I/O
-error, dev sdb, sector 300000
-Sep 10 15:12:53 localhost kernel: [  266.455493] md/raid:md0: read
-error not correctable (sector 300000 on sdb).
-Sep 10 15:12:53 localhost kernel: [  266.455500] md/raid:md0: read
-error not correctable (sector 300008 on sdb).
-Sep 10 15:12:53 localhost kernel: [  266.455503] md/raid:md0: read
-error not correctable (sector 300016 on sdb).
-Sep 10 15:12:53 localhost kernel: [  266.455507] md/raid:md0: read
-error not correctable (sector 300024 on sdb).
-Sep 10 15:12:53 localhost kernel: [  266.455507] md/raid:md0: read
-error not correctable (sector 300024 on sdb).
-Sep 10 15:12:53 localhost kernel: [  266.455534] ata3: EH complete
-Sep 10 15:12:54 localhost kernel: [  267.556251] ata3.00: exception
-Emask 0x0 SAct 0x1 SErr 0x0 action 0x0
-Sep 10 15:12:54 localhost kernel: [  267.556253] ata3.00: irq_stat 0x40000008
-Sep 10 15:12:54 localhost kernel: [  267.556257] ata3.00: failed
-command: READ FPDMA QUEUED
-Sep 10 15:12:54 localhost kernel: [  267.556266] ata3.00: cmd
-60/00:00:00:94:04/04:00:00:00:00/40 tag 0 ncq 524288 in
-Sep 10 15:12:54 localhost kernel: [  267.556266]          res
-41/40:00:08:94:04/00:04:00:00:00/00 Emask 0x409 (media error) <F>
-Sep 10 15:12:54 localhost kernel: [  267.556280] ata3.00: status: { DRDY ERR }
-Sep 10 15:12:54 localhost kernel: [  267.556292] ata3.00: error: { UNC }
-Sep 10 15:13:42 localhost kernel: [  315.360006] EXT4-fs (sda3): error count: 9
-Sep 10 15:13:42 localhost kernel: [  315.360021] EXT4-fs (sda3):
-initial error at 1378787888: ext4_writepages:2544
-Sep 10 15:13:42 localhost kernel: [  315.360035] EXT4-fs (sda3): last
-error at 1378789801: ext4_journal_check_start:57
-Sep 10 15:13:42 localhost kernel: [  315.360035] EXT4-fs (sda3): last
-error at 1378789801: ext4_journal_check_start:57
-Sep 10 15:15:46 localhost udevd[1892]: worker [3161] unexpectedly
-returned with status 0x0100
-Sep 10 15:15:46 localhost udevd[1892]: worker [3161] failed while
-handling '/devices/virtual/block/md0'
-Sep 10 15:16:28 localhost kernel: [  480.850203]       Not tainted
-3.11.0-next-20130906+ #4
-Sep 10 15:16:28 localhost kernel: [  480.852344] "echo 0 >
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Sep 10 15:16:28 localhost kernel: [  480.854380]  [<ffffffff8153b324>]
-md_do_sync+0x7e4/0xe60
-Sep 10 15:16:28 localhost kernel: [  480.854386]  [<ffffffff81747fcb>]
-? _raw_spin_unlock_irq+0x2b/0x40
-Sep 10 15:16:28 localhost kernel: [  480.854395]  [<ffffffff81536fa0>]
-? md_unregister_thread+0x90/0x90
-Sep 10 15:16:28 localhost kernel: [  480.854400]  [<ffffffff810a716d>]
-? trace_hardirqs_on+0xd/0x10
-Sep 10 15:16:28 localhost kernel: [  480.854405]  [<ffffffff815370bf>]
-md_thread+0x11f/0x170
-Sep 10 15:16:28 localhost kernel: [  480.854410]  [<ffffffff81536fa0>]
-? md_unregister_thread+0x90/0x90
-Sep 10 15:16:28 localhost kernel: [  480.854415]  [<ffffffff8106d956>]
-kthread+0xd6/0xe0
-Sep 10 15:16:28 localhost kernel: [  480.854423]  [<ffffffff8106d880>]
-? __init_kthread_worker+0x70/0x70
-Sep 10 15:16:28 localhost kernel: [  480.854428]  [<ffffffff8174ff2c>]
-ret_from_fork+0x7c/0xb0
-Sep 10 15:16:28 localhost kernel: [  480.854432]  [<ffffffff8106d880>]
-? __init_kthread_worker+0x70/0x70
-Sep 10 15:16:28 localhost kernel: [  480.854435] no locks held by
-md0_resync/3246.
-Sep 10 15:16:28 localhost kernel: [  480.854437] INFO: task mdadm:3257
-blocked for more than 120 seconds.
-Sep 10 15:16:28 localhost kernel: [  480.854438]       Not tainted
-3.11.0-next-20130906+ #4
-Sep 10 15:16:28 localhost kernel: [  480.854439] "echo 0 >
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Sep 10 15:16:28 localhost kernel: [  480.854442] mdadm           D
-0000000000000000  5024  3257   3209 0x00000080
-Sep 10 15:16:28 localhost kernel: [  480.854445]  ffff880138c37b18
-0000000000000046 00000000ffffffff ffff880037d3b120
-Sep 10 15:16:28 localhost kernel: [  480.854447]  ffff88013a038720
-ffff88013a038000 0000000000013500 ffff880138c37fd8
-Sep 10 15:16:28 localhost kernel: [  480.854449]  ffff880138c36010
-0000000000013500 0000000000013500 ffff880138c37fd8
-Sep 10 15:16:28 localhost kernel: [  480.854449] Call Trace:
-Sep 10 15:16:28 localhost kernel: [  480.854452]  [<ffffffff81745fa4>]
-schedule+0x24/0x70
-Sep 10 15:16:28 localhost kernel: [  480.854453]  [<ffffffff81742725>]
-schedule_timeout+0x175/0x200
-Sep 10 15:16:28 localhost kernel: [  480.854455]  [<ffffffff810a6d30>]
-? mark_held_locks+0x80/0x130
-Sep 10 15:16:28 localhost kernel: [  480.854457]  [<ffffffff81747fcb>]
-? _raw_spin_unlock_irq+0x2b/0x40
-Sep 10 15:16:28 localhost kernel: [  480.854459]  [<ffffffff810a709d>]
-? trace_hardirqs_on_caller+0xfd/0x1c0
-Sep 10 15:16:28 localhost kernel: [  480.854461]  [<ffffffff810a716d>]
-? trace_hardirqs_on+0xd/0x10
-Sep 10 15:16:28 localhost kernel: [  480.854463]  [<ffffffff81746600>]
-wait_for_completion+0xa0/0x110
-Sep 10 15:16:28 localhost kernel: [  480.854465]  [<ffffffff8107d160>]
-? try_to_wake_up+0x300/0x300
-Sep 10 15:16:28 localhost kernel: [  480.854467]  [<ffffffff8106ddbc>]
-kthread_stop+0x4c/0xe0
-Sep 10 15:16:28 localhost kernel: [  480.854468]  [<ffffffff81536f5e>]
-md_unregister_thread+0x4e/0x90
-Sep 10 15:16:28 localhost kernel: [  480.854470]  [<ffffffff8153965d>]
-md_reap_sync_thread+0x1d/0x140
-Sep 10 15:16:28 localhost kernel: [  480.854472]  [<ffffffff815397ab>]
-__md_stop_writes+0x2b/0x80
-Sep 10 15:16:28 localhost kernel: [  480.854473]  [<ffffffff8153c911>]
-do_md_stop+0x91/0x4d0
-Sep 10 15:16:28 localhost kernel: [  480.854475]  [<ffffffff8153e8a7>]
-? md_ioctl+0xf7/0x15c0
-Sep 10 15:16:28 localhost kernel: [  480.854477]  [<ffffffff810a716d>]
-? trace_hardirqs_on+0xd/0x10
-Sep 10 15:16:28 localhost kernel: [  480.854479]  [<ffffffff8153f6a9>]
-md_ioctl+0xef9/0x15c0
-Sep 10 15:16:28 localhost kernel: [  480.854481]  [<ffffffff8113145d>]
-? handle_mm_fault+0x17d/0x920
+> On Tue, Sep 10, 2013 at 03:20:32PM +1000, NeilBrown wrote:
+> > On Tue, 10 Sep 2013 12:24:38 +0800 Shaohua Li <shli@kernel.org> wrote:
+> >=20
+> > > On Tue, Sep 10, 2013 at 02:06:29PM +1000, NeilBrown wrote:
+> > > > On Tue, 10 Sep 2013 10:35:55 +0800 Shaohua Li <shli@kernel.org> wro=
+te:
+> > > >=20
+> > > > > On Tue, Sep 10, 2013 at 11:13:18AM +1000, NeilBrown wrote:
+> > > > > > On Mon, 9 Sep 2013 12:33:18 +0800 Shaohua Li <shli@kernel.org> =
+wrote:
+> > > > > > >  		} else {
+> > > > > > > +			spin_lock(&conf->device_lock);
+> > > > > > > +
+> > > > > > >  			if (atomic_read(&sh->count)) {
+> > > > > > >  				BUG_ON(!list_empty(&sh->lru)
+> > > > > > >  				    && !test_bit(STRIPE_EXPANDING, &sh->state)
+> > > > > > > @@ -611,13 +725,14 @@ get_active_stripe(struct r5conf *conf, s
+> > > > > > >  					sh->group =3D NULL;
+> > > > > > >  				}
+> > > > > > >  			}
+> > > > > > > +			spin_unlock(&conf->device_lock);
+> > > > > >=20
+> > > > > > The device_lock is only really needed in the 'else' branch of t=
+he if
+> > > > > > statement.  So can we have it only there.  i.e. don't take the =
+lock if
+> > > > > > sh->count is non-zero.
+> > > > >=20
+> > > > > This is correct, I assume this isn't worthy optimizing before. Wi=
+ll fix soon.
+> > > >=20
+> > > > It isn't really about optimising performance.  It is about making t=
+he code
+> > > > easier to understand.  If we keep the region covered by the lock as=
+ small as
+> > > > reasonably possible, it makes it more obvious to the reader which v=
+alues are
+> > > > being protected.
+> > > >=20
+> > > > =20
+> > > > > > > -	spin_lock_irqsave(&conf->device_lock, flags);
+> > > > > > > +	lock_all_device_hash_locks_irqsave(conf, &flags);
+> > > > > > >  	clear_bit(In_sync, &rdev->flags);
+> > > > > > >  	mddev->degraded =3D calc_degraded(conf);
+> > > > > > > -	spin_unlock_irqrestore(&conf->device_lock, flags);
+> > > > > > > +	unlock_all_device_hash_locks_irqrestore(conf, &flags);
+> > > > > > >  	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+> > > > > >=20
+> > > > > > Why do you think you need to take all the hash locks here and e=
+lsewhere when
+> > > > > > ->degraded is set?
+> > > > > > The lock is only need to ensure that the 'In_sync' flags are co=
+nsistent with
+> > > > > > the 'degraded' count.
+> > > > > > ->degraded isn't used in get_active_stripe so I cannot see how =
+it is relevant
+> > > > > > to the hash locks.
+> > > > > >=20
+> > > > > > We need to lock everything in raid5_quiesce().  I don't think w=
+e need to
+> > > > > > anywhere else.
+> > > > >=20
+> > > > > init_stripe() accesses some filelds, don't need to protect?
+> > > >=20
+> > > > What fields?  Not ->degraded.
+> > > >=20
+> > > > I think the fields that it accesses are effectively protected by th=
+e new
+> > > > seqlock.
+> > > > If you don't think so, please be explicit.
+> > >=20
+> > > Like raid_disks, previous_raid_disks, chunk_sectors, prev_chunk_secto=
+rs,
+> > > algorithm and so on. They are used in raid5_compute_sector(), stripe_=
+set_idx()
+> > > and init_stripe(). The former two are called by init_stripe().
+> >=20
+> > Yes.  Those are only changed in raid5_start_reshape() and are protected=
+ by
+> > conf->gen_lock.
+>=20
+> Ok, I thought I misread degraded as max_degraded, so added unnecessary co=
+de.
+> The last question, in raid5_start_reshape(), I thought we should use seql=
+ock to
+> protect the '!mddev->sync_thread' case, no?
 
-2013/9/10, NeilBrown <neilb@suse.de>:
-> On Tue, 10 Sep 2013 13:00:52 +0800 y b <ycbzzjlby@gmail.com> wrote:
->
->> When raid5 hit a fresh badblock, this badblock will flagged as unack
->> badblock until md_update_sb is called.
->> But md_stop/reboot/md_set_readonly will avoid raid5d call md_update_sb
->> in md_check_recovery, the badblock will always be unack, so raid5d
->> thread enter a infinite loop and never can unregister sync_thread
->> that cause deadlock.
->>
->> To solve this, before md_stop_writes call md_unregister_thread, set
->> MD_STOPPING_WRITES on mddev->flags. In raid5.c analyse_stripe judge
->> MD_STOPPING_WRITES bit on mddev->flags, if setted don't block rdev
->> to wait md_update_sb. so raid5d thread can be finished.
->> Signed-off-by: Bian Yu <bianyu@kedacom.com>
->
-> Have you actually seen this deadlock happen?  Because I don't think it can
-> happen.
->
-> By the time we get to md_stop or md_set_readonly all dirty buffers should
-> have been flushed and there should be no pending writes so nothing to wait
-> for an unacked bad block.
->
-> If you have seen this happen, any details you can give about the exact
-> state
-> of the RAID5 when it deadlocked, the stack trace of any relevant processes
-> etc would be very helpful.
->
-> Thanks,
-> NeilBrown
->
->
->> ---
->>  drivers/md/md.c    |    2 ++
->>  drivers/md/md.h    |    3 +++
->>  drivers/md/raid5.c |    3 ++-
->>  3 files changed, 7 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index adf4d7e..54ef71f 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -5278,6 +5278,7 @@ static void md_clean(struct mddev *mddev)
->>  static void __md_stop_writes(struct mddev *mddev)
->>  {
->>      set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
->> +    set_bit(MD_STOPPING_WRITES, &mddev->flags);
->>      if (mddev->sync_thread) {
->>          set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>          md_reap_sync_thread(mddev);
->> @@ -5294,6 +5295,7 @@ static void __md_stop_writes(struct mddev *mddev)
->>          mddev->in_sync = 1;
->>          md_update_sb(mddev, 1);
->>      }
->> +    clear_bit(MD_STOPPING_WRITES, &mddev->flags);
->>  }
->>
->>  void md_stop_writes(struct mddev *mddev)
->> diff --git a/drivers/md/md.h b/drivers/md/md.h
->> index 608050c..c998b82 100644
->> --- a/drivers/md/md.h
->> +++ b/drivers/md/md.h
->> @@ -214,6 +214,9 @@ struct mddev {
->>  #define MD_STILL_CLOSED    4    /* If set, then array has not been opened
->> since
->>                   * md_ioctl checked on it.
->>                   */
->> +#define MD_STOPPING_WRITES 5     /* If set, raid5 shouldn't set
->> unacknowledged
->> +                  * badblock blocked in analyse_stripe to avoid infinite
->> loop
->> +                  */
->>
->>      int                suspended;
->>      atomic_t            active_io;
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index f9972e2..ff1aecf 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -3446,7 +3446,8 @@ static void analyse_stripe(struct stripe_head
->> *sh, struct stripe_head_state *s)
->>          if (rdev) {
->>              is_bad = is_badblock(rdev, sh->sector, STRIPE_SECTORS,
->>                           &first_bad, &bad_sectors);
->> -            if (s->blocked_rdev == NULL
->> +            if (!test_bit(MD_STOPPING_WRITES, &conf->mddev->flags)
->> +                && s->blocked_rdev == NULL
->>                  && (test_bit(Blocked, &rdev->flags)
->>                  || is_bad < 0)) {
->>                  if (is_bad < 0)
->
->
+We don't need anything there to protect the change to conf->raid_disks as
+make_request can only possibly access previous_raid_disks at that point.
+
+However conf->reshape_progress is an issue.
+I write request just before this point would use a 'previous' stripe, while
+immediately after it would use a 'next' stripe.  i.e. sh->generation could
+have a different value.
+
+So I think would should use the seqlock to protect that branch, and should
+decrement conf->generation.
+We should be putting algorithm and chunk back as well.
+
+I'll great a patch to just fix that.
+Thanks.
+
+>=20
+> > If they change while init_stripe is running, the read_seqcount_retry() =
+call in
+> > make_request() will notice the inconsistency, release the stripe, and t=
+ry
+> > again.
+> >=20
+> > I guess we probably need an extra check on gen_lock inside init_stripe(=
+).
+> > i.e. a
+> >   do {
+> >      seq =3D read_seqcount_begin(&conf->gen_lock);
+> >=20
+> > just after the "remove_hash(sh)", and a
+> >=20
+> >   } while (read_seqcount_retry(&conf->gen_lock, seq));
+> >=20
+> > just before the "insert_hash(sh)".  That will ensure the stripe inserte=
+d into
+> > the hash is consistent.  The read_seqcount_retry() in make_request is s=
+till
+> > needed to ensure that the correct stripe_head is used.
+>=20
+> Good point. If it's in hash list, the seqcount check could be skiped.
+
+I'm not sure exactly what you mean but I cannot see a case where you would
+want to skip the seqcount check there...
+
+NeilBrown
+
+--Sig_/rbLlz33xCOTpiXEgsrZax5g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUi7KJDnsnt1WYoG5AQI22RAAqS73ysXnXIsw7nL5S6m7sTS4DrX9EOZ4
+a/J9UY8SRsKRXKHhlaD2gJmbLzMN+xsiEIa43BxVZaz+t1uQ0uUeuvvRqy0Vov2a
+i1NQvmG0YHysWFD4oeYE2KYNuWPJLV0vQQwIWN7agFYfmTJGMNfL1ilXto1rGked
+kjtPn4WLCQX3BV8U/HLhTW1kbjCU38uiLojpjYCeBWwvXtsSsTussoJLk0kU6YmL
+xnnJitBwbhZ6kbE/gGaXYgLOwaLAo2nH/oTz4mS3QXHjzCn8VEoEPlZFKDQW90eq
+d+J/qTZ5DkCndYcTPlnZwuzMRXKLBagzt8O66Qy8W2EMkiaxz8nyRov4Ccs4jV0C
+J0mUrOR3U8SHZopbzECkFrDHkYsb7HJiIsm/vtKPdBm24Y7Izf8d2/5e0lHnd/Hi
+pKZgs+MJGC0lcLyBi4Fkcdnm7siETWlRcXonX+gpgFJIuA50s+5SLumP9ogQimab
+y03qR4/JnD3GlQ6jB6k6YP4HiY04/eh5eK5uFbkFGrcQkGj9QQcUqVyhGr1aQ7g7
+yw9Gen8No4EU1pJS7Irw2nz6EneKV8KMkIUPc2LoqoHyJa9ChS83kCjdXRrXbLnU
+kMqnjs0NdP4qkfqDF7GU7XcAVueu5lHDiPTWazo1Io5OAKQR952V+xSVDXu1MVEA
+aHIeJfw8kZE=
+=dz28
+-----END PGP SIGNATURE-----
+
+--Sig_/rbLlz33xCOTpiXEgsrZax5g--
