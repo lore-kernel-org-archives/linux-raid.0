@@ -1,64 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Managing mdam
-Date: Wed, 11 Sep 2013 09:48:48 +1000
-Message-ID: <20130911094848.00289146@notabene.brown>
-References: <CAPoh-nY8wwu-2yYRbKycPX2gEUofQu6y29TOYhOm83C2au6ZQQ@mail.gmail.com>
-	<20130910153347.5fafb58b@notabene.brown>
-	<CAPoh-nYLbSL81V4zmLQ579+XMa2rsNFG-Drf6mVQQuCh6SYOKg@mail.gmail.com>
-	<6693fa95e533a6027b7346f1b9b8af7e@alyseo.com>
+Subject: Re: [BUG] md hang at schedule in  md_write_start
+Date: Wed, 11 Sep 2013 09:54:59 +1000
+Message-ID: <20130911095459.086d532d@notabene.brown>
+References: <52090E6D.10104@profitbricks.com>
+	<20130813143115.55dd27d1@notabene.brown>
+	<5209E37D.6050107@profitbricks.com>
+	<20130814104410.10bb2259@notabene.brown>
+	<520B3B39.4060703@profitbricks.com>
+	<522EFDD1.3000708@profitbricks.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/o.CSbRqtstcaDJA_UswUB7V"; protocol="application/pgp-signature"
+ boundary="Sig_/fCsZ.fzNQw/ovMxrBa_xOjf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6693fa95e533a6027b7346f1b9b8af7e@alyseo.com>
+In-Reply-To: <522EFDD1.3000708@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francois Billard <francois.billard@alyseo.com>
-Cc: linux-raid@vger.kernel.org
+To: Jack Wang <jinpu.wang@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Jack Wang <xjtuwjp@gmail.com>, Sebastian Riemer <sebastian.riemer@profitbricks.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/o.CSbRqtstcaDJA_UswUB7V
+--Sig_/fCsZ.fzNQw/ovMxrBa_xOjf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Sep 2013 10:03:23 +0200 Francois Billard
-<francois.billard@alyseo.com> wrote:
+On Tue, 10 Sep 2013 13:09:05 +0200 Jack Wang <jinpu.wang@profitbricks.com>
+wrote:
 
-> Hi,
+> snip
 >=20
-> Is it possible to manage mdadm from an external point of view ? with a=20
-> library with bindings in some language (Python) for example ?
-> Thanks in advance
+> Hi Neil,
 >=20
-> Regards,
-> Francois
+> I notice you send out pull request for md update, which include fix for
+> this bug.
+>=20
+> I think we'd better include the fix to stable tree at least from 3.4
+> above, what do you think?
 
-Only by running mdadm in a separate process and passing appropriate argumen=
-ts.
+I don't think it is a situation that is at all like to occur in normal usag=
+e,
+so it doesn't seem justified for -stable.
 
-Is there something particular that you wanted to do?
+Do you disagree?  Did you ever experience the deadlock in normal usage or
+only in artificial situations?
+
+>=20
+> md: avoid deadlock when dirty buffers during md_stop.
+>=20
+> > http://git.neil.brown.name/?p=3Dmd.git;a=3Dcommit;h=3D260fa034ef7a4ff8b=
+73068b48ac497edd5217491
+>=20
+> BTW: It will be great if you could add my Reported-by and Tested-by:)
+
+Sorry I forgot those.  To late to add them now.
 
 NeilBrown
 
---Sig_/o.CSbRqtstcaDJA_UswUB7V
+
+
+>=20
+> Best regards,
+> Jack
+>=20
+
+
+--Sig_/fCsZ.fzNQw/ovMxrBa_xOjf
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUi+v4Dnsnt1WYoG5AQKyFQ/9ECDyR0A1f20NxLeR3Yywy61wXB0CETg1
-D/BzqA698+NAUTuN8KBpEGuT41h+naqVSTdns16JSxOaZKgmVJyjNRxb2Jn86Fko
-QWXGyhgqoy5hODdzknyL0dQuE7ml67zwLdcy6jZxuPSnL4LttsGKXDl8VDthRe4y
-7qQGQJjnkr4u10kw4gksF08TNckJUifhsWiCJ1Bl96PZO8SdnkcvSC/HX4PScrKc
-l5PCSC82glliwPgBrRCyZogAgn2X9bdauyl3BDBtJKOrnMMGG3uNkzx0Spqdnbw7
-OHjMJF/g1vHq1GA1UHhj/jiHLgqpAFeM3jCtw7m/H3HnOjlkoXfOsVwlD5ILhQ98
-6eefaTTzcwldHZcFWu9wSRqT9d/NyhMGxbpQGwU7P618QRH7DJqutQf/Gl0JCoxK
-hMy5oK3O5JyMhb1ZcOq9+K05zIF1YRVs8I1pkwp1WpmFYk44rUtTWXxT7n4B9JuP
-cMtbRjXiTyco2/NQDJL1EvQuJDbOMmDhidxcT8JsfuBclKa048By1uEDciob4ltE
-e9DjuepFP3W0GlgdGhB/DdOq55q38TplLkw4/QjKH53ML89J54TtB2m/+TiwCrlj
-tWnx0u6lr6GKvU6xPpiHnbxbB2mpY6Npw0oxTUnPt0hR08vJGFbtVgVl1XBceCrj
-Sxd9Hwe4VvE=
-=dULg
+iQIVAwUBUi+xUznsnt1WYoG5AQIl6A/+LUbDOF8r7qR5ajyh5hyv4vbeOBFRh058
+ffSTJ0McssZhj9M31f+5zW43RzrAJQnZhiQD8JiRy1ur4LUNZgA9osXub32nxFSN
+Q4faN2yrWK3M+ZX763OjgC8Vk/V26onO5DeewLz0phITWYyU7Ur/XOwTfuw4T+jz
+ADp42HRFyRp1P3DSTTxMfD7rOQnNTKaufUCNpwxkMTvs+kNyqwIbWtq6fNNZtFFv
++CFsJJp8uXYykoRseowbj5JfIVqd0jLge/JWKvY0E1Nk4i110B/omJeb/v8DdHFl
+8dBBqTFxxoKFncvsOv1+RFvoHhdN2cKB4abROXJkKhNEpyZpxvyL+SaGf/OiKjot
+ehmIzCfBfu0pf9gB+l2X9ckS/xtemKOp52GkGklXlHCoFB8wgQ9SjbwoAdnVv9pZ
+T23pNmES34xJdejkWWR6lZDn461eGWTezBQzaH8zTImvyDi1sGZmdcPH4oFb6vD1
+zWeDgZIzAcAStiiKdANODH8u3nz+z5G5d/Gz5/FSvkAYn7SexLAt9xjzkreE530a
+Lq4bdWRtxXnDluN4Tq7iJMMTZIu9jb0XnNELO2vPxwRZ5vPq32sOCe1NqKnYdBHA
+xWAT3O5apWPWaM31eWusYhCdGk2YY3+OlCjgXNs//AdYMRDCxoLDT2rtWBMiXo+5
+LWO7amZ3U+w=
+=XnSc
 -----END PGP SIGNATURE-----
 
---Sig_/o.CSbRqtstcaDJA_UswUB7V--
+--Sig_/fCsZ.fzNQw/ovMxrBa_xOjf--
