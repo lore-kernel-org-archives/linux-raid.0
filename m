@@ -1,54 +1,36 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: write-refresh md array (feature request)
-Date: Wed, 11 Sep 2013 17:15:50 -0300
-Message-ID: <20130911201550.GA15507@khazad-dum.debian.net>
-References: <20130910181905.GC21530@khazad-dum.debian.net>
- <CAGqmV7ph6JF1cVQwBt-FrzToThMC+gbfPMj3V5EFqbtoOFuFHQ@mail.gmail.com>
- <20130911123747.GB1736@khazad-dum.debian.net>
- <CAA9_cmfFSM8v-xEBHdVXuGXcRUcWa6qcHrdwjUqECSsKnY2t5Q@mail.gmail.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: [PATCH 1/2] DDF: brief_examine_subarrays_ddf: print array name
+Date: Wed, 11 Sep 2013 21:50:35 +0200
+Message-ID: <5230C98B.7030902@arcor.de>
+References: <1378502781-849-1-git-send-email-mwilck@arcor.de>	<20130909111546.2e9551b1@notabene.brown>	<522E13EF.3080001@arcor.de> <20130910100151.31048cad@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAA9_cmfFSM8v-xEBHdVXuGXcRUcWa6qcHrdwjUqECSsKnY2t5Q@mail.gmail.com>
+In-Reply-To: <20130910100151.31048cad@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>
-Cc: CoolCold <coolthecold@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 11 Sep 2013, Dan Williams wrote:
-> On Wed, Sep 11, 2013 at 5:37 AM, Henrique de Moraes Holschuh
-> <hmh@hmh.eng.br> wrote:
-> > On Wed, 11 Sep 2013, CoolCold wrote:
-> >> You can achieve this with a bit inderect way - there are sync_min and
-> >> sync_max params which can be used to operate on certain borders of array,
-> >> more info
-> >> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/md.txt?id=refs/tags/v3.11#n579.
-> >
-> > Doesn't do anything close to what I requested.  Neither check nor repair
-> > will re-write sectors that appear to be good (and are actually returning the
-> > correct data after ECC correction by the component device, but will
-> > eventually fail if not rewritten to soon).
+On 09/10/2013 02:01 AM, NeilBrown wrote:
+
+>> Well, yast is actually not calling --brief. It calls "mdadm --examine
+>> --scan", and --scan implies --brief (comment in mdadm.c). My patch
+>> simply causes DDF and IMSM to print similar output with "mdadm -Es".
+>> Isn't that reasonable?
 > 
-> Sounds like a modification of the "replace" code to allow replacing
-> the with self-same drive. Something like "want_refresh" would mark the
+> This bit that I really didn't like is where you synthesised a "ddf_%d" name
+> if the name field was empty.  This is wrong.
 
-That would do it, if the system considers that the component device is still
-valid while it is being replaced in-place with itself :)
+Didn't really like it myself. Thanks for pointing it out.
 
-> drive as a soft replacement to mark that slot to be re-written.  But
-> if the drive is expected to be "weak" you could just rotate in a spare
-> drive without degrading the array with the existing code.
+> There are a couple of other places where the name is extracted from the
+> ddf metadata: getinfo_super_ddf_bvd and container_content_ddf.
+> If brief_examine_subarrays_ddf uses the name in the same way following
+> the same rules (e.g. discarding trailing spaces) then that would be OK.
+> But if the name is empty, then no name should be given in the 'array' line.
 
-Well, that requires a spare device, which is often not the case in small
-setups (which are the ones more likely to be using md raid with SATA,
-instead of SAS).
+That means that libstorage's way of parsing mdadm -Es output must be
+changed, but that should be possible. Sending new patches.
 
-Although I really don't know if SAS nearline devices are any better than the
-current crop of untrustworthy crap that passes for SATA HDDs.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Martin
