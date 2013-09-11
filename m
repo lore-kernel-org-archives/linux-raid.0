@@ -1,96 +1,41 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5: Retry R5_ReadNoMerge flag when hit a read error.
-Date: Wed, 11 Sep 2013 12:42:00 +1000
-Message-ID: <20130911124200.6855813b@notabene.brown>
-References: <1378080782-9971-1-git-send-email-ycbzzjlby@gmail.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] bcache: defensively handle format strings
+Date: Tue, 10 Sep 2013 21:41:34 -0700
+Message-ID: <20130911044134.GA17310@www.outflux.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RwU9PQoF7dZVultT0VAzkyj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1378080782-9971-1-git-send-email-ycbzzjlby@gmail.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: ycbzzjlby@gmail.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bian Yu <bianyu@kedacom.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kent Overstreet <kmo@daterainc.com>, Neil Brown <neilb@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/RwU9PQoF7dZVultT0VAzkyj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Just to be safe, call the error reporting function with "%s" to avoid
+any possible future format string leak.
 
-On Sun,  1 Sep 2013 20:13:02 -0400 ycbzzjlby@gmail.com wrote:
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/md/bcache/super.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> From: Bian Yu <bianyu@kedacom.com>
->=20
-> Because of block layer merge, one bio fails will cause other bios
-> which belongs to the same request fails, so raid5_end_read_request
-> will record all these bios as badblocks.
-> If retry request with R5_ReadNoMerge flag to avoid bios merge,
-> badblocks can only record sector which is bad exactly.
->=20
-> test:
-> hdparm --yes-i-know-what-i-am-doing --make-bad-sector 300000 /dev/sdb
-> mdadm -C /dev/md0 -l5 -n3 /dev/sd[bcd] --assume-clean
-> mdadm /dev/md0 -f /dev/sdd
-> mdadm /dev/md0 -r /dev/sdd
-> mdadm --zero-superblock /dev/sdd
-> mdadm /dev/md0 -a /dev/sdd
->=20
-> 1. Without this patch:
-> cat /sys/block/md0/md/rd*/bad_blocks
-> 299776 256
-> 299776 256
->=20
-> 2. With this patch:
-> cat /sys/block/md0/md/rd*/bad_blocks
-> 300000 8
-> 300000 8
->=20
-> Signed-off-by: Bian Yu <bianyu@kedacom.com>
-> ---
->  drivers/md/raid5.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index ff1aecf..ee8c280 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1924,6 +1924,9 @@ static void raid5_end_read_request(struct bio * bi,=
- int error)
->  			       mdname(conf->mddev), bdn);
->  		else
->  			retry =3D 1;
-> +		if (set_bad && test_bit(In_sync, &rdev->flags)
-> +		    && !test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
-> +			retry =3D 1;
->  		if (retry)
->  			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags)) {
->  				set_bit(R5_ReadError, &sh->dev[i].flags);
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 547c4c5..5be1de4 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1644,7 +1644,7 @@ err_unlock_gc:
+ err:
+ 	closure_sync(&op.cl);
+ 	/* XXX: test this, it's broken */
+-	bch_cache_set_error(c, err);
++	bch_cache_set_error(c, "%s", err);
+ }
+ 
+ static bool can_attach_cache(struct cache *ca, struct cache_set *c)
+-- 
+1.7.9.5
 
 
-Applied, thanks.
-
-NeilBrown
-
---Sig_/RwU9PQoF7dZVultT0VAzkyj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUi/YeDnsnt1WYoG5AQKeahAAq72LoOH1Bb5K4BbGynB5Ly18jkkmHqsQ
-Q0JXyjLImaRDLggjYBHqlx+5eFw7cZVdl00ZgznJRuywAPLf1GTupJ5iEPYnPTok
-fNj4gZiNvBWmjv+G45IY74mKANqz2GLT5+/+NhTJouPawWoN98zoTHCCNCODJwNP
-8lyv6dNev+n2q3Vf1rYOgjMdAo3wshFeQsIduuOaxvPqet+hEmRg4VlF7QdjrUgZ
-vNKCFTEvOKFKCU6SOqiSFP+TRxPRu9ybRoXI4GNeXjyAyFbi8WM4IPSCcybtqRxy
-MSDaCpBgs5IKzZAlNvr759jS+binE5soGAW5KQShM/uEO+x34+iGq0r1fodbJt5N
-ZbFJMNd27jeY3zHlOMQ8l9hXwd8/3TeyFO0kIliN2zsZ1A3gbGNcWh6LxF1lAAKJ
-xRVuhuRQrQ3cDECEXoQHLYKDeA+mHz3muQluyaPGJXBKPBJg5bZjFq2sOeN7qf6U
-O5fuWJkRPmrrhEgN+/t+XvBbaXRwgGARJPBTJjDqyU2HS1Oq967aeI38byZQ98gy
-5c906ijSJezqNcjwImIxMa2iT83ZkyRYOv+5Z+vY0KDT5NCZgL060iKDpzPIpeyd
-qnAYWr2u+RDpvX66uIo6SSB4+3XQcf+lhmoR4Al6Tb/siMkPxJywEtgldc7pcf/C
-1shI8lhubM0=
-=UJln
------END PGP SIGNATURE-----
-
---Sig_/RwU9PQoF7dZVultT0VAzkyj--
+-- 
+Kees Cook
+Chrome OS Security
