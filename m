@@ -1,92 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [BUG] md hang at schedule in  md_write_start
-Date: Thu, 12 Sep 2013 08:59:33 +1000
-Message-ID: <20130912085933.54b5021b@notabene.brown>
-References: <52090E6D.10104@profitbricks.com>
-	<20130813143115.55dd27d1@notabene.brown>
-	<5209E37D.6050107@profitbricks.com>
-	<20130814104410.10bb2259@notabene.brown>
-	<520B3B39.4060703@profitbricks.com>
-	<522EFDD1.3000708@profitbricks.com>
-	<20130911095459.086d532d@notabene.brown>
-	<52301E58.7010000@gmail.com>
+Subject: Re: write-refresh md array (feature request)
+Date: Thu, 12 Sep 2013 09:05:48 +1000
+Message-ID: <20130912090548.5613ab26@notabene.brown>
+References: <20130910181905.GC21530@khazad-dum.debian.net>
+	<CAA9_cmc+hJ9MrGyZDRXbUPNPcpgwm1RNvWQ4yX65zqKZy4puuQ@mail.gmail.com>
+	<20130911123222.GA1736@khazad-dum.debian.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/QCS/Ii4tlZjLl=o/OT=Bm02"; protocol="application/pgp-signature"
+ boundary="Sig_/Jh15iB6iAlbe1Femq2SwmW+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52301E58.7010000@gmail.com>
+In-Reply-To: <20130911123222.GA1736@khazad-dum.debian.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: Jack Wang <jinpu.wang@profitbricks.com>, linux-raid@vger.kernel.org, Sebastian Riemer <sebastian.riemer@profitbricks.com>, stable@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/QCS/Ii4tlZjLl=o/OT=Bm02
+--Sig_/Jh15iB6iAlbe1Femq2SwmW+
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Sep 2013 09:40:08 +0200 Jack Wang <xjtuwjp@gmail.com> wrote:
+On Wed, 11 Sep 2013 09:32:23 -0300 Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
 
-> On 09/11/2013 01:54 AM, NeilBrown wrote:
-> > On Tue, 10 Sep 2013 13:09:05 +0200 Jack Wang <jinpu.wang@profitbricks.c=
-om>
-> > wrote:
+> On Tue, 10 Sep 2013, Dan Williams wrote:
+> > On Tue, Sep 10, 2013 at 11:19 AM, Henrique de Moraes Holschuh
+> > <hmh@hmh.eng.br> wrote:
+> > > (please CC me on replies).
+> > > I've been in several situations where it would have been helpful to b=
+e able
+> > > to refresh weak sectors by rewriting the whole md raid component devi=
+ce,
+> > > without the need to increase array failure risk through a fail+remove=
++add
+> > > cycle for the component device.
+> > >
+> > > How difficult would it be to implement a "refresh" as a Linux md driv=
+er
+> > > sync_action, pigging back on "check" ?
+> > >
+> > > Are there any drawbacks to write-refreshing component devices?
+> > >
 > >=20
-> >> snip
-> >>
-> >> Hi Neil,
-> >>
-> >> I notice you send out pull request for md update, which include fix for
-> >> this bug.
-> >>
-> >> I think we'd better include the fix to stable tree at least from 3.4
-> >> above, what do you think?
-> >=20
-> > I don't think it is a situation that is at all like to occur in normal =
-usage,
-> > so it doesn't seem justified for -stable.
-> >=20
-> > Do you disagree?  Did you ever experience the deadlock in normal usage =
-or
-> > only in artificial situations?
+> > Why is "check" insufficient?  If it trips over any bad sectors it will
+> > re-write them.
 >=20
-> Yes, we do see this BUG in our production environment, so I think it's
-> good to include it in stable tree.
+> The idea is to rewrite the sector _before_ it goes bad.
+>=20
+> Consumer SATA HDDs nowadays not only apparently fail to properly remap
+> sectors because they don't track anymore that some sectors in that subtra=
+ck
+> were reported uncorrect a number of times (and thus are "weak").  They al=
+so
+> appear to not write-refresh sectors that required ECC correction, except
+> maybe during an offline SMART test routine.
 >=20
 
-I was hoping you would explain how....
+My view on this is that it has nothing to do with RAID.  If it is valuable =
+to
+"write-refresh" a device in a RAID array, then it would equally make sense =
+to
+write-refresh a device that wasn't in a RAID array.
 
-Maybe I'm misunderstanding, but as I see it the deadlock can only occur if
-you run "mdadm --stop" while some other process has the block device open
-and is writing to it.  That seems like a dumb thing to do and my suggest
-would be to not do it.
-Is there a good reason why you try to stop the array while it is being
-written to.
-Would it make sense for the process to open the block device with O_EXCL.
-This would encourage exclusive access, and would also prevent the deadlock
-from happening.
+So any solution to this should try to address the whole problem.
 
 NeilBrown
 
---Sig_/QCS/Ii4tlZjLl=o/OT=Bm02
+--Sig_/Jh15iB6iAlbe1Femq2SwmW+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUjD12jnsnt1WYoG5AQIEDhAAmkdUVnVCdR01gNrTx1Pm1nRwEKha162s
-DhAepwaokXSYtY5BTx5qxn3w83LMy0V09CJVeS1lrk+gi1yUo3lnwvvkHzF4pQ1o
-8SL60Otry/RTuJMN39px5lAr3njVa1k6sxSPddsqrcM/cP47QdbFaR2QqyI3n8Mk
-u8q9oKoVjNDfSjPww2Be7PVI9fZmTuY1mKopMgQiPFyJB0hM7h02htMyk9T3vkGO
-rmo6iMsbKau74JnOoAOSp/0lYDHpDmmv963s1ehZV6c4ARpdufKEFazUJYO6K6S7
-C+ANaaZM+xRkVhoV0WOfb/fDPeAmiyRp6ziIlW8S/dbFXkliUoyQa8bsJiiIuJJr
-dcqwCq2DN/RKpIJyo/eaaOTCfAB+HKpHsIveNHrn5UTfPjgts4BPltRdNFMfRliy
-H8SZrRnX4M6wStp8yIY/uXIdzyC0x/k/Rax0SvUMI9j+DjOzfKOFAkvRX+5NgZLc
-eQT+CxmKwbXOs+txn47uvRzglLEvzUfvx3uA0lMzMxR0C/iMniKUr1awJlGGsw0u
-Ge5k8VNKEaDZnIwDxDfgIduIaI+Mrc+zvrUkFH51eAsIyzw6VLVPwL5hWu47b7JK
-jZl0SEG1Rhqts3AnmY2Ym8OcRnhs3yQAO4VSSCVv5frp8PJT5f4goMwgXM95mkJe
-dNRnUY/AeP4=
-=jtWi
+iQIVAwUBUjD3TDnsnt1WYoG5AQJxwQ//TWSH67qrrGz3+LsoRtrCYvhsHG5CpPca
+no/ahhTmNv91bEtaus9P8Gya0JXOQx4X2prF7UeWoYDOwqEn8C97RMAj+OXbQr+V
+l4AgxpQrQhn+furmCj4j+rEIB0otjMyLK8S8cusVWtCGZHTFWWrHZhHwd9D1Ukwg
+TvIOtJvXzJLTVG48tH28bp08mV6ixwd/wyrbMYa1mF4+e9QLUH8Yi/9hqp9Sp1ol
+Sgy6ntBYa70/SmUM7rAu7azlytwagFdriXvyxmiHc2soTPssWaiiDEABD05KyzMN
+C5KM5iKoKaaYso0+PAwRO5gVuOokmejHgBUrcU2wGlmSH7YmNMEV9aJQaqj4llNW
+Lw2PCUdg3UUdbnb8etDbeOiklsH6NVpPy5WeYM1XO7in4SNtJQEpvJ8Ox3M5FpeQ
+HbRMrm4KnOHXEZ83RupJ6zMZ9ke8qk4okAyHCXWxKIMeRIWUgTxzFD+lP617hgjf
+ELoC4fbHAfJcRxs4eTF/rtG8pCipm16wrVyrj05xejBw8vzaK73b1pwvqoXJziam
++iascjibBd6nOcOJVla9v/ip+cIUOGo5ltpJOa+P73+YjSyjcaGjToEhLKTiGU0G
+0QzGcswlmyWS5faGsIGZbJtDptmTJacWwaxnnW02BRsQOE9bNxVwrN9A471JfRVc
+VG+H/xGucIw=
+=IvBn
 -----END PGP SIGNATURE-----
 
---Sig_/QCS/Ii4tlZjLl=o/OT=Bm02--
+--Sig_/Jh15iB6iAlbe1Femq2SwmW+--
