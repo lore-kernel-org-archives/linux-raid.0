@@ -1,73 +1,96 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 3/3] raid5: relieve lock contention in
- get_active_stripe()
-Date: Wed, 11 Sep 2013 11:34:12 +1000
-Message-ID: <20130911113412.5ac91a65@notabene.brown>
-References: <20130905162910.179ea808@notabene.brown>
-	<20130905091822.GA8401@kernel.org>
-	<20130909043318.GA27517@kernel.org>
-	<20130910111318.1d19e8d3@notabene.brown>
-	<20130910023555.GA17907@kernel.org>
-	<20130910140629.702683da@notabene.brown>
-	<20130910042438.GA16797@kernel.org>
-	<20130910152032.48631492@notabene.brown>
-	<20130910065912.GA12038@kernel.org>
-	<20130910172836.43e23cbf@notabene.brown>
-	<20130910073756.GB12038@kernel.org>
+Subject: Re: [PATCH] raid5: Retry R5_ReadNoMerge flag when hit a read error.
+Date: Wed, 11 Sep 2013 12:42:00 +1000
+Message-ID: <20130911124200.6855813b@notabene.brown>
+References: <1378080782-9971-1-git-send-email-ycbzzjlby@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/s/7+HZm3l5mxZXXWA22.oeT"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130910073756.GB12038@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+ boundary="Sig_/RwU9PQoF7dZVultT0VAzkyj"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1378080782-9971-1-git-send-email-ycbzzjlby@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ycbzzjlby@gmail.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bian Yu <bianyu@kedacom.com>
 List-Id: linux-raid.ids
 
---Sig_/s/7+HZm3l5mxZXXWA22.oeT
+--Sig_/RwU9PQoF7dZVultT0VAzkyj
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Sep 2013 15:37:56 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Sun,  1 Sep 2013 20:13:02 -0400 ycbzzjlby@gmail.com wrote:
 
-
-> Below is my latest patch.
+> From: Bian Yu <bianyu@kedacom.com>
 >=20
+> Because of block layer merge, one bio fails will cause other bios
+> which belongs to the same request fails, so raid5_end_read_request
+> will record all these bios as badblocks.
+> If retry request with R5_ReadNoMerge flag to avoid bios merge,
+> badblocks can only record sector which is bad exactly.
+>=20
+> test:
+> hdparm --yes-i-know-what-i-am-doing --make-bad-sector 300000 /dev/sdb
+> mdadm -C /dev/md0 -l5 -n3 /dev/sd[bcd] --assume-clean
+> mdadm /dev/md0 -f /dev/sdd
+> mdadm /dev/md0 -r /dev/sdd
+> mdadm --zero-superblock /dev/sdd
+> mdadm /dev/md0 -a /dev/sdd
+>=20
+> 1. Without this patch:
+> cat /sys/block/md0/md/rd*/bad_blocks
+> 299776 256
+> 299776 256
+>=20
+> 2. With this patch:
+> cat /sys/block/md0/md/rd*/bad_blocks
+> 300000 8
+> 300000 8
+>=20
+> Signed-off-by: Bian Yu <bianyu@kedacom.com>
+> ---
+>  drivers/md/raid5.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ff1aecf..ee8c280 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -1924,6 +1924,9 @@ static void raid5_end_read_request(struct bio * bi,=
+ int error)
+>  			       mdname(conf->mddev), bdn);
+>  		else
+>  			retry =3D 1;
+> +		if (set_bad && test_bit(In_sync, &rdev->flags)
+> +		    && !test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+> +			retry =3D 1;
+>  		if (retry)
+>  			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags)) {
+>  				set_bit(R5_ReadError, &sh->dev[i].flags);
 
-Thanks.  It looks good.
-I have pushed it out to me for-next branch (which a few cosmetic white-space
-adjustments).
-I will need to review it again but it is certainly very close to 'right'.
 
-One thing I'm a bit concerned about is the md_raid5_congested function.
-It can return "false", yet a write can still block.
-That isn't a huge problem, but it could have some negative consequences.
-Maybe we could have an atomic_t which counts how many hash values as "full"
-and we report "congested" when any are full.  Maybe.
+Applied, thanks.
 
-Thanks,
 NeilBrown
 
---Sig_/s/7+HZm3l5mxZXXWA22.oeT
+--Sig_/RwU9PQoF7dZVultT0VAzkyj
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUi/IlTnsnt1WYoG5AQIPBg/9HtcYRjxRVIDwPE5C9nfWdN3M7GZ0RebL
-TtfVNwGuzEnGWMyqhfvp7+CgNmQN9mOo/8sWT0YhRih48vE2sKcHhIcT0AuBzv7s
-6eMOH/3SsHxzDDLOqtEfbfu/JtOjxARf8MORtYQgFpy1xW7qK/oBxivnaqShHSNn
-FHmc2rRCDK+A12ghBTctuN9vvrGctV+LCe2A011Za4JkW1bpmAPWHKgpJTDROKkj
-DzEX+tgMMmyen3Sn9NU5nFiK7i5vFNsgh/oSAnmLNS0CZnR5zUxTdqSi64yip7IB
-MwfPd3gZv6nh8TaHG3YVktsiILf6ipE4XEPJAhmV1NCjbjCCTm47IzOkpT1CQbI2
-vWaem3sKRKu1NsEXW1zURKZNmJudx9MSXJIepGitdSyP/e0nLrhGIAH/kBxv0JF0
-7M/AwNlFDPdpO8beKfqB0gOVBybVDkAMofvbuYJ5MtfojdKU3zJBxDklti0wR4SD
-8USnaYi2QPsRAA0rlM8NCHBExUVx7LQk5KZbK5IYlOFjDJelQ7GwhV+H58JgMOxC
-JGp5wEBiShGBv4NlSvqIkV0dSWBt/AWSU8S46UqEWhGdLFbn3XTbQSWZsJXOqPQN
-A3s5Xvl2AijlsncH7OnvzwKnw3wyJquBe84sJ4XlZmMokR3FKH301LT3U0yvAI0k
-rJc+94HsSCw=
-=DgKi
+iQIVAwUBUi/YeDnsnt1WYoG5AQKeahAAq72LoOH1Bb5K4BbGynB5Ly18jkkmHqsQ
+Q0JXyjLImaRDLggjYBHqlx+5eFw7cZVdl00ZgznJRuywAPLf1GTupJ5iEPYnPTok
+fNj4gZiNvBWmjv+G45IY74mKANqz2GLT5+/+NhTJouPawWoN98zoTHCCNCODJwNP
+8lyv6dNev+n2q3Vf1rYOgjMdAo3wshFeQsIduuOaxvPqet+hEmRg4VlF7QdjrUgZ
+vNKCFTEvOKFKCU6SOqiSFP+TRxPRu9ybRoXI4GNeXjyAyFbi8WM4IPSCcybtqRxy
+MSDaCpBgs5IKzZAlNvr759jS+binE5soGAW5KQShM/uEO+x34+iGq0r1fodbJt5N
+ZbFJMNd27jeY3zHlOMQ8l9hXwd8/3TeyFO0kIliN2zsZ1A3gbGNcWh6LxF1lAAKJ
+xRVuhuRQrQ3cDECEXoQHLYKDeA+mHz3muQluyaPGJXBKPBJg5bZjFq2sOeN7qf6U
+O5fuWJkRPmrrhEgN+/t+XvBbaXRwgGARJPBTJjDqyU2HS1Oq967aeI38byZQ98gy
+5c906ijSJezqNcjwImIxMa2iT83ZkyRYOv+5Z+vY0KDT5NCZgL060iKDpzPIpeyd
+qnAYWr2u+RDpvX66uIo6SSB4+3XQcf+lhmoR4Al6Tb/siMkPxJywEtgldc7pcf/C
+1shI8lhubM0=
+=UJln
 -----END PGP SIGNATURE-----
 
---Sig_/s/7+HZm3l5mxZXXWA22.oeT--
+--Sig_/RwU9PQoF7dZVultT0VAzkyj--
