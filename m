@@ -1,50 +1,65 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: write-refresh md array (feature request)
-Date: Wed, 11 Sep 2013 10:41:54 +0400
-Message-ID: <CAGqmV7rPoZ7yorVezQn6=shTz1iqT94cgizxmGf3svVXQGVsNQ@mail.gmail.com>
-References: <20130910181905.GC21530@khazad-dum.debian.net>
+From: Jack Wang <xjtuwjp@gmail.com>
+Subject: Re: [BUG] md hang at schedule in  md_write_start
+Date: Wed, 11 Sep 2013 09:40:08 +0200
+Message-ID: <52301E58.7010000@gmail.com>
+References: <52090E6D.10104@profitbricks.com> <20130813143115.55dd27d1@notabene.brown> <5209E37D.6050107@profitbricks.com> <20130814104410.10bb2259@notabene.brown> <520B3B39.4060703@profitbricks.com> <522EFDD1.3000708@profitbricks.com> <20130911095459.086d532d@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130910181905.GC21530@khazad-dum.debian.net>
+In-Reply-To: <20130911095459.086d532d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Jack Wang <jinpu.wang@profitbricks.com>, linux-raid@vger.kernel.org, Sebastian Riemer <sebastian.riemer@profitbricks.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
-You can achieve this with a bit inderect way - there are sync_min and
-sync_max params which can be used to operate on certain borders of
-array, more info
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/md.txt?id=refs/tags/v3.11#n579
-.
+On 09/11/2013 01:54 AM, NeilBrown wrote:
+> On Tue, 10 Sep 2013 13:09:05 +0200 Jack Wang <jinpu.wang@profitbricks.com>
+> wrote:
+> 
+>> snip
+>>
+>> Hi Neil,
+>>
+>> I notice you send out pull request for md update, which include fix for
+>> this bug.
+>>
+>> I think we'd better include the fix to stable tree at least from 3.4
+>> above, what do you think?
+> 
+> I don't think it is a situation that is at all like to occur in normal usage,
+> so it doesn't seem justified for -stable.
+> 
+> Do you disagree?  Did you ever experience the deadlock in normal usage or
+> only in artificial situations?
 
-On Tue, Sep 10, 2013 at 10:19 PM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> (please CC me on replies).
->
-> I've been in several situations where it would have been helpful to be able
-> to refresh weak sectors by rewriting the whole md raid component device,
-> without the need to increase array failure risk through a fail+remove+add
-> cycle for the component device.
->
-> How difficult would it be to implement a "refresh" as a Linux md driver
-> sync_action, pigging back on "check" ?
->
-> Are there any drawbacks to write-refreshing component devices?
->
-> --
->   "One disk to rule them all, One disk to find them. One disk to bring
->   them all and in the darkness grind them. In the Land of Redmond
->   where the shadows lie." -- The Silicon Valley Tarot
->   Henrique Holschuh
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, we do see this BUG in our production environment, so I think it's
+good to include it in stable tree.
 
 
+> 
+>>
+>> md: avoid deadlock when dirty buffers during md_stop.
+>>
+>>> http://git.neil.brown.name/?p=md.git;a=commit;h=260fa034ef7a4ff8b73068b48ac497edd5217491
+>>
+>> BTW: It will be great if you could add my Reported-by and Tested-by:)
+> 
+> Sorry I forgot those.  To late to add them now.
+> 
+Fine, Thanks all the time:)
 
--- 
-Best regards,
-[COOLCOLD-RIPN]
+Regards,
+Jack
+
+
+> NeilBrown
+> 
+> 
+> 
+>>
+>> Best regards,
+>> Jack
+>>
+> 
+
