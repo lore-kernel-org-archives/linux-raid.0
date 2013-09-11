@@ -1,65 +1,56 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [BUG] md hang at schedule in  md_write_start
-Date: Wed, 11 Sep 2013 09:40:08 +0200
-Message-ID: <52301E58.7010000@gmail.com>
-References: <52090E6D.10104@profitbricks.com> <20130813143115.55dd27d1@notabene.brown> <5209E37D.6050107@profitbricks.com> <20130814104410.10bb2259@notabene.brown> <520B3B39.4060703@profitbricks.com> <522EFDD1.3000708@profitbricks.com> <20130911095459.086d532d@notabene.brown>
+From: "Francois Billard" <francois.billard@alyseo.com>
+Subject: RE: Managing mdam
+Date: Wed, 11 Sep 2013 09:40:23 +0200
+Message-ID: <026e01ceaec2$2ced7110$86c85330$@alyseo.com>
+References: <CAPoh-nY8wwu-2yYRbKycPX2gEUofQu6y29TOYhOm83C2au6ZQQ@mail.gmail.com>	<20130910153347.5fafb58b@notabene.brown>	<CAPoh-nYLbSL81V4zmLQ579+XMa2rsNFG-Drf6mVQQuCh6SYOKg@mail.gmail.com>	<6693fa95e533a6027b7346f1b9b8af7e@alyseo.com> <20130911094848.00289146@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130911095459.086d532d@notabene.brown>
+In-Reply-To: <20130911094848.00289146@notabene.brown>
+Content-Language: fr
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jack Wang <jinpu.wang@profitbricks.com>, linux-raid@vger.kernel.org, Sebastian Riemer <sebastian.riemer@profitbricks.com>, stable@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/11/2013 01:54 AM, NeilBrown wrote:
-> On Tue, 10 Sep 2013 13:09:05 +0200 Jack Wang <jinpu.wang@profitbricks.com>
-> wrote:
-> 
->> snip
->>
->> Hi Neil,
->>
->> I notice you send out pull request for md update, which include fix for
->> this bug.
->>
->> I think we'd better include the fix to stable tree at least from 3.4
->> above, what do you think?
-> 
-> I don't think it is a situation that is at all like to occur in normal usage,
-> so it doesn't seem justified for -stable.
-> 
-> Do you disagree?  Did you ever experience the deadlock in normal usage or
-> only in artificial situations?
+We want to embed raid management in our application. But we want a bett=
+er
+solution if it exists rather than parsing the output of mdadm which is =
+error
+prone.
+Is there a solution or should i write kilometer of regexp ? :)
 
-Yes, we do see this BUG in our production environment, so I think it's
-good to include it in stable tree.
+-----Message d'origine-----
+De=A0: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] De la part de NeilBrown
+Envoy=E9=A0: mercredi 11 septembre 2013 01:49
+=C0=A0: Francois Billard
+Cc=A0: linux-raid@vger.kernel.org
+Objet=A0: Re: Managing mdam
 
+On Tue, 10 Sep 2013 10:03:23 +0200 Francois Billard
+<francois.billard@alyseo.com> wrote:
 
-> 
->>
->> md: avoid deadlock when dirty buffers during md_stop.
->>
->>> http://git.neil.brown.name/?p=md.git;a=commit;h=260fa034ef7a4ff8b73068b48ac497edd5217491
->>
->> BTW: It will be great if you could add my Reported-by and Tested-by:)
-> 
-> Sorry I forgot those.  To late to add them now.
-> 
-Fine, Thanks all the time:)
+> Hi,
+>=20
+> Is it possible to manage mdadm from an external point of view ? with =
+a=20
+> library with bindings in some language (Python) for example ?
+> Thanks in advance
+>=20
+> Regards,
+> Francois
 
-Regards,
-Jack
+Only by running mdadm in a separate process and passing appropriate
+arguments.
 
+Is there something particular that you wanted to do?
 
-> NeilBrown
-> 
-> 
-> 
->>
->> Best regards,
->> Jack
->>
-> 
+NeilBrown
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
