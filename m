@@ -1,265 +1,71 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v2] md/raid5: avoid deadlock when raid5 array has unack
- badblocks during md_stop_writes.
-Date: Thu, 12 Sep 2013 14:44:14 +1000
-Message-ID: <20130912144414.53fb8727@notabene.brown>
-References: <1378098595-11536-1-git-send-email-ycbzzjlby@gmail.com>
+Subject: Re: mdadm 3.3: issue with mdmon --takeover
+Date: Thu, 12 Sep 2013 14:59:43 +1000
+Message-ID: <20130912145943.6844547d@notabene.brown>
+References: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
+	<20130904160832.3627bcb8@notabene.brown>
+	<CAC9WiBiHkOjqY4nDwMh4S8td9NMz2mrdqK0R7cZp7nKSMyhBvg@mail.gmail.com>
+	<20130905121123.27968f9f@notabene.brown>
+	<CAC9WiBiHcS126iFv91250d83sMrBYmRbvoqYAEhjJWjb2p5J3A@mail.gmail.com>
+	<CAC9WiBgRiu_YL1TpzD4dtLXv=LiA-RERn+C6Q+i=P_WTNdw3+w@mail.gmail.com>
+	<20130911093518.794bbb21@notabene.brown>
+	<5230D7C8.6080908@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/J3YKB/oNp9C+LODG00mya7Y"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1378098595-11536-1-git-send-email-ycbzzjlby@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: ycbzzjlby@gmail.com
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Bian Yu <bianyu@kedacom.com>
+ boundary="Sig_/p1oONK+o6ICHx30o9SdWXkH"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5230D7C8.6080908@arcor.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/J3YKB/oNp9C+LODG00mya7Y
+--Sig_/p1oONK+o6ICHx30o9SdWXkH
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon,  2 Sep 2013 01:09:55 -0400 ycbzzjlby@gmail.com wrote:
+On Wed, 11 Sep 2013 22:51:20 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> From: Bian Yu <bianyu@kedacom.com>
+> On 09/11/2013 01:35 AM, NeilBrown wrote:
+> > I think this patch will help.  The last hunk in particular should make =
+the
+> > difference.
+> >=20
+> > Please let me know if it fixes the problem.
 >=20
-> When raid5 hit a fresh badblock, this badblock will flagged as unack
-> badblock until md_update_sb is called.
-> But md_stop/reboot/md_set_readonly will avoid raid5d call md_update_sb
-> in md_check_recovery, the badblock will always be unack, so raid5d
-> thread enter a infinite loop and never can unregister sync_thread
-> that cause deadlock.
+> Thanks for figuring this out. Indeed I forgot the possibility that
+> secondary LBA may be unused when I wrote that code.
 >=20
-> To solve this, before md_stop_writes call md_unregister_thread, set
-> MD_STOPPING_WRITES on mddev->flags. In raid5.c analyse_stripe judge
-> MD_STOPPING_WRITES bit on mddev->flags, if setted don't block rdev
-> to wait md_update_sb. so raid5d thread can be stopped.
+> Are you going to fix this directly? Otherwise I might go over it,
+> double-check, and submit a patch.
 >=20
-> I can reproduce it by using follow way:
-> When raid5 array is recovering and hit a fresh badblock, then shutdown ar=
-ray at once.
->=20
-> [  480.850203]       Not tainted 3.11.0-next-20130906+ #4
-> [  480.852344] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disable=
-s this message.
-> [  480.854380]  [<ffffffff8153b324>] md_do_sync+0x7e4/0xe60
-> [  480.854386]  [<ffffffff81747fcb>] ? _raw_spin_unlock_irq+0x2b/0x40
-> [  480.854395]  [<ffffffff81536fa0>] ? md_unregister_thread+0x90/0x90
-> [  480.854400]  [<ffffffff810a716d>] ? trace_hardirqs_on+0xd/0x10
-> [  480.854405]  [<ffffffff815370bf>] md_thread+0x11f/0x170
-> [  480.854410]  [<ffffffff81536fa0>] ? md_unregister_thread+0x90/0x90
-> [  480.854415]  [<ffffffff8106d956>] kthread+0xd6/0xe0
-> [  480.854423]  [<ffffffff8106d880>] ? __init_kthread_worker+0x70/0x70
-> [  480.854428]  [<ffffffff8174ff2c>] ret_from_fork+0x7c/0xb0
-> [  480.854432]  [<ffffffff8106d880>] ? __init_kthread_worker+0x70/0x70
-> [  480.854435] no locks held by md0_resync/3246.
-> [  480.854437] INFO: task mdadm:3257 blocked for more than 120 seconds.
-> [  480.854438]       Not tainted 3.11.0-next-20130906+ #4
-> [  480.854439] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disable=
-s this message.
-> [  480.854442] mdadm           D 0000000000000000  5024  3257   3209 0x00=
-000080
-> [  480.854445]  ffff880138c37b18 0000000000000046 00000000ffffffff ffff88=
-0037d3b120
-> [  480.854447]  ffff88013a038720 ffff88013a038000 0000000000013500 ffff88=
-0138c37fd8
-> [  480.854449]  ffff880138c36010 0000000000013500 0000000000013500 ffff88=
-0138c37fd8
-> [  480.854449] Call Trace:
-> [  480.854452]  [<ffffffff81745fa4>] schedule+0x24/0x70
-> [  480.854453]  [<ffffffff81742725>] schedule_timeout+0x175/0x200
-> [  480.854455]  [<ffffffff810a6d30>] ? mark_held_locks+0x80/0x130
-> [  480.854457]  [<ffffffff81747fcb>] ? _raw_spin_unlock_irq+0x2b/0x40
-> [  480.854459]  [<ffffffff810a709d>] ? trace_hardirqs_on_caller+0xfd/0x1c0
-> [  480.854461]  [<ffffffff810a716d>] ? trace_hardirqs_on+0xd/0x10
-> [  480.854463]  [<ffffffff81746600>] wait_for_completion+0xa0/0x110
-> [  480.854465]  [<ffffffff8107d160>] ? try_to_wake_up+0x300/0x300
-> [  480.854467]  [<ffffffff8106ddbc>] kthread_stop+0x4c/0xe0
-> [  480.854468]  [<ffffffff81536f5e>] md_unregister_thread+0x4e/0x90
-> [  480.854470]  [<ffffffff8153965d>] md_reap_sync_thread+0x1d/0x140
-> [  480.854472]  [<ffffffff815397ab>] __md_stop_writes+0x2b/0x80
-> [  480.854473]  [<ffffffff8153c911>] do_md_stop+0x91/0x4d0
-> [  480.854475]  [<ffffffff8153e8a7>] ? md_ioctl+0xf7/0x15c0
-> [  480.854477]  [<ffffffff810a716d>] ? trace_hardirqs_on+0xd/0x10
-> [  480.854479]  [<ffffffff8153f6a9>] md_ioctl+0xef9/0x15c0
-> [  480.854481]  [<ffffffff8113145d>] ? handle_mm_fault+0x17d/0x920
->=20
-> Signed-off-by: Bian Yu <bianyu@kedacom.com>
-> ---
->  drivers/md/md.c    |    2 ++
->  drivers/md/md.h    |    4 ++++
->  drivers/md/raid5.c |    3 ++-
->  3 files changed, 8 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index adf4d7e..54ef71f 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5278,6 +5278,7 @@ static void md_clean(struct mddev *mddev)
->  static void __md_stop_writes(struct mddev *mddev)
->  {
->  	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +	set_bit(MD_STOPPING_WRITES, &mddev->flags);
->  	if (mddev->sync_thread) {
->  		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->  		md_reap_sync_thread(mddev);
-> @@ -5294,6 +5295,7 @@ static void __md_stop_writes(struct mddev *mddev)
->  		mddev->in_sync =3D 1;
->  		md_update_sb(mddev, 1);
->  	}
-> +	clear_bit(MD_STOPPING_WRITES, &mddev->flags);
->  }
-> =20
->  void md_stop_writes(struct mddev *mddev)
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 608050c..a24ae1d 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -214,6 +214,10 @@ struct mddev {
->  #define MD_STILL_CLOSED	4	/* If set, then array has not been opened since
->  				 * md_ioctl checked on it.
->  				 */
-> +#define MD_STOPPING_WRITES 5	/* If set, raid5 shouldn't set unacknowledg=
-ed
-> +				 * badblock blocked in analyse_stripe to avoid
-> +				 * infinite loop.
-> +				 */
-> =20
->  	int				suspended;
->  	atomic_t			active_io;
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index f9972e2..ff1aecf 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3446,7 +3446,8 @@ static void analyse_stripe(struct stripe_head *sh, =
-struct stripe_head_state *s)
->  		if (rdev) {
->  			is_bad =3D is_badblock(rdev, sh->sector, STRIPE_SECTORS,
->  					     &first_bad, &bad_sectors);
-> -			if (s->blocked_rdev =3D=3D NULL
-> +			if (!test_bit(MD_STOPPING_WRITES, &conf->mddev->flags)
-> +			    && s->blocked_rdev =3D=3D NULL
->  			    && (test_bit(Blocked, &rdev->flags)
->  				|| is_bad < 0)) {
->  				if (is_bad < 0)
 
-
-Thanks for including the extra details in the patch, but it wasn't only that
-I didn't think it should be needed (I was wrong there).  I also don't like
-the patch.  It isn't at all clear to me that it will do the right thing.
-There is a reason that we block until the bad block lists has been updated,
-and to just not block because it is inconvenient just doesn't seem right.
-
-I would rather change the sequencing so that the badblock list can be updat=
-ed
-at this point.
-Something like that patch below, but I'm not 100% sure of it yet and I'm
-about to go on leave so I'm not sure I'll be able to commit to it for a whi=
-le.
-
-If you could review and test I would appreciate it.
+I've applied that patch I previously proposed (plus compile fix).  Feel free
+to double-check anyway and  submit a patch if you find anything.
 
 Thanks,
 NeilBrown
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index adf4d7e..e4d78c0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3170,6 +3170,9 @@ rdev_attr_store(struct kobject *kobj, struct attribut=
-e *attr,
- 		return -EACCES;
- 	rv =3D mddev ? mddev_lock(mddev): -EBUSY;
- 	if (!rv) {
-+		mutex_lock(&mddev->open_mutex);
-+		clear_bit(MD_STILL_CLOSED, &mddev->flags);
-+		mutex_unlock(&mddev->open_mutex);
- 		if (rdev->mddev =3D=3D NULL)
- 			rv =3D -EBUSY;
- 		else
-@@ -4764,6 +4767,9 @@ md_attr_store(struct kobject *kobj, struct attribute =
-*attr,
- 		flush_workqueue(md_misc_wq);
- 	rv =3D mddev_lock(mddev);
- 	if (!rv) {
-+		mutex_lock(&mddev->open_mutex);
-+		clear_bit(MD_STILL_CLOSED, &mddev->flags);
-+		mutex_unlock(&mddev->open_mutex);
- 		rv =3D entry->store(mddev, page, length);
- 		mddev_unlock(mddev);
- 	}
-@@ -5279,8 +5285,10 @@ static void __md_stop_writes(struct mddev *mddev)
- {
- 	set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 	if (mddev->sync_thread) {
-+		mddev_unlock(&mddev);
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 		md_reap_sync_thread(mddev);
-+		mddev_lock(&mddev);
- 	}
-=20
- 	del_timer_sync(&mddev->safemode_timer);
-@@ -5337,7 +5345,9 @@ static int md_set_readonly(struct mddev *mddev, struc=
-t block_device *bdev)
- 		err =3D -EBUSY;
- 		goto out;
- 	}
--	if (bdev && !test_bit(MD_STILL_CLOSED, &mddev->flags)) {
-+	if (mddev->pers)
-+		__md_stop_writes(mddev);
-+	if (!test_bit(MD_STILL_CLOSED, &mddev->flags)) {
- 		/* Someone opened the device since we flushed it
- 		 * so page cache could be dirty and it is too late
- 		 * to flush.  So abort
-@@ -5346,8 +5356,6 @@ static int md_set_readonly(struct mddev *mddev, struc=
-t block_device *bdev)
- 		return -EBUSY;
- 	}
- 	if (mddev->pers) {
--		__md_stop_writes(mddev);
--
- 		err  =3D -ENXIO;
- 		if (mddev->ro=3D=3D1)
- 			goto out;
-@@ -5379,7 +5387,9 @@ static int do_md_stop(struct mddev * mddev, int mode,
- 		mutex_unlock(&mddev->open_mutex);
- 		return -EBUSY;
- 	}
--	if (bdev && !test_bit(MD_STILL_CLOSED, &mddev->flags)) {
-+	if (mddev->pers)
-+		__md_stop_writes(mddev);
-+	if (!test_bit(MD_STILL_CLOSED, &mddev->flags)) {
- 		/* Someone opened the device since we flushed it
- 		 * so page cache could be dirty and it is too late
- 		 * to flush.  So abort
-@@ -5391,7 +5401,6 @@ static int do_md_stop(struct mddev * mddev, int mode,
- 		if (mddev->ro)
- 			set_disk_ro(disk, 0);
-=20
--		__md_stop_writes(mddev);
- 		__md_stop(mddev);
- 		mddev->queue->merge_bvec_fn =3D NULL;
- 		mddev->queue->backing_dev_info.congested_fn =3D NULL;
-
---Sig_/J3YKB/oNp9C+LODG00mya7Y
+--Sig_/p1oONK+o6ICHx30o9SdWXkH
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUjFGnjnsnt1WYoG5AQJKFQ//UDDDxB6o1LxyVPMe9YRphg+hnpawaru8
-UdPs5SsIcuSppuWm81V/b5n3JLlv6APvgIc+nHoJjjv+odaoT2mem6uxYjIn98xn
-YZFYY24udjxOA6Jab1yPbl/yRm7u6dt7cD08pn68TPT6qrK6WoBPkb+t+/8vv08u
-FKs/tO3ITiK9PFxbFyzGx4ZFmZnnMZL+L3H9lfSmiNmifjMlTsUlO4cB457RSDXt
-WrQtwq2P4KZdXnk5LAIMqLj+FBpjLCZHE1fVVQlSfhmBXwxIksOlsizWtskF/U04
-c7dw5qdva+ijdhe9Jy5eUQgrxITlbGQMnrPUgObJq6FIATLrUYJgDa3OrFlVj+NW
-/DAOBWUErVdC3eL7wdqz5VoSl5Gd4+c1Bn+G/GB/Lm0TfL9FK8rEHEuOG0rIN18r
-hf6dZ+pw989n3WLUehWlR60vpZ+vkLMMJZUcCM31Piko+IoC3J38E+MLOemKtKSS
-gEK4aeH2SkdDlxTVlgQDUvTi8R7Mj6ttwS1QUA6lKglNKPsbiPviy4gH9TiDGVlf
-iuqIIctSWDC/Ikid9boyM7tEmKGn44B2FUqjH2MThXHPfZgaNc7Xk+uxrG1LnMTs
-Cp7j0NK/4Hcia/0/F2SCyt7b00oJnQqtG2WeqArKRxSPQZPjXDqJfWZdaXyU2FZp
-++Qf/qFF2bA=
-=RKaG
+iQIVAwUBUjFKPznsnt1WYoG5AQKQwhAApf6KVEVeABLBtRn5wpfvCGtlAiYi00K1
+6g20sM+ZODOKDQPsznBgr3jZGhoYgHqbXoBBU3DIfX5EN56s8yM1OANpZLNsGahD
+7IwdzeRKwtlF0JS2i1WBW9OpWl2F4JgzYn9zhAbouk3CwXPmi1D8PscUHwc6LmbY
+swn2aXROrE9yGY9GcU9elqrFBWnzYrFhS6hZRHcjXUH7Ni3ptqYkXlIgBaGDxRLF
+2ii3EpOtsaOrMJsB2QS1bskqKLokjrvX2x40/pEGLN83/z+b5aMhCISjliL4CsQO
+/Lfs5LdfyZ3FhYEqckiW0i9Nyl7R8fMoY5Cdtjs5tmD6EVIsVsZaPvvu3eHe1MGN
+6V/QWV2V5WAnJ9bERQXlAUKVAELuLD/bd1v343L6uDzH2+5XYouZMMYwnyzP3c4C
+pmyOsEfxEAMDRJSQiWRYHkpeTxv15cKaYECfudsW6ldKm6Hbn5qFdG1h19gtR1Pu
+YxYNcQdv4TDpyR0LWAltL4RykK7S2ws5TgFuWSPOLDTvAnX3OZBkWsj8ZoLg/P73
+aTUPtjNEmrYZSthUK2OUU5Paik8H07TeFVp44ID3jLdHnEZ60kPqnATqXwHY7GX7
+bwGLriTHxnv71nt82jOfKObm/UVbt+IyzAugCgpnKMT5jsT7eIgdwFsFwkqT1pQa
+jbmcl5tlDDg=
+=G74c
 -----END PGP SIGNATURE-----
 
---Sig_/J3YKB/oNp9C+LODG00mya7Y--
+--Sig_/p1oONK+o6ICHx30o9SdWXkH--
