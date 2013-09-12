@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: mdadm 3.3: issue with mdmon --takeover
-Date: Thu, 12 Sep 2013 15:00:41 +1000
-Message-ID: <20130912150041.55267bc8@notabene.brown>
+Date: Thu, 12 Sep 2013 15:03:31 +1000
+Message-ID: <20130912150331.254aba60@notabene.brown>
 References: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
 	<20130904160832.3627bcb8@notabene.brown>
 	<CAC9WiBiHkOjqY4nDwMh4S8td9NMz2mrdqK0R7cZp7nKSMyhBvg@mail.gmail.com>
@@ -10,52 +10,115 @@ References: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
 	<CAC9WiBgRiu_YL1TpzD4dtLXv=LiA-RERn+C6Q+i=P_WTNdw3+w@mail.gmail.com>
 	<20130911093518.794bbb21@notabene.brown>
 	<CAC9WiBiRWN4sZ=nd2R3+XqxMD2X=d9F6JtDGpXaNX1jtOFMB4w@mail.gmail.com>
+	<CAC9WiBjsC1E2HV2vmiiKmGFXBBmZ+Rh0gktvxebKqZbKqD2hpw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hW3.gXS7LOoHEoI9KXsAKmo"; protocol="application/pgp-signature"
+ boundary="Sig_/19pMhObWE7ilk.5Ab_whXRu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBiRWN4sZ=nd2R3+XqxMD2X=d9F6JtDGpXaNX1jtOFMB4w@mail.gmail.com>
+In-Reply-To: <CAC9WiBjsC1E2HV2vmiiKmGFXBBmZ+Rh0gktvxebKqZbKqD2hpw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Francis Moreau <francis.moro@gmail.com>
 Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/hW3.gXS7LOoHEoI9KXsAKmo
+--Sig_/19pMhObWE7ilk.5Ab_whXRu
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Sep 2013 09:40:56 +0200 Francis Moreau <francis.moro@gmail.com>
+On Wed, 11 Sep 2013 10:11:29 +0200 Francis Moreau <francis.moro@gmail.com>
 wrote:
 
-> Yes it fixes the problem.
+> On Wed, Sep 11, 2013 at 9:40 AM, Francis Moreau <francis.moro@gmail.com> =
+wrote:
+> [...]
+> >>
+> >> I think this patch will help.  The last hunk in particular should make=
+ the
+> >> difference.
+> >>
+> >> Please let me know if it fixes the problem.
+> >>
+> >
+> > Yes it fixes the problem.
+> >
+> > I had to adjust the patch to make it compile by using be64_to_cpu()
+> > where needed.
+> >
 >=20
-> I had to adjust the patch to make it compile by using be64_to_cpu()
-> where needed.
+> Hmm unfortunately the following test case seems broken too, I'm not
+> sure it's related however:
+>=20
+> # create a ddf array containing loop0 and loop1
+> $ cat /proc/mdstat
+> Personalities : [raid1]
+> md124 : active raid1 loop0[1] loop1[0]
+>       84416 blocks super external:/md125/0 [2/2] [UU]
+>=20
+> md125 : inactive loop1[1](S) loop0[0](S)
+>       65536 blocks super external:ddf
+>=20
+> # stop the array
+> $ mdadm --stop /dev/md124
+> mdadm: stopped /dev/md124
+> $ mdadm --stop /dev/md125
+> mdadm: stopped /dev/md125
+>=20
+> # Add only one disk
+> $ mdadm -I /dev/loop0
+> mdadm: container /dev/md/ddf1 now has 1 device
+> mdadm: /dev/md/array1 assembled with 1 device but not started
+>=20
+> # start the array
+> $ mdadm -R /dev/md124
 
-Thanks.  I've applied with those fixes.
+Does
+  mdadm -IRs
+work at this point?
+
+If so, it is just a problem with my quick reimplementation of "-R".
+I've made a note to look at it when I get a chance.
 
 NeilBrown
 
---Sig_/hW3.gXS7LOoHEoI9KXsAKmo
+>=20
+> # looks like it failed
+> $ cat /proc/mdstat
+> Personalities : [raid1]
+> md124 : inactive loop0[0]
+>       84416 blocks super external:/md125/0
+>=20
+> md125 : inactive loop0[0](S)
+>       32768 blocks super external:ddf
+>=20
+> # start mdmon manually with debug trace
+> $ mdmon /dev/md125
+> starting mdmon for md125
+> monitor: wake ( )
+> no arrays to monitor... exiting
+>=20
+>=20
+
+
+--Sig_/19pMhObWE7ilk.5Ab_whXRu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUjFKeTnsnt1WYoG5AQIXEhAAtyMwczIGpiPX+3iVfvLNpgBIxJTgmXlk
-262n2qtRYSFK3oRWRo+0TxH9aZST2hOFsgzMoys4z5Olu8FXPoNPXQO7N1/m07dz
-8B04Mam9aj7BtfwD4rqm9bZ71V78vcqdT45Zh6/x5QYY7nljG5rYSp6KVHCKGBCw
-pJh2xLEYRNU02tdrNdeP6zOvgtRAzmdYvAJBQSJVp8TUzOO9FbRb2CjbWmfmjfCI
-XlEooBl20wkDoodlmkMgZTDIA7lBy7/ryqk3kvPkRW/xNJmqg6949ixZw7O7lj5d
-JigXbIpxNydkHwMnwdRG+lAsge4sdOpL2hugm3iuomqOPcFMbM8zpy9Hq/r3BE3P
-2+Cs5R5Lxtw5SUcmcpmlAQLfCpDMoHmVRHe5q67a6ZpMZwpa1JPsuJdixpghZWkb
-eR+jL5dyDxXj5GG5q+AAJN0rH9nAe3VEjhMTIJ3muGQSJuXP2FkIraqgghpa3eXT
-Ql5RM/eRcECPcP7OVaRF1dcE5W/e5+Tk3z9Fovxc5O7vL9lFmPIJArlUyfQNnT5U
-dR9maZYTcoukp3l4M1dxBrBWz6C3guSkphTyTyESr5AEIx8s5F/cE9q7YPMUCtwl
-CScU/3XmRdCQJxbzI5LI/3XeWyHofRVK+zl7MNgPdLZBrXTFcAuzVAUQ5MVZtc24
-sRgX3sWNiTk=
-=LaeD
+iQIVAwUBUjFLIznsnt1WYoG5AQJP8A//fJj2CmFZqQ5qXef/+2jDvW4t65ETITr2
+pNaiu1uRlaCihyvYiyRe8SinNYEAaepu4CEHkx7tH+NJ6s/bg7xZ2PyrITx9pEAC
+Z/0TSWwwpGJk7ldunGAufhEL2SYcPJUT9yqq+tir/eT7XmLEaN5/7+WizMjjKW9/
+98L7Rk5f+EFtvWXLAdUrMG/6Oqh7QHvJ/7gx4Q4VYJtgZYhxlk4SL7arcnmt/jb/
+iVFh3x4PTdbE3bpmuU39olWkBXzsJv1UFNjFdx0RYxEPfTOef161yNMRyI5efIfA
+/DgsFTi8RevVVxR1TuZGjZIRSDXG+UEnA/pOq9C3QuaLRRMUuFcA3Dfxa/kWq/it
+5Q5KmWFup0dxUUP2SJTZvZXHfWzNZ1Uc2ik/3RH/wZMeH8n05I/lNdeQPRlHCsns
+nKLnQauof6BECTyjQ6eoanCa1jE0afeWOLrs4k0vsy7HhR5IK8pthOT8Z/RTm3VW
+mcycM65KzxVLZXqQLNIQVeHunS3KlkzpUn6534BLOlJknLtrMaFRdv12w9o4Kc6I
+DsO4iKTWF/Jk5JvYIn/HjmruScz8cjAomp7Qi/0sKg9B5HXip9wd0dItkAEGFxX8
+C2Xg0Qa9vEK07MaK5wlvrZSxuJJcL4xmw9qFnSkMFQTod5fsOTKkCIkj+H24F+vF
+mjKAs9vjL4Q=
+=xx7B
 -----END PGP SIGNATURE-----
 
---Sig_/hW3.gXS7LOoHEoI9KXsAKmo--
+--Sig_/19pMhObWE7ilk.5Ab_whXRu--
