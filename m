@@ -1,32 +1,28 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH] mdmon: honour --offroot, again
-Date: Thu, 12 Sep 2013 20:25:46 +0200
-Message-ID: <5232072A.5050308@arcor.de>
-References: <1378930519-7679-1-git-send-email-mwilck@arcor.de> <20130912154250.09c986c2@notabene.brown>
+Subject: Installing openSUSE 12.3  on DDF fake RAID with mdadm
+Date: Thu, 12 Sep 2013 22:51:52 +0200
+Message-ID: <52322968.6060008@arcor.de>
+References: <5217D0D6.5030801@arcor.de> <522E3781.50807@arcor.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130912154250.09c986c2@notabene.brown>
+In-Reply-To: <522E3781.50807@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/12/2013 07:42 AM, NeilBrown wrote:
-> On Wed, 11 Sep 2013 22:15:19 +0200 mwilck@arcor.de wrote:
+On 09/09/2013 11:02 PM, Martin Wilck wrote:
+> On 08/23/2013 11:15 PM, Martin Wilck wrote:
+>> A recipe for installing CentOS 6.4 on DDF fake RAID members using mdadm
+>> (not dmraid) can now be found on
+>> https://raid.wiki.kernel.org/index.php/DDF_Fake_RAID.
 > 
->> Reintroducing --offroot as an undocumented option, as its use is going to
->> go away soon anyway.
->>
-> 
-> Aggh...  This is all pretty horrible isn't it?
-> 
-> I've applied your patch because I don't think it can break anything and it
-> could possible help as you say.
+> I added a similar recipe for SUSE SLES 11 to the same Wiki page (my
+> work, not supported by SUSE in any way). The usual disclaimers apply.
 
-I just verified that OpenSUSE Factory still needs this patch as well.
-Fedora is probably the only distribution that "properly" (according to
-the systemd developers) starts and stops mdmon from "offroot" (i.e. initrd).
+There is a section on OpenSUSE 12.3 now, too. Installation tested on
+actual Fake RAID hardware.
 
 Martin
+
