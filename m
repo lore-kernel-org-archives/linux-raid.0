@@ -1,83 +1,62 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: mdadm 3.3: issue with mdmon --takeover
-Date: Thu, 12 Sep 2013 09:40:31 +0200
-Message-ID: <CAC9WiBgN4nVGDmni57F9rKf==gK13EbCggQvvTaKpzcSYv9Q_w@mail.gmail.com>
-References: <CAC9WiBjg4Tbv_UM4o66-8jtFEYGvh3kuP6xSdnz7uL+fq3fZTQ@mail.gmail.com>
-	<20130904160832.3627bcb8@notabene.brown>
-	<CAC9WiBiHkOjqY4nDwMh4S8td9NMz2mrdqK0R7cZp7nKSMyhBvg@mail.gmail.com>
-	<20130905121123.27968f9f@notabene.brown>
-	<CAC9WiBiHcS126iFv91250d83sMrBYmRbvoqYAEhjJWjb2p5J3A@mail.gmail.com>
-	<CAC9WiBgRiu_YL1TpzD4dtLXv=LiA-RERn+C6Q+i=P_WTNdw3+w@mail.gmail.com>
-	<20130911093518.794bbb21@notabene.brown>
-	<CAC9WiBiRWN4sZ=nd2R3+XqxMD2X=d9F6JtDGpXaNX1jtOFMB4w@mail.gmail.com>
-	<CAC9WiBjsC1E2HV2vmiiKmGFXBBmZ+Rh0gktvxebKqZbKqD2hpw@mail.gmail.com>
-	<20130912150331.254aba60@notabene.brown>
+From: Jack Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [BUG] md hang at schedule in  md_write_start
+Date: Thu, 12 Sep 2013 09:55:01 +0200
+Message-ID: <52317355.6020201@profitbricks.com>
+References: <52090E6D.10104@profitbricks.com> <20130813143115.55dd27d1@notabene.brown> <5209E37D.6050107@profitbricks.com> <20130814104410.10bb2259@notabene.brown> <520B3B39.4060703@profitbricks.com> <522EFDD1.3000708@profitbricks.com> <20130911095459.086d532d@notabene.brown> <52301E58.7010000@gmail.com> <20130912085933.54b5021b@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130912150331.254aba60@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20130912085933.54b5021b@notabene.brown>
+Sender: stable-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+Cc: Jack Wang <xjtuwjp@gmail.com>, linux-raid@vger.kernel.org, Sebastian Riemer <sebastian.riemer@profitbricks.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 12, 2013 at 7:03 AM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 11 Sep 2013 10:11:29 +0200 Francis Moreau <francis.moro@gmail.com>
-> wrote:
->
->> On Wed, Sep 11, 2013 at 9:40 AM, Francis Moreau <francis.moro@gmail.com> wrote:
->> [...]
->> >>
->> >> I think this patch will help.  The last hunk in particular should make the
->> >> difference.
->> >>
->> >> Please let me know if it fixes the problem.
->> >>
->> >
->> > Yes it fixes the problem.
->> >
->> > I had to adjust the patch to make it compile by using be64_to_cpu()
->> > where needed.
->> >
+On 09/12/2013 12:59 AM, NeilBrown wrote:
+> On Wed, 11 Sep 2013 09:40:08 +0200 Jack Wang <xjtuwjp@gmail.com> wrote:
+> 
+>> On 09/11/2013 01:54 AM, NeilBrown wrote:
+>>> On Tue, 10 Sep 2013 13:09:05 +0200 Jack Wang <jinpu.wang@profitbricks.com>
+>>> wrote:
+>>>
+>>>> snip
+>>>>
+>>>> Hi Neil,
+>>>>
+>>>> I notice you send out pull request for md update, which include fix for
+>>>> this bug.
+>>>>
+>>>> I think we'd better include the fix to stable tree at least from 3.4
+>>>> above, what do you think?
+>>>
+>>> I don't think it is a situation that is at all like to occur in normal usage,
+>>> so it doesn't seem justified for -stable.
+>>>
+>>> Do you disagree?  Did you ever experience the deadlock in normal usage or
+>>> only in artificial situations?
 >>
->> Hmm unfortunately the following test case seems broken too, I'm not
->> sure it's related however:
+>> Yes, we do see this BUG in our production environment, so I think it's
+>> good to include it in stable tree.
 >>
->> # create a ddf array containing loop0 and loop1
->> $ cat /proc/mdstat
->> Personalities : [raid1]
->> md124 : active raid1 loop0[1] loop1[0]
->>       84416 blocks super external:/md125/0 [2/2] [UU]
->>
->> md125 : inactive loop1[1](S) loop0[0](S)
->>       65536 blocks super external:ddf
->>
->> # stop the array
->> $ mdadm --stop /dev/md124
->> mdadm: stopped /dev/md124
->> $ mdadm --stop /dev/md125
->> mdadm: stopped /dev/md125
->>
->> # Add only one disk
->> $ mdadm -I /dev/loop0
->> mdadm: container /dev/md/ddf1 now has 1 device
->> mdadm: /dev/md/array1 assembled with 1 device but not started
->>
->> # start the array
->> $ mdadm -R /dev/md124
->
-> Does
->   mdadm -IRs
-> work at this point?
+> 
+> I was hoping you would explain how....
+> 
+> Maybe I'm misunderstanding, but as I see it the deadlock can only occur if
+> you run "mdadm --stop" while some other process has the block device open
+> and is writing to it.  That seems like a dumb thing to do and my suggest
+> would be to not do it.
+> Is there a good reason why you try to stop the array while it is being
+> written to.
+> Would it make sense for the process to open the block device with O_EXCL.
+> This would encourage exclusive access, and would also prevent the deadlock
+> from happening.
+> 
+> NeilBrown
+> 
+Thanks Neil for suggestion.
+I will look into the code which is developed by other colleagues, and we
+will fix that if it is.
 
-Yes it does.
-
->
-> If so, it is just a problem with my quick reimplementation of "-R".
-> I've made a note to look at it when I get a chance.
->
-
-ok, thanks.
-
--- 
-Francis
+Regards,
+Jack
