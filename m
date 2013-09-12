@@ -1,85 +1,95 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] mdmon: honour --offroot, again
-Date: Thu, 12 Sep 2013 15:42:50 +1000
-Message-ID: <20130912154250.09c986c2@notabene.brown>
-References: <1378930519-7679-1-git-send-email-mwilck@arcor.de>
+Subject: Re: [PATCH 2/2] DDF: brief_examine_subarrays_ddf: print array name
+Date: Thu, 12 Sep 2013 15:44:41 +1000
+Message-ID: <20130912154441.0658f011@notabene.brown>
+References: <5230C98B.7030902@arcor.de>
+	<1378929335-12606-2-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/B73qbFnjTJ9W9VFA3_GxZO/"; protocol="application/pgp-signature"
+ boundary="Sig_/GdCEDtnlsf6rLQDujg7k6/3"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1378930519-7679-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <1378929335-12606-2-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: mwilck@arcor.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/B73qbFnjTJ9W9VFA3_GxZO/
+--Sig_/GdCEDtnlsf6rLQDujg7k6/3
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Sep 2013 22:15:19 +0200 mwilck@arcor.de wrote:
+On Wed, 11 Sep 2013 21:55:35 +0200 mwilck@arcor.de wrote:
 
-> commit 3e32ba9d removed support for --offroot, and a9c15847 made
-> mdmon use @ in argv[0] only when started from initrd.
+> Print an array name in brief output, like IMSM does.
 >=20
-> This breaks mdadm in OpenSUSE 12.3, which starts mdmon from the
-> root file system and relies on --offroot to work as documented earlier.
->=20
-> Reintroducing --offroot as an undocumented option, as its use is going to
-> go away soon anyway.
->=20
-> If this can't be applied, it should probably be included as distro-specif=
-ic
-> patch if mdadm 3.3 is built for OpenSUSE 12.3. I haven't checked if the
-> patch is necesary for OpenSUSE Factory, too.
+> SUSE's YaST2 (libstorage) needs this in order to detect MD arrays
+> during installation.
 >=20
 > Signed-off-by: Martin Wilck <mwilck@arcor.de>
 > ---
->  mdmon.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  super-ddf.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/mdmon.c b/mdmon.c
-> index f0b0623..8cd53d8 100644
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -320,7 +320,7 @@ int main(int argc, char *argv[])
->  			dofork =3D 0;
->  			break;
->  		case OffRootOpt:
-> -			/* silently ignore old option */
-> +			argv[0][0] =3D '@';
->  			break;
->  		case 'h':
->  		default:
+> diff --git a/super-ddf.c b/super-ddf.c
+> index c2ac88b..00a5c8b 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -1518,6 +1518,7 @@ static void getinfo_super_ddf(struct supertype *st,=
+ struct mdinfo *info, char *m
+> =20
+>  static void uuid_from_ddf_guid(const char *guid, int uuid[4]);
+>  static void uuid_from_super_ddf(struct supertype *st, int uuid[4]);
+> +static void _ddf_array_name(char *name, const struct ddf_super *ddf, int=
+ i);
+> =20
+>  static unsigned int get_vd_num_of_subarray(struct supertype *st)
+>  {
+> @@ -1577,6 +1578,7 @@ static void brief_examine_subarrays_ddf(struct supe=
+rtype *st, int verbose)
+>  		struct virtual_entry *ve =3D &ddf->virt->entries[i];
+>  		struct vcl vcl;
+>  		char nbuf1[64];
+> +		char namebuf[17];
+>  		if (all_ff(ve->guid))
+>  			continue;
+>  		memcpy(vcl.conf.guid, ve->guid, DDF_GUID_LEN);
+> @@ -1584,7 +1586,9 @@ static void brief_examine_subarrays_ddf(struct supe=
+rtype *st, int verbose)
+>  		vcl.vcnum =3D i;
+>  		uuid_from_super_ddf(st, info.uuid);
+>  		fname_from_uuid(st, &info, nbuf1, ':');
+> -		printf("ARRAY container=3D%s member=3D%d UUID=3D%s\n",
+> +		_ddf_array_name(namebuf, ddf, i);
+> +		printf("ARRAY%s%s container=3D%s member=3D%d UUID=3D%s\n",
+> +		       namebuf[0] =3D=3D '\0' ? "" : " /dev/md/", namebuf,
+>  		       nbuf+5, i, nbuf1+5);
+>  	}
+>  }
 
-Aggh...  This is all pretty horrible isn't it?
+This an previous applied - thanks.
 
-I've applied your patch because I don't think it can break anything and it
-could possible help as you say.
-
-Thanks,
 NeilBrown
 
---Sig_/B73qbFnjTJ9W9VFA3_GxZO/
+--Sig_/GdCEDtnlsf6rLQDujg7k6/3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUjFUWjnsnt1WYoG5AQIqURAAvFdEBZH6GJ8nbrBhy2iAodDArpB09SQW
-uLR068WFRNPPi1OvTerrgXHvxPQaQEApWjoYAXAWi1v3piGTsLHwQGAX6W3FsXXY
-zhhO6aUzfqC6nfSuTNIKVXI1ISWQL0yA6srl1xwPn+sK+/KBtSBbuTeEC9clWZgR
-X8PIcMp5t6WyYd8cDPMwzbDBw52eJDmZqbp3AWoukaoBFk5hFI+uaHsdkfHthpGT
-dIBCVF7sJMcxOP2XMD/Qn4toxqN1tkNoENfLGXozSqZ2LqZ9DK060pO0ugHmfxmL
-iFwtYvNMNsdPnTt52gjfNNj6jyzCHqF4cgTT+HBIwtmGYkK8PxchXKs6PxaBywkP
-qccTjR/9zpXn29dLqsxTsx7rWNcaSV9zLBWYnpfrRlGXvFk6JfdvchqstUtu7aKa
-RxBB6KIkKTr3e7yK7HHWib48fKq1iTI8th8ZmcFa5lo8zCqBHRQDc9NQjMdMNTD9
-JSSD2cA9LcSErwczkN84mqDOoXKL9y1tmpq229Egy4Mr+Q2E/2rSh8MtLq6FD9yv
-gEEUQpMeuKHbT/8Bdz9R5XUW1SYqbgXNSjP5jjueViZbJvuLHE+z8AcMqmIroZRl
-RILcMKh7moSP1A2vLNH6ROm4lQ1ThbqNcfuCuskj47I08Nvw7r9kaVR3tpVt5GjL
-goyH4mWQyjI=
-=G5IJ
+iQIVAwUBUjFUyTnsnt1WYoG5AQLPcw/9HxoacneRPEEhNI26sdkXbvNi6qa23K30
+ZtzT6g3uB4ESJPo9GVrxCUD9Qphmw2y3yjPRM6QwFNYvPnQYeyLEPtZTviK/di+v
+IrKdeW6SB12qaUFZjkmKiutvpZ0OSTZeuUMLwgJ/12Ji+sdwAfk3MAAP5ERmBCwd
+gM/dqr6NZUMos3mkRACRtP4x0M6jRgzhwR77YFxB66jPYrHsvIccTWiwgxaPGTyA
++Q2jutgmEVEpgg+/p6lVOGj5pAx+sw6YxlMmFJsk1H4zs7pQIBnELyieOtZTa7n9
+wyQMFRvADyTue0zgKNllzw6QirwH5B8wS8cPq9gWgvbVk7/mwR5GIWt+odhIKw2r
+G+QUA2lq8wqy6bzupkAuj/JqKEKFuG1obOIfJQ5wM8j88vWBCfLrR0c/3AYo/XaD
+SnPXo1kzcQsBjQxeqSX6w3Q4+6x2n5u41L2xIfVbrUGk2YoLsji4gJWkuJh7f0QZ
+hpFCr8DwWf+33LRL5bfv1Zhfj2TGDsOdlaTub+PWRFy1XR5gHNp1TdIJsC7BhJ0s
+xmcj6hTed6YrSdZZz3Hzvd5b20lRIvpJf14508cfOiL9nZDv9uoXxK6J+o5vDbrT
+wqlOGOvXY+NUgOyweMboeiAF5oybnF0WtuBakSxc7RCWcnLg9RtLsJgTKPvkKg9D
+0diU2DSlUVs=
+=8nrY
 -----END PGP SIGNATURE-----
 
---Sig_/B73qbFnjTJ9W9VFA3_GxZO/--
+--Sig_/GdCEDtnlsf6rLQDujg7k6/3--
