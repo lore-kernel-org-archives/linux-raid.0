@@ -1,99 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: change '%' to condition
-Date: Thu, 12 Sep 2013 15:39:19 +1000
-Message-ID: <20130912153919.26831641@notabene.brown>
-References: <1373890837-3475-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1373890837-3475-67-git-send-email-Jes.Sorensen@redhat.com>
-	<alpine.LRH.2.02.1307151445220.23929@file01.intranet.prod.int.rdu2.redhat.com>
-	<wrfjfvvely2a.fsf@redhat.com>
-	<alpine.LRH.2.02.1307201112210.2761@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: Re: [PATCH] mdmon: honour --offroot, again
+Date: Thu, 12 Sep 2013 15:42:50 +1000
+Message-ID: <20130912154250.09c986c2@notabene.brown>
+References: <1378930519-7679-1-git-send-email-mwilck@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/oKuSZpvS_llRwl_64qQQA9n"; protocol="application/pgp-signature"
+ boundary="Sig_/B73qbFnjTJ9W9VFA3_GxZO/"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1307201112210.2761@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <1378930519-7679-1-git-send-email-mwilck@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, rhkernel-list@redhat.com
+To: mwilck@arcor.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/oKuSZpvS_llRwl_64qQQA9n
+--Sig_/B73qbFnjTJ9W9VFA3_GxZO/
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 11 Sep 2013 19:18:57 -0400 (EDT) Mikulas Patocka
-<mpatocka@redhat.com> wrote:
+On Wed, 11 Sep 2013 22:15:19 +0200 mwilck@arcor.de wrote:
 
-> Hi
+> commit 3e32ba9d removed support for --offroot, and a9c15847 made
+> mdmon use @ in argv[0] only when started from initrd.
 >=20
-> I think you should revert the patch=20
-> 4c0ca26bd260dddf3b9781758cb5e2df3f74d4a3 that did this change:
+> This breaks mdadm in OpenSUSE 12.3, which starts mdmon from the
+> root file system and relies on --offroot to work as documented earlier.
 >=20
->                 for (f =3D 1; f < geo->far_copies; f++) {
->                         d +=3D geo->near_copies;
-> -                       if (d >=3D geo->raid_disks)
-> -                               d -=3D geo->raid_disks;
-> +                       d %=3D geo->raid_disks;
->                         s +=3D geo->stride;
->                         r10bio->devs[slot].devnum =3D d;
->                         r10bio->devs[slot].addr =3D s;
+> Reintroducing --offroot as an undocumented option, as its use is going to
+> go away soon anyway.
 >=20
+> If this can't be applied, it should probably be included as distro-specif=
+ic
+> patch if mdadm 3.3 is built for OpenSUSE 12.3. I haven't checked if the
+> patch is necesary for OpenSUSE Factory, too.
 >=20
-> On most processors, the divide and modulo operations are slower than a=20
-> possibly misprediteced branch or conditional move instruction.
+> Signed-off-by: Martin Wilck <mwilck@arcor.de>
+> ---
+>  mdmon.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-> So, replacing a condition with modulo doesn't make sense.
->=20
-> A benchmark on AMD K10 shows that mispredicted branch is 8.7 times faster=
-=20
-> than a divide operation:
->=20
->         for (i =3D 0; i < 10000000; i++) {
->                 q++;
->                 if (q >=3D 8)
->                         q -=3D 8;
->         }
-> - 11607us (it compiles to cmov and runs at a rate of 3 ticks per=20
-> iteration)
->=20
->         for (i =3D 0; i < 10000000; i++) {
->                 q++;
->                 q %=3D max;
->         }
-> - 101241us (26 ticks per iteration)
->=20
->=20
-> Mikulas
+> diff --git a/mdmon.c b/mdmon.c
+> index f0b0623..8cd53d8 100644
+> --- a/mdmon.c
+> +++ b/mdmon.c
+> @@ -320,7 +320,7 @@ int main(int argc, char *argv[])
+>  			dofork =3D 0;
+>  			break;
+>  		case OffRootOpt:
+> -			/* silently ignore old option */
+> +			argv[0][0] =3D '@';
+>  			break;
+>  		case 'h':
+>  		default:
 
-I can't seem to get excited about this sort of micro optimisation.
+Aggh...  This is all pretty horrible isn't it?
 
-If someone were to send me a nice patch with a good description and a couple
-of acked-by:s from relevant people I would probably apply it.  But otherwise
-I just wouldn't care.
+I've applied your patch because I don't think it can break anything and it
+could possible help as you say.
 
 Thanks,
 NeilBrown
 
---Sig_/oKuSZpvS_llRwl_64qQQA9n
+--Sig_/B73qbFnjTJ9W9VFA3_GxZO/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUjFThznsnt1WYoG5AQLtOQ/9Frpwh6AV6n9g2AKnFndgg1kuCKzktG3G
-qmsJko9UNhubtnxyZRVTIGa3oSUViFpcqGPzOAH30cVggYlVOuM+WG1l/6T8pm5f
-OrdwYZwT7v7tLt4gLl/R6eSFpO9c3hBM7t/hnDOa0sMXxFAzCWR4gnz+Yagm97jp
-JQcXtpFyV39nNFnS8uT0y6Ixqb5oJWUPC/sQUIJLru3vaTHSezuKcTzrmHFpig8I
-XIJBy9+8va5OE46wmK/cMzaoiQad9Gx1fx7+nPBEw3NqHAziFWKFtxDXdN/VdQFZ
-lsUu7nv9niSyvAXsK96kkL9tX6jcvi3EQ9REbH8FMNhwZTX19kfEEnRptKXegx/Y
-OFChj7BWI50pzbO0jzH3gucKlUyigxNC4PxV+fM6faL1xTQusK7TJscz4BzpugSr
-RGMmQIYIuIlSkfXLVWS5PLfbokP928cCZ6/kuNuMETpwT724Yw/ufSmsq2dnfnmP
-STO7zmDcTbHapKLSdmZLDrRqhbz9RGw2oUnHRPyxV0WgpfLvL782ZZH4Kvi85FLy
-uSC/QYhvuWGScg0nZI5MqQ7LsLQbDxc3+uhsiiJWVyaWL7L/kRtmfOJTvIHMoEYm
-j8y0uPducJMF1yhUx1b1kLLJpzBCIw3PbUiqLfVVd32vbSc8mI4Xfodk5sorBEP6
-S38rCxPo/w4=
-=N2H6
+iQIVAwUBUjFUWjnsnt1WYoG5AQIqURAAvFdEBZH6GJ8nbrBhy2iAodDArpB09SQW
+uLR068WFRNPPi1OvTerrgXHvxPQaQEApWjoYAXAWi1v3piGTsLHwQGAX6W3FsXXY
+zhhO6aUzfqC6nfSuTNIKVXI1ISWQL0yA6srl1xwPn+sK+/KBtSBbuTeEC9clWZgR
+X8PIcMp5t6WyYd8cDPMwzbDBw52eJDmZqbp3AWoukaoBFk5hFI+uaHsdkfHthpGT
+dIBCVF7sJMcxOP2XMD/Qn4toxqN1tkNoENfLGXozSqZ2LqZ9DK060pO0ugHmfxmL
+iFwtYvNMNsdPnTt52gjfNNj6jyzCHqF4cgTT+HBIwtmGYkK8PxchXKs6PxaBywkP
+qccTjR/9zpXn29dLqsxTsx7rWNcaSV9zLBWYnpfrRlGXvFk6JfdvchqstUtu7aKa
+RxBB6KIkKTr3e7yK7HHWib48fKq1iTI8th8ZmcFa5lo8zCqBHRQDc9NQjMdMNTD9
+JSSD2cA9LcSErwczkN84mqDOoXKL9y1tmpq229Egy4Mr+Q2E/2rSh8MtLq6FD9yv
+gEEUQpMeuKHbT/8Bdz9R5XUW1SYqbgXNSjP5jjueViZbJvuLHE+z8AcMqmIroZRl
+RILcMKh7moSP1A2vLNH6ROm4lQ1ThbqNcfuCuskj47I08Nvw7r9kaVR3tpVt5GjL
+goyH4mWQyjI=
+=G5IJ
 -----END PGP SIGNATURE-----
 
---Sig_/oKuSZpvS_llRwl_64qQQA9n--
+--Sig_/B73qbFnjTJ9W9VFA3_GxZO/--
