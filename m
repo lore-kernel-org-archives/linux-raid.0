@@ -1,44 +1,63 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: Implementing --detail-platform for DDF
-Date: Thu, 12 Sep 2013 17:18:13 -0700
-Message-ID: <CAA9_cmcoSkDL_afvnBL09eSryAPYd-90wk1XJZ_Hvo4CdEQgpg@mail.gmail.com>
-References: <5230D9D6.7030005@arcor.de>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: mdadm 3.3 fails to kick out non fresh disk
+Date: Fri, 13 Sep 2013 15:22:20 +0200
+Message-ID: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5230D9D6.7030005@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 11, 2013 at 2:00 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> Hi Neil,
->
-> I thought I might come up with an implementation of mdadm
-> --detail-platform for DDF, but I encountered a problem I'd like to discuss.
->
-> For DDF, we can't scan PCI devices like IMSM does, because we don't know
-> all controllers supporting DDF. Thus I considered scanning block devices
-> instead and looking at "foreign" vendor strings in the meta data;
-> possibly also filtering by device names or types. It occured to me that
-> it might be elegant to simply call conf_get_devs() for a list of devices
-> to be scanned. But if I do that, config.o and its dependencies must be
-> linked with mdmon, blowing up its size considerably. I figure that
-> that's a no-go. But I'm also reluctant to write my own DDF-specific
-> block device scanning code while there is conf_get_devs() already.
->
-> Perhaps I am misunderstanding the purpose of --detail-platform?
-> I wouldn't bother with it if YaST2/libstorage didn't call it in order to
-> check if a "fake RAID" platform is present.
+Hi Neil,
 
---detail-platform is more about finding the presence of the raid
-option-rom / firmware support.  I can imagine the installer may want
-to confirm that an array is bootable before installing to it.
+I'm probably doing something wrong since it's a pretty critical bug
+but can't see what.
 
-Is it enough to scan for devices that self-report as raid controllers?
- Problem then becomes finding a cross-implementation method to parse
-the firmware signature to detect DDF capabilities.
+I'm creating a RAID1 array with 1.2 metadata. After that I stop the
+array, and restart the array with only one disk. I write random data
+on the array and then stop it again:
 
---
-Dan
+# mkfs.ext4 /dev/md125
+# mdadm --stop /dev/md125
+# mdadm -IRs /dev/loop0
+# mount /dev/md125 /mnt/
+# date >/mnt/foo
+# umount /mnt
+# mdadm --stop /dev/md125
+
+Finally I restart the array with the 2 disks (one disk is outdated)
+and mdadm happily activates the array without error. Note that I add
+the outdated disk first in that case:
+
+# mdadm -IRs /dev/loop1
+mdadm: /dev/loop1 attached to /dev/md/array1, which has been started.
+# mdadm -IRs /dev/loop0
+mdadm: /dev/loop0 attached to /dev/md/array1 which is already active.
+# cat /proc/mdstat
+Personalities : [raid1]
+md125 : active raid1 loop0[0] loop1[1]
+      117056 blocks super 1.2 [2/2] [UU]
+# mount /dev/md125 /mnt
+# ls /mnt/
+[  457.321771] EXT4-fs error (device md125): ext4_lookup:1047: inode
+#2: comm ls: deleted inode referenced: 12
+ls: cannot access /mnt/1: Input/output error
+
+If I add the outdated disk last I got this:
+# mdadm -IRs /dev/loop0
+mdadm: /dev/loop0 attached to /dev/md/array1, which has been started.
+# mdadm -IRs /dev/loop1
+mdadm: can only add /dev/loop1 to /dev/md/array1 as a spare, and
+force-spare is not set.
+mdadm: failed to add /dev/loop1 to existing array /dev/md/array1:
+Invalid argument.
+
+which didn't tell me the reason why loop1 must be a spare.
+
+Is this expected ? If so could you enlight me ?
+
+Thanks
+-- 
+Francis
