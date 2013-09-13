@@ -1,103 +1,53 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Sat, 14 Sep 2013 00:35:47 +0200
-Message-ID: <CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
-	<20130914064305.0baadc69@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: How-to for enabling TRIM for SSD RAID-1 arrays?
+Date: Fri, 13 Sep 2013 17:54:54 -0500
+Message-ID: <523397BE.8080404@hardwarefreak.com>
+References: <CAD2NviVyoF4y9uQnvcng082zAGQoXq18JT7WM=+RfBGCzCp9zA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20130914064305.0baadc69@notabene.brown>
+In-Reply-To: <CAD2NviVyoF4y9uQnvcng082zAGQoXq18JT7WM=+RfBGCzCp9zA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Derek Piper <derek.piper@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On 9/13/2013 3:25 PM, Derek Piper wrote:
 
-On Fri, Sep 13, 2013 at 10:43 PM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 13 Sep 2013 15:22:20 +0200 Francis Moreau <francis.moro@gmail.com>
-> wrote:
->
->> Hi Neil,
->>
->> I'm probably doing something wrong since it's a pretty critical bug
->> but can't see what.
->>
->> I'm creating a RAID1 array with 1.2 metadata. After that I stop the
->> array, and restart the array with only one disk. I write random data
->> on the array and then stop it again:
->>
->> # mkfs.ext4 /dev/md125
->> # mdadm --stop /dev/md125
->> # mdadm -IRs /dev/loop0
->> # mount /dev/md125 /mnt/
->> # date >/mnt/foo
->> # umount /mnt
->> # mdadm --stop /dev/md125
->>
->> Finally I restart the array with the 2 disks (one disk is outdated)
->> and mdadm happily activates the array without error. Note that I add
->> the outdated disk first in that case:
->>
->> # mdadm -IRs /dev/loop1
->> mdadm: /dev/loop1 attached to /dev/md/array1, which has been started.
->> # mdadm -IRs /dev/loop0
->> mdadm: /dev/loop0 attached to /dev/md/array1 which is already active.
->
-> That's a worry.  I'm not sure how to fix it.
->
-> I would probably suggest you don't use "-IR" to add devices.  That would make
-> it a lot less likely to happen.
->
+> Having found a posting on this list from July this year, I am trying to
+> find if (and how) TRIM support is supported and enabled under RAID 1 with 2
+> SSD drives.
 
-Well I'm not sure how I should start an array...
+The are more important questions to first ask yourself.
 
-For example doing:
+1.  Will TRIM benefit your make/model of SSDs?
+    Are they the same brand, model, and firmware?  If different brands
+    or models, or even the same model w/different firmware, the two may
+    behave completely differently WRT TRIM.  One may speed up while the
+    other slows down.
 
-# mdadm -I /dev/loop0
-# mdadm -I /dev/loop1
-# mdadm -R /dev/md125
+2.  Will it benefit your workloads?
 
-works for array using metadata 1.2 but doesn't if the array is using
-DDF (mdmon not started). To workaround this issue you suggested to use
--IRs:
+3.  How compressible are your files, on average?
 
-# mdadm -IRs /dev/loop0
-# mdadm -IRs /dev/loop1
+4.  Which SSDs?  SandForce 22xx based?  Which firmware rev?  See:
+http://www.anandtech.com/show/6107/corsair-force-series-gs-240gb-review
 
-but now mdadm can't detect outdated disk anymore.
+5.  Do you plan to use realtime discard or batch discard?  Most recent
+    data shows that realtime discard murders performance.
 
-Could you suggest something to start an array which would work in all
-cases (ddf or 1.2, add non-fresh disk...) ?
 
->
->> # cat /proc/mdstat
->> Personalities : [raid1]
->> md125 : active raid1 loop0[0] loop1[1]
->>       117056 blocks super 1.2 [2/2] [UU]
->> # mount /dev/md125 /mnt
->> # ls /mnt/
->> [  457.321771] EXT4-fs error (device md125): ext4_lookup:1047: inode
->> #2: comm ls: deleted inode referenced: 12
->> ls: cannot access /mnt/1: Input/output error
->>
->> If I add the outdated disk last I got this:
->> # mdadm -IRs /dev/loop0
->> mdadm: /dev/loop0 attached to /dev/md/array1, which has been started.
->> # mdadm -IRs /dev/loop1
->> mdadm: can only add /dev/loop1 to /dev/md/array1 as a spare, and
->> force-spare is not set.
->> mdadm: failed to add /dev/loop1 to existing array /dev/md/array1:
->> Invalid argument.
->>
->> which didn't tell me the reason why loop1 must be a spare.
->
-> It  must be a spare because it is out of date.
->
+Summary:  There is much, much, more to optimizing SSD performance than
+getting TRIM working down the stack.  In fact some SSDs work better
+without TRIM, and some perform worse when TRIM is used.
 
-Yes but I think mdadm should tell the reason, no  ?
+For many users, TRIM is a solution to a problem they may never have.
+They simply want it because they've read somewhere that they should have it.
 
-Thanks
 -- 
-Francis
+Stan
+
+
+
