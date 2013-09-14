@@ -1,28 +1,48 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: "detect reshape on array start" (was Re: Weirdness with DDF arrays
- (mdadm 3.3))
-Date: Sat, 14 Sep 2013 23:16:17 +0200
-Message-ID: <5234D221.8010607@arcor.de>
-References: <CAC9WiBgJX4VH7-cNMVcqPL-9UpsH03Z7cRKvLUOSUogkiQpx7Q@mail.gmail.com> <52346FB1.2020205@arcor.de> <5234CEAB.1090808@arcor.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: mwilck@arcor.de
+Subject: [PATCH] Monitor: don't set arrays dirty after transition to read-only
+Date: Sat, 14 Sep 2013 23:24:07 +0200
+Message-ID: <1379193847-402-1-git-send-email-mwilck@arcor.de>
+References: <5234D221.8010607@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5234CEAB.1090808@arcor.de>
+In-Reply-To: <5234D221.8010607@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
-Cc: adam.kwolek@intel.com
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On 09/14/2013 11:01 PM, Martin Wilck wrote:
+This patch reverts commit 4867e068. Setting arrays dirty after
+transition from inactive to anything else causes unnecessary
+meta data writes and may wreak trouble unnecessarily when
+a disk was missing during assembly but the array was never
+written to.
 
-> it seems that has been made for is a pretty special case (reshape of
-> RAID0 to RAID4, or would that affect other target geometries as well?)
-> 
-> For experimenting, I reverted the patch and ran some of the IMSM test
-> cases for reshape of RAID0 to something else, and they all still succeed.
+The reason for 4867e068 was a special situation during reshape
+from RAID0 to RAID4. I ran all IMSM test cases with it reverted
+and found no regressions, so I believe the reshape logic for
+IMSM works fine in mdadm 3.3 also without this.
 
-Meanwhile I ran all test cases for IMSM (09, 11-18) with this patch
-reverted; they all succeed.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ monitor.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Martin
+diff --git a/monitor.c b/monitor.c
+index 742aa19..3b57ed0 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -270,13 +270,6 @@ static int read_and_act(struct active_array *a)
+ 		a->info.resync_start
+ 		);
+ 
+-	if (a->curr_state > inactive &&
+-	    a->prev_state == inactive) {
+-		/* array has been started
+-		 * possible that container operation has to be completed
+-		 */
+-		a->container->ss->set_array_state(a, 0);
+-	}
+ 	if ((a->curr_state == bad_word || a->curr_state <= inactive) &&
+ 	    a->prev_state > inactive) {
+ 		/* array has been stopped */
+-- 
+1.7.3.4
