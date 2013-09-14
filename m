@@ -1,130 +1,84 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Fri, 13 Sep 2013 20:56:42 -0300
-Message-ID: <CAH3kUhHU7Xa-KA0b55tEuRKSTz8VNJnh6DmhY1RJ9OtjGL7C8w@mail.gmail.com>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
-	<20130914064305.0baadc69@notabene.brown>
-	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: Moving drives around for a new one
+Date: Fri, 13 Sep 2013 17:01:33 -0700
+Message-ID: <5233A75D.5030007@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi guys, i'm just reading this thread and sometimes i have some doubts
-about mdadm and mdmon too... others i know why it failed or something
-like...
+I currently have 4 500Gb drives. sda/b are mirrored with 3 arrays:
 
-just some points, not related to the thread problem...
+md0 is boot, os, and some misc stuff.
+md1 is swap
+md2 is data.
 
-in git there's some nice features talking with the user about
-use "git add <file>..." to include in what will be committed
+sdc/d is one mirrored array, md3
 
-this kind of tips are very nice for beginner and new users, should be
-nice put some tips in mdadm too?!
-i don't remember the cases where tips should be used but maybe we
-could start a new mail thread to make this feature?
+sdc is failing. SMART is now reporting ~150 bad sectors but mdadm hasn't 
+kicked it out yet. I have a Hitachi 0A39289 Ultrastar A7K2000 on order. 
+I am hoping that it is not short changed on size compaired to the 2 
+segates or it won't have enough space. But I want it to be mirrored into 
+all 4 arrays basicly becoming a 3rd mirror for md0/1/2 and one of 2 for 
+md3. At some point I want to get a second 1TB and get it down to just 
+the 2 drives. Then I can remove md3 and expand md2.
 
-thanks for the space guys, sorry can't help here in this thread
+What I'd like to do is after removing sdc, move sda/b down one on the 
+motherboard connectors so that the new drive is sda. There is at least 1 
+file I know needs to be updated for grub:
 
-2013/9/13 Francis Moreau <francis.moro@gmail.com>:
-> Hi Neil,
->
-> On Fri, Sep 13, 2013 at 10:43 PM, NeilBrown <neilb@suse.de> wrote:
->> On Fri, 13 Sep 2013 15:22:20 +0200 Francis Moreau <francis.moro@gmail.com>
->> wrote:
->>
->>> Hi Neil,
->>>
->>> I'm probably doing something wrong since it's a pretty critical bug
->>> but can't see what.
->>>
->>> I'm creating a RAID1 array with 1.2 metadata. After that I stop the
->>> array, and restart the array with only one disk. I write random data
->>> on the array and then stop it again:
->>>
->>> # mkfs.ext4 /dev/md125
->>> # mdadm --stop /dev/md125
->>> # mdadm -IRs /dev/loop0
->>> # mount /dev/md125 /mnt/
->>> # date >/mnt/foo
->>> # umount /mnt
->>> # mdadm --stop /dev/md125
->>>
->>> Finally I restart the array with the 2 disks (one disk is outdated)
->>> and mdadm happily activates the array without error. Note that I add
->>> the outdated disk first in that case:
->>>
->>> # mdadm -IRs /dev/loop1
->>> mdadm: /dev/loop1 attached to /dev/md/array1, which has been started.
->>> # mdadm -IRs /dev/loop0
->>> mdadm: /dev/loop0 attached to /dev/md/array1 which is already active.
->>
->> That's a worry.  I'm not sure how to fix it.
->>
->> I would probably suggest you don't use "-IR" to add devices.  That would make
->> it a lot less likely to happen.
->>
->
-> Well I'm not sure how I should start an array...
->
-> For example doing:
->
-> # mdadm -I /dev/loop0
-> # mdadm -I /dev/loop1
-> # mdadm -R /dev/md125
->
-> works for array using metadata 1.2 but doesn't if the array is using
-> DDF (mdmon not started). To workaround this issue you suggested to use
-> -IRs:
->
-> # mdadm -IRs /dev/loop0
-> # mdadm -IRs /dev/loop1
->
-> but now mdadm can't detect outdated disk anymore.
->
-> Could you suggest something to start an array which would work in all
-> cases (ddf or 1.2, add non-fresh disk...) ?
->
->>
->>> # cat /proc/mdstat
->>> Personalities : [raid1]
->>> md125 : active raid1 loop0[0] loop1[1]
->>>       117056 blocks super 1.2 [2/2] [UU]
->>> # mount /dev/md125 /mnt
->>> # ls /mnt/
->>> [  457.321771] EXT4-fs error (device md125): ext4_lookup:1047: inode
->>> #2: comm ls: deleted inode referenced: 12
->>> ls: cannot access /mnt/1: Input/output error
->>>
->>> If I add the outdated disk last I got this:
->>> # mdadm -IRs /dev/loop0
->>> mdadm: /dev/loop0 attached to /dev/md/array1, which has been started.
->>> # mdadm -IRs /dev/loop1
->>> mdadm: can only add /dev/loop1 to /dev/md/array1 as a spare, and
->>> force-spare is not set.
->>> mdadm: failed to add /dev/loop1 to existing array /dev/md/array1:
->>> Invalid argument.
->>>
->>> which didn't tell me the reason why loop1 must be a spare.
->>
->> It  must be a spare because it is out of date.
->>
->
-> Yes but I think mdadm should tell the reason, no  ?
->
-> Thanks
-> --
-> Francis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+/boot/grub/device.map
+(fd0)	/dev/fd0
+(hd0)	/dev/disk/by-id/ata-ST3500413AS_Z3T69GCE
+(hd1)	/dev/disk/by-id/ata-ST3500418AS_5VMJ49P1
+(hd2)	/dev/disk/by-id/ata-ST3500320AS_9QM35MY5
+(hd3)	/dev/disk/by-id/ata-ST3500820AS_9QM6V6JF
+
+To fix that my notes have "grub-install --recheck /dev/sda" from the 
+last drive replacement I did. I'm guessing I need something a bit 
+different to update all the drive locations? Maybe:
+"grub-install --recheck all"?
+
+But I don't need to do anything for:
+menu.lst: http://pastebin.com/7WWHajsc
+correct?
+
+What about /etc/mdadm/mdadm.conf:
+# mdadm.conf
+#
+# Please refer to mdadm.conf(5) for information about this file.
+#
+
+# by default, scan all partitions (/proc/partitions) for MD superblocks.
+# alternatively, specify devices to scan, using wildcards if desired.
+DEVICE partitions
+
+# auto-create devices with Debian standard permissions
+CREATE owner=root group=disk mode=0660 auto=yes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR tlenz@vorgon.com
+
+# definitions of existing MD arrays
+# ARRAY /dev/md0 level=raid1 num-devices=2 
+UUID=e4926be6:8d6f08e5:0ab6b006:621c4ec0
+# ARRAY /dev/md1 level=raid1 num-devices=2 
+UUID=eac96451:66efa3ab:0ab6b006:621c4ec0
+# ARRAY /dev/md2 level=raid1 num-devices=2 
+UUID=934b5d12:5f83677f:0ab6b006:621c4ec0
+# ARRAY /dev/md3 level=raid1 num-devices=2 
+UUID=47b3c905:5121e149:0ab6b006:621c4ec0
+
+ARRAY /dev/md0 UUID=e4926be6:8d6f08e5:0ab6b006:621c4ec0
+ARRAY /dev/md1 UUID=eac96451:66efa3ab:0ab6b006:621c4ec0
+ARRAY /dev/md2 UUID=934b5d12:5f83677f:0ab6b006:621c4ec0
+ARRAY /dev/md3 UUID=47b3c905:5121e149:0ab6b006:621c4ec0
 
 
 
--- 
-Roberto Spadim
