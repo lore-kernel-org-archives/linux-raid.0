@@ -1,58 +1,82 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 5 3-drive array failed 2 disks at once - can anything be
- saved?
-Date: Sun, 15 Sep 2013 21:12:08 -0400
-Message-ID: <52365AE8.5010807@turmel.org>
-References: <52332763.30901@schultzfamily.ca> <52347194.7010602@turmel.org> <52361B98.9030705@schultzfamily.ca>
+From: Dave Gomboc <dave_gomboc@acm.org>
+Subject: raid10 recovery assistance requested
+Date: Sun, 15 Sep 2013 20:30:20 -0700
+Message-ID: <CA+dwz-3hWizOmbzBDBV3K4DPM1D3WUPRn_d63-FhS+5RZ-ffvQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52361B98.9030705@schultzfamily.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Schultz <rob@schultzfamily.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Robert,
+Last night, I had booted using sysresccd-3.7.1 and been able to see
+the contents of the raid10, with one problem (I believe /proc/mdstat
+was showing a _ amongst the AAA).  However, I was able to mount the md
+device, and lvm commands were finding data just fine.  I even mounted
+a logical volume that normally mounts to /srv -- it had not been
+checked for a long time so it automatically did an fsck.  (I was not
+thrilled about this, but I wasn't positive I should interrupt it
+either.)  The fsck appeared to succesfully complete: at least, no
+error was reported amongst the 5 steps by the time I got out of bed
+this morning.  Without intending to change anything related to the
+raid setup, it appears that I somehow did so while using
+sysresccd-3.7.1 when booting the machine again this morning, because I
+am now unable to mount the raid10.
 
-On 09/15/2013 04:42 PM, Robert Schultz wrote:
-> Phil:
-> 
-> Thank you for the information. This is my backup machine. Up to this
-> point I wasn't concerned about having a second copy of this machine, but
-> I have a tendency to decommission a computer and leave the backups on by
-> backuppc for archive purposes. I probably don't really, really need
-> anything on this PC. That said I'm am very paranoid that I will have
-> some other failure before I can resolve this :-(
-> 
-> I hadn't read anything about timing in disks in RAID - I'll have to go
-> do some research. I see WD has their RED series that appears to be
-> directed to this market.
+I have run mdadm --examine --scan 2>&1 | less (though I am typing this
+by hand from another computer off of a written copy of data that was
+on-screen earlier today).
 
-Please do read the archives on the topic.  You won't regret it.
+No md superblock detected on /dev/sdl, /dev/sdk, /dev/sdj, /dev/sdi,
+/dev/sda3, /dev/sda2, /dev/sda1, /dev/sda, /dev/sr0, /dev/loop0.  No
+surprises there.
 
-And yes, the WD REDs power up with SCTERC set properly.  I bought four
-of these for my new media server.
+Specific fields that were different between the four devices, I list
+after this paragraph.  For each of /dev/sdi1, /dev/sdj1, /dev/sdk1,
+and /dev/sdl1, the following fields were identical: magic (a92b4efc),
+version (1.2), feature map (0x0), array uuid (3c76...), name
+(cheap:teramooch), creation time, raid level (raid10), raid devices
+(4), avail dev size: 3907021954 (1863.01 GiB 2000.40 GB), array size:
+7814041600 (3726.03 GiB 4000.79 GB), used dev size: 3907020800
+(1863.01 GiB, 2000.39 GB), data offset (2048 sectors), super offset (8
+sectors), state (clean), layout (near=2), chunk size(512K)
 
-> Here is the information requested. Please let me know if this changes
-> anything in your instructions. I'll hold off until you confirm.
+Two of the four drives have in addition to the above the following,
+identical information:
+device uuid: 6680...
+update time: Sat Sep 14 06:14:13 2013
+checksum: 6b7397f - correct [yes, only 7 hex digits]
+events: 520
+device role: Active device 0
+array state: AAAA
 
-One modest change.  Two of your drives *do* support SCTERC, they just
-have to have it enabled on every powerup:
+The other two drives have identical alternative information:
+device uuid: 45ff...
+update time: Sun Sep 15 09:54:22 2013
+checksum: 1cbfeaea - correct
+events: 599
+device role: Active device 3
+array state: .AAA
 
-> SCT Error Recovery Control:
->            Read: Disabled
->           Write: Disabled
+I do also have the four drive serial numbers (from ls -l
+/dev/disk/by-id), and have figured out which pair are "active device
+0" versus "active device 3" (though I cannot currently distinguish
+between the two drives that report identical data).  I had also been
+seeing something like "inactive" with two (S) when catting
+/proc/mdstat, but unfortunately I did not record the precise text that
+was given.
 
-For those two drives, your boot sequence should have:
+Subsequent to performing the above, I have invoked mdadm --stop, used
+smartctl (which appears to report that all of the drives are actually
+working, though "old age" is listed in a few categories) and the
+machine has since been powered down again.
 
-smartctl -l scterc,70,70 /dev/sdX
+I hope (and suspect) that some variation of --build (or perhaps even
+--assemble) involving --assume-clean might restore access to my data,
+but I figured that it would be prudent to ask here before I fscked
+anything up further.  I have four larger (GPT) drives ready to migrate
+all of the data to, so if I could make the raid10 available again,
+then I am ready to migrate the data off without any further reboots.
 
-For the other, you still need:
-
-echo 180 >/sys/block/sdX/device/timeout
-
-Otherwise, my recommendations stand.
-
-Phil
+Your help is appreciated,
+Dave
