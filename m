@@ -1,35 +1,73 @@
 From: P Orrifolius <porrifolius@gmail.com>
-Subject: Re: Advice for recovering array containing LUKS encrypted LVM volumes
-Date: Mon, 16 Sep 2013 11:34:02 +1200
-Message-ID: <CAC38o7SNeyzh++88FLn7U1b19WDEfSBBN9E_1LRPM7ona6Eh+A@mail.gmail.com>
-References: <CAC38o7ScozDqspEH-FSyoa_W5W8s+VfYd1RTAitz574wMYqhkA@mail.gmail.com>
-	<51FE529C.6000502@hardwarefreak.com>
-	<CAC38o7TqO9m=6LDHxDiV=XYcfAdbnpa=GZuft-TAqFDvdqvJ4A@mail.gmail.com>
-	<52015093.3040100@hardwarefreak.com>
-	<CAC38o7SZ=mGnKCOTrhi7zny3ajOF3BEmfouthN0XqVgXXANe4g@mail.gmail.com>
-	<52042545.7020500@hardwarefreak.com>
-	<CAC38o7SgLO_jDmO7VPqOYRJbtJDeN_i8Nmf_fCv4=u7w1CWLSQ@mail.gmail.com>
+Subject: LSI 9211 (SAS2008) BIOS problems, invalid PCI slot
+Date: Mon, 16 Sep 2013 12:07:21 +1200
+Message-ID: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC38o7SgLO_jDmO7VPqOYRJbtJDeN_i8Nmf_fCv4=u7w1CWLSQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10 August 2013 20:44, P Orrifolius <porrifolius@gmail.com> wrote:
-> On 9 August 2013 08:17, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+Hello.
 
-> No, definitely the bare card (LSI00194).
+I have an LSI 9211-8i controller which is running the IR firmware.  My
+intention is to flash it with the IT firmware and use it for an md
+RAID array.
 
-So finally after a deal of trouble with local suppliers of the HBA and
-eventually getting it shipped in from Amazon USA I've got all the
-pieces.  Which is good.
+However I don't think it is playing nicely with my motherboard BIOS.
 
-I've got it all put together and the system booting up and running as
-it was before (md array inconsistent/unassembled) without using the
-HBA.  Unfortunately I'm not yet sure the HBA is actually going to work
-with my motherboard... but I'll save that for another post.
 
-Anyway, thanks for your advice and recommendations.
+On first installing it, with no drives attached, the LSI BIOS runs and
+then the motherboard BIOS goes through an AHCI drive detection phase.
+After detecting the drives (2xHD 1xOptical, connected to SATA ports on
+MB) the boot hung and required a hard reset.
+
+The LSI MPT2BIOS version is 7.29.0.0 and the controller firmware is 15.0.0.0-IR.
+The motherboard is a Gigabyte GA-MA78G-DS3H (revision 1) running the F3 BIOS.
+
+I can enter the LSI configuration utility during the controller boot
+process and I see that it has a PCI slot of 'ff' which, according to
+the utility, indicates an invalid PCI slot.
+
+
+I've updated to the latest motherboard BIOS (F9) and now the boot
+process follows the same sequence but continues after the AHCI
+detection and eventually brings up linux.  However the controller
+still reports a PCI slot of 'ff'.
+
+I can see it in linux but if I have a drive connected I don't see it
+in the boot configuration utility (not sure if I should) and I don't
+see it as a /dev/sd? device (not sure if this is where I should find
+it).  So I suspect it's not really working.
+
+Here is the output from lspci -v:
+
+02:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
+SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
+        Subsystem: LSI Logic / Symbios Logic Device 3020
+        Flags: bus master, fast devsel, latency 0, IRQ 18
+        I/O ports at de00 [size=256]
+        Memory at fdcfc000 (64-bit, non-prefetchable) [size=16K]
+        Memory at fdc80000 (64-bit, non-prefetchable) [size=256K]
+        [virtual] Expansion ROM at fdb00000 [disabled] [size=512K]
+        Capabilities: [50] Power Management version 3
+        Capabilities: [68] Express Endpoint, MSI 00
+        Capabilities: [d0] Vital Product Data
+        Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [138] Power Budgeting <?>
+        Capabilities: [150] Single Root I/O Virtualization (SR-IOV)
+        Capabilities: [190] Alternative Routing-ID Interpretation (ARI)
+        Kernel driver in use: mpt2sas
+        Kernel modules: mpt2sas
+
+
+Anybody run into this or have any advice?  Is this really a problem?
+
+I'm reluctant to risk bricking it during a firmware flash if it truly
+is misbehaving.
+
+
+Thanks.
