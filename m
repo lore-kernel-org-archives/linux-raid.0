@@ -1,73 +1,58 @@
-From: P Orrifolius <porrifolius@gmail.com>
-Subject: LSI 9211 (SAS2008) BIOS problems, invalid PCI slot
-Date: Mon, 16 Sep 2013 12:07:21 +1200
-Message-ID: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5 3-drive array failed 2 disks at once - can anything be
+ saved?
+Date: Sun, 15 Sep 2013 21:12:08 -0400
+Message-ID: <52365AE8.5010807@turmel.org>
+References: <52332763.30901@schultzfamily.ca> <52347194.7010602@turmel.org> <52361B98.9030705@schultzfamily.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52361B98.9030705@schultzfamily.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Robert Schultz <rob@schultzfamily.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+Hi Robert,
 
-I have an LSI 9211-8i controller which is running the IR firmware.  My
-intention is to flash it with the IT firmware and use it for an md
-RAID array.
+On 09/15/2013 04:42 PM, Robert Schultz wrote:
+> Phil:
+> 
+> Thank you for the information. This is my backup machine. Up to this
+> point I wasn't concerned about having a second copy of this machine, but
+> I have a tendency to decommission a computer and leave the backups on by
+> backuppc for archive purposes. I probably don't really, really need
+> anything on this PC. That said I'm am very paranoid that I will have
+> some other failure before I can resolve this :-(
+> 
+> I hadn't read anything about timing in disks in RAID - I'll have to go
+> do some research. I see WD has their RED series that appears to be
+> directed to this market.
 
-However I don't think it is playing nicely with my motherboard BIOS.
+Please do read the archives on the topic.  You won't regret it.
 
+And yes, the WD REDs power up with SCTERC set properly.  I bought four
+of these for my new media server.
 
-On first installing it, with no drives attached, the LSI BIOS runs and
-then the motherboard BIOS goes through an AHCI drive detection phase.
-After detecting the drives (2xHD 1xOptical, connected to SATA ports on
-MB) the boot hung and required a hard reset.
+> Here is the information requested. Please let me know if this changes
+> anything in your instructions. I'll hold off until you confirm.
 
-The LSI MPT2BIOS version is 7.29.0.0 and the controller firmware is 15.0.0.0-IR.
-The motherboard is a Gigabyte GA-MA78G-DS3H (revision 1) running the F3 BIOS.
+One modest change.  Two of your drives *do* support SCTERC, they just
+have to have it enabled on every powerup:
 
-I can enter the LSI configuration utility during the controller boot
-process and I see that it has a PCI slot of 'ff' which, according to
-the utility, indicates an invalid PCI slot.
+> SCT Error Recovery Control:
+>            Read: Disabled
+>           Write: Disabled
 
+For those two drives, your boot sequence should have:
 
-I've updated to the latest motherboard BIOS (F9) and now the boot
-process follows the same sequence but continues after the AHCI
-detection and eventually brings up linux.  However the controller
-still reports a PCI slot of 'ff'.
+smartctl -l scterc,70,70 /dev/sdX
 
-I can see it in linux but if I have a drive connected I don't see it
-in the boot configuration utility (not sure if I should) and I don't
-see it as a /dev/sd? device (not sure if this is where I should find
-it).  So I suspect it's not really working.
+For the other, you still need:
 
-Here is the output from lspci -v:
+echo 180 >/sys/block/sdX/device/timeout
 
-02:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
-SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
-        Subsystem: LSI Logic / Symbios Logic Device 3020
-        Flags: bus master, fast devsel, latency 0, IRQ 18
-        I/O ports at de00 [size=256]
-        Memory at fdcfc000 (64-bit, non-prefetchable) [size=16K]
-        Memory at fdc80000 (64-bit, non-prefetchable) [size=256K]
-        [virtual] Expansion ROM at fdb00000 [disabled] [size=512K]
-        Capabilities: [50] Power Management version 3
-        Capabilities: [68] Express Endpoint, MSI 00
-        Capabilities: [d0] Vital Product Data
-        Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
-        Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [138] Power Budgeting <?>
-        Capabilities: [150] Single Root I/O Virtualization (SR-IOV)
-        Capabilities: [190] Alternative Routing-ID Interpretation (ARI)
-        Kernel driver in use: mpt2sas
-        Kernel modules: mpt2sas
+Otherwise, my recommendations stand.
 
-
-Anybody run into this or have any advice?  Is this really a problem?
-
-I'm reluctant to risk bricking it during a firmware flash if it truly
-is misbehaving.
-
-
-Thanks.
+Phil
