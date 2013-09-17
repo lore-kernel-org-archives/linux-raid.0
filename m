@@ -1,101 +1,110 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: P Orrifolius <porrifolius@gmail.com>
 Subject: Re: LSI 9211 (SAS2008) BIOS problems, invalid PCI slot
-Date: Mon, 16 Sep 2013 20:26:26 -0500
-Message-ID: <5237AFC2.7090807@hardwarefreak.com>
+Date: Tue, 17 Sep 2013 15:55:57 +1200
+Message-ID: <CAC38o7RW1NULs6WhSNTqiTr1Nu38QNy1vQTpHRNRfk4a3fKubw@mail.gmail.com>
 References: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+	<5237AFC2.7090807@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
+In-Reply-To: <5237AFC2.7090807@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: P Orrifolius <porrifolius@gmail.com>
+To: stan@hardwarefreak.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/15/2013 7:07 PM, P Orrifolius wrote:
+On 17 September 2013 13:26, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 9/15/2013 7:07 PM, P Orrifolius wrote:
 
-> I have an LSI 9211-8i controller which is running the IR firmware.  My
-> intention is to flash it with the IT firmware and use it for an md
-> RAID array.
-> 
-> However I don't think it is playing nicely with my motherboard BIOS.
-> 
-> On first installing it, with no drives attached, the LSI BIOS runs and
-> then the motherboard BIOS goes through an AHCI drive detection phase.
-> After detecting the drives (2xHD 1xOptical, connected to SATA ports on
-> MB) the boot hung and required a hard reset.
-> 
-> The LSI MPT2BIOS version is 7.29.0.0 and the controller firmware is 15.0.0.0-IR.
-> The motherboard is a Gigabyte GA-MA78G-DS3H (revision 1) running the F3 BIOS.
-> 
-> I can enter the LSI configuration utility during the controller boot
-> process and I see that it has a PCI slot of 'ff' which, according to
-> the utility, indicates an invalid PCI slot.
+The executive summary:
 
-Invalid in what way?  The motherboard assigns PCI resources to expansion
-boards, not the other way round.  So I'm curious as to what the board is
-saying is invalid about the PCI slot configuration.
+Connected drive now being detected and made available in linux.  But
+the PCI Slot is still being listed as 'ff' and boot fails with some
+controller settings.
 
-> I've updated to the latest motherboard BIOS (F9) and now the boot
-> process follows the same sequence but continues after the AHCI
-> detection and eventually brings up linux.  However the controller
-> still reports a PCI slot of 'ff'.
+More details below.
 
-Do the drives show up under the device identifier, such as in this img:
-http://i.imgur.com/weKsd.jpg
+>> I can enter the LSI configuration utility during the controller boot
+>> process and I see that it has a PCI slot of 'ff' which, according to
+>> the utility, indicates an invalid PCI slot.
+>
+> Invalid in what way?  The motherboard assigns PCI resources to expansion
+> boards, not the other way round.  So I'm curious as to what the board is
+> saying is invalid about the PCI slot configuration.
 
-> I can see it in linux but if I have a drive connected I don't see it
-> in the boot configuration utility (not sure if I should) and I don't
-> see it as a /dev/sd? device (not sure if this is where I should find
-> it).  So I suspect it's not really working.
+If I highlight the 'ff' value for PCI Slot in the configuration
+utility and then hit F1 (Help) it says:
 
-If you have a drive connected and powered up it should show up in the
-LSI BIOS config util as above, and should also be enumerated by the LSI
-boot BIOS during the POST sequence.  If the drive isn't showing up in
-the controller utility then you likely have:
+PCI Slot
+The PCI Slot number assigned by the System BIOS to an adapter.  If the
+value displayed is FF it indicates invalid slot number.
 
-1.  Bad or not fully connected data or power cable(s)
-2.  Bad drive
-3.  Bad HBA
+I can't find any information about it, other than this comment to a
+post: http://www.servethehome.com/howto-flash-supermicro-x8si6f-lsi-sas-2008-controller-lsi-firmware/#comment-30607
 
-> Here is the output from lspci -v:
-> 
-> 02:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
-> SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
->         Subsystem: LSI Logic / Symbios Logic Device 3020
->         Flags: bus master, fast devsel, latency 0, IRQ 18
->         I/O ports at de00 [size=256]
->         Memory at fdcfc000 (64-bit, non-prefetchable) [size=16K]
->         Memory at fdc80000 (64-bit, non-prefetchable) [size=256K]
->         [virtual] Expansion ROM at fdb00000 [disabled] [size=512K]
->         Capabilities: [50] Power Management version 3
->         Capabilities: [68] Express Endpoint, MSI 00
->         Capabilities: [d0] Vital Product Data
->         Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
->         Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [138] Power Budgeting <?>
->         Capabilities: [150] Single Root I/O Virtualization (SR-IOV)
->         Capabilities: [190] Alternative Routing-ID Interpretation (ARI)
->         Kernel driver in use: mpt2sas
->         Kernel modules: mpt2sas
+> Do the drives show up under the device identifier, such as in this img:
+> http://i.imgur.com/weKsd.jpg
 
-That's a good sign.  The driver loads and detects the board, and shows
-no errors.
+No.
 
-> Anybody run into this or have any advice?  Is this really a problem?
-> 
-> I'm reluctant to risk bricking it during a firmware flash if it truly
-> is misbehaving.
+> If you have a drive connected and powered up it should show up in the
+> LSI BIOS config util as above, and should also be enumerated by the LSI
+> boot BIOS during the POST sequence.  If the drive isn't showing up in
+> the controller utility then you likely have:
+>
+> 1.  Bad or not fully connected data or power cable(s)
+> 2.  Bad drive
+> 3.  Bad HBA
 
-The firmware rev isn't going to prevent a connected drive from being
-detected and listed in the utility.  If the drive doesn't appear it's
-almost certainly a data/power cabling issue.  You're using one 8087
-breakout cable and one SATA connector on that cable correct?
+I connected the drive direct to the motherboard and it works fine.
 
--- 
-Stan
+I connected the drive to the controller via different SATA breakouts,
+different 8087->4xSATA cables and different ports on the controller...
+still no dice.
+
+In every case I could tell by touch that the drive wasn't spinning up.
 
 
+However...
+
+I changed the controller Boot Support setting to Disabled and the
+Drive Spin-up Delay from 2 -> 0 after my failures, without touching
+any cabling.
+
+And, lo!  On reboot the drive spun-up immediately and the controller
+detected it.  I booted into linux and it appeared as a sd? device.
+
+Weird thing is I set the controller options back as they were yet the
+drive still spins-up... I swear I didn't touch the cabling.
+
+
+So current status is:
+ - Controller, and detected connected drive, reports PCI Slot ff which
+is, it claims, invalid.
+
+ - When the controller Boot Support is set to 'Enabled BIOS and OS' or
+'Enabled BIOS only' the AHCI drive detection on boot takes ages then
+eventually outputs 'Warning - something wrong with your hardware!'
+Hard reset is then needed.  This prevents linux booting of course.
+The connected drive is detected and listed after the controller
+initialises. Presumably the MPT2 boot ROM that the controller says it
+installed doesn't work well with my motherboard.
+
+ - If Boot Support is set to 'Disabled' or 'Enabled OS only' then the
+controller initialisation simply states Adapter(s) disabled.  Then the
+AHCI drive detection happens and linux boots.  Happily the connected
+drive is visible in linux.
+
+
+I can live with the mystery and I don't need to boot from drives
+connected to the controller, so my only questions really are:
+
+ - will flashing be safe given the 'ff' business?
+
+and
+
+ - will the controller being 'Disabled' lose me any capabilities
+beyond booting from controller connected devices?
+
+
+Thanks.
