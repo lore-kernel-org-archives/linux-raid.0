@@ -1,74 +1,101 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: [PATCH 3/3] DDF: compare_super_ddf: fix sequence number check
-Date: Mon, 16 Sep 2013 21:53:06 +0200
-Message-ID: <523761A2.303@arcor.de>
-References: <1379191632-32719-1-git-send-email-mwilck@arcor.de> <1379191632-32719-3-git-send-email-mwilck@arcor.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: LSI 9211 (SAS2008) BIOS problems, invalid PCI slot
+Date: Mon, 16 Sep 2013 20:26:26 -0500
+Message-ID: <5237AFC2.7090807@hardwarefreak.com>
+References: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1379191632-32719-3-git-send-email-mwilck@arcor.de>
+In-Reply-To: <CAC38o7Q4R_qXdtfBv86cNkEq6bp-6GrtqYat2m=WW47Tc5D6aw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: P Orrifolius <porrifolius@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/14/2013 10:47 PM, mwilck@arcor.de wrote:
-> The sequence number check in compare_super_ddf was broken,
-> anchor sequence number is always -1.
-> 
-> With this patch, mdadm will refuse to add a disk with non-matching
-> sequence number.
-> 
-> This fixes Francis Moreau's problem reported with subject
-> "mdadm 3.3 fails to kick out non fresh disk".
-> 
-> FIXME: More work is needed here. Currently mdadm won't even add the
-> disk to the container, that's wrong. It should be added as a spare.
-> ---
->  super-ddf.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 3673cb3..002b271 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -3892,10 +3892,10 @@ static int compare_super_ddf(struct supertype *st, struct supertype *tst)
->  	if (memcmp(first->anchor.guid, second->anchor.guid, DDF_GUID_LEN) != 0)
->  		return 2;
->  
-> -	if (!be32_eq(first->anchor.seq, second->anchor.seq)) {
-> -		dprintf("%s: sequence number mismatch %u/%u\n", __func__,
-> -			be32_to_cpu(first->anchor.seq),
-> -			be32_to_cpu(second->anchor.seq));
-> +	if (!be32_eq(first->active->seq, second->active->seq)) {
-> +		dprintf("%s: sequence number mismatch %u<->%u\n", __func__,
-> +			be32_to_cpu(first->active->seq),
-> +			be32_to_cpu(second->active->seq));
->  		return 3;
->  	}
->  	if (first->max_part != second->max_part ||
+On 9/15/2013 7:07 PM, P Orrifolius wrote:
 
-While the fix itself is certainly correct, I don't think any more that
-this is the right thing to do. If we reject a disk in compare_super()
-just because of a sequence number mismatch, we won't be able to handle
-incremental scanning gracefully, because mdadm will never even try to
-add it any more. This is exactly what Francis just noticed. However,
-just ignoring the sequence number as the code did without the patch is
-also incorrect, as Francis noted previously in the "fails to kick out
-non fresh disk" thread.
+> I have an LSI 9211-8i controller which is running the IR firmware.  My
+> intention is to flash it with the IT firmware and use it for an md
+> RAID array.
+> 
+> However I don't think it is playing nicely with my motherboard BIOS.
+> 
+> On first installing it, with no drives attached, the LSI BIOS runs and
+> then the motherboard BIOS goes through an AHCI drive detection phase.
+> After detecting the drives (2xHD 1xOptical, connected to SATA ports on
+> MB) the boot hung and required a hard reset.
+> 
+> The LSI MPT2BIOS version is 7.29.0.0 and the controller firmware is 15.0.0.0-IR.
+> The motherboard is a Gigabyte GA-MA78G-DS3H (revision 1) running the F3 BIOS.
+> 
+> I can enter the LSI configuration utility during the controller boot
+> process and I see that it has a PCI slot of 'ff' which, according to
+> the utility, indicates an invalid PCI slot.
 
-The container loading code already has some logic to deal with different
-sequence numbers during assembly (just pick the highest). In case of
-incremental assembly, things get more complex. We must be prepared to
-read the disk with the "best" (i.e. highest) meta data after other disk,
-possibly after some subarrays have already been started. It is possible
-that the new best meta data indicates failures previously loaded disks
-and already started arrays.
+Invalid in what way?  The motherboard assigns PCI resources to expansion
+boards, not the other way round.  So I'm curious as to what the board is
+saying is invalid about the PCI slot configuration.
 
-I am still trying to understand exactly how mdadm, mdmon, and kernel
-have to play together during incremental assembly in order to get this
-right. I think most of this  should take place in mdmon/manager, but I
-may be wrong about that.
+> I've updated to the latest motherboard BIOS (F9) and now the boot
+> process follows the same sequence but continues after the AHCI
+> detection and eventually brings up linux.  However the controller
+> still reports a PCI slot of 'ff'.
 
-Martin
+Do the drives show up under the device identifier, such as in this img:
+http://i.imgur.com/weKsd.jpg
+
+> I can see it in linux but if I have a drive connected I don't see it
+> in the boot configuration utility (not sure if I should) and I don't
+> see it as a /dev/sd? device (not sure if this is where I should find
+> it).  So I suspect it's not really working.
+
+If you have a drive connected and powered up it should show up in the
+LSI BIOS config util as above, and should also be enumerated by the LSI
+boot BIOS during the POST sequence.  If the drive isn't showing up in
+the controller utility then you likely have:
+
+1.  Bad or not fully connected data or power cable(s)
+2.  Bad drive
+3.  Bad HBA
+
+> Here is the output from lspci -v:
+> 
+> 02:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
+> SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
+>         Subsystem: LSI Logic / Symbios Logic Device 3020
+>         Flags: bus master, fast devsel, latency 0, IRQ 18
+>         I/O ports at de00 [size=256]
+>         Memory at fdcfc000 (64-bit, non-prefetchable) [size=16K]
+>         Memory at fdc80000 (64-bit, non-prefetchable) [size=256K]
+>         [virtual] Expansion ROM at fdb00000 [disabled] [size=512K]
+>         Capabilities: [50] Power Management version 3
+>         Capabilities: [68] Express Endpoint, MSI 00
+>         Capabilities: [d0] Vital Product Data
+>         Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [c0] MSI-X: Enable+ Count=15 Masked-
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [138] Power Budgeting <?>
+>         Capabilities: [150] Single Root I/O Virtualization (SR-IOV)
+>         Capabilities: [190] Alternative Routing-ID Interpretation (ARI)
+>         Kernel driver in use: mpt2sas
+>         Kernel modules: mpt2sas
+
+That's a good sign.  The driver loads and detects the board, and shows
+no errors.
+
+> Anybody run into this or have any advice?  Is this really a problem?
+> 
+> I'm reluctant to risk bricking it during a firmware flash if it truly
+> is misbehaving.
+
+The firmware rev isn't going to prevent a connected drive from being
+detected and listed in the utility.  If the drive doesn't appear it's
+almost certainly a data/power cabling issue.  You're using one 8087
+breakout cable and one SATA connector on that cable correct?
+
+-- 
+Stan
+
+
