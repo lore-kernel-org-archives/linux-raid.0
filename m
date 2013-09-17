@@ -1,29 +1,35 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Remove bashism from Makefile
-Date: Tue, 17 Sep 2013 20:20:40 +0400
-Message-ID: <1379434840-9971-1-git-send-email-mjt@msgid.tls.msk.ru>
+From: Justin Maggard <jmaggard10@gmail.com>
+Subject: Mdadm 3.3 reshape issue
+Date: Tue, 17 Sep 2013 11:56:06 -0700
+Message-ID: <CAKgsxVTVBC7pf3--vAoxwa1LMr7E5OyGnhhwQS=-CD0FYQPUQQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>, Michael Tokarev <mjt@tls.msk.ru>
 List-Id: linux-raid.ids
 
-Makefile uses [ x == y ] construct which does not work
-with POSIX shell.  Since this is just testing a flag,
-replace it with string comparison (=) operator instead.
+Today I was trying to reshape a RAID 5, going from 3 RAID disks to 4,
+using the new mdadm 3.3 release.  I had already added the new
+partition to the array, which was marked as spare.  Then I ran
+`/sbin/mdadm -G -n4 /dev/md127` to start the reshape.  Unfortunately,
+it would always return "Failed to initiate reshape".
 
-Signed-off-By: Michael Tokarev <mjt@tls.msk.ru>
+After a little digging, I found that this was because I'm running a
+SUSE SLE11-SP3 kernel, which has partially-implemented support for
+changing data_offset.  In raid5.c:raid5_start_reshape(), I found this:
 
-diff --git a/Makefile b/Makefile
-index e8da3a5..c60cc2c 100644
---- a/Makefile
-+++ b/Makefile
-@@ -156,7 +156,7 @@ all : check_rundir mdadm mdmon
- man : mdadm.man md.man mdadm.conf.man mdmon.man raid6check.man
- 
- check_rundir:
--	@if [ ! -d "$(dir $(RUN_DIR))" -a  "$(CHECK_RUN_DIR)" == 1 ]; then \
-+	@if [ ! -d "$(dir $(RUN_DIR))" -a  "$(CHECK_RUN_DIR)" = 1 ]; then \
- 		echo "***** Parent of $(RUN_DIR) does not exist.  Maybe set different RUN_DIR="; \
- 		echo "*****  e.g. make RUN_DIR=/dev/.mdadm" ; \
- 		echo "***** or set CHECK_RUN_DIR=0"; exit 1; \
+                /* Don't support changing data_offset yet */
+                if (rdev->new_data_offset != rdev->data_offset)
+                        return -EINVAL;
+
+So, I understand where the "Failed to initiate reshape" error is
+coming from.  But is there perhaps a better way to handle this
+situation?  I also found that new_data_offset does not get restored
+after hitting this error, so further attempts to reshape using a
+backup-file continued to fail.  Would it make sense to at least set
+new_data_offset back to what it was when we fail to initiate the
+reshape?
+
+Thanks,
+-Justin
