@@ -1,35 +1,46 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: Mdadm 3.3 reshape issue
-Date: Tue, 17 Sep 2013 11:56:06 -0700
-Message-ID: <CAKgsxVTVBC7pf3--vAoxwa1LMr7E5OyGnhhwQS=-CD0FYQPUQQ@mail.gmail.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Mdadm 3.3 reshape issue
+Date: Wed, 18 Sep 2013 01:12:24 +0600
+Message-ID: <20130918011224.7840cecf@natsu>
+References: <CAKgsxVTVBC7pf3--vAoxwa1LMr7E5OyGnhhwQS=-CD0FYQPUQQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/oJAuME7=JHU18/5qzGHe9az"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAKgsxVTVBC7pf3--vAoxwa1LMr7E5OyGnhhwQS=-CD0FYQPUQQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Maggard <jmaggard10@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Today I was trying to reshape a RAID 5, going from 3 RAID disks to 4,
-using the new mdadm 3.3 release.  I had already added the new
-partition to the array, which was marked as spare.  Then I ran
-`/sbin/mdadm -G -n4 /dev/md127` to start the reshape.  Unfortunately,
-it would always return "Failed to initiate reshape".
+--Sig_/oJAuME7=JHU18/5qzGHe9az
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-After a little digging, I found that this was because I'm running a
-SUSE SLE11-SP3 kernel, which has partially-implemented support for
-changing data_offset.  In raid5.c:raid5_start_reshape(), I found this:
+On Tue, 17 Sep 2013 11:56:06 -0700
+Justin Maggard <jmaggard10@gmail.com> wrote:
 
-                /* Don't support changing data_offset yet */
-                if (rdev->new_data_offset != rdev->data_offset)
-                        return -EINVAL;
+> I'm running a SUSE SLE11-SP3 kernel
 
-So, I understand where the "Failed to initiate reshape" error is
-coming from.  But is there perhaps a better way to handle this
-situation?  I also found that new_data_offset does not get restored
-after hitting this error, so further attempts to reshape using a
-backup-file continued to fail.  Would it make sense to at least set
-new_data_offset back to what it was when we fail to initiate the
-reshape?
+Or you could have mentioned which actual kernel version you are running...
+Anyways to save people some googling and sifting through useless release
+notes, this seems to be based on Linux 3.0.76.
+Personally I'd suggest upgrading to 3.10 or 3.11.
 
-Thanks,
--Justin
+--=20
+With respect,
+Roman
+
+--Sig_/oJAuME7=JHU18/5qzGHe9az
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlI4qZgACgkQTLKSvz+PZwjLrwCeMA/IV3l0AN7MeE6rHGRkNYkD
+QjUAnA+0r5LLmvMe2n0VjLpWIFT6ItMj
+=bd/O
+-----END PGP SIGNATURE-----
+
+--Sig_/oJAuME7=JHU18/5qzGHe9az--
