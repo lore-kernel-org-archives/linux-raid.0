@@ -1,25 +1,17 @@
-From: Drew <drew.kay@gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Fwd: Best configuration for bcache/md cache or other cache using ssd
-Date: Wed, 18 Sep 2013 08:39:43 -0700
-Message-ID: <CACJz6QvCKLaGE-VxN9arJDb1WYuz0L8yS9FGSNfAnR-vyVA+EA@mail.gmail.com>
+Date: Wed, 18 Sep 2013 12:51:16 -0300
+Message-ID: <CAH3kUhFf11O8a-y5W40ogrKu_XsjGfmi6R4YUmxbYw-McrEvyA@mail.gmail.com>
 References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com>
- <CACJz6QtVzR1bED939ZkesyXMWjv-2DmxZSrGH_enKX5dCuNEJw@mail.gmail.com> <CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com>
+	<CACJz6QtVzR1bED939ZkesyXMWjv-2DmxZSrGH_enKX5dCuNEJw@mail.gmail.com>
+	<CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
-
-Forwarded as only I got the reply.
-
----------- Forwarded message ----------
-From: Roberto Spadim <roberto@spadim.com.br>
-Date: Wed, Sep 18, 2013 at 7:41 AM
-Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-To: Drew <drew.kay@gmail.com>
-
 
 Sorry guys, this time i don't have a full knowledge about the
 workload, but from what he told me, he want fast writes with hdd but i
@@ -63,10 +55,5 @@ Em 18/09/2013 11:00, "Drew" <drew.kay@gmail.com> escreveu:
 
 
 -- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
+Roberto Spadim
+SPAEmpresarial
