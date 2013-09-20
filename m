@@ -1,7 +1,7 @@
 From: Martin Wilck <mwilck@arcor.de>
 Subject: Re: Question on DDF degraded array
-Date: Fri, 20 Sep 2013 20:16:35 +0200
-Message-ID: <523C9103.40804@arcor.de>
+Date: Fri, 20 Sep 2013 20:18:12 +0200
+Message-ID: <523C9164.6030604@arcor.de>
 References: <CAC9WiBjRic8x3ech59pEEFSojtXM=6DX7kHECLW3xZYXg2kugA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
