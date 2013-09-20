@@ -1,89 +1,93 @@
-From: John <linux_mailing@internode.on.net>
-Subject: Raid 5 Array 3/4 Drives non-fresh
-Date: Fri, 20 Sep 2013 22:36:21 +1000
-Message-ID: <523C4145.7000502@internode.on.net>
+From: Andrei Banu <andrei.banu@redhost.ro>
+Subject: Anomaly with 2 x 840Pro SSDs in software raid 1
+Date: Fri, 20 Sep 2013 16:05:36 +0300
+Message-ID: <fb67779bbcbf5350e85432704fed805a@redhost.ro>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hello,
 
-Plugged in some buggy usb hardware and it did bad things to my kernel
-INFO: task khubd:27 blocked for more than 120 seconds.
-After reset realized all 3 of my md arrays got a bit upset by my usb 
-device! :-(
+We have a troubling server fitted with 2 840Pro Samsung SSDs. Besides 
+other problems addressed also here a while ago (to which I have still 
+found no solution) we have one more anomaly (or so I believe).
 
-1 rebuilt, the other is  rebuilding now (they only lost 1 disk each)
-The third one below is a bit beyond my limited skills! I think I need to 
-re-create the array but would like some help in doing so.. as I really 
-don't want to trash it through incompetence..
+Although both SSDs worked 100% of the time their wear is very different. 
+/dev/sda has a wear of 95% while /dev/sdb has a wear of 77%. The total 
+number of LBAs is different only by 9.76%. But the wear level is with 
+463.75% higher for sdb.
 
-  md: kicking non-fresh sdj from array!
-  md: unbind<sdj>
-  md: export_rdev(sdj)
-  md: kicking non-fresh sdh from array!
-  md: unbind<sdh>
-  md: export_rdev(sdh)
-  md: kicking non-fresh sdk from array!
-  md: unbind<sdk>
-  md: export_rdev(sdk)
-  md/raid:md2: device sdi operational as raid disk 1
-  md/raid:md2: allocated 4280kB
-  md/raid:md2: not enough operational devices (3/4 failed)
-  RAID conf printout:
-  --- level:5 rd:4 wd:1
-   disk 1, o:1, dev:sdi
-  md/raid:md2: failed to run raid set.
-  md: pers->run() failed ...
+Shouldn't these be proportional?
 
+root [~]# smartctl --attributes /dev/sda
+smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-358.11.1.el6.x86_64] 
+(local build)
 
-Tried
-mdadm --assemble /dev/md2 --scan
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+UPDATED  WHEN_FAILED RAW_VALUE
 
-cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] 
-[raid1] [raid10]
-md2 : inactive sdi[6](S) sdk[4](S) sdj[5](S) sdh[0](S)
-       7814054240 blocks super 1.2
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always 
+       -       4014
+  12 Power_Cycle_Count       0x0032   099   099   000    Old_age   Always 
+       -       5
+177 Wear_Leveling_Count     0x0013   095   095   000    Pre-fail  Always 
+       -       149
+241 Total_LBAs_Written      0x0032   099   099   000    Old_age   Always 
+       -       18515581190
 
-md0 : active raid5 sdn[2] sdo[1] sdm[4] sdf[5]
-       2197720128 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/4] 
-[UUUU]
+root [~]# smartctl --attributes /dev/sdb
+smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-358.11.1.el6.x86_64] 
+(local build)
 
-md1 : active raid5 sdb[5] sdc[1] sdd[4] sda[2]
-       2930284224 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/3] 
-[_UUU]
-       [=======>.............]  recovery = 35.8% (350218368/976761408) 
-finish=200.6min speed=52048K/sec
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
+UPDATED  WHEN_FAILED RAW_VALUE
 
-then
-
-mdadm --assemble /dev/md2 --scan --force
-
-All members came up as spares
-
-mdadm --stop /dev/md2
-
-ARRAY /dev/md2 metadata=1.2 name=storagepc:raid-2tb 
-UUID=73ea3bd2:50b609a1:768a7e19:ca3ef9f0
-/dev/sdh Active Device 0 AA.. Event 203528
-/dev/sdi Active device 1 .A.. Event 203552
-/dev/sdj Active device 2 AAAA Event 203522
-/dev/sdk Active device 3 AAAA Event 203522
-
-I am running
-dd if=/dev/xxx of=/dev/null bs=1M
-across all the /dev/md2 drives in case there is something more than the 
-just the kernel hang that caused this
-
-The entire array is one lvm volume.. would appreciate any help to 
-reassemble!
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always 
+       -       4014
+  12 Power_Cycle_Count       0x0032   099   099   000    Old_age   Always 
+       -       5
+177 Wear_Leveling_Count     0x0013   077   077   000    Pre-fail  Always 
+       -       840
+241 Total_LBAs_Written      0x0032   099   099   000    Old_age   Always 
+       -       20324371103
 
 
-Kind Regards,
+A 'iostat -x' returns this:
 
-John
+Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s 
+avgrq-sz avgqu-sz   await  svctm  %util
+sda              10.10    46.15  803.26  121.32  8672.87  1543.00    
+11.05     0.33    0.36   0.06   5.47
+sdb               9.15    52.77  318.00  114.68  4577.24  1543.00    
+14.14     0.20    0.47   0.30  13.16
+md1               0.00     0.00    1.41    1.29    11.27    10.36     
+8.00     0.00    0.00   0.00   0.00
+md2               0.00     0.00 1119.61  164.21 10796.10  1530.64     
+9.60     0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.42    0.01     3.20     0.01     
+7.46     0.00    0.00   0.00   0.00
+
+Shouldn't also the %util of 2 members of the same raid-1 array be the 
+same? Also svctm seems very different by a similar factor of x5.
+
+A little background info about the system:
+- CentOS 6.4
+- Linux 2.6.32-358.11.1.el6.x86_64 #1 SMP Wed Jun 12 03:34:52 UTC 2013 
+x86_64 x86_64 x86_64 GNU/Linux
+- E3-1270v2, 16GB RAM, SuperMicro SYS-5017C-MTRF, 2 x Samsung 840 Pro 
+512GB in mdraid-1
+- cat /proc/mdstat
+md0 : active raid1 sdb2[1] sda2[0]
+       204736 blocks super 1.0 [2/2] [UU]
+md2 : active raid1 sdb3[1] sda3[0]
+       404750144 blocks super 1.0 [2/2] [UU]
+md1 : active raid1 sdb1[1] sda1[0]
+       2096064 blocks super 1.1 [2/2] [UU]
+
+Kind regards!
+
