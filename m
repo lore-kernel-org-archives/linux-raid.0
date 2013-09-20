@@ -1,7 +1,7 @@
 From: Andrei Banu <andrei.banu@redhost.ro>
 Subject: Anomaly with 2 x 840Pro SSDs in software raid 1
-Date: Fri, 20 Sep 2013 16:05:36 +0300
-Message-ID: <fb67779bbcbf5350e85432704fed805a@redhost.ro>
+Date: Fri, 20 Sep 2013 15:43:51 +0300
+Message-ID: <1af14cfddfa5194b8f168e7131361543@redhost.ro>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
  format=flowed
