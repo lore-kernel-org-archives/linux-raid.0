@@ -1,86 +1,89 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Fri, 20 Sep 2013 10:56:16 +0200
-Message-ID: <CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
-	<20130914064305.0baadc69@notabene.brown>
-	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
-	<20130914203800.385466b2@notabene.brown>
-	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>
-	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>
-	<5234CA6A.3070305@arcor.de>
-	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>
-	<52373A19.7000105@arcor.de>
+From: John <linux_mailing@internode.on.net>
+Subject: Raid 5 Array 3/4 Drives non-fresh
+Date: Fri, 20 Sep 2013 22:36:21 +1000
+Message-ID: <523C4145.7000502@internode.on.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52373A19.7000105@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Martin,
+Hi all,
 
-On Mon, Sep 16, 2013 at 7:04 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> On 09/16/2013 03:56 PM, Francis Moreau wrote:
->
->> I did give your patch "DDF: compare_super_ddf: fix sequence number
->> check" a try and now mdadm is able to detect a difference between the
->> 2 disks. Therefore it refuses to insert the second disk which is
->> better.
->>
->> However it's still not able to detect which version is the "fresher"
->> like mdadm does with soft RAID1 (metadata 1.2). Therefore mdadm is not
->> able to kick out the first disk if it's the outdated one.
->>
->> Is that expected ?
->
-> At the moment, yes. This needs work.
->
+Plugged in some buggy usb hardware and it did bad things to my kernel
+INFO: task khubd:27 blocked for more than 120 seconds.
+After reset realized all 3 of my md arrays got a bit upset by my usb 
+device! :-(
 
-Actually this is worse than I thought: with your patch applied mdadm
-refuses to add back a spare disk into a degraded DDF array.
+1 rebuilt, the other is  rebuilding now (they only lost 1 disk each)
+The third one below is a bit beyond my limited skills! I think I need to 
+re-create the array but would like some help in doing so.. as I really 
+don't want to trash it through incompetence..
 
-For example on a DDF array:
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md126 : active raid1 sdb[1] sda[0]
-      2064384 blocks super external:/md127/0 [2/2] [UU]
-
-md127 : inactive sdb[1](S) sda[0](S)
-      65536 blocks super external:ddf
-
-unused devices: <none>
-
-# mdadm /dev/md126 --fail sdb
-[   24.118434] md/raid1:md126: Disk failure on sdb, disabling device.
-[   24.118437] md/raid1:md126: Operation continuing on 1 devices.
-mdadm: set sdb faulty in /dev/md126
-
-# mdadm /dev/md127 --remove sdb
-mdadm: hot removed sdb from /dev/md127
-
-# mdadm /dev/md127 --add /dev/sdb
-mdadm: added /dev/sdb
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md126 : active raid1 sda[0]
-      2064384 blocks super external:/md127/0 [2/1] [U_]
-
-md127 : inactive sdb[1](S) sda[0](S)
-      65536 blocks super external:ddf
-
-unused devices: <none>
+  md: kicking non-fresh sdj from array!
+  md: unbind<sdj>
+  md: export_rdev(sdj)
+  md: kicking non-fresh sdh from array!
+  md: unbind<sdh>
+  md: export_rdev(sdh)
+  md: kicking non-fresh sdk from array!
+  md: unbind<sdk>
+  md: export_rdev(sdk)
+  md/raid:md2: device sdi operational as raid disk 1
+  md/raid:md2: allocated 4280kB
+  md/raid:md2: not enough operational devices (3/4 failed)
+  RAID conf printout:
+  --- level:5 rd:4 wd:1
+   disk 1, o:1, dev:sdi
+  md/raid:md2: failed to run raid set.
+  md: pers->run() failed ...
 
 
-As you can see the reinserted disk sdb sits as spare and isn't added
-back to the array.
+Tried
+mdadm --assemble /dev/md2 --scan
 
-Is it possible to add this major feature work again and keep your improvement ?
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] 
+[raid1] [raid10]
+md2 : inactive sdi[6](S) sdk[4](S) sdj[5](S) sdh[0](S)
+       7814054240 blocks super 1.2
 
-Thanks
--- 
-Francis
+md0 : active raid5 sdn[2] sdo[1] sdm[4] sdf[5]
+       2197720128 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/4] 
+[UUUU]
+
+md1 : active raid5 sdb[5] sdc[1] sdd[4] sda[2]
+       2930284224 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/3] 
+[_UUU]
+       [=======>.............]  recovery = 35.8% (350218368/976761408) 
+finish=200.6min speed=52048K/sec
+
+then
+
+mdadm --assemble /dev/md2 --scan --force
+
+All members came up as spares
+
+mdadm --stop /dev/md2
+
+ARRAY /dev/md2 metadata=1.2 name=storagepc:raid-2tb 
+UUID=73ea3bd2:50b609a1:768a7e19:ca3ef9f0
+/dev/sdh Active Device 0 AA.. Event 203528
+/dev/sdi Active device 1 .A.. Event 203552
+/dev/sdj Active device 2 AAAA Event 203522
+/dev/sdk Active device 3 AAAA Event 203522
+
+I am running
+dd if=/dev/xxx of=/dev/null bs=1M
+across all the /dev/md2 drives in case there is something more than the 
+just the kernel hang that caused this
+
+The entire array is one lvm volume.. would appreciate any help to 
+reassemble!
+
+
+Kind Regards,
+
+John
