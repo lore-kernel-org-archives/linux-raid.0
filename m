@@ -1,42 +1,76 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-Date: Thu, 19 Sep 2013 18:22:53 -0500
-Message-ID: <523B874D.4050904@hardwarefreak.com>
-References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com> <CACJz6QtVzR1bED939ZkesyXMWjv-2DmxZSrGH_enKX5dCuNEJw@mail.gmail.com> <CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com> <CAH3kUhFf11O8a-y5W40ogrKu_XsjGfmi6R4YUmxbYw-McrEvyA@mail.gmail.com> <CACJz6QtDt-5mgtpHr092AyFOxoSoY+V7F8QbiUcDuD5JN7TsMA@mail.gmail.com> <CAH3kUhGNeXbmR+2zk+3KCDSaBfsjLuZQA89tG_C776emw0nSSQ@mail.gmail.com> <523A60DF.5040702@hardwarefreak.com> <CAH3kUhFaXEwR8ym8Vvf3yEODLf6mXOWnCQbk4qgLk7bnaepV3g@mail.gmail.com> <523AAC1F.6050006@hardwarefreak.com> <CAH3kUhG8cKsuG=-aJOuzJOV+5fe46E+QdCMczxghuL-MbWK95Q@mail.gmail.com> <523B1D1C.2070807@mpstor.com> <CAH3kUhF26nE7cro_Kkod6uZzLeEkhLtpDpbtF3ts2_F9hb4bYQ@mail.gmail.com> <523B26E9.30608@mpstor.com> <CAH3kUhE33h=7D6r7KO9VvQRN5qrZS+cad
- KUBQW8POFYvyGsS3w@mail.gmail.com> <523B3185.3020309@mpstor.com>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <523B3185.3020309@mpstor.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
-Cc: Roberto Spadim <rspadim@gmail.com>, Drew <drew.kay@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH] Problems with RAID 4/5/6 and kmem_cache
+Date: Thu, 19 Sep 2013 22:15:59 -0500
+Message-ID: <1379646960-12553-1-git-send-email-jbrassow@redhat.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-raid@vger.kernel.org
+Cc: linux-mm@kvack.org, cl@linux.com, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-On 9/19/2013 12:16 PM, Benjamin ESTRABAUD wrote:
+I'm sending a patch that changes the name string used with
+kmem_cache_create.  While I believe this is a bug in the kmem_cache
+implementation, it doesn't hurt to work-around it in this simple way.
 
-> MegaRAID is the LSI RAID controller's driver/management software name.
+The problem with kmem_cache* is this:
+*) Assume CONFIG_SLUB is set
+1) kmem_cache_create(name="foo-a")
+- creates new kmem_cache structure
+2) kmem_cache_create(name="foo-b")
+- If identical cache characteristics, it will be merged with the previously
+  created cache associated with "foo-a".  The cache's refcount will be 
+  incremented and an alias will be created via sysfs_slab_alias().
+3) kmem_cache_destroy(<ptr>)
+- Attempting to destroy cache associated with "foo-a", but instead the
+  refcount is simply decremented.  I don't even think the sysfs aliases are
+  ever removed...
+4) kmem_cache_create(name="foo-a")               
+- This FAILS because kmem_cache_sanity_check colides with the existing
+  name ("foo-a") associated with the non-removed cache.
 
-For the young pups here, MegaRAID was the brand name for the hardware
-RAID products sold by American Megatrends Incorporated, AMI, in the
-1990s.  You just might recognize that name, since most PCs ship with AMI
-BIOS.  AMI sold their RAID division to LSI more than 10 years ago.  They
-also sold their motherboard division though I can't recall to whom.
+This is a problem for RAID (specifically dm-raid) because the name used
+for the kmem_cache_create is ("raid%d-%p", level, mddev).  If the cache
+persists for long enough, the memory address of an old mddev will be 
+reused for a new mddev - causing an identical formulation of the cache
+name.  Even though kmem_cache_destory had long ago been used to delete
+the old cache, the merging of caches has cause the name and cache of that
+old instance to be preserved and causes a colision (and thus failure) in
+kmem_cache_create().  I see this regularly in my testing.
 
-LSI also purchased Mylex Corp around the same time frame.  Together, AMI
-and Mylex owned over ~70% of the US RAID card market, a large percent of
-the worldwide RAID card market, and had OEM contracts with all of the
-major hardware vendors, including Bull, Data General, DEC, Dell,
-Fujitsu/Siemens, HP, IBM, SGI, SUN, Unisys, etc.  Sometime later they
-also acquired 3Ware, pretty well sewing up the market.
+I haven't tried to reproduce this using MD-specific tools, but I would
+think it would be even easier to reproduce there because of the cache
+name being used.  (Perhaps create two similar RAID4/5/6 arrays.  Remove
+the first one and then try to recreate the first one.  The cache should
+stay and the re-use of the name should collide.)
 
-Mylex didn't use any branding, simply model numbers, such as DAC960,
-DAC1100, etc.  So LSI retained the MegaRAID brand and has used it for
-all RAID products to date, as it had wide recognition and is catchy as
-far as branding goes.
+There are a few ways I can think of to correct this bug in kmem_cache,
+but none of them seem that clean.
+1) force kmem_cache_destroy to be called with a name so that the
+   proper alias can be removed (and the name of the cache possibly
+   updated).
+2) Change structures around so that we return something small from
+   kmem_cache_create that contains a name and pointer to the mergable
+   cache.  If new caches are mergable with existing ones, then we
+   only have to create the small structure.  Having that pointer allows
+   us to properly remove the reference and corresponding name when
+   calling kmem_cache_destroy().
+Perhaps there are cleaner options.  In the meantime, please accept my
+MD RAID4/5/6 workaround patch.
+
+thanks,
+ brassow
+
+Jonathan Brassow (1):
+  RAID5: Change kmem_cache name string of RAID 4/5/6 stripe cache
+
+ drivers/md/raid5.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 -- 
-Stan
+1.7.7.6
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
