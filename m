@@ -1,158 +1,64 @@
-From: Sachin Garg <sgarg.bugreporter@gmail.com>
-Subject: Unable to start RAID5 array
-Date: Thu, 19 Sep 2013 23:37:55 -0400
-Message-ID: <523BC313.8000104@gmail.com>
+From: Dave Gomboc <dave_gomboc@acm.org>
+Subject: Re: raid10 recovery assistance requested
+Date: Thu, 19 Sep 2013 22:29:11 -0700
+Message-ID: <CA+dwz-1=VQE1pgCctrdbvw99Qq2c_me1aYUJGU0E2sJ2Y-JdpA@mail.gmail.com>
+References: <CA+dwz-3hWizOmbzBDBV3K4DPM1D3WUPRn_d63-FhS+5RZ-ffvQ@mail.gmail.com>
+ <CA+dwz-2DUsx6JK=TYfKc8eGbAiHo2orhnBQv5HfOTNXAi9hv7g@mail.gmail.com> <523A7DB9.9070600@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <523A7DB9.9070600@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Thanks for replying, Stan.
 
-I have a RAID5 array comprised of 4 devices (partitions). On top of the
-RAID, I have an LVM volume which contains my /home. Recently, I started
-getting a lot of SATA errors relating to one of my hard drives and I
-decided to remove it from the array. I do not know what I did, but after
-marking the device as failed, the RAID array would not assemble and
-drops me to a root shell.
+I am not actually sure what are the bare, required facts, so I had
+just tried to include the information that I could obtain from mdadm.
 
-I am running ArchLinux and have whatever are the latest packages
-available - don't have the machine at hand, hence unable to specify
-exact versions.
+At this point, I have been running GNU ddrescue (e.g., ddrescue
+--cluster-size=65536 --no-split --force /dev/source /dev/destination
+/.../log.txt) to transfer two of the complete drives to two of the
+larger four drives that I have.  No errors have shown up whatsoever so
+far, which jives with the SMART results.  In a couple of more days, I
+should have all four copied over, then I could try risk writing to the
+four larger drives.
 
-This is what I see when I run the various commands. It should be noted
-that the array to be assembled is actually /dev/md127. The array was
-actually created using SystemRescueCD.
+I know that the set of 4 drives had been set aside for quite a while.
+They were completely out of space.  I booted the recovery disk for a
+couple of reasons.  One was that when I booted normally, they had
+shown up with one marked as failed.  However, there seems to be no
+actual error, so I can only guess that prior to having set them aside
+some time ago, I had failed one on purpose in order to install a
+larger drive and begin a migration, but got interrupted by life's
+events.  The other reason was that I had (mistakenly) thought it would
+be a good idea to use the recovery disk as an environment from which
+to migrate the data to larger drives.  I was also adding hardware to
+support port multiplication (don't have 8 sata ports onboard) and
+thought it would be helpful to be running a relatively bare-bones
+setup.
 
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : inactive sdc2[1](S) sda2[0](S) sdb1[4](S)
-      480215144 blocks super 1.2
+Dave
 
-unused devices: <none>
 
-# mdadm -E --scan -v
-ARRAY /dev/md/0  level=raid5 metadata=1.2 num-devices=4
-UUID=01b153ea:a93c7325:c13bf9cf:3195666f name=sysresccd:0
-   devices=/dev/sdc2,/dev/sdb1,/dev/sda2
-
-# mdadm -E /dev/sda2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 01b153ea:a93c7325:c13bf9cf:3195666f
-           Name : sysresccd:0
-  Creation Time : Sat Mar  2 11:03:45 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 312570400 (149.05 GiB 160.04 GB)
-     Array Size : 468475392 (446.77 GiB 479.72 GB)
-  Used Dev Size : 312316928 (148.92 GiB 159.91 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 3a44949c:aba25c05:76fb0146:3192a757
-
-    Update Time : Thu Sep 12 19:16:14 2013
-       Checksum : dacd122 - correct
-         Events : 118427
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AA.A ('A' == active, '.' == missing)
-
-# mdadm -E /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 01b153ea:a93c7325:c13bf9cf:3195666f
-           Name : sysresccd:0
-  Creation Time : Sat Mar  2 11:03:45 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 312317616 (148.92 GiB 159.91 GB)
-     Array Size : 468475392 (446.77 GiB 479.72 GB)
-  Used Dev Size : 312316928 (148.92 GiB 159.91 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 73aaeb8f:9e33caf5:7837c9f5:f3ac36ab
-
-    Update Time : Thu Sep 12 19:16:14 2013
-       Checksum : f4c83ba7 - correct
-         Events : 118427
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AA.A ('A' == active, '.' == missing)
-
-# mdadm -E /dev/sdc2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 01b153ea:a93c7325:c13bf9cf:3195666f
-           Name : sysresccd:0
-  Creation Time : Sat Mar  2 11:03:45 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 335542272 (160.00 GiB 171.80 GB)
-     Array Size : 468475392 (446.77 GiB 479.72 GB)
-  Used Dev Size : 312316928 (148.92 GiB 159.91 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 3da52be1:5dbcb8f2:90e0904b:1150045d
-
-    Update Time : Thu Sep 12 19:16:14 2013
-       Checksum : 4bea74b3 - correct
-         Events : 118427
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AA.A ('A' == active, '.' == missing)
-
-# mdadm -Avf /dev/md127
-mdadm: looking for devices for /dev/md127
-mdadm: no RAID superblock on /dev/dm-6
-mdadm: no RAID superblock on /dev/dm-5
-mdadm: no RAID superblock on /dev/dm-4
-mdadm: no RAID superblock on /dev/dm-3
-mdadm: no RAID superblock on /dev/dm-2
-mdadm: no RAID superblock on /dev/dm-1
-mdadm: no RAID superblock on /dev/dm-0
-mdadm: /dev/sdc2 is busy - skipping
-mdadm: no RAID superblock on /dev/sdc1
-mdadm: no RAID superblock on /dev/sdc
-mdadm: /dev/sdb1 is busy - skipping
-mdadm: no RAID superblock on /dev/sdb
-mdadm: no RAID superblock on /dev/sda3
-mdadm: /dev/sda2 is busy - skipping
-mdadm: no RAID superblock on /dev/sda1
-mdadm: no RAID superblock on /dev/sda
-
-Now, the question that arises is why are the devices:  /dev/sda2,
-/dev/sdb1 and /dev/sdc2 busy, even though the RAID has not been
-assembled? How can I fix this? How can I fix "mdadm -E --scan -v" so
-that it shows the device as /dev/md127. If nothing else, how can I
-recover the data and recreate the RAID array?
-
-Have been struggling with this for some time. Any help would be
-gleefully accepted.
-
-Thanks,
-Sachin
+On 18 September 2013 21:29, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 9/18/2013 10:20 PM, Dave Gomboc wrote:
+> ...
+>> Having received no response to date, I am wondering if this perhaps
+>> isn't the right forum for asking for advice regarding my problem.  If
+>> it is not, could someone please suggest where I should be asking
+>> instead?
+>
+> This is the right place.  I suspect your somewhat convoluted report had
+> folks scratching their heads, all hoping someone else would pick this
+> one up.  Could you condense it into the bare required facts?
+>
+> Also, I didn't see a statement as to why you booted the recovery disk to
+> begin with.  That fact alone suggests you already had some problem.
+> What was it?
+>
+> --
+> Stan
+>
