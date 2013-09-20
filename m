@@ -1,93 +1,87 @@
-From: Andrei Banu <andrei.banu@redhost.ro>
-Subject: Anomaly with 2 x 840Pro SSDs in software raid 1
-Date: Fri, 20 Sep 2013 15:43:51 +0300
-Message-ID: <1af14cfddfa5194b8f168e7131361543@redhost.ro>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: mdadm 3.3 fails to kick out non fresh disk
+Date: Fri, 20 Sep 2013 20:07:53 +0200
+Message-ID: <523C8EF9.60809@arcor.de>
+References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>	<20130914064305.0baadc69@notabene.brown>	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>	<20130914203800.385466b2@notabene.brown>	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>	<5234CA6A.3070305@arcor.de>	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>	<52373A19.7000105@arcor.de> <CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 09/20/2013 10:56 AM, Francis Moreau wrote:
+> Hello Martin,
+> 
+> On Mon, Sep 16, 2013 at 7:04 PM, Martin Wilck <mwilck@arcor.de> wrote:
+>> On 09/16/2013 03:56 PM, Francis Moreau wrote:
+>>
+>>> I did give your patch "DDF: compare_super_ddf: fix sequence number
+>>> check" a try and now mdadm is able to detect a difference between the
+>>> 2 disks. Therefore it refuses to insert the second disk which is
+>>> better.
+>>>
+>>> However it's still not able to detect which version is the "fresher"
+>>> like mdadm does with soft RAID1 (metadata 1.2). Therefore mdadm is not
+>>> able to kick out the first disk if it's the outdated one.
+>>>
+>>> Is that expected ?
+>>
+>> At the moment, yes. This needs work.
+>>
+> 
+> Actually this is worse than I thought: with your patch applied mdadm
+> refuses to add back a spare disk into a degraded DDF array.
+> 
+> For example on a DDF array:
+> 
+> # cat /proc/mdstat
+> Personalities : [raid1]
+> md126 : active raid1 sdb[1] sda[0]
+>       2064384 blocks super external:/md127/0 [2/2] [UU]
+> 
+> md127 : inactive sdb[1](S) sda[0](S)
+>       65536 blocks super external:ddf
+> 
+> unused devices: <none>
+> 
+> # mdadm /dev/md126 --fail sdb
+> [   24.118434] md/raid1:md126: Disk failure on sdb, disabling device.
+> [   24.118437] md/raid1:md126: Operation continuing on 1 devices.
+> mdadm: set sdb faulty in /dev/md126
+> 
+> # mdadm /dev/md127 --remove sdb
+> mdadm: hot removed sdb from /dev/md127
+> 
+> # mdadm /dev/md127 --add /dev/sdb
+> mdadm: added /dev/sdb
+> 
+> # cat /proc/mdstat
+> Personalities : [raid1]
+> md126 : active raid1 sda[0]
+>       2064384 blocks super external:/md127/0 [2/1] [U_]
+> 
+> md127 : inactive sdb[1](S) sda[0](S)
+>       65536 blocks super external:ddf
+> 
+> unused devices: <none>
+> 
+> 
+> As you can see the reinserted disk sdb sits as spare and isn't added
+> back to the array.
 
-We have a troubling server fitted with 2 840Pro Samsung SSDs. Besides 
-other problems addressed also here a while ago (to which I have still 
-found no solution) we have one more anomaly (or so I believe).
+That's correct. You marked that disk failed.
 
-Although both SSDs worked 100% of the time their wear is very different. 
-/dev/sda has a wear of 95% while /dev/sdb has a wear of 77%. The total 
-number of LBAs is different only by 9.76%. But the wear level is with 
-463.75% higher for sdb.
+> Is it possible to add this major feature work again and keep your improvement ?
 
-Shouldn't these be proportional?
+No. A failed disk can't be added again without rebuild. I am positive
+about that.
 
-root [~]# smartctl --attributes /dev/sda
-smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-358.11.1.el6.x86_64] 
-(local build)
+Martin
 
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
-UPDATED  WHEN_FAILED RAW_VALUE
-
-   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always 
-       -       4014
-  12 Power_Cycle_Count       0x0032   099   099   000    Old_age   Always 
-       -       5
-177 Wear_Leveling_Count     0x0013   095   095   000    Pre-fail  Always 
-       -       149
-241 Total_LBAs_Written      0x0032   099   099   000    Old_age   Always 
-       -       18515581190
-
-root [~]# smartctl --attributes /dev/sdb
-smartctl 5.43 2012-06-30 r3573 [x86_64-linux-2.6.32-358.11.1.el6.x86_64] 
-(local build)
-
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      
-UPDATED  WHEN_FAILED RAW_VALUE
-
-   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always 
-       -       4014
-  12 Power_Cycle_Count       0x0032   099   099   000    Old_age   Always 
-       -       5
-177 Wear_Leveling_Count     0x0013   077   077   000    Pre-fail  Always 
-       -       840
-241 Total_LBAs_Written      0x0032   099   099   000    Old_age   Always 
-       -       20324371103
-
-
-A 'iostat -x' returns this:
-
-Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s 
-avgrq-sz avgqu-sz   await  svctm  %util
-sda              10.10    46.15  803.26  121.32  8672.87  1543.00    
-11.05     0.33    0.36   0.06   5.47
-sdb               9.15    52.77  318.00  114.68  4577.24  1543.00    
-14.14     0.20    0.47   0.30  13.16
-md1               0.00     0.00    1.41    1.29    11.27    10.36     
-8.00     0.00    0.00   0.00   0.00
-md2               0.00     0.00 1119.61  164.21 10796.10  1530.64     
-9.60     0.00    0.00   0.00   0.00
-md0               0.00     0.00    0.42    0.01     3.20     0.01     
-7.46     0.00    0.00   0.00   0.00
-
-Shouldn't also the %util of 2 members of the same raid-1 array be the 
-same? Also svctm seems very different by a similar factor of x5.
-
-A little background info about the system:
-- CentOS 6.4
-- Linux 2.6.32-358.11.1.el6.x86_64 #1 SMP Wed Jun 12 03:34:52 UTC 2013 
-x86_64 x86_64 x86_64 GNU/Linux
-- E3-1270v2, 16GB RAM, SuperMicro SYS-5017C-MTRF, 2 x Samsung 840 Pro 
-512GB in mdraid-1
-- cat /proc/mdstat
-md0 : active raid1 sdb2[1] sda2[0]
-       204736 blocks super 1.0 [2/2] [UU]
-md2 : active raid1 sdb3[1] sda3[0]
-       404750144 blocks super 1.0 [2/2] [UU]
-md1 : active raid1 sdb1[1] sda1[0]
-       2096064 blocks super 1.1 [2/2] [UU]
-
-Kind regards!
+> 
+> Thanks
 
