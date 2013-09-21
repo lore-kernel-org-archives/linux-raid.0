@@ -1,70 +1,60 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Desperate: mdadm fails to assemble raid saying devices are busy.
-Date: Sat, 21 Sep 2013 12:44:42 -0500
-Message-ID: <CAAMCDed1UffC4yj9DvKSu_9HhrJo6XLh4tHqkU9ymhP19AD1Ag@mail.gmail.com>
-References: <523DADE5.8050604@gmail.com>
+From: Christoph Lameter <cl@linux.com>
+Subject: Re: [PATCH] Problems with RAID 4/5/6 and kmem_cache
+Date: Sat, 21 Sep 2013 21:56:34 +0000
+Message-ID: <0000014142863060-919062ff-7284-445d-b3ec-f38cc8d5a6c8-000000@email.amazonses.com>
+References: <1379646960-12553-1-git-send-email-jbrassow@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <523DADE5.8050604@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Sachin Garg <sgarg.bugreporter@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1379646960-12553-1-git-send-email-jbrassow@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, Pekka Enberg <penberg@kernel.org>
 List-Id: linux-raid.ids
 
-cat /proc/mdstat
+On Thu, 19 Sep 2013, Jonathan Brassow wrote:
 
-It is probably already partially assembled (and since no force not
-active--note there is a kernel optionmd_mod.start_dirty_degraded=1
-that will enable if the array can at least work ) so not operational,
-typically you can stop it and it will no longer show up in mdstat then
-you can do what you are trying to do.
+> 4) kmem_cache_create(name="foo-a")
+> - This FAILS because kmem_cache_sanity_check colides with the existing
+>   name ("foo-a") associated with the non-removed cache.
 
-lsof will not show things that are being held open/busy in the kernel,
-lsof only shows userspace useage.
+That should not happen. breakage you see will result. Oh. I see the move
+to common code resulted in the SLAB checks being used for SLUB.
 
-On Sat, Sep 21, 2013 at 9:32 AM, Sachin Garg
-<sgarg.bugreporter@gmail.com> wrote:
-> Hi,
->
-> I am on Arch Linux. I have a 4 device RAID 5 of which 1 device is no longer
-> working. I am unable to assemble the raid.
->
-> The active devices are:/dev/sda2, /dev/sdb1, /dev/sdc2
->
-> The errors I get are like:
->
-> # mdadm -Avf /dev/md127
-> mdadm: looking for devices for /dev/md127
-> mdadm: no RAID superblock on /dev/dm-6
-> mdadm: no RAID superblock on /dev/dm-5
-> mdadm: no RAID superblock on /dev/dm-4
-> mdadm: no RAID superblock on /dev/dm-3
-> mdadm: no RAID superblock on /dev/dm-2
-> mdadm: no RAID superblock on /dev/dm-1
-> mdadm: no RAID superblock on /dev/dm-0
-> mdadm: /dev/sdc2 is busy - skipping
-> mdadm: no RAID superblock on /dev/sdc1
-> mdadm: no RAID superblock on /dev/sdc
-> mdadm: /dev/sdb1 is busy - skipping
-> mdadm: no RAID superblock on /dev/sdb
-> mdadm: no RAID superblock on /dev/sda3
-> mdadm: /dev/sda2 is busy - skipping
-> mdadm: no RAID superblock on /dev/sda1
-> mdadm: no RAID superblock on /dev/sda
->
-> I would like to know what is making these devices busy. I do not see any
-> indication from lsof or from the device mapper that these devices are being
-> used. I have even changed the  initramfs and the fstab etc. to prevent this
-> array from being started at boot time - still unable to assemble it.
->
-> This array contains my /home and I do not know how to recover it.
->
-> Help please ...
->
-> Thanks,
-> Sachin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following patch should fix this.
+
+Subject: slab_common: Do not check for duplicate slab names
+
+SLUB can alias multiple slab kmem_create_requests to one slab cache
+to save memory and increase the cache hotness. As a result the name
+of the slab can be stale. Only check the name for duplicates if we are
+in debug mode where we do not merge multiple caches.
+
+Signed-off-by: Christoph Lameter <cl@linux.com>
+
+Index: linux/mm/slab_common.c
+===================================================================
+--- linux.orig/mm/slab_common.c	2013-09-20 11:49:13.052208294 -0500
++++ linux/mm/slab_common.c	2013-09-21 16:55:23.097131481 -0500
+@@ -56,6 +56,7 @@
+ 			continue;
+ 		}
+
++#if !defined(CONFIG_SLUB) || !defined(CONFIG_SLUB_DEBUG_ON)
+ 		/*
+ 		 * For simplicity, we won't check this in the list of memcg
+ 		 * caches. We have control over memcg naming, and if there
+@@ -69,6 +70,7 @@
+ 			s = NULL;
+ 			return -EINVAL;
+ 		}
++#endif
+ 	}
+
+ 	WARN_ON(strchr(name, ' '));	/* It confuses parsers */
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
