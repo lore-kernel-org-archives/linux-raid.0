@@ -1,80 +1,149 @@
-From: Dave Gomboc <dave_gomboc@acm.org>
-Subject: Re: raid10 recovery assistance requested
-Date: Sun, 22 Sep 2013 17:15:59 +0000
-Message-ID: <CA+dwz-27furxUt=vQAhN8Va_gk3v545in3=kQVMG4eO5SqdCrQ@mail.gmail.com>
-References: <CA+dwz-3hWizOmbzBDBV3K4DPM1D3WUPRn_d63-FhS+5RZ-ffvQ@mail.gmail.com>
- <CA+dwz-2DUsx6JK=TYfKc8eGbAiHo2orhnBQv5HfOTNXAi9hv7g@mail.gmail.com>
- <523A7DB9.9070600@hardwarefreak.com> <CA+dwz-1=VQE1pgCctrdbvw99Qq2c_me1aYUJGU0E2sJ2Y-JdpA@mail.gmail.com>
+From: P Agenbag <internet@mweb.co.za>
+Subject: RAID5+spare volume gone - mdadm sees RAID1 only?
+Date: Sun, 22 Sep 2013 20:02:35 +0200
+Message-ID: <CAFjqtwhDa03Yi2kaWAVCVpYPxPmF3omwAw2KW4cmKfQerXFwug@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+dwz-1=VQE1pgCctrdbvw99Qq2c_me1aYUJGU0E2sJ2Y-JdpA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: stan@hardwarefreak.com
 List-Id: linux-raid.ids
 
-Okay,
+Hi List
 
-I am nervous about losing 10+ years of personal data.  Your help would
-be greatly appreciated!
+I have a D-Link DNS345 NAS which I configured as RAID5 + spare with 4x
+500GB Seagate SATA drives.
 
-I now have all four drives copied (with ddrescue) from the originals.
-The new copies are connected to the system; the original drives are
-not.  When attempting to boot from my normal boot drive, I see this
-very early on in the boot process:
+I suspect a power surge caused the NAS to suddenly lose the volume.
 
-Booting...
-errror: found two disks with the index 0 for RAID md/teramooch.
-error: found two disks with the index 3 for RAID md/teramooch.
+All 4 drives checked out OK when doing a SMART test on the NAS itself.
+I proceeded to build all 4 drives into a CentOS server, but was unable
+to mount the RAID5 - error is always "not enough drives".
 
-Later, once the dmesg material appears, I get to:
+I followed some advise in archives, and did some mdadm -- examines,
+and echo them below - what I don't understand is why the --examine
+picks them up as RAID1.
 
-** WARNING: There appears to be one or more degraded RAID devices **
+Is there anything I can do to re-build this array?
 
-The system may have suffered a hardware fault, such as a disk drive
-failure.  The root device may depend on the RAID devices being online.
-One or more of the following RAID devices are degraded:
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md0 : inactive sdi1[3](S) sdg1[0](S)
-      3907021954 blocks super 1.2
+Appreciate any help/advise.
 
-unused devices: <none>
-You may attempt to start the system anyway, or stop now and attempt
-manual recovery operations.  To do this automatically in the future,
-add "bootdegraded=true" to the kernel boot options.
+Regards
 
-If you choose to start the degraded RAID, the system may boot
-normally, but performance may be degraded, and a further hardware
-fault could result in permanent data loss.
 
-If you abort now, you will be provided with a recovery shell.
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 17888794:50a497c7:f853c57d:313558dc
+  Creation Time : Sat Sep 21 11:19:13 2013
+     Raid Level : raid1
+  Used Dev Size : 524224 (512.02 MiB 536.81 MB)
+     Array Size : 524224 (512.02 MiB 536.81 MB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 1
 
-Do you wish to start the degraded RAID [y/N]: Timed out
-Gave up waiting for root device.  Common problems:
- - Boot args (cat /proc/cmdline)
-   - Check rootdelay=  (did the system wait long enough?)
-   - Check root= (did the system wait for the right device?)
- - Missing modules (cat /proc/modules: ls /dev)
-ALERT!  /dev/mapper/teramooch-root does not exist.  Dropping to a shell!
+    Update Time : Sun Sep 22 12:20:23 2013
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : df65b6a0 - correct
+         Events : 6
 
-BusyBox v1.18.5 (Ubuntu 1:1.18.5-1ubuntu4.1) built-in shell (ash)
-Enter 'help' for a list of built-in commands.
 
-(initramfs) _
+      Number   Major   Minor   RaidDevice State
+this     3       8        1        3      active sync   /dev/sda1
 
-I then rebooted and allowed the system rescue cd to boot.  cat
-/proc/mdstat gives
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 17888794:50a497c7:f853c57d:313558dc
+  Creation Time : Sat Sep 21 11:19:13 2013
+     Raid Level : raid1
+  Used Dev Size : 524224 (512.02 MiB 536.81 MB)
+     Array Size : 524224 (512.02 MiB 536.81 MB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 1
 
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md127 : inactive sda1[3](S) sdc1[0](S)
-      3907021954 blocks super 1.2
+    Update Time : Sun Sep 22 12:20:23 2013
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : df65b6aa - correct
+         Events : 6
 
-unused devices: <none>
 
-What should I do from here?
+      Number   Major   Minor   RaidDevice State
+this     0       8       17        0      active sync   /dev/sdb1
 
-Thanks,
-Dave
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 17888794:50a497c7:f853c57d:313558dc
+  Creation Time : Sat Sep 21 11:19:13 2013
+     Raid Level : raid1
+  Used Dev Size : 524224 (512.02 MiB 536.81 MB)
+     Array Size : 524224 (512.02 MiB 536.81 MB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 1
+
+    Update Time : Sun Sep 22 12:20:23 2013
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : df65b6be - correct
+         Events : 6
+
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       33        2      active sync   /dev/sdc1
+
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 17888794:50a497c7:f853c57d:313558dc
+  Creation Time : Sat Sep 21 11:19:13 2013
+     Raid Level : raid1
+  Used Dev Size : 524224 (512.02 MiB 536.81 MB)
+     Array Size : 524224 (512.02 MiB 536.81 MB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 1
+
+    Update Time : Sun Sep 22 12:20:23 2013
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : df65b6cc - correct
+         Events : 6
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       49        1      active sync   /dev/sdd1
+
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       49        1      active sync   /dev/sdd1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8        1        3      active sync   /dev/sda1
