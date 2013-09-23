@@ -1,7 +1,7 @@
 From: Dave Gomboc <dave_gomboc@acm.org>
 Subject: Re: raid10 recovery assistance requested
-Date: Mon, 23 Sep 2013 04:55:45 +0000
-Message-ID: <CA+dwz-2CMaoquRso8d=FZ1X5cEWE0vz7ceR6zhwzR2xM=1FM9A@mail.gmail.com>
+Date: Mon, 23 Sep 2013 05:07:11 +0000
+Message-ID: <CA+dwz-1tERmc0ntihZdm-q1USkJNX9Px7Xdpb7Tr=k02pe-gOg@mail.gmail.com>
 References: <CA+dwz-3hWizOmbzBDBV3K4DPM1D3WUPRn_d63-FhS+5RZ-ffvQ@mail.gmail.com>
  <CA+dwz-2DUsx6JK=TYfKc8eGbAiHo2orhnBQv5HfOTNXAi9hv7g@mail.gmail.com>
  <523A7DB9.9070600@hardwarefreak.com> <CA+dwz-1=VQE1pgCctrdbvw99Qq2c_me1aYUJGU0E2sJ2Y-JdpA@mail.gmail.com>
@@ -11,259 +11,379 @@ References: <CA+dwz-3hWizOmbzBDBV3K4DPM1D3WUPRn_d63-FhS+5RZ-ffvQ@mail.gmail.com>
  <523FAD81.9070005@turmel.org> <CA+dwz-2Me3g3udQh90k6EjCMjr+uqyoujCdMM9=tsKEnsmkzdA@mail.gmail.com>
  <523FB511.5070001@turmel.org> <CA+dwz-31yG3Y4xzmUoiMNtLw=q1pE_GTyNqSk5WBAsGDCGT9iw@mail.gmail.com>
  <523FBAB2.7070506@turmel.org> <CA+dwz-2qqYbL1uFmL+vnS=ht6ZHxMDkRRBUYPz0KFQZNZkeK-A@mail.gmail.com>
- <523FBFAA.3050705@turmel.org>
+ <523FBFAA.3050705@turmel.org> <CA+dwz-2CMaoquRso8d=FZ1X5cEWE0vz7ceR6zhwzR2xM=1FM9A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary=001a1130ca2e5830ac04e705ffbd
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <523FBFAA.3050705@turmel.org>
+In-Reply-To: <CA+dwz-2CMaoquRso8d=FZ1X5cEWE0vz7ceR6zhwzR2xM=1FM9A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> Should I be disconnecting sdb and sdc, disconnecting sda and sdd, or
->> does it matter?
->
-> Actually, from that report, just do "mdadm /dev/md127 --run".
+--001a1130ca2e5830ac04e705ffbd
+Content-Type: text/plain; charset=ISO-8859-1
 
-This didn't seem to work for me.  A subsequent mdadm --stop did affect
-/proc/mdstat, though.
-
-I then went on to verify which drive was providing what using mdadm --examine.
-
-Rebooting with just one of each drive available, mdadm /dev/md127
---run again didn't work.  I then went to your earlier advice:
-
->>> Then use "mdadm -Af /dev/mdX /dev/sdY1 /dev/sdZ1"
->>>
->>> The "-f" will force the assembly without regard to the event counts.
->>> Then you can take a backup.  Finally you can add devices as "new" ones
->>> to rebuild back to full redundancy.  (Fix your timeouts before
->>> attempting the latter.)
-
-The drives are now sda and sdb (instead of sda and sdd).
-
-root@sysresccd /root % mdadm -Af /dev/md127 /dev/sda1 /dev/sdb1
-mdadm: forcing event count in /dev/sda1(0) from 520 upto 599
-mdadm: /dev/md127 has been started with 2 drives (out of 4).
-
-The partition information seems to be visible:
-
-root@sysresccd /root % cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md127 : active raid10 sda1[0] sdb1[3]
-      3907020800 blocks super 1.2 512K chunks 2 near-copies [4/2] [U__U]
-
-unused devices: <none>
-root@sysresccd /root % pvdisplay
-  --- Physical volume ---
-  PV Name               /dev/md127
-  VG Name               teramooch
-  PV Size               3.64 TiB / not usable 2.00 MiB
-  Allocatable           yes (but full)
-  PE Size               4.00 MiB
-  Total PE              953862
-  Free PE               0
-  Allocated PE          953862
-  PV UUID               CPvNYY-28Dn-M96v-orps-1882-IOR3-fm7wHO
-
-root@sysresccd /root % vgdisplay
-  --- Volume group ---
-  VG Name               teramooch
-  System ID
-  Format                lvm2
-  Metadata Areas        1
-  Metadata Sequence No  26
-  VG Access             read/write
-  VG Status             resizable
-  MAX LV                0
-  Cur LV                8
-  Open LV               0
-  Max PV                0
-  Cur PV                1
-  Act PV                1
-  VG Size               3.64 TiB
-  PE Size               4.00 MiB
-  Total PE              953862
-  Alloc PE / Size       953862 / 3.64 TiB
-  Free  PE / Size       0 / 0
-  VG UUID               j4Svly-X1uO-OVL1-cfCd-eJ4s-sEQs-O50dGq
-
-At first, lvdisplay showed the logical volumes as not available, so I
-then invoked
-
-root@sysresccd /root % vgchange -a y
-  8 logical volume(s) in volume group "teramooch" now active
-root@sysresccd /root % lvdisplay
-  --- Logical volume ---
-  LV Path                /dev/teramooch/root
-  LV Name                root
-  VG Name                teramooch
-  LV UUID                914ouu-RIan-58j9-HU8x-lL1r-shjr-BFupPn
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                5.00 GiB
-  Current LE             1280
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:0
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/usr
-  LV Name                usr
-  VG Name                teramooch
-  LV UUID                ah8CFq-r946-GRxW-q1yv-vcVH-S341-AoJmBH
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                5.00 GiB
-  Current LE             1280
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:1
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/var
-  LV Name                var
-  VG Name                teramooch
-  LV UUID                eybfZ0-Vy8N-P5XG-S0C1-dXzw-gaCG-TCry0d
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                5.00 GiB
-  Current LE             1280
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:2
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/tmp
-  LV Name                tmp
-  VG Name                teramooch
-  LV UUID                2SSk0A-Mv2b-gI5X-37TE-1zoX-9afj-wUbvkT
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                1.00 GiB
-  Current LE             256
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:3
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/opt
-  LV Name                opt
-  VG Name                teramooch
-  LV UUID                0HN60s-NOr9-qQ5m-Kgds-Y7i0-jDHl-RlpEhg
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                1.00 GiB
-  Current LE             256
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:4
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/home
-  LV Name                home
-  VG Name                teramooch
-  LV UUID                j1Vtft-WRg8-yBIM-fhjb-6EP4-Df56-4lTHz7
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                5.00 GiB
-  Current LE             1280
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:5
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/srv
-  LV Name                srv
-  VG Name                teramooch
-  LV UUID                L3n5AZ-XgTa-7uV8-GzCG-82oX-JqrJ-VugwT6
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                2.91 TiB
-  Current LE             762123
-  Segments               7
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:6
-
-  --- Logical volume ---
-  LV Path                /dev/teramooch/backupduffycapemay
-  LV Name                backupduffycapemay
-  VG Name                teramooch
-  LV UUID                83RVKO-txsd-q1oE-2p9n-z0dk-zIQe-Sx3Eol
-  LV Write Access        read/write
-  LV Creation host, time ,
-  LV Status              available
-  # open                 0
-  LV Size                726.98 GiB
-  Current LE             186107
-  Segments               2
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     4096
-  Block device           253:7
-
-I made /mnt/root, /mnt/home, etc., then
-
-[Actually, I mounted these rw first, then realized that I shouldn't
-have, unmounted them, and re-mounted them read-only.]
-
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-root /mnt/root
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-home /mnt/home
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-tmp /mnt/tmp
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-usr /mnt/usr
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-var /mnt/var
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-opt /mnt/opt
-
-These mount attempts returned without error, and ls within the
-directories is possible.
-
-However, the large, important one doesn't mount:
-
-root@sysresccd /mnt % mount -o ro -t ext3 /dev/mapper/teramooch-srv /mnt/srv
-mount: wrong fs type, bad option, bad superblock on /dev/mapper/teramooch-srv,
-       missing codepage or helper program, or other error
-       In some cases useful info is found in syslog - try
-       dmesg | tail or so
-
-root@sysresccd /mnt % mount -o ro /dev/mapper/teramooch-srv /mnt/srv
-NTFS signature is missing.
-Failed to mount '/dev/mapper/teramooch-srv': Invalid argument
-The device '/dev/mapper/teramooch-srv' doesn't seem to have a valid NTFS.
-Maybe the wrong device is used? Or the whole disk instead of a
-partition (e.g. /dev/sda, not /dev/sda1)? Or the other way around?
-
-It should be ext3, not NTFS.
-
-Yikes.
+I can get at that /etc/lvm area now (it's part of root).  I pasted the
+contents of /etc/lvm/backup/teramooch here, and I have also attached
+it to this email.
 
 Dave
+
+root@sysresccd /root % cat /mnt/root/etc/lvm/backup/teramooch
+# Generated by LVM2 version 2.02.66(2) (2010-05-20): Sat Aug  4 21:25:35 2012
+
+contents = "Text Format Volume Group"
+version = 1
+
+description = "Created *after* executing 'vgreduce teramooch /dev/sda'"
+
+creation_host = "cheap" # Linux cheap 3.2.0-26-generic #41-Ubuntu SMP
+Thu Jun 14 17:49:24 UTC 2012 x86_64
+creation_time = 1344140735 # Sat Aug  4 21:25:35 2012
+
+teramooch {
+id = "j4Svly-X1uO-OVL1-cfCd-eJ4s-sEQs-O50dGq"
+seqno = 26
+status = ["RESIZEABLE", "READ", "WRITE"]
+flags = []
+extent_size = 8192 # 4 Megabytes
+max_lv = 0
+max_pv = 0
+
+physical_volumes {
+
+pv0 {
+id = "CPvNYY-28Dn-M96v-orps-1882-IOR3-fm7wHO"
+device = "/dev/md0" # Hint only
+
+status = ["ALLOCATABLE"]
+flags = []
+dev_size = 7814041600 # 3.6387 Terabytes
+pe_start = 2048
+pe_count = 953862 # 3.63869 Terabytes
+}
+}
+
+logical_volumes {
+
+root {
+id = "914ouu-RIan-58j9-HU8x-lL1r-shjr-BFupPn"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 1280 # 5 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 0
+]
+}
+}
+
+usr {
+id = "ah8CFq-r946-GRxW-q1yv-vcVH-S341-AoJmBH"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 1280 # 5 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 1280
+]
+}
+}
+
+var {
+id = "eybfZ0-Vy8N-P5XG-S0C1-dXzw-gaCG-TCry0d"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 1280 # 5 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 2560
+]
+}
+}
+
+tmp {
+id = "2SSk0A-Mv2b-gI5X-37TE-1zoX-9afj-wUbvkT"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 256 # 1024 Megabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 3840
+]
+}
+}
+
+opt {
+id = "0HN60s-NOr9-qQ5m-Kgds-Y7i0-jDHl-RlpEhg"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 256 # 1024 Megabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 5120
+]
+}
+}
+
+home {
+id = "j1Vtft-WRg8-yBIM-fhjb-6EP4-Df56-4lTHz7"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 1
+
+segment1 {
+start_extent = 0
+extent_count = 1280 # 5 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 6400
+]
+}
+}
+
+srv {
+id = "L3n5AZ-XgTa-7uV8-GzCG-82oX-JqrJ-VugwT6"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 7
+
+segment1 {
+start_extent = 0
+extent_count = 393216 # 1.5 Terabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 268544
+]
+}
+segment2 {
+start_extent = 393216
+extent_count = 112902 # 441.023 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 840960
+]
+}
+segment3 {
+start_extent = 506118
+extent_count = 97280 # 380 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 743680
+]
+}
+segment4 {
+start_extent = 603398
+extent_count = 80640 # 315 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 187904
+]
+}
+segment5 {
+start_extent = 684038
+extent_count = 1024 # 4 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 4096
+]
+}
+segment6 {
+start_extent = 685062
+extent_count = 1024 # 4 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 5376
+]
+}
+segment7 {
+start_extent = 686086
+extent_count = 76037 # 297.02 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 111867
+]
+}
+}
+
+backupduffycapemay {
+id = "83RVKO-txsd-q1oE-2p9n-z0dk-zIQe-Sx3Eol"
+status = ["READ", "WRITE", "VISIBLE"]
+flags = []
+segment_count = 2
+
+segment1 {
+start_extent = 0
+extent_count = 81920 # 320 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 661760
+]
+}
+segment2 {
+start_extent = 81920
+extent_count = 104187 # 406.98 Gigabytes
+
+type = "striped"
+stripe_count = 1 # linear
+
+stripes = [
+"pv0", 7680
+]
+}
+}
+}
+}
+root@sysresccd /root %
+
+--001a1130ca2e5830ac04e705ffbd
+Content-Type: application/octet-stream; name=teramooch
+Content-Disposition: attachment; filename=teramooch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hlwte3gh0
+
+IyBHZW5lcmF0ZWQgYnkgTFZNMiB2ZXJzaW9uIDIuMDIuNjYoMikgKDIwMTAtMDUtMjApOiBTYXQg
+QXVnICA0IDIxOjI1OjM1IDIwMTIKCmNvbnRlbnRzID0gIlRleHQgRm9ybWF0IFZvbHVtZSBHcm91
+cCIKdmVyc2lvbiA9IDEKCmRlc2NyaXB0aW9uID0gIkNyZWF0ZWQgKmFmdGVyKiBleGVjdXRpbmcg
+J3ZncmVkdWNlIHRlcmFtb29jaCAvZGV2L3NkYSciCgpjcmVhdGlvbl9ob3N0ID0gImNoZWFwIgkj
+IExpbnV4IGNoZWFwIDMuMi4wLTI2LWdlbmVyaWMgIzQxLVVidW50dSBTTVAgVGh1IEp1biAxNCAx
+Nzo0OToyNCBVVEMgMjAxMiB4ODZfNjQKY3JlYXRpb25fdGltZSA9IDEzNDQxNDA3MzUJIyBTYXQg
+QXVnICA0IDIxOjI1OjM1IDIwMTIKCnRlcmFtb29jaCB7CglpZCA9ICJqNFN2bHktWDF1Ty1PVkwx
+LWNmQ2QtZUo0cy1zRVFzLU81MGRHcSIKCXNlcW5vID0gMjYKCXN0YXR1cyA9IFsiUkVTSVpFQUJM
+RSIsICJSRUFEIiwgIldSSVRFIl0KCWZsYWdzID0gW10KCWV4dGVudF9zaXplID0gODE5MgkJIyA0
+IE1lZ2FieXRlcwoJbWF4X2x2ID0gMAoJbWF4X3B2ID0gMAoKCXBoeXNpY2FsX3ZvbHVtZXMgewoK
+CQlwdjAgewoJCQlpZCA9ICJDUHZOWVktMjhEbi1NOTZ2LW9ycHMtMTg4Mi1JT1IzLWZtN3dITyIK
+CQkJZGV2aWNlID0gIi9kZXYvbWQwIgkjIEhpbnQgb25seQoKCQkJc3RhdHVzID0gWyJBTExPQ0FU
+QUJMRSJdCgkJCWZsYWdzID0gW10KCQkJZGV2X3NpemUgPSA3ODE0MDQxNjAwCSMgMy42Mzg3IFRl
+cmFieXRlcwoJCQlwZV9zdGFydCA9IDIwNDgKCQkJcGVfY291bnQgPSA5NTM4NjIJIyAzLjYzODY5
+IFRlcmFieXRlcwoJCX0KCX0KCglsb2dpY2FsX3ZvbHVtZXMgewoKCQlyb290IHsKCQkJaWQgPSAi
+OTE0b3V1LVJJYW4tNThqOS1IVTh4LWxMMXItc2hqci1CRnVwUG4iCgkJCXN0YXR1cyA9IFsiUkVB
+RCIsICJXUklURSIsICJWSVNJQkxFIl0KCQkJZmxhZ3MgPSBbXQoJCQlzZWdtZW50X2NvdW50ID0g
+MQoKCQkJc2VnbWVudDEgewoJCQkJc3RhcnRfZXh0ZW50ID0gMAoJCQkJZXh0ZW50X2NvdW50ID0g
+MTI4MAkjIDUgR2lnYWJ5dGVzCgoJCQkJdHlwZSA9ICJzdHJpcGVkIgoJCQkJc3RyaXBlX2NvdW50
+ID0gMQkjIGxpbmVhcgoKCQkJCXN0cmlwZXMgPSBbCgkJCQkJInB2MCIsIDAKCQkJCV0KCQkJfQoJ
+CX0KCgkJdXNyIHsKCQkJaWQgPSAiYWg4Q0ZxLXI5NDYtR1J4Vy1xMXl2LXZjVkgtUzM0MS1Bb0pt
+QkgiCgkJCXN0YXR1cyA9IFsiUkVBRCIsICJXUklURSIsICJWSVNJQkxFIl0KCQkJZmxhZ3MgPSBb
+XQoJCQlzZWdtZW50X2NvdW50ID0gMQoKCQkJc2VnbWVudDEgewoJCQkJc3RhcnRfZXh0ZW50ID0g
+MAoJCQkJZXh0ZW50X2NvdW50ID0gMTI4MAkjIDUgR2lnYWJ5dGVzCgoJCQkJdHlwZSA9ICJzdHJp
+cGVkIgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVhcgoKCQkJCXN0cmlwZXMgPSBbCgkJCQkJ
+InB2MCIsIDEyODAKCQkJCV0KCQkJfQoJCX0KCgkJdmFyIHsKCQkJaWQgPSAiZXliZlowLVZ5OE4t
+UDVYRy1TMEMxLWRYenctZ2FDRy1UQ3J5MGQiCgkJCXN0YXR1cyA9IFsiUkVBRCIsICJXUklURSIs
+ICJWSVNJQkxFIl0KCQkJZmxhZ3MgPSBbXQoJCQlzZWdtZW50X2NvdW50ID0gMQoKCQkJc2VnbWVu
+dDEgewoJCQkJc3RhcnRfZXh0ZW50ID0gMAoJCQkJZXh0ZW50X2NvdW50ID0gMTI4MAkjIDUgR2ln
+YWJ5dGVzCgoJCQkJdHlwZSA9ICJzdHJpcGVkIgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVh
+cgoKCQkJCXN0cmlwZXMgPSBbCgkJCQkJInB2MCIsIDI1NjAKCQkJCV0KCQkJfQoJCX0KCgkJdG1w
+IHsKCQkJaWQgPSAiMlNTazBBLU12MmItZ0k1WC0zN1RFLTF6b1gtOWFmai13VWJ2a1QiCgkJCXN0
+YXR1cyA9IFsiUkVBRCIsICJXUklURSIsICJWSVNJQkxFIl0KCQkJZmxhZ3MgPSBbXQoJCQlzZWdt
+ZW50X2NvdW50ID0gMQoKCQkJc2VnbWVudDEgewoJCQkJc3RhcnRfZXh0ZW50ID0gMAoJCQkJZXh0
+ZW50X2NvdW50ID0gMjU2CSMgMTAyNCBNZWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQiCgkJ
+CQlzdHJpcGVfY291bnQgPSAxCSMgbGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYwIiwg
+Mzg0MAoJCQkJXQoJCQl9CgkJfQoKCQlvcHQgewoJCQlpZCA9ICIwSE42MHMtTk9yOS1xUTVtLUtn
+ZHMtWTdpMC1qREhsLVJscEVoZyIKCQkJc3RhdHVzID0gWyJSRUFEIiwgIldSSVRFIiwgIlZJU0lC
+TEUiXQoJCQlmbGFncyA9IFtdCgkJCXNlZ21lbnRfY291bnQgPSAxCgoJCQlzZWdtZW50MSB7CgkJ
+CQlzdGFydF9leHRlbnQgPSAwCgkJCQlleHRlbnRfY291bnQgPSAyNTYJIyAxMDI0IE1lZ2FieXRl
+cwoKCQkJCXR5cGUgPSAic3RyaXBlZCIKCQkJCXN0cmlwZV9jb3VudCA9IDEJIyBsaW5lYXIKCgkJ
+CQlzdHJpcGVzID0gWwoJCQkJCSJwdjAiLCA1MTIwCgkJCQldCgkJCX0KCQl9CgoJCWhvbWUgewoJ
+CQlpZCA9ICJqMVZ0ZnQtV1JnOC15QklNLWZoamItNkVQNC1EZjU2LTRsVEh6NyIKCQkJc3RhdHVz
+ID0gWyJSRUFEIiwgIldSSVRFIiwgIlZJU0lCTEUiXQoJCQlmbGFncyA9IFtdCgkJCXNlZ21lbnRf
+Y291bnQgPSAxCgoJCQlzZWdtZW50MSB7CgkJCQlzdGFydF9leHRlbnQgPSAwCgkJCQlleHRlbnRf
+Y291bnQgPSAxMjgwCSMgNSBHaWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQiCgkJCQlzdHJp
+cGVfY291bnQgPSAxCSMgbGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYwIiwgNjQwMAoJ
+CQkJXQoJCQl9CgkJfQoKCQlzcnYgewoJCQlpZCA9ICJMM241QVotWGdUYS03dVY4LUd6Q0ctODJv
+WC1KcXJKLVZ1Z3dUNiIKCQkJc3RhdHVzID0gWyJSRUFEIiwgIldSSVRFIiwgIlZJU0lCTEUiXQoJ
+CQlmbGFncyA9IFtdCgkJCXNlZ21lbnRfY291bnQgPSA3CgoJCQlzZWdtZW50MSB7CgkJCQlzdGFy
+dF9leHRlbnQgPSAwCgkJCQlleHRlbnRfY291bnQgPSAzOTMyMTYJIyAxLjUgVGVyYWJ5dGVzCgoJ
+CQkJdHlwZSA9ICJzdHJpcGVkIgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVhcgoKCQkJCXN0
+cmlwZXMgPSBbCgkJCQkJInB2MCIsIDI2ODU0NAoJCQkJXQoJCQl9CgkJCXNlZ21lbnQyIHsKCQkJ
+CXN0YXJ0X2V4dGVudCA9IDM5MzIxNgoJCQkJZXh0ZW50X2NvdW50ID0gMTEyOTAyCSMgNDQxLjAy
+MyBHaWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQiCgkJCQlzdHJpcGVfY291bnQgPSAxCSMg
+bGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYwIiwgODQwOTYwCgkJCQldCgkJCX0KCQkJ
+c2VnbWVudDMgewoJCQkJc3RhcnRfZXh0ZW50ID0gNTA2MTE4CgkJCQlleHRlbnRfY291bnQgPSA5
+NzI4MAkjIDM4MCBHaWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQiCgkJCQlzdHJpcGVfY291
+bnQgPSAxCSMgbGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYwIiwgNzQzNjgwCgkJCQld
+CgkJCX0KCQkJc2VnbWVudDQgewoJCQkJc3RhcnRfZXh0ZW50ID0gNjAzMzk4CgkJCQlleHRlbnRf
+Y291bnQgPSA4MDY0MAkjIDMxNSBHaWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQiCgkJCQlz
+dHJpcGVfY291bnQgPSAxCSMgbGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYwIiwgMTg3
+OTA0CgkJCQldCgkJCX0KCQkJc2VnbWVudDUgewoJCQkJc3RhcnRfZXh0ZW50ID0gNjg0MDM4CgkJ
+CQlleHRlbnRfY291bnQgPSAxMDI0CSMgNCBHaWdhYnl0ZXMKCgkJCQl0eXBlID0gInN0cmlwZWQi
+CgkJCQlzdHJpcGVfY291bnQgPSAxCSMgbGluZWFyCgoJCQkJc3RyaXBlcyA9IFsKCQkJCQkicHYw
+IiwgNDA5NgoJCQkJXQoJCQl9CgkJCXNlZ21lbnQ2IHsKCQkJCXN0YXJ0X2V4dGVudCA9IDY4NTA2
+MgoJCQkJZXh0ZW50X2NvdW50ID0gMTAyNAkjIDQgR2lnYWJ5dGVzCgoJCQkJdHlwZSA9ICJzdHJp
+cGVkIgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVhcgoKCQkJCXN0cmlwZXMgPSBbCgkJCQkJ
+InB2MCIsIDUzNzYKCQkJCV0KCQkJfQoJCQlzZWdtZW50NyB7CgkJCQlzdGFydF9leHRlbnQgPSA2
+ODYwODYKCQkJCWV4dGVudF9jb3VudCA9IDc2MDM3CSMgMjk3LjAyIEdpZ2FieXRlcwoKCQkJCXR5
+cGUgPSAic3RyaXBlZCIKCQkJCXN0cmlwZV9jb3VudCA9IDEJIyBsaW5lYXIKCgkJCQlzdHJpcGVz
+ID0gWwoJCQkJCSJwdjAiLCAxMTE4NjcKCQkJCV0KCQkJfQoJCX0KCgkJYmFja3VwZHVmZnljYXBl
+bWF5IHsKCQkJaWQgPSAiODNSVktPLXR4c2QtcTFvRS0ycDluLXowZGsteklRZS1TeDNFb2wiCgkJ
+CXN0YXR1cyA9IFsiUkVBRCIsICJXUklURSIsICJWSVNJQkxFIl0KCQkJZmxhZ3MgPSBbXQoJCQlz
+ZWdtZW50X2NvdW50ID0gMgoKCQkJc2VnbWVudDEgewoJCQkJc3RhcnRfZXh0ZW50ID0gMAoJCQkJ
+ZXh0ZW50X2NvdW50ID0gODE5MjAJIyAzMjAgR2lnYWJ5dGVzCgoJCQkJdHlwZSA9ICJzdHJpcGVk
+IgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVhcgoKCQkJCXN0cmlwZXMgPSBbCgkJCQkJInB2
+MCIsIDY2MTc2MAoJCQkJXQoJCQl9CgkJCXNlZ21lbnQyIHsKCQkJCXN0YXJ0X2V4dGVudCA9IDgx
+OTIwCgkJCQlleHRlbnRfY291bnQgPSAxMDQxODcJIyA0MDYuOTggR2lnYWJ5dGVzCgoJCQkJdHlw
+ZSA9ICJzdHJpcGVkIgoJCQkJc3RyaXBlX2NvdW50ID0gMQkjIGxpbmVhcgoKCQkJCXN0cmlwZXMg
+PSBbCgkJCQkJInB2MCIsIDc2ODAKCQkJCV0KCQkJfQoJCX0KCX0KfQo=
+--001a1130ca2e5830ac04e705ffbd--
