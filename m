@@ -1,7 +1,7 @@
-From: Roberto Spadim <rspadim@gmail.com>
+From: Tommy Apel <tommyapeldk@gmail.com>
 Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-Date: Tue, 24 Sep 2013 03:11:24 -0300
-Message-ID: <CAH3kUhHWBp=BFxH1kRLWqShhgwGzbnm5qfXv4csD0eaZw16KAw@mail.gmail.com>
+Date: Tue, 24 Sep 2013 09:18:37 +0200
+Message-ID: <CAGA4a+FD8TN1LkZRAAjQ-tHFPrSb1dT9URyzEtUCBE10Fboueg@mail.gmail.com>
 References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com>
 	<CACJz6QtVzR1bED939ZkesyXMWjv-2DmxZSrGH_enKX5dCuNEJw@mail.gmail.com>
 	<CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com>
@@ -19,71 +19,87 @@ References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com>
 	<523B3185.3020309@mpstor.com>
 	<523B874D.4050904@hardwarefreak.com>
 	<CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com>
+	<CAH3kUhHWBp=BFxH1kRLWqShhgwGzbnm5qfXv4csD0eaZw16KAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com>
+In-Reply-To: <CAH3kUhHWBp=BFxH1kRLWqShhgwGzbnm5qfXv4csD0eaZw16KAw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <rspadim@gmail.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hi guys, i found this one ( http://en.wikipedia.org/wiki/I-RAM ), but
-it's pci (not pci-express) and don't have a high iops (pci bootleneck)
-any pci-express solution like this?
+Hello Roberto,
+modern day I-RAM are a PCIe SSD's, you might want to take a look at
+these options
+OCZ RevoDrive, Fusion-IO ioDrive, LSI Nytro
+
+
+/Tommy
+
 
 2013/9/24 Roberto Spadim <rspadim@gmail.com>:
-> Hi Stan,Benjamin, Drew and others guys!
-> Well i read many things about raid cards now =) thanks stan! i'm not a
-> expert but at least somethings i understood...
+> hi guys, i found this one ( http://en.wikipedia.org/wiki/I-RAM ), but
+> it's pci (not pci-express) and don't have a high iops (pci bootleneck)
+> any pci-express solution like this?
 >
-> i was thinking about BBU at raid cards...
-> it's something like bcache with the 'ssd' part as the raid card, and
-> the hdd part as the raid disks.... different from ssd the raid card
-> use ram memory (probably) + batery
->
-> well now my question is...
-> there's a memory + bbu 'hard drive'?
-> i want to use it as the ssd part of the bcache, and use the hdd as my
-> motherboard hdd connections
-> in other words... i want the raid card goals with a memory hard drive
->
-> any ideas? anyone know anything about it?
->
-> thanks guys!
->
-> 2013/9/19 Stan Hoeppner <stan@hardwarefreak.com>:
->> On 9/19/2013 12:16 PM, Benjamin ESTRABAUD wrote:
+> 2013/9/24 Roberto Spadim <rspadim@gmail.com>:
+>> Hi Stan,Benjamin, Drew and others guys!
+>> Well i read many things about raid cards now =) thanks stan! i'm not a
+>> expert but at least somethings i understood...
 >>
->>> MegaRAID is the LSI RAID controller's driver/management software name.
+>> i was thinking about BBU at raid cards...
+>> it's something like bcache with the 'ssd' part as the raid card, and
+>> the hdd part as the raid disks.... different from ssd the raid card
+>> use ram memory (probably) + batery
 >>
->> For the young pups here, MegaRAID was the brand name for the hardware
->> RAID products sold by American Megatrends Incorporated, AMI, in the
->> 1990s.  You just might recognize that name, since most PCs ship with AMI
->> BIOS.  AMI sold their RAID division to LSI more than 10 years ago.  They
->> also sold their motherboard division though I can't recall to whom.
+>> well now my question is...
+>> there's a memory + bbu 'hard drive'?
+>> i want to use it as the ssd part of the bcache, and use the hdd as my
+>> motherboard hdd connections
+>> in other words... i want the raid card goals with a memory hard drive
 >>
->> LSI also purchased Mylex Corp around the same time frame.  Together, AMI
->> and Mylex owned over ~70% of the US RAID card market, a large percent of
->> the worldwide RAID card market, and had OEM contracts with all of the
->> major hardware vendors, including Bull, Data General, DEC, Dell,
->> Fujitsu/Siemens, HP, IBM, SGI, SUN, Unisys, etc.  Sometime later they
->> also acquired 3Ware, pretty well sewing up the market.
+>> any ideas? anyone know anything about it?
 >>
->> Mylex didn't use any branding, simply model numbers, such as DAC960,
->> DAC1100, etc.  So LSI retained the MegaRAID brand and has used it for
->> all RAID products to date, as it had wide recognition and is catchy as
->> far as branding goes.
+>> thanks guys!
+>>
+>> 2013/9/19 Stan Hoeppner <stan@hardwarefreak.com>:
+>>> On 9/19/2013 12:16 PM, Benjamin ESTRABAUD wrote:
+>>>
+>>>> MegaRAID is the LSI RAID controller's driver/management software name.
+>>>
+>>> For the young pups here, MegaRAID was the brand name for the hardware
+>>> RAID products sold by American Megatrends Incorporated, AMI, in the
+>>> 1990s.  You just might recognize that name, since most PCs ship with AMI
+>>> BIOS.  AMI sold their RAID division to LSI more than 10 years ago.  They
+>>> also sold their motherboard division though I can't recall to whom.
+>>>
+>>> LSI also purchased Mylex Corp around the same time frame.  Together, AMI
+>>> and Mylex owned over ~70% of the US RAID card market, a large percent of
+>>> the worldwide RAID card market, and had OEM contracts with all of the
+>>> major hardware vendors, including Bull, Data General, DEC, Dell,
+>>> Fujitsu/Siemens, HP, IBM, SGI, SUN, Unisys, etc.  Sometime later they
+>>> also acquired 3Ware, pretty well sewing up the market.
+>>>
+>>> Mylex didn't use any branding, simply model numbers, such as DAC960,
+>>> DAC1100, etc.  So LSI retained the MegaRAID brand and has used it for
+>>> all RAID products to date, as it had wide recognition and is catchy as
+>>> far as branding goes.
+>>>
+>>> --
+>>> Stan
+>>>
+>>
+>>
 >>
 >> --
->> Stan
->>
+>> Roberto Spadim
 >
 >
 >
 > --
 > Roberto Spadim
-
-
-
--- 
-Roberto Spadim
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
