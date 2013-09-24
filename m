@@ -1,45 +1,52 @@
-From: mwilck@arcor.de
-Subject: [PATCH] Monitor: write meta data in readonly state, sometimes
-Date: Tue, 24 Sep 2013 20:53:18 +0200
-Message-ID: <1380048798-31699-1-git-send-email-mwilck@arcor.de>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Detecting that an array has been stopped
+Date: Tue, 24 Sep 2013 15:20:24 -0500
+Message-ID: <l1ss60$fun$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch reverts 24a216bf:
-"Monitor: Don't write metadata in inactive array state".
+I've successfully gotten my NAS monitoring program to check the status
+of my RAID arrays by parsing /proc/mdstat.  (Definitely a PITA, but I
+did get to learn about RAID 10 layouts ans POSIX regular expressions.)
 
-While it's true that writing meta data is usually not necessary
-in readonly state, there is one important exception: if a
-disk goes faulty, we want to record that, even if the array is
-inactive.
+I'm now thinking about how to make the program robust in the situation
+where the array names (in /proc/mdstat) aren't necessarily stable.  For
+example, a couple of arrays might be stopped for some sort of
+maintenance activity and "swap" names when they are reassembled.
 
-We might as well just revert 24a216bf, because with the recently
-submitted patch
-"Monitor: don't set arrays dirty after transition to read-only"
-those meta data writes that really annoying (for a clean, readonly,
-healthy array during startup) are gone anyway.
+The obvious answer is to use mdadm to check the UUIDs of the arrays, but
+I don't want to do that every time I check the RAID status (currently
+every 30 seconds).  So my plan is to only read the UUID of an array
+when it first appears in /proc/mdstat (i.e. it wasn't there the last
+time I read the file).
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- monitor.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+This will work as long as the program notices that an array has been
+stopped before a (possibly different) array appears with the same name.
+So it would be nice if there were a simple way to reliably detect that
+a particular array has been stopped -- even if a different array has
+since been started with the same name.  It appears that I can do this
+pretty easily with sysfs.
 
-diff --git a/monitor.c b/monitor.c
-index 3b57ed0..f81e707 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -421,8 +421,7 @@ static int read_and_act(struct active_array *a)
- 	if (sync_completed > a->last_checkpoint)
- 		a->last_checkpoint = sync_completed;
- 
--	if (deactivate || a->curr_state >= clean)
--		a->container->ss->sync_metadata(a->container);
-+	a->container->ss->sync_metadata(a->container);
- 	dprintf("%s(%d): state:%s action:%s next(", __func__, a->info.container_member,
- 		array_states[a->curr_state], sync_actions[a->curr_action]);
- 
+From my initial testing, it looks like I can open each array's
+array_state file when I first detect the array, and lseek/read will
+return ENODEV if the array is ever stopped -- even if the array is
+restarted (with the same or a different name) or if a different array is
+started with the same name.
+
+It seems almost too easy.
+
+Is there any reason that this approach won't work?
+
+Thanks!
+
 -- 
-1.7.3.4
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+Sometimes there's nothing left to do but crash and burn...or die trying.
+========================================================================
+
