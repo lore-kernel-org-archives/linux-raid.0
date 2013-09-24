@@ -1,48 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/22] Immutable biovecs, block layer changes
-Date: Tue, 24 Sep 2013 04:00:12 -0700
-Message-ID: <20130924110012.GA7160@infradead.org>
-References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
- <20130808150954.GA30092@infradead.org>
- <20130808211529.GB15409@kmo-pixel>
+From: Andreas Heinlein <aheinlein@gmx.com>
+Subject: Strange RAID 1 rebuild problem
+Date: Tue, 24 Sep 2013 14:23:03 +0200
+Message-ID: <52418427.40208@gmx.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130808211529.GB15409@kmo-pixel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <kmo@daterainc.com>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just curious, what's the state of the remaining immutable bio work?
+Hello,
 
-On Thu, Aug 08, 2013 at 02:15:29PM -0700, Kent Overstreet wrote:
-> > What is preventing you from sending those out as well?  While it's not
-> > absolutely nessecary it would certainly be good if we'd avoid a struct
-> > bio size regression.
-> 
-> There's still some fairly significant changes, and I don't want to make
-> too many invasive changes at once.
-> 
-> Main thing is making generic_make_request() take arbitrary size bios.
-> After this series that's just two simple patches, but then the changes
-> to make use of that will be changing behaviour in non obvious ways.
-> 
-> The way the merging changes work is it enables multi page bvecs - so a
-> bvec can point to many physically contiguous pages. This moves segment
-> merging to bio_add_page(), and gets rid of bi_phys_segments - now
-> bi_vcnt == bi_phys_segments, we just split the bio if it's too big.
-> 
-> Then, with bio_add_page() building up large bios and the block layer
-> splitting them as necessary, there shouldn't be any need for segment
-> merging across bios anymore (because generally when that would've
-> happened before, now we'd just be sending one larger bio down).
-> 
-> The remaining patches aren't terribly complicated though (less
-> complicated than this patch series). Trickiest bit is multipage bvecs,
-> and that's mostly just lots of code auditing - the way I convert
-> existing code is by adding bio_for_each_page() - analagous to
-> bio_for_each_segment, but giving you bvecs that point to single pages.
-> So it's an easy conversion, just have to make sure nothing's missed.
----end quoted text---
+we have a strange problem rebuilding a partially destroyed md raid 1, 
+and I hope you can help me.
+
+Short description: We have a machine with two disks with 4 partitions 
+each; partitions 2, 3 and 4 each form a raid 1 (md0 = sda2/sdc2, md1 = 
+sda3/sdc3, md2 = sda4/sdc4). We lost a disk some days ago and I am now 
+trying to rebuild it with a brand new disk (here sdc). I cloned the 
+partition table from sda to sdc and successfully added back partitions 2 
+and 3 to md0 and md1, respectively. I also added partition 4 to md2, and 
+it starts rebuilding. I can see a "RebuildFinished Event" some hours 
+later in the logs, but when I look at /proc/mdstat, it looks like this:
+
+md2 : active raid1 sdc4[1](S) sda4[0]
+       xxx blocks [2/1] [_U]
+
+So the newly-added partition is listed as a spare, while md2 is running 
+on only one of two devices. I have no idea where this comes from, and I 
+see no further information in the logs. The array was initially built 
+with 2 devices *plus* one spare (which is to be added later on), but I 
+don't think this is an issue here.
+
+We're running Linux 2.6.32 on Debian 6.0, with mdadm
