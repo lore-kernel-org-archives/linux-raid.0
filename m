@@ -1,56 +1,293 @@
-From: "Bradley D. Thornton" <Bradley@NorthTech.US>
-Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-Date: Tue, 24 Sep 2013 05:12:22 -0700
-Message-ID: <524181A6.6050303@NorthTech.US>
-References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com> <CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com> <CAH3kUhFf11O8a-y5W40ogrKu_XsjGfmi6R4YUmxbYw-McrEvyA@mail.gmail.com> <CACJz6QtDt-5mgtpHr092AyFOxoSoY+V7F8QbiUcDuD5JN7TsMA@mail.gmail.com> <CAH3kUhGNeXbmR+2zk+3KCDSaBfsjLuZQA89tG_C776emw0nSSQ@mail.gmail.com> <523A60DF.5040702@hardwarefreak.com> <CAH3kUhFaXEwR8ym8Vvf3yEODLf6mXOWnCQbk4qgLk7bnaepV3g@mail.gmail.com> <523AAC1F.6050006@hardwarefreak.com> <CAH3kUhG8cKsuG=-aJOuzJOV+5fe46E+QdCMczxghuL-MbWK95Q@mail.gmail.com> <523B1D1C.2070807@mpstor.com> <CAH3kUhF26nE7cro_Kkod6uZzLeEkhLtpDpbtF3ts2_F9hb4bYQ@mail.gmail.com> <523B26E9.30608@mpstor.com> <CAH3kUhE33h=7D6r7KO9VvQRN5qrZS+cadKUBQW8POFYvyGsS3w@mail.gmail.com> <523B3185.3020309@mpstor.com> <523B
- 874D.4050904@hardwarefreak.com> <CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com> <52414D81.4010104@hardwarefreak.com>
+From: Karel Walters <karel.walters@gmail.com>
+Subject: [Recovery] RAID10 hdd failureS help requested
+Date: Tue, 24 Sep 2013 15:12:30 +0200
+Message-ID: <CAB4fJqfd1zrw_AS89ufysfyCoKNf6VYj81xov0=7y0aXoYtjxw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52414D81.4010104@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: RIPEMD160
+Hopefully someone can help me with this.
+I have a 7 drive raid10 array.
+A single drive failed this night and the 7th spare drive was trying to
+pickup the failed drive.
+During the re-sync a second drive failed and the re-sync stopped.
+
+Now I know I should replace the failed drives but I would like to have
+them online one more time for some critical files that were produced
+last night.
+
+As it stands I tried:
+
+remove from array and re-add:
+This failed with:
+mdadm: --re-add for /dev/sdd1 to /dev/md1 is not possible
+
+I tried forced reassemble:
+this failed:
+mdadm: failed to add /dev/sde1 to /dev/md1: Device or resource busy
+mdadm: failed to add /dev/sdj1 to /dev/md1: Device or resource busy
+mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
+
+From what I read online I should re-create the array with
+assume-clean, but I am quite hesitant to do so since a single type
+means the destruction of my raid array.
+
+Could someone please advice?
 
 
+Added is the output from --examine and --detail
 
-On 09/24/2013 01:29 AM, Stan Hoeppner wrote:
-> On 9/24/2013 12:06 AM, Roberto Spadim wrote:
->> Hi Stan,Benjamin, Drew and others guys!
-> 
-> You desire to drink champagne on a beer budget I'm afraid.  You first
+/dev/md1:
+        Version : 1.2
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+  Used Dev Size : -1
+   Raid Devices : 6
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Sep 24 13:52:16 2013
+          State : active, degraded, Not Started
+ Active Devices : 4
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : far=2
+     Chunk Size : 64K
+
+           Name : phobos:0  (local to host phobos)
+           UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+         Events : 6298
+
+    Number   Major   Minor   RaidDevice State
+       8       8       81        0      active sync   /dev/sdf1
+       7       8      129        1      active sync   /dev/sdi1
+       2       8      113        2      active sync   /dev/sdh1
+       3       0        0        3      removed
+       4       0        0        4      removed
+       6       8       97        5      active sync   /dev/sdg1
+
+       9       8       33        -      spare   /dev/sdc1
+      10       8       49        -      spare   /dev/sdd1
 
 
-Hi Stan,
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
 
-Please don't BCC the list - it whacks people's mail filters. either To:
-or CC: is fine, but again, please don't BCC: the list okay?
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 3b46e91f:bd2a3481:f1818a46:19e77284
 
-Kindest regards,
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 2d4b1c52 - correct
+         Events : 0
 
+         Layout : far=2
+     Chunk Size : 64K
 
-- -- 
-Bradley D. Thornton
-Manager Network Services
-NorthTech Computer
-TEL: +1.310.388.9469  (US)
-TEL: +44.203.318.2755 (UK)
-TEL: +41.43.508.05.10 (CH)
-http://NorthTech.US
+   Device Role : spare
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Find this cert at x-hkp://pool.sks-keyservers.net
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 0be3d9d6:376a68fe:ef7df0e5:9b369dea
 
-iQEcBAEBAwAGBQJSQYGmAAoJEE1wgkIhr9j3m4wH/21YOW7p6ogcogB44hoNHOD0
-4uEGSNrIr4e4aI7EPTiG3nTL1MSumfyWeLC8K8XRuIPJNQ+USMxQ5uBPyR2SPU/v
-DCNFbFue28gqHDAPvOM5xSeDgGQP8BRpfWvU0QBeUhti4aMig4/tzSQGET7qKM9Q
-p/4FYKZuZh5nodwvoQzMk73CovmlceA/BBrkm1pPyQ1kYZHakNYywvvh4ohPK+2K
-HgKXFmqRn870JPtODgjgFzgtWfIj47TwNE7i7x4elWrg9SvsHYXIzNgk69+8TOZX
-E+q8c/rLP8d/D8JKuYMVz9HLSu8PBEEfsilK++0kfIjPfyd3TSr9k64Z0CwDux8=
-=E8j/
------END PGP SIGNATURE-----
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 67003c20 - correct
+         Events : 0
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : spare
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 21d32b5b:4817285e:928eb39d:f9c7090b
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 23417b46 - correct
+         Events : 0
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : spare
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a300c489:7a42f41a:2cbf23eb:1db87ae8
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 39870d51 - correct
+         Events : 6298
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526991 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a9cd4f3b:c562c203:3b2c6d3a:2df429bd
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : f7d9a74b - correct
+         Events : 6298
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : Active device 5
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : b2439c7e:6e1048b9:87da7045:3c2d5249
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 87d7aec6 - correct
+         Events : 6298
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : Active device 2
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdi1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : cc3485c3:08acfa6b:25c11841:f80e07b7
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : e8d00bd9 - correct
+         Events : 6298
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AAA..A ('A' == active, '.' == missing)
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d2d84ef9:7981fe2b:2140e1cb:1ec86f38
+           Name : phobos:0  (local to host phobos)
+  Creation Time : Thu Apr 26 11:33:56 2012
+     Raid Level : raid10
+   Raid Devices : 6
+
+ Avail Dev Size : 5860526080 (2794.52 GiB 3000.59 GB)
+     Array Size : 8790788352 (8383.55 GiB 9001.77 GB)
+  Used Dev Size : 5860525568 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 2e8d438b:16ad5bb7:6e2dafcd:804b37ce
+
+    Update Time : Tue Sep 24 13:52:16 2013
+       Checksum : 9fb6061d - correct
+         Events : 6298
+
+         Layout : far=2
+     Chunk Size : 64K
+
+   Device Role : spare
+   Array State : AAA..A ('A' == active, '.' == missing)
