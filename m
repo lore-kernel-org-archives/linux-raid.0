@@ -1,58 +1,45 @@
-From: Kent Overstreet <kmo@daterainc.com>
-Subject: Re: [PATCH 0/22] Immutable biovecs, block layer changes
-Date: Tue, 24 Sep 2013 12:19:54 -0700
-Message-ID: <20130924191954.GB2636@kmo-pixel>
-References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
- <20130808150954.GA30092@infradead.org>
- <20130808211529.GB15409@kmo-pixel>
- <20130924110012.GA7160@infradead.org>
- <20130924132014.GA16165@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130924132014.GA16165@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+From: mwilck@arcor.de
+Subject: [PATCH] Monitor: write meta data in readonly state, sometimes
+Date: Tue, 24 Sep 2013 20:53:18 +0200
+Message-ID: <1380048798-31699-1-git-send-email-mwilck@arcor.de>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-On Tue, Sep 24, 2013 at 09:20:14AM -0400, Mike Snitzer wrote:
-> On Tue, Sep 24 2013 at  7:00am -0400,
-> Christoph Hellwig <hch@infradead.org> wrote:
-> 
-> > Just curious, what's the state of the remaining immutable bio work?
-> 
-> Hey Christoph,
-> 
-> Have you been over the patchset?  Looks sane to you?
-> 
-> Given how disruptive this patchset is to the block layer I'm wondering
-> how painful this change will be in combination with Jens' blk-mq
-> changes.  I'd prefer to see blk-mq before immutable biovecs; but I have
-> my own selfish reasons for that.
-> 
-> I'm also concerned about DM regressions given that a lot of DM code to
-> handle splitting a bio that spans target boundaries is ripped out, see:
-> https://patchwork.kernel.org/patch/2840657/
+This patch reverts 24a216bf:
+"Monitor: Don't write metadata in inactive array state".
 
-Oh good, you had seen that :)
+While it's true that writing meta data is usually not necessary
+in readonly state, there is one important exception: if a
+disk goes faulty, we want to record that, even if the array is
+inactive.
 
-Are you worried about performance regressions or actual bugs?
+We might as well just revert 24a216bf, because with the recently
+submitted patch
+"Monitor: don't set arrays dirty after transition to read-only"
+those meta data writes that really annoying (for a clean, readonly,
+healthy array during startup) are gone anyway.
 
-I _have_ explicitly tested that code path, but I don't know what corner
-cases I may have missed so it definitely needs your eyeballs and testing
-too.
+Signed-off-by: Martin Wilck <mwilck@arcor.de>
+---
+ monitor.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-As for performance - this'll be more efficient than what the dm code was
-doing before. Especially when the multipage bvec patches go in.
-
-> But that is just handwaving/FUD at this point cause I haven't put the
-> time to looking at this patchset close enough to feel comfortable.  I
-> can make reviewing this patchset a priority this week though.
-> 
-> Kent, have you rebased this patchset at all?  Do you have a git tree I
-> can clone to save the pain of pulling these patches out my my mbox,
-> etc.
-
-Yeah: git://evilpiepirate.org/~kent/linux-bcache.git for-jens
+diff --git a/monitor.c b/monitor.c
+index 3b57ed0..f81e707 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -421,8 +421,7 @@ static int read_and_act(struct active_array *a)
+ 	if (sync_completed > a->last_checkpoint)
+ 		a->last_checkpoint = sync_completed;
+ 
+-	if (deactivate || a->curr_state >= clean)
+-		a->container->ss->sync_metadata(a->container);
++	a->container->ss->sync_metadata(a->container);
+ 	dprintf("%s(%d): state:%s action:%s next(", __func__, a->info.container_member,
+ 		array_states[a->curr_state], sync_actions[a->curr_action]);
+ 
+-- 
+1.7.3.4
