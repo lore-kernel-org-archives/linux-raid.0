@@ -1,68 +1,38 @@
-From: mwilck@arcor.de
-Subject: [PATCH 2/2] DDF: add_to_super_ddf: be careful with workspace_lba
-Date: Tue, 24 Sep 2013 19:18:52 +0200
-Message-ID: <1380043132-8099-3-git-send-email-mwilck@arcor.de>
-References: <1380043132-8099-1-git-send-email-mwilck@arcor.de>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: mdadm 3.3 fails to kick out non fresh disk
+Date: Tue, 24 Sep 2013 19:38:47 +0200
+Message-ID: <5241CE27.30203@arcor.de>
+References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>	<20130914064305.0baadc69@notabene.brown>	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>	<20130914203800.385466b2@notabene.brown>	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>	<5234CA6A.3070305@arcor.de>	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>	<52373A19.7000105@arcor.de>	<CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>	<523C8EF9.60809@arcor.de>	<CAC9WiBgnWHupc59z+ym2me3RcL4F6YqdE_3aXTvRN2zZZQ4jzQ@mail.gmail.com> <CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1380043132-8099-1-git-send-email-mwilck@arcor.de>
+In-Reply-To: <CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
-Cc: mwilck@arcor.de
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Some vendor DDF structures interpret workspace_lba
-very differently then us. Make a sanity check on the value
-before using it for config_size.
+Hi Francis,
 
-Signed-off-by: Martin Wilck <mwilck@arcor.de>
----
- super-ddf.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
+> Could you show me the mdadm command I should use to insert sdb into the array ?
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 3e13ff0..7711f96 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2703,6 +2703,31 @@ static unsigned int find_unused_pde(const struct ddf_super *ddf)
- 	return DDF_NOTFOUND;
- }
- 
-+static void _set_config_size(struct phys_disk_entry *pde, const struct dl *dl)
-+{
-+	__u64 cfs, t;
-+	cfs = min(dl->size - 32*1024*2ULL, be64_to_cpu(dl->primary_lba));
-+	t = be64_to_cpu(dl->secondary_lba);
-+	if (t != ~(__u64)0)
-+		cfs = min(cfs, t);
-+	/*
-+	 * Some vendor DDF structures interpret workspace_lba
-+	 * very differently then us. Make a sanity check on the value.
-+	 */
-+	t = be64_to_cpu(dl->workspace_lba);
-+	if (t < cfs) {
-+		__u64 wsp = cfs - t;
-+		if (wsp > 1024*1024*2ULL && wsp > dl->size / 16) {
-+			pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
-+			       __func__, dl->major, dl->minor, wsp);
-+		} else
-+			cfs = t;
-+	}
-+	pde->config_size = cpu_to_be64(cfs);
-+	dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
-+		__func__, dl->major, dl->minor, cfs, dl->size-cfs);
-+}
-+
- /* add a device to a container, either while creating it or while
-  * expanding a pre-existing container
-  */
-@@ -2826,7 +2851,7 @@ static int add_to_super_ddf(struct supertype *st,
- 		dd->secondary_lba = ddf->active->secondary_lba;
- 	else
- 		__calc_lba(dd, ddf->dlist, secondary_lba, 32);
--	pde->config_size = dd->workspace_lba;
-+	_set_config_size(pde, dd);
- 
- 	sprintf(pde->path, "%17.17s","Information: nil") ;
- 	memset(pde->pad, 0xff, 6);
--- 
-1.7.3.4
+I tried your scenario on HW with LSI fake RAID and encountered the same
+problem you had. I have come up with a patch that I've just posted ("Fix
+mdadm --add for LSI fake RAID" and follow-ups).
+
+Please try if this patch fixes your problem. To be precise, with this
+patch applied, mdadm /dev/md127 --add /dev/sdX should work again. You
+should be able to run this on your currently broken system if you
+somehow manage to transfer the updated mdadm and mdmon executables to
+that system, run mdmon --takeover /dev/md127, and then remove/add sdX again.
+
+The reason for the problem was a difference in the interpretation of the
+workspace_lba field in the DDF header between my code and LSI's.
+
+This has nothing to do with my previous patch "compare_super_ddf: fix
+sequence number check".
+
+Regards
+Martin
+
