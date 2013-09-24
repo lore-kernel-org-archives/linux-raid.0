@@ -1,78 +1,48 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-Date: Tue, 24 Sep 2013 03:29:53 -0500
-Message-ID: <52414D81.4010104@hardwarefreak.com>
-References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com> <CACJz6QtVzR1bED939ZkesyXMWjv-2DmxZSrGH_enKX5dCuNEJw@mail.gmail.com> <CAH3kUhHin5PfjDCNFjD8eypNML=0YrkQp14DrCADc2StcODdaw@mail.gmail.com> <CAH3kUhFf11O8a-y5W40ogrKu_XsjGfmi6R4YUmxbYw-McrEvyA@mail.gmail.com> <CACJz6QtDt-5mgtpHr092AyFOxoSoY+V7F8QbiUcDuD5JN7TsMA@mail.gmail.com> <CAH3kUhGNeXbmR+2zk+3KCDSaBfsjLuZQA89tG_C776emw0nSSQ@mail.gmail.com> <523A60DF.5040702@hardwarefreak.com> <CAH3kUhFaXEwR8ym8Vvf3yEODLf6mXOWnCQbk4qgLk7bnaepV3g@mail.gmail.com> <523AAC1F.6050006@hardwarefreak.com> <CAH3kUhG8cKsuG=-aJOuzJOV+5fe46E+QdCMczxghuL-MbWK95Q@mail.gmail.com> <523B1D1C.2070807@mpstor.com> <CAH3kUhF26nE7cro_Kkod6uZzLeEkhLtpDpbtF3ts2_F9hb4bYQ@mail.gmail.com> <523B26E9.30608@mpstor.com> <CAH3kUhE33h=7D6r7KO9VvQRN5qrZS+cad
- KUBQW8POFYvyGsS3w@mail.gmail.com> <523B3185.3020309@mpstor.com> <523B874D.4050904@hardwarefreak.com> <CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/22] Immutable biovecs, block layer changes
+Date: Tue, 24 Sep 2013 04:00:12 -0700
+Message-ID: <20130924110012.GA7160@infradead.org>
+References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
+ <20130808150954.GA30092@infradead.org>
+ <20130808211529.GB15409@kmo-pixel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <rspadim@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130808211529.GB15409@kmo-pixel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kent Overstreet <kmo@daterainc.com>
+Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, neilb@suse.de, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/24/2013 12:06 AM, Roberto Spadim wrote:
-> Hi Stan,Benjamin, Drew and others guys!
-> Well i read many things about raid cards now =) thanks stan! i'm not a
-> expert but at least somethings i understood...
-> 
-> i was thinking about BBU at raid cards...
-> it's something like bcache with the 'ssd' part as the raid card, and
-> the hdd part as the raid disks.... different from ssd the raid card
-> use ram memory (probably) + batery
-> 
-> well now my question is...
-> there's a memory + bbu 'hard drive'?
-> i want to use it as the ssd part of the bcache, and use the hdd as my
-> motherboard hdd connections
-> in other words... i want the raid card goals with a memory hard drive
-> 
-> any ideas? anyone know anything about it?
+Just curious, what's the state of the remaining immutable bio work?
 
-You desire to drink champagne on a beer budget I'm afraid.  You first
-stated this was for business use on a Dell 420 server, so I recommended
-a business oriented solution to solve the IOPS problem you previously
-described.
-
-Now you say what we've been discussing is for your home PC.  So I'm left
-wondering what it is that you're really after.
-
-If the latter case is closer to the truth of it, you should use bcache
-with an SSD.
-
-
-> thanks guys!
+On Thu, Aug 08, 2013 at 02:15:29PM -0700, Kent Overstreet wrote:
+> > What is preventing you from sending those out as well?  While it's not
+> > absolutely nessecary it would certainly be good if we'd avoid a struct
+> > bio size regression.
 > 
-> 2013/9/19 Stan Hoeppner <stan@hardwarefreak.com>:
->> On 9/19/2013 12:16 PM, Benjamin ESTRABAUD wrote:
->>
->>> MegaRAID is the LSI RAID controller's driver/management software name.
->>
->> For the young pups here, MegaRAID was the brand name for the hardware
->> RAID products sold by American Megatrends Incorporated, AMI, in the
->> 1990s.  You just might recognize that name, since most PCs ship with AMI
->> BIOS.  AMI sold their RAID division to LSI more than 10 years ago.  They
->> also sold their motherboard division though I can't recall to whom.
->>
->> LSI also purchased Mylex Corp around the same time frame.  Together, AMI
->> and Mylex owned over ~70% of the US RAID card market, a large percent of
->> the worldwide RAID card market, and had OEM contracts with all of the
->> major hardware vendors, including Bull, Data General, DEC, Dell,
->> Fujitsu/Siemens, HP, IBM, SGI, SUN, Unisys, etc.  Sometime later they
->> also acquired 3Ware, pretty well sewing up the market.
->>
->> Mylex didn't use any branding, simply model numbers, such as DAC960,
->> DAC1100, etc.  So LSI retained the MegaRAID brand and has used it for
->> all RAID products to date, as it had wide recognition and is catchy as
->> far as branding goes.
->>
->> --
->> Stan
->>
+> There's still some fairly significant changes, and I don't want to make
+> too many invasive changes at once.
 > 
+> Main thing is making generic_make_request() take arbitrary size bios.
+> After this series that's just two simple patches, but then the changes
+> to make use of that will be changing behaviour in non obvious ways.
 > 
+> The way the merging changes work is it enables multi page bvecs - so a
+> bvec can point to many physically contiguous pages. This moves segment
+> merging to bio_add_page(), and gets rid of bi_phys_segments - now
+> bi_vcnt == bi_phys_segments, we just split the bio if it's too big.
 > 
-
+> Then, with bio_add_page() building up large bios and the block layer
+> splitting them as necessary, there shouldn't be any need for segment
+> merging across bios anymore (because generally when that would've
+> happened before, now we'd just be sending one larger bio down).
+> 
+> The remaining patches aren't terribly complicated though (less
+> complicated than this patch series). Trickiest bit is multipage bvecs,
+> and that's mostly just lots of code auditing - the way I convert
+> existing code is by adding bio_for_each_page() - analagous to
+> bio_for_each_segment, but giving you bvecs that point to single pages.
+> So it's an easy conversion, just have to make sure nothing's missed.
+---end quoted text---
