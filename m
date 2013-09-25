@@ -1,7 +1,7 @@
 From: mwilck@arcor.de
-Subject: [PATCH 6/6] tests/10ddf-incremental-wrong-order: new unit test
-Date: Wed, 25 Sep 2013 22:42:02 +0200
-Message-ID: <1380141722-31454-3-git-send-email-mwilck@arcor.de>
+Subject: [PATCH 5/6] tests/10ddf-assemble-missing: new unit test
+Date: Wed, 25 Sep 2013 22:42:01 +0200
+Message-ID: <1380141722-31454-2-git-send-email-mwilck@arcor.de>
 References: <1380050242-31857-2-git-send-email-mwilck@arcor.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1380050242-31857-2-git-send-email-mwilck@arcor.de>
@@ -10,31 +10,27 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: mwilck@arcor.de
 List-Id: linux-raid.ids
 
-This is a test simulating two temporary missing disks. These will
-have less recent meta data than the other disks in the container.
-When the array is reassembled, we expect mdadm to detect that
-and react to it by using the meta data of the more recent disks
-as reference.
+This is a test case for handling incremental
+assembly correctly after disks had been missing once.
 
-This test FAILS with mdadm 3.3 for DDF.
+This test is the basis for other similar but more tricky
+test cases involving inconsitent meta data.
 
 Signed-off-by: Martin Wilck <mwilck@arcor.de>
 ---
- tests/10ddf-incremental-wrong-order |  131 +++++++++++++++++++++++++++++++++++
- 1 files changed, 131 insertions(+), 0 deletions(-)
- create mode 100644 tests/10ddf-incremental-wrong-order
+ tests/10ddf-assemble-missing |   58 ++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 58 insertions(+), 0 deletions(-)
+ create mode 100644 tests/10ddf-assemble-missing
 
-diff --git a/tests/10ddf-incremental-wrong-order b/tests/10ddf-incremental-wrong-order
+diff --git a/tests/10ddf-assemble-missing b/tests/10ddf-assemble-missing
 new file mode 100644
-index 0000000..2324f1d
+index 0000000..e36843f
 --- /dev/null
-+++ b/tests/10ddf-incremental-wrong-order
-@@ -0,0 +1,131 @@
-+# An array is assembled incompletely. Some disks will
-+# have later metadata than others.
-+# The array is then reassembled in the "wrong" order -
-+# older meta data first.
-+# This FAILS with mdadm 3.3
++++ b/tests/10ddf-assemble-missing
+@@ -0,0 +1,58 @@
++# An array is assembled incompletely.
++# The previously missing disks are then added again.
++# Nothing is written, so this should work cleanly.
 +. tests/env-ddf-template
 +tmp=$(mktemp /tmp/mdtest-XXXXXX)
 +rm -f $tmp /var/tmp/mdmon.log
@@ -49,11 +45,6 @@ index 0000000..2324f1d
 +mdadm --wait $member0
 +mdadm --wait $member1
 +
-+mke2fs $member0
-+mke2fs $member1
-+sha_0a=$(sha1_sum $member0)
-+sha_1a=$(sha1_sum $member1)
-+
 +mdadm -Ss
 +sleep 1
 +
@@ -61,58 +52,18 @@ index 0000000..2324f1d
 +mdadm -I $dev10
 +mdadm -I $dev11
 +
-+# Start runnable members ($member1) and write
++# Start runnable members
 +mdadm -IRs
-+e2fsck -fy $member1
-+sha_1b=$(sha1_sum $member1)
-+
 +mdadm -Ss
-+sleep 1
-+
-+# Seq number should be different now
-+seq8a=$(mdadm -E $dev8 | sed -n 's/^ *Seq : //p')
-+seq10a=$(mdadm -E $dev10 | sed -n 's/^ *Seq : //p')
-+
-+if [ $seq8a -ge $seq10a ]; then
-+    ret=1
-+    echo ERROR: sequential number of $dev10 not bigger than $dev8
-+fi
-+if [ x$sha_1a = x$sha_1b ]; then
-+    ret=1
-+    echo ERROR: sha1sums equal after write
-+fi
 +
 +#[ -f /var/tmp/mdmon.log ] && cat /var/tmp/mdmon.log
 +
-+# Now reassemble 
-+# Note that we add the previously missing disks first.
-+# $dev10 should have a higher seq number than $dev8
++# Now reassemble
++# This should work because BVDs weren't written to
 +for d in $dev8 $dev9 $dev10 $dev11; do
-+    mdadm -I $d  
++    mdadm -I $d
 +done
-+
-+mdadm -IRs
-+sha_0c=$(sha1_sum $member0)
-+sha_1c=$(sha1_sum $member1)
-+
 +mdadm -Ss
-+sleep 1
-+
-+seq8c=$(mdadm -E $dev8 | sed -n 's/^ *Seq : //p')
-+seq10c=$(mdadm -E $dev10 | sed -n 's/^ *Seq : //p')
-+
-+if [ x$sha_0a != x$sha_0c ]; then
-+    ret=1
-+    echo ERROR: sha1sum of $member0 has changed
-+fi
-+if [ x$sha_1b != x$sha_1c ]; then
-+    ret=1
-+    echo ERROR: sha1sum of $member1 has changed
-+fi
-+if [ \( $seq10a -ge $seq10c \) -o \( $seq8c -ne $seq10c \) ]; then
-+    ret=1
-+    echo ERROR: sequential numbers are wrong
-+fi
 +
 +# Expect consistent state
 +for d in $dev10 $dev8; do
@@ -128,32 +79,6 @@ index 0000000..2324f1d
 +	echo ERROR: unexpected number of online disks on $d
 +    fi
 +done
-+
-+# Now try assembly
-+if mdadm -A $container $dev8 $dev9 $dev10 $dev11; then
-+    mdadm -IR $container
-+    sha_0d=$(sha1_sum $member0)
-+    sha_1d=$(sha1_sum $member1)
-+    mdadm -Ss
-+    sleep 1
-+    seq8d=$(mdadm -E $dev8 | sed -n 's/^ *Seq : //p')
-+    seq10d=$(mdadm -E $dev10 | sed -n 's/^ *Seq : //p')
-+    if [ x$sha_0a != x$sha_0d ]; then
-+	ret=1
-+	echo ERROR: sha1sum of $member0 has changed
-+    fi
-+    if [ x$sha_1b != x$sha_1d ]; then
-+	ret=1
-+	echo ERROR: sha1sum of $member1 has changed
-+    fi
-+    if [ \( $seq10a -ge $seq10d \) -o \( $seq8d -ne $seq10d \) ]; then
-+	ret=1
-+	echo ERROR: sequential numbers are wrong
-+    fi
-+else
-+    ret=1
-+    echo ERROR: assembly failed
-+fi
 +
 +if [ $ret -ne 0 ]; then
 +    mdadm -E $dev10
