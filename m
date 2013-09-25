@@ -1,90 +1,32 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Best configuration for bcache/md cache or other cache using ssd
-Date: Wed, 25 Sep 2013 00:53:44 -0500
-Message-ID: <52427A68.3040202@hardwarefreak.com>
-References: <CAH3kUhHrK-TKJD1s_7SvtOz=YnpO82EvMGPv0X8rVAaDcuTO0Q@mail.gmail.com> <CACJz6QtDt-5mgtpHr092AyFOxoSoY+V7F8QbiUcDuD5JN7TsMA@mail.gmail.com> <CAH3kUhGNeXbmR+2zk+3KCDSaBfsjLuZQA89tG_C776emw0nSSQ@mail.gmail.com> <523A60DF.5040702@hardwarefreak.com> <CAH3kUhFaXEwR8ym8Vvf3yEODLf6mXOWnCQbk4qgLk7bnaepV3g@mail.gmail.com> <523AAC1F.6050006@hardwarefreak.com> <CAH3kUhG8cKsuG=-aJOuzJOV+5fe46E+QdCMczxghuL-MbWK95Q@mail.gmail.com> <523B1D1C.2070807@mpstor.com> <CAH3kUhF26nE7cro_Kkod6uZzLeEkhLtpDpbtF3ts2_F9hb4bYQ@mail.gmail.com> <523B26E9.30608@mpstor.com> <CAH3kUhE33h=7D6r7KO9VvQRN5qrZS+cadKUBQW8POFYvyGsS3w@mail.gmail.com> <523B3185.3020309@mpstor.com> <523B874D.4050904@hardwarefreak.com> <CAH3kUhH1FqvQX=Sx0s16AtYyOXUJky1p6kWAGQrbukFyUhJT1g@mail.gmail.com> <52414D81.4010104@hardwarefreak.com>
- <524181A6.6050303@NorthTech.US> <52424B46.6000107@hardwarefreak.com> <CAH3kUhGmBLoBHUmkCJHd7XRHPhvR2X7JcWN4vXssvMaumbqh+A@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Karel Walters <karel.walters@gmail.com>
+Subject: Re: [Recovery] RAID10 hdd failureS help requested
+Date: Wed, 25 Sep 2013 14:55:11 +0200
+Message-ID: <CAB4fJqe6--drdDX-9hJAqMMrbXrn8uU0sKecob44eFXbA6vPgw@mail.gmail.com>
+References: <CAB4fJqfd1zrw_AS89ufysfyCoKNf6VYj81xov0=7y0aXoYtjxw@mail.gmail.com>
+	<5241A06F.10704@turmel.org>
+	<CAB4fJqezb0sWcUUgRPd4BXoWr3hNBp725gv8xnMOPmcqU8RiRw@mail.gmail.com>
+	<5241B4B7.1010305@turmel.org>
+	<CAB4fJqerQy7PJzK4+WSNAh7YCcHmwoAqB5vMrXeSYqzWawAS+A@mail.gmail.com>
+	<5241C763.6040306@turmel.org>
+	<CAB4fJqeoK-o+xvAc0vnp=ika6=vTV0d6wrJhjwg43c0f7O+K_g@mail.gmail.com>
+	<5241E295.6040105@turmel.org>
+	<CAB4fJqfezFNN_C_RaETT2pqO==NQC+H1FKnwvk5FkyJs9cV3Rg@mail.gmail.com>
+	<524201FE.2080907@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhGmBLoBHUmkCJHd7XRHPhvR2X7JcWN4vXssvMaumbqh+A@mail.gmail.com>
+In-Reply-To: <524201FE.2080907@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <rspadim@gmail.com>
-Cc: "Bradley D. Thornton" <Bradley@northtech.us>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 9/24/2013 11:35 PM, Roberto Spadim wrote:
-> Hi Bradley!
-> Sorry i don't understand what a BCC is, i'm using gmail with reply
-> button, at gmail it show To: and CC: fields only
-> what unlisted-recipients means?
-> help is wellcome to solve this problem
+> Whoops!  Yes, add the --assume-clean.
+>
+Well it didn' t work and I couldn' t wait any longer to bring back a
+working raid array.
+Thanks for all the help!
+I learned a lot and may this be an extra lesson to keep the original
+creation files of the raid array :)
 
-Roberto,
-
-Troubleshooting email client problems is way off topic for this list.
-So this aspect of this thread should end now out of courtesy to the list
-members and the archives.
-
-I only replied to Bradley, and the list, because I was publicly accused
-of doing something that only brain dead nubies would do.  Rightly or
-wrongly, I took offense to that accusation, having some 25+ years of IT
-experience and some 10+ years operating mail servers.
-
-To disprove the accusation, I traced down the source of the problem
-which was the TO header in your email of 9/24/2013 12:06 CST.  It is up
-to you to figure out what went wrong, if you even care to.  I say that
-because this could have simply been a momentary glitch in Gmail and not
-worth the hassle.  If you do choose to pursue this, you should do so
-independently of this list.
-
-Regards,
-
--- 
-Stan
-
-
-> 2013/9/24 Stan Hoeppner <stan@hardwarefreak.com>:
->> On 9/24/2013 7:12 AM, Bradley D. Thornton wrote:
->>
->>> On 09/24/2013 01:29 AM, Stan Hoeppner wrote:
->>>> On 9/24/2013 12:06 AM, Roberto Spadim wrote:
->>>>> Hi Stan,Benjamin, Drew and others guys!
->>>>
->>>> You desire to drink champagne on a beer budget I'm afraid.  You first
->> ...
->>> Please don't BCC the list - it whacks people's mail filters. either To:
->>> or CC: is fine, but again, please don't BCC: the list okay?
->>
->> Hi Bradley,
->>
->> Thank you for scolding a mailop WRT the netiquette of BCC'ing a list. :)
->>
->> "Reply to all" shouldn't cause this.  So what is the root cause?  Hmm...
->> let's see...  Here we go.  Take a look at the headers of Roberto's msg
->> to which I replied:
->>
->> From:   Roberto Spadim <rspadim@gmail.com>
->> Cc:     Linux-RAID <linux-raid@vger.kernel.org>
->> Content-Type: text/plain; charset=ISO-8859-1
->> To:     unlisted-recipients:; (no To-header on input)
->>
->>
->> This mangled header caused TBird's reply-all to do the following:
->>
->> To: Roberto Spadim <rspadim@gmail.com>
->> CC: unlisted-recipients:;, Linux-RAID <linux-raid@vger.kernel.org>
->>
->>
->> I've never used the feature, but AIUI, this "unlisted-recipients"
->> directive in TBird turns all subsequent CCs into BCCs.
->>
->>
->> So, my apologies for concentrating on the content of my reply, and not
->> paying closer attention to the headers before hitting send.  That said,
->> the root cause of this problem lay at the feet of Roberto, or his MUA,
->> for mangling the headers.  You may want to take this up with him, though
->> I'm sure he'll see this msg.
-
+Karel
