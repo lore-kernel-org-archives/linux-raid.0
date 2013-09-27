@@ -1,69 +1,73 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 0/22] Immutable biovecs, block layer changes
-Date: Fri, 27 Sep 2013 14:38:52 -0400
-Message-ID: <20130927183851.GA16605@redhat.com>
-References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
- <20130808150954.GA30092@infradead.org>
- <20130808211529.GB15409@kmo-pixel>
- <20130924110012.GA7160@infradead.org>
- <20130924132014.GA16165@redhat.com>
- <20130924191954.GB2636@kmo-pixel>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: Detecting that an array has been stopped
+Date: Sat, 28 Sep 2013 03:00:50 +0400
+Message-ID: <CAGqmV7pYMcupTobbbSW0D-Ykgwu5a4GyVAu8TCC9T9d08FbxOg@mail.gmail.com>
+References: <l1ss60$fun$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130924191954.GB2636@kmo-pixel>
+In-Reply-To: <l1ss60$fun$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kent Overstreet <kmo@daterainc.com>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: Ian Pilcher <arequipeno@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Sep 24 2013 at  3:19pm -0400,
-Kent Overstreet <kmo@daterainc.com> wrote:
+Hello!
+I'm a bit confused by what you mean with "swap names" - if you have
+proper mdadm.conf , you will get consistent array names even after
+stop/start cycle . Keeping mdadm.conf within initrd (many distros do
+this by default), will make you happy in case of reboot too.
 
-> On Tue, Sep 24, 2013 at 09:20:14AM -0400, Mike Snitzer wrote:
-> > On Tue, Sep 24 2013 at  7:00am -0400,
-> > Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> > > Just curious, what's the state of the remaining immutable bio work?
-> > 
-> > Hey Christoph,
-> > 
-> > Have you been over the patchset?  Looks sane to you?
-> > 
-> > Given how disruptive this patchset is to the block layer I'm wondering
-> > how painful this change will be in combination with Jens' blk-mq
-> > changes.  I'd prefer to see blk-mq before immutable biovecs; but I have
-> > my own selfish reasons for that.
-> > 
-> > I'm also concerned about DM regressions given that a lot of DM code to
-> > handle splitting a bio that spans target boundaries is ripped out, see:
-> > https://patchwork.kernel.org/patch/2840657/
-> 
-> Oh good, you had seen that :)
-> 
-> Are you worried about performance regressions or actual bugs?
+Hope this info will be useful for you.
 
-Actual bugs.
- 
-> I _have_ explicitly tested that code path, but I don't know what corner
-> cases I may have missed so it definitely needs your eyeballs and testing
-> too.
+On Wed, Sep 25, 2013 at 12:20 AM, Ian Pilcher <arequipeno@gmail.com> wrote:
+> I've successfully gotten my NAS monitoring program to check the status
+> of my RAID arrays by parsing /proc/mdstat.  (Definitely a PITA, but I
+> did get to learn about RAID 10 layouts ans POSIX regular expressions.)
 >
-> As for performance - this'll be more efficient than what the dm code was
-> doing before. Especially when the multipage bvec patches go in.
+> I'm now thinking about how to make the program robust in the situation
+> where the array names (in /proc/mdstat) aren't necessarily stable.  For
+> example, a couple of arrays might be stopped for some sort of
+> maintenance activity and "swap" names when they are reassembled.
+>
+> The obvious answer is to use mdadm to check the UUIDs of the arrays, but
+> I don't want to do that every time I check the RAID status (currently
+> every 30 seconds).  So my plan is to only read the UUID of an array
+> when it first appears in /proc/mdstat (i.e. it wasn't there the last
+> time I read the file).
+>
+> This will work as long as the program notices that an array has been
+> stopped before a (possibly different) array appears with the same name.
+> So it would be nice if there were a simple way to reliably detect that
+> a particular array has been stopped -- even if a different array has
+> since been started with the same name.  It appears that I can do this
+> pretty easily with sysfs.
+>
+> From my initial testing, it looks like I can open each array's
+> array_state file when I first detect the array, and lseek/read will
+> return ENODEV if the array is ever stopped -- even if the array is
+> restarted (with the same or a different name) or if a different array is
+> started with the same name.
+>
+> It seems almost too easy.
+>
+> Is there any reason that this approach won't work?
+>
+> Thanks!
+>
+> --
+> ========================================================================
+> Ian Pilcher                                         arequipeno@gmail.com
+> Sometimes there's nothing left to do but crash and burn...or die trying.
+> ========================================================================
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Sure, I can appreciate that.
- 
-> > But that is just handwaving/FUD at this point cause I haven't put the
-> > time to looking at this patchset close enough to feel comfortable.  I
-> > can make reviewing this patchset a priority this week though.
-> > 
-> > Kent, have you rebased this patchset at all?  Do you have a git tree I
-> > can clone to save the pain of pulling these patches out my my mbox,
-> > etc.
-> 
-> Yeah: git://evilpiepirate.org/~kent/linux-bcache.git for-jens
 
-Looking now, will build and kickoff some regression tests before I then
-jump into reviewing the code.
+
+-- 
+Best regards,
+[COOLCOLD-RIPN]
