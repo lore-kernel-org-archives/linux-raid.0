@@ -1,28 +1,42 @@
-From: Christoph Lameter <cl@linux.com>
-Subject: Re: [PATCH] Problems with RAID 4/5/6 and kmem_cache
-Date: Wed, 2 Oct 2013 14:43:29 +0000
-Message-ID: <00000141799facf7-d62f6643-9499-4a8b-8a13-b9c751316d97-000000@email.amazonses.com>
-References: <1379646960-12553-1-git-send-email-jbrassow@redhat.com> <0000014142863060-919062ff-7284-445d-b3ec-f38cc8d5a6c8-000000@email.amazonses.com> <CAOJsxLGaNe_cap7fx8ZRZPWqkQhUbpA07Qhtgsg_+c5JdgV=qQ@mail.gmail.com>
+From: Mark <grimm26@gmail.com>
+Subject: Re: RAID10 scrub
+Date: Wed, 2 Oct 2013 13:15:20 -0500
+Message-ID: <CA+FAjA_fNs3Rk_omsxGMnyB+VV+hNpBgRswD1BNWTLDQpM8e1A@mail.gmail.com>
+References: <CA+FAjA90MPuA4aQUqmKRAzEsxJFMFJ9_UZFeiWJd__QAmS-mBg@mail.gmail.com>
+	<20131002075538.GA20005@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <CAOJsxLGaNe_cap7fx8ZRZPWqkQhUbpA07Qhtgsg_+c5JdgV=qQ@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: Pekka Enberg <penberg@kernel.org>
-Cc: Jonathan Brassow <jbrassow@redhat.com>, linux-raid@vger.kernel.org, "linux-mm@kvack.org" <linux-mm@kvack.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20131002075538.GA20005@cthulhu.home.robinhill.me.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 28 Sep 2013, Pekka Enberg wrote:
+On Wed, Oct 2, 2013 at 2:55 AM, Robin Hill <robin@robinhill.me.uk> wrote:
+> On Tue Oct 01, 2013 at 03:42:39 -0500, Mark Keisler wrote:
+>
+>> Is scrub (sync) needed on RAID10?  I've noticed in mdadm monitor logs that
+>> it seems to re-allocate data destined for bad blocks on the fly anyway.
+>>  Maybe I don't quite understand what the scrub does, though :)
+>> I ran it for the first time on my RAID last night anyway to make sure all
+>> way well since I am failing out a dying disk for replacement today.
+>
+> "Scrubbing" will read all the data on all the disks in the array, which
+> ensures there's no read errors (as well as correcting any parity/mirror
+> mismatches). Any found will then get rewritten (which may cause a bad
+> block re-allocation in the background) while the parity/mirrored data is
+> still available. If there's too many in a short time then the disk will
+> be failed.
+>
+> Otherwise you'll only find out about read errors if the data happens to
+> be read in normal use, or when you're trying to recover a failed disk
+> (and unless you have multiple levels of redundancy, you're then
+> stuffed).
+>
+> I'd recommend running it regularly on any software RAID setup (well, any
+> with redundancy anyway).
+>
+> Cheers,
+>     Robin
 
-> Do we need to come up with something less #ifdeffy for v3.13?
-
-It would be nice to have something that also checks the runtime debug
-configuration. But so far debugging is only switchable at runtime for SLUB
-and not for SLAB. We could get that when we unify the object debugging in
-both allocators.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks for the explanation, I like to avoid getting stuffed :)
