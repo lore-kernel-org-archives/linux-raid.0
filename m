@@ -1,37 +1,156 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Wed, 02 Oct 2013 20:33:53 +0200
-Message-ID: <524C6711.3090805@arcor.de>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>	<20130914064305.0baadc69@notabene.brown>	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>	<20130914203800.385466b2@notabene.brown>	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>	<5234CA6A.3070305@arcor.de>	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>	<52373A19.7000105@arcor.de>	<CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>	<523C8EF9.60809@arcor.de>	<CAC9WiBgnWHupc59z+ym2me3RcL4F6YqdE_3aXTvRN2zZZQ4jzQ@mail.gmail.com>	<CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>	<52409E62.3090105@arcor.de>	<CAC9WiBigzwNFV2FSU+tWS969fh+6G6ikQcrDqDyW0C
- biaOuLkQ@mail.gmail.com> <CAC9WiBje39ij9RLEqe8aha3FGn_LirxzQezXx-s5+J-HqUpwug@mail.gmail.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: imsm identification problem.  mdadm 3.3
+Date: Wed, 2 Oct 2013 22:23:19 -0400
+Message-ID: <20131003022319.GA28770@animx.eu.org>
+Reply-To: Wakko Warner <wakko@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC9WiBje39ij9RLEqe8aha3FGn_LirxzQezXx-s5+J-HqUpwug@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/27/2013 05:47 PM, Francis Moreau wrote:
+Please keep me in CC.
 
-> I finally found my issue: mdmon --takeover service wasn't started
-> anymore (probably I messed it up earlier). Therefore mdmon started by
-> initrd was used and wasn't working properly.
+I compiled v3.3 to see if the problem was still there.  It is.  The problem. 
+I setup an imsm array with 2 volumes.  a 200mb raid10 volume, and a raid5 on
+the remaining space.  This was done from the bios.
 
-Thanks a lot for finding this out, glad your system is working again.
-And sorry for having lost you and talking about the BIOS; I was thinking
-you were still working on fake BIOS hardware.
+mdadm detected the array and volumes ok, but the names are wrong.  the 200mb
+was named EFI and the other was named ani.
 
-> If you still want me to test something, please tell me.
-> 
-> OTHO, it would be easier if you setup a git tree somewhere with your
-> patches that you want me to test. BTW I'm not subscribed to linux-raid
-> mailing list.
+/dev/md127 is the imsm container.
+       126 is the volume ani. (This is about 7tb.  disks are 3tb each and
+still initializing)
+       125 is the volume EFI.
 
-I'll wait for Neil to come back and comment on my patches. It doesn't
-make sense for me right now to create my own repository.
+According to --examine /dev/md127,
+[EFI] UUID is ad256dcf:38ff8fed:8c27647e:24f61d81
+[ani] UUID is 9fe3c18a:0e9e2d4f:613456ca:b9989dcc
 
-Regards
-Martin
+However --detail --export /dev/md125 shows the name as ani with UUID
+ad256dcf:38ff8fed:8c27647e:24f61d81 and --detail --export /dev/md126 shows
+the name EFI with UUID 9fe3c18a:0e9e2d4f:613456ca:b9989dcc.
+
+I did manually bring these up using mdadm 3.2.5-5 (Debian).  I don't remember
+the exact commands off the top of my head, but they should be in my history if
+needed.
+
+Here's some output of various commands using mdadm 3.3:
+# ./mdadm --detail --export /dev/md126
+MD_LEVEL=raid5
+MD_DEVICES=4
+MD_CONTAINER=/dev/md127
+MD_MEMBER=1
+MD_UUID=9fe3c18a:0e9e2d4f:613456ca:b9989dcc
+MD_DEVNAME=EFI
+MD_DEVICE_sda_ROLE=0
+MD_DEVICE_sda_DEV=/dev/sda
+MD_DEVICE_sdb_ROLE=1
+MD_DEVICE_sdb_DEV=/dev/sdb
+MD_DEVICE_sdc_ROLE=2
+MD_DEVICE_sdc_DEV=/dev/sdc
+MD_DEVICE_sdd_ROLE=3
+MD_DEVICE_sdd_DEV=/dev/sdd
+# ./mdadm --detail --export /dev/md125
+MD_LEVEL=raid10
+MD_DEVICES=4
+MD_CONTAINER=/dev/md127
+MD_MEMBER=0
+MD_UUID=ad256dcf:38ff8fed:8c27647e:24f61d81
+MD_DEVNAME=ani
+MD_DEVICE_sda_ROLE=0
+MD_DEVICE_sda_DEV=/dev/sda
+MD_DEVICE_sdb_ROLE=1
+MD_DEVICE_sdb_DEV=/dev/sdb
+MD_DEVICE_sdc_ROLE=2
+MD_DEVICE_sdc_DEV=/dev/sdc
+MD_DEVICE_sdd_ROLE=3
+MD_DEVICE_sdd_DEV=/dev/sdd
+# ./mdadm --detail --export /dev/md127
+MD_LEVEL=container
+MD_DEVICES=4
+MD_METADATA=imsm
+MD_UUID=201ddcce:1db6911a:255409fa:5d10b453
+MD_DEVICE_sda_ROLE=spare
+MD_DEVICE_sda_DEV=/dev/sda
+MD_DEVICE_sdb_ROLE=spare
+MD_DEVICE_sdb_DEV=/dev/sdb
+MD_DEVICE_sdc_ROLE=spare
+MD_DEVICE_sdc_DEV=/dev/sdc
+MD_DEVICE_sdd_ROLE=spare
+MD_DEVICE_sdd_DEV=/dev/sdd
+# ./mdadm --examine /dev/md127
+/dev/md127:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.3.00
+    Orig Family : a644757f
+         Family : a644757f
+     Generation : 00000041
+     Attributes : All supported
+           UUID : 201ddcce:1db6911a:255409fa:5d10b453
+       Checksum : b634b595 correct
+    MPB Sectors : 2
+          Disks : 4
+   RAID Devices : 2
+
+  Disk01 Serial : 9XK0FE2B
+          State : active
+             Id : 00000001
+    Usable Size : 5860526862 (2794.52 GiB 3000.59 GB)
+
+[EFI]:
+           UUID : ad256dcf:38ff8fed:8c27647e:24f61d81
+     RAID Level : 10
+        Members : 4
+          Slots : [UUUU]
+    Failed disk : none
+      This Slot : 1
+     Array Size : 417792 (204.03 MiB 213.91 MB)
+   Per Dev Size : 209160 (102.15 MiB 107.09 MB)
+  Sector Offset : 0
+    Num Stripes : 816
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : idle
+      Map State : normal
+    Dirty State : clean
+
+[ani]:
+           UUID : 9fe3c18a:0e9e2d4f:613456ca:b9989dcc
+     RAID Level : 5 <-- 5
+        Members : 4 <-- 4
+          Slots : [UUUU] <-- [UUUU]
+    Failed disk : none
+      This Slot : 1
+     Array Size : 16701927424 (7964.10 GiB 8551.39 GB)
+   Per Dev Size : 5567309576 (2654.70 GiB 2850.46 GB)
+  Sector Offset : 213256
+    Num Stripes : 21747302
+     Chunk Size : 128 KiB <-- 128 KiB
+       Reserved : 0
+  Migrate State : initialize
+      Map State : normal <-- uninitialized
+     Checkpoint : 505646 (1024)
+    Dirty State : clean
+
+  Disk00 Serial : 9XK0FBJA
+          State : active
+             Id : 00000000
+    Usable Size : 5860526862 (2794.52 GiB 3000.59 GB)
+
+  Disk02 Serial : 9XK0DQLC
+          State : active
+             Id : 00000002
+    Usable Size : 5860526862 (2794.52 GiB 3000.59 GB)
+
+  Disk03 Serial : 9XK0FFYD
+          State : active
+             Id : 00000003
+    Usable Size : 5860526862 (2794.52 GiB 3000.59 GB)
+#
+
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
