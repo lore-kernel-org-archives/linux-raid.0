@@ -1,55 +1,63 @@
-From: =?ISO-8859-1?Q?G=FCnther_J=2E?= Niederwimmer <gjn@gjn.priv.at>
-Subject: Problem with Dualboot on a LSI 9271-8i Controller
-Date: Mon, 07 Oct 2013 13:58:19 +0200
-Message-ID: <4461728.ofzB8jD5W8@techz.gjn.prv>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] md: Fix skipping recovery for read-only arrays.
+Date: Mon, 07 Oct 2013 16:25:51 +0200
+Message-ID: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Since:
+        commit 7ceb17e87bde79d285a8b988cfed9eaeebe60b86
+        md: Allow devices to be re-added to a read-only array.
 
-I have a big Problem to boot Linux on this Controller.
+spares are activated on a read-only array. In case of raid1 and raid10
+personalities it causes that not-in-sync devices are marked in-sync
+without checking if recovery has been finished.
 
-The System is a Asus W9D WS with a LSI Raid Controller.
+If a read-only array is degraded and one of its devices is not in-sync
+(because the array has been only partially recovered) recovery will be skipped.
 
-My Installation is:
+This patch adds checking if recovery has been finished before marking a device
+in-sync for raid1 and raid10 personalities. In case of raid5 personality
+such condition is already present (at raid5.c:6029).
 
-2 x Raid1 SSD's with 256GB
+Bug was introduced in 3.10 and causes data corruption.
 
-On the first Raid1 is windows installed (UEFI) and on the second Raid1 =
-is Linux=20
-(oSUSE) installed (UEFI)
+Cc: stable@vger.kernel.org
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ drivers/md/raid1.c  |    1 +
+ drivers/md/raid10.c |    1 +
+ 2 files changed, 2 insertions(+)
 
-When I install the system and make the 1. REBOOT all is correct oSUSE i=
-s=20
-booting again, all works correct.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index d60412c..aacf6bf 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1479,6 +1479,7 @@ static int raid1_spare_active(struct mddev *mddev)
+ 			}
+ 		}
+ 		if (rdev
++		    && rdev->recovery_offset == MaxSector
+ 		    && !test_bit(Faulty, &rdev->flags)
+ 		    && !test_and_set_bit(In_sync, &rdev->flags)) {
+ 			count++;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index df7b0a0..73dc8a3 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1782,6 +1782,7 @@ static int raid10_spare_active(struct mddev *mddev)
+ 			}
+ 			sysfs_notify_dirent_safe(tmp->replacement->sysfs_state);
+ 		} else if (tmp->rdev
++			   && tmp->rdev->recovery_offset == MaxSector
+ 			   && !test_bit(Faulty, &tmp->rdev->flags)
+ 			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+ 			count++;
 
-But after a shutdown only windows is booting again, oSUSE tell me=20
-
-Initrd is loading but it is hang.
-
-Sometime 1-3 Days oSUSE is booting?
-
-I have no Idea why?
-
-This is always on different Systems with the same LSI Controller.
-
-Have I configure the Raid Controller wrong, or is this Controller broke=
-n, or=20
-have Grun2-efi Problem with this Controller ....
-
-Have any a Idea .....
-
---=20
-mit freundlichen Gr=FC=DFen / best Regards,
-
- G=FCnther J. Niederwimmer
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
