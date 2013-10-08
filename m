@@ -1,42 +1,45 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Using mdadm instead of dmraid for BIOS-RAID root volume
-Date: Tue, 08 Oct 2013 20:36:02 +0200
-Message-ID: <52545092.1040001@arcor.de>
-References: <5253F7C2.2030401@pobox.com> <52541473.4020005@pobox.com>
+Subject: Re: mdadm >= 3.0 - udev test rule
+Date: Tue, 08 Oct 2013 20:40:36 +0200
+Message-ID: <525451A4.9070504@arcor.de>
+References: <CAHsdBYNPTp1tB9RsLPHAsCaFbSxMA2OZ3cqbqyKsqrjcC7-jkA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52541473.4020005@pobox.com>
+In-Reply-To: <CAHsdBYNPTp1tB9RsLPHAsCaFbSxMA2OZ3cqbqyKsqrjcC7-jkA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Candler <b.candler@pobox.com>
-Cc: linux-raid@vger.kernel.org
+To: Hristo Chonov <chonov@vkm.tu-darmstadt.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/08/2013 04:19 PM, Brian Candler wrote:
->  > Anyway, I'm not so worried about having broken this machine, as it 
-> needed a reinstall anyway, but I do wonder what would have been the 
-> correct way to get mdraid instead of dmraid at boot time for this root 
-> volume?
+On 10/08/2013 02:12 PM, Hristo Chonov wrote:
+> Hello,
 > 
-> After some more searching, it looks like the udev rules were nobbled to 
-> disable this in
-> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1030292
+> I have just a simple question about the udev rule:
+> TEST!="md/array_state", GOTO="md_end" or in the last two releases with
+> the systemd support: TEST!="md/array_state", ENV{SYSTEMD_READY}="0",
+> GOTO="md_end".
 > 
-> A possible way to re-enable is here:
-> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1054948/comments/9
-> 
-> I'm a bit concerned about the issues around clean shutdown, and hence 
-> whether is really production-ready yet.
+> We are running a XenSever 6.2 system which is based on CentOS 5.7 with
+> included an old version of udev: udev-095. This version doesn't
+> support the ATTR keyword so I am going to swap it with the old one
+> SYSFS, but it appears that udev doesn't recognize as well the TEST
+> keyword, so I am wondering what exactly this rule is there for? Is it
+> checking if "md/array_state" appears somewhere in the attributes and
+> if not it jumps to "md_end"?
 
-In general, this works. I have seen it work with CentOS, Fedora, and
-various SUSE distributions. It may require some work on Ubuntu's side.
+from mdadm(8):
+TEST{octal mode mask}
+           Test the existence of a file. An octal mode mask can be
+specified if needed.
 
- 1 The udev rules for incremental mdadm autoassembly need to be in
-place. The upstream rules should be fine. They can normally coexist with
-the rules for dmraid.
- 2 For shutdown, the distro must take care not to kill mdmon before file
-systems are unmounted, and to run mdadm --wait-clean after any write
-access to file systems is finished.
+So, this checks if the file "/sys/class/block/md$X/md/array_state"
+exists, and exits otherwise.
+
+> And do you have any idea how the rule should be rewritten for older
+> versions of udev?
+
+It could probably be done with PROGRAM="/bin/test -f md/array_state" or
+the like (not tested).
 
 Martin
