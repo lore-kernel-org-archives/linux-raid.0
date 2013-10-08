@@ -1,97 +1,75 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: RAID 5 : recovery after failure
-Date: Tue, 8 Oct 2013 22:06:03 +0100
-Message-ID: <20131008210603.GA22876@cthulhu.home.robinhill.me.uk>
-References: <CAPbD+Repm2SDpCGsR35QbW9Zq-MiCu1Fsdh4jjP_yESE3E3Exg@mail.gmail.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: imsm identification problem.  mdadm 3.3
+Date: Tue, 8 Oct 2013 17:28:51 -0400
+Message-ID: <20131008212851.GC21201@animx.eu.org>
+References: <20131003022319.GA28770@animx.eu.org>
+ <52544DB1.7020402@arcor.de>
+Reply-To: Wakko Warner <wakko@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAPbD+Repm2SDpCGsR35QbW9Zq-MiCu1Fsdh4jjP_yESE3E3Exg@mail.gmail.com>
+In-Reply-To: <52544DB1.7020402@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guillaume Betous <guillaume.betous@gmail.com>
+To: Martin Wilck <mwilck@arcor.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Please keep me in CC.
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Martin Wilck wrote:
+> On 10/03/2013 04:23 AM, Wakko Warner wrote:
+> > 
+> > I compiled v3.3 to see if the problem was still there.  It is.  The problem. 
+> > I setup an imsm array with 2 volumes.  a 200mb raid10 volume, and a raid5 on
+> > the remaining space.  This was done from the bios.
+> > 
+> > mdadm detected the array and volumes ok, but the names are wrong.  the 200mb
+> > was named EFI and the other was named ani.
+> > 
+> > /dev/md127 is the imsm container.
+> >        126 is the volume ani. (This is about 7tb.  disks are 3tb each and
+> > still initializing)
+> >        125 is the volume EFI.
+> > 
+> > According to --examine /dev/md127,
+> > [EFI] UUID is ad256dcf:38ff8fed:8c27647e:24f61d81
+> > [ani] UUID is 9fe3c18a:0e9e2d4f:613456ca:b9989dcc
+> > 
+> > However --detail --export /dev/md125 shows the name as ani with UUID
+> > ad256dcf:38ff8fed:8c27647e:24f61d81 and --detail --export /dev/md126 shows
+> > the name EFI with UUID 9fe3c18a:0e9e2d4f:613456ca:b9989dcc.
+> > 
+> > I did manually bring these up using mdadm 3.2.5-5 (Debian).  I don't remember
+> > the exact commands off the top of my head, but they should be in my history if
+> > needed.
+> 
+> Do I understand correctly, this is the situation after bringing up the
+> array with mdadm 3.2.5, you are just looking at the state of affairs
+> with mdadm 3.3? If yes, I wouldn't expect any difference between the
+> output of mdadm 3.3 and 3.2.5. Both just reflect the current state of md
+> in the kernel (MD_DEVNAME is just the device name the array has under
+> /dev/md).
 
-On Tue Oct 08, 2013 at 09:19:44 +0200, Guillaume Betous wrote:
+Ok, I wasn't sure.  I believe I did assemble with 3.2.5 but not with 3.3.
 
-> Hi,
->=20
-> My RAID 5 has failed... After a first failure, the spare disk has
-> started its rebuild. During the rebuild process (60%), I received a
-> 2nd email :(
->=20
-> The RAID became laggy and finally unusable.
->=20
-> Now I can't recover the RAID array. Even if there is no particular
-> precious data, I'm trying to recover it, only be to learn a little bit
-> :)
->=20
-> I've tried the procedures written in the wiki, and before trying the
-> last one (recreate), I write this mail, as said in the wiki :)
->=20
-> Trying to --force fails with the following message :
-> mdadm: /dev/sdf1 has no superblock - assembly aborted
->=20
-> Removing sdf1 from RAID array results in same error on sdd1 and so on...
->=20
-> You'll find some command results here after :
->=20
-> mdadm --examine : http://pastie.org/8385891
-> timeouts : http://pastie.org/8385901
-> smartclt -x : http://pastebin.com/BXMHADZD
->=20
-Looks like you've got some timeout mismatches, which is probably causing
-some of the issues. Two of the drives are WD Reds, which have SCT ERC
-enabled by default at 7 seconds (which is good). There's also a Seagate
-which supports ERC but it isn't enabled (you'll need to set that each
-boot). Then there's a Seagate and a WD Green which don't support ERC at
-all, so you'll need to set the timeouts to 180+ at each boot for those.
+This was a set of test disks.  I'm not concerned with any data.
 
-I've no idea which disk is which though - I'd guess the smartctl output
-is in order, but there's nothing to actually say which output
-corresponds with which device.
+When I boot this system (mdadm has not been setup to start arrays on this
+system, or atleast it shouldn't be), what is the best way to assemble the
+imsm arrays?
 
-The first WD Red (sda?) is reporting a couple of read errors - those are
-the only obvious SMART errors though. There are a couple of command
-timeouts in the SMART attributes for the non-green Seagate (sdb?) as
-well, which might also be relevant (I'm not familiar with that attribute
-though, so I'm not entirely sure).
+did an mdadm -Es >> /etc/mdadm/mdadm.conf and attempted to mdadm -As (which
+didn't assemble anything).  I think that was with 3.2.5 as well.
 
-As far as the array goes, it looks like you _should_ be able to force
-assembly with sdc1, sde1 & sdf1. They all have array positions listed,
-whereas the other two are just listed as spares. If that fails, retry
-with --verbose and post the resulting error messages (and the
-corresponding section of dmesg output).
+If there is anything special that needs to go into mdadm.conf, please let me
+know.
 
-Make sure you set the ERC/timeouts before attempting to re-add either of
-the other disks though.
+> In order to see if your problem is fixed with mdadm 3.3, you must
+> assemble the array with 3.3 (and mdmon from 3.3 should be used as well).
 
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+mdmon should be disabled on the system I'm testing with.
 
---x+6KMIRAuhnl3hBn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.20 (GNU/Linux)
-
-iEYEARECAAYFAlJUc7oACgkQShxCyD40xBILjwCgyK285LHElyCueRSeghWqKjuA
-xwgAnixFNtENitc66ZgjSip9+L29Taff
-=cUZn
------END PGP SIGNATURE-----
-
---x+6KMIRAuhnl3hBn--
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
