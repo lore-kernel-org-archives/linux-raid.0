@@ -1,53 +1,42 @@
 From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: imsm identification problem.  mdadm 3.3
-Date: Tue, 08 Oct 2013 20:23:45 +0200
-Message-ID: <52544DB1.7020402@arcor.de>
-References: <20131003022319.GA28770@animx.eu.org>
+Subject: Re: Using mdadm instead of dmraid for BIOS-RAID root volume
+Date: Tue, 08 Oct 2013 20:36:02 +0200
+Message-ID: <52545092.1040001@arcor.de>
+References: <5253F7C2.2030401@pobox.com> <52541473.4020005@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131003022319.GA28770@animx.eu.org>
+In-Reply-To: <52541473.4020005@pobox.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
+To: Brian Candler <b.candler@pobox.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/03/2013 04:23 AM, Wakko Warner wrote:
-> Please keep me in CC.
+On 10/08/2013 04:19 PM, Brian Candler wrote:
+>  > Anyway, I'm not so worried about having broken this machine, as it 
+> needed a reinstall anyway, but I do wonder what would have been the 
+> correct way to get mdraid instead of dmraid at boot time for this root 
+> volume?
 > 
-> I compiled v3.3 to see if the problem was still there.  It is.  The problem. 
-> I setup an imsm array with 2 volumes.  a 200mb raid10 volume, and a raid5 on
-> the remaining space.  This was done from the bios.
+> After some more searching, it looks like the udev rules were nobbled to 
+> disable this in
+> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1030292
 > 
-> mdadm detected the array and volumes ok, but the names are wrong.  the 200mb
-> was named EFI and the other was named ani.
+> A possible way to re-enable is here:
+> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1054948/comments/9
 > 
-> /dev/md127 is the imsm container.
->        126 is the volume ani. (This is about 7tb.  disks are 3tb each and
-> still initializing)
->        125 is the volume EFI.
-> 
-> According to --examine /dev/md127,
-> [EFI] UUID is ad256dcf:38ff8fed:8c27647e:24f61d81
-> [ani] UUID is 9fe3c18a:0e9e2d4f:613456ca:b9989dcc
-> 
-> However --detail --export /dev/md125 shows the name as ani with UUID
-> ad256dcf:38ff8fed:8c27647e:24f61d81 and --detail --export /dev/md126 shows
-> the name EFI with UUID 9fe3c18a:0e9e2d4f:613456ca:b9989dcc.
-> 
-> I did manually bring these up using mdadm 3.2.5-5 (Debian).  I don't remember
-> the exact commands off the top of my head, but they should be in my history if
-> needed.
+> I'm a bit concerned about the issues around clean shutdown, and hence 
+> whether is really production-ready yet.
 
-Do I understand correctly, this is the situation after bringing up the
-array with mdadm 3.2.5, you are just looking at the state of affairs
-with mdadm 3.3? If yes, I wouldn't expect any difference between the
-output of mdadm 3.3 and 3.2.5. Both just reflect the current state of md
-in the kernel (MD_DEVNAME is just the device name the array has under
-/dev/md).
+In general, this works. I have seen it work with CentOS, Fedora, and
+various SUSE distributions. It may require some work on Ubuntu's side.
 
-In order to see if your problem is fixed with mdadm 3.3, you must
-assemble the array with 3.3 (and mdmon from 3.3 should be used as well).
+ 1 The udev rules for incremental mdadm autoassembly need to be in
+place. The upstream rules should be fine. They can normally coexist with
+the rules for dmraid.
+ 2 For shutdown, the distro must take care not to kill mdmon before file
+systems are unmounted, and to run mdadm --wait-clean after any write
+access to file systems is finished.
 
 Martin
