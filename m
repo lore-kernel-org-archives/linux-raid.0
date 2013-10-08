@@ -1,103 +1,97 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Problem with Dualboot on a LSI 9271-8i Controller
-Date: Tue, 08 Oct 2013 20:54:04 +0200
-Message-ID: <525454CC.2010704@arcor.de>
-References: <4461728.ofzB8jD5W8@techz.gjn.prv> <52534304.8010606@hardwarefreak.com> <1692827.Iklf2kLWDY@techz.gjn.prv>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: RAID 5 : recovery after failure
+Date: Tue, 8 Oct 2013 22:06:03 +0100
+Message-ID: <20131008210603.GA22876@cthulhu.home.robinhill.me.uk>
+References: <CAPbD+Repm2SDpCGsR35QbW9Zq-MiCu1Fsdh4jjP_yESE3E3Exg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1692827.Iklf2kLWDY@techz.gjn.prv>
+Content-Disposition: inline
+In-Reply-To: <CAPbD+Repm2SDpCGsR35QbW9Zq-MiCu1Fsdh4jjP_yESE3E3Exg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?=22G=FCnther_J=2E_Niederwimmer=22?= <gjn@gjn.priv.at>
+To: Guillaume Betous <guillaume.betous@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/08/2013 08:39 AM, G=FCnther J. Niederwimmer wrote:
-> Am Montag, 7. Oktober 2013, 18:25:56 schrieb Stan Hoeppner:
->> On 10/7/2013 6:58 AM, G=FCnther J. Niederwimmer wrote:
->>> The System is a Asus W9D WS with a LSI Raid Controller.
->>
->> ...
->>
->>> 2 x Raid1 SSD's with 256GB
->>>
->>> On the first Raid1 is windows installed (UEFI) and on the second Ra=
-id1 is
->>> Linux (oSUSE) installed (UEFI)
->>>
->>> When I install the system and make the 1. REBOOT all is correct oSU=
-SE is
->>> booting again, all works correct.
->>>
->>> But after a shutdown only windows is booting again, oSUSE tell me
->>>
->>> Initrd is loading but it is hang.
->>>
->>> Sometime 1-3 Days oSUSE is booting?
->>
->> ...
->>
->>> This is always on different Systems with the same LSI Controller.
->>
->> Does this mean you have multiple computers all identical, all with t=
-his
->> controller, all dual booting Windows and Linux?  This is a strange
->> setup.  Why do you do this?
->=20
-> NO ;)
->=20
-> This is the system from a friend an I change only the Motherboard for=
- Tests
->=20
->=20
->>> Have I configure the Raid Controller wrong, or is this Controller b=
-roken,
->>> or have Grun2-efi Problem with this Controller ....
->>
->> Would you find it surprising that LSI never considered this $600
->> Enterprise 8 port RAID controller would be used in a dual boot
->> workstation role, with 4 SSDs in two RAID1 sets?
->>
->> My guess is that this is a Grub2 issue and it's having trouble seein=
-g
->> both disk devices as enumerated by the UEFI implementation.
->>
->> What happens when you create a 4 SSD RAID10 and partition the result=
-ing
->> single disk device into two equal halves, one partition for SuSE and=
- one
->> for Windows?  With everything on one disk device this should work mu=
-ch
->> more reliably.
->=20
-> But why it is booting same times (?) and only stop booting on a shutd=
-own ?
 
-I suppose with "shutdown" you mean "power off"? Does this happen if you
-shut down from Linux, Windows, or both? What if you reset the system
-again after the shutdown? What if you do a warm reboot from Windows?
-What exactly are the messages you see in the failure case?
+--x+6KMIRAuhnl3hBn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-To me this looks like a problem either in the BIOS or in the Option ROM
-of the LSI controller. Sometimes the BIOS has difficulties with booting
-from a secondary disk (although that *should* be history in the times o=
-f
-UEFI). As Stan suggested, a setup with two partitions on a single RAID
-volume may be easier to handle for the BIOS. I might also be interestin=
-g
-to swap the OSes (Windows on 2nd drive, Linux on the 1st).
+On Tue Oct 08, 2013 at 09:19:44 +0200, Guillaume Betous wrote:
 
-It could also be a GRUB2 problem, but GRUB2 essentially just reads
-blocks from the disk using UEFI calls, there's really not a lot it can
-mess up.
-
-Martin
-
+> Hi,
 >=20
+> My RAID 5 has failed... After a first failure, the spare disk has
+> started its rebuild. During the rebuild process (60%), I received a
+> 2nd email :(
+>=20
+> The RAID became laggy and finally unusable.
+>=20
+> Now I can't recover the RAID array. Even if there is no particular
+> precious data, I'm trying to recover it, only be to learn a little bit
+> :)
+>=20
+> I've tried the procedures written in the wiki, and before trying the
+> last one (recreate), I write this mail, as said in the wiki :)
+>=20
+> Trying to --force fails with the following message :
+> mdadm: /dev/sdf1 has no superblock - assembly aborted
+>=20
+> Removing sdf1 from RAID array results in same error on sdd1 and so on...
+>=20
+> You'll find some command results here after :
+>=20
+> mdadm --examine : http://pastie.org/8385891
+> timeouts : http://pastie.org/8385901
+> smartclt -x : http://pastebin.com/BXMHADZD
+>=20
+Looks like you've got some timeout mismatches, which is probably causing
+some of the issues. Two of the drives are WD Reds, which have SCT ERC
+enabled by default at 7 seconds (which is good). There's also a Seagate
+which supports ERC but it isn't enabled (you'll need to set that each
+boot). Then there's a Seagate and a WD Green which don't support ERC at
+all, so you'll need to set the timeouts to 180+ at each boot for those.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I've no idea which disk is which though - I'd guess the smartctl output
+is in order, but there's nothing to actually say which output
+corresponds with which device.
+
+The first WD Red (sda?) is reporting a couple of read errors - those are
+the only obvious SMART errors though. There are a couple of command
+timeouts in the SMART attributes for the non-green Seagate (sdb?) as
+well, which might also be relevant (I'm not familiar with that attribute
+though, so I'm not entirely sure).
+
+As far as the array goes, it looks like you _should_ be able to force
+assembly with sdc1, sde1 & sdf1. They all have array positions listed,
+whereas the other two are just listed as spares. If that fails, retry
+with --verbose and post the resulting error messages (and the
+corresponding section of dmesg output).
+
+Make sure you set the ERC/timeouts before attempting to re-add either of
+the other disks though.
+
+HTH,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--x+6KMIRAuhnl3hBn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iEYEARECAAYFAlJUc7oACgkQShxCyD40xBILjwCgyK285LHElyCueRSeghWqKjuA
+xwgAnixFNtENitc66ZgjSip9+L29Taff
+=cUZn
+-----END PGP SIGNATURE-----
+
+--x+6KMIRAuhnl3hBn--
