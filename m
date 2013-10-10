@@ -1,8 +1,10 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 0/1] consistent return types from byteswap macros
-Date: Thu, 10 Oct 2013 09:42:04 +0200
-Message-ID: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/1] Be consistent in return types from byteswap macros
+Date: Thu, 10 Oct 2013 09:42:05 +0200
+Message-ID: <1381390925-9033-2-git-send-email-Jes.Sorensen@redhat.com>
+References: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, karsten@redhat.com
@@ -10,37 +12,57 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Hi,
+The bswap_*() macros return int values. Make sure we return the
+equivalent types in same byteorder pass-through functions to avoid
+problems with the original type leaking through to printf() etc.
 
-There are multiple ways to solve this one, but I think this is the
-least intrusive solution, even if not the prettiest.
-
-Problem is that current macros simply return the original value if cpu
-byteorder equals the converted type, leaking through the original
-type. This results in errors like this when building for PPC64, as an
-example:
-
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches  -m64 -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\"   -DUSE_PTHREADS   -c -o super-intel.o super-intel.c
-super-ddf.c: In function 'examine_vd':
-super-ddf.c:1414:10: error: format '%llu' expects argument of type 'long long unsigned int', but argument 3 has type '__u64' [-Werror=format=]
-          be64_to_cpu(vc->blocks)/2);
-          ^
-
-We could force the macros to all return u16/u32/u64, which would be
-'cleaner'. However I suspect that would make us chase a pile of build
-warnings converting all printf's to explicitly cast. So I made them
-return the same types as our byteswap macros default to (hence the
-unsigned int return type for the 16 bit swaps).
-
-Jes
-
-
-Jes Sorensen (1):
-  Be consistent in return types from byteswap macros
-
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
  mdadm.h | 24 ++++++++++++------------
  1 file changed, 12 insertions(+), 12 deletions(-)
 
+diff --git a/mdadm.h b/mdadm.h
+index c90fe10..cb207c9 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -129,12 +129,12 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
+ 
+ #if !defined(__KLIBC__)
+ #if BYTE_ORDER == LITTLE_ENDIAN
+-#define	__cpu_to_le16(_x) (_x)
+-#define __cpu_to_le32(_x) (_x)
+-#define __cpu_to_le64(_x) (_x)
+-#define	__le16_to_cpu(_x) (_x)
+-#define __le32_to_cpu(_x) (_x)
+-#define __le64_to_cpu(_x) (_x)
++#define	__cpu_to_le16(_x) (unsigned int)(_x)
++#define __cpu_to_le32(_x) (unsigned int)(_x)
++#define __cpu_to_le64(_x) (unsigned long long)(_x)
++#define	__le16_to_cpu(_x) (unsigned int)(_x)
++#define __le32_to_cpu(_x) (unsigned int)(_x)
++#define __le64_to_cpu(_x) (unsigned long long)(_x)
+ 
+ #define	__cpu_to_be16(_x) bswap_16(_x)
+ #define __cpu_to_be32(_x) bswap_32(_x)
+@@ -150,12 +150,12 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
+ #define __le32_to_cpu(_x) bswap_32(_x)
+ #define __le64_to_cpu(_x) bswap_64(_x)
+ 
+-#define	__cpu_to_be16(_x) (_x)
+-#define __cpu_to_be32(_x) (_x)
+-#define __cpu_to_be64(_x) (_x)
+-#define	__be16_to_cpu(_x) (_x)
+-#define __be32_to_cpu(_x) (_x)
+-#define __be64_to_cpu(_x) (_x)
++#define	__cpu_to_be16(_x) (unsigned int)(_x)
++#define __cpu_to_be32(_x) (unsigned int)(_x)
++#define __cpu_to_be64(_x) (unsigned long long)(_x)
++#define	__be16_to_cpu(_x) (unsigned int)(_x)
++#define __be32_to_cpu(_x) (unsigned int)(_x)
++#define __be64_to_cpu(_x) (unsigned long long)(_x)
+ #else
+ #  error "unknown endianness."
+ #endif
 -- 
 1.8.3.1
 
