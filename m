@@ -1,88 +1,71 @@
-From: Brian Candler <brian@soundmouse.com>
-Subject: mdadm monitor processes soaking up CPU
-Date: Thu, 10 Oct 2013 16:58:45 +0100
-Message-ID: <5256CEB5.1070109@soundmouse.com>
+From: Digimer <lists@alteeve.ca>
+Subject: Re: Broken array, trying to assemble enough to copy data off
+Date: Thu, 10 Oct 2013 12:20:20 -0400
+Message-ID: <5256D3C4.5010109@alteeve.ca>
+References: <5255E5E4.8010900@alteeve.ca> <5255E98C.3020009@alteeve.ca> <5256A14B.7030008@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5256A14B.7030008@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Can anybody suggest what is going on here? It looks like mdadm --monitor 
-is livelocking.
+On 10/10/13 08:44, Phil Turmel wrote:
+> Good morning,
+> 
+> On 10/09/2013 07:41 PM, Digimer wrote:
+>> I forgot to add the smartctl output;
+>>
+>> /dev/sdb: http://fpaste.org/45627/13813614/
+>> /dev/sdc: http://fpaste.org/45628/38136150/
+>> /dev/sdd: http://fpaste.org/45630/36151813/
+>> /dev/sde: http://fpaste.org/45632/36154613/
+>>
+>> (sorry for the top post, worried this would have gotten lost below)
+> 
+> [You could/should have just trimmed the material below.]
+> 
+> Anyways, excellent report.
+> 
+> According to the mdadm -E data, you should only need to perform a forced
+> assembly, like so:
+> 
+> mdadm --stop /dev/md1
+> mdadm --assemble --force /dev/md1 /dev/sd[bcde]2
+> 
+> Your drives all have the same event counts, suggesting that they were
+> all dieing within milliseconds of each other.  One of them lived long
+> enough to record the another's failure, but not to bump the event count.
+>  The dead machine almost certainly suffered a catastrophic hardware failure.
+> 
+> Presuming the forced assembly works, you should plan on tossing these
+> drives after you get your data... they have dangerously high relocation
+> counts and cannot be trusted.  (Fairly typical for consumer drives
+> approaching 30k hours.)
+> 
+> HTH,
+> 
+> Phil
 
-# ps auxwww | grep mdadm
-root      2122 82.0  2.4 1605348 1592784 ?     Ds   Oct02 9664:43 
-/sbin/mdadm --monitor --pid-file /var/run/mdadm/monitor.pid --daemonise 
---scan --syslog
-root     11875 55.2  0.2 172776 160320 ?       R    06:37 337:23 
-/sbin/mdadm --monitor --scan --oneshot
-root     12220 79.8  1.5 1018324 1005940 ?     D    Oct04 7394:44 
-/sbin/mdadm --monitor --scan --oneshot
-root     13808 71.7  0.9 616368 604016 ?       R    Oct06 4572:35 
-/sbin/mdadm --monitor --scan --oneshot
-root     27512 66.4  0.6 428588 416156 ?       R    Oct08 2322:25 
-/sbin/mdadm --monitor --scan --oneshot
-root     35333  0.0  0.0   9392   876 pts/1    S+   16:48   0:00 grep 
---color=auto mdadm
-root     35636 81.9  1.9 1286204 1273840 ?     R    Oct03 8767:55 
-/sbin/mdadm --monitor --scan --oneshot
-root     36670 68.0  0.7 511072 498632 ?       D    Oct07 3354:22 
-/sbin/mdadm --monitor --scan --oneshot
-root     39678 77.3  1.1 796328 784000 ?       R    Oct05 6043:20 
-/sbin/mdadm --monitor --scan --oneshot
-root     47822 57.5  0.4 290272 277828 ?       D    Oct09 1176:11 
-/sbin/mdadm --monitor --scan --oneshot
+Ya, I have no plan at all to use these drives or the server they came
+from anymore. In fact, they've already been replaced. :)
 
-This is ubuntu 12.04, with mdadm version "mdadm - v3.2.5 - 18th May 
-2012" (dpkg-query -s says 3.2.5-1ubuntu0.2)
+I tried the --assemble --force (and --assemble --force --run) without
+success. It fails saying that sde2 thinks sdb2 has failed, leaving two
+dead members. If I try to start with just sd[bcd], it says that it has
+two drives and one spare, so still refuses to start.
 
-If I strace all of these, they all show an infinite loop of
+Any other options/ideas? I'm not in any rush, so I am happy to test things.
 
-...
-open("/dev/md126", O_RDONLY)            = 3
-fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
-ioctl(3, 0x80480911, 0x7fff0235df80)    = 0
-close(3)                                = 0
-open("/dev/md126", O_RDONLY)            = 3
-fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
-ioctl(3, 0x80480911, 0x7fff0235df80)    = 0
-close(3)                                = 0
-...
+Cheers!
 
-The arrays themselves mostly look OK, but md126 is in an inactive state:
+digimer
 
-# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md128 : active raid1 sdx7[1] sdw6[0]
-       28303232 blocks super 1.2 [2/2] [UU]
-
-md129 : active raid1 sdx5[1] sdw5[0]
-       351430464 blocks super 1.2 [2/2] [UU]
-
-md126 : inactive sdv[14] sdo[15] sdl[16] sda[17]
-       2000420864 blocks super 1.2
-
-md127 : active raid0 sds[6] sdt[16] sdu[10] sdr[12] sdq[11] sdp[17] 
-sdk[3] sdh[15] sdm[14] sdn[13] sdj[0] sdi[7] sdg[9] sde[4] sdd[1] sdc[5] 
-sdf[2] sdb[8]
-       9001893888 blocks super 1.2 16384k chunks
-
-unused devices: <none>
-
-All devices say "PASSED" in response to smartctl -H
-
-Probably the disks in md126 were not added to the raid0 array md127 when 
-it was built. But this doesn't explain why mdadm is churning up CPU.
-
-Is there anything you want me to check on this box, before I kill all 
-these mdadm processes, stop md126, and wipe the metadata off those four 
-disks?
-
-Thanks,
-
-Brian.
-
+-- 
+Digimer
+Papers and Projects: https://alteeve.ca/w/
+What if the cure for cancer is trapped in the mind of a person without
+access to education?
