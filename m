@@ -1,27 +1,46 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Multiple SSDs - RAID-1, -10, or stacked? TRIM?
-Date: Thu, 10 Oct 2013 08:14:41 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1310100813130.20065@uplift.swm.pp.se>
-References: <20131009123135.GT1779@bitfolk.com> <l33q8a$da4$1@ger.gmane.org> <5255827B.8090309@hesbynett.no>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/1] consistent return types from byteswap macros
+Date: Thu, 10 Oct 2013 09:42:04 +0200
+Message-ID: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5255827B.8090309@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, karsten@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, 9 Oct 2013, David Brown wrote:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> I would believe that /if/ an SSD was going to die, it is likely to do so 
-> without warning - it is likely to be the controller that has died.  But 
-> I can think of no reason why the controller on an SSD is more likely to 
-> die than the controller on an HD - and HD's have so many more ways to 
-> die (often slowly and noisily).
+Hi,
 
-I have a lot higher failure rates on SSDs when than HDDs, all of them 
-sudden complete deaths. Those were all first-generation drives from Intel 
-and OCZ, but still...
+There are multiple ways to solve this one, but I think this is the
+least intrusive solution, even if not the prettiest.
+
+Problem is that current macros simply return the original value if cpu
+byteorder equals the converted type, leaking through the original
+type. This results in errors like this when building for PPC64, as an
+example:
+
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches  -m64 -DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" -DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\"   -DUSE_PTHREADS   -c -o super-intel.o super-intel.c
+super-ddf.c: In function 'examine_vd':
+super-ddf.c:1414:10: error: format '%llu' expects argument of type 'long long unsigned int', but argument 3 has type '__u64' [-Werror=format=]
+          be64_to_cpu(vc->blocks)/2);
+          ^
+
+We could force the macros to all return u16/u32/u64, which would be
+'cleaner'. However I suspect that would make us chase a pile of build
+warnings converting all printf's to explicitly cast. So I made them
+return the same types as our byteswap macros default to (hence the
+unsigned int return type for the 16 bit swaps).
+
+Jes
+
+
+Jes Sorensen (1):
+  Be consistent in return types from byteswap macros
+
+ mdadm.h | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+1.8.3.1
+
