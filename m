@@ -1,68 +1,54 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 1/1] Be consistent in return types from byteswap macros
-Date: Thu, 10 Oct 2013 09:42:05 +0200
-Message-ID: <1381390925-9033-2-git-send-email-Jes.Sorensen@redhat.com>
-References: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Brian Candler <b.candler@pobox.com>
+Subject: Re: Using mdadm instead of dmraid for BIOS-RAID root volume
+Date: Thu, 10 Oct 2013 09:11:02 +0100
+Message-ID: <52566116.5020604@pobox.com>
+References: <5253F7C2.2030401@pobox.com> <52541473.4020005@pobox.com> <52545092.1040001@arcor.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <52545092.1040001@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, karsten@redhat.com
+To: Martin Wilck <mwilck@arcor.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 08/10/2013 19:36, Martin Wilck wrote:
+> On 10/08/2013 04:19 PM, Brian Candler wrote:
+>>   > Anyway, I'm not so worried about having broken this machine, as it
+>> needed a reinstall anyway, but I do wonder what would have been the
+>> correct way to get mdraid instead of dmraid at boot time for this root
+>> volume?
+>>
+>> After some more searching, it looks like the udev rules were nobbled to
+>> disable this in
+>> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1030292
+>>
+>> A possible way to re-enable is here:
+>> https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1054948/comments/9
+>>
+>> I'm a bit concerned about the issues around clean shutdown, and hence
+>> whether is really production-ready yet.
+> In general, this works. I have seen it work with CentOS, Fedora, and
+> various SUSE distributions. It may require some work on Ubuntu's side.
+>
+>   1 The udev rules for incremental mdadm autoassembly need to be in
+> place. The upstream rules should be fine. They can normally coexist with
+> the rules for dmraid.
+>   2 For shutdown, the distro must take care not to kill mdmon before file
+> systems are unmounted, and to run mdadm --wait-clean after any write
+> access to file systems is finished.
+Details of what I tried for ubuntu, and the results, are at
+https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1054948/comments/16
 
-The bswap_*() macros return int values. Make sure we return the
-equivalent types in same byteorder pass-through functions to avoid
-problems with the original type leaking through to printf() etc.
+Although it kind-of works, there are a lot of rough edges: most 
+seriously, locking up during a shutdown. This isn't ready for production 
+unfortunately.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- mdadm.h | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Also, I tried booting Ubuntu 13.10beta2, and it is still using dmraid:
+https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/1054948/comments/17
 
-diff --git a/mdadm.h b/mdadm.h
-index c90fe10..cb207c9 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -129,12 +129,12 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
- 
- #if !defined(__KLIBC__)
- #if BYTE_ORDER == LITTLE_ENDIAN
--#define	__cpu_to_le16(_x) (_x)
--#define __cpu_to_le32(_x) (_x)
--#define __cpu_to_le64(_x) (_x)
--#define	__le16_to_cpu(_x) (_x)
--#define __le32_to_cpu(_x) (_x)
--#define __le64_to_cpu(_x) (_x)
-+#define	__cpu_to_le16(_x) (unsigned int)(_x)
-+#define __cpu_to_le32(_x) (unsigned int)(_x)
-+#define __cpu_to_le64(_x) (unsigned long long)(_x)
-+#define	__le16_to_cpu(_x) (unsigned int)(_x)
-+#define __le32_to_cpu(_x) (unsigned int)(_x)
-+#define __le64_to_cpu(_x) (unsigned long long)(_x)
- 
- #define	__cpu_to_be16(_x) bswap_16(_x)
- #define __cpu_to_be32(_x) bswap_32(_x)
-@@ -150,12 +150,12 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
- #define __le32_to_cpu(_x) bswap_32(_x)
- #define __le64_to_cpu(_x) bswap_64(_x)
- 
--#define	__cpu_to_be16(_x) (_x)
--#define __cpu_to_be32(_x) (_x)
--#define __cpu_to_be64(_x) (_x)
--#define	__be16_to_cpu(_x) (_x)
--#define __be32_to_cpu(_x) (_x)
--#define __be64_to_cpu(_x) (_x)
-+#define	__cpu_to_be16(_x) (unsigned int)(_x)
-+#define __cpu_to_be32(_x) (unsigned int)(_x)
-+#define __cpu_to_be64(_x) (unsigned long long)(_x)
-+#define	__be16_to_cpu(_x) (unsigned int)(_x)
-+#define __be32_to_cpu(_x) (unsigned int)(_x)
-+#define __be64_to_cpu(_x) (unsigned long long)(_x)
- #else
- #  error "unknown endianness."
- #endif
--- 
-1.8.3.1
+Regards,
+
+Brian.
 
