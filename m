@@ -1,62 +1,63 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Re: Multiple SSDs - RAID-1, -10, or stacked? TRIM?
-Date: Thu, 10 Oct 2013 20:37:50 +0000
-Message-ID: <20131010203750.GV1779@bitfolk.com>
-References: <20131009123135.GT1779@bitfolk.com>
- <5256701C.3090807@hardwarefreak.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH] RAID5: Change kmem_cache name string of RAID 4/5/6 stripe
+ cache
+Date: Thu, 10 Oct 2013 15:50:04 -0700
+Message-ID: <52572F1C.8080905@zytor.com>
+References: <1379646960-12553-1-git-send-email-jbrassow@redhat.com> <1379646960-12553-2-git-send-email-jbrassow@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5256701C.3090807@hardwarefreak.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1379646960-12553-2-git-send-email-jbrassow@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, cl@linux.com
 List-Id: linux-raid.ids
 
-Hi Stan,
-
-(Thanks everyone else who's responded so far, too -- I'm paying
-attention with interest)
-
-On Thu, Oct 10, 2013 at 04:15:08AM -0500, Stan Hoeppner wrote:
-> On 10/9/2013 7:31 AM, Andy Smith wrote:
-> > Are there any gotchas to be aware of? I haven't much experience with
-> > SSDs.
+On 09/19/2013 08:16 PM, Jonathan Brassow wrote:
+> The unique portion of the kmem_cache name used when dm-raid is creating
+> a RAID 4/5/6 array is the memory address of it's associated 'mddev'
+> structure.  This is not always unique.  The memory associated
+> with the 'mddev' structure can be freed and a future 'mddev' structure
+> can be allocated from the exact same spot.  This causes an identical
+> name to the old cache to be created when kmem_cache_create is called.
+> If an old name is still present amoung slab_caches due to cache merging,
+> the call will fail.  This is not theoretical, I see this regularly when
+> performing device-mapper RAID 4/5/6 tests (although, strangely only on
+> Fedora-19).
 > 
-> Yes, there is one major gotcha WRT md/RAID and SSDs, which to this point
-> nobody has mentioned in this thread, possibly because it pertains to
-> writes, not reads.  Note my question posed to you up above.  Since I've
-> answered this question in detail at least a dozen times on this mailing
-> list, I'll simply refer you to one of my recent archived posts for the
-> details:
+> Making the unique portion of the kmem_cache name based on jiffies fixes
+> this problem.
 > 
-> http://permalink.gmane.org/gmane.linux.raid/43984
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+> ---
+>  drivers/md/raid5.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7ff4f25..f731ce9 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -1618,7 +1618,7 @@ static int grow_stripes(struct r5conf *conf, int num)
+>  			"raid%d-%s", conf->level, mdname(conf->mddev));
+>  	else
+>  		sprintf(conf->cache_name[0],
+> -			"raid%d-%p", conf->level, conf->mddev);
+> +			"raid%d-%llu", conf->level, get_jiffies_64());
+>  	sprintf(conf->cache_name[1], "%s-alt", conf->cache_name[0]);
+>  
+>  	conf->active_name = 0;
+> 
 
-When I first read that link I thought perhaps you were referring to
-write performance dropping off a cliff due to SSD garbage caching
-routines that kicked in, but then I read the rest of the thread and
-I think maybe you were hinting at the single write thread issue you
-talk about more in:
+And it is not possible to create two inside the same jiffy?  Seems
+unlikely at best.
 
-    http://www.spinics.net/lists/raid/msg44211.html
+Why not just use a simple counter?
 
-Is that the case?
+	-hpa
 
-> To be clear, the need for careful directory/file layout to achieve
-> parallel throughput pertains only to the linear concatenation storage
-> architecture described above.  If one is using XFS atop a striped array
-> then throughput, either sequential or parallel, is -not- limited by
-> file/dir placement across the AGs, as all AGs are striped across the disks.
-
-So, in summary do you recommend the stacked RAID-0 on top of RAID-1
-pairs instead of a RAID-10, where write performance may otherwise be
-bottlenecked by md's single write thread?
-
-Write ops are a fraction of the random reads and using RAID with a
-battery-backed write cache solved that problem, but it does need to
-scale linearly with whatever improvement we can get for the read
-ops, so I would think it will still be something worth thinking
-about, so thanks for pointing that out.
-
-Thanks,
-Andy
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
