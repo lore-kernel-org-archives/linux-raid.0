@@ -1,51 +1,42 @@
-From: Guillaume Betous <guillaume.betous@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Best practice for setting up "ordinary" RAID
-Date: Fri, 11 Oct 2013 08:52:16 +0200
-Message-ID: <CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com>
-References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com>
-	<alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se>
+Date: Fri, 11 Oct 2013 09:03:55 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se>
+References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com> <alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se> <CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se>
+In-Reply-To: <CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: Guillaume Betous <guillaume.betous@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I would recommend setting this to 180 seconds.
+On Fri, 11 Oct 2013, Guillaume Betous wrote:
 
-Yes, and that's what I've done ! Not 30 seconds, but 3 minutes, you're =
-right.
-Sorry :)
+>> I would recommend setting this to 180 seconds.
+>
+> Yes, and that's what I've done ! Not 30 seconds, but 3 minutes, you're right.
+> Sorry :)
+>
+>> RAID6, preferrably with a spare.
+>
+> I'm not comfortable with RAID 6 setup. What is the minimal number of
+> hard drives for having a RAID 6 + spare ?
 
-> RAID6, preferrably with a spare.
+Well, I guess that would be 4, but that doesn't make much sense, then you 
+could rather have just 3 drives in raid1.
 
-I'm not comfortable with RAID 6 setup. What is the minimal number of
-hard drives for having a RAID 6 + spare ?
+But basically it's usually beneficial to have a RAID6 array over a 
+RAID5+spare. I can't think of any "home use" usage patterns where RAID6 
+would perform a lot worse than RAID5. You get the benefit of allowing two 
+drives to fail or a single drive failure plus read errors to be handled 
+without problems.
 
-> Also save mdadm --examine and smartctl -a from all drives at each sta=
-rt (or
-> at least after every time you've done a change to the array)
+I have completely stopped using RAID5 it's just not worth it when using 
+large non-enterprise drives with 10^-14 read error rates.
 
-Very good. I'll had this.
+What is it about RAID6 that you are not comfortable with?
 
-> I would also recommend having a recent enough kernel so you can do in=
--place
-> replacement. I believe this is 3.3 and later.
-
-Checked : 3.7, so that's OK.
-
-gUI
-
---=20
-Pour la sant=E9 de votre ordinateur, pr=E9f=E9rez les logiciels libres.
-Lire son mail : http://www.mozilla-europe.org/fr/products/thunderbird/
-Browser le web : http://www.mozilla-europe.org/fr/products/firefox/
-Suite bureautique : http://www.libreoffice.org/download/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
