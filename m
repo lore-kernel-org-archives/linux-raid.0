@@ -1,38 +1,52 @@
-From: Guillaume Betous <guillaume.betous@gmail.com>
+From: David Brown <david.brown@hesbynett.no>
 Subject: Re: Best practice for setting up "ordinary" RAID
-Date: Fri, 11 Oct 2013 10:58:53 +0200
-Message-ID: <CAPbD+Rf9ncgBGG+A_fVsD8uk4kOAQ4mgeG1-h8karCOi5sq-UQ@mail.gmail.com>
-References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com>
-	<alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se>
-	<CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com>
-	<alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se>
-	<CAPbD+Rc81u=_VrK0VSNvOdfQxYK4CHse+DYa8-vS1r==b_AN_Q@mail.gmail.com>
-	<alpine.DEB.2.02.1310110917550.20065@uplift.swm.pp.se>
+Date: Fri, 11 Oct 2013 11:28:38 +0200
+Message-ID: <5257C4C6.5080600@hesbynett.no>
+References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com> <alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se> <CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com> <alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se> <CAPbD+Rc81u=_VrK0VSNvOdfQxYK4CHse+DYa8-vS1r==b_AN_Q@mail.gmail.com> <20131011081508.GA4995@cthulhu.home.robinhill.me.uk> <CAPbD+RcN-ze=+wP+46N_wkVWkhV_feNXtkyKAuxy-D4MQmRctQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1310110917550.20065@uplift.swm.pp.se>
+In-Reply-To: <CAPbD+RcN-ze=+wP+46N_wkVWkhV_feNXtkyKAuxy-D4MQmRctQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Guillaume Betous <guillaume.betous@gmail.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> RAID6 will help you with drive failure plus random read error. RAID5 =
-doesn't
-> do that.
+On 11/10/13 10:57, Guillaume Betous wrote:
+>> Any read
+>> error or drive failure during the rebuild and you're in trouble.
+> 
+> That was exactly what happened to me ! A rebuild is of course a very
+> big load and another failure becomes more probable.
+> 
+>> With RAID 6 you can handle 2 drive failures at any time
+> 
+> Understood. I'll definitely switch to RAID 6 :)
+> 
+>> They are more complex, but not enough so to trouble any modern CPU - you
+>> might have issues on a 386/486, but I doubt you'll see any difference on
+>> an Atom.
 
-Yes, very good point. Next step : switch to RAID 6 :)
+On modern CPUs, the raid6 calculations run fast - and on servers you
+often have at least one CPU core doing nothing anyway.
 
-gUI
+The only slow part of raid6 calculations is when you have to read data
+when there are two missing disks.  But reading slowly with raid6 beats
+no data at all with raid5!
 
---=20
-Pour la sant=E9 de votre ordinateur, pr=E9f=E9rez les logiciels libres.
-Lire son mail : http://www.mozilla-europe.org/fr/products/thunderbird/
-Browser le web : http://www.mozilla-europe.org/fr/products/firefox/
-Suite bureautique : http://www.libreoffice.org/download/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Partial stripe writes (RMW writes) can be faster with raid5 than with
+raid6, although I gather this has been under improvement recently.
+(I've lost track of the status of these changes.)  Usually, it is a
+small price to pay.
+
+> 
+> Ok. Maybe I should update French version of Wikipedia RAID article :)
+> I'll test by myself.
+> For now (RAID 5), on rebuild, it's about 30MB/s. On reading, it's
+> about 90MB/s (direct access to /dev/md127, not read from FS).
+> 
+> gUI
+> 
+
+
