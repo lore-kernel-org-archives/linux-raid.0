@@ -1,81 +1,60 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH] RAID5: Change kmem_cache name string of RAID 4/5/6 stripe cache
-Date: Thu, 10 Oct 2013 21:37:40 -0500
-Message-ID: <5CBD865B-7865-4FE2-ABFE-AFFD9736D256@redhat.com>
-References: <1379646960-12553-1-git-send-email-jbrassow@redhat.com> <1379646960-12553-2-git-send-email-jbrassow@redhat.com> <52572F1C.8080905@zytor.com>
-Mime-Version: 1.0 (Apple Message framework v1085)
+From: Kent Overstreet <kmo@daterainc.com>
+Subject: Re: [PATCH 16/22] dm: Refactor for new bio cloning/splitting
+Date: Thu, 10 Oct 2013 21:13:14 -0700
+Message-ID: <20131011041314.GB28572@kmo>
+References: <1375912471-5106-1-git-send-email-kmo@daterainc.com>
+ <1375912471-5106-17-git-send-email-kmo@daterainc.com>
+ <20130928045909.GA19745@redhat.com>
+ <20131003031738.GA27418@kmo-pixel>
+ <20131003032320.GA15322@redhat.com>
+ <20131003214525.GA12183@kmo-pixel>
+ <20131003225009.GA24173@redhat.com>
+ <20131004170732.GA30728@redhat.com>
+ <20131007001410.GA14264@redhat.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <52572F1C.8080905@zytor.com>
-Sender: owner-linux-mm@kvack.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, cl@linux.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20131007001410.GA14264@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-I think I can NACK this patch.  It was fixed properly in the kmem code.
+On Sun, Oct 06, 2013 at 08:14:10PM -0400, Mike Snitzer wrote:
+> On Fri, Oct 04 2013 at  1:07pm -0400,
+> Mike Snitzer <snitzer@redhat.com> wrote:
+>  
+> > With your latest fix I was able to create a thin device and format with
+> > XFS.  Unfortunately, when I tried to run the thinp-test-suite the very
+> > first BasicTests test (test_dd_benchmark) fails -- need to look closer
+> > but it would seem to me the thinp saved bio_endio path isn't happy.  We
+> > likely need an appropriately placed atomic_inc(&bio->bi_remaining); like
+> > you did in dm-cache-target.c
+> > 
+> > ------------[ cut here ]------------
+> > kernel BUG at fs/bio.c:1722!
+> ...
+> > Call Trace:
+> >  [<ffffffffa05f2ef9>] process_prepared_mapping+0x79/0x150 [dm_thin_pool]
+> >  [<ffffffffa05f2ba7>] process_prepared+0x87/0xa0 [dm_thin_pool]
+> >  [<ffffffffa05f58f3>] do_worker+0x33/0x60 [dm_thin_pool]
+> >  [<ffffffff81067862>] process_one_work+0x182/0x3b0
+> >  [<ffffffff81068c80>] worker_thread+0x120/0x3a0
+> >  [<ffffffff81068b60>] ? manage_workers+0x160/0x160
+> >  [<ffffffff8106eace>] kthread+0xce/0xe0
+> >  [<ffffffff8106ea00>] ? kthread_freezable_should_stop+0x70/0x70
+> >  [<ffffffff8152b1ac>] ret_from_fork+0x7c/0xb0
+> >  [<ffffffff8106ea00>] ? kthread_freezable_should_stop+0x70/0x70
+> > Code: 1f 84 00 00 00 00 00 48 8b 57 10 83 e2 01 0f 44 f1 eb cd 0f 1f 40 00 48 8b 7f 50 48 85 ff 74 dd 8b 57 44 48 8d 47 44 85 d2 7f ac <0f> 0b eb fe 0f 1f 84 00 00 00 00 00 55 48 89 e5 66 66 66 66 90 
+> > RIP  [<ffffffff811b1464>] bio_endio+0x74/0x80
+> >  RSP <ffff88032c5e7d48>
+> > ---[ end trace acb5a7d638591b7b ]---
+> 
+> Please fold this fix into your for-jens branch, thanks.  (Could be that
+> by the time Jens takes your immutable biovec changes we'll need to
+> rebase but at least it won't slip through the cracks).
 
- brassow
-
-On Oct 10, 2013, at 5:50 PM, H. Peter Anvin wrote:
-
-> On 09/19/2013 08:16 PM, Jonathan Brassow wrote:
->> The unique portion of the kmem_cache name used when dm-raid is =
-creating
->> a RAID 4/5/6 array is the memory address of it's associated 'mddev'
->> structure.  This is not always unique.  The memory associated
->> with the 'mddev' structure can be freed and a future 'mddev' =
-structure
->> can be allocated from the exact same spot.  This causes an identical
->> name to the old cache to be created when kmem_cache_create is called.
->> If an old name is still present amoung slab_caches due to cache =
-merging,
->> the call will fail.  This is not theoretical, I see this regularly =
-when
->> performing device-mapper RAID 4/5/6 tests (although, strangely only =
-on
->> Fedora-19).
->>=20
->> Making the unique portion of the kmem_cache name based on jiffies =
-fixes
->> this problem.
->>=20
->> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
->> ---
->> drivers/md/raid5.c |    2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>=20
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 7ff4f25..f731ce9 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -1618,7 +1618,7 @@ static int grow_stripes(struct r5conf *conf, =
-int num)
->> 			"raid%d-%s", conf->level, mdname(conf->mddev));
->> 	else
->> 		sprintf(conf->cache_name[0],
->> -			"raid%d-%p", conf->level, conf->mddev);
->> +			"raid%d-%llu", conf->level, get_jiffies_64());
->> 	sprintf(conf->cache_name[1], "%s-alt", conf->cache_name[0]);
->>=20
->> 	conf->active_name =3D 0;
->>=20
->=20
-> And it is not possible to create two inside the same jiffy?  Seems
-> unlikely at best.
->=20
-> Why not just use a simple counter?
->=20
-> 	-hpa
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Thanks! I knew that bio chaining patch was going to cause a few issues
+like this, but it seems to useful to pass up. Anything else come up/any
+comments?
