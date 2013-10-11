@@ -1,52 +1,34 @@
-From: Guillaume Betous <guillaume.betous@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Best practice for setting up "ordinary" RAID
-Date: Fri, 11 Oct 2013 09:14:24 +0200
-Message-ID: <CAPbD+Rc81u=_VrK0VSNvOdfQxYK4CHse+DYa8-vS1r==b_AN_Q@mail.gmail.com>
-References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com>
-	<alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se>
-	<CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com>
-	<alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se>
+Date: Fri, 11 Oct 2013 09:19:58 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1310110917550.20065@uplift.swm.pp.se>
+References: <CAPbD+RckkbYXF4Wpr_yzboJ0B+TBZayf0LbT3f4O3xQ-JN3gaA@mail.gmail.com> <alpine.DEB.2.02.1310110827350.20065@uplift.swm.pp.se> <CAPbD+Rc-EDpVvm=-Ge5nWJNgJRBVWseqJKwnfCdDLoBjzC4hzg@mail.gmail.com> <alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se>
+ <CAPbD+Rc81u=_VrK0VSNvOdfQxYK4CHse+DYa8-vS1r==b_AN_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1310110900400.20065@uplift.swm.pp.se>
+In-Reply-To: <CAPbD+Rc81u=_VrK0VSNvOdfQxYK4CHse+DYa8-vS1r==b_AN_Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: Guillaume Betous <guillaume.betous@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> What is it about RAID6 that you are not comfortable with?
+On Fri, 11 Oct 2013, Guillaume Betous wrote:
 
-I've never use it :)
+> As I read that algorithm on the RAID 6 are way more complex, and rebuild 
+> time is longer, as I have only a Atom D510 as CPU, I consider that RAID 
+> 5 is a better option.
 
-Here the deal : I have 5 drives on my NAS, I can't have more in my
-tower (1 drive for the system, 5 drives for the NAS). From Adam's
-message, it should be enough for setting up a good RAID 6.
+It's an old myth that RAID6 uses a lot of CPU. It doesn't, not even 
+considering you have an Atom D510.
 
-=46or now, I have a RAID 5 with a spare, meaning that I have 3x(drive
-size) as available size. I can have 2 hard drive failures.
-If I setup a RAID 6, if I understand well, I'll also have 3x(drive
-size) as available size, I will also can have 2 drive failures.
+> But if you can explain that RAID 6 have pros I haven't seen, I'll
+> surely swith to RAID 6 (always want to learn :) ).
 
-As I read that algorithm on the RAID 6 are way more complex, and
-rebuild time is longer, as I have only a Atom D510 as CPU, I consider
-that RAID 5 is a better option.
+RAID6 will help you with drive failure plus random read error. RAID5 
+doesn't do that.
 
-But if you can explain that RAID 6 have pros I haven't seen, I'll
-surely swith to RAID 6 (always want to learn :) ).
+My recommendation to you is to convert your RAID5+spare to RAID6.
 
-Thanks,
-
-gUI
-
---=20
-Pour la sant=E9 de votre ordinateur, pr=E9f=E9rez les logiciels libres.
-Lire son mail : http://www.mozilla-europe.org/fr/products/thunderbird/
-Browser le web : http://www.mozilla-europe.org/fr/products/firefox/
-Suite bureautique : http://www.libreoffice.org/download/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
