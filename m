@@ -1,45 +1,44 @@
-From: Eric Smith <eric.d.bald.smith@gmail.com>
-Subject: Re: 4 drive raid 5 array with 2 drives down
-Date: Fri, 11 Oct 2013 22:25:52 -0400
-Message-ID: <CAJJ2cgQy+NSrPLyOQvzSaRg1riCW6yzqUo++pSf_2kdBAEa+QA@mail.gmail.com>
-References: <CAJJ2cgSy8J2tSy0g6YWJOYdfEp13Fu7jxgwtxp1qt7Z4jL+JtA@mail.gmail.com>
-	<alpine.DEB.2.02.1310110657000.20065@uplift.swm.pp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Ethan Tira-Thompson <ethan@tira-thompson.com>
+Subject: Removable mirror disks?
+Date: Sat, 12 Oct 2013 11:15:43 -0700
+Message-ID: <A9E6EB68-1FEC-4509-9357-2F62BC62AE84@tira-thompson.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1310110657000.20065@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-using ddrescure -f -vvvv -r 3 /dev/sda /dev/sdb
+Hi all,
 
-it's rescued 0 B  seems to be trying to copy 4142 MB but has not
-copied any thing
+I=92m setting up a raid mirror with two disks.  Ideally, I=92d like to =
+do this in such a way that I could stop the array, remove a drive, moun=
+t it directly on another machine as read-only (no RAID setup), and then=
+ put it back in the RAID and re-assemble as if nothing happened.  (Or I=
+ could put a new drive in and keep the old one as a snapshot backup.)  =
+It=92s a maintenance option, not something I intend to do a lot.
 
-So is there some setting I can try other than above that might extract
-something.
+Can I do this?  I=92ve tried creating a raid from the root block device=
+ (e.g. sdb) and then partitioning and formatting within the RAID, as we=
+ll as the opposite, partitioning the block device and making a raid of =
+the partition.  Neither of these seems happy if I pull a drive and try =
+to use it directly.  Is that due to the mdadm metadata overwriting/offs=
+etting the filesystem?  Would something like DDF containers solve this?=
+  Or if I shrink the filesystem on a partition (leaving unused space on=
+ the partition) and then use metadata version 1.0? (not sure I can do t=
+hat, everything I=92ve seen resizes the partition too)
 
-Thanks for any help.
+An unrelated question: I=92ve heard some implementations RAID-1 mirrori=
+ng will load balance reads between the disks at the process level but n=
+ot striping of reads within a thread?  How does linux raid handle this?=
+  Seems like the kernel could stripe the read requests regardless of be=
+ing single threaded, but maybe there=92s some complication of guarantee=
+ing coherency with writes to each drive?
 
-On Fri, Oct 11, 2013 at 1:00 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> On Thu, 10 Oct 2013, Eric Smith wrote:
->
->> I had a functional 4 drive Raid5 array.  I lost one drive called support
->> to warranty it and in the time that it was coming to me a second drive died
->> also.
->
->
-> Use ddrescue to try to get data out of the failed drives. If you have 2 out
-> of 4 drives that are totally dead and no data can be taken from them, then
-> you basically have 1/3 of your data completely gone, spread over the entire
-> filesystem. You won't be able to recover much more than sporadic file
-> contents...
->
-> If indeed the drives are not totally dead and you can get most of the data
-> out using ddrescue, then there is more hope. Do this then, and post new
-> information to the list depending on how much data you were able to extract.
->
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
+Thanks!
+ -Ethan--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
