@@ -1,59 +1,39 @@
-From: peter@steinhoff.se
+From: Brian Candler <b.candler@pobox.com>
 Subject: Re: Problem diagnosing rebuilding raid5 array
-Date: Tue, 15 Oct 2013 10:20:39 -0400
-Message-ID: <20131015102039.518915oe7a8npf0g@phobos.elinuxservers.com>
-References: <20131014123104.77620e8uy2pe0214@phobos.elinuxservers.com>
- <525C29CD.4080604@pobox.com>
- <20131015084037.10297bo5940ryklk@phobos.elinuxservers.com>
- <525D3A27.7070301@pobox.com>
+Date: Tue, 15 Oct 2013 15:20:30 +0100
+Message-ID: <525D4F2E.50604@pobox.com>
+References: <20131014123104.77620e8uy2pe0214@phobos.elinuxservers.com> <525C29CD.4080604@pobox.com> <20131015084037.10297bo5940ryklk@phobos.elinuxservers.com> <525D3FE6.7000407@pobox.com> <20131015101442.19647jupyxo6848w@phobos.elinuxservers.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <525D3A27.7070301@pobox.com>
-Content-Disposition: inline
+In-Reply-To: <20131015101442.19647jupyxo6848w@phobos.elinuxservers.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Candler <b.candler@pobox.com>
+To: peter@steinhoff.se
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have used those tests in the past but I'm a little worried that I  
-might make matters worse if I test the drives currently in the array  
-before having tried to recover whatever information I can.
+On 15/10/2013 15:14, peter@steinhoff.se wrote:
+> Thanks Brian.
+>
+> Yes, I replaced sdh because it showed read errors in dmesg and was 
+> kicked out of the array.
+>
+> But has the new sdh been rebuilt completely? If that case there should 
+> be n-1 drives? Or does "spare" just means that it can be used but has 
+> no data yet?
+>
+That's what I'm not sure about. It is "clean" but it is also "spare". 
+I'm not sure what state would be seen while it is rebuilding.
 
-Thanks,
-Peter
+When the old sdh had a problem, did you mdadm /dev/mdXXX --fail /dev/sdh?
 
-Quoting Brian Candler <b.candler@pobox.com>:
+And after you inserted the new drive, and presumably did mdadm 
+/dev/mdXXX --add /dev/sdh, did you see it start to rebuild in /proc/mdstat?
 
-> On 15/10/2013 13:40, peter@steinhoff.se wrote:
->>
->> On another note, I took the failed drive I replaced in my array  
->> (/dev/sdh) and put it in another machine (win7) and run Western  
->> Digital's diagnosis software and it says the drive is OK.
->>
-> Another type of drive test you can do is with smartctl:
+> Also I have my old sdh with data on it but I don't know how current 
+> that data is but perhaps I can use that somehow?
 >
-> smartctl -t conveyance /dev/sdX
-> ... typically takes a couple of minutes
-> smartctl -l selftest /dev/sdX   # to monitor progress / completion
->
-> smartctl -t long /dev/sdX
-> ... typically takes 6 hours on a 3TB drive
-> smartctl -l selftest /dev/sdX   # to monitor progress / completion
->
-> Regards,
->
-> Brian.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+You could mdadm --examine it, but I suspect that the event count will be 
+way out of line by now.
 
