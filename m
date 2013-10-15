@@ -1,7 +1,7 @@
 From: Brian Candler <b.candler@pobox.com>
 Subject: Re: Problem diagnosing rebuilding raid5 array
-Date: Tue, 15 Oct 2013 13:50:47 +0100
-Message-ID: <525D3A27.7070301@pobox.com>
+Date: Tue, 15 Oct 2013 14:15:18 +0100
+Message-ID: <525D3FE6.7000407@pobox.com>
 References: <20131014123104.77620e8uy2pe0214@phobos.elinuxservers.com> <525C29CD.4080604@pobox.com> <20131015084037.10297bo5940ryklk@phobos.elinuxservers.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -15,19 +15,46 @@ List-Id: linux-raid.ids
 
 On 15/10/2013 13:40, peter@steinhoff.se wrote:
 >
-> On another note, I took the failed drive I replaced in my array 
-> (/dev/sdh) and put it in another machine (win7) and run Western 
-> Digital's diagnosis software and it says the drive is OK.
+> Anyway, I'm still at loss what to do and what my next step should be...
 >
-Another type of drive test you can do is with smartctl:
+Well, I'm not the world's authority on this, but from what I can see:
 
-smartctl -t conveyance /dev/sdX
-... typically takes a couple of minutes
-smartctl -l selftest /dev/sdX   # to monitor progress / completion
+$ egrep '^/|UUID|State :|Events :' ert
+/dev/sdd:
+             UUID : 61a6a879:adb7ac7b:86c7b55e:eb5cc2b6
+            State : clean
+           Events : 1288444
+/dev/sde:
+             UUID : 61a6a879:adb7ac7b:86c7b55e:eb5cc2b6
+            State : clean
+           Events : 1288428
+/dev/sdf:
+             UUID : 61a6a879:adb7ac7b:86c7b55e:eb5cc2b6
+            State : clean
+           Events : 1288444
+/dev/sdg:
+             UUID : 61a6a879:adb7ac7b:86c7b55e:eb5cc2b6
+            State : clean
+           Events : 1288444
+/dev/sdh:
+             UUID : 61a6a879:adb7ac7b:86c7b55e:eb5cc2b6
+            State : clean
+           Events : 1288444
 
-smartctl -t long /dev/sdX
-... typically takes 6 hours on a 3TB drive
-smartctl -l selftest /dev/sdX   # to monitor progress / completion
+So it looks like sde is stale with respect to the other drives (which 
+have a larger event count) and therefore is not being used. But sdh is a 
+spare (you said it was rebuilding onto this?), so you have N-2 usable 
+data disks, which is not enough to start RAID5.
+
+DON'T do the following before someone else on the list confirms this is 
+the right course of action, but you can force the array to assemble using:
+
+mdadm --stop /dev/mdXXX
+mdadm --assemble --force --run /dev/mdXXX /dev/sd{d,e,f,g,h}
+
+But since the state of sde is old, I think there is a real risk that 
+data corruption has taken place. Do an fsck before mounting. It may be 
+better to restore from a trusted backup.
 
 Regards,
 
