@@ -1,103 +1,91 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: Fix skipping recovery for read-only arrays.
-Date: Wed, 16 Oct 2013 14:49:54 +1100
-Message-ID: <20131016144954.5eb8a689@notabene.brown>
-References: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
+Subject: Re: mdadm 3.3 fails to kick out non fresh disk
+Date: Wed, 16 Oct 2013 15:57:11 +1100
+Message-ID: <20131016155711.715678e7@notabene.brown>
+References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
+	<20130914064305.0baadc69@notabene.brown>
+	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
+	<20130914203800.385466b2@notabene.brown>
+	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>
+	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>
+	<5234CA6A.3070305@arcor.de>
+	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>
+	<52373A19.7000105@arcor.de>
+	<CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
+	<523C8EF9.60809@arcor.de>
+	<CAC9WiBgnWHupc59z+ym2me3RcL4F6YqdE_3aXTvRN2zZZQ4jzQ@mail.gmail.com>
+	<CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>
+	<52409E62.3090105@arcor.de>
+	<CAC9WiBigzwNFV2FSU+tWS969fh+6G6ikQcrDqDyW0CbiaOuLkQ@mail.gmail.com>
+	<CAC9WiBje39ij9RLEqe8aha3FGn_LirxzQezXx-s5+J-HqUpwug@mail.gmail.com>
+	<524C6711.3090805@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9THdEqY5EJUGN5nS.kwAauA"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org
+ boundary="Sig_/l.dqH3AOUZYr4j/0w5lSrJ2"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <524C6711.3090805@arcor.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/9THdEqY5EJUGN5nS.kwAauA
+--Sig_/l.dqH3AOUZYr4j/0w5lSrJ2
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 07 Oct 2013 16:25:51 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+On Wed, 02 Oct 2013 20:33:53 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> Since:
->         commit 7ceb17e87bde79d285a8b988cfed9eaeebe60b86
->         md: Allow devices to be re-added to a read-only array.
+> On 09/27/2013 05:47 PM, Francis Moreau wrote:
 >=20
-> spares are activated on a read-only array. In case of raid1 and raid10
-> personalities it causes that not-in-sync devices are marked in-sync
-> without checking if recovery has been finished.
+> > I finally found my issue: mdmon --takeover service wasn't started
+> > anymore (probably I messed it up earlier). Therefore mdmon started by
+> > initrd was used and wasn't working properly.
 >=20
-> If a read-only array is degraded and one of its devices is not in-sync
-> (because the array has been only partially recovered) recovery will be sk=
-ipped.
+> Thanks a lot for finding this out, glad your system is working again.
+> And sorry for having lost you and talking about the BIOS; I was thinking
+> you were still working on fake BIOS hardware.
 >=20
-> This patch adds checking if recovery has been finished before marking a d=
-evice
-> in-sync for raid1 and raid10 personalities. In case of raid5 personality
-> such condition is already present (at raid5.c:6029).
+> > If you still want me to test something, please tell me.
+> >=20
+> > OTHO, it would be easier if you setup a git tree somewhere with your
+> > patches that you want me to test. BTW I'm not subscribed to linux-raid
+> > mailing list.
 >=20
-> Bug was introduced in 3.10 and causes data corruption.
->=20
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  drivers/md/raid1.c  |    1 +
->  drivers/md/raid10.c |    1 +
->  2 files changed, 2 insertions(+)
->=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index d60412c..aacf6bf 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -1479,6 +1479,7 @@ static int raid1_spare_active(struct mddev *mddev)
->  			}
->  		}
->  		if (rdev
-> +		    && rdev->recovery_offset =3D=3D MaxSector
->  		    && !test_bit(Faulty, &rdev->flags)
->  		    && !test_and_set_bit(In_sync, &rdev->flags)) {
->  			count++;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index df7b0a0..73dc8a3 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -1782,6 +1782,7 @@ static int raid10_spare_active(struct mddev *mddev)
->  			}
->  			sysfs_notify_dirent_safe(tmp->replacement->sysfs_state);
->  		} else if (tmp->rdev
-> +			   && tmp->rdev->recovery_offset =3D=3D MaxSector
->  			   && !test_bit(Faulty, &tmp->rdev->flags)
->  			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
->  			count++;
+> I'll wait for Neil to come back and comment on my patches. It doesn't
+> make sense for me right now to create my own repository.
 
-Applied - thanks.
+Hi,
+ I'm back from leave now :-)
+ Your patches look good - thanks a lots.
+ I think I have applied them all (though the numbering was a bit odd and I
+ might have missed something).
 
-I'll forward it to Linus and -stable shortly.
+ I've lost track ... are there any outstanding issues here, or are we "done=
+" ?
 
+Thanks,
 NeilBrown
 
---Sig_/9THdEqY5EJUGN5nS.kwAauA
+--Sig_/l.dqH3AOUZYr4j/0w5lSrJ2
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUl4M4jnsnt1WYoG5AQJsMQ//eP0JalczBf1BYAvlRDffokMCJLlaDOsp
-qZwgfZoAU4YOkp0VDffPlnZQMIsOWAuUrgmCdor7XUrDbhg2aCUPOWD7rs/iX/iK
-f01+UBrSM+Ei6PQoPl6nLI36f5RBQDahJlVljJvN+JqST6xjQ1KEdneSQ/l41ZJe
-0Q0OK4dO4DxJMhKzjYPh4fKDRJkDPnouRzHpvfP72E/XS6Y14oIxUIUP1qaqxoYc
-ioItnfNKhqdcRCCYH8QiBpY47GO0gFMlipfYRZ3/m48hCJRZ6iV4k/Atet8UaZVC
-DdpsYD7bK8KJNQT8nWxJRfdk53p0AFFiM/pfqnkqjqwnR8hQ4kqMRC+5qWE5ThRh
-gHpKwAVqK6q3HoIwVNpph18SA6yjmurn5hOG5gLIjpw9F0lA2tMSnR4pWIL8S+yQ
-YN0ApXz++M9nLWe1vy5U2c9mocxW6n8xcWbpdzi4W7NyNV0Ep5WOcy0SPRoWizDG
-Pu3xMt3IjG22TuAhS3DxQSPM06n/ZB1meYY8a9z7G4NWJMnzTPtTZ3+FnyzZwHfq
-dNUD4lSF77JAWhx5OMye+mHFbQWRsK05VDFR7Ey3U1Js7IQm5B6DmUzZ9Q+XP7x0
-KrEqQyJIbs+aax36cix2+65NzppEsJtDlQW1h5WSH6+Mx28yQ6f0f5AjYxfs/txv
-sVTV2lFdIf4=
-=XAup
+iQIVAwUBUl4cpznsnt1WYoG5AQJvig//cUp6+7ppThwQQUcf8hhBf5pok6eqc076
+EVayktcsCwjK92z5KlDhiRCEDJRsUqg9/thJ6UlYbk3jicSnMDxqM9yCZRM9EB9W
+rpe/l/dPAOiNey/GlfyxaCwBGQ/XqE5gUqJ8XjJx8dY/shgcPHqrlvT7ezZQxvYd
+z7l38E/w1ZrJpYCTu7hHgJMbgvgbwXO7zvwA8uM77i2N1Ywyra83Sz7HdjB7RDoV
+bpBzoPvVJhTYD/rvkCbKTO6rRzdpeIEt04QpFLwFgRO4U4Am7Izeqt5LDazqmgCN
+NaKvinxrHsgh1BTQp/GjtCeEnplC8vX/BRKk6WLZhJrC5G++flKpa/nsoUG32jp7
++/cNhsfpaprz98H568eZnlOSmDmou7smoN2ftvwv89LsAVc08TsTFKK3ob3XQHLo
+gOwVlW0qQzq1UufSWPJdSvOGTYgGK+9O0uccv+po4rnLTFyUbYG6gzWj8YaHltNG
+keUSVCkvFCrcvjbyyquOU3F/AlZ2FWeZv/+p6aCplhmIZWTspPUmNjDxr4F02jA9
+bGu/WYk8RYZmZpSlkO1t/lKwurbwafYO+dNXwvKDUJ63rsaRpnEJ+5p+LixOWNWg
+XXuk7LjaD0IMpXzHcxlYB+MAexQkwOnhkwsiOzTPW4Z3/500gW9BNwr6BzzSxexg
+glM6mk/exnY=
+=jmSl
 -----END PGP SIGNATURE-----
 
---Sig_/9THdEqY5EJUGN5nS.kwAauA--
+--Sig_/l.dqH3AOUZYr4j/0w5lSrJ2--
