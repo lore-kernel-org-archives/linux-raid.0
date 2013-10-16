@@ -1,81 +1,103 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/1] consistent return types from byteswap macros
-Date: Wed, 16 Oct 2013 12:44:35 +1100
-Message-ID: <20131016124435.0570f720@notabene.brown>
-References: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] md: Fix skipping recovery for read-only arrays.
+Date: Wed, 16 Oct 2013 14:49:54 +1100
+Message-ID: <20131016144954.5eb8a689@notabene.brown>
+References: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/PYCrU_/IpHxH7VX5RttGFhx"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1381390925-9033-1-git-send-email-Jes.Sorensen@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, karsten@redhat.com
+ boundary="Sig_/9THdEqY5EJUGN5nS.kwAauA"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/PYCrU_/IpHxH7VX5RttGFhx
+--Sig_/9THdEqY5EJUGN5nS.kwAauA
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 10 Oct 2013 09:42:04 +0200 Jes.Sorensen@redhat.com wrote:
+On Mon, 07 Oct 2013 16:25:51 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Since:
+>         commit 7ceb17e87bde79d285a8b988cfed9eaeebe60b86
+>         md: Allow devices to be re-added to a read-only array.
 >=20
-> Hi,
+> spares are activated on a read-only array. In case of raid1 and raid10
+> personalities it causes that not-in-sync devices are marked in-sync
+> without checking if recovery has been finished.
 >=20
-> There are multiple ways to solve this one, but I think this is the
-> least intrusive solution, even if not the prettiest.
+> If a read-only array is degraded and one of its devices is not in-sync
+> (because the array has been only partially recovered) recovery will be sk=
+ipped.
 >=20
-> Problem is that current macros simply return the original value if cpu
-> byteorder equals the converted type, leaking through the original
-> type. This results in errors like this when building for PPC64, as an
-> example:
+> This patch adds checking if recovery has been finished before marking a d=
+evice
+> in-sync for raid1 and raid10 personalities. In case of raid5 personality
+> such condition is already present (at raid5.c:6029).
 >=20
-> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -O2 -=
-g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=3D2 -fexceptions -fstack-protector-stro=
-ng --param=3Dssp-buffer-size=3D4 -grecord-gcc-switches  -m64 -DSendmail=3D\=
-""/usr/sbin/sendmail -t"\" -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\=
-"/etc/mdadm/mdadm.conf\" -DMAP_DIR=3D\"/run/mdadm\" -DMAP_FILE=3D\"map\" -D=
-MDMON_DIR=3D\"/run/mdadm\" -DFAILED_SLOTS_DIR=3D\"/run/mdadm/failed-slots\"=
-   -DUSE_PTHREADS   -c -o super-intel.o super-intel.c
-> super-ddf.c: In function 'examine_vd':
-> super-ddf.c:1414:10: error: format '%llu' expects argument of type 'long =
-long unsigned int', but argument 3 has type '__u64' [-Werror=3Dformat=3D]
->           be64_to_cpu(vc->blocks)/2);
->           ^
+> Bug was introduced in 3.10 and causes data corruption.
 >=20
-> We could force the macros to all return u16/u32/u64, which would be
-> 'cleaner'. However I suspect that would make us chase a pile of build
-> warnings converting all printf's to explicitly cast. So I made them
-> return the same types as our byteswap macros default to (hence the
-> unsigned int return type for the 16 bit swaps).
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  drivers/md/raid1.c  |    1 +
+>  drivers/md/raid10.c |    1 +
+>  2 files changed, 2 insertions(+)
 >=20
-> Jes
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index d60412c..aacf6bf 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1479,6 +1479,7 @@ static int raid1_spare_active(struct mddev *mddev)
+>  			}
+>  		}
+>  		if (rdev
+> +		    && rdev->recovery_offset =3D=3D MaxSector
+>  		    && !test_bit(Faulty, &rdev->flags)
+>  		    && !test_and_set_bit(In_sync, &rdev->flags)) {
+>  			count++;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index df7b0a0..73dc8a3 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -1782,6 +1782,7 @@ static int raid10_spare_active(struct mddev *mddev)
+>  			}
+>  			sysfs_notify_dirent_safe(tmp->replacement->sysfs_state);
+>  		} else if (tmp->rdev
+> +			   && tmp->rdev->recovery_offset =3D=3D MaxSector
+>  			   && !test_bit(Faulty, &tmp->rdev->flags)
+>  			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+>  			count++;
 
-Looks good.  Applied. Thanks.
+Applied - thanks.
+
+I'll forward it to Linus and -stable shortly.
 
 NeilBrown
 
---Sig_/PYCrU_/IpHxH7VX5RttGFhx
+--Sig_/9THdEqY5EJUGN5nS.kwAauA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUl3vgznsnt1WYoG5AQJo9g/8CTWZbdNuP4QoNhdT6ehDMpXyHJ7boTuL
-J0qWeIH1mkw063yPFjbX36l3tFfUSz5du5F96APgzZazrMsa4VpDltvNtAa8tXRS
-wU2rKc2vE5PiZ3RWH1JP8Kjri1aDGFMwrBkmgRC4kDMNjjLZZ/6FW7pVoiKI2jfM
-TLU/Gjp007gL3Z92epz7IFFVxG4kA0iM62HwPdrXYguL40vwiOj/GfO7kIIsyKd7
-7Zxat8gm9GUPw8zknMkPC3+oNytr8tJs2LtqR8lcC6W/+ABz+Mi1/Stk9kLDcL+T
-MOUqJYe336eit1tFwp8XNFFjGRc3b4Ggw9LWBMiuPQLb2b4M2n5wLrp58l+aTbr/
-a/FffhAR8qM8i9Hgz6oeFwzXOenJv6JgDr0MDW02mG005784+rB1+h/DNljIkbKR
-gFXTCoJOt3ZTlQnXL8Qi6eEJW7CP/rfFpxX+eo2Y4hztc4M1qe3GyT5oDVlhtKG4
-7AF9CFOg4N/mH8frE6HvDtD+CyTgu478QYBDTHkbbUUqBaA8Hkfxu75WOwII0LJJ
-TZ1kAytL2OApdNIkptslasbYUIwX62jMbLGpVKE37uRi0ts/bqz6jBI7Ira8yAfm
-HB5SDim3CIzjNQTU6CX6ibx0VL4T9eP5Ai+bOiuQkM/neSdUdAhqPEHRFJRAl/S7
-prx/Fjaq5+c=
-=q/3d
+iQIVAwUBUl4M4jnsnt1WYoG5AQJsMQ//eP0JalczBf1BYAvlRDffokMCJLlaDOsp
+qZwgfZoAU4YOkp0VDffPlnZQMIsOWAuUrgmCdor7XUrDbhg2aCUPOWD7rs/iX/iK
+f01+UBrSM+Ei6PQoPl6nLI36f5RBQDahJlVljJvN+JqST6xjQ1KEdneSQ/l41ZJe
+0Q0OK4dO4DxJMhKzjYPh4fKDRJkDPnouRzHpvfP72E/XS6Y14oIxUIUP1qaqxoYc
+ioItnfNKhqdcRCCYH8QiBpY47GO0gFMlipfYRZ3/m48hCJRZ6iV4k/Atet8UaZVC
+DdpsYD7bK8KJNQT8nWxJRfdk53p0AFFiM/pfqnkqjqwnR8hQ4kqMRC+5qWE5ThRh
+gHpKwAVqK6q3HoIwVNpph18SA6yjmurn5hOG5gLIjpw9F0lA2tMSnR4pWIL8S+yQ
+YN0ApXz++M9nLWe1vy5U2c9mocxW6n8xcWbpdzi4W7NyNV0Ep5WOcy0SPRoWizDG
+Pu3xMt3IjG22TuAhS3DxQSPM06n/ZB1meYY8a9z7G4NWJMnzTPtTZ3+FnyzZwHfq
+dNUD4lSF77JAWhx5OMye+mHFbQWRsK05VDFR7Ey3U1Js7IQm5B6DmUzZ9Q+XP7x0
+KrEqQyJIbs+aax36cix2+65NzppEsJtDlQW1h5WSH6+Mx28yQ6f0f5AjYxfs/txv
+sVTV2lFdIf4=
+=XAup
 -----END PGP SIGNATURE-----
 
---Sig_/PYCrU_/IpHxH7VX5RttGFhx--
+--Sig_/9THdEqY5EJUGN5nS.kwAauA--
