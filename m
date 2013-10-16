@@ -1,82 +1,68 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] md: Fix skipping recovery for read-only arrays.
-Date: Wed, 16 Oct 2013 07:43:16 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A664D26@IRSMSX105.ger.corp.intel.com>
-References: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
- <20131016144954.5eb8a689@notabene.brown>
+From: John Yates <jyates65@gmail.com>
+Subject: Re: Advice recovering from interrupted grow on RAID5 array
+Date: Wed, 16 Oct 2013 09:02:52 -0400
+Message-ID: <CA+90J_9vLnEVPhAkQmZ5VS=gTw0fjf107wf=2riLn+=RstJMSQ@mail.gmail.com>
+References: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
+	<20131016162625.628c5558@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131016144954.5eb8a689@notabene.brown>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20131016162625.628c5558@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday, October 16, 2013 5:50 AM NeilBrown <neilb@suse.de> wrote:
-> On Mon, 07 Oct 2013 16:25:51 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-> wrote:
-> 
-> > Since:
-> >         commit 7ceb17e87bde79d285a8b988cfed9eaeebe60b86
-> >         md: Allow devices to be re-added to a read-only array.
-> >
-> > spares are activated on a read-only array. In case of raid1 and raid10
-> > personalities it causes that not-in-sync devices are marked in-sync
-> > without checking if recovery has been finished.
-> >
-> > If a read-only array is degraded and one of its devices is not in-sync
-> > (because the array has been only partially recovered) recovery will be skipped.
-> >
-> > This patch adds checking if recovery has been finished before marking
-> > a device in-sync for raid1 and raid10 personalities. In case of raid5
-> > personality such condition is already present (at raid5.c:6029).
-> >
-> > Bug was introduced in 3.10 and causes data corruption.
-> >
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> > ---
-> >  drivers/md/raid1.c  |    1 +
-> >  drivers/md/raid10.c |    1 +
-> >  2 files changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c index
-> > d60412c..aacf6bf 100644
-> > --- a/drivers/md/raid1.c
-> > +++ b/drivers/md/raid1.c
-> > @@ -1479,6 +1479,7 @@ static int raid1_spare_active(struct mddev *mddev)
-> >  			}
-> >  		}
-> >  		if (rdev
-> > +		    && rdev->recovery_offset == MaxSector
-> >  		    && !test_bit(Faulty, &rdev->flags)
-> >  		    && !test_and_set_bit(In_sync, &rdev->flags)) {
-> >  			count++;
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c index
-> > df7b0a0..73dc8a3 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -1782,6 +1782,7 @@ static int raid10_spare_active(struct mddev
-> *mddev)
-> >  			}
-> >  			sysfs_notify_dirent_safe(tmp->replacement-
-> >sysfs_state);
-> >  		} else if (tmp->rdev
-> > +			   && tmp->rdev->recovery_offset == MaxSector
-> >  			   && !test_bit(Faulty, &tmp->rdev->flags)
-> >  			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
-> >  			count++;
-> 
-> Applied - thanks.
-> 
-> I'll forward it to Linus and -stable shortly.
-> 
+On Wed, Oct 16, 2013 at 1:26 AM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 14 Oct 2013 21:59:45 -0400 John Yates <jyates65@gmail.com> wrote:
+>
+>> Midway through a RAID5 grow operation from 5 to 6 USB connected
+>> drives, system logs show that the kernel lost communication with some
+>> of the drive ports which has left my array in a state that I have not
+>> been able to reassemble. After reseating the cable connections and
+>> rebooting, all of the drives appear to be functioning normally, so
+>> hopefully the data is still intact. I need advice on recovery steps
+>> for the array.
+>>
+>> It appears that each drive failed in quick succession with /dev/sdc1
+>> being the last standing and having the others marked as missing in its
+>> superblock. The superblocks of the other drives show all drives as
+>> available. (--examine output below)
+>>
+>> >mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1
+>> mdadm: too-old timestamp on backup-metadata on device-5
+>> mdadm: If you think it is should be safe, try 'export MDADM_GROW_ALLOW_OLD=1'
+>> mdadm: /dev/md127 assembled from 1 drives - not enough to start the array.
+>
+> Did you try following the suggestion and run
+>
+>  export MDADM_GROW_ALLOW_OLD=1
+>
+> and the try the --asssemble again?
+>
 > NeilBrown
 
-Thanks!
+Yes I did, thanks. Not much change though. It accepts the timestamp,
+but then appears not to use it.
 
-Lukasz
+mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+/dev/sdf1 /dev/sdg1 --verbose
+mdadm: looking for devices for /dev/md127
+mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
+mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
+mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
+mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
+mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
+mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
+mdadm: :/dev/md127 has an active reshape - checking if critical
+section needs to be restored
+mdadm: accepting backup with timestamp 1381360844 for array with
+timestamp 1381729948
+mdadm: backup-metadata found on device-5 but is not needed
+mdadm: added /dev/sdf1 to /dev/md127 as 1
+mdadm: added /dev/sdd1 to /dev/md127 as 2
+mdadm: added /dev/sdc1 to /dev/md127 as 3
+mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
+mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
+mdadm: added /dev/sde1 to /dev/md127 as 0
+mdadm: /dev/md127 assembled from 4 drives - not enough to start the array.
