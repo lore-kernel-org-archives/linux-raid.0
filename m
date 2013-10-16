@@ -1,91 +1,72 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Wed, 16 Oct 2013 15:57:11 +1100
-Message-ID: <20131016155711.715678e7@notabene.brown>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
-	<20130914064305.0baadc69@notabene.brown>
-	<CAC9WiBhbyV6Xpu=7HvKUK1hXNw1uC+QZcDOM0R9zUCMrR7WNtQ@mail.gmail.com>
-	<20130914203800.385466b2@notabene.brown>
-	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>
-	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>
-	<5234CA6A.3070305@arcor.de>
-	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>
-	<52373A19.7000105@arcor.de>
-	<CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
-	<523C8EF9.60809@arcor.de>
-	<CAC9WiBgnWHupc59z+ym2me3RcL4F6YqdE_3aXTvRN2zZZQ4jzQ@mail.gmail.com>
-	<CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>
-	<52409E62.3090105@arcor.de>
-	<CAC9WiBigzwNFV2FSU+tWS969fh+6G6ikQcrDqDyW0CbiaOuLkQ@mail.gmail.com>
-	<CAC9WiBje39ij9RLEqe8aha3FGn_LirxzQezXx-s5+J-HqUpwug@mail.gmail.com>
-	<524C6711.3090805@arcor.de>
+Subject: Re: Advice recovering from interrupted grow on RAID5 array
+Date: Wed, 16 Oct 2013 16:26:25 +1100
+Message-ID: <20131016162625.628c5558@notabene.brown>
+References: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/l.dqH3AOUZYr4j/0w5lSrJ2"; protocol="application/pgp-signature"
+ boundary="Sig_/Ke+bTZut5Hcn/bArBaJhOZO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <524C6711.3090805@arcor.de>
+In-Reply-To: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: John Yates <jyates65@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/l.dqH3AOUZYr4j/0w5lSrJ2
+--Sig_/Ke+bTZut5Hcn/bArBaJhOZO
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 02 Oct 2013 20:33:53 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Mon, 14 Oct 2013 21:59:45 -0400 John Yates <jyates65@gmail.com> wrote:
 
-> On 09/27/2013 05:47 PM, Francis Moreau wrote:
+> Midway through a RAID5 grow operation from 5 to 6 USB connected
+> drives, system logs show that the kernel lost communication with some
+> of the drive ports which has left my array in a state that I have not
+> been able to reassemble. After reseating the cable connections and
+> rebooting, all of the drives appear to be functioning normally, so
+> hopefully the data is still intact. I need advice on recovery steps
+> for the array.
 >=20
-> > I finally found my issue: mdmon --takeover service wasn't started
-> > anymore (probably I messed it up earlier). Therefore mdmon started by
-> > initrd was used and wasn't working properly.
+> It appears that each drive failed in quick succession with /dev/sdc1
+> being the last standing and having the others marked as missing in its
+> superblock. The superblocks of the other drives show all drives as
+> available. (--examine output below)
 >=20
-> Thanks a lot for finding this out, glad your system is working again.
-> And sorry for having lost you and talking about the BIOS; I was thinking
-> you were still working on fake BIOS hardware.
->=20
-> > If you still want me to test something, please tell me.
-> >=20
-> > OTHO, it would be easier if you setup a git tree somewhere with your
-> > patches that you want me to test. BTW I'm not subscribed to linux-raid
-> > mailing list.
->=20
-> I'll wait for Neil to come back and comment on my patches. It doesn't
-> make sense for me right now to create my own repository.
+> >mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev=
+/sdf1 /dev/sdg1
+> mdadm: too-old timestamp on backup-metadata on device-5
+> mdadm: If you think it is should be safe, try 'export MDADM_GROW_ALLOW_OL=
+D=3D1'
+> mdadm: /dev/md127 assembled from 1 drives - not enough to start the array.
 
-Hi,
- I'm back from leave now :-)
- Your patches look good - thanks a lots.
- I think I have applied them all (though the numbering was a bit odd and I
- might have missed something).
+Did you try following the suggestion and run
 
- I've lost track ... are there any outstanding issues here, or are we "done=
-" ?
+ export MDADM_GROW_ALLOW_OLD=3D1
 
-Thanks,
+and the try the --asssemble again?
+
 NeilBrown
 
---Sig_/l.dqH3AOUZYr4j/0w5lSrJ2
+--Sig_/Ke+bTZut5Hcn/bArBaJhOZO
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUl4cpznsnt1WYoG5AQJvig//cUp6+7ppThwQQUcf8hhBf5pok6eqc076
-EVayktcsCwjK92z5KlDhiRCEDJRsUqg9/thJ6UlYbk3jicSnMDxqM9yCZRM9EB9W
-rpe/l/dPAOiNey/GlfyxaCwBGQ/XqE5gUqJ8XjJx8dY/shgcPHqrlvT7ezZQxvYd
-z7l38E/w1ZrJpYCTu7hHgJMbgvgbwXO7zvwA8uM77i2N1Ywyra83Sz7HdjB7RDoV
-bpBzoPvVJhTYD/rvkCbKTO6rRzdpeIEt04QpFLwFgRO4U4Am7Izeqt5LDazqmgCN
-NaKvinxrHsgh1BTQp/GjtCeEnplC8vX/BRKk6WLZhJrC5G++flKpa/nsoUG32jp7
-+/cNhsfpaprz98H568eZnlOSmDmou7smoN2ftvwv89LsAVc08TsTFKK3ob3XQHLo
-gOwVlW0qQzq1UufSWPJdSvOGTYgGK+9O0uccv+po4rnLTFyUbYG6gzWj8YaHltNG
-keUSVCkvFCrcvjbyyquOU3F/AlZ2FWeZv/+p6aCplhmIZWTspPUmNjDxr4F02jA9
-bGu/WYk8RYZmZpSlkO1t/lKwurbwafYO+dNXwvKDUJ63rsaRpnEJ+5p+LixOWNWg
-XXuk7LjaD0IMpXzHcxlYB+MAexQkwOnhkwsiOzTPW4Z3/500gW9BNwr6BzzSxexg
-glM6mk/exnY=
-=jmSl
+iQIVAwUBUl4jgTnsnt1WYoG5AQI2tQ//SzDCyHh219jfRRX4yMZNYyVglmMErkdP
+ZeGdIcNzRXZOcNmIIA4Gig7UZzM0zhhPIUG7LBJjJ5CUpADVPcNapWVMqTQ6vqQ3
+Y6B+zaXQOMmbtY6ChwKe9B+Q9jqfBRxYo4r8HUWZ8RMda3s12efkHMErH9ysB0cC
+j3E5juCNw0gCtebNPVq+X91ZMGsi4YSvnRNXPHY4hi0nIX8RQ+mtkLmd8hwViAA/
+sgT8ByaCHD6z0asCDu84KnLbIN78lKM3W7TAqie8J2kMpHMoqZ73WIaI44LXGZ+1
+m0B4kytn2gP9ZLSxbaUZfWWCon0hVf/42NDY70wmgf1vzZKpGpD2dHWAYExSSQin
+b9xzLlbPKd+ckxznvwi6vYsDzc6H9H9ns/CW7cx5hliLavKZ02bGuUBsQQWIpWDL
+IoQ7P2MOryylHFdq3dhLCJmpTPjNG+pM26mf6B3NbjnFtJCmfq5ZyvsJVdfo9vBr
+2/XVKCKAjk0sS1ydzCRNl2/STUfqC0DlKRcoQBudjC0NBsKMADNCqPdnnUAJgMms
+4towmsfxnnuQJ/7TT57thRs8Bxb3kNcwOow8MvmOViU13xIQmXmqBG3VW7SboiEk
+2a4D2VbX2RR74RbsvHZUtPgPY0sWqWKP/IcvBQ8eNjZZlbyJq+/wkcYSOtPu9zzI
+sXe1tr0Bdg4=
+=u0yl
 -----END PGP SIGNATURE-----
 
---Sig_/l.dqH3AOUZYr4j/0w5lSrJ2--
+--Sig_/Ke+bTZut5Hcn/bArBaJhOZO--
