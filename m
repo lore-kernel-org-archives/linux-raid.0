@@ -1,84 +1,82 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: crypto/xor.c and lib/raid6 to improve raid5/6 performance?
-Date: Wed, 16 Oct 2013 17:28:25 +1100
-Message-ID: <20131016172825.3a06fe99@notabene.brown>
-References: <CAP7cwtumKJ5t3cb0bACaVtGVKXT2jibzWzdjqY2Si=uNjDg1KQ@mail.gmail.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] md: Fix skipping recovery for read-only arrays.
+Date: Wed, 16 Oct 2013 07:43:16 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A664D26@IRSMSX105.ger.corp.intel.com>
+References: <20131007142551.14867.36809.stgit@gklab-154-244.igk.intel.com>
+ <20131016144954.5eb8a689@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/B_YKNxbF6OUv/QIBYSBACu3"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAP7cwtumKJ5t3cb0bACaVtGVKXT2jibzWzdjqY2Si=uNjDg1KQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: xxiao <xiaoxianghua@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131016144954.5eb8a689@notabene.brown>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/B_YKNxbF6OUv/QIBYSBACu3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wednesday, October 16, 2013 5:50 AM NeilBrown <neilb@suse.de> wrote:
+> On Mon, 07 Oct 2013 16:25:51 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+> wrote:
+> 
+> > Since:
+> >         commit 7ceb17e87bde79d285a8b988cfed9eaeebe60b86
+> >         md: Allow devices to be re-added to a read-only array.
+> >
+> > spares are activated on a read-only array. In case of raid1 and raid10
+> > personalities it causes that not-in-sync devices are marked in-sync
+> > without checking if recovery has been finished.
+> >
+> > If a read-only array is degraded and one of its devices is not in-sync
+> > (because the array has been only partially recovered) recovery will be skipped.
+> >
+> > This patch adds checking if recovery has been finished before marking
+> > a device in-sync for raid1 and raid10 personalities. In case of raid5
+> > personality such condition is already present (at raid5.c:6029).
+> >
+> > Bug was introduced in 3.10 and causes data corruption.
+> >
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> > ---
+> >  drivers/md/raid1.c  |    1 +
+> >  drivers/md/raid10.c |    1 +
+> >  2 files changed, 2 insertions(+)
+> >
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c index
+> > d60412c..aacf6bf 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -1479,6 +1479,7 @@ static int raid1_spare_active(struct mddev *mddev)
+> >  			}
+> >  		}
+> >  		if (rdev
+> > +		    && rdev->recovery_offset == MaxSector
+> >  		    && !test_bit(Faulty, &rdev->flags)
+> >  		    && !test_and_set_bit(In_sync, &rdev->flags)) {
+> >  			count++;
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c index
+> > df7b0a0..73dc8a3 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -1782,6 +1782,7 @@ static int raid10_spare_active(struct mddev
+> *mddev)
+> >  			}
+> >  			sysfs_notify_dirent_safe(tmp->replacement-
+> >sysfs_state);
+> >  		} else if (tmp->rdev
+> > +			   && tmp->rdev->recovery_offset == MaxSector
+> >  			   && !test_bit(Faulty, &tmp->rdev->flags)
+> >  			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+> >  			count++;
+> 
+> Applied - thanks.
+> 
+> I'll forward it to Linus and -stable shortly.
+> 
+> NeilBrown
 
-On Fri, 11 Oct 2013 15:20:32 -0500 xxiao <xiaoxianghua@gmail.com> wrote:
+Thanks!
 
-> I'm looking for ways to speed up RAID calculations(e.g XOR for RAID5) plus
-> offloading them from CPU as much as possible. During kernel boot up I
-> noticed two outputs:
->=20
-> crypto/xor.c:
-> xor: measuring software checksum speed
->    8regs     :  3379.000 MB/sec
->    8regs_prefetch:  2969.000 MB/sec
->    32regs    :  3398.000 MB/sec
->    32regs_prefetch:  3054.000 MB/sec
-> xor: using function: 32regs (3398.000 MB/sec)
->=20
-> lib/raid6:
-> raid6: altivecx1  1470 MB/s
-> raid6: altivecx2  1820 MB/s
-> raid6: altivecx4  2756 MB/s
-> raid6: altivecx8  2874 MB/s
-> raid6: int64x1    480 MB/s
-> raid6: int64x2    832 MB/s
-> raid6: int64x4   1221 MB/s
-> raid6: int64x8   1160 MB/s
-> raid6: using algorithm altivecx8 (2874 MB/s)
-> raid6: using intx1 recovery algorithm
->=20
-> However I'm unclear how the md drivers(especially RAID5, and/or RAID6) can
-> benefit from these code, can I use them to accelerate RAID5/6's XOR with
-> these code somehow?
->=20
-
-RAID5 and RAID6 already use exactly this code to perform xor and RAID6
-calculations.
-
-If a platform has some sort of co-processor which can do these calculations,
-md can certainly use that too.
-Some of the relevant code is in "linux/crypto/async_tx"
-Other code is elsewhere in the tree. looks for "adma" for "advanced
-DMA" in file names.
-
-NeilBrown
-
---Sig_/B_YKNxbF6OUv/QIBYSBACu3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUl4yCTnsnt1WYoG5AQKoTA//SAvNRfIZyvi3p3vjRTKaiGz6xtcW6Oba
-PE7KK31M7A0pTPfAgQcn9HbKXQGLRkIzQrL0uyLBXnrKmdeWseF9BnsRfzrc1qOY
-6omzDETU5xm6gzK4/LA/MLMFtxP03RT5uCpQTP++xbSk+7M+E2IbrVt5iHNZ3v7L
-NVs3VItcnL2+cf+De1Ob3bi+AqZWqdvEVJ3vOe0Efqg50b41tOooOBqJVfunB5KL
-raMZfFbMxNdkotprazn+5LjMC9+dLHoAqfhvLp4dCdhBvn8m9SXr7JH9xSBLMjGe
-e5V+3wLrHuI/M+6VGAgJDHPs8MCu/iv6BQx5UxO0yPxRz+695JJk5gRqD5yH8YjS
-0s6OMer9XYa3qPCON4fJ27r6UPB3cjfSqCkG1j62NV7J6PSBiI1RnzP99ZK9Zy1W
-ZsJMgHKl6NsfpsF9d4VrpnZmKkziR3P+d4ern7UyxVeBAwJUDp9HncVnLeCcoMr4
-S82j2RdyVqUo9s8a8to4PnqtBynmJczPIGKt8j4+UOx+nzrx+/BuLF98E25n1E6L
-6WWARld99JlnYvAVQNZJgk1ipBtF1Eh62qxkJAFzEMvXfJWZd14WafWog0E0Xl3O
-yhicBiIC0GWq0qh08qx2xkdXVzZooRKlofYXWEg2tVUaLj7pFEYmZQFfr/ZuY7w8
-ne3hEshv9hU=
-=a+FZ
------END PGP SIGNATURE-----
-
---Sig_/B_YKNxbF6OUv/QIBYSBACu3--
+Lukasz
