@@ -1,125 +1,105 @@
-From: John Yates <jyates65@gmail.com>
-Subject: Re: Advice recovering from interrupted grow on RAID5 array
-Date: Thu, 17 Oct 2013 01:36:28 -0400
-Message-ID: <CA+90J_8y+XOhdmKuAm9VSKSvb61+57YU0iYWGjkh4WP3BAF5pA@mail.gmail.com>
-References: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
-	<20131016162625.628c5558@notabene.brown>
-	<CA+90J_9vLnEVPhAkQmZ5VS=gTw0fjf107wf=2riLn+=RstJMSQ@mail.gmail.com>
-	<20131017110725.54de5b06@notabene.brown>
+From: Mikhail Yakshin <greycat.na.kor@gmail.com>
+Subject: ANNOUNCE: Einarc 2.0 - hardware RAID management frontend CLI/API
+Date: Thu, 17 Oct 2013 14:36:32 +0400
+Message-ID: <CANp_HXc0YY1CpNmcxafJyS0sPoYOBETHzh1gseiL9nyX+NyQEQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131017110725.54de5b06@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Oct 16, 2013 at 8:07 PM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 16 Oct 2013 09:02:52 -0400 John Yates <jyates65@gmail.com> wrote:
->
->> On Wed, Oct 16, 2013 at 1:26 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Mon, 14 Oct 2013 21:59:45 -0400 John Yates <jyates65@gmail.com> wrote:
->> >
->> >> Midway through a RAID5 grow operation from 5 to 6 USB connected
->> >> drives, system logs show that the kernel lost communication with some
->> >> of the drive ports which has left my array in a state that I have not
->> >> been able to reassemble. After reseating the cable connections and
->> >> rebooting, all of the drives appear to be functioning normally, so
->> >> hopefully the data is still intact. I need advice on recovery steps
->> >> for the array.
->> >>
->> >> It appears that each drive failed in quick succession with /dev/sdc1
->> >> being the last standing and having the others marked as missing in its
->> >> superblock. The superblocks of the other drives show all drives as
->> >> available. (--examine output below)
->> >>
->> >> >mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1
->> >> mdadm: too-old timestamp on backup-metadata on device-5
->> >> mdadm: If you think it is should be safe, try 'export MDADM_GROW_ALLOW_OLD=1'
->> >> mdadm: /dev/md127 assembled from 1 drives - not enough to start the array.
->> >
->> > Did you try following the suggestion and run
->> >
->> >  export MDADM_GROW_ALLOW_OLD=1
->> >
->> > and the try the --asssemble again?
->> >
->> > NeilBrown
->>
->> Yes I did, thanks. Not much change though. It accepts the timestamp,
->> but then appears not to use it.
->>
->> mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
->> /dev/sdf1 /dev/sdg1 --verbose
->> mdadm: looking for devices for /dev/md127
->> mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
->> mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
->> mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
->> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
->> mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
->> mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
->> mdadm: :/dev/md127 has an active reshape - checking if critical
->> section needs to be restored
->> mdadm: accepting backup with timestamp 1381360844 for array with
->> timestamp 1381729948
->> mdadm: backup-metadata found on device-5 but is not needed
->> mdadm: added /dev/sdf1 to /dev/md127 as 1
->> mdadm: added /dev/sdd1 to /dev/md127 as 2
->> mdadm: added /dev/sdc1 to /dev/md127 as 3
->> mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
->> mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
->> mdadm: added /dev/sde1 to /dev/md127 as 0
->> mdadm: /dev/md127 assembled from 4 drives - not enough to start the array.
->
->
-> What about with MDADM_GROW_ALLOW_OLD=1 *and* --force ??
->
-> If that doesn't work, please add --verbose as well, and report the output.
->
-> NeilBrown
+Hello,
 
-Thanks Neil. I had tried that as well (output below). I'm wondering if
-there is a way to fix the metadata for /dev/sdc1 since that seems to
-be the odd one where the --examine data indicates that the other disks
-are all bad when I don't believe they really are (just the result of a
-partial kernel or driver crash). I have read about some people zeroing
-the superblock on a device so that it can be recreated, but I am not
-sure exactly how that works and am hesitant to try it since a reshape
-was in progress. I have also read about people having had success by
-re-running the original mdadm --create while leaving the data intact,
-but again I am hesitant to try that, especially because of the reshape
-state.
+After almost 3 years without releases, I'm finally pleased to announce
+new major version of Einarc - 2.0.
 
-Or... maybe this all has more to do with the Update Time, since the
-output seems to indicate 4 drives are usable. All of the drives have
-the same Update Time except for /dev/sdc1 which is about 5 minutes
-later than the rest. Since it is the fourth device, perhaps the
-assemble is satisfied with devices 0, 1, 2, 3, but then seeing an
-Update Time on devices 4 and 5 that is earlier than device 3, it
-marks them as "possibly out of date" and stops trying to assemble the
-array. Hard to tell, but I still would not have any idea how to
-overcome that scenario. I appreciate your help!
+Einarc is a unified frontend to manage all the storage/RAID devices
+attached to a Linux system, including proprietary ones. Einarc works
+as a universal translator to/from proprietary CLIs and software
+implementations, such as mdadm, uniting them all in single paradigm.
 
-# export MDADM_GROW_ALLOW_OLD=1
-# mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-/dev/sdf1 /dev/sdg1 --force --verbose
-mdadm: looking for devices for /dev/md127
-mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
-mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
-mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
-mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
-mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
-mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
-mdadm: :/dev/md127 has an active reshape - checking if critical
-section needs to be restored
-mdadm: accepting backup with timestamp 1381360844 for array with
-timestamp 1381729948
-mdadm: backup-metadata found on device-5 but is not needed
-mdadm: added /dev/sdf1 to /dev/md127 as 1
-mdadm: added /dev/sdd1 to /dev/md127 as 2
-mdadm: added /dev/sdc1 to /dev/md127 as 3
-mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
-mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
-mdadm: added /dev/sde1 to /dev/md127 as 0
-mdadm: /dev/md127 assembled from 4 drives - not enough to start the array.
+* New features:
+
+** Dedicated hotspare support ("hotspare add", "hotspare delete" methods)
+** Getting physical disc SMART attributes in unified form ("physical smart")
+** Adapter restart method to reset an adapter, stop all arrays and
+reinitialize them ("adapter restart")
+** Listing logical discs now also shows their /dev entries, if possible
+** Getting WWN and enclosure ID for physical drives (attributes "wwn"
+and "enclosure" for "physical" object, software only)
+** Getting adapter's expanders ID and model (method "expanders" for
+"adapter" object)
+** Log dumping support ("log dump", for lsi_megacli only)
+** Enabling/disabling WriteCache support for logical and physical
+discs ("writecache" attribute for "physical" and "logical" object,
+software only)
+** Disabling powersaving support for logical and physical discs
+("powersaving" attribute for "physical" and "logical" object, software
+only)
+** BBU support (arcconf)
+
+* Support for new adapters / chipsets, improved RAID autodetection:
+
+** Adaptec 2405, Adaptec 51645, Adaptec 5405Z, Adaptec 5445Z, Adaptec
+5805Z, Adaptec 6405, Adaptec 6805, Adaptec 6805Q
+** Intel RS2BL040, Intel RS2BL080, Intel RS2WC040
+** LSI 53C896/897-based, LSI MegaRAID SAS 9240-4i, LSI MegaRAID SAS
+9260, LSI SRCSASLS4I
+** SuperMicro SMC2108
+
+* User friendliness:
+
+** command line interface now hints what objects are available
+** most objects and methods can be abbreviated akin to UNIX commands
+(i.e. "physical list" => "pd ls", "logical hotspare delete" => "ld hs
+rm", etc)
+** adapter type and number specification can be omitted if there's
+only one adapter in the system
+** more user-friendly error messages
+** output is "humanized" by default if we use real tty for output
+** added man pages: einarc(8), einarc-install(8),
+raid-wizard-clear(8), raid-wizard-passthrough(8),
+raid-wizard-optimal(8)
+** prevent lsi_megacli from littering its log files around by default
+
+* Bumped versions of proprietary CLI utilities:
+
+** Areca 1.9.0_120503
+** LSI MegaRC 1.11
+** LSI MegaCLI 8.07.07
+** 3Ware 9.5.0.1
+** ArcConf 1.1.20324
+
+* Compatibility issues:
+
+** Ruby 1.9 compatibility, 1.8 should be still supported
+** dash compatibility, bash is no longer required
+** Workarounds for proprietary CLI calls that require Linux kernel
+2.6.x explicitly to work on kernel 3.x
+** Support for more than 26 logical discs (i.e. names like "sdaa"
+beyond "sda"-"sdz")
+** Dropped HAL support: querying now uses udev, procfs and sysfs
+** Explicitly disallowed software-RAID-on-top-of-hardware-RAID, added
+switch to disallow software-RAID-on-USB-mass-storage
+
+* Infrastructure and API changes:
+
+** Added testing framework using mock-up adapters CLI output, added
+tests for lsi_megacli and lsi_megarc
+** All output is done to `@outstream` by default (which can be
+overridden), not `$stdout`
+** Subversion -> Git transition, Git maintenance support
+
+* Multiple bugfixes and minor improvements
+
+As usual, Einarc is available from it's homepage or from github:
+
+http://www.inquisitor.ru/doc/einarc/
+http://github.com/inq-team/einarc/
+
+Download link:
+https://github.com/inq-team/einarc/releases/tag/v2.0
+
+-- 
+WBR, Mikhail Yakshin
