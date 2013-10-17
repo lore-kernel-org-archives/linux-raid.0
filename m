@@ -1,111 +1,188 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Advice recovering from interrupted grow on RAID5 array
-Date: Thu, 17 Oct 2013 11:07:25 +1100
-Message-ID: <20131017110725.54de5b06@notabene.brown>
-References: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
-	<20131016162625.628c5558@notabene.brown>
-	<CA+90J_9vLnEVPhAkQmZ5VS=gTw0fjf107wf=2riLn+=RstJMSQ@mail.gmail.com>
+From: m d <mikeintel8@gmail.com>
+Subject: MD RAID5 / XFS filesystem creation error
+Date: Wed, 16 Oct 2013 17:39:57 -0700
+Message-ID: <CAB7tbKUppfi49m+8wFRq78gvdidOfKD_UyB=uUYHTkhnzH1hSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CYzRHRUExwUtddGTE9Lxxbz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+90J_9vLnEVPhAkQmZ5VS=gTw0fjf107wf=2riLn+=RstJMSQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Yates <jyates65@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, michael.j.degon@intel.com
 List-Id: linux-raid.ids
 
---Sig_/CYzRHRUExwUtddGTE9Lxxbz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hey Guys,
 
-On Wed, 16 Oct 2013 09:02:52 -0400 John Yates <jyates65@gmail.com> wrote:
+In my testing I have encountered a problem  while  trying to create a
+xfs  filesystem on a 4 disk Intel SSD Raid5 volume. I am currently
+testing with a Fedora 3.11.4-201 kernel  and the latest  version of
+the mdadm binary(3.2.6-21). I realize that userspace mdadm binary may
+not factor into the equation and the error may be all mdraid5 kernel
+module driven.
 
-> On Wed, Oct 16, 2013 at 1:26 AM, NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 14 Oct 2013 21:59:45 -0400 John Yates <jyates65@gmail.com> wrot=
-e:
-> >
-> >> Midway through a RAID5 grow operation from 5 to 6 USB connected
-> >> drives, system logs show that the kernel lost communication with some
-> >> of the drive ports which has left my array in a state that I have not
-> >> been able to reassemble. After reseating the cable connections and
-> >> rebooting, all of the drives appear to be functioning normally, so
-> >> hopefully the data is still intact. I need advice on recovery steps
-> >> for the array.
-> >>
-> >> It appears that each drive failed in quick succession with /dev/sdc1
-> >> being the last standing and having the others marked as missing in its
-> >> superblock. The superblocks of the other drives show all drives as
-> >> available. (--examine output below)
-> >>
-> >> >mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /=
-dev/sdf1 /dev/sdg1
-> >> mdadm: too-old timestamp on backup-metadata on device-5
-> >> mdadm: If you think it is should be safe, try 'export MDADM_GROW_ALLOW=
-_OLD=3D1'
-> >> mdadm: /dev/md127 assembled from 1 drives - not enough to start the ar=
-ray.
-> >
-> > Did you try following the suggestion and run
-> >
-> >  export MDADM_GROW_ALLOW_OLD=3D1
-> >
-> > and the try the --asssemble again?
-> >
-> > NeilBrown
->=20
-> Yes I did, thanks. Not much change though. It accepts the timestamp,
-> but then appears not to use it.
->=20
-> mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-> /dev/sdf1 /dev/sdg1 --verbose
-> mdadm: looking for devices for /dev/md127
-> mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
-> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
-> mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
-> mdadm: :/dev/md127 has an active reshape - checking if critical
-> section needs to be restored
-> mdadm: accepting backup with timestamp 1381360844 for array with
-> timestamp 1381729948
-> mdadm: backup-metadata found on device-5 but is not needed
-> mdadm: added /dev/sdf1 to /dev/md127 as 1
-> mdadm: added /dev/sdd1 to /dev/md127 as 2
-> mdadm: added /dev/sdc1 to /dev/md127 as 3
-> mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
-> mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
-> mdadm: added /dev/sde1 to /dev/md127 as 0
-> mdadm: /dev/md127 assembled from 4 drives - not enough to start the array.
+The basic kernel error is encountered when  creating a 4 drive RAID5
+volume  and writing an XFS filesystem to it after  it has resync=92d.
+The quick commands used are as follows:
 
 
-What about with MDADM_GROW_ALLOW_OLD=3D1 *and* --force ??
+1.       Check  to make sure the Raid 5 volume is resync=92d:
 
-If that doesn't work, please add --verbose as well, and report the output.
+              #cat /proc/mdstat
 
-NeilBrown
+2.       Change from init5 to init3, eliminating the X-windowing
+system, allowing for more explicit kernel error output:
 
---Sig_/CYzRHRUExwUtddGTE9Lxxbz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+              #init 3
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+3.       Build  xfs filesystem  on the sync=92d raid5 volume:
 
-iQIVAwUBUl8qPTnsnt1WYoG5AQLQHxAAgOl8Q5tQJJMHAMkkjeZXhkogucVPamF7
-KqfqH8dMNhlWKrwkK/tf1TWrMJM+KdCWRQ7cAemlWmwB5GeLcQKrUTY28vkn1COe
-oM79L4he8yO4debOlWV4cxHXZYOypRXN4I2UhoKSRVmHIKDkxx1MipnuN/qHtuFW
-tBoy0QJPYvbdZZ5/1SsCwGOSAWOc+03Mel7HAcmtW28FNORtIv4sLFnZlqgXYltX
-vfZcwT5TgztEz/bC8fhZryHLcxD5Hanerpp6jZibO5rQAMbsa8xeD41Ai4NNBlYf
-y2laKAWCF/mTX5Yxp2nwiLBVgw+PMYmAS2jBOVQehGytTDPHD1ENsjIxgOcZ+LZj
-t/R3tmGiGyr/Nt7WqvK5BvAvxINFArvwkSwO1tf+vNHmij1xjRQQM9jOAiSC1IEn
-3vSyUzyqsj1zOdxHK9iwkoEdKbl2Fy67cijpNumW+rp37SaeMyIPJss52lQQeggD
-tZQypOPGHsIGMTWs82GXIuoK6qvwNYFOd7je7HqW2ylCQIhOQPm3n14+3XLh8Ur3
-c0t/kfSujTfX2kwzxU7N4VHLCixXTapqM3MdSJNCeU1n1C/pmLdavpyBlG5JLCSS
-BNMzan+ILQJNapRhDrs0mwbleJKyUpAlUO7O2o5/Xf17reChKKhxVoEPLEHko9Y8
-we0AJgzsUSE=
-=cWXi
------END PGP SIGNATURE-----
+              # mkfs.xfs   /dev/md5
 
---Sig_/CYzRHRUExwUtddGTE9Lxxbz--
+
+
+After  executing the mkfs.xfs command,  the standard out  will
+instantly start to spew blk  & mdraid5 errors. Ending after 2 rounds
+of errors with a cpu soft lockup message:
+
+Kernel: [ 1016.781678] BUG: soft lockup ? CPU#1 stuck for 22s! [md5_rai=
+d:463]
+
+
+The kernel panic error log is posted at:
+
+http://pastebin.com/EbGYti24
+
+
+
+Detailed Configuration Setup:
+
+This  configuration requires  4 SATA2 ports to be present on the same
+controller.
+
+Test Environment:
+
+Storage Media:                 Intel SSD 710 Series 200GB  x 4 Disks
+OS:                                 Fedora 19 x86_64
+
+
+
+Steps to recreate:
+1.            HW Setup:
+         a.            Install 2 x 2GB DDR3 UDIMMs  on the last 2
+slots farthest from the CPU (one memory channel).
+         b.            Connect  all 4  Intel 710  200GB SSDs to SATA2
+ports located on  the one ahci  sata  controller. I have tried  Intel
+320 SSDs with the same result.
+         c.             Insert a  8GB USBkey in to one of the USB
+slots and  Install Fedora OS.  Use a standard partitioning system and
+limit  swap to 3GB.  In my experience  this is assigned  to the
+/dev/sde  device.
+
+2.            After the  OS has been installed on the  platform ,
+reboot  system.
+
+3.            When  system  is back up,  login  as root and use fdisk
+to create a 50 GB  partition  on each disk. Assign the partition  type
+to be =93fd=94 which is the =93linux RAID auto-detect=94 partition type=
+ for
+every partition created.
+
+4.            Use mdadm  binary  to create a RAID 5  partition using
+the 4  50GB  linux RAID auto-detect that were just created. Use a
+command like this:
+
+#mdadm  --create /dev/md5 --level=3D5 --raid-devices =3D 4 /dev/sda1
+/dev/sdb1 /dev/sdc1 /dev/sdd1
+
+5.            Once the RAID5 volume has been created, attempt to make
+a XFS file system on the new volume. This can be accomplished  using
+this command;
+
+# mkfs.xfs  /dev/md5
+
+6.            After about 5 seconds there the system will start
+indicating  kernel errors and 5 seconds after that  the system will
+freeze. If one is  running this experiment in the init 3  multi-user
+mode , the system will spew  kernel errors until  it eventually
+freezes. The  error should look like this:
+
+Kernel: [ 1016.781678] BUG: soft lockup ? CPU#1 stuck for 22s! [md5_rai=
+d:463]
+
+
+
+Basic experiments  executed to narrow the scope of issue:
+
+#Is the  problem persistent on all local media  types?
+
+                I tried this same setup on 4 enterprise 3G HDD disks
+with no problems or issues. I was able to create a 4 disk RAID5 array
+and write an XFS  filesystem to the RAID array. Then I was able to
+write, append and read a file to the XFS filesystem on the RAID array
+=2E
+
+#Does it fail if you create a different file system type. (ext3)?
+
+ Yes, I have tried  this and the failure still  occurs.
+
+#Does it fail if you create a XFS file system on a non RAID AVN SATA
+disk? Create XFS on a single disk.
+
+ No  failure. I was able to create a partition, write a xfs
+filesystem, create a file, write the file, read the file, and delete
+the file.
+
+#Is the RAID5 volume fully initialized when you create the XFS file
+system. you can check it with cat /proc/mdstat. it will show a
+percentage of how far its done.
+
+  Yes , After  creating the RAID5 volume, I  run the =91#watch cat
+/proc/mdstat=92command to watch the  volume go through its sync process=
+=2E
+
+
+#Can you try to do that same without using AVN SATA drives. Use 4 RAM
+disks instead of real drives and do that same test. That way we can
+rule out AVN SATA. Use /dev/ram0 etc... you have to specify the ram
+disk size in grub.
+
+I checked  this out:
+
+o             loading the brd module
+o             resized each /dev/ram[?]  device to  8192  (8M)
+o             Created /dev/md100 using mdadm RAID5  and /dev/ram[0-3]
+o             Executed  #mkfs.xfs  /dev/md100 with  no errors.
+
+
+
+I think this issue is MD5 RAID kernel module and SSD timing related
+and this test proves that  there is nothing wrong with the mdadm
+binary in relation to Atom processor originally being tested.
+
+
+Experiments tried to verify that this a kernel issue:
+
+Below are all of the experiments trying to create a xfs filesystem on
+RAID5 resulted  in the same kernel panic error:
+
+- Moved OS USB key and SSDs to an older generation atom storage
+platform, failed.
+- Connected the SSDs to a LSI card, failed.
+- Updated the kernel to the latest kernel (3.11.4-201), failed.
+- Updated  the mdadm binary(3.2.6-21) to the latest version, failed.
+
+
+
+When  moving  the OS and SSDs to the order Atom generation which did
+not have these problems before, the  problem followed,  indicating
+that the issue was kernel or  MDRAID related.
+
+
+
+Regards,
+
+Michael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
