@@ -1,50 +1,56 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid5 trim OOPS / use after free?
-Date: Fri, 18 Oct 2013 08:05:07 +0200
-Message-ID: <wrfjob6ndsh8.fsf@redhat.com>
-References: <CE8692DA.64C5%shli@fusionio.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [patch 1/2]raid5: set bio bi_vcnt 0 for discard request
+Date: Sat, 19 Oct 2013 14:50:28 +0800
+Message-ID: <20131019065028.GA10670@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CE8692DA.64C5%shli@fusionio.com> (Shaohua Li's message of "Thu,
-	17 Oct 2013 23:30:31 +0000")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <ShLi@fusionio.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Jeff Moyer <jmoyer@redhat.com>
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-Shaohua Li <ShLi@fusionio.com> writes:
-> On 10/18/13 5:58 AM, "Jes Sorensen" <Jes.Sorensen@redhat.com> wrote:
->
->>Hi,
->>
->>I have been trying out the trim code in recent kernels and I am
->>consistently seeing crashes with the raid5 trim implementation.
->>
->>I am seeing 3-4 different OOPS outputs which are very different in their
->>output. This makes me suspect this is a memory corruption of use after
->>free problem?
->>
->>Basically I have a system with an AHCI controller and 4 SATA SSD drives
->>hooked up to it. I create a raid5 and then run mkfs.ext4 on it and the
->>fireworks display starts.
->>
->>I first saw this with an older kernel with some backports applied, but I
->>am able to reproduce this with the current top of tree out of Linus'
->>tree.
->>
->>Any ideas?
->
-> The raid5 trim support is in upstream since v3.7, can you please try an
-> old kernel to check if this is a regression? For example, 3.11, 3.10?
-> Looks we have some problems with discard request payload from the oops log.
 
-I went as far back and explicitly checked out the git commit that
-introduced raid5 trim support:
+SCSI layer will add new payload for discard request. If two bios are merged
+to one, the second bio has bi_vcnt 1 which is set in raid5. This will confuse
+SCSI and cause oops.
 
-git checkout 620125f2bf8ff0c4969b79653b54d7bcc9d40637
+Suite for backport to 3.7+
 
-Same problem there.
+Reported-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+ drivers/md/raid5.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Regards,
-Jes
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2013-10-19 14:10:22.392044663 +0800
++++ linux/drivers/md/raid5.c	2013-10-19 14:10:22.388044717 +0800
+@@ -877,6 +877,12 @@ static void ops_run_io(struct stripe_hea
+ 			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			bi->bi_io_vec[0].bv_offset = 0;
+ 			bi->bi_size = STRIPE_SIZE;
++			/*
++			 * If this is discard request, set bi_vcnt 0. We don't
++			 * want to confuse SCSI because SCSI will replace payload
++			 */
++			if (rw & REQ_DISCARD)
++				bi->bi_vcnt = 0;
+ 			if (rrdev)
+ 				set_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags);
+ 
+@@ -915,6 +921,12 @@ static void ops_run_io(struct stripe_hea
+ 			rbi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			rbi->bi_io_vec[0].bv_offset = 0;
+ 			rbi->bi_size = STRIPE_SIZE;
++			/*
++			 * If this is discard request, set bi_vcnt 0. We don't
++			 * want to confuse SCSI because SCSI will replace payload
++			 */
++			if (rw & REQ_DISCARD)
++				rbi->bi_vcnt = 0;
+ 			if (conf->mddev->gendisk)
+ 				trace_block_bio_remap(bdev_get_queue(rbi->bi_bdev),
+ 						      rbi, disk_devt(conf->mddev->gendisk),
