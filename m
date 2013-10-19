@@ -1,54 +1,57 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch 2/2]raid5: avoid find discard stripe
-Date: Sat, 19 Oct 2013 14:51:42 +0800
-Message-ID: <20131019065141.GB10670@kernel.org>
+From: Shaohua Li <ShLi@fusionio.com>
+Subject: Re: raid5 trim OOPS / use after free?
+Date: Sat, 19 Oct 2013 06:54:49 +0000
+Message-ID: <CE884D0C.64F9%shli@fusionio.com>
+References: <wrfjsivzdskq.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <wrfjsivzdskq.fsf@redhat.com>
+Content-Language: en-US
+Content-ID: <728EDE8D2C412D4AA13ADC8CA2778AAF@fusionio.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, "stan@hardwarefreak.com" <stan@hardwarefreak.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-raid.ids
 
 
-SCSI discard will damage discard stripe bio setting, eg, some fields are
-changed. If the stripe is reused very soon, we have wrong bios setting. We
-remove discard stripe from hash list, so next time the strip will be fully
-initialized.
 
-Suite for backport to 3.7+. Of course, the 'conf->hash_locks +
-sh->hash_lock_index' should be replaced to '&conf->device_lock' for old kernel.
+On 10/18/13 2:03 PM, "Jes Sorensen" <Jes.Sorensen@redhat.com> wrote:
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+>Stan Hoeppner <stan@hardwarefreak.com> writes:
+>> On 10/17/2013 4:58 PM, Jes Sorensen wrote:
+>>> Hi,
+>>> 
+>>> I have been trying out the trim code in recent kernels and I am
+>>> consistently seeing crashes with the raid5 trim implementation.
+>>> 
+>>> I am seeing 3-4 different OOPS outputs which are very different in
+>>>their
+>>> output. This makes me suspect this is a memory corruption of use after
+>>> free problem?
+>>> 
+>>> Basically I have a system with an AHCI controller and 4 SATA SSD drives
+>>> hooked up to it. I create a raid5 and then run mkfs.ext4 on it and the
+>>> fireworks display starts.
+>>> 
+>>> I first saw this with an older kernel with some backports applied, but
+>>>I
+>>> am able to reproduce this with the current top of tree out of Linus'
+>>> tree.
+>>> 
+>>> Any ideas?
+>>
+>> See a nearly identical problem posted to this list yesterday:
+>>
+>> http://www.spinics.net/lists/raid/msg44686.html
+>
+>Looks the same - I believe I have seen that variation of the problem as
+>well.
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2013-10-19 14:10:30.839946446 +0800
-+++ linux/drivers/md/raid5.c	2013-10-19 14:24:59.977011959 +0800
-@@ -3035,6 +3035,7 @@ static void handle_stripe_clean_event(st
- 		}
- 	if (!discard_pending &&
- 	    test_bit(R5_Discard, &sh->dev[sh->pd_idx].flags)) {
-+		unsigned long flags;
- 		clear_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
- 		clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
- 		if (sh->qd_idx >= 0) {
-@@ -3043,6 +3044,14 @@ static void handle_stripe_clean_event(st
- 		}
- 		/* now that discard is done we can proceed with any sync */
- 		clear_bit(STRIPE_DISCARD, &sh->state);
-+		/*
-+		 * SCSI discard will change some bio fields and the stripe has
-+		 * no updated data, so remove it from hash list and the stripe
-+		 * will be reinitialized
-+		 */
-+		spin_lock_irqsave(conf->hash_locks + sh->hash_lock_index, flags);
-+		remove_hash(sh);
-+		spin_unlock_irqrestore(conf->hash_locks + sh->hash_lock_index, flags);
- 		if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state))
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 
+Ok, looks we have some problems with request merge in SCSI. I just posted
+some patches to linux-raid maillist, please test and report back.
+
+Thanks,
+Shaohua
+
