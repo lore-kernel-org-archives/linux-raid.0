@@ -1,26 +1,32 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Linux MD? Or an H710p?
-Date: Sun, 20 Oct 2013 10:50:08 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1310201048350.26825@uplift.swm.pp.se>
-References: <526328AE.2020908@gmail.com>
+From: Sung Lee <suzlee@aswara.edu.my>
+Subject: Greetings
+Date: Sun, 20 Oct 2013 19:47:30 +0800 (MYT)
+Message-ID: <ec9e4461-9fb7-4108-81e8-e2f0ba2fb51a__7045.63473486832$1382276463$gmane$org@zimbra>
+Reply-To: Sung Lee <sleehk24@zing.vn>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <526328AE.2020908@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 19 Oct 2013, Steve Bergman wrote:
 
-> Any general guidance would be appreciated. We'll probably be keeping 
-> this server for 7 years, and it's pretty important to us. So I'm really 
-> wanting to get this right.
 
-I prefer to use hardware raid for the boot device, because it can be a 
-mess to make sure grub can boot off of any of the two boot drives and to 
-re-assure this is true over time.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+
+DAH SING BANK LTD
+DES VOEUX RD.BRANCH,CENTRAL HONG KONG,
+HONG KONG.
+
+Greetings,
+
+I am Mr.Sung Lee, Auditing and Account Credit Officer, Dah Sing Bank Ltd,(Hong Kong). I ask for your partnership in re-profiling funds Transfer. 
+
+Further to this,details would be made known if interested but in summary the funds would be transferred from my bank and further to this other informations to facilitate the remittance of the funds will be revealed to you in due course. For your assistance, you shall receive 25% of the funds to be transferred .
+
+I will appreciate if you can reply me.
+
+I'm looking forward to it
+Sung Lee
+
+The information contained in this email and any attachments is confidential and may be subject to copyright or other intellectual property protection. If you are not the intended recipient, you are not authorized to use or disclose this information, and we request that you notify us by reply mail or telephone and delete the original message from your mail system.
