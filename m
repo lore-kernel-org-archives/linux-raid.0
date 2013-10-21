@@ -1,151 +1,145 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm 3.3 fails to kick out non fresh disk
-Date: Mon, 21 Oct 2013 10:59:45 +1100
-Message-ID: <20131021105945.780d5800@notabene.brown>
-References: <CAC9WiBgGgKGHqcwrVo7J_peS8YiH-KBF8T1uGbwJrve_7aa3cw@mail.gmail.com>
-	<CAC9WiBh9EOFKx99fTH2yYN62A5CAg4_mqpNtxj6jZOZE+_Raww@mail.gmail.com>
-	<CAC9WiBja2N_Q8h6MSci+fgRWWpvvRpcMZp8FOZX3V_FK8pjhpA@mail.gmail.com>
-	<5234CA6A.3070305@arcor.de>
-	<CAC9WiBi8XyWS8AgjAE0cxiaa4uRbNS69=vfC+TKnoG_iFp2+Vg@mail.gmail.com>
-	<52373A19.7000105@arcor.de>
-	<CAC9WiBjnM5nwKf4f7UN6hQgsbYhVLLPnfAD6RATbF3C-NHRrXg@mail.gmail.com>
-	<523C8EF9.60809@arcor.de>
-	<CAC9WiBgnWHupc59z+ym2me3RcL4F6YqdE_3aXTvRN2zZZQ4jzQ@mail.gmail.com>
-	<CAC9WiBgzfvQkLZXT+9WYuxBUCRJqWZAvbyVmK9-9EsiwNeRxhw@mail.gmail.com>
-	<52409E62.3090105@arcor.de>
-	<CAC9WiBigzwNFV2FSU+tWS969fh+6G6ikQcrDqDyW0CbiaOuLkQ@mail.gmail.com>
-	<CAC9WiBje39ij9RLEqe8aha3FGn_LirxzQezXx-s5+J-HqUpwug@mail.gmail.com>
-	<524C6711.3090805@arcor.de>
-	<20131016155711.715678e7@notabene.brown>
-	<CAC9WiBiwSHTC6o2sXwjqyy78B07VCgkdJG5PpHGyYu8bNV4JvA@mail.gmail.com>
-	<20131017215827.6a85d2bc@notabene.brown>
-	<5262E9C5.1050200@arcor.de>
+Subject: Re: RFC: incremental container assembly when sequence numbers don't
+ match
+Date: Mon, 21 Oct 2013 11:07:27 +1100
+Message-ID: <20131021110727.363cdd02@notabene.brown>
+References: <523CADFD.9050006@arcor.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rFqKRtrI=tGidMgBuoSRqzA"; protocol="application/pgp-signature"
+ boundary="Sig_/v/efc_XWeZUMbK=m5dSc8F_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5262E9C5.1050200@arcor.de>
+In-Reply-To: <523CADFD.9050006@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Martin Wilck <mwilck@arcor.de>
-Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Francis Moreau <francis.moro@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/rFqKRtrI=tGidMgBuoSRqzA
+--Sig_/v/efc_XWeZUMbK=m5dSc8F_
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 19 Oct 2013 22:21:25 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Fri, 20 Sep 2013 22:20:13 +0200 Martin Wilck <mwilck@arcor.de> wrote:
 
-> Hi Neil,
+> Hi,
 >=20
-> >> Martin started addressing this in another new thread whose subject is
-> >> "RFC: incremental container assembly when sequence numbers don't
-> >> match"
-> >>
-> >>
-> > Ah yes, thanks.  I had a quick look and it seems to make sense, but it
-> > deserves more thorough consideration.
-> > I'll get on to that sometime soon.
+> I have spent a few days thinking about the problem of incremental
+> container assembly when disk sequence numbers (aka event counters) don't
+> match, and how mdadm/mdmon should behave in various situations.
+> Before I start coding on this, I'd like to get your opinion - I may be
+> overlooking something  important.
 >=20
+> The scenario I look at is that sequence numbers don't match during
+> incremental assembly. This can occur quite easily. A disk may have been
+> missing the last time the array was assembled, and be added again. The
+> last incremental assembly may have been interrupted before all disks
+> were found, for whatever reason. Etc. The problems Francis reported
+> lately all occur in situations of this type.
 >=20
-> Good that you're back. I was starting to get nervous :-)
+> A) New disk has lower seq number as previously scanned ones:
+>    The up-to-date meta data is the meta data previously parsed.
+>=20
+>    For each subarray the new disk is a member in the meta data:
+>      A.1) If the subarray is already running, add the new disk a spare.
 
-(still hoping someone else will put their hand up to maintain md though....)
+If the new disk has old metadata, then it might have failed at some point, =
+so
+we shouldn't add it as anything without good reason.
+If the most recent metadata records that a device went missing, rather than
+actually failed, then it might be justified to add it as a spare.  But in
+general I'd prefer thing were only added as spares if that was explicitly
+requested of if the policy in mdadm.conf encourages it.
+
+>      A.2) check the subarray seqnum; if the subarray seqnum is equal
+> between existing and new disks, the new disk can be added as "clean".
+> (This requires implementing separate seqnums for every subarray, but
+> that can be done quite easily, at least for DDF).
+>      A.3) Otherwise, add the new disk as a spare.
+>=20
+>    The added disk may be marked as "Missing" or "Faulty" in the meta
+> data. That will be handled already by existing code already AFAICS.
+>=20
+> B) New disk has higher seq number than previously scanned ones.
+>    The up-to-date meta data is on the new disk. Here it gets tricky.
+>=20
+>    B.1) If mdmon isn't running for this container:
+>      B.1.a) reread the meta data (load_container() will automatically
+> choose the best meta data).
+>      B.1.b) Discard previously made configurations
+>      B.1.c) Reassemble the arrays, starting with the new disk. When
+> re-adding the drive(s) with the older meta data, act as in A) above.
+>=20
+>    B.2) If mdmon is already running for this container, it means at
+> least one subarray is already running, too.
+>      B.2.a) If the new disk belongs to a already running and active
+> subarray, we have encountered a fatal error. mdadm should refuse to do
+> anything with the new disk and emit an alert.
+>      B.2.b) If the new disk belongs to a already running read-only
+> subarray, and the subarray seqnum of the new disk is lower than that of
+> the existing disks, we also have a fatal error - we don't know which
+> data is more recent. Human intervention is necessary.
+>      B.2.c) Both mdadm and mdmon need to update the meta data as
+> described in B.1.a).
+>      B.2.d) If the new disk belongs to a already running read-only
+> subarray, and the subarray seqnum of the new disk is greater or equal to
+> the subarray seqnum of the existing disk(s), it might be possible to add
+> the new disk to the array as clean. If the seqnum isn't equal, recovery
+> must be started on the previously existing disk(s). Currently the kernel
+> doesn't allow adding a new disk as "clean" in any state except
+> "inactive", so this special case will not be implemented any time soon.
+> It's a general question whether or not mdadm should attempt to be
+> "smart" in situations like this.
+>      B.2.e) Subarrays that aren't running yet, and which the new disk is
+> a member of, can be reassembled as described in A)
+>      B.2.f) pre-existing disks that are marked missing or failed in the
+> updated meta data must have their status changed. This may cause the
+> already running array(s) to degrade or break, even if the new disk
+> doen't belong to them.
+>      B.2.g) The status of all subarrays (consistent/initialized) is
+> updated according to the new meta data.
+>=20
+> Note that the really difficult cases B.2.a/b/d can't easily happen if
+> the Incremental assembly is done without "-R", as it should be. So it
+> may be reasonable to just quit with an error if any of these situation
+> is encountered.
+>=20
+> An important further question is where this logic should be implemented.
+> This is independent of meta data type and thus most of it should be in
+> the generic Incremental_container() code path.
+
+maybe in assemble_container_content?  But mdmon need to know about some of =
+it
+too of course.
 
 >=20
-> Wrt the sequence number issue: One thing that I need to understand
-> better is how native MD deals with this kind of thing. Containers have
-> one additional complexity: one set of meta data for several subarrays.
+> Feedback welcome.
+> Best regards
+> Martin
 
-With native MD is it is fairly simple - that 'one additional complexity' do=
-es
-make a real difference.
+Sounds very sensible, but the devil is in the detail of course. :-)
 
- - Before the array is running, you can add any device.
- - When the array is started, anything older than the newest device is
-   discarded (with the understanding that a bitmap broadens the "age"
-   of the newest device, so that oldish devices can still be included).
- - If the array is started but readonly, the missing devices of the same age
-   as the newest device can be added (I think).
- - After the array is read-write, devices can only be added if there is a
-   bitmap, and they must be in the age range of the bitmap.
-
-
->=20
-> IMO one thing I think we need is cleaner semantics for compare_super().
-> The return to distinguish at least the cases
->=20
->   0 - OK
->   1 - fatal incompatibility
->   2 - nonfatal, new disk has "older" meta data
->   3 - nonfatal, new disk has "newer" meta data
-
-Does this really belong in compare_super()?
-
-Currently compare super is for checking if the device belongs to the array =
-at
-all.  The test on the sequence number (event counter) is separate.
-getinfo_super should return that in info->events.  Current only super0 and
-super1 do that, intel and ddf don't.
-
->=20
-> IMSM already has this to some extent.
->=20
-> The logic to handle this must be in the generic, non-metadata-specific
-> code. Metadata handlers need methods to force re-reading the meta data
-> from certain disk(s). mdmon also needs a way to detect that it needs to
-> reread the meta data.
-
-If there is a container with one array started and the other not, then you
-might want to reread the metadata for one array but not the other.
-That could get messing but should be do-able.
-
->=20
-> Furthermore,  at least compare_super_ddf does not only compare, it also
-> makes changes to its internal data structures; I think other meta data
-> handlers do the same. IMO it would be more appropriate to do this in a
-> separate call, after the caller has decided if and how to merge the meta
-> data.
-
-Sounds reasonable.
-
->=20
-> Then we need to make sure that (to the maximum extent possible) these
-> issued are handled similarly during Assembly and Incremental Assembly.
->=20
-> The "nonfatal" case is similar to the current "homehost" logic.
->=20
-> As for the complex scenarios in my "RFC" mail, thinking more about it, I
-> found that the dangerous incremental assembly cases are not so critical
-> after all, as long as subarrays aren't started prematurely, which is
-> mostly guaranteed by the current udev rules.
-
-Agreed.  We should  do our best to detect the dangerous cases, but they
-shouldn't be likely.
-
+Thanks,
 NeilBrown
 
-
---Sig_/rFqKRtrI=tGidMgBuoSRqzA
+--Sig_/v/efc_XWeZUMbK=m5dSc8F_
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUmRucjnsnt1WYoG5AQJ9Uw/9HEGAgNdCxbLAMQCFD29353sjgUGKNBeO
-iXYtkmBVx0A8IERYekmzOaYVSVnp2fc+PkOrkGYDP5USoKqOrcieJrGxGZA7Yp41
-rSmY4iBP0ezAsNuTWarvlKa+SGb6X2oKJgPDA1oArnNjGIZhGjrnL5oUUfWp2rp6
-pHUkN9zNMLd4ZaByV2hwN398ystO8/m9fMKHgfQ4HRe8jwE/5Ehpc6BIBVIcoT9U
-6ZRttn+0qfvakHQtsixBTRbx0GyHS6BOubwtwpMXd2kVsmznDQTUxN63Qc7dm6MX
-vzXFhXqwOdLEtGUv2Tod8+bsII7Aq00NtUZr4asOqCg9wkDBDAT5LmOQw0zMvSEQ
-8pr7zkgrSdGL/Qy5xOhAH6Bs0oDEyRerL7CNXYfa2iykxgluM0djRAV3+7Nl31C2
-btrCsWePX8g76e7wM2UfPWz6RWeW98H35bQp1KXfU2/dy0+x25/shArkd+rLsphX
-jw5EMgKC7CGqc56wl7qlLdkxsVvcNr4B34AOJq8xBAP/SLcnhdJmRRq6QJ0U4v4A
-wp5KHRa8BCEv747kv0wsUjCg2JgZ/VnL/0o6xuDav11EyKEGpWtaF5Ks5E/jZqwJ
-53L3jD91GUA5kdaCdL3rXvs+2OvjLNDDcW05mi0PdlnDr31rQZpWt9lUaLwHlyiY
-+NHxymYytyQ=
-=978/
+iQIVAwUBUmRwPznsnt1WYoG5AQJ6Xw/+ImAsjgSWgsQYTSFR0AM9MzBjAnSGvr28
+PRj/W2imTFIoaOeggMg2auJ5zzNr3cwiICpDEyes9izHGYl5vQwraX1CAi4LImSL
+O4UslEQL13KBbZuKQ2ztqabFDbFhNU9bPHEw/pJ4Vv+aMUvcUKc5BCEFS1/m+DZE
+BYs60Ea1TIUWNrdP7x7cd2HgEvLTdpvCZ3b3YYc6KK4BeAy+WksgzSyi0ukxrcG1
+gt9OXIuKOXKyDcVJ1qmCX7pCjUGQsd6SrDmwKivnEam3Z+QhV5IM7AV1vkrS7FzN
+NJNlC72/UjIB9T7bNvoXEvdTzgMn2li2VlYuoiUOzETEShrGvcym7VeIaXxRPTc7
+DDNfprUkWM0H2seL1MJJqs528FzeCXHnD3rQWdkT9p1wQdpHh/30xjz+AeHWhS+Y
+fHD548fOmVVYoekl1kq3oX+84Lksvop7QMfCk4+fwrVoUCd0Mw0j1WVqKYqbzwlV
+ZCLVbBv30YCiMATmN9e1g1Yy4jry/xbip6o1seyI2gfTlnEna7JznPAx+3Exevza
+nyjaxZJ0OD1KjoavTsuCYMtbi6LNr8G8sebxRWX/F9ZjhLJap3LKTv3zfHrQk9uS
+qzl2hkYZwKVh1fcpiqVyxY+OBXzRlOPANaKeMgG8QvUK+GoKguUuMM5106qwpqHp
+lDhfVSVWdPI=
+=59tC
 -----END PGP SIGNATURE-----
 
---Sig_/rFqKRtrI=tGidMgBuoSRqzA--
+--Sig_/v/efc_XWeZUMbK=m5dSc8F_--
