@@ -1,145 +1,181 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RFC: incremental container assembly when sequence numbers don't
- match
-Date: Mon, 21 Oct 2013 11:07:27 +1100
-Message-ID: <20131021110727.363cdd02@notabene.brown>
-References: <523CADFD.9050006@arcor.de>
+Subject: Re: Advice recovering from interrupted grow on RAID5 array
+Date: Mon, 21 Oct 2013 12:09:43 +1100
+Message-ID: <20131021120943.179a2bb0@notabene.brown>
+References: <CA+90J__=u_m9RW7c9KHGMRr+6ZOSVQUN6yXm61YM_yir-7LE7A@mail.gmail.com>
+	<20131016162625.628c5558@notabene.brown>
+	<CA+90J_9vLnEVPhAkQmZ5VS=gTw0fjf107wf=2riLn+=RstJMSQ@mail.gmail.com>
+	<20131017110725.54de5b06@notabene.brown>
+	<CA+90J_8y+XOhdmKuAm9VSKSvb61+57YU0iYWGjkh4WP3BAF5pA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/v/efc_XWeZUMbK=m5dSc8F_"; protocol="application/pgp-signature"
+ boundary="Sig_/ARsgs.qG=CsI3aYOl72AEXL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <523CADFD.9050006@arcor.de>
+In-Reply-To: <CA+90J_8y+XOhdmKuAm9VSKSvb61+57YU0iYWGjkh4WP3BAF5pA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Francis Moreau <francis.moro@gmail.com>
+To: John Yates <jyates65@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/v/efc_XWeZUMbK=m5dSc8F_
+--Sig_/ARsgs.qG=CsI3aYOl72AEXL
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 20 Sep 2013 22:20:13 +0200 Martin Wilck <mwilck@arcor.de> wrote:
+On Thu, 17 Oct 2013 01:36:28 -0400 John Yates <jyates65@gmail.com> wrote:
 
-> Hi,
+> On Wed, Oct 16, 2013 at 8:07 PM, NeilBrown <neilb@suse.de> wrote:
+> > On Wed, 16 Oct 2013 09:02:52 -0400 John Yates <jyates65@gmail.com> wrot=
+e:
+> >
+> >> On Wed, Oct 16, 2013 at 1:26 AM, NeilBrown <neilb@suse.de> wrote:
+> >> > On Mon, 14 Oct 2013 21:59:45 -0400 John Yates <jyates65@gmail.com> w=
+rote:
+> >> >
+> >> >> Midway through a RAID5 grow operation from 5 to 6 USB connected
+> >> >> drives, system logs show that the kernel lost communication with so=
+me
+> >> >> of the drive ports which has left my array in a state that I have n=
+ot
+> >> >> been able to reassemble. After reseating the cable connections and
+> >> >> rebooting, all of the drives appear to be functioning normally, so
+> >> >> hopefully the data is still intact. I need advice on recovery steps
+> >> >> for the array.
+> >> >>
+> >> >> It appears that each drive failed in quick succession with /dev/sdc1
+> >> >> being the last standing and having the others marked as missing in =
+its
+> >> >> superblock. The superblocks of the other drives show all drives as
+> >> >> available. (--examine output below)
+> >> >>
+> >> >> >mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde=
+1 /dev/sdf1 /dev/sdg1
+> >> >> mdadm: too-old timestamp on backup-metadata on device-5
+> >> >> mdadm: If you think it is should be safe, try 'export MDADM_GROW_AL=
+LOW_OLD=3D1'
+> >> >> mdadm: /dev/md127 assembled from 1 drives - not enough to start the=
+ array.
+> >> >
+> >> > Did you try following the suggestion and run
+> >> >
+> >> >  export MDADM_GROW_ALLOW_OLD=3D1
+> >> >
+> >> > and the try the --asssemble again?
+> >> >
+> >> > NeilBrown
+> >>
+> >> Yes I did, thanks. Not much change though. It accepts the timestamp,
+> >> but then appears not to use it.
+> >>
+> >> mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+> >> /dev/sdf1 /dev/sdg1 --verbose
+> >> mdadm: looking for devices for /dev/md127
+> >> mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
+> >> mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
+> >> mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
+> >> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
+> >> mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
+> >> mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
+> >> mdadm: :/dev/md127 has an active reshape - checking if critical
+> >> section needs to be restored
+> >> mdadm: accepting backup with timestamp 1381360844 for array with
+> >> timestamp 1381729948
+> >> mdadm: backup-metadata found on device-5 but is not needed
+> >> mdadm: added /dev/sdf1 to /dev/md127 as 1
+> >> mdadm: added /dev/sdd1 to /dev/md127 as 2
+> >> mdadm: added /dev/sdc1 to /dev/md127 as 3
+> >> mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
+> >> mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
+> >> mdadm: added /dev/sde1 to /dev/md127 as 0
+> >> mdadm: /dev/md127 assembled from 4 drives - not enough to start the ar=
+ray.
+> >
+> >
+> > What about with MDADM_GROW_ALLOW_OLD=3D1 *and* --force ??
+> >
+> > If that doesn't work, please add --verbose as well, and report the outp=
+ut.
+> >
+> > NeilBrown
 >=20
-> I have spent a few days thinking about the problem of incremental
-> container assembly when disk sequence numbers (aka event counters) don't
-> match, and how mdadm/mdmon should behave in various situations.
-> Before I start coding on this, I'd like to get your opinion - I may be
-> overlooking something  important.
+> Thanks Neil. I had tried that as well (output below). I'm wondering if
+> there is a way to fix the metadata for /dev/sdc1 since that seems to
+> be the odd one where the --examine data indicates that the other disks
+> are all bad when I don't believe they really are (just the result of a
+> partial kernel or driver crash). I have read about some people zeroing
+> the superblock on a device so that it can be recreated, but I am not
+> sure exactly how that works and am hesitant to try it since a reshape
+> was in progress. I have also read about people having had success by
+> re-running the original mdadm --create while leaving the data intact,
+> but again I am hesitant to try that, especially because of the reshape
+> state.
 >=20
-> The scenario I look at is that sequence numbers don't match during
-> incremental assembly. This can occur quite easily. A disk may have been
-> missing the last time the array was assembled, and be added again. The
-> last incremental assembly may have been interrupted before all disks
-> were found, for whatever reason. Etc. The problems Francis reported
-> lately all occur in situations of this type.
+> Or... maybe this all has more to do with the Update Time, since the
+> output seems to indicate 4 drives are usable. All of the drives have
+> the same Update Time except for /dev/sdc1 which is about 5 minutes
+> later than the rest. Since it is the fourth device, perhaps the
+> assemble is satisfied with devices 0, 1, 2, 3, but then seeing an
+> Update Time on devices 4 and 5 that is earlier than device 3, it
+> marks them as "possibly out of date" and stops trying to assemble the
+> array. Hard to tell, but I still would not have any idea how to
+> overcome that scenario. I appreciate your help!
 >=20
-> A) New disk has lower seq number as previously scanned ones:
->    The up-to-date meta data is the meta data previously parsed.
->=20
->    For each subarray the new disk is a member in the meta data:
->      A.1) If the subarray is already running, add the new disk a spare.
+> # export MDADM_GROW_ALLOW_OLD=3D1
+> # mdadm --assemble /dev/md127 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+> /dev/sdf1 /dev/sdg1 --force --verbose
+> mdadm: looking for devices for /dev/md127
+> mdadm: /dev/sdb1 is identified as a member of /dev/md127, slot 4.
+> mdadm: /dev/sdc1 is identified as a member of /dev/md127, slot 3.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md127, slot 2.
+> mdadm: /dev/sde1 is identified as a member of /dev/md127, slot 0.
+> mdadm: /dev/sdf1 is identified as a member of /dev/md127, slot 1.
+> mdadm: /dev/sdg1 is identified as a member of /dev/md127, slot 5.
+> mdadm: :/dev/md127 has an active reshape - checking if critical
+> section needs to be restored
+> mdadm: accepting backup with timestamp 1381360844 for array with
+> timestamp 1381729948
+> mdadm: backup-metadata found on device-5 but is not needed
+> mdadm: added /dev/sdf1 to /dev/md127 as 1
+> mdadm: added /dev/sdd1 to /dev/md127 as 2
+> mdadm: added /dev/sdc1 to /dev/md127 as 3
+> mdadm: added /dev/sdb1 to /dev/md127 as 4 (possibly out of date)
+> mdadm: added /dev/sdg1 to /dev/md127 as 5 (possibly out of date)
+> mdadm: added /dev/sde1 to /dev/md127 as 0
+> mdadm: /dev/md127 assembled from 4 drives - not enough to start the array.
 
-If the new disk has old metadata, then it might have failed at some point, =
-so
-we shouldn't add it as anything without good reason.
-If the most recent metadata records that a device went missing, rather than
-actually failed, then it might be justified to add it as a spare.  But in
-general I'd prefer thing were only added as spares if that was explicitly
-requested of if the policy in mdadm.conf encourages it.
+That shouldn't happen.  With '-f' it should force the event count of either=
+ b1
+or g1 (or maybe both) to match the others.
 
->      A.2) check the subarray seqnum; if the subarray seqnum is equal
-> between existing and new disks, the new disk can be added as "clean".
-> (This requires implementing separate seqnums for every subarray, but
-> that can be done quite easily, at least for DDF).
->      A.3) Otherwise, add the new disk as a spare.
->=20
->    The added disk may be marked as "Missing" or "Faulty" in the meta
-> data. That will be handled already by existing code already AFAICS.
->=20
-> B) New disk has higher seq number than previously scanned ones.
->    The up-to-date meta data is on the new disk. Here it gets tricky.
->=20
->    B.1) If mdmon isn't running for this container:
->      B.1.a) reread the meta data (load_container() will automatically
-> choose the best meta data).
->      B.1.b) Discard previously made configurations
->      B.1.c) Reassemble the arrays, starting with the new disk. When
-> re-adding the drive(s) with the older meta data, act as in A) above.
->=20
->    B.2) If mdmon is already running for this container, it means at
-> least one subarray is already running, too.
->      B.2.a) If the new disk belongs to a already running and active
-> subarray, we have encountered a fatal error. mdadm should refuse to do
-> anything with the new disk and emit an alert.
->      B.2.b) If the new disk belongs to a already running read-only
-> subarray, and the subarray seqnum of the new disk is lower than that of
-> the existing disks, we also have a fatal error - we don't know which
-> data is more recent. Human intervention is necessary.
->      B.2.c) Both mdadm and mdmon need to update the meta data as
-> described in B.1.a).
->      B.2.d) If the new disk belongs to a already running read-only
-> subarray, and the subarray seqnum of the new disk is greater or equal to
-> the subarray seqnum of the existing disk(s), it might be possible to add
-> the new disk to the array as clean. If the seqnum isn't equal, recovery
-> must be started on the previously existing disk(s). Currently the kernel
-> doesn't allow adding a new disk as "clean" in any state except
-> "inactive", so this special case will not be implemented any time soon.
-> It's a general question whether or not mdadm should attempt to be
-> "smart" in situations like this.
->      B.2.e) Subarrays that aren't running yet, and which the new disk is
-> a member of, can be reassembled as described in A)
->      B.2.f) pre-existing disks that are marked missing or failed in the
-> updated meta data must have their status changed. This may cause the
-> already running array(s) to degrade or break, even if the new disk
-> doen't belong to them.
->      B.2.g) The status of all subarrays (consistent/initialized) is
-> updated according to the new meta data.
->=20
-> Note that the really difficult cases B.2.a/b/d can't easily happen if
-> the Incremental assembly is done without "-R", as it should be. So it
-> may be reasonable to just quit with an error if any of these situation
-> is encountered.
->=20
-> An important further question is where this logic should be implemented.
-> This is independent of meta data type and thus most of it should be in
-> the generic Incremental_container() code path.
+What version of mdadm are you using? (mdadm -V)
 
-maybe in assemble_container_content?  But mdmon need to know about some of =
-it
-too of course.
+Maybe try the latest
+  git clone git://git.neil.brown.name/mdadm
+  cd mdadm
+  make mdadm
+  ./mdadm .....
 
->=20
-> Feedback welcome.
-> Best regards
-> Martin
-
-Sounds very sensible, but the devil is in the detail of course. :-)
-
-Thanks,
 NeilBrown
 
---Sig_/v/efc_XWeZUMbK=m5dSc8F_
+--Sig_/ARsgs.qG=CsI3aYOl72AEXL
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUmRwPznsnt1WYoG5AQJ6Xw/+ImAsjgSWgsQYTSFR0AM9MzBjAnSGvr28
-PRj/W2imTFIoaOeggMg2auJ5zzNr3cwiICpDEyes9izHGYl5vQwraX1CAi4LImSL
-O4UslEQL13KBbZuKQ2ztqabFDbFhNU9bPHEw/pJ4Vv+aMUvcUKc5BCEFS1/m+DZE
-BYs60Ea1TIUWNrdP7x7cd2HgEvLTdpvCZ3b3YYc6KK4BeAy+WksgzSyi0ukxrcG1
-gt9OXIuKOXKyDcVJ1qmCX7pCjUGQsd6SrDmwKivnEam3Z+QhV5IM7AV1vkrS7FzN
-NJNlC72/UjIB9T7bNvoXEvdTzgMn2li2VlYuoiUOzETEShrGvcym7VeIaXxRPTc7
-DDNfprUkWM0H2seL1MJJqs528FzeCXHnD3rQWdkT9p1wQdpHh/30xjz+AeHWhS+Y
-fHD548fOmVVYoekl1kq3oX+84Lksvop7QMfCk4+fwrVoUCd0Mw0j1WVqKYqbzwlV
-ZCLVbBv30YCiMATmN9e1g1Yy4jry/xbip6o1seyI2gfTlnEna7JznPAx+3Exevza
-nyjaxZJ0OD1KjoavTsuCYMtbi6LNr8G8sebxRWX/F9ZjhLJap3LKTv3zfHrQk9uS
-qzl2hkYZwKVh1fcpiqVyxY+OBXzRlOPANaKeMgG8QvUK+GoKguUuMM5106qwpqHp
-lDhfVSVWdPI=
-=59tC
+iQIVAwUBUmR+1znsnt1WYoG5AQLTfQ/+ImOXCj6w+EH9mC9/h04hzCg7OvUi3pBy
+HskNQp54aQCl3qflBvPyp/RaXHlumFiKtAR7BMqwJK+w3RQU8r9PqHSFCzc2LTy1
+Fh8fgxI0IT/8unq7cLdfrqjicBsaibz25MFpFn2KlKlxLheQzFaprgvOSpfA4kkp
+1MmfCJlF6t5bCyXResHROdeSgLEB9aYhMSkCfsKFcRxBlmGWa6uJP9+RjWTHCiCn
+gRL/1XohtNuMqdpCHTeV1bof3MVJsajV80IRgJYILGDKJgpqfl69f/ChsBKMYo4O
+gq1BmvwK1iUxZzQ7y/l+dnVQWaQQ/WLinx7AArWsu42lGj6F/r+IbBGpBSaH2rkH
+eC/H2IynsSMZCQwX7oiDU/jPWYeTIezlacp/vmgx8zNyU1EnDlQsvesX0XfJZ1c8
+VKF8yAL8DR0e4PICmK4OjTaG3bSI59/cYBt6nGV7TrAF/ZvLnFC/j7VVQ366vU5M
+GfZA1rMNP+FiD997vokkB3/XTqUZlQw7XCzQvaQIoqDc4dnxZ4mpAfFlP4Bpzehb
+LuFKx+tF6MIA4apSOGH3wCt1OUJBs12hw3575dlLsjU/Mh2devWj/UwOTFou9luu
+RoDkBAPy0UtorEC2gZQSLWQrllHZfeaqHtjVtBoWelRV398CrQBfzGcStrGSWyco
+ECbJzvLI/c4=
+=w+Dc
 -----END PGP SIGNATURE-----
 
---Sig_/v/efc_XWeZUMbK=m5dSc8F_--
+--Sig_/ARsgs.qG=CsI3aYOl72AEXL--
