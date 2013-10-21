@@ -1,225 +1,79 @@
-From: Hans-Joachim Baader <hjb@pro-linux.de>
-Subject: Using array without initializing
-Date: Mon, 21 Oct 2013 18:37:12 +0200
-Message-ID: <20131021163711.GA10854@kilauea.hjbaader.home>
+From: "DeGon, Michael J" <michael.j.degon@intel.com>
+Subject: RE: raid5 trim OOPS / use after free?
+Date: Mon, 21 Oct 2013 18:23:12 +0000
+Message-ID: <96619C4E5865E4479F08FA01268918B346FC62F4@FMSMSX106.amr.corp.intel.com>
+References: <CE884D0C.64F9%shli@fusionio.com> <wrfj38nug63y.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <wrfj38nug63y.fsf@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, Shaohua Li <ShLi@fusionio.com>
+Cc: "stan@hardwarefreak.com" <stan@hardwarefreak.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-raid.ids
 
+All, 
 
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Friday, I installed and tested the  pre- 3.7 raid5 trim kernel,  3.6.10 kernel. 
 
-Hi,
+I was able to create an xfs  filesystem on a RAID5 SSD array  without the  kernel panic.
 
-I have a problem that might be a bit unusual.
+This  leads me to believe that the raid5 trim feature  added in kernel 3.7 may have  caused the  issue I reported.
 
-Using an Intel 82801, we create in the BIOS a RAID 5 with 3 disks,
-spanning the whole disks. After that we boot Linux via the network
-into an initial ramdisk (buildroot) to assemble and format the array.
-Currently I use kernel 3.7.8, mdadm 3.2.6 and the following commands
-to start the array:
+Regards, 
 
-    mdadm --assemble --scan -e imsm
-    mdadm --incremental -e imsm /dev/md/imsm0
+Michael 
+  
 
-After the first command, /proc/mdstat looks like this:
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Jes Sorensen
+Sent: Monday, October 21, 2013 5:29 AM
+To: Shaohua Li
+Cc: stan@hardwarefreak.com; linux-raid@vger.kernel.org; NeilBrown; Jeff Moyer
+Subject: Re: raid5 trim OOPS / use after free?
 
-Personalities : [raid6] [raid5] [raid4]=20
-md127 : inactive sdc[2](S) sda[1](S) sdb[0](S)
-      9459 blocks super external:imsm
+Shaohua Li <ShLi@fusionio.com> writes:
+> On 10/18/13 2:03 PM, "Jes Sorensen" <Jes.Sorensen@redhat.com> wrote:
+>
+>>Stan Hoeppner <stan@hardwarefreak.com> writes:
+>>> On 10/17/2013 4:58 PM, Jes Sorensen wrote:
+>>>> Hi,
+>>>> 
+>>>> I have been trying out the trim code in recent kernels and I am 
+>>>> consistently seeing crashes with the raid5 trim implementation.
+>>>> 
+>>>> I am seeing 3-4 different OOPS outputs which are very different in 
+>>>>their  output. This makes me suspect this is a memory corruption of 
+>>>>use after  free problem?
+>>>> 
+>>>> Basically I have a system with an AHCI controller and 4 SATA SSD 
+>>>> drives hooked up to it. I create a raid5 and then run mkfs.ext4 on 
+>>>> it and the fireworks display starts.
+>>>> 
+>>>> I first saw this with an older kernel with some backports applied, 
+>>>>but I  am able to reproduce this with the current top of tree out of 
+>>>>Linus'
+>>>> tree.
+>>>> 
+>>>> Any ideas?
+>>>
+>>> See a nearly identical problem posted to this list yesterday:
+>>>
+>>> http://www.spinics.net/lists/raid/msg44686.html
+>>
+>>Looks the same - I believe I have seen that variation of the problem 
+>>as well.
+>
+> Ok, looks we have some problems with request merge in SCSI. I just 
+> posted some patches to linux-raid maillist, please test and report back.
 
-After the second command, Linux starts to initialize the array:
+Hi Shaohua,
 
-Personalities : [raid6] [raid5] [raid4]=20
-md126 : active raid5 sda[2] sdb[1] sdc[0]
-      1953497088 blocks super external:/md127/0 level 5, 128k chunk, algori=
-thm 0 [3/3] [UUU]
-      [=3D>...................]  resync =3D  5.5% (54541952/976748672) fini=
-sh=3D86.5min speed=3D177664K/sec
-     =20
-md127 : inactive sdc[2](S) sda[1](S) sdb[0](S)
-      9459 blocks super external:imsm
+Thanks for the quick reply. I will test them as soon as I can, but it probably wont be until the end of the week.
 
-Here is the complete output of mdadm -E /dev/sd*:
-
-/dev/sda:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.2.02
-    Orig Family : 04e27e25
-         Family : 04e27e25
-     Generation : 00000053
-     Attributes : All supported
-           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
-       Checksum : 9b719f6c correct
-    MPB Sectors : 2
-          Disks : 3
-   RAID Devices : 1
-
-  Disk00 Serial : Z1D4N2AZ
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[Volume1]:
-           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
-     RAID Level : 5 <-- 5
-        Members : 3 <-- 3
-          Slots : [UUU] <-- [UUU]
-    Failed disk : none
-      This Slot : 0
-     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
-   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
-  Sector Offset : 0
-    Num Stripes : 7630848
-     Chunk Size : 128 KiB <-- 128 KiB
-       Reserved : 0
-  Migrate State : initialize
-      Map State : normal <-- uninitialized
-     Checkpoint : 141111 (768)
-    Dirty State : clean
-
-  Disk01 Serial : Z1D4MN2C
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk02 Serial : Z1D4MNG0
-          State : active
-             Id : 00000002
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-/dev/sdb:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.2.02
-    Orig Family : 04e27e25
-         Family : 04e27e25
-     Generation : 00000053
-     Attributes : All supported
-           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
-       Checksum : 9b719f6c correct
-    MPB Sectors : 2
-          Disks : 3
-   RAID Devices : 1
-
-  Disk01 Serial : Z1D4MN2C
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[Volume1]:
-           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
-     RAID Level : 5 <-- 5
-        Members : 3 <-- 3
-          Slots : [UUU] <-- [UUU]
-    Failed disk : none
-      This Slot : 1
-     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
-   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
-  Sector Offset : 0
-    Num Stripes : 7630848
-     Chunk Size : 128 KiB <-- 128 KiB
-       Reserved : 0
-  Migrate State : initialize
-      Map State : normal <-- uninitialized
-     Checkpoint : 141111 (768)
-    Dirty State : clean
-
-  Disk00 Serial : Z1D4N2AZ
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk02 Serial : Z1D4MNG0
-          State : active
-             Id : 00000002
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-/dev/sdc:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.2.02
-    Orig Family : 04e27e25
-         Family : 04e27e25
-     Generation : 00000053
-     Attributes : All supported
-           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
-       Checksum : 9b719f6c correct
-    MPB Sectors : 2
-          Disks : 3
-   RAID Devices : 1
-
-  Disk02 Serial : Z1D4MNG0
-          State : active
-             Id : 00000002
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[Volume1]:
-           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
-     RAID Level : 5 <-- 5
-        Members : 3 <-- 3
-          Slots : [UUU] <-- [UUU]
-    Failed disk : none
-      This Slot : 2
-     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
-   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
-  Sector Offset : 0
-    Num Stripes : 7630848
-     Chunk Size : 128 KiB <-- 128 KiB
-       Reserved : 0
-  Migrate State : initialize
-      Map State : normal <-- uninitialized
-     Checkpoint : 141111 (768)
-    Dirty State : clean
-
-  Disk00 Serial : Z1D4N2AZ
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk01 Serial : Z1D4MN2C
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-
-This would all be perfect if we did use Linux on the machine. However, afte=
-r dumping
-a MS Windows image on it, the machine is shipped to customers, and it is re=
-quested
-that we don't initialize the array, so that the resync happens when the cus=
-tomer
-starts it. Apparently MS Windows has a mode to use the array without initia=
-lizing it
-until requested. (I guess it initializes only the parts of the array that a=
-re
-actually used, so that it never needs to be initialized explicitly.)
-
-Is this possible with Linux too? Is it reasonable at all? Unfortunately, th=
-e option
---assume-clean is not allowed in this mode, and I found no other option tha=
-t could help.
-
-Thanks
-Hans-Joachim
---=20
-Pro-Linux - Germany's largest volunteer Linux support site
-http://www.pro-linux.de/          Public Key ID 0x3DDBDDEA
-
---qDbXVdCdHGoSgWSk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iD8DBQFSZVg3LbySPj3b3eoRAlavAKCSOmKSoqmu68WB1UpUZIJ4zVE7nACfTpLb
-f/ws5fdB8FvPM9+3zWJ0eaw=
-=CXgU
------END PGP SIGNATURE-----
-
---qDbXVdCdHGoSgWSk--
+Regards,
+Jes
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
