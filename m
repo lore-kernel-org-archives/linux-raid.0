@@ -1,111 +1,225 @@
-From: ycbzzjlby@gmail.com
-Subject: [PATCH] md: avoid deadlock when md_set_badblocks.
-Date: Sat, 12 Oct 2013 01:10:03 -0400
-Message-ID: <1381554603-1695-1-git-send-email-ycbzzjlby@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, majianpeng@gmail.com, Bian Yu <bianyu@kedacom.com>
+From: Hans-Joachim Baader <hjb@pro-linux.de>
+Subject: Using array without initializing
+Date: Mon, 21 Oct 2013 18:37:12 +0200
+Message-ID: <20131021163711.GA10854@kilauea.hjbaader.home>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Bian Yu <bianyu@kedacom.com>
 
-When operate harddisk and hit errors, md_set_badblocks is called after
-scsi_restart_operations which already disabled the irq. but md_set_badblocks
-will call write_sequnlock_irq and enable irq. so softirq can preempt the
-current thread and that may cause a deadlock. I think this situation should
-use write_sequnlock_irqsave/irqrestore instead.
+--qDbXVdCdHGoSgWSk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I met the situation and the call trace is below:
-[  638.919974] BUG: spinlock recursion on CPU#0, scsi_eh_13/1010
-[  638.921923]  lock: 0xffff8800d4d51fc8, .magic: dead4ead, .owner: scsi_eh_13/1010, .owner_cpu: 0
-[  638.923890] CPU: 0 PID: 1010 Comm: scsi_eh_13 Not tainted 3.12.0-rc5+ #37
-[  638.925844] Hardware name: To be filled by O.E.M. To be filled by O.E.M./MAHOBAY, BIOS 4.6.5 03/05/2013
-[  638.927816]  ffff880037ad4640 ffff880118c03d50 ffffffff8172ff85 0000000000000007
-[  638.929829]  ffff8800d4d51fc8 ffff880118c03d70 ffffffff81730030 ffff8800d4d51fc8
-[  638.931848]  ffffffff81a72eb0 ffff880118c03d90 ffffffff81730056 ffff8800d4d51fc8
-[  638.933884] Call Trace:
-[  638.935867]  <IRQ>  [<ffffffff8172ff85>] dump_stack+0x55/0x76
-[  638.937878]  [<ffffffff81730030>] spin_dump+0x8a/0x8f
-[  638.939861]  [<ffffffff81730056>] spin_bug+0x21/0x26
-[  638.941836]  [<ffffffff81336de4>] do_raw_spin_lock+0xa4/0xc0
-[  638.943801]  [<ffffffff8173f036>] _raw_spin_lock+0x66/0x80
-[  638.945747]  [<ffffffff814a73ed>] ? scsi_device_unbusy+0x9d/0xd0
-[  638.947672]  [<ffffffff8173fb1b>] ? _raw_spin_unlock+0x2b/0x50
-[  638.949595]  [<ffffffff814a73ed>] scsi_device_unbusy+0x9d/0xd0
-[  638.951504]  [<ffffffff8149ec47>] scsi_finish_command+0x37/0xe0
-[  638.953388]  [<ffffffff814a75e8>] scsi_softirq_done+0xa8/0x140
-[  638.955248]  [<ffffffff8130e32b>] blk_done_softirq+0x7b/0x90
-[  638.957116]  [<ffffffff8104fddd>] __do_softirq+0xfd/0x330
-[  638.958987]  [<ffffffff810b964f>] ? __lock_release+0x6f/0x100
-[  638.960861]  [<ffffffff8174a5cc>] call_softirq+0x1c/0x30
-[  638.962724]  [<ffffffff81004c7d>] do_softirq+0x8d/0xc0
-[  638.964565]  [<ffffffff8105024e>] irq_exit+0x10e/0x150
-[  638.966390]  [<ffffffff8174ad4a>] smp_apic_timer_interrupt+0x4a/0x60
-[  638.968223]  [<ffffffff817499af>] apic_timer_interrupt+0x6f/0x80
-[  638.970079]  <EOI>  [<ffffffff810b964f>] ? __lock_release+0x6f/0x100
-[  638.971899]  [<ffffffff8173fa6a>] ? _raw_spin_unlock_irq+0x3a/0x50
-[  638.973691]  [<ffffffff8173fa60>] ? _raw_spin_unlock_irq+0x30/0x50
-[  638.975475]  [<ffffffff81562393>] md_set_badblocks+0x1f3/0x4a0
-[  638.977243]  [<ffffffff81566e07>] rdev_set_badblocks+0x27/0x80
-[  638.978988]  [<ffffffffa00d97bb>] raid5_end_read_request+0x36b/0x4e0 [raid456]
-[  638.980723]  [<ffffffff811b5a1d>] bio_endio+0x1d/0x40
-[  638.982463]  [<ffffffff81304ff3>] req_bio_endio.isra.65+0x83/0xa0
-[  638.984214]  [<ffffffff81306b9f>] blk_update_request+0x7f/0x350
-[  638.985967]  [<ffffffff81306ea1>] blk_update_bidi_request+0x31/0x90
-[  638.987710]  [<ffffffff813085e0>] __blk_end_bidi_request+0x20/0x50
-[  638.989439]  [<ffffffff8130862f>] __blk_end_request_all+0x1f/0x30
-[  638.991149]  [<ffffffff81308746>] blk_peek_request+0x106/0x250
-[  638.992861]  [<ffffffff814a62a9>] ? scsi_kill_request.isra.32+0xe9/0x130
-[  638.994561]  [<ffffffff814a633a>] scsi_request_fn+0x4a/0x3d0
-[  638.996251]  [<ffffffff813040a7>] __blk_run_queue+0x37/0x50
-[  638.997900]  [<ffffffff813045af>] blk_run_queue+0x2f/0x50
-[  638.999553]  [<ffffffff814a5750>] scsi_run_queue+0xe0/0x1c0
-[  639.001185]  [<ffffffff814a7721>] scsi_run_host_queues+0x21/0x40
-[  639.002798]  [<ffffffff814a2e87>] scsi_restart_operations+0x177/0x200
-[  639.004391]  [<ffffffff814a4fe9>] scsi_error_handler+0xc9/0xe0
-[  639.005996]  [<ffffffff814a4f20>] ? scsi_unjam_host+0xd0/0xd0
-[  639.007600]  [<ffffffff81072f6b>] kthread+0xdb/0xe0
-[  639.009205]  [<ffffffff81072e90>] ? flush_kthread_worker+0x170/0x170
-[  639.010821]  [<ffffffff81748cac>] ret_from_fork+0x7c/0xb0
-[  639.012437]  [<ffffffff81072e90>] ? flush_kthread_worker+0x170/0x170
+Hi,
 
-Signed-off-by: Bian Yu <bianyu@kedacom.com>
-Reviewed-by: Jianpeng Ma <majianpeng@gmail.com>
----
- drivers/md/md.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+I have a problem that might be a bit unusual.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8a0d762..2445fec 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8111,6 +8111,7 @@ static int md_set_badblocks(struct badblocks *bb, sector_t s, int sectors,
- 	u64 *p;
- 	int lo, hi;
- 	int rv = 1;
-+	unsigned long flags;
- 
- 	if (bb->shift < 0)
- 		/* badblocks are disabled */
-@@ -8125,7 +8126,7 @@ static int md_set_badblocks(struct badblocks *bb, sector_t s, int sectors,
- 		sectors = next - s;
- 	}
- 
--	write_seqlock_irq(&bb->lock);
-+	write_seqlock_irqsave(&bb->lock, flags);
- 
- 	p = bb->page;
- 	lo = 0;
-@@ -8241,7 +8242,7 @@ static int md_set_badblocks(struct badblocks *bb, sector_t s, int sectors,
- 	bb->changed = 1;
- 	if (!acknowledged)
- 		bb->unacked_exist = 1;
--	write_sequnlock_irq(&bb->lock);
-+	write_sequnlock_irqrestore(&bb->lock, flags);
- 
- 	return rv;
- }
--- 
-1.7.1
+Using an Intel 82801, we create in the BIOS a RAID 5 with 3 disks,
+spanning the whole disks. After that we boot Linux via the network
+into an initial ramdisk (buildroot) to assemble and format the array.
+Currently I use kernel 3.7.8, mdadm 3.2.6 and the following commands
+to start the array:
+
+    mdadm --assemble --scan -e imsm
+    mdadm --incremental -e imsm /dev/md/imsm0
+
+After the first command, /proc/mdstat looks like this:
+
+Personalities : [raid6] [raid5] [raid4]=20
+md127 : inactive sdc[2](S) sda[1](S) sdb[0](S)
+      9459 blocks super external:imsm
+
+After the second command, Linux starts to initialize the array:
+
+Personalities : [raid6] [raid5] [raid4]=20
+md126 : active raid5 sda[2] sdb[1] sdc[0]
+      1953497088 blocks super external:/md127/0 level 5, 128k chunk, algori=
+thm 0 [3/3] [UUU]
+      [=3D>...................]  resync =3D  5.5% (54541952/976748672) fini=
+sh=3D86.5min speed=3D177664K/sec
+     =20
+md127 : inactive sdc[2](S) sda[1](S) sdb[0](S)
+      9459 blocks super external:imsm
+
+Here is the complete output of mdadm -E /dev/sd*:
+
+/dev/sda:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.02
+    Orig Family : 04e27e25
+         Family : 04e27e25
+     Generation : 00000053
+     Attributes : All supported
+           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
+       Checksum : 9b719f6c correct
+    MPB Sectors : 2
+          Disks : 3
+   RAID Devices : 1
+
+  Disk00 Serial : Z1D4N2AZ
+          State : active
+             Id : 00000000
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+[Volume1]:
+           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
+     RAID Level : 5 <-- 5
+        Members : 3 <-- 3
+          Slots : [UUU] <-- [UUU]
+    Failed disk : none
+      This Slot : 0
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
+  Sector Offset : 0
+    Num Stripes : 7630848
+     Chunk Size : 128 KiB <-- 128 KiB
+       Reserved : 0
+  Migrate State : initialize
+      Map State : normal <-- uninitialized
+     Checkpoint : 141111 (768)
+    Dirty State : clean
+
+  Disk01 Serial : Z1D4MN2C
+          State : active
+             Id : 00000001
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+  Disk02 Serial : Z1D4MNG0
+          State : active
+             Id : 00000002
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.02
+    Orig Family : 04e27e25
+         Family : 04e27e25
+     Generation : 00000053
+     Attributes : All supported
+           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
+       Checksum : 9b719f6c correct
+    MPB Sectors : 2
+          Disks : 3
+   RAID Devices : 1
+
+  Disk01 Serial : Z1D4MN2C
+          State : active
+             Id : 00000001
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+[Volume1]:
+           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
+     RAID Level : 5 <-- 5
+        Members : 3 <-- 3
+          Slots : [UUU] <-- [UUU]
+    Failed disk : none
+      This Slot : 1
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
+  Sector Offset : 0
+    Num Stripes : 7630848
+     Chunk Size : 128 KiB <-- 128 KiB
+       Reserved : 0
+  Migrate State : initialize
+      Map State : normal <-- uninitialized
+     Checkpoint : 141111 (768)
+    Dirty State : clean
+
+  Disk00 Serial : Z1D4N2AZ
+          State : active
+             Id : 00000000
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+  Disk02 Serial : Z1D4MNG0
+          State : active
+             Id : 00000002
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+/dev/sdc:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.02
+    Orig Family : 04e27e25
+         Family : 04e27e25
+     Generation : 00000053
+     Attributes : All supported
+           UUID : 8d359434:ec976aca:274c42c2:0b38bc28
+       Checksum : 9b719f6c correct
+    MPB Sectors : 2
+          Disks : 3
+   RAID Devices : 1
+
+  Disk02 Serial : Z1D4MNG0
+          State : active
+             Id : 00000002
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+[Volume1]:
+           UUID : 7dfa2a6f:6dc8e907:f0559321:3fab80ea
+     RAID Level : 5 <-- 5
+        Members : 3 <-- 3
+          Slots : [UUU] <-- [UUU]
+    Failed disk : none
+      This Slot : 2
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 1953497352 (931.50 GiB 1000.19 GB)
+  Sector Offset : 0
+    Num Stripes : 7630848
+     Chunk Size : 128 KiB <-- 128 KiB
+       Reserved : 0
+  Migrate State : initialize
+      Map State : normal <-- uninitialized
+     Checkpoint : 141111 (768)
+    Dirty State : clean
+
+  Disk00 Serial : Z1D4N2AZ
+          State : active
+             Id : 00000000
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+  Disk01 Serial : Z1D4MN2C
+          State : active
+             Id : 00000001
+    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+
+
+This would all be perfect if we did use Linux on the machine. However, afte=
+r dumping
+a MS Windows image on it, the machine is shipped to customers, and it is re=
+quested
+that we don't initialize the array, so that the resync happens when the cus=
+tomer
+starts it. Apparently MS Windows has a mode to use the array without initia=
+lizing it
+until requested. (I guess it initializes only the parts of the array that a=
+re
+actually used, so that it never needs to be initialized explicitly.)
+
+Is this possible with Linux too? Is it reasonable at all? Unfortunately, th=
+e option
+--assume-clean is not allowed in this mode, and I found no other option tha=
+t could help.
+
+Thanks
+Hans-Joachim
+--=20
+Pro-Linux - Germany's largest volunteer Linux support site
+http://www.pro-linux.de/          Public Key ID 0x3DDBDDEA
+
+--qDbXVdCdHGoSgWSk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iD8DBQFSZVg3LbySPj3b3eoRAlavAKCSOmKSoqmu68WB1UpUZIJ4zVE7nACfTpLb
+f/ws5fdB8FvPM9+3zWJ0eaw=
+=CXgU
+-----END PGP SIGNATURE-----
+
+--qDbXVdCdHGoSgWSk--
