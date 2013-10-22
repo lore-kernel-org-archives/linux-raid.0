@@ -1,282 +1,48 @@
-From: Dan Knight <dknight1989@woh.rr.com>
-Subject: [Question] how to proceed after bad raid5 reshape
-Date: Tue, 22 Oct 2013 18:02:32 -0400
-Message-ID: <5266F5F8.4040503@woh.rr.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: [Question] how to proceed after bad raid5 reshape
+Date: Wed, 23 Oct 2013 04:16:40 +0600
+Message-ID: <20131023041640.0e8ae338@natsu>
+References: <5266F5F8.4040503@woh.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hzj5Eu_2968xFqYlsArgNEG"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5266F5F8.4040503@woh.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Knight <dknight1989@woh.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+--Sig_/hzj5Eu_2968xFqYlsArgNEG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I was attempting to add a drive to a 4 drive raid5.  Everything seemed 
-to be going well, but the reshape has seemingly gotten stuck at 99%.  
-Here is what cat /proc/mdstat gives:
+On Tue, 22 Oct 2013 18:02:32 -0400
+Dan Knight <dknight1989@woh.rr.com> wrote:
 
+> Checking mdadm -Evvvvs shows that maybe 2 drives went bad during the=20
+> reshape?
 
-Personalities : [raid6] [raid5] [raid4]
-md127 : active raid5 sde[4] sdd[5](F) sdc[6](F) sdb[3] sdf[2]
-       5860543488 blocks super 0.91 level 5, 4k chunk, algorithm 2 [5/3] 
-[__UUU]
-       [===================>.]  reshape = 99.0% (1934430696/1953514496) 
-finish=1967.2min speed=161K/sec
+And maybe, just maybe, `dmesg` would have something about this, if this ind=
+eed
+happened. But of course asking people on the internet to play with you an
+exciting game of guesswork is much more exciting than looking at the actual
+log which would simply and boringly TELL you what exactly happened...
 
-unused devices: <none>
+--=20
+With respect,
+Roman
 
+--Sig_/hzj5Eu_2968xFqYlsArgNEG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Checking mdadm -Evvvvs shows that maybe 2 drives went bad during the 
-reshape?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iEYEARECAAYFAlJm+UgACgkQTLKSvz+PZwjaEgCfXjRXX+bKQr+FPi7+WPpKbfgv
+VRMAnRN/xlIMDB4bFz+dP9HNUUBk5dVT
+=HbuJ
+-----END PGP SIGNATURE-----
 
-mdadm: No md superblock detected on /dev/md127.
-/dev/sdf:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a4f - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     2       8       80        2      active sync   /dev/sdf
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-/dev/sde:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a43 - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       64        4      active sync   /dev/sde
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-/dev/sdb:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a11 - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       16        3      active sync   /dev/sdb
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-mdadm: No md superblock detected on /dev/sda1.
-/dev/sda:
-    MBR Magic : aa55
-Partition[0] :     72303777 sectors at           63 (type 83)
-mdadm: No md superblock detected on /dev/sdc.
-mdadm: No md superblock detected on /dev/sdd.
-[root@server etc]# watch cat /proc/mdstat
-[root@server etc]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : active raid5 sde[4] sdd[5](F) sdc[6](F) sdb[3] sdf[2]
-       5860543488 blocks super 0.91 level 5, 4k chunk, algorithm 2 [5/3] 
-[__UUU]
-       [===================>.]  reshape = 99.0% (1934430696/1953514496) 
-finish=1967.2min speed=161K/sec
-
-unused devices: <none>
-[root@server etc]# mdadm -Evvvvs
-mdadm: No md superblock detected on /dev/md127.
-/dev/sdf:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a4f - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     2       8       80        2      active sync   /dev/sdf
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-/dev/sde:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a43 - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       64        4      active sync   /dev/sde
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-/dev/sdb:
-           Magic : a92b4efc
-         Version : 0.91.00
-            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
-server)
-   Creation Time : Sun Feb 20 18:39:42 2011
-      Raid Level : raid5
-   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
-      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
-    Raid Devices : 5
-   Total Devices : 5
-Preferred Minor : 127
-
-   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
-   Delta Devices : 1 (4->5)
-
-     Update Time : Tue Oct 22 16:43:25 2013
-           State : active
-  Active Devices : 3
-Working Devices : 3
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 6e803a11 - correct
-          Events : 15471
-
-          Layout : left-symmetric
-      Chunk Size : 4K
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       16        3      active sync   /dev/sdb
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8       80        2      active sync   /dev/sdf
-    3     3       8       16        3      active sync   /dev/sdb
-    4     4       8       64        4      active sync   /dev/sde
-mdadm: No md superblock detected on /dev/sda1.
-/dev/sda:
-    MBR Magic : aa55
-Partition[0] :     72303777 sectors at           63 (type 83)
-mdadm: No md superblock detected on /dev/sdc.
-mdadm: No md superblock detected on /dev/sdd.
-
-
-
-I am curious as to how best to proceed.  Does anyone have any suggestions?
-
-Thanks,
-Dan
-
+--Sig_/hzj5Eu_2968xFqYlsArgNEG--
