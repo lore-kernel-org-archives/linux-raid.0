@@ -1,48 +1,81 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: [Question] how to proceed after bad raid5 reshape
-Date: Wed, 23 Oct 2013 04:16:40 +0600
-Message-ID: <20131023041640.0e8ae338@natsu>
-References: <5266F5F8.4040503@woh.rr.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hzj5Eu_2968xFqYlsArgNEG"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5266F5F8.4040503@woh.rr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Knight <dknight1989@woh.rr.com>
-Cc: linux-raid@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/24] treewide: Convert use of typedef ctl_table to struct ctl_table
+Date: Tue, 22 Oct 2013 15:29:43 -0700
+Message-ID: <cover.1382480758.git.joe@perches.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, codalist@coda.cs.cmu.edu, linux-fsdevel@vger.kernel.org, linux-cachefs@redhat.com, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, keyrings@linux-nfs.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/hzj5Eu_2968xFqYlsArgNEG
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Joe Perches (24):
+  arm: Convert use of typedef ctl_table to struct ctl_table
+  ia64: Convert use of typedef ctl_table to struct ctl_table
+  s390: Convert use of typedef ctl_table to struct ctl_table
+  tile: Convert use of typedef ctl_table to struct ctl_table
+  cdrom: Convert use of typedef ctl_table to struct ctl_table
+  random: Convert use of typedef ctl_table to struct ctl_table
+  infiniband: Convert use of typedef ctl_table to struct ctl_table
+  md: Convert use of typedef ctl_table to struct ctl_table
+  parport: Convert use of typedef ctl_table to struct ctl_table
+  scsi: Convert use of typedef ctl_table to struct ctl_table
+  coda: Convert use of typedef ctl_table to struct ctl_table
+  fscache: Convert use of typedef ctl_table to struct ctl_table
+  lockd: Convert use of typedef ctl_table to struct ctl_table
+  nfs: Convert use of typedef ctl_table to struct ctl_table
+  inotify: Convert use of typedef ctl_table to struct ctl_table
+  ntfs: Convert use of typedef ctl_table to struct ctl_table
+  ocfs2: Convert use of typedef ctl_table to struct ctl_table
+  proc: Convert use of typedef ctl_table to struct ctl_table
+  fs: Convert use of typedef ctl_table to struct ctl_table
+  key: Convert use of typedef ctl_table to struct ctl_table
+  ipc: Convert use of typedef ctl_table to struct ctl_table
+  kernel: Convert use of typedef ctl_table to struct ctl_table
+  mm: Convert use of typedef ctl_table to struct ctl_table
+  security:keys: Convert use of typedef ctl_table to struct ctl_table
 
-On Tue, 22 Oct 2013 18:02:32 -0400
-Dan Knight <dknight1989@woh.rr.com> wrote:
+ arch/arm/kernel/isa.c              |  6 ++---
+ arch/ia64/kernel/crash.c           |  4 +--
+ arch/ia64/kernel/perfmon.c         |  6 ++---
+ arch/s390/appldata/appldata_base.c | 10 ++++----
+ arch/s390/kernel/debug.c           |  2 +-
+ arch/s390/mm/cmm.c                 |  8 +++---
+ arch/tile/kernel/proc.c            |  4 +--
+ drivers/cdrom/cdrom.c              | 10 ++++----
+ drivers/char/random.c              |  4 +--
+ drivers/infiniband/core/ucma.c     |  2 +-
+ drivers/md/md.c                    |  6 ++---
+ drivers/parport/procfs.c           | 52 ++++++++++++++++++--------------------
+ drivers/scsi/scsi_sysctl.c         |  6 ++---
+ fs/coda/sysctl.c                   |  4 +--
+ fs/dcache.c                        |  2 +-
+ fs/drop_caches.c                   |  2 +-
+ fs/eventpoll.c                     |  2 +-
+ fs/file_table.c                    |  4 +--
+ fs/fscache/main.c                  |  4 +--
+ fs/inode.c                         |  2 +-
+ fs/lockd/svc.c                     |  6 ++---
+ fs/nfs/nfs4sysctl.c                |  6 ++---
+ fs/nfs/sysctl.c                    |  6 ++---
+ fs/notify/inotify/inotify_user.c   |  2 +-
+ fs/ntfs/sysctl.c                   |  4 +--
+ fs/ocfs2/stackglue.c               |  8 +++---
+ fs/proc/proc_sysctl.c              |  2 +-
+ include/linux/key.h                |  2 +-
+ ipc/ipc_sysctl.c                   | 14 +++++-----
+ ipc/mq_sysctl.c                    | 10 ++++----
+ kernel/sysctl.c                    |  2 +-
+ kernel/utsname_sysctl.c            |  6 ++---
+ mm/page-writeback.c                |  2 +-
+ mm/page_alloc.c                    | 12 ++++-----
+ security/keys/sysctl.c             |  2 +-
+ 35 files changed, 111 insertions(+), 113 deletions(-)
 
-> Checking mdadm -Evvvvs shows that maybe 2 drives went bad during the=20
-> reshape?
+-- 
+1.8.1.2.459.gbcd45b4.dirty
 
-And maybe, just maybe, `dmesg` would have something about this, if this ind=
-eed
-happened. But of course asking people on the internet to play with you an
-exciting game of guesswork is much more exciting than looking at the actual
-log which would simply and boringly TELL you what exactly happened...
-
---=20
-With respect,
-Roman
-
---Sig_/hzj5Eu_2968xFqYlsArgNEG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlJm+UgACgkQTLKSvz+PZwjaEgCfXjRXX+bKQr+FPi7+WPpKbfgv
-VRMAnRN/xlIMDB4bFz+dP9HNUUBk5dVT
-=HbuJ
------END PGP SIGNATURE-----
-
---Sig_/hzj5Eu_2968xFqYlsArgNEG--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
