@@ -1,69 +1,149 @@
-From: Steve Bergman <sbergman27@gmail.com>
-Subject: Re: Linux MD? Or an H710p?
-Date: Mon, 21 Oct 2013 19:36:42 -0500
-Message-ID: <5265C89A.4000908@gmail.com>
-References: <526328AE.2020908@gmail.com> <21093.14265.261728.755087@quad.stoffel.home>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 repair does not repair errors?
+Date: Tue, 22 Oct 2013 12:11:13 +1100
+Message-ID: <20131022121113.48958a0b@notabene.brown>
+References: <526541CD.8000003@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/qtYji4x4jUcIQUaFCBeQ1mn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21093.14265.261728.755087@quad.stoffel.home>
+In-Reply-To: <526541CD.8000003@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First of all, thank you Stan, Mikael, and John for your replies.
+--Sig_/qtYji4x4jUcIQUaFCBeQ1mn
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Stan,
+On Mon, 21 Oct 2013 19:01:33 +0400 Michael Tokarev <mjt@tls.msk.ru> wrote:
 
-I had made a private bet with myself that Stan Hoeppner would be the 
-first to respond to my query. And I was not disappointed. In fact, I was 
-hoping for advice from you. We're getting the 7 yr hardware support 
-contract from Dell, and I'm a little concerned about "finger-pointing" 
-issues with regards to putting in a non-Dell SAS controller. Network 
-card? No problem. But drive controller? Forgive me for "white-knuckling" 
-on this a bit. But I have gotten an OK to order the server with both the 
-H710p and the mystery "SAS 6Gbps HBA External Controller [$148.55]" for 
-which no one at Dell seems to be able to tell me the pedigree. So I can 
-configure both ways and see which I like. I do find that 1GB NV cache 
-with barriers turned off to be attractive.
+> Hello.
+>=20
+> I've a raid1 array (composed of 4 drives, so it is a 4-fold
+> copy of data), and one of the drives has an unreadable (bad)
+> sector in the partition belonging to this array.
+>=20
+> When I run md 'repair' action, it hits the error place, the
+> kernel clearly returns an error, but md does not do anything
+> with it.  For example:
+>=20
+> Oct 21 18:43:55 mother kernel: [190018.073098] md: requested-resync of RA=
+ID array md1
+> Oct 21 18:43:55 mother kernel: [190018.093910] md: minimum _guaranteed_  =
+speed: 1000 KB/sec/disk.
+> Oct 21 18:43:55 mother kernel: [190018.114765] md: using maximum availabl=
+e idle IO bandwidth (but not more than 200000 KB/sec) for requested-resync.
+> Oct 21 18:43:55 mother kernel: [190018.136459] md: using 128k window, ove=
+r a total of 2096064k.
+> Oct 21 18:45:11 mother kernel: [190094.091974] ata6.00: exception Emask 0=
+x0 SAct 0xf SErr 0x0 action 0x0
+> Oct 21 18:45:11 mother kernel: [190094.114093] ata6.00: irq_stat 0x400000=
+08
+> Oct 21 18:45:11 mother kernel: [190094.135906] ata6.00: failed command: R=
+EAD FPDMA QUEUED
+> Oct 21 18:45:11 mother kernel: [190094.157710] ata6.00: cmd 60/00:00:00:3=
+b:3e/04:00:00:00:00/40 tag 0 ncq 524288 in
+> Oct 21 18:45:11 mother kernel: [190094.157710]          res 41/40:00:29:3=
+e:3e/00:00:00:00:00/40 Emask 0x409 (media error) <F>
+> Oct 21 18:45:11 mother kernel: [190094.202315] ata6.00: status: { DRDY ER=
+R }
+> Oct 21 18:45:11 mother kernel: [190094.224517] ata6.00: error: { UNC }
+> Oct 21 18:45:11 mother kernel: [190094.248920] ata6.00: configured for UD=
+MA/133
+> Oct 21 18:45:11 mother kernel: [190094.271003] sd 5:0:0:0: [sdc] Unhandle=
+d sense code
+> Oct 21 18:45:11 mother kernel: [190094.293044] sd 5:0:0:0: [sdc]
+> Oct 21 18:45:11 mother kernel: [190094.314654] Result: hostbyte=3DDID_OK =
+driverbyte=3DDRIVER_SENSE
+> Oct 21 18:45:11 mother kernel: [190094.336483] sd 5:0:0:0: [sdc]
+> Oct 21 18:45:11 mother kernel: [190094.357966] Sense Key : Medium Error [=
+current] [descriptor]
+> Oct 21 18:45:11 mother kernel: [190094.379808] Descriptor sense data with=
+ sense descriptors (in hex):
+> Oct 21 18:45:11 mother kernel: [190094.402024]         72 03 11 04 00 00 =
+00 0c 00 0a 80 00 00 00 00 00
+> Oct 21 18:45:11 mother kernel: [190094.424502]         00 3e 3e 29
+> Oct 21 18:45:11 mother kernel: [190094.446338] sd 5:0:0:0: [sdc]
+> Oct 21 18:45:11 mother kernel: [190094.467995] Add. Sense: Unrecovered re=
+ad error - auto reallocate failed
+> Oct 21 18:45:11 mother kernel: [190094.490075] sd 5:0:0:0: [sdc] CDB:
+> Oct 21 18:45:11 mother kernel: [190094.511870] Read(10): 28 00 00 3e 3b 0=
+0 00 04 00 00
+> Oct 21 18:45:11 mother kernel: [190094.533829] end_request: I/O error, de=
+v sdc, sector 4079145
+> Oct 21 18:45:11 mother kernel: [190094.555800] ata6: EH complete
+> Oct 21 18:45:22 mother kernel: [190105.602687] md: md1: requested-resync =
+done.
+>=20
+> There's no indication that raid code tried to re-write the bad spot,
+> and the bad block remains bad in the drive, so next read (direct from
+> the drive) return the same I/O error with the same kernel messages.
+>=20
+> Shouldn't `repair' action re-write the problem place?
 
-But hey, this is going to be a very nice opportunity for observing XFS's 
-savvy with parallel i/o. And I'm looking forward to it. BTW, it's the 
-problematic COBOL Point of Sale app that didn't do fsyncs that is being 
-migrated to its Windows-only MS-SQL version in the virtualized instance 
-of Windows 2008 Server. At least it will be a virtualized instance on 
-this server if I get my way. Essentially, our core business is moving 
-from Linux to Windows in this move. C'est la vie. I did my best. NCR won.
+Yes it should.
+When end_sync_read() notices that BIO_UPTODATE isn't set it refuses to set
+R1BIO_Uptodate.
+When sync_request_write() notices that isn't set it calls
+fix_sync_read_error().
 
-Mikael,
+fix_sync_read_error then calls sync_page_io() for each page in the region a=
+nd
+if that fails (as you would expect, it goes on to the next disk and the next
+until a working one is found.  Then that block is written back to all those
+that failed.
+fix_sync_read_error doesn't report any success, but as it re-read the faili=
+ng
+device you should see the SCSI read error reported a second time at least.
 
-That's a good point. I know that at one time RHEL didn't get that right 
-in its Grub config. I've been assuming that in 2013 it's a "taken for 
-granted" thing, with the caveat that nothing involving the bootloader 
-and boot sectors can ever be completely taken for granted.
+Are you able to add some tracing and recompile the kernel and see if you can
+find out what is happening?
+e.g.
+  if end_sync_read doesn't see BIO_UPTODATE, print something.
+  if sync_request_write doesn't see R1BIO_Uptodate, print something
+  when fix_sync_read_error calls sync_page_io, print something.
 
-John,
+??
 
-First, let me get an embarrassing misinterpretation out of the way. "HYB 
-CARR" stands for "hybrid carrier" which is a fancy name for a 2.5" -> 
-3.5" drive mounting adapter.
+Thanks,
+NeilBrown
 
-Fortunately, this is a workload (varied as it is) with which I am 
-extremely familiar. Yes, Firefox uses (abuses?) memory aggressively. But 
-if necessary, I can control that with system-wide lockprefs. This 
-server, which ended up being a Dell R720, will have an insane 256GB of 
-memory in a mirrored configuration, resulting in an effective (and half 
-as insane) 128GB visible to the OS. In 7 years time that should seem 
-about 1/25th as insane as that. And we'll just have to see about the 50% 
-memory bandwidth hit we see for mirroring.
 
-But anyway, I know that 16GB was iffy for the same workload 5 years ago. 
-And we've expanded a bit. I think I could reasonably run what we're 
-doing now on 24GB. Which means that we'd probably need something between 
-that and 32GB, because my brain tends to underestimate these things. We 
-currently are running on 48GB, which is so roomy that it makes it hard 
-to tell.
 
--Steve
+>=20
+> This is kernel 3.10.15.
+>=20
+> Thank you!
+>=20
+> /mjt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+
+--Sig_/qtYji4x4jUcIQUaFCBeQ1mn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUmXQsTnsnt1WYoG5AQI+xw//ba5RTq/CFzkVUkzNQsJPQHDCdq86hpqN
+tNhP8P/pAVyUaACD0YhXDqMsoWvmC70Y+tv4DbxZ/uADDs62OzaTe4ivXiy9g8/2
+vwV3dMJrYz/I5MI67VkOJyvIjMJpD/EUaOSyF6Y8y1f582aYTooI50PEg8XqaBZF
+ecizXmAZNsmlkASSDbHzjKbheTuR19ScxOey6EUtDgkxRwTCtJka52Xw5zvo/CwL
+yfFRgV5CrvCBZryGwtdpGpdSFyAhwiVLohAeaSQtzv/H0eZKS+cwH4mthz6pSm/z
+gBknJZuMNI2P5A/shh+9T4IL2CWQUHWH3sO6ByuC+tz4qk7mPgwchUjd4DQkbX9z
+AdO/dBmbTLRaN/HsD7VgDxU3rjA7p5fuXYVGiz69VWqRFJemta8IeQX8kWWM1v84
+rNOn6wEdJDX4Pw8nnSZm1P1TVLdmTbSTHpu9JJWNPanJTiqYPoqEDXr0vROzAgQC
+jfUlNzmyXJ6BPlnj6Zf+Iq05CNdAaj7LrS8FlBB/bowp79ZroKrHwgBvtXwmOUdl
+RfCEy7Ti5DBOvmXHhQvDKzWVOrhpnJdTUB2hFtOFBkBMJSYkYm9CVQbWHp5Ith0K
+DOpKyKccjxKeMGA4scTKoOmt1dKZeXHN77TWlHYrQ7NhdExHocgZxBWChus/eWl7
+0AuivtFofbo=
+=n8JS
+-----END PGP SIGNATURE-----
+
+--Sig_/qtYji4x4jUcIQUaFCBeQ1mn--
