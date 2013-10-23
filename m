@@ -1,90 +1,69 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 08/24] md: Convert use of typedef ctl_table to struct
- ctl_table
-Date: Wed, 23 Oct 2013 11:37:14 +1100
-Message-ID: <20131023113714.4899fd63@notabene.brown>
-References: <cover.1382480758.git.joe@perches.com>
-	<97bd203891c6b2c45b2e77c31edda1b4149782f2.1382480758.git.joe@perches.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Linux MD? Or an H710p?
+Date: Wed, 23 Oct 2013 09:03:16 +0200
+Message-ID: <526774B4.400@hesbynett.no>
+References: <526328AE.2020908@gmail.com> <21093.14265.261728.755087@quad.stoffel.home> <5265C89A.4000908@gmail.com> <52662849.1080003@hesbynett.no> <5266AE51.4050501@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ikf4vkwEO7ElgOEBHyMXCIA"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <97bd203891c6b2c45b2e77c31edda1b4149782f2.1382480758.git.joe@perches.com>
+In-Reply-To: <5266AE51.4050501@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Steve Bergman <sbergman27@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ikf4vkwEO7ElgOEBHyMXCIA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 22/10/13 18:56, Stan Hoeppner wrote:
+> On 10/22/2013 2:24 AM, David Brown wrote:
+>> On 22/10/13 02:36, Steve Bergman wrote:
+>>
+>> <snip>
+>>
+>>> But hey, this is going to be a very nice opportunity for observing XFS's
+>>> savvy with parallel i/o.
+>>
+>> You mentioned using a 6-drive RAID10 in your first email, with XFS on
+>> top of that.  Stan is the expert here, but my understanding is that you
+>> should go for three 2-drive RAID1 pairs, and then use an md linear
+>> "raid" for these pairs and put XFS on top of that in order to get the
+>> full benefits of XFS parallelism.
+> 
+> XFS on a concatenation, which is what you described above, is a very
+> workload specific storage architecture.  It is not a general use
+> architecture, and almost never good for database workloads.  Here most
+> of the data is stored in a single file or a small set of files, in a
+> single directory.  With such a DB workload and 3 concatenated mirrors,
+> only 1/3rd of the spindles would see the vast majority of the IO.
+> 
 
-On Tue, 22 Oct 2013 15:29:51 -0700 Joe Perches <joe@perches.com> wrote:
+That's a good point - while I had noted that the OP was running a
+database, I forgot it was a virtual windows machine and MS SQL database.
+ The virtual machine will use a single large file for its virtual
+harddisk image, and so RAID10 + XFS will beat RAID1 + concat + XFS.
 
-> This typedef is unnecessary and should just be removed.
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/md/md.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 8a0d762..7b57639 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -112,7 +112,7 @@ static inline int speed_max(struct mddev *mddev)
-> =20
->  static struct ctl_table_header *raid_table_header;
-> =20
-> -static ctl_table raid_table[] =3D {
-> +static struct ctl_table raid_table[] =3D {
->  	{
->  		.procname	=3D "speed_limit_min",
->  		.data		=3D &sysctl_speed_limit_min,
-> @@ -130,7 +130,7 @@ static ctl_table raid_table[] =3D {
->  	{ }
->  };
-> =20
-> -static ctl_table raid_dir_table[] =3D {
-> +static struct ctl_table raid_dir_table[] =3D {
->  	{
->  		.procname	=3D "raid",
->  		.maxlen		=3D 0,
-> @@ -140,7 +140,7 @@ static ctl_table raid_dir_table[] =3D {
->  	{ }
->  };
-> =20
-> -static ctl_table raid_root_table[] =3D {
-> +static struct ctl_table raid_root_table[] =3D {
->  	{
->  		.procname	=3D "dev",
->  		.maxlen		=3D 0,
+On the other hand, he is also serving 100+ freenx desktop users.  As far
+as I understand it (and I'm very happy for corrections if I'm wrong),
+that will mean a /home directory with 100+ sub-directories for the
+different users - and that /is/ one of the ideal cases for concat+XFS
+parallelism.
+
+Only the OP can say which type of access is going to dominate and where
+the balance should go.
 
 
-Applied, thanks.
+As a more general point, I don't know that you can generalise that
+database workloads normally store data in a single big file or a small
+set of files.  I haven't worked with many databases, and none more than
+a few hundred MB, so I am theorising here on things I have read rather
+than personal practice.  But certainly with postgresql the data is split
+into multiple directories - each table has its own directory.  For very
+big tables, the data is split into multiple files - and at some point,
+they will hit the allocation group size and then be split over multiple
+AG's, leading to parallelism (with a bit of luck).  I am guessing other
+databases are somewhat similar.  Of course, like any database tuning,
+this will all be highly load-dependent.
 
-NeilBrown
 
---Sig_/ikf4vkwEO7ElgOEBHyMXCIA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUmcaOjnsnt1WYoG5AQKy2w/+LXVHoSB/jeDt3pICUI5tBmLFYX8ikdHJ
-Q0M1dP1DFlFKDwb8iVhdVGLkkWKRquVM3hkFkzdIbsZJqBmcUSkCq9vIpb7sgQU8
-K+GEGaYjoGqND/DT97m9rUaR2zXOFCsW0XLV7oIj+uPETwNCXRJ/SyCX0fL3WVKl
-UFug+xcTv0TMOp9z9N+6I9zBZnX9d8iqtVDCusIx7OtYur1HdPOS1RYiaZ2GxaSX
-doDzl9EJUtTv02Fg6Cm3a2HL1sd0ccGIgENr6Hqre7lfD8CPJSzYCAgUlrDvn3HB
-QhiGy1ODH93sB0ccVBxsvMq/6CmJAoSVJHiv3Mamtd68beDLn33T1TyTynw1eOB4
-kh12/4VBDMTljI3VAyBPeEc1CY3THfVVb6HlTv+C1+2PT6Fuo8jn5Dsvn9njQlyK
-V4gqGxT2xj1ZNrXVxFDn807wej+MD0I8VvqKfP96ogmNZI1Dok5rZqukn9Srw/e/
-TJJXo9A2Se/CKFe9qeJf2N1G/nyVsaHMoX9g208QgMrLpIvenBC2m0fUiqZlD2RK
-1jNNFwlDZ/ogzS/W5XC+O36YQbcJp7v9BrxZBDAv8hGrXpWe/S9eCoo92cMFHOkn
-wwVagVQ2/ls3ZoRZIB+1OhiHr9rc0VTXx0WR1DhGnl+EH/vS/qGdOumLMWmVG/Sl
-mYmPlTWRA6A=
-=IfC/
------END PGP SIGNATURE-----
 
---Sig_/ikf4vkwEO7ElgOEBHyMXCIA--
