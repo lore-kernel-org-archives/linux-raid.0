@@ -1,72 +1,44 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: ISW fakeraid: fail to add back a disk previously removed
-Date: Wed, 23 Oct 2013 11:24:57 +0200
-Message-ID: <CAC9WiBj5UO76MN3s0TgTLVKVAXJzY+eBxCMCYJWTp0JgdYogaQ@mail.gmail.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Linux MD? Or an H710p?
+Date: Wed, 23 Oct 2013 12:05:21 -0700
+Message-ID: <CACJz6QvPyKKP4iqeemMD4oMSt6P4xAiV7U6AfrEsJhTJpZaVvg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, Steve Bergman <sbergman27@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+> As a more general point, I don't know that you can generalise that
+> database workloads normally store data in a single big file or a small
+> set of files.  I haven't worked with many databases, and none more than
+> a few hundred MB, so I am theorising here on things I have read rather
+> than personal practice.  But certainly with postgresql the data is split
+> into multiple directories - each table has its own directory.  For very
+> big tables, the data is split into multiple files - and at some point,
+> they will hit the allocation group size and then be split over multiple
+> AG's, leading to parallelism (with a bit of luck).  I am guessing other
+> databases are somewhat similar.  Of course, like any database tuning,
+> this will all be highly load-dependent.
 
-I'm testing ISW fake-raid with mdadm 3.3 and I can't add back a disk
-to a container previously marked as failed and removed.
+MS SQL Server does tend to store each database in it's own file no
+matter the size. Ran into this with a VMware ESXi cluster maintained
+by a vCenter instance running SQL Server Express on Windows Server
+2008r2.
 
-Also I'm testing ISW inside a VM so I'm not sure my test case is valid.
+Both SQL Server Express 2005 & 2008 store the entire DB in one large
+file. Know this because I ran up against a file size limitation on
+Express '05 when the DB tables storing performance data grew to the
+allowed max of '05. Had to upgrade to '08 and clean out old
+performance data to make vCenter happy again.
 
-So basically my ISW array was created with dmraid. I then installed my
-system on this array and rebooted to switch to mdadm. So far so good
-everything seems to work perfectly:
 
-# export IMSM_NO_PLATFORM=1
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md126 : active raid1 sda[1] sdb[0]
-      2092375 blocks super external:/md127/0 [2/2] [UU]
-
-md127 : inactive sda[1](S) sdb[0](S)
-      6306 blocks super external:imsm
-
-unused devices: <none>
-
-# mdadm -E /dev/sdb
-/dev/sdb:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.1.00
-    Orig Family : ef92cdd9
-[ ... ]
-
-Now I'm marking sda as failed and remove it:
-
-# mdadm --fail /dev/md126 sda
-# mdadm --remove /dev/md127 sda
-
-everything works fine until I add back sda to the container:
-
-# mdadm --add /dev/md127 /dev/sda
-mdadm: add /dev/sda
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md126 : active raid1 sdb[0]
-      2092375 blocks super external:/md127/0 [2/1] [_U]
-
-md127 : inactive sda[1](S) sdb[0](S)
-      6306 blocks super external:imsm
-
-sda is not added anymore to the array md126 and therefore no resynchro happens.
-
-# mdadm -E /dev/sda
-/dev/sda:
-   MBR Magic : aa55
-Partition[0] :      3612577 sectors at         2048 (type 83)
-Partition[1] :       560133 sectors at      3616767 (type 05)
-
-Could anybody tell me if that's expected and if so could you englight me ?
-
-Thanks.
 -- 
-Francis
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+
+"This started out as a hobby and spun horribly out of control."
+-Unknown
