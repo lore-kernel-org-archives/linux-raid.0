@@ -1,28 +1,72 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch 1/2]raid5: set bio bi_vcnt 0 for discard request
-Date: Wed, 23 Oct 2013 04:07:19 -0400
-Message-ID: <yq14n88h0lk.fsf@sermon.lab.mkp.net>
-References: <20131019065028.GA10670@kernel.org>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: ISW fakeraid: fail to add back a disk previously removed
+Date: Wed, 23 Oct 2013 11:24:57 +0200
+Message-ID: <CAC9WiBj5UO76MN3s0TgTLVKVAXJzY+eBxCMCYJWTp0JgdYogaQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131019065028.GA10670@kernel.org> (Shaohua Li's message of
-	"Sat, 19 Oct 2013 14:50:28 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Jes.Sorensen@redhat.com
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Shaohua" == Shaohua Li <shli@kernel.org> writes:
+Hello,
 
-Shaohua> SCSI layer will add new payload for discard request. If two
-Shaohua> bios are merged to one, the second bio has bi_vcnt 1 which is
-Shaohua> set in raid5. This will confuse SCSI and cause oops.
+I'm testing ISW fake-raid with mdadm 3.3 and I can't add back a disk
+to a container previously marked as failed and removed.
 
-A discard bio does not have a payload prior to the SCSI command being
-prepared so vcnt should indeed be 0.
+Also I'm testing ISW inside a VM so I'm not sure my test case is valid.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+So basically my ISW array was created with dmraid. I then installed my
+system on this array and rebooted to switch to mdadm. So far so good
+everything seems to work perfectly:
 
+# export IMSM_NO_PLATFORM=1
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md126 : active raid1 sda[1] sdb[0]
+      2092375 blocks super external:/md127/0 [2/2] [UU]
+
+md127 : inactive sda[1](S) sdb[0](S)
+      6306 blocks super external:imsm
+
+unused devices: <none>
+
+# mdadm -E /dev/sdb
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.1.00
+    Orig Family : ef92cdd9
+[ ... ]
+
+Now I'm marking sda as failed and remove it:
+
+# mdadm --fail /dev/md126 sda
+# mdadm --remove /dev/md127 sda
+
+everything works fine until I add back sda to the container:
+
+# mdadm --add /dev/md127 /dev/sda
+mdadm: add /dev/sda
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md126 : active raid1 sdb[0]
+      2092375 blocks super external:/md127/0 [2/1] [_U]
+
+md127 : inactive sda[1](S) sdb[0](S)
+      6306 blocks super external:imsm
+
+sda is not added anymore to the array md126 and therefore no resynchro happens.
+
+# mdadm -E /dev/sda
+/dev/sda:
+   MBR Magic : aa55
+Partition[0] :      3612577 sectors at         2048 (type 83)
+Partition[1] :       560133 sectors at      3616767 (type 05)
+
+Could anybody tell me if that's expected and if so could you englight me ?
+
+Thanks.
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Francis
