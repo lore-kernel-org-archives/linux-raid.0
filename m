@@ -1,61 +1,36 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help raid10 recovery from 2 disks removed
-Date: Thu, 24 Oct 2013 08:16:50 -0400
-Message-ID: <52690FB2.6000005@turmel.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: RE: Help raid10 recovery from 2 disks removed
+Date: Thu, 24 Oct 2013 14:44:14 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1310241441280.1838@uplift.swm.pp.se>
 References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net> <alpine.DEB.2.02.1310241050290.1838@uplift.swm.pp.se> <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: yuji_touya@yokogawa-digital.com, swmike@swm.pp.se
+To: yuji_touya@yokogawa-digital.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning,
+On Thu, 24 Oct 2013, yuji_touya@yokogawa-digital.com wrote:
 
-On 10/24/2013 06:14 AM, yuji_touya@yokogawa-digital.com wrote:
-> Mikael,
+> Here's syslog entries about raid10 and smartctl output.
+> sdb seems to have too many bad blocks. Is that the reason why sdb was kicked out?
 
-[trim /]
+Most likely.
 
->> You need to figure out what happened to get sdb kicked out of the array,
->> check logs and "dmesg". Also use smartctl to check sdb and see if it's
->> failing.
+> I'm going to copy files from /dev/md0 to anywhere else as soon as possible.
+> Should I repair filesystem before copying? (like xfs_repair /dev/md0)
 
-[trim /]
+What you need to do now is to use dd_rescue or equivalent to copy the data 
+off of sdb to a good drive. Stop the array first. This means you'll lose 
+data on the bad blocks. After this is done, and you have assembled the 
+array with the good drive with (most of) the data from sdb, start the 
+array, then hot-add in sdc and let things sync up. You should now have 
+redundancy.
 
-> Device Model:     ST2000DM001-9YN164
+Also check why you didn't get notification that sdc wasn't part of the 
+array, usually mdmon or equivalent will send email about these events.
 
-If I recall correctly, this model doesn't support error recovery
-control.  If you haven't fixed your driver timeouts, it explains your
-situation.
-
-
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
->   1 Raw_Read_Error_Rate     0x000f   115   097   006    Pre-fail  Always       -       88125160
->   3 Spin_Up_Time            0x0003   093   093   000    Pre-fail  Always       -       0
->   4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       14
->   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
-
-No reallocations...
-
-> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       112
-> 198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       112
-
-But many sectors waiting for rewrite (which will either fix them or
-reallocate them).  Rewrites can't succeed in normal MD operation with
-mismatched timeouts.
-
-If you search the archives for various combinations of "scterc",
-"timeout mismatch", "URE" and "error recovery", you'll find numerous
-discussion of this problem and ways to mitigate it.  (More like horror
-stories, to be honest.)  Most importantly, plan to buy RAID-capable
-drives in the future.
-
-HTH,
-
-Phil
-
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
