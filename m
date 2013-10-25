@@ -1,31 +1,29 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Dag Nygren <dag@newtech.fi>
 Subject: Re: Help raid10 recovery from 2 disks removed
-Date: Fri, 25 Oct 2013 10:24:45 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1310251023070.1838@uplift.swm.pp.se>
-References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net> <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net> <alpine.DEB.2.02.1310241441280.1838@uplift.swm.pp.se> <2614300.keHkAfZ48K@eseries.newtech.fi>
+Date: Fri, 25 Oct 2013 11:34:06 +0300
+Message-ID: <2452698.EiKka9Ty8q@eseries.newtech.fi>
+References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net> <2614300.keHkAfZ48K@eseries.newtech.fi> <alpine.DEB.2.02.1310251023070.1838@uplift.swm.pp.se>
+Reply-To: dag@newtech.fi
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2614300.keHkAfZ48K@eseries.newtech.fi>
+In-Reply-To: <alpine.DEB.2.02.1310251023070.1838@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dag Nygren <dag@newtech.fi>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: yuji_touya@yokogawa-digital.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 25 Oct 2013, Dag Nygren wrote:
+On Friday 25 October 2013 10:24:45 Mikael Abrahamsson wrote:
+> On Fri, 25 Oct 2013, Dag Nygren wrote:
+> 
+> > And I don't think he needs to loose any data, nor use ddrescue here.
+> 
+> He has no redundancy drive for his data, so unfortunately I believe he 
+> does.
 
-> And I don't think he needs to loose any data, nor use ddrescue here.
+Ouch. Yes, of course, I somehow misread and thought he had a RAID-6.
+Sorry for the misunderstanding!
 
-He has no redundancy drive for his data, so unfortunately I believe he 
-does.
-
-Your advice makes a lot of sense and all people should look into this (if 
-you feel like it, document it on the wiki, but in his case his parity 
-drive was kicked out long ago.
-
-> After taht run "echo "repair" >/sys/block/md0/md/sync_action"
-
-Works great if there is proper redundancy.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Best
+Dag
