@@ -1,57 +1,191 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid5 trim OOPS / use after free?
-Date: Fri, 25 Oct 2013 13:37:37 +0200
-Message-ID: <wrfj1u39wpha.fsf@redhat.com>
-References: <CE884D0C.64F9%shli@fusionio.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Linux MD? Or an H710p?
+Date: Fri, 25 Oct 2013 13:42:00 +0200
+Message-ID: <526A5908.4060301@hesbynett.no>
+References: <526328AE.2020908@gmail.com> <21093.14265.261728.755087@quad.stoffel.home> <5265C89A.4000908@gmail.com> <52662849.1080003@hesbynett.no> <5266AE51.4050501@hardwarefreak.com> <526774B4.400@hesbynett.no> <5268BCD6.4000305@hardwarefreak.com> <5268CB88.9060002@hesbynett.no> <526A3B2C.8050800@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CE884D0C.64F9%shli@fusionio.com> (Shaohua Li's message of "Sat,
-	19 Oct 2013 06:54:49 +0000")
+In-Reply-To: <526A3B2C.8050800@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <ShLi@fusionio.com>
-Cc: "stan@hardwarefreak.com" <stan@hardwarefreak.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Jeff Moyer <jmoyer@redhat.com>
+To: stan@hardwarefreak.com
+Cc: Steve Bergman <sbergman27@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Shaohua Li <ShLi@fusionio.com> writes:
-> On 10/18/13 2:03 PM, "Jes Sorensen" <Jes.Sorensen@redhat.com> wrote:
->
->>Stan Hoeppner <stan@hardwarefreak.com> writes:
->>> On 10/17/2013 4:58 PM, Jes Sorensen wrote:
->>>> Hi,
->>>> 
->>>> I have been trying out the trim code in recent kernels and I am
->>>> consistently seeing crashes with the raid5 trim implementation.
->>>> 
->>>> I am seeing 3-4 different OOPS outputs which are very different in
->>>>their
->>>> output. This makes me suspect this is a memory corruption of use after
->>>> free problem?
->>>> 
->>>> Basically I have a system with an AHCI controller and 4 SATA SSD drives
->>>> hooked up to it. I create a raid5 and then run mkfs.ext4 on it and the
->>>> fireworks display starts.
->>>> 
->>>> I first saw this with an older kernel with some backports applied, but
->>>>I
->>>> am able to reproduce this with the current top of tree out of Linus'
->>>> tree.
->>>> 
->>>> Any ideas?
->>>
->>> See a nearly identical problem posted to this list yesterday:
->>>
->>> http://www.spinics.net/lists/raid/msg44686.html
->>
->>Looks the same - I believe I have seen that variation of the problem as
->>well.
->
-> Ok, looks we have some problems with request merge in SCSI. I just posted
-> some patches to linux-raid maillist, please test and report back.
+On 25/10/13 11:34, Stan Hoeppner wrote:
+> On 10/24/2013 2:26 AM, David Brown wrote:
+>> On 24/10/13 08:23, Stan Hoeppner wrote:
+>>> On 10/23/2013 2:03 AM, David Brown wrote:
+>>> 
+>>>> On the other hand, he is also serving 100+ freenx desktop
+>>>> users.  As far as I understand it (and I'm very happy for
+>>>> corrections if I'm wrong), that will mean a /home directory
+>>>> with 100+ sub-directories for the different users - and that
+>>>> /is/ one of the ideal cases for concat+XFS parallelism.
+>>> 
+>>> No, it is /not/.  Homedir storage is not an ideal use case.  It's
+>>> not even in the ballpark.  There's simply not enough parallelism
+>>> nor IOPS involved, and file sizes can vary substantially, so the
+>>> workload is not deterministic, i.e. it is "general".  Recall I
+>>> said in my last reply that this "is a very workload specific
+>>> storage architecture"?
+>>> 
+>>> Workloads that benefit from XFS over concatenated disks are those
+>>> that:
+>>> 
+>>> 1.  Expose inherent limitations and/or inefficiencies of
+>>> striping, at the filesystem, elevator, and/or hardware level
+>>> 
+>>> 2.  Exhibit a high degree of directory level parallelism
+>>> 
+>>> 3.  Exhibit high IOPS or data rates
+>>> 
+>>> 4.  Most importantly, exhibit relatively deterministic IO
+>>> patterns
+>>> 
+>>> Typical homedir storage meets none of these criteria.  Homedir
+>>> files on a GUI desktop terminal server are not 'typical', but the
+>>> TS workload doesn't meet these criteria either.
+> 
+> If you could sum up everything below into a couple of short, direct, 
+> coherent questions you have, I'd be glad to address them.
+> 
 
-I tried your version, but the locking changes didn't compile in my
-tree. However the version Neil pushed to Linux seem to be good and
-solves the problem for me.
+Maybe I've been rambling a bit much.  I am not sure I can be very short
+while still explaining my reasoning, but these are the three most
+important paragraphs.  They are statements that I hope to get confirmed
+or corrected, rather than questions as such.
 
-Thanks again!
-Jes
+
+First, to make sure I am not making any technical errors here, I
+believe that when you make your XFS over a linear concat, the
+allocation groups are spread evenly across the parts of the concat
+so that logically (by number) adjacent AG's will be on different
+underlying disks.  When you make a new directory on the filesystem,
+it gets put in a different AG (wrapping around, of course, and
+overflowing when necessary).  Thus if you make three directories,
+and put a file in each directory, then each file will be on a
+different disk.  (I believe older XFS only allocated different
+top-level directories to different AG's, but current XFS does so
+for all directories).
+
+<snip>
+
+To my mind, this boils down to a question of balancing - concat
+gives lower average latencies with highly parallel accesses, but
+sacrifices maximum throughput of large files.  If you don't have
+lots of parallel accesses, then concat gains little or nothing
+compared to raid0.
+
+<snip>
+
+But I am struggling with point 4 - "most importantly, exhibit
+relatively deterministic IO patterns".  All you need is to have
+your file accesses spread amongst a range of directories.  If the
+number of (roughly) parallel accesses is big enough, you'll get a
+fairly even spread across the disks - and if it is not big enough
+for that, you haven't matched point 2.  This is not really much
+different from raid0 - small accesses will be scattered across the
+different disks.  The big difference comes when there is a large
+file access - with raid0, you will block /all/ other accesses for a
+time, while with concat (over three disks) you will block one third
+of the accesses for three times as long.
+
+
+mvh.,
+
+David
+
+
+
+> 
+> 
+> 
+>> I am trying to learn from your experience and knowledge here, so
+>> thank you for your time so far.  Hopefully it is also of use and
+>> interest to others - that's one of the beauties of public mailing
+>> lists.
+>> 
+>> 
+>> Am I correct in thinking that a common "ideal use case" is a mail
+>> server with lots of accounts, especially with maildir structures,
+>> so that accesses are spread across lots of directories with
+>> typically many parallel accesses to many small files?
+>> 
+>> 
+>> First, to make sure I am not making any technical errors here, I
+>> believe that when you make your XFS over a linear concat, the
+>> allocation groups are spread evenly across the parts of the concat
+>> so that logically (by number) adjacent AG's will be on different
+>> underlying disks.  When you make a new directory on the filesystem,
+>> it gets put in a different AG (wrapping around, of course, and
+>> overflowing when necessary).  Thus if you make three directories,
+>> and put a file in each directory, then each file will be on a
+>> different disk.  (I believe older XFS only allocated different
+>> top-level directories to different AG's, but current XFS does so
+>> for all directories).
+>> 
+>> 
+>> 
+>> I have been thinking about what the XFS over concat gives you
+>> compared to XFS over raid0 on the same disks (or raid1 pairs - the
+>> details don't matter much).
+>> 
+>> First, consider small files.  Access to small files (smaller than
+>> the granularity of the raid0 chunks) will usually only involve one
+>> disk of the raid0 stripe, and will /definitely/ only involve one
+>> disk of the concat.  You should be able to access multiple small
+>> files in parallel, if you are lucky in the mix (with raid0, this
+>> "luck" will be mostly random, while with concat it will depend on
+>> the mix of files within directories.  In particular, multiple files
+>> within the same directory will not be paralleled).  With a concat,
+>> all relevant accesses such as directory reads and inode table
+>> access will be within the same disk as the file, while with raid0
+>> it could easily be a different disk - but such accesses are often
+>> cached in ram.  With raid0 you have the chance of the small file
+>> spanning two disks, leading to longer latency for that file and for
+>> other parallel accesses.
+>> 
+>> All in all, small file access should not be /too/ different - but
+>> my guess is concat has the edge for lowest overall latency with
+>> multiple parallel accesses, as I think concat will avoid jumps
+>> between disks better.
+>> 
+>> 
+>> For large files, there is a bigger difference.  Raid0 gives
+>> striping for higher throughput - but these accesses block the
+>> parallel accesses to other files.  concat has slower throughput as
+>> there is no striping, but the other disks are free for parallel
+>> accesses (big or small).
+>> 
+>> 
+>> To my mind, this boils down to a question of balancing - concat
+>> gives lower average latencies with highly parallel accesses, but
+>> sacrifices maximum throughput of large files.  If you don't have
+>> lots of parallel accesses, then concat gains little or nothing
+>> compared to raid0.
+>> 
+>> 
+>> If I try to match up this with the points you made, point 1 about 
+>> striping is clear - this is a major difference between concat and
+>> raid0. Point 2 and 3 about parallelism and high IOPs (and therefore
+>> low latency) is also clear - if you don't need such access, concat
+>> will give you nothing.
+>> 
+>> Only the OP can decide if his usage will meet these points.
+>> 
+>> But I am struggling with point 4 - "most importantly, exhibit
+>> relatively deterministic IO patterns".  All you need is to have
+>> your file accesses spread amongst a range of directories.  If the
+>> number of (roughly) parallel accesses is big enough, you'll get a
+>> fairly even spread across the disks - and if it is not big enough
+>> for that, you haven't matched point 2.  This is not really much
+>> different from raid0 - small accesses will be scattered across the
+>> different disks.  The big difference comes when there is a large
+>> file access - with raid0, you will block /all/ other accesses for a
+>> time, while with concat (over three disks) you will block one third
+>> of the accesses for three times as long.
+> 
+> 
+
