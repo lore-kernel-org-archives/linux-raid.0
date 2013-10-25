@@ -1,29 +1,31 @@
-From: Ian Pilcher <arequipeno@gmail.com>
-Subject: Re: Can a running MD array name change?
-Date: Fri, 25 Oct 2013 02:40:52 -0500
-Message-ID: <526A2084.4090508@gmail.com>
-References: <l4d4vb$vgk$1@ger.gmane.org> <20131025183844.2e5c8fec@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Help raid10 recovery from 2 disks removed
+Date: Fri, 25 Oct 2013 10:24:45 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1310251023070.1838@uplift.swm.pp.se>
+References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net> <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net> <alpine.DEB.2.02.1310241441280.1838@uplift.swm.pp.se> <2614300.keHkAfZ48K@eseries.newtech.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131025183844.2e5c8fec@notabene.brown>
+In-Reply-To: <2614300.keHkAfZ48K@eseries.newtech.fi>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Dag Nygren <dag@newtech.fi>
+Cc: yuji_touya@yokogawa-digital.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/25/2013 02:38 AM, NeilBrown wrote:
-> No.  The name that appears in /proc/mdstat can not change while an array is
-> active.  Nor will this ever be possible (at least as long as I have any say
-> in the matter).
-> 
-> Hope that helps.
+On Fri, 25 Oct 2013, Dag Nygren wrote:
 
-It does indeed.  Thank you!
+> And I don't think he needs to loose any data, nor use ddrescue here.
+
+He has no redundancy drive for his data, so unfortunately I believe he 
+does.
+
+Your advice makes a lot of sense and all people should look into this (if 
+you feel like it, document it on the wiki, but in his case his parity 
+drive was kicked out long ago.
+
+> After taht run "echo "repair" >/sys/block/md0/md/sync_action"
+
+Works great if there is proper redundancy.
 
 -- 
-========================================================================
-Ian Pilcher                                         arequipeno@gmail.com
-Sometimes there's nothing left to do but crash and burn...or die trying.
-========================================================================
+Mikael Abrahamsson    email: swmike@swm.pp.se
