@@ -1,46 +1,69 @@
-From: <yuji_touya@yokogawa-digital.com>
-Subject: RE: Help raid10 recovery from 2 disks removed
-Date: Fri, 25 Oct 2013 10:08:57 +0000
-Message-ID: <1F36A02C60ACD1478457DCD917DA0FA8034C9E@ZEX001-0M9030.jp.ykgw.net>
-References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net>
- <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net>
- <alpine.DEB.2.02.1310241441280.1838@uplift.swm.pp.se>
- <2614300.keHkAfZ48K@eseries.newtech.fi>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Enable SCTERC in the kernel?
+Date: Fri, 25 Oct 2013 21:42:52 +1100
+Message-ID: <20131025214252.1929c7f1@notabene.brown>
+References: <1969984.qn2lKzvFd6@eseries.newtech.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/5thAUlwuY5OiQ1S7DmSK+up"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2614300.keHkAfZ48K@eseries.newtech.fi>
-Content-Language: ja-JP
+In-Reply-To: <1969984.qn2lKzvFd6@eseries.newtech.fi>
 Sender: linux-raid-owner@vger.kernel.org
-To: dag@newtech.fi, swmike@swm.pp.se
+To: dag@newtech.fi
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Dag,
+--Sig_/5thAUlwuY5OiQ1S7DmSK+up
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Just had a fight with this myself, also using Seagate drives.
-> And I don't think he needs to loose any data, nor use ddrescue here.
+On Fri, 25 Oct 2013 11:51 +0300 Dag Nygren <dag@newtech.fi> wrote:
 
-What a coincidence! thank you for your advice.
-But sorry, dd_rescue is now running on my PC. (Thank you Mikael)
-Looking at the progress, it will take about 12 hours more to finish copying.
+>=20
+> Hi all!
+>=20
+> Just run into the standard problem by not having SCTERC enabled
+> for my drives due to a spelling mistake in my rc.local script
+> setting the parameters and started wondering:
+>=20
+> - What if the md module automatically set this during assembly
+> of the RAID? - In the kernel module itself. It could always set it,
+> if the set failed we could spit out a kernel warning that the used
+> drive might not be the best as a RAID device. Would there be any ill
+> effects from this?
+> - And ditto for the device time-out.
+>=20
+> This would definitely make md work a lot better for people. I have a
+> strange feeling that most don't know the parameter needs setting...
 
-To move the 112 "Pending" sectors to "Reallocated_Sector_Ct" in sdb, redundancy
-drive is required? I don't know whether it works or not in my case.
+I don't think it is appropriate for the kernel to automatically set such
+things.  However it might be appropriate for mdadm to do it when assembling
+or creating the array.
 
->> Also check why you didn't get notification that sdc wasn't part of the
->> array, usually mdmon or equivalent will send email about these events.
->
-> Good advice! Set up the smartctl email address!
+I'm happy to review and  possibly accept patches.
 
-Not mdadm.conf but smartctl?
-I added "MAILADDR" entry (mailing list in my dept.) to /etc/mdadm.conf, and
-mdmonitor service was running. But no notifier e-mail was delivered to the list.
-There is a mail server issue in my company. :(
-Anyway now I set my personal e-mail address to MAILADDR and found notifier works.
+NeilBrown
 
-Thanks
-Yuji
+--Sig_/5thAUlwuY5OiQ1S7DmSK+up
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
------
-CONFIDENTIAL: This e-mail may contain information that is confidential or otherwise protected from disclosure and intended only for the party to whom it is addressed. If you are not the intended recipient, please notify the sender by return and delete this e-mail. You are hereby formally advised that any unauthorized use, disclosure or copying of this email is strictly prohibited and may be unlawful.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUmpLLDnsnt1WYoG5AQLC1A//c6lpXVwuCJtIRmF+uYBOO094AtPJnslM
+PZFZn3I4CivsC3BkqTOmwUCPywHnnDYI0fCXCoQkANa6qotNiy/P2OgVB61gJtGG
+Xgr9J1n1WEAG0UEOktp8K5PclRDYncVL4DWYvFDMW7MHIfilVdk8Bno6aEor4m6y
+68T316zaTHE2Wdh57fjzv1tgiBktgJqnBIl14l70yRBa5rOiKAY6GkvrEVghru3t
+axTZb4Ci6preQz2mPEbb5H5FXG1ZWHYoVzL3D9GuT5WIqplnbnjfU2VXkygrMuqr
+9f1Kn1uEnK96UE8KC08qO8vA6fRTsWo8kbSDOkF5FSEhhZO4fhwPsgSdrJVAUUkG
+HdGxDTbJc8g/F7FwSHJQdtXwt2zzvNuOasiQj9wuVe5SJxcjlBuGIb4H7gACc2vu
+4mdkc+HmdnjC8ytyql6For+pdN7YRC73DRnb750lvMyDVqi3Ej+0r6nvE0CzkYkf
+Jk92WEyi/FpFuDuEAfZoRfUl0VjOQLdJQPA0bbcJhFI50utvMukESMmcm+qaxst+
+dkXSABk0lUNmvnOxB1hO/zEO67sjmsfyI8g4mzHey8IhGQ+A79NHfDk0j5R6ZyqG
+gR07CXP+uv1At3+xMlIzgTxIiOzQBVIPiePGT5+UcJcht7EivN5eOhQmO0z/LhGB
+PIBUIzsn5ZI=
+=GYgk
+-----END PGP SIGNATURE-----
+
+--Sig_/5thAUlwuY5OiQ1S7DmSK+up--
