@@ -1,39 +1,32 @@
-From: <yuji_touya@yokogawa-digital.com>
-Subject: RE: Help raid10 recovery from 2 disks removed
-Date: Fri, 25 Oct 2013 10:47:12 +0000
-Message-ID: <1F36A02C60ACD1478457DCD917DA0FA8034D07@ZEX001-0M9030.jp.ykgw.net>
-References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net>
- <alpine.DEB.2.02.1310241050290.1838@uplift.swm.pp.se>
- <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net>
- <52690FB2.6000005@turmel.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Enable SCTERC in the kernel?
+Date: Fri, 25 Oct 2013 06:47:31 -0400
+Message-ID: <yq1k3h1d3uk.fsf@sermon.lab.mkp.net>
+References: <1969984.qn2lKzvFd6@eseries.newtech.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52690FB2.6000005@turmel.org>
-Content-Language: ja-JP
+In-Reply-To: <1969984.qn2lKzvFd6@eseries.newtech.fi> (Dag Nygren's message of
+	"Fri, 25 Oct 2013 11:51 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: philip@turmel.org, swmike@swm.pp.se
+To: dag@newtech.fi
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-UGhpbCwNCg0KPj4gRGV2aWNlIE1vZGVsOiAgICAgU1QyMDAwRE0wMDEtOVlOMTY0DQo+DQo+IElm
-IEkgcmVjYWxsIGNvcnJlY3RseSwgdGhpcyBtb2RlbCBkb2Vzbid0IHN1cHBvcnQgZXJyb3IgcmVj
-b3ZlcnkNCj4gY29udHJvbC4gIElmIHlvdSBoYXZlbid0IGZpeGVkIHlvdXIgZHJpdmVyIHRpbWVv
-dXRzLCBpdCBleHBsYWlucyB5b3VyDQo+IHNpdHVhdGlvbi4NCg0KSSBoYWQgYmVlbiBiZWxpZXZp
-bmcgdGhhdCBub3dhZGF5cyBhbGwgaGRkIGRyaXZlIGNhbiByZWFsbG9jYXRlIGJhZCBzZWN0b3Jz
-Lg0KSXQgaXMgd3JvbmcsIHJpZ2h0Pw0KDQpJIGhhZCBub3QgZml4ZWQgZHJpdmVyIHRpbWVvdXRz
-LiBJdCdzIGEgbmV3IHdvcmQgdG8gbWUuDQpJIHdvbmRlciB0aGVzZSBzZXR0aW5ncyBhcmUgcmVx
-dWlyZWQgdG8gdXNlIHJlc3QgU2VhZ2F0ZSBkcml2ZXMgKHNkZCBhbmQgc2RlKS4NCg0KSSdsbCB1
-c2UgUkFJRC1jYXBhYmxlIGRyaXZlcyB3aGVuIGV4Y2hhbmdpbmcga2lja2VkIG91dCBkaXNrcy4N
-ClRoYW5rIHlvdSBmb3IgeW91ciBhZHZpY2UuDQoNCkknbSBsZWFybm5pbmcgYSBsb3QgdGhyb3Vn
-aCBteSBwcm9ibGVtIGFuZCByZWFsbHkgdGhhbmsgdG8gbGludXgtcmFpZCBjb21tdW5pdHksDQpw
-ZW9wbGUgaGVscGVkIG1lLCBhbmQgb2YgY291cnNlIHNvZnR3YXJlIFJBSUQgc3lzdGVtLiA7LSkN
-Cg0KVGhhbmtzDQpZdWppDQoNCi0tLS0tDQpDT05GSURFTlRJQUw6IFRoaXMgZS1tYWlsIG1heSBj
-b250YWluIGluZm9ybWF0aW9uIHRoYXQgaXMgY29uZmlkZW50aWFsIG9yIG90aGVyd2lzZSBwcm90
-ZWN0ZWQgZnJvbSBkaXNjbG9zdXJlIGFuZCBpbnRlbmRlZCBvbmx5IGZvciB0aGUgcGFydHkgdG8g
-d2hvbSBpdCBpcyBhZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGll
-bnQsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBieSByZXR1cm4gYW5kIGRlbGV0ZSB0aGlzIGUt
-bWFpbC4gWW91IGFyZSBoZXJlYnkgZm9ybWFsbHkgYWR2aXNlZCB0aGF0IGFueSB1bmF1dGhvcml6
-ZWQgdXNlLCBkaXNjbG9zdXJlIG9yIGNvcHlpbmcgb2YgdGhpcyBlbWFpbCBpcyBzdHJpY3RseSBw
-cm9oaWJpdGVkIGFuZCBtYXkgYmUgdW5sYXdmdWwuDQo=
+>>>>> "Dag" == Dag Nygren <dag@newtech.fi> writes:
+
+Dag> - What if the md module automatically set this during assembly
+Dag> of the RAID?
+
+There are a couple of challenges here. libata lives under SCSI and there
+is no official translation between SCTERC for ATA to the SCSI Read Write
+Error Recovery mode page. But I can work around that.
+
+A harder issue is to ensure that we don't cause regressions by
+requesting the SRWER mode from devices that blow up when they receive an
+unexpected SCSI command (yes, USB device vendors, I'm looking at you).
+
+Anyway. I agree that this might be worthwhile. I'll put it on my list...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
