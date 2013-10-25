@@ -1,57 +1,81 @@
-From: Dag Nygren <dag@newtech.fi>
-Subject: Re: Help raid10 recovery from 2 disks removed
-Date: Fri, 25 Oct 2013 19:05:31 +0300
-Message-ID: <1829715.RaAbOq6Xvn@eseries.newtech.fi>
-References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net> <2614300.keHkAfZ48K@eseries.newtech.fi> <526A6235.2020801@turmel.org>
-Reply-To: dag@newtech.fi
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Enable SCTERC in the kernel?
+Date: Fri, 25 Oct 2013 18:29:33 +0200
+Message-ID: <20131025162933.GA2231@lazy.lzy>
+References: <1969984.qn2lKzvFd6@eseries.newtech.fi>
+ <20131025214252.1929c7f1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <526A6235.2020801@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <20131025214252.1929c7f1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, yuji_touya@yokogawa-digital.com, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: dag@newtech.fi, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday 25 October 2013 08:21:09 Phil Turmel wrote:
-> Good morning Dag,
+On Fri, Oct 25, 2013 at 09:42:52PM +1100, NeilBrown wrote:
+> On Fri, 25 Oct 2013 11:51 +0300 Dag Nygren <dag@newtech.fi> wrote:
 > 
-> On 10/25/2013 03:27 AM, Dag Nygren wrote:
-> 
-> > Just enabling scterc (which is disabled by default and will be
-> > after a power down of the drive), setting the timeout 
-> > and then running a repair on the array
-> > fixed it for me as md was smart enough to try to rewrite the
-> > sector(s) that had failed and with scterc the drive would then reallocate
-> > the failed sector. 
-> > I thought I had this done, but a syntax error in the script had
-> > prevented it from working.. :-( )
 > > 
-> > The working script I ran for this was:
-> > =============================
-> > # Set up RAID drive timeouts
-> > for x in b c d e
-> > do
-> >         smartctl -l scterc,70,70 /dev/sd$x
-> >         echo 180 >/sys/block/sd$x/device/timeout
-> > done
-> > ==============================
+> > Hi all!
+> > 
+> > Just run into the standard problem by not having SCTERC enabled
+> > for my drives due to a spelling mistake in my rc.local script
+> > setting the parameters and started wondering:
+> > 
+> > - What if the md module automatically set this during assembly
+> > of the RAID? - In the kernel module itself. It could always set it,
+> > if the set failed we could spit out a kernel warning that the used
+> > drive might not be the best as a RAID device. Would there be any ill
+> > effects from this?
+> > - And ditto for the device time-out.
+> > 
+> > This would definitely make md work a lot better for people. I have a
+> > strange feeling that most don't know the parameter needs setting...
 > 
-> You shouldn't do both.  You only need the long driver timeout if the
-> hard disk doesn't support scterc.  Long timeouts are bad for application
-> software, as you can get very long system pauses while waiting for a
-> sector recovery.  But the long timeout is the only option if you have
-> non-scterc drives.
+> I don't think it is appropriate for the kernel to automatically set such
+> things.  However it might be appropriate for mdadm to do it when assembling
+> or creating the array.
 
-Ok, Just wanted to be on the safe side.. And this array is just serving
-my MythTV recordings, so not very critical.
+Actually, IMHO, "mdadm" should trigger an exernal
+event, which, consequently, runs a script.
 
-> Some time ago I posted a similar script that checked the result code
-> from smartctl.  It only resets the driver timeout if smartctl couldn't
-> set scterc.
+This is already in place, somehow, using "udev".
 
-This is of course even more optimal.
+From a post, on this mailing list, of Sam Bingner:
 
-Thanks!
-Dag
+I have written a simple udev rule calling a bash script to set the timeouts on all connected devices.
+I would like to a) provide this to anybody who feels they may need it and b) know if anybody sees any
+potential issues with this.
+It seems to work fine for me over a couple reboots...
+
+contents of udev rule:
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="[sh]d[a-z]", RUN+="/usr/local/bin/settimeout"
+
+contents of /usr/local/bin/settimeout:
+#!/bin/bash
+
+[ "${ACTION}" == "add" ] && {
+        /usr/sbin/smartctl -l scterc,70,70 ${DEVNAME} || echo 180 > /sys/${DEVPATH}/device/timeout
+}
+
+I guess, what is missing, is to connect the HDDs
+with a specific "mdadm" event, instead of running
+for each HDD.
+I'm not sure if this is already possible, since
+some "udev" rules for "md" are already existing.
+
+bye,
+
+pg
+
+> I'm happy to review and  possibly accept patches.
+> 
+> NeilBrown
+
+
+
+-- 
+
+piergiorgio
