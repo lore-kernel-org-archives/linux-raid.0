@@ -1,47 +1,29 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: Re: C600 raid
-Date: Thu, 24 Oct 2013 16:46:33 +0000
-Message-ID: <1382633193.37138.36.camel@djiang5-linux2.ch.intel.com>
-References: <CALFpzo6Jx++eDnQPUwCN0oPfp545w9UdgYU0AZ+fyGD8=4oPPg@mail.gmail.com>
-	 <1382630249.37138.32.camel@djiang5-linux2.ch.intel.com>
-	 <CALFpzo7nSHPgkLETtdfRTEKh4UkR=cUyWe5AW36nfHfpoEOGNg@mail.gmail.com>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Can a running MD array name change?
+Date: Fri, 25 Oct 2013 02:01:07 -0500
+Message-ID: <l4d4vb$vgk$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALFpzo7nSHPgkLETtdfRTEKh4UkR=cUyWe5AW36nfHfpoEOGNg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <315CCD7C48576845ACF76B724167470F@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcus Sorensen <shadowsor@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVGh1LCAyMDEzLTEwLTI0IGF0IDE2OjMzICswMDAwLCBNYXJjdXMgU29yZW5zZW4gd3JvdGU6
-DQo+IFRoYW5rcy4gSW4gdGhlIHBhc3Qgd2l0aCBvbmJvYXJkIGNvbnRyb2xsZXJzIGxpa2UgdGhp
-cyBJJ3ZlIHNldCB1cCB0aGUNCj4gYXJyYXkgaW4gdGhlIGJvb3QgbWVudSwgYW5kIHRoZW4gd2hl
-biBpbnN0YWxsaW5nIHRoZSBPUyB0aGUga2VybmVsIGhhcw0KPiBhdXRvbWF0aWNhbGx5IHNwdW4g
-aXQgdXAgYXMgYSBkZXZpY2UgbWFwcGVyIGRpc2suIEknbSBhc3N1bWluZyB0aGF0DQo+IHRoZSBi
-aW9zIG1lbnUgdG9vbHMgd3JpdGUgdGhlIE1EIG1ldGFkYXRhIHN1Y2ggdGhhdCBhbiBpbnN0YWxs
-ZXIgd2l0aA0KPiBNRCBtb2R1bGVzIHdvdWxkIGRvIHRoZSBzYW1lLg0KDQpJIHRoaW5rIGl0IGVu
-dGlyZWx5IGRlcGVuZHMgb24gdGhlIGRpc3Ryby4gSSBrbm93IGZvciBzdXJlIHRoYXQgU0xFUywN
-ClJIRUwsIGFuZCBGZWRvcmEgaGFzIHRoZSBwcm9wZXIgc3VwcG9ydCBmb3IgaW5zdGFsbGluZyB0
-byBhbmQgYm9vdGluZw0KZnJvbSBJTVNNIFJBSUQgdm9sdW1lcy4gDQoNCj4gDQo+IE9uIE9jdCAy
-NCwgMjAxMyA5OjU3IEFNLCAiSmlhbmcsIERhdmUiIDxkYXZlLmppYW5nQGludGVsLmNvbT4gd3Jv
-dGU6DQo+ICAgICAgICAgT24gVGh1LCAyMDEzLTEwLTI0IGF0IDA0OjMxICswMDAwLCBNYXJjdXMg
-U29yZW5zZW4gd3JvdGU6DQo+ICAgICAgICAgPiBDYW4gc29tZW9uZSByZW1pbmQgbWUsIGlzIHRo
-ZSBDNjAwIGNoaXBzZXQgInJhaWQtMSIgYW4NCj4gICAgICAgICBtZC1yYWlkIHdpdGgNCj4gICAg
-ICAgICA+IHRoZSBpbnRlbCBtZXRhZGF0YSwgb3IgaXMgaXQgZG0tcmFpZCBjb21wYXRpYmxlIGxp
-a2Ugb3RoZXINCj4gICAgICAgICBmYWtlcmFpZA0KPiAgICAgICAgID4gZHJpdmVycywgb3Igc29t
-ZXRoaW5nIGVsc2U/DQo+ICAgICAgICAgDQo+ICAgICAgICAgVGhlIEM2MDAgc2VyaWVzIGNoaXBz
-ZXQgaXMgYSBTQVMgY29udHJvbGxlci4gRGVwZW5kaW5nIG9uIHRoZQ0KPiAgICAgICAgIFNLVSBv
-ZiB0aGUNCj4gICAgICAgICBjaGlwc2V0IHRoZSBPUk9NL0VGSSBkcml2ZXIgd2lsbCBlbmFibGUg
-b3IgZGlzYWJsZSBSQUlENS4NCj4gICAgICAgICBPdGhlcndpc2UgdGhlDQo+ICAgICAgICAgT1JP
-TSBzaG91bGQgYXQgbGVhc3Qgc3VwcG9ydCBSQUlEMCBhbmQgUkFJRDEuIEl0IHVzZXMgdGhlDQo+
-ICAgICAgICAgZXh0ZXJuYWwgSU1TTQ0KPiAgICAgICAgIG1ldGFkYXRhLiBUaGF0IG1lYW5zIHlv
-dSBjYW4gaGF2ZSBNRFJBSUQgbWFuYWdlIHRoZSBSQUlEDQo+ICAgICAgICAgdm9sdW1lcywgYW5k
-DQo+ICAgICAgICAgdGhlIFJBSUQwIGFuZCBSQUlEMSBjYW4gYmUgbWFuYWdlZCB3aXRoIERNUkFJ
-RCBhcyB3ZWxsLg0KPiAgICAgICAgIEFsdGhvdWdoIEludGVsDQo+ICAgICAgICAgbm8gbG9uZ2Vy
-IHN1cHBvcnRzIERNUkFJRCB1c2FnZSBmb3IgaXRzIGV4dGVybmFsIG1ldGFkYXRhIGFuZA0KPiAg
-ICAgICAgIHJlY29tbWVuZHMNCj4gICAgICAgICB1c2luZyBNRFJBSUQgZm9yIG1hbmFnZW1lbnQu
-DQoNCg==
+I'm still trying to figure out if there is any way that the kernel name
+of an MD RAID array (as shown in /proc/mdstat) can change while the
+array is running.
+
+See http://article.gmane.org/gmane.linux.raid/44417 for a fairly
+thorough explanation of why this is important to me.
+
+Any insight greatly appreciated.
+
+Thanks!
+
+-- 
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+Sometimes there's nothing left to do but crash and burn...or die trying.
+========================================================================
+
