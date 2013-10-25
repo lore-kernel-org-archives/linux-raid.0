@@ -1,69 +1,39 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Enable SCTERC in the kernel?
-Date: Fri, 25 Oct 2013 21:42:52 +1100
-Message-ID: <20131025214252.1929c7f1@notabene.brown>
-References: <1969984.qn2lKzvFd6@eseries.newtech.fi>
+From: <yuji_touya@yokogawa-digital.com>
+Subject: RE: Help raid10 recovery from 2 disks removed
+Date: Fri, 25 Oct 2013 10:47:12 +0000
+Message-ID: <1F36A02C60ACD1478457DCD917DA0FA8034D07@ZEX001-0M9030.jp.ykgw.net>
+References: <1F36A02C60ACD1478457DCD917DA0FA8034656@ZEX001-0M9030.jp.ykgw.net>
+ <alpine.DEB.2.02.1310241050290.1838@uplift.swm.pp.se>
+ <1F36A02C60ACD1478457DCD917DA0FA8034983@ZEX001-0M9030.jp.ykgw.net>
+ <52690FB2.6000005@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/5thAUlwuY5OiQ1S7DmSK+up"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1969984.qn2lKzvFd6@eseries.newtech.fi>
+In-Reply-To: <52690FB2.6000005@turmel.org>
+Content-Language: ja-JP
 Sender: linux-raid-owner@vger.kernel.org
-To: dag@newtech.fi
+To: philip@turmel.org, swmike@swm.pp.se
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5thAUlwuY5OiQ1S7DmSK+up
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 25 Oct 2013 11:51 +0300 Dag Nygren <dag@newtech.fi> wrote:
-
->=20
-> Hi all!
->=20
-> Just run into the standard problem by not having SCTERC enabled
-> for my drives due to a spelling mistake in my rc.local script
-> setting the parameters and started wondering:
->=20
-> - What if the md module automatically set this during assembly
-> of the RAID? - In the kernel module itself. It could always set it,
-> if the set failed we could spit out a kernel warning that the used
-> drive might not be the best as a RAID device. Would there be any ill
-> effects from this?
-> - And ditto for the device time-out.
->=20
-> This would definitely make md work a lot better for people. I have a
-> strange feeling that most don't know the parameter needs setting...
-
-I don't think it is appropriate for the kernel to automatically set such
-things.  However it might be appropriate for mdadm to do it when assembling
-or creating the array.
-
-I'm happy to review and  possibly accept patches.
-
-NeilBrown
-
---Sig_/5thAUlwuY5OiQ1S7DmSK+up
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUmpLLDnsnt1WYoG5AQLC1A//c6lpXVwuCJtIRmF+uYBOO094AtPJnslM
-PZFZn3I4CivsC3BkqTOmwUCPywHnnDYI0fCXCoQkANa6qotNiy/P2OgVB61gJtGG
-Xgr9J1n1WEAG0UEOktp8K5PclRDYncVL4DWYvFDMW7MHIfilVdk8Bno6aEor4m6y
-68T316zaTHE2Wdh57fjzv1tgiBktgJqnBIl14l70yRBa5rOiKAY6GkvrEVghru3t
-axTZb4Ci6preQz2mPEbb5H5FXG1ZWHYoVzL3D9GuT5WIqplnbnjfU2VXkygrMuqr
-9f1Kn1uEnK96UE8KC08qO8vA6fRTsWo8kbSDOkF5FSEhhZO4fhwPsgSdrJVAUUkG
-HdGxDTbJc8g/F7FwSHJQdtXwt2zzvNuOasiQj9wuVe5SJxcjlBuGIb4H7gACc2vu
-4mdkc+HmdnjC8ytyql6For+pdN7YRC73DRnb750lvMyDVqi3Ej+0r6nvE0CzkYkf
-Jk92WEyi/FpFuDuEAfZoRfUl0VjOQLdJQPA0bbcJhFI50utvMukESMmcm+qaxst+
-dkXSABk0lUNmvnOxB1hO/zEO67sjmsfyI8g4mzHey8IhGQ+A79NHfDk0j5R6ZyqG
-gR07CXP+uv1At3+xMlIzgTxIiOzQBVIPiePGT5+UcJcht7EivN5eOhQmO0z/LhGB
-PIBUIzsn5ZI=
-=GYgk
------END PGP SIGNATURE-----
-
---Sig_/5thAUlwuY5OiQ1S7DmSK+up--
+UGhpbCwNCg0KPj4gRGV2aWNlIE1vZGVsOiAgICAgU1QyMDAwRE0wMDEtOVlOMTY0DQo+DQo+IElm
+IEkgcmVjYWxsIGNvcnJlY3RseSwgdGhpcyBtb2RlbCBkb2Vzbid0IHN1cHBvcnQgZXJyb3IgcmVj
+b3ZlcnkNCj4gY29udHJvbC4gIElmIHlvdSBoYXZlbid0IGZpeGVkIHlvdXIgZHJpdmVyIHRpbWVv
+dXRzLCBpdCBleHBsYWlucyB5b3VyDQo+IHNpdHVhdGlvbi4NCg0KSSBoYWQgYmVlbiBiZWxpZXZp
+bmcgdGhhdCBub3dhZGF5cyBhbGwgaGRkIGRyaXZlIGNhbiByZWFsbG9jYXRlIGJhZCBzZWN0b3Jz
+Lg0KSXQgaXMgd3JvbmcsIHJpZ2h0Pw0KDQpJIGhhZCBub3QgZml4ZWQgZHJpdmVyIHRpbWVvdXRz
+LiBJdCdzIGEgbmV3IHdvcmQgdG8gbWUuDQpJIHdvbmRlciB0aGVzZSBzZXR0aW5ncyBhcmUgcmVx
+dWlyZWQgdG8gdXNlIHJlc3QgU2VhZ2F0ZSBkcml2ZXMgKHNkZCBhbmQgc2RlKS4NCg0KSSdsbCB1
+c2UgUkFJRC1jYXBhYmxlIGRyaXZlcyB3aGVuIGV4Y2hhbmdpbmcga2lja2VkIG91dCBkaXNrcy4N
+ClRoYW5rIHlvdSBmb3IgeW91ciBhZHZpY2UuDQoNCkknbSBsZWFybm5pbmcgYSBsb3QgdGhyb3Vn
+aCBteSBwcm9ibGVtIGFuZCByZWFsbHkgdGhhbmsgdG8gbGludXgtcmFpZCBjb21tdW5pdHksDQpw
+ZW9wbGUgaGVscGVkIG1lLCBhbmQgb2YgY291cnNlIHNvZnR3YXJlIFJBSUQgc3lzdGVtLiA7LSkN
+Cg0KVGhhbmtzDQpZdWppDQoNCi0tLS0tDQpDT05GSURFTlRJQUw6IFRoaXMgZS1tYWlsIG1heSBj
+b250YWluIGluZm9ybWF0aW9uIHRoYXQgaXMgY29uZmlkZW50aWFsIG9yIG90aGVyd2lzZSBwcm90
+ZWN0ZWQgZnJvbSBkaXNjbG9zdXJlIGFuZCBpbnRlbmRlZCBvbmx5IGZvciB0aGUgcGFydHkgdG8g
+d2hvbSBpdCBpcyBhZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGll
+bnQsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBieSByZXR1cm4gYW5kIGRlbGV0ZSB0aGlzIGUt
+bWFpbC4gWW91IGFyZSBoZXJlYnkgZm9ybWFsbHkgYWR2aXNlZCB0aGF0IGFueSB1bmF1dGhvcml6
+ZWQgdXNlLCBkaXNjbG9zdXJlIG9yIGNvcHlpbmcgb2YgdGhpcyBlbWFpbCBpcyBzdHJpY3RseSBw
+cm9oaWJpdGVkIGFuZCBtYXkgYmUgdW5sYXdmdWwuDQo=
