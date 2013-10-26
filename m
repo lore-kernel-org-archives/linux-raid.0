@@ -1,134 +1,213 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Linux MD? Or an H710p?
-Date: Sat, 26 Oct 2013 04:37:10 -0500
-Message-ID: <526B8D46.5010506@hardwarefreak.com>
-References: <526328AE.2020908@gmail.com> <21093.14265.261728.755087@quad.stoffel.home> <5265C89A.4000908@gmail.com> <52662849.1080003@hesbynett.no> <5266AE51.4050501@hardwarefreak.com> <526774B4.400@hesbynett.no> <5268BCD6.4000305@hardwarefreak.com> <5268CB88.9060002@hesbynett.no> <526A3B2C.8050800@hardwarefreak.com> <526A5908.4060301@hesbynett.no>
-Reply-To: stan@hardwarefreak.com
+From: Dan Knight <dknight1989@woh.rr.com>
+Subject: assembling array after disk failure
+Date: Sat, 26 Oct 2013 17:04:31 -0400
+Message-ID: <526C2E5F.1060507@woh.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <526A5908.4060301@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Steve Bergman <sbergman27@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/25/2013 6:42 AM, David Brown wrote:
-> On 25/10/13 11:34, Stan Hoeppner wrote:
-...
->>>> Workloads that benefit from XFS over concatenated disks are those
->>>> that:
->>>>
->>>> 1.  Expose inherent limitations and/or inefficiencies of
->>>> striping, at the filesystem, elevator, and/or hardware level
->>>>
->>>> 2.  Exhibit a high degree of directory level parallelism
->>>>
->>>> 3.  Exhibit high IOPS or data rates
->>>>
->>>> 4.  Most importantly, exhibit relatively deterministic IO
->>>> patterns
-...
+Hello after some trouble with disks, I am trying to reassemble an 
+array.  When I start the array, I am told I don't have enough disks to 
+start.  What is really strange to me is that when I examine the disks in 
+the array, mdadm gives me different overall information for different 
+disks.  What do I need to do to assemble the array?
 
-> allocation groups are spread evenly across the parts of the concat
-> so that logically (by number) adjacent AG's will be on different
-> underlying disks.
+**[root@server etc]# mdadm -As
+**mdadm: /dev/md127 assembled from 3 drives - not enough to start the 
+array.**
+*[root@server etc]# cat /proc/mdstat*
+Personalities :
+md127 : inactive sdf[2](S) sde[4](S) sdb[3](S) sdc[1](S) sdd[0](S)
+       9767572480 blocks super 0.91
 
-This is not correct.  The LBA sectors are numbered linearly, hence teh
-md name "linear", from the first sector of the first disk (or partition)
-to the last sector of the last disk, creating one large virtual disk.
-Thus mkfs.xfs divides the disk into equal sized AGs from beginning to
-end.  So if you have 4 exactly equal sized disks in the concatenation
-and default mkfs.xfs creates 8 AGs, then AG0/1 would be on the first
-disk, AG2/3 would be on the second, and so on.  If the disks (or
-partitions) are not precisely the same number of sectors you will end up
-with portions of AGs laying across physical disk boundaries.  The AGs
-are NOT adjacently interleaved across disks as you suggest.
+unused devices: <none>
+*[root@server etc]# mdadm --examine /dev/sdb*
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 0.91.00
+            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
+server)
+   Creation Time : Sun Feb 20 18:39:42 2011
+      Raid Level : raid5
+   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
+      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 127
 
-> To my mind, this boils down to a question of balancing - concat
-> gives lower average latencies with highly parallel accesses, but
+   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
+   Delta Devices : 1 (4->5)
 
-That's too general a statement.  Again, it depends on the workload, and
-the type of parallel access.  For some parallel small file workloads
-with high DLP, then yes.  For a parallel DB workload with a single table
-file, no.  See #2 and #4 above.
+     Update Time : Tue Oct 22 16:43:25 2013
+           State : active
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 6e803a11 - correct
+          Events : 15471
 
-> sacrifices maximum throughput of large files.  
+          Layout : left-symmetric
+      Chunk Size : 4K
 
-Not true.  There are large file streaming workloads that perform better
-with XFS over concatenation than with striped RAID.  Again, this is
-workload dependent.  See #1-4 above.
+       Number   Major   Minor   RaidDevice State
+this     3       8       16        3      active sync   /dev/sdb
 
-> If you don't have
-> lots of parallel accesses, then concat gains little or nothing
-> compared to raid0.
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8       80        2      active sync   /dev/sdf
+    3     3       8       16        3      active sync   /dev/sdb
+    4     4       8       64        4      active sync   /dev/sde
+*[root@server etc]# mdadm --examine /dev/sdc*
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 0.91.00
+            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
+server)
+   Creation Time : Sun Feb 20 18:39:42 2011
+      Raid Level : raid5
+   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
+      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 127
 
-You just repeated #2-3.
+   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
+   Delta Devices : 1 (4->5)
 
-> But I am struggling with point 4 - "most importantly, exhibit
-> relatively deterministic IO patterns".  
+     Update Time : Tue Oct 22 14:42:50 2013
+           State : clean
+  Active Devices : 5
+Working Devices : 5
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 6e805a2a - correct
+          Events : 15468
 
-It means exactly what is says.  In the parallel workload, the file
-sizes, IOPS, and/or data rate to each AG needs to be roughly equal.
-Ergo the IO pattern is "deterministic".  Deterministic means we know
-what the IO pattern is before we build the storage system and run the
-application on it.
+          Layout : left-symmetric
+      Chunk Size : 4K
 
-Again, this is a "workload specific storage architecture".
+       Number   Major   Minor   RaidDevice State
+this     1       8       32        1      active sync   /dev/sdc
 
-> All you need is to have
-> your file accesses spread amongst a range of directories.  If the
-> number of (roughly) parallel accesses is big enough, you'll get a
-> fairly even spread across the disks - and if it is not big enough
-> for that, you haven't matched point 2.  
+    0     0       8       48        0      active sync   /dev/sdd
+    1     1       8       32        1      active sync   /dev/sdc
+    2     2       8       80        2      active sync   /dev/sdf
+    3     3       8       16        3      active sync   /dev/sdb
+    4     4       8       64        4      active sync   /dev/sde
+*[root@server etc]# mdadm --examine /dev/sdd*
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 0.91.00
+            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
+server)
+   Creation Time : Sun Feb 20 18:39:42 2011
+      Raid Level : raid5
+   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
+      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 127
 
-And if you aim a shotgun at a flock of geese you might hit a couple.
-This is not deterministic.
+   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
+   Delta Devices : 1 (4->5)
 
-> This is not really much
-> different from raid0 - small accesses will be scattered across the
-> different disks.  
+     Update Time : Tue Oct 22 14:42:50 2013
+           State : clean
+  Active Devices : 5
+Working Devices : 5
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 6e805a38 - correct
+          Events : 15468
 
-It's very different.  And no they won't be scattered across the disks
-with a striped array.  When aligned to a striped array, XFS will
-allocate all files at the start of a stripe.  If the file is smaller
-than sunit it will reside entirely on the first disk.  This creates a
-massive IO hotspot.  If the workload consists of files that are all or
-mostly smaller than sunit, all other disks in the striped array will sit
-idle until the filesystem is sufficiently full that no virgin stripes
-remain.  At this point all allocation will become unaligned, or aligned
-to sunit boundaries if possible, with new files being allocated into the
-massive fragmented free space.  Performance can't be any worse than this
-scenario.
+          Layout : left-symmetric
+      Chunk Size : 4K
 
-You can format XFS without alignment on a striped array and avoid the
-single drive hotspot above.  However, file placement within the AGs and
-thus on the stripe is non-deterministic, because you're not aligned.
-XFS doesn't know where the chunk and stripe boundaries are.  So you'll
-still end up with hot spots, some disks more active than others.
+       Number   Major   Minor   RaidDevice State
+this     0       8       48        0      active sync   /dev/sdd
 
-This is where a properly designed XFS over concatenation may help.  I
-say "may" because if you're not hitting #2-3 it doesn't matter.  The
-load may not be sufficient to expose the architectural defect in either
-of the striped architectures above.
+    0     0       8       48        0      active sync   /dev/sdd
+    1     1       8       32        1      active sync   /dev/sdc
+    2     2       8       80        2      active sync   /dev/sdf
+    3     3       8       16        3      active sync   /dev/sdb
+    4     4       8       64        4      active sync   /dev/sde
+*[root@server etc]# mdadm --examine /dev/sde*
+/dev/sde:
+           Magic : a92b4efc
+         Version : 0.91.00
+            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
+server)
+   Creation Time : Sun Feb 20 18:39:42 2011
+      Raid Level : raid5
+   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
+      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 127
 
-So, again, use of XFS over concatenation is workload specific.  And 4 of
-the criteria to evaluate whether it should be used are above.
+   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
+   Delta Devices : 1 (4->5)
 
-> The big difference comes when there is a large
-> file access - with raid0, you will block /all/ other accesses for a
-> time, while with concat (over three disks) you will block one third
-> of the accesses for three times as long.
+     Update Time : Tue Oct 22 16:43:25 2013
+           State : active
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 6e803a43 - correct
+          Events : 15471
 
-You're assuming a mixed workload.  Again, XFS over concatenation is
-never used with a mixed, i.e. non-deterministic, workload.  It is used
-only with workloads that exhibit determinism.
+          Layout : left-symmetric
+      Chunk Size : 4K
 
-Once again:  "This is a very workload specific storage architecture"
+       Number   Major   Minor   RaidDevice State
+this     4       8       64        4      active sync   /dev/sde
 
-How many times have I repeated this on this list?  Apparently not enough.
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8       80        2      active sync   /dev/sdf
+    3     3       8       16        3      active sync   /dev/sdb
+    4     4       8       64        4      active sync   /dev/sde
+*[root@server etc]# mdadm --examine /dev/sdf*
+/dev/sdf:
+           Magic : a92b4efc
+         Version : 0.91.00
+            UUID : ed465281:7b68fb12:01f9e43d:ac30fbff (local to host 
+server)
+   Creation Time : Sun Feb 20 18:39:42 2011
+      Raid Level : raid5
+   Used Dev Size : 1953514496 (1863.02 GiB 2000.40 GB)
+      Array Size : 7814057984 (7452.07 GiB 8001.60 GB)
+    Raid Devices : 5
+   Total Devices : 5
+Preferred Minor : 127
 
--- 
-Stan
+   Reshape pos'n : 7736445008 (7378.05 GiB 7922.12 GB)
+   Delta Devices : 1 (4->5)
+
+     Update Time : Tue Oct 22 16:43:25 2013
+           State : active
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 6e803a4f - correct
+          Events : 15471
+
+          Layout : left-symmetric
+      Chunk Size : 4K
+
+       Number   Major   Minor   RaidDevice State
+this     2       8       80        2      active sync   /dev/sdf
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8       80        2      active sync   /dev/sdf
+    3     3       8       16        3      active sync   /dev/sdb
+    4     4       8       64        4      active sync   /dev/sde
 
