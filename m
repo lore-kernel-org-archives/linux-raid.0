@@ -1,206 +1,107 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Linux MD? Or an H710p?
-Date: Sun, 27 Oct 2013 23:08:11 +0100
-Message-ID: <526D8ECB.5070607@hesbynett.no>
-References: <526328AE.2020908@gmail.com> <21093.14265.261728.755087@quad.stoffel.home> <5265C89A.4000908@gmail.com> <52662849.1080003@hesbynett.no> <5266AE51.4050501@hardwarefreak.com> <526774B4.400@hesbynett.no> <5268BCD6.4000305@hardwarefreak.com> <5268CB88.9060002@hesbynett.no> <526A3B2C.8050800@hardwarefreak.com> <526A5908.4060301@hesbynett.no> <526B8D46.5010506@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: changing parameters of a running array?
+Date: Mon, 28 Oct 2013 10:02:39 +1100
+Message-ID: <20131028100239.082b5c0d@notabene.brown>
+References: <526A2034.2050103@msgid.tls.msk.ru>
+	<20131025111248.8fcd1cb5912e51c54f67f733@bbaw.de>
+	<526D4D26.90808@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/t1Kd_rEgAsYZWI=ro4zpdEa"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <526B8D46.5010506@hardwarefreak.com>
+In-Reply-To: <526D4D26.90808@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Steve Bergman <sbergman27@gmail.com>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/10/13 11:37, Stan Hoeppner wrote:
-> On 10/25/2013 6:42 AM, David Brown wrote:
->> On 25/10/13 11:34, Stan Hoeppner wrote:
-> ...
->>>>> Workloads that benefit from XFS over concatenated disks are those
->>>>> that:
->>>>>
->>>>> 1.  Expose inherent limitations and/or inefficiencies of
->>>>> striping, at the filesystem, elevator, and/or hardware level
->>>>>
->>>>> 2.  Exhibit a high degree of directory level parallelism
->>>>>
->>>>> 3.  Exhibit high IOPS or data rates
->>>>>
->>>>> 4.  Most importantly, exhibit relatively deterministic IO
->>>>> patterns
-> ...
->
->> allocation groups are spread evenly across the parts of the concat
->> so that logically (by number) adjacent AG's will be on different
->> underlying disks.
->
-> This is not correct.  The LBA sectors are numbered linearly, hence teh
-> md name "linear", from the first sector of the first disk (or partition)
-> to the last sector of the last disk, creating one large virtual disk.
-> Thus mkfs.xfs divides the disk into equal sized AGs from beginning to
-> end.  So if you have 4 exactly equal sized disks in the concatenation
-> and default mkfs.xfs creates 8 AGs, then AG0/1 would be on the first
-> disk, AG2/3 would be on the second, and so on.  If the disks (or
-> partitions) are not precisely the same number of sectors you will end up
-> with portions of AGs laying across physical disk boundaries.  The AGs
-> are NOT adjacently interleaved across disks as you suggest.
+--Sig_/t1Kd_rEgAsYZWI=ro4zpdEa
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-OK.
+On Sun, 27 Oct 2013 21:28:06 +0400 Michael Tokarev <mjt@tls.msk.ru> wrote:
 
->
->> To my mind, this boils down to a question of balancing - concat
->> gives lower average latencies with highly parallel accesses, but
->
-> That's too general a statement.  Again, it depends on the workload, and
-> the type of parallel access.  For some parallel small file workloads
-> with high DLP, then yes.  For a parallel DB workload with a single table
-> file, no.  See #2 and #4 above.
+> 25.10.2013 13:12, Lars T=C3=A4uber wrote:
+> > Hi Michael,
+> >
+> > Fri, 25 Oct 2013 11:39:32 +0400
+> > Michael Tokarev <mjt@tls.msk.ru> =3D=3D> linux-raid <linux-raid@vger.ke=
+rnel.org> :
+> >> Hello.
+> >>
+> >> Is there a way to change some parameters - like preferred minor,
+> >> array name, homehost, guuid and the like - of a _running_ array?
+> >> I understand these can be changed using --assemble --update=3Dfoo,
+> >> but how about, say, root array which is being assembled from
+> >> within an initrd with limited functionality?
+> >>
+> >> What I'm trying to achieve is to make a clone of a (remote)
+> >> running system, in order to upgrade hdds.  For this, a new
+> >> set of drives are inserted, new set of filesystems is created,
+> >> current filesystems are copied to new hdds and on the next
+> >> reboot the system should boot from the new hdds.  But since
+> >> I can't create arrays with the same names/minors as currently
+> >> running ones, and I want to preserve the naming scheme, I
+> >> need to ensure the new arrays will be named correctly after
+> >> the reboot.  But since the system is remote, this is a bit
+> >> difficult to achieve for the root device.
+> >>
+> >> And similarly, I can't --update a NON-running array without
+> >> --assemble, so I can't fix the names before reboot while the
+> >> old arrays are still running.
+> >>
+> >> Maybe the easiest way is to write a small (perl) program
+> >> which will read the superblock of a non-running array, update
+> >> it and write it back.  This at least will allow me to perform
+> >> tasks before reboot.  But this way it becomes risky - if the
+> >> first reboot will happen with the old drives still in place,
+> >> havoc might happen, since more than one array will have the
+> >> same name...
+> >>
+> >> So a better route will be to create new arrays with temp
+> >> names, reboot, change names on the newly running system,
+> >> and remove old arrays.  The question is how to change
+> >> some params on a running system.
+> >>
+> >
+> > it depends on the distribution you're running. But you might not need t=
+o change these parameters while the system is running.
+>=20
+> It doesn't.  One thing is the name forcible used to assemble
+> an array -- this one indeed depends on the initrd/initramfs
+> in use.  And another thing is the name recorded in the array
+> superblock -- this does not and should not chage behind my
+> back.  It should only change explicitly.  And that's exactly
+> what I'm talking about -- how to explicitly change some
+> params when the array is in use.
 
-Fair enough.  I was thinking of parallel accesses to /different/ files, 
-in different directories.  I think if I had said that, we would be 
-closer here.
+I'm sorry but that isn't possible.  The only options I can think of are:
+ - boot of some other media and then update the metadata
+ - hack the initrd to assemble with --update=3D to update whatever  needs
+   updating.
 
->
->> sacrifices maximum throughput of large files.
->
-> Not true.  There are large file streaming workloads that perform better
-> with XFS over concatenation than with striped RAID.  Again, this is
-> workload dependent.  See #1-4 above.
+NeilBrown
 
-That would be workloads where you have parallel accesses to large files 
-in different directories?
+--Sig_/t1Kd_rEgAsYZWI=ro4zpdEa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
->
->> If you don't have
->> lots of parallel accesses, then concat gains little or nothing
->> compared to raid0.
->
-> You just repeated #2-3.
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-Yes.
+iQIVAwUBUm2bjznsnt1WYoG5AQJ/NBAAneWqfM9mVLU7Zg6xRim5b7n1i387bvzg
+5IYxVrA0jamChO4zw/h9SzjaXJAiz8BQg9Hpy0nsHCW+baaY8LeBUTSwc6G1iHrX
+LbD/rDyPKNQpMSWP3vToicPOOBV6cEl2JYhqvnWjJ5LbD/mIGpDIpBBEjCqigPHU
+WubEVaRXT0JGBeKv+5mIodMVW9U1CG2tNa211FNh1w3fEo49XIEJwaNTr+lSOA5O
+/uJ8cTD3J9KupqFYpfF+PRHwZCqR7MZpK8GbKeRLxVgtE7BQ/tRQYL46O0IWKCdQ
++behORkQqkjzVCkQOA/a5XW5I/4r+1o78lgNS9LKrvtmqaTTukJ4IRyk93Twmuys
+HZIG5+2ldT6ZwkPoFsv7G7lYfvUqXpNGEhxmSxRpgyUPBFtq07X4H4MITQ6a42FV
+su/rJ5zvCtrMO4mMODqqO+VeA0aXD1MU086StF3aYPV5QaZbewB32mJYbiMYDvlp
+JcDwoMmugNEva5hY4VEb4LFL78ZKoy2pXn+kHVOkudBmeG70lyzXvKqO6ulriEK6
+y3/uox5ox+bMPM8t7xxRiXYnB/Wopu2XSfElDEXM0wIJEylAGX8AhyFow1l9PsY0
+gPiPekOk7NQmiMJDA6QdvkR4PPN4waAvEp8dmyds6amOVKYCJ3gIRtMDPjir9zDh
+03982PzyEds=
+=bZoM
+-----END PGP SIGNATURE-----
 
->> But I am struggling with point 4 - "most importantly, exhibit
->> relatively deterministic IO patterns".
->
-> It means exactly what is says.  In the parallel workload, the file
-> sizes, IOPS, and/or data rate to each AG needs to be roughly equal.
-> Ergo the IO pattern is "deterministic".  Deterministic means we know
-> what the IO pattern is before we build the storage system and run the
-> application on it.
->
-
-I know what deterministic means, and I know what you are saying here.  I 
-just did not understand why you felt it mattered so much - but your 
-answer below makes it much clearer.
-
-> Again, this is a "workload specific storage architecture".
-
-No doubts there!
-
->
->> All you need is to have
->> your file accesses spread amongst a range of directories.  If the
->> number of (roughly) parallel accesses is big enough, you'll get a
->> fairly even spread across the disks - and if it is not big enough
->> for that, you haven't matched point 2.
->
-> And if you aim a shotgun at a flock of geese you might hit a couple.
-> This is not deterministic.
->
-
-I think you would be hard pushed to get better than "random with known 
-characteristics" for most workloads (as always, there are exceptions 
-where the workload is known very accurately).  Enough independent random 
-accesses and tight enough characteristics will give you the determinism 
-you are looking for.  (If 50 people aim shotguns at a flock of geese, it 
-doesn't matter if they aim randomly or at carefully assigned targets - 
-the result is a fairly even spread across the flock.)
-
->> This is not really much
->> different from raid0 - small accesses will be scattered across the
->> different disks.
->
-> It's very different.  And no they won't be scattered across the disks
-> with a striped array.  When aligned to a striped array, XFS will
-> allocate all files at the start of a stripe.  If the file is smaller
-> than sunit it will reside entirely on the first disk.  This creates a
-> massive IO hotspot.  If the workload consists of files that are all or
-> mostly smaller than sunit, all other disks in the striped array will sit
-> idle until the filesystem is sufficiently full that no virgin stripes
-> remain.  At this point all allocation will become unaligned, or aligned
-> to sunit boundaries if possible, with new files being allocated into the
-> massive fragmented free space.  Performance can't be any worse than this
-> scenario.
-
-/This/ is a key point that is new to me.  It is a specific detail of XFS 
-that I was not aware of, and I fully agree it makes a very significant 
-difference.
-
-I am trying to think /why/ XFS does it this way.  I assume there is a 
-good reason.  Could it be the general point that big files usually start 
-as small files, and that by allocating in this way XFS aims to reduce 
-fragmentation and maximise stripe throughput as the file grows?
-
-
-One thing I get from this is that if your workload is mostly small files 
-(smaller than sunit), then linear concat is going to give you better 
-performance than raid0 even if the accesses are not very evenly spread 
-across allocation groups - pretty much anything is better than 
-concentrating everything on the first disk only.  (Of course, if you are 
-only accessing small files and you /don't/ have a lot of parallelism, 
-then performance is unlikely to matter much.)
-
->
-> You can format XFS without alignment on a striped array and avoid the
-> single drive hotspot above.  However, file placement within the AGs and
-> thus on the stripe is non-deterministic, because you're not aligned.
-> XFS doesn't know where the chunk and stripe boundaries are.  So you'll
-> still end up with hot spots, some disks more active than others.
->
-> This is where a properly designed XFS over concatenation may help.  I
-> say "may" because if you're not hitting #2-3 it doesn't matter.  The
-> load may not be sufficient to expose the architectural defect in either
-> of the striped architectures above.
->
-> So, again, use of XFS over concatenation is workload specific.  And 4 of
-> the criteria to evaluate whether it should be used are above.
->
->> The big difference comes when there is a large
->> file access - with raid0, you will block /all/ other accesses for a
->> time, while with concat (over three disks) you will block one third
->> of the accesses for three times as long.
->
-> You're assuming a mixed workload.  Again, XFS over concatenation is
-> never used with a mixed, i.e. non-deterministic, workload.  It is used
-> only with workloads that exhibit determinism.
->
-
-Yes, I am assuming a mixed workload (partly because that's what the OP has).
-
-> Once again:  "This is a very workload specific storage architecture"
->
-
-I think most people, including me, understand that it is 
-workload-specific.  What we are learning is exactly what kinds of 
-workload are best suited to which layout, and why.  The ideal situation 
-is to be able to test out many different layouts under real-life loads, 
-but I think that's unrealistic in most cases.  So the best we can do is 
-try to learn the theory.
-
-> How many times have I repeated this on this list?  Apparently not enough.
->
-
-I try to listen in to most of these threads, and sometimes I join in. 
-Usually I learn a little more each time.  I hope the same applies to 
-others here.
-
-The general point - that filesystem and raid layout is workload 
-dependent - is one of these things that cannot be repeated too often, I 
-think.
-
-Thanks,
-
-David
-
+--Sig_/t1Kd_rEgAsYZWI=ro4zpdEa--
