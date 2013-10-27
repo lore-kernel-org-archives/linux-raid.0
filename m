@@ -1,44 +1,78 @@
-From: Dan Knight <dknight1989@woh.rr.com>
-Subject: Re: assembling array after disk failure
-Date: Sat, 26 Oct 2013 18:31:19 -0400
-Message-ID: <526C42B7.1020202@woh.rr.com>
-References: <526C2E5F.1060507@woh.rr.com> <526C3C3E.6040406@turmel.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: changing parameters of a running array?
+Date: Sun, 27 Oct 2013 21:28:06 +0400
+Message-ID: <526D4D26.90808@msgid.tls.msk.ru>
+References: <526A2034.2050103@msgid.tls.msk.ru> <20131025111248.8fcd1cb5912e51c54f67f733@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <526C3C3E.6040406@turmel.org>
+In-Reply-To: <20131025111248.8fcd1cb5912e51c54f67f733@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: =?ISO-8859-1?Q?Lars_T=E4uber?= <taeuber@bbaw.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you.  --force is exactly what I needed to do.  It is working 
-properly now.
-
-On 10/26/2013 06:03 PM, Phil Turmel wrote:
-> On 10/26/2013 05:04 PM, Dan Knight wrote:
->> Hello after some trouble with disks, I am trying to reassemble an
->> array.  When I start the array, I am told I don't have enough disks to
->> start.  What is really strange to me is that when I examine the disks in
->> the array, mdadm gives me different overall information for different
->> disks.  What do I need to do to assemble the array?
+25.10.2013 13:12, Lars T=E4uber wrote:
+> Hi Michael,
+>
+> Fri, 25 Oct 2013 11:39:32 +0400
+> Michael Tokarev <mjt@tls.msk.ru> =3D=3D> linux-raid <linux-raid@vger.=
+kernel.org> :
+>> Hello.
 >>
->> **[root@server etc]# mdadm -As
->> **mdadm: /dev/md127 assembled from 3 drives - not enough to start the
->> array.**
->> *[root@server etc]# cat /proc/mdstat*
->> Personalities :
->> md127 : inactive sdf[2](S) sde[4](S) sdb[3](S) sdc[1](S) sdd[0](S)
->>        9767572480 blocks super 0.91
-> "--force" is your friend in such situations.
+>> Is there a way to change some parameters - like preferred minor,
+>> array name, homehost, guuid and the like - of a _running_ array?
+>> I understand these can be changed using --assemble --update=3Dfoo,
+>> but how about, say, root array which is being assembled from
+>> within an initrd with limited functionality?
+>>
+>> What I'm trying to achieve is to make a clone of a (remote)
+>> running system, in order to upgrade hdds.  For this, a new
+>> set of drives are inserted, new set of filesystems is created,
+>> current filesystems are copied to new hdds and on the next
+>> reboot the system should boot from the new hdds.  But since
+>> I can't create arrays with the same names/minors as currently
+>> running ones, and I want to preserve the naming scheme, I
+>> need to ensure the new arrays will be named correctly after
+>> the reboot.  But since the system is remote, this is a bit
+>> difficult to achieve for the root device.
+>>
+>> And similarly, I can't --update a NON-running array without
+>> --assemble, so I can't fix the names before reboot while the
+>> old arrays are still running.
+>>
+>> Maybe the easiest way is to write a small (perl) program
+>> which will read the superblock of a non-running array, update
+>> it and write it back.  This at least will allow me to perform
+>> tasks before reboot.  But this way it becomes risky - if the
+>> first reboot will happen with the old drives still in place,
+>> havoc might happen, since more than one array will have the
+>> same name...
+>>
+>> So a better route will be to create new arrays with temp
+>> names, reboot, change names on the newly running system,
+>> and remove old arrays.  The question is how to change
+>> some params on a running system.
+>>
 >
-> mdadm --stop /dev/md127
-> mdadm -Af /dev/md127 /dev/sd[bcdef]
->
-> You haven't given enough information for any advice on avoiding future
-> trouble...
->
-> Phil
->
+> it depends on the distribution you're running. But you might not need=
+ to change these parameters while the system is running.
 
+It doesn't.  One thing is the name forcible used to assemble
+an array -- this one indeed depends on the initrd/initramfs
+in use.  And another thing is the name recorded in the array
+superblock -- this does not and should not chage behind my
+back.  It should only change explicitly.  And that's exactly
+what I'm talking about -- how to explicitly change some
+params when the array is in use.
+
+Thanks,
+
+/mjt
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
