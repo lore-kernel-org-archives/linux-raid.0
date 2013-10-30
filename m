@@ -1,49 +1,23 @@
-From: John Schmidt <johnschmidt4@gmail.com>
-Subject: Re: [PATCH] mdadm.8.in
-Date: Tue, 29 Oct 2013 14:37:21 -0700
-Message-ID: <CACcY5UxRTf_R=pSX7+EWnJGO03n+9z6Kpr_DKnDwG1Cw5Zf2ig@mail.gmail.com>
-References: <CACcY5Uxc2f6HOxLHt5DY5E71EvFbo0dNmtqUtH=FRwTitE=+zw@mail.gmail.com>
- <20131030083431.59e5d397@notabene.brown>
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH 0/3] handle some bugs for REQ_NOMERGE.
+Date: Wed, 30 Oct 2013 10:41:35 +0800
+Message-ID: <2013103010413167237212@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131030083431.59e5d397@notabene.brown>
 Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thank you!
-
-On Tue, Oct 29, 2013 at 2:34 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 29 Oct 2013 10:16:18 -0700 John Schmidt <johnschmidt4@gmail.com>
-> wrote:
->
->> I found a small bug in the documentation of mdadm.  I fixed it in my
->> local git clone of git://neil.brown.name/mdadm  Here is the change:
->>
->> git diff mdadm.8.in
->> diff --git a/mdadm.8.in b/mdadm.8.in
->> index 09aff81..006ae59 100644
->> --- a/mdadm.8.in
->> +++ b/mdadm.8.in
->> @@ -529,7 +529,7 @@ amount of available space is.
->>  .BR \-c ", " \-\-chunk=
->>  Specify chunk size of kibibytes.  The default when creating an
->>  array is 512KB.  To ensure compatibility with earlier versions, the
->> -default when Building and array with no persistent metadata is 64KB.
->> +default when building an array with no persistent metadata is 64KB.
->>  This is only meaningful for RAID0, RAID4, RAID5, RAID6, and RAID10.
->>
->>  RAID4, RAID5, RAID6, and RAID10 require the chunk size to be a power
->>
->> Let me know if there are other things I need to do to get this patch submitted.
->>
->> Thank you,
->> John Schmidt
->> johnschmidt4@gmail.com
->
->
-> applied.  Thanks.
->
-> NeilBrown
+VGhpcyBwYXRjaCBzZXQgbWFpbmx5IGhhbmRsZSBzb21lIGJ1Z3MgZm9yIFJFUV9OT01FUkdFLg0K
+DQpKaWFucGVuZyBNYSAoMyk6DQogIGJsb2NrOiBBZGQgUkVRX05PTUVSR0UgaW50byBSRVFfQ09N
+TU9OX01BU0sNCiAgYmxvY2s6IENoZWNrIGJpbyBjYW4gbWVyZ2UgYmVmb3JlIGNhbGwgYXR0ZW1w
+dF9wbHVnX21lcmdlLg0KICBtZC9yYWlkNTogRm9yIHN0cmlwZSB3aXRoIFI1X1JlYWROb01lcmdl
+LCB3ZSByZXBsYWNlIFJFUV9GTFVTSCB3aXRoICAgDQogICAgIFJFUV9OT01FUkdFLg0KDQogYmxv
+Y2svYmxrLWNvcmUuYyAgICAgICAgICB8IDIgKy0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgICAgICAg
+IHwgMiArLQ0KIGluY2x1ZGUvbGludXgvYmxrX3R5cGVzLmggfCAyICstDQogMyBmaWxlcyBjaGFu
+Z2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCi0tIA0KMS44LjQ=
