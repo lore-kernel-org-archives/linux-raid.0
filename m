@@ -1,38 +1,53 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH] raid0: Set discard_granularity to correct value after
- reshape.
-Date: Wed, 30 Oct 2013 13:20:22 +0100
-Message-ID: <20131030122022.20862.97997.stgit@gklab-154-222.igk.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: drivers: md: include "linux/vmalloc.h" in
+ "dm-cache-policy-hints.c"
+Date: Wed, 30 Oct 2013 10:38:25 -0400
+Message-ID: <20131030143825.GA8125@redhat.com>
+References: <5270A465.2040200@asianux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, shli@kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5270A465.2040200@asianux.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chen Gang <gang.chen@asianux.com>
+Cc: agk@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-In case of reshape of raid0 through raid4 a value of discard_granularity
-will be set to stripe size. MD driver should re-set this value to correct
-one when migration will be finished. Otherwise array will be left with
-wrong value and discard operations will not work properly.
+On Wed, Oct 30 2013 at  2:17am -0400,
+Chen Gang <gang.chen@asianux.com> wrote:
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: Shaohua Li <shli@kernel.org>
----
- drivers/md/raid0.c |    2 ++
- 1 file changed, 2 insertions(+)
+> Need include related header file, or can not pass compiling, the
+> related error (for powerpc with allmodconfig):
+>=20
+>     CC [M]  drivers/md/dm-cache-policy-hints.o
+>   drivers/md/dm-cache-policy-hints.c: In function =E2=80=98alloc_hash=
+=E2=80=99:
+>   drivers/md/dm-cache-policy-hints.c:94:2: error: implicit declaratio=
+n of function =E2=80=98vzalloc=E2=80=99 [-Werror=3Dimplicit-function-de=
+claration]
+>   drivers/md/dm-cache-policy-hints.c:94:14: warning: assignment makes=
+ pointer from integer without a cast [enabled by default]
+>   drivers/md/dm-cache-policy-hints.c: In function =E2=80=98free_hash=E2=
+=80=99:
+>   drivers/md/dm-cache-policy-hints.c:101:2: error: implicit declarati=
+on of function =E2=80=98vfree=E2=80=99 [-Werror=3Dimplicit-function-dec=
+laration]
+>   drivers/md/dm-cache-policy-hints.c: In function =E2=80=98alloc_bits=
+et=E2=80=99:
+>   drivers/md/dm-cache-policy-hints.c:184:2: warning: return makes poi=
+nter from integer without a cast [enabled by default]
+>=20
+>=20
+> Signed-off-by: Chen Gang <gang.chen@asianux.com>
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index c4d420b..807ca3a 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -266,6 +266,8 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
- 	}
- 	mddev->queue->backing_dev_info.congested_fn = raid0_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
-+	mddev->queue->limits.discard_granularity =
-+			queue_logical_block_size(mddev->queue);
- 
- 	/*
- 	 * now since we have the hard sector sizes, we can make sure
+This was already fixed a couple days ago in the linux-dm.git 'for-next'
+branch.
+
+But thanks.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
