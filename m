@@ -1,23 +1,30 @@
 From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 0/3] handle some bugs for REQ_NOMERGE.
-Date: Wed, 30 Oct 2013 10:41:35 +0800
-Message-ID: <2013103010413167237212@gmail.com>
+Subject: [PATCH 3/3] md/raid5: For stripe with R5_ReadNoMerge, we replace REQ_FLUSH with REQ_NOMERGE.
+Date: Wed, 30 Oct 2013 10:41:46 +0800
+Message-ID: <2013103010414134402615@gmail.com>
 Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
 Cc: LKML <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-VGhpcyBwYXRjaCBzZXQgbWFpbmx5IGhhbmRsZSBzb21lIGJ1Z3MgZm9yIFJFUV9OT01FUkdFLg0K
-DQpKaWFucGVuZyBNYSAoMyk6DQogIGJsb2NrOiBBZGQgUkVRX05PTUVSR0UgaW50byBSRVFfQ09N
-TU9OX01BU0sNCiAgYmxvY2s6IENoZWNrIGJpbyBjYW4gbWVyZ2UgYmVmb3JlIGNhbGwgYXR0ZW1w
-dF9wbHVnX21lcmdlLg0KICBtZC9yYWlkNTogRm9yIHN0cmlwZSB3aXRoIFI1X1JlYWROb01lcmdl
-LCB3ZSByZXBsYWNlIFJFUV9GTFVTSCB3aXRoICAgDQogICAgIFJFUV9OT01FUkdFLg0KDQogYmxv
-Y2svYmxrLWNvcmUuYyAgICAgICAgICB8IDIgKy0NCiBkcml2ZXJzL21kL3JhaWQ1LmMgICAgICAg
-IHwgMiArLQ0KIGluY2x1ZGUvbGludXgvYmxrX3R5cGVzLmggfCAyICstDQogMyBmaWxlcyBjaGFu
-Z2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQoNCi0tIA0KMS44LjQ=
+Rm9yIFI1X1JlYWROb01lcmdlLGl0IG1lYW4gdGhpcyBiaW8gY2FuJ3QgbWVyZ2Ugd2l0aCBvdGhl
+ciBiaW9zIG9yDQpyZXF1ZXN0Lkl0IHVzZWQgUkVRX0ZMVVNIIHRvIGFjaGlldmUgdGhpcy4gQnV0
+IFJFUV9OT01FUkdFIGNhbiBkbyB0aGUNCnNhbWUgd29yay4NCg0KU2lnbmVkLW9mZi1ieTogSmlh
+bnBlbmcgTWEgPG1hamlhbnBlbmdAZ21haWwuY29tPg0KLS0tDQogZHJpdmVycy9tZC9yYWlkNS5j
+IHwgMiArLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0K
+DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQpp
+bmRleCBmOGI5MDY4Li44ZTBhZWFhIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQor
+KysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC03NzIsNyArNzcyLDcgQEAgc3RhdGljIHZvaWQg
+b3BzX3J1bl9pbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBlX2hlYWRfc3Rh
+dGUgKnMpDQogCQkJCWJpLT5iaV9zZWN0b3IgPSAoc2gtPnNlY3Rvcg0KIAkJCQkJCSArIHJkZXYt
+PmRhdGFfb2Zmc2V0KTsNCiAJCQlpZiAodGVzdF9iaXQoUjVfUmVhZE5vTWVyZ2UsICZzaC0+ZGV2
+W2ldLmZsYWdzKSkNCi0JCQkJYmktPmJpX3J3IHw9IFJFUV9GTFVTSDsNCisJCQkJYmktPmJpX3J3
+IHw9IFJFUV9OT01FUkdFOw0KIA0KIAkJCWJpLT5iaV92Y250ID0gMTsNCiAJCQliaS0+YmlfaW9f
+dmVjWzBdLmJ2X2xlbiA9IFNUUklQRV9TSVpFOw0KLS0gDQoxLjguNA==
+
