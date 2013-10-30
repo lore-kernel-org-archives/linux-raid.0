@@ -1,55 +1,76 @@
-From: Chen Gang <gang.chen@asianux.com>
-Subject: [PATCH] drivers: md: include "linux/vmalloc.h" in "dm-cache-policy-hints.c"
-Date: Wed, 30 Oct 2013 14:17:09 +0800
-Message-ID: <5270A465.2040200@asianux.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] UAPI: include <asm/byteorder.h> in linux/raid/md_p.h
+Date: Wed, 30 Oct 2013 17:20:13 +1100
+Message-ID: <20131030172013.5dae6baa@notabene.brown>
+References: <1383049738-26107-1-git-send-email-aurelien@aurel32.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, neilb@suse.de
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/BoZeLe+eLDx7Lq5nEa1mtAt"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1383049738-26107-1-git-send-email-aurelien@aurel32.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Aurelien Jarno <aurelien@aurel32.net>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Need include related header file, or can not pass compiling, the
-related error (for powerpc with allmodconfig):
+--Sig_/BoZeLe+eLDx7Lq5nEa1mtAt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-    CC [M]  drivers/md/dm-cache-policy-hints.o
-  drivers/md/dm-cache-policy-hints.c: In function =91alloc_hash=92:
-  drivers/md/dm-cache-policy-hints.c:94:2: error: implicit declaration =
-of function =91vzalloc=92 [-Werror=3Dimplicit-function-declaration]
-  drivers/md/dm-cache-policy-hints.c:94:14: warning: assignment makes p=
-ointer from integer without a cast [enabled by default]
-  drivers/md/dm-cache-policy-hints.c: In function =91free_hash=92:
-  drivers/md/dm-cache-policy-hints.c:101:2: error: implicit declaration=
- of function =91vfree=92 [-Werror=3Dimplicit-function-declaration]
-  drivers/md/dm-cache-policy-hints.c: In function =91alloc_bitset=92:
-  drivers/md/dm-cache-policy-hints.c:184:2: warning: return makes point=
-er from integer without a cast [enabled by default]
+On Tue, 29 Oct 2013 13:28:58 +0100 Aurelien Jarno <aurelien@aurel32.net>
+wrote:
 
+> linux/raid/md_p.h is using conditionals depending on endianess and fails
+> with an error if neither of __BIG_ENDIAN, __LITTLE_ENDIAN or
+> __BYTE_ORDER are defined, but it doesn't include any header which can
+> define these constants. This make this header unusable alone.
+>=20
+> This patch adds a #include <asm/byteorder.h> at the beginning of this
+> header to make it usable alone. This is needed to compile klibc on MIPS.
+>=20
+> Signed-off-by: Aurelien Jarno <aurelien@aurel32.net>
+> ---
+>  include/uapi/linux/raid/md_p.h | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_=
+p.h
+> index fe1a540..f7cf7f3 100644
+> --- a/include/uapi/linux/raid/md_p.h
+> +++ b/include/uapi/linux/raid/md_p.h
+> @@ -16,6 +16,7 @@
+>  #define _MD_P_H
+> =20
+>  #include <linux/types.h>
+> +#include <asm/byteorder.h>
+> =20
+>  /*
+>   * RAID superblock.
 
-Signed-off-by: Chen Gang <gang.chen@asianux.com>
----
- drivers/md/dm-cache-policy-hints.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Makes sense.  Applied.  Thanks.
 
-diff --git a/drivers/md/dm-cache-policy-hints.c b/drivers/md/dm-cache-p=
-olicy-hints.c
-index 312cfb7..a8c1930 100644
---- a/drivers/md/dm-cache-policy-hints.c
-+++ b/drivers/md/dm-cache-policy-hints.c
-@@ -15,6 +15,7 @@
- #include <linux/hash.h>
- #include <linux/list.h>
- #include <linux/module.h>
-+#include <linux/vmalloc.h>
-=20
- #define DM_MSG_PREFIX "cache-policy-hints"
-=20
---=20
-1.7.7.6
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
+
+--Sig_/BoZeLe+eLDx7Lq5nEa1mtAt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUnClHTnsnt1WYoG5AQIZjQ/6ApB1MiVjgr2VudIXjtKuWI5DYuvcNtsc
+C4P7eb18GEAk1ePnDtkUZJRq8UH9QjLKo9L9pYyaydKOCQ1M/WFpbK7G+ZUeRkd+
+fLE6kudhhcQUOMfAtHZ8RtNE6mZEop7tOPOzws+PHVZup6jXGEcOqtAVMyHioyyJ
+2U7HBwwsZfF8CB8pkTt7awJzDB45bFLDlIIq4YpiM9CiGybLU34Y6UpRrZ/reWAC
+bcb6LPnhLHl5rYyO4AEXWixe0l1Uxqm0k4UPb4JJg1eDgiY69Pk/VnQqi2H8StJN
+m36BQfqqnNevd45/hR1OuUxfI+PFIGeDeWOmQVo1vrIbRJtm3NyKdMgW6RsBlEa9
+9FQ2erL81E21jZHMOIhI+kORLNwP4gPR34Vf0/dC39Rj2pcvJaH443uh7Xi5YLlq
+k32yvWybqeCGoa8QCzVlbN9YLLj4DOslXF4i9v0jvkHgvPNqeuGpcbWuOGSeFDWW
+glvh58/ribbXKP+raUIfQ2g+V4340XaF8Samdl9dtI4TsHeAe+kFR85YoSUK0/u6
+NgCFnY3Zai2XBtTywDCUTuMXPH1pejrFf7qrmfhlUTYLBRyHPOJXhHvAlmp19ju2
+h9iZdGANfs4tcQvZZReK/0FMwI3AsdHxwr4vgNFJVcGi1HHc5XJqu1K6EeQjIakm
+TwSMdsojpS0=
+=l1Mz
+-----END PGP SIGNATURE-----
+
+--Sig_/BoZeLe+eLDx7Lq5nEa1mtAt--
