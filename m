@@ -1,43 +1,51 @@
-From: kedacomkernel <kedacomkernel@gmail.com>
-Subject: Re: Re: [PATCH 3/3] md/raid5: For stripe with R5_ReadNoMerge, we replace REQ_FLUSH with REQ_NOMERGE.
-Date: Thu, 31 Oct 2013 13:24:10 +0800
-Message-ID: <201310311324074524940@gmail.com>
-References: <2013103010414134402615@gmail.com>,
-	<20131031141056.1525429a@notabene.brown>
-Reply-To: kedacomkernel <kedacomkernel@gmail.com>
+From: axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 3/3] md/raid5: For stripe with R5_ReadNoMerge, we replace
+ REQ_FLUSH with REQ_NOMERGE.
+Date: Thu, 31 Oct 2013 08:10:16 -0600
+Message-ID: <20131031141016.GE10091@kernel.dk>
+References: <2013103010414134402615@gmail.com>
+ <20131031141056.1525429a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20131031141056.1525429a@notabene.brown>
 Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, majianpeng <majianpeng@gmail.com>
-Cc: axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: majianpeng <majianpeng@gmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIFdlZCwgMzAgT2N0IDIwMTMgMTA6NDE6NDYgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gRm9yIFI1X1JlYWROb01lcmdlLGl0IG1lYW4gdGhp
-cyBiaW8gY2FuJ3QgbWVyZ2Ugd2l0aCBvdGhlciBiaW9zIG9yDQo+PiByZXF1ZXN0Lkl0IHVzZWQg
-UkVRX0ZMVVNIIHRvIGFjaGlldmUgdGhpcy4gQnV0IFJFUV9OT01FUkdFIGNhbiBkbyB0aGUNCj4+
-IHNhbWUgd29yay4NCj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBl
-bmdAZ21haWwuY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9tZC9yYWlkNS5jIHwgMiArLQ0KPj4g
-IDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQ0KPj4gDQo+PiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiBp
-bmRleCBmOGI5MDY4Li44ZTBhZWFhIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5j
-DQo+PiArKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCj4+IEBAIC03NzIsNyArNzcyLDcgQEAgc3Rh
-dGljIHZvaWQgb3BzX3J1bl9pbyhzdHJ1Y3Qgc3RyaXBlX2hlYWQgKnNoLCBzdHJ1Y3Qgc3RyaXBl
-X2hlYWRfc3RhdGUgKnMpDQo+PiAgCQkJCWJpLT5iaV9zZWN0b3IgPSAoc2gtPnNlY3Rvcg0KPj4g
-IAkJCQkJCSArIHJkZXYtPmRhdGFfb2Zmc2V0KTsNCj4+ICAJCQlpZiAodGVzdF9iaXQoUjVfUmVh
-ZE5vTWVyZ2UsICZzaC0+ZGV2W2ldLmZsYWdzKSkNCj4+IC0JCQkJYmktPmJpX3J3IHw9IFJFUV9G
-TFVTSDsNCj4+ICsJCQkJYmktPmJpX3J3IHw9IFJFUV9OT01FUkdFOw0KPj4gIA0KPj4gIAkJCWJp
-LT5iaV92Y250ID0gMTsNCj4+ICAJCQliaS0+YmlfaW9fdmVjWzBdLmJ2X2xlbiA9IFNUUklQRV9T
-SVpFOw0KPg0KPlRoYW5rcy4NCj4NCj5JJ3ZlIHF1ZXVlZCB0aGlzIHVwIHBlbmRpbmcgSmVucycg
-YWNjZXB0YW5jZSBvZiB0aGUgb3RoZXIgcGF0Y2hlcy4NCj4NCj5CeSB0aGUgd2F5LCB5b3VyIHBh
-dGNoIGZpbGUgaGFzIGEgY2FycmlhZ2UgcmV0dXJuIGFzIHdlbGwgYXMgYSBuZXdsaW5lIGF0IHRo
-ZQ0KPmVuZCBvZiBlYWNoIGxpbmUuDQo+InBhdGNoIiBjYW4gc3RpbGwgaGFuZGxlIHRoZW0gYnV0
-ICJnaXQgYW0iIGRvZXNuJ3QgbGlrZSBpdC4NCj4NCj5JZiB5b3UgYXJlIGFibGUgdG8gc2VuZCB0
-aGUgcGF0Y2hlcyBhcyBwbGFpbiB0ZXh0IHdpdGgganVzdCBhIE5FV0xJTkUgYXQgdGhlDQo+ZW5k
-IG9mIGVhY2ggbGluZSwgcmF0aGVyIHRoYW4gYmFzZTY0IGVuY29kZXMgd2l0aCBjYXJyaWFnZSBy
-ZXR1cm5zLCBpdCB3b3VsZA0KPmhlbHAgYSBsaXR0bGUuDQo+DQpTb3Jyb3kgZm9yIHRoYXQsIGkn
-bGwgcGF5IGF0dGVudGlvbiB0byB0aGlzLg0KVGhhbmtzIQ0KSmlhbnBlbmcgTWENCg0KPlRoYW5r
-cywNCj5OZWlsQnJvd24NCj4=
+On Thu, Oct 31 2013, NeilBrown wrote:
+> On Wed, 30 Oct 2013 10:41:46 +0800 majianpeng <majianpeng@gmail.com> wrote:
+> 
+> > For R5_ReadNoMerge,it mean this bio can't merge with other bios or
+> > request.It used REQ_FLUSH to achieve this. But REQ_NOMERGE can do the
+> > same work.
+> > 
+> > Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> > ---
+> >  drivers/md/raid5.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index f8b9068..8e0aeaa 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -772,7 +772,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+> >  				bi->bi_sector = (sh->sector
+> >  						 + rdev->data_offset);
+> >  			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+> > -				bi->bi_rw |= REQ_FLUSH;
+> > +				bi->bi_rw |= REQ_NOMERGE;
+> >  
+> >  			bi->bi_vcnt = 1;
+> >  			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+> 
+> Thanks.
+> 
+> I've queued this up pending Jens' acceptance of the other patches.
+
+I've queued up the other two for 3.13.
+
+-- 
+Jens Axboe
