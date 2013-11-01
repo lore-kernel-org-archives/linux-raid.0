@@ -1,25 +1,26 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: [RFC] md raid resync counter
-Date: Fri, 01 Nov 2013 13:59:40 +0100
-Message-ID: <5273A5BC.5060109@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid5 raid5d  multi-thread
+Date: Fri, 01 Nov 2013 11:19:50 -0500
+Message-ID: <5273D4A6.3070308@hardwarefreak.com>
+References: <72a920d2-2c76-41af-bcac-0dee5b36df5a@aliyun.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <72a920d2-2c76-41af-bcac-0dee5b36df5a@aliyun.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: lilofile <lilofile@aliyun.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil and all,
+On 10/31/2013 10:27 PM, lilofile wrote:
+> now in MD raid5,stripe is hande in one thread, and I found the CPU occupation is very high, why stripe is not handled in multi-thread ? is any different to implement? and what consideration in original design?
 
-Is there anyway to know:
+Shaohua Li has been working on a threaded RAID5 implementation for many
+months now.  AFAIK it is not yet ready for inclusion nor widespread
+testing by others.  See:
 
-1. How often does a raid start to resync?
-2. How many bytes did it resync?
+https://lkml.org/lkml/2013/7/30/29
 
-If not, for the first one, I think we cound add field into mddev like
-resync_counter, increase when resync done, and annother field into
-md_rdev to track how many bytes synced to the outdated disk?
-
-Regards,
-Jack
+-- 
+Stan
