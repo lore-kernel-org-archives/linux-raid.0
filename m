@@ -1,35 +1,56 @@
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subject: 3.12: raid-1 mismatch_cnt question
-Date: Mon, 4 Nov 2013 05:25:28 -0500
-Message-ID: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
+From: Karsten Hohmeier <karsten.hohmeier@tu-ilmenau.de>
+Subject: More distinct events for mdadm - check vs. error case
+Date: Mon, 04 Nov 2013 11:10:48 +0100
+Message-ID: <527772A8.4020602@tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello everybody,
 
-I run two SSDs in a RAID-1 configuration and I have a swap partition on a
-third SSD.  Over time, the mismatch_cnt between the two devices grows higher
-and higher.
+I have a design/usability question regarding the events generated for mdadm.
+When my Debian box runs the monthly array checks every first Sunday of a
+month, I can observe the following in my logs:
 
-Once a week, I run a check and repair against the md devices to help bring
-the mismatch_cnt down.  When I run the check and repair, the system is live
-so there are various logs/processes writing to disk.  The system also has
-ECC memory and there are no errors reported.
+Nov  3 00:57:01 kvmbox kernel: [115379.938671] md: data-check of RAID
+array md0
+Nov  3 00:57:01 kvmbox kernel: [115379.938675] md: minimum _guaranteed_
+ speed: 1000 KB/sec/disk.
+Nov  3 00:57:01 kvmbox kernel: [115379.938677] md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+data-check.
+Nov  3 00:57:01 kvmbox kernel: [115379.938679] md: using 128k window,
+over a total of 976759672k.
+Nov  3 00:57:01 kvmbox mdadm[2628]: RebuildStarted event detected on md
+device /dev/md/0
+Nov  3 01:30:21 kvmbox mdadm[2628]: Rebuild20 event detected on md
+device /dev/md/0
+Nov  3 02:20:21 kvmbox mdadm[2628]: Rebuild48 event detected on md
+device /dev/md/0
+Nov  3 02:53:41 kvmbox mdadm[2628]: Rebuild65 event detected on md
+device /dev/md/0
+Nov  3 03:27:02 kvmbox mdadm[2628]: Rebuild80 event detected on md
+device /dev/md/0
+Nov  3 04:19:54 kvmbox kernel: [127553.046807] md: md0: data-check done.
+Nov  3 04:19:54 kvmbox mdadm[2628]: RebuildFinished event detected on md
+device /dev/md/0
 
-The following graph is the mismatch_cnt from June 2013 to current; each drop
-represents a check+repair.  In September, I dropped the kernel/vm caches
-before running check/repair and that seemed to help a bit.
-http://home.comcast.net/~jpiszcz/20131104/md_raid_mismatch_cnt.png
+I know this is harmless and that the operation would switch from 'check'
+to 'repair' if anything were wrong on the discs. But from a user/system
+administrator standpoint I would really appreciate it if there would be
+CheckStarted and corresponding CheckXX progress events so that my
+management scripts could distinguish the 'check' rebuild from a rebuild
+that was caused by an error (and not trigger the acoustic alarm on my
+server every 1st Sunday each month).
 
-My question is: is this normal or should the mismatch_cnt always be 0 unless
-there is a HW or md/driver issue?
+Or should I ignore all the rebuild events? Can I rely on other events
+being passed to my scripts before a rebuild will happen in case of an
+actual error? What is the best practice here?
 
-Justin.
+Best wishes
 
+Karsten Hohmeier
