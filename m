@@ -1,60 +1,35 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: [RFC] md raid resync counter
-Date: Mon, 04 Nov 2013 10:26:42 +0100
-Message-ID: <52776852.3020309@gmail.com>
-References: <5273A5BC.5060109@gmail.com> <20131102104808.47834bdc@notabene.brown>
+From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
+Subject: 3.12: raid-1 mismatch_cnt question
+Date: Mon, 4 Nov 2013 05:25:28 -0500
+Message-ID: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131102104808.47834bdc@notabene.brown>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/02/2013 12:48 AM, NeilBrown wrote:
-> On Fri, 01 Nov 2013 13:59:40 +0100 Jack Wang <xjtuwjp@gmail.com> wrote:
-> 
->> Hi Neil and all,
->>
->> Is there anyway to know:
->>
->> 1. How often does a raid start to resync?
-> 
-> Look at your logs?
-> 
->> 2. How many bytes did it resync?
-> 
-> Look at "mismatch_cnt" in sysfs (and multiply by 512).
-> 
-> NeilBrown
-> 
->
-Thanks Neil,
+Hi,
 
-You're always very helpful :)
+I run two SSDs in a RAID-1 configuration and I have a swap partition on a
+third SSD.  Over time, the mismatch_cnt between the two devices grows higher
+and higher.
 
-About the second one. As I checked in my system kernel 3.4.51
+Once a week, I run a check and repair against the md devices to help bring
+the mismatch_cnt down.  When I run the check and repair, the system is live
+so there are various logs/processes writing to disk.  The system also has
+ECC memory and there are no errors reported.
 
-when raid is resync:
-cat /proc/mdstat
-Personalities : [raid1]
-md1 : active raid1 dm-1[3] dm-2[2]
-      23762944 blocks super 1.2 [2/1] [_U]
-      [==>..................]  recovery = 10.7% (2562240/23762944)
-finish=7.5min speed=46565K/sec
-# cat /sys/block/md1/md/mismatch_cnt
-0
+The following graph is the mismatch_cnt from June 2013 to current; each drop
+represents a check+repair.  In September, I dropped the kernel/vm caches
+before running check/repair and that seemed to help a bit.
+http://home.comcast.net/~jpiszcz/20131104/md_raid_mismatch_cnt.png
 
-cat /sys/block/md1/md/degraded
-1
- cat /sys/block/md1/md/mismatch_cnt
-0
-# cat /sys/block/md1/md/sync_completed
-8911488 / 47525888
+My question is: is this normal or should the mismatch_cnt always be 0 unless
+there is a HW or md/driver issue?
 
-mismatch_cnt is 0, sync_completed look what I want?
-
-Jack
+Justin.
 
