@@ -1,113 +1,107 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC] md raid resync counter
-Date: Tue, 5 Nov 2013 16:12:55 +1100
-Message-ID: <20131105161255.130a9c52@notabene.brown>
-References: <5273A5BC.5060109@gmail.com>
-	<20131102104808.47834bdc@notabene.brown>
-	<52776852.3020309@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GKTs/STblj+iSh9kxEbNn=8"; protocol="application/pgp-signature"
+From: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
+Subject: mdadm: /dev/md0 has been started with 1 drive (out of 2).
+Date: Tue, 5 Nov 2013 10:41:31 +0200
+Message-ID: <C8EFEBC6-4B43-4B71-AA3F-7DC69480220D@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52776852.3020309@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jack Wang <xjtuwjp@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/GKTs/STblj+iSh9kxEbNn=8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Mon, 04 Nov 2013 10:26:42 +0100 Jack Wang <xjtuwjp@gmail.com> wrote:
+I am new to mdadm/software raid and I've built myself a raid1 array, which after a resume from sleep is assembled with 1 out of 2 devices only.
 
-> On 11/02/2013 12:48 AM, NeilBrown wrote:
-> > On Fri, 01 Nov 2013 13:59:40 +0100 Jack Wang <xjtuwjp@gmail.com> wrote:
-> >=20
-> >> Hi Neil and all,
-> >>
-> >> Is there anyway to know:
-> >>
-> >> 1. How often does a raid start to resync?
-> >=20
-> > Look at your logs?
-> >=20
-> >> 2. How many bytes did it resync?
-> >=20
-> > Look at "mismatch_cnt" in sysfs (and multiply by 512).
-> >=20
-> > NeilBrown
-> >=20
-> >
-> Thanks Neil,
->=20
-> You're always very helpful :)
->=20
-> About the second one. As I checked in my system kernel 3.4.51
->=20
-> when raid is resync:
-> cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 dm-1[3] dm-2[2]
->       23762944 blocks super 1.2 [2/1] [_U]
->       [=3D=3D>..................]  recovery =3D 10.7% (2562240/23762944)
-> finish=3D7.5min speed=3D46565K/sec
+I queried the web, read some threads on the mailing list and learned that event count on these two devices differe a little, and that in a case like this, it would seem, mdadm --assemble --scan --force is a right action. Tried that, but the array is still assembled with only one device.
 
-This array is doing "recovery", not "resync".
+Where do I go from here?
 
-"Resync" is when the devices should all contains the same data but maybe
-don't due to some  error.  So md/raid1 checks and fixes the errors.
-"recovery" is when a spare has been added and data is being copied  onto it.
+--examine output:
 
-
-> # cat /sys/block/md1/md/mismatch_cnt
-> 0
->=20
-> cat /sys/block/md1/md/degraded
-> 1
->  cat /sys/block/md1/md/mismatch_cnt
-> 0
-> # cat /sys/block/md1/md/sync_completed
-> 8911488 / 47525888
->=20
-> mismatch_cnt is 0, sync_completed look what I want?
-
-"sync_completed" is a number which is somewhat smaller than the number of
-sectors that have been be processed by the current
-sync/repair/recover/whatever.
-
-Slightly smaller because it is only updated occasionally.
-
-I don't really know what you want because you didn't say what you would do
-with the information, but it is possible that this is what you want.
-
-
->=20
-> Jack
+> % mdadm --examine /dev/sdc1
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : c4cf4a52:6daa94c8:6d88a2fa:8f604199
+>            Name : sega:0  (local to host sega)
+>   Creation Time : Fri Nov  1 16:24:18 2013
+>      Raid Level : raid1
+>    Raid Devices : 2
+> 
+>  Avail Dev Size : 3906553856 (1862.79 GiB 2000.16 GB)
+>      Array Size : 1953276736 (1862.79 GiB 2000.16 GB)
+>   Used Dev Size : 3906553472 (1862.79 GiB 2000.16 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 814f6fb3:a8a93019:c04ef011:cfa16124
+> 
+>     Update Time : Tue Nov  5 01:03:48 2013
+>        Checksum : 32aca1de - correct
+>          Events : 22
+> 
+> 
+>    Device Role : Active device 0
+>    Array State : AA ('A' == active, '.' == missing)
+> 
+> 
+> 
+> % mdadm --examine /dev/sdd1
+> /dev/sdd1:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : c4cf4a52:6daa94c8:6d88a2fa:8f604199
+>            Name : sega:0  (local to host sega)
+>   Creation Time : Fri Nov  1 16:24:18 2013
+>      Raid Level : raid1
+>    Raid Devices : 2
+> 
+>  Avail Dev Size : 3906553856 (1862.79 GiB 2000.16 GB)
+>      Array Size : 1953276736 (1862.79 GiB 2000.16 GB)
+>   Used Dev Size : 3906553472 (1862.79 GiB 2000.16 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : cea7f341:435cdefd:5f883265:a75c5080
+> 
+>     Update Time : Tue Nov  5 07:53:09 2013
+>        Checksum : 55110136 - correct
+>          Events : 30
+> 
+> 
+>    Device Role : Active device 1
+>    Array State : .A ('A' == active, '.' == missing)
 
 
-NeilBrown
+dmesg output:
 
---Sig_/GKTs/STblj+iSh9kxEbNn=8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> [548246.716474] scsi_verify_blk_ioctl: 18 callbacks suppressed
+> [548246.716484] mdadm: sending ioctl 800c0910 to a partition!
+> [548246.716492] mdadm: sending ioctl 800c0910 to a partition!
+> [548246.716512] mdadm: sending ioctl 1261 to a partition!
+> [548246.716518] mdadm: sending ioctl 1261 to a partition!
+> [548246.718155] mdadm: sending ioctl 800c0910 to a partition!
+> [548246.718163] mdadm: sending ioctl 800c0910 to a partition!
+> [548246.718174] mdadm: sending ioctl 1261 to a partition!
+> [548246.718180] mdadm: sending ioctl 1261 to a partition!
+> [548246.720524] mdadm: sending ioctl 800c0910 to a partition!
+> [548246.720533] mdadm: sending ioctl 800c0910 to a partition!
+> [548247.265498] md: md0 stopped.
+> [548247.269420] md: bind<sdc1>
+> [548247.271426] md: bind<sdd1>
+> [548247.271471] md: kicking non-fresh sdc1 from array!
+> [548247.271478] md: unbind<sdc1>
+> [548247.274669] md: export_rdev(sdc1)
+> [548247.332487] md/raid1:md0: active with 1 out of 2 mirrors
+> [548247.332531] md0: detected capacity change from 0 to 2000155377664
+> [548247.334969]  md0: unknown partition table
+> [548272.306149] md0: detected capacity change from 2000155377664 to 0
+> [548272.306163] md: md0 stopped.
+> [548272.306175] md: unbind<sdd1>
+> [548272.308646] md: export_rdev(sdd1)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUnh+Vznsnt1WYoG5AQL+ew//TTpjTwfmCLbp5Kn//7bQJGEZ3tpy0yz6
-nSHxPLJGnyY0lKbFNfTY0junCxaW50F56yjv5NKTGjRJQskx8ILOB3zZHUg/V/Os
-CK3EOyB9io5P7nvW/rOO9glcOEz030XSEJYtXEb/avuYeINARJTHUatTRxT4/yBG
-d6WnUk786pUGVLOU8ksTpZCgoIRutJdH7sQh2wJcXiAnnRXpB7bgBg5ZoM7NNQZC
-iuJ71yXABreqoMyoEXm1sMQ0g8ygNAexCLdl4Ms7Sxs7XeNfX8xiiFaxgafsPg99
-VV5/g2yAbnm48cHFFwHVN8raNm7psPmeR2V9YXJLGEB4jPvDLOyEkXPHBukCCcZf
-M+phNv+1eZTSxqy4ml3nuNfTPkwFuGT/jAb6ZXtiqJKYQ9cRHm1xPehTKvCT850U
-oucbogR76i8LWfv6c0+Vf0MYD2FNLD0o2Z+pgA6SCsc7yaqaJhG5KhnYwre3DSnq
-S9aCaS/u8zX8/Udih2fFz417DapCMHpajx8hVaMGrQ1nmYQ64uYjA8VqKu5lw1Pd
-rtAa92/x1khSYW8gORSwGdRiG7+J9Hz74FHr61Y3ZwqjpyyZpfmOu530D3up98Pg
-5xEBcT7o5ep557QwcVcrQjH8vVhWW4dtstK0U6jUIkJ+HROy7YQm+uvtYfL3OcdM
-MXDOwd7+NWs=
-=kzSo
------END PGP SIGNATURE-----
-
---Sig_/GKTs/STblj+iSh9kxEbNn=8--
+Ivan
