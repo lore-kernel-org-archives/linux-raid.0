@@ -1,83 +1,30 @@
-From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Subject: RE: [PATCH] raid0: Set discard_granularity to correct value after
- reshape.
-Date: Tue, 5 Nov 2013 14:25:19 +0000
-Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F01783D0B@IRSMSX105.ger.corp.intel.com>
-References: <20131030122022.20862.97997.stgit@gklab-154-222.igk.intel.com>
- <20131031111612.2735d0c1@notabene.brown>
+From: "Mrs. Mary Saleh Saville" <pattersonjwilliam@yahoo.com>
+Subject: Donation Project
+Date: Wed, 6 Nov 2013 01:42:15 +0800
+Message-ID: <201311050334.rA53YJuP021289@tx.cpta.com.cn>
+Reply-To: <mary_saleh@europemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20131031111612.2735d0c1@notabene.brown>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "shli@kernel.org" <shli@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linuxdicas@yahoogroups.com.br, linxlunx@yahoogroups.com, linuxvadapav@yahoogroups.com, linuxtechbiz@yahoogroups.com, linuxindo@yahoogroups.com, linuxhubli@yahoogroups.com, lioc_farrerab@yahoo.es, linux-sparse@vger.kernel.org, linux-securitymodule@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rtusers@vger.kernel.org, linux-raid@vger.kernel.org, linuxnewbie@vger.kernel.org, linux-net@vger.kernel.org, linux-msdos@vger.kernel.org, linux-m68k@vger.kernel.org, linuxkernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linuxhams@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linuxcrypto@vger.kernel.org, linux-btrace@vger.kernel.org, linux-fai-devel@rrz.unikoeln.de, linux-fai@rrz.uni-koeln.de, lio@pd.jaring.my, linuxppc-embedded@ozlabs.org, linux-streams@openss7.org, linuxutf8@nl.linux.org, linuxers@mm.glug-bom.org, linuxwacom-discuss@lists.sourceforge.net, linux-usbusers@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net, linux-karma-devel@lists.sourceforge.net, linux-india-help@lists.sourceforge.net, linux-indiageneral@lists.sourceforge.net, linuxr3000@lists.pcxperience.com, linux-ha-dev@lists.linux-ha.org, linux-pcmcia@lists.infradead.org, linux-uvc-devel@lists.berlios.de, linux-nantes@listes.univ-nantes.fr, linuxchix@linuxchix.org.br, linux-plug@linux.org.pe, linux-programming@linux.or.id, lio@kecegroup.com, linux-users@it.canterbury.ac.nz, linux-il@cs.huji.ac.il, linviawin@bellpac.po.my, linviani@aneka-infokom.co.id
 List-Id: linux-raid.ids
 
-On Thursday, October 31, 2013 1:16 AM NeilBrown <neilb@suse.de> wrote:
-> On Wed, 30 Oct 2013 13:20:22 +0100 Pawel Baldysiak
-> <pawel.baldysiak@intel.com> wrote:
->=20
-> > In case of reshape of raid0 through raid4 a value of
-> > discard_granularity will be set to stripe size. MD driver should
-> > re-set this value to correct one when migration will be finished.
-> > Otherwise array will be left with wrong value and discard operation=
-s will not
-> work properly.
-> >
-> > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > Cc: Shaohua Li <shli@kernel.org>
-> > ---
-> >  drivers/md/raid0.c |    2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index
-> > c4d420b..807ca3a 100644
-> > --- a/drivers/md/raid0.c
-> > +++ b/drivers/md/raid0.c
-> > @@ -266,6 +266,8 @@ static int create_strip_zones(struct mddev *mdd=
-ev,
-> struct r0conf **private_conf)
-> >  	}
-> >  	mddev->queue->backing_dev_info.congested_fn =3D raid0_congested;
-> >  	mddev->queue->backing_dev_info.congested_data =3D mddev;
-> > +	mddev->queue->limits.discard_granularity =3D
-> > +			queue_logical_block_size(mddev->queue);
-> >
-> >  	/*
-> >  	 * now since we have the hard sector sizes, we can make sure
->=20
-> Thanks, but this doesn't seem like the right sort of fix.  It is to s=
-pecific to the
-> symptom rather than trying to address the underlying problem.
->=20
-> Maybe something like this?  Can you review and test?
->=20
-> Thanks,
-> NeilBrown
->=20
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c index
-> 628cd529343f..740b6340f980 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -3620,6 +3620,7 @@ level_store(struct mddev *mddev, const char
-> *buf, size_t len)
->  		mddev->in_sync =3D 1;
->  		del_timer_sync(&mddev->safemode_timer);
->  	}
-> +	blk_set_stacking_limit(&mddev->queue->limits);
->  	pers->run(mddev);
->  	set_bit(MD_CHANGE_DEVS, &mddev->flags);
->  	mddev_resume(mddev);
-Hi Neil,
-I have tested Yours patch, and everything works well.
-TRIM operation are made correctly.
-Could You apply it to upstream?=20
+Hello,
 
-BTW. Correct name of this function is blk_set_stacking_limits();
+I am Mrs. Mary Saleh Saville an ageing widow suffering from long time illness. I have some funds I inherited from my late husband, the sum of US$3,500,000.00 and I am in need of a very honest and God fearing person that will use the fund for God's work to help the less privileged out there.
 
-Thanks,
-Pawe=B3 Baldysiak
+I have mapped out$1,200.000.00 for your personal use in this work. While the rest will be for the work.Please if you would be able to use the funds for the Lord's work kindly reply for further details.
+
+Your full name:
+Your full address:
+Your telephone/mobile number:
+Your fax Number:
+Your full company name:
+Your age:
+
+Thanks and God bless.
+
+Mrs. Mary Saleh Saville
