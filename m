@@ -1,105 +1,38 @@
-From: Kevin Wilson <kevin@digitalarchitects.co.za>
-Subject: Re: Seagate black armour recovery
-Date: Tue, 5 Nov 2013 21:39:39 +0200
-Message-ID: <CAHwiqHsCOzUgktC7DGMXELE0P8kFXbNBji6na0oXfdEWzY4ijg@mail.gmail.com>
-References: <CAHwiqHszJWNRZqWuarzJZO8cYqQitUoJ+SeLUco64Po=FA3doQ@mail.gmail.com>
-	<52781F71.4060105@turmel.org>
+From: "Mrs. Nkoana Maite Mashabane" <pesa_san@yahoo.gr>
+Subject: INVESTMENT PARTNERSHIP
+Date: Wed, 6 Nov 2013 13:30:25 +0800
+Message-ID: <201311051522.rA5FMPuP032011__21313.3984282196$1383716166$gmane$org@tx.cpta.com.cn>
+Reply-To: <nkoa_mashabane@safrica.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52781F71.4060105@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org, Morne Botha <bothamb@gmail.com>
+To: linuxdicas@yahoogroups.com.br, linxlunx@yahoogroups.com, linuxvadapav@yahoogroups.com, linuxtechbiz@yahoogroups.com, linuxindo@yahoogroups.com, linuxhubli@yahoogroups.com, lioc_farrerab@yahoo.es, linux-sparse@vger.kernel.org, linux-securitymodule@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rtusers@vger.kernel.org, linux-raid@vger.kernel.org, linuxnewbie@vger.kernel.org, linux-net@vger.kernel.org, linux-msdos@vger.kernel.org, linux-m68k@vger.kernel.org, linuxkernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linuxhams@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linuxcrypto@vger.kernel.org, linux-btrace@vger.kernel.org, linux-fai-devel@rrz.unikoeln.de, linux-fai@rrz.uni-koeln.de, lio@pd.jaring.my, linuxppc-embedded@ozlabs.org, linux-streams@openss7.org, linuxutf8@nl.linux.org, linuxers@mm.glug-bom.org, linuxwacom-discuss@lists.sourceforge.net, linux-usbusers@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net, linux-karma-devel@lists.sourceforge.net, linux-india-help@lists.sourceforge.net, linux-indiageneral@lists.sourceforge.net, linuxr3000@lists.pcxperience.com, linux-ha-dev@lists.linux-ha.org, linux-pcmcia@lists.infradead.org, linux-uvc-devel@lists.berlios.de, linux-nantes@listes.univ-nantes.fr, linuxchix@linuxchix.org.br, linux-plug@linux.org.pe, linux-programming@linux.or.id, lio@kecegroup.com, linux-users@it.canterbury.ac.nz, linux-il@cs.huji.ac.il, linviawin@bellpac.po.my, linviani@aneka-infokom.co.id
 List-Id: linux-raid.ids
 
-Hi Phil,
-Thanks for the quick reply. I should have, as you correctly stated,
-included the result from trying to force assemble.
-mdadm: looking for devices for /dev/md3
-mdadm: /dev/sda4 is identified as a member of /dev/md3, slot 0.
-mdadm: /dev/sdb4 is identified as a member of /dev/md3, slot 1.
-mdadm: /dev/sdc4 is identified as a member of /dev/md3, slot 2.
-mdadm: ignoring /dev/sdb4 as it reports /dev/sda4 as failed
-mdadm: ignoring /dev/sdc4 as it reports /dev/sda4 as failed
-mdadm: no uptodate device for slot 1 of /dev/md3
-mdadm: no uptodate device for slot 2 of /dev/md3
-mdadm: no uptodate device for slot 3 of /dev/md3
-mdadm: added /dev/sda4 to /dev/md3 as 0
-mdadm: /dev/md3 assembled from 1 drive - not enough to start the array.
+Hello,
 
-I was then trying to edit the Array status in sdb4 and sdc4 due to the
-two lines ignoring /dev/sd[x]4 as it reports...
-The man pages suggest using the --update=summaries with a list of the
-devices, however I get an error that states that this is not valid for
-1.X superblock versions.
+I am Mrs. Maite Nkoana Mashabane, am the Minister of International Relations and Cooperation of South Africa, Please view my profile. http://www.gcis.gov.za/gcis/gcis_profile.jsp?id=1480.
 
-At this point we found only the two options I mentioned, and we
-decided to climb the mountain and talk to the oracle. Is there another
-way to get the other two drives back into the array?
+I would like you to indicate your interest to receive the transfer of $3.5 Million. I will like you to stand as the beneficiary of the said fund.
 
-regards,
+However, I will be resigning soon and want to establish any type of machinery tools devices or agriculture or even real estate under my own registered company. I have the sum to invest. How can I come in contact with you in partnership/investment transaction?
 
-Kevin
+I want you to assist me in investing the money in your country.
 
-On 5 November 2013 00:28, Phil Turmel <philip@turmel.org> wrote:
-> Hi Kevin,
->
-> On 11/04/2013 08:51 AM, Kevin Wilson wrote:
->> Good day All,
->
-> [snip /]
->
-> Good report, BTW.
->
->> 1. Hexedit the drive status information in the superblocks and set it
->> to what we require to assemble
->
-> You would have to be very brave to try that, and very confident that you
-> complete understood the on-disk raid metadata.
->
->> 2. Run the create option of mdadm with precisely the original
->> configuration of the pack to overwrite the superblock information
->
-> This is a valid option, but should always be the *last* resort.
->
-> Your research missed the recommended *first* option:
->
-> mdadm --assemble --force ....
->
-> [snip /]
->
->> Mdadm examine for each drive:
->> /dev/sda4:
->
->>          Events : 18538
->>    Device Role : Active device 0
->>    Array State : AAA. ('A' == active, '.' == missing)
->
->> /dev/sdb4:
->>          Events : 18538
->>    Device Role : Active device 1
->>    Array State : .AA. ('A' == active, '.' == missing)
->
->> /dev/sdc4:
->>          Events : 18538
->>    Device Role : Active device 2
->>    Array State : ..A. ('A' == active, '.' == missing)
->
->> /dev/sdd4 is the faulty drive that now shows up as 4GB.
->
-> Check /proc/mdstat and then use mdadm --stop to make sure any partial
-> assembly of these devices is gone.  Then
->
-> mdadm -Afv /dev/md3 /dev/sd[abc]4
->
-> Save the output so you can report it to this list if it fails.  You
-> should end up with the array running in degraded mode.
->
-> Use fsck as needed to deal with the detritus from the power losses, then
-> make your backups.
->
-> HTH,
->
-> Phil
->
+I will also like you to send me the following information below:
+
+(1)Full names:
+(2)Private phone number:
+(3)Current residential address:
+(4)Your Country:
+(5)Occupation:
+(6)Age and Sex:
+
+Please I do not need to remind you of the need for absolute Confidentiality if this transaction must succeed. YOU MUST NOT CALL ME! If you do not feel comfortable with this transaction, do not hesitate to discontinue.
+
+I will give you more detail's as soon as you confirm your willingness to assisting me.
+
+Mrs. Nkoana Maite Mashabane
