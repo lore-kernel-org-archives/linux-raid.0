@@ -1,92 +1,102 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: mdadm: /dev/md0 has been started with 1 drive (out of 2).
-Date: Wed, 6 Nov 2013 08:54:57 +0000
-Message-ID: <20131106085457.GA4473@cthulhu.home.robinhill.me.uk>
-References: <C8EFEBC6-4B43-4B71-AA3F-7DC69480220D@gmail.com>
- <5278C2A6.7060005@websitemanagers.com.au>
- <E9509E1D-C8FB-4496-ADD5-C6ACBEFC4007@gmail.com>
- <5278D84C.4040600@websitemanagers.com.au>
- <5E756798-9940-4EA9-821A-2A49F92E0B03@gmail.com>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: ISW fakeraid: fail to add back a disk previously removed
+Date: Wed, 6 Nov 2013 10:06:24 +0100
+Message-ID: <CAC9WiBjdLKmZ5koOr7R6yuYUiOYdVLDGjiRGssg8kK5RQ1fr0A@mail.gmail.com>
+References: <CAC9WiBj5UO76MN3s0TgTLVKVAXJzY+eBxCMCYJWTp0JgdYogaQ@mail.gmail.com>
+	<CAC9WiBiz+PTNQtv00RZUoBS30CaZwST+9W9K1SiPsVuze2MEcA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5E756798-9940-4EA9-821A-2A49F92E0B03@gmail.com>
+In-Reply-To: <CAC9WiBiz+PTNQtv00RZUoBS30CaZwST+9W9K1SiPsVuze2MEcA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: dan.j.williams@intel.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So far now answer, I'm adding you in the thread since it seems a
+critical issue, hope you don't mind.
 
-On Tue Nov 05, 2013 at 02:02:03PM +0200, Ivan Lezhnjov IV wrote:
+Thanks
 
-> On Nov 5, 2013, at 1:36 PM, Adam Goryachev <mailinglists@websitemanagers.=
-com.au> wrote:
->=20
-> > The
-> > alternative is to force the array, then run a check, and then a repair.
-> > This will at least allow you to get consistent data regardless of which
-> > disk you read from, however, you won't determine whether it is the
-> > "newer" or "older" data (md will choose at random AFAIK).
->=20
-> What are these check and repair commands that you refer to when
-> talking about forcing an array? Are they echo check|repair >
-> /sys/block/mdX/md/sync_action ?
->=20
-> When you say force the array, does it translate to a different set of
-> commands than what you showed in the very first reply? What would be
-> those? I'm just curious to see how these things are done when managing
-> the arrays, and examples help a lot!
->=20
-There are 3 ways to get an array back up and running. The basic one is
-just to do an assemble. This will only work if there's enough disks with
-the same event count (and array state info) to assemble a working array.
-It should always work with a RAID1 array as only a single disk is ever
-needed.
+On Mon, Oct 28, 2013 at 7:18 AM, Francis Moreau <francis.moro@gmail.com> wrote:
+> Hi,
+>
+>
+> [ Adding Dan Williams in CC since it appears to be the author of the
+> intel fake raid support. ]
+>
+>
+> On Wed, Oct 23, 2013 at 11:24 AM, Francis Moreau <francis.moro@gmail.com> wrote:
+>> Hello,
+>>
+>> I'm testing ISW fake-raid with mdadm 3.3 and I can't add back a disk
+>> to a container previously marked as failed and removed.
+>>
+>> Also I'm testing ISW inside a VM so I'm not sure my test case is valid.
+>>
+>> So basically my ISW array was created with dmraid. I then installed my
+>> system on this array and rebooted to switch to mdadm. So far so good
+>> everything seems to work perfectly:
+>>
+>> # export IMSM_NO_PLATFORM=1
+>>
+>> # cat /proc/mdstat
+>> Personalities : [raid1]
+>> md126 : active raid1 sda[1] sdb[0]
+>>       2092375 blocks super external:/md127/0 [2/2] [UU]
+>>
+>> md127 : inactive sda[1](S) sdb[0](S)
+>>       6306 blocks super external:imsm
+>>
+>> unused devices: <none>
+>>
+>> # mdadm -E /dev/sdb
+>> /dev/sdb:
+>>           Magic : Intel Raid ISM Cfg Sig.
+>>         Version : 1.1.00
+>>     Orig Family : ef92cdd9
+>> [ ... ]
+>>
+>> Now I'm marking sda as failed and remove it:
+>>
+>> # mdadm --fail /dev/md126 sda
+>> # mdadm --remove /dev/md127 sda
+>>
+>> everything works fine until I add back sda to the container:
+>>
+>> # mdadm --add /dev/md127 /dev/sda
+>> mdadm: add /dev/sda
+>>
+>> # cat /proc/mdstat
+>> Personalities : [raid1]
+>> md126 : active raid1 sdb[0]
+>>       2092375 blocks super external:/md127/0 [2/1] [_U]
+>>
+>> md127 : inactive sda[1](S) sdb[0](S)
+>>       6306 blocks super external:imsm
+>>
+>> sda is not added anymore to the array md126 and therefore no resynchro happens.
+>>
+>> # mdadm -E /dev/sda
+>> /dev/sda:
+>>    MBR Magic : aa55
+>> Partition[0] :      3612577 sectors at         2048 (type 83)
+>> Partition[1] :       560133 sectors at      3616767 (type 05)
+>>
+>> Could anybody tell me if that's expected and if so could you englight me ?
+>>
+>> Thanks.
+>> --
+>> Francis
+>
+>
+>
+> --
+> Francis
 
-The second option is to assemble with the --force flag. This will tell
-md to ignore the event count when assembling the array (providing
-they're close enough). This is only useful when a normal assemble fails
-to get an array up and running. As you found, it won't add any extra
-disks available, only the minimum needed to get the array back up. I
-don't think this will ever be of use with a RAID1 array.
 
-The final option (and it's definitely a last-hope scenario) is to
-recreate the array using the exact same parameters as were originally
-used and adding the --assume-clean flag. This is fraught with danger as
-different mdadm versions have used different offsets (and only the very
-latest allow specifying the data offset to use), and any error in
-parameters or disk order can result in severe data loss. This should
-only be used when all other options fail, and generally only when
-advised to by one of the more knowledgeable people on this list (once
-they're sure you've tried every other option and have pulled out the
-necessary info from the array metadata to run the correct create
-command). Again, I don't see this being useful for a RAID1 array.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---dDRMvlgZJXvWKvBx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlJ6A+EACgkQShxCyD40xBJlrACgym5ezgTDmi6AMFiTejsGUjSf
-y3cAoNWptV9Ir7LQGhkeEXB+VaOBL3I+
-=Hh/5
------END PGP SIGNATURE-----
-
---dDRMvlgZJXvWKvBx--
+-- 
+Francis
