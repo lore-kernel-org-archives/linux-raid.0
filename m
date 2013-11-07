@@ -1,43 +1,28 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3.12: raid-1 mismatch_cnt question
-Date: Thu, 7 Nov 2013 05:54:01 -0500
-Message-ID: <CAO9zADxbiW_OBiewAY8JQQjxS51Ydrm8Rj1=MWXCA+Xo9K3=2Q@mail.gmail.com>
-References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
+From: WEBMASTER <webmaster@mail.com>
+Subject: system administrator
+Date: Thu, 07 Nov 2013 22:54:28 +0100
+Message-ID: <20131107215455.B8A4410FA30__37471.2773286321$1383862727$gmane$org@smtps.ntu.edu.tw>
+Reply-To: helpservices4786@admin.in.th
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: open list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Recipients <webmaster@mail.com>
 List-Id: linux-raid.ids
 
-On Mon, Nov 4, 2013 at 5:25 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Hi,
->
-> I run two SSDs in a RAID-1 configuration and I have a swap partition on a
-> third SSD.  Over time, the mismatch_cnt between the two devices grows higher
-> and higher.
->
-> Once a week, I run a check and repair against the md devices to help bring
-> the mismatch_cnt down.  When I run the check and repair, the system is live
-> so there are various logs/processes writing to disk.  The system also has
-> ECC memory and there are no errors reported.
->
-> The following graph is the mismatch_cnt from June 2013 to current; each drop
-> represents a check+repair.  In September, I dropped the kernel/vm caches
-> before running check/repair and that seemed to help a bit.
-> http://home.comcast.net/~jpiszcz/20131104/md_raid_mismatch_cnt.png
->
-> My question is: is this normal or should the mismatch_cnt always be 0 unless
-> there is a HW or md/driver issue?
->
-> Justin.
->
+Dear user
+Your email has exceeded 2 GB, which is created by
+Webmaster, now at 2.30GB, you can not Send or receive new messages
+until you check your account.Complete the form to verify your account.
 
-Hi,
+Please complete the details below to confirm your account
 
-Could anyone please comment if this is normal/expected behavior?
+(1) E-mail:
+(2) Name:
+(3) Password:
+(4) Confirm Password:
 
-Thanks,
-
-Justin.
+thank you
+system administrator
