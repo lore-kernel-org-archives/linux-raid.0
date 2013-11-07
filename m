@@ -1,117 +1,158 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH] raid5: Using slow_path to release stripe when mmdev->threand is null
-Date: Thu, 7 Nov 2013 09:58:42 +0800
-Message-ID: <201311070958386657802@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid0: Set discard_granularity to correct value after
+ reshape.
+Date: Thu, 7 Nov 2013 13:38:38 +1100
+Message-ID: <20131107133838.742d83b1@notabene.brown>
+References: <20131030122022.20862.97997.stgit@gklab-154-222.igk.intel.com>
+	<20131031111612.2735d0c1@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F01783D0B@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/rKqHyDjE6jlNFe_j18iH3ZL"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F01783D0B@IRSMSX105.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "shli@kernel.org" <shli@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-U3RhcnRpbmcgYSBmYWlsZWQgcmFpZDUsa2VybmVsIHByaW50IHRob3NlIG1lc3NhZ2VzOg0KWyAg
-ICA3LjA4NTkzNF0gbWQvcmFpZDptZDEyNzogbm90IGVub3VnaCBvcGVyYXRpb25hbCBkZXZpY2Vz
-ICgzLzQgZmFpbGVkKQ0KWyAgICA3LjA4NTk0MV0gUkFJRCBjb25mIHByaW50b3V0Og0KWyAgICA3
-LjA4NTk0Ml0gIC0tLSBsZXZlbDo1IHJkOjQgd2Q6MQ0KWyAgICA3LjA4NTk0NF0gIGRpc2sgMCwg
-bzoxLCBkZXY6c2RiDQpbICAgIDcuMDg1OTQ4XQ0KPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NClsgICAg
-Ny4wODU5NTBdIEJVRyByYWlkNS1tZDEyNyAoTm90IHRhaW50ZWQpOiBPYmplY3RzIHJlbWFpbmlu
-ZyBpbiByYWlkNS1tZDEyNyBvbiBrbWVtX2NhY2hlX2Nsb3NlKCkNClsgICAgNy4wODU5NTFdDQot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQ0KWyAgICA3LjA4NTk1MV0NClsgICAgNy4wODU5NTJdIERpc2Fi
-bGluZyBsb2NrIGRlYnVnZ2luZyBkdWUgdG8ga2VybmVsIHRhaW50DQpbICAgIDcuMDg1OTU1XSBJ
-TkZPOiBTbGFiIDB4ZmZmZmVhMDAwMmU0NDgwMCBvYmplY3RzPTI0IHVzZWQ9MTYgZnA9MHhmZmZm
-ODgwMGI5MTI3Njk4IGZsYWdzPTB4MTAwMDAwMDAwMDA0MDgwDQpbICAgIDcuMDg1OTU4XSBDUFU6
-IDAgUElEOiAyMTc2IENvbW06IG1kYWRtIFRhaW50ZWQ6IEcgICAgQiAzLjEyLjArICMyDQpbICAg
-IDcuMDg1OTU5XSBIYXJkd2FyZSBuYW1lOiBUbyBCZSBGaWxsZWQgQnkgTy5FLk0uIFRvIEJlIEZp
-bGxlZCBCeQ0KTy5FLk0uL1RvIGJlIGZpbGxlZCBieSBPLkUuTS4sIEJJT1MgMDgwMDE1ICAxMS8w
-OS8yMDExDQpbICAgIDcuMDg1OTYxXSAgZmZmZjg4MDEzYWEzODYwMCBmZmZmODgwMGI4ZjcxYjU4
-IGZmZmZmZmZmODE3MDQ4OTEgZmZmZjg4MDBiOTEyNzY5OA0KWyAgICA3LjA4NTk2M10gIGZmZmZl
-YTAwMDJlNDQ4MDAgZmZmZjg4MDBiOGY3MWM0OCBmZmZmZmZmZjgxMTNjN2M3IDIwNzM3NDYzNjU2
-YTYyNGYNClsgICAgNy4wODU5NjZdICA2ZTY5NmU2OTYxNmQ2NTcyIDY5NjE3MjIwNmU2OTIwNjcg
-MzczMjMxNjQ2ZDJkMzU2NCA2ZDY1NmQ2YjIwNmU2ZjIwDQpbICAgIDcuMDg1OTY4XSBDYWxsIFRy
-YWNlOg0KWyAgICA3LjA4NTk3NF0gIFs8ZmZmZmZmZmY4MTcwNDg5MT5dIGR1bXBfc3RhY2srMHg0
-OS8weDYwDQpbICAgIDcuMDg1OTc3XSAgWzxmZmZmZmZmZjgxMTNjN2M3Pl0gc2xhYl9lcnIrMHg5
-Ny8weGIwDQpbICAgIDcuMDg1OTgwXSAgWzxmZmZmZmZmZjgxMTNlZTkwPl0gPyBzbGFiX2NwdXVw
-X2NhbGxiYWNrKzB4ZDAvMHhkMA0KWyAgICA3LjA4NTk4Ml0gIFs8ZmZmZmZmZmY4MTEzZWVlYj5d
-ID8gZmx1c2hfY3B1X3NsYWIrMHg1Yi8weDcwDQpbICAgIDcuMDg1OTg0XSAgWzxmZmZmZmZmZjgx
-MTNmYzY0Pl0gPyBfX2ttYWxsb2MrMHhmNC8weDE3MA0KWyAgICA3LjA4NTk4Nl0gIFs8ZmZmZmZm
-ZmY4MTE0MjFjYj5dDQpsaXN0X3NsYWJfb2JqZWN0cy5jbG9uZS4wKzB4NWIvMHgxNjANClsgICAg
-Ny4wODU5ODhdICBbPGZmZmZmZmZmODExNDI5Y2I+XSBfX2ttZW1fY2FjaGVfc2h1dGRvd24rMHhk
-Yi8weDFiMA0KWyAgICA3LjA4NTk5Ml0gIFs8ZmZmZmZmZmY4MTExODUzZD5dIGttZW1fY2FjaGVf
-ZGVzdHJveSsweDVkLzB4MTAwDQpbICAgIDcuMDg1OTk2XSAgWzxmZmZmZmZmZmEwMDhkZDFkPl0g
-ZnJlZV9jb25mKzB4NWQvMHgxMjAgW3JhaWQ0NTZdDQpbICAgIDcuMDg1OTk5XSAgWzxmZmZmZmZm
-ZmEwMDkwY2Y5Pl0gcnVuKzB4OGQ5LzB4YTcxIFtyYWlkNDU2XQ0KWyAgICA3LjA4NjAxNV0gIFs8
-ZmZmZmZmZmY4MTUxNmE5Nz5dIG1kX3J1bisweDM3Ny8weDhiMA0KWyAgICA3LjA4NjAyM10gIFs8
-ZmZmZmZmZmY4MTUxNmZlOT5dIGRvX21kX3J1bisweDE5LzB4YzANClsgICAgNy4wODYwMjVdICBb
-PGZmZmZmZmZmODE1MTcyZDg+XSBhcnJheV9zdGF0ZV9zdG9yZSsweDI0OC8weDI2MA0KWyAgICA3
-LjA4NjAyN10gIFs8ZmZmZmZmZmY4MTUxMDJlZj5dIG1kX2F0dHJfc3RvcmUrMHhkZi8weDEyMA0K
-WyAgICA3LjA4NjAzMV0gIFs8ZmZmZmZmZmY4MTFiNzNlZD5dIHN5c2ZzX3dyaXRlX2ZpbGUrMHhk
-ZC8weDE2MA0KWyAgICA3LjA4NjAzM10gIFs8ZmZmZmZmZmY4MTE0NmY1OD5dIHZmc193cml0ZSsw
-eGM4LzB4MTcwDQpbICAgIDcuMDg2MDM2XSAgWzxmZmZmZmZmZjgxMTQ3NTNhPl0gU3lTX3dyaXRl
-KzB4NWEvMHhhMA0KWyAgICA3LjA4NjAzOF0gIFs8ZmZmZmZmZmY4MTcxMDVlMj5dIHN5c3RlbV9j
-YWxsX2Zhc3RwYXRoKzB4MTYvMHgxYg0KWyAgICA3LjA4NjA0MF0gSU5GTzogT2JqZWN0IDB4ZmZm
-Zjg4MDBiOTEyMDAwMCBAb2Zmc2V0PTANClsgICAgNy4wODYwNDJdIElORk86IE9iamVjdCAweGZm
-ZmY4ODAwYjkxMjA1MjggQG9mZnNldD0xMzIwDQpbICAgIDcuMDg2MDQzXSBJTkZPOiBPYmplY3Qg
-MHhmZmZmODgwMGI5MTIwYTUwIEBvZmZzZXQ9MjY0MA0KWyAgICA3LjA4NjA0NF0gSU5GTzogT2Jq
-ZWN0IDB4ZmZmZjg4MDBiOTEyMGY3OCBAb2Zmc2V0PTM5NjANClsgICAgNy4wODYwNDVdIElORk86
-IE9iamVjdCAweGZmZmY4ODAwYjkxMjE0YTAgQG9mZnNldD01MjgwDQpbICAgIDcuMDg2MDQ2XSBJ
-TkZPOiBPYmplY3QgMHhmZmZmODgwMGI5MTIxOWM4IEBvZmZzZXQ9NjYwMA0KWyAgICA3LjA4NjA0
-OF0gSU5GTzogT2JqZWN0IDB4ZmZmZjg4MDBiOTEyMWVmMCBAb2Zmc2V0PTc5MjANClsgICAgNy4w
-ODYwNDldIElORk86IE9iamVjdCAweGZmZmY4ODAwYjkxMjI0MTggQG9mZnNldD05MjQwDQpbICAg
-IDcuMDg2MDUwXSBJTkZPOiBPYmplY3QgMHhmZmZmODgwMGI5MTIyOTQwIEBvZmZzZXQ9MTA1NjAN
-ClsgICAgNy4wODYwNTFdIElORk86IE9iamVjdCAweGZmZmY4ODAwYjkxMjJlNjggQG9mZnNldD0x
-MTg4MA0KWyAgICA3LjA4NjA1Ml0gSU5GTzogT2JqZWN0IDB4ZmZmZjg4MDBiOTEyMzM5MCBAb2Zm
-c2V0PTEzMjAwDQpbICAgIDcuMDg2MDU0XSBJTkZPOiBPYmplY3QgMHhmZmZmODgwMGI5MTIzOGI4
-IEBvZmZzZXQ9MTQ1MjANClsgICAgNy4wODYwNTVdIElORk86IE9iamVjdCAweGZmZmY4ODAwYjkx
-MjNkZTAgQG9mZnNldD0xNTg0MA0KWyAgICA3LjA4NjA1N10gSU5GTzogT2JqZWN0IDB4ZmZmZjg4
-MDBiOTEyNDMwOCBAb2Zmc2V0PTE3MTYwDQpbICAgIDcuMDg2MDU4XSBJTkZPOiBPYmplY3QgMHhm
-ZmZmODgwMGI5MTI0ODMwIEBvZmZzZXQ9MTg0ODANClsgICAgNy4wODYwNTldIElORk86IE9iamVj
-dCAweGZmZmY4ODAwYjkxMjRkNTggQG9mZnNldD0xOTgwMA0KWyAgICA3LjA4NjA2MV0ga21lbV9j
-YWNoZV9kZXN0cm95IHJhaWQ1LW1kMTI3OiBTbGFiIGNhY2hlIHN0aWxsIGhhcyBiamVjdHMNClsg
-ICAgNy4wODYwNjNdIENQVTogMCBQSUQ6IDIxNzYgQ29tbTogbWRhZG0gVGFpbnRlZDogRyAgICBC
-IDMuMTIuMCsgIzINClsgICAgNy4wODYwNjRdIEhhcmR3YXJlIG5hbWU6IFRvIEJlIEZpbGxlZCBC
-eSBPLkUuTS4gVG8gQmUgRmlsbGVkIEJ5DQpPLkUuTS4vVG8gYmUgZmlsbGVkIGJ5IE8uRS5NLiwg
-QklPUyAwODAwMTUgIDExLzA5LzIwMTENClsgICAgNy4wODYwNjVdICBmZmZmODgwMGI5MmVhYTAw
-IGZmZmY4ODAwYjhmNzFjZDggZmZmZmZmZmY4MTcwNDg5MSAwMDAwMDAwMDAwMDE1NzQwDQpbICAg
-IDcuMDg2MDY4XSAgZmZmZjg4MDEzYWEzODYwMCBmZmZmODgwMGI4ZjcxY2Y4IGZmZmZmZmZmODEx
-MTg1ZGQgMDAwMDAwMDAwMDAwMDAwMA0KWyAgICA3LjA4NjA3MF0gIGZmZmY4ODAwYjkyZWFhMDAg
-ZmZmZjg4MDBiOGY3MWQyOCBmZmZmZmZmZmEwMDhkZDFkIGZmZmY4ODAxM2ExNmQ4MDANClsgICAg
-Ny4wODYwNzJdIENhbGwgVHJhY2U6DQpbICAgIDcuMDg2MDc0XSAgWzxmZmZmZmZmZjgxNzA0ODkx
-Pl0gZHVtcF9zdGFjaysweDQ5LzB4NjANClsgICAgNy4wODYwNzddICBbPGZmZmZmZmZmODExMTg1
-ZGQ+XSBrbWVtX2NhY2hlX2Rlc3Ryb3krMHhmZC8weDEwMA0KWyAgICA3LjA4NjA4MF0gIFs8ZmZm
-ZmZmZmZhMDA4ZGQxZD5dIGZyZWVfY29uZisweDVkLzB4MTIwIFtyYWlkNDU2XQ0KWyAgICA3LjA4
-NjA4Ml0gIFs8ZmZmZmZmZmZhMDA5MGNmOT5dIHJ1bisweDhkOS8weGE3MSBbcmFpZDQ1Nl0NClsg
-ICAgNy4wODYwODVdICBbPGZmZmZmZmZmODE1MTZhOTc+XSBtZF9ydW4rMHgzNzcvMHg4YjANClsg
-ICAgNy4wODYwODddICBbPGZmZmZmZmZmODE1MTZmZTk+XSBkb19tZF9ydW4rMHgxOS8weGMwDQpb
-ICAgIDcuMDg2MDg5XSAgWzxmZmZmZmZmZjgxNTE3MmQ4Pl0gYXJyYXlfc3RhdGVfc3RvcmUrMHgy
-NDgvMHgyNjANClsgICAgNy4wODYwOTFdICBbPGZmZmZmZmZmODE1MTAyZWY+XSBtZF9hdHRyX3N0
-b3JlKzB4ZGYvMHgxMjANClsgICAgNy4wODYwOTRdICBbPGZmZmZmZmZmODExYjczZWQ+XSBzeXNm
-c193cml0ZV9maWxlKzB4ZGQvMHgxNjANClsgICAgNy4wODYwOTZdICBbPGZmZmZmZmZmODExNDZm
-NTg+XSB2ZnNfd3JpdGUrMHhjOC8weDE3MA0KWyAgICA3LjA4NjA5OF0gIFs8ZmZmZmZmZmY4MTE0
-NzUzYT5dIFN5U193cml0ZSsweDVhLzB4YTANClsgICAgNy4wODYxMDBdICBbPGZmZmZmZmZmODE3
-MTA1ZTI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINClsgICAgNy4wODYxMDRdIG1k
-L3JhaWQ6bWQxMjc6IGZhaWxlZCB0byBydW4gcmFpZCBzZXQuDQpbICAgIDcuMDg2MTA1XSBtZDog
-cGVycy0+cnVuKCkgZmFpbGVkIC4uLg0KDQpUaGlzIGlzIGJlY2F1c2Ugd2hlbiBjYWxsZWQgcmVs
-ZWFzZV9zdHJpcGUoKSBpbiBncm93X29uZV9zdHJpcGUoKSwgdGhlDQptZGRldi0+dGhyZWFkIGlz
-IG51bGwuU28gaXQgd2lsbCBvbWl0IG9uZSB3YWtldXAgdGhpcyB0aHJlYWQgdG8gcmVsZWFzZQ0K
-c3RyaXBlLg0KRm9yIHRoaXMgY29uZGl0aW9uLCB1c2luZyBzbG93X3BhdGggdG8gcmVsZWFzZSBz
-dHJpcGUuDQoNClNpZ25lZC1vZmYtYnk6IEppYW5wZW5nIE1hIDxtYWppYW5wZW5nQGdtYWlsLmNv
-bT4NCi0tLQ0KIGRyaXZlcnMvbWQvcmFpZDUuYyB8IDYgKysrKystDQogMSBmaWxlIGNoYW5nZWQs
-IDUgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9t
-ZC9yYWlkNS5jIGIvZHJpdmVycy9tZC9yYWlkNS5jDQppbmRleCBmOGI5MDY4Li5lOTNlYjdiIDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMN
-CkBAIC0zNDAsNyArMzQwLDExIEBAIHN0YXRpYyB2b2lkIHJlbGVhc2Vfc3RyaXBlKHN0cnVjdCBz
-dHJpcGVfaGVhZCAqc2gpDQogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7DQogCWJvb2wgd2FrZXVwOw0K
-IA0KLQlpZiAodGVzdF9hbmRfc2V0X2JpdChTVFJJUEVfT05fUkVMRUFTRV9MSVNULCAmc2gtPnN0
-YXRlKSkNCisJLyoNCisJICogQmVmb3JlIGNyZWF0aW5nIG1tZGV2LT50aHJlYWQsdGhpcyBmdW5j
-IHdpbGxiZSBjYWxsZWQuDQorCSAqLw0KKwlpZiAodW5saWtlbHkoIWNvbmYtPm1kZGV2LT50aHJl
-YWQpIHx8DQorCQl0ZXN0X2FuZF9zZXRfYml0KFNUUklQRV9PTl9SRUxFQVNFX0xJU1QsICZzaC0+
-c3RhdGUpKQ0KIAkJZ290byBzbG93X3BhdGg7DQogCXdha2V1cCA9IGxsaXN0X2FkZCgmc2gtPnJl
-bGVhc2VfbGlzdCwgJmNvbmYtPnJlbGVhc2VkX3N0cmlwZXMpOw0KIAlpZiAod2FrZXVwKQ0KLS0g
-DQoxLjguNA==
+--Sig_/rKqHyDjE6jlNFe_j18iH3ZL
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 5 Nov 2013 14:25:19 +0000 "Baldysiak, Pawel"
+<pawel.baldysiak@intel.com> wrote:
+
+> On Thursday, October 31, 2013 1:16 AM NeilBrown <neilb@suse.de> wrote:
+> > On Wed, 30 Oct 2013 13:20:22 +0100 Pawel Baldysiak
+> > <pawel.baldysiak@intel.com> wrote:
+> >=20
+> > > In case of reshape of raid0 through raid4 a value of
+> > > discard_granularity will be set to stripe size. MD driver should
+> > > re-set this value to correct one when migration will be finished.
+> > > Otherwise array will be left with wrong value and discard operations =
+will not
+> > work properly.
+> > >
+> > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> > > Cc: Shaohua Li <shli@kernel.org>
+> > > ---
+> > >  drivers/md/raid0.c |    2 ++
+> > >  1 file changed, 2 insertions(+)
+> > >
+> > > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index
+> > > c4d420b..807ca3a 100644
+> > > --- a/drivers/md/raid0.c
+> > > +++ b/drivers/md/raid0.c
+> > > @@ -266,6 +266,8 @@ static int create_strip_zones(struct mddev *mddev,
+> > struct r0conf **private_conf)
+> > >  	}
+> > >  	mddev->queue->backing_dev_info.congested_fn =3D raid0_congested;
+> > >  	mddev->queue->backing_dev_info.congested_data =3D mddev;
+> > > +	mddev->queue->limits.discard_granularity =3D
+> > > +			queue_logical_block_size(mddev->queue);
+> > >
+> > >  	/*
+> > >  	 * now since we have the hard sector sizes, we can make sure
+> >=20
+> > Thanks, but this doesn't seem like the right sort of fix.  It is to spe=
+cific to the
+> > symptom rather than trying to address the underlying problem.
+> >=20
+> > Maybe something like this?  Can you review and test?
+> >=20
+> > Thanks,
+> > NeilBrown
+> >=20
+> >=20
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c index
+> > 628cd529343f..740b6340f980 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -3620,6 +3620,7 @@ level_store(struct mddev *mddev, const char
+> > *buf, size_t len)
+> >  		mddev->in_sync =3D 1;
+> >  		del_timer_sync(&mddev->safemode_timer);
+> >  	}
+> > +	blk_set_stacking_limit(&mddev->queue->limits);
+> >  	pers->run(mddev);
+> >  	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+> >  	mddev_resume(mddev);
+> Hi Neil,
+> I have tested Yours patch, and everything works well.
+> TRIM operation are made correctly.
+> Could You apply it to upstream?=20
+>=20
+> BTW. Correct name of this function is blk_set_stacking_limits();
+>=20
+> Thanks,
+> Pawe=C5=82 Baldysiak
+
+Thanks for testing.  I've queue the following up for submission soonish.
+
+NeilBrown
+
+=46rom 3d2b31bb23ccb8170fafdf358098bb3cb0836080 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 7 Nov 2013 13:36:36 +1100
+Subject: [PATCH] md: fix calculation of stacking limits on level change.
+
+The various ->run routines of md personalities assume that the 'queue'
+has been initialised by the blk_set_stacking_limits() call in
+md_alloc().
+
+However when the level is changed (by level_store()) the ->run routine
+for the new level is called for an array which has already had the
+stacking limits modified.  This can result in incorrect final
+settings.
+
+So call blk_set_stacking_limits() before ->run in level_store().
+
+A specific consequence of this bug is that it causes
+discard_granularity to be set incorrectly when reshaping a RAID4 to a
+RAID0.
+
+This is suitable for any -stable kernel since 3.3 in which
+blk_set_stacking_limits() was introduced.
+
+Cc: stable@vger.kernel.org (3.3+)
+Reported-by: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 628cd529343f..b3a75afee560 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3620,6 +3620,7 @@ level_store(struct mddev *mddev, const char *buf, siz=
+e_t len)
+ 		mddev->in_sync =3D 1;
+ 		del_timer_sync(&mddev->safemode_timer);
+ 	}
++	blk_set_stacking_limits(&mddev->queue->limits);
+ 	pers->run(mddev);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 	mddev_resume(mddev);
+
+--Sig_/rKqHyDjE6jlNFe_j18iH3ZL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUnr9Ljnsnt1WYoG5AQLIyg//QRKMfZOJ6b25ayXzh7+hn9oHl6YLf0xI
+O23WZs6JsMQ7fHUYzHQUCCc6m9X+DUZdYqlhZVRXYesiRaPYtppezvS6WXuzH1/O
+IDxfhcNjox7UwvS62RnWuTNIZEi1TWk+yHrRyDylsrlwbnhM7wBhlCJo8vWR/fB5
+7pn1sbV803wsEO5KFPl7FXqp38ScaPnMDaSBwOWGkoQBFO27+6yPG5Qte+rPRI23
+Pl03pGGiZPVp4AvWCAXMloVNgBCT0V8mo7GyiVZN++S5rQTDuub6ONUh0/4ThwJ1
+LPngSBVSMrolXqo5nsfun+VXJTBv3Eel5BnkWGlcmFf0j9FXjtsncXcDjv+Q7Tw/
+38Mw4cONDd81TYS7KjDfsdu0YKuNnaNDJIO2J1tjziXx8q/h8j3JMoq4yaTDkQes
+fF3v4A8YvKeDFzIiCAwma6p8cfUF8j3y+GAKrlWLwbB6clSKtnrIaNz13Tdnb6W+
+H2MMn29P3KKGZNx2umwow/a43lERY1wVeR3PbglGJ7/zJdlU0wDgLw5chIY8ZkRf
+iFS426Svceg6lA/2xtWBdW23Kis99xCibCQaZ6PpgIW0aUuHhL8qO+RS3FbkSOxN
+2GGpSOjnaAXRAKqt/Z6xVU+oQO3qz5oMSrJZZQbiJiXLktHN84LdmSQfjmeKaZOv
+f+jfbOEDkvU=
+=4TFx
+-----END PGP SIGNATURE-----
+
+--Sig_/rKqHyDjE6jlNFe_j18iH3ZL--
