@@ -1,80 +1,50 @@
-From: NeilBrown <neilb@suse.de>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: ISW fakeraid: fail to add back a disk previously removed
-Date: Sat, 9 Nov 2013 08:16:23 +1100
-Message-ID: <20131109081623.25c6bfc4@notabene.brown>
+Date: Fri, 8 Nov 2013 14:02:08 -0800
+Message-ID: <CAPcyv4j-Pn-+0uAf+3A9JnnSxcjeQGyPjV_h=mWdhGkZuEM2yA@mail.gmail.com>
 References: <CAC9WiBj5UO76MN3s0TgTLVKVAXJzY+eBxCMCYJWTp0JgdYogaQ@mail.gmail.com>
 	<CAC9WiBiz+PTNQtv00RZUoBS30CaZwST+9W9K1SiPsVuze2MEcA@mail.gmail.com>
 	<CAC9WiBjdLKmZ5koOr7R6yuYUiOYdVLDGjiRGssg8kK5RQ1fr0A@mail.gmail.com>
 	<D9FFE20C522965449E182ACE73889AEB1A67F5CF@IRSMSX105.ger.corp.intel.com>
 	<CAC9WiBjSh_OYb0k6zyWgeMdbkYzKxrpg9n2VD5RTgdOTNwcudg@mail.gmail.com>
-	<D9FFE20C522965449E182ACE73889AEB1A67FFF9@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9/TCBPZowK=C6V3Ee3pu+BM"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1A67FFF9@IRSMSX105.ger.corp.intel.com>
+In-Reply-To: <CAC9WiBjSh_OYb0k6zyWgeMdbkYzKxrpg9n2VD5RTgdOTNwcudg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: Francis Moreau <francis.moro@gmail.com>, "Williams, Dan J" <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: "Dorau, Lukasz" <lukasz.dorau@intel.com>, NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/9/TCBPZowK=C6V3Ee3pu+BM
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Nov 8, 2013 at 5:45 AM, Francis Moreau <francis.moro@gmail.com> wrote:
+> Hello Lukasz
+>
+> On Wed, Nov 6, 2013 at 3:08 PM, Dorau, Lukasz <lukasz.dorau@intel.com> wrote:
+>
+>  [...]
+>
+>>
+>> If you created a RAID array with mdadm, it would work correctly - recovery would
+>> start.
+>
+> Nope, I've got an identical behaviour if the array is created by mdadm (v3.3).
 
-On Fri, 8 Nov 2013 14:33:24 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.com>
-wrote:
+It should really work either way.  I gave it a shot with:
 
-> On Friday, November 08, 2013 2:46 PM Francis Moreau <francis.moro@gmail.c=
-om> wrote:
-> > > If you created a RAID array with mdadm, it would work correctly - rec=
-overy would
-> > > start.
-> >=20
-> > Nope, I've got an identical behaviour if the array is created by mdadm =
-(v3.3).
-> >=20
->=20
-> I have checked it twice with Fedora 19 and mdadm v3.3 and it works.
-> What OS are you running?
->=20
-> > As you can see, I'm confused about ISW vs IMSM.
-> >=20
-> > Are those 2 formats the same thing ?
-> >=20
->=20
-> ISW is a name of Intel metadata used by dmraid and IMSM is a name of Inte=
-l metadata used by mdadm, but ISW in dmraid has not been supported and deve=
-loped for a couple of years, so ISW might be called an old version of IMSM.
->=20
-> Lukasz
+mdadm - v3.3-30-gf33a71f - 31st October 2013
+mdadm - v3.2.5 - 18th May 2012
 
-Unless we identify something in the metadata the dmraid writes which clearly
-contravene the specification, we must assume there is a bug in mdadm.  I
-haven't had a change to look at this properly yet but I hope to next week.
+...and it seems ok with loop devices, so something more fundamental is wrong.
 
-NeilBrown
+mdmon is in charge of finding new devices in the container and adding
+them to the member arrays.  Can you confirm that mdmon is running when
+the disk is failing to be added?
 
---Sig_/9/TCBPZowK=C6V3Ee3pu+BM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+The IMSM format is sensitive to disk serial numbers, I'm curious if
+your virtual disks are specifying unique serial numbers for your
+devices?  In my above tests with loopback devices I am using
+IMSM_DEVNAME_AS_SERIAL=1 for debug purposes you might try that as
+well.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUn1Upznsnt1WYoG5AQKIHBAAlTvLUKwtL52CvyQB7pb0ARlNXQHDAGSV
-NgMjmokNLvH7LmXbEyL3MtZb8swLJfjQs53vIH3o/umq/DMIy4/ReJ8JO/YOEEHK
-zlFmGLKJO8kfex6ue9h/6ta0JjNojx9VO2+AZUFDBPxtvqFy0GK4b0ncUElDPdXa
-MYCWcN0/JLWZ1Jp0Jol6d84yUN26Oyc5COJKpkuZAfcxHB9OY7HXFEnEONegURZC
-Ne9P78J2LI/SaFF6VjHTfb7NSzL4aSbH2WgkGXxYnydwbXHfuU5lLK4jb1Avbbii
-mxifdkpcBChwoiG154lkuW3AkSspnzcRu6sv3t+10igw7NJAKXwAsBbQEFvhFbsq
-DJ8sptMl80zFgpbwPCJEYpqSAHKNeuXaYJDiyWtsVtOzfxJ1TsCL97U6gXKtdM+g
-uy+hq+v11TtqEgxWbKtsgwJbDIOF8Jq1UuSatgAblDVDppETyQhUV1TFHvO6c40l
-fYwp1mPVEQwOGQ8SSyfhn1Sp5lnT99fhNEQ0Tsec4sTCGAddWChY3BWOKmH0nKrW
-iMG2Dh/Ckgi6BvWb4TkzbzTlV2wp6M88iMhOaBpoo1vvjk5D7c9Ch+95EvP0bcm7
-VaG8U+jBGhu1HEZ5qIQcfEpVfvSGsCRSofvFc/GlSFAabICdCFPR9P8t7ox98F0Q
-vFwSZjgGIcE=
-=TPOY
------END PGP SIGNATURE-----
-
---Sig_/9/TCBPZowK=C6V3Ee3pu+BM--
+--
+Dan
