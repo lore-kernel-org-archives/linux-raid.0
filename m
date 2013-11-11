@@ -1,97 +1,31 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: stoppind md from kicking out "bad' drives
-Date: Mon, 11 Nov 2013 11:28:14 +0400
-Message-ID: <5280870E.6080703@msgid.tls.msk.ru>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: stoppind md from kicking out "bad' drives
+Date: Mon, 11 Nov 2013 08:41:19 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1311110838190.26054@uplift.swm.pp.se>
+References: <5280870E.6080703@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5280870E.6080703@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello.
+On Mon, 11 Nov 2013, Michael Tokarev wrote:
 
-Yesterday we've hit a classical issue of two drives
-failure in raid5 configuration.
+> The question is: what's missing currently to prevent kicking drives from 
+> md arrays at all?  And I really mean preventing _both_ first failed 
+> drive (before start of resync) and second failed drive?
 
-The scenario was like this:
+Crank up the timeout settings a lot might help (I use 180 seconds), it 
+would probably have stopped the first drive from being kicked out.
 
-  - one disk failed (atually just stopped responding, but
-    started working again after bus reset, but that was much
-    later than needed)
+But you really should be running RAID6 and not RAID5 (as you now have 
+observed) to handle the failure case you just observed.
 
-  - the failed disk has been kicked out of the array
+Write-intent bitmap would have stopped the initial full resync of the 
+drive that was kicked out, which might have helped as well.
 
-  - md started syncronizing a hot-spare drive
-
-  - during resync, another drive developed a bad (unreadable)
-    sector
-
-  - another drive has been kicked out of the array
-
-  - boom
-
-Now it is obvious that almost all data on the second drive
-is intact, except of the area where the bad sector resides
-(which is, btw, at the very end of the drive, where most
-likely there's no useful data at all).  The hot-spare is
-almost ready too (up to amost the end of it).  But the array
-is non-functional and all filesystems are switched to read-
-only mode...
-
-The question is: what's missing currently to prevent kicking
-drives from md arrays at all?  And I really mean preventing
-_both_ first failed drive (before start of resync) and second
-failed drive?
-
-Can write-intent bitmap be used in this case, to mark areas
-changed in array which are failed to be written to one or
-another component device, for example?  Md can mark a drive
-as "semi-failed" and still try to use it in some situations.
-
-This "semi" state can be different - f.e., one is where md
-tries all normal operations on the drive and redirects failed
-reads to other drives (with continued attempts to re-write
-bad data) and continues writing normally, marking all failed
-writes in the bitmap.  Let's say it is "semi-working" state.
-Another is when no regular I/O is happening to it except of
-the critical situations when _another_ drive becomes unreadable
-in some place - so md will try to reconstruct that data based
-on this semi-failed drive in a hope that those places will
-be read successfully.  And other variations of the same theme...
-
-At the very least, maybe we should prevent md from kicking
-the last component device which makes the array unusable, like
-failed second drive on raid5 config - even if it has a bad
-sector, the array was 99.9% fine before md kicked it out,
-but after kicking it, the array is 100% dead...  This does
-not look right to me.
-
-Also, what's the way to assemble this array now?  We've almost
-resynced hot spare, a failed-at-the-end drive (the second
-failed one), and a non-fresh first failed drive which is in
-good condition, just outdated.  Can mdadm be forced to assemble
-the array from good drives plus second-failed drive?, maybe in
-read-only mode (this will let us to copy data which is still
-readable to another place)?
-
-I'd try to re-write the bad places on second-failed drive based
-on the information on good drives plus data from first-failed
-drive, -- it is obvious that those places still can be reconstructed,
-because even when the filesystem were in use during (attempt to)
-resync, no changes were made to the problematic areas, so there,
-first-failed drive still can be used.  But this - at this stage -
-is rather tricky, i'll need to write a program to help me, and
-made it bug-free to be useful.
-
-All in all, it still looks like md has very good potential for
-improvements wrt reliability... ;)
-
-(The system in question belongs to one of a very well-known
-organisations in free software, and it is (or was) the main
-software repository)
-
-Thank you!
-
-/mjt
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
