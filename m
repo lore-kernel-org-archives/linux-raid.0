@@ -1,31 +1,36 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: mdadm: sending ioctl [1261|800c0910] to a partition!
-Date: Mon, 11 Nov 2013 05:32:09 -0800
-Message-ID: <CACJz6QsCxgk981szeA-ptZFy5fGE7W+FzrzoATD9YqxhhZv_LQ@mail.gmail.com>
-References: <FE57A73F-D70A-4D2C-A658-BB320A0ECA35@gmail.com>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Re: stoppind md from kicking out "bad' drives
+Date: Mon, 11 Nov 2013 09:55:29 -0600
+Message-ID: <l5qulc$kaa$1@ger.gmane.org>
+References: <5280870E.6080703@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <FE57A73F-D70A-4D2C-A658-BB320A0ECA35@gmail.com>
+In-Reply-To: <5280870E.6080703@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Apparently harmless.
+On 11/11/2013 01:28 AM, Michael Tokarev wrote:
+> The question is: what's missing currently to prevent kicking
+> drives from md arrays at all?  And I really mean preventing
+> _both_ first failed drive (before start of resync) and second
+> failed drive?
 
-https://bugzilla.redhat.com/show_bug.cgi?id=783955
+I'm becoming increasingly convinced that hot-spares are a bad idea,
+particularly when you're one failure away from data loss.  (I.e. I might
+be willing to auto-add a hot-spare after the initial failure in a RAID-6
+array, but not after a second failure.)
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=656899:
-
-Sounds like it's a warning for developers as part of a trace of SCSI
-ioctls. Look like it was patched in newer kernels.
+I much prefer to do a manual recovery, after using a badblocks read-only
+test to check all of the component devices for bad sectors.  (I also
+build my MD arrays out of partitions rather than entire drives to make
+this process more manageable.)
 
 -- 
-Drew
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+           Sent from the cloud -- where it's already tomorrow
+========================================================================
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
