@@ -1,54 +1,37 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: stoppind md from kicking out "bad' drives
-Date: Mon, 11 Nov 2013 11:51:14 +0400
-Message-ID: <52808C72.3000405@msgid.tls.msk.ru>
-References: <5280870E.6080703@msgid.tls.msk.ru> <alpine.DEB.2.02.1311110838190.26054@uplift.swm.pp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
+Subject: Re: Running check and e2fsck simultaneously
+Date: Mon, 11 Nov 2013 09:52:51 +0200
+Message-ID: <6DC2162E-B592-4183-B645-71BC8AC21C76@gmail.com>
+References: <B385A1A4-3EB2-48CA-8EA5-FE8A0F5C2BA0@gmail.com> <527FCBAF.4070208@hardwarefreak.com> <58CD4AD8-0A1E-42E8-984D-F4727EE2B8F0@gmail.com> <527FDBC1.4000009@hardwarefreak.com> <D691C632-1025-4D32-9138-55BF9DE47300@gmail.com> <527FE89A.4010608@hardwarefreak.com> <89667845-9A4C-4402-91BE-0817BCB02C6F@gmail.com> <52805251.2010102@hardwarefreak.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1311110838190.26054@uplift.swm.pp.se>
+In-Reply-To: <52805251.2010102@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-11.11.2013 11:41, Mikael Abrahamsson wrote:
-> On Mon, 11 Nov 2013, Michael Tokarev wrote:
->
->> The question is: what's missing currently to prevent kicking drives from md arrays at all?  And I really mean preventing _both_ first failed drive (before start of resync) and second failed drive?
->
-> Crank up the timeout settings a lot might help (I use 180 seconds), it would probably have stopped the first drive from being kicked out.
->
-> But you really should be running RAID6 and not RAID5 (as you now have observed) to handle the failure case you just observed.
 
-No, really, that's not the solutions I was asking for.
+On Nov 11, 2013, at 5:43 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-Yes raid6 is better in this context.  But it has exactly the same properties
-when drives start "semi-failing" - it is enough to have one bad sector in
-different places of 3 drives for a catastrophic failure, while the array
-can even continue to work normally because the bad sectors are in different
-places.
+>> What about filesystem state? Does it matter if a filesystem is mounted when check is run?
+> 
+> I'm not an EXT user.  See "man e2fsck".
+> 
+> With XFS you can check while mounted using "xfs_repair -n [device]", but
+> no repairs will be performed, you simply get a report.  To repair a
+> damaged XFS filesystem use the same command sans "-n" on the unmounted
+> filesystem.  xfs_repair will abort if the filesystem is mounted, and
+> "-n" is not specified.  xfs_repair is not to be automated via
+> script/cron.  It is only to be run if/when errors are encountered,
+> usually after a crash, power loss, controller failure, etc.
 
-It is the drive kick-off - the decision made by md driver - which makes the
-failure catastrophic.
+Oh, I meant 'check' as in
 
-We may reduce probability of such event by using different configuration
-tweaks, but the underlying problem remains.
+echo check > /sys/block/$DEVICE/md/sync_action
 
-> Write-intent bitmap would have stopped the initial full resync of the drive that was kicked out, which might have helped as well.
+That, and I also read on my distro's wiki that 'check' will pick up where it was interrupted automatically in those cases when a system is rebooted before 'check' is complete. Well, apparently it does not work that way because I was only some 4% into 'check' yesterday evening, and after resume from sleep mdstat does not show that 'check' is running. So, does the distro's wiki contain erroneous information?
 
-Nope, because the array were (re)syncing a hot spare, not the first failed
-drive.
-
-I asked about write-intent bitmap because it can act as a semi-permanent "list
-of bad blocks on component devices" -- instead of kicking whole device out,
-mark just the "bad place" on it in the bitmap (the place where we weren't
-able to write _new_ data) and continue using it, just avoiding reading from
-the marked-as-bad places (because even if it'll succees, the data will be
-wrong already).
-
-Thanks,
-
-/mjt
-
+Ivan
