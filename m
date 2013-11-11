@@ -1,66 +1,80 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: stoppind md from kicking out "bad' drives
-Date: Mon, 11 Nov 2013 12:05:21 +0400
-Message-ID: <52808FC1.3010200@msgid.tls.msk.ru>
-References: <5280870E.6080703@msgid.tls.msk.ru> <alpine.DEB.2.02.1311110838190.26054@uplift.swm.pp.se> <52808C72.3000405@msgid.tls.msk.ru> <alpine.DEB.2.02.1311110853530.26054@uplift.swm.pp.se>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Running check and e2fsck simultaneously
+Date: Mon, 11 Nov 2013 09:09:50 +0100
+Message-ID: <528090CE.4040504@hesbynett.no>
+References: <B385A1A4-3EB2-48CA-8EA5-FE8A0F5C2BA0@gmail.com> <527FCBAF.4070208@hardwarefreak.com> <58CD4AD8-0A1E-42E8-984D-F4727EE2B8F0@gmail.com> <527FDBC1.4000009@hardwarefreak.com> <D691C632-1025-4D32-9138-55BF9DE47300@gmail.com> <527FE89A.4010608@hardwarefreak.com> <89667845-9A4C-4402-91BE-0817BCB02C6F@gmail.com> <52805251.2010102@hardwarefreak.com> <6DC2162E-B592-4183-B645-71BC8AC21C76@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1311110853530.26054@uplift.swm.pp.se>
+In-Reply-To: <6DC2162E-B592-4183-B645-71BC8AC21C76@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>, stan@hardwarefreak.com
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-11.11.2013 11:56, Mikael Abrahamsson wrote:
-> On Mon, 11 Nov 2013, Michael Tokarev wrote:
->
->> No, really, that's not the solutions I was asking for.
->
-> Well, it is.
->
->> Yes raid6 is better in this context.  But it has exactly the same properties
->> when drives start "semi-failing" - it is enough to have one bad sector in
->> different places of 3 drives for a catastrophic failure, while the array
->> can even continue to work normally because the bad sectors are in different
->> places.
->
-> If you have timeouts set properly then md will be able to re-calculate the bad sector from parity and re-write it, even with one drive failed.
+On 11/11/13 08:52, Ivan Lezhnjov IV wrote:
+> 
+> On Nov 11, 2013, at 5:43 AM, Stan Hoeppner <stan@hardwarefreak.com>
+> wrote:
+> 
+>>> What about filesystem state? Does it matter if a filesystem is
+>>> mounted when check is run?
+>> 
+>> I'm not an EXT user.  See "man e2fsck".
+>> 
+>> With XFS you can check while mounted using "xfs_repair -n
+>> [device]", but no repairs will be performed, you simply get a
+>> report.  To repair a damaged XFS filesystem use the same command
+>> sans "-n" on the unmounted filesystem.  xfs_repair will abort if
+>> the filesystem is mounted, and "-n" is not specified.  xfs_repair
+>> is not to be automated via script/cron.  It is only to be run
+>> if/when errors are encountered, usually after a crash, power loss,
+>> controller failure, etc.
+> 
+> Oh, I meant 'check' as in
+> 
+> echo check > /sys/block/$DEVICE/md/sync_action
 
-Timeouts has nothing to do with this at all.
+In general, you can happily do a raid check while the system is in use
+(i.e., the filesystem is mounted).  Of course, if you are using the
+system heavily then things will slow down, but it will all work fine.
+Raid is designed for maximal uptime - you don't have to stop arrays or
+umount filesystems for raid maintenance.
 
-First drive were "stuck" somewhere in its firmware or electronics and
-didn't respond at all (for several MINUTES), even to device reset.
-It recovered much later when a bus reset was performed.
+You can also run raid check simultaneously with e2fsck.
 
-Second drive returned "I can't read this data" rather quickly.  It
-was not "timeout reading" or somesuch, it was a confident "sorry guys
-I've lost this piece".
+But you can't run e2fsck very well while it is mounted.  You /can/ run
+it in read-only mode, and if nothing writes to the filesystem (including
+touching access times) then it will work.  But in general you will get
+false error messages when inconsistencies are found as structures are
+written during the check.  (Other tricks include re-mounting as
+read-only, and doing an lvm snapshot of the volume then fsck'ing that.)
 
->> It is the drive kick-off - the decision made by md driver - which makes the failure catastrophic.
->
-> That's what the timeout problem is. If you're running consumer drives and default linux kernel timeouts then the drive will be kicked before it can return a read error.
+> 
+> That, and I also read on my distro's wiki that 'check' will pick up
+> where it was interrupted automatically in those cases when a system
+> is rebooted before 'check' is complete. Well, apparently it does not
+> work that way because I was only some 4% into 'check' yesterday
+> evening, and after resume from sleep mdstat does not show that
+> 'check' is running. So, does the distro's wiki contain erroneous
+> information?
+> 
 
-It's not consumer drivers, and again, it has nothing to do with the timeouts.
+I can't say anything about that other than general points about "sleep"
+being a half-way house between rebooting and running.  It does not
+surprise me that you get issues with things not restarting after a sleep
+and wakeup.
 
-Even if it were really timeouts, even given infinite timeout, if the bad
-sector can't be read, no games with timeouts will let to recover it.
+As far as I understand your posts, you have a laptop that you use as a
+normal machine and also as a server.  Presumably you are connected to
+mains power rather than a battery.  Why not just let the thing run
+overnight?  It's a laptop - it's low power already.  As long as things
+like the display turn off (and perhaps the disks too, after some period
+without use), the power used will be tiny.  So keep it turned on, or
+turn it off - then you don't have any sleep problems.
 
-And it is just ONE bad sector (on next drive) which makes md to kick the
-WHOLE device out of the array -- exactly the moment which turns the issue
-from "maybe, just maybe, lost some data" to "whole data has been lost".
-(And yes I pretty much understand that md tries to rewrite the place when
-it can do that)
+I don't think you mentioned what distro you are using (I might have
+missed it), which makes it difficult to guess what the "distro's wiki" says.
 
-[]
-> I don't understand why you would be running a RAID5+spare instead of RAID6 without spare.
-
-Yet again, this is a entirely different question.
-
-Please, pretty please, don't speak if you don't understand the topic... ;)
-
-Thanks,
-
-/mjt
 
