@@ -1,52 +1,43 @@
-From: Giovanni Tessore <giotex@texsoft.it>
-Subject: Re: recommending RAID6 over RAID5 when doing mdadm --create
-Date: Tue, 12 Nov 2013 08:12:37 +0100
-Message-ID: <5281D4E5.6080304@texsoft.it>
-References: <alpine.DEB.2.02.1311110841340.26054@uplift.swm.pp.se>	<52809BC5.2010605@hardwarefreak.com> <20131112135243.285834fa@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3.12: raid-1 mismatch_cnt question
+Date: Tue, 12 Nov 2013 04:14:15 -0500
+Message-ID: <CAO9zADwwhw9qQ7GMh45-4AXktp8UmsVOLDVVwSfc5gQS1QTENQ@mail.gmail.com>
+References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
+	<CAO9zADxbiW_OBiewAY8JQQjxS51Ydrm8Rj1=MWXCA+Xo9K3=2Q@mail.gmail.com>
+	<528178B8.4000704@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131112135243.285834fa@notabene.brown>
+In-Reply-To: <528178B8.4000704@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: open list <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/12/2013 03:52 AM, NeilBrown wrote:
-> On Mon, 11 Nov 2013 02:56:37 -0600 Stan Hoeppner <stan@hardwarefreak.com>
-> wrote:
->
->> On 11/11/2013 1:44 AM, Mikael Abrahamsson wrote:
+On Mon, Nov 11, 2013 at 7:39 PM, Brad Campbell
+<lists2009@fnarfbargle.com> wrote:
+> On 11/07/2013 06:54 PM, Justin Piszcz wrote:
 >>
->>> I believe this has been discussed before, but I would like to bring it
->>> up again.
+>> On Mon, Nov 4, 2013 at 5:25 AM, Justin Piszcz <jpiszcz@lucidpixels.com>
+>> wrote:
 >>>
->>> I would like to see mdadm recommend RAID6 over RAID6 when using
->>> component drives that are 500GB or larger and ask if the user is really
->>> sure about using RAID5, plus a pointer to a webpage on the wiki
->>> informing the user about the trouble with RAID5 on large volumes with
->>> consumer or prosumer drives.
+>>> Hi,
 >>>
->>> I am willing to contribute text to the webpage being pointed to.
->> Wikis change to regularly, too easily.  Networks can be down at times,
->> often the worst times.  See Murphy's Law.
->>
->> It would be better to put this information in mdadm(8) and refer the
->> user there.
->>
-> .. or in md(4) maybe.
+>>> I run two SSDs in a RAID-1 configuration and I have a swap partition on a
+>>> third SSD.  Over time, the mismatch_cnt between the two devices grows
+>>> higher
+>>> and higher.
+>>>
 >
-> If anyone wants to run with this and send me a patch (for code and
-> documentation) I would be very likely to apply it.
+> Are both SSD's identical? Do you have discard enabled on the filesystem?
+Yes (2 x Intel SSDSC2CW240A3) & yes )/dev/root on / type ext4
+(rw,relatime,discard,data=ordered))
+
 >
-> NeilBrown
+> The reason I ask is I have a RAID10 comprised of 3 Intel and 3 Samsung
+> SSD's. The Intel return 0 after TRIM while the Samsung don't, so I _always_
+> have a massive mismatch_cnt after I run fstrim. I never use a repair
+> operation as it's just going to re-write the already trimmed sectors.
+Very interesting and good to know!
 
-That issue (RAID5 going fully down during resync of degraded array if 
-read errors occur) hasn't been addressed by the badblocks log feature 
-available in later kernels and mdadm ?
-Yet, it is not clear to me if the fetaure is fully implemented and 
-operational.
-
-Regards
-Giovanni
-
+Justin.
