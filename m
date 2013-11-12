@@ -1,66 +1,52 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/2] raid5: Using conf->device_lock protect multi-thread
- resouce when changed.
-Date: Tue, 12 Nov 2013 11:41:46 +0800
-Message-ID: <20131112034146.GB24456@kernel.org>
-References: <201311121043363569796@gmail.com>
+From: Giovanni Tessore <giotex@texsoft.it>
+Subject: Re: recommending RAID6 over RAID5 when doing mdadm --create
+Date: Tue, 12 Nov 2013 08:12:37 +0100
+Message-ID: <5281D4E5.6080304@texsoft.it>
+References: <alpine.DEB.2.02.1311110841340.26054@uplift.swm.pp.se>	<52809BC5.2010605@hardwarefreak.com> <20131112135243.285834fa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201311121043363569796@gmail.com>
+In-Reply-To: <20131112135243.285834fa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 12, 2013 at 10:43:39AM +0800, majianpeng wrote:
-> When changed group_thread_cnt from sysfs entry, it met OOPS.
-> The kernel messages are:
-> [  135.299021] BUG: unable to handle kernel NULL pointer dereference at           (null)
-> [  135.299073] IP: [<ffffffff815188ab>] handle_active_stripes+0x32b/0x440
-> [  135.299107] PGD 0
-> [  135.299122] Oops: 0000 [#1] SMP
-> [  135.299144] Modules linked in: netconsole e1000e ptp pps_core
-> [  135.299188] CPU: 3 PID: 2225 Comm: md0_raid5 Not tainted 3.12.0+ #24
-> [  135.299214] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080015  11/09/2011
-> [  135.299255] task: ffff8800b9638f80 ti: ffff8800b77a4000 task.ti: ffff8800b77a4000
-> [  135.299283] RIP: 0010:[<ffffffff815188ab>]  [<ffffffff815188ab>] handle_active_stripes+0x32b/0x440
-> [  135.299323] RSP: 0018:ffff8800b77a5c48  EFLAGS: 00010002
-> [  135.299344] RAX: ffff880037bb5c70 RBX: 0000000000000000 RCX: 0000000000000008
-> [  135.299371] RDX: ffff880037bb5cb8 RSI: 0000000000000001 RDI: ffff880037bb5c00
-> [  135.299398] RBP: ffff8800b77a5d08 R08: 0000000000000001 R09: 0000000000000000
-> [  135.299425] R10: ffff8800b77a5c98 R11: 00000000ffffffff R12: ffff880037bb5c00
-> [  135.299452] R13: 0000000000000000 R14: 0000000000000000 R15: ffff880037bb5c70
-> [  135.299479] FS:  0000000000000000(0000) GS:ffff88013fd80000(0000) knlGS:0000000000000000
-> [  135.299510] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [  135.299532] CR2: 0000000000000000 CR3: 0000000001c0b000 CR4: 00000000000407e0
-> [  135.299559] Stack:
-> [  135.299570]  ffff8800b77a5c88 ffffffff8107383e ffff8800b77a5c88 ffff880037a64300
-> [  135.299611]  000000000000ec08 ffff880037bb5cb8 ffff8800b77a5c98 ffffffffffffffd8
-> [  135.299654]  000000000000ec08 ffff880037bb5c60 ffff8800b77a5c98 ffff8800b77a5c98
-> [  135.299696] Call Trace:
-> [  135.299711]  [<ffffffff8107383e>] ? __wake_up+0x4e/0x70
-> [  135.299733]  [<ffffffff81518f88>] raid5d+0x4c8/0x680
-> [  135.299756]  [<ffffffff817174ed>] ? schedule_timeout+0x15d/0x1f0
-> [  135.299781]  [<ffffffff81524c9f>] md_thread+0x11f/0x170
-> [  135.299804]  [<ffffffff81069cd0>] ? wake_up_bit+0x40/0x40
-> [  135.299826]  [<ffffffff81524b80>] ? md_rdev_init+0x110/0x110
-> [  135.299850]  [<ffffffff81069656>] kthread+0xc6/0xd0
-> [  135.299871]  [<ffffffff81069590>] ? kthread_freezable_should_stop+0x70/0x70
-> [  135.299899]  [<ffffffff81722ffc>] ret_from_fork+0x7c/0xb0
-> [  135.299923]  [<ffffffff81069590>] ? kthread_freezable_should_stop+0x70/0x70
-> [  135.299951] Code: ff ff ff 0f 84 d7 fe ff ff e9 5c fe ff ff 66 90 41 8b b4 24 d8 01 00 00 45 31 ed 85 f6 0f 8e 7b fd ff ff 49 8b 9c 24 d0 01 00 00 <48> 3b 1b 49 89 dd 0f 85 67 fd ff ff 48 8d 43 28 31 d2 eb 17 90
-> [  135.300005] RIP  [<ffffffff815188ab>] handle_active_stripes+0x32b/0x440
-> [  135.300005]  RSP <ffff8800b77a5c48>
-> [  135.300005] CR2: 0000000000000000
-> [  135.300005] ---[ end trace 504854e5bb7562ed ]---
-> [  135.300005] Kernel panic - not syncing: Fatal exception
-> 
-> This because raid5d() can running when changed multi-thread resources.
-> After mddve_suspend(), the raid5d() can still on running.
-> But when change multi-thread resources in raid5_store_group_thread_cnt(),
-> it can't use conf->device_lock to protect.
-> 
-> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
-Reviewed-by: Shaohua Li <shli@kernel.org>
+On 11/12/2013 03:52 AM, NeilBrown wrote:
+> On Mon, 11 Nov 2013 02:56:37 -0600 Stan Hoeppner <stan@hardwarefreak.com>
+> wrote:
+>
+>> On 11/11/2013 1:44 AM, Mikael Abrahamsson wrote:
+>>
+>>> I believe this has been discussed before, but I would like to bring it
+>>> up again.
+>>>
+>>> I would like to see mdadm recommend RAID6 over RAID6 when using
+>>> component drives that are 500GB or larger and ask if the user is really
+>>> sure about using RAID5, plus a pointer to a webpage on the wiki
+>>> informing the user about the trouble with RAID5 on large volumes with
+>>> consumer or prosumer drives.
+>>>
+>>> I am willing to contribute text to the webpage being pointed to.
+>> Wikis change to regularly, too easily.  Networks can be down at times,
+>> often the worst times.  See Murphy's Law.
+>>
+>> It would be better to put this information in mdadm(8) and refer the
+>> user there.
+>>
+> .. or in md(4) maybe.
+>
+> If anyone wants to run with this and send me a patch (for code and
+> documentation) I would be very likely to apply it.
+>
+> NeilBrown
+
+That issue (RAID5 going fully down during resync of degraded array if 
+read errors occur) hasn't been addressed by the badblocks log feature 
+available in later kernels and mdadm ?
+Yet, it is not clear to me if the fetaure is fully implemented and 
+operational.
+
+Regards
+Giovanni
+
