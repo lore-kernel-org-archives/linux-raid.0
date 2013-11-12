@@ -1,86 +1,59 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 1/2] raid5: Before freeing old multi-thread worker,it should flush them.
-Date: Tue, 12 Nov 2013 10:43:46 +0800
-Message-ID: <201311121043328526975@gmail.com>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: 3.12: raid-1 mismatch_cnt question
+Date: Mon, 11 Nov 2013 21:49:08 -0500
+Message-ID: <21121.38692.485478.101911@quad.stoffel.home>
+References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com>
+	<527E8B74.70301@shiftmail.org>
+	<008301cedd9d$fc254cf0$f46fe6d0$@lucidpixels.com>
+	<527F7FF5.3000002@shiftmail.org>
+	<000301cedec0$1fa72d60$5ef58820$@lucidpixels.com>
+	<5280BA1E.6060604@shiftmail.org>
+	<CAO9zADyyXiw91y=GwArcC9wUrhRPNNxp_XMAgtcPxR=fiZZY1g@mail.gmail.com>
+	<21121.19173.938188.985528@quad.stoffel.home>
+	<20131112085556.766f095b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20131112085556.766f095b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, shli <shli@kernel.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: John Stoffel <john@stoffel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, joystick <joystick@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-V2hlbiBjaGFuZ2VkIGdyb3VwX3RocmVhZF9jbnQgZnJvbSBzeXNmcyBlbnRyeSx0aGUga2VybmVs
-IG1ldCBvb3BzLg0KVGhlIGtlcm5lbCBtZXNzYWdlcyBhcmU6DQpbICA3NDAuOTYxMzg5XSBCVUc6
-IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAw
-MDAwMDAwMDAwMDA4DQpbICA3NDAuOTYxNDQ0XSBJUDogWzxmZmZmZmZmZjgxMDYyNTcwPl0gcHJv
-Y2Vzc19vbmVfd29yaysweDMwLzB4NTAwDQpbICA3NDAuOTYxNDc2XSBQR0QgYjkwMTMwNjcgUFVE
-IGI2NTFlMDY3IFBNRCAwDQpbICA3NDAuOTYxNTAzXSBPb3BzOiAwMDAwIFsjMV0gU01QDQpbICA3
-NDAuOTYxNTI1XSBNb2R1bGVzIGxpbmtlZCBpbjogbmV0Y29uc29sZSBlMTAwMGUgcHRwIHBwc19j
-b3JlDQpbICA3NDAuOTYxNTc3XSBDUFU6IDAgUElEOiAzNjgzIENvbW06IGt3b3JrZXIvdTg6NSBO
-b3QgdGFpbnRlZCAzLjEyLjArICMyMw0KWyAgNzQwLjk2MTYwMl0gSGFyZHdhcmUgbmFtZTogVG8g
-QmUgRmlsbGVkIEJ5IE8uRS5NLiBUbyBCZSBGaWxsZWQgQnkgTy5FLk0uL1RvIGJlIGZpbGxlZCBi
-eSBPLkUuTS4sIEJJT1MgMDgwMDE1ICAxMS8wOS8yMDExDQpbICA3NDAuOTYxNjQ2XSB0YXNrOiBm
-ZmZmODgwMTNhYmUwMDAwIHRpOiBmZmZmODgwMTNhMjQ2MDAwIHRhc2sudGk6IGZmZmY4ODAxM2Ey
-NDYwMDANClsgIDc0MC45NjE2NzNdIFJJUDogMDAxMDpbPGZmZmZmZmZmODEwNjI1NzA+XSAgWzxm
-ZmZmZmZmZjgxMDYyNTcwPl0gcHJvY2Vzc19vbmVfd29yaysweDMwLzB4NTAwDQpbICA3NDAuOTYx
-NzA4XSBSU1A6IDAwMTg6ZmZmZjg4MDEzYTI0N2UwOCAgRUZMQUdTOiAwMDAxMDA4Ng0KWyAgNzQw
-Ljk2MTczMF0gUkFYOiBmZmZmODgwMGI5MTJiNDAwIFJCWDogZmZmZjg4MDEzYTYxZTY4MCBSQ1g6
-IGZmZmY4ODAwYjkxMmI0MDANClsgIDc0MC45NjE3NTddIFJEWDogZmZmZjg4MDBiOTEyYjYwMCBS
-U0k6IGZmZmY4ODAwYjkxMmI2MDAgUkRJOiBmZmZmODgwMTNhNjFlNjgwDQpbICA3NDAuOTYxNzgy
-XSBSQlA6IGZmZmY4ODAxM2EyNDdlNDggUjA4OiBmZmZmODgwMTNhMjQ2MDAwIFIwOTogMDAwMDAw
-MDAwMDAyYzA5ZA0KWyAgNzQwLjk2MTgwOF0gUjEwOiAwMDAwMDAwMDAwMDAwMTBmIFIxMTogMDAw
-MDAwMDAwMDAwMDAwMCBSMTI6IGZmZmY4ODAxM2IwMGNjMDANClsgIDc0MC45NjE4MzNdIFIxMzog
-MDAwMDAwMDAwMDAwMDAwMCBSMTQ6IGZmZmY4ODAxM2IwMGNmODAgUjE1OiBmZmZmODgwMTNhNjFl
-NmIwDQpbICA3NDAuOTYxODYxXSBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4
-MDEzZmMwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpbICA3NDAuOTYxODkzXSBD
-UzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDNiDQpbICA3NDAu
-OTYyMDAxXSBDUjI6IDAwMDAwMDAwMDAwMDAwYjggQ1IzOiAwMDAwMDAwMGIyNGZlMDAwIENSNDog
-MDAwMDAwMDAwMDA0MDdmMA0KWyAgNzQwLjk2MjAwMV0gU3RhY2s6DQpbICA3NDAuOTYyMDAxXSAg
-MDAwMDAwMDAwMDAwMDAwOCBmZmZmODgwMGI5MTJiNjAwIGZmZmY4ODAxM2IwMGNjMDAgZmZmZjg4
-MDEzYTYxZTY4MA0KWyAgNzQwLjk2MjAwMV0gIGZmZmY4ODAxM2IwMGNjMDAgZmZmZjg4MDEzYjAw
-Y2MxOCBmZmZmODgwMTNiMDBjZjgwIGZmZmY4ODAxM2E2MWU2YjANClsgIDc0MC45NjIwMDFdICBm
-ZmZmODgwMTNhMjQ3ZWI4IGZmZmZmZmZmODEwNjM5YzYgMDAwMDAwMDAwMDAxMmE4MCBmZmZmODgw
-MTNhMjQ3ZmQ4DQpbICA3NDAuOTYyMDAxXSBDYWxsIFRyYWNlOg0KWyAgNzQwLjk2MjAwMV0gIFs8
-ZmZmZmZmZmY4MTA2MzljNj5dIHdvcmtlcl90aHJlYWQrMHgyMDYvMHgzZjANClsgIDc0MC45NjIw
-MDFdICBbPGZmZmZmZmZmODEwNjM3YzA+XSA/IG1hbmFnZV93b3JrZXJzKzB4MmMwLzB4MmMwDQpb
-ICA3NDAuOTYyMDAxXSAgWzxmZmZmZmZmZjgxMDY5NjU2Pl0ga3RocmVhZCsweGM2LzB4ZDANClsg
-IDc0MC45NjIwMDFdICBbPGZmZmZmZmZmODEwNjk1OTA+XSA/IGt0aHJlYWRfZnJlZXphYmxlX3No
-b3VsZF9zdG9wKzB4NzAvMHg3MA0KWyAgNzQwLjk2MjAwMV0gIFs8ZmZmZmZmZmY4MTcyMmZmYz5d
-IHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwDQpbICA3NDAuOTYyMDAxXSAgWzxmZmZmZmZmZjgxMDY5
-NTkwPl0gPyBrdGhyZWFkX2ZyZWV6YWJsZV9zaG91bGRfc3RvcCsweDcwLzB4NzANClsgIDc0MC45
-NjIwMDFdIENvZGU6IDg5IGU1IDQxIDU3IDQxIDU2IDQxIDU1IDQ1IDMxIGVkIDQxIDU0IDUzIDQ4
-IDg5IGZiIDQ4IDgzIGVjIDE4IDQ4IDhiIDA2IDRjIDhiIDY3IDQ4IDQ4IDg5IGMxIDMwIGM5IGE4
-IDA0IDRjIDBmIDQ1IGU5IDgwIDdmIDU4IDAwIDw0OT4gOGIgNDUgMDggNDQgOGIgYjAgMDAgMDEg
-MDAgMDAgNzggMGMgNDEgZjYgNDQgMjQgMTAgMDQgMGYgODQNClsgIDc0MC45NjIwMDFdIFJJUCAg
-WzxmZmZmZmZmZjgxMDYyNTcwPl0gcHJvY2Vzc19vbmVfd29yaysweDMwLzB4NTAwDQpbICA3NDAu
-OTYyMDAxXSAgUlNQIDxmZmZmODgwMTNhMjQ3ZTA4Pg0KWyAgNzQwLjk2MjAwMV0gQ1IyOiAwMDAw
-MDAwMDAwMDAwMDA4DQpbICA3NDAuOTYyMDAxXSAtLS1bIGVuZCB0cmFjZSAzOTE4MTQ2MDAwMDc0
-OGRlIF0tLS0NClsgIDc0MC45NjIwMDFdIEtlcm5lbCBwYW5pYyAtIG5vdCBzeW5jaW5nOiBGYXRh
-bCBleGNlcHRpb24NCg0KU3VwcG9zZSB0aGlzIGNvbmRpdGlvbix0aGVyZSBhcmUgbGVmdCBzb21l
-IHN0aXJwZXMgd2hpY2ggbGVzcyBNQVhfU1RSSVBFX0JBVENILg0KaXQgcXVldWVkIGEgd29ya2Vy
-IHRvIGhhbmRsZS5CdXQgYmVmb3JlIGNhbGxpbmcgcmFpZDVfZG9fd29yaywgcmFpZDVkIGhhbmRs
-ZSB0aG9zZQ0Kc3RyaXBlIG1ha2UgY29uZi0+YWN0aXZlX3N0cmllcCA9MC5TbyBtZGRldl9zdXNw
-ZW5kKCkgY2FuIHJldHVybi4NCkl0IGZyZWUgb2xkIHdvcmtlciByZXNvdXJjZXMgYmVmb3JlIHJh
-aWQ1X2RvX3dvcmsuU28gd2hlbiBwcm9jZXNzX29uZV93b3JrKCkgY2FsbA0KcmFpZDVfZG9fd29y
-aywgdGhlIHJhaWQ1IHdvcmtlciBhbHJlYWR5IGZyZWUuDQoNCgkJCQlyYWlkNWQoKQkJcmFpZDVf
-c3RvcmVfZ3JvdXBfdGhyZWFkX2NudCgpDQpxdWV1ZV93b3JrCQkJCQkJbWRkZXZfc3VzcGVuZCgp
-DQoJCQkJaGFuZGxlX3N0cmlwcw0KCQkJCWFjdGl2ZV9zdHJpcGU9MA0KCQkJCQkJCWZyZWUob2xk
-IHdvcmtlciByZXNvdXJjZXMpDQoJCXByb2Nlc3Nfb25lX3dvcmsNCgkJcmFpZDVfZG9fd29yaw0K
-DQpUbyBhdm9pZCB0aGlzLCB3ZSBzaG91bGQgb25seSBmbHVzaCB0aG9zZSB3b3JrZXIgYmVmb3Jl
-IGZyZWUgdGhlbS4NCg0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21h
-aWwuY29tPg0KLS0tDQogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAgMyArKysNCiAxIGZpbGVzIGNo
-YW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KaW5kZXggZjhiOTA2OC4uY2M4
-NjZmOCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbWQvcmFpZDUuYw0KKysrIGIvZHJpdmVycy9tZC9y
-YWlkNS5jDQpAQCAtNTIzOSw2ICs1MjM5LDkgQEAgcmFpZDVfc3RvcmVfZ3JvdXBfdGhyZWFkX2Nu
-dChzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjb25zdCBjaGFyICpwYWdlLCBzaXplX3QgbGVuKQ0KIAlv
-bGRfZ3JvdXBzID0gY29uZi0+d29ya2VyX2dyb3VwczsNCiAJb2xkX2dyb3VwX2NudCA9IGNvbmYt
-Pndvcmtlcl9jbnRfcGVyX2dyb3VwOw0KIA0KKwlpZiAob2xkX2dyb3VwcykNCisJCWZsdXNoX3dv
-cmtxdWV1ZShyYWlkNV93cSk7DQorDQogCWNvbmYtPndvcmtlcl9ncm91cHMgPSBOVUxMOw0KIAll
-cnIgPSBhbGxvY190aHJlYWRfZ3JvdXBzKGNvbmYsIG5ldyk7DQogCWlmIChlcnIpIHsNCi0tIA0K
-MS43LjENCg==
+>>>>> "NeilBrown" == NeilBrown  <neilb@suse.de> writes:
 
+NeilBrown> On Mon, 11 Nov 2013 16:23:49 -0500 "John Stoffel" <john@stoffel.org> wrote:
+>> 
+>> I thought you could also get a mis-match count from open mmap'd files,
+>> which aren't completely written to one disk or another?  
+>> 
+
+NeilBrown> The only cause I can imagine for the mismatch count
+NeilBrown> increasing is for a page of memory to be change while it is
+NeilBrown> being written out (so each device sees a different value)
+NeilBrown> and then for the page to be invalidated (so the dirty page
+NeilBrown> never gets written out again).
+
+NeilBrown> The only way to change a page while it is being written out
+NeilBrown> is (I think) through memory mapping (though this could have
+NeilBrown> change, "write" might achieve it).
+
+NeilBrown> But normally if you change a memory mapped page while it is
+NeilBrown> being written it will be marked 'dirty' and so will be
+NeilBrown> written out again - the same to both devices.
+
+NeilBrown> You could possibly modify a mem-mapped file, and then
+NeilBrown> delete it before the latest changes were written, but think
+NeilBrown> that would be unlikely to do on purpose.
+
+NeilBrown> Swap is the most likely cause.  If some pages in a process
+NeilBrown> were written out and changed during the writeout, and then
+NeilBrown> the process was killed, you could easily get a mismatch
+NeilBrown> persisting.
+
+I think it is swap in my case, it's a RHEL 5.6 box being used to host
+VNC sessions for my users.  They do weekly checks on the mirrored
+disks, and I think I get mis-match counts because swap is on MD too.  
+
+John
