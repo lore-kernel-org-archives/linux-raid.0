@@ -1,73 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: recommending RAID6 over RAID5 when doing mdadm --create
-Date: Tue, 12 Nov 2013 13:52:43 +1100
-Message-ID: <20131112135243.285834fa@notabene.brown>
-References: <alpine.DEB.2.02.1311110841340.26054@uplift.swm.pp.se>
-	<52809BC5.2010605@hardwarefreak.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2] raid5: Before freeing old multi-thread worker,it
+ should flush them.
+Date: Tue, 12 Nov 2013 11:39:13 +0800
+Message-ID: <20131112033913.GA24456@kernel.org>
+References: <201311121043328526975@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qVmXnpuxHfk8/V9y09M2d7Y"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52809BC5.2010605@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <201311121043328526975@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/qVmXnpuxHfk8/V9y09M2d7Y
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Nov 12, 2013 at 10:43:46AM +0800, majianpeng wrote:
+> When changed group_thread_cnt from sysfs entry,the kernel met oops.
+> The kernel messages are:
+> [  740.961389] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+> [  740.961444] IP: [<ffffffff81062570>] process_one_work+0x30/0x500
+> [  740.961476] PGD b9013067 PUD b651e067 PMD 0
+> [  740.961503] Oops: 0000 [#1] SMP
+> [  740.961525] Modules linked in: netconsole e1000e ptp pps_core
+> [  740.961577] CPU: 0 PID: 3683 Comm: kworker/u8:5 Not tainted 3.12.0+ #23
+> [  740.961602] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080015  11/09/2011
+> [  740.961646] task: ffff88013abe0000 ti: ffff88013a246000 task.ti: ffff88013a246000
+> [  740.961673] RIP: 0010:[<ffffffff81062570>]  [<ffffffff81062570>] process_one_work+0x30/0x500
+> [  740.961708] RSP: 0018:ffff88013a247e08  EFLAGS: 00010086
+> [  740.961730] RAX: ffff8800b912b400 RBX: ffff88013a61e680 RCX: ffff8800b912b400
+> [  740.961757] RDX: ffff8800b912b600 RSI: ffff8800b912b600 RDI: ffff88013a61e680
+> [  740.961782] RBP: ffff88013a247e48 R08: ffff88013a246000 R09: 000000000002c09d
+> [  740.961808] R10: 000000000000010f R11: 0000000000000000 R12: ffff88013b00cc00
+> [  740.961833] R13: 0000000000000000 R14: ffff88013b00cf80 R15: ffff88013a61e6b0
+> [  740.961861] FS:  0000000000000000(0000) GS:ffff88013fc00000(0000) knlGS:0000000000000000
+> [  740.961893] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> [  740.962001] CR2: 00000000000000b8 CR3: 00000000b24fe000 CR4: 00000000000407f0
+> [  740.962001] Stack:
+> [  740.962001]  0000000000000008 ffff8800b912b600 ffff88013b00cc00 ffff88013a61e680
+> [  740.962001]  ffff88013b00cc00 ffff88013b00cc18 ffff88013b00cf80 ffff88013a61e6b0
+> [  740.962001]  ffff88013a247eb8 ffffffff810639c6 0000000000012a80 ffff88013a247fd8
+> [  740.962001] Call Trace:
+> [  740.962001]  [<ffffffff810639c6>] worker_thread+0x206/0x3f0
+> [  740.962001]  [<ffffffff810637c0>] ? manage_workers+0x2c0/0x2c0
+> [  740.962001]  [<ffffffff81069656>] kthread+0xc6/0xd0
+> [  740.962001]  [<ffffffff81069590>] ? kthread_freezable_should_stop+0x70/0x70
+> [  740.962001]  [<ffffffff81722ffc>] ret_from_fork+0x7c/0xb0
+> [  740.962001]  [<ffffffff81069590>] ? kthread_freezable_should_stop+0x70/0x70
+> [  740.962001] Code: 89 e5 41 57 41 56 41 55 45 31 ed 41 54 53 48 89 fb 48 83 ec 18 48 8b 06 4c 8b 67 48 48 89 c1 30 c9 a8 04 4c 0f 45 e9 80 7f 58 00 <49> 8b 45 08 44 8b b0 00 01 00 00 78 0c 41 f6 44 24 10 04 0f 84
+> [  740.962001] RIP  [<ffffffff81062570>] process_one_work+0x30/0x500
+> [  740.962001]  RSP <ffff88013a247e08>
+> [  740.962001] CR2: 0000000000000008
+> [  740.962001] ---[ end trace 39181460000748de ]---
+> [  740.962001] Kernel panic - not syncing: Fatal exception
+> 
+> Suppose this condition,there are left some stirpes which less MAX_STRIPE_BATCH.
+> it queued a worker to handle.But before calling raid5_do_work, raid5d handle those
+> stripe make conf->active_striep =0.So mddev_suspend() can return.
+> It free old worker resources before raid5_do_work.So when process_one_work() call
+> raid5_do_work, the raid5 worker already free.
+> 
+> 				raid5d()		raid5_store_group_thread_cnt()
+> queue_work						mddev_suspend()
+> 				handle_strips
+> 				active_stripe=0
+> 							free(old worker resources)
+> 		process_one_work
+> 		raid5_do_work
+> 
+> To avoid this, we should only flush those worker before free them.
+> 
+> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 
-On Mon, 11 Nov 2013 02:56:37 -0600 Stan Hoeppner <stan@hardwarefreak.com>
-wrote:
-
-> On 11/11/2013 1:44 AM, Mikael Abrahamsson wrote:
->=20
-> > I believe this has been discussed before, but I would like to bring it
-> > up again.
-> >=20
-> > I would like to see mdadm recommend RAID6 over RAID6 when using
-> > component drives that are 500GB or larger and ask if the user is really
-> > sure about using RAID5, plus a pointer to a webpage on the wiki
-> > informing the user about the trouble with RAID5 on large volumes with
-> > consumer or prosumer drives.
-> >=20
-> > I am willing to contribute text to the webpage being pointed to.
->=20
-> Wikis change to regularly, too easily.  Networks can be down at times,
-> often the worst times.  See Murphy's Law.
->=20
-> It would be better to put this information in mdadm(8) and refer the
-> user there.
->=20
-
-.. or in md(4) maybe.
-
-If anyone wants to run with this and send me a patch (for code and
-documentation) I would be very likely to apply it.
-
-NeilBrown
-
---Sig_/qVmXnpuxHfk8/V9y09M2d7Y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUoGX+znsnt1WYoG5AQLsnRAAmolTC6d1sokbDf+1ZYFMqZ4NN4IU6lDL
-1sJtdnMykk6ko+DZkv7eZrQm2QcFnW++lrHi79WHWMI7iWBTcqf5kNDNiCDd/Zcw
-pIqAtC91fx9NOyijksZoJr0NvFqcFmXSxAHBaNOvZGCwwCaMS/IrR0apIBfJ2yBb
-kwcciS6iWrMbVDn4+FEZKJzlc+CAlJdE8B5nXRfmZRaZnCI8z+bM77IjslbWz3wu
-0uu1lOAUKoWwaFzo1i80Z89kXgDtLZtizNy3hHv1WfhwNN+iBvOMxAIJxRepy6s4
-bW3x6CIj18Nw/H35DO86zSVn85K8dhuemusgsUQUI27T7/woKshd3sBppJfFqMgs
-GLofSbcbbvHzAiGei+9sgTCjGqzcpD7wLNXd26+tNZpX2HnodqC73BrDMY91OMD+
-ulqA/XELHvlKixq3TnaluelxaoJenOjazIxr9psg/SMRw9GrsDCFki3CXw86RhRW
-+2rlAffmayvSHnUqHtUMPWnx9MiW6rz2nf0hnFszWH2AyaJdQQBxfNDs9CaCSDAi
-JiWazL5a//5bYBi3LwvjfZvOewousQAt3LtOgNE+YPMfMn7R5jdDpHP8mIR5nbf/
-e8bdHrV5347fpVty/3FNa9nwQj8aZN0kdwShX+QvF/D1/DXVv3v2MTrPmFBrvly9
-JiWbAyUu/YQ=
-=1dys
------END PGP SIGNATURE-----
-
---Sig_/qVmXnpuxHfk8/V9y09M2d7Y--
+thanks for fixing it.
+Reviewed-by: Shaohua Li <shli@kernel.org>
