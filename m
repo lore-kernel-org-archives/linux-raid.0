@@ -1,39 +1,54 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: Re: [PATCH 0/4] ioatdma: 16-source operation fixes
-Date: Wed, 13 Nov 2013 20:38:24 +0000
-Message-ID: <1384375104.106465.12.camel@djiang5-linux2.ch.intel.com>
-References: <20131113200146.12667.19447.stgit@viggo.jf.intel.com>
+From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
+Subject: RE: 3.12: raid-1 mismatch_cnt question
+Date: Wed, 13 Nov 2013 17:10:00 -0500
+Message-ID: <000001cee0bd$1979da60$4c6d8f20$@lucidpixels.com>
+References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com> <527E8B74.70301@shiftmail.org> <008301cedd9d$fc254cf0$f46fe6d0$@lucidpixels.com> <527F7FF5.3000002@shiftmail.org> <000301cedec0$1fa72d60$5ef58820$@lucidpixels.com> <5280BA1E.6060604@shiftmail.org> <CAO9zADyyXiw91y=GwArcC9wUrhRPNNxp_XMAgtcPxR=fiZZY1g@mail.gmail.com> <5281F53D.4060703@shiftmail.org> <528202ED.1040307@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131113200146.12667.19447.stgit@viggo.jf.intel.com>
-Content-Language: en-US
-Content-ID: <6028F20FEE715A4B9C91EBDD7E66AE32@intel.com>
+In-Reply-To: <528202ED.1040307@fastmail.fm>
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, "Koul, Vinod" <vinod.koul@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: 'Bernd Schubert' <bernd.schubert@fastmail.fm>, 'joystick' <joystick@shiftmail.org>
+Cc: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T24gV2VkLCAyMDEzLTExLTEzIGF0IDIwOjEyICswMDAwLCBXaWxsaWFtcywgRGFuIEogd3JvdGU6
-DQo+IEEgY29sbGVjdGlvbiBvZiBmaXhlcyB0byBhZGRyZXNzIGZhaWx1cmVzIGNhdWdodCBieSBy
-YWlkNnRlc3QgZm9yIHRoZQ0KPiBncmVhdGVyIHRoYW4gMTYtc291cmNlIGNhc2VzLg0KPiANCj4g
-cmFpZDZ0ZXN0IGlzIGFsc28gdXBkYXRlZCB0byBydW4gdGhlc2UgY29ybmVyIGNhc2VzIGJ5IGRl
-ZmF1bHQgZ29pbmcNCj4gZm9yd2FyZC4NCj4gDQo+IFRoaXMgb25seSBpbXBhY3RzIGFycmF5cyBs
-YXJnZXIgdGhhbiAxNiBkaXNrcyBvbiBwbGF0Zm9ybXMgd2l0aCB2My4zIG9mDQo+IHRoZSBpb2F0
-ZG1hIGVuZ2luZSAoSW50ZWwoUikgQXRvbSBTMTIwMCBmYW1pbHkpLg0KPiANCg0KQWNrZWQtYnk6
-IERhdmUgSmlhbmcgPGRhdmUuamlhbmdAaW50ZWwuY29tPg0KDQo+IC0tLQ0KPiANCj4gRGFuIFdp
-bGxpYW1zICg0KToNCj4gICAgICAgaW9hdGRtYTogZml4IHNlZCBwb29sIHNlbGVjdGlvbg0KPiAg
-ICAgICBpb2F0ZG1hOiBmaXggc2VsZWN0aW9uIG9mIDE2IHZzIDggc291cmNlIHBhdGgNCj4gICAg
-ICAgaW9hdGRtYTogY2xlYW4gdXAgc2VkIHBvb2wga21lbV9jYWNoZQ0KPiAgICAgICByYWlkNnRl
-c3Q6IGFkZCBuZXcgY29ybmVyIGNhc2UgZm9yIGlvYXRkbWEgZHJpdmVyDQo+IA0KPiANCj4gIGNy
-eXB0by9hc3luY190eC9yYWlkNnRlc3QuYyB8ICAgMTAgKysrKy0NCj4gIGRyaXZlcnMvZG1hL2lv
-YXQvZG1hLmggICAgICB8ICAgIDEgDQo+ICBkcml2ZXJzL2RtYS9pb2F0L2RtYV92Mi5oICAgfCAg
-ICAxIA0KPiAgZHJpdmVycy9kbWEvaW9hdC9kbWFfdjMuYyAgIHwgICA4OCArKysrKysrKysrKy0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICBkcml2ZXJzL2RtYS9pb2F0L3BjaS5j
-ICAgICAgfCAgIDIwICsrKysrKystLS0NCj4gIDUgZmlsZXMgY2hhbmdlZCwgNDcgaW5zZXJ0aW9u
-cygrKSwgNzMgZGVsZXRpb25zKC0pDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
-aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBkbWFlbmdpbmUiIGluDQo+IHRoZSBib2R5
-IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
-DQo=
+
+
+-----Original Message-----
+From: Bernd Schubert [mailto:bernd.schubert@fastmail.fm] 
+Sent: Tuesday, November 12, 2013 5:29 AM
+To: joystick; Justin Piszcz
+Cc: linux-raid
+Subject: Re: 3.12: raid-1 mismatch_cnt question
+
+joystick's recommendations:
+
+>> - wait for mismatch_cnt reach 2000 at least (the more, the better), then .. [ .. ]
+
+$ cat /sys/devices/virtual/block/md1/md/mismatch_cnt 
+254336
+
+
+[ .. ]
+
+
+If you have available disk space, you might run ql-fstest (possibly in 
+combination) with the above method.
+
+https://bitbucket.org/aakef/ql-fstest
+
+Right now it does not support yet to restart it and to verify existing 
+files, but I'm going to add this, either this evening or on Thursday.
+
+[ .. ]
+
+I attempted to test both here:
+http://home.comcast.net/~jpiszcz/20131113/joystick_cmds.txt
+
+The --re-add did not work btw.
+
+Justin.
+
