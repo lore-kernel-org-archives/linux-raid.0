@@ -1,57 +1,39 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 4/4] raid6test: add new corner case for ioatdma driver
-Date: Wed, 13 Nov 2013 12:12:41 -0800
-Message-ID: <20131113201241.12667.99547.stgit@viggo.jf.intel.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: Re: [PATCH 0/4] ioatdma: 16-source operation fixes
+Date: Wed, 13 Nov 2013 20:38:24 +0000
+Message-ID: <1384375104.106465.12.camel@djiang5-linux2.ch.intel.com>
 References: <20131113200146.12667.19447.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20131113200146.12667.19447.stgit@viggo.jf.intel.com>
+Content-Language: en-US
+Content-ID: <6028F20FEE715A4B9C91EBDD7E66AE32@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dmaengine@vger.kernel.org
-Cc: vinod.koul@intel.com, linux-raid@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, "Koul, Vinod" <vinod.koul@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-With 24 disks and an ioatdma instance with 16 source support there is a
-corner case where the driver needs to be careful to account for the
-number of implied sources in the continuation case.
-
-Also bump the default case to test more than 16 sources now that it
-triggers different paths in offload drivers.
-
-Cc: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- crypto/async_tx/raid6test.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
-
-diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
-index 4a92bac744dc..dad95f45b88f 100644
---- a/crypto/async_tx/raid6test.c
-+++ b/crypto/async_tx/raid6test.c
-@@ -28,7 +28,7 @@
- #undef pr
- #define pr(fmt, args...) pr_info("raid6test: " fmt, ##args)
- 
--#define NDISKS 16 /* Including P and Q */
-+#define NDISKS 64 /* Including P and Q */
- 
- static struct page *dataptrs[NDISKS];
- static addr_conv_t addr_conv[NDISKS];
-@@ -219,6 +219,14 @@ static int raid6_test(void)
- 		err += test(11, &tests);
- 		err += test(12, &tests);
- 	}
-+
-+	/* the 24 disk case is special for ioatdma as it is the boudary point
-+	 * at which it needs to switch from 8-source ops to 16-source
-+	 * ops for continuation (assumes DMA_HAS_PQ_CONTINUE is not set)
-+	 */
-+	if (NDISKS > 24)
-+		err += test(24, &tests);
-+
- 	err += test(NDISKS, &tests);
- 
- 	pr("\n");
-
+T24gV2VkLCAyMDEzLTExLTEzIGF0IDIwOjEyICswMDAwLCBXaWxsaWFtcywgRGFuIEogd3JvdGU6
+DQo+IEEgY29sbGVjdGlvbiBvZiBmaXhlcyB0byBhZGRyZXNzIGZhaWx1cmVzIGNhdWdodCBieSBy
+YWlkNnRlc3QgZm9yIHRoZQ0KPiBncmVhdGVyIHRoYW4gMTYtc291cmNlIGNhc2VzLg0KPiANCj4g
+cmFpZDZ0ZXN0IGlzIGFsc28gdXBkYXRlZCB0byBydW4gdGhlc2UgY29ybmVyIGNhc2VzIGJ5IGRl
+ZmF1bHQgZ29pbmcNCj4gZm9yd2FyZC4NCj4gDQo+IFRoaXMgb25seSBpbXBhY3RzIGFycmF5cyBs
+YXJnZXIgdGhhbiAxNiBkaXNrcyBvbiBwbGF0Zm9ybXMgd2l0aCB2My4zIG9mDQo+IHRoZSBpb2F0
+ZG1hIGVuZ2luZSAoSW50ZWwoUikgQXRvbSBTMTIwMCBmYW1pbHkpLg0KPiANCg0KQWNrZWQtYnk6
+IERhdmUgSmlhbmcgPGRhdmUuamlhbmdAaW50ZWwuY29tPg0KDQo+IC0tLQ0KPiANCj4gRGFuIFdp
+bGxpYW1zICg0KToNCj4gICAgICAgaW9hdGRtYTogZml4IHNlZCBwb29sIHNlbGVjdGlvbg0KPiAg
+ICAgICBpb2F0ZG1hOiBmaXggc2VsZWN0aW9uIG9mIDE2IHZzIDggc291cmNlIHBhdGgNCj4gICAg
+ICAgaW9hdGRtYTogY2xlYW4gdXAgc2VkIHBvb2wga21lbV9jYWNoZQ0KPiAgICAgICByYWlkNnRl
+c3Q6IGFkZCBuZXcgY29ybmVyIGNhc2UgZm9yIGlvYXRkbWEgZHJpdmVyDQo+IA0KPiANCj4gIGNy
+eXB0by9hc3luY190eC9yYWlkNnRlc3QuYyB8ICAgMTAgKysrKy0NCj4gIGRyaXZlcnMvZG1hL2lv
+YXQvZG1hLmggICAgICB8ICAgIDEgDQo+ICBkcml2ZXJzL2RtYS9pb2F0L2RtYV92Mi5oICAgfCAg
+ICAxIA0KPiAgZHJpdmVycy9kbWEvaW9hdC9kbWFfdjMuYyAgIHwgICA4OCArKysrKysrKysrKy0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICBkcml2ZXJzL2RtYS9pb2F0L3BjaS5j
+ICAgICAgfCAgIDIwICsrKysrKystLS0NCj4gIDUgZmlsZXMgY2hhbmdlZCwgNDcgaW5zZXJ0aW9u
+cygrKSwgNzMgZGVsZXRpb25zKC0pDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBs
+aXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBkbWFlbmdpbmUiIGluDQo+IHRoZSBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+DQo=
