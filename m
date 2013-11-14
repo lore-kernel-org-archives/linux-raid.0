@@ -1,54 +1,78 @@
-From: "Justin Piszcz" <jpiszcz@lucidpixels.com>
-Subject: RE: 3.12: raid-1 mismatch_cnt question
-Date: Wed, 13 Nov 2013 17:10:00 -0500
-Message-ID: <000001cee0bd$1979da60$4c6d8f20$@lucidpixels.com>
-References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com> <527E8B74.70301@shiftmail.org> <008301cedd9d$fc254cf0$f46fe6d0$@lucidpixels.com> <527F7FF5.3000002@shiftmail.org> <000301cedec0$1fa72d60$5ef58820$@lucidpixels.com> <5280BA1E.6060604@shiftmail.org> <CAO9zADyyXiw91y=GwArcC9wUrhRPNNxp_XMAgtcPxR=fiZZY1g@mail.gmail.com> <5281F53D.4060703@shiftmail.org> <528202ED.1040307@fastmail.fm>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm --fail requires writeable drive.
+Date: Thu, 14 Nov 2013 11:44:49 +1100
+Message-ID: <20131114114449.27f3c746@notabene.brown>
+References: <52836DD1.8080605@mpstor.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/9S53qi0w5xpXfUMxR+zwAvp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528202ED.1040307@fastmail.fm>
-Content-Language: en-us
+In-Reply-To: <52836DD1.8080605@mpstor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Bernd Schubert' <bernd.schubert@fastmail.fm>, 'joystick' <joystick@shiftmail.org>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: Benjamin ESTRABAUD <be@mpstor.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/9S53qi0w5xpXfUMxR+zwAvp
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 13 Nov 2013 12:17:21 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
 
------Original Message-----
-From: Bernd Schubert [mailto:bernd.schubert@fastmail.fm] 
-Sent: Tuesday, November 12, 2013 5:29 AM
-To: joystick; Justin Piszcz
-Cc: linux-raid
-Subject: Re: 3.12: raid-1 mismatch_cnt question
+> Hi,
+>=20
+> I noticed that mdadm --fail will only work if a disk is present and is=20
+> writeable.
+>=20
+> mdadm's Manage.c seems to first make sure the drive can be "stat"ed=20
+> before proceeding (which will fail if the drive is gone), and then=20
+> seemingly try to write "Faulty" to the drive's superblock as well as=20
+> notifying MD of the drive failure.
+>=20
+> However, in many cases, a drive must be set faulty because it has gone=20
+> offline. MD will do a very good job to set the drive faulty itself,=20
+> provided that IOs are running on the array. If no IOs are running on the=
+=20
+> array, removing a drive and then trying to set it as failed will not=20
+> work. Trying to "-r" the drive will also fail since the drive is not yet=
+=20
+> marked as failed, so deemed still in use.
+>=20
+> Looking through the code it seemed to me that MD could be told to fail a=
+=20
+> drive even if that drive was no longer present (the /dev/sdX device node=
+=20
+> file still is in this case), in the same way as remove works. Would that=
+=20
+> be possible? Am I missing something here?
 
-joystick's recommendations:
+Does
+  mdadm /dev/mdXX --fail detached
 
->> - wait for mismatch_cnt reach 2000 at least (the more, the better), then .. [ .. ]
+do what you want?
 
-$ cat /sys/devices/virtual/block/md1/md/mismatch_cnt 
-254336
+NeilBrown
 
+--Sig_/9S53qi0w5xpXfUMxR+zwAvp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-[ .. ]
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
+iQIVAwUBUoQdATnsnt1WYoG5AQLl2BAAg8NZF2srdCyApu/gIXxSrMxG+/RdnjJ4
+NkMNEqDPzCRswkczd/qQcjGMQbcogbYD2Rfazxi1mSknRfRPk7SQwhOhL6kwOGlC
+6oFZ7dZER9wLXxhJawi/eJOaMMaP5ycHGvpJt2beIIuOZ98UNlkRl5v/SmhuGPLo
+Jo5XiYRFg7cB57WhHcFSSoQ/Tyb09jKjZk8mx+3I3U5fVRO1zSfeS7WT1Lp+Ykpq
+41t8irC635tHr7hZEINHddUxkumX3iA2I5Nzy/+/XkJ69bPYBNbwvmbVHTG3kBg4
+jdIbowLTGOHQQzzldPt44ThpQJxkiU3q4IsT5bObWReEXfrsjvpf5hG85GXzXaM9
+qA7MelCqMjhnWLYtRzSKl594LDqxM+VwtvL/0DyudEgf00k7JMV81Lg4rgSxNK38
+gMxirrMEbdGhtvyqp2j+HjyterQ7N4vm7rH+MKkTEfQ4c+hvDrDdi5tIRofhJWmL
+lw8/uJb8wzhusVx2mBlUHOu6GGUiWgnEXMeSZHtTXs8j1cOF1PdKtl4y5leIEHWa
+HWiOLRW/oC+Yf+OpZBzJk0YydjdeaQyelqGjEB+0iEA/xxfvIfTcsYveASlD+v/I
+yGEd4a4xmw8XIFdI3XyPs+SV4QwuWOLbxUCRG+/mGfICHSSoL9RG8W8prQObP594
+3fyGqiA/bcs=
+=x9hb
+-----END PGP SIGNATURE-----
 
-If you have available disk space, you might run ql-fstest (possibly in 
-combination) with the above method.
-
-https://bitbucket.org/aakef/ql-fstest
-
-Right now it does not support yet to restart it and to verify existing 
-files, but I'm going to add this, either this evening or on Thursday.
-
-[ .. ]
-
-I attempted to test both here:
-http://home.comcast.net/~jpiszcz/20131113/joystick_cmds.txt
-
-The --re-add did not work btw.
-
-Justin.
-
+--Sig_/9S53qi0w5xpXfUMxR+zwAvp--
