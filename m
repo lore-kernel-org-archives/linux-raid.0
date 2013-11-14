@@ -1,251 +1,511 @@
-From: 4363@list.ru
-Subject: kernel panic with bitmap_startwrite
-Date: Thu, 14 Nov 2013 07:24:58 +0400
-Message-ID: <1636076445.20131114072458@list.ru>
-Reply-To: 4363@list.ru
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 4/4] raid1: Rewrite the implementation of iobarrier.
+Date: Thu, 14 Nov 2013 17:44:38 +1100
+Message-ID: <20131114174438.7f2db666@notabene.brown>
+References: <201308281940511854138@gmail.com>
+	<20131024125059.1a440152@notabene.brown>
+	<201310290930116677124@gmail.com>
+	<20131031133314.522f30ad@notabene.brown>
+	<201310311114307462606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/_hplwLG5iAtQAWwga4YjEtM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201310311114307462606@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello!
-I have an IBM System x3200 M2 with Fibre HBA: Brocade Communications Systems, Inc. 415/815/41B/81B 4Gbps/8Gbps PCIe single port FC HBA (rev 01), on it installed Red Hat Enterprise Linux 5 kernel 2.6.18-238.19.1.
-used native multipath-tools v0.4.7 (03/12, 2006) and mdadm.
+--Sig_/_hplwLG5iAtQAWwga4YjEtM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-#modinfo bfa
+On Thu, 31 Oct 2013 11:20:55 +0800 majianpeng <majianpeng@gmail.com> wrote:
 
-filename: /lib/modules/2.6.18-238.19.1.el5/kernel/drivers/scsi/bfa/bfa.ko
-version: 2.1.2.0
-author: Brocade Communications Systems, Inc.
-description: Brocade Fibre Channel HBA Driver fcpim
-
-and IBM DS 3512 with 2 LUN, LUN this raid6
-
-configured multipath configuration:
-
-#cat /etc/multipath.conf
-
-defaults {
-# user_friendly_names no
-# polling_interval 2
-# path_selector "round-robin 0"
-# selector "round-robin 0"
-# polling_interval 2
-# find_multipaths yes
-# flush_on_last_del yes
-# checker_timeout 10
-# failback immediate
-# failback manual
-# path_checker readsector0
-# path_checker rdac
-# path_grouping_policy failover
-# path_grouping_policy multibus
-# rr_min_io 100
-# features 0
-# no_path_retry fail
-# getuid_callout "/sbin/scsi_id -g -u -s /block/%n"
-# getuid_callout "/lib/udev/scsi_id --whitelisted --device=/dev/%n."
-# prio_callout "/sbin/mpath_prio_rdac /dev/%n"
-# dev_loss_tmo 10
-# fast_io_fail_tmo 5
-}#defaults
-####################
-blacklist {
-devnode "sda"
-wwid *
-}#blacklist
-####################
-blacklist_exceptions {
-#osnovnoy_1
-wwid 360080e50002ef5ee00000bbe524a8ced
-#rezerv_1
-wwid 360080e50002ef5ee00000bc1524a8d93
-}#blacklist_exceptions
-####################
-devices {
-device {
-vendor "IBM"
-product "1746 FAStT"
-# path_checker rdac
-# path_selector "round-robin 0"
-}#device
-}#devices
-####################
-multipaths {
-multipath {
-wwid 360080e50002ef5ee00000bbe524a8ced
-alias osnov_1
-}
-multipath {
-wwid 360080e50002ef5ee00000bc1524a8d93
-alias rezerv_1
-}
-}
+Sorry for the delayed reply.
 
 
-#lsscsi
-[0:2:0:0] disk IBM ServeRAID-MR10k 1.40 /dev/sda
-[3:0:0:0] disk IBM 1746 FAStT 1070 /dev/sdb
-[3:0:0:1] disk IBM 1746 FAStT 1070 /dev/sdf
-[3:0:0:31] disk IBM Universal Xport 1070 -
-[3:0:1:0] disk IBM 1746 FAStT 1070 /dev/sdh
-[3:0:1:1] disk IBM 1746 FAStT 1070 /dev/sdi
-[3:0:1:31] disk IBM Universal Xport 1070 -
-[3:0:2:0] disk IBM 1746 FAStT 1070 /dev/sdj
-[3:0:2:1] disk IBM 1746 FAStT 1070 /dev/sdk
-[3:0:2:31] disk IBM Universal Xport 1070 -
-[3:0:3:0] disk IBM 1746 FAStT 1070 /dev/sdl
-[3:0:3:1] disk IBM 1746 FAStT 1070 /dev/sdm
-[3:0:3:31] disk IBM Universal Xport 1070 -
-[4:0:0:0] disk IBM 1746 FAStT 1070 /dev/sdc
-[4:0:0:1] disk IBM 1746 FAStT 1070 /dev/sdd
-[4:0:0:31] disk IBM Universal Xport 1070 -
-[4:0:1:0] disk IBM 1746 FAStT 1070 /dev/sde
-[4:0:1:1] disk IBM 1746 FAStT 1070 /dev/sdg
-[4:0:1:31] disk IBM Universal Xport 1070 -
-[4:0:2:0] disk IBM 1746 FAStT 1070 /dev/sdn
-[4:0:2:1] disk IBM 1746 FAStT 1070 /dev/sdo
-[4:0:2:31] disk IBM Universal Xport 1070 -
-[4:0:3:0] disk IBM 1746 FAStT 1070 /dev/sdp
-[4:0:3:1] disk IBM 1746 FAStT 1070 /dev/sdq
-[4:0:3:31] disk IBM Universal Xport 1070 -
+> >On Tue, 29 Oct 2013 09:30:14 +0800 majianpeng <majianpeng@gmail.com> wro=
+te:
+> >
+> >
+> >Nearly there!!  Just a few more details.  See below.
+> >
+> >
+> >> Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
+> >> ---
+> >>  drivers/md/raid1.c | 122 ++++++++++++++++++++++++++++++++++++++++++++=
++++------
+> >>  drivers/md/raid1.h |  14 ++++++
+> >>  2 files changed, 124 insertions(+), 12 deletions(-)
+> >>=20
+> >> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> >> index b4a6dcd..5b311c0 100644
+> >> --- a/drivers/md/raid1.c
+> >> +++ b/drivers/md/raid1.c
+> >> @@ -66,7 +66,8 @@
+> >>   */
+> >>  static int max_queued_requests =3D 1024;
+> >> =20
+> >> -static void allow_barrier(struct r1conf *conf);
+> >> +static void allow_barrier(struct r1conf *conf, sector_t start_next_wi=
+ndow,
+> >> +				sector_t bi_sector);
+> >>  static void lower_barrier(struct r1conf *conf);
+> >> =20
+> >>  static void * r1bio_pool_alloc(gfp_t gfp_flags, void *data)
+> >> @@ -227,6 +228,8 @@ static void call_bio_endio(struct r1bio *r1_bio)
+> >>  	struct bio *bio =3D r1_bio->master_bio;
+> >>  	int done;
+> >>  	struct r1conf *conf =3D r1_bio->mddev->private;
+> >> +	sector_t start_next_window =3D r1_bio->start_next_window;
+> >> +	sector_t bi_sector =3D bio->bi_sector;
+> >
+> >This should  be r1_bio->sector, not bio->bi_sector.
+> >They are often the same but if multiple r1_bios are needed for some reas=
+on
+> >(e.g. bad blocks) they may not be.
+> >
+> No, allow_barrier() only for bio not for r1bio.It only do when bio->bi_ph=
+ys_segments =3D=3D 0.
+
+Yes, I see that now, thanks.
 
 
-#multipath -ll
-osnov_1 (360080e50002ef5ee00000bbe524a8ced) dm-2 IBM,1746 FAStT
-[size=11T][features=3 queue_if_no_path pg_init_retries 50][hwhandler=1 rdac][rw]
-\_ round-robin 0 [prio=400][active]
-\_ 4:0:0:0 sdc 8:32 [active][ready]
-\_ 3:0:1:0 sdh 8:112 [active][ready]
-\_ 3:0:3:0 sdl 8:176 [active][ready]
-\_ 4:0:2:0 sdn 8:208 [active][ready]
-\_ round-robin 0 [prio=0][enabled]
-\_ 3:0:0:0 sdb 8:16 [active][ghost]
-\_ 4:0:1:0 sde 8:64 [active][ghost]
-\_ 3:0:2:0 sdj 8:144 [active][ghost]
-\_ 4:0:3:0 sdp 8:240 [active][ghost]
-rezerv_1 (360080e50002ef5ee00000bc1524a8d93) dm-3 IBM,1746 FAStT
-[size=11T][features=3 queue_if_no_path pg_init_retries 50][hwhandler=1 rdac][rw]
-\_ round-robin 0 [prio=400][active]
-\_ 4:0:0:1 sdd 8:48 [active][ready]
-\_ 3:0:1:1 sdi 8:128 [active][ready]
-\_ 3:0:3:1 sdm 8:192 [active][ready]
-\_ 4:0:2:1 sdo 8:224 [active][ready]
-\_ round-robin 0 [prio=0][enabled]
-\_ 3:0:0:1 sdf 8:80 [active][ghost]
-\_ 4:0:1:1 sdg 8:96 [active][ghost]
-\_ 3:0:2:1 sdk 8:160 [active][ghost]
-\_ 4:0:3:1 sdq 65:0 [active][ghost]
+> If this value is r1_bio->sector, the value may has different value as you=
+ said.
+> So in allow_barrier():
+>        if (start_next_window) {
+>                 if (start_next_window =3D=3D conf->start_next_window) {
+>                         if (conf->start_next_window + NEXT_NORMALIO_DISTA=
+NCE
+>                                 <=3D bi_sector)
+>                                 conf->next_window_requests--;
+>                         else=20
+>                                 conf->current_window_requests--;
+>                 } else=20
+> It will has differnt result.
+>=20
+> >> =20
+> >>  	if (bio->bi_phys_segments) {
+> >>  		unsigned long flags;
+> >> @@ -234,6 +237,11 @@ static void call_bio_endio(struct r1bio *r1_bio)
+> >>  		bio->bi_phys_segments--;
+> >>  		done =3D (bio->bi_phys_segments =3D=3D 0);
+> >>  		spin_unlock_irqrestore(&conf->device_lock, flags);
+> >> +		/*
+> >> +		 * make_request() might be waiting for
+> >> +		 * bi_phys_segments to decrease
+> >> +		 */
+> >> +		wake_up(&conf->wait_barrier);
+> >>  	} else
+> >>  		done =3D 1;
+> >> =20
+> >> @@ -245,7 +253,7 @@ static void call_bio_endio(struct r1bio *r1_bio)
+> >>  		 * Wake up any possible resync thread that waits for the device
+> >>  		 * to go idle.
+> >>  		 */
+> >> -		allow_barrier(conf);
+> >> +		allow_barrier(conf, start_next_window, bi_sector);
+> >>  	}
+> >>  }
+> >> =20
+> >> @@ -827,10 +835,18 @@ static void raise_barrier(struct r1conf *conf)
+> >>  	/* block any new IO from starting */
+> >>  	conf->barrier++;
+> >> =20
+> >> -	/* Now wait for all pending IO to complete */
+> >> +	/* For those conditions we must wait:
+> >> +	 * A:while the array is in frozen state
+> >> +	 * B:while barrier >=3D RESYNC_DEPTH, meaning resync reach
+> >> +	 *   the max count which allowed.
+> >> +	 * C:next_resync + RESYNC_SECTORS > start_next_window, meaning
+> >> +	 *   next resync will reach to window which normal bios are handling.
+> >> +	 */
+> >>  	wait_event_lock_irq(conf->wait_barrier,
+> >>  			    !conf->array_frozen &&
+> >> -			    !conf->nr_pending && conf->barrier < RESYNC_DEPTH,
+> >> +			    conf->barrier < RESYNC_DEPTH &&
+> >> +			    (conf->start_next_window >=3D
+> >> +			     conf->next_resync + RESYNC_SECTORS),
+> >>  			    conf->resync_lock);
+> >
+> >You've removed the test on conf->nr_pending here, which I think is corre=
+ct.
+> >It counts 'read' requests as well.  Testing start_next_window serves the=
+ same
+> >purpose as it is increased whenever current_window_requests reaches zero.
+> >
+> In func wait_barrier():
+>         if (need_to_wait_for_sync(conf, bio)) {
+>               [snip]
+>         } else if (bio_data_dir(bio) =3D=3D WRITE) {
+>                 if (conf->next_resync + NEXT_NORMALIO_DISTANCE
+>                                 <=3D bio->bi_sector) {
+>                         if (conf->start_next_window =3D=3D MaxSector)
+>                                 conf->start_next_window =3D
+>                                         conf->next_resync +
+>                                                 NEXT_NORMALIO_DISTANCE;
+>=20
+>                         if ((conf->start_next_window + NEXT_NORMALIO_DIST=
+ANCE)
+>                                 <=3D bio->bi_sector)
+>                                 conf->next_window_requests++;
+>                         else
+>                                 conf->current_window_requests++;
+>                 }
+>                 if (bio->bi_sector >=3D conf->start_next_window)
+>                         sector =3D conf->start_next_window;
+>         }
+> start_next_window only for bio_data_dir(bio) =3D=3D WRITE. So resync can'=
+t wait read io to complete.
+>=20
+> >However you having modified as similar test on nr_pending in wait_barrie=
+r().
+I meant:       haven't modified a similar test ....
+> >That worries me a bit.  Should that be changed to a test on start_next_w=
+indow
+> >to match the above change?
+> For this condition, i only copy it.For this condition, i'm not know clear=
+ly.
+> Can you give me more details about this?
 
 
-configured mdadm configuration:
+Before your patch we know if there are pending requests (submitted but not
+completed) which stop use from doing resync if conf->nr_pending > 0.
+After your patch we cannot use that that test as it counts READ requests, a=
+nd
+requests that are outside the range being resynced.
 
-#mdadm -D /dev/md0
-mdadm: metadata format 1.00 unknown, ignored.
-/dev/md0:
-Version : 1.00
-Creation Time : Tue Oct 22 12:34:01 2013
-Raid Level : raid1
-Array Size : 11718818096 (11175.94 GiB 12000.07 GB)
-Used Dev Size : 11718818096 (11175.94 GiB 12000.07 GB)
-Raid Devices : 2
-Total Devices : 2
-Preferred Minor : 0
-Persistence : Superblock is persistent
+The test is now a bit more complicated.  I think it is:
 
-Intent Bitmap : Internal
-
-Update Time : Thu Oct 24 11:45:38 2013
-State : active
-Active Devices : 2
-Working Devices : 2
-Failed Devices : 0
-Spare Devices : 0
-
-Name : 0
-UUID : cfffde5b:3f232606:f45a5be9:d7a5c4b2
-Events : 21
-
-Number Major Minor RaidDevice State
-0 253 4 0 active sync /dev/dm-4
-1 253 5 1 active sync /dev/dm-5
+		 conf->start_next_window <
+                 conf->next_resync + RESYNC_SECTORS
 
 
-#cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 dm-4[0] dm-5[1]
-11718818096 blocks super 1.0 [2/2] [UU]
-bitmap: 0/11 pages [0KB], 524288KB chunk
+i.e. while start_next_window is less than next_resync+RESYNC_SECTORS there
+cold be outstanding writes that are blocking resync.  As soon as those writ=
+es
+complete, start_next_window will increase and the resync can complete.
+So if start_next_window < next_resync+RESYNC_SECTORS and there are pending
+request in current->bio_list, then then there is no point waiting for resync
+(it cannot progress anyway) so we may as well submit another write.
 
-unused devices: <none>
+So change:
 
+		wait_event_lock_irq(conf->wait_barrier,
+				    !conf->array_frozen &&
+				    (!conf->barrier ||
+				    (conf->nr_pending &&
+				     current->bio_list &&
+				     !bio_list_empty(current->bio_list))),
+				    conf->resync_lock);
 
-md0 is formatted in ext3
+in wait barrier to
 
-#tune2fs -l /dev/md0
-tune2fs 1.39 (29-May-2006)
-Filesystem volume name: <none>
-Last mounted on: <not available>
-Filesystem UUID: 6a2352e4-be78-4c53-80a3-a7e7614cb6c2
-Filesystem magic number: 0xEF53
-Filesystem revision #: 1 (dynamic)
-Filesystem features: has_journal resize_inode dir_index filetype needs_recovery sparse_super large_file
-Default mount options: (none)
-Filesystem state: clean
-Errors behavior: Continue
-Filesystem OS type: Linux
-Inode count: 1464860672
-Block count: 2929704524
-Reserved block count: 29297045
-Free blocks: 2883691408
-Free inodes: 1464860662
-First block: 0
-Block size: 4096
-Fragment size: 4096
-Reserved GDT blocks: 325
-Blocks per group: 32768
-Fragments per group: 32768
-Inodes per group: 16384
-Inode blocks per group: 512
-Filesystem created: Wed Oct 23 09:16:11 2013
-Last mount time: Thu Oct 24 11:45:33 2013
-Last write time: Thu Oct 24 11:45:33 2013
-Mount count: 5
-Maximum mount count: 38
-Last checked: Wed Oct 23 09:16:11 2013
-Check interval: 15552000 (6 months)
-Next check after: Mon Apr 21 09:16:11 2014
-Reserved blocks uid: 0 (user root)
-Reserved blocks gid: 0 (group root)
-First inode: 11
-Inode size: 128
-Journal inode: 8
-Default directory hash: tea
-Directory Hash Seed: 82383c38-be3a-4096-9082-ad295ee3404e
-Journal backup: inode blocks
-
-md0 mounted on /osnov.
-and using the command:
-#dd if=/dev/zero of=/osnov/test bs=1MB count=1000
-or 
-simply copy from MCvs
-
-we get:
-
-Code: 0f 0b 68 ce fc 2c 88 c2 95 04 8d 42 01 66 89 45 00 c7 43 50
-RIP [<ffffffff80218ab2>] bitmap_startwrite+0xb5/0x101
-    RSP<ffff81105fbb9c20>
-<0>Kernel panic - not syncing: Fatal exception
-
-without bitmap all works!
-You can get rid of this problem without installing new drivers and programs?
+		wait_event_lock_irq(conf->wait_barrier,
+				    !conf->array_frozen &&
+				    (!conf->barrier ||
+				    (conf->start_next_window < conf->next_resync + RESYNC_SECTORS &&
+				     current->bio_list &&
+				     !bio_list_empty(current->bio_list))),
+				    conf->resync_lock);
 
 
+> >
+> >
+> >> =20
+> >>  	spin_unlock_irq(&conf->resync_lock);
+> >> @@ -846,10 +862,33 @@ static void lower_barrier(struct r1conf *conf)
+> >>  	wake_up(&conf->wait_barrier);
+> >>  }
+> >> =20
+> >> -static void wait_barrier(struct r1conf *conf)
+> >> +static bool need_to_wait_for_sync(struct r1conf *conf, struct bio *bi=
+o)
+> >> +{
+> >> +	bool wait =3D false;
+> >> +
+> >> +	if (conf->array_frozen || !bio)
+> >> +		wait =3D true;
+> >> +	else if (conf->barrier && bio_data_dir(bio) =3D=3D WRITE) {
+> >> +		if (conf->next_resync < RESYNC_WINDOW_SECTORS)
+> >> +			wait =3D true;
+> >> +		else if ((conf->next_resync - RESYNC_WINDOW_SECTORS
+> >> +				>=3D bio_end_sector(bio)) ||
+> >> +			 (conf->next_resync + NEXT_NORMALIO_DISTANCE
+> >> +				<=3D bio->bi_sector))
+> >> +			wait =3D false;
+> >> +		else
+> >> +			wait =3D true;
+> >> +	}
+> >> +
+> >> +	return wait;
+> >> +}
+> >> +
+> >> +static sector_t wait_barrier(struct r1conf *conf, struct bio *bio)
+> >>  {
+> >> +	sector_t sector =3D 0;
+> >> +
+> >>  	spin_lock_irq(&conf->resync_lock);
+> >> -	if (conf->barrier) {
+> >> +	if (need_to_wait_for_sync(conf, bio)) {
+> >>  		conf->nr_waiting++;
+> >>  		/* Wait for the barrier to drop.
+> >>  		 * However if there are already pending
+> >> @@ -868,16 +907,57 @@ static void wait_barrier(struct r1conf *conf)
+> >>  				     !bio_list_empty(current->bio_list))),
+> >>  				    conf->resync_lock);
+> >>  		conf->nr_waiting--;
+> >> +	} else if (bio_data_dir(bio) =3D=3D WRITE) {
+> >> +		if (conf->next_resync + NEXT_NORMALIO_DISTANCE
+> >> +				<=3D bio->bi_sector) {
+> >> +			if (conf->start_next_window =3D=3D MaxSector)
+> >> +				conf->start_next_window =3D
+> >> +					conf->next_resync +
+> >> +						NEXT_NORMALIO_DISTANCE;
+> >> +
+> >> +			if ((conf->start_next_window + NEXT_NORMALIO_DISTANCE)
+> >> +				<=3D bio->bi_sector)
+> >> +				conf->next_window_requests++;
+> >> +			else
+> >> +				conf->current_window_requests++;
+> >> +		}
+> >> +		if (bio->bi_sector >=3D conf->start_next_window)
+> >> +			sector =3D conf->start_next_window;
+> >
+> >You aren't setting 'sector' if we needed to wait.  I don't think that is
+> >correct, is it?
+> >
+> Yes.How about those code:
+> spin_lock_irq(&conf->resync_lock);
+> retry_check:
+>         if (need_to_wait_for_sync(conf, bio)) {
+>                 conf->nr_waiting++;
+>                 /* Wait for the barrier to drop.
+>                  * However if there are already pending
+>                  * requests (preventing the barrier from
+>                  * rising completely), and the
+>                  * pre-process bio queue isn't empty,
+>                  * then don't wait, as we need to empty
+>                  * that queue to get the nr_pending
+>                  * count down.
+>                  */
+>                 wait_event_lock_irq(conf->wait_barrier,
+>                                     !conf->array_frozen &&
+>                                     (!conf->barrier ||
+>                                     (conf->nr_pending &&
+>                                      current->bio_list &&
+>                                      !bio_list_empty(current->bio_list))),
+>                                     conf->resync_lock);
+>                 conf->nr_waiting--;
+> 				goto retry_check;
+> >
+
+It would look a lot better if you made it a while loop:
+
+ while (need_to_wait....) {
+     nr_waiting++
+     wait_event.....
+     nr_waiting--
+ if (bio_data_dir.....
 
 
--- 
-Yuriy Vet
+Thanks,
+NeilBrown
 
+
+
+> >>  	}
+> >> +
+> >>  	conf->nr_pending++;
+> >>  	spin_unlock_irq(&conf->resync_lock);
+> >> +	return sector;
+> >>  }
+> >> =20
+> >> -static void allow_barrier(struct r1conf *conf)
+> >> +static void allow_barrier(struct r1conf *conf, sector_t start_next_wi=
+ndow,
+> >> +				sector_t bi_sector)
+> >>  {
+> >>  	unsigned long flags;
+> >> +
+> >>  	spin_lock_irqsave(&conf->resync_lock, flags);
+> >>  	conf->nr_pending--;
+> >> +	if (start_next_window) {
+> >> +		if (start_next_window =3D=3D conf->start_next_window) {
+> >> +			if (conf->start_next_window + NEXT_NORMALIO_DISTANCE
+> >> +				<=3D bi_sector)
+> >> +				conf->next_window_requests--;
+> >> +			else
+> >> +				conf->current_window_requests--;
+> >> +		} else
+> >> +			conf->current_window_requests--;
+> >> +
+> >> +		if (!conf->current_window_requests) {
+> >> +			if (conf->next_window_requests) {
+> >> +				conf->current_window_requests =3D
+> >> +					conf->next_window_requests;
+> >> +				conf->next_window_requests =3D 0;
+> >> +				conf->start_next_window +=3D
+> >> +					NEXT_NORMALIO_DISTANCE;
+> >> +			} else
+> >> +				conf->start_next_window =3D MaxSector;
+> >> +		}
+> >> +	}
+> >>  	spin_unlock_irqrestore(&conf->resync_lock, flags);
+> >>  	wake_up(&conf->wait_barrier);
+> >>  }
+> >> @@ -1012,6 +1092,7 @@ static void make_request(struct mddev *mddev, st=
+ruct bio * bio)
+> >>  	int first_clone;
+> >>  	int sectors_handled;
+> >>  	int max_sectors;
+> >> +	sector_t start_next_window;
+> >> =20
+> >>  	/*
+> >>  	 * Register the new request and wait if the reconstruction
+> >> @@ -1041,7 +1122,7 @@ static void make_request(struct mddev *mddev, st=
+ruct bio * bio)
+> >>  		finish_wait(&conf->wait_barrier, &w);
+> >>  	}
+> >> =20
+> >> -	wait_barrier(conf);
+> >> +	start_next_window =3D wait_barrier(conf, bio);
+> >> =20
+> >>  	bitmap =3D mddev->bitmap;
+> >> =20
+> >> @@ -1162,6 +1243,7 @@ read_again:
+> >> =20
+> >>  	disks =3D conf->raid_disks * 2;
+> >>   retry_write:
+> >> +	r1_bio->start_next_window =3D start_next_window;
+> >>  	blocked_rdev =3D NULL;
+> >>  	rcu_read_lock();
+> >>  	max_sectors =3D r1_bio->sectors;
+> >> @@ -1230,14 +1312,24 @@ read_again:
+> >>  	if (unlikely(blocked_rdev)) {
+> >>  		/* Wait for this device to become unblocked */
+> >>  		int j;
+> >> +		sector_t old =3D start_next_window;
+> >> =20
+> >>  		for (j =3D 0; j < i; j++)
+> >>  			if (r1_bio->bios[j])
+> >>  				rdev_dec_pending(conf->mirrors[j].rdev, mddev);
+> >>  		r1_bio->state =3D 0;
+> >> -		allow_barrier(conf);
+> >> +		allow_barrier(conf, start_next_window, bio->bi_sector);
+> >
+> >I think this should be r1_bio->sector, not bio->bi_sector, for the same
+> >reason as earlier.
+> >
+> The exaplaination is the same at above.
+>=20
+> Thanks!
+> Jianpeng Ma
+> >
+> >>  		md_wait_for_blocked_rdev(blocked_rdev, mddev);
+> >> -		wait_barrier(conf);
+> >> +		start_next_window =3D wait_barrier(conf, bio);
+> >> +		/*
+> >> +		 * We must make sure the multi r1bios of bio have
+> >> +		 * the same value of bi_phys_segments
+> >> +		 */
+> >> +		if (bio->bi_phys_segments && old &&
+> >> +			old !=3D start_next_window)
+> >> +			/*wait the former r1bio(s) completed*/
+> >> +			wait_event(conf->wait_barrier,
+> >> +					bio->bi_phys_segments =3D=3D 1);
+> >>  		goto retry_write;
+> >>  	}
+> >> =20
+> >> @@ -1437,11 +1529,14 @@ static void print_conf(struct r1conf *conf)
+> >> =20
+> >>  static void close_sync(struct r1conf *conf)
+> >>  {
+> >> -	wait_barrier(conf);
+> >> -	allow_barrier(conf);
+> >> +	wait_barrier(conf, NULL);
+> >> +	allow_barrier(conf, 0, 0);
+> >> =20
+> >>  	mempool_destroy(conf->r1buf_pool);
+> >>  	conf->r1buf_pool =3D NULL;
+> >> +
+> >> +	conf->next_resync =3D 0;
+> >> +	conf->start_next_window =3D MaxSector;
+> >>  }
+> >> =20
+> >>  static int raid1_spare_active(struct mddev *mddev)
+> >> @@ -2713,6 +2808,9 @@ static struct r1conf *setup_conf(struct mddev *m=
+ddev)
+> >>  	conf->pending_count =3D 0;
+> >>  	conf->recovery_disabled =3D mddev->recovery_disabled - 1;
+> >> =20
+> >> +	conf->start_next_window =3D MaxSector;
+> >> +	conf->current_window_requests =3D conf->next_window_requests =3D 0;
+> >> +
+> >>  	err =3D -EIO;
+> >>  	for (i =3D 0; i < conf->raid_disks * 2; i++) {
+> >> =20
+> >> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> >> index 331a98a..07425a1 100644
+> >> --- a/drivers/md/raid1.h
+> >> +++ b/drivers/md/raid1.h
+> >> @@ -41,6 +41,19 @@ struct r1conf {
+> >>  	 */
+> >>  	sector_t		next_resync;
+> >> =20
+> >> +	/*when raid1 start resync,we divide raid into four partitions
+> >> +	 * |---------|--------------|---------------------|-------------|
+> >> +	 *        next_resync   start_next_window        Pc
+> >> +	 * Now start_next_window =3D next_resync + NEXT_NORMALIO_DISTANCE
+> >> +	 * Pc =3D start_next_window + NEXT_NORMALIO_DISTANCE
+> >> +	 * current_window_requests means the count of normalIO between
+> >> +	 * start_next_window and Pc.
+> >> +	 * next_window_requests means the count of nornalIO after Pc.
+> >> +	 * */
+> >> +	sector_t		start_next_window;
+> >> +	int			current_window_requests;
+> >> +	int			next_window_requests;
+> >> +
+> >>  	spinlock_t		device_lock;
+> >> =20
+> >>  	/* list of 'struct r1bio' that need to be processed by raid1d,
+> >> @@ -112,6 +125,7 @@ struct r1bio {
+> >>  						 * in this BehindIO request
+> >>  						 */
+> >>  	sector_t		sector;
+> >> +	sector_t		start_next_window;
+> >>  	int			sectors;
+> >>  	unsigned long		state;
+> >>  	struct mddev		*mddev;
+> >
+> >
+> >Thanks,
+> >NeilBrown
+> >
+
+--Sig_/_hplwLG5iAtQAWwga4YjEtM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIVAwUBUoRxVjnsnt1WYoG5AQKsKA/7Bwj4bTSaDhSsIp8MP5mmzSkqmQivVe2u
+Nz/pK5laQ1QKAwzSCm7ShWkvt2Rob3096mdzf8iWwYderlDG1XPGpTbB0OQQkhDD
+XQl7+8398ygdCdDhEnjqgNMXi+QyvJS0P/SJkt9V6B8gbVyWhdheYuIkj/PwjyAL
++OrqstFg3MfG5MwspQopEfkIat7V5B/vzlcfkqAkXNMNi+BizxZvqqQgRoqJQpPT
+pZrFMXgGmNjiS1mKJPAgMIYo4SAX6M9ujRMwAqTB+D8F/MQMJm0BOl+51mmB+eSO
+CGsmKb1cCoWRc44hmNnYeIvsE15VOazJbpufBXIaqM070KC5hbIzYYj2OAC0ScRz
+XXdfzqbEmJ4Hei3D+lT++c/INKUhOHpqCtT8ETJKZeuafLCW+uVnoQejOFObt3Nr
+8P+Ba74JVVlHRVEvbBLfMEf9Mzxb3CbPcslFi6bxDg5siDNVY4ODHWzv4Cs0Rqkh
+UI2DpjOEnQmDftfAYtDiWVQ8YILSrcNWZHefaziapkS+uxuNpNGljW7mktcJOB8W
+c40YO2ulphpgnlyUK6/MBkC9hZ7x3whSvUZvkBQzSCLLwY9rXx56/PfhL6z+ba6E
+YdASsSCmE/L10zzOMFejLKdfkblsnihKaCAqcQ4foc7bj7LecfiqNYZuf0DTK5cm
+T6XYGI4Hppg=
+=DfEj
+-----END PGP SIGNATURE-----
+
+--Sig_/_hplwLG5iAtQAWwga4YjEtM--
