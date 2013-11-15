@@ -1,135 +1,164 @@
-From: joystick <joystick@shiftmail.org>
-Subject: Re: 3.12: raid-1 mismatch_cnt question
-Date: Fri, 15 Nov 2013 09:51:32 +0100
-Message-ID: <5285E094.2050607@shiftmail.org>
-References: <000f01ced948$2fbab140$8f3013c0$@lucidpixels.com> <527E8B74.70301@shiftmail.org> <008301cedd9d$fc254cf0$f46fe6d0$@lucidpixels.com> <527F7FF5.3000002@shiftmail.org> <000301cedec0$1fa72d60$5ef58820$@lucidpixels.com> <5280BA1E.6060604@shiftmail.org> <CAO9zADyyXiw91y=GwArcC9wUrhRPNNxp_XMAgtcPxR=fiZZY1g@mail.gmail.com> <5281F53D.4060703@shiftmail.org> <528202ED.1040307@fastmail.fm> <000001cee0bd$1979da60$4c6d8f20$@lucidpixels.com> <52848D5C.7020701@shiftmail.org> <002201cee126$5c390290$14ab07b0$@lucidpixels.com> <5284F5B2.3040307@shiftmail.org> <007301cee15e$178969e0$469c3da0$@lucidpixels.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
+Subject: /proc/mdstat status documentation and md: export_rdev
+Date: Fri, 15 Nov 2013 11:28:00 +0200
+Message-ID: <E90CEDA2-1AF7-4FCF-91F6-346D644CF674@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <007301cee15e$178969e0$469c3da0$@lucidpixels.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/11/2013 18:22, Justin Piszcz wrote:
->
-> -----Original Message-----
-> From: joystick [mailto:joystick@shiftmail.org]
-> Sent: Thursday, November 14, 2013 11:09 AM
-> To: Justin Piszcz
-> Cc: 'Bernd Schubert'; 'linux-raid'
-> Subject: Re: 3.12: raid-1 mismatch_cnt question
->
-> [ .. ]
->
->>> At the end of the procedure (like now, if you didn't resync or repair in
->>> the meanwhile) is mismatch_cnt still so high?
-> After a reboot, I ran the check and yes it was still high.
->
-> [ .. ]
->
->>> no, not that one...
->>> it would be helpful to know the kernel version that *creates*
->>> mismatches, the one that you have running normally on the live system.
-> Version: 3.12.0 (and typically always use the latest)
+Hi everyone,
 
-ok
+as some of you already know I run a non-typical configuration that involves external USB drives assembled as raid1 array. I'm still smoothing out the edges of my setup because of all the challenges associated with not so perfect pm-utils/combination of software and hardware I have.
 
-> That's the "bugged" one, supposing this is really a bug (until we find
-> where the mismatches are, it's difficult to say wether this is a data
-> loss or not)
->
->>> Maybe the mismatched are located ext4 metadata areas which are not files
->>> and so can't be seen with md5sums... That would still be as much
->>> worrisome, unless some expert of ext4 can tell that it's ok (it can be
->>> OK if the region with mismatches is an old metadata area, currently
->>> unused; the mechanism that can create harmless mismatches in this case
->>> has been described by Neil)
-> If that is what is occurring, is it possible to exclude them from mismatch_cnt?
+Anyway, I've been successfully resuming from sleep for a while now but this morning something new happened, namely this:
 
-not possible unfortunately.
+% cat /proc/mdstat 
+Personalities : [raid1] 
+md0 : inactive sdc1[1](S)
+      1953276928 blocks super 1.2
+       
+unused devices: <none>
 
-But your mismatch_cnt is exceptionally high, which is unlikely to come 
-from the described mechanism. Other people usually have zero even after 
-months of operation, e.g. I have zero
+which made me realize I have no clue what this message mean and what inactive, [1] and (S) mean in "md0 : inactive sdc1[1](S)".
 
+So, I was wondering if somebody could possibly explain how to read this particular instance of mdstat output, and if there is chance there is a documentation somewhere out there that will let me do this myself?
 
-> [ .. ]
->
-> - First confirm that mismatch_cnt is still high..
-> It was 0 after reboot.
+If you're curious (like myself lol) this is what I observed had happened in dmesg/kernel log prior to cat /proc/mdstat
 
-Above you wrote that after the procedure you rebooted then did a check 
-and it was still high. Can you guess when did it repair?
+Nov 15 08:25:52 localhost kernel: [29863.901108] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.901115] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.901328] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.901335] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.904392] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.904400] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.905078] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.905086] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.905690] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.905697] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:52 localhost kernel: [29863.918128] md: bind<sdc1>
+Nov 15 08:25:58 localhost kernel: [29869.976304] scsi_verify_blk_ioctl: 30 callbacks suppressed
+Nov 15 08:25:58 localhost kernel: [29869.976309] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:58 localhost kernel: [29869.976314] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:58 localhost kernel: [29869.976323] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:58 localhost kernel: [29869.976325] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:59 localhost kernel: [29870.115516] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:59 localhost kernel: [29870.115528] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:25:59 localhost kernel: [29870.115543] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:25:59 localhost kernel: [29870.115549] mdadm: sending ioctl 1261 to a partition!
 
+So at this point the system resumed from sleep, and I ran cat /proc/mdstat. Realized that something went wrong and I did not know what to do, so I disconnected the drives, plugged them back in:
 
-> [ .. ]
->
->
-> - Then if this does not disrupt your system operation too much, i would
-> suggest to fill 95% of free space with a zeroes file like you did in
-> earlier tests. Otherwise for a mismatch happening in non-file area we
-> won't be sure of what kind of area is that. Maybe recompute mismatch_cnt
-> after this.
->
-> Create file up to 95% utilization on /root:
-> /dev/root       219G  205G   12G  95% /
->
-> Re-check:
-> # echo check > /sys/devices/virtual/block/md1/md/sync_action
-> # cat /sys/devices/virtual/block/md1/md/mismatch_cnt
-> 27520
+Nov 15 08:28:34 localhost kernel: [30025.749558] usb 1-1: USB disconnect, device number 7
+Nov 15 08:28:37 localhost kernel: [30028.112008] usb 1-2: USB disconnect, device number 5
+Nov 15 08:28:57 localhost kernel: [30048.990409] usb 1-2: new high-speed USB device number 8 using ehci_hcd
+Nov 15 08:28:58 localhost kernel: [30049.117229] scsi11 : usb-storage 1-2:1.0
+Nov 15 08:28:59 localhost kernel: [30050.121248] scsi 11:0:0:0: Direct-Access     WD       Elements 1048    1022 PQ: 0 ANSI: 6
+Nov 15 08:29:00 localhost kernel: [30050.126571] sd 11:0:0:0: [sdb] Spinning up disk....
+Nov 15 08:29:00 localhost kernel: [30051.187081] usb 1-1: new high-speed USB device number 9 using ehci_hcd
+Nov 15 08:29:00 localhost kernel: [30051.312832] scsi12 : usb-storage 1-1:1.0
+Nov 15 08:29:01 localhost kernel: [30052.133739] .
+Nov 15 08:29:01 localhost kernel: [30052.314419] scsi 12:0:0:0: Direct-Access     WD       Elements 1048    1022 PQ: 0 ANSI: 6
+Nov 15 08:29:04 localhost kernel: [30052.320765] sd 12:0:0:0: [sde] Spinning up disk........ready
+Nov 15 08:29:04 localhost kernel: [30055.144571] sd 11:0:0:0: [sdb] 3907024896 512-byte logical blocks: (2.00 TB/1.81 TiB)
+Nov 15 08:29:04 localhost kernel: [30055.144581] sd 11:0:0:0: [sdb] 4096-byte physical blocks
+Nov 15 08:29:04 localhost kernel: [30055.145433] sd 11:0:0:0: [sdb] Write Protect is off
+Nov 15 08:29:04 localhost kernel: [30055.145442] sd 11:0:0:0: [sdb] Mode Sense: 47 00 10 08
+Nov 15 08:29:04 localhost kernel: [30055.146305] sd 11:0:0:0: [sdb] No Caching mode page present
+Nov 15 08:29:04 localhost kernel: [30055.146314] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+Nov 15 08:29:04 localhost kernel: [30055.149807] sd 11:0:0:0: [sdb] No Caching mode page present
+Nov 15 08:29:04 localhost kernel: [30055.149816] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+Nov 15 08:29:04 localhost kernel: [30055.163711]  sdb: sdb1
+Nov 15 08:29:04 localhost kernel: [30055.169937] sd 11:0:0:0: [sdb] No Caching mode page present
+Nov 15 08:29:04 localhost kernel: [30055.169948] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+Nov 15 08:29:04 localhost kernel: [30055.169957] sd 11:0:0:0: [sdb] Attached SCSI disk
+Nov 15 08:29:04 localhost kernel: [30055.330370] .
+Nov 15 08:29:04 localhost kernel: [30055.345968] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.345978] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.346186] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.347627] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.348234] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.348242] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.348838] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.348845] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:29:04 localhost kernel: [30055.360590] md: bind<sdb1>
+Nov 15 08:29:06 localhost kernel: [30056.333730] ..ready
+Nov 15 08:29:06 localhost kernel: [30057.337894] sd 12:0:0:0: [sde] 3907024896 512-byte logical blocks: (2.00 TB/1.81 TiB)
+Nov 15 08:29:06 localhost kernel: [30057.337904] sd 12:0:0:0: [sde] 4096-byte physical blocks
+Nov 15 08:29:06 localhost kernel: [30057.338753] sd 12:0:0:0: [sde] Write Protect is off
+Nov 15 08:29:06 localhost kernel: [30057.338762] sd 12:0:0:0: [sde] Mode Sense: 47 00 10 08
+Nov 15 08:29:06 localhost kernel: [30057.339502] sd 12:0:0:0: [sde] No Caching mode page present
+Nov 15 08:29:06 localhost kernel: [30057.339511] sd 12:0:0:0: [sde] Assuming drive cache: write through
+Nov 15 08:29:06 localhost kernel: [30057.342516] sd 12:0:0:0: [sde] No Caching mode page present
+Nov 15 08:29:06 localhost kernel: [30057.342525] sd 12:0:0:0: [sde] Assuming drive cache: write through
+Nov 15 08:29:06 localhost kernel: [30057.354130]  sde: sde1
+Nov 15 08:29:06 localhost kernel: [30057.359369] sd 12:0:0:0: [sde] No Caching mode page present
+Nov 15 08:29:06 localhost kernel: [30057.359381] sd 12:0:0:0: [sde] Assuming drive cache: write through
+Nov 15 08:29:06 localhost kernel: [30057.359369] sd 12:0:0:0: [sde] No Caching mode page present
+Nov 15 08:29:06 localhost kernel: [30057.359381] sd 12:0:0:0: [sde] Assuming drive cache: write through
+Nov 15 08:29:06 localhost kernel: [30057.359390] sd 12:0:0:0: [sde] Attached SCSI disk
+Nov 15 08:29:06 localhost kernel: [30057.565248] md: export_rdev(sde1)
+Nov 15 08:29:06 localhost kernel: [30057.566615] md: export_rdev(sde1)
+Nov 15 08:30:57 localhost kernel: [30168.336551] md: md0 stopped.
+Nov 15 08:30:57 localhost kernel: [30168.336562] md: unbind<sdb1>
+Nov 15 08:30:57 localhost kernel: [30168.336669] md: export_rdev(sdb1)
+Nov 15 08:30:57 localhost kernel: [30168.336689] md: unbind<sdc1>
+Nov 15 08:30:57 localhost kernel: [30168.340361] md: export_rdev(sdc1)
 
-?????
-You mean that mismatch_cnt was zero, then you created a big file full of 
-zeroes and after that mismatch_cnt jumped to 27520 ??
-I believe this should not happen, especially not with the harmless 
-mechanism explained by Neil, and this narrows the bug quite a lot.
-If you confirm I understood correctly, can you retry such thing a couple 
-of times? Delete zeroes file, repair RAID so that mismatch_cnt goes to 
-zero, check to confirm that mismatch_cnt is zero, create a file full of 
-zeroes, check again... did mismatch_cnt jump to a high value?
+The array did not assemble automatically this time either, and mdstat showed the same state. So, this time I decided to run
 
-If reproducing the bug is so easy, you might want to try earlier kernels 
-such as the 3.0.101 and re-test with that .
-If earlier kernels do not have such bug it becomes relatively easy to 
-find when was it introduced. Maybe without even knowing where are the 
-mismatches located.
+% mdadm --stop --scan
+mdadm: stopped /dev/md0
+% mdadm --assemble --scan
+mdadm: /dev/md0 has been started with 2 drives.
 
+and it assembled just fine
 
-> then, copypasting the procedure with some modifications:
-> ----
-> ... to determine the location of mismatches (...)
-> Unfortunately I don't think MD tells you the location of mismatches
-> directly. Do you want to try the following:
-> /sys/block/md1/md/sync_min and /sys/block/md1/md/sync_max should allow
-> you to narrow the region of the next check.
-> Set them, then perform check, then cat mismatch_cnt.
-> Narrow progressively sync_min and sync_max so that you identify the most
-> dense areas of mismatches, or a few single blocks that mismatch.
-> When you have identified some regions or isolated blocks, invoke "sync"
-> from bash and then check again the same region a couple of times so to
-> be sure that it stays mismatched and it's not just a transient situation.
-> Then try with debugfs (in readonly mode can be used with fs mounted):
-> there should be an option to get the inode number from a block number of
-> the device... I hope that block numbers are not offset by MD... I think
-> it's icheck and after that you might need "find -inum <inode_number>"
-> launched on the same filesystem to find the corresponding filename from
-> the inode number. That should be the file that contains the mismatch.
-> [ .. ]
-> When I do this, the speed of check thereafter is very slow:
->
-> Personalities : [raid1]
-> md1 : active raid1 sdc2[0] sdb2[1]
->        233381376 blocks [2/2] [UU]
->        [>....................]  check =  0.0% (4500/233381376) finish=80387.9min speed=48K/sec (55 days)
->
-> The speed continues to decrease when the sync_min is set to 1000 and sync_max is 9000 (this won't work).
+% cat /proc/mdstat 
+Personalities : [raid1] 
+md0 : active raid1 sdb1[2] sde1[1]
+      1953276736 blocks super 1.2 [2/2] [UU]
+      bitmap: 0/15 pages [0KB], 65536KB chunk
 
-Are you running the "find" simultaneously with "check" ?
-Check priority is rather low so I understand why it would slow down if 
-you are also doing "find". Otherwise... seems like it's another bug.
+unused devices: <none>
 
+Here's the corresponding kernel log
 
+Nov 15 08:31:06 localhost kernel: [30177.083700] scsi_verify_blk_ioctl: 48 callbacks suppressed
+Nov 15 08:31:06 localhost kernel: [30177.083709] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.083717] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.083737] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.083743] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.086150] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.086158] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.086168] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.086174] mdadm: sending ioctl 1261 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.087982] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.087992] mdadm: sending ioctl 800c0910 to a partition!
+Nov 15 08:31:06 localhost kernel: [30177.923752] md: md0 stopped.
+Nov 15 08:31:07 localhost kernel: [30177.936426] md: bind<sde1>
+Nov 15 08:31:07 localhost kernel: [30177.937166] md: bind<sdb1>
+Nov 15 08:31:07 localhost kernel: [30178.382401] md/raid1:md0: active with 2 out of 2 mirrors
+Nov 15 08:31:07 localhost kernel: [30178.463060] created bitmap (15 pages) for device md0
+Nov 15 08:31:07 localhost kernel: [30178.470165] md0: bitmap initialized from disk: read 1/1 pages, set 0 of 29805 bits
+Nov 15 08:31:07 localhost kernel: [30178.959261] md0: detected capacity change from 0 to 2000155377664
+Nov 15 08:31:08 localhost kernel: [30179.019629]  md0: unknown partition table
+
+So, I think these messages are the gist of it all:
+
+Nov 15 08:29:06 localhost kernel: [30057.565248] md: export_rdev(sde1)
+Nov 15 08:29:06 localhost kernel: [30057.566615] md: export_rdev(sde1)
+Nov 15 08:30:57 localhost kernel: [30168.336551] md: md0 stopped.
+Nov 15 08:30:57 localhost kernel: [30168.336562] md: unbind<sdb1>
+Nov 15 08:30:57 localhost kernel: [30168.336669] md: export_rdev(sdb1)
+Nov 15 08:30:57 localhost kernel: [30168.336689] md: unbind<sdc1>
+Nov 15 08:30:57 localhost kernel: [30168.340361] md: export_rdev(sdc1)
+
+What do they mean? What is export of rdev? What kind of device is considered to be an rdev? What does this sequence of message tell me in human language? :)
+
+I know, some of you feel very strongly about using USB for this sort of thing, but so far I've been enjoying my ride. Both in terms of stability and how it is pushing me to learn more about mdadm and RAID technology in general. Yes, the stability is far from enterprise grade systems, but I'm an enthusiast like perhaps many of you here and this has proven to be a very good training wheels. Besides, even though it is a bumpy ride, it is kinda fun, you know? ;D
+
+Ivan
