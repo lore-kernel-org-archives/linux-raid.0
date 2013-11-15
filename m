@@ -1,109 +1,69 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/4] raid1: Rewrite the implementation of iobarrier.
-Date: Fri, 15 Nov 2013 14:42:11 +1100
-Message-ID: <20131115144211.5ac78deb@notabene.brown>
-References: <201308281940511854138@gmail.com>
-	<20131024125059.1a440152@notabene.brown>
-	<201310290930116677124@gmail.com>
-	<20131031133314.522f30ad@notabene.brown>
-	<201310311114307462606@gmail.com>
-	<20131114174438.7f2db666@notabene.brown>
-	<201311151029513246491@gmail.com>
+Subject: Re: mdadm --fail requires writeable drive.
+Date: Fri, 15 Nov 2013 15:46:27 +1100
+Message-ID: <20131115154627.14364eb3@notabene.brown>
+References: <52836DD1.8080605@mpstor.com>
+	<20131114114449.27f3c746@notabene.brown>
+	<5285094D.9070904@mpstor.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Vtx9GI+QHb69A.nDpc/szt2"; protocol="application/pgp-signature"
+ boundary="Sig_/YvzcpMJ/aj3q9Xgj5TUZHrh"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201311151029513246491@gmail.com>
+In-Reply-To: <5285094D.9070904@mpstor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Benjamin ESTRABAUD <be@mpstor.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/Vtx9GI+QHb69A.nDpc/szt2
+--Sig_/YvzcpMJ/aj3q9Xgj5TUZHrh
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 15 Nov 2013 10:29:56 +0800 majianpeng <majianpeng@gmail.com> wrote:
+On Thu, 14 Nov 2013 17:33:01 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
 
-> >> Yes.How about those code:
-> >> spin_lock_irq(&conf->resync_lock);
-> >> retry_check:
-> >>         if (need_to_wait_for_sync(conf, bio)) {
-> >>                 conf->nr_waiting++;
-> >>                 /* Wait for the barrier to drop.
-> >>                  * However if there are already pending
-> >>                  * requests (preventing the barrier from
-> >>                  * rising completely), and the
-> >>                  * pre-process bio queue isn't empty,
-> >>                  * then don't wait, as we need to empty
-> >>                  * that queue to get the nr_pending
-> >>                  * count down.
-> >>                  */
-> >>                 wait_event_lock_irq(conf->wait_barrier,
-> >>                                     !conf->array_frozen &&
-> >>                                     (!conf->barrier ||
-> >>                                     (conf->nr_pending &&
-> >>                                      current->bio_list &&
-> >>                                      !bio_list_empty(current->bio_list=
-))),
-> >>                                     conf->resync_lock);
-> >>                 conf->nr_waiting--;
-> >> 				goto retry_check;
-> >> >
-> >
-> >It would look a lot better if you made it a while loop:
-> >
-> > while (need_to_wait....) {
-> >     nr_waiting++
-> >     wait_event.....
-> >     nr_waiting--
-> > if (bio_data_dir.....
-> >
-> For this, i think it don;t need while() or recheck.
-> The code should:
+> Hi Neil,
 >=20
-> if (nedd_to_wait...) {
-> 	nr_waiting++
-> 	wait_event.....
-> 	nr_waiting--
-> }
-> if (bio && bio_data_dir(bio) =3D=3D WRITE) {
-> 	 do;
-> }
+> This does work but I was looking for a way to explicitely set a=20
+> particular device as Failed (I want to process devices one by one).
 >=20
-> I think again need_to_wait...(),it must return false. So we don't recheck=
- this.
-> Or am I missing something?
+> But right now I was reading from the array to force it detecting the=20
+> failure as opposed to using "detached" which orders of magnitude better.
 >=20
+> Thanks for the tip, I'll use that for now.
 
-An 'if' is fine.  I just didn't like the goto.
-If you can send me the updated patch in a day or 2 I should be able to get =
-it
-into the current merge window.
+If you really want to just fail one of them you can used the "kernel name"
+like "sda1".
+If you
+   ls -d /sys/block/mdXX/md/dev-*
 
-thanks,
+you will see the devices that are though to be part of the array.  The part
+of the name after "dev-" is the "kernel name".
+"mdadm /dev/mdXX --fail" will accept a "kernel name" and will mark just that
+device as faulty.
+
 NeilBrown
 
---Sig_/Vtx9GI+QHb69A.nDpc/szt2
+
+--Sig_/YvzcpMJ/aj3q9Xgj5TUZHrh
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIVAwUBUoWYFDnsnt1WYoG5AQKEqg/+KupX7swf4evdDlQ/YPP3Eg4MT0dGanZ6
-kSxqIZ2ZVF65fS822DzLfKgDz/8w0yfXLTu1HYHPW31kfV8d1NHkIHul/ILCWAQc
-YIi/9zmBjZdvO3P8510Y6wTKGx2b8Fl5EOgG3no74CNkD5q1SM5PsDjlS5mEx2Cx
-Ev6/cb1k08WD0ZoSiDjlqOUPSq11xF0RV2W+pBwsnnXQKVy7yRFq9ArHtpH8X3lF
-qX7QWpDTo4oRpAsOUAoSVvIMySKo5XFSyo58IqMpTqJSj6r21I3vLK2yz2m8+6lo
-QMCRzHMvMkSa+VeVq0m8CIYHp6sAl5JtWw5who/zz9qiLN/6B/2TNjYwWc0EJsF/
-rBBCmY6ikckHp3GyJT4+3Dg/YILX5XePi90qvw5idBPwZOOwNHIMrPzMYLAnDr6m
-UIEMvuLO3pFvWPNKui7dwiKe7nqxtrTp1uNflg7ap/ufN5cZ5vv4lUs6Mfe/HTAy
-CjWMu+KXLjF7y5iybcTi3RheIcKCvBhg6L5GqrbvG3OcwMY7ki82A6u5TJON5Pkb
-EeQGBB7/Q0zLECB4q5cAuR0yi7cJ/VRc9cS6ldwStj/OpyhimVah5Rt9MDdWjiDS
-GsUa5fdeVo8PGQ2yzzeYWmaoda8LJCmZ3Axg5mkJZ5sg4hWaWKUK0E1ZeSI9uhje
-ShcgLKsG5KU=
-=qzdX
+iQIVAwUBUoWnIznsnt1WYoG5AQIGwQ//cYmIaZbk63ThzQXHvbQXeln8o7tmRLQg
+NGaUiWm0oDQRrhjQ5hBTL+CgyxFq4RTof3hvfuLXdbt147MbtD6SJSP8ksqk5AWm
+DpoLAfiLs2nxn8y97CaqkISrSjqceSsWE7UlftJKd+awQt1Z+HwyzTphF62hzeuk
+awmunVO1tzG3QkpIHMMObf25/E33fAH2JjAiSQajnP3CAnW28ITkoQM1B64Essd0
+7e1K8b3V7M6V1VvijwHeaelGx1Q9aiyU2293AJ65rFGS87xqkTiGcYwqu+t03JBa
+MS83tC9MheNlSVtHmMxPqiQnoYAY9x6ZPyUjnvun2SdZVe32vcVfjC4U1K9+xbe0
+q5FKEX+UEUNJUI70BSVT9b4SVrahIziCgGP0G48kXWULmfh+362Jkpf7eghrgyqi
+0T7XCk+vf89qKBhvzPky3DWx/D+iXgglgmI5g7F8MP82Ldi3cOEwm2MlmlTlDwmQ
+XkaRe4BKlRetgOGVQfOAfEzXKnRsqMe8+mTz/Ku1M2Bbh8dWVy8Ix+YmVdkcL2Vf
+leGmoOm4yPGcDlBIuvekUFNPoi3R9GwqU2dhQFl/01lStOU70LfE/92O3WhqTqV7
+vNG1sgchEHepWFUVcVX7V95jKyR2+CcgloypG4LpxZsxvoStYUZOkddnEg+NumMo
+wuclxpHJQ+k=
+=7W3P
 -----END PGP SIGNATURE-----
 
---Sig_/Vtx9GI+QHb69A.nDpc/szt2--
+--Sig_/YvzcpMJ/aj3q9Xgj5TUZHrh--
