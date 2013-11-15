@@ -1,48 +1,52 @@
-From: Joe Thornber <thornber@redhat.com>
-Subject: Re: [dm-devel] [PATCH -next] dm cache policy mq:: use list_del_init
- instead of list_del/INIT_LIST_HEAD
-Date: Fri, 15 Nov 2013 10:58:23 +0000
-Message-ID: <20131115105822.GA18770@debian>
-References: <CAPgLHd_iO2aHnn-uBp=1OYafVonrSfXnEcW7Mz=vp3btkkygPA@mail.gmail.com>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: mdadm --fail requires writeable drive.
+Date: Fri, 15 Nov 2013 12:22:28 +0000
+Message-ID: <52861204.5050001@mpstor.com>
+References: <52836DD1.8080605@mpstor.com> <20131114114449.27f3c746@notabene.brown> <5285094D.9070904@mpstor.com> <20131115154627.14364eb3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPgLHd_iO2aHnn-uBp=1OYafVonrSfXnEcW7Mz=vp3btkkygPA@mail.gmail.com>
+In-Reply-To: <20131115154627.14364eb3@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: agk@redhat.com, snitzer@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, yongjun_wei@trendmicro.com.cn
+To: NeilBrown <neilb@suse.de>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-ACK
+On 15/11/13 04:46, NeilBrown wrote:
+> On Thu, 14 Nov 2013 17:33:01 +0000 Benjamin ESTRABAUD <be@mpstor.com> wrote:
+>
+>> Hi Neil,
+>>
+>> This does work but I was looking for a way to explicitely set a
+>> particular device as Failed (I want to process devices one by one).
+>>
+>> But right now I was reading from the array to force it detecting the
+>> failure as opposed to using "detached" which orders of magnitude better.
+>>
+>> Thanks for the tip, I'll use that for now.
+>
 
-On Fri, Nov 15, 2013 at 05:47:12PM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Using list_del_init() instead of list_del() + INIT_LIST_HEAD().
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  drivers/md/dm-cache-policy-mq.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/dm-cache-policy-mq.c b/drivers/md/dm-cache-policy-mq.c
-> index 7209fab..ac7d3b3 100644
-> --- a/drivers/md/dm-cache-policy-mq.c
-> +++ b/drivers/md/dm-cache-policy-mq.c
-> @@ -287,9 +287,8 @@ static struct entry *alloc_entry(struct entry_pool *ep)
->  static struct entry *alloc_particular_entry(struct entry_pool *ep, dm_cblock_t cblock)
->  {
->  	struct entry *e = ep->entries + from_cblock(cblock);
-> -	list_del(&e->list);
->  
-> -	INIT_LIST_HEAD(&e->list);
-> +	list_del_init(&e->list);
->  	INIT_HLIST_NODE(&e->hlist);
->  	ep->nr_allocated++;
->  
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+Hi Neil,
+
+> If you really want to just fail one of them you can used the "kernel name"
+> like "sda1".
+> If you
+>     ls -d /sys/block/mdXX/md/dev-*
+>
+
+Thanks a lot for this! This is exactly what I was looking for and it 
+worked like a charm.
+
+> you will see the devices that are though to be part of the array.  The part
+> of the name after "dev-" is the "kernel name".
+> "mdadm /dev/mdXX --fail" will accept a "kernel name" and will mark just that
+> device as faulty.
+>
+
+That's perfect. Thanks a lot!
+
+> NeilBrown
+>
+
+Ben.
