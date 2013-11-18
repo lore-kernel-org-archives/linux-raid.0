@@ -1,88 +1,56 @@
-From: Eric Sandeen <sandeen@redhat.com>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: Filesystem writes on RAID5 too slow
-Date: Mon, 18 Nov 2013 12:28:21 -0600
-Message-ID: <528A5C45.4080906@redhat.com>
+Date: Tue, 19 Nov 2013 00:41:40 +0600
+Message-ID: <20131119004140.3fea96df@natsu>
 References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/x4nyDRcD=BOV5KkYrQUcxCe"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
-Cc: xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
+To: Martin Boutin <martboutin@gmail.com>
+Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-XFS" <linux-xfs@vger.kernel.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/18/13, 10:02 AM, Martin Boutin wrote:
-> Dear list,
-> 
-> I am writing about an apparent issue (or maybe it is normal, that's my
-> question) regarding filesystem write speed in in a linux raid device.
-> More specifically, I have linux-3.10.10 running in an Intel Haswell
-> embedded system with 3 HDDs in a RAID-5 configuration.
-> The hard disks have 4k physical sectors which are reported as 512
-> logical size. I made sure the partitions underlying the raid device
-> start at sector 2048.
+--Sig_/x4nyDRcD=BOV5KkYrQUcxCe
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-(fixed cc: to xfs list)
+On Mon, 18 Nov 2013 11:02:15 -0500
+Martin Boutin <martboutin@gmail.com> wrote:
 
-> The RAID device has version 1.2 metadata and 4k (bytes) of data
-> offset, therefore the data should also be 4k aligned. The raid chunk
-> size is 512K.
-> 
 > I have the md0 raid device formatted as ext3 with a 4k block size, and
 > stride and stripes correctly chosen to match the raid chunk size, that
-> is, stride=128,stripe-width=256.
-> 
-> While I was working in a small university project, I just noticed that
-> the write speeds when using a filesystem over raid are *much* slower
-> than when writing directly to the raid device (or even compared to
-> filesystem read speeds).
-> 
+> is, stride=3D128,stripe-width=3D256.
+
+What is your stripe cache size?
+http://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-tr=
+ansfer/
+
 > The command line for measuring filesystem read and write speeds was:
-> 
-> $ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
-> $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
-> 
-> The command line for measuring raw read and write speeds was:
-> 
-> $ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
-> $ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
-> 
-> Here are some speed measures using dd (an average of 20 runs).:
-> 
-> device       raw/fs  mode   speed (MB/s)    slowdown (%)
-> /dev/md0    raw    read    207
-> /dev/md0    raw    write    209
-> /dev/md1    raw    read    214
-> /dev/md1    raw    write    212
-> 
-> /dev/md0    xfs    read    188    9
-> /dev/md0    xfs    write    35    83
-> 
-> /dev/md1    ext3    read    199    7
-> /dev/md1    ext3    write    36    83
-> 
-> /dev/md0    ufs    read    212    0
-> /dev/md0    ufs    write    53    75
-> 
-> /dev/md0    ext2    read    202    2
-> /dev/md0    ext2    write    34    84
-> 
-> Is it possible that the filesystem has such enormous impact in the
-> write speed? We are talking about a slowdown of 80%!!! Even a
-> filesystem as simple as ufs has a slowdown of 75%! What am I missing?
+>=20
+> $ dd if=3D/tmp/diskmnt/filerd.zero of=3D/dev/null bs=3D1M count=3D1000 if=
+lag=3Ddirect
+> $ dd if=3D/dev/zero of=3D/tmp/diskmnt/filewr.zero bs=3D1M count=3D1000 of=
+lag=3Ddirect
 
-One thing you're missing is enough info to debug this.
+Try testing with "fdatasync" instead of "direct" here.
 
-/proc/mdstat, kernel version, xfs_info output, mkfs commandlines used,
-partition table details, etc.
+--=20
+With respect,
+Roman
 
-If something is misaligned and you are doing RMW for these IOs it could
-hurt a lot.
+--Sig_/x4nyDRcD=BOV5KkYrQUcxCe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--Eric
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-> Thank you,
-> 
+iEYEARECAAYFAlKKX2QACgkQTLKSvz+PZwh1mwCgjuGOIMIxOqMQRP79r1fKVx+f
+1f0AnR9v0sYECiXgCFZoXoUzhVdBmPwO
+=kJZ2
+-----END PGP SIGNATURE-----
 
+--Sig_/x4nyDRcD=BOV5KkYrQUcxCe--
