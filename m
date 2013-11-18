@@ -1,32 +1,88 @@
-From: "David F." <df7729@gmail.com>
-Subject: MDADM 3.3 broken?
-Date: Mon, 18 Nov 2013 10:26:00 -0800
-Message-ID: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: Re: Filesystem writes on RAID5 too slow
+Date: Mon, 18 Nov 2013 12:28:21 -0600
+Message-ID: <528A5C45.4080906@redhat.com>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc: xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 11/18/13, 10:02 AM, Martin Boutin wrote:
+> Dear list,
+> 
+> I am writing about an apparent issue (or maybe it is normal, that's my
+> question) regarding filesystem write speed in in a linux raid device.
+> More specifically, I have linux-3.10.10 running in an Intel Haswell
+> embedded system with 3 HDDs in a RAID-5 configuration.
+> The hard disks have 4k physical sectors which are reported as 512
+> logical size. I made sure the partitions underlying the raid device
+> start at sector 2048.
 
-we updated our linux disk with mdadm 3.3 from 3.2.6 and customers are
-finding their RAID is no longer detected.  It's only been a couple
-weeks and based on the number of customers, we know there is an issue.
- We're having those with problems workaround by having them load
-dmraid instead for now.
+(fixed cc: to xfs list)
 
-We also did tests locally and finding intermittent problems with
-RAID-0 on ISW - sometimes 3.3 doesn't identify both drives as RAID
-members.  3.2.6 works 100% of the time.
+> The RAID device has version 1.2 metadata and 4k (bytes) of data
+> offset, therefore the data should also be 4k aligned. The raid chunk
+> size is 512K.
+> 
+> I have the md0 raid device formatted as ext3 with a 4k block size, and
+> stride and stripes correctly chosen to match the raid chunk size, that
+> is, stride=128,stripe-width=256.
+> 
+> While I was working in a small university project, I just noticed that
+> the write speeds when using a filesystem over raid are *much* slower
+> than when writing directly to the raid device (or even compared to
+> filesystem read speeds).
+> 
+> The command line for measuring filesystem read and write speeds was:
+> 
+> $ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
+> $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
+> 
+> The command line for measuring raw read and write speeds was:
+> 
+> $ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
+> $ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
+> 
+> Here are some speed measures using dd (an average of 20 runs).:
+> 
+> device       raw/fs  mode   speed (MB/s)    slowdown (%)
+> /dev/md0    raw    read    207
+> /dev/md0    raw    write    209
+> /dev/md1    raw    read    214
+> /dev/md1    raw    write    212
+> 
+> /dev/md0    xfs    read    188    9
+> /dev/md0    xfs    write    35    83
+> 
+> /dev/md1    ext3    read    199    7
+> /dev/md1    ext3    write    36    83
+> 
+> /dev/md0    ufs    read    212    0
+> /dev/md0    ufs    write    53    75
+> 
+> /dev/md0    ext2    read    202    2
+> /dev/md0    ext2    write    34    84
+> 
+> Is it possible that the filesystem has such enormous impact in the
+> write speed? We are talking about a slowdown of 80%!!! Even a
+> filesystem as simple as ufs has a slowdown of 75%! What am I missing?
 
-Also with DDF RAID - cisco server for example not detecting RAID5 -
-C220M3_LFF_SpecSheet.pdf. I believe they are using the LSI MegaRaid
-since DMRAID reports that.
+One thing you're missing is enough info to debug this.
 
-Are these problems known - we wouldn't mind moving to the latest
-version if your pretty sure it fixes it, otherwise we're going to have
-to revert to 3.2.6?
+/proc/mdstat, kernel version, xfs_info output, mkfs commandlines used,
+partition table details, etc.
 
-TIA!!
+If something is misaligned and you are doing RMW for these IOs it could
+hurt a lot.
+
+-Eric
+
+> Thank you,
+> 
+
