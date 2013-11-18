@@ -1,51 +1,52 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Tue, 19 Nov 2013 01:25:36 +0600
-Message-ID: <20131119012536.473bf37b@natsu>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<20131119004140.3fea96df@natsu>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: MDADM 3.3 broken?
+Date: Mon, 18 Nov 2013 21:22:57 +0100
+Message-ID: <528A7721.8080604@arcor.de>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zJADM7HgRyYwXL4UQY8zh=N"; protocol="application/pgp-signature"
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20131119004140.3fea96df@natsu>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Martin Boutin <martboutin@gmail.com>
-Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-XFS" <linux-xfs@vger.kernel.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "David F." <df7729@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/zJADM7HgRyYwXL4UQY8zh=N
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 11/18/2013 07:26 PM, David F. wrote:
+> Hi,
+> 
+> we updated our linux disk with mdadm 3.3 from 3.2.6 and customers are
+> finding their RAID is no longer detected.  It's only been a couple
+> weeks and based on the number of customers, we know there is an issue.
+>  We're having those with problems workaround by having them load
+> dmraid instead for now.
+> 
+> We also did tests locally and finding intermittent problems with
+> RAID-0 on ISW - sometimes 3.3 doesn't identify both drives as RAID
+> members.  3.2.6 works 100% of the time.
+> 
+> Also with DDF RAID - cisco server for example not detecting RAID5 -
+> C220M3_LFF_SpecSheet.pdf. I believe they are using the LSI MegaRaid
+> since DMRAID reports that.
 
-On Tue, 19 Nov 2013 00:41:40 +0600
-Roman Mamedov <rm@romanrm.net> wrote:
+Could you please provide mdadm -E and possibly mdadm --dump output of
+the disks that aren't detected? How does RAID discovery work on your
+systems? Are you using standard udev rules or something special? How
+does your mdadm.conf look like?
 
-> > The command line for measuring filesystem read and write speeds was:
-> >=20
-> > $ dd if=3D/tmp/diskmnt/filerd.zero of=3D/dev/null bs=3D1M count=3D1000 =
-iflag=3Ddirect
-> > $ dd if=3D/dev/zero of=3D/tmp/diskmnt/filewr.zero bs=3D1M count=3D1000 =
-oflag=3Ddirect
->=20
-> Try testing with "fdatasync" instead of "direct" here.
+Regards
+Martin
 
-Sorry, "conv=3Dfdatasync" instead of "oflag=3Ddirect".
 
---=20
-With respect,
-Roman
+> 
+> Are these problems known - we wouldn't mind moving to the latest
+> version if your pretty sure it fixes it, otherwise we're going to have
+> to revert to 3.2.6?
+> 
+> TIA!!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---Sig_/zJADM7HgRyYwXL4UQY8zh=N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlKKabAACgkQTLKSvz+PZwgoPgCfRGrUCd59bvnmF2xxIL6/wWfJ
-/DoAn0+AZJ6y6v3sZvsSH0222y+5yhkp
-=OFIi
------END PGP SIGNATURE-----
-
---Sig_/zJADM7HgRyYwXL4UQY8zh=N--
