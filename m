@@ -1,74 +1,72 @@
-From: "Steven Rose [DATACOM]" <Steven.Rose@datacom.co.nz>
-Subject: mdadm: "reshape: not enough stripes. Needed 65536"
-Date: Mon, 18 Nov 2013 13:38:39 +1300
-Message-ID: <C057AC9B02D06A49810E9597C11F55BF1CD7694012@dnzwgex2.datacom.co.nz>
+From: Martin Boutin <martboutin@gmail.com>
+Subject: Filesystem writes on RAID5 too slow
+Date: Mon, 18 Nov 2013 11:02:15 -0500
+Message-ID: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>
+Cc: "Kernel.org-Linux-XFS" <linux-xfs@vger.kernel.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi! I can't find any mention of this problem, which I suspect is self-inflicted by using a stupid chunk size of 65536 (64MB).
+Dear list,
 
-My raid 5 array has 4 devices. 3 are active and 1 is a spare. I want to grow it to use all 4. Array details are below.
-I removed the write-intent bitmap and used:
-  mdadm --grow --raid-devices=4 /dev/md5
+I am writing about an apparent issue (or maybe it is normal, that's my
+question) regarding filesystem write speed in in a linux raid device.
+More specifically, I have linux-3.10.10 running in an Intel Haswell
+embedded system with 3 HDDs in a RAID-5 configuration.
+The hard disks have 4k physical sectors which are reported as 512
+logical size. I made sure the partitions underlying the raid device
+start at sector 2048.
 
-and got the error "mdadm: failed to set raid disks" and
-syslog: "md/raid:md5: reshape: not enough stripes.  Needed 65536".
+The RAID device has version 1.2 metadata and 4k (bytes) of data
+offset, therefore the data should also be 4k aligned. The raid chunk
+size is 512K.
 
-The max value of stripe_cache_size is half of this so I can't increase it enough although I have 8GB RAM.
+I have the md0 raid device formatted as ext3 with a 4k block size, and
+stride and stripes correctly chosen to match the raid chunk size, that
+is, stride=128,stripe-width=256.
 
-I realised that the chunk size is huge and is probably causing a stripe-width that's too large, and tried to reduce the chunk size to 128K with:
-  mdadm --grow -c 128 /dev/md5 --backup-file=/mnt/backup/chunks.bak
+While I was working in a small university project, I just noticed that
+the write speeds when using a filesystem over raid are *much* slower
+than when writing directly to the raid device (or even compared to
+filesystem read speeds).
 
-and got:
-"mdadm: Cannot set device shape for /dev/md5" and
-syslog message "md/raid:md5: reshape: not enough stripes.  Needed 65536".
+The command line for measuring filesystem read and write speeds was:
 
-Is there anything else I could try? I can recreate the array from the backup if necessary.
+$ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
+$ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
 
+The command line for measuring raw read and write speeds was:
 
-Version and array info:
-mdadm version is 3.2.5-lubuntu0.3, kernel is 3.2.0-32-generic. I have 8GB of RAM, running Mint 13 (Maya) for now.
+$ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
+$ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
 
-Array details:
-/dev/md5:
-        Version : 1.2
-  Creation Time : Sun Oct 21 22:05:44 2012
-     Raid Level : raid5
-     Array Size : 1904607232 (1816.38 GiB 1950.32 GB)
-  Used Dev Size : 952303616 (908.19 GiB 975.16 GB)
-   Raid Devices : 3
-  Total Devices : 4
-    Persistence : Superblock is persistent
+Here are some speed measures using dd (an average of 20 runs).:
 
-    Update Time : Sun Nov 17 16:09:40 2013
-          State : clean
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 1
+device       raw/fs  mode   speed (MB/s)    slowdown (%)
+/dev/md0    raw    read    207
+/dev/md0    raw    write    209
+/dev/md1    raw    read    214
+/dev/md1    raw    write    212
 
-         Layout : left-symmetric
-     Chunk Size : 65536K
+/dev/md0    xfs    read    188    9
+/dev/md0    xfs    write    35    83
 
-           Name : blackbox:md5  (local to host blackbox)
-           UUID : 72ffa5b6:601c3c8f:cf7d0771:bb9536a5
-         Events : 17268
+/dev/md1    ext3    read    199    7
+/dev/md1    ext3    write    36    83
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       3       8       53        1      active sync   /dev/sdd5
-       2       8       34        2      active sync   /dev/sdc2
+/dev/md0    ufs    read    212    0
+/dev/md0    ufs    write    53    75
 
-       5       8       66        -      spare   /dev/sde2
+/dev/md0    ext2    read    202    2
+/dev/md0    ext2    write    34    84
 
-This is formatted with EXT4.
+Is it possible that the filesystem has such enormous impact in the
+write speed? We are talking about a slowdown of 80%!!! Even a
+filesystem as simple as ufs has a slowdown of 75%! What am I missing?
 
-
-Thanks for any help.
-Steven Rose
+Thank you,
+-- 
+Martin Boutin
