@@ -1,112 +1,85 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: MDADM 3.3 broken?
-Date: Tue, 19 Nov 2013 09:05:57 -0800
-Message-ID: <CAGRSmLufpZV5qYa-jq17n_MTWY0oc9yX4USoc0PZsb1LJheGcQ@mail.gmail.com>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
-	<528A7721.8080604@arcor.de>
-	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
-	<20131119110110.396b2af3@notabene.brown>
+From: Andrea Mazzoleni <amadvance@gmail.com>
+Subject: Re: Triple parity and beyond
+Date: Tue, 19 Nov 2013 18:28:43 +0100
+Message-ID: <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
+	<528A90B7.5010905@zytor.com>
+	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
+	<528AA1EB.3010909@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131119110110.396b2af3@notabene.brown>
+In-Reply-To: <528AA1EB.3010909@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-Hello,
+Hi Peter,
 
-The mdadm 3.3 binary we've been using was compiled from source on a Debian
-Wheezy 32-bit install, with the source downloaded from kernel.org
+Yes, 251 disks for 6 parity.
 
-But also, this morning, I tried the same test with the 3.3 mdadm binary
-taken from the Debian Jessie package here:
+To build a NxM Cauchy matrix you need to pick N+M distinct values
+in the GF(2^8) and we have only 2^8 == 256 available.
+This means that for every row we add for an extra parity level, we
+have to remove one of the disk columns.
 
-packages.debian.org slash jessie slash i386 slash mdadm slash download
-(mdadm_3.3-2_i386.deb)
+Note that in true, I use an Extended Cauchy matrix that gives the
+first row of 1 for "free". This results in N+M <= 256+1.
+So, DISKS = 257 - PARITY -> 251 = 257 - 6
 
-The results were the same, as this output shows:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-mdadm: looking for devices for further assembly
-mdadm: no RAID superblock on /dev/sdd4
-mdadm: no RAID superblock on /dev/sdd3
-mdadm: no RAID superblock on /dev/sdd2
-mdadm: no RAID superblock on /dev/sdd1
-mdadm: no RAID superblock on /dev/sdd
-mdadm: cannot open device /dev/sr1: No medium found
-mdadm: cannot open device /dev/sr0: No medium found
-mdadm: no RAID superblock on /dev/sda11
-mdadm: no RAID superblock on /dev/sda10
-mdadm: no RAID superblock on /dev/sda9
-mdadm: no RAID superblock on /dev/sda8
-mdadm: no RAID superblock on /dev/sda7
-mdadm: no RAID superblock on /dev/sda6
-mdadm: no RAID superblock on /dev/sda5
-mdadm: no RAID superblock on /dev/sda4
-mdadm: no RAID superblock on /dev/sda3
-mdadm: no RAID superblock on /dev/sda2
-mdadm: no RAID superblock on /dev/sda1
-mdadm: no RAID superblock on /dev/sda
-mdadm: no RAID superblock on /dev/sdc1
-mdadm: /dev/sdb is identified as a member of /dev/md/imsm0, slot -1.
-mdadm: /dev/sdc2 is identified as a member of /dev/md/imsm0, slot -1.
-mdadm: /dev/sdc is identified as a member of /dev/md/imsm0, slot -1.
-mdadm: added /dev/sdc2 to /dev/md/imsm0 as -1
-mdadm: failed to add /dev/sdc to /dev/md/imsm0: Device or resource busy
-mdadm: added /dev/sdb to /dev/md/imsm0 as -1
-mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-mdadm: looking for devices for /dev/md/RAID0
-mdadm: looking in container /dev/md/imsm0
-mdadm: found match on member /md127/0 in /dev/md/imsm0
-mdadm: Started /dev/md/RAID0 with 2 devices
+A brief introduction of Cauchy and Extended Cauchy matrix can be found in:
 
-I ran strace on this version with this command:
-strace -o mdadm33trace.txt mdadm --assemble --scan --no-degraded
+Vinocha, "On Generator Cauchy Matrices of GDRS/GTRS Codes", 2012
+http://www.m-hikari.com/ijcms/ijcms-2012/45-48-2012/brarIJCMS45-48-2012.pdf
+(just check the Introduction, the rest is not related)
 
-Here's a link to the strace output file:
-www.dropbox.com slash s slash l5tcgu8zvjn7eb7 slash mdadm33trace.txt
+More details can be found in:
 
-On Mon, Nov 18, 2013 at 4:01 PM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 18 Nov 2013 15:13:58 -0800 "David F." <df7729@gmail.com> wrote:
+Roth, "Introduction to Coding Theory", 2006
+http://carlossicoli.free.fr/R/Roth_R.-Introduction_to_coding_theory-Cambridge_University_Press%282006%29.pdf
+(search for "Extended Cauchy")
+
+Ciao,
+Andrea
+
+On Tue, Nov 19, 2013 at 12:25 AM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 11/18/2013 02:35 PM, Andrea Mazzoleni wrote:
+>> Hi Peter,
+>>
+>> The Cauchy matrix has the mathematical property to always have itself
+>> and all submatrices not singular. So, we are sure that we can always
+>> solve the equations to recover the data disks.
+>>
+>> Besides the mathematical proof, I've also inverted all the
+>> 377,342,351,231 possible submatrices for up to 6 parities and 251 data
+>> disks, and got an experimental confirmation of this.
+>>
 >
->
->> output of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.2.6):
-> ...
->> mdadm: no RAID superblock on /dev/sdc2
->
->
+> Nice.
 >
 >>
->> output1 of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.3 -
->> note using /dev/sdc2, not /dev/sdc):
-> .....
->> mdadm: /dev/sdc2 is identified as a member of /dev/md/imsm0, slot -1.
+>> The only limit is coming from the GF(2^8). You have a maximum number
+>> of disk = 2^8 + 1 - number_of_parities. For example, with 6 parities,
+>> you can have no more of 251 data disks. Over this limit it's not
+>> possible to build a Cauchy matrix.
+>>
 >
-> So there is the problem.  mdadm 3.2.6 sees no RAID superblock on sdc2, while
-> mdadm 3.3 does (but should not).
+> 251?  Not 255?
+>
+>> Note that instead with a Vandermonde matrix you don't have the
+>> guarantee to always have all the submatrices not singular. This is the
+>> reason because using power coefficients, before or late, it happens to
+>> have unsolvable equations.
+>>
+>> You can find the code that generate the Cauchy matrix with some
+>> explanation in the comments at (see the set_cauchy() function) :
+>>
+>> http://sourceforge.net/p/snapraid/code/ci/master/tree/mktables.c
+>
+> OK, need to read up on the theoretical aspects of this, but it sounds
+> promising.
+>
+>         -hpa
 >
 >
-> However that code hasn't changed!
->
-> load_super_imsm() still starts with:
->
->
->         if (test_partition(fd))
->                 /* IMSM not allowed on partitions */
->                 return 1;
->
->
-> and test_partition hasn't changed since it was written in April 2010 for
-> mdadm 3.1.3.
->
-> So I'm quite perplexed.
->
-> Is your mdadm-3.3 compiled from source or provided by a distro?
->
-> Can you run the "mdadm --assemble" under strace and post the result?
->
->   strace -o /tmp/some-file mdadm --assemble --scan ......
->
-> Thanks,
-> NeilBrown
