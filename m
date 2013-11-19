@@ -1,28 +1,26 @@
-From: majianpeng <majianpeng@gmail.com>
-Subject: Re: Re: [PATCH 4/4] raid1: Rewrite the implementation of iobarrier.
-Date: Tue, 19 Nov 2013 15:53:51 +0800
-Message-ID: <201311191553480479640@gmail.com>
-References: <201308281940511854138@gmail.com> <20131024125059.1a440152@notabene.brown> <201310290930116677124@gmail.com> <20131031133314.522f30ad@notabene.brown> <201310311114307462606@gmail.com> <20131114174438.7f2db666@notabene.brown> <201311151029513246491@gmail.com> <20131115144211.5ac78deb@notabene.brown> <201311151454593252903@gmail.com>,
-	<20131119152506.3b60f52b@notabene.brown>
-Reply-To: majianpeng <majianpeng@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Is my drive dying ?
+Date: Tue, 19 Nov 2013 09:14:06 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1311190913410.1157@uplift.swm.pp.se>
+References: <CAPbD+RcuxFY0gwMNm5Z=YJ2knuYoK8thevVpL+bv+kb=QKN4Pw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPbD+RcuxFY0gwMNm5Z=YJ2knuYoK8thevVpL+bv+kb=QKN4Pw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Guillaume Betous <guillaume.betous@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pk9uIEZyaSwgMTUgTm92IDIwMTMgMTQ6NTU6MDIgKzA4MDAgbWFqaWFucGVuZyA8bWFqaWFucGVu
-Z0BnbWFpbC5jb20+IHdyb3RlOg0KPg0KPj4gPklmIHlvdSBjYW4gc2VuZCBtZSB0aGUgdXBkYXRl
-ZCBwYXRjaCBpbiBhIGRheSBvciAyIEkgc2hvdWxkIGJlIGFibGUgdG8gZ2V0IGl0DQo+PiA+aW50
-byB0aGUgY3VycmVudCBtZXJnZSB3aW5kb3cuDQo+PiA+DQo+PiA+dGhhbmtzLA0KPj4gPk5laWxC
-cm93bg0KPj4gPg0KPj4gVGhhbmtzIHZlcnkgbXVjaCBuZWlsISBCZWxvdyB0aGUgbGF0ZXN0IHBh
-dGNoLg0KPj4gDQo+PiBTdWJqZWN0OnJhaWQxOiBSZXdyaXRlIHRoZSBpbXBsZW1lbnRhdGlvbiBv
-ZiBpb2JhcnJpZXIuDQo+DQo+VGhhbmtzLiBJJ3ZlIGFwcGxpZWQgdGhhdCBwYXRjaC4gSSBhbHNv
-IGNsZWFuZWQgdXAgc29tZSBvZiB0aGUgZm9ybWF0dGluZyBhbmQNCj5jbGFyaWZpZWQgdGhlIHBh
-dGNoIGRlc2NyaXB0aW9uIHF1aXRlIGEgYml0Lg0KPg0KPk5laWxCcm93bg0KPg0KVGhhbmtzIHZl
-cnkgbXVjaCENCg0KSmlhbnBlbmcgTWE=
+On Tue, 19 Nov 2013, Guillaume Betous wrote:
 
+> They all are on the same drive : sdc (WD Red).
+>
+> Here is a "smarctl -a /dev/sdc" : http://pastie.org/8491779
+>
+> It's a recent drive (3000 hours => 4 months), is it currently dying ?
+
+With 56 pending sectors, I would RMA this drive.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
