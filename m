@@ -1,78 +1,91 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: MDADM 3.3 broken?
-Date: Tue, 19 Nov 2013 12:08:56 -0800
-Message-ID: <CAGRSmLvjph4GrD_6hXcPa9RiM-uW0034roHMsZQ=m8QNMzvpJA@mail.gmail.com>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
-	<528A7721.8080604@arcor.de>
-	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
-	<20131119110110.396b2af3@notabene.brown>
-	<528BBFEB.7050202@arcor.de>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: Triple parity and beyond
+Date: Tue, 19 Nov 2013 15:29:33 -0500
+Message-ID: <528BCA2D.5010500@redhat.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528BBFEB.7050202@arcor.de>
+In-Reply-To: <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>, James Plank <plank@cs.utk.edu>
 List-Id: linux-raid.ids
 
-and don't forget it's not 100% of the time, it's about 50% of the time
-3.3 gives a problem so not sure if it's an uninitialized variable or
-something like that?   3.2.6 works 100% of the time.  And again on
-RAID0 - RAID1 haven't seen a problem.
+On 11/19/2013 12:28 PM, Andrea Mazzoleni wrote:
+> Hi Peter,
+>
+> Yes, 251 disks for 6 parity.
+>
+> To build a NxM Cauchy matrix you need to pick N+M distinct values
+> in the GF(2^8) and we have only 2^8 == 256 available.
+> This means that for every row we add for an extra parity level, we
+> have to remove one of the disk columns.
+>
+> Note that in true, I use an Extended Cauchy matrix that gives the
+> first row of 1 for "free". This results in N+M <= 256+1.
+> So, DISKS = 257 - PARITY -> 251 = 257 - 6
+>
+> A brief introduction of Cauchy and Extended Cauchy matrix can be found in:
+>
+> Vinocha, "On Generator Cauchy Matrices of GDRS/GTRS Codes", 2012
+> http://www.m-hikari.com/ijcms/ijcms-2012/45-48-2012/brarIJCMS45-48-2012.pdf
+> (just check the Introduction, the rest is not related)
+>
+> More details can be found in:
+>
+> Roth, "Introduction to Coding Theory", 2006
+> http://carlossicoli.free.fr/R/Roth_R.-Introduction_to_coding_theory-Cambridge_University_Press%282006%29.pdf
+> (search for "Extended Cauchy")
+>
+> Ciao,
+> Andrea
 
-On Tue, Nov 19, 2013 at 11:45 AM, Martin Wilck <mwilck@arcor.de> wrote:
-> On 11/19/2013 01:01 AM, NeilBrown wrote:
->> On Mon, 18 Nov 2013 15:13:58 -0800 "David F." <df7729@gmail.com> wrote:
->>
->>
->>> output of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.2.6):
->> ...
->>> mdadm: no RAID superblock on /dev/sdc2
->>
->>
->>
+Great work - we have waited a long time for this. Adding in Jim Plank who did 
+some great talks and work in this area as well :)
+
+Ric
+
+>
+> On Tue, Nov 19, 2013 at 12:25 AM, H. Peter Anvin <hpa@zytor.com> wrote:
+>> On 11/18/2013 02:35 PM, Andrea Mazzoleni wrote:
+>>> Hi Peter,
 >>>
->>> output1 of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.3 -
->>> note using /dev/sdc2, not /dev/sdc):
->> .....
->>> mdadm: /dev/sdc2 is identified as a member of /dev/md/imsm0, slot -1.
+>>> The Cauchy matrix has the mathematical property to always have itself
+>>> and all submatrices not singular. So, we are sure that we can always
+>>> solve the equations to recover the data disks.
+>>>
+>>> Besides the mathematical proof, I've also inverted all the
+>>> 377,342,351,231 possible submatrices for up to 6 parities and 251 data
+>>> disks, and got an experimental confirmation of this.
+>>>
+>> Nice.
 >>
->> So there is the problem.  mdadm 3.2.6 sees no RAID superblock on sdc2, while
->> mdadm 3.3 does (but should not).
+>>> The only limit is coming from the GF(2^8). You have a maximum number
+>>> of disk = 2^8 + 1 - number_of_parities. For example, with 6 parities,
+>>> you can have no more of 251 data disks. Over this limit it's not
+>>> possible to build a Cauchy matrix.
+>>>
+>> 251?  Not 255?
+>>
+>>> Note that instead with a Vandermonde matrix you don't have the
+>>> guarantee to always have all the submatrices not singular. This is the
+>>> reason because using power coefficients, before or late, it happens to
+>>> have unsolvable equations.
+>>>
+>>> You can find the code that generate the Cauchy matrix with some
+>>> explanation in the comments at (see the set_cauchy() function) :
+>>>
+>>> http://sourceforge.net/p/snapraid/code/ci/master/tree/mktables.c
+>> OK, need to read up on the theoretical aspects of this, but it sounds
+>> promising.
+>>
+>>          -hpa
 >>
 >>
->> However that code hasn't changed!
->>
->> load_super_imsm() still starts with:
->>
->>
->>       if (test_partition(fd))
->>               /* IMSM not allowed on partitions */
->>               return 1;
->
-> Well not quite - you changed that code in commit b31df436 "intel,ddf:
-> don't require partitions when ignore_hw_compat is set". Maybe there's
-> something wrong with that ignore_hw_compat logic?
->
-> In the strace I don't see indication of test_partition having been
-> called, that's another hint in that direction.
->
-> Martin
->
->>
->>
->> and test_partition hasn't changed since it was written in April 2010 for
->> mdadm 3.1.3.
->>
->> So I'm quite perplexed.
->>
->> Is your mdadm-3.3 compiled from source or provided by a distro?
->>
->> Can you run the "mdadm --assemble" under strace and post the result?
->>
->>   strace -o /tmp/some-file mdadm --assemble --scan ......
->>
->> Thanks,
->> NeilBrown
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
