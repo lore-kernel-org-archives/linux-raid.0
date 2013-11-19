@@ -1,33 +1,37 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: MDADM 3.3 broken?
-Date: Tue, 19 Nov 2013 14:49:59 -0800
-Message-ID: <CAGRSmLsfAo62to98bnSgpSqatmH2Fcv8NhQQYJQHhL_pHZp=pg@mail.gmail.com>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
-	<528A7721.8080604@arcor.de>
-	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
-	<20131119110110.396b2af3@notabene.brown>
-	<CAGRSmLufpZV5qYa-jq17n_MTWY0oc9yX4USoc0PZsb1LJheGcQ@mail.gmail.com>
-	<528BCC4A.5070201@arcor.de>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Triple parity and beyond
+Date: Tue, 19 Nov 2013 14:51:47 -0800
+Message-ID: <CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
+ <528A90B7.5010905@zytor.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
+ <528AA1EB.3010909@zytor.com> <528B3A6F.2010304@hesbynett.no> <CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528BCC4A.5070201@arcor.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Andrea Mazzoleni <amadvance@gmail.com>
+Cc: David Brown <david.brown@hesbynett.no>, "H. Peter Anvin" <hpa@zytor.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-I believe because the partitions take up the entire provided md device
-- so if you don't skew the size of the device to protect the meta
-data, the partition could go to the end of the drive.
+I'm not going to claim any expert status on this discussion (the
+theory makes my head spin) but I will say I agree with Andrea as far
+as prefering his implementation for triple parity and beyond.
 
-On Tue, Nov 19, 2013 at 12:38 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> The question I have is why is there IMSM meta data on sdc2 at all?
-> IMSM metadata sit at the end of a block device. So I figure that sdc2 is
-> the last partition, and by some wird circumstance it's so large that it
-> includes the last sectors of the physical disk where the metadata
-> resides. That would be a bad idea, a dd if=/dev/zero of=/dev/sdc2 would
-> wipe not only the partition but also the RAID meta data.
->
-> Martin
->
+PSHUFB has been around the intel platform since the Core2 introduced
+it as part of SSSE3 back in Q1 2006. The generation of Intel based
+servers that ran pre-Core Xeons are long in the tooth and this is a
+value judgement but if your data is big enough you need triple parity,
+you probably shouldn't be running it from an ten year old platform.
+
+But that's just me. :-)
+
+
+-- 
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+
+"This started out as a hobby and spun horribly out of control."
+-Unknown
