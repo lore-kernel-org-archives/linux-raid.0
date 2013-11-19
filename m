@@ -1,137 +1,112 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Triple parity and beyond
-Date: Tue, 19 Nov 2013 11:16:15 +0100
-Message-ID: <528B3A6F.2010304@hesbynett.no>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com> <528AA1EB.3010909@zytor.com>
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Tue, 19 Nov 2013 09:05:57 -0800
+Message-ID: <CAGRSmLufpZV5qYa-jq17n_MTWY0oc9yX4USoc0PZsb1LJheGcQ@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<528A7721.8080604@arcor.de>
+	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
+	<20131119110110.396b2af3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528AA1EB.3010909@zytor.com>
+In-Reply-To: <20131119110110.396b2af3@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Andrea Mazzoleni <amadvance@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, creamyfish@gmail.com
+To: NeilBrown <neilb@suse.de>
+Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/11/13 00:25, H. Peter Anvin wrote:
-> On 11/18/2013 02:35 PM, Andrea Mazzoleni wrote:
->> Hi Peter,
+Hello,
+
+The mdadm 3.3 binary we've been using was compiled from source on a Debian
+Wheezy 32-bit install, with the source downloaded from kernel.org
+
+But also, this morning, I tried the same test with the 3.3 mdadm binary
+taken from the Debian Jessie package here:
+
+packages.debian.org slash jessie slash i386 slash mdadm slash download
+(mdadm_3.3-2_i386.deb)
+
+The results were the same, as this output shows:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mdadm: looking for devices for further assembly
+mdadm: no RAID superblock on /dev/sdd4
+mdadm: no RAID superblock on /dev/sdd3
+mdadm: no RAID superblock on /dev/sdd2
+mdadm: no RAID superblock on /dev/sdd1
+mdadm: no RAID superblock on /dev/sdd
+mdadm: cannot open device /dev/sr1: No medium found
+mdadm: cannot open device /dev/sr0: No medium found
+mdadm: no RAID superblock on /dev/sda11
+mdadm: no RAID superblock on /dev/sda10
+mdadm: no RAID superblock on /dev/sda9
+mdadm: no RAID superblock on /dev/sda8
+mdadm: no RAID superblock on /dev/sda7
+mdadm: no RAID superblock on /dev/sda6
+mdadm: no RAID superblock on /dev/sda5
+mdadm: no RAID superblock on /dev/sda4
+mdadm: no RAID superblock on /dev/sda3
+mdadm: no RAID superblock on /dev/sda2
+mdadm: no RAID superblock on /dev/sda1
+mdadm: no RAID superblock on /dev/sda
+mdadm: no RAID superblock on /dev/sdc1
+mdadm: /dev/sdb is identified as a member of /dev/md/imsm0, slot -1.
+mdadm: /dev/sdc2 is identified as a member of /dev/md/imsm0, slot -1.
+mdadm: /dev/sdc is identified as a member of /dev/md/imsm0, slot -1.
+mdadm: added /dev/sdc2 to /dev/md/imsm0 as -1
+mdadm: failed to add /dev/sdc to /dev/md/imsm0: Device or resource busy
+mdadm: added /dev/sdb to /dev/md/imsm0 as -1
+mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
+mdadm: looking for devices for /dev/md/RAID0
+mdadm: looking in container /dev/md/imsm0
+mdadm: found match on member /md127/0 in /dev/md/imsm0
+mdadm: Started /dev/md/RAID0 with 2 devices
+
+I ran strace on this version with this command:
+strace -o mdadm33trace.txt mdadm --assemble --scan --no-degraded
+
+Here's a link to the strace output file:
+www.dropbox.com slash s slash l5tcgu8zvjn7eb7 slash mdadm33trace.txt
+
+On Mon, Nov 18, 2013 at 4:01 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 18 Nov 2013 15:13:58 -0800 "David F." <df7729@gmail.com> wrote:
+>
+>
+>> output of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.2.6):
+> ...
+>> mdadm: no RAID superblock on /dev/sdc2
+>
+>
+>
 >>
->> The Cauchy matrix has the mathematical property to always have itself
->> and all submatrices not singular. So, we are sure that we can always
->> solve the equations to recover the data disks.
->>
->> Besides the mathematical proof, I've also inverted all the
->> 377,342,351,231 possible submatrices for up to 6 parities and 251 data
->> disks, and got an experimental confirmation of this.
->>
-> 
-> Nice.
-> 
->>
->> The only limit is coming from the GF(2^8). You have a maximum number
->> of disk = 2^8 + 1 - number_of_parities. For example, with 6 parities,
->> you can have no more of 251 data disks. Over this limit it's not
->> possible to build a Cauchy matrix.
->>
-> 
-> 251?  Not 255?
-> 
->> Note that instead with a Vandermonde matrix you don't have the
->> guarantee to always have all the submatrices not singular. This is the
->> reason because using power coefficients, before or late, it happens to
->> have unsolvable equations.
->>
->> You can find the code that generate the Cauchy matrix with some
->> explanation in the comments at (see the set_cauchy() function) :
->>
->> http://sourceforge.net/p/snapraid/code/ci/master/tree/mktables.c
-> 
-> OK, need to read up on the theoretical aspects of this, but it sounds
-> promising.
-> 
-> 	-hpa
-> 
-
-Hi all,
-
-A while back I worked through the maths for a method of extending raid
-to multiple parities, though I never got as far as implementing it in
-code (other than some simple Python test code to confirm the maths).  It
-is also missing the maths for simplified ways to recover data.  I've
-posted a couple of times with this on the linux-raid mailing list (as
-linked in this thread) - there has certainly been some interest, but
-it's not easy to turn interest into hard work!
-
-I used an obvious expansion on the existing RAID5 and RAID6 algorithms,
-with parity P_n being generated from powers of 2^n.  This means that the
-triple-parity version can be implemented by simply applying the RAID6
-operations twice.  For a triple parity, this works well - the matrices
-involved are all invertible up to 255 data disks.  Beyond that, however,
-things drop off rapidly - quad parity implemented in the same way only
-supports 21 data disks, and for five parity disks you need to use 0x20
-(skipping 0x10) to get even 8 data disks.
-
-This means that my method would be fine for triple parity, and would
-also be efficient in implementation.
-
-Beyond triple parity, the simple method has size limits for four parity
-and is no use on anything bigger.  The Cauchy matrix method lets us go
-beyond that (I haven't yet studied your code and your maths - I will do
-so as soon as I have the chance, but I doubt if that will be before the
-weekend).
-
-Would it be possible to use the simple parity system for the first three
-parities, and Cauchy beyond that?  That would give the best of both worlds.
-
-
-
-The important thing to think about here is what would actually be useful
-in the real world.  It is always nice to have a system that can make an
-array with 251 data disks and 6 parities (and I certainly think the
-maths involved is fun), but would anyone use such a beast?
-
-Triple parity has clear use cases.  As people have moved up from raid5
-to raid6, "raid7" or "raid6-3p" would be an obvious next step.  I also
-see it as being useful for maintenance on raid6 arrays - if you want to
-replace disks on a raid6 array you could first add a third parity disk
-with an asymmetric layout, then you could replace the main disks while
-keeping two disk redundancy at all times.
-
-Quad parity is unlikely, I think - you would need a very wide array and
-unusual requirements to make quad parity a better choice than a layered
-system of raid10 or raid15.  At most, I think it would find use as a
-temporary security while maintaining a triple-raid array.  Remember also
-that such an array would be painfully slow if it ever needed to rebuild
-data with four missing disks - and if it is then too slow to be usable,
-then quad parity is not a useful solution.
-
-
-(Obviously anyone with /real/ experience with large arrays can give
-better ideas here - I like the maths of multi-parity raid, but I will
-not it for my small arrays.)
-
-
-
-Of course I will enjoy studying your maths here, and I'll try to give
-some feedback on it.  But I think for implementation purposes, the
-simple "powers of 4" generation of triple parity would be better than
-using the Cauchy matrix - it is a clear step from the existing raid6,
-and it can work fast on a wide variety of processors (people use ARMs
-and other "small" cpus on raids, not just x86 with SSE3).  I believe
-that would mean simpler code and fewer changes, which is always popular
-with the kernel folk.
-
-However, if it is not possible to use Cauchy matrices to get four and
-more parity while keeping the same first three parities, then the
-balance changes and a decision needs to be made - do we (the Linux
-kernel developers, the btrfs developers, and the users) want a simpler
-system that is limited to triple parity (or quad parity with 21 + 4
-disks), or do we want a more complex but more flexible system?
-
-Personally, I don't mind either way, as long as we get a good technical
-solution.  And I'll do what I can to help with the maths in either case.
-
-David
-
-
+>> output1 of 'mdadm --assemble --scan --no-degraded -v' (mdadm 3.3 -
+>> note using /dev/sdc2, not /dev/sdc):
+> .....
+>> mdadm: /dev/sdc2 is identified as a member of /dev/md/imsm0, slot -1.
+>
+> So there is the problem.  mdadm 3.2.6 sees no RAID superblock on sdc2, while
+> mdadm 3.3 does (but should not).
+>
+>
+> However that code hasn't changed!
+>
+> load_super_imsm() still starts with:
+>
+>
+>         if (test_partition(fd))
+>                 /* IMSM not allowed on partitions */
+>                 return 1;
+>
+>
+> and test_partition hasn't changed since it was written in April 2010 for
+> mdadm 3.1.3.
+>
+> So I'm quite perplexed.
+>
+> Is your mdadm-3.3 compiled from source or provided by a distro?
+>
+> Can you run the "mdadm --assemble" under strace and post the result?
+>
+>   strace -o /tmp/some-file mdadm --assemble --scan ......
+>
+> Thanks,
+> NeilBrown
