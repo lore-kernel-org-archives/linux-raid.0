@@ -1,36 +1,32 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Triple parity and beyond
-Date: Wed, 20 Nov 2013 11:10:11 -0800
-Message-ID: <528D0913.1070604@zytor.com>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com>	<CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>	<528BCA2D.5010500@redhat.com>	<73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <CAGKKSfUGLzeLfab0uJTGV=UELxEH+mB3K4VbDouHxzmc+xuZ2A@mail.gmail.com>
+From: kustep <kustep@web.de>
+Subject: unused space before data offset mismatch
+Date: Wed, 20 Nov 2013 20:46:21 +0100
+Message-ID: <528D118D.7090800@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGKKSfUGLzeLfab0uJTGV=UELxEH+mB3K4VbDouHxzmc+xuZ2A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrea Mazzoleni <amadvance@gmail.com>, James Plank <plank@cs.utk.edu>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/20/2013 11:05 AM, Andrea Mazzoleni wrote:
-> 
-> For the first row with j=0, I use xi = 2^-i and y0 = 0, that results in:
-> 
+Hello Everyone,
 
-How can xi = 2^-i if x is supposed to be constant?
+is there an option to specifiy the "Unused Space : before=...."
+Superblock information in mdadm -C ....?
 
-That doesn't mean that your approach isn't valid, of course, but it
-might not be a Cauchy matrix and thus needs additional analysis.
+My Raid crashed due to a controller error, but I was able to make the
+new superblock almost identical to the old one (using mdadm -C
+--assume-clean --level=6 --raid-devices=11 --chunk=256K --metadata=1.2
+--bitmap=None --size=195328588 --data-offset=128768 /dev/md0
+/dev/mapper/disk[cdefmbjkh] missing). Looking at mdadm --examine the
+only difference left is:
+old layout: Unused Space : before=257456 sectors, after=197632 sectors
+new layout: Unused Space : before=257448 sectors, after=197632 sectors
 
-> row j=0 -> 1/(xi+y0) = 1/(2^-i + 0) = 2^i (RAID-6 coefficients)
-> 
-> For the next rows with j>0, I use yj = 2^j, resulting in:
-> 
-> rows j>0 -> 1/(xi+yj) = 1/(2^-i + 2^j)
+Is there an option to change that or anything else I can do to make the
+layouts identical? The assembled raid refuses to mount, and I suspect
+this difference to be the reason.
 
-Even more so here... 2^-i and 2^j don't seem to be of the form xi and yj
-respectively.
-
-	-hpa
-
+Thanks in advance
+Stephan
