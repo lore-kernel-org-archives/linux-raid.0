@@ -1,21 +1,33 @@
-From: Veedar Hokstadt <veedar@gmail.com>
-Subject: Is there a tool to examine raw metadata?
-Date: Wed, 20 Nov 2013 13:26:10 -0500
-Message-ID: <CANb3qHfWJp4ana76ap8YBaVJfCfmUS8FUATYS9YrAgJ9JrfLCQ@mail.gmail.com>
+From: Andrea Mazzoleni <amadvance@gmail.com>
+Subject: Re: Triple parity and beyond
+Date: Wed, 20 Nov 2013 19:34:53 +0100
+Message-ID: <CAGKKSfV+TyONu0EgSy9r5k7SiP5ZM3n7pGajY62DBSBw6YvR+w@mail.gmail.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
+	<528A90B7.5010905@zytor.com>
+	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
+	<528AA1EB.3010909@zytor.com>
+	<528B3A6F.2010304@hesbynett.no>
+	<CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com>
+	<528C8F8E.9030908@hesbynett.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <528C8F8E.9030908@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-Greetings,
-Consider a 3 drive RAID5 where each drive has lost it's partitioning
-info. Running mdadm -E does not find a superblock. But using hexedit
-an mdadm superblock can be found in tact near the end of each drive.
+Hi David,
 
-Is there perhaps a tool I can point at the superblock to decode it? Or
-trick mdadm into reporting the contents of the superblock?
+>> The choice of ZFS to use powers of 4 was likely not optimal,
+>> because to multiply by 4, it has to do two multiplications by 2.
+> I can agree with that.  I didn't copy ZFS's choice here
+David, it was not my intention to suggest that you copied from ZFS.
+Sorry to have expressed myself badly. I just mentioned ZFS because it's
+an implementation that I know uses powers of 4 to generate triple
+parity, and I saw in the code that it's implemented with two multiplication
+by 2.
 
-I know I can look at the superblock format doc and translate it by
-hand but I was hoping for an easier way.   Thanks for any help.  -V
+Ciao,
+Andrea
