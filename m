@@ -1,22 +1,21 @@
-From: nopii28168045@nopii.com
-Subject: =?iso-8859-5?B?0dXX4NDX29jn3d4g2tDa0O8g1NDc0CDR49TV4iDe?=
-	=?iso-8859-5?B?4iCy0OEg0iDS3uHi3uDT1Q==?=
-Date: Wed, 20 Nov 2013 16:10:53 -0200 (BRST)
-Message-ID: <0230801.20131120191052@nopii.com>
-Reply-To: nopii28168045@nopii.com
+From: Veedar Hokstadt <veedar@gmail.com>
+Subject: Is there a tool to examine raw metadata?
+Date: Wed, 20 Nov 2013 13:26:10 -0500
+Message-ID: <CANb3qHfWJp4ana76ap8YBaVJfCfmUS8FUATYS9YrAgJ9JrfLCQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: auto-help@peterlink.ru, s.babayan@globus-leasing.ru, linux-raid@vger.kernel.org, zakaz@amigo-autostyle.ru, mlv_ua@mail.univ
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=BC=D0=DA=E1=D8=DC=D0=DB=EC=DD=DE =BF=E0=DE=D4=E3=DA=E2=D8=D2=DD=EB=D9 =
-=E1=DF=DE=E1=DE=D1 =DF=E0=D8=E7=D8=DD=D8=E2=EC =D4=D0=DC=DE=E7=DA=D5 =E3=
-=D4=DE=D2=DE=DB=EC=E1=E2=D2=D8=D5 http://goo.gl/4hlzmv
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Greetings,
+Consider a 3 drive RAID5 where each drive has lost it's partitioning
+info. Running mdadm -E does not find a superblock. But using hexedit
+an mdadm superblock can be found in tact near the end of each drive.
+
+Is there perhaps a tool I can point at the superblock to decode it? Or
+trick mdadm into reporting the contents of the superblock?
+
+I know I can look at the superblock format doc and translate it by
+hand but I was hoping for an easier way.   Thanks for any help.  -V
