@@ -1,50 +1,68 @@
 From: David Brown <david.brown@hesbynett.no>
 Subject: Re: Triple parity and beyond
-Date: Wed, 20 Nov 2013 11:35:47 +0100
-Message-ID: <528C9083.5040200@hesbynett.no>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com>	<528B3A6F.2010304@hesbynett.no>	<CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com>	<CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>	<7668D159-6B70-4DE9-A381-EFC15A77E0CC@colorremedies.com> <CAJBj3ve+k2FUrvYJhLTGt9cJmNp7djUDQDZiYSNYzjJZ8_JLVg@mail.gmail.com>
+Date: Wed, 20 Nov 2013 11:44:39 +0100
+Message-ID: <528C9297.9030801@hesbynett.no>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <20131119181237.GA3666@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJBj3ve+k2FUrvYJhLTGt9cJmNp7djUDQDZiYSNYzjJZ8_JLVg@mail.gmail.com>
+In-Reply-To: <20131119181237.GA3666@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Williams <jwilliams4200@gmail.com>, Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
 List-Id: linux-raid.ids
 
-On 20/11/13 02:23, John Williams wrote:
-> On Tue, Nov 19, 2013 at 4:54 PM, Chris Murphy <lists@colorremedies.com>
-> wrote:
->> If anything, I'd like to see two implementations of RAID 6 dual
->> parity. The existing implementation in the md driver and btrfs could
->> remain the default, but users could opt into Cauchy matrix based dual
->> parity which would then enable them an easy (and live) migration path
->> to triple parity and beyond.
+On 19/11/13 19:12, Piergiorgio Sartor wrote:
+> On Mon, Nov 18, 2013 at 11:08:59PM +0100, Andrea Mazzoleni wrote:
 
-Andrea's Cauchy matrix is compatible with the existing Raid6, so there
-is no problem there.
-
-I believe it would be a terrible idea to have an incompatible extension
-- that would mean you could not have temporary extra parity drives with
-asymmetrical layouts, which is something I see as a very useful feature.
+<snip for brevity>
 
 > 
-> Actually, my understanding is that Andrea's Cauchy matrix technique
-> (call it C) is compatible with existing md RAID5 and RAID6 (call these
-> A). It is only the non-SSSE3 triple-parity algorithm 2^-1 (call it B)
-> that is incompatible with his Cauchy matrix technique.
+> Hi Andrea,
 > 
-> So, you can have:
+> great job, this was exactly what I was looking for.
 > 
-> 1) A+B
+> Do you know if there is a "fast" way not to correct
+> errors, but to find them?
 > 
-> or
+> In RAID-6 (as per raid6check) there is an easy way
+> to verify where an HDD has incorrect data.
 > 
-> 2) A+C
-> 
-> But you cannot have A+B+C
 
-Yes, that's right.
+I think the way to do that is just to generate the parity blocks from
+the data blocks, and compare them to the existing parity blocks.
 
+> I suspect, for each 2 parity block it should be
+> possible to find 1 error (and if this is true, then
+> quad parity is more attractive than triple one).
+> 
+> Furthermore, my second (of first) target would
+> be something like: http://www.symform.com/blog/tag/raid-96/
+> 
+> Which uses 32 parities (out of 96 "disks").
+
+I believe Andrea's matrix is extensible as long as you have no more than
+257 disks in total.  A mere 32 parities should not be a problem :-)
+
+mvh.,
+
+David
+
+
+> 
+> Keep going!!!
+> 
+> bye,
+> 
+> pg
+> 
+>>
+>> Ciao,
+>> Andrea
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
