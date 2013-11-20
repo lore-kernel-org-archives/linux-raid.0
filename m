@@ -1,73 +1,32 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: MDADM 3.3 broken?
-Date: Wed, 20 Nov 2013 11:48:33 +1100
-Message-ID: <20131120114833.695fc9d4@notabene.brown>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
-	<528A7721.8080604@arcor.de>
-	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
-	<20131119110110.396b2af3@notabene.brown>
-	<528BBFEB.7050202@arcor.de>
-	<20131120105115.27494ab6@notabene.brown>
-	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
-	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GB.pA.Vkq5przOpWYtx=sWz"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "David F." <df7729@gmail.com>
-Cc: Martin Wilck <mwilck@arcor.de>, linux-raid@vger.kernel.org
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Triple parity and beyond
+Date: Tue, 19 Nov 2013 17:54:29 -0700
+Message-ID: <7668D159-6B70-4DE9-A381-EFC15A77E0CC@colorremedies.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <528A90B7.5010905@zytor.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com> <528AA1EB.3010909@zytor.com> <528B3A6F.2010304@hesbynett.no> <CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com> <CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Cc: Btrfs BTRFS <linux-btrfs@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/GB.pA.Vkq5przOpWYtx=sWz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 19 Nov 2013 16:35:44 -0800 "David F." <df7729@gmail.com> wrote:
+On Nov 19, 2013, at 3:51 PM, Drew <drew.kay@gmail.com> wrote:
 
-> FWIW, we confirmed that it appears to be the old RAID1 data it was
-> finding - when the partition is below half the size it didn't find it
-> in the partition, when resized just beyond half the size (of the RAID0
-> md drive), it then started finding it in the partition.
->=20
-> Also, was Cisco's information useful for why their cisco server (using
-> lsi)  RAID5 won't assembly?  Do you think the patch deals with that as
-> well?
->=20
->
+> I'm not going to claim any expert status on this discussion (the
+> theory makes my head spin) but I will say I agree with Andrea as far
+> as prefering his implementation for triple parity and beyond.
+> 
+> PSHUFB has been around the intel platform since the Core2 introduced
+> it as part of SSSE3 back in Q1 2006. The generation of Intel based
+> servers that ran pre-Core Xeons are long in the tooth and this is a
+> value judgement but if your data is big enough you need triple parity,
+> you probably shouldn't be running it from an ten year old platform.
 
-You did say something about Cisco in the original post but it wasn't at all
-clear what you were asking or what the context was.
+If anything, I'd like to see two implementations of RAID 6 dual parity. The existing implementation in the md driver and btrfs could remain the default, but users could opt into Cauchy matrix based dual parity which would then enable them an easy (and live) migration path to triple parity and beyond.
 
-Could you please spell it all out.  You said something about dmraid reporti=
-ng
-something.  Showing the output of dmraid in that case wouldn't hurt.
-And show the output of "mdadm --examine /dev/device" for any relevant device
-is often a good idea.
 
-NeilBrown
-
---Sig_/GB.pA.Vkq5przOpWYtx=sWz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIVAwUBUowG4Tnsnt1WYoG5AQLrLQ/+KXjjdGj485GVGXyNm/arEIl4Hu+UhBdE
-wiXjR3PV0t5ZerEhbx+2hS0UQx/gDWItEeJyb5XBT4rqqKKE3OP6ik0ADXs5vh0f
-IMPwLkM/rBuStUZlu3PoFFZms5p+xskEpBfkBq8fPaKPHMdjqkuikv+a0DkhGQ0R
-FQqqGIl+/XS1q6rzL9InI0SpTmg29E2Qc0pLuTA1s4zWzWJAJp9MUNLCwT+ImVM7
-JBlhCwFA3tMXdwYAXpF8Nnahr0ks5uzcVPizhq4Xt5gRt2TGWWu2tESeo39t7Jf2
-T5xV5e2N9ssYYiloqdT+l7Y7/ezMmgkrkaT87h1LezeaqCwpVeP0brI/EKddJZ+Q
-Je9FNKcG2zwA5pYkkivJlpLm2uSxhNeew2DYXatjoIare9VyMhZ4wYiAoT/MRNVH
-bLDkxrjw4PR7SX7VpHzXi3l9xhiM6ZXYdRMBxCyXjnNPbi+XZ9PGqHqOz4fNwjyo
-K4iGlIKpdI3i9Y4v10MGPTWDn8aUQj7NMu5PmgnWzeTVgNgOKQatt8ZRgJs4e+ID
-iXKjZmvOausyTZX6PcTN6POlxrDW5j828uM8FR03TZBRhGIkp18zOL0GURHoSKH4
-KhmB3fIJbwE5Slbdk84iaFxYcThkY3TZ9YnwCoUTxgLRqRxUUb9KSuzgMEo6nTAs
-J68PpRFFdZI=
-=69DU
------END PGP SIGNATURE-----
-
---Sig_/GB.pA.Vkq5przOpWYtx=sWz--
+Chris Murphy
