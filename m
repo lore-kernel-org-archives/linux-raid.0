@@ -1,32 +1,47 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Triple parity and beyond
-Date: Tue, 19 Nov 2013 17:54:29 -0700
-Message-ID: <7668D159-6B70-4DE9-A381-EFC15A77E0CC@colorremedies.com>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <528A90B7.5010905@zytor.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com> <528AA1EB.3010909@zytor.com> <528B3A6F.2010304@hesbynett.no> <CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com> <CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <CACJz6QtP9TXKX9ZB2J5nfLCCn0yfNExwZ-VYm-xiN53aA9vfLw@mail.gmail.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Cc: Btrfs BTRFS <linux-btrfs@vger.kernel.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: dmaengine 3.13 v2
+Date: Tue, 19 Nov 2013 17:10:37 -0800
+Message-ID: <CAA9_cmf0WoOYjB4n=Gvcm6bMnF-HqvEWf=YpiAbB=wViEaFivA@mail.gmail.com>
+References: <CAPcyv4iQQutRipP+XQGPAxfQVj9C_K9SEjGF_Rd1=ZkgTZnjow@mail.gmail.com>
+	<20131116065213.GI8834@intel.com>
+	<CAPcyv4iMY84dbZLtZceAKnhbkDP-+Vszss8BYriB9pva6nxCfg@mail.gmail.com>
+	<20131117162813.GJ8834@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20131117162813.GJ8834@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Vinod Koul <vinod.koul@intel.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>, Andy Shevchenko <andriy.shevchenko@linux.jf.intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-raid <linux-raid@vger.kernel.org>, Jon Mason <jon.mason@intel.com>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 List-Id: linux-raid.ids
 
+On Sun, Nov 17, 2013 at 8:28 AM, Vinod Koul <vinod.koul@intel.com> wrote:
+> On Sat, Nov 16, 2013 at 10:37:38AM -0800, Dan Williams wrote:
+>> On Nov 15, 2013 11:48 PM, "Vinod Koul" <vinod.koul@intel.com> wrote:
+>>
+>> > While the dmaengine-v2 has:
+>> >
+>> > commit 82a1402eaee5dab1f3ab2d5aa4c316451374c5af
+>> > Author: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+>> > Date:   Wed Oct 30 12:01:43 2013 -0300
+>> >
+>> > Which also explains the diff I got with test. I have pushed my merge to
+>> > dan_merge2 for your ref. You next branch also doesnt show this commit and
+>> these
+>> > are missing below. I guess we need this for the fix. Looks like you tagged
+>> > without these patches. I can go ahead and merge commit
+>> > bad6f9dba84e7ddc448f306ce4b289dcaa95b9f9 directly if you want.
+>>
+>> No, use the tag directly.  We're still sorting those ntb patches out
+>> internally and I accidentally included them in the test branch.
+> Fine, I have pushed now as next, pls do verify
+>
 
-On Nov 19, 2013, at 3:51 PM, Drew <drew.kay@gmail.com> wrote:
+Sorry, didn't reply to this.
 
-> I'm not going to claim any expert status on this discussion (the
-> theory makes my head spin) but I will say I agree with Andrea as far
-> as prefering his implementation for triple parity and beyond.
-> 
-> PSHUFB has been around the intel platform since the Core2 introduced
-> it as part of SSSE3 back in Q1 2006. The generation of Intel based
-> servers that ran pre-Core Xeons are long in the tooth and this is a
-> value judgement but if your data is big enough you need triple parity,
-> you probably shouldn't be running it from an ten year old platform.
+The merge looks good.  I did notice that the merge message says "Merge
+commit 'dmaengine-3.13-v2'" rather than "Merge tag
+'dmaengine-3.13-v2'".  Not a big deal, but may want to check your git
+version supports pulling signed tags.
 
-If anything, I'd like to see two implementations of RAID 6 dual parity. The existing implementation in the md driver and btrfs could remain the default, but users could opt into Cauchy matrix based dual parity which would then enable them an easy (and live) migration path to triple parity and beyond.
-
-
-Chris Murphy
+Thanks Vinod!
