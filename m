@@ -1,31 +1,50 @@
-From: Andrea Mazzoleni <amadvance@gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: Triple parity and beyond
-Date: Wed, 20 Nov 2013 22:38:28 +0100
-Message-ID: <CAGKKSfWZD0N53+NCsYjk-LCYMCTFvqL9sqNq0Og4AHiw9H2Mrw@mail.gmail.com>
+Date: Wed, 20 Nov 2013 22:59:39 +0100
+Message-ID: <20131120215939.GA2622@lazy.lzy>
 References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
-	<20131119181237.GA3666@lazy.lzy>
+ <20131119181237.GA3666@lazy.lzy>
+ <528C9297.9030801@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131119181237.GA3666@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <528C9297.9030801@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
 List-Id: linux-raid.ids
 
-Hi Piergiorgio,
+On Wed, Nov 20, 2013 at 11:44:39AM +0100, David Brown wrote:
+[...]
+> > In RAID-6 (as per raid6check) there is an easy way
+> > to verify where an HDD has incorrect data.
+> >=20
+>=20
+> I think the way to do that is just to generate the parity blocks from
+> the data blocks, and compare them to the existing parity blocks.
 
-> In RAID-6 (as per raid6check) there is an easy way
-> to verify where an HDD has incorrect data.
-> I suspect, for each 2 parity block it should be
-> possible to find 1 error (and if this is true, then
-> quad parity is more attractive than triple one).
-Yes. The theory say that with quad parity is possible to find 2
-errors. Or find 1 error when running in degraded mode with 2 missing
-disks.
+Uhm, the generic RS decoder should try all
+the possible combination of erasure and so
+detect the error.
+This is unfeasible already with 3 parities,
+so there are faster algorithms, I believe:
 
-But yep, the problem is how to do in a fast way. I don't know enough
-the field to answer this.
+Peterson=E2=80=93Gorenstein=E2=80=93Zierler algorithm
+Berlekamp=E2=80=93Massey algorithm
 
-Ciao,
-Andrea
+Nevertheless, I do not know too much about
+those, so I cannot state if they apply to
+the Cauchy matrix as explained here.
+
+bye,
+
+--=20
+
+piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
