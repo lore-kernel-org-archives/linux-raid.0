@@ -1,50 +1,22 @@
-From: John Williams <jwilliams4200@gmail.com>
-Subject: Re: Triple parity and beyond
-Date: Wed, 20 Nov 2013 10:09:47 -0800
-Message-ID: <CAJBj3vcCgaNsS7JTZM9SEvjus09ZmaXT_iEwEvDOpjxt1BVZsg@mail.gmail.com>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
-	<528A90B7.5010905@zytor.com>
-	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
-	<528AA1EB.3010909@zytor.com>
-	<528B3A6F.2010304@hesbynett.no>
-	<CAGKKSfX6xx2SoDeMy7QOcGgLx5ApfbOF1pvhwixwnvEktWAWUw@mail.gmail.com>
-	<528C8F8E.9030908@hesbynett.no>
+From: nopii28168045@nopii.com
+Subject: =?iso-8859-5?B?0dXX4NDX29jn3d4g2tDa0O8g1NDc0CDR49TV4iDe?=
+	=?iso-8859-5?B?4iCy0OEg0iDS3uHi3uDT1Q==?=
+Date: Wed, 20 Nov 2013 16:10:53 -0200 (BRST)
+Message-ID: <0230801.20131120191052@nopii.com>
+Reply-To: nopii28168045@nopii.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <528C8F8E.9030908@hesbynett.no>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, David Smith <creamyfish@gmail.com>
+Content-Type: text/plain; charset=iso-8859-5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: auto-help@peterlink.ru, s.babayan@globus-leasing.ru, linux-raid@vger.kernel.org, zakaz@amigo-autostyle.ru, mlv_ua@mail.univ
 List-Id: linux-raid.ids
 
-On Wed, Nov 20, 2013 at 2:31 AM, David Brown <david.brown@hesbynett.no> wrote:
-> That's certainly a reasonable way to look at it.  We should not limit
-> the possibilities for high-end systems because of the limitations of
-> low-end systems that are unlikely to use 3+ parity anyway.  I've also
-> looked up a list of the processors that support SSE3 and PSHUFB - a lot
-> of modern "low-end" x86 cpus support it.  And of course it is possible
-> to implement general G(2^8) multiplication without PSHUFB, using a
-> lookup table - it is important that this can all work with any CPU, even
-> if it is slow.
-
-Unfortunately, it is SSSE3 that is required for PSHUFB. The SSE3 set
-with only two-esses does not suffice. I made that same mistake when I
-first heard about Andrea's 6-parity work. SSSE3 vs. SSE3, confusing
-notation!
-
-SSSE3 is significantly less widely supported than SSE3. Particularly
-on AMD, only the very latest CPUs seem to support SSSE3. Intel support
-for SSSE3 goes back much further than AMD support.
-
-Maybe it is not such a big problem, since it may be possible to
-support two "roads". Both roads would include the current md RAID-5
-and RAID-6. But one road, which those lacking CPUs supporting SSSE3
-might choose, would continue on to the non-SSSE3 triple-parity 2^-1
-technique, and then dead-end. The other road would continue with the
-Cauchy matrix technique through 3-parity all the way to 6-parity.
-
-It might even be feasible to allow someone stuck at the end of the
-non-SSSE3 road to convert to the Cauchy road. You would have to go
-through all the 2^-1 triple-parity and convert it to Cauchy
-triple-parity. But then you would be safely on the Cauchy road.
+=BC=D0=DA=E1=D8=DC=D0=DB=EC=DD=DE =BF=E0=DE=D4=E3=DA=E2=D8=D2=DD=EB=D9 =
+=E1=DF=DE=E1=DE=D1 =DF=E0=D8=E7=D8=DD=D8=E2=EC =D4=D0=DC=DE=E7=DA=D5 =E3=
+=D4=DE=D2=DE=DB=EC=E1=E2=D2=D8=D5 http://goo.gl/4hlzmv
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
