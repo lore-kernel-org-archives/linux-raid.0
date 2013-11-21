@@ -1,72 +1,103 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+From: David Brown <david.brown@hesbynett.no>
 Subject: Re: Triple parity and beyond
-Date: Thu, 21 Nov 2013 20:54:54 +1100
-Message-ID: <528DD86E.8040608@websitemanagers.com.au>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DCD36.1060808@hesbynett.no>
+Date: Thu, 21 Nov 2013 11:13:29 +0100
+Message-ID: <528DDCC9.7050701@hesbynett.no>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <20131119181237.GA3666@lazy.lzy> <528C9297.9030801@hesbynett.no> <20131120215939.GA2622@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528DCD36.1060808@hesbynett.no>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>, stan@hardwarefreak.com, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>
-Cc: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <20131120215939.GA2622@lazy.lzy>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
 List-Id: linux-raid.ids
 
-On 21/11/13 20:07, David Brown wrote:
-> I can see plenty of reasons why raid15 might be a good idea, and even
-> raid16 for 5 disk redundancy, compared to multi-parity sets.  However,
-> it costs a lot in disk space.  For example, with 20 disks at 1 TB each,
-> you can have:
->
-> raid5 = 19TB, 1 disk redundancy
-> raid6 = 18TB, 2 disk redundancy
-> raid6.3 = 17TB, 3 disk redundancy
-> raid6.4 = 16TB, 4 disk redundancy
-> raid6.5 = 15TB, 5 disk redundancy
->
-> raid10 = 10TB, 1 disk redundancy
-> raid15 = 8TB, 3 disk redundancy
-> raid16 = 6TB, 5 disk redundancy
->
->
-> That's a very significant difference.
->
-> Implementing 3+ parity does not stop people using raid15, or similar
-> schemes - it just adds more choice to let people optimise according to
-> their needs.
-BTW, as far as strange RAID type options to try and get around problems
-with failed disks, before I learned about timeout mismatches, I was
-pretty worried when my 5 disk RAID5 kept falling apart and losing a
-random member, then adding the failed disk back would work perfectly. To
-help me feel better about this, I used 5 x 500GB drives in RAID5 and
-then used the RAID5 + 1 x 2TB drive in RAID1, meaning I could afford to
-lose any two disks without losing data. Of course, now I know RAID6
-might have been a better choice, or even simply 2 x 2TB drives in RAID1 :)
+On 20/11/13 22:59, Piergiorgio Sartor wrote:
+> On Wed, Nov 20, 2013 at 11:44:39AM +0100, David Brown wrote:
+> [...]
+>>> In RAID-6 (as per raid6check) there is an easy way
+>>> to verify where an HDD has incorrect data.
+>>>
+>>
+>> I think the way to do that is just to generate the parity blocks fro=
+m
+>> the data blocks, and compare them to the existing parity blocks.
+>=20
+> Uhm, the generic RS decoder should try all
+> the possible combination of erasure and so
+> detect the error.
+> This is unfeasible already with 3 parities,
+> so there are faster algorithms, I believe:
+>=20
+> Peterson=E2=80=93Gorenstein=E2=80=93Zierler algorithm
+> Berlekamp=E2=80=93Massey algorithm
+>=20
+> Nevertheless, I do not know too much about
+> those, so I cannot state if they apply to
+> the Cauchy matrix as explained here.
+>=20
+> bye,
+>=20
 
-In any case, I'm not sure I understand the concern with RAID 7.X (as it
-is being called, where X > 2). Certainly you will need to make 1
-computation for each stripe being written, for each value of X, so RAID
-7.5 with 5 disk redundancy means 5 calculations for each stripe being
-written. However, given that drives are getting bigger every year, did
-we forget that we are also getting faster CPU and also more cores in a
-single "CPU package"?
+Ah, you are trying to find which disk has incorrect data so that you ca=
+n
+change just that one disk?  There are dangers with that...
 
-On a pure storage server, the CPU would normally have nothing to do,
-except a little interrupt handling, it is just shuffling bytes around.
-Of course, if you need RAID7.5 then you probably have a dedicated
-storage server, so I don't see the problem with using the CPU to do all
-the calculations.
+<http://neil.brown.name/blog/20100211050355>
 
-Of course, if you are asking about carbon emissions, and cooling costs
-in the data center, this could (on a global scale) have a significant
-impact, so maybe it is a bad idea after all :)
+If you disagree with this blog post (and I urge you to read it in full
+first), then this is how I would do a "smart" stripe recovery:
 
-Regards,
-Adam
 
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+=46irst calculate the parities from the data blocks, and compare these
+with the existing parity blocks.
 
+If they all match, the stripe is consistent.
+
+Normal (detectable) disk errors and unrecoverable read errors get
+flagged by the disk and the IO system, and you /know/ there is a proble=
+m
+with that block.  Whether it is a data block or a parity block, you
+re-generate the correct data and store it - that's what your raid is fo=
+r.
+
+If you have no detected read errors, and there is one parity
+inconsistency, then /probably/ that block has had an undetected read
+error, or it simply has not been written completely before a crash.
+Either way, just re-write the correct parity.
+
+If there are two or more parity inconsistencies, but not all parities
+are in error, then you either have multiple disk or block failures, or
+you have a partly-written stripe.  Any attempts at "smart" correction
+will almost certainly be worse than just re-writing the new parities an=
+d
+hoping that the filesystem's journal works.
+
+If all the parities are inconsistent, then the "smart" thing is to look
+for a single incorrect disk block.  Just step through the blocks one by
+one - assume that block is wrong and replace it (in temporary memory,
+not on disk!) with a recovered version from the other data blocks and
+the parities (only the first parity is needed).  Re-calculate the other
+parities and compare.  If the other parities now match, then you have
+found a single inconsistent data block.  It /may/ be a good idea to
+re-write this - or maybe not (see the blog post linked above).
+
+If you don't find any single data blocks that can be "corrected" in thi=
+s
+way, then re-writing the parity blocks to match the disk data is
+probably the least harmful fix.
+
+
+Remember, this is not a general error detection and correction scheme -
+it is a system targeted for a particular type of use, with particular
+patterns of failure and failure causes, and particular mechanisms on to=
+p
+(journalled file systems) to consider.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-btrfs" =
+in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
