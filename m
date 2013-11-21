@@ -1,105 +1,249 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Triple parity and beyond
-Date: Thu, 21 Nov 2013 21:52:29 +0100
-Message-ID: <20131121205229.GA2458@lazy.lzy>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
- <20131119181237.GA3666@lazy.lzy>
- <528C9297.9030801@hesbynett.no>
- <20131120215939.GA2622@lazy.lzy>
- <528DDCC9.7050701@hesbynett.no>
- <20131121200545.GB1916@lazy.lzy>
- <528E6DB2.6050005@hesbynett.no>
+From: Brett Russ <brett@linux.vnet.ibm.com>
+Subject: raid1 behind write ordering (barrier) protection
+Date: Thu, 21 Nov 2013 15:53:28 -0500
+Message-ID: <528E72C8.7050909@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <528E6DB2.6050005@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi David,
+Hi,
 
-On Thu, Nov 21, 2013 at 09:31:46PM +0100, David Brown wrote:
-[...]
-> If this can all be done to give the user an informed choice, then it
-> sounds good.
+We are in process of porting some mods we made against an older, barrier 
+equipped, kernel to a newer kernel without barrier support.  Our environment is 
+unique in that we use both disk write cache and MD raid1 behind writes.  We see 
+that the behind write feature introduces an I/O ordering bug at the MD level; 
+the bug is defined in greater detail in the patch header below.
 
-that would be my target.
-To _offer_ more options to the (advanced) user.
-It _must_ always be under user control.
+The patch header and content are below, as ported to a RHEL 6.4 based kernel 
+which has moved to flush/FUA.  However, bios that used to be marked 
+BIO_RW_BARRIER are now, ineffectively for our purposes, marked 
+BIO_FLUSH|BIO_FUA.  Pretend we wanted a barrier here, as that's what we need.
 
-> One issue here is whether the check should be done with the filesystem
-> mounted and in use, or only off-line.  If it is off-line then it will
-> mean a long down-time while the array is checked - but if it is online,
-> then there is the risk of confusing the filesystem and caches by
-> changing the data.
+Looking for thoughts from the community on the best way(s) to solve this 
+ordering issue.  One proposal we're considering is forcing overlapping writes to 
+block until the first behind write completes, as long as they're in process context.
 
-Currently, "raid6check" can work with FS mounted.
-I got the suggestion from Neil (of course).
-It is possible to lock one stripe and check it.
-This should be, at any given time, consistent
-(that is, the parity should always match the data).
-If an error is found, it is reported.
-Again, the user can decide to fix it or not,
-considering all the FS consequences and so on.
+Appreciate the look,
+BR
 
-> Most disk errors /are/ detectable, and are reported by the underlying
-> hardware - small surface errors are corrected by the disk's own error
-> checking and correcting mechanisms, and larger errors are usually
-> detected.  It is (or should be!) very rare that a read error goes
-> undetected without there being a major problem with the disk controller.
->  And if the error is detected, then the normal raid processing kicks in
-> as there is no doubt about which block has problems.
+----
 
-That's clear. That case is an "erasure" (I think)
-and it is perfectly in line with the usual operation.
-I'm not trying to replace this mechanism.
- 
-> If you can be /sure/ about which data block is incorrect, then I agree -
-> but you can't be /entirely/ sure.  But I agree that you can make a good
-> enough guess to recommend a fix to the user - as long as it is not
-> automatic.
+This patch ensures that barriers will be synchronous on the write behind legs,
+i.e. they will not be allowed to go behind.
 
-One typical case is when many errors are
-found, belonging to the same disk.
-This case clearly shows the disk is to be
-replaced or the interface checked...
-But, again, the user is the master, not the
-machine... :-)
- 
-> For most ECC schemes, you know that all your blocks are set
-> synchronously - so any block that does not fit in, is an error.  With
-> raid, it could also be that a stripe is only partly written - you can
+This patch adds a new capability to the md raid1 behind write feature which
+allows us to ensure ordering when reads and/or writes go to a member device
+which allows behind writes.  The problem we're trying to solve here is:
 
-Could it be?
-I would consider this an error.
-The stripe must always be consistent, there
-should be a transactional mechanism to make
-sure that, if read back, the data is always
-matching the parity.
-When I write "read back" I mean from whatever
-the data is: physical disk or cache.
-Otherwise, the check must run exclusively on
-the array (no mounted FS, no other things
-running on it).
+1. write1 to sector X comes to MD
+1a. write1 sent to primary leg
+1b. write1 sent to secondary leg which is write behind
+2. write1 completes on primary leg, upper layer is ack'd
+3. write2 to sector X comes to MD
+3a. write2 sent to primary leg
+3b. write2 sent to secondary leg which is write behind
+4. secondary leg now has two overlapping writes to it, layers beneath have
+    freedom to reorder them, big problems ensue.
 
-> have two different valid sets of data mixed to give an inconsistent
-> stripe, without any good way of telling what consistent data is the best
-> choice.
->  
-> Perhaps a checking tool can take advantage of a write-intent bitmap (if
-> there is one) so that it knows if an inconsistent stripe is partly
-> updated or the result of a disk error.
+Solution is for MD to maintain a list of outstanding behind writes to allow us
+to check all incoming I/O going to the behind member(s).  I/O is handled as
+follows:
 
-Of course, this is an option, which should be
-taken into consideration.
+Reads
 
-Any improvement idea is welcome!!!
+Reads to the behind leg used to block if any behind writes were outstanding.
+Now they only block if they overlap an outstanding behind write.
 
-bye,
+Writes
 
--- 
+Writes to the behind leg check if they overlap any outstanding behind writes.
+If they do, they are marked as a barrier on the behind leg only so ordering is
+ensured.  If they don't, they are issued as normal.  In either case, however,
+they are added to a list of outstanding behind writes.
 
-piergiorgio
+Any writes that overlap with in-progress writes on the behind list, they
+need to be marked as a barrier to prevent reordering. However it is an
+overkill to send a barrier to both (primary and write-mostly) legs of the
+array.
+
+For raid1, the upper layer wouldn't send down an overlapping write unless at 
+least one non write-mostly leg has ack'd. So there is no reason to mark that leg
+as a barrier.
+
+
+Signed-Off-By: Aniket Kulkarni <aniket.kulkarni@us.ibm.com>
+Signed-off-by: Brett Russ <brett@linux.vnet.ibm.com>
+Signed-off-by: Jay Wentworth <jwentworth@us.ibm.com>
+
+Index: b/drivers/md/raid1.c
+===================================================================
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -368,10 +368,15 @@ static void close_write(struct r1bio *r1
+  {
+  	/* it really is the end of this request */
+  	if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
++		unsigned long flags;
++		struct r1conf *conf = r1_bio->mddev->private;
+  		/* free extra copy of the data pages */
+  		int i = r1_bio->behind_page_count;
+  		while (i--)
+  			safe_put_page(r1_bio->behind_bvecs[i].bv_page);
++		spin_lock_irqsave(&conf->device_lock, flags);
++		list_del(&r1_bio->behind_list);
++		spin_unlock_irqrestore(&conf->device_lock, flags);
+  		kfree(r1_bio->behind_bvecs);
+  		r1_bio->behind_bvecs = NULL;
+  	}
+@@ -958,6 +963,36 @@ do_sync_io:
+  	pr_debug("%dB behind alloc failed, doing sync I/O\n", bio->bi_size);
+  }
+
++
++/* This function allows us to determine if an incoming request overlaps the
++ * sector range of any outstanding behind writes.  Knowing this will allow us
++ * to prevent writes and/or reads from potential reordering below MD.
++ */
++static int test_overlap_and_enq_behind_writes(struct r1bio *newreq, int enq)
++{
++	unsigned long flags;
++	struct r1conf *conf;
++	struct r1bio *listreq;
++	sector_t newreq_end;
++	int olap = 0;
++
++	conf = newreq->mddev->private;
++	newreq_end = newreq->sector + newreq->sectors;
++
++	spin_lock_irqsave(&conf->device_lock, flags);
++	list_for_each_entry(listreq, &conf->behind_list, behind_list) {
++		if ((newreq_end > listreq->sector) &&
++			(newreq->sector < listreq->sector + listreq->sectors)) {
++				olap = 1;
++				break;
++		}
++	}
++	if (enq)
++		list_add(&newreq->behind_list, &conf->behind_list);
++	spin_unlock_irqrestore(&conf->device_lock, flags);
++	return olap;
++}
++
+  static int make_request(struct mddev *mddev, struct bio * bio)
+  {
+  	struct r1conf *conf = mddev->private;
+@@ -969,11 +1004,11 @@ static int make_request(struct mddev *md
+  	unsigned long flags;
+  	const int rw = bio_data_dir(bio);
+  	const bool do_sync = bio_rw_flagged(bio, BIO_RW_SYNCIO);
+-	const unsigned long do_flush_fua = (bio->bi_rw & (BIO_FLUSH | BIO_FUA));
+  	struct md_rdev *blocked_rdev;
+  	int first_clone;
+  	int sectors_handled;
+  	int max_sectors;
++	unsigned int do_flush_fua, do_behind_flush;
+
+  	/*
+  	 * Register the new request and wait if the reconstruction
+@@ -1047,7 +1082,7 @@ read_again:
+  		mirror = conf->mirrors + rdisk;
+
+  		if (test_bit(WriteMostly, &mirror->rdev->flags) &&
+-		    bitmap) {
++		    bitmap && test_overlap_and_enq_behind_writes(r1_bio, 0)) {
+  			/* Reading from a write-mostly device must
+  			 * take care not to over-take any writes
+  			 * that are 'behind'
+@@ -1216,6 +1251,35 @@ read_again:
+  	}
+  	sectors_handled = r1_bio->sector + max_sectors - bio->bi_sector;
+
++	do_flush_fua = 0;
++	do_behind_flush = 0;
++
++	/* If this is a flush/fua request don't
++	 * ever let it go "behind".  Keep all the
++	 * mirrors in sync.
++	 */
++	if (bio_rw_flagged(bio, BIO_FLUSH | BIO_FUA)) {
++		set_bit(R1BIO_BehindIO, &r1_bio->state);
++		do_flush_fua =  bio->bi_rw & (BIO_FLUSH | BIO_FUA);
++	}
++	else if (bitmap && mddev->bitmap_info.max_write_behind) {
++		if (atomic_read(&bitmap->behind_writes)
++			< mddev->bitmap_info.max_write_behind &&
++			!waitqueue_active(&bitmap->behind_wait))
++				set_bit(R1BIO_BehindIO, &r1_bio->state);
++		/* If this write is going behind, enqueue it on a
++ 		 * behind_list. Also check if this write overlaps any existing
++ 		 * behind writes. If it does, mark it as a flush(barrier) on the
++ 		 * behind leg(s) only so ordering is guaranteed. Any writes
++ 		 * *beyond* the max_write_behind limit won't go behind and
++ 		 * therefore can't result in an overlap and thus aren't
++ 		 * enqueued in the behind_list.
++ 		 */
++		if (test_overlap_and_enq_behind_writes(
++			r1_bio, test_bit(R1BIO_BehindIO, &r1_bio->state)))
++			do_behind_flush = BIO_FLUSH;
++	}
++
+  	atomic_set(&r1_bio->remaining, 1);
+  	atomic_set(&r1_bio->behind_remaining, 0);
+
+@@ -1261,7 +1325,6 @@ read_again:
+  			if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
+  				atomic_inc(&r1_bio->behind_remaining);
+  		}
+-
+  		r1_bio->bios[i] = mbio;
+
+  		mbio->bi_sector	= (r1_bio->sector +
+@@ -1271,6 +1334,15 @@ read_again:
+  		mbio->bi_rw = WRITE | do_flush_fua | (do_sync << BIO_RW_SYNCIO);
+  		mbio->bi_private = r1_bio;
+
++		if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
++			/* any write that goes to write mostly leg AND overlaps with
++ 			 * an outstanding write behind needs to be a barrier
++ 			 * however the non-write-mostly leg doesn't need a barrier
++ 			 * because we wouldn't have an overlapping write unless the
++ 			 * non-write-mostly io has been ack'd
++ 			 */
++			mbio->bi_rw |= do_behind_flush;
++
+  		atomic_inc(&r1_bio->remaining);
+  		spin_lock_irqsave(&conf->device_lock, flags);
+  		bio_list_add(&conf->pending_bio_list, mbio);
+@@ -2843,6 +2915,7 @@ static struct r1conf *setup_conf(struct
+  	conf->raid_disks = mddev->raid_disks;
+  	conf->mddev = mddev;
+  	INIT_LIST_HEAD(&conf->retry_list);
++	INIT_LIST_HEAD(&conf->behind_list);
+
+  	spin_lock_init(&conf->resync_lock);
+  	init_waitqueue_head(&conf->wait_barrier);
+Index: b/drivers/md/raid1.h
+===================================================================
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -51,6 +51,7 @@ struct r1conf {
+
+  	/* queue pending writes to be submitted on unplug */
+  	struct bio_list		pending_bio_list;
++	struct list_head	behind_list; /* oustanding behind writes */
+  	int			pending_count;
+
+  	/* for use when syncing mirrors:
+@@ -126,6 +127,7 @@ struct r1bio {
+  	int			read_disk;
+
+  	struct list_head	retry_list;
++	struct list_head	behind_list;
+  	/* Next two are only valid when R1BIO_BehindIO is set */
+  	struct bio_vec		*behind_bvecs;
+  	int			behind_page_count;
+
