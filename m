@@ -1,154 +1,72 @@
-From: Martin Boutin <martboutin@gmail.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Thu, 21 Nov 2013 04:50:51 -0500
-Message-ID: <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
-	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
-	<20131121092606.GU11434@dastard>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: Triple parity and beyond
+Date: Thu, 21 Nov 2013 20:54:54 +1100
+Message-ID: <528DD86E.8040608@websitemanagers.com.au>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DCD36.1060808@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <20131121092606.GU11434@dastard>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <528DCD36.1060808@hesbynett.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>, stan@hardwarefreak.com, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>
+Cc: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-On Thu, Nov 21, 2013 at 4:26 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Nov 21, 2013 at 04:11:41AM -0500, Martin Boutin wrote:
->> On Mon, Nov 18, 2013 at 7:57 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Mon, Nov 18, 2013 at 12:28:21PM -0600, Eric Sandeen wrote:
->> >> On 11/18/13, 10:02 AM, Martin Boutin wrote:
->> >> > Dear list,
->> >> >
->> >> > I am writing about an apparent issue (or maybe it is normal, that's my
->> >> > question) regarding filesystem write speed in in a linux raid device.
->> >> > More specifically, I have linux-3.10.10 running in an Intel Haswell
->> >> > embedded system with 3 HDDs in a RAID-5 configuration.
->> >> > The hard disks have 4k physical sectors which are reported as 512
->> >> > logical size. I made sure the partitions underlying the raid device
->> >> > start at sector 2048.
->> >>
->> >> (fixed cc: to xfs list)
->> >>
->> >> > The RAID device has version 1.2 metadata and 4k (bytes) of data
->> >> > offset, therefore the data should also be 4k aligned. The raid chunk
->> >> > size is 512K.
->> >> >
->> >> > I have the md0 raid device formatted as ext3 with a 4k block size, and
->> >> > stride and stripes correctly chosen to match the raid chunk size, that
->> >> > is, stride=128,stripe-width=256.
->> >> >
->> >> > While I was working in a small university project, I just noticed that
->> >> > the write speeds when using a filesystem over raid are *much* slower
->> >> > than when writing directly to the raid device (or even compared to
->> >> > filesystem read speeds).
->> >> >
->> >> > The command line for measuring filesystem read and write speeds was:
->> >> >
->> >> > $ dd if=/tmp/diskmnt/filerd.zero of=/dev/null bs=1M count=1000 iflag=direct
->> >> > $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
->> >> >
->> >> > The command line for measuring raw read and write speeds was:
->> >> >
->> >> > $ dd if=/dev/md0 of=/dev/null bs=1M count=1000 iflag=direct
->> >> > $ dd if=/dev/zero of=/dev/md0 bs=1M count=1000 oflag=direct
->> >> >
->> >> > Here are some speed measures using dd (an average of 20 runs).:
->> >> >
->> >> > device       raw/fs  mode   speed (MB/s)    slowdown (%)
->> >> > /dev/md0    raw    read    207
->> >> > /dev/md0    raw    write    209
->> >> > /dev/md1    raw    read    214
->> >> > /dev/md1    raw    write    212
->> >
->> > So, that's writing to the first 1GB of /dev/md0, and all the writes
->> > are going to be aligned to the MD stripe.
->> >
->> >> > /dev/md0    xfs    read    188    9
->> >> > /dev/md0    xfs    write    35    83o
->> >
->> > And these will not be written to the first 1GB of the block device
->> > but somewhere else. Most likely a region that hasn't otherwise been
->> > used, and so isn't going to be overwriting the same blocks like the
->> > /dev/md0 case is going to be. Perhaps there's some kind of stripe
->> > caching effect going on here? Was the md device fully initialised
->> > before you ran these tests?
->> >
->> >> >
->> >> > /dev/md1    ext3    read    199    7
->> >> > /dev/md1    ext3    write    36    83
->> >> >
->> >> > /dev/md0    ufs    read    212    0
->> >> > /dev/md0    ufs    write    53    75
->> >> >
->> >> > /dev/md0    ext2    read    202    2
->> >> > /dev/md0    ext2    write    34    84
->> >
->> > I suspect what you are seeing here is either the latency introduced
->> > by having to allocate blocks before issuing the IO, or the file
->> > layout due to allocation is not idea. Single threaded direct IO is
->> > latency bound, not bandwidth bound and, as such, is IO size
->> > sensitive. Allocation for direct IO is also IO size sensitive -
->> > there's typically an allocation per IO, so the more IO you have to
->> > do, the more allocation that occurs.
->>
->> I just did a few more tests, this time with ext4:
->>
->> device       raw/fs  mode   speed (MB/s)    slowdown (%)
->> /dev/md0    ext4    read    199    4%
->> /dev/md0    ext4    write    210    0%
->>
->> This time, no slowdown at all on ext4. I believe this is due to the
->> multiblock allocation feature of ext4 (I'm using O_DIRECT, so it
->> should be it). So I guess for the other filesystems, it was indeed
->> the latency introduced by block allocation.
+On 21/11/13 20:07, David Brown wrote:
+> I can see plenty of reasons why raid15 might be a good idea, and even
+> raid16 for 5 disk redundancy, compared to multi-parity sets.  However,
+> it costs a lot in disk space.  For example, with 20 disks at 1 TB each,
+> you can have:
 >
-> Except that XFS does extent based allocation as well, so that's not
-> likely the reason. The fact that ext4 doesn't see a slowdown like
-> every other filesystem really doesn't make a lot of sense to
-> me, either from an IO dispatch point of view or an IO alignment
-> point of view.
+> raid5 = 19TB, 1 disk redundancy
+> raid6 = 18TB, 2 disk redundancy
+> raid6.3 = 17TB, 3 disk redundancy
+> raid6.4 = 16TB, 4 disk redundancy
+> raid6.5 = 15TB, 5 disk redundancy
 >
-> Why? Because all the filesystems align identically to the underlying
-> device and all should be doing 4k block aligned IO, and XFS has
-> roughly the same allocation overhead for this workload as ext4.
-> Did you retest XFS or any of the other filesystems directly after
-> running the ext4 tests (i.e. confirm you are testing apples to
-> apples)?
+> raid10 = 10TB, 1 disk redundancy
+> raid15 = 8TB, 3 disk redundancy
+> raid16 = 6TB, 5 disk redundancy
+>
+>
+> That's a very significant difference.
+>
+> Implementing 3+ parity does not stop people using raid15, or similar
+> schemes - it just adds more choice to let people optimise according to
+> their needs.
+BTW, as far as strange RAID type options to try and get around problems
+with failed disks, before I learned about timeout mismatches, I was
+pretty worried when my 5 disk RAID5 kept falling apart and losing a
+random member, then adding the failed disk back would work perfectly. To
+help me feel better about this, I used 5 x 500GB drives in RAID5 and
+then used the RAID5 + 1 x 2TB drive in RAID1, meaning I could afford to
+lose any two disks without losing data. Of course, now I know RAID6
+might have been a better choice, or even simply 2 x 2TB drives in RAID1 :)
 
-Yes I did, the performance figures did not change for either XFS or ext3.
->
-> What we need to determine why other filesystems are slow (and why
-> ext4 is fast) is more information about your configuration and block
-> traces showing what is happening at the IO level, like was requested
-> in a previous email....
+In any case, I'm not sure I understand the concern with RAID 7.X (as it
+is being called, where X > 2). Certainly you will need to make 1
+computation for each stripe being written, for each value of X, so RAID
+7.5 with 5 disk redundancy means 5 calculations for each stripe being
+written. However, given that drives are getting bigger every year, did
+we forget that we are also getting faster CPU and also more cores in a
+single "CPU package"?
 
-Ok, I'm going to try coming up with meaningful data. Thanks.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+On a pure storage server, the CPU would normally have nothing to do,
+except a little interrupt handling, it is just shuffling bytes around.
+Of course, if you need RAID7.5 then you probably have a dedicated
+storage server, so I don't see the problem with using the CPU to do all
+the calculations.
 
+Of course, if you are asking about carbon emissions, and cooling costs
+in the data center, this could (on a global scale) have a significant
+impact, so maybe it is a bad idea after all :)
 
+Regards,
+Adam
 
 -- 
-Martin Boutin
+Adam Goryachev
+Website Managers
+www.websitemanagers.com.au
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
