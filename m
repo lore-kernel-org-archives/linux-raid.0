@@ -1,81 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: unused space before data offset mismatch
-Date: Thu, 21 Nov 2013 14:33:30 +1100
-Message-ID: <20131121143330.326f8d45@notabene.brown>
-References: <528D118D.7090800@web.de>
+Subject: Re: Is there a tool to examine raw metadata?
+Date: Thu, 21 Nov 2013 14:36:01 +1100
+Message-ID: <20131121143601.02e72a18@notabene.brown>
+References: <CANb3qHfWJp4ana76ap8YBaVJfCfmUS8FUATYS9YrAgJ9JrfLCQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6gZATOMTFO9lV=Mx_VddFa3"; protocol="application/pgp-signature"
+ boundary="Sig_/AHW6G4uST2Sw0ipllSG8iL_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528D118D.7090800@web.de>
+In-Reply-To: <CANb3qHfWJp4ana76ap8YBaVJfCfmUS8FUATYS9YrAgJ9JrfLCQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: kustep <kustep@web.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Veedar Hokstadt <veedar@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/6gZATOMTFO9lV=Mx_VddFa3
+--Sig_/AHW6G4uST2Sw0ipllSG8iL_
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 Nov 2013 20:46:21 +0100 kustep <kustep@web.de> wrote:
+On Wed, 20 Nov 2013 13:26:10 -0500 Veedar Hokstadt <veedar@gmail.com> wrote:
 
-> Hello Everyone,
+> Greetings,
+> Consider a 3 drive RAID5 where each drive has lost it's partitioning
+> info. Running mdadm -E does not find a superblock. But using hexedit
+> an mdadm superblock can be found in tact near the end of each drive.
 >=20
-> is there an option to specifiy the "Unused Space : before=3D...."
-> Superblock information in mdadm -C ....?
-
- --data-offset=3D....
-
-or=20
-  --data-offset=3Dvariable ... /dev/foo:16K  /dev/foo2:32K ....
-
-You probably need mdadm 3.3.
-
-NeilBrown
-
+> Is there perhaps a tool I can point at the superblock to decode it? Or
+> trick mdadm into reporting the contents of the superblock?
 >=20
-> My Raid crashed due to a controller error, but I was able to make the
-> new superblock almost identical to the old one (using mdadm -C
-> --assume-clean --level=3D6 --raid-devices=3D11 --chunk=3D256K --metadata=
-=3D1.2
-> --bitmap=3DNone --size=3D195328588 --data-offset=3D128768 /dev/md0
-> /dev/mapper/disk[cdefmbjkh] missing). Looking at mdadm --examine the
-> only difference left is:
-> old layout: Unused Space : before=3D257456 sectors, after=3D197632 sectors
-> new layout: Unused Space : before=3D257448 sectors, after=3D197632 sectors
->=20
-> Is there an option to change that or anything else I can do to make the
-> layouts identical? The assembled raid refuses to mount, and I suspect
-> this difference to be the reason.
->=20
-> Thanks in advance
-> Stephan
+> I know I can look at the superblock format doc and translate it by
+> hand but I was hoping for an easier way.   Thanks for any help.  -V
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+If you use losetup to create a device pointing to the original but with an
+offset to match where you think the partition was, then run "mdadm -E" on t=
+he
+loop device.
 
---Sig_/6gZATOMTFO9lV=Mx_VddFa3
+You could probably do:
+
+ for i in {1..1000}
+ do
+  losetup -o $i /dev/loop0 /dev/whatever
+  echo $i
+  mdadm -E /dev/loop0
+  mdadm -d /dev/loop0
+ done
+
+NeilBrown
+
+--Sig_/AHW6G4uST2Sw0ipllSG8iL_
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUo1/Cjnsnt1WYoG5AQLMKBAAkmUwMVCAD0OeyBCdwFPulDBEhHKQ4Aze
-TO7rmbrrhbDqcn7yE8usN+x40NpRaBUHh4qzynixK05z8gXHb/QzWWpJ5yZo5HPj
-r8fYUo0T7BOb6sTwQqfsOCRVHh+WVUcfZrtRaRO+JvKJvxWoHof44U2N/lvswHU6
-pTUR7Z1lx4eYg/FNymNGiqTuLt9nSfzdj2wRkmULMzi3JYhfHHD6C/1tZ/kFmUdC
-nh7zq2mSTofOS28zkoP3AuWDhHaHGRV/SKOkqB+bO1/8DXeKr//uoXM5qtrMWtGU
-LkHxdASnDFSmOajl5wZfcYKXtjyPh8ar/GEuEY1A4BP7PK6hh2CbQ7ArD/tG/hdq
-Q4aKeL78vYKygmGqX+MuVSAtPA3oxOzOcHmm602nIQGpVX/OlFxuRSD4tIYzRuSQ
-qlO6+iBgQMGMsu/nFtSM+xFl9cmMgnjJgGd3dr+6S0PLzr05i9mCnLWl1pbALVuF
-msIGqgOUKCCdSAJZSFJ56x3+I5iJDNC6gDNJxEu05nQr7lLJCTH2OT5Yx6fXj22u
-ukiqNAYypZrniVxlZqn7AayrBXGMWz0by0usvf2Ba101s62r1BAZhVWXYh4m0wi6
-+WJeWg/ModTdwsY4fr4uhW5XrtSSoMZAi/bXosdlWBdWLzy38W8o44OE4d5UswRG
-c5xyWBmDzQc=
-=W8AT
+iQIVAwUBUo1/oTnsnt1WYoG5AQKK3w/9HsZYpkfCC1QmRIagG+JyDNHuVNYV0CBW
+SZFRy0ufyGkHCiHSmD6prIilInu4EabfnwnR9uhtnj15LONHSAtCW0kLsAXfnsAy
+Gk3vccH8yK+YaDYwsQr9S7lAn+R6+fLrNVPWNlNN9LEJ1BsF6Y0IWwv6jo10aEu8
+ueH22qUb9YCIxr85rTYwOBsZowucxuPAj0tMxlWRQWbvbjAOldUWxhhlBiYzlBfW
+P5FKUoAfe0sMnjzJHUtyl47+HPDPF9T+kYutPOm7pM2RJXYe+/Xq61GxvoKT3LAd
+1QWqBOwksZHuEmM0bCkuZEnriaq5HEdF3gfvF+36+ab6u3lHIfVUsrdlpUirapcZ
+KTo+GR1U2vqBpOzWDJaNDvJHkzdSxVy2cZV0NJ8lkdWme1Gf97l2CDyC8nI/5bpz
+/nS5RRepwctGIyriC9kI8UyCiB22RCdtIaWvOhL52twNZgQxX/K7j8MfoS+NGBYP
+44v9gHsL17f9LGcFCmdAy8eo9RuMxgixYIxAiuo4vJu8VkGJTkmrEvc42VI8tkvd
+canXKEoEGqtsxK6nl8fa/CYNwQ4PHKPJLp/c/xeBiQiHDLsj0V2nL9770sY1qWtT
+WXaPadCIEBmhJj0fL/SD7LW9+PwGLCqt4PfEVVmVze9kvlmKLw50BQSV9zdgoIHC
+7M6y+BTZ1YU=
+=xY7A
 -----END PGP SIGNATURE-----
 
---Sig_/6gZATOMTFO9lV=Mx_VddFa3--
+--Sig_/AHW6G4uST2Sw0ipllSG8iL_--
