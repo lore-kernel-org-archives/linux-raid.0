@@ -1,45 +1,105 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: MDADM 3.3 broken?
-Date: Thu, 21 Nov 2013 21:46:07 +0100
-Message-ID: <528E710F.1050901@arcor.de>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>	<528A7721.8080604@arcor.de>	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>	<20131119110110.396b2af3@notabene.brown>	<528BBFEB.7050202@arcor.de>	<20131120105115.27494ab6@notabene.brown>	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>	<20131120114833.695fc9d4@notabene.brown>	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com> <20131120133016.7de2d400@notabene.brown>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Triple parity and beyond
+Date: Thu, 21 Nov 2013 21:52:29 +0100
+Message-ID: <20131121205229.GA2458@lazy.lzy>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
+ <20131119181237.GA3666@lazy.lzy>
+ <528C9297.9030801@hesbynett.no>
+ <20131120215939.GA2622@lazy.lzy>
+ <528DDCC9.7050701@hesbynett.no>
+ <20131121200545.GB1916@lazy.lzy>
+ <528E6DB2.6050005@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131120133016.7de2d400@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <528E6DB2.6050005@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "David F." <df7729@gmail.com>, linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
 List-Id: linux-raid.ids
 
-On 11/20/2013 03:30 AM, NeilBrown wrote:
+Hi David,
 
->>>> mdadm --examine --scan
->>> ARRAY metadata=ddf UUID=7ab254d0:fae71048:
->>> 404edde9:750a8a05
->>> ARRAY container=7ab254d0:fae71048:404edde9:750a8a05 member=0
->>> UUID=5337ab03:86ca2abc:d42bfbc8:23626c78
-> 
-> This shows that mdadm found a container with the correct UUID, but the member
-> array inside the container has the wrong uuid.
-> 
-> Martin: I think one of your recent changes would have changed the member UUID
-> for some specific arrays because the one that was being created before wasn't
-> reliably stable.  Could  that apply to David's situation?
+On Thu, Nov 21, 2013 at 09:31:46PM +0100, David Brown wrote:
+[...]
+> If this can all be done to give the user an informed choice, then it
+> sounds good.
 
-I am confused. AFAIL, my patch bedbf68a first introduced subarray UUIDs
-for DDF. I don't understand how this mdadm.conf could have worked with
-mdadm 3.2.x.
+that would be my target.
+To _offer_ more options to the (advanced) user.
+It _must_ always be under user control.
 
-But you are right, I had to make 7087f02b later that changed the way
-subarray UUIDs were calculated. This would hurt people who created their
-mdadm.conf file) with stock 3.3 and updated to latest git later.
+> One issue here is whether the check should be done with the filesystem
+> mounted and in use, or only off-line.  If it is off-line then it will
+> mean a long down-time while the array is checked - but if it is online,
+> then there is the risk of confusing the filesystem and caches by
+> changing the data.
 
-> David: if you remove the "UUID=" part for the array leaving the
-> "container=.... member=0" as the identification, does it work?
+Currently, "raid6check" can work with FS mounted.
+I got the suggestion from Neil (of course).
+It is possible to lock one stripe and check it.
+This should be, at any given time, consistent
+(that is, the parity should always match the data).
+If an error is found, it is reported.
+Again, the user can decide to fix it or not,
+considering all the FS consequences and so on.
 
-I second that. David, please try it. I'd also appreciate "mdadm -E
-/dev/sdX" output for all the RAID disks.
+> Most disk errors /are/ detectable, and are reported by the underlying
+> hardware - small surface errors are corrected by the disk's own error
+> checking and correcting mechanisms, and larger errors are usually
+> detected.  It is (or should be!) very rare that a read error goes
+> undetected without there being a major problem with the disk controller.
+>  And if the error is detected, then the normal raid processing kicks in
+> as there is no doubt about which block has problems.
 
-Martin
+That's clear. That case is an "erasure" (I think)
+and it is perfectly in line with the usual operation.
+I'm not trying to replace this mechanism.
+ 
+> If you can be /sure/ about which data block is incorrect, then I agree -
+> but you can't be /entirely/ sure.  But I agree that you can make a good
+> enough guess to recommend a fix to the user - as long as it is not
+> automatic.
+
+One typical case is when many errors are
+found, belonging to the same disk.
+This case clearly shows the disk is to be
+replaced or the interface checked...
+But, again, the user is the master, not the
+machine... :-)
+ 
+> For most ECC schemes, you know that all your blocks are set
+> synchronously - so any block that does not fit in, is an error.  With
+> raid, it could also be that a stripe is only partly written - you can
+
+Could it be?
+I would consider this an error.
+The stripe must always be consistent, there
+should be a transactional mechanism to make
+sure that, if read back, the data is always
+matching the parity.
+When I write "read back" I mean from whatever
+the data is: physical disk or cache.
+Otherwise, the check must run exclusively on
+the array (no mounted FS, no other things
+running on it).
+
+> have two different valid sets of data mixed to give an inconsistent
+> stripe, without any good way of telling what consistent data is the best
+> choice.
+>  
+> Perhaps a checking tool can take advantage of a write-intent bitmap (if
+> there is one) so that it knows if an inconsistent stripe is partly
+> updated or the result of a disk error.
+
+Of course, this is an option, which should be
+taken into consideration.
+
+Any improvement idea is welcome!!!
+
+bye,
+
+-- 
+
+piergiorgio
