@@ -1,215 +1,117 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Fri, 22 Nov 2013 10:41:16 +1100
-Message-ID: <20131121234116.GD6502@dastard>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
- <528A5C45.4080906@redhat.com>
- <20131119005740.GY6188@dastard>
- <CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
- <20131121092606.GU11434@dastard>
- <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
- <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Triple parity and beyond
+Date: Thu, 21 Nov 2013 18:30:49 -0600
+Message-ID: <528EA5B9.3000801@hardwarefreak.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DBF85.6010303@shiftmail.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Martin Boutin <martboutin@gmail.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <528DBF85.6010303@shiftmail.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: joystick <joystick@shiftmail.org>
+Cc: James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>, Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-On Thu, Nov 21, 2013 at 08:31:38AM -0500, Martin Boutin wrote:
-> $ uname -a
-> Linux haswell1 3.10.10 #1 SMP PREEMPT Wed Oct 2 11:22:22 CEST 2013
-> i686 GNU/Linux
+On 11/21/2013 2:08 AM, joystick wrote:
+> On 21/11/2013 02:28, Stan Hoeppner wrote:
+...
+>> WRT rebuild times, once drives hit 20TB we're looking at 18 hours just
+>> to mirror a drive at full streaming bandwidth, assuming 300MB/s
+>> average--and that is probably being kind to the drive makers.  With 6 or
+>> 8 of these drives, I'd guess a typical md/RAID6 rebuild will take at
+>> minimum 72 hours or more, probably over 100, and probably more yet for
+>> 3P.  And with larger drive count arrays the rebuild times approach a
+>> week.  Whose users can go a week with degraded performance?  This is
+>> simply unreasonable, at best.  I say it's completely unacceptable.
+>>
+>> With these gargantuan drives coming soon, the probability of multiple
+>> UREs during rebuild are pretty high.
+> 
+> No because if you are correct about the very high CPU overhead during
 
-Oh, it's 32 bit system. Things you don't know from the obfuscating
-codenames everyone uses these days...
+I made no such claim.
 
-> $ mkfs.xfs -s size=4096 -f -l size=32m /dev/md0
-> $ mount -t xfs /dev/md0 /tmp/diskmnt/
-> $ dd if=/dev/zero of=/tmp/diskmnt/filewr.zero bs=1M count=1000 oflag=direct
-> 1000+0 records in
-> 1000+0 records out
-> 1048576000 bytes (1.0 GB) copied, 28.0304 s, 37.4 MB/s
-....
-> $ cat /proc/mounts
-> (...)
-> /dev/md0 /tmp/diskmnt xfs
-> rw,relatime,attr2,inode64,sunit=1024,swidth=2048,noquota 0 0
+> rebuild (which I don't see so dramatic as Andrea claims 500MB/sec for
+> triple-parity, probably parallelizable on multiple cores), the speed of
+> rebuild decreases proportionally 
 
-sunit/swidth is 512k/1MB
+The rebuild time of a parity array normally has little to do with CPU
+overhead.  The bulk of the elapsed time is due to:
 
-> # same layout for other disks
-> $ fdisk -c -u /dev/sda
-....
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sda1            2048    20565247    10281600   83  Linux
+1.  The serial nature of the rebuild algorithm
+2.  The random IO pattern of the reads
+3.  The rotational latency of the drives
 
-Aligned to 1 MB.
+#3 is typically the largest portion of the elapsed time.
 
-> /dev/sda2        20565248  1953525167   966479960   83  Linux
+> and hence the stress and heating on the
+> drives proportionally reduces, approximating that of normal operation.
+> And how often have you seen a drive failure in a week during normal
+> operation?
 
-And that isn't aligned to 1MB. 20565248 / 2048 = 10041.625. It is
-aligned to 4k, though, so there shouldn't be any hardware RMW
-cycles.
+This depends greatly on one's normal operation.  In general, for most
+users of parity arrays, any full array operation such as a rebuild or
+reshape is far more taxing on the drives, in both power draw and heat
+dissipation, than 'normal' operation.
 
-> $ xfs_info /dev/md0
-> meta-data=/dev/md0               isize=256    agcount=32, agsize=15101312 blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=483239168, imaxpct=5
->          =                       sunit=12
+> But in reality, consider that a non-naive implementation of
+> multiple-parity would probably use just the single parity during
+> reconstruction if just one disk fails, using the multiple parities only
+> to read the stripes which are unreadable at single parity. So the speed
+> and time of reconstruction and performance penalty would be that of
+> raid5 except in exceptional situations of multiple failures.
 
-sunit/swidth of 512k/1MB, so it matches the MD device.
+That may very well be, but it doesn't change #2,3 above.
 
-> $ xfs_bmap -vvp /tmp/diskmnt/filewr.zero
-> /tmp/diskmnt/filewr.zero:
->  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
->    0: [0..2047999]:    2049056..4097055  0 (2049056..4097055) 2048000 01111
->  FLAG Values:
->     010000 Unwritten preallocated extent
->     001000 Doesn't begin on stripe unit
->     000100 Doesn't end   on stripe unit
->     000010 Doesn't begin on stripe width
->     000001 Doesn't end   on stripe width
-> # this does not look good, does it?
+>> What I envision is an array type, something similar to RAID 51, i.e.
+>> striped parity over mirror pairs. ....
+> 
+> I don't like your approach of raid 51: it has the write overhead of
+> raid5, with the waste of space of raid1.
+> So it cannot be used as neither a performance array nor a capacity array.
 
-Yup, looks broken.
+I don't like it either.  It's a compromise.  But as RAID1/10 will soon
+be unusable due to URE probability during rebuild, I think it's a
+relatively good compromise for some users, some workloads.
 
-/me digs through git. 
+> In the scope of this discussion (we are talking about very large
+> arrays), 
 
-Yup, commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") broke
-the code that sets stripe unit alignment for the initial allocation
-way back in 3.2.
+Capacity yes, drive count, no.  Drive capacities are increasing at a
+much faster rate than our need for storage space.  As we move forward
+the trend will be building larger capacity arrays with fewer disks.
 
-[ Hmmm, that would explain the very occasional failure that
-generic/223 throws outi (maybe once a month I see it fail). ]
+> the waste of space of your solution, higher than 50%, will make
+> your solution costing double the price.
 
-Which means MD is doing RMW cycles for it's parity calculations, and
-that's where performance is going south.
+This is the classic mirror vs parity argument.  Using 1 more disk to add
+parity to striped mirrors doesn't change it.  "Waste" is in the eye of
+the beholder.  Anyone currently using RAID10 will have no problem
+dedicating one more disk for uptime, protection.
 
-Current code:
+> A competitor for the multiple-parity scheme might be raid65 or 66, but
+> this is a so much dirtier approach than multiple parity if you think at
+> the kind of rmw and overhead that will occur during normal operation.
 
-$ xfs_io -fd -c "truncate 0" -c "falloc 0 1g" -c "bmap -vvp" -c "pwrite 0 1g -b 1280k" testfile
-testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET          TOTAL FLAGS
-   0: [0..2097151]:    1056..2098207     0 (1056..2098207)  2097152 11111
- FLAG Values:
-    010000 Unwritten preallocated extent
-    001000 Doesn't begin on stripe unit
-    000100 Doesn't end   on stripe unit
-    000010 Doesn't begin on stripe width
-    000001 Doesn't end   on stripe width
-wrote 1073741824/1073741824 bytes at offset 0
-1 GiB, 1024 ops; 0:00:02.00 (343.815 MiB/sec and 268.6054 ops/sec)
-$
+Neither of those has any advantage over multi-parity.  I suggested this
+approach because it retains all of the advantages of RAID10 but one.  We
+sacrifice fast random write performance for protection against UREs, the
+same reason behind 3P.  That's what the single parity is for, and that
+alone.
 
-Which indicates that even if we take direct IO based allocation out
-of the picture, the allocation does not get aligned properly. This
-in on a 3.5TB 12 SAS disk MD RAID6 with sunit=64k,swidth=640k.
+I suggest that anyone in the future needing fast random write IOPS is
+going to move those workloads to SSD, which is steadily increasing in
+capacity.  And I suggest anyone building arrays with 10-20TB drives
+isn't in need of fast random write IOPS.  Whether this approach is
+valuable to anyone depends on whether the remaining attributes of
+RAID10, with the added URE protection, are worth the drive count.
+Obviously proponents of traditional parity arrays will not think so.
+Users of RAID10 may.  Even if md never supports such a scheme, I bet
+we'll see something similar to this in enterprise gear, where rebuilds
+need to be 'fast' and performance degradation due to a downed drive is
+not acceptable.
 
-With a fixed kernel:
-
-$ xfs_io -fd -c "truncate 0" -c "falloc 0 1g" -c "bmap -vvp" -c "pwrite 0 1g -b 1280k" testfile
-testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
-   0: [0..2097151]:    6293504..8390655  0 (6293504..8390655) 2097152 10000
- FLAG Values:
-    010000 Unwritten preallocated extent
-    001000 Doesn't begin on stripe unit
-    000100 Doesn't end   on stripe unit
-    000010 Doesn't begin on stripe width
-    000001 Doesn't end   on stripe width
-wrote 1073741824/1073741824 bytes at offset 0
-1 GiB, 820 ops; 0:00:02.00 (415.192 MiB/sec and 332.4779 ops/sec)
-$
-
-It;s clear we have completely stripe swidth aligned allocation and it's 25% faster.
-
-Take fallocate out of the picture so the direct IO does the
-allocation:
-
-$ xfs_io -fd -c "truncate 0" -c "pwrite 0 1g -b 1280k" -c "bmap -vvp" testfile
-wrote 1073741824/1073741824 bytes at offset 0
-1 GiB, 820 ops; 0:00:02.00 (368.241 MiB/sec and 294.8807 ops/sec)
-testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET            TOTAL FLAGS
-   0: [0..2097151]:    2099200..4196351  0 (2099200..4196351) 2097152 00000
- FLAG Values:
-    010000 Unwritten preallocated extent
-    001000 Doesn't begin on stripe unit
-    000100 Doesn't end   on stripe unit
-    000010 Doesn't begin on stripe width
-    000001 Doesn't end   on stripe width
-
-It's slower than with preallocation (no surprise - no allocation
-overhead per write(2) call after preallocation is done) but the
-allocation is still correctly aligned.
-
-The patch below should fix the unaligned allocation problem you are
-seeing, but because XFS defaults to stripe unit alignment for large
-allocations, you might still see RMW cycles when it aligns to a
-stripe unit that is not the first in a MD stripe. I'll have a quick
-look at fixing that behaviour when the swalloc mount option is
-specified....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
-
-xfs: align initial file allocations correctly.
-
-From: Dave Chinner <dchinner@redhat.com>
-
-The function xfs_bmap_isaeof() is used to indicate that an
-allocation is occurring at or past the end of file, and as such
-should be aligned to the underlying storage geometry if possible.
-
-Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-behaviour of this function for empty files - it turned off
-allocation alignment for this case accidentally. Hence large initial
-allocations from direct IO are not getting correctly aligned to the
-underlying geometry, and that is cause write performance to drop in
-alignment sensitive configurations.
-
-Fix it by considering allocation into empty files as requiring
-aligned allocation again.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 3ef11b2..8401f11 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1635,7 +1635,7 @@ xfs_bmap_last_extent(
-  * blocks at the end of the file which do not start at the previous data block,
-  * we will try to align the new blocks at stripe unit boundaries.
-  *
-- * Returns 0 in bma->aeof if the file (fork) is empty as any new write will be
-+ * Returns 1 in bma->aeof if the file (fork) is empty as any new write will be
-  * at, or past the EOF.
-  */
- STATIC int
-@@ -1650,9 +1650,14 @@ xfs_bmap_isaeof(
- 	bma->aeof = 0;
- 	error = xfs_bmap_last_extent(NULL, bma->ip, whichfork, &rec,
- 				     &is_empty);
--	if (error || is_empty)
-+	if (error)
- 		return error;
- 
-+	if (is_empty) {
-+		bma->aeof = 1;
-+		return 0;
-+	}
-+
- 	/*
- 	 * Check if we are allocation or past the last extent, or at least into
- 	 * the last delayed allocated extent.
+Stan
