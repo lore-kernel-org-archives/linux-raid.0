@@ -1,211 +1,130 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: [PATCH] Revert "raid5: make release_stripe lockless" because it causes test regression
-Date: Fri, 22 Nov 2013 14:13:22 -0600
-Message-ID: <3AB6E544-FCB7-47C6-B9B3-1919065BE598@redhat.com>
-References: <alpine.LRH.2.02.1311221502360.28281@file01.intranet.prod.int.rdu2.redhat.com>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: ARC-1120 and MD very sloooow
+Date: Fri, 22 Nov 2013 14:17:41 -0600
+Message-ID: <528FBBE5.80404@hardwarefreak.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>
+Reply-To: stan@hardwarefreak.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1311221502360.28281@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <1385118796.8091.31.camel@bews002.euractiv.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>, Zdenek Kabelac <zkabelac@redhat.com>, dm-devel@redhat.com
+To: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-I have seen this and been working on a couple patches.
+[CC'ing XFS]
 
-I have fixed 773ca8 by not calling mddev_suspend in raid_ctr and making the quiesce in mddev_resume contingent on whether the device has been suspended.  This has fixed the problem up to 3.12.
+On 11/22/2013 5:13 AM, Jimmy Thrasibule wrote:
 
-I am currently bisecting to find a new problem that has been introduced since then.
+Hi Jimmy,
 
-I hope to post the patches soon.
+This may not be an md problem.  It appears you've mangled your XFS
+filesystem alignment.  This may be a contributing factor to the low
+write throughput.
 
- brassow
+>         md3 : active raid10 sdc1[0] sdf1[3] sde1[2] sdd1[1]
+>               7813770240 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
+...
+>         /dev/md3 on /srv type xfs (rw,nosuid,nodev,noexec,noatime,attr2,delaylog,inode64,sunit=2048,swidth=4096,noquota)
 
+Beyond having a ridiculously unnecessary quantity of mount options, it
+appears you've got your filesystem alignment messed up, still.  Your
+RAID geometry is 512KB chunk, 1MB stripe width.  Your override above is
+telling the filesystem that the RAID geometry is chunk size 1MB and
+stripe width 2MB, so XFS is pumping double the IO size that md is
+expecting.
 
-On Nov 22, 2013, at 2:07 PM, Mikulas Patocka wrote:
+>         # xfs_info /dev/md3 
+>         meta-data=/dev/md3               isize=256    agcount=32, agsize=30523648 blks
+>                  =                       sectsz=512   attr=2
+>         data     =                       bsize=4096   blocks=976755712, imaxpct=5
+>                  =                       sunit=256    swidth=512 blks
+>         naming   =version 2              bsize=4096   ascii-ci=0
+>         log      =internal               bsize=4096   blocks=476936, version=2
+>                  =                       sectsz=512   sunit=8 blks, lazy-count=1
 
-> Revert 773ca82fa1ee58dd1bf88b6a5ca385ec83a2cac6 and
-> d265d9dc1d25a69affc21ae9fe5004b9d09c10ef.
-> 
-> The lvm testsuite (from 
-> ftp://sources.redhat.com/pub/lvm2/LVM2.2.02.104.tgz) fails with unkillable 
-> lvm and dmsetup processes on kernel 3.12. The testsuite passes on 3.11. 
-> Bisect shows that the failure is caused by patch 
-> 773ca82fa1ee58dd1bf88b6a5ca385ec83a2cac6. When I revert this patch on 3.12 
-> kernel, the testsuite finishes and there are no unkillable processes.
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Cc: stable@kernel.org	# 3.12
-> 
-> ---
-> drivers/md/raid5.c |   70 +++--------------------------------------------------
-> drivers/md/raid5.h |    3 --
-> 2 files changed, 5 insertions(+), 68 deletions(-)
-> 
-> Index: linux-3.12-fast/drivers/md/raid5.c
-> ===================================================================
-> --- linux-3.12-fast.orig/drivers/md/raid5.c	2013-11-21 22:45:20.000000000 +0100
-> +++ linux-3.12-fast/drivers/md/raid5.c	2013-11-21 23:39:01.000000000 +0100
-> @@ -293,62 +293,12 @@ static void __release_stripe(struct r5co
-> 		do_release_stripe(conf, sh);
-> }
-> 
-> -static struct llist_node *llist_reverse_order(struct llist_node *head)
-> -{
-> -	struct llist_node *new_head = NULL;
-> -
-> -	while (head) {
-> -		struct llist_node *tmp = head;
-> -		head = head->next;
-> -		tmp->next = new_head;
-> -		new_head = tmp;
-> -	}
-> -
-> -	return new_head;
-> -}
-> -
-> -/* should hold conf->device_lock already */
-> -static int release_stripe_list(struct r5conf *conf)
-> -{
-> -	struct stripe_head *sh;
-> -	int count = 0;
-> -	struct llist_node *head;
-> -
-> -	head = llist_del_all(&conf->released_stripes);
-> -	head = llist_reverse_order(head);
-> -	while (head) {
-> -		sh = llist_entry(head, struct stripe_head, release_list);
-> -		head = llist_next(head);
-> -		/* sh could be readded after STRIPE_ON_RELEASE_LIST is cleard */
-> -		smp_mb();
-> -		clear_bit(STRIPE_ON_RELEASE_LIST, &sh->state);
-> -		/*
-> -		 * Don't worry the bit is set here, because if the bit is set
-> -		 * again, the count is always > 1. This is true for
-> -		 * STRIPE_ON_UNPLUG_LIST bit too.
-> -		 */
-> -		__release_stripe(conf, sh);
-> -		count++;
-> -	}
-> -
-> -	return count;
-> -}
-> -
-> static void release_stripe(struct stripe_head *sh)
-> {
-> 	struct r5conf *conf = sh->raid_conf;
-> 	unsigned long flags;
-> -	bool wakeup;
-> 
-> -	if (test_and_set_bit(STRIPE_ON_RELEASE_LIST, &sh->state))
-> -		goto slow_path;
-> -	wakeup = llist_add(&sh->release_list, &conf->released_stripes);
-> -	if (wakeup)
-> -		md_wakeup_thread(conf->mddev->thread);
-> -	return;
-> -slow_path:
-> 	local_irq_save(flags);
-> -	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
-> 	if (atomic_dec_and_lock(&sh->count, &conf->device_lock)) {
-> 		do_release_stripe(conf, sh);
-> 		spin_unlock(&conf->device_lock);
-> @@ -596,8 +546,7 @@ get_active_stripe(struct r5conf *conf, s
-> 			if (atomic_read(&sh->count)) {
-> 				BUG_ON(!list_empty(&sh->lru)
-> 				    && !test_bit(STRIPE_EXPANDING, &sh->state)
-> -				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)
-> -				    && !test_bit(STRIPE_ON_RELEASE_LIST, &sh->state));
-> +				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state));
-> 			} else {
-> 				if (!test_bit(STRIPE_HANDLE, &sh->state))
-> 					atomic_inc(&conf->active_stripes);
-> @@ -4293,10 +4242,6 @@ static void raid5_unplug(struct blk_plug
-> 			 */
-> 			smp_mb__before_clear_bit();
-> 			clear_bit(STRIPE_ON_UNPLUG_LIST, &sh->state);
-> -			/*
-> -			 * STRIPE_ON_RELEASE_LIST could be set here. In that
-> -			 * case, the count is always > 1 here
-> -			 */
-> 			__release_stripe(conf, sh);
-> 			cnt++;
-> 		}
-> @@ -5007,13 +4952,11 @@ static void raid5_do_work(struct work_st
-> 	handled = 0;
-> 	spin_lock_irq(&conf->device_lock);
-> 	while (1) {
-> -		int batch_size, released;
-> -
-> -		released = release_stripe_list(conf);
-> +		int batch_size;
-> 
-> 		batch_size = handle_active_stripes(conf, group_id, worker);
-> 		worker->working = false;
-> -		if (!batch_size && !released)
-> +		if (!batch_size)
-> 			break;
-> 		handled += batch_size;
-> 	}
-> @@ -5048,9 +4991,7 @@ static void raid5d(struct md_thread *thr
-> 	spin_lock_irq(&conf->device_lock);
-> 	while (1) {
-> 		struct bio *bio;
-> -		int batch_size, released;
-> -
-> -		released = release_stripe_list(conf);
-> +		int batch_size;
-> 
-> 		if (
-> 		    !list_empty(&conf->bitmap_list)) {
-> @@ -5075,7 +5016,7 @@ static void raid5d(struct md_thread *thr
-> 		}
-> 
-> 		batch_size = handle_active_stripes(conf, ANY_GROUP, NULL);
-> -		if (!batch_size && !released)
-> +		if (!batch_size)
-> 			break;
-> 		handled += batch_size;
-> 
-> @@ -5503,7 +5444,6 @@ static struct r5conf *setup_conf(struct 
-> 	INIT_LIST_HEAD(&conf->delayed_list);
-> 	INIT_LIST_HEAD(&conf->bitmap_list);
-> 	INIT_LIST_HEAD(&conf->inactive_list);
-> -	init_llist_head(&conf->released_stripes);
-> 	atomic_set(&conf->active_stripes, 0);
-> 	atomic_set(&conf->preread_active_stripes, 0);
-> 	atomic_set(&conf->active_aligned_reads, 0);
-> Index: linux-3.12-fast/drivers/md/raid5.h
-> ===================================================================
-> --- linux-3.12-fast.orig/drivers/md/raid5.h	2013-11-21 23:29:32.000000000 +0100
-> +++ linux-3.12-fast/drivers/md/raid5.h	2013-11-21 23:29:35.000000000 +0100
-> @@ -197,7 +197,6 @@ enum reconstruct_states {
-> struct stripe_head {
-> 	struct hlist_node	hash;
-> 	struct list_head	lru;	      /* inactive_list or handle_list */
-> -	struct llist_node	release_list;
-> 	struct r5conf		*raid_conf;
-> 	short			generation;	/* increments with every
-> 						 * reshape */
-> @@ -324,7 +323,6 @@ enum {
-> 	STRIPE_OPS_REQ_PENDING,
-> 	STRIPE_ON_UNPLUG_LIST,
-> 	STRIPE_DISCARD,
-> -	STRIPE_ON_RELEASE_LIST,
-> };
-> 
-> /*
-> @@ -463,7 +461,6 @@ struct r5conf {
-> 	 */
-> 	atomic_t		active_stripes;
-> 	struct list_head	inactive_list;
-> -	struct llist_head	released_stripes;
-> 	wait_queue_head_t	wait_for_stripe;
-> 	wait_queue_head_t	wait_for_overlap;
-> 	int			inactive_blocked;	/* release of inactive stripes blocked,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You created your filesystem with stripe unit of 128KB and stripe width
+of 256KB which don't match the RAID geometry.  I assume this is the
+reason for the fstab overrides.  I suggest you try overriding with
+values that match the RAID geometry, which should be sunit=1024 and
+swidth=2048.  This may or may not cure the low write throughput but it's
+a good starting point, and should be done anyway.  You could also try
+specifying zeros to force all filesystem write IOs to be 4KB, i.e. no
+alignment.
 
+Also, your log was created with a stripe unit alignment of 4KB, which is
+128 times smaller than your chunk.  The default value is zero, which
+means use 4KB IOs.  This shouldn't be a problem, but I do wonder why you
+manually specified a value equal to the default.
+
+mkfs.xfs automatically reads the stripe geometry from md and sets
+sunit/swidth correctly (assuming non-nested arrays).  Why did you
+specify these manually?
+
+> The issue is that disk access is very slow and I cannot spot why. Here
+> is some data when I try to access the file system.
+> 
+> 
+>         # dd if=/dev/zero of=/srv/test.zero bs=512K count=6000
+>         6000+0 records in
+>         6000+0 records out
+>         3145728000 bytes (3.1 GB) copied, 82.2142 s, 38.3 MB/s
+>         
+>         # dd if=/srv/store/video/test.zero of=/dev/null
+>         6144000+0 records in
+>         6144000+0 records out
+>         3145728000 bytes (3.1 GB) copied, 12.0893 s, 260 MB/s
+
+What percent of the filesystem space is currently used?
+
+>         First run:
+>         $ time ls /srv/files
+>         [...]
+>         real	9m59.609s
+>         user	0m0.408s
+>         sys	0m0.176s
+
+This is a separate problem and has nothing to do with the hardware, md,
+or XFS.  I assisted with a similar, probably identical, ls completion
+time issue last week on the XFS list.  I'd guess you're storing user and
+group data on a remote LDAP server and it is responding somewhat slowly.
+ Use 'strace -T' with ls and you'll see lots of poll calls and the time
+taken by each.  17,189 files at 35ms avg latency per LDAP query yields
+10m02s, if my math is correct, so 35ms is your current avg latency per
+query.  Be aware that even if you get the average LDAP latency per file
+down to 2ms, you're still looking at 34s for ls to complete on this
+directory.  Much better than 10 minutes, but nothing close to the local
+speed you're used to.
+
+>         Second run:
+>         $ time ls /srv/files
+>         [...]
+>         real	0m0.257s
+>         user	0m0.108s
+>         sys	0m0.088s
+
+Here the LDAP data has been cached.  Wait an hour, run ls again, and
+it'll be slow again.
+
+>         $ ls -l /srv/files | wc -l
+>         17189
+
+> I guess the controller is what's is blocking here as I encounter the
+> issue only on servers where it is installed. I tried many settings like
+> enabling or disabling cache but nothing changed.
+
+The controller is not the cause of the 10 minute ls delay.  If you see
+the ls delay only on servers with this controller it is coincidence.
+The cause lay elsewhere.
+
+Areca are pretty crappy controllers generally, but I doubt they're at
+fault WRT your low write throughput, though it is possible.
+
+> Any advise would be appreciated.
+
+I hope I've steered you in the right direction.
+
+-- 
+Stan
