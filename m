@@ -1,56 +1,44 @@
-From: Ben Hutchings <bhutchings@solarflare.com>
-Subject: Re: md/raid5: Use conf->device_lock protect changing of
- multi-thread resources.
-Date: Fri, 22 Nov 2013 16:10:49 +0000
-Message-ID: <1385136649.1586.27.camel@bwh-desktop.uk.level5networks.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Triple parity and beyond
+Date: Fri, 22 Nov 2013 08:50:32 -0800
+Message-ID: <CAK2H+efFuzvOaQe3NMOeBzujvvrrcKcZCmmMXzjTSUpLdJMvHQ@mail.gmail.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
+	<528A90B7.5010905@zytor.com>
+	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
+	<528AA1EB.3010909@zytor.com>
+	<CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>
+	<528BCA2D.5010500@redhat.com>
+	<73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu>
+	<528D61C5.70902@hardwarefreak.com>
+	<528DCD36.1060808@hesbynett.no>
+	<528F122C.2040202@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <528F122C.2040202@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>, NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: David Brown <david.brown@hesbynett.no>, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>, Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, Linux-RAID <linux-raid@vger.kernel.org>, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-Coverity reported a new defect after this change (commit 60aaf9338545) -
-passing a singleton pointer as the worker_groups parameter to
-alloc_thread_groups() which expects an array pointer.  But actually it
-looks like it should still be a singleton pointer and
-alloc_thread_groups() is broken:
+On Fri, Nov 22, 2013 at 12:13 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> Hi David,
+>
+> On 11/21/2013 3:07 AM, David Brown wrote:
+<SNIP>
+>> Shouldn't we be talking about RAID 15 here, rather than RAID 51 ?  I
+>> interpret "RAID 15" to be like "RAID 10" - a raid5 set of raid1 mirrors,
+>> while "RAID 51" would be a raid1 mirror of raid5 sets.  I am certain
+>> that you mean a raid5 set of raid1 pairs - I just think you've got the
+>> name wrong.
+>
+> Now that you mention it, yes, RAID 15 would fit much better with
+> convention.  Not sure why I thought 51.  So it's RAID 15 from here.
+<SNIP>
 
--       conf->worker_groups = kzalloc(sizeof(struct r5worker_group) *
--                               conf->group_cnt, GFP_NOIO);
--       if (!conf->worker_groups || !workers) {
-+       workers = kzalloc(size * *group_cnt, GFP_NOIO);
-+       *worker_groups = kzalloc(sizeof(struct r5worker_group) *
-+                               *group_cnt, GFP_NOIO);
-+       if (!*worker_groups || !workers) {
-                kfree(workers);
--               kfree(conf->worker_groups);
--               conf->worker_groups = NULL;
-+               kfree(*worker_groups);
-                return -ENOMEM;
-        }
- 
--       for (i = 0; i < conf->group_cnt; i++) {
-+       for (i = 0; i < *group_cnt; i++) {
-                struct r5worker_group *group;
- 
--               group = &conf->worker_groups[i];
-+               group = worker_groups[i];
+For us casual readers & RAID users could you clarify RAID15? Would
+that be a bunch of RAID1's grouped together in what appears to be a
+RAID5 to the system?
 
-This assignment should, I think, be:
-
-		group = &(*worker_groups)[i];
-
-or equivalently:
-
-		group = *worker_groups + i;
-
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+Thanks,
+Mark
