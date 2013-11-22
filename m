@@ -1,44 +1,40 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Triple parity and beyond
-Date: Fri, 22 Nov 2013 08:50:32 -0800
-Message-ID: <CAK2H+efFuzvOaQe3NMOeBzujvvrrcKcZCmmMXzjTSUpLdJMvHQ@mail.gmail.com>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
-	<528A90B7.5010905@zytor.com>
-	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>
-	<528AA1EB.3010909@zytor.com>
-	<CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>
-	<528BCA2D.5010500@redhat.com>
-	<73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu>
-	<528D61C5.70902@hardwarefreak.com>
-	<528DCD36.1060808@hesbynett.no>
-	<528F122C.2040202@hardwarefreak.com>
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Fri, 22 Nov 2013 10:36:01 -0800
+Message-ID: <CAGRSmLsa5Wu0rTu7HdJM+ZLd3ukt1WcG=Kx6EB2fD1xx=VbFxQ@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<528A7721.8080604@arcor.de>
+	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
+	<20131119110110.396b2af3@notabene.brown>
+	<528BBFEB.7050202@arcor.de>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<CAGRSmLtR7rEVYFpGoDybgrX4Myj2Fa2MVbiVYK6=fi1RSRKPFA@mail.gmail.com>
+	<CAGRSmLsO9uPkEdwvVwKotE53D15Jg9ar+UwLPjH=q0EY8BwkSg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528F122C.2040202@hardwarefreak.com>
+In-Reply-To: <CAGRSmLsO9uPkEdwvVwKotE53D15Jg9ar+UwLPjH=q0EY8BwkSg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: David Brown <david.brown@hesbynett.no>, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>, Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, Linux-RAID <linux-raid@vger.kernel.org>, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
+To: Martin Wilck <mwilck@arcor.de>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Nov 22, 2013 at 12:13 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> Hi David,
->
-> On 11/21/2013 3:07 AM, David Brown wrote:
-<SNIP>
->> Shouldn't we be talking about RAID 15 here, rather than RAID 51 ?  I
->> interpret "RAID 15" to be like "RAID 10" - a raid5 set of raid1 mirrors,
->> while "RAID 51" would be a raid1 mirror of raid5 sets.  I am certain
->> that you mean a raid5 set of raid1 pairs - I just think you've got the
->> name wrong.
->
-> Now that you mention it, yes, RAID 15 would fit much better with
-> convention.  Not sure why I thought 51.  So it's RAID 15 from here.
-<SNIP>
+Okay, got the word on what the sdf drive is:
 
-For us casual readers & RAID users could you clarify RAID15? Would
-that be a bunch of RAID1's grouped together in what appears to be a
-RAID5 to the system?
+"5th drive is configured as spare for RAID 5"
 
-Thanks,
-Mark
+On Thu, Nov 21, 2013 at 7:06 PM, David F. <df7729@gmail.com> wrote:
+> So it looks like sdf shouldn't be part of the RAID5 set - maybe it's a
+> stand alone drive configured on the raid controller?  I can ask if
+> they know...
+>
+> On Thu, Nov 21, 2013 at 3:09 PM, David F. <df7729@gmail.com> wrote:
+>> They also said: RAID 5 with 4 physical drives.
