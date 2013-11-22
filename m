@@ -1,49 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Fri, 22 Nov 2013 01:21:36 -0800
-Message-ID: <20131122092136.GD32568@infradead.org>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
- <528A5C45.4080906@redhat.com>
- <20131119005740.GY6188@dastard>
- <CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
- <20131121092606.GU11434@dastard>
- <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
- <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
- <20131121234116.GD6502@dastard>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Triple parity and beyond
+Date: Fri, 22 Nov 2013 03:35:49 -0600
+Message-ID: <528F2575.80605@hardwarefreak.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com>	<CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com>	<528BCA2D.5010500@redhat.com>	<73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu>	<528D61C5.70902@hardwarefreak.com>	<CAJBj3vf7Ot2oUkk6LtkWRouFqrSCKecz0yD4Ds5UGT1BL1ds5A@mail.gmail.com>	<528DADB1.8010604@hardwarefreak.com>	<CAJBj3vcE07FYi-+xMxwd+u6dVfFU0ryU=j+ekmG8p=cgMhU74g@mail.gmail.com>	<528E8FEC.2070204@hardwarefreak.com> <CAJBj3veHCTbGstLoUec67sMWuyHQMmZNY4A6bwcb+HQOgjJ_Ew@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131121234116.GD6502@dastard>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <CAJBj3veHCTbGstLoUec67sMWuyHQMmZNY4A6bwcb+HQOgjJ_Ew@mail.gmail.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: John Williams <jwilliams4200@gmail.com>
+Cc: James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>, Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-> From: Dave Chinner <dchinner@redhat.com>
+On 11/21/2013 5:38 PM, John Williams wrote:
+> On Thu, Nov 21, 2013 at 2:57 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> He wrote that article in late 2009.  It seems pretty clear he wasn't
+>> looking 10 years forward to 20TB drives, where the minimum mirror
+>> rebuild time will be ~18 hours, and parity rebuild will be much greater.
 > 
-> The function xfs_bmap_isaeof() is used to indicate that an
-> allocation is occurring at or past the end of file, and as such
-> should be aligned to the underlying storage geometry if possible.
-> 
-> Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-> behaviour of this function for empty files - it turned off
-> allocation alignment for this case accidentally. Hence large initial
-> allocations from direct IO are not getting correctly aligned to the
-> underlying geometry, and that is cause write performance to drop in
-> alignment sensitive configurations.
-> 
-> Fix it by considering allocation into empty files as requiring
-> aligned allocation again.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Actually, it is completely obvious that he WAS looking ten years
+> ahead, seeing as several of his graphs have time scales going to
+> 2009+10 = 2019.
 
-Ooops.  The fix looks good,
+Only one graph goes to 2019, the rest are 2010 or less.  That being the
+case, his 2019 graph deals with projected reliability of single, double,
+and triple parity.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> And he specifically mentions longer rebuild times as one of the
+> reasons why higher parity RAIDs are needed.
 
+Yes, he certainly does.  But *only* in the context of the array
+surviving for the duration of a rebuild.  He doesn't state that he cares
+what the total duration is, he doesn't guess what it might be, nor does
+he seem to care about the degraded performance before or during the
+rebuild.  He is apparently of the mindset "more parity will save us,
+until we need more parity, until we need more parity, until we need
+more...".
 
-Might be worth cooking up a test for this, scsi_debug can expose
-geometry, and we already have it wired to to large sector size
-testing in xfstests.
+Following this path, parity will eventually eat more disks of capacity
+than RAID10 does today for average array counts, and the only reason for
+it being survival of ever increasing rebuild duration.
 
+This is precisely why I proposed "RAID 15".  It gives you the single
+disk cloning rebuild speed of RAID 10.  When parity hits 5P then RAID 15
+becomes very competitive for smaller arrays.  And since drives at that
+point will be 40-50TB each, even small arrays will need lots of
+protection against UREs and additional failures during massive rebuild
+times.  Here I'd say RAID 15 will beat 5P hands down.
+
+-- 
+Stan
