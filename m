@@ -1,130 +1,102 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: ARC-1120 and MD very sloooow
-Date: Fri, 22 Nov 2013 14:17:41 -0600
-Message-ID: <528FBBE5.80404@hardwarefreak.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>
-Reply-To: stan@hardwarefreak.com
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Stuck reshape
+Date: Fri, 22 Nov 2013 13:17:52 -0600
+Message-ID: <528FADE0.4090608@nuclearwinter.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1385118796.8091.31.camel@bews002.euractiv.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[CC'ing XFS]
+I have a reshape that got stuck on what appears to be step 1 of the process.
 
-On 11/22/2013 5:13 AM, Jimmy Thrasibule wrote:
+What can be done? Will a shutdown be recoverable, or should I be
+prepared to restore from backup?
 
-Hi Jimmy,
+I can read from the array w/o error.
 
-This may not be an md problem.  It appears you've mangled your XFS
-filesystem alignment.  This may be a contributing factor to the low
-write throughput.
+I initiated the re-shape with the following command (devices 4->5, level
+5->6, chunk 512->256):
+mdadm --grow /dev/md1 --level=6 --raid-devices=6 --chunk=256
 
->         md3 : active raid10 sdc1[0] sdf1[3] sde1[2] sdd1[1]
->               7813770240 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
-...
->         /dev/md3 on /srv type xfs (rw,nosuid,nodev,noexec,noatime,attr2,delaylog,inode64,sunit=2048,swidth=4096,noquota)
+The output was:
+mdadm: level of /dev/md1 changed to raid6
+mdadm: Need to backup 3072K of critical section..
 
-Beyond having a ridiculously unnecessary quantity of mount options, it
-appears you've got your filesystem alignment messed up, still.  Your
-RAID geometry is 512KB chunk, 1MB stripe width.  Your override above is
-telling the filesystem that the RAID geometry is chunk size 1MB and
-stripe width 2MB, so XFS is pumping double the IO size that md is
-expecting.
+The status is:
 
->         # xfs_info /dev/md3 
->         meta-data=/dev/md3               isize=256    agcount=32, agsize=30523648 blks
->                  =                       sectsz=512   attr=2
->         data     =                       bsize=4096   blocks=976755712, imaxpct=5
->                  =                       sunit=256    swidth=512 blks
->         naming   =version 2              bsize=4096   ascii-ci=0
->         log      =internal               bsize=4096   blocks=476936, version=2
->                  =                       sectsz=512   sunit=8 blks, lazy-count=1
+md1 : active raid6 sdo1[6] sdn1[5] sdd1[2] sdb1[4] sdc1[0] sda1[1]
+      2929890816 blocks super 1.2 level 6, 512k chunk, algorithm 18
+[6/5] [UUUU_U]
+      [>....................]  reshape =  0.0% (512/976630272)
+finish=56199369.9min speed=0K/sec
+      bitmap: 0/1 pages [0KB], 1048576KB chunk
 
-You created your filesystem with stripe unit of 128KB and stripe width
-of 256KB which don't match the RAID geometry.  I assume this is the
-reason for the fstab overrides.  I suggest you try overriding with
-values that match the RAID geometry, which should be sunit=1024 and
-swidth=2048.  This may or may not cure the low write throughput but it's
-a good starting point, and should be done anyway.  You could also try
-specifying zeros to force all filesystem write IOs to be 4KB, i.e. no
-alignment.
+This process is chewing up a lot of CPU:
+ 2858 root      20   0    7936   3692    280 R  91.5  0.0  35:23.72 mdadm
+ 2856 root      20   0       0      0      0 R  24.4  0.0  14:05.14
+md1_raid6
+ 2857 root      20   0       0      0      0 R  12.2  0.0   4:28.68
+md1_reshape
 
-Also, your log was created with a stripe unit alignment of 4KB, which is
-128 times smaller than your chunk.  The default value is zero, which
-means use 4KB IOs.  This shouldn't be a problem, but I do wonder why you
-manually specified a value equal to the default.
+(that's 91.5% for mdadm, 24.4% for md1_raid6, and 12.2% for md1_reshape)
 
-mkfs.xfs automatically reads the stripe geometry from md and sets
-sunit/swidth correctly (assuming non-nested arrays).  Why did you
-specify these manually?
+All drives are on-line and functioning normally. I did forget to remove
+the internal bitmap and I also forgot to use an external backup file.
 
-> The issue is that disk access is very slow and I cannot spot why. Here
-> is some data when I try to access the file system.
-> 
-> 
->         # dd if=/dev/zero of=/srv/test.zero bs=512K count=6000
->         6000+0 records in
->         6000+0 records out
->         3145728000 bytes (3.1 GB) copied, 82.2142 s, 38.3 MB/s
->         
->         # dd if=/srv/store/video/test.zero of=/dev/null
->         6144000+0 records in
->         6144000+0 records out
->         3145728000 bytes (3.1 GB) copied, 12.0893 s, 260 MB/s
+mdadm - v3.2.6 - 25th October 2012
+kernel: 3.11.8-200.fc19.x86_64
 
-What percent of the filesystem space is currently used?
+Syslog is:
 
->         First run:
->         $ time ls /srv/files
->         [...]
->         real	9m59.609s
->         user	0m0.408s
->         sys	0m0.176s
+[  601.373480] md: bind<sdn1>
+[  601.773482] md: bind<sdo1>
+[  601.824051] RAID conf printout:
+[  601.824058]  --- level:5 rd:4 wd:4
+[  601.824062]  disk 0, o:1, dev:sdc1
+[  601.824065]  disk 1, o:1, dev:sda1
+[  601.824068]  disk 2, o:1, dev:sdd1
+[  601.824071]  disk 3, o:1, dev:sdb1
+[  601.824073] RAID conf printout:
+[  601.824075]  --- level:5 rd:4 wd:4
+[  601.824078]  disk 0, o:1, dev:sdc1
+[  601.824080]  disk 1, o:1, dev:sda1
+[  601.824083]  disk 2, o:1, dev:sdd1
+[  601.824085]  disk 3, o:1, dev:sdb1
+[  647.692320] md/raid:md1: device sdd1 operational as raid disk 2
+[  647.698547] md/raid:md1: device sdb1 operational as raid disk 3
+[  647.704787] md/raid:md1: device sdc1 operational as raid disk 0
+[  647.710941] md/raid:md1: device sda1 operational as raid disk 1
+[  647.718258] md/raid:md1: allocated 5394kB
+[  647.752152] md/raid:md1: raid level 6 active with 4 out of 5 devices,
+algorithm 18
+[  647.760088] RAID conf printout:
+[  647.760092]  --- level:6 rd:5 wd:4
+[  647.760096]  disk 0, o:1, dev:sdc1
+[  647.760100]  disk 1, o:1, dev:sda1
+[  647.760103]  disk 2, o:1, dev:sdd1
+[  647.760105]  disk 3, o:1, dev:sdb1
+[  648.622041] RAID conf printout:
+[  648.622049]  --- level:6 rd:6 wd:5
+[  648.622053]  disk 0, o:1, dev:sdc1
+[  648.622057]  disk 1, o:1, dev:sda1
+[  648.622059]  disk 2, o:1, dev:sdd1
+[  648.622062]  disk 3, o:1, dev:sdb1
+[  648.622065]  disk 4, o:1, dev:sdo1
+[  648.622072] RAID conf printout:
+[  648.622074]  --- level:6 rd:6 wd:5
+[  648.622077]  disk 0, o:1, dev:sdc1
+[  648.622079]  disk 1, o:1, dev:sda1
+[  648.622082]  disk 2, o:1, dev:sdd1
+[  648.622084]  disk 3, o:1, dev:sdb1
+[  648.622087]  disk 4, o:1, dev:sdo1
+[  648.622089]  disk 5, o:1, dev:sdn1
+[  648.622475] md: reshape of RAID array md1
+[  648.626832] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[  648.633041] md: using maximum available idle IO bandwidth (but not
+more than 200000 KB/sec) for reshape.
+[  648.643053] md: using 128k window, over a total of 976630272k.
 
-This is a separate problem and has nothing to do with the hardware, md,
-or XFS.  I assisted with a similar, probably identical, ls completion
-time issue last week on the XFS list.  I'd guess you're storing user and
-group data on a remote LDAP server and it is responding somewhat slowly.
- Use 'strace -T' with ls and you'll see lots of poll calls and the time
-taken by each.  17,189 files at 35ms avg latency per LDAP query yields
-10m02s, if my math is correct, so 35ms is your current avg latency per
-query.  Be aware that even if you get the average LDAP latency per file
-down to 2ms, you're still looking at 34s for ls to complete on this
-directory.  Much better than 10 minutes, but nothing close to the local
-speed you're used to.
-
->         Second run:
->         $ time ls /srv/files
->         [...]
->         real	0m0.257s
->         user	0m0.108s
->         sys	0m0.088s
-
-Here the LDAP data has been cached.  Wait an hour, run ls again, and
-it'll be slow again.
-
->         $ ls -l /srv/files | wc -l
->         17189
-
-> I guess the controller is what's is blocking here as I encounter the
-> issue only on servers where it is installed. I tried many settings like
-> enabling or disabling cache but nothing changed.
-
-The controller is not the cause of the 10 minute ls delay.  If you see
-the ls delay only on servers with this controller it is coincidence.
-The cause lay elsewhere.
-
-Areca are pretty crappy controllers generally, but I doubt they're at
-fault WRT your low write throughput, though it is possible.
-
-> Any advise would be appreciated.
-
-I hope I've steered you in the right direction.
-
--- 
-Stan
+--Larkin
