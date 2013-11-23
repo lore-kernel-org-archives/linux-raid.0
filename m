@@ -1,49 +1,123 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Triple parity and beyond
-Date: Sat, 23 Nov 2013 18:39:11 +0100
-Message-ID: <5290E83F.5080304@hesbynett.no>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <528A90B7.5010905@zytor.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com> <528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DCD36.1060808@hesbynett.no> <528F122C.2040202@hardwarefreak.com> <528F812D.8020105@hardwarefreak.com> <20131123095953.18858e89@notabene.brown>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: stoppind md from kicking out "bad' drives
+Date: Sun, 24 Nov 2013 02:05:16 +0400
+Message-ID: <5291269C.5080209@msgid.tls.msk.ru>
+References: <5280870E.6080703@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131123095953.18858e89@notabene.brown>
+In-Reply-To: <5280870E.6080703@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: stan@hardwarefreak.com, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>, Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 22/11/13 23:59, NeilBrown wrote:
-> On Fri, 22 Nov 2013 10:07:09 -0600 Stan Hoeppner <stan@hardwarefreak.com>
-> wrote:
->
-<snip>
->> In the event of a double drive failure in one mirror, the RAID 1 code
->> will need to be modified in such a way as to allow the RAID 5 code to
->> rebuild the first replacement disk, because the RAID 1 device is still
->> in a failed state.  Once this rebuild is complete, the RAID 1 code will
->> need to switch the state to degraded, and then do its standard rebuild
->> routine for the 2nd replacement drive.
->>
->> Or, with some (likely major) hacking it should be possible to rebuild
->> both drives simultaneously for no loss of throughput or additional
->> elapsed time on the RAID 5 rebuild.
->
-> Nah, that would be minor hacking.  Just recreate the RAID1 in a state that is
-> not-insync, but with automatic-resync disabled.
-> Then as continuous writes arrive, move the "recovery_cp" variable forward
-> towards the end of the array.  When it reaches the end we can safely mark the
-> whole array as 'in-sync' and forget about diabling auto-resync.
->
-> NeilBrown
->
+Neil, I'm sorry for the repost, -- can you comment please?
 
-That was my thoughts here.  I don't know what state the planned "bitmap 
-of non-sync regions" feature is in, but if and when it is implemented, 
-you would just create the replacement raid1 pair without any 
-synchronisation.  Any writes to the pair (such as during a raid5 
-rebuild) would get written to both disks at the same time.
+I think this is important enough to deserve your comments... ;)
 
-David
+Meanwhile, in order to fix the mentioned broken raid5, I had
+to resort to a small perl script which reads each stripe (all
+parts which can be read), re-constructs missing stuff from
+available data when possible, and writes result to external
+file, displaying areas which can't be reconstructed.  Repeating
+procedure for the missing areas using another set of drives...
+So in the end we were able to completely restore all data
+from the array in question.
 
+Thanks,
+
+/mjt
+
+11.11.2013 11:28, Michael Tokarev wrote:
+> Hello.
+> 
+> Yesterday we've hit a classical issue of two drives
+> failure in raid5 configuration.
+> 
+> The scenario was like this:
+> 
+>  - one disk failed (atually just stopped responding, but
+>    started working again after bus reset, but that was much
+>    later than needed)
+> 
+>  - the failed disk has been kicked out of the array
+> 
+>  - md started syncronizing a hot-spare drive
+> 
+>  - during resync, another drive developed a bad (unreadable)
+>    sector
+> 
+>  - another drive has been kicked out of the array
+> 
+>  - boom
+> 
+> Now it is obvious that almost all data on the second drive
+> is intact, except of the area where the bad sector resides
+> (which is, btw, at the very end of the drive, where most
+> likely there's no useful data at all).  The hot-spare is
+> almost ready too (up to amost the end of it).  But the array
+> is non-functional and all filesystems are switched to read-
+> only mode...
+> 
+> The question is: what's missing currently to prevent kicking
+> drives from md arrays at all?  And I really mean preventing
+> _both_ first failed drive (before start of resync) and second
+> failed drive?
+> 
+> Can write-intent bitmap be used in this case, to mark areas
+> changed in array which are failed to be written to one or
+> another component device, for example?  Md can mark a drive
+> as "semi-failed" and still try to use it in some situations.
+> 
+> This "semi" state can be different - f.e., one is where md
+> tries all normal operations on the drive and redirects failed
+> reads to other drives (with continued attempts to re-write
+> bad data) and continues writing normally, marking all failed
+> writes in the bitmap.  Let's say it is "semi-working" state.
+> Another is when no regular I/O is happening to it except of
+> the critical situations when _another_ drive becomes unreadable
+> in some place - so md will try to reconstruct that data based
+> on this semi-failed drive in a hope that those places will
+> be read successfully.  And other variations of the same theme...
+> 
+> At the very least, maybe we should prevent md from kicking
+> the last component device which makes the array unusable, like
+> failed second drive on raid5 config - even if it has a bad
+> sector, the array was 99.9% fine before md kicked it out,
+> but after kicking it, the array is 100% dead...  This does
+> not look right to me.
+> 
+> Also, what's the way to assemble this array now?  We've almost
+> resynced hot spare, a failed-at-the-end drive (the second
+> failed one), and a non-fresh first failed drive which is in
+> good condition, just outdated.  Can mdadm be forced to assemble
+> the array from good drives plus second-failed drive?, maybe in
+> read-only mode (this will let us to copy data which is still
+> readable to another place)?
+> 
+> I'd try to re-write the bad places on second-failed drive based
+> on the information on good drives plus data from first-failed
+> drive, -- it is obvious that those places still can be reconstructed,
+> because even when the filesystem were in use during (attempt to)
+> resync, no changes were made to the problematic areas, so there,
+> first-failed drive still can be used.  But this - at this stage -
+> is rather tricky, i'll need to write a program to help me, and
+> made it bug-free to be useful.
+> 
+> All in all, it still looks like md has very good potential for
+> improvements wrt reliability... ;)
+> 
+> (The system in question belongs to one of a very well-known
+> organisations in free software, and it is (or was) the main
+> software repository)
+> 
+> Thank you!
+> 
+> /mjt
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
