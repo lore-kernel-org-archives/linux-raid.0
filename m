@@ -1,45 +1,49 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Triple parity and beyond
-Date: Sat, 23 Nov 2013 23:10:24 +0100
-Message-ID: <20131123221024.GA10555@lazy.lzy>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>
- <20131120222903.GA3654@lazy.lzy>
- <CAGKKSfUejP=pb6HHF-48ciu5GSSd_ZCZMXHyL6iHLcQHvDs8yQ@mail.gmail.com>
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Sat, 23 Nov 2013 15:36:16 -0800
+Message-ID: <CAGRSmLsLiZ92YM-S-xHAKGmCpcc=9iu+Z9q87ObkE5z=Qz7+Ag@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<528A7721.8080604@arcor.de>
+	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
+	<20131119110110.396b2af3@notabene.brown>
+	<528BBFEB.7050202@arcor.de>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<CAGRSmLtR7rEVYFpGoDybgrX4Myj2Fa2MVbiVYK6=fi1RSRKPFA@mail.gmail.com>
+	<CAGRSmLsO9uPkEdwvVwKotE53D15Jg9ar+UwLPjH=q0EY8BwkSg@mail.gmail.com>
+	<CAGRSmLsa5Wu0rTu7HdJM+ZLd3ukt1WcG=Kx6EB2fD1xx=VbFxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGKKSfUejP=pb6HHF-48ciu5GSSd_ZCZMXHyL6iHLcQHvDs8yQ@mail.gmail.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Andrea Mazzoleni <amadvance@gmail.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, David Brown <david.brown@hesbynett.no>, David Smith <creamyfish@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRSmLsa5Wu0rTu7HdJM+ZLd3ukt1WcG=Kx6EB2fD1xx=VbFxQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Andrea,
+Did that report give you everything needed?
 
-On Sat, Nov 23, 2013 at 08:55:08AM +0100, Andrea Mazzoleni wrote:
-> Hi Piergiorgio,
-> 
-> > How about par2? How does this work?
-> I checked the matrix they use, and sometimes it contains some singular
-> square submatrix.
-> It seems that in GF(2^16) these cases are just less common. Maybe they
-> were just unnoticed.
-> 
-> Anyway, this seems to be an already known problem for PAR2, with an
-> hypothetical PAR3 fixing it:
-> 
-> http://sourceforge.net/p/parchive/discussion/96282/thread/d3c6597b/
+When do you think the next release of mdadm will be ready?  Just
+trying to plan the next release?
 
-you did a pretty damn good research work!
+Thanks!
 
-Maybe you should consider to contact them too.
-I'm not sure if your approach can be extended
-to GF(2^16), I guess yes, in that case they
-might be interested too.
-
-bye,
-
--- 
-
-piergiorgio
+On Fri, Nov 22, 2013 at 10:36 AM, David F. <df7729@gmail.com> wrote:
+> Okay, got the word on what the sdf drive is:
+>
+> "5th drive is configured as spare for RAID 5"
+>
+> On Thu, Nov 21, 2013 at 7:06 PM, David F. <df7729@gmail.com> wrote:
+>> So it looks like sdf shouldn't be part of the RAID5 set - maybe it's a
+>> stand alone drive configured on the raid controller?  I can ask if
+>> they know...
+>>
+>> On Thu, Nov 21, 2013 at 3:09 PM, David F. <df7729@gmail.com> wrote:
+>>> They also said: RAID 5 with 4 physical drives.
