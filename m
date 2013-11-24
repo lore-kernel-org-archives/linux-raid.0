@@ -1,71 +1,30 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Mon, 25 Nov 2013 10:21:37 +1100
-Message-ID: <20131124232137.GA8803@dastard>
-References: <528A5C45.4080906@redhat.com>
- <20131119005740.GY6188@dastard>
- <CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
- <20131121092606.GU11434@dastard>
- <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
- <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
- <20131121234116.GD6502@dastard>
- <20131122092136.GD32568@infradead.org>
- <20131122224038.GH6502@dastard>
- <20131123084106.GA19088@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131123084106.GA19088@infradead.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH 0/1] Recent breakage of DM RAID
+Date: Sun, 24 Nov 2013 17:30:42 -0600
+Message-ID: <1385335843-14021-1-git-send-email-jbrassow@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: jbrassow@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Sat, Nov 23, 2013 at 12:41:06AM -0800, Christoph Hellwig wrote:
-> On Sat, Nov 23, 2013 at 09:40:38AM +1100, Dave Chinner wrote:
-> > > geometry, and we already have it wired to to large sector size
-> > > testing in xfstests.
-> > 
-> > We don't need to screw around with the sector size - that is
-> > irrelevant to the problem, and we have an allocation alignment
-> > test that is supposed to catch these issues: generic/223.
-> 
-> It didn't imply we need large sector sizes, but the same mechanism
-> to expodse a large sector size can also be used to present large
-> stripe units/width.
-> 
-> > As I said, I have seen occasional failures of that test (once a
-> > month, on average) as a result of this bug. It was simply not often
-> > enough - running in a hard loop didn't increase the frequency of
-> > failures - to be able debug it or to reach my "there's a regression
-> > I need to look at" threshold. Perhaps we need to revisit that test
-> > and see if we can make it more likely to trigger failures...
-> 
-> Seems like 233 should have cought it regularly with the explicit
-> alignment options on mkfs time.  Maybe we also need a test mirroring
-> the plain dd more closely?
+There have been two commits that have broken DM RAID:
+1) 773ca82 (v3.12-rc1) raid5: make release_stripe lockless
+2) 566c09c raid5: relieve lock contention in get_active_stripe()
 
-Preallocation showed the problem, too, so we probably don't even
-need dd to check whether allocation alignment is working properly.
-We should probably write a test that spefically checks all the
-different anlignment/extent size combinations we can use.
+I've provided a patch for the first, but I don't have a patch ready for
+the second yet.  Since 3.12 is alreay out, I figured I better send the
+patch for the first problem now.
 
-Preallocation should behave very similarly to direct IO, but I'm
-pretty sure that it won't do things like round up allocations to
-stripe unit/widths like direct IO does. The fact that we do
-allocation sunit/swidth size alignment for direct Io outside the
-allocator and sunit/swidth offset alignment inside the allocation is
-kinda funky....
+Simply creating a RAID 4/5/6 device via device-mapper (or LVM) is sufficent
+to cause the hang to manifest.
 
-> I've not seen 233 fail for a long time..
+Jonathan Brassow (1):
+  MD/DM RAID: Fix hang due to recent RAID5 locking changes
 
-Not surprising, it is a one in several hundred test runs occurrence
-here...
+ drivers/md/dm-raid.c |    1 -
+ drivers/md/md.c      |    5 ++++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
+
