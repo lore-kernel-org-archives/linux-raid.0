@@ -1,42 +1,21 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Triple parity and beyond
-Date: Mon, 25 Nov 2013 10:20:12 +0100
-Message-ID: <5293164C.2040201@hesbynett.no>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <201311241619.08668.russell@coker.com.au> <52927343.9000203@hardwarefreak.com> <201311251314.06277.russell@coker.com.au>
+From: gerry@daiwa.com
+Subject: =?iso-8859-5?Q?=C1=E0=D0=D1=D0=E2=EB=D2=D0=D5=E2_=DE=DF?=
+	=?iso-8859-5?Q?=D5=E0=D0=E2=D8=D2=DD=DE?=
+Date: Mon, 25 Nov 2013 12:00:46 +0100
+Message-ID: <29980959.20131125123909@daiwa.com>
+Reply-To: gerry@daiwa.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201311251314.06277.russell@coker.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: russell@coker.com.au, stan@hardwarefreak.com
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>
+To: creative@papercranes.com.au, horovod@horovod.com, linux-raid@vger.kernel.org, ky@ckpspb.ru
 List-Id: linux-raid.ids
 
-On 25/11/13 03:14, Russell Coker wrote:
-> On Mon, 25 Nov 2013, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>> If that is the problem then the solution would be to just enable
->>> read-ahead. Don't we already have that in both the OS and the disk
->>> hardware?  The hard- drive read-ahead buffer should at least cover the
->>> case where a seek completes but the desired sector isn't under the
->>> heads.
->>
->> I'm not sure if read-ahead would solve such a problem, if indeed this is
->> a possible problem.  AFAIK the RAID5/6 drivers process stripes serially,
->> not asynchronously, so I'd think the rebuild may still stall for ms at a
->> time in such a situation.
-> 
-> For a RAID block device (such as Linux software RAID) read-ahead should work 
-> well.  For a RAID type configuration managed by the filesystem where you might 
-> have different RAID levels in the same filesystem it might not be possible.
-> 
-> It would be a nice feature to have RAID-0 for unimportant files and RAID-1 or 
-> RAID-6 for important files on the same filesystem.  But that type of thing 
-> would really complicate RAID rebuild.
-> 
-
-I think btrfs is planning to have such features - different files can
-have different raid types.  It certainly supports different raid levels
-for metadata and file data.  But it is definitely a feature you want on
-the filesystem level, rather than the raid block device level.
-
+=D2=DD=D5 =D7=E3=D1=E0=D5=D6=DA=D8 =D8 =D7=D0=DD=E3=D4=DB=D8=D2=EB=E5 =E3=
+=DF=E0=D0=D6=DD=D5=DD=D8=D9 http://goo.gl/ksv9PV
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
