@@ -1,92 +1,63 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Re: Stuck reshape
-Date: Sun, 24 Nov 2013 19:44:10 -0600
-Message-ID: <5292AB6A.4010605@nuclearwinter.com>
-References: <528FADE0.4090608@nuclearwinter.com> <20131125104316.09a98169@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Triple parity and beyond
+Date: Sun, 24 Nov 2013 20:04:32 -0600
+Message-ID: <5292B030.5030305@hardwarefreak.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com> <528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <CAJBj3vf7Ot2oUkk6LtkWRouFqrSCKecz0yD4Ds5UGT1BL1ds5A@mail.gmail.com> <528DADB1.8010604@hardwarefreak.com> <CAJBj3vcE07FYi-+xMxwd+u6dVfFU0ryU=j+ekmG8p=cgMhU74g@mail.gmail.com> <528E8FEC.2070204@hardwarefreak.com> <20131123100753.1820ab7c@notabene.brown> <5290252A.8020508@hardwarefreak.com> <20131123160428.6f1c5898@notabene.brown> <CAJBj3vfsbPoke2spzomBQRGqmSG9RCjwfMG1R4mfmJ8SOBZjvw@mail.gmail.com> <20131123181208.5103bee4@notabene.bro
+ wn> <52917AA8.1040300@hardwarefreak.com> <CAJBj3vdKsmQ=ovG5LnoDz_DqLFp5+o_j0JUWtWTRP+jzbbZkhg@mail.gmail.com> <52926BE3.1000301@hardwarefreak.com> <l6u3h9$l72$2@ger.gmane.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131125104316.09a98169@notabene.brown>
+In-Reply-To: <l6u3h9$l72$2@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Alex Elsayed <eternaleye@gmail.com>, linux-raid@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/24/2013 5:43 PM, NeilBrown wrote:
->> I initiated the re-shape with the following command (devices 4->5, level
->> 5->6, chunk 512->256):
->> mdadm --grow /dev/md1 --level=6 --raid-devices=6 --chunk=256
->
-> So devices: 4 -> 6 ??
-
-Correct, devices 4->6.
-
->
+On 11/24/2013 5:53 PM, Alex Elsayed wrote:
+> Stan Hoeppner wrote:
+> 
+>> On 11/23/2013 11:14 PM, John Williams wrote:
+>>> On Sat, Nov 23, 2013 at 8:03 PM, Stan Hoeppner <stan@hardwarefreak.com>
+>>> wrote:
+> <snip>
 >>
->> The output was:
->> mdadm: level of /dev/md1 changed to raid6
->> mdadm: Need to backup 3072K of critical section..
+>>> But I, and a number of other people I have talked to or corresponded
+>>> with, have had mdadm RAID 5 or RAID 6 rebuilds of one drive run at
+>>> approximately the optimal sequential write speed of the replacement
+>>> drive. It is not unusual on a reasonably configured system.
 >>
->> The status is:
+>> I freely admit I may have drawn an incorrect conclusion about md parity
+>> rebuild performance based on incomplete data.  I simply don't recall
+>> anyone stating here in ~3 years that their parity rebuilds were speedy,
+>> but quite the opposite.  I guess it's possible that each one of those
+>> cases was due to another factor, such as user load, slow CPU, bus
+>> bottleneck, wonky disk firmware, backplane issues, etc.
 >>
->> md1 : active raid6 sdo1[6] sdn1[5] sdd1[2] sdb1[4] sdc1[0] sda1[1]
->>       2929890816 blocks super 1.2 level 6, 512k chunk, algorithm 18
->> [6/5] [UUUU_U]
->>       [>....................]  reshape =  0.0% (512/976630272)
->> finish=56199369.9min speed=0K/sec
->>       bitmap: 0/1 pages [0KB], 1048576KB chunk
->>
->> This process is chewing up a lot of CPU:
->>  2858 root      20   0    7936   3692    280 R  91.5  0.0  35:23.72 mdadm
->>  2856 root      20   0       0      0      0 R  24.4  0.0  14:05.14
->> md1_raid6
->>  2857 root      20   0       0      0      0 R  12.2  0.0   4:28.68
->> md1_reshape
->>
->> (that's 91.5% for mdadm, 24.4% for md1_raid6, and 12.2% for md1_reshape)
->>
->> All drives are on-line and functioning normally. I did forget to remove
->> the internal bitmap and I also forgot to use an external backup file.
->
-> You don't need a backup file when increasing the number of data
-drives, and
-> recent kernels don't need you to remove the bitmap (and one those that
-did,
-> it would fail cleanly).
-> So these aren't problems.
->
-> Still, something is clearly wrong.
->
-> It should be completely safe to reboot ... but given that I don't know
-what
-> the reshape is hanging here I cannot promise that the reshape won't hang
-> again after a reboot.
->
-> I'll try to reproduce this and see if I can understand what is happening.
-> Meanwhile ... maybe try killing mdadm.  That certainly won't hurt and may
-> help.
->
-> NeilBrown
->
+> 
+> Well, there's also the issue of selection bias - people come to the list and
 
-Thank you for your reply. I managed to resolve this issue but hadn't
-gotten around to replying with an update.
+"Selection bias" would infer I'm doing some kind of formal analysis,
+which is obviously not the case, though I do understand the point you're
+making.
 
-I noticed, via strace, that mdadm was reading from sysfs as fast as it
-could and was trying to open sync_completed O_RDWR which it was unable
-to do since it was read-only. Just for fun I changed sync_completed to
-0644 and all mdadm did with that file was read from it. This was with
-mdadm v3.2.6. This 'fix' did not change any aspect of the behavior other
-than allowing mdadm to read the file w/o error.
+> complain when their RAID is taking forever to resync. People generally don't 
+> come to the list and complain when their RAID resyncs quickly and without 
+> issues.
 
-I finally decided to 'echo max > /sys/block/md1/md/sync_max'. It had
-been stuck at 1024. That unstuck the reshape and it completed
-successfully. Being paranoid, I did a full compare of the most recent
-backup and no (unexpected) differences were detected.
+When folks report problems on linux-raid it is commonplace for others to
+reply that the same feature works fine for them, that the problem may be
+configuration specific, etc.  When people have reported slow RAID5/6
+rebuilds in the past, and these were not always reported in direct help
+requests but as "me too" posts, I don't recall others saying their
+parity rebuilds are speedy.  I'm not saying nobody ever has, simply that
+I don't recall such.  Which is why I've been under the impression that
+parity rebuilds are generally slow for everyone.
 
-I did a 'echo t > /proc/sysrq-trigger' while things were stuck but it
-overran the buffer rather badly.
+I wish I had hardware available to perform relevant testing.  It would
+be nice to have some real data on this showing apples to apples rebuild
+times for the various RAID levels on the same hardware.
 
---Larkin
-
+-- 
+Stan
