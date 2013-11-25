@@ -1,32 +1,45 @@
-From: Larkin Lowrey <llowrey@nuclearwinter.com>
-Subject: Slow AVX XOR reported
-Date: Mon, 25 Nov 2013 14:29:24 -0600
-Message-ID: <5293B324.2050303@nuclearwinter.com>
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: MDADM 3.3 broken?
+Date: Mon, 25 Nov 2013 22:39:27 +0100
+Message-ID: <5293C38F.9000602@arcor.de>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>	<528A7721.8080604@arcor.de>	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>	<20131119110110.396b2af3@notabene.brown>	<528BBFEB.7050202@arcor.de>	<20131120105115.27494ab6@notabene.brown>	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>	<20131120114833.695fc9d4@notabene.brown>	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>	<20131120133016.7de2d400@notabene.brown>	<CAGRSmLvR0vrddZ=qOQsM0m+3diDNC3uu-TW2OjwF2mS8UsNF7A@mail.gmail.com>	<CAGRSmLsCdXbAUCUMncKv1ER9HBtFnk9BeuF6iaWv=9SSRAiHeA@mail.gmail.com>	<528E7202.902030
+ 1@arcor.de>	<CAGRSmLsDPk0wJ8D_tbttt95OovLLS8xUG-ZpkSfYWQNyq8arjg@mail.gmail.com>	<528E7B92.1050703@arcor.de> <CAGRSmLseaH+fFPA2x8pZ8ur6zXv6VP=CRacEAqh0D7YexzUebA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRSmLseaH+fFPA2x8pZ8ur6zXv6VP=CRacEAqh0D7YexzUebA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: "David F." <df7729@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The AVX XOR performance reported during boot seems wrong.
+On 11/21/2013 11:39 PM, David F. wrote:
+> Are you saying that the old obsolete DMRAID should still be used for
+> DDF RAID?   What about the 2TiB limit?  I'd rather see modern linux
+> RAID support work as good as it does for Windows.
 
-raid6: using algorithm sse2x4 (10035 MB/s)
-xor: automatically using best checksumming function:
-   avx       :  3468.000 MB/sec
+No, I haven't said that. On the contrary, I am actively working on
+getting mdadm support for DDF into the main distributions.
 
-I would expect the value to be well north of 10000MB/s. I do not get a
-generic_sse performance number which I do on other non-AVX hosts.
+I was just wondering about your setup because as far as I know, no
+distribution enables mdadm support for DDF. Doing that requires changes
+in the distribution's udev rules, intrd/initramfs generation code, and
+installer. See my DDF page in the Linux RAID wiki for details.
 
-The system is a dual AMD Opteron 6378 (16 core, 2.4GHz, piledriver). The
-kernel is 3.11.8-200.fc19.x86_64.
+Regards
+Martin
 
-I did read that AMD's AVX-256 implementation performs poorly compared to
-AVX-128. Perhaps there are other AMD specific "optimizations" that need
-to be considered.
 
-Is there any standalone code I ran run to benchmark the various XOR
-implementations?
+> 
+> On Thu, Nov 21, 2013 at 1:30 PM, Martin Wilck <mwilck@arcor.de> wrote:
+>> On 11/21/2013 10:10 PM, David F. wrote:
+>>> On that DMRAID - they are still yet to try it.  But we do know the
+>>> RAID5 works via Int13h interface in real mode and via Windows.  I
+>>> think they thought it was a 4 disk array?  I'll ask if they know the
+>>> actually number of drives in the RAID configuration.
+>>
+>> What distribution are these people using? I am not aware of any distro
+>> that would activate mdadm for DDF RAID by default.
+>>
+>> Martin
 
---Larkin
