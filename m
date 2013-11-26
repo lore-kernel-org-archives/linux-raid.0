@@ -1,58 +1,45 @@
-From: joystick <joystick@shiftmail.org>
-Subject: Re: Triple parity and beyond
-Date: Tue, 26 Nov 2013 19:10:50 +0100
-Message-ID: <5294E42A.4000300@shiftmail.org>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <20131119181237.GA3666@lazy.lzy> <528C9297.9030801@hesbynett.no> <20131120215939.GA2622@lazy.lzy> <528DDCC9.7050701@hesbynett.no> <20131121200545.GB1916@lazy.lzy> <528E6DB2.6050005@hesbynett.no>
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Tue, 26 Nov 2013 13:59:34 -0800
+Message-ID: <CAGRSmLsHSwELK_jd=PEckDpSBVCfrt9cHBvG_cH9esMYtLu5Jg@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<528A7721.8080604@arcor.de>
+	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
+	<20131119110110.396b2af3@notabene.brown>
+	<528BBFEB.7050202@arcor.de>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<5293C789.3020703@arcor.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <528E6DB2.6050005@hesbynett.no>
+In-Reply-To: <5293C789.3020703@arcor.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
+To: Martin Wilck <mwilck@arcor.de>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21/11/2013 21:31, David Brown wrote:
-> On 21/11/13 21:05, Piergiorgio Sartor wrote:
->> Having a multi parity RAID allows to check
->> even which disk.
->> This would provide the user with a more
->> comprehensive (I forgot the spelling)
->> information.
->>
->> Of course, since we are there, we can
->> also give the option to fix it.
->> This would be much likely a "fsck".
-> If this can all be done to give the user an informed choice, then it
-> sounds good.
+does it need to be a tar type file or would virtual hard drive .vmdk
+files be okay?
+
+On Mon, Nov 25, 2013 at 1:56 PM, Martin Wilck <mwilck@arcor.de> wrote:
+> The metadata really looks all ok, but mdadm fails to assemble it
+> correctly. It does look like a bug to me. The problem seems to be
+> related to the global spare somehow. I have no idea why.
 >
-> One issue here is whether the check should be done with the filesystem
-> mounted and in use, or only off-line.  If it is off-line then it will
-> mean a long down-time while the array is checked - but if it is online,
-> then there is the risk of confusing the filesystem and caches by
-> changing the data.
+> The best thing to proceed would be to run mdadm --dump on
+> /dev/sd[bcdef], put the output in a tgz and make it available to us
+> somewhere. So we could actually debut the assembly.
 >
-
-Non-existent issue imho, because if that stripe is changing, any error 
-will be corrected (overwritten), at least on the data disks (parity can 
-still be wrong if a shortcut-rmw method is used).
-So you perform fsck for filesystem and data comes out good because any 
-error has been overwritten already, and fsck also returns noerror. Not 
-useful.
-
-You have to consider only the case where the array check is performed 
-online, and the stripe does not change in the meanwhile, that means it 
-does not change for a long time, enough for you to complete all the checks.
-
-debugfs techniques can tell you what filesystem element corresponds to a 
-certain block number, and this can be done online, with the filesystem 
-mounted.
-
-I don't understand the thing you say about the caches. Caches are not an 
-obstacle for current "check" operation, so they also won't be a problem 
-for the new improved check operation which you are discussing.
-
-
-
-
+> Regards,
+> Martin
+>
+>
+>
