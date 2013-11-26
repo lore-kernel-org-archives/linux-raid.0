@@ -1,121 +1,58 @@
-From: "David F." <df7729@gmail.com>
-Subject: dm-raid45?
-Date: Tue, 26 Nov 2013 10:07:47 -0800
-Message-ID: <CAGRSmLv9vpLRr=WdY+YJFhE9aZfGYtYbegTo=g6MUPz5z+NSww@mail.gmail.com>
+From: joystick <joystick@shiftmail.org>
+Subject: Re: Triple parity and beyond
+Date: Tue, 26 Nov 2013 19:10:50 +0100
+Message-ID: <5294E42A.4000300@shiftmail.org>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com> <20131119181237.GA3666@lazy.lzy> <528C9297.9030801@hesbynett.no> <20131120215939.GA2622@lazy.lzy> <528DDCC9.7050701@hesbynett.no> <20131121200545.GB1916@lazy.lzy> <528E6DB2.6050005@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <528E6DB2.6050005@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, hpa@zytor.com, creamyfish@gmail.com
 List-Id: linux-raid.ids
 
-As a workaround to the mdadm issue with the spare drive we were going
-to have them activate DMRAID but that ends up with the information
-below.  Specifically something about dm-raid45 but we had to drop that
-because it no longer compiles in the latest kernels and we couldn't
-find an update that would.   Any ideas?  (still working on getting the
-dump - the fact that tmpfs doesn't support sparse files makes having
-the customer create the dump via a script we provide a bit more
-involved):
+On 21/11/2013 21:31, David Brown wrote:
+> On 21/11/13 21:05, Piergiorgio Sartor wrote:
+>> Having a multi parity RAID allows to check
+>> even which disk.
+>> This would provide the user with a more
+>> comprehensive (I forgot the spelling)
+>> information.
+>>
+>> Of course, since we are there, we can
+>> also give the option to fix it.
+>> This would be much likely a "fsck".
+> If this can all be done to give the user an informed choice, then it
+> sounds good.
+>
+> One issue here is whether the check should be done with the filesystem
+> mounted and in use, or only off-line.  If it is off-line then it will
+> mean a long down-time while the array is checked - but if it is online,
+> then there is the risk of confusing the filesystem and caches by
+> changing the data.
+>
 
-ERROR: device-mapper target type "raid45" is not in the kernel
-WARN: locking /var/lock/dmraid/.lock
-NOTICE: skipping removable device /dev/sda
-NOTICE: /dev/sdg: asr     discovering
-NOTICE: /dev/sdg: ddf1    discovering
-NOTICE: /dev/sdg: ddf1 metadata discovered
-NOTICE: /dev/sdg: hpt37x  discovering
-NOTICE: /dev/sdg: hpt45x  discovering
-NOTICE: /dev/sdg: isw     discovering
-NOTICE: /dev/sdg: jmicron discovering
-NOTICE: /dev/sdg: lsi     discovering
-NOTICE: /dev/sdg: nvidia  discovering
-NOTICE: /dev/sdg: pdc     discovering
-NOTICE: /dev/sdg: sil     discovering
-NOTICE: /dev/sdg: via     discovering
-NOTICE: /dev/sdf: asr     discovering
-NOTICE: /dev/sdf: ddf1    discovering
-NOTICE: /dev/sdf: ddf1 metadata discovered
-NOTICE: /dev/sdf: hpt37x  discovering
-NOTICE: /dev/sdf: hpt45x  discovering
-NOTICE: /dev/sdf: isw     discovering
-NOTICE: /dev/sdf: jmicron discovering
-NOTICE: /dev/sdf: lsi     discovering
-NOTICE: /dev/sdf: nvidia  discovering
-NOTICE: /dev/sdf: pdc     discovering
-NOTICE: /dev/sdf: sil     discovering
-NOTICE: /dev/sdf: via     discovering
-NOTICE: /dev/sde: asr     discovering
-NOTICE: /dev/sde: ddf1    discovering
-NOTICE: /dev/sde: ddf1 metadata discovered
-NOTICE: /dev/sde: hpt37x  discovering
-NOTICE: /dev/sde: hpt45x  discovering
-NOTICE: /dev/sde: isw     discovering
-NOTICE: /dev/sde: jmicron discovering
-NOTICE: /dev/sde: lsi     discovering
-NOTICE: /dev/sde: nvidia  discovering
-NOTICE: /dev/sde: pdc     discovering
-NOTICE: /dev/sde: sil     discovering
-NOTICE: /dev/sde: via     discovering
-NOTICE: /dev/sdd: asr     discovering
-NOTICE: /dev/sdd: ddf1    discovering
-NOTICE: /dev/sdd: ddf1 metadata discovered
-NOTICE: /dev/sdd: hpt37x  discovering
-NOTICE: /dev/sdd: hpt45x  discovering
-NOTICE: /dev/sdd: isw     discovering
-NOTICE: /dev/sdd: jmicron discovering
-NOTICE: /dev/sdd: lsi     discovering
-NOTICE: /dev/sdd: nvidia  discovering
-NOTICE: /dev/sdd: pdc     discovering
-NOTICE: /dev/sdd: sil     discovering
-NOTICE: /dev/sdd: via     discovering
-NOTICE: /dev/sdc: asr     discovering
-NOTICE: /dev/sdc: ddf1    discovering
-NOTICE: /dev/sdc: ddf1 metadata discovered
-NOTICE: /dev/sdc: hpt37x  discovering
-NOTICE: /dev/sdc: hpt45x  discovering
-NOTICE: /dev/sdc: isw     discovering
-NOTICE: /dev/sdc: jmicron discovering
-NOTICE: /dev/sdc: lsi     discovering
-NOTICE: /dev/sdc: nvidia  discovering
-NOTICE: /dev/sdc: pdc     discovering
-NOTICE: /dev/sdc: sil     discovering
-NOTICE: /dev/sdc: via     discovering
-NOTICE: /dev/sdb: asr     discovering
-NOTICE: /dev/sdb: ddf1    discovering
-NOTICE: /dev/sdb: hpt37x  discovering
-NOTICE: /dev/sdb: hpt45x  discovering
-NOTICE: /dev/sdb: isw     discovering
-NOTICE: /dev/sdb: jmicron discovering
-NOTICE: /dev/sdb: lsi     discovering
-NOTICE: /dev/sdb: nvidia  discovering
-NOTICE: /dev/sdb: pdc     discovering
-NOTICE: /dev/sdb: sil     discovering
-NOTICE: /dev/sdb: via     discovering
-NOTICE: added /dev/sdg to RAID set ".ddf1_disks"
-NOTICE: added /dev/sdf to RAID set ".ddf1_disks"
-NOTICE: added /dev/sde to RAID set ".ddf1_disks"
-NOTICE: added /dev/sdd to RAID set ".ddf1_disks"
-NOTICE: added /dev/sdc to RAID set ".ddf1_disks"
-RAID set "ddf1_MegaSR   R5 #0" was not activated
-INFO: Activating GROUP raid set ".ddf1_disks"
-WARN: unlocking /var/lock/dmraid/.lock
+Non-existent issue imho, because if that stripe is changing, any error 
+will be corrected (overwritten), at least on the data disks (parity can 
+still be wrong if a shortcut-rmw method is used).
+So you perform fsck for filesystem and data comes out good because any 
+error has been overwritten already, and fsck also returns noerror. Not 
+useful.
 
-Output of dmraid --raid_devices command:
-/dev/sdg: ddf1, ".ddf1_disks", GROUP, unknown, 285155328 sectors, data@ 0
-/dev/sdf: ddf1, ".ddf1_disks", GROUP, ok, 285155328 sectors, data@ 0
-/dev/sde: ddf1, ".ddf1_disks", GROUP, ok, 285155328 sectors, data@ 0
-/dev/sdd: ddf1, ".ddf1_disks", GROUP, ok, 285155328 sectors, data@ 0
-/dev/sdc: ddf1, ".ddf1_disks", GROUP, ok, 285155328 sectors, data@ 0
+You have to consider only the case where the array check is performed 
+online, and the stripe does not change in the meanwhile, that means it 
+does not change for a long time, enough for you to complete all the checks.
 
-Output of dmraid -s -s command:
-*** Group superset .ddf1_disks
---> Subset
-name   : ddf1_MegaSR   R5 #0
-size   : 855465984
-stride : 128
-type   : raid5_ls
-status : ok
-subsets: 0
-devs   : 4
-spares : 0
+debugfs techniques can tell you what filesystem element corresponds to a 
+certain block number, and this can be done online, with the filesystem 
+mounted.
+
+I don't understand the thing you say about the caches. Caches are not an 
+obstacle for current "check" operation, so they also won't be a problem 
+for the new improved check operation which you are discussing.
+
+
+
+
