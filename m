@@ -1,61 +1,99 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Raid10 multi core scaling
-Date: Tue, 26 Nov 2013 22:19:34 +1100
-Message-ID: <529483C6.2080503@websitemanagers.com.au>
-References: <20131126105859.Horde.-ppIIPYRo99SlH7zGogGx_A@webmail.aeiou.pt>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH 1/1] MD/DM RAID: Fix hang due to recent RAID5 locking changes
+Date: Tue, 26 Nov 2013 08:32:36 -0600
+Message-ID: <3526D887-4D5D-4B09-9CAE-F771EFE45E6A@redhat.com>
+References: <1385335843-14021-1-git-send-email-jbrassow@redhat.com> <1385335843-14021-2-git-send-email-jbrassow@redhat.com> <20131125110315.262223cf@notabene.brown> <D89A7889-9B7B-40F1-AD7D-08937D168C7E@redhat.com> <30A220BB-6E93-44C9-A487-F23DBF546ED6@redhat.com> <20131126162746.4d42ef1d@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131126105859.Horde.-ppIIPYRo99SlH7zGogGx_A@webmail.aeiou.pt>
+In-Reply-To: <20131126162746.4d42ef1d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pedro Teixeira <finas@aeiou.pt>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Jonathan Brassow <jbrassow@redhat.com>, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
 
+On Nov 25, 2013, at 11:27 PM, NeilBrown wrote:
 
-On 26/11/13 21:58, Pedro Teixeira wrote:
->    I created a Raid10 array with 16 sata 1TB disks and the array
-> performance
-> seems to be limited by the md0_raid10 taking 99% of one core and not
-> scalling to other cores. I tried overclocing the cpu cores and this
-> lead to
-> a small increase in performance ( but md0_raid10 keeps eating 99% of one
-> core ).
->
->    I'm using:
->     - a phenom X6 at 3600mhz
->     - 16 seagate SSHDs ( sata3 7200RPM with 8GB ssd cache )
->     - 4x marvell 9230 sata3 controllers ( 4 ports each ) pcie 2.0 2x
-> lanes.
->     - 8GB ram
->     - custom 3.12 kernel and mdadm compiled from latest source
->
->    what I did to test performance was to force a check on the array, and
-> this
-> leads to mdadm reporting a speed of about 990000K/sec. The hard disks
-> report a 54% utilization. ( Overclocking the cpu by 200mhz increases the
-> resync speed a bit and the hdd's utilizartion to about 58% )
->
->    If I do the same with a raid5 array instead of raid10, them resync
-> speed
-> will be almost double of raid10, the harddisk utilization reported
-> will be
-> 98-100% and I can see at least two cores being used.
+> On Mon, 25 Nov 2013 13:08:56 -0600 Brassow Jonathan <jbrassow@redhat.com>
+> wrote:
+> 
+>> 
+>> On Nov 25, 2013, at 8:20 AM, Brassow Jonathan wrote:
+>> 
+>>> 
+>>> On Nov 24, 2013, at 6:03 PM, NeilBrown wrote:
+>>> 
+>>>> On Sun, 24 Nov 2013 17:30:43 -0600 Jonathan Brassow <jbrassow@redhat.com>
+>>>> wrote:
+>>>> 
+>>>>> When commit 773ca82 was made in v3.12-rc1, it caused RAID4/5/6 devices
+>>>>> that were created via device-mapper (dm-raid.c) to hang on creation.
+>>>>> This is not necessarily the fault of that commit, but perhaps the way
+>>>>> dm-raid.c was setting-up and activating devices.
+>>>>> 
+>>>>> Device-mapper allows I/O and memory allocations in the constructor
+>>>>> (i.e. raid_ctr()), but nominal and recovery I/O should not be allowed
+>>>>> until a 'resume' is issued (i.e. raid_resume()).  It has been problematic
+>>>>> (at least in the past) to call mddev_resume before mddev_suspend was
+>>>>> called, but this is how DM behaves - CTR then resume.  To solve the
+>>>>> problem, raid_ctr() was setting up the structures, calling md_run(), and
+>>>>> then also calling mddev_suspend().  The stage was then set for raid_resume()
+>>>>> to call mddev_resume().
+>>>>> 
+>>>>> Commit 773ca82 caused a change in behavior during raid5.c:run().
+>>>>> 'setup_conf->grow_stripes->grow_one_stripe' is called which creates the
+>>>>> stripe cache and increments 'active_stripes'.
+>>>>> 'grow_one_stripe->release_stripe' doesn't actually decrement 'active_stripes'
+>>>>> anymore.  The side effect of this is that when raid_ctr calls mddev_suspend,
+>>>>> it waits for 'active_stripes' to reduce to 0 - which never happens.
+>>>> 
+>>>> Hi Jon,
+>>>> this sounds like the same bug that is fixed by 
+>>>> 
+>>>> commit ad4068de49862b083ac2a15bc50689bb30ce3e44
+>>>> Author: majianpeng <majianpeng@gmail.com>
+>>>> Date:   Thu Nov 14 15:16:15 2013 +1100
+>>>> 
+>>>>  raid5: Use slow_path to release stripe when mddev->thread is null
+>>>> 
+>>>> which is already en-route to 3.12.x.  Could you check if it fixes the bug for
+>>>> you?
+>>> 
+>>> Sure, I'll check.  Just reading the subject of the patch, I have high hopes.  The slow path decrements 'active_stripes', which was causing the above problem...  I'll make sure though.
+>> 
+>> Yes, this patch fixes the issue in 3.12-rc1+.
+>> 
+>> However, there is still a problem I'm searching for that was introduced in commit 566c09c (at least that's what I get when bisecting).
+>> 
+>> The problem only shows up when I have taken a snapshot of a RAID5 device and only if I have cycled the device before adding the snapshot:
+>> 1> lvcreate --type raid5 -i 3 -L 20M -n lv vg
+>> 2> lvchange -an vg/lv
+>> 3> lvchange -ay vg/lv
+>> 4> lvcreate -s vg/lv -L 50M -n snap
+>> 5> lvchange -an vg/lv
+>> 6> lvchange -ay vg/lv -- BUG: line 292 of raid5.c
+>> 
+>> The current bug triggers on the 'BUG_ON(atomic_read(&conf->active_stripes)==0)' in do_release_stripe().  I'm not sure why yet.
+>> 
+>> brassow
+> 
+> I've had a look and I must say I'm not sure either.
+> I keep wondering if something is wrong with the locking in get_active_stripe.
+> The region covered by device_lock is not much smaller with the whole now
+> covered by hash_locks[hash].  I cannot see a problem with the locking but I
+> might be missing something.  A missing atomic_inc of active_stripes in there
+> could cause your problem.
+> 
+> As you can easily reproduce, could you try expanding the range covered by
+> device_lock to be the whole branch where sh is not NULL.  If that makes a
+> difference it would be quite instructive.  I don't hold high hopes though.
 
-AFAIK, the only way to make RAID10 use multiple cores is to actually
-create 8 RAID1 arrays, and then combine those into a RAID0 linear or
-RAID0 striped array. Each array will then create a new thread (total of
-9 threads) which will then spread across all available cores.
+Sure, I'll try that.
 
-There is ongoing work happening to improve this, but I don't think it is
-available in any released kernel yet.
+I've also found that I hit the BUG() on line 693 of raid5.c:get_active_stripe().
 
-Regards,
-Adam
-
--- 
-Adam Goryachev
-Website Managers
-www.websitemanagers.com.au
+thanks,
+ brassow
 
