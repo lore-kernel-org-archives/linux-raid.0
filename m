@@ -1,17 +1,29 @@
 From: "lilofile" <lilofile@aliyun.com>
-Subject: =?UTF-8?B?bWQgcmFpZDUgcGVyZm9ybWFjZSA2eCBTU0QgUkFJRDU=?=
-Date: Wed, 27 Nov 2013 21:48:22 +0800
-Message-ID: <3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com
+Subject: =?UTF-8?B?562U5aSN77yabWQgcmFpZDUgcGVyZm9ybWFjZSA2eCBTU0QgUkFJRDU=?=
+Date: Wed, 27 Nov 2013 21:51:29 +0800
+Message-ID: <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com
 Reply-To: "lilofile" <lilofile@aliyun.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 529455CB.6050907@hardwarefreak.com
+In-Reply-To: 3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: lilofile <lilofile@aliyun.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+additional: CPU: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
+                memory:32GB
+
+
+------------------------------------------------------------------
+=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>
+=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B411=E6=9C=8827=
+=E6=97=A5(=E6=98=9F=E6=9C=9F=E4=B8=89) 21:48
+=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9ALinux RAID <linux-raid@vger.kernel.=
+org>
+=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9Amd raid5 performace 6x SSD RAID5
 
 hi=EF=BC=9Aall;
 when I create raid5 which use six SSD(sTEC s840),
@@ -52,6 +64,11 @@ root@sc0:/sys/block/md126/md# dd of=3D/dev/zero if=3D/dev/md126 count=3D=
 
 why the performance is so bad?  especially the write performace.
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
