@@ -1,56 +1,67 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: =?UTF-8?B?562U5aSN77yabWQgcmFpZDUgcGVyZm9ybWFjZSA2eCBTU0QgUkE=?=
- =?UTF-8?B?SUQ1?=
-Date: Thu, 28 Nov 2013 00:24:45 -0600
-Message-ID: <5296E1AD.1040005@hardwarefreak.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com>	<20131126061458.GM8803@dastard>	<36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>	<5296C98D.8000302@hardwarefreak.com> <20131128104625.54a5fc94@natsu>
+Subject: Re: Triple parity and beyond
+Date: Thu, 28 Nov 2013 01:16:13 -0600
+Message-ID: <5296EDBD.8030905@hardwarefreak.com>
+References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DCD36.1060808@hesbynett.no> <528F17FB.60909@hardwarefreak.com> <528F5AF4.60803@hesbynett.no>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131128104625.54a5fc94@natsu>
+In-Reply-To: <528F5AF4.60803@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: lilofile <lilofile@aliyun.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>
+Cc: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
 List-Id: linux-raid.ids
 
-On 11/27/2013 10:46 PM, Roman Mamedov wrote:
-> On Wed, 27 Nov 2013 22:41:49 -0600
-> Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> 
->>> when the stripe_cache_size is set 4096. 
-> ...
->> 2.  A 4KB stripe cache is too small for 6 SSDs, try 8KB
-> 
-> The stripe cache size setting is specified not in KB, but in pages per disk,
-> so a value of 4096 on x86 systems means 4096*4096*6 = 96 MB of cache for the
-> whole array.
+Late reply.  This one got lost in the flurry of activity...
 
-Thanks Roman for correcting me on that which I know well.  Typing a
-trailing "KB" so often hard wires the brain and fingers I guess.  My KBs
-were intended to be Ks.
-
-http://www.spinics.net/lists/raid/msg42370.html
-On 04/03/13 23:20, Stan Hoeppner wrote:
+On 11/22/2013 7:24 AM, David Brown wrote:
+> On 22/11/13 09:38, Stan Hoeppner wrote:
+>> On 11/21/2013 3:07 AM, David Brown wrote:
+>>
+>>> For example, with 20 disks at 1 TB each, you can have:
+>>
 ...
-> Formula:  stripe_cache_size * 4096 bytes * drive_count = RAM usage.
+>> Maximum:
+>>
+>> RAID 10 = 10 disk redundancy
+>> RAID 15 = 11 disk redundancy
+> 
+> 12 disks maximum (you have 8 with data, the rest are mirrors, parity, or
+> mirrors of parity).
+> 
+>> RAID 16 = 12 disk redundancy
+> 
+> 14 disks maximum (you have 6 with data, the rest are mirrors, parity, or
+> mirrors of parity).
 
-To expound on the importance of this, with a handful of SSDs and a value
-of 8K, throughput tends to plateau, and then slowly decreases as
-stripe_cache_size is increased.  The upper bound of stripe_cache_size
-gains has not yet been established because the write thread peaks a core
-with only a few SSDs.  Multiple write threads and a larger quantity of
-SSDs, or much faster SSDs, are needed to explore whether values of
-16K-32K provide a meaningful increase in throughput, and whether this is
-worth the RAM consumed.  For instance, with 12 SSDs and
-stripe_cache_size of 32768:
+We must follow different definitions of "redundancy".  I view redundancy
+as the number of drives that can fail without taking down the array.  In
+the case of the above 20 drive RAID15 that maximum is clearly 11
+drives-- one of every mirror and both of one mirror can fail.  The 12th
+drive failure kills the array.
 
-(((32768*4096)*12)/1048576)/1000 = 1.5 GB of RAM is consumed
+>> Range:
+>>
+>> RAID 10 = 1-10 disk redundancy
+>> RAID 15 = 3-11 disk redundancy
+>> RAID 16 = 5-12 disk redundancy
+>
+> Yes, I know these are the minimum redundancies.  But that's a vital
+> figure for reliability (even if the range is important for statistical
+> averages).  When one disk in a raid10 array fails, your main concern is
+> about failures or URE's in the other half of the pair - it doesn't help
+> to know that another nine disks can "safely" fail too.
 
-When Shaohua Li completes his threading patch series it may be possible
-to explore this more thoroughly.
+Knowing this is often critical from an architectural standpoint David.
+It is quite common to create the mirrors of a RAID10 across two HBAs and
+two JBOD chassis.  Some call this "duplexing".  With RAID10 you know you
+can lose one HBA, one cable, one JBOD (PSU, expander, etc) and not skip
+a beat.  "RAID15" would work the same in this scenario.
+
+This architecture is impossible with RAID5/6.  Any of the mentioned
+failures will kill the array.
 
 -- 
 Stan
-
