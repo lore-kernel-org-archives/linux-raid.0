@@ -1,117 +1,181 @@
-From: Jack Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [BUG]NULL Pointer dereference in rdev_set_badblocks
-Date: Thu, 28 Nov 2013 17:16:21 +0100
-Message-ID: <52976C55.3070109@profitbricks.com>
-References: <523FF75B.4000208@profitbricks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com>
+Subject: Re: /proc/mdstat status documentation and md: export_rdev
+Date: Thu, 28 Nov 2013 19:11:25 +0200
+Message-ID: <CB92E3E9-672C-456F-9767-719159BC0CE5@gmail.com>
+References: <E90CEDA2-1AF7-4FCF-91F6-346D644CF674@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <523FF75B.4000208@profitbricks.com>
+In-Reply-To: <E90CEDA2-1AF7-4FCF-91F6-346D644CF674@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
-Cc: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09/23/2013 10:10 AM, Jack Wang wrote:
-> Hi Neil and all,
-> 
-> I saw below NULL Pointer dereference in rdev_set_badblocks once:
-> 
-> when this happened, both devices in raid1 almost failed at same time, a
-> lot of io errors, after several minutes, super_written error and disable
-> on device and then run into NULL pointer dereference.
-> 
-> Could you comment on this?
-> 
->  cat badblock_null.log
-> Sep  3 14:31:19 pserver102 kernel: [534312.102156] Modules linked in:
-> bridge stp llc nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_t
-> ables raid1 md_mod dm_round_robin sd_mod crc_t10dif ib_srp
-> scsi_transport_srp scsi_tgt xt_ETHOIP6(O) x_tables vhost_net(O) macvtap
-> macvlan
-> tun(O) nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 rdma_ucm rdma_cm
-> iw_cm ib_addr ib_ipoib ib_cm ib_sa ib_uverbs ib_umad ib_qib mlx4_ib i
-> b_mthca ib_mad ib_core dm_multipath scsi_dh kvm_amd kvm sg powernow_k8
-> mperf crc32c_intel microcode tpm_tis tpm tpm_bios psmouse serio_raw
-> evdev usb_storage scsi_mod amd64_edac_mod edac_core edac_mce_amd
-> i2c_piix4 button processor thermal_sys mlx4_core
-> Sep  3 14:31:19 pserver102 kernel: [534312.103339]
-> Sep  3 14:31:19 pserver102 kernel: [534312.103432] Pid: 46599, comm:
-> md2_raid1 Tainted: G           O 3.4.51-4-pserver #1 Supermicro H8QG6/
-> H8QG6
-> Sep  3 14:31:19 pserver102 kernel: [534312.103658] RIP:
-> 0010:[<ffffffffa02b3978>]  [<ffffffffa02b3978>]
-> rdev_set_badblocks+0x8/0x70 [md_mod
-> ]
-> Sep  3 14:31:19 pserver102 kernel: [534312.103870] RSP:
-> 0018:ffff881fbc197c10  EFLAGS: 00010282
-> Sep  3 14:31:19 pserver102 kernel: [534312.103976] RAX: 0000000000000000
-> RBX: 0000000000000000 RCX: 0000000000000000
-> Sep  3 14:31:19 pserver102 kernel: [534312.104171] RDX: 0000000000000008
-> RSI: 00000000001ad300 RDI: 0000000000000000
-> Sep  3 14:31:19 pserver102 kernel: [534312.104358] RBP: ffff881803fa55c0
-> R08: ffffea0100092418 R09: 0000000000000001
-> Sep  3 14:31:19 pserver102 kernel: [534312.104550] R10: 0000000000000000
-> R11: dead000000100100 R12: 0000000000000000
-> Sep  3 14:31:19 pserver102 kernel: [534312.104762] R13: 00000000001ad300
-> R14: 0000000000000010 R15: 0000000000000008
-> Sep  3 14:31:19 pserver102 kernel: [534312.104960] FS:
-> 00007f3722277700(0000) GS:ffff880807d00000(0000) knlGS:0000000000000000
-> Sep  3 14:31:19 pserver102 kernel: [534312.105158] CS:  0010 DS: 0000
-> ES: 0000 CR0: 000000008005003b
-> Sep  3 14:31:19 pserver102 kernel: [534312.105263] CR2: 0000000000000058
-> CR3: 0000002003c15000 CR4: 00000000000407e0
-> Sep  3 14:31:19 pserver102 kernel: [534312.105456] DR0: 0000000000000000
-> DR1: 0000000000000000 DR2: 0000000000000000
-> Sep  3 14:31:19 pserver102 kernel: [534312.105654] DR3: 0000000000000000
-> DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Sep  3 14:31:19 pserver102 kernel: [534312.105854] Process md2_raid1
-> (pid: 46599, threadinfo ffff881fbc196000, task ffff881fc44ccaf0)
-> Sep  3 14:31:19 pserver102 kernel: [534312.106050] Stack:
-> Sep  3 14:31:19 pserver102 kernel: [534312.106148]  00000000001ad300
-> 0000000000000001 ffff880800f11800 ffffffffa02c8df3
-> Sep  3 14:31:19 pserver102 kernel: [534312.106351]  ffff881fe461ef90
-> ffff881f00000020 0000100000000009 ffff880800f11800
-> Sep  3 14:31:19 pserver102 kernel: [534312.106558]  ffff88180324e000
-> ffff88180324e000 ffff8818ffffffff ffff883ffa7c5b50
-> Sep  3 14:31:19 pserver102 kernel: [534312.106774] Call Trace:
-> Sep  3 14:31:19 pserver102 kernel: [534312.106876]  [<ffffffffa02c8df3>]
-> ? md_raid1_congested+0x1ab3/0x5560 [raid1]
-> Sep  3 14:31:19 pserver102 kernel: [534312.106989]  [<ffffffff813814af>]
-> ? generic_make_request+0xaf/0xe0
-> Sep  3 14:31:19 pserver102 kernel: [534312.107101]  [<ffffffffa02c943c>]
-> ? md_raid1_congested+0x20fc/0x5560 [raid1]
-> Sep  3 14:31:19 pserver102 kernel: [534312.107213]  [<ffffffff8167686b>]
-> ? __schedule+0x2eb/0x750
-> Sep  3 14:31:19 pserver102 kernel: [534312.107320]  [<ffffffff81046e23>]
-> ? lock_timer_base+0x33/0x70
-> Sep  3 14:31:19 pserver102 kernel: [534312.107429]  [<ffffffff810478bc>]
-> ? try_to_del_timer_sync+0x7c/0xd0
-> Sep  3 14:31:19 pserver102 kernel: [534312.107538]  [<ffffffff81046e60>]
-> ? lock_timer_base+0x70/0x70
-> Sep  3 14:31:19 pserver102 kernel: [534312.107652]  [<ffffffffa02b17ff>]
-> ? md_rdev_init+0x23f/0x290 [md_mod]
-> Sep  3 14:31:19 pserver102 kernel: [534312.107765]  [<ffffffff81059db0>]
-> ? wake_up_bit+0x40/0x40
-> Sep  3 14:31:19 pserver102 kernel: [534312.107876]  [<ffffffffa02b16e0>]
-> ? md_rdev_init+0x120/0x290 [md_mod]
-> Sep  3 14:31:19 pserver102 kernel: [534312.107986]  [<ffffffffa02b16e0>]
-> ? md_rdev_init+0x120/0x290 [md_mod]
-> Sep  3 14:31:19 pserver102 kernel: [534312.108096]  [<ffffffff8105988e>]
-> ? kthread+0x9e/0xb0
-> Sep  3 14:31:19 pserver102 kernel: [534312.108203]  [<ffffffff816804a4>]
-> ? kernel_thread_helper+0x4/0x10
-> Sep  3 14:31:19 pserver102 kernel: [534312.108310]  [<ffffffff810597f0>]
-> ? kthread_freezable_should_stop+0x60/0x60
-> Sep  3 14:31:19 pserver102 kernel: [534312.108424]  [<ffffffff816804a0>]
-> ? gs_change+0x13/0x13
-> Sep  3 14:31:19 pserver102 kernel: [534312.108530] Code: 01 00 00 e8 5b
-> 95 ff ff 48 8b 7b 18 48 89 de e8 bf 97 ff ff e9 88 fe ff ff 66 2e 0
-> f 1f 84 00 00 00 00 00 53 48 89 fb 48 83 ec 10 <48> 03 77 58 48 8d bf 30
-> 01 00 00 e8 28 9d ff ff 85 c0 75 0c 48
-> 
+Hey guys,
 
-Ping, Neil, could you share your thought, we hit this bug once more:(.
+bumping my question in an attempt to get some attention and love :D
 
+I would appreciate it if someone pointed out if there is a documentation that can be used to interpret all the codes that appear in /proc/mdstat output. For example, I know that (F) means that an array member's status is Failed, but what about (S)? Are there any other status codes like that? What are their meanings?
+
+Also, what about the kernel messages like export_rdev? What do they mean? What is export of rdev? What kind of device is considered to be an rdev? etc. Please, see my first message in this thread for more details to understand what I'm referring to.
+
+Ivan
+
+
+
+On Nov 15, 2013, at 11:28 AM, Ivan Lezhnjov IV <ivan.lezhnjov.iv@gmail.com> wrote:
+
+> Hi everyone,
+> 
+> as some of you already know I run a non-typical configuration that involves external USB drives assembled as raid1 array. I'm still smoothing out the edges of my setup because of all the challenges associated with not so perfect pm-utils/combination of software and hardware I have.
+> 
+> Anyway, I've been successfully resuming from sleep for a while now but this morning something new happened, namely this:
+> 
+> % cat /proc/mdstat 
+> Personalities : [raid1] 
+> md0 : inactive sdc1[1](S)
+>      1953276928 blocks super 1.2
+> 
+> unused devices: <none>
+> 
+> which made me realize I have no clue what this message mean and what inactive, [1] and (S) mean in "md0 : inactive sdc1[1](S)".
+> 
+> So, I was wondering if somebody could possibly explain how to read this particular instance of mdstat output, and if there is chance there is a documentation somewhere out there that will let me do this myself?
+> 
+> If you're curious (like myself lol) this is what I observed had happened in dmesg/kernel log prior to cat /proc/mdstat
+> 
+> Nov 15 08:25:52 localhost kernel: [29863.901108] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.901115] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.901328] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.901335] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.904392] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.904400] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.905078] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.905086] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.905690] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.905697] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:52 localhost kernel: [29863.918128] md: bind<sdc1>
+> Nov 15 08:25:58 localhost kernel: [29869.976304] scsi_verify_blk_ioctl: 30 callbacks suppressed
+> Nov 15 08:25:58 localhost kernel: [29869.976309] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:58 localhost kernel: [29869.976314] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:58 localhost kernel: [29869.976323] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:58 localhost kernel: [29869.976325] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:59 localhost kernel: [29870.115516] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:59 localhost kernel: [29870.115528] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:25:59 localhost kernel: [29870.115543] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:25:59 localhost kernel: [29870.115549] mdadm: sending ioctl 1261 to a partition!
+> 
+> So at this point the system resumed from sleep, and I ran cat /proc/mdstat. Realized that something went wrong and I did not know what to do, so I disconnected the drives, plugged them back in:
+> 
+> Nov 15 08:28:34 localhost kernel: [30025.749558] usb 1-1: USB disconnect, device number 7
+> Nov 15 08:28:37 localhost kernel: [30028.112008] usb 1-2: USB disconnect, device number 5
+> Nov 15 08:28:57 localhost kernel: [30048.990409] usb 1-2: new high-speed USB device number 8 using ehci_hcd
+> Nov 15 08:28:58 localhost kernel: [30049.117229] scsi11 : usb-storage 1-2:1.0
+> Nov 15 08:28:59 localhost kernel: [30050.121248] scsi 11:0:0:0: Direct-Access     WD       Elements 1048    1022 PQ: 0 ANSI: 6
+> Nov 15 08:29:00 localhost kernel: [30050.126571] sd 11:0:0:0: [sdb] Spinning up disk....
+> Nov 15 08:29:00 localhost kernel: [30051.187081] usb 1-1: new high-speed USB device number 9 using ehci_hcd
+> Nov 15 08:29:00 localhost kernel: [30051.312832] scsi12 : usb-storage 1-1:1.0
+> Nov 15 08:29:01 localhost kernel: [30052.133739] .
+> Nov 15 08:29:01 localhost kernel: [30052.314419] scsi 12:0:0:0: Direct-Access     WD       Elements 1048    1022 PQ: 0 ANSI: 6
+> Nov 15 08:29:04 localhost kernel: [30052.320765] sd 12:0:0:0: [sde] Spinning up disk........ready
+> Nov 15 08:29:04 localhost kernel: [30055.144571] sd 11:0:0:0: [sdb] 3907024896 512-byte logical blocks: (2.00 TB/1.81 TiB)
+> Nov 15 08:29:04 localhost kernel: [30055.144581] sd 11:0:0:0: [sdb] 4096-byte physical blocks
+> Nov 15 08:29:04 localhost kernel: [30055.145433] sd 11:0:0:0: [sdb] Write Protect is off
+> Nov 15 08:29:04 localhost kernel: [30055.145442] sd 11:0:0:0: [sdb] Mode Sense: 47 00 10 08
+> Nov 15 08:29:04 localhost kernel: [30055.146305] sd 11:0:0:0: [sdb] No Caching mode page present
+> Nov 15 08:29:04 localhost kernel: [30055.146314] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+> Nov 15 08:29:04 localhost kernel: [30055.149807] sd 11:0:0:0: [sdb] No Caching mode page present
+> Nov 15 08:29:04 localhost kernel: [30055.149816] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+> Nov 15 08:29:04 localhost kernel: [30055.163711]  sdb: sdb1
+> Nov 15 08:29:04 localhost kernel: [30055.169937] sd 11:0:0:0: [sdb] No Caching mode page present
+> Nov 15 08:29:04 localhost kernel: [30055.169948] sd 11:0:0:0: [sdb] Assuming drive cache: write through
+> Nov 15 08:29:04 localhost kernel: [30055.169957] sd 11:0:0:0: [sdb] Attached SCSI disk
+> Nov 15 08:29:04 localhost kernel: [30055.330370] .
+> Nov 15 08:29:04 localhost kernel: [30055.345968] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.345978] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.346186] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.347627] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.348234] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.348242] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.348838] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.348845] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:29:04 localhost kernel: [30055.360590] md: bind<sdb1>
+> Nov 15 08:29:06 localhost kernel: [30056.333730] ..ready
+> Nov 15 08:29:06 localhost kernel: [30057.337894] sd 12:0:0:0: [sde] 3907024896 512-byte logical blocks: (2.00 TB/1.81 TiB)
+> Nov 15 08:29:06 localhost kernel: [30057.337904] sd 12:0:0:0: [sde] 4096-byte physical blocks
+> Nov 15 08:29:06 localhost kernel: [30057.338753] sd 12:0:0:0: [sde] Write Protect is off
+> Nov 15 08:29:06 localhost kernel: [30057.338762] sd 12:0:0:0: [sde] Mode Sense: 47 00 10 08
+> Nov 15 08:29:06 localhost kernel: [30057.339502] sd 12:0:0:0: [sde] No Caching mode page present
+> Nov 15 08:29:06 localhost kernel: [30057.339511] sd 12:0:0:0: [sde] Assuming drive cache: write through
+> Nov 15 08:29:06 localhost kernel: [30057.342516] sd 12:0:0:0: [sde] No Caching mode page present
+> Nov 15 08:29:06 localhost kernel: [30057.342525] sd 12:0:0:0: [sde] Assuming drive cache: write through
+> Nov 15 08:29:06 localhost kernel: [30057.354130]  sde: sde1
+> Nov 15 08:29:06 localhost kernel: [30057.359369] sd 12:0:0:0: [sde] No Caching mode page present
+> Nov 15 08:29:06 localhost kernel: [30057.359381] sd 12:0:0:0: [sde] Assuming drive cache: write through
+> Nov 15 08:29:06 localhost kernel: [30057.359369] sd 12:0:0:0: [sde] No Caching mode page present
+> Nov 15 08:29:06 localhost kernel: [30057.359381] sd 12:0:0:0: [sde] Assuming drive cache: write through
+> Nov 15 08:29:06 localhost kernel: [30057.359390] sd 12:0:0:0: [sde] Attached SCSI disk
+> Nov 15 08:29:06 localhost kernel: [30057.565248] md: export_rdev(sde1)
+> Nov 15 08:29:06 localhost kernel: [30057.566615] md: export_rdev(sde1)
+> Nov 15 08:30:57 localhost kernel: [30168.336551] md: md0 stopped.
+> Nov 15 08:30:57 localhost kernel: [30168.336562] md: unbind<sdb1>
+> Nov 15 08:30:57 localhost kernel: [30168.336669] md: export_rdev(sdb1)
+> Nov 15 08:30:57 localhost kernel: [30168.336689] md: unbind<sdc1>
+> Nov 15 08:30:57 localhost kernel: [30168.340361] md: export_rdev(sdc1)
+> 
+> The array did not assemble automatically this time either, and mdstat showed the same state. So, this time I decided to run
+> 
+> % mdadm --stop --scan
+> mdadm: stopped /dev/md0
+> % mdadm --assemble --scan
+> mdadm: /dev/md0 has been started with 2 drives.
+> 
+> and it assembled just fine
+> 
+> % cat /proc/mdstat 
+> Personalities : [raid1] 
+> md0 : active raid1 sdb1[2] sde1[1]
+>      1953276736 blocks super 1.2 [2/2] [UU]
+>      bitmap: 0/15 pages [0KB], 65536KB chunk
+> 
+> unused devices: <none>
+> 
+> Here's the corresponding kernel log
+> 
+> Nov 15 08:31:06 localhost kernel: [30177.083700] scsi_verify_blk_ioctl: 48 callbacks suppressed
+> Nov 15 08:31:06 localhost kernel: [30177.083709] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.083717] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.083737] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.083743] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.086150] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.086158] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.086168] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.086174] mdadm: sending ioctl 1261 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.087982] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.087992] mdadm: sending ioctl 800c0910 to a partition!
+> Nov 15 08:31:06 localhost kernel: [30177.923752] md: md0 stopped.
+> Nov 15 08:31:07 localhost kernel: [30177.936426] md: bind<sde1>
+> Nov 15 08:31:07 localhost kernel: [30177.937166] md: bind<sdb1>
+> Nov 15 08:31:07 localhost kernel: [30178.382401] md/raid1:md0: active with 2 out of 2 mirrors
+> Nov 15 08:31:07 localhost kernel: [30178.463060] created bitmap (15 pages) for device md0
+> Nov 15 08:31:07 localhost kernel: [30178.470165] md0: bitmap initialized from disk: read 1/1 pages, set 0 of 29805 bits
+> Nov 15 08:31:07 localhost kernel: [30178.959261] md0: detected capacity change from 0 to 2000155377664
+> Nov 15 08:31:08 localhost kernel: [30179.019629]  md0: unknown partition table
+> 
+> So, I think these messages are the gist of it all:
+> 
+> Nov 15 08:29:06 localhost kernel: [30057.565248] md: export_rdev(sde1)
+> Nov 15 08:29:06 localhost kernel: [30057.566615] md: export_rdev(sde1)
+> Nov 15 08:30:57 localhost kernel: [30168.336551] md: md0 stopped.
+> Nov 15 08:30:57 localhost kernel: [30168.336562] md: unbind<sdb1>
+> Nov 15 08:30:57 localhost kernel: [30168.336669] md: export_rdev(sdb1)
+> Nov 15 08:30:57 localhost kernel: [30168.336689] md: unbind<sdc1>
+> Nov 15 08:30:57 localhost kernel: [30168.340361] md: export_rdev(sdc1)
+> 
+> What do they mean? What is export of rdev? What kind of device is considered to be an rdev? What does this sequence of message tell me in human language? :)
+> 
+> I know, some of you feel very strongly about using USB for this sort of thing, but so far I've been enjoying my ride. Both in terms of stability and how it is pushing me to learn more about mdadm and RAID technology in general. Yes, the stability is far from enterprise grade systems, but I'm an enthusiast like perhaps many of you here and this has proven to be a very good training wheels. Besides, even though it is a bumpy ride, it is kinda fun, you know? ;D
+> 
+> Ivan
 
