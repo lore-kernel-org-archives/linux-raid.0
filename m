@@ -1,93 +1,86 @@
-From: "lilofile" <lilofile@aliyun.com>
-Subject: =?UTF-8?B?562U5aSN77ya562U5aSN77yabWQgcmFpZDUgcGVyZm9ybWFjZSA2eCBTU0QgUkFJRDU=?=
-Date: Thu, 28 Nov 2013 19:54:49 +0800
-Message-ID: <e93182b7-34a4-4a7c-8f78-e5dae83a3cae@aliyun.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>,5296C98D.8000302@hardwarefreak.com
-Reply-To: "lilofile" <lilofile@aliyun.com>
+From: Jimmy Thrasibule <thrasibule.jimmy@gmail.com>
+Subject: Re: ARC-1120 and MD very sloooow
+Date: Thu, 28 Nov 2013 16:59:43 +0100
+Message-ID: <CAMqSRmCJEp1i9QXGRBZ+2Ohv95=JfTkwO9oTnE3fkX0K1f6hug@mail.gmail.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>
+	<528FBBE5.80404@hardwarefreak.com>
+	<1385369796.2076.16.camel@bews002.euractiv.com>
+	<5293EF32.9090301@hardwarefreak.com>
+	<20131126025210.GL8803@dastard>
+	<52941C5D.1000305@hardwarefreak.com>
+	<20131126061458.GM8803@dastard>
+	<529455CB.6050907@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 5296C98D.8000302@hardwarefreak.com
+In-Reply-To: <529455CB.6050907@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan <stan@hardwarefreak.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com
+Cc: Dave Chinner <david@fromorbit.com>, Linux RAID <linux-raid@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-I have change stripe cache size from   4096 stripe cache to  8192, the =
-test result show the performance improve <5%, maybe The effect is not v=
-ery obvious=E3=80=82
+> Right.  It's unusual to see this many mount options.  FYI, the XFS
+> default is relatime, which is nearly identical to noatime.  Specifying
+> noatime won't gain you anything.  Do you really need nosuid, nodev, noexec?
+
+Well better say what I don't want on the filesystem no?
+
+ >Do you also see the low write speed and slow ls on md0, any/all of your
+> md/RAID10 arrays?
+
+Yes, all drive operations are slow, unfortunately, I have no drives in
+the machine
+that are not managed by the controller to push tests further.
+
+> The usual: "iostat -x -d -m 5" output while the test is running.
+> Also, you are using buffered IO, so changing it to use direct IO
+> will tell us exactly what the disks are doing when Io is issued.
+> blktrace is your friend here....
+
+I've ran the following:
 
 
-------------------------------------------------------------------
-=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9AStan Hoeppner <stan@hardwarefreak.c=
-om>
-=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B411=E6=9C=8828=
-=E6=97=A5(=E6=98=9F=E6=9C=9F=E5=9B=9B) 12:41
-=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>; Lin=
-ux RAID <linux-raid@vger.kernel.org>
-=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9Amd r=
-aid5 performace 6x SSD RAID5
+    # dd if=/dev/zero of=/srv/store/video/test.zero bs=512K count=6000
+oflag=direct
+    6000+0 records in
+    6000+0 records out
+    3145728000 bytes (3.1 GB) copied, 179.945 s, 17.5 MB/s
 
-On 11/27/2013 7:51 AM, lilofile wrote:
-> additional: CPU: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
->                 memory:32GB
-=2E..
-> when I create raid5 which use six SSD(sTEC s840),
-> when the stripe_cache_size is set 4096.=20
-> root@host1:/sys/block/md126/md# cat /proc/mdstat=20
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] =
-[raid4] [raid10]=20
-> md126 : active raid5 sdg[6] sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
->       3906404480 blocks super 1.2 level 5, 128k chunk, algorithm 2 [6=
-/6] [UUUUUU]
->=20
-> the single ssd read/write performance :
->=20
-> root@host1:~# dd if=3D/dev/sdb of=3D/dev/zero count=3D100000 bs=3D1M
-> ^C76120+0 records in
-> 76119+0 records out
-> 79816556544 bytes (80 GB) copied, 208.278 s, 383 MB/s
->=20
-> root@host1:~# dd of=3D/dev/sdb if=3D/dev/zero count=3D100000 bs=3D1M
-> 100000+0 records in
-> 100000+0 records out
-> 104857600000 bytes (105 GB) copied, 232.943 s, 450 MB/s
->=20
-> the raid read and write performance is  approx 1.8GB/s read and 1.1GB=
-/s write performance
-> root@sc0:/sys/block/md126/md# dd if=3D/dev/zero of=3D/dev/md126 count=
-=3D100000 bs=3D1M
-> 100000+0 records in
-> 100000+0 records out
-> 104857600000 bytes (105 GB) copied, 94.2039 s, 1.1 GB/s
->=20
->=20
-> root@sc0:/sys/block/md126/md# dd of=3D/dev/zero if=3D/dev/md126 count=
-=3D100000 bs=3D1M
-> 100000+0 records in
-> 100000+0 records out
-> 104857600000 bytes (105 GB) copied, 59.5551 s, 1.8 GB/s
->=20
-> why the performance is so bad?  especially the write performace.
+    # dd if=/srv/store/video/test.zero of=/dev/null iflag=direct
+    6144000+0 records in
+    6144000+0 records out
+    3145728000 bytes (3.1 GB) copied, 984.317 s, 3.2 MB/s
 
-There are 3 things that could be, or are, limiting performance here.
 
-1.  The RAID5 write thread peaks one CPU core as it is single threaded
-2.  A 4KB stripe cache is too small for 6 SSDs, try 8KB
-3.  dd issues IOs serially and will thus never saturate the hardware
+Traces are huge for the read test so I put them on Google Drive + SHA1 sums:
+https://drive.google.com/folderview?id=0BxJZG8aWsaMaVWkyQk1ELU5yX2c
 
-#1 will eventually be addressed with a multi-thread patch to the variou=
-s
-RAID drivers including RAID5.  There is no workaround at this time.
+Drives `sdc` to `sdf` are part of the RAID10 array. Only drives `sdc` and `sde`
+are used when reading.
 
-To address #3 use FIO or a similar testing tool that can issue IOs in
-parallel.  With SSD based storage you will never reach maximum
-throughput with a serial data stream.
+> That makes me wonder if the controller and drive write caches have been disabled.
+> That could explain this.
 
---=20
-Stan
+Caching is enabled for the controller but not much information.
+
+
+    > sys info
+    The System Information
+    ===========================================
+    Main Processor     : 500MHz
+    CPU ICache Size    : 32KB
+    CPU DCache Size    : 32KB
+    CPU SCache Size    : 0KB
+    System Memory      : 128MB/333MHz/ECC
+    Firmware Version   : V1.49 2010-12-02
+    BOOT ROM Version   : V1.49 2010-12-02
+    Serial Number      : Y611CAABAR200126
+    Controller Name    : ARC-1120
+    ===========================================
+
+
+By the way is enabling the controller cache a good idea? I would disable
+it and let the kernel manage.
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jimmy
