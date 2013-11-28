@@ -1,119 +1,119 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Triple parity and beyond
-Date: Thu, 28 Nov 2013 10:56:44 +0100
-Message-ID: <5297135C.50600@hesbynett.no>
-References: <CAGKKSfWO4qTZsbd-=10cKc7=O7hTCVceMVQvCTJcUh1Z_gW04Q@mail.gmail.com>	<528A90B7.5010905@zytor.com>	<CAGKKSfWXv4vzVDz-wOm=wC=oU3uM3t7hnp39CoXFkOjyjN_knA@mail.gmail.com>	<528AA1EB.3010909@zytor.com> <CAGKKSfVEMuRYf-L5Nfy0Q4SHKcks0VhPJkj73vy+krsNhSkruA@mail.gmail.com> <528BCA2D.5010500@redhat.com> <73BEB41F-0FAC-4108-BEA9-DB6D921F6F55@cs.utk.edu> <528D61C5.70902@hardwarefreak.com> <528DCD36.1060808@hesbynett.no> <528F17FB.60909@hardwarefreak.com> <528F5AF4.60803@hesbynett.no> <5296EDBD.8030905@hardwarefreak.com>
+From: "lilofile" <lilofile@aliyun.com>
+Subject: =?UTF-8?B?562U5aSN77ya562U5aSN77yabWQgcmFpZDUgcGVyZm9ybWFjZSA2eCBTU0QgUkFJRDU=?=
+Date: Thu, 28 Nov 2013 18:02:48 +0800
+Message-ID: <fa7f0ec0-e7ba-46ca-a129-24bb45b52460@aliyun.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>,5296C98D.8000302@hardwarefreak.com
+Reply-To: "lilofile" <lilofile@aliyun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <5296EDBD.8030905@hardwarefreak.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: stan@hardwarefreak.com, James Plank <plank@cs.utk.edu>, Ric Wheeler <rwheeler@redhat.com>
-Cc: Andrea Mazzoleni <amadvance@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, David Smith <creamyfish@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: 5296C98D.8000302@hardwarefreak.com
+Sender: linux-raid-owner@vger.kernel.org
+To: stan <stan@hardwarefreak.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 28/11/13 08:16, Stan Hoeppner wrote:
-> Late reply.  This one got lost in the flurry of activity...
-> 
-> On 11/22/2013 7:24 AM, David Brown wrote:
->> On 22/11/13 09:38, Stan Hoeppner wrote:
->>> On 11/21/2013 3:07 AM, David Brown wrote:
->>>
->>>> For example, with 20 disks at 1 TB each, you can have:
->>>
-> ...
->>> Maximum:
->>>
->>> RAID 10 = 10 disk redundancy
->>> RAID 15 = 11 disk redundancy
->>
->> 12 disks maximum (you have 8 with data, the rest are mirrors, parity, or
->> mirrors of parity).
->>
->>> RAID 16 = 12 disk redundancy
->>
->> 14 disks maximum (you have 6 with data, the rest are mirrors, parity, or
->> mirrors of parity).
-> 
-> We must follow different definitions of "redundancy".  I view redundancy
-> as the number of drives that can fail without taking down the array.  In
-> the case of the above 20 drive RAID15 that maximum is clearly 11
-> drives-- one of every mirror and both of one mirror can fail.  The 12th
-> drive failure kills the array.
-> 
+thank you  for your advise. now I have test multi-thread patch, the sin=
+gle raid5 performance improve 30%.
 
-No, we have the same definitions of redundancy - just different
-definitions of basic arithmetic.  Your definition is a bit more common!
+but I have another problem,when write on single raid,write performance =
+is  approx 1.1GB/s=20
 
-My error was actually in an earlier email, when I listed the usable
-capacities of different layouts for 20 x 1TB drive.  I wrote:
+root@host0:/sys/block/md126/md# dd if=3D/dev/zero of=3D/dev/md126 count=
+=3D100000 bs=3D1M
+100000+0 records in
+100000+0 records out
+104857600000 bytes (105 GB) copied, 94.2039 s, 1.1 GB/s
 
-> raid10 = 10TB, 1 disk redundancy
-> raid15 = 8TB, 3 disk redundancy
-> raid16 = 6TB, 5 disk redundancy
+when write on two raid,write write performance is  approx 0.96+0.84=3D1=
+=2E8GB/s, theory is 2.2GB/s,why have 400M/s  performance loss?
 
-Of course, it should be:
+root@host0:/sys/block/md126/md# 100000+0 records in
+100000+0 records out
+104857600000 bytes (105 GB) copied, 108.56 s, 966 MB/s
+100000+0 records in
+100000+0 records out
+104857600000 bytes (105 GB) copied, 123.511 s, 849 MB/s
 
-raid10 = 10TB, 1 disk redundancy
-raid15 = 9TB, 3 disk redundancy
-raid16 = 8TB, 5 disk redundancy
-
-
-So it is your fault for not spotting my earlier mistake :-)
+[1]-  Done                    dd if=3D/dev/zero of=3D/dev/md126 count=3D=
+100000 bs=3D1M
+[2]+  Done                    dd if=3D/dev/zero of=3D/dev/md127 count=3D=
+100000 bs=3D1M
+root@host0:/sys/block/md126/md#=20
 
 
 
->>> Range:
->>>
->>> RAID 10 = 1-10 disk redundancy
->>> RAID 15 = 3-11 disk redundancy
->>> RAID 16 = 5-12 disk redundancy
->>
->> Yes, I know these are the minimum redundancies.  But that's a vital
->> figure for reliability (even if the range is important for statistical
->> averages).  When one disk in a raid10 array fails, your main concern is
->> about failures or URE's in the other half of the pair - it doesn't help
->> to know that another nine disks can "safely" fail too.
-> 
-> Knowing this is often critical from an architectural standpoint David.
-> It is quite common to create the mirrors of a RAID10 across two HBAs and
-> two JBOD chassis.  Some call this "duplexing".  With RAID10 you know you
-> can lose one HBA, one cable, one JBOD (PSU, expander, etc) and not skip
-> a beat.  "RAID15" would work the same in this scenario.
-> 
 
-That is absolutely true, and I agree that it is very important when
-setting up big arrays.  You have to make decisions like where you split
-your raid1 pairs - putting them on different controllers/chassis means
-you can survive the loss of a whole half of the system.  On the other
-hand, putting them on the same controller could mean hardware raid1 is
-more efficient and you don't need to duplicate the traffic over the
-higher level interfaces.
+------------------------------------------------------------------
+=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9AStan Hoeppner <stan@hardwarefreak.c=
+om>
+=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B411=E6=9C=8828=
+=E6=97=A5(=E6=98=9F=E6=9C=9F=E5=9B=9B) 12:41
+=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>; Lin=
+ux RAID <linux-raid@vger.kernel.org>
+=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9Amd r=
+aid5 performace 6x SSD RAID5
 
-But here we are looking at one specific class of failures - hard disk
-failures (including complete disk failure and URE's).  For that, the
-redundancy is the number of disks that can fail without data loss,
-assuming the worst possible combination of failures.  And given the
-extra stress on the disks during degraded access or rebuilds, "bad"
-combinations are more likely than "good" combinations.
+On 11/27/2013 7:51 AM, lilofile wrote:
+> additional: CPU: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
+>                 memory:32GB
+=2E..
+> when I create raid5 which use six SSD(sTEC s840),
+> when the stripe_cache_size is set 4096.=20
+> root@host1:/sys/block/md126/md# cat /proc/mdstat=20
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] =
+[raid4] [raid10]=20
+> md126 : active raid5 sdg[6] sdf[4] sde[3] sdd[2] sdc[1] sdb[0]
+>       3906404480 blocks super 1.2 level 5, 128k chunk, algorithm 2 [6=
+/6] [UUUUUU]
+>=20
+> the single ssd read/write performance :
+>=20
+> root@host1:~# dd if=3D/dev/sdb of=3D/dev/zero count=3D100000 bs=3D1M
+> ^C76120+0 records in
+> 76119+0 records out
+> 79816556544 bytes (80 GB) copied, 208.278 s, 383 MB/s
+>=20
+> root@host1:~# dd of=3D/dev/sdb if=3D/dev/zero count=3D100000 bs=3D1M
+> 100000+0 records in
+> 100000+0 records out
+> 104857600000 bytes (105 GB) copied, 232.943 s, 450 MB/s
+>=20
+> the raid read and write performance is  approx 1.8GB/s read and 1.1GB=
+/s write performance
+> root@sc0:/sys/block/md126/md# dd if=3D/dev/zero of=3D/dev/md126 count=
+=3D100000 bs=3D1M
+> 100000+0 records in
+> 100000+0 records out
+> 104857600000 bytes (105 GB) copied, 94.2039 s, 1.1 GB/s
+>=20
+>=20
+> root@sc0:/sys/block/md126/md# dd of=3D/dev/zero if=3D/dev/md126 count=
+=3D100000 bs=3D1M
+> 100000+0 records in
+> 100000+0 records out
+> 104857600000 bytes (105 GB) copied, 59.5551 s, 1.8 GB/s
+>=20
+> why the performance is so bad?  especially the write performace.
 
-So I think it is of little help to say that a 20 disk raid 15 can
-survive up to 11 disk failures.  It is far more interesting to say that
-it can survive any 3 random disk failures, and (if connected as you
-describe with two controllers and chassis) it can also survive the
-complete failure of a chassis or controller while still retaining a one
-disk redundancy.
+There are 3 things that could be, or are, limiting performance here.
 
+1.  The RAID5 write thread peaks one CPU core as it is single threaded
+2.  A 4KB stripe cache is too small for 6 SSDs, try 8KB
+3.  dd issues IOs serially and will thus never saturate the hardware
 
-As a side issue here, I wonder if a write intent bitmap can be used for
-a chassis failure so that when the chassis is fixed (the controller card
-replaced, the cable re-connected, etc.) the disks inside can be brought
-up to sync again without a full rebuild.
+#1 will eventually be addressed with a multi-thread patch to the variou=
+s
+RAID drivers including RAID5.  There is no workaround at this time.
 
-> This architecture is impossible with RAID5/6.  Any of the mentioned
-> failures will kill the array.
-> 
+To address #3 use FIO or a similar testing tool that can issue IOs in
+parallel.  With SSD based storage you will never reach maximum
+throughput with a serial data stream.
 
-Yes.
-
+--=20
+Stan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
