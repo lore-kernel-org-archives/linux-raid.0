@@ -1,53 +1,57 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: =?UTF-8?B?562U5aSN77ya562U5aSN77yabWQgcmFpZDUgcGVyZm9ybWFjZSA=?=
- =?UTF-8?B?NnggU1NEIFJBSUQ1?=
-Date: Fri, 29 Nov 2013 00:23:46 -0600
-Message-ID: <529832F2.8010206@hardwarefreak.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>,5296C98D.8000302@hardwarefreak.com <fa7f0ec0-e7ba-46ca-a129-24bb45b52460@aliyun.com> <5297FE1C.6080504@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+From: Martin Boutin <martboutin@gmail.com>
+Subject: cgroups-blkio CFQ scheduling does not work well in a RAID5 configuration.
+Date: Fri, 29 Nov 2013 09:06:08 -0500
+Message-ID: <CACtJ3Hak1pvYLRDSC3MELeo_jV8_1Tp8rjte5SODyvNauoFv4g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5297FE1C.6080504@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lilofile <lilofile@aliyun.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, "Kernel.org-Linux-cgroups" <cgroups@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/28/2013 8:38 PM, Stan Hoeppner wrote:
-> On 11/28/2013 4:02 AM, lilofile wrote:
->> thank you  for your advise. now I have test multi-thread patch, the single raid5 performance improve 30%.
->>
->> but I have another problem,when write on single raid,write performance is  approx 1.1GB/s 
-> ...
->> [1]-  Done                    dd if=/dev/zero of=/dev/md126 count=100000 bs=1M
->> [2]+  Done                    dd if=/dev/zero of=/dev/md127 count=100000 bs=1M
-> 
-> No.  This is not a parallel IO test.
-> 
-> ...
->> To address #3 use FIO or a similar testing tool that can issue IOs in
->> parallel.  With SSD based storage you will never reach maximum
->> throughput with a serial data stream.
-> 
-> This is a parallel IO test, one command line:
-> 
-> ~# fio --directory=/dev/md126 --zero_buffers --numjobs=16
-> --group_reporting --blocksize=64k --ioengine=libaio --iodepth=16
-> --direct=1 --size=64g --name=read --rw=read --stonewall --name=write
-> --rw=write --stonewall
+Hello list,
 
-Correction.  The --size value is per job, not per fio run.  We use 16
-jobs in parallel to maximize the hardware throughput.  So use --size=4g
-for 64GB total written in the test.  If you use --size=64g as I stated
-above you'll write 1TB total in the test, and it will take forever to
-finish.  With --size=4g the read test should take ~30 seconds and the
-write test ~40s, not including the fio initialization time.
+Today I was trying to figure out how to get block I/O prioritization
+working for a certain process. The process is a streaming server that
+reads a big file stored in a filesystem (xfs) on top of a RAID5
+configuration using 3 disks, using O_DIRECT.
 
-> Normally this targets a filesystem, not a raw block device.  This
-> command line should work for a raw md device.
+I'm setting up cgroups this way:
+$ echo 1000 > /sys/fs/cgroup/blkio/prio/blkio.weight
+$ echo 10 > /sys/fs/cgroup/blkio/blkio.leaf_weight
 
+meaning that all the tasks in the prio cgroup will have unconstrained
+access time to the disk, while all the other tasks will have their
+disk access time weighted by a factor.
 
+If I ignore the RAID5 setup, create a XFS filesystem on /dev/sdb2,
+mount it on /data and put my streaming daemon in the prio cgroup and
+run the daemon by streaming around 250MiB/s of data, while I launch
+fio with disk I/O intensive tasks. For a period of 5 minutes, the
+streaming deamon had to stop streaming in about 5 times to rebuffer.
+
+Now, if I consider the same scenario but using the RAID5 device and
+letting the daemon stream 500MiB/s of data (because the RAID has
+around twice the throughput of a single drive), after a period of 5
+minutes the streaming daemon had to stop streaming in about 50 times!
+This is 10 times more than the single drive case.
+
+While streaming, I observed both blkio.sectors and blkio.io_queued for
+both cgroups (the root node and prio). If only the streaming daemon is
+run (therefore fio is stopped), the sector count in prio/blkio.sectors
+increases while (root)/blkio.sectors does not. This confirms the
+streaming daemon is correctly identified as in the prio cgroup.
+Then, while both the streaming daemon and fio run, observing io_queued
+shows that for the root cgroup there is about 50 queued request in
+total (in average), while for the prio cgroup there is only one
+ocasional delayed request from time to time.
+
+$ uname -a
+Linux haswell1 3.10.10 #9 SMP PREEMPT Fri Nov 29 11:38:20 CET 2013
+i686 GNU/Linux
+
+Any ideas?
+
+Thanks,
 -- 
-Stan
-
+Martin Boutin
