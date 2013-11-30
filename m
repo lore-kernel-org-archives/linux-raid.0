@@ -1,130 +1,187 @@
-From: "lilofile" <lilofile@aliyun.com>
-Subject: =?UTF-8?B?562U5aSN77ya562U5aSN77ya562U5aSN77yabWQgcmFpZDUgcmFuZG9tIHBlcmZvcm1hY2Ug?=
-  =?UTF-8?B?NnggU1NEIFJBSUQ1?=
-Date: Sat, 30 Nov 2013 22:12:35 +0800
-Message-ID: <b76f02a4-b751-4533-81ba-1c73aa65e4b4@aliyun.com>
-References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>,5296C98D.8000302@hardwarefreak.com <fa7f0ec0-e7ba-46ca-a129-24bb45b52460@aliyun.com>,5297FE1C.6080504@hardwarefreak.com
-Reply-To: "lilofile" <lilofile@aliyun.com>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: Re: Growing array, duplicating data, shrinking array questions.
+Date: Sat, 30 Nov 2013 16:07:27 +0000
+Message-ID: <BLU0-SMTP228AF830EE9F7252DAE2AFF98E80@phx.gbl>
+References: <BLU0-SMTP1655B70AE4DF50100E9817198E10@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 5297FE1C.6080504@hardwarefreak.com
+In-Reply-To: <BLU0-SMTP1655B70AE4DF50100E9817198E10@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan <stan@hardwarefreak.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thanks.  now i use fio to test random write performance
-why the random write performance is so low, 6X SSD , 4k IOPS write rand=
-om only 55097?  when I use FIO,the single SSD random 4k write reach to =
-3.5W.
+On Thu, 2013-11-21 at 18:09 +0000, Wilson Jonathan wrote:
+> I think I know what I need to do to perform the operations I want, but
+> wanted to check here first.
+> 
+> I currently have 2 disks used to hold OS/swap/(empty)home/somedata
+> partitions (500G) and a six drive raid 6 (1TB, single partition not
+> whole drive) setup.
+> 
+> What I want to do is replace the 6 drives with 4 3TB WD REDs, and also
+> to move the OS and stuff onto the 4 3TB drives.
+> 
+> At the moment the 500GB drives are partitioned as following.
+> 
+> GPT: 
+> 1MB (Bios boot)
+> 210MB RAID1 (boot)
+> 24GB  RAID1 (root) (current live boot)
+> 8GB   *SWAP
+> 54GB  RAID1 (root2) (new install, will replace root)
+> 11GB  RAID1 (home)
+> XXGB  RAID1 (data)
+> The swap is amalgamated into 16GB total swap.
+> 
+> (root) and (root2) are different versions of debian, (root) is my
+> current "live" and (root2) is my "testing" by the end of this excersize
+> (root) will no longer exist, and (root2) will become my "live."
+> 
+> My idea is to fail and remove one of the RAID6 devices, then put the 3TB
+> in its place and format it, using gptfdisk, as the following.
+> 
+> GPT:
+> 1MB (Bios boot)
+> 210MB RAID1 (boot)
+> 84GB  RAID1 (root2)
+> 16GB  RAID1 (*swap)
+> XXGB  Space unused, to push the last partition to the end of the disk.
+> 1TB   RAID6 (raid6)
+> 
+> From what I have read I can grow the (boot) (root2) by increasing the
+> number of devices, even though (root2) is larger on the new disk it will
+> be added and only the first 54GB will synced; basically increase the
+> number of devices from 2 to 3.
+> 
+> I will also add/update the boot loader/mbr to the new drive.
+> 
+> By adding in the raid6 partition it will be re-synced as if it were the
+> original failed drive being replaced.
+> 
+> I then replicate this process for the other 3 disks.
+> eg (boot) (root2) no-devices=4
+> ...=5
+> ...=6
+> 
+> and obviously adding in a replacement for the failed/removed RAID6 1TB
+> drive with the RAID6 partition (raid6) and updating the (bios boot)/mbr
+> 
+> I will create a new RAID1 (*swap) when all the 4 devices are in place.
+> 
+> Also I will then create a RAID6 partition on the 4 drives empty space
+> unused partition (new6).
+> 
+> Once this is done, and checked if all working ok...
+> 
+> I will then fail and remove both the original, 500GB, RAID1 (boot)
+> (root) (root2) drives, then grow the raids down to ..devices=4
+> 
+> I believe I will then need to grow the (root2) ..size=max to extend it
+> from 54GB to 84GB, check the file system, grow the file system, then
+> check it again.
+> 
+> I will then copy all the data from the (raid6) to (new6) run a check to
+> see if they are identical, and then bring down and delete (raid6) remove
+> the last 2 remaining 1TB drives, put them into USB caddies (from whence
+> they originally came, was cheaper than buying the raw drives) and then
+> backup to them.
+> 
+> Finally I will delete all the 4 (raid6) partitions, I will also change
+> the size of the (new6) partition to include the now deleted (raid6)
+> space. (I'm assuming changing the partition end will not affect the data
+> contained within) for all 4 drives, then grow the partition ..size=max,
+> check the file system, grow the file system, final check...
+> 
+> Finally I will update the mdadm.conf in both the (root) and (root2)
+> directory to take note of changes.. create the swap on the (*swap) and
+> also change the (root) and (root2) fstab to take note of the file system
+> changes and the new swap partition...
+> 
+> ...to keep things clean, I will change the files slightly differently
+> for both "/" so that (root) will no longer see (root2) and also the
+> reverse, once all is complete (root) will no longer be used and will be
+> removed... 
+> 
+> ..then check that they both boot ok, finally delete the now unused (bios
+> boot) (boot) (root2) from the 500GB drives, do some house keeping and if
+> all has gone to plan then I can finally breath again.
+> 
+> Is there anything I've got in the above that looks wrong, or is a
+> disaster in the making as I've miss understood something?
+> 
+> Actually, thinking about it... will I need to update the initramfs at
+> any point, for example when I delete the (root) from within (root2) as
+> my final stage after all housekeeping, and also once I have updated
+> everything in (root) such as fstab and mdadm.conf?
 
-root@host0:/# fio -filename=3D/dev/md0     -iodepth=3D16 -thread -rw=3D=
-randwrite -ioengine=3Dlibaio -bs=3D4k -size=3D30G  -numjobs=3D10 -runti=
-me=3D1000 -group_reporting -name=3Dmytest=20
-mytest: (g=3D0): rw=3Drandwrite, bs=3D4K-4K/4K-4K, ioengine=3Dlibaio, i=
-odepth=3D16
-=2E..
-mytest: (g=3D0): rw=3Drandwrite, bs=3D4K-4K/4K-4K, ioengine=3Dlibaio, i=
-odepth=3D16
-fio 1.59
-Starting 10 threadsJobs: 1 (f=3D1): [____w_____] [68.3% done] [0K/0K /s=
-] [0 /0  iops] [eta 07m:53s]       s]
-mytest: (groupid=3D0, jobs=3D10): err=3D 0: pid=3D6099
-  write: io=3D215230MB, bw=3D220392KB/s, iops=3D55097 , runt=3D1000019m=
-sec
-    slat (usec): min=3D1 , max=3D337733 , avg=3D176.46, stdev=3D2623.23
-    clat (usec): min=3D4 , max=3D540048 , avg=3D2667.83, stdev=3D10078.=
-16
-     lat (usec): min=3D40 , max=3D576049 , avg=3D2844.42, stdev=3D10399=
-=2E30
-    bw (KB/s) : min=3D    0, max=3D1100192, per=3D10.22%, avg=3D22514.4=
-8, stdev=3D17262.85
-  cpu          : usr=3D6.70%, sys=3D16.48%, ctx=3D11656865, majf=3D46, =
-minf=3D1626216
-  IO depths    : 1=3D0.1%, 2=3D0.1%, 4=3D0.1%, 8=3D0.1%, 16=3D100.0%, 3=
-2=3D0.0%, >=3D64=3D0.0%
-     submit    : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.0%, 32=3D0.0%, =
-64=3D0.0%, >=3D64=3D0.0%
-     complete  : 0=3D0.0%, 4=3D100.0%, 8=3D0.0%, 16=3D0.1%, 32=3D0.0%, =
-64=3D0.0%, >=3D64=3D0.0%
-     issued r/w/d: total=3D0/55098999/0, short=3D0/0/0
-     lat (usec): 10=3D0.01%, 50=3D41.01%, 100=3D50.01%, 250=3D1.23%, 50=
-0=3D0.42%
-     lat (usec): 750=3D0.02%, 1000=3D0.01%
-     lat (msec): 2=3D0.01%, 4=3D0.01%, 10=3D0.05%, 20=3D0.16%, 50=3D6.5=
-8%
-     lat (msec): 100=3D0.44%, 250=3D0.05%, 500=3D0.01%, 750=3D0.01%
 
-Run status group 0 (all jobs):
-  WRITE: io=3D215230MB, aggrb=3D220391KB/s, minb=3D225681KB/s, maxb=3D2=
-25681KB/s, mint=3D1000019msec, maxt=3D1000019msec
+I have a couple of other questions/observations to add to the original
+ones.
 
-Disk stats (read/write):
-  md0: ios=3D167/49755890, merge=3D0/0, ticks=3D0/0, in_queue=3D0, util=
-=3D0.00%, aggrios=3D12530125/13199536, aggrmerge=3D1151802/1283069, agg=
-rticks=3D14762174/11503916, aggrin_queue=3D26230996, aggrutil=3D95.56%
-    sdh: ios=3D12519812/13192529, merge=3D1157990/1291154, ticks=3D1185=
-4444/8141456, in_queue=3D19960416, util=3D90.19%
-    sdi: ios=3D12524619/13201735, merge=3D1158477/1280984, ticks=3D1216=
-1064/8308572, in_queue=3D20436280, util=3D90.56%
-    sdj: ios=3D12526628/13210796, merge=3D1155512/1274875, ticks=3D1207=
-4040/8250524, in_queue=3D20289960, util=3D90.63%
-    sdk: ios=3D12534367/13213646, merge=3D1148527/1268088, ticks=3D1237=
-2792/8455368, in_queue=3D20791752, util=3D90.81%
-    sdl: ios=3D12534777/13205894, merge=3D1147263/1275381, ticks=3D1263=
-2824/8728444, in_queue=3D21325724, util=3D90.86%
-    sdm: ios=3D12540551/13172620, merge=3D1143048/1307937, ticks=3D2747=
-7880/27139136, in_queue=3D54581844, util=3D95.56%
+It seems as if I will need to update the initramfs due to changes to
+fstab and mdadm, this is not a problem :-)
+
+Now for a huge problem...
+
+My system is a "bios" not a "UEFI" and as such it, within the bios, does
+not report the disk sizes correctly, says is about 700GB (can't be exact
+without rebooting)... however to my surprise linux sees the whole disk
+as 3TB, I partitioned it using gptfdisk, then created a number of ext4
+file systems, filled them up with real files, ran fsck tests, zeroed out
+the highest partition, re-fsck'd the lower partitions and all seemed ok.
+
+___question 1___
+(it should be noted that I was concerned that if the bios miss-reported
+the size and linux saw the whole disk I was worried that perhaps some
+overlapping mapping might have been going on, say the first partition,
+low on the disk, was somehow mapped into the last (700GB) of the disk..
+I'm guessing, and its a big guess, that once the bios has turned over
+control to linux then linux no longer uses the bios (or its hooks) to
+access the HD and instead goes to it directly, would this be a correct
+"guess"?)
+
+Now here is where I know/think I have a big problem with a 3tb drive in
+a "bios" system and need confirmation before going any further...
+
+___question 2___
+I'm guessing that as the bios can only see the tail end of the hard
+drive it would not be able to load the data from the "mbr" (still there
+despite being a GPT formatted disk) and proceed to load the first stage
+boot loader because it will think the "mbr" should be at the start of
+the "700GB" which in reality is 2.2TB into the disk, would this be a
+correct assumption? (
+
+Actually I could probably test this by installing
+(grub-install /dev/sdX) then going into the bios and telling it to boot
+from that disk while the original boot drives (containing
+biosboot /boot /root) were still pluged in, if it failed then I know its
+not going to work.
+
+___question 3___
+If it does not work, but linux can see and use the drive with no
+problems, then is it possible to install the first (possibly second, i'm
+guessing thats what gets put in the "biosboot" partiton) stage grub2
+boot loaders to a USB drive, then have this load the rest of the system
+"/boot" partition from the new 3tb drives or if not possible then
+include the "/boot" on the usb drive as its only 200M its not a
+hardship, if I "raid" it to the existing partitions then any changes
+will be replicated, and should the usb fail I can just boot a system
+rescue disk make a new usb boot, copy the "/boot" from the hard drive
+and away we go.
+
+___question 4___
+I guess instead of using a USB, I could use the DVD drive, create a
+first/second stage loader onto it that will then chain into the hd to
+load the linux kernel.. is this possible?
+
+I guess my last question is related to q3/q4 and that is... if its
+possible then is there a simple set of commands required, my initial
+thoughts are "grub-install" to the usb stick, as it will know to load
+from "the first drive" and as I will replicate, mirror, "/boot" (as well
+as "/") on the first 4 drives... if it fails then the second one will
+become the first so will be found by grub and so on...
 
 
 
-
-
-------------------------------------------------------------------
-=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9AStan Hoeppner <stan@hardwarefreak.c=
-om>
-=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B411=E6=9C=8829=
-=E6=97=A5(=E6=98=9F=E6=9C=9F=E4=BA=94) 10:38
-=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>; Lin=
-ux RAID <linux-raid@vger.kernel.org>
-=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9A=E7=AD=
-=94=E5=A4=8D=EF=BC=9Amd raid5 performace 6x SSD RAID5
-
-On 11/28/2013 4:02 AM, lilofile wrote:
-> thank you  for your advise. now I have test multi-thread patch, the s=
-ingle raid5 performance improve 30%.
->=20
-> but I have another problem,when write on single raid,write performanc=
-e is  approx 1.1GB/s=20
-=2E..
-> [1]-  Done                    dd if=3D/dev/zero of=3D/dev/md126 count=
-=3D100000 bs=3D1M
-> [2]+  Done                    dd if=3D/dev/zero of=3D/dev/md127 count=
-=3D100000 bs=3D1M
-
-No.  This is not a parallel IO test.
-
-=2E..
-> To address #3 use FIO or a similar testing tool that can issue IOs in
-> parallel.  With SSD based storage you will never reach maximum
-> throughput with a serial data stream.
-
-This is a parallel IO test, one command line:
-
-~# fio --directory=3D/dev/md126 --zero_buffers --numjobs=3D16
---group_reporting --blocksize=3D64k --ioengine=3Dlibaio --iodepth=3D16
---direct=3D1 --size=3D64g --name=3Dread --rw=3Dread --stonewall --name=3D=
-write
---rw=3Dwrite --stonewall
-
-Normally this targets a filesystem, not a raw block device.  This
-command line should work for a raw md device.
-
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
