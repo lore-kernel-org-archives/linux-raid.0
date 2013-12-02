@@ -1,113 +1,73 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Raid10 multi core scaling
-Date: Mon, 02 Dec 2013 09:19:45 +0100
-Message-ID: <529C42A1.3010400@hesbynett.no>
-References: <20131126105859.Horde.-ppIIPYRo99SlH7zGogGx_A@webmail.aeiou.pt> <20131202172207.7400e03a@notabene.brown>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Creating new raid5 or 6 with --assume-clean
+Date: Mon, 2 Dec 2013 08:48:59 +0000
+Message-ID: <20131202084859.GA26327@cthulhu.home.robinhill.me.uk>
+References: <20131202030707.GB19621@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131202172207.7400e03a@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20131202030707.GB19621@animx.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Pedro Teixeira <finas@aeiou.pt>
+To: Wakko Warner <wakko@animx.eu.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/12/13 07:22, NeilBrown wrote:
-> On Tue, 26 Nov 2013 10:58:59 +0000 Pedro Teixeira <finas@aeiou.pt> wr=
-ote:
+
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Sun Dec 01, 2013 at 10:07:07PM -0500, Wakko Warner wrote:
+
+> This is a general question, but I'll give a specific.
 >=20
->>    I created a Raid10 array with 16 sata 1TB disks and the array
->> performance
->> seems to be limited by the md0_raid10 taking 99% of one core and not
->> scalling to other cores. I tried overclocing the cpu cores and this =
-lead to
->> a small increase in performance ( but md0_raid10 keeps eating 99% of=
- one
->> core ).
+> If I create an array with assume clean and proceed to write to the device,
+> what happens with the parity?
 >=20
-> Are you really talking about general array performance, or just resyn=
-c
-> performance?
+> EX:
+> mdadm -C /dev/md0 -n 4 -l 6 -e 1.0 -b internal -c 128 --assume-clean \
+> 	sdc2 sdd2 sdf2 sde2
 >=20
-> Because md0_raid10 doesn't do much work for normal IO so that should =
-scale to
-> multiple processors.
-> I'm not sure that optimising resync to use more than one processor is=
- really
-> much of a priority - is it?
+> Then:
+> dd if=3D/dev/zero of=3D/dev/md0 bs=3D1M
 >=20
-> NeilBrown
-
-I think that depends a bit on whether we are talking about md raid10, o=
-r
-raid1+0.  For md raid10, resyncs and rebuilds are always going to take =
-a
-bit of time - data has to be copied back and forth across the same
-disks, with a lot of head movement (especially for "far" layout).  I
-don't see that it would take much cpu time, however.  And this sort of
-layout is mostly for small arrays - it gives great performance when you
-have two drives, and perhaps up to about 4 drives.  But after that,
-people probably want raid1+0 layouts (i.e., raid0 stripes of raid1 pair=
-s).
-
-=46or raid1 + 0, resync time /is/ important - it is one of the reasons
-people pick it, especially the time to resync a single replaced drive.
-But again, I can't see how that would take cpu time.
-
-I suppose that when doing the initial sync of this 16 disk array, you
-have to read in all data from 8 disks and write it out to the other 8
-disks.  That's a lot of IO passing through the cpus, even if there is n=
-o
-calculations going on.  But I thought each raid1 pair already had its
-own thread, so this would be scaled across 8 cores?  Is md raid10
-limited to just one thread?
-
-mvh.,
-
-David
-
-
+> When it finishes, will all the parity blocks be correct for raid 5 and
+> raid6?
 >=20
+> Would changing md/stripe_cache_size up/down make a difference to the
+> parities?
 >=20
->>
->>    I'm using:
->>     - a phenom X6 at 3600mhz
->>     - 16 seagate SSHDs ( sata3 7200RPM with 8GB ssd cache )
->>     - 4x marvell 9230 sata3 controllers ( 4 ports each ) pcie 2.0 2x
->> lanes.
->>     - 8GB ram
->>     - custom 3.12 kernel and mdadm compiled from latest source
->>
->>    what I did to test performance was to force a check on the array,=
- and
->> this
->> leads to mdadm reporting a speed of about 990000K/sec. The hard disk=
-s
->> report a 54% utilization. ( Overclocking the cpu by 200mhz increases=
- the
->> resync speed a bit and the hdd's utilizartion to about 58% )
->>
->>    If I do the same with a raid5 array instead of raid10, them resyn=
-c
->> speed
->> will be almost double of raid10, the harddisk utilization reported w=
-ill be
->> 98-100% and I can see at least two cores being used.
->>
->> ____________________________________________________________________=
-____________
->> Mensagem enviada atrav=C3=A9s do email gr=C3=A1tis AEIOU
->> http://www.aeiou.pt
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+Doing that specifically should result in all parity being correct, yes.
+Providing the writes are not going to a single disk in a stripe (in
+which case read-modify-write may be used to update the parity rather
+than a full stripe read and parity recalculation) then any write should
+result in the parity for that stripe being written correctly. I think
+RMW is only used in RAID5 currently though.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changing the stripe cache size won't affect the parity calculation at
+all (except in terms of performance/throughput).
+
+Regards,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--HcAYCG3uE/tztfnV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlKcSXsACgkQShxCyD40xBIBcQCfYz0BeYTFJSgKxxwgGmgBxrVv
+atsAni2YOw5wK/Sq406Qf2LVtQaE48ZH
+=lKF3
+-----END PGP SIGNATURE-----
+
+--HcAYCG3uE/tztfnV--
