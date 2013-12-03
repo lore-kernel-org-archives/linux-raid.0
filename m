@@ -1,62 +1,56 @@
-From: Brett Russ <brett@linux.vnet.ibm.com>
-Subject: Re: [BUG,PATCH] raid1 behind write ordering (barrier) protection
-Date: Mon, 02 Dec 2013 18:35:29 -0500
-Message-ID: <529D1941.6000507@linux.vnet.ibm.com>
-References: <528E72C8.7050909@linux.vnet.ibm.com> <529CBFBD.9070009@linux.vnet.ibm.com> <20131203100813.67814984@notabene.brown>
+From: Tom Pfeifer <tpfeife1@gmail.com>
+Subject: Re: dm-raid45?
+Date: Tue, 03 Dec 2013 09:42:07 -0500
+Message-ID: <529DEDBF.4020905@gmail.com>
+References: <CAGRSmLv9vpLRr=WdY+YJFhE9aZfGYtYbegTo=g6MUPz5z+NSww@mail.gmail.com>
+ <CANBHLUgEj5VjLbzuO+cu=fTRwsNQX3ZD7cCPa5=6k21S_wF5Qg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131203100813.67814984@notabene.brown>
+In-reply-to: <CANBHLUgEj5VjLbzuO+cu=fTRwsNQX3ZD7cCPa5=6k21S_wF5Qg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Dmitrijs Ledkovs <xnox@debian.org>
+Cc: "David F." <df7729@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/02/2013 06:08 PM, NeilBrown wrote:
-> How about just keeping a record of whether there is a BIO_FLUSH request
-> outstanding on each "behind" leg.  While there is we don't submit new
-> requests.
-> So we have a queue of bios for each leg which are waiting for a BIO_FLUSH to
-> complete, and we send them on down as soon as it does.
+On 11/26/2013 06:32 PM, Dmitrijs Ledkovs wrote:
+> On 26 November 2013 18:07, David F. <df7729@gmail.com> wrote:
+>> As a workaround to the mdadm issue with the spare drive we were going
+>> to have them activate DMRAID but that ends up with the information
+>> below.  Specifically something about dm-raid45 but we had to drop that
+>> because it no longer compiles in the latest kernels and we couldn't
+>> find an update that would.   Any ideas?  (still working on getting the
+>> dump - the fact that tmpfs doesn't support sparse files makes having
+>> the customer create the dump via a script we provide a bit more
+>> involved):
+>>
+> 
+> Ubuntu kernels still somewhat maintain and have dm-raid-45 module.
+> 
+> Install linux-image-extra-virtual package which will pull in correct
+> versioned packaged with extra modules.
+> 
+> It is planned however to migrate off & drop dm-raid-45 module soon.
+> 
+> ps. latest version I can find is
+> 3.8.0-22-generic/kernel/ubuntu/dm-raid4-5/dm-raid45.ko
+> 
+> Regards,
+> 
+> Dmitrijs.
 
-In these circumstances, it's MD who's created the situation, not an upper 
-layer's BIO_FLUSH.  So, we can't key off of that.  Additionally, the patch below 
-also fixes another issue related to BIO_FLUSH:
+As a follow up to this general subject, what will replace the dm-raid45
+module after it is dropped?
 
- >>> +    /* If this is a flush/fua request don't
- >>> +     * ever let it go "behind".  Keep all the
- >>> +     * mirrors in sync.
- >>> +     */
- >>> +    if (bio_rw_flagged(bio, BIO_FLUSH | BIO_FUA)) {
- >>> +        set_bit(R1BIO_BehindIO, &r1_bio->state);
- >>> +        do_flush_fua =  bio->bi_rw & (BIO_FLUSH | BIO_FUA);
- >>> +    }
+I guess another way to ask that question is what functionality does the
+dm-raid45 module support that is not currently supported by the dm-raid
+module, which has aliases to dm-raid1, dm-raid4, dm-raid5, dmraid6, and
+dm-raid10.
 
-so we avoid the BIO_FLUSH "behind" issue that way.  This probably should be a 
-separate patch...
+And is it already possible now (in recent kernels such as 3.11.x and
+later) to use the dm-raid module in place of dm-raid45?
 
-We could divide the behind write ordering problem into two:
-1) detecting the condition to protect
-2) protecting against that condition
 
-Solutions for (1) include:
-a) keeping a list of behind writes
-b) keeping a count of behind writes
-c) ?
 
-Solutions for (2) include:
-i) blocking the I/O
-j) ?
-
-The advantages to solution (a) are:
--nothing gets blocked unless it overlaps (previously all reads would)
--list depth limited to max behind writes allowed (typically small)
-
-I wish there were alternatives to solution (i) but recognize that since barriers 
-were removed in favor of the filesystem owning the ordering problem, MD is 
-effectively assuming the role of the filesystem in this case.
-
-Thanks,
-BR
 
