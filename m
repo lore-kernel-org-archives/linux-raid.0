@@ -1,277 +1,238 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid5 rmmod bug oops
-Date: Wed, 4 Dec 2013 17:54:04 +1100
-Message-ID: <20131204175404.0dde26e6@notabene.brown>
-References: <6da697f7-5486-4b67-9957-687db9c42db2@aliyun.com>
+From: Phill Watkins <phill.watkins@gmail.com>
+Subject: Degraded array but drive healthy
+Date: Wed, 4 Dec 2013 22:23:10 +0000
+Message-ID: <CAONsccXLi+1rqZQPsUSfzfuTD3+jWugiH4jAFPKQNLh0aAKSuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/akBEln16jaPFsIRtrb=cdsr"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6da697f7-5486-4b67-9957-687db9c42db2@aliyun.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lilofile <lilofile@aliyun.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/akBEln16jaPFsIRtrb=cdsr
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Wed, 04 Dec 2013 14:34:00 +0800 "lilofile" <lilofile@aliyun.com> wrote:
+I have an issue that I can't really pin down.
 
->  I download  linux 3.10.21 source and compile system,when I  load md-mod.=
-ko raid456.ko, Immediately rmmod raid456.ko  md-mod.ko,=20
-> System error as follows:
->=20
-> Dec  4 14:00:37 host2-X8DTS kernel: [  414.981261] md: raid6 personality =
-unregistered
-> Dec  4 14:00:37 host2-X8DTS kernel: [  414.981268] md: raid5 personality =
-unregistered
-> Dec  4 14:00:37 host2-X8DTS kernel: [  414.981271] md: raid4 personality =
-unregistered
-> Dec  4 14:00:38 host2-X8DTS kernel: [  416.422769] md: raid1 personality =
-unregistered
-> Dec  4 14:00:41 host2-X8DTS kernel: [  418.632353] md: raid10 personality=
- unregistered
-> Dec  4 14:00:42 host2-X8DTS kernel: [  420.577832] md: multipath personal=
-ity unregistered
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574371] BUG: unable to handle =
-kernel paging request at ffffffffa0113000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574381] IP: [<ffffffff81678fa1=
->] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574399] PGD 1c0c067 PUD 1c0d06=
-3 PMD 2289da067 PTE 0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574404] Oops: 0002 [#1] SMP=20
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574407] Modules linked in: cor=
-etemp kvm_intel kvm bnep ghash_clmulni_intel rfcomm bluetooth aesni_intel a=
-blk_helper joydev cryptd lrw gf128mul psmouse glue_helper i7core_edac aes_x=
-86_64 gpio_ich ioatdma serio_raw edac_core microcode lpc_ich mac_hid parpor=
-t_pc ppdev lp parport async_pq async_xor xor async_memcpy async_raid6_recov=
- raid6_pq async_tx hid_generic usbhid hid igb mpt2sas dca scsi_transport_sa=
-s i2c_algo_bit raid_class ptp mlx4_core pps_core [last unloaded: md_mod]
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574451] CPU: 11 PID: 2497 Comm=
-: udisks-daemon Not tainted 3.10.21 #1
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574455] Hardware name: Supermi=
-cro B8DTP/B8DTP, BIOS 080015  03/17/2010
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574457] task: ffff880228430000=
- ti: ffff880228db4000 task.ti: ffff880228db4000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574459] RIP: 0010:[<ffffffff81=
-678fa1>]  [<ffffffff81678fa1>] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574465] RSP: 0018:ffff880228db=
-5ab8  EFLAGS: 00010082
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574467] RAX: 0000000000000282 =
-RBX: ffffffffa0113000 RCX: ffff8802286258d0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574470] RDX: 0000000000010000 =
-RSI: ffff880228db5c08 RDI: ffffffffa0113000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574473] RBP: ffff880228db5ab8 =
-R08: ffff880227a92438 R09: 0000000000000000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574475] R10: 0000000000000000 =
-R11: 0000000000000000 R12: ffff880228db5c08
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574478] R13: ffff880228db5b88 =
-R14: ffff880228db5e2c R15: 0000000000000001
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574481] FS:  00007f9042f9f7c0(=
-0000) GS:ffff88023fce0000(0000) knlGS:0000000000000000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574484] CS:  0010 DS: 0000 ES:=
- 0000 CR0: 0000000080050033
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574486] CR2: ffffffffa0113000 =
-CR3: 00000002331db000 CR4: 00000000000007e0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574489] DR0: 0000000000000000 =
-DR1: 0000000000000000 DR2: 0000000000000000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574491] DR3: 0000000000000000 =
-DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574493] Stack:
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574495]  ffff880228db5ad8 ffff=
-ffff8106a2f0 0000000000000002 ffff880228db5bf8
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574502]  ffff880228db5b28 ffff=
-ffff8118b1ee ffff880228db5af8 0000000000000000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574508]  ffff880228db5b28 0000=
-000000771d20 0000000000000001 0000000000000001
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574515] Call Trace:
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574526]  [<ffffffff8106a2f0>] =
-remove_wait_queue+0x20/0x70
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574535]  [<ffffffff8118b1ee>] =
-poll_freewait+0x4e/0xe0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574541]  [<ffffffff8118c3b3>] =
-do_sys_poll+0x163/0x4d0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574546]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574551]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574559]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574564]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574570]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574578]  [<ffffffff8156b0a6>] =
-? verify_iovec+0x56/0xd0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574587]  [<ffffffff8155d1e2>] =
-? ___sys_recvmsg+0x192/0x2a0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574595]  [<ffffffff81144eb0>] =
-? handle_mm_fault+0x210/0x310
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574604]  [<ffffffff811c0009>] =
-? eventfd_ctx_read+0x59/0x200
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574612]  [<ffffffff81079470>] =
-? try_to_wake_up+0x2b0/0x2b0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574620]  [<ffffffff810964bc>] =
-? ktime_get_ts+0x4c/0xe0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574626]  [<ffffffff8118b575>] =
-? poll_select_set_timeout+0x85/0xa0
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574632]  [<ffffffff8118c7fb>] =
-SyS_poll+0x6b/0x100
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574641]  [<ffffffff81681802>] =
-system_call_fastpath+0x16/0x1b
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574644] Code: 89 d0 f0 0f b1 0=
-f 39 d0 75 e5 b8 01 00 00 00 5d c3 66 0f 1f 84 00 00 00 00 00 66 66 66 66 9=
-0 55 48 89 e5 9c 58 fa ba 00 00 01 00 <f0> 0f c1 17 89 d1 c1 e9 10 66 39 d1=
- 74 0b 90 f3 90 0f b7 17 66=20
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574679] RIP  [<ffffffff81678fa=
-1>] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574683]  RSP <ffff880228db5ab8>
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574684] CR2: ffffffffa0113000
-> Dec  4 14:02:03 host2-X8DTS kernel: [  501.574687] ---[ end trace 033ae58=
-aa75ca232 ]---
-> Dec  4 14:09:01 host2-X8DTS kernel: [  919.511367] type=3D1400 audit(1386=
-137341.577:29): apparmor=3D"DENIED" operation=3D"capable" parent=3D1 profil=
-e=3D"/usr/sbin/cupsd" pid=3D1069 comm=3D"cupsd" pid=3D1069 comm=3D"cupsd" c=
-apability=3D36  capname=3D"block_suspend"
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109803] BUG: unable to handle =
-kernel paging request at ffffffffa0113000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109812] IP: [<ffffffff81678fa1=
->] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109825] PGD 1c0c067 PUD 1c0d06=
-3 PMD 2289da067 PTE 0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109831] Oops: 0002 [#2] SMP=20
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109835] Modules linked in: cor=
-etemp kvm_intel kvm bnep ghash_clmulni_intel rfcomm bluetooth aesni_intel a=
-blk_helper joydev cryptd lrw gf128mul psmouse glue_helper i7core_edac aes_x=
-86_64 gpio_ich ioatdma serio_raw edac_core microcode lpc_ich mac_hid parpor=
-t_pc ppdev lp parport async_pq async_xor xor async_memcpy async_raid6_recov=
- raid6_pq async_tx hid_generic usbhid hid igb mpt2sas dca scsi_transport_sa=
-s i2c_algo_bit raid_class ptp mlx4_core pps_core [last unloaded: md_mod]
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109874] CPU: 9 PID: 1318 Comm:=
- mdadm Tainted: G      D      3.10.21 #1
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109877] Hardware name: Supermi=
-cro B8DTP/B8DTP, BIOS 080015  03/17/2010
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109880] task: ffff8801281b5c40=
- ti: ffff880128fe8000 task.ti: ffff880128fe8000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109882] RIP: 0010:[<ffffffff81=
-678fa1>]  [<ffffffff81678fa1>] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109887] RSP: 0018:ffff880128fe=
-9978  EFLAGS: 00010086
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109890] RAX: 0000000000000286 =
-RBX: ffffffffa0113000 RCX: 0000000000000001
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109892] RDX: 0000000000010000 =
-RSI: ffff880128fe9af8 RDI: ffffffffa0113000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109894] RBP: ffff880128fe9978 =
-R08: 0000000000000001 R09: 0000000000000000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109895] R10: 0000000000000000 =
-R11: 0000000000000000 R12: ffff880128fe9af8
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109897] R13: ffff880128fe9ab8 =
-R14: 0000000000000010 R15: ffff880228160400
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109900] FS:  00007f610504a700(=
-0000) GS:ffff88023fca0000(0000) knlGS:0000000000000000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109902] CS:  0010 DS: 0000 ES:=
- 0000 CR0: 000000008005003b
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109904] CR2: ffffffffa0113000 =
-CR3: 000000013abaa000 CR4: 00000000000007e0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109907] DR0: 0000000000000000 =
-DR1: 0000000000000000 DR2: 0000000000000000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109909] DR3: 0000000000000000 =
-DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109910] Stack:
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109912]  ffff880128fe9998 ffff=
-ffff8106a2f0 0000000000000001 ffff880128fe9ae8
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109917]  ffff880128fe99e8 ffff=
-ffff8118b1ee ffff880128fe99b8 0000000000000000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109921]  ffff880128fe99e8 0000=
-000000000005 0000000000000005 0000000000000020
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109926] Call Trace:
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109933]  [<ffffffff8106a2f0>] =
-remove_wait_queue+0x20/0x70
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109940]  [<ffffffff8118b1ee>] =
-poll_freewait+0x4e/0xe0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109943]  [<ffffffff8118bba7>] =
-do_select+0x617/0x690
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109948]  [<ffffffff8118b370>] =
-? __pollwait+0xf0/0xf0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109956]  [<ffffffff8112a1b4>] =
-? lru_cache_add_lru+0x24/0x50
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109962]  [<ffffffff8114e2c2>] =
-? page_add_new_anon_rmap+0x72/0xf0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109968]  [<ffffffff81143c17>] =
-? handle_pte_fault+0x7a7/0x920
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109973]  [<ffffffff812ae18e>] =
-? security_inode_alloc+0x1e/0x20
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109980]  [<ffffffff81199940>] =
-? seq_release+0x30/0x30
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109984]  [<ffffffff8119a0b4>] =
-? seq_open+0x84/0x160
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109991]  [<ffffffff8132719e>] =
-? radix_tree_lookup_slot+0xe/0x10
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.109997]  [<ffffffff8111cf4e>] =
-? find_get_page+0x1e/0x90
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110000]  [<ffffffff8111ea78>] =
-? filemap_fault+0xd8/0x4b0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110004]  [<ffffffff8111c1d7>] =
-? unlock_page+0x27/0x30
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110008]  [<ffffffff81140a29>] =
-? __do_fault+0x3b9/0x4a0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110012]  [<ffffffff8118bdf2>] =
-core_sys_select+0x1d2/0x310
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110018]  [<ffffffff8167cdf4>] =
-? __do_page_fault+0x284/0x4e0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110022]  [<ffffffff8119a661>] =
-? seq_read+0x101/0x3e0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110028]  [<ffffffff810964bc>] =
-? ktime_get_ts+0x4c/0xe0
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110032]  [<ffffffff8118bff1>] =
-SyS_select+0xc1/0x100
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110038]  [<ffffffff81681802>] =
-system_call_fastpath+0x16/0x1b
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110040] Code: 89 d0 f0 0f b1 0=
-f 39 d0 75 e5 b8 01 00 00 00 5d c3 66 0f 1f 84 00 00 00 00 00 66 66 66 66 9=
-0 55 48 89 e5 9c 58 fa ba 00 00 01 00 <f0> 0f c1 17 89 d1 c1 e9 10 66 39 d1=
- 74 0b 90 f3 90 0f b7 17 66=20
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110073] RIP  [<ffffffff81678fa=
-1>] _raw_spin_lock_irqsave+0x11/0x30
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110078]  RSP <ffff880128fe9978>
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110080] CR2: ffffffffa0113000
-> Dec  4 14:11:09 host2-X8DTS kernel: [ 1047.110083] ---[ end trace 033ae58=
-aa75ca233 ]---
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have two RAID 1 arrays, one for /boot and another for an LVM.
 
-Yes, this has some up before.
-No-one has fixed it yet though.
+Yesterday one of the arrays (the LVM) became degraded after a reboot
+which included an automated fsck on all filesystems.
 
-http://www.spinics.net/lists/raid/msg37689.html
+I've run full SMART tests on both drives and both completed without errors:
 
-NeilBrown
+The only thing I've noticed is the raw attribute of the
+Multi_Zone_Error_Rate from the failed drive:
 
---Sig_/akBEln16jaPFsIRtrb=cdsr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+    ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+      1 Raw_Read_Error_Rate     0x002f   100   100   051    Pre-fail
+Always       -       0
+      2 Throughput_Performance  0x0026   056   056   000    Old_age
+Always       -       11660
+      3 Spin_Up_Time            0x0023   089   089   025    Pre-fail
+Always       -       3460
+      4 Start_Stop_Count        0x0032   100   100   000    Old_age
+Always       -       24
+      5 Reallocated_Sector_Ct   0x0033   252   252   010    Pre-fail
+Always       -       0
+      7 Seek_Error_Rate         0x002e   252   252   051    Old_age
+Always       -       0
+      8 Seek_Time_Performance   0x0024   252   252   015    Old_age
+Offline      -       0
+      9 Power_On_Hours          0x0032   100   100   000    Old_age
+Always       -       3973
+     10 Spin_Retry_Count        0x0032   252   252   051    Old_age
+Always       -       0
+     11 Calibration_Retry_Count 0x0032   100   100   000    Old_age
+Always       -       37
+     12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+Always       -       24
+    191 G-Sense_Error_Rate      0x0022   252   252   000    Old_age
+Always       -       0
+    192 Power-Off_Retract_Count 0x0022   252   252   000    Old_age
+Always       -       0
+    194 Temperature_Celsius     0x0002   064   064   000    Old_age
+Always       -       29 (Min/Max 21/36)
+    195 Hardware_ECC_Recovered  0x003a   100   100   000    Old_age
+Always       -       0
+    196 Reallocated_Event_Count 0x0032   252   252   000    Old_age
+Always       -       0
+    197 Current_Pending_Sector  0x0032   252   252   000    Old_age
+Always       -       0
+    198 Offline_Uncorrectable   0x0030   252   252   000    Old_age
+Offline      -       0
+    199 UDMA_CRC_Error_Count    0x0036   200   200   000    Old_age
+Always       -       0
+    200 Multi_Zone_Error_Rate   0x002a   100   100   000    Old_age
+Always       -       637
+    223 Load_Retry_Count        0x0032   100   100   000    Old_age
+Always       -       37
+    225 Load_Cycle_Count        0x0032   100   100   000    Old_age
+Always       -       2055
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+And the Raw_Read_Error_Rate of the good drive:
 
-iQIVAwUBUp7RjDnsnt1WYoG5AQKrJg//eyi0M01PpUl4oQlGkUBc2R+E02BWu+IN
-4CSCHVjhgDsWOJs+z39TWLDOO0KODM+skwR/9nRo6NMJocgwZ/4VrMi5MRH0YyBO
-Lx3fwzWPSbbSATecyYpE9zeRv0xyanyOZqO4bcBVlbXfqCSg91Rljtu1gmgAC2zX
-9JqT1Ptlquq8psmpldwYAgNf28MrEt6mJkfMunOCGQmDVOlEzjp6uRD2cWtDxS1V
-vbgX5xwEGfbucSd+MSnhjXVsB/H8d2U7tJBh0XSURNGS8WoQgggX/qGyikm5DMkN
-x306X3RqKCO9r/pEs7tEPUx+WdEJrTHNfWtZKPiZNEOeYQiGlVBMoU92cq+z28MB
-fA4AoCiKN6zscNJnkKsgxYp2WPSynUAYb0K0sVAazMd3h3Axlj7OGwjTka6f8TUu
-xDUJoRbul1kEGdJLApyktqOD/TuSHKHzVZOoaefHnyvm80As5AlLC2bqEajl2Tib
-IhWGdK7YpPN9Vsjzo862kmdKCr2FmTyFiDhw1P99W88DFUEpM2lCFlOCIx6BSoDc
-vQmZb88F5kaBcW+2n6/0ets+/kxCmKlEqXZnaw4kjoW2nymBMJKewDnjYintuAOp
-5WFGtDBJhYNU98Aw99V7ox/qbANHPKu0EeSM2YSb6I0UsebX/Zfs7ESq3JdUBPgi
-BdQbWGr5zwg=
-=OZt+
------END PGP SIGNATURE-----
+    ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
+UPDATED  WHEN_FAILED RAW_VALUE
+      1 Raw_Read_Error_Rate     0x002f   100   100   051    Pre-fail
+Always       -       1
+      2 Throughput_Performance  0x0026   055   055   000    Old_age
+Always       -       11961
+      3 Spin_Up_Time            0x0023   089   089   025    Pre-fail
+Always       -       3462
+      4 Start_Stop_Count        0x0032   100   100   000    Old_age
+Always       -       24
+      5 Reallocated_Sector_Ct   0x0033   252   252   010    Pre-fail
+Always       -       0
+      7 Seek_Error_Rate         0x002e   252   252   051    Old_age
+Always       -       0
+      8 Seek_Time_Performance   0x0024   252   252   015    Old_age
+Offline      -       0
+      9 Power_On_Hours          0x0032   100   100   000    Old_age
+Always       -       3973
+     10 Spin_Retry_Count        0x0032   252   252   051    Old_age
+Always       -       0
+     11 Calibration_Retry_Count 0x0032   100   100   000    Old_age
+Always       -       133
+     12 Power_Cycle_Count       0x0032   100   100   000    Old_age
+Always       -       24
+    191 G-Sense_Error_Rate      0x0022   252   252   000    Old_age
+Always       -       0
+    192 Power-Off_Retract_Count 0x0022   252   252   000    Old_age
+Always       -       0
+    194 Temperature_Celsius     0x0002   064   063   000    Old_age
+Always       -       29 (Min/Max 21/37)
+    195 Hardware_ECC_Recovered  0x003a   100   100   000    Old_age
+Always       -       0
+    196 Reallocated_Event_Count 0x0032   252   252   000    Old_age
+Always       -       0
+    197 Current_Pending_Sector  0x0032   252   252   000    Old_age
+Always       -       0
+    198 Offline_Uncorrectable   0x0030   252   252   000    Old_age
+Offline      -       0
+    199 UDMA_CRC_Error_Count    0x0036   200   200   000    Old_age
+Always       -       0
+    200 Multi_Zone_Error_Rate   0x002a   100   100   000    Old_age
+Always       -       0
+    223 Load_Retry_Count        0x0032   100   100   000    Old_age
+Always       -       133
+    225 Load_Cycle_Count        0x0032   100   100   000    Old_age
+Always       -       2157
 
---Sig_/akBEln16jaPFsIRtrb=cdsr--
+I've had drives fail in the past but I find this confusing. Is the
+drive failing, is there an issue with the
+controller/motherboard or should I just zero the drive and add it back.
+
+Here is a small section from the kernel log:
+
+    Dec  3 10:56:41  kernel: [  928.639916] sd 1:0:0:0: [sdb]
+Unhandled error code
+    Dec  3 10:56:41  kernel: [  928.639917] sd 1:0:0:0: [sdb]
+    Dec  3 10:56:41  kernel: [  928.639918] Result: hostbyte=DID_OK
+driverbyte=DRIVER_TIMEOUT
+    Dec  3 10:56:41  kernel: [  928.639920] sd 1:0:0:0: [sdb] CDB:
+    Dec  3 10:56:41  kernel: [  928.639921] Read(10): 28 00 00 72 13
+a0 00 00 08 00
+    Dec  3 10:56:41  kernel: [  928.639926] end_request: I/O error,
+dev sdb, sector 7476128
+    Dec  3 10:56:41  kernel: [  928.639950] md/raid1:md1: sdb3:
+rescheduling sector 6210464
+    Dec  3 10:56:41  kernel: [  928.639977] sd 1:0:0:0: [sdb]
+Unhandled error code
+    Dec  3 10:56:41  kernel: [  928.639978] sd 1:0:0:0: [sdb]
+    Dec  3 10:56:41  kernel: [  928.639979] Result: hostbyte=DID_OK
+driverbyte=DRIVER_TIMEOUT
+    Dec  3 10:56:41  kernel: [  928.639981] sd 1:0:0:0: [sdb] CDB:
+    Dec  3 10:56:41  kernel: [  928.639982] Write(10): 2a 00 01 35 37
+b8 00 00 38 00
+    Dec  3 10:56:41  kernel: [  928.639987] end_request: I/O error,
+dev sdb, sector 20264888
+    Dec  3 10:56:41  kernel: [  928.640015] sd 1:0:0:0: [sdb]
+Unhandled error code
+    Dec  3 10:56:41  kernel: [  928.640017] sd 1:0:0:0: [sdb]
+    Dec  3 10:56:41  kernel: [  928.640018] Result: hostbyte=DID_OK
+driverbyte=DRIVER_TIMEOUT
+    Dec  3 10:56:41  kernel: [  928.640019] sd 1:0:0:0: [sdb] CDB:
+    Dec  3 10:56:41  kernel: [  928.640020] Write(10): 2a 00 3b 49 19
+c0 00 00 10 00
+    Dec  3 10:56:41  kernel: [  928.640026] end_request: I/O error,
+dev sdb, sector 994646464
+    Dec  3 10:56:41  kernel: [  928.697578] md/raid1:md1: redirecting
+sector 23223656 to other mirror: sda3
+    Dec  3 10:56:41  kernel: [  928.713801] md/raid1:md1: redirecting
+sector 6210464 to other mirror: sda3
+    Dec  3 10:56:41  kernel: [  928.713864] RAID1 conf printout:
+    Dec  3 10:56:41  kernel: [  928.713866]  --- wd:1 rd:2
+    Dec  3 10:56:41  kernel: [  928.713869]  disk 0, wo:1, o:0, dev:sdb3
+    Dec  3 10:56:41  kernel: [  928.713871]  disk 1, wo:0, o:1, dev:sda3
+    Dec  3 10:56:41  kernel: [  928.717843] RAID1 conf printout:
+    Dec  3 10:56:41  kernel: [  928.717846]  --- wd:1 rd:2
+    Dec  3 10:56:41  kernel: [  928.717848]  disk 1, wo:0, o:1, dev:sda3
+
+And here's some details from mdadm:
+
+    Personalities : [linear] [multipath] [raid0] [raid1] [raid6]
+[raid5] [raid4] [raid10]
+    md0 : active raid1 sda2[1] sdb2[0]
+          499392 blocks super 1.2 [2/2] [UU]
+
+    md1 : active raid1 sda3[1] sdb3[0](F)
+          975552320 blocks super 1.2 [2/1] [_U]
+
+    unused devices: <none>
+
+    /dev/md0:
+            Version : 1.2
+      Creation Time : Sat Jun 22 11:30:54 2013
+         Raid Level : raid1
+         Array Size : 499392 (487.77 MiB 511.38 MB)
+      Used Dev Size : 499392 (487.77 MiB 511.38 MB)
+       Raid Devices : 2
+      Total Devices : 2
+        Persistence : Superblock is persistent
+
+        Update Time : Tue Dec  3 21:12:57 2013
+              State : clean
+     Active Devices : 2
+    Working Devices : 2
+     Failed Devices : 0
+      Spare Devices : 0
+
+               Name : ubuntu:0
+               UUID : 83f80fc5:e1da5cd9:67eed912:09c62536
+             Events : 35
+
+        Number   Major   Minor   RaidDevice State
+           0       8       18        0      active sync   /dev/sdb2
+           1       8        2        1      active sync   /dev/sda2
+
+    /dev/md1:
+            Version : 1.2
+      Creation Time : Sat Jun 22 11:31:06 2013
+         Raid Level : raid1
+         Array Size : 975552320 (930.36 GiB 998.97 GB)
+      Used Dev Size : 975552320 (930.36 GiB 998.97 GB)
+       Raid Devices : 2
+      Total Devices : 2
+        Persistence : Superblock is persistent
+
+        Update Time : Wed Dec  4 18:20:00 2013
+              State : clean, degraded
+     Active Devices : 1
+    Working Devices : 1
+     Failed Devices : 1
+      Spare Devices : 0
+
+               Name : ubuntu:1
+               UUID : 49dbfe44:d988b67b:06f285ee:f28ffeb9
+             Events : 11036
+
+        Number   Major   Minor   RaidDevice State
+           0       0        0        0      removed
+           1       8        3        1      active sync   /dev/sda3
+
+           0       8       19        -      faulty spare   /dev/sdb3
+
+I'd really appreciate some advice.
+
+Regards
