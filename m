@@ -1,48 +1,34 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: MDADM 3.3 broken?
-Date: Thu, 5 Dec 2013 17:53:29 -0800
-Message-ID: <CAGRSmLsOBr2GdSD5wa9K_2cKYqaE95SGMbfHJ-BsjDnEfk72cw@mail.gmail.com>
-References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
-	<528A7721.8080604@arcor.de>
-	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
-	<20131119110110.396b2af3@notabene.brown>
-	<528BBFEB.7050202@arcor.de>
-	<20131120105115.27494ab6@notabene.brown>
-	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
-	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
-	<20131120114833.695fc9d4@notabene.brown>
-	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
-	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
-	<20131120133016.7de2d400@notabene.brown>
-	<528E710F.1050901@arcor.de>
-	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
-	<5293C789.3020703@arcor.de>
-	<CAGRSmLsHSwELK_jd=PEckDpSBVCfrt9cHBvG_cH9esMYtLu5Jg@mail.gmail.com>
-	<529674CB.5040808@arcor.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID-0/5/6 performances
+Date: Fri, 06 Dec 2013 03:24:18 -0600
+Message-ID: <52A197C2.1090805@hardwarefreak.com>
+References: <20131205192454.GA5695@lazy.lzy>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <529674CB.5040808@arcor.de>
+In-Reply-To: <20131205192454.GA5695@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 12/5/2013 1:24 PM, Piergiorgio Sartor wrote:
 
-Got the files from the customer - you can download the zipped tar from
-https://www.dropbox.com/s/aq8idkjnxyslho7/raid5data.tgz
+> The "stripe_cache_size" was set to the max 32768.
 
-Let me know when you get it so we can delete it.
+You don't want to set this so high.  Doing this will:
 
-Thanks.
+1.  Usually decrease throughput
+2.  Eat a huge amount of memory.  With 5 drives:
 
+    ((32768*4096)*5)/1048576 = 640 MB RAM consumed for the stripe buffer
 
-On Wed, Nov 27, 2013 at 2:40 PM, Martin Wilck <mwilck@arcor.de> wrote:
-> On 11/26/2013 10:59 PM, David F. wrote:
->> does it need to be a tar type file or would virtual hard drive .vmdk
->> files be okay?
->
-> I guess it would be ok (never tried).
->
-> Martin
+For 5 or fewer pieces of spinning rust a value of 2048 or less should be
+sufficient.  Test 512, 1024, 2048, 4096, and 8192.  You should see your
+throughput go up and then back down.  Find the sweet spot and use that
+value.  If two of these yield throughput within 5% of one another, use
+the lower value as it eats less RAM.
+
+-- 
+Stan
