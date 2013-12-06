@@ -1,19 +1,29 @@
-From: <miguelreno3@miguelreno.onmicrosoft.com>
-Subject: PROPOSAL(STRICTLY CONFIDENTIAL).
-Date: Fri, 6 Dec 2013 13:23:59 +0100
-Message-ID: <200f1e17-879d-45c7-9549-3b46b680f783@DB3PR05MB282.eurprd05.prod.outlook.com>
-Reply-To: <morenomiguelmartinez@aol.com>
+From: Sebastian Riemer <sebastian.riemer@profitbricks.com>
+Subject: Idea: reduce SCST processes per LUN
+Date: Fri, 06 Dec 2013 17:29:02 +0100
+Message-ID: <52A1FB4E.9000503@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <miguelreno3@miguelreno.onmicrosoft.com>
+To: Uwe Geier <uwe.geier@profitbricks.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, dcops <dcops@profitbricks.com>
 List-Id: linux-raid.ids
 
-I am Martinez M.Moreno, a lawyer resident in Spain. I am contacting you with regards to a discreet and confidential proposal.
-I will furnish you with further details once I receive your affirmatory response.Contact me for more information if interested through my personal email: morenomiguelmartinez@aol.com
+Hi Uwe,
 
-Regards,
-Martinez M.Moreno.
+my idea was to reduce the number of SCST processes per LUN on the
+storage servers as the default is 8. It can be changed live, I've tested.
+
+But I've also seen that on storage1703 and storage1804 it is already set
+to 1.
+
+$ for i in `ls -1 /sys/kernel/scst_tgt/devices`; do cat
+/sys/kernel/scst_tgt/devices/$i/threads_num; done
+
+So there seems to be no possibility to further reduce the number of
+kernel processes.
+
+Cheers,
+Sebastian
