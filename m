@@ -1,43 +1,61 @@
-From: Patrick Smears <patrick@smears.org>
-Subject: mdadm fails to recognise DDF partitions from Marvell MV64460 controller
-Date: Fri, 06 Dec 2013 17:44:28 +0000
-Message-ID: <52A20CFC.7050802@smears.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID-0/5/6 performances
+Date: Fri, 6 Dec 2013 19:13:30 +0100
+Message-ID: <20131206181330.GA4161@lazy.lzy>
+References: <20131205192454.GA5695@lazy.lzy>
+ <52A197C2.1090805@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <52A197C2.1090805@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Dec 06, 2013 at 03:24:18AM -0600, Stan Hoeppner wrote:
+> On 12/5/2013 1:24 PM, Piergiorgio Sartor wrote:
+> 
+> > The "stripe_cache_size" was set to the max 32768.
+> 
+> You don't want to set this so high.  Doing this will:
+> 
+> 1.  Usually decrease throughput
+> 2.  Eat a huge amount of memory.  With 5 drives:
+> 
+>     ((32768*4096)*5)/1048576 = 640 MB RAM consumed for the stripe buffer
+> 
+> For 5 or fewer pieces of spinning rust a value of 2048 or less should be
+> sufficient.  Test 512, 1024, 2048, 4096, and 8192.  You should see your
+> throughput go up and then back down.  Find the sweet spot and use that
+> value.  If two of these yield throughput within 5% of one another, use
+> the lower value as it eats less RAM.
 
-I have a Lenovo D20 server, which has a Marvel MV64460 (fake)RAID 
-controller.
+Hi Stan,
 
-For various reasons I need to be able to dual-boot the machine with 
-Windows, so I need to use the native RAID format (which the Windows 
-drivers understand).
+thanks for the reply, I was looking forward to it,
+since you always provide useful information.
 
-It uses DDF metadata on its partitions, which I've been using 
-successfully with "dmraid" for some time, but I'd like to move to mdadm 
-since the dmraid support is lacking in a number of respects (e.g. cannot 
-create metadata; cannot rebuild arrays, etc...).
+I checked two systems, one, different, with RAID-5,
+the other the actual RAID-6.
 
-Unfortunately, though dmraid recognises the partition as DDF, mdadm does 
-not - it always reports the disk as having no superblock.
+In the first one, 2048 seems to be the best stripe
+cache size, while more results in slower writing
+speed, albeit not too much.
 
-I've done some debugging on this, and it appears that the RAID 
-controller's BIOS departs from the DDF spec in a couple of (minor) ways 
-- and so because mdadm is stricter in its checks than dmraid, it refuses 
-to recognise the disk.
+For the RAID-6, it seems 32768 is the best value.
 
-I think I can come up with a patch to work around this - should I do 
-that and submit it (and if so, where should I send it)? Or would it be 
-better to describe the issues I've found in more detail first?
+There is one difference, the RAID-5 has chunk size
+of 512k (default), while the RAID-6 has still the 64k.
 
-Regards,
+BTW, why is that? I mean why large stripe cache
+results in lower writing speed?
 
-Patrick
+Thanks,
 
+bye,
 
+-- 
+
+piergiorgio
