@@ -1,61 +1,95 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-0/5/6 performances
-Date: Fri, 6 Dec 2013 19:13:30 +0100
-Message-ID: <20131206181330.GA4161@lazy.lzy>
-References: <20131205192454.GA5695@lazy.lzy>
- <52A197C2.1090805@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm fails to recognise DDF partitions from Marvell MV64460
+ controller
+Date: Sat, 7 Dec 2013 09:28:20 +1100
+Message-ID: <20131207092820.66c7be92@notabene.brown>
+References: <52A20CFC.7050802@smears.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Xp2ungPhS2nht3RDmUd90Fu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <52A197C2.1090805@hardwarefreak.com>
+In-Reply-To: <52A20CFC.7050802@smears.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Patrick Smears <patrick@smears.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 06, 2013 at 03:24:18AM -0600, Stan Hoeppner wrote:
-> On 12/5/2013 1:24 PM, Piergiorgio Sartor wrote:
-> 
-> > The "stripe_cache_size" was set to the max 32768.
-> 
-> You don't want to set this so high.  Doing this will:
-> 
-> 1.  Usually decrease throughput
-> 2.  Eat a huge amount of memory.  With 5 drives:
-> 
->     ((32768*4096)*5)/1048576 = 640 MB RAM consumed for the stripe buffer
-> 
-> For 5 or fewer pieces of spinning rust a value of 2048 or less should be
-> sufficient.  Test 512, 1024, 2048, 4096, and 8192.  You should see your
-> throughput go up and then back down.  Find the sweet spot and use that
-> value.  If two of these yield throughput within 5% of one another, use
-> the lower value as it eats less RAM.
+--Sig_/Xp2ungPhS2nht3RDmUd90Fu
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Stan,
+On Fri, 06 Dec 2013 17:44:28 +0000 Patrick Smears <patrick@smears.org> wrot=
+e:
 
-thanks for the reply, I was looking forward to it,
-since you always provide useful information.
+> Hi,
+>=20
+> I have a Lenovo D20 server, which has a Marvel MV64460 (fake)RAID=20
+> controller.
+>=20
+> For various reasons I need to be able to dual-boot the machine with=20
+> Windows, so I need to use the native RAID format (which the Windows=20
+> drivers understand).
+>=20
+> It uses DDF metadata on its partitions, which I've been using=20
+> successfully with "dmraid" for some time, but I'd like to move to mdadm=20
+> since the dmraid support is lacking in a number of respects (e.g. cannot=
+=20
+> create metadata; cannot rebuild arrays, etc...).
+>=20
+> Unfortunately, though dmraid recognises the partition as DDF, mdadm does=
+=20
+> not - it always reports the disk as having no superblock.
+>=20
+> I've done some debugging on this, and it appears that the RAID=20
+> controller's BIOS departs from the DDF spec in a couple of (minor) ways=20
+> - and so because mdadm is stricter in its checks than dmraid, it refuses=
+=20
+> to recognise the disk.
+>=20
+> I think I can come up with a patch to work around this - should I do=20
+> that and submit it (and if so, where should I send it)? Or would it be=20
+> better to describe the issues I've found in more detail first?
+>=20
 
-I checked two systems, one, different, with RAID-5,
-the other the actual RAID-6.
+A patch is often a good way to describe an issue in detail - though you
+should include plain-language text as well of course.
+Patches can be posted to this list.
 
-In the first one, 2048 seems to be the best stripe
-cache size, while more results in slower writing
-speed, albeit not too much.
+The only "DDF" I've come across which mdadm doesn't like is DDFv1.0 which h=
+as
+all multi-byte values in the "other" order, and uses a different checksum
+algorithm.  As I cannot find  a document describing DDFv1.0 I cannot
+calculate the checksum so I cannot update the metadata, so I cannot use
+DDFv1.0.
 
-For the RAID-6, it seems 32768 is the best value.
-
-There is one difference, the RAID-5 has chunk size
-of 512k (default), while the RAID-6 has still the 64k.
-
-BTW, why is that? I mean why large stripe cache
-results in lower writing speed?
+If the "minor" variances you found don't prevent us from being able to upda=
+te
+the metadata and still have it recognised by the card, then I'm certainly
+interested in a patch.
 
 Thanks,
+NeilBrown
 
-bye,
+--Sig_/Xp2ungPhS2nht3RDmUd90Fu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-piergiorgio
+iQIVAwUBUqJPhDnsnt1WYoG5AQJtfRAAl3a5L1QSIM9MUr5L78EV2X72heprnNLb
+LMbXXDMeTsb4KIBcN5E5Pgwz/8hcu2w6h+/dqGHw9Zd8jEmjmAlD25plj7AtjwSL
+c7yHd7fIVnuaEO4TqfnfteRitmy/dqKEqlwS0I+2dI6R7tEDjtPLK2ypZ4ghLnUa
+QD/Pn2FuLfSjtRkJmaS/GjNffeli1KPnYCFdtZq/OQQ1w1KY0GLV2KHBdm/33kin
+g163O4njge5/nODjxV0zWEOhpOgSrzOuzzleE9Ul61lWMxxy2Zb+LysWjtX9gH+V
+qMkPsIvvLVk1eUZ5BtMp4CC66ZD+Mk1EJpKPrvO/A+VAOylZkcCdukbkIN6SocPv
+1CiNRr9Rar7i1uZQpXngrSIL5NXNPVz19YycQ2S6xVttwXgp7B6DwBlHrAK0vfPp
+THpH7O0WQp0vJ2507dlCSuK64wJSGsRUSw/Mk5P/pPn1/d6JPcuNYLMOo2N+wcID
+Q8e/QJdtdJMKOb1rWjyAK+c9DwCKBIu5HOLkItvfxARZ6KgCaodWFXl7+B5WVdQU
+trpi1msJolf1IJCraSzY5/gPze0v1i8XleclgTgvtDbzyGSAYPDN4EI7HMjh+vs6
+rULuHrkX2nWCtQZTOXkQVe09+Yf5X+ENRMeDk8DBEkCa7mYlb7wh+LXILJtHOWd5
+3rFLxs3bdTQ=
+=0uCQ
+-----END PGP SIGNATURE-----
+
+--Sig_/Xp2ungPhS2nht3RDmUd90Fu--
