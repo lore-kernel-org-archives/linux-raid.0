@@ -1,65 +1,51 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID-0/5/6 performances
-Date: Fri, 06 Dec 2013 17:29:02 -0600
-Message-ID: <52A25DBE.3030202@hardwarefreak.com>
-References: <20131205192454.GA5695@lazy.lzy> <52A197C2.1090805@hardwarefreak.com> <20131206181330.GA4161@lazy.lzy>
-Reply-To: stan@hardwarefreak.com
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Fri, 6 Dec 2013 18:28:16 -0800
+Message-ID: <CAGRSmLvUrKT8zArpJsFrA=X9KZ7iMyqOWvyeaRBcQ3h0dcGU6Q@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<528A7721.8080604@arcor.de>
+	<CAGRSmLvRVQtrkYPLS8NfRS+DvyS0xZ72cwVdLygb0w5KbVrARA@mail.gmail.com>
+	<20131119110110.396b2af3@notabene.brown>
+	<528BBFEB.7050202@arcor.de>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<5293C789.3020703@arcor.de>
+	<CAGRSmLsHSwELK_jd=PEckDpSBVCfrt9cHBvG_cH9esMYtLu5Jg@mail.gmail.com>
+	<529674CB.5040808@arcor.de>
+	<CAGRSmLsOBr2GdSD5wa9K_2cKYqaE95SGMbfHJ-BsjDnEfk72cw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131206181330.GA4161@lazy.lzy>
+In-Reply-To: <CAGRSmLsOBr2GdSD5wa9K_2cKYqaE95SGMbfHJ-BsjDnEfk72cw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Martin Wilck <mwilck@arcor.de>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/6/2013 12:13 PM, Piergiorgio Sartor wrote:
-> On Fri, Dec 06, 2013 at 03:24:18AM -0600, Stan Hoeppner wrote:
->> On 12/5/2013 1:24 PM, Piergiorgio Sartor wrote:
->>
->>> The "stripe_cache_size" was set to the max 32768.
->>
->> You don't want to set this so high.  Doing this will:
->>
->> 1.  Usually decrease throughput
->> 2.  Eat a huge amount of memory.  With 5 drives:
->>
->>     ((32768*4096)*5)/1048576 = 640 MB RAM consumed for the stripe buffer
->>
->> For 5 or fewer pieces of spinning rust a value of 2048 or less should be
->> sufficient.  Test 512, 1024, 2048, 4096, and 8192.  You should see your
->> throughput go up and then back down.  Find the sweet spot and use that
->> value.  If two of these yield throughput within 5% of one another, use
->> the lower value as it eats less RAM.
-> 
-> Hi Stan,
-> 
-> thanks for the reply, I was looking forward to it,
-> since you always provide useful information.
-> 
-> I checked two systems, one, different, with RAID-5,
-> the other the actual RAID-6.
-> 
-> In the first one, 2048 seems to be the best stripe
-> cache size, while more results in slower writing
-> speed, albeit not too much.
-> 
-> For the RAID-6, it seems 32768 is the best value.
-> 
-> There is one difference, the RAID-5 has chunk size
-> of 512k (default), while the RAID-6 has still the 64k.
-> 
-> BTW, why is that? I mean why large stripe cache
-> results in lower writing speed?
+Just wondering if the link to the files to debug the problem made it ???
 
-I don't have the answer to this question.  It has been asked before.  I
-can only speculate that the larger cache table introduces overhead of
-some kind.  You may want to ask Neil directly.
-
-Note that you're using dd for testing this.  dd produces single stream
-serial IO.  If you test other IO patterns, such as parallel or
-asynchronous, with software such as FIO, the results may be a bit different.
-
--- 
-Stan
+On Thu, Dec 5, 2013 at 5:53 PM, David F. <df7729@gmail.com> wrote:
+> Hi,
+>
+> Got the files from the customer - you can download the zipped tar from
+>
+> Let me know when you get it so we can delete it.
+>
+> Thanks.
+>
+>
+> On Wed, Nov 27, 2013 at 2:40 PM, Martin Wilck <mwilck@arcor.de> wrote:
+>> On 11/26/2013 10:59 PM, David F. wrote:
+>>> does it need to be a tar type file or would virtual hard drive .vmdk
+>>> files be okay?
+>>
+>> I guess it would be ok (never tried).
+>>
+>> Martin
