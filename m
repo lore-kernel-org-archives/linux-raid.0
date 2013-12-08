@@ -1,27 +1,23 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Raid1 where Event Count off my 1 cannot assemble --force
-Date: Sun, 8 Dec 2013 11:57:47 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
-References: <52A44778.8040502@suddenlinkmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: Hai Wu <haiwu.us@gmail.com>
+Subject: mdadm rebuild
+Date: Sun, 8 Dec 2013 11:53:00 -0600
+Message-ID: <B49ACD0F-BAD8-4D61-B87C-A06295B58A56@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52A44778.8040502@suddenlinkmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 8 Dec 2013, David C. Rankin wrote:
+I am wondering whether it is possible for mdadm to auto-rebuild a failed
+raid1 driver upon its replacement with a new drive? The following lines
+from some RedHat website URL seems to indicate vaguely that it might be possible:
 
-> Guys,
->
->  I have an older box that is a fax server where the Event Count for /dev/md1 is
-> off by 1, but the array cannot be reassembled with --assemble --force /dev/dm1
-> /dev/sda5 /dev/sdb5.
+Previously, mdadm was not able to rebuild newly-connected drives
+automatically. This update adds the array auto-rebuild feature and allows a
+RAID stack to automatically rebuild newly-connected drives.
 
-What are the messages displayed in "dmesg" when you try to use this 
-command?
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+The goal is to get mdadm software raid1 to behave the same as hardware
+raid1, when replacing failed hard drive. It should automatically detect new
+drive and rebuild the new drive into part of raid1 ..
