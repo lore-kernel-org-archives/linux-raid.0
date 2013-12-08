@@ -1,186 +1,90 @@
-From: Christopher Hoover <ch@murgatroid.com>
-Subject: unable to assemble (mostly?) clean array
-Date: Sun, 8 Dec 2013 15:32:42 -0800
-Message-ID: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: unable to assemble (mostly?) clean array
+Date: Mon, 9 Dec 2013 10:55:07 +1100
+Message-ID: <20131209105507.0273bf9e@notabene.brown>
+References: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/L_K4FRmRvXEPXzEbPMqmeoA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christopher Hoover <ch@murgatroid.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi folks,
+--Sig_/L_K4FRmRvXEPXzEbPMqmeoA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-what's the safest way to get this array back into r/o mode?
+On Sun, 8 Dec 2013 15:32:42 -0800 Christopher Hoover <ch@murgatroid.com>
+wrote:
 
-thanks,
--ch
-ch@murgatroid.com
+> hi folks,
+>=20
+> what's the safest way to get this array back into r/o mode?
+>=20
+> thanks,
+> -ch
+> ch@murgatroid.com
+>=20
+>=20
+> ch@snaggle:~$ sudo mdadm --examine /dev/sd[defg]1 | egrep 'Event|^/dev/sd'
+>=20
+> /dev/sdd1:
+>=20
+>          Events : 286024
+>=20
+> /dev/sde1:
+>=20
+>          Events : 286011
+>=20
+> /dev/sdf1:
+>=20
+>          Events : 286024
+>=20
+> /dev/sdg1:
+>=20
+>          Events : 286024
+>=20
+> ch@snaggle:~$ sudo mdadm --assemble --force  /dev/md0 /dev/sdd1
+> /dev/sde1 /sdg1
+>=20
+> mdadm: cannot open device /sdg1: No such file or directory
+>=20
+> mdadm: /sdg1 has no superblock - assembly aborted
 
+You missed a "/dev" there!
 
-ch@snaggle:~$ sudo mdadm --examine /dev/sd[defg]1 | egrep 'Event|^/dev/sd'
+Did you try just giving all the devices to mdadm and letting it pick the be=
+st?
 
-/dev/sdd1:
+ mdadm --assemble --force /dev/md0 /dev/sd[defg]1
 
-         Events : 286024
+?
 
-/dev/sde1:
+NeilBrown
 
-         Events : 286011
+--Sig_/L_K4FRmRvXEPXzEbPMqmeoA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-/dev/sdf1:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-         Events : 286024
+iQIVAwUBUqUG2znsnt1WYoG5AQKniA/5ARYIlBzF79E/rqTtIcxaL6pzsBjFbk+W
+Qck6tg5uw4VzUjF3osrdSMnkhiQ0iQKZZIrsALnlKntOTkY/GY1g5yAu4PJjQfNF
+/Szg7qTF0yhiBMs1kZEaWYSNpnRBrIedLZdKQ/SxxmPpn7sJU30xXZnpN/r3/EWi
+002x5vrXHFyc+ATNJNdMBRZf1izTTrerUZHMQLcjalQFmFrmjsq3oJ2BQT/VdB2T
+z6xtoZqNCg1gty0yvMlEqnw+G4HMI4a8Jf6JBjsskww8IkRf0oLqAGic+3DQXhVZ
+Jk/N5Qtdb4AxnXwmxKe+KC4b6A5o2A6WsbDWdlT13Lh5UDBiovUsuFIW4zC+jV2J
+Pk4K7KyCHoDNeTcJ0W5Uh+nW1i3iJW6bcNN7s3uWxvls41y16ry6xZbe8UIQH+ZV
+dIvLVPuHw3sc6OXoSdByp92MG04XA+2i+8fVpInLRLWanj8lCNDe9aMuPe7U2Pt9
+YH+RYCgADqL5v0QZzPXxMSDFwd2mG3SLBxmhhw16vPuUlgu9DBZ+p/JMcHESJgf8
+uJWI6rkgeSo3Vo3KxM19tM/Md5TpY2YEZ0Dk602L1VBaXv9Mz0CdyRq+HbBrL7Hy
+A/W3O/8jxmGDk/UilB7BLhi+CicIOdbrBOldcxxr/aOPi116r+Lk26JSQW5RplCL
+ERe//XKVwYw=
+=6rPM
+-----END PGP SIGNATURE-----
 
-/dev/sdg1:
-
-         Events : 286024
-
-ch@snaggle:~$ sudo mdadm --assemble --force  /dev/md0 /dev/sdd1
-/dev/sde1 /sdg1
-
-mdadm: cannot open device /sdg1: No such file or directory
-
-mdadm: /sdg1 has no superblock - assembly aborted
-
-ch@snaggle:~$ sudo mdadm --assemble --force  /dev/md0 /dev/sdd1 /dev/sde1
-
-mdadm: ignoring /dev/sde1 as it reports /dev/sdd1 as failed
-
-mdadm: /dev/md0 assembled from 0 drives and 1 spare - not enough to
-start the array.
-
-ch@snaggle:~$ sudo mdadm -E /dev/sd[defg]1
-
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 48af1ed4:8978e992:f8a6b934:875c877f (local to host snaggle)
-  Creation Time : Mon May 23 00:02:10 2011
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Tue Dec  3 21:19:31 2013
-          State : clean
- Active Devices : 1
-Working Devices : 3
- Failed Devices : 2
-  Spare Devices : 2
-       Checksum : f32d49b0 - correct
-         Events : 286024
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     4       8       33        4      spare
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       65        2      active sync   /dev/sde1
-   3     3       0        0        3      faulty removed
-   4     4       8       33        4      spare
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 48af1ed4:8978e992:f8a6b934:875c877f (local to host snaggle)
-  Creation Time : Mon May 23 00:02:10 2011
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Sun Dec  1 18:03:17 2013
-          State : clean
- Active Devices : 2
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 2
-       Checksum : f32a7899 - correct
-         Events : 286011
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       49        1      active sync   /dev/sdd1
-
-   0     0       0        0        0      removed
-   1     1       8       49        1      active sync   /dev/sdd1
-   2     2       8       65        2      active sync   /dev/sde1
-   3     3       0        0        3      faulty removed
-   4     4       8       33        4      spare
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 48af1ed4:8978e992:f8a6b934:875c877f (local to host snaggle)
-  Creation Time : Mon May 23 00:02:10 2011
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Tue Dec  3 21:19:31 2013
-          State : clean
- Active Devices : 1
-Working Devices : 3
- Failed Devices : 2
-  Spare Devices : 2
-       Checksum : f32d49d2 - correct
-         Events : 286024
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       65        2      active sync   /dev/sde1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       65        2      active sync   /dev/sde1
-   3     3       0        0        3      faulty removed
-   4     4       8       33        4      spare
-   5     5       8       81        5      spare   /dev/sdf1
-/dev/sdg1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 48af1ed4:8978e992:f8a6b934:875c877f (local to host snaggle)
-  Creation Time : Mon May 23 00:02:10 2011
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Tue Dec  3 21:19:31 2013
-          State : clean
- Active Devices : 1
-Working Devices : 3
- Failed Devices : 2
-  Spare Devices : 2
-       Checksum : f32d49e2 - correct
-         Events : 286024
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     5       8       81        5      spare   /dev/sdf1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       65        2      active sync   /dev/sde1
-   3     3       0        0        3      faulty removed
-   4     4       8       33        4      spare
-   5     5       8       81        5      spare   /dev/sdf1
+--Sig_/L_K4FRmRvXEPXzEbPMqmeoA--
