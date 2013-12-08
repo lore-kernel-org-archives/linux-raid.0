@@ -1,58 +1,72 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: Re: Raid1 where Event Count off my 1 cannot assemble --force
-Date: Sun, 08 Dec 2013 11:57:37 -0600
-Message-ID: <52A4B311.6040204@suddenlinkmail.com>
-References: <52A44778.8040502@suddenlinkmail.com> <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
+From: Tomas Agartz <tlund@nxs.se>
+Subject: How to assemble 4-disk raid5 with one broken disk and one marked as
+ spare by operator error?
+Date: Sun, 8 Dec 2013 21:04:42 +0100 (CET)
+Message-ID: <Pine.LNX.4.61.1312082056110.13787@envy.nxs.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/08/2013 04:57 AM, Mikael Abrahamsson wrote:
-> On Sun, 8 Dec 2013, David C. Rankin wrote:
-> 
->> Guys,
->>
->>  I have an older box that is a fax server where the Event Count for /dev/md1 is
->> off by 1, but the array cannot be reassembled with --assemble --force /dev/dm1
->> /dev/sda5 /dev/sdb5.
-> 
-> What are the messages displayed in "dmesg" when you try to use this command?
-> 
+After booting a server that had been powered off for some time, the 4-disk 
+raid5 device was up and running in read-only mode with one disk missing. 
+After a, in hindsight, hasty decision, "mdadm --manage --add /dev/md0 
+/dev/sdd" was executed to re-add the missing device to the array.
 
-Mikael,
+At this time, all hell broke loose :) The first thing that happened was 
+that sdd was added as a spare instead of re-added as expected. The second 
+thing was that a different disk, sdb, was kicked from the array because of 
+read/sata-bus errors. The root disk also bailed and the system had to be 
+powercycled.
 
-  Following the commands:
+The real problem, from the start, was probably that sdb was bad all along, 
+but from some reason sdd was the device missing from the array after the 
+initial boot.
 
-# mdadm --stop /dev/md1
-# mdadm --assemble --force /dev/dm1 /dev/sd[ab]5
+Trying to read data from sdb gives read errors and timeouts, but I was 
+able to do "mdadm --examine" after resetting the sata port.
 
-  The messages captured in the logs are:
+The current state is that, out of 4 disks two are good (sde and sdf), one 
+is (in error) marked as a spare (sdd), and the fourth device is unusable 
+(sdb).
 
-Rescue Kernel: md: md1: stopped.
-Rescue Kernel: md: unbind<sda5>
-Rescue Kernel: md: export_rdev(sda5)
-Rescue Kernel: md: unbind<sdb5>
-Rescue Kernel: md: export_rdev(sdb5)
-Rescue Kernel: md: md1: stopped.
-Rescue Kernel: md: md1 raid array is not clean -- starting background reconstruction
-Rescue Kernel: md: raid1: raid set md1 active with 2 out of 2 mirrors
-Rescue Kernel: md1: bitmap file is out of date (148 < 149) -- forcing full recovery
-Rescue Kernel: md1: bitmap file is out of date, doing full recovery
-Rescue Kernel: md1: bitmap initialisation failed: -5
-Rescue Kernel: md1: failed to create bitmap (-5)
+What is the correct method do change the spare disk back to a data disk 
+and try to restart the array with 3 out of 4 devices (sdd, sde and sdf)?
 
+The device has never had a spare, so I think that sdd used to be "Active 
+device 0" before this happened?
 
-  That's it for the log, then on the command line I have:
+Possibly relevant data from mdadm --examine on the four devices:
 
-mdadm: failed to RUN_ARRAY /dev/md1: Input/Output error
+sdb          State : clean
+sdb         Events : 333560
+sdb   Device Role : Active device 3
+sdb   Array State : .AAA ('A' == active, '.' == missing)
 
-  What should I try next? Don't hesitate to ask if you need any additional
-information, I'll provide whatever is necessary. Thanks.
+sdd          State : clean
+sdd         Events : 333562
+sdd   Device Role : spare
+sdd   Array State : .AA. ('A' == active, '.' == missing)
 
--- 
-David C. Rankin, J.D.,P.E.
+sde          State : clean
+sde         Events : 333562
+sde   Device Role : Active device 1
+sde   Array State : .AA. ('A' == active, '.' == missing)
+
+sdf          State : clean
+sdf         Events : 333562
+sdf   Device Role : Active device 2
+sdf   Array State : .AA. ('A' == active, '.' == missing)
+
+If no one else has any better suggestions, my best guess would be to: 
+"mdadm --create /dev/md0 --level=5 --raid-devices=4 --assume-clean 
+/dev/sdd /dev/sde /dev/sdf missing" (the device was created with default 
+values, metadata 1.2, chunk size 512K, layout left-symmetric).
+
+(Other crazy ideas involve editing the superblock of sdd and making it 
+device 0 and then trying to start the array after that).
+
+Best regards,
+Tomas
