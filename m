@@ -1,72 +1,100 @@
-From: Tomas Agartz <tlund@nxs.se>
-Subject: How to assemble 4-disk raid5 with one broken disk and one marked as
- spare by operator error?
-Date: Sun, 8 Dec 2013 21:04:42 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.1312082056110.13787@envy.nxs.se>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm rebuild
+Date: Mon, 9 Dec 2013 08:55:54 +1100
+Message-ID: <20131209085554.262006d5@notabene.brown>
+References: <B49ACD0F-BAD8-4D61-B87C-A06295B58A56@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/q7CMLfJc8xTX+Bul.8rY5/n"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <B49ACD0F-BAD8-4D61-B87C-A06295B58A56@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Hai Wu <haiwu.us@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After booting a server that had been powered off for some time, the 4-disk 
-raid5 device was up and running in read-only mode with one disk missing. 
-After a, in hindsight, hasty decision, "mdadm --manage --add /dev/md0 
-/dev/sdd" was executed to re-add the missing device to the array.
+--Sig_/q7CMLfJc8xTX+Bul.8rY5/n
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-At this time, all hell broke loose :) The first thing that happened was 
-that sdd was added as a spare instead of re-added as expected. The second 
-thing was that a different disk, sdb, was kicked from the array because of 
-read/sata-bus errors. The root disk also bailed and the system had to be 
-powercycled.
+On Sun, 8 Dec 2013 11:53:00 -0600 Hai Wu <haiwu.us@gmail.com> wrote:
 
-The real problem, from the start, was probably that sdb was bad all along, 
-but from some reason sdd was the device missing from the array after the 
-initial boot.
+> I am wondering whether it is possible for mdadm to auto-rebuild a failed
+> raid1 driver upon its replacement with a new drive? The following lines
+> from some RedHat website URL seems to indicate vaguely that it might be p=
+ossible:
+>=20
 
-Trying to read data from sdb gives read errors and timeouts, but I was 
-able to do "mdadm --examine" after resetting the sata port.
+Yes and no.
+"yes" because it is certainly possible to arrange this,
+"no" because it isn't just mdadm which does it.
 
-The current state is that, out of 4 disks two are good (sde and sdf), one 
-is (in error) marked as a spare (sdd), and the fourth device is unusable 
-(sdb).
+When a drive is plugged in, udev notices and can run various commands to do
+things with that device.  You need to get udev to run "mdadm -I $devname"
+when a new device is plugged in.
+The udev scripts which come with mdadm will only do that for new drives whi=
+ch
+appear to be part of an array already.  You presumably want it to do that f=
+or
+any new drive.  The change should be quite easy.
 
-What is the correct method do change the spare disk back to a data disk 
-and try to restart the array with 3 out of 4 devices (sdd, sde and sdf)?
+Secondly, you need to tell mdadm that it is OK to add a new device as a spa=
+re
+to an array.  To see how to do this you need to read the documentation for
+the "POLICY" command in mdadm.conf.5.
 
-The device has never had a spare, so I think that sdd used to be "Active 
-device 0" before this happened?
+A line like:
+    POLICY action=3Dforce-spare
+tells mdadm that any device passed to "mdadm -I" can be added to any array =
+as
+a spare.  You might not want that, but you can restrict it in various ways.
 
-Possibly relevant data from mdadm --examine on the four devices:
+    POLICY path=3Dpci-0000:00:1f.2-scsi* action=3Dspare
 
-sdb          State : clean
-sdb         Events : 333560
-sdb   Device Role : Active device 3
-sdb   Array State : .AAA ('A' == active, '.' == missing)
+says that any device attached to a particular controller can be added to any
+array as long as it is already a member of the array, or appears to be blan=
+k.
 
-sdd          State : clean
-sdd         Events : 333562
-sdd   Device Role : spare
-sdd   Array State : .AA. ('A' == active, '.' == missing)
+There are various other directives which should allow you to describe
+whatever you want.
 
-sde          State : clean
-sde         Events : 333562
-sde   Device Role : Active device 1
-sde   Array State : .AA. ('A' == active, '.' == missing)
+NeilBrown
 
-sdf          State : clean
-sdf         Events : 333562
-sdf   Device Role : Active device 2
-sdf   Array State : .AA. ('A' == active, '.' == missing)
 
-If no one else has any better suggestions, my best guess would be to: 
-"mdadm --create /dev/md0 --level=5 --raid-devices=4 --assume-clean 
-/dev/sdd /dev/sde /dev/sdf missing" (the device was created with default 
-values, metadata 1.2, chunk size 512K, layout left-symmetric).
+> Previously, mdadm was not able to rebuild newly-connected drives
+> automatically. This update adds the array auto-rebuild feature and allows=
+ a
+> RAID stack to automatically rebuild newly-connected drives.
+>=20
+> The goal is to get mdadm software raid1 to behave the same as hardware
+> raid1, when replacing failed hard drive. It should automatically detect n=
+ew
+> drive and rebuild the new drive into part of raid1 ..--
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-(Other crazy ideas involve editing the superblock of sdd and making it 
-device 0 and then trying to start the array after that).
 
-Best regards,
-Tomas
+--Sig_/q7CMLfJc8xTX+Bul.8rY5/n
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUqTq6jnsnt1WYoG5AQKtmw//f0fmVmxXUHVNkPfwEWJeKRBz7vGt/ZJ7
+95wSXzaqwhb3HSqE7SW/g0f9+m5SzayrOeQDHqVDn+MiRMz4SjD2RFPuBCM20DNq
+KTHTSLWeQRGjc0kg709KR9q0pYwmRh65aFGPLJ0nKavyFPfrzScI9U4DeLvZj57s
+DFimILtBEIdmB24odDUq4LRLr3UAAC3Y2ivGMDG0SRNDtsD9cg862U7jGX3pQO8/
+GRdz6O1BO94XBAveG6sr4CPMJIXERRrhf4MvE6cFU1SLAR8Q0ib637WIN9BozP8e
+xqDQMS00JhJPF/otiU3fKmT6qHJL5lqnUXwBNsq8BL6vXLrnoPirvkg/3G9dXa+P
+b8F8y7Wn6Tcp3uF94B/1SV4UFUSu9r9XH87pEHkFKBBU3RpOwdaW2sKlLopRvdF3
+TdQR968leNAao/KyYvfDrCo5p1V96CklZWD94BFRteXwDfCX7NEJWzfr63oFv0dw
+ee+Jkizcb6lYMMQlAwEvoBt9oQrzIlMWbYNYovYAvMkCPCb6c9dxc9BRoTAC8fxl
+jq6NSSzw1wygoQY4e2BGSXeZg053NyqKaq86qIaj23jT6pnjiDAoz2+eZXfI1cXj
+fATEFcf/uyGHz6AiJusSxwpsS+urxdEAEDVTOGjFtOGxPyv2Uum0vmjGFUFLBWhG
+uhrzjyJSVEU=
+=qf+5
+-----END PGP SIGNATURE-----
+
+--Sig_/q7CMLfJc8xTX+Bul.8rY5/n--
