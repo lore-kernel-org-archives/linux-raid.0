@@ -1,65 +1,47 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid1 where Event Count off my 1 cannot assemble --force
-Date: Mon, 9 Dec 2013 15:46:39 +1100
-Message-ID: <20131209154639.3b9f801c@notabene.brown>
-References: <52A44778.8040502@suddenlinkmail.com>
-	<alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
-	<52A4B311.6040204@suddenlinkmail.com>
-	<52A51122.3030604@suddenlinkmail.com>
-	<20131209120040.6464b91b@notabene.brown>
-	<52A546DB.3090605@suddenlinkmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: [SOLVED] Re: Raid1 where Event Count off my 1 cannot assemble --force
+Date: Sun, 08 Dec 2013 23:20:27 -0600
+Message-ID: <52A5531B.6080702@suddenlinkmail.com>
+References: <52A44778.8040502@suddenlinkmail.com> <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se> <52A4B311.6040204@suddenlinkmail.com> <52A51122.3030604@suddenlinkmail.com> <20131209120040.6464b91b@notabene.brown> <52A546DB.3090605@suddenlinkmail.com> <20131209154639.3b9f801c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52A546DB.3090605@suddenlinkmail.com>
+In-Reply-To: <20131209154639.3b9f801c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBTdW4s
-IDA4IERlYyAyMDEzIDIyOjI4OjExIC0wNjAwICJEYXZpZCBDLiBSYW5raW4iDQo8ZHJhbmtpbmF0
-dHlAc3VkZGVubGlua21haWwuY29tPiB3cm90ZToNCg0KPiAtLS0tLUJFR0lOIFBHUCBTSUdORUQg
-TUVTU0FHRS0tLS0tDQo+IEhhc2g6IFNIQTENCj4gDQo+IE9uIDEyLzA4LzIwMTMgMDc6MDAgUE0s
-IE5laWxCcm93biB3cm90ZToNCj4gPiBXaGF0IHZlcnNpb24gb2YgbWRhZG0gZG8geW91IGhhdmU/
-ICBJdCBsb29rcyBsaWtlIGl0IHNob3VsZCBiZSBjbGV2ZXJlciB0aGFuIA0KPiA+IGl0IGlzLg0K
-PiA+IA0KPiA+IFdoYXQgaWYgeW91IGFkZCAiLS11cGRhdGU9bm8tYml0bWFwIiB0byB0aGUgLS1h
-c3NlbWJsZSBsaW5lPyBBcyB0aGUgYml0bWFwDQo+ID4gc2VlbXMgdG8gYmUgY2F1c2luZyBwcm9i
-bGVtLCBpZ25vcmluZyBpdCBtaWdodCBoZWxwLg0KPiA+IA0KPiA+IE5laWxCcm93bg0KPiANCj4g
-SSB0cmllZCB0aGF0IHRvbyBOZWlsLCBpdCBzYWlkOg0KPiANCj4gbmVtdGVtcDovbW50ICMgbWRh
-ZG0gLS12ZXJib3NlIC0tYXNzZW1ibGUgLS1mb3JjZSAtLXVwZGF0ZT1uby1iaXRtYXAgL2Rldi9t
-ZDENCj4gL2Rldi9zZFthYl01DQo+IG1kYWRtOiAnLS11cGRhdGU9bm8tYml0bWFwJyBpcyBpbnZh
-bGlkLiAgVmFsaWQgLS11cGRhdGUgb3B0aW9ucyBhcmU6DQo+ICAgICAgJ3NwYXJjMi4yJywgJ3N1
-cGVyLW1pbm9yJywgJ3V1aWQnLCAnbmFtZScsICdyZXN5bmMnLA0KPiAgICAgICdzdW1tYXJpZXMn
-LCAnaG9tZWhvc3QnLCAnYnl0ZW9yZGVyJywgJ2RldmljZXNpemUnLg0KPiANCj4gTGlrZSBpbiBt
-eSByZXBseSB0byBBZGFtLCBJIHRoaW5rIHRoZSBhZ2Ugb2YgbWRhZG0gbWF5IGJlIHRoZSBpc3N1
-ZS4gVGhlDQo+IG9wZW5TdVNFIDExLjAgaW5zdGFsbCBEVkQgaXMgcHJldHR5IG9sZCA7LSkgSXQg
-anVzdCBtYXkgbm90IGJlIGhhbmRsaW5nIHRoZQ0KPiAtIC0tYXNzZW1ibGUgY29ycmVjdGx5IGdp
-dmVuIHRoZSBFdmVudCBjb3VudCBkaWZmZXJlbmNlLCBhbmQgdGhlcmUgZG9lc24ndCBzZWVtIHRv
-DQo+IGJlIGEgd2F5IHRvIGp1c3QgdGVsbCBpdDoNCj4gDQo+ICJUaGUgZGF0YSBpcyBjb3JyZWN0
-IG9uIGJvdGggZGlza3MsIGp1c3QgYXNzZW1ibGUgYW5kIHJ1biBpdCBhbmQgYmUgcXVpZXQhIg0K
-PiANCj4gSSdsbCB0cnkgYm9vdGluZyBhbiBBcmNoIGluc3RhbGwgQ0Qgd2l0aCAzLjMuMiBvbiBp
-dCBhbmQgcmVwb3J0IGJhY2suIFRoYW5rIHlvdQ0KPiBhbmQgQWRhbSBmb3IgeW91ciBoZWxwLg0K
-PiANCj4gSWYgaXQgZG9lcyBhc3NlbWJsZSB3aXRoIG1kYWRtIDMuMy4yLCBhbnl0aGluZyBJIG5l
-ZWQgdG8gZG8gb24gdGhlIGFzc2VtYmxlZA0KPiBhcnJheSB0byBtYWtlIHN1cmUgaXQgc3RheXMg
-dGhhdCB3YXk/IGZzY2s/IEFueSB3YXkgdG8gdGVsbCBpdCB0byBtYWtlIHN1cmUgaXQNCj4gaXMg
-aW4gc3luYyBzbyBpdCB3aWxsIGJvb3QgdW5kZXIgdGhlIG9wZW5TdVNFIDExLjAgdmVyc2lvbiBv
-ZiBtZGFkbT8NCj4gDQoNCk9uY2UgeW91IGdldCBhbnkga2VybmVsIHRvIHN1Y2Nlc3NmdWxseSBh
-c3NlbWJsZSB0aGUgYXJyYXksIGFueSBvdGhlcg0Ka2VybmVsL21kYWRtIHNob3VsZCBiZSBhYmxl
-IHRvIGFzIHdlbGwuDQoNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0N
-ClZlcnNpb246IEdudVBHIHYyLjAuMjIgKEdOVS9MaW51eCkNCg0KaVFJVkF3VUJVcVZMTHpuc250
-MVdZb0c1QVFKNW1nLy9Va21oa0NBdGJpQ2Y3eisxWDlpL0hzb1JPcUgzRGhuNg0KaWkyR0VrV2Ni
-K0lMN3RZSjN6cDB1elhQSk9BdVUxMFNTRjdJY3JvYnA5QUJuV3NDSGVmRVhnR3Q0a1JCN2RHOA0K
-VmtJcllJRUFybVNrTFhrUmxTUDc2SVdpMkEvQVp6aEJDMy84UVBWWFZEQnkySTkzWUh3YmtJdHR6
-TEpVUmM4Ug0KL2d0WlJYN0JsaTRGZ2ROUXVSajlLM0tMYzdSYXIrQ0cxUG16TFNJbnYzYlhoWktN
-MkpqbFQyV3o0QzBuaUJyZg0KMHRvcE1talRyVkVTZjhxVDJRbE9BdmhOOEJQTnRXUjk1L0g2Vyt2
-MG5LVTFLbnlPdW82aHdvbHFPRm1zcHlKdg0KSHJuMlBGZE5LbVlGZlErckZPTVpRazRteElJOU94
-THA1YmlkRTdyNGplZHp5aFFpNlFLRExjWFpjNTUwaXJ4SQ0KZTJ2R3UxWWcrVjhkNmRjUllnZVBD
-aERJSm4wYzEzaVlneFpIeE9KNEkxdWh3QzlkSE53Z044djM3N25rZlppKw0Kd0JtbDdEbzJveW56
-SW1lQ0M3RlZCbllyam1KbTFNNWRqVXFCMTJkSXZRWnlTZkkvU1VNSVZMUE55dXBpYVN2Yg0KeHZa
-L1F6b0phb3dZbzFhMGx0NUVtV0FWRDVGWi9ZVGppZmZ4Q2RSci9QMXJWV2ZjN0p4MktFL2k0Mmhl
-WG84ZQ0KekJVNTFoQnJXSTNKVkxZTVFyNC9SYzFOWVh0RTUxQ3EwUXp6TTVkbG5iK3lhMW0yYm9z
-Y1l5VUNaSGpNR3NKZw0KOUpVblQ2dTdVOGE2NzZTWnFDQ1V1ZElWUEZ4SVIreHloZ3B3MEFtSGNw
-Zk1kSjE4aWMvTm1XWElRUjdqK2prYQ0KZTVMaXlRVnU1bnc9DQo9bkdwSw0KLS0tLS1FTkQgUEdQ
-IFNJR05BVFVSRS0tLS0tDQo=
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 12/08/2013 10:46 PM, NeilBrown wrote:
+> Once you get any kernel to successfully assemble the array, any other 
+> kernel/mdadm should be able to as well.
+> 
+> NeilBrown
+
+After 2 days pulling my hair out, the answer was a simple as popping in the
+Arch install CD and rebooting!!
+
+After it booted, I checked cat /proc/mdstat and /dev/md1  (md125) on Arch is
+active and re-syncing. Perfect.
+
+That was a whole lot of work to find out that it was an old mdadm causing all
+the problems -- live and learn...
+
+Perhaps we should add "get the latest release of mdadm" to the Raid Recovery
+page with the explanation that sometimes older versions of mdadm just do not
+know how to handle simple issues that arise, such as differing Event counts.
+Using the latest mdadm can solve those problems immediately.
+
+- -- 
+David C. Rankin, J.D.,P.E.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iEYEARECAAYFAlKlUxsACgkQZMpuZ8CyrchuWgCfR+Lv97xnyE75Yp3iTCfEq7aC
++f8An2d6+MOHw0Bki+kg5IvOIxC7yYsr
+=T4Hs
+-----END PGP SIGNATURE-----
