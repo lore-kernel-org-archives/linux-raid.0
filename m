@@ -1,38 +1,44 @@
-From: Tomas Agartz <tlund@nxs.se>
-Subject: Re: How to assemble 4-disk raid5 with one broken disk and one marked
- as spare by operator error?
-Date: Mon, 9 Dec 2013 12:27:57 +0100 (CET)
-Message-ID: <Pine.LNX.4.61.1312091224020.13787@envy.nxs.se>
-References: <Pine.LNX.4.61.1312082056110.13787@envy.nxs.se>
- <20131209144645.70e01149@notabene.brown>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: adding a missing drive(s), which drives get written to?
+Date: Mon, 9 Dec 2013 14:09:11 +0000
+Message-ID: <BLU0-SMTP144CE5F6040BC17EDAE8A9E98D30@phx.gbl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131209144645.70e01149@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 9 Dec 2013, NeilBrown wrote:
+After recovering from a failed raid6, now running with 2 missing drives
+and soon to be finally backed up (is still backing up), I have 2 related
+questions...
 
-> If you want to re-add, it is safest to ask mdadm to --re-add, not to --add.
+The first is, can I add in both drives at the same time, or do I need to
+add them in singly, just checking for clarity?
 
-Yeah, that was a bit of a brain fart :(
+The second question is far more important... during the re-creation of
+data on the newly added missing disk/partition(s) does mdadm just read
+the data from the original array and write to the new disk(s) or does it
+potentially write new/update existing data (excluding bitmap/superblock)
+to the existing disks.
 
-> The only real option at this point is to --create the array.  There isn't
-> enough information for mdadm to be able  to do anything clever.
+My reason for asking about what gets written where is because I
+re-purposed the pulled (2) disks along with another that I had laying
+around to use as a temporary backup medium... one of the pulled disks
+suddenly re-mapped over a thousand sectors (i'm fairly sure it was in
+the thousand, but the disk is now reporting immediate fail imminent in
+smart and and in reality when it was taring to it, it totally locked up)
+but then again the disk was over 5 years of "powered up" time... I'm
+suprised it had not failed sooner so I am now rather worried that
+although periodic scrubs (first sun/month) have reported no problems
+that if one of the existing 4 disks gets heavy writes it will fail but
+"might" just last long enough in a heavy read situation (and in fact no
+problems are reported so far in the backup process) to get at least 1
+disk redundancy back into the array.
 
-> Check the "Data Offset" of the devices and make sure the newly created array
-> gets the same "Data Offset" (it can explicitly be set with the latest mdadm).
+Thanks in advance.
 
-Ok, then I was on the right track at least.
+Jon
 
-However! Good news! After fiddeling with SATA cables and, in the end 
-replacing all of them, I managed to get the "sdb" disk working again. I 
-did a --force assemble with those 3 disks and then added the fourth disk 
-back and let it rebuild. Since the array was never written to while all of 
-this happened, the filesystem (and all the data) was intact when done.
 
-Best regards,
-Tomas
