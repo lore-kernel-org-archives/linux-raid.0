@@ -1,47 +1,62 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: [SOLVED] Re: Raid1 where Event Count off my 1 cannot assemble --force
-Date: Sun, 08 Dec 2013 23:20:27 -0600
-Message-ID: <52A5531B.6080702@suddenlinkmail.com>
-References: <52A44778.8040502@suddenlinkmail.com> <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se> <52A4B311.6040204@suddenlinkmail.com> <52A51122.3030604@suddenlinkmail.com> <20131209120040.6464b91b@notabene.brown> <52A546DB.3090605@suddenlinkmail.com> <20131209154639.3b9f801c@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [SOLVED] Re: Raid1 where Event Count off my 1 cannot assemble
+ --force
+Date: Mon, 9 Dec 2013 16:40:05 +1100
+Message-ID: <20131209164005.0e9ea273@notabene.brown>
+References: <52A44778.8040502@suddenlinkmail.com>
+	<alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
+	<52A4B311.6040204@suddenlinkmail.com>
+	<52A51122.3030604@suddenlinkmail.com>
+	<20131209120040.6464b91b@notabene.brown>
+	<52A546DB.3090605@suddenlinkmail.com>
+	<20131209154639.3b9f801c@notabene.brown>
+	<52A5531B.6080702@suddenlinkmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131209154639.3b9f801c@notabene.brown>
+In-Reply-To: <52A5531B.6080702@suddenlinkmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Cc: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 12/08/2013 10:46 PM, NeilBrown wrote:
-> Once you get any kernel to successfully assemble the array, any other 
-> kernel/mdadm should be able to as well.
-> 
-> NeilBrown
-
-After 2 days pulling my hair out, the answer was a simple as popping in the
-Arch install CD and rebooting!!
-
-After it booted, I checked cat /proc/mdstat and /dev/md1  (md125) on Arch is
-active and re-syncing. Perfect.
-
-That was a whole lot of work to find out that it was an old mdadm causing all
-the problems -- live and learn...
-
-Perhaps we should add "get the latest release of mdadm" to the Raid Recovery
-page with the explanation that sometimes older versions of mdadm just do not
-know how to handle simple issues that arise, such as differing Event counts.
-Using the latest mdadm can solve those problems immediately.
-
-- -- 
-David C. Rankin, J.D.,P.E.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iEYEARECAAYFAlKlUxsACgkQZMpuZ8CyrchuWgCfR+Lv97xnyE75Yp3iTCfEq7aC
-+f8An2d6+MOHw0Bki+kg5IvOIxC7yYsr
-=T4Hs
------END PGP SIGNATURE-----
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBTdW4s
+IDA4IERlYyAyMDEzIDIzOjIwOjI3IC0wNjAwICJEYXZpZCBDLiBSYW5raW4iDQo8ZHJhbmtpbmF0
+dHlAc3VkZGVubGlua21haWwuY29tPiB3cm90ZToNCg0KPiAtLS0tLUJFR0lOIFBHUCBTSUdORUQg
+TUVTU0FHRS0tLS0tDQo+IEhhc2g6IFNIQTENCj4gDQo+IE9uIDEyLzA4LzIwMTMgMTA6NDYgUE0s
+IE5laWxCcm93biB3cm90ZToNCj4gPiBPbmNlIHlvdSBnZXQgYW55IGtlcm5lbCB0byBzdWNjZXNz
+ZnVsbHkgYXNzZW1ibGUgdGhlIGFycmF5LCBhbnkgb3RoZXIgDQo+ID4ga2VybmVsL21kYWRtIHNo
+b3VsZCBiZSBhYmxlIHRvIGFzIHdlbGwuDQo+ID4gDQo+ID4gTmVpbEJyb3duDQo+IA0KPiBBZnRl
+ciAyIGRheXMgcHVsbGluZyBteSBoYWlyIG91dCwgdGhlIGFuc3dlciB3YXMgYSBzaW1wbGUgYXMg
+cG9wcGluZyBpbiB0aGUNCj4gQXJjaCBpbnN0YWxsIENEIGFuZCByZWJvb3RpbmchIQ0KPiANCj4g
+QWZ0ZXIgaXQgYm9vdGVkLCBJIGNoZWNrZWQgY2F0IC9wcm9jL21kc3RhdCBhbmQgL2Rldi9tZDEg
+IChtZDEyNSkgb24gQXJjaCBpcw0KPiBhY3RpdmUgYW5kIHJlLXN5bmNpbmcuIFBlcmZlY3QuDQo+
+IA0KPiBUaGF0IHdhcyBhIHdob2xlIGxvdCBvZiB3b3JrIHRvIGZpbmQgb3V0IHRoYXQgaXQgd2Fz
+IGFuIG9sZCBtZGFkbSBjYXVzaW5nIGFsbA0KPiB0aGUgcHJvYmxlbXMgLS0gbGl2ZSBhbmQgbGVh
+cm4uLi4NCj4gDQo+IFBlcmhhcHMgd2Ugc2hvdWxkIGFkZCAiZ2V0IHRoZSBsYXRlc3QgcmVsZWFz
+ZSBvZiBtZGFkbSIgdG8gdGhlIFJhaWQgUmVjb3ZlcnkNCj4gcGFnZSB3aXRoIHRoZSBleHBsYW5h
+dGlvbiB0aGF0IHNvbWV0aW1lcyBvbGRlciB2ZXJzaW9ucyBvZiBtZGFkbSBqdXN0IGRvIG5vdA0K
+PiBrbm93IGhvdyB0byBoYW5kbGUgc2ltcGxlIGlzc3VlcyB0aGF0IGFyaXNlLCBzdWNoIGFzIGRp
+ZmZlcmluZyBFdmVudCBjb3VudHMuDQo+IFVzaW5nIHRoZSBsYXRlc3QgbWRhZG0gY2FuIHNvbHZl
+IHRob3NlIHByb2JsZW1zIGltbWVkaWF0ZWx5Lg0KDQpHbGFkIHRoYXQgaXQgaXMgbm93IHdvcmtp
+bmcgZm9yIHlvdSENCg0KSXNuJ3QgIk1ha2Ugc3VyZSB5b3UgaGF2ZSBsYXRlc3QgcmVsZWFzZSIg
+YWx3YXlzIHRoZSBzZWNvbmQgdGhpbmcgdG8gY2hlY2sNCihhZnRlciBjaGVja2luZyB0aGF0IHlv
+dSBhcmUgYWN0dWFsbHkgdXNpbmcgdGhlIGNvbW1hbmQgcHJvcGVybHk6LSk/Pw0KDQpCdXQgeWVz
+LCBpdCBkb2Vzbid0IGh1cnQgdG8gYWRkIGl0IHRvIGEgd2lraSBwYWdlIHNvbWV3aGVyZS4NCg0K
+TmVpbEJyb3duDQotLS0tLUJFR0lOIFBHUCBTSUdOQVRVUkUtLS0tLQ0KVmVyc2lvbjogR251UEcg
+djIuMC4yMiAoR05VL0xpbnV4KQ0KDQppUUlWQXdVQlVxVlh0VG5zbnQxV1lvRzVBUUxHL0JBQXB2
+T2xCY3lRMTk5WmlSb2gySVl6M0lnWmc5b3Ztb1RuDQp6ZFdOTjVmcndGeDRtVW1xMStlVXBLcG43
+WFEzWEFEQkliRjgyLzF2U2EwR1EyU2ZGa3BVYkpReWNheFhna3kyDQpCZjZKdFE2WEZCbWJndTFY
+WUVURkpmQlJWOW05R2sxMGJLc0dlTnRxdlJwZmVscUo0dWNJeUZNUHdrdElYbk9ODQpYZTZhaWxL
+TnI2MmZSQ0dtRTNmeGpXdWpNZ2lKankvUTN0VGJBT1p2Wis4VExGYlpTZEZSbEc1Z0lRU3FWWlAy
+DQpPM1pHa3ZnRllWc2VUSU9NVnpiZVFnNlZ4UmRUYVdiRVozeHB5SWE0Ny9sNi9oMGlobmxkazRO
+VUMzYndEVDFEDQpseEZMa0tjZ0ZnclBhcmdqUTB3c1N2eDcvUUM0cGJrMGN1S09rOFkxWTdPL2VK
+bnkwMjh2MHRFemFyWHVaYmdwDQplRFl0WGh0NmxFU3NOUml5QWtUcWJldTVWeWRXWXNHUlVpcG1n
+MEw0UXRtUDNUUGpmV0dZSFpaeFUrdFBCZm5zDQpxMlF2YVVRcExJakZwcit5M0Myazc1eEtJdW9a
+RXdSZU5NU0pHdkkvREI1Q0Q4V3FKSVZxSXk4THNJY0h1anhQDQpMQW05T0NSbkZOeWxWZWRFY0Fl
+SFVqdTFReWlyMHZQY3Mzd1JyRUpJdjB5UFI2T2JmT2JGUHRwelMwell5Q1ptDQpZY21JNjNhNkRT
+MnE3V2NHbHVZU3dPZ011MXRtbWRVMi9zaWZXRTcrSlpoNlBJNTZJbHQzK1JSZlFST2J6eWs4DQo4
+LzdvOU80VlNWQjZCU0V5RnF0aHVDMTZOL3dpU1NBQ1BTcVAyTGkxSURKL3RQVXY1V1BjOUZDS0c2
+Qllsa3ZGDQpTRkxMN0JlWnlnYz0NCj1La1VaDQotLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0tLS0N
+Cg==
