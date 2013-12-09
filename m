@@ -1,111 +1,127 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: unable to assemble (mostly?) clean array
-Date: Mon, 9 Dec 2013 12:33:05 +1100
-Message-ID: <20131209123305.04e7257f@notabene.brown>
-References: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
-	<52A5089D.3080109@websitemanagers.com.au>
-	<CACw0PsYs+UwDVoPXAB6qf8j8OhU5qd8YhEeTj4Bok9aNR+bVew@mail.gmail.com>
-	<20131209120217.54dd3082@notabene.brown>
-	<CACw0PsaCzZAKWeh9MxXK39Fpwh5wg-bjHHMY0-0djW+59Qf-jQ@mail.gmail.com>
+From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
+Subject: Re: Raid1 where Event Count off my 1 cannot assemble --force
+Date: Sun, 08 Dec 2013 20:38:45 -0600
+Message-ID: <52A52D35.7060909@suddenlinkmail.com>
+References: <52A44778.8040502@suddenlinkmail.com> <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se> <52A4B311.6040204@suddenlinkmail.com> <52A51122.3030604@suddenlinkmail.com> <52A51442.1000903@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/OkM_dnv/LODC/P/IDEah_YE"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACw0PsaCzZAKWeh9MxXK39Fpwh5wg-bjHHMY0-0djW+59Qf-jQ@mail.gmail.com>
+In-Reply-To: <52A51442.1000903@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christopher Hoover <ch@murgatroid.com>
-Cc: Adam Goryachev <adam@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/OkM_dnv/LODC/P/IDEah_YE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 8 Dec 2013 17:08:19 -0800 Christopher Hoover <ch@murgatroid.com>
-wrote:
-
-> ch@snaggle:~$ sudo mdadm --assemble --verbose  --force /dev/md0  /dev/sd[=
-defg]1
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 4.
-> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 1.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 2.
-> mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 5.
-> mdadm: ignoring /dev/sde1 as it reports /dev/sdd1 as failed
-> mdadm: ignoring /dev/sdf1 as it reports /dev/sdd1 as failed
-> mdadm: no uptodate device for slot 0 of /dev/md0
-> mdadm: no uptodate device for slot 1 of /dev/md0
-> mdadm: no uptodate device for slot 2 of /dev/md0
-> mdadm: no uptodate device for slot 3 of /dev/md0
-> mdadm: added /dev/sdg1 to /dev/md0 as 5
-> mdadm: added /dev/sdd1 to /dev/md0 as 4
-> mdadm: /dev/md0 assembled from 0 drives and 2 spares - not enough to
-> start the array.
-> ch@snaggle:~$
-
-Thanks.
-
-I recognise this bug now.  You are running mdadm-3.2.something - correct?
-You need 3.3.
-Just grab the latest:
-
- cd /tmp;git clone git://neil.brown.name/mdadm ; cd mdadm ; make ; ./mdadm =
- -Avf /dev/md0 /dev/sd[defg]1
-
-NeilBrown
+On 12/08/2013 06:52 PM, Adam Goryachev wrote:
+> Have you tried this:
+> 
+> mdadm --verbose --assemble /dev/md1 /dev/sdb5
+> mdadm --manage /dev/md1 --run
+> 
+> Being raid1, you should be able to use only a single device....
+> 
+> 
+> BTW, chances to recover your data should be exceptional, as long as you don't do
+> anything too silly. You should even be able to mount the device directly
+> (read-only):
+> mount -o ro /dev/sdb5 /mnt
+> 
+> (Depending on the content is a filesystem).
+> Then you can just backup the data, create a new array, and restore the data.
+> Depending on data and size this might even be a better option...
 
 
->=20
-> On Sun, Dec 8, 2013 at 5:02 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Sun, 8 Dec 2013 16:32:22 -0800 Christopher Hoover <ch@murgatroid.com>
-> > wrote:
-> >
-> >> yes, thanks, typo there.  that was done hastily for the e-mail.
-> >>
-> >> i had tried the right thing previously and here it is again.  still no=
- luck:
-> >>
-> >>
-> >> ch@snaggle:~$ sudo mdadm -E /dev/sd[defg]1 | egrep 'Events|^/dev/sd'
-> >> /dev/sdd1:
-> >>          Events : 286024
-> >> /dev/sde1:
-> >>          Events : 286011
-> >> /dev/sdf1:
-> >>          Events : 286024
-> >> /dev/sdg1:
-> >>          Events : 286024
-> >> ch@snaggle:~$ sudo mdadm --assemble --force /dev/md0  /dev/sd[dfg]1
-> >> mdadm: ignoring /dev/sdf1 as it reports /dev/sdd1 as failed
-> >> mdadm: /dev/md0 assembled from 0 drives and 2 spares - not enough to
-> >> start the array.
-> >> ch@snaggle:~$
-> >
-> > Please try listing *all* of the devices, and add "-v" for extra output.
-> >
-> > NeilBrown
+Adam,
+
+  Thank you for your suggestions. Here is the output attempting what you
+suggested. The version is old (2.6.4), it is on the openSuSE install DVD for 11.0:
+
+nemtemp:/mnt # mdadm --verbose --assemble /dev/md1 /dev/sdb5
+mdadm: looking for devices for /dev/md1
+mdadm: /dev/sdb5 is identified as a member of /dev/md1, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md1
+mdadm: added /dev/sdb5 to /dev/md1 as 1
+mdadm: /dev/md1 assembled from 1 drive - need all 2 to start it (use --run to
+insist).
+
+nemtemp:/mnt # cat /proc/mdstat
+Personalities : [raid1]
+md2 : active raid1 sda7[0] sdb7[1]
+      221929772 blocks super 1.0 [2/2] [UU]
+      bitmap: 0/424 pages [0KB], 256KB chunk
+
+md1 : inactive sdb5[1](S)
+      20972752 blocks super 1.0
+
+md0 : active raid1 sda1[0] sdb1[1]
+      104376 blocks super 1.0 [2/2] [UU]
+      bitmap: 0/7 pages [0KB], 8KB chunk
+
+unused devices: <none>
+
+nemtemp:/mnt # mdadm --run --verbose /dev/md1
+mdadm: failed to run array /dev/md1: Input/output error
+nemtemp:/mnt # tail /var/log/messages
+
+Dec  9 02:30:20 Rescue kernel: raid1: raid set md1 active with 1 out of 2 mirrors
+Dec  9 02:30:20 Rescue kernel: md1: bitmap file is out of date (148 < 149) --
+forcing full recovery
+Dec  9 02:30:20 Rescue kernel: md1: bitmap file is out of date, doing full recovery
+Dec  9 02:30:20 Rescue kernel: md1: bitmap initialisation failed: -5
+Dec  9 02:30:20 Rescue kernel: md1: failed to create bitmap (-5)
+Dec  9 02:30:20 Rescue kernel: md: pers->run() failed ...
+
+  I could boot with a newer recovery disk and see if a newer version of mdadm
+would do things differently. I was using the original just to make sure I didn't
+outsmart myself using a never version of mdadm than I would be running with
+after repairing /dev/md1
+
+  Hooray! I can mount the thing as -t ext3:
+
+mdadm: stopped /dev/md1
+nemtemp:/mnt # mount -o ro /dev/sdb5 /mnt/sdb/
+mount: unknown filesystem type 'linux_raid_member'
+nemtemp:/mnt # mount -t ext3 -o ro /dev/sdb5 /mnt/sdb/
+nemtemp:/mnt # l sdb
+total 116
+drwxr-xr-x  21 root root  4096 2013-01-25 17:06 ./
+drwxr-xr-x   7 root root   140 2013-12-08 06:38 ../
+drwxr-xr-x   2 root root  4096 2010-12-05 06:43 bin/
+drwxr-xr-x   2 root root  4096 2008-08-21 06:48 boot/
+drwxr-xr-x   2 root root  4096 2008-08-22 01:54 data/
+drwxr-xr-x   5 root root  4096 2008-08-21 06:48 dev/
+drwxr-xr-x 129 root root 12288 2013-11-16 13:23 etc/
+drwxr-xr-x   2 root root  4096 2008-08-21 06:48 home/
+drwxr-xr-x  14 root root 12288 2011-01-14 20:13 lib/
+drwx------   2 root root 16384 2008-08-21 06:43 lost+found/
+drwxr-xr-x   2 root root  4096 2009-07-28 22:39 media/
+drwxr-xr-x   8 root root  4096 2010-12-21 18:05 mnt/
+drwxr-xr-x   5 root root  4096 2008-07-03 21:16 opt/
+drwxr-xr-x   3 root root  4096 2008-08-21 06:48 proc/
+drwx------  24 root root  4096 2013-10-01 20:58 root/
+drwxr-xr-x   3 root root 12288 2010-12-27 23:15 sbin/
+drwxr-xr-x   4 root root  4096 2008-09-11 07:26 srv/
+drwxr-xr-x   3 root root  4096 2008-08-21 06:48 sys/
+drwxrwxrwt   7 root root  4096 2013-11-19 15:15 tmp/
+drwxr-xr-x  12 root root  4096 2010-01-24 01:41 usr/
+drwxr-xr-x  15 root root  4096 2009-07-02 06:37 var/
+
+  Now since I can mount it, how in the heck do I get the raid put back together.
+Seems really simple, but I'm stuck... Try with a newer mdadm?
 
 
---Sig_/OkM_dnv/LODC/P/IDEah_YE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> BTW, the bitmap location looks.... strange...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+  I thought so too, but checking the other arrays, /dev/md2 has a negative
+number as well:
 
-iQIVAwUBUqUd0Tnsnt1WYoG5AQJIrRAAgwigV8c1ARHOQCN1haMSNwU+yEuUJfm+
-HZhcQ0zqcx3vVp+4ahby1WyJgd6kEeO6j5ewHTFNXBJKFoqQyYURkjVf7CRunPjS
-fLFJ68u8UFN7dVO7FmNjPUgQqVCCcA47mM4Cq8KUZK8/Bq1U66Ek9xX3saZ14gkH
-GlfRgrPLNVRaRqekbNKVAu1KXoAnJEJX3aqvz5e0eYMPYoaX1Jn599yiGT+nZ+tb
-hRB6/3jYSDcp/HjtOF7tOAvZw5nuZUG66FWrdn9wZneZS4QrpWSkh28W+3/zI94B
-gi9xYWHcb4nf4ag7D2x07zVHWBXbbk3vqJWYSvgIYTbQ9dsK39AZhpN7Ev6Q6XKB
-ikvPFu/sTcsOs7A0AcAZa+pX3MAn+FIuHUdH1nJns20WcP6VmND270i8RvXmoAuV
-187J3XJIkkq/6JriPunvrtelpw0ao/TudqBLPrY8bLWBqpIUOpW6PbIrVMcFTFFj
-f2ovq1rqlq1YTuNS2Os1KMtgQ6rxKg3NyOXUB9J2eVsWm+Sef7oa8itThsmufoDr
-fy4B2LFNeucruKSwCuSFP2XQW6YGmWKtGEwsBuXERtaAhSdoSO+iErINicx5cnlN
-58Wdd9RU+D2uP0itCrH469GdXJf+mEsPJH3j8nWIkz/yuDKnilnQgDciz5q5HLqd
-kRBk+a/vM1o=
-=4ygM
------END PGP SIGNATURE-----
+nemtemp:/mnt # mdadm -E /dev/sda7
+/dev/sda7:
+<snip>
+Internal Bitmap : -213 sectors from superblock
+    Update Time : Mon Dec  9 02:14:18 2013
 
---Sig_/OkM_dnv/LODC/P/IDEah_YE--
+
+
+-- 
+David C. Rankin, J.D.,P.E.
