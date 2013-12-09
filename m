@@ -1,62 +1,75 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: mdadm rebuild
-Date: Mon, 09 Dec 2013 10:56:32 +1100
-Message-ID: <52A50730.4030301@websitemanagers.com.au>
-References: <B49ACD0F-BAD8-4D61-B87C-A06295B58A56@gmail.com>	<20131209085554.262006d5@notabene.brown>	<CAJ1=nZfUBQ0_T1s3deG+HOU7BQeayibWcW8y5h5bEjFt2tvhnA@mail.gmail.com>	<20131209095328.0d39e6ad@notabene.brown>	<CA74C8FD-DBDC-428B-9645-E2DD2300EE9D@gmail.com> <20131209101752.33deb603@notabene.brown>
+From: Adam Goryachev <adam@websitemanagers.com.au>
+Subject: Re: unable to assemble (mostly?) clean array
+Date: Mon, 09 Dec 2013 11:02:37 +1100
+Message-ID: <52A5089D.3080109@websitemanagers.com.au>
+References: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131209101752.33deb603@notabene.brown>
+In-Reply-To: <CACw0PsYr+u=YqXQJtUBLDzoppXPWCoRRLUqvgPLE4_L+V68iZw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Hai Wu <haiwu.us@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Christopher Hoover <ch@murgatroid.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/12/13 10:17, NeilBrown wrote:
-> On Sun, 8 Dec 2013 17:03:22 -0600 Hai Wu <haiwu.us@gmail.com> wrote:
+On 09/12/13 10:32, Christopher Hoover wrote:
+> hi folks,
 >
->> This is something I am not aware of, thanks!
->>
->> In this case, do I have to worry about cases where the new drive might not be able to boot (this is raid1 with 2 drives, and both drives need to be able to boot up the server by themselves in case the other drive fails later)? I remember I had to do the following before for the new drive:
->>
->> grub> root (hd0,0)
->>
->> Is that still the case here if marking it as 'spare'?
-> If you want the new drive to boot and the boot sector is not covered by any
-> md array, then you have to update the boot sector yourself.
+> what's the safest way to get this array back into r/o mode?
 >
-> You can presumably get udev to run some command which will write a boot
-> sector out.  However I'm not an expert on boot sector management so cannot
-> really advise you.
-Hi Neil,
+> thanks,
+> -ch
+> ch@murgatroid.com
+>
+>
+> ch@snaggle:~$ sudo mdadm --examine /dev/sd[defg]1 | egrep 'Event|^/dev/sd'
+>
+> /dev/sdd1:
+>
+>           Events : 286024
+>
+> /dev/sde1:
+>
+>           Events : 286011
+>
+> /dev/sdf1:
+>
+>           Events : 286024
+>
+> /dev/sdg1:
+>
+>           Events : 286024
+>
+> ch@snaggle:~$ sudo mdadm --assemble --force  /dev/md0 /dev/sdd1
+> /dev/sde1 /sdg1
+>
+> mdadm: cannot open device /sdg1: No such file or directory
+>
+> mdadm: /sdg1 has no superblock - assembly aborted
+>
 
-I like the way you phrased that :)
+I'm no expert on this, but two questions:
+Did you mean /dev/sdg1 ?
 
-I just wanted to clarify one point, it there a specific MD metadata 
-version (I'm assuming either 1.0 or 1.2) which could be applied to an 
-entire device MD array which would allow the automatic sync of the boot 
-sectors/etc
+Why not use sdd1, sdf1 and sdg1 since they have the correct event counts?
+Then add sde1 and allow to resync?
 
-ie, something like:
-mdadm --create /dev/md3 --level=raid1 --metadata=1.2 /dev/sda /dev/sdb
+sudo mdadm --manage /dev/md0 --stop
+sudo mdadm --assemble  /dev/md0 /dev/sd[dfg]1
+sudo mdadm --manage /dev/md0 --run
 
-then writing the boot sector information to /dev/md3
-mdadm --manage /dev/md3 --fail /dev/sdb
-mdadm --manage /dev/md3 --remove /dev/sdb
-mdadm --manage /dev/md3 --add /dev/sdc
+Try that, and provide any output
 
-Then, shutdown, remove sda and sdb
 
-Would you expect the system to boot successfully from sdc (assuming the 
-BIOS will boot from it, and that the OS will "find" the correct boot and 
-root device....
-
-In the past I've always used partitions for MD, but this might be a good 
-reason to use whole devices if it would solve the issue of the boot 
-sector information.
+PS, it seems you would only need a minimum of 2 drives, and you have 
+three with matching event counts, so it should be fine.
 
 Regards,
 Adam
+
 -- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Adam Goryachev
+Website Managers
+P: +61 2 8304 0000                    adam@websitemanagers.com.au
+F: +61 2 8304 0001                     www.websitemanagers.com.au
+
