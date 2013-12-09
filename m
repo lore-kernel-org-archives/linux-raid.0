@@ -1,62 +1,33 @@
-From: NeilBrown <neilb@suse.de>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: [SOLVED] Re: Raid1 where Event Count off my 1 cannot assemble
  --force
-Date: Mon, 9 Dec 2013 16:40:05 +1100
-Message-ID: <20131209164005.0e9ea273@notabene.brown>
-References: <52A44778.8040502@suddenlinkmail.com>
-	<alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se>
-	<52A4B311.6040204@suddenlinkmail.com>
-	<52A51122.3030604@suddenlinkmail.com>
-	<20131209120040.6464b91b@notabene.brown>
-	<52A546DB.3090605@suddenlinkmail.com>
-	<20131209154639.3b9f801c@notabene.brown>
-	<52A5531B.6080702@suddenlinkmail.com>
+Date: Mon, 9 Dec 2013 08:40:13 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1312090839360.24602@uplift.swm.pp.se>
+References: <52A44778.8040502@suddenlinkmail.com> <alpine.DEB.2.02.1312081157100.24602@uplift.swm.pp.se> <52A4B311.6040204@suddenlinkmail.com> <52A51122.3030604@suddenlinkmail.com> <20131209120040.6464b91b@notabene.brown> <52A546DB.3090605@suddenlinkmail.com>
+ <20131209154639.3b9f801c@notabene.brown> <52A5531B.6080702@suddenlinkmail.com> <20131209164005.0e9ea273@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52A5531B.6080702@suddenlinkmail.com>
+In-Reply-To: <20131209164005.0e9ea273@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBTdW4s
-IDA4IERlYyAyMDEzIDIzOjIwOjI3IC0wNjAwICJEYXZpZCBDLiBSYW5raW4iDQo8ZHJhbmtpbmF0
-dHlAc3VkZGVubGlua21haWwuY29tPiB3cm90ZToNCg0KPiAtLS0tLUJFR0lOIFBHUCBTSUdORUQg
-TUVTU0FHRS0tLS0tDQo+IEhhc2g6IFNIQTENCj4gDQo+IE9uIDEyLzA4LzIwMTMgMTA6NDYgUE0s
-IE5laWxCcm93biB3cm90ZToNCj4gPiBPbmNlIHlvdSBnZXQgYW55IGtlcm5lbCB0byBzdWNjZXNz
-ZnVsbHkgYXNzZW1ibGUgdGhlIGFycmF5LCBhbnkgb3RoZXIgDQo+ID4ga2VybmVsL21kYWRtIHNo
-b3VsZCBiZSBhYmxlIHRvIGFzIHdlbGwuDQo+ID4gDQo+ID4gTmVpbEJyb3duDQo+IA0KPiBBZnRl
-ciAyIGRheXMgcHVsbGluZyBteSBoYWlyIG91dCwgdGhlIGFuc3dlciB3YXMgYSBzaW1wbGUgYXMg
-cG9wcGluZyBpbiB0aGUNCj4gQXJjaCBpbnN0YWxsIENEIGFuZCByZWJvb3RpbmchIQ0KPiANCj4g
-QWZ0ZXIgaXQgYm9vdGVkLCBJIGNoZWNrZWQgY2F0IC9wcm9jL21kc3RhdCBhbmQgL2Rldi9tZDEg
-IChtZDEyNSkgb24gQXJjaCBpcw0KPiBhY3RpdmUgYW5kIHJlLXN5bmNpbmcuIFBlcmZlY3QuDQo+
-IA0KPiBUaGF0IHdhcyBhIHdob2xlIGxvdCBvZiB3b3JrIHRvIGZpbmQgb3V0IHRoYXQgaXQgd2Fz
-IGFuIG9sZCBtZGFkbSBjYXVzaW5nIGFsbA0KPiB0aGUgcHJvYmxlbXMgLS0gbGl2ZSBhbmQgbGVh
-cm4uLi4NCj4gDQo+IFBlcmhhcHMgd2Ugc2hvdWxkIGFkZCAiZ2V0IHRoZSBsYXRlc3QgcmVsZWFz
-ZSBvZiBtZGFkbSIgdG8gdGhlIFJhaWQgUmVjb3ZlcnkNCj4gcGFnZSB3aXRoIHRoZSBleHBsYW5h
-dGlvbiB0aGF0IHNvbWV0aW1lcyBvbGRlciB2ZXJzaW9ucyBvZiBtZGFkbSBqdXN0IGRvIG5vdA0K
-PiBrbm93IGhvdyB0byBoYW5kbGUgc2ltcGxlIGlzc3VlcyB0aGF0IGFyaXNlLCBzdWNoIGFzIGRp
-ZmZlcmluZyBFdmVudCBjb3VudHMuDQo+IFVzaW5nIHRoZSBsYXRlc3QgbWRhZG0gY2FuIHNvbHZl
-IHRob3NlIHByb2JsZW1zIGltbWVkaWF0ZWx5Lg0KDQpHbGFkIHRoYXQgaXQgaXMgbm93IHdvcmtp
-bmcgZm9yIHlvdSENCg0KSXNuJ3QgIk1ha2Ugc3VyZSB5b3UgaGF2ZSBsYXRlc3QgcmVsZWFzZSIg
-YWx3YXlzIHRoZSBzZWNvbmQgdGhpbmcgdG8gY2hlY2sNCihhZnRlciBjaGVja2luZyB0aGF0IHlv
-dSBhcmUgYWN0dWFsbHkgdXNpbmcgdGhlIGNvbW1hbmQgcHJvcGVybHk6LSk/Pw0KDQpCdXQgeWVz
-LCBpdCBkb2Vzbid0IGh1cnQgdG8gYWRkIGl0IHRvIGEgd2lraSBwYWdlIHNvbWV3aGVyZS4NCg0K
-TmVpbEJyb3duDQotLS0tLUJFR0lOIFBHUCBTSUdOQVRVUkUtLS0tLQ0KVmVyc2lvbjogR251UEcg
-djIuMC4yMiAoR05VL0xpbnV4KQ0KDQppUUlWQXdVQlVxVlh0VG5zbnQxV1lvRzVBUUxHL0JBQXB2
-T2xCY3lRMTk5WmlSb2gySVl6M0lnWmc5b3Ztb1RuDQp6ZFdOTjVmcndGeDRtVW1xMStlVXBLcG43
-WFEzWEFEQkliRjgyLzF2U2EwR1EyU2ZGa3BVYkpReWNheFhna3kyDQpCZjZKdFE2WEZCbWJndTFY
-WUVURkpmQlJWOW05R2sxMGJLc0dlTnRxdlJwZmVscUo0dWNJeUZNUHdrdElYbk9ODQpYZTZhaWxL
-TnI2MmZSQ0dtRTNmeGpXdWpNZ2lKankvUTN0VGJBT1p2Wis4VExGYlpTZEZSbEc1Z0lRU3FWWlAy
-DQpPM1pHa3ZnRllWc2VUSU9NVnpiZVFnNlZ4UmRUYVdiRVozeHB5SWE0Ny9sNi9oMGlobmxkazRO
-VUMzYndEVDFEDQpseEZMa0tjZ0ZnclBhcmdqUTB3c1N2eDcvUUM0cGJrMGN1S09rOFkxWTdPL2VK
-bnkwMjh2MHRFemFyWHVaYmdwDQplRFl0WGh0NmxFU3NOUml5QWtUcWJldTVWeWRXWXNHUlVpcG1n
-MEw0UXRtUDNUUGpmV0dZSFpaeFUrdFBCZm5zDQpxMlF2YVVRcExJakZwcit5M0Myazc1eEtJdW9a
-RXdSZU5NU0pHdkkvREI1Q0Q4V3FKSVZxSXk4THNJY0h1anhQDQpMQW05T0NSbkZOeWxWZWRFY0Fl
-SFVqdTFReWlyMHZQY3Mzd1JyRUpJdjB5UFI2T2JmT2JGUHRwelMwell5Q1ptDQpZY21JNjNhNkRT
-MnE3V2NHbHVZU3dPZ011MXRtbWRVMi9zaWZXRTcrSlpoNlBJNTZJbHQzK1JSZlFST2J6eWs4DQo4
-LzdvOU80VlNWQjZCU0V5RnF0aHVDMTZOL3dpU1NBQ1BTcVAyTGkxSURKL3RQVXY1V1BjOUZDS0c2
-Qllsa3ZGDQpTRkxMN0JlWnlnYz0NCj1La1VaDQotLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0tLS0N
-Cg==
+On Mon, 9 Dec 2013, NeilBrown wrote:
+
+> But yes, it doesn't hurt to add it to a wiki page somewhere.
+
+I added this text to the wiki:
+
+"There are bugs in older versions of mdadm, and a lot of "stable" 
+operating system releases ship with really old mdadm versions. Recent 
+versions are 3.2.x and 3.3.x. It's advisable if you run into problems 
+assembling your raid to upgrade to the latest git version of mdadm. If you 
+can get the raid to successfully assemble and recover with the git 
+version, then it's fine to use your old mdadm version again for normal 
+system operation. Newer mdadm doesn't make any changes to the array that 
+isn't backwards compatible."
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
