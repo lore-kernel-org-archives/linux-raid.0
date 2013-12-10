@@ -1,76 +1,36 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: adding a missing drive(s), which drives get written to?
-Date: Tue, 10 Dec 2013 08:59:20 +0000
-Message-ID: <20131210085920.GB441@cthulhu.home.robinhill.me.uk>
-References: <BLU0-SMTP144CE5F6040BC17EDAE8A9E98D30@phx.gbl>
+From: Can Jeuleers <can.jeuleers@gmail.com>
+Subject: Re: Rebuild events while scrubbing - problems or just informational?
+Date: Tue, 10 Dec 2013 17:55:06 +0100
+Message-ID: <52A7476A.9060307@gmail.com>
+References: <CAK2H+ed3vEJVF8To8FWD_Ltj7jGKgrBAvz-Aum4viR=VZE+gww@mail.gmail.com> <20131210085225.GA441@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1UWUbFP1cBYEclgG"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BLU0-SMTP144CE5F6040BC17EDAE8A9E98D30@phx.gbl>
+In-Reply-To: <20131210085225.GA441@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 12/10/2013 09:52 AM, Robin Hill wrote:
+>> Dec  8 14:30:01 c2RAID6 mdadm[1838]: RebuildStarted event detected on
+>> md device /dev/md/3
+>> Dec  8 15:03:21 c2RAID6 mdadm[1838]: Rebuild26 event detected on md
+>> device /dev/md/3
+>> Dec  8 15:36:41 c2RAID6 mdadm[1838]: Rebuild49 event detected on md
+>> device /dev/md/3
+>> Dec  8 16:10:01 c2RAID6 mdadm[1838]: Rebuild70 event detected on md
+>> device /dev/md/3
+>> Dec  8 16:43:21 c2RAID6 mdadm[1838]: Rebuild87 event detected on md
+>> device /dev/md/3
+>>
+> 
+> They're perfectly normal if you're doing a repair - I don't think they
+> should be there for a check though. It's just mdadm in monitor mode
+> reporting the progress (the numbers are the percentage completed) to
+> syslog.  According to the manual the default reporting interval is 20
+> percent, but I think it actually triggers on a completed stripe (or
+> block of stripes) so the numbers aren't exactly on the interval.
 
---1UWUbFP1cBYEclgG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon Dec 09, 2013 at 02:09:11PM +0000, Wilson Jonathan wrote:
-
-> After recovering from a failed raid6, now running with 2 missing drives
-> and soon to be finally backed up (is still backing up), I have 2 related
-> questions...
->=20
-> The first is, can I add in both drives at the same time, or do I need to
-> add them in singly, just checking for clarity?
->=20
-You can add both together. Older versions of mdadm would kick off the
-rebuild before the addition of both disks had been completed though, so
-you might want to freeze the array first:
-
- echo freeze > /sys/block/md0/md/sync_action                               =
-    =20
- mdadm /dev/md0 --add /dev/foo /dev/bar                                    =
-    =20
- echo idle > /sys/block/md0/md/sync_action                                 =
-    =20
-
-> The second question is far more important... during the re-creation of
-> data on the newly added missing disk/partition(s) does mdadm just read
-> the data from the original array and write to the new disk(s) or does it
-> potentially write new/update existing data (excluding bitmap/superblock)
-> to the existing disks.
->=20
-The rebuild process will only write data to the new disks. The only
-cases where data will be written to the old disks during a rebuild is if
-a read error is triggered and the data has to be reconstructed (not
-applicable in your case as you have no redundancy to rebuild the data
-=66rom in the case of a read error), or if new data is written to the
-array.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---1UWUbFP1cBYEclgG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlKm1+cACgkQShxCyD40xBLb/ACfamfUSoW0Inn8FafAxYBOVnO2
-49kAoNpM/BGbTtDOTb16fZ3qwzfoiD92
-=gVvV
------END PGP SIGNATURE-----
-
---1UWUbFP1cBYEclgG--
+I see them as well during checks. Although I can't find documentation
+stating so I regard them as normal.
