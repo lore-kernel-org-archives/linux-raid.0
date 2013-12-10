@@ -1,36 +1,42 @@
-From: Can Jeuleers <can.jeuleers@gmail.com>
-Subject: Re: Rebuild events while scrubbing - problems or just informational?
-Date: Tue, 10 Dec 2013 17:55:06 +0100
-Message-ID: <52A7476A.9060307@gmail.com>
-References: <CAK2H+ed3vEJVF8To8FWD_Ltj7jGKgrBAvz-Aum4viR=VZE+gww@mail.gmail.com> <20131210085225.GA441@cthulhu.home.robinhill.me.uk>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Filesystem writes on RAID5 too slow
+Date: Tue, 10 Dec 2013 11:18:03 -0800
+Message-ID: <20131210191803.GA31162@infradead.org>
+References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
+ <528A5C45.4080906@redhat.com>
+ <20131119005740.GY6188@dastard>
+ <CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
+ <20131121092606.GU11434@dastard>
+ <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
+ <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
+ <20131121234116.GD6502@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131210085225.GA441@cthulhu.home.robinhill.me.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20131121234116.GD6502@dastard>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-On 12/10/2013 09:52 AM, Robin Hill wrote:
->> Dec  8 14:30:01 c2RAID6 mdadm[1838]: RebuildStarted event detected on
->> md device /dev/md/3
->> Dec  8 15:03:21 c2RAID6 mdadm[1838]: Rebuild26 event detected on md
->> device /dev/md/3
->> Dec  8 15:36:41 c2RAID6 mdadm[1838]: Rebuild49 event detected on md
->> device /dev/md/3
->> Dec  8 16:10:01 c2RAID6 mdadm[1838]: Rebuild70 event detected on md
->> device /dev/md/3
->> Dec  8 16:43:21 c2RAID6 mdadm[1838]: Rebuild87 event detected on md
->> device /dev/md/3
->>
+> xfs: align initial file allocations correctly.
 > 
-> They're perfectly normal if you're doing a repair - I don't think they
-> should be there for a check though. It's just mdadm in monitor mode
-> reporting the progress (the numbers are the percentage completed) to
-> syslog.  According to the manual the default reporting interval is 20
-> percent, but I think it actually triggers on a completed stripe (or
-> block of stripes) so the numbers aren't exactly on the interval.
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The function xfs_bmap_isaeof() is used to indicate that an
+> allocation is occurring at or past the end of file, and as such
+> should be aligned to the underlying storage geometry if possible.
+> 
+> Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
+> behaviour of this function for empty files - it turned off
+> allocation alignment for this case accidentally. Hence large initial
+> allocations from direct IO are not getting correctly aligned to the
+> underlying geometry, and that is cause write performance to drop in
+> alignment sensitive configurations.
+> 
+> Fix it by considering allocation into empty files as requiring
+> aligned allocation again.
 
-I see them as well during checks. Although I can't find documentation
-stating so I regard them as normal.
+Seems like this one didn't get picked up yet?
+
