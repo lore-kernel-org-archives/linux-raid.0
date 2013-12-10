@@ -1,42 +1,70 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Tue, 10 Dec 2013 11:18:03 -0800
-Message-ID: <20131210191803.GA31162@infradead.org>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
- <528A5C45.4080906@redhat.com>
- <20131119005740.GY6188@dastard>
- <CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
- <20131121092606.GU11434@dastard>
- <CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
- <CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
- <20131121234116.GD6502@dastard>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: Re: adding a missing drive(s), which drives get written to? a thank
+ you.
+Date: Tue, 10 Dec 2013 22:16:02 +0000
+Message-ID: <BLU0-SMTP14816803676F341D602402898D20@phx.gbl>
+References: <BLU0-SMTP144CE5F6040BC17EDAE8A9E98D30@phx.gbl>
+	 <20131210085920.GB441@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131121234116.GD6502@dastard>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20131210085920.GB441@cthulhu.home.robinhill.me.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org, bernd.schubert@fastmail.fm
 List-Id: linux-raid.ids
 
-> xfs: align initial file allocations correctly.
+On Tue, 2013-12-10 at 08:59 +0000, Robin Hill wrote:
+> On Mon Dec 09, 2013 at 02:09:11PM +0000, Wilson Jonathan wrote:
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> > After recovering from a failed raid6, now running with 2 missing drives
+> > and soon to be finally backed up (is still backing up), I have 2 related
+> > questions...
+> > 
+> > The first is, can I add in both drives at the same time, or do I need to
+> > add them in singly, just checking for clarity?
+> > 
+> You can add both together. Older versions of mdadm would kick off the
+> rebuild before the addition of both disks had been completed though, so
+> you might want to freeze the array first:
 > 
-> The function xfs_bmap_isaeof() is used to indicate that an
-> allocation is occurring at or past the end of file, and as such
-> should be aligned to the underlying storage geometry if possible.
+>  echo freeze > /sys/block/md0/md/sync_action                                    
+>  mdadm /dev/md0 --add /dev/foo /dev/bar                                         
+>  echo idle > /sys/block/md0/md/sync_action                                      
 > 
-> Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-> behaviour of this function for empty files - it turned off
-> allocation alignment for this case accidentally. Hence large initial
-> allocations from direct IO are not getting correctly aligned to the
-> underlying geometry, and that is cause write performance to drop in
-> alignment sensitive configurations.
+> > The second question is far more important... during the re-creation of
+> > data on the newly added missing disk/partition(s) does mdadm just read
+> > the data from the original array and write to the new disk(s) or does it
+> > potentially write new/update existing data (excluding bitmap/superblock)
+> > to the existing disks.
+> > 
+> The rebuild process will only write data to the new disks. The only
+> cases where data will be written to the old disks during a rebuild is if
+> a read error is triggered and the data has to be reconstructed (not
+> applicable in your case as you have no redundancy to rebuild the data
+> from in the case of a read error), or if new data is written to the
+> array.
 > 
-> Fix it by considering allocation into empty files as requiring
-> aligned allocation again.
+> Cheers,
+>     Robin
 
-Seems like this one didn't get picked up yet?
+Wow that was a bum tightening 7 hours (I set the recovery to be
+slow[er], so I didn't tax the existing 4 drives, probably would have
+made no difference had I maxed it out but I do occasionally get a sata
+reset if doing things like DD and other things on disks that are under
+heavy load)
+
+The echo > freeze didn't work and came up with an error, so I tried >
+idle which it accepted... then did some googling and found that doing an
+idle to an array with multiple drive adds should stop and re-start it so
+even if the mdadm only tried to add 1 drive, it would then re-start and
+then add the 2 drives (was in a post on here by Niel Brown in 2012.)
+
+Thank you for your help, and Bernd Schubert who posted to my initial
+thread when I had problems, it was much appreciated.
+
+Jon.
+
+
 
