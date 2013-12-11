@@ -1,125 +1,135 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Rebuild events while scrubbing - problems or just
- informational?
-Date: Wed, 11 Dec 2013 12:38:26 +1100
-Message-ID: <20131211123826.0942ea22@notabene.brown>
-References: <CAK2H+ed3vEJVF8To8FWD_Ltj7jGKgrBAvz-Aum4viR=VZE+gww@mail.gmail.com>
-	<20131210085225.GA441@cthulhu.home.robinhill.me.uk>
-	<52A7476A.9060307@gmail.com>
+Subject: udev rule and systemd unit files and  mdadm - cross distro.
+Date: Wed, 11 Dec 2013 13:12:23 +1100
+Message-ID: <20131211131223.5acbbca8@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mwA__qf9IZWdocOcPSsdLN3"; protocol="application/pgp-signature"
+ boundary="Sig_/1g6=R58cEgr4r+SgcYchF+9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52A7476A.9060307@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Can Jeuleers <can.jeuleers@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>, Jes Sorensen <Jes.Sorensen@redhat.com>, linux RAID <linux-raid@vger.kernel.org>
+Cc: Michael Tokarev <mjt@tls.msk.ru>
 List-Id: linux-raid.ids
 
---Sig_/mwA__qf9IZWdocOcPSsdLN3
+--Sig_/1g6=R58cEgr4r+SgcYchF+9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Dec 2013 17:55:06 +0100 Can Jeuleers <can.jeuleers@gmail.com>
-wrote:
 
-> On 12/10/2013 09:52 AM, Robin Hill wrote:
-> >> Dec  8 14:30:01 c2RAID6 mdadm[1838]: RebuildStarted event detected on
-> >> md device /dev/md/3
-> >> Dec  8 15:03:21 c2RAID6 mdadm[1838]: Rebuild26 event detected on md
-> >> device /dev/md/3
-> >> Dec  8 15:36:41 c2RAID6 mdadm[1838]: Rebuild49 event detected on md
-> >> device /dev/md/3
-> >> Dec  8 16:10:01 c2RAID6 mdadm[1838]: Rebuild70 event detected on md
-> >> device /dev/md/3
-> >> Dec  8 16:43:21 c2RAID6 mdadm[1838]: Rebuild87 event detected on md
-> >> device /dev/md/3
-> >>
-> >=20
-> > They're perfectly normal if you're doing a repair - I don't think they
-> > should be there for a check though. It's just mdadm in monitor mode
-> > reporting the progress (the numbers are the percentage completed) to
-> > syslog.  According to the manual the default reporting interval is 20
-> > percent, but I think it actually triggers on a completed stripe (or
-> > block of stripes) so the numbers aren't exactly on the interval.
->=20
-> I see them as well during checks. Although I can't find documentation
-> stating so I regard them as normal.
-> --
+Hi,
+ I would really like all distros that use systemd and mdadm to use a common
+ set of unit files to run mdadm.  Similarly I would like us all to use
+ exactly the same udev rules files.
+ This is, after all, one of the benefits of open source - sharing fixes so =
+we
+ all get a better result.  It should also make it easier to respond to
+ community issues because there are fewer differences between distros.
 
-% man mdadm
+ To this end:
 
-Search for "RebuildStarted"
+  - I've recently added some systemd unit files to mdadm and they are or wi=
+ll
+    be in openSUSE.  I'm hoping they will eventually make their way into
+    Fedora and any other distro that uses systemd.  I am of course happy to
+    make changes to meet needs in other distros that I'm not aware of.
 
-           RebuildStarted
-                  An  md array started reconstruction. (syslog priority: Wa=
-rn-
-                  ing)
+    The particular unit files are:
+     mdadm-last-resort@.timer  mdadm-last-resort@.service
 
+      When udev runs "mdadm -I" and finds that the array could have been
+      started degraded, but wasn't because there is good reason to believe
+      that more devices will appear, it adds to SYSTEMD_WANTS
+           mdadm-last-resort@mdXXX.timer
+      This waits 30 seconds and then runs mdadm-last-resort@mdxxx.service
+      which starts the array if possible.
+      If another device has appeared and the array has already been started,
+      this will simply do nothing.
+      This means that if you shut down, remove a device, then reboot you get
+      a 30 second pause and the array starts.  That is better than the
+      current situation where the array doesn't start.
 
-           RebuildNN
-                  Where NN is a two-digit number (ie. 05, 48). This  indica=
-tes
-                  that  rebuild has passed that many percent of the total. =
-The
-                  events are generated with fixed increment since 0. Increm=
-ent
-                  size  may be specified with a commandline option (default=
- is
-                  20). (syslog priority: Warning)
+http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D169ffac7ad7748=
+c8586fd1d68b7a417d71133140
 
+    mdmonitor.service
 
+      This is similar in purpose to the mdmonitor.service from Fedora, but
+      different in detail.  In particular whenever a RAID[1-9]* array start=
+s,
+      udev adds this service to SYSTEMD_WANTS so that "mdadm --monitor" will
+      automatically be started when needed, but never before.  So there is =
+no
+      need to explicitly "enable" this service.
 
-This is in a section which starts
+      Doug/Jes: do you see a problem with switching to this in due course?
 
-MONITOR MODE
-       Usage: mdadm --monitor options... devices...
+http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D61c094715836e7=
+6b66d7a69adcb6769127b5b77d
 
 
-       This usage causes mdadm to periodically poll a number of md arrays  =
-and
-       to report on any events noticed.  mdadm will never exit once it deci=
-des
-       that there are arrays to be checked, so it should normally  be  run =
- in
-       the background.
+  - I've had a look at the Fedora udev rules files and brought a few ideas
+    across to the udev files in the mdadm distro.  They are possibly
+    irrelevant for other distros, but they shouldn't hurt.  There was a
+    bug-fix though.
+    There are a few bits that I haven't brought in yet, mostly relating to
+    the state of DM devices.
 
+http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D05ec50a57badfd=
+220373aa06afd7d3fac0beb49f
+http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D25392f5fc59f96=
+fb766ecb5617d5276f8c87d489
 
-I guess that doesn't explicitly say it is normal, but that is the intent :-)
+ So if there are any distro maintainers out there (or anyone else who might
+ be interested), I'd love to hear about other things that might need to be =
+in
+ common unit or rules files.  Having said that though I'll shortly be going
+ on Christmas/New Year leave so I'm not expecting a quick resolution to all
+ of this.  I'm happy to collect ideas though and would like to have somethi=
+ng
+ fairly coherent before 3.3.1 which I'd like to see in February.
 
-They should be generated from recovery, resync, reshape, check, repair and
-anything else that might be added which processes the whole array like that.
-I guess "Rebuild" isn't a very generic word.. but
-   "StuffStarted"
-   "Stuff20"
-   "StuffFinished"
-probably wouldn't go down well either.
+ I'm quite aware that distro will have real differences for various reasons.
+ If at all possible I'd like to be able to localise those to separate files.
+ One example is the way arguments are passed to "mdadm --monitor" by
+ mdmonitor.service.
+ Fedora appears to not pass many arguments - presumably the important values
+ are in /etc/mdadm.conf.
+ openSUSE does pass lots of arguments generated from information
+ in /etc/sysconfig/mdadm (which is edited directly by our sysadmin tool
+ "yast").
+ The mdmonitor.service file I have written will run a script
+    /usr/lib/systemd/scripts/mdadm_env.sh
+ and then read environment variables from /run/sysconfig/mdadm.  The script
+ writes there and a value written there is used as the arguments for mdadm.
+ I've included a SUSE-specific version of mdadm_env.sh.  Other distros might
+ provide something else.  If the file doesn't exist, then sensible defaults
+ are used.  I hope a similar approach can be used to factor out any other
+ distro-specific rules that might be needed.
 
-
+Comments etc very welcome,
 Thanks,
 NeilBrown
 
-
---Sig_/mwA__qf9IZWdocOcPSsdLN3
+--Sig_/1g6=R58cEgr4r+SgcYchF+9
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUqfCEjnsnt1WYoG5AQITpg/9Eh+WD/koYxkUJFp8H5mEfEqEsdRXuEnc
-K4J2CxPnRpUSkLmTcMpDDhhiLiQI6l1xaVXOBhyB0xjK+ymQZgmWXhkY+hVMN871
-8w81L0DNrrQ2XPFKO1KsOr5q+Wz7l9uGYd4FZer8D5eGzXmJYhFRoqJoyOG3D84W
-HwIDszZd41QUW2Xwsov9m74CqbcQt0YTunkIOdrb0Xk7qU0Cg50PvZGkHlRX2DNp
-2ePfBrTplK7F2DPHo+X2+y19MLrFs9nvqF2eQOQ99NB4+HH+ELo0EqbtKkj+aNBs
-PYIXjU+M73u99gOdvP7UtptatD2pMNjhHHUQlIFekT2a0m3z0wHPtEBu3JHiyoT2
-qClVwKE5m1ICk/gnTO8Qxg4mJxJN2xk64ZNJojSBJXBc78bx5GWh/gak7olPoo8K
-6pM2IBYq+NkxDrA8pJ7UW0S2GquBt69/A9j3uj27ZmOf8AHg2wGXKVyUb/h9bu3v
-EunOZeGptBeNJKqoqQMMJGopuGP5YibvlSd9W0NdJx2XhMdUxsX2ubf+ONzHjyN2
-cnsz1Wb2Y6NlzgZRpmwSfYWVm9iCjfCrMuRhSVke2VtRX9cgspEJvco8pWZJ8Hmx
-8vwaFxkCEWRM89bxUnIVJgnvOtMrL+dPXbq0FxEtkAC+odH/JCu9n1CXQNLcFFlW
-23MssUrs/C8=
-=6YGn
+iQIVAwUBUqfKBznsnt1WYoG5AQJ0ww//ZskW6GmZxwNsWu0v9AKhienrNIQrR2Kd
+Z1FQxuRETMbLya9IMblmo1l0NYwoRq5BoJqL3N88H2jlRf0T04jYcEiBYq4X7SLI
+T18Bq/rNxqOZIRL9eDlgC3eCtBaTxhRKgKcZnXBLYkTPL8j0tPSO8e7Tlq3AohuL
+EoxK3DqoPXtAQzGSaSL3eoFJTmIKayMjyZ9/H86dp9YhIKdH5tn9vTWOWzB1Td7K
+iXwQleI29vXDXGM+iPYzDWzTV+gS69oB1Mi7XFFQUsTuURELUDDa373jxxOlrBxj
+gJpnlWwg/0NiVUmTRDzTUT63cak9wUiFluQmqNrx919/6k5aUW8REeTtqQx82By7
+t4Hs4hRyckM3YYg4E9501Ackvtlcs3pkuBKnARZAs9u2UnEEQHUQhTFnu1/V7HWk
+cc4BPD8FhSaJvgWnifbINTxcfb5Nu8tEjqAz9yjJ3HLRzgaF1lO/FOBxoTh181zB
+ZZXCI9cFC+6BNcFIRnoPSPNo7pIquwUBxSQrLcQzQjaydBeCAeLZy+WKJgb1Mc4U
+rDGg2IqzhrbtUqfv6dXpRJwphlW01rkufg2ZjQZo3Ka3xvx7bBBfrCdUxUgNx/6Q
+59g8Y6uXudqOrt6o8YFslaqkKVudiFwlT5eOGQdJriKGh29mAExu24y3emvlNRge
+CB/zsFJgSww=
+=n/ih
 -----END PGP SIGNATURE-----
 
---Sig_/mwA__qf9IZWdocOcPSsdLN3--
+--Sig_/1g6=R58cEgr4r+SgcYchF+9--
