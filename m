@@ -1,68 +1,79 @@
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Filesystem writes on RAID5 too slow
-Date: Wed, 11 Dec 2013 13:09:45 -0600
-Message-ID: <20131211190945.GF1935@sgi.com>
-References: <CACtJ3HZxp6xEjY_wOucCcqX4scNzEGuiAsovQYObJS9whtYJsQ@mail.gmail.com>
-	<528A5C45.4080906@redhat.com> <20131119005740.GY6188@dastard>
-	<CACtJ3Ha3C7JNi5VZRnNMn+-okNheygmbj=j9AnUMvfzfZjNwug@mail.gmail.com>
-	<20131121092606.GU11434@dastard>
-	<CACtJ3HZAsOtmLArMWraygfQxpGymtZjr+a_reXv8o6LJzoMbvw@mail.gmail.com>
-	<CACtJ3Ha5P2Heu4qiEEk6c4g+tKyR=RrD-4E-Cqj+bP8YDjKQ6w@mail.gmail.com>
-	<20131121234116.GD6502@dastard>
-	<20131210191803.GA31162@infradead.org>
-	<20131211002753.GD10988@dastard>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH mdadm 1/1] Clarify scope of Rebuild events in mdadm
+ manpage
+Date: Thu, 12 Dec 2013 13:26:53 +1100
+Message-ID: <20131212132653.28f56053@notabene.brown>
+References: <1386747955-7238-1-git-send-email-jan.ceuleers@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <20131211002753.GD10988@dastard>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Martin Boutin <martboutin@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, "Kernel.org-Linux-EXT4" <linux-ext4@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ZOgUekAdd+qkIS4MDN9sZE8"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1386747955-7238-1-git-send-email-jan.ceuleers@computer.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jan Ceuleers <jan.ceuleers@computer.org>
+Cc: Mark Knecht <markkecht@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+--Sig_/ZOgUekAdd+qkIS4MDN9sZE8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 11, 2013 at 11:27:53AM +1100, Dave Chinner wrote:
-> On Tue, Dec 10, 2013 at 11:18:03AM -0800, Christoph Hellwig wrote:
-> > > xfs: align initial file allocations correctly.
-> > > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > The function xfs_bmap_isaeof() is used to indicate that an
-> > > allocation is occurring at or past the end of file, and as such
-> > > should be aligned to the underlying storage geometry if possible.
-> > > 
-> > > Commit 27a3f8f ("xfs: introduce xfs_bmap_last_extent") changed the
-> > > behaviour of this function for empty files - it turned off
-> > > allocation alignment for this case accidentally. Hence large initial
-> > > allocations from direct IO are not getting correctly aligned to the
-> > > underlying geometry, and that is cause write performance to drop in
-> > > alignment sensitive configurations.
-> > > 
-> > > Fix it by considering allocation into empty files as requiring
-> > > aligned allocation again.
-> > 
-> > Seems like this one didn't get picked up yet?
-> 
-> I'm about to resend all my outstanding patches...
+On Wed, 11 Dec 2013 08:45:55 +0100 Jan Ceuleers <jan.ceuleers@computer.org>
+wrote:
 
-Sorry I didn't see that one.  If you stick the keyword 'patch' in the subject I
-tend to do a bit better.
+> To date, the manpage did not make it clear under which circumstances
+> Rebuild events are generated, leading to a question on the mailing
+> list as to whether it is normal for these events to be generated
+> while checking an array.
+> So clarify that all operations that act on the entire array are in
+> scope. The list is given as "e.g.", because it might grow in the
+> future as other full-array operations are added.
+>=20
+> Reported-by: Mark Knecht <markknecht@gmail.com>
+> Signed-off-by: Jan Ceuleers <jan.ceuleers@computer.org>
+> ---
+>  mdadm.8.in |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index edbedc4..ced1b50 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -2363,7 +2363,8 @@ hot-spare and resync operations which are monitored.
+> =20
+>  .TP
+>  .B RebuildStarted
+> -An md array started reconstruction. (syslog priority: Warning)
+> +An md array started reconstruction (e.g. recovery, resync, reshape,
+> +check, repair). (syslog priority: Warning)
+> =20
+>  .TP
+>  .BI Rebuild NN
 
-Regards,
-	Ben
+Applied, thanks.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+NeilBrown
+
+--Sig_/ZOgUekAdd+qkIS4MDN9sZE8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUqke8znsnt1WYoG5AQIfcQ//cpOiIawUEKXMAbwK431c5VbU4Qz4HCIL
+sqDtYsG9bo+8baCxMt8hh3Z7zsJ19n0uJnhRQqaKouPWAHOp45oNieDTO8FWfTLe
+PqhdMWzDI6LHh9YZjf9fgoYfPkbk521ztJcXnITvLnF6aGxbWRwHDyEPC+hqGsX3
+vaxCCQ2D3Wfodvt/3q9OaiI/MMWpnlaFI6Pp3XtEBjAfOcHZxxv9VwWa/lRHu+5M
+NdvA8cnhFTa1mn4gsO4ie4gMT0q+0A5DcctoHnIzTJ8SRBqiNfQ7ysaSxAr/dxn3
+sZwCqSm6WRYXXw9b8SKckPxc1VgQEwefeKeLeXQFXZ22uYwgWYU4P+gL23KunjFq
+eDi80kcKC0IsJJkPoHaHn86In8JPZkaSffK5xyWmuu2q7U7LMKYfdFVWlQ5ePXS/
+Erg0hJrAqaUNTy+dWBdXajwhovTvyA7FhHZLdtWAnscO1ZWc6MKFF9z6WUagRP7w
+8Q5gYjsPNEm3KBFbD0ifCTtNyYQwhRtGurWRv5TZT0ykrnMAZRTDl9Cwvg4ZZ/Tm
+Coy3XQsmcLhsydtd6jJZtOmXuZIre77rf+QGtXS9uZFyog8goJkSRWe/dC928gSH
+ko15dooD8l+JZOKFs0GlKIkAvz9tbUWjTUekXfJx8bcami2AL++esN2PwmylkciG
+LdKdbV7njvY=
+=M5th
+-----END PGP SIGNATURE-----
+
+--Sig_/ZOgUekAdd+qkIS4MDN9sZE8--
