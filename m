@@ -1,73 +1,58 @@
-From: Brett Russ <brett@linux.vnet.ibm.com>
-Subject: Re: [BUG,PATCH] raid1 behind write ordering (barrier) protection
-Date: Thu, 12 Dec 2013 09:45:12 -0500
-Message-ID: <52A9CBF8.3050004@linux.vnet.ibm.com>
-References: <528E72C8.7050909@linux.vnet.ibm.com> <529CBFBD.9070009@linux.vnet.ibm.com> <20131203100813.67814984@notabene.brown> <529D1941.6000507@linux.vnet.ibm.com>
+From: Pieter De Wit <pieter@insync.za.net>
+Subject: Re: Using Video cards (CUDA) for RAID parity
+Date: Fri, 13 Dec 2013 05:57:29 +1300
+Message-ID: <52A9EAF9.6020804@insync.za.net>
+References: <52A98FAF.4000205@insync.za.net> <52A9A380.50805@hesbynett.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <529D1941.6000507@linux.vnet.ibm.com>
+In-Reply-To: <52A9A380.50805@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/02/2013 06:35 PM, Brett Russ wrote:
-> On 12/02/2013 06:08 PM, NeilBrown wrote:
->> How about just keeping a record of whether there is a BIO_FLUSH request
->> outstanding on each "behind" leg.  While there is we don't submit new
->> requests.
->> So we have a queue of bios for each leg which are waiting for a BIO_FLUSH to
->> complete, and we send them on down as soon as it does.
+On 13/12/2013 00:52, David Brown wrote:
+> On 12/12/13 11:27, Pieter De Wit wrote:
+>> Hi List,
+>>
+>> Given the recent work done with techs like CUDA etc. - has the idea been
+>> floated to use the video card for RAID parity calculations vs the CPU ?
+>> Bitcoin and plenty others have shown the true speed of these cards. This
+>> might be a cheaper version of a RAID card.
+>>
+>> Cheers,
+>>
+>> Pieter
+> I am almost certain that you /could/ use a graphics card to do parity
+> calculations faster than a cpu core.  However, even the newly proposed
+> multi-parity calculations are not a big challenge for a modern cpu.  A
+> bigger issue is getting optimal threading so that multiple cores (or at
+> least threads) can be used at the same time, and this work is well under
+> way already.  Once that work is completed, my guess is that I/O, cache
+> or memory bandwidth will be the bottleneck for big raid arrays rather
+> than cpu power - and using graphics cards will not help there.
 >
-> In these circumstances, it's MD who's created the situation, not an upper
-> layer's BIO_FLUSH.  So, we can't key off of that.  Additionally, the patch below
-> also fixes another issue related to BIO_FLUSH:
+> David
 >
->  >>> +    /* If this is a flush/fua request don't
->  >>> +     * ever let it go "behind".  Keep all the
->  >>> +     * mirrors in sync.
->  >>> +     */
->  >>> +    if (bio_rw_flagged(bio, BIO_FLUSH | BIO_FUA)) {
->  >>> +        set_bit(R1BIO_BehindIO, &r1_bio->state);
->  >>> +        do_flush_fua =  bio->bi_rw & (BIO_FLUSH | BIO_FUA);
->  >>> +    }
 >
-> so we avoid the BIO_FLUSH "behind" issue that way.  This probably should be a
-> separate patch...
->
-> We could divide the behind write ordering problem into two:
-> 1) detecting the condition to protect
-> 2) protecting against that condition
->
-> Solutions for (1) include:
-> a) keeping a list of behind writes
-> b) keeping a count of behind writes
-> c) ?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ah - I see - I also thought it was multi-threaded, but, tbh, I never 
+looked that hard into it. My question comes from the fact that I now 
+have access to 32x750gig (and more if needed) drives on a fiber array. 
+The down side is that I only have *old* CPUs driving the array. RAID5's 
+sync speed (15 disks) is 8meg/second. Change the array to RAID10 and the 
+sync speed is above 100meg/second.
 
-One possible additional solution for (1) proposed by a colleague here is 
-leveraging the bitmap as an indicator of an outstanding write to a region.  I 
-fear this may be an incompatible overloading the in- vs. out-of sync role of the 
-bitmap, though.
+I, naively perhaps, assumed the bottleneck to be the Intel CPU's which 
+sparked this idea.
 
-> Solutions for (2) include:
-> i) blocking the I/O
-> j) ?
->
-> The advantages to solution (a) are:
-> -nothing gets blocked unless it overlaps (previously all reads would)
-> -list depth limited to max behind writes allowed (typically small)
->
-> I wish there were alternatives to solution (i) but recognize that since barriers
-> were removed in favor of the filesystem owning the ordering problem, MD is
-> effectively assuming the role of the filesystem in this case.
->
-> Thanks,
-> BR
+What about block level hashing ? (Unless this is already done and I just 
+never knew it :) )
 
-Additional thoughts on the above, Neil?
+Cheers,
 
-Thanks,
-BR
-
+Pieter
