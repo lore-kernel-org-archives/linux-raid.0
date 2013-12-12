@@ -1,37 +1,56 @@
-From: Chris Green <cgreen@valvesoftware.com>
-Subject: RE: Using Video cards (CUDA) for RAID parity
-Date: Thu, 12 Dec 2013 17:30:15 +0000
-Message-ID: <E38D1C1385D38045A01B28E88043427E19EE0B15@exchange10.valvesoftware.com>
+From: joystick <joystick@shiftmail.org>
+Subject: Re: Using Video cards (CUDA) for RAID parity
+Date: Thu, 12 Dec 2013 18:51:40 +0100
+Message-ID: <52A9F7AC.30209@shiftmail.org>
 References: <52A98FAF.4000205@insync.za.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <52A98FAF.4000205@insync.za.net>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Pieter De Wit' <pieter@insync.za.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Pieter De Wit <pieter@insync.za.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-At least for the raid5 case that would seem to be a loss performance-wise:
+On 12/12/2013 11:27, Pieter De Wit wrote:
+> Hi List,
+>
+> Given the recent work done with techs like CUDA etc. - has the idea 
+> been floated to use the video card for RAID parity calculations vs the 
+> CPU ?
 
-- AFAIK, even a single good x86 core can XOR memory at faster than the DRAM memory bandwidth of the system.
-- High end GPUs have more memory bandwidth than the x86 and could perform large XOR operations between buffers at a faster rate. But the memory bandwidth over the bus to the gfx card is lower than the main memory DRAM bandwidth, so you would have a net loss from having to move the data between the GPU and CPU.
+Sending the XOR computation to the GPU is like shooting a fly with a cannon.
+
+The bandwidth to the GPU would be the bottleneck by 2 orders of 
+magnitude if you try to do this.
+
+XOR is a way too simple operation. Even if it was a stream of double * 
+double multiplications, the bottleneck would lie in the bandwidth 
+to/from the GPU.
+You can gain something only if you do a matrix multiplication where each 
+float or double is uploaded only once but reused many times in all the 
+row x column multiplications.
+
+The best performers on the GPU are the autoctonous applications, which 
+operate autonomously and communicate very little with the CPU for a very 
+long time.
+
+The XOR computation is WAY fast enough on modern processors. There is a 
+benchmark at boot about this:
+
+dmesg | grep "raid6: using algorithm"
+
+returns:
+
+[    5.072162] raid6: using algorithm sse2x4 (7556 MB/s)
+
+7.5 GB/sec, and that's raid6, not even XOR.
+Probably even single-threaded.
+(probably this does not include the memory-copy overhead)
 
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Pieter De Wit
-Sent: Thursday, December 12, 2013 2:28 AM
-To: linux-raid@vger.kernel.org
-Subject: Using Video cards (CUDA) for RAID parity
 
-Hi List,
 
-Given the recent work done with techs like CUDA etc. - has the idea been floated to use the video card for RAID parity calculations vs the CPU ? 
-Bitcoin and plenty others have shown the true speed of these cards. This might be a cheaper version of a RAID card.
 
-Cheers,
 
-Pieter
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
