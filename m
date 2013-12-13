@@ -1,117 +1,145 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Re: Using Video cards (CUDA) for RAID parity
-Date: Thu, 12 Dec 2013 18:57:41 +0000
-Message-ID: <52AA0725.6070808@mpstor.com>
-References: <52A98FAF.4000205@insync.za.net> <52A9A380.50805@hesbynett.no> <52A9EAF9.6020804@insync.za.net> <52A9EED1.40703@mpstor.com> <ff87dc745635b18a71b98ce36356eea7@insync.za.net>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Help with degraded array
+Date: Fri, 13 Dec 2013 17:11:52 -0500
+Message-ID: <CAB1R3shBH5sAq6qDL4aQcxERA3mMo5UBJGTvVS20JjyW0ZyZLA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ff87dc745635b18a71b98ce36356eea7@insync.za.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pieter De Wit <pieter@insync.za.net>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/12/13 18:11, Pieter De Wit wrote:
->> Hi,
->>
->> <snip>
->>
->> When resyncing a RAID5, is the CPU running 100%? Even old CPUs should be
->> able to resync faster than that. What CPU is that if I may ask?
->>
->> I just confirmed they are *not* at 100% so the bottleneck is somewhere else. Here is the last cpu in cpuinfo:
->>
->> processor : 3
->> vendor_id : GenuineIntel
->> cpu family : 15
->> model : 2
->> model name : Intel(R) Xeon(TM) CPU 2.80GHz
->> stepping : 7
->> microcode : 0x38
->> cpu MHz : 2791.161
->> cache size : 512 KB
->> physical id : 3
->> siblings : 1
->> core id : 0
->> cpu cores : 0
->> apicid : 7
->> initial apicid : 7
->> fdiv_bug : no
->> hlt_bug : no
->> f00f_bug : no
->> coma_bug : no
->> fpu : yes
->> fpu_exception : yes
->> cpuid level : 2
->> wp : yes
->> flags : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov
->> pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe pebs bts cid
->> xtpr
->> bogomips : 5582.28
->> clflush size : 64
->> cache_alignment : 128
->> address sizes : 36 bits physical, 32 bits virtual
->> power management:
->>
->> This is rebuilding of RAID6:
->>
->> [>....................]  resync =  0.1% (1215876/732443136)
->> finish=4444.2min speed=2741K/sec
->>
->> # tail sync_speed sync_speed_max sync_speed_min
->>
->> ==> sync_speed <==
->> 2788
->>
->> ==> sync_speed_max <==
->> 200000 (system)
->>
->> ==> sync_speed_min <==
->> 200000 (local)
->>
->> # tail sync_speed sync_speed_max sync_speed_min
->> ==> sync_speed <==
->> 2788
->>
->> ==> sync_speed_max <==
->> 200000 (system)
->>
->> ==> sync_speed_min <==
->> 200000 (local)
->>
->> # dmesg | grep "raid6: using algorithm"
->> [ 2.244060] raid6: using algorithm mmxx2 (1916 MB/s)
->>
-We have similar CPUs here and we get good resync speed. How many disks 
-are in your array, and what's their size?
+Hi,
 
-Maybe one of your disk is not performing well, you could try to profile 
-their individual speed.
+I have an RAID1 array that has entered a degraded state, and the disk
+appears to have changed from sda to sdc during this process. I'm not
+sure how this affects the array, and could really use some help to
+keep me from screwing it up.
 
->>> I, naively perhaps, assumed the bottleneck to be the Intel CPU's
->>> which sparked this idea. What about block level hashing ? (Unless
->>> this is already done and I just never knew it :) )
->> Like keeping a checksum of each RAID chunk or stripe for data
->> consistency checks? RAID doesn't deal with that, it deals with
->> reconstructing data in the event of a drive failure but doesn't
->> guarantee data consistency. Therefore, if some bits on a drive were to
->> be "flipped", the next RAID "scrub" (repair) would detect a mismatch
->> between the data chunks and the parity and would simply update the
->> parity from the available data (not "repairing" the corrupted data), as
->> far as I know that's because there's no way for the array to know
->> whether the data or the parity was written wrong or corrupted.
->>
->> Regards,
->> Ben.
->>
->> Is there parity in RAID10/RAID1 ? It seems my idea won't work either way as there isn't the bus bandwidth to support it, this is now more an educational thing :)
->>
-RAID1 is a mirror (a full copy), while RAID10 is different than RAID1 
-it's still not using parity but chunk copies.
+The system is an fc15 box with just one array, md0.
 
->> Cheers,
->>
->> Pieter
+# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdb2[1]
+      148478904 blocks super 1.2 [2/1] [_U]
+      bitmap: 1/2 pages [4KB], 65536KB chunk
 
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Wed Mar 21 12:31:23 2012
+     Raid Level : raid1
+     Array Size : 148478904 (141.60 GiB 152.04 GB)
+  Used Dev Size : 148478904 (141.60 GiB 152.04 GB)
+   Raid Devices : 2
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Fri Dec 13 17:09:19 2013
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : hqmailrelay:0
+           UUID : 99acf2a0:afa1266c:b870423d:f06e4009
+         Events : 11504
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       18        1      active sync   /dev/sdb2
+
+# fdisk -l /dev/sda /dev/sdb /dev/sdc
+
+Disk /dev/sdb: 160.0 GB, 160041885696 bytes
+255 heads, 63 sectors/track, 19457 cylinders, total 312581808 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x000e7781
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048        6143        2048   83  Linux
+/dev/sdb2            6144   296966143   148480000   fd  Linux raid autodetect
+/dev/sdb3       296966144   299014143     1024000   83  Linux
+/dev/sdb4       299014144   312580095     6782976   82  Linux swap / Solaris
+
+Disk /dev/sdc: 160.0 GB, 160041885696 bytes
+255 heads, 63 sectors/track, 19457 cylinders, total 312581808 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x000c0feb
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1            2048        6143        2048   83  Linux
+/dev/sdc2   *        6144     2054143     1024000   83  Linux
+/dev/sdc3         2054144   299014143   148480000   fd  Linux raid autodetect
+/dev/sdc4       299014144   312580095     6782976   82  Linux swap / Solaris
+
+Here also is the relevant info from dmesg:
+
+ata1: exception Emask 0x50 SAct 0x0 SErr 0x40d0800 action 0xe frozen
+ata1: irq_stat 0x00400040, connection status changed
+ata1: SError: { HostInt PHYRdyChg CommWake 10B8B DevExch }
+ata1: hard resetting link
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1: hard resetting link
+ata1: SATA link down (SStatus 0 SControl 300)
+ata1: limiting SATA link speed to 1.5 Gbps
+ata1: hard resetting link
+ata1: SATA link down (SStatus 0 SControl 310)
+ata1.00: disabled
+ata1: EH complete
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: [sda] killing request
+sd 0:0:0:0: rejecting I/O to offline device
+md: super_written gets error=-5, uptodate=0
+md/raid1:md0: Disk failure on sda3, disabling device.
+md/raid1:md0: Operation continuing on 1 devices.
+ata1.00: detaching (SCSI 0:0:0:0)
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda]
+Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 0:0:0:0: [sda] Stopping disk
+sd 0:0:0:0: [sda] START_STOP FAILED
+sd 0:0:0:0: [sda]
+Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+Buffer I/O error on device sda2, logical block 65536
+lost page write due to I/O error on sda2
+JBD2: Error -5 detected when updating journal superblock for sda2-8.
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 0, wo:1, o:0, dev:sda3
+ disk 1, wo:0, o:1, dev:sdb2
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 1, wo:0, o:1, dev:sdb2
+md: unbind<sda3>
+md: export_rdev(sda3)
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x4040000 action 0xe frozen
+ata1: irq_stat 0x00000040, connection status changed
+ata1: SError: { CommWake DevExch }
+ata1: hard resetting link
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-8: ST3160316AS, JC4B, max UDMA/133
+ata1.00: 312581808 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+ata1: EH complete
+scsi 0:0:0:0: Direct-Access     ATA      ST3160316AS      JC4B PQ: 0 ANSI: 5
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:0:0: [sdc] 312581808 512-byte logical blocks: (160 GB/149 GiB)
+sd 0:0:0:0: [sdc] Write Protect is off
+sd 0:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 0:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sdc: sdc1 sdc2 sdc3 sdc4
+sd 0:0:0:0: [sdc] Attached SCSI disk
+
+I'd really appreciate any guidance you could provide.
+
+Thanks,
+Alex
