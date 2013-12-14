@@ -1,33 +1,42 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: Re: Help with degraded array
-Date: Sat, 14 Dec 2013 04:38:22 -0600
-Message-ID: <52AC351E.5050709@suddenlinkmail.com>
-References: <CAB1R3shBH5sAq6qDL4aQcxERA3mMo5UBJGTvVS20JjyW0ZyZLA@mail.gmail.com>
+From: Rashika Kheria <rashika.kheria@gmail.com>
+Subject: [PATCH] drivers: md: Mark the function btree_insert_fn() as static
+ in btree.c
+Date: Sat, 14 Dec 2013 18:29:29 +0530
+Message-ID: <20131214125929.GA8200@rashika>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3shBH5sAq6qDL4aQcxERA3mMo5UBJGTvVS20JjyW0ZyZLA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-bcache-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Kent Overstreet <kmo@daterainc.com>, Neil Brown <neilb@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, josh@joshtriplett.org
 List-Id: linux-raid.ids
 
-On 12/13/2013 04:11 PM, Alex wrote:
-> I'd really appreciate any guidance you could provide.
-> 
-> Thanks,
-> Alex
+This patch marks the function btree_insert_fn() as static in
+bcache/btree.c because it is not used outside this file.
 
-It simply looks like the drive designation changed /dev/sda -> /dev/sdc and
-mdadm kicked sda out of the array because it wasn't there. Are you not using
-UUID designation to assemble the arrays? What does your /etc/mdadm.conf look like?
+Thus, it also eliminates the following warning in bcache/btree.c:
+drivers/md/bcache/btree.c:2220:5: warning: no previous prototype for =E2=
+=80=98btree_insert_fn=E2=80=99 [-Wmissing-prototypes]
 
-It looks like you could add /dev/sdc3 back into the array, let it rebuild if
-necessary, then use:
+Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+---
+ drivers/md/bcache/btree.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- mdadm --detail --scan >> /etc/mdadm.conf
-
-To create a new UUID based mdadm.conf that would prevent this from happening again.
-
--- 
-David C. Rankin, J.D.,P.E.
+diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+index 5e2765a..dc6e2be 100644
+--- a/drivers/md/bcache/btree.c
++++ b/drivers/md/bcache/btree.c
+@@ -2217,7 +2217,7 @@ struct btree_insert_op {
+ 	struct bkey	*replace_key;
+ };
+=20
+-int btree_insert_fn(struct btree_op *b_op, struct btree *b)
++static int btree_insert_fn(struct btree_op *b_op, struct btree *b)
+ {
+ 	struct btree_insert_op *op =3D container_of(b_op,
+ 					struct btree_insert_op, op);
+--=20
+1.7.9.5
