@@ -1,67 +1,48 @@
-From: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Subject: Re: Help with degraded array
-Date: Sat, 14 Dec 2013 12:25:36 -0600
-Message-ID: <52ACA2A0.4060405@suddenlinkmail.com>
-References: <CAB1R3shBH5sAq6qDL4aQcxERA3mMo5UBJGTvVS20JjyW0ZyZLA@mail.gmail.com>	<52AC351E.5050709@suddenlinkmail.com> <CAB1R3siFu3q98bT23Lz1u2uVqkxvth35pguzSdBQ7auZkJwumg@mail.gmail.com>
+From: Josh Triplett <josh@joshtriplett.org>
+Subject: Re: [PATCH] drivers: md: Mark the function btree_insert_fn() as
+ static in btree.c
+Date: Sat, 14 Dec 2013 12:44:15 -0800
+Message-ID: <20131214204414.GK17601@leaf>
+References: <20131214125929.GA8200@rashika>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3siFu3q98bT23Lz1u2uVqkxvth35pguzSdBQ7auZkJwumg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: mdraid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20131214125929.GA8200@rashika>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Rashika Kheria <rashika.kheria@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Kent Overstreet <kmo@daterainc.com>, Neil Brown <neilb@suse.de>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/14/2013 11:40 AM, Alex wrote:
-> # cat /etc/mdadm.conf
-> 
-> # mdadm.conf written out by anaconda
-> MAILADDR root
-> AUTO +imsm +1.x -all
-> ARRAY /dev/md0 level=raid1 num-devices=2
-> UUID=99acf2a0:afa1266c:b870423d:f06e4009
-> 
-> So I would then use "mdadm --add /dev/md0 /dev/sdc3" to add it,
-> correct? It's not necessary to first fail the device?
+On Sat, Dec 14, 2013 at 06:29:29PM +0530, Rashika Kheria wrote:
+> This patch marks the function btree_insert_fn() as static in
+> bcache/btree.c because it is not used outside this file.
+>=20
+> Thus, it also eliminates the following warning in bcache/btree.c:
+> drivers/md/bcache/btree.c:2220:5: warning: no previous prototype for =
+=E2=80=98btree_insert_fn=E2=80=99 [-Wmissing-prototypes]
+>=20
+> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
 
-From your earlier post:
+Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 
-# mdadm -D /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Wed Mar 21 12:31:23 2012
-     Raid Level : raid1
-     Array Size : 148478904 (141.60 GiB 152.04 GB)
-  Used Dev Size : 148478904 (141.60 GiB 152.04 GB)
-   Raid Devices : 2
-  Total Devices : 1
-^^^^^^^^^^^^^^^^^^^^^    Persistence : Superblock is persistent
-<snip>
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-                                      ^^^^^^^^^^^^^^^^^^^^^^
-       1       8       18        1      active sync   /dev/sdb2
-
-
-The drive at /dev/sda3 has already been failed/removed. The reason was:
-
-Buffer I/O error on device sda2, logical block 65536
-lost page write due to I/O error on sda2
-JBD2: Error -5 detected when updating journal superblock for sda2-8.
-
-  What I would do is run smartctl -t short /dev/sdc, then smartctl -a /dev/sdc
-and make sure the drive was reported as PASSED and not in imminent failure. Then
-run fsck on /dev/sdc2 (the partition reporting the I/O error on what was sda2 --
-DO NOT fsck /dev/sdc3.
-
-  Then I would reboot to see if the drive designation didn't revert to sda and
-give mdadm a chance to reassemble the array automatically. If that did not work,
-then I would check the drive designation (sda/sdc) and try the "--add" as you
-specified, if that failed use "--add --force".
-
-Good luck.
-
-
-
--- 
-David C. Rankin, J.D.,P.E.
+>  drivers/md/bcache/btree.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+> index 5e2765a..dc6e2be 100644
+> --- a/drivers/md/bcache/btree.c
+> +++ b/drivers/md/bcache/btree.c
+> @@ -2217,7 +2217,7 @@ struct btree_insert_op {
+>  	struct bkey	*replace_key;
+>  };
+> =20
+> -int btree_insert_fn(struct btree_op *b_op, struct btree *b)
+> +static int btree_insert_fn(struct btree_op *b_op, struct btree *b)
+>  {
+>  	struct btree_insert_op *op =3D container_of(b_op,
+>  					struct btree_insert_op, op);
+> --=20
+> 1.7.9.5
+>=20
