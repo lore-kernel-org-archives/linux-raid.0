@@ -1,24 +1,38 @@
-From: Dag Nygren <dag@newtech.fi>
-Subject: Re: =?UTF-8?B?562U5aSN77yadHdv?= raid5 performance
-Date: Mon, 16 Dec 2013 15:06:39 +0200
-Message-ID: <3600622.49q3PtzSug@eseries.newtech.fi>
-References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com> <fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>
-Reply-To: dag@newtech.fi
+From: Tommy Apel <tommyapeldk@gmail.com>
+Subject: =?UTF-8?B?UmU6IOetlOWkje+8mnR3byByYWlkNSBwZXJmb3JtYW5jZQ==?=
+Date: Mon, 16 Dec 2013 14:32:02 +0100
+Message-ID: <CAGA4a+G5Wpj-yhGG3Zv5TMM8XUPPp9YNUvRJJvqmhPGwaLbQ4w@mail.gmail.com>
+References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com>
+	<fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>
+	<3600622.49q3PtzSug@eseries.newtech.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>
+In-Reply-To: <3600622.49q3PtzSug@eseries.newtech.fi>
 Sender: linux-raid-owner@vger.kernel.org
 To: lilofile <lilofile@aliyun.com>
-Cc: Pieter De Wit <pieter@insync.za.net>, linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday 16 December 2013 15:57:42 lilofile wrote:
-> the disks involved in the array is sTEC ssd disk,they are connected by mpt2sas 6Gb/s
+Please give us the output of mdadm -D for each array aswell, and just
+in case, also the model of the SSD's in use
 
-I/O bus to the card?
+2013/12/16 Dag Nygren <dag@newtech.fi>:
+> On Monday 16 December 2013 15:57:42 lilofile wrote:
+>> the disks involved in the array is sTEC ssd disk,they are connected by mpt2sas 6Gb/s
+>
+> I/O bus to the card?
+>
+> Best
+> Dag
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Best
-Dag
 
+
+-- 
+
+/Tommy
