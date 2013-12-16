@@ -1,56 +1,46 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Using Video cards (CUDA) for RAID parity
-Date: Mon, 16 Dec 2013 17:07:43 +0100
-Message-ID: <20131216160743.73CE838465B@gemini.denx.de>
-References: <52A98FAF.4000205@insync.za.net> <52A9A1B3.5080706@mpstor.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: =?utf-8?B?UmU6IOetlOWkje+8muetlOWkje+8mnR3byByYWlkNSBwZXJmb3JtYW5jZQ==?=
+Date: Mon, 16 Dec 2013 16:32:54 +0000
+Message-ID: <1387211574.112523.5.camel@djiang5-linux2.ch.intel.com>
+References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com>
+	 <fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>
+	,3600622.49q3PtzSug@eseries.newtech.fi
+ <a9545b2f-d9be-4616-be40-59bfff151032@aliyun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <52A9A1B3.5080706@mpstor.com>
+In-Reply-To: <a9545b2f-d9be-4616-be40-59bfff151032@aliyun.com>
+Content-Language: en-US
+Content-ID: <CE0482FA57534848B89DDC8BC137C9F1@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
-Cc: Pieter De Wit <pieter@insync.za.net>, linux-raid@vger.kernel.org
+To: lilofile <lilofile@aliyun.com>
+Cc: dag <dag@newtech.fi>, linux-raid <linux-raid@vger.kernel.org>, Pieter De Wit <pieter@insync.za.net>
 List-Id: linux-raid.ids
 
-Dear Benjamin,
-
-In message <52A9A1B3.5080706@mpstor.com> you wrote:
-> On several more RAID specific SoC (like the PowerPC 440x/460x) a XOR 
-> engine is included to speed up RAID calculations (effectively a hardware 
-> RAID engine).
-> 
-> I think Intel Atom CPUs were planned/got a similar engine added, but 
-> with the advance in CPU efficiencies and frequencies, these XOR engines 
-> are practically obsolete: You will barely use 5% of your CPU (if a high 
-> end CPU) for the parity calculation on RAID5.
-> 
-> These days it seems that the overhead from the parity calculations are 
-> so small that they become insignificant.
-
-I fully agree here.
-
-Even on a not so fresh desktop CPU (Intel Core2 Quad CPU Q9550 at
-2.83GHz) I see this in the kernel logs:
-
-...
-[   15.944466] xor: measuring software checksum speed
-[   15.983008]    prefetch64-sse: 11592.000 MB/sec
-[   16.020008]    generic_sse: 10232.000 MB/sec
-[   16.045623] xor: using function: prefetch64-sse (11592.000 MB/sec)
-...
-
-So for each percent of CPU bandwith I offer I get 115 MB/s bandwith
-for parity calculations.  None of the RAID arrays I have running would
-ever need even close to 10 % of my CPU (in theory, at least).
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-I can't say I've ever been lost, but I was bewildered once for  three
-days.                                     - Daniel Boone (Attributed)
+T24gTW9uLCAyMDEzLTEyLTE2IGF0IDEzOjEzICswMDAwLCBsaWxvZmlsZSB3cm90ZToNCj4gbXB0
+MnNhcyA2R2IvcywgUENJRSAyLjDvvIx0aGUgY2FyZCBpcyBmb3VyIHBvcnQsc28gdGhlb3JldGlj
+YWwgcmF0aW8gY2FuIHJlYWNoIHRvIDIuNEdiL3MsaXQgaXMgbm90IGJvdHRsZW5lY2suIEkgdGVz
+dCByZWFkIHR3byByYWlkNSB1c2luZyBkZCwNCj4gc3VjaCBhcyAgZGQgaWY9L2Rldi9tZDAgb2Y9
+L2Rldi96ZXJvIDFNDQo+ICAgICAgICAgICAgICBkZCBpZj0vZGV2L21kMSBvZj0vZGV2L3plcm8g
+MU0gDQo+IHRoZSB0b3RhbCByZWFkIGJhbmR3aWR0aCAgY2FuIHJlYWNoIHRvIDIuM0dCL3Msc28g
+SS9PIGJ1cyBpcyBub3QgYSBwcm9ibGVtLg0KDQpEaWQgeW91IGNoZWNrIGFuZCBzZWUgaWYgdGhl
+IGNvbnRyb2xsZXIgaXMgdXNpbmcgTVNJWD8gSSd2ZSBlbmNvdW50ZXJlZA0Kc29tZSBtcHQyc2Fz
+IGRlZmF1bHRlZCB0byBpbnR4IGJ5IHRoZSBkcml2ZXIuIEFsc28gc2VlIGlmIGNoYW5naW5nIHJx
+DQphZmZpbml0eSBoZWxwcyBwZXJmb3JtYW5jZT8NCmVjaG8gMiA+IC9zeXMvYmxvY2svc2RYL3F1
+ZXVlL3JxX2FmZmluaXR5DQpUaGlzIHNob3VsZCByb3V0ZSB0aGUgSEJBIGludGVycnVwdHMgdG8g
+dGhlIGNvcmUgdGhhdCBzZW50IHRoZSBJL08NCnJlcXVlc3QuICANCg0KDQo+IA0KPiAtLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0NCj4g5Y+R5Lu25Lq677yaRGFnIE55Z3JlbiA8ZGFnQG5ld3RlY2guZmk+DQo+IOWPkemAgeaX
+tumXtO+8mjIwMTPlubQxMuaciDE25pelKOaYn+acn+S4gCkgMjE6MDYNCj4g5pS25Lu25Lq677ya
+bGlsb2ZpbGUgPGxpbG9maWxlQGFsaXl1bi5jb20+DQo+IOaKhOOAgOmAge+8mlBpZXRlciBEZSBX
+aXQgPHBpZXRlckBpbnN5bmMuemEubmV0PjsgbGludXgtcmFpZCA8bGludXgtcmFpZEB2Z2VyLmtl
+cm5lbC5vcmc+DQo+IOS4u+OAgOmimO+8mlJlOiDnrZTlpI3vvJp0d28gcmFpZDUgcGVyZm9ybWFu
+Y2UNCj4gDQo+IE9uIE1vbmRheSAxNiBEZWNlbWJlciAyMDEzIDE1OjU3OjQyIGxpbG9maWxlIHdy
+b3RlOg0KPiA+IHRoZSBkaXNrcyBpbnZvbHZlZCBpbiB0aGUgYXJyYXkgaXMgc1RFQyBzc2QgZGlz
+ayx0aGV5IGFyZSBjb25uZWN0ZWQgYnkgbXB0MnNhcyA2R2Ivcw0KPiANCj4gSS9PIGJ1cyB0byB0
+aGUgY2FyZD8NCj4gDQo+IEJlc3QNCj4gRGFnDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20g
+dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KPiB0
+aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCg0K
