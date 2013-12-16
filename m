@@ -1,160 +1,56 @@
-From: "lilofile" <lilofile@aliyun.com>
-Subject: =?UTF-8?B?562U5aSN77ya562U5aSN77ya562U5aSN77yadHdvIHJhaWQ1IHBlcmZvcm1hbmNl?=
-Date: Mon, 16 Dec 2013 22:21:21 +0800
-Message-ID: <4cee5572-4512-4e88-9f4d-6bce0550df34@aliyun.com>
-References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com>	<fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>	<3600622.49q3PtzSug@eseries.newtech.fi>	<17f1f2ef-bac0-4857-b72b-ed5b9667426b@aliyun.com>,CAGA4a+HPazewdo64v_L7wMUeqXTd_4O8-cHXLYUhDL1bmJusvg@mail.gmail.com
-Reply-To: "lilofile" <lilofile@aliyun.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Using Video cards (CUDA) for RAID parity
+Date: Mon, 16 Dec 2013 17:07:43 +0100
+Message-ID: <20131216160743.73CE838465B@gemini.denx.de>
+References: <52A98FAF.4000205@insync.za.net> <52A9A1B3.5080706@mpstor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: CAGA4a+HPazewdo64v_L7wMUeqXTd_4O8-cHXLYUhDL1bmJusvg@mail.gmail.com
+In-reply-to: <52A9A1B3.5080706@mpstor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tommy Apel <tommyapeldk@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Benjamin ESTRABAUD <be@mpstor.com>
+Cc: Pieter De Wit <pieter@insync.za.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-really the chunksizes of two raid is different in this test=EF=BC=8Cbut=
- I use same chunksize in two raid already, the result is the same.
-the question is why write performance of  each single raid5 can reached=
- to 1GB/s(dd),dd write two raid5 can only reach to 1.4GB/s=EF=BC=8C
-Theoretically total performance can reached to 2GB/s=EF=BC=8Closs 30% .
-is any contention in soft raid5?
+Dear Benjamin,
 
+In message <52A9A1B3.5080706@mpstor.com> you wrote:
+> On several more RAID specific SoC (like the PowerPC 440x/460x) a XOR 
+> engine is included to speed up RAID calculations (effectively a hardware 
+> RAID engine).
+> 
+> I think Intel Atom CPUs were planned/got a similar engine added, but 
+> with the advance in CPU efficiencies and frequencies, these XOR engines 
+> are practically obsolete: You will barely use 5% of your CPU (if a high 
+> end CPU) for the parity calculation on RAID5.
+> 
+> These days it seems that the overhead from the parity calculations are 
+> so small that they become insignificant.
 
-------------------------------------------------------------------
-=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9ATommy Apel <tommyapeldk@gmail.com>
-=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B412=E6=9C=8816=
-=E6=97=A5(=E6=98=9F=E6=9C=9F=E4=B8=80) 22:02
-=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>
-=E6=8A=84=E3=80=80=E9=80=81=EF=BC=9Alinux-raid <linux-raid@vger.kernel.=
-org>
-=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9A=E7=AD=
-=94=E5=A4=8D=EF=BC=9Atwo raid5 performance
+I fully agree here.
 
-=46irst off you chunksizes are different on the two volumes and secondl=
-y
-if you're looking for throughput performance move them up to like 512K
-or maybe more
+Even on a not so fresh desktop CPU (Intel Core2 Quad CPU Q9550 at
+2.83GHz) I see this in the kernel logs:
 
-2013/12/16 lilofile <lilofile@aliyun.com>:
-> the result of mdadm -D is as follows:
->
-> root@host0:~# mdadm  -D /dev/md126
-> /dev/md126:
->         Version : 1.2
->   Creation Time : Sat Dec  7 16:26:04 2013
->      Raid Level : raid5
->      Array Size : 1171499840 (1117.23 GiB 1199.62 GB)
->   Used Dev Size : 234299968 (223.45 GiB 239.92 GB)
->    Raid Devices : 6
->   Total Devices : 6
->     Persistence : Superblock is persistent
->
->   Intent Bitmap : Internal
->
->     Update Time : Fri Dec 13 22:51:04 2013
->           State : active
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->            Name : host0:md126
->            UUID : aaa3075d:f25e3bd0:9dd347c5:fb58192f
->          Events : 158
->
->     Number   Major   Minor   RaidDevice State
->        0      65      112        0      active sync   /dev/sdx
->        1      65       96        1      active sync   /dev/sdw
->        2      65       80        2      active sync   /dev/sdv
->        3      65       64        3      active sync   /dev/sdu
->        4      65       48        4      active sync   /dev/sdt
->        6      65       32        5      active sync   /dev/sds
-> root@host0:~#
->
->
-> root@host0:~# mdadm  -D /dev/md129
-> /dev/md129:
->         Version : 1.2
->   Creation Time : Sun Dec  8 15:59:11 2013
->      Raid Level : raid5
->      Array Size : 1171498880 (1117.23 GiB 1199.61 GB)
->   Used Dev Size : 234299776 (223.45 GiB 239.92 GB)
->    Raid Devices : 6
->   Total Devices : 6
->     Persistence : Superblock is persistent
->
->     Update Time : Mon Dec 16 21:50:45 2013
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 128K
->
->            Name : host0:md129  (local to host sc0)
->            UUID : b80616a9:49540979:90b20aa6:1b22f67b
->          Events : 31
->
->     Number   Major   Minor   RaidDevice State
->        0      65       16        0      active sync   /dev/sdr
->        1      65        0        1      active sync   /dev/sdq
->        2       8      224        2      active sync   /dev/sdo
->        3       8      240        3      active sync   /dev/sdp
->        4       8      208        4      active sync   /dev/sdn
->        5       8      192        5      active sync   /dev/sdm
-> root@host0:~#
->
->
-> ------------------------------------------------------------------
-> =E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9ATommy Apel <tommyapeldk@gmail.com=
->
-> =E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B412=E6=9C=88=
-16=E6=97=A5(=E6=98=9F=E6=9C=9F=E4=B8=80) 21:32
-> =E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>
-> =E6=8A=84=E3=80=80=E9=80=81=EF=BC=9Alinux-raid <linux-raid@vger.kerne=
-l.org>
-> =E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9Atw=
-o raid5 performance
->
-> Please give us the output of mdadm -D for each array aswell, and just
-> in case, also the model of the SSD's in use
->
-> 2013/12/16 Dag Nygren <dag@newtech.fi>:
->> On Monday 16 December 2013 15:57:42 lilofile wrote:
->>> the disks involved in the array is sTEC ssd disk,they are connected=
- by mpt2sas 6Gb/s
->>
->> I/O bus to the card?
->>
->> Best
->> Dag
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
->
-> /Tommy
+...
+[   15.944466] xor: measuring software checksum speed
+[   15.983008]    prefetch64-sse: 11592.000 MB/sec
+[   16.020008]    generic_sse: 10232.000 MB/sec
+[   16.045623] xor: using function: prefetch64-sse (11592.000 MB/sec)
+...
 
+So for each percent of CPU bandwith I offer I get 115 MB/s bandwith
+for parity calculations.  None of the RAID arrays I have running would
+ever need even close to 10 % of my CPU (in theory, at least).
 
+Best regards,
 
---=20
+Wolfgang Denk
 
-/Tommy
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+I can't say I've ever been lost, but I was bewildered once for  three
+days.                                     - Daniel Boone (Attributed)
