@@ -1,20 +1,36 @@
-From: Tommy Apel <tommyapeldk@gmail.com>
-Subject: =?UTF-8?B?UmU6IOetlOWkje+8muetlOWkje+8mnR3byByYWlkNSBwZXJmb3JtYW5jZQ==?=
-Date: Mon, 16 Dec 2013 15:02:47 +0100
-Message-ID: <CAGA4a+HPazewdo64v_L7wMUeqXTd_4O8-cHXLYUhDL1bmJusvg@mail.gmail.com>
-References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com>
-	<fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>
-	<3600622.49q3PtzSug@eseries.newtech.fi>
-	<17f1f2ef-bac0-4857-b72b-ed5b9667426b@aliyun.com>
+From: "lilofile" <lilofile@aliyun.com>
+Subject: =?UTF-8?B?562U5aSN77ya562U5aSN77ya562U5aSN77yadHdvIHJhaWQ1IHBlcmZvcm1hbmNl?=
+Date: Mon, 16 Dec 2013 22:21:21 +0800
+Message-ID: <4cee5572-4512-4e88-9f4d-6bce0550df34@aliyun.com>
+References: <386c52f5-dd36-4697-b76a-d24038bbded3@aliyun.com>	<fc24d5bd-da62-4c2d-8c51-c9b76a3f9dd7@aliyun.com>	<3600622.49q3PtzSug@eseries.newtech.fi>	<17f1f2ef-bac0-4857-b72b-ed5b9667426b@aliyun.com>,CAGA4a+HPazewdo64v_L7wMUeqXTd_4O8-cHXLYUhDL1bmJusvg@mail.gmail.com
+Reply-To: "lilofile" <lilofile@aliyun.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17f1f2ef-bac0-4857-b72b-ed5b9667426b@aliyun.com>
+In-Reply-To: CAGA4a+HPazewdo64v_L7wMUeqXTd_4O8-cHXLYUhDL1bmJusvg@mail.gmail.com
 Sender: linux-raid-owner@vger.kernel.org
-To: lilofile <lilofile@aliyun.com>
+To: Tommy Apel <tommyapeldk@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+really the chunksizes of two raid is different in this test=EF=BC=8Cbut=
+ I use same chunksize in two raid already, the result is the same.
+the question is why write performance of  each single raid5 can reached=
+ to 1GB/s(dd),dd write two raid5 can only reach to 1.4GB/s=EF=BC=8C
+Theoretically total performance can reached to 2GB/s=EF=BC=8Closs 30% .
+is any contention in soft raid5?
+
+
+------------------------------------------------------------------
+=E5=8F=91=E4=BB=B6=E4=BA=BA=EF=BC=9ATommy Apel <tommyapeldk@gmail.com>
+=E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4=EF=BC=9A2013=E5=B9=B412=E6=9C=8816=
+=E6=97=A5(=E6=98=9F=E6=9C=9F=E4=B8=80) 22:02
+=E6=94=B6=E4=BB=B6=E4=BA=BA=EF=BC=9Alilofile <lilofile@aliyun.com>
+=E6=8A=84=E3=80=80=E9=80=81=EF=BC=9Alinux-raid <linux-raid@vger.kernel.=
+org>
+=E4=B8=BB=E3=80=80=E9=A2=98=EF=BC=9ARe: =E7=AD=94=E5=A4=8D=EF=BC=9A=E7=AD=
+=94=E5=A4=8D=EF=BC=9Atwo raid5 performance
 
 =46irst off you chunksizes are different on the two volumes and secondl=
 y
