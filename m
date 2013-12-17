@@ -1,65 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: request help with RAID1 array that endlessly attempts to sync
-Date: Tue, 17 Dec 2013 14:43:18 -0500
-Message-ID: <52B0A956.7030501@turmel.org>
-References: <20131217065028.GC20941@nx5.priv> <20131217165348.GA5070@localhost.localdomain> <52B09027.5090605@turmel.org> <20131217192637.GB5070@localhost.localdomain>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Chunk size change stop/restart
+Date: Wed, 18 Dec 2013 09:32:10 +1100
+Message-ID: <20131218093210.46a208a2@notabene.brown>
+References: <20131217190019.GA1883@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/xvf97GenlKEK9Me9y.PG+ZM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131217192637.GB5070@localhost.localdomain>
+In-Reply-To: <20131217190019.GA1883@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Julie Ashworth <ashworth@berkeley.edu>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/17/2013 02:26 PM, Julie Ashworth wrote:
-> Thanks Phil,
-> I should note that the drives are labelled "enterprise", purchased from a hw RAID vendor (ACNC.com).
-> 
-> On 17-12-2013 12.55 -0500, Phil Turmel wrote:
->> Please post the output of "smartctl -x" for both of these drives.
-> 
-> The Centos5 smartctl (from smartmontools rpm) doesn't support the -x option. However, it's apparently equivelent to:
-> smartctl -H -i -g all -c -A -f brief -l xerror,error -l xselftest,selftest -l selective -l directory -l scttemp -l scterc -l devstat -l sataphy 
-> 
-> Centos5 smartctl supports the following:
->  smartctl -H -i -c -A -l error -l selftest -l selective -l directory -l scttemp -l scttempsts -l scttemphist
-> 
-> ... and I enclosed the output for sda and sdb.
-> If you think it would be useful to have the additional options (provided by -x), then let me know, and I'll try to build it.
+--Sig_/xvf97GenlKEK9Me9y.PG+ZM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I was interested in the reallocation counts, the current pending
-sectors, and the scterc timeouts.  The latter were not present, and are
-important.
+On Tue, 17 Dec 2013 20:00:19 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-But /dev/sdb has three relocations and only one pending error.  That's
-an old drive, but not sick.  I'd be concerned that there're other
-hardware issues in your system if the timeout issue is not part of the
-problem.
+> Hi all,
+>=20
+> I started the process of changing the chunk
+> size of a RAID-5 array (5 HDDs).
+>=20
+> Unfortunately, I unwisely choose a quite slow
+> device for the backup file.
+>=20
+> Is it possible, without stopping the array, to
+> stop the "reshape", move the backup file to a
+> faster place and restart the process?
 
->> timeout mismatches combined with lack of scrubbing.
-> 
-> I've read about mismatches, but not about scrubbing. I'll investigate this.
-> What program/options do your weekly scrub?
+You might be able to kill the mdadm which over-sees the reshape, move the
+file, then use --grow --continue to continue the reshape.
+But I've never tested this and suspect that something would go wrong.
 
-Simple weekly cron job does "echo check >>/sys/block/mdX/md/sync_action"
-for each array.
+Stopping, moving, and re-assembling should work.
 
->> Maybe not.  Please tell us you know all about error recovery timeouts
-> 
-> Instead of stopping the sync, I decided to slow it down:
-> echo 1001 > /proc/sys/dev/raid/speed_limit_max
-> 
->> and the timeout mismatch problem commonly encountered with
->> consumer-grade hard drives.  Otherwise, you might want search the list
->> archives for various combinations of the keywords "scterc", "error
->> recovery", "timeout mismatch", "URE", and/or "bit error rate".
-> 
-> I'm not a big fan of Seagate (enterprise or not). The drives I purchased before these (~2008) needed to have firmware updates to prevent bricking. Sigh.
+Being patient also works,  but can be very difficult.
 
-That Seagate part number twigged an old memory... I didn't think it was
-an enterprise drive.  I have had good experiences with Hitachi, FWIW.
-Recent purchases have all been WD Red just for this issue.
+NeilBrown
 
-Phil
+--Sig_/xvf97GenlKEK9Me9y.PG+ZM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUrDQ6jnsnt1WYoG5AQIb2w/+KpG5ki5iQfQR9PLzbaRGrk3TSvIY7lbZ
+TuRIknu/6VTOhN3rJUTgziuy0uK/1mOC1SA14eS7SQuxuURXMrB0qJ7CIWLyWgnq
+hCP8ZnNKkok2B2EQBllBhwx6WAB4RCso3PTEZPlQsXzjEH5cHeTSMDOJee+Ly3xs
+8K8fnU7Hdld0MSIuC6ag4iGpDhyCSPU5xt96xvnV4mAHlhBRBSPK4Fa1R7rnRwR8
+gBonizuRNShjjsPXhuM0RuUQLGISxEJqPQeL9FrXVFJEK3tsM27HdV2HPdXvC7lP
+6hRIbqlJT0FeL43CmrFvxq/L643ZTcYzEqrTTEKf2nr2fn1I7w9+DFAoJSdMCsMY
+F3/EYwwF/hct8McubtpyY24BiZJMVqEiful9ESeIe/tmEes8JKa3wlUj63g1EIt2
+93HkN/iDc7mnms0i4iKyeMcib4w05d0zEgV9cVwaXG3jkfsgggv+j9RQLL5buiCk
+qy5/FPRM1HCBMy6sEklTw/vMhDTO3LhNKGHlqTrmFKFWEPi1PTtL9qpWRLFV5SBi
+fPMlB0JhHzW15r+fm58iO1ILb/iHt/SIJfMBM+f7q5RmwT8Hmtk0KusHi+MozVAz
+1iyks5yYqZRjb7DyV73qENQu+j0uhWV7GZB4ANsjME1qVlZfjctlz/cRP5hcaeYi
+l7cn+lUu0Xc=
+=C2T3
+-----END PGP SIGNATURE-----
+
+--Sig_/xvf97GenlKEK9Me9y.PG+ZM--
