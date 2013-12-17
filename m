@@ -1,12 +1,11 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: RAID 6 reads all remaining chunks in a stripe when a single chunk
  is rewritten
-Date: Tue, 17 Dec 2013 07:02:29 -0600
-Message-ID: <52B04B65.7070603@hardwarefreak.com>
+Date: Tue, 17 Dec 2013 08:39:16 -0500
+Message-ID: <52B05404.7010806@turmel.org>
 References: <52B02A08.4090007@informatik.uni-rostock.de>
-Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <52B02A08.4090007@informatik.uni-rostock.de>
@@ -14,7 +13,7 @@ Sender: linux-raid-owner@vger.kernel.org
 To: Nikolaus Jeremic <jeremic@informatik.uni-rostock.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/17/2013 4:40 AM, Nikolaus Jeremic wrote:
+On 12/17/2013 05:40 AM, Nikolaus Jeremic wrote:
 > Hi,
 > 
 > I've did some Linux MD RAID 5 and 6 random write performance tests with
@@ -27,14 +26,19 @@ On 12/17/2013 4:40 AM, Nikolaus Jeremic wrote:
 > 
 > By the way, in case of RAID 5 and 5 or more drives, the remaining chunks
 > seem not to be read when updating a single chunk in a stripe.
-> 
-> Here is the fio job description:
 
-<snip>
+This is not a bug.  When writing to a small part of a stripe, the parity
+must be recomputed for the whole stripe, causing MD to read the rest of
+the stripe.
 
-It would be easier and more deterministic if you'd simply use dd to
-write one full stripe, then seek to one chunk within that stripe and
-write one page.
+However, it is mathematically possible to compute the new parity given
+the new data, old data, and the old parity.  This is a simple
+computation for raid5 and this shortcut has been implemented.
 
--- 
-Stan
+The similar shortcut computation for raid6 has been discussed, but
+no-one has provided a patch.  (It is not so simple.)  I suspect a patch
+would be welcome. :-)
+
+HTH,
+
+Phil
