@@ -1,55 +1,38 @@
 From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
 Subject: RE: What can be used instead of /dev/disk/by-path/* symlinks?
-Date: Tue, 17 Dec 2013 10:02:40 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A69A280@IRSMSX105.ger.corp.intel.com>
+Date: Tue, 17 Dec 2013 10:08:40 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A69A29F@IRSMSX105.ger.corp.intel.com>
 References: <D9FFE20C522965449E182ACE73889AEB1A69A1E3@IRSMSX105.ger.corp.intel.com>
- <20131217204055.353e5970@notabene.brown>
+ <CANBHLUi6h7B2CFTShqV+1RxFiAqSe7pw=siPXx8OFrfDqZCvfA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131217204055.353e5970@notabene.brown>
+In-Reply-To: <CANBHLUi6h7B2CFTShqV+1RxFiAqSe7pw=siPXx8OFrfDqZCvfA@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+To: Dimitri John Ledkov <xnox@debian.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-On Tuesday, December 17, 2013 10:41 AM Neil Brown (neilb@suse.de) wrote:
-> On Tue, 17 Dec 2013 09:10:44 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.com>
-> wrote:
-> 
-[...]
-> Personally, I really don't care.  Does anyone know what udev changed?  Maybe
-> we should ask udev developers to change it back.
-> 
-> NeilBrown
-> 
-
-udev developers wrote:
-http://cgit.freedesktop.org/systemd/systemd/tree/src/udev/udev-builtin-path_id.c#n378
-
-        /*
-         * We do not support the ATA transport class, it uses global counters
-         * to name the ata devices which numbers spread across multiple
-         * controllers.
-         *
-         * The real link numbers are not exported. Also, possible chains of ports
-         * behind port multipliers cannot be composed that way.
-         *
-         * Until all that is solved at the kernel level, there are no by-path/
-         * links for ATA devices.
-         */
-
-Lukasz
-
-> >
-> > The /dev/disk/by-path/* symlinks are not created for ATA devices in systems using
-> systemd v182+, so mdadm cannot use them in case of policies and udev rules
-> (mdadm -If --path=...)
-> >
-> > What do you think - what should be used instead? The symlinks from /sys/block/* ?
-> >
-> > Regards,
-> > Lukasz
-> > --
+T24gVHVlc2RheSwgRGVjZW1iZXIgMTcsIDIwMTMgMTA6NTQgQU0gRGltaXRyaSBKb2huIExlZGtv
+diA8eG5veEBkZWJpYW4ub3JnPiB3cm90ZToNCj4gDQo+IEhlbGxvLA0KPiANCj4gT24gMTcgRGVj
+ZW1iZXIgMjAxMyAwOToxMCwgRG9yYXUsIEx1a2FzeiA8bHVrYXN6LmRvcmF1QGludGVsLmNvbT4g
+d3JvdGU6DQo+ID4gSGkgTmVpbCwNCj4gPg0KPiA+IFRoZSAvZGV2L2Rpc2svYnktcGF0aC8qIHN5
+bWxpbmtzIGFyZSBub3QgY3JlYXRlZCBmb3IgQVRBIGRldmljZXMgaW4gc3lzdGVtcyB1c2luZw0K
+PiBzeXN0ZW1kIHYxODIrLCBzbyBtZGFkbSBjYW5ub3QgdXNlIHRoZW0gaW4gY2FzZSBvZiBwb2xp
+Y2llcyBhbmQgdWRldiBydWxlcw0KPiAobWRhZG0gLUlmIC0tcGF0aD0uLi4pDQo+ID4NCj4gPiBX
+aGF0IGRvIHlvdSB0aGluayAtIHdoYXQgc2hvdWxkIGJlIHVzZWQgaW5zdGVhZD8gVGhlIHN5bWxp
+bmtzIGZyb20gL3N5cy9ibG9jay8qID8NCj4gPg0KPiANCj4gSSBhbSB1c2luZyBhIHBhdGNoZWQg
+dWRldiBmcm9tIHN5c3RlbWQgZGFlbW9uIGNvbGxlY3Rpb24gdjIwNCwgaXQNCj4gc3RpbGwgaGFz
+ICJieS1wYXRoIiBzeW1saW5rcyBzZXR1cCBpbiB0aGUgcGVyc2lzdGVudCBzdG9yYWdlIHJ1bGVz
+Lg0KPiBTaW1pbGFybHkgdXBzdHJlYW0gc3lzdGVtZCBkYWVtb24gY29sbGVjdGlvbiB2MjA0IGFs
+c28gc2V0cyB1cA0KPiAiYnktcGF0aCIgc3ltbGlua3MgaW4gdGhlIHBlcnNpc3RlbnQgc3RvcmFn
+ZSBydWxlcy4NCj4gDQo+IFdoYXQgaXMgeW91ciB1ZGV2IHJ1bGVzIGNvbmZpZz8gYXJlIGFueSBv
+ZiBwZXJzaXN0ZW50IHN0b3JhZ2UgcnVsZXMNCj4gb3ZlcnJpZGRlbj8gb3Igbm90IHdhaXRpbmcg
+Zm9yIHVkZXYgdG8gc2V0dGxlPyBtYXliZSB0aGUgImJ1aWx0aW4iDQo+IGNvbW1hbmQgInBhdGhf
+aWQiIG5vdCByZXR1cm5pbmcgLyBkZXRlY3RpbmcgdGhlIHBhdGhzIG9mIEFUQSBkZXZpY2VzDQo+
+IGluIHF1ZXN0aW9uPw0KPiANCg0KVGhlIC9kZXYvZGlzay9ieS1wYXRoLyogc3ltbGlua3MgaGF2
+ZSBub3QgYmVlbiBjcmVhdGVkIGZvciBBVEEgZGV2aWNlcyBpbiBzeXN0ZW1kIHNpbmNlIHYxODI6
+DQpodHRwOi8vY2dpdC5mcmVlZGVza3RvcC5vcmcvc3lzdGVtZC9zeXN0ZW1kL3RyZWUvc3JjL3Vk
+ZXYvdWRldi1idWlsdGluLXBhdGhfaWQuYyNuMzc4DQoNCkx1a2Fzeg0KDQo=
