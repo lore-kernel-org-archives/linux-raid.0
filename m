@@ -1,39 +1,62 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Re: Help with degraded array
-Date: Wed, 18 Dec 2013 11:49:19 -0500
-Message-ID: <CAB1R3sh6VU_jqiOZ4K7hQG6hng+q1Cct-8Mi6_gX9NJW+oNs8Q@mail.gmail.com>
-References: <CAB1R3shBH5sAq6qDL4aQcxERA3mMo5UBJGTvVS20JjyW0ZyZLA@mail.gmail.com>
-	<52AC351E.5050709@suddenlinkmail.com>
-	<CAB1R3siFu3q98bT23Lz1u2uVqkxvth35pguzSdBQ7auZkJwumg@mail.gmail.com>
-	<52ACA2A0.4060405@suddenlinkmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Chunk size change stop/restart
+Date: Wed, 18 Dec 2013 19:31:09 +0100
+Message-ID: <20131218183109.GA4670@lazy.lzy>
+References: <20131217190019.GA1883@lazy.lzy>
+ <20131218093210.46a208a2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52ACA2A0.4060405@suddenlinkmail.com>
+Content-Disposition: inline
+In-Reply-To: <20131218093210.46a208a2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Wed, Dec 18, 2013 at 09:32:10AM +1100, NeilBrown wrote:
+> On Tue, 17 Dec 2013 20:00:19 +0100 Piergiorgio Sartor
+> <piergiorgio.sartor@nexgo.de> wrote:
+> 
+> > Hi all,
+> > 
+> > I started the process of changing the chunk
+> > size of a RAID-5 array (5 HDDs).
+> > 
+> > Unfortunately, I unwisely choose a quite slow
+> > device for the backup file.
+> > 
+> > Is it possible, without stopping the array, to
+> > stop the "reshape", move the backup file to a
+> > faster place and restart the process?
+> 
+> You might be able to kill the mdadm which over-sees the reshape, move the
+> file, then use --grow --continue to continue the reshape.
+> But I've never tested this and suspect that something would go wrong.
 
-> The drive at /dev/sda3 has already been failed/removed. The reason was:
->
-> Buffer I/O error on device sda2, logical block 65536
-> lost page write due to I/O error on sda2
-> JBD2: Error -5 detected when updating journal superblock for sda2-8.
->
->   What I would do is run smartctl -t short /dev/sdc, then smartctl -a /dev/sdc
-> and make sure the drive was reported as PASSED and not in imminent failure. Then
-> run fsck on /dev/sdc2 (the partition reporting the I/O error on what was sda2 --
-> DO NOT fsck /dev/sdc3.
+Hi Neil,
 
-Okay, ran a non-destructive badblocks after the smartctl test and it
-passed. Rebooted and it switched back to sda from sdc. Ran "mdadm
---add /dev/md0 /dev/sda3" and it's now rebuilding.
+thanks for the answer.
 
-I've done all this before, but somehow got a little nervous with it
-being 3000 miles away and at a customer's location :-)
+Actually, I've another card to play.
+The array is empty in the second half, so I could
+try to kill mdadm (which signal? I guess the normal
+kill should do) and then restart the reshape, as
+soon as the 50% mark is reached.
 
-Thanks so much, everyone, for all your help.
-Regards,
-Alex
+Assuming something goes wrong, is there a way to
+re-start the array forcing (maybe?) the 64k chunk
+size (then a repair should simply fix the second
+half, I guess).
+ 
+> Stopping, moving, and re-assembling should work.
+> 
+> Being patient also works,  but can be very difficult.
+
+That was plan A, but I missed by 1 day... :-)
+
+bye,
+
+-- 
+
+piergiorgio
