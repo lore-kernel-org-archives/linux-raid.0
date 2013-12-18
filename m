@@ -1,65 +1,57 @@
-From: Redwood Hyd <redwoodhyd@gmail.com>
-Subject: Fwd: raid5 + dm-crypt WRITE perf., higher rrqm/s - kernel 3.10.16
-Date: Wed, 18 Dec 2013 16:54:12 +0530
-Message-ID: <CADOhdumGijbviVv65mt76fwmsYNW25PEUorNW1Q01Vi+FqcnTg@mail.gmail.com>
-References: <CADOhdu=rxGCWv7CCigR-dLJYeU0uPdh4Vuan0TOAT9OED=247g@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: request help with RAID1 array that endlessly attempts to sync
+Date: Wed, 18 Dec 2013 07:08:37 -0500
+Message-ID: <52B19045.5010102@turmel.org>
+References: <20131217065028.GC20941@nx5.priv> <20131217165348.GA5070@localhost.localdomain> <52B09027.5090605@turmel.org> <20131217192637.GB5070@localhost.localdomain> <52B0A956.7030501@turmel.org> <20131218034556.GA9457@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADOhdu=rxGCWv7CCigR-dLJYeU0uPdh4Vuan0TOAT9OED=247g@mail.gmail.com>
+In-Reply-To: <20131218034556.GA9457@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Julie Ashworth <ashworth@berkeley.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello All,
-Kind reminder -  no one answered this yet.  Did I describe the problem
-well ?  Please let me know if any more information needed.
+On 12/17/2013 10:45 PM, Julie Ashworth wrote:
+> hi Phil,
+> thanks again for your help. It was surprisingly easy to install the latest smarmontools.
+> 
+> On 17-12-2013 14.43 -0500, Phil Turmel wrote:
+>> I was interested in the reallocation counts, the current pending
+>> sectors, and the scterc timeouts.  The latter were not present, and are
+>> important.
+> 
+> ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
+>   5 Reallocated_Sector_Ct   PO--CK   100   100   036    -    3
+> 197 Current_Pending_Sector  -O--C-   100   100   000    -    1
+> SCT Error Recovery Control:
+>            Read:    100 (10.0 seconds)
+>           Write:    100 (10.0 seconds)
+> 
+> (I also attached the full output)
+> 
+> I verified that a weekly scrub is performed via cron (default with Centos5), and there were no errors detected prior to the sync. The output is included in syslog reports. 
 
-regards
---rh
+Very good.  You do not have a timeout mismatch problem.  But the
+behavior of /dev/sdb does not match its health.  That suggests some
+other problem is present, like a bad SATA cord or socket, a bad power
+supply, bad cooling, et cetera.
 
+>> But /dev/sdb has three relocations and only one pending error.  That's
+>> an old drive, but not sick.  I'd be concerned that there're other
+>> hardware issues in your system if the timeout issue is not part of the
+>> problem.
+> 
+> Should I run the sync (mdadm -a) in verbose mode? If so, what is the best way to terminate the current sync? By failing/removing /dev/sda?
 
----------- Forwarded message ----------
-From: Redwood Hyd <redwoodhyd@gmail.com>
-Date: Tue, Dec 17, 2013 at 12:50 PM
-Subject: raid5 + dm-crypt WRITE perf., higher rrqm/s - kernel 3.10.16
-To: linux-raid@vger.kernel.org
+I'd let the sync continue until it fails or completes.  And if it
+completes, exercise the array to see if it stays flaky.  If it does not
+complete, start swapping parts in the system.
 
+Regards,
 
-Hi All,
-I am trying to match the WRITE throughput for  512K chunk size to
-WRITE throughput I am getting with 32K chunk size.
+Phil
 
-My setup is :  iozone (4k rec) -> ext4 -> dm-crypt dev mapper + raid5 (4 disks).
-
-In my past experience 512K  chunk size was not very off from 32K chunk
-size on kernel 2.6.32 for above situation.
-
-From iostats it seems  that 512K  is slow because of  higher rrqm/s on
-the physical disks behind raid5 device (last 4 columns are from iostat
--x on physical disks behind raid5)
-
-Chunk-size  iozon MB/s  Avgrq-sz   r/s    rMB/s    rrqm/s
-512K     25 MBps     976       ~60  ~7.00   ~1800
-32K     39 MBps      63   ~20  ~0.55   ~100
-
-Question: Is it that partial stripe  happening and causing more reads here ?
-Question:  Can someone suggest some code hacks or config changes such
-that even with 512K iozone writes to ext4/dm-crypt/raid5 device is
-close to 39 MBps?
-Or otherwise more pointers into code to understand and conclude will be helpful
-Question: Are the changes in dm-crypt or block layer (since 2.6.32)
-causing  higher  r/s rMB/s rrqm/s etc. ?  How to tune it now?
-
-To compare here are same numbers (lower rrqm/s) if I remove dm-crypt :
-
-Chunk-size  iozon MB/s  Avgrq-sz      r/s    rMB/s      rrqm/s
-512K        81 MBps          976      ~12     ~0.41     ~100
-32K         89 MBps          63      ~01     ~0.04     ~4
-
-Quesiton: Why  dm-crypt causing higher r/s rMB/s rrqm/s ( higher these
-lower write MB/s) ?
-
-
-regards
---rh
+ps.  I'll be offline all day today--I'm sure the list will chip in if
+you need more help.
