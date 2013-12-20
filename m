@@ -1,53 +1,49 @@
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: XFS blocked task in xlog_cil_force_lsn
-Date: Fri, 20 Dec 2013 23:43:47 +0100
-Message-ID: <201312202343.47895.arekm@maven.pl>
-References: <52B102FF.8040404@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>
-	<52B41B67.9030308@pzystorm.de>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: mdadm, spin down never happens, do spare work the same?
+Date: Fri, 20 Dec 2013 23:56:14 +0000
+Message-ID: <BLU0-SMTP164EF98C4A2354CB5CE42AD98C40@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <52B41B67.9030308@pzystorm.de>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, xfs@pzystorm.de
-Cc: linux-raid@vger.kernel.org, stan@hardwarefreak.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gRnJpZGF5IDIwIG9mIERlY2VtYmVyIDIwMTMsIEtldmluIFJpY2h0ZXIgd3JvdGU6Cgo+ID4+
-ICQgY2F0IC9zeXMvYmxvY2svbWQyL21kL3N0cmlwZV9jYWNoZV9zaXplCj4gPj4gMjU2Cj4gPiAK
-PiA+IDI1NiBpcyB0aGUgZGVmYXVsdCBhbmQgaXQgaXMgd2F5IHRvbyBsb3cuICBUaGlzIGlzIGxp
-bWl0aW5nIHlvdXIgd3JpdGUKPiA+IHRocm91Z3B1dC4gIEluY3JlYXNlIHRoaXMgdG8gYSBtaW5p
-bXVtIG9mIDEwMjQgd2hpY2ggd2lsbCBnaXZlIHlvdSBhCj4gPiAyME1CIHN0cmlwZSBjYWNoZSBi
-dWZmZXIuICBUaGlzIHNob3VsZCBiZWNvbWUgYWN0aXZlIGltbWVkaWF0ZWx5LiAgQWRkCj4gPiBp
-dCB0byBhIHN0YXJ0dXAgc2NyaXB0IHRvIG1ha2UgaXQgcGVybWFuZW50LgoKPiA+ICQgZWNobyAy
-NTYgPiAvc3lzL2Jsb2NrL21kMi9tZC9zdHJpcGVfY2FjaGVfc2l6ZQo+ID4gJCB0aW1lIGNwIC1h
-IC9vbGRkaXNrL3Rlc3Rmb2xkZXIgLzZ0Yi9mb28xLwo+ID4gcmVhbCAgICAyNW0zOC45MjVzCj4g
-PiB1c2VyICAgIDBtMC41OTVzCj4gPiBzeXMgICAgIDFtMjMuMTgycwo+ID4gCj4gPiAkIGVjaG8g
-MTAyNCA+IC9zeXMvYmxvY2svbWQyL21kL3N0cmlwZV9jYWNoZV9zaXplCj4gPiAkIHRpbWUgY3Ag
-LWEgL29sZGRpc2svdGVzdGZvbGRlciAvcmFpZC9mb28yLwo+ID4gcmVhbCAgICA3bTMyLjgyNHMK
-PiA+IHVzZXIgICAgMG0wLjQzOHMKPiA+IHN5cyAgICAgMW02Ljc1OXMKPiA+IAo+ID4gJCBlY2hv
-IDIwNDggPiAvc3lzL2Jsb2NrL21kMi9tZC9zdHJpcGVfY2FjaGVfc2l6ZQo+ID4gJCB0aW1lIGNw
-IC1hIC9vbGRkaXNrL3Rlc3Rmb2xkZXIgL3JhaWQvZm9vMy8KPiA+IHJlYWwgICAgNW0zMi44NDdz
-Cj4gPiB1c2VyICAgIDBtMC40MThzCj4gPiBzeXMgICAgIDFtNS42NzFzCj4gPiAKPiA+ICQgZWNo
-byA0MDk2ID4gL3N5cy9ibG9jay9tZDIvbWQvc3RyaXBlX2NhY2hlX3NpemUKPiA+ICQgdGltZSBj
-cCAtYSAvb2xkZGlzay90ZXN0Zm9sZGVyIC9yYWlkL2ZvbzQvCj4gPiByZWFsICAgIDVtNTQuNTU0
-cwo+ID4gdXNlciAgICAwbTAuNDM3cwo+ID4gc3lzICAgICAxbTYuMjY4cwo+IAo+IFRoZSBkaWZm
-ZXJlbmNlIGlzIHJlYWxseSBhbWF6aW5nISBTbyAyMDQ4IHNlZW1zIHRvIGJlIHRoZSBiZXN0IGNo
-b2ljZS4KPiA2MEdCIGluIDUsNW1pbnV0ZXMgYXJlIDE4ME1CL3Nlay4gVGhhdCBzb3VuZHMgYSBi
-aXQgaGlnaCwgZG9lc250IGl0Pwo+IFRoZSBSQUlEIG9ubHkgY29uc2lzdCBvZiA1IFNBVEEgZGlz
-a3Mgd2l0aCA3MjAwcnBtLgoKSSB3b25kZXIgd2h5IGtlcm5lbCBpcyBnaXZpbmcgZGVmYXVsdHMg
-dGhhdCBldmVyeW9uZSByZXBlYXRseSByZWNvbW1lbmRzIHRvIApjaGFuZ2UvaW5jcmVhc2U/IEhh
-cyBhbnlvbmUgdHJpZWQgdG8gYnVncmVwb3J0IHRoYXQgZm9yIHN0cmlwZV9jYWNoZV9zaXplIApj
-YXNlPwoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20gLyBtYXZlbi5wbAoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+I've noticed that with an active mdadm raid that there seems to be a
+periodic polling of the devices in the array which prevents the drives
+ever going into various slumber modes... and it also doesnt seem to make
+a difference if the file system on the array is mounted or not (slightly
+subjective as its more an observation than an in-depth testing).
+
+I'm guessing its to make sure the array is "ok" and is also used to
+update things such as /proc/mdstat and maybe other things related, so
+every now and then it goes "hi, are you there disks, whats your current
+state" for want of a better idea of the process.
+
+What I'm wondering is how mdadm treats the "spare" drives, does it also
+poll them periodically to the same time constraints as the active drives
+or does it just check at re-boot and maybe some other periodic time
+scales...
+
+The reason for enquiring is if a "spare" drive is kept alive to the same
+extent as a "live/active" drive then it means that a spare could have
+been powered up and accessed for the exact same time as a running
+"active" set of drives... which means that even though its never been
+used it could have had the same amount of time "live/spinning" as the
+existing arrays drives which would mean it is just as likely to fail due
+to [running] age as any other drive within the array, if however its
+only polled very sporadically (boot, maybe once a month, some other
+amount) then its "active life" is drastically shortened, which would
+mean its (to some degree) less likely to fail when its updated as a
+"live disk" when another member has failed... obviously baring spin up
+counts and other "power up=old=pre-fail" issues.
+
+Thanks in advance.
+
+Jon
+
+ 
+
+ 
+
