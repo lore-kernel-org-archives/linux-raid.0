@@ -1,91 +1,101 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm, spin down never happens, do spare work the same?
-Date: Sat, 21 Dec 2013 11:10:01 +1100
-Message-ID: <20131221111001.1fed992a@notabene.brown>
-References: <BLU0-SMTP164EF98C4A2354CB5CE42AD98C40@phx.gbl>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: md-RAID5/6 stripe_cache_size default value vs performance vs memory
+ footprint
+Date: Sat, 21 Dec 2013 05:18:42 -0600
+Message-ID: <52B57912.5080000@hardwarefreak.com>
+References: <52B102FF.8040404@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>	<52B41B67.9030308@pzystorm.de> <201312202343.47895.arekm@maven.pl>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/46yHNbf/O3ALhPCqz0P9p9M"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP164EF98C4A2354CB5CE42AD98C40@phx.gbl>
+In-Reply-To: <201312202343.47895.arekm@maven.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>
+Cc: linux-raid@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
---Sig_/46yHNbf/O3ALhPCqz0P9p9M
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I renamed the subject as your question doesn't really apply to XFS, or
+the OP, but to md-RAID.
 
-On Fri, 20 Dec 2013 23:56:14 +0000 Wilson Jonathan
-<piercing_male@hotmail.com> wrote:
+On 12/20/2013 4:43 PM, Arkadiusz Mi=C5=9Bkiewicz wrote:
 
-> I've noticed that with an active mdadm raid that there seems to be a
-> periodic polling of the devices in the array which prevents the drives
-> ever going into various slumber modes... and it also doesnt seem to make
-> a difference if the file system on the array is mounted or not (slightly
-> subjective as its more an observation than an in-depth testing).
->=20
-> I'm guessing its to make sure the array is "ok" and is also used to
-> update things such as /proc/mdstat and maybe other things related, so
-> every now and then it goes "hi, are you there disks, whats your current
-> state" for want of a better idea of the process.
->=20
-> What I'm wondering is how mdadm treats the "spare" drives, does it also
-> poll them periodically to the same time constraints as the active drives
-> or does it just check at re-boot and maybe some other periodic time
-> scales...
->=20
-> The reason for enquiring is if a "spare" drive is kept alive to the same
-> extent as a "live/active" drive then it means that a spare could have
-> been powered up and accessed for the exact same time as a running
-> "active" set of drives... which means that even though its never been
-> used it could have had the same amount of time "live/spinning" as the
-> existing arrays drives which would mean it is just as likely to fail due
-> to [running] age as any other drive within the array, if however its
-> only polled very sporadically (boot, maybe once a month, some other
-> amount) then its "active life" is drastically shortened, which would
-> mean its (to some degree) less likely to fail when its updated as a
-> "live disk" when another member has failed... obviously baring spin up
-> counts and other "power up=3Dold=3Dpre-fail" issues.
->=20
-> Thanks in advance.
->=20
-> Jon
->=20
->
+> I wonder why kernel is giving defaults that everyone repeatly recomme=
+nds to=20
+> change/increase? Has anyone tried to bugreport that for stripe_cache_=
+size=20
+> case?
 
-Nope.  md doesn't 'poll' devices at all.
-if you ask to read from the array, it reads from devices.
-If you ask to write to the array, it writes to devices (and maybe reads)
-if you ask it to 'check' the array, it does.
-IF it notices a spare and a missing device, it performs recovery.
-If there is nothing to do, it does nothing.
+The answer is balancing default md-RAID5/6 write performance against
+kernel RAM consumption, with more weight given to the latter.  The form=
+ula:
 
-What evidence do you have which led you to suspect some polling activity.
+((4096*stripe_cache_size)*num_drives)=3D RAM consumed for stripe cache
 
-NeilBrown
+High stripe_cache_size values will cause the kernel to eat non trivial
+amounts of RAM for the stripe cache buffer.  This table demonstrates th=
+e
+effect today for typical RAID5/6 disk counts.
 
---Sig_/46yHNbf/O3ALhPCqz0P9p9M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+stripe_cache_size	drives	RAM consumed
+256			 4	  4 MB
+			 8	  8 MB
+			16	 16 MB
+512			 4	  8 MB
+			 8	 16 MB
+			16	 32 MB
+1024			 4	 16 MB
+			 8	 32 MB
+			16	 64 MB
+2048			 4	 32 MB
+			 8	 64 MB
+			16	128 MB
+4096			 4	 64 MB
+			 8	128 MB
+			16	256 MB
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+The powers that be, Linus in particular, are not fond of default
+settings that create a lot of kernel memory structures.  The default
+md-RAID5/6 stripe_cache-size yields 1MB consumed per member device.
 
-iQIVAwUBUrTcXznsnt1WYoG5AQJQLw/+K2L8848sSOhdgirBzoNvf3THL4umb/7s
-lUdDUt1aUgwz4Z8znUcys3NmZnNv1U78iGATbppsywIQMLd8178NCSKsbUsb3HlQ
-809p0nG+2SrJTlh6+Y9VcXOqwaMFpeeaKOAXhjPPmys0wsCPDNPoL4zhI2AHfwV1
-esqGhKxGOaudJKTQlsobcpUox5ueYbAZmSU04f8qExvRxK8kjawxYh3A1Nzg0Rde
-X8fTB+6wHppGq5tKJmyIcx4BKSU6HDUZWrxg0qUZvafs5uSnBrU2naPjqgh6lnsV
-AEYOMz3tQ0+o9W3CNbF0B8JN2Utmdbs1AbCO98BOhMcVDfGSTsRXsZqXfE638DLW
-f0A4exRONqkzHw181hBfC4/NTzmjBdX8yzEpZ0ca6KujXd154VBXHUnY2mrbJHnB
-HDXTEqRBl+oiAlIAaauVwGz0cLsERx0ICTAMNWp9L/fzrntDBva1mirH02pLpZz4
-otexj57h+LuAzRTsjCaH3y+SWbTgAP7RtOoDpTaINJnLM+6/mwpvteHzjzCyZAn3
-52eHpOp3TwbiyONIAssPhzRvt/spy2/Q2pRmwkhJfHkuYQGcCRFjXq1P32F/HQhR
-ispj3QSGMi2L61WMVtVR1JLrMqK7Ecgwq4rB8z8MD2oiH2BhD8he/A05lVDVxbgU
-WWlRabWPgVI=
-=GRLD
------END PGP SIGNATURE-----
+With SSDs becoming mainstream, and becoming ever faster, at some point
+the md-RAID5/6 architecture will have to be redesigned because of the
+memory footprint required for performance.  Currently the required size
+of the stripe cache appears directly proportional to the aggregate writ=
+e
+throughput of the RAID devices.  Thus the optimal value will vary
+greatly from one system to another depending on the throughput of the
+drives.
 
---Sig_/46yHNbf/O3ALhPCqz0P9p9M--
+=46or example, I assisted a user with 5x Intel SSDs back in January and
+his system required 4096, or 80MB of RAM for stripe cache, to reach
+maximum write throughput of the devices.  This yielded 600MB/s or 60%
+greater throughput than 2048, or 40MB RAM for cache.  In his case 60MB
+more RAM than the default was well worth the increase as the machine wa=
+s
+an iSCSI target server with 8GB RAM.
+
+In the previous case with 5x rust RAID6 the 2048 value seemed optimal
+(though not yet verified), requiring 40MB less RAM than the 5x Intel
+SSDs.  For a 3 modern rust RAID5 the default of 256, or 3MB, is close t=
+o
+optimal but maybe a little low.  Consider that 256 has been the default
+for a very long time, and was selected back when average drive
+throughput was much much lower, as in 50MB/s or less, SSDs hadn't yet
+been invented, and system memories were much smaller.
+
+Due to the massive difference in throughput between rust and SSD, any
+meaningful change in the default really requires new code to sniff out
+what type of devices constitute the array, if that's possible, and it
+probably isn't, and set a lowish default accordingly.  Again, SSDs
+didn't exist when md-RAID was coded, nor when this default was set, and
+this throws a big monkey wrench into these spokes.
+
+--=20
+Stan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
