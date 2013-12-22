@@ -1,46 +1,40 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: md-RAID5/6 stripe_cache_size default value vs performance vs
-	memory footprint
-Date: Sat, 21 Dec 2013 19:41:37 -0600
-Message-ID: <52B64351.4040806@hardwarefreak.com>
-References: <52B102FF.8040404@pzystorm.de>	<52B2FE9E.50307@hardwarefreak.com>	<52B41B67.9030308@pzystorm.de>	<201312202343.47895.arekm@maven.pl>
-	<52B57912.5080000@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+From: Hans Kraus <hans@hanswkraus.com>
+Subject: Weird problem: mdadm blocks
+Date: Sun, 22 Dec 2013 10:01:26 +0100
+Message-ID: <52B6AA66.5050502@hanswkraus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <52B57912.5080000@hardwarefreak.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWN6?= <arekm@maven.pl>
-Cc: linux-raid@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/21/2013 5:18 AM, Stan Hoeppner wrote:
-...
-> For example, I assisted a user with 5x Intel SSDs back in January and
-> his system required 4096, or 80MB of RAM for stripe cache, to reach
-> maximum write throughput of the devices.  This yielded 600MB/s or 60%
-> greater throughput than 2048, or 40MB RAM for cache.  In his case 60MB
-> more RAM than the default was well worth the increase as the machine was
-> an iSCSI target server with 8GB RAM.
+Hi,
 
-Correction here.  I said above that 80MB was 60MB greater than the
-default for his 5 drives.  This should have said 75MB greater than the
-default which is 1MB per member device, or 5MB for 5 drives.
+my backup system (running backuppc) has developed a weird problem:
+calls from command line "mdadm --detail /dev/mdX" block, for every
+existing raid on the system, and can be only terminated with ^C. This
+is true even for the newest mdadm built from git.
 
--- 
-Stan
+"cat /proc/mdstat" blocks too. All mounted raids are working (at least
+ls <mountpoint> is), exept for one, md127 (the storage of backuppc).
+There ls is blocking and is not terminable by ^C.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+The raid structure is the following:
+md2, md3, m4	raid1 for swap, /boot, /
+md30		raid0 for short term storage
+md10, md11, md12, md13	raid0, built from 2x 2TB or 1TB + 3TB drives
+md127		raid5 built from md10, md11, md12, md13
+
+I recently (some 12 hours ago) added md13 again and the system was
+rebuilding from a degraded state. The file system on md127 is xfs. All
+the physical rives are OK, at least according to smartmontools.
+Webmin 1.660 reports:
+CPU load averages 	16.96 (1 min) 15.04 (5 mins) 12.67 (15 mins)
+CPU usage 		0% user, 1% kernel, 99% IO, 0% idle
+
+Is there any way to diagnose the problem further? I'm reluctant to
+do a reboot.
+
+Regards, Hans
