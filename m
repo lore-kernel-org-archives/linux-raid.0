@@ -1,17 +1,18 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: md-RAID5/6 stripe_cache_size default value vs performance vs
 	memory footprint
-Date: Thu, 26 Dec 2013 00:55:10 -0800
-Message-ID: <20131226085510.GB32660@infradead.org>
+Date: Thu, 26 Dec 2013 03:24:00 -0600
+Message-ID: <52BBF5B0.8020206@hardwarefreak.com>
 References: <52B102FF.8040404@pzystorm.de> <52B2FE9E.50307@hardwarefreak.com>
 	<52B41B67.9030308@pzystorm.de> <201312202343.47895.arekm@maven.pl>
 	<52B57912.5080000@hardwarefreak.com>
+	<20131226085510.GB32660@infradead.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <xfs-bounces@oss.sgi.com>
-Content-Disposition: inline
-In-Reply-To: <52B57912.5080000@hardwarefreak.com>
+In-Reply-To: <20131226085510.GB32660@infradead.org>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
 List-Archive: <http://oss.sgi.com/pipermail/xfs>
@@ -21,20 +22,33 @@ List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-raid@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-On Sat, Dec 21, 2013 at 05:18:42AM -0600, Stan Hoeppner wrote:
-> The powers that be, Linus in particular, are not fond of default
-> settings that create a lot of kernel memory structures.  The default
-> md-RAID5/6 stripe_cache-size yields 1MB consumed per member device.
+On 12/26/2013 2:55 AM, Christoph Hellwig wrote:
+> On Sat, Dec 21, 2013 at 05:18:42AM -0600, Stan Hoeppner wrote:
+>> The powers that be, Linus in particular, are not fond of default
+>> settings that create a lot of kernel memory structures.  The default
+>> md-RAID5/6 stripe_cache-size yields 1MB consumed per member device.
+> 
+> The default sizing is stupid as it basically makes RAID unusable out
+> of the box, I always have to fix that up, as well as a somewhat
+> reasonable chunk size for parity RAID to make it usable.  I'm also
+> pretty sure I complained about it at least once a while ago, but never
+> got a reply.
 
-The default sizing is stupid as it basically makes RAID unusable out
-of the box, I always have to fix that up, as well as a somewhat
-reasonable chunk size for parity RAID to make it usable.  I'm also
-pretty sure I complained about it at least once a while ago, but never
-got a reply.
+IIRC you Dave C. and myself all voiced criticism after the default chunk
+size was changed from 64KB to 512KB.  I guess we didn't make a strong
+enough case to have it reduced, or maybe didn't use the right approach.
+
+Maybe Neil is waiting for patches to be submitted for changing these
+defaults, and to argue the merits in that context instead of pure
+discussion?  Dunno.  Just guessing.  Maybe he'll read this and jump in.
+
+-- 
+Stan
+
 
 _______________________________________________
 xfs mailing list
