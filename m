@@ -1,31 +1,73 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Low resync throughput
-Date: Fri, 27 Dec 2013 12:22:02 +0000
-Message-ID: <21181.28906.59447.146830@tree.ty.sabi.co.uk>
-References: <52BD152C.5050301@ubuntu.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: RAID 10 far and offset on-disk layouts
+Date: Fri, 27 Dec 2013 15:29:49 +0100
+Message-ID: <52BD8EDD.10809@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52BD152C.5050301@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have been experimenting with setting up a raid array on 3
-> new drives that are each capable of about 180 MB/s throughput.
+Hi all,
+I (think of) quite well understand how far and offset work, but I can 
+not find any data on the precise on-disk layout.
 
-I guess that if this a rotating disk drive "capable" is intended
-here in the marketing sense of "cannot exceed". :-)
+FAR LAYOUT
+md(4) states:
+"The first copy of all data blocks will be striped across the early part 
+of all drives in RAID0 fashion, and then the next copy of all blocks 
+will be striped across a later section of all drives, always ensuring 
+that all copies of any given block are on different drives"
 
-> I have tried raid5 and raid10 in both offset and far layouts
-> using both 64k and 512k chunk sizes, and the resync speed
-> seems to always be significantly less than the throughput of a
-> single drive, even after I write 500,000 to sync_speed_max.
-> The fastest of the bunch was raid10 in far mode, at ~140 MB/s,
-> and the rest were around 110 MB/s.
+The "on different drives" part let me wonder _how_ are chunks 
+distributed. On a 4-disk array, I can imagine some different schemas:
 
-The output of 'iostats -dx 1' might be interesting. :-)
+1)	A1 A2 A3 A4
+	.. .. .. ..
+	A4 A1 A2 A3
 
-Also as to RAID5 you might want to look at 'man mdadm' the
-paragraph beginning "When creating a RAID5 array".
+2)	A1 A2 A3 A4
+	.. .. .. ..
+	A2 A1 A4 A3
+
+The first schema is the one depicted by SuSe documentation [1], while 
+the second is the one described by Wikipedia [2].
+
+Question 1: as the two schema have different reliability 
+characteristics, which is really used?
+
+OFFSET LAYOUT
+md(4) states:
+"When 'offset' replicas are chosen, the multiple copies of a given chunk 
+are laid out on consecutive drives and at consecutive offsets. 
+Effectively each stripe is duplicated and the copies are offset by one 
+device."
+
+This means a schema like this:
+	
+3)	A1 A2 A3 A4
+	A4 A1 A2 A3
+	.. .. .. ..
+
+However, this is susceptible to any consecutive two-disk failures. A 
+schema like
+
+4)	A1 A2 A3 A4
+	A2 A1 A4 A3
+
+would not suffer from this problem (eg: disk 2 & 3 can fail and the 
+array is still working).
+
+Question 2: apart from simplicity, why the offset layout use the schema 
+as n.3? I miss something?
+
+Regards.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
