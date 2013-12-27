@@ -1,36 +1,58 @@
-From: pg@lxraid2.for.sabi.co.UK (Peter Grandi)
+From: Gionatan Danti <g.danti@assyoma.it>
 Subject: Re: RAID 10 far and offset on-disk layouts
-Date: Fri, 27 Dec 2013 14:46:06 +0000
-Message-ID: <21181.37550.85602.993895@tree.ty.sabi.co.uk>
+Date: Fri, 27 Dec 2013 16:16:12 +0100
+Message-ID: <52BD99BC.8000205@assyoma.it>
 References: <52BD8EDD.10809@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <52BD8EDD.10809@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
-> The "on different drives" part let me wonder _how_ are chunks
-> distributed. [ ... ] Question 1: as the two schema have
-> different reliability characteristics, which is really used?
+ > It does not matter (except to people writing MD-specific tools).
+ > There is nothing special as to the ordering of drives or chunks
+ > on drives. Also reliability is a *statistical* property not a
+ > geometric one...
 
-It does not matter (except to people writing MD-specific tools).
-There is nothing special as to the ordering of drives or chunks
-on drives. Also reliability is a *statistical* property not a
-geometric one...
+Uhm, why it don't matter? For clarity, let me redraw the two schemas:
 
-> [ ... ] However, this is susceptible to any consecutive
-> two-disk failures. A schema like [... ] would not suffer from
-> this problem (eg: disk 2 & 3 can fail and the array is still
-> working).
+1) A1 A2 A3 A4
+    .. .. .. ..
+    A4 A1 A2 A3
 
-That "consecutive two-disk failures" is really funny!
+2) A1 A2 A3 A4
+    .. .. .. ..
+    A2 A1 A4 A3
 
-If two-paired-disk failure in RAID10 bother you, try RAID14:
+Schema n.1 will fail on any adjacent disk failure. Eg: 1 & 2, 2 & 3, 3 & 
+4, 4 & 1.
 
-  http://www.sabi.co.uk/blog/13-two.html#131213
+On the other hand, schema n.2 will become inactive only when 1 & 2 or 3 
+& 4 disk fail, but not, for example, when 2 & 3 or 1 & 4 fail.
 
-Warning: that does not come at no cost :-).
+Or I misunderstand something?
+
+ > That "consecutive two-disk failures" is really funny!
+
+Er, my English is not very good :p
+I really was talking about adjacent disk failures. Sorry!
+
+ > If two-paired-disk failure in RAID10 bother you, try RAID14:
+ >
+ >  http://www.sabi.co.uk/blog/13-two.html#131213
+ >
+ > Warning: that does not come at no cost :-).
+
+Thank you very mych for the link! I need some time to read it carefully...
+
+Regards.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
