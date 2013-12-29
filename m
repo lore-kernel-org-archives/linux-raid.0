@@ -1,72 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: raid 6 4 disk failure, improper --create leads to bad superblock
-Date: Sun, 29 Dec 2013 15:33:21 -0500
-Message-ID: <52C08711.2010200@turmel.org>
-References: <CAG9GHm3_UNO_jZguFtGpMwMs=a3ut2FXjNWfFV9MU1nC-YJYWQ@mail.gmail.com>
+From: Pieter De Wit <pieter@insync.za.net>
+Subject: Is partition alignment needed for RAID partitions ?
+Date: Mon, 30 Dec 2013 10:04:35 +1300
+Message-ID: <52C08E63.8020800@insync.za.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG9GHm3_UNO_jZguFtGpMwMs=a3ut2FXjNWfFV9MU1nC-YJYWQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cooper tron <cooper@cobhc.ca>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/28/2013 06:02 PM, Cooper tron wrote:
-> If you could please CC me directly. TIA
-> 
-> I have a raid that I've recently realized is ridden with flaws. Id
-> like to be able to mount it one last time to get a current backup of
-> user generated data. Then rebuild it with proper hardware.
+Hi List,
 
-[trim /]
+I am taking advantage of the holiday season by testing some NAS devices 
+for work. This now allows me to rebuild my home storage.
 
-> I recently added 1 more drive going from 9-10. Here is where things
-> get murky. We just had a killer ice storm, brownouts and power issues
-> for days. Right as I was growing. So one drive (sde, at the time)
-> failed during the grow. While investigating I was forced to shut down
-> due to my ups screaming at me. Once power is back, I boot up and
-> theres a second drive marked faulty (don't recall which). Smartctl
-> told me both drives were OK. So I readded them, as they were resyncing
-> 2 more got marked faulty....  There I sat with 4 drives out of the
-> array (when I should have came for help). No amount of --assemble
-> would start the array. I did not try any --force. All the drives
-> tested as being relatively healthy so I took a chance.
-> 
-> I finally got the array to start with --create --raid-devices=10 /dev/sda (etc.)
+My current setup is as follow:
 
---force --assemble was your only hope.
+/dev/sda 250 gig drive (/boot is mounted here since I had no other use 
+for the drive)
+/dev/sdb 2TB drive
+/dev/sdc 2TB drive
 
-You did a --create while the devices were in an incomplete --grow state.
- You also did nothing to maintain the original metadata version, data
-offset, or chunk size.  Your description implies you also left off
---assume-clean.
+/dev/sdb and sdc has two MD devices on them, a RAID1 and a RAID0 device. 
+/dev/sdb and sdc was taken out of a MAC server, so the partition table 
+is a mess, I want to rebuild them.
 
-Your data is *gone*.
+All of these house LVM PV's
 
-[trim /]
+The RAID1 device contains all my "critical" data ( root device, logs, 
+photos etc) while the RAID0 device contains all data I have other 
+sources for.
 
-> I found almost an exact case scenario from some emails, where it was
-> suggested to --create again with the proper permutations and the raid
-> should rebuild with hopefully some data intact.  So I tried again this
-> time just specifying a 64K chunk. After an 11 hour resync. I still
-> have a bad superblock when trying to mount/fsck.
+So my question is, do I need to align the partitions for the raid devices ?
 
-There's no resync time when using --assume-clean, and it is vital to
-successfully performing such a parameter search.  Leave it out even
-*once* and *poof*, your data is gone.
+These are desktop grade drives, but for the RAID0 device I saw quite low 
+throughput (15meg/sec moving data to the NAS via gig connection). I just 
+created a RAID1 device between /dev/sda and an iSCSI target on the NAS, 
+and it synced at 48meg/sec, moving data at 30meg/sec - double that of 
+the RAID0 device. I would have expected the RAID0 device to easily get 
+up to the 60meg/sec mark ?
 
-> Without any records of the order of failures, or even an old --examine
-> or --detail to show me how the raid was shaped when it was running or
-> its last 'sane' state. Is there any chance I will see that data again?
+Cheers,
 
-Nope, sorry.  Even if you had used --assume-clean, you disrupted a
---grow operation, losing the information MD needed to continue reshaping
-from one layout to another.
-
-> Happy Holidays!
-
-Merry Christmas and Happy New Year.  My condolences on your lost data.
-
-Phil
-
+Pieter
