@@ -1,55 +1,71 @@
-From: Pieter De Wit <pieter@insync.za.net>
-Subject: Re: Is partition alignment needed for RAID partitions ?
-Date: Tue, 31 Dec 2013 07:32:26 +1300
-Message-ID: <52C1BC3A.3070106@insync.za.net>
-References: <52C08E63.8020800@insync.za.net> <52C11929.3070600@hardwarefreak.com> <52C12F8B.6080507@insync.za.net> <52C14FB8.8080005@hardwarefreak.com> <52C162A7.1080309@insync.za.net> <52C1A8F0.2030208@hardwarefreak.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: The chunk size paradox
+Date: Mon, 30 Dec 2013 13:48:58 -0500
+Message-ID: <52C1C01A.7010407@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C1A8F0.2030208@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com, linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Stan,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-  
+I believe that using a single "chunk size" causes a lose-lose tradeoff
+when creating raid 5/6/10 arrays.  Too small of a chunk size and you
+waste too much time seeking to skip over the redundant data ( I think
+this is why the default was changed from 64k to 512k ), but too large of
+a chunk size, and you lose parallelism since your requests won't be
+large enough to span a whole stripe, and in the case of raid5 you run
+into problems with the stripe cache.
 
-> (3407028224 sectors * 512 bytes per sector) / 524288 (chunk bytes) =
->
-> 3327176 chunks
-Right - more for clarity, these are the 512 byte sectors, not the 4k 
-ones (otherwise I would have had a 12 TB drive :) )
-> Please show the exact iostat command line you are using and the output. 
-iostat -x 1
->> Also, there is no other disk usage in the system. All the data is
->> currently on the NAS (except system "stuff" for a quite firewall)
->>
->> I just spotted another thing, the two drives are on the same SATA
->> controller, from rescan-scsi-bus:
->>
->> Scanning for device 3 0 0 0 ...
->> OLD: Host: scsi3 Channel: 00 Id: 00 Lun: 00
->>        Vendor: ATA      Model: WDC WD20EARX-008 Rev: 51.0
->>        Type:   Direct-Access                    ANSI SCSI revision: 05
->> Scanning for device 3 0 1 0 ...
->> OLD: Host: scsi3 Channel: 00 Id: 01 Lun: 00
->>        Vendor: ATA      Model: WDC WD20EARX-008 Rev: 51.0
->>        Type:   Direct-Access                    ANSI SCSI revision: 05
->>
->> Would it be better to move these apart ? I remember IDE used to have
->> this issue, but I also recall SATA "fixed" that.
-> This isn't the problem.  Even if both drives were connected via a plain
-> old 33MHz 132MB/s PCI SATA card you'd still be capable of 120MB/s
-> throughput, 60MB/s per drive.
->
->> Thanks again,
-> You're welcome.  Eventually you get to the bottom of this.
-And the email :) I now have the drive with no data on them, so I can 
-even run write tests. I am going to start with the usual "dd" tests, any 
-other that you would like to see ?
+I believe that what is needed is to drop back down to 64k chunk size,
+and deal with the seek problem by grouping stripes.  Instead of rotating
+between every stripe, you only rotate between groups of stripes.  An
+example of a three disk raid5 would look like this with a group factor
+of 3:
 
-Cheers,
+1     2     1+2'
+3     4     3+4'
+5     6     5+6'
+7+8'  7     8
+9+10' 9    10
 
-Pieter
+And a raid10-offset:
+
+1     2     3
+4     5     6
+7     8     9
+3'    1'    2'
+6'    4'    5'
+9'    7'    8'
+
+And raid10-near:
+
+1     1'    2
+3     3'    4
+5     5'    6
+2'    7     7'
+4'    8     8'
+6'    9     9'
+
+This gets you the benefit of reduced seeks, without hindering
+parallelism.  In the case of the raid10-offset, you can use a relatively
+large ( ~1GB ) group size to get sequential read performance nearly
+identical to that of raid0, only needing to seek every 1 * n GB, while
+not requiring requests at least 1 * n GB to keep all disks busy.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSwcAZAAoJEI5FoCIzSKrw7J4IAKvCT/pvph2/PRiU4hB+nQAa
+2PkZujxN0qQOzt/WH8nBPtibFIZDMrz7BF77R4H9ysJDJ2zScwJXPUtVhfDGp4rG
+l++JsE7Drie/+hFR60N2gJNGZIBTnTWAWmfMig72fbJcURTwKDcqrhkPBe2gnA9D
+gVlz+prNKcbVAa9j3LByL1PN29Gq2Vr9ICLeDs+x+epIA2ZslbIWwj8A3rsS98/3
+D2LX3m5Jx5DzgjxIxWsgFcJy1aT6bby0QgNwSh/2ITLeQVKE8HlQb2r6PupPX/GC
+MVMP7CLGREBb2D83Q2YDBMLz4+xCd0h4mbMPkD7L47m1XPobPLeEu4SfsiHjDSk=
+=O9Ce
+-----END PGP SIGNATURE-----
