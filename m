@@ -1,71 +1,55 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: The chunk size paradox
-Date: Mon, 30 Dec 2013 13:48:58 -0500
-Message-ID: <52C1C01A.7010407@ubuntu.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: The chunk size paradox
+Date: Mon, 30 Dec 2013 23:38:12 +0000
+Message-ID: <21186.996.238486.690328@tree.ty.sabi.co.uk>
+References: <52C1C01A.7010407@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52C1C01A.7010407@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+[ ... ]
 
-I believe that using a single "chunk size" causes a lose-lose tradeoff
-when creating raid 5/6/10 arrays.  Too small of a chunk size and you
-waste too much time seeking to skip over the redundant data ( I think
-this is why the default was changed from 64k to 512k ), but too large of
-a chunk size, and you lose parallelism since your requests won't be
-large enough to span a whole stripe, and in the case of raid5 you run
-into problems with the stripe cache.
+> I believe that using a single "chunk size" causes a lose-lose
+> tradeoff when creating raid 5/6/10 arrays. Too small of a
+> chunk size and you waste too much time seeking to skip over
+> the redundant data ( I think this is why the default was
+> changed from 64k to 512k ), but too large of a chunk size, and
+> you lose parallelism since your requests won't be large enough
+> to span a whole stripe,
 
-I believe that what is needed is to drop back down to 64k chunk size,
-and deal with the seek problem by grouping stripes.  Instead of rotating
-between every stripe, you only rotate between groups of stripes.  An
-example of a three disk raid5 would look like this with a group factor
-of 3:
+That seems to me a very peculiar way of looking at it. I used to
+think that the biggest tradeoff as to chunk size is due to the
+devices in a RAID set being as a rule not synchronized, so it
+may happen that if they are disk drives their angular positions
+might be up to nearly a full rotation apart across the the RAID
+set members.
 
-1     2     1+2'
-3     4     3+4'
-5     6     5+6'
-7+8'  7     8
-9+10' 9    10
+This can result in some significant wait to collect data that
+spans multiple chunks from all the devices involved, and the
+more drives there are the greater the chances that at least one
+disk will have an angular position nearly a full rotation apart
+from another disk drive...
 
-And a raid10-offset:
+  http://www.sabi.co.uk/blog/12-thr.html#120310
+  http://www.sabi.co.uk/blog/12-two.html#120221
 
-1     2     3
-4     5     6
-7     8     9
-3'    1'    2'
-6'    4'    5'
-9'    7'    8'
+Therefore a larger chunk size increases the amount of data that
+can be fetched on each device without waiting for the other
+device to get to the desires angular position. It has of course
+the advnatage that you mention, but also the advantage that
+random IO might be improved.
 
-And raid10-near:
+> and in the case of raid5 you run into problems with the stripe
+> cache.
 
-1     1'    2
-3     3'    4
-5     5'    6
-2'    7     7'
-4'    8     8'
-6'    9     9'
+IIRC the stripe cache can be up to 32MB for RAID device, and
+that's a lot of stripes for any sensible-sized RAID set. But it
+never stopped people who "know better" to do very wide RAID5 or
+RAID6 sets :-).
 
-This gets you the benefit of reduced seeks, without hindering
-parallelism.  In the case of the raid10-offset, you can use a relatively
-large ( ~1GB ) group size to get sequential read performance nearly
-identical to that of raid0, only needing to seek every 1 * n GB, while
-not requiring requests at least 1 * n GB to keep all disks busy.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSwcAZAAoJEI5FoCIzSKrw7J4IAKvCT/pvph2/PRiU4hB+nQAa
-2PkZujxN0qQOzt/WH8nBPtibFIZDMrz7BF77R4H9ysJDJ2zScwJXPUtVhfDGp4rG
-l++JsE7Drie/+hFR60N2gJNGZIBTnTWAWmfMig72fbJcURTwKDcqrhkPBe2gnA9D
-gVlz+prNKcbVAa9j3LByL1PN29Gq2Vr9ICLeDs+x+epIA2ZslbIWwj8A3rsS98/3
-D2LX3m5Jx5DzgjxIxWsgFcJy1aT6bby0QgNwSh/2ITLeQVKE8HlQb2r6PupPX/GC
-MVMP7CLGREBb2D83Q2YDBMLz4+xCd0h4mbMPkD7L47m1XPobPLeEu4SfsiHjDSk=
-=O9Ce
------END PGP SIGNATURE-----
+[ ... ]
