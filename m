@@ -1,62 +1,71 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: The chunk size paradox
-Date: Tue, 31 Dec 2013 14:51:25 +0100
-Message-ID: <52C2CBDD.6040207@hesbynett.no>
-References: <52C1C01A.7010407@ubuntu.com> <21186.996.238486.690328@tree.ty.sabi.co.uk> <20131231000132.879A7381435@gemini.denx.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is partition alignment needed for RAID partitions ?
+Date: Tue, 31 Dec 2013 08:21:19 -0600
+Message-ID: <52C2D2DF.5040701@hardwarefreak.com>
+References: <52C08E63.8020800@insync.za.net> <52C11929.3070600@hardwarefreak.com> <52C12F8B.6080507@insync.za.net> <52C14FB8.8080005@hardwarefreak.com> <52C162A7.1080309@insync.za.net> <52C1A8F0.2030208@hardwarefreak.com> <52C1BC3A.3070106@insync.za.net>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131231000132.879A7381435@gemini.denx.de>
+In-Reply-To: <52C1BC3A.3070106@insync.za.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: Pieter De Wit <pieter@insync.za.net>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 31/12/13 01:01, Wolfgang Denk wrote:
-> Dear Peter,
->
-> In message <21186.996.238486.690328@tree.ty.sabi.co.uk> you wrote:
+On 12/30/2013 12:32 PM, Pieter De Wit wrote:
+> Hi Stan,
+> 
+>> (3407028224 sectors * 512 bytes per sector) / 524288 (chunk bytes) =
 >>
->> Therefore a larger chunk size increases the amount of data that
->> can be fetched on each device without waiting for the other
->> device to get to the desires angular position. It has of course
->> the advnatage that you mention, but also the advantage that
->> random IO might be improved.
->
-> Hm... does it make sense to discuss any of this without considering
-> the actual work load of the storage system?
->
-> For example, we have some RAID 6 arrays that store mostly source code
-> and the resulting object files when compiling that code.  In this
-> environment, we have the following distribution of file sizes:
->
-> 	65% 	are smaller than 4 kB
-> 	80% 	are smaller than 8 kB
-> 	90% 	are smaller than 16 kB
-> 	96% 	are smaller than 32 kB
-> 	98.4% 	are smaller than 64 kB
->
-> It appears to me, that your argumentation is valid only for large (or
-> rather huge), strictly sequential file accesses only.  Random acces to
-> a large number of small files like in the environment shown above will
-> need pretty much different settings for optimal performance.
->
-> I think we should not conceal such dependencies.  There is no "one
-> size fits all" solution.
->
-> Just my $ 0.02.
->
-> Best regards,
->
-> Wolfgang Denk
->
+>> 3327176 chunks
 
-While that's true, it would be my guess that for most large raid 6 
-arrays, there /are/ many large files.  It takes a great many small files 
-to justify having raid 6 rather than raid 1, but you don't need too many 
-large media files.
+> Right - more for clarity, these are the 512 byte sectors, not the 4k
+> ones (otherwise I would have had a 12 TB drive :) )
 
-But it's important that new options are optional - we don't want to 
-reduce performance for existing users, even if it is for less common usage.
+Linux works only with 512B sectors at this time, thus all the
+partitioning tools use 512B sectors.  At some point in the future we may
+see native 4K/sector devices and native Linux support for those.
+
+>> Please show the exact iostat command line you are using and the output. 
+> iostat -x 1
+
+You're polling once every second so the 15 MB/s isn't due to averaging.
+
+>>> Also, there is no other disk usage in the system. All the data is
+>>> currently on the NAS (except system "stuff" for a quite firewall)
+>>>
+>>> I just spotted another thing, the two drives are on the same SATA
+>>> controller, from rescan-scsi-bus:
+>>>
+>>> Scanning for device 3 0 0 0 ...
+>>> OLD: Host: scsi3 Channel: 00 Id: 00 Lun: 00
+>>>        Vendor: ATA      Model: WDC WD20EARX-008 Rev: 51.0
+>>>        Type:   Direct-Access                    ANSI SCSI revision: 05
+>>> Scanning for device 3 0 1 0 ...
+>>> OLD: Host: scsi3 Channel: 00 Id: 01 Lun: 00
+>>>        Vendor: ATA      Model: WDC WD20EARX-008 Rev: 51.0
+>>>        Type:   Direct-Access                    ANSI SCSI revision: 05
+>>>
+>>> Would it be better to move these apart ? I remember IDE used to have
+>>> this issue, but I also recall SATA "fixed" that.
+>>
+>> This isn't the problem.  Even if both drives were connected via a plain
+>> old 33MHz 132MB/s PCI SATA card you'd still be capable of 120MB/s
+>> throughput, 60MB/s per drive.
+>>
+>>> Thanks again,
+>> You're welcome.  Eventually you get to the bottom of this.
+>>
+> And the email :) I now have the drive with no data on them, so I can
+> even run write tests. I am going to start with the usual "dd" tests, any
+> other that you would like to see ?
+
+dd will give you a rough idea of the single streaming throughput of the
+array, which will be lower than its maximum throughput due to
+serialization and latency.  If you want to see the max the array can do
+use FIO as it can do both parallel and async IO.
+
+-- 
+Stan
 
