@@ -1,69 +1,44 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Is partition alignment needed for RAID partitions ?
-Date: Tue, 31 Dec 2013 08:38:55 -0600
-Message-ID: <52C2D6FF.8010509@hardwarefreak.com>
-References: <52C08E63.8020800@insync.za.net> <52C11929.3070600@hardwarefreak.com> <52C12F8B.6080507@insync.za.net> <52C14FB8.8080005@hardwarefreak.com> <52C162A7.1080309@insync.za.net> <52C1A8F0.2030208@hardwarefreak.com> <52C2184B.5030403@insync.za.net>
-Reply-To: stan@hardwarefreak.com
+From: Tomas M <tomas@slax.org>
+Subject: How to prefer some devices over others in raid
+Date: Tue, 31 Dec 2013 15:42:12 +0100
+Message-ID: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C2184B.5030403@insync.za.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pieter De Wit <pieter@insync.za.net>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/30/2013 7:05 PM, Pieter De Wit wrote:
-> Hi Stan,
->> You're welcome.  Eventually you get to the bottom of this.
->>
-> I think this moment has arrived :)
-> 
-> I did some fio tests from all levels, raw disk, raw md device, raw LV,
-> filesystem (ext4) on top of LV. All read and write tests came back with
-> +- 120MB/s (mostly 128, but let's tone it down just for stats)
-> 
-> I did a read,write and mixed test against the NAS:
-> 
-> The read and write tests came back at 60MB/s, the mixed came in at 11MB/s.
+I'm using software raid 5 (stripe with one parity drive).
 
-It seams clear the QNAP device is your weak link.
+Is there a way to force the raid array to MOSTLY ignore one of the drives?
 
-> I ran a network test from my desktop to the server, using iperf and it
-> got up to 80MB/s, add to that the sync traffic of 10-15MB and you have a
-> pretty full gig pipe. The desktop nic is a crappy onboard one, so I am
-> quite happy with those stats. Just "FYI" - they are all linked with a
-> Cisco 3750G, the NAS has 2xgig ports in an etherchannel
+Let me explain. If a drive is failing (is very slow, has errors, etc),
+then I still prefer to keep it in the array and simply COPY all data
+from the array somewhere else, instead of risking that the array gets
+degraded if I remove the failing drive and another one dies at the
+same time.
 
-Etherchannel is proprietary to Cisco.  I'd be surprised if the QNAP
-supports it.  802.11ad maybe, but not Etherchannel.  In any case it's
-not relevant here as your pvmove operations are a single TCP stream.
-Single streams always transmit over a single link, unless you have two
-Linux hosts with 2 links each doing mode balance-rr with source based
-routing.
+Example:
+- 4 drives in raid5
+- one drive is slow, lets call the drive DISK1
+- copying all data from the array is very slow because it still uses
+DISK1 to read data from it, even if it could IGNORE it and COMPUTE the
+data from the other three drives
 
-> This leaves me only two conclusions:
-> 
-> 1) pvmove isn't as fast as I think - it might be due to some checksums
-> or some other process (I know it creates a small mirror of a PE and then
-> breaks it - rinse repeat for all PEs)
+The filesystem on the array needs to be still mounted rw, though,
+since there may be some changes.
 
-Try it between different disks within the host.  It should be much quicker.
+Is there any mdadm parameter or option which would make the array
+IGNORE any given disk on reads (since those can be computed from other
+drives), while still NOT IGNORING the disk in writes?
 
-> 2) That is just the limit for this system, "it is what it is"
+Because if I set it to ignore that failing slow drive, I will copy out
+the data 100 times faster while still keeping the array in sync.
+Because for me if ANOTHER drive dies, it will still be better to have
+the data 100 times slower than nothing. I hope you understand me :)
 
-I don't think the limit is your host but the QNAP.
+Thanks!
 
-> Either way - I think I have taken up enough of the list time, so thank
-> you very much for the in-depth answers ! I still have access to the NAS
-> until at least 13/01/2014 if you want to do more checks/tests.
 
-More tests on the QNAP aren't necessary.  We already know it's slow.
-
-> Have a good 2014!
-
-You too.
-
--- 
-Stan
-
+Tomas M
