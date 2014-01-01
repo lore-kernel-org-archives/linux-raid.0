@@ -1,67 +1,108 @@
-From: Krzysztof Adamski <k-list@adamski.org>
-Subject: Re: Looking for help how to migrate 2disk RAID1 to 3 disk RAID6
-Date: Wed, 01 Jan 2014 10:10:51 -0500
-Message-ID: <1388589051.5058.43.camel@oxygen.netxsys.com>
-References: <1388537511.5058.22.camel@oxygen.netxsys.com>
-	 <52C36908.2010701@insync.za.net>
-	 <1388552041.5058.25.camel@oxygen.netxsys.com>
-	 <52C3EEE2.10402@insync.za.net>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: How to prefer some devices over others in raid
+Date: Wed, 01 Jan 2014 10:49:12 -0600
+Message-ID: <52C44708.3030307@hardwarefreak.com>
+References: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com> <52C2E00B.90406@hardwarefreak.com> <CAL1oBhrVUTK5ayU=sgmVgP0Xu5eh1nGcfRjQSYALXXJMVE03+w@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C3EEE2.10402@insync.za.net>
+In-Reply-To: <CAL1oBhrVUTK5ayU=sgmVgP0Xu5eh1nGcfRjQSYALXXJMVE03+w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pieter De Wit <pieter@insync.za.net>
+To: Tomas M <tomas@slax.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2014-01-01 at 23:33 +1300, Pieter De Wit wrote:
-> On 1/01/2014 17:54, Krzysztof Adamski wrote:
-> > On Wed, 2014-01-01 at 14:02 +1300, Pieter De Wit wrote:
-> >> On 1/01/2014 13:51, Krzysztof Adamski wrote:
-> >>> <snip>
-> >> Hi,
-> >>
-> >> RAID Level 6 requires a minimum of 4 drives to implement
-> >>
-> >> Cheers,
-> >>
-> >> Pieter
-> > I have seen messages by Neil from 2011 that he was planning to remove
-> > this silly minimum requirement of 4 drive for RAID6.
-> >
-> >
-> IMHO, that "silly minimum requirement" *is* RAID6, 2xDATA, 2xPARITY. If 
-> you make it 1 DATA, then you might as well have RAID1 with a hot spare 
-> (not even sure how the calc's will work - for RAID6 like that, RAID1 is 
-> easy :) )
+On 1/1/2014 12:50 AM, Tomas M wrote:
+> My main concern is that I'm not always 100% sure if a certain drive is
+> the root cause of slow read performance, so failing a wrong one would
+> have terrible consequences. On the other hand, if it was possible to
+> say "read the data with pretending one drive has failed, but write to
+> the array as if all drives are ok", then I could actually find out if
+> copying speed reverts to normal.
 
-Based of what you are saying you probably would not believe that RAID5
-can be made with 2 drives, DATA + 1 PARITY. But Linux RAID supports that
-just fine (thanks Neil).
+So you want to monkey with the way RAID works just to figure out if one
+of your drives is flaky, causing slow IO?
 
-Hot spares are a joke, you have to wait for a drive to fail before you
-use them, that can be to late. A 3 drive RAID1 make more sense. On one
-system I have a 8 drive RAID1 (the /boot partition) the / (root)
-partition is a 8 drive RAID6.
+Tools already exist to identify such things.  "iostat -x" 'await' shows
+latency per drive.  "smartctl -A /dev/device" gives you
+Raw_Read_Error_Rate and Seek_Error_Rate.   High counts in the RAW_VALUE
+column for either indicates the drive is re-reading sectors and applying
+extra DSP to figure out the magnetism of the bits.
 
-> I would use RAID5 for now, then migrate to RAID6 when you get a forth 
-> drive. IIRC, you can always upgrade "up", not down (RAID numbers that is)
+Comparing such data amongst your array member drives should pretty
+quickly tell you if one has a problem.  If none do, you need to look
+elsewhere for the problem.
 
-Using RAID5 defeats the purpose of having 2 parity drives.
+Your initial post suggested you knew which drive was flaky.  Now you
+indicate you don't know which, if any, is flaky.  This suggests you have
+no idea why your array is slow.
 
-If you want to know why I'm so paranoid, if that I had 5 enterprise
-series drives fail within a month period of each other. I didn't lose
-any data, but from now I don't trust any drive and I expect triple
-redundancy. 
+The first place to look when IO slows down suddenly is the filesystem.
+Nearly full filesystems scatter extents into any free space available
+when writing new files or appending files.  When you read these back you
+get far more seeking than normal and everything slows down,
+dramatically.  Investigate this possibility, and the things above,
+before attempting to rewrite raid5.c, which will inevitably cause you
+more problems than it solves.
 
-> Cheers,
+-- 
+Stan
+
+
+> Maybe I should write a kernel patch to try this out. Any suggestions
+> where to start?
 > 
-> Pieter
+> Tomas M
+> 
+> On Tue, Dec 31, 2013 at 4:17 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>>
+>>
+>> On 12/31/2013 8:42 AM, Tomas M wrote:
+>>> I'm using software raid 5 (stripe with one parity drive).
+>>>
+>>> Is there a way to force the raid array to MOSTLY ignore one of the drives?
+>>>
+>>> Let me explain. If a drive is failing (is very slow, has errors, etc),
+>>> then I still prefer to keep it in the array and simply COPY all data
+>>> from the array somewhere else, instead of risking that the array gets
+>>> degraded if I remove the failing drive and another one dies at the
+>>> same time.
+>>>
+>>> Example:
+>>> - 4 drives in raid5
+>>> - one drive is slow, lets call the drive DISK1
+>>> - copying all data from the array is very slow because it still uses
+>>> DISK1 to read data from it, even if it could IGNORE it and COMPUTE the
+>>> data from the other three drives
+>>>
+>>> The filesystem on the array needs to be still mounted rw, though,
+>>> since there may be some changes.
+>>>
+>>> Is there any mdadm parameter or option which would make the array
+>>> IGNORE any given disk on reads (since those can be computed from other
+>>> drives), while still NOT IGNORING the disk in writes?
+>>>
+>>> Because if I set it to ignore that failing slow drive, I will copy out
+>>> the data 100 times faster while still keeping the array in sync.
+>>> Because for me if ANOTHER drive dies, it will still be better to have
+>>> the data 100 times slower than nothing. I hope you understand me :)
+>>
+>> The option you request is not available TTBOMK.  So...
+>>
+>> Fail the drive.  Copy all the data off the array.  Zero the drive and
+>> add it back.  Resync.
+>>
+>> But while you're at it, why not simply replace the flaky drive before
+>> the resync?  Why would you intentionally keep a known-to-be-failing
+>> drive in the array?
+>>
+>> --
+>> Stan
+>>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+> 
