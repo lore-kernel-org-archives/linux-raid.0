@@ -1,59 +1,37 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: How to prefer some devices over others in raid
-Date: Tue, 31 Dec 2013 09:17:31 -0600
-Message-ID: <52C2E00B.90406@hardwarefreak.com>
-References: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Krzysztof Adamski <k-list@adamski.org>
+Subject: Looking for help how to migrate 2disk RAID1 to 3 disk RAID6
+Date: Tue, 31 Dec 2013 19:51:51 -0500
+Message-ID: <1388537511.5058.22.camel@oxygen.netxsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomas M <tomas@slax.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I have a system with two drives like this:
+/ RAID1 on sda3 and sdb3
+/boot RAID1 on sda1 and sdb1
 
+I would like to migrate to
+/ RAID6 on sdi3, sdj3 and sdh3
+/boot RAID1 on sdi1, sdj1 and sdh1
 
-On 12/31/2013 8:42 AM, Tomas M wrote:
-> I'm using software raid 5 (stripe with one parity drive).
-> 
-> Is there a way to force the raid array to MOSTLY ignore one of the drives?
-> 
-> Let me explain. If a drive is failing (is very slow, has errors, etc),
-> then I still prefer to keep it in the array and simply COPY all data
-> from the array somewhere else, instead of risking that the array gets
-> degraded if I remove the failing drive and another one dies at the
-> same time.
-> 
-> Example:
-> - 4 drives in raid5
-> - one drive is slow, lets call the drive DISK1
-> - copying all data from the array is very slow because it still uses
-> DISK1 to read data from it, even if it could IGNORE it and COMPUTE the
-> data from the other three drives
-> 
-> The filesystem on the array needs to be still mounted rw, though,
-> since there may be some changes.
-> 
-> Is there any mdadm parameter or option which would make the array
-> IGNORE any given disk on reads (since those can be computed from other
-> drives), while still NOT IGNORING the disk in writes?
-> 
-> Because if I set it to ignore that failing slow drive, I will copy out
-> the data 100 times faster while still keeping the array in sync.
-> Because for me if ANOTHER drive dies, it will still be better to have
-> the data 100 times slower than nothing. I hope you understand me :)
+The /boot already done.
+How would I do the migration to RAID6?
 
-The option you request is not available TTBOMK.  So...
+The new drives i,j and h are larger then a and b, after the migration I
+will reshape the raid to use all the space on the new raid, unless it is
+possible to do it in one step.
 
-Fail the drive.  Copy all the data off the array.  Zero the drive and
-add it back.  Resync.
+The reason I want RAID6 and not RAID1 with 3 drives is that later I may
+add more drives to the array.
 
-But while you're at it, why not simply replace the flaky drive before
-the resync?  Why would you intentionally keep a known-to-be-failing
-drive in the array?
+Currently I don't trust any RAID that has only one parity drive, it has
+to survive a failure of any two drives. So RAID6 or triple RAID1 are a
+minimum.
 
--- 
-Stan
+Thanks in advance,
+K
 
