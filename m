@@ -1,48 +1,45 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: How to prefer some devices over others in raid
-Date: Wed, 01 Jan 2014 15:21:50 -0500
-Message-ID: <52C478DE.2060504@turmel.org>
-References: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com> <52C2E00B.90406@hardwarefreak.com> <CAL1oBhrVUTK5ayU=sgmVgP0Xu5eh1nGcfRjQSYALXXJMVE03+w@mail.gmail.com> <52C44708.3030307@hardwarefreak.com> <CAL1oBhovXZhnKMqzoYt=7N5ZHeyX76LK+1LNYMRmcQGGqs7W3w@mail.gmail.com>
+From: Pieter De Wit <pieter@insync.za.net>
+Subject: Re: Looking for help how to migrate 2disk RAID1 to 3 disk RAID6
+Date: Thu, 02 Jan 2014 11:06:03 +1300
+Message-ID: <52C4914B.90301@insync.za.net>
+References: <1388537511.5058.22.camel@oxygen.netxsys.com>	 <52C36908.2010701@insync.za.net>	 <1388552041.5058.25.camel@oxygen.netxsys.com>	 <52C3EEE2.10402@insync.za.net> <1388589051.5058.43.camel@oxygen.netxsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAL1oBhovXZhnKMqzoYt=7N5ZHeyX76LK+1LNYMRmcQGGqs7W3w@mail.gmail.com>
+In-Reply-To: <1388589051.5058.43.camel@oxygen.netxsys.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomas M <tomas@slax.org>, stan@hardwarefreak.com
+To: Krzysztof Adamski <k-list@adamski.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/01/2014 01:00 PM, Tomas M wrote:
->> Your initial post suggested you knew which drive was flaky.  Now you
->> indicate you don't know which, if any, is flaky.  This suggests you have
->> no idea why your array is slow.
-> 
-> Well, I always have an indication which drive is flaky, based on dmesg
-> output (e.g. hard resetting ATA3 link, etc). However, sometimes it
-> reports that more than one drive has problems, and I can't be 100%
-> sure which of the flaky drives is the "more flaky" one :) and it is
-> too late to replace any of them, since there is high chance that the
-> other one dies as well during resync (which happened to me few times
-> already). From my point of view it is better for me to keep the array
-> in sync as long as I can, and copy the data somewhere as fast as I
-> can.
+On 2/01/2014 04:10, Krzysztof Adamski wrote:
+> On Wed, 2014-01-01 at 23:33 +1300, Pieter De Wit wrote:
+>
+> Based of what you are saying you probably would not believe that RAID5
+> can be made with 2 drives, DATA + 1 PARITY. But Linux RAID supports that
+> just fine (thanks Neil).
+Yeah - you right there - I can't see why you would have a "RAID1 set 
+with parity", nor can I see how the calculations would work. Then again, 
+I am not a MD developer and I am not going to look at the source code. I 
+would like to know what the command line would look like to create this, 
+for educational purposes.
+> Hot spares are a joke, you have to wait for a drive to fail before you
+> use them, that can be to late. A 3 drive RAID1 make more sense. On one
+> system I have a 8 drive RAID1 (the /boot partition) the / (root)
+> partition is a 8 drive RAID6.
+>
+>
+IMHO, you have answered your question of what RAID level you need to 
+run, RAID1. As for your original question of the data migration, I would 
+move the data over on a filesystem level. I used to have this neat trick 
+where by I created soft symlink between the "new" and "old" locations, 
+from memory, it only works between different block devices. You then 
+instruct linux to copy the data to "itself". Since it's a symlink it 
+copies the data to the new device. It was something along those lines. 
+You need to mount the source as read only, iirc. Contact me off list if 
+you want more details.
 
-If you've experienced drive drops during resync a "few times already",
-and you don't say that such drives were obviously dead, it makes me
-suspicious that you are using non-enterprise drives.
+Cheers,
 
-Using non-enterprise drive in any raid array can expose you to false
-failures from the timeout mismatch problem.  If you care to share the
-output of "smartctl -x" for all of your drives, and "for x in
-/sys/block/*/device/timeout ; do echo $x $(< $x) ; done", we can
-immediately figure that out for you.
-
-If you want to understand the issue, search this list's archives for
-various combinations of "scterc", "URE", "timeout mismatch".  You should
-also see if your distro has a cron job that performs a "check" scrub on
-your arrays for you.
-
-HTH,
-
-Phil
+Pieter
