@@ -1,58 +1,65 @@
-From: Laura Abbott <lauraa@codeaurora.org>
-Subject: [RFC PATCHv3 04/11] dm: Use VMALLOC_TOTAL instead of VMALLCO_END - VMALLOC_START
-Date: Thu,  2 Jan 2014 13:53:22 -0800
-Message-ID: <1388699609-18214-5-git-send-email-lauraa@codeaurora.org>
-References: <1388699609-18214-1-git-send-email-lauraa@codeaurora.org>
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1388699609-18214-1-git-send-email-lauraa@codeaurora.org>
-Sender: owner-linux-mm@kvack.org
-To: Andrew Morton <akpm@linux-foundation.org>, Kyungmin Park <kmpark@infradead.org>, Dave Hansen <dave@sr71.net>, linux-mm@kvack.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: linux-kernel@vger.kernel.org, Laura Abbott <lauraa@codeaurora.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: The chunk size paradox
+Date: Thu, 02 Jan 2014 23:32:46 +0100
+Message-ID: <20140102223246.8DBE538220E@gemini.denx.de>
+References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <52C5A9AA.9090300@hardwarefreak.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-vmalloc already provides a macro to calculat the total vmalloc size,
-VMALLOC_TOTAL. Use it.
+Dear Stan,
 
-Signed-off-by: Laura Abbott <lauraa@codeaurora.org>
----
- drivers/md/dm-bufio.c |    4 ++--
- drivers/md/dm-stats.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+In message <52C5A9AA.9090300@hardwarefreak.com> you wrote:
+>
+> > filesystem blocks and memory pages aren't necessarily 4K, though that
+> > is the most common size.
+> 
+> Yes, they are necessarily 4K in Linux.  Linux only supports page sized
+> BIO for consistency across the memory manager and IO subsystems.  Most
+> architectures which Linux currently supports have hardware page sizes
+> greater than 4K, for instance IA64 supports 4k/8k/16k, even a 4GB page
+> size.  But it was decided long ago to stick with 4K for a number of
+> reasons, one of these is stated above.  For background on this Google is
+> your friend.
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index 54bdd923..cd677f2 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -1736,8 +1736,8 @@ static int __init dm_bufio_init(void)
- 	 * Get the size of vmalloc space the same way as VMALLOC_TOTAL
- 	 * in fs/proc/internal.h
- 	 */
--	if (mem > (VMALLOC_END - VMALLOC_START) * DM_BUFIO_VMALLOC_PERCENT / 100)
--		mem = (VMALLOC_END - VMALLOC_START) * DM_BUFIO_VMALLOC_PERCENT / 100;
-+	if (mem > VMALLOC_TOTAL * DM_BUFIO_VMALLOC_PERCENT / 100)
-+		mem = VMALLOC_TOTAL * DM_BUFIO_VMALLOC_PERCENT / 100;
- #endif
- 
- 	dm_bufio_default_cache_size = mem;
-diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
-index 28a9012..378ffb6 100644
---- a/drivers/md/dm-stats.c
-+++ b/drivers/md/dm-stats.c
-@@ -80,7 +80,7 @@ static bool __check_shared_memory(size_t alloc_size)
- 	if (a >> PAGE_SHIFT > totalram_pages / DM_STATS_MEMORY_FACTOR)
- 		return false;
- #ifdef CONFIG_MMU
--	if (a > (VMALLOC_END - VMALLOC_START) / DM_STATS_VMALLOC_FACTOR)
-+	if (a > VMALLOC_TOTAL / DM_STATS_VMALLOC_FACTOR)
- 		return false;
- #endif
- 	return true;
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-hosted by The Linux Foundation
+Well, you can tune the page size - and if you need no file system
+support (like when implementing a RAID controller card) making the
+page size exactly the same as the chunk size will allow for some nice
+performance optimizations (as you can avoid a lot of large memcpy()
+operations).
+
+We did this (some 6 years ago) for the (then AMCC) PPC440SPe
+processors; I can't find the old document any longer on APM's web
+site, but there is still a copy here ([1]) which shows the effect.
+
+So yes, tuning the system page size can have considerable impact, but
+only for special-purpose applications, and when optimising for large
+sequential I/O (which appears to be how the RAID controller
+manufacturers are testing / optimizing their systems).
+
+
+Fact is, with a file system on top of the RAID array, and with our
+typical work load of many very small files, A RAID6 with chunk size
+16k will give much better results that with chunk size 64k - and
+anything even bigger will be worse.
+
+
+[1] ftp://ftp.denx.de/pub/demos/RAID-demo/doc/RAIDinLinux_PB_0529a.pdf
+
+Best regards,
+
+Wolfgang Denk
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+"The first rule of magic is simple. Don't waste your time waving your
+hands and hoping when a rock or a club will do."
+                                               - McCloctnik the Lucid
