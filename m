@@ -1,100 +1,101 @@
-From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 23:56:15 +0100
-Message-ID: <52C5EE8F.3090204@aei.mpg.de>
-References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com> <52C5BC28.2020003@gmail.com> <52C5EB62.1090807@hardwarefreak.com>
+Date: Thu, 02 Jan 2014 17:16:05 -0600
+Message-ID: <52C5F335.9060909@hardwarefreak.com>
+References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com> <52C5B9AE.6050901@ubuntu.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms040409000700090405030708"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C5EB62.1090807@hardwarefreak.com>
+In-Reply-To: <52C5B9AE.6050901@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Joe Landman <joe.landman@gmail.com>, Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
+On 1/2/2014 1:10 PM, Phillip Susi wrote:
+> On 1/2/2014 1:02 PM, Stan Hoeppner wrote:
+>> There are no native 4K sector drives on the market.  Linux does
+>> not support a native 4K sector size, only 512 bytes, unless this
+>> has changed in recent kernels and I'm simply not aware of it yet.
+> 
+> Linux has supported 4k sectors for several years.  You can test it
+> with the scsi_debug module and it's sector_size argument.  The parted
+> test suite has been doing this for a few years to test that parted
+> correctly handles 1k, 2k, and 4k sector sizes.  You can also set up
+> qemu to emulate such a drive.
 
---------------ms040409000700090405030708
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Thank you for this information.  Now, if I actually had a 4K drive in my
+hands, and plugged it in, directly formatted it with XFS, no partitions,
+would the LBA addressing be 4K or 512B?  Or would I need to tweak kernel
+parameters?  Or possibly rebuild my kernel to support 4K sectors?
 
-Hi
+> While most consumer level sata drives that use 4k hardware sectors
+> have 512 byte logical sector emulation, there are at least a few
+> drives out there that do not, and are pure 4k sector drives.
 
-sorry late in joining the thread
+I'm still waiting to hear an announcement from a vendor, or see a link
+from someone claiming this to be true.
 
-On 01/02/2014 11:42 PM, Stan Hoeppner wrote:
->=20
-> Damn, you had me salivating Joe.  These are both AF 512e drives, not
-> native 4K.
->=20
->> and many others.
->=20
-> I've not yet seen an announcement from anyone.  I'm not all seeing, but=
+>>> CD-ROM type drives have always used 2k sectors.  Also
+>>
+>> This is not relevant to this discussion.
+> 
+> Sure it is; it's a non 512 byte sector that linux has handled for many
+> years and so disproves your assertion that a sector is always 512 bytes.
 
-> I'd think such an announcement would cross my RADAR.
->=20
+It's not relevant because you don't create an md RAID set from CD-ROM.
 
-Just look around:
+>> Yes, they are necessarily 4K in Linux.  Linux only supports page
+>> sized BIO for consistency across the memory manager and IO
+>> subsystems.  Most architectures which Linux currently supports have
+>> hardware page sizes greater than 4K, for instance IA64 supports
+>> 4k/8k/16k, even a 4GB page size.  But it was decided long ago to
+>> stick with 4K for a number of reasons, one of these is stated
+>> above.  For background on this Google is your friend.
+> 
+> Wrong, wrong wrong.  
 
+If you say it 3 times does that make it 3x more likely to be true? :)
 
-http://www.wdc.com/wdproducts/library/SpecSheet/ENG/2879-771475.pdf
+> Linux always has supported ext[234] filesystems
+> using 1k, 2k, or 4k filesystem block sizes.  Now basically nobody has
+> used the smaller sizes for quite a few years ( they were originally
+> useful on 1-100 MB disks ), but it is still supported.  
 
-and then the FAQ about "Advanced Format":
+I'll take your that it is still supported, FSVO 'supported'.
 
-https://wdc.custhelp.com/app/answers/detail/a_id/5655
+> It can use
+> larger sizes than that, if your platform has > 4k page size.  The page
 
-Why would one need to align to 4k if the on disk layout would be 512bytes=
-?
+IIRC, there was a lengthy discussion about this on mm back when some
+folks wanted to use 16K-4GB pages on Itanium, and later 2M pages on
+x86-64, to cut down on the amount of memory required for page tables and
+to increase performance for big memory workloads.  As I recall the
+arguments for continuing to use 4K pages across the world of Linux,
+regardless of architecture capability, and to NOT make it configurable
+as in HP-UX, were, paraphrasing:
 
-Or did I miss something?
+1.  The kernel manipulates "everything" in pages so we need consistency
+2.  While larger pages saves page table space and increases throughput
+    for large memory intensive workloads, it causes more waste in other
+    structures and increases bandwidth demands for data that are
+    smaller than the page size
 
-Cheers
+So, IIRC, it was decided that the page size would remain 4K basically
+forever.  So while it is *technically* possible to have a larger page
+size in Linux, it is absolutely not supported by the kernel team, nor
+any distro kernel, AFAIK.
 
-Carsten
+> Several cpu
+> archs give you the option to choose between different page sizes when
+> building the kernel, so yes, you can choose to use the larger sizes
+> rather than the default 4k.
 
+And I'd guess a whole host of things will likely break as a result if
+you don't correctly modify much of the kernel source before running
+make.  See above.
 
---------------ms040409000700090405030708
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIE8DCC
-BOwwggPUoAMCAQICAk/QMA0GCSqGSIb3DQEBBQUAMDYxCzAJBgNVBAYTAkRFMRMwEQYDVQQK
-EwpHZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0EwHhcNMTMwNTA2MTU1OTM4WhcNMTQw
-NjA1MTU1OTM4WjA9MRMwEQYDVQQKEwpHZXJtYW5HcmlkMQwwCgYDVQQLEwNBRUkxGDAWBgNV
-BAMTD0NhcnN0ZW4gQXVsYmVydDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJzM
-vu6K/4EHUx/JuCoansTOW8cSyuPbvElm7IfuuEfXHJ1/m/Lbkv/C7oA+0Pvk4WCOLBx1OVUk
-4vVZ0Lq6G9ekTgeZVaqFvHXKlFdUvdp3b5/nlAGc3z7GaDG/F6LdI5Iu374cTdeSvkuNseRg
-KZP6Qq4GIMAZZ2hv1JC/xDxZs/59ACuL0IsjmdZPEiR8uiF01ZejehmdFiPJJP8at+PJgnoW
-hW21Gh72CYI3CjvfB37Q5fUOqF1gMsfJmsJokwYfLLy8BcWbmP5BQ8IOL42F2RsuPTctnnbS
-hhYj73Qyp4/Mxzeg1r34ZevEqM1pX6ceW7I/7Aos8HmhbcW71KMCAwEAAaOCAfswggH3MAwG
-A1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgSwMB0GA1UdDgQWBBTeMPDcRbuXT/FdxHmf8kNH
-EWVOVjAfBgNVHSMEGDAWgBTGdckorNEL/Dz/ubUe0187gGISNDAlBgNVHREEHjAcgRpDYXJz
-dGVuLkF1bGJlcnRAYWVpLm1wZy5kZTAcBgNVHRIEFTATgRFncmlka2EtY2FAa2l0LmVkdTA1
-BgNVHR8ELjAsMCqgKKAmhiRodHRwOi8vZ3JpZC5memsuZGUvY2EvZ3JpZGthLWNybC5kZXIw
-KAYDVR0gBCEwHzAPBg0rBgEEAZQ2qywBAQEIMAwGCiqGSIb3TAUCAgEwEQYJYIZIAYb4QgEB
-BAQDAgWgME4GCWCGSAGG+EIBDQRBFj9DZXJ0aWZpY2F0ZSBpc3N1ZWQgdW5kZXIgQ1AvQ1BT
-IHYuIDEuOCBhdCBodHRwOi8vZ3JpZC5memsuZGUvY2EwJAYJYIZIAYb4QgECBBcWFWh0dHA6
-Ly9ncmlkLmZ6ay5kZS9jYTAzBglghkgBhvhCAQgEJhYkaHR0cDovL2dyaWQuZnprLmRlL2Nh
-L2dyaWRrYS1jcHMucGRmMDMGCWCGSAGG+EIBAwQmFiRodHRwOi8vZ3JpZC5memsuZGUvY2Ev
-Z3JpZGthLWNybC5kZXIwDQYJKoZIhvcNAQEFBQADggEBALkdDvMzLkK1EpFkRPxEA4GpbYyy
-5p59V9057HT/QUYvD7rO5KiayiRoDqgKeDW59Fek1N5W0d2IuN+j+VWLDqlBI1THd33F3Dqc
-08Me/q6OkpHDjhCDnuH353n2gyxnsmXEEMozhx4onJbX0N3kZxjgNKEiP9R+zOq6Qq+CgKFS
-O5w/wdtCTQ5Tpfr/n90KWYwVQ2er5dnKowu6j9YIj/dD8jJGk3T13rgzdnRzWtSQhjP8YIRf
-ql08NsUgDShjNiBo289K7fpBNdVLGNI/pIA8P1ratofCGBPvMdjp+cjhulQX5//qS1ctP0ux
-8MhY3kBMGynLkwibH5MiLfVSip0xggLOMIICygIBATA8MDYxCzAJBgNVBAYTAkRFMRMwEQYD
-VQQKEwpHZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAk/QMAkGBSsOAwIaBQCgggFn
-MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE0MDEwMjIyNTYx
-NVowIwYJKoZIhvcNAQkEMRYEFMaTnC4ehwC0TVDQgyeEgUuwvnZ1MEsGCSsGAQQBgjcQBDE+
-MDwwNjELMAkGA1UEBhMCREUxEzARBgNVBAoTCkdlcm1hbkdyaWQxEjAQBgNVBAMTCUdyaWRL
-YS1DQQICT9AwTQYLKoZIhvcNAQkQAgsxPqA8MDYxCzAJBgNVBAYTAkRFMRMwEQYDVQQKEwpH
-ZXJtYW5HcmlkMRIwEAYDVQQDEwlHcmlkS2EtQ0ECAk/QMGwGCSqGSIb3DQEJDzFfMF0wCwYJ
-YIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYI
-KoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwDQYJKoZIhvcNAQEBBQAEggEA
-GQ6aco+kT8YMcfpH3c6jw8tAq7B9LnatpdvvUMhORQuT7C78IJEz/Ym85Ut0KP7QzGTFydxj
-67Qy7NgelzRWKcNZNkA/EG4T9iuHRNxXyTUXLSBfQMyMXXamsa/AvQe00tPByONBAWbvdjaf
-OV+etbf9/0WpRp9hrtHdAaCMUSeja1K7YA4BCHieIungtkOV2RkImvOltCIdxZAQ/dKVnELG
-gVMBrgUD41G6AyAGFqL0IaYoBIYvytwj0+p4/HA/NFApW/nQCePSQKuSjIhwHtkldH+rSlnY
-YZgJh+bQj8Wa8UKpyx0Ktq4pwo8nNwGrKTfNZ2awgyKbPm9KcQaLlQAAAAAAAA==
---------------ms040409000700090405030708--
+-- 
+Stan
