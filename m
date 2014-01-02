@@ -1,59 +1,58 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 15:08:17 -0500
-Message-ID: <52C5C731.2070209@ubuntu.com>
-References: <52C1C01A.7010407@ubuntu.com> <21186.996.238486.690328@tree.ty.sabi.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21186.996.238486.690328@tree.ty.sabi.co.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+From: Laura Abbott <lauraa@codeaurora.org>
+Subject: [RFC PATCHv3 04/11] dm: Use VMALLOC_TOTAL instead of VMALLCO_END - VMALLOC_START
+Date: Thu,  2 Jan 2014 13:53:22 -0800
+Message-ID: <1388699609-18214-5-git-send-email-lauraa@codeaurora.org>
+References: <1388699609-18214-1-git-send-email-lauraa@codeaurora.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1388699609-18214-1-git-send-email-lauraa@codeaurora.org>
+Sender: owner-linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>, Kyungmin Park <kmpark@infradead.org>, Dave Hansen <dave@sr71.net>, linux-mm@kvack.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: linux-kernel@vger.kernel.org, Laura Abbott <lauraa@codeaurora.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+vmalloc already provides a macro to calculat the total vmalloc size,
+VMALLOC_TOTAL. Use it.
 
-Peter, please make sure to use your mail client's reply-to-all feature
-and avoid any BS reply-to-list command, which breaks cross posted
-threads, and delays my seeing your reply since I didn't get a copy.
+Signed-off-by: Laura Abbott <lauraa@codeaurora.org>
+---
+ drivers/md/dm-bufio.c |    4 ++--
+ drivers/md/dm-stats.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On 12/30/2013 6:38 PM, Peter Grandi wrote:
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index 54bdd923..cd677f2 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1736,8 +1736,8 @@ static int __init dm_bufio_init(void)
+ 	 * Get the size of vmalloc space the same way as VMALLOC_TOTAL
+ 	 * in fs/proc/internal.h
+ 	 */
+-	if (mem > (VMALLOC_END - VMALLOC_START) * DM_BUFIO_VMALLOC_PERCENT / 100)
+-		mem = (VMALLOC_END - VMALLOC_START) * DM_BUFIO_VMALLOC_PERCENT / 100;
++	if (mem > VMALLOC_TOTAL * DM_BUFIO_VMALLOC_PERCENT / 100)
++		mem = VMALLOC_TOTAL * DM_BUFIO_VMALLOC_PERCENT / 100;
+ #endif
+ 
+ 	dm_bufio_default_cache_size = mem;
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 28a9012..378ffb6 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -80,7 +80,7 @@ static bool __check_shared_memory(size_t alloc_size)
+ 	if (a >> PAGE_SHIFT > totalram_pages / DM_STATS_MEMORY_FACTOR)
+ 		return false;
+ #ifdef CONFIG_MMU
+-	if (a > (VMALLOC_END - VMALLOC_START) / DM_STATS_VMALLOC_FACTOR)
++	if (a > VMALLOC_TOTAL / DM_STATS_VMALLOC_FACTOR)
+ 		return false;
+ #endif
+ 	return true;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
 
-> Therefore a larger chunk size increases the amount of data that can
-> be fetched on each device without waiting for the other device to
-> get to the desires angular position. It has of course the advnatage
-> that you mention, but also the advantage that random IO might be
-> improved.
-
-Yes, and that is a good reason not to use 4k chunk size.  I believe
-that 64k is plenty large enough for this purpose though.
-
->> and in the case of raid5 you run into problems with the stripe 
->> cache.
-> 
-> IIRC the stripe cache can be up to 32MB for RAID device, and that's
-> a lot of stripes for any sensible-sized RAID set. But it never
-> stopped people who "know better" to do very wide RAID5 or RAID6
-> sets :-).
-
-That's kind of my point: you don't want a *very* large stripe cache,
-but limiting the chunk size means you get seek overhead to skip the
-redundant data, so you are stuck between a rock and a hard place.  It
-isn't as big of a deal on a 5 disk raid5/6 but on a 2 or 3 disk
-raid10, a 512k chunk size has a hefty seek overhead.
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSxccxAAoJEI5FoCIzSKrwQU4H/RXeLoFe74YFIKaLIc2gs9CM
-S/RJ2P6ht5ZDR0uWge1t80PcIt46AG61KDoe4uqKeJ8i9j2pnEo74jP4uy8FpIg+
-YgwZ114iAthiuA/vL/pQPbbnjJ5t/cG0TBmAviiGEyjckirc6/JO1kwcy3+dL+Fx
-gfD4f7Vt7CNAkuJyJiyk87cRxJ8o0v643YFuGMnmCdlWr6GDVm/dDOhgtoepK7Mq
-9yKm/VLm1Yr5XdCdogK7K7ZnGHLVMKQG8U2+fC1AgsulNtQoEeZmfU47RcK0LSdE
-Oxb2w5aQb5AwxI6mukpAFTihbKR1qevpffs5qBNSCuTSgiCExj4KAe6BwcAlu9s=
-=/GBo
------END PGP SIGNATURE-----
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
