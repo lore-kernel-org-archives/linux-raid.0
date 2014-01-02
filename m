@@ -1,46 +1,42 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: How to prefer some devices over others in raid
-Date: Thu, 02 Jan 2014 08:30:24 -0600
-Message-ID: <52C57800.3090802@hardwarefreak.com>
-References: <CAL1oBhr+V0NQ1zG4LVP8qFT3_wsMHnqhUkZafVibtk0oCDGg5Q@mail.gmail.com> <52C2E00B.90406@hardwarefreak.com> <CAL1oBhrVUTK5ayU=sgmVgP0Xu5eh1nGcfRjQSYALXXJMVE03+w@mail.gmail.com> <52C44708.3030307@hardwarefreak.com> <CAL1oBhovXZhnKMqzoYt=7N5ZHeyX76LK+1LNYMRmcQGGqs7W3w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: joystick <joystick@shiftmail.org>
+Subject: Re: The chunk size paradox
+Date: Thu, 02 Jan 2014 15:49:31 +0100
+Message-ID: <52C57C7B.80400@shiftmail.org>
+References: <52C1C01A.7010407@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAL1oBhovXZhnKMqzoYt=7N5ZHeyX76LK+1LNYMRmcQGGqs7W3w@mail.gmail.com>
+In-Reply-To: <52C1C01A.7010407@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomas M <tomas@slax.org>
-Cc: linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/1/2014 12:00 PM, Tomas M wrote:
->> Your initial post suggested you knew which drive was flaky.  Now you
->> indicate you don't know which, if any, is flaky.  This suggests you have
->> no idea why your array is slow.
-> 
-> Well, I always have an indication which drive is flaky, based on dmesg
-> output (e.g. hard resetting ATA3 link, etc). However, sometimes it
-> reports that more than one drive has problems
-[snip]
+On 30/12/2013 19:48, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> I believe that using a single "chunk size" causes a lose-lose tradeoff
+> when creating raid 5/6/10 arrays.
 
-Full stop.
+I don't think your analysis is correct.
 
-Random resets on multiple links indicates a backplane (if present),
-HBA/controller, or cable problem, not a drive problem.  If you're using
-an HBA+backplane with an SFF-8087 4x multilane cable, or a breakout
-cable, the problem could be as simple as a lose connection at the
-SFF-8087 multilane connector, or a cable gone bad.  If you have multiple
-discrete SATA cables, one per drive, this indicates a problem with the
-controller/HBA.
+Firstly you are forgetting that multiple requests are issued 
+simultaneously to one disk by the kernel, and they can be served 
+out-of-order via NCQ / TCQ by the disks. The kernel does not wait for 
+sector N to be read before issuing the read for sector N+1, it issues a 
+lot of them together since it knows how much data it has to read (via 
+readahead, most of the times). The disk reorders read/write requests 
+according to its angular position, so you almost never pay for the 
+angular offset during a sequential read/write, not even when skipping 
+redundant data from one component disk of the RAID.
 
-Ergo, if you have a multilane cable, unplug/replug it and see if that
-helps.  If not, replace it.  If that doesn't solve the problem, replace
-the HBA.  If replacing the HBA doesn't solve it, replace the backplane.
+Secondly, for writes, I suspect you are assuming that a whole stipe has 
+to be read and rewritten in order for one small write to be performed, 
+but it is not so. For a 4k write in raid5, two 4k sectors are read, then 
+two 4k sectors are written, and this is completely independent from 
+chunk size. It already behaves mostly like your "groups", which are the 
+stripes actually.
 
-If you have discrete cables, replacing the HBA should fix the problem.
-If you have discrete cables and are using motherboard SATA ports, you'll
-need to acquire an HBA and cease using the motherboard ports.
 
--- 
-Stan
