@@ -1,65 +1,71 @@
-From: Wolfgang Denk <wd@denx.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 23:32:46 +0100
-Message-ID: <20140102223246.8DBE538220E@gemini.denx.de>
-References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com>
+Date: Thu, 02 Jan 2014 16:42:42 -0600
+Message-ID: <52C5EB62.1090807@hardwarefreak.com>
+References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com> <52C5BC28.2020003@gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <52C5A9AA.9090300@hardwarefreak.com>
+In-Reply-To: <52C5BC28.2020003@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Joe Landman <joe.landman@gmail.com>, Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Stan,
-
-In message <52C5A9AA.9090300@hardwarefreak.com> you wrote:
->
-> > filesystem blocks and memory pages aren't necessarily 4K, though that
-> > is the most common size.
+On 1/2/2014 1:21 PM, Joe Landman wrote:
+> On 01/02/2014 01:02 PM, Stan Hoeppner wrote:
+>> On 1/2/2014 10:31 AM, Phillip Susi wrote:
+>>> On 1/2/2014 10:41 AM, Stan Hoeppner wrote:
+>>>> First, there is no such thing as a 4K sector in Linux.  Sectors are
+>>>> 512 bytes.  Filesystem blocks and memory pages are 4K.
+>>>
+>>> Of course there is.  Disks with 4k sectors are becoming more and more
+>>> popular.
+>>
+>> Please read:  https://en.wikipedia.org/wiki/Advanced_Format
+>>
+>> There are no native 4K sector drives on the market.  Linux does not
 > 
-> Yes, they are necessarily 4K in Linux.  Linux only supports page sized
-> BIO for consistency across the memory manager and IO subsystems.  Most
-> architectures which Linux currently supports have hardware page sizes
-> greater than 4K, for instance IA64 supports 4k/8k/16k, even a 4GB page
-> size.  But it was decided long ago to stick with 4K for a number of
-> reasons, one of these is stated above.  For background on this Google is
-> your friend.
+> Untrue.
+> 
+> http://storage.toshiba.eu/cms/en/hdd/hard_disk_drives/product_detail.jsp?productid=452
 
-Well, you can tune the page size - and if you need no file system
-support (like when implementing a RAID controller card) making the
-page size exactly the same as the chunk size will allow for some nice
-performance optimizations (as you can avoid a lot of large memcpy()
-operations).
+From that page:
 
-We did this (some 6 years ago) for the (then AMCC) PPC440SPe
-processors; I can't find the old document any longer on APM's web
-site, but there is still a copy here ([1]) which shows the effect.
+Physical parameters	
+Bytes/sector (Host)		512
+Bytes/sector (Disk)		4096 kByte
 
-So yes, tuning the system page size can have considerable impact, but
-only for special-purpose applications, and when optimising for large
-sequential I/O (which appears to be how the RAID controller
-manufacturers are testing / optimizing their systems).
+> 
+> http://www.seagate.com/www-content/product-content/constellation-fam/constellation-cs/en-us/docs/terascale-hdd-data-sheet-ds1793-1-1306us.pdf
+
+From that page:
+
+Configuration
+Heads/Disks				8/4
+Bytes per Sector (512-byte emulation)	4096
+
+Damn, you had me salivating Joe.  These are both AF 512e drives, not
+native 4K.
+
+> and many others.
+
+I've not yet seen an announcement from anyone.  I'm not all seeing, but
+I'd think such an announcement would cross my RADAR.
+
+> 512 byte sector native drives are now far less common, with many of the
+> drives being native 4096 bytes with a translation layer for legacy
+> systems that require 512 bytes.  This is infamous for wreaking havoc
+> with alignment.
+
+Exactly.  Which is why so many of us wish native 4K drives would be
+released.  And, again, AFAIK, nobody is shipping a native drive.
+They're all still 512e.  I'd love for someone to prove me wrong here by
+pointing one out that is available, preferably more than one.
+
+-- 
+Stan
 
 
-Fact is, with a file system on top of the RAID array, and with our
-typical work load of many very small files, A RAID6 with chunk size
-16k will give much better results that with chunk size 64k - and
-anything even bigger will be worse.
-
-
-[1] ftp://ftp.denx.de/pub/demos/RAID-demo/doc/RAIDinLinux_PB_0529a.pdf
-
-Best regards,
-
-Wolfgang Denk
-
---
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-"The first rule of magic is simple. Don't waste your time waving your
-hands and hoping when a rock or a club will do."
-                                               - McCloctnik the Lucid
