@@ -1,102 +1,45 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: raid5: R5_WriteError is not cleared after rdev is marked as Faulty
-Date: Thu, 2 Jan 2014 17:58:33 +0200
-Message-ID: <CAGRgLy6w=_nspVHu9YF9JHz3ADc5CkGL5N0bv6TGgopUpeaxGw@mail.gmail.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: The chunk size paradox
+Date: Thu, 02 Jan 2014 11:31:36 -0500
+Message-ID: <52C59468.6080200@ubuntu.com>
+References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52C588A7.6010207@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com, joystick <joystick@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-I see the following issue: if more than one stripe-head experiences an
-error in raid5_end_write_request, then when first stripe-head is
-handled, it eventually fails the disk, but when the second stripe-head
-is handled, disk is already marked as Faulty, so R5_WriteError is not
-cleared from this second stripe-head, but it still remains in the
-stripe cache.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Below are more details on the flow. I added some prints to display the
-flags values etc.
+On 1/2/2014 10:41 AM, Stan Hoeppner wrote:
+> First, there is no such thing as a 4K sector in Linux.  Sectors are
+> 512 bytes.  Filesystem blocks and memory pages are 4K.
 
-# raid6 is rebuilding a disk
+Of course there is.  Disks with 4k sectors are becoming more and more
+popular.  CD-ROM type drives have always used 2k sectors.  Also
+filesystem blocks and memory pages aren't necessarily 4K, though that
+is the most common size.
 
-# disk fails, as a result, raid5_end_write_request is called on two
-stripe-heads:
-[23369]md48066*[raid5_end_write_request:2002] sh[4560].flags=0x101A
-dev[0].flags=0x20003 rdev[dm-6].flags=0x40
-bio=ffff880028744fd8[4592(4560):8] WRITE ERROR
-[13527.467363] [3842]md48066*[raid5_end_write_request:2002]
-sh[4568].flags=0x101B dev[0].flags=0x20003 rdev[dm-6].flags=0x240
-bio=ffff880028742bc0[4600(4568):8] WRITE ERROR
+> read the data chunk of the stripe in which the 4 sectors of the
+> 4KB
 
-As a result, appropriate r5dev's are marked with R5_WriteError on
-these two stripe-heads.
+You mean 8 sectors, assuming you're still talking about 512 byte sectors.
 
-# raid5 calls analyse_stripe on behalf of stripe-head 4560 ((through
-handle_active_stripes->handle_stripe->analyse_stripe)
 
-# analyse_stripe performs this code:
-        if (rdev && test_bit(R5_WriteError, &dev->flags)) {
-            /* This flag does not apply to '.replacement'
-             * only to .rdev, so make sure to check that*/
-            struct md_rdev *rdev2 = rcu_dereference(
-                conf->disks[i].rdev);
-            if (rdev2 == rdev)
-                clear_bit(R5_Insync, &dev->flags);
-            if (rdev2 && !test_bit(Faulty, &rdev2->flags)) {
-                s->handle_bad_blocks = 1;
-it clears the R5_WriteError and sets handle_bad_blocks on the stripe-head
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-# handle_stripe performs:
-    if (s.handle_bad_blocks)
-        for (i = disks; i--; ) {
-            struct md_rdev *rdev;
-            struct r5dev *dev = &sh->dev[i];
-            if (test_and_clear_bit(R5_WriteError, &dev->flags)) {
-                /* We own a safe reference to the rdev */
-                rdev = conf->disks[i].rdev;
-                if (!rdev_set_badblocks(rdev, sh->sector,
-                            STRIPE_SECTORS, 0))
-                    md_error(conf->mddev, rdev);
-this marks the rdev as Faulty and fails it (bad blocks are disabled)
-
-# raid5d calls analyse_stripe on stripe-head 4568. However, rdev is
-already marked as Faulty, so it does:
-        if (rdev && test_bit(Faulty, &rdev->flags))
-            rdev = NULL;
-and later this condition does not hold:
-if (rdev && test_bit(R5_WriteError, &dev->flags)) {
-so R5_WriteError is not cleared, but this stripe-head is still valid
-in the stripe cache.
-
-Dumping the state of this stripe-head in the stripe-cache (through
-custom sysfs entry):
-sh[4568].state=0x1010 disks=5 pdidx=2 qdidx=3
-  dev[0].flags=0x20001 rdev[???].flags=0x0 (sector=13688)
-  dev[1].flags=0x11 rdev[dm-7].flags=0x2 (sector=13720)
-  dev[2].flags=0x11 rdev[dm-8].flags=0x2 (sector=0) *P*
-  dev[3].flags=0x11 rdev[dm-9].flags=0x2 (sector=0) *Q*
-  dev[4].flags=0x11 rdev[dm-10].flags=0x2 (sector=13656)
-
-# Now user recovers the disk and re-adds the disk back into the array.
-Rebuild starts, and eventually md_do_sync calls sync_request on this
-stripe-head, which calls handle_stripe->analyse_stripe. Now
-analyse_stripe sees the stale R5_WriteError flag and fails the disk,
-which aborts the rebuild. Here is the stack trace, which detects the
-stale R5_WriteError and fails the disk:
-[<ffffffffa02d4543>] error+0x153/0x1d0 [raid456]
-[<ffffffffa0445449>] md_error.part.39+0x19/0xa0 [md_mod]
-[<ffffffffa0445503>] md_error+0x33/0x60 [md_mod]
-[<ffffffffa02da07c>] handle_stripe+0x57c/0x2250 [raid456]
-[<ffffffffa02dcacb>] sync_request+0x18b/0x390 [raid456]
-[<ffffffffa044320c>] md_do_sync+0x76c/0xda0 [md_mod]
-[<ffffffffa044084d>] md_thread+0x10d/0x140 [md_mod]
-
-Does this analysis make sense? I don't know how to fix issue though. I
-am looking at kernel (3.8.13 - as usual), but looking at your
-for-linus branch, it seems like the same would happen.
-
-Thanks,
-Alex.
+iQEcBAEBAgAGBQJSxZRoAAoJEI5FoCIzSKrwCGUH/i7LbqjiCAxXo4to5mrNOKyj
+3MlfRXyihoo0v78LNPZg5nX7toqEWD/E+kc+HxHPdQKAEkxFqVcgT7S+VA2Zoi59
+/F2jFHFE+ZSI6szAkt1FiGsYR/SQ3bkAC2L078keZ0i1gaO6ZUov/4rdw5cTf+TG
+pUZk6Kwqr1uNRaPIVRhvMUy9+qCnTOKJ/65/XvesIGDoTIZTcCMitbxLduPd7nkr
+iZaiWv7HNrWba7WVPbD2SGKpkAUiE61F1+8nobeslYrWuD8w2QrNFfw1tA+2ScuB
+b3lqdXnLGeIX6phDuEew/kveJ/mXvIuBJtDkNN4q6Xqc8FWVDSerI2u10xrDsc8=
+=17Wg
+-----END PGP SIGNATURE-----
