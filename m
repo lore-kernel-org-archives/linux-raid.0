@@ -1,101 +1,52 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: pg@lxraid2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 17:16:05 -0600
-Message-ID: <52C5F335.9060909@hardwarefreak.com>
-References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org> <52C588A7.6010207@hardwarefreak.com> <52C59468.6080200@ubuntu.com> <52C5A9AA.9090300@hardwarefreak.com> <52C5B9AE.6050901@ubuntu.com>
-Reply-To: stan@hardwarefreak.com
+Date: Thu, 2 Jan 2014 23:22:46 +0000
+Message-ID: <21189.62662.712801.352081@tree.ty.sabi.co.uk>
+References: <52C1C01A.7010407@ubuntu.com>
+	<52C57C7B.80400@shiftmail.org>
+	<52C588A7.6010207@hardwarefreak.com>
+	<52C59468.6080200@ubuntu.com>
+	<52C5A9AA.9090300@hardwarefreak.com>
+	<52C5BC28.2020003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C5B9AE.6050901@ubuntu.com>
+In-Reply-To: <52C5BC28.2020003@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, joystick <joystick@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/2/2014 1:10 PM, Phillip Susi wrote:
-> On 1/2/2014 1:02 PM, Stan Hoeppner wrote:
->> There are no native 4K sector drives on the market.  Linux does
->> not support a native 4K sector size, only 512 bytes, unless this
->> has changed in recent kernels and I'm simply not aware of it yet.
-> 
-> Linux has supported 4k sectors for several years.  You can test it
-> with the scsi_debug module and it's sector_size argument.  The parted
-> test suite has been doing this for a few years to test that parted
-> correctly handles 1k, 2k, and 4k sector sizes.  You can also set up
-> qemu to emulate such a drive.
+[ ... ]
 
-Thank you for this information.  Now, if I actually had a 4K drive in my
-hands, and plugged it in, directly formatted it with XFS, no partitions,
-would the LBA addressing be 4K or 512B?  Or would I need to tweak kernel
-parameters?  Or possibly rebuild my kernel to support 4K sectors?
+> 512 byte sector native drives are now far less common,
 
-> While most consumer level sata drives that use 4k hardware sectors
-> have 512 byte logical sector emulation, there are at least a few
-> drives out there that do not, and are pure 4k sector drives.
+Most smaller/faster SAS drivers still have 512 physical sectors,
+but >= 2TB drives, especially those with < 7200RPM, tend to have
+4KiB physical sectors (because 4KiB sector drives are cheaper).
 
-I'm still waiting to hear an announcement from a vendor, or see a link
-from someone claiming this to be true.
+> with many of the drives being native 4096 bytes witnh a
+> translation layer for legacy systems that require 512 bytes.
 
->>> CD-ROM type drives have always used 2k sectors.  Also
->>
->> This is not relevant to this discussion.
-> 
-> Sure it is; it's a non 512 byte sector that linux has handled for many
-> years and so disproves your assertion that a sector is always 512 bytes.
+On a PC here I have half-and-half:
 
-It's not relevant because you don't create an md RAID set from CD-ROM.
+  # lsscsi | grep sd.
+  [0:0:0:0]    disk    ATA      WDC WD2002FAEX-0 05.0  /dev/sda
+  [1:0:0:0]    disk    ATA      ST2000DM001-1CH1 CC44  /dev/sdb
+  [2:0:0:0]    disk    ATA      ST2000DM001-9YN1 CC4C  /dev/sdc
+  [3:0:0:0]    disk    ATA      Hitachi HDS72202 JKAO  /dev/sdd
+  [6:0:0:0]    disk    ATA      WDC WD20EARX-32P AB51  /dev/sde
+  [6:0:1:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdf
 
->> Yes, they are necessarily 4K in Linux.  Linux only supports page
->> sized BIO for consistency across the memory manager and IO
->> subsystems.  Most architectures which Linux currently supports have
->> hardware page sizes greater than 4K, for instance IA64 supports
->> 4k/8k/16k, even a 4GB page size.  But it was decided long ago to
->> stick with 4K for a number of reasons, one of these is stated
->> above.  For background on this Google is your friend.
-> 
-> Wrong, wrong wrong.  
+  # grep . /sys/block/sd?/queue/physical_block_size
+  /sys/block/sda/queue/physical_block_size:512
+  /sys/block/sdb/queue/physical_block_size:4096
+  /sys/block/sdc/queue/physical_block_size:4096
+  /sys/block/sdd/queue/physical_block_size:512
+  /sys/block/sde/queue/physical_block_size:4096
+  /sys/block/sdf/queue/physical_block_size:512
 
-If you say it 3 times does that make it 3x more likely to be true? :)
+They are all 2TB "consumer" drives, mostly recent ones. I am
+slightly surprised that half still have 512 physical sectors.
 
-> Linux always has supported ext[234] filesystems
-> using 1k, 2k, or 4k filesystem block sizes.  Now basically nobody has
-> used the smaller sizes for quite a few years ( they were originally
-> useful on 1-100 MB disks ), but it is still supported.  
-
-I'll take your that it is still supported, FSVO 'supported'.
-
-> It can use
-> larger sizes than that, if your platform has > 4k page size.  The page
-
-IIRC, there was a lengthy discussion about this on mm back when some
-folks wanted to use 16K-4GB pages on Itanium, and later 2M pages on
-x86-64, to cut down on the amount of memory required for page tables and
-to increase performance for big memory workloads.  As I recall the
-arguments for continuing to use 4K pages across the world of Linux,
-regardless of architecture capability, and to NOT make it configurable
-as in HP-UX, were, paraphrasing:
-
-1.  The kernel manipulates "everything" in pages so we need consistency
-2.  While larger pages saves page table space and increases throughput
-    for large memory intensive workloads, it causes more waste in other
-    structures and increases bandwidth demands for data that are
-    smaller than the page size
-
-So, IIRC, it was decided that the page size would remain 4K basically
-forever.  So while it is *technically* possible to have a larger page
-size in Linux, it is absolutely not supported by the kernel team, nor
-any distro kernel, AFAIK.
-
-> Several cpu
-> archs give you the option to choose between different page sizes when
-> building the kernel, so yes, you can choose to use the larger sizes
-> rather than the default 4k.
-
-And I'd guess a whole host of things will likely break as a result if
-you don't correctly modify much of the kernel source before running
-make.  See above.
-
--- 
-Stan
+[ ... ]
