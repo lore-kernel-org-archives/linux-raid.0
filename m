@@ -1,56 +1,48 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 10:24:06 -0500
-Message-ID: <52C58496.5030200@ubuntu.com>
+Date: Thu, 02 Jan 2014 09:41:27 -0600
+Message-ID: <52C588A7.6010207@hardwarefreak.com>
 References: <52C1C01A.7010407@ubuntu.com> <52C57C7B.80400@shiftmail.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <52C57C7B.80400@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: joystick <joystick@shiftmail.org>
+To: joystick <joystick@shiftmail.org>, Phillip Susi <psusi@ubuntu.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 1/2/2014 8:49 AM, joystick wrote:
+> For a 4k write in raid5, two 4k sectors are read, then
+> two 4k sectors are written, and this is completely independent from
+> chunk size.
 
-On 1/2/2014 9:49 AM, joystick wrote:
-> lot of them together since it knows how much data it has to read
-> (via readahead, most of the times). The disk reorders read/write
-> requests
+First, there is no such thing as a 4K sector in Linux.  Sectors are 512
+bytes.  Filesystem blocks and memory pages are 4K.
 
-That's the problem; if you want a 1 GB stripe size then you need 2 GB
-of readahead to keep the disks spinning.  That's not really
-reasonable.  The idea is to get back to ~128k being enough readahead
-to keep the disks busy, without causing loads of seeking.  Reordering
-doesn't come into play here since I'm talking sequential reads.
+I'm no expert WRT raid5.c/raid6.c, but I'm pretty sure it doesn't work
+as you state.  I'm pretty sure it works like this:
 
-> Secondly, for writes, I suspect you are assuming that a whole stipe
-> has to be read and rewritten in order for one small write to be
-> performed, but it is not so. For a 4k write in raid5, two 4k
-> sectors are read, then two 4k sectors are written, and this is
-> completely independent from chunk size. It already behaves mostly
-> like your "groups", which are the stripes actually.
+Redundancy is maintained at the chunk level, not the filesystem block
+level or page level.  If modifying a single filesystem block, md will
+read the data chunk of the stripe in which the 4 sectors of the 4KB
+block resides, write back the chunk incorporating the changes to the 4
+sectors, read the parity chunk, recalculate the parity chunk based on
+the new data chunk, and then write back the parity chunk.
 
-I don't believe this is correct.  raid5 caches an entire stripe at a
-time in the stripe cache.  Even if it were so, it still wouldn't be
-related to what I'm talking about, which is the fact that when doing
-large streaming reads, the disk head has to seek to skip the redundant
-data.  How often it has to do that is related to the chunk size, and
-is something you want to minimize since it is bad for throughput.
+This is precisely why many folks, including myself, consider the current
+512KB chunk default to be way too high.  Modifying a single 4KB
+filesystem block requires reading 1MB from disk and writing 1MB, a total
+of 2MB of IO just to modify a single 4KB page.  And AFAIK this is the
+best case scenario.  According to past posts by Neil, IIRC, the current
+RAID5/6 code may read more than just two chunks during RMW depending on
+certain factors.  With RAID6 you have at least one extra chunk write, if
+not an extra chunk read, so your IO is at least 2.5MB for a single 4K
+write with RAID6.
+
+-- 
+Stan
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSxYSWAAoJEI5FoCIzSKrwvdoH/3/181+FZ1O40NJ1BuDan1Hc
-oHwvqt+B+ow2H042l0gduVM8ZkgsGaLXF2R4/g2dYF4p77OvCPiHmY5R47WdUJzI
-M6phlZlkCgKK3uyUCaCPAxJ2OKdzZxvlM9SDtywfH3H6aFYmAOWJTUD9EdkztRfZ
-XM6CGpRly3/sCx+P3RTb4X/5F2VOJlbzEar5mp1TYIlYyR4hdeDeaci32Xgtmkcv
-HBVAXnNMfQew4fTEQzD+hE1/ILIVB0xZt5E/O5368pidcTU7ndPVjXywWA9FF/CL
-ckQSnNE2DpLXEb/2uT3VsAqEcJjMXYspGs1qocGw7VOMirM7ZstREX/kphJdPAU=
-=eVT+
------END PGP SIGNATURE-----
