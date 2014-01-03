@@ -1,103 +1,79 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: The chunk size paradox
-Date: Thu, 02 Jan 2014 23:58:49 -0500
-Message-ID: <52C64389.3080106@gmail.com>
-References: <52C1C01A.7010407@ubuntu.com>	<52C57C7B.80400@shiftmail.org>	<52C588A7.6010207@hardwarefreak.com>	<52C59468.6080200@ubuntu.com>	<52C5A9AA.9090300@hardwarefreak.com>	<52C5BC28.2020003@gmail.com> <21189.62662.712801.352081@tree.ty.sabi.co.uk>
+From: Piotr Klimek <piotr@klimek.net.pl>
+Subject: RAID6 reshape integer problem
+Date: Fri, 3 Jan 2014 09:30:16 +0000 (UTC)
+Message-ID: <loom.20140103T101338-556@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21189.62662.712801.352081@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxraid2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/02/2014 06:22 PM, Peter Grandi wrote:
+Hello,
+I was trying to migrate from 5x3TB RAID5 to 6x3TB RAID6 with this command:
 
->    # grep . /sys/block/sd?/queue/physical_block_size
->    /sys/block/sda/queue/physical_block_size:512
->    /sys/block/sdb/queue/physical_block_size:4096
->    /sys/block/sdc/queue/physical_block_size:4096
->    /sys/block/sdd/queue/physical_block_size:512
->    /sys/block/sde/queue/physical_block_size:4096
->    /sys/block/sdf/queue/physical_block_size:512
->
-> They are all 2TB "consumer" drives, mostly recent ones. I am
-> slightly surprised that half still have 512 physical sectors.
+$ mdadm --grow /dev/md1 --level=6 --raid-devices=6 --
+backup=/home/archiwum/r6.bak
 
-Gaak ... our HGST are showing this as well.  For some reason I think I 
-have an old sdparm when I looked before.  Trust that the kernel will 
-rarely lie to you even if the tools that work with it do.
+After couple of days reshape stalled on 2147483648 block. I have found that 
+this is a bug in mdadm. 2147483648 is max integer on 32 bit system. For now 
+situation looks like this:
 
+$ uname -a
+Linux backuper 2.6.32-5-686-bigmem #1 SMP Mon Sep 23 23:38:27 UTC 2013 i686 
+GNU/Linux
 
-[root@unison ~]# grep . /sys/block/sd*/queue/physical_block_size
-/sys/block/sdaa/queue/physical_block_size:4096
-/sys/block/sdab/queue/physical_block_size:4096
-/sys/block/sdac/queue/physical_block_size:512
-/sys/block/sdad/queue/physical_block_size:4096
-/sys/block/sdae/queue/physical_block_size:4096
-/sys/block/sdaf/queue/physical_block_size:4096
-/sys/block/sdag/queue/physical_block_size:4096
-/sys/block/sdah/queue/physical_block_size:4096
-/sys/block/sdai/queue/physical_block_size:4096
-/sys/block/sdaj/queue/physical_block_size:4096
-/sys/block/sdak/queue/physical_block_size:512
-/sys/block/sdal/queue/physical_block_size:4096
-/sys/block/sdam/queue/physical_block_size:4096
-/sys/block/sdan/queue/physical_block_size:4096
-/sys/block/sdao/queue/physical_block_size:4096
-/sys/block/sdap/queue/physical_block_size:4096
-/sys/block/sdaq/queue/physical_block_size:4096
-/sys/block/sda/queue/physical_block_size:4096
-/sys/block/sdar/queue/physical_block_size:4096
-/sys/block/sdas/queue/physical_block_size:512
-/sys/block/sdat/queue/physical_block_size:512
-/sys/block/sdau/queue/physical_block_size:4096
-/sys/block/sdav/queue/physical_block_size:4096
-/sys/block/sdaw/queue/physical_block_size:4096
-/sys/block/sdax/queue/physical_block_size:4096
-/sys/block/sday/queue/physical_block_size:512
-/sys/block/sdaz/queue/physical_block_size:512
-/sys/block/sdba/queue/physical_block_size:4096
-/sys/block/sdbb/queue/physical_block_size:4096
-/sys/block/sdbc/queue/physical_block_size:4096
-/sys/block/sdbd/queue/physical_block_size:4096
-/sys/block/sdbe/queue/physical_block_size:4096
-/sys/block/sdbf/queue/physical_block_size:4096
-/sys/block/sdbg/queue/physical_block_size:512
-/sys/block/sdbh/queue/physical_block_size:512
-/sys/block/sdbi/queue/physical_block_size:4096
-/sys/block/sdbj/queue/physical_block_size:4096
-/sys/block/sdbk/queue/physical_block_size:512
-/sys/block/sdbl/queue/physical_block_size:512
-/sys/block/sdb/queue/physical_block_size:4096
-/sys/block/sdc/queue/physical_block_size:4096
-/sys/block/sdd/queue/physical_block_size:4096
-/sys/block/sde/queue/physical_block_size:512
-/sys/block/sdf/queue/physical_block_size:4096
-/sys/block/sdg/queue/physical_block_size:4096
-/sys/block/sdh/queue/physical_block_size:4096
-/sys/block/sdi/queue/physical_block_size:4096
-/sys/block/sdj/queue/physical_block_size:4096
-/sys/block/sdk/queue/physical_block_size:4096
-/sys/block/sdl/queue/physical_block_size:4096
-/sys/block/sdm/queue/physical_block_size:512
-/sys/block/sdn/queue/physical_block_size:4096
-/sys/block/sdo/queue/physical_block_size:512
-/sys/block/sdp/queue/physical_block_size:4096
-/sys/block/sdq/queue/physical_block_size:4096
-/sys/block/sdr/queue/physical_block_size:4096
-/sys/block/sds/queue/physical_block_size:4096
-/sys/block/sdt/queue/physical_block_size:4096
-/sys/block/sdu/queue/physical_block_size:512
-/sys/block/sdv/queue/physical_block_size:4096
-/sys/block/sdw/queue/physical_block_size:4096
-/sys/block/sdx/queue/physical_block_size:4096
-/sys/block/sdy/queue/physical_block_size:4096
-/sys/block/sdz/queue/physical_block_size:4096
+$ mdadm --version
+mdadm - v3.1.4 - 31st August 2010
 
+$ cat /proc/mdstat
+md1 : active raid6 sdi1[6] sdj1[0] sdk1[5] sdc1[4] sdf1[3] sdh1[1]
+      11721054208 blocks super 1.2 level 6, 512k chunk, algorithm 18 [6/5] 
+[UUUUU_]
+      [==============>......]  reshape = 73.2% (2147483648/2930263552) 
+finish=18031577.4min speed=0K/sec
 
+$ mdadm --detail /dev/md1
+/dev/md1:
+        Version : 1.2
+  Creation Time : Mon Nov 25 11:41:34 2013
+     Raid Level : raid6
+     Array Size : 11721054208 (11178.07 GiB 12002.36 GB)
+  Used Dev Size : 2930263552 (2794.52 GiB 3000.59 GB)
+   Raid Devices : 6
+  Total Devices : 6
+    Persistence : Superblock is persistent
 
-This is one of the day job's large Ceph boxen.  The 4k units are HGST 
-4TB enterprise drives, and the 512B units are SSDs.
+    Update Time : Fri Jan  3 10:26:20 2014
+          State : clean, degraded, recovering
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+ Reshape Status : 73% complete
+     New Layout : left-symmetric
+
+           Name : backuper:1  (local to host backuper)
+           UUID : 5fb40412:f3447bf7:f654d5f1:1bef1e1c
+         Events : 4553396
+
+    Number   Major   Minor   RaidDevice State
+       0       8      145        0      active sync   /dev/sdj1
+       1       8      113        1      active sync   /dev/sdh1
+       3       8       81        2      active sync   /dev/sdf1
+       4       8       33        3      active sync   /dev/sdc1
+       5       8      161        4      active sync   /dev/sdk1
+       6       8      129        5      spare rebuilding   /dev/sdi1
+
+What should I do now? Its a production system, of course I have a backups 
+but I would like to avoid recovering 8TB data from backups. My idea is to 
+cancel reshape, and then do it again with bigger chunk, or upgrade 
+mdadm/kernel. 
+Thanks in advance for your help.
+
 
