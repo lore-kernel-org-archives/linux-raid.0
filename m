@@ -1,84 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: More 'D' state processes [was: Re: Weird problem: mdadm blocks]
-Date: Mon, 6 Jan 2014 09:00:54 +1100
-Message-ID: <20140106090054.594f6853@notabene.brown>
-References: <52B6AA66.5050502@hanswkraus.com>
-	<20131222221914.78630829@notabene.brown>
-	<52B70F38.5040807@hanswkraus.com>
-	<52B716BF.70000@hanswkraus.com>
+Subject: Re: Recovering an Array with inconsistent Superblocks
+Date: Mon, 6 Jan 2014 10:50:11 +1100
+Message-ID: <20140106105011.3e58bbdc@notabene.brown>
+References: <1388829881.16265.20.camel@vessel>
+	<52C835C9.3050707@turmel.org>
+	<1388873143.7641.20.camel@vessel>
+	<52C8C433.5030403@turmel.org>
+	<1388912870.3591.4.camel@vessel>
+	<20140105205612.093276ef@notabene.brown>
+	<1388918703.3591.20.camel@vessel>
+	<52C9A399.5040802@turmel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/FgQlfGICMoQDEE/S=yifaHR"; protocol="application/pgp-signature"
+ boundary="Sig_/1br2WafW90.Eji2/xp2bGth"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52B716BF.70000@hanswkraus.com>
+In-Reply-To: <52C9A399.5040802@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Fabian Knorr <knorrfab@fim.uni-passau.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/FgQlfGICMoQDEE/S=yifaHR
+--Sig_/1br2WafW90.Eji2/xp2bGth
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 22 Dec 2013 17:43:43 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
+On Sun, 05 Jan 2014 13:25:29 -0500 Phil Turmel <philip@turmel.org> wrote:
 
-> Hi Neil,
+> Hi Fabian,
+>=20
+> I see good news to greet me this morning!
+>=20
+> On 01/05/2014 05:45 AM, Fabian Knorr wrote:
+> > $ cat /proc/mdstat=20
+> > Personalities : [raid6] [raid5] [raid4]=20
+> > md127 : active (auto-read-only) raid5 sde1[6] sdh1[2] sdi1[3] sdb1[4] s=
+dg1[1] sdc1[5] sdf1[0]
+> >       11721074688 blocks level 5, 1024k chunk, algorithm 2 [7/7] [UUUUU=
+UU]
+> >         resync=3DPENDING
+>=20
+> Auto-read-only will switch to read-write as soon as you actually write
+> anything to the array.  Which will also kick off the resync.
 
-Hi Hans,
- sorry for the delay - Christmas/New Year vacation...
+You can also "mdadm --readwrite /dev/md127" to allow resync to continue.
 
-> > [40800.777037] xfsaild/dm-0    D ffff88003754c300     0 20798      2
-> > 0x00000000
-> > [40800.777042]  ffff88003754c300 0000000000000046 0000000000000000
-> > ffff88005d7c51a0
-> > [40800.777047]  0000000000013780 ffff88001b01ffd8 ffff88001b01ffd8
-> > ffff88003754c300
-> > [40800.777052]  ffff880071fede00 ffffffff81070fc1 0000000000000046
-> > ffff88003734a400
-> > [40800.777057] Call Trace:
-> > [40800.777061]  [<ffffffff81070fc1>] ? arch_local_irq_save+0x11/0x17
-> > [40800.777071]  [<ffffffffa0170466>] ? md_flush_request+0x96/0x111 [md_=
-mod]
-> > [40800.777076]  [<ffffffff8103f6c4>] ? try_to_wake_up+0x197/0x197
-> > [40800.777082]  [<ffffffffa0f11711>] ? make_request+0x25/0x37a [raid456]
-> > [40800.777091]  [<ffffffffa0185873>] ?
 
-This looks like the most likely root of the problem - something wrong in
-md_flush_request.
+> Long term, consider creating a new array with metadata type 1.x so you
+> can use a bitmap.  If you ever have an event like this, where one or
+> more devices are disconnected then reconnected, it'll greatly shorten
+> the recovery time.
 
-There was a bug here fixed in 2.6.37
-
-commit a035fc3e2531703b539f23bec4ca7943cfc69349
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Dec 9 16:17:51 2010 +1100
-
-    md: fix possible deadlock in handling flush requests.
-
-You didn't say which kernel you were running.  Could it be earlier than
-2.6.37???
+While I would encourage the use for 1.x metadata, you don't strictly need it
+for a bitmap.  0.90 metadata supports bitmaps too, though it is slightly le=
+ss
+flexibly in the granularity of the bitmap (not that you would probably
+notice).
 
 NeilBrown
 
---Sig_/FgQlfGICMoQDEE/S=yifaHR
+
+--Sig_/1br2WafW90.Eji2/xp2bGth
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUsnWFjnsnt1WYoG5AQI7/g/+P3zcZYEb/FVde/gCxc9VcFbxnoUkmx4u
-bR8GYyWalLraQp58DSisyhAqv3CiNMcTeoZQKX5Dtr/neUNy7rK0oC8lwk2uMepx
-jYRvjlhSkCXbctq9pKvmDbugCJIIvLuD5eMmlFmIQnDuXu0yr8KrI7faIoJkt/kk
-+ze1ailIyevJ2TgOws10Iyc+9+7wJPcnAo4/mlShcjDnDY9ReW9yW9JVyhc0/npx
-2jJayEuYZlIIM5LO5fNkBGu8a9Tj0RSFLQ7rPT8VRDsZq15QJuZx6g7C4WdgiFK7
-x3ADN2c2ic3y1npc3J/pGpsUN59MPBWvELHhdjhM1treZBqN26AOMiKulafpUY3u
-hfFDiYrU41x08y5VyswQS+ajWRcL2sKDdoQ+29wku2Ce8BJMLYQrOgp3l7ys9LFg
-kKrmlTmOBB3Lt5noc0LZ5Vd4OjpQwrnDwIVhJB/yuA1BMMJoVWw2k7uNuA4xz/cy
-Cl2B70ada9mtAko1RyKUnrJsBku4R50CqcY5/+sDrhosF8qSp8AM9dhSEMoIjSi7
-wuA8JzGMzUF3L4LnS3o7TUr1gMmpYkpuSIJM6FpPdVRkQGDn291Wyoj9clXO6u8o
-obshiglatYrxA2CMjx+eEp8jzrofcRHf2OZYkAl9mi9lE08GkaFzwaHgGm3jKumJ
-DVBbX4v2kOg=
-=3/g9
+iQIVAwUBUsnvsznsnt1WYoG5AQIqbw/8CGQFvd6cGLKHIS394iFShVGL9p33OgC7
+l+yfv/Pv+D7uXPxHSY1lrTzKXNbKZMLQ6H2NVjL0YkRHNBxbT/xwEvxM+iqP5dU6
+U8L9c9Bbx74P9mKB3Y8nuFwzHR8L6tJQRv55N2a8lG2IFes+zgwcIA1OBxFOxauM
+TvqeQaQG0I5hmOb4EITkuuCQQfnLJ0hRsZgp+Xo3PJmUmMCL4Tm2eG5S3LNNcvXU
+jAjt9aTEjrmE10KrNeltGtCXPp5ohyg9QhtDbckG+QWOL97j8gWgFjsP9nbQcDjM
+WzHZF+UKkHNnkJV/Nvamuazz17XhJlIvNLQqLS4F3HakjP2ZydcCOb9Ywkv9Xto4
+x5WDApS1pKFH+nhc9rp0U+D7dI6D/FmkDIWRZ3A05SXXFey9QWkSWwz0657F8I5B
+n99LzlFIByQmZ+NU5zcT+3tPYpE9mcLt1cGogKDZJz1LoMTQoPUPQbPmtGlbpvBY
+thyfCfHx9AcCYdMFEYtKrw5dVyMkR+oN4Yuk0jdCf9+g4YZ/icsXSwU0CmB08BU4
+6KcUpLWnSwCX57KPqLSjKg0V6pFvo07oxpwA4v57JbucYJ1Fnw3XTXbEJDBAbiUU
+Jdd4gD9whtlEaR7A6XhNW5MD/qGxXJVHAOKuDqo/jk48avwOvtUYRqPPZNTZVkV6
+EPoDynXfdG4=
+=HrnK
 -----END PGP SIGNATURE-----
 
---Sig_/FgQlfGICMoQDEE/S=yifaHR--
+--Sig_/1br2WafW90.Eji2/xp2bGth--
