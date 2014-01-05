@@ -1,49 +1,67 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Looking for some advice on best way to identify drives / recover
- from issues
-Date: Sun, 05 Jan 2014 13:34:35 -0500
-Message-ID: <52C9A5BB.4090803@turmel.org>
-References: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: Why 4k native drives haven't arrived
+Date: Sun, 5 Jan 2014 18:48:54 +0000
+Message-ID: <21193.43286.201949.339364@tree.ty.sabi.co.uk>
+References: <52C61807.6050906@hardwarefreak.com>
+	<yq1d2k8zsie.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
+In-Reply-To: <yq1d2k8zsie.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dylan Distasio <interzone@gmail.com>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good afternoon Dylan,
+[ ... ]
 
-On 01/05/2014 10:04 AM, Dylan Distasio wrote:
-> Hi all-
+> DASD on the mainframe is 4Kn, for instance. And there are a
+> bunch of SAN devices and SSDs out there that also report
+> themselves as 4Kn.
 
-[trim /]
+Some HW RAID host adapters can be configured to offer the host
+4KiB sectors too.
 
-> Unfortunately, I did not take the time to physically label the drives
-> in the box (there are close to 20) as I built these, and had been
-> meaning to, but life got in the way.  Since I have had no issues with
-> these arrays in a very long time, I don't even remember if I split
-> them across controllers or what.
+> So devices absolutely exist and are available. 4Kn harddrives
+> are harder to come by, however. SAS/FC drives are available
+> formatted as 4Kn when you order them. Some 512n drives can be
+> reformatted. But you won't find 4Kn formatted drives in retail.
 
-[trim /]
+But as mentioned later on they have been available for
+years. Also I remember buying some old generation of SATA WD
+Green drive that had 4096 logical sectors, quickly superceded by
+emulated drives in later updates, as major OS support some years
+ago was not quite there yet.
 
-> Will that give me enough info to figure out which drive belongs to
-> which array?  Does anyone have any other suggestions?  I am not sure
-> of the current state of ANY of the arrays that were on this box, but I
-> don't want to make things worse by booting this system up with some
-> drives missing because I've unplugged them, and having the a bad
-> situation get worse.
+> 4Kn SATA works fine in Linux as well but has failed to get any
+> traction. Mainly because there is no win for the user. Just
+> lots of pain. [ ... ] The drive vendors pushed 4Kn for years
+> and years. The problem was that to the host there is no
+> benefit whatsoever. Just lots of pain throughout the entire
+> I/O stack (BIOS, OS, HBA ROMs, RAID controller firmware). And
+> no win. None.
 
-I created a script for precisely this type of documentation task, keyed
-to drive serial numbers and UUIDs wherever identifiable.
+There are some obvious wins to addressing in 4KiB sectors, the
+most important of which is the avoidance of RMW as a possibility.
 
-https://github.com/pturmel/lsdrv
+But there is another important short term win, as older storage
+protols and formats relate maximum disk or partition or filetree
+capacity to maximum number of sectors addressable, which is
+often fixed at below 2^32 or 2^31, so addresses in units of 4KiB
+sectors allow 8 times more capacity than 512B ones.
 
-(If any of your drive serial numbers are entirely numeric, you'll want
-the patch shown in the open issues)
+This is particularly important for drives partitioned using MBR
+partitions with FAT32 filetrees in them, which is why this is
+the case especially for USB drives:
 
-HTH,
+> [ ... ]  Actually, >2TB USB drives typically expose 4Kn to the
+> host. For that reason there are already problems with XP and
+> big drives.
 
-Phil
+As for example here:
 
+  http://kb.netgear.com/app/answers/detail/a_id/22039/~/readyshare-and-usb-hard-drives-with-4kb-sector-size
+
+and ingeneral in several reports here:
+
+  http://www.google.com/search?btnG=SEARCH&num=100&as_epq=Logical+Sector+size+4096+bytes
