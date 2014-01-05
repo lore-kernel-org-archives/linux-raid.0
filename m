@@ -1,90 +1,91 @@
-From: Fabian Knorr <knorrfab@fim.uni-passau.de>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Recovering an Array with inconsistent Superblocks
-Date: Sun, 05 Jan 2014 10:07:50 +0100
-Message-ID: <1388912870.3591.4.camel@vessel>
-References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>
-	 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>
+Date: Sun, 5 Jan 2014 20:56:12 +1100
+Message-ID: <20140105205612.093276ef@notabene.brown>
+References: <1388829881.16265.20.camel@vessel>
+	<52C835C9.3050707@turmel.org>
+	<1388873143.7641.20.camel@vessel>
+	<52C8C433.5030403@turmel.org>
+	<1388912870.3591.4.camel@vessel>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-ZLZjAOA1OWFoH2YG5RJq"
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Lcu0mub.+XN6=5vFw6cNYt7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C8C433.5030403@turmel.org>
+In-Reply-To: <1388912870.3591.4.camel@vessel>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: Fabian Knorr <knorrfab@fim.uni-passau.de>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/Lcu0mub.+XN6=5vFw6cNYt7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
---=-ZLZjAOA1OWFoH2YG5RJq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+On Sun, 05 Jan 2014 10:07:50 +0100 Fabian Knorr <knorrfab@fim.uni-passau.de>
+wrote:
 
-> Try this:
-> 
-> mdadm --stop /dev/md0
-> 
-> mdadm -Afv /dev/md0 /dev/sd[bcefghi]1
-> 
-> It leaves out /dev/sda, which appears to have been the spare in the
-> original setup.
-> 
-> If MD is happy after that, use fsck -n on your logical volumes to verify
-> your FS integrity, and/or see the extent of the damage (little or none,
-> I think).
+> > Try this:
+> >=20
+> > mdadm --stop /dev/md0
+> >=20
+> > mdadm -Afv /dev/md0 /dev/sd[bcefghi]1
+> >=20
+> > It leaves out /dev/sda, which appears to have been the spare in the
+> > original setup.
+> >=20
+> > If MD is happy after that, use fsck -n on your logical volumes to verify
+> > your FS integrity, and/or see the extent of the damage (little or none,
+> > I think).
+>=20
+> This had the same result as simply trying --assemble --scan, see
+> "assemble.log". I tried using sda1 instead of sdb1 as well as the both
+> seem to have ID 4 ("assemble2.log"), same thing again.
+>=20
+> Do you have any idea why mdadm seems to ignore --force and does not add
+> the outdated disks? (Or am I misinterpreting --force?)
 
-This had the same result as simply trying --assemble --scan, see
-"assemble.log". I tried using sda1 instead of sdb1 as well as the both
-seem to have ID 4 ("assemble2.log"), same thing again.
+I haven't read the whole thread, but this sounds like the bug fixed by:
 
-Do you have any idea why mdadm seems to ignore --force and does not add
-the outdated disks? (Or am I misinterpreting --force?)
+commit f81a2b56c4b437f66aaf5582a9c6b7f5ab2103c4
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Oct 22 09:55:04 2013 +1100
 
-Thanks.
+    Assembe: fix bug in force_array - it wasn't forcing properly.
 
-Fabian
 
---=-ZLZjAOA1OWFoH2YG5RJq
-Content-Disposition: attachment; filename="assemble.log"
-Content-Type: text/x-log; name="assemble.log"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+try getting mdadm from git and building that
+  git clone git://neil.brown.name/mdadm
+  cd mdadm
+  make
 
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 6.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 3.
-mdadm: added /dev/sdg1 to /dev/md0 as 1
-mdadm: added /dev/sdh1 to /dev/md0 as 2
-mdadm: added /dev/sdi1 to /dev/md0 as 3
-mdadm: added /dev/sdb1 to /dev/md0 as 4 (possibly out of date)
-mdadm: added /dev/sdc1 to /dev/md0 as 5 (possibly out of date)
-mdadm: added /dev/sde1 to /dev/md0 as 6 (possibly out of date)
-mdadm: added /dev/sdf1 to /dev/md0 as 0
-mdadm: /dev/md0 assembled from 4 drives - not enough to start the array.
+NeilBrown
 
---=-ZLZjAOA1OWFoH2YG5RJq
-Content-Disposition: attachment; filename="assemble2.log"
-Content-Type: text/x-log; name="assemble2.log"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+>=20
+> Thanks.
+>=20
+> Fabian
 
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 6.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 3.
-mdadm: added /dev/sdg1 to /dev/md0 as 1
-mdadm: added /dev/sdh1 to /dev/md0 as 2
-mdadm: added /dev/sdi1 to /dev/md0 as 3
-mdadm: added /dev/sda1 to /dev/md0 as 4 (possibly out of date)
-mdadm: added /dev/sdc1 to /dev/md0 as 5 (possibly out of date)
-mdadm: added /dev/sde1 to /dev/md0 as 6 (possibly out of date)
-mdadm: added /dev/sdf1 to /dev/md0 as 0
-mdadm: /dev/md0 assembled from 4 drives - not enough to start the array.
 
---=-ZLZjAOA1OWFoH2YG5RJq--
+--Sig_/Lcu0mub.+XN6=5vFw6cNYt7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUsksQjnsnt1WYoG5AQJO1Q//ZoKZkvM6ASMq2rTtMVAvxx3BAXuam7rt
+NNT79CDslWjbZJV/3eMzdGFvw5vu+hTndGPs+e7on1/GCukB1Y9v8OFWdS9A/qVS
+jSu4FuMVgGRJwop5XqyMWpRvW7/b9GIb1UN2g2cGeWfdf7YQkRMwk6P1g1Eo/r0T
+0SJ+wA3szVf3jS35w19CdDxbywk12i1wwpQpZ9/ITSaLXE/XaC261GooYOtTmLPv
+0sO34k/C+gj8CjJnbpQE/WaFTEmm+i5fVjv7b0JJ3mWCNCq2qDn6qYcRWBrfq9aU
+A81bfqK5H7iJRblgauczF1CkAJxw6zWBJN1Dt3J/AyK1blx2z3BOVNq4V8pgZStL
+hKLbV6Nf08P+quYI3BLXTBWqfZU6O0wspD2/eU4J0gPLWy43t7Xk5AZN7Ptj76S1
+tU4Uec3Q3wbHgs2mdoUFZbrPW2GWKJbZTiKWaKPeeTJknhKNY4ITaQqd4bQsWKFr
+z9cvRRtFHfFF0O/vaXoGciMBkP1ohOLu7qd7Lr2cQIeYOFeIFP+3VZu0y33p682G
+W9JIxz8E0+DWrJ99sY1El3jKbup6SjCeWDLGHsZUgeQl786QEiyeedobx9PXAvM/
+BM4w8Sl+GNiZ075QV6gV113DDh6RRFg4+6CopjpjQqVTvHycxv9F2IYYR8lrP5IM
+w+0uucW9dfo=
+=G3Sm
+-----END PGP SIGNATURE-----
+
+--Sig_/Lcu0mub.+XN6=5vFw6cNYt7--
