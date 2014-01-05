@@ -1,71 +1,65 @@
-From: Fabian Knorr <knorrfab@fim.uni-passau.de>
-Subject: Re: Recovering an Array with inconsistent Superblocks
-Date: Sun, 05 Jan 2014 11:40:11 +0100
-Message-ID: <1388918411.3591.18.camel@vessel>
-References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>
-	 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>
-	 <1388912870.3591.4.camel@vessel> <20140105205612.093276ef@notabene.brown>
+From: Dylan Distasio <interzone@gmail.com>
+Subject: Looking for some advice on best way to identify drives / recover from issues
+Date: Sun, 5 Jan 2014 10:04:54 -0500
+Message-ID: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140105205612.093276ef@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I haven't read the whole thread, but this sounds like the bug fixed by:
-> 
-> commit f81a2b56c4b437f66aaf5582a9c6b7f5ab2103c4
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Tue Oct 22 09:55:04 2013 +1100
-> 
->     Assembe: fix bug in force_array - it wasn't forcing properly.
-> 
-> 
-> try getting mdadm from git and building that
->   git clone git://neil.brown.name/mdadm
->   cd mdadm
->   make
+Hi all-
 
-Thank you Neil, that did it. 
+I''ve been fortunate enough to not have to email this august group for
+advice regarding my mdadm arrays in quite awhile, but am looking for
+some suggestions.
 
-With the git version, I was able to re-assemble the array as Phil told
-me:
+I woke up this morning to something beeping in my headless Norco
+server case at home (never a promising start to the morning).  I was
+unable to ping the box which increased my dismay.  I proceeded to
+perform a hard reboot, and still nothing on the ping.  At this point,
+I plugged a monitor in to see what was happening on reboot.
 
-	mdadm --assemble /dev/md0 /dev/sd[bcefghi] --force --verbose
+Let me take a moment to provide details of my basic set up.  There are
+three separate HD controllers being used in this box: the motherboard
+headers, a supermicro PCI-X card (in a PCI slot), and a Highpoint
+RocketRaid SAS controller used as JBOD.
 
-mdadm told me that "7 devices are not enough to start the array" (see
-assemble.log). /proc/mdstat still showed /dev/md127 instead of md0, now
-correctly with 7 drives and r/o (mdstat.log).
+I have a number of separate mdadm arrays tied to this physical box
+that have been built over the years including a RAID6 one, a RAID10,
+and 2 mirrors.
 
-Still, I was able to see my LVM volumes after "vgchange -ay" and do a
-(read-only) fsck (fsck.log). It seemed to pass flawlessly for the volume
-"lvm-storage", which is the partition containing my data. "lvm-root"
-failed horribly, but this is just the system partition which I planned
-on re-building from scratch anyway.
+Unfortunately, I did not take the time to physically label the drives
+in the box (there are close to 20) as I built these, and had been
+meaning to, but life got in the way.  Since I have had no issues with
+these arrays in a very long time, I don't even remember if I split
+them across controllers or what.
 
+So back to the reboot, I can see the motherboard drives showing up as
+the POST runs through its paces.  I can then see what appears to be
+the Supermicro drives showing up, but when the Highpoint controller
+gets to it own internal boot screen, it hangs at detecting drives, and
+I am unable to get into the controller card BIOS by hitting ctrl-H
+(keyboard works though, as I can ctrl-alt-delete, so it is not locking
+the PC).
 
-I'd like to keep the state of lvm-storage as it is and re-install my
-system. Still, a few things I'm not sure about:
+So at this point, I don't know my point of failure.  I am guessing the
+Highpoint flaked out though, especially since I now believe that was
+the component beeping based on the PC restarting ok otherwise.
 
-	- How can I get mdadm to initiate resync and get write access 
-	  to my data?
+I am looking for advice on minimizing my risk of making things worse
+as I attempt to identify what drives belong which with array.   The
+RAID6 is my most immediate concern in getting back up and running.
 
-	- As lvm-root seems to be severly damaged, is there any chance
-	  of  errors in the lvm-storage FS that fsck -fn does not
-	  detect? Could re-syncing therefore destroy data I have access
-	  to now?
+My immediate thought was to disconnect all drives and then reconnect
+them one by one from a motherboard header, and use:
 
-	- Can I make sure that the working setup is written to all 
-	  superblocks, and zero the spare's superblock so that there is
-	  no such confusion when trying to assemble the array in the
-	  future?
+mdadm --examine /dev/sdX1
 
-Thanks.
-
-Fabian
-
-
-
+Will that give me enough info to figure out which drive belongs to
+which array?  Does anyone have any other suggestions?  I am not sure
+of the current state of ANY of the arrays that were on this box, but I
+don't want to make things worse by booting this system up with some
+drives missing because I've unplugged them, and having the a bad
+situation get worse.
