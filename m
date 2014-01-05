@@ -1,67 +1,122 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Why 4k native drives haven't arrived
-Date: Sun, 5 Jan 2014 18:48:54 +0000
-Message-ID: <21193.43286.201949.339364@tree.ty.sabi.co.uk>
-References: <52C61807.6050906@hardwarefreak.com>
-	<yq1d2k8zsie.fsf@sermon.lab.mkp.net>
+From: Krzysztof Adamski <k@adamski.org>
+Subject: Re: Looking for some advice on best way to identify drives /
+ recover from issues
+Date: Sun, 05 Jan 2014 14:37:54 -0500
+Message-ID: <1388950674.5058.53.camel@oxygen.netxsys.com>
+References: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
+	 <CAAMCDee00xy+06FnDq15qaXZmvh9TNSQQcfV8qExgu2DvScm2A@mail.gmail.com>
+	 <CAJrqPH-mOGeupVYJ3tCCOrtx8cnpjoyOP=fW5GZdKqD0HVtyRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1d2k8zsie.fsf@sermon.lab.mkp.net>
+In-Reply-To: <CAJrqPH-mOGeupVYJ3tCCOrtx8cnpjoyOP=fW5GZdKqD0HVtyRw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Dylan Distasio <interzone@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
+Boot with knoppix CD and examine the drives without MD starting. This is
+after you remove the highpoint card.
 
-> DASD on the mainframe is 4Kn, for instance. And there are a
-> bunch of SAN devices and SSDs out there that also report
-> themselves as 4Kn.
+This way you can figure out what drives belong to which array.
+If you can use lsdrv while running from knoppix.
 
-Some HW RAID host adapters can be configured to offer the host
-4KiB sectors too.
 
-> So devices absolutely exist and are available. 4Kn harddrives
-> are harder to come by, however. SAS/FC drives are available
-> formatted as 4Kn when you order them. Some 512n drives can be
-> reformatted. But you won't find 4Kn formatted drives in retail.
+On Sun, 2014-01-05 at 12:06 -0500, Dylan Distasio wrote:
+> Thanks for the trick.  The issue of complicating things with MD is
+> what I am concerned about.  I am afraid to boot the PC up with drives
+> missing (if for example I remove the highpoint controller) because it
+> may end up assembling an array with drives missing and degrading it
+> when it didn't need to be.
+> 
+> I'm really wishing I had labeled my drives now, since I don't know
+> which ones are part of which array physically, and don't want any
+> arrays to assemble until I do.  I was wondering if booting into a live
+> CD would be the way to go.  I need some way of checking which drive is
+> in which array without the risk of any arrays assembling.
+> 
+> On Sun, Jan 5, 2014 at 11:33 AM, Roger Heflin <rogerheflin@gmail.com> wrote:
+> > The crude but simple way is this:
+> >
+> > Get the machine up with all disks that will work.
+> >
+> > dd if=/dev/mdX of=/dev/null on each array, noting which disks light
+> > up, repeat on all arrays, same process can be done with each disk (dd
+> > if=/dev/sdX of=/dev/null ) to see exactly what disk maps to where.
+> > This trick is rather nice since it pretty much works with
+> > everything...even if you have a hw raid controlled and a failed disk,
+> > that will be the one disk that never lights, so you can find the
+> > failed on there also, just make sure that when done you have the
+> > expected number of disks to not light up.
+> >
+> > The biggest issue is that if the md's come up missing the 4 drives it
+> > may complicate things with MD, though at worse that should require
+> > some usage of the raw mdadm command to force things on after doing
+> > this.
+> >
+> > On Sun, Jan 5, 2014 at 9:04 AM, Dylan Distasio <interzone@gmail.com> wrote:
+> >> Hi all-
+> >>
+> >> I''ve been fortunate enough to not have to email this august group for
+> >> advice regarding my mdadm arrays in quite awhile, but am looking for
+> >> some suggestions.
+> >>
+> >> I woke up this morning to something beeping in my headless Norco
+> >> server case at home (never a promising start to the morning).  I was
+> >> unable to ping the box which increased my dismay.  I proceeded to
+> >> perform a hard reboot, and still nothing on the ping.  At this point,
+> >> I plugged a monitor in to see what was happening on reboot.
+> >>
+> >> Let me take a moment to provide details of my basic set up.  There are
+> >> three separate HD controllers being used in this box: the motherboard
+> >> headers, a supermicro PCI-X card (in a PCI slot), and a Highpoint
+> >> RocketRaid SAS controller used as JBOD.
+> >>
+> >> I have a number of separate mdadm arrays tied to this physical box
+> >> that have been built over the years including a RAID6 one, a RAID10,
+> >> and 2 mirrors.
+> >>
+> >> Unfortunately, I did not take the time to physically label the drives
+> >> in the box (there are close to 20) as I built these, and had been
+> >> meaning to, but life got in the way.  Since I have had no issues with
+> >> these arrays in a very long time, I don't even remember if I split
+> >> them across controllers or what.
+> >>
+> >> So back to the reboot, I can see the motherboard drives showing up as
+> >> the POST runs through its paces.  I can then see what appears to be
+> >> the Supermicro drives showing up, but when the Highpoint controller
+> >> gets to it own internal boot screen, it hangs at detecting drives, and
+> >> I am unable to get into the controller card BIOS by hitting ctrl-H
+> >> (keyboard works though, as I can ctrl-alt-delete, so it is not locking
+> >> the PC).
+> >>
+> >> So at this point, I don't know my point of failure.  I am guessing the
+> >> Highpoint flaked out though, especially since I now believe that was
+> >> the component beeping based on the PC restarting ok otherwise.
+> >>
+> >> I am looking for advice on minimizing my risk of making things worse
+> >> as I attempt to identify what drives belong which with array.   The
+> >> RAID6 is my most immediate concern in getting back up and running.
+> >>
+> >> My immediate thought was to disconnect all drives and then reconnect
+> >> them one by one from a motherboard header, and use:
+> >>
+> >> mdadm --examine /dev/sdX1
+> >>
+> >> Will that give me enough info to figure out which drive belongs to
+> >> which array?  Does anyone have any other suggestions?  I am not sure
+> >> of the current state of ANY of the arrays that were on this box, but I
+> >> don't want to make things worse by booting this system up with some
+> >> drives missing because I've unplugged them, and having the a bad
+> >> situation get worse.
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-But as mentioned later on they have been available for
-years. Also I remember buying some old generation of SATA WD
-Green drive that had 4096 logical sectors, quickly superceded by
-emulated drives in later updates, as major OS support some years
-ago was not quite there yet.
 
-> 4Kn SATA works fine in Linux as well but has failed to get any
-> traction. Mainly because there is no win for the user. Just
-> lots of pain. [ ... ] The drive vendors pushed 4Kn for years
-> and years. The problem was that to the host there is no
-> benefit whatsoever. Just lots of pain throughout the entire
-> I/O stack (BIOS, OS, HBA ROMs, RAID controller firmware). And
-> no win. None.
-
-There are some obvious wins to addressing in 4KiB sectors, the
-most important of which is the avoidance of RMW as a possibility.
-
-But there is another important short term win, as older storage
-protols and formats relate maximum disk or partition or filetree
-capacity to maximum number of sectors addressable, which is
-often fixed at below 2^32 or 2^31, so addresses in units of 4KiB
-sectors allow 8 times more capacity than 512B ones.
-
-This is particularly important for drives partitioned using MBR
-partitions with FAT32 filetrees in them, which is why this is
-the case especially for USB drives:
-
-> [ ... ]  Actually, >2TB USB drives typically expose 4Kn to the
-> host. For that reason there are already problems with XP and
-> big drives.
-
-As for example here:
-
-  http://kb.netgear.com/app/answers/detail/a_id/22039/~/readyshare-and-usb-hard-drives-with-4kb-sector-size
-
-and ingeneral in several reports here:
-
-  http://www.google.com/search?btnG=SEARCH&num=100&as_epq=Logical+Sector+size+4096+bytes
