@@ -1,103 +1,90 @@
-From: Phil Turmel <philip@turmel.org>
+From: Fabian Knorr <knorrfab@fim.uni-passau.de>
 Subject: Re: Recovering an Array with inconsistent Superblocks
-Date: Sat, 04 Jan 2014 21:32:19 -0500
-Message-ID: <52C8C433.5030403@turmel.org>
-References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org> <1388873143.7641.20.camel@vessel>
+Date: Sun, 05 Jan 2014 10:07:50 +0100
+Message-ID: <1388912870.3591.4.camel@vessel>
+References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>
+	 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-ZLZjAOA1OWFoH2YG5RJq"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1388873143.7641.20.camel@vessel>
+In-Reply-To: <52C8C433.5030403@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Fabian Knorr <knorrfab@fim.uni-passau.de>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/04/2014 05:05 PM, Fabian Knorr wrote:
-> Hi, Phil,
+
+--=-ZLZjAOA1OWFoH2YG5RJq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+> Try this:
 > 
-> thank you very much for your reply.
+> mdadm --stop /dev/md0
 > 
->> Side note: If you have a live spare available for a raid5, there's no
->> good reason not to reshape to a raid6, and very good reasons to do so.
+> mdadm -Afv /dev/md0 /dev/sd[bcefghi]1
 > 
-> I was worried that RAID6 would incur a significant load on the CPU,
-> especially if one disk fails. The system is a single-core Intel Atom.
-
-It does add more load, especially when degraded.  I guess it depends on
-your usage pattern.  I would try it before I gave up on the idea.
-
->> Device names are not guaranteed to remain identical from one boot to
->> another.  And often won't be if a removable device is plugged in at that
->> time.  The linux MD driver keeps identity data in the superblock that
->> makes the actual device names immaterial.
->>
->> It is really important that we get a "map" of device names to drive
->> serial numbers, and adjust all future operations to ensure we are
->> working with the correct names.  An excerpt from "ls -l
->> /dev/disk/by-id/" would do.  And you need to verify it after every boot
->> until this crisis is resolved.
+> It leaves out /dev/sda, which appears to have been the spare in the
+> original setup.
 > 
-> See the attachment "partitions". I grep'ed for raid partitions.
-> 
->> 1) raid.status appears to be from *after* your --add attempts.  That
->> means anything in those reports from those devices is useless.  So we
->> will have to figure out what that data was.
-> 
-> Could it be that --add only changed the superblock of one disk,
-> namely /dev/sdb in file from my first e-mail?
+> If MD is happy after that, use fsck -n on your logical volumes to verify
+> your FS integrity, and/or see the extent of the damage (little or none,
+> I think).
 
-/dev/sda actually.
+This had the same result as simply trying --assemble --scan, see
+"assemble.log". I tried using sda1 instead of sdb1 as well as the both
+seem to have ID 4 ("assemble2.log"), same thing again.
 
->> 2) You attempted to recreate the array.  If you left out
->> "--assume-clean", your data is toast.  Please show the precise command
->> line you used in your re-create attempt.  Also generate a fresh
->> "raid.status" for the current situation.
-> 
-> The only commands I used were --add /dev/sdb, --run, --assemble --scan,
-> --assemble --scan --force and --stop. I didn't try to re-create it, at
-> least not now. Also, the timestamp from raid.status (2011) is incorrect,
-> the array was re-created from scratch in the summer of 2012. I can't
-> tell why disks other than /dev/sdb1 have an invalid superblock.
+Do you have any idea why mdadm seems to ignore --force and does not add
+the outdated disks? (Or am I misinterpreting --force?)
 
-This is very good news.  In fact, I think --assemble --force can still
-be made to work....
+Thanks.
 
->> 3) The array seems to think it's member devices were /dev/sda through
->> /dev/sdh (not in that order).  Your "raid.status" has /dev/sd[abcefghi],
->> suggesting a rescue usb or some such is /dev/sdd. 
-> 
-> Yes, that's correct.
+Fabian
 
-Very good.
+--=-ZLZjAOA1OWFoH2YG5RJq
+Content-Disposition: attachment; filename="assemble.log"
+Content-Type: text/x-log; name="assemble.log"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
->> 4) Please describe the structure of the *content* of the array, so we
->> can suggest strategies to *safely* recognize when our future attempts to
->> --create --assume-clean have succeeded.  LVM?  Partitioned?  One big
->> filesystem?
-> 
-> I'm using the array as a physical volume for LVM.
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 6.
+mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 3.
+mdadm: added /dev/sdg1 to /dev/md0 as 1
+mdadm: added /dev/sdh1 to /dev/md0 as 2
+mdadm: added /dev/sdi1 to /dev/md0 as 3
+mdadm: added /dev/sdb1 to /dev/md0 as 4 (possibly out of date)
+mdadm: added /dev/sdc1 to /dev/md0 as 5 (possibly out of date)
+mdadm: added /dev/sde1 to /dev/md0 as 6 (possibly out of date)
+mdadm: added /dev/sdf1 to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 4 drives - not enough to start the array.
 
-Ok.
+--=-ZLZjAOA1OWFoH2YG5RJq
+Content-Disposition: attachment; filename="assemble2.log"
+Content-Type: text/x-log; name="assemble2.log"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-Try this:
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 6.
+mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 3.
+mdadm: added /dev/sdg1 to /dev/md0 as 1
+mdadm: added /dev/sdh1 to /dev/md0 as 2
+mdadm: added /dev/sdi1 to /dev/md0 as 3
+mdadm: added /dev/sda1 to /dev/md0 as 4 (possibly out of date)
+mdadm: added /dev/sdc1 to /dev/md0 as 5 (possibly out of date)
+mdadm: added /dev/sde1 to /dev/md0 as 6 (possibly out of date)
+mdadm: added /dev/sdf1 to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 4 drives - not enough to start the array.
 
-mdadm --stop /dev/md0
+--=-ZLZjAOA1OWFoH2YG5RJq--
 
-mdadm -Afv /dev/md0 /dev/sd[bcefghi]1
-
-It leaves out /dev/sda, which appears to have been the spare in the
-original setup.
-
-If MD is happy after that, use fsck -n on your logical volumes to verify
-your FS integrity, and/or see the extent of the damage (little or none,
-I think).
-
-If that works, you can --add /dev/sda1 again, and it will become the
-spare again.
-
-If it doesn't work, show everything printed by "mdadm -Afv" above.
-
-HTH,
-
-Phil
