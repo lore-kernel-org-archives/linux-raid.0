@@ -1,19 +1,37 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Looking for some advice on best way to identify drives / recover
  from issues
-Date: Sun, 5 Jan 2014 07:44:39 -0800
-Message-ID: <CAK2H+ecnYpDbyqQrFZwmkL4F++iVwDvhfxNqxzWETbFtvXJqUg@mail.gmail.com>
+Date: Sun, 5 Jan 2014 10:33:28 -0600
+Message-ID: <CAAMCDee00xy+06FnDq15qaXZmvh9TNSQQcfV8qExgu2DvScm2A@mail.gmail.com>
 References: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dylan Distasio <interzone@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Jan 5, 2014 at 7:04 AM, Dylan Distasio <interzone@gmail.com> wrote:
+The crude but simple way is this:
+
+Get the machine up with all disks that will work.
+
+dd if=/dev/mdX of=/dev/null on each array, noting which disks light
+up, repeat on all arrays, same process can be done with each disk (dd
+if=/dev/sdX of=/dev/null ) to see exactly what disk maps to where.
+This trick is rather nice since it pretty much works with
+everything...even if you have a hw raid controlled and a failed disk,
+that will be the one disk that never lights, so you can find the
+failed on there also, just make sure that when done you have the
+expected number of disks to not light up.
+
+The biggest issue is that if the md's come up missing the 4 drives it
+may complicate things with MD, though at worse that should require
+some usage of the raw mdadm command to force things on after doing
+this.
+
+On Sun, Jan 5, 2014 at 9:04 AM, Dylan Distasio <interzone@gmail.com> wrote:
 > Hi all-
 >
 > I''ve been fortunate enough to not have to email this august group for
@@ -72,37 +90,3 @@ On Sun, Jan 5, 2014 at 7:04 AM, Dylan Distasio <interzone@gmail.com> wrote:
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-I'm reacting to nothing more than 20 drives, no documentation and beeping:
-
-1) Are the beeps POST codes?
-
-http://www.computerhope.com/beep.htm
-
-2) Before making any physical changes I'd start by  drawing an
-accurate picture. Exactly what cables go to exactly what drives. Put a
-label on each drive & each cable (masking tape/black pen, etc.) so
-that if you do disassemble things you have a chance of getting it back
-together later in the same configuration.
-
-3) If I thought it was the High Point I'd likely just remove it from
-its slot and try booting again. (Assuming it's not needed to boot.)
-
-4) It's not clear to me from this email exactly what's required (if
-anything) in terms of RAID to make machine boot but if I could boot
-from nothing but what's attached to the MB then that what I'd be
-trying to do first. With 20 drives you could have a power supply
-failiing  and the system isn't getting enough power to run 20 drives,
-etc. Minimize as much as possible.
-
-5) If you get to where you can boot then you should run smartctl on
-each drive looking for any info. However I would understand if 20
-drives over a bunch of years means not all drives support S.M.A.R.T.
-
-6) Once you get it booting I'd run a check of any RAID that's included
-at that point to ensure it hadn't been damaged and then look to add
-things back in.
-
-Good luck!
-
-- Mark
