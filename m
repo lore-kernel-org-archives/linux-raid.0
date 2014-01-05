@@ -1,62 +1,80 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Looking for some advice on best way to identify drives / recover
- from issues
-Date: Sun, 5 Jan 2014 10:05:14 -0800
-Message-ID: <CAK2H+ee7Wq9BPvbqYbycUEMgvPAW4_NR9ANC2kQ9AnHrJYewJA@mail.gmail.com>
-References: <CAJrqPH9FNtomPygu1XPm2VQpJg3MKX1zUPCt0AOnzQ4GO7YEEQ@mail.gmail.com>
-	<CAK2H+ecnYpDbyqQrFZwmkL4F++iVwDvhfxNqxzWETbFtvXJqUg@mail.gmail.com>
-	<CAJrqPH_oj63UE6=n8OQZmM+mynjpUojy+0VLcvFXTmCO_JmmMQ@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Recovering an Array with inconsistent Superblocks
+Date: Sun, 05 Jan 2014 13:25:29 -0500
+Message-ID: <52C9A399.5040802@turmel.org>
+References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>	 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>	 <1388912870.3591.4.camel@vessel> <20140105205612.093276ef@notabene.brown> <1388918703.3591.20.camel@vessel>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJrqPH_oj63UE6=n8OQZmM+mynjpUojy+0VLcvFXTmCO_JmmMQ@mail.gmail.com>
+In-Reply-To: <1388918703.3591.20.camel@vessel>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dylan Distasio <interzone@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Fabian Knorr <knorrfab@fim.uni-passau.de>, NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 5, 2014 at 9:01 AM, Dylan Distasio <interzone@gmail.com> wrote:
->>
->> I'm reacting to nothing more than 20 drives, no documentation and beeping:
->>
->> 1) Are the beeps POST codes?
->>
->> http://www.computerhope.com/beep.htm
->
-> No, I woke up to it beeping, but it POSTs fine.  I think the beeping
-> was probably coming from the Highpoint card indicating array failure.
-> It no longer beeps, but it also won't pick up any drives.
+Hi Fabian,
 
->
-> The machine will boot fine from what I can see, but I am concerned
-> with disconnecting some drives and letting it boot because it might
-> result in a degraded array assembling simply because I did not
-> reconnect the drives it was looking for when I remove the highpoint
-> from the picture.
+I see good news to greet me this morning!
 
-A couple of things. Again, I'm not an md expert so be careful, but
-this is just informational:
+On 01/05/2014 05:45 AM, Fabian Knorr wrote:
+> $ cat /proc/mdstat 
+> Personalities : [raid6] [raid5] [raid4] 
+> md127 : active (auto-read-only) raid5 sde1[6] sdh1[2] sdi1[3] sdb1[4] sdg1[1] sdc1[5] sdf1[0]
+>       11721074688 blocks level 5, 1024k chunk, algorithm 2 [7/7] [UUUUUUU]
+>         resync=PENDING
 
-1) You said you have a couple of RAIDs in this box but you didn't
-describe them very completely. To the extent you can what are they?
-Give all the info you can: RAID type, number of drives, which drives,
-do the RAIDs use dev names (/dev/sda) or do you use UUIDs? What
-controllers are connected to what RAIDs.
+Auto-read-only will switch to read-write as soon as you actually write
+anything to the array.  Which will also kick off the resync.
 
-2) IMO if the machine is booting without picking up the drives
-attached to the Highpoint then it would seem logical that you could
-completely remove the Highpoint - actually take it out of the PCI slot
-- and still boot the machine. If you can do that and get to a Linux
-prompt then document and test what you have. After that's done and
-someone more md knowledgeable checks in on what you are reporting then
-you could look at the Highpoint drives and finally the Highpoint
-controller.
+> unused devices: <none>
+> 
+> $ mdadm --stop /dev/md127 
+> mdadm: Cannot get exclusive access to /dev/md127:Perhaps a running process, mounted filesystem or active volume group?
 
-Personally I wouldn't do anything in terms of assembling the RAID by
-hand until I had LOTS of mdadm data (Examine & Detail analysis for all
-drives and RAIDs) If you have another machine where you could test
-drives then I suppose you could remove them one-at-a-time and run
-smartstl on each one to determine if there's any obvious problem.
+LVM has the array open--but you don't need to stop it.  Just mount your
+storage filesystem.
 
-Good luck,
-Mark
+The damaged root filesystem undoubtedly had much info in RAM cache that
+couldn't be written after the controller hiccup.
+
+> I'd like to keep the state of lvm-storage as it is and re-install my
+> system. Still, a few things I'm not sure about:
+> 
+> 	- How can I get mdadm to initiate resync and get write access 
+> 	  to my data?
+
+See above.
+
+> 	- As lvm-root seems to be severly damaged, is there any chance
+> 	  of  errors in the lvm-storage FS that fsck -fn does not
+> 	  detect? Could re-syncing therefore destroy data I have access
+> 	  to now?
+
+Possible, but not any help for it.  The file allocation structures are
+Ok (that's what fsck can see), but if any contents had been just written
+at the time of the crash, parts of those writes might not have reached
+the dropped array members.
+
+> 	- Can I make sure that the working setup is written to all 
+> 	  superblocks, and zero the spare's superblock so that there is
+> 	  no such confusion when trying to assemble the array in the
+> 	  future?
+
+Yes, you can use --zero-superblock on the spare before you --add it back
+the array.  It might save you some warnings.
+
+Long term, consider creating a new array with metadata type 1.x so you
+can use a bitmap.  If you ever have an event like this, where one or
+more devices are disconnected then reconnected, it'll greatly shorten
+the recovery time.
+
+You should also learn to use --re-add instead of --add for devices that
+are supposed to already be part of an array.  Newer versions of mdadm
+try to help you with this.
+
+HTH,
+
+Phil
+
+(And thank you too, Neil, for a timely assist!)
