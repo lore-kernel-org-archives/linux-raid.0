@@ -1,47 +1,37 @@
-From: joystick <joystick@shiftmail.org>
+From: Alex Elsayed <eternaleye@gmail.com>
 Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
-Date: Mon, 06 Jan 2014 12:59:19 +0100
-Message-ID: <52CA9A97.4000803@shiftmail.org>
-References: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
+Date: Mon, 06 Jan 2014 05:11:02 -0800
+Message-ID: <laea0q$d0g$2@ger.gmane.org>
+References: <1389000716-3274-1-git-send-email-amadvance@gmail.com> <52CA9A97.4000803@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrea Mazzoleni <amadvance@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/01/2014 10:31, Andrea Mazzoleni wrote:
-> Hi,
->
-> This is a port to the Linux kernel of a RAID engine that I'm currently using
-> in a hobby project called SnapRAID. This engine supports up to six parities
-> levels and at the same time maintains compatibility with the existing Linux
-> RAID6 one.
->
+joystick wrote:
 
-This is just great Andrea,
-thank you for such Epiphany present.
+> On 06/01/2014 10:31, Andrea Mazzoleni wrote:
+>> Hi,
+>>
+>> This is a port to the Linux kernel of a RAID engine that I'm currently
+>> using in a hobby project called SnapRAID. This engine supports up to six
+>> parities levels and at the same time maintains compatibility with the
+>> existing Linux RAID6 one.
+>>
+> 
+> This is just great Andrea,
+> thank you for such Epiphany present.
+> 
+> Just by looking at the Subjects, it seems patch number 0/1 is missing.
+> It might have not gotten through to the lists, or be a numbering mistake.
 
-Just by looking at the Subjects, it seems patch number 0/1 is missing. 
-It might have not gotten through to the lists, or be a numbering mistake.
+No, the numbering style is ${index}/${total}, where index = 0 is a cover 
+letter. So there are two patches total, 1/2 and 2/2, with the cover letter 
+0/2.
 
-Does your code also support (shortcut) RMW as opposed to RCW, for all 
-parities?
-RMW is: for a 4k write: read just nparities+1data disks, recompute 
-parities, write nparities+1data disks,
-RCW is: "read all disks" prior to recompute parities...
-
-Part of such RMW code should be in handle_stripe_dirtying which is not 
-in your patch 0/2 but that might have been in patch 0/1 which apparently 
-didn't get through.
-
-See this patch by Kumar for support of RMW in raid6 (raid5 has it) which 
-unfortunately apparently wasn't merged up to now:
-http://marc.info/?l=linux-raid&m=136624783417452&w=2
-
-Thank you
-J.
+<snip>
 
