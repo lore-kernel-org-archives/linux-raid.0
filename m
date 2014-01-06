@@ -1,41 +1,61 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
-Date: Mon, 6 Jan 2014 10:13:09 -0800
-Message-ID: <CAK2H+efOLtq6onYASnZ5DsghVMp5AN70fx_uN8Ha5Wr3RxKx3A@mail.gmail.com>
-References: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid5: R5_WriteError is not cleared after rdev is marked as
+ Faulty
+Date: Tue, 7 Jan 2014 09:46:19 +1100
+Message-ID: <20140107094619.102c7abe@notabene.brown>
+References: <CAGRgLy6w=_nspVHu9YF9JHz3ADc5CkGL5N0bv6TGgopUpeaxGw@mail.gmail.com>
+	<20140106131505.0ee4c490@notabene.brown>
+	<CAGRgLy5wy54cCiXkuwTTqUugaKCukUgUNq7vzf75TV0=f2+2bA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/z_dD6UR95Ofy98mX3Ap9iip"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
+In-Reply-To: <CAGRgLy5wy54cCiXkuwTTqUugaKCukUgUNq7vzf75TV0=f2+2bA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrea Mazzoleni <amadvance@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andrea,
-   As others have said it looks interesting. Thanks for the efforts.
+--Sig_/z_dD6UR95Ofy98mX3Ap9iip
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-   Question: As an end-user type who currently uses mdadm RAID6, if I
-wanted to set up a dedicated machine to do some SnapRAID testing then
-what's the minimum disk hardware I'd need assuming Linux is just on
-it's own disk?
+On Mon, 6 Jan 2014 17:12:10 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-1) 1 drive for Linux
-2) 4 (or possibly 3) drives for a SnapRAID RAID6 device?
-3) 3 drives for a SnapRAID RAID5 device? (If RAID5 can even use
-SnapRAID. Not sure it can)
+> Thanks, Neil!
+> The test that was failing, passes now.
+>=20
+> Thanks for the patch,
+> Alex.
+>=20
+>=20
 
-   Are there any known issues using both mdadm and SnapRAID devices in
-the same system? Again, I don't care if there are and the machine dies
-a brutal death (which I doubt from your announcement) but just asking.
+Thanks for testing.  I'll send the fix upstream shortly.
 
-Cheers,
-Mark
+NeilBrown
 
-On Mon, Jan 6, 2014 at 1:31 AM, Andrea Mazzoleni <amadvance@gmail.com> wrote:
-> Hi,
->
-> This is a port to the Linux kernel of a RAID engine that I'm currently using
-> in a hobby project called SnapRAID. This engine supports up to six parities
-> levels and at the same time maintains compatibility with the existing Linux
-> RAID6 one.
+
+--Sig_/z_dD6UR95Ofy98mX3Ap9iip
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUssyOznsnt1WYoG5AQIiSBAAqXNlfThDaZBkjkhO+pCtIfT3CcoE1e7x
+YqrBB91fC84HBmrs+QEc5Vk7jwNaRCOwryNMoq7Vjoi0Hv7deXh14XDUWmmyqdss
+FSdD7l0z94sQhOown3G0JRspi7q8epZ14TozofrWOhksyK0F0NMD6CiQeVN/g0eu
+2PRvidChlA4oL90tKo235ZwUL50QN7nC9g9xnOu55naEceRPiuHAgvXVqhTM83cA
+VpkemYxaljtst6MNi3LVW7Ru6siY3WphIYe3iTGSq/VA5lkqPZ51LrU66AIgrIsC
+CwbcRDefFOh/yoNsTbMUs0U+wNy9bT63CnVA6iGN9FgX842WBtsGTk3iarpetD9L
+y0dnwvYup5IkWjlIbtpUTZD5FKU219TQzdJ+Mku3j3MdRDZ7ZFa3twLBo/2Vu74k
+XQWUlEvLy+E3asnOFsMVl/lx40qAk698seKINVrTP+euHzyYpAzun+wvPRdhYWgH
+Kvb+niC8iIWfmMovll3PX4JRI7NKI8hVgehE4LqKQWZ0oA4ALmnWDALOul4kz2R7
+2r67V/kyiY0W8BN923Ul5Y3iQU5XxCI85Yd9SQgVzzh4bIsru+GrKzlyvlyNxot+
+GknlToo/CeDLQHw5zX95OYdvi/yzb8E/N2602PSy5Hol3Y1okrWB/F5nbL4DA6nk
+1s0dzhk1AV0=
+=FITW
+-----END PGP SIGNATURE-----
+
+--Sig_/z_dD6UR95Ofy98mX3Ap9iip--
