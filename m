@@ -1,37 +1,33 @@
-From: Alex Elsayed <eternaleye@gmail.com>
-Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
-Date: Mon, 06 Jan 2014 05:11:02 -0800
-Message-ID: <laea0q$d0g$2@ger.gmane.org>
-References: <1389000716-3274-1-git-send-email-amadvance@gmail.com> <52CA9A97.4000803@shiftmail.org>
+From: Fabian Knorr <knorrfab@fim.uni-passau.de>
+Subject: Re: Recovering an Array with inconsistent Superblocks
+Date: Mon, 06 Jan 2014 15:00:46 +0100
+Message-ID: <1389016846.25272.5.camel@vessel>
+References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>
+		 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>
+		 <1388912870.3591.4.camel@vessel> <20140105205612.093276ef@notabene.brown>
+	 <1388918703.3591.20.camel@vessel> <52C9A399.5040802@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52C9A399.5040802@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-joystick wrote:
+Many thanks to both of you, Phil and Neil!
 
-> On 06/01/2014 10:31, Andrea Mazzoleni wrote:
->> Hi,
->>
->> This is a port to the Linux kernel of a RAID engine that I'm currently
->> using in a hobby project called SnapRAID. This engine supports up to six
->> parities levels and at the same time maintains compatibility with the
->> existing Linux RAID6 one.
->>
-> 
-> This is just great Andrea,
-> thank you for such Epiphany present.
-> 
-> Just by looking at the Subjects, it seems patch number 0/1 is missing.
-> It might have not gotten through to the lists, or be a numbering mistake.
+Everything works flawlessly now and I had no data loss whatsoever.
 
-No, the numbering style is ${index}/${total}, where index = 0 is a cover 
-letter. So there are two patches total, 1/2 and 2/2, with the cover letter 
-0/2.
+> Long term, consider creating a new array with metadata type 1.x so you
+> can use a bitmap.  If you ever have an event like this, where one or
+> more devices are disconnected then reconnected, it'll greatly shorten
+> the recovery time.
 
-<snip>
+But it's not possible to upgrade the metadata version of an existing
+array, is it? 
+
+Fabian
+
 
