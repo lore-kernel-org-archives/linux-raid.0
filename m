@@ -1,725 +1,188 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: looking for advice on raid0+raid5 array recovery with mdadm and
- sector offset
-Date: Mon, 6 Jan 2014 12:41:43 +1100
-Message-ID: <20140106124143.287894da@notabene.brown>
-References: <CANgodhBjRyNDwJwOxepqxX0zMaLtnniYpwWe_k7hjgfRP0UpvA@mail.gmail.com>
+Subject: Re: raid5: R5_WriteError is not cleared after rdev is marked as
+ Faulty
+Date: Mon, 6 Jan 2014 13:15:05 +1100
+Message-ID: <20140106131505.0ee4c490@notabene.brown>
+References: <CAGRgLy6w=_nspVHu9YF9JHz3ADc5CkGL5N0bv6TGgopUpeaxGw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/N914d9dXJ.wNvOzu0bq=qvo"; protocol="application/pgp-signature"
+ boundary="Sig_/VVs7AO2L4UWRuHLYze+Pgsr"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANgodhBjRyNDwJwOxepqxX0zMaLtnniYpwWe_k7hjgfRP0UpvA@mail.gmail.com>
+In-Reply-To: <CAGRgLy6w=_nspVHu9YF9JHz3ADc5CkGL5N0bv6TGgopUpeaxGw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: den Hoog <speedyden@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/N914d9dXJ.wNvOzu0bq=qvo
+--Sig_/VVs7AO2L4UWRuHLYze+Pgsr
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2 Jan 2014 20:45:24 +0100 den Hoog <speedyden@gmail.com> wrote:
+On Thu, 2 Jan 2014 17:58:33 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> Hi Neil
+> Hi Neil,
+> I see the following issue: if more than one stripe-head experiences an
+> error in raid5_end_write_request, then when first stripe-head is
+> handled, it eventually fails the disk, but when the second stripe-head
+> is handled, disk is already marked as Faulty, so R5_WriteError is not
+> cleared from this second stripe-head, but it still remains in the
+> stripe cache.
 >=20
-> I apologize if I made mistakes with the first mail post but probably
-> something went wrong, so this is a retry.
+> Below are more details on the flow. I added some prints to display the
+> flags values etc.
 >=20
-> I'm looking for advice on my plan to recover my raid5 volume with mdadm.
+> # raid6 is rebuilding a disk
 >=20
-> I was in a hurry and made a stupid mistake when upgrading the MB bios.
-> Forgot to turn on the Intel SATA raid, and Windows recovery erased the
-> first disk of 4.
+> # disk fails, as a result, raid5_end_write_request is called on two
+> stripe-heads:
+> [23369]md48066*[raid5_end_write_request:2002] sh[4560].flags=3D0x101A
+> dev[0].flags=3D0x20003 rdev[dm-6].flags=3D0x40
+> bio=3Dffff880028744fd8[4592(4560):8] WRITE ERROR
+> [13527.467363] [3842]md48066*[raid5_end_write_request:2002]
+> sh[4568].flags=3D0x101B dev[0].flags=3D0x20003 rdev[dm-6].flags=3D0x240
+> bio=3Dffff880028742bc0[4600(4568):8] WRITE ERROR
 >=20
-> It is an array of 4x4TB, in a matrix, having 1 RAID0 volume, and 1 RAID5 =
-vol.
-> Although the array displays a failed array in Windows, 3 disks are
-> active, and 1 is missing and showing as a non-raid array being
-> available.
+> As a result, appropriate r5dev's are marked with R5_WriteError on
+> these two stripe-heads.
 >=20
-> In (my) theory, I should still be able to recover the raid5 vol. with
-> the remaining 3 disks, however I should specify the specific sector
-> offset I guess.
-> I read many articles on this, but none of them address the
-> 'difficulty' of recovering a specific volume when multiple exist in an
-> array.
+> # raid5 calls analyse_stripe on behalf of stripe-head 4560 ((through
+> handle_active_stripes->handle_stripe->analyse_stripe)
 >=20
-> Although I've some backups, I really would appreciate your help in
-> getting this recovered.
-> sda is the SSD
-> sdb is the 'missing' and erased drive (serial ending on P82C)
-> sdc is the second drive in the array
-> sdd is the 3rd drive in the array
-> sde is the 4th drive in the array
-> sdf is the usb stick I'm running Fedora live from
+> # analyse_stripe performs this code:
+>         if (rdev && test_bit(R5_WriteError, &dev->flags)) {
+>             /* This flag does not apply to '.replacement'
+>              * only to .rdev, so make sure to check that*/
+>             struct md_rdev *rdev2 =3D rcu_dereference(
+>                 conf->disks[i].rdev);
+>             if (rdev2 =3D=3D rdev)
+>                 clear_bit(R5_Insync, &dev->flags);
+>             if (rdev2 && !test_bit(Faulty, &rdev2->flags)) {
+>                 s->handle_bad_blocks =3D 1;
+> it clears the R5_WriteError and sets handle_bad_blocks on the stripe-head
 >=20
-> What I've done so far :
+> # handle_stripe performs:
+>     if (s.handle_bad_blocks)
+>         for (i =3D disks; i--; ) {
+>             struct md_rdev *rdev;
+>             struct r5dev *dev =3D &sh->dev[i];
+>             if (test_and_clear_bit(R5_WriteError, &dev->flags)) {
+>                 /* We own a safe reference to the rdev */
+>                 rdev =3D conf->disks[i].rdev;
+>                 if (!rdev_set_badblocks(rdev, sh->sector,
+>                             STRIPE_SECTORS, 0))
+>                     md_error(conf->mddev, rdev);
+> this marks the rdev as Faulty and fails it (bad blocks are disabled)
 >=20
-> - Started Fedora 15 Live from a USB
-> - installed the mdadm package data_offset and compiled
+> # raid5d calls analyse_stripe on stripe-head 4568. However, rdev is
+> already marked as Faulty, so it does:
+>         if (rdev && test_bit(Faulty, &rdev->flags))
+>             rdev =3D NULL;
+> and later this condition does not hold:
+> if (rdev && test_bit(R5_WriteError, &dev->flags)) {
+> so R5_WriteError is not cleared, but this stripe-head is still valid
+> in the stripe cache.
 >=20
+> Dumping the state of this stripe-head in the stripe-cache (through
+> custom sysfs entry):
+> sh[4568].state=3D0x1010 disks=3D5 pdidx=3D2 qdidx=3D3
+>   dev[0].flags=3D0x20001 rdev[???].flags=3D0x0 (sector=3D13688)
+>   dev[1].flags=3D0x11 rdev[dm-7].flags=3D0x2 (sector=3D13720)
+>   dev[2].flags=3D0x11 rdev[dm-8].flags=3D0x2 (sector=3D0) *P*
+>   dev[3].flags=3D0x11 rdev[dm-9].flags=3D0x2 (sector=3D0) *Q*
+>   dev[4].flags=3D0x11 rdev[dm-10].flags=3D0x2 (sector=3D13656)
 >=20
-> My plan to work with an offset to recover the [HitR5] volume:
+> # Now user recovers the disk and re-adds the disk back into the array.
+> Rebuild starts, and eventually md_do_sync calls sync_request on this
+> stripe-head, which calls handle_stripe->analyse_stripe. Now
+> analyse_stripe sees the stale R5_WriteError flag and fails the disk,
+> which aborts the rebuild. Here is the stack trace, which detects the
+> stale R5_WriteError and fails the disk:
+> [<ffffffffa02d4543>] error+0x153/0x1d0 [raid456]
+> [<ffffffffa0445449>] md_error.part.39+0x19/0xa0 [md_mod]
+> [<ffffffffa0445503>] md_error+0x33/0x60 [md_mod]
+> [<ffffffffa02da07c>] handle_stripe+0x57c/0x2250 [raid456]
+> [<ffffffffa02dcacb>] sync_request+0x18b/0x390 [raid456]
+> [<ffffffffa044320c>] md_do_sync+0x76c/0xda0 [md_mod]
+> [<ffffffffa044084d>] md_thread+0x10d/0x140 [md_mod]
 >=20
-> - echo 1 > /sys/module/md_mod/parameters/
-> start_dirty_degraded
-> - mdadm -C /dev/md/imsm -e imsm -n 4 /dev/sdb /dev/sdc /dev/sdd /dev/sde
-> - mdadm -C /dev/md0 -l5 -n4 -c 128   /dev/sdb:1073746184s
-> /dev/sdc:1073746184s /dev/sdd:1073746184s /dev/sde:1073746184s
+> Does this analysis make sense? I don't know how to fix issue though. I
+> am looking at kernel (3.8.13 - as usual), but looking at your
+> for-linus branch, it seems like the same would happen.
+>=20
 
-This certainly won't work.
-You need "--data-offset=3Dvariable" for the "NNNNs" suffixes to be recognis=
-ed,
-and even then it only works for 1.x metadata, not for imsm metadata.
+Looks like:
 
-There isn't much support for sticking together broken IMSM arrays at
-present.  Your best bet is to re-create the whole array.
+commit 5d8c71f9e5fbdd95650be00294d238e27a363b5c
+Author: Adam Kwolek <adam.kwolek@intel.com>
+Date:   Fri Dec 9 14:26:11 2011 +1100
 
-So:
-   mdadm -C /dev/md/imsm -e imsm -n 4 /dev/sd[bcde]
-   mdadm -C /dev/md0 -l0 -n4 -c 128K -z 512G /dev/md/imsm
+    md: raid5 crash during degradation
 
-then check that /dev/md0 looks OK for the RAID0 array.
-If it does then you can continue to create the raid5 array
 
-   mdadm -C /dev/md1 -l5 -n4 -c 128k --assume-clean /dev/md/imsm
+introduced this problem (in linux 3.3) with an over-simple fix for a proble=
+m.
 
-That *should* then be correct.
+I think that we can not just reverted that patch as
 
-If the RAID0 array doesn't look right, the possible sdb really was cleared
-rather than just having the metadata erased.
-In this case the RAID0 is definitely gone and it will be a bit harder to
-create the RAID5.  It could be something like:
+commit 14a75d3e07c784c004b4b44b34af996b8e4ac453
+Author: NeilBrown <neilb@suse.de>
+Date:   Fri Dec 23 10:17:52 2011 +1100
 
-   mdadm -C /dev/md1 -l5 -n4 -c 128k missing /dev/sd[cde]
+    md/raid5: preferentially read from replacement device if possible.
 
-but I'm not sure that 'missing' is works for imsm.  If you need to go this
-way I can try to make 'missing' for for imsm.  It shouldn't be too hard.
 
+has effected a better fix.
+So the patch below should work.  Does that make sense to you?
+
+Thanks,
 NeilBrown
 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index cc055da02e2a..9168173deaf3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3608,7 +3608,7 @@ static void analyse_stripe(struct stripe_head *sh, st=
+ruct stripe_head_state *s)
+ 			 */
+ 			set_bit(R5_Insync, &dev->flags);
+=20
+-		if (rdev && test_bit(R5_WriteError, &dev->flags)) {
++		if (test_bit(R5_WriteError, &dev->flags)) {
+ 			/* This flag does not apply to '.replacement'
+ 			 * only to .rdev, so make sure to check that*/
+ 			struct md_rdev *rdev2 =3D rcu_dereference(
+@@ -3621,7 +3621,7 @@ static void analyse_stripe(struct stripe_head *sh, st=
+ruct stripe_head_state *s)
+ 			} else
+ 				clear_bit(R5_WriteError, &dev->flags);
+ 		}
+-		if (rdev && test_bit(R5_MadeGood, &dev->flags)) {
++		if (test_bit(R5_MadeGood, &dev->flags)) {
+ 			/* This flag does not apply to '.replacement'
+ 			 * only to .rdev, so make sure to check that*/
+ 			struct md_rdev *rdev2 =3D rcu_dereference(
 
->=20
->=20
-> I'm in doubt about working with missing disks first to start a
-> degraded array, with -C and missing for the first drive.
-> Or choosing assemble --auto, or as stated above and create the volume wit=
-h an
-> offset.
->=20
-> Another thing I'm not certain of: do I need to build a new mdadm with
-> data_offset, or is it already present in my 3.2.6 version?
-> When I built a new version with Neils mdadm I ended up with a 3.2.5 18May=
-2012
-> version.
->=20
-> As I guess I have only one shot at this I have not executed anything yet.
->=20
-> thanks many for your help, time and advice!
->=20
-> best regards Dennis
->=20
->=20
-> =3D=3D=3D=3D=3D=3D=3Doutput mdadm -Evvvvs=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D
->=20
-> root@localhost ~]# mdadm -Evvvvs
->=20
-> mdadm: No md superblock detected on /dev/dm-1.
->=20
-> mdadm: No md superblock detected on /dev/dm-0.
->=20
-> /dev/sdf1:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :    432871117 sectors at   3224498923 (type 07)
->=20
-> Partition[1] :   1953460034 sectors at   3272020941 (type 16)
->=20
-> Partition[3] :    924335794 sectors at     50200576 (type 00)
->=20
-> /dev/sdf:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :     15769600 sectors at         2048 (type 0b)
->=20
-> /dev/sde:
->=20
->           Magic : Intel Raid ISM Cfg Sig.
->=20
->         Version : 1.3.00
->=20
->     Orig Family : f3437c9b
->=20
->          Family : f3437c9d
->=20
->      Generation : 00002c5f
->=20
->      Attributes : All supported
->=20
->            UUID : 47b011c7:4a8531ea:7e94ab93:06034952
->=20
->        Checksum : 671f5f84 correct
->=20
->     MPB Sectors : 2
->=20
->           Disks : 4
->=20
->    RAID Devices : 2
->=20
->=20
->   Disk03 Serial : PL1321LAG4RXEH
->=20
->           State : active
->=20
->              Id : 00000005
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
-> [HitR0]:
->=20
->            UUID : 73ecf2cf:fcfd2598:d6523381:71e57931
->=20
->      RAID Level : 0
->=20
->         Members : 4
->=20
->           Slots : [_UUU]
->=20
->     Failed disk : 1
->=20
->       This Slot : 3
->=20
->      Array Size : 4294967296 (2048.00 GiB 2199.02 GB)
->=20
->    Per Dev Size : 1073742088 (512.00 GiB 549.76 GB)
->=20
->   Sector Offset : 0
->=20
->     Num Stripes : 4194304
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
-> [HitR5]:
->=20
->            UUID : 71626250:b8fc1262:3545d952:69eb329e
->=20
->      RAID Level : 5
->=20
->         Members : 4
->=20
->           Slots : [_UU_]
->=20
->     Failed disk : 3
->=20
->       This Slot : 3 (out-of-sync)
->=20
->      Array Size : 20220831744 (9642.04 GiB 10353.07 GB)
->=20
->    Per Dev Size : 6740279304 (3214.02 GiB 3451.02 GB)
->=20
->   Sector Offset : 1073746184
->=20
->     Num Stripes : 26329208
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
->   Disk00 Serial : PL2311LAG1P82C:0
->=20
->           State : active
->=20
->              Id : ffffffff
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk01 Serial : PL1321LAG4NMEH
->=20
->           State : active
->=20
->              Id : 00000003
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk02 Serial : PL1321LAG4TH4H
->=20
->           State : active
->=20
->              Id : 00000004
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
-> /dev/sdd:
->=20
->           Magic : Intel Raid ISM Cfg Sig.
->=20
->         Version : 1.3.00
->=20
->     Orig Family : f3437c9b
->=20
->          Family : f3437c9d
->=20
->      Generation : 00002c5f
->=20
->      Attributes : All supported
->=20
->            UUID : 47b011c7:4a8531ea:7e94ab93:06034952
->=20
->        Checksum : 671f5f84 correct
->=20
->     MPB Sectors : 2
->=20
->           Disks : 4
->=20
->    RAID Devices : 2
->=20
->=20
->   Disk02 Serial : PL1321LAG4TH4H
->=20
->           State : active
->=20
->              Id : 00000004
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
-> [HitR0]:
->=20
->            UUID : 73ecf2cf:fcfd2598:d6523381:71e57931
->=20
->      RAID Level : 0
->=20
->         Members : 4
->=20
->           Slots : [_UUU]
->=20
->     Failed disk : 1
->=20
->       This Slot : 2
->=20
->      Array Size : 4294967296 (2048.00 GiB 2199.02 GB)
->=20
->    Per Dev Size : 1073742088 (512.00 GiB 549.76 GB)
->=20
->   Sector Offset : 0
->=20
->     Num Stripes : 4194304
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
-> [HitR5]:
->=20
->            UUID : 71626250:b8fc1262:3545d952:69eb329e
->=20
->      RAID Level : 5
->=20
->         Members : 4
->=20
->           Slots : [_UU_]
->=20
->     Failed disk : 3
->=20
->       This Slot : 2
->=20
->      Array Size : 20220831744 (9642.04 GiB 10353.07 GB)
->=20
->    Per Dev Size : 6740279304 (3214.02 GiB 3451.02 GB)
->=20
->   Sector Offset : 1073746184
->=20
->     Num Stripes : 26329208
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
->   Disk00 Serial : PL2311LAG1P82C:0
->=20
->           State : active
->=20
->              Id : ffffffff
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk01 Serial : PL1321LAG4NMEH
->=20
->           State : active
->=20
->              Id : 00000003
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk03 Serial : PL1321LAG4RXEH
->=20
->           State : active
->=20
->              Id : 00000005
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
-> /dev/sdc:
->=20
->           Magic : Intel Raid ISM Cfg Sig.
->=20
->         Version : 1.3.00
->=20
->     Orig Family : f3437c9b
->=20
->          Family : f3437c9d
->=20
->      Generation : 00002c5f
->=20
->      Attributes : All supported
->=20
->            UUID : 47b011c7:4a8531ea:7e94ab93:06034952
->=20
->        Checksum : 671f5f84 correct
->=20
->     MPB Sectors : 2
->=20
->           Disks : 4
->=20
->    RAID Devices : 2
->=20
->=20
->   Disk01 Serial : PL1321LAG4NMEH
->=20
->           State : active
->=20
->              Id : 00000003
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
-> [HitR0]:
->=20
->            UUID : 73ecf2cf:fcfd2598:d6523381:71e57931
->=20
->      RAID Level : 0
->=20
->         Members : 4
->=20
->           Slots : [_UUU]
->=20
->     Failed disk : 1
->=20
->       This Slot : 1
->=20
->      Array Size : 4294967296 (2048.00 GiB 2199.02 GB)
->=20
->    Per Dev Size : 1073742088 (512.00 GiB 549.76 GB)
->=20
->   Sector Offset : 0
->=20
->     Num Stripes : 4194304
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
-> [HitR5]:
->=20
->            UUID : 71626250:b8fc1262:3545d952:69eb329e
->=20
->      RAID Level : 5
->=20
->         Members : 4
->=20
->           Slots : [_UU_]
->=20
->     Failed disk : 3
->=20
->       This Slot : 1
->=20
->      Array Size : 20220831744 (9642.04 GiB 10353.07 GB)
->=20
->    Per Dev Size : 6740279304 (3214.02 GiB 3451.02 GB)
->=20
->   Sector Offset : 1073746184
->=20
->     Num Stripes : 26329208
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
->   Disk00 Serial : PL2311LAG1P82C:0
->=20
->           State : active
->=20
->              Id : ffffffff
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk02 Serial : PL1321LAG4TH4H
->=20
->           State : active
->=20
->              Id : 00000004
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk03 Serial : PL1321LAG4RXEH
->=20
->           State : active
->=20
->              Id : 00000005
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
-> mdadm: No md superblock detected on /dev/sdb1.
->=20
-> /dev/sdb:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :   4294967295 sectors at            1 (type ee)
->=20
-> /dev/sda2:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :   1816210284 sectors at   1920221984 (type 72)
->=20
-> Partition[1] :   1953653108 sectors at   1936028192 (type 6c)
->=20
-> Partition[3] :          447 sectors at     27722122 (type 00)
->=20
-> /dev/sda1:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :   1816210284 sectors at   1920221984 (type 72)
->=20
-> Partition[1] :   1953653108 sectors at   1936028192 (type 6c)
->=20
-> Partition[3] :          447 sectors at     27722122 (type 00)
->=20
-> /dev/sda:
->=20
->    MBR Magic : aa55
->=20
-> Partition[0] :       716800 sectors at         2048 (type 07)
->=20
-> Partition[1] :    499396608 sectors at       718848 (type 07)
->=20
-> mdadm: No md superblock detected on /dev/loop4.
->=20
-> mdadm: No md superblock detected on /dev/loop3.
->=20
-> mdadm: No md superblock detected on /dev/loop2.
->=20
-> mdadm: No md superblock detected on /dev/loop1.
->=20
-> mdadm: No md superblock detected on /dev/loop0.
->=20
-> /dev/md127:
->=20
->           Magic : Intel Raid ISM Cfg Sig.
->=20
->         Version : 1.3.00
->=20
->     Orig Family : f3437c9b
->=20
->          Family : f3437c9d
->=20
->      Generation : 00002c5f
->=20
->      Attributes : All supported
->=20
->            UUID : 47b011c7:4a8531ea:7e94ab93:06034952
->=20
->        Checksum : 671f5f84 correct
->=20
->     MPB Sectors : 2
->=20
->           Disks : 4
->=20
->    RAID Devices : 2
->=20
->=20
->   Disk02 Serial : PL1321LAG4TH4H
->=20
->           State : active
->=20
->              Id : 00000004
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
-> [HitR0]:
->=20
->            UUID : 73ecf2cf:fcfd2598:d6523381:71e57931
->=20
->      RAID Level : 0
->=20
->         Members : 4
->=20
->           Slots : [_UUU]
->=20
->     Failed disk : 1
->=20
->       This Slot : 2
->=20
->      Array Size : 4294967296 (2048.00 GiB 2199.02 GB)
->=20
->    Per Dev Size : 1073742088 (512.00 GiB 549.76 GB)
->=20
->   Sector Offset : 0
->=20
->     Num Stripes : 4194304
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
-> [HitR5]:
->=20
->            UUID : 71626250:b8fc1262:3545d952:69eb329e
->=20
->      RAID Level : 5
->=20
->         Members : 4
->=20
->           Slots : [_UU_]
->=20
->     Failed disk : 3
->=20
->       This Slot : 2
->=20
->      Array Size : 20220831744 (9642.04 GiB 10353.07 GB)
->=20
->    Per Dev Size : 6740279304 (3214.02 GiB 3451.02 GB)
->=20
->   Sector Offset : 1073746184
->=20
->     Num Stripes : 26329208
->=20
->      Chunk Size : 128 KiB
->=20
->        Reserved : 0
->=20
->   Migrate State : idle
->=20
->       Map State : failed
->=20
->     Dirty State : clean
->=20
->=20
->   Disk00 Serial : PL2311LAG1P82C:0
->=20
->           State : active
->=20
->              Id : ffffffff
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk01 Serial : PL1321LAG4NMEH
->=20
->           State : active
->=20
->              Id : 00000003
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
->=20
->=20
->   Disk03 Serial : PL1321LAG4RXEH
->=20
->           State : active
->=20
->              Id : 00000005
->=20
->     Usable Size : 7814030862 (3726.02 GiB 4000.78 GB)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/N914d9dXJ.wNvOzu0bq=qvo
+--Sig_/VVs7AO2L4UWRuHLYze+Pgsr
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUsoJ1znsnt1WYoG5AQImwg/+Id0aUrGbo/vEibj63RAcJED25AdJHaqE
-jo9aa3omw8jB4wuMhKzEcJejza94xh/Jke3bLkMCYmG5uo7gAXznSc/Pq2kO/Rtx
-jDLSPotrkAysD389J4SLtQzzkXj+PovaYWHh7VGrBB3+d1Cc2hB3yXruiDNxytRR
-Gwr2ATiyNi/G5r2CJOB2DZm36ozdBWaANRsvJa1pZIgy/EEdqCmYZ5nZso4ulSwQ
-+dJZxyVTnJqgUYrOACxTkSxNhuqCnvrF2+xgx2llcMrzslvUUPNuxl5IHntsPW1P
-i5DSRvLmyGduCli5ElWQR35IqFpo5Qde12nag+f6dQ0cdsCbXLLvNcxHJvUrBSDK
-gaj8ua65gNJwSeg4zlyq5SO3Eiq4OaH19gNjzUmoHT5D0of9t/HQcq1uNEND36EX
-xpOcAtuBxIT1zINkeUw2ldpLBcnj1EoFBoEyRXWrAHsLne2JPqSn72w6zDI7XhQN
-mXuuaBOKFGGsnWdfADD80yIgCWLER+FVCxrFF1Vme+Yaly8y2v10meZ2k8bpyi9q
-sFCkNA4rommR1ApwiTg6ACXhg5dPHB4cnx8T40e2fOhNYx7RIPsNo7cVUrBV8rZX
-IsZYb+zDKLuPEKnUU3K4gTNvOfvlKBbdPXOaUu4gbT1s5TqnzR+/+FeQocGNi3Ik
-+8tPyI8Q5rc=
-=KK7o
+iQIVAwUBUsoRqTnsnt1WYoG5AQID1g/+OIXEmhyENDRI37vwcu3hVMSD6HAMGoXw
+gcp/H7uEThKeoq3PX5K2VRAyzxS5c2wIIeOm2f0kOqjlmelVUZVlZ4PL7hacJ4IZ
+gdl5bW193uuprlrCh532xuZxuh3KZ4MVtg4TUh9kXbCjxGp8Yz3hhBRc3mFx9L/4
+BHRlZOz3M8Rjwnv3bryMmQnsKQMJiWoLumFG2WvUOR9YPRkfPoDNRsinC+N3xThn
+EnDcCmg3tFRZ5WbCsPiE3Na2+V/0X7wIUzsAVg1P37TvPW3oF5qD6Xx9JI7Rxsir
+lnkX5wwjS919DQo0e+62bSx6cIBK/0Sj12w74uzPx7qk9772X8RxX2wpS9rVuWVK
+sCqPiFMZsh+w0C62Vo38oiM6JtNm3H5ZF46/2VfNfZmni2SuFbY+OWX2TSJ70Lbv
+Utj4EKpmK8FRgJhaeIFfI6hWGcqjYV/mxwNPfSs7uODcPNdJ5cPhWg7i9BTc8xWM
+c0EcTPPa4GV1egzANOKjg92ZmXUltavhkm5WSLzn9P3dykSz1Il3a1vdtVg4Hncb
+O42Dk0515cj0Im7sIK3EhwMSIhEBxHWImznpyTFoDe/3WmUwz5mWzZ/xlVTsv86d
+rtaXTpJT+B3Vn8+bDmfWgU8dDl6i77Qxf7nykROM+6S12ZUvYJTNpnCszYDMutjY
+pIC9C45d8bc=
+=iZjb
 -----END PGP SIGNATURE-----
 
---Sig_/N914d9dXJ.wNvOzu0bq=qvo--
+--Sig_/VVs7AO2L4UWRuHLYze+Pgsr--
