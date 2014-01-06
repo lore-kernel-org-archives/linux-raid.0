@@ -1,33 +1,33 @@
-From: Fabian Knorr <knorrfab@fim.uni-passau.de>
-Subject: Re: Recovering an Array with inconsistent Superblocks
-Date: Mon, 06 Jan 2014 15:00:46 +0100
-Message-ID: <1389016846.25272.5.camel@vessel>
-References: <1388829881.16265.20.camel@vessel> <52C835C9.3050707@turmel.org>
-		 <1388873143.7641.20.camel@vessel> <52C8C433.5030403@turmel.org>
-		 <1388912870.3591.4.camel@vessel> <20140105205612.093276ef@notabene.brown>
-	 <1388918703.3591.20.camel@vessel> <52C9A399.5040802@turmel.org>
+From: Chris Mason <clm@fb.com>
+Subject: Re: [RFC v2 2/2] fs: btrfs: Extends btrfs/raid56 to support up to
+ six parities
+Date: Mon, 6 Jan 2014 14:12:56 +0000
+Message-ID: <1389017609.23310.0.camel@ret.masoncoding.com>
+References: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
+	 <1389000716-3274-3-git-send-email-amadvance@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52C9A399.5040802@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1389000716-3274-3-git-send-email-amadvance@gmail.com>
+Content-Language: en-US
+Content-ID: <03D3FBCD996DF84691383E1810360F94@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "amadvance@gmail.com" <amadvance@gmail.com>
+Cc: Josef Bacik <jbacik@fb.com>, "neilb@suse.de" <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Many thanks to both of you, Phil and Neil!
+On Mon, 2014-01-06 at 10:31 +-0100, Andrea Mazzoleni wrote:
++AD4- This patch changes btrfs/raid56.c to use the new raid interface and
++AD4- extends its support to an arbitrary number of parities.
++AD4- 
++AD4- More in details, the two faila/failb failure indexes are now replaced
++AD4- with a fail+AFsAXQ- vector that keeps track of up to six failures, and now
++AD4- the new raid+AF8-par() and raid+AF8-rec() functions are used to handle with
++AD4- parity instead of the old xor/raid6 ones.
++AD4- 
 
-Everything works flawlessly now and I had no data loss whatsoever.
+Neat.  The faila/failb were always my least favorite part of the btrfs
+code +ADs-)  Did you test just raid5/6 or also the higher parity counts?
 
-> Long term, consider creating a new array with metadata type 1.x so you
-> can use a bitmap.  If you ever have an event like this, where one or
-> more devices are disconnected then reconnected, it'll greatly shorten
-> the recovery time.
-
-But it's not possible to upgrade the metadata version of an existing
-array, is it? 
-
-Fabian
-
-
+-chris
