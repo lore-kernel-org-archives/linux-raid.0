@@ -1,41 +1,269 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Why 4k native drives haven't arrived
-Date: Mon, 06 Jan 2014 18:50:24 -0500
-Message-ID: <yq161pwy8jj.fsf@sermon.lab.mkp.net>
-References: <52C61807.6050906@hardwarefreak.com>
-	<yq1d2k8zsie.fsf@sermon.lab.mkp.net>
-	<21193.43286.201949.339364@tree.ty.sabi.co.uk>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Can raid1-resync cause a corruption?
+Date: Tue, 7 Jan 2014 10:56:51 +1100
+Message-ID: <20140107105651.0cfbab31@notabene.brown>
+References: <CAGRgLy6qoYFW0BabE4qUT2kc61MEjpCS7x_PnxW+iCRUPzB6AA@mail.gmail.com>
+	<20131230084132.6f8b033e@notabene.brown>
+	<CAGRgLy4Uu_6k0bL1xWxyArKAvKNJL1J=Jn6MjHNAXX5bgryvHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/67NIAN+QBnIMiSClNBa8rh8"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21193.43286.201949.339364@tree.ty.sabi.co.uk> (Peter Grandi's
-	message of "Sun, 5 Jan 2014 18:48:54 +0000")
+In-Reply-To: <CAGRgLy4Uu_6k0bL1xWxyArKAvKNJL1J=Jn6MjHNAXX5bgryvHg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, yair@zadarastorage.com
 List-Id: linux-raid.ids
 
->>>>> "Peter" == Peter Grandi <pg@lxra2.for.sabi.co.UK> writes:
+--Sig_/67NIAN+QBnIMiSClNBa8rh8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Peter> There are some obvious wins to addressing in 4KiB sectors, the
-Peter> most important of which is the avoidance of RMW as a possibility.
+On Mon, 6 Jan 2014 18:58:30 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-There are also drives where you can disable RMW explicitly. I.e. the
-drive appears as 512e but will reject any misaligned non-multiple of 4K.
+> Hi Neil,
+>=20
+> looking again at resync/rebuild flow in raid1, I see that sync_sequest() =
+calls
+> raise_barrier(conf);
+> and only then sets
+> conf->next_resync =3D sector_nr;
+>=20
+> while a READ request calls:
+> wait_barrier(conf);
+> and only later:
+> rdisk =3D read_balance(conf, r1_bio, &max_sectors);
+> which is the one looking at next_resync.
+>=20
+> Basically, this guarantees that while READ is looking at next_resync,
+> there are no sync requests in-flight, so for sure the area up to
+> next_resync has already been synced. So my previous analysis seems to
+> be incorrect? Or still somehow the nest_resync race can happen?
 
-The downside to 4Kn is that it breaks applications using direct I/O that
-assume that the sector size is 512 bytes. Which essentially means all of
-them. Solaris opted to do RMW in software to overcome that issue.
-Whereas we are trying to get application writers to fix their code...
+I know I agreed with you last time when you were wrong, so agreeing with you
+again probably would sound very convincing, but it seems you are right.
+The RAID1 code doesn't seem to have a race here (which is good news to me of
+course).
 
-Peter> But there is another important short term win, as older storage
-Peter> protols and formats relate maximum disk or partition or filetree
-Peter> capacity to maximum number of sectors addressable, which is often
-Peter> fixed at below 2^32 or 2^31, so addresses in units of 4KiB
-Peter> sectors allow 8 times more capacity than 512B ones.
+So you have a corruption which could be caused by md/raid1, or by ext4fs, or
+by mysql.  Or maybe by your dm layer.  And you cannot easily reproduce it.
+That is not going to be easy to fix :-(   I'm afraid there is nothing I can
+suggest.
 
-Yep. Although in Linux we use 512-byte sectors throughout the I/O stack
-regardless of the device's logical block size.
+NeilBrown
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+
+>=20
+> Thanks,
+> Alex.
+>=20
+>=20
+> On Sun, Dec 29, 2013 at 11:41 PM, NeilBrown <neilb@suse.de> wrote:
+> > On Sun, 29 Dec 2013 13:27:35 +0200 Alexander Lyakas <alex.bolshoy@gmail=
+.com>
+> > wrote:
+> >
+> >> Hi Neil,
+> >> I see in the code, that read_balance is careful not to do
+> >> read-balancing, if the area in question is under resync:
+> >>     if (conf->mddev->recovery_cp < MaxSector &&
+> >>         (this_sector + sectors >=3D conf->next_resync)) {
+> >>         choose_first =3D 1;
+> >>         start_disk =3D 0;
+> >>     } else {
+> >>         choose_first =3D 0;
+> >>         start_disk =3D conf->last_used;
+> >>     }
+> >>
+> >> However, I see that next_resync is updated in sync_request:
+> >> conf->next_resync =3D sector_nr;
+> >> before actually completing the resync of that area, before even
+> >> submitting the read-bios. Is this correct? Should we perhaps update
+> >> next_sync at the point where we update curr_resync_completed in
+> >> md_do_sync?
+> >
+> > Your analysis appears correct.  Thanks!
+> > Can you send a patch?  If so, could you check if raid10 needs a similar=
+ fix?
+> >
+> > Thanks,
+> > NeilBrown
+> >
+> >
+> >
+> >> Kernel that I am looking at is Ubuntu-Precise 3.2.0-29.46.
+> >>
+> >> Below is a sequence of event that lead us to this question.
+> >>
+> >> We have a 3-disk RADI1, with ext4 mounted on top and mysql running,
+> >> whose files are on that ext4.
+> >> # 3-disk RAID1 was recovering from an unclean shutdown (crash) of the
+> >> machine, it started resync:
+> >>
+> >> Dec 26 08:05:42 vc kernel: [11576870.520393] md: md1 stopped.
+> >> Dec 26 08:05:42 vc kernel: [11576870.526898] md: bind<dm-2>
+> >> Dec 26 08:05:42 vc kernel: [11576870.534819] md: bind<dm-3>
+> >> Dec 26 08:05:42 vc kernel: [11576870.535908] md: bind<dm-1>
+> >> Dec 26 08:05:42 vc kernel: [11576870.580730] md/raid1:md1: not clean
+> >> -- starting background reconstruction
+> >> Dec 26 08:05:42 vc kernel: [11576870.580735] md/raid1:md1: active with
+> >> 3 out of 3 mirrors
+> >> Dec 26 08:05:42 vc kernel: [11576870.581399] created bitmap (1 pages)
+> >> for device md1
+> >> Dec 26 08:05:42 vc kernel: [11576870.582386] md1: bitmap initialized
+> >> from disk: read 1/1 pages, set 5 of 5 bits
+> >> Dec 26 08:05:42 vc kernel: [11576870.583335] md1: detected capacity
+> >> change from 0 to 320773120
+> >> Dec 26 08:05:42 vc kernel: [11576870.585593] md: resync of RAID array =
+md1
+> >> Dec 26 08:05:42 vc kernel: [11576870.585597] md: minimum _guaranteed_
+> >> speed: 10000 KB/sec/disk.
+> >> Dec 26 08:05:42 vc kernel: [11576870.585601] md: using maximum
+> >> available idle IO bandwidth (but not more than 200000 KB/sec) for
+> >> resync.
+> >> Dec 26 08:05:42 vc kernel: [11576870.585617] md: using 128k window,
+> >> over a total of 313255k.
+> >> Dec 26 08:05:42 vc kernel: [11576870.687868]  md1: unknown partition t=
+able
+> >>
+> >> # meanwhile, ext4 was mounted on top of it (dm-4 is a devicemapper
+> >> target on top of MD1, which collects some stats, but otherwise does
+> >> not interfere with bios in any way). ext4 also realized the unclean
+> >> shutdown:
+> >> Dec 26 08:05:42 vc kernel: [11576870.936166] [14831]dm_iostat
+> >> [dm_iostat_ctr] Successfully set up dm (252:4) iostats on top of
+> >> /dev/md1 (9:1), flags=3D0x80
+> >> Dec 26 08:05:43 vc kernel: [11576871.159955] [EXT4 FS bs=3D1024, gc=3D=
+39,
+> >> bpg=3D8192, ipg=3D2016, mo=3D9c02c818, mo2=3D0000]
+> >> Dec 26 08:05:43 vc kernel: [11576871.160092] EXT4-fs (dm-4): recovery =
+complete
+> >> Dec 26 08:05:43 vc kernel: [11576871.161099] EXT4-fs (dm-4): mounted
+> >> filesystem with ordered data mode. Opts: debug,data_err=3Dabort
+> >>
+> >> # mysql was started on top of ext4, and also realized the unclean shut=
+down:
+> >> InnoDB: Log scan progressed past the checkpoint lsn 18148639
+> >> 131226  8:05:44  InnoDB: Database was not shut down normally!
+> >> InnoDB: Starting crash recovery.
+> >> InnoDB: Reading tablespace information from the .ibd files...
+> >> InnoDB: Restoring possible half-written data pages from the doublewrite
+> >> InnoDB: buffer...
+> >> InnoDB: Doing recovery: scanned up to log sequence number 18154016
+> >> 131226  8:05:44  InnoDB: Starting an apply batch of log records to the
+> >> database...
+> >> InnoDB: Progress in percents: 11 12 13 14 15 16 17 18 19 20 21 22 23
+> >> 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46
+> >> 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69
+> >> 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92
+> >> 93 94 95 96 97 98 99
+> >> InnoDB: Apply batch completed
+> >> 131226  8:05:44  InnoDB: Waiting for the background threads to start
+> >>
+> >> 8 seconds later, raid1-resync completed:
+> >> Dec 26 08:05:52 vc kernel: [11576880.161306] md: md1: resync done.
+> >> Dec 26 08:05:52 vc kernel: [11576880.221701] RAID1 conf printout:
+> >> Dec 26 08:05:52 vc kernel: [11576880.221705]  --- wd:3 rd:3
+> >> Dec 26 08:05:52 vc kernel: [11576880.221709]  disk 0, wo:0, o:1, dev:d=
+m-1
+> >> Dec 26 08:05:52 vc kernel: [11576880.221712]  disk 1, wo:0, o:1, dev:d=
+m-2
+> >> Dec 26 08:05:52 vc kernel: [11576880.221714]  disk 2, wo:0, o:1, dev:d=
+m-3
+> >>
+> >> # The system ran normally for about 5 minutes, and then was shutdown c=
+leanly:
+> >> # mysql was stopped cleanly
+> >> 131226  8:11:28 [Note] /usr/sbin/mysqld: Normal shutdown
+> >> 131226  8:11:28 [Note] Event Scheduler: Purging the queue. 0 events
+> >> 131226  8:11:30 [Warning] /usr/sbin/mysqld: Forcing close of thread 68
+> >>  user: 'change_vsa_user'
+> >> 131226  8:11:30 [Warning] /usr/sbin/mysqld: Forcing close of thread 59
+> >>  user: 'standbyVc0'
+> >> 131226  8:11:30  InnoDB: Starting shutdown...
+> >> 131226  8:11:31  InnoDB: Waiting for 3 pages to be flushed
+> >> 131226  8:11:31  InnoDB: Shutdown completed; log sequence number 18626=
+878
+> >> 131226  8:11:31 [Note] /usr/sbin/mysqld: Shutdown complete
+> >>
+> >> # ext4 was cleanly unmounted (no print in the kernel for that)
+> >> # md1 was stopped cleanly
+> >> Dec 26 08:11:31 vc kernel: [11577219.716151] md1: detected capacity
+> >> change from 320773120 to 0
+> >> Dec 26 08:11:31 vc kernel: [11577219.716158] md: md1 stopped.
+> >> Dec 26 08:11:31 vc kernel: [11577219.716167] md: unbind<dm-1>
+> >> Dec 26 08:11:31 vc kernel: [11577219.740152] md: export_rdev(dm-1)
+> >> Dec 26 08:11:31 vc kernel: [11577219.740174] md: unbind<dm-3>
+> >> Dec 26 08:11:31 vc kernel: [11577219.772137] md: export_rdev(dm-3)
+> >> Dec 26 08:11:31 vc kernel: [11577219.772158] md: unbind<dm-2>
+> >> Dec 26 08:11:31 vc kernel: [11577219.810269] md: export_rdev(dm-2)
+> >>
+> >> # Then the system was brought up again
+> >> # md1 was assembled with a clean bitmap
+> >> Dec 26 08:11:40 vc kernel: [  337.918676] md: md1 stopped.
+> >> Dec 26 08:11:40 vc kernel: [  337.923588] md: bind<dm-2>
+> >> Dec 26 08:11:40 vc kernel: [  337.924085] md: bind<dm-3>
+> >> Dec 26 08:11:40 vc kernel: [  337.924511] md: bind<dm-1>
+> >> Dec 26 08:11:40 vc kernel: [  337.927127] md: raid1 personality
+> >> registered for level 1
+> >> Dec 26 08:11:40 vc kernel: [  337.927264] bio: create slab <bio-1> at 1
+> >> Dec 26 08:11:40 vc kernel: [  337.927435] md/raid1:md1: active with 3
+> >> out of 3 mirrors
+> >> Dec 26 08:11:40 vc kernel: [  337.927826] created bitmap (1 pages) for
+> >> device md1
+> >> Dec 26 08:11:40 vc kernel: [  337.928341] md1: bitmap initialized from
+> >> disk: read 1/1 pages, set 0 of 5 bits
+> >> Dec 26 08:11:40 vc kernel: [  337.929316] md1: detected capacity
+> >> change from 0 to 320773120
+> >> Dec 26 08:11:40 vc kernel: [  337.934610]  md1: unknown partition table
+> >>
+> >> # ext4 was mounted cleanly
+> >> Dec 26 08:11:40 vc kernel: [  338.036300] [6536]dm_iostat
+> >> [dm_iostat_ctr] Successfully set up dm (252:4) iostats on top of
+> >> /dev/md1 (9:1), flags=3D0x80
+> >> Dec 26 08:11:40 vc kernel: [  338.063921] [EXT4 FS bs=3D1024, gc=3D39,
+> >> bpg=3D8192, ipg=3D2016, mo=3D9c02c818, mo2=3D0000]
+> >> Dec 26 08:11:40 vc kernel: [  338.064104] EXT4-fs (dm-4): mounted
+> >> filesystem with ordered data mode. Opts: debug,data_err=3Dabort
+> >>
+> >> # but then mysql detected a corruption
+> >> 131226 8:11:40 InnoDB: Error: space id and page n:o stored in the page
+> >> InnoDB: read in are 543256175:543236195, should be 0:595!
+> >> InnoDB: Database page corruption on disk or a failed
+> >> InnoDB: file read of page 595.
+> >> InnoDB: You may have to recover from a backup.
+> >> 131226 8:11:40 InnoDB: Page dump in ascii and hex (16384 bytes):
+> >>
+> >> It happened only once, and we do a lot of testing of such unclean
+> >> shutdowns.The only theory that we have is that raid1 resync somehow
+> >> changed the underlying data of mysql/ext4.
+> >>
+> >> Thanks,
+> >> Alex.
+> >
+
+
+--Sig_/67NIAN+QBnIMiSClNBa8rh8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUstCwznsnt1WYoG5AQI+Bg/+Lcjd3RDe0S8RMO6sA2oHvMrk3beh6B/X
+/DES+G5G+VlRcgqcUlFT3rONS9Fgrv7lO14/tZblYwu9gb6aH2l4z+2rwHAdvO5/
+m9OBxnjWkF+ctuEFtM/1OzsUFzAu8b3EWCmoTNqwlp+RMgeiYY5KzyrvWvAQufMX
+bMI+cMJ5Hd5JNvoCQ8GO8QZ95nkBDtEhR2N6LWzS6OjmXDbMVZoQAA/gMz7C2swl
+c7ks5u81QsXj01HzKVmRwH65pKBAs+4fF4UFdi7mwk4Ma8P7vLhS78vTOXZz8Ct/
+7gWtKU9RJj8N7QWINe8sco6yhUWkfeo1CIQNpT5FIi/Jp0PdglDo6NGf8GwDj9IT
+TjvRHKnDm2IPtoEabwE7m25Xoo8bKoplpMZ/eZUGgJFySAqcH+psLL4PORwZqFrQ
+hBOvDo9HEUDgX4g1NzVgd4ySms8GfxY2PXd/PgbiwX/7vOmqK067CpkkrwQdXzV1
+UqU4F4eXVYKrzR7jBzl3DGMA3Wwo+riwOeAKP25WdOoW+fgADT4oVMD++Nk7veir
+0yyK7Dw31DqXgbtF2NTW/cP0a0HAEWnNOnlKER2WRC6lRK2tmdkq56BifFeuWY+f
+QJLftjFdBcgxjzqSPMuwJobvi/SbK9zaXbcaeRh8xfISYCNxH0sLf6mJcDJO6tGD
+WOGo8mvJxoM=
+=YNWf
+-----END PGP SIGNATURE-----
+
+--Sig_/67NIAN+QBnIMiSClNBa8rh8--
