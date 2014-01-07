@@ -1,35 +1,36 @@
 From: Andrea Mazzoleni <amadvance@gmail.com>
 Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
-Date: Tue, 7 Jan 2014 12:06:05 +0100
-Message-ID: <20140107110605.GC16044@gmail.com>
+Date: Tue, 7 Jan 2014 12:15:48 +0100
+Message-ID: <20140107111548.GD16044@gmail.com>
 References: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
- <52CA9A97.4000803@shiftmail.org>
+ <CAK2H+efOLtq6onYASnZ5DsghVMp5AN70fx_uN8Ha5Wr3RxKx3A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-btrfs-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52CA9A97.4000803@shiftmail.org>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: joystick <joystick@shiftmail.org>
-Cc: Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
+In-Reply-To: <CAK2H+efOLtq6onYASnZ5DsghVMp5AN70fx_uN8Ha5Wr3RxKx3A@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Andrea Mazzoleni <amadvance@gmail.com>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/06, joystick wrote:
-> Just by looking at the Subjects, it seems patch number 0/1 is
-> missing. It might have not gotten through to the lists, or be a
-> numbering mistake.
-The patch files can be also downloaded from: http://snapraid.sourceforge.net/linux/v2/
+Hi Mark,
 
-Sorry about that,
+On 01/06, Mark Knecht wrote:
+>    Question: As an end-user type who currently uses mdadm RAID6, if I
+> wanted to set up a dedicated machine to do some SnapRAID testing then
+> what's the minimum disk hardware I'd need assuming Linux is just on
+> it's own disk?
+The patch I sent is not related to SnapRAID. It's the same raid engine,
+but this is not going to change how mdadm RAID is working.
 
-> Does your code also support (shortcut) RMW as opposed to RCW, for
-> all parities?
-At now no. But it can be easily extended to add the parity computation
-of a single disk in a set of already computed parities and then provide the
-required support for RMW.
+When and if this patch will be accepted in the Linux kernel, you can
+expect to have mdadm to support triple/quad/and more parity just like RAID5
+and RAID6 are supported today.
 
-With SSSE3 this can be implemented in a very efficient way.
+But at now there is no new functionality to try. We still miss the
+required changes inside mdadm, that likely will happen in a second
+time.
 
 Ciao,
 Andrea
-
