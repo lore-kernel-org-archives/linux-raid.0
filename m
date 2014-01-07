@@ -1,1019 +1,271 @@
-From: Michael Samer <michael.samer@epos-cat.de>
-Subject: QNAP 8 port RAID5 md0 unmountable defective md superblocks
-Date: Tue, 07 Jan 2014 13:47:03 +0100
-Message-ID: <52CBF747.7020505@epos-cat.de>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Can raid1-resync cause a corruption?
+Date: Tue, 7 Jan 2014 17:01:23 +0200
+Message-ID: <CAGRgLy61Xx9US=nMuTdAKSnFXKGi=bH49gMZsNOD3Myv7NLQ3g@mail.gmail.com>
+References: <CAGRgLy6qoYFW0BabE4qUT2kc61MEjpCS7x_PnxW+iCRUPzB6AA@mail.gmail.com>
+	<20131230084132.6f8b033e@notabene.brown>
+	<CAGRgLy4Uu_6k0bL1xWxyArKAvKNJL1J=Jn6MjHNAXX5bgryvHg@mail.gmail.com>
+	<20140107105651.0cfbab31@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140107105651.0cfbab31@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, yair@zadarastorage.com
 List-Id: linux-raid.ids
 
-Hello list
-
-Currently I've the a mdadm system here with unmountable volume due to 
-disk (timeout and badblocks) failures. I transfered the disk already to 
-new HDs.
-
-Question: for this is a RAID5 the only redundant disk was lost to a 
-timeout sometime in the past and the second (/dev/sdf) had tons of 
-BadBlocks in the first and last 5MBs. I reconstructed the partition 
-table (as all 8 disks are build the same way), but how could I glue the 
-mdadm system together again. After that I'd start an integrity check of 
-the mdadm volume and afterwards an fsck. I attach the "mdadm --examine 
-/dev/sd*" so you might consider looking upon my problem
-
-the md0 is found, but the md superblocks are missing on four of the 8
-disks.
-Question: Where is this superblock located so I can see if it was damaged
-(badBlock). Is there a way to reconstruct this md superblock?
-
-A "cat /proc/mdstat"give md0 a inactive (because of the lost redundancy)
-
-
-The inability to mount the md0 is the main problem; the other md arrays 
-are uninteresting so far. The md0 consists of 8 disks combined into a 
-RAID5 Array; sometimes in the past one disk seems to be spilled out 
-(timeout which is quite a common problem with the WD Caviar Green 
-Editions due to their missing TLER feature). At 21.4 the /dev/sdf had 
-BadBlocks in the MBR/PT section and the array collapsed. The contact 
-with QNAP brought a few hints, but mainly: bring the backup into action 
-and rebuild. That's as much as I know about. All other actions have been 
-readonly to analyze. I've been the first to transfer the data to 
-Nearline Storage disks and looking a bit more into the system. In the 
-month waiting it seems two other disks seems to have badblocks gathered 
-as I could not explain the missing md superblocks with anything else. 
-Hitting such a critical area with such a low amount of BadBlocks puzzles 
-me somehow.
-
-Here's the mdadm --examine /dev/sd*:
-
-/dev/sda:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sda1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 5
-Preferred Minor : 9
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3e2e7326 - correct
-          Events : 763
-
-
-       Number   Major   Minor   RaidDevice State
-this     2       8        1        2      active sync   /dev/sda1
-
-    0     0       0        0        0      removed
-    1     1       8       17        1      active sync   /dev/sdb1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sda2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 126
-
-     Update Time : Mon Dec 16 14:46:37 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be161f0b - correct
-          Events : 59
-
-
-       Number   Major   Minor   RaidDevice State
-this     4       8        2        4      spare   /dev/sda2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8       98        2      spare   /dev/sdg2
-    3     3       8       82        3      spare   /dev/sdf2
-    4     4       8        2        4      spare   /dev/sda2
-/dev/sda3:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 52d7d080:5c40de46:bc741f30:65cb5a0d
-   Creation Time : Sun Jan 27 23:10:25 2013
-      Raid Level : raid5
-   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
-      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 0
-
-     Update Time : Sun Apr 21 14:14:49 2013
-           State : active
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 91564c42 - correct
-          Events : 136
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       51        3      active sync   /dev/sdd3
-
-    0     0       8        3        0      active sync   /dev/sda3
-    1     1       0        0        1      faulty removed
-    2     2       8       35        2      active sync   /dev/sdc3
-    3     3       8       51        3      active sync   /dev/sdd3
-    4     4       8       67        4      active sync   /dev/sde3
-    5     5       8       83        5      active sync   /dev/sdf3
-    6     6       8       99        6      active sync   /dev/sdg3
-    7     7       8      115        7      active sync   /dev/sdh3
-/dev/sda4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e299b3 - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     5       8        4        5      active sync   /dev/sda4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdb:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdb1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 5
-Preferred Minor : 9
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3e2e7334 - correct
-          Events : 763
-
-
-       Number   Major   Minor   RaidDevice State
-this     1       8       17        1      active sync   /dev/sdb1
-
-    0     0       0        0        0      removed
-    1     1       8       17        1      active sync   /dev/sdb1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sdb4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e299c5 - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     6       8       20        6      active sync   /dev/sdb4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdc:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 8
-Preferred Minor : 9
-
-     Update Time : Sun Apr 21 14:00:12 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 8
-Working Devices : 8
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : 3cf34b80 - correct
-          Events : 440
-
-
-       Number   Major   Minor   RaidDevice State
-this     0       8       17        0      active sync   /dev/sdb1
-
-    0     0       8       17        0      active sync   /dev/sdb1
-    1     1       8       49        1      active sync   /dev/sdd1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       33        3      active sync   /dev/sdc1
-    4     4       8       65        4      active sync   /dev/sde1
-    5     5       8       81        5      active sync   /dev/sdf1
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       8       97        7      active sync   /dev/sdg1
-/dev/sdc2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 8
-Preferred Minor : 8
-
-     Update Time : Thu Mar  7 09:42:20 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 8
-  Failed Devices : 0
-   Spare Devices : 6
-        Checksum : bc9f6dd7 - correct
-          Events : 31
-
-
-       Number   Major   Minor   RaidDevice State
-this     1       8       18        1      active sync   /dev/sdb2
-
-    0     0       8        2        0      active sync   /dev/sda2
-    1     1       8       18        1      active sync   /dev/sdb2
-    2     2       8      114        2      spare   /dev/sdh2
-    3     3       8       98        3      spare   /dev/sdg2
-    4     4       8       82        4      spare   /dev/sdf2
-    5     5       8       66        5      spare   /dev/sde2
-    6     6       8       50        6      spare   /dev/sdd2
-    7     7       8       34        7      spare   /dev/sdc2
-/dev/sdc3:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 52d7d080:5c40de46:bc741f30:65cb5a0d
-   Creation Time : Sun Jan 27 23:10:25 2013
-      Raid Level : raid5
-   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
-      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
-    Raid Devices : 8
-   Total Devices : 8
-Preferred Minor : 0
-
-     Update Time : Sun Apr 21 14:06:49 2013
-           State : active
-  Active Devices : 8
-Working Devices : 8
-  Failed Devices : 0
-   Spare Devices : 0
-        Checksum : 91564a57 - correct
-          Events : 135
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-       Number   Major   Minor   RaidDevice State
-this     1       8       19        1      active sync   /dev/sdb3
-
-    0     0       8        3        0      active sync   /dev/sda3
-    1     1       8       19        1      active sync   /dev/sdb3
-    2     2       8       35        2      active sync   /dev/sdc3
-    3     3       8       51        3      active sync   /dev/sdd3
-    4     4       8       67        4      active sync   /dev/sde3
-    5     5       8       83        5      active sync   /dev/sdf3
-    6     6       8       99        6      active sync   /dev/sdg3
-    7     7       8      115        7      active sync   /dev/sdh3
-/dev/sdc4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e299c9 - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     0       8       36        0      active sync   /dev/sdc4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdd:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdd1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 6
-Preferred Minor : 9
-
-     Update Time : Tue Sep 17 12:47:24 2013
-           State : active
-Internal Bitmap : present
-  Active Devices : 6
-Working Devices : 6
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3db7a8d2 - correct
-          Events : 723
-
-
-       Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
-
-    0     0       8        1        0      active sync   /dev/sda1
-    1     1       8       33        1      active sync   /dev/sdc1
-    2     2       8       49        2      active sync   /dev/sdd1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sdd2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 126
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be1615ae - correct
-          Events : 59
-
-
-       Number   Major   Minor   RaidDevice State
-this     0       8       50        0      active sync   /dev/sdd2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8       98        2      spare   /dev/sdg2
-    3     3       8       82        3      spare   /dev/sdf2
-    4     4       8        2        4      spare   /dev/sda2
-/dev/sdd4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e299dd - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     2       8       52        2      active sync   /dev/sdd4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sde:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sde1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 5
-Preferred Minor : 9
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3e2e7368 - correct
-          Events : 763
-
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       65        3      active sync   /dev/sde1
-
-    0     0       0        0        0      removed
-    1     1       8       17        1      active sync   /dev/sdb1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sde2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 8
-
-     Update Time : Fri Dec 13 12:02:41 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be1203d3 - correct
-          Events : 57
-
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       66        3      spare   /dev/sde2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8        2        2      spare   /dev/sda2
-    3     3       8       66        3      spare   /dev/sde2
-    4     4       8       98        4      spare   /dev/sdg2
-/dev/sde3:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 52d7d080:5c40de46:bc741f30:65cb5a0d
-   Creation Time : Sun Jan 27 23:10:25 2013
-      Raid Level : raid5
-   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
-      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 0
-
-     Update Time : Sun Apr 21 14:14:49 2013
-           State : active
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 91564c54 - correct
-          Events : 136
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       67        4      active sync   /dev/sde3
-
-    0     0       8        3        0      active sync   /dev/sda3
-    1     1       0        0        1      faulty removed
-    2     2       8       35        2      active sync   /dev/sdc3
-    3     3       8       51        3      active sync   /dev/sdd3
-    4     4       8       67        4      active sync   /dev/sde3
-    5     5       8       83        5      active sync   /dev/sdf3
-    6     6       8       99        6      active sync   /dev/sdg3
-    7     7       8      115        7      active sync   /dev/sdh3
-/dev/sde4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e299f1 - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       68        4      active sync   /dev/sde4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdf:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdf1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 9
-
-     Update Time : Sun Apr 21 14:50:18 2013
-           State : active
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3cf355e6 - correct
-          Events : 449
-
-
-       Number   Major   Minor   RaidDevice State
-this     5       8       81        5      active sync   /dev/sdf1
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       33        3      active sync   /dev/sdc1
-    4     4       0        0        4      faulty removed
-    5     5       8       81        5      active sync   /dev/sdf1
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       8       97        7      active sync   /dev/sdg1
-/dev/sdf2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 126
-
-     Update Time : Mon Dec 16 14:46:37 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be161f59 - correct
-          Events : 59
-
-
-       Number   Major   Minor   RaidDevice State
-this     3       8       82        3      spare   /dev/sdf2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8       98        2      spare   /dev/sdg2
-    3     3       8       82        3      spare   /dev/sdf2
-    4     4       8        2        4      spare   /dev/sda2
-/dev/sdf4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Wed Apr 24 14:30:56 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 61ab5765 - correct
-          Events : 1178
-
-
-       Number   Major   Minor   RaidDevice State
-this     5       8       84        5      active sync   /dev/sdf4
-
-    0     0       0        0        0      removed
-    1     1       0        0        1      faulty removed
-    2     2       8        4        2      active sync   /dev/sda4
-    3     3       8       36        3      active sync   /dev/sdc4
-    4     4       0        0        4      faulty removed
-    5     5       8       84        5      active sync   /dev/sdf4
-    6     6       8      116        6      active sync   /dev/sdh4
-    7     7       8      100        7      active sync   /dev/sdg4
-/dev/sdg:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdg1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 5
-Preferred Minor : 9
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3e2e738a - correct
-          Events : 763
-
-
-       Number   Major   Minor   RaidDevice State
-this     4       8       97        4      active sync   /dev/sdg1
-
-    0     0       0        0        0      removed
-    1     1       8       17        1      active sync   /dev/sdb1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sdg2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 126
-
-     Update Time : Mon Dec 16 14:46:37 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be161f67 - correct
-          Events : 59
-
-
-       Number   Major   Minor   RaidDevice State
-this     2       8       98        2      spare   /dev/sdg2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8       98        2      spare   /dev/sdg2
-    3     3       8       82        3      spare   /dev/sdf2
-    4     4       8        2        4      spare   /dev/sda2
-/dev/sdg4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e29a0f - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     3       8      100        3      active sync   /dev/sdg4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdh:
-    MBR Magic : aa55
-Partition[0] :      1060250 sectors at           40 (type 83)
-Partition[1] :      1060284 sectors at      1060296 (type 83)
-Partition[2] :   3903891386 sectors at      2120584 (type 83)
-Partition[3] :       996024 sectors at   3906011976 (type 83)
-/dev/sdh1:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 05105cec:26fef0b4:bf3f9508:05f7c111
-   Creation Time : Sun Jan 27 18:38:01 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 8
-   Total Devices : 5
-Preferred Minor : 9
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 5
-Working Devices : 5
-  Failed Devices : 2
-   Spare Devices : 0
-        Checksum : 3e2e739e - correct
-          Events : 763
-
-
-       Number   Major   Minor   RaidDevice State
-this     6       8      113        6      active sync   /dev/sdh1
-
-    0     0       0        0        0      removed
-    1     1       8       17        1      active sync   /dev/sdb1
-    2     2       8        1        2      active sync   /dev/sda1
-    3     3       8       65        3      active sync   /dev/sde1
-    4     4       8       97        4      active sync   /dev/sdg1
-    5     5       0        0        5      faulty removed
-    6     6       8      113        6      active sync   /dev/sdh1
-    7     7       0        0        7      faulty removed
-/dev/sdh2:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 39e8ca2f:3cfff703:4de89223:ac2a0c13
-   Creation Time : Thu Mar  7 09:41:55 2013
-      Raid Level : raid1
-   Used Dev Size : 530048 (517.71 MiB 542.77 MB)
-      Array Size : 530048 (517.71 MiB 542.77 MB)
-    Raid Devices : 2
-   Total Devices : 5
-Preferred Minor : 126
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-  Active Devices : 2
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 3
-        Checksum : be1615f0 - correct
-          Events : 59
-
-
-       Number   Major   Minor   RaidDevice State
-this     1       8      114        1      active sync   /dev/sdh2
-
-    0     0       8       50        0      active sync   /dev/sdd2
-    1     1       8      114        1      active sync   /dev/sdh2
-    2     2       8       98        2      spare   /dev/sdg2
-    3     3       8       82        3      spare   /dev/sdf2
-    4     4       8        2        4      spare   /dev/sda2
-/dev/sdh3:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 52d7d080:5c40de46:bc741f30:65cb5a0d
-   Creation Time : Sun Jan 27 23:10:25 2013
-      Raid Level : raid5
-   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
-      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 0
-
-     Update Time : Sun Apr 21 14:14:49 2013
-           State : active
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 91564c8a - correct
-          Events : 136
-
-          Layout : left-symmetric
-      Chunk Size : 64K
-
-       Number   Major   Minor   RaidDevice State
-this     7       8      115        7      active sync   /dev/sdh3
-
-    0     0       8        3        0      active sync   /dev/sda3
-    1     1       0        0        1      faulty removed
-    2     2       8       35        2      active sync   /dev/sdc3
-    3     3       8       51        3      active sync   /dev/sdd3
-    4     4       8       67        4      active sync   /dev/sde3
-    5     5       8       83        5      active sync   /dev/sdf3
-    6     6       8       99        6      active sync   /dev/sdg3
-    7     7       8      115        7      active sync   /dev/sdh3
-/dev/sdh4:
-           Magic : a92b4efc
-         Version : 0.90.00
-            UUID : 4bfc2d50:283e9f67:803faac1:21814c31
-   Creation Time : Sun Jan 27 18:38:10 2013
-      Raid Level : raid1
-   Used Dev Size : 458880 (448.20 MiB 469.89 MB)
-      Array Size : 458880 (448.20 MiB 469.89 MB)
-    Raid Devices : 8
-   Total Devices : 7
-Preferred Minor : 13
-
-     Update Time : Mon Dec 16 14:05:54 2013
-           State : clean
-Internal Bitmap : present
-  Active Devices : 7
-Working Devices : 7
-  Failed Devices : 1
-   Spare Devices : 0
-        Checksum : 62e29a1b - correct
-          Events : 4355
-
-
-       Number   Major   Minor   RaidDevice State
-this     1       8      116        1      active sync   /dev/sdh4
-
-    0     0       8       36        0      active sync   /dev/sdc4
-    1     1       8      116        1      active sync   /dev/sdh4
-    2     2       8       52        2      active sync   /dev/sdd4
-    3     3       8      100        3      active sync   /dev/sdg4
-    4     4       8       68        4      active sync   /dev/sde4
-    5     5       8        4        5      active sync   /dev/sda4
-    6     6       8       20        6      active sync   /dev/sdb4
-    7     7       0        0        7      faulty removed
-/dev/sdj:
-    MBR Magic : aa55
-Partition[0] :         4320 sectors at           32 (type 83)
-Partition[1] :       484608 sectors at         4352 (type 83)
-Partition[2] :       484608 sectors at       488960 (type 83)
-Partition[3] :        34048 sectors at       973568 (type 05)
-/dev/sdj4:
-    MBR Magic : aa55
-Partition[0] :        16608 sectors at           32 (type 83)
-Partition[1] :        17408 sectors at        16640 (type 05)
-
-
-
-
-Any hints? My first thought was restoring/copying/generating the md 
-superblock on all missing four member disks.
-
-Hope anyone got some better insight and inspiration than me :-)
-
-Cheers
-Michael Samer
-
-
+Hi Neil,
+Thank you for your comments. Yes, apparently in this case md/raid1 was
+not the cause. I studied the code more by adding prints and following
+the resync flow, but cannot see any obvious problem.
+
+I did find another case, in which raid1-resync can read phantom data,
+although this is not what happened to us:
+# raid1 has 3 disks A,B,C and is resyncing after an unclean shutdown.
+sync_request always selects disk=A as read_disk.
+# application reads from far sector (beyond next_resync), so
+read_balance() selects disk=A to read from (it is the first one)
+# disk A fails
+# resync aborts and restarts, now sync_request reads from B and syncs into C
+# application reads again from the same far sector, now read_balance()
+selects disk B to read from
+
+So potentially we could get a different data from these two reads. In
+our case, though, there were no disk failures.
+
+FWIW, the raid1 code I was once responsible for, treated this
+situation as follows:
+# READ comes from application
+# raid1 sees that it is resyncing, so it locks the relevant area of
+the raid1 and syncs it. Then it unlocks and proceeds to serve the READ
+normally
+# resync thread comes to appropriate area, locks it and sees that it
+has already been synced (bits are off in the bitmap), so it proceeds
+further
+
+However in md/raid1, there is no mechanism currently that can lock a
+part of the raid. We only have raise_barrier/wait_barrier that
+effectively locks the whole capacity.
+
+Is it, for example, reasonable to READ the data as you normally do,
+then to trigger a WRITE with the same data and only then to complete
+the original READ? There are a lot of inefficiencies here, I know,
+like re-writing the same data again on read_disk, and syncing this
+data again later. (I know, patches are welcome...)
+
+Thanks,
+Alex.
+
+On Tue, Jan 7, 2014 at 1:56 AM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 6 Jan 2014 18:58:30 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>>
+>> looking again at resync/rebuild flow in raid1, I see that sync_sequest() calls
+>> raise_barrier(conf);
+>> and only then sets
+>> conf->next_resync = sector_nr;
+>>
+>> while a READ request calls:
+>> wait_barrier(conf);
+>> and only later:
+>> rdisk = read_balance(conf, r1_bio, &max_sectors);
+>> which is the one looking at next_resync.
+>>
+>> Basically, this guarantees that while READ is looking at next_resync,
+>> there are no sync requests in-flight, so for sure the area up to
+>> next_resync has already been synced. So my previous analysis seems to
+>> be incorrect? Or still somehow the nest_resync race can happen?
+>
+> I know I agreed with you last time when you were wrong, so agreeing with you
+> again probably would sound very convincing, but it seems you are right.
+> The RAID1 code doesn't seem to have a race here (which is good news to me of
+> course).
+>
+> So you have a corruption which could be caused by md/raid1, or by ext4fs, or
+> by mysql.  Or maybe by your dm layer.  And you cannot easily reproduce it.
+> That is not going to be easy to fix :-(   I'm afraid there is nothing I can
+> suggest.
+>
+> NeilBrown
+>
+>
+>>
+>> Thanks,
+>> Alex.
+>>
+>>
+>> On Sun, Dec 29, 2013 at 11:41 PM, NeilBrown <neilb@suse.de> wrote:
+>> > On Sun, 29 Dec 2013 13:27:35 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+>> > wrote:
+>> >
+>> >> Hi Neil,
+>> >> I see in the code, that read_balance is careful not to do
+>> >> read-balancing, if the area in question is under resync:
+>> >>     if (conf->mddev->recovery_cp < MaxSector &&
+>> >>         (this_sector + sectors >= conf->next_resync)) {
+>> >>         choose_first = 1;
+>> >>         start_disk = 0;
+>> >>     } else {
+>> >>         choose_first = 0;
+>> >>         start_disk = conf->last_used;
+>> >>     }
+>> >>
+>> >> However, I see that next_resync is updated in sync_request:
+>> >> conf->next_resync = sector_nr;
+>> >> before actually completing the resync of that area, before even
+>> >> submitting the read-bios. Is this correct? Should we perhaps update
+>> >> next_sync at the point where we update curr_resync_completed in
+>> >> md_do_sync?
+>> >
+>> > Your analysis appears correct.  Thanks!
+>> > Can you send a patch?  If so, could you check if raid10 needs a similar fix?
+>> >
+>> > Thanks,
+>> > NeilBrown
+>> >
+>> >
+>> >
+>> >> Kernel that I am looking at is Ubuntu-Precise 3.2.0-29.46.
+>> >>
+>> >> Below is a sequence of event that lead us to this question.
+>> >>
+>> >> We have a 3-disk RADI1, with ext4 mounted on top and mysql running,
+>> >> whose files are on that ext4.
+>> >> # 3-disk RAID1 was recovering from an unclean shutdown (crash) of the
+>> >> machine, it started resync:
+>> >>
+>> >> Dec 26 08:05:42 vc kernel: [11576870.520393] md: md1 stopped.
+>> >> Dec 26 08:05:42 vc kernel: [11576870.526898] md: bind<dm-2>
+>> >> Dec 26 08:05:42 vc kernel: [11576870.534819] md: bind<dm-3>
+>> >> Dec 26 08:05:42 vc kernel: [11576870.535908] md: bind<dm-1>
+>> >> Dec 26 08:05:42 vc kernel: [11576870.580730] md/raid1:md1: not clean
+>> >> -- starting background reconstruction
+>> >> Dec 26 08:05:42 vc kernel: [11576870.580735] md/raid1:md1: active with
+>> >> 3 out of 3 mirrors
+>> >> Dec 26 08:05:42 vc kernel: [11576870.581399] created bitmap (1 pages)
+>> >> for device md1
+>> >> Dec 26 08:05:42 vc kernel: [11576870.582386] md1: bitmap initialized
+>> >> from disk: read 1/1 pages, set 5 of 5 bits
+>> >> Dec 26 08:05:42 vc kernel: [11576870.583335] md1: detected capacity
+>> >> change from 0 to 320773120
+>> >> Dec 26 08:05:42 vc kernel: [11576870.585593] md: resync of RAID array md1
+>> >> Dec 26 08:05:42 vc kernel: [11576870.585597] md: minimum _guaranteed_
+>> >> speed: 10000 KB/sec/disk.
+>> >> Dec 26 08:05:42 vc kernel: [11576870.585601] md: using maximum
+>> >> available idle IO bandwidth (but not more than 200000 KB/sec) for
+>> >> resync.
+>> >> Dec 26 08:05:42 vc kernel: [11576870.585617] md: using 128k window,
+>> >> over a total of 313255k.
+>> >> Dec 26 08:05:42 vc kernel: [11576870.687868]  md1: unknown partition table
+>> >>
+>> >> # meanwhile, ext4 was mounted on top of it (dm-4 is a devicemapper
+>> >> target on top of MD1, which collects some stats, but otherwise does
+>> >> not interfere with bios in any way). ext4 also realized the unclean
+>> >> shutdown:
+>> >> Dec 26 08:05:42 vc kernel: [11576870.936166] [14831]dm_iostat
+>> >> [dm_iostat_ctr] Successfully set up dm (252:4) iostats on top of
+>> >> /dev/md1 (9:1), flags=0x80
+>> >> Dec 26 08:05:43 vc kernel: [11576871.159955] [EXT4 FS bs=1024, gc=39,
+>> >> bpg=8192, ipg=2016, mo=9c02c818, mo2=0000]
+>> >> Dec 26 08:05:43 vc kernel: [11576871.160092] EXT4-fs (dm-4): recovery complete
+>> >> Dec 26 08:05:43 vc kernel: [11576871.161099] EXT4-fs (dm-4): mounted
+>> >> filesystem with ordered data mode. Opts: debug,data_err=abort
+>> >>
+>> >> # mysql was started on top of ext4, and also realized the unclean shutdown:
+>> >> InnoDB: Log scan progressed past the checkpoint lsn 18148639
+>> >> 131226  8:05:44  InnoDB: Database was not shut down normally!
+>> >> InnoDB: Starting crash recovery.
+>> >> InnoDB: Reading tablespace information from the .ibd files...
+>> >> InnoDB: Restoring possible half-written data pages from the doublewrite
+>> >> InnoDB: buffer...
+>> >> InnoDB: Doing recovery: scanned up to log sequence number 18154016
+>> >> 131226  8:05:44  InnoDB: Starting an apply batch of log records to the
+>> >> database...
+>> >> InnoDB: Progress in percents: 11 12 13 14 15 16 17 18 19 20 21 22 23
+>> >> 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46
+>> >> 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69
+>> >> 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92
+>> >> 93 94 95 96 97 98 99
+>> >> InnoDB: Apply batch completed
+>> >> 131226  8:05:44  InnoDB: Waiting for the background threads to start
+>> >>
+>> >> 8 seconds later, raid1-resync completed:
+>> >> Dec 26 08:05:52 vc kernel: [11576880.161306] md: md1: resync done.
+>> >> Dec 26 08:05:52 vc kernel: [11576880.221701] RAID1 conf printout:
+>> >> Dec 26 08:05:52 vc kernel: [11576880.221705]  --- wd:3 rd:3
+>> >> Dec 26 08:05:52 vc kernel: [11576880.221709]  disk 0, wo:0, o:1, dev:dm-1
+>> >> Dec 26 08:05:52 vc kernel: [11576880.221712]  disk 1, wo:0, o:1, dev:dm-2
+>> >> Dec 26 08:05:52 vc kernel: [11576880.221714]  disk 2, wo:0, o:1, dev:dm-3
+>> >>
+>> >> # The system ran normally for about 5 minutes, and then was shutdown cleanly:
+>> >> # mysql was stopped cleanly
+>> >> 131226  8:11:28 [Note] /usr/sbin/mysqld: Normal shutdown
+>> >> 131226  8:11:28 [Note] Event Scheduler: Purging the queue. 0 events
+>> >> 131226  8:11:30 [Warning] /usr/sbin/mysqld: Forcing close of thread 68
+>> >>  user: 'change_vsa_user'
+>> >> 131226  8:11:30 [Warning] /usr/sbin/mysqld: Forcing close of thread 59
+>> >>  user: 'standbyVc0'
+>> >> 131226  8:11:30  InnoDB: Starting shutdown...
+>> >> 131226  8:11:31  InnoDB: Waiting for 3 pages to be flushed
+>> >> 131226  8:11:31  InnoDB: Shutdown completed; log sequence number 18626878
+>> >> 131226  8:11:31 [Note] /usr/sbin/mysqld: Shutdown complete
+>> >>
+>> >> # ext4 was cleanly unmounted (no print in the kernel for that)
+>> >> # md1 was stopped cleanly
+>> >> Dec 26 08:11:31 vc kernel: [11577219.716151] md1: detected capacity
+>> >> change from 320773120 to 0
+>> >> Dec 26 08:11:31 vc kernel: [11577219.716158] md: md1 stopped.
+>> >> Dec 26 08:11:31 vc kernel: [11577219.716167] md: unbind<dm-1>
+>> >> Dec 26 08:11:31 vc kernel: [11577219.740152] md: export_rdev(dm-1)
+>> >> Dec 26 08:11:31 vc kernel: [11577219.740174] md: unbind<dm-3>
+>> >> Dec 26 08:11:31 vc kernel: [11577219.772137] md: export_rdev(dm-3)
+>> >> Dec 26 08:11:31 vc kernel: [11577219.772158] md: unbind<dm-2>
+>> >> Dec 26 08:11:31 vc kernel: [11577219.810269] md: export_rdev(dm-2)
+>> >>
+>> >> # Then the system was brought up again
+>> >> # md1 was assembled with a clean bitmap
+>> >> Dec 26 08:11:40 vc kernel: [  337.918676] md: md1 stopped.
+>> >> Dec 26 08:11:40 vc kernel: [  337.923588] md: bind<dm-2>
+>> >> Dec 26 08:11:40 vc kernel: [  337.924085] md: bind<dm-3>
+>> >> Dec 26 08:11:40 vc kernel: [  337.924511] md: bind<dm-1>
+>> >> Dec 26 08:11:40 vc kernel: [  337.927127] md: raid1 personality
+>> >> registered for level 1
+>> >> Dec 26 08:11:40 vc kernel: [  337.927264] bio: create slab <bio-1> at 1
+>> >> Dec 26 08:11:40 vc kernel: [  337.927435] md/raid1:md1: active with 3
+>> >> out of 3 mirrors
+>> >> Dec 26 08:11:40 vc kernel: [  337.927826] created bitmap (1 pages) for
+>> >> device md1
+>> >> Dec 26 08:11:40 vc kernel: [  337.928341] md1: bitmap initialized from
+>> >> disk: read 1/1 pages, set 0 of 5 bits
+>> >> Dec 26 08:11:40 vc kernel: [  337.929316] md1: detected capacity
+>> >> change from 0 to 320773120
+>> >> Dec 26 08:11:40 vc kernel: [  337.934610]  md1: unknown partition table
+>> >>
+>> >> # ext4 was mounted cleanly
+>> >> Dec 26 08:11:40 vc kernel: [  338.036300] [6536]dm_iostat
+>> >> [dm_iostat_ctr] Successfully set up dm (252:4) iostats on top of
+>> >> /dev/md1 (9:1), flags=0x80
+>> >> Dec 26 08:11:40 vc kernel: [  338.063921] [EXT4 FS bs=1024, gc=39,
+>> >> bpg=8192, ipg=2016, mo=9c02c818, mo2=0000]
+>> >> Dec 26 08:11:40 vc kernel: [  338.064104] EXT4-fs (dm-4): mounted
+>> >> filesystem with ordered data mode. Opts: debug,data_err=abort
+>> >>
+>> >> # but then mysql detected a corruption
+>> >> 131226 8:11:40 InnoDB: Error: space id and page n:o stored in the page
+>> >> InnoDB: read in are 543256175:543236195, should be 0:595!
+>> >> InnoDB: Database page corruption on disk or a failed
+>> >> InnoDB: file read of page 595.
+>> >> InnoDB: You may have to recover from a backup.
+>> >> 131226 8:11:40 InnoDB: Page dump in ascii and hex (16384 bytes):
+>> >>
+>> >> It happened only once, and we do a lot of testing of such unclean
+>> >> shutdowns.The only theory that we have is that raid1 resync somehow
+>> >> changed the underlying data of mysql/ext4.
+>> >>
+>> >> Thanks,
+>> >> Alex.
+>> >
+>
