@@ -1,39 +1,35 @@
 From: Andrea Mazzoleni <amadvance@gmail.com>
-Subject: Re: [RFC v2 2/2] fs: btrfs: Extends btrfs/raid56 to support up to
- six parities
-Date: Tue, 7 Jan 2014 11:35:43 +0100
-Message-ID: <20140107103543.GB16044@gmail.com>
+Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
+Date: Tue, 7 Jan 2014 12:06:05 +0100
+Message-ID: <20140107110605.GC16044@gmail.com>
 References: <1389000716-3274-1-git-send-email-amadvance@gmail.com>
- <1389000716-3274-3-git-send-email-amadvance@gmail.com>
- <1389017609.23310.0.camel@ret.masoncoding.com>
+ <52CA9A97.4000803@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1389017609.23310.0.camel@ret.masoncoding.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Mason <clm@fb.com>
-Cc: "amadvance@gmail.com" <amadvance@gmail.com>, Josef Bacik <jbacik@fb.com>, "neilb@suse.de" <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+In-Reply-To: <52CA9A97.4000803@shiftmail.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: joystick <joystick@shiftmail.org>
+Cc: Andrea Mazzoleni <amadvance@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Chris,
+On 01/06, joystick wrote:
+> Just by looking at the Subjects, it seems patch number 0/1 is
+> missing. It might have not gotten through to the lists, or be a
+> numbering mistake.
+The patch files can be also downloaded from: http://snapraid.sourceforge.net/linux/v2/
 
-On 01/06, Chris Mason wrote:
-> Neat.  The faila/failb were always my least favorite part of the btrfs
-> code ;)  Did you test just raid5/6 or also the higher parity counts?
-At this stage no real testing was made with btrfs.
+Sorry about that,
 
-The intention of this btrfs patch is mainly to get feedback on the new raid
-inteface, and see if it matches the needs of btrfs, and if it results in
-cleaner code than before.
+> Does your code also support (shortcut) RMW as opposed to RCW, for
+> all parities?
+At now no. But it can be easily extended to add the parity computation
+of a single disk in a set of already computed parities and then provide the
+required support for RMW.
 
-And besides the removal of the faila/failb variables, something other that
-likely you can appreciate is the removal of all the P/Q logic from btrfs,
-that it's now replaced with a single raid_rec() call.
-
-After the raid interface stabilizes, this patch can be used as starting
-point for a real btrfs patch. But at now it's just to show
-some example code of what kind of modification btrfs will need.
+With SSSE3 this can be implemented in a very efficient way.
 
 Ciao,
 Andrea
+
