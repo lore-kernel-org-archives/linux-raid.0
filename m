@@ -1,73 +1,104 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Recovering an Array with inconsistent Superblocks
-Date: Tue, 7 Jan 2014 11:26:27 +1100
-Message-ID: <20140107112627.32894e72@notabene.brown>
-References: <1388829881.16265.20.camel@vessel>
-	<52C835C9.3050707@turmel.org>
-	<1388873143.7641.20.camel@vessel>
-	<52C8C433.5030403@turmel.org>
-	<1388912870.3591.4.camel@vessel>
-	<20140105205612.093276ef@notabene.brown>
-	<1388918703.3591.20.camel@vessel>
-	<52C9A399.5040802@turmel.org>
-	<1389016846.25272.5.camel@vessel>
+Subject: Re: [RFC] lib: raid: New RAID library supporting up to six parities
+Date: Tue, 7 Jan 2014 11:33:57 +1100
+Message-ID: <20140107113357.3bd67ad0@notabene.brown>
+References: <1388742436-3754-1-git-send-email-amadvance@gmail.com>
+	<20140106111529.7bcff024@notabene.brown>
+	<20140106094523.GA4602@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2/kwNwfNh3ptHkFZYspPUvI"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1389016846.25272.5.camel@vessel>
-Sender: linux-raid-owner@vger.kernel.org
-To: Fabian Knorr <knorrfab@fim.uni-passau.de>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+ boundary="Sig_/=Ci+F7FClBMEgb/_8_j5c+W"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140106094523.GA4602@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrea Mazzoleni <amadvance@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com
 List-Id: linux-raid.ids
 
---Sig_/2/kwNwfNh3ptHkFZYspPUvI
+--Sig_/=Ci+F7FClBMEgb/_8_j5c+W
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 06 Jan 2014 15:00:46 +0100 Fabian Knorr <knorrfab@fim.uni-passau.de>
+On Mon, 6 Jan 2014 10:45:23 +0100 Andrea Mazzoleni <amadvance@gmail.com>
 wrote:
 
-> Many thanks to both of you, Phil and Neil!
+> Hi Neil,
 >=20
-> Everything works flawlessly now and I had no data loss whatsoever.
+> Thanks for your feedback. In the meantime I went further in developing and
+> I've just sent version 2 of the patch, that contains a preliminary btrfs
+> modification to use the new interface.
 >=20
-> > Long term, consider creating a new array with metadata type 1.x so you
-> > can use a bitmap.  If you ever have an event like this, where one or
-> > more devices are disconnected then reconnected, it'll greatly shorten
-> > the recovery time.
+> Please use this one for any kind of review because it contains a modifica=
+tion
+> of the interface to match better the btrfs use.
+> I'll now try to do something similar to the async_tx layer and to improve=
+ the
+> code documentation as you recommended.
+
+Thanks.
+
 >=20
-> But it's not possible to upgrade the metadata version of an existing
-> array, is it?=20
+> Anyway, a good entry point to understand the code is to start from the
+> include/linux/raid/raid.h file. It contains the functions that external
+> modules should call with a complete description of them.
+>=20
+> There is raid_par() used to compute parity, and raid_rec() to recover dam=
+aged
+> blocks. These two functions replace all the old xor_blocks and raid6 call=
+s.
+>=20
+> And there is the raid_sort() you mention. It's an helper function that ca=
+n be
+> used to ensure that the blocks indexes are passed at the raid interface in
+> proper order. In existing code I saw that the indexes are often sorted be=
+fore
+> calling raid6, with something like:
+>=20
+> 	if (faila > failb) {
+> 		int tmp =3D failb;
+> 		failb =3D faila;
+> 		faila =3D tmp;
+> 	}
+>=20
+> To do the same with up to six failures, it's now required some kind of so=
+rt
+> function.
 
-With mdadm-3.3 you can assemble an array with 0.90 metadata using
+I'm not totally convinced by this, but then I haven't played with the code
+so maybe I'm wrong.
+I don't see the above as "sorting" faila and failb, but rather determining
+which one is first.  Once you know which one is first, the remainder follow
+in order.
+So I would probably just make sure we always process the block is the "righ=
+t"
+order.  Then sorting would be irrelevant.
+But as I say, I haven't fiddled with the code, so maybe that would end up
+being more complex.
 
-  mdadm --assemble --update=3Dmetadata /dev/mdWHATEVER /dev/.....
-
-and it will be converted to 1.0 metadata.
-
+Thanks,
 NeilBrown
 
---Sig_/2/kwNwfNh3ptHkFZYspPUvI
+
+--Sig_/=Ci+F7FClBMEgb/_8_j5c+W
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUstJsznsnt1WYoG5AQJBqw/+PqWCi+UESMY10sgcLF/Uh8lh0dDirisl
-6Zni3/LRM13KUkmttTIWjaggbt+Z9OymTUYbsr6y1wHEYnOzjZelOPdmXPj6Llq5
-/u7O0VE0kbVmyZ3UAJVnYULsYfTkervF0mWmD8TN+g+X2KnCj3lzJ9o4q2rsWxnZ
-u+kwN/ERiW5cY6dOaimutYo2CrROvgypmZldOmA1UoFh9m5lzHGF59UrxL5ffwF3
-IfT7OoL7kcpn3QyAXisYJRyCN2ZdPpPODHRGz5VsjVhEQkb5N6gCPoggazjYT5Sa
-tfjra4/PkyScr5LpemkOBOmyzPTerfqfJ9glmO0Qvn27dIHt2/ZfPwTlKzBPaZGL
-AcNKtV+Tt5ks5Osa+M/NUXKfVUq8za9UCeJ9z93RfUf0pEDlXZpe/IyltUkhlex2
-Aa2bA7jv1X46TadHiZihxgVN1O3Z4jkNiQTLby5mFCNzCmt41cAPonxLtno/tMqs
-DrU1b9Vxt/YMiiPvBaSvjanGBV2vFrCBhrKq9NR0Z7W85dWGuKVeGDedTeY5FJub
-uHiGLacIHiKamcJ/lGYkoAswWNREy8MkK7b/Rr48lgnxiqAXbHeCBryo2zYOq/Sz
-42bXXRyx6UJNZHV13ENvvEtMIXMWQxJrrTJsXW2T4qh6Tjjig8hh0lWhEzsYAIpR
-msvl8eXg/JY=
-=xiM3
+iQIVAwUBUstLdTnsnt1WYoG5AQKlmQ//TzKGXzAskIf3bSswe+RzUj80HmxPPgy9
+PYSSQgDlNEAiNhBa2xVB6aVFLk5atsxCwVI4o8ckif+vXkDyQCdS3o7usTjYCt9W
+/vFmtxzRCrCg9em5iv0KGk8Au2HV1EtF2+6mDlGGJQptoB4/zaG/k2ivMWn62v6A
+ELkdOy0ZGq6Z3bRprkntCqRBq/eNmkdHKquIvJpgjNx0VxOJS29vwzhknXesO012
+TwpXEFVC06MBuQ06TRmQQLSWM6ocA+1Cgzi5/5ZYySSQTd4FgSMhfhkRWfFVw2yJ
+Y/npgWQhcrp6xJUaAJEhko+KnyvpkdqjhE2fPd3xXsyvoRxEaW9w1qFXC5J5d4te
+vSB4iZcJ9xy5ADN2N8/gi1DUXfZzdSOPjG3rq996mYyaYiz2d6RluzcusY6/zyQK
+wUSNAOuxBYuNaj8lETmrpmzb6Xh15Fj+dANYme+CqpOS6rhV/qiHcl97UVtEnGe1
+ggnDwzfKiA1609edJ1uPu3QOa7ZVzEIEnjavkdL+Et01cWAt0yQI+McB7TnsKdoC
+bAs9zvBcfpQovxw60LM/YrZmqsXg6dRDQIjHKM4utNgwsSB0QXrBTl1In/tj6Y7M
+DMW5RDocTkCcUNl2ohmHsz46q0GhUfhuRG49ylc/BW19eWHArRVqttH6VdORqczD
+InnoV3U+lkc=
+=EmBH
 -----END PGP SIGNATURE-----
 
---Sig_/2/kwNwfNh3ptHkFZYspPUvI--
+--Sig_/=Ci+F7FClBMEgb/_8_j5c+W--
