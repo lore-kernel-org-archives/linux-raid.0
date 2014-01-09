@@ -1,48 +1,37 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: RAID 10 far and offset on-disk layouts
-Date: Thu, 09 Jan 2014 09:03:37 +0100
-Message-ID: <52CE57D9.1030501@assyoma.it>
-References: <52BD8EDD.10809@assyoma.it> <20131227151927.GA4003@www5.open-std.org> <52BD9B4F.3000509@assyoma.it> <20131227154952.GA6539@www5.open-std.org>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] bcache: Fix sparse non static symbol warning
+Date: Thu, 9 Jan 2014 22:21:19 +0800
+Message-ID: <CAPgLHd_sYw7iTiNHT8S86QXswOZZhQVsi-hfh5fbZni0L7BiBg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20131227154952.GA6539@www5.open-std.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: keld@keldix.com, neilb@suse.de
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: kmo@daterainc.com, neilb@suse.de
+Cc: yongjun_wei@trendmicro.com.cn, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>
->> Interesting. Two question:
->> 1) from which kernel the layout is the one depicted by Wikipedia?
->> 2) it is possible, using mdadm, check what "far" layout is in use?
->
-> I cannot answer that. Neil Brown should know.
->
-> Best regards
-> Keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Hi all,
-anyone with an update on these two questions?
+Fixes the following sparse warning:
 
-I was thinking to use the kernel block trace facility to track disk 
-access and infer the on-disk data structure, but I haven't tried for now.
+drivers/md/bcache/sysfs.c:419:5: warning:
+ symbol 'bch_bset_print_stats' was not declared. Should it be static?
 
-On the other hand, I carefully looked at mdadm output, without finding 
-anything related to physical block placing.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/md/bcache/sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Any new advices on that regard?
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+index c6ab693..d8458d4 100644
+--- a/drivers/md/bcache/sysfs.c
++++ b/drivers/md/bcache/sysfs.c
+@@ -416,7 +416,7 @@ static int btree_bset_stats(struct btree_op *b_op, struct btree *b)
+ 	return MAP_CONTINUE;
+ }
+ 
+-int bch_bset_print_stats(struct cache_set *c, char *buf)
++static int bch_bset_print_stats(struct cache_set *c, char *buf)
+ {
+ 	struct bset_stats_op op;
+ 	int ret;
