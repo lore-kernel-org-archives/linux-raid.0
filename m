@@ -1,37 +1,23 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] bcache: Fix sparse non static symbol warning
-Date: Thu, 9 Jan 2014 22:21:19 +0800
-Message-ID: <CAPgLHd_sYw7iTiNHT8S86QXswOZZhQVsi-hfh5fbZni0L7BiBg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-bcache-owner@vger.kernel.org>
-Sender: linux-bcache-owner@vger.kernel.org
-To: kmo@daterainc.com, neilb@suse.de
-Cc: yongjun_wei@trendmicro.com.cn, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Why 4k native drives haven't arrived
+Date: Thu, 9 Jan 2014 14:49:36 -0700
+Message-ID: <38C8AAEB-811B-442F-BA80-1EFAF00BADB1@colorremedies.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+4Kn drives, i.e. 4096 byte physical and logical sector, drives maybe have been in the wild for some time, ~1 year.
 
-Fixes the following sparse warning:
+http://forums.macrumors.com/showpost.php?p=16996220&postcount=189
+"Logical sector size: 4096 bytes"
 
-drivers/md/bcache/sysfs.c:419:5: warning:
- symbol 'bch_bset_print_stats' was not declared. Should it be static?
+And further, the LBA's are clearly 4096 bytes each based on the partition table sector start/end values only adding up to the size column if the (LBA) sectors are 4096 bytes each.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/md/bcache/sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This drive is found in an enclosure, sold as a backup device, not intended for booting. 
 
-diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
-index c6ab693..d8458d4 100644
---- a/drivers/md/bcache/sysfs.c
-+++ b/drivers/md/bcache/sysfs.c
-@@ -416,7 +416,7 @@ static int btree_bset_stats(struct btree_op *b_op, struct btree *b)
- 	return MAP_CONTINUE;
- }
- 
--int bch_bset_print_stats(struct cache_set *c, char *buf)
-+static int bch_bset_print_stats(struct cache_set *c, char *buf)
- {
- 	struct bset_stats_op op;
- 	int ret;
+
+Chris Murphy
