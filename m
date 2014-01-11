@@ -1,172 +1,348 @@
-From: =?utf-8?B?R3Jvw59rcmV1dHosIEp1bGlhbg==?=
-	<Julian.Grosskreutz@med.uni-jena.de>
-Subject: mdadm expanded 8 disk raid 6 fails in new server, 5 original
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: mdadm expanded 8 disk raid 6 fails in new server, 5 original
  devices show no md superblock
-Date: Sat, 11 Jan 2014 06:42:28 +0000
-Message-ID: <1389422546.11328.15.camel@achilles.aeskuladis.de>
-Reply-To: =?utf-8?B?R3Jvw59rcmV1dHosIEp1bGlhbg==?=
-	  <Julian.Grosskreutz@med.uni-jena.de>
+Date: Sat, 11 Jan 2014 12:47:33 -0500
+Message-ID: <52D183B5.3060006@turmel.org>
+References: <1389422546.11328.15.camel@achilles.aeskuladis.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: de-DE
-Content-ID: <D8356AF31C705949B6BCEF1342E8039B@krz.uni-jena.de>
+In-Reply-To: <1389422546.11328.15.camel@achilles.aeskuladis.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: =?UTF-8?B?Ikdyb8Ofa3JldXR6LCBKdWxpYW4i?= <Julian.Grosskreutz@med.uni-jena.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 Cc: "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-RGVhciBhbGwsIGRlYXIgTmVpbCAodGhhbmtzIGZvciBwb2ludGluZyBtZSB0byB0aGlzIGxpc3Qp
-LA0KDQpJIGFtIGluIGRlc3BlcmF0ZSBuZWVkIG9mIGhlbHAuIG1kYWRtIGlzIGZhbnRhc3RpYyB3
-b3JrLCBhbmQgSSBoYXZlDQpyZWxpZWQgb24gbWRhZG0gZm9yIHllYXJzIHRvIHJ1biB2ZXJ5IHN0
-YWJsZSBzZXJ2ZXIgc3lzdGVtcywgbmV2ZXIgaGFkDQptYWpvciBwcm9ibGVtcyBJIGNvdWxkIG5v
-dCBzb2x2ZS4NCg0KVGhpcyB0aW1lIGl0cyBkaWZmZXJlbnQ6DQoNCk9uIGEgQ2VudG9zIDYueCAo
-Y2FuJ3QgcmVtZW1iZXIpIGluaXRpYWxseSBpbiAyMDEyOg0KDQpwYXJ0ZWQgdG8gY3JlYXRlIEdQ
-VCBwYXJ0aXRpb25zIG9uIDUgU2VhZ2F0ZSBkcml2ZXMgM1RCIGVhY2gNCg0KTW9kZWw6IEFUQSBT
-VDMwMDBETTAwMS05WU4xIChzY3NpKQ0KRGlzayAvZGV2L3NkYTogNTg2MDUzMzE2OHMgICMgc2Rb
-YmNkZV0gaWRlbnRpY2FsDQpTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMkIvNDA5
-NkINClBhcnRpdGlvbiBUYWJsZTogZ3B0DQoNCk51bWJlciAgU3RhcnQgICAgIEVuZCAgICAgICAg
-ICBTaXplICAgICAgICAgRmlsZSBzeXN0ZW0gIE5hbWUgICAgIEZsYWdzDQoxICAgICAgMjA0OHMg
-ICAgIDE5NTM3OTFzICAgICAxOTUxNzQ0cyAgICAgZXh0NCAgICAgICAgICAgICAgICAgIGJvb3QN
-CjIgICAgICAxOTU1ODQwcyAgNTg2MDUzMjIyM3MgIDU4NTg1NzYzODRzICAgICAgICAgICAgICAg
-cHJpbWFyeSAgcmFpZA0KDQpJIHVzZWQgYW4gdW5rbm93biBtZGFkbSB2ZXJzaW9uIGluY2x1ZGlu
-ZyB1bmtub3duIG9mZnNldCBwYXJhbWV0ZXJzIGZvcg0KNGsgYWxpZ25tZW50IHRvIGNyZWF0ZQ0K
-DQovZGV2L3NkW2FiY2RlXTEgYXMgL2Rldi9tZDAgcmFpZCAxIGZvciBib290aW5nICgxIEdCKQ0K
-L2Rldi9zZFthYmNkZV0yIGFzIC9kZXYvbWQxIHJhaWQgNiBmb3IgZGF0YSAoOSBUQikgbHZtIHBo
-eXNpY2FsIGRyaXZlDQoNCkxhdGVyIGFkZGVkIDMgbW9yZSAzVCBpZGVudGljYWwgU2VhZ2F0ZSBk
-cml2ZXMgd2l0aCBpZGVudGljYWwgcGFydGl0aW9uDQpsYXlvdXQsIGJ1dCBsYXRlciBmaXJtd2Fy
-ZS4NCg0KVXNpbmcgbGlrZWx5IGEgZGlmZmVyZW50IG5ld2VyIHZlcnNpb24gb2YgbWRhZG0gSSBl
-eHBhbmRlZCBSQUlEIDYgYnkgMg0KZHJpdmVzIGFuZCBhZGRlZCAxIHNwYXJlLg0KDQovZGV2L21k
-MSB3YXMgYXQgMTUgVEIgZ3Jvc3MsIDEzIFRCIHVzYWJsZSwgZXhwYW5kZWQgcHYNCg0KUmFuIGZp
-bmUNCg0KVGhlbiBJIG1vdmVkIHRoZSA4IGRpc2tzIHRvIGEgbmV3IHNlcnZlciB3aXRoIGFuIGhi
-YSBhbmQgYmFja3BsYW5lLA0KYXJyYXkgZGlkIG5vdCBzdGFydCBiZWNhdXNlIG1kYWRtIGRpZCBu
-b3QgZmluZCB0aGUgc3VwZXJibG9ja3Mgb24gdGhlDQpvcmlnaW5hbCA1IGRldmljZXMgL2Rldi9z
-ZFthYmNkZV0yLiBNb3ZpbmcgdGhlIGRpc2tzIGJhY2sgdG8gdGhlIG9sZA0Kc2VydmVyIHRoZSBl
-cnJvciBkaWQgbm90IHZhbmlzaC4gVXNpbmcgYSBjZW50b3MgNi4zIGxpdmVjZCwgSSBnb3QgdGhl
-DQpmb2xsb3dpbmc6DQoNCltyb290QGxpdmVjZCB+XSMgbWRhZG0gLUV2dnZ2cyAvZGV2L3NkW2Fi
-Y2RlZmdoXTINCm1kYWRtOiBObyBtZCBzdXBlcmJsb2NrIGRldGVjdGVkIG9uIC9kZXYvc2RhMi4N
-Cm1kYWRtOiBObyBtZCBzdXBlcmJsb2NrIGRldGVjdGVkIG9uIC9kZXYvc2RiMi4NCm1kYWRtOiBO
-byBtZCBzdXBlcmJsb2NrIGRldGVjdGVkIG9uIC9kZXYvc2RjMi4NCm1kYWRtOiBObyBtZCBzdXBl
-cmJsb2NrIGRldGVjdGVkIG9uIC9kZXYvc2RkMi4NCm1kYWRtOiBObyBtZCBzdXBlcmJsb2NrIGRl
-dGVjdGVkIG9uIC9kZXYvc2RlMi4NCg0KL2Rldi9zZGYyOg0KICAgICAgICAgICAgICBNYWdpYyA6
-IGE5MmI0ZWZjDQogICAgICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgICAgIEZlYXR1cmUgTWFw
-IDogMHgwDQogICAgICAgICBBcnJheSBVVUlEIDogMzJkODJmODQ6ZmUzMGFjMmU6ZjU4OWFhZWY6
-YmRkM2U0YzcNCiAgICAgICAgICAgICAgIE5hbWUgOiAxDQogICAgICBDcmVhdGlvbiBUaW1lIDog
-V2VkIEp1bCAzMSAxODoyNDozOCAyMDEzDQogICAgICAgICBSYWlkIExldmVsIDogcmFpZDYNCiAg
-ICAgICBSYWlkIERldmljZXMgOiA3DQoNCiAgICAgQXZhaWwgRGV2IFNpemUgOiA1ODU4MzE0MjQw
-ICgyNzkzLjQ2IEdpQiAyOTk5LjQ2IEdCKQ0KICAgICAgICAgQXJyYXkgU2l6ZSA6IDI5Mjg1Nzkz
-MjgwICgxMzk2NC41NSBHaUIgMTQ5OTQuMzMgR0IpDQogICAgICBVc2VkIERldiBTaXplIDogNTg1
-NzE1ODY1NiAoMjc5Mi45MSBHaUIgMjk5OC44NyBHQikNCiAgICAgICAgRGF0YSBPZmZzZXQgOiAy
-NjIxNDQgc2VjdG9ycw0KICAgICAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0KICAgICAgICAg
-ICAgICBTdGF0ZSA6IGFjdGl2ZQ0KICAgICAgICBEZXZpY2UgVVVJRCA6IGQ1YTE2Y2IyOmZmNDFi
-OWE1OmNiYmYxMmI3OjM3NTAwMjZkDQoNCiAgICAgICAgVXBkYXRlIFRpbWUgOiBNb24gRGVjIDE2
-IDAxOjE2OjI2IDIwMTMNCiAgICAgICAgICAgQ2hlY2tzdW0gOiBlZTkyMWM0MyAtIGNvcnJlY3QN
-CiAgICAgICAgICAgICBFdmVudHMgOiAzMjcNCg0KICAgICAgICAgICAgIExheW91dCA6IGxlZnQt
-c3ltbWV0cmljDQogICAgICAgICBDaHVuayBTaXplIDogMjU2Sw0KDQogICAgICBEZXZpY2UgUm9s
-ZSA6IEFjdGl2ZSBkZXZpY2UgNQ0KICAgICAgQXJyYXkgU3RhdGUgOiBBLkFBQUFBICgnQScgPT0g
-YWN0aXZlLCAnLicgPT0gbWlzc2luZykNCg0KL2Rldi9zZGcyOg0KICAgICAgICAgICAgICBNYWdp
-YyA6IGE5MmI0ZWZjDQogICAgICAgICAgICBWZXJzaW9uIDogMS4yDQogICAgICAgIEZlYXR1cmUg
-TWFwIDogMHgwDQogICAgICAgICBBcnJheSBVVUlEIDogMzJkODJmODQ6ZmUzMGFjMmU6ZjU4OWFh
-ZWY6YmRkM2U0YzcNCiAgICAgICAgICAgICAgIE5hbWUgOiAxDQogICAgICBDcmVhdGlvbiBUaW1l
-IDogV2VkIEp1bCAzMSAxODoyNDozOCAyMDEzDQogICAgICAgICBSYWlkIExldmVsIDogcmFpZDYN
-CiAgICAgICBSYWlkIERldmljZXMgOiA3DQoNCiAgICAgQXZhaWwgRGV2IFNpemUgOiA1ODU4MzE0
-MjQwICgyNzkzLjQ2IEdpQiAyOTk5LjQ2IEdCKQ0KICAgICAgICAgQXJyYXkgU2l6ZSA6IDI5Mjg1
-NzkzMjgwICgxMzk2NC41NSBHaUIgMTQ5OTQuMzMgR0IpDQogICAgICBVc2VkIERldiBTaXplIDog
-NTg1NzE1ODY1NiAoMjc5Mi45MSBHaUIgMjk5OC44NyBHQikNCiAgICAgICAgRGF0YSBPZmZzZXQg
-OiAyNjIxNDQgc2VjdG9ycw0KICAgICAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0KICAgICAg
-ICAgICAgICBTdGF0ZSA6IGFjdGl2ZQ0KICAgICAgICBEZXZpY2UgVVVJRCA6IGExZTFlNTFiOmQ4
-OTEyOTg1OmU1MTIwN2E5OjFkNzE4MjkyDQoNCiAgICAgICAgVXBkYXRlIFRpbWUgOiBNb24gRGVj
-IDE2IDAxOjE2OjI2IDIwMTMNCiAgICAgICAgICAgQ2hlY2tzdW0gOiA0ZWYwMWZlOSAtIGNvcnJl
-Y3QNCiAgICAgICAgICAgICBFdmVudHMgOiAzMjcNCg0KICAgICAgICAgICAgIExheW91dCA6IGxl
-ZnQtc3ltbWV0cmljDQogICAgICAgICBDaHVuayBTaXplIDogMjU2Sw0KDQogICAgICAgIERldmlj
-ZSBSb2xlIDogQWN0aXZlIGRldmljZSA2DQogICAgICAgIEFycmF5IFN0YXRlIDogQS5BQUFBQSAo
-J0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCi9kZXYvc2RoMjoNCiAgICAgICAgICAg
-ICAgTWFnaWMgOiBhOTJiNGVmYw0KICAgICAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgICAgICBG
-ZWF0dXJlIE1hcCA6IDB4MA0KICAgICAgICAgQXJyYXkgVVVJRCA6IDMyZDgyZjg0OmZlMzBhYzJl
-OmY1ODlhYWVmOmJkZDNlNGM3DQogICAgICAgICAgICAgICBOYW1lIDogMQ0KICAgICAgQ3JlYXRp
-b24gVGltZSA6IFdlZCBKdWwgMzEgMTg6MjQ6MzggMjAxMw0KICAgICAgICAgUmFpZCBMZXZlbCA6
-IHJhaWQ2DQogICAgICAgUmFpZCBEZXZpY2VzIDogNw0KDQogICAgIEF2YWlsIERldiBTaXplIDog
-NTg1ODMxNDI0MCAoMjc5My40NiBHaUIgMjk5OS40NiBHQikNCiAgICAgICAgIEFycmF5IFNpemUg
-OiAyOTI4NTc5MzI4MCAoMTM5NjQuNTUgR2lCIDE0OTk0LjMzIEdCKQ0KICAgICAgVXNlZCBEZXYg
-U2l6ZSA6IDU4NTcxNTg2NTYgKDI3OTIuOTEgR2lCIDI5OTguODcgR0IpDQogICAgICAgIERhdGEg
-T2Zmc2V0IDogMjYyMTQ0IHNlY3RvcnMNCiAgICAgICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMN
-CiAgICAgICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICAgICAgRGV2aWNlIFVVSUQgOiAwMzBj
-YjlhNzo3NmE0OGIzYzpiMzQ0ODM2OTpmY2YwMTNlMQ0KDQogICAgICAgIFVwZGF0ZSBUaW1lIDog
-TW9uIERlYyAxNiAwMToxNjoyNiAyMDEzDQogICAgICAgICAgIENoZWNrc3VtIDogYTEzMzBlOTcg
-LSBjb3JyZWN0DQogICAgICAgICAgICAgRXZlbnRzIDogMzI3DQoNCiAgICAgICAgICAgICBMYXlv
-dXQgOiBsZWZ0LXN5bW1ldHJpYw0KICAgICAgICAgQ2h1bmsgU2l6ZSA6IDI1NksNCg0KICAgICAg
-IERldmljZSBSb2xlIDogc3BhcmUNCiAgICAgICBBcnJheSBTdGF0ZSA6IEEuQUFBQUEgKCdBJyA9
-PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nKQ0KDQoNCkkgc3VzcGVjdCB0aGF0IHRoZSBzdXBlcmJs
-b2NrIG9mIHRoZSBvcmlnaW5hbCA1IGRldmljZXMgaXMgYXQgYQ0KZGlmZmVyZW50IGxvY2F0aW9u
-LCBwb3NzaWJseSBiZWNhdXNlIHRoZXkgd2hlcmUgY3JlYXRlZCB3aXRoIGEgZGlmZmVyZW50DQpt
-ZGFkbSB2ZXJzaW9uLCBpLmUuIGF0IHRoZSBlbmQgb2YgdGhlIHBhcnRpdGlvbnMuIEJvb3Rpbmcg
-dGhlIGRyaXZlcw0Kd2l0aCB0aGUgaGJhIGluIElUIChub24tcmFpZCkgbW9kZSBvbiB0aGUgbmV3
-IHNlcnZlciBtYXkgaGF2ZSBpbnRyb2R1Y2VkDQphbiBpbml0aWFsaXphdGlvbiBvbiB0aGUgZmly
-c3QgZml2ZSBkcml2ZSBhdCB0aGUgZW5kIG9mIHRoZSBwYXJ0aXRpb25zDQpiZWNhdXNlIEkgY2Fu
-IGhleGR1bXAgc29tZXRoaW5nIHdpdGggIkVGSSBQQVJUIiBpbiB0aGUgbGFzdCA2NCBrYiBpbiBh
-bGwNCjggcGFydGl0aW9ucyB1c2VkIGZvciB0aGUgcmFpZCA2LCB3aGljaCBtYXkgbm90IGhhdmUg
-YWZmZWN0ZWQgdGhlIDMNCmFkZGVkIGRyaXZlcyB3aGljaCBzaG93IG1ldGFkYXRhIDEuMi4NCg0K
-SWYgYW55IG9mIFlvdSBjYW4gaGVscCBtZSBzb3J0IHRoaXMgSSB3b3VsZCBncmVhdGx5IGFwcHJl
-Y2lhdGUgaXQuIEkNCmd1ZXNzIEkgbmVlZCB0aGUgbWRhZG0gdmVyc2lvbiB3aGVyZSBJIGNhbiBz
-ZXQgdGhlIGRhdGEgb2Zmc2V0DQpkaWZmZXJlbnRseSBmb3IgZWFjaCBkZXZpY2UsIGJ1dCBpdCBk
-b2Vzbid0IGNvbXBpbGUgd2l0aCBhbiBlcnJvciBpbg0Kc2hhMS5jOg0KDQpzaGExLmg6Mjk6MjI6
-IEZlaGxlcjogYW5zaWRlY2wuaDogRGF0ZWkgb2RlciBWZXJ6ZWljaG5pcyBuaWNodCBnZWZ1bmRl
-bg0KKGRpZG4ndCBmaW5kIGFuc2lkZWNsLmgsIGVycm9yIGluIEdlcm1hbikNCg0KV2hhdCB3b3Vs
-ZCBiZSB0aGUgYmVzdCB3YXkgdG8gcHJvY2VlZD8gVGhlcmUgaXMgY3JpdGljYWwgZGF0YSBvbiB0
-aGlzDQpyYWlkLCBub3QgZnVsbHkgYmFja2VkIHVwLg0KDQooVVBEJ1QpDQoNClRoYW5rcyBmb3Ig
-Z2V0dGluZyBiYWNrLg0KDQpZZXMsIGl0J3MgYmFkLCBJIGtub3csIGFsc28gdHdlYWtpbmcgd2l0
-aG91dCBrZWVwaW5nIGV4YWN0IHJlY29yZHMgb2YNCnZlcnNpb25zIGFuZCBvZmZzZXRzLg0KDQpJ
-IGFtLCBob3dldmVyLCByYXRoZXIgc3VyZSB0aGF0IG5vdGhpbmcgd2FzIHdyaXR0ZW4gdG8gdGhl
-IGRpc2tzIHdoZW4gSQ0KcGx1Z2dlZCB0aGVtIGludG8gdGhlIE5FVyBzZXJ2ZXIsIHVubGVzcyBz
-dGFydGluZyB1cCBhIGxpdmUgY2QgY2F1c2VzIGFuDQphdXRvbWF0aWMgYXNzZW1ibGUgYXR0ZW1w
-dCB3aXRoIGFuIHVwZGF0ZSB0byB0aGUgc3VwZXJibG9ja3MuIFRoYXQgSQ0KY2Fubm90IGV4Y2x1
-ZGUuDQoNCldoYXQgSSBkaWQgc28gZmFyIHcvbyB3cml0aW5nIHRvIHRoZSBkaXNrcw0KDQpnZXQg
-bm9uLTAwIGRhdGEgYXQgdGhlIGJlZ2lubmluZyBvZiBzZGEyOg0KDQpkZCBpZj0vZGV2L3NkYSBz
-a2lwPTE5NTU4NDAgYnM9NTEyIGNvdW50PTEwIHwgaGV4ZHVtcCAtQyB8IGdyZXAgW14wMF0NCg0K
-Z2l2ZXMgbWUNCg0KMDAwMDAwMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMA0KfC4uLi4uLi4uLi4uLi4uLi58DQogICAgICAgICoNCjAwMDAxMDAwICAx
-ZSBiNSA1NCA1MSAyMCA0YyA1NiA0ZCAgMzIgMjAgNzggNWIgMzUgNDEgMjUgNzIgIHwuLlRRIExW
-TTINCnhbNUElcnwNCjAwMDAxMDEwICAzMCA0ZSAyYSAzZSAwMSAwMCAwMCAwMCAgMDAgMTAgMDAg
-MDAgMDAgMDAgMDAgMDAgIHwNCjBOKj4uLi4uLi4uLi4uLi58DQowMDAwMTAyMCAgMDAgMDAgMDIg
-MDAgMDAgMDAgMDAgMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQp8Li4uLi4uLi4uLi4uLi4u
-LnwNCjAwMDAxMDMwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDANCnwuLi4uLi4uLi4uLi4uLi4ufA0KKg0KMDAwMDEyMDAgIDc2IDY3IDVmIDZlIDY1IDY0
-IDY5IDY3ICA3MyAzMCAzMiAyMCA3YiAwYSA2OSA2NCAgfHZnX25lZGlnczAyDQp7LmlkfA0KMDAw
-MDEyMTAgIDIwIDNkIDIwIDIyIDMyIDRjIDYyIDQ4ICA3MSA2NCAyZCA3MiA2NyA0MiA3NCAyZCAg
-fCA9DQoiMkxiSHFkLXJnQnQtfA0KMDAwMDEyMjAgIDQ1IDRhIDc1IDMxIDJkIDMyIDUyIDM2ICAz
-MSAyZCA0MSAzNSA3YSA3NCAyZCA2ZSAgfA0KRUp1MS0yUjYxLUE1enQtbnwNCjAwMDAxMjMwICA0
-OSA1OCA1MyAyZCA2NiA3OSA0ZiAzNiAgMzMgNzMgMjIgMGEgNzMgNjUgNzEgNmUgIHwNCklYUy1m
-eU82M3MiLnNlcW58DQowMDAwMTI0MCAgNmYgMjAgM2QgMjAgMzcgMGEgNjYgNmYgIDcyIDZkIDYx
-IDc0IDIwIDNkIDIwIDIyICB8byA9DQo3LmZvcm1hdCA9ICJ8DQowMDAwMTI1MCAgNmMgNzYgNmQg
-MzIgMjIgMjAgMjMgMjAgIDY5IDZlIDY2IDZmIDcyIDZkIDYxIDc0ICB8bHZtMiIgIw0KaW5mb3Jt
-YXR8DQooY29udCdkKQ0KDQpidXQgb24gL2Rldi9zZGINCg0KMDAwMDAwMDAgIDVmIDgwIDAwIDAw
-IDVmIDgwIDAxIDAwICA1ZiA4MCAwMiAwMCA1ZiA4MCAwMyAwMCAgfA0KXy4uLl8uLi5fLi4uXy4u
-LnwNCjAwMDAwMDEwICA1ZiA4MCAwNCAwMCA1ZiA4MCAwYyAwMCAgNWYgODAgMGQgMDAgMDAgMDAg
-MDAgMDAgIHwNCl8uLi5fLi4uXy4uLi4uLi58DQowMDAwMDAyMCAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQp8Li4uLi4uLi4uLi4uLi4uLnwNCioNCjAw
-MDAxMDAwICA2MCA4MCAwMCAwMCA2MCA4MCAwMSAwMCAgNjAgODAgMDIgMDAgNjAgODAgMDMgMDAg
-IHwNCmAuLi5gLi4uYC4uLmAuLi58DQowMDAwMTAxMCAgNjAgODAgMDQgMDAgNjAgODAgMGMgMDAg
-IDYwIDgwIDBkIDAwIDAwIDAwIDAwIDAwICB8DQpgLi4uYC4uLmAuLi4uLi4ufA0KMDAwMDEwMjAg
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KfC4uLi4u
-Li4uLi4uLi4uLi58DQoqDQowMDAwMTQwMA0KDQpzbyBteSBpbml0aWFsIGd1ZXNzIHRoYXQgdGhl
-IGRhdGEgbWF5IHN0YXJ0IGF0IDAwMDAxMDAwIGRpZCBub3QgcGFuIG91dC4NCg0KRG9lcyBhbnli
-b2R5IGhhdmUgYW4gaWRlYSBvZiBob3cgdG8gcmVsaWFibHkgaWRlbnRpZnkgYW4gbWRhZG0NCnN1
-cGVyYmxvY2sgaW4gYSBoZXhkdW1wIG9mIHRoZSBkcml2ZSA/DQoNCkFuZCBzZWNvbmQsIGhhdmUg
-SSBnb3QgbXkgbnVtYmVycyByaWdodCA/IEluIHBhcnRlZCBJIHNlZSB0aGUgYmxvY2sNCmNvdW50
-LCBhbmQgd2hlbiBJIG11bHRpcGx5IDUxMiAobm90IDQwOTYhKSB3aXRoIHRoZSB0b3RhbCBjb3Vu
-dCBJIGdldCAzDQpUQiwgc28gSSB0aGluayBJIGhhdmUgdG8gdXNlIGJzPTUxMiBpbiBkZCB0byBn
-ZXQgdGVoIHBhcnRpdGlvbg0KYm91bmRhcmllcyBjb3JyZWN0Lg0KDQpBcyBmb3IgdGhlIGxhc3Qg
-c3RhdGU6IG9uZSBkcml2ZSB3YXMgc2V0IGZhdWx0eSwgYXBwYXJlbnRseSwgYnV0IHRoZQ0Kc3Bh
-cmUgaGFkIG5vdCBiZWVuIGludGVncmF0ZWQuIEkgbWF5IGhhdmUgZ290dGVuIGNhdWdodCBpbiBh
-IGJ1Zw0KZGVzY3JpYmVkIGJ5IE5laWwgQnJvd24sIHdoZXJlIG9uIHNodXRkb3duIGRpc2sgd2Vy
-ZSB3cm9uZ2x5IHJlcG9ydGVkLA0KYW5kIHN1YnNlcXVlbnRseSBzdXBlcmJsb2NrIGluZm9ybWF0
-aW9uIHdhcyBvdmVyd3JpdHRlbi4NCg0KSSBkb24ndCBoYXZlIE5BUy9TQU4gc3RvcmFnZSBzcGFj
-ZSB0byBtYWtlIGlkZW50aWNhbCBjb3BpZXMgb2YgNXgzIFRCLA0KYnV0IG1heWJlIEkgc2hvdWxk
-IGJ1eSA1IG1vcmUgZGlza3MgYW5kIGRvIGEgZGQgbWlycm9yIHNvIEkgaGF2ZSBhDQpiYWNrdXAg
-b2YgdGhlIGN1cnJlbnQgc3RhdGUuDQoNCkFnYWluLCBhbnkgaGVscCAvIGlkZWFzIHdlbGNvbWUs
-IGVzcGVjaWFsbHkgYnVpbGRpbmcgYW4gbWRhZG0gdmVyc2lvbg0Kd2l0aCBvZmZzZXRfZGF0YSBv
-cHRpb25zIC4uLg0KDQpKdWxpYW4NCg0KVW5pdmVyc2l0w6R0c2tsaW5pa3VtIEplbmEgLSBCYWNo
-c3RyYXNzZSAxOCAtIEQtMDc3NDMgSmVuYQ0KRGllIGdlc2V0emxpY2hlbiBQZmxpY2h0YW5nYWJl
-biBmaW5kZW4gU2llIHVudGVyIGh0dHA6Ly93d3cudW5pa2xpbmlrdW0tamVuYS5kZS9QZmxpY2h0
-YW5nYWJlbi5odG1sDQo=
+Hi Julian,
+
+Very good report.  I think we can help.
+
+On 01/11/2014 01:42 AM, Gro=C3=9Fkreutz, Julian wrote:
+> Dear all, dear Neil (thanks for pointing me to this list),
+>=20
+> I am in desperate need of help. mdadm is fantastic work, and I have
+> relied on mdadm for years to run very stable server systems, never ha=
+d
+> major problems I could not solve.
+>=20
+> This time its different:
+>=20
+> On a Centos 6.x (can't remember) initially in 2012:
+>=20
+> parted to create GPT partitions on 5 Seagate drives 3TB each
+>=20
+> Model: ATA ST3000DM001-9YN1 (scsi)
+> Disk /dev/sda: 5860533168s  # sd[bcde] identical
+> Sector size (logical/physical): 512B/4096B
+> Partition Table: gpt
+>=20
+> Number  Start     End          Size         File system  Name     Fla=
+gs
+> 1      2048s     1953791s     1951744s     ext4                  boot
+> 2      1955840s  5860532223s  5858576384s               primary  raid
+
+Ok.
+
+Please also show the partition tables for the /dev/sd[fgh].
+
+> I used an unknown mdadm version including unknown offset parameters f=
+or
+> 4k alignment to create
+>=20
+> /dev/sd[abcde]1 as /dev/md0 raid 1 for booting (1 GB)
+> /dev/sd[abcde]2 as /dev/md1 raid 6 for data (9 TB) lvm physical drive
+>=20
+> Later added 3 more 3T identical Seagate drives with identical partiti=
+on
+> layout, but later firmware.
+>=20
+> Using likely a different newer version of mdadm I expanded RAID 6 by =
+2
+> drives and added 1 spare.
+>=20
+> /dev/md1 was at 15 TB gross, 13 TB usable, expanded pv
+>=20
+> Ran fine
+
+Ok.  Your evidence below has some evidence suggesting you created the
+larger array from scratch instead of using --grow.  Do you remember?
+
+> Then I moved the 8 disks to a new server with an hba and backplane,
+> array did not start because mdadm did not find the superblocks on the
+> original 5 devices /dev/sd[abcde]2. Moving the disks back to the old
+> server the error did not vanish. Using a centos 6.3 livecd, I got the
+> following:
+>=20
+> [root@livecd ~]# mdadm -Evvvvs /dev/sd[abcdefgh]2
+> mdadm: No md superblock detected on /dev/sda2.
+> mdadm: No md superblock detected on /dev/sdb2.
+> mdadm: No md superblock detected on /dev/sdc2.
+> mdadm: No md superblock detected on /dev/sdd2.
+> mdadm: No md superblock detected on /dev/sde2.
+>=20
+> /dev/sdf2:
+>               Magic : a92b4efc
+>             Version : 1.2
+>         Feature Map : 0x0
+>          Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>                Name : 1
+>       Creation Time : Wed Jul 31 18:24:38 2013
+
+Note this creation time...  would have been 2012 if you had used --grow=
+=2E
+
+>          Raid Level : raid6
+>        Raid Devices : 7
+>=20
+>      Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>          Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>       Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+
+This used dev size is very odd.  The unused space after the data area i=
+s
+1155584 sectors (>500MiB).
+
+>         Data Offset : 262144 sectors
+>        Super Offset : 8 sectors
+>               State : active
+>         Device UUID : d5a16cb2:ff41b9a5:cbbf12b7:3750026d
+>=20
+>         Update Time : Mon Dec 16 01:16:26 2013
+>            Checksum : ee921c43 - correct
+>              Events : 327
+>=20
+>              Layout : left-symmetric
+>          Chunk Size : 256K
+>=20
+>       Device Role : Active device 5
+>       Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+> /dev/sdg2:
+>               Magic : a92b4efc
+>             Version : 1.2
+>         Feature Map : 0x0
+>          Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>                Name : 1
+>       Creation Time : Wed Jul 31 18:24:38 2013
+>          Raid Level : raid6
+>        Raid Devices : 7
+>=20
+>      Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>          Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>       Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+>         Data Offset : 262144 sectors
+>        Super Offset : 8 sectors
+>               State : active
+>         Device UUID : a1e1e51b:d8912985:e51207a9:1d718292
+>=20
+>         Update Time : Mon Dec 16 01:16:26 2013
+>            Checksum : 4ef01fe9 - correct
+>              Events : 327
+>=20
+>              Layout : left-symmetric
+>          Chunk Size : 256K
+>=20
+>         Device Role : Active device 6
+>         Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+> /dev/sdh2:
+>               Magic : a92b4efc
+>             Version : 1.2
+>         Feature Map : 0x0
+>          Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>                Name : 1
+>       Creation Time : Wed Jul 31 18:24:38 2013
+>          Raid Level : raid6
+>        Raid Devices : 7
+>=20
+>      Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>          Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>       Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+>         Data Offset : 262144 sectors
+>        Super Offset : 8 sectors
+>               State : active
+>         Device UUID : 030cb9a7:76a48b3c:b3448369:fcf013e1
+>=20
+>         Update Time : Mon Dec 16 01:16:26 2013
+>            Checksum : a1330e97 - correct
+>              Events : 327
+>=20
+>              Layout : left-symmetric
+>          Chunk Size : 256K
+>=20
+>        Device Role : spare
+>        Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+>=20
+> I suspect that the superblock of the original 5 devices is at a
+> different location, possibly because they where created with a differ=
+ent
+> mdadm version, i.e. at the end of the partitions. Booting the drives
+> with the hba in IT (non-raid) mode on the new server may have introdu=
+ced
+> an initialization on the first five drive at the end of the partition=
+s
+> because I can hexdump something with "EFI PART" in the last 64 kb in =
+all
+> 8 partitions used for the raid 6, which may not have affected the 3
+> added drives which show metadata 1.2.
+
+The "EFI PART" is part of the backup copy of the GPT.  All the drives i=
+n
+a working array will have the same metadata version (superblock
+location) even if the data offsets are different.
+
+I would suggest hexdumping entire devices looking for the MD superblock
+magic value, which will always be at the start of a 4k-aligned block.
+
+Show (will take a long time, even with the big block size):
+
+for x in /dev/sd[a-e]2 ; echo -e "\nDevice $x" ; dd if=3D$x bs=3D1M |he=
+xdump
+-C |grep "000  fc 4e 2b a9" ; done
+
+=46or any candidates found, hexdump the whole 4k block for us.
+
+> If any of You can help me sort this I would greatly appreciate it. I
+> guess I need the mdadm version where I can set the data offset
+> differently for each device, but it doesn't compile with an error in
+> sha1.c:
+>=20
+> sha1.h:29:22: Fehler: ansidecl.h: Datei oder Verzeichnis nicht gefund=
+en
+> (didn't find ansidecl.h, error in German)
+
+You probably need some *-dev packages.  I don't use the RHEL platform,
+so I'm not sure what you'd need.  In the ubuntu world, it'd be the
+"build-essentials" meta-package.
+
+> What would be the best way to proceed? There is critical data on this
+> raid, not fully backed up.
+>=20
+> (UPD'T)
+>=20
+> Thanks for getting back.
+>=20
+> Yes, it's bad, I know, also tweaking without keeping exact records of
+> versions and offsets.
+>=20
+> I am, however, rather sure that nothing was written to the disks when=
+ I
+> plugged them into the NEW server, unless starting up a live cd causes=
+ an
+> automatic assemble attempt with an update to the superblocks. That I
+> cannot exclude.
+>=20
+> What I did so far w/o writing to the disks
+>=20
+> get non-00 data at the beginning of sda2:
+>=20
+> dd if=3D/dev/sda skip=3D1955840 bs=3D512 count=3D10 | hexdump -C | gr=
+ep [^00]
+
+=46WIW, you could have combined "if=3D/dev/sda skip=3D1955840" into
+"if=3D/dev/sda2" . . . :-)
+
+> gives me
+>=20
+> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+>         *
+> 00001000  1e b5 54 51 20 4c 56 4d  32 20 78 5b 35 41 25 72  |..TQ LVM=
+2
+> x[5A%r|
+> 00001010  30 4e 2a 3e 01 00 00 00  00 10 00 00 00 00 00 00  |
+> 0N*>............|
+> 00001020  00 00 02 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> 00001030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> *
+> 00001200  76 67 5f 6e 65 64 69 67  73 30 32 20 7b 0a 69 64  |vg_nedig=
+s02
+> {.id|
+> 00001210  20 3d 20 22 32 4c 62 48  71 64 2d 72 67 42 74 2d  | =3D
+> "2LbHqd-rgBt-|
+> 00001220  45 4a 75 31 2d 32 52 36  31 2d 41 35 7a 74 2d 6e  |
+> EJu1-2R61-A5zt-n|
+> 00001230  49 58 53 2d 66 79 4f 36  33 73 22 0a 73 65 71 6e  |
+> IXS-fyO63s".seqn|
+> 00001240  6f 20 3d 20 37 0a 66 6f  72 6d 61 74 20 3d 20 22  |o =3D
+> 7.format =3D "|
+> 00001250  6c 76 6d 32 22 20 23 20  69 6e 66 6f 72 6d 61 74  |lvm2" #
+> informat|
+> (cont'd)
+
+This implies that /dev/sda2 is the first device in a raid5/6 that uses
+metadata 0.9 or 1.0.  You've found the LVM PV signature, which starts a=
+t
+4k into a PV.  Theoretically, this could be a stray, abandoned signatur=
+e
+from the original array, with the real LVM signature at the 262144
+offset.  Show:
+
+dd if=3D/dev/sda2 skip=3D262144 count=3D16 |hexdump -C
+
+>=20
+> but on /dev/sdb
+>=20
+> 00000000  5f 80 00 00 5f 80 01 00  5f 80 02 00 5f 80 03 00  |
+> _..._..._..._...|
+> 00000010  5f 80 04 00 5f 80 0c 00  5f 80 0d 00 00 00 00 00  |
+> _..._..._.......|
+> 00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> *
+> 00001000  60 80 00 00 60 80 01 00  60 80 02 00 60 80 03 00  |
+> `...`...`...`...|
+> 00001010  60 80 04 00 60 80 0c 00  60 80 0d 00 00 00 00 00  |
+> `...`...`.......|
+> 00001020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+> |................|
+> *
+> 00001400
+>=20
+> so my initial guess that the data may start at 00001000 did not pan o=
+ut.
+
+No, but with parity raid scattering data amongst the participating
+devices, the report on /dev/sdb2 is expected.
+
+> Does anybody have an idea of how to reliably identify an mdadm
+> superblock in a hexdump of the drive ?
+
+Above.
+
+> And second, have I got my numbers right ? In parted I see the block
+> count, and when I multiply 512 (not 4096!) with the total count I get=
+ 3
+> TB, so I think I have to use bs=3D512 in dd to get teh partition
+> boundaries correct.
+
+dd uses bs=3D512 as the default.  And it can access the partitions dire=
+ctly.
+
+> As for the last state: one drive was set faulty, apparently, but the
+> spare had not been integrated. I may have gotten caught in a bug
+> described by Neil Brown, where on shutdown disk were wrongly reported=
+,
+> and subsequently superblock information was overwritten.
+
+Possible.  If so, you may not find any superblocks with the grep above.
+
+> I don't have NAS/SAN storage space to make identical copies of 5x3 TB=
+,
+> but maybe I should buy 5 more disks and do a dd mirror so I have a
+> backup of the current state.
+
+We can do some more non-destructive investigation first.
+
+Regards,
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
