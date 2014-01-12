@@ -1,81 +1,92 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Why 4k native drives haven't arrived
-Date: Mon, 13 Jan 2014 02:25:51 +0600
-Message-ID: <20140113022551.656b95e1@natsu>
-References: <38C8AAEB-811B-442F-BA80-1EFAF00BADB1@colorremedies.com>
-	<6AACF77C-5D54-4ABF-AA2D-FC3F4F1E141C@colorremedies.com>
-	<yq1txd9nw2d.fsf@sermon.lab.mkp.net>
-	<F92ECEC1-D375-498B-8C6A-C88C815C325F@colorremedies.com>
-	<yq1lhylnj8z.fsf@sermon.lab.mkp.net>
-	<B202E185-81A8-4F10-A311-521F2E7086BA@colorremedies.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID 10 far and offset on-disk layouts
+Date: Mon, 13 Jan 2014 10:20:21 +1100
+Message-ID: <20140113102021.1ef3e203@notabene.brown>
+References: <52BD8EDD.10809@assyoma.it>
+	<20131227151927.GA4003@www5.open-std.org>
+	<52BD9B4F.3000509@assyoma.it>
+	<20131227154952.GA6539@www5.open-std.org>
+	<52CE57D9.1030501@assyoma.it>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f9+VBdTwMH+pD=BE8iFoA8."; protocol="application/pgp-signature"
+ boundary="Sig_/TT9gHQh_heeX7uQVxHAFFRA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B202E185-81A8-4F10-A311-521F2E7086BA@colorremedies.com>
+In-Reply-To: <52CE57D9.1030501@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-raid@vger.kernel.org, keld@keldix.com
 List-Id: linux-raid.ids
 
---Sig_/f9+VBdTwMH+pD=BE8iFoA8.
+--Sig_/TT9gHQh_heeX7uQVxHAFFRA
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 12 Jan 2014 12:04:53 -0700
-Chris Murphy <lists@colorremedies.com> wrote:
+On Thu, 09 Jan 2014 09:03:37 +0100 Gionatan Danti <g.danti@assyoma.it> wrot=
+e:
+
+> >>
+> >> Interesting. Two question:
+> >> 1) from which kernel the layout is the one depicted by Wikipedia?
+
+Exactly what depiction in wikipedia are you referring to?  A link to the
+image might help.
+
+> >> 2) it is possible, using mdadm, check what "far" layout is in use?
+
+mdadm --detail /dev/mdWHATEVER | grep Layout
+
+
+> >
+> > I cannot answer that. Neil Brown should know.
+> >
+> > Best regards
+> > Keld
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>=20
+> Hi all,
+> anyone with an update on these two questions?
+>=20
+> I was thinking to use the kernel block trace facility to track disk=20
+> access and infer the on-disk data structure, but I haven't tried for now.
+>=20
+> On the other hand, I carefully looked at mdadm output, without finding=20
+> anything related to physical block placing.
+
+Look for "Layout".
+
+NeilBrown
+
 
 >=20
-> On Jan 12, 2014, at 11:32 AM, "Martin K. Petersen" <martin.petersen@oracl=
-e.com> wrote:
+> Any new advices on that regard?
+> Thanks.
 >=20
-> >>>>>> "Chris" =3D=3D Chris Murphy <lists@colorremedies.com> writes:
-> >=20
-> > Chris> I think this is a pretty craptastic thing for a vendor to do to
-> > Chris> users. It doesn't matter that the overwhelming majority will buy
-> > Chris> the product as a unit, and never remove it. It means some users
-> > Chris> will need esoteric knowledge to recover their own data, a
-> > Chris> recovery from data loss that's induced by ill conceived product
-> > Chris> behavior.
-> >=20
-> > Removing the physical drive from the USB enclosure is getting pretty far
-> > away from "intended purpose".
->=20
-> It's common enough that it's predictable that a significant minority user=
-s will get into trouble with a product of this type. That even Mac users ar=
-e pulling drives out of enclosures, for reasons other than troubleshooting,=
- further demonstrates that it's not at all uncommon practice.
 
-=46rom what I remember reading about these drives, some of the newer ones are
-just USB-only. There is no "enclosure" to speak of, that you could remove a=
-nd
-then simply plug the drive into SATA. It may be still possible, but certain=
-ly
-not easy:
-http://www.datarecoverytools.co.uk/2010/05/05/how-to-connect-and-recover-us=
-b-only-western-digital-drives-with-hd-doctor-suite/
 
-It does make sense for the manufacturers to roll-out these lesser-compatible
-features on such USB-only drives first. Another instance where that was the
-case, is the first 3 TB drives. They can manufacture and sell those with
-confidence, knowing that no one will try to use the drive plugged directly =
-into
-their Windows XP PC with a 10-year-old BIOS.
-
---=20
-With respect,
-Roman
-
---Sig_/f9+VBdTwMH+pD=BE8iFoA8.
+--Sig_/TT9gHQh_heeX7uQVxHAFFRA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-iEYEARECAAYFAlLS+k8ACgkQTLKSvz+PZwiUKwCeJlBAKDZPOxGJ3p+F4++ksRfp
-5aIAn250Le2BE9ENzZ46j9WpekHohxxo
-=mO+L
+iQIVAwUBUtMjNTnsnt1WYoG5AQJlcA//dmUG+lpb4UqjueS0KyGjj1YOFlUiQ0S3
+m0FIb2PZAe66o5/48Uk3m5m0URpgH8xsLn8iXTWn3NHGGkN5Hj9JwlVJdqV8/xxI
+BYSx+R0rDGfJXPKyclJrf/YWnzvPhpe1+JDJB4qj9+TUznMoK6qC9osstDp2CQc9
+SmqGbADALFyxqvfcyt/O85cDfHvxmeg/9NJfzWNBKrT0Ed//nmmloYyrD9ZhKkvW
+4ca5Ky+BIKrKXzgaYnUCkZxcXzDhS+5jBYxgbPei1RcNMQ/WvEhf9JxT+NdZWW6f
+ySh5jZ8Qto24oREf5l+N8ZhiM1q+ThQclZO5aM/DjC2LW2E/IfiF+WMtfDU2YjEF
+WGiqOGmX5tX7nTtjyr8vYUXnNRQb7rGc9EO/dbBpti7SmWavlhw6odPEM6Fk0Blf
+gUEzvpKwdB8tV+vp1KSb64qfRbMo7aGNAD/jyCSBHJXO+s9+UWRl0EJ7a9jmtRd9
+ntsDtO3hxa2uLr6viNDPPFbVfzTl0m+Bztn+Ea9c1+P2peiYFfb6tnlholcFibit
+sunLV+wSfqjCmwYDfuzd211xXLWnyJcsmolvlVFyyJjnMVsflre2W21HRLVq+QOw
+jHJp6ZfVMx5Sr2uhFmal7wtzCxULmxY2ZwJcH39GzajYTo9xZOaZnB+sZum8Og9K
+MsmuI76b+9A=
+=IxSI
 -----END PGP SIGNATURE-----
 
---Sig_/f9+VBdTwMH+pD=BE8iFoA8.--
+--Sig_/TT9gHQh_heeX7uQVxHAFFRA--
