@@ -1,29 +1,154 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: mdadm expanded 8 disk raid 6 fails in new server, 5 original devices show no md superblock
-Date: Mon, 13 Jan 2014 13:11:37 -0700
-Message-ID: <D71A830E-3DB0-428D-8ED7-AD07E92B9B0A@colorremedies.com>
-References: <1389422546.11328.15.camel@achilles.aeskuladis.de>	 <52D183B5.3060006@turmel.org> <1389632980.11328.104.camel@achilles.aeskuladis.de> <52D4337F.4050307@turmel.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID 10 far and offset on-disk layouts
+Date: Tue, 14 Jan 2014 09:27:51 +1100
+Message-ID: <20140114092751.09464b7b@notabene.brown>
+References: <52BD8EDD.10809@assyoma.it>
+	<20131227151927.GA4003@www5.open-std.org>
+	<52BD9B4F.3000509@assyoma.it>
+	<20131227154952.GA6539@www5.open-std.org>
+	<52CE57D9.1030501@assyoma.it>
+	<20140113102021.1ef3e203@notabene.brown>
+	<52D3A962.4000308@assyoma.it>
+	<20140113204534.737a98f6@notabene.brown>
+	<52D3BCB1.1010200@assyoma.it>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Mepbi0LHVk_XlZmOKnPedHM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52D4337F.4050307@turmel.org>
+In-Reply-To: <52D3BCB1.1010200@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-raid@vger.kernel.org, keld@keldix.com
 List-Id: linux-raid.ids
 
+--Sig_/Mepbi0LHVk_XlZmOKnPedHM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Jan 13, 2014, at 11:42 AM, Phil Turmel <philip@turmel.org> wrote:
+On Mon, 13 Jan 2014 11:15:13 +0100 Gionatan Danti <g.danti@assyoma.it> wrot=
+e:
 
-> Do *not* buy desktop drives!  You need raid-capable drives like the WD
-> Red at the least.
+> On 01/13/2014 10:45 AM, NeilBrown wrote:
+> > On Mon, 13 Jan 2014 09:52:50 +0100 Gionatan Danti <g.danti@assyoma.it> =
+wrote:
+> >
+> >> Hi Neil,
+> >> let me recap from a previous message:
+> >>
+> >>   >FAR LAYOUT
+> >>   >md(4) states:
+> >>   >"The first copy of all data blocks will be striped across the early=
+ >part
+> >>   >of all drives in RAID0 fashion, and then the next copy of all blocks
+> >>   >will be striped across a later section of all drives, always ensuri=
+ng
+> >>   >that all copies of any given block are on different drives"
+> >>   >
+> >>   >The "on different drives" part let me wonder _how_ are chunks
+> >>   >distributed. On a 4-disk array, I can imagine some different schema=
+s:
+> >>   >
+> >>   >1)	A1 A2 A3 A4
+> >>   >	.. .. .. ..
+> >>   >	A4 A1 A2 A3
+> >>   >
+> >>   >2)	A1 A2 A3 A4
+> >>   >	.. .. .. ..
+> >>   >	A2 A1 A4 A3
+> >>   >
+> >>   >The first schema is the one depicted by SuSe documentation [1], whi=
+le
+> >>   >the second is the one described by Wikipedia [2].
+> >>   >
+> >>   >Question 1: as the two schema have different reliability
+> >>   >characteristics, which is really used?
+> >>
+> >> SuSe entry:
+> >> https://www.suse.com/documentation/sles11/stor_admin/data/raidmdadmr10=
+cpx.html#b7cynnk
+> >>
+> >> Wikipedia entry:
+> >> http://en.wikipedia.org/wiki/Linux_MD_RAID_10#LINUX-MD-RAID-10 (see how
+> >> far layout is depicted)
+> >>
+> >> Keld kindly told me that the SuSe is simply not updated, as it depict a
+> >> situation changed with newer kernels. So my two questions:
+> >
+> > I cannot see an important difference between the two pages you referenc=
+e.
+> > Both appear to be correct.
+>=20
+> Mmm... they seem different to me.
+>=20
+> SeSe FAR Layout:
+>=20
+> sda1 sdb1 sdc1 sde1
+>    0    1    2    3
+>    4    5    6    7
+>    . . .
+>    3    0    1    2
+>    7    4    5    6
+>=20
+> Notice how (for example) sdb1 is coupled both to sda1 (0,4) and=20
+> sdc1(1,5). If sdb1 fails, any sda1 or sdc1 failure lead to data loss.
+>=20
+> Now, Wikipedia FAR Layout:
+>=20
+> 4 drives (sda1, sdb1, sdc1, sdd1)
+> --------------------
+> A1   A2   A3   A4
+> A5   A6   A7   A8
+> A9   A10  A11  A12
+> ..   ..   ..   ..
+> A2   A1   A4   A3
+> A6   A5   A8   A7
+> A10  A9   A12  A11
+> ..   ..   ..   ..
+>=20
+> Notice now how a single disk (eg: sdb1) is coupled to only another=20
+> _single_ disk (eg: sda1). In this case, if sdb1 fails, you had to lose=20
+> sda1 to have a data loss. Losing sdc1 or sdd1 will _not_ lead to data los=
+s.
+>=20
 
+Thanks for being explicit - it is much easier to answer explicit questions =
+:-)
 
-Yeah I agree. If you care about the data, suck it up and use the right drive.
+Yes, they are different.  So the wikipedia article is wrong, or at least
+misleading.  That is not what the "f2" layout looks like.
 
-Very slight threadjack here: WD has a Caviar and Scorpio Blue, and all of the models I've seen, both desktop and laptop interestingly enough, have SCT ERC support. They are "tested and recommended" for raid0/raid1 only. WD says they are not warranted for use in (among other things) "multi-bay chassis" even though they don't list raid5 by name. I think the question is whether vibration is a concern with this class of drive, which then points a typical user to the Caviar/Scorpio Black which has the same recommendation and proscription as the Blue, *but* at least one desktop and one laptop Black model I have, do not support SCT ERC.
+The md driver does support that layout.  I don't know yet what mdadm will
+call it, but it won't be called "f2".
 
-So it's almost like spec wise the Red has the vibration tolerance of the Black, but the SCT ERC support the Blue has. It's just odd they do it this way though. And finding out what drives have SCT ERC support is non-obvious.
+So this change:
 
-Chris Murphy
+http://en.wikipedia.org/w/index.php?title=3DNon-standard_RAID_levels&diff=
+=3D501908270&oldid=3D501604733
 
+was wrong.
+
+NeilBrown
+
+--Sig_/Mepbi0LHVk_XlZmOKnPedHM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUtRoZznsnt1WYoG5AQIomhAAqBAYkmBS5OHUWZCBgQ5I+bnruTTWuuIk
+l+eLginPqqjvHci3RfoAFVIv13a4JxwZ8647o+6N2qQLAS2IDbAPJJlD6jxoVK8p
+KYk9q4ipurjQDtiNDpqhn1DoezAkU9DUyIUG4Ss5jpomuaXkwXaV8Vvf0LXcQ+4W
+F4O55AQ7eCcXjf2Zd9ZQRDAizR03PyWGJm0q+l8k3FGzwpHzLDdlSYiSW1sLy/AK
+9bann8Snkc2rp1evz5q9W+I3iXvg5xuTiVTX6cfD9KY7WmeMBFMyfrIL4xfvap3C
+FH+D4UiHjRCspLFpY3+EU4BwMZBcNho1bSC0cV7WPW6Zuo6/zkqQ+I3p3fuXHS25
+hicShLxc7ZH0ziUSWFINPHSHl8OVx21tc2SWfBFYQe+V3y4Y1gG94VdX4AW7Vpfr
+eFVpP432/SYvY7cSMmozXQdwdtKw5yRqhvt1khqwbr41nqst070LBgaCqXQEf5c4
+nDXIjsHY7WaeWiJr36bvwo4Du66BlHA4ac3lt5AwubHwHHbsFd08N8c9F4B67O+C
+sv5GVhDhNSKq19ZA+vgi4CUJ+ZJaz7Mn0T2Z68YHNUNiuNlhW8ePWkaZd8y7402u
+0bjLC4iArzEU834EHi6hjqq/4O6+bJX9CHObzdvw1mnbLfj3AgA08J9jk9ZejKLm
+DRprFqmeSeI=
+=D3GV
+-----END PGP SIGNATURE-----
+
+--Sig_/Mepbi0LHVk_XlZmOKnPedHM--
