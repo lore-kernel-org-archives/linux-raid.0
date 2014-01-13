@@ -1,92 +1,141 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID 10 far and offset on-disk layouts
-Date: Mon, 13 Jan 2014 10:20:21 +1100
-Message-ID: <20140113102021.1ef3e203@notabene.brown>
-References: <52BD8EDD.10809@assyoma.it>
-	<20131227151927.GA4003@www5.open-std.org>
-	<52BD9B4F.3000509@assyoma.it>
-	<20131227154952.GA6539@www5.open-std.org>
-	<52CE57D9.1030501@assyoma.it>
+From: Richard Michael <rmichael@edgeofthenet.org>
+Subject: After RAID0 grow: inconsistent superblocks and /proc/mdstat
+Date: Sun, 12 Jan 2014 23:37:57 -0500
+Message-ID: <CABR0jETBgOtu8EbR0oT0TNP_ixg0-vBQUyPZbrDTFBYU3KTL4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/TT9gHQh_heeX7uQVxHAFFRA"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52CE57D9.1030501@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-raid@vger.kernel.org, keld@keldix.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/TT9gHQh_heeX7uQVxHAFFRA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello list,
 
-On Thu, 09 Jan 2014 09:03:37 +0100 Gionatan Danti <g.danti@assyoma.it> wrot=
-e:
+I grew a RAID0 by one-disk, and it re-shaped via RAID4 as expected.
 
-> >>
-> >> Interesting. Two question:
-> >> 1) from which kernel the layout is the one depicted by Wikipedia?
+However, the component superblocks still RAID4, while /proc/mdstat,
+/sys/block/md0/md/level and "mdadm -D" all indicate RAID0.
 
-Exactly what depiction in wikipedia are you referring to?  A link to the
-image might help.
-
-> >> 2) it is possible, using mdadm, check what "far" layout is in use?
-
-mdadm --detail /dev/mdWHATEVER | grep Layout
+I am reluctant to stop the array, in case auto-assemble can't put it
+back together.  (I suppose I could create a new array, but I'd want to
+be quite confident about the layout of the disks.)
 
 
-> >
-> > I cannot answer that. Neil Brown should know.
-> >
-> > Best regards
-> > Keld
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
->=20
-> Hi all,
-> anyone with an update on these two questions?
->=20
-> I was thinking to use the kernel block trace facility to track disk=20
-> access and infer the on-disk data structure, but I haven't tried for now.
->=20
-> On the other hand, I carefully looked at mdadm output, without finding=20
-> anything related to physical block placing.
-
-Look for "Layout".
-
-NeilBrown
+Is this a bug?  Should/can I re-write the superblock(s)?
 
 
->=20
-> Any new advices on that regard?
-> Thanks.
->=20
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+md0 : active raid0 sdc1[2] sdd1[0]
+      5860268032 blocks super 1.2 512k chunks
+
+# cat /sys/block/md0/md/level
+raid0
+
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Fri Jan 10 13:02:25 2014
+     Raid Level : raid0
+     Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 12 20:08:53 2014
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 512K
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       2       8       33        1      active sync   /dev/sdc1
 
 
---Sig_/TT9gHQh_heeX7uQVxHAFFRA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+But,
 
-iQIVAwUBUtMjNTnsnt1WYoG5AQJlcA//dmUG+lpb4UqjueS0KyGjj1YOFlUiQ0S3
-m0FIb2PZAe66o5/48Uk3m5m0URpgH8xsLn8iXTWn3NHGGkN5Hj9JwlVJdqV8/xxI
-BYSx+R0rDGfJXPKyclJrf/YWnzvPhpe1+JDJB4qj9+TUznMoK6qC9osstDp2CQc9
-SmqGbADALFyxqvfcyt/O85cDfHvxmeg/9NJfzWNBKrT0Ed//nmmloYyrD9ZhKkvW
-4ca5Ky+BIKrKXzgaYnUCkZxcXzDhS+5jBYxgbPei1RcNMQ/WvEhf9JxT+NdZWW6f
-ySh5jZ8Qto24oREf5l+N8ZhiM1q+ThQclZO5aM/DjC2LW2E/IfiF+WMtfDU2YjEF
-WGiqOGmX5tX7nTtjyr8vYUXnNRQb7rGc9EO/dbBpti7SmWavlhw6odPEM6Fk0Blf
-gUEzvpKwdB8tV+vp1KSb64qfRbMo7aGNAD/jyCSBHJXO+s9+UWRl0EJ7a9jmtRd9
-ntsDtO3hxa2uLr6viNDPPFbVfzTl0m+Bztn+Ea9c1+P2peiYFfb6tnlholcFibit
-sunLV+wSfqjCmwYDfuzd211xXLWnyJcsmolvlVFyyJjnMVsflre2W21HRLVq+QOw
-jHJp6ZfVMx5Sr2uhFmal7wtzCxULmxY2ZwJcH39GzajYTo9xZOaZnB+sZum8Og9K
-MsmuI76b+9A=
-=IxSI
------END PGP SIGNATURE-----
 
---Sig_/TT9gHQh_heeX7uQVxHAFFRA--
+# mdadm -E /dev/sd[cd]1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 8f51352a:610d0ecd:a1e28ddd:86c8586c
+           Name : anvil.localdomain:0  (local to host anvil.localdomain)
+  Creation Time : Fri Jan 10 13:02:25 2014
+     Raid Level : raid4
+   Raid Devices : 3
+
+ Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
+     Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
+  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
+    Data Offset : 260096 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=260008 sectors, after=2959 sectors
+          State : clean
+    Device UUID : ad6e6c88:0f897bc1:1f6ec909:f599bc01
+
+    Update Time : Sun Jan 12 20:08:53 2014
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 1388a7b - correct
+         Events : 9451
+
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 8f51352a:610d0ecd:a1e28ddd:86c8586c
+           Name : anvil.localdomain:0  (local to host anvil.localdomain)
+  Creation Time : Fri Jan 10 13:02:25 2014
+     Raid Level : raid4
+   Raid Devices : 3
+
+ Avail Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
+     Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
+    Data Offset : 260096 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=260008 sectors, after=2959 sectors
+          State : clean
+    Device UUID : b3cda274:547919b1:4e026228:0a4981e7
+
+    Update Time : Sun Jan 12 20:08:53 2014
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : e16a1979 - correct
+         Events : 9451
+
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+Somewhat aside, I grew the array with:
+
+"mdadm --grow /dev/md0 --raid-devices=2 --add /dev/sdc1"
+
+I suspect I should not have used "--add".  Looking at the superblock,
+there is a 3rd unknown device, which I did not intend to add.
+
+Did I convince mdadm to add two devices at the same time, sdc1 *and* a
+missing device?  (This surprises me a bit, in the sense that
+--raid-devices=2 would pertain to the added devices, rather than the
+total devices in the array.)
+
+Or, perhaps mdadm add a "dummy" device as part of the temporary RAID4
+conversion?
+
+
+Thanks for any comments.
+
+Regards,
+Richard
