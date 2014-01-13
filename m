@@ -1,162 +1,143 @@
-From: Richard Michael <rmichael@edgeofthenet.org>
-Subject: Re: After RAID0 grow: inconsistent superblocks and /proc/mdstat
-Date: Mon, 13 Jan 2014 00:03:06 -0500
-Message-ID: <CABR0jEQ12_1kLXiYxrJJ7yhm_7L5UJAEfEYNZumqY2P2TdLa1Q@mail.gmail.com>
-References: <CABR0jETBgOtu8EbR0oT0TNP_ixg0-vBQUyPZbrDTFBYU3KTL4Q@mail.gmail.com>
- <CABR0jETSpfzfMuxiZrL1YsudZEUV_inZegb5AzsQ-ihyy06_GA@mail.gmail.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: RAID 10 far and offset on-disk layouts
+Date: Mon, 13 Jan 2014 09:52:50 +0100
+Message-ID: <52D3A962.4000308@assyoma.it>
+References: <52BD8EDD.10809@assyoma.it>	<20131227151927.GA4003@www5.open-std.org>	<52BD9B4F.3000509@assyoma.it>	<20131227154952.GA6539@www5.open-std.org>	<52CE57D9.1030501@assyoma.it> <20140113102021.1ef3e203@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABR0jETSpfzfMuxiZrL1YsudZEUV_inZegb5AzsQ-ihyy06_GA@mail.gmail.com>
+In-Reply-To: <20140113102021.1ef3e203@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, keld@keldix.com, Gionatan Danti <g.danti@assyoma.it>
 List-Id: linux-raid.ids
 
-Perhaps also worth noting -- "mdadm -D /dev/md0" does not output the
-stanza with Name, UUID and Events.  Expected?
+Hi Neil,
+let me recap from a previous message:
 
-On Sun, Jan 12, 2014 at 11:42 PM, Richard Michael
-<rmichael@edgeofthenet.org> wrote:
-> Following up my own message, I forgot to include mdadm and kernel versions:
+ >FAR LAYOUT
+ >md(4) states:
+ >"The first copy of all data blocks will be striped across the early >part
+ >of all drives in RAID0 fashion, and then the next copy of all blocks
+ >will be striped across a later section of all drives, always ensuring
+ >that all copies of any given block are on different drives"
+ >
+ >The "on different drives" part let me wonder _how_ are chunks
+ >distributed. On a 4-disk array, I can imagine some different schemas:
+ >
+ >1)	A1 A2 A3 A4
+ >	.. .. .. ..
+ >	A4 A1 A2 A3
+ >
+ >2)	A1 A2 A3 A4
+ >	.. .. .. ..
+ >	A2 A1 A4 A3
+ >
+ >The first schema is the one depicted by SuSe documentation [1], while
+ >the second is the one described by Wikipedia [2].
+ >
+ >Question 1: as the two schema have different reliability
+ >characteristics, which is really used?
+
+SuSe entry: 
+https://www.suse.com/documentation/sles11/stor_admin/data/raidmdadmr10cpx.html#b7cynnk
+
+Wikipedia entry: 
+http://en.wikipedia.org/wiki/Linux_MD_RAID_10#LINUX-MD-RAID-10 (see how 
+far layout is depicted)
+
+Keld kindly told me that the SuSe is simply not updated, as it depict a 
+situation changed with newer kernels. So my two questions:
+1) from which kernel the layout is the one depicted by Wikipedia?
+2) it is possible, using mdadm, check what "far" layout is in use?
+
+ From what I can see, a "mdadm --detail /dev/mdWHATEVER | grep Layout" 
+tell me if using far vs near vs offset layout, but not the physical 
+on-disk chunks organization (eg: far "type" 1 or 2).
+
+Anyway, the thread started because I wonder why the OFFSET layout couple 
+each disk to other two disks. Let me quote again:
+
+ >OFFSET LAYOUT
+ >md(4) states:
+ >"When 'offset' replicas are chosen, the multiple copies of a given >chunk
+ >are laid out on consecutive drives and at consecutive offsets.
+ >Effectively each stripe is duplicated and the copies are offset by one
+ >device."
+ >
+ >This means a schema like this:
+ >	
+ >3)	A1 A2 A3 A4
+ >	A4 A1 A2 A3
+ >	.. .. .. ..
+ >
+ >However, this is susceptible to any consecutive two-disk failures. A
+ >schema like
+ >
+ >4)	A1 A2 A3 A4
+ >	A2 A1 A4 A3
+ >
+ >would not suffer from this problem (eg: disk 2 & 3 can fail and the
+ >array is still working).
+ >
+ >Question 2: apart from simplicity, why the offset layout use the schema
+ >as n.3? I miss something?
+
+Full thread link: http://marc.info/?t=138815504400002&r=1&w=2
+
+Excuse me for the long email, I am simply trying to learn something :)
+Thank you very much.
+
+On 01/13/2014 12:20 AM, NeilBrown wrote:
+> On Thu, 09 Jan 2014 09:03:37 +0100 Gionatan Danti <g.danti@assyoma.it> wrote:
 >
-> $ mdadm --version
-> mdadm - v3.3 - 3rd September 2013
+>>>>
+>>>> Interesting. Two question:
+>>>> 1) from which kernel the layout is the one depicted by Wikipedia?
 >
-> $ uname -a
-> Linux anvil.localdomain 3.12.6-300.fc20.x86_64 #1 SMP Mon Dec 23
-> 16:44:31 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+> Exactly what depiction in wikipedia are you referring to?  A link to the
+> image might help.
+>
+>>>> 2) it is possible, using mdadm, check what "far" layout is in use?
+>
+> mdadm --detail /dev/mdWHATEVER | grep Layout
 >
 >
+>>>
+>>> I cannot answer that. Neil Brown should know.
+>>>
+>>> Best regards
+>>> Keld
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> Hi all,
+>> anyone with an update on these two questions?
+>>
+>> I was thinking to use the kernel block trace facility to track disk
+>> access and infer the on-disk data structure, but I haven't tried for now.
+>>
+>> On the other hand, I carefully looked at mdadm output, without finding
+>> anything related to physical block placing.
 >
-> On Sun, Jan 12, 2014 at 11:37 PM, Richard Michael
-> <rmichael@edgeofthenet.org> wrote:
->> Hello list,
+> Look for "Layout".
+>
+> NeilBrown
+>
+>
 >>
->> I grew a RAID0 by one-disk, and it re-shaped via RAID4 as expected.
+>> Any new advices on that regard?
+>> Thanks.
 >>
->> However, the component superblocks still RAID4, while /proc/mdstat,
->> /sys/block/md0/md/level and "mdadm -D" all indicate RAID0.
->>
->> I am reluctant to stop the array, in case auto-assemble can't put it
->> back together.  (I suppose I could create a new array, but I'd want to
->> be quite confident about the layout of the disks.)
->>
->>
->> Is this a bug?  Should/can I re-write the superblock(s)?
->>
->>
->> # cat /proc/mdstat
->> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
->> md0 : active raid0 sdc1[2] sdd1[0]
->>       5860268032 blocks super 1.2 512k chunks
->>
->> # cat /sys/block/md0/md/level
->> raid0
->>
->> # mdadm -D /dev/md0
->> /dev/md0:
->>         Version : 1.2
->>   Creation Time : Fri Jan 10 13:02:25 2014
->>      Raid Level : raid0
->>      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
->>    Raid Devices : 2
->>   Total Devices : 2
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Sun Jan 12 20:08:53 2014
->>           State : clean
->>  Active Devices : 2
->> Working Devices : 2
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>      Chunk Size : 512K
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       49        0      active sync   /dev/sdd1
->>        2       8       33        1      active sync   /dev/sdc1
->>
->>
->>
->> But,
->>
->>
->> # mdadm -E /dev/sd[cd]1
->> /dev/sdc1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x0
->>      Array UUID : 8f51352a:610d0ecd:a1e28ddd:86c8586c
->>            Name : anvil.localdomain:0  (local to host anvil.localdomain)
->>   Creation Time : Fri Jan 10 13:02:25 2014
->>      Raid Level : raid4
->>    Raid Devices : 3
->>
->>  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
->>      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
->>   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
->>     Data Offset : 260096 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=260008 sectors, after=2959 sectors
->>           State : clean
->>     Device UUID : ad6e6c88:0f897bc1:1f6ec909:f599bc01
->>
->>     Update Time : Sun Jan 12 20:08:53 2014
->>   Bad Block Log : 512 entries available at offset 72 sectors
->>        Checksum : 1388a7b - correct
->>          Events : 9451
->>
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 1
->>    Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
->> /dev/sdd1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x0
->>      Array UUID : 8f51352a:610d0ecd:a1e28ddd:86c8586c
->>            Name : anvil.localdomain:0  (local to host anvil.localdomain)
->>   Creation Time : Fri Jan 10 13:02:25 2014
->>      Raid Level : raid4
->>    Raid Devices : 3
->>
->>  Avail Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
->>      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
->>     Data Offset : 260096 sectors
->>    Super Offset : 8 sectors
->>    Unused Space : before=260008 sectors, after=2959 sectors
->>           State : clean
->>     Device UUID : b3cda274:547919b1:4e026228:0a4981e7
->>
->>     Update Time : Sun Jan 12 20:08:53 2014
->>   Bad Block Log : 512 entries available at offset 72 sectors
->>        Checksum : e16a1979 - correct
->>          Events : 9451
->>
->>      Chunk Size : 512K
->>
->>    Device Role : Active device 0
->>    Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
->>
->>
->>
->> Somewhat aside, I grew the array with:
->>
->> "mdadm --grow /dev/md0 --raid-devices=2 --add /dev/sdc1"
->>
->> I suspect I should not have used "--add".  Looking at the superblock,
->> there is a 3rd unknown device, which I did not intend to add.
->>
->> Did I convince mdadm to add two devices at the same time, sdc1 *and* a
->> missing device?  (This surprises me a bit, in the sense that
->> --raid-devices=2 would pertain to the added devices, rather than the
->> total devices in the array.)
->>
->> Or, perhaps mdadm add a "dummy" device as part of the temporary RAID4
->> conversion?
->>
->>
->> Thanks for any comments.
->>
->> Regards,
->> Richard
+>
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
