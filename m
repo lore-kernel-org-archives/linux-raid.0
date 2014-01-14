@@ -1,322 +1,208 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdadm expanded 8 disk raid 6 fails in new server, 5 original
+From: =?utf-8?B?R3Jvw59rcmV1dHosIEp1bGlhbg==?=
+	<Julian.Grosskreutz@med.uni-jena.de>
+Subject: AW: mdadm expanded 8 disk raid 6 fails in new server, 5 original
  devices show no md superblock
-Date: Tue, 14 Jan 2014 08:14:54 -0500
-Message-ID: <52D5384E.6030408@turmel.org>
-References: <1389422546.11328.15.camel@achilles.aeskuladis.de>	 <52D183B5.3060006@turmel.org>	 <1389632980.11328.104.camel@achilles.aeskuladis.de>	 <52D4337F.4050307@turmel.org> <1389695513.11328.158.camel@achilles.aeskuladis.de>
+Date: Tue, 14 Jan 2014 14:00:27 +0000
+Message-ID: <527FF59735ECEE43B2A8CBA10B85507978C7E0@EXCHDB1.krz.uni-jena.de>
+References: <1389422546.11328.15.camel@achilles.aeskuladis.de>
+	 <52D183B5.3060006@turmel.org>
+	 <1389632980.11328.104.camel@achilles.aeskuladis.de>
+	 <52D4337F.4050307@turmel.org>
+ <1389695513.11328.158.camel@achilles.aeskuladis.de>
+ <52D5384E.6030408@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1389695513.11328.158.camel@achilles.aeskuladis.de>
+In-Reply-To: <52D5384E.6030408@turmel.org>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?Ikdyb8Ofa3JldXR6LCBKdWxpYW4i?= <Julian.Grosskreutz@med.uni-jena.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "neilb@suse.de" <neilb@suse.de>
+To: 'Phil Turmel' <philip@turmel.org>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+Cc: "'neilb@suse.de'" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 01/14/2014 05:31 AM, Gro=C3=9Fkreutz, Julian wrote:
-> Hi Phil,
->=20
-> thanks again for bearing with me.
-
-No problem.
-
->>>>> Model: ATA ST3000DM001-9YN1 (scsi)
->>
->> Aside: This model looks familiar.  I'm pretty sure these drives are
->> desktop models that lack scterc support.  Meaning they are *not*
->> generally suitable for raid duty.  Search the archives for combinati=
-ons
->> of "timeout mismatch", "scterc", "URE", and "scrub" for a full
->> explanation.  If I've guessed correctly, you *must* use the driver
->> timeout work-around before proceeding.
->>
->=20
-> Yes I did, and smartctl showed no significant problems.
-
-?.  What did "smartctl -l scterc" say?  If it says unsupported, you hav=
-e
-a problem.  The workaround is to set the driver timeouts to ~180 second=
-s
-for each such drive.
-
-If scterc is supported, but disabled, you can set 7-second timeouts wit=
-h
-"smartctl -l scterc,70,70", but you must do so on every power cycle.
-Either way, you need boot-time scripting or distro support.
-
-Raid-rated drives power up with a reasonable setting here.
-
-> The 10 year old
-> server (supermicro enterprise grade dual Xeon with 8 GB ECC RAM) had
-> started to create problems early January which is why I wanted to mov=
-e
-> the drives to a new server in the first place, to then transfer the d=
-ata
-> to a new set of enterprise grade disks. I had checked the memory and =
-the
-> disks in a burn in for several days including time out and power savi=
-ng
-> before I set up the raid 2012/2013, and did not have any issues then.
-
-Ok.  This makes sense.
-
-> One of the reasons I tend use mdadm is that I am able to utilize
-> existing hardware to create bridging solutions until money comes in f=
-or
-> better hardware, and moving an mdadm raid has so far never created a
-> serious problem.
-
-Many people discover the timeout problem the first time they have an
-otherwise correctable read error in their array, and the array falls
-apart instead.  This list's archives are well-populated with such cases=
-=2E
-
->>> So attached You will find hexdumps of 64k of /sda/sd[a-h]2 at secto=
-r 0
->>> and 262144 which shows the superblock 1.2 on sd[fgh]2, not on sd[a-=
-e]2,
->>> but may help to identify data_offset; I suspect it is 2048 on sd[a-=
-e]2
->>> and 262144 on sd[fgh]2.
->>>
->>
->> Jackpot!  LVM2 embedded backup data at the correct location for mdad=
-m
->> data offset =3D=3D 262144.  And on /dev/sda2, which is the only devi=
-ce that
->> should have it (first device in the raid).
->>
->> From /dev/sda2 @ 262144:
->>
->>> 00001200  76 67 5f 6e 65 64 69 67  73 30 32 20 5d 0a 69 64  |vg_ned=
-igs02 ].id|
->>> 00001210  20 3d 20 22 32 4c 62 48  71 64 2d 72 67 42 9f 6e  | =3D "=
-2LbHqd-rgB.n|
->>> 00001220  45 4a 75 31 2d 32 52 36  31 2d 41 35 f5 75 2d 6e  |EJu1-2=
-R61-A5.u-n|
->>> 00001230  49 58 53 2d 66 79 4f 36  33 73 22 0a 73 65 3a 01  |IXS-fy=
-O63s".se:.|
->>> 00001240  6f 20 3d 20 33 36 0a 66  6f 72 6d 61 ca 24 3d 20  |o =3D =
-36.forma.$=3D |
->>> 00001250  22 6c 76 6d 32 22 20 23  20 69 6e 66 6f 72 6b ac  |"lvm2"=
- # infork.|
->> ...
->>> 00001a70  20 31 33 37 35 32 38 37  39 37 39 09 23 20 d2 32  | 13752=
-87979.# .2|
->>> 00001a80  64 20 4a 75 6c 20 33 31  20 31 38 3a af 37 3a 31  |d Jul =
-31 18:.7:1|
->>> 00001a90  39 20 32 30 31 33 0a 0a  00 00 00 00 00 00 ee 12  |9 2013=
-=2E.........|
->>
->> Note the creation date/time at the end (with a corrupted byte):
->>
->> Jul 31 18:?7:19 2013
->>
->> There are other corrupted bytes scattered around.  I'd be worried ab=
-out
->> the RAM in this machine.  Since you are using non-enterprise drives,=
- I'm
->> going to go out on a limb here and guess that the server doesn't hav=
-e
->> ECC ram...
-> see above
-
-Understood.  With really old memory, double-faults in the ECC could hav=
-e
-panic'd the server, leaving scattered data unwritten.
-
->> Consider performing an extended memcheck run to see what's going on.
->> Maybe move the entire stack of disks to another server.
->>
-> Thats what I did initially, moved it back because it failed, now will
-> move again into the new server before proceeding.
-
-Ok.
-
->> Based on the signature discovered above, we should be able to --crea=
-te
->> --assume-clean with the modern default data offset.  We know the
->> following device roles:
->>
->> /dev/sda2 =3D=3D 0
->> /dev/sdf2 =3D=3D 5
->> /dev/sdg2 =3D=3D 6
->> /dev/sdh2 =3D=3D spare
->>
->> So /dev/sdh2 should be left out until the array is working.
->>
->> Please re-execute the "mdadm -E" reports for /dev/sd[fgh]2 and show =
-them
->> uncut.  (Use the lasted mdadm.)  That should fill in the likely devi=
-ce
->> order of the remaining drives.
-
-Hmmm.  Typo on my part: s/lasted/latest/  Newer mdadm will give more
-information.  In particular, I wanted the tail of each report where eac=
-h
-device lists what it last knew about all of the other devices' roles.
-
-> [root@livecd mnt]# mdadm -E /dev/sd[fgh]2
->=20
-> /dev/sdf2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
->            Name : 1
->   Creation Time : Wed Jul 31 18:24:38 2013
->      Raid Level : raid6
->    Raid Devices : 7
->=20
->  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
->      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
->   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : d5a16cb2:ff41b9a5:cbbf12b7:3750026d
->=20
->     Update Time : Mon Dec 16 01:16:26 2013
->        Checksum : ee921c43 - correct
->          Events : 327
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->    Device Role : Active device 5
->    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-I was expecting more info after this.
-
-> /dev/sdg2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
->            Name : 1
->   Creation Time : Wed Jul 31 18:24:38 2013
->      Raid Level : raid6
->    Raid Devices : 7
->=20
->  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
->      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
->   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : a1e1e51b:d8912985:e51207a9:1d718292
->=20
->     Update Time : Mon Dec 16 01:16:26 2013
->        Checksum : 4ef01fe9 - correct
->          Events : 327
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->    Device Role : Active device 6
->    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-And here.
-
-> /dev/sdh2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
->            Name : 1
->   Creation Time : Wed Jul 31 18:24:38 2013
->      Raid Level : raid6
->    Raid Devices : 7
->=20
->  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
->      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
->   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 030cb9a7:76a48b3c:b3448369:fcf013e1
->=20
->     Update Time : Mon Dec 16 01:16:26 2013
->        Checksum : a1330e97 - correct
->          Events : 327
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->    Device Role : spare
->    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-And here.
-
->> Also, it is important that you document which drive serial numbers a=
-re
->> currently occupying the different device names.  An excerpt from "ls=
- -l
->> /dev/disk/by-id/" would do.
->=20
-> scsi-SATA_ST3000DM001-9YN_S1F026VJ -> ../../sda
-> scsi-SATA_ST3000DM001-9YN_W1F0TB3C -> ../../sdb
-> scsi-SATA_ST3000DM001-9YN_S1F04KAK -> ../../sdc
-> scsi-SATA_ST3000DM001-9YN_W1F0RWJY -> ../../sdd
-> scsi-SATA_ST3000DM001-9YN_S1F08N7Q -> ../../sde
-> scsi-SATA_ST3000DM001-9YN_Z1F1F3TC -> ../../sdf
-> scsi-SATA_ST3000DM001-9YN_W1F1ZZ9T -> ../../sdg
-> scsi-SATA_ST3000DM001-9YN_Z1F1X0AC -> ../../sdh
-
-Ok.  Be sure to recheck this list any time you boot, since the device
-order matters.
-
-> I am a bit more relaxed now because I found that a scheduled transfer=
- of
-> the data to the university tape robot had completed before christmas.=
- So
-> this local archive mirror is (luckily) not critical. I still want to
-> understand whether all this is just a result of shaky hardware, or an
-> mdadm (misuse) issue. Losing (all superblocks on) five drives in a la=
-rge
-> software raid 6 instead of bytes is not something I would like to rep=
-eat
-> any time soon by ie. mishandling mdadm.
-
-I think you skated over the edge due to a flaky motherboard.  mdadm
-can't fix that.  In fact, since you have a backup, I personally wouldn'=
-t
-bother further reconstruction efforts.  If you have a recent
-vgcfgbackup, it's doable, but I have little confidence in the device
-order: [a????fg], probably [abcdefg].  There's 4! =3D=3D 24 permutation=
-s
-there, each of which will require a vgcfgrestore before you can check
-the reconstruction with "fsck -n".
-
-> We have then
->=20
-> Wed Jul 31 18:24:38 2013 on sdf-h2 for creation of the raid6 and
-> wed Jul 31 18:?7:19 2013 for creation of the lvm group
->=20
-> could well be.
-
-I don't see any way to get such a timestamp except "certainly was".
-
-> So I will move the disks to the new server, make 1:1 copies to new
-> drives and then attempt an assembly using --assume-clean in which
-> order ?
-
-All permutations of [a????fg] with b, c, d, and e.
-
-Try likely combinations gleaned from "mdadm -E" reports first to
-shortcut the process.
-
-> Thanks so much, I have learned a lot already.
-
-You are welcome, and good luck.
-
-Regards,
-
-Phil
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGkgUGhpbCwNCg0KZ3JlYXQgaGVscCwgYSBsb3Qgb2YgbGVzc29ucyBsZWFybmVkIG9uIG15IHBh
+cnQsIHRoYW5rcyBhZ2Fpbi4NCg0KSSB3aWxsIG5vdCB0cnkgdG8gcmVzY3VlIHRoZSByYWlkLCB0
+aW1lIGNvbnN0cmFpbnRzIGZvcmJpZCB0aGlzIGJ1dCBJIHdpbGwgZnJvbSBub3cgb24gaW1wbGVt
+ZW50IGEgc3RyaWN0IG1pbmltdW0gaGFyZHdhcmUgcmVxdWlyZW1lbnRzIHBvbGljeSA6DQotKQ0K
+DQpSZWdhcmRzDQoNCkp1bGlhbg0KDQotLS0tLVVyc3Byw7xuZ2xpY2hlIE5hY2hyaWNodC0tLS0t
+DQpWb246IFBoaWwgVHVybWVsIFttYWlsdG86cGhpbGlwQHR1cm1lbC5vcmddDQpHZXNlbmRldDog
+RGllbnN0YWcsIDE0LiBKYW51YXIgMjAxNCAxNDoxNQ0KQW46IEdyb8Ofa3JldXR6LCBKdWxpYW47
+IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpDYzogbmVpbGJAc3VzZS5kZQ0KQmV0cmVmZjog
+UmU6IG1kYWRtIGV4cGFuZGVkIDggZGlzayByYWlkIDYgZmFpbHMgaW4gbmV3IHNlcnZlciwgNSBv
+cmlnaW5hbCBkZXZpY2VzIHNob3cgbm8gbWQgc3VwZXJibG9jaw0KDQpPbiAwMS8xNC8yMDE0IDA1
+OjMxIEFNLCBHcm/Dn2tyZXV0eiwgSnVsaWFuIHdyb3RlOg0KPiBIaSBQaGlsLA0KPg0KPiB0aGFu
+a3MgYWdhaW4gZm9yIGJlYXJpbmcgd2l0aCBtZS4NCg0KTm8gcHJvYmxlbS4NCg0KPj4+Pj4gTW9k
+ZWw6IEFUQSBTVDMwMDBETTAwMS05WU4xIChzY3NpKQ0KPj4NCj4+IEFzaWRlOiBUaGlzIG1vZGVs
+IGxvb2tzIGZhbWlsaWFyLiAgSSdtIHByZXR0eSBzdXJlIHRoZXNlIGRyaXZlcyBhcmUNCj4+IGRl
+c2t0b3AgbW9kZWxzIHRoYXQgbGFjayBzY3RlcmMgc3VwcG9ydC4gIE1lYW5pbmcgdGhleSBhcmUg
+Km5vdCoNCj4+IGdlbmVyYWxseSBzdWl0YWJsZSBmb3IgcmFpZCBkdXR5LiAgU2VhcmNoIHRoZSBh
+cmNoaXZlcyBmb3INCj4+IGNvbWJpbmF0aW9ucyBvZiAidGltZW91dCBtaXNtYXRjaCIsICJzY3Rl
+cmMiLCAiVVJFIiwgYW5kICJzY3J1YiIgZm9yDQo+PiBhIGZ1bGwgZXhwbGFuYXRpb24uICBJZiBJ
+J3ZlIGd1ZXNzZWQgY29ycmVjdGx5LCB5b3UgKm11c3QqIHVzZSB0aGUNCj4+IGRyaXZlciB0aW1l
+b3V0IHdvcmstYXJvdW5kIGJlZm9yZSBwcm9jZWVkaW5nLg0KPj4NCj4NCj4gWWVzIEkgZGlkLCBh
+bmQgc21hcnRjdGwgc2hvd2VkIG5vIHNpZ25pZmljYW50IHByb2JsZW1zLg0KDQo/LiAgV2hhdCBk
+aWQgInNtYXJ0Y3RsIC1sIHNjdGVyYyIgc2F5PyAgSWYgaXQgc2F5cyB1bnN1cHBvcnRlZCwgeW91
+IGhhdmUgYSBwcm9ibGVtLiAgVGhlIHdvcmthcm91bmQgaXMgdG8gc2V0IHRoZSBkcml2ZXIgdGlt
+ZW91dHMgdG8gfjE4MCBzZWNvbmRzIGZvciBlYWNoIHN1Y2ggZHJpdmUuDQoNCklmIHNjdGVyYyBp
+cyBzdXBwb3J0ZWQsIGJ1dCBkaXNhYmxlZCwgeW91IGNhbiBzZXQgNy1zZWNvbmQgdGltZW91dHMg
+d2l0aCAic21hcnRjdGwgLWwgc2N0ZXJjLDcwLDcwIiwgYnV0IHlvdSBtdXN0IGRvIHNvIG9uIGV2
+ZXJ5IHBvd2VyIGN5Y2xlLg0KRWl0aGVyIHdheSwgeW91IG5lZWQgYm9vdC10aW1lIHNjcmlwdGlu
+ZyBvciBkaXN0cm8gc3VwcG9ydC4NCg0KUmFpZC1yYXRlZCBkcml2ZXMgcG93ZXIgdXAgd2l0aCBh
+IHJlYXNvbmFibGUgc2V0dGluZyBoZXJlLg0KDQo+IFRoZSAxMCB5ZWFyIG9sZA0KPiBzZXJ2ZXIg
+KHN1cGVybWljcm8gZW50ZXJwcmlzZSBncmFkZSBkdWFsIFhlb24gd2l0aCA4IEdCIEVDQyBSQU0p
+IGhhZA0KPiBzdGFydGVkIHRvIGNyZWF0ZSBwcm9ibGVtcyBlYXJseSBKYW51YXJ5IHdoaWNoIGlz
+IHdoeSBJIHdhbnRlZCB0byBtb3ZlDQo+IHRoZSBkcml2ZXMgdG8gYSBuZXcgc2VydmVyIGluIHRo
+ZSBmaXJzdCBwbGFjZSwgdG8gdGhlbiB0cmFuc2ZlciB0aGUNCj4gZGF0YSB0byBhIG5ldyBzZXQg
+b2YgZW50ZXJwcmlzZSBncmFkZSBkaXNrcy4gSSBoYWQgY2hlY2tlZCB0aGUgbWVtb3J5DQo+IGFu
+ZCB0aGUgZGlza3MgaW4gYSBidXJuIGluIGZvciBzZXZlcmFsIGRheXMgaW5jbHVkaW5nIHRpbWUg
+b3V0IGFuZA0KPiBwb3dlciBzYXZpbmcgYmVmb3JlIEkgc2V0IHVwIHRoZSByYWlkIDIwMTIvMjAx
+MywgYW5kIGRpZCBub3QgaGF2ZSBhbnkgaXNzdWVzIHRoZW4uDQoNCk9rLiAgVGhpcyBtYWtlcyBz
+ZW5zZS4NCg0KPiBPbmUgb2YgdGhlIHJlYXNvbnMgSSB0ZW5kIHVzZSBtZGFkbSBpcyB0aGF0IEkg
+YW0gYWJsZSB0byB1dGlsaXplDQo+IGV4aXN0aW5nIGhhcmR3YXJlIHRvIGNyZWF0ZSBicmlkZ2lu
+ZyBzb2x1dGlvbnMgdW50aWwgbW9uZXkgY29tZXMgaW4NCj4gZm9yIGJldHRlciBoYXJkd2FyZSwg
+YW5kIG1vdmluZyBhbiBtZGFkbSByYWlkIGhhcyBzbyBmYXIgbmV2ZXIgY3JlYXRlZA0KPiBhIHNl
+cmlvdXMgcHJvYmxlbS4NCg0KTWFueSBwZW9wbGUgZGlzY292ZXIgdGhlIHRpbWVvdXQgcHJvYmxl
+bSB0aGUgZmlyc3QgdGltZSB0aGV5IGhhdmUgYW4gb3RoZXJ3aXNlIGNvcnJlY3RhYmxlIHJlYWQg
+ZXJyb3IgaW4gdGhlaXIgYXJyYXksIGFuZCB0aGUgYXJyYXkgZmFsbHMgYXBhcnQgaW5zdGVhZC4g
+IFRoaXMgbGlzdCdzIGFyY2hpdmVzIGFyZSB3ZWxsLXBvcHVsYXRlZCB3aXRoIHN1Y2ggY2FzZXMu
+DQoNCj4+PiBTbyBhdHRhY2hlZCBZb3Ugd2lsbCBmaW5kIGhleGR1bXBzIG9mIDY0ayBvZiAvc2Rh
+L3NkW2EtaF0yIGF0IHNlY3Rvcg0KPj4+IDAgYW5kIDI2MjE0NCB3aGljaCBzaG93cyB0aGUgc3Vw
+ZXJibG9jayAxLjIgb24gc2RbZmdoXTIsIG5vdCBvbg0KPj4+IHNkW2EtZV0yLCBidXQgbWF5IGhl
+bHAgdG8gaWRlbnRpZnkgZGF0YV9vZmZzZXQ7IEkgc3VzcGVjdCBpdCBpcyAyMDQ4DQo+Pj4gb24g
+c2RbYS1lXTIgYW5kIDI2MjE0NCBvbiBzZFtmZ2hdMi4NCj4+Pg0KPj4NCj4+IEphY2twb3QhICBM
+Vk0yIGVtYmVkZGVkIGJhY2t1cCBkYXRhIGF0IHRoZSBjb3JyZWN0IGxvY2F0aW9uIGZvciBtZGFk
+bQ0KPj4gZGF0YSBvZmZzZXQgPT0gMjYyMTQ0LiAgQW5kIG9uIC9kZXYvc2RhMiwgd2hpY2ggaXMg
+dGhlIG9ubHkgZGV2aWNlDQo+PiB0aGF0IHNob3VsZCBoYXZlIGl0IChmaXJzdCBkZXZpY2UgaW4g
+dGhlIHJhaWQpLg0KPj4NCj4+IEZyb20gL2Rldi9zZGEyIEAgMjYyMTQ0Og0KPj4NCj4+PiAwMDAw
+MTIwMCAgNzYgNjcgNWYgNmUgNjUgNjQgNjkgNjcgIDczIDMwIDMyIDIwIDVkIDBhIDY5IDY0DQo+
+Pj4gfHZnX25lZGlnczAyIF0uaWR8DQo+Pj4gMDAwMDEyMTAgIDIwIDNkIDIwIDIyIDMyIDRjIDYy
+IDQ4ICA3MSA2NCAyZCA3MiA2NyA0MiA5ZiA2ZSAgfCA9DQo+Pj4gIjJMYkhxZC1yZ0IubnwNCj4+
+PiAwMDAwMTIyMCAgNDUgNGEgNzUgMzEgMmQgMzIgNTIgMzYgIDMxIDJkIDQxIDM1IGY1IDc1IDJk
+IDZlDQo+Pj4gfEVKdTEtMlI2MS1BNS51LW58DQo+Pj4gMDAwMDEyMzAgIDQ5IDU4IDUzIDJkIDY2
+IDc5IDRmIDM2ICAzMyA3MyAyMiAwYSA3MyA2NSAzYSAwMQ0KPj4+IHxJWFMtZnlPNjNzIi5zZTou
+fA0KPj4+IDAwMDAxMjQwICA2ZiAyMCAzZCAyMCAzMyAzNiAwYSA2NiAgNmYgNzIgNmQgNjEgY2Eg
+MjQgM2QgMjAgIHxvID0NCj4+PiAzNi5mb3JtYS4kPSB8DQo+Pj4gMDAwMDEyNTAgIDIyIDZjIDc2
+IDZkIDMyIDIyIDIwIDIzICAyMCA2OSA2ZSA2NiA2ZiA3MiA2YiBhYyAgfCJsdm0yIg0KPj4+ICMg
+aW5mb3JrLnwNCj4+IC4uLg0KPj4+IDAwMDAxYTcwICAyMCAzMSAzMyAzNyAzNSAzMiAzOCAzNyAg
+MzkgMzcgMzkgMDkgMjMgMjAgZDIgMzIgIHwNCj4+PiAxMzc1Mjg3OTc5LiMgLjJ8DQo+Pj4gMDAw
+MDFhODAgIDY0IDIwIDRhIDc1IDZjIDIwIDMzIDMxICAyMCAzMSAzOCAzYSBhZiAzNyAzYSAzMSAg
+fGQgSnVsDQo+Pj4gMzEgMTg6Ljc6MXwNCj4+PiAwMDAwMWE5MCAgMzkgMjAgMzIgMzAgMzEgMzMg
+MGEgMGEgIDAwIDAwIDAwIDAwIDAwIDAwIGVlIDEyICB8OQ0KPj4+IDIwMTMuLi4uLi4uLi4ufA0K
+Pj4NCj4+IE5vdGUgdGhlIGNyZWF0aW9uIGRhdGUvdGltZSBhdCB0aGUgZW5kICh3aXRoIGEgY29y
+cnVwdGVkIGJ5dGUpOg0KPj4NCj4+IEp1bCAzMSAxODo/NzoxOSAyMDEzDQo+Pg0KPj4gVGhlcmUg
+YXJlIG90aGVyIGNvcnJ1cHRlZCBieXRlcyBzY2F0dGVyZWQgYXJvdW5kLiAgSSdkIGJlIHdvcnJp
+ZWQNCj4+IGFib3V0IHRoZSBSQU0gaW4gdGhpcyBtYWNoaW5lLiAgU2luY2UgeW91IGFyZSB1c2lu
+ZyBub24tZW50ZXJwcmlzZQ0KPj4gZHJpdmVzLCBJJ20gZ29pbmcgdG8gZ28gb3V0IG9uIGEgbGlt
+YiBoZXJlIGFuZCBndWVzcyB0aGF0IHRoZSBzZXJ2ZXINCj4+IGRvZXNuJ3QgaGF2ZSBFQ0MgcmFt
+Li4uDQo+IHNlZSBhYm92ZQ0KDQpVbmRlcnN0b29kLiAgV2l0aCByZWFsbHkgb2xkIG1lbW9yeSwg
+ZG91YmxlLWZhdWx0cyBpbiB0aGUgRUNDIGNvdWxkIGhhdmUgcGFuaWMnZCB0aGUgc2VydmVyLCBs
+ZWF2aW5nIHNjYXR0ZXJlZCBkYXRhIHVud3JpdHRlbi4NCg0KPj4gQ29uc2lkZXIgcGVyZm9ybWlu
+ZyBhbiBleHRlbmRlZCBtZW1jaGVjayBydW4gdG8gc2VlIHdoYXQncyBnb2luZyBvbi4NCj4+IE1h
+eWJlIG1vdmUgdGhlIGVudGlyZSBzdGFjayBvZiBkaXNrcyB0byBhbm90aGVyIHNlcnZlci4NCj4+
+DQo+IFRoYXRzIHdoYXQgSSBkaWQgaW5pdGlhbGx5LCBtb3ZlZCBpdCBiYWNrIGJlY2F1c2UgaXQg
+ZmFpbGVkLCBub3cgd2lsbA0KPiBtb3ZlIGFnYWluIGludG8gdGhlIG5ldyBzZXJ2ZXIgYmVmb3Jl
+IHByb2NlZWRpbmcuDQoNCk9rLg0KDQo+PiBCYXNlZCBvbiB0aGUgc2lnbmF0dXJlIGRpc2NvdmVy
+ZWQgYWJvdmUsIHdlIHNob3VsZCBiZSBhYmxlIHRvDQo+PiAtLWNyZWF0ZSAtLWFzc3VtZS1jbGVh
+biB3aXRoIHRoZSBtb2Rlcm4gZGVmYXVsdCBkYXRhIG9mZnNldC4gIFdlIGtub3cNCj4+IHRoZSBm
+b2xsb3dpbmcgZGV2aWNlIHJvbGVzOg0KPj4NCj4+IC9kZXYvc2RhMiA9PSAwDQo+PiAvZGV2L3Nk
+ZjIgPT0gNQ0KPj4gL2Rldi9zZGcyID09IDYNCj4+IC9kZXYvc2RoMiA9PSBzcGFyZQ0KPj4NCj4+
+IFNvIC9kZXYvc2RoMiBzaG91bGQgYmUgbGVmdCBvdXQgdW50aWwgdGhlIGFycmF5IGlzIHdvcmtp
+bmcuDQo+Pg0KPj4gUGxlYXNlIHJlLWV4ZWN1dGUgdGhlICJtZGFkbSAtRSIgcmVwb3J0cyBmb3Ig
+L2Rldi9zZFtmZ2hdMiBhbmQgc2hvdw0KPj4gdGhlbSB1bmN1dC4gIChVc2UgdGhlIGxhc3RlZCBt
+ZGFkbS4pICBUaGF0IHNob3VsZCBmaWxsIGluIHRoZSBsaWtlbHkNCj4+IGRldmljZSBvcmRlciBv
+ZiB0aGUgcmVtYWluaW5nIGRyaXZlcy4NCg0KSG1tbS4gIFR5cG8gb24gbXkgcGFydDogcy9sYXN0
+ZWQvbGF0ZXN0LyAgTmV3ZXIgbWRhZG0gd2lsbCBnaXZlIG1vcmUgaW5mb3JtYXRpb24uICBJbiBw
+YXJ0aWN1bGFyLCBJIHdhbnRlZCB0aGUgdGFpbCBvZiBlYWNoIHJlcG9ydCB3aGVyZSBlYWNoIGRl
+dmljZSBsaXN0cyB3aGF0IGl0IGxhc3Qga25ldyBhYm91dCBhbGwgb2YgdGhlIG90aGVyIGRldmlj
+ZXMnIHJvbGVzLg0KDQo+IFtyb290QGxpdmVjZCBtbnRdIyBtZGFkbSAtRSAvZGV2L3NkW2ZnaF0y
+DQo+DQo+IC9kZXYvc2RmMjoNCj4gICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCj4gICAgICAg
+ICBWZXJzaW9uIDogMS4yDQo+ICAgICBGZWF0dXJlIE1hcCA6IDB4MA0KPiAgICAgIEFycmF5IFVV
+SUQgOiAzMmQ4MmY4NDpmZTMwYWMyZTpmNTg5YWFlZjpiZGQzZTRjNw0KPiAgICAgICAgICAgIE5h
+bWUgOiAxDQo+ICAgQ3JlYXRpb24gVGltZSA6IFdlZCBKdWwgMzEgMTg6MjQ6MzggMjAxMw0KPiAg
+ICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KPiAgICBSYWlkIERldmljZXMgOiA3DQo+DQo+ICBBdmFp
+bCBEZXYgU2l6ZSA6IDU4NTgzMTQyNDAgKDI3OTMuNDYgR2lCIDI5OTkuNDYgR0IpDQo+ICAgICAg
+QXJyYXkgU2l6ZSA6IDI5Mjg1NzkzMjgwICgxMzk2NC41NSBHaUIgMTQ5OTQuMzMgR0IpDQo+ICAg
+VXNlZCBEZXYgU2l6ZSA6IDU4NTcxNTg2NTYgKDI3OTIuOTEgR2lCIDI5OTguODcgR0IpDQo+ICAg
+ICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzDQo+ICAgIFN1cGVyIE9mZnNldCA6IDggc2Vj
+dG9ycw0KPiAgICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCj4gICAgIERldmljZSBVVUlEIDogZDVh
+MTZjYjI6ZmY0MWI5YTU6Y2JiZjEyYjc6Mzc1MDAyNmQNCj4NCj4gICAgIFVwZGF0ZSBUaW1lIDog
+TW9uIERlYyAxNiAwMToxNjoyNiAyMDEzDQo+ICAgICAgICBDaGVja3N1bSA6IGVlOTIxYzQzIC0g
+Y29ycmVjdA0KPiAgICAgICAgICBFdmVudHMgOiAzMjcNCj4NCj4gICAgICAgICAgTGF5b3V0IDog
+bGVmdC1zeW1tZXRyaWMNCj4gICAgICBDaHVuayBTaXplIDogMjU2Sw0KPg0KPiAgICBEZXZpY2Ug
+Um9sZSA6IEFjdGl2ZSBkZXZpY2UgNQ0KPiAgICBBcnJheSBTdGF0ZSA6IEEuQUFBQUEgKCdBJyA9
+PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nKQ0KDQpJIHdhcyBleHBlY3RpbmcgbW9yZSBpbmZvIGFm
+dGVyIHRoaXMuDQoNCj4gL2Rldi9zZGcyOg0KPiAgICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYw0K
+PiAgICAgICAgIFZlcnNpb24gOiAxLjINCj4gICAgIEZlYXR1cmUgTWFwIDogMHgwDQo+ICAgICAg
+QXJyYXkgVVVJRCA6IDMyZDgyZjg0OmZlMzBhYzJlOmY1ODlhYWVmOmJkZDNlNGM3DQo+ICAgICAg
+ICAgICAgTmFtZSA6IDENCj4gICBDcmVhdGlvbiBUaW1lIDogV2VkIEp1bCAzMSAxODoyNDozOCAy
+MDEzDQo+ICAgICAgUmFpZCBMZXZlbCA6IHJhaWQ2DQo+ICAgIFJhaWQgRGV2aWNlcyA6IDcNCj4N
+Cj4gIEF2YWlsIERldiBTaXplIDogNTg1ODMxNDI0MCAoMjc5My40NiBHaUIgMjk5OS40NiBHQikN
+Cj4gICAgICBBcnJheSBTaXplIDogMjkyODU3OTMyODAgKDEzOTY0LjU1IEdpQiAxNDk5NC4zMyBH
+QikNCj4gICBVc2VkIERldiBTaXplIDogNTg1NzE1ODY1NiAoMjc5Mi45MSBHaUIgMjk5OC44NyBH
+QikNCj4gICAgIERhdGEgT2Zmc2V0IDogMjYyMTQ0IHNlY3RvcnMNCj4gICAgU3VwZXIgT2Zmc2V0
+IDogOCBzZWN0b3JzDQo+ICAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQ0KPiAgICAgRGV2aWNlIFVV
+SUQgOiBhMWUxZTUxYjpkODkxMjk4NTplNTEyMDdhOToxZDcxODI5Mg0KPg0KPiAgICAgVXBkYXRl
+IFRpbWUgOiBNb24gRGVjIDE2IDAxOjE2OjI2IDIwMTMNCj4gICAgICAgIENoZWNrc3VtIDogNGVm
+MDFmZTkgLSBjb3JyZWN0DQo+ICAgICAgICAgIEV2ZW50cyA6IDMyNw0KPg0KPiAgICAgICAgICBM
+YXlvdXQgOiBsZWZ0LXN5bW1ldHJpYw0KPiAgICAgIENodW5rIFNpemUgOiAyNTZLDQo+DQo+ICAg
+IERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSA2DQo+ICAgIEFycmF5IFN0YXRlIDogQS5BQUFB
+QSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCkFuZCBoZXJlLg0KDQo+IC9kZXYv
+c2RoMjoNCj4gICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCj4gICAgICAgICBWZXJzaW9uIDog
+MS4yDQo+ICAgICBGZWF0dXJlIE1hcCA6IDB4MA0KPiAgICAgIEFycmF5IFVVSUQgOiAzMmQ4MmY4
+NDpmZTMwYWMyZTpmNTg5YWFlZjpiZGQzZTRjNw0KPiAgICAgICAgICAgIE5hbWUgOiAxDQo+ICAg
+Q3JlYXRpb24gVGltZSA6IFdlZCBKdWwgMzEgMTg6MjQ6MzggMjAxMw0KPiAgICAgIFJhaWQgTGV2
+ZWwgOiByYWlkNg0KPiAgICBSYWlkIERldmljZXMgOiA3DQo+DQo+ICBBdmFpbCBEZXYgU2l6ZSA6
+IDU4NTgzMTQyNDAgKDI3OTMuNDYgR2lCIDI5OTkuNDYgR0IpDQo+ICAgICAgQXJyYXkgU2l6ZSA6
+IDI5Mjg1NzkzMjgwICgxMzk2NC41NSBHaUIgMTQ5OTQuMzMgR0IpDQo+ICAgVXNlZCBEZXYgU2l6
+ZSA6IDU4NTcxNTg2NTYgKDI3OTIuOTEgR2lCIDI5OTguODcgR0IpDQo+ICAgICBEYXRhIE9mZnNl
+dCA6IDI2MjE0NCBzZWN0b3JzDQo+ICAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0KPiAgICAg
+ICAgICAgU3RhdGUgOiBhY3RpdmUNCj4gICAgIERldmljZSBVVUlEIDogMDMwY2I5YTc6NzZhNDhi
+M2M6YjM0NDgzNjk6ZmNmMDEzZTENCj4NCj4gICAgIFVwZGF0ZSBUaW1lIDogTW9uIERlYyAxNiAw
+MToxNjoyNiAyMDEzDQo+ICAgICAgICBDaGVja3N1bSA6IGExMzMwZTk3IC0gY29ycmVjdA0KPiAg
+ICAgICAgICBFdmVudHMgOiAzMjcNCj4NCj4gICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRy
+aWMNCj4gICAgICBDaHVuayBTaXplIDogMjU2Sw0KPg0KPiAgICBEZXZpY2UgUm9sZSA6IHNwYXJl
+DQo+ICAgIEFycmF5IFN0YXRlIDogQS5BQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3Np
+bmcpDQoNCkFuZCBoZXJlLg0KDQo+PiBBbHNvLCBpdCBpcyBpbXBvcnRhbnQgdGhhdCB5b3UgZG9j
+dW1lbnQgd2hpY2ggZHJpdmUgc2VyaWFsIG51bWJlcnMNCj4+IGFyZSBjdXJyZW50bHkgb2NjdXB5
+aW5nIHRoZSBkaWZmZXJlbnQgZGV2aWNlIG5hbWVzLiAgQW4gZXhjZXJwdCBmcm9tDQo+PiAibHMg
+LWwgL2Rldi9kaXNrL2J5LWlkLyIgd291bGQgZG8uDQo+DQo+IHNjc2ktU0FUQV9TVDMwMDBETTAw
+MS05WU5fUzFGMDI2VkogLT4gLi4vLi4vc2RhDQo+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5f
+VzFGMFRCM0MgLT4gLi4vLi4vc2RiDQo+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fUzFGMDRL
+QUsgLT4gLi4vLi4vc2RjDQo+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fVzFGMFJXSlkgLT4g
+Li4vLi4vc2RkDQo+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fUzFGMDhON1EgLT4gLi4vLi4v
+c2RlDQo+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fWjFGMUYzVEMgLT4gLi4vLi4vc2RmDQo+
+IHNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fVzFGMVpaOVQgLT4gLi4vLi4vc2RnDQo+IHNjc2kt
+U0FUQV9TVDMwMDBETTAwMS05WU5fWjFGMVgwQUMgLT4gLi4vLi4vc2RoDQoNCk9rLiAgQmUgc3Vy
+ZSB0byByZWNoZWNrIHRoaXMgbGlzdCBhbnkgdGltZSB5b3UgYm9vdCwgc2luY2UgdGhlIGRldmlj
+ZSBvcmRlciBtYXR0ZXJzLg0KDQo+IEkgYW0gYSBiaXQgbW9yZSByZWxheGVkIG5vdyBiZWNhdXNl
+IEkgZm91bmQgdGhhdCBhIHNjaGVkdWxlZCB0cmFuc2Zlcg0KPiBvZiB0aGUgZGF0YSB0byB0aGUg
+dW5pdmVyc2l0eSB0YXBlIHJvYm90IGhhZCBjb21wbGV0ZWQgYmVmb3JlDQo+IGNocmlzdG1hcy4g
+U28gdGhpcyBsb2NhbCBhcmNoaXZlIG1pcnJvciBpcyAobHVja2lseSkgbm90IGNyaXRpY2FsLiBJ
+DQo+IHN0aWxsIHdhbnQgdG8gdW5kZXJzdGFuZCB3aGV0aGVyIGFsbCB0aGlzIGlzIGp1c3QgYSBy
+ZXN1bHQgb2Ygc2hha3kNCj4gaGFyZHdhcmUsIG9yIGFuIG1kYWRtIChtaXN1c2UpIGlzc3VlLiBM
+b3NpbmcgKGFsbCBzdXBlcmJsb2NrcyBvbikgZml2ZQ0KPiBkcml2ZXMgaW4gYSBsYXJnZSBzb2Z0
+d2FyZSByYWlkIDYgaW5zdGVhZCBvZiBieXRlcyBpcyBub3Qgc29tZXRoaW5nIEkNCj4gd291bGQg
+bGlrZSB0byByZXBlYXQgYW55IHRpbWUgc29vbiBieSBpZS4gbWlzaGFuZGxpbmcgbWRhZG0uDQoN
+CkkgdGhpbmsgeW91IHNrYXRlZCBvdmVyIHRoZSBlZGdlIGR1ZSB0byBhIGZsYWt5IG1vdGhlcmJv
+YXJkLiAgbWRhZG0gY2FuJ3QgZml4IHRoYXQuICBJbiBmYWN0LCBzaW5jZSB5b3UgaGF2ZSBhIGJh
+Y2t1cCwgSSBwZXJzb25hbGx5IHdvdWxkbid0IGJvdGhlciBmdXJ0aGVyIHJlY29uc3RydWN0aW9u
+IGVmZm9ydHMuICBJZiB5b3UgaGF2ZSBhIHJlY2VudCB2Z2NmZ2JhY2t1cCwgaXQncyBkb2FibGUs
+IGJ1dCBJIGhhdmUgbGl0dGxlIGNvbmZpZGVuY2UgaW4gdGhlIGRldmljZQ0Kb3JkZXI6IFthPz8/
+P2ZnXSwgcHJvYmFibHkgW2FiY2RlZmddLiAgVGhlcmUncyA0ISA9PSAyNCBwZXJtdXRhdGlvbnMg
+dGhlcmUsIGVhY2ggb2Ygd2hpY2ggd2lsbCByZXF1aXJlIGEgdmdjZmdyZXN0b3JlIGJlZm9yZSB5
+b3UgY2FuIGNoZWNrIHRoZSByZWNvbnN0cnVjdGlvbiB3aXRoICJmc2NrIC1uIi4NCg0KPiBXZSBo
+YXZlIHRoZW4NCj4NCj4gV2VkIEp1bCAzMSAxODoyNDozOCAyMDEzIG9uIHNkZi1oMiBmb3IgY3Jl
+YXRpb24gb2YgdGhlIHJhaWQ2IGFuZCB3ZWQNCj4gSnVsIDMxIDE4Oj83OjE5IDIwMTMgZm9yIGNy
+ZWF0aW9uIG9mIHRoZSBsdm0gZ3JvdXANCj4NCj4gY291bGQgd2VsbCBiZS4NCg0KSSBkb24ndCBz
+ZWUgYW55IHdheSB0byBnZXQgc3VjaCBhIHRpbWVzdGFtcCBleGNlcHQgImNlcnRhaW5seSB3YXMi
+Lg0KDQo+IFNvIEkgd2lsbCBtb3ZlIHRoZSBkaXNrcyB0byB0aGUgbmV3IHNlcnZlciwgbWFrZSAx
+OjEgY29waWVzIHRvIG5ldw0KPiBkcml2ZXMgYW5kIHRoZW4gYXR0ZW1wdCBhbiBhc3NlbWJseSB1
+c2luZyAtLWFzc3VtZS1jbGVhbiBpbiB3aGljaA0KPiBvcmRlciA/DQoNCkFsbCBwZXJtdXRhdGlv
+bnMgb2YgW2E/Pz8/ZmddIHdpdGggYiwgYywgZCwgYW5kIGUuDQoNClRyeSBsaWtlbHkgY29tYmlu
+YXRpb25zIGdsZWFuZWQgZnJvbSAibWRhZG0gLUUiIHJlcG9ydHMgZmlyc3QgdG8gc2hvcnRjdXQg
+dGhlIHByb2Nlc3MuDQoNCj4gVGhhbmtzIHNvIG11Y2gsIEkgaGF2ZSBsZWFybmVkIGEgbG90IGFs
+cmVhZHkuDQoNCllvdSBhcmUgd2VsY29tZSwgYW5kIGdvb2QgbHVjay4NCg0KUmVnYXJkcywNCg0K
+UGhpbA0KDQoNClVuaXZlcnNpdMOkdHNrbGluaWt1bSBKZW5hIC0gQmFjaHN0cmFzc2UgMTggLSBE
+LTA3NzQzIEplbmENCkRpZSBnZXNldHpsaWNoZW4gUGZsaWNodGFuZ2FiZW4gZmluZGVuIFNpZSB1
+bnRlciBodHRwOi8vd3d3LnVuaWtsaW5pa3VtLWplbmEuZGUvUGZsaWNodGFuZ2FiZW4uaHRtbA0K
