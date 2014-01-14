@@ -1,51 +1,62 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: [RFC v2 0/2] New RAID library supporting up to six parities
-Date: Tue, 14 Jan 2014 10:25:06 +0100
-Message-ID: <52D50272.3000704@hesbynett.no>
-References: <1389000716-3274-1-git-send-email-amadvance@gmail.com> <CAK2H+efOLtq6onYASnZ5DsghVMp5AN70fx_uN8Ha5Wr3RxKx3A@mail.gmail.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: RAID 10 far and offset on-disk layouts
+Date: Tue, 14 Jan 2014 10:27:12 +0100
+Message-ID: <52D502F0.2090703@assyoma.it>
+References: <52BD8EDD.10809@assyoma.it>	<20131227151927.GA4003@www5.open-std.org>	<52BD9B4F.3000509@assyoma.it>	<20131227154952.GA6539@www5.open-std.org>	<52CE57D9.1030501@assyoma.it>	<20140113102021.1ef3e203@notabene.brown>	<52D3A962.4000308@assyoma.it>	<20140113204534.737a98f6@notabene.brown>	<52D3BCB1.1010200@assyoma.it>	<20140114092751.09464b7b@notabene.brown>	<52D4FE05.3020709@assyoma.it> <20140114201655.61f4e10b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+efOLtq6onYASnZ5DsghVMp5AN70fx_uN8Ha5Wr3RxKx3A@mail.gmail.com>
+In-Reply-To: <20140114201655.61f4e10b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>, Andrea Mazzoleni <amadvance@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, keld@keldix.com, Gionatan Danti <g.danti@assyoma.it>
 List-Id: linux-raid.ids
 
-On 06/01/14 19:13, Mark Knecht wrote:
-> Andrea,
->    As others have said it looks interesting. Thanks for the efforts.
-> 
->    Question: As an end-user type who currently uses mdadm RAID6, if I
-> wanted to set up a dedicated machine to do some SnapRAID testing then
-> what's the minimum disk hardware I'd need assuming Linux is just on
-> it's own disk?
-> 
-> 1) 1 drive for Linux
-> 2) 4 (or possibly 3) drives for a SnapRAID RAID6 device?
-> 3) 3 drives for a SnapRAID RAID5 device? (If RAID5 can even use
-> SnapRAID. Not sure it can)
-> 
->    Are there any known issues using both mdadm and SnapRAID devices in
-> the same system? Again, I don't care if there are and the machine dies
-> a brutal death (which I doubt from your announcement) but just asking.
-> 
-> Cheers,
-> Mark
-> 
+>> Ok, so let recap:
+>>
+>> 1) FAR layout is the one depicted by SuSe documentation, while the
+>> Wikipedia entry is wrong
+>
+> Yes.
+>
+>>
+>> 2) MD _can_ produce a FAR layout as depicted by Wikipedia, but we don't
+>> know how the user-space mdadm tool call it (maybe it is not implemented
+>> yet?)
+>
+> Yes.  Not implemented yet.
+>
+>>
+>> 3) There are any reasons why FAR and OFFSET layout scramble data in this
+>> manner, coupling any disk with two more disks? It was done for
+>> simplicity, or I am missing something?
+>
+> It just seemed the easiest thing to do at the time.
+>
+>>
+>> 4) you confirm that currently we can _not_ create a FAR layout as the
+>> one depicted by wikipedia by no means? What about OFFSET layout?
+>
+> You certainly can created the FAR layout depicted on wikipedia, e.g. by
+> binary-editing the metadata on some devices, or writing some code which does
+> that for you.  It requires flipping one bit in the metadata and updating the
+> checksum.  You can probably even to it by writing something appropriate into
+> some sysfs files.
+> But mdadm cannot do it yet.
+> Ditto for the new OFFSET layout.
+> (The old offset layout can be created with "--layout=o2").
+>
+> NeilBrown
+>
 
-If you want to do testing (once there is mdadm support for making the
-multi-raid devices), then an easy way is to make some big empty files on
-an existing disk and set them up as loopback devices.  Then you can use
-these "fake" drives for the arrays.  You can then test a 6+4 quad parity
-array using 10 1G files rather than needing 10 physical drives, and you
-can play with resyncing, fault testing (using the md "faulty" layout),
-reshaping, etc.
+All clear now :)
 
-Of course, you can't test real-world speed this way.  However, you /can/
-test parity generation/recovery speeds nicely by putting the loopback
-files in a tmpfs system in memory - that eliminates the hard disk speeds
-and lets you do hard testing of the raid code.
+Thank you very much Neil.
 
-
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
