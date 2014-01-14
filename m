@@ -1,171 +1,322 @@
-From: =?utf-8?B?R3Jvw59rcmV1dHosIEp1bGlhbg==?=
-	<Julian.Grosskreutz@med.uni-jena.de>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: mdadm expanded 8 disk raid 6 fails in new server, 5 original
  devices show no md superblock
-Date: Tue, 14 Jan 2014 10:31:53 +0000
-Message-ID: <1389695513.11328.158.camel@achilles.aeskuladis.de>
-References: <1389422546.11328.15.camel@achilles.aeskuladis.de>
-	 <52D183B5.3060006@turmel.org>
-	 <1389632980.11328.104.camel@achilles.aeskuladis.de>
-	 <52D4337F.4050307@turmel.org>
-Reply-To: =?utf-8?B?R3Jvw59rcmV1dHosIEp1bGlhbg==?=
-	  <Julian.Grosskreutz@med.uni-jena.de>
+Date: Tue, 14 Jan 2014 08:14:54 -0500
+Message-ID: <52D5384E.6030408@turmel.org>
+References: <1389422546.11328.15.camel@achilles.aeskuladis.de>	 <52D183B5.3060006@turmel.org>	 <1389632980.11328.104.camel@achilles.aeskuladis.de>	 <52D4337F.4050307@turmel.org> <1389695513.11328.158.camel@achilles.aeskuladis.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52D4337F.4050307@turmel.org>
-Content-Language: de-DE
-Content-ID: <08F26E485C6C56499C38F2417D48A24C@krz.uni-jena.de>
+In-Reply-To: <1389695513.11328.158.camel@achilles.aeskuladis.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: =?UTF-8?B?Ikdyb8Ofa3JldXR6LCBKdWxpYW4i?= <Julian.Grosskreutz@med.uni-jena.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 Cc: "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-SGkgUGhpbCwNCg0KdGhhbmtzIGFnYWluIGZvciBiZWFyaW5nIHdpdGggbWUuDQoNCj4gPg0KPiA+
-Pj4gTW9kZWw6IEFUQSBTVDMwMDBETTAwMS05WU4xIChzY3NpKQ0KPg0KPiBBc2lkZTogVGhpcyBt
-b2RlbCBsb29rcyBmYW1pbGlhci4gIEknbSBwcmV0dHkgc3VyZSB0aGVzZSBkcml2ZXMgYXJlDQo+
-IGRlc2t0b3AgbW9kZWxzIHRoYXQgbGFjayBzY3RlcmMgc3VwcG9ydC4gIE1lYW5pbmcgdGhleSBh
-cmUgKm5vdCoNCj4gZ2VuZXJhbGx5IHN1aXRhYmxlIGZvciByYWlkIGR1dHkuICBTZWFyY2ggdGhl
-IGFyY2hpdmVzIGZvciBjb21iaW5hdGlvbnMNCj4gb2YgInRpbWVvdXQgbWlzbWF0Y2giLCAic2N0
-ZXJjIiwgIlVSRSIsIGFuZCAic2NydWIiIGZvciBhIGZ1bGwNCj4gZXhwbGFuYXRpb24uICBJZiBJ
-J3ZlIGd1ZXNzZWQgY29ycmVjdGx5LCB5b3UgKm11c3QqIHVzZSB0aGUgZHJpdmVyDQo+IHRpbWVv
-dXQgd29yay1hcm91bmQgYmVmb3JlIHByb2NlZWRpbmcuDQo+DQoNClllcyBJIGRpZCwgYW5kIHNt
-YXJ0Y3RsIHNob3dlZCBubyBzaWduaWZpY2FudCBwcm9ibGVtcy4gVGhlIDEwIHllYXIgb2xkDQpz
-ZXJ2ZXIgKHN1cGVybWljcm8gZW50ZXJwcmlzZSBncmFkZSBkdWFsIFhlb24gd2l0aCA4IEdCIEVD
-QyBSQU0pIGhhZA0Kc3RhcnRlZCB0byBjcmVhdGUgcHJvYmxlbXMgZWFybHkgSmFudWFyeSB3aGlj
-aCBpcyB3aHkgSSB3YW50ZWQgdG8gbW92ZQ0KdGhlIGRyaXZlcyB0byBhIG5ldyBzZXJ2ZXIgaW4g
-dGhlIGZpcnN0IHBsYWNlLCB0byB0aGVuIHRyYW5zZmVyIHRoZSBkYXRhDQp0byBhIG5ldyBzZXQg
-b2YgZW50ZXJwcmlzZSBncmFkZSBkaXNrcy4gSSBoYWQgY2hlY2tlZCB0aGUgbWVtb3J5IGFuZCB0
-aGUNCmRpc2tzIGluIGEgYnVybiBpbiBmb3Igc2V2ZXJhbCBkYXlzIGluY2x1ZGluZyB0aW1lIG91
-dCBhbmQgcG93ZXIgc2F2aW5nDQpiZWZvcmUgSSBzZXQgdXAgdGhlIHJhaWQgMjAxMi8yMDEzLCBh
-bmQgZGlkIG5vdCBoYXZlIGFueSBpc3N1ZXMgdGhlbi4NCg0KT25lIG9mIHRoZSByZWFzb25zIEkg
-dGVuZCB1c2UgbWRhZG0gaXMgdGhhdCBJIGFtIGFibGUgdG8gdXRpbGl6ZQ0KZXhpc3RpbmcgaGFy
-ZHdhcmUgdG8gY3JlYXRlIGJyaWRnaW5nIHNvbHV0aW9ucyB1bnRpbCBtb25leSBjb21lcyBpbiBm
-b3INCmJldHRlciBoYXJkd2FyZSwgYW5kIG1vdmluZyBhbiBtZGFkbSByYWlkIGhhcyBzbyBmYXIg
-bmV2ZXIgY3JlYXRlZCBhDQpzZXJpb3VzIHByb2JsZW0uDQoNCj4gPiBTbyBhdHRhY2hlZCBZb3Ug
-d2lsbCBmaW5kIGhleGR1bXBzIG9mIDY0ayBvZiAvc2RhL3NkW2EtaF0yIGF0IHNlY3RvciAwDQo+
-ID4gYW5kIDI2MjE0NCB3aGljaCBzaG93cyB0aGUgc3VwZXJibG9jayAxLjIgb24gc2RbZmdoXTIs
-IG5vdCBvbiBzZFthLWVdMiwNCj4gPiBidXQgbWF5IGhlbHAgdG8gaWRlbnRpZnkgZGF0YV9vZmZz
-ZXQ7IEkgc3VzcGVjdCBpdCBpcyAyMDQ4IG9uIHNkW2EtZV0yDQo+ID4gYW5kIDI2MjE0NCBvbiBz
-ZFtmZ2hdMi4NCj4gPg0KPg0KPiBKYWNrcG90ISAgTFZNMiBlbWJlZGRlZCBiYWNrdXAgZGF0YSBh
-dCB0aGUgY29ycmVjdCBsb2NhdGlvbiBmb3IgbWRhZG0NCj4gZGF0YSBvZmZzZXQgPT0gMjYyMTQ0
-LiAgQW5kIG9uIC9kZXYvc2RhMiwgd2hpY2ggaXMgdGhlIG9ubHkgZGV2aWNlIHRoYXQNCj4gc2hv
-dWxkIGhhdmUgaXQgKGZpcnN0IGRldmljZSBpbiB0aGUgcmFpZCkuDQo+DQo+IEZyb20gL2Rldi9z
-ZGEyIEAgMjYyMTQ0Og0KPg0KPiA+IDAwMDAxMjAwICA3NiA2NyA1ZiA2ZSA2NSA2NCA2OSA2NyAg
-NzMgMzAgMzIgMjAgNWQgMGEgNjkgNjQgIHx2Z19uZWRpZ3MwMiBdLmlkfA0KPiA+IDAwMDAxMjEw
-ICAyMCAzZCAyMCAyMiAzMiA0YyA2MiA0OCAgNzEgNjQgMmQgNzIgNjcgNDIgOWYgNmUgIHwgPSAi
-MkxiSHFkLXJnQi5ufA0KPiA+IDAwMDAxMjIwICA0NSA0YSA3NSAzMSAyZCAzMiA1MiAzNiAgMzEg
-MmQgNDEgMzUgZjUgNzUgMmQgNmUgIHxFSnUxLTJSNjEtQTUudS1ufA0KPiA+IDAwMDAxMjMwICA0
-OSA1OCA1MyAyZCA2NiA3OSA0ZiAzNiAgMzMgNzMgMjIgMGEgNzMgNjUgM2EgMDEgIHxJWFMtZnlP
-NjNzIi5zZToufA0KPiA+IDAwMDAxMjQwICA2ZiAyMCAzZCAyMCAzMyAzNiAwYSA2NiAgNmYgNzIg
-NmQgNjEgY2EgMjQgM2QgMjAgIHxvID0gMzYuZm9ybWEuJD0gfA0KPiA+IDAwMDAxMjUwICAyMiA2
-YyA3NiA2ZCAzMiAyMiAyMCAyMyAgMjAgNjkgNmUgNjYgNmYgNzIgNmIgYWMgIHwibHZtMiIgIyBp
-bmZvcmsufA0KPiAuLi4NCj4gPiAwMDAwMWE3MCAgMjAgMzEgMzMgMzcgMzUgMzIgMzggMzcgIDM5
-IDM3IDM5IDA5IDIzIDIwIGQyIDMyICB8IDEzNzUyODc5NzkuIyAuMnwNCj4gPiAwMDAwMWE4MCAg
-NjQgMjAgNGEgNzUgNmMgMjAgMzMgMzEgIDIwIDMxIDM4IDNhIGFmIDM3IDNhIDMxICB8ZCBKdWwg
-MzEgMTg6Ljc6MXwNCj4gPiAwMDAwMWE5MCAgMzkgMjAgMzIgMzAgMzEgMzMgMGEgMGEgIDAwIDAw
-IDAwIDAwIDAwIDAwIGVlIDEyICB8OSAyMDEzLi4uLi4uLi4uLnwNCj4NCj4gTm90ZSB0aGUgY3Jl
-YXRpb24gZGF0ZS90aW1lIGF0IHRoZSBlbmQgKHdpdGggYSBjb3JydXB0ZWQgYnl0ZSk6DQo+DQo+
-IEp1bCAzMSAxODo/NzoxOSAyMDEzDQo+DQo+IFRoZXJlIGFyZSBvdGhlciBjb3JydXB0ZWQgYnl0
-ZXMgc2NhdHRlcmVkIGFyb3VuZC4gIEknZCBiZSB3b3JyaWVkIGFib3V0DQo+IHRoZSBSQU0gaW4g
-dGhpcyBtYWNoaW5lLiAgU2luY2UgeW91IGFyZSB1c2luZyBub24tZW50ZXJwcmlzZSBkcml2ZXMs
-IEknbQ0KPiBnb2luZyB0byBnbyBvdXQgb24gYSBsaW1iIGhlcmUgYW5kIGd1ZXNzIHRoYXQgdGhl
-IHNlcnZlciBkb2Vzbid0IGhhdmUNCj4gRUNDIHJhbS4uLg0Kc2VlIGFib3ZlDQo+IENvbnNpZGVy
-IHBlcmZvcm1pbmcgYW4gZXh0ZW5kZWQgbWVtY2hlY2sgcnVuIHRvIHNlZSB3aGF0J3MgZ29pbmcg
-b24uDQo+IE1heWJlIG1vdmUgdGhlIGVudGlyZSBzdGFjayBvZiBkaXNrcyB0byBhbm90aGVyIHNl
-cnZlci4NCj4NClRoYXRzIHdoYXQgSSBkaWQgaW5pdGlhbGx5LCBtb3ZlZCBpdCBiYWNrIGJlY2F1
-c2UgaXQgZmFpbGVkLCBub3cgd2lsbA0KbW92ZSBhZ2FpbiBpbnRvIHRoZSBuZXcgc2VydmVyIGJl
-Zm9yZSBwcm9jZWVkaW5nLg0KDQo+IEJhc2VkIG9uIHRoZSBzaWduYXR1cmUgZGlzY292ZXJlZCBh
-Ym92ZSwgd2Ugc2hvdWxkIGJlIGFibGUgdG8gLS1jcmVhdGUNCj4gLS1hc3N1bWUtY2xlYW4gd2l0
-aCB0aGUgbW9kZXJuIGRlZmF1bHQgZGF0YSBvZmZzZXQuICBXZSBrbm93IHRoZQ0KPiBmb2xsb3dp
-bmcgZGV2aWNlIHJvbGVzOg0KPg0KPiAvZGV2L3NkYTIgPT0gMA0KPiAvZGV2L3NkZjIgPT0gNQ0K
-PiAvZGV2L3NkZzIgPT0gNg0KPiAvZGV2L3NkaDIgPT0gc3BhcmUNCj4NCj4gU28gL2Rldi9zZGgy
-IHNob3VsZCBiZSBsZWZ0IG91dCB1bnRpbCB0aGUgYXJyYXkgaXMgd29ya2luZy4NCj4NCj4gUGxl
-YXNlIHJlLWV4ZWN1dGUgdGhlICJtZGFkbSAtRSIgcmVwb3J0cyBmb3IgL2Rldi9zZFtmZ2hdMiBh
-bmQgc2hvdyB0aGVtDQo+IHVuY3V0LiAgKFVzZSB0aGUgbGFzdGVkIG1kYWRtLikgIFRoYXQgc2hv
-dWxkIGZpbGwgaW4gdGhlIGxpa2VseSBkZXZpY2UNCj4gb3JkZXIgb2YgdGhlIHJlbWFpbmluZyBk
-cml2ZXMuDQoNCltyb290QGxpdmVjZCBtbnRdIyBtZGFkbSAtRSAvZGV2L3NkW2ZnaF0yDQoNCi9k
-ZXYvc2RmMjoNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAx
-LjINCiAgICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogMzJkODJmODQ6ZmUz
-MGFjMmU6ZjU4OWFhZWY6YmRkM2U0YzcNCiAgICAgICAgICAgTmFtZSA6IDENCiAgQ3JlYXRpb24g
-VGltZSA6IFdlZCBKdWwgMzEgMTg6MjQ6MzggMjAxMw0KICAgICBSYWlkIExldmVsIDogcmFpZDYN
-CiAgIFJhaWQgRGV2aWNlcyA6IDcNCg0KIEF2YWlsIERldiBTaXplIDogNTg1ODMxNDI0MCAoMjc5
-My40NiBHaUIgMjk5OS40NiBHQikNCiAgICAgQXJyYXkgU2l6ZSA6IDI5Mjg1NzkzMjgwICgxMzk2
-NC41NSBHaUIgMTQ5OTQuMzMgR0IpDQogIFVzZWQgRGV2IFNpemUgOiA1ODU3MTU4NjU2ICgyNzky
-LjkxIEdpQiAyOTk4Ljg3IEdCKQ0KICAgIERhdGEgT2Zmc2V0IDogMjYyMTQ0IHNlY3RvcnMNCiAg
-IFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDogYWN0aXZlDQogICAg
-RGV2aWNlIFVVSUQgOiBkNWExNmNiMjpmZjQxYjlhNTpjYmJmMTJiNzozNzUwMDI2ZA0KDQogICAg
-VXBkYXRlIFRpbWUgOiBNb24gRGVjIDE2IDAxOjE2OjI2IDIwMTMNCiAgICAgICBDaGVja3N1bSA6
-IGVlOTIxYzQzIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMzI3DQoNCiAgICAgICAgIExh
-eW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiAyNTZLDQoNCiAgIERldmlj
-ZSBSb2xlIDogQWN0aXZlIGRldmljZSA1DQogICBBcnJheSBTdGF0ZSA6IEEuQUFBQUEgKCdBJyA9
-PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5nKQ0KL2Rldi9zZGcyOg0KICAgICAgICAgIE1hZ2ljIDog
-YTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQog
-ICAgIEFycmF5IFVVSUQgOiAzMmQ4MmY4NDpmZTMwYWMyZTpmNTg5YWFlZjpiZGQzZTRjNw0KICAg
-ICAgICAgICBOYW1lIDogMQ0KICBDcmVhdGlvbiBUaW1lIDogV2VkIEp1bCAzMSAxODoyNDozOCAy
-MDEzDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNw0KDQogQXZh
-aWwgRGV2IFNpemUgOiA1ODU4MzE0MjQwICgyNzkzLjQ2IEdpQiAyOTk5LjQ2IEdCKQ0KICAgICBB
-cnJheSBTaXplIDogMjkyODU3OTMyODAgKDEzOTY0LjU1IEdpQiAxNDk5NC4zMyBHQikNCiAgVXNl
-ZCBEZXYgU2l6ZSA6IDU4NTcxNTg2NTYgKDI3OTIuOTEgR2lCIDI5OTguODcgR0IpDQogICAgRGF0
-YSBPZmZzZXQgOiAyNjIxNDQgc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQog
-ICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICBEZXZpY2UgVVVJRCA6IGExZTFlNTFiOmQ4OTEy
-OTg1OmU1MTIwN2E5OjFkNzE4MjkyDQoNCiAgICBVcGRhdGUgVGltZSA6IE1vbiBEZWMgMTYgMDE6
-MTY6MjYgMjAxMw0KICAgICAgIENoZWNrc3VtIDogNGVmMDFmZTkgLSBjb3JyZWN0DQogICAgICAg
-ICBFdmVudHMgOiAzMjcNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAg
-Q2h1bmsgU2l6ZSA6IDI1NksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDYNCiAg
-IEFycmF5IFN0YXRlIDogQS5BQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoN
-Cg0KL2Rldi9zZGgyOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lv
-biA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiAzMmQ4MmY4
-NDpmZTMwYWMyZTpmNTg5YWFlZjpiZGQzZTRjNw0KICAgICAgICAgICBOYW1lIDogMQ0KICBDcmVh
-dGlvbiBUaW1lIDogV2VkIEp1bCAzMSAxODoyNDozOCAyMDEzDQogICAgIFJhaWQgTGV2ZWwgOiBy
-YWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNw0KDQogQXZhaWwgRGV2IFNpemUgOiA1ODU4MzE0MjQw
-ICgyNzkzLjQ2IEdpQiAyOTk5LjQ2IEdCKQ0KICAgICBBcnJheSBTaXplIDogMjkyODU3OTMyODAg
-KDEzOTY0LjU1IEdpQiAxNDk5NC4zMyBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDU4NTcxNTg2NTYg
-KDI3OTIuOTEgR2lCIDI5OTguODcgR0IpDQogICAgRGF0YSBPZmZzZXQgOiAyNjIxNDQgc2VjdG9y
-cw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUN
-CiAgICBEZXZpY2UgVVVJRCA6IDAzMGNiOWE3Ojc2YTQ4YjNjOmIzNDQ4MzY5OmZjZjAxM2UxDQoN
-CiAgICBVcGRhdGUgVGltZSA6IE1vbiBEZWMgMTYgMDE6MTY6MjYgMjAxMw0KICAgICAgIENoZWNr
-c3VtIDogYTEzMzBlOTcgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAzMjcNCg0KICAgICAg
-ICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDI1NksNCg0KICAg
-RGV2aWNlIFJvbGUgOiBzcGFyZQ0KICAgQXJyYXkgU3RhdGUgOiBBLkFBQUFBICgnQScgPT0gYWN0
-aXZlLCAnLicgPT0gbWlzc2luZykNCg0KPiBBbHNvLCBpdCBpcyBpbXBvcnRhbnQgdGhhdCB5b3Ug
-ZG9jdW1lbnQgd2hpY2ggZHJpdmUgc2VyaWFsIG51bWJlcnMgYXJlDQo+IGN1cnJlbnRseSBvY2N1
-cHlpbmcgdGhlIGRpZmZlcmVudCBkZXZpY2UgbmFtZXMuICBBbiBleGNlcnB0IGZyb20gImxzIC1s
-DQo+IC9kZXYvZGlzay9ieS1pZC8iIHdvdWxkIGRvLg0KDQpzY3NpLVNBVEFfU1QzMDAwRE0wMDEt
-OVlOX1MxRjAyNlZKIC0+IC4uLy4uL3NkYQ0Kc2NzaS1TQVRBX1NUMzAwMERNMDAxLTlZTl9XMUYw
-VEIzQyAtPiAuLi8uLi9zZGINCnNjc2ktU0FUQV9TVDMwMDBETTAwMS05WU5fUzFGMDRLQUsgLT4g
-Li4vLi4vc2RjDQpzY3NpLVNBVEFfU1QzMDAwRE0wMDEtOVlOX1cxRjBSV0pZIC0+IC4uLy4uL3Nk
-ZA0Kc2NzaS1TQVRBX1NUMzAwMERNMDAxLTlZTl9TMUYwOE43USAtPiAuLi8uLi9zZGUNCnNjc2kt
-U0FUQV9TVDMwMDBETTAwMS05WU5fWjFGMUYzVEMgLT4gLi4vLi4vc2RmDQpzY3NpLVNBVEFfU1Qz
-MDAwRE0wMDEtOVlOX1cxRjFaWjlUIC0+IC4uLy4uL3NkZw0Kc2NzaS1TQVRBX1NUMzAwMERNMDAx
-LTlZTl9aMUYxWDBBQyAtPiAuLi8uLi9zZGgNCg0KDQo+IEkgaGF2ZSB0byBhZG1pdCB0aGF0IEkn
-bSB2ZXJ5IGNvbmNlcm5lZCBhYm91dCB5b3VyIGNvcnJ1cHRlZCBMVk0NCj4gc2lnbmF0dXJlIGF0
-IG9mZnNldCAyNjIxNDQuICBMVk0gcHJvYmFibHkgd29uJ3QgcmVjb2duaXplIHlvdXIgUFYgb25j
-ZQ0KPiB0aGUgYXJyYXkgaXMgYXNzZW1ibGVkIGNvcnJlY3RseSwgbWFraW5nIGl0IGRpZmZpY3Vs
-dCB0bw0KPiBub24tZGVzdHJ1Y3RpdmVseSB0ZXN0IHRoZSBmaWxlc3lzdGVtcyBvbiB5b3VyIGxv
-Z2ljYWwgdm9sdW1lcy4gIFlvdSBtYXkNCj4gaGF2ZSB0byBkdXBsaWNhdGUgeW91ciBkaXNrcyBv
-bnRvIG5ldyBvbmVzIHNvIHRoYXQgYW4gTFZNIHJlc3RvcmUgY2FuIGJlDQo+IHNhZmVseSBhdHRl
-bXB0ZWQuDQoNCj4gRG8gKm5vdCogYnV5IGRlc2t0b3AgZHJpdmVzISAgWW91IG5lZWQgcmFpZC1j
-YXBhYmxlIGRyaXZlcyBsaWtlIHRoZSBXRA0KPiBSZWQgYXQgdGhlIGxlYXN0Lg0KDQo7LSkgQWxy
-ZWFkeSBvcmRlcmVkIFdEIHJlZHMsIHdpbGwgYmUgZGVsaXZlcmVkIGFueSB0aW1lIG5vdy4gSSBn
-dWVzcyBJDQpoYXZlIG5vdyByZWFjaGVkIHRoYXQgbGV2ZWwgYWZ0ZXIgeWVhcnMgb2YgbWFraW5n
-IGRvIHdpdGggdmVyeSBsaW1pdGVkDQpidWRnZXRzLg0KDQpJIGFtIGEgYml0IG1vcmUgcmVsYXhl
-ZCBub3cgYmVjYXVzZSBJIGZvdW5kIHRoYXQgYSBzY2hlZHVsZWQgdHJhbnNmZXIgb2YNCnRoZSBk
-YXRhIHRvIHRoZSB1bml2ZXJzaXR5IHRhcGUgcm9ib3QgaGFkIGNvbXBsZXRlZCBiZWZvcmUgY2hy
-aXN0bWFzLiBTbw0KdGhpcyBsb2NhbCBhcmNoaXZlIG1pcnJvciBpcyAobHVja2lseSkgbm90IGNy
-aXRpY2FsLiBJIHN0aWxsIHdhbnQgdG8NCnVuZGVyc3RhbmQgd2hldGhlciBhbGwgdGhpcyBpcyBq
-dXN0IGEgcmVzdWx0IG9mIHNoYWt5IGhhcmR3YXJlLCBvciBhbg0KbWRhZG0gKG1pc3VzZSkgaXNz
-dWUuIExvc2luZyAoYWxsIHN1cGVyYmxvY2tzIG9uKSBmaXZlIGRyaXZlcyBpbiBhIGxhcmdlDQpz
-b2Z0d2FyZSByYWlkIDYgaW5zdGVhZCBvZiBieXRlcyBpcyBub3Qgc29tZXRoaW5nIEkgd291bGQg
-bGlrZSB0byByZXBlYXQNCmFueSB0aW1lIHNvb24gYnkgaWUuIG1pc2hhbmRsaW5nIG1kYWRtLg0K
-DQpXZSBoYXZlIHRoZW4NCg0KV2VkIEp1bCAzMSAxODoyNDozOCAyMDEzIG9uIHNkZi1oMiBmb3Ig
-Y3JlYXRpb24gb2YgdGhlIHJhaWQ2IGFuZA0Kd2VkIEp1bCAzMSAxODo/NzoxOSAyMDEzIGZvciBj
-cmVhdGlvbiBvZiB0aGUgbHZtIGdyb3VwDQoNCmNvdWxkIHdlbGwgYmUuDQoNClNvIEkgd2lsbCBt
-b3ZlIHRoZSBkaXNrcyB0byB0aGUgbmV3IHNlcnZlciwgbWFrZSAxOjEgY29waWVzIHRvIG5ldw0K
-ZHJpdmVzIGFuZCB0aGVuIGF0dGVtcHQgYW4gYXNzZW1ibHkgdXNpbmcgLS1hc3N1bWUtY2xlYW4g
-aW4gd2hpY2gNCm9yZGVyID8NCg0KVGhhbmtzIHNvIG11Y2gsIEkgaGF2ZSBsZWFybmVkIGEgbG90
-IGFscmVhZHkuDQoNClJlZ2FyZHMNCg0KDQpKdWxpYW4NCg0KDQoNClVuaXZlcnNpdMOkdHNrbGlu
-aWt1bSBKZW5hIC0gQmFjaHN0cmFzc2UgMTggLSBELTA3NzQzIEplbmENCkRpZSBnZXNldHpsaWNo
-ZW4gUGZsaWNodGFuZ2FiZW4gZmluZGVuIFNpZSB1bnRlciBodHRwOi8vd3d3LnVuaWtsaW5pa3Vt
-LWplbmEuZGUvUGZsaWNodGFuZ2FiZW4uaHRtbA0K
+On 01/14/2014 05:31 AM, Gro=C3=9Fkreutz, Julian wrote:
+> Hi Phil,
+>=20
+> thanks again for bearing with me.
+
+No problem.
+
+>>>>> Model: ATA ST3000DM001-9YN1 (scsi)
+>>
+>> Aside: This model looks familiar.  I'm pretty sure these drives are
+>> desktop models that lack scterc support.  Meaning they are *not*
+>> generally suitable for raid duty.  Search the archives for combinati=
+ons
+>> of "timeout mismatch", "scterc", "URE", and "scrub" for a full
+>> explanation.  If I've guessed correctly, you *must* use the driver
+>> timeout work-around before proceeding.
+>>
+>=20
+> Yes I did, and smartctl showed no significant problems.
+
+?.  What did "smartctl -l scterc" say?  If it says unsupported, you hav=
+e
+a problem.  The workaround is to set the driver timeouts to ~180 second=
+s
+for each such drive.
+
+If scterc is supported, but disabled, you can set 7-second timeouts wit=
+h
+"smartctl -l scterc,70,70", but you must do so on every power cycle.
+Either way, you need boot-time scripting or distro support.
+
+Raid-rated drives power up with a reasonable setting here.
+
+> The 10 year old
+> server (supermicro enterprise grade dual Xeon with 8 GB ECC RAM) had
+> started to create problems early January which is why I wanted to mov=
+e
+> the drives to a new server in the first place, to then transfer the d=
+ata
+> to a new set of enterprise grade disks. I had checked the memory and =
+the
+> disks in a burn in for several days including time out and power savi=
+ng
+> before I set up the raid 2012/2013, and did not have any issues then.
+
+Ok.  This makes sense.
+
+> One of the reasons I tend use mdadm is that I am able to utilize
+> existing hardware to create bridging solutions until money comes in f=
+or
+> better hardware, and moving an mdadm raid has so far never created a
+> serious problem.
+
+Many people discover the timeout problem the first time they have an
+otherwise correctable read error in their array, and the array falls
+apart instead.  This list's archives are well-populated with such cases=
+=2E
+
+>>> So attached You will find hexdumps of 64k of /sda/sd[a-h]2 at secto=
+r 0
+>>> and 262144 which shows the superblock 1.2 on sd[fgh]2, not on sd[a-=
+e]2,
+>>> but may help to identify data_offset; I suspect it is 2048 on sd[a-=
+e]2
+>>> and 262144 on sd[fgh]2.
+>>>
+>>
+>> Jackpot!  LVM2 embedded backup data at the correct location for mdad=
+m
+>> data offset =3D=3D 262144.  And on /dev/sda2, which is the only devi=
+ce that
+>> should have it (first device in the raid).
+>>
+>> From /dev/sda2 @ 262144:
+>>
+>>> 00001200  76 67 5f 6e 65 64 69 67  73 30 32 20 5d 0a 69 64  |vg_ned=
+igs02 ].id|
+>>> 00001210  20 3d 20 22 32 4c 62 48  71 64 2d 72 67 42 9f 6e  | =3D "=
+2LbHqd-rgB.n|
+>>> 00001220  45 4a 75 31 2d 32 52 36  31 2d 41 35 f5 75 2d 6e  |EJu1-2=
+R61-A5.u-n|
+>>> 00001230  49 58 53 2d 66 79 4f 36  33 73 22 0a 73 65 3a 01  |IXS-fy=
+O63s".se:.|
+>>> 00001240  6f 20 3d 20 33 36 0a 66  6f 72 6d 61 ca 24 3d 20  |o =3D =
+36.forma.$=3D |
+>>> 00001250  22 6c 76 6d 32 22 20 23  20 69 6e 66 6f 72 6b ac  |"lvm2"=
+ # infork.|
+>> ...
+>>> 00001a70  20 31 33 37 35 32 38 37  39 37 39 09 23 20 d2 32  | 13752=
+87979.# .2|
+>>> 00001a80  64 20 4a 75 6c 20 33 31  20 31 38 3a af 37 3a 31  |d Jul =
+31 18:.7:1|
+>>> 00001a90  39 20 32 30 31 33 0a 0a  00 00 00 00 00 00 ee 12  |9 2013=
+=2E.........|
+>>
+>> Note the creation date/time at the end (with a corrupted byte):
+>>
+>> Jul 31 18:?7:19 2013
+>>
+>> There are other corrupted bytes scattered around.  I'd be worried ab=
+out
+>> the RAM in this machine.  Since you are using non-enterprise drives,=
+ I'm
+>> going to go out on a limb here and guess that the server doesn't hav=
+e
+>> ECC ram...
+> see above
+
+Understood.  With really old memory, double-faults in the ECC could hav=
+e
+panic'd the server, leaving scattered data unwritten.
+
+>> Consider performing an extended memcheck run to see what's going on.
+>> Maybe move the entire stack of disks to another server.
+>>
+> Thats what I did initially, moved it back because it failed, now will
+> move again into the new server before proceeding.
+
+Ok.
+
+>> Based on the signature discovered above, we should be able to --crea=
+te
+>> --assume-clean with the modern default data offset.  We know the
+>> following device roles:
+>>
+>> /dev/sda2 =3D=3D 0
+>> /dev/sdf2 =3D=3D 5
+>> /dev/sdg2 =3D=3D 6
+>> /dev/sdh2 =3D=3D spare
+>>
+>> So /dev/sdh2 should be left out until the array is working.
+>>
+>> Please re-execute the "mdadm -E" reports for /dev/sd[fgh]2 and show =
+them
+>> uncut.  (Use the lasted mdadm.)  That should fill in the likely devi=
+ce
+>> order of the remaining drives.
+
+Hmmm.  Typo on my part: s/lasted/latest/  Newer mdadm will give more
+information.  In particular, I wanted the tail of each report where eac=
+h
+device lists what it last knew about all of the other devices' roles.
+
+> [root@livecd mnt]# mdadm -E /dev/sd[fgh]2
+>=20
+> /dev/sdf2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>            Name : 1
+>   Creation Time : Wed Jul 31 18:24:38 2013
+>      Raid Level : raid6
+>    Raid Devices : 7
+>=20
+>  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : d5a16cb2:ff41b9a5:cbbf12b7:3750026d
+>=20
+>     Update Time : Mon Dec 16 01:16:26 2013
+>        Checksum : ee921c43 - correct
+>          Events : 327
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>=20
+>    Device Role : Active device 5
+>    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+I was expecting more info after this.
+
+> /dev/sdg2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>            Name : 1
+>   Creation Time : Wed Jul 31 18:24:38 2013
+>      Raid Level : raid6
+>    Raid Devices : 7
+>=20
+>  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : a1e1e51b:d8912985:e51207a9:1d718292
+>=20
+>     Update Time : Mon Dec 16 01:16:26 2013
+>        Checksum : 4ef01fe9 - correct
+>          Events : 327
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>=20
+>    Device Role : Active device 6
+>    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+And here.
+
+> /dev/sdh2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 32d82f84:fe30ac2e:f589aaef:bdd3e4c7
+>            Name : 1
+>   Creation Time : Wed Jul 31 18:24:38 2013
+>      Raid Level : raid6
+>    Raid Devices : 7
+>=20
+>  Avail Dev Size : 5858314240 (2793.46 GiB 2999.46 GB)
+>      Array Size : 29285793280 (13964.55 GiB 14994.33 GB)
+>   Used Dev Size : 5857158656 (2792.91 GiB 2998.87 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : active
+>     Device UUID : 030cb9a7:76a48b3c:b3448369:fcf013e1
+>=20
+>     Update Time : Mon Dec 16 01:16:26 2013
+>        Checksum : a1330e97 - correct
+>          Events : 327
+>=20
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+>=20
+>    Device Role : spare
+>    Array State : A.AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+And here.
+
+>> Also, it is important that you document which drive serial numbers a=
+re
+>> currently occupying the different device names.  An excerpt from "ls=
+ -l
+>> /dev/disk/by-id/" would do.
+>=20
+> scsi-SATA_ST3000DM001-9YN_S1F026VJ -> ../../sda
+> scsi-SATA_ST3000DM001-9YN_W1F0TB3C -> ../../sdb
+> scsi-SATA_ST3000DM001-9YN_S1F04KAK -> ../../sdc
+> scsi-SATA_ST3000DM001-9YN_W1F0RWJY -> ../../sdd
+> scsi-SATA_ST3000DM001-9YN_S1F08N7Q -> ../../sde
+> scsi-SATA_ST3000DM001-9YN_Z1F1F3TC -> ../../sdf
+> scsi-SATA_ST3000DM001-9YN_W1F1ZZ9T -> ../../sdg
+> scsi-SATA_ST3000DM001-9YN_Z1F1X0AC -> ../../sdh
+
+Ok.  Be sure to recheck this list any time you boot, since the device
+order matters.
+
+> I am a bit more relaxed now because I found that a scheduled transfer=
+ of
+> the data to the university tape robot had completed before christmas.=
+ So
+> this local archive mirror is (luckily) not critical. I still want to
+> understand whether all this is just a result of shaky hardware, or an
+> mdadm (misuse) issue. Losing (all superblocks on) five drives in a la=
+rge
+> software raid 6 instead of bytes is not something I would like to rep=
+eat
+> any time soon by ie. mishandling mdadm.
+
+I think you skated over the edge due to a flaky motherboard.  mdadm
+can't fix that.  In fact, since you have a backup, I personally wouldn'=
+t
+bother further reconstruction efforts.  If you have a recent
+vgcfgbackup, it's doable, but I have little confidence in the device
+order: [a????fg], probably [abcdefg].  There's 4! =3D=3D 24 permutation=
+s
+there, each of which will require a vgcfgrestore before you can check
+the reconstruction with "fsck -n".
+
+> We have then
+>=20
+> Wed Jul 31 18:24:38 2013 on sdf-h2 for creation of the raid6 and
+> wed Jul 31 18:?7:19 2013 for creation of the lvm group
+>=20
+> could well be.
+
+I don't see any way to get such a timestamp except "certainly was".
+
+> So I will move the disks to the new server, make 1:1 copies to new
+> drives and then attempt an assembly using --assume-clean in which
+> order ?
+
+All permutations of [a????fg] with b, c, d, and e.
+
+Try likely combinations gleaned from "mdadm -E" reports first to
+shortcut the process.
+
+> Thanks so much, I have learned a lot already.
+
+You are welcome, and good luck.
+
+Regards,
+
+Phil
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
