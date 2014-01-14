@@ -1,32 +1,37 @@
-From: keld@keldix.com
-Subject: Re: RAID 10 far and offset on-disk layouts
-Date: Tue, 14 Jan 2014 11:06:37 +0100
-Message-ID: <20140114100637.GA5043@www5.open-std.org>
-References: <52BD8EDD.10809@assyoma.it> <20131227151927.GA4003@www5.open-std.org> <52BD9B4F.3000509@assyoma.it> <20131227154952.GA6539@www5.open-std.org> <52CE57D9.1030501@assyoma.it> <20140113102021.1ef3e203@notabene.brown> <52D3A962.4000308@assyoma.it> <20140113204534.737a98f6@notabene.brown>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [PATCH] md/raid5: Add compensation in sysfs for raid456.
+Date: Tue, 14 Jan 2014 14:00:18 +0400
+Message-ID: <52D50AB2.1080806@msgid.tls.msk.ru>
+References: <201401141340162970440@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140113204534.737a98f6@notabene.brown>
+In-Reply-To: <201401141340162970440@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Gionatan Danti <g.danti@assyoma.it>, linux-raid@vger.kernel.org
+To: majianpeng <majianpeng@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 13, 2014 at 08:45:34PM +1100, NeilBrown wrote:
-> On Mon, 13 Jan 2014 09:52:50 +0100 Gionatan Danti <g.danti@assyoma.it> wrote:
-> 
-> I think I know what you are talking about now.  The md driver in the kernel
-> supports two sorts of 'far' or 'offset' layouts for arrays where the number
-> of devices is not an integer multiple of the number of copies.
-> This has been supported in Linux since v3.9. but is not yet supported by
-> mdadm.
+14.01.2014 09:40, majianpeng wrote:
+> For non-fullstripe-write, raid456 need read some old data no matter how
+> rcw or rmw. We use compensation to recored the value about the
+> additional read-data.The unit of compenstaion is PAGE_SIZE.
+> Using the formula compensation*PAGE_SIZE/write_count_for_md, we can know
+> the efficiency.Using this we can tune the write mode to get the best
+> efficiency.
 
-Hmm, we discussed also the new layouts for when the number of drives are 
-a whole multiple of the number of copies. That layout should follow the same 
-principles.
+Just a very small nitpick:
 
-How do I generate the new format on kernel 3.9?
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -494,6 +494,11 @@ struct r5conf {
+>  	struct r5worker_group	*worker_groups;
+>  	int			group_cnt;
+>  	int			worker_cnt_per_group;
+> +
+> +	/*For non-fullstripe-write, it need read some data
 
-best regards
-keld
+Missing space in the comment ;)
+
+/mjt
