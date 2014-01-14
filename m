@@ -1,61 +1,67 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID 10 far and offset on-disk layouts
-Date: Mon, 13 Jan 2014 18:46:15 -0600
-Message-ID: <52D488D7.4080604@hardwarefreak.com>
-References: <52BD8EDD.10809@assyoma.it> <20131227151927.GA4003@www5.open-std.org> <52BD9B4F.3000509@assyoma.it> <20131227154952.GA6539@www5.open-std.org> <52CE57D9.1030501@assyoma.it> <20140113102021.1ef3e203@notabene.brown> <52D3A962.4000308@assyoma.it> <20140113204534.737a98f6@notabene.brown> <52D3BCB1.1010200@assyoma.it> <20140114092751.09464b7b@notabene.brown> <20140113233834.GA8885@www5.open-std.org>
-Reply-To: stan@hardwarefreak.com
+From: majianpeng <majianpeng@gmail.com>
+Subject: [PATCH] md/raid5: Add compensation in sysfs for raid456.
+Date: Tue, 14 Jan 2014 13:40:20 +0800
+Message-ID: <201401141340162970440@gmail.com>
+Reply-To: majianpeng <majianpeng@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140113233834.GA8885@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: keld@keldix.com, NeilBrown <neilb@suse.de>
-Cc: Gionatan Danti <g.danti@assyoma.it>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/13/2014 5:38 PM, keld@keldix.com wrote:
-> On Tue, Jan 14, 2014 at 09:27:51AM +1100, NeilBrown wrote:
-...
->> So this change:
->>
->> http://en.wikipedia.org/w/index.php?title=Non-standard_RAID_levels&diff=501908270&oldid=501604733
->>
->> was wrong.
-> 
-> Well, it was me doing the wikipedia edit. The edit was done based on information from Neil that this was actually 
-> the layout. Then later we found out that it really was not, but it should be; and then Neil implemented
-> the better layout.  Maybe it is not called "f2", I look forward to be informed what the actual name 
-> will be. 
-> 
-> I think the name should be "f2" as it is a "far" layout, with 2 copies, and it really should be
-> the default for "far" with 2 copies, as the redundancy is much better than the old layout.
-> Keeping the name would mean that  we would not need to make and spread documentation on this,
-> so that people following existing documentation would automatically get the better implementation.
-> There is no need that new raid instances of "far" should get the old layout, except for
-> backwards compatibility. 
+Rm9yIG5vbi1mdWxsc3RyaXBlLXdyaXRlLCByYWlkNDU2IG5lZWQgcmVhZCBzb21lIG9sZCBkYXRh
+IG5vIG1hdHRlciBob3cNCnJjdyBvciBybXcuIFdlIHVzZSBjb21wZW5zYXRpb24gdG8gcmVjb3Jl
+ZCB0aGUgdmFsdWUgYWJvdXQgdGhlDQphZGRpdGlvbmFsIHJlYWQtZGF0YS5UaGUgdW5pdCBvZiBj
+b21wZW5zdGFpb24gaXMgUEFHRV9TSVpFLg0KVXNpbmcgdGhlIGZvcm11bGEgY29tcGVuc2F0aW9u
+KlBBR0VfU0laRS93cml0ZV9jb3VudF9mb3JfbWQsIHdlIGNhbiBrbm93DQp0aGUgZWZmaWNpZW5j
+eS5Vc2luZyB0aGlzIHdlIGNhbiB0dW5lIHRoZSB3cml0ZSBtb2RlIHRvIGdldCB0aGUgYmVzdA0K
+ZWZmaWNpZW5jeS4NCg0KU2lnbmVkLW9mZi1ieTogSmlhbnBlbmcgTWEgPG1hamlhbnBlbmdAZ21h
+aWwuY29tPg0KLS0tDQogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAxNiArKysrKysrKysrKysrKysr
+DQogZHJpdmVycy9tZC9yYWlkNS5oIHwgICAgNSArKysrKw0KIDIgZmlsZXMgY2hhbmdlZCwgMjEg
+aW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9yYWlkNS5jIGIvZHJpdmVy
+cy9tZC9yYWlkNS5jDQppbmRleCBjYzA1NWRhLi5lNDU2MTM0IDEwMDY0NA0KLS0tIGEvZHJpdmVy
+cy9tZC9yYWlkNS5jDQorKysgYi9kcml2ZXJzL21kL3JhaWQ1LmMNCkBAIC0zMTE2LDYgKzMxMTYs
+NyBAQCBzdGF0aWMgdm9pZCBoYW5kbGVfc3RyaXBlX2RpcnR5aW5nKHN0cnVjdCByNWNvbmYgKmNv
+bmYsDQogCQkJCQkJICIlZCBmb3Igci1tLXdcbiIsIGkpOw0KIAkJCQkJc2V0X2JpdChSNV9MT0NL
+RUQsICZkZXYtPmZsYWdzKTsNCiAJCQkJCXNldF9iaXQoUjVfV2FudHJlYWQsICZkZXYtPmZsYWdz
+KTsNCisJCQkJCWF0b21pY19pbmMoJmNvbmYtPmNvbXBlbnNhdGlvbik7DQogCQkJCQlzLT5sb2Nr
+ZWQrKzsNCiAJCQkJfSBlbHNlIHsNCiAJCQkJCXNldF9iaXQoU1RSSVBFX0RFTEFZRUQsICZzaC0+
+c3RhdGUpOw0KQEAgLTMxNDQsNiArMzE0NSw3IEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9zdHJpcGVf
+ZGlydHlpbmcoc3RydWN0IHI1Y29uZiAqY29uZiwNCiAJCQkJCQkiJWQgZm9yIFJlY29uc3RydWN0
+XG4iLCBpKTsNCiAJCQkJCXNldF9iaXQoUjVfTE9DS0VELCAmZGV2LT5mbGFncyk7DQogCQkJCQlz
+ZXRfYml0KFI1X1dhbnRyZWFkLCAmZGV2LT5mbGFncyk7DQorCQkJCQlhdG9taWNfaW5jKCZjb25m
+LT5jb21wZW5zYXRpb24pOw0KIAkJCQkJcy0+bG9ja2VkKys7DQogCQkJCQlxcmVhZCsrOw0KIAkJ
+CQl9IGVsc2Ugew0KQEAgLTU0MjYsMTIgKzU0MjgsMjUgQEAgc3RhdGljIHN0cnVjdCBtZF9zeXNm
+c19lbnRyeQ0KIHJhaWQ1X2dyb3VwX3RocmVhZF9jbnQgPSBfX0FUVFIoZ3JvdXBfdGhyZWFkX2Nu
+dCwgU19JUlVHTyB8IFNfSVdVU1IsDQogCQkJCXJhaWQ1X3Nob3dfZ3JvdXBfdGhyZWFkX2NudCwN
+CiAJCQkJcmFpZDVfc3RvcmVfZ3JvdXBfdGhyZWFkX2NudCk7DQorc3RhdGljIHNzaXplX3QNCitj
+b21wZW5zYXRpb25fc2hvdyhzdHJ1Y3QgbWRkZXYgKm1kZGV2LCBjaGFyICpwYWdlKQ0KK3sNCisJ
+c3RydWN0IHI1Y29uZiAqY29uZiA9IG1kZGV2LT5wcml2YXRlOw0KKwlpZiAoY29uZikNCisJCXJl
+dHVybiBzcHJpbnRmKHBhZ2UsICIlZFxuIiwgYXRvbWljX3JlYWQoJmNvbmYtPmNvbXBlbnNhdGlv
+bikpOw0KKwllbHNlDQorCQlyZXR1cm4gMDsNCit9DQorDQorc3RhdGljIHN0cnVjdCBtZF9zeXNm
+c19lbnRyeQ0KK3JhaWQ1X2NvbXBlbnNhdGlvbiA9IF9fQVRUUl9STyhjb21wZW5zYXRpb24pOw0K
+IA0KIHN0YXRpYyBzdHJ1Y3QgYXR0cmlidXRlICpyYWlkNV9hdHRyc1tdID0gIHsNCiAJJnJhaWQ1
+X3N0cmlwZWNhY2hlX3NpemUuYXR0ciwNCiAJJnJhaWQ1X3N0cmlwZWNhY2hlX2FjdGl2ZS5hdHRy
+LA0KIAkmcmFpZDVfcHJlcmVhZF9ieXBhc3NfdGhyZXNob2xkLmF0dHIsDQogCSZyYWlkNV9ncm91
+cF90aHJlYWRfY250LmF0dHIsDQorCSZyYWlkNV9jb21wZW5zYXRpb24uYXR0ciwNCiAJTlVMTCwN
+CiB9Ow0KIHN0YXRpYyBzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwIHJhaWQ1X2F0dHJzX2dyb3VwID0g
+ew0KQEAgLTU2ODYsNiArNTcwMSw3IEBAIHN0YXRpYyBzdHJ1Y3QgcjVjb25mICpzZXR1cF9jb25m
+KHN0cnVjdCBtZGRldiAqbWRkZXYpDQogCWF0b21pY19zZXQoJmNvbmYtPmFjdGl2ZV9zdHJpcGVz
+LCAwKTsNCiAJYXRvbWljX3NldCgmY29uZi0+cHJlcmVhZF9hY3RpdmVfc3RyaXBlcywgMCk7DQog
+CWF0b21pY19zZXQoJmNvbmYtPmFjdGl2ZV9hbGlnbmVkX3JlYWRzLCAwKTsNCisJYXRvbWljX3Nl
+dCgmY29uZi0+Y29tcGVuc2F0aW9uLCAwKTsNCiAJY29uZi0+YnlwYXNzX3RocmVzaG9sZCA9IEJZ
+UEFTU19USFJFU0hPTEQ7DQogCWNvbmYtPnJlY292ZXJ5X2Rpc2FibGVkID0gbWRkZXYtPnJlY292
+ZXJ5X2Rpc2FibGVkIC0gMTsNCiANCmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL3JhaWQ1LmggYi9k
+cml2ZXJzL21kL3JhaWQ1LmgNCmluZGV4IDAxYWQ4YWUuLjhmYTUzOGQgMTAwNjQ0DQotLS0gYS9k
+cml2ZXJzL21kL3JhaWQ1LmgNCisrKyBiL2RyaXZlcnMvbWQvcmFpZDUuaA0KQEAgLTQ5NCw2ICs0
+OTQsMTEgQEAgc3RydWN0IHI1Y29uZiB7DQogCXN0cnVjdCByNXdvcmtlcl9ncm91cAkqd29ya2Vy
+X2dyb3VwczsNCiAJaW50CQkJZ3JvdXBfY250Ow0KIAlpbnQJCQl3b3JrZXJfY250X3Blcl9ncm91
+cDsNCisNCisJLypGb3Igbm9uLWZ1bGxzdHJpcGUtd3JpdGUsIGl0IG5lZWQgcmVhZCBzb21lIGRh
+dGENCisJICogdXNpbmcgdGhpcyBmaWxlZCB0byBhY291bnQgdGhlIGFkZGl0aW9uYWwgZGF0YS4N
+CisJICogVGhlIHVuaXQgb2YgY29tcGVuc2F0aW9uIGlzIFBBR0VfU0laRSovDQorCWF0b21pY190
+CQljb21wZW5zYXRpb247DQogfTsNCiANCiAvKg0KLS0gDQoxLjcuMTAuNA0K
 
-The problem here is that you're creating the Wikipedia page as if it
-*is* source reference material.  I.e. you're including "original work,
-your original work.  This is a violation of the Wikipedia rules of
-editing.  And this kind of situation is exactly why those rules exist.
-
-The layout tables you are including need to exist in a free to duplicate
-reference document, and should be copied verbatim from said document.
-They should not be created from scratch simply based on information in
-an email exchange on a mailing list, just as web forums are not
-considered a valid reference source.
-
-Therefore, if such layout tables do not exist in official Linux
-documentation they should not be included in Wikipedia.  If they do
-exist, the information should be copied verbatim, and the source
-document referenced.  There are no such references in the article.
-
-Wikipedia is an encyclopedia, not a reference work.  All information
-needs to be source from reference work.  If you want your original work
-to be included in Wikipedia, you need to create your own documentation,
-add it to the Linux Documentation Project, and have it peer reviewed.
-Then you can include it, and cite that source.
-
--- 
-Stan
