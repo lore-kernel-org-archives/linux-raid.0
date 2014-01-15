@@ -1,150 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: livelock during MD device open
-Date: Wed, 15 Jan 2014 12:57:40 +1100
-Message-ID: <20140115125740.160e8998@notabene.brown>
-References: <52D57086.1000508@freebox.fr>
+Subject: [GIT PULL REQUEST] last minute md fixes for 3.13
+Date: Wed, 15 Jan 2014 16:20:41 +1100
+Message-ID: <20140115162041.4ab345da@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hD6jsUlw5zaVqdeWk1=GsA1"; protocol="application/pgp-signature"
+ boundary="Sig_/btgVWss==AqM9wSXht3qXII"; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <52D57086.1000508@freebox.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nicolas Schichan <nschichan@freebox.fr>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Andrei Warkentin <andreiw@vmware.com>, Damian Nowak <spam@nowaker.net>, Bruno Wolff III <bruno@wolff.to>, majianpeng <majianpeng@gmail.com>, Alexander Lyakas <alex.bolshoy@gmail.com>
 List-Id: linux-raid.ids
 
---Sig_/hD6jsUlw5zaVqdeWk1=GsA1
+--Sig_/btgVWss==AqM9wSXht3qXII
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 14 Jan 2014 18:14:46 +0100 Nicolas Schichan <nschichan@freebox.fr>
-wrote:
 
->=20
->=20
-> Hi,
->=20
-> I have recently been trying to find the cause a livelock occurring during=
- MD=20
-> device open.
->=20
-> The livelock happens when a process tries to open an MD device for the
-> first time and another opens the same MD device and sends an invalid
-> ioctl:
->=20
-> Process 1				Process 2
-> ---------				---------
->=20
-> md_alloc()
->    mddev_find()
->    -> returns a new mddev with
->       hold_active =3D=3D UNTIL_IOCTL
->    add_disk()
->    -> sends KOBJ_ADD uevent
->=20
-> 					(sees KOBJ_ADD uevent for device)
-> 					md_open()
-> 					md_ioctl(INVALID_IOCTL)
-> 					-> returns ENODEV and clears
-> 					   mddev->hold_active
-> 					md_release()
-> 					  md_put()
-> 					  -> deletes the mddev as
-> 					     hold_active is 0
->=20
-> md_open()
->    mddev_find()
->    -> returns a newly
->      allocated mddev with
->      mddev->gendisk =3D=3D NULL
-> -> returns with ERESTARTSYS
->     (kernel restarts the open syscall)
->=20
->=20
-> As to how to fix this, I see two possibilities:
->=20
-> - don't set hold_active to 0 if err is -ENODEV in the abort_unlock
->    path in md_ioctl().
->=20
-> - check cmd parameter early in md_ioctl() and return -ENOTTY if the
->    cmd parameter is not a valid MD ioctl.
->=20
-> Please advise on the preferred way to fix this, I'll be glad to send a
-> patch for whatever is the preferred solution.
->=20
-> I have also a simple C program that I can send should you want to reprodu=
-ce=20
-> the issue.
->=20
-> Regards,
->=20
+Sorry they are late .... Christmas holidays and all that.  Hopefully they c=
+an
+still squeak into 3.13.
 
-That's a very small race you are consistently losing - if I understand
-correctly.
-
-In __blkdev_get:
-
- restart:
-
-	ret =3D -ENXIO;
-	disk =3D get_gendisk(bdev->bd_dev, &partno);
-	if (!disk)
-		goto out;
-	owner =3D disk->fops->owner;
-
-	disk_block_events(disk);
-	mutex_lock_nested(&bdev->bd_mutex, for_part);
-
-
-The "get_gendisk" calls into md_alloc (via md_probe) and then add_disk(),
-which generates a uevent which is handled by udev.
-And before the above code gets to the mutex_lock_nexted(), the process run =
-by
-udev must have opened the device (executing all that code above and more) a=
-nd
-issued the ioctl.
-
-I guess it is possible, but happening every time to produce a live-lock
-suggests that the scheduler must be encouraging that behaviour.  Presumably
-this is a virtual machine with just one CPU ??
-
-I suppose the best fix is, as you suggest, to avoid clearing hold_active for
-invalid ioctls.  It feels a bit like papering over a bug, but I think the
-only way to really fix it is to add extra locking to the above code sequence
-and I don't want to do that.
-
-Of your two suggestions I much prefer the second.  It will be more code, but
-it is also more obviously correct.  The current code is rather messy with
-respect to invalid ioctl commands.
-
-I would be happy to accept a patch which aborted md_ioctl if the cmd wasn't
-one of those known to md.
-
-Thanks,
 NeilBrown
 
 
+The following changes since commit 6d183de4077191d1201283a9035ce57a9b05254d:
 
---Sig_/hD6jsUlw5zaVqdeWk1=GsA1
+  md/raid5: fix newly-broken locking in get_active_stripe. (2013-11-28 11:0=
+0:15 +1100)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md tags/md/3.13-fixes
+
+for you to fetch changes up to 8313b8e57f55b15e5b7f7fc5d1630bbf686a9a97:
+
+  md: fix problem when adding device to read-only array with bitmap. (2014-=
+01-14 16:44:08 +1100)
+
+----------------------------------------------------------------
+md: half a dozen bug fixes for 3.13
+
+All of these fix real bugs the people have hit, and are tagged
+for -stable.
+
+----------------------------------------------------------------
+NeilBrown (6):
+      md/raid5: Fix possible confusion when multiple write errors occur.
+      md/raid10: fix two bugs in handling of known-bad-blocks.
+      md/raid1: fix request counting bug in new 'barrier' code.
+      md/raid5: fix a recently broken BUG_ON().
+      md/raid10: fix bug when raid10 recovery fails to recover a block.
+      md: fix problem when adding device to read-only array with bitmap.
+
+ drivers/md/md.c     | 18 +++++++++++++++---
+ drivers/md/md.h     |  3 +++
+ drivers/md/raid1.c  |  3 +--
+ drivers/md/raid10.c | 12 ++++++------
+ drivers/md/raid5.c  |  7 ++++---
+ 5 files changed, 29 insertions(+), 14 deletions(-)
+
+--Sig_/btgVWss==AqM9wSXht3qXII
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUtXrFDnsnt1WYoG5AQJBPg//VXLG99cKCH2fs5Qcxv1ZD3N4eoPj2W1B
-waj5JozhBqc0s0hpcOmU4DdYDT3WSLzUpVBgYVnhHEr6zybtDZQiAelrKUkkWdtA
-yJ17tyRds8UC+B39kSMXGk4EfRAoJjhFiaU0TJPm7vSSNxLIv5nGLseG3IWHrVzj
-7pmZBIOO/y+wHRoxUX7cWJe2UBmQrlp5aolXCdF49ZYiZ1CNvlQP0p+DiGCYJeug
-FoBOvUoIlJrHktmu0BFzwXq6p7yLrrPboXWNW7objh6A7UPMcVLhw5bumjrkWD5R
-gsczGytQNcoQgMParUburY5tbKvh0z1BSsLRbdtSUxuLUBlX+/44yxaIHXz/R8Ya
-Be5pwadjrOnR6g0DLhgAq3J/HieKpvJ5SiMSjF+lsXjAa1Y8oBn0TNz9AV4ZKqBM
-Z22VE4YDkZbvH7p+1AUwwknl6rANpyod9s3ni3lSTdBkIriTgyK657Uou0sVRWpP
-yXeFRmz+p4MnLhgOhO3RFGpCtDMFXYIcvI9eC+l6HqTHBA5bzaiq225kBBYO4r42
-I7FH703BQdzh5pFUWO9LukYf3Jea7CKikFwmr5Gnz3CpNnA/wvEafvM15PQdM9cm
-1U4aCzuENIm++HfnrTtoywKEoFhdHC7QdFok/CrIwdFAN+Jdi9x9mbocbQwTNkvb
-asBJs1sYn1M=
-=buwX
+iQIVAwUBUtYaqTnsnt1WYoG5AQKT3g/7BLGTNU9M6M8tTg4iqG2TnmxdLPhSeedd
+TfOU2A2OybKw7z49qCp9rkA2vjYIv9ZyGVD2AdxdmpA0ZTPyJVUlXLAU3qMk/a2R
+CWVud11+I+qnvMKPrO+Q1MGVtiB3Q8v7Jky3zPIrh8bNWeh0KplIs1BA9EOdUHF7
+lvtMFQ9FVO3cI/r+anSFVvPQTCKLGnCLHCBB//Ehxg8HSsflblyrLv0pQmAKC7ck
+iuy1vK8JLOgL9P5ZlxmAB44hkYCJJHwu1vOqDyv8VsV6UdDKreYL5AP/32xKFA0G
+i3FTtQIfJXWdRewfiuZT9BxhFu41w/2nb/LKKJnG07zNUt4PQMZo1xoySlhYFcrk
+3xuu7dsypJmz4BskWJAolgqp5xbLJcQUCYGl4nd9v5Fd1WACxdBSUG2j9DBkD7gp
+X9Jq46o4L/CDWZYoUyLSIgEXqWSq5bolMdD5E6ckJauS551j4+fyVsVikoIZwbDS
+W8XnKb+x6hSTTzfNS5lyZaki2kdIXd4dHC7ae/2dRCsfggK4+vHjmQjwfkYB4lwD
+9cpxdO6LplJac/h0tKpPpy+2e6kqgvnyHWFG8jGjNlBWWB9ASPiIqiqkXXv69X6q
+iHnrxHBV2RmMBs4Tbuo3KJSMRV3euigmvGo7rcp4BvCCX4dCivFHrk2edmc4ZTWL
+w28wpxUayTc=
+=2pMi
 -----END PGP SIGNATURE-----
 
---Sig_/hD6jsUlw5zaVqdeWk1=GsA1--
+--Sig_/btgVWss==AqM9wSXht3qXII--
