@@ -1,68 +1,150 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdadm expanded 8 disk raid 6 fails in new server, 5 original
- devices show no md superblock
-Date: Tue, 14 Jan 2014 13:43:05 -0500
-Message-ID: <52D58539.7090501@turmel.org>
-References: <1389422546.11328.15.camel@achilles.aeskuladis.de>	 <52D183B5.3060006@turmel.org>	 <1389632980.11328.104.camel@achilles.aeskuladis.de>	 <52D4337F.4050307@turmel.org>	 <1389695513.11328.158.camel@achilles.aeskuladis.de>	 <52D5384E.6030408@turmel.org> <BLU0-SMTP57BD7000137CADA6A976CA98BF0@phx.gbl>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: livelock during MD device open
+Date: Wed, 15 Jan 2014 12:57:40 +1100
+Message-ID: <20140115125740.160e8998@notabene.brown>
+References: <52D57086.1000508@freebox.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP57BD7000137CADA6A976CA98BF0@phx.gbl>
-Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>
-Cc: =?UTF-8?B?Ikdyb8Ofa3JldXR6LCBKdWxpYW4i?= <Julian.Grosskreutz@med.uni-jena.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hD6jsUlw5zaVqdeWk1=GsA1"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <52D57086.1000508@freebox.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicolas Schichan <nschichan@freebox.fr>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/14/2014 12:47 PM, Wilson Jonathan wrote:
+--Sig_/hD6jsUlw5zaVqdeWk1=GsA1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-[trim /]
+On Tue, 14 Jan 2014 18:14:46 +0100 Nicolas Schichan <nschichan@freebox.fr>
+wrote:
 
-> I understand the issue of "timeout" on drives that might perform long
-> error checking which then causes mdadm, via the device (block?) driver
-> issuing a time out, to then kick the drive. In this instance you allow
-> some time for a drive to try and fix things at the expense of a hung
-> array for a longer period of time.
-> 
-> I also understand that with scterc the drive gives up (in effect timing
-> its self out) when it hits the 7 second, or there about, mark and
-> subsequently mdadm kicks the drive out. In this specific instance the
-> idea is to kill a drive quickly to that the raid doesn't hang longer
-> than a few seconds.
+>=20
+>=20
+> Hi,
+>=20
+> I have recently been trying to find the cause a livelock occurring during=
+ MD=20
+> device open.
+>=20
+> The livelock happens when a process tries to open an MD device for the
+> first time and another opens the same MD device and sends an invalid
+> ioctl:
+>=20
+> Process 1				Process 2
+> ---------				---------
+>=20
+> md_alloc()
+>    mddev_find()
+>    -> returns a new mddev with
+>       hold_active =3D=3D UNTIL_IOCTL
+>    add_disk()
+>    -> sends KOBJ_ADD uevent
+>=20
+> 					(sees KOBJ_ADD uevent for device)
+> 					md_open()
+> 					md_ioctl(INVALID_IOCTL)
+> 					-> returns ENODEV and clears
+> 					   mddev->hold_active
+> 					md_release()
+> 					  md_put()
+> 					  -> deletes the mddev as
+> 					     hold_active is 0
+>=20
+> md_open()
+>    mddev_find()
+>    -> returns a newly
+>      allocated mddev with
+>      mddev->gendisk =3D=3D NULL
+> -> returns with ERESTARTSYS
+>     (kernel restarts the open syscall)
+>=20
+>=20
+> As to how to fix this, I see two possibilities:
+>=20
+> - don't set hold_active to 0 if err is -ENODEV in the abort_unlock
+>    path in md_ioctl().
+>=20
+> - check cmd parameter early in md_ioctl() and return -ENOTTY if the
+>    cmd parameter is not a valid MD ioctl.
+>=20
+> Please advise on the preferred way to fix this, I'll be glad to send a
+> patch for whatever is the preferred solution.
+>=20
+> I have also a simple C program that I can send should you want to reprodu=
+ce=20
+> the issue.
+>=20
+> Regards,
+>=20
 
-No.  The intent is to fail the read without failing the controller channel.
+That's a very small race you are consistently losing - if I understand
+correctly.
 
-> However surely these things (bar the amount of time) result in the same
-> final result of a drive being kicked out. Even in a non-madam hardware
-> raid set up, the drive is either kicked because it didn't return in 7
-> seconds, or the drive kicks its self because it gave up before 7
-> seconds.
+In __blkdev_get:
 
-No.  Upon a failed read, MD will obtain/reconstruct the problem sector
-from remaining redundancy, then write the correct data back.  Occasional
-read errors of this type are normal, and fix themselves when the sector
-is written again.  MD will only fail a drive after *multiple* read
-errors, not just one.  (Isolated bursts of up to 20, then ~ ten per hour.)
+ restart:
 
-[trim /]
+	ret =3D -ENXIO;
+	disk =3D get_gendisk(bdev->bd_dev, &partno);
+	if (!disk)
+		goto out;
+	owner =3D disk->fops->owner;
 
-> Surely, unless I'm missing something, rebuilding a failed drive's data
-> means that you want the system to not kick if at all possible and having
-> scterc enabled or a short timeout (shorter than the drives max time,
-> unless that time is indefinite retry) is the last thing you want?
+	disk_block_events(disk);
+	mutex_lock_nested(&bdev->bd_mutex, for_part);
 
-What you are missing is what happens when the controller channel times
-out.  The original read is reported failed to MD while the driver tries
-to revive the unresponsive drive.  MD proceeds to obtain/reconstruct the
-missing data, then write back.  But the device is not communicating--the
-driver has reset the channel, and will continue not communicating until
-the drive firmware finally gives up on the original read.  So the
-*write* fails instantly, kicking the drive out of the array.
 
-When you, the admin, get around to looking, the drive is idle but
-apparently fine.  (It gains a "pending" sector, which stays until the
-drive is told to write over that spot.)
+The "get_gendisk" calls into md_alloc (via md_probe) and then add_disk(),
+which generates a uevent which is handled by udev.
+And before the above code gets to the mutex_lock_nexted(), the process run =
+by
+udev must have opened the device (executing all that code above and more) a=
+nd
+issued the ioctl.
 
-HTH,
+I guess it is possible, but happening every time to produce a live-lock
+suggests that the scheduler must be encouraging that behaviour.  Presumably
+this is a virtual machine with just one CPU ??
 
-Phil
+I suppose the best fix is, as you suggest, to avoid clearing hold_active for
+invalid ioctls.  It feels a bit like papering over a bug, but I think the
+only way to really fix it is to add extra locking to the above code sequence
+and I don't want to do that.
+
+Of your two suggestions I much prefer the second.  It will be more code, but
+it is also more obviously correct.  The current code is rather messy with
+respect to invalid ioctl commands.
+
+I would be happy to accept a patch which aborted md_ioctl if the cmd wasn't
+one of those known to md.
+
+Thanks,
+NeilBrown
+
+
+
+--Sig_/hD6jsUlw5zaVqdeWk1=GsA1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUtXrFDnsnt1WYoG5AQJBPg//VXLG99cKCH2fs5Qcxv1ZD3N4eoPj2W1B
+waj5JozhBqc0s0hpcOmU4DdYDT3WSLzUpVBgYVnhHEr6zybtDZQiAelrKUkkWdtA
+yJ17tyRds8UC+B39kSMXGk4EfRAoJjhFiaU0TJPm7vSSNxLIv5nGLseG3IWHrVzj
+7pmZBIOO/y+wHRoxUX7cWJe2UBmQrlp5aolXCdF49ZYiZ1CNvlQP0p+DiGCYJeug
+FoBOvUoIlJrHktmu0BFzwXq6p7yLrrPboXWNW7objh6A7UPMcVLhw5bumjrkWD5R
+gsczGytQNcoQgMParUburY5tbKvh0z1BSsLRbdtSUxuLUBlX+/44yxaIHXz/R8Ya
+Be5pwadjrOnR6g0DLhgAq3J/HieKpvJ5SiMSjF+lsXjAa1Y8oBn0TNz9AV4ZKqBM
+Z22VE4YDkZbvH7p+1AUwwknl6rANpyod9s3ni3lSTdBkIriTgyK657Uou0sVRWpP
+yXeFRmz+p4MnLhgOhO3RFGpCtDMFXYIcvI9eC+l6HqTHBA5bzaiq225kBBYO4r42
+I7FH703BQdzh5pFUWO9LukYf3Jea7CKikFwmr5Gnz3CpNnA/wvEafvM15PQdM9cm
+1U4aCzuENIm++HfnrTtoywKEoFhdHC7QdFok/CrIwdFAN+Jdi9x9mbocbQwTNkvb
+asBJs1sYn1M=
+=buwX
+-----END PGP SIGNATURE-----
+
+--Sig_/hD6jsUlw5zaVqdeWk1=GsA1--
