@@ -1,81 +1,224 @@
-From: Martin Bruse <zondolfin@gmail.com>
-Subject: problems with block sizes in raid 5
-Date: Sat, 18 Jan 2014 19:12:59 +0100
-Message-ID: <CA+YGrSBw9CKZF7u3DZ_3+vvp1q3r2WzE4Kggc7vAX8dosQnJHQ@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] raid6check.c add page size check and repair
+Date: Sat, 18 Jan 2014 19:18:24 +0100
+Message-ID: <20140118181823.GA15757@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello list, I have a problem that I have some small hope that you can
-help me with.
+Hi Neil,
 
-I had a raid 5 array of 5 1TB drives, set up in an LVM group and then
-cryptomapped to an XFS filesystem.
+I prepared a patch, against mdadm 3.3, to reduce
+the check error report and the (automatic) repair,
+from stripe to page (4K) size.
+The patch is fully untested, it compiles, but
+I would like someone to review the code.
 
-Now one of the drives failed, so I had to buy a new one.
+Next patch will be about verbosity control.
 
-As I was also running out of space, I decided to buy 5 new 3TB drives instead.
+bye,
 
-Last time I did this, I just set up a new array and then rsynced the
-entire filesystem over to the new array, but this time I figured I
-should be clever.
+--- --- ---
 
-So I started replacing one disk at a time with the new drives - each
-time waiting until they had synced up before removing the next old
-drive.
+diff -uNr a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2013-09-03 06:47:47.000000000 +0200
++++ b/raid6check.c	2014-01-18 19:04:01.400340084 +0100
+@@ -27,6 +27,9 @@
+ #include <signal.h>
+ #include <sys/mman.h>
+ 
++#define CHECK_PAGE_BITS (12)
++#define CHECK_PAGE_SIZE (1 << CHECK_PAGE_BITS)
++
+ enum repair {
+ 	NO_REPAIR = 0,
+ 	MANUAL_REPAIR,
+@@ -73,15 +76,15 @@
+ 	}
+ }
+ 
+-/* Try to find out if a specific disk has problems */
+-int raid6_stats(int *results, int raid_disks, int chunk_size)
++/* Try to find out if a specific disk has problems in a CHECK_PAGE_SIZE page size */
++int raid6_stats_blk(int *results, int raid_disks)
+ {
+ 	int i;
+ 	int curr_broken_disk = -255;
+ 	int prev_broken_disk = -255;
+ 	int broken_status = 0;
+ 
+-	for(i = 0; i < chunk_size; i++) {
++	for(i = 0; i < CHECK_PAGE_SIZE; i++) {
+ 
+ 		if(results[i] != -255)
+ 			curr_broken_disk = results[i];
+@@ -112,6 +115,16 @@
+ 	return curr_broken_disk;
+ }
+ 
++/* Collect disks status for a strip in CHECK_PAGE_SIZE page size blocks */
++void raid6_stats(int *disk, int *results, int raid_disks, int chunk_size)
++{
++	int i, j;
++
++	for(i = 0, j = 0; i < chunk_size; i += CHECK_PAGE_SIZE, j++) {
++		disk[j] = raid6_stats_blk(&results[i], raid_disks);
++	}
++}
++
+ int lock_stripe(struct mdinfo *info, unsigned long long start,
+ 		int chunk_size, int data_disks, sighandler_t *sig) {
+ 	int rv;
+@@ -152,13 +165,14 @@
+ 	char *stripe_buf = xmalloc(raid_disks * chunk_size);
+ 	char **stripes = xmalloc(raid_disks * sizeof(char*));
+ 	char **blocks = xmalloc(raid_disks * sizeof(char*));
++	char **blocks_page = xmalloc(raid_disks * sizeof(char*));
+ 	int *block_index_for_slot = xmalloc(raid_disks * sizeof(int));
+ 	uint8_t *p = xmalloc(chunk_size);
+ 	uint8_t *q = xmalloc(chunk_size);
+ 	int *results = xmalloc(chunk_size * sizeof(int));
+ 	sighandler_t *sig = xmalloc(3 * sizeof(sighandler_t));
+ 
+-	int i;
++	int i, j;
+ 	int diskP, diskQ;
+ 	int data_disks = raid_disks - 2;
+ 	int err = 0;
+@@ -172,7 +186,7 @@
+ 		stripes[i] = stripe_buf + i * chunk_size;
+ 
+ 	while (length > 0) {
+-		int disk;
++		int disk[chunk_size >> CHECK_PAGE_BITS];
+ 
+ 		printf("pos --> %llu\n", start);
+ 
+@@ -217,26 +231,31 @@
+ 		block_index_for_slot[diskP] = data_disks;
+ 		blocks[data_disks+1] = stripes[diskQ];
+ 		block_index_for_slot[diskQ] = data_disks+1;
+-
++/* Do we really need the code below? */
++#if 0
+ 		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
+ 			printf("P(%d) wrong at %llu\n", diskP, start);
+ 		}
+ 		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
+ 			printf("Q(%d) wrong at %llu\n", diskQ, start);
+ 		}
++#endif
+ 		raid6_collect(chunk_size, p, q, stripes[diskP], stripes[diskQ], results);
+-		disk = raid6_stats(results, raid_disks, chunk_size);
++		raid6_stats(disk, results, raid_disks, chunk_size);
+ 
+-		if(disk >= -2) {
+-			disk = geo_map(disk, start, raid_disks, level, layout);
+-		}
+-		if(disk >= 0) {
+-			printf("Error detected at %llu: possible failed disk slot: %d --> %s\n",
+-				start, disk, name[disk]);
+-		}
+-		if(disk == -65535) {
+-			printf("Error detected at %llu: disk slot unknown\n", start);
++		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
++			if(disk[j] >= -2) {
++				disk[j] = geo_map(disk[j], start, raid_disks, level, layout);
++			}
++			if(disk[j] >= 0) {
++				printf("Error detected at %llu, page %d: possible failed disk slot: %d --> %s\n",
++					start, j, disk[j], name[disk[j]]);
++			}
++			if(disk[j] == -65535) {
++				printf("Error detected at %llu, page %d: disk slot unknown\n", start, j);
++			}
+ 		}
++
+ 		if(repair == MANUAL_REPAIR) {
+ 			printf("Repairing stripe %llu\n", start);
+ 			printf("Assuming slots %d (%s) and %d (%s) are incorrect\n",
+@@ -325,21 +344,37 @@
+ 				goto exitCheck;
+ 			}
+ 
+-		} else if (disk >= 0 && repair == AUTO_REPAIR) {
+-			printf("Auto-repairing slot %d (%s)\n", disk, name[disk]);
+-			if (disk == diskQ) {
+-				qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks, data_disks, chunk_size);
++		}
++
++		int pages_to_write_count = 0;
++		int page_to_write[chunk_size >> CHECK_PAGE_BITS];
++		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
++			if (disk[j] >= 0 && repair == AUTO_REPAIR) {
++				printf("Auto-repairing slot %d (%s)\n", disk[j], name[disk[j]]);
++				pages_to_write_count++;
++				page_to_write[j] = 1;
++				for(i = 0; i < raid_disks; i++) {
++					blocks_page[i] = blocks[i] + j * CHECK_PAGE_SIZE;
++				}
++				if (disk[j] == diskQ) {
++					qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks_page, data_disks, CHECK_PAGE_SIZE);
++				} else {
++					char *all_but_failed_blocks[data_disks];
++					int failed_block_index = block_index_for_slot[disk[j]];
++					for (i=0; i < data_disks; i++)
++						if (failed_block_index == i)
++							all_but_failed_blocks[i] = stripes[diskP] + j * CHECK_PAGE_SIZE;
++						else
++							all_but_failed_blocks[i] = blocks_page[i];
++					xor_blocks(stripes[disk[j]] + j * CHECK_PAGE_SIZE,
++					all_but_failed_blocks, data_disks, CHECK_PAGE_SIZE);
++				}
+ 			} else {
+-				char *all_but_failed_blocks[data_disks];
+-				int failed_block_index = block_index_for_slot[disk];
+-				for (i=0; i < data_disks; i++)
+-					if (failed_block_index == i)
+-						all_but_failed_blocks[i] = stripes[diskP];
+-					else
+-						all_but_failed_blocks[i] = blocks[i];
+-				xor_blocks(stripes[disk],
+-					all_but_failed_blocks, data_disks, chunk_size);
++				page_to_write[j] = 0;
+ 			}
++		}
++
++		if(pages_to_write_count > 0) {
+ 
+ 			err = lock_stripe(info, start, chunk_size, data_disks, sig);
+ 			if(err != 0) {
+@@ -348,14 +383,19 @@
+ 				goto exitCheck;
+ 			}
+ 
+-			lseek64(source[disk], offsets[disk] + start * chunk_size, 0);
+-			int write_res = write(source[disk], stripes[disk], chunk_size);
++			int write_res = 0;
++			for(j = 0; j < (chunk_size >> CHECK_PAGE_BITS); j++) {
++				if(page_to_write[j] == 1) {
++					lseek64(source[disk[j]], offsets[disk[j]] + start * chunk_size + j * CHECK_PAGE_SIZE, 0);
++					write_res += write(source[disk[j]], stripes[disk[j]] + j * CHECK_PAGE_SIZE, CHECK_PAGE_SIZE);
++				}
++			}
+ 
+ 			err = unlock_all_stripes(info, sig);
+-			if(err != 0 || write_res != chunk_size)
++			if (err != 0 || write_res != (CHECK_PAGE_SIZE * pages_to_write_count))
+ 				goto exitCheck;
+ 
+-			if (write_res != chunk_size) {
++			if (write_res != (CHECK_PAGE_SIZE * pages_to_write_count)) {
+ 				fprintf(stderr, "Failed to write a full chunk.\n");
+ 				goto exitCheck;
+ 			}
 
-This worked pretty well, until the array failed completely when I
-yanked a drive. I believe it was because another of the old drives
-hiccupped at the same time so the array stopped since I was missing
-two drives.
 
-Because I had my entire LVM + cryptomap + XFS setup running, I figured
-it was just faster to reboot than to take everything down to
-re-assemble with a --force to get it running again.
 
-So I rebooted, and did a manual reassemble with --force. And the array
-was up, and I ran my little setup-script that does the cryptomapping
-and mounting of the array.
+-- 
 
-Here comes the problem: "mount" produced "mount: Function not implemented"
-
-I became slightly worried, and tried "xfs_check", which claimed I had
-a log file and refused to work.
-
-So I ran "xfs_repair", which said "xfs_repair: warning - cannot set
-blocksize 512 on block device /dev/mapper/data: Invalid argument"
-
-This made me start looking at the block sizes of the different drives.
-I ran "blockdevice --getbsz", and it became evident that the old
-drives had block size 1024, and the new ones 4096.
-
-This begs a few questions:
-
-1) What block size will an md device have?
-1.1) When it has 5 drives with block size 1024?
-1.2) When it has 3 drives with block size 1024 and 2 with block size 4096?
-
-2) If it gets a different block size in case 1.2), why didn't it
-happen until I rebooted? (The XFS mount seemed to work just fine, I
-accessed files without a hitch)
-
-3) Is there a way to "force" a block size for an md device?
-
-In the end, of course, I am not expert enough to be sure that the
-block size is the problem, but this is the only lead I have. My weak
-hypothesis is "the md device kept the same 1024 block size (which is
-odd, since XFS seems to want 512?) until I rebooted, when it checked
-the block sizes of the component drives and chose the biggest one -
-which caused XFS to refuse to mount the drive".
-
-This makes me suspect that I must buy at least one new 1TB drive with
-a block size of 1024, sync into the array and restart the array
-without any 4096 block size drives in it.
-
-But before I do this, I thought I better ask some experts what they figured...
-
-best regards (and a panicky cry for help)
-Martin
+piergiorgio
