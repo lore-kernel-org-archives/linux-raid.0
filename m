@@ -1,205 +1,81 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid recovery - raid5 - one active, two spares
-Date: Sat, 18 Jan 2014 10:42:09 -0500
-Message-ID: <52DAA0D1.60005@turmel.org>
-References: <CAPZL0fpbkAy=L7i3RcTL_z0y2dQ5K00Y2Vnhss_agtCoZEur4Q@mail.gmail.com>
+From: Martin Bruse <zondolfin@gmail.com>
+Subject: problems with block sizes in raid 5
+Date: Sat, 18 Jan 2014 19:12:59 +0100
+Message-ID: <CA+YGrSBw9CKZF7u3DZ_3+vvp1q3r2WzE4Kggc7vAX8dosQnJHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPZL0fpbkAy=L7i3RcTL_z0y2dQ5K00Y2Vnhss_agtCoZEur4Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mariusz Zalewski <mariusz@zalewscy.eu>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning Mariusz,
+Hello list, I have a problem that I have some small hope that you can
+help me with.
 
-On 01/17/2014 08:10 PM, Mariusz Zalewski wrote:
-> Hi,
-> 
-> Encouraged via information found on the wiki
-> <https://raid.wiki.kernel.org/index.php/RAID_Recovery> it would be
-> great to receive advice from linux-raid community.
+I had a raid 5 array of 5 1TB drives, set up in an LVM group and then
+cryptomapped to an XFS filesystem.
 
-This is the right place for help.
+Now one of the drives failed, so I had to buy a new one.
 
-> Recently I bought a extra hard drive (next to existing raid level 5
-> three discs). Unfortunately during physical installation probably
-> disconnect two hard drives of existing raid on my PC. I didn't notice
-> that cables was not properly inserted. After system bootup (Linux Mint
-> 13) md doesn't start. Because /home directory should be mounted on
-> LVM@RAID my system doesn't start properly
-> 
-> I've disconnected new hard drive, check and correct every cable on
-> previously working hard drives and run LiveUSB linux to check if RAID
-> will go OK. It wasn't.
+As I was also running out of space, I decided to buy 5 new 3TB drives instead.
 
-I wonder if you've left out some things you tried . . .
+Last time I did this, I just set up a new array and then rsynced the
+entire filesystem over to the new array, but this time I figured I
+should be clever.
 
-> From liveCD perspective raid 5 should be worked on three partitions:
-> /dev/sdb1
-> /dev/sdd1
-> /dev/sde1
-> 
-> There are also other storage devices on PC:
-> /dev/sda - main drive, system without /home
-> /dev/sdc - LiveUSB usb
-> 
-> 
-> LiveUSBmint ~ # cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10]
-> md2 : inactive sdd1[1](S) sde1[3](S)
->       5859354352 blocks super 1.0
-> 
-> unused devices: <none>
-> 
-> LiveUSBmint ~ # mdadm --examine /dev/sd[bde]1
-> /dev/sdb1:
->           Magic : a92b4efc
->         Version : 1.0
->     Feature Map : 0x0
->      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->            Name : tobik:2
->   Creation Time : Wed May 23 00:05:55 2012
->      Raid Level : raid5
->    Raid Devices : 3
-> 
->  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->      Array Size : 11718708480 (5587.92 GiB 5999.98 GB)
->   Used Dev Size : 5859354240 (2793.96 GiB 2999.99 GB)
->    Super Offset : 5859354608 sectors
->           State : clean
->     Device UUID : 8aa81e09:22237f15:0801f42d:95104515
-> 
->     Update Time : Fri Jan 17 18:32:50 2014
->        Checksum : 8454c6e - correct
->          Events : 91
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->    Device Role : Active device 0
->    Array State : AAA ('A' == active, '.' == missing)
+So I started replacing one disk at a time with the new drives - each
+time waiting until they had synced up before removing the next old
+drive.
 
-This is good.
+This worked pretty well, until the array failed completely when I
+yanked a drive. I believe it was because another of the old drives
+hiccupped at the same time so the array stopped since I was missing
+two drives.
 
-> /dev/sdd1:
->           Magic : a92b4efc
->         Version : 1.0
->     Feature Map : 0x0
->      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->            Name : tobik:2
->   Creation Time : Wed May 23 00:05:55 2012
->      Raid Level : -unknown-
->    Raid Devices : 0
-> 
->  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->    Super Offset : 5859354608 sectors
->           State : active
->     Device UUID : ec85b3b8:30a31d27:6af31507:dcb4e8dc
-> 
->     Update Time : Fri Jan 17 20:07:12 2014
->        Checksum : 6a2b13f4 - correct
->          Events : 1
-> 
-> 
->    Device Role : spare
->    Array State :  ('A' == active, '.' == missing)
+Because I had my entire LVM + cryptomap + XFS setup running, I figured
+it was just faster to reboot than to take everything down to
+re-assemble with a --force to get it running again.
 
-This is bad.  Simply attempting to assemble an array will not change a
-drive to a spare.
+So I rebooted, and did a manual reassemble with --force. And the array
+was up, and I ran my little setup-script that does the cryptomapping
+and mounting of the array.
 
-> /dev/sde1:
->           Magic : a92b4efc
->         Version : 1.0
->     Feature Map : 0x0
->      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->            Name : tobik:2
->   Creation Time : Wed May 23 00:05:55 2012
->      Raid Level : -unknown-
->    Raid Devices : 0
-> 
->  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->    Super Offset : 5859354608 sectors
->           State : active
->     Device UUID : 0bc9b05f:bc35f218:82798504:ef62ff32
-> 
->     Update Time : Fri Jan 17 20:07:12 2014
->        Checksum : 56831dcb - correct
->          Events : 1
-> 
-> 
->    Device Role : spare
->    Array State :  ('A' == active, '.' == missing)
+Here comes the problem: "mount" produced "mount: Function not implemented"
 
-Same here.
+I became slightly worried, and tried "xfs_check", which claimed I had
+a log file and refused to work.
 
-If the unintended disconnect was the only thing that had gone wrong,
-mdadm --assemble --force would have fixed it.
+So I ran "xfs_repair", which said "xfs_repair: warning - cannot set
+blocksize 512 on block device /dev/mapper/data: Invalid argument"
 
-Did you try to "--add" these devices to the array while in the LiveCD?
+This made me start looking at the block sizes of the different drives.
+I ran "blockdevice --getbsz", and it became evident that the old
+drives had block size 1024, and the new ones 4096.
 
-> mint etc # mdadm --examine /dev/sd[bde]1 | egrep "/dev/sd|Events|Role|Time"
-> /dev/sdb1:
->   Creation Time : Wed May 23 00:05:55 2012
->     Update Time : Fri Jan 17 18:32:50 2014
->          Events : 91
->    Device Role : Active device 0
-> /dev/sdd1:
->   Creation Time : Wed May 23 00:05:55 2012
->     Update Time : Fri Jan 17 20:07:12 2014
->          Events : 1
->    Device Role : spare
-> /dev/sde1:
->   Creation Time : Wed May 23 00:05:55 2012
->     Update Time : Fri Jan 17 20:07:12 2014
->          Events : 1
->    Device Role : spare
-> 
-> 
-> LiveUSBmint ~ # uname -a
-> Linux mint 3.2.0-23-generic #36-Ubuntu SMP Tue Apr 10 20:39:51 UTC
-> 2012 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> LiveUSBmint ~ # mdadm -V
-> mdadm - v3.2.5 - 18th May 2012
-> 
-> 
-> It is possible to recover Raid 5 from this disks? I consider
-> "Restoring array by recreating..."
-> <https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29>
-> but I would like to know Your opinion. According to wiki it should be
-> considered as *last* resort.
+This begs a few questions:
 
-It is a last resort, but appears to be necessary in your case.  There's
-only two possible device orders to choose from.  Your array has version
-1.0 metadata, so the data offset won't be a problem, but you must use
-the --size option to make sure the new array has the same size as the
-original:
+1) What block size will an md device have?
+1.1) When it has 5 drives with block size 1024?
+1.2) When it has 3 drives with block size 1024 and 2 with block size 4096?
 
-Try #1:
+2) If it gets a different block size in case 1.2), why didn't it
+happen until I rebooted? (The XFS mount seemed to work just fine, I
+accessed files without a hitch)
 
-mdadm --stop /dev/md2
-mdadm --create --assume-clean --metadata=1.0 --size=2929677120 \
-  --chunk=64 /dev/md2 /dev/sd{b,d,e}1
+3) Is there a way to "force" a block size for an md device?
 
-Show "mdadm -E /dev/sdb1" and verify that all of the sizes & offsets
-match the original.
+In the end, of course, I am not expert enough to be sure that the
+block size is the problem, but this is the only lead I have. My weak
+hypothesis is "the md device kept the same 1024 block size (which is
+odd, since XFS seems to want 512?) until I rebooted, when it checked
+the block sizes of the component drives and chose the biggest one -
+which caused XFS to refuse to mount the drive".
 
-Do *not* mount the array! (Yet)
+This makes me suspect that I must buy at least one new 1TB drive with
+a block size of 1024, sync into the array and restart the array
+without any 4096 block size drives in it.
 
-Use "fsck -n" to see if the filesystem is reasonably consistent.  If
-not, switch /dev/sdd1 and /dev/sde1 in try #2.
+But before I do this, I thought I better ask some experts what they figured...
 
-When you are confortable with the device order based on "fsck -n"
-output, perform a normal fsck, then mount.
-
-> P.S. Fortunately I have a backup, but time spend on recover can take
-> much longer.
-
-Backups are good.
-
-HTH,
-
-Phil
+best regards (and a panicky cry for help)
+Martin
