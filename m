@@ -1,218 +1,56 @@
-From: Mariusz Zalewski <mariusz@zalewscy.eu>
-Subject: Re: Raid recovery - raid5 - one active, two spares
-Date: Sun, 19 Jan 2014 00:21:04 +0100
-Message-ID: <CAPZL0focNQC0FtfSSDx6mh=LJUVeDyc7ZO4A3D6QOn6d7MDffA@mail.gmail.com>
-References: <CAPZL0fpbkAy=L7i3RcTL_z0y2dQ5K00Y2Vnhss_agtCoZEur4Q@mail.gmail.com>
- <52DAA0D1.60005@turmel.org>
+From: Ron Leach <ronleach@tesco.net>
+Subject: If separate md for /boot, OS, and /srv, must 'create' on disks with
+ 3 partns?
+Date: Sun, 19 Jan 2014 18:39:41 +0000
+Message-ID: <52DC1BED.7070901@tesco.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DAA0D1.60005@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Phil,
+List, may I ask a query about partitions?
 
-[cut]
->> Recently I bought a extra hard drive (next to existing raid level 5
->> three discs). Unfortunately during physical installation probably
->> disconnect two hard drives of existing raid on my PC. I didn't notice
->> that cables was not properly inserted. After system bootup (Linux Mint
->> 13) md doesn't start. Because /home directory should be mounted on
->> LVM@RAID my system doesn't start properly
->>
->> I've disconnected new hard drive, check and correct every cable on
->> previously working hard drives and run LiveUSB linux to check if RAID
->> will go OK. It wasn't.
->
-> I wonder if you've left out some things you tried . . .
+Our objective is to run a Debian Wheezy system as a data server using 
+an LVM on top of 2 x 3TB discs in RAID-1 configuration.  A first 
+attempt had the whole discs used for the data filesystem, using a 
+single /dev/md(n), on whole unpartitioned disks.  We've dismantled 
+that because of filesystem size problems (it had used only 2TB disks) 
+and will make a second attempt and additionally, this time, we want to 
+use the array for 3 purposes:
 
-This may be significant: The step "After system bootup...my system
-doesn't start properly" - I've start twice Mint in "recovery mode"
-(2nd grub item). I did not mount or try to recreate array by any
-command, but Linux Mint asked, if I want to try start degraded raid,
-and I answer "Y"es. I don't remember exact answer, but indicated a
-failure. After that I've boot from LiveUSB/CD.
+(a) Boot with Grub
+(b) Hold the OS
+(c) Use the remainder of the disk for the data server, on which we'll 
+install an LVM and later grow that with another 2 x 3TB disks.
 
->> From liveCD perspective raid 5 should be worked on three partitions:
->> /dev/sdb1
->> /dev/sdd1
->> /dev/sde1
->>
->> There are also other storage devices on PC:
->> /dev/sda - main drive, system without /home
->> /dev/sdc - LiveUSB usb
->>
->>
->> LiveUSBmint ~ # cat /proc/mdstat
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md2 : inactive sdd1[1](S) sde1[3](S)
->>       5859354352 blocks super 1.0
->>
->> unused devices: <none>
->>
->> LiveUSBmint ~ # mdadm --examine /dev/sd[bde]1
->> /dev/sdb1:
->>           Magic : a92b4efc
->>         Version : 1.0
->>     Feature Map : 0x0
->>      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->>            Name : tobik:2
->>   Creation Time : Wed May 23 00:05:55 2012
->>      Raid Level : raid5
->>    Raid Devices : 3
->>
->>  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->>      Array Size : 11718708480 (5587.92 GiB 5999.98 GB)
->>   Used Dev Size : 5859354240 (2793.96 GiB 2999.99 GB)
->>    Super Offset : 5859354608 sectors
->>           State : clean
->>     Device UUID : 8aa81e09:22237f15:0801f42d:95104515
->>
->>     Update Time : Fri Jan 17 18:32:50 2014
->>        Checksum : 8454c6e - correct
->>          Events : 91
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>    Device Role : Active device 0
->>    Array State : AAA ('A' == active, '.' == missing)
->
-> This is good.
->
->> /dev/sdd1:
->>           Magic : a92b4efc
->>         Version : 1.0
->>     Feature Map : 0x0
->>      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->>            Name : tobik:2
->>   Creation Time : Wed May 23 00:05:55 2012
->>      Raid Level : -unknown-
->>    Raid Devices : 0
->>
->>  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->>    Super Offset : 5859354608 sectors
->>           State : active
->>     Device UUID : ec85b3b8:30a31d27:6af31507:dcb4e8dc
->>
->>     Update Time : Fri Jan 17 20:07:12 2014
->>        Checksum : 6a2b13f4 - correct
->>          Events : 1
->>
->>
->>    Device Role : spare
->>    Array State :  ('A' == active, '.' == missing)
->
-> This is bad.  Simply attempting to assemble an array will not change a
-> drive to a spare.
->
->> /dev/sde1:
->>           Magic : a92b4efc
->>         Version : 1.0
->>     Feature Map : 0x0
->>      Array UUID : e494f7d3:bef9154e:1de134d7:476ed4e0
->>            Name : tobik:2
->>   Creation Time : Wed May 23 00:05:55 2012
->>      Raid Level : -unknown-
->>    Raid Devices : 0
->>
->>  Avail Dev Size : 5859354352 (2793.96 GiB 2999.99 GB)
->>    Super Offset : 5859354608 sectors
->>           State : active
->>     Device UUID : 0bc9b05f:bc35f218:82798504:ef62ff32
->>
->>     Update Time : Fri Jan 17 20:07:12 2014
->>        Checksum : 56831dcb - correct
->>          Events : 1
->>
->>
->>    Device Role : spare
->>    Array State :  ('A' == active, '.' == missing)
->
-> Same here.
->
-> If the unintended disconnect was the only thing that had gone wrong,
-> mdadm --assemble --force would have fixed it.
+Assuming I am correct in needing something such as:
 
-I've tried that also without success. Can't remember output (don't
-have access to environment now).
+/dev/md0 for Grub, (and copied to both physical disks of the RAID-1)
+/dev/md1 for the OS, and
+/dev/md2 for the data files (on which we'll install the LVM)
 
-> Did you try to "--add" these devices to the array while in the LiveCD?
+then I think we need to partition our disks before creating the array. 
+  Is that correct?
 
-Nope, but Linux Mint in "recovery mode" could.
+The wiki ( https://raid.wiki.kernel.org/index.php/Partition_Types , 
+and https://raid.wiki.kernel.org/index.php/RAID_setup#General_setup ) 
+is relatively silent on the 'numbers' of partitions that could or 
+should be used, if creating a raid on new discs in the circumstances 
+where boot 'partitions' and separate OS 'partitions' might be needed. 
+  I couldn't see anything in man mdadm to guide me, either, but I 
+could have missed something and apologies if I have.
 
->> mint etc # mdadm --examine /dev/sd[bde]1 | egrep "/dev/sd|Events|Role|Time"
->> /dev/sdb1:
->>   Creation Time : Wed May 23 00:05:55 2012
->>     Update Time : Fri Jan 17 18:32:50 2014
->>          Events : 91
->>    Device Role : Active device 0
->> /dev/sdd1:
->>   Creation Time : Wed May 23 00:05:55 2012
->>     Update Time : Fri Jan 17 20:07:12 2014
->>          Events : 1
->>    Device Role : spare
->> /dev/sde1:
->>   Creation Time : Wed May 23 00:05:55 2012
->>     Update Time : Fri Jan 17 20:07:12 2014
->>          Events : 1
->>    Device Role : spare
->>
->>
->> LiveUSBmint ~ # uname -a
->> Linux mint 3.2.0-23-generic #36-Ubuntu SMP Tue Apr 10 20:39:51 UTC
->> 2012 x86_64 x86_64 x86_64 GNU/Linux
->>
->> LiveUSBmint ~ # mdadm -V
->> mdadm - v3.2.5 - 18th May 2012
->>
->>
->> It is possible to recover Raid 5 from this disks? I consider
->> "Restoring array by recreating..."
->> <https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29>
->> but I would like to know Your opinion. According to wiki it should be
->> considered as *last* resort.
->
-> It is a last resort, but appears to be necessary in your case.  There's
-> only two possible device orders to choose from.  Your array has version
-> 1.0 metadata, so the data offset won't be a problem, but you must use
-> the --size option to make sure the new array has the same size as the
-> original:
->
-> Try #1:
->
-> mdadm --stop /dev/md2
-> mdadm --create --assume-clean --metadata=1.0 --size=2929677120 \
->   --chunk=64 /dev/md2 /dev/sd{b,d,e}1
->
-> Show "mdadm -E /dev/sdb1" and verify that all of the sizes & offsets
-> match the original.
->
-> Do *not* mount the array! (Yet)
->
-> Use "fsck -n" to see if the filesystem is reasonably consistent.  If
-> not, switch /dev/sdd1 and /dev/sde1 in try #2.
->
-> When you are confortable with the device order based on "fsck -n"
-> output, perform a normal fsck, then mount.
+Should I proceed to partition the disks, and then create 3 RAID-1 
+arrays (one on each partition-pair), or should I use a different 
+technique/layout to hold Grub, the OS, and an expandable LV for the 
+datafiles?
 
-Thank you for advice. I'll try that, but first I decide to clone these
-three disk (dd) and make tests on clones. I'll try to recreate array
-from three hard drives. If this does not help I will try to recreate
-from different sets of two drives. I'll send info after tests. Now I'm
-organizing drives for clones.
+I had always assumed that /dev/md(x) always mapped to /dev/sda(y), but 
+I have a faint recollection that a discussion on the list a year or so 
+ago had suggested that that mapping was not cast in stone, and 
+multiple partitions on the physical devices were neither necessary nor 
+desirable.  Grateful for any comment,  Ron
 
->> P.S. Fortunately I have a backup, but time spend on recover can take
->> much longer.
->
-> Backups are good.
-
-I like them too :-)
-
-Regards,
--- 
-Mariusz Zalewski
