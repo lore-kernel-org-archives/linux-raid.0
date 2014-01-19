@@ -1,139 +1,247 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: If separate md for /boot, OS, and /srv, must 'create' on disks
- with 3 partns?
-Date: Sun, 19 Jan 2014 22:29:57 +0100
-Message-ID: <52DC43D5.6010904@hesbynett.no>
-References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org>
+From: Ian Kumlien <ian.kumlien@gmail.com>
+Subject: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
+Date: Sun, 19 Jan 2014 23:00:23 +0100
+Message-ID: <1390168823.587.1.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-APHGKTzmBFit3rrsHQWL"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DC39A7.5020506@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Ron Leach <ronleach@tesco.net>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19/01/14 21:46, Phil Turmel wrote:
-> Hi Ron,
->
-> On 01/19/2014 01:39 PM, Ron Leach wrote:
->> List, may I ask a query about partitions?
->
-> Of course!
->
->> Our objective is to run a Debian Wheezy system as a data server using an
->> LVM on top of 2 x 3TB discs in RAID-1 configuration.  A first attempt
->> had the whole discs used for the data filesystem, using a single
->> /dev/md(n), on whole unpartitioned disks.  We've dismantled that because
->> of filesystem size problems (it had used only 2TB disks) and will make a
->> second attempt and additionally, this time, we want to use the array for
->> 3 purposes:
->>
->> (a) Boot with Grub
->> (b) Hold the OS
->> (c) Use the remainder of the disk for the data server, on which we'll
->> install an LVM and later grow that with another 2 x 3TB disks.
->
-> This kind of setup is fine for light duties (like my personal servers),
-> but may cause you significant grief if you need to do high-bandwidth
-> streaming.
->
-> (a) is insignificant, as it is only touched at boot or update.
->
-> (b) is a random-access workload that tends to spike near and after RAM
-> exhaustion.  Lots of seeks when busy.
->
-> (c) is unspecified here, but streaming workloads often cause RAM
-> exhaustion as the cache fills.  Then the seeks of the random-access
-> workload crush the total bandwidth of the drives involved.
->
->> Assuming I am correct in needing something such as:
->>
->> /dev/md0 for Grub, (and copied to both physical disks of the RAID-1)
->> /dev/md1 for the OS, and
->
-> I would use LVM here, too.
->
->> /dev/md2 for the data files (on which we'll install the LVM)
->>
->> then I think we need to partition our disks before creating the array.
->>   Is that correct?
->
-> Yes.
->
->> The wiki ( https://raid.wiki.kernel.org/index.php/Partition_Types , and
->> https://raid.wiki.kernel.org/index.php/RAID_setup#General_setup ) is
->> relatively silent on the 'numbers' of partitions that could or should be
->> used, if creating a raid on new discs in the circumstances where boot
->> 'partitions' and separate OS 'partitions' might be needed.  I couldn't
->> see anything in man mdadm to guide me, either, but I could have missed
->> something and apologies if I have.
->
-> Partitioning is not recommended for arrays with heavy-duty workloads.
-> Mixing workload types on the same spinning disks gets you worst-case
-> performance for both types.  It doesn't matter for SSDs, but that's
-> rather expensive in large capacities.
->
->> Should I proceed to partition the disks, and then create 3 RAID-1 arrays
->> (one on each partition-pair), or should I use a different
->> technique/layout to hold Grub, the OS, and an expandable LV for the
->> datafiles?
->
-> How were you booting when the two disks were a single array?  Some other
-> device?  If you can still do that, consider it.
->
->> I had always assumed that /dev/md(x) always mapped to /dev/sda(y), but I
->> have a faint recollection that a discussion on the list a year or so ago
->> had suggested that that mapping was not cast in stone, and multiple
->> partitions on the physical devices were neither necessary nor
->> desirable.  Grateful for any comment,  Ron
->
-> MD simply makes arrays out of block devices.  It doesn't care,
-> logically, whether those are whole disks, partitions, loopbacks devices,
-> or other layered devices.
->
-> For the small systems I've built lately, I've set up modest twin SSDs to
-> handle boot, root, swap, database tablespaces, and mail storage.  Then
-> added four or more large drives to handle media files.  The SSDs have a
-> small partition for grub (raid1) and the balance in a single raid1 for
-> LVM.  The large drives are typically unpartitioned, making a large
-> raid6, raid10,f3, or raid10,n3.  (In my opinion, large drives aren't
-> safe with less than double redundancy.)
->
-> Oh, and don't forget a backup plan.  Raid redundancy is *not* backup.
->
-> If you have bigger goals in mind, ignore me--do whatever Stan says
-> (seriously).
->
-> HTH,
->
-> Phil
 
-You've made a lot of good points here.  I'd just like to add a couple.
+--=-APHGKTzmBFit3rrsHQWL
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-For some types of server, access to the OS partition is pretty minimal - 
-all the programs that need to be run are running, and all the files that 
-need to be accessed are accessed and cached in ram.  Access to the disk 
-is so small that it makes no difference to the main data access (unless 
-you are running something with especially tight latency requirements - 
-you /could/ be unlucky on occasion).  I once had a firewall/router 
-machine that was still running fine a week after the disk controller had 
-failed - until some person "helpfully" reset it.
+Ok, so third try to actually email this... 
+---
 
-Make sure the server has plenty of ram - you want ram exhaustion and 
-swap to be a very rare exception.
+Hi,
 
-When you have plenty of ram, you can reduce access to the OS partition 
-by putting things like /tmp, /var/tmp, /var/log, /var/run, etc., on 
-tmpfs mounts.  Of course, the files won't survive a crash or restart, 
-but it's easier on the disk and faster to access the files.  Make your 
-choice according to needs.
+I started testing 3.13-rc8 on another machine since the first one seemed
+to be working fine...
 
-And remember, raid is not a backup plan.  (This can't be stressed too 
-often!)
+One spontaneous reboot later i'm not so sure ;)
 
-David
+Right now i captured a kernel oops in the raid code it seems...
+
+(Also attached to avoid mangling)
+
+[33411.934672] ------------[ cut here ]------------
+[33411.934685] kernel BUG at drivers/md/raid5.c:291!
+[33411.934690] invalid opcode: 0000 [#1] PREEMPT SMP 
+[33411.934696] Modules linked in: bonding btrfs microcode
+[33411.934705] CPU: 4 PID: 2319 Comm: md2_raid6 Not tainted 3.13.0-rc8 #83
+[33411.934709] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.934716] task: ffff880326265880 ti: ffff880320472000 task.ti: ffff880320472000
+[33411.934720] RIP: 0010:[<ffffffff81a3a5be>]  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934731] RSP: 0018:ffff880320473d28  EFLAGS: 00010087
+[33411.934735] RAX: ffff8802f0875a60 RBX: 0000000000000001 RCX: ffff8800b0d816b0
+[33411.934739] RDX: ffff880324eeee98 RSI: ffff8802f0875a40 RDI: ffff880324eeec00
+[33411.934743] RBP: ffff8802f0875a50 R08: 0000000000000000 R09: 0000000000000001
+[33411.934747] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880324eeec00
+[33411.934752] R13: ffff880324eeee58 R14: ffff880320473e88 R15: 0000000000000000
+[33411.934756] FS:  00007fc38654d700(0000) GS:ffff880337d00000(0000) knlGS:0000000000000000
+[33411.934761] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[33411.934765] CR2: 00007f0cb28bd000 CR3: 00000002ebcf6000 CR4: 00000000000407e0
+[33411.934769] Stack:
+[33411.934771]  ffff8800bba09690 ffff8800b4f16588 ffff880303005a40 0000000000000001
+[33411.934779]  ffff8800b33e43d0 ffffffff81a3a62d ffff880324eeee58 0000000000000000
+[33411.934786]  ffff880324eeee58 ffff880326660670 ffff880326265880 ffffffff81a41692
+[33411.934794] Call Trace:
+[33411.934798]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.934803]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.934808]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.934814]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.934818]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.934823]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.934828]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70Hi,
+
+I started testing 3.13-rc8 on another machine since the first one seemed to be working fine...
+
+One spontaneous reboot later i'm not so sure ;)
+
+Right now i captured a kernel oops in the raid code it seems...
+
+(Also attached to avoid mangling)
+
+[33411.934672] ------------[ cut here ]------------
+[33411.934685] kernel BUG at drivers/md/raid5.c:291!
+[33411.934690] invalid opcode: 0000 [#1] PREEMPT SMP 
+[33411.934696] Modules linked in: bonding btrfs microcode
+[33411.934705] CPU: 4 PID: 2319 Comm: md2_raid6 Not tainted 3.13.0-rc8 #83
+[33411.934709] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.934716] task: ffff880326265880 ti: ffff880320472000 task.ti: ffff880320472000
+[33411.934720] RIP: 0010:[<ffffffff81a3a5be>]  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934731] RSP: 0018:ffff880320473d28  EFLAGS: 00010087
+[33411.934735] RAX: ffff8802f0875a60 RBX: 0000000000000001 RCX: ffff8800b0d816b0
+[33411.934739] RDX: ffff880324eeee98 RSI: ffff8802f0875a40 RDI: ffff880324eeec00
+[33411.934743] RBP: ffff8802f0875a50 R08: 0000000000000000 R09: 0000000000000001
+[33411.934747] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880324eeec00
+[33411.934752] R13: ffff880324eeee58 R14: ffff880320473e88 R15: 0000000000000000
+[33411.934756] FS:  00007fc38654d700(0000) GS:ffff880337d00000(0000) knlGS:0000000000000000
+[33411.934761] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[33411.934765] CR2: 00007f0cb28bd000 CR3: 00000002ebcf6000 CR4: 00000000000407e0
+[33411.934769] Stack:
+[33411.934771]  ffff8800bba09690 ffff8800b4f16588 ffff880303005a40 0000000000000001
+[33411.934779]  ffff8800b33e43d0 ffffffff81a3a62d ffff880324eeee58 0000000000000000
+[33411.934786]  ffff880324eeee58 ffff880326660670 ffff880326265880 ffffffff81a41692
+[33411.934794] Call Trace:
+[33411.934798]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.934803]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.934808]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.934814]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.934818]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.934823]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.934828]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70
+[33411.934833]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934839]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.934843]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934847] Code: f7 ff ff 66 90 48 8b 43 18 48 8b b8 48 01 00 00 48 89 14 24 48 89 74 24 08 e8 af 9a 02 00 48 8b 74 24 08 48 8b 14 24 eb 9f 0f 0b <0f> 0b 0f 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 f0 ff 4e 
+[33411.934912] RIP  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934918]  RSP <ffff880320473d28>
+[33411.941326] ---[ end trace 42d97d618cc5bfe2 ]---
+[33411.941331] ------------[ cut here ]------------
+[33411.941337] WARNING: CPU: 4 PID: 2319 at kernel/exit.c:703 do_exit+0x45/0xa40()
+[33411.941351] Modules linked in: bonding btrfs microcode
+[33411.941377] CPU: 4 PID: 2319 Comm: md2_raid6 Tainted: G      D      3.13.0-rc8 #83
+[33411.941395] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.941417]  0000000000000000 0000000000000009 ffffffff81d4eeb8 0000000000000000
+[33411.941449]  ffffffff810eba01 000000000000000b ffff880320473c78 0000000000000096
+[33411.941480]  ffff880324eeee58 ffff880320473e88 ffffffff810ed7d5 ffff880324eeee58
+[33411.941512] Call Trace:
+[33411.941519]  [<ffffffff81d4eeb8>] ? dump_stack+0x4a/0x75
+[33411.941530]  [<ffffffff810eba01>] ? warn_slowpath_common+0x81/0xb0
+[33411.941544]  [<ffffffff810ed7d5>] ? do_exit+0x45/0xa40
+[33411.941557]  [<ffffffff81d4c0d4>] ? printk+0x4f/0x54
+[33411.941568]  [<ffffffff810463ed>] ? oops_end+0x8d/0xd0
+[33411.941579]  [<ffffffff810431d2>] ? do_invalid_op+0xa2/0x100
+[33411.941592]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941606]  [<ffffffff81d596a8>] ? invalid_op+0x18/0x20
+[33411.941617]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941633]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.941647]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.941658]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.941670]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.941683]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.941695]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.941708]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70
+[33411.941722]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941736]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.941749]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941762] ---[ end trace 42d97d618cc5bfe3 ]---
+[33411.941773] note: md2_raid6[2319] exited with preempt_count 1
+[33411.934833]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934839]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.934843]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934847] Code: f7 ff ff 66 90 48 8b 43 18 48 8b b8 48 01 00 00 48 89 14 24 48 89 74 24 08 e8 af 9a 02 00 48 8b 74 24 08 48 8b 14 24 eb 9f 0f 0b <0f> 0b 0f 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 f0 ff 4e 
+[33411.934912] RIP  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934918]  RSP <ffff880320473d28>
+[33411.941326] ---[ end trace 42d97d618cc5bfe2 ]---
+[33411.941331] ------------[ cut here ]------------
+[33411.941337] WARNING: CPU: 4 PID: 2319 at kernel/exit.c:703 do_exit+0x45/0xa40()
+[33411.941351] Modules linked in: bonding btrfs microcode
+[33411.941377] CPU: 4 PID: 2319 Comm: md2_raid6 Tainted: G      D      3.13.0-rc8 #83
+[33411.941395] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.941417]  0000000000000000 0000000000000009 ffffffff81d4eeb8 0000000000000000
+[33411.941449]  ffffffff810eba01 000000000000000b ffff880320473c78 0000000000000096
+[33411.941480]  ffff880324eeee58 ffff880320473e88 ffffffff810ed7d5 ffff880324eeee58
+[33411.941512] Call Trace:
+[33411.941519]  [<ffffffff81d4eeb8>] ? dump_stack+0x4a/0x75
+[33411.941530]  [<ffffffff810eba01>] ? warn_slowpath_common+0x81/0xb0
+[33411.941544]  [<ffffffff810ed7d5>] ? do_exit+0x45/0xa40
+[33411.941557]  [<ffffffff81d4c0d4>] ? printk+0x4f/0x54
+[33411.941568]  [<ffffffff810463ed>] ? oops_end+0x8d/0xd0
+[33411.941579]  [<ffffffff810431d2>] ? do_invalid_op+0xa2/0x100
+[33411.941592]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941606]  [<ffffffff81d596a8>] ? invalid_op+0x18/0x20
+[33411.941617]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941633]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.941647]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.941658]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.941670]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.941683]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.941695]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.941708]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70
+[33411.941722]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941736]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.941749]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941762] ---[ end trace 42d97d618cc5bfe3 ]---
+[33411.941773] note: md2_raid6[2319] exited with preempt_count 1
+
+--=-APHGKTzmBFit3rrsHQWL
+Content-Disposition: attachment; filename="kernel-oops-3.13-rc8-raid.txt"
+Content-Type: text/plain; name="kernel-oops-3.13-rc8-raid.txt"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+[33411.934672] ------------[ cut here ]------------
+[33411.934685] kernel BUG at drivers/md/raid5.c:291!
+[33411.934690] invalid opcode: 0000 [#1] PREEMPT SMP 
+[33411.934696] Modules linked in: bonding btrfs microcode
+[33411.934705] CPU: 4 PID: 2319 Comm: md2_raid6 Not tainted 3.13.0-rc8 #83
+[33411.934709] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.934716] task: ffff880326265880 ti: ffff880320472000 task.ti: ffff880320472000
+[33411.934720] RIP: 0010:[<ffffffff81a3a5be>]  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934731] RSP: 0018:ffff880320473d28  EFLAGS: 00010087
+[33411.934735] RAX: ffff8802f0875a60 RBX: 0000000000000001 RCX: ffff8800b0d816b0
+[33411.934739] RDX: ffff880324eeee98 RSI: ffff8802f0875a40 RDI: ffff880324eeec00
+[33411.934743] RBP: ffff8802f0875a50 R08: 0000000000000000 R09: 0000000000000001
+[33411.934747] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880324eeec00
+[33411.934752] R13: ffff880324eeee58 R14: ffff880320473e88 R15: 0000000000000000
+[33411.934756] FS:  00007fc38654d700(0000) GS:ffff880337d00000(0000) knlGS:0000000000000000
+[33411.934761] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[33411.934765] CR2: 00007f0cb28bd000 CR3: 00000002ebcf6000 CR4: 00000000000407e0
+[33411.934769] Stack:
+[33411.934771]  ffff8800bba09690 ffff8800b4f16588 ffff880303005a40 0000000000000001
+[33411.934779]  ffff8800b33e43d0 ffffffff81a3a62d ffff880324eeee58 0000000000000000
+[33411.934786]  ffff880324eeee58 ffff880326660670 ffff880326265880 ffffffff81a41692
+[33411.934794] Call Trace:
+[33411.934798]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.934803]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.934808]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.934814]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.934818]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.934823]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.934828]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70
+[33411.934833]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934839]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.934843]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.934847] Code: f7 ff ff 66 90 48 8b 43 18 48 8b b8 48 01 00 00 48 89 14 24 48 89 74 24 08 e8 af 9a 02 00 48 8b 74 24 08 48 8b 14 24 eb 9f 0f 0b <0f> 0b 0f 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 f0 ff 4e 
+[33411.934912] RIP  [<ffffffff81a3a5be>] do_release_stripe+0x18e/0x1a0
+[33411.934918]  RSP <ffff880320473d28>
+[33411.941326] ---[ end trace 42d97d618cc5bfe2 ]---
+[33411.941331] ------------[ cut here ]------------
+[33411.941337] WARNING: CPU: 4 PID: 2319 at kernel/exit.c:703 do_exit+0x45/0xa40()
+[33411.941351] Modules linked in: bonding btrfs microcode
+[33411.941377] CPU: 4 PID: 2319 Comm: md2_raid6 Tainted: G      D      3.13.0-rc8 #83
+[33411.941395] Hardware name: System manufacturer System Product Name/Crosshair IV Formula, BIOS 3029    10/09/2012
+[33411.941417]  0000000000000000 0000000000000009 ffffffff81d4eeb8 0000000000000000
+[33411.941449]  ffffffff810eba01 000000000000000b ffff880320473c78 0000000000000096
+[33411.941480]  ffff880324eeee58 ffff880320473e88 ffffffff810ed7d5 ffff880324eeee58
+[33411.941512] Call Trace:
+[33411.941519]  [<ffffffff81d4eeb8>] ? dump_stack+0x4a/0x75
+[33411.941530]  [<ffffffff810eba01>] ? warn_slowpath_common+0x81/0xb0
+[33411.941544]  [<ffffffff810ed7d5>] ? do_exit+0x45/0xa40
+[33411.941557]  [<ffffffff81d4c0d4>] ? printk+0x4f/0x54
+[33411.941568]  [<ffffffff810463ed>] ? oops_end+0x8d/0xd0
+[33411.941579]  [<ffffffff810431d2>] ? do_invalid_op+0xa2/0x100
+[33411.941592]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941606]  [<ffffffff81d596a8>] ? invalid_op+0x18/0x20
+[33411.941617]  [<ffffffff81a3a5be>] ? do_release_stripe+0x18e/0x1a0
+[33411.941633]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
+[33411.941647]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
+[33411.941658]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
+[33411.941670]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
+[33411.941683]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
+[33411.941695]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
+[33411.941708]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70
+[33411.941722]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941736]  [<ffffffff81d5857c>] ? ret_from_fork+0x7c/0xb0
+[33411.941749]  [<ffffffff811094d0>] ? flush_kthread_worker+0x80/0x80
+[33411.941762] ---[ end trace 42d97d618cc5bfe3 ]---
+[33411.941773] note: md2_raid6[2319] exited with preempt_count 1
 
 
+--=-APHGKTzmBFit3rrsHQWL--
 
