@@ -1,53 +1,47 @@
-From: Phil Turmel <philip@turmel.org>
+From: Ron Leach <ronleach@tesco.net>
 Subject: Re: If separate md for /boot, OS, and /srv, must 'create' on disks
  with 3 partns?
-Date: Mon, 20 Jan 2014 13:29:52 -0500
-Message-ID: <52DD6B20.5030906@turmel.org>
-References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org> <52DD5471.4070809@tesco.net>
+Date: Mon, 20 Jan 2014 19:07:40 +0000
+Message-ID: <52DD73FC.7000801@tesco.net>
+References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org> <52DD5471.4070809@tesco.net> <52DD6B20.5030906@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DD5471.4070809@tesco.net>
+In-Reply-To: <52DD6B20.5030906@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ron Leach <ronleach@tesco.net>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/20/2014 11:53 AM, Ron Leach wrote:
-> On 19/01/2014 20:46, Phil Turmel wrote:
->> On 01/19/2014 01:39 PM, Ron Leach wrote:
->>> Assuming I am correct in needing something such as:
->>>
->>> /dev/md0 for Grub, (and copied to both physical disks of the RAID-1)
->>> /dev/md1 for the OS, and
->>
->> I would use LVM here, too.
-> 
-> I wondered.  Would also enable me to reserve much less space for the OS
-> and one or two small services that might be run there.  I'll read up on
-> Grub over LVM, which is the only thing I'm not familiar with.
+On 20/01/2014 18:29, Phil Turmel wrote:
+>
+> Let me clarify:  /dev/md0 should be a v0.90 or v1.0 raid1 for /boot, no LVM.
+ >
+ > /dev/md1 is an LVM PV for the OS.
 
-Let me clarify:  /dev/md0 should be a v0.90 or v1.0 raid1 for /boot, no LVM.
 
-/dev/md1 is an LVM PV for the OS.
+Ok.  That means I need physical partitions for those, on each of the 
+drives.
 
-> Thanks for the guidance, and for confirming that separate RAID1s does
-> imply separate partitions on the physical devices.  I've noted your (and
-> David's, in another post) concerns about bandwidth and RAM.  I'll look
-> into booting into the LVM, that's new to me.
+Since I am using 3TB drives, I'll need to use a GPT which, if I 
+understand correctly, requires to reveal a dummy 'partition' to make 
+the BIOS think there is a boot sector thingy there.
 
-The key is to have both MD and LVM support in your initramfs that gets
-loaded by grub with your kernel.  All the major distributions will do
-this for you if you create the OS on LVM in the first place.
+So I'm assuming to pre-partition the physical devices this way:
 
-They'll usually let grub find your root filesystem UUID and put it into
-the kernel command line.  You can override that with an explicit
-root=LABEL= or root=UUID= setting in /etc/default/grub.
+/dev/sd[x]1 - 64k (? I'm checking the docs) empty, for BIOS to see
+/dev/sd[x]2 - 128 MB /boot v0.90/v1.0 RAID1, /dev/md0
+/dev/sd[x]3 - remainder ~3 TB for LVM, v1.2 RAID1, /dev/md1
 
-Having root in an LVM allows strange things like relocating and/or
-resizing it on the fly.  Particularly handy if physical access is difficult.
+and then make the two RAID1s, and then create the LVM.
 
-HTH,
+>
+>
+> Having root in an LVM allows strange things like relocating and/or
+> resizing it on the fly.  Particularly handy if physical access is difficult.
+>
 
-Phil
+Yes, it was that potential aspect that set me deciding to try your 
+approach.  Functional demands on our systems keep changing.
 
+Much appreciated, Ron
