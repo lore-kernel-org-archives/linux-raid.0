@@ -1,104 +1,86 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: Questions about bitrot and RAID 5/6
-Date: Mon, 20 Jan 2014 22:55:06 +0000
-Message-ID: <21213.43338.397566.928634@tree.ty.sabi.co.uk>
-References: <20140120203433.GY6553@blisses.org>
-	<20140121084617.582f9b75@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Allow to check mdadm with clangs static checker
+ (scan-build)
+Date: Tue, 21 Jan 2014 10:06:43 +1100
+Message-ID: <20140121100643.0ebaf13d@notabene.brown>
+References: <52DD4B54.4060809@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/gK.X58PBe.bx9bscOicIDgz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140121084617.582f9b75@notabene.brown>
+In-Reply-To: <52DD4B54.4060809@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
+--Sig_/gK.X58PBe.bx9bscOicIDgz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> In short, I'm trying to understand if there's a reasonable way to
->> get something equivlant to ZFS/BTRFS on-a-mirror-with-scrubbing
->> if I'm using MD RAID 6.  [ ... ] "Single-disk corruption
->> recovery". What I'm wondering if he's describing something
->> theoretically possible given the redundant data RAID 6 stores,
+On Mon, 20 Jan 2014 17:14:12 +0100 Bernd Schubert
+<bernd.schubert@fastmail.fm> wrote:
 
-This seems to me a stupid idea that comes up occasionally on
-this list, and the answer is always the same: the redundancy in
-RAID is designed for *reconstruction* of data, not for integrity
-*checking* of data, and RAID assumes that the underlying storage
-system reports *every* error, that is there are never undetected
-errors from the lower layer. When an error is reported, RAID
-uses redundancy to reconstruct the lost data. That's how it was
-designed, and for good reasons including simplicity (also see
-later).
+> Clangs scan-build tool (static checker) set the environmental variable CC,
+> so Makefile should allow to use that value.
+>=20
+> Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+> ---
+>  Makefile |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/Makefile b/Makefile
+> index 043bcea..63cc3ac 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -41,7 +41,7 @@ KLIBC=3D/home/src/klibc/klibc-0.77
+> =20
+>  KLIBC_GCC =3D gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/includ=
+e -I$(KLIBC)/linux/include -I$(KLIBC)/klibc/arch/i386/include -I$(KLIBC)/kl=
+ibc/include/bits32
+> =20
+> -CC =3D $(CROSS_COMPILE)gcc
+> +CC ?=3D $(CROSS_COMPILE)gcc
+>  CXFLAGS ?=3D -ggdb
+>  CWFLAGS =3D -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parame=
+ter
+>  ifdef WARN_UNUSED
 
-It might be possible to design RAID systems that provide
-protection against otherwise undetected storage errors, but it
-would cost a lot in time and complexity (issues with both BTRFS
-and ZFS) and would be rather pointless in many if not most
-cases.
+I'm not exactly against this, but presumably you could tell scan-build to r=
+un
 
-Existing facilities like 'check' in MD RAID are there for extra
-convenience, as opportunistic little hints, and should not be
-relied upon for data integrity; they are mostly there to
-exercise the storage layer, not to detect otherwise undetected
-errors.
+  make CC=3D$CC
 
-> ars technica recently had an article about "Bitrot and atomics
-> COWs: Inside "next-gen" filesystems."
-> http://feeds.arstechnica.com/~r/arstechnica/everything/~3/Cb4ylzECYVQ/
-> Early on it talks about creating a brtfs filesystem with RAID1
-> configured and then binary-editing one of the device to flip one
-> bit. Then magically btrfs survives while some other filesystem
-> suffered data corruption. That is where I stopped reading
-> because that is *not* how bitrot happens.
+to achieve the same effect with no patch ??
 
-Indeed, and "bitrot" happens for example as reported here:
+i.e.
 
-  http://w3.hepix.org/storage/hep_pdf/2007/Spring/kelemen-2007-HEPiX-Silent_Corruptions.pdf
+  scan-build 'make CC=3D$CC'
 
-> Drives have sophisticated error checking and correcting codes.
-> If a pbit on the media changes, the device will either fix it
-> transparently or report an error [ ... ]
+But maybe I'll apply it anyway.
 
-That's also because storage manufacturers understand that RAID
-systems and filesystems are designed to absolutely rely on error
-reporting by the storage layer...
+NeilBrown
 
-> On the path from the CCD which captures the photo of the cat,
-> to the LCD which displays the image, there are lots of memory
-> buffers and busses which carry the data. Any one of those
-> could theoretically flip one or more bits.
+--Sig_/gK.X58PBe.bx9bscOicIDgz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-That's part of what the CERN study above reports: a significant
-number of otherwise undetected error not because of failing
-hardware, but pretty obviously from bugs in the Linux kernel, in
-drivers, in host adapter firmware, in buses, in drive firmware.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-  Note: I have seen situations where "bad" devices on a PCI bus
-  would corrupt random memory locations *after* the storage
-  layer and filesystem had verified the checksums...
+iQIVAwUBUt2sAznsnt1WYoG5AQITwA//UVU6YD1eUKXO3WsMc1jm19DRY5pUU0sF
+GPZEO+3VL2RxIEpA7JPByu8Bjxf4dQkD1nyQGzzwb6W1icJpfVzNb+LpGrmqCXQe
+x/sxLLyWUOa2Oz2uw6kGGY64A3Jdx662UagL6alzRUMcd7QhloNb02bp0rsHq6i7
+KhIG/EugAAhDlsvBGEsHch08dPhlh7V4tUWbqnhWYGq+WKyH2lFzCBx0AmIhiTS7
+ajRyAeksBNDWs0Mv5StC9q3uQVzRWxVQbr6uiGnjO8J7v/KWI7BhLjwJGCUuJV2/
+DSy3BQZkjJim0hiQ/jwQ6p+kEPsppNXTwlaanJwXBE8Q9Nhxx/4WT8NF27cuK0Jf
+4d6tp9hozX/WLep4ZD0D2XIdBmwuhv1ZlobxBuUUFINs+WByYWLgfonpEDRkHbdF
+sdFWNyuBbSZgYc8deozF8QK5SaQCzLVJzg400c/nVEGEiDd4lXfeE0Ya2jGLTCi7
+h7d/ogkxEcLww2R6Ic83TJeeEtraV7sVyeBznULNFvcWDCCKdpHn9G09JaeURT4W
+NCdEcAzgp7Z4Cm7flXs7CaxwfUFaQk1e9fJAftFpqg+Lu9v+DC0jW2moU63X9CgT
+4zwbmpgeo/IG/L0glq985oA4TfUfWB6XvpREIxgfbILgzhZT5QvZGs5T3wASn3Sa
+TNeOUdkmZzg=
+=xgln
+-----END PGP SIGNATURE-----
 
-Note that in th CERN tests *all* disks were modern devices with
-extensive ECC, and all servers were "enterprise" class stuff.
-
-> Each of them *should* have appropriate error detecting and
-> correcting codes.
-
-That's more than arguable, especially as to "correcting". For
-much data even error detection is not that important, and for a
-large amount of content correction is even less important.
-
-A lot of disk drives are full of graphical or audio content
-where uncorrected errors are unnoticeable, for example. After
-all essentially all consumer devices don't have RAM ECC and
-nobody seems to complain about the inevitable undetected
-errors...
-
-In general the "end-to-end" argument applies: if some data
-really needs strong error detection and/or correction, put it in
-the file format itself, so that the relevant costs are only paid
-in the specific cases, and it is portable across filesystems and
-storage layers, so that those extremely delicate and critical
-filesystems and storage layers can stay skinny and simple.
-
-[ ... ]
+--Sig_/gK.X58PBe.bx9bscOicIDgz--
