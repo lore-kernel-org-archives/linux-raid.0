@@ -1,69 +1,75 @@
-From: Mason Loring Bliss <mason@blisses.org>
-Subject: Questions about bitrot and RAID 5/6
-Date: Mon, 20 Jan 2014 15:34:33 -0500
-Message-ID: <20140120203433.GY6553@blisses.org>
+From: den Hoog <speedyden@gmail.com>
+Subject: Re: looking for advice on raid0+raid5 array recovery with mdadm and
+ sector offset
+Date: Mon, 20 Jan 2014 16:43:38 -0500
+Message-ID: <CANgodhBzYbr6+V6POFy5e9cYPtGFYNcfmR2Z8hE5Vj0jA8YveA@mail.gmail.com>
+References: <CANgodhBjRyNDwJwOxepqxX0zMaLtnniYpwWe_k7hjgfRP0UpvA@mail.gmail.com>
+	<20140106124143.287894da@notabene.brown>
+	<CANgodhCyo7fgEzkg-=jtYkVkNVda50yiaYCCpzPcxAeFxwNUjw@mail.gmail.com>
+	<CANgodhC6wKST5B3zKHD-04xHV8DCUm1Rv71c44RWDMuJp6+WGg@mail.gmail.com>
+	<CANgodhDZnogCmXDLz75Hidv=HcYoaoj=1thKTqt8htP8gx3CSw@mail.gmail.com>
+	<20140120171645.591b17fc@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20140120171645.591b17fc@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was initially writing to HPA, and he noted the existence of this list, so
-I'm going to boil down what I've got so far for the list. In short, I'm
-trying to understand if there's a reasonable way to get something equivlant
-to ZFS/BTRFS on-a-mirror-with-scrubbing if I'm using MD RAID 6.
+Hello Neil,
+
+thanks again for spending time on this when you're already swamped, I
+appreciate it much
+
+the commands look logical for my setup (just a type on the chunk size,
+needs tobe capital K)
+I did not dare to fire off the last command last time, but as missing
+seems to be available for imsm, I re-processed all of the commands
+again
+
+the Raid0 is created without any trouble (only stating it is already
+part of an array, confirmed with Y), but the raid5 array won't.
+After it also stated sdc sdd sde are part of an array, and confirming
+with Y for the create, it gives the following:
+
+"mdadm: unable to add 'missing' disk to container"
+I'm using mdadm - v3.2.6 - 25th October 2012.
+Could it be the 3.2.6 does not support missing for imsm?
+
+best regards Dennis
 
 
-
-I recently read (or attempted to read, for those sections that exceeded my
-background in math) HPA's paper "The mathematics of RAID-6", and I was
-particularly interested in section four, "Single-disk corruption recovery".
-What I'm wondering if he's describing something theoretically possible given
-the redundant data RAID 6 stores, or something that's actually been
-implemented in (specifically) MD RAID 6 on Linux.
-
-The world is in a rush to adopt ZFS and BTRFS, but there are dinosaurs among
-us that would love to maintain proper layering with the RAID layer being able
-to correct for bitrot itself. A common scenario that would benefit from this
-is having an encrypted layer sitting atop RAID, with LVM atop that.
-
-
-
-I just looked through the code for the first time today, and I'd love to know
-if my understanding is correct. My current read of the code is as follows:
-
-linux-source/lib/raid6/recov.c suggests that for a single-disk failure,
-recovery is handled by the RAID 5 code. In raid5.c, if I'm reading it
-correctly, raid5_end_read_request will request a rewrite attempt if uptodate
-is not true, which can call md_error, which can initiate recovery.
-
-I'm struggling a little to trace recovery, but it does seem like MD maintains
-a list of bad blocks and can map out bad sectors rather than marking a whole
-drive as being dead.
-
-Am I correct in assuming that bitrot will show up as a bad read, thus making
-the read check fail and causing a rewrite attempt, which will mark the sector
-in question as bad and write the data somewhere else if it's detected? If
-this is the case then there's a very viable, already deployed option for
-catching bitrot that doesn't require complete upheaval of how people manage
-disk space and volumes nowadays.
-
-On a related note, raid6check was mention to me. I don't see that available
-on Debian or RHEL stable, but I found a man page:
-
-    https://github.com/neilbrown/mdadm/blob/master/raid6check.8
-
-The man page says, "No write operations are performed on the array or the
-components," but my reading of the code makes it seem like a read error will
-trigger a write implicitly. Am I misunderstanding this? Overall, am I barking
-up the wrong tree in thinking that RAID 6 might let me preserve proper
-layering while giving me the data integrity safeguards I'd otherwise get from
-ZFS or BTRFS?
-
-Thanks in advance for clarifications and pointers!
-
--- 
-Mason Loring Bliss             mason@blisses.org            Ewige Blumenkraft!
-(if awake 'sleep (aref #(sleep dream) (random 2))) -- Hamlet, Act III, Scene I
+On Mon, Jan 20, 2014 at 1:16 AM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 16 Jan 2014 22:03:00 +0100 den Hoog <speedyden@gmail.com> wrote:
+>
+>> Hi Neil
+>>
+>> can you try to make 'missing' working for imsm?
+>>
+>> probably not on the short list of things to do, but if you are willing
+>> to help me out, I'll appreciate it much!
+>
+> Hi Dennis,
+>
+> it seems that "missing" already works with IMSM.  I thought I remembered that
+> it didn't, but I was wrong.
+>
+> So you should be able to create the raid0 using the first parts of the
+> devices, then create the RAID5.
+> When creating the RAID5, list the devices that should  make up the RAID5 in
+> the correct order.
+> So something like:
+>
+>  mdadm -C /dev/md/imsm -e imsm -n 4 /dev/sd[bcde]
+>  mdadm -C /dev/md0 -l0 -n4 -c 128k -z 512G /dev/md/imsm
+>  mdadm -C /dev/md1 -l5 -n4 -c 128k missing /dev/sdc /dev/sdd /dev/sde
+>
+> Then /dev/md1 should be your RAID5 array.
+>
+> You should double-check the above command to make sure you agree with ever
+> part, and ask if there is anything that doesn't seem right.
+>
+> NeilBrown
+>
