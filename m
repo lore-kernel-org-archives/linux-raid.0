@@ -1,260 +1,89 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] raid6check.c add page size check and repair
-Date: Mon, 20 Jan 2014 19:22:23 +0100
-Message-ID: <20140120182223.GA4871@lazy.lzy>
-References: <20140118181823.GA15757@lazy.lzy>
- <52DD4ABD.5060605@itwm.fraunhofer.de>
+From: Ian Kumlien <ian.kumlien@gmail.com>
+Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
+Date: Mon, 20 Jan 2014 19:27:18 +0100
+Message-ID: <1390242438.587.16.camel@localhost>
+References: <1390168823.587.1.camel@localhost>
+	 <20140120113851.3b476ed8@notabene.brown> <1390178957.587.9.camel@localhost>
+	 <20140120143748.33bb52d2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <52DD4ABD.5060605@itwm.fraunhofer.de>
+In-Reply-To: <20140120143748.33bb52d2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 20, 2014 at 05:11:41PM +0100, Bernd Schubert wrote:
-> Hello Piergiorgio,
-> 
-> I'm going to review it in more detail later on this week and I think
-> I also still have an outstanding patch. But on quick glance, I think
-> your patch introduces a memory leak.
-> 
-> > @@ -152,13 +165,14 @@
-> >  	char *stripe_buf = xmalloc(raid_disks * chunk_size);
-> >  	char **stripes = xmalloc(raid_disks * sizeof(char*));
-> >  	char **blocks = xmalloc(raid_disks * sizeof(char*));
-> >+	char **blocks_page = xmalloc(raid_disks * sizeof(char*));
-> >  	int *block_index_for_slot = xmalloc(raid_disks * sizeof(int));
-> >  	uint8_t *p = xmalloc(chunk_size);
-> >  	uint8_t *q = xmalloc(chunk_size);
-> >  	int *results = xmalloc(chunk_size * sizeof(int));
-> >  	sighandler_t *sig = xmalloc(3 * sizeof(sighandler_t));
-> 
-> I don't see free(blocks_page).
-> 
-> Btw, clangs static code checker is rather good to find such issues.
-> Actually, it reports several issues with mdadm, I just didn't have
-> the time to look into it in more detail.
-> 
-> Btw2: Any chance you could at least add the '-p' argument to your
-> diff command? I think if you just would use git, it would do that
-> automatically.
+On m=C3=A5n, 2014-01-20 at 14:37 +1100, NeilBrown wrote:
+>=20
+> Thanks - that extra info is quite useful.  Knowing that nothing else =
+unusual
+> is happening can be quite valuable (and I don't like to assume).
+>=20
+> I haven't found anything that would clearly cause your crash, but I h=
+ave
+> found something that looks wrong and conceivably could.
+>=20
+> Could you please try this patch on top of what you are currently usin=
+g?  By
+> the look of it you get a crash at least every day, often more often. =
+ So if
+> this produces a day with no crashes, that would be promising.
+>=20
+> The important aspect of the patch is that it moves the "atomic_inc" o=
+f
+> "sh->count" back under the protection of ->device_lock in the case wh=
+en some
+> other thread might be using the same 'sh'.
 
-Hi Bernd,
+I have been unable to trip this up, so this was it!
 
-good catch, I'm pretty sure there are even more :-)
+Tested-by: Ian Kumlien <ian.kumlien@gmail.com>
 
-Here the re-patch, i.e. the same patch, with the free().
-This was done, with "diff -uNpr", I hope it fits your needs.
-BTW, could you point me to some instruction on how to get
-the git tree of mdadm?
+I hope this hits stable ASAP ;)
 
---- --- ---
+> Thanks,
+> NeilBrown
+>=20
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 3088d3af5a89..03f82ab87d9e 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -675,8 +675,10 @@ get_active_stripe(struct r5conf *conf, sector_t =
+sector,
+>  					 || !conf->inactive_blocked),
+>  					*(conf->hash_locks + hash));
+>  				conf->inactive_blocked =3D 0;
+> -			} else
+> +			} else {
+>  				init_stripe(sh, sector, previous);
+> +				atomic_inc(&sh->count);
+> +			}
+>  		} else {
+>  			spin_lock(&conf->device_lock);
+>  			if (atomic_read(&sh->count)) {
+> @@ -695,13 +697,11 @@ get_active_stripe(struct r5conf *conf, sector_t=
+ sector,
+>  					sh->group =3D NULL;
+>  				}
+>  			}
+> +			atomic_inc(&sh->count);
+>  			spin_unlock(&conf->device_lock);
+>  		}
+>  	} while (sh =3D=3D NULL);
+> =20
+> -	if (sh)
+> -		atomic_inc(&sh->count);
+> -
+>  	spin_unlock_irq(conf->hash_locks + hash);
+>  	return sh;
+>  }
 
 
-diff -uNrp a/raid6check.c b/raid6check.c
---- a/raid6check.c	2013-09-03 06:47:47.000000000 +0200
-+++ b/raid6check.c	2014-01-20 19:18:50.829188974 +0100
-@@ -27,6 +27,9 @@
- #include <signal.h>
- #include <sys/mman.h>
- 
-+#define CHECK_PAGE_BITS (12)
-+#define CHECK_PAGE_SIZE (1 << CHECK_PAGE_BITS)
-+
- enum repair {
- 	NO_REPAIR = 0,
- 	MANUAL_REPAIR,
-@@ -73,15 +76,15 @@ void raid6_collect(int chunk_size, uint8
- 	}
- }
- 
--/* Try to find out if a specific disk has problems */
--int raid6_stats(int *results, int raid_disks, int chunk_size)
-+/* Try to find out if a specific disk has problems in a CHECK_PAGE_SIZE page size */
-+int raid6_stats_blk(int *results, int raid_disks)
- {
- 	int i;
- 	int curr_broken_disk = -255;
- 	int prev_broken_disk = -255;
- 	int broken_status = 0;
- 
--	for(i = 0; i < chunk_size; i++) {
-+	for(i = 0; i < CHECK_PAGE_SIZE; i++) {
- 
- 		if(results[i] != -255)
- 			curr_broken_disk = results[i];
-@@ -112,6 +115,16 @@ int raid6_stats(int *results, int raid_d
- 	return curr_broken_disk;
- }
- 
-+/* Collect disks status for a strip in CHECK_PAGE_SIZE page size blocks */
-+void raid6_stats(int *disk, int *results, int raid_disks, int chunk_size)
-+{
-+	int i, j;
-+
-+	for(i = 0, j = 0; i < chunk_size; i += CHECK_PAGE_SIZE, j++) {
-+		disk[j] = raid6_stats_blk(&results[i], raid_disks);
-+	}
-+}
-+
- int lock_stripe(struct mdinfo *info, unsigned long long start,
- 		int chunk_size, int data_disks, sighandler_t *sig) {
- 	int rv;
-@@ -152,13 +165,14 @@ int check_stripes(struct mdinfo *info, i
- 	char *stripe_buf = xmalloc(raid_disks * chunk_size);
- 	char **stripes = xmalloc(raid_disks * sizeof(char*));
- 	char **blocks = xmalloc(raid_disks * sizeof(char*));
-+	char **blocks_page = xmalloc(raid_disks * sizeof(char*));
- 	int *block_index_for_slot = xmalloc(raid_disks * sizeof(int));
- 	uint8_t *p = xmalloc(chunk_size);
- 	uint8_t *q = xmalloc(chunk_size);
- 	int *results = xmalloc(chunk_size * sizeof(int));
- 	sighandler_t *sig = xmalloc(3 * sizeof(sighandler_t));
- 
--	int i;
-+	int i, j;
- 	int diskP, diskQ;
- 	int data_disks = raid_disks - 2;
- 	int err = 0;
-@@ -172,7 +186,7 @@ int check_stripes(struct mdinfo *info, i
- 		stripes[i] = stripe_buf + i * chunk_size;
- 
- 	while (length > 0) {
--		int disk;
-+		int disk[chunk_size >> CHECK_PAGE_BITS];
- 
- 		printf("pos --> %llu\n", start);
- 
-@@ -217,26 +231,31 @@ int check_stripes(struct mdinfo *info, i
- 		block_index_for_slot[diskP] = data_disks;
- 		blocks[data_disks+1] = stripes[diskQ];
- 		block_index_for_slot[diskQ] = data_disks+1;
--
-+/* Do we really need the code below? */
-+#if 0
- 		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
- 			printf("P(%d) wrong at %llu\n", diskP, start);
- 		}
- 		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
- 			printf("Q(%d) wrong at %llu\n", diskQ, start);
- 		}
-+#endif
- 		raid6_collect(chunk_size, p, q, stripes[diskP], stripes[diskQ], results);
--		disk = raid6_stats(results, raid_disks, chunk_size);
-+		raid6_stats(disk, results, raid_disks, chunk_size);
- 
--		if(disk >= -2) {
--			disk = geo_map(disk, start, raid_disks, level, layout);
--		}
--		if(disk >= 0) {
--			printf("Error detected at %llu: possible failed disk slot: %d --> %s\n",
--				start, disk, name[disk]);
--		}
--		if(disk == -65535) {
--			printf("Error detected at %llu: disk slot unknown\n", start);
-+		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
-+			if(disk[j] >= -2) {
-+				disk[j] = geo_map(disk[j], start, raid_disks, level, layout);
-+			}
-+			if(disk[j] >= 0) {
-+				printf("Error detected at %llu, page %d: possible failed disk slot: %d --> %s\n",
-+					start, j, disk[j], name[disk[j]]);
-+			}
-+			if(disk[j] == -65535) {
-+				printf("Error detected at %llu, page %d: disk slot unknown\n", start, j);
-+			}
- 		}
-+
- 		if(repair == MANUAL_REPAIR) {
- 			printf("Repairing stripe %llu\n", start);
- 			printf("Assuming slots %d (%s) and %d (%s) are incorrect\n",
-@@ -325,21 +344,37 @@ int check_stripes(struct mdinfo *info, i
- 				goto exitCheck;
- 			}
- 
--		} else if (disk >= 0 && repair == AUTO_REPAIR) {
--			printf("Auto-repairing slot %d (%s)\n", disk, name[disk]);
--			if (disk == diskQ) {
--				qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks, data_disks, chunk_size);
-+		}
-+
-+		int pages_to_write_count = 0;
-+		int page_to_write[chunk_size >> CHECK_PAGE_BITS];
-+		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
-+			if (disk[j] >= 0 && repair == AUTO_REPAIR) {
-+				printf("Auto-repairing slot %d (%s)\n", disk[j], name[disk[j]]);
-+				pages_to_write_count++;
-+				page_to_write[j] = 1;
-+				for(i = 0; i < raid_disks; i++) {
-+					blocks_page[i] = blocks[i] + j * CHECK_PAGE_SIZE;
-+				}
-+				if (disk[j] == diskQ) {
-+					qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks_page, data_disks, CHECK_PAGE_SIZE);
-+				} else {
-+					char *all_but_failed_blocks[data_disks];
-+					int failed_block_index = block_index_for_slot[disk[j]];
-+					for (i=0; i < data_disks; i++)
-+						if (failed_block_index == i)
-+							all_but_failed_blocks[i] = stripes[diskP] + j * CHECK_PAGE_SIZE;
-+						else
-+							all_but_failed_blocks[i] = blocks_page[i];
-+					xor_blocks(stripes[disk[j]] + j * CHECK_PAGE_SIZE,
-+					all_but_failed_blocks, data_disks, CHECK_PAGE_SIZE);
-+				}
- 			} else {
--				char *all_but_failed_blocks[data_disks];
--				int failed_block_index = block_index_for_slot[disk];
--				for (i=0; i < data_disks; i++)
--					if (failed_block_index == i)
--						all_but_failed_blocks[i] = stripes[diskP];
--					else
--						all_but_failed_blocks[i] = blocks[i];
--				xor_blocks(stripes[disk],
--					all_but_failed_blocks, data_disks, chunk_size);
-+				page_to_write[j] = 0;
- 			}
-+		}
-+
-+		if(pages_to_write_count > 0) {
- 
- 			err = lock_stripe(info, start, chunk_size, data_disks, sig);
- 			if(err != 0) {
-@@ -348,14 +383,19 @@ int check_stripes(struct mdinfo *info, i
- 				goto exitCheck;
- 			}
- 
--			lseek64(source[disk], offsets[disk] + start * chunk_size, 0);
--			int write_res = write(source[disk], stripes[disk], chunk_size);
-+			int write_res = 0;
-+			for(j = 0; j < (chunk_size >> CHECK_PAGE_BITS); j++) {
-+				if(page_to_write[j] == 1) {
-+					lseek64(source[disk[j]], offsets[disk[j]] + start * chunk_size + j * CHECK_PAGE_SIZE, 0);
-+					write_res += write(source[disk[j]], stripes[disk[j]] + j * CHECK_PAGE_SIZE, CHECK_PAGE_SIZE);
-+				}
-+			}
- 
- 			err = unlock_all_stripes(info, sig);
--			if(err != 0 || write_res != chunk_size)
-+			if (err != 0 || write_res != (CHECK_PAGE_SIZE * pages_to_write_count))
- 				goto exitCheck;
- 
--			if (write_res != chunk_size) {
-+			if (write_res != (CHECK_PAGE_SIZE * pages_to_write_count)) {
- 				fprintf(stderr, "Failed to write a full chunk.\n");
- 				goto exitCheck;
- 			}
-@@ -370,6 +410,7 @@ exitCheck:
- 	free(stripe_buf);
- 	free(stripes);
- 	free(blocks);
-+	free(blocks_page);
- 	free(block_index_for_slot);
- 	free(p);
- 	free(q);
-
--- 
-
-piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
