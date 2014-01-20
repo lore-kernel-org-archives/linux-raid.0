@@ -1,86 +1,132 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Allow to check mdadm with clangs static checker
- (scan-build)
-Date: Tue, 21 Jan 2014 10:06:43 +1100
-Message-ID: <20140121100643.0ebaf13d@notabene.brown>
-References: <52DD4B54.4060809@fastmail.fm>
+From: "David F." <df7729@gmail.com>
+Subject: Re: MDADM 3.3 broken?
+Date: Mon, 20 Jan 2014 15:54:08 -0800
+Message-ID: <CAGRSmLt+dcm7LrMgcfmbZq=L-=EfcMJt16WgKCz9umXrLVHpuA@mail.gmail.com>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<5293C789.3020703@arcor.de>
+	<CAGRSmLsHSwELK_jd=PEckDpSBVCfrt9cHBvG_cH9esMYtLu5Jg@mail.gmail.com>
+	<529674CB.5040808@arcor.de>
+	<CAGRSmLsOBr2GdSD5wa9K_2cKYqaE95SGMbfHJ-BsjDnEfk72cw@mail.gmail.com>
+	<CAGRSmLvUrKT8zArpJsFrA=X9KZ7iMyqOWvyeaRBcQ3h0dcGU6Q@mail.gmail.com>
+	<20131207141648.069eb003@notabene.brown>
+	<CAGRSmLugnbB=_xTOPYnzTBvrOPZoHi8oSzs53-_cdBgttb7VXg@mail.gmail.com>
+	<20140120153421.456f864f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/gK.X58PBe.bx9bscOicIDgz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DD4B54.4060809@fastmail.fm>
+In-Reply-To: <20140120153421.456f864f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Martin Wilck <mwilck@arcor.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/gK.X58PBe.bx9bscOicIDgz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Ok, thanks - we have sent it on for them to check.
 
-On Mon, 20 Jan 2014 17:14:12 +0100 Bernd Schubert
-<bernd.schubert@fastmail.fm> wrote:
-
-> Clangs scan-build tool (static checker) set the environmental variable CC,
-> so Makefile should allow to use that value.
->=20
-> Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-> ---
->  Makefile |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/Makefile b/Makefile
-> index 043bcea..63cc3ac 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -41,7 +41,7 @@ KLIBC=3D/home/src/klibc/klibc-0.77
-> =20
->  KLIBC_GCC =3D gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/includ=
-e -I$(KLIBC)/linux/include -I$(KLIBC)/klibc/arch/i386/include -I$(KLIBC)/kl=
-ibc/include/bits32
-> =20
-> -CC =3D $(CROSS_COMPILE)gcc
-> +CC ?=3D $(CROSS_COMPILE)gcc
->  CXFLAGS ?=3D -ggdb
->  CWFLAGS =3D -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parame=
-ter
->  ifdef WARN_UNUSED
-
-I'm not exactly against this, but presumably you could tell scan-build to r=
-un
-
-  make CC=3D$CC
-
-to achieve the same effect with no patch ??
-
-i.e.
-
-  scan-build 'make CC=3D$CC'
-
-But maybe I'll apply it anyway.
-
-NeilBrown
-
---Sig_/gK.X58PBe.bx9bscOicIDgz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBUt2sAznsnt1WYoG5AQITwA//UVU6YD1eUKXO3WsMc1jm19DRY5pUU0sF
-GPZEO+3VL2RxIEpA7JPByu8Bjxf4dQkD1nyQGzzwb6W1icJpfVzNb+LpGrmqCXQe
-x/sxLLyWUOa2Oz2uw6kGGY64A3Jdx662UagL6alzRUMcd7QhloNb02bp0rsHq6i7
-KhIG/EugAAhDlsvBGEsHch08dPhlh7V4tUWbqnhWYGq+WKyH2lFzCBx0AmIhiTS7
-ajRyAeksBNDWs0Mv5StC9q3uQVzRWxVQbr6uiGnjO8J7v/KWI7BhLjwJGCUuJV2/
-DSy3BQZkjJim0hiQ/jwQ6p+kEPsppNXTwlaanJwXBE8Q9Nhxx/4WT8NF27cuK0Jf
-4d6tp9hozX/WLep4ZD0D2XIdBmwuhv1ZlobxBuUUFINs+WByYWLgfonpEDRkHbdF
-sdFWNyuBbSZgYc8deozF8QK5SaQCzLVJzg400c/nVEGEiDd4lXfeE0Ya2jGLTCi7
-h7d/ogkxEcLww2R6Ic83TJeeEtraV7sVyeBznULNFvcWDCCKdpHn9G09JaeURT4W
-NCdEcAzgp7Z4Cm7flXs7CaxwfUFaQk1e9fJAftFpqg+Lu9v+DC0jW2moU63X9CgT
-4zwbmpgeo/IG/L0glq985oA4TfUfWB6XvpREIxgfbILgzhZT5QvZGs5T3wASn3Sa
-TNeOUdkmZzg=
-=xgln
------END PGP SIGNATURE-----
-
---Sig_/gK.X58PBe.bx9bscOicIDgz--
+On Sun, Jan 19, 2014 at 8:34 PM, NeilBrown <neilb@suse.de> wrote:
+> On Sat, 14 Dec 2013 13:01:50 -0800 "David F." <df7729@gmail.com> wrote:
+>
+>> Hi,
+>>
+>> Just wondering if this gave you guys everything you needed to figure
+>> out the issue?
+>
+> I had everything but time.  I've now made the time and have the fix (I hope).
+>
+> Please try the current HEAD of git://neil.brown.name/mdadm/
+> The important patch is below.
+>
+>>
+>> Also, any idea on when 3.4 may be out with the various fixes?
+>
+> I hope to release 3.3.1 some time in February.  Based on past experience it
+> should be out before Easter, but no promises.
+>
+> NeilBrown
+>
+> From f0e876ce03a63f150bb87b2734c139bc8bb285b2 Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Mon, 20 Jan 2014 15:27:29 +1100
+> Subject: [PATCH] DDF: fix detection of failed devices during assembly.
+>
+> When we call "getinfo_super", we report the working/failed status
+> of the particular device, and also (via the 'map') the working/failed
+> status of every other device that this metadata is aware of.
+>
+> It is important that the way we calculate "working or failed" is
+> consistent.
+> As it is, getinfo_super_ddf() will report a spare as "working", but
+> every other device will see it as "failed", which leads to failure to
+> assemble arrays with spares.
+>
+> For getinfo_super_ddf (i.e. for the container), a device is assumed
+> "working" unless flagged as DDF_Failed.
+> For getinfo_super_ddf_bvd (for a member array), a device is assumed
+> "failed" unless DDF_Online is set, and DDF_Failed is not set.
+>
+> Reported-by: "David F." <df7729@gmail.com>
+> Signed-off-by: NeilBrown <neilb@suse.de>
+>
+> diff --git a/super-ddf.c b/super-ddf.c
+> index d526d8ad3da9..4242af86fea9 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -1913,6 +1913,7 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+>         info->disk.major = 0;
+>         info->disk.minor = 0;
+>         if (ddf->dlist) {
+> +               struct phys_disk_entry *pde = NULL;
+>                 info->disk.number = be32_to_cpu(ddf->dlist->disk.refnum);
+>                 info->disk.raid_disk = find_phys(ddf, ddf->dlist->disk.refnum);
+>
+> @@ -1920,12 +1921,19 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+>                                                   entries[info->disk.raid_disk].
+>                                                   config_size);
+>                 info->component_size = ddf->dlist->size - info->data_offset;
+> +               if (info->disk.raid_disk >= 0)
+> +                       pde = ddf->phys->entries + info->disk.raid_disk;
+> +               if (pde &&
+> +                   !(be16_to_cpu(pde->state) & DDF_Failed))
+> +                       info->disk.state = (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+> +               else
+> +                       info->disk.state = 1 << MD_DISK_FAULTY;
+>         } else {
+>                 info->disk.number = -1;
+>                 info->disk.raid_disk = -1;
+>  //             info->disk.raid_disk = find refnum in the table and use index;
+> +               info->disk.state = (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+>         }
+> -       info->disk.state = (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+>
+>         info->recovery_start = MaxSector;
+>         info->reshape_active = 0;
+> @@ -1943,8 +1951,6 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info, char *m
+>                 int i;
+>                 for (i = 0 ; i < map_disks; i++) {
+>                         if (i < info->array.raid_disks &&
+> -                           (be16_to_cpu(ddf->phys->entries[i].state)
+> -                            & DDF_Online) &&
+>                             !(be16_to_cpu(ddf->phys->entries[i].state)
+>                               & DDF_Failed))
+>                                 map[i] = 1;
+> @@ -2017,7 +2023,11 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info, cha
+>                 info->disk.raid_disk = cd + conf->sec_elmnt_seq
+>                         * be16_to_cpu(conf->prim_elmnt_count);
+>                 info->disk.number = dl->pdnum;
+> -               info->disk.state = (1<<MD_DISK_SYNC)|(1<<MD_DISK_ACTIVE);
+> +               info->disk.state = 0;
+> +               if (info->disk.number >= 0 &&
+> +                   (be16_to_cpu(ddf->phys->entries[info->disk.number].state) & DDF_Online) &&
+> +                   !(be16_to_cpu(ddf->phys->entries[info->disk.number].state) & DDF_Failed))
+> +                       info->disk.state = (1<<MD_DISK_SYNC)|(1<<MD_DISK_ACTIVE);
+>         }
+>
+>         info->container_member = ddf->currentconf->vcnum;
