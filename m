@@ -1,208 +1,164 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
-Date: Mon, 20 Jan 2014 14:37:48 +1100
-Message-ID: <20140120143748.33bb52d2@notabene.brown>
-References: <1390168823.587.1.camel@localhost>
-	<20140120113851.3b476ed8@notabene.brown>
-	<1390178957.587.9.camel@localhost>
+Subject: Re: MDADM 3.3 broken?
+Date: Mon, 20 Jan 2014 15:34:21 +1100
+Message-ID: <20140120153421.456f864f@notabene.brown>
+References: <CAGRSmLviYJtCfNiARKW0FvrJ0BUDrvhPnQy2drzbkf95-Gfpag@mail.gmail.com>
+	<20131120105115.27494ab6@notabene.brown>
+	<CAGRSmLsAALx=kJFiB6_b_yeb66qMZCa+4brg8Aejeaf031_JPg@mail.gmail.com>
+	<CAGRSmLs8AXqTG9Y0YU46vtpb2q08-2ApknBHVPF75FXPJu7C0Q@mail.gmail.com>
+	<20131120114833.695fc9d4@notabene.brown>
+	<CAGRSmLsTnc_Lood59wF88w6nECVojbeiGkdntLExLEf6ZoaF7g@mail.gmail.com>
+	<CAGRSmLvv0-MRyKV89W4zDi57Fhx8dxEUsR+zskOQ0R-H6x4Zbw@mail.gmail.com>
+	<20131120133016.7de2d400@notabene.brown>
+	<528E710F.1050901@arcor.de>
+	<CAGRSmLtfL+Pzcy0CdfvUpcX3Z90-wEVTg46Q2iFRbJsxuSeyBQ@mail.gmail.com>
+	<5293C789.3020703@arcor.de>
+	<CAGRSmLsHSwELK_jd=PEckDpSBVCfrt9cHBvG_cH9esMYtLu5Jg@mail.gmail.com>
+	<529674CB.5040808@arcor.de>
+	<CAGRSmLsOBr2GdSD5wa9K_2cKYqaE95SGMbfHJ-BsjDnEfk72cw@mail.gmail.com>
+	<CAGRSmLvUrKT8zArpJsFrA=X9KZ7iMyqOWvyeaRBcQ3h0dcGU6Q@mail.gmail.com>
+	<20131207141648.069eb003@notabene.brown>
+	<CAGRSmLugnbB=_xTOPYnzTBvrOPZoHi8oSzs53-_cdBgttb7VXg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZhClVz428QU56nMghgi5waT"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1390178957.587.9.camel@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ian Kumlien <ian.kumlien@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+ boundary="Sig_/wPY7NNdbuHf9fhc3f1hTka6"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGRSmLugnbB=_xTOPYnzTBvrOPZoHi8oSzs53-_cdBgttb7VXg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "David F." <df7729@gmail.com>
+Cc: Martin Wilck <mwilck@arcor.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/ZhClVz428QU56nMghgi5waT
-Content-Type: text/plain; charset=UTF-8
+--Sig_/wPY7NNdbuHf9fhc3f1hTka6
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 20 Jan 2014 01:49:17 +0100 Ian Kumlien <ian.kumlien@gmail.com> wrot=
-e:
+On Sat, 14 Dec 2013 13:01:50 -0800 "David F." <df7729@gmail.com> wrote:
 
-> On m=C3=A5n, 2014-01-20 at 11:38 +1100, NeilBrown wrote:
-> > On Sun, 19 Jan 2014 23:00:23 +0100 Ian Kumlien <ian.kumlien@gmail.com> =
-wrote:
-> >=20
-> > > Ok, so third try to actually email this...=20
-> > > ---
-> > >=20
-> > > Hi,
-> > >=20
-> > > I started testing 3.13-rc8 on another machine since the first one see=
-med
-> > > to be working fine...
-> > >=20
-> > > One spontaneous reboot later i'm not so sure ;)
-> > >=20
-> > > Right now i captured a kernel oops in the raid code it seems...
-> > >=20
-> > > (Also attached to avoid mangling)
-> > >=20
-> > > [33411.934672] ------------[ cut here ]------------
-> > > [33411.934685] kernel BUG at drivers/md/raid5.c:291!
-> > > [33411.934690] invalid opcode: 0000 [#1] PREEMPT SMP=20
-> > > [33411.934696] Modules linked in: bonding btrfs microcode
-> > > [33411.934705] CPU: 4 PID: 2319 Comm: md2_raid6 Not tainted 3.13.0-rc=
-8 #83
-> > > [33411.934709] Hardware name: System manufacturer System Product Name=
-/Crosshair IV Formula, BIOS 3029    10/09/2012
-> > > [33411.934716] task: ffff880326265880 ti: ffff880320472000 task.ti: f=
-fff880320472000
-> > > [33411.934720] RIP: 0010:[<ffffffff81a3a5be>]  [<ffffffff81a3a5be>] d=
-o_release_stripe+0x18e/0x1a0
-> > > [33411.934731] RSP: 0018:ffff880320473d28  EFLAGS: 00010087
-> > > [33411.934735] RAX: ffff8802f0875a60 RBX: 0000000000000001 RCX: ffff8=
-800b0d816b0
-> > > [33411.934739] RDX: ffff880324eeee98 RSI: ffff8802f0875a40 RDI: ffff8=
-80324eeec00
-> > > [33411.934743] RBP: ffff8802f0875a50 R08: 0000000000000000 R09: 00000=
-00000000001
-> > > [33411.934747] R10: 0000000000000000 R11: 0000000000000000 R12: ffff8=
-80324eeec00
-> > > [33411.934752] R13: ffff880324eeee58 R14: ffff880320473e88 R15: 00000=
-00000000000
-> > > [33411.934756] FS:  00007fc38654d700(0000) GS:ffff880337d00000(0000) =
-knlGS:0000000000000000
-> > > [33411.934761] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> > > [33411.934765] CR2: 00007f0cb28bd000 CR3: 00000002ebcf6000 CR4: 00000=
-000000407e0
-> > > [33411.934769] Stack:
-> > > [33411.934771]  ffff8800bba09690 ffff8800b4f16588 ffff880303005a40 00=
-00000000000001
-> > > [33411.934779]  ffff8800b33e43d0 ffffffff81a3a62d ffff880324eeee58 00=
-00000000000000
-> > > [33411.934786]  ffff880324eeee58 ffff880326660670 ffff880326265880 ff=
-ffffff81a41692
-> > > [33411.934794] Call Trace:
-> > > [33411.934798]  [<ffffffff81a3a62d>] ? release_stripe_list+0x4d/0x70
-> > > [33411.934803]  [<ffffffff81a41692>] ? raid5d+0xa2/0x4d0
-> > > [33411.934808]  [<ffffffff81a65ed6>] ? md_thread+0xe6/0x120
-> > > [33411.934814]  [<ffffffff81122060>] ? finish_wait+0x90/0x90
-> > > [33411.934818]  [<ffffffff81a65df0>] ? md_rdev_init+0x100/0x100
-> > > [33411.934823]  [<ffffffff8110958c>] ? kthread+0xbc/0xe0
-> > > [33411.934828]  [<ffffffff81110000>] ? smpboot_park_threads+0x70/0x70=
-Hi,
-> >=20
-> > Thanks for the report.
-> > Can you provide any more context about the details of the array in ques=
-tion?
-> > I see it was RAID6.  Was it degraded?  Was it resyncing?  Was it being
-> > reshaped?
-> > Was there any way that it was different from the array one the machine =
-where
-> > it seemed to work?
+> Hi,
 >=20
-> Yes, it's a raid6 and no, there is no reshaping or syncing going on...=20
->=20
-> Basically everything worked fine before:
-> reboot   system boot  3.13.0-rc8       Sun Jan 19 21:47 - 01:42  (03:55) =
-  =20
-> reboot   system boot  3.13.0-rc8       Sun Jan 19 21:38 - 01:42  (04:04) =
-  =20
-> reboot   system boot  3.13.0-rc8       Sun Jan 19 12:13 - 01:42  (13:29) =
-  =20
-> reboot   system boot  3.13.0-rc8       Sat Jan 18 21:23 - 01:42 (1+04:19)=
-  =20
-> reboot   system boot  3.12.6           Mon Dec 30 16:27 - 22:21 (19+05:53=
-) =20
->=20
-> As in, no problems before the 3.13.0-rc8 upgrade...
->=20
-> cat /proc/mdstat:
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]=
- [multipath]=20
-> md2 : active raid6 sdf1[2] sdd1[9] sdj1[8] sdg1[4] sde1[5] sdi1[11] sdc1[=
-0] sdh1[10]
->       11721074304 blocks super 1.2 level 6, 64k chunk, algorithm 2 [8/8] =
-[UUUUUUUU]
->       bitmap: 0/15 pages [0KB], 65536KB chunk
->=20
-> What i do do is:
-> echo 32768 > /sys/block/*/md/stripe_cache_size
->=20
-> Which has caused no problems during intense write operations before...=20
->=20
-> I find it quite surprising since it only requires ~3 gigabytes of writes
-> to die and almost assume that it's related to the stripe_cache_size.
-> (Since all memory is ECC and i doubt it would break, quite literally,
-> over night i haven't run extensive memory tests)
->=20
-> I don't quite know what other information you might need...
+> Just wondering if this gave you guys everything you needed to figure
+> out the issue?
 
-Thanks - that extra info is quite useful.  Knowing that nothing else unusual
-is happening can be quite valuable (and I don't like to assume).
+I had everything but time.  I've now made the time and have the fix (I hope=
+).
 
-I haven't found anything that would clearly cause your crash, but I have
-found something that looks wrong and conceivably could.
+Please try the current HEAD of git://neil.brown.name/mdadm/
+The important patch is below.
 
-Could you please try this patch on top of what you are currently using?  By
-the look of it you get a crash at least every day, often more often.  So if
-this produces a day with no crashes, that would be promising.
+>=20
+> Also, any idea on when 3.4 may be out with the various fixes?
 
-The important aspect of the patch is that it moves the "atomic_inc" of
-"sh->count" back under the protection of ->device_lock in the case when some
-other thread might be using the same 'sh'.
+I hope to release 3.3.1 some time in February.  Based on past experience it
+should be out before Easter, but no promises.
 
-Thanks,
 NeilBrown
 
+=46rom f0e876ce03a63f150bb87b2734c139bc8bb285b2 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 20 Jan 2014 15:27:29 +1100
+Subject: [PATCH] DDF: fix detection of failed devices during assembly.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3088d3af5a89..03f82ab87d9e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -675,8 +675,10 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
- 					 || !conf->inactive_blocked),
- 					*(conf->hash_locks + hash));
- 				conf->inactive_blocked =3D 0;
--			} else
-+			} else {
- 				init_stripe(sh, sector, previous);
-+				atomic_inc(&sh->count);
-+			}
- 		} else {
- 			spin_lock(&conf->device_lock);
- 			if (atomic_read(&sh->count)) {
-@@ -695,13 +697,11 @@ get_active_stripe(struct r5conf *conf, sector_t secto=
-r,
- 					sh->group =3D NULL;
- 				}
- 			}
-+			atomic_inc(&sh->count);
- 			spin_unlock(&conf->device_lock);
- 		}
- 	} while (sh =3D=3D NULL);
+When we call "getinfo_super", we report the working/failed status
+of the particular device, and also (via the 'map') the working/failed
+status of every other device that this metadata is aware of.
+
+It is important that the way we calculate "working or failed" is
+consistent.
+As it is, getinfo_super_ddf() will report a spare as "working", but
+every other device will see it as "failed", which leads to failure to
+assemble arrays with spares.
+
+For getinfo_super_ddf (i.e. for the container), a device is assumed
+"working" unless flagged as DDF_Failed.
+For getinfo_super_ddf_bvd (for a member array), a device is assumed
+"failed" unless DDF_Online is set, and DDF_Failed is not set.
+
+Reported-by: "David F." <df7729@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/super-ddf.c b/super-ddf.c
+index d526d8ad3da9..4242af86fea9 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -1913,6 +1913,7 @@ static void getinfo_super_ddf(struct supertype *st, s=
+truct mdinfo *info, char *m
+ 	info->disk.major =3D 0;
+ 	info->disk.minor =3D 0;
+ 	if (ddf->dlist) {
++		struct phys_disk_entry *pde =3D NULL;
+ 		info->disk.number =3D be32_to_cpu(ddf->dlist->disk.refnum);
+ 		info->disk.raid_disk =3D find_phys(ddf, ddf->dlist->disk.refnum);
 =20
--	if (sh)
--		atomic_inc(&sh->count);
--
- 	spin_unlock_irq(conf->hash_locks + hash);
- 	return sh;
- }
+@@ -1920,12 +1921,19 @@ static void getinfo_super_ddf(struct supertype *st,=
+ struct mdinfo *info, char *m
+ 						  entries[info->disk.raid_disk].
+ 						  config_size);
+ 		info->component_size =3D ddf->dlist->size - info->data_offset;
++		if (info->disk.raid_disk >=3D 0)
++			pde =3D ddf->phys->entries + info->disk.raid_disk;
++		if (pde &&
++		    !(be16_to_cpu(pde->state) & DDF_Failed))
++			info->disk.state =3D (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
++		else
++			info->disk.state =3D 1 << MD_DISK_FAULTY;
+ 	} else {
+ 		info->disk.number =3D -1;
+ 		info->disk.raid_disk =3D -1;
+ //		info->disk.raid_disk =3D find refnum in the table and use index;
++		info->disk.state =3D (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+ 	}
+-	info->disk.state =3D (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+=20
+ 	info->recovery_start =3D MaxSector;
+ 	info->reshape_active =3D 0;
+@@ -1943,8 +1951,6 @@ static void getinfo_super_ddf(struct supertype *st, s=
+truct mdinfo *info, char *m
+ 		int i;
+ 		for (i =3D 0 ; i < map_disks; i++) {
+ 			if (i < info->array.raid_disks &&
+-			    (be16_to_cpu(ddf->phys->entries[i].state)
+-			     & DDF_Online) &&
+ 			    !(be16_to_cpu(ddf->phys->entries[i].state)
+ 			      & DDF_Failed))
+ 				map[i] =3D 1;
+@@ -2017,7 +2023,11 @@ static void getinfo_super_ddf_bvd(struct supertype *=
+st, struct mdinfo *info, cha
+ 		info->disk.raid_disk =3D cd + conf->sec_elmnt_seq
+ 			* be16_to_cpu(conf->prim_elmnt_count);
+ 		info->disk.number =3D dl->pdnum;
+-		info->disk.state =3D (1<<MD_DISK_SYNC)|(1<<MD_DISK_ACTIVE);
++		info->disk.state =3D 0;
++		if (info->disk.number >=3D 0 &&
++		    (be16_to_cpu(ddf->phys->entries[info->disk.number].state) & DDF_Onli=
+ne) &&
++		    !(be16_to_cpu(ddf->phys->entries[info->disk.number].state) & DDF_Fai=
+led))
++			info->disk.state =3D (1<<MD_DISK_SYNC)|(1<<MD_DISK_ACTIVE);
+ 	}
+=20
+ 	info->container_member =3D ddf->currentconf->vcnum;
 
---Sig_/ZhClVz428QU56nMghgi5waT
+--Sig_/wPY7NNdbuHf9fhc3f1hTka6
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUtyaDDnsnt1WYoG5AQL1Yw//b5quLX17XplJjJotOzNOBn3IJSwQdomR
-WJCRnnMGoWjv2z8i3oF58SC4gbG23px7vc4131icP8GqMjc76/dp9crcWMirgXjy
-3rm54A5Q9HMNcdUqfrcTWqTFbGlrMV0iCyR+drVdZmioJRf2ovD8rk5C4yzyDjPr
-I82R7J4Pbit8I2ArIgTdoCnQglgY9Z8NNxHkTqGbuMAgJCZoq3fHF8hCwJhH+XHs
-ZXEoVDqJQlsfYXs1N0KJFbXHTjGRaD8C1wfTd1ZJGbBXJ5H4lSA6bJgZf7Gchuk2
-2MmF9NNjIG1rdhLLQD1n7eJobVHMH8GIkXte+PJEN48qxiJkFUozXpDNG6ZA/2nS
-xFDizQNRdCJ1YlIKo6dvM/2NzZDfg5Jh6Pxwak/2cTupPFjYC5uAA5ZCj9XjOjDO
-wxSBWrwb1Wx8B4YOD7wOp4hYdz7OlD6yRtvfpaNNGLS1dSz1B+dgmDheBHWadngQ
-k5EJVCxGMzG0k2pfmz35KbedVPS0K01Z5yFgUhjBgzQkZmzb4spu4OHT60qR3FX4
-l71Kw+xifwTjpnswNDK6HG5L1XZB8K25SJT2Z2VHcaJ5dLd8z3D+Rd3nx1BV4oFN
-soYIZsOuQWD293E8j8PT+hpRz2knAUCO1UTR76k0wl5yunhI86/3nnGMAIS5sNTT
-f1m5dgs96WA=
-=dkdX
+iQIVAwUBUtynTTnsnt1WYoG5AQKGxg/+OLDsS6+Cx+XFvlX9gnREuXEIEi31bY8w
+UZXlif4as6AZJ2al7Qor+wgZmZ3Bv8c9x0OjhGZxnuU5ULCZlCjDY6ugHQBqD2SD
+orFku4B7kEcDgZFOMuUOxdTnxX2kXolRuPYbbw4zsSakI+O5fAvHyNuDMnfb2755
+m/kqH3GercqNCmC1ecEAfa5jpf/S9HO48sMrPjQo4OMvdqb5PzhvE8rB36KGGEda
+E63pq+k3qdG2T+cH23CMQiCGJBopihuS0lFzRziAt5L1OhWGi6VRycqkKC50nrsJ
+IAG/wYMricN2hxehRh6RwDU48yugXMLhwj9C1RKpZ8lYyvVA0sAYQWFluIB+XGYZ
+caQtSJUtRfq6iSmL3C0AHGwTiu1IY43m+LubV364k+F8Yx+wKkZOsp0HWdWPli/D
+SAs6OBuXz0GHSGiEMqfTrczT9Zp5lQY/uM6ayoyFk3LDROhylXv0s6gd1BSRu913
+W8epUVWG9pIt+q2GyrPISXK5JgNU4hDVaOXJap5BYvv1Rkm8oJ+uUno5Fw5ma6dA
+c13oBq6EHEQ4b64BMIxYMs8TFZa4I5Dzos5p10HjdieWTjTCPo0aH7a9D1W2HGO9
+E8oyW8Hl42z9KjyDoarJUOna7Kkk/EGB7Xg37qBPvv8sJ8Yll5aVTgXWmsNtqZMx
+lkL7bS0oLpU=
+=1UFJ
 -----END PGP SIGNATURE-----
 
---Sig_/ZhClVz428QU56nMghgi5waT--
+--Sig_/wPY7NNdbuHf9fhc3f1hTka6--
