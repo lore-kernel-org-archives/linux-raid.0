@@ -1,86 +1,260 @@
-From: Ron Leach <ronleach@tesco.net>
-Subject: Re: If separate md for /boot, OS, and /srv, must 'create' on disks
- with 3 partns?
-Date: Mon, 20 Jan 2014 16:53:05 +0000
-Message-ID: <52DD5471.4070809@tesco.net>
-References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [PATCH] raid6check.c add page size check and repair
+Date: Mon, 20 Jan 2014 19:22:23 +0100
+Message-ID: <20140120182223.GA4871@lazy.lzy>
+References: <20140118181823.GA15757@lazy.lzy>
+ <52DD4ABD.5060605@itwm.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DC39A7.5020506@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <52DD4ABD.5060605@itwm.fraunhofer.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/01/2014 20:46, Phil Turmel wrote:
-> On 01/19/2014 01:39 PM, Ron Leach wrote:
->> Assuming I am correct in needing something such as:
->>
->> /dev/md0 for Grub, (and copied to both physical disks of the RAID-1)
->> /dev/md1 for the OS, and
->
-> I would use LVM here, too.
->
+On Mon, Jan 20, 2014 at 05:11:41PM +0100, Bernd Schubert wrote:
+> Hello Piergiorgio,
+> 
+> I'm going to review it in more detail later on this week and I think
+> I also still have an outstanding patch. But on quick glance, I think
+> your patch introduces a memory leak.
+> 
+> > @@ -152,13 +165,14 @@
+> >  	char *stripe_buf = xmalloc(raid_disks * chunk_size);
+> >  	char **stripes = xmalloc(raid_disks * sizeof(char*));
+> >  	char **blocks = xmalloc(raid_disks * sizeof(char*));
+> >+	char **blocks_page = xmalloc(raid_disks * sizeof(char*));
+> >  	int *block_index_for_slot = xmalloc(raid_disks * sizeof(int));
+> >  	uint8_t *p = xmalloc(chunk_size);
+> >  	uint8_t *q = xmalloc(chunk_size);
+> >  	int *results = xmalloc(chunk_size * sizeof(int));
+> >  	sighandler_t *sig = xmalloc(3 * sizeof(sighandler_t));
+> 
+> I don't see free(blocks_page).
+> 
+> Btw, clangs static code checker is rather good to find such issues.
+> Actually, it reports several issues with mdadm, I just didn't have
+> the time to look into it in more detail.
+> 
+> Btw2: Any chance you could at least add the '-p' argument to your
+> diff command? I think if you just would use git, it would do that
+> automatically.
 
-I wondered.  Would also enable me to reserve much less space for the 
-OS and one or two small services that might be run there.  I'll read 
-up on Grub over LVM, which is the only thing I'm not familiar with.
+Hi Bernd,
 
->> Should I proceed to partition the disks, and then create 3 RAID-1 arrays
->> (one on each partition-pair), or should I use a different
->> technique/layout to hold Grub, the OS, and an expandable LV for the
->> datafiles?
->
-> How were you booting when the two disks were a single array?  Some other
-> device?  If you can still do that, consider it.
->
+good catch, I'm pretty sure there are even more :-)
 
-It was another device - Debian on a separate single 250 GB sda.  With 
-only 4 ports on the machine, and a wish to add another 2 x 3TB drives 
-for the LVM, it won't be available.  Hence, I was working toward 
-putting the OS on the RAID1 array, but now looking into putting the OS 
-on the LVM, (as you suggest).
+Here the re-patch, i.e. the same patch, with the free().
+This was done, with "diff -uNpr", I hope it fits your needs.
+BTW, could you point me to some instruction on how to get
+the git tree of mdadm?
 
->
-> For the small systems I've built lately, I've set up modest twin SSDs to
-> handle boot, root, swap, database tablespaces, and mail storage.  Then
-> added four or more large drives to handle media files.  The SSDs have a
-> small partition for grub (raid1) and the balance in a single raid1 for
-> LVM.
-
-Noted, thanks.
-
->
-> Oh, and don't forget a backup plan.  Raid redundancy is *not* backup.
->
-
-Understood.  Incidentally, this server contains project file backups, 
-and is primarily a backup repository so that we can recover from 
-accidental deletion, or even retrieve previous project information for 
-re-examination (should it become necessary).  We are not expecting to 
-stream anything (well, not to date, anyway) so I don't expect 
-bandwidth problems; we do have a lot of historic data including 
-photographs, and project emails.  Relatively low traffic, but large 
-capacity, and available on demand.  Additionally, we have a 
-full-retention policy, which is imposing the capacity demands on this 
-backup server.  We use incremental backup, with rdiff-backup which 
-means that files once backed up don't get backed up again unless they 
-change.
-
- From this machine, copies of the backup content will be made, in 
-rotation, and held offsite.
+--- --- ---
 
 
-> If you have bigger goals in mind, ignore me--do whatever Stan says
-> (seriously).
+diff -uNrp a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2013-09-03 06:47:47.000000000 +0200
++++ b/raid6check.c	2014-01-20 19:18:50.829188974 +0100
+@@ -27,6 +27,9 @@
+ #include <signal.h>
+ #include <sys/mman.h>
+ 
++#define CHECK_PAGE_BITS (12)
++#define CHECK_PAGE_SIZE (1 << CHECK_PAGE_BITS)
++
+ enum repair {
+ 	NO_REPAIR = 0,
+ 	MANUAL_REPAIR,
+@@ -73,15 +76,15 @@ void raid6_collect(int chunk_size, uint8
+ 	}
+ }
+ 
+-/* Try to find out if a specific disk has problems */
+-int raid6_stats(int *results, int raid_disks, int chunk_size)
++/* Try to find out if a specific disk has problems in a CHECK_PAGE_SIZE page size */
++int raid6_stats_blk(int *results, int raid_disks)
+ {
+ 	int i;
+ 	int curr_broken_disk = -255;
+ 	int prev_broken_disk = -255;
+ 	int broken_status = 0;
+ 
+-	for(i = 0; i < chunk_size; i++) {
++	for(i = 0; i < CHECK_PAGE_SIZE; i++) {
+ 
+ 		if(results[i] != -255)
+ 			curr_broken_disk = results[i];
+@@ -112,6 +115,16 @@ int raid6_stats(int *results, int raid_d
+ 	return curr_broken_disk;
+ }
+ 
++/* Collect disks status for a strip in CHECK_PAGE_SIZE page size blocks */
++void raid6_stats(int *disk, int *results, int raid_disks, int chunk_size)
++{
++	int i, j;
++
++	for(i = 0, j = 0; i < chunk_size; i += CHECK_PAGE_SIZE, j++) {
++		disk[j] = raid6_stats_blk(&results[i], raid_disks);
++	}
++}
++
+ int lock_stripe(struct mdinfo *info, unsigned long long start,
+ 		int chunk_size, int data_disks, sighandler_t *sig) {
+ 	int rv;
+@@ -152,13 +165,14 @@ int check_stripes(struct mdinfo *info, i
+ 	char *stripe_buf = xmalloc(raid_disks * chunk_size);
+ 	char **stripes = xmalloc(raid_disks * sizeof(char*));
+ 	char **blocks = xmalloc(raid_disks * sizeof(char*));
++	char **blocks_page = xmalloc(raid_disks * sizeof(char*));
+ 	int *block_index_for_slot = xmalloc(raid_disks * sizeof(int));
+ 	uint8_t *p = xmalloc(chunk_size);
+ 	uint8_t *q = xmalloc(chunk_size);
+ 	int *results = xmalloc(chunk_size * sizeof(int));
+ 	sighandler_t *sig = xmalloc(3 * sizeof(sighandler_t));
+ 
+-	int i;
++	int i, j;
+ 	int diskP, diskQ;
+ 	int data_disks = raid_disks - 2;
+ 	int err = 0;
+@@ -172,7 +186,7 @@ int check_stripes(struct mdinfo *info, i
+ 		stripes[i] = stripe_buf + i * chunk_size;
+ 
+ 	while (length > 0) {
+-		int disk;
++		int disk[chunk_size >> CHECK_PAGE_BITS];
+ 
+ 		printf("pos --> %llu\n", start);
+ 
+@@ -217,26 +231,31 @@ int check_stripes(struct mdinfo *info, i
+ 		block_index_for_slot[diskP] = data_disks;
+ 		blocks[data_disks+1] = stripes[diskQ];
+ 		block_index_for_slot[diskQ] = data_disks+1;
+-
++/* Do we really need the code below? */
++#if 0
+ 		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
+ 			printf("P(%d) wrong at %llu\n", diskP, start);
+ 		}
+ 		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
+ 			printf("Q(%d) wrong at %llu\n", diskQ, start);
+ 		}
++#endif
+ 		raid6_collect(chunk_size, p, q, stripes[diskP], stripes[diskQ], results);
+-		disk = raid6_stats(results, raid_disks, chunk_size);
++		raid6_stats(disk, results, raid_disks, chunk_size);
+ 
+-		if(disk >= -2) {
+-			disk = geo_map(disk, start, raid_disks, level, layout);
+-		}
+-		if(disk >= 0) {
+-			printf("Error detected at %llu: possible failed disk slot: %d --> %s\n",
+-				start, disk, name[disk]);
+-		}
+-		if(disk == -65535) {
+-			printf("Error detected at %llu: disk slot unknown\n", start);
++		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
++			if(disk[j] >= -2) {
++				disk[j] = geo_map(disk[j], start, raid_disks, level, layout);
++			}
++			if(disk[j] >= 0) {
++				printf("Error detected at %llu, page %d: possible failed disk slot: %d --> %s\n",
++					start, j, disk[j], name[disk[j]]);
++			}
++			if(disk[j] == -65535) {
++				printf("Error detected at %llu, page %d: disk slot unknown\n", start, j);
++			}
+ 		}
++
+ 		if(repair == MANUAL_REPAIR) {
+ 			printf("Repairing stripe %llu\n", start);
+ 			printf("Assuming slots %d (%s) and %d (%s) are incorrect\n",
+@@ -325,21 +344,37 @@ int check_stripes(struct mdinfo *info, i
+ 				goto exitCheck;
+ 			}
+ 
+-		} else if (disk >= 0 && repair == AUTO_REPAIR) {
+-			printf("Auto-repairing slot %d (%s)\n", disk, name[disk]);
+-			if (disk == diskQ) {
+-				qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks, data_disks, chunk_size);
++		}
++
++		int pages_to_write_count = 0;
++		int page_to_write[chunk_size >> CHECK_PAGE_BITS];
++		for(j = 0; i < (chunk_size >> CHECK_PAGE_BITS); j++) {
++			if (disk[j] >= 0 && repair == AUTO_REPAIR) {
++				printf("Auto-repairing slot %d (%s)\n", disk[j], name[disk[j]]);
++				pages_to_write_count++;
++				page_to_write[j] = 1;
++				for(i = 0; i < raid_disks; i++) {
++					blocks_page[i] = blocks[i] + j * CHECK_PAGE_SIZE;
++				}
++				if (disk[j] == diskQ) {
++					qsyndrome(p, (uint8_t*)stripes[diskQ], (uint8_t**)blocks_page, data_disks, CHECK_PAGE_SIZE);
++				} else {
++					char *all_but_failed_blocks[data_disks];
++					int failed_block_index = block_index_for_slot[disk[j]];
++					for (i=0; i < data_disks; i++)
++						if (failed_block_index == i)
++							all_but_failed_blocks[i] = stripes[diskP] + j * CHECK_PAGE_SIZE;
++						else
++							all_but_failed_blocks[i] = blocks_page[i];
++					xor_blocks(stripes[disk[j]] + j * CHECK_PAGE_SIZE,
++					all_but_failed_blocks, data_disks, CHECK_PAGE_SIZE);
++				}
+ 			} else {
+-				char *all_but_failed_blocks[data_disks];
+-				int failed_block_index = block_index_for_slot[disk];
+-				for (i=0; i < data_disks; i++)
+-					if (failed_block_index == i)
+-						all_but_failed_blocks[i] = stripes[diskP];
+-					else
+-						all_but_failed_blocks[i] = blocks[i];
+-				xor_blocks(stripes[disk],
+-					all_but_failed_blocks, data_disks, chunk_size);
++				page_to_write[j] = 0;
+ 			}
++		}
++
++		if(pages_to_write_count > 0) {
+ 
+ 			err = lock_stripe(info, start, chunk_size, data_disks, sig);
+ 			if(err != 0) {
+@@ -348,14 +383,19 @@ int check_stripes(struct mdinfo *info, i
+ 				goto exitCheck;
+ 			}
+ 
+-			lseek64(source[disk], offsets[disk] + start * chunk_size, 0);
+-			int write_res = write(source[disk], stripes[disk], chunk_size);
++			int write_res = 0;
++			for(j = 0; j < (chunk_size >> CHECK_PAGE_BITS); j++) {
++				if(page_to_write[j] == 1) {
++					lseek64(source[disk[j]], offsets[disk[j]] + start * chunk_size + j * CHECK_PAGE_SIZE, 0);
++					write_res += write(source[disk[j]], stripes[disk[j]] + j * CHECK_PAGE_SIZE, CHECK_PAGE_SIZE);
++				}
++			}
+ 
+ 			err = unlock_all_stripes(info, sig);
+-			if(err != 0 || write_res != chunk_size)
++			if (err != 0 || write_res != (CHECK_PAGE_SIZE * pages_to_write_count))
+ 				goto exitCheck;
+ 
+-			if (write_res != chunk_size) {
++			if (write_res != (CHECK_PAGE_SIZE * pages_to_write_count)) {
+ 				fprintf(stderr, "Failed to write a full chunk.\n");
+ 				goto exitCheck;
+ 			}
+@@ -370,6 +410,7 @@ exitCheck:
+ 	free(stripe_buf);
+ 	free(stripes);
+ 	free(blocks);
++	free(blocks_page);
+ 	free(block_index_for_slot);
+ 	free(p);
+ 	free(q);
 
-Stan posts on several of the lists we follow, and I always read his 
-contributions; many insights over the months and years.
+-- 
 
-Thanks for the guidance, and for confirming that separate RAID1s does 
-imply separate partitions on the physical devices.  I've noted your 
-(and David's, in another post) concerns about bandwidth and RAM.  I'll 
-look into booting into the LVM, that's new to me.
-
-regards, Ron
+piergiorgio
