@@ -1,89 +1,53 @@
-From: Ian Kumlien <ian.kumlien@gmail.com>
-Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
-Date: Mon, 20 Jan 2014 19:27:18 +0100
-Message-ID: <1390242438.587.16.camel@localhost>
-References: <1390168823.587.1.camel@localhost>
-	 <20140120113851.3b476ed8@notabene.brown> <1390178957.587.9.camel@localhost>
-	 <20140120143748.33bb52d2@notabene.brown>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: If separate md for /boot, OS, and /srv, must 'create' on disks
+ with 3 partns?
+Date: Mon, 20 Jan 2014 13:29:52 -0500
+Message-ID: <52DD6B20.5030906@turmel.org>
+References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org> <52DD5471.4070809@tesco.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140120143748.33bb52d2@notabene.brown>
+In-Reply-To: <52DD5471.4070809@tesco.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Ron Leach <ronleach@tesco.net>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On m=C3=A5n, 2014-01-20 at 14:37 +1100, NeilBrown wrote:
->=20
-> Thanks - that extra info is quite useful.  Knowing that nothing else =
-unusual
-> is happening can be quite valuable (and I don't like to assume).
->=20
-> I haven't found anything that would clearly cause your crash, but I h=
-ave
-> found something that looks wrong and conceivably could.
->=20
-> Could you please try this patch on top of what you are currently usin=
-g?  By
-> the look of it you get a crash at least every day, often more often. =
- So if
-> this produces a day with no crashes, that would be promising.
->=20
-> The important aspect of the patch is that it moves the "atomic_inc" o=
-f
-> "sh->count" back under the protection of ->device_lock in the case wh=
-en some
-> other thread might be using the same 'sh'.
+On 01/20/2014 11:53 AM, Ron Leach wrote:
+> On 19/01/2014 20:46, Phil Turmel wrote:
+>> On 01/19/2014 01:39 PM, Ron Leach wrote:
+>>> Assuming I am correct in needing something such as:
+>>>
+>>> /dev/md0 for Grub, (and copied to both physical disks of the RAID-1)
+>>> /dev/md1 for the OS, and
+>>
+>> I would use LVM here, too.
+> 
+> I wondered.  Would also enable me to reserve much less space for the OS
+> and one or two small services that might be run there.  I'll read up on
+> Grub over LVM, which is the only thing I'm not familiar with.
 
-I have been unable to trip this up, so this was it!
+Let me clarify:  /dev/md0 should be a v0.90 or v1.0 raid1 for /boot, no LVM.
 
-Tested-by: Ian Kumlien <ian.kumlien@gmail.com>
+/dev/md1 is an LVM PV for the OS.
 
-I hope this hits stable ASAP ;)
+> Thanks for the guidance, and for confirming that separate RAID1s does
+> imply separate partitions on the physical devices.  I've noted your (and
+> David's, in another post) concerns about bandwidth and RAM.  I'll look
+> into booting into the LVM, that's new to me.
 
-> Thanks,
-> NeilBrown
->=20
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 3088d3af5a89..03f82ab87d9e 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -675,8 +675,10 @@ get_active_stripe(struct r5conf *conf, sector_t =
-sector,
->  					 || !conf->inactive_blocked),
->  					*(conf->hash_locks + hash));
->  				conf->inactive_blocked =3D 0;
-> -			} else
-> +			} else {
->  				init_stripe(sh, sector, previous);
-> +				atomic_inc(&sh->count);
-> +			}
->  		} else {
->  			spin_lock(&conf->device_lock);
->  			if (atomic_read(&sh->count)) {
-> @@ -695,13 +697,11 @@ get_active_stripe(struct r5conf *conf, sector_t=
- sector,
->  					sh->group =3D NULL;
->  				}
->  			}
-> +			atomic_inc(&sh->count);
->  			spin_unlock(&conf->device_lock);
->  		}
->  	} while (sh =3D=3D NULL);
-> =20
-> -	if (sh)
-> -		atomic_inc(&sh->count);
-> -
->  	spin_unlock_irq(conf->hash_locks + hash);
->  	return sh;
->  }
+The key is to have both MD and LVM support in your initramfs that gets
+loaded by grub with your kernel.  All the major distributions will do
+this for you if you create the OS on LVM in the first place.
 
+They'll usually let grub find your root filesystem UUID and put it into
+the kernel command line.  You can override that with an explicit
+root=LABEL= or root=UUID= setting in /etc/default/grub.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Having root in an LVM allows strange things like relocating and/or
+resizing it on the fly.  Particularly handy if physical access is difficult.
+
+HTH,
+
+Phil
+
