@@ -1,59 +1,74 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Very long raid5 init/rebuild times
-Date: Mon, 20 Jan 2014 23:35:40 -0800
-Message-ID: <20140121073540.GF10140@merlins.org>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: Re: If separate md for /boot, OS, and /srv, must 'create' on disks
+ with 3 partns?
+Date: Tue, 21 Jan 2014 08:02:15 +0000
+Message-ID: <BLU0-SMTP448236D742C629A9419C4D98A40@phx.gbl>
+References: <52DC1BED.7070901@tesco.net> <52DC39A7.5020506@turmel.org>
+	 <52DD5471.4070809@tesco.net> <52DD6B20.5030906@turmel.org>
+	 <52DD73FC.7000801@tesco.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <52DD73FC.7000801@tesco.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ron Leach <ronleach@tesco.net>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Howdy,
+On Mon, 2014-01-20 at 19:07 +0000, Ron Leach wrote:
+> On 20/01/2014 18:29, Phil Turmel wrote:
+> >
+> > Let me clarify:  /dev/md0 should be a v0.90 or v1.0 raid1 for /boot, no LVM.
+>  >
+>  > /dev/md1 is an LVM PV for the OS.
+> 
+> 
+> Ok.  That means I need physical partitions for those, on each of the 
+> drives.
+> 
+> Since I am using 3TB drives, I'll need to use a GPT which, if I 
+> understand correctly, requires to reveal a dummy 'partition' to make 
+> the BIOS think there is a boot sector thingy there.
+> 
+> So I'm assuming to pre-partition the physical devices this way:
+> 
+> /dev/sd[x]1 - 64k (? I'm checking the docs) empty, for BIOS to see
 
-I'm setting up a new array with 5 4TB drives for which I'll use dmcrypt.
+I've set mine to 1MB (bios boot, EF02 in gdisk) this means it aligns
+nicely on the 1 MB partition as does its start position 2048 sectors on
+a 512e drive.
 
-Question #1:
-Is it better to dmcrypt the 5 drives and then make a raid5 on top, or the opposite
-(raid5 first, and then dmcrypt)
-I used:
-cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 /dev/sd[mnopq]1
+> /dev/sd[x]2 - 128 MB /boot v0.90/v1.0 RAID1, /dev/md0
+
+I'm not sure here, but I have no problems using a 1.2 metadata
+partition... I think the reason it works is that the stuff in biosboot
+contains everything needed to boot, the "boot" directory is not needed
+with biosboot as its only a temp staging area used to build the boot
+loader which is then copied to the biosboot... 
+
+I would check this for yourself just to be sure; I recall I kept it as a
+seperate partition due to a miss-understanding and/or it seemed the
+"right way" at the time.
+
+> /dev/sd[x]3 - remainder ~3 TB for LVM, v1.2 RAID1, /dev/md1
+> 
+> and then make the two RAID1s, and then create the LVM.
+> 
+> >
+> >
+> > Having root in an LVM allows strange things like relocating and/or
+> > resizing it on the fly.  Particularly handy if physical access is difficult.
+> >
+> 
+> Yes, it was that potential aspect that set me deciding to try your 
+> approach.  Functional demands on our systems keep changing.
+> 
+> Much appreciated, Ron
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-Question #2:
-In order to copy data from a working system, I connected the drives via an external
-enclosure which uses a SATA PMP. As a result, things are slow:
-
-md5 : active raid5 dm-7[5] dm-6[3] dm-5[2] dm-4[1] dm-2[0]
-      15627526144 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [UUUU_]
-      [>....................]  recovery =  0.9% (35709052/3906881536) finish=3406.6min speed=18939K/sec
-      bitmap: 0/30 pages [0KB], 65536KB chunk
-
-2.5 days for an init or rebuild is going to be painful. 
-I already checked that I'm not CPU/dmcrpyt pegged.
-
-I read Neil's message why init is still required:
-http://marc.info/?l=linux-raid&m=112044009718483&w=2
-even if somehow on brand new blank drives full of 0s I'm thinking this could be faster
-by just assuming the array is clean (all 0s give a parity of 0).
-Is it really unsafe to do so? (actually if you do this on top of dmcrypt
-like I did here, I won't get 0s, so that way around, it's unfortunately
-necessary).
-
-I suppose that 1 day-ish rebuild times are kind of a given with 4TB drives anyway?
-
-
-Question #3:
-Since I'm going to put btrfs on top, I'm almost tempted to skip the md raid5
-layer and just use the native support, but the raid code in btrfs still
-seems a bit younger than I'm comfortable with.
-Is anyone using it and has done disk failures, replaces, and all?
-
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
