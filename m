@@ -1,58 +1,59 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Manually reconstruct a RAID10 from adaptec 3805
-Date: Tue, 21 Jan 2014 01:15:44 -0600
-Message-ID: <52DE1EA0.8060403@hardwarefreak.com>
-References: <CAE6VuKFnEjPsq=aeQXU4Jfn_3kD1TE19gRGk3YGdUXGTdgN+xg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Marc MERLIN <marc@merlins.org>
+Subject: Very long raid5 init/rebuild times
+Date: Mon, 20 Jan 2014 23:35:40 -0800
+Message-ID: <20140121073540.GF10140@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE6VuKFnEjPsq=aeQXU4Jfn_3kD1TE19gRGk3YGdUXGTdgN+xg@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Raul Dias <raul@dias.com.br>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/20/2014 2:01 PM, Raul Dias wrote:
-> Hello,
-> 
-> I have a failled RAID 10 in a remote server.  The controller show all
-> drives as "offline"
-> In order to recover it, I will try to reconstruct the fs from disk images.
-> 
-> Does anyone have a clue on how adaptec layouts its raid10 disks?
-> 
-> So far, all information I have is this:
-> http://www.unixwiz.net/techtips/recovering-failed-raid.html
-> 
-> However, it is from 2008 and a raid1 only.
-> Can anyone point me in the right direction?
+Howdy,
 
-Apparently you've performed many additional troubleshooting steps but
-omitted them here.  The path you suggest is only taken when a RAID
-controller has failed and a same brand replacement unit is not possible.
+I'm setting up a new array with 5 4TB drives for which I'll use dmcrypt.
 
-Simply having all drives kicked offline doesn't mean the controller has
-failed.  Usually it means all drives lost power, or there is a problem
-with the backplane.
+Question #1:
+Is it better to dmcrypt the 5 drives and then make a raid5 on top, or the opposite
+(raid5 first, and then dmcrypt)
+I used:
+cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 /dev/sd[mnopq]1
 
-Please describe what happened before the drives went offline.  Did the
-server crash?  Lose power?  Or did all 4,6,8 drives mysteriously just go
-offline?  How many drives in this RAID10 array?
 
-The first thing you should do in such a circumstance is boot the machine
-and enter the RAID BIOS, then manually force all the drives online, then
-perform a health check (whatever Adaptec calls this) of the array.  If
-everything passes, boot up the machine.
+Question #2:
+In order to copy data from a working system, I connected the drives via an external
+enclosure which uses a SATA PMP. As a result, things are slow:
 
-If any or all of the drives are booted offline again, you need to
-inspect the hardware, specifically the power feed to the backplane, the
-backplane itself, and the PSU.
+md5 : active raid5 dm-7[5] dm-6[3] dm-5[2] dm-4[1] dm-2[0]
+      15627526144 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [UUUU_]
+      [>....................]  recovery =  0.9% (35709052/3906881536) finish=3406.6min speed=18939K/sec
+      bitmap: 0/30 pages [0KB], 65536KB chunk
 
-Trying to manually reconstruct the data from the drives is an absolute
-last resort, when the controller is verified to have failed, and a
-replacement isn't available.
+2.5 days for an init or rebuild is going to be painful. 
+I already checked that I'm not CPU/dmcrpyt pegged.
 
+I read Neil's message why init is still required:
+http://marc.info/?l=linux-raid&m=112044009718483&w=2
+even if somehow on brand new blank drives full of 0s I'm thinking this could be faster
+by just assuming the array is clean (all 0s give a parity of 0).
+Is it really unsafe to do so? (actually if you do this on top of dmcrypt
+like I did here, I won't get 0s, so that way around, it's unfortunately
+necessary).
+
+I suppose that 1 day-ish rebuild times are kind of a given with 4TB drives anyway?
+
+
+Question #3:
+Since I'm going to put btrfs on top, I'm almost tempted to skip the md raid5
+layer and just use the native support, but the raid code in btrfs still
+seems a bit younger than I'm comfortable with.
+Is anyone using it and has done disk failures, replaces, and all?
+
+Thanks,
+Marc
 -- 
-Stan
-
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
