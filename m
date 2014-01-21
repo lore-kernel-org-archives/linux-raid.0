@@ -1,109 +1,43 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Disappointing performance: 5-disk RAID6, 3.11.6
-Date: Tue, 21 Jan 2014 17:55:43 +0100
-Message-ID: <CADNH=7HpRJRDQ9PUmKDOVs=Pbbj2Z50AZi9XdFrhUBQKR7A-Dg@mail.gmail.com>
-References: <CAKuK5J34CvTwZ5S6uyBUdEft2SkwrycXvYfNvQATit8GbdZcuw@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Very long raid5 init/rebuild times
+Date: Tue, 21 Jan 2014 09:08:05 -0800
+Message-ID: <CAK2H+ef3p-Vk86p0fX=54d=KfWmj3vEKvjaVy2bm6hr7Rq_f2Q@mail.gmail.com>
+References: <20140121073540.GF10140@merlins.org>
+	<20140121163755.GG10140@merlins.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKuK5J34CvTwZ5S6uyBUdEft2SkwrycXvYfNvQATit8GbdZcuw@mail.gmail.com>
+In-Reply-To: <20140121163755.GG10140@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Marc MERLIN <marc@merlins.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21 January 2014 17:42, Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
+On Tue, Jan 21, 2014 at 8:37 AM, Marc MERLIN <marc@merlins.org> wrote:
+> On Mon, Jan 20, 2014 at 11:35:40PM -0800, Marc MERLIN wrote:
+>> Howdy,
+>>
+>> I'm setting up a new array with 5 4TB drives for which I'll use dmcrypt.
+>>
+>> Question #1:
+>> Is it better to dmcrypt the 5 drives and then make a raid5 on top, or the opposite
+>> (raid5 first, and then dmcrypt)
+>> I used:
+>> cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 /dev/sd[mnopq]1
 >
-> I have a 5-disk RAID6 using (5) 320GB SATA drives.
-> I rarely see even sequential I/O approaching that of a single drive's
-> performance.
-> Example: (Rarely!) I'll see an aggregate 250MB/s read or write, but
-> that translates to 50MB/s read or write per-drive. I was hoping for
-> more.
+> I should have said that this is seemingly a stupid question since obviously
+> if you encrypt each drive separately, you're going through the encryption
+> layer 5 times during rebuilds instead of just once.
+> However in my case, I'm not CPU-bound, so that didn't seem to be an issue
+> and I was more curious to know if the dmcrypt and dmraid5 layers stacked the
+> same regardless of which one was on top and which one at the bottom.
 >
-> The partition layout looks like this:
->
-> /dev/sda1 : start=     2048, size=  1024000, Id=83, bootable
-> /dev/sda2 : start=  1026048, size=  1024000, Id=82
-> /dev/sda3 : start=  2050048, size=623091712, Id=fd
-> /dev/sda4 : start=        0, size=        0, Id= 0
->
-> on all 5 disks, and sd{whatever}3 is used to assemble the raid,
-> specifically, /dev/md2.
->
-> mdadm -D /dev/md2:
->
-> /dev/md2:
->         Version : 1.2
->   Creation Time : Fri Nov  1 11:13:07 2013
->      Raid Level : raid6
->      Array Size : 934242816 (890.96 GiB 956.66 GB)
->   Used Dev Size : 311414272 (296.99 GiB 318.89 GB)
->    Raid Devices : 5
->   Total Devices : 5
->     Persistence : Superblock is persistent
->
->   Intent Bitmap : Internal
->
->     Update Time : Tue Jan 21 10:33:52 2014
->           State : active
->  Active Devices : 5
-> Working Devices : 5
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->            Name : turnip:2  (local to host turnip)
->            UUID : bece804d:eaaeb280:38d2d7f3:1e493146
->          Events : 21788
->
->     Number   Major   Minor   RaidDevice State
->        0       8       51        0      active sync   /dev/sdd3
->        1       8       35        1      active sync   /dev/sdc3
->        2       8        3        2      active sync   /dev/sda3
->        3       8       19        3      active sync   /dev/sdb3
->        4       8       67        4      active sync   /dev/sde3
->
-> The filesystem is ext4, and debugfs says:
->
-> RAID stride:              16
-> RAID stripe width:        48
->
->
-> The processor is an AMD Phenom 9150e (quad-core, x86_64) and the O/S
-> is openSUSE 13.1, kernel 3.11.6. Some of the hardware looks like this:
->
-> 00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] RS780 Host Bridge
-> 00:01.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] RS780/RS880 PCI
-> to PCI bridge (int gfx)
-> 00:07.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] RS780/RS880 PCI
-> to PCI bridge (PCIE port 3)
-> 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode]
->
->
-> Settings:
-> The stripe_cache_size is 4096 (see
-> http://blog.jamponi.net/2013/12/sw-raid6-performance-influenced-by.html
-> )
-> readahead is 16384
-> scheduler is deadline
-> queue depth per-drive is 1.
-> nr_requests is 256.
->
-> Does this seem out of line? Thoughts?
->
-> --
-> Jon
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Marc
 
+I know nothing about dmcrypt but as someone pointed out to me in
+another thread recently about alternative parity methods for RAID6 you
+might be able to do some tests using loopback devices instead of real
+hard drives to speed up your investigation times.
 
-
-Does enabling NCQ help? (I see "queue depth per-drive is 1")
-
-Mathias
+Cheers,
+Mark
