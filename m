@@ -1,145 +1,138 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Disappointing performance: 5-disk RAID6, 3.11.6
-Date: Wed, 22 Jan 2014 09:54:04 +1100
-Message-ID: <20140122095404.25e63a06@notabene.brown>
-References: <CAKuK5J34CvTwZ5S6uyBUdEft2SkwrycXvYfNvQATit8GbdZcuw@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Manually reconstruct a RAID10 from adaptec 3805
+Date: Tue, 21 Jan 2014 17:14:14 -0600
+Message-ID: <52DEFF46.1040606@hardwarefreak.com>
+References: <CAE6VuKFnEjPsq=aeQXU4Jfn_3kD1TE19gRGk3YGdUXGTdgN+xg@mail.gmail.com>	<52DE1EA0.8060403@hardwarefreak.com> <CAE6VuKExccbVz4xdGKAX7G5RtWOq-FtMy6xLvfSaMAjJBBHGZg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/tokKzDViF3+ymiLWtIKm/m3"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKuK5J34CvTwZ5S6uyBUdEft2SkwrycXvYfNvQATit8GbdZcuw@mail.gmail.com>
+In-Reply-To: <CAE6VuKExccbVz4xdGKAX7G5RtWOq-FtMy6xLvfSaMAjJBBHGZg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Raul Dias <raul@dias.com.br>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/tokKzDViF3+ymiLWtIKm/m3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Omitted list CC on reply.
 
-On Tue, 21 Jan 2014 10:42:19 -0600 Jon Nelson
-<jnelson-linux-raid@jamponi.net> wrote:
+On 1/21/2014 1:47 AM, Raul Dias wrote:
+> Unfortunally, I dont have physical access to the machine.
+> 
+> The controller was substituted from 3805 to 5805.
+> However, the following message were generated:
 
-> I have a 5-disk RAID6 using (5) 320GB SATA drives.
-> I rarely see even sequential I/O approaching that of a single drive's
-> performance.
-> Example: (Rarely!) I'll see an aggregate 250MB/s read or write, but
-> that translates to 50MB/s read or write per-drive. I was hoping for
-> more.
+Did the controller swap *cause* the problem?  Or did the tech swap the
+controllers in an attempt to solve the problem?
 
-A 5 disk RAID6 has 3 data drives (in each stripe), so 250MB/s translates to
-250/3 or 83MB/s per drive (skipping over parity data isn't faster than
-reading it unless you have a very large chunk size, which brings other cost=
-s).
+> """
+> Two independent halves of same logical device present.
+> Turn off system, remove disk(s) constitute one of this halves and try again.
+> """
+> 
+> No much info googling for this message (or sense).
+> As a RAID 10, of course there are 2 halves.
+> 
+> Under this warning, is it safe to force it to be online?
 
-What exactly where you hoping for?
+You probably can't because the 5805 apparently doesn't yet know the RAID
+configuration of your disks.
 
-If you run something like
-  for i in a b c d e
-  do dd if=3D/dev/sd${i}3 of=3D/dev/null bs=3D1M count=3D100 &
-  done
-while system is otherwise idle, what throughput does each dd report?
+Making an educated guess here, your 3805 died.  The tech grabbed a 5805,
+who knows from where, maybe new, maybe used, and just slapped it in the
+machine, buttoned it up, and turned it back on.
 
-NeilBrown
+When you swap controllers like this, you must clear any RAID
+configuration stored in the replacement card's onboard flash, then tell
+the card BIOS to scan all attached drives for a configuration.  All
+drives in your array have a copy of the RAID metadata at the end of the
+drives.  The controller will find this metadata and present the
+configuration to you.  If that process works correctly, you simply save
+that config to flash.  Your array should be functional again.
 
+Read the Adaptec documentation.
 
->=20
-> The partition layout looks like this:
->=20
-> /dev/sda1 : start=3D     2048, size=3D  1024000, Id=3D83, bootable
-> /dev/sda2 : start=3D  1026048, size=3D  1024000, Id=3D82
-> /dev/sda3 : start=3D  2050048, size=3D623091712, Id=3Dfd
-> /dev/sda4 : start=3D        0, size=3D        0, Id=3D 0
->=20
-> on all 5 disks, and sd{whatever}3 is used to assemble the raid,
-> specifically, /dev/md2.
->=20
-> mdadm -D /dev/md2:
->=20
-> /dev/md2:
->         Version : 1.2
->   Creation Time : Fri Nov  1 11:13:07 2013
->      Raid Level : raid6
->      Array Size : 934242816 (890.96 GiB 956.66 GB)
->   Used Dev Size : 311414272 (296.99 GiB 318.89 GB)
->    Raid Devices : 5
->   Total Devices : 5
->     Persistence : Superblock is persistent
->=20
->   Intent Bitmap : Internal
->=20
->     Update Time : Tue Jan 21 10:33:52 2014
->           State : active
->  Active Devices : 5
-> Working Devices : 5
->  Failed Devices : 0
->   Spare Devices : 0
->=20
->          Layout : left-symmetric
->      Chunk Size : 64K
->=20
->            Name : turnip:2  (local to host turnip)
->            UUID : bece804d:eaaeb280:38d2d7f3:1e493146
->          Events : 21788
->=20
->     Number   Major   Minor   RaidDevice State
->        0       8       51        0      active sync   /dev/sdd3
->        1       8       35        1      active sync   /dev/sdc3
->        2       8        3        2      active sync   /dev/sda3
->        3       8       19        3      active sync   /dev/sdb3
->        4       8       67        4      active sync   /dev/sde3
->=20
-> The filesystem is ext4, and debugfs says:
->=20
-> RAID stride:              16
-> RAID stripe width:        48
->=20
->=20
-> The processor is an AMD Phenom 9150e (quad-core, x86_64) and the O/S
-> is openSUSE 13.1, kernel 3.11.6. Some of the hardware looks like this:
->=20
-> 00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] RS780 Host Bridge
-> 00:01.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] RS780/RS880 PCI
-> to PCI bridge (int gfx)
-> 00:07.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] RS780/RS880 PCI
-> to PCI bridge (PCIE port 3)
-> 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
-> SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode]
->=20
->=20
-> Settings:
-> The stripe_cache_size is 4096 (see
-> http://blog.jamponi.net/2013/12/sw-raid6-performance-influenced-by.html
-> )
-> readahead is 16384
-> scheduler is deadline
-> queue depth per-drive is 1.
-> nr_requests is 256.
->=20
-> Does this seem out of line? Thoughts?
->=20
+> I have the feelling that the host technician who performanced the
+> controller switch, might have switched the disk cable order too.
+
+This issue was solved over 15 years ago when metadata was added to the
+drives.  Cable connection, backplane slot order-- none of these make a
+difference.  If the controller finds the metadata, it then knows each
+drive's physical and logical position in the array.
+
+> If so, would that explain the message/warning?
+> Is the array bond to the disk cable connection (instead of an internal
+> label, like fstab e.g.)?
+> 
+> So, I guess the best course would be to make images and try to
+> reconstruct (unstrip) the partition.
+
+No.  The best course of action is to call Adaptec Support.  Tell them
+exactly what has happened, and they should be able to walk you through
+this to get the RAID10 array up and running again.
+
+If the situation is what it seems to be, again, simply clearing the
+flash configuration on the 5805 and reading the metadata from the disks
+should fix your problem.  Unless of course you have a bad backplane, and
+the original 3805 wasn't actually bad.  Cross that bridge when you get
+there.
+
+> I probably can eliminate the mirror part of the array, but still 4
+> disks to guess the stripping order to reorganize.
+
+You're attacking this from the wrong angle.  You're trying to work
+around the vendor RAID card instead of working within it.  Work within
+it and you should be back up in no time.
+
+Swapping controllers is a common situation and should be a seamless
+process.  This is precisely why all the RAID card vendors added metadata
+to the drives.  Swap cards, read metadata, reboot, go.  Back in the
+medieval days of RAID cards one had to recreate the configuration by
+hand in the card BIOS, using notes taken when the array was originally
+created.  What if you're the 3rd guy and the 1st guy's notes are gone?
+Metadata.
 
 
---Sig_/tokKzDViF3+ymiLWtIKm/m3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBUt76jDnsnt1WYoG5AQLQLRAAr0RAwzBwabBhfgtDWmzH6uw6Eqlq771t
-RAQCnAtYA3dqNLGp22F+uDebCURBWaTUfKcj9G4c9bsFzXLqP5sn4G5C8xIUYmO+
-p2Agc+CCbwgEHZt3d3Gw8u7DDI9gknPjRUIojkmsXT8JWav6j/BeSfjFr+d8QLPY
-au+RJclFFll7KSWZptbBTCEo8qvldRO1J+ZvTTG8C6b7oUAbBO8j2/RnHru9pWeE
-sUCkopHySJykYuA3DTEpr626W3+ktCVnFSaJHHQONVNpE3LhLiRSbcKu7SUQn4gM
-pr12WNwG2npP/1dRIDgKIWXaitSAOt5mGXaanPDHgOQNOVD9rRKFakKkTZqXzBdi
-twRaIt+5wY2XVXKNISOU2bRHVXyWGXUNGleQOzlU7sLf4d6eQ9Hr65y/xHGuwKWA
-NIVroFFHe88v+m6iAzIPsEd0FuQgxH+sj96dQQJ/TkDl8GN4Zvz+lrYy7a+prJKv
-vH/bSIqzyzuijPKPgiJ8xOVeFyvkppC/Io7u4mm2iRitXWLu+BH3tKFTUrStg/br
-kyiWkMmEk1Y0jyEGB4ZOpWWKUgB8CKGffNSPwc/W7FXczX9BqilFHI45aQLXZBWB
-rSoooGcdaa7+TFOwKXfKj1SvnOZnP80fjndzOFBQ49ZmGSbL0wVAMcUQOsbjJUDK
-bYmh+8ASzv4=
-=8uzw
------END PGP SIGNATURE-----
-
---Sig_/tokKzDViF3+ymiLWtIKm/m3--
+> 2014/1/21 Stan Hoeppner <stan@hardwarefreak.com>:
+>> On 1/20/2014 2:01 PM, Raul Dias wrote:
+>>> Hello,
+>>>
+>>> I have a failled RAID 10 in a remote server.  The controller show all
+>>> drives as "offline"
+>>> In order to recover it, I will try to reconstruct the fs from disk images.
+>>>
+>>> Does anyone have a clue on how adaptec layouts its raid10 disks?
+>>>
+>>> So far, all information I have is this:
+>>> http://www.unixwiz.net/techtips/recovering-failed-raid.html
+>>>
+>>> However, it is from 2008 and a raid1 only.
+>>> Can anyone point me in the right direction?
+>>
+>> Apparently you've performed many additional troubleshooting steps but
+>> omitted them here.  The path you suggest is only taken when a RAID
+>> controller has failed and a same brand replacement unit is not possible.
+>>
+>> Simply having all drives kicked offline doesn't mean the controller has
+>> failed.  Usually it means all drives lost power, or there is a problem
+>> with the backplane.
+>>
+>> Please describe what happened before the drives went offline.  Did the
+>> server crash?  Lose power?  Or did all 4,6,8 drives mysteriously just go
+>> offline?  How many drives in this RAID10 array?
+>>
+>> The first thing you should do in such a circumstance is boot the machine
+>> and enter the RAID BIOS, then manually force all the drives online, then
+>> perform a health check (whatever Adaptec calls this) of the array.  If
+>> everything passes, boot up the machine.
+>>
+>> If any or all of the drives are booted offline again, you need to
+>> inspect the hardware, specifically the power feed to the backplane, the
+>> backplane itself, and the PSU.
+>>
+>> Trying to manually reconstruct the data from the drives is an absolute
+>> last resort, when the controller is verified to have failed, and a
+>> replacement isn't available.
+>>
+>> --
+>> Stan
+>>
