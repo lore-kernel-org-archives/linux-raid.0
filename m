@@ -1,63 +1,46 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [PATCH] Allow to check mdadm with clangs static checker (scan-build)
-Date: Tue, 21 Jan 2014 18:39:56 +0100
-Message-ID: <52DEB0EC.5070103@fastmail.fm>
-References: <52DD4B54.4060809@fastmail.fm> <20140121100643.0ebaf13d@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Very long raid5 init/rebuild times
+Date: Tue, 21 Jan 2014 11:31:02 -0700
+Message-ID: <F3902817-7550-4A04-A606-6B360D9FF485@colorremedies.com>
+References: <20140121073540.GF10140@merlins.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140121100643.0ebaf13d@notabene.brown>
+In-Reply-To: <20140121073540.GF10140@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/21/2014 12:06 AM, NeilBrown wrote:
-> On Mon, 20 Jan 2014 17:14:12 +0100 Bernd Schubert
-> <bernd.schubert@fastmail.fm> wrote:
->
->> Clangs scan-build tool (static checker) set the environmental variable CC,
->> so Makefile should allow to use that value.
->>
->> Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
->> ---
->>   Makefile |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/Makefile b/Makefile
->> index 043bcea..63cc3ac 100644
->> --- a/Makefile
->> +++ b/Makefile
->> @@ -41,7 +41,7 @@ KLIBC=/home/src/klibc/klibc-0.77
->>
->>   KLIBC_GCC = gcc -nostdinc -iwithprefix include -I$(KLIBC)/klibc/include -I$(KLIBC)/linux/include -I$(KLIBC)/klibc/arch/i386/include -I$(KLIBC)/klibc/include/bits32
->>
->> -CC = $(CROSS_COMPILE)gcc
->> +CC ?= $(CROSS_COMPILE)gcc
->>   CXFLAGS ?= -ggdb
->>   CWFLAGS = -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
->>   ifdef WARN_UNUSED
->
-> I'm not exactly against this, but presumably you could tell scan-build to run
->
->    make CC=$CC
->
-> to achieve the same effect with no patch ??
->
-> i.e.
->
->    scan-build 'make CC=$CC'
 
-Yeah, that would also work. IMHO, it is just not very intuitive.
-Maybe I should submit a patch for the man page of the debian package and 
-upstream docs.
+On Jan 21, 2014, at 12:35 AM, Marc MERLIN <marc@merlins.org> wrote:
 
->
-> But maybe I'll apply it anyway.
+> Howdy,
+> 
+> I'm setting up a new array with 5 4TB drives for which I'll use dmcrypt.
+> 
+> Question #1:
+> Is it better to dmcrypt the 5 drives and then make a raid5 on top, or the opposite
+> (raid5 first, and then dmcrypt)
 
-Would be great.
+I'm pretty sure there are multithreading patches for dmcrypt, but I don't know what versions it's accepted into, and that's the question you need to answer. If the version you're using still only supports one encryption thread per block device, then you want to dmcrypt 5 drives, then create md on top of that. This way you get 5 threads doing encryption rather than 1 thread and hence one core trying to encrypt for 5 drives.
 
 
-Thanks,
-Bernd
+> I suppose that 1 day-ish rebuild times are kind of a given with 4TB drives anyway?
+
+4000000MB / 135MB/s = 8.23 hours. So 24 hours seems like a long time and I'd wonder what the bottleneck is.
+
+
+
+> Question #3:
+> Since I'm going to put btrfs on top, I'm almost tempted to skip the md raid5
+> layer and just use the native support, but the raid code in btrfs still
+> seems a bit younger than I'm comfortable with.
+> Is anyone using it and has done disk failures, replaces, and all?
+
+Like I mentioned on linux-btrfs@ it's there for testing. If you're prepared to use it with the intent of breaking it and reporting breakage, then great, that's useful. If you're just being impatient, expect to get bitten. And it's undergoing quite a bit of changes in btrfs-next. I'm not sure if those changes will appear in 3.14 or 3.15
+
+
+
+Chris Murphy
+
