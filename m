@@ -1,89 +1,167 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Wed, 22 Jan 2014 01:55:34 -0600
-Message-ID: <52DF7976.6070808@hardwarefreak.com>
-References: <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org>
-Reply-To: stan@hardwarefreak.com
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Questions about bitrot and RAID 5/6
+Date: Wed, 22 Jan 2014 11:40:30 +0100
+Message-ID: <52DFA01E.8000301@hesbynett.no>
+References: <20140121171943.GC6553@blisses.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140121163755.GG10140@merlins.org>
+In-Reply-To: <20140121171943.GC6553@blisses.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>, linux-raid@vger.kernel.org
+To: Mason Loring Bliss <mason@blisses.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/21/2014 10:37 AM, Marc MERLIN wrote:
-> On Mon, Jan 20, 2014 at 11:35:40PM -0800, Marc MERLIN wrote:
->> Howdy,
->>
->> I'm setting up a new array with 5 4TB drives for which I'll use dmcrypt.
->>
->> Question #1:
->> Is it better to dmcrypt the 5 drives and then make a raid5 on top, or the opposite
->> (raid5 first, and then dmcrypt)
+On 21/01/14 18:19, Mason Loring Bliss wrote:
+> On Tue, Jan 21, 2014 at 08:46:17AM +1100, NeilBrown wrote:
+> 
+>> ars technica recently had an article about "Bitrot and atomics COWs: Inside
+>> "next-gen" filesystems."
+> [...]
+>> That is where I stopped reading because that is *not* how bitrot happens.
+> 
+> I'm not finding the specific things I've read to this effect, and some of it
+> was on ephemeral media (IRC), but one of the justifications I've seen for the
+> ZFS/BTRFS approach is that some drives might not consistently report errors.
+> I think it's likely the case that one is in somewhat bad trouble in that
+> situation, but paranoia isn't strictly a bad thing.
+> 
+> 
+>> i.e. that clever stuff done by btrfs is already done by the drive!
+> 
+> The Ars Technica article shook my faith in this a little, and I'm
+> appreciating the balanced view. (And, I'm spinning up smartd anywhere where
+> it's not now running.)
+> 
+> 
+> 
+> On Mon, Jan 20, 2014 at 10:55:06PM +0000, Peter Grandi wrote:
+> 
+>> This seems to me a stupid idea that comes up occasionally on this list, and
+>> the answer is always the same: the redundancy in RAID is designed for
+>> *reconstruction* of data, not for integrity *checking* of data,
+> 
+> And yet, one person's stupid is another person's glaringly obvious. The RAID
+> layer is the only one where you can have redundant data available from
+> distinct devices. If it's desired, fault-tolerance ought to exist at every
+> level.
+> 
+> 
+>> and RAID assumes that the underlying storage system reports *every* error,
+>> that is there are never undetected errors from the lower layer.
+> 
+> I wouldn't want to force extra processing and storage onto everyone, but it
+> seems like something that doesn't muddy the design or complicate things at
+> all. It seems like a perfect option for the paranoid - think of ordered data
+> mode in EXT4. You don't have to turn it on if you don't want it.
+> 
 
-For maximum throughput and to avoid hitting a ceiling with one thread on
-one core, using one dmcrypt thread per physical device is a way to
-achieve this.
+If the raid system reads in the whole stripe, and finds that the
+parities don't match, what should it do?  Before considering what checks
+can be done, you need to think through what could cause those checks to
+fail - and what should be done about it.  If the stripe's parities don't
+match, then something /very/ bad has happened - either a disk has a read
+error that it is not reporting, or you've got hardware problems with
+memory, buses, etc., or the software has a serious bug.  In any case,
+you have to question the accuracy of anything you read off the array -
+you certainly have no way of knowing which disk is causing the trouble.
+ Probably the best you could do is report the whole stripe read as
+failed, and hope that the filesystem can recover.
 
->> I used:
->> cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64 /dev/sd[mnopq]1
+> 
+> 
+> On Tue, Jan 21, 2014 at 10:18:14AM +0100, David Brown wrote:
+> 
+>> I've read your blog on this topic, and I fully agree that checksumming or
+>> read-time verification should not be part of the raid layer.
+> 
+> Can you provide a link, please?
+> 
 
-Changing the key size or the encryption method may decrease latency a
-bit, but likely not enough.
+<http://neil.brown.name/blog/20110227114201>
+<http://neil.brown.name/blog/20100211050355>
 
-> I should have said that this is seemingly a stupid question since obviously
-> if you encrypt each drive separately, you're going through the encryption
-> layer 5 times during rebuilds instead of just once.
 
-Each dmcrypt thread is handling 1/5th of the IOs.  The low init
-throughput isn't caused by using 5 threads.  One thread would likely do
-no better.
+> 
+>> The ideal place is whatever is generating the data generates the checksum,
+>> and whatever is reading the data checks it - then /any/ error in the
+>> storage path will be detected.
+> 
+> Detected, but not corrected. Again, fault tolerance means that the system
+> works around errors. 
 
-> However in my case, I'm not CPU-bound, so that didn't seem to be an issue
-> and I was more curious to know if the dmcrypt and dmraid5 layers stacked the
-> same regardless of which one was on top and which one at the bottom.
+That's true - but the same applies to checking raid stripes for
+consistency.  You can only detect an error, not correct it.  To be able
+to correct the error, you need to put the checking mechanism below the
+layer of the redundancy.  This is what btrfs does - the checksum is on
+the file block or extent, and that block or extent is stored redundantly
+(for raid1, dup, etc.) as is its checksum.  You cannot do the
+/correcting/ above the redundancy layer unless you are talking about
+hamming codes or other forward error correction, which would be
+massively invasive for performance.
 
-You are not CPU bound, nor hardware bandwidth bound.  You are latency
-bound, just like every dmcrypt user.  dmcrypt adds a non trivial amount
-of latency to every IO.  Latency with serial IO equals low throughput.
+So if you want to /correct/ errors at the raid level, you need
+checksumming (or other detection mechanisms) just below the raid layer -
+and that is the block layer, typically the disk layer.  But the disk
+layer already has such a mechanism - it is the ECC system built into the
+disk.  Another checksum on the block layer is just a duplication of the
+work already done by the disk - at best, you are checking the
+connections and buffers along the way.  These are, as with everything
+else, a potential source of error - but they are definitely a low-risk
+point.
 
-Experiment with these things to increase throughput.  If you're using
-the CFQ elevator switch to deadline.  Try smaller md chunk sizes, key
-lengths, different ciphers, etc.  Turn off automatic CPU frequency
-scaling.  I've read reports of encryption causing the frequency to drop
-instead of increase.
+> As has been pointed out, there are potential sources of
+> error at every level. It's not at all unreasonable for each layer to take
+> advantage of available information to ensure correct operation.
+> 
 
-In general, to increase serial IO throughput on a high latency path one
-must:
+It is certainly not unreasonable to consider it - but you always have to
+balance the probability of something going wrong, the consequences of
+such errors, and the costs of correcting them.
 
-1.  Issue lots of IOs asynchronously
-2.  And/or issue lots of IOs in parallel
+The types of error that btrfs checksumming can detect (and correct,
+given redundant copies) are extremely rare - the huge majority of
+unrecoverable disk read errors are detected and reported by the drive.
+But it turns out that this checksumming is relatively inexpensive when
+it is done as part of the filesystem, and the checksums have other
+potential benefits (such as for deduplication, smarter rsyncs, etc.).
+So it is worth doing here.
 
-Or both.  AFAIK both of these require code rewrites for md maintenance
-operations.
+Why would you then want to spend additional effort for a less useful,
+more expensive checking at the raid level that covers fewer possible
+errors?  I know I can't give a proper analysis without relevant
+statistics, but my gut feeling is that the cost/benefit ratio is very
+much against trying to correct failures - or even do stripe checking -
+at the raid level.
 
-Once in production, if your application workloads do 1 or 2 above then
-you may see higher throughput than the 18MB/s you see with the init.  If
-your workloads are serial maybe not much more.
 
-Common sense says that encrypting 16TB of storage at the block level,
-using software libraries and optimized CPU instructions, is not a smart
-thing to do.  Not if one desires decent performance, and especially if
-one doesn't need all 16TB encrypted.
+> Hell, in a past life when I was working on embedded medical devices, I wrote
+> code to store critical variables in reprodicibly-mutated form so that on
+> accessing them I could verify that the hardware wasn't faulty and that
+> nothing was randomly spraying memory. Certainly it cost a tiny bit of extra
+> processing. The goal wasn't fault tolerance there, it was detection, but the
+> point is that we didn't have to trust the substrate, so we did what we could
+> to use it without trust.
 
-If you in fact don't need all 16TB encrypted, and I'd argue very few do,
-especially John and Jane Doe, then tear this down, build a regular
-array, and maintain an encrypted directory or few.
+Yes, and that is why there is ECC in the disks, and ECC memory.  High
+reliability systems, where the cost is justified, use ECC techniques at
+many other levels too - some processors even have whole cores redundant
+and fault tolerant.  But you have to suit your redundancy, checks, and
+corrections to your threat model and your cost model.  And while I agree
+that /checking/ at the raid level is not too expensive, /correcting/
+would be much more demanding.
 
-If you actually *need* to encrypt all 16TB at the block level, and
-require decent performance, you need to acquire a dedicated crypto
-board.  One board will cost more than your complete server.  The cost of
-such devices should be a strong clue as to who does and does not need to
-encrypt their entire storage.
+> 
+> 
+>> Putting the checksums in the filesystem, as btrfs does, is the next best
+>> thing - it is the highest layer where this is practical.
+> 
+> Again, depending on the goal. It's practical error detection, but doesn't add
+> to the reliability of the overall system at all if there's no source of
+> redundant data for a quorum.
+> 
 
--- 
-Stan
+Yes, without redundancy then the btrfs checksum is error detection, but
+not correction.
 
 
