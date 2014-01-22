@@ -1,51 +1,85 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: Disappointing performance: 5-disk RAID6, 3.11.6
-Date: Tue, 21 Jan 2014 18:24:09 -0600
-Message-ID: <CAKuK5J2wgccORwctg2EEv=CnPMcRD4d63yZWOGp8-3ARqp3wQw@mail.gmail.com>
-References: <CAKuK5J34CvTwZ5S6uyBUdEft2SkwrycXvYfNvQATit8GbdZcuw@mail.gmail.com>
- <20140122095404.25e63a06@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
+Date: Wed, 22 Jan 2014 11:52:08 +1100
+Message-ID: <20140122115208.6a2b3909@notabene.brown>
+References: <1390168823.587.1.camel@localhost>
+	<20140120113851.3b476ed8@notabene.brown>
+	<1390178957.587.9.camel@localhost>
+	<20140120143748.33bb52d2@notabene.brown>
+	<1390242438.587.16.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/rygyYLVlWbaiFbWzQcpSoBR"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140122095404.25e63a06@notabene.brown>
+In-Reply-To: <1390242438.587.16.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Ian Kumlien <ian.kumlien@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jan 21, 2014 at 4:54 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 21 Jan 2014 10:42:19 -0600 Jon Nelson
-> <jnelson-linux-raid@jamponi.net> wrote:
->
->> I have a 5-disk RAID6 using (5) 320GB SATA drives.
->> I rarely see even sequential I/O approaching that of a single drive's
->> performance.
->> Example: (Rarely!) I'll see an aggregate 250MB/s read or write, but
->> that translates to 50MB/s read or write per-drive. I was hoping for
->> more.
->
-> A 5 disk RAID6 has 3 data drives (in each stripe), so 250MB/s translates to
-> 250/3 or 83MB/s per drive (skipping over parity data isn't faster than
-> reading it unless you have a very large chunk size, which brings other costs).
->
-> What exactly where you hoping for?
->
-> If you run something like
->   for i in a b c d e
->   do dd if=/dev/sd${i}3 of=/dev/null bs=1M count=100 &
->   done
-> while system is otherwise idle, what throughput does each dd report?
+--Sig_/rygyYLVlWbaiFbWzQcpSoBR
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Of course, you're absolutely right about data disks vs. parity disks.
-I'd been playing with raid10 for so long...
+On Mon, 20 Jan 2014 19:27:18 +0100 Ian Kumlien <ian.kumlien@gmail.com> wrot=
+e:
 
-Bumping that count up to 10000, I get an aggregate of (up to) 360MB/s,
-averaging around 325MB/s, lows near 300MB/s.
+> On m=C3=A5n, 2014-01-20 at 14:37 +1100, NeilBrown wrote:
+> >=20
+> > Thanks - that extra info is quite useful.  Knowing that nothing else un=
+usual
+> > is happening can be quite valuable (and I don't like to assume).
+> >=20
+> > I haven't found anything that would clearly cause your crash, but I have
+> > found something that looks wrong and conceivably could.
+> >=20
+> > Could you please try this patch on top of what you are currently using?=
+  By
+> > the look of it you get a crash at least every day, often more often.  S=
+o if
+> > this produces a day with no crashes, that would be promising.
+> >=20
+> > The important aspect of the patch is that it moves the "atomic_inc" of
+> > "sh->count" back under the protection of ->device_lock in the case when=
+ some
+> > other thread might be using the same 'sh'.
+>=20
+> I have been unable to trip this up, so this was it!
+>=20
+> Tested-by: Ian Kumlien <ian.kumlien@gmail.com>
+>=20
+> I hope this hits stable ASAP ;)
 
-Something didn't seem right, though, so I re-ran the dd on each drive
-individually and found an outlier. Most were 70-75MB/s, but one was
-55MB/s. Bummer. Anyway, thanks for reminding me to think twice, post
-once.
+I've push it out into my for-next branch.
+I'll probably send a pull request to Linus tomorrow.
+It has some chance of getting into a -stable branch next week (though I'm n=
+ot
+really sure of the schedule).
 
--
-Jon
+Thanks again for testing and reporting!
+
+NeilBrown
+
+--Sig_/rygyYLVlWbaiFbWzQcpSoBR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUt8WODnsnt1WYoG5AQK1KQ/+INf6X77HU8nzHCxCL+RWsjq0dp0fsNW9
+oiuRc+z8kxzbwkaTUMVqKP5jKvel+sBEgBaWGFSsyelZnk2FvTQLSjhESh1Z7Qso
+wq3e0Z60uZIog7I/SquJgP3YqGhfC3oxKQr39+pWxXcqoG1U3ASKGy4DvlbAdzG/
+C8rUerI6Wyhcs21ZnBUhy3KRKuCfB/u2HLQFPl8gZAR3OYh/oPhMrR2+cCJKZSTl
+7CCECVqbhhwGnHme4R7OJuk4Sr0+Lbg4qmVUQtrnMIwa2gq2y8idU/NUoYKPMXP2
+uvwQorjwwQ9gJJTqKGaJx10XHSfffgGXhSLogVWfi++GiKU4Jcsx8oK4KY6iumfN
+Ra4gAt0AJxE/TN789ciOiXnoNdbp/WmF05cRO0yLGtO00T/5OWj8uqDjzBNMdq+V
+1xx1hgY2rmMvagX0wM6ZjunISMiDiEdFp0ND3t9COZwKV62U+WGMn0zgoqhrI0Yb
+PrXleFdCz+qbcjl8vp/EQpoVgzNG0xGIiyvNB7p5MBsS3Wl6T8FWIAOp5zN0pGTq
+piWuT84El2LpkCsY202/C1U0xtKBH2lLUljEYJjG5zHFXRtdtaILNLbnnGmviVfU
+moEhCmTLRe7IvL4gJ8efjN2YrKMWXL9iVC+rEGwaC8zsITfpkWhc01HORx51erlk
+KTNcGb1sPVg=
+=4diZ
+-----END PGP SIGNATURE-----
+
+--Sig_/rygyYLVlWbaiFbWzQcpSoBR--
