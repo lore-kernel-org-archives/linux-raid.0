@@ -1,50 +1,100 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Questions about bitrot and RAID 5/6
-Date: Wed, 22 Jan 2014 17:48:20 -0700
-Message-ID: <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com>
-References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Nate Dailey <nate.dailey@stratus.com>
+Subject: LVM raid1 mirror: interrupted resync isn't handled well
+Date: Wed, 22 Jan 2014 19:40:08 -0500
+Message-ID: <52E064E8.2000209@stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52DFA01E.8000301@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi, looking for some guidance as to whether or not this is expected to 
+work, and if I'm doing anything wrong or can make any changes to fix 
+this. (I tried posting on linux-lvm, but didn't get anywhere)
 
-On Jan 22, 2014, at 3:40 AM, David Brown <david.brown@hesbynett.no> wrote:
-> 
-> If the raid system reads in the whole stripe, and finds that the
-> parities don't match, what should it do?  
+I've found that if LVM raid1 resync is interrupted, the volume 
+immediately comes up in sync when next activated, without actually 
+copying the remainder of the data. This doesn't happen on the initial 
+resync when the mirror is created; it happens on a resync after a disk 
+pull/insert.
 
-https://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
-page 8 shows how it can be determined whether data, or P, or Q are corrupt. Multiple corruptions could indicate if a particular physical drive is the only source of corruptions and then treat it as an erasure. Using normal reconstruction code, the problem is correctable. But I'm uncertain if this enables determination of the specific device/chunk when there is data corruption within a single stripe.
+I've reproduced this several times on a system with the root FS on an 
+LVM raid1 (note, this is not LVM on top of a separate MD raid1 device, 
+it's an LVM raid1 mirror created with 'lvconvert -m1 --type raid1 ...'):
 
-It seems there's still an assumption that if data chunks produce P' and Q' which do not match P or Q, that P and Q are both correct which might not be true.
+- remove a disk containing one leg of an LVM raid1 mirror
+- do enough IO that a lengthy resync will be required
+- shutdown
+- insert the removed disk
+- reboot
+- on reboot, the volume is resyncing properly
+- before resync completes, reboot again
+- this time during boot, the volume is activated and no resync is performed
 
-> Before considering what checks
-> can be done, you need to think through what could cause those checks to
-> fail - and what should be done about it.  If the stripe's parities don't
-> match, then something /very/ bad has happened - either a disk has a read
-> error that it is not reporting, or you've got hardware problems with
-> memory, buses, etc., or the software has a serious bug.
+But here's an example showing the same thing happening with just a 
+volume deactivate/activate:
 
-Yes but we know that these things actually happen, even if rare. I don't know how common ECC fails to detect error, or detects but wrongly corrects, but we know that there are (rarely) misdirected writes. That not lonly obliterates data that might have been stored where the data landed, but it also means it's missing where it's expected. Neither drive nor controller ECC helps in such cases.
+# lvs
+   LV                                                   VG      Attr 
+    LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+...
+   testlv 
+testvg rwi-a-r---  5.00g                                 4.84
 
->  In any case,
-> you have to question the accuracy of anything you read off the array -
-> you certainly have no way of knowing which disk is causing the trouble.
+# lvchange -an /dev/testvg/testlv
 
-I'm not certain. From the Anvin paper, equation 27 suggests it's possible to know which disk is causing the trouble. But I don't know if that equation is intended for physical drives corrupting a mix of data, P and Q parities - or if it works to isolate the specific corrupt data chunk in a single (or more correctly, isolated) stripe data/parity mismatch event.
+# lvchange -ay /dev/testvg/testlv
 
-I think in the case of a single, non-overlapping corruption in a data chunk, that RS parity can be used to localize the error. If that's true, then it can be treated as a "read error" and the normal reconstruction for that chunk applies.
+# lvs
+   LV                                                              VG 
+    Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+...
+   testlv 
+testvg rwi-a-r---  5.00g                               100.00
 
-> Probably the best you could do is report the whole stripe read as
-> failed, and hope that the filesystem can recover.
+Here's dmesg showing the start of resync:
 
-With default chunk size of 512KB that's quite a bit of data loss for a file system that doesn't use checksummed metadata.
+md/raid1:mdX: active with 1 out of 2 mirrors
+created bitmap (5 pages) for device mdX
+mdX: bitmap initialized from disk: read 1 pages, set 4524 of 10240 bits
+RAID1 conf printout:
+  --- wd:1 rd:2
+  disk 0, wo:0, o:1, dev:dm-18
+  disk 1, wo:1, o:1, dev:dm-20
+RAID1 conf printout:
+  --- wd:1 rd:2
+  disk 0, wo:0, o:1, dev:dm-18
+  disk 1, wo:1, o:1, dev:dm-20
+md: recovery of RAID array mdX
+md: minimum _guaranteed_  speed: 4000 KB/sec/disk.
+md: using maximum available idle IO bandwidth (but not more than 15000 
+KB/sec) for recovery.
+md: using 128k window, over a total of 5242880k.
+
+And the interrupted sync:
+
+md: md_do_sync() got signal ... exiting
+
+And the reactivation without resuming resync:
+
+md/raid1:mdX: active with 2 out of 2 mirrors
+created bitmap (5 pages) for device mdX
+mdX: bitmap initialized from disk: read 1 pages, set 3938 of 10240 bits
 
 
-Chris Murphy
+This is the lvm version (though I also grabbed the latest lvm2 from 
+git.fedorahosted.org and had the same problem):
 
+   LVM version:     2.02.100(2)-RHEL6 (2013-09-12)
+   Library version: 1.02.79-RHEL6 (2013-09-12)
+   Driver version:  4.23.6
+
+This was on CentOS 6.4. I also reproduced it on Ubuntu 13.10, haven't 
+tried anything newer.
+
+Can anyone offer any advice? Thanks!
+
+Nate Dailey
+Stratus Technologies
