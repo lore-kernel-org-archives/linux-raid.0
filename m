@@ -1,46 +1,62 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: [PATCH] raid6check.c: remove legacy code
-Date: Thu, 23 Jan 2014 19:43:33 +0100
-Message-ID: <20140123184332.GA9468@lazy.lzy>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Questions about bitrot and RAID 5/6
+Date: Thu, 23 Jan 2014 13:53:42 -0500
+Message-ID: <52E16536.2070608@turmel.org>
+References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no> <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com> <52E0D060.3020508@hesbynett.no> <DE020E0C-E6EC-48E9-8D7B-09F5A65A2DF5@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <DE020E0C-E6EC-48E9-8D7B-09F5A65A2DF5@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+Hi Chris,
 
-this patch will remove some legacy code.
-It is part of the verbosity "cleanup".
-In any case, if information about the P
-and Q parity mismatches is required, it
-should go inside the code handling page
-size blocks, not full stripe size.
+On 01/23/2014 12:28 PM, Chris Murphy wrote:
+> It's a fair point. I've recently run across some claims on a separate
+> forum with hardware raid5 arrays containing all enterprise drives,
+> with regularly scrubs, yet with such excessive implosions that some
+> integrators have moved to raid6 and completely discount the use of
+> raid5. The use case is video production. This sounds suspiciously
+> like microcode or raid firmware bugs to me. I just don't see how ~6-8
+> enterprise drives in a raid5 translates into significantly higher
+> array collapses that then essentially vanish when it's raid6.
 
-Signed off: piergiorgio.sartor@nexgo.de
-diff -uNrp a/raid6check.c b/raid6check.c
---- a/raid6check.c	2014-01-20 19:48:10.435721613 +0100
-+++ b/raid6check.c	2014-01-23 19:36:23.151837870 +0100
-@@ -231,15 +231,7 @@ int check_stripes(struct mdinfo *info, i
- 		block_index_for_slot[diskP] = data_disks;
- 		blocks[data_disks+1] = stripes[diskQ];
- 		block_index_for_slot[diskQ] = data_disks+1;
--/* Do we really need the code below? */
--#if 0
--		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
--			printf("P(%d) wrong at %llu\n", diskP, start);
--		}
--		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
--			printf("Q(%d) wrong at %llu\n", diskQ, start);
--		}
--#endif
-+
- 		raid6_collect(chunk_size, p, q, stripes[diskP], stripes[diskQ], results);
- 		raid6_stats(disk, results, raid_disks, chunk_size);
- 
+I just wanted to address this one point.  Raid6 is many orders of
+magnitude more robust than raid5 in the rebuild case.  Let me illustrate:
 
--- 
+How to lose data in a raid5:
 
-piergiorgio
+1) Experience unrecoverable read errors on two of the N drives at the
+same *time* and same *sector offset* of the two drives.  Absurdly
+improbable.  On the order of 1x10^-36 for 1T consumer-grade drives.
+
+2a) Experience hardware failure on one drive followed by 2b) an
+unrecoverable read error in another drive.  You can expect a hardware
+failure rate of a few percent per year.  Then, when rebuilding on the
+replacement drive, the odds skyrocket.  On large arrays, the odds of
+data loss are little different from the odds of a hardware failure in
+the first place.
+
+How to lose data in a raid6:
+
+1) Experience unrecoverable read errors on *three* of the N drives at
+the same *time* and same *sector offset* of the drives.  Even more
+absurdly improbable.  On the order of 1x10^-58 for 1T consumer-grade drives.
+
+2) Experience hardware failure on one drive followed by unrecoverable
+read errors on two of the remaining drives at the same *time* and same
+*sector offset* of the two drives.  Again, absurdly improbable.  Same as
+for the raid5 case "1".
+
+3) Experience hardware failure on two drives followed by an
+unrecoverable read error in another drive.  As with raid5 on large
+arrays, you probably can't complete the rebuild error-free.  But the
+odds of this event are subject to management--quick reponse to case "2"
+greatly reduces the odds of case "3".
+
+It is no accident that raid5 is becoming much less popular.
+
+Phil
