@@ -1,100 +1,96 @@
-From: Nate Dailey <nate.dailey@stratus.com>
-Subject: LVM raid1 mirror: interrupted resync isn't handled well
-Date: Wed, 22 Jan 2014 19:40:08 -0500
-Message-ID: <52E064E8.2000209@stratus.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid6check.c add page size check and repair
+Date: Thu, 23 Jan 2014 12:30:58 +1100
+Message-ID: <20140123123058.72f07aa7@notabene.brown>
+References: <20140118181823.GA15757@lazy.lzy>
+	<52DD4ABD.5060605@itwm.fraunhofer.de>
+	<20140120182223.GA4871@lazy.lzy>
+	<20140120191022.GA8006@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Ru+ZzVHh37016WYbWqSTXPJ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140120191022.GA8006@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, looking for some guidance as to whether or not this is expected to 
-work, and if I'm doing anything wrong or can make any changes to fix 
-this. (I tried posting on linux-lvm, but didn't get anywhere)
+--Sig_/Ru+ZzVHh37016WYbWqSTXPJ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I've found that if LVM raid1 resync is interrupted, the volume 
-immediately comes up in sync when next activated, without actually 
-copying the remainder of the data. This doesn't happen on the initial 
-resync when the mirror is created; it happens on a resync after a disk 
-pull/insert.
+On Mon, 20 Jan 2014 20:10:22 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-I've reproduced this several times on a system with the root FS on an 
-LVM raid1 (note, this is not LVM on top of a separate MD raid1 device, 
-it's an LVM raid1 mirror created with 'lvconvert -m1 --type raid1 ...'):
+> Hi again,
+>=20
+> I'm polluting the mailing list now... Sorry!
+>=20
+> I found a couple of really stupid bugs, so this
+> re-re-patch should fix them.
+>=20
+> Sorry for the noise.
+>=20
 
-- remove a disk containing one leg of an LVM raid1 mirror
-- do enough IO that a lengthy resync will be required
-- shutdown
-- insert the removed disk
-- reboot
-- on reboot, the volume is resyncing properly
-- before resync completes, reboot again
-- this time during boot, the volume is activated and no resync is performed
+Hi,
+ I've applied that patch - it looks believable.
 
-But here's an example showing the same thing happening with just a 
-volume deactivate/activate:
+However:
+1/ If you could try putting a description of what the patch does, and why, =
+at
+the top, that would help a lot.
+See  http://www.ozlabs.org/~akpm/stuff/tpp.txt
 
-# lvs
-   LV                                                   VG      Attr 
-    LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
-...
-   testlv 
-testvg rwi-a-r---  5.00g                                 4.84
-
-# lvchange -an /dev/testvg/testlv
-
-# lvchange -ay /dev/testvg/testlv
-
-# lvs
-   LV                                                              VG 
-    Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
-...
-   testlv 
-testvg rwi-a-r---  5.00g                               100.00
-
-Here's dmesg showing the start of resync:
-
-md/raid1:mdX: active with 1 out of 2 mirrors
-created bitmap (5 pages) for device mdX
-mdX: bitmap initialized from disk: read 1 pages, set 4524 of 10240 bits
-RAID1 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:0, o:1, dev:dm-18
-  disk 1, wo:1, o:1, dev:dm-20
-RAID1 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:0, o:1, dev:dm-18
-  disk 1, wo:1, o:1, dev:dm-20
-md: recovery of RAID array mdX
-md: minimum _guaranteed_  speed: 4000 KB/sec/disk.
-md: using maximum available idle IO bandwidth (but not more than 15000 
-KB/sec) for recovery.
-md: using 128k window, over a total of 5242880k.
-
-And the interrupted sync:
-
-md: md_do_sync() got signal ... exiting
-
-And the reactivation without resuming resync:
-
-md/raid1:mdX: active with 2 out of 2 mirrors
-created bitmap (5 pages) for device mdX
-mdX: bitmap initialized from disk: read 1 pages, set 3938 of 10240 bits
+2/  I'm not really happy about:
+> @@ -217,26 +231,31 @@ int check_stripes(struct mdinfo *info, i
+>  		block_index_for_slot[diskP] =3D data_disks;
+>  		blocks[data_disks+1] =3D stripes[diskQ];
+>  		block_index_for_slot[diskQ] =3D data_disks+1;
+> -
+> +/* Do we really need the code below? */
+> +#if 0
+>  		if (memcmp(p, stripes[diskP], chunk_size) !=3D 0) {
+>  			printf("P(%d) wrong at %llu\n", diskP, start);
+>  		}
+>  		if (memcmp(q, stripes[diskQ], chunk_size) !=3D 0) {
+>  			printf("Q(%d) wrong at %llu\n", diskQ, start);
+>  		}
+> +#endif
 
 
-This is the lvm version (though I also grabbed the latest lvm2 from 
-git.fedorahosted.org and had the same problem):
+If you think it should be removed, then delete it completely.  It will still
+exist in the git history so they is no really loss of code.
+If you aren't sure, then don't delete it at all.  Ask.  Explain your thinki=
+ng
+and seek opinions.
+In either case it should be in a separate patch.
+I've left the "#if 0" etc for now but if you could push through to a
+resolution and send a patch I would appreciate it.
 
-   LVM version:     2.02.100(2)-RHEL6 (2013-09-12)
-   Library version: 1.02.79-RHEL6 (2013-09-12)
-   Driver version:  4.23.6
+Thanks,
+NeilBrown
 
-This was on CentOS 6.4. I also reproduced it on Ubuntu 13.10, haven't 
-tried anything newer.
+--Sig_/Ru+ZzVHh37016WYbWqSTXPJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Can anyone offer any advice? Thanks!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-Nate Dailey
-Stratus Technologies
+iQIVAwUBUuBw0jnsnt1WYoG5AQJeyw//RHVLKwpa++pFWWT+xQsDo/PF9rXYyWON
+1Kj8xxjy1ctdTkwmvtQWlQ5sRUpmn4DJCF8vNasIrx2c+sU53K2X/8py42YnnOiZ
+MWVTCO0foyLQOk2qcTMYCgG/8ZYUBw6ypE59Tu8mIr00iu+mNJAN/ozsj37niC8Y
+xBK0RarzANgD6rt8m+Ng6L0S6YQd8+oRIZjiFxWvsRSIvEnvcAlB7c3/lpIyOQ88
+trQopvjRijs3M+oM9B7yTHvY7DcwT9z9TlbtFfFRubBDa8wtmpoKK00RroxMgo3d
+1gqtsD4Z0+btiMHLhOH+c+5gw4RdshD4FKet6jn0756BIt+wYjalmwLoACDhMkgM
+pVmIVWdI5Ks+WMXr3o8lAph1oJ+4B7eIyZkKfe5OnUA+batoFup8IM6YYIpXFjRW
+Wpk15pMzafXTXapXjxKjbhzHjWCepF2L6urEbVaAkrHuHT7F3sOWFpZsxjpIU9nQ
+T9hO8zjEDPVK+kGrBIyAj0EF/x/VExixHPmzBbXGVn9aWt8fAKog6YOzGc85Odkp
+LW2zq/qHax0vh8mbf6cQ+AgrZnYMQ48A93oktJD0YuLJYDcB7jfyqo2+/wAQ0g2K
+w1xsXE8X+dJJfblGpWRhR4y7ui8ST9RsT+BECvhF6zkGZl5VTtjprEA4SPlSjHEC
+NiYTLzQfaE0=
+=IREM
+-----END PGP SIGNATURE-----
+
+--Sig_/Ru+ZzVHh37016WYbWqSTXPJ--
