@@ -1,39 +1,50 @@
-From: Ian Kumlien <ian.kumlien@gmail.com>
-Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
-Date: Thu, 23 Jan 2014 01:00:46 +0100
-Message-ID: <1390435246.587.18.camel@localhost>
-References: <1390168823.587.1.camel@localhost>
-	 <20140120113851.3b476ed8@notabene.brown> <1390178957.587.9.camel@localhost>
-	 <20140120143748.33bb52d2@notabene.brown>
-	 <1390242438.587.16.camel@localhost>
-	 <20140122115208.6a2b3909@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140122115208.6a2b3909@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Questions about bitrot and RAID 5/6
+Date: Wed, 22 Jan 2014 17:48:20 -0700
+Message-ID: <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com>
+References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52DFA01E.8000301@hesbynett.no>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On ons, 2014-01-22 at 11:52 +1100, NeilBrown wrote:
-> On Mon, 20 Jan 2014 19:27:18 +0100 Ian Kumlien <ian.kumlien@gmail.com> wrote:
-> > I have been unable to trip this up, so this was it!
-> > 
-> > Tested-by: Ian Kumlien <ian.kumlien@gmail.com>
-> > 
-> > I hope this hits stable ASAP ;)
+
+On Jan 22, 2014, at 3:40 AM, David Brown <david.brown@hesbynett.no> wrote:
 > 
-> I've push it out into my for-next branch.
-> I'll probably send a pull request to Linus tomorrow.
-> It has some chance of getting into a -stable branch next week (though I'm not
-> really sure of the schedule).
+> If the raid system reads in the whole stripe, and finds that the
+> parities don't match, what should it do?  
 
-Good, I bet I'm not the only one that will hit this...
+https://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+page 8 shows how it can be determined whether data, or P, or Q are corrupt. Multiple corruptions could indicate if a particular physical drive is the only source of corruptions and then treat it as an erasure. Using normal reconstruction code, the problem is correctable. But I'm uncertain if this enables determination of the specific device/chunk when there is data corruption within a single stripe.
 
-> Thanks again for testing and reporting!
+It seems there's still an assumption that if data chunks produce P' and Q' which do not match P or Q, that P and Q are both correct which might not be true.
 
-No problem, and thank you! ;)
+> Before considering what checks
+> can be done, you need to think through what could cause those checks to
+> fail - and what should be done about it.  If the stripe's parities don't
+> match, then something /very/ bad has happened - either a disk has a read
+> error that it is not reporting, or you've got hardware problems with
+> memory, buses, etc., or the software has a serious bug.
 
-> NeilBrown
+Yes but we know that these things actually happen, even if rare. I don't know how common ECC fails to detect error, or detects but wrongly corrects, but we know that there are (rarely) misdirected writes. That not lonly obliterates data that might have been stored where the data landed, but it also means it's missing where it's expected. Neither drive nor controller ECC helps in such cases.
+
+>  In any case,
+> you have to question the accuracy of anything you read off the array -
+> you certainly have no way of knowing which disk is causing the trouble.
+
+I'm not certain. From the Anvin paper, equation 27 suggests it's possible to know which disk is causing the trouble. But I don't know if that equation is intended for physical drives corrupting a mix of data, P and Q parities - or if it works to isolate the specific corrupt data chunk in a single (or more correctly, isolated) stripe data/parity mismatch event.
+
+I think in the case of a single, non-overlapping corruption in a data chunk, that RS parity can be used to localize the error. If that's true, then it can be treated as a "read error" and the normal reconstruction for that chunk applies.
+
+> Probably the best you could do is report the whole stripe read as
+> failed, and hope that the filesystem can recover.
+
+With default chunk size of 512KB that's quite a bit of data loss for a file system that doesn't use checksummed metadata.
+
+
+Chris Murphy
+
