@@ -1,59 +1,39 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Wed, 22 Jan 2014 17:17:55 -0600
-Message-ID: <52E051A3.3050103@hardwarefreak.com>
-References: <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org>
-Reply-To: stan@hardwarefreak.com
+From: Ian Kumlien <ian.kumlien@gmail.com>
+Subject: Re: [BUG] at drivers/md/raid5.c:291! kernel 3.13-rc8
+Date: Thu, 23 Jan 2014 01:00:46 +0100
+Message-ID: <1390435246.587.18.camel@localhost>
+References: <1390168823.587.1.camel@localhost>
+	 <20140120113851.3b476ed8@notabene.brown> <1390178957.587.9.camel@localhost>
+	 <20140120143748.33bb52d2@notabene.brown>
+	 <1390242438.587.16.camel@localhost>
+	 <20140122115208.6a2b3909@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140122174854.GF26014@merlins.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140122115208.6a2b3909@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/22/2014 11:48 AM, Marc MERLIN wrote:
-...
-> If crypt is on top of raid5, it seems (and that makes sense) that no
-> encryption is neded for the rebuild. However in my test I can confirm that
-> the rebuild time is exactly the same. I only get 19MB/s of rebuild bandwidth
-> and I think tha'ts because of the port multiplier.
+On ons, 2014-01-22 at 11:52 +1100, NeilBrown wrote:
+> On Mon, 20 Jan 2014 19:27:18 +0100 Ian Kumlien <ian.kumlien@gmail.com> wrote:
+> > I have been unable to trip this up, so this was it!
+> > 
+> > Tested-by: Ian Kumlien <ian.kumlien@gmail.com>
+> > 
+> > I hope this hits stable ASAP ;)
+> 
+> I've push it out into my for-next branch.
+> I'll probably send a pull request to Linus tomorrow.
+> It has some chance of getting into a -stable branch next week (though I'm not
+> really sure of the schedule).
 
-Ok, now I think we're finally getting to the heart of this.  Given the
-fact that you're doing full array encryption, and after reading your bio
-on your website the other day, I think I've been giving you too much
-credit.  So let's get back to md basics.  Have you performed any md
-optimizations?  The default value of
+Good, I bet I'm not the only one that will hit this...
 
-/sys/block/mdX/md/stripe_cache_size
+> Thanks again for testing and reporting!
 
-is 256.  This default is woefully inadequate for modern systems, and
-will yield dreadfully low throughput.  To fix this execute
+No problem, and thank you! ;)
 
-~$ echo 2048 > /sys/block/mdX/md/stripe_cache_size
-
-To specifically address slow resync speed try
-
-~$ echo 50000 > /proc/sys/dev/raid/speed_limit_min
-
-And you also likely need to increase readahead from the default 128KB to
-something like 1MB (in 512KiB units)
-
-~$ blockdev --setra 2048 /dev/mdX
-
-Since kernel 2.6.23 Linux does on demand readahead, so small random IO
-won't trigger it.  Thus a large value here will not negatively impact
-random IO.  See:  http://lwn.net/Articles/235181/
-
-These changes should give you just a bit of a boost to resync
-throughput, and streaming workloads in general.
-
-Please test and post your results.  I don't think your problems have
-anything to do with crypto.  However, after you get md running at peak
-performance you then may start to see limitations in your crypto setup,
-if you have chosen to switch to dmcrypt above md.
-
--- 
-Stan
+> NeilBrown
