@@ -1,77 +1,72 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Questions about bitrot and RAID 5/6
-Date: Fri, 24 Jan 2014 13:12:32 -0500
-Message-ID: <52E2AD10.5080208@turmel.org>
-References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no> <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com> <52E0D060.3020508@hesbynett.no> <DE020E0C-E6EC-48E9-8D7B-09F5A65A2DF5@colorremedies.com> <52E16536.2070608@turmel.org> <30218363-7819-40A1-B647-D19C1FD90548@colorremedies.com> <52E2691E.4050701@turmel.org> <0466C42D-F51E-41D1-B220-F38EB43C1A38@colorremedies.com> <52E29CEF.7030408@turmel.org> <62EB0D79-9A50-4C50-ACBF-1C507D6F449B@colorremedies.com>
+From: Roberto Spadim <rspadim@gmail.com>
+Subject: Re: Why are reads not balanced across my RAID-1?
+Date: Fri, 24 Jan 2014 16:22:56 -0200
+Message-ID: <CAH3kUhGA8x_5hDbqxcskHQq+5YXFrz4XspmzeTq0O8dQci8zzw@mail.gmail.com>
+References: <20140124104757.8256.qmail@science.horizon.com>
+	<20140124120448.GA19163@www5.open-std.org>
+	<CAJvUf-BfK-CeLFZ3WmRFbSpjr_x8x1FO7pDX5gmAJyw2RpekxA@mail.gmail.com>
+	<20140124174904.GA6884@www5.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <62EB0D79-9A50-4C50-ACBF-1C507D6F449B@colorremedies.com>
+In-Reply-To: <20140124174904.GA6884@www5.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
+Cc: Matt Garman <matthew.garman@gmail.com>, George Spelvin <linux@horizon.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/24/2014 12:59 PM, Chris Murphy wrote:
-> 
-> On Jan 24, 2014, at 10:03 AM, Phil Turmel <philip@turmel.org> wrote:
->>> w many bits of loss occur with one URE?
->> 
->> Complete physical sector.
-> 
-> 
-> A complete physical sector represents 512 bytes / 4096 bits, or in
-> the case of AF disks 4096 bytes / 32768 bits, of loss for one URE.
-> Correct?
-> 
-> So a URE is either 4096 bits nonrecoverable, or 32768 bits
-> nonrecoverable, for HDDs. Correct?
+Hi guys, i done some tests some time ago, and what i can tell is
 
-Yes.  Note that the specification is for an *event*, not for a specific
-number of bits lost.  The error rate is not "bits lost per bits read",
-it is "bits lost event per bits read".
+Raid1 use the nearest disk algorithm to select what disk will execute
+reads (read balance)
+i think it's very good, but don't consider diferent disk speed (access
+time and continous read), but it do a very good job
+i don't know there's space to improvement here, i got 1% of speed up
+doing a mix of disk speed (7.2k rpm 5k rpm and 15k rpm and a ssd) and
+changing the read balance algorithm
+i think it's solid 1% of speed up, but confuse to config parameters,
+parameters are based with access time (head time to move from position
+0 to end of disk, or 0 for ssd) and continous read (based on mb/second
+in a continous read, or based on rpm and track size)
 
->>>> Your comments suggest you've completely discounted the fact
->>>> that published URE rates are now close to, or within, drive
->>>> capacities.
->>>> 
->>>> Spend some time with the math and you will be very concerned.
->>> 
->>> Yeah I tried that a year ago and when it came to really super
->>> basic questions, no one was willing to answer them and the thread
->>> died as if we don't actually know what we're talking about. So I
->>> think some rather basic definitions are in order and an agreement
->>> that we don't get to redefine mathematics by saying a max error
->>> rate is a mean.
->>> 
->>> http://www.spinics.net/lists/raid/msg41669.html
->> 
->> I participated in that thread.  Some of your comments there imply
->> that the math is simple.  It's not (unless you are whiz with
->> statistics). Look at the Poisson distribution I referenced and the
->> computation examples I gave.
-> 
-> At the moment a Poisson distribution is out of scope because my
-> questions have nothing to do with how often, when, or how many, such
-> URE's will occur. At the moment I only want complete utter clarity on
-> what a URE/nonrecoverable error (not even the rate) is in terms of
-> quantity. That's my main problem.
+the best i got is:
+if you want raid1 you will run a system like databases, or multi
+thread systems, each thread operating a disk
+if have a system with continous read/write (dvr, stream, etc) raid10
+far is the best
 
-Ok, but the earlier arguments in this thread over the relative merits of
-raid5 versus raid6 very much depend on the error rate.
+maybe more tunes you can do with align, read ahead, and others
+filesystem options/parameters and cache, a raid card with flash backup
+or battery is nice too
 
->> Note that a statement about the rate of a randomly occurring error
->> is implicitly stating an average.
-> 
-> Except that it has only one limiter, with the next notch a whole
-> order magnitude less error. So I don't see how you get an average
-> unless you're willing to just make assumptions about the bottom end.
-> It doesn't make sense that a manufacturer would state a maximum error
-> rate of X and then target that as an average. The average is
-> certainly well below the max.
+good luck
 
-You are confused.  The specification is a maximum of an average.  An
-average that changes with time, and cannot be measured from single events.
 
-Phil
+2014/1/24 <keld@keldix.com>
+>
+> On Fri, Jan 24, 2014 at 08:56:02AM -0600, Matt Garman wrote:
+> > On Fri, Jan 24, 2014 at 6:04 AM,  <keld@keldix.com> wrote:
+> > > The reading is not balanced because it does not make sense to do balanced
+> > > reads for sequential reading. In RAID-1 the disk sectors are consequitive.
+> > > So if you would read one sector from one disk, and the following sector from the other disk,
+> > > then the next read from disk 1 would need to skip a full resolvation of the disk,
+> > > which may cost something like 8 ms.  So better read contigously from the same disk, and hope
+> > > for some other IO request that can use disk 2.
+> >
+> >
+> > Does that rationale hold for SSDs?
+>
+> No, this is not relevant for SSDs as access time is almost zero.
+>
+> best regards
+> keld
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+
+-- 
+Roberto Spadim
