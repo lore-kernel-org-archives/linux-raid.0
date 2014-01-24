@@ -1,74 +1,55 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Fri, 24 Jan 2014 02:24:09 -0600
-Message-ID: <52E22329.7070903@hardwarefreak.com>
-References: <20140121073540.GF10140@merlins.org>	<20140121163755.GG10140@merlins.org>	<52DF7976.6070808@hardwarefreak.com>	<20140122174854.GF26014@merlins.org>	<52E051A3.3050103@hardwarefreak.com>	<21217.9977.5869.747472@quad.stoffel.home>	<52E1BB9D.5000204@hardwarefreak.com> <20140124140729.6cf73745@notabene.brown>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "George Spelvin" <linux@horizon.com>
+Subject: Why are reads not balanced across my RAID-1?
+Date: 24 Jan 2014 05:47:57 -0500
+Message-ID: <20140124104757.8256.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140124140729.6cf73745@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Stoffel <john@stoffel.org>, Marc MERLIN <marc@merlins.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
-On 1/23/2014 9:07 PM, NeilBrown wrote:
-> On Thu, 23 Jan 2014 19:02:21 -0600 Stan Hoeppner <stan@hardwarefreak.com>
-> wrote:
-> 
->> On 1/23/2014 8:28 AM, John Stoffel wrote:
->>
->>> But more importantly, maybe it would make sense to have this number
->>> automatically scale with memory size?  If you only have 1gig stay at
->>> 256, but then jump more aggresively to 1024, 2048, 4196 and 8192 and
->>> then (for now) capping at 8192.  
->>
->> Setting the default based strictly on memory capacity won't work.  See
->> this discussion for background.
->>
->> http://www.spinics.net/lists/raid/msg45364.html
->>
-> 
-> I would like to see the stripe cache grow on demand, shrink when idle, and
-> use the "shrinker" interface to shrink even when not idle if there is memory
-> pressure.
-> So if someone wants a project....
-> 
-> NeilBrown
+I was doing some bulk reads on an ext4 file system on
+a simple mirrored device (3.13 x86_64 kernel):
 
+md2 : active raid1 sdd3[0] sde3[1]
+      1932514496 blocks [2/2] [UU]
+      bitmap: 0/15 pages [0KB], 65536KB chunk
 
-I'm a user, not a kernel hacker, and I don't know C.  Three strikes
-right there. :(  Otherwise I'd love to tackle it.  I do have some
-comments/ideas on the subject.
+And I noticed that the reads were all hitting the first disk.
+The second was basically idle.  Here's "dstat -d -D md2,sdd,sde":
 
-Progressively growing and shrinking the cache should be relatively
-straightforward.  We can do it dynamically today by modifying a system
-variable.  What's needed is code to track data input volume or rate to
-md and to interface with the shrinker.
+--dsk/md2-----dsk/sdd-----dsk/sde--
+ read  writ: read  writ: read  writ
+ 510k   55k: 484k   58k:  27k   58k
+ 129M    0 : 129M    0 :  48k    0
+ 108M   48k: 108M   60k: 576k   60k
+ 123M    0 : 123M 8192B:   0  8192B
+ 133M    0 : 133M    0 : 360k    0
+ 132M    0 : 132M    0 :  20k    0
+ 138M    0 : 138M    0 : 304k    0
+ 128M    0 : 128M    0 : 896k    0
+ 129M    0 : 129M 4096B:  64k 4096B
+ 135M    0 : 135M    0 :  36k    0
+ 116M   12k: 116M   24k:  36k   28k
+ 117M    0 : 116M 4096B: 632k    0
+ 127M    0 : 127M    0 : 288k    0
+ 130M    0 : 130M    0 : 336k    0
+ 133M    0 : 133M    0 : 212k    0
+ 134M    0 : 134M    0 : 304k    0
+ 130M    0 : 129M 4096B: 100k 4096B
+ 128M    0 : 127M    0 : 280k    0
+ 106M   12k: 106M   28k: 372k   28k
+ 129M    0 : 129M    0 : 344k    0
+ 134M    0 : 134M    0 : 196k    0
+ 134M    0 : 134M    0 : 384k    0
+ 129M    0 : 129M    0 : 304k    0
 
-I think the difficult aspect of this will be determining the upper bound
-on the cache size for a given system, as the optimum cache size directly
-correlates to the throughput of the hardware.  With the current power of
-2 restrictions, less than thorough testing indicates that disk based
-arrays seem to prefer a value of 1024-2048 for max throughput whereas
-SSD arrays seem to prefer 4096.  In either case, going to the next legal
-value decreases throughput and eats double the RAM while doing so.
+I thought (drivers/md/raid1.c:read_balance()) the driver was
+supposed to do some striping on large reads.
 
-So here we need some way to determine device throughput or at least
-device class, and set an upper bound accordingly.  I also think we
-should consider unhitching our wagon from powers of 2 if we're going to
-be dynamically growing/shrinking the cache.  I think grow/shrink should
-be progressive with smaller jumps.  With 5 drives growing from 2048 to
-4096 is going to grab 40MB of pages, likewise dumping 40MB for the
-impending shrink iteration, then 20MB, 10MB, and finally dumping 5MB
-arriving back at the 1MB/drive default.  This may cause a lot of memory
-thrashing on some systems and workloads, evicting application data from
-L2/L3 caches.  So we may want to be careful about how much memory we're
-shuffling and how often.
+While 125M/s is nice, more than that would be nicer.
 
--- 
-Stan
+The drives are identical, but are plugged in to different controllers.
+sdd is on an AMD SB600 controller, while sde is on a PDC42819.
 
-
+Is there some knob I need to adjust to make read balancing happen?
