@@ -1,75 +1,30 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Questions about bitrot and RAID 5/6
-Date: Thu, 23 Jan 2014 23:06:38 +0100
-Message-ID: <52E1926E.30106@hesbynett.no>
-References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no> <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com> <52E0D060.3020508@hesbynett.no> <DE020E0C-E6EC-48E9-8D7B-09F5A65A2DF5@colorremedies.com> <52E16536.2070608@turmel.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Very long raid5 init/rebuild times
+Date: Thu, 23 Jan 2014 19:02:21 -0600
+Message-ID: <52E1BB9D.5000204@hardwarefreak.com>
+References: <20140121073540.GF10140@merlins.org>	<20140121163755.GG10140@merlins.org>	<52DF7976.6070808@hardwarefreak.com>	<20140122174854.GF26014@merlins.org>	<52E051A3.3050103@hardwarefreak.com> <21217.9977.5869.747472@quad.stoffel.home>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52E16536.2070608@turmel.org>
+In-Reply-To: <21217.9977.5869.747472@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: John Stoffel <john@stoffel.org>
+Cc: Marc MERLIN <marc@merlins.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23/01/14 19:53, Phil Turmel wrote:
-> Hi Chris,
->
-> On 01/23/2014 12:28 PM, Chris Murphy wrote:
->> It's a fair point. I've recently run across some claims on a separate
->> forum with hardware raid5 arrays containing all enterprise drives,
->> with regularly scrubs, yet with such excessive implosions that some
->> integrators have moved to raid6 and completely discount the use of
->> raid5. The use case is video production. This sounds suspiciously
->> like microcode or raid firmware bugs to me. I just don't see how ~6-8
->> enterprise drives in a raid5 translates into significantly higher
->> array collapses that then essentially vanish when it's raid6.
->
-> I just wanted to address this one point.  Raid6 is many orders of
-> magnitude more robust than raid5 in the rebuild case.  Let me illustrate:
->
-> How to lose data in a raid5:
->
-> 1) Experience unrecoverable read errors on two of the N drives at the
-> same *time* and same *sector offset* of the two drives.  Absurdly
-> improbable.  On the order of 1x10^-36 for 1T consumer-grade drives.
->
-> 2a) Experience hardware failure on one drive followed by 2b) an
-> unrecoverable read error in another drive.  You can expect a hardware
-> failure rate of a few percent per year.  Then, when rebuilding on the
-> replacement drive, the odds skyrocket.  On large arrays, the odds of
-> data loss are little different from the odds of a hardware failure in
-> the first place.
->
-> How to lose data in a raid6:
->
-> 1) Experience unrecoverable read errors on *three* of the N drives at
-> the same *time* and same *sector offset* of the drives.  Even more
-> absurdly improbable.  On the order of 1x10^-58 for 1T consumer-grade drives.
->
-> 2) Experience hardware failure on one drive followed by unrecoverable
-> read errors on two of the remaining drives at the same *time* and same
-> *sector offset* of the two drives.  Again, absurdly improbable.  Same as
-> for the raid5 case "1".
->
-> 3) Experience hardware failure on two drives followed by an
-> unrecoverable read error in another drive.  As with raid5 on large
-> arrays, you probably can't complete the rebuild error-free.  But the
-> odds of this event are subject to management--quick reponse to case "2"
-> greatly reduces the odds of case "3".
->
-> It is no accident that raid5 is becoming much less popular.
->
-> Phil
+On 1/23/2014 8:28 AM, John Stoffel wrote:
 
-Don't forget the other possible cause of read errors - some muppet sees 
-that one drive has a complete failure, and when going to replace it 
-pulls out the wrong drive...  Raid 6 gives extra protection against that 
-most unbounded of error sources - human error!
+> But more importantly, maybe it would make sense to have this number
+> automatically scale with memory size?  If you only have 1gig stay at
+> 256, but then jump more aggresively to 1024, 2048, 4196 and 8192 and
+> then (for now) capping at 8192.  
 
-Anyway, the issue of checksums and the type of bitrot situation invented 
-for the Ars Technica article is about /undetected/ errors - dealing with 
-/detected/ unrecoverable read errors is easy.
+Setting the default based strictly on memory capacity won't work.  See
+this discussion for background.
 
+http://www.spinics.net/lists/raid/msg45364.html
 
+-- 
+Stan
