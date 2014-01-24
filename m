@@ -1,74 +1,93 @@
-From: keld@keldix.com
-Subject: Re: Why are reads not balanced across my RAID-1?
-Date: Fri, 24 Jan 2014 13:04:48 +0100
-Message-ID: <20140124120448.GA19163@www5.open-std.org>
-References: <20140124104757.8256.qmail@science.horizon.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Questions about bitrot and RAID 5/6
+Date: Fri, 24 Jan 2014 08:22:38 -0500
+Message-ID: <52E2691E.4050701@turmel.org>
+References: <20140121171943.GC6553@blisses.org> <52DFA01E.8000301@hesbynett.no> <78DCA4D1-9386-4BE7-894C-47EF4772C431@colorremedies.com> <52E0D060.3020508@hesbynett.no> <DE020E0C-E6EC-48E9-8D7B-09F5A65A2DF5@colorremedies.com> <52E16536.2070608@turmel.org> <30218363-7819-40A1-B647-D19C1FD90548@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140124104757.8256.qmail@science.horizon.com>
+In-Reply-To: <30218363-7819-40A1-B647-D19C1FD90548@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 24, 2014 at 05:47:57AM -0500, George Spelvin wrote:
-> I was doing some bulk reads on an ext4 file system on
-> a simple mirrored device (3.13 x86_64 kernel):
-> 
-> md2 : active raid1 sdd3[0] sde3[1]
->       1932514496 blocks [2/2] [UU]
->       bitmap: 0/15 pages [0KB], 65536KB chunk
-> 
-> And I noticed that the reads were all hitting the first disk.
-> The second was basically idle.  Here's "dstat -d -D md2,sdd,sde":
-> 
-> --dsk/md2-----dsk/sdd-----dsk/sde--
->  read  writ: read  writ: read  writ
->  510k   55k: 484k   58k:  27k   58k
->  129M    0 : 129M    0 :  48k    0
->  108M   48k: 108M   60k: 576k   60k
->  123M    0 : 123M 8192B:   0  8192B
->  133M    0 : 133M    0 : 360k    0
->  132M    0 : 132M    0 :  20k    0
->  138M    0 : 138M    0 : 304k    0
->  128M    0 : 128M    0 : 896k    0
->  129M    0 : 129M 4096B:  64k 4096B
->  135M    0 : 135M    0 :  36k    0
->  116M   12k: 116M   24k:  36k   28k
->  117M    0 : 116M 4096B: 632k    0
->  127M    0 : 127M    0 : 288k    0
->  130M    0 : 130M    0 : 336k    0
->  133M    0 : 133M    0 : 212k    0
->  134M    0 : 134M    0 : 304k    0
->  130M    0 : 129M 4096B: 100k 4096B
->  128M    0 : 127M    0 : 280k    0
->  106M   12k: 106M   28k: 372k   28k
->  129M    0 : 129M    0 : 344k    0
->  134M    0 : 134M    0 : 196k    0
->  134M    0 : 134M    0 : 384k    0
->  129M    0 : 129M    0 : 304k    0
-> 
-> I thought (drivers/md/raid1.c:read_balance()) the driver was
-> supposed to do some striping on large reads.
-> 
-> While 125M/s is nice, more than that would be nicer.
-> 
-> The drives are identical, but are plugged in to different controllers.
-> sdd is on an AMD SB600 controller, while sde is on a PDC42819.
-> 
-> Is there some knob I need to adjust to make read balancing happen?
+Hi Chris,
 
-The reading is not balanced because it does not make sense to do balanced 
-reads for sequential reading. In RAID-1 the disk sectors are consequitive.
-So if you would read one sector from one disk, and the following sector from the other disk, 
-then the next read from disk 1 would need to skip a full resolvation of the disk,
-which may cost something like 8 ms.  So better read contigously from the same disk, and hope
-for some other IO request that can use disk 2. 
+[BTW, reply-to-all is proper etiquette on kernel.org lists.  You keep
+dropping CCs.]
 
-For sequential reading RAID-10 in the "far" layout make a much more balanced 
-reading scheme. You will get somethng like RAID-0 reading speeds here.
+On 01/23/2014 04:38 PM, Chris Murphy wrote:
+> 
+> On Jan 23, 2014, at 11:53 AM, Phil Turmel <philip@turmel.org> wrote:
+> 
 
-Best regards
-Keld
+>> 2a) Experience hardware failure on one drive followed by 2b) an 
+>> unrecoverable read error in another drive.  You can expect a
+>> hardware failure rate of a few percent per year.  Then, when
+>> rebuilding on the replacement drive, the odds skyrocket.  On large
+>> arrays, the odds of data loss are little different from the odds of
+>> a hardware failure in the first place.
+> 
+> Yes I understand this, but 2a and 2b occurring at the same time also
+> seems very improbable with enterprise drives and regularly scheduled
+> scrubs. That's the context I'm coming from.
+
+No, they aren't improbable.  That's my point.  For consumer drives, you
+can expect a new URE every 12T or so read, on average.  (Based on
+claimed URE rates.)  So big arrays (tens of terabytes) are likely find a
+*new* URE on *every* scrub, even if they are back-to-back.  And on
+rebuild after a hardware failure, which also reads the entire array.
+
+> What are the odds of a latent sector error resulting in a read
+> failure, within ~14 days from the most recent scrub? And with
+> enterprise drives that by design have the proper SCT ERC value? And
+> at the same time as a single disk failure? It seems like a rather low
+> probability. I'd sooner expect to see a 2nd disk failure before the
+> rebuild completes.
+
+It's not even close.  The URE on rebuild is near *certain* on very large
+arrays.
+
+Enterprise drives push the URE rate down another factor of ten, so the
+problem is most apparent on arrays of high tens of T or hundreds of T.
+But enterprise customers are even more concerned with data loss, moving
+the threshold right back.  And if you are a data center with thousands
+of drives, the hardware failure rate is noticeable.
+
+Also, all of my analysis presumes proper error-recovery configuration.
+Without it, you're toast.
+
+>> It is no accident that raid5 is becoming much less popular.
+> 
+> Sure and I don't mean to indicate raid6 isn't orders of magnitude
+> safer. I'm suggesting that massive safety margin is being used to
+> paper over common improper configurations of raid5 arrays.  e.g.
+> using drives with the wrong SCT ERC timeout for either controller or
+> SCSI block layer, and also not performing any sort of raid or SMART
+> scrubbing enabling latent sector errors to develop.
+
+No, the problem is much more serious than that.  Improper ERC just
+causes a dramatic array collapse that confuses the hobbyist.  That's why
+it gets a lot of attention on linux-raid.
+
+> The accumulation of latent sector errors makes raid5 collapse only
+> somewhat less likely than the probability of a single drive failure.
+> So raid5 is particularly sensitive to failure in the case of bad
+> setups, whereas dual parity can in-effect mitigate the consequences
+> of bad setups. But that's not really what it's designed for. If we're
+> talking about exactly correctly configured setups, the comparison is
+> overwhelmingly about (multiple) drive failure probability.
+
+No, improper ERC setup will take out a raid6 almost as fast as raid5,
+since any URE kicks the drive out.  It happens to mostly to hobbyists
+who haven't scheduled scrubs, since anyone doing scrubs finds this out
+relatively quickly.  (Because they are afflicted with a rash of drive
+"failures" that aren't.)
+
+Your comments suggest you've completely discounted the fact that
+published URE rates are now close to, or within, drive capacities.
+
+Spend some time with the math and you will be very concerned.
+
+Phil
