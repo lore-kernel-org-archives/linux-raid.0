@@ -1,36 +1,21 @@
-From: Clemens Eisserer <linuxhippy@gmail.com>
-Subject: Questions regarding bad block management
-Date: Sun, 26 Jan 2014 22:03:45 +0100
-Message-ID: <CAFvQSYTXWG7q92nkENw5p4EDEmEPO85qf28-9m3K2eFhAZK9gQ@mail.gmail.com>
+From: Abdul Nasser <abdulnas500@justin.ddo.jp>
+Subject: Kind Regards
+Date: Sun, 26 Jan 2014 21:53:07 +0000
+Message-ID: <SECEXCHANGEFHmxYqMg00004163@mail.standardelectronics.com>
+Reply-To: s.abdulnasser@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Recipients <abdulnas500@justin.ddo.jp>
 List-Id: linux-raid.ids
 
-Hi,
+Greetings,
+My name is Abdul Nasser Sokariah and I am writing you from Syria, I choose to contact you directly as I need a reliable person to trust who can help me handle my huge deposit  with a vault company in EUROPE, and based on my present situation in Syria, I need you urgently to take possession of everything and further modalities/directives will follow.Please reply to my private  Email: nasserabdul190@yahoo.com
 
-I've seen several SD cards used in my raspberry pi develop bad blocks
-which can not be read or written anymore.
-I thought raid couldn't help here as it would flag the whole device as
-"bad" once it can not write a block anymore, however recently I
-learned linux-raid is now capable of handling bad blocks.
+I wait for your response.
 
-I've been searching a bit, however didn't find a lot of information,
-so I would be greateful if somebody could answer the following
-questions:
-
-1. Is the badblock-code contained in the stable 3.12 kernel?
-
-1. Using a raid1 with badblock management, is it possible for
-linux-raid to automatially repair errors transparently?
-So if a block goes bad, does linux-raid silently replace it without
-user intervention.
-
-2. What happens in case a replaced block fails again? Is this supported?
-
-Any pointer to documentation about bad-block handling would be highly
-appriciated.
-
-Thanks, Clemens
+Yours truly,
+Abdul Nasser Sokariah
