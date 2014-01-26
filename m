@@ -1,39 +1,36 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: Why are reads not balanced across my RAID-1?
-Date: Sat, 25 Jan 2014 09:52:44 -0800
-Message-ID: <52E3F9EC.3000901@tigertech.com>
-References: <20140124104757.8256.qmail@science.horizon.com>	<20140124120448.GA19163@www5.open-std.org>	<CAJvUf-BfK-CeLFZ3WmRFbSpjr_x8x1FO7pDX5gmAJyw2RpekxA@mail.gmail.com>	<20140124174904.GA6884@www5.open-std.org> <CAH3kUhGA8x_5hDbqxcskHQq+5YXFrz4XspmzeTq0O8dQci8zzw@mail.gmail.com>
+From: Clemens Eisserer <linuxhippy@gmail.com>
+Subject: Questions regarding bad block management
+Date: Sun, 26 Jan 2014 22:03:45 +0100
+Message-ID: <CAFvQSYTXWG7q92nkENw5p4EDEmEPO85qf28-9m3K2eFhAZK9gQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhGA8x_5hDbqxcskHQq+5YXFrz4XspmzeTq0O8dQci8zzw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/24/14, 10:22 AM, Roberto Spadim wrote:
+Hi,
 
-> i don't know there's space to improvement here, i got 1% of speed up
-> doing a mix of disk speed (7.2k rpm 5k rpm and 15k rpm and a ssd) and
-> changing the read balance algorithm
+I've seen several SD cards used in my raspberry pi develop bad blocks
+which can not be read or written anymore.
+I thought raid couldn't help here as it would flag the whole device as
+"bad" once it can not write a block anymore, however recently I
+learned linux-raid is now capable of handling bad blocks.
 
-If your RAID1 array contains both spinning disks and SSDs, you can (and
-should) simply set the spinning disks as "write-mostly":
+I've been searching a bit, however didn't find a lot of information,
+so I would be greateful if somebody could answer the following
+questions:
 
- http://tansi.info/hybrid/
+1. Is the badblock-code contained in the stable 3.12 kernel?
 
-This causes all reads to come from the SSD if possible.
+1. Using a raid1 with badblock management, is it possible for
+linux-raid to automatially repair errors transparently?
+So if a block goes bad, does linux-raid silently replace it without
+user intervention.
 
-After doing this, all reads should be at the SSD speed, although all
-writes will still be at spinning disk speeds. We have been doing this on
-all our database servers for years with zero problems (although we
-finally now trust SSDs enough to switch all array members to SSDs, so
-we're phasing it out).
+2. What happens in case a replaced block fails again? Is this supported?
 
-If your workload consists of lots of scattered reads, you'll get far
-more than a 1% read performance increase from this, with no tweaking of
-read balancing algorithm necessary.
+Any pointer to documentation about bad-block handling would be highly
+appriciated.
 
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Thanks, Clemens
