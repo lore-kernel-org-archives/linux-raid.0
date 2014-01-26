@@ -1,7 +1,7 @@
-From: Abdul Nasser <abdulnas500@justin.ddo.jp>
+From: Abdul Nasser <nasser500@justin.ddo.jp>
 Subject: Kind Regards
-Date: Sun, 26 Jan 2014 21:53:07 +0000
-Message-ID: <SECEXCHANGEFHmxYqMg00004163@mail.standardelectronics.com>
+Date: Sun, 26 Jan 2014 21:31:50 +0000
+Message-ID: <SECEXCHANGEvzoxJ6sJ00003a38@mail.standardelectronics.com>
 Reply-To: s.abdulnasser@yahoo.com.hk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <abdulnas500@justin.ddo.jp>
+To: Recipients <nasser500@justin.ddo.jp>
 List-Id: linux-raid.ids
 
 Greetings,
