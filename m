@@ -1,238 +1,421 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Tue, 28 Jan 2014 01:46:28 -0600
-Message-ID: <52E76054.5090900@hardwarefreak.com>
-References: <21217.9977.5869.747472@quad.stoffel.home> <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org> <52E0807D.2030608@hardwarefreak.com> <20140123091319.GB2306@merlins.org> <52E10A07.3070302@hardwarefreak.com> <20140123210155.GJ10046@merlins.org> <52E1F685.3050300@hardwarefreak.com> <20140125083630.GA7555@merlins.org>
-Reply-To: stan@hardwarefreak.com
+From: Maurizio De Santis <m.desantis@morganspa.com>
+Subject: [HELP] Recover a RAID5 with 8 drives
+Date: Tue, 28 Jan 2014 16:29:40 +0100
+Message-ID: <52E7CCE4.3030408@morganspa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140125083630.GA7555@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/25/2014 2:36 AM, Marc MERLIN wrote:
-> On Thu, Jan 23, 2014 at 11:13:41PM -0600, Stan Hoeppner wrote:
->> Well, no, not really.  I know there are some real quality issues with a
->> lot of cheap PMP JBODs out there.  I was just surprised to see an
->> experienced Linux sysadmin have bad luck with 3/3 of em.  Most folks
->> using Silicon Image HBAs with SiI PMPs seem to get good performance.
->  
-> I've worked with the raw chips on silicon, have the firmware flashing tool
-> for the PMP, and never saw better than that.
-> So I'm not sure who those most folks are, or what chips they have, but
-> obviously the experience you describe is very different from the one I've
-> seen, or even from what the 2 kernel folks I know who used to maintain them
-> have, since they've abandonned using them due to them being more trouble
-> than they're worth and the performance poor.
+Hi!
 
-The first that comes to mind is Backblaze, a cloud storage provider for
-consumer file backup.  They're on their 3rd generation of storage pod,
-and they're still using the original Syba SiI 3132 PCIe, Addonics SiI
-3124 PCI cards, and SiI 3726 PMP backplane boards, since 2009.  All
-Silicon Image ASICs both HBA and PMP.  Each pod has 4 SATA cards and 9
-PMPs boards with 45 drive slots.  The version 3.0 pod offers 180TB of
-storage.  They have a few hundred of these storage pods in service
-backing up user files over the net.  Here's the original design.  The
-post has links to version 2 and 3.
+I think I've got a problem :-/ I have a QNAP NAS with a 8 disks RAID5. 
+Some days ago I got a "Disk Read/Write Error" on the 8th drive 
+(/dev/sdh), with the suggestion to replace the disk.
 
-http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-build-cheap-cloud-storage/
+I replaced it, but after a bit the RAID rebuilding failed, and the QNAP 
+Admin Interface still gives me a "Disk Read/Write Error" on /dev/sdh. 
+Plus, I can't access to the RAID data anymore :-/
 
-The key to their success is obviously working closely with all their
-vendors to make sure the SATA cards and PMPs have the correct firmware
-versions to work reliably with each other.  Consumers buying cheap big
-box store HBAs and enclosures don't have this advantage.
+I was following this guide 
+https://raid.wiki.kernel.org/index.php/RAID_Recovery but, since I 
+haven't got any backup (I promise I will do them in the future!) I'm 
+afraid to run any possibly destructive command.
 
-> To be fair, at the time I cared about performance on PMP, I was also using
-> snapshots on LVM and those were so bad that they actually were the
-> performance issue sometimes I got as slow as 5MB/s. Yes, LVM snapshots were
-> horrible for performance, which is why I switched to brtfs now.
-> 
->> Personally, I've never used PMPs.  Given the cost ratio between drives
->> and HBA ports, a quality 4/8 port SAS HBA such as one of the LSIs is a
->> better solution all around.  4TB drives average $200 each.  A five drive
->> array is $1000.  An LSI 8 port 12G SAS HBA with guaranteed
->> compatibility, quality, support, and performance is $300.  A cheap 2
-> 
-> You are correct. When I started with PMPs there was not a single good SATA
-> card that had 10 ports or more and didn't cost $900. That was 4-5 years ago
-> though.
-> Today, I don't use PMPs anymore, except for some enclosures where it's easy
-> to just have one cable and where what you describe would need 5 sata cables
-> to the enclosure, would it not?
+How do you suggest to proceed? I would like to make a RAID excluding the 
+8th disk in order to mount it and backup important data, but I don't 
+even know if it is doable :-/ Moreover, looking at `mdadm --examine` 
+output I see that sdb seems to have problems too, also if QNAP Admin 
+Interface doesn't report it.
 
-No.  For external JBOD storage you go with an SAS expander unit instead
-of a PMP.  You have a single SFF 8088 cable to the host which carries 4
-SAS/SATA channels, up to 2.4 GB/s with 6G interfaces.
+Here some informations about the machine status:
 
-> (unless you use something like USB3, but that's another interface I've had
-> my share of driver bug problems with, so it's not a net win either).
+# uname -a
+Linux NAS 3.4.6 #1 SMP Thu Sep 12 10:56:51 CST 2013 x86_64 unknown
 
-Yes, USB is a horrible interface for RAID storage.
+# mdadm -V
+mdadm - v2.6.3 - 20th August 2007
 
->> port SATA HBA and 5 port PMP card gives sub optimal performance, iffy
->> compatibility, and low quality, and is ~$130.  $1300 vs $1130.  Going
->> with a cheap SATA HBA and PMP makes no sense.
-> 
-> I generally agree. Here I was using it to transfer data off some drives, but
-> indeed I wouldn't use this for a main array.
+# cat /etc/mdadm.conf
+ARRAY /dev/md0 
+devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3,/dev/sde3,/dev/sdf3,/dev/sdg3,/dev/sdh3
 
-Your original posts left me with the impression that you were using this
-as a production array.  Apologies for not digesting those correctly.
+# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] 
+[raid4] [multipath]
+md8 : active raid1 sdg2[2](S) sdf2[3](S) sde2[4](S) sdd2[5](S) 
+sdc2[6](S) sdb2[1] sda2[0]
+       530048 blocks [2/2] [UU]
 
-...
-> Since I get the same speed writing through all the layers as raid5 gets
-> doing a resync without writes and the other layers, I'm not sure how you're
-> suggesting that I can get extra performance.
+md13 : active raid1 sda4[0] sde4[6] sdf4[5] sdg4[4] sdd4[3] sdc4[2] sdb4[1]
+       458880 blocks [8/7] [UUUUUUU_]
+       bitmap: 8/57 pages [32KB], 4KB chunk
 
-You don't get extra performance.  You expose the performance you already
-have.  Serial submission typically doesn't reach peak throughput.  Both
-the resync operation and dd copy are serial submitters.  You usually
-must submit asynchronously or in parallel to reach maximum throughput.
-Being limited by a PMP it may not matter.  But with your direct
-connected drives of your production array you should see a substantial
-increase in throughput with parallel submission.
+md9 : active raid1 sda1[0] sdg1[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sdb1[1]
+       530048 blocks [8/7] [UUUUUUU_]
+       bitmap: 30/65 pages [120KB], 4KB chunk
 
-> Well, unless you mean just raw swraid5 can be made faster with my drives
-> still.
-> That is likely possible if I get a better sata card to put in my machine
-> or find another way to increase cpu to drive throughput.
+unused devices: <none>
 
-To significantly increase single streaming throughput you need AIO.  A
-faster CPU won't make any difference.  Neither will a better SATA card,
-unless your current one is defective, or limits port throughput will
-more than one port active--I've heard of couple that do so.
+# mdadm --examine /dev/sd[abcdefgh]3
+/dev/sda3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 0
 
->> You said you had pulled the PMP and connected direct to an HBA, bumping
->> from 19MB/s to 99MB/s.  Did you switch back to the PMP and are now
->> getting 100MB/s through the PMP?  We should be able to get much higher
->> if it's 3/6G SATA, a little higher if it's 1/5G.
->  
-> No, I did not. I'm not planning on having my destination array (the one I'm
-> writing to) behind a PMP for the reasons we discussed above.
-> The ports are 3MB/s. Obviously I'm not getting the right speed, but I think
-> there is something wrong with the motherboard of the system this is in,
-> causing some bus conflicts and slowdowns.
-> This is something I'll need to investigate outside of this list since it's
-> not related to raid anymore.
+     Update Time : Fri Jan 24 17:19:58 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 982047ab - correct
+          Events : 0.2944851
 
-Interesting.
+          Layout : left-symmetric
+      Chunk Size : 64K
 
->>> For now, I put dmcrypt on top of md5, I get 100MB/s raw block write speed (actually
->>> just writing a big file in btrfs and going through all the layers) even
->>> though it's only using one CPU thread for encryption instead of 2 or more if
->>> each disk were encrypted under the md5 layer.
->>
->> 100MB/s sequential read throughput is very poor for a 5 drive RAID5,
->> especially with new 4TB drives which can stream well over 130MB/s each.
->  
-> Yes, I totally agree.
-> 
->>> As another test
->>> gargamel:/mnt/btrfs_pool1# dd if=/dev/md5 of=/dev/null bs=1M count=1024
->>> 1073741824 bytes (1.1 GB) copied, 9.78191 s, 110 MB/s
->>
->> dd single stream copies are not a valid test of array throughput.  This
->> tells you only the -minimum- throughput of the array.
->  
-> If the array is idle, how is that not a valid block read test?
+       Number   Major   Minor   RaidDevice State
+this     0       8        3        0      active sync   /dev/sda3
 
-See above WRT asynchronous and parallel submission.
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sdb3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 8
+Preferred Minor : 0
 
->>> So it looks like 100-110MB/s is the read and write speed limit of that array.
->> To test real maximum throughput install fio, save and run this job file,
->> and post your results.  Monitor CPU burn of dmcrypt, using top is fine,
->> while running the job to see if it eats all of one core.  The job runs
->> in multiple steps, first creating the eight 1GB test files, then running
->> the read/write tests against those files.
->>
->> [global]
->> directory=/some/directory
->> zero_buffers
->> numjobs=4
->> group_reporting
->> blocksize=1024k
->> ioengine=libaio
->> iodepth=16
->> direct=1
->> size=1g
->>
->> [read]
->> rw=read
->> stonewall
->>
->> [write]
->> rw=write
->> stonewall
-> 
-> Yeah, I have fio, didn't seem needed here, but I'll it a shot when I get a
-> chance.
+     Update Time : Fri Jan 24 17:09:57 2014
+           State : active
+  Active Devices : 7
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 1
+        Checksum : 97f3567d - correct
+          Events : 0.2944837
 
-With your setup and its apparent hardware limitations, parallel
-submission may not reveal any more performance.  On the vast majority of
-systems it does.
+          Layout : left-symmetric
+      Chunk Size : 64K
 
->>> Thanks for you answers again,
->>
->> You're welcome.  If you wish to wring maximum possible performance from
->> this rig I'll stick with ya until we get there.  You're not far.  Just
->> takes some testing and tweaking unless you have a real hardware
->> limitation, not a driver setting or firmware issue.
-> 
-> Thanks for your offer, although to be honest, I think I'm hitting a hardware
-> problem which I need to look into when I get a chance.
+       Number   Major   Minor   RaidDevice State
+this     1       8       19        1      active sync   /dev/sdb3
 
-Got it.
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       8       19        1      active sync   /dev/sdb3
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+    8     8       8      115        8      spare   /dev/sdh3
+/dev/sdc3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 0
 
->> BTW, I don't recall you mentioning which HBA and PMP you're using at the
->> moment, and whether the PMP is an Addonics card or integrated in a JBOD.
->>  Nor if you're 1.5/3/6G from HBA through PMP to each drive.
-> 
-> That PMP is integrated in the jbod, I haven't torn it apart to check which
-> one it was, but I've pretty much gotten slow speeds from those things and
-> more importantly PMPs have bugs during drive hangs and retries which can
-> cause recovery problems and killing swraid5 arrays, so that's why I stopped
-> using them for serious use.
+     Update Time : Fri Jan 24 17:19:58 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 982047cf - correct
+          Events : 0.2944851
 
-Probably a good call WRT consumer PMP JBODs.
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-> The driver authors know about the issues, and some are in the PMP firmware
-> and not something they can work around.
-> 
->> Post your dmesg output showing the drive link speeds if you would, i.e.
->> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> 
-> Yep, very familiar with that unfortunately from my PMP debugging days
-> [    6.188660] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> [    6.211533] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> [    6.444897] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> [    6.444918] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> [    6.445087] ata2.00: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
-> [    6.445109] ata2.01: SATA link up 3.0 Gbps (SStatus 123 SControl 330)
-> [   14.179297] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   14.675693] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   15.516390] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   16.008800] ata12: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   19.339559] ata14: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   19.692273] ata14.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   20.705263] ata14.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   21.785956] ata14.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   22.899091] ata14.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   23.935813] ata14.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> 
-> Of course, I'm not getting that speed, but again, I'll look into it.
+       Number   Major   Minor   RaidDevice State
+this     2       8       35        2      active sync   /dev/sdc3
 
-Yeah, something's definitely up with that.  All drives are 3G sync, so
-you 'should' have 300 MB/s data rate through the PMP.
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sdd3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 0
 
-> Thanks for your suggestions for tweaks.
+     Update Time : Fri Jan 24 17:19:58 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 982047e1 - correct
+          Events : 0.2944851
 
-No problem Marc.  Have you noticed the right hand side of my email
-address? :)  I'm kinda like a dog with a bone when it comes to hardware
-issues.  Apologies if I've been a bit too tenacious with this.
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     3       8       51        3      active sync   /dev/sdd3
+
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sde3:
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 982047f3 - correct
+          Events : 0.2944851
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     4       8       67        4      active sync   /dev/sde3
+
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sdf3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 0
+
+     Update Time : Fri Jan 24 17:19:58 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 98204805 - correct
+          Events : 0.2944851
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     5       8       83        5      active sync   /dev/sdf3
+
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sdg3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 0
+
+     Update Time : Fri Jan 24 17:19:58 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : 98204817 - correct
+          Events : 0.2944851
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     6       8       99        6      active sync   /dev/sdg3
+
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+/dev/sdh3:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
+   Creation Time : Fri Jan 20 02:19:47 2012
+      Raid Level : raid5
+   Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
+      Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
+    Raid Devices : 8
+   Total Devices : 8
+Preferred Minor : 0
+
+     Update Time : Fri Jan 24 17:18:26 2014
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : 98204851 - correct
+          Events : 0.2944847
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+       Number   Major   Minor   RaidDevice State
+this     8       8      115        8      spare   /dev/sdh3
+
+    0     0       8        3        0      active sync   /dev/sda3
+    1     1       0        0        1      faulty removed
+    2     2       8       35        2      active sync   /dev/sdc3
+    3     3       8       51        3      active sync   /dev/sdd3
+    4     4       8       67        4      active sync   /dev/sde3
+    5     5       8       83        5      active sync   /dev/sdf3
+    6     6       8       99        6      active sync   /dev/sdg3
+    7     7       0        0        7      faulty removed
+    8     8       8      115        8      spare   /dev/sdh3
+
+# dmesg **edited (removed unuseful parts)**
+, wo:0, o:1, dev:sdb2
+[  975.516724] RAID1 conf printout:
+[  975.516728]  --- wd:2 rd:2
+[  975.516732]  disk 0, wo:0, o:1, dev:sda2
+[  975.516737]  disk 1, wo:0, o:1, dev:sdb2
+[  975.516740] RAID1 conf printout:
+[  975.516744]  --- wd:2 rd:2
+[  975.516748]  disk 0, wo:0, o:1, dev:sda2
+[  975.516753]  disk 1, wo:0, o:1, dev:sdb2
+[  977.495709] md: unbind<sdh2>
+[  977.505048] md: export_rdev(sdh2)
+[  977.535277] md/raid1:md9: Disk failure on sdh1, disabling device.
+[  977.575038]  disk 2, wo:0, o:1, dev:sdc1
+[  977.575043]  disk 3, wo:0, o:1, dev:sdd1
+[  977.575048]  disk 4, wo:0, o:1, dev:sde1
+[  977.575053]  disk 5, wo:0, o:1, dev:sdf1
+[  977.575058]  disk 6, wo:0, o:1, dev:sdg1
+[  979.547149] md: unbind<sdh1>
+[  979.558031] md: export_rdev(sdh1)
+[  979.592646] md/raid1:md13: Disk failure on sdh4, disabling device.
+[  979.592650] md/raid1:md13: Operation continuing on 7 devices.
+[  979.650862] RAID1 conf printout:
+[  979.650869]  --- wd:7 rd:8
+[  979.650875]  disk 0, wo:0, o:1, dev:sda4
+[  979.650880]  disk 1, wo:0, o:1, dev:sdb4
+[  979.650885]  disk 2, wo:0, o:1, dev:sdc4
+[  979.650890]  disk 3, wo:0, o:1, dev:sdd4
+[  979.650895]  disk 4, wo:0, o:1, dev:sdg4
+[  979.650900]  disk 5, wo:0, o:1, dev:sdf4
+[  979.650905]  disk 6, wo:0, o:1, dev:sde4
+[  979.650911]  disk 7, wo:1, o:0, dev:sdh4
+[  979.656024] RAID1 conf printout:
+[  979.656029]  --- wd:7 rd:8
+[  979.656034]  disk 0, wo:0, o:1, dev:sda4
+[  979.656039]  disk 1, wo:0, o:1, dev:sdb4
+[  979.656044]  disk 2, wo:0, o:1, dev:sdc4
+[  979.656049]  disk 3, wo:0, o:1, dev:sdd4
+[  979.656054]  disk 4, wo:0, o:1, dev:sdg4
+[  979.656059]  disk 5, wo:0, o:1, dev:sdf4
+[  979.656063]  disk 6, wo:0, o:1, dev:sde4
+[  981.604906] md: unbind<sdh4>
+[  981.616035] md: export_rdev(sdh4)
+[  981.753058] md/raid:md0: Disk failure on sdh3, disabling device.
+[  981.753062] md/raid:md0: Operation continuing on 6 devices.
+[  983.765852] md: unbind<sdh3>
+[  983.777030] md: export_rdev(sdh3)
+[ 1060.094825] journal commit I/O error
+[ 1060.099196] journal commit I/O error
+[ 1060.103525] journal commit I/O error
+[ 1060.108698] journal commit I/O error
+[ 1060.116311] journal commit I/O error
+[ 1060.123634] journal commit I/O error
+[ 1060.127225] journal commit I/O error
+[ 1060.130930] journal commit I/O error
+[ 1060.137651] EXT4-fs (md0): previous I/O error to superblock detected
+[ 1060.178323] Buffer I/O error on device md0, logical block 0
+[ 1060.181873] lost page write due to I/O error on md0
+[ 1060.185634] EXT4-fs error (device md0): ext4_put_super:849: Couldn't 
+clean up the journal
+[ 1062.662723] md0: detected capacity change from 13991546060800 to 0
+[ 1062.666308] md: md0 stopped.
+[ 1062.669760] md: unbind<sda3>
+[ 1062.681031] md: export_rdev(sda3)
+[ 1062.684466] md: unbind<sdg3>
+[ 1062.695023] md: export_rdev(sdg3)
+[ 1062.698342] md: unbind<sdf3>
+[ 1062.709021] md: export_rdev(sdf3)
+[ 1062.712310] md: unbind<sde3>
+[ 1062.723029] md: export_rdev(sde3)
+[ 1062.726245] md: unbind<sdd3>
+[ 1062.737022] md: export_rdev(sdd3)
+[ 1062.740112] md: unbind<sdc3>
+[ 1062.751022] md: export_rdev(sdc3)
+[ 1062.753934] md: unbind<sdb3>
+[ 1062.764021] md: export_rdev(sdb3)
+[ 1063.772687] md: md0 stopped.
+[ 1064.782381] md: md0 stopped.
+[ 1065.792585] md: md0 stopped.
+[ 1066.801668] md: md0 stopped.
+[ 1067.812573] md: md0 stopped.
+[ 1068.821548] md: md0 stopped.
+[ 1069.830667] md: md0 stopped.
+[ 1070.839554] md: md0 stopped.
+[ 1071.848418] md: md0 stopped.
 
 -- 
-Stan
+
+Maurizio De Santis
+
