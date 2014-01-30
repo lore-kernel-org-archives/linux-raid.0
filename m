@@ -1,7 +1,7 @@
 From: Yorik <yoriks13@westnet.com.au>
-Subject: RAID6 Rebuild Issue - Data Offset possibly
-Date: Thu, 30 Jan 2014 22:09:57 +0800
-Message-ID: <CAFth78ycV8wJ+B0bBXZzhPSxcF6XjwAkjkpyuxRqzf1jGsW8_Q@mail.gmail.com>
+Subject: RAIS5 Rebuild Help - Possible Data Offset
+Date: Thu, 30 Jan 2014 22:20:45 +0800
+Message-ID: <CAFth78x1SkCEUmETFt+F+79UpjUbhanNLUbZoWa7Hxi3EzsdMw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,6 +10,8 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hello
+
+Sorry if double post had to remove some HTML.
 
 I've been using "mdadm" for about 8-9 years with a lot of success in
 different Array configurations. I am a huge fan of Software RAID. I
@@ -31,12 +33,11 @@ wiping the majority of the SSD and config files with it.
 The RAID6 does not start, stating that it only has 5 of the 8 drives
 required. Looking into this, the drives seem to be clean and check
 okay, but there is even differences (expected) and Data Offset
-difference between drives that I read (here:
-h__p://neil.brown.name/blog/20120615073245) was not necessarily good
-for rebuilding and that I should ask for a version of mdadm that can
-handle this as it's possible that creating with an older version, then
-adding new drives is causing an issue. Data Offsets of 2048 and 4096
-exist.
+difference between drives that I read (Neil Brown Blog date
+-20120615073245) was not necessarily good for rebuilding and that I
+should ask for a version of mdadm that can handle this as it's
+possible that creating with an older version, then adding new drives
+is causing an issue. Data Offsets of 2048 and 4096 exist.
 
 Also of note is that I have some drives that are on the Array without
 partitions as they would not add to the Array with partitions on them
