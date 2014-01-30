@@ -1,570 +1,399 @@
-From: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
-Subject: AW: AW: [HELP] Recover a RAID5 with 8 drives
-Date: Thu, 30 Jan 2014 12:22:44 +0000
-Message-ID: <A2EC67620EC7424F9EC3DD49243E9060466D9B28@AUDIINSX0328.audi.vwg>
-References: <52E7CCE4.3030408@morganspa.com>
- <A2EC67620EC7424F9EC3DD49243E9060466D9512@AUDIINSX0328.audi.vwg>
- <52E90CA9.5070808@morganspa.com>
- <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
+From: Yorik <yoriks13@westnet.com.au>
+Subject: RAID6 Rebuild Issue - Data Offset possibly
+Date: Thu, 30 Jan 2014 22:09:57 +0800
+Message-ID: <CAFth78ycV8wJ+B0bBXZzhPSxcF6XjwAkjkpyuxRqzf1jGsW8_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
-Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Maurizio De Santis' <m.desantis@morganspa.com>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->Hi Michael,
+Hello
 
+I've been using "mdadm" for about 8-9 years with a lot of success in
+different Array configurations. I am a huge fan of Software RAID. I
+recently suffered a failure that was very unfortunate and I now have
+an issue with differing Data Offset and other issues preventing my
+Array from rebuilding. A brief history follows:
 
-Hi Maurizio
+Array originally created as RAID5, 3x 3TB Drives in May 2011 on a
+(then) latest Fedora build.
+Added more drives in 2012 and 2013 with upgraded Fedora builds.
+Recently added another drive and changed to RAID6, 6x6TB Drives.
+Suffered a failure shortly after 2 more drives that kicked the last 2
+drives off and one of the 6 other that were previously running.
+During the RAID rebuild, my computer locked up and then suffered a
+Power Failure (having a bad day) that stopped my OS Disk (SSD) from
+allowing me to reboot. Eventually rebuilt the OS with Fedora 20,
+wiping the majority of the SSD and config files with it.
 
->I agree with you that our situations seem very similar, moreover your=20
->analysis seems correct to me, since our hard disks are all WD Caviar=20
->Green, so they lack of the TLER feature (which I wasn't aware of, than=
-ks=20
->for pointing out this too).
+The RAID6 does not start, stating that it only has 5 of the 8 drives
+required. Looking into this, the drives seem to be clean and check
+okay, but there is even differences (expected) and Data Offset
+difference between drives that I read (here:
+h__p://neil.brown.name/blog/20120615073245) was not necessarily good
+for rebuilding and that I should ask for a version of mdadm that can
+handle this as it's possible that creating with an older version, then
+adding new drives is causing an issue. Data Offsets of 2048 and 4096
+exist.
 
+Also of note is that I have some drives that are on the Array without
+partitions as they would not add to the Array with partitions on them
+due to size when they were added. I think that I had version issue
+with fdisk, but it seemed to work okay until now.
 
-The TLER is partly available, but per default not active as you surely
-have found out. Everytime to use smartctl.... just to force using it is
-a hardware problem, and we solved it by using real disks this time.
+When I run the following command:
 
->Luckily I just managed to access to the RAID in order to backup=20
->important data, executing `mdadm --assemble --force /dev/md0=20
->/dev/sd[abcdefgh]3`; so the crucial part is done; now I have the=20
->"freedom" to do everything in order to resolve the issue.
+mdadm --create --assume-clean --level=6 --raid-devices=8
+--size=2930263552 /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd
+/dev/sdi /dev/sde /dev/sdg /dev/sdf
 
-Luckily your disks were not corrupted (badBlacks) as mine. 5 out of 8
-disks hat BB from 8k to 47k blocks, one was out of order (so a collegue
-of Ontrack helped me to get this one running=3Dsdg). After getting most
-of the datas transferred I recognized the md superblock is gone on 5
-of 8 HDs and the partition table is unreadable on two, so I had to
-implement them into the transferred disks.
+I get:
 
->Now I would ask you:
+mdadm: /dev/sda1 is smaller than given size. 2930134016K < 2930263552K
++ metadata
+mdadm: /dev/sdb1 is smaller than given size. 2930134016K < 2930263552K
++ metadata
+mdadm: /dev/sdc1 is smaller than given size. 2930134016K < 2930263552K
++ metadata
+mdadm: /dev/sdd is smaller than given size. 2930135040K < 2930263552K + metadata
+mdadm: /dev/sdi is smaller than given size. 2930135040K < 2930263552K + metadata
+mdadm: /dev/sde is smaller than given size. 2930135040K < 2930263552K + metadata
+mdadm: /dev/sdg is smaller than given size. 2930135040K < 2930263552K + metadata
+mdadm: /dev/sdf is smaller than given size. 2930135040K < 2930263552K + metadata
+mdadm: create aborted
 
->  * how did you proceed in order to restore your situation? Do you hav=
-e
->    any suggestion?
+Which makes me think that there are further issues. Should I be
+looking for an older version of mdadm or a different version? Can
+anyone offer some advice please or where to look next.
 
-I'd not have asked in my first mail for help if I could assemble it
-somehow. I'd advice for the doing as mdadm is far away of my knowledge
-(which is good on hardware RAID Controllers and ZFS Systems, which I
-run on big servers). Currently I need a way which could work. As my
-problem was not even replied once it seems I'm on my own.
-My way would be (as I have a backup of all disks when they were
-delivered to me):=20
-a) using testdisk to extract the Part table from a running
-Disk into the PT missing 5 disks
-b) get mdadm to write new superblocks into the disks (the datas are
-not tempered/altered that way as I understand mdadm manual) via
---create --asssume-clean and leave the sdb out via the missing
-Parameter so like
-mdadm --create --assume-clean /dev/md0 --level=3D5 --raid-devices=3D8
-/dev/sd{a,c,d,e,f,g,h}3 missing
-c) run an e2fsck on the md0 (which is now possible as I added
-2GB RAM)
-d) get the datas into our SAN
+Regards
+Derek
 
-e) recreate the array manually and exporting this time into the
-mdadm.conf (which the QNAP does not do)
+Information follows:
 
+--Drive information--
+mdadm --examine <Appropriate partitions and drives>
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
 
-=46unny thing is that the QNAP support provided me with wrong ways
-to go according to Neil Browns answer and the QNAP 859 is not able
-to run an fsck by default as it has not enough ram when volume is over
-8TiB
+ Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=1976 sectors, after=1024 sectors
+          State : clean
+    Device UUID : e27f0cdd:f9ade1a9:069a8d4d:a4e7d767
 
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
 
+    Update Time : Tue Jan 21 23:35:32 2014
+       Checksum : 944933 - correct
+         Events : 3118496
 
->  * reading about TLER I believe I understood that the failing disks
->are not necessarly broken, but the RAID thinks they are; does it mean
->    that I can still use the failing disks?
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-One bad Block is for me enough to swap a drive, but you are right:
-the disk just took too much time to recover so it was thrown out of
-the array. As my disks had big areas with defective blocks in just
-2 years of running all disks were replaced. Just the 8 month of
-waiting now costed more than the complete array and replacement drives.
-It just proves: good disk are worth their money!
+   Device Role : Active device 0
+   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
 
-You might have read in my thread that this was the second QNAP with
-the same problem (this time much more sincere; the first case about
-one year back was just like your one)
+ Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=1976 sectors, after=1024 sectors
+          State : active
+    Device UUID : ff0ddbdd:5d3123ae:3b813125:97a96017
 
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
 
-Cheers
-Michael
+    Update Time : Tue Jan 21 23:35:32 2014
+       Checksum : 8cd103dc - correct
+         Events : 3118496
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-Il 28/01/2014 21:11, Samer, Michael (I/ET-83, extern) ha scritto:
-> Hello Maurizio
-> A very likewise case did happened to me (search for QNAP).
-> Your box dropped a second one (=3Dfull failure) while rebuilding, I g=
-uess due to read errors and no TLER capable drive.
-> Western Digital is prone for this.
->
-> I was lucky to be able to copy all of my faulty (5 of 8) drives and c=
-urrently I try to recreate the md superblocks which have been lost on t=
-he last write.
-> What drives do you use?
->
-> Cheers
-> Sam
->
->
-> -----Urspr=FCngliche Nachricht-----
-> Von: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.k=
-ernel.org] Im Auftrag von Maurizio De Santis
-> Gesendet: Dienstag, 28. Januar 2014 16:30
-> An: linux-raid@vger.kernel.org
-> Betreff: [HELP] Recover a RAID5 with 8 drives
->
-> Hi!
->
-> I think I've got a problem :-/ I have a QNAP NAS with a 8 disks RAID5=
-=2E
-> Some days ago I got a "Disk Read/Write Error" on the 8th drive
-> (/dev/sdh), with the suggestion to replace the disk.
->
-> I replaced it, but after a bit the RAID rebuilding failed, and the QN=
-AP
-> Admin Interface still gives me a "Disk Read/Write Error" on /dev/sdh.
-> Plus, I can't access to the RAID data anymore :-/
->
-> I was following this guide
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery but, since I
-> haven't got any backup (I promise I will do them in the future!) I'm
-> afraid to run any possibly destructive command.
->
-> How do you suggest to proceed? I would like to make a RAID excluding =
-the
-> 8th disk in order to mount it and backup important data, but I don't
-> even know if it is doable :-/ Moreover, looking at `mdadm --examine`
-> output I see that sdb seems to have problems too, also if QNAP Admin
-> Interface doesn't report it.
->
-> Here some informations about the machine status:
->
-> # uname -a
-> Linux NAS 3.4.6 #1 SMP Thu Sep 12 10:56:51 CST 2013 x86_64 unknown
->
-> # mdadm -V
-> mdadm - v2.6.3 - 20th August 2007
->
-> # cat /etc/mdadm.conf
-> ARRAY /dev/md0
-> devices=3D/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3,/dev/sde3,/dev/sdf3=
-,/dev/sdg3,/dev/sdh3
->
-> # cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-> [raid4] [multipath]
-> md8 : active raid1 sdg2[2](S) sdf2[3](S) sde2[4](S) sdd2[5](S)
-> sdc2[6](S) sdb2[1] sda2[0]
->         530048 blocks [2/2] [UU]
->
-> md13 : active raid1 sda4[0] sde4[6] sdf4[5] sdg4[4] sdd4[3] sdc4[2] s=
-db4[1]
->         458880 blocks [8/7] [UUUUUUU_]
->         bitmap: 8/57 pages [32KB], 4KB chunk
->
-> md9 : active raid1 sda1[0] sdg1[6] sdf1[5] sde1[4] sdd1[3] sdc1[2] sd=
-b1[1]
->         530048 blocks [8/7] [UUUUUUU_]
->         bitmap: 30/65 pages [120KB], 4KB chunk
->
-> unused devices: <none>
->
-> # mdadm --examine /dev/sd[abcdefgh]3
-> /dev/sda3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 7
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:19:58 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 6
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 982047ab - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     0       8        3        0      active sync   /dev/sda3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sdb3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 8
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:09:57 2014
->             State : active
->    Active Devices : 7
-> Working Devices : 8
->    Failed Devices : 1
->     Spare Devices : 1
->          Checksum : 97f3567d - correct
->            Events : 0.2944837
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     1       8       19        1      active sync   /dev/sdb3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       8       19        1      active sync   /dev/sdb3
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
->      8     8       8      115        8      spare   /dev/sdh3
-> /dev/sdc3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 7
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:19:58 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 6
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 982047cf - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     2       8       35        2      active sync   /dev/sdc3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sdd3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 7
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:19:58 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 6
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 982047e1 - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     3       8       51        3      active sync   /dev/sdd3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sde3:
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 982047f3 - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     4       8       67        4      active sync   /dev/sde3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sdf3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 7
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:19:58 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 6
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 98204805 - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     5       8       83        5      active sync   /dev/sdf3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sdg3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 7
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:19:58 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 6
->    Failed Devices : 2
->     Spare Devices : 0
->          Checksum : 98204817 - correct
->            Events : 0.2944851
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     6       8       99        6      active sync   /dev/sdg3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
-> /dev/sdh3:
->             Magic : a92b4efc
->           Version : 00.90.00
->              UUID : 418e2add:2c4b313b:d12fb7ea:993d5bf7
->     Creation Time : Fri Jan 20 02:19:47 2012
->        Raid Level : raid5
->     Used Dev Size : 1951945600 (1861.52 GiB 1998.79 GB)
->        Array Size : 13663619200 (13030.64 GiB 13991.55 GB)
->      Raid Devices : 8
->     Total Devices : 8
-> Preferred Minor : 0
->
->       Update Time : Fri Jan 24 17:18:26 2014
->             State : clean
->    Active Devices : 6
-> Working Devices : 7
->    Failed Devices : 2
->     Spare Devices : 1
->          Checksum : 98204851 - correct
->            Events : 0.2944847
->
->            Layout : left-symmetric
->        Chunk Size : 64K
->
->         Number   Major   Minor   RaidDevice State
-> this     8       8      115        8      spare   /dev/sdh3
->
->      0     0       8        3        0      active sync   /dev/sda3
->      1     1       0        0        1      faulty removed
->      2     2       8       35        2      active sync   /dev/sdc3
->      3     3       8       51        3      active sync   /dev/sdd3
->      4     4       8       67        4      active sync   /dev/sde3
->      5     5       8       83        5      active sync   /dev/sdf3
->      6     6       8       99        6      active sync   /dev/sdg3
->      7     7       0        0        7      faulty removed
->      8     8       8      115        8      spare   /dev/sdh3
->
-> # dmesg **edited (removed unuseful parts)**
-> , wo:0, o:1, dev:sdb2
-> [  975.516724] RAID1 conf printout:
-> [  975.516728]  --- wd:2 rd:2
-> [  975.516732]  disk 0, wo:0, o:1, dev:sda2
-> [  975.516737]  disk 1, wo:0, o:1, dev:sdb2
-> [  975.516740] RAID1 conf printout:
-> [  975.516744]  --- wd:2 rd:2
-> [  975.516748]  disk 0, wo:0, o:1, dev:sda2
-> [  975.516753]  disk 1, wo:0, o:1, dev:sdb2
-> [  977.495709] md: unbind<sdh2>
-> [  977.505048] md: export_rdev(sdh2)
-> [  977.535277] md/raid1:md9: Disk failure on sdh1, disabling device.
-> [  977.575038]  disk 2, wo:0, o:1, dev:sdc1
-> [  977.575043]  disk 3, wo:0, o:1, dev:sdd1
-> [  977.575048]  disk 4, wo:0, o:1, dev:sde1
-> [  977.575053]  disk 5, wo:0, o:1, dev:sdf1
-> [  977.575058]  disk 6, wo:0, o:1, dev:sdg1
-> [  979.547149] md: unbind<sdh1>
-> [  979.558031] md: export_rdev(sdh1)
-> [  979.592646] md/raid1:md13: Disk failure on sdh4, disabling device.
-> [  979.592650] md/raid1:md13: Operation continuing on 7 devices.
-> [  979.650862] RAID1 conf printout:
-> [  979.650869]  --- wd:7 rd:8
-> [  979.650875]  disk 0, wo:0, o:1, dev:sda4
-> [  979.650880]  disk 1, wo:0, o:1, dev:sdb4
-> [  979.650885]  disk 2, wo:0, o:1, dev:sdc4
-> [  979.650890]  disk 3, wo:0, o:1, dev:sdd4
-> [  979.650895]  disk 4, wo:0, o:1, dev:sdg4
-> [  979.650900]  disk 5, wo:0, o:1, dev:sdf4
-> [  979.650905]  disk 6, wo:0, o:1, dev:sde4
-> [  979.650911]  disk 7, wo:1, o:0, dev:sdh4
-> [  979.656024] RAID1 conf printout:
-> [  979.656029]  --- wd:7 rd:8
-> [  979.656034]  disk 0, wo:0, o:1, dev:sda4
-> [  979.656039]  disk 1, wo:0, o:1, dev:sdb4
-> [  979.656044]  disk 2, wo:0, o:1, dev:sdc4
-> [  979.656049]  disk 3, wo:0, o:1, dev:sdd4
-> [  979.656054]  disk 4, wo:0, o:1, dev:sdg4
-> [  979.656059]  disk 5, wo:0, o:1, dev:sdf4
-> [  979.656063]  disk 6, wo:0, o:1, dev:sde4
-> [  981.604906] md: unbind<sdh4>
-> [  981.616035] md: export_rdev(sdh4)
-> [  981.753058] md/raid:md0: Disk failure on sdh3, disabling device.
-> [  981.753062] md/raid:md0: Operation continuing on 6 devices.
-> [  983.765852] md: unbind<sdh3>
-> [  983.777030] md: export_rdev(sdh3)
-> [ 1060.094825] journal commit I/O error
-> [ 1060.099196] journal commit I/O error
-> [ 1060.103525] journal commit I/O error
-> [ 1060.108698] journal commit I/O error
-> [ 1060.116311] journal commit I/O error
-> [ 1060.123634] journal commit I/O error
-> [ 1060.127225] journal commit I/O error
-> [ 1060.130930] journal commit I/O error
-> [ 1060.137651] EXT4-fs (md0): previous I/O error to superblock detect=
-ed
-> [ 1060.178323] Buffer I/O error on device md0, logical block 0
-> [ 1060.181873] lost page write due to I/O error on md0
-> [ 1060.185634] EXT4-fs error (device md0): ext4_put_super:849: Couldn=
-'t
-> clean up the journal
-> [ 1062.662723] md0: detected capacity change from 13991546060800 to 0
-> [ 1062.666308] md: md0 stopped.
-> [ 1062.669760] md: unbind<sda3>
-> [ 1062.681031] md: export_rdev(sda3)
-> [ 1062.684466] md: unbind<sdg3>
-> [ 1062.695023] md: export_rdev(sdg3)
-> [ 1062.698342] md: unbind<sdf3>
-> [ 1062.709021] md: export_rdev(sdf3)
-> [ 1062.712310] md: unbind<sde3>
-> [ 1062.723029] md: export_rdev(sde3)
-> [ 1062.726245] md: unbind<sdd3>
-> [ 1062.737022] md: export_rdev(sdd3)
-> [ 1062.740112] md: unbind<sdc3>
-> [ 1062.751022] md: export_rdev(sdc3)
-> [ 1062.753934] md: unbind<sdb3>
-> [ 1062.764021] md: export_rdev(sdb3)
-> [ 1063.772687] md: md0 stopped.
-> [ 1064.782381] md: md0 stopped.
-> [ 1065.792585] md: md0 stopped.
-> [ 1066.801668] md: md0 stopped.
-> [ 1067.812573] md: md0 stopped.
-> [ 1068.821548] md: md0 stopped.
-> [ 1069.830667] md: md0 stopped.
-> [ 1070.839554] md: md0 stopped.
-> [ 1071.848418] md: md0 stopped.
->
+   Device Role : Active device 1
+   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
 
+ Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=1976 sectors, after=1024 sectors
+          State : active
+    Device UUID : f4106804:6552a7b0:2a960408:b7ca41ff
 
---=20
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
 
-Maurizio De Santis
-DEVELOPMENT MANAGER
-Morgan S.p.A.
-Via Degli Olmetti, 36
-00060 Formello (RM), Italy
-t. 06.9075275
-w. www.morganspa.com
-m. m.desantis@morganspa.com
+    Update Time : Tue Jan 21 23:35:32 2014
+       Checksum : 80965de9 - correct
+         Events : 3118496
 
-In ottemperanza al Dlgs. 196/2003 sulla tutela dei dati personali, le i=
-nformazioni contenute in questo messaggio sono strettamente riservate e=
- sono esclusivamente indirizzate al destinatario; qualsiasi uso, o divu=
-lgazione dello stesso =E8 vietata. Nel caso in cui abbiate ricevuto que=
-sto messaggio per errore. Vi invitiamo ad avvertire il mittente al pi=F9=
- presto e a procedere all'immediata distruzione dello stesso.
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-According to Italian law Dlgs. 196/2003 concerning privacy, information=
- contained in this message is confidential and intended for the address=
-ee only; any use, copy or distribution of same is strictly prohibited. =
-If you have received this message in error, you are requested to inform=
- the sender as soon as possible and immediately destroy it.
+   Device Role : Active device 2
+   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=4024 sectors, after=1968 sectors
+          State : active
+    Device UUID : d9d26a74:100488a7:8841e37a:f84e07b7
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
+
+    Update Time : Tue Jan 21 23:35:32 2014
+       Checksum : 121e0ccb - correct
+         Events : 3118496
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sde:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=4024 sectors, after=1968 sectors
+          State : active
+    Device UUID : a73e6b7b:4791f3d6:b60e1025:0dda98c1
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
+
+    Update Time : Tue Jan 21 23:35:32 2014
+       Checksum : fd485e13 - correct
+         Events : 3118496
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=4024 sectors, after=1968 sectors
+          State : clean
+    Device UUID : 25acca8d:45ae78df:77d834cb:b97cfadd
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
+
+    Update Time : Tue Jan 21 23:26:20 2014
+       Checksum : daba52df - correct
+         Events : 3118491
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 7
+   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=4024 sectors, after=1968 sectors
+          State : clean
+    Device UUID : c4fca7c8:450ddd64:41aae795:334c9512
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
+
+    Update Time : Tue Jan 21 23:26:20 2014
+       Checksum : 9a49a3c2 - correct
+         Events : 3118491
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 6
+   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdi:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x5
+     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
+           Name : desktop:0
+  Creation Time : Tue May 31 01:55:34 2011
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
+     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
+  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
+    Data Offset : 4096 sectors
+   Super Offset : 0 sectors
+   Unused Space : before=4024 sectors, after=1968 sectors
+          State : clean
+    Device UUID : 09f19ee9:414e5ea8:b755a246:a0a2c2f7
+
+Internal Bitmap : 8 sectors from superblock
+  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
+  Delta Devices : 2 (6->8)
+
+    Update Time : Tue Jan 21 23:26:20 2014
+       Checksum : 94a9dae5 - correct
+         Events : 3118491
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 4
+   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+--Device ID's vs Device Name--
+lrwxrwxrwx 1 root root  9 Jan 27 23:03
+ata-HL-DT-ST_DVDRAM_GH22NS70_K0028Q64636 -> ../../sr0
+lrwxrwxrwx 1 root root  9 Jan 27 23:03
+ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6 -> ../../sdh
+lrwxrwxrwx 1 root root 10 Jan 27 23:03
+ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6-part1 -> ../../sdh1
+lrwxrwxrwx 1 root root 10 Jan 27 23:03
+ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6-part2 -> ../../sdh2
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F47ATC
+-> ../../sdg
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F49MSQ
+-> ../../sdf
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F49MYJ
+-> ../../sdi
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-9YW166_Z1F13TGY
+-> ../../sde
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0B9RF -> ../../sdb
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0B9RF-part1
+-> ../../sdb1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0BR4Q -> ../../sda
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0BR4Q-part1
+-> ../../sda1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0F087 -> ../../sdc
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0F087-part1
+-> ../../sdc1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0FEHD -> ../../sdd
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 dm-name-vg_desktop-lv_home -> ../../dm-1
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 dm-name-vg_desktop-lv_root -> ../../dm-0
+lrwxrwxrwx 1 root root 10 Jan 27 23:03
+dm-uuid-LVM-gPmDONxd0J5Xzhng4nMgLyJywSvcsrFB1bQOUpSoE0SzQ6kHuvqiMzxpkiH0ZgWJ
+-> ../../dm-1
+lrwxrwxrwx 1 root root 10 Jan 27 23:03
+dm-uuid-LVM-gPmDONxd0J5Xzhng4nMgLyJywSvcsrFBsTxjvh7YlYcmxUryNXlejEsR55sjfh9w
+-> ../../dm-0
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002dae3e0a -> ../../sdb
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002dae3e0a-part1 ->
+../../sdb1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002dfdfece -> ../../sdc
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002dfdfece-part1 ->
+../../sdc1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002e0ff1ce -> ../../sda
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002e0ff1ce-part1 ->
+../../sda1
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002e10998c -> ../../sdd
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5004e34e5a2 -> ../../sde
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e23a6 -> ../../sdi
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e27c4 -> ../../sdf
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e2888 -> ../../sdg
+lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5e83a97f6722d623 -> ../../sdh
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5e83a97f6722d623-part1 ->
+../../sdh1
+lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5e83a97f6722d623-part2 ->
+../../sdh2
+
+cat /etc/mdadm.conf
+ARRAY /dev/md0 devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3,/dev/sde3,/dev/sdf3,/dev/sdg3,/dev/sdh3
+
+--Other--
+# uname -a
+Linux desktop.yorik 3.12.8-300.fc20.x86_64 #1 SMP Thu Jan 16 01:07:50
+UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+
+# mdadm -V
+mdadm - v3.3 - 3rd September 2013
