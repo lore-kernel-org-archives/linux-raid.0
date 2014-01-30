@@ -1,30 +1,30 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: AW: [HELP] Recover a RAID5 with 8 drives
-Date: Thu, 30 Jan 2014 17:26:02 +0800
-Message-ID: <52EA1AAA.5090802@fnarfbargle.com>
-References: <52E7CCE4.3030408@morganspa.com> <A2EC67620EC7424F9EC3DD49243E9060466D9512@AUDIINSX0328.audi.vwg> <52E90CA9.5070808@morganspa.com>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: Re: non-persistent superblocks?
+Date: Thu, 30 Jan 2014 10:16:24 +0000
+Message-ID: <BLU0-SMTP148F6E0422558E051D1067198AF0@phx.gbl>
+References: <52E9D9CC.9000908@cas.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52E90CA9.5070808@morganspa.com>
+In-Reply-To: <52E9D9CC.9000908@cas.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurizio De Santis <m.desantis@morganspa.com>, "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
-Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: Chris Schanzle <mdadm@cas.homelinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 29/01/14 22:14, Maurizio De Santis wrote:
-> *** resent in order to send it in text format (this time for real :-/
-> :-/ ) ***
->
-> Hi Michael,
->
-> I agree with you that our situations seem very similar, moreover your
-> analysis seems correct to me, since our hard disks are all WD Caviar
-> Green, so they lack of the TLER feature (which I wasn't aware of, thanks
-> for pointing out this too).
+On Wed, 2014-01-29 at 23:49 -0500, Chris Schanzle wrote:
+
+<snip, as my reply might be relevent, or not>
+
+Two things come to mind, the first is if you updated the mdadm.conf
+(/etc/mdadm/mdadm.conf or /etc/mdadm.conf)
+
+The second is, update-initramfs -u to make sure things are setup for the
+boot process. (I tend to do this when ever i change something that
+"might" change a boot process... even if it does not, its pure habit as
+apposed to correct procedure)
 
 
-I'd double check this. 9 out of 10 of my WD 2T Green drives have TLER. 
-It's just not enabled by default.
+
 
