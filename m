@@ -1,93 +1,67 @@
-From: Richard Gomes <rgomes.info@gmail.com>
-Subject: Boot fails from one of the drives cos it's not an ext4 filesystem.
-Date: Thu, 30 Jan 2014 21:08:13 +0000
-Message-ID: <52EABF3D.5060100@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: [HELP] Recover a RAID5 with 8 drives
+Date: Thu, 30 Jan 2014 14:48:32 -0700
+Message-ID: <A8650C09-BAC4-43D8-8BBA-024E6E295D1E@colorremedies.com>
+References: <52E7CCE4.3030408@morganspa.com> <A2EC67620EC7424F9EC3DD49243E9060466D9512@AUDIINSX0328.audi.vwg> <52E90CA9.5070808@morganspa.com> <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
+Cc: 'Maurizio De Santis' <m.desantis@morganspa.com>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ 3rd time I'm trying to post this! :(  This Majordomo sucks :( ]
 
-Hello,
+On Jan 30, 2014, at 5:20 AM, "Samer, Michael (I/ET-83, extern)" <extern=
+=2Emichael.samer@audi.de> wrote:
+>=20
+>  * reading about TLER I believe I understood that the failing disks
+> are not necessarly broken, but the RAID thinks they are; does it mean
+>    that I can still use the failing disks?
 
-I have /dev/sda and /dev/sdb in RAID1.
+=46or starters, make sure the SCSI command timer is increased to at lea=
+st that of the drive timeout, there's a chance the drive might recover =
+data before there's a read error.
 
-I've discovered that I can boot from partition /dev/sda1 but not from
-/dev/sdb1.
+echo 120 >/sys/block/sdX/device/timeout
 
-Apparently, both disks have equivalent partition tables:
+This is per drive kernel setting. So you have to do this for each drive=
+=2E It's also not persistent across reboots.
 
-    # sfdisk -l /dev/sda
+If during your rebuild any two drives report a read error, then it's a =
+problem. And the rebuild stops. In this case, you can find the affected=
+ drive(s) and sectors causing the read error from dmesg. Then on indivi=
+dual physical drives, do sector reads to locate the exact LBAs affected=
+=2E If these are AF disks, don't forget for each bad 4096 byte sector, =
+you'll get 8 LBA read errors. To fix it, you must write to all 8 LBAs. =
+I'd avoid using bs=3D4096 to avoid confusion because that also changes =
+any seek=3D value away from 512e based LBAs. Just keep it all 512 secto=
+r based, and just know you have to write out a count of at least 8 to f=
+ix each physical sector. Before doing this though, I'd report back if y=
+ou're getting two UREs on a stripe and the rebuild fails. Someone else =
+with more experience may help with which disk to choose.=20
 
-    Disk /dev/sda: 121601 cylinders, 255 heads, 63 sectors/track
-    Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting
-    from 0
+Obviously the above means destroying some data on disk, but it's better=
+ to zero a bad sector (which is lost anyway) rather than it producing a=
+ URE - this way you only get one URE for that stripe on the next rebuil=
+d. What data is corrupted as a result of this depends on what was locat=
+ed in those sectors, it has a decent chance of being free space if the =
+array isn't full. Next most likely is some file data or metadata. And t=
+hen less likely is file system metadata=85 once the rebuild is done, yo=
+u'll run an fsck with -n, to see if there are file system problems and =
+how major they are. You don't necessarily want to run an fsck that writ=
+es changes to the file system as a first step, it could write changes t=
+hat hose the fs even though the array rebuild was successful. Anyway, c=
+ross that bridge when you come to it, but it's better to work slower an=
+d make as few changes as necessary if this is an array that you don't h=
+ave a current backup for.
 
-       Device Boot Start     End   #cyls    #blocks   Id  System
-    /dev/sda1   *      0+     60-     61-    487424   fd  Linux raid
-    autodetect
-    /dev/sda2         60+   7841-   7781-  62499840   fd  Linux raid
-    autodetect
-    /dev/sda3       7841+ 121601- 113760- 913773568   fd  Linux raid
-    autodetect
-    /dev/sda4          0       -       0          0    0  Empty
+Chris Murphy
 
-
-    # sfdisk -l /dev/sdb
-
-    Disk /dev/sdb: 121601 cylinders, 255 heads, 63 sectors/track
-    Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting
-    from 0
-
-       Device Boot Start     End   #cyls    #blocks   Id  System
-    /dev/sdb1   *      0+     60-     61-    487424   fd  Linux raid
-    autodetect
-    /dev/sdb2         60+   7841-   7781-  62499840   fd  Linux raid
-    autodetect
-    /dev/sdb3       7841+ 121601- 113760- 913773568   fd  Linux raid
-    autodetect
-    /dev/sdb4          0       -       0          0    0  Empty
-
-
-
-But /parted/ tells me a different story.
-This is the culprit: /dev/sdb1 is not known as ext4, as it should be.
-
-    # parted -l
-    Model: ATA ST1000DM003-9YN1 (scsi)
-    Disk /dev/sda: 1000GB
-    Sector size (logical/physical): 512B/4096B
-    Partition Table: msdos
-
-    Number  Start   End     Size    Type     File system  Flags
-     1      1049kB  500MB   499MB   primary  ext4         boot, raid
-     2      500MB   64.5GB  64.0GB  primary               raid
-     3      64.5GB  1000GB  936GB   primary               raid
-
-
-    Model: ATA ST1000DM003-9YN1 (scsi)
-    Disk /dev/sdb: 1000GB
-    Sector size (logical/physical): 512B/4096B
-    Partition Table: msdos
-
-    Number  Start   End     Size    Type     File system  Flags
-     1      1049kB  500MB   499MB   primary               boot, raid
-     2      500MB   64.5GB  64.0GB  primary               raid
-     3      64.5GB  1000GB  936GB   primary               raid
-
-
-What would be a recommended way to fix this issue?
-
-Thanks
--- 
-Richard Gomes
-http://rgomes.info
-http://www.linkedin.com/in/rgomes
-mobile: +44(77)9955-6813
-inum <http://www.inum.net/>: +883(5100)0800-9804
-sip:rgomes@ippi.fr
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
