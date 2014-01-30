@@ -1,400 +1,110 @@
-From: Yorik <yoriks13@westnet.com.au>
-Subject: RAIS5 Rebuild Help - Possible Data Offset
-Date: Thu, 30 Jan 2014 22:20:45 +0800
-Message-ID: <CAFth78x1SkCEUmETFt+F+79UpjUbhanNLUbZoWa7Hxi3EzsdMw@mail.gmail.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Re: sequential versus random I/O
+Date: Thu, 30 Jan 2014 09:28:14 -0600
+Message-ID: <CAJvUf-A3ERw-Omn2fRLcZJ=zDOEP-quLe7T5gT6RaVroOpFX3g@mail.gmail.com>
+References: <CAJvUf-BbRMXvwwbVvstGPUV7xQpVBqVXLNvTHhYf_wv8=Ws9uw@mail.gmail.com>
+	<52E9BB3B.7010600@hardwarefreak.com>
+	<CAJvUf-DsN-z4rYjYC6Ki42ce6PzKjwsLjNGTW9QxEi=hKH_7Wg@mail.gmail.com>
+	<52EA27D4.6060805@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52EA27D4.6060805@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello
+On Thu, Jan 30, 2014 at 4:22 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> I wouldn't go used as they do.  Not for something this critical.
 
-Sorry if double post had to remove some HTML.
+No, not for an actual production system.  I linked that as "conceptual
+inspiration" not as an exact template for what I'd do.  Although, the
+used route might be useful for building a cheap prototype to
+demonstrate proof of concept.
 
-I've been using "mdadm" for about 8-9 years with a lot of success in
-different Array configurations. I am a huge fan of Software RAID. I
-recently suffered a failure that was very unfortunate and I now have
-an issue with differing Data Offset and other issues preventing my
-Array from rebuilding. A brief history follows:
+> If you architect the system correctly, and use decent quality hardware,
+> it won't blow up on you.  If you don't get the OS environment tuned
+> correctly you'll simply get less throughput than desired.  But that can
+> always be remedied with tweaking.
 
-Array originally created as RAID5, 3x 3TB Drives in May 2011 on a
-(then) latest Fedora build.
-Added more drives in 2012 and 2013 with upgraded Fedora builds.
-Recently added another drive and changed to RAID6, 6x6TB Drives.
-Suffered a failure shortly after 2 more drives that kicked the last 2
-drives off and one of the 6 other that were previously running.
-During the RAID rebuild, my computer locked up and then suffered a
-Power Failure (having a bad day) that stopped my OS Disk (SSD) from
-allowing me to reboot. Eventually rebuilt the OS with Fedora 20,
-wiping the majority of the SSD and config files with it.
+Right.  I think the general concept is solid, but, as with most
+things, "the devil's in the details".  FWIW, the creator of the DCDW
+enumerated some of the "gotchas" for a build like this[1].  He went
+into more detail in some private correspondence with me.  It's a
+little alarming that he got roughly 50% the performance with a tuned
+Linux setup compared to a mostly out-of-the-box Solaris install.
+Also, subtle latency issues with PCIe timings across different
+motherboards sounds like a migraine-caliber headache.
 
-The RAID6 does not start, stating that it only has 5 of the 8 drives
-required. Looking into this, the drives seem to be clean and check
-okay, but there is even differences (expected) and Data Offset
-difference between drives that I read (Neil Brown Blog date
--20120615073245) was not necessarily good for rebuilding and that I
-should ask for a version of mdadm that can handle this as it's
-possible that creating with an older version, then adding new drives
-is causing an issue. Data Offsets of 2048 and 4096 exist.
+> Each of the two backplanes has 24 drive slots and 6 SFF-8087 connectors.
+>  Each 8087 carries 4 SAS channels.  You connect two ports of each HBA to
+> the top backplane and the other two to the bottom backplane.  I.e. one
+> ...
 
-Also of note is that I have some drives that are on the Array without
-partitions as they would not add to the Array with partitions on them
-due to size when they were added. I think that I had version issue
-with fdisk, but it seemed to work okay until now.
+Your concept is similar to what I've sketched out in my mind.  My
+twist is that I think I would actually build multiple servers, each
+one would be a 24-disk 2U system.  Our data is fairly easy to
+partition across multiple servers.  Also, we already have a big
+"symlink index" directory that abstracts the actual location of the
+files.  IOW, my users don't know/don't care where the files actually
+live, as long as the symlinks are there and not broken.
 
-When I run the following command:
+> Without the cost of NICs you're looking at roughly $19,000 for this
+> configuration, including shipping costs, for a ~22TB DIY SSD based NFS
+> server system expandable to 46TB.  With two quad port 10GbE NICs and
+> SFPs you're at less $25K with the potential for ~6GB/s NFS throughput.
 
-mdadm --create --assume-clean --level=6 --raid-devices=8
---size=2930263552 /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd
-/dev/sdi /dev/sde /dev/sdg /dev/sdf
+Yup, and this amount is less than one year's maintenance on the big
+iron system we have in place.  And, quoting the vendor, "Maintenance
+costs only go up."
 
-I get:
+> In specifying HBAs instead of RAID controllers I am assuming you'll use
+> md/RAID.  With this many SSDs any current RAID controller would slow you
+> down anyway as the ASICs aren't fast enough.  You'll need minimum
+> redundancy to guard against an SSD failure, which means RAID5 with SSDs.
+>  Your workload is almost exclusively read heavy, which means you could
+> simply create a single 24 drive RAID5 or RAID6 with the default 512KB
+> chunk.  I'd go with RAID6.  That will yield a stripe width of
+> 22*512KB=11MB.  Using RAID5/6 allows you to grow the array incrementally
+> without the need for LVM which may slow you down.
 
-mdadm: /dev/sda1 is smaller than given size. 2930134016K < 2930263552K
-+ metadata
-mdadm: /dev/sdb1 is smaller than given size. 2930134016K < 2930263552K
-+ metadata
-mdadm: /dev/sdc1 is smaller than given size. 2930134016K < 2930263552K
-+ metadata
-mdadm: /dev/sdd is smaller than given size. 2930135040K < 2930263552K + metadata
-mdadm: /dev/sdi is smaller than given size. 2930135040K < 2930263552K + metadata
-mdadm: /dev/sde is smaller than given size. 2930135040K < 2930263552K + metadata
-mdadm: /dev/sdg is smaller than given size. 2930135040K < 2930263552K + metadata
-mdadm: /dev/sdf is smaller than given size. 2930135040K < 2930263552K + metadata
-mdadm: create aborted
+At the expense of storage capacity, I was in my mind thinking of
+raid10 with 3-way mirrors.  We do have backups, but downtime on this
+system won't be taken lightly.
 
-Which makes me think that there are further issues. Should I be
-looking for an older version of mdadm or a different version? Can
-anyone offer some advice please or where to look next.
+> Surely you'll use XFS as it's the only Linux filesystem suitable for
+> such a parallel workload.  As you will certainly grow the array in the
+> future, I'd format XFS without stripe alignment and have it do 4KB IOs.
+> ...
 
-Regards
-Derek
+I was definitely thinking XFS.  But one other motivation for multiple
+2U systems (instead of one massive system) is that it's more modular.
+Existing systems never have to be grown or reconfigured.  When we need
+more space/throughput, I just throw another system in place.  I might
+have to re-distribute the data, but this would be a very rare (maybe
+once/year) event.
 
-Information follows:
+If I get the green light to do this, I'd actually test a few
+configurations.  But some that come to mind:
+    - raid10,f3
+    - groups of 3-way raid1 mirrors striped together with XFS
+    - groups of raid6 sets not striped together (our symlink index I
+mentioned above makes this not as messy as it sounds)
 
---Drive information--
-mdadm --examine <Appropriate partitions and drives>
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
+> The last point I'll make is that it may require some serious tweaking of
+> IRQ load balancing, md/RAID, NFS, Ethernet bonding driver, etc, to wring
+> peak throughput out of such a DIY SSD system.  Achieving ~1GB/s parallel
+> NFS throughput from a DIY rig with a single 10GbE port isn't horribly
+> difficult.  3+GB/s parallel NFS via bonded 10GbE interfaces is a bit
+> more challenging.
 
- Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=1976 sectors, after=1024 sectors
-          State : clean
-    Device UUID : e27f0cdd:f9ade1a9:069a8d4d:a4e7d767
+I agree, I think that comes back around to what we said above: the
+concept is simple, but the details mean the difference between
+brilliant and mediocre.
 
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
+Thanks for your input Stan, I appreciate it.  I'm an infrequent poster
+to this list, but a long-time reader, and I've learned a lot from your
+posts over the years.
 
-    Update Time : Tue Jan 21 23:35:32 2014
-       Checksum : 944933 - correct
-         Events : 3118496
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=1976 sectors, after=1024 sectors
-          State : active
-    Device UUID : ff0ddbdd:5d3123ae:3b813125:97a96017
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:35:32 2014
-       Checksum : 8cd103dc - correct
-         Events : 3118496
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860528128 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=1976 sectors, after=1024 sectors
-          State : active
-    Device UUID : f4106804:6552a7b0:2a960408:b7ca41ff
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:35:32 2014
-       Checksum : 80965de9 - correct
-         Events : 3118496
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdd:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=4024 sectors, after=1968 sectors
-          State : active
-    Device UUID : d9d26a74:100488a7:8841e37a:f84e07b7
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:35:32 2014
-       Checksum : 121e0ccb - correct
-         Events : 3118496
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sde:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=4024 sectors, after=1968 sectors
-          State : active
-    Device UUID : a73e6b7b:4791f3d6:b60e1025:0dda98c1
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:35:32 2014
-       Checksum : fd485e13 - correct
-         Events : 3118496
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 5
-   Array State : AAAA.A.. ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdf:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=4024 sectors, after=1968 sectors
-          State : clean
-    Device UUID : 25acca8d:45ae78df:77d834cb:b97cfadd
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:26:20 2014
-       Checksum : daba52df - correct
-         Events : 3118491
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 7
-   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdg:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=4024 sectors, after=1968 sectors
-          State : clean
-    Device UUID : c4fca7c8:450ddd64:41aae795:334c9512
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:26:20 2014
-       Checksum : 9a49a3c2 - correct
-         Events : 3118491
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 6
-   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdi:
-          Magic : a92b4efc
-        Version : 1.1
-    Feature Map : 0x5
-     Array UUID : 80009fa3:a96743bd:f5dbfd87:18a1c52d
-           Name : desktop:0
-  Creation Time : Tue May 31 01:55:34 2011
-     Raid Level : raid6
-   Raid Devices : 8
-
- Avail Dev Size : 5860529072 (2794.52 GiB 3000.59 GB)
-     Array Size : 17581581312 (16767.10 GiB 18003.54 GB)
-  Used Dev Size : 5860527104 (2794.52 GiB 3000.59 GB)
-    Data Offset : 4096 sectors
-   Super Offset : 0 sectors
-   Unused Space : before=4024 sectors, after=1968 sectors
-          State : clean
-    Device UUID : 09f19ee9:414e5ea8:b755a246:a0a2c2f7
-
-Internal Bitmap : 8 sectors from superblock
-  Reshape pos'n : 30978048 (29.54 GiB 31.72 GB)
-  Delta Devices : 2 (6->8)
-
-    Update Time : Tue Jan 21 23:26:20 2014
-       Checksum : 94a9dae5 - correct
-         Events : 3118491
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : AAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
---Device ID's vs Device Name--
-lrwxrwxrwx 1 root root  9 Jan 27 23:03
-ata-HL-DT-ST_DVDRAM_GH22NS70_K0028Q64636 -> ../../sr0
-lrwxrwxrwx 1 root root  9 Jan 27 23:03
-ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6 -> ../../sdh
-lrwxrwxrwx 1 root root 10 Jan 27 23:03
-ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6-part1 -> ../../sdh1
-lrwxrwxrwx 1 root root 10 Jan 27 23:03
-ata-OCZ-AGILITY3_OCZ-8D0T42404K8H12P6-part2 -> ../../sdh2
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F47ATC
--> ../../sdg
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F49MSQ
--> ../../sdf
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-1CU166_Z1F49MYJ
--> ../../sdi
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST3000VX000-9YW166_Z1F13TGY
--> ../../sde
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0B9RF -> ../../sdb
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0B9RF-part1
--> ../../sdb1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0BR4Q -> ../../sda
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0BR4Q-part1
--> ../../sda1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0F087 -> ../../sdc
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 ata-ST33000651AS_9XK0F087-part1
--> ../../sdc1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 ata-ST33000651AS_9XK0FEHD -> ../../sdd
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 dm-name-vg_desktop-lv_home -> ../../dm-1
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 dm-name-vg_desktop-lv_root -> ../../dm-0
-lrwxrwxrwx 1 root root 10 Jan 27 23:03
-dm-uuid-LVM-gPmDONxd0J5Xzhng4nMgLyJywSvcsrFB1bQOUpSoE0SzQ6kHuvqiMzxpkiH0ZgWJ
--> ../../dm-1
-lrwxrwxrwx 1 root root 10 Jan 27 23:03
-dm-uuid-LVM-gPmDONxd0J5Xzhng4nMgLyJywSvcsrFBsTxjvh7YlYcmxUryNXlejEsR55sjfh9w
--> ../../dm-0
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002dae3e0a -> ../../sdb
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002dae3e0a-part1 ->
-../../sdb1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002dfdfece -> ../../sdc
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002dfdfece-part1 ->
-../../sdc1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002e0ff1ce -> ../../sda
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5000c5002e0ff1ce-part1 ->
-../../sda1
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5002e10998c -> ../../sdd
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c5004e34e5a2 -> ../../sde
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e23a6 -> ../../sdi
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e27c4 -> ../../sdf
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5000c500657e2888 -> ../../sdg
-lrwxrwxrwx 1 root root  9 Jan 27 23:03 wwn-0x5e83a97f6722d623 -> ../../sdh
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5e83a97f6722d623-part1 ->
-../../sdh1
-lrwxrwxrwx 1 root root 10 Jan 27 23:03 wwn-0x5e83a97f6722d623-part2 ->
-../../sdh2
-
-cat /etc/mdadm.conf
-ARRAY /dev/md0 devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3,/dev/sde3,/dev/sdf3,/dev/sdg3,/dev/sdh3
-
---Other--
-# uname -a
-Linux desktop.yorik 3.12.8-300.fc20.x86_64 #1 SMP Thu Jan 16 01:07:50
-UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
-
-# mdadm -V
-mdadm - v3.3 - 3rd September 2013
+[1] http://forums.servethehome.com/diy-server-builds/2894-utterly-absurd-quad-xeon-e5-supermicro-server-48-ssd-drives.html
