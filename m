@@ -1,61 +1,133 @@
-From: Chris Schanzle <mdadm@cas.homelinux.org>
-Subject: Re: non-persistent superblocks?  [WORKAROUND]
-Date: Thu, 30 Jan 2014 11:46:31 -0500
-Message-ID: <52EA81E7.7010906@cas.homelinux.org>
-References: <52E9D9CC.9000908@cas.homelinux.org>
- <BLU0-SMTP148F6E0422558E051D1067198AF0@phx.gbl>
+From: Benedikt Fraunhofer
+	<benedikt.fraunhofer.lists.mdadm.67B-ACM@traced.net>
+Subject: raid6 caught in rebuild loop
+Date: Thu, 30 Jan 2014 19:10:41 +0100
+Message-ID: <CAD_6HTEiHUVLFV1zCvn+--8wWSbocgGX7vExX5He0vu59cCAnw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <BLU0-SMTP148F6E0422558E051D1067198AF0@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/30/2014 05:16 AM, Wilson Jonathan wrote:
-> On Wed, 2014-01-29 at 23:49 -0500, Chris Schanzle wrote:
->
-> <snip, as my reply might be relevent, or not>
->
-> Two things come to mind, the first is if you updated the mdadm.conf
-> (/etc/mdadm/mdadm.conf or /etc/mdadm.conf)
->
-> The second is, update-initramfs -u to make sure things are setup for the
-> boot process. (I tend to do this when ever i change something that
-> "might" change a boot process... even if it does not, its pure habit as
-> apposed to correct procedure)
+Hello List,
 
-Thanks for these suggestions. Fedora's /etc/mdadm.confshouldn't be necessary to start the array (yes for mdadm monitoring): this is not a boot device and the kernel was finding the lone single late-added parity disk on boot.
+Hope that hasn't been answered elsewhere; searching for "mdadm rebuild loop"
+refers to all sorts of mdadm loopback related posts :)
 
-As for updating the initramfs, it didn't make sense to try this as the late-added parity disk was being discovered so the kernel modules were available.  It seems update-initramfs is for Ubuntu, for Fedora it's dracut.  BTW, rebooting with (the non-hostonly) rescue kernel made no difference; it could have since the original install was on a non-raid device so it has no reason to include raid kernel modules.
+recently, one of my raid6-arrays came up with one drive missing.
+No big deal, I just re-added the drive and thanks to the bitmap, rebuild
+was quite fast. At ~100% it got caught in a loop of
+"rebuild finished -> rebuilding" and /proc/mdstat showed something like
+"Rebuild: DELAYED" and "rebuild 100%"
+
+I didn't want to have the raid with one drive missing for long, so i just
+cleared  the superblock of the drive and re-added it. Some time later the
+drive (now for real) failed and I decided to get a new one.
+
+In the meantime the raid came online with one of the cables not fully plugged
+in. Again no big deal but again this endless rebuild loop.
+I'm running 3.2.0-58 with mdadm 3.2.5 (but tried 3.3 as well)
+and syslog says something like:
+
+Jan 30 18:08:29 zmurcht kernel: [  140.550455] md: bind<sdd>
+Jan 30 18:08:29 zmurcht kernel: [  140.598177] RAID conf printout:
+Jan 30 18:08:29 zmurcht kernel: [  140.598182]  --- level:6 rd:8 wd:6
+Jan 30 18:08:29 zmurcht kernel: [  140.598185]  disk 0, o:1, dev:sde
+Jan 30 18:08:29 zmurcht kernel: [  140.598188]  disk 1, o:1, dev:sdg
+Jan 30 18:08:29 zmurcht kernel: [  140.598191]  disk 2, o:1, dev:sdi
+Jan 30 18:08:29 zmurcht kernel: [  140.598194]  disk 4, o:1, dev:sdh
+Jan 30 18:08:29 zmurcht kernel: [  140.598197]  disk 5, o:1, dev:sdd
+Jan 30 18:08:29 zmurcht kernel: [  140.598200]  disk 6, o:1, dev:sdf
+Jan 30 18:08:29 zmurcht kernel: [  140.598203]  disk 7, o:1, dev:sdc
+Jan 30 18:08:29 zmurcht kernel: [  140.598404] md: recovery of RAID array md127
+Jan 30 18:08:29 zmurcht kernel: [  140.598409] md: minimum
+_guaranteed_  speed: 1000 KB/sec/disk.
+Jan 30 18:08:29 zmurcht kernel: [  140.598413] md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+recovery.
+Jan 30 18:08:29 zmurcht kernel: [  140.598430] md: using 128k window,
+over a total of 3906887168k.
+Jan 30 18:08:30 zmurcht mdadm[2220]: RebuildStarted event detected on
+md device /dev/md127
+Jan 30 18:09:26 zmurcht kernel: [  197.719647] md: md127: recovery done.
+Jan 30 18:09:27 zmurcht kernel: [  198.044326] RAID conf printout:
+Jan 30 18:09:27 zmurcht kernel: [  198.044330]  --- level:6 rd:8 wd:6
+Jan 30 18:09:27 zmurcht kernel: [  198.044333]  disk 0, o:1, dev:sde
+Jan 30 18:09:27 zmurcht kernel: [  198.044335]  disk 1, o:1, dev:sdg
+Jan 30 18:09:27 zmurcht kernel: [  198.044337]  disk 2, o:1, dev:sdi
+Jan 30 18:09:27 zmurcht kernel: [  198.044339]  disk 4, o:1, dev:sdh
+Jan 30 18:09:27 zmurcht kernel: [  198.044341]  disk 5, o:1, dev:sdd
+Jan 30 18:09:27 zmurcht kernel: [  198.044343]  disk 6, o:1, dev:sdf
+Jan 30 18:09:27 zmurcht kernel: [  198.044345]  disk 7, o:1, dev:sdc
+Jan 30 18:09:27 zmurcht kernel: [  198.044346] RAID conf printout:
+Jan 30 18:09:27 zmurcht kernel: [  198.044348]  --- level:6 rd:8 wd:6
+Jan 30 18:09:27 zmurcht kernel: [  198.044350]  disk 0, o:1, dev:sde
+Jan 30 18:09:27 zmurcht kernel: [  198.044352]  disk 1, o:1, dev:sdg
+Jan 30 18:09:27 zmurcht kernel: [  198.044354]  disk 2, o:1, dev:sdi
+Jan 30 18:09:27 zmurcht kernel: [  198.044356]  disk 4, o:1, dev:sdh
+Jan 30 18:09:27 zmurcht kernel: [  198.044358]  disk 5, o:1, dev:sdd
+Jan 30 18:09:27 zmurcht kernel: [  198.044360]  disk 6, o:1, dev:sdf
+Jan 30 18:09:27 zmurcht kernel: [  198.044362]  disk 7, o:1, dev:sdc
+Jan 30 18:09:27 zmurcht kernel: [  198.044590] md: recovery of RAID array md127
+Jan 30 18:09:27 zmurcht kernel: [  198.044595] md: minimum
+_guaranteed_  speed: 1000 KB/sec/disk.
+Jan 30 18:09:27 zmurcht kernel: [  198.044599] md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+recovery.
+Jan 30 18:09:27 zmurcht kernel: [  198.044613] md: using 128k window,
+over a total of 3906887168k.
+Jan 30 18:09:27 zmurcht kernel: [  198.044616] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:09:27 zmurcht kernel: [  198.044663] md: md127: recovery done.
+Jan 30 18:09:27 zmurcht kernel: [  198.145718] RAID conf printout:
 
 
-I got inspiration from https://raid.wiki.kernel.org/index.php/RAID_superblock_formats to switch superblock format from 1.2 (4k into the device) to the beginning of the device.  Success!
+which repeats over and over in rapid succession:
 
-Precisely what I did after a reboot, starting/recreating md0 as mentioned previously:
+bf@zmurcht:/tmp$ grep -e "recovery done" -e "recovery of" a | head
+Jan 30 18:08:29 zmurcht kernel: [  140.598404] md: recovery of RAID array md127
+Jan 30 18:09:26 zmurcht kernel: [  197.719647] md: md127: recovery done.
+Jan 30 18:09:27 zmurcht kernel: [  198.044590] md: recovery of RAID array md127
+Jan 30 18:09:27 zmurcht kernel: [  198.044616] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:09:27 zmurcht kernel: [  198.044663] md: md127: recovery done.
+Jan 30 18:09:27 zmurcht kernel: [  198.145988] md: recovery of RAID array md127
+Jan 30 18:09:27 zmurcht kernel: [  198.146006] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:09:27 zmurcht kernel: [  198.146016] md: md127: recovery done.
+Jan 30 18:09:27 zmurcht kernel: [  198.245932] md: recovery of RAID array md127
+Jan 30 18:09:27 zmurcht kernel: [  198.245950] md: resuming recovery
+of md127 from checkpoint.
+bf@zmurcht:/tmp$ grep -e "recovery done" -e "recovery of" a | tail
+Jan 30 18:10:01 zmurcht kernel: [  232.350503] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:10:01 zmurcht kernel: [  232.350571] md: md127: recovery done.
+Jan 30 18:10:01 zmurcht kernel: [  232.450390] md: recovery of RAID array md127
+Jan 30 18:10:01 zmurcht kernel: [  232.450471] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:10:01 zmurcht kernel: [  232.450539] md: md127: recovery done.
+Jan 30 18:10:01 zmurcht kernel: [  232.583628] md: recovery of RAID array md127
+Jan 30 18:10:01 zmurcht kernel: [  232.583706] md: resuming recovery
+of md127 from checkpoint.
+Jan 30 18:10:01 zmurcht kernel: [  232.583715] md: md127: recovery done.
+Jan 30 18:10:01 zmurcht kernel: [  232.690245] md: recovery of RAID array md127
+Jan 30 18:10:01 zmurcht kernel: [  232.690320] md: resuming recovery
+of md127 from checkpoint.
+bf@zmurcht:/tmp$ grep -e "recovery done" -e "recovery of" a | wc -l
+979
 
-mdadm --detail /dev/md0
-vgchange -an
-mdadm --stop /dev/md0
-# supply info from above 'mdadm --detail' to parameters below
-mdadm --create /dev/md0 --assume-clean --level=5 --raid-devices=5 --chunk=512 --layout=left-symmetric --metadata=1.1  /dev/sd{a,b,c,d,e}
+until stopped with mdadm --stop /dev/md127 (which takes a long time)
 
-At this point I had an array with a new UUID, could mount stuff, see data, all was good.
 
-mdadm --detail --scan >> /etc/mdadm.conf
-emacs !$ # commented out the previous entry
-cat /etc/mdadm.conf
-#ARRAY /dev/md0 metadata=1.2 name=d130.localdomain:0 UUID=011323af:44ef25e9:54dccc7c:b9c66978
-ARRAY /dev/md0 metadata=1.1 name=d130.localdomain:0 UUID=6fe3cb23:732852d5:358f8b9e:b3820c6b
+I don't want to make the same mistake as I did with the first drive,
+so any advice is welcome.
 
-Rebooted and my array was started!
+Maybe the checkpoint is pointing to something wrong or isn't updated
+on completion?
 
-cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdc[2] sdb[1] sda[0] sdd[3] sde[4]
-       15627548672 blocks super 1.1 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
-       bitmap: 0/30 pages [0KB], 65536KB chunk
+May it be safe to clear the bitmap and re-add the drive with --assume-clean?
 
-I believe there is something broken with having a gpt-labeled disk (without partitions defined) that is incompatible with superblock version 1.2.
+Thx in advance
 
+ Benedikt
