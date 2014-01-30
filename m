@@ -1,39 +1,42 @@
 From: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
 Subject: AW: AW: [HELP] Recover a RAID5 with 8 drives
-Date: Thu, 30 Jan 2014 12:20:20 +0000
-Message-ID: <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
+Date: Thu, 30 Jan 2014 12:22:44 +0000
+Message-ID: <A2EC67620EC7424F9EC3DD49243E9060466D9B28@AUDIINSX0328.audi.vwg>
 References: <52E7CCE4.3030408@morganspa.com>
  <A2EC67620EC7424F9EC3DD49243E9060466D9512@AUDIINSX0328.audi.vwg>
  <52E90CA9.5070808@morganspa.com>
+ <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52E90CA9.5070808@morganspa.com>
+In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
 Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
 To: 'Maurizio De Santis' <m.desantis@morganspa.com>
 Cc: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Michael,
+>Hi Michael,
+
 
 Hi Maurizio
 
-I agree with you that our situations seem very similar, moreover your=20
-analysis seems correct to me, since our hard disks are all WD Caviar=20
-Green, so they lack of the TLER feature (which I wasn't aware of, thank=
-s=20
-for pointing out this too).
+>I agree with you that our situations seem very similar, moreover your=20
+>analysis seems correct to me, since our hard disks are all WD Caviar=20
+>Green, so they lack of the TLER feature (which I wasn't aware of, than=
+ks=20
+>for pointing out this too).
+
 
 The TLER is partly available, but per default not active as you surely
 have found out. Everytime to use smartctl.... just to force using it is
 a hardware problem, and we solved it by using real disks this time.
 
-Luckily I just managed to access to the RAID in order to backup=20
-important data, executing `mdadm --assemble --force /dev/md0=20
-/dev/sd[abcdefgh]3`; so the crucial part is done; now I have the=20
-"freedom" to do everything in order to resolve the issue.
+>Luckily I just managed to access to the RAID in order to backup=20
+>important data, executing `mdadm --assemble --force /dev/md0=20
+>/dev/sd[abcdefgh]3`; so the crucial part is done; now I have the=20
+>"freedom" to do everything in order to resolve the issue.
 
 Luckily your disks were not corrupted (badBlacks) as mine. 5 out of 8
 disks hat BB from 8k to 47k blocks, one was out of order (so a collegue
@@ -42,10 +45,11 @@ of the datas transferred I recognized the md superblock is gone on 5
 of 8 HDs and the partition table is unreadable on two, so I had to
 implement them into the transferred disks.
 
-Now I would ask you:
+>Now I would ask you:
 
-  * how did you proceed in order to restore your situation? Do you have
-    any suggestion?
+>  * how did you proceed in order to restore your situation? Do you hav=
+e
+>    any suggestion?
 
 I'd not have asked in my first mail for help if I could assemble it
 somehow. I'd advice for the doing as mdadm is far away of my knowledge
@@ -77,9 +81,9 @@ to run an fsck by default as it has not enough ram when volume is over
 
 
 
-  * reading about TLER I believe I understood that the failing disks
-are not necessarly broken, but the RAID thinks they are; does it mean
-    that I can still use the failing disks?
+>  * reading about TLER I believe I understood that the failing disks
+>are not necessarly broken, but the RAID thinks they are; does it mean
+>    that I can still use the failing disks?
 
 One bad Block is for me enough to swap a drive, but you are right:
 the disk just took too much time to recover so it was thrown out of
