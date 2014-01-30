@@ -1,67 +1,54 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: [HELP] Recover a RAID5 with 8 drives
-Date: Thu, 30 Jan 2014 14:48:32 -0700
-Message-ID: <A8650C09-BAC4-43D8-8BBA-024E6E295D1E@colorremedies.com>
-References: <52E7CCE4.3030408@morganspa.com> <A2EC67620EC7424F9EC3DD49243E9060466D9512@AUDIINSX0328.audi.vwg> <52E90CA9.5070808@morganspa.com> <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466D9B0D@AUDIINSX0328.audi.vwg>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
-Cc: 'Maurizio De Santis' <m.desantis@morganspa.com>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block devices: validate block device capacity
+Date: Thu, 30 Jan 2014 14:49:23 -0800
+Message-ID: <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>
+References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, Nick Piggin <npiggin@kernel.dk>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 2014-01-30 at 15:40 -0500, Mikulas Patocka wrote:
+> When running the LVM2 testsuite on 32-bit kernel, there are unkillable
+> processes stuck in the kernel consuming 100% CPU:
+> blkid           R running      0  2005   1409 0x00000004
+> ce009d00 00000082 ffffffcf c11280ba 00000060 560b5dfd 00003111 00fe41cb
+> 00000000 ce009d00 00000000 d51cfeb0 00000000 0000001e 00000002 ffffffff
+> 00000002 c10748c1 00000002 c106cca4 00000000 00000000 ffffffff 00000000
+> Call Trace:
+> [<c11280ba>] ? radix_tree_next_chunk+0xda/0x2c0
+> [<c10748c1>] ? release_pages+0x61/0x160
+> [<c106cca4>] ? find_get_pages+0x84/0x100
+> [<c1251fbe>] ? _cond_resched+0x1e/0x40
+> [<c10758cb>] ? truncate_inode_pages_range+0x12b/0x440
+> [<c1075cb7>] ? truncate_inode_pages+0x17/0x20
+> [<c10cf2ba>] ? __blkdev_put+0x3a/0x140
+> [<c10d02db>] ? blkdev_close+0x1b/0x40
+> [<c10a60b2>] ? __fput+0x72/0x1c0
+> [<c1039461>] ? task_work_run+0x61/0xa0
+> [<c1253b6f>] ? work_notifysig+0x24/0x35
+> 
+> This is caused by the fact that the LVM2 testsuite creates 64TB device.
+> The kernel uses "unsigned long" to index pages in files and block devices,
+> on 64TB device "unsigned long" overflows (it can address up to 16TB with
+> 4k pages), causing the infinite loop.
 
-On Jan 30, 2014, at 5:20 AM, "Samer, Michael (I/ET-83, extern)" <extern=
-=2Emichael.samer@audi.de> wrote:
->=20
->  * reading about TLER I believe I understood that the failing disks
-> are not necessarly broken, but the RAID thinks they are; does it mean
->    that I can still use the failing disks?
+Why is this?  the whole reason for CONFIG_LBDAF is supposed to be to
+allow 64 bit offsets for block devices on 32 bit.  It sounds like
+there's somewhere not using sector_t ... or using it wrongly which needs
+fixing.
 
-=46or starters, make sure the SCSI command timer is increased to at lea=
-st that of the drive timeout, there's a chance the drive might recover =
-data before there's a read error.
+> On 32-bit architectures, we must limit block device size to
+> PAGE_SIZE*(2^32-1).
 
-echo 120 >/sys/block/sdX/device/timeout
+So you're saying CONFIG_LBDAF can never work, why?
 
-This is per drive kernel setting. So you have to do this for each drive=
-=2E It's also not persistent across reboots.
+James
 
-If during your rebuild any two drives report a read error, then it's a =
-problem. And the rebuild stops. In this case, you can find the affected=
- drive(s) and sectors causing the read error from dmesg. Then on indivi=
-dual physical drives, do sector reads to locate the exact LBAs affected=
-=2E If these are AF disks, don't forget for each bad 4096 byte sector, =
-you'll get 8 LBA read errors. To fix it, you must write to all 8 LBAs. =
-I'd avoid using bs=3D4096 to avoid confusion because that also changes =
-any seek=3D value away from 512e based LBAs. Just keep it all 512 secto=
-r based, and just know you have to write out a count of at least 8 to f=
-ix each physical sector. Before doing this though, I'd report back if y=
-ou're getting two UREs on a stripe and the rebuild fails. Someone else =
-with more experience may help with which disk to choose.=20
 
-Obviously the above means destroying some data on disk, but it's better=
- to zero a bad sector (which is lost anyway) rather than it producing a=
- URE - this way you only get one URE for that stripe on the next rebuil=
-d. What data is corrupted as a result of this depends on what was locat=
-ed in those sectors, it has a decent chance of being free space if the =
-array isn't full. Next most likely is some file data or metadata. And t=
-hen less likely is file system metadata=85 once the rebuild is done, yo=
-u'll run an fsck with -n, to see if there are file system problems and =
-how major they are. You don't necessarily want to run an fsck that writ=
-es changes to the file system as a first step, it could write changes t=
-hat hose the fs even though the array rebuild was successful. Anyway, c=
-ross that bridge when you come to it, but it's better to work slower an=
-d make as few changes as necessary if this is an array that you don't h=
-ave a current backup for.
 
-Chris Murphy
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
