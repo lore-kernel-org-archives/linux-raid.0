@@ -1,124 +1,114 @@
-From: Richard Gomes <rgomes.info@gmail.com>
-Subject: Re: Boot fails from one of the drives cos it's not an ext4 filesystem.
-Date: Fri, 31 Jan 2014 10:15:47 +0000
-Message-ID: <52EB77D3.5020606@gmail.com>
-References: <52EABF3D.5060100@gmail.com> <BLU0-SMTP249E446B64AB9D79F0AEAA098AE0@phx.gbl>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: RAIS5 Rebuild Help - Possible Data Offset
+Date: Fri, 31 Jan 2014 10:25:52 +0000
+Message-ID: <20140131102551.GA2425@cthulhu.home.robinhill.me.uk>
+References: <CAFth78x1SkCEUmETFt+F+79UpjUbhanNLUbZoWa7Hxi3EzsdMw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP249E446B64AB9D79F0AEAA098AE0@phx.gbl>
+Content-Disposition: inline
+In-Reply-To: <CAFth78x1SkCEUmETFt+F+79UpjUbhanNLUbZoWa7Hxi3EzsdMw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>
+To: Yorik <yoriks13@westnet.com.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Wilson,
 
-Thanks a lot for your answer. The issue is now solved, actually.
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Majordomo refused my previous post, again! :( ... when I inform it was
-solved.
-[ It's really annoying this thing to have to remember to force messages
-as text-only :( ]
+On Thu Jan 30, 2014 at 10:20:45pm +0800, Yorik wrote:
 
-The solution, as Robert suggested was
+> Hello
+>=20
+> Sorry if double post had to remove some HTML.
+>=20
+> I've been using "mdadm" for about 8-9 years with a lot of success in
+> different Array configurations. I am a huge fan of Software RAID. I
+> recently suffered a failure that was very unfortunate and I now have
+> an issue with differing Data Offset and other issues preventing my
+> Array from rebuilding. A brief history follows:
+>=20
+> Array originally created as RAID5, 3x 3TB Drives in May 2011 on a
+> (then) latest Fedora build.
+> Added more drives in 2012 and 2013 with upgraded Fedora builds.
+> Recently added another drive and changed to RAID6, 6x6TB Drives.
+> Suffered a failure shortly after 2 more drives that kicked the last 2
+> drives off and one of the 6 other that were previously running.
+> During the RAID rebuild, my computer locked up and then suffered a
+> Power Failure (having a bad day) that stopped my OS Disk (SSD) from
+> allowing me to reboot. Eventually rebuilt the OS with Fedora 20,
+> wiping the majority of the SSD and config files with it.
+>=20
+> The RAID6 does not start, stating that it only has 5 of the 8 drives
+> required. Looking into this, the drives seem to be clean and check
+> okay, but there is even differences (expected) and Data Offset
+> difference between drives that I read (Neil Brown Blog date
+> -20120615073245) was not necessarily good for rebuilding and that I
+> should ask for a version of mdadm that can handle this as it's
+> possible that creating with an older version, then adding new drives
+> is causing an issue. Data Offsets of 2048 and 4096 exist.
+>=20
+> Also of note is that I have some drives that are on the Array without
+> partitions as they would not add to the Array with partitions on them
+> due to size when they were added. I think that I had version issue
+> with fdisk, but it seemed to work okay until now.
+>=20
+> When I run the following command:
+>=20
+> mdadm --create --assume-clean --level=3D6 --raid-devices=3D8
+> --size=3D2930263552 /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd
+> /dev/sdi /dev/sde /dev/sdg /dev/sdf
+>=20
+> I get:
+>=20
+> mdadm: /dev/sda1 is smaller than given size. 2930134016K < 2930263552K
+> + metadata
+> mdadm: /dev/sdb1 is smaller than given size. 2930134016K < 2930263552K
+> + metadata
+> mdadm: /dev/sdc1 is smaller than given size. 2930134016K < 2930263552K
+> + metadata
+> mdadm: /dev/sdd is smaller than given size. 2930135040K < 2930263552K + m=
+etadata
+> mdadm: /dev/sdi is smaller than given size. 2930135040K < 2930263552K + m=
+etadata
+> mdadm: /dev/sde is smaller than given size. 2930135040K < 2930263552K + m=
+etadata
+> mdadm: /dev/sdg is smaller than given size. 2930135040K < 2930263552K + m=
+etadata
+> mdadm: /dev/sdf is smaller than given size. 2930135040K < 2930263552K + m=
+etadata
+> mdadm: create aborted
+>=20
+> Which makes me think that there are further issues. Should I be
+> looking for an older version of mdadm or a different version? Can
+> anyone offer some advice please or where to look next.
+>=20
+You don't mention having tried a force assemble, which should have been
+done before resorting to re-creating the array. What's the output from
+running "mdadm -Af /dev/md0 /dev/sd[abc]1 /dev/sd[defgi]"?
 
-      # grub-install /dev/sdb
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-Thanks a lot :)
+--gBBFr7Ir9EOA20Yy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-Richard Gomes
-http://rgomes.info
-http://www.linkedin.com/in/rgomes
-mobile: +44(77)9955-6813
-inum <http://www.inum.net/>: +883(5100)0800-9804
-sip:rgomes@ippi.fr
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-On 31/01/14 09:52, Wilson Jonathan wrote:
-> On Thu, 2014-01-30 at 21:08 +0000, Richard Gomes wrote:
->> [ 3rd time I'm trying to post this! :(  This Majordomo sucks :( ]
->>
->> Hello,
->>
->> I have /dev/sda and /dev/sdb in RAID1.
->>
->> I've discovered that I can boot from partition /dev/sda1 but not from
->> /dev/sdb1.
->>
->> Apparently, both disks have equivalent partition tables:
->>
->>     # sfdisk -l /dev/sda
->>
->>     Disk /dev/sda: 121601 cylinders, 255 heads, 63 sectors/track
->>     Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting
->>     from 0
->>
->>        Device Boot Start     End   #cyls    #blocks   Id  System
->>     /dev/sda1   *      0+     60-     61-    487424   fd  Linux raid
->>     autodetect
->>     /dev/sda2         60+   7841-   7781-  62499840   fd  Linux raid
->>     autodetect
->>     /dev/sda3       7841+ 121601- 113760- 913773568   fd  Linux raid
->>     autodetect
->>     /dev/sda4          0       -       0          0    0  Empty
->>
->>
->>     # sfdisk -l /dev/sdb
->>
->>     Disk /dev/sdb: 121601 cylinders, 255 heads, 63 sectors/track
->>     Units = cylinders of 8225280 bytes, blocks of 1024 bytes, counting
->>     from 0
->>
->>        Device Boot Start     End   #cyls    #blocks   Id  System
->>     /dev/sdb1   *      0+     60-     61-    487424   fd  Linux raid
->>     autodetect
->>     /dev/sdb2         60+   7841-   7781-  62499840   fd  Linux raid
->>     autodetect
->>     /dev/sdb3       7841+ 121601- 113760- 913773568   fd  Linux raid
->>     autodetect
->>     /dev/sdb4          0       -       0          0    0  Empty
->>
->>
->>
->> But /parted/ tells me a different story.
->> This is the culprit: /dev/sdb1 is not known as ext4, as it should be.
->>
->>     # parted -l
->>     Model: ATA ST1000DM003-9YN1 (scsi)
->>     Disk /dev/sda: 1000GB
->>     Sector size (logical/physical): 512B/4096B
->>     Partition Table: msdos
->>
->>     Number  Start   End     Size    Type     File system  Flags
->>      1      1049kB  500MB   499MB   primary  ext4         boot, raid
->>      2      500MB   64.5GB  64.0GB  primary               raid
->>      3      64.5GB  1000GB  936GB   primary               raid
->>
->>
->>     Model: ATA ST1000DM003-9YN1 (scsi)
->>     Disk /dev/sdb: 1000GB
->>     Sector size (logical/physical): 512B/4096B
->>     Partition Table: msdos
->>
->>     Number  Start   End     Size    Type     File system  Flags
->>      1      1049kB  500MB   499MB   primary               boot, raid
->>      2      500MB   64.5GB  64.0GB  primary               raid
->>      3      64.5GB  1000GB  936GB   primary               raid
-> As far as I know, the flags are redundant to a degree; although they
-> "may" be used as a hint.
->
-> Making a drive bootable requires a boot sector loader of some form (as
-> mentioned in Roberts post).
->
-> If you can output the result of  cat /proc/mdstat and also the mdadm
-> outputs as suggested by Robert then a more informed response can be
-> given.
->
->>
->> What would be a recommended way to fix this issue?
->>
->> Thanks
->
->
+iEYEARECAAYFAlLrei8ACgkQShxCyD40xBKktQCfZrAAHSQvkavAUZOFouRa2SGN
+OtYAn3E+hmsSyhHMOuSKHJEgwZSlI4CS
+=R55R
+-----END PGP SIGNATURE-----
 
+--gBBFr7Ir9EOA20Yy--
