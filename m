@@ -1,67 +1,41 @@
-From: Marcus <shadowsor@gmail.com>
-Subject: Re: md hang on updating bitmap
-Date: Thu, 30 Jan 2014 23:25:06 -0700
-Message-ID: <CALFpzo4+=X35ywYGRCnMaLv4=0QOA54oEy4On-iC1kiCPaf5rw@mail.gmail.com>
-References: <20463c26597b0a4c939dcb582cc44210@mail.turboio.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] block devices: validate block device capacity
+Date: Fri, 31 Jan 2014 03:20:17 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1401310316560.21451@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>    <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>    <alpine.LRH.2.02.1401301805590.19506@file01.intranet.prod.int.rdu2.redhat.com>  
+ <1391125027.2181.114.camel@dabdike.int.hansenpartnership.com>   <alpine.LRH.2.02.1401301905520.25766@file01.intranet.prod.int.rdu2.redhat.com>  <1391132609.2181.131.camel@dabdike.int.hansenpartnership.com>  <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
+ <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20463c26597b0a4c939dcb582cc44210@mail.turboio.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: admin <admin@turboio.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-raid.ids
 
-I've seen that trace on occasion too. What's interesting is that the
-md thread never shows up in the hung tasks timeout, but the things
-that are depending on the md array do. It's almost like there are
-certain times when md won't take 'io error' for an answer. You have to
-send w to sysrq-trigger to see that trace (though it's apparent via
-top that the thread is in D state most of the time).
 
-On Sat, Jan 25, 2014 at 3:57 AM, admin <admin@turboio.com> wrote:
-> I've been failure testing initiator-side mirroring, and occasionally if I
-> hit things just right during a failure scenario, I can get md arrays stuck
-> indefinitely. This seems to wedge the scsi controller(target on initiator)
-> from cleanly disconnecting, even though it is trying furiously and failing
-> IO. I'm on the latest kernel 3.10, and using the srp_backport driver with
-> the fast_io_fail and dev_loss_tmo updates. I'm told by the srp devs that the
-> target seems to be failing io and aborting as it should, but about 2 times
-> out of 10 I can get the md threads stuck in D state forever. I'm just
-> throwing this out there in case anyone has suggestions or knows what to try.
->
-> [69923.701603] md3_raid1       D ffffffff818089a0  5248  8760      2
-> 0x00000080
-> [69923.709434]  ffff88020d511b58 0000000000000046 ffff880213f59020
-> 0000000000013d80
-> [69923.717381]  ffff88020d511fd8 ffff88020d510010 0000000000013d80
-> 0000000000013d80
-> [69923.725338]  ffff88020d511fd8 0000000000013d80 ffff880213f59020
-> ffff8802148458b0
-> [69923.733352] Call Trace:
-> [69923.741291]  [<ffffffff81761834>] schedule+0x24/0x70
-> [69923.749303]  [<ffffffff815e6745>] md_super_wait+0x55/0x90
-> [69923.757294]  [<ffffffff81092eb0>] ? wake_up_bit+0x40/0x40
-> [69923.765226]  [<ffffffff815f3b92>] write_page+0x1b2/0x370
-> [69923.773100]  [<ffffffff815f38c9>] bitmap_update_sb+0x119/0x120
-> [69923.780994]  [<ffffffff815eca85>] md_update_sb+0x245/0x650
-> [69923.788890]  [<ffffffff815f1d8a>] md_check_recovery+0x24a/0x4c0
-> [69923.796793]  [<ffffffffa02f06a2>] raid1d+0x32/0xf10 [raid1]
-> [69923.804729]  [<ffffffff8107c226>] ? try_to_del_timer_sync+0x56/0x70
-> [69923.812717]  [<ffffffff8107c29a>] ? del_timer_sync+0x5a/0x70
-> [69923.820565]  [<ffffffff8175f785>] ? schedule_timeout+0x135/0x210
-> [69923.828327]  [<ffffffff81044293>] ? default_spin_lock_flags+0x13/0x20
-> [69923.836134]  [<ffffffff81044293>] ? default_spin_lock_flags+0x13/0x20
-> [69923.843788]  [<ffffffff815ea12f>] md_thread+0x11f/0x170
-> [69923.851288]  [<ffffffff81092eb0>] ? wake_up_bit+0x40/0x40
-> [69923.858767]  [<ffffffff815ea010>] ? md_rdev_init+0x110/0x110
-> [69923.866238]  [<ffffffff81092806>] kthread+0xc6/0xd0
-> [69923.873689]  [<ffffffff81092740>] ?
-> kthread_freezable_should_stop+0x60/0x60
-> [69923.881236]  [<ffffffff8176b7fc>] ret_from_fork+0x7c/0xb0
-> [69923.888759]  [<ffffffff81092740>] ?
-> kthread_freezable_should_stop+0x60/0x60
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+On Thu, 30 Jan 2014, James Bottomley wrote:
+
+> > So, if you want 64-bit page offsets, you need to increase pgoff_t size, 
+> > and that will increase the limit for both files and block devices.
+> 
+> No.  The point is the page cache mapping of the device uses a
+> manufactured inode saved in the backing device. It looks fixable in the
+> buffer code before the page cache gets involved.
+
+So if you think you can support 16TiB devices and leave pgoff_t 32-bit, 
+send a patch that does it.
+
+Until you make it, you should apply the patch that I sent, that prevents 
+kernel lockups or data corruption when the user uses 16TiB device on 
+32-bit kernel.
+
+Mikulas
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
