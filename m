@@ -1,117 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block devices: validate block device capacity
-Date: Thu, 30 Jan 2014 21:45:27 -0800
-Message-ID: <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com>
-References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
-	   <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>
-	   <alpine.LRH.2.02.1401301805590.19506@file01.intranet.prod.int.rdu2.redhat.com>
-	  <1391125027.2181.114.camel@dabdike.int.hansenpartnership.com>
-	  <alpine.LRH.2.02.1401301905520.25766@file01.intranet.prod.int.rdu2.redhat.com>
-	 <1391132609.2181.131.camel@dabdike.int.hansenpartnership.com>
-	 <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
+From: Marcus <shadowsor@gmail.com>
+Subject: Re: md hang on updating bitmap
+Date: Thu, 30 Jan 2014 23:25:06 -0700
+Message-ID: <CALFpzo4+=X35ywYGRCnMaLv4=0QOA54oEy4On-iC1kiCPaf5rw@mail.gmail.com>
+References: <20463c26597b0a4c939dcb582cc44210@mail.turboio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20463c26597b0a4c939dcb582cc44210@mail.turboio.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: admin <admin@turboio.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2014-01-30 at 21:43 -0500, Mikulas Patocka wrote:
-> 
-> On Thu, 30 Jan 2014, James Bottomley wrote:
-> 
-> > > A device may be accessed direcly (by opening /dev/sdX) and it creates a 
-> > > mapping too - thus, the size of a mapping limits the size of a block 
-> > > device.
-> > 
-> > Right, that's what I suspected below.  We can't damage large block
-> > support on filesystems just because of this corner case.
-> 
-> Devices larger than 16TiB never worked on 32-bit kernel, so this patch 
-> isn't damaging anything.
+I've seen that trace on occasion too. What's interesting is that the
+md thread never shows up in the hung tasks timeout, but the things
+that are depending on the md array do. It's almost like there are
+certain times when md won't take 'io error' for an answer. You have to
+send w to sysrq-trigger to see that trace (though it's apparent via
+top that the thread is in D state most of the time).
 
-expectations: 32 bit with CONFIG_LBDAF is supposed to be able to do
-almost everything 64 bits can
-
-> Note that if you attach a 16TiB block device, don't open it and mount it, 
-> it still won't work, because the buffer cache uses the page cache (see the 
-> function __find_get_block_slow and the variable "pgoff_t index" - that 
-> variable would overflow if the filesystem accessed a buffer beyond 16TiB).
-
-That depends on the layout of the fs metadata.
-
-> > > The main problem is that pgoff_t has 4 bytes - chaning it to 8 bytes may 
-> > > fix it - but there may be some hidden places where pgoff is converted to 
-> > > unsigned long - who knows, if they exist or not?
-> > 
-> > I don't think we want to do that ... it will make struct page fatter and
-> > have knock on impacts in the radix tree code.  To fix this, we need to
-> > make the corner case (i.e. opening large block devices without a
-> > filesystem) bear the pain.  It sort of looks like we want to do a linear
-> > array of mappings of 64TB for the device so the page cache calculations
-> > don't overflow.
-> 
-> The code that reads and writes data to block devices and files is shared - 
-> the functions in mm/filemap.c work for both files and block devices.
-
-Yes.
-
-> So, if you want 64-bit page offsets, you need to increase pgoff_t size, 
-> and that will increase the limit for both files and block devices.
-
-No.  The point is the page cache mapping of the device uses a
-manufactured inode saved in the backing device. It looks fixable in the
-buffer code before the page cache gets involved.
-
-> You shouldn't have separate functions for managing pages on files and 
-> separate functions for managing pages on block devices - that would 
-> increase code size and cause maintenance problems.
-
-It wouldn't it would add structure to the buffer cache for large
-devices.
-
-> > > Though, we need to know if the people who designed memory management agree 
-> > > with changing pgoff_t to 64 bits.
-> > 
-> > I don't think we can change the size of pgoff_t ... because it won't
-> > just be that, it will be other problems like the radix tree.
-> 
-> If we can't change it, then we must stay with the current 16TiB limit. 
-> There's no other way.
-> 
-> > However, you also have to bear in mind that truncating large block
-> > device support to 64TB on 32 bits is a technical ABI break.  Hopefully
-> > it is only technical because I don't know of any current consumer block
-> > device that is 64TB yet, but anyone who'd created a filesystem >64TB
-> > would find it no-longer mounted on 32 bits.
-> > James
-> 
-> It is not ABI break, because block devices larger than 16TiB never worked 
-> on 32-bit architectures. So it's better to refuse them outright, than to 
-> cause subtle lockups or data corruption.
-
-An ABI is a contract between the userspace and the kernel.  Saying we
-can remove a clause in the contract because no-one ever exercised it and
-not call it changing the contract is sophistry.  The correct thing to do
-would be to call it a bug and fix it.
-
-In a couple of short years we'll be over 16TB for hard drives.  I don't
-really want to be the one explaining to the personal storage people that
-the only way to install a 16+TB drive in their arm (or quark) based
-Linux systems is a processor upgrade.
-
-I suppose there are a couple of possibilities: pgoff_t + radix tree
-expansion or double radix tree in the buffer code.  This should probably
-be taken to fsdevel where they might have better ideas.
-
-James
-
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On Sat, Jan 25, 2014 at 3:57 AM, admin <admin@turboio.com> wrote:
+> I've been failure testing initiator-side mirroring, and occasionally if I
+> hit things just right during a failure scenario, I can get md arrays stuck
+> indefinitely. This seems to wedge the scsi controller(target on initiator)
+> from cleanly disconnecting, even though it is trying furiously and failing
+> IO. I'm on the latest kernel 3.10, and using the srp_backport driver with
+> the fast_io_fail and dev_loss_tmo updates. I'm told by the srp devs that the
+> target seems to be failing io and aborting as it should, but about 2 times
+> out of 10 I can get the md threads stuck in D state forever. I'm just
+> throwing this out there in case anyone has suggestions or knows what to try.
+>
+> [69923.701603] md3_raid1       D ffffffff818089a0  5248  8760      2
+> 0x00000080
+> [69923.709434]  ffff88020d511b58 0000000000000046 ffff880213f59020
+> 0000000000013d80
+> [69923.717381]  ffff88020d511fd8 ffff88020d510010 0000000000013d80
+> 0000000000013d80
+> [69923.725338]  ffff88020d511fd8 0000000000013d80 ffff880213f59020
+> ffff8802148458b0
+> [69923.733352] Call Trace:
+> [69923.741291]  [<ffffffff81761834>] schedule+0x24/0x70
+> [69923.749303]  [<ffffffff815e6745>] md_super_wait+0x55/0x90
+> [69923.757294]  [<ffffffff81092eb0>] ? wake_up_bit+0x40/0x40
+> [69923.765226]  [<ffffffff815f3b92>] write_page+0x1b2/0x370
+> [69923.773100]  [<ffffffff815f38c9>] bitmap_update_sb+0x119/0x120
+> [69923.780994]  [<ffffffff815eca85>] md_update_sb+0x245/0x650
+> [69923.788890]  [<ffffffff815f1d8a>] md_check_recovery+0x24a/0x4c0
+> [69923.796793]  [<ffffffffa02f06a2>] raid1d+0x32/0xf10 [raid1]
+> [69923.804729]  [<ffffffff8107c226>] ? try_to_del_timer_sync+0x56/0x70
+> [69923.812717]  [<ffffffff8107c29a>] ? del_timer_sync+0x5a/0x70
+> [69923.820565]  [<ffffffff8175f785>] ? schedule_timeout+0x135/0x210
+> [69923.828327]  [<ffffffff81044293>] ? default_spin_lock_flags+0x13/0x20
+> [69923.836134]  [<ffffffff81044293>] ? default_spin_lock_flags+0x13/0x20
+> [69923.843788]  [<ffffffff815ea12f>] md_thread+0x11f/0x170
+> [69923.851288]  [<ffffffff81092eb0>] ? wake_up_bit+0x40/0x40
+> [69923.858767]  [<ffffffff815ea010>] ? md_rdev_init+0x110/0x110
+> [69923.866238]  [<ffffffff81092806>] kthread+0xc6/0xd0
+> [69923.873689]  [<ffffffff81092740>] ?
+> kthread_freezable_should_stop+0x60/0x60
+> [69923.881236]  [<ffffffff8176b7fc>] ret_from_fork+0x7c/0xb0
+> [69923.888759]  [<ffffffff81092740>] ?
+> kthread_freezable_should_stop+0x60/0x60
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
