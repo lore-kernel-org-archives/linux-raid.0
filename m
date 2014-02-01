@@ -1,60 +1,44 @@
-From: Nate Dailey <nate.dailey@stratus.com>
-Subject: [PATCH] dm-raid: check events in super_validate
-Date: Sat, 1 Feb 2014 09:35:20 -0500
-Message-ID: <52ED0628.4030203@stratus.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] raid6check.c: reduce verbosity
+Date: Sat, 1 Feb 2014 17:03:34 +0100
+Message-ID: <20140201160334.GA9378@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If an LVM raid1 recovery is interrupted by deactivating the LV, when the 
-LV is reactivated it comes up with both members in sync--the recovery 
-never completes.
+This patch removes some printouts, which
+are not really useful here.
+These could be re-added later, in case a
+verbosity parameter will be provided.
 
-I've been trying to figure out how to fix this. Does this approach look 
-okay? I'm not sure what else to use to determine that a member disk is 
-out of sync. It looks like if disk_recovery_offset in the superblock 
-were updated during the recovery, that would also cause it to resume 
-after interruption--but MD skips the recovery target disk when writing 
-superblocks, so this doesn't work.
+Signed off: piergiorgio.sartor@nexgo.de
 
-Comments?
+diff -uNrp a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2014-01-23 19:36:23.151837870 +0100
++++ b/raid6check.c	2014-02-01 16:56:14.123771170 +0100
+@@ -188,8 +188,6 @@ int check_stripes(struct mdinfo *info, i
+ 	while (length > 0) {
+ 		int disk[chunk_size >> CHECK_PAGE_BITS];
+ 
+-		printf("pos --> %llu\n", start);
+-
+ 		err = lock_stripe(info, start, chunk_size, data_disks, sig);
+ 		if(err != 0) {
+ 			if (err != 2)
+@@ -221,7 +219,6 @@ int check_stripes(struct mdinfo *info, i
+ 			int disk = geo_map(i, start, raid_disks, level, layout);
+ 			blocks[i] = stripes[disk];
+ 			block_index_for_slot[disk] = i;
+-			printf("%d->%d\n", i, disk);
+ 		}
+ 
+ 		qsyndrome(p, q, (uint8_t**)blocks, data_disks, chunk_size);
 
-Thanks,
 
-Nate Dailey
-Stratus Technologies
+-- 
 
-
-
-diff -Nupr linux-3.12.9.orig/drivers/md/dm-raid.c 
-linux-3.12.9/drivers/md/dm-raid.c
---- linux-3.12.9.orig/drivers/md/dm-raid.c    2014-02-01 
-08:46:51.088086299 -0500
-+++ linux-3.12.9/drivers/md/dm-raid.c    2014-02-01 09:02:06.657149550 -0500
-@@ -1042,6 +1042,21 @@ static int super_validate(struct mddev *
-          rdev->recovery_offset = le64_to_cpu(sb->disk_recovery_offset);
-          if (rdev->recovery_offset != MaxSector)
-              clear_bit(In_sync, &rdev->flags);
-+        else if (!test_bit(Faulty, &rdev->flags)) {
-+            uint64_t events_sb;
-+
-+            /*
-+             * Trigger recovery if events is out-of-date.
-+             */
-+            events_sb = le64_to_cpu(sb->events);
-+            if (events_sb < mddev->events) {
-+                DMINFO("Force recovery on out-of-date device #%d.",
-+                       rdev->raid_disk);
-+                clear_bit(In_sync, &rdev->flags);
-+                rdev->saved_raid_disk = rdev->raid_disk;
-+                rdev->recovery_offset = 0;
-+            }
-+        }
-      }
-
-      /*
-
+piergiorgio
