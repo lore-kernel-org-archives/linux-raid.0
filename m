@@ -1,84 +1,120 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Intent Bitmap size and performance
-Date: Sun, 2 Feb 2014 17:28:32 +1100
-Message-ID: <20140202172832.30e33c05@notabene.brown>
-References: <20140202003915.GB25441@merlins.org>
-	<20140202005646.GC25441@merlins.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: raid1 repair does not repair errors?
+Date: Sun, 02 Feb 2014 16:24:48 +0400
+Message-ID: <52EE3910.3040205@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZEFHpKZs6.ksMbPKdIKhs/e"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140202005646.GC25441@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
---Sig_/ZEFHpKZs6.ksMbPKdIKhs/e
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello.
 
-On Sat, 1 Feb 2014 16:56:46 -0800 Marc MERLIN <marc@merlins.org> wrote:
+This is a followup for a somewhat old thread, --
+ http://thread.gmane.org/gmane.linux.raid/44503
+with the required details.
 
-> On Sat, Feb 01, 2014 at 04:39:15PM -0800, Marc MERLIN wrote:
-> > How can I tell I got the size for my array size?
->=20
-> Aah, the clue seems to be in the kernel logs:
-> [669348.274368] md7: bitmap file is out of date (0 < 38029) -- forcing fu=
-ll recovery
-> [669348.299174] created bitmap (15 pages) for device md7
-> [669348.316720] md7: bitmap file is out of date, doing full recovery
-> [669348.380555] md7: bitmap initialized from disk: read 1 pages, set 2980=
-9 of 29809 bits
->=20
-> If I got the math right, 30K bits for 8TB is one bit per 266MB.
->=20
-> Given that, I'm going to assume that this is not going to impact system
-> performance much for most operations.
->=20
-> Is my assumption and conclusion correct?
->=20
-> Thanks,
-> Marc
+Initial problem was that with a raid1 array on a
+few drives and one of them having a bad sector,
+runnig `repair' action does not actually fix the
+error, it looks like the raid1 code does not see
+the error.
 
-You can also use "mdadm --examine-bitmap" on one of the component devices to
-get more details about the bitmap.
+This is a production host, so it is very difficult to
+experiment.  When I initially hit this issue there, I
+tried various ways to fix the issue, one of them was
+to removing the bad drive from the array and adding
+it back.  This forced all sectors to be re-written,
+and the problem went away.
 
-My rule-of-thumb (base on zero hard evidence) is that one bit should
-correspond to approximately 1 second of IO.  Your bits correspond to 2 or 3
-seconds so that is certainly the right ball park.
+Now, the same issue happened again - another drive
+developed a bad sector, and again, md `repair' action
+does not fix it.
 
-As always with RAID, performance is highly dependent on load.
-It is quite easy to add and remove bitmaps to/from a live md array so
-testing the effect on a particular workload is not that hard.
+So I added some debugging as requested in the original
+thread, and re-run `repair' action.
 
-The default mdadm chooses is a bit complex.  It first chooses an amount of
-space to reserve for the bitmap, the it figures what chunk size will allow
-the bits to fit in the available space.  Then makes sure that it as least
-64Meg.
+Here's the changes I added to 3.10 raid1.c file:
 
-NeilBrown
+--- ../linux-3.10/drivers/md/raid1.c	2014-02-02 16:01:55.003119836 +0400
++++ drivers/md/raid1.c	2014-02-02 16:07:37.913808336 +0400
+@@ -1636,6 +1636,8 @@ static void end_sync_read(struct bio *bi
+ 	 */
+ 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
+ 		set_bit(R1BIO_Uptodate, &r1_bio->state);
++else
++printk("end_sync_read: !BIO_UPTODATE\n");
 
---Sig_/ZEFHpKZs6.ksMbPKdIKhs/e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+ 	if (atomic_dec_and_test(&r1_bio->remaining))
+ 		reschedule_retry(r1_bio);
+@@ -1749,6 +1751,7 @@ static int fix_sync_read_error(struct r1
+ 				 * active, and resync is currently active
+ 				 */
+ 				rdev = conf->mirrors[d].rdev;
++printk("fix_sync_read_error: calling sync_page_io(%Li, %Li<<9)\n", (uint64_t)sect, (uint64_t)s);
+ 				if (sync_page_io(rdev, sect, s<<9,
+ 						 bio->bi_io_vec[idx].bv_page,
+ 						 READ, false)) {
+@@ -1931,10 +1934,12 @@ static void sync_request_write(struct md
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+ 	bio = r1_bio->bios[r1_bio->read_disk];
 
-iQIVAwUBUu3lkTnsnt1WYoG5AQIU6g/+KYFbg6J1Ix5DJKR7xvlFGxbFeqIa5DoE
-Iomhsg8ZETP+dYHgqo26qrIvJeyLTf7EfcrqlYsfDlaGz7zEaS/PVXSl/xCSsrc6
-q0V6dVEgbl3yXIxOJKu+6qhJWjPi9d1gbHpcuNU2+vLO0+oiUmKgiwwIgaC0tot7
-BXymJPnYajRlD4uEGcFOZqtCVMledg0iZyDSFzOhWpukzBFjI10w3q7xvGVrboaE
-Vfu9GJ8/iOJSzNBCuoY8n1JXHd7V8en5t5q8iVoPvq8vpkOaCF7WsKGr89E2NUu1
-9iD3WOALgSkXce/mmFOV6QaXy9VnK0xZL7DDM+G35JnksqkrnzYp0EGGCr5nAJxF
-Skpmv8X56cIcsYNolm/qiC78xpIVHszC0UHnDJSpuTWB8j5rpnRQSGRjmSsx4WZ6
-jF/XrSk268ZbXWcBqvWxr6j32Drclw6hwSBeyMWcOlFxvixrSbo+l+Ao0vPt5DWP
-caXiQ5jgcxWj6DpDwiM9z88eAX3NwxP6mwOhVJMWR8z8TIVZfGZxYymeTdjaE/cf
-bCeShOIa/m5N0B6Hl+1PCHDd7wUHhi0VjeBtpWUcElbOuSnl1huUcQn6Cp7UnSy+
-hRnQDswAoI7H5NEBpo5SYZxsc/xgYsNkH4EO+Y4yNbZr3H74os7nSq64GmIPbDTs
-guxrFsp0C4I=
-=6BD8
------END PGP SIGNATURE-----
+-	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
++	if (!test_bit(R1BIO_Uptodate, &r1_bio->state)) {
+ 		/* ouch - failed to read all of that. */
++printk("sync_request_write: !R1BIO_Uptodate\n");
+ 		if (!fix_sync_read_error(r1_bio))
+ 			return;
++	}
 
---Sig_/ZEFHpKZs6.ksMbPKdIKhs/e--
+ 	if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
+ 		if (process_checks(r1_bio) < 0)
+
+
+And here is the whole dmesg result from the repair run:
+
+[   74.288227] md: requested-resync of RAID array md1
+[   74.288719] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[   74.289329] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for requested-resync.
+[   74.290404] md: using 128k window, over a total of 2096064k.
+[  179.213754] ata6.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0 action 0x0
+[  179.214500] ata6.00: irq_stat 0x40000008
+[  179.214909] ata6.00: failed command: READ FPDMA QUEUED
+[  179.215452] ata6.00: cmd 60/80:00:00:3e:3e/00:00:00:00:00/40 tag 0 ncq 65536 in
+[  179.215452]          res 41/40:00:23:3e:3e/00:00:00:00:00/40 Emask 0x409 (media error) <F>
+[  179.217087] ata6.00: status: { DRDY ERR }
+[  179.217500] ata6.00: error: { UNC }
+[  179.220185] ata6.00: configured for UDMA/133
+[  179.220656] sd 5:0:0:0: [sdd] Unhandled sense code
+[  179.221149] sd 5:0:0:0: [sdd]
+[  179.221476] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[  179.222062] sd 5:0:0:0: [sdd]
+[  179.222398] Sense Key : Medium Error [current] [descriptor]
+[  179.223034] Descriptor sense data with sense descriptors (in hex):
+[  179.223704]         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
+[  179.224726]         00 3e 3e 23
+[  179.225169] sd 5:0:0:0: [sdd]
+[  179.225494] Add. Sense: Unrecovered read error - auto reallocate failed
+[  179.226215] sd 5:0:0:0: [sdd] CDB:
+[  179.226577] Read(10): 28 00 00 3e 3e 00 00 00 80 00
+[  179.227344] end_request: I/O error, dev sdd, sector 4079139
+[  179.227926] end_sync_read: !BIO_UPTODATE
+[  179.228359] ata6: EH complete
+[  181.926457] md: md1: requested-resync done.
+
+
+So the only printk I've added is seen: "end_sync_read: !BIO_UPTODATE", and
+it looks like rewriting code is never called.
+
+
+This is root array of a production machine, so I can reboot it only at
+late evenings or at weekends.  But this time I finally want to fix the
+bug for real, so I will not try to fix the erroneous drive until we will
+be able to fix the code.  Just one thing: the fixing process might be
+a bit slow.
+
+Thanks,
+
+/mjt
