@@ -1,120 +1,44 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: raid1 repair does not repair errors?
-Date: Sun, 02 Feb 2014 16:24:48 +0400
-Message-ID: <52EE3910.3040205@msgid.tls.msk.ru>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: Very long raid5 init/rebuild times
+Date: Sun, 02 Feb 2014 13:53:57 -0500
+Message-ID: <52EE9445.2020202@ubuntu.com>
+References: <21217.9977.5869.747472@quad.stoffel.home> <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org> <52E0807D.2030608@hardwarefreak.com> <20140123091319.GB2306@merlins.org> <52E10A07.3070302@hardwarefreak.com> <20140123210155.GJ10046@merlins.org> <52E1F685.3050300@hardwarefreak.com> <20140125083630.GA7555@merlins.org> <52E76054.5090900@hardwarefreak.com> <52EABA63.2060701@ubuntu.com> <52ED77A3.6020509@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52ED77A3.6020509@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: stan@hardwarefreak.com, Marc MERLIN <marc@merlins.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-This is a followup for a somewhat old thread, --
- http://thread.gmane.org/gmane.linux.raid/44503
-with the required details.
+On 02/01/2014 05:39 PM, Stan Hoeppner wrote:
+> Phillip, you seem to be arguing application performance.  For an 
+> application/data type that doesn't need fsync you'd be correct.
+> 
+> However, the purpose of this exchange has been to determine the
+> maximum hardware throughput of the OP's array.  It's not possible
+> to accurately measure IO throughput doing buffered writes.  Thus
+> O_DIRECT is needed.
 
-Initial problem was that with a raid1 array on a
-few drives and one of them having a bad sector,
-runnig `repair' action does not actually fix the
-error, it looks like the raid1 code does not see
-the error.
-
-This is a production host, so it is very difficult to
-experiment.  When I initially hit this issue there, I
-tried various ways to fix the issue, one of them was
-to removing the bad drive from the array and adding
-it back.  This forced all sectors to be re-written,
-and the problem went away.
-
-Now, the same issue happened again - another drive
-developed a bad sector, and again, md `repair' action
-does not fix it.
-
-So I added some debugging as requested in the original
-thread, and re-run `repair' action.
-
-Here's the changes I added to 3.10 raid1.c file:
-
---- ../linux-3.10/drivers/md/raid1.c	2014-02-02 16:01:55.003119836 +0400
-+++ drivers/md/raid1.c	2014-02-02 16:07:37.913808336 +0400
-@@ -1636,6 +1636,8 @@ static void end_sync_read(struct bio *bi
- 	 */
- 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
-+else
-+printk("end_sync_read: !BIO_UPTODATE\n");
-
- 	if (atomic_dec_and_test(&r1_bio->remaining))
- 		reschedule_retry(r1_bio);
-@@ -1749,6 +1751,7 @@ static int fix_sync_read_error(struct r1
- 				 * active, and resync is currently active
- 				 */
- 				rdev = conf->mirrors[d].rdev;
-+printk("fix_sync_read_error: calling sync_page_io(%Li, %Li<<9)\n", (uint64_t)sect, (uint64_t)s);
- 				if (sync_page_io(rdev, sect, s<<9,
- 						 bio->bi_io_vec[idx].bv_page,
- 						 READ, false)) {
-@@ -1931,10 +1934,12 @@ static void sync_request_write(struct md
-
- 	bio = r1_bio->bios[r1_bio->read_disk];
-
--	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-+	if (!test_bit(R1BIO_Uptodate, &r1_bio->state)) {
- 		/* ouch - failed to read all of that. */
-+printk("sync_request_write: !R1BIO_Uptodate\n");
- 		if (!fix_sync_read_error(r1_bio))
- 			return;
-+	}
-
- 	if (test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery))
- 		if (process_checks(r1_bio) < 0)
+No, you can get there just fine with buffered IO as well, unless you
+have an obscenely fast array and very slow ram, the overhead of
+buffering won't really matter for IO throughput ( just the extra cpu ).
 
 
-And here is the whole dmesg result from the repair run:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-[   74.288227] md: requested-resync of RAID array md1
-[   74.288719] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[   74.289329] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for requested-resync.
-[   74.290404] md: using 128k window, over a total of 2096064k.
-[  179.213754] ata6.00: exception Emask 0x0 SAct 0x7fffffff SErr 0x0 action 0x0
-[  179.214500] ata6.00: irq_stat 0x40000008
-[  179.214909] ata6.00: failed command: READ FPDMA QUEUED
-[  179.215452] ata6.00: cmd 60/80:00:00:3e:3e/00:00:00:00:00/40 tag 0 ncq 65536 in
-[  179.215452]          res 41/40:00:23:3e:3e/00:00:00:00:00/40 Emask 0x409 (media error) <F>
-[  179.217087] ata6.00: status: { DRDY ERR }
-[  179.217500] ata6.00: error: { UNC }
-[  179.220185] ata6.00: configured for UDMA/133
-[  179.220656] sd 5:0:0:0: [sdd] Unhandled sense code
-[  179.221149] sd 5:0:0:0: [sdd]
-[  179.221476] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-[  179.222062] sd 5:0:0:0: [sdd]
-[  179.222398] Sense Key : Medium Error [current] [descriptor]
-[  179.223034] Descriptor sense data with sense descriptors (in hex):
-[  179.223704]         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
-[  179.224726]         00 3e 3e 23
-[  179.225169] sd 5:0:0:0: [sdd]
-[  179.225494] Add. Sense: Unrecovered read error - auto reallocate failed
-[  179.226215] sd 5:0:0:0: [sdd] CDB:
-[  179.226577] Read(10): 28 00 00 3e 3e 00 00 00 80 00
-[  179.227344] end_request: I/O error, dev sdd, sector 4079139
-[  179.227926] end_sync_read: !BIO_UPTODATE
-[  179.228359] ata6: EH complete
-[  181.926457] md: md1: requested-resync done.
-
-
-So the only printk I've added is seen: "end_sync_read: !BIO_UPTODATE", and
-it looks like rewriting code is never called.
-
-
-This is root array of a production machine, so I can reboot it only at
-late evenings or at weekends.  But this time I finally want to fix the
-bug for real, so I will not try to fix the erroneous drive until we will
-be able to fix the code.  Just one thing: the fixing process might be
-a bit slow.
-
-Thanks,
-
-/mjt
+iQEcBAEBCgAGBQJS7pRFAAoJEI5FoCIzSKrw/5AH/2EUXwPjdaqKyg9oD5igX92p
+VLLjCCDJyzd2MaC3u4DPpQUtzIXPEkjuKT6hBMNwx/+gFnODXQjssZ3siXVgc2Mi
+JAGYwRWYbLDYQscKagYyQFDiNjg5b1zA/KEjKYTO5hpkFQELDgE115PPn6NhV/Q9
+r/vjzEtvDLjuN5Y7uQDpZv87bEy2O7aJX1TFygPN0MazJo6O93yFfweUwI2JUm1H
+q1DL96Evd/CCfzhPWiPnWrP4MpuUG7B1OKjwfXnlw5tW1tj7wRA6tRnyuCeAHCfb
+1/wvxXm426rxflSNa85sP///amh8mnccN+4ZcOYEql4XSt8qh8G2sdH35Kp3og8=
+=BnZb
+-----END PGP SIGNATURE-----
