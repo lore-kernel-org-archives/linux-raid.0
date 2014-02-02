@@ -1,36 +1,32 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: Soft RAID and EFI systems
-Date: Sun, 02 Feb 2014 22:39:31 +0100
-Message-ID: <52EEBB13.5040803@gmail.com>
-References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <52ED6F6B.1040108@arcor.de>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: raid1 repair does not repair errors?
+Date: Sun, 2 Feb 2014 21:51:46 +0000
+Message-ID: <21230.48626.53552.600221@tree.ty.sabi.co.uk>
+References: <52EE3910.3040205@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52ED6F6B.1040108@arcor.de>
+In-Reply-To: <52EE3910.3040205@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Wilck <mwilck@arcor.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Martin,
+> [ ... ] I tried various ways to fix the issue, one of them was
+> to removing the bad drive from the array and adding it back.
+> This forced all sectors to be re-written, and the problem went
+> away.
 
-On 02/01/2014 11:04 PM, Martin Wilck wrote:
-> Hi Francis,
-> 
->> For Fake RAID, I'm not sure but I would say that the bios is able to
->> read the RAID metadata as well.
->> For (md) Soft RAID, I don't know. I would say that the bios is
->> unlikely to understand the md metadata stored in the /boot partition
->> so it won't work.
-> 
-> there is no big difference between EFI and legacy systems in this area.
+Lucky,
 
-Well  the main difference I can see is that EFI firmwares access a
-filesystem where as BIOS doesn't in order to load  the bootloader.
+> [ ... ] Now, the same issue happened again - another drive
+> developed a bad sector, and again, md `repair' action does not
+> fix it. [ ... ]
 
-In the case of BIOS you can still rely on a bootloader such as grub to
-access a partition with MD RAID on it.
+Thanks for letting us know things work as expected and MD RAID
+has not developed psychic powers yet :-).
 
-Thanks
-
+Similar reports happen now and then. Some people seem to develop
+inflated expectations of what a RAID system can do, and how a
+storage stack works. Perhaps some people imagine that "repair"
+means "repair disk errors" rather than "repair RAID status".
