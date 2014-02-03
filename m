@@ -1,39 +1,41 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Mon, 03 Feb 2014 00:34:13 -0600
-Message-ID: <52EF3865.4000106@hardwarefreak.com>
-References: <21217.9977.5869.747472@quad.stoffel.home> <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org> <52E0807D.2030608@hardwarefreak.com> <20140123091319.GB2306@merlins.org> <52E10A07.3070302@hardwarefreak.com> <20140123210155.GJ10046@merlins.org> <52E1F685.3050300@hardwarefreak.com> <20140125083630.GA7555@merlins.org> <52E76054.5090900@hardwarefreak.com> <52EABA63.2060701@ubuntu.com> <52ED77A3.6020509@hardwarefreak.com> <52EE9445.2020202@ubuntu.com>
-Reply-To: stan@hardwarefreak.com
+From: Martin Wilck <mwilck@arcor.de>
+Subject: Re: Soft RAID and EFI systems
+Date: Mon, 03 Feb 2014 08:19:16 +0100
+Message-ID: <80d17373-b007-4af5-bef1-09ba11a3fd77@email.android.com>
+References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <70EFD3D5-F7AC-4359-8888-99EB6CCA9E4F@colorremedies.com> <52EEB9F2.2000607@gmail.com> <3D3B8F1A-F525-459D-95F2-9D7889C222CD@colorremedies.com> <52EECD53.30802@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52EE9445.2020202@ubuntu.com>
+In-Reply-To: <52EECD53.30802@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Marc MERLIN <marc@merlins.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/2/2014 12:53 PM, Phillip Susi wrote:
+On 2. Februar 2014 23:57:23 MEZ, Phil Turmel <philip@turmel.org> wrote:
 
-> On 02/01/2014 05:39 PM, Stan Hoeppner wrote:
+>It seems to me that you should be able to create a raid1 v1.0 MD array
+>of your EFI support partitions, and put the combined and signed
+>kernel/initramfs onto it (mirrored to all member drives).
+>
+>Then set the UEFI bios to try each device's ESP in turn.
+>
 
->> It's not possible
->> to accurately measure IO throughput doing buffered writes.  Thus
->> O_DIRECT is needed.
+Smart idea ... MD RAID on the whole disk still seems more reasonable to me.
 
-> No, you can get there just fine with buffered IO as well, unless you
-> have an obscenely fast array and very slow ram, the overhead of
-> buffering won't really matter for IO throughput ( just the extra cpu ).
+Martin
 
-Please reread my statement above.  Now let me restate that as:
 
-Measuring disk throughput when writing through the buffer cache isn't a
-measurement of disk throughput as much as it is a measurement of cache
-throughput.  Thus, such measurements do not demonstrate actual disk
-throughput.
+>Untested ... :-)
+>
+>Phil
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-raid"
+>in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Do you disagree?
 
 -- 
-Stan
+Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
