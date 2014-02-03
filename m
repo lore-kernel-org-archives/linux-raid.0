@@ -1,41 +1,67 @@
-From: Martin Wilck <mwilck@arcor.de>
-Subject: Re: Soft RAID and EFI systems
-Date: Mon, 03 Feb 2014 08:19:16 +0100
-Message-ID: <80d17373-b007-4af5-bef1-09ba11a3fd77@email.android.com>
-References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <70EFD3D5-F7AC-4359-8888-99EB6CCA9E4F@colorremedies.com> <52EEB9F2.2000607@gmail.com> <3D3B8F1A-F525-459D-95F2-9D7889C222CD@colorremedies.com> <52EECD53.30802@turmel.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: raid1 repair does not repair errors?
+Date: Mon, 03 Feb 2014 11:30:40 +0400
+Message-ID: <52EF45A0.3010401@msgid.tls.msk.ru>
+References: <52EE3910.3040205@msgid.tls.msk.ru> <20140203120431.400a8a1b@notabene.brown> <20140203153644.4c530672@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52EECD53.30802@turmel.org>
+In-Reply-To: <20140203153644.4c530672@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2. Februar 2014 23:57:23 MEZ, Phil Turmel <philip@turmel.org> wrote:
+03.02.2014 08:36, NeilBrown wrote:
+[]
+> Actually I've changed my mind.  That patch won't fix anything.
+> fix_sync_read_error() is focussed on fixing a read error on ->read_disk.
+> So we only set uptodate if ->read_disk succeeded.
+> 
+> So this patch should do it.
+> 
+> NeilBrown
+> 
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index fd3a2a14b587..0fe5fd469e74 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -1733,7 +1733,8 @@ static void end_sync_read(struct bio *bio, int error)
+>  	 * or re-read if the read failed.
+>  	 * We don't do much here, just schedule handling by raid1d
+>  	 */
+> -	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
+> +	if (bio == r1_bio->bios[r1_bio->read_disk] &&
+> +	    test_bit(BIO_UPTODATE, &bio->bi_flags))
+>  		set_bit(R1BIO_Uptodate, &r1_bio->state);
+>  
+>  	if (atomic_dec_and_test(&r1_bio->remaining))
+> 
 
->It seems to me that you should be able to create a raid1 v1.0 MD array
->of your EFI support partitions, and put the combined and signed
->kernel/initramfs onto it (mirrored to all member drives).
->
->Then set the UEFI bios to try each device's ESP in turn.
->
+I changed it like this for now:
 
-Smart idea ... MD RAID on the whole disk still seems more reasonable to me.
+--- ../linux-3.10/drivers/md/raid1.c	2014-02-02 16:01:55.003119836 +0400
++++ drivers/md/raid1.c	2014-02-03 11:26:59.062845829 +0400
+@@ -1634,8 +1634,12 @@ static void end_sync_read(struct bio *bi
+ 	 * or re-read if the read failed.
+ 	 * We don't do much here, just schedule handling by raid1d
+ 	 */
+-	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
+-		set_bit(R1BIO_Uptodate, &r1_bio->state);
++	if (bio == r1_bio->bios[r1_bio->read_disk]) {
++	    if (test_bit(BIO_UPTODATE, &bio->bi_flags))
++ 		set_bit(R1BIO_Uptodate, &r1_bio->state);
++	    else
++		printk("end_sync_read: our bio, but !BIO_UPTODATE\n");
++	}
 
-Martin
+ 	if (atomic_dec_and_test(&r1_bio->remaining))
+ 		reschedule_retry(r1_bio);
 
+and will test it later today (in about 10 hours from now) -- as I
+mentioned, this is a prod box and testing isn't possible anytime.
 
->Untested ... :-)
->
->Phil
->--
->To unsubscribe from this list: send the line "unsubscribe linux-raid"
->in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you for looking into this.  Hopefully it will work better now :)
 
-
--- 
-Diese Nachricht wurde von meinem Android-Mobiltelefon mit K-9 Mail gesendet.
+/mjt
