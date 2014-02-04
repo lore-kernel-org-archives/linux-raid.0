@@ -1,71 +1,132 @@
-From: Bill <billstuff2001@sbcglobal.net>
-Subject: raid5 replace ignored error?
-Date: Tue, 04 Feb 2014 03:00:50 -0600
-Message-ID: <52F0AC42.5080407@sbcglobal.net>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Soft RAID and EFI systems
+Date: Tue, 04 Feb 2014 10:35:15 +0100
+Message-ID: <52F0B453.3070108@hesbynett.no>
+References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <70EFD3D5-F7AC-4359-8888-99EB6CCA9E4F@colorremedies.com> <52EEB9F2.2000607@gmail.com> <3D3B8F1A-F525-459D-95F2-9D7889C222CD@colorremedies.com> <52F0A58D.6000400@gmail.com> <52F0AB60.8000800@hesbynett.no> <52F0AD83.4030300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <52F0AD83.4030300@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Francis Moreau <francis.moro@gmail.com>, Chris Murphy <lists@colorremedies.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On 04/02/14 10:06, Francis Moreau wrote:
+> On 02/04/2014 09:57 AM, David Brown wrote:
+>> On 04/02/14 09:32, Francis Moreau wrote:
+>>> On 02/02/2014 11:30 PM, Chris Murphy wrote:
+>>>>
+>>>> On Feb 2, 2014, at 2:34 PM, Francis Moreau <francis.moro@gmail.com>
+>>>> wrote:
+>>>>>
+>>>>> That's funny because one of the reasons I want to use UEFI
+>>>>> firmware is to get rid of grub (I don't like it and the way it
+>>>>> has become such a bloated beast): since /boot is vfat and has its
+>>>>> own partition, I prefer use a much simpler bootloader such as
+>>>>> gummyboot.
+>>>>
+>>>> It might be possible to do what you want with mdadm metadata
+>>>> version 1.0. Typically bootable raid1 is ext4 on md raid1 using
+>>>> metadata format 1.0, and an internal bitmap. When the partitions
+>>>> are not assembled, they each appear as separate ext4 partitions. If
+>>>> FAT32 on md raid1 with metadata 1.0 still looks like FAT32 as a
+>>>> separate partition, and the mdadm v1.0 metadata at the end of the
+>>>> partition doesn't confuse the firmware, what should happen is any
+>>>> ESP can boot the system. Once the kernel and initramfs are loaded,
+>>>> mdadm will locate the mdadm metadata on each partition and assemble
+>>>> them into a single md device, and fstab mounts the md device at
+>>>> /boot. So prior to boot they are separate ESPs, and after boot it's
+>>>> a single ESP (mirrored). But I haven't tested this arrangement with
+>>>> ESPs and UEFI.
+>>>
+>>> I'll test this configuration and see if it works soon.
+>>>
+>>>>
+>>>> The easiest scenario I've found for resilient boot on EFI systems
+>>>> is, well, not easy. First, I put shim and grub package files onto
+>>>> each ESP along with the previously posted grub.cfg snippet. Those
+>>>> grub.cfgs are one time, non-updatable files, that point to
+>>>> /boot/grub2/grub.cfg (produced with grub2-mkconfig on Fedora) on
+>>>> Btrfs raid1. That's about as reliable as it gets because the only
+>>>> dependencies are grub (which understands Btrfs multiple devices)
+>>>> and dracut baking the btrfs module into initramfs. It gets
+>>>> essentially fool proof if btrfs is compiled into the kernel. Other
+>>>> combinations are easier to break. I basically want ESPs that aren't
+>>>> being modified if at all avoidable because FAT32 breaks easily if
+>>>> anything is being written to it and there is a crash or power
+>>>> failure.
+>>>>
+>>>
+>>> I agree that FAT32 can break during power failure, that's the reason
+>>> why I'm trying to make it mirrored. But I want to get rid of grub as
+>>> much as possible so I would prefer to use the first solution.
+>>
+>> Mirroring will not help FAT32 during power failure - you have a good
+>> chance of getting two copies of the same error.  And if your power fail
+>> hits during writes, you also have a good chance of the two disks having
+>> /different/ errors and inconsistencies.  The problem lies in FAT32
+>> having no log, and no barriers or ordering when it makes changes -
+>> updates to the file data, the directory structure, and the FAT table can
+>> happen in different orders, and a power failure can leave one part
+>> updated and the other part with old data.  Raid cannot help with this
+>> problem.
+> 
+> Ok, so basically RAID helps only in case of disk failure, right ?
 
-I had something weird happen during a replace in a raid5 array on kernel 
-3.10.28 -
-it appears an error in writing to / communicating with the replacement 
-disk was ignored.
+Exactly correct (where "disk failure" includes both complete failure of
+the disk, and unrecoverable read errors).  Raid does not help against
+corruption due to power fails (if you have a raid card with a battery
+backup, and a filesystem with journalling, it should help here), and it
+does not help against the most common cause of data loss - human error!
 
-I have this array:
+> 
+> It seems odd to have chosen FAT32 in the first place then.
 
-md3 : active raid5 sda1[0] sdd1[3] sdb1[1] sdf1[4] sdc1[2]
-       3900742144 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-       bitmap: 0/233 pages [0KB], 2048KB chunk
+FAT32 is the worst possible choice of a filesystem, except for three
+aspects - it is quite simple and can be implemented in a small amount of
+code (such as in EFI or a bootloader), it is usable on small disks or
+partitions, and it is supported by brain-dead OS's that don't understand
+better alternatives (NTFS has journalling, but is a monster to implement
+in something the size of EFI).
 
-I tried replacing sdf1 with sde1.
+It's a crap filesystem, but it is the "industry standard" for small
+disks and small systems.
 
-     [106666.129833] md: recovery of RAID array md3
-     [106666.129836] md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
-     [106666.129837] md: using maximum available idle IO bandwidth (but 
-not more than 200000 KB/sec) for recovery.
-     [106666.129842] md: using 128k window, over a total of 975185536k.
+> 
+>>
+>> The most important way to protect your FAT32 system is simply to avoid
+>> writing to it except when absolutely necessary.  If it is mounted
+>> read-only, and only updated when changing grub or updating the kernel,
+>> then just make sure you don't power-cycle your machine at that time.
+> 
+> Well, the problem is that you never know when power failures happen at
+> least for me with a small server without any power backup.
 
-1/2 hour later I got a flood of errors in dmesg:
+The answer here is staring you in the face... get an UPS.  A small one
+is not expensive - you only need it to run the server for a couple of
+minutes.  Even though journalled filesystems can keep their /metadata/
+consistency after a power failure, they don't normally guarantee /data/
+consistency, and certainly cannot guarantee /application level/
+consistency.  You get that from doing a proper shutdown.  And remember
+also that after an unclean shutdown, restarts involve long consistency
+checks at the raid level and at the filesystem level - an UPS will let
+you avoid that.
 
-     [108334.974861] ata5.00: exception Emask 0x10 SAct 0x7fffffff SErr 
-0x480100 action 0x6 frozen
-     [108334.974864] ata5.00: irq_stat 0x08000000, interface fatal error
-     [108334.974866] ata5: SError: { UnrecovData 10B8B Handshk }
-     [108334.974868] ata5.00: failed command: WRITE FPDMA QUEUED
-     [108334.974872] ata5.00: cmd 61/00:00:10:97:9e/04:00:15:00:00/40 
-tag 0 ncq 524288 out
-     [108334.974872]          res 40/00:b0:10:f7:9e/00:00:15:00:00/40 
-Emask 0x10 (ATA bus error)
-     [108334.974873] ata5.00: status: { DRDY }
-     .
-     .(29 more of the same message)
-     .
-     [108344.976877] ata5: softreset failed (1st FIS failed)
-     [108344.976883] ata5: hard resetting link
-     [108349.874854] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-     [108349.901025] ata5.00: configured for UDMA/133
-     [108349.901055] ata5: EH complete
-
-There were no md error messages, the recovery continued, and finished a 
-few hours later.
-
-     [122443.805899] md: md3: recovery done.
-
-
-Afterwards I did a QC check and found a mismatch in one file which I 
-mapped to the area
-being updated when this error was logged.
-
-What should happen in this case?
-Should the "replace" have failed or is there something else going on here?
-
-Thanks,
-Bill
-
+> 
+>> The smaller the critical window, the smaller the chances of problems.
+>>
+>> If you need to do updates more regularly, then your best bet is to have
+>> independent FAT32 partitions on the two disks.  Make your updates on one
+>> disk, and when it is finished copy the changes onto the other disk.
+>> Then you always have a good copy - if you get a crash while the first
+>> disk is being updated, then when you re-start the computer, use its boot
+>> menu to choose booting from the second disk.
+> 
+> That seems the best thing to do then.
+> 
+> Thanks.
+> 
+> 
 
