@@ -1,32 +1,39 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Soft RAID and EFI systems
-Date: Tue, 4 Feb 2014 08:40:57 -0700
-Message-ID: <B024B0B9-6E6E-4988-B371-644EF2641F77@colorremedies.com>
-References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <70EFD3D5-F7AC-4359-8888-99EB6CCA9E4F@colorremedies.com> <52EEB9F2.2000607@gmail.com> <3D3B8F1A-F525-459D-95F2-9D7889C222CD@colorremedies.com> <52F0A58D.6000400@gmail.com> <52F0AB60.8000800@hesbynett.no>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Larry Fenske <LFenske@SGI.com>
+Subject: Re: Very long raid5 init/rebuild times
+Date: Tue, 4 Feb 2014 10:59:47 -0700
+Message-ID: <52F12A93.50408@SGI.com>
+References: <21217.9977.5869.747472@quad.stoffel.home> <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org> <52E0807D.2030608@hardwarefreak.com> <20140123091319.GB2306@merlins.org> <52E10A07.3070302@hardwarefreak.com> <20140123210155.GJ10046@merlins.org> <52E1F685.3050300@hardwarefreak.com> <20140125083630.GA7555@merlins.org> <52E76054.5090900@hardwarefreak.com> <52EABA63.2060701@ubuntu.com> <52ED77A3.6020509@hardwarefreak.com> <52EE9445.2020202@ubuntu.com> <52EF3865.4000106@hardwarefreak.com> <52EFAACE.40906@ubuntu.com> <52F05ECD.5060804@hardwarefreak.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52F0AB60.8000800@hesbynett.no>
+In-Reply-To: <52F05ECD.5060804@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Francis Moreau <francis.moro@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: stan@hardwarefreak.com, Phillip Susi <psusi@ubuntu.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On Feb 4, 2014, at 1:57 AM, David Brown <david.brown@hesbynett.no> wrote:
-> The most important way to protect your FAT32 system is simply to avoid
-> writing to it except when absolutely necessary.  If it is mounted
-> read-only, and only updated when changing grub or updating the kernel,
-> then just make sure you don't power-cycle your machine at that time.
-> The smaller the critical window, the smaller the chances of problems.
-
-I agree. I even question why most linux distros persistently mount the EFI System partition at /boot/efi for no apparently good reason. Windows and OS X do not keep the ESP mounted even read-only. It's pretty much never updated. If we're constantly updating the ESP for things like grub.cfg modifications, I think the implementation is flawed.
-
-On EFI, grubx64.efi/core.img needs to look for grub.cfg /boot/grub2 not /boot/efi/EFI/fedora
-https://bugzilla.redhat.com/show_bug.cgi?id=1048999
-
-
-
-Chris Murphy
-
+On 02/03/2014 08:30 PM, Stan Hoeppner wrote:
+> On 2/3/2014 8:42 AM, Phillip Susi wrote:
+>
+>> On 2/3/2014 1:34 AM, Stan Hoeppner wrote:
+>>> Please reread my statement above.  Now let me restate that as:
+>>>
+>>> Measuring disk throughput when writing through the buffer cache
+>>> isn't a measurement of disk throughput as much as it is a
+>>> measurement of cache throughput.  Thus, such measurements do not
+>>> demonstrate actual disk throughput.
+>>>
+>>> Do you disagree?
+>> Yes, I do because cache throughput is >>>> disk throughput.
+> It is because buffer cache throughput is greater that measurements of
+> disk throughput are not accurate.  If one issues a sync after writing
+> through buffer cache the measured throughput should be fairly close.
+> But without issuing a sync you're measuring buffer cache throughput.
+>
+> Thus, as I said previously, it is better to do parallel O_DIRECT writes
+> or use AIO with O_DIRECT for testing disk throughput as one doesn't have
+> to worry about these buffer cache issues.
+>
+Perhaps Phillip is doing the obvious and only measuring throughput after
+the cache is full.
