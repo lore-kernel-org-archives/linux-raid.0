@@ -1,70 +1,51 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Very long raid5 init/rebuild times
-Date: Tue, 04 Feb 2014 15:58:14 -0600
-Message-ID: <52F16276.7040802@hardwarefreak.com>
-References: <21217.9977.5869.747472@quad.stoffel.home> <20140121073540.GF10140@merlins.org> <20140121163755.GG10140@merlins.org> <52DF7976.6070808@hardwarefreak.com> <20140122174854.GF26014@merlins.org> <52E0807D.2030608@hardwarefreak.com> <20140123091319.GB2306@merlins.org> <52E10A07.3070302@hardwarefreak.com> <20140123210155.GJ10046@merlins.org> <52E1F685.3050300@hardwarefreak.com> <20140125083630.GA7555@merlins.org> <52E76054.5090900@hardwarefreak.com> <52EABA63.2060701@ubuntu.com> <52ED77A3.6020509@hardwarefreak.com> <52EE9445.2020202@ubuntu.com> <52EF3865.4000106@hardwarefreak.com> <52EFAACE.40906@ubuntu.com> <52F05ECD.5060804@hardwarefreak.com> <52F12A93.50408@SGI.com> <52F12CA0.1030803@ubuntu.com> <52F134D3.20704@hardwarefreak.com> <52F13795.50408@ubuntu.com> <52F13C66.9030200@hardw
- arefreak.com> <52F14AA4.9020402@ubuntu.com>
-Reply-To: stan@hardwarefreak.com
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: mdadm, raid 6 best options if any?
+Date: Tue, 4 Feb 2014 22:26:33 +0000
+Message-ID: <BLU0-SMTP462E6C9C5DF0FE45B7116D798AA0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52F14AA4.9020402@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Larry Fenske <LFenske@SGI.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/4/2014 2:16 PM, Phillip Susi wrote:
+I am currently creating a raid 6 array, normally I would just let the
+defaults do the job and be done with it but I'm having to do a limited
+create and then add disks.
 
-> On 2/4/2014 2:15 PM, Stan Hoeppner wrote:
->> I never argued that the buffer cache path is slower.  It is in fact
->> much faster in most cases.
->>
->> I argued that accurately measuring the actual data throughput at
->> the disks isn't possible when writing through buffer cache.  At
->> least not in a straightforward manner as with O_DIRECT.  I've made
->> the point in the last two or three replies.  Yet instead of
->> directly addressing that, rebutting that, you keep making these
->> tangential irrelevant arguments...
-> 
-> You originally said "To significantly increase single streaming
-> throughput you need AIO."  
+From what I can recall a raid six can have differing layouts, the
+"checksum" data can be interspersed across the disks or put on 2
+"parity" disks and the data contained on the other set of drives.
 
-Yes, I stated that in this post
+My first question is, does this still hold true and if so do I need to
+do anything to get the parity spread over the disks, is there a layout
+recommended or is the "if not specified it will do this" route possible.
 
-http://www.spinics.net/lists/raid/msg45726.html
+My second question is, due to my situation I am going to have to create
+a 4 drive raid 6 array with just 2 disks initially. The reason for this
+is a lack of sata ports/disks (I have the 4 drives, but... the end
+partition of 2 of the drives is needed to keep a raid 6 6 disk set up
+running, I will drop 2 drives/partitions from the 6, extend the lower
+portion of the 2 drives (new raid 6), then copy from the degraded 6
+drive to the new degraded 4 drive, then delete partitions/disks from the
+6 drive and extend the last 2 drives, of the 4 drives, and add them
+in.... 
 
-in the context of achieving greater throughput with an FIO job file
-configured to use O_DIRECT, a job file I created, that the OP was using
-for testing.  That job file is quoted further down in this same post,
-and is included in my posts prior this one in the thread.  Apparently
-you ignored them.  The context of my comment above is clearly
-established multiple times earlier in the thread.
+Now my thinking is that all I need to do is, fail/remove "drive
+b/partition6 from the six drive, then drive c/partition6... I now have a
+degraded raid 6.
 
-In my paragraph directly preceding the statement you quote above, I
-stated this:
+Then create MD51 /dev/sdb5 /dev/sdc5 missing missing.
+Copy data to md51 (after file system creation)
+add MD51 /dev/sdd5 /dev/sde5
+and jobs a good un.
 
-"Serial submission typically doesn't reach peak throughput...  You
-usually must submit asynchronously or in parallel to reach maximum
-throughput."
+My issue, I may be over thinking this, is that the b5/c5/missing/missing
+might force the d5/e5 to be parity only, when I would like the parity to
+be across all drives... a nice clean stripe! Or perhaps it makes no
+difference to performance/disk life/summat else.
 
-And again this is in the context of the FIO job file using O_DIRECT, and
-this statement is factual.  As I repeated earlier today, O_DIRECT is
-used because measuring actual throughput at the disks is
-straightforward.  To increase O_DIRECT write throughput in FIO, you
-typically need parallel submission or AIO.  This is well known.
+Jon 
 
-> Now you appear to be saying otherwise.
 
-No, I have not contradicted myself Phillip.  I've stated the same thing
-until becoming blue in the face, and it's quite frustrating.
-
-The fact of the matter is that you took a single sentence out of context
-in a very long thread, and attacked it, attacked me, as being wrong,
-when in fact I am, and have been, correct throughout.
-
-Context matters, always.
-
--- 
-Stan
