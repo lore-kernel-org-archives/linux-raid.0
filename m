@@ -1,94 +1,61 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: Intent Bitmap size and performance
-Date: Thu, 6 Feb 2014 11:05:19 -0800
-Message-ID: <20140206190519.GE25441@merlins.org>
-References: <20140202003915.GB25441@merlins.org>
- <20140202005646.GC25441@merlins.org>
- <20140202172832.30e33c05@notabene.brown>
+From: Joe Landman <joe.landman@gmail.com>
+Subject: Re: Storage system
+Date: Thu, 06 Feb 2014 14:24:35 -0500
+Message-ID: <52F3E173.8020305@gmail.com>
+References: <20140206180909.GA2419@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140202172832.30e33c05@notabene.brown>
+In-Reply-To: <20140206180909.GA2419@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Feb 02, 2014 at 05:28:32PM +1100, NeilBrown wrote:
-> On Sat, 1 Feb 2014 16:56:46 -0800 Marc MERLIN <marc@merlins.org> wrote:
-> 
-> > On Sat, Feb 01, 2014 at 04:39:15PM -0800, Marc MERLIN wrote:
-> > > How can I tell I got the size for my array size?
-> > 
-> > Aah, the clue seems to be in the kernel logs:
-> > [669348.274368] md7: bitmap file is out of date (0 < 38029) -- forcing full recovery
-> > [669348.299174] created bitmap (15 pages) for device md7
-> > [669348.316720] md7: bitmap file is out of date, doing full recovery
-> > [669348.380555] md7: bitmap initialized from disk: read 1 pages, set 29809 of 29809 bits
-> > 
-> > If I got the math right, 30K bits for 8TB is one bit per 266MB.
-> > 
-> > Given that, I'm going to assume that this is not going to impact system
-> > performance much for most operations.
-> > 
-> > Is my assumption and conclusion correct?
-> > 
-> > Thanks,
-> > Marc
-> 
-> You can also use "mdadm --examine-bitmap" on one of the component devices to
-> get more details about the bitmap.
+On 02/06/2014 01:09 PM, Piergiorgio Sartor wrote:
+> Hi all,
+>
+> this question is only partially related to Linux MD,
+> but since the experts are here, I think it would not
+> be a big problem to ask here.
+>
+> I'm considering a storage system.
+> This is based on HDD "rust".
+> It should have RAID-6, for protection agaist disk
+> failure(s).
+> It should have LUKS (or similar), in order to simplify
+> HDD disposal (disk that are still somehow readable will
+> not need to be wiped out before dumping them).
 
-Thanks, I had managed to miss this in the man page.
+Can you use the full disk encryption mechanisms?  This could 
+(potentially) save a layer, though the down side is that you don't have 
+control over it.  We've not used it, most of our customers destroying 
+disks tend to physically destroy them, and not trust the encryption layer.
 
-Argh, not good then, see:
-gargamel:~# mdadm --examine-bitmap /dev/md5
-        Filename : /dev/md5
-           Magic : 534b554c
-mdadm: invalid bitmap magic 0x534b554c, the bitmap file appears to be corrupted
-         Version : 16826042
-mdadm: unknown bitmap version 16826042, either the bitmap file is corrupted or you need to upgrade your tools
-gargamel:~# mdadm --examine-bitmap /dev/md8
-        Filename : /dev/md8
-           Magic : 534b554c
-mdadm: invalid bitmap magic 0x534b554c, the bitmap file appears to be corrupted
-         Version : 16826042
-mdadm: unknown bitmap version 16826042, either the bitmap file is corrupted or you need to upgrade your tools
+> It should have LVM, as flexible partition system.
+>
+> Now, given that the HDD are always the lower layer, the
+> others can be combined in any order.
+> Six possible combinations, specifically, naming:
+>
+> H: HDD
+> R: RAID
+> E: encryption
+> L: LVM
+>
+> We can have:
+>
+> HREL
+> HRLE
+> HLRE
+> HLER
+> HERL
+> HELR
 
-md8 I just created a few weeks ago.
-md5 is old-ish but I just added the bitmap with --grow.
+If this is a heavily used system, you'll likely want to start with HR 
+for performance reasons.  If you can eliminate the E with FDE as noted, 
+and if it works well, great.  If not, I'd suggest putting that next. 
+LVM isn't a fast system, so its better not to put it on a fast system. 
+LUKS can be fast with good CPUs and reasonable controllers/disks.
 
-kernel: 3.12.7
-gargamel:~# mdadm --version
-mdadm - v3.3 - 3rd September 2013
 
-gargamel:~# apt-get install -t unstable mdadm
-Reading package lists... Done
-Building dependency tree       
-Reading state information... Done
-mdadm is already the newest version.
-
-Is debian unstable too old, or do I have another bug?
-
-> My rule-of-thumb (base on zero hard evidence) is that one bit should
-> correspond to approximately 1 second of IO.  Your bits correspond to 2 or 3
-> seconds so that is certainly the right ball park.
-> 
-> As always with RAID, performance is highly dependent on load.
-> It is quite easy to add and remove bitmaps to/from a live md array so
-> testing the effect on a particular workload is not that hard.
-> 
-> The default mdadm chooses is a bit complex.  It first chooses an amount of
-> space to reserve for the bitmap, the it figures what chunk size will allow
-> the bits to fit in the available space.  Then makes sure that it as least
-> 64Meg.
-
-Thanks for explaining.
-
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
