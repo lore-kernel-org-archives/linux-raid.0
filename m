@@ -1,32 +1,94 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH 45/51] md, raid5: Fix CPU hotplug callback registration
-Date: Thu, 6 Feb 2014 19:43:23 +0100
-Message-ID: <20140206184323.GB31410@redhat.com>
-References: <20140205220251.19080.92336.stgit@srivatsabhat.in.ibm.com> <20140205221244.19080.70910.stgit@srivatsabhat.in.ibm.com> <20140206121151.0cbdbaa1@notabene.brown> <52F35E62.2060003@linux.vnet.ibm.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: Intent Bitmap size and performance
+Date: Thu, 6 Feb 2014 11:05:19 -0800
+Message-ID: <20140206190519.GE25441@merlins.org>
+References: <20140202003915.GB25441@merlins.org>
+ <20140202005646.GC25441@merlins.org>
+ <20140202172832.30e33c05@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52F35E62.2060003@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: NeilBrown <neilb@suse.de>, paulus@samba.org, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org, mingo@kernel.org, paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20140202172832.30e33c05@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/06, Srivatsa S. Bhat wrote:
->
-> On 02/06/2014 06:41 AM, NeilBrown wrote:
-> > Shall I wait for a signed-of-by from Oleg, then queue it through my md tree?
-> >
->
-> Sure, that sounds great, since this patch doesn't have any dependency.
-> Thanks a lot!
->
-> Oleg, it would be great if you could kindly add your S-O-B to this patch.
-> Thanks!
+On Sun, Feb 02, 2014 at 05:28:32PM +1100, NeilBrown wrote:
+> On Sat, 1 Feb 2014 16:56:46 -0800 Marc MERLIN <marc@merlins.org> wrote:
+> 
+> > On Sat, Feb 01, 2014 at 04:39:15PM -0800, Marc MERLIN wrote:
+> > > How can I tell I got the size for my array size?
+> > 
+> > Aah, the clue seems to be in the kernel logs:
+> > [669348.274368] md7: bitmap file is out of date (0 < 38029) -- forcing full recovery
+> > [669348.299174] created bitmap (15 pages) for device md7
+> > [669348.316720] md7: bitmap file is out of date, doing full recovery
+> > [669348.380555] md7: bitmap initialized from disk: read 1 pages, set 29809 of 29809 bits
+> > 
+> > If I got the math right, 30K bits for 8TB is one bit per 266MB.
+> > 
+> > Given that, I'm going to assume that this is not going to impact system
+> > performance much for most operations.
+> > 
+> > Is my assumption and conclusion correct?
+> > 
+> > Thanks,
+> > Marc
+> 
+> You can also use "mdadm --examine-bitmap" on one of the component devices to
+> get more details about the bitmap.
 
-Thanks Neil and Srivatsa,
+Thanks, I had managed to miss this in the man page.
 
-Sure, feel free to add
+Argh, not good then, see:
+gargamel:~# mdadm --examine-bitmap /dev/md5
+        Filename : /dev/md5
+           Magic : 534b554c
+mdadm: invalid bitmap magic 0x534b554c, the bitmap file appears to be corrupted
+         Version : 16826042
+mdadm: unknown bitmap version 16826042, either the bitmap file is corrupted or you need to upgrade your tools
+gargamel:~# mdadm --examine-bitmap /dev/md8
+        Filename : /dev/md8
+           Magic : 534b554c
+mdadm: invalid bitmap magic 0x534b554c, the bitmap file appears to be corrupted
+         Version : 16826042
+mdadm: unknown bitmap version 16826042, either the bitmap file is corrupted or you need to upgrade your tools
 
-Signed-off-by: Oleg Nesterov <oleg@redhat.com>
+md8 I just created a few weeks ago.
+md5 is old-ish but I just added the bitmap with --grow.
+
+kernel: 3.12.7
+gargamel:~# mdadm --version
+mdadm - v3.3 - 3rd September 2013
+
+gargamel:~# apt-get install -t unstable mdadm
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+mdadm is already the newest version.
+
+Is debian unstable too old, or do I have another bug?
+
+> My rule-of-thumb (base on zero hard evidence) is that one bit should
+> correspond to approximately 1 second of IO.  Your bits correspond to 2 or 3
+> seconds so that is certainly the right ball park.
+> 
+> As always with RAID, performance is highly dependent on load.
+> It is quite easy to add and remove bitmaps to/from a live md array so
+> testing the effect on a particular workload is not that hard.
+> 
+> The default mdadm chooses is a bit complex.  It first chooses an amount of
+> space to reserve for the bitmap, the it figures what chunk size will allow
+> the bits to fit in the available space.  Then makes sure that it as least
+> 64Meg.
+
+Thanks for explaining.
+
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
