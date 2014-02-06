@@ -1,137 +1,253 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid6check.c: reduce verbosity
-Date: Thu, 6 Feb 2014 09:30:12 +1100
-Message-ID: <20140206093012.69fa4332@notabene.brown>
-References: <20140201160334.GA9378@lazy.lzy>
-	<20140204161025.579257b1@notabene.brown>
-	<20140205191845.GA11653@lazy.lzy>
+Subject: Re: [PATCH 45/51] md, raid5: Fix CPU hotplug callback registration
+Date: Thu, 6 Feb 2014 12:11:51 +1100
+Message-ID: <20140206121151.0cbdbaa1@notabene.brown>
+References: <20140205220251.19080.92336.stgit@srivatsabhat.in.ibm.com>
+	<20140205221244.19080.70910.stgit@srivatsabhat.in.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qWXDGGph9ggvYMdKHP/qLX6"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140205191845.GA11653@lazy.lzy>
-Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+ boundary="Sig_/8Sh5fJFndN.WKIU2q1H+blD"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140205221244.19080.70910.stgit@srivatsabhat.in.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+Cc: paulus@samba.org, oleg@redhat.com, rusty@rustcorp.com.au, peterz@infradead.org, tglx@linutronix.de, akpm@linux-foundation.org, mingo@kernel.org, paulmck@linux.vnet.ibm.com, tj@kernel.org, walken@google.com, ego@linux.vnet.ibm.com, linux@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/qWXDGGph9ggvYMdKHP/qLX6
+--Sig_/8Sh5fJFndN.WKIU2q1H+blD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 5 Feb 2014 20:18:45 +0100 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+On Thu, 06 Feb 2014 03:42:45 +0530 "Srivatsa S. Bhat"
+<srivatsa.bhat@linux.vnet.ibm.com> wrote:
 
-> On Tue, Feb 04, 2014 at 04:10:25PM +1100, NeilBrown wrote:
-> > On Sat, 1 Feb 2014 17:03:34 +0100 Piergiorgio Sartor
-> > <piergiorgio.sartor@nexgo.de> wrote:
-> >=20
-> > > This patch removes some printouts, which
-> > > are not really useful here.
-> > > These could be re-added later, in case a
-> > > verbosity parameter will be provided.
-> > >=20
-> > > Signed off: piergiorgio.sartor@nexgo.de
-> > >=20
-> > > diff -uNrp a/raid6check.c b/raid6check.c
-> > > --- a/raid6check.c	2014-01-23 19:36:23.151837870 +0100
-> > > +++ b/raid6check.c	2014-02-01 16:56:14.123771170 +0100
-> > > @@ -188,8 +188,6 @@ int check_stripes(struct mdinfo *info, i
-> > >  	while (length > 0) {
-> > >  		int disk[chunk_size >> CHECK_PAGE_BITS];
-> > > =20
-> > > -		printf("pos --> %llu\n", start);
-> > > -
-> > >  		err =3D lock_stripe(info, start, chunk_size, data_disks, sig);
-> > >  		if(err !=3D 0) {
-> > >  			if (err !=3D 2)
-> > > @@ -221,7 +219,6 @@ int check_stripes(struct mdinfo *info, i
-> > >  			int disk =3D geo_map(i, start, raid_disks, level, layout);
-> > >  			blocks[i] =3D stripes[disk];
-> > >  			block_index_for_slot[disk] =3D i;
-> > > -			printf("%d->%d\n", i, disk);
-> > >  		}
-> > > =20
-> > >  		qsyndrome(p, q, (uint8_t**)blocks, data_disks, chunk_size);
-> > >=20
-> > >=20
-> >=20
-> > This and other 3 all applied - thanks.
-> >=20
-> > NeilBrown
+> From: Oleg Nesterov <oleg@redhat.com>
 >=20
-> Hi Neil,
+> Subsystems that want to register CPU hotplug callbacks, as well as perform
+> initialization for the CPUs that are already online, often do it as shown
+> below:
 >=20
-> thanks for the update.
+> 	get_online_cpus();
 >=20
-> It seems the patch removing the commented code
-> (the one you complained about), was not added.
+> 	for_each_online_cpu(cpu)
+> 		init_cpu(cpu);
 >=20
-> Below the patch again.
+> 	register_cpu_notifier(&foobar_cpu_notifier);
 >=20
-> Thanks,
+> 	put_online_cpus();
 >=20
-> bye,
+> This is wrong, since it is prone to ABBA deadlocks involving the
+> cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
+> with CPU hotplug operations).
 >=20
-> --- --- --- --- ---
+> Interestingly, the raid5 code can actually prevent double initialization =
+and
+> hence can use the following simplified form of callback registration:
 >=20
-> This patch will remove some legacy code.
-> It is part of the verbosity "cleanup".
-> In any case, if information about the P
-> and Q parity mismatches is required, it
-> should go inside the code handling page
-> size blocks, not full stripe size.
+> 	register_cpu_notifier(&foobar_cpu_notifier);
 >=20
-> Signed off: piergiorgio.sartor@nexgo.de
-> diff -uNrp a/raid6check.c b/raid6check.c
-> --- a/raid6check.c      2014-01-20 19:48:10.435721613 +0100
-> +++ b/raid6check.c      2014-01-23 19:36:23.151837870 +0100
-> @@ -231,15 +231,7 @@ int check_stripes(struct mdinfo *info, i
->                 block_index_for_slot[diskP] =3D data_disks;
->                 blocks[data_disks+1] =3D stripes[diskQ];
->                 block_index_for_slot[diskQ] =3D data_disks+1;
-> -/* Do we really need the code below? */
-> -#if 0
-> -               if (memcmp(p, stripes[diskP], chunk_size) !=3D 0) {
-> -                       printf("P(%d) wrong at %llu\n", diskP, start);
-> -               }
-> -               if (memcmp(q, stripes[diskQ], chunk_size) !=3D 0) {
-> -                       printf("Q(%d) wrong at %llu\n", diskQ, start);
-> -               }
-> -#endif
+> 	get_online_cpus();
+>=20
+> 	for_each_online_cpu(cpu)
+> 		init_cpu(cpu);
+>=20
+> 	put_online_cpus();
+>=20
+> A hotplug operation that occurs between registering the notifier and call=
+ing
+> get_online_cpus(), won't disrupt anything, because the code takes care to
+> perform the memory allocations only once.
+>=20
+> So reorganize the code in raid5 this way to fix the deadlock with callback
+> registration.
+>=20
+> Cc: Neil Brown <neilb@suse.de>
+> Cc: linux-raid@vger.kernel.org
+> Cc: stable@vger.kernel.org
+> [Srivatsa: Fixed the unregister_cpu_notifier() deadlock, added the
+> free_scratch_buffer() helper to condense code further and wrote the chang=
+elog.]
+> Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+> ---
+>=20
+>  drivers/md/raid5.c |   90 +++++++++++++++++++++++++---------------------=
+------
+>  1 file changed, 44 insertions(+), 46 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index f1feade..16f5c21 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5514,23 +5514,43 @@ raid5_size(struct mddev *mddev, sector_t sectors,=
+ int raid_disks)
+>  	return sectors * (raid_disks - conf->max_degraded);
+>  }
+> =20
+> +static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu=
+ *percpu)
+> +{
+> +	safe_put_page(percpu->spare_page);
+> +	kfree(percpu->scribble);
+> +	percpu->spare_page =3D NULL;
+> +	percpu->scribble =3D NULL;
+> +}
 > +
->                 raid6_collect(chunk_size, p, q, stripes[diskP], stripes[d=
-iskQ], results);
->                 raid6_stats(disk, results, raid_disks, chunk_size);
->=20
->=20
->=20
->=20
+> +static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu=
+ *percpu)
+> +{
+> +	if (conf->level =3D=3D 6 && !percpu->spare_page)
+> +		percpu->spare_page =3D alloc_page(GFP_KERNEL);
+> +	if (!percpu->scribble)
+> +		percpu->scribble =3D kmalloc(conf->scribble_len, GFP_KERNEL);
+> +
+> +	if (!percpu->scribble || (conf->level =3D=3D 6 && !percpu->spare_page))=
+ {
+> +		free_scratch_buffer(conf, percpu);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static void raid5_free_percpu(struct r5conf *conf)
+>  {
+> -	struct raid5_percpu *percpu;
+>  	unsigned long cpu;
+> =20
+>  	if (!conf->percpu)
+>  		return;
+> =20
+> -	get_online_cpus();
+> -	for_each_possible_cpu(cpu) {
+> -		percpu =3D per_cpu_ptr(conf->percpu, cpu);
+> -		safe_put_page(percpu->spare_page);
+> -		kfree(percpu->scribble);
+> -	}
+>  #ifdef CONFIG_HOTPLUG_CPU
+>  	unregister_cpu_notifier(&conf->cpu_notify);
+>  #endif
+> +
+> +	get_online_cpus();
+> +	for_each_possible_cpu(cpu)
+> +		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+>  	put_online_cpus();
+> =20
+>  	free_percpu(conf->percpu);
+> @@ -5557,15 +5577,7 @@ static int raid456_cpu_notify(struct notifier_bloc=
+k *nfb, unsigned long action,
+>  	switch (action) {
+>  	case CPU_UP_PREPARE:
+>  	case CPU_UP_PREPARE_FROZEN:
+> -		if (conf->level =3D=3D 6 && !percpu->spare_page)
+> -			percpu->spare_page =3D alloc_page(GFP_KERNEL);
+> -		if (!percpu->scribble)
+> -			percpu->scribble =3D kmalloc(conf->scribble_len, GFP_KERNEL);
+> -
+> -		if (!percpu->scribble ||
+> -		    (conf->level =3D=3D 6 && !percpu->spare_page)) {
+> -			safe_put_page(percpu->spare_page);
+> -			kfree(percpu->scribble);
+> +		if (alloc_scratch_buffer(conf, percpu)) {
+>  			pr_err("%s: failed memory allocation for cpu%ld\n",
+>  			       __func__, cpu);
+>  			return notifier_from_errno(-ENOMEM);
+> @@ -5573,10 +5585,7 @@ static int raid456_cpu_notify(struct notifier_bloc=
+k *nfb, unsigned long action,
+>  		break;
+>  	case CPU_DEAD:
+>  	case CPU_DEAD_FROZEN:
+> -		safe_put_page(percpu->spare_page);
+> -		kfree(percpu->scribble);
+> -		percpu->spare_page =3D NULL;
+> -		percpu->scribble =3D NULL;
+> +		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+>  		break;
+>  	default:
+>  		break;
+> @@ -5588,40 +5597,29 @@ static int raid456_cpu_notify(struct notifier_blo=
+ck *nfb, unsigned long action,
+>  static int raid5_alloc_percpu(struct r5conf *conf)
+>  {
+>  	unsigned long cpu;
+> -	struct page *spare_page;
+> -	struct raid5_percpu __percpu *allcpus;
+> -	void *scribble;
+> -	int err;
+> +	int err =3D 0;
+> =20
+> -	allcpus =3D alloc_percpu(struct raid5_percpu);
+> -	if (!allcpus)
+> +	conf->percpu =3D alloc_percpu(struct raid5_percpu);
+> +	if (!conf->percpu)
+>  		return -ENOMEM;
+> -	conf->percpu =3D allcpus;
+> +
+> +#ifdef CONFIG_HOTPLUG_CPU
+> +	conf->cpu_notify.notifier_call =3D raid456_cpu_notify;
+> +	conf->cpu_notify.priority =3D 0;
+> +	err =3D register_cpu_notifier(&conf->cpu_notify);
+> +	if (err)
+> +		return err;
+> +#endif
+> =20
+>  	get_online_cpus();
+> -	err =3D 0;
+>  	for_each_present_cpu(cpu) {
+> -		if (conf->level =3D=3D 6) {
+> -			spare_page =3D alloc_page(GFP_KERNEL);
+> -			if (!spare_page) {
+> -				err =3D -ENOMEM;
+> -				break;
+> -			}
+> -			per_cpu_ptr(conf->percpu, cpu)->spare_page =3D spare_page;
+> -		}
+> -		scribble =3D kmalloc(conf->scribble_len, GFP_KERNEL);
+> -		if (!scribble) {
+> -			err =3D -ENOMEM;
+> +		err =3D alloc_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+> +		if (err) {
+> +			pr_err("%s: failed memory allocation for cpu%ld\n",
+> +			       __func__, cpu);
+>  			break;
+>  		}
+> -		per_cpu_ptr(conf->percpu, cpu)->scribble =3D scribble;
+>  	}
+> -#ifdef CONFIG_HOTPLUG_CPU
+> -	conf->cpu_notify.notifier_call =3D raid456_cpu_notify;
+> -	conf->cpu_notify.priority =3D 0;
+> -	if (err =3D=3D 0)
+> -		err =3D register_cpu_notifier(&conf->cpu_notify);
+> -#endif
+>  	put_online_cpus();
+> =20
+>  	return err;
 
-Thanks for the reminder.  This one is now applied.
+
+Looks good, thanks.
+Shall I wait for a signed-of-by from Oleg, then queue it through my md tree?
 
 NeilBrown
 
---Sig_/qWXDGGph9ggvYMdKHP/qLX6
+--Sig_/8Sh5fJFndN.WKIU2q1H+blD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUvK7dDnsnt1WYoG5AQJnrA//cefYaxWjH/9HXSwoZQE4PAFAcOj1DO02
-OUimCZ5YriNEAw1LkZsh97c8lpP/OXj/Ees9WFOjuAIoKYlfbqKfUGNFpgHy0izO
-YrawQXEMz4/of9jmrMClq97UeNJzH2TU+C20VpSOR4864C7vFAuLZEtjJHVL+dYv
-q/faF0fVpRUGN3hhWGYoNaTOn+SLtb5uVa5FGPTAUcpNYU6n1U13k8Hl2PaS9FGu
-qY6Hs3ux7qEq7MhVMB9JjMv4P4GfD7kMJttXf4RyEPqMdhEVcCilNfHw69o4D7eV
-URb8reHX5AOD+6t75u+M1+VPkXTe6P6GZmfEasl3IjFXvs2Km/fdubEFxcDJRRsm
-7h2Ao4opvtMAUZnd0tyx/xgQawoV8/SUsVSPpDcPprYGOcwZte0eB9Fljq0a1e78
-NV2eBnTqiUwxCXsOsmNR0owHMknEgu5FboR7Dnep/H8mxttVofO3v4H/MMCOD46N
-DZV4H7GDvE6xtVHalz9YxgkPMPMnzr23x8VZKNbNrXK/GM13aKaV4M2QQy0IHlJv
-MKIzhf+MuLSm9P5Ee8XV2cQ6f3HPfC9e5Hq8tpH68lTcUhF/ejNB767/RPxcyjSh
-0VmZ6qN0ulNTD23dpUWfaiocSKLpmGvvk7UD0FdLErwTnPxBBeBg7m5U/TJPVakV
-+M8RffWbbKA=
-=VGAI
+iQIVAwUBUvLhVznsnt1WYoG5AQKFmg//d1Kld0oVg0+dKRhM9dDXkuU3tP4K7Q9W
+DsWITNBfQU/jgGxbp0ggkkIfOHtwKc6D0v1qEHLmvNQDfgq20fnU1msJ6mmbf1/N
+d/CLiEjL8f1rEQeiBbh46xy47lnYHu2nTacG2oUy4X9vowxIQqdyGTYZULdicRi1
+sI+RIjb8T6GgsybeKIxuSmPnltbxCbh9weQ7fENkCj9PfZz58d919Om2WhRk4bcV
+hDCG2Wuxn2CJ9gjbn9D2FrhuvtO8RJ62YXjUSGu2rM3pIihwHMyL2l1GAydsFV/Z
+6r+0lnafTEJH3F02yKjAjD98hfskRg1KxHMkl9pwydtdRJ1P4CtQ+RQqaYhdsGcZ
+ZptvkslUs6znykhvAY8WnBTXH2mrE2fPyfA8ENiBRJNXZ6apfwXZnydcjkYtMx3R
+SQeUu3H83pgEbyVY0/vLLKfs//66KvkNFf2nYZXv9mRcqkWcQWbRb26aF9w9Q/Gx
+usVnr9i+B1D39+2T18di/QvaUhmMYpobMrJfdK0XuOAY4ndfZQHnOoFUxzfguOen
+WBh+yC4cUX6MfqBMHoKwO0QJvGhfsw1hy+03SqAS4zo39X+OBFHKEeQRHtZ9HCEM
+Uggym6ySvNWC3q4/NJlcJ4RclE5qe6i5CYixSJAKVwlXcx5wCO75SIIYph9o1cG+
+YWhf35h9I20=
+=pjqx
 -----END PGP SIGNATURE-----
 
---Sig_/qWXDGGph9ggvYMdKHP/qLX6--
+--Sig_/8Sh5fJFndN.WKIU2q1H+blD--
