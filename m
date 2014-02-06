@@ -1,30 +1,24 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: raid1 repair does not repair errors?
-Date: Thu, 6 Feb 2014 15:21:32 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1402061519440.24915@uplift.swm.pp.se>
-References: <52EE3910.3040205@msgid.tls.msk.ru> <20140203120431.400a8a1b@notabene.brown>
+From: Yung Kyu Kim <guiselle.flores@syc.com.mx>
+Subject: Hello
+Date: Thu, 6 Feb 2014 09:26:33 -0600 (CST)
+Message-ID: <15789700.159071.1391700393330.JavaMail.root__40636.8721546189$1391701332$gmane$org@syc.com.mx>
+Reply-To: "2794615276@qq.com" <2794615276@qq.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140203120431.400a8a1b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 3 Feb 2014, NeilBrown wrote:
+Hello,
 
-> We only try to fix a read error when all reads failed rather than when any
-> read fails.
-> Most of the time there is only one read so this makes no difference.
-> However for 'check' and 'repair' we read all devices so the current code will
-> only try to repair a read error if *every*  device failed, which of course
-> would be pointless.
+The Project is about the exportation of 100,000 barrels of Light Crude
+Oil daily out from Iraq to Turkey through my client's company in Iraq
+at the rate of $92.00 a barrel. This amount to $9,200,000 daily. I ask
+for your support as a foreigner to handle this business project with my
+client and you are not expected to invest in Iraq
 
-Is this the same problem I hit and documented in my thread a few weeks 
-back? ("read errors not corrected when doing check on RAID6")
+If yes, let me know and we will discuss this project proper.
 
-Is the same problem is valid for RAID6 as well and it fixes that as well?
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Yung Kyu Kim.
+Email: 2794615276@qq.com
