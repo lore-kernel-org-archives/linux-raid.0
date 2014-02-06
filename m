@@ -1,42 +1,30 @@
-From: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
-Subject: QNAP 8 port RAID5 md0 recovery of missing MBR and md superblocks
-Date: Thu, 6 Feb 2014 11:16:21 +0000
-Message-ID: <A2EC67620EC7424F9EC3DD49243E9060466DC09B@AUDIINSX0328.audi.vwg>
-References: <52CBF747.7020505@epos-cat.de>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: raid1 repair does not repair errors?
+Date: Thu, 6 Feb 2014 15:21:32 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1402061519440.24915@uplift.swm.pp.se>
+References: <52EE3910.3040205@msgid.tls.msk.ru> <20140203120431.400a8a1b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52CBF747.7020505@epos-cat.de>
-Content-Language: de-DE
+In-Reply-To: <20140203120431.400a8a1b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all
+On Mon, 3 Feb 2014, NeilBrown wrote:
 
-As my thread from the 7.1.2014 didn't bring any hint or any reply or way out, I tried to figure out which might get me started again:
+> We only try to fix a read error when all reads failed rather than when any
+> read fails.
+> Most of the time there is only one read so this makes no difference.
+> However for 'check' and 'repair' we read all devices so the current code will
+> only try to repair a read error if *every*  device failed, which of course
+> would be pointless.
 
-As five disks show no md superblock and four didn't see a partition layout (to contain a superblock) I'd like to (re)create a fitting partition and then (re)create a new md superblock info on all disks.
+Is this the same problem I hit and documented in my thread a few weeks 
+back? ("read errors not corrected when doing check on RAID6")
 
-A) should I use parted (manual) or testdisk (export/import)? As I could read the structure from any of the three working disks as all should be the same.
+Is the same problem is valid for RAID6 as well and it fixes that as well?
 
-B) my first try would be to (temper with md ...) create a plain 1:1 system like before
-"mdadm --create --assume-clean /dev/md0 --level=5 --raid-devices=8 /dev/sd{a,c,d,e,f,g,h}3 missing"
-(as the sdb was spilled out some weeks before, so outdated)
-
-When this doesn't work I'd try 
-
-"mdadm --create --assume-clean /dev/md0 --level=5 --raid-devices=8 /dev/sd{a,b,c,d,e,f,g,h}3"
-to gather at least the week old layout & data
-
-C) "fsck.ext4 /dev/md0" on the array afterwards
-
-D) "mdadm --detail --scan --verbose > /etc/mdadm.conf"
-[which is a missing function in the QNAP md implantation]
-
-Cheers
-Michael Samer
-
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
