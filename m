@@ -1,82 +1,73 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Bug#737951: mdadm: udev rules files ignores raid=noautodetect
- kernel parameter
-Date: Fri, 07 Feb 2014 11:36:46 +0400
-Message-ID: <52F48D0E.80905@msgid.tls.msk.ru>
-References: <2014-02-07T08-14-24@devnull.michael-prokop.at>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: Soft RAID and EFI systems
+Date: Fri, 07 Feb 2014 08:42:09 +0100
+Message-ID: <52F48E51.7080403@gmail.com>
+References: <CAC9WiBjSjBw8Y=cCd8bpwQhuy-1+swYVdHkBT7bynv6Hx8_6zA@mail.gmail.com> <70EFD3D5-F7AC-4359-8888-99EB6CCA9E4F@colorremedies.com> <52EEB9F2.2000607@gmail.com> <3D3B8F1A-F525-459D-95F2-9D7889C222CD@colorremedies.com> <52EECD53.30802@turmel.org> <52F0A79F.7090707@gmail.com> <52F0A976.9080306@hesbynett.no> <BEFF038F-20FE-4F52-A9BA-FB2F8A030997@colorremedies.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2014-02-07T08-14-24@devnull.michael-prokop.at>
+In-Reply-To: <BEFF038F-20FE-4F52-A9BA-FB2F8A030997@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Prokop <mika@debian.org>, 737951@bugs.debian.org
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>, David Brown <david.brown@hesbynett.no>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Control: tag -1 + moreinfo
-Control: severity -1 wishlist
+Hi Chris,
 
-07.02.2014 11:21, Michael Prokop wrote:
-> Package: mdadm
-> Version: 3.3-2
-> Severity: normal
+On 02/04/2014 04:13 PM, Chris Murphy wrote:
 > 
-> Quoting from kernel's Documentation/md.txt:
+> On Feb 4, 2014, at 1:48 AM, David Brown <david.brown@hesbynett.no> wrote:
 > 
-> ,---- [ https://www.kernel.org/doc/Documentation/md.txt ]
-> | Boot time autodetection of RAID arrays
-> | --------------------------------------
-> |
-> | When md is compiled into the kernel (not as module), partitions of
-> | type 0xfd are scanned and automatically assembled into RAID arrays.
-> | This autodetection may be suppressed with the kernel parameter
-> | "raid=noautodetect".  As of kernel 2.6.9, only drives with a type 0
-> | superblock can be autodetected and run at boot time.
-> `----
+>> On 04/02/14 09:41, Francis Moreau wrote:
+>>> On 02/02/2014 11:57 PM, Phil Turmel wrote:
+>>>> On 02/02/2014 05:30 PM, Chris Murphy wrote:
+>>>>>
+>>>>> On Feb 2, 2014, at 2:34 PM, Francis Moreau <francis.moro@gmail.com>
+>>>>> wrote:
+>>>>>>
+>>>>>> That's funny because one of the reasons I want to use UEFI firmware
+>>>>>> is to get rid of grub (I don't like it and the way it has become
+>>>>>> such a bloated beast): since /boot is vfat and has its own
+>>>>>> partition, I prefer use a much simpler bootloader such as
+>>>>>> gummyboot.
+>>>>
+>>>> Ditching the bootloader is possible:
+>>>>
+>>>> http://kroah.com/log/blog/2013/09/02/booting-a-self-signed-linux-kernel/
+>>>>
+>>>
+>>> Well yeah it's possible but not currently usable IMHO. It means that you
+>>> need to build your own kernel, include in this kernel the initramfs
+>>> image and you need to redo the whole process if you want to change a
+>>> single option in the kernel command line.
+>>>
+>>>> It seems to me that you should be able to create a raid1 v1.0 MD array
+>>>> of your EFI support partitions, and put the combined and signed
+>>>> kernel/initramfs onto it (mirrored to all member drives).
+>>>
+>>> Are both v0.9 and v1.0 MD  put their metadata at the end of a partition
+>>> ? I thought only v0.9 would do that.
+>>
+>> Yes, it is only 0.9 format that is at the end of the partition.
 > 
-> The udev rules file /lib/udev/rules.d/64-md-raid-assembly.rules
-> shipped by mdadm ignores that kernel parameter and tries to assemble
-> mdadm RAIDs without honoring the raid=noautodetect setting.
+> Both 0.90 and 1.00 are at the end of the partition.
 > 
-> It would be nice if there would be some way (maybe just checking for
-> raid=noautodetect in /proc/cmdline?) to disable auto assembly
-> without having to manually delete/override the udev file.
+> On a 550MiB disk with the last offset 0x225f0000, I get the start of metadata:
+> 
+> 0.90
+> 225f0000
+> 
+> 1.00
+> 225fe000
+> 
+> In both cases the resulting md device sizes are identical. So if anything 1.00 is very slightly farther back than 0.90, and is a newer metadata version. The Fedora installer use metadata 1.00 along with internal bitmap when creating bootable raid1 arrays.
+> 
+> This mdadm warning "possible for there to be confusion about whether the superblock applies to a whole device or just the last partition" would only apply if you attempt to make whole physical drives md member devices, which then runs into GPT problems. For one the 1.00 metadata would actually reside within the last 34 sectors of the physical device which is where the backup GPT belongs. Even if you use metadata 0.90 to avoid that, you now have a primary and backup GPT that agree when there is no raid1 active, but then the primary and backup GPT disagree when it is active. So you can't have it both ways with GPT formatted disks on UEFI: both ways meaning a disk that appears valid whether md is active or not.
+> 
 
-I don't think that using raid=noautodetect is a good way of doing
-this.  It is for the really obsolete in-kernel array assembly, and
-it is described as such in the documentation you quoted above.
+hmm I didn't think about this previously but why one would use the whole
+physical drives as md member devices, specially as for the boot disk
+(the one used to store the bootloader) ?
 
-In debian we have another parameter in initrd, --
-
-  mdassemble=all|none|list
-
-which is copied from a debconf question.  Maybe this one is better
-suited for this need, at least it is more flexible.  It is sort
-of trivial to get this parameter from kernel command line in the
-initrd script.
-
-But.
-
-It is all about early-boot environment.
-
-None of these parameters, at my point of view, should be considered
-after pre-boot is done and we're in the main system.  If you're
-talking about main udev rules of mdadm, I disagree, there should
-be entirely separate option, if at all.
-
-What is your usage case?  What are you trying to achieve?
-
-Note that we're moving (very slow) towards assembling everything
-using those rules, including your boot arrays, so if you disable
-those, your system wont boot anymore.
-
-Adding linux-raid list to Cc.  Please describe your situation
-in more detail, and maybe together we will be able to come to
-some solution.
-
-Marking your bugreport as a wishlist for now in debian.
-
-Thanks,
-
-/mjt
+Thanks
