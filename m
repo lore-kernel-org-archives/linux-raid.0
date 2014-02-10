@@ -1,22 +1,70 @@
-From: Eivind Sarto <eivindsarto@gmail.com>
-Subject: md/raid5.c and STRIPE_IO_STARTED
-Date: Mon, 10 Feb 2014 13:53:46 -0800
-Message-ID: <92C24A71-5C61-420E-A7EB-3D3B8492E77C@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Reassemble Raid 6
+Date: Mon, 10 Feb 2014 18:02:54 -0500
+Message-ID: <52F95A9E.2060805@turmel.org>
+References: <ema2a9c249-212d-4d96-a89b-b8e4a5d9f827@bigg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <ema2a9c249-212d-4d96-a89b-b8e4a5d9f827@bigg>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: dan.j.williams@gmail.com
+To: Justin Stephenson <justin@evensteveninc.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am looking at drivers/md/raid5.c and I noticed that the flag STRIPE_IO_STARTED is only set and not cleared.
-The flag only gets cleared in init_stripe() if a stripe is re-initialized.
+On 02/10/2014 07:13 PM, Justin Stephenson wrote:
+> Hello Phil,
+> 
+> You are 100% correct. Thanks for your email. I had 2 separate ARRAY
+> entries in my mdadm.config file. When I added the spare, I added the new
+> information to the config file but did not remove the old entry. Total
+> newbie mistake.
+> 
+> - I commented out all the previous entries in the mdadm.config file (it
+> had a devices lists instead of the UUID information)
+> 
+> - I successfully assembled the array (mdadm --assemble /dev/md0 
+> /dev/sdb1 etc...)
+> 
+> - I  updated the config file using the information from mdadm -Esc
+> partitions | grep UUID and deleted the old entries.
+> 
+> - I uncommented the fstab entry for the array and rebooted.
+> 
+> 
+> Everything is working perfectly now.
+> 
+> 
+> I remember reading somewhere that mdadm can run without the config file
+> by using the RAID uuid and the information in the superblocks. Would
+> this be more reliable?
+> 
+> Thanks Again
 
-Shouldn't it also be cleared whenever the current batch of IOs complete for each stripe?
+You're welcome.
 
-I'm currently working with SLES11 SP3, but the same should also be the case in latest kernel.org.
+I suggest you trim the mdadm.conf file even further--I only specify name
+and uuid, so device changes don't interfere with assembly.  Like so
+(slightly edited):
 
--eivind
+MAILFROM mdadm@example.com
+MAILADDR philip@example.com
+
+DEVICE /dev/sd[a-z][1-9]
+
+# Mirrored Boot partitions
+ARRAY /dev/md1 UUID=75c011c6:caeb06ea:ec7e3370:aa4f3320
+
+# Far mirror (Raid10) core operations
+ARRAY /dev/md2 UUID=6b4858da:f24e2567:34e73fe5:b8f2c118
+
+# Bulk redundant (Raid6) storage
+ARRAY /dev/md3 UUID=04f3706c:79a3cd73:8a558eee:93ec1879
+
+
+HTH,
+
+Phil
+
+ps. Don't forget to update your initramfs after any changes to mdadm.conf!
 
