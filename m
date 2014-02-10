@@ -1,73 +1,76 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Storage system
-Date: Fri, 7 Feb 2014 17:14:57 -0700
-Message-ID: <BAEB6EB8-6D73-40A8-8250-85B15645E629@colorremedies.com>
-References: <20140206180909.GA2419@lazy.lzy>	<52F49433.8080904@hesbynett.no> <CAJvUf-BTjmxonub0eWGNm1YNp4zYis5Mgti9FuRiQ8RbVY3cXQ@mail.gmail.com> <52F505B3.2050902@hesbynett.no> <52F508EF.7090808@gmail.com> <52F50B7B.8020902@hesbynett.no>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52F50B7B.8020902@hesbynett.no>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Can Jeuleers <can.jeuleers@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+From: Michael Prokop <mika@debian.org>
+Subject: Bug#737951: mdadm: udev rules files ignores raid=noautodetect kernel parameter
+Date: Mon, 10 Feb 2014 16:53:05 +0100
+Message-ID: <2014-02-10T16-46-44@devnull.michael-prokop.at>
+References: <2014-02-07T08-14-24@devnull.michael-prokop.at>
+ <52F48D0E.80905@msgid.tls.msk.ru>
+Reply-To: Michael Prokop <mika@debian.org>, 737951@bugs.debian.org
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2/Dpz40iF3jpiHxF"
+Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist=m.gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.737951.B737951.139204759631916@bugs.debian.org>
+Content-Disposition: inline
+In-Reply-To: <52F48D0E.80905@msgid.tls.msk.ru>
+List-URL: <http://lists.debian.org/debian-bugs-dist/>
+List-Post: <mailto:debian-bugs-dist@lists.debian.org>
+List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: 737951@bugs.debian.org, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Feb 7, 2014, at 9:36 AM, David Brown <david.brown@hesbynett.no> wrot=
-e:
+--2/Dpz40iF3jpiHxF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> On 07/02/14 17:25, Can Jeuleers wrote:
->> On 02/07/2014 05:11 PM, David Brown wrote:
->>> The only thing you can't erase are re-mapped sectors - but hopefull=
-y
->>> those will be rare!
->>=20
->> I wonder if using the Secure Erase feature destroys all sectors
->> (including remapped-ones) or not.
->>=20
->=20
-> I think secure erase can be done in different ways.  On disks that ha=
-ve
-> full-disk encryption, it simply erases (or changes) the password.  Fo=
-r
-> other drives, it has to write through all sectors on the disk - I wou=
-ld
-> expect re-mapped sectors are included, but I don't know the details.
+Hi,
 
-=46rom the September 2012 draft, rev 1 of NIST 800-80, they distinguish=
- between the following ATA commands:
+thanks for the fast reply, Michael
 
-	=95 ATA sanitize command
-	=95 ATA Secure Erase command
-	=95 Cryptographic Erase
+* Michael Tokarev [Fri Feb 07, 2014 at 11:36:46AM +0400]:
+> 07.02.2014 11:21, Michael Prokop wrote:
 
-I don't have a clear understanding of what "sanitize" command is, altho=
-ugh it's relatively new. None of my drives have it. hdparm reports my d=
-rives support SECURITY ERASE UNIT and ENHANCED SECURITY ERASE UNIT. For=
- HDDs, these take the same time. The first one writes zeros. The 2nd on=
-e writes a manufacturer defined pattern (i.e. it's almost certainly not=
- random). The Samsung 830 SSD also has these two commands, but the time=
- difference between them was substantial: I *think* 3 minutes for one a=
-nd 18 minutes for the other.
+> > It would be nice if there would be some way (maybe just checking for
+> > raid=noautodetect in /proc/cmdline?) to disable auto assembly
+> > without having to manually delete/override the udev file.
 
-Cryptographic erase doesn't overwrite anything. It just makes sure the =
-MEKs are changed, thereby making the drive unreadable, since SEDs are a=
-lways encrypting using a MEK, even if there isn't a KEK set.
+> I don't think that using raid=noautodetect is a good way of doing
+> this.  It is for the really obsolete in-kernel array assembly, and
+> it is described as such in the documentation you quoted above.
 
+Right
 
->=20
->=20
->> Also, what level of trust do people on this list have that the disk'=
-s
->> Secure Erase feature does what it says on the tin?\
+[...]
+> None of these parameters, at my point of view, should be considered
+> after pre-boot is done and we're in the main system.  If you're
+> talking about main udev rules of mdadm, I disagree, there should
+> be entirely separate option, if at all.
 
-Again NIST 800-80 says: "Verification must be performed for each techni=
-que within Clear and Purge, except degaussing." Strictly speaking the t=
-rust is zero without verification.
+> What is your usage case?  What are you trying to achieve?
+[...]
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My goal is to support booting a live system (like http://grml.org/)
+in a way which *prevents* auto assembling under all circumstances.
+This is relevant e.g. for data rescue and forensics tasks.
+
+regards,
+-mika-
+
+--2/Dpz40iF3jpiHxF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAlL49eEACgkQ2N9T+zficuhJBQCfZCI2dyaIkiTcO+eiQNAMr8kT
+eZwAnidRtiRkX7AyDck+e8xOJLVn5m0q
+=LhMS
+-----END PGP SIGNATURE-----
+
+--2/Dpz40iF3jpiHxF--
