@@ -1,76 +1,234 @@
-From: Michael Prokop <mika@debian.org>
-Subject: Bug#737951: mdadm: udev rules files ignores raid=noautodetect kernel parameter
-Date: Mon, 10 Feb 2014 16:53:05 +0100
-Message-ID: <2014-02-10T16-46-44@devnull.michael-prokop.at>
-References: <2014-02-07T08-14-24@devnull.michael-prokop.at>
- <52F48D0E.80905@msgid.tls.msk.ru>
-Reply-To: Michael Prokop <mika@debian.org>, 737951@bugs.debian.org
+From: "Justin Stephenson" <justin@evensteveninc.com>
+Subject: Reassemble Raid 6
+Date: Mon, 10 Feb 2014 16:48:09 +0000
+Message-ID: <em138f8d3b-69b5-40ed-baf9-c23fb4e7ae1b@littlez>
+Reply-To: "Justin Stephenson" <justin@evensteveninc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2/Dpz40iF3jpiHxF"
-Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist=m.gmane.org@lists.debian.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.737951.B737951.139204759631916@bugs.debian.org>
-Content-Disposition: inline
-In-Reply-To: <52F48D0E.80905@msgid.tls.msk.ru>
-List-URL: <http://lists.debian.org/debian-bugs-dist/>
-List-Post: <mailto:debian-bugs-dist@lists.debian.org>
-List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: 737951@bugs.debian.org, linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; format=flowed; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
---2/Dpz40iF3jpiHxF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I have reviewed the Linux Raid Wiki regarding rebuilding and it 
+recommended writing a note to the list.
 
-Hi,
+I am running an mdadm raid on CENTOS 6.5 with 6 disks in a Raid 6 off of 
+my motherboard's SATA controller.
 
-thanks for the fast reply, Michael
+I added a 7th disk as a spare.
 
-* Michael Tokarev [Fri Feb 07, 2014 at 11:36:46AM +0400]:
-> 07.02.2014 11:21, Michael Prokop wrote:
+When I rebooted the raid after adding the spare, it would not mount and 
+the OS would only boot into recovery mode. I changed my fsck file to 
+exclude the raid and can now boot into the GUI.
 
-> > It would be nice if there would be some way (maybe just checking for
-> > raid=noautodetect in /proc/cmdline?) to disable auto assembly
-> > without having to manually delete/override the udev file.
+I have tried to reassemble the array using --assemble and I get the the 
+following message:
 
-> I don't think that using raid=noautodetect is a good way of doing
-> this.  It is for the really obsolete in-kernel array assembly, and
-> it is described as such in the documentation you quoted above.
+mdadm: we match both /dev/md/BigBlue:0 and /dev/md0 - cannot decide 
+which to use.
 
-Right
+I am including the output of the mdadm --examine below.
 
-[...]
-> None of these parameters, at my point of view, should be considered
-> after pre-boot is done and we're in the main system.  If you're
-> talking about main udev rules of mdadm, I disagree, there should
-> be entirely separate option, if at all.
+I am considering using --force to assemble the array, though I suspect 
+that this is something simple that I am overlooking -- I am quite new to 
+linux.
 
-> What is your usage case?  What are you trying to achieve?
-[...]
+Any input would be appreciated.
 
-My goal is to support booting a live system (like http://grml.org/)
-in a way which *prevents* auto assembling under all circumstances.
-This is relevant e.g. for data rescue and forensics tasks.
+- Justin
 
-regards,
--mika-
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
 
---2/Dpz40iF3jpiHxF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 7f7ace48:01a4b6f6:bf182ae3:6acddef9
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : cedf7f63 - correct
+          Events : 557
 
-iEYEARECAAYFAlL49eEACgkQ2N9T+zficuhJBQCfZCI2dyaIkiTcO+eiQNAMr8kT
-eZwAnidRtiRkX7AyDck+e8xOJLVn5m0q
-=LhMS
------END PGP SIGNATURE-----
+          Layout : left-symmetric
+      Chunk Size : 128K
 
---2/Dpz40iF3jpiHxF--
+    Device Role : spare
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 8a4d11bd:fe387740:1edc1151:b0ebba43
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : 44a6c909 - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 0
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdd1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : aa158e32:f4449a9b:73e95000:22852278
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : f8ed43e6 - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 1
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sde1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 7bee5d42:cb66c602:162e88f1:e140447c
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : 65423ef2 - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 2
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdf1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : b4a7b35c:6e377711:4b291874:edb2c4d0
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : 65593610 - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 3
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdg1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 7c0bba5a:6b205302:d026a78d:91f5ebdd
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : 7af1c2ff - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 4
+    Array State : AAAAAA ('A' == active, '.' == missing)
+/dev/sdh1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 0849c677:64e4772e:8892d80b:47e0097a
+            Name : BigBlue:0  (local to host BigBlue)
+   Creation Time : Wed Jan 15 22:46:32 2014
+      Raid Level : raid6
+    Raid Devices : 6
+
+  Avail Dev Size : 5860267024 (2794.39 GiB 3000.46 GB)
+      Array Size : 11720533504 (11177.57 GiB 12001.83 GB)
+   Used Dev Size : 5860266752 (2794.39 GiB 3000.46 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : a750a146:7ee7383e:2929d803:2bee9dc1
+
+     Update Time : Sun Feb  9 20:31:13 2014
+        Checksum : fca1ca30 - correct
+          Events : 557
+
+          Layout : left-symmetric
+      Chunk Size : 128K
+
+    Device Role : Active device 5
+    Array State : AAAAAA ('A' == active, '.' == missing)
+
+
