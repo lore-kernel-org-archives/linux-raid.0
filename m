@@ -1,62 +1,33 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] md/raid5: allow resync-rebuild requests to run
- multi-threaded
-Date: Tue, 11 Feb 2014 13:13:54 +1100
-Message-ID: <20140211131354.4167812c@notabene.brown>
-References: <7847F3C0-2B56-48E7-802C-0FBA937FD44F@gmail.com>
+From: Andrew Martin <amartin@xes-inc.com>
+Subject: Automatically drop caches after mdadm fails a drive out of an
+ array?
+Date: Tue, 11 Feb 2014 11:11:04 -0600 (CST)
+Message-ID: <1090802800.32078.1392138664718.JavaMail.zimbra@xes-inc.com>
+References: <1413719638.30344.1392138285471.JavaMail.zimbra@xes-inc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vYhCAjF/lJkL0oNAqxVu=RU"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7847F3C0-2B56-48E7-802C-0FBA937FD44F@gmail.com>
+In-Reply-To: <1413719638.30344.1392138285471.JavaMail.zimbra@xes-inc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eivind Sarto <eivindsarto@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/vYhCAjF/lJkL0oNAqxVu=RU
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
+I am running mdadm 3.2.5 on an Ubuntu 12.04 fileserver with a 10-drive RAID6 array (10x1TB). Recently, /dev/sdb started failing:
+Feb 10 13:49:29 myfileserver kernel: [17162220.838256] sas: command 0xffff88010628f600, task 0xffff8800466241c0, timed out: BLK_EH_NOT_HANDLED
 
-Hi,
- thanks for the patch.
- When you include a patch as an attachment, I find it easier to work with if
- it is "text/plain" rather than "application/octet-stream".
+Around this same time, a few users attempted to access a directory on this RAID array over CIFS, which they had previously accessed earlier in the day. When they attempted to access it this time, the directory was empty. The emptiness of the folder was confirmed via a local shell on the fileserver, which reported the same information. At around 13:50, mdadm dropped /dev/sdb from the RAID array:
+Feb 10 13:50:31 myfileserver mdadm[1897]: Fail event detected on md device /dev/md2, component device /dev/sdb
 
- As your patch is justified as a performance improvement, please include
- some measurements together with a rough description of the hardware (one or
- two sentences).
+However, it was not until around 14:15 that these files reappeared in the directory. I am guessing that it took this long for the invalid, cached read to be flushed from the kernel buffer cache.
 
- Also, the performance improvement requires that multi-threading is enabled,
- which isn't the default.  Please measure the effect of the patch when
- multi-threading not enabled.
- Maybe we should make the change you suggest be conditional on threading
- being enabled, but we can't know without numbers.
+The concern with the above behavior is it leaves a potentially large window of time during which certain data may not be correctly returned from the RAID array. Is it possible for mdadm to automatically flush the kernel buffer cache after it drops a drive from the array:
+sync; echo 3 > /proc/sys/vm/drop_caches
+
+This would have caused the data to have been re-read at 13:50, a much smaller window of time during which invalid data was present in the cache. Or, is there a better suggestion for handling this situation?
 
 Thanks,
-NeilBrown
 
---Sig_/vYhCAjF/lJkL0oNAqxVu=RU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBUvmHYjnsnt1WYoG5AQLYZw/+ImrMb0VhjqEX8BaQ+IZUSjUu75aaPfpZ
-eEWzX2g8azplqincqpuAE1ng5r0GzKFzZxoSlqcZOog7mJEsQ38En0GsKNockGv6
-nAJUt+H2ite53kCaUQYdOy9mzp+cleIqj2uWd9b8BlQaDFQxCQAmzmEI7pfMF5dB
-r1nwP1vbY8QRVzaGhHdgx3hUggl1cGRUsoQUetNBgZD+u87h6xs7vcu5DDjFsMMR
-8dF2O0TnWFP/cJs0E3xFMioZ07ekPqLcgC2XZen+G5fsD2gLRe+Ke7wJ+XjQjlwt
-YMJaZr4vQvRe921Rzp4lRQsgF4ZMthzzAg5G8FZTZWLupjxBOvUV84kx8pzVK+Z7
-Wzbv4D0RB9POHZRez32L9yFTIOVAIAV9/3B5l98odQlnhIVNDKjla4LprC+lSyxu
-9ve2iE/18vSQdRCSy6NYZ/YZRXqzk4HhgfJmy0nkJrCC4fsPpwPxqG+P6ISOKXYG
-unGXW9YZxBCTp3H4HJy3gbNp7dyf14gf4s6ekzP+m2saNAswaTG4HDANopT0heD0
-EvAUFbgA1aUQIG9LvpiHwmOAhF51F0/SgWEQDPKdvpZp6bWlbRw6cKgW2soDW83S
-hgFqSgtoKLeG7q+k6N+vjGhVG4jStWypduuMCwt//PE9aRkDVinFzH3F6KcRiYuX
-NJsJCFwPKGA=
-=OSkW
------END PGP SIGNATURE-----
-
---Sig_/vYhCAjF/lJkL0oNAqxVu=RU--
+Andrew Martin
