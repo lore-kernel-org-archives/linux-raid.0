@@ -1,70 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Reassemble Raid 6
-Date: Mon, 10 Feb 2014 18:02:54 -0500
-Message-ID: <52F95A9E.2060805@turmel.org>
-References: <ema2a9c249-212d-4d96-a89b-b8e4a5d9f827@bigg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Eivind Sarto <eivindsarto@gmail.com>
+Subject: [PATCH 1/1] md/raid5: allow resync-rebuild requests to run multi-threaded
+Date: Mon, 10 Feb 2014 17:52:02 -0800
+Message-ID: <7847F3C0-2B56-48E7-802C-0FBA937FD44F@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Content-Type: multipart/mixed; boundary="Apple-Mail=_A1696C09-B87F-4D38-BA74-04F221B1359C"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ema2a9c249-212d-4d96-a89b-b8e4a5d9f827@bigg>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Stephenson <justin@evensteveninc.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/10/2014 07:13 PM, Justin Stephenson wrote:
-> Hello Phil,
-> 
-> You are 100% correct. Thanks for your email. I had 2 separate ARRAY
-> entries in my mdadm.config file. When I added the spare, I added the new
-> information to the config file but did not remove the old entry. Total
-> newbie mistake.
-> 
-> - I commented out all the previous entries in the mdadm.config file (it
-> had a devices lists instead of the UUID information)
-> 
-> - I successfully assembled the array (mdadm --assemble /dev/md0 
-> /dev/sdb1 etc...)
-> 
-> - I  updated the config file using the information from mdadm -Esc
-> partitions | grep UUID and deleted the old entries.
-> 
-> - I uncommented the fstab entry for the array and rebooted.
-> 
-> 
-> Everything is working perfectly now.
-> 
-> 
-> I remember reading somewhere that mdadm can run without the config file
-> by using the RAID uuid and the information in the superblocks. Would
-> this be more reliable?
-> 
-> Thanks Again
 
-You're welcome.
+--Apple-Mail=_A1696C09-B87F-4D38-BA74-04F221B1359C
+Content-Disposition: attachment;
+	filename=raid5.patch
+Content-Type: application/octet-stream;
+	name="raid5.patch"
+Content-Transfer-Encoding: 7bit
 
-I suggest you trim the mdadm.conf file even further--I only specify name
-and uuid, so device changes don't interfere with assembly.  Like so
-(slightly edited):
+Author: Eivind Sarto <eivind.sarto@gmail.com>
+Date: Mon Feb 10 17:42:09 2014
 
-MAILFROM mdadm@example.com
-MAILADDR philip@example.com
+    md/raid5: allow resync/rebuild requests to run multi-threaded
 
-DEVICE /dev/sd[a-z][1-9]
+    Sync operations are currently handled within the sync thread, making the
+    execution single-threaded.  This patch will allow the processing to be done
+    parallel by raid5d (and a pool of kworkers), significantly increasing
+    rebuild/resync throughput.
 
-# Mirrored Boot partitions
-ARRAY /dev/md1 UUID=75c011c6:caeb06ea:ec7e3370:aa4f3320
+    Signed-off-by: Eivind Sarto <eivind.sarto@gmail.com>
 
-# Far mirror (Raid10) core operations
-ARRAY /dev/md2 UUID=6b4858da:f24e2567:34e73fe5:b8f2c118
+--- a/drivers/md/raid5.c	2014-02-10 17:18:43.000000000 -0800
++++ b/drivers/md/raid5.c	2014-02-10 17:21:49.000000000 -0800
+@@ -5026,8 +5026,8 @@ static inline sector_t sync_request(stru
+ 	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_degraded);
+ 
+ 	set_bit(STRIPE_SYNC_REQUESTED, &sh->state);
++	set_bit(STRIPE_HANDLE, &sh->state);
+ 
+-	handle_stripe(sh);
+ 	release_stripe(sh);
+ 
+ 	return STRIPE_SECTORS;
 
-# Bulk redundant (Raid6) storage
-ARRAY /dev/md3 UUID=04f3706c:79a3cd73:8a558eee:93ec1879
-
-
-HTH,
-
-Phil
-
-ps. Don't forget to update your initramfs after any changes to mdadm.conf!
-
+--Apple-Mail=_A1696C09-B87F-4D38-BA74-04F221B1359C--
