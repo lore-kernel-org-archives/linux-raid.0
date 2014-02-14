@@ -1,37 +1,52 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Automatically drop caches after mdadm fails a drive out of an
- array?
-Date: Thu, 13 Feb 2014 22:53:02 -0600
-Message-ID: <52FDA12E.2070502@hardwarefreak.com>
-References: <1413719638.30344.1392138285471.JavaMail.zimbra@xes-inc.com> <1090802800.32078.1392138664718.JavaMail.zimbra@xes-inc.com> <20140212065420.4643f9a1@notabene.brown> <700319865.79921.1392160257000.JavaMail.zimbra@xes-inc.com> <52FABC1A.1010804@hardwarefreak.com> <1113712961.13129.1392216288183.JavaMail.zimbra@xes-inc.com> <52FC8250.4080903@hardwarefreak.com> <669652530.12040.1392303427052.JavaMail.zimbra@xes-inc.com> <alpine.DEB.2.02.1402131822190.24915@uplift.swm.pp.se>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Florian Lampel <florian.lampel@gmail.com>
+Subject: RAID6 dead on the water after Controller failure
+Date: Fri, 14 Feb 2014 17:19:35 +0100
+Message-ID: <7A417EAE-106E-4541-941F-1002696F8735@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1402131822190.24915@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, Andrew Martin <amartin@xes-inc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/13/2014 11:25 AM, Mikael Abrahamsson wrote:
-> On Thu, 13 Feb 2014, Andrew Martin wrote:
-> 
->> Note that I added a new, replacement drive to the array at 17:09. In
->> lieu of Marvel SAS cards, what would you recommend?
-> 
-> LSI 2008 is very well tested HBA controller, it exists in many vendors'
-> cards. Works properly with 4TB drives (and larger I presume). For
-> instance the LSI SAS 9211-8i HBA has this chip.
+Greetings,
 
-Agreed, LSI based HBAs are all pretty reliable.  These chips can be
-found on motherboards, LSI branded HBAs, as well as IBM, Intel, and
-other branded HBAs.  The multi-lane Adaptecs are good as well.
+The title says it all: 2 days before my RAID6 lost a HDD (sdh). Not  a problem, I thought, just let it reassemble and be done with it.
 
-Honestly, I've only really heard of serious problems with the mvsas
-driver and the Marvell SAS 88SE64xx based HBAs, most often the
-Supermicro, but also the Highpoint 2600 family.  There may be others.
+Unfortunately, my Mainboard-Controller didn't seem to like that, and after about 2 hours into the rebuilding process it showed me that the array was missing 5 drives ( 4 from the MB-Controller and the one that went south before).
+Being a Admin for quite a while, I did not panic and have not issued a single command that writes to the RAID in any form as of yet.
 
--- 
-Stan
+Having read the wiki page about broken RAID arrays reading some messages on the list it became obvious that I should check with you guys before I do anything. The Server is still running, but I intend to restart it after unplugging an SATA cable that I assume to be faulty.
+
+Here are the relevant logs and outputs of mdadm as requested on the Wiki:
+
+h__p://pastebin.com/1xweaLYG
+
+cat /proc/mdstat:
+root@Lserve:~# cat /proc/mdstat 
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [raid1] [raid10] 
+md0 : active raid6 sdh1[12](S) sdc1[10](F) sdb1[9](F) sda1[8](F) sdd1[11](F) sdf1[5] sdk1[1] sdl1[2] sdg1[6] sde1[4] sdm1[3] sdj1[0]
+      19535129600 blocks super 1.0 level 6, 512k chunk, algorithm 2 [12/7] [UUUUUUU_____]
+      
+unused devices: <none>
+
+sda, sdb, sdc and sdd can't be reached anymore by any means. I believe a restart might fix this, but I am not sure.
+
+2) I assume that I should do the following, in this order: 
+
+2.1) restart the machine and check all the cables etc.
+---> and hope that /dev/sda, sdb, sdc and sdd will talk to me again.
+
+2.2) mdadm --assemble --scan 
+---> and hope for the best. I don't think it will work.
+
+2.3 madm --assemble --force /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 (since the Event count is the same) /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1
+--> I don't believe this one will work, too. When using --force, is the sequence of the HDDs in the command important?
+
+2.4) mdadm --create --assume-clean --chunk=512 --metadata=1.0 --level 6 --raid-devices=12 --size=1953512960 /dev/md0 /dev/sdj1 /dev/sdk1 /dev/sdl1 etc. (using the sequence numbers of the /proc/mdstat pasted above)
+
+--> That should do it, right?
+
+Thanks in advance,
+Florian
