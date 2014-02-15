@@ -1,45 +1,48 @@
-From: Andrew Martin <amartin@xes-inc.com>
-Subject: Re: Automatically drop caches after mdadm fails a drive out of an
- array?
-Date: Fri, 14 Feb 2014 16:40:37 -0600 (CST)
-Message-ID: <518410588.65674.1392417637212.JavaMail.zimbra@xes-inc.com>
-References: <1413719638.30344.1392138285471.JavaMail.zimbra@xes-inc.com> <700319865.79921.1392160257000.JavaMail.zimbra@xes-inc.com> <52FABC1A.1010804@hardwarefreak.com> <1113712961.13129.1392216288183.JavaMail.zimbra@xes-inc.com> <52FC8250.4080903@hardwarefreak.com> <669652530.12040.1392303427052.JavaMail.zimbra@xes-inc.com> <alpine.DEB.2.02.1402131822190.24915@uplift.swm.pp.se> <52FDA12E.2070502@hardwarefreak.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Florian Lampel <florian.lampel@gmail.com>
+Subject: Re: RAID6 dead on the water after Controller failure
+Date: Sat, 15 Feb 2014 13:31:46 +0100
+Message-ID: <5269CCC7-A0A7-479E-9738-88C74CB19435@gmail.com>
+References: <7A417EAE-106E-4541-941F-1002696F8735@gmail.com> <52FE7E2D.8020308@turmel.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.1 \(1827\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <52FDA12E.2070502@hardwarefreak.com>
+In-Reply-To: <52FE7E2D.8020308@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------ Original Message -----
-> From: "Stan Hoeppner" <stan@hardwarefreak.com>
-> To: "Mikael Abrahamsson" <swmike@swm.pp.se>, "Andrew Martin" <amartin@xes-inc.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Thursday, February 13, 2014 10:53:02 PM
-> Subject: Re: Automatically drop caches after mdadm fails a drive out of an array?
-> 
-> On 2/13/2014 11:25 AM, Mikael Abrahamsson wrote:
-> > On Thu, 13 Feb 2014, Andrew Martin wrote:
-> > 
-> >> Note that I added a new, replacement drive to the array at 17:09. In
-> >> lieu of Marvel SAS cards, what would you recommend?
-> > 
-> > LSI 2008 is very well tested HBA controller, it exists in many vendors'
-> > cards. Works properly with 4TB drives (and larger I presume). For
-> > instance the LSI SAS 9211-8i HBA has this chip.
-> 
-> Agreed, LSI based HBAs are all pretty reliable.  These chips can be
-> found on motherboards, LSI branded HBAs, as well as IBM, Intel, and
-> other branded HBAs.  The multi-lane Adaptecs are good as well.
-> 
-> Honestly, I've only really heard of serious problems with the mvsas
-> driver and the Marvell SAS 88SE64xx based HBAs, most often the
-> Supermicro, but also the Highpoint 2600 family.  There may be others.
-> 
+Greetings,
 
-Thanks for the help!
+first of all - thanks to Phil Turmel for pointing me in the right direction. I checked all the cables and true enough, the System SSD's cable's shielding was halfway peeled off.
 
-Andrew
+Anyway, the current state is as follows:
+
+*) The missing HDDs came up right after the reboot, and I had to use the "bootdegraded=true" kernel option.
+*) All 12 drives are functional.
+
+Here is a link to the requested output of 
+
+--- mdadm -E /dev/sd[abcd]1 ---
+--- for x in /dev/sd[a-z] ; do echo $x : ; smartctl -x $x ; done ----
+
+as well as
+
+---- mdadm --examine /dev/sd[abcdefghijklmnop]1 ------
+
+
+Link:
+h__p://pastebin.com/v6yzn3KX
+
+My findings:
+The Event count does differ, but not by much. As my next step, I would follow Phil Turmel's advice and reassemble the Array using the --force option, to be precise:
+
+mdadm -Afv /dev/md0 /dev/sd[abcdefgjklm]1
+
+Could you please advise me wether this next step is all right to do now that we have new logs etc.?
+
+Thanks in advance,
+Florian Lampel
+
+PS: Thanks again to Phil for pointing out that --create would be madness.
