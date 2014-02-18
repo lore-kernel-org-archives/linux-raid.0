@@ -1,33 +1,124 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: QNAP 8 port RAID5 md0 recovery of missing MBR and md superblocks
-Date: Tue, 18 Feb 2014 07:59:56 -0500
-Message-ID: <5303594C.5010408@turmel.org>
-References: <52CBF747.7020505@epos-cat.de> <A2EC67620EC7424F9EC3DD49243E9060466DC09B@AUDIINSX0328.audi.vwg> <A2EC67620EC7424F9EC3DD49243E9060466EC018@AUDIINSX0328.audi.vwg> <530212E5.2030003@turmel.org> <A2EC67620EC7424F9EC3DD49243E9060466EC088@AUDIINSX0328.audi.vwg> <53026150.2080806@turmel.org> <A2EC67620EC7424F9EC3DD49243E9060466EC7EE@AUDIINSX0328.audi.vwg>
+From: Bill <billstuff2001@sbcglobal.net>
+Subject: Re: raid5 replace ignored error?
+Date: Tue, 18 Feb 2014 13:16:14 -0600
+Message-ID: <5303B17E.5010708@sbcglobal.net>
+References: <52F0AC42.5080407@sbcglobal.net> <20140218144657.28b7601e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466EC7EE@AUDIINSX0328.audi.vwg>
+In-Reply-To: <20140218144657.28b7601e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Michael,
+On 02/17/2014 09:46 PM, NeilBrown wrote:
+> On Tue, 04 Feb 2014 03:00:50 -0600 Bill <billstuff2001@sbcglobal.net> wrote:
+>
+>> Hi,
+>>
+>> I had something weird happen during a replace in a raid5 array on kernel
+>> 3.10.28 -
+>> it appears an error in writing to / communicating with the replacement
+>> disk was ignored.
+>>
+>> I have this array:
+>>
+>> md3 : active raid5 sda1[0] sdd1[3] sdb1[1] sdf1[4] sdc1[2]
+>>         3900742144 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+>>         bitmap: 0/233 pages [0KB], 2048KB chunk
+>>
+>> I tried replacing sdf1 with sde1.
+>>
+>>       [106666.129833] md: recovery of RAID array md3
+>>       [106666.129836] md: minimum _guaranteed_  speed: 20000 KB/sec/disk.
+>>       [106666.129837] md: using maximum available idle IO bandwidth (but
+>> not more than 200000 KB/sec) for recovery.
+>>       [106666.129842] md: using 128k window, over a total of 975185536k.
+>>
+>> 1/2 hour later I got a flood of errors in dmesg:
+>>
+>>       [108334.974861] ata5.00: exception Emask 0x10 SAct 0x7fffffff SErr
+>> 0x480100 action 0x6 frozen
+>>       [108334.974864] ata5.00: irq_stat 0x08000000, interface fatal error
+>>       [108334.974866] ata5: SError: { UnrecovData 10B8B Handshk }
+>>       [108334.974868] ata5.00: failed command: WRITE FPDMA QUEUED
+>>       [108334.974872] ata5.00: cmd 61/00:00:10:97:9e/04:00:15:00:00/40
+>> tag 0 ncq 524288 out
+>>       [108334.974872]          res 40/00:b0:10:f7:9e/00:00:15:00:00/40
+>> Emask 0x10 (ATA bus error)
+>>       [108334.974873] ata5.00: status: { DRDY }
+>>       .
+>>       .(29 more of the same message)
+>>       .
+>>       [108344.976877] ata5: softreset failed (1st FIS failed)
+>>       [108344.976883] ata5: hard resetting link
+>>       [108349.874854] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>       [108349.901025] ata5.00: configured for UDMA/133
+>>       [108349.901055] ata5: EH complete
+>>
+>> There were no md error messages, the recovery continued, and finished a
+>> few hours later.
+>>
+>>       [122443.805899] md: md3: recovery done.
+>>
+>>
+>> Afterwards I did a QC check and found a mismatch in one file which I
+>> mapped to the area
+>> being updated when this error was logged.
+>>
+>> What should happen in this case?
+>> Should the "replace" have failed or is there something else going on here?
+> Hi Bill,
+>   sorry for the delay.
+>
+> Were there any message like:
+>     end_request: I/O error, dev sde, sector NNNNNNNN
+>
+> ??
+> If not, then the error never got up to md - the driver thinks that it managed
+> to recovery.
+> If so, then md really should have marked the replacement as faulty - or
+> possible recorded a bad-block if the device has a badblock log on it (mdadm
+> -E would tell you).
+>
+> If the write actually failed, but md wasn't told, then that is a problem in
+> the driver or device.
+> If the md was told, then it certainly would be a bug in md.
+>
 
-[Please don't top post.  Trim & reply inline or bottom.]
+Thanks for the help, Neil
 
-On 02/18/2014 07:16 AM, Samer, Michael (I/ET-83, extern) wrote:
+There were no "I/O error" messages, and the drive is healthy according 
+to SMART data.
 
-> Here's the actual examine of the target machine (I'm using a
-> different one so disk designation is different as the target machine
-> has only V2.6.3 available):
+I later found that these errors came after I hot-plugged a drive into a 
+different sata
+card. During the hotplug for the new disk, the controller for sde 
+hard-reset, then
+I got the flood of errors above, then it hard-reset again 10 seconds 
+later and things
+worked ok from there.
 
-[trim /]
+When I dug into the file which got corrupted, I found blocks of zero bytes,
+which implies the write didn't happen because I had zero'd the drive 
+before doing
+the replace. So it seems like something failed and md didn't hear about it.
 
-We'll need more information on the new platform, w/ all disks involved.
- Please start with "lsdrv >tree.txt" [1] and then "gdisk -l" for all
-disks.  Consider including "smartdrv -x" for all as well.
+This happened while I was breaking in a new system, and I've since 
+tightened up
+some loose screws and loose cables, and things are much more stable now.
 
-Phil
+Thanks again,
+Bill
 
-[1] https://github.com/pturmel/lsdrv
+
+
+
+
+
+
+
+
+
