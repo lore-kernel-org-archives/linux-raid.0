@@ -1,18 +1,18 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.13 90/99] md/raid5: Fix CPU hotplug callback registration
-Date: Thu, 20 Feb 2014 15:53:25 -0800
-Message-ID: <20140220235120.815456819@linuxfoundation.org>
-References: <20140220235118.191692546@linuxfoundation.org>
+Subject: [PATCH 3.12 73/82] md/raid5: Fix CPU hotplug callback registration
+Date: Thu, 20 Feb 2014 15:52:56 -0800
+Message-ID: <20140220235021.672984378@linuxfoundation.org>
+References: <20140220235019.483734207@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140220235118.191692546@linuxfoundation.org>
+In-Reply-To: <20140220235019.483734207@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-raid@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-3.13-stable review patch.  If anyone has any objections, please let me know.
+3.12-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -71,7 +71,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5512,23 +5512,43 @@ raid5_size(struct mddev *mddev, sector_t
+@@ -5351,23 +5351,43 @@ raid5_size(struct mddev *mddev, sector_t
  	return sectors * (raid_disks - conf->max_degraded);
  }
  
@@ -122,7 +122,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	put_online_cpus();
  
  	free_percpu(conf->percpu);
-@@ -5555,15 +5575,7 @@ static int raid456_cpu_notify(struct not
+@@ -5394,15 +5414,7 @@ static int raid456_cpu_notify(struct not
  	switch (action) {
  	case CPU_UP_PREPARE:
  	case CPU_UP_PREPARE_FROZEN:
@@ -139,7 +139,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  			pr_err("%s: failed memory allocation for cpu%ld\n",
  			       __func__, cpu);
  			return notifier_from_errno(-ENOMEM);
-@@ -5571,10 +5583,7 @@ static int raid456_cpu_notify(struct not
+@@ -5410,10 +5422,7 @@ static int raid456_cpu_notify(struct not
  		break;
  	case CPU_DEAD:
  	case CPU_DEAD_FROZEN:
@@ -151,7 +151,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  		break;
  	default:
  		break;
-@@ -5586,40 +5595,29 @@ static int raid456_cpu_notify(struct not
+@@ -5425,40 +5434,29 @@ static int raid456_cpu_notify(struct not
  static int raid5_alloc_percpu(struct r5conf *conf)
  {
  	unsigned long cpu;
