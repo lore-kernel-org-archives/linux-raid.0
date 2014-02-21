@@ -1,20 +1,37 @@
 From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 3.11 102/121] md/raid5: Fix CPU hotplug callback registration
-Date: Fri, 21 Feb 2014 12:48:46 +0000
-Message-ID: <1392986945-9693-103-git-send-email-luis.henriques@canonical.com>
-References: <1392986945-9693-1-git-send-email-luis.henriques@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1392986945-9693-1-git-send-email-luis.henriques@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: linux-raid@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, NeilBrown <neilb@suse.de>, Luis Henriques <luis.henriques@canonical.com>
+Subject: [3.5.y.z extended stable] Patch "md/raid5: Fix CPU hotplug callback registration" has been added to staging queue
+Date: Fri, 21 Feb 2014 12:59:42 +0000
+Message-ID: <1392987582-14825-1-git-send-email-luis.henriques@canonical.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: linux-raid@vger.kernel.org, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, NeilBrown <neilb@suse.de>, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
 List-Id: linux-raid.ids
 
-3.11.10.5 -stable review patch.  If anyone has any objections, please let me know.
+This is a note to let you know that I have just added a patch titled
 
-------------------
+    md/raid5: Fix CPU hotplug callback registration
 
+to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
+which can be found at:
+
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.5.y.z tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+From 1b622ef46259a145bb8b43f0448915fe6a3cdab7 Mon Sep 17 00:00:00 2001
 From: Oleg Nesterov <oleg@redhat.com>
+Date: Thu, 6 Feb 2014 03:42:45 +0530
+Subject: md/raid5: Fix CPU hotplug callback registration
 
 commit 789b5e0315284463617e106baad360cb9e8db3ac upstream.
 
@@ -67,13 +84,13 @@ Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
  1 file changed, 44 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a40b969..f64379b 100644
+index eb0f9ea..a42eda2 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5037,23 +5037,43 @@ raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks)
+@@ -4737,23 +4737,43 @@ raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks)
  	return sectors * (raid_disks - conf->max_degraded);
  }
- 
+
 +static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
 +{
 +	safe_put_page(percpu->spare_page);
@@ -101,10 +118,10 @@ index a40b969..f64379b 100644
  {
 -	struct raid5_percpu *percpu;
  	unsigned long cpu;
- 
+
  	if (!conf->percpu)
  		return;
- 
+
 -	get_online_cpus();
 -	for_each_possible_cpu(cpu) {
 -		percpu = per_cpu_ptr(conf->percpu, cpu);
@@ -119,9 +136,9 @@ index a40b969..f64379b 100644
 +	for_each_possible_cpu(cpu)
 +		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
  	put_online_cpus();
- 
+
  	free_percpu(conf->percpu);
-@@ -5079,15 +5099,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+@@ -4779,15 +4799,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
  	switch (action) {
  	case CPU_UP_PREPARE:
  	case CPU_UP_PREPARE_FROZEN:
@@ -138,7 +155,7 @@ index a40b969..f64379b 100644
  			pr_err("%s: failed memory allocation for cpu%ld\n",
  			       __func__, cpu);
  			return notifier_from_errno(-ENOMEM);
-@@ -5095,10 +5107,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+@@ -4795,10 +4807,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
  		break;
  	case CPU_DEAD:
  	case CPU_DEAD_FROZEN:
@@ -150,7 +167,7 @@ index a40b969..f64379b 100644
  		break;
  	default:
  		break;
-@@ -5110,40 +5119,29 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+@@ -4810,40 +4819,29 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
  static int raid5_alloc_percpu(struct r5conf *conf)
  {
  	unsigned long cpu;
@@ -159,7 +176,7 @@ index a40b969..f64379b 100644
 -	void *scribble;
 -	int err;
 +	int err = 0;
- 
+
 -	allcpus = alloc_percpu(struct raid5_percpu);
 -	if (!allcpus)
 +	conf->percpu = alloc_percpu(struct raid5_percpu);
@@ -174,7 +191,7 @@ index a40b969..f64379b 100644
 +	if (err)
 +		return err;
 +#endif
- 
+
  	get_online_cpus();
 -	err = 0;
  	for_each_present_cpu(cpu) {
@@ -204,7 +221,8 @@ index a40b969..f64379b 100644
 -		err = register_cpu_notifier(&conf->cpu_notify);
 -#endif
  	put_online_cpus();
- 
+
  	return err;
--- 
+--
 1.9.0
+
