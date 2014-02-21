@@ -1,37 +1,31 @@
 From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [3.5.y.z extended stable] Patch "md/raid5: Fix CPU hotplug callback registration" has been added to staging queue
-Date: Fri, 21 Feb 2014 12:59:42 +0000
-Message-ID: <1392987582-14825-1-git-send-email-luis.henriques@canonical.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: linux-raid@vger.kernel.org, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, NeilBrown <neilb@suse.de>, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
+Subject: [PATCH 3.5 54/60] md/raid5: Fix CPU hotplug callback registration
+Date: Fri, 21 Feb 2014 13:01:21 +0000
+Message-ID: <1392987687-15367-55-git-send-email-luis.henriques@canonical.com>
+References: <1392987687-15367-1-git-send-email-luis.henriques@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-team-bounces@lists.ubuntu.com>
+In-Reply-To: <1392987687-15367-1-git-send-email-luis.henriques@canonical.com>
+List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
+List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
+List-Post: <mailto:kernel-team@lists.ubuntu.com>
+List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
+List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
+Errors-To: kernel-team-bounces@lists.ubuntu.com
+Sender: kernel-team-bounces@lists.ubuntu.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, Oleg Nesterov <oleg@redhat.com>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-raid.ids
 
-This is a note to let you know that I have just added a patch titled
+3.5.7.31 -stable review patch.  If anyone has any objections, please let me know.
 
-    md/raid5: Fix CPU hotplug callback registration
+------------------
 
-to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
-which can be found at:
-
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.5.y.z tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Luis
-
-------
-
-From 1b622ef46259a145bb8b43f0448915fe6a3cdab7 Mon Sep 17 00:00:00 2001
 From: Oleg Nesterov <oleg@redhat.com>
-Date: Thu, 6 Feb 2014 03:42:45 +0530
-Subject: md/raid5: Fix CPU hotplug callback registration
 
 commit 789b5e0315284463617e106baad360cb9e8db3ac upstream.
 
@@ -90,7 +84,7 @@ index eb0f9ea..a42eda2 100644
 @@ -4737,23 +4737,43 @@ raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks)
  	return sectors * (raid_disks - conf->max_degraded);
  }
-
+ 
 +static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
 +{
 +	safe_put_page(percpu->spare_page);
@@ -118,10 +112,10 @@ index eb0f9ea..a42eda2 100644
  {
 -	struct raid5_percpu *percpu;
  	unsigned long cpu;
-
+ 
  	if (!conf->percpu)
  		return;
-
+ 
 -	get_online_cpus();
 -	for_each_possible_cpu(cpu) {
 -		percpu = per_cpu_ptr(conf->percpu, cpu);
@@ -136,7 +130,7 @@ index eb0f9ea..a42eda2 100644
 +	for_each_possible_cpu(cpu)
 +		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
  	put_online_cpus();
-
+ 
  	free_percpu(conf->percpu);
 @@ -4779,15 +4799,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
  	switch (action) {
@@ -176,7 +170,7 @@ index eb0f9ea..a42eda2 100644
 -	void *scribble;
 -	int err;
 +	int err = 0;
-
+ 
 -	allcpus = alloc_percpu(struct raid5_percpu);
 -	if (!allcpus)
 +	conf->percpu = alloc_percpu(struct raid5_percpu);
@@ -191,7 +185,7 @@ index eb0f9ea..a42eda2 100644
 +	if (err)
 +		return err;
 +#endif
-
+ 
  	get_online_cpus();
 -	err = 0;
  	for_each_present_cpu(cpu) {
@@ -221,8 +215,7 @@ index eb0f9ea..a42eda2 100644
 -		err = register_cpu_notifier(&conf->cpu_notify);
 -#endif
  	put_online_cpus();
-
+ 
  	return err;
---
+-- 
 1.9.0
-
