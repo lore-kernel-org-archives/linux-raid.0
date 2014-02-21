@@ -1,23 +1,34 @@
-From: Larry Fenske <LFenske@SGI.com>
-Subject: Re: raid 'check' does not provoke expected i/o error
-Date: Fri, 21 Feb 2014 10:49:29 -0700
-Message-ID: <530791A9.60808@SGI.com>
-References: <5307034E.9080007@eyal.emu.id.au>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: feature re-quest for "re-write"
+Date: Fri, 21 Feb 2014 19:09:00 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5307034E.9080007@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>, list linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The translation between disk and RAID sectors is something I also have
-been wanting.  Does anybody have any information about this?
 
-- Larry Fenske
+Hi,
 
-On 02/21/2014 12:42 AM, Eyal Lebedinsky wrote:
-> Q2) Do we have a writeup on how to translate the sector (in the i/o
-error) to a block
-> in the raid device (/dev/mdN)?
+we have "check", "repair", "replacement" and other operations on raid 
+volumes.
+
+I am not a programmer, but I was wondering how much work it would require 
+to take current code and implement "rewrite", basically re-writing every 
+block in the md raid level. Since "repair" and "check" doesn't seem to 
+properly detect a few errors, wouldn't it make sense to try least 
+existance / easiest implementation route to just re-write all data on the 
+entire array? If reads fail, re-calculate from parity, if reads work, just 
+write again.
+
+The goal of this new mode would be to eradicate pending sectors by 
+re-writing everything on the drive.
+
+If this doesn't seem like a sensible approach, what would be a sensible 
+approach to avoid having pending sectors keep being "pending" even after 
+"check" and "repair"?
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
