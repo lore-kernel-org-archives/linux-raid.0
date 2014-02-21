@@ -1,85 +1,80 @@
-From: Christian Iversen <ci@meebox.net>
-Subject: Cannot assemble DDF raid
-Date: Fri, 21 Feb 2014 05:26:15 +0100
-Message-ID: <5306D567.2010304@meebox.net>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: raid 'check' does not provoke expected i/o error
+Date: Fri, 21 Feb 2014 18:42:06 +1100
+Message-ID: <5307034E.9080007@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>, "[meebox] Anders Eiler" <ace@meebox.net>
+To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-(please CC, not on the list currently)
-
-I'm trying to recover from a 2-disk RAID5 failure on a Dell PERC 
-controller running:
-
-   2 x 146GB RAID1 (system)
-   6 x 2TB RAID5 (data1)
-   6 x 3TB RAID5 (data2)
-
-Normally, data1 and data2 are then striped with mdadm on Linux, to 
-increase performance over a JBOD-style usage. This has worked nicely for 
-a while.. until we lost 2 disks in data2 within a few hours of each 
-other. Murphy's law, and all that.
+In short: smartctl lists one pending sector. A dd of that disk provokes an i/o error
+as expected. A raid 'sync_action=check' does not find a problem and does *not* trigger
+an i/o error. Why?
 
 
-I've made a raw disk copy (using ddrescue) from one of the dead disks, 
-onto a new disk. I tried putting this disk in the server, but it would 
-not accept it. (It said it was recognized as foreign, but import failed)
+My smart log is indicating a pending sector in a component of a 7x4TB (software) raid6
+device. Looking at that component I see:
 
-If I try to assemble the raid, I get this error:
+# smartctl -x /dev/sdi
+...
+197 Current_Pending_Sector  -O--CK   200   200   000    -    1
+...
+SMART Extended Self-test Log Version: 1 (1 sectors)
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Short offline       Completed: read failure       90%      5878         261696
+...
 
-[root@rescue]~ #mdadm -A /dev/md10 /dev/sd[abcde]
-mdadm: superblock on /dev/sde doesn't match others - assembly aborted
+I then test this by attempting to read around the bad sector:
 
-Now, this does seem to be true. All the GUIDs on sda-sdd:
+# dd if=/dev/sdi of=/dev/null skip=261120 count=2048
+dd: error reading '/dev/sdi': Input/output error
+576+0 records in
+576+0 records out
+294912 bytes (295 kB) copied, 3.18338 s, 92.6 kB/s
 
-Controller GUID : 44656C6C:20202020:32374730:32524100:00743D30:00000021
-  Container GUID : 44656C6C:20202020:1000005B:10281F34:40371E8C:E9A398EA
-       VD GUID[0] : 44656C6C:20202020:1000005B:10281F34:3DB931F1:D8857F5D
-       VD GUID[1] : 44656C6C:20202020:1000005B:10281F34:3DB9326E:61E7B2D7
-       VD GUID[2] : 44656C6C:20202020:1000005B:10281F34:3F6ADA39:99DCAA67
+and the log shows:
 
-While on the last 2 disks, we have this:
+# dmesg|tail
+[768141.382189]         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
+[768141.461997]         00 03 fe 40
+[768141.503122] sd 6:0:6:0: [sdi]
+[768141.542668] Add. Sense: Unrecovered read error - auto reallocate failed
+[768141.623913] sd 6:0:6:0: [sdi] CDB:
+[768141.667622] Read(16): 88 00 00 00 00 00 00 03 fe 40 00 00 00 08 00 00
+[768141.748586] end_request: I/O error, dev sdi, sector 261696
+[768141.816217] Buffer I/O error on device sdi, logical block 32712
+[768141.889061] ata13: EH complete
+[768141.927696] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
 
-Controller GUID : 44656C6C:20202020:32374730:32524100:00743D30:00000021
-  Container GUID : 44656C6C:20202020:1000005B:10281F34:3DB931F1:40FC2989
-       VD GUID[0] : 44656C6C:20202020:1000005B:10281F34:3DB931F1:D8857F5D
-       VD GUID[1] : 44656C6C:20202020:1000005B:10281F34:3DB9326E:61E7B2D7
-       VD GUID[2] : 44656C6C:20202020:1000005B:10281F34:3F6ADA39:99DCAA67
+I ran a raid check
 
-Notice how the last 8 bytes of the Container is different.
+Feb 21 00:05:01 e7 kernel: [815562.730457] md: data-check of RAID array md127
+Feb 21 00:05:01 e7 kernel: [815562.745190] md: minimum _guaranteed_  speed: 100000 KB/sec/disk.
+Feb 21 00:05:01 e7 kernel: [815562.764583] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+Feb 21 00:05:01 e7 kernel: [815562.795202] md: using 128k window, over a total of 3906885120k.
+Feb 21 09:48:28 e7 kernel: [850585.930844] md: md127: data-check done.
 
-I'm not quite sure how this happened, but I have a strong suspicion the 
-PERC controller did something less than clever, and now I can't start 
-the raid with mdadm OR perc.
+It did not find any problem and did not trigger an i/o error, and the final mismatch_count=0.
+Neither was the pending cluster reallocated (which would happen if it was written to by
+the raid6 if it saw a read i/o error, I think).
 
+Q1) Why do I *not* see an i/o error from the raid check?
 
+Q2) Do we have a writeup on how to translate the sector (in the i/o error) to a block
+in the raid device (/dev/mdN)?
 
-I've tried to simply update the container GUID using a hex editor, but 
-this of course causes the CRCs to fail. (I reverted this change)
+Here is how I see it:
+I know that /dev/sdi1 starts 2048 sectors into the disk (call it 256 4k blocks).
+Being a 7 disk raid6 means that this block (n=32712-256=32456) is seen by the
+fs near block (b=n*5=162280) and this [n,...,n+4] is the block number to use
+to start tracing with debugfs. I do assume that my ext4 also uses 4k blocks.
 
-I have the following questions:
+I still have the pending sector and am ready to experiment (up to a point...).
 
-   1) If I could manage to change the Container GUID, would that
-      be a viable way to force the array to start, for further rescue?
-
-   2) Is there any other way to force the array to start? (--force does 
-not help)
-
-   3) Any other suggestions?
+TIA
 
 -- 
-De bedste hilsner,
-
-Christian Iversen
-Systemadministrator, Meebox.net
-
--------
-Denne e-mail kan indeholde fortrolige
-oplysninger. Er du ikke den rette modtager,
-bedes du returnere og slette denne e-mail.
--------
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
