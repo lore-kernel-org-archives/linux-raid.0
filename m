@@ -1,209 +1,85 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.4 21/25] md/raid5: Fix CPU hotplug callback registration
-Date: Thu, 20 Feb 2014 15:51:37 -0800
-Message-ID: <20140220234843.077747471@linuxfoundation.org>
-References: <20140220234842.483343851@linuxfoundation.org>
+From: Christian Iversen <ci@meebox.net>
+Subject: Cannot assemble DDF raid
+Date: Fri, 21 Feb 2014 05:26:15 +0100
+Message-ID: <5306D567.2010304@meebox.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140220234842.483343851@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, linux-raid@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, NeilBrown <neilb@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, "[meebox] Anders Eiler" <ace@meebox.net>
 List-Id: linux-raid.ids
 
-3.4-stable review patch.  If anyone has any objections, please let me know.
+(please CC, not on the list currently)
 
-------------------
+I'm trying to recover from a 2-disk RAID5 failure on a Dell PERC 
+controller running:
 
-From: Oleg Nesterov <oleg@redhat.com>
+   2 x 146GB RAID1 (system)
+   6 x 2TB RAID5 (data1)
+   6 x 3TB RAID5 (data2)
 
-commit 789b5e0315284463617e106baad360cb9e8db3ac upstream.
+Normally, data1 and data2 are then striped with mdadm on Linux, to 
+increase performance over a JBOD-style usage. This has worked nicely for 
+a while.. until we lost 2 disks in data2 within a few hours of each 
+other. Murphy's law, and all that.
 
-Subsystems that want to register CPU hotplug callbacks, as well as perform
-initialization for the CPUs that are already online, often do it as shown
-below:
 
-	get_online_cpus();
+I've made a raw disk copy (using ddrescue) from one of the dead disks, 
+onto a new disk. I tried putting this disk in the server, but it would 
+not accept it. (It said it was recognized as foreign, but import failed)
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+If I try to assemble the raid, I get this error:
 
-	register_cpu_notifier(&foobar_cpu_notifier);
+[root@rescue]~ #mdadm -A /dev/md10 /dev/sd[abcde]
+mdadm: superblock on /dev/sde doesn't match others - assembly aborted
 
-	put_online_cpus();
+Now, this does seem to be true. All the GUIDs on sda-sdd:
 
-This is wrong, since it is prone to ABBA deadlocks involving the
-cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-with CPU hotplug operations).
+Controller GUID : 44656C6C:20202020:32374730:32524100:00743D30:00000021
+  Container GUID : 44656C6C:20202020:1000005B:10281F34:40371E8C:E9A398EA
+       VD GUID[0] : 44656C6C:20202020:1000005B:10281F34:3DB931F1:D8857F5D
+       VD GUID[1] : 44656C6C:20202020:1000005B:10281F34:3DB9326E:61E7B2D7
+       VD GUID[2] : 44656C6C:20202020:1000005B:10281F34:3F6ADA39:99DCAA67
 
-Interestingly, the raid5 code can actually prevent double initialization and
-hence can use the following simplified form of callback registration:
+While on the last 2 disks, we have this:
 
-	register_cpu_notifier(&foobar_cpu_notifier);
+Controller GUID : 44656C6C:20202020:32374730:32524100:00743D30:00000021
+  Container GUID : 44656C6C:20202020:1000005B:10281F34:3DB931F1:40FC2989
+       VD GUID[0] : 44656C6C:20202020:1000005B:10281F34:3DB931F1:D8857F5D
+       VD GUID[1] : 44656C6C:20202020:1000005B:10281F34:3DB9326E:61E7B2D7
+       VD GUID[2] : 44656C6C:20202020:1000005B:10281F34:3F6ADA39:99DCAA67
 
-	get_online_cpus();
+Notice how the last 8 bytes of the Container is different.
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+I'm not quite sure how this happened, but I have a strong suspicion the 
+PERC controller did something less than clever, and now I can't start 
+the raid with mdadm OR perc.
 
-	put_online_cpus();
 
-A hotplug operation that occurs between registering the notifier and calling
-get_online_cpus(), won't disrupt anything, because the code takes care to
-perform the memory allocations only once.
 
-So reorganize the code in raid5 this way to fix the deadlock with callback
-registration.
+I've tried to simply update the container GUID using a hex editor, but 
+this of course causes the CRCs to fail. (I reverted this change)
 
-Cc: linux-raid@vger.kernel.org
-Fixes: 36d1c6476be51101778882897b315bd928c8c7b5
-Signed-off-by: Oleg Nesterov <oleg@redhat.com>
-[Srivatsa: Fixed the unregister_cpu_notifier() deadlock, added the
-free_scratch_buffer() helper to condense code further and wrote the changelog.]
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+I have the following questions:
 
----
- drivers/md/raid5.c |   90 +++++++++++++++++++++++++----------------------------
- 1 file changed, 44 insertions(+), 46 deletions(-)
+   1) If I could manage to change the Container GUID, would that
+      be a viable way to force the array to start, for further rescue?
 
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4678,23 +4678,43 @@ raid5_size(struct mddev *mddev, sector_t
- 	return sectors * (raid_disks - conf->max_degraded);
- }
- 
-+static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
-+{
-+	safe_put_page(percpu->spare_page);
-+	kfree(percpu->scribble);
-+	percpu->spare_page = NULL;
-+	percpu->scribble = NULL;
-+}
-+
-+static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
-+{
-+	if (conf->level == 6 && !percpu->spare_page)
-+		percpu->spare_page = alloc_page(GFP_KERNEL);
-+	if (!percpu->scribble)
-+		percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
-+
-+	if (!percpu->scribble || (conf->level == 6 && !percpu->spare_page)) {
-+		free_scratch_buffer(conf, percpu);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
- static void raid5_free_percpu(struct r5conf *conf)
- {
--	struct raid5_percpu *percpu;
- 	unsigned long cpu;
- 
- 	if (!conf->percpu)
- 		return;
- 
--	get_online_cpus();
--	for_each_possible_cpu(cpu) {
--		percpu = per_cpu_ptr(conf->percpu, cpu);
--		safe_put_page(percpu->spare_page);
--		kfree(percpu->scribble);
--	}
- #ifdef CONFIG_HOTPLUG_CPU
- 	unregister_cpu_notifier(&conf->cpu_notify);
- #endif
-+
-+	get_online_cpus();
-+	for_each_possible_cpu(cpu)
-+		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
- 	put_online_cpus();
- 
- 	free_percpu(conf->percpu);
-@@ -4720,15 +4740,7 @@ static int raid456_cpu_notify(struct not
- 	switch (action) {
- 	case CPU_UP_PREPARE:
- 	case CPU_UP_PREPARE_FROZEN:
--		if (conf->level == 6 && !percpu->spare_page)
--			percpu->spare_page = alloc_page(GFP_KERNEL);
--		if (!percpu->scribble)
--			percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
--
--		if (!percpu->scribble ||
--		    (conf->level == 6 && !percpu->spare_page)) {
--			safe_put_page(percpu->spare_page);
--			kfree(percpu->scribble);
-+		if (alloc_scratch_buffer(conf, percpu)) {
- 			pr_err("%s: failed memory allocation for cpu%ld\n",
- 			       __func__, cpu);
- 			return notifier_from_errno(-ENOMEM);
-@@ -4736,10 +4748,7 @@ static int raid456_cpu_notify(struct not
- 		break;
- 	case CPU_DEAD:
- 	case CPU_DEAD_FROZEN:
--		safe_put_page(percpu->spare_page);
--		kfree(percpu->scribble);
--		percpu->spare_page = NULL;
--		percpu->scribble = NULL;
-+		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
- 		break;
- 	default:
- 		break;
-@@ -4751,40 +4760,29 @@ static int raid456_cpu_notify(struct not
- static int raid5_alloc_percpu(struct r5conf *conf)
- {
- 	unsigned long cpu;
--	struct page *spare_page;
--	struct raid5_percpu __percpu *allcpus;
--	void *scribble;
--	int err;
-+	int err = 0;
- 
--	allcpus = alloc_percpu(struct raid5_percpu);
--	if (!allcpus)
-+	conf->percpu = alloc_percpu(struct raid5_percpu);
-+	if (!conf->percpu)
- 		return -ENOMEM;
--	conf->percpu = allcpus;
-+
-+#ifdef CONFIG_HOTPLUG_CPU
-+	conf->cpu_notify.notifier_call = raid456_cpu_notify;
-+	conf->cpu_notify.priority = 0;
-+	err = register_cpu_notifier(&conf->cpu_notify);
-+	if (err)
-+		return err;
-+#endif
- 
- 	get_online_cpus();
--	err = 0;
- 	for_each_present_cpu(cpu) {
--		if (conf->level == 6) {
--			spare_page = alloc_page(GFP_KERNEL);
--			if (!spare_page) {
--				err = -ENOMEM;
--				break;
--			}
--			per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
--		}
--		scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
--		if (!scribble) {
--			err = -ENOMEM;
-+		err = alloc_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
-+		if (err) {
-+			pr_err("%s: failed memory allocation for cpu%ld\n",
-+			       __func__, cpu);
- 			break;
- 		}
--		per_cpu_ptr(conf->percpu, cpu)->scribble = scribble;
- 	}
--#ifdef CONFIG_HOTPLUG_CPU
--	conf->cpu_notify.notifier_call = raid456_cpu_notify;
--	conf->cpu_notify.priority = 0;
--	if (err == 0)
--		err = register_cpu_notifier(&conf->cpu_notify);
--#endif
- 	put_online_cpus();
- 
- 	return err;
+   2) Is there any other way to force the array to start? (--force does 
+not help)
+
+   3) Any other suggestions?
+
+-- 
+De bedste hilsner,
+
+Christian Iversen
+Systemadministrator, Meebox.net
+
+-------
+Denne e-mail kan indeholde fortrolige
+oplysninger. Er du ikke den rette modtager,
+bedes du returnere og slette denne e-mail.
+-------
