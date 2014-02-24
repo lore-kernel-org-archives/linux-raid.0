@@ -1,91 +1,197 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: raid 'check' does not provoke expected i/o error
-Date: Tue, 25 Feb 2014 07:45:26 +1100
-Message-ID: <530BAF66.7060508@eyal.emu.id.au>
-References: <5307034E.9080007@eyal.emu.id.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5307034E.9080007@eyal.emu.id.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+From: Andrea Mazzoleni <amadvance@gmail.com>
+Subject: [PATCH v5 0/3] New RAID library supporting up to six parities
+Date: Mon, 24 Feb 2014 22:15:27 +0100
+Message-ID: <1393276530-26423-1-git-send-email-amadvance@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: clm@fb.com, jbacik@fb.com, neilb@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, amadvance@gmail.com
 List-Id: linux-raid.ids
 
-I neglected to give the kernel version.
+Hi,
 
-# uname -a
-Linux e4.eyal.emu.id.au 3.12.11-201.fc19.x86_64 #1 SMP Fri Feb 14 19:08:33 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+A new version of the new RAID library. Finally with *working* btrfs support!
 
-Eyal
+It includes patches for both the kernel and btrfs-progs to add new parity
+modes "par3", "par4", "par5" and "par6" working similarly at the existing
+"raid5" and "raid6" ones.
 
-On 02/21/14 18:42, Eyal Lebedinsky wrote:
-> In short: smartctl lists one pending sector. A dd of that disk provokes an i/o error
-> as expected. A raid 'sync_action=check' does not find a problem and does *not* trigger
-> an i/o error. Why?
->
->
-> My smart log is indicating a pending sector in a component of a 7x4TB (software) raid6
-> device. Looking at that component I see:
->
-> # smartctl -x /dev/sdi
-> ...
-> 197 Current_Pending_Sector  -O--CK   200   200   000    -    1
-> ...
-> SMART Extended Self-test Log Version: 1 (1 sectors)
-> Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
-> # 1  Short offline       Completed: read failure       90%      5878         261696
-> ...
->
-> I then test this by attempting to read around the bad sector:
->
-> # dd if=/dev/sdi of=/dev/null skip=261120 count=2048
-> dd: error reading '/dev/sdi': Input/output error
-> 576+0 records in
-> 576+0 records out
-> 294912 bytes (295 kB) copied, 3.18338 s, 92.6 kB/s
->
-> and the log shows:
->
-> # dmesg|tail
-> [768141.382189]         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
-> [768141.461997]         00 03 fe 40
-> [768141.503122] sd 6:0:6:0: [sdi]
-> [768141.542668] Add. Sense: Unrecovered read error - auto reallocate failed
-> [768141.623913] sd 6:0:6:0: [sdi] CDB:
-> [768141.667622] Read(16): 88 00 00 00 00 00 00 03 fe 40 00 00 00 08 00 00
-> [768141.748586] end_request: I/O error, dev sdi, sector 261696
-> [768141.816217] Buffer I/O error on device sdi, logical block 32712
-> [768141.889061] ata13: EH complete
-> [768141.927696] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
->
-> I ran a raid check
->
-> Feb 21 00:05:01 e7 kernel: [815562.730457] md: data-check of RAID array md127
-> Feb 21 00:05:01 e7 kernel: [815562.745190] md: minimum _guaranteed_  speed: 100000 KB/sec/disk.
-> Feb 21 00:05:01 e7 kernel: [815562.764583] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
-> Feb 21 00:05:01 e7 kernel: [815562.795202] md: using 128k window, over a total of 3906885120k.
-> Feb 21 09:48:28 e7 kernel: [850585.930844] md: md127: data-check done.
->
-> It did not find any problem and did not trigger an i/o error, and the final mismatch_count=0.
-> Neither was the pending cluster reallocated (which would happen if it was written to by
-> the raid6 if it saw a read i/o error, I think).
->
-> Q1) Why do I *not* see an i/o error from the raid check?
->
-> Q2) Do we have a writeup on how to translate the sector (in the i/o error) to a block
-> in the raid device (/dev/mdN)?
->
-> Here is how I see it:
-> I know that /dev/sdi1 starts 2048 sectors into the disk (call it 256 4k blocks).
-> Being a 7 disk raid6 means that this block (n=32712-256=32456) is seen by the
-> fs near block (b=n*5=162280) and this [n,...,n+4] is the block number to use
-> to start tracing with debugfs. I do assume that my ext4 also uses 4k blocks.
->
-> I still have the pending sector and am ready to experiment (up to a point...).
->
-> TIA
->
+The patches apply cleanly to kernel v3.14-rc3 and btrfs-progs v3.12.
+
+If you are willing to test it, you can do something like that:
+
+mkfs.btrfs -d par3 -m par3 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+mount /dev/sdb1 /mnt/tmp
+...copy something to /mnt/tmp...
+md5deep -r /mnt/tmp > test_before.hash
+umount /mnt/tmp
+dd if=/dev/urandom of=/dev/sdc1 count=...
+dd if=/dev/urandom of=/dev/sdd1 count=...
+dd if=/dev/urandom of=/dev/sde1 count=...
+mount -o degraded /dev/sdb1 /mnt/tmp
+md5deep -r /mnt/tmp > test_after.hash
+umount /mnt/tmp
+diff -u test_before.hash test_after.hash && echo OK
+
+I run various test like that, and everything seems to work.
+
+The first patch is the new RAID library for the kernel, supporting up to six
+parities. It's verified with automated test that reach 99.3% code coverage.
+It also passes clang and valgrind tests with no error.
+
+It applies cleanly to kernel v3.14-rc3, but it should work with any other
+version because it's formed only of new files. The only kernel change
+is the new CONFIG_RAID_CAUCHY option in the "lib" configuration section.
+
+For reviewing I recommend to start from the include/raid/raid.h that describes
+the new generic raid interface. Then continue in lib/raid/raid.c where the interface
+is implement. You can start reading the documentation about the RAID
+mathematics used, taking care that its correctness is proven both
+mathematically and by brute-force by the test programs.
+You can then review raid_gen() and raid_rec(), that are high level forwarders
+to generic and optimized asm functions that generate parity
+and recover data. Their internal structure is very similar at the functions
+in RAID6. The main difference is to have a generic matrix of parity coefficients.
+All these functions are verified by the test programs, with full lines and
+branches coverage, meaning that you can concentrate the review on their
+structure, than in the computation and asm details.
+Finally, you can review the test programs in lib/raid/test, to ensure that
+everything is really tested, and the coverage test can help you on that.
+
+The second patch contains the kernel btrfs modifications. Besides adding the
+new parity modes it also removes a lot of code about raid details that are
+now handled by the new raid library.
+
+It applies cleanly to kernel v3.14-rc3. You can use it also for previous kernels,
+with an obvious adjustment in fs/btrfs/ctree.h.
+
+For reviewing you can start from the diff, and check chunk after chunk.
+Likely the two most complex changes are where the new raid_gen() and raid_rec()
+are called replacing big chunks of code. But the rest is mostly straightforward
+as I just extended all the checks about RAID5 and RAID6 to six parities.
+But for sure it needs a more careful review as my knowledge of btrfs internals is
+very limited.
+
+The third patch contains the btrfs-progs modification. They are just matching
+the kernel changes, and the same considerations apply.
+
+It applies cleanly to btrfs-progs v3.12.
+
+Please let me know what you think, and if it can be considered for inclusion or
+something more is required.
+
+If some patch is missing due mailinglist size limit, you can download them at:
+
+  http://snapraid.sourceforge.net/linux/v5/
+
+You can see the code coverage analysis made by lcov at:
+
+  http://snapraid.sourceforge.net/linux/v5/coverage/
+
+Changes from v4 to v5:
+ - Adds more comments in the libraid patch.
+ - Reviews and completes the btrfs patch. The previous patch was not
+   really working due some missing pieces.
+ - Adds a new patch for btrfs-progs to extend the mkfs.btrfs
+   functionality to create filesystem with up to six parity levels.
+ - Removes the async_tx patch as not yet ready for inclusion.
+
+Changes from v3 to v4:
+ - Adds a code coverage test
+ - Adds a matrix inversion test.
+ - Everything updated to kernel 3.13.
+
+Changes from v2 to v3:
+ - Adds a new patch to change async_tx to use the new raid library
+   for synchronous cases and to export a similar interface.
+   Also modified md/raid5.c to use the new interface of async_tx.
+   This is just example code not meant for inclusion!
+ - Renamed raid_par() to raid_gen() to match better existing naming.
+ - Removed raid_sort() and replaced with raid_insert() that allows
+   to build a vector already in order instead of sorting it later.
+   This function is declared in the new raid/helper.h.
+ - Better documentation in the raid.h/c files. Start from raid.h
+   to see the documentation of the new interface.
+
+Changes from v1 to v2:
+ - Adds a patch to btrfs to extend its support to more than double parity.
+   This is just example code not meant for inclusion!
+ - Changes the main raid_rec() interface to merge the failed data
+   and parity index vectors. This matches better the kernel usage.
+ - Uses alloc_pages_exact() instead of __get_free_pages().
+ - Removes unnecessary register loads from par1_sse().
+ - Converts the asm_begin/end() macros to inlined functions.
+ - Fixes some more checkpatch.pl warnings.
+ - Other minor style/comment changes.
+
+Andrea Mazzoleni (2):
+  lib: raid: New RAID library supporting up to six parities
+  fs: btrfs: Adds new par3456 modes to support up to six parities
+
+ fs/btrfs/Kconfig             |    1 +
+ fs/btrfs/ctree.h             |   50 +-
+ fs/btrfs/disk-io.c           |    7 +-
+ fs/btrfs/extent-tree.c       |   67 +-
+ fs/btrfs/inode.c             |    3 +-
+ fs/btrfs/raid56.c            |  273 +++-----
+ fs/btrfs/raid56.h            |   19 +-
+ fs/btrfs/scrub.c             |    3 +-
+ fs/btrfs/volumes.c           |  144 ++--
+ include/linux/raid/helper.h  |   32 +
+ include/linux/raid/raid.h    |   87 +++
+ include/trace/events/btrfs.h |   16 +-
+ include/uapi/linux/btrfs.h   |   19 +-
+ lib/Kconfig                  |   17 +
+ lib/Makefile                 |    1 +
+ lib/raid/.gitignore          |    3 +
+ lib/raid/Makefile            |   14 +
+ lib/raid/cpu.h               |   44 ++
+ lib/raid/gf.h                |  109 +++
+ lib/raid/helper.c            |   38 +
+ lib/raid/int.c               |  567 +++++++++++++++
+ lib/raid/internal.h          |  148 ++++
+ lib/raid/mktables.c          |  383 +++++++++++
+ lib/raid/module.c            |  458 ++++++++++++
+ lib/raid/raid.c              |  492 +++++++++++++
+ lib/raid/test/Makefile       |   72 ++
+ lib/raid/test/combo.h        |  155 +++++
+ lib/raid/test/fulltest.c     |   79 +++
+ lib/raid/test/invtest.c      |  172 +++++
+ lib/raid/test/memory.c       |   79 +++
+ lib/raid/test/memory.h       |   78 +++
+ lib/raid/test/selftest.c     |   44 ++
+ lib/raid/test/speedtest.c    |  578 ++++++++++++++++
+ lib/raid/test/test.c         |  314 +++++++++
+ lib/raid/test/test.h         |   59 ++
+ lib/raid/test/usermode.h     |   95 +++
+ lib/raid/test/xor.c          |   41 ++
+ lib/raid/x86.c               | 1565 ++++++++++++++++++++++++++++++++++++++++++
+ 38 files changed, 6037 insertions(+), 289 deletions(-)
+ create mode 100644 include/linux/raid/helper.h
+ create mode 100644 include/linux/raid/raid.h
+ create mode 100644 lib/raid/.gitignore
+ create mode 100644 lib/raid/Makefile
+ create mode 100644 lib/raid/cpu.h
+ create mode 100644 lib/raid/gf.h
+ create mode 100644 lib/raid/helper.c
+ create mode 100644 lib/raid/int.c
+ create mode 100644 lib/raid/internal.h
+ create mode 100644 lib/raid/mktables.c
+ create mode 100644 lib/raid/module.c
+ create mode 100644 lib/raid/raid.c
+ create mode 100644 lib/raid/test/Makefile
+ create mode 100644 lib/raid/test/combo.h
+ create mode 100644 lib/raid/test/fulltest.c
+ create mode 100644 lib/raid/test/invtest.c
+ create mode 100644 lib/raid/test/memory.c
+ create mode 100644 lib/raid/test/memory.h
+ create mode 100644 lib/raid/test/selftest.c
+ create mode 100644 lib/raid/test/speedtest.c
+ create mode 100644 lib/raid/test/test.c
+ create mode 100644 lib/raid/test/test.h
+ create mode 100644 lib/raid/test/usermode.h
+ create mode 100644 lib/raid/test/xor.c
+ create mode 100644 lib/raid/x86.c
 
 -- 
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+1.7.12.1
