@@ -1,29 +1,47 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: mdadm won't remove drive from array
-Date: Mon, 24 Feb 2014 12:05:13 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1402241203510.747@uplift.swm.pp.se>
-References: <CAKFseUP0_Y3ZuBKKrTD6WPCRoYraKk4+3sogxmbXQwikh2Wi=g@mail.gmail.com>
+From: wiebittewas <wiebittewas@googlemail.com>
+Subject: Re: Data Offset
+Date: Mon, 24 Feb 2014 12:22:44 +0100
+Message-ID: <530B2B84.3010208@gmail.com>
+References: <CAFhY2CjOECFy4bWDL6zs9rtSkVGPR9Wv=1UX9vKgmdjwMsmBYg@mail.gmail.com> <20120602095237.3822e2c2@notabene.brown> <CAFhY2Cjwep5mZkYCfRn4UYmQpSyHU13dSCB8HF8F9wG8Rzx9Aw@mail.gmail.com> <20120604133526.6da3bf10@notabene.brown> <4FCCFDBB.201@pierre-beck.de> <20120605085728.7e922359@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKFseUP0_Y3ZuBKKrTD6WPCRoYraKk4+3sogxmbXQwikh2Wi=g@mail.gmail.com>
+In-Reply-To: <20120605085728.7e922359@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 24 Feb 2014, Caspar Smit wrote:
+Am 05.06.2012 00:57 schrieb "NeilBrown" bzgl. "Re: Data Offset":
 
-> #mdadm --remove /dev/md5 /dev/sde
-> mdadm: cannot find /dev/sde: No such file or directory
 
-Accordig to mdadm manpage the syntax is:
+> OK, try:
+> 
+>    git clone -b data_offset git://neil.brown.name/mdadm
+>    cd mdadm
+>    make
+> 
+>    ./mdadm -C /dev/md1 -e 1.2 -l 5 -n 5 --assume-clean -c 512 \ 
+>       /dev/sdc3:2048s /dev/sdb3:2048s ???  /dev/sdd3:1024s ???
+> 
+> The number after ':' after a device name is a data offset.  's' means sectors.
 
-mdadm [mode] <raiddevice> [options] <component-devices>
+well, luckily I've found this message and was able to rescue an array
+with two failed disks with only a few damaged files...
 
-Could you please verify if "mdadm --manage /dev/md5 --remove /dev/sde"
+but is there any possibility that this features comes into normal tree,
+so it will be usable in near future from rescue-sticks like grml?
 
-gives the same behaviour.
+> Don't install this mdadm, and don't use it for anything other than
+> re-creating this array.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+or does it interfere with other necessary features?
+
+I've viewed a diff to standard 3.2.5 and doesn't see real complex
+things, but even a lot of smaller changes.
+
+at least thanks for your work.
+
+w.
+
+
