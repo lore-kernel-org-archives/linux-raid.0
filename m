@@ -1,79 +1,95 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: feature re-quest for "re-write"
-Date: Mon, 24 Feb 2014 10:24:36 +0800
-Message-ID: <530AAD64.4030701@fnarfbargle.com>
-References: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: What is the sector size in /sys/block/md*/md items?
+Date: Mon, 24 Feb 2014 13:29:44 +1100
+Message-ID: <20140224132944.435c9a2e@notabene.brown>
+References: <5307F95E.70501@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/bnTNBc0z1TyEuipXUS_Rj.1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
+In-Reply-To: <5307F95E.70501@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 22/02/14 02:09, Mikael Abrahamsson wrote:
->
-> Hi,
->
-> we have "check", "repair", "replacement" and other operations on raid
-> volumes.
->
-> I am not a programmer, but I was wondering how much work it would
-> require to take current code and implement "rewrite", basically
-> re-writing every block in the md raid level. Since "repair" and "check"
-> doesn't seem to properly detect a few errors, wouldn't it make sense to
-> try least existance / easiest implementation route to just re-write all
-> data on the entire array? If reads fail, re-calculate from parity, if
-> reads work, just write again.
+--Sig_/bnTNBc0z1TyEuipXUS_Rj.1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Now, this is after 3 minutes of looking at raid5.c, so if I've missed 
-something obvious please feel free to yell at me. I'm not much of a 
-programmer. Having said that -
+On Sat, 22 Feb 2014 12:11:58 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
+wrote:
 
-Can someone check my understanding of this bit of code?
+> I am reading the kernel Documentation/md.txt.
+>=20
+> It explains what md the items in sysfs mean. It refers a few times to "se=
+ctors".
+> - Are we talking 512 bytes or the underlying physical disk sector size?
 
-static void handle_parity_checks6(struct r5conf *conf, struct 
-stripe_head *sh,
-                                   struct stripe_head_state *s,
-                                   int disks)
-<....>
+Always 512 bytes.
 
-         switch (sh->check_state) {
-         case check_state_idle:
-                 /* start a new check operation if there are < 2 failures */
-                 if (s->failed == s->q_failed) {
-                         /* The only possible failed device holds Q, so it
-                          * makes sense to check P (If anything else 
-were failed,
-                          * we would have used P to recreate it).
-                          */
-                         sh->check_state = check_state_run;
-                 }
-                 if (!s->q_failed && s->failed < 2) {
-                         /* Q is not failed, and we didn't use it to 
-generate
-                          * anything, so it makes sense to check it
-                          */
-                         if (sh->check_state == check_state_run)
-                                 sh->check_state = check_state_run_pq;
-                         else
-                                 sh->check_state = check_state_run_q;
-                 }
+> - Do all disks in an array need to have the same sector size?
+
+No.
+
+>=20
+> Seeing how md can be built over physical disks, partitions, loop mounts a=
+nd more,
+> I expect that 'sector' is short for '512 bytes' and real disk sector size=
+ is not
+> relevant here.
+
+Correct.
+
+>=20
+> Nevertheless, there is md*/queue/hw_sector_size which gives 512. So there=
+ are now
+> a few sector sizes (the array and the underlying devices) and the text do=
+es not
+> make it clear which is used where. I assume the array cluster size is the=
+ one
+> referred to in this document.
+
+I was never happy when 'queue' appeared under md*.  It is almost entirely
+irrelevant.
+
+Feel free to post a patch to clarify md.txt.
+
+Thanks,
+NeilBrown
 
 
-So we get passed a stripe. If it's not being checked we :
+>=20
+> TIA
+>=20
+> --
+> Eyal Lebedinsky (eyal@eyal.emu.id.au)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-- If Q has failed we initiate check_state_run (which checks only P)
 
-- If we have less than 2 failed drives (lets say we have none), if we 
-are already checking P (check_state_run) we upgrade that to 
-check_state_run_pq (and therefore check both).
+--Sig_/bnTNBc0z1TyEuipXUS_Rj.1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-However
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-- If we were check_state_idle, beacuse we had 0 failed drives, then we 
-only mark check_state_run_q and therefore skip checking P ??
+iQIVAwUBUwqumDnsnt1WYoG5AQIQsA//fHn+/fA6adiO4SqmLLWX8b0TCCR8NM8i
+dVcv6fkfmheN6B6GyrHrdoQL89lYRRCgz5GY7VMgqSxmEv+wms3wHrff3KkMDZgx
+hivQnmvgTnntuu5Ni9GzK1+ZH4bfACfQ2Zr5SlxleuoRHsWqcz2Sqbnv56vIRgo5
+wNgVVgNoqNQ6iodUdBrvISMR4fF4SHIuYaGSpM5pi/wWKf67P6LzR2tj/rbWs/CZ
+2G7HK9iRz+PmTSdiI/WphobZOxR6qBc/juB49Hsh8W6ADEZNhcwai/7fw6pcZeCV
+DGOpOKtU37YnevMiDYG5EyZJ0ErxvG555zqBI/LXo3zDW8F2g9a2meEkYlXUCND8
+WWjLijuiyuPHh0PDu72kOfCQt3u8k1NUG9MqcTkpLgNbobxCgcQKsCKk/a7zDHNg
+LdWqOpmtQxg1SRy8a8pb6KX1xxiIBMQYa11x7JlKWOGbG52LxoMlG6EB7KGG4bpP
+5EgV8YezgAQvY+RWiedvXg2koA5XX7fG8zsJUq8h171uSPCACb5RdDXXctne/NLQ
+3EF8D4Wx7m8P7+/8TmAlozRMJivWtmI1okjkBBxgssk6csjOluXASFw2NxwuQKVN
+IPBJ7JkfsDSsxaT9C7uRnZLzcOCOYFwIjvy26RroaX+Jexv2+jNVVc8r+21Luumy
+V+dMxyuWBPA=
+=9Nh6
+-----END PGP SIGNATURE-----
 
-Regards,
-Brad
+--Sig_/bnTNBc0z1TyEuipXUS_Rj.1--
