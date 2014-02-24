@@ -1,44 +1,43 @@
-From: Caspar Smit <c.smit@truebit.nl>
-Subject: Re: mdadm won't remove drive from array
-Date: Mon, 24 Feb 2014 14:46:53 +0100
-Message-ID: <CAKFseUNtuncgwF=WxLwdd0j2eYNGjG_HS3xtSXyiLjHEAhyptQ@mail.gmail.com>
-References: <CAKFseUP0_Y3ZuBKKrTD6WPCRoYraKk4+3sogxmbXQwikh2Wi=g@mail.gmail.com>
-	<alpine.DEB.2.02.1402241203510.747@uplift.swm.pp.se>
+From: Wilson Jonathan <piercing_male@hotmail.com>
+Subject: Re: feature re-quest for "re-write"
+Date: Mon, 24 Feb 2014 14:14:55 +0000
+Message-ID: <BLU0-SMTP340FC1C74C40495FA5F94298860@phx.gbl>
+References: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
+	 <530AA09B.3090708@fnarfbargle.com> <530AA460.602@eyal.emu.id.au>
+	 <530AAA55.2080508@fnarfbargle.com> <530ABF21.7030200@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1402241203510.747@uplift.swm.pp.se>
+In-Reply-To: <530ABF21.7030200@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Mikael,
 
-# mdadm --manage /dev/md5 --remove /dev/sde
-mdadm: cannot find /dev/sde: No such file or directory
+> # echo 3 >'/proc/sys/vm/drop_caches'
+> # dd if=/dev/md127 of=/dev/null count=$((20*1024*1024))
+> 20971520+0 records in
+> 20971520+0 records out
+> 10737418240 bytes (11 GB) copied, 13.5717 s, 791 MB/s
+> 
+> Note that I do not expect to get an error because reading the array will not read the P/Q checksums
+> (it assumes good data and avoids the calculations overhead of verifying P/Q).
+> 
+> BTW, due to the use of a buffer layer I could have done the whole test using 4k blocks rather than
+> sectors, but it makes no difference in this case.
+> 
+> Eyal
+> 
 
-# mdadm --manage /dev/md5 --remove detached
-<no output>
+I wonder, could you not use dd to perform a "refresh"?
 
-So this doesn't make any difference.
+dd if=/dev/md127 of=/dev/md127 count=... bs=....
 
-Kind regards,
-Caspar Smit
+As that would force a re-calc and write of P & Q and data.
 
-2014-02-24 12:05 GMT+01:00 Mikael Abrahamsson <swmike@swm.pp.se>:
-> On Mon, 24 Feb 2014, Caspar Smit wrote:
->
->> #mdadm --remove /dev/md5 /dev/sde
->> mdadm: cannot find /dev/sde: No such file or directory
->
->
-> Accordig to mdadm manpage the syntax is:
->
-> mdadm [mode] <raiddevice> [options] <component-devices>
->
-> Could you please verify if "mdadm --manage /dev/md5 --remove /dev/sde"
->
-> gives the same behaviour.
->
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
+That said, its just a "could you/would it" suggestion not a "do it" due
+to the inherent dangers of dd.
+
+
