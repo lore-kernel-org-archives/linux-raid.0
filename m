@@ -1,31 +1,29 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: What is the sector size in /sys/block/md*/md items?
-Date: Sat, 22 Feb 2014 12:11:58 +1100
-Message-ID: <5307F95E.70501@eyal.emu.id.au>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: feature re-quest for "re-write"
+Date: Mon, 24 Feb 2014 09:30:03 +0800
+Message-ID: <530AA09B.3090708@fnarfbargle.com>
+References: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am reading the kernel Documentation/md.txt.
+On 22/02/14 02:09, Mikael Abrahamsson wrote:
+>
 
-It explains what md the items in sysfs mean. It refers a few times to "sectors".
-- Are we talking 512 bytes or the underlying physical disk sector size?
-- Do all disks in an array need to have the same sector size?
+> If this doesn't seem like a sensible approach, what would be a sensible
+> approach to avoid having pending sectors keep being "pending" even after
+> "check" and "repair"?
+>
 
-Seeing how md can be built over physical disks, partitions, loop mounts and more,
-I expect that 'sector' is short for '512 bytes' and real disk sector size is not
-relevant here.
+The only reason I've ever seen this personally was when the pending 
+sectors were on non-data parts of the drive, like some of the space 
+around the superblock. Have you verified that these issues are really on 
+sectors in the data area? SMART should tell you the LBA of the first 
+error in a read test.
 
-Nevertheless, there is md*/queue/hw_sector_size which gives 512. So there are now
-a few sector sizes (the array and the underlying devices) and the text does not
-make it clear which is used where. I assume the array cluster size is the one
-referred to in this document.
-
-TIA
-
---
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+Brad
