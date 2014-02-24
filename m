@@ -1,96 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Data Offset
-Date: Tue, 25 Feb 2014 08:38:40 +1100
-Message-ID: <20140225083840.11cec0f1@notabene.brown>
-References: <CAFhY2CjOECFy4bWDL6zs9rtSkVGPR9Wv=1UX9vKgmdjwMsmBYg@mail.gmail.com>
-	<20120602095237.3822e2c2@notabene.brown>
-	<CAFhY2Cjwep5mZkYCfRn4UYmQpSyHU13dSCB8HF8F9wG8Rzx9Aw@mail.gmail.com>
-	<20120604133526.6da3bf10@notabene.brown>
-	<4FCCFDBB.201@pierre-beck.de>
-	<20120605085728.7e922359@notabene.brown>
-	<530B2B84.3010208@gmail.com>
+Subject: Re: mdadm won't remove drive from array
+Date: Tue, 25 Feb 2014 08:54:16 +1100
+Message-ID: <20140225085416.478dc97e@notabene.brown>
+References: <CAKFseUP0_Y3ZuBKKrTD6WPCRoYraKk4+3sogxmbXQwikh2Wi=g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jAHs0Cfd=gVHw/OrkykJ8zI"; protocol="application/pgp-signature"
+ boundary="Sig_/d0mM4sEzY/0J9eVFV_K6vqK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <530B2B84.3010208@gmail.com>
+In-Reply-To: <CAKFseUP0_Y3ZuBKKrTD6WPCRoYraKk4+3sogxmbXQwikh2Wi=g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: wiebittewas <wiebittewas@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: Caspar Smit <c.smit@truebit.nl>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/jAHs0Cfd=gVHw/OrkykJ8zI
+--Sig_/d0mM4sEzY/0J9eVFV_K6vqK
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 24 Feb 2014 12:22:44 +0100 wiebittewas <wiebittewas@googlemail.com>
-wrote:
+On Mon, 24 Feb 2014 11:51:00 +0100 Caspar Smit <c.smit@truebit.nl> wrote:
 
-> Am 05.06.2012 00:57 schrieb "NeilBrown" bzgl. "Re: Data Offset":
+> Hi all,
 >=20
+> I'm having trouble removing a failed drive from an array.
 >=20
-> > OK, try:
-> >=20
-> >    git clone -b data_offset git://neil.brown.name/mdadm
-> >    cd mdadm
-> >    make
-> >=20
-> >    ./mdadm -C /dev/md1 -e 1.2 -l 5 -n 5 --assume-clean -c 512 \=20
-> >       /dev/sdc3:2048s /dev/sdb3:2048s ???  /dev/sdd3:1024s ???
-> >=20
-> > The number after ':' after a device name is a data offset.  's' means s=
-ectors.
+> #cat /proc/mdstat
 >=20
-> well, luckily I've found this message and was able to rescue an array
-> with two failed disks with only a few damaged files...
+> md5 : active raid6 sdn[14](S) sdm[13](S) sdad[12] sdl[11] sdba[10]
+> sde[0](F) sdd[9] sdc[8] sdk[7] sdj[6] sdi[5] sdh[3] sdg[2]
+>       15628103680 blocks super 1.2 level 6, 512k chunk, algorithm 2
+> [10/10] [UUUUUUUUUU]
 >=20
-> but is there any possibility that this features comes into normal tree,
-> so it will be usable in near future from rescue-sticks like grml?
+> The drive in question is sde
+>=20
+> #mdadm --remove /dev/md5 /dev/sde
+> mdadm: cannot find /dev/sde: No such file or directory
+>=20
+> The drive crashed so hard it is not visible to the kernel anymore.
+>=20
+> # cat /proc/partitions |grep sde
+> <no output>
+>=20
+> Normally in such case i do:
+>=20
+> #mdadm --remove /dev/md5 detached
+> <no output>
+>
+> The drive remains in the array.
 
-This feature is in mdadm-3.3.
+Odd.  This suggests that /dev/sde has been removed (presumably by udev) but
+that if you create a device with the appropriate major/minor numbers, the
+device can be opened.  Maybe udev got confused....
+
+>=20
+> Is there any other way to remove this detached drive from the array
+> without having to stop/start the array or is this a (known) bug?
+
+Try
+   mdadm /dev/md5 --remove faulty
+
+that will remove all devices marked as 'faulty'.
+You could all use
+
+   mdadm -If sde
 
 NeilBrown
 
+
 >=20
-> > Don't install this mdadm, and don't use it for anything other than
-> > re-creating this array.
+> # mdadm -V
+> mdadm - v3.1.4 - 31st August 2010
 >=20
-> or does it interfere with other necessary features?
+> # uname -a
+> Linux supernas01 3.2.0-0.bpo.4-amd64 #1 SMP Debian 3.2.39-2~bpo60+1
+> x86_64 GNU/Linux
 >=20
-> I've viewed a diff to standard 3.2.5 and doesn't see real complex
-> things, but even a lot of smaller changes.
->=20
-> at least thanks for your work.
->=20
-> w.
->=20
->=20
+> Kind regards,
+> Caspar Smit
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/jAHs0Cfd=gVHw/OrkykJ8zI
+--Sig_/d0mM4sEzY/0J9eVFV_K6vqK
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUwu74Dnsnt1WYoG5AQL/sw//TwwwM5cNU4DsuEqA57Gx2fiEiOu8U3eN
-PRvVQUlpEmPCqbaNlYTVhBEsdrtObiZIRd4qXQ9Oboprimfoxipq5mEYKEZOIzkR
-FT07sBJuFwamgnouf8OR4ZIJVY3hYeYSJ6RlHxcvaGcV+9tteEJRENqnAXLKfjd0
-1f8a+8yXd9fKgvxCikP7MhQDT701Q+1dqqVrLmjQjhlAnuh5fUqwuQ0L6L/ZPQdF
-wfS/hL8tVZ9H4LbtFVulU0Sk0bKXKF7uNaFWph9ujVXZ7B85BrmT1rYad5IaZbWI
-2oWoWXZDKRCNzh5+vw9yfSkfA8KFSoTwIPt3Flm+2rYmPmUqsm9/DOJReCz6fLrG
-2RYnwmCVUmUQHndmlsNKOW14uJQSYR2fLSWl+kjtuXPy/9JoT8FnwMdbk6DbM2ZN
-pGFF3DcgDsnwuE2J9Q/br5RpX1oGn/yyp6fuHtjpicrQWOnf/Ayv7Jrm1Q/xOgGe
-alDXZQwMgIwufv78RKdvFawaOysC43yWMpS6s2ywypjYJveMrZHw1Tr41/azOEV8
-YhoP4djRIe9nrcV6STlO0/K7sQ2K3IXvA2JEOWULCiBB5SN2p7TyVEoLfPuQRcxp
-fAs10A+/rsf2LTVkNWdrp375VYSAk9ACDl2ZnHcqhbehp4PHN6ipydaNmBN5o7HZ
-yjLCec4TEdQ=
-=wIJO
+iQIVAwUBUwu/iDnsnt1WYoG5AQLt7g//QFq6pGlF6/s7J6JquuXBMKO/7qL5s0D7
+C1guq/drah4vpnXav4QVxWFndInNYpo5bC9sZq9ZOWNUb2dG0bzBAbr8wFdgsv+A
+1lc5zzSCtA0aAyIAPOHigG+HYEGe1HotfXggYTTn2xfgoBhfC5FkrCGm7wqKDfD0
+CTlvKk4kcNwMTKS20/w6dljoq8vH4Jwyd6oJ9Csbd6fV2fsfZHBtyZxuMVl7ynio
+9eXG+2vpZFvwhrnmfRsXZ3PJNa2alVZVNqc1WOSggG8kiKueZUAn0Oft8tmh7c4F
+qZJjVCY50sZWmYWxV4gQget3w8ro81u9gVeElZUOyYYERaj52LI9bivFcgo7hkln
+EdI0JVUP6e1n+eO/ubbjeDF3Rwda3t4yc7X/gg+ijDTK4Fsqtjzj1sGplA31xZba
+OSk9PDFIWVKVaL9SySL2DsVU3I3tmW7/JvrOYmmMwmqypLoZe7ieka8B02cJFRmJ
+Oir4N+dgY7SkDnMXiBq/ZqMOlj0E8FR9MqEivGuHSZ5F2clnfcHclCX9xXV9Acmk
+D0lnii91pEfdIsFnLksLyEXaog66DeOll8TmcoDzhqWD3L+8sNCd3DqjTeOTae6F
+bJGxQUV24axMKXx9r2cZieffu+Bfh9ICnucy2oxOEtYGTTrJyAxMiFyB3aStJ1SQ
+6gN4upI9yTI=
+=CYPG
 -----END PGP SIGNATURE-----
 
---Sig_/jAHs0Cfd=gVHw/OrkykJ8zI--
+--Sig_/d0mM4sEzY/0J9eVFV_K6vqK--
