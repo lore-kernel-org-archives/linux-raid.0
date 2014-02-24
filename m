@@ -1,54 +1,91 @@
 From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: feature re-quest for "re-write"
-Date: Tue, 25 Feb 2014 07:39:14 +1100
-Message-ID: <530BADF2.3090907@eyal.emu.id.au>
-References: <alpine.DEB.2.02.1402211903030.15054@uplift.swm.pp.se>	 <530AA09B.3090708@fnarfbargle.com> <530AA460.602@eyal.emu.id.au>	 <530AAA55.2080508@fnarfbargle.com> <530ABF21.7030200@eyal.emu.id.au> <BLU0-SMTP340FC1C74C40495FA5F94298860@phx.gbl>
+Subject: Re: raid 'check' does not provoke expected i/o error
+Date: Tue, 25 Feb 2014 07:45:26 +1100
+Message-ID: <530BAF66.7060508@eyal.emu.id.au>
+References: <5307034E.9080007@eyal.emu.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP340FC1C74C40495FA5F94298860@phx.gbl>
+In-Reply-To: <5307034E.9080007@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-My main interest is to understand why 'check' does not actually check.
-I already know how to fix the problem, by writing to the location I
-can force the pending reallocation to happen, but then I will not have
-the test case anymore.
+I neglected to give the kernel version.
 
-The OP asks for a specific solution, but I think that the 'check' action
-should already correctly rewrite failed (i/o error) sectors. It does not
-always know which sector to rewrite when it finds a raid6 mismatch
-without an i/o error (with raid5 it never knows).
+# uname -a
+Linux e4.eyal.emu.id.au 3.12.11-201.fc19.x86_64 #1 SMP Fri Feb 14 19:08:33 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
 
 Eyal
 
-On 02/25/14 01:14, Wilson Jonathan wrote:
+On 02/21/14 18:42, Eyal Lebedinsky wrote:
+> In short: smartctl lists one pending sector. A dd of that disk provokes an i/o error
+> as expected. A raid 'sync_action=check' does not find a problem and does *not* trigger
+> an i/o error. Why?
 >
->> # echo 3 >'/proc/sys/vm/drop_caches'
->> # dd if=/dev/md127 of=/dev/null count=$((20*1024*1024))
->> 20971520+0 records in
->> 20971520+0 records out
->> 10737418240 bytes (11 GB) copied, 13.5717 s, 791 MB/s
->>
->> Note that I do not expect to get an error because reading the array will not read the P/Q checksums
->> (it assumes good data and avoids the calculations overhead of verifying P/Q).
->>
->> BTW, due to the use of a buffer layer I could have done the whole test using 4k blocks rather than
->> sectors, but it makes no difference in this case.
->>
->> Eyal
->>
 >
-> I wonder, could you not use dd to perform a "refresh"?
+> My smart log is indicating a pending sector in a component of a 7x4TB (software) raid6
+> device. Looking at that component I see:
 >
-> dd if=/dev/md127 of=/dev/md127 count=... bs=....
+> # smartctl -x /dev/sdi
+> ...
+> 197 Current_Pending_Sector  -O--CK   200   200   000    -    1
+> ...
+> SMART Extended Self-test Log Version: 1 (1 sectors)
+> Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+> # 1  Short offline       Completed: read failure       90%      5878         261696
+> ...
 >
-> As that would force a re-calc and write of P & Q and data.
+> I then test this by attempting to read around the bad sector:
 >
-> That said, its just a "could you/would it" suggestion not a "do it" due
-> to the inherent dangers of dd.
+> # dd if=/dev/sdi of=/dev/null skip=261120 count=2048
+> dd: error reading '/dev/sdi': Input/output error
+> 576+0 records in
+> 576+0 records out
+> 294912 bytes (295 kB) copied, 3.18338 s, 92.6 kB/s
+>
+> and the log shows:
+>
+> # dmesg|tail
+> [768141.382189]         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
+> [768141.461997]         00 03 fe 40
+> [768141.503122] sd 6:0:6:0: [sdi]
+> [768141.542668] Add. Sense: Unrecovered read error - auto reallocate failed
+> [768141.623913] sd 6:0:6:0: [sdi] CDB:
+> [768141.667622] Read(16): 88 00 00 00 00 00 00 03 fe 40 00 00 00 08 00 00
+> [768141.748586] end_request: I/O error, dev sdi, sector 261696
+> [768141.816217] Buffer I/O error on device sdi, logical block 32712
+> [768141.889061] ata13: EH complete
+> [768141.927696] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+>
+> I ran a raid check
+>
+> Feb 21 00:05:01 e7 kernel: [815562.730457] md: data-check of RAID array md127
+> Feb 21 00:05:01 e7 kernel: [815562.745190] md: minimum _guaranteed_  speed: 100000 KB/sec/disk.
+> Feb 21 00:05:01 e7 kernel: [815562.764583] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+> Feb 21 00:05:01 e7 kernel: [815562.795202] md: using 128k window, over a total of 3906885120k.
+> Feb 21 09:48:28 e7 kernel: [850585.930844] md: md127: data-check done.
+>
+> It did not find any problem and did not trigger an i/o error, and the final mismatch_count=0.
+> Neither was the pending cluster reallocated (which would happen if it was written to by
+> the raid6 if it saw a read i/o error, I think).
+>
+> Q1) Why do I *not* see an i/o error from the raid check?
+>
+> Q2) Do we have a writeup on how to translate the sector (in the i/o error) to a block
+> in the raid device (/dev/mdN)?
+>
+> Here is how I see it:
+> I know that /dev/sdi1 starts 2048 sectors into the disk (call it 256 4k blocks).
+> Being a 7 disk raid6 means that this block (n=32712-256=32456) is seen by the
+> fs near block (b=n*5=162280) and this [n,...,n+4] is the block number to use
+> to start tracing with debugfs. I do assume that my ext4 also uses 4k blocks.
+>
+> I still have the pending sector and am ready to experiment (up to a point...).
+>
+> TIA
+>
 
 -- 
 Eyal Lebedinsky (eyal@eyal.emu.id.au)
