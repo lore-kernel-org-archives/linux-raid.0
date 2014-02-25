@@ -1,57 +1,79 @@
-From: Jakob Unterwurzacher <jakobunt@gmail.com>
-Subject: md raid6: slow resync if fs is mounted rw
-Date: Tue, 25 Feb 2014 23:55:15 +0100
-Message-ID: <530D1F53.5070703@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] dm-raid: check events in super_validate
+Date: Tue, 25 Feb 2014 16:59:18 -0600
+Message-ID: <3E58643B-64BF-4A4B-9D44-3D075148FE80@redhat.com>
+References: <52ED0628.4030203@stratus.com> <20140225163020.6f299f15@notabene.brown> <DB09A2EA-5D6C-449F-A61A-EFF556F269B8@redhat.com> <530D17BF.7090008@stratus.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <530D17BF.7090008@stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nate Dailey <nate.dailey@stratus.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-Dear list,
 
-I am seeing a strange performance issue on a 4 x 4TB md raid6 on kernel
-3.12. Initial resync goes nice and fast at 130MB/s:
+On Feb 25, 2014, at 4:22 PM, Nate Dailey wrote:
 
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md1 : active raid6 sda3[0] sdd3[3] sdc3[2] sdb3[1]
->       7751269376 blocks super 1.2 level 6, 512k chunk, algorithm 2 [4/4] [UUUU]
->       [=>...................]  resync =  7.5% (293925504/3875634688) finish=458.4min speed=130210K/sec
+> Here's what I've done to reproduce this:
 > 
-> md0 : active raid1 sda2[0] sdd2[3] sdc2[2] sdb2[1]
->       29280128 blocks super 1.2 [4/4] [UUUU]
+> - remove a disk containing one leg of an LVM raid1 mirror
+> - do enough IO that a lengthy recovery will be required
+> - insert the removed disk
+> - let recovery begin, but deactivate the LV before it completes
+> - activate the LV
 > 
-> unused devices: <none>
+> This is the point where the recovery should start back up, but it doesn't. I haven't tried this in a few weeks, but am happy to try it again if it would help.
 
-...unless the ext4 filesystem on the array is mounted read-write!
-Then, speed plummets to 1 - 7MB/s. The filesystem is empty and totally
-idle; a simple "mount -o remount,ro" restores the speed to 130MB/s.
+Confirmed (test output below).  I'll get started on this.  This code can be a bit tricky and I've been away from it for a while.  It will take me a bit to re-familiarize myself with it and review your patch.
 
-I dumped the /sys/block/md1/md tree with the filesystem mounted ro and
-rw, the diff looks like this:
+thanks,
+ brassow
 
-> # diff -u md.rw md.ro
-> [...]
-> --- md.rw/stripe_cache_active   2014-02-25 17:33:31.250019324 +0100
-> +++ md.ro/stripe_cache_active   2014-02-25 17:33:31.250019324 +0100
-> @@ -1 +1 @@
-> -0
-> +256
-> diff -u md.rw/sync_speed md.ro/sync_speed
-> --- md.rw/sync_speed    2014-02-25 17:33:31.250019324 +0100
-> +++ md.ro/sync_speed    2014-02-25 17:33:31.250019324 +0100
-> @@ -1 +1 @@
-> -1052
-> +126244
 
-So, stripe_cache_active is zero if the fs is mounted rw. Hmm.
-
-Interestingly, if I increase sync_speed_min to 100MB/s, I do get 100MB/s.
-
-Any idea what is going on?
-
-Best regards,
-Jakob Unterwurzacher
+[root@bp-02 ~]# lvs -a -o name,attr,size,sync_percent vg
+  LV               Attr       LSize   Cpy%Sync
+  raid1            Rwi-a-r--- 300.00g   100.00
+  [raid1_rimage_0] iwi-aor--- 300.00g         
+  [raid1_rimage_1] iwi-aor--- 300.00g         
+  [raid1_rmeta_0]  ewi-aor---   4.00m         
+  [raid1_rmeta_1]  ewi-aor---   4.00m         
+[root@bp-02 ~]# off.sh sda
+Turning off sda
+[root@bp-02 ~]# dd if=/dev/zero of=/dev/vg/raid1 bs=4M count=10000
+10000+0 records in
+10000+0 records out
+41943040000 bytes (42 GB) copied, 147.139 s, 285 MB/s
+[root@bp-02 ~]# on.sh sda
+Turning on sda
+[root@bp-02 ~]# lvs -a -o name,attr,size,sync_percent vg
+  LV               Attr       LSize   Cpy%Sync
+  raid1            Rwi-a-r-r- 300.00g   100.00
+  [raid1_rimage_0] iwi-aor-r- 300.00g         
+  [raid1_rimage_1] iwi-aor--- 300.00g         
+  [raid1_rmeta_0]  ewi-aor-r-   4.00m         
+  [raid1_rmeta_1]  ewi-aor---   4.00m         
+[root@bp-02 ~]# lvchange --refresh vg/raid1
+[root@bp-02 ~]# lvs -a -o name,attr,size,sync_percent vg
+  LV               Attr       LSize   Cpy%Sync
+  raid1            Rwi-a-r--- 300.00g     0.00
+  [raid1_rimage_0] Iwi-aor--- 300.00g         
+  [raid1_rimage_1] iwi-aor--- 300.00g         
+  [raid1_rmeta_0]  ewi-aor---   4.00m         
+  [raid1_rmeta_1]  ewi-aor---   4.00m         
+[root@bp-02 ~]# lvs -a -o name,attr,size,sync_percent vg
+  LV               Attr       LSize   Cpy%Sync
+  raid1            Rwi-a-r--- 300.00g     0.29
+  [raid1_rimage_0] Iwi-aor--- 300.00g         
+  [raid1_rimage_1] iwi-aor--- 300.00g         
+  [raid1_rmeta_0]  ewi-aor---   4.00m         
+  [raid1_rmeta_1]  ewi-aor---   4.00m         
+[root@bp-02 ~]# lvchange -an vg
+[root@bp-02 ~]# lvchange -ay vg; lvs -a -o name,attr,size,sync_percent vg
+  LV               Attr       LSize   Cpy%Sync
+  raid1            Rwi-a-r--- 300.00g   100.00
+  [raid1_rimage_0] iwi-aor--- 300.00g         
+  [raid1_rimage_1] iwi-aor--- 300.00g         
+  [raid1_rmeta_0]  ewi-aor---   4.00m         
+  [raid1_rmeta_1]  ewi-aor---   4.00m         
