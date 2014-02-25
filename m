@@ -1,40 +1,27 @@
-From: Denis Golovan <denis.golovan@gmail.com>
-Subject: RAID5 hard freeze
-Date: Tue, 25 Feb 2014 00:01:42 +0200
-Message-ID: <CAF8Fvyz2PnEd=t=E-xUuG6anoLhm1zJCn0txD=P_aE_5AmoVUw@mail.gmail.com>
+From: Julie Ashworth <ashworth@berkeley.edu>
+Subject: Re: request help with RAID1 array that endlessly attempts to sync
+Date: Mon, 24 Feb 2014 16:16:53 -0800
+Message-ID: <20140225001653.GA31372@ssh2.neuro.berkeley.edu>
+References: <20131217065028.GC20941@nx5.priv>
+ <20131217165348.GA5070@localhost.localdomain>
+ <52B09027.5090605@turmel.org>
+ <20131217192637.GB5070@localhost.localdomain>
+ <52B0A956.7030501@turmel.org>
+ <20131218034556.GA9457@localhost.localdomain>
+ <52B19045.5010102@turmel.org>
+ <20140121063808.GA27520@ssh2.neuro.berkeley.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140121063808.GA27520@ssh2.neuro.berkeley.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
-
-I am struggling to diagnose a strange freeze of software RAID5 array.
-My RAID5 consists of 4 Toshiba SATA drives and has ext4 filesystem on top of it.
-
-It works fine unless I start several process writing intensively to it.
-At first, it looks like the system is under high pressure, then the
-system starts lagging a lot and a hard freeze always follows after
-several minutes.
-
-No errors in system log, nothing is emitted to console. Just hard
-freeze with HDD light always on. I tried enabling kernel network
-logging to another machine and again no information when hanging.
-After reboot, my array starts reconstruction and finishes without
-errors.
-
-I tried disabling quotas and barriers for ext4.
-After disabling barriers, it almost seemed to work, but after some
-time the same hard freeze happens.
-
-I tested the same hardware configuration under Linux v3.10, 3.11, 3.12
-and now 3.13.5 (all x86 arch) behaves the same way. The same issue can
-be reproduced easily.
-
-So now I tested everything Google suggests on the matter.
-Could you give a hint on how to debug this issue?
-
-BR,
-Denis
+Thank you Phil!
+I only had one glitch - my version of lvm2 (lvm2-2.02.74-5.el5_6.1) created mirrored extents on the same physical device. I reverted to linear LVs, upgraded lvm2, and it worked perfectly.
+Words can't express my gratitude - you saved me so much time and stress. Do you like pizza? Dominos? Pizza Hut? ;)
+best,
+Julie
