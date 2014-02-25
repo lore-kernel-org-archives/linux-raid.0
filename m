@@ -1,25 +1,51 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm thin: inverted down_trylock() test
-Date: Tue, 25 Feb 2014 07:49:22 -0500
-Message-ID: <20140225124922.GA639@redhat.com>
-References: <20140225083509.GB5023@elgon.mountain>
-Mime-Version: 1.0
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [PATCH] dm-raid: check events in super_validate
+Date: Tue, 25 Feb 2014 16:13:04 -0600
+Message-ID: <DB09A2EA-5D6C-449F-A61A-EFF556F269B8@redhat.com>
+References: <52ED0628.4030203@stratus.com> <20140225163020.6f299f15@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140225083509.GB5023@elgon.mountain>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Joe Thornber <ejt@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140225163020.6f299f15@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Nate Dailey <nate.dailey@stratus.com>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue, Feb 25 2014 at  3:35am -0500,
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> down_trylock() is the opposite of mutex_trylock().  It returns zero on
-> success and one on failure.
+On Feb 24, 2014, at 11:30 PM, NeilBrown wrote:
+
+> On Sat, 1 Feb 2014 09:35:20 -0500 Nate Dailey <nate.dailey@stratus.com> wrote:
 > 
-> Fixes: f4ef95631ebf ('dm thin: do not run the worker thread if pool is suspended')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> If an LVM raid1 recovery is interrupted by deactivating the LV, when the 
+>> LV is reactivated it comes up with both members in sync--the recovery 
+>> never completes.
+>> 
+>> I've been trying to figure out how to fix this. Does this approach look 
+>> okay? I'm not sure what else to use to determine that a member disk is 
+>> out of sync. It looks like if disk_recovery_offset in the superblock 
+>> were updated during the recovery, that would also cause it to resume 
+>> after interruption--but MD skips the recovery target disk when writing 
+>> superblocks, so this doesn't work.
+>> 
+>> Comments?
+> 
+> I know it is confusing, but this should really have gone to dm-devel rather
+> than linux-raid, to make sure Jon Brassow see it (hi Jon!).
+> 
+> Setting recovery_offset to 0 certainly looks wrong, it should be set to
+>  sb->disk_recovery_offset
+> like the code just above your change.
+> Why does the code there not meet your need.
+> 
+> Jon: can you help?
 
-Thanks for the fix, but that commit has since been dropped.
+Sure, thanks for forwarding.
+
+Could you describe first how you are creating the problem?
+
+When I create a RAID1 LV, deactivate it, and reactivate it; I don't see it skip the sync.  Also, if I replace a single drive and cycle the LV, I don't see it skip the sync.  What steps am I missing?
+
+ brassow
+
