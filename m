@@ -1,67 +1,57 @@
-From: Nate Dailey <nate.dailey@stratus.com>
-Subject: Re: [PATCH] dm-raid: check events in super_validate
-Date: Tue, 25 Feb 2014 17:22:55 -0500
-Message-ID: <530D17BF.7090008@stratus.com>
-References: <52ED0628.4030203@stratus.com> <20140225163020.6f299f15@notabene.brown> <DB09A2EA-5D6C-449F-A61A-EFF556F269B8@redhat.com>
+From: Jakob Unterwurzacher <jakobunt@gmail.com>
+Subject: md raid6: slow resync if fs is mounted rw
+Date: Tue, 25 Feb 2014 23:55:15 +0100
+Message-ID: <530D1F53.5070703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DB09A2EA-5D6C-449F-A61A-EFF556F269B8@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>, NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here's what I've done to reproduce this:
+Dear list,
 
-- remove a disk containing one leg of an LVM raid1 mirror
-- do enough IO that a lengthy recovery will be required
-- insert the removed disk
-- let recovery begin, but deactivate the LV before it completes
-- activate the LV
+I am seeing a strange performance issue on a 4 x 4TB md raid6 on kernel
+3.12. Initial resync goes nice and fast at 130MB/s:
 
-This is the point where the recovery should start back up, but it 
-doesn't. I haven't tried this in a few weeks, but am happy to try it 
-again if it would help.
+> # cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md1 : active raid6 sda3[0] sdd3[3] sdc3[2] sdb3[1]
+>       7751269376 blocks super 1.2 level 6, 512k chunk, algorithm 2 [4/4] [UUUU]
+>       [=>...................]  resync =  7.5% (293925504/3875634688) finish=458.4min speed=130210K/sec
+> 
+> md0 : active raid1 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+>       29280128 blocks super 1.2 [4/4] [UUUU]
+> 
+> unused devices: <none>
 
-Nate
+...unless the ext4 filesystem on the array is mounted read-write!
+Then, speed plummets to 1 - 7MB/s. The filesystem is empty and totally
+idle; a simple "mount -o remount,ro" restores the speed to 130MB/s.
 
+I dumped the /sys/block/md1/md tree with the filesystem mounted ro and
+rw, the diff looks like this:
 
+> # diff -u md.rw md.ro
+> [...]
+> --- md.rw/stripe_cache_active   2014-02-25 17:33:31.250019324 +0100
+> +++ md.ro/stripe_cache_active   2014-02-25 17:33:31.250019324 +0100
+> @@ -1 +1 @@
+> -0
+> +256
+> diff -u md.rw/sync_speed md.ro/sync_speed
+> --- md.rw/sync_speed    2014-02-25 17:33:31.250019324 +0100
+> +++ md.ro/sync_speed    2014-02-25 17:33:31.250019324 +0100
+> @@ -1 +1 @@
+> -1052
+> +126244
 
+So, stripe_cache_active is zero if the fs is mounted rw. Hmm.
 
-On 02/25/2014 05:13 PM, Brassow Jonathan wrote:
-> On Feb 24, 2014, at 11:30 PM, NeilBrown wrote:
->
->> On Sat, 1 Feb 2014 09:35:20 -0500 Nate Dailey <nate.dailey@stratus.com> wrote:
->>
->>> If an LVM raid1 recovery is interrupted by deactivating the LV, when the
->>> LV is reactivated it comes up with both members in sync--the recovery
->>> never completes.
->>>
->>> I've been trying to figure out how to fix this. Does this approach look
->>> okay? I'm not sure what else to use to determine that a member disk is
->>> out of sync. It looks like if disk_recovery_offset in the superblock
->>> were updated during the recovery, that would also cause it to resume
->>> after interruption--but MD skips the recovery target disk when writing
->>> superblocks, so this doesn't work.
->>>
->>> Comments?
->> I know it is confusing, but this should really have gone to dm-devel rather
->> than linux-raid, to make sure Jon Brassow see it (hi Jon!).
->>
->> Setting recovery_offset to 0 certainly looks wrong, it should be set to
->>   sb->disk_recovery_offset
->> like the code just above your change.
->> Why does the code there not meet your need.
->>
->> Jon: can you help?
-> Sure, thanks for forwarding.
->
-> Could you describe first how you are creating the problem?
->
-> When I create a RAID1 LV, deactivate it, and reactivate it; I don't see it skip the sync.  Also, if I replace a single drive and cycle the LV, I don't see it skip the sync.  What steps am I missing?
->
->   brassow
->
+Interestingly, if I increase sync_speed_min to 100MB/s, I do get 100MB/s.
 
+Any idea what is going on?
+
+Best regards,
+Jakob Unterwurzacher
