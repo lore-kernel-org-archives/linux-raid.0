@@ -1,39 +1,38 @@
-From: Charles Polisher <cpolish@surewest.net>
-Subject: Re: Reshape RAID10 -> RAID1
-Date: Tue, 25 Feb 2014 23:20:54 -0800
-Message-ID: <20140226072054.GE14322@kevin.peecee3.com>
-References: <20140226060532.GA18630@kevin.peecee3.com>
- <20140226180317.10790f0e@notabene.brown>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: how to handle bad sectors in md control areas?
+Date: Wed, 26 Feb 2014 19:16:30 +1100
+Message-ID: <530DA2DE.9030705@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140226180317.10790f0e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Feb 26, 2014 at 06:03:17PM +1100, NeilBrown wrote:
-> On Tue, 25 Feb 2014 22:05:32 -0800 Charles Polisher <cpolish@surewest.net>
-> wrote:
-> 
-> > Hi all,
-> > 
-> > I hope to reshape a RAID10 (near,2) with 2 failed and physically
-> > removed members [_U_U] into a RAID1 hopefully [UU], for the
-> > benefit of seeing a healthy status.
-> > 
-> > Is following proposed invocation correct?
-> > 
-> >    mdadm --grow /dev/md2 --level=1
-> 
-> I think so.  If not, mdadm will complain.
-> 
-> It is quite easy to experiment: create some largish file, use losetup to turn
-> them into block device.  Then experiment with /dev/loop*
+In another thread I investigated an issue with a pending sector, which now seems to be
+a bad sector inside the md header (the first 256k sectors).
 
-Thanks! Will do exactly that.
+The question now remaining: what is the correct approach to fixing this problem?
+
+The more general issue is what to do when any md control area develops an error. does
+all data have redundant copies?
+
+The simple way that I see is to fail the member, remove it, clear it (at least
+--zero-superblock and write to the bad sector) and then add it. However this
+will incur a full resync (about 10 hours).
+
+Is there a faster, yet safe way? I was thinking that a clean umount and raid stop
+should allow a create with --assume-clean (which will write to the bad sector and
+"fix" it), but the doco discourages this.
+
+Also, it is not impossible to think that the specific bad sector (toward the end
+of the header) is not actually used today, meaning I can live with it as is, or
+write anything to the bad sector as it does not get used. Too involved though.
+
+A bad sector in the data area should be fixed with a standard raid 'check' action.
+
+TIA
+
 -- 
-Charles
-
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
