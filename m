@@ -1,60 +1,23 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] md / procfs: avoid Oops if md-mod removed while
- /proc/mdstat is being polled.
-Date: Thu, 27 Feb 2014 13:51:25 -0800
-Message-ID: <20140227135125.92a56ff656b3ca8d0b5d9029@linux-foundation.org>
-References: <20140227172445.13644477@notabene.brown>
-	<20140227125807.d034c50c7fe2e1a9f3c38ec1@linux-foundation.org>
-	<20140228083443.64c92382@notabene.brown>
+From: Karen Williams <KWilliams@gloversvilleschools.org>
+Subject: Outlook gebruiker waarschuwing.
+Date: Wed, 26 Feb 2014 06:32:14 +0000
+Message-ID: <34AEC189DE25054ABC8B6B969C68365215080226__27772.8796158501$1393540766$gmane$org@GESDMBX01.gesda.gesd.gsd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140228083443.64c92382@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>, majianpeng <majianpeng@gmail.com>, lkml <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "acount-security-noreply@account.microsoft.com" <acount-security-noreply@account.microsoft.com>
 List-Id: linux-raid.ids
 
-On Fri, 28 Feb 2014 08:34:43 +1100 NeilBrown <neilb@suse.de> wrote:
+Geachte Webmail Gebruiker,
+Uw twee inkomende mails hangende toestand geplaatst als gevolg van de recente upgrade in onze database.
 
-> On Thu, 27 Feb 2014 12:58:07 -0800 Andrew Morton <akpm@linux-foundation.org>
-> wrote:
-> 
-> > On Thu, 27 Feb 2014 17:24:45 +1100 NeilBrown <neilb@suse.de> wrote:
-> > 
-> > > If poll or select is waiting on /proc/mdstat when md-mod is unloaded
-> > > an oops will ensure when the poll/select completes.
-> > > 
-> > > This is because the wait_queue_head which is registered with poll_wait()
-> > > is local to the module and no longer exists when the poll completes and
-> > > detaches that wait_queue_head (in poll_free_wait -> remove_wait_queue).
-> > > 
-> > > To fix this we need the wait_queue_head to have (at least) the same life
-> > > time as the proc_dir_entry.  So this patch places it in that structure.
-> > > 
-> > > We:
-> > >   - add pde_poll_wait to struct proc_dir_entry
-> > >   - call poll_wait() passing this when poll() is called on the proc file
-> > >   - export a function proc_wake_up which will call wake_up() on pde_poll_wait
-> > > 
-> > > and make use of all that in md.c
-> > 
-> > This sounds wrong.  If a userspace process is waiting on
-> > md_event_waiters then the md module is "busy" and the rmmod attempt
-> > should fail?
-> 
-> Al Viro says "no" quite firmly.
-> 
-> I think the core argument is that
-> 
->   rmmod md-mod < /proc/mdstat
-> 
-> would deadlock.
+in volgorde te ontvangen uw berichten KLIK HIER<http://goorsoicuesaeorusdoisda.webs.com/>
 
-Well, only if the rmmod hangs around waiting for the module to go idle.
-I'm thinking rmmod should fail.  EBUSY.
+Login met uw juiste Webmail informatie en wachten op antwoordt van onze data service.
+Onze excuses voor het ongemak en waarderen uw begrip.
 
-> http://marc.info/?l=linux-fsdevel&m=133024267507384
-
-Why don't a billion blocking-procfs-read sites have this problem?
+Exchange administrator
+The Microsoft Account Team 2014.
