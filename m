@@ -1,186 +1,57 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH] md / procfs: avoid Oops if md-mod removed while
- /proc/mdstat is being polled.
-Date: Thu, 27 Feb 2014 17:24:45 +1100
-Message-ID: <20140227172445.13644477@notabene.brown>
+From: Jakob Unterwurzacher <jakobunt@gmail.com>
+Subject: Re: Recovering RAID-6 from a Failed Grow
+Date: Thu, 27 Feb 2014 09:16:01 +0100
+Message-ID: <530EF441.5020804@gmail.com>
+References: <CAMuGJSm2EtoMja5dEchFERW0-Mj1Cj0UjU4n55ETeegLkpT_cw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/go0y1zVCsVM/NqISGITolbd"; protocol="application/pgp-signature"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux RAID <linux-raid@vger.kernel.org>, majianpeng <majianpeng@gmail.com>, lkml <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAMuGJSm2EtoMja5dEchFERW0-Mj1Cj0UjU4n55ETeegLkpT_cw@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Karl Wilbur <karl@karlwilbur.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/go0y1zVCsVM/NqISGITolbd
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 26.02.2014 08:14, Karl Wilbur wrote:
+> 
+> I have spent several hours now searching Google, reading list
+> archives, as well as trying a few things from the wiki (like the
+> attempts to re-create the array).
+> 
+> I feel fairly certain that the filesystem is still intact and should
+> mountable, I'm just as a loss as to where to go next. Any ideas or
+> suggestions?
 
+I am not an expert on this, but just looking at the output I wonder if
+you used the right disk order on the recreate? You have used
 
+> mdadm --create /dev/md0 --level=6 --chunk=64 --size=976762496
+> --assume-clean --raid-devices=9 --metadata=0.9 /dev/sdb /dev/sdc
+> /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj
 
-If poll or select is waiting on /proc/mdstat when md-mod is unloaded
-an oops will ensure when the poll/select completes.
+b c d e f g h i j
 
-This is because the wait_queue_head which is registered with poll_wait()
-is local to the module and no longer exists when the poll completes and
-detaches that wait_queue_head (in poll_free_wait -> remove_wait_queue).
+while the original --explain output suggests
 
-To fix this we need the wait_queue_head to have (at least) the same life
-time as the proc_dir_entry.  So this patch places it in that structure.
+>    0     0       8       16        0      active sync   /dev/sdb
+>    1     1       0        0        1      faulty removed
+>    2     2       8      112        2      active sync   /dev/sdh
+>    3     3       0        0        3      faulty removed
+>    4     4       8      144        4      active sync   /dev/sdj
+>    5     5       8      128        5      active sync   /dev/sdi
+>    6     6       0        0        6      faulty removed
+>    7     7       8       32        7      active sync   /dev/sdc
+>    8     8       8       96        8      active sync   /dev/sdg
 
-We:
-  - add pde_poll_wait to struct proc_dir_entry
-  - call poll_wait() passing this when poll() is called on the proc file
-  - export a function proc_wake_up which will call wake_up() on pde_poll_wa=
-it
+b ? h ? j i ? c g
 
-and make use of all that in md.c
+(question marks being missing disks - that is, position has to be guessed).
 
-Reported-by: "majianpeng" <majianpeng@gmail.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
+On the wiki, there is the suggestion of doing any experiments read-only
+via a read-write overlay file. This seems to be a very good idea.
 
---
+> https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
 
-Do we have a maintainer for fs/proc ??
-If I could get a couple of Acks, or constructive comments, on this,
-I would  appreciate it.
-Thanks,
-NeilBrown
+Best regards,
+Jakob
 
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4ad5cc4e63e8..1bf70d9c55d3 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -193,12 +193,12 @@ EXPORT_SYMBOL_GPL(bio_clone_mddev);
-  *  start array, stop array, error, add device, remove device,
-  *  start build, activate spare
-  */
--static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
-+static struct proc_dir_entry *mdstat_pde;
- static atomic_t md_event_count;
- void md_new_event(struct mddev *mddev)
- {
- 	atomic_inc(&md_event_count);
--	wake_up(&md_event_waiters);
-+	proc_wake_up(mdstat_pde);
- }
- EXPORT_SYMBOL_GPL(md_new_event);
-=20
-@@ -208,7 +208,7 @@ EXPORT_SYMBOL_GPL(md_new_event);
- static void md_new_event_inintr(struct mddev *mddev)
- {
- 	atomic_inc(&md_event_count);
--	wake_up(&md_event_waiters);
-+	proc_wake_up(mdstat_pde);
- }
-=20
- /*
-@@ -7187,8 +7187,6 @@ static unsigned int mdstat_poll(struct file *filp, po=
-ll_table *wait)
- 	struct seq_file *seq =3D filp->private_data;
- 	int mask;
-=20
--	poll_wait(filp, &md_event_waiters, wait);
--
- 	/* always allow read */
- 	mask =3D POLLIN | POLLRDNORM;
-=20
-@@ -8557,7 +8555,7 @@ static void md_geninit(void)
- {
- 	pr_debug("md: sizeof(mdp_super_t) =3D %d\n", (int)sizeof(mdp_super_t));
-=20
--	proc_create("mdstat", S_IRUGO, NULL, &md_seq_fops);
-+	mdstat_pde =3D proc_create("mdstat", S_IRUGO, NULL, &md_seq_fops);
- }
-=20
- static int __init md_init(void)
-diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index b7f268eb5f45..c579da4cd765 100644
---- a/fs/proc/generic.c
-+++ b/fs/proc/generic.c
-@@ -357,6 +357,7 @@ static struct proc_dir_entry *__proc_create(struct proc=
-_dir_entry **parent,
- 	atomic_set(&ent->count, 1);
- 	spin_lock_init(&ent->pde_unload_lock);
- 	INIT_LIST_HEAD(&ent->pde_openers);
-+	init_waitqueue_head(&ent->pde_poll_wait);
- out:
- 	return ent;
- }
-diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-index 124fc43c7090..353fc199e8b5 100644
---- a/fs/proc/inode.c
-+++ b/fs/proc/inode.c
-@@ -234,13 +234,21 @@ static unsigned int proc_reg_poll(struct file *file, =
-struct poll_table_struct *p
- 	unsigned int (*poll)(struct file *, struct poll_table_struct *);
- 	if (use_pde(pde)) {
- 		poll =3D pde->proc_fops->poll;
--		if (poll)
-+		if (poll) {
-+			poll_wait(file, &pde->pde_poll_wait, pts);
- 			rv =3D poll(file, pts);
-+		}
- 		unuse_pde(pde);
- 	}
- 	return rv;
- }
-=20
-+void proc_wake_up(struct proc_dir_entry *pde)
-+{
-+	wake_up(&pde->pde_poll_wait);
-+}
-+EXPORT_SYMBOL_GPL(proc_wake_up);
-+
- static long proc_reg_unlocked_ioctl(struct file *file, unsigned int cmd, u=
-nsigned long arg)
- {
- 	struct proc_dir_entry *pde =3D PDE(file_inode(file));
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 651d09a11dde..6f9f84eecded 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -46,6 +46,7 @@ struct proc_dir_entry {
- 	struct completion *pde_unload_completion;
- 	struct list_head pde_openers;	/* who did ->open, but not ->release */
- 	spinlock_t pde_unload_lock; /* proc_fops checks and pde_users bumps */
-+	wait_queue_head_t pde_poll_wait; /* For proc_reg_poll */
- 	u8 namelen;
- 	char name[];
- };
-diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index 608e60a74c3c..a4a3d5f001ef 100644
---- a/include/linux/proc_fs.h
-+++ b/include/linux/proc_fs.h
-@@ -34,6 +34,7 @@ static inline struct proc_dir_entry *proc_create(
- 	return proc_create_data(name, mode, parent, proc_fops, NULL);
- }
-=20
-+extern void proc_wake_up(struct proc_dir_entry *pde);
- extern void proc_set_size(struct proc_dir_entry *, loff_t);
- extern void proc_set_user(struct proc_dir_entry *, kuid_t, kgid_t);
- extern void *PDE_DATA(const struct inode *);
-
---Sig_/go0y1zVCsVM/NqISGITolbd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBUw7aLTnsnt1WYoG5AQK1Vw/9GY0co1BnJ4ceZzVAw+25O2ch9SQXKDij
-hVzMQbJDNregPSTkmHhYQ4URr0W0qszFV6vaYOTyCBGb+1uYWRWemqHupp+wUgoJ
-kZxsDBQwaDIX6gL6mZTIHGQqBbUSnoImgw1kNFiZB8OI1+gvVx9SeHAVmsYOaTyb
-dGyfqdfAkiB/B+mDAvXIR9ma7a4y3b/p4h/QcTSozn2+5m263mlVCRbKqFI2WjSf
-y/XTnYnQ1l8P5k7yQlLrf+2WjeR3Fua3X2YHrjp2n6ngjggp5TydwbvWxnfU1zol
-2WM5wiDWCJWij/6KSuDldAlLRXYUNQcv/uKkhzE4gCZbhPsHZlguvpvGQOM4r4G2
-XUTYm5ISvGqV1oU53mf50r9jmUROLWYVuytWJosAFOREeEfXj9RN3AYaHYKNnG/B
-cnfj6f9s+3tSyJFRGtSiFDKWKZR3A5gFSAl2Ch6jGxwbGiSnWz6pDYkZjN/OvhxG
-ii92U5/2qAmwgBfImGvXxZtvmc5n9yHkFMyBINXRRR/mD4n7xKnRLk9nziGn1AqL
-Nt1eiZ9M7KJbwP8rGtYXyHU4z22Mp0s/wecW56ndayH6x9LnaCpT3DZ8czVX+/Gv
-/BxEHtsCY1YQkK+Dg5yty5yhVhxh3MfpuJgVEAzxFdWafyTEIierPdnHZ74TVguF
-/CcvLryUmlU=
-=8/OW
------END PGP SIGNATURE-----
-
---Sig_/go0y1zVCsVM/NqISGITolbd--
