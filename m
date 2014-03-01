@@ -1,43 +1,51 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: [md PATCH 00/10] md patches for 3.5: RAID10 reshape
-Date: Sat, 01 Mar 2014 00:08:30 -0500
-Message-ID: <53116B4E.50306@ubuntu.com>
+Date: Sat, 1 Mar 2014 18:03:35 +1100
+Message-ID: <20140301180335.3cb5de75@notabene.brown>
 References: <20120403054656.19495.36380.stgit@notabene.brown>
+	<53116B4E.50306@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20120403054656.19495.36380.stgit@notabene.brown>
+In-Reply-To: <53116B4E.50306@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-On 04/03/2012 01:53 AM, NeilBrown wrote:
-> The following patches are now in my queue for 3.5. (I may add some
-> more, but to avoid patch-bombing I sending these now as I think
-> they are ready).
-> 
-> This is all about reshaping arrays and particularly RAID10.
-
-I was wondering what the current status of this patch set is?  It
-looks like this patch did get merged into the kernel, but mdadm does
-not yet support reshaping raid10?  Does that mean that adding a drive
-to a raid10 can be done by manually fiddling with sysfs?
-
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJTEWtLAAoJEI5FoCIzSKrwH10H/RIXXRFm8gWKC3gDE8pZtOcY
-kVRMLu4OxZpT6nI4FlnanDbRMWxjTEvUehR+1ZfZu7+0QTF9e1WSUAhHHOKwpl0Q
-KYZUeiDfOQjviUuTPnB4+Sfjh9CUJUjXVbvy5ZzxNxn6LnzHcLkxwhesQ6c7NLzH
-oy4hQtHgRH2lzjcuuDVWJD9ZZmD2u0yOYwTt8aOCWmw6VrYnA/E0YJg9P9PrA/7m
-Nfute2Xi8ulQmC3KMmM/1t8zntohynb4dX2y1KH1kB0Eb8i4WWVR3kpfWOdW0ta8
-T75Hqo/zK6euJVNy9lYKNQZN1CjQJgsBDrgM+oR5tpBREI0zRzU6bn5ont12TII=
-=mHgu
------END PGP SIGNATURE-----
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBTYXQs
+IDAxIE1hciAyMDE0IDAwOjA4OjMwIC0wNTAwIFBoaWxsaXAgU3VzaSA8cHN1c2lAdWJ1bnR1LmNv
+bT4gd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KPiBIYXNo
+OiBTSEE1MTINCj4gDQo+IE9uIDA0LzAzLzIwMTIgMDE6NTMgQU0sIE5laWxCcm93biB3cm90ZToN
+Cj4gPiBUaGUgZm9sbG93aW5nIHBhdGNoZXMgYXJlIG5vdyBpbiBteSBxdWV1ZSBmb3IgMy41LiAo
+SSBtYXkgYWRkIHNvbWUNCj4gPiBtb3JlLCBidXQgdG8gYXZvaWQgcGF0Y2gtYm9tYmluZyBJIHNl
+bmRpbmcgdGhlc2Ugbm93IGFzIEkgdGhpbmsNCj4gPiB0aGV5IGFyZSByZWFkeSkuDQo+ID4gDQo+
+ID4gVGhpcyBpcyBhbGwgYWJvdXQgcmVzaGFwaW5nIGFycmF5cyBhbmQgcGFydGljdWxhcmx5IFJB
+SUQxMC4NCj4gDQo+IEkgd2FzIHdvbmRlcmluZyB3aGF0IHRoZSBjdXJyZW50IHN0YXR1cyBvZiB0
+aGlzIHBhdGNoIHNldCBpcz8gIEl0DQo+IGxvb2tzIGxpa2UgdGhpcyBwYXRjaCBkaWQgZ2V0IG1l
+cmdlZCBpbnRvIHRoZSBrZXJuZWwsIGJ1dCBtZGFkbSBkb2VzDQo+IG5vdCB5ZXQgc3VwcG9ydCBy
+ZXNoYXBpbmcgcmFpZDEwPyAgRG9lcyB0aGF0IG1lYW4gdGhhdCBhZGRpbmcgYSBkcml2ZQ0KPiB0
+byBhIHJhaWQxMCBjYW4gYmUgZG9uZSBieSBtYW51YWxseSBmaWRkbGluZyB3aXRoIHN5c2ZzPw0K
+PiANCg0KV2h5IGRvIHlvdSB0aGluayBtZGFkbSBkb2Vzbid0IHlldCBzdXBwb3J0IHJlc2hhcGlu
+ZyByYWlkMTA/DQoNCmNvbW1pdCAxOWNlYjE2ZGFmYjdkZjk4ZmY5MDI5ODAwOGQ0NDg4ZGM5M2Iz
+NzBhDQpBdXRob3I6IE5laWxCcm93biA8bmVpbGJAc3VzZS5kZT4NCkRhdGU6ICAgVGh1IE9jdCA0
+IDE2OjM0OjIxIDIwMTIgKzEwMDANCg0KICAgIEdyb3c6IGFkZCByYWlkMTAgcmVzaGFwZS4NCiAN
+Cg0KJCBnaXQgZGVzY3JpYmUgLS1jb250YWlucyAxOWNlYjE2ZGFmYjdkZjk4ZmY5MDI5ODAwOGQ0
+NDg4ZGM5M2IzNzBhDQptZGFkbS0zLjMtcmMxfjE5Mg0KDQoNClNvIG1kYWRtLTMuMyBhbmQgbGF0
+ZXIgc2hvdWxkIGRvIHdoYXQgeW91IHdhbnQuDQoNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1Ag
+U0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMjIgKEdOVS9MaW51eCkNCg0KaVFJ
+VkF3VUJVeEdHUnpuc250MVdZb0c1QVFMajNBLy9ZWEVFRHFLSHZmd0NTK1ZCUG9JQmlIb1BDY2pD
+OWlQZg0KUjZKV1pyblhpOVcxWHRiK0VsSFBPM2RUd2ZJRFMxMllCRjZ0OFFST1VlZTZvaVBNOHN5
+QVZPeEdxbnhkSHM2bg0Kd1FoUG5hdDN4SURwYzllcmtrTWhWeGhjUm0zUXQ2a3Nkc2JQOEhwNEJ0
+cnBoMG4ydE5Cclp6WWJnZGxta3NqSA0KZm43OXZ5b2xVaWFwaUJsT3JtNmZMZmZGblFSUkVqblF5
+bzc4d3IwZTFSOUN1Y210MlZUdmhreXpZT3RhaUkwOQ0KUDg0T0JIRVlGQmlkYW0zd2lpNUZyaXpV
+N0RIb0ZWSHM1Q2pKN2pyUlNnazRoVWdnVUd5QkRrZlFlYVVKTm1YVw0KVzBvQ081U0pBWGRmQlVU
+NVl5ZjlOaTA0cGJmU1Q3aGlWT2s0VUg5TFBqelFvQ3JVTGR1NmJybjdNY203bTN2Yw0KNFJseTN2
+VThScU1rTFlYcEp5YW5xL09ITng4MklHUXFnUGVZcE00eTQzTEozSms1WlZIS0ExSTNzRkNCT1JP
+Qw0KcTJpdkp0Z0hRVmFMNExNclhiZm5abGFLYUNUcnkwMmVkMG5OekpYb1BsUmV0Mkk0WEx5MlU1
+V2pDVmYrbEg3SQ0KZVdSTmplTjZqQ2IzbGlLdzVOemlwK1pHZHdQZGRtSmNvNTUyKzZIeHlMNjlk
+QXBYMXVVKy96eXZrYytzK0creg0KYTFEMHBJODdEYUQ0YkhTaXF5OGkyWU9pcWhWQmR4cnc0bVZj
+QmtvWldiYnlhRytRVEhWTndIczB4eEVXNkFUWg0KYS9wQ0ZoZ3IxZ1VDQWtjZFZJc2R4OEJFUFcr
+SFJiTlQ0TDl4T2FnTGRLekZRYU8zNm91UjJJMFU0QmVLZlpWRw0KVk1FeW9VMEx2VFk9DQo9YkVF
+NQ0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
