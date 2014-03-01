@@ -1,51 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 00/10] md patches for 3.5: RAID10 reshape
-Date: Sat, 1 Mar 2014 18:03:35 +1100
-Message-ID: <20140301180335.3cb5de75@notabene.brown>
-References: <20120403054656.19495.36380.stgit@notabene.brown>
-	<53116B4E.50306@ubuntu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: base64
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: [dm-devel] [PATCH] dm-raid: check events in super_validate
+Date: Sat, 1 Mar 2014 07:54:13 -0600
+Message-ID: <989868B6-C039-401E-96AA-F64B441A6E10@redhat.com>
+References: <52ED0628.4030203@stratus.com> <20140225163020.6f299f15@notabene.brown> <DB09A2EA-5D6C-449F-A61A-EFF556F269B8@redhat.com> <530D17BF.7090008@stratus.com> <3E58643B-64BF-4A4B-9D44-3D075148FE80@redhat.com> <4A643D2E-04C2-462A-8CF8-9BB2A4DC38AE@redhat.com> <530E8418.50707@stratus.com> <7D5F856A-768B-458C-9ED2-812D49A635F3@redhat.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53116B4E.50306@ubuntu.com>
+In-Reply-To: <7D5F856A-768B-458C-9ED2-812D49A635F3@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: linux-raid@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Nate Dailey <nate.dailey@stratus.com>, "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, Jonathan Brassow <jbrassow@redhat.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBTYXQs
-IDAxIE1hciAyMDE0IDAwOjA4OjMwIC0wNTAwIFBoaWxsaXAgU3VzaSA8cHN1c2lAdWJ1bnR1LmNv
-bT4gd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KPiBIYXNo
-OiBTSEE1MTINCj4gDQo+IE9uIDA0LzAzLzIwMTIgMDE6NTMgQU0sIE5laWxCcm93biB3cm90ZToN
-Cj4gPiBUaGUgZm9sbG93aW5nIHBhdGNoZXMgYXJlIG5vdyBpbiBteSBxdWV1ZSBmb3IgMy41LiAo
-SSBtYXkgYWRkIHNvbWUNCj4gPiBtb3JlLCBidXQgdG8gYXZvaWQgcGF0Y2gtYm9tYmluZyBJIHNl
-bmRpbmcgdGhlc2Ugbm93IGFzIEkgdGhpbmsNCj4gPiB0aGV5IGFyZSByZWFkeSkuDQo+ID4gDQo+
-ID4gVGhpcyBpcyBhbGwgYWJvdXQgcmVzaGFwaW5nIGFycmF5cyBhbmQgcGFydGljdWxhcmx5IFJB
-SUQxMC4NCj4gDQo+IEkgd2FzIHdvbmRlcmluZyB3aGF0IHRoZSBjdXJyZW50IHN0YXR1cyBvZiB0
-aGlzIHBhdGNoIHNldCBpcz8gIEl0DQo+IGxvb2tzIGxpa2UgdGhpcyBwYXRjaCBkaWQgZ2V0IG1l
-cmdlZCBpbnRvIHRoZSBrZXJuZWwsIGJ1dCBtZGFkbSBkb2VzDQo+IG5vdCB5ZXQgc3VwcG9ydCBy
-ZXNoYXBpbmcgcmFpZDEwPyAgRG9lcyB0aGF0IG1lYW4gdGhhdCBhZGRpbmcgYSBkcml2ZQ0KPiB0
-byBhIHJhaWQxMCBjYW4gYmUgZG9uZSBieSBtYW51YWxseSBmaWRkbGluZyB3aXRoIHN5c2ZzPw0K
-PiANCg0KV2h5IGRvIHlvdSB0aGluayBtZGFkbSBkb2Vzbid0IHlldCBzdXBwb3J0IHJlc2hhcGlu
-ZyByYWlkMTA/DQoNCmNvbW1pdCAxOWNlYjE2ZGFmYjdkZjk4ZmY5MDI5ODAwOGQ0NDg4ZGM5M2Iz
-NzBhDQpBdXRob3I6IE5laWxCcm93biA8bmVpbGJAc3VzZS5kZT4NCkRhdGU6ICAgVGh1IE9jdCA0
-IDE2OjM0OjIxIDIwMTIgKzEwMDANCg0KICAgIEdyb3c6IGFkZCByYWlkMTAgcmVzaGFwZS4NCiAN
-Cg0KJCBnaXQgZGVzY3JpYmUgLS1jb250YWlucyAxOWNlYjE2ZGFmYjdkZjk4ZmY5MDI5ODAwOGQ0
-NDg4ZGM5M2IzNzBhDQptZGFkbS0zLjMtcmMxfjE5Mg0KDQoNClNvIG1kYWRtLTMuMyBhbmQgbGF0
-ZXIgc2hvdWxkIGRvIHdoYXQgeW91IHdhbnQuDQoNCk5laWxCcm93bg0KLS0tLS1CRUdJTiBQR1Ag
-U0lHTkFUVVJFLS0tLS0NClZlcnNpb246IEdudVBHIHYyLjAuMjIgKEdOVS9MaW51eCkNCg0KaVFJ
-VkF3VUJVeEdHUnpuc250MVdZb0c1QVFMajNBLy9ZWEVFRHFLSHZmd0NTK1ZCUG9JQmlIb1BDY2pD
-OWlQZg0KUjZKV1pyblhpOVcxWHRiK0VsSFBPM2RUd2ZJRFMxMllCRjZ0OFFST1VlZTZvaVBNOHN5
-QVZPeEdxbnhkSHM2bg0Kd1FoUG5hdDN4SURwYzllcmtrTWhWeGhjUm0zUXQ2a3Nkc2JQOEhwNEJ0
-cnBoMG4ydE5Cclp6WWJnZGxta3NqSA0KZm43OXZ5b2xVaWFwaUJsT3JtNmZMZmZGblFSUkVqblF5
-bzc4d3IwZTFSOUN1Y210MlZUdmhreXpZT3RhaUkwOQ0KUDg0T0JIRVlGQmlkYW0zd2lpNUZyaXpV
-N0RIb0ZWSHM1Q2pKN2pyUlNnazRoVWdnVUd5QkRrZlFlYVVKTm1YVw0KVzBvQ081U0pBWGRmQlVU
-NVl5ZjlOaTA0cGJmU1Q3aGlWT2s0VUg5TFBqelFvQ3JVTGR1NmJybjdNY203bTN2Yw0KNFJseTN2
-VThScU1rTFlYcEp5YW5xL09ITng4MklHUXFnUGVZcE00eTQzTEozSms1WlZIS0ExSTNzRkNCT1JP
-Qw0KcTJpdkp0Z0hRVmFMNExNclhiZm5abGFLYUNUcnkwMmVkMG5OekpYb1BsUmV0Mkk0WEx5MlU1
-V2pDVmYrbEg3SQ0KZVdSTmplTjZqQ2IzbGlLdzVOemlwK1pHZHdQZGRtSmNvNTUyKzZIeHlMNjlk
-QXBYMXVVKy96eXZrYytzK0creg0KYTFEMHBJODdEYUQ0YkhTaXF5OGkyWU9pcWhWQmR4cnc0bVZj
-QmtvWldiYnlhRytRVEhWTndIczB4eEVXNkFUWg0KYS9wQ0ZoZ3IxZ1VDQWtjZFZJc2R4OEJFUFcr
-SFJiTlQ0TDl4T2FnTGRLekZRYU8zNm91UjJJMFU0QmVLZlpWRw0KVk1FeW9VMEx2VFk9DQo9YkVF
-NQ0KLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tDQo=
+
+On Feb 28, 2014, at 2:40 PM, Brassow Jonathan wrote:
+
+> The commit that fixed the problem was:
+> f466722ca614edcd14f3337373f33132117c7612
+> f466722 md: Change handling of save_raid_disk and metadata update during recover
+> 
+> I don't know if this is safe to independently apply to previous kernels or not yet.  Neil, do you know?
+> 
+> I have applied it directly to the 3.13 kernel and it solves the problem.  However, applying it to the 3.12 kernel does not solve the problem.  There is obviously something else I'm missing or the fuzziness of the patch on 3.12 is causing things to not behave as expected.
+
+I was wrong.  After retesting, this commit /does/ fix the problem.  I've tested it all the way back to 3.10 and it fixes the problem.
+
+Neil, would you be willing to have this patch go to stable?
+
+ brassow
