@@ -1,113 +1,105 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: how to handle bad sectors in md control areas?
-Date: Mon, 3 Mar 2014 08:38:38 +1100
-Message-ID: <20140303083838.6f6ba7c6@notabene.brown>
+Date: Mon, 3 Mar 2014 08:42:45 +1100
+Message-ID: <20140303084245.5b329a9a@notabene.brown>
 References: <530DA2DE.9030705@eyal.emu.id.au>
+	<530FE7D2.30809@eyal.emu.id.au>
+	<20140228105356.GA2003@lazy.lzy>
+	<53108DEF.7030904@eyal.emu.id.au>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/"; protocol="application/pgp-signature"
+ boundary="Sig_/u_Tz0FxZNh9qgfCcq1IafTA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <530DA2DE.9030705@eyal.emu.id.au>
+In-Reply-To: <53108DEF.7030904@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
 Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/
+--Sig_/u_Tz0FxZNh9qgfCcq1IafTA
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 26 Feb 2014 19:16:30 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
+On Sat, 01 Mar 2014 00:23:59 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
 wrote:
 
-> In another thread I investigated an issue with a pending sector, which no=
-w seems to be
-> a bad sector inside the md header (the first 256k sectors).
+> Thanks Piergiorgio,
 >=20
-> The question now remaining: what is the correct approach to fixing this p=
-roblem?
-
-You could "fix" it by simply redefining it not to be a problem.
-If you never get an error then is there a problem?
-
+> I did search before, unsuccessfully. I repeated now with different keywor=
+ds and found
+> this entry in the kernel wiki
+> 	https://raid.wiki.kernel.org/index.php/RAID_superblock_formats
 >=20
-> The more general issue is what to do when any md control area develops an=
- error. does
-> all data have redundant copies?
-
-We don't currently have any redundancy with a device.  Of course most
-metadata is replicated across all devices so there is redundancy in that
-sense.
-I have occasionally thought of creating a v1.3 metadata which duplicates the
-superblock at both end of the device.  Never quite seemed worth the effort
-though.
-The write-intent-bitmap would be a lot more expensive to duplicate but as it
-is identical on all devices, the  gain would be small (though there are cas=
-es
-where it would be useful).
-
-The bad-block log probably should be duplicated.  That wouldn't be too
-expensive and  might have  some real benefits....
-
+> It documents the initial fixed fields of the superblock. I still do not k=
+now how
+> the intent bitmap is laid out. I can see that it starts 4KB into the supe=
+rblock:
+> 	Internal Bitmap : 8 sectors from superblock
+> but did not yet find its size (which I expect depends on the array size).
 >=20
-> The simple way that I see is to fail the member, remove it, clear it (at =
-least
-> --zero-superblock and write to the bad sector) and then add it. However t=
-his
-> will incur a full resync (about 10 hours).
+> I guess I can calculate it from the sys/block/md127/md items
+> 	component_size * 1024 / 'bitmap/chunksize' / 8
+> which comes up to 7452 bytes which is still a small fraction of the 128MB=
+ header size.
 >=20
-> Is there a faster, yet safe way? I was thinking that a clean umount and r=
-aid stop
-> should allow a create with --assume-clean (which will write to the bad se=
-ctor and
-> "fix" it), but the doco discourages this.
+> What else is there? bad blocks list? Reading an old blog (from Neil) sugg=
+ests that it
+> is not larger than 32KB (but is only 4KB now), so still "small" in this c=
+ontext.
+> Don't know where it resides though.
+>=20
+> I need to understand the full layout of the header and so far I do not se=
+e anything that
+> says what the area past the initial 16KB is used (is always zero when I i=
+nspect it).
+> I started a heavy file copy on the raid and watched the header and never =
+saw any change.
+> I expected to see at least some activity in the bitmap but none encounter=
+ed.
+>=20
+> My simple question is: is it the case that the reserved header space afte=
+r 16KB is
+> actually still unused in header version 1.2? My bad sector is practically=
+ at the end
+> of this 128MB area. A trivial question to answer for someone with expert =
+knowledge
+> of md.
+>=20
+> Anyone?
 
-Why do you think this will write the bad sector?
-When you --create and array it doesn't write too all the space on the array.
-It only writes what it needs to.  So the superblock, the write-intent-bitmap
-and maybe the bad-block-log.  But nothing else.
-And most of that gets written during normal array activity.
-
-So if a block remains unwritten after stop/start/check, you can be fairy su=
-re
-it isn't used at all, so you can ignore it.  Or write zeros to it.
-
->=20
-> Also, it is not impossible to think that the specific bad sector (toward =
-the end
-> of the header) is not actually used today, meaning I can live with it as =
-is, or
-> write anything to the bad sector as it does not get used. Too involved th=
-ough.
->=20
-> A bad sector in the data area should be fixed with a standard raid 'check=
-' action.
->=20
-> TIA
->=20
+The location of the superblock is reported by "mdadm --exmamine".
+The size is 4K (Though most of that is unsed).
+The location of the bitmap (if present) is reported by "mdadm --examine"
+as an offset from the superblock.  It size can be deduced from the output
+of "mdadm --examine-bitmap".  Take the number of bits, divide by 8, add 256
+and round up to a multiple of 512.  This number is bytes.
+The location of the bad-block-log (if present) is reported by "mdadm
+--examine" as an offset from the superblocks.  It's size if 4K.
+Any other space outside of the data region is currently unused by md.
 
 NeilBrown
 
---Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/
+
+--Sig_/u_Tz0FxZNh9qgfCcq1IafTA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUxOk5Dnsnt1WYoG5AQJorA/9E6Z4stWedsd5iiaOcmjEDkDzBlO1fuL+
-ZCJf7/qaqlgqZZABO9L94bbvFuqo+w8WIx8rne349JnC6E/CXreUj2l0ATre9smf
-KeBD+jXz4EqUYczu/kLj2Gu7m1Z1CBlLJaH1OeteXxdSIM7/xz1Wepc9ryLd+aDe
-TvDlSF6NSSZMzAcm2lXoz2mbe3MT6SZbTI+vX4KiQjV5JTfaEfc4NQm9xn7Tugi6
-FuVD6qVA8azi2N2O2VxdNEyEfOLQuNSaneEK0leL9MdTUNcRpM4rQRNtmQ27M4/v
-BMFsMTlWRhrQEV6CxdvP0y3pMQyLsYjy5I4MYw2gI7R0HYVhQKjLeiwJeETcn/Wi
-KN3K1i4K5fsaFNp52RFWqUxDtgDEivnSDqc4tZMwJN0M/jFQB7NyP4w2XfENJgAX
-YB6O4r6rhBqk8hifwTk957qd5wGFjGnn84PhKxLi9G0ALqJAJ/g4fz009k2eZYLE
-FfonJLG/Uv744RWeAFunQjkQEMvOZ4BWJETPtR1AgiQs2eS6bMG2UJ/qUsqWofAZ
-qKYzFGyNmBrW99zLy2cIO0o00RRSUa8PgxMhHJind8alxz91+9vGKnrgaM0p6gGL
-SEccpLsCv2O7P794AwROMZ6iuWq8QzLo4ev7YAAu2OdEjcVCSGajetnUpOGI3g4V
-OHlLM3/I6gg=
-=ABjj
+iQIVAwUBUxOl1Tnsnt1WYoG5AQJu7w/+KSy6VwOl7ipsg6mHh8IUZXyjJQwgPqCO
+MfI6T2ORryaeunuU+1h09wZmZODu3Jm6UBXcLHUgYThCD3MBLeOktHp/eIuM/yAQ
+gSP4XIxSZ4VmevS/+L/JaCS1iTSSLYO07gj+ZTFMbbIKnhvc0EJOJT9CEoUIktSU
+kDcPbZGcDRwO97GXmuIKkWnl7z0HLS82wu7JZ6R7W8aRzvKbvQ/wyfUZZNVn8vu0
+MjQVYCAsvsTpVLMx6hEBdP3/EoJ/iicnic2qX6TyCT29S3+LQJtCz1eKsqC4Wprz
+OHyY4e8Khe0ORjbGDidtjmrBlIlT3S0RNwYrjFVcMRcY69ksIF2A4L2iR/PVRY3K
+wI77Ks11cBGUN5u8lrP5Z0bMP/emJXG4c9gd0AhwVyuNfHjoBRPtBnxtldq725EA
+ZtSYI/s/XxNqiRKCHW/u/c7aVFUVk445JVfWCwSc4z+NTNN8Vd0GvEhFHCWJfhRJ
+Nv042aYvOCuD6fYbWB71PPS5GMiw80K0Q51AjbAgvWzSqPDiaAyv/XIngR+lC2NB
+/4/oCp7pMi9mb9gxftcppl434f6I53J+/GleMmjD/ofF456NobVwnlawLrnyiM3z
+LXmMZPF8SwtrnMUH24Y1YHeA4+RKxod48tIe4XMLffoa0oaVoSMlU/6Wavmxj/3L
+oht+Np64k4U=
+=UZJM
 -----END PGP SIGNATURE-----
 
---Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/--
+--Sig_/u_Tz0FxZNh9qgfCcq1IafTA--
