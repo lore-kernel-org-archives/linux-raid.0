@@ -1,105 +1,98 @@
-From: NeilBrown <neilb@suse.de>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
 Subject: Re: how to handle bad sectors in md control areas?
-Date: Mon, 3 Mar 2014 08:42:45 +1100
-Message-ID: <20140303084245.5b329a9a@notabene.brown>
-References: <530DA2DE.9030705@eyal.emu.id.au>
-	<530FE7D2.30809@eyal.emu.id.au>
-	<20140228105356.GA2003@lazy.lzy>
-	<53108DEF.7030904@eyal.emu.id.au>
+Date: Mon, 03 Mar 2014 09:21:44 +1100
+Message-ID: <5313AEF8.3000505@eyal.emu.id.au>
+References: <530DA2DE.9030705@eyal.emu.id.au> <20140303083838.6f6ba7c6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/u_Tz0FxZNh9qgfCcq1IafTA"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53108DEF.7030904@eyal.emu.id.au>
+In-Reply-To: <20140303083838.6f6ba7c6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: list linux-raid <linux-raid@vger.kernel.org>
+To: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/u_Tz0FxZNh9qgfCcq1IafTA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 03/03/14 08:38, NeilBrown wrote:
+> On Wed, 26 Feb 2014 19:16:30 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
+> wrote:
+>
+>> In another thread I investigated an issue with a pending sector, which now seems to be
+>> a bad sector inside the md header (the first 256k sectors).
+>>
+>> The question now remaining: what is the correct approach to fixing this problem?
+>
+> You could "fix" it by simply redefining it not to be a problem.
+> If you never get an error then is there a problem?
 
-On Sat, 01 Mar 2014 00:23:59 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
-wrote:
+I did not know if this block is never accessed or just rarely so. I prefer to handle the
+issue when I am in control rather than md encountering it, maybe at a bad time when
+resyncing another disk, or growing or reshaping the array, or when the array fills up
+and the write intent gets fully used.
 
-> Thanks Piergiorgio,
->=20
-> I did search before, unsuccessfully. I repeated now with different keywor=
-ds and found
-> this entry in the kernel wiki
-> 	https://raid.wiki.kernel.org/index.php/RAID_superblock_formats
->=20
-> It documents the initial fixed fields of the superblock. I still do not k=
-now how
-> the intent bitmap is laid out. I can see that it starts 4KB into the supe=
-rblock:
-> 	Internal Bitmap : 8 sectors from superblock
-> but did not yet find its size (which I expect depends on the array size).
->=20
-> I guess I can calculate it from the sys/block/md127/md items
-> 	component_size * 1024 / 'bitmap/chunksize' / 8
-> which comes up to 7452 bytes which is still a small fraction of the 128MB=
- header size.
->=20
-> What else is there? bad blocks list? Reading an old blog (from Neil) sugg=
-ests that it
-> is not larger than 32KB (but is only 4KB now), so still "small" in this c=
-ontext.
-> Don't know where it resides though.
->=20
-> I need to understand the full layout of the header and so far I do not se=
-e anything that
-> says what the area past the initial 16KB is used (is always zero when I i=
-nspect it).
-> I started a heavy file copy on the raid and watched the header and never =
-saw any change.
-> I expected to see at least some activity in the bitmap but none encounter=
-ed.
->=20
-> My simple question is: is it the case that the reserved header space afte=
-r 16KB is
-> actually still unused in header version 1.2? My bad sector is practically=
- at the end
-> of this 128MB area. A trivial question to answer for someone with expert =
-knowledge
-> of md.
->=20
-> Anyone?
+I moved from raid5 to raid6 because the risk of another error while resyncing a
+replaced raid5 disk (almost 10 hours of heavy activity) is becoming too high.
 
-The location of the superblock is reported by "mdadm --exmamine".
-The size is 4K (Though most of that is unsed).
-The location of the bitmap (if present) is reported by "mdadm --examine"
-as an offset from the superblock.  It size can be deduced from the output
-of "mdadm --examine-bitmap".  Take the number of bits, divide by 8, add 256
-and round up to a multiple of 512.  This number is bytes.
-The location of the bad-block-log (if present) is reported by "mdadm
---examine" as an offset from the superblocks.  It's size if 4K.
-Any other space outside of the data region is currently unused by md.
+I also hoped that raid6 will be able to correctly repair an error (even when there
+is no low level io error, just a mismatch) when assuming it is a "single" error
+(using ECC terminology). I understand that this is not yet done?
 
-NeilBrown
+>> The more general issue is what to do when any md control area develops an error. does
+>> all data have redundant copies?
+>
+> We don't currently have any redundancy with a device.  Of course most
+> metadata is replicated across all devices so there is redundancy in that
+> sense.
+> I have occasionally thought of creating a v1.3 metadata which duplicates the
+> superblock at both end of the device.  Never quite seemed worth the effort
+> though.
+> The write-intent-bitmap would be a lot more expensive to duplicate but as it
+> is identical on all devices, the  gain would be small (though there are cases
+> where it would be useful).
+>
+> The bad-block log probably should be duplicated.  That wouldn't be too
+> expensive and  might have  some real benefits....
+>
+>>
+>> The simple way that I see is to fail the member, remove it, clear it (at least
+>> --zero-superblock and write to the bad sector) and then add it. However this
+>> will incur a full resync (about 10 hours).
+>>
+>> Is there a faster, yet safe way? I was thinking that a clean umount and raid stop
+>> should allow a create with --assume-clean (which will write to the bad sector and
+>> "fix" it), but the doco discourages this.
+>
+> Why do you think this will write the bad sector?
 
+I assumed the full header (128MB) is initialised when it is created. Maybe not...
 
---Sig_/u_Tz0FxZNh9qgfCcq1IafTA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> When you --create and array it doesn't write too all the space on the array.
+> It only writes what it needs to.  So the superblock, the write-intent-bitmap
+> and maybe the bad-block-log.  But nothing else.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+This (the last three words) is the information I was after.
 
-iQIVAwUBUxOl1Tnsnt1WYoG5AQJu7w/+KSy6VwOl7ipsg6mHh8IUZXyjJQwgPqCO
-MfI6T2ORryaeunuU+1h09wZmZODu3Jm6UBXcLHUgYThCD3MBLeOktHp/eIuM/yAQ
-gSP4XIxSZ4VmevS/+L/JaCS1iTSSLYO07gj+ZTFMbbIKnhvc0EJOJT9CEoUIktSU
-kDcPbZGcDRwO97GXmuIKkWnl7z0HLS82wu7JZ6R7W8aRzvKbvQ/wyfUZZNVn8vu0
-MjQVYCAsvsTpVLMx6hEBdP3/EoJ/iicnic2qX6TyCT29S3+LQJtCz1eKsqC4Wprz
-OHyY4e8Khe0ORjbGDidtjmrBlIlT3S0RNwYrjFVcMRcY69ksIF2A4L2iR/PVRY3K
-wI77Ks11cBGUN5u8lrP5Z0bMP/emJXG4c9gd0AhwVyuNfHjoBRPtBnxtldq725EA
-ZtSYI/s/XxNqiRKCHW/u/c7aVFUVk445JVfWCwSc4z+NTNN8Vd0GvEhFHCWJfhRJ
-Nv042aYvOCuD6fYbWB71PPS5GMiw80K0Q51AjbAgvWzSqPDiaAyv/XIngR+lC2NB
-/4/oCp7pMi9mb9gxftcppl434f6I53J+/GleMmjD/ofF456NobVwnlawLrnyiM3z
-LXmMZPF8SwtrnMUH24Y1YHeA4+RKxod48tIe4XMLffoa0oaVoSMlU/6Wavmxj/3L
-oht+Np64k4U=
-=UZJM
------END PGP SIGNATURE-----
+> And most of that gets written during normal array activity.
+>
+> So if a block remains unwritten after stop/start/check, you can be fairy sure
+> it isn't used at all, so you can ignore it.  Or write zeros to it.
 
---Sig_/u_Tz0FxZNh9qgfCcq1IafTA--
+This was my understanding too. The "ignore" was not optimal as apart from the emotional
+stress from knowing there is an unreadable sector, there is the constant complaining
+of smartd in the log. I zeroed it.
+
+>> Also, it is not impossible to think that the specific bad sector (toward the end
+>> of the header) is not actually used today, meaning I can live with it as is, or
+>> write anything to the bad sector as it does not get used. Too involved though.
+>>
+>> A bad sector in the data area should be fixed with a standard raid 'check' action.
+>>
+>> TIA
+>>
+>
+> NeilBrown
+
+cheers
+	Eyal
+
+--
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
