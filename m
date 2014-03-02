@@ -1,110 +1,113 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+From: NeilBrown <neilb@suse.de>
 Subject: Re: how to handle bad sectors in md control areas?
-Date: Sun, 2 Mar 2014 13:25:53 +0000
-Message-ID: <21267.12641.441629.980868@tree.ty.sabi.co.uk>
+Date: Mon, 3 Mar 2014 08:38:38 +1100
+Message-ID: <20140303083838.6f6ba7c6@notabene.brown>
 References: <530DA2DE.9030705@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <530DA2DE.9030705@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: list linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> In another thread I investigated an issue with a pending
-> sector, which now seems to be a bad sector [ ... ] The question
-> now remaining: what is the correct approach to fixing this
-> problem?
+--Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The correct approach is something like:
+On Wed, 26 Feb 2014 19:16:30 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
+wrote:
 
-> The simple way that I see is to fail the member, remove it,
-> [ ... ] and then add it.
+> In another thread I investigated an issue with a pending sector, which no=
+w seems to be
+> a bad sector inside the md header (the first 256k sectors).
+>=20
+> The question now remaining: what is the correct approach to fixing this p=
+roblem?
 
-Where the last "it" is a "known good" storage device.
+You could "fix" it by simply redefining it not to be a problem.
+If you never get an error then is there a problem?
 
-> [ ... ] clear it (at least --zero-superblock and write to the
-> bad sector) [ ... ]
+>=20
+> The more general issue is what to do when any md control area develops an=
+ error. does
+> all data have redundant copies?
 
-Whether "write to the bad sector" effects a repair or not turning
-a failed storage device into a "known good" one, and is dangerous
-or not, is a matter of judgement, based on a large number of
-factors, and the particulars of the situation leading to the error.
+We don't currently have any redundancy with a device.  Of course most
+metadata is replicated across all devices so there is redundancy in that
+sense.
+I have occasionally thought of creating a v1.3 metadata which duplicates the
+superblock at both end of the device.  Never quite seemed worth the effort
+though.
+The write-intent-bitmap would be a lot more expensive to duplicate but as it
+is identical on all devices, the  gain would be small (though there are cas=
+es
+where it would be useful).
 
-> However this will incur a full resync (about 10 hours).
+The bad-block log probably should be duplicated.  That wouldn't be too
+expensive and  might have  some real benefits....
 
-If you have intentionally or not designed a RAID setup that has
-very expensive resync, that's what you get, unless you can
-guarantee that resync will never happen. Good luck! :-)
+>=20
+> The simple way that I see is to fail the member, remove it, clear it (at =
+least
+> --zero-superblock and write to the bad sector) and then add it. However t=
+his
+> will incur a full resync (about 10 hours).
+>=20
+> Is there a faster, yet safe way? I was thinking that a clean umount and r=
+aid stop
+> should allow a create with --assume-clean (which will write to the bad se=
+ctor and
+> "fix" it), but the doco discourages this.
 
-> Is there a faster, yet safe way?
+Why do you think this will write the bad sector?
+When you --create and array it doesn't write too all the space on the array.
+It only writes what it needs to.  So the superblock, the write-intent-bitmap
+and maybe the bad-block-log.  But nothing else.
+And most of that gets written during normal array activity.
 
-Ah the eternal illusion that someone knows a "secret" way to do
-things N times better than other people, at no cost of course.
+So if a block remains unwritten after stop/start/check, you can be fairy su=
+re
+it isn't used at all, so you can ignore it.  Or write zeros to it.
 
-For RAID, in the general case no. In some specific cases where
-you know what you doing, including a deep understanding of both
-RAID, MD RAID, and storage device error causes and handling,
-perhaps there is.
+>=20
+> Also, it is not impossible to think that the specific bad sector (toward =
+the end
+> of the header) is not actually used today, meaning I can live with it as =
+is, or
+> write anything to the bad sector as it does not get used. Too involved th=
+ough.
+>=20
+> A bad sector in the data area should be fixed with a standard raid 'check=
+' action.
+>=20
+> TIA
+>=20
 
-> A bad sector in the data area should be fixed with a standard
-> raid 'check' action.
+NeilBrown
 
-That seems to me to be a fruit of your imagination; and that of
-others, as I occasionally watch the usual threads, eagerly
-"contributed" to by the usual clowns, about MD RAID "detecting"
-errors and "repairing" bad sectors.
+--Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Let's repeat here for the Nth time: RAID is entirely based on the
-assumption that the storage devices (disks, host adapters, buses,
-...) below it are either entirely error free, or report every
-error that occurs on them; that there are no undetected errors.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-RAID is not required to perform any detection of errors
-undetected by the underlying storage devices, and in the general
-case is not able to do that either, as the RAID "levels" with
-redundancy have that redundancy designed for reconstruction not
-error detection, and even well design error detection is usually
-very, very expensive.
+iQIVAwUBUxOk5Dnsnt1WYoG5AQJorA/9E6Z4stWedsd5iiaOcmjEDkDzBlO1fuL+
+ZCJf7/qaqlgqZZABO9L94bbvFuqo+w8WIx8rne349JnC6E/CXreUj2l0ATre9smf
+KeBD+jXz4EqUYczu/kLj2Gu7m1Z1CBlLJaH1OeteXxdSIM7/xz1Wepc9ryLd+aDe
+TvDlSF6NSSZMzAcm2lXoz2mbe3MT6SZbTI+vX4KiQjV5JTfaEfc4NQm9xn7Tugi6
+FuVD6qVA8azi2N2O2VxdNEyEfOLQuNSaneEK0leL9MdTUNcRpM4rQRNtmQ27M4/v
+BMFsMTlWRhrQEV6CxdvP0y3pMQyLsYjy5I4MYw2gI7R0HYVhQKjLeiwJeETcn/Wi
+KN3K1i4K5fsaFNp52RFWqUxDtgDEivnSDqc4tZMwJN0M/jFQB7NyP4w2XfENJgAX
+YB6O4r6rhBqk8hifwTk957qd5wGFjGnn84PhKxLi9G0ALqJAJ/g4fz009k2eZYLE
+FfonJLG/Uv744RWeAFunQjkQEMvOZ4BWJETPtR1AgiQs2eS6bMG2UJ/qUsqWofAZ
+qKYzFGyNmBrW99zLy2cIO0o00RRSUa8PgxMhHJind8alxz91+9vGKnrgaM0p6gGL
+SEccpLsCv2O7P794AwROMZ6iuWq8QzLo4ev7YAAu2OdEjcVCSGajetnUpOGI3g4V
+OHlLM3/I6gg=
+=ABjj
+-----END PGP SIGNATURE-----
 
-Even more so, RAID cannot "fix" bad sectors, and it is not
-designed to do so, because RAID subsystems are mere IO remappers
-and multiplexers (IIRC NeilB sometimes reminds people of that),
-and the way storage devices error happen and can be fixed is a
-difficult subject that cannot be handled in the general case in a
-general purpose RAID IO remapper and multiplexer.
-
-MD RAID, as a side effect of its operation, merely does some weak
-consistency checks and some weak attempts at making things
-not-worse when errors are reported or inconsistencies are
-discovered.
-
-This is strictly speaking beyond its mission and a layering
-nastiness, but while it is somewhat useful, it is very important
-that remain a limited effort, because it is already very hard to
-get an IO mapper and multiplexer to work reliably and with good
-performance (tradeoff between speed and other qualities) in the
-general case.
-
-Writing and maintaining a *correct* RAID subsystem is difficult
-enough, e.g. given the extreme cases of parallelism and timing
-dependent issues it involves (and many proprietary RAID products
-are nowhere as reliable as MD RAID, perhaps also because they try
-to do too many things other than mapping and multiplexing IO).
-
-Reliable, safe error detection is usually quite expensive as to
-speed, and reliable, safe error correction is very difficult to
-do because the code gets rarely exercised, and there are so many
-subtle and tricky cases.
-
-If you want an error detecting, error-correcting block device
-abstraction layer, write one quite separate from MD RAID, or buy
-one of several expensive proprietary efforts aimed at your
-demographic.
-
-Myself, like many users of RAID, and MD RAID, would rather MD to
-remain a *reliable*, low overhead, IO remapper and multiplexer,
-with code as simple as possible for ease of understanding and
-maintenance, without "mission creep". The end-to-end argument
-also applies here.
+--Sig_/VDFYEVUiWJJ.OQ_CVwNwPc/--
