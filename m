@@ -1,156 +1,93 @@
-From: =?iso-8859-1?Q?Jan_Kundr=E1t?= <jkt@flaska.net>
-Subject: External USB-SATA bridge rewriting logical block sizes
-Date: Mon, 03 Mar 2014 06:02:20 +0100
-Message-ID: <f533c037-b72b-4039-9ef7-f2c61a0de3e6@flaska.net>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: raid5 write latency is 10x the drive latency
+Date: Mon, 3 Mar 2014 15:28:02 +0200
+Message-ID: <CAGRgLy55eAiam-JJFzUAZH581odHu8o9Pxt6y8jbcj92v+q6CQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>, Yair Hershko <yair@zadarastorage.com>
 List-Id: linux-raid.ids
 
-Hi,
-I'm having troubles using WD40EZRX [1] in a USB3 -> SATA dock. The trou=
-ble=20
-I'm hitting is that the data I get back when reading the first partitio=
-n=20
-differ depending on whether I access the drive via the enclosure, or=20
-directly as a SATA disk.
+Hi Neil,
 
-Here is how it looks directly attached:
+We are testing a fully random 8K write IOMETER workload on a raid5 md,
+composed of 5 drives. Initial resync is fully completed.
 
-plejtvak ~ # sg_readcap -l /dev/sdc
-Read Capacity results:
-   Protection: prot_en=3D0, p_type=3D0, p_i_exponent=3D0
-   Logical block provisioning: lbpme=3D0, lbprz=3D0
-   Last logical block address=3D7814037167 (0x1d1c0beaf), Number of log=
-ical=20
-blocks=3D7814037168
-   Logical block length=3D512 bytes
-   Logical blocks per physical block exponent=3D3
-   Lowest aligned logical block address=3D0
-Hence:
-   Device size: 4000787030016 bytes, 3815447.8 MiB, 4000.79 GB
+We see that the write latency that the MD device demonstrates is 10
+times the latency of individual drives. Typical iostat output is:
 
-And this is how it looks through the USB convertor:
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+dm-28             0.00     0.00  235.05  883.51   940.21  3448.97
+7.85    77.88   62.86   50.68   66.10   0.67  75.46
+dm-30             0.00     0.00  230.93  881.44   923.71  3440.72
+7.85    68.90   55.31   59.45   54.22   0.70  77.94
+dm-32             0.00     0.00  185.57  846.39   742.27  3300.52
+7.84    59.39   51.10   44.98   52.44   0.56  57.73
+dm-33             0.00     0.00  232.99  864.95   931.96  3374.74
+7.85    46.72   34.92   31.06   35.96   0.45  49.48
+dm-35             0.00     0.00  265.98  895.88  1063.92  3498.45
+7.85    62.14   46.43   41.09   48.01   0.56  65.15
+md4               0.00     0.00    0.00  263.92     0.00 12338.14
+93.50     0.00    0.00    0.00    0.00   0.00   0.00
+dm-37             0.00     0.00    0.00  263.92     0.00 12338.14
+93.50   128.54  505.81    0.00  505.81   3.89 102.68
 
-svist ~ # sg_readcap -l /dev/sdb
-Read Capacity results:
-   Protection: prot_en=3D0, p_type=3D0, p_i_exponent=3D0
-   Logical block provisioning: lbpme=3D0, lbprz=3D0
-   Last logical block address=3D976754645 (0x3a3817d5), Number of logic=
-al=20
-blocks=3D976754646
-   Logical block length=3D4096 bytes
-   Logical blocks per physical block exponent=3D0
-   Lowest aligned logical block address=3D0
-Hence:
-   Device size: 4000787030016 bytes, 3815447.8 MiB, 4000.79 GB
+dm-28,30,32,33,35 are MD individual devices.
+dm-37 is a linear Device Mapper device stacked on top of md4, to see
+the MD performance (for some reason MD doesn't show r/w latencies in
+iostat).
 
-My partition table is probably borked -- IIRC I created it via `cfdisk`=
-=20
-over the USB connection, but I am not sure about that anymore. This is =
-what=20
-gdisk reports when directly attached:
+I understand that with RMW that raid5 is doing, we can expect 2x of
+the drive latency (1x to load the stipe-head, 1x to update the
+required stripe-head blocks on disk). However, I am trying to
+understand where the rest of the latency is coming from.
 
-Command (? for help): p
-Disk /dev/sdc: 7814037168 sectors, 3.6 TiB
-Logical sector size: 512 bytes
-Disk identifier (GUID): AD1C809E-45FC-4CDD-A9EC-2855D4AF1E6E
-Partition table holds up to 128 entries
-=46irst usable sector is 34, last usable sector is 7814037134
-Partitions will be aligned on 8-sector boundaries
-Total free space is 4294972395 sectors (2.0 TiB)
+One thing I see is that with such random workload, raid5d thread is
+busy updating the bitmap in stack like this:
+[<ffffffff81569f05>] md_super_wait+0x55/0x90
+[<ffffffff815709e8>] bitmap_unplug.part.21+0x158/0x160
+[<ffffffff81570a12>] bitmap_unplug+0x22/0x30
+[<ffffffffa0702f57>] raid5d+0xe7/0x570 [raid456]
+[<ffffffff8156344d>] md_thread+0x10d/0x140
+[<ffffffff8107f050>] kthread+0xc0/0xd0
+[<ffffffff816f61ec>] ret_from_fork+0x7c/0xb0
+[<ffffffffffffffff>] 0xffffffffffffffff
 
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1              63      3519064768   1.6 TiB     0700  Linux/Windows =
-data
+So I understand that given a single-threaded nature of raid5, when
+raid5d() is doing the bitmap update, it delays the processing of all
+stripe-heads.
 
-=2E..and through the USB dock:
+So I commented out the bitmap_unplug call, just to see if there is
+some other problem. Things are better now, but still:
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s
+avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+dm-27             0.00     0.00  254.74 1317.89  1018.95  5271.58
+8.00   137.68   87.55   92.98   86.50   0.49  77.05
+dm-29             0.00     0.00  269.47 1345.26  1077.89  5381.05
+8.00   146.44  104.24   81.36  108.82   0.52  83.79
+dm-32             0.00     0.00  267.37 1345.26  1069.47  5381.05
+8.00   130.10   94.34   73.72   98.44   0.48  76.63
+dm-33             0.00     0.00  267.37 1343.16  1069.47  5372.63
+8.00    87.61   54.40   52.19   54.84   0.34  55.16
+dm-36             0.00     0.00  271.58 1355.79  1086.32  5423.16
+8.00   136.33   97.45   81.77  100.59   0.47  76.63
+md4               0.00     0.00    0.00  454.74     0.00 21911.58
+96.37     0.00    0.00    0.00    0.00   0.00   0.00
+dm-37             0.00     0.00    0.00  454.74     0.00 21911.58
+96.37   132.05  330.82    0.00  330.82   2.31 105.26
 
-Command (? for help): p
-Disk /dev/sdb: 976754646 sectors, 3.6 TiB
-Logical sector size: 4096 bytes
-Disk identifier (GUID): DFE2C96D-8A4C-4516-86B2-4F6DA0EB8609
-Partition table holds up to 128 entries
-=46irst usable sector is 6, last usable sector is 976754640
-Partitions will be aligned on 8-sector boundaries
-Total free space is 57 sectors (228.0 KiB)
+So it looks like about ~100ms are lost somewhere (assuming ~100ms +
+~100ms for reading and writing the stripe head).
 
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1              63      3519064768   13.1 TiB    8300  Linux filesyst=
-em
+I tried to profile raid5d looking for some other blocking operation it
+might be doing. And I don't see one. Typically - without the bitmap
+update - raid5 call takes 400-500us, so I don't understand how the
+additional ~100ms of latency is gained. (With the bitmap update,
+raid5d is significantly delayed by it, which delayes all the
+processing). Do you have an idea why there is a latency difference?
 
-I have a filesystem on the first partition. Accessing it works fine via=
- the=20
-USB reduction, but mount refuses to proceed when accessing the SATA dis=
-k=20
-directly. I assume that this is because the partition starts at byte=20
-(63*4096) from the beginning of the disk, which matches the detected=20
-partition start when using the USB thingy. However, when accessing the =
-disk=20
-directly over SATA, the partition is presumably expected to begin at=20
-(63*512), which is a very different location, and stuff therefore break=
-s.
-
-I have already read the discussion from January [3] and believe that th=
-is=20
-is a different situation -- I haven't disassembled anything, this is a=20
-standalone USB->SATA convertor and a standalone SATA disk.
-
-I would appreciate a couple of pointers here:
-
-- Did I screw up somehow? If so, how? Perhaps by using wrong partition=20
-table layout, i.e. by tying myself to logical blocks?
-
-- Can I salvage the data by rewriting the partition table in some magic=
- way=20
-which would work with both "physical 4k, logic 4k" and "physical 512, l=
-ogic=20
-4k" modes at the same time?
-
-- Is the USB enclosure which I'm using just a crappy piece of hardware =
-that=20
-I should stay away from?
-
-- What is the cleanest way of accessing the drive in the safest possibl=
-e=20
-manner? I would like to put my backups in there, and I wasn't really ha=
-ppy=20
-when I plugged the drive directly in order to test the contents and fou=
-nd=20
-out that it won't even mount.
-
-- I guess I could just give up on partitioning altogether and use=20
-filesystem on the whole device without much trouble. However, I'm afrai=
-d=20
-that this might confuse the kernel's partition layout detection, and it=
-=20
-also seems a bit ugly.
-
-Help is much appreciated. There's an unsolved Stackoverflow post at [4]=
-=20
-which appears to be dealing with the exactly same problem, btw.
-
-With kind regards,
-Jan
-
-[1] WD40EZRX-00SPEB0, a 4TB WD Green
-[2] "174c:5106 ASMedia Technology Inc. Transcend StoreJet 25M3" (lsusb)=
-,=20
-also known as "IcyBox IB-116StU3-B" (label)
-[3] http://www.spinics.net/lists/raid/msg45555.html
-[4]=20
-http://superuser.com/questions/679725/how-to-correct-512-byte-sector-mb=
-r-on-a-4096-byte-sector-disk
-
---=20
-Trojit=C3=A1, a fast Qt IMAP e-mail client -- http://trojita.flaska.net=
-/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Alex.
