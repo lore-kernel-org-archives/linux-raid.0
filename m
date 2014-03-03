@@ -1,79 +1,221 @@
-From: =?iso-8859-1?Q?Jan_Kundr=E1t?= <jkt@flaska.net>
-Subject: Re: External USB-SATA bridge rewriting logical block sizes
-Date: Mon, 03 Mar 2014 16:18:12 +0100
-Message-ID: <29626b57-c751-4ba7-8774-b45fc090b4b6@flaska.net>
-References: <f533c037-b72b-4039-9ef7-f2c61a0de3e6@flaska.net>
- <53149110.7090008@hardwarefreak.com>
+From: Kamal Mostafa <kamal@canonical.com>
+Subject: [PATCH 3.8 59/67] md/raid5: Fix CPU hotplug callback registration
+Date: Mon,  3 Mar 2014 10:55:47 -0800
+Message-ID: <1393872955-28810-60-git-send-email-kamal@canonical.com>
+References: <1393872955-28810-1-git-send-email-kamal@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53149110.7090008@hardwarefreak.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-team-bounces@lists.ubuntu.com>
+In-Reply-To: <1393872955-28810-1-git-send-email-kamal@canonical.com>
+List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
+List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
+List-Post: <mailto:kernel-team@lists.ubuntu.com>
+List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
+List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
+Errors-To: kernel-team-bounces@lists.ubuntu.com
+Sender: kernel-team-bounces@lists.ubuntu.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>, Kamal Mostafa <kamal@canonical.com>, Oleg Nesterov <oleg@redhat.com>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 List-Id: linux-raid.ids
 
-On Monday, 3 March 2014 15:26:24 CEST, Stan Hoeppner wrote:
-> Presumably you have some md raid level with fault tolerance, since yo=
-u
-> posted this to the linux-raid list.  Why not simply kick the drive fr=
-om
-> the array, install it "direct" inside the chassis, repartition it the
-> same as the other members of the array that are direct connected to t=
-he
-> SATA controller, re-add the partition to the array, and rebuild.
+3.8.13.19 -stable review patch.  If anyone has any objections, please let me know.
 
-Hi Stan, I don't run RAID on these machines. I saw a recent thread deal=
-ing=20
-with 4k drives on this ML which made me hope that this topic won't be=20
-considered OT here. Sorry if this is not appropriate -- do you happen t=
-o=20
-know a more suitable ML?
+------------------
 
-> Why you prepped this drive in it with intention of moving it into the=
- PC=20
-> chassis leaves me scratching my head.
+From: Oleg Nesterov <oleg@redhat.com>
 
-My primary machine is a T420s laptop which has a USB3 port, but no eSAT=
-A.=20
-The throughput I can get from a drive attached there is much better tha=
-n=20
-what I can get via network from my other box with plenty of SATA ports,=
- but=20
-only a VIA C7 CPU (even though it has a gigabit NIC). Expected, I guess=
-=2E
+commit 789b5e0315284463617e106baad360cb9e8db3ac upstream.
 
-Another aspect is energy saving -- the tiny power plug which comes with=
- the=20
-USB dock eats less than the other PC.
+Subsystems that want to register CPU hotplug callbacks, as well as perform
+initialization for the CPUs that are already online, often do it as shown
+below:
 
-> Is this some habit you developed years ago?  Prepping a new drive
-> in a USB before permanently installing it in the chassis?  If so, I'd
-> recommend using a hot swap SATA chassis that installs in a 5.25" driv=
-e
-> bay instead.  They're $15-30 USD, cheaper, and more reliable, than a =
-USB
-> dock, by far.
+	get_online_cpus();
 
-Yes, that's what I use for the direct connection. 100% passive, very=20
-reliable, appears to be robust, mechanically. However, I cannot connect=
-=20
-that to the laptop where I do most of my work. I do have a dock, so it'=
-s=20
-very convenient and ergonomic, but the IO options are a bit limited on =
-this=20
-model.
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
 
-Cheers,
-Jan
+	register_cpu_notifier(&foobar_cpu_notifier);
 
---=20
-Trojit=C3=A1, a fast Qt IMAP e-mail client -- http://trojita.flaska.net=
-/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	put_online_cpus();
+
+This is wrong, since it is prone to ABBA deadlocks involving the
+cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
+with CPU hotplug operations).
+
+Interestingly, the raid5 code can actually prevent double initialization and
+hence can use the following simplified form of callback registration:
+
+	register_cpu_notifier(&foobar_cpu_notifier);
+
+	get_online_cpus();
+
+	for_each_online_cpu(cpu)
+		init_cpu(cpu);
+
+	put_online_cpus();
+
+A hotplug operation that occurs between registering the notifier and calling
+get_online_cpus(), won't disrupt anything, because the code takes care to
+perform the memory allocations only once.
+
+So reorganize the code in raid5 this way to fix the deadlock with callback
+registration.
+
+Cc: linux-raid@vger.kernel.org
+Fixes: 36d1c6476be51101778882897b315bd928c8c7b5
+Signed-off-by: Oleg Nesterov <oleg@redhat.com>
+[Srivatsa: Fixed the unregister_cpu_notifier() deadlock, added the
+free_scratch_buffer() helper to condense code further and wrote the changelog.]
+Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Kamal Mostafa <kamal@canonical.com>
+---
+ drivers/md/raid5.c | 90 ++++++++++++++++++++++++++----------------------------
+ 1 file changed, 44 insertions(+), 46 deletions(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5cffbd3..f992f4a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5065,23 +5065,43 @@ raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks)
+ 	return sectors * (raid_disks - conf->max_degraded);
+ }
+ 
++static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
++{
++	safe_put_page(percpu->spare_page);
++	kfree(percpu->scribble);
++	percpu->spare_page = NULL;
++	percpu->scribble = NULL;
++}
++
++static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
++{
++	if (conf->level == 6 && !percpu->spare_page)
++		percpu->spare_page = alloc_page(GFP_KERNEL);
++	if (!percpu->scribble)
++		percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
++
++	if (!percpu->scribble || (conf->level == 6 && !percpu->spare_page)) {
++		free_scratch_buffer(conf, percpu);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
+ static void raid5_free_percpu(struct r5conf *conf)
+ {
+-	struct raid5_percpu *percpu;
+ 	unsigned long cpu;
+ 
+ 	if (!conf->percpu)
+ 		return;
+ 
+-	get_online_cpus();
+-	for_each_possible_cpu(cpu) {
+-		percpu = per_cpu_ptr(conf->percpu, cpu);
+-		safe_put_page(percpu->spare_page);
+-		kfree(percpu->scribble);
+-	}
+ #ifdef CONFIG_HOTPLUG_CPU
+ 	unregister_cpu_notifier(&conf->cpu_notify);
+ #endif
++
++	get_online_cpus();
++	for_each_possible_cpu(cpu)
++		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+ 	put_online_cpus();
+ 
+ 	free_percpu(conf->percpu);
+@@ -5107,15 +5127,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+ 	switch (action) {
+ 	case CPU_UP_PREPARE:
+ 	case CPU_UP_PREPARE_FROZEN:
+-		if (conf->level == 6 && !percpu->spare_page)
+-			percpu->spare_page = alloc_page(GFP_KERNEL);
+-		if (!percpu->scribble)
+-			percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
+-
+-		if (!percpu->scribble ||
+-		    (conf->level == 6 && !percpu->spare_page)) {
+-			safe_put_page(percpu->spare_page);
+-			kfree(percpu->scribble);
++		if (alloc_scratch_buffer(conf, percpu)) {
+ 			pr_err("%s: failed memory allocation for cpu%ld\n",
+ 			       __func__, cpu);
+ 			return notifier_from_errno(-ENOMEM);
+@@ -5123,10 +5135,7 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+ 		break;
+ 	case CPU_DEAD:
+ 	case CPU_DEAD_FROZEN:
+-		safe_put_page(percpu->spare_page);
+-		kfree(percpu->scribble);
+-		percpu->spare_page = NULL;
+-		percpu->scribble = NULL;
++		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
+ 		break;
+ 	default:
+ 		break;
+@@ -5138,40 +5147,29 @@ static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
+ static int raid5_alloc_percpu(struct r5conf *conf)
+ {
+ 	unsigned long cpu;
+-	struct page *spare_page;
+-	struct raid5_percpu __percpu *allcpus;
+-	void *scribble;
+-	int err;
++	int err = 0;
+ 
+-	allcpus = alloc_percpu(struct raid5_percpu);
+-	if (!allcpus)
++	conf->percpu = alloc_percpu(struct raid5_percpu);
++	if (!conf->percpu)
+ 		return -ENOMEM;
+-	conf->percpu = allcpus;
++
++#ifdef CONFIG_HOTPLUG_CPU
++	conf->cpu_notify.notifier_call = raid456_cpu_notify;
++	conf->cpu_notify.priority = 0;
++	err = register_cpu_notifier(&conf->cpu_notify);
++	if (err)
++		return err;
++#endif
+ 
+ 	get_online_cpus();
+-	err = 0;
+ 	for_each_present_cpu(cpu) {
+-		if (conf->level == 6) {
+-			spare_page = alloc_page(GFP_KERNEL);
+-			if (!spare_page) {
+-				err = -ENOMEM;
+-				break;
+-			}
+-			per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
+-		}
+-		scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
+-		if (!scribble) {
+-			err = -ENOMEM;
++		err = alloc_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
++		if (err) {
++			pr_err("%s: failed memory allocation for cpu%ld\n",
++			       __func__, cpu);
+ 			break;
+ 		}
+-		per_cpu_ptr(conf->percpu, cpu)->scribble = scribble;
+ 	}
+-#ifdef CONFIG_HOTPLUG_CPU
+-	conf->cpu_notify.notifier_call = raid456_cpu_notify;
+-	conf->cpu_notify.priority = 0;
+-	if (err == 0)
+-		err = register_cpu_notifier(&conf->cpu_notify);
+-#endif
+ 	put_online_cpus();
+ 
+ 	return err;
+-- 
+1.8.3.2
