@@ -1,134 +1,156 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md / procfs: avoid Oops if md-mod removed while
- /proc/mdstat is being polled.
-Date: Mon, 3 Mar 2014 14:53:33 +1100
-Message-ID: <20140303145333.05ce4315@notabene.brown>
-References: <20140227172445.13644477@notabene.brown>
-	<20140227125807.d034c50c7fe2e1a9f3c38ec1@linux-foundation.org>
-	<20140228083443.64c92382@notabene.brown>
-	<20140227135125.92a56ff656b3ca8d0b5d9029@linux-foundation.org>
-	<20140228100757.7dbd3dae@notabene.brown>
-	<20140227153242.42cb9b9ef83dacc895017d44@linux-foundation.org>
+From: =?iso-8859-1?Q?Jan_Kundr=E1t?= <jkt@flaska.net>
+Subject: External USB-SATA bridge rewriting logical block sizes
+Date: Mon, 03 Mar 2014 06:02:20 +0100
+Message-ID: <f533c037-b72b-4039-9ef7-f2c61a0de3e6@flaska.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/DF7.Cd93fkarzoWZ3flQizO"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140227153242.42cb9b9ef83dacc895017d44@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>, majianpeng <majianpeng@gmail.com>, lkml <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/DF7.Cd93fkarzoWZ3flQizO
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
+I'm having troubles using WD40EZRX [1] in a USB3 -> SATA dock. The trou=
+ble=20
+I'm hitting is that the data I get back when reading the first partitio=
+n=20
+differ depending on whether I access the drive via the enclosure, or=20
+directly as a SATA disk.
 
-On Thu, 27 Feb 2014 15:32:42 -0800 Andrew Morton <akpm@linux-foundation.org>
-wrote:
+Here is how it looks directly attached:
 
-> On Fri, 28 Feb 2014 10:07:57 +1100 NeilBrown <neilb@suse.de> wrote:
->=20
-> > On Thu, 27 Feb 2014 13:51:25 -0800 Andrew Morton <akpm@linux-foundation=
-.org>
-> > wrote:
-> >=20
-> > > On Fri, 28 Feb 2014 08:34:43 +1100 NeilBrown <neilb@suse.de> wrote:
-> > >=20
-> > > > On Thu, 27 Feb 2014 12:58:07 -0800 Andrew Morton <akpm@linux-founda=
-tion.org>
-> > > > wrote:
-> > > >=20
-> > > > > On Thu, 27 Feb 2014 17:24:45 +1100 NeilBrown <neilb@suse.de> wrot=
-e:
-> > > > >=20
-> > > > > > If poll or select is waiting on /proc/mdstat when md-mod is unl=
-oaded
-> > > > > > an oops will ensure when the poll/select completes.
-> > > > > >=20
-> > > > > > This is because the wait_queue_head which is registered with po=
-ll_wait()
-> > > > > > is local to the module and no longer exists when the poll compl=
-etes and
-> > > > > > detaches that wait_queue_head (in poll_free_wait -> remove_wait=
-_queue).
-> > > > > >=20
-> > > > > > To fix this we need the wait_queue_head to have (at least) the =
-same life
-> > > > > > time as the proc_dir_entry.  So this patch places it in that st=
-ructure.
-> > > > > >=20
-> > > > > > We:
-> > > > > >   - add pde_poll_wait to struct proc_dir_entry
-> > > > > >   - call poll_wait() passing this when poll() is called on the =
-proc file
-> > > > > >   - export a function proc_wake_up which will call wake_up() on=
- pde_poll_wait
-> > > > > >=20
-> > > > > > and make use of all that in md.c
-> > > > >=20
-> > > > > This sounds wrong.  If a userspace process is waiting on
-> > > > > md_event_waiters then the md module is "busy" and the rmmod attem=
-pt
-> > > > > should fail?
-> > > >=20
-> > > > Al Viro says "no" quite firmly.
-> > > >=20
-> > > > I think the core argument is that
-> > > >=20
-> > > >   rmmod md-mod < /proc/mdstat
-> > > >=20
-> > > > would deadlock.
-> > >=20
-> > > Well, only if the rmmod hangs around waiting for the module to go idl=
-e.
-> > > I'm thinking rmmod should fail.  EBUSY.
->=20
-> This?  What happens if we just fail the rmmod when the module is busy
-> (which it is).
+plejtvak ~ # sg_readcap -l /dev/sdc
+Read Capacity results:
+   Protection: prot_en=3D0, p_type=3D0, p_i_exponent=3D0
+   Logical block provisioning: lbpme=3D0, lbprz=3D0
+   Last logical block address=3D7814037167 (0x1d1c0beaf), Number of log=
+ical=20
+blocks=3D7814037168
+   Logical block length=3D512 bytes
+   Logical blocks per physical block exponent=3D3
+   Lowest aligned logical block address=3D0
+Hence:
+   Device size: 4000787030016 bytes, 3815447.8 MiB, 4000.79 GB
 
-I was hoping that Al would step in with an answer, but I got impatient had
-had a look around myself.
+And this is how it looks through the USB convertor:
 
-I found
+svist ~ # sg_readcap -l /dev/sdb
+Read Capacity results:
+   Protection: prot_en=3D0, p_type=3D0, p_i_exponent=3D0
+   Logical block provisioning: lbpme=3D0, lbprz=3D0
+   Last logical block address=3D976754645 (0x3a3817d5), Number of logic=
+al=20
+blocks=3D976754646
+   Logical block length=3D4096 bytes
+   Logical blocks per physical block exponent=3D0
+   Lowest aligned logical block address=3D0
+Hence:
+   Device size: 4000787030016 bytes, 3815447.8 MiB, 4000.79 GB
 
-commit 99b76233803beab302123d243eea9e41149804f3
-Author: Alexey Dobriyan <adobriyan@gmail.com>
-Date:   Wed Mar 25 22:48:06 2009 +0300
+My partition table is probably borked -- IIRC I created it via `cfdisk`=
+=20
+over the USB connection, but I am not sure about that anymore. This is =
+what=20
+gdisk reports when directly attached:
 
-    proc 2/2: remove struct proc_dir_entry::owner
-   =20
+Command (? for help): p
+Disk /dev/sdc: 7814037168 sectors, 3.6 TiB
+Logical sector size: 512 bytes
+Disk identifier (GUID): AD1C809E-45FC-4CDD-A9EC-2855D4AF1E6E
+Partition table holds up to 128 entries
+=46irst usable sector is 34, last usable sector is 7814037134
+Partitions will be aligned on 8-sector boundaries
+Total free space is 4294972395 sectors (2.0 TiB)
 
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1              63      3519064768   1.6 TiB     0700  Linux/Windows =
+data
 
-which references
+=2E..and through the USB dock:
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D12454
+Command (? for help): p
+Disk /dev/sdb: 976754646 sectors, 3.6 TiB
+Logical sector size: 4096 bytes
+Disk identifier (GUID): DFE2C96D-8A4C-4516-86B2-4F6DA0EB8609
+Partition table holds up to 128 entries
+=46irst usable sector is 6, last usable sector is 976754640
+Partitions will be aligned on 8-sector boundaries
+Total free space is 57 sectors (228.0 KiB)
 
-which seems to suggest that we used to try to do as you suggest but it was
-racy and would be a lot of work to "fix". The chosen solution was to only
-'get' the module during read/write, not just while the /proc file is open.
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1              63      3519064768   13.1 TiB    8300  Linux filesyst=
+em
 
-NeilBrown
+I have a filesystem on the first partition. Accessing it works fine via=
+ the=20
+USB reduction, but mount refuses to proceed when accessing the SATA dis=
+k=20
+directly. I assume that this is because the partition starts at byte=20
+(63*4096) from the beginning of the disk, which matches the detected=20
+partition start when using the USB thingy. However, when accessing the =
+disk=20
+directly over SATA, the partition is presumably expected to begin at=20
+(63*512), which is a very different location, and stuff therefore break=
+s.
 
---Sig_/DF7.Cd93fkarzoWZ3flQizO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I have already read the discussion from January [3] and believe that th=
+is=20
+is a different situation -- I haven't disassembled anything, this is a=20
+standalone USB->SATA convertor and a standalone SATA disk.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+I would appreciate a couple of pointers here:
 
-iQIVAwUBUxP8vTnsnt1WYoG5AQIhNBAAuXj8ipTGw4UuB0uvnqz93wPfxX5Y2cMt
-ll9Iozyod/SjCfBfuupZpYg3gl4LQHuBXeJpqO30DBOsSsYgqsoBzqHgzk1y50/T
-+gsMTrb252qDDrvh7FrpMmGXULVKwqynYKTzaCRX5BrFWq8sKx2pboeEelvnPOfA
-B0dBOzOQ1lo4DJqAtTvPTborlxOWag/Hz36a02MWNkh6LrY+ZZSlx/h3youODdeh
-QuzTNv+MCeMNYs6/oAXLYuRktPJdc4Gx9Ofw8pR2nIh0JUS/X7YF0F4lJMskBRY1
-XPbbmryL7Kby8qRQ0+LNuLFlz4m5K/mhfdFJHJfnJA5JZGu6h+veKuN5xyxOUI9y
-O+8F8qsXNU5XQPWc7tdWerZ5CdxK8nL92852Sq/8LWNDYI2UEPivrrU5Ew58djRS
-ftpCmG+Fcoz8ESQfpaqGHW/wFaHRFbtkQYF/a9NxwlSo0WSd8h9KL9J0xL9BZhps
-ODTuP+a5Irs8htMERQudAnWKvyiO3qY04TrI+cgXn92sHA9XM4OpmXhAH2LQ2DZW
-FcH+dhyavLzutkdG/im5N7ips4lgPwXV2smREWIyt93DDBTm/Wd5wLNPp528/f71
-GnKmYl1P2neBNSYC+tEdByw3bDGfLcIAuiXwRImryctOXRHlDWKJ/JzxlhaCEN5e
-tLcFoQGLqFI=
-=BdgV
------END PGP SIGNATURE-----
+- Did I screw up somehow? If so, how? Perhaps by using wrong partition=20
+table layout, i.e. by tying myself to logical blocks?
 
---Sig_/DF7.Cd93fkarzoWZ3flQizO--
+- Can I salvage the data by rewriting the partition table in some magic=
+ way=20
+which would work with both "physical 4k, logic 4k" and "physical 512, l=
+ogic=20
+4k" modes at the same time?
+
+- Is the USB enclosure which I'm using just a crappy piece of hardware =
+that=20
+I should stay away from?
+
+- What is the cleanest way of accessing the drive in the safest possibl=
+e=20
+manner? I would like to put my backups in there, and I wasn't really ha=
+ppy=20
+when I plugged the drive directly in order to test the contents and fou=
+nd=20
+out that it won't even mount.
+
+- I guess I could just give up on partitioning altogether and use=20
+filesystem on the whole device without much trouble. However, I'm afrai=
+d=20
+that this might confuse the kernel's partition layout detection, and it=
+=20
+also seems a bit ugly.
+
+Help is much appreciated. There's an unsolved Stackoverflow post at [4]=
+=20
+which appears to be dealing with the exactly same problem, btw.
+
+With kind regards,
+Jan
+
+[1] WD40EZRX-00SPEB0, a 4TB WD Green
+[2] "174c:5106 ASMedia Technology Inc. Transcend StoreJet 25M3" (lsusb)=
+,=20
+also known as "IcyBox IB-116StU3-B" (label)
+[3] http://www.spinics.net/lists/raid/msg45555.html
+[4]=20
+http://superuser.com/questions/679725/how-to-correct-512-byte-sector-mb=
+r-on-a-4096-byte-sector-disk
+
+--=20
+Trojit=C3=A1, a fast Qt IMAP e-mail client -- http://trojita.flaska.net=
+/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
