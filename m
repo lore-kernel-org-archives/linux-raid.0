@@ -1,98 +1,134 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: how to handle bad sectors in md control areas?
-Date: Mon, 03 Mar 2014 09:21:44 +1100
-Message-ID: <5313AEF8.3000505@eyal.emu.id.au>
-References: <530DA2DE.9030705@eyal.emu.id.au> <20140303083838.6f6ba7c6@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md / procfs: avoid Oops if md-mod removed while
+ /proc/mdstat is being polled.
+Date: Mon, 3 Mar 2014 14:53:33 +1100
+Message-ID: <20140303145333.05ce4315@notabene.brown>
+References: <20140227172445.13644477@notabene.brown>
+	<20140227125807.d034c50c7fe2e1a9f3c38ec1@linux-foundation.org>
+	<20140228083443.64c92382@notabene.brown>
+	<20140227135125.92a56ff656b3ca8d0b5d9029@linux-foundation.org>
+	<20140228100757.7dbd3dae@notabene.brown>
+	<20140227153242.42cb9b9ef83dacc895017d44@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140303083838.6f6ba7c6@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: list linux-raid <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/DF7.Cd93fkarzoWZ3flQizO"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140227153242.42cb9b9ef83dacc895017d44@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux RAID <linux-raid@vger.kernel.org>, majianpeng <majianpeng@gmail.com>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/03/14 08:38, NeilBrown wrote:
-> On Wed, 26 Feb 2014 19:16:30 +1100 Eyal Lebedinsky <eyal@eyal.emu.id.au>
-> wrote:
->
->> In another thread I investigated an issue with a pending sector, which now seems to be
->> a bad sector inside the md header (the first 256k sectors).
->>
->> The question now remaining: what is the correct approach to fixing this problem?
->
-> You could "fix" it by simply redefining it not to be a problem.
-> If you never get an error then is there a problem?
+--Sig_/DF7.Cd93fkarzoWZ3flQizO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I did not know if this block is never accessed or just rarely so. I prefer to handle the
-issue when I am in control rather than md encountering it, maybe at a bad time when
-resyncing another disk, or growing or reshaping the array, or when the array fills up
-and the write intent gets fully used.
+On Thu, 27 Feb 2014 15:32:42 -0800 Andrew Morton <akpm@linux-foundation.org>
+wrote:
 
-I moved from raid5 to raid6 because the risk of another error while resyncing a
-replaced raid5 disk (almost 10 hours of heavy activity) is becoming too high.
+> On Fri, 28 Feb 2014 10:07:57 +1100 NeilBrown <neilb@suse.de> wrote:
+>=20
+> > On Thu, 27 Feb 2014 13:51:25 -0800 Andrew Morton <akpm@linux-foundation=
+.org>
+> > wrote:
+> >=20
+> > > On Fri, 28 Feb 2014 08:34:43 +1100 NeilBrown <neilb@suse.de> wrote:
+> > >=20
+> > > > On Thu, 27 Feb 2014 12:58:07 -0800 Andrew Morton <akpm@linux-founda=
+tion.org>
+> > > > wrote:
+> > > >=20
+> > > > > On Thu, 27 Feb 2014 17:24:45 +1100 NeilBrown <neilb@suse.de> wrot=
+e:
+> > > > >=20
+> > > > > > If poll or select is waiting on /proc/mdstat when md-mod is unl=
+oaded
+> > > > > > an oops will ensure when the poll/select completes.
+> > > > > >=20
+> > > > > > This is because the wait_queue_head which is registered with po=
+ll_wait()
+> > > > > > is local to the module and no longer exists when the poll compl=
+etes and
+> > > > > > detaches that wait_queue_head (in poll_free_wait -> remove_wait=
+_queue).
+> > > > > >=20
+> > > > > > To fix this we need the wait_queue_head to have (at least) the =
+same life
+> > > > > > time as the proc_dir_entry.  So this patch places it in that st=
+ructure.
+> > > > > >=20
+> > > > > > We:
+> > > > > >   - add pde_poll_wait to struct proc_dir_entry
+> > > > > >   - call poll_wait() passing this when poll() is called on the =
+proc file
+> > > > > >   - export a function proc_wake_up which will call wake_up() on=
+ pde_poll_wait
+> > > > > >=20
+> > > > > > and make use of all that in md.c
+> > > > >=20
+> > > > > This sounds wrong.  If a userspace process is waiting on
+> > > > > md_event_waiters then the md module is "busy" and the rmmod attem=
+pt
+> > > > > should fail?
+> > > >=20
+> > > > Al Viro says "no" quite firmly.
+> > > >=20
+> > > > I think the core argument is that
+> > > >=20
+> > > >   rmmod md-mod < /proc/mdstat
+> > > >=20
+> > > > would deadlock.
+> > >=20
+> > > Well, only if the rmmod hangs around waiting for the module to go idl=
+e.
+> > > I'm thinking rmmod should fail.  EBUSY.
+>=20
+> This?  What happens if we just fail the rmmod when the module is busy
+> (which it is).
 
-I also hoped that raid6 will be able to correctly repair an error (even when there
-is no low level io error, just a mismatch) when assuming it is a "single" error
-(using ECC terminology). I understand that this is not yet done?
+I was hoping that Al would step in with an answer, but I got impatient had
+had a look around myself.
 
->> The more general issue is what to do when any md control area develops an error. does
->> all data have redundant copies?
->
-> We don't currently have any redundancy with a device.  Of course most
-> metadata is replicated across all devices so there is redundancy in that
-> sense.
-> I have occasionally thought of creating a v1.3 metadata which duplicates the
-> superblock at both end of the device.  Never quite seemed worth the effort
-> though.
-> The write-intent-bitmap would be a lot more expensive to duplicate but as it
-> is identical on all devices, the  gain would be small (though there are cases
-> where it would be useful).
->
-> The bad-block log probably should be duplicated.  That wouldn't be too
-> expensive and  might have  some real benefits....
->
->>
->> The simple way that I see is to fail the member, remove it, clear it (at least
->> --zero-superblock and write to the bad sector) and then add it. However this
->> will incur a full resync (about 10 hours).
->>
->> Is there a faster, yet safe way? I was thinking that a clean umount and raid stop
->> should allow a create with --assume-clean (which will write to the bad sector and
->> "fix" it), but the doco discourages this.
->
-> Why do you think this will write the bad sector?
+I found
 
-I assumed the full header (128MB) is initialised when it is created. Maybe not...
+commit 99b76233803beab302123d243eea9e41149804f3
+Author: Alexey Dobriyan <adobriyan@gmail.com>
+Date:   Wed Mar 25 22:48:06 2009 +0300
 
-> When you --create and array it doesn't write too all the space on the array.
-> It only writes what it needs to.  So the superblock, the write-intent-bitmap
-> and maybe the bad-block-log.  But nothing else.
+    proc 2/2: remove struct proc_dir_entry::owner
+   =20
 
-This (the last three words) is the information I was after.
 
-> And most of that gets written during normal array activity.
->
-> So if a block remains unwritten after stop/start/check, you can be fairy sure
-> it isn't used at all, so you can ignore it.  Or write zeros to it.
+which references
 
-This was my understanding too. The "ignore" was not optimal as apart from the emotional
-stress from knowing there is an unreadable sector, there is the constant complaining
-of smartd in the log. I zeroed it.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D12454
 
->> Also, it is not impossible to think that the specific bad sector (toward the end
->> of the header) is not actually used today, meaning I can live with it as is, or
->> write anything to the bad sector as it does not get used. Too involved though.
->>
->> A bad sector in the data area should be fixed with a standard raid 'check' action.
->>
->> TIA
->>
->
-> NeilBrown
+which seems to suggest that we used to try to do as you suggest but it was
+racy and would be a lot of work to "fix". The chosen solution was to only
+'get' the module during read/write, not just while the /proc file is open.
 
-cheers
-	Eyal
+NeilBrown
 
---
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
+--Sig_/DF7.Cd93fkarzoWZ3flQizO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUxP8vTnsnt1WYoG5AQIhNBAAuXj8ipTGw4UuB0uvnqz93wPfxX5Y2cMt
+ll9Iozyod/SjCfBfuupZpYg3gl4LQHuBXeJpqO30DBOsSsYgqsoBzqHgzk1y50/T
++gsMTrb252qDDrvh7FrpMmGXULVKwqynYKTzaCRX5BrFWq8sKx2pboeEelvnPOfA
+B0dBOzOQ1lo4DJqAtTvPTborlxOWag/Hz36a02MWNkh6LrY+ZZSlx/h3youODdeh
+QuzTNv+MCeMNYs6/oAXLYuRktPJdc4Gx9Ofw8pR2nIh0JUS/X7YF0F4lJMskBRY1
+XPbbmryL7Kby8qRQ0+LNuLFlz4m5K/mhfdFJHJfnJA5JZGu6h+veKuN5xyxOUI9y
+O+8F8qsXNU5XQPWc7tdWerZ5CdxK8nL92852Sq/8LWNDYI2UEPivrrU5Ew58djRS
+ftpCmG+Fcoz8ESQfpaqGHW/wFaHRFbtkQYF/a9NxwlSo0WSd8h9KL9J0xL9BZhps
+ODTuP+a5Irs8htMERQudAnWKvyiO3qY04TrI+cgXn92sHA9XM4OpmXhAH2LQ2DZW
+FcH+dhyavLzutkdG/im5N7ips4lgPwXV2smREWIyt93DDBTm/Wd5wLNPp528/f71
+GnKmYl1P2neBNSYC+tEdByw3bDGfLcIAuiXwRImryctOXRHlDWKJ/JzxlhaCEN5e
+tLcFoQGLqFI=
+=BdgV
+-----END PGP SIGNATURE-----
+
+--Sig_/DF7.Cd93fkarzoWZ3flQizO--
