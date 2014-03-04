@@ -1,49 +1,44 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: raid5 write latency is 10x the drive latency
-Date: Tue, 4 Mar 2014 11:50:45 +0200
-Message-ID: <CAGRgLy5mTGKMCkWE3qYz2Hjiija5qvgFJ0MkV6iUd9N-_OS3VA@mail.gmail.com>
-References: <CAGRgLy55eAiam-JJFzUAZH581odHu8o9Pxt6y8jbcj92v+q6CQ@mail.gmail.com>
-	<21268.65296.503057.601739@tree.ty.sabi.co.uk>
-	<21269.4194.236349.136774@tree.ty.sabi.co.uk>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: RAID5 hard freeze
+Date: Tue, 04 Mar 2014 12:57:08 +0100
+Message-ID: <5315BF94.50803@fastmail.fm>
+References: <CAF8Fvyz2PnEd=t=E-xUuG6anoLhm1zJCn0txD=P_aE_5AmoVUw@mail.gmail.com>	<20140225135809.0b1afc69@notabene.brown>	<CAF8Fvyy3DqXZPx83Bk1bTgws5W0Z9Zm-XkE86En9uJk886zERg@mail.gmail.com> <CAF8FvyxaXNHEAqdsfGfF-j_di9W=a5Mx3GwOFyoA_NHea-x+5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21269.4194.236349.136774@tree.ty.sabi.co.uk>
+In-Reply-To: <CAF8FvyxaXNHEAqdsfGfF-j_di9W=a5Mx3GwOFyoA_NHea-x+5g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Denis Golovan <denis.golovan@gmail.com>, NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 4, 2014 at 1:29 AM, Peter Grandi <pg@lxra2.for.sabi.co.uk> wrote:
->> [ ... ] Which tool settings? [ ... ]
+On 03/01/2014 03:54 PM, Denis Golovan wrote:
+> Hi again
 >
-> As to this, how are the 8KiB writes aligned? To 1KiB? 4KiB?
-> 8KiB? To something else?
-They were 4Kb aligned. Looking at the code, I don't think it matters
-much; if I had them them 8K aligned, it would still be required to
-load/update 2 stripe-heads for each write.
+> I was contacted by a person who suggested to double-check
+> vfs_cache_pressure setting.
+> And it appeared that I had this setting set to 10000. That was a
+> left-over from previously debugging OOM-killer case.
+>
+> When I removed this setting from sysctl.conf, I was able to greatly
+> increase the time to crash/freeze.
+> My server was able to withstand about a day of continuous write test.
+>
+> Nevertheless, it froze after that.
+>
+> Still it looks like something is wrong with RAID/filesystem co-operation.
+
+But why should it be RAID/filesystem and not hardware related or another 
+linux subsystem?
 
 >
-> Is there any other activity on the same physical disks given
-> that the RAID members seem to be LVs?
-They are device-mapper devices (but not LVs), and there was no other
-activity. The device-mappers lead to drives behind MegaRAID write-back
-caching. (Something tells me you will find this funny at best, but as
-I mentioned, I am just trying to understand how much write latency MD
-can add on top of drives latencies).
+> I would still like to debug the problem.
+> Please help.
 
->
-> Also what's the size of those LV members of the MD set? It may
-> be quite small...
-Each one is 560GB. The whole MD usable space is ~2.2TB, so with a
-random workload over such huge capacity, MD stripe cache cannot help
-anyways. You need to load and update new stripe-heads every write.
-This was the purpose of the test. In my case, I had 1024 stripe-heads,
-while only up to 500 of them were active.
+The only way to get more help and information is probably to attach a 
+real serial console (i.e. ipmi-sol).
 
-Alex.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bernd
+
