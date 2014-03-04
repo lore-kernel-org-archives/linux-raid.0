@@ -1,104 +1,172 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: External USB-SATA bridge rewriting logical block sizes
-Date: Tue, 04 Mar 2014 00:36:35 -0600
-Message-ID: <53157473.30801@hardwarefreak.com>
-References: <f533c037-b72b-4039-9ef7-f2c61a0de3e6@flaska.net> <53149110.7090008@hardwarefreak.com> <29626b57-c751-4ba7-8774-b45fc090b4b6@flaska.net>
-Reply-To: stan@hardwarefreak.com
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: raid5 write latency is 10x the drive latency
+Date: Tue, 4 Mar 2014 11:41:25 +0200
+Message-ID: <CAGRgLy542j-G2WAbRdqGf26xfnQ5wkCqnEmgPecHtEp-WpXOSA@mail.gmail.com>
+References: <CAGRgLy55eAiam-JJFzUAZH581odHu8o9Pxt6y8jbcj92v+q6CQ@mail.gmail.com>
+	<21268.65296.503057.601739@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <29626b57-c751-4ba7-8774-b45fc090b4b6@flaska.net>
+In-Reply-To: <21268.65296.503057.601739@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Jan_Kundr=E1t?= <jkt@flaska.net>
-Cc: linux-raid@vger.kernel.org
+To: Peter Grandi <pg@lxra2.for.sabi.co.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 3/3/2014 9:18 AM, Jan Kundr=E1t wrote:
-> On Monday, 3 March 2014 15:26:24 CEST, Stan Hoeppner wrote:
->> Presumably you have some md raid level with fault tolerance, since y=
-ou
->> posted this to the linux-raid list.  Why not simply kick the drive f=
-rom
->> the array, install it "direct" inside the chassis, repartition it th=
-e
->> same as the other members of the array that are direct connected to =
-the
->> SATA controller, re-add the partition to the array, and rebuild.
->=20
-> Hi Stan, I don't run RAID on these machines. I saw a recent thread
-> dealing with 4k drives on this ML which made me hope that this topic
-> won't be considered OT here. Sorry if this is not appropriate -- do y=
-ou
-> happen to know a more suitable ML?
+Peter,
+Thank you for your response.
 
-Such an issue should be discussed on either of these two lists:
+On Tue, Mar 4, 2014 at 12:15 AM, Peter Grandi <pg@lxra2.for.sabi.co.uk> wrote:
+>> We are testing a fully random 8K write IOMETER workload on a
+>> raid5 md, composed of 5 drives. [ ... ]
+>
+> "Doctor, if I stab my hand very hard with a fork it hurts a lot,
+> what can you do about that?"
+>
+>> We see that the write latency that the MD device demonstrates
+>
+> Congratulations on reckoning that write latency matters. People
+> who think they know better and use parity RAID usually manage to
+> forget about write latency.
+>
+> Also congratulations on using a reasonable member count of 4+1.
+Thank you, Peter.
 
-linux-ide@vger.kernel.org
-linux-usb@vger.kernel.org
 
-http://vger.kernel.org/vger-lists.html
+>
+>> is 10 times the latency of individual drives. [ ... ]
+>
+> The latency of what actually?
+>
+> That's what 'iostat' reports for "something". The definition of
+> 'await' if that's what you are looking may be interesting.
+>
+Yes, r_await and w_await is what I am looking at.
 
->> Why you prepped this drive in it with intention of moving it into th=
-e
->> PC chassis leaves me scratching my head.
->=20
-> My primary machine is a T420s laptop which has a USB3 port, but no
-> eSATA. The throughput I can get from a drive attached there is much
-> better than what I can get via network from my other box with plenty =
-of
-> SATA ports, but only a VIA C7 CPU (even though it has a gigabit NIC).
-> Expected, I guess.
+> Also, what does your tool report?
+>
+>   BTW, why not use 'fio' which along with some versions of
+>   Garloff's version of 'bonnie' is one of the few reliable
+>   speed-testing tools (with the right options...).
+>
+> Also what type of device? Which size of the stripe cache (very
+> important)?
+>
+> Which chunk size? Which drive write cache setting? Which use of
+> barriers? Which filesystem? Which elevator? Which flusher
+> parameters? Which tool settings? How many threads?
+As you probably know, each entry in the MD stripe cache is a kind of a
+mini-stripe of 4K blocks (this is what is called "struct stripe_head"
+in the code). So for example, when using 64K MD chunk size and 8K
+write-size, it may be required to load and update 2 stripe-heads to
+satisfy the write. With 4K write-size and 4K MD chunk size, for
+example, it is needed to load and update a single stripe-head to
+satisfy the write.
+In my test, MD chunk size is 64K, so yes, it is needed to load more
+than one stripe-head each time. With 4K write-size, there is not much
+difference, actually, there are still some milliseconds "unaccounted".
 
-So you simply want to be able to access this 4TB drive on both your
-T420s and your VIA C7 based desktop/media PC.  The solution to the
-current problem is simple:  plug the USB enclosure into one of the PC's
-USB ports instead of plugging the bare drive into the SATA cage.
-Logical sector size problem solved.
+As for other parameters you mentioned, I can post all of them, but at
+this point, I only care how much write latency MD adds above the write
+latency that the drives demonstrate. I am not sure why you find this
+funny, BTW.
 
-Now, if the C7 PC only has USB 2.0 ports and you demand more throughput
-than the ~50MB/s this provides, USB 3.0 PCIe, mini PCIe, and PCI cards
-are available.  If your C7 system doesn't have any slots available, the=
-n
-you're left with only one solution:  acquire an eSATA ExpressCard/34 fo=
-r
-the T420s and an eSATA enclosure for the drive.  This will give you 512=
-B
-sectors on both platforms and the maximum throughput of the drive.
-However, you'll have to blow away the contents of the drive,
-repartition, reformat, etc, since it was partitioned with 4096B logical
-sector size being reported by the enclosure bridge chip.
+>
+> Because some of the numbers look a bit amazing or strange:
+>
+> * Only 20% of IOPS are reads, which is pretty miraculous.
+>
+> * 'dm-33' seems significantly faster (seek times) than the other
+>   members.
+>
+> * Each drive delivers over 1,000 4kiB IOPS (mixed r/W), which is
+>   also pretty miraculous if they are disk drives, and terrible if
+>   they are flash drives.
+>
+> * That ~50ms full wait-time per IO seems a bit high to me at a
+>   device utilization of around 70%, and a bit inconsistent with
+>   the ability of each device to process 1,000 IOPS.
+>
+> * In your second set of numbers utilization remains the same,the
+>   per-disk write await doubles to around 90-100ms, average queue
+>   size nearly doubles too, but 4kiB write IOPS go up to by 50%,
+>   and the percent of reads goes down to 16.6% almost exactly.
+>   These numbers tell a story, a pretty strong story.
+>
 
-=2E..
->> Is this some habit you developed years ago?  Prepping a new drive
->> in a USB before permanently installing it in the chassis?  If so, I'=
-d
->> recommend using a hot swap SATA chassis that installs in a 5.25" dri=
-ve
->> bay instead.  They're $15-30 USD, cheaper, and more reliable, than a=
- USB
->> dock, by far.
->=20
-> Yes, that's what I use for the direct connection. 100% passive, very
-> reliable, appears to be robust, mechanically. However, I cannot conne=
-ct
-> that to the laptop where I do most of my work. I do have a dock, so i=
-t's
-> very convenient and ergonomic, but the IO options are a bit limited o=
-n
-> this model.
+>> [ ... ] with RMW that raid5 is doing, we can expect 2x of the
+>> drive latency
+>
+> HAHAHAHAHAHA! HAHAHAHAHAHAHAHAHA! You made my day.
+>
+>> (1x to load the stipe-head, 1x to update the required
+>> stripe-head blocks on disk).
+>
+> Amazing! Send patches! :-)
+I studied the raid5 code at some point, and here is the flow for
+writing a 4Kb block onto a 2+1 raid5 with 4K chunk size:
 
-Sounds like an eSATA ExpressCard and eSATA enclosure are in your future=
-=2E
- Unless of course you have no way to get your data off the drive and
-restore it after wiping the drive and starting over, in which case
-you're stuck with USB 2.0 speed on the C7 box.
+add_stripe_bio: bio is attached to the stripe
+analyse_stripe
+handle_stripe_fill
+handle_stripe_dirtying: here the second data drive is marked for "read"
+ops_run_io: here it submits the READ bio
+raid5_end_read_request: READ bio is completed, raid5d will complete
+handling this stripe
+analyse_stripe
+handle_stripe_dirtying()->schedule_reconstruction()
+__raid_run_ops
+ops_run_biodrain: here user bio is copied into the stripe-head's block
+of the data drive that we didn't read
+ops_run_reconstruct5
+ops_complete_reconstruct: parity calculation is done, processing will
+resume in raid5d
+analyse_stripe
+handle_stripe: sets R5_Wantwrite on the parity and data r5devs
+ops_run_io: schedules the writes
+raid5_end_write_request: called two times: on parity and data drive
+This completes the flow, and eventually user bio is completed.
 
---=20
-Stan
+So besides loaing and writing out the stripe-head, there is only the
+parity calculation, which I don't know at this point how much time
+does it take. (In my test, the CPU had a good amount of idle time,
+BTW).
+Do you agree that this is the flow? Or you see some other places,
+where millis can be spent, which I missed?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>> raid5d thread is busy updating the bitmap
+>
+> Using a bitmap and worrying about write latency, I had not even
+> thought about that as a possibility. Extremely funny!
+Can you please clarify what to do you find so funny here? Should I not
+use the bitmap?
+
+>
+>> commented out the bitmap_unplug call
+>
+> Ah plugging/unplugging one of the great examples of sheer
+> "genius" in the Linux code. We can learn a lot from it :-).
+Again, can you please clarify? I was only trying to see whether raid5d
+does some other blocking operation, besides the bitmap update, and I
+learned that it doesn't. I realize that the bitmap update is required,
+just wanted to see if there is anything else that was blocking. Do you
+see anything wrong with this approach?
+
+>
+>> Typically - without the bitmap update - raid5 call takes
+>> 400-500us, so I don't understand how the additional ~100ms of
+>> latency is gained
+>
+> That's really really funny! Thanks! :-)
+Again, can you please clarify? I am happy to make your day, but if
+since you have taken time to comment on my email, I would like to at
+least understand what you meant.
+
+Thanks,
+Alex.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
