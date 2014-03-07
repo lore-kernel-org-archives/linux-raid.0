@@ -1,43 +1,42 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: Linux software-RAID and bootloader
-Date: Fri, 7 Mar 2014 18:58:37 +0000
-Message-ID: <21274.5853.421683.526973@tree.ty.sabi.co.uk>
+Date: Fri, 7 Mar 2014 12:45:14 -0700
+Message-ID: <67153819-285E-430A-A745-A96D6ECDA4DB@colorremedies.com>
 References: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
-> how is it ensured that superblock(for example version 1.2) can
-> be created at 4KiB from the beginning of the drive?
 
-By paying a huge salary :-) to a system administrator? 
+On Mar 6, 2014, at 8:13 PM, Martin T <m4rtntns@gmail.com> wrote:
 
-> I mean isn't there a hazard that this area on the disk is
-> already occupied for example by the bootloader stage 1.5?
+> Hi,
+> 
+> how is it ensured that superblock(for example version 1.2) can be
+> created at 4KiB from the beginning of the drive? I mean isn't there a
+> hazard that this area on the disk is already occupied for example by
+> the bootloader stage 1.5?
 
-MD RAID set members are *block devices* not necessarily "disks",
-and what is put in that block device will be whatever has been
-planned by the system administrator; in general system
-administrators don't just store superblocks around onto some
-block device and hope they don't overwrite something, they
-design the storage system structure ahead of time so that it all
-fits together.
+The offset is 4KB from the block device. So if the chosen block device is the drive, e.g. /dev/sda, then the superblock will start at LBA 8. If it's /dev/sda1 then typically it would be LBA 2056 since most partition tools these days start the first partition at 2048.
 
-> ..then how should one ensure that for example MBR/GPT is
-> mirrored or bootloader data is mirrored which both are located
-> out of partition boundaries?
+> In addition, if software-RAID is created using partitions for example
+> like this: mdadm --create --verbose --level=1 --metadata=1.2
+> --chunk=64 --raid-devices=2 /dev/md0 /dev/sdb1 /dev/sdc1
 
-Perhaps the highly paid :-) system administrator ensures that?
-Maybe by using 'sfdisk -d ... | sfdisk' or equivalent and
-running GRUB or LILO multiple times for multiple targets?
+In that case it's almost certainly at LBA 2056, whereas the MBR gap ranges from LBA 1 to 2047, and only a small part of which (less than 50K) will be the GRUB core.img (essentially it's a mandatory stage 1.5).
 
-The questions above may be based on the assumption that MD RAID
-is a high level automatic storage management solution for end
-users, where instead it is (and should remain) a low level
-building block.
+
+> ..then how should one ensure that for example MBR/GPT is mirrored or
+> bootloader data is mirrored which both are located out of partition
+> boundaries?
+
+The MBR/GPT and bootloader are not mirrored. grub-install can detect if /boot is on md raid, and will install an appropriate core.img on each disk's MBR gap or BIOS Boot partition. 
+
+Right now this doesn't happen on UEFI because grub-install only installs core.img (as grubx64.efi) onto /boot/efi which can only be one EFI System partition. It's not a good UX. The way it ought to work in my opinion, is to never have persistently mounted ESPs. The grub-install should determine member drives of /boot, and then mount their ESP's and install an appropriate grubx64.efi (core.img) to each; as well as a very basic grub.cfg that merely points GRUB to the real grub.cfg on /boot/grub - which since it's mirrored or raid5/6, only one copy must be maintained by the kernel upgrade utility.
+
+Chris Murphy
