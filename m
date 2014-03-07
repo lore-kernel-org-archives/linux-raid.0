@@ -1,42 +1,32 @@
 From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Linux software-RAID and bootloader
-Date: Fri, 7 Mar 2014 12:45:14 -0700
-Message-ID: <67153819-285E-430A-A745-A96D6ECDA4DB@colorremedies.com>
-References: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com>
+Subject: Re: Is mdadm.conf needed?
+Date: Fri, 7 Mar 2014 13:00:43 -0700
+Message-ID: <B13575D2-B437-4C38-9A31-E58CCE72F189@colorremedies.com>
+References: <CAJx5YvG5sA9GcPEd2D59ekg+QrRj7YGTKW=a8MMmLUWwkMo8fA@mail.gmail.com>
 Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com>
+In-Reply-To: <CAJx5YvG5sA9GcPEd2D59ekg+QrRj7YGTKW=a8MMmLUWwkMo8fA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Mar 6, 2014, at 8:13 PM, Martin T <m4rtntns@gmail.com> wrote:
+On Mar 6, 2014, at 7:13 PM, Martin T <m4rtntns@gmail.com> wrote:
 
 > Hi,
 > 
-> how is it ensured that superblock(for example version 1.2) can be
-> created at 4KiB from the beginning of the drive? I mean isn't there a
-> hazard that this area on the disk is already occupied for example by
-> the bootloader stage 1.5?
+> while most of the Linux software-RAID related tutorials suggest to
+> have the mdadm.conf file up to date, then is it actually needed or
+> used any more? I mean all the data needed by kernel for creating the
+> RAID arrays should be stored in the superblocks, shouldn't it? Or in
+> which situation the mdadm.conf is needed?
 
-The offset is 4KB from the block device. So if the chosen block device is the drive, e.g. /dev/sda, then the superblock will start at LBA 8. If it's /dev/sda1 then typically it would be LBA 2056 since most partition tools these days start the first partition at 2048.
+Good question. mdadm.conf is baked into the initramfs by dracut, along with mdadm, on Fedora systems. I haven't tried to willfully break it by deleting mdadm.conf and rebuilding the initramfs to see if it still works. 
 
-> In addition, if software-RAID is created using partitions for example
-> like this: mdadm --create --verbose --level=1 --metadata=1.2
-> --chunk=64 --raid-devices=2 /dev/md0 /dev/sdb1 /dev/sdc1
+I'm pretty sure it happens within the initramfs prior to the kernel even attempting to mount root. On systemd systems this could be better learned by passing systemd.log_level=debug systemd.log_target=console. The initramfs contains systemd, mdadm, mdadm.conf - and I'm pretty sure systemd activates that service, and then mdadm uses the mdadm.conf that's in the initramfs to assemble the array, and then systemd mounts it per the kernel command line which specifies root as an mduuid.
 
-In that case it's almost certainly at LBA 2056, whereas the MBR gap ranges from LBA 1 to 2047, and only a small part of which (less than 50K) will be the GRUB core.img (essentially it's a mandatory stage 1.5).
-
-
-> ..then how should one ensure that for example MBR/GPT is mirrored or
-> bootloader data is mirrored which both are located out of partition
-> boundaries?
-
-The MBR/GPT and bootloader are not mirrored. grub-install can detect if /boot is on md raid, and will install an appropriate core.img on each disk's MBR gap or BIOS Boot partition. 
-
-Right now this doesn't happen on UEFI because grub-install only installs core.img (as grubx64.efi) onto /boot/efi which can only be one EFI System partition. It's not a good UX. The way it ought to work in my opinion, is to never have persistently mounted ESPs. The grub-install should determine member drives of /boot, and then mount their ESP's and install an appropriate grubx64.efi (core.img) to each; as well as a very basic grub.cfg that merely points GRUB to the real grub.cfg on /boot/grub - which since it's mirrored or raid5/6, only one copy must be maintained by the kernel upgrade utility.
 
 Chris Murphy
+
