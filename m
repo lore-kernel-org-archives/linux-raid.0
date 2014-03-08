@@ -1,83 +1,60 @@
 From: Martin T <m4rtntns@gmail.com>
-Subject: Re: Is mdadm.conf needed?
-Date: Sat, 8 Mar 2014 03:07:26 +0000
-Message-ID: <CAJx5YvH3AqY8jcw-U7hGSeXe55xTPLxdi6zsKVLM9pUBRwAocw@mail.gmail.com>
-References: <CAJx5YvG5sA9GcPEd2D59ekg+QrRj7YGTKW=a8MMmLUWwkMo8fA@mail.gmail.com>
-	<B13575D2-B437-4C38-9A31-E58CCE72F189@colorremedies.com>
-	<531A2883.1000100@gmail.com>
+Subject: Re: calculating optimal chunk size for Linux software-RAID
+Date: Sat, 8 Mar 2014 03:15:38 +0000
+Message-ID: <CAJx5YvH1GE0KUcsSnVwbtUz6qP4zMv3N2qt3HhrjdF69NT2vLQ@mail.gmail.com>
+References: <CAJx5YvHVrWgcOCOh2q95RLcDcq5bkev0uqyStj=Op3DCjNhTGw@mail.gmail.com>
+	<531A5D2F.3010002@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <531A2883.1000100@gmail.com>
+In-Reply-To: <531A5D2F.3010002@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>, pg@lxra2.for.sabi.co.uk, lists@colorremedies.com
+To: stan@hardwarefreak.com
 Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks for explaining this!
+Stan,
 
+ok, I see. However, are there utilities out there which help one to
+analyze how applications on a server use the file-system over the time
+and help to make an educated decision regarding the chunk size?
 
 
 regards,
 Martin
 
-On Fri, Mar 7, 2014 at 8:13 PM, Joe Landman <joe.landman@gmail.com> wrote:
-> On 03/07/2014 03:00 PM, Chris Murphy wrote:
->>
->>
->> On Mar 6, 2014, at 7:13 PM, Martin T <m4rtntns@gmail.com> wrote:
->>
->>> Hi,
->>>
->>> while most of the Linux software-RAID related tutorials suggest to
->>> have the mdadm.conf file up to date, then is it actually needed or
->>> used any more? I mean all the data needed by kernel for creating
->>> the RAID arrays should be stored in the superblocks, shouldn't it?
->>> Or in which situation the mdadm.conf is needed?
->>
->>
->> Good question. mdadm.conf is baked into the initramfs by dracut,
->> along with mdadm, on Fedora systems. I haven't tried to willfully
->> break it by deleting mdadm.conf and rebuilding the initramfs to see
->> if it still works.
+On Fri, Mar 7, 2014 at 11:58 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 3/6/2014 8:06 PM, Martin T wrote:
+>> Am I correct that optimal chunk size is usually the size of the
+>> average file read/written to disk divided by number of block devices
+>> in RAID array storing the data? For example if the average file size
+>> is 1024KiB and I have four disks in RAID1, then I should choose the
+>> chunk size around 256KiB to get the optimal read performance? Or if I
+>> have two drives in RAID0, then I should choose the chunk size 512KiB
+>> instead? Or are there better methods/benchmarks to determine the
+>> optimal chunk size for software-RAID?
 >
+> You're asking the wrong question.  Storage architecture design always
+> begins with the workload.  The correct question is:
 >
-> On diskless systems, I have as part of the startup, an
+> My workload (application mix) performs *most* IO in manner X, where X is
 >
->         mdadm --examine --scan > /tmp/mdadm.scanned.conf
->         mdadm -As --conf=/tmp/mdadm.scanned.conf
+> 1.  large streaming write/read
+> 2.  small file write/read
+> 3.  metadata heavy
 >
-> so technically its not needed a-priori here.  For systems with the root on a
-> particular RAID you would want to assemble the RAID before the switch.  Most
-> dracut based systems complain quite vociferously when you make mdadm go
-> away, as they don't seem able to do what we've done above to figure out what
-> they should assemble.
+> I have Y number of disk drives.  I plan to use XFS/EXT4/etc filesystem.
+>  What RAID level and chunk size are optimal for my workload, and how do
+> I properly tune my filesystem to my workload and storage stack?
 >
+>> Last but not least, is there a
+>> good utility which could help one to measure the average I/O
+>> read/write size?
 >
->> I'm pretty sure it happens within the initramfs prior to the kernel
->> even attempting to mount root. On systemd systems this could be
->> better learned by passing systemd.log_level=debug
->> systemd.log_target=console. The initramfs contains systemd, mdadm,
->> mdadm.conf - and I'm pretty sure systemd activates that service, and
->> then mdadm uses the mdadm.conf that's in the initramfs to assemble
->> the array, and then systemd mounts it per the kernel command line
->> which specifies root as an mduuid.
->
->
-> It would be nice if, as part of the startup, it did a scan, a comparison of
-> the root device to whats available, and instead of timing out or panicing
-> (both of which I've seen), that it  drops into a shell if the root raid
-> device is either a) not there, or b) not ok to assemble.  The rd.shell
-> dracut line sorta/kinda does this.  I am not sure what the systemd
-> equivalent is.
->
-> Basically what I am saying is that the metadata for assembling the RAIDs is
-> on the disks themselves, and the mdadm.conf (if it exists) should be used
-> for confirmation/security/warning/error reporting purposes ... and not
-> necessarily for actual assembly.
->
+> In flight IO size has no correlation to stripe and chunk size.  What you
+> need to know is how your application(s) write to the filesystem and how
+> your filesystem issues write IOs.  You should already know that the
+> former, and it's easy to determine the latter.
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Stan
