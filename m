@@ -1,90 +1,40 @@
-From: Federico Foschini <undicizeri@gmail.com>
-Subject: Re: I've made a bit of a mess in my raid setup
-Date: Sat, 8 Mar 2014 21:23:26 +0100
-Message-ID: <CAFRU1Xs+hKhsJnRap2cARc=Z8W13sftna728WLJs3MGOM+VZag@mail.gmail.com>
-References: <CAFRU1XuCKyfL7uMa0wJj0dUjHyhBDp933_O4+TsQk33KM6brUA@mail.gmail.com>
- <531AF967.60500@grumpydevil.homelinux.org> <CAFRU1XsTdqVZ8bHumH3m-xfTK1M6u29U4H3ZDKNa_TZ=gKR_tg@mail.gmail.com>
- <531B0229.7030800@grumpydevil.homelinux.org> <CAFRU1XueM=bR0XXxskgwSGAcM_eXsDrsTVdF9V6GBvP9eZNs2w@mail.gmail.com>
- <531B1098.8080305@grumpydevil.homelinux.org> <531B6EA2.8080702@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Linux software-RAID and bootloader
+Date: Sat, 8 Mar 2014 14:20:48 -0700
+Message-ID: <20C9589F-7F5F-49D0-916E-9A6AA6B833BA@colorremedies.com>
+References: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com> <67153819-285E-430A-A745-A96D6ECDA4DB@colorremedies.com> <CAJx5YvF7t=suX8jzQso4cjPPqFgCgBDXiop9i47F+C2A2KtR=g@mail.gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <531B6EA2.8080702@gmail.com>
+In-Reply-To: <CAJx5YvF7t=suX8jzQso4cjPPqFgCgBDXiop9i47F+C2A2KtR=g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Can Jeuleers <can.jeuleers@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thank you for your help. Unfortunatly the server rebooted before I
-could run the update-initramfs command and now this is my current
-state:
+On Mar 7, 2014, at 9:13 PM, Martin T <m4rtntns@gmail.com> wrote:
 
-root@petra:~# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md1 : inactive sdd[3](S)
-      2930135512 blocks super 1.2
+> Chris, Peter,
+> 
+> thank you for this information! So in a nutshell, it's important to
+> make sure that partitioning tool leaves enough space between the start
+> of the block device and the first partition so that both Linux MD RAID
+> and bootloader can both write their data to this area?
 
-md0 : active linear sdb[0] sda[1]
-      2930277152 blocks super 1.2 0k rounding
+My original explaination might be confusing. The offset is 4KB from the *start* of the block device. Block device is defined as any discretely definable block device, that is /dev/sda is a block device, but so is /dev/sda1 and /dev/sda2. So mdadm metadata v 1.2 is offset 4KB from the start of whatever device you point mdadm to.
 
-unused devices: <none>
+Therefore if you partition, you wouldn't ever point mdadm to /dev/sda you'd point it to a partition and hence avoid writing metadata to the MBR gap, no matter what the start of the first partition is.
 
-root@petra:~# mdadm --examine --scan
-ARRAY /dev/md0 UUID=e151ea2f:37b942a4:e368bf24:bd0fce41
-ARRAY /dev/md/0 metadata=1.2 UUID=952ad074:4039f24a:2ec1808e:d555a88c
-name=petra:0
-ARRAY /dev/md/md1 metadata=1.2
-UUID=03c85017:15cecfb6:13d059bc:a8ff8779 name=petra:md1
-
-root@petra:~# mdadm --examine /dev/md0
-/dev/md0:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 03c85017:15cecfb6:13d059bc:a8ff8779
-           Name : petra:md1  (local to host petra)
-  Creation Time : Sun Feb 16 12:21:56 2014
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 5860292160 (2794.41 GiB 3000.47 GB)
-     Array Size : 2930135360 (2794.39 GiB 3000.46 GB)
-  Used Dev Size : 5860270720 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : ae9da3ed:c4d422cb:06cf927d:b75bfc36
-
-    Update Time : Sat Mar  8 18:14:00 2014
-       Checksum : 51e09d97 - correct
-         Events : 74578
+Any recent partition tool starts the first partition at LBA 2048.
 
 
-   Device Role : Active device 1
-   Array State : AA ('A' == active, '.' == missing)
+> In addition, it's a best practice to mirror MBR/GPT using
+> sfdisk/sgdisk(or dd) to each block device in RAID array and then
+> install GRUB to each block device separately?
 
-What is going on? Why /dev/md1 is now inactive and /dev/sdd is busy?
-And i don't understand why when I examine /dev/md0 the "Name" is
-"petra:md1". Also in "--examine --scan" it says I have /dev/md0
-/dev/md/0 and /dev/md/1 when on the filesystem only exist /dev/md0 and
-/dev/md1
+I don't think mdadm is overly fussy about small differences in member device sizes, but sure you can duplicate identical layouts among drives using whatever method is easiest for you. Don't use dd for GPT however, it won't copy the backup GPT.
 
+If BIOS, yes grub-install to each member disk. If UEFI, install to one, and then manually create and copy to the others (for now).
 
 
-2014-03-08 20:25 GMT+01:00 Can Jeuleers <can.jeuleers@gmail.com>:
-> On 03/08/2014 01:44 PM, Rudy Zijlstra wrote:
->> To solve this, you need to update the initrd. Please google for this, i
->> do not use ubuntu so am not the best to give instructions on it.
->
-> sudo update-initramfs -u -k all
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Federico Foschini.
+Chris Murphy
