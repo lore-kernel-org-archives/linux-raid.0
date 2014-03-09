@@ -1,26 +1,22 @@
-From: Raul Dias <raul@dias.com.br>
-Subject: Re: Linux software-RAID and bootloader
-Date: Sun, 9 Mar 2014 00:52:09 -0300
-Message-ID: <CAE6VuKH2E0rMVZAg8ugjR8BRmknyUNS_D8EOOr4UjBbFsuVeOg@mail.gmail.com>
-References: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com>
-	<67153819-285E-430A-A745-A96D6ECDA4DB@colorremedies.com>
-	<CAJx5YvF7t=suX8jzQso4cjPPqFgCgBDXiop9i47F+C2A2KtR=g@mail.gmail.com>
-	<20C9589F-7F5F-49D0-916E-9A6AA6B833BA@colorremedies.com>
+From: Can Jeuleers <can.jeuleers@gmail.com>
+Subject: Re: I've made a bit of a mess in my raid setup
+Date: Sun, 09 Mar 2014 08:58:51 +0100
+Message-ID: <531C1F3B.8050308@gmail.com>
+References: <CAFRU1XuCKyfL7uMa0wJj0dUjHyhBDp933_O4+TsQk33KM6brUA@mail.gmail.com> <531AF967.60500@grumpydevil.homelinux.org> <CAFRU1XsTdqVZ8bHumH3m-xfTK1M6u29U4H3ZDKNa_TZ=gKR_tg@mail.gmail.com> <531B0229.7030800@grumpydevil.homelinux.org> <CAFRU1XueM=bR0XXxskgwSGAcM_eXsDrsTVdF9V6GBvP9eZNs2w@mail.gmail.com> <531B1098.8080305@grumpydevil.homelinux.org> <531B6EA2.8080702@gmail.com> <CAFRU1Xs+hKhsJnRap2cARc=Z8W13sftna728WLJs3MGOM+VZag@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20C9589F-7F5F-49D0-916E-9A6AA6B833BA@colorremedies.com>
+In-Reply-To: <CAFRU1Xs+hKhsJnRap2cARc=Z8W13sftna728WLJs3MGOM+VZag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: Federico Foschini <undicizeri@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2014-03-08 18:20 GMT-03:00 Chris Murphy <lists@colorremedies.com>:
+On 03/08/2014 09:23 PM, Federico Foschini wrote:
+> What is going on? Why /dev/md1 is now inactive and /dev/sdd is busy?
 
-> If BIOS, yes grub-install to each member disk. If UEFI, install to one, and then manually create and copy to the others (for now).
+I don't know Federico, but have you tried updating your initrd and
+rebooting? So that the assembly that takes place at boot uses the same
+configuration as it would post-boot?
 
-Simply mounting eachUEFI vfat partitions and copy the files is enough?
-Does it need to be updated on every new kernel update (grub menu
-item)?
-
-thanks
