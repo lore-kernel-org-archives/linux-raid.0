@@ -1,26 +1,27 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Raul Dias <raul@dias.com.br>
 Subject: Re: Replace RAID devices without resorting to degraded mode?
-Date: Wed, 12 Mar 2014 12:54:48 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1403121253420.747@uplift.swm.pp.se>
-References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com> <531F9BAE.1040001@websitemanagers.com.au> <CAK_KU4Yun-=HyDnCVvddCPuUkNPjbVbqP1VEo=v=-z6FNwuMCA@mail.gmail.com>
+Date: Wed, 12 Mar 2014 09:23:32 -0300
+Message-ID: <CAE6VuKFxqRET=tQoSvbHFd7iiKeXBPJZTBUgTTwMpzOnrPEmbg@mail.gmail.com>
+References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com>
+	<53202503.10901@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK_KU4Yun-=HyDnCVvddCPuUkNPjbVbqP1VEo=v=-z6FNwuMCA@mail.gmail.com>
+In-Reply-To: <53202503.10901@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Scott D'Vileskis <sdvileskis@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: Scott D'Vileskis <sdvileskis@gmail.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+2014-03-12 6:12 GMT-03:00 David Brown <david.brown@hesbynett.no>:
+...
+>
+> If you want to safely replace the disks in a raid5 array, the easiest
+> way is to add a new disk (this can be an external USB disk if necessary)
+> and re-shape to an asymmetric raid6 with parity Q on the new disk.  Now
+> you have an extra redundancy for safety.  (Use asymmetric raid6 to avoid
+> re-striping the existing disks.)
 
-> I remembered reading about this once, and researching once before, but
-> I am pretty sure my Xubuntu 13.10 distro doesn't have the flavor of
-> mdadm I need.  (Awesome work on this tool Neil! With mdadm you have
-> transformed the utility of the md subsystem, and made it almost
-> impossible to break an array with bad options)
+Is there a solution for other RAID setups? 1,0,6,10?
 
-I did "--replace" on a 12.04 LTS with a 3.8 kernel plus side-compiled 
-mdadm.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+thanks
