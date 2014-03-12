@@ -1,99 +1,193 @@
-From: "Scott D'Vileskis" <sdvileskis@gmail.com>
-Subject: Re: Replace RAID devices without resorting to degraded mode?
-Date: Tue, 11 Mar 2014 20:00:42 -0400
-Message-ID: <CAK_KU4Yun-=HyDnCVvddCPuUkNPjbVbqP1VEo=v=-z6FNwuMCA@mail.gmail.com>
-References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com>
-	<531F9BAE.1040001@websitemanagers.com.au>
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] poll/wait/md: allow module to safely support 'poll' on
+ /proc files
+Date: Wed, 12 Mar 2014 13:36:38 +1100
+Message-ID: <20140312133638.1fd84632@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <531F9BAE.1040001@websitemanagers.com.au>
-Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/4h0xwM5dugq.bFxoPNuUjZA"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, majianpeng <majianpeng@gmail.com>
 List-Id: linux-raid.ids
 
-Thank you for the response..
+--Sig_/4h0xwM5dugq.bFxoPNuUjZA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
->> Does Linux MD RAID support a method of hot replacing a disk WITHOUT
->> having to resort to degraded mode?
->
->
-> Yes, it does, if you use a recent kernel + mdadm
+The md driver currently supports 'poll' on /proc/mdstat.
+This is unsafe as if the md-mod module is removed while a 'poll'
+or 'select' is outstanding on /proc/mdstat, an oops occurs
+when the syscall completes.
+poll_freewait() will call remove_wait_queue() on a wait_queue_head_t
+which was local to the module which no-longer exists.
 
-I remembered reading about this once, and researching once before, but
-I am pretty sure my Xubuntu 13.10 distro doesn't have the flavor of
-mdadm I need.  (Awesome work on this tool Neil! With mdadm you have
-transformed the utility of the md subsystem, and made it almost
-impossible to break an array with bad options)
->
-> However, you have another option anyway. Just remove the hot spare,
-> re-partition as needed, then grow the raid5 to raid6.
-> 1) Wait for the re-sync to complete
-> 2) Drop another old drive from the array
-> 3) Re-partition
-> 4) Add back to the array and re-sync
-> You will never have worse redundancy than current during the above process.
-> Personally, I'd probably use the hot spare to move to RAID6, and then use
-> the migration to move a drive to its replacement (assuming you have another
-> spare drive available).
+This problem is particular to /proc.  Most filesystems do not
+allow the module to be unloaded while any files are open on it.
+/proc only blocks module unloading while a file_operations
+call is currently active into the module, not while the file is open.
+kernfs has this property too but kernfs allocates a wait_queue_head_t
+in its internal data structures so the module doesn't need to provide
+one.
+(A previous patch to add a similar allocation to procfs was not
+accepted).
 
-Thanks for pointing out that obvious solution, I had almost forgot! I
-think this had crossed my mind at some point, but I wasn't sure if I
-needed RAID6 at this time. The 2TB Samsung F4EG drives have a 1e^15
-BER, which is on par with enterprise drives. I've been using them for
-about 3 years, and they are still barely audible and perform great. I
-have even purchased several used (The genuine Samsung article, Made in
-Korea, not the post-merger Seagate flavor) and they all seem to behave
-awesome.
-The other kink to this solution is that I only plan to have 4 drives
-in the system when all is said and done. I might just go with a RAID10
-in that case.
+This patch takes a different approach and allows a module to
+disconnect the wait_queue_head_t that was passed to poll_wait()
+from all the clients which are waiting on it.  Thus after calling
+ proc_remove_entry("mdstat", NULL);
+we simply call
+ wait_queue_purge(&md_event_waiters);
 
-If I decide to go this route, migrating to RAID6 is certainly a great solution.
->
->
->> However, in my situation, my RAID5 partitions start in the middle of
->> the drive, complicating that slightly... Fortunately, I have a spare
->> drive or two to assist.
->> 1) Stop RAID array
->> 2) Clone one of the RAID devices to a larger disk (Using dd)
->> 3) Remove the old RAID device from the system
->> 4) Restart the RAID array in readonly mode (to test that the clone was
->> successful without marking the array as dirty, otherwise, revert to
->> the removed disk)
->> 5) Optional: Restart the RAID array in readwrite mode to confirm
->> 6) Repeat 1-5 for each additional disk
->> 7) Grow the array (Resync starts at the new space)
->> 8) Grow the filesystem
->
-I did start this process and migrated the first drive. Array downtime
-was acceptable to me.. Details:
-1) I stopped the RAID array
-2) I created a partition on my spare drive
-   (starting at sector 2048 so my 4K sector drive lies on a 4K boundary)
-3) I cloned the partition with dd, It ran for a few hours at 100MB/min
-sustained:
-dd if=/dev/sda2 of=/dev/sdf1 bs=1M
-(in another terminal: "while killall -USR1 dd; do sleep 60; done" was
-pretty handy for monitoring progress)
-4) I couldn't figure out how to start the array readonly, but I
-assembled it manually with the following:
-mdadm --assemble /dev/md5 /dev/sdf1 /dev/sdb2 /dev/sdc2 /dev/sdd2
-/dev/sde2 --no-degraded
-mdadm: /dev/md5 has been started with 5 drives.
+and then know that it is safe to remove the module.
 
-So, while this solution does require a spare disk, this is an option
-for migrating raid5 without running the array in degraded mode.
->
-> Actually, I was trying to find the URL to show the migrate options, but
-> couldn't seem to find any docs in the mdadm wiki at:
-> http://vger.kernel.org/vger-lists.html#linux-raid
-> Also, the debian raid wiki, the Neil Brown blog, and various other
-> resources. Hopefully someone else will be able to provide the relevant link.
-> Perhaps searching the mailing list itself would be best (I definitely recall
-> seeing it discussed here), but I'm out of time now. Good luck.
+rcu infrastructure is used to avoid races.
+poll_freewait() checks if the purge has happened under rcu_read_lock()
+to ensure that it never touches any freed memory.  wait_queue_purge()
+uses synchronize_rcu() to ensure no poll_freewait() could still be
+looking at the wait_queue_head_t.
 
-I recall seeing it at one point too.. Maybe it was in the btrfs man pages?
-Thanks again!
+Reported-by: "majianpeng" <majianpeng@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4ad5cc4e63e8..e28c9d2a1166 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8681,6 +8681,7 @@ static __exit void md_exit(void)
+ 	unregister_reboot_notifier(&md_notifier);
+ 	unregister_sysctl_table(raid_table_header);
+ 	remove_proc_entry("mdstat", NULL);
++	wait_queue_purge(&md_event_waiters);
+ 	for_each_mddev(mddev, tmp) {
+ 		export_array(mddev);
+ 		mddev->hold_active =3D 0;
+diff --git a/fs/eventpoll.c b/fs/eventpoll.c
+index af903128891c..a095312d01e2 100644
+--- a/fs/eventpoll.c
++++ b/fs/eventpoll.c
+@@ -521,7 +521,7 @@ static void ep_remove_wait_queue(struct eppoll_entry *p=
+wq)
+ 	/* If it is cleared by POLLFREE, it should be rcu-safe */
+ 	whead =3D rcu_dereference(pwq->whead);
+ 	if (whead)
+-		remove_wait_queue(whead, &pwq->wait);
++		remove_wait_queue_purgeable(whead, &pwq->wait);
+ 	rcu_read_unlock();
+ }
+=20
+diff --git a/fs/select.c b/fs/select.c
+index 467bb1cb3ea5..7c35bcdbd94c 100644
+--- a/fs/select.c
++++ b/fs/select.c
+@@ -129,7 +129,7 @@ EXPORT_SYMBOL(poll_initwait);
+=20
+ static void free_poll_entry(struct poll_table_entry *entry)
+ {
+-	remove_wait_queue(entry->wait_address, &entry->wait);
++	remove_wait_queue_purgeable(entry->wait_address, &entry->wait);
+ 	fput(entry->filp);
+ }
+=20
+diff --git a/include/linux/wait.h b/include/linux/wait.h
+index 559044c79232..18d0d2fbf3bd 100644
+--- a/include/linux/wait.h
++++ b/include/linux/wait.h
+@@ -106,6 +106,8 @@ static inline int waitqueue_active(wait_queue_head_t *q)
+ extern void add_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
+ extern void add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *w=
+ait);
+ extern void remove_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
++extern void wait_queue_purge(wait_queue_head_t *q);
++extern void remove_wait_queue_purgeable(wait_queue_head_t *q, wait_queue_t=
+ *wait);
+=20
+ static inline void __add_wait_queue(wait_queue_head_t *head, wait_queue_t =
+*new)
+ {
+diff --git a/kernel/sched/wait.c b/kernel/sched/wait.c
+index 7d50f794e248..12548730c6ed 100644
+--- a/kernel/sched/wait.c
++++ b/kernel/sched/wait.c
+@@ -52,6 +52,51 @@ void remove_wait_queue(wait_queue_head_t *q, wait_queue_=
+t *wait)
+ EXPORT_SYMBOL(remove_wait_queue);
+=20
+=20
++/**
++ * wait_queue_purge - remove all waiter from a wait_queue
++ * @q: The queue to be purged
++ *
++ * Unlink all pending waiters from the queue.
++ * This can be used prior to freeing a queue providing all waiters are
++ * prepared for queue purging.
++ * Waiters must call remove_wait_queue_puregeable() rather than
++ * remove_wait_queue().
++ *
++ */
++void wait_queue_purge(wait_queue_head_t *q)
++{
++	spin_lock(&q->lock);
++	while (!list_empty(&q->task_list))
++		list_del_init(q->task_list.next);
++	spin_unlock(&q->lock);
++	synchronize_rcu();
++}
++EXPORT_SYMBOL(wait_queue_purge);
++
++/**
++ * remove_wait_queue_puregeable - remove_wait_queue if wait_queue_purge mi=
+ght be used.
++ * @q: the queue, which may already be purged, to remove from
++ * @wait: the waiter to remove
++ *
++ * Remove a waiter from a queue if it hasn't already been purged.
++ * If the queue has already been purged then task_list will be empty.
++ * If it isn't then it is still safe to lock the queue and remove
++ * the task.
++ */
++void remove_wait_queue_purgeable(wait_queue_head_t *q, wait_queue_t *wait)
++{
++	unsigned long flags;
++
++	rcu_read_lock();
++	if (!list_empty(&wait->task_list)) {
++		spin_lock_irqsave(&q->lock, flags);
++		list_del_init(&wait->task_list);
++		spin_unlock_irqrestore(&q->lock, flags);
++	}
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(remove_wait_queue_purgeable);
++
+ /*
+  * The core wakeup function. Non-exclusive wakeups (nr_exclusive =3D=3D 0)=
+ just
+  * wake everything up. If it's an exclusive wakeup (nr_exclusive =3D=3D sm=
+all +ve
+
+--Sig_/4h0xwM5dugq.bFxoPNuUjZA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUx/INjnsnt1WYoG5AQJzoRAAnOEH+smOXSOfC7T4zb3Kq5y3xS1lldlP
+C1EksoLoQsrX1ymH0gblWzt1YdZpX4Bs5uMqnkEvKXQLaBiRkPmSrz+eMtospkPQ
+FbgtNSfAnKjygyZeyMDPm9BWKp/Nf2H0uMrc22hnNLkpeyNpm26kJzSz8TZMU6/N
+yK3v3LiwAnru68LaP81erecKj+/FwQ2JO89P0aPbHAJEPs/exrVTXCgiOarx6xOP
+L/1In/AyLcgTRSrX7YQBX8/O9kldt2Vt3saS3M7l9egJ7ilHuEaQ2woPHQT1u0AU
+STzFVrjq7g+R9X8sGtO2W/ExMaH+ASZBICsGfCVYP3zall7jJKqlwero/ewXXUsq
+6aIdRelaAmoiWCPKhFeePQLRRh4qRPbDHBIlzBrJGfs1fnX1HqGtG2T8VXiBY4++
+OmILlAk3+iZMqiN24vHiDZlwKQQDE7IGM/XjFeXg+0IY0k1mhyivCbGuPXQzTyuV
+cq5tC8ZUdyY/l4/nzyXxvJeaTgW1cYCjPw0Ozrf9LWtVtwpFQozjk52GeFH2xN8w
+ePcs3tvJR7yXOtttIi7gW/ns+lhK9jqnxGVFfWHVY0D+fNs6C1zj+eUsJUt5Cd6c
+8+FXDLDNoYrgXPDjto6OJfkcCVXhxCbJO2cZQ7/UXm8DCx4CZturHhqVjbOLZEb6
+3XJ3qLSJxSk=
+=KxDO
+-----END PGP SIGNATURE-----
+
+--Sig_/4h0xwM5dugq.bFxoPNuUjZA--
