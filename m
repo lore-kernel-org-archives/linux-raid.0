@@ -1,52 +1,58 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Linux software-RAID and bootloader
-Date: Wed, 12 Mar 2014 10:49:04 -0600
-Message-ID: <01893F58-0959-4CAF-AAD6-09467D565A23@colorremedies.com>
-References: <CAJx5YvGGM7yziWQEefs=_Wte4jy13w1x1oG6MuUOggSgTfodMQ@mail.gmail.com> <67153819-285E-430A-A745-A96D6ECDA4DB@colorremedies.com> <CAJx5YvF7t=suX8jzQso4cjPPqFgCgBDXiop9i47F+C2A2KtR=g@mail.gmail.com> <20C9589F-7F5F-49D0-916E-9A6AA6B833BA@colorremedies.com> <CAE6VuKH2E0rMVZAg8ugjR8BRmknyUNS_D8EOOr4UjBbFsuVeOg@mail.gmail.com> <4C7B5B3C-5603-4346-BDDC-40ABBB2CD45E@colorremedies.com> <CAJx5YvEtPip5P-y_bnn5hebGnJ97hwBSyww3tq4BB=rAreMgLQ@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Replace RAID devices without resorting to degraded mode?
+Date: Thu, 13 Mar 2014 10:18:33 +1100
+Message-ID: <20140313101833.7fccbabe@notabene.brown>
+References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com>
+	<53202503.10901@hesbynett.no>
+	<CAE6VuKFxqRET=tQoSvbHFd7iiKeXBPJZTBUgTTwMpzOnrPEmbg@mail.gmail.com>
+	<532056EB.2080206@hesbynett.no>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/VoJmwLsTpc0qZcDS9WpM40L"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJx5YvEtPip5P-y_bnn5hebGnJ97hwBSyww3tq4BB=rAreMgLQ@mail.gmail.com>
+In-Reply-To: <532056EB.2080206@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin T <m4rtntns@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: Raul Dias <raul@dias.com.br>, Scott D'Vileskis <sdvileskis@gmail.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/VoJmwLsTpc0qZcDS9WpM40L
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Mar 12, 2014, at 10:06 AM, Martin T <m4rtntns@gmail.com> wrote:
+On Wed, 12 Mar 2014 13:45:31 +0100 David Brown <david.brown@hesbynett.no>
+wrote:
 
-> Chris,
-> 
-> thank you for a good explanation! However, if I use
-> partitions(/dev/sda1, /dev/sdb2, etc) as block devices and thus write
-> mdadm metadata v1.2 not to gap after the MBR, but to an area from 4KB
-> from the beginning of the partition, then how is it ensured that I
-> don't overwrite anything?
+> So for raid1, you would add a new mirror device, making a 3-way mirror
+> instead of a 2-way one (I don't know off-hand if md raid allows this
+> re-shape).
 
-There is no assurance, you have to know that the partition you're writing to doesn't already contain information you want to keep. Creating an array is usually a destructive process.
+It sure does. raid1 can be 1-way, 2-way, 3-way, 4-way ..... and "mdadm
+--grow" can easily switch between them.
 
-Upon creation of the array, it appears as a logical block device with a designation, e.g. /dev/md0. That's what you format, and that's what you write data to. Yes if you write directly to the member of an array it's bad news for either the mdadm metadata or portions of your data, or both, so don't write to member devices again.
-
-
-> I mean mdadm isn't using regular OS calls
-> for writing data to file-system, is it?
-
-No. The kernel md driver operates as a layer in between the SCSI block device layer and the file system. So simplistically from top to bottom: application, application libraries, file system, md, SCSI/libata, controller, drive.
-
-> I understand that it writes
-> this metadata similarly to dd utility and doesn't understand if it's
-> overwriting any files or not?
-
-I think it'll sense certain existing data and ask if you really want to proceed, but that's a gift if it does. By the way make sure you save your mdadm create command somewhere safe, if you ever have a problem down the road it's a good idea to know what command was used in case metadata is somehow overwritten.
-
-> Or the other way around, if I create a
-> file-system(for example ext3 or ext4), then how does the mke2fs
-> utility know that it should not use the area at the beginning of the
-> partition?
-
-Because you don't use mkfs on those partitions. You mkfs on the md device. That md device isn't exactly the same size as adding up all sectors from all members, it's slightly smaller to account for the metadata areas, and an optional internal bitmaps. Those things aren't accessible, and can't be overwritten, from the md device, e.g. /dev/md0. They only exist on the member devices, e.g. /dev/sda1, /dev/sdb1, etc.
+NeilBrown
 
 
-Chris Murphy
+--Sig_/VoJmwLsTpc0qZcDS9WpM40L
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBUyDrSTnsnt1WYoG5AQJG3g/9FSjsUODRcihXDRJqUl+q0cmBcQCkaNBs
+EcbUInkto18Rr3JzQQt1/tZXo4vipd8rcAYWG2sqbvu+AFH5Z9mrxrYH37atb3FB
+yYTdhxuulPB2j0ak87Yi26wjjI1Z6vQtQHwWdldT4qsymuzZJ0SYdVgXXkziVq9I
+93DFl1zHhXRRzaUOIr3xO/Z8hpFxWz0Yr65u+5NVXb3KwoZIZ2CZ85D+RjNnH37o
++jPG8jeBl4qdekr4oOXOCQYmYm7zflkunrMmqkDwLeOdpXuZx1btmvMM1bm6CWOO
+oCojCXABRwtSMy5fqrjb6gjDf7wlrCcGgezV5VSthY3P2WZOf3A3MRbF8rajTtAE
+0wwHGrF2+WTMcM/Xi8ruMmtmmFmIMMs9MG63ZruzGRLAPxVWNBJ8jwBTPSFAX+iX
+5h2mmi4Mu1dejacqe4c4a44fjTnqAp3TUhDIz5XCo9ITsA2+t2+Au5OwIcsRPV9Q
+Rok+ZB7mM5TzFW+qscxD6W0xqRXsjRDKPFfkNV0jtb8wR8vcoFmm5v6YXvmjoogZ
+0UBcvmrvHlIkgOjfWEfkHfQG7Ob5QO48fuZMsytUGcm6m+PMctu3hc07psxjb/23
+/xSAGmR9u/GxgEg6I8NR+tA6JnkwFymCyHfrrzOjqRkCDBikhNnPlL9k0IOG2yaN
+EbvL3aj19x0=
+=9QFu
+-----END PGP SIGNATURE-----
+
+--Sig_/VoJmwLsTpc0qZcDS9WpM40L--
