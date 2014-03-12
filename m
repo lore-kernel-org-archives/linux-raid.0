@@ -1,88 +1,95 @@
-From: Martin T <m4rtntns@gmail.com>
-Subject: Re: calculating optimal chunk size for Linux software-RAID
-Date: Wed, 12 Mar 2014 17:21:46 +0200
-Message-ID: <CAJx5YvFHnQDCF5DiRjdyxj4AK226sCk=oF-o5NbbLispOO=Y=g@mail.gmail.com>
-References: <CAJx5YvHVrWgcOCOh2q95RLcDcq5bkev0uqyStj=Op3DCjNhTGw@mail.gmail.com>
-	<531A5D2F.3010002@hardwarefreak.com>
-	<CAJx5YvH1GE0KUcsSnVwbtUz6qP4zMv3N2qt3HhrjdF69NT2vLQ@mail.gmail.com>
-	<531AACA1.6000606@hardwarefreak.com>
-	<531B93A4.7010708@tmr.com>
+From: "Scott D'Vileskis" <sdvileskis@gmail.com>
+Subject: Re: Replace RAID devices without resorting to degraded mode?
+Date: Wed, 12 Mar 2014 11:38:02 -0400
+Message-ID: <CAK_KU4Zmi4jUO9tfMVk-c-GXBqDUZOWd1LoBx_+isT96O6Kz9Q@mail.gmail.com>
+References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com>
+	<53202503.10901@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <531B93A4.7010708@tmr.com>
+In-Reply-To: <53202503.10901@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: davidsen@tmr.com, stan@hardwarefreak.com
-Cc: Linux Raid List <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stan,
-
-you said that "In flight IO size has no correlation to stripe and
-chunk size.  What you
-need to know is how your application(s) write to the filesystem and how
-your filesystem issues write IOs.". Could you please explain this? I
-would think that it's possible to measure how applications read/write
-to file system, isn't it?
-
-
-
-regards,
-Martin
-
-
-On 3/9/14, Bill Davidsen <davidsen@tmr.com> wrote:
-> Stan Hoeppner wrote:
->> On 3/7/2014 9:15 PM, Martin T wrote:
->>> Stan,
->>>
->>> ok, I see. However, are there utilities out there which help one to
->>> analyze how applications on a server use the file-system over the time
->>> and help to make an educated decision regarding the chunk size?
->>
->> My apologies.  You're a complete novice and I'm leading you down the
->> textbook storage architectural design path.  Let's short circuit that as
->> I don't have the time.
->>
->> As you're starting from zero, let me give you what works best with 99%
->> of workloads.  Use a chunk size of 32KB or 64KB.  Such a chunk will work
->> extremely well with any singular or mixed workloads, on parity and
->> non-parity RAID.  The only workload that should have a significantly
->> larger chunk than this is a purely streaming allocation workload of
->> large files.
->>
->> If you want a more technical explanation, you can read all of my
->> relevant posts in the linux-raid or XFS archives, as I've explained this
->> hundreds of times in great detail.  Or you can wait a few months to read
->> the kernel documentation I'm working on, which will teach the reader the
->> formal storage stack design process, soup to nuts.  I wish it was
->> already finished, as I could simply paste the link for you, which,
->> coincidentally, is the exact reason I'm writing it. :)
->>
->>
-> Thank you Stan, hopefully you cover typical mixed use cases. I split my
-> physical
-> drives with partitions and built large chunk arrays on on set and small on
-> the
-> other, to cover my use cases of editing large video files and compiling
-> kernels
-> and large apps.
 >
-> The ext4 extended options stride= and stripe-width= can produce improvements
-> in
-> performance, particularly when writing a large file on an array with a small
+> Step 1 in all this is, of course, to take a backup.  And step 2 is to
+> check that your backup is good.
+
+Everything important was backed up recently.  :-)
+
 >
-> chunk size. My limited tests showed this helped more with raid6 than raid5.
+> It is also a good idea to practice on fake arrays made from loopback
+> "disks" - they work fine for md raid, and let you practice re-shaping=
+,
+> re-sizing, etc., without any risk to your real disks.
+
+I also recommend this for things I am not sure about,
+and I imagine it is critical for development testing.
+In fact, when I like to give a demo to folks:
+--I'll first create a RAID array with loop devices.
+--Ill then copy over a movie and start watching the movie.
+--I'll then fail a disk and delete the file
+--Then I'll create a new file, add it to the array
+and watch it recover, all the while the movie doesn't skip a beat. :-)
+
 >
-> Since you're writing a document you can include that or not as it pleases
-> you.
 >
-> --
-> Bill Davidsen <davidsen@tmr.com>
->    "We have more to fear from the bungling of the incompetent than from
-> the machinations of the wicked."  - from Slashdot
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If you want to safely replace the disks in a raid5 array, the easiest
+> way is to add a new disk (this can be an external USB disk if necessa=
+ry)
+> and re-shape to an asymmetric raid6 with parity Q on the new disk.  N=
+ow
+> you have an extra redundancy for safety.  (Use asymmetric raid6 to av=
+oid
+> re-striping the existing disks.)
 >
+I would disagree with your assertion that it is the 'easiest' way.
+I tried to do this on my system, but you didn't specify which parity
+method to use.
+RTFMing I found...
+              These  same  layouts  are available for RAID6.  There are=
+ also 4
+              layouts that will provide an intermediate stage  for  con=
+verting
+              between  RAID5 and RAID6.  These provide a layout which i=
+s iden=E2=80=90
+              tical to  the  corresponding  RAID5  layout  on  the  fir=
+st  N-1
+              devices,  and  has  the  'Q' syndrome (the second 'parity=
+' block
+              used by RAID6) on the last device.  These layouts are: le=
+ft-sym=E2=80=90
+              metric-6,  right-symmetric-6,  left-asymmetric-6, right-a=
+symmet=E2=80=90
+              ric-6, and parity-first-6.
+Regardless, attempting to use any of these layouts were countered with
+ "that parity mode isn't available for that level raid." or something s=
+imilar.
+
+It was much 'easier' to compile the latest mdadm and use --replace
+(Thanks Mikael):
+  apt-get install git
+  git clone git://neil.brown.name/mdadm
+  make install
+  mdadm --add /dev/md5 /dev/sdX
+  mdadm --replace /dev/md5 /dev/sdY
+
+Recovery has been the same >100MB/sec and it is reading from one disk
+'Y', writing to another 'X' without a full resync
+
+Thanks again everyone your awesome ideas!
+
+Now, time to see how many of these Linux raid options exist in my new
+Lenovo/Iomega ix4 NAS unit.
+http://www.amazon.com/s/ref=3Dnb_sb_noss?url=3Dsearch-alias%3Daps&field=
+-keywords=3Dlenovo%20ix4
+Apparently it runs a flavor of Debian for ARM.  I suspect I'll be
+cross compiling some modern versions of our favorite tool :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
