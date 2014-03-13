@@ -1,59 +1,68 @@
-From: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>
-Subject: AW: QNAP 8 port RAID5 md0 recovery of missing MBR and md superblocks
-Date: Thu, 13 Mar 2014 10:43:22 +0000
-Message-ID: <A2EC67620EC7424F9EC3DD49243E9060466FB311@AUDIINSX0328.audi.vwg>
-References: <52CBF747.7020505@epos-cat.de>
- <A2EC67620EC7424F9EC3DD49243E9060466DC09B@AUDIINSX0328.audi.vwg>
- <A2EC67620EC7424F9EC3DD49243E9060466EC018@AUDIINSX0328.audi.vwg>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Growing RAID5 SSD Array
+Date: Thu, 13 Mar 2014 06:58:04 -0500
+Message-ID: <53219D4C.2020207@hardwarefreak.com>
+References: <53211C9D.8050607@websitemanagers.com.au>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A2EC67620EC7424F9EC3DD49243E9060466EC018@AUDIINSX0328.audi.vwg>
-Content-Language: de-DE
+In-Reply-To: <53211C9D.8050607@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Samer, Michael (I/ET-83, extern)" <extern.michael.samer@audi.de>, "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>
-Cc: "'philip@turmel.org'" <philip@turmel.org>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings to all
+On 3/12/2014 9:49 PM, Adam Goryachev wrote:
+...
+>     Number   Major   Minor   RaidDevice State
+>        7       8       33        0      active sync   /dev/sdc1
+>        6       8        1        1      active sync   /dev/sda1
+>        8       8       49        2      active sync   /dev/sdd1
+>        5       8       81        3      active sync   /dev/sdf1
+>        9       8       65        4      active sync   /dev/sde1
+...
+> /dev/sda	Total_LBAs_Written	845235
+> /dev/sdc	Total_LBAs_Written      851335
+> /dev/sdd	Total_LBAs_Written      804564
+> /dev/sde	Total_LBAs_Written	719767
+> /dev/sdf	Total_LBAs_Written      719982
+...
+> So the drive with the highest writes 851335 and the drive with the
+> lowest writes 719982 show a big difference. Perhaps I have a problem
+> with the setup/config of my array, or similar?
 
-Phil solved my problem with his help
+This is normal for striped arrays.  If we reorder your write statistics
+table to reflect array device order, we can clearly see the effect of
+partial stripe writes.  These are new file allocations, appends, etc
+that are smaller than stripe width.  Totally normal.  To get these close
+to equal you'd need a chunk size of 16K or smaller.
 
-A bit diffusing was the problem of my partedMagic different /dev/sdx sorting:
+> /dev/sdc	Total_LBAs_Written      851335
+> /dev/sda	Total_LBAs_Written	845235
+> /dev/sdd	Total_LBAs_Written      804564
+> /dev/sde	Total_LBAs_Written	719767
+> /dev/sdf	Total_LBAs_Written      719982
 
-QNAP Original: 
-sda=ZXT
-sdb=S13
-sdc=P3E
-sdd=ZB6
-sde=GJN
-sdf=PSN
-sdg=WD
-sdh=1NH
+> So, I could simply do the following:
+> mdadm --manage /dev/md1 --add /dev/sdb1
+> mdadm --grow /dev/md1 --raid-devices=6
+> 
+> Probably also need to remove the bitmap and re-add the bitmap.
 
+Might want to do
 
-Parted Order=rebuildversion:
-sda=ZB6
-sdb=P3E
-sdc=S13
-sdd=ZXT
-sde=GJN
-sdf=PSN
-sdg=WD
-sdh=1NH
+~$ echo 250000 > /proc/sys/dev/raid/speed_limit_min
+~$ echo 500000 > /proc/sys/dev/raid/speed_limit_min
 
-so:
-mdadm --create --assume-clean --verbose /dev/md0 --chunk=64 --metadata=0.9 --level=5 --raid-devices=8 /dev/sdd3 missing /dev/sd{b,a,e,f,g,h}3
+That'll bump min resync to 250 MB/s per drive, max 500 MB/s.  IIRC the
+defaults are 1 MB/s and 100 MB/s.
 
-mdadm --assemble /dev/md0 --uuid=30358eff:ac9e6122:004291dc:e0ebbc5e
+> Can anyone suggest if what I am seeing is "normal", and should I just go
+> ahead and add the extra disk?
 
-mdadm --detail --scan >> /etc/mdadm.conf
+Don't see why not.  You might want to stop drbd first.
 
-dd /dev/md0 /BACKUP/Pallmert.bin
+-- 
+Stan
 
-worked and did the job and is currently saving the image for further inspection.
-
-Thanks a lot!
-
-Michael
