@@ -1,66 +1,36 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid6 - data integrity issue - data mis-compare on rebuilding
- RAID 6 - with 100 Mb resync speed.
-Date: Thu, 13 Mar 2014 17:19:02 +1100
-Message-ID: <20140313171902.2a767027@notabene.brown>
-References: <13688C12F44C7C428726663F950CA253094ADEC6@venus.in.megatrends.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Replace RAID devices without resorting to degraded mode?
+Date: Thu, 13 Mar 2014 10:27:08 +0100
+Message-ID: <532179EC.7070206@hesbynett.no>
+References: <CAK_KU4ZfsCOyZxgkxLC7AFOJ2XEvcHi-Gr7itv4q_pPOQbaAYA@mail.gmail.com>	<53202503.10901@hesbynett.no>	<CAE6VuKFxqRET=tQoSvbHFd7iiKeXBPJZTBUgTTwMpzOnrPEmbg@mail.gmail.com>	<532056EB.2080206@hesbynett.no> <20140313101833.7fccbabe@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8T89ykSf9hKvC0yIil=Kj_t"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <13688C12F44C7C428726663F950CA253094ADEC6@venus.in.megatrends.com>
+In-Reply-To: <20140313101833.7fccbabe@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Manibalan P <pmanibalan@amiindia.co.in>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Raul Dias <raul@dias.com.br>, Scott D'Vileskis <sdvileskis@gmail.com>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/8T89ykSf9hKvC0yIil=Kj_t
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 13/03/14 00:18, NeilBrown wrote:
+> On Wed, 12 Mar 2014 13:45:31 +0100 David Brown <david.brown@hesbynett.no>
+> wrote:
+> 
+>> So for raid1, you would add a new mirror device, making a 3-way mirror
+>> instead of a 2-way one (I don't know off-hand if md raid allows this
+>> re-shape).
+> 
+> It sure does. raid1 can be 1-way, 2-way, 3-way, 4-way ..... and "mdadm
+> --grow" can easily switch between them.
+> 
 
-On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P" <pmanibalan@amiindia.co.in>
-wrote:
-
-> >
-> >Was the array fully synced before you started the test?
->=20
-> Yes , IO is started, only after the re-sync is completed.
->  And to add more info,
->              I am facing this mis-compare only with high resync speed
-> (30M to 100M), I ran the same test with resync speed min -10M and max -
-> 30M, without any issue. So the  issue has relationship with
-> sync_speed_max / min.
-
-So presumably it is an interaction between recovery and IO.  Maybe if we
-write to a stripe that is being recoverred, or recover a stripe that is bei=
-ng
-written to, then something gets confused.
-
-I'll have a look to see what I can find.
+I thought that was the case, but I didn't want to promise anything
+without checking.
 
 Thanks,
-NeilBrown
 
---Sig_/8T89ykSf9hKvC0yIil=Kj_t
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+David
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBUyFN1jnsnt1WYoG5AQKSNg//Q4CfeIPKaANj/Vk+Fvd4n9SFt6yM4N2x
-Dr+CTvLCbiUllbbJ7qnPXoKi6RnEBXkej4abRrfaRtY4X0cT5KZIvKjTlRdFsRG6
-o/6/bF888mze0pJ97jj9HHaCxgL4Rfzzl4QHbFJQpAPkBu2TNHUo525kPN2a9Yrc
-ZjosVooxP3JBbL9fUgIPvownkuK8ogs5j+atkl+08S9Q1YtTqMXVC1i2GrVdHp+U
-vPHc6NUkLbmQRKBCbkfrfFbAH6iS/HLtDSsZZKrMtSqwdAd7GjeEFf9ot+FjkVyb
-RGGp8Jpy+ofFIurrylPsydNpWa1Bx45mQojrEM8gkcxudGrJ8Bdz3oKo4acF6RBn
-ub3aPgXkROqHKyJ82Jrf2+U/isI2Ptm+q2pTbZGjdt7lbSKYW8ebUBYUX5a6B7qt
-EBvJaBmdxmSUwwh9GDCAxhSc+aDsWCx9+1NXwaknQPQWE785k9oM6fv5N+e3f5hS
-3QC+pVA4kDsTka/tZZqvx/sUpWoIh6UOI6r3H0iUkqzQM0FxJBwCH3+QHUYF0ndl
-5Hx/I8hfXtqd3vus5x68ylXovm9lYUKxYvDIAcO/0KmGbJCKcYcISs+4qlfJyfu+
-GzCsCSKFGkSmJ1W+S9y4Cy7/VPmhsTVeBfmuVJ7KrkecxcaTG3bgFugFTSidDvzw
-xF7FoR/pn/E=
-=9Xy2
------END PGP SIGNATURE-----
 
---Sig_/8T89ykSf9hKvC0yIil=Kj_t--
