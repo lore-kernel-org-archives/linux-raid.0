@@ -1,50 +1,39 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mapping disk sectors to files
-Date: Fri, 14 Mar 2014 08:13:05 -0400
-Message-ID: <5322F251.2080600@turmel.org>
-References: <00000144bf42b0b6-2fe18839-c08d-4c8a-a358-a68135c6d340-000000@email.amazonses.com>
+From: "Scott D'Vileskis" <sdvileskis@gmail.com>
+Subject: Raid stalls during --replace and other disk activity...
+Date: Sat, 15 Mar 2014 00:28:44 -0400
+Message-ID: <CAK_KU4bEFkydyqJfrUWNoq9R7AxVwPU29Kyzp+5mn=tmf7GgHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <00000144bf42b0b6-2fe18839-c08d-4c8a-a358-a68135c6d340-000000@email.amazonses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thorsten von Eicken <tve@voneicken.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning Thorsten,
+I have a 4 disk RAID5.  I added a spare disk and am in the process of
+--replace[ing] a disk in the array.
 
-On 03/14/2014 02:23 AM, Thorsten von Eicken wrote:
-> I've just had a disk in a raid1 mirror set die and that exposed some bad
-> block on the remaining drive -- ooops! I'd now like to map the bad
-> blocks to files so I can restore the affected files from backups, but I
-> can't figure out the mapping. What I've done:
+~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0]
+[raid1] [raid10]
+md5 : active raid5 sde1[4](R) sda1[1] sdb1[7] sdd1[8] sdf1[0]
+      4395302400 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+      [==============>......]  recovery = 71.7%
+(1051281152/1465100800) finish=334.3min speed=20628K/sec
 
-[trim /]
+I am replacing /dev/sdf with /dev/sde. This WAS running at about 120MB/second.
 
-> The GPT is:
-> Disk /dev/sda: 3907029168 sectors, 1.8 TiB
+However, when I started a format of an unrelated partition on
+/dev/sda, the RAID 'recovery' disk-replacement completely stopped. I
+suspect the RAID rebuild mechanism is pausing because of the activity
+on /dev/sda.
 
->    3          935936      3907029134   1.8 TiB     FD00  Linux RAID
+I monkeyed with
+echo 90000 > speed_limit_min
+and now I get 10 second bursts of 20-100MB/sec every 30 seconds or so,
+so at least the jobs will finish in parallel..
 
-> The md device says:
-> # mdadm --examine /dev/sda3
-> /dev/sda3:
->           Magic : a92b4efc
->         Version : 1.2
+I feel the RAID --replace option should only concern itself with the
+two disks involved not get caught up because of activity on another
+disk. Is this a bug?
 
->      Raid Level : raid1
-> 
->     Data Offset : 2048 sectors
-
-These key pieces of info tell you that the blocks in /dev/md0 start at
-sector 2048 in /dev/sda3, which itself starts at sector 935936 of the
-disk as a whole.  As a raid1, the blocks are 1:1 linear from there.
-
-So all you've missed in your calculations is the 2048 sector offset of
-the md data area.  Add that to your partition start value and you'll be
-golden.
-
-HTH,
-
-Phil
+Thoughts?
