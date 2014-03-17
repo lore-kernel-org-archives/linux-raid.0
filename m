@@ -1,180 +1,165 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: Recent 3.x kernels: Memory leak causing OOMs
-Date: Mon, 17 Mar 2014 08:51:06 +0000
-Message-ID: <20140317085105.GZ21483@n2100.arm.linux.org.uk>
-References: <20140216200503.GN30257@n2100.arm.linux.org.uk> <alpine.DEB.2.02.1402161406120.26926@chino.kir.corp.google.com> <20140216225000.GO30257@n2100.arm.linux.org.uk> <1392670951.24429.10.camel@sakura.staff.proxad.net> <20140217210954.GA21483@n2100.arm.linux.org.uk> <20140315101952.GT21483@n2100.arm.linux.org.uk> <20140317180748.644d30e2@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ralph Mueck <linux-kernel@rmueck.de>
+Subject: [PATCH] md: Fixed issue in raid1 that may lead to data corruption
+Date: Mon, 17 Mar 2014 14:22:24 +0100
+Message-ID: <1395062544-11321-1-git-send-email-linux-kernel@rmueck.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140317180748.644d30e2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Maxime Bizon <mbizon@freebox.fr>, linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org, David Rientjes <rientjes@google.com>
+To: linux-kernel@rmueck.de
+Cc: i4passt@lists.cs.fau.de, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Matthias Oefelein <ma.oefelein@arcor.de>
 List-Id: linux-raid.ids
 
-On Mon, Mar 17, 2014 at 06:07:48PM +1100, NeilBrown wrote:
-> On Sat, 15 Mar 2014 10:19:52 +0000 Russell King - ARM Linux
-> <linux@arm.linux.org.uk> wrote:
-> 
-> > On Mon, Feb 17, 2014 at 09:09:54PM +0000, Russell King - ARM Linux wrote:
-> > > On Mon, Feb 17, 2014 at 10:02:31PM +0100, Maxime Bizon wrote:
-> > > > 
-> > > > On Sun, 2014-02-16 at 22:50 +0000, Russell King - ARM Linux wrote:
-> > > > 
-> > > > > http://www.home.arm.linux.org.uk/~rmk/misc/log-20140208.txt
-> > > > 
-> > > > [<c0064ce0>] (__alloc_pages_nodemask+0x0/0x694) from [<c022273c>] (sk_page_frag_refill+0x78/0x108)
-> > > > [<c02226c4>] (sk_page_frag_refill+0x0/0x108) from [<c026a3a4>] (tcp_sendmsg+0x654/0xd1c)  r6:00000520 r5:c277bae0 r4:c68f37c0
-> > > > [<c0269d50>] (tcp_sendmsg+0x0/0xd1c) from [<c028ca9c>] (inet_sendmsg+0x64/0x70)
-> > > > 
-> > > > FWIW I had OOMs with the exact same backtrace on kirkwood platform
-> > > > (512MB RAM), but sorry I don't have the full dump anymore.
-> > > > 
-> > > > I found a slow leaking process, and since I fixed that leak I now have
-> > > > uptime better than 7 days, *but* there was definitely some memory left
-> > > > when the OOM happened, so it appears to be related to fragmentation.
-> > > 
-> > > However, that's a side effect, not the cause - and a patch has been
-> > > merged to fix that OOM - but that doesn't explain where most of the
-> > > memory has gone!
-> > > 
-> > > I'm presently waiting for the machine to OOM again (it's probably going
-> > > to be something like another month) at which point I'll grab the files
-> > > people have been mentioning (/proc/meminfo, /proc/vmallocinfo,
-> > > /proc/slabinfo etc.)
-> > 
-> > For those new to this report, this is a 3.12.6+ kernel, and I'm seeing
-> > OOMs after a month or two of uptime.
-> > 
-> > Last night, it OOM'd severely again at around 5am... and rebooted soon
-> > after so we've lost any hope of recovering anything useful from the
-> > machine.
-> > 
-> > However, the new kernel re-ran the raid check, and...
-> > 
-> > md: data-check of RAID array md2
-> > md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> > for data-check.
-> > md: using 128k window, over a total of 4194688k.
-> > md: delaying data-check of md3 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md4 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md3 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md5 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md3 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md4 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md6 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md4 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md3 until md2 has finished (they share one or more physical units)
-> > md: delaying data-check of md5 until md2 has finished (they share one or more physical units)
-> > md: md2: data-check done.
-> > md: delaying data-check of md5 until md3 has finished (they share one or more physical units)
-> > md: data-check of RAID array md3
-> > md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> > for data-check.
-> > md: using 128k window, over a total of 524544k.
-> > md: delaying data-check of md4 until md3 has finished (they share one or more physical units)
-> > md: delaying data-check of md6 until md3 has finished (they share one or more physical units)
-> > kmemleak: 836 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > md: md3: data-check done.
-> > md: delaying data-check of md6 until md4 has finished (they share one or more physical units)
-> > md: delaying data-check of md4 until md5 has finished (they share one or more physical units)
-> > md: data-check of RAID array md5
-> > md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> > for data-check.
-> > md: using 128k window, over a total of 10486080k.
-> > kmemleak: 2235 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > md: md5: data-check done.
-> > md: data-check of RAID array md4
-> > md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> > for data-check.
-> > md: using 128k window, over a total of 10486080k.
-> > md: delaying data-check of md6 until md4 has finished (they share one or more physical units)
-> > kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > md: md4: data-check done.
-> > md: data-check of RAID array md6
-> > md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> > for data-check.
-> > md: using 128k window, over a total of 10409472k.
-> > kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > kmemleak: 3 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > md: md6: data-check done.
-> > kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
-> > 
-> > which totals 3077 of leaks.  So we have a memory leak.  Looking at
-> > the kmemleak file:
-> > 
-> > unreferenced object 0xc3c3f880 (size 256):
-> >   comm "md2_resync", pid 4680, jiffies 638245 (age 8615.570s)
-> >   hex dump (first 32 bytes):
-> >     00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 f0  ................
-> >     00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00  ................
-> >   backtrace:
-> >     [<c008d4f0>] __save_stack_trace+0x34/0x40
-> >     [<c008d5f0>] create_object+0xf4/0x214
-> >     [<c02da114>] kmemleak_alloc+0x3c/0x6c
-> >     [<c008c0d4>] __kmalloc+0xd0/0x124
-> >     [<c00bb124>] bio_alloc_bioset+0x4c/0x1a4
-> >     [<c021206c>] r1buf_pool_alloc+0x40/0x148
-> >     [<c0061160>] mempool_alloc+0x54/0xfc
-> >     [<c0211938>] sync_request+0x168/0x85c
-> >     [<c021addc>] md_do_sync+0x75c/0xbc0
-> >     [<c021b594>] md_thread+0x138/0x154
-> >     [<c0037b48>] kthread+0xb0/0xbc
-> >     [<c0013190>] ret_from_fork+0x14/0x24
-> >     [<ffffffff>] 0xffffffff
-> > 
-> > with 3077 of these in the debug file.  3075 are for "md2_resync" and
-> > two are for "md4_resync".
-> > 
-> > /proc/slabinfo shows for this bucket:
-> > kmalloc-256         3237   3450    256   15    1 : tunables  120   60    0 : slabdata    230    230      0
-> > 
-> > but this would only account for about 800kB of memory usage, which itself
-> > is insignificant - so this is not the whole story.
-> > 
-> > It seems that this is the culpret for the allocations:
-> >         for (j = pi->raid_disks ; j-- ; ) {
-> >                 bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
-> > 
-> > Since RESYNC_PAGES will be 64K/4K=16, each struct bio_vec is 12 bytes
-> > (12 * 16 = 192) plus the size of struct bio, which would fall into this
-> > bucket.
-> > 
-> > I don't see anything obvious - it looks like it isn't every raid check
-> > which loses bios.  Not quite sure what to make of this right now.
-> > 
-> 
-> I can't see anything obvious either.
-> 
-> The bios allocated there are stored in a r1_bio and those pointers are never
-> changed.
-> If the r1_bio wasn't freed then when the data-check finished, mempool_destroy
-> would complain that the pool wasn't completely freed.
-> And when the r1_bio is freed, all the bios are put as well.
-> 
-> I guess if something was calling bio_get() on the bio, then might stop the
-> bio_put from freeing the memory, but I cannot see anything that would do that.
-> 
-> I've tried testing on a recent mainline kernel and while kmemleak shows about
-> 238 leaks from "swapper/0", there are none related to md or bios.
-> 
-> I'll let it run a while longer and see if anything pops.
+If data gets damaged on a disk that is part of a RAID-1 array, it is
+possible that the damaged data is mirrored to the other disks of the
+array.
+In the case of a two-disk array this behavior cannot be avoided as there
+is no reference which disk contains the intact data.
+However, in a configuration with three or more disks it is possible to
+compare the data of all array members to find out which version is
+probably the right one to clone on all members.
+The patch adds this functionality by adding a mechanism that chooses the
+disk with the fewest mismatches.
 
-I think the interesting detail from the above is that seems a little random
-- which suggests some kind of race maybe.  There are three 10G partitions,
-but only one of those leaks two BIOs, but a 4G partition leaked 3075 BIOs.
-md2 is /usr and md4 is /home.  Maybe it's related to other IO happening
-during the check?
+Signed-off-by: Ralph Mueck <linux-kernel@rmueck.de>
+Signed-off-by: Matthias Oefelein <ma.oefelein@arcor.de>
 
-The underlying devices for all the raid1s are PATA (IT821x) using the ata
-driver.
+---
+ drivers/md/raid1.c | 109 +++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 73 insertions(+), 36 deletions(-)
 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 4a6ca1c..645a6e1 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1947,6 +1947,12 @@ static int process_checks(struct r1bio *r1_bio)
+ 	int primary;
+ 	int i;
+ 	int vcnt;
++	/* Each time a read block from a device differs from its
++	 * pendant on the other device, its mismatch counter is incremented.
++	 */
++	int mismatch_counter[conf->raid_disks * 2];
++	/* "pointer" to the disk with fewest mismatches */
++	int min_mismatch_disk = -1;
+ 
+ 	/* Fix variable parts of all bios */
+ 	vcnt = (r1_bio->sectors + PAGE_SIZE / 512 - 1) >> (PAGE_SHIFT - 9);
+@@ -1982,49 +1988,80 @@ static int process_checks(struct r1bio *r1_bio)
+ 			size -= PAGE_SIZE;
+ 		}
+ 	}
+-	for (primary = 0; primary < conf->raid_disks * 2; primary++)
+-		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
+-		    test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags)) {
+-			r1_bio->bios[primary]->bi_end_io = NULL;
+-			rdev_dec_pending(conf->mirrors[primary].rdev, mddev);
+-			break;
+-		}
+-	r1_bio->read_disk = primary;
+-	for (i = 0; i < conf->raid_disks * 2; i++) {
+-		int j;
+-		struct bio *pbio = r1_bio->bios[primary];
+-		struct bio *sbio = r1_bio->bios[i];
+-		int uptodate = test_bit(BIO_UPTODATE, &sbio->bi_flags);
+ 
+-		if (sbio->bi_end_io != end_sync_read)
++	for (primary = 0; primary < conf->raid_disks * 2; primary++) {
++		if (r1_bio->bios[primary]->bi_end_io != end_sync_read ||
++		    !test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags)) {
++			/* ignore this disk for comparison */
++			mismatch_counter[primary] = -1;
+ 			continue;
+-		/* Now we can 'fixup' the BIO_UPTODATE flag */
+-		set_bit(BIO_UPTODATE, &sbio->bi_flags);
+-
+-		if (uptodate) {
+-			for (j = vcnt; j-- ; ) {
+-				struct page *p, *s;
+-				p = pbio->bi_io_vec[j].bv_page;
+-				s = sbio->bi_io_vec[j].bv_page;
+-				if (memcmp(page_address(p),
+-					   page_address(s),
+-					   sbio->bi_io_vec[j].bv_len))
+-					break;
++		}
++		mismatch_counter[primary] = 0;
++		for (i = 0; i < conf->raid_disks * 2; i++) {
++			int j;
++			struct bio *pbio = r1_bio->bios[primary];
++			struct bio *sbio = r1_bio->bios[i];
++			int uptodate = test_bit(BIO_UPTODATE, &sbio->bi_flags);
++
++			if (sbio->bi_end_io != end_sync_read)
++				continue;
++			/* Now we can 'fixup' the BIO_UPTODATE flag */
++			set_bit(BIO_UPTODATE, &sbio->bi_flags);
++
++			if (uptodate) {
++				for (j = vcnt; j-- ; ) {
++					struct page *p, *s;
++					p = pbio->bi_io_vec[j].bv_page;
++					s = sbio->bi_io_vec[j].bv_page;
++					if (memcmp(page_address(p),
++						  page_address(s),
++						  sbio->bi_io_vec[j].bv_len))
++						++mismatch_counter[primary];
++				}
+ 			}
+-		} else
+-			j = 0;
+-		if (j >= 0)
+-			atomic64_add(r1_bio->sectors, &mddev->resync_mismatches);
+-		if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
+-			      && uptodate)) {
++			if (mismatch_counter[primary] > 0)
++				atomic64_add(r1_bio->sectors, &mddev->resync_mismatches);
++			if (!mismatch_counter[primary]
++			    || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
++				&& uptodate)) {
++				mismatch_counter[primary] = 0;
++			}
++		}
++
++		if (min_mismatch_disk == -1) {
++			min_mismatch_disk = primary;
++		} else {
++			if (mismatch_counter[primary] < mismatch_counter[min_mismatch_disk])
++				min_mismatch_disk = primary;
++		}
++	}
++	r1_bio->read_disk = min_mismatch_disk;
++	/* We have compared everything now. */
++
++	/* If mismatches occured, we try to fix them now */
++	for (primary = 0; primary < conf->raid_disks * 2; primary++) {
++		int uptodate = test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags);
++		struct bio *destination = r1_bio->bios[primary];
++		struct bio *source = r1_bio->bios[min_mismatch_disk];
++		/* take only valid disks */
++		if (mismatch_counter[primary] == -1
++		    || primary == min_mismatch_disk)
++			continue;
++
++		if (mismatch_counter[primary] == 0
++		    || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
++			&& uptodate)) {
+ 			/* No need to write to this device. */
+-			sbio->bi_end_io = NULL;
+-			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
++			r1_bio->bios[primary]->bi_end_io = NULL;
++			rdev_dec_pending(conf->mirrors[primary].rdev, mddev);
+ 			continue;
+ 		}
+-
+-		bio_copy_data(sbio, pbio);
++		/* Write the data from min_mismatch_disk to primary,
++		 * as the data in primary is probably corrupted
++		 */
++		bio_copy_data(destination, source);
+ 	}
++
+ 	return 0;
+ }
+ 
 -- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+1.8.3.2
+
