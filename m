@@ -1,296 +1,235 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Growing RAID5 SSD Array
-Date: Mon, 17 Mar 2014 16:43:35 +1100
-Message-ID: <53268B87.4060203@websitemanagers.com.au>
-References: <53211C9D.8050607@websitemanagers.com.au> <53219D4C.2020207@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Recent 3.x kernels: Memory leak causing OOMs
+Date: Mon, 17 Mar 2014 18:07:48 +1100
+Message-ID: <20140317180748.644d30e2@notabene.brown>
+References: <20140216200503.GN30257@n2100.arm.linux.org.uk>
+	<alpine.DEB.2.02.1402161406120.26926@chino.kir.corp.google.com>
+	<20140216225000.GO30257@n2100.arm.linux.org.uk>
+	<1392670951.24429.10.camel@sakura.staff.proxad.net>
+	<20140217210954.GA21483@n2100.arm.linux.org.uk>
+	<20140315101952.GT21483@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53219D4C.2020207@hardwarefreak.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/7zuIflDmIm228PLb2DxONT4"; protocol="application/pgp-signature"
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140315101952.GT21483@n2100.arm.linux.org.uk>
+Sender: owner-linux-mm@kvack.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: linux-raid@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Maxime Bizon <mbizon@freebox.fr>, linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org, David Rientjes <rientjes@google.com>
 List-Id: linux-raid.ids
 
-On 13/03/14 22:58, Stan Hoeppner wrote:
-> On 3/12/2014 9:49 PM, Adam Goryachev wrote:
-> ...
->>      Number   Major   Minor   RaidDevice State
->>         7       8       33        0      active sync   /dev/sdc1
->>         6       8        1        1      active sync   /dev/sda1
->>         8       8       49        2      active sync   /dev/sdd1
->>         5       8       81        3      active sync   /dev/sdf1
->>         9       8       65        4      active sync   /dev/sde1
-> ...
->> /dev/sda	Total_LBAs_Written	845235
->> /dev/sdc	Total_LBAs_Written      851335
->> /dev/sdd	Total_LBAs_Written      804564
->> /dev/sde	Total_LBAs_Written	719767
->> /dev/sdf	Total_LBAs_Written      719982
-> ...
->> So the drive with the highest writes 851335 and the drive with the
->> lowest writes 719982 show a big difference. Perhaps I have a problem
->> with the setup/config of my array, or similar?
-> This is normal for striped arrays.  If we reorder your write statistics
-> table to reflect array device order, we can clearly see the effect of
-> partial stripe writes.  These are new file allocations, appends, etc
-> that are smaller than stripe width.  Totally normal.  To get these close
-> to equal you'd need a chunk size of 16K or smaller.
+--Sig_/7zuIflDmIm228PLb2DxONT4
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Would that have a material impact on performance?
-While current wear stats (Media Wearout Indicator) are all 98 or higher, 
-at some point, would it be reasonable to fail the drive with the lowest 
-write count, and then use it to replace the drive with the highest write 
-count, repeating twice, so that over the next period of time usage 
-should merge toward the average? Given the current wear rate, will 
-probably replace all the drives in 5 years, which is well before they 
-reach 50% wear anyway.
+On Sat, 15 Mar 2014 10:19:52 +0000 Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
 
->> So, I could simply do the following:
->> mdadm --manage /dev/md1 --add /dev/sdb1
->> mdadm --grow /dev/md1 --raid-devices=6
->>
->> Probably also need to remove the bitmap and re-add the bitmap.
-> Might want to do
->
-> ~$ echo 250000 > /proc/sys/dev/raid/speed_limit_min
-> ~$ echo 500000 > /proc/sys/dev/raid/speed_limit_min
->
-> That'll bump min resync to 250 MB/s per drive, max 500 MB/s.  IIRC the
-> defaults are 1 MB/s and 100 MB/s.
+> On Mon, Feb 17, 2014 at 09:09:54PM +0000, Russell King - ARM Linux wrote:
+> > On Mon, Feb 17, 2014 at 10:02:31PM +0100, Maxime Bizon wrote:
+> > >=20
+> > > On Sun, 2014-02-16 at 22:50 +0000, Russell King - ARM Linux wrote:
+> > >=20
+> > > > http://www.home.arm.linux.org.uk/~rmk/misc/log-20140208.txt
+> > >=20
+> > > [<c0064ce0>] (__alloc_pages_nodemask+0x0/0x694) from [<c022273c>] (sk=
+_page_frag_refill+0x78/0x108)
+> > > [<c02226c4>] (sk_page_frag_refill+0x0/0x108) from [<c026a3a4>] (tcp_s=
+endmsg+0x654/0xd1c)  r6:00000520 r5:c277bae0 r4:c68f37c0
+> > > [<c0269d50>] (tcp_sendmsg+0x0/0xd1c) from [<c028ca9c>] (inet_sendmsg+=
+0x64/0x70)
+> > >=20
+> > > FWIW I had OOMs with the exact same backtrace on kirkwood platform
+> > > (512MB RAM), but sorry I don't have the full dump anymore.
+> > >=20
+> > > I found a slow leaking process, and since I fixed that leak I now have
+> > > uptime better than 7 days, *but* there was definitely some memory left
+> > > when the OOM happened, so it appears to be related to fragmentation.
+> >=20
+> > However, that's a side effect, not the cause - and a patch has been
+> > merged to fix that OOM - but that doesn't explain where most of the
+> > memory has gone!
+> >=20
+> > I'm presently waiting for the machine to OOM again (it's probably going
+> > to be something like another month) at which point I'll grab the files
+> > people have been mentioning (/proc/meminfo, /proc/vmallocinfo,
+> > /proc/slabinfo etc.)
+>=20
+> For those new to this report, this is a 3.12.6+ kernel, and I'm seeing
+> OOMs after a month or two of uptime.
+>=20
+> Last night, it OOM'd severely again at around 5am... and rebooted soon
+> after so we've lost any hope of recovering anything useful from the
+> machine.
+>=20
+> However, the new kernel re-ran the raid check, and...
+>=20
+> md: data-check of RAID array md2
+> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> md: using maximum available idle IO bandwidth (but not more than 200000 K=
+B/sec)
+> for data-check.
+> md: using 128k window, over a total of 4194688k.
+> md: delaying data-check of md3 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md4 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md3 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md5 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md3 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md4 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md6 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md4 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md3 until md2 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md5 until md2 has finished (they share one or =
+more physical units)
+> md: md2: data-check done.
+> md: delaying data-check of md5 until md3 has finished (they share one or =
+more physical units)
+> md: data-check of RAID array md3
+> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> md: using maximum available idle IO bandwidth (but not more than 200000 K=
+B/sec)
+> for data-check.
+> md: using 128k window, over a total of 524544k.
+> md: delaying data-check of md4 until md3 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md6 until md3 has finished (they share one or =
+more physical units)
+> kmemleak: 836 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> md: md3: data-check done.
+> md: delaying data-check of md6 until md4 has finished (they share one or =
+more physical units)
+> md: delaying data-check of md4 until md5 has finished (they share one or =
+more physical units)
+> md: data-check of RAID array md5
+> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> md: using maximum available idle IO bandwidth (but not more than 200000 K=
+B/sec)
+> for data-check.
+> md: using 128k window, over a total of 10486080k.
+> kmemleak: 2235 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> md: md5: data-check done.
+> md: data-check of RAID array md4
+> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> md: using maximum available idle IO bandwidth (but not more than 200000 K=
+B/sec)
+> for data-check.
+> md: using 128k window, over a total of 10486080k.
+> md: delaying data-check of md6 until md4 has finished (they share one or =
+more physical units)
+> kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> md: md4: data-check done.
+> md: data-check of RAID array md6
+> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> md: using maximum available idle IO bandwidth (but not more than 200000 K=
+B/sec)
+> for data-check.
+> md: using 128k window, over a total of 10409472k.
+> kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> kmemleak: 3 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+> md: md6: data-check done.
+> kmemleak: 1 new suspected memory leaks (see /sys/kernel/debug/kmemleak)
+>=20
+> which totals 3077 of leaks.  So we have a memory leak.  Looking at
+> the kmemleak file:
+>=20
+> unreferenced object 0xc3c3f880 (size 256):
+>   comm "md2_resync", pid 4680, jiffies 638245 (age 8615.570s)
+>   hex dump (first 32 bytes):
+>     00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 f0  ................
+>     00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+>     [<c008d4f0>] __save_stack_trace+0x34/0x40
+>     [<c008d5f0>] create_object+0xf4/0x214
+>     [<c02da114>] kmemleak_alloc+0x3c/0x6c
+>     [<c008c0d4>] __kmalloc+0xd0/0x124
+>     [<c00bb124>] bio_alloc_bioset+0x4c/0x1a4
+>     [<c021206c>] r1buf_pool_alloc+0x40/0x148
+>     [<c0061160>] mempool_alloc+0x54/0xfc
+>     [<c0211938>] sync_request+0x168/0x85c
+>     [<c021addc>] md_do_sync+0x75c/0xbc0
+>     [<c021b594>] md_thread+0x138/0x154
+>     [<c0037b48>] kthread+0xb0/0xbc
+>     [<c0013190>] ret_from_fork+0x14/0x24
+>     [<ffffffff>] 0xffffffff
+>=20
+> with 3077 of these in the debug file.  3075 are for "md2_resync" and
+> two are for "md4_resync".
+>=20
+> /proc/slabinfo shows for this bucket:
+> kmalloc-256         3237   3450    256   15    1 : tunables  120   60    =
+0 : slabdata    230    230      0
+>=20
+> but this would only account for about 800kB of memory usage, which itself
+> is insignificant - so this is not the whole story.
+>=20
+> It seems that this is the culpret for the allocations:
+>         for (j =3D pi->raid_disks ; j-- ; ) {
+>                 bio =3D bio_kmalloc(gfp_flags, RESYNC_PAGES);
+>=20
+> Since RESYNC_PAGES will be 64K/4K=3D16, each struct bio_vec is 12 bytes
+> (12 * 16 =3D 192) plus the size of struct bio, which would fall into this
+> bucket.
+>=20
+> I don't see anything obvious - it looks like it isn't every raid check
+> which loses bios.  Not quite sure what to make of this right now.
+>=20
 
-Worked perfectly on one machine, the second machine hung, and basically 
-crashed. Almost turned into a disaster, but thankfully having two copies 
-over the two machines I managed to get everything sorted. After a 
-reboot, the second machine recovered and it grew the array also.
+I can't see anything obvious either.
 
-Some of the logs from that time:
-Mar 13 23:05:59 san2 kernel: [42511.418380] RAID conf printout:
-Mar 13 23:05:59 san2 kernel: [42511.418385]  --- level:5 rd:6 wd:6
-Mar 13 23:05:59 san2 kernel: [42511.418388]  disk 0, o:1, dev:sdc1
-Mar 13 23:05:59 san2 kernel: [42511.418390]  disk 1, o:1, dev:sde1
-Mar 13 23:05:59 san2 kernel: [42511.418392]  disk 2, o:1, dev:sdd1
-Mar 13 23:05:59 san2 kernel: [42511.418394]  disk 3, o:1, dev:sdf1
-Mar 13 23:05:59 san2 kernel: [42511.418396]  disk 4, o:1, dev:sda1
-Mar 13 23:05:59 san2 kernel: [42511.418399]  disk 5, o:1, dev:sdb1
-Mar 13 23:05:59 san2 kernel: [42511.418444] md: reshape of RAID array md1
-Mar 13 23:05:59 san2 kernel: [42511.418448] md: minimum _guaranteed_  
-speed: 1000 KB/sec/disk.
-Mar 13 23:05:59 san2 kernel: [42511.418451] md: using maximum available 
-idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-Mar 13 23:05:59 san2 kernel: [42511.418493] md: using 128k window, over 
-a total of 468847936k.
-Mar 13 23:06:00 san2 kernel: [42511.512165] md: md_do_sync() got signal 
-... exiting
-Mar 13 23:07:01 san2 kernel: [42573.067781] iscsi_trgt: Abort Task (01) 
-issued on tid:9 lun:0 by sid:8162774362161664 (Function Complete)
-Mar 13 23:07:01 san2 kernel: [42573.067789] iscsi_trgt: Abort Task (01) 
-issued on tid:11 lun:0 by sid:7318349599801856 (Function Complete)
-Mar 13 23:07:01 san2 kernel: [42573.067797] iscsi_trgt: Abort Task (01) 
-issued on tid:12 lun:0 by sid:6473924787110400 (Function Complete)
-Mar 13 23:07:01 san2 kernel: [42573.067838] iscsi_trgt: Abort Task (01) 
-issued on tid:14 lun:0 by sid:5348025014485504 (Function Complete)
-Mar 13 23:07:02 san2 kernel: [42573.237591] iscsi_trgt: Abort Task (01) 
-issued on tid:8 lun:0 by sid:4503599899804160 (Function Complete)
-Mar 13 23:07:02 san2 kernel: [42573.237600] iscsi_trgt: Abort Task (01) 
-issued on tid:2 lun:0 by sid:14918173819994624 (Function Complete)
+The bios allocated there are stored in a r1_bio and those pointers are never
+changed.
+If the r1_bio wasn't freed then when the data-check finished, mempool_destr=
+oy
+would complain that the pool wasn't completely freed.
+And when the r1_bio is freed, all the bios are put as well.
 
-I probably hit CTRL-C causing the "got signal... exiting" because the 
-system wasn't responding. There are a *lot* more iscsi errors and then 
-these:
-Mar 13 23:09:09 san2 kernel: [42700.645060] INFO: task md1_raid5:314 
-blocked for more than 120 seconds.
-Mar 13 23:09:09 san2 kernel: [42700.645087] "echo 0 > 
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Mar 13 23:09:09 san2 kernel: [42700.645117] md1_raid5       D 
-ffff880236833780     0   314      2 0x00000000
-Mar 13 23:09:09 san2 kernel: [42700.645123]  ffff88022fc53690 
-0000000000000046 ffff8801ee330240 ffff88023593e0c0
-Mar 13 23:09:09 san2 kernel: [42700.645128]  0000000000013780 
-ffff88022d859fd8 ffff88022d859fd8 ffff88022fc53690
-Mar 13 23:09:09 san2 kernel: [42700.645133]  ffff8801ee4b85b8 
-ffffffff81071011 0000000000000046 ffff8802307aa000
-Mar 13 23:09:09 san2 kernel: [42700.645138] Call Trace:
-Mar 13 23:09:09 san2 kernel: [42700.645146] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:09:09 san2 kernel: [42700.645160] [<ffffffffa0111c44>] ? 
-check_reshape+0x27b/0x51a [raid456]
-Mar 13 23:09:09 san2 kernel: [42700.645165] [<ffffffff8103f6ba>] ? 
-try_to_wake_up+0x197/0x197
-Mar 13 23:09:09 san2 kernel: [42700.645175] [<ffffffffa0060381>] ? 
-md_check_recovery+0x2a5/0x514 [md_mod]
-Mar 13 23:09:09 san2 kernel: [42700.645181] [<ffffffffa01156fe>] ? 
-raid5d+0x1c/0x483 [raid456]
-Mar 13 23:09:09 san2 kernel: [42700.645187] [<ffffffff8134fdc7>] ? 
-_raw_spin_unlock_irqrestore+0xe/0xf
-Mar 13 23:09:09 san2 kernel: [42700.645192] [<ffffffff8134eedb>] ? 
-schedule_timeout+0x2c/0xdb
-Mar 13 23:09:09 san2 kernel: [42700.645195] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:09:09 san2 kernel: [42700.645199] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:09:09 san2 kernel: [42700.645206] [<ffffffffa005a256>] ? 
-md_thread+0x114/0x132 [md_mod]
-Mar 13 23:09:09 san2 kernel: [42700.645212] [<ffffffff8105fcd3>] ? 
-add_wait_queue+0x3c/0x3c
-Mar 13 23:09:09 san2 kernel: [42700.645219] [<ffffffffa005a142>] ? 
-md_rdev_init+0xea/0xea [md_mod]
-Mar 13 23:09:09 san2 kernel: [42700.645224] [<ffffffff8105f681>] ? 
-kthread+0x76/0x7e
-Mar 13 23:09:09 san2 kernel: [42700.645229] [<ffffffff81356ef4>] ? 
-kernel_thread_helper+0x4/0x10
-Mar 13 23:09:09 san2 kernel: [42700.645234] [<ffffffff8105f60b>] ? 
-kthread_worker_fn+0x139/0x139
-Mar 13 23:09:09 san2 kernel: [42700.645238] [<ffffffff81356ef0>] ? 
-gs_change+0x13/0x13
-Mar 13 23:11:09 san2 kernel: [42820.250905] INFO: task md1_raid5:314 
-blocked for more than 120 seconds.
-Mar 13 23:11:09 san2 kernel: [42820.250932] "echo 0 > 
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Mar 13 23:11:09 san2 kernel: [42820.250961] md1_raid5       D 
-ffff880236833780     0   314      2 0x00000000
-Mar 13 23:11:09 san2 kernel: [42820.250967]  ffff88022fc53690 
-0000000000000046 ffff8801ee330240 ffff88023593e0c0
-Mar 13 23:11:09 san2 kernel: [42820.250973]  0000000000013780 
-ffff88022d859fd8 ffff88022d859fd8 ffff88022fc53690
-Mar 13 23:11:09 san2 kernel: [42820.250978]  ffff8801ee4b85b8 
-ffffffff81071011 0000000000000046 ffff8802307aa000
-Mar 13 23:11:09 san2 kernel: [42820.250982] Call Trace:
-Mar 13 23:11:09 san2 kernel: [42820.250991] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:11:09 san2 kernel: [42820.251004] [<ffffffffa0111c44>] ? 
-check_reshape+0x27b/0x51a [raid456]
-Mar 13 23:11:09 san2 kernel: [42820.251009] [<ffffffff8103f6ba>] ? 
-try_to_wake_up+0x197/0x197
-Mar 13 23:11:09 san2 kernel: [42820.251019] [<ffffffffa0060381>] ? 
-md_check_recovery+0x2a5/0x514 [md_mod]
-Mar 13 23:11:09 san2 kernel: [42820.251025] [<ffffffffa01156fe>] ? 
-raid5d+0x1c/0x483 [raid456]
-Mar 13 23:11:09 san2 kernel: [42820.251031] [<ffffffff8134fdc7>] ? 
-_raw_spin_unlock_irqrestore+0xe/0xf
-Mar 13 23:11:09 san2 kernel: [42820.251035] [<ffffffff8134eedb>] ? 
-schedule_timeout+0x2c/0xdb
-Mar 13 23:11:09 san2 kernel: [42820.251039] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:11:09 san2 kernel: [42820.251043] [<ffffffff81071011>] ? 
-arch_local_irq_save+0x11/0x17
-Mar 13 23:11:09 san2 kernel: [42820.251050] [<ffffffffa005a256>] ? 
-md_thread+0x114/0x132 [md_mod]
-Mar 13 23:11:09 san2 kernel: [42820.251056] [<ffffffff8105fcd3>] ? 
-add_wait_queue+0x3c/0x3c
-Mar 13 23:11:09 san2 kernel: [42820.251063] [<ffffffffa005a142>] ? 
-md_rdev_init+0xea/0xea [md_mod]
-Mar 13 23:11:09 san2 kernel: [42820.251068] [<ffffffff8105f681>] ? 
-kthread+0x76/0x7e
-Mar 13 23:11:09 san2 kernel: [42820.251073] [<ffffffff81356ef4>] ? 
-kernel_thread_helper+0x4/0x10
-Mar 13 23:11:09 san2 kernel: [42820.251078] [<ffffffff8105f60b>] ? 
-kthread_worker_fn+0x139/0x139
-Mar 13 23:11:09 san2 kernel: [42820.251082] [<ffffffff81356ef0>] ? 
-gs_change+0x13/0x13
+I guess if something was calling bio_get() on the bio, then might stop the
+bio_put from freeing the memory, but I cannot see anything that would do th=
+at.
 
-Plus a few more (can provide them if interested), then more iscsi 
-errors, and finally I rebooted the machine:
-Mar 14 00:55:08 san2 kernel: [    4.415215] md/raid:md1: not clean -- 
-starting background reconstruction
-Mar 14 00:55:08 san2 kernel: [    4.415216] md/raid:md1: reshape will 
-continue
-Mar 14 00:55:08 san2 kernel: [    4.415223] md/raid:md1: device sdc1 
-operational as raid disk 0
-Mar 14 00:55:08 san2 kernel: [    4.415225] md/raid:md1: device sdb1 
-operational as raid disk 5
-Mar 14 00:55:08 san2 kernel: [    4.415226] md/raid:md1: device sda1 
-operational as raid disk 4
-Mar 14 00:55:08 san2 kernel: [    4.415227] md/raid:md1: device sdf1 
-operational as raid disk 3
-Mar 14 00:55:08 san2 kernel: [    4.415228] md/raid:md1: device sdd1 
-operational as raid disk 2
-Mar 14 00:55:08 san2 kernel: [    4.415230] md/raid:md1: device sde1 
-operational as raid disk 1
-Mar 14 00:55:08 san2 kernel: [    4.415477] md/raid:md1: allocated 6384kB
-Mar 14 00:55:08 san2 kernel: [    4.415491] md/raid:md1: raid level 5 
-active with 6 out of 6 devices, algorithm 2
-Mar 14 00:55:08 san2 kernel: [    4.415492] RAID conf printout:
-Mar 14 00:55:08 san2 kernel: [    4.415493]  --- level:5 rd:6 wd:6
-Mar 14 00:55:08 san2 kernel: [    4.415494]  disk 0, o:1, dev:sdc1
-Mar 14 00:55:08 san2 kernel: [    4.415495]  disk 1, o:1, dev:sde1
-Mar 14 00:55:08 san2 kernel: [    4.415496]  disk 2, o:1, dev:sdd1
-Mar 14 00:55:08 san2 kernel: [    4.415497]  disk 3, o:1, dev:sdf1
-Mar 14 00:55:08 san2 kernel: [    4.415498]  disk 4, o:1, dev:sda1
-Mar 14 00:55:08 san2 kernel: [    4.415499]  disk 5, o:1, dev:sdb1
-Mar 14 00:55:08 san2 kernel: [    4.415526] md1: detected capacity 
-change from 0 to 1920401145856
-Mar 14 00:55:08 san2 kernel: [    4.416733]  md1: unknown partition table
+I've tried testing on a recent mainline kernel and while kmemleak shows abo=
+ut
+238 leaks from "swapper/0", there are none related to md or bios.
 
-Later after the resync completed I grew the array to make the extra 
-space available:
-Mar 14 01:37:02 san2 kernel: [ 2514.928987] md: md1: reshape done.
-Mar 14 01:37:02 san2 kernel: [ 2514.982394] RAID conf printout:
-Mar 14 01:37:02 san2 kernel: [ 2514.982398]  --- level:5 rd:6 wd:6
-Mar 14 01:37:02 san2 kernel: [ 2514.982402]  disk 0, o:1, dev:sdc1
-Mar 14 01:37:02 san2 kernel: [ 2514.982405]  disk 1, o:1, dev:sde1
-Mar 14 01:37:02 san2 kernel: [ 2514.982407]  disk 2, o:1, dev:sdd1
-Mar 14 01:37:02 san2 kernel: [ 2514.982410]  disk 3, o:1, dev:sdf1
-Mar 14 01:37:02 san2 kernel: [ 2514.982413]  disk 4, o:1, dev:sda1
-Mar 14 01:37:02 san2 kernel: [ 2514.982415]  disk 5, o:1, dev:sdb1
-Mar 14 01:37:02 san2 kernel: [ 2514.982422] md1: detected capacity 
-change from 1920401145856 to 2400501432320
-Mar 14 01:37:02 san2 kernel: [ 2514.993988] md: resync of RAID array md1
-Mar 14 01:37:02 san2 kernel: [ 2514.993992] md: minimum _guaranteed_  
-speed: 300000 KB/sec/disk.
-Mar 14 01:37:02 san2 kernel: [ 2514.993995] md: using maximum available 
-idle IO bandwidth (but not more than 400000 KB/sec) for resync.
-Mar 14 01:37:02 san2 kernel: [ 2514.994041] md: using 128k window, over 
-a total of 468847936k.
-Mar 14 01:55:16 san2 kernel: [ 3605.141839] md: md1: resync done.
-Mar 14 01:55:16 san2 kernel: [ 3605.172547] RAID conf printout:
-Mar 14 01:55:16 san2 kernel: [ 3605.172551]  --- level:5 rd:6 wd:6
-Mar 14 01:55:16 san2 kernel: [ 3605.172554]  disk 0, o:1, dev:sdc1
-Mar 14 01:55:16 san2 kernel: [ 3605.172556]  disk 1, o:1, dev:sde1
-Mar 14 01:55:16 san2 kernel: [ 3605.172558]  disk 2, o:1, dev:sdd1
-Mar 14 01:55:16 san2 kernel: [ 3605.172560]  disk 3, o:1, dev:sdf1
-Mar 14 01:55:16 san2 kernel: [ 3605.172562]  disk 4, o:1, dev:sda1
-Mar 14 01:55:16 san2 kernel: [ 3605.172564]  disk 5, o:1, dev:sdb1
+I'll let it run a while longer and see if anything pops.
 
+NeilBrown
 
-This did lead to another observation.... The speed of the resync seemed 
-limited by something other than disk IO. It was usually around 250 to 
-300MB/s, the maximum achieved was around 420MB/s. I also noticed that 
-idle CPU time on one of the cores was relatively low, though I never saw 
-it hit 0 (minimum I saw was 12% idle, average around 20%).
+--Sig_/7zuIflDmIm228PLb2DxONT4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-So, I'm wondering whether I should consider upgrading the CPU and/or 
-motherboard to try and improve peak performance?
-Currently I have Intel Xeon E3-1230V2/3.3GHz/8MB 
-Cache/4core/8thread/5GTs, my supplier has offered a number of options:
-1) Compatible with current motherboard
-      Intel Xeon E3-1280V2/3.6GHz/8MB Cache/4core/8thread/5GTs
-2)  Intel Xeon E5-2620V2/2.1GHz/15MB Cache/6core/12thread/5GTs
-3)  Intel Xeon E5-2630V2/2.6GHz/15MB Cache/6core/12thread/7.2GTs
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-My understanding is that the RAID5 is single threaded, so will work best 
-with a higher speed single core CPU compared to a larger number of cores 
-at a lower speed. However, I'm not sure how much "work" is being done 
-across the various models. ie, does a E5 CPU do more work even though it 
-has a lower clock speed? Does this carry over to the E7 class as well?
+iQIVAwUBUyafRDnsnt1WYoG5AQLoLBAAhJ1mFPGUH+ZvK+9aZ+tQfPDsN0gDeXA7
+RE/MOsY33e9TWeYBi35p8UbzqlESmMI4v4kLyjnknzUQSKQpI66YC3jchwk+bi29
+8T6e044IhnKf0V25aVJSu3Xyk4EyAWrm1TYz/rf7gFMwoG7DBtWxpKaOiVCTSAkM
+XuQTXViUM3BfmSoGduU7V5QM4NuHQY1zCLTfb0/VpA4tMRosoozXeL1bLKjwHp9n
+eHBBuhz7fgO+ZeMIR5WqF6IPx4JoG1Y/sLamBud+lBTTRjATrCXqjxfnke00glzl
+MEReE3qke0w7u3ckG83QpCivrM8ErLArweid1u9OC1O9vnDX/W+gYmhVdlQh8+Sf
+rqmmQePqvjzLClEou6YR10KntMRDm8ujSrEXHWJc1t1wI/VDgm398DmkhcPWTEx0
+j2kLv4e6L+8Y8Rf5FCwlbsMz2ujXtwSatLFqguCcn2SnS/spnxM76QMPhMhM0z6s
+E7Cl0XdrXoLCxFNY6Nd0xnRYt8ORzvdVjh3WuQb39+CFriLeMtmbudpkEAo4e5Qv
+ntmU1nU/b0+In8PTo6vM0vHbF1eLCREaKS9UOlbJyEmvB91N/tib2bu4gqz1aaCX
+JJJIS58f8cjFpsdrHnZ1NWXgVzE2KACPoWfMmTuXOITHLkZgeXce4Y+OcRmjXBQY
+m56dIlTgNCE=
+=F4dk
+-----END PGP SIGNATURE-----
 
-Currently I'm looking to replace at least the motherboard with 
-http://www.supermicro.com/products/motherboard/Xeon/C202_C204/X9SCM-F.cfm in 
-order to get 2 of the PCIe 2.0 8x slots (one for the existing LSI SATA 
-controller and one for a dual port 10Gb ethernet card. This will provide 
-a 10Gb cross-over connection between the two server, plus replace the 8 
-x 1G ports with a single 10Gb port (solving the load balancing across 
-the multiple links issue). Finally, this 28 port (4 x 10G + 24 x 1G) 
-switch 
-http://www.netgear.com.au/business/products/switches/stackable-smart-switches/GS728TXS.aspx# 
-should allow the 2 x 10G connections to be connected through to the 8 
-servers with 2 x 1G connections each using multipath scsi to setup two 
-connections (one on each 1G port) with the same destination (10G port)
+--Sig_/7zuIflDmIm228PLb2DxONT4--
 
-Any suggestions/comments would be welcome.
-
-Regards,
-Adam
-
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
