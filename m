@@ -1,337 +1,102 @@
-From: Ralph Mueck <linux-kernel@rmueck.de>
-Subject: [PATCH 2/2] md: Add support for RAID-1 consistency check feature
-Date: Mon, 17 Mar 2014 16:00:05 +0100
-Message-ID: <1395068405-13860-3-git-send-email-linux-kernel@rmueck.de>
-References: <1395068405-13860-1-git-send-email-linux-kernel@rmueck.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1395068405-13860-1-git-send-email-linux-kernel@rmueck.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@rmueck.de
-Cc: i4passt@lists.cs.fau.de, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Matthias Oefelein <ma.oefelein@arcor.de>
+From: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: Recent 3.x kernels: Memory leak causing OOMs
+Date: Mon, 17 Mar 2014 18:18:13 +0000
+Message-ID: <20140317181813.GA24144@arm.com>
+References: <20140216200503.GN30257@n2100.arm.linux.org.uk>
+ <alpine.DEB.2.02.1402161406120.26926@chino.kir.corp.google.com>
+ <20140216225000.GO30257@n2100.arm.linux.org.uk>
+ <1392670951.24429.10.camel@sakura.staff.proxad.net>
+ <20140217210954.GA21483@n2100.arm.linux.org.uk>
+ <20140315101952.GT21483@n2100.arm.linux.org.uk>
+ <20140317180748.644d30e2@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140317180748.644d30e2@notabene.brown>
+Sender: owner-linux-mm@kvack.org
+To: NeilBrown <neilb@suse.de>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-raid@vger.kernel.org, linux-mm@kvack.org, David Rientjes <rientjes@google.com>, Maxime Bizon <mbizon@freebox.fr>, Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-raid.ids
 
-This patch introduces a consistency check feature for level-1 RAID
-arrays that have been created with the md driver.
-When enabled, every read request is duplicated and initiated for each
-member of the RAID array. All read blocks are compared with their
-corresponding blocks on the other array members. If the check fails for
-a block, the block is not handed over, but an error code is returned
-instead.
-As mentioned in the cover letter, the implementation still has some 
-unresolved issues.
+On Mon, Mar 17, 2014 at 06:07:48PM +1100, NeilBrown wrote:
+> On Sat, 15 Mar 2014 10:19:52 +0000 Russell King - ARM Linux
+> <linux@arm.linux.org.uk> wrote:
+> > unreferenced object 0xc3c3f880 (size 256):
+> >   comm "md2_resync", pid 4680, jiffies 638245 (age 8615.570s)
+> >   hex dump (first 32 bytes):
+> >     00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 f0  ................
+> >     00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00  ................
+> >   backtrace:
+> >     [<c008d4f0>] __save_stack_trace+0x34/0x40
+> >     [<c008d5f0>] create_object+0xf4/0x214
+> >     [<c02da114>] kmemleak_alloc+0x3c/0x6c
+> >     [<c008c0d4>] __kmalloc+0xd0/0x124
+> >     [<c00bb124>] bio_alloc_bioset+0x4c/0x1a4
+> >     [<c021206c>] r1buf_pool_alloc+0x40/0x148
+> >     [<c0061160>] mempool_alloc+0x54/0xfc
+> >     [<c0211938>] sync_request+0x168/0x85c
+> >     [<c021addc>] md_do_sync+0x75c/0xbc0
+> >     [<c021b594>] md_thread+0x138/0x154
+> >     [<c0037b48>] kthread+0xb0/0xbc
+> >     [<c0013190>] ret_from_fork+0x14/0x24
+> >     [<ffffffff>] 0xffffffff
+> > 
+> > with 3077 of these in the debug file.  3075 are for "md2_resync" and
+> > two are for "md4_resync".
+> > 
+> > /proc/slabinfo shows for this bucket:
+> > kmalloc-256         3237   3450    256   15    1 : tunables  120   60    0 : slabdata    230    230      0
+> > 
+> > but this would only account for about 800kB of memory usage, which itself
+> > is insignificant - so this is not the whole story.
+> > 
+> > It seems that this is the culpret for the allocations:
+> >         for (j = pi->raid_disks ; j-- ; ) {
+> >                 bio = bio_kmalloc(gfp_flags, RESYNC_PAGES);
+> > 
+> > Since RESYNC_PAGES will be 64K/4K=16, each struct bio_vec is 12 bytes
+> > (12 * 16 = 192) plus the size of struct bio, which would fall into this
+> > bucket.
+> > 
+> > I don't see anything obvious - it looks like it isn't every raid check
+> > which loses bios.  Not quite sure what to make of this right now.
+> 
+> I can't see anything obvious either.
+> 
+> The bios allocated there are stored in a r1_bio and those pointers are never
+> changed.
+> If the r1_bio wasn't freed then when the data-check finished, mempool_destroy
+> would complain that the pool wasn't completely freed.
+> And when the r1_bio is freed, all the bios are put as well.
 
-Signed-off-by: Ralph Mueck <linux-kernel@rmueck.de>
-Signed-off-by: Matthias Oefelein <ma.oefelein@arcor.de>
+It could be a false positive, there are areas that kmemleak doesn't scan
+like page allocations and the pointer reference graph it tries to build
+would fail.
 
----
- drivers/md/raid1.c | 252 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 250 insertions(+), 2 deletions(-)
+What's interesting to see is the first few leaks reported as they are
+always reported in the order of allocation. In this case, the
+bio_kmalloc() returned pointer is stored in r1_bio. Is the r1_bio
+reported as a leak as well?
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 4a6ca1c..8c64f9a 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -37,6 +37,7 @@
- #include <linux/module.h>
- #include <linux/seq_file.h>
- #include <linux/ratelimit.h>
-+#include <linux/gfp.h>
- #include "md.h"
- #include "raid1.h"
- #include "bitmap.h"
-@@ -257,6 +258,109 @@ static void call_bio_endio(struct r1bio *r1_bio)
- 	}
- }
- 
-+/* The safe_read version of the raid_end_bio_io() function */
-+/* On a read request, we issue requests to all available disks.
-+ * Data is returned only if all discs contain the same data
-+ */
-+static void safe_read_call_bio_endio(struct r1bio *r1_bio)
-+{
-+	struct bio *bio = r1_bio->master_bio;
-+	int done;
-+	struct r1conf *conf = r1_bio->mddev->private;
-+	sector_t start_next_window = r1_bio->start_next_window;
-+	sector_t bi_sector = bio->bi_iter.bi_sector;
-+	int disk;
-+	struct md_rdev *rdev;
-+	int i;
-+	struct page *dragptr = NULL;
-+	int already_copied = 0;	/* we want to copy the data only once */
-+
-+	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
-+		struct bio *p = NULL;
-+		struct bio *s = NULL;
-+		
-+		rcu_read_lock();
-+		rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		rcu_read_unlock();
-+
-+		if (r1_bio->bios[disk] == IO_BLOCKED
-+			|| rdev == NULL
-+			|| test_bit(Unmerged, &rdev->flags)
-+			|| test_bit(Faulty, &rdev->flags)) {
-+			continue;
-+		}
-+
-+		/* bio_for_each_segment is broken. at least here.. */
-+		/* iterate over linked bios */
-+		for (p = r1_bio->master_bio, s = r1_bio->bios[disk];
-+		     (p != NULL) && (s != NULL);
-+		     p = p->bi_next, s = s->bi_next) {
-+			/* compare the pages read */
-+			for (i = 0; i < r1_bio->bios[disk]->bi_vcnt; i++) {
-+				if (dragptr) { /* dragptr points to the previous page */
-+					if(memcmp(page_address(r1_bio->bios[disk]->bi_io_vec[0].bv_page),
-+						page_address(dragptr),
-+						(r1_bio->bios[disk]->bi_io_vec[0].bv_len))) {
-+						set_bit(R1BIO_ReadError, &r1_bio->state);
-+						clear_bit(R1BIO_Uptodate, &r1_bio->state);
-+					}
-+				}
-+				dragptr = r1_bio->bios[disk]->bi_io_vec[0].bv_page;
-+			}
-+		}
-+	}
-+
-+	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
-+		rcu_read_lock();
-+		rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		rcu_read_unlock();
-+		if (r1_bio->bios[disk] == IO_BLOCKED	//stolen from read_balance - documentation? HA! Look there!
-+			|| rdev == NULL
-+			|| test_bit(Unmerged, &rdev->flags)
-+			|| test_bit(Faulty, &rdev->flags)) {
-+			continue;
-+		}
-+
-+ 		for (i = 0; i < r1_bio->bios[disk]->bi_vcnt; i++) {
-+			if(!already_copied) {
-+				if (r1_bio->bios[disk]->bi_io_vec[i].bv_page) {
-+					memcpy(page_address(r1_bio->master_bio->bi_io_vec[i].bv_page),
-+					       page_address(r1_bio->bios[disk]->bi_io_vec[i].bv_page),
-+					       (r1_bio->bios[disk]->bi_io_vec[i].bv_len));
-+				}
-+			}
-+
-+			put_page(r1_bio->bios[disk]->bi_io_vec[i].bv_page);
-+		}
-+		already_copied = 1;
-+	}
-+
-+	if (bio->bi_phys_segments) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&conf->device_lock, flags);
-+		bio->bi_phys_segments--;
-+		done = (bio->bi_phys_segments == 0);
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
-+		/*
-+		 * make_request() might be waiting for
-+		 * bi_phys_segments to decrease
-+		 */
-+		wake_up(&conf->wait_barrier);
-+	} else
-+		done = 1;
-+
-+	if (!test_bit(R1BIO_Uptodate, &r1_bio->state))
-+		clear_bit(BIO_UPTODATE, &bio->bi_flags);
-+	if (done) {
-+		bio_endio(bio, 0);
-+		/*
-+		 * Wake up any possible resync thread that waits for the device
-+		 * to go idle.
-+		 */
-+		allow_barrier(conf, start_next_window, bi_sector);
-+	}
-+}
-+
- static void raid_end_bio_io(struct r1bio *r1_bio)
- {
- 	struct bio *bio = r1_bio->master_bio;
-@@ -268,8 +372,12 @@ static void raid_end_bio_io(struct r1bio *r1_bio)
- 			 (unsigned long long) bio->bi_iter.bi_sector,
- 			 (unsigned long long) bio_end_sector(bio) - 1);
- 
--		call_bio_endio(r1_bio);
-+		if (r1_bio->mddev->safe_read && bio_data_dir(bio) == READ)
-+			safe_read_call_bio_endio(r1_bio);
-+		else
-+			call_bio_endio(r1_bio);
- 	}
-+
- 	free_r1bio(r1_bio);
- }
- 
-@@ -303,6 +411,14 @@ static int find_bio_disk(struct r1bio *r1_bio, struct bio *bio)
- 	return mirror;
- }
- 
-+static void r1_bio_read_done(struct r1bio *r1_bio)
-+{
-+	if(r1_bio->mddev->safe_read)
-+		if (!atomic_dec_and_test(&r1_bio->remaining))
-+			return;
-+	raid_end_bio_io(r1_bio);
-+}
-+
- static void raid1_end_read_request(struct bio *bio, int error)
- {
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
-@@ -333,7 +449,7 @@ static void raid1_end_read_request(struct bio *bio, int error)
- 	}
- 
- 	if (uptodate) {
--		raid_end_bio_io(r1_bio);
-+		r1_bio_read_done(r1_bio);
- 		rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
- 	} else {
- 		/*
-@@ -1073,6 +1189,133 @@ static void raid1_unplug(struct blk_plug_cb *cb, bool from_schedule)
- 	kfree(plug);
- }
- 
-+/* This function creates a "deep copy" of a bio (own pages, own bvecs) */
-+static struct bio *copy_bio(struct bio *source, struct mddev *mddev) {
-+	struct bio *temp;
-+
-+	temp = bio_clone_mddev(source, GFP_NOIO, mddev);
-+	BUG_ON(!temp);
-+
-+	bio_alloc_pages(temp, GFP_NOIO | __GFP_HIGHMEM);
-+	temp->bi_flags = source->bi_flags;
-+	temp->bi_flags = (temp->bi_flags | BIO_OWNS_VEC);
-+
-+	temp->bi_rw = source->bi_rw;
-+	temp->bi_iter.bi_sector = source->bi_iter.bi_sector;
-+	temp->bi_iter.bi_size = source->bi_iter.bi_size;
-+	temp->bi_phys_segments = source->bi_phys_segments;
-+	temp->bi_end_io = source->bi_end_io;
-+	temp->bi_private = source->bi_private;
-+
-+	return temp;
-+}
-+
-+/* Duplicate the read command in order to read from every available disk */
-+static void do_safe_read(struct mddev *mddev, struct bio * bio, struct r1bio *r1_bio) {
-+	struct r1conf *conf = mddev->private;
-+	struct raid1_info *mirror;
-+	struct bitmap *bitmap;
-+	struct bio *read_bio;
-+	struct md_rdev *rdev;
-+
-+	int rdisk;
-+	int max_sectors = r1_bio->sectors;
-+	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
-+	int sectors_handled;
-+
-+	int disk;
-+	bitmap = mddev->bitmap;
-+
-+	/* set the atomic counter */
-+	atomic_set(&r1_bio->remaining, 1);
-+
-+	/* iterate over the disks */
-+	for (disk = 0 ; disk < conf->raid_disks * 2 ; disk++) {
-+d_s_read_again:
-+		rcu_read_lock();
-+		rdev = rcu_dereference(conf->mirrors[disk].rdev);
-+		rcu_read_unlock();
-+
-+		/* check if disk is valid */
-+		if (r1_bio->bios[disk] == IO_BLOCKED
-+			|| rdev == NULL
-+			|| test_bit(Unmerged, &rdev->flags)
-+			|| test_bit(Faulty, &rdev->flags)) {
-+			continue;
-+		}
-+
-+		rdisk = disk;
-+
-+		mirror = conf->mirrors + rdisk;
-+
-+		if (test_bit(WriteMostly, &mirror->rdev->flags) &&
-+			bitmap) {
-+			/* Reading from a write-mostly device must
-+				* take care not to over-take any writes
-+				* that are 'behind'
-+				*/
-+			wait_event(bitmap->behind_wait,
-+					atomic_read(&bitmap->behind_writes) == 0);
-+		}
-+		r1_bio->read_disk = rdisk;
-+
-+		/* try to copy the bio */
-+		read_bio = copy_bio(bio, mddev);
-+		if(!read_bio)
-+			return;
-+		bio_trim(read_bio, r1_bio->sector - bio->bi_iter.bi_sector,
-+				max_sectors);
-+
-+		r1_bio->bios[rdisk] = read_bio;
-+
-+		read_bio->bi_iter.bi_sector = r1_bio->sector +
-+			mirror->rdev->data_offset;
-+		read_bio->bi_bdev = mirror->rdev->bdev;
-+		read_bio->bi_end_io = raid1_end_read_request;
-+		read_bio->bi_rw = READ | do_sync;
-+		read_bio->bi_private = r1_bio;
-+
-+		if (max_sectors < r1_bio->sectors) {
-+			/* could not read all from this device, so we will
-+				* need another r1_bio.
-+				*/
-+
-+			sectors_handled = (r1_bio->sector + max_sectors
-+						- bio->bi_iter.bi_sector);
-+			r1_bio->sectors = max_sectors;
-+			spin_lock_irq(&conf->device_lock);
-+			if (bio->bi_phys_segments == 0)
-+				bio->bi_phys_segments = 2;
-+			else
-+				bio->bi_phys_segments++;
-+			spin_unlock_irq(&conf->device_lock);
-+			/* Cannot call generic_make_request directly
-+				* as that will be queued in __make_request
-+				* and subsequent mempool_alloc might block waiting
-+				* for it.  So hand bio over to raid1d.
-+				*/
-+			reschedule_retry(r1_bio);
-+
-+			r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
-+
-+			r1_bio->master_bio = bio;
-+			r1_bio->sectors = bio_sectors(bio) - sectors_handled;
-+			r1_bio->state = 0;
-+			r1_bio->mddev = mddev;
-+			r1_bio->sector = bio->bi_iter.bi_sector +
-+				sectors_handled;
-+			goto d_s_read_again;
-+		} else {
-+			
-+			atomic_inc(&r1_bio->remaining);
-+			generic_make_request(read_bio);
-+		}
-+		
-+	}
-+	r1_bio_read_done(r1_bio);	/* decrement atomic counter */
-+	return;
-+}
-+
- static void make_request(struct mddev *mddev, struct bio * bio)
- {
- 	struct r1conf *conf = mddev->private;
-@@ -1157,6 +1400,11 @@ static void make_request(struct mddev *mddev, struct bio * bio)
- 		 */
- 		int rdisk;
- 
-+		if(mddev->safe_read) {
-+			do_safe_read(mddev, bio, r1_bio);
-+			return;
-+		}
-+
- read_again:
- 		rdisk = read_balance(conf, r1_bio, &max_sectors);
- 
+The sync_request() function eventually gets rid of the r1_bio as it is a
+variable on the stack. But it is stored in a bio->bi_private variable
+and that's where I lost track of where pointers are referenced from.
+
+A simple way to check whether it's a false positive is to do a:
+
+echo dump=<unref obj addr> > /sys/kernel/debug/kmemleak
+
+If an object was reported as a leak but later on kmemleak doesn't know
+about it, it means that it was freed and hence a false positive (maybe I
+should add this as a warning in kmemleak if certain amount of leaked
+objects freeing is detected).
+
 -- 
-1.8.3.2
+Catalin
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
