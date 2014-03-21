@@ -1,77 +1,75 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Jeff Allison <jeff.allison@allygray.2y.net>
 Subject: Re: raid resync speed
-Date: Thu, 20 Mar 2014 13:44:58 -0500
-Message-ID: <532B372A.7090802@hardwarefreak.com>
-References: <CAPrpM6wLpRhMqqsXQ8Baqz4axxj6cvoB2Z1HAOiNm7gPv1FT=w@mail.gmail.com> <532AFCC8.6080902@hardwarefreak.com> <532B0ABC.5040604@fastmail.fm>
-Reply-To: stan@hardwarefreak.com
+Date: Fri, 21 Mar 2014 11:44:24 +1100
+Message-ID: <CAPrpM6x=BBXA30JEiO4Y3-JcZz2vBjM18wGuAf5HWfaAczg=tw@mail.gmail.com>
+References: <CAPrpM6wLpRhMqqsXQ8Baqz4axxj6cvoB2Z1HAOiNm7gPv1FT=w@mail.gmail.com>
+	<532B2988.5070600@itwm.fraunhofer.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <532B0ABC.5040604@fastmail.fm>
+In-Reply-To: <532B2988.5070600@itwm.fraunhofer.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@fastmail.fm>, Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3/20/2014 10:35 AM, Bernd Schubert wrote:
-> On 3/20/2014 9:35 AM, Stan Hoeppner wrote:
->> Yes.  The article gives 16384 and 32768 as examples for
->> stripe_cache_size.  Such high values tend to reduce throughput instead
->> of increasing it.  Never use a value above 2048 with rust, and 1024 is
->> usually optimal for 7.2K drives.  Only go 4096 or higher with SSDs.  In
->> addition, high values eat huge amounts of memory.  The formula is:
+I don't think it's the raid code I've dropped the disk out of the
+array and I still cannot get anymore that 4MB/sec out of it...
 
-> Why should the stripe-cache size differ between SSDs and rotating disks?
+[jeff@nas ~]$dd if=/dev/zero of=/mnt/sdj/bonnie/test.tmp bs=4k
+count=2000000 && sync && dd if=/dev/zero of=/mnt/sdd/bonnie/test.tmp
+bs=4k count=2000000 && sync
 
-I won't discuss "should" as that makes this a subjective discussion.
-I'll discuss this objectively, discuss what md does, not what it
-"should" do or could do.
+2000000+0 records in
+2000000+0 records out
+8192000000 bytes (8.2 GB) copied, 231.778 s, 35.3 MB/s <-- WD Green
+RMA I got back yesterday.
 
-I'll answer your question with a question:  Why does the total stripe
-cache memory differ, doubling between 4 drives and 8 drives, or 8 drives
-and 16 drives, to maintain the same per drive throughput?
+2000000+0 records in
+2000000+0 records out
+8192000000 bytes (8.2 GB) copied, 1818.18 s, 4.5 MB/s <-- Dud one.
 
-The answer to both this question and your question is the same answer.
-As the total write bandwidth of the array increases, so must the total
-stripe cache buffer space.  stripe_cache_size of 1024 is usually optimal
-for SATA drives with measured 100MB/s throughput, and 4096 is usually
-optimal for SSDs with 400MB/s measured write throughput.  The bandwidth
-numbers include parity block writes.
+Perhaps it's time to RMA the RMA.
 
-array(s)		bandwidth MB/s	stripe_cache_size	cache MB
-
-12x 100MB/s Rust	1200		1024			 48
-16x 100MB/s Rust	1600		1024			 64
-32x 100MB/s Rust	3200		1024			128
-
-3x  400MB/s SSD		1200		4096			 48
-4x  400MB/s SSD		1600		4096			 64
-8x  400MB/s SSD		3200		4096			128
-
-As is clearly demonstrated, there is a direct relationship between cache
-size and total write bandwidth.  The number of drives and drive type is
-irrelevant.  It's the aggregate write bandwidth that matters.
-
-Whether this "should" be this way is something for developers to debate.
- I'm simply demonstrating how it "is" currently.
-
-> Did you ever try to figure out yourself why it got slower with higher
-> values? I profiled that in the past and it was a CPU/memory limitation -
-> the md thread went to 100%, searching for stripe-heads.
-
-This may be true at the limits, but going from 512 to 1024 to 2048 to
-4096 with a 3 disk rust array isn't going to peak the CPU.  And
-somewhere with this setup, usually between 1024 and 2048, throughput
-will begin to tail off, even with plenty of CPU and memory B/W remaining.
-
-> So I really wonder how you got the impression that the stripe cache size
-> should have different values for differnt kinds of drives.
-
-Because higher aggregate throughputs require higher stripe_cache_size
-values, and some drive types (SSDs) have significantly higher throughput
-than others (rust), usually [3|4] to 1 for discrete SSDs, much greater
-for PCIe SSDs.
-
-Cheers,
-
-Stan
+On 21 March 2014 04:46, Bernd Schubert
+<bernd.schubert@itwm.fraunhofer.de> wrote:
+> On 03/20/2014 02:12 AM, Jeff Allison wrote:
+>>
+>> The gist of my question is what kind of resync speed should I expect?
+>>
+>> I have a HP N54L Microserver running centos 6.5.
+>>
+>> In this box I have a 3x2TB disk raid 5 array, which I am in the
+>> process of extending to a 4x2TB raid 5 array.
+>>
+>> I've added the new disk --> mdadm --add /dev/md0 /dev/sdb
+>>
+>> And grown the array --> mdadm --grow /dev/md0 --raid-devices=4
+>>
+>> Now the problem the resync speed is v slow, it refuses to rise above
+>> 5MB, in general it sits at 4M.
+>
+>
+> Per second?
+>
+>
+>>
+>> from looking at glances it would appear that writing to the new disk
+>> is the bottle neck, /dev/sdb is the new disk.
+>>
+>> Disk I/O In/s Out/s
+>> md0 0 0
+>> sda1 0 0
+>> sda2 0 1K
+>> sdb1 3.92M 0
+>> sdc1 24.2M 54.7M
+>> sdd1 11.2M 54.7M
+>> sde1 16.3M 54.7M
+>
+>
+> Could you please send output of 'iostat -xm 1'? Also, do you anything in
+> 'top' that takes 100% CPU?
+>
+> Thanks,
+> Bernd
+>
+>
