@@ -1,79 +1,31 @@
-From: "Manibalan P" <pmanibalan@amiindia.co.in>
-Subject: RE: raid6 - data integrity issue - data mis-compare on rebuilding RAID 6 - with 100 Mb resync speed.
-Date: Mon, 24 Mar 2014 18:45:43 +0530
-Message-ID: <13688C12F44C7C428726663F950CA253095F44D7@venus.in.megatrends.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Check/repair command?
+Date: Mon, 24 Mar 2014 15:42:43 -0400
+Message-ID: <53308AB3.6030807@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I have performed the following tests to narrow down the integrity issue.
+I know you can initiate a check/repair by writing to the right file in
+sysfs, but I can not find the proper way to do this via mdadm.  Am I
+just blind or is it missing?
 
-1. RAID 6, single drive failure - NO ISSUE
-	a. Running IO
-	b. mdadm set faulty and remove a drive
-	c. mdadm add the drive back
- There is no mis-compare happen in this path.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-2. RAID 6, two drive failure - write during Degrade and verify after
-rebuild 
-	a. remove two drives, to make the RAID array degraded.
-	b. now run write IO write cycle, wait till the write cycle
-completes
-	c. insert the drives back one by one, and wait till the re-build
-completes and a RAID array become optimal.
-	d. now perform the verification cycle.
-There is no mis-compare happened in this path also.
-
-During All my test, the sync_Speed_max and min is set to 100Mb
-
-So, as you referred in your previous mail, the corruption might be
-happening only during resync and IO happens in parallel.
-
-Also, I tested with upstream 2.6.32 kernel from git:
-"http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ -
-tags/v2.6.32"
-	And I am facing mis-compare issue in this kernel as well.  on
-RAID 6, two drive failure with high sync_speed.
-
-Thanks,
-Manibalan.
-
------Original Message-----
-From: NeilBrown [mailto:neilb@suse.de]
-Sent: Thursday, March 13, 2014 11:49 AM
-To: Manibalan P
-Cc: linux-raid@vger.kernel.org
-Subject: Re: raid6 - data integrity issue - data mis-compare on
-rebuilding RAID 6 - with 100 Mb resync speed.
-
-On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P"
-<pmanibalan@amiindia.co.in>
-wrote:
-
-> >
-> >Was the array fully synced before you started the test?
-> 
-> Yes , IO is started, only after the re-sync is completed.
->  And to add more info,
->              I am facing this mis-compare only with high resync speed 
-> (30M to 100M), I ran the same test with resync speed min -10M and max
-> - 30M, without any issue. So the  issue has relationship with 
-> sync_speed_max / min.
-
-So presumably it is an interaction between recovery and IO.  Maybe if we
-write to a stripe that is being recoverred, or recover a stripe that is
-being written to, then something gets confused.
-
-I'll have a look to see what I can find.
-
-Thanks,
-NeilBrown
+iQEcBAEBAgAGBQJTMIqzAAoJEI5FoCIzSKrww84IAIWK9cxfsRqQZ5oQ9GDTLtt1
+d6qw6mpghfVSu3JaHwo6u2wzsGaSkiGYoqWqBoVkFl5YLof6+EPbZ2yKhjtEHVuF
+RkAlg7AVuKaRmGAo+r2KRCfjjw9uxnZX8PwX4QPV9wON5bqt732JbeY6aYpNMdtW
+YYcq6jeb1k1WA7ST5MGAVs/t8xzGXBsYbxp17bbxr46VwAUpZzWS7h1nYrAuiX32
+pj+GBhEkmTMjCmfWB5p+OPac+wZUa0uIiUmnJuzFvmXGJkXvS3EalS4CCpYD3H1M
+AjjDgXRRYk6AUZHQ64nN0h7ehcjE+ton9ULcfBGwG2HwWwijzJtb/AHnsmadYYE=
+=ddrr
+-----END PGP SIGNATURE-----
