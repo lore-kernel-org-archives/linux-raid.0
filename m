@@ -1,36 +1,79 @@
-From: Monam Agarwal <monamagarwal123@gmail.com>
-Subject: [PATCH] drivers/md: Use RCU_INIT_POINTER(x, NULL) in dm.c
-Date: Sun, 23 Mar 2014 23:58:27 +0530
-Message-ID: <1395599307-6862-1-git-send-email-monamagarwal123@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Manibalan P" <pmanibalan@amiindia.co.in>
+Subject: RE: raid6 - data integrity issue - data mis-compare on rebuilding RAID 6 - with 100 Mb resync speed.
+Date: Mon, 24 Mar 2014 18:45:43 +0530
+Message-ID: <13688C12F44C7C428726663F950CA253095F44D7@venus.in.megatrends.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-This patch replaces rcu_assign_pointer(x, NULL) with RCU_INIT_POINTER(x, NULL)
+Hi,
 
-The rcu_assign_pointer() ensures that the initialization of a structure       
-is carried out before storing a pointer to that structure. 
-And in the case of the NULL pointer, there is no structure to initialize. 
-So, rcu_assign_pointer(p, NULL) can be safely converted to RCU_INIT_POINTER(p, NULL)
+I have performed the following tests to narrow down the integrity issue.
 
-Signed-off-by: Monam Agarwal <monamagarwal123@gmail.com>
----
- drivers/md/dm.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+1. RAID 6, single drive failure - NO ISSUE
+	a. Running IO
+	b. mdadm set faulty and remove a drive
+	c. mdadm add the drive back
+ There is no mis-compare happen in this path.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 8c53b09..804412a 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -2172,7 +2172,7 @@ static struct dm_table *__unbind(struct mapped_device *md)
- 		return NULL;
- 
- 	dm_table_event_callback(map, NULL, NULL);
--	rcu_assign_pointer(md->map, NULL);
-+	RCU_INIT_POINTER(md->map, NULL);
- 	dm_sync_table(md);
- 
- 	return map;
--- 
-1.7.9.5
+2. RAID 6, two drive failure - write during Degrade and verify after
+rebuild 
+	a. remove two drives, to make the RAID array degraded.
+	b. now run write IO write cycle, wait till the write cycle
+completes
+	c. insert the drives back one by one, and wait till the re-build
+completes and a RAID array become optimal.
+	d. now perform the verification cycle.
+There is no mis-compare happened in this path also.
+
+During All my test, the sync_Speed_max and min is set to 100Mb
+
+So, as you referred in your previous mail, the corruption might be
+happening only during resync and IO happens in parallel.
+
+Also, I tested with upstream 2.6.32 kernel from git:
+"http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ -
+tags/v2.6.32"
+	And I am facing mis-compare issue in this kernel as well.  on
+RAID 6, two drive failure with high sync_speed.
+
+Thanks,
+Manibalan.
+
+-----Original Message-----
+From: NeilBrown [mailto:neilb@suse.de]
+Sent: Thursday, March 13, 2014 11:49 AM
+To: Manibalan P
+Cc: linux-raid@vger.kernel.org
+Subject: Re: raid6 - data integrity issue - data mis-compare on
+rebuilding RAID 6 - with 100 Mb resync speed.
+
+On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P"
+<pmanibalan@amiindia.co.in>
+wrote:
+
+> >
+> >Was the array fully synced before you started the test?
+> 
+> Yes , IO is started, only after the re-sync is completed.
+>  And to add more info,
+>              I am facing this mis-compare only with high resync speed 
+> (30M to 100M), I ran the same test with resync speed min -10M and max
+> - 30M, without any issue. So the  issue has relationship with 
+> sync_speed_max / min.
+
+So presumably it is an interaction between recovery and IO.  Maybe if we
+write to a stripe that is being recoverred, or recover a stripe that is
+being written to, then something gets confused.
+
+I'll have a look to see what I can find.
+
+Thanks,
+NeilBrown
