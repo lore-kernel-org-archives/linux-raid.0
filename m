@@ -1,27 +1,39 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Array created by mdadm 3.2 & 3.3 have different array size,
- why?
-Date: Wed, 26 Mar 2014 19:38:24 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1403261937480.747@uplift.swm.pp.se>
-References: <tencent_66C345191B9B49B92956F243@qq.com>
+From: Tide <lovetide@qq.com>
+Subject: Re: Array created by mdadm 3.2 & 3.3 have different array size, why?
+Date: Wed, 26 Mar 2014 19:47:55 +0000 (UTC)
+Message-ID: <loom.20140326T204008-573@post.gmane.org>
+References: <tencent_66C345191B9B49B92956F243@qq.com> <5333160F.8060007@SGI.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <tencent_66C345191B9B49B92956F243@qq.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tide <lovetide@qq.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 26 Mar 2014, Tide wrote:
+Larry Fenske <LFenske <at> SGI.com> writes:
 
-> The partition size of each disk in the two arrays are identical (all 
-> partitions have 5860531087 logical sectors), so why the array size are 
-> different? Is it caused by different mdadm version (I guess so) or 
-> different array level or something else?
+> 
+> Your RAID 6 array has an internal bitmap, while your RAID 5 array does not.
 
-Do mdadm -E on one component device from each md volume. My first guess 
-would be different data offset.
+When creating array, I didn't specified bitmap options (don't know what it
+is), so is it different behavior between v3.2 and v3.3, or it's just the 
+compile parameters are different between CentOS 6 and Fedora 19/20?
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> 
+> - Larry Fenske
+> SGI signature
+> 
+> Senior Software Engineer
+> SGI
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo <at> vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+
+
+
