@@ -1,22 +1,28 @@
-From: Larry Fenske <LFenske@SGI.com>
-Subject: Re: Array created by mdadm 3.2 & 3.3 have different array size, why?
-Date: Wed, 26 Mar 2014 12:01:51 -0600
-Message-ID: <5333160F.8060007@SGI.com>
-References: <tencent_66C345191B9B49B92956F243@qq.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: raid6check.c patches
+Date: Wed, 26 Mar 2014 19:09:44 +0100
+Message-ID: <20140326180943.GA1959@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <tencent_66C345191B9B49B92956F243@qq.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Tide <lovetide@qq.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your RAID 6 array has an internal bitmap, while your RAID 5 array does not.
+Hi Neil,
 
-- Larry Fenske
-SGI signature
+about two weeks ago I sent three (3)
+patches for raid6check.c, but I got
+no feedback since then.
 
-Senior Software Engineer
-SGI
+This is just a reminder, in case you
+missed them.
 
+Thanks,
+
+bye,
+
+-- 
+
+piergiorgio
