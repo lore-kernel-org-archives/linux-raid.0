@@ -1,28 +1,27 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: raid6check.c patches
-Date: Wed, 26 Mar 2014 19:09:44 +0100
-Message-ID: <20140326180943.GA1959@lazy.lzy>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Array created by mdadm 3.2 & 3.3 have different array size,
+ why?
+Date: Wed, 26 Mar 2014 19:38:24 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1403261937480.747@uplift.swm.pp.se>
+References: <tencent_66C345191B9B49B92956F243@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <tencent_66C345191B9B49B92956F243@qq.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tide <lovetide@qq.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Wed, 26 Mar 2014, Tide wrote:
 
-about two weeks ago I sent three (3)
-patches for raid6check.c, but I got
-no feedback since then.
+> The partition size of each disk in the two arrays are identical (all 
+> partitions have 5860531087 logical sectors), so why the array size are 
+> different? Is it caused by different mdadm version (I guess so) or 
+> different array level or something else?
 
-This is just a reminder, in case you
-missed them.
-
-Thanks,
-
-bye,
+Do mdadm -E on one component device from each md volume. My first guess 
+would be different data offset.
 
 -- 
-
-piergiorgio
+Mikael Abrahamsson    email: swmike@swm.pp.se
