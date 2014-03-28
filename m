@@ -1,127 +1,186 @@
-From: Tide <lovetide@qq.com>
-Subject: Re: Array created by mdadm 3.2 & 3.3 have different array size, why?
-Date: Fri, 28 Mar 2014 02:44:29 +0000 (UTC)
-Message-ID: <loom.20140328T033136-569@post.gmane.org>
-References: <tencent_66C345191B9B49B92956F243@qq.com> <alpine.DEB.2.02.1403261937480.747@uplift.swm.pp.se> <loom.20140326T205013-837@post.gmane.org> <53334347.4050108@hardwarefreak.com> <5334425D.5010704@fastmail.fm> <53348C82.1060506@hardwarefreak.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid resync speed
+Date: Fri, 28 Mar 2014 03:03:28 -0500
+Message-ID: <53352CD0.5010109@hardwarefreak.com>
+References: <CAPrpM6wLpRhMqqsXQ8Baqz4axxj6cvoB2Z1HAOiNm7gPv1FT=w@mail.gmail.com> <532AFCC8.6080902@hardwarefreak.com> <532B0ABC.5040604@fastmail.fm> <532B372A.7090802@hardwarefreak.com> <53344D06.4090401@fastmail.fm>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <53344D06.4090401@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@fastmail.fm>, Jeff Allison <jeff.allison@allygray.2y.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Stan Hoeppner <stan <at> hardwarefreak.com> writes:
-
+On 3/27/2014 11:08 AM, Bernd Schubert wrote:
+> Sorry for the late reply, I'm busy with work...
 > 
-> On 3/27/2014 10:23 AM, Bernd Schubert wrote:
-> ...
-> >> commit 508a7f16b242d6c3353e15aab46ac8ca8dc7cd08
-> >> Author: NeilBrown <neilb <at> suse.de>
-> >> Date:   Wed Apr 4 14:00:40 2012 +1000
-> >>
-> >>     super1: leave more space in front of data by default.
-> >>
-> >>     The kernel is growing the ability to avoid the need for a
-> >>     backup file during reshape by being able to change the data offset.
-> >>
-> >>     For this to be useful we need plenty of free space before the
-> >>     data so the data offset can be reduced.
-> >>
-> >>     So for v1.1 and v1.2 metadata make the default data_offset much
-> >>     larger.  Aim for 128Meg, but keep a power of 2 and don't use more
-> >>     than 0.1% of each device.
-> >>
-> >>     Don't change v1.0 as that is used when the data_offset is required to
-> >>     be zero.
+> On 03/20/2014 07:44 PM, Stan Hoeppner wrote:
+>> On 3/20/2014 10:35 AM, Bernd Schubert wrote:
+>>> On 3/20/2014 9:35 AM, Stan Hoeppner wrote:
+>>>> Yes.  The article gives 16384 and 32768 as examples for
+>>>> stripe_cache_size.  Such high values tend to reduce throughput instead
+>>>> of increasing it.  Never use a value above 2048 with rust, and 1024 is
+>>>> usually optimal for 7.2K drives.  Only go 4096 or higher with SSDs.  In
+>>>> addition, high values eat huge amounts of memory.  The formula is:
+>>
+>>> Why should the stripe-cache size differ between SSDs and rotating disks?
+>>
+>> I won't discuss "should" as that makes this a subjective discussion.
+>> I'll discuss this objectively, discuss what md does, not what it
+>> "should" do or could do.
+>>
+>> I'll answer your question with a question:  Why does the total stripe
+>> cache memory differ, doubling between 4 drives and 8 drives, or 8 drives
+>> and 16 drives, to maintain the same per drive throughput?
+>>
+>> The answer to both this question and your question is the same answer.
+>> As the total write bandwidth of the array increases, so must the total
+>> stripe cache buffer space.  stripe_cache_size of 1024 is usually optimal
+>> for SATA drives with measured 100MB/s throughput, and 4096 is usually
+>> optimal for SSDs with 400MB/s measured write throughput.  The bandwidth
+>> numbers include parity block writes.
 > 
-> This is a good match because the discrepancy on his RAID6 is pretty
-> close to 128MB per drive.  However, both his RAID5 and RAID6 arrays are
-> metadata 1.2.  So this commit alone may not fully explain the capacity
-> difference he's seeing between RAID5 and RAID6.  Or is this commit RAID6
-> specific?  I don't see that in the comments above.
+> Did you also consider that you simply need more stripe-heads (struct stripe_head) to get complete stripes with more drives?
+
+It has nothing to do with what we're discussing.  You get complete stripes with the default value which is IIRC 256, though md.txt still says 128 as of 3.13.6, and that it only applies to RAID5.  Maybe md.txt should be updated.
+
+  stripe_cache_size  (currently raid5 only)
+      number of entries in the stripe cache.  This is writable, but
+      there are upper and lower limits (32768, 16).  Default is 128.
+
+>> array(s)        	bandwidth MB/s    stripe_cache_size    cache MB
+>>
+>> 12x 100MB/s Rust     1200        	  1024                  48
+>> 16x 100MB/s Rust     1600        	  1024                  64
+>> 32x 100MB/s Rust     3200        	  1024                 128
+>>
+>> 3x  400MB/s SSD      1200        	  4096                  48
+>> 4x  400MB/s SSD      1600        	  4096                  64
+>> 8x  400MB/s SSD      3200        	  4096                 128
+>>
+>> As is clearly demonstrated, there is a direct relationship between cache
+>> size and total write bandwidth.  The number of drives and drive type is
+>> irrelevant.  It's the aggregate write bandwidth that matters.
 > 
-> Cheers,
+> What is the meaning of "cache MB"? It does not seem to come from this calculation:
 > 
-> Stan
+>>     memory = conf->max_nr_stripes * (sizeof(struct stripe_head) +
+>>          max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+...
+> 
+>>         printk(KERN_INFO "md/raid:%s: allocated %dkB\n",
+>>                mdname(mddev), memory);
 
-Yes, it's not fully explain the difference. Here's another test with mdadm
-v3.2.6 (which already have the 508a7f16b242d6c3353e15aab46ac8ca8dc7cd08
-commit) in CentOS 6.5.
+No, it is not derieved from the source code, but from the formula I stated previously in this thread:
 
-Created a RAID 5 array with 5 1GiB loop devices, the data_offset of this new
-array is only 1024 sectors (0.5M).
+stripe_cache_size * 4096 bytes * drive_count = RAM usage
 
-# MAKEDEV /dev/loop
+>> Whether this "should" be this way is something for developers to debate.
+>>   I'm simply demonstrating how it "is" currently.
+> 
+> Well, somehow I only see two different stripe-cache size values in your numbers. 
 
-# for hdd in {1..5}; do truncate -s 1G hdd5$hdd; losetup /dev/loop5$hdd
-hdd5$hdd; done
+Only two are required to demonstrate the md RAID5/6 behavior in question.
 
-# mdadm -C /dev/md5 -l5 -n4 -x1 /dev/loop5[1-5]
+> Then the given bandwidth seems to be theoretical value, based on num-drives * performance-per-drive. 
 
-# mdadm --version
-mdadm - v3.2.6 - 25th October 2012
+The values in the table are not theoretical, but are derived from test data, and are very close to what one will see with such a real world configuration.
 
-# mdadm --examine /dev/loop51
-/dev/loop51:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 5fb7e243:01760f20:c773f451:09928fa0
-           Name : RecordFileServer:5  (local to host RecordFileServer)
-  Creation Time : Fri Mar 28 10:14:36 2014
-     Raid Level : raid5
-   Raid Devices : 4
+> Redundancy drives are also missing in that calculation.  
 
- Avail Dev Size : 2096128 (1023.67 MiB 1073.22 MB)
-     Array Size : 3142656 (3.00 GiB 3.22 GB)
-  Used Dev Size : 2095104 (1023.17 MiB 1072.69 MB)
-    Data Offset : 1024 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : d662c632:b2aafbac:406c84a6:ae519102
+No, this is included.  Read the sentence directly preceding the table.
 
-    Update Time : Fri Mar 28 10:15:07 2014
-       Checksum : ab92e515 - correct
-         Events : 20
+> And then the value of "cache MB" is also unclear. 
 
-         Layout : left-symmetric
-     Chunk Size : 512K
+It is unambiguous.
 
-   Device Role : Active device 0
-   Array State : AAAA ('A' == active, '.' == missing)
+> So I'm sorry, but don't see any "simply demonstrating".
 
-# mdadm -D /dev/md5
-/dev/md5:
-        Version : 1.2
-  Creation Time : Fri Mar 28 10:14:36 2014
-     Raid Level : raid5
-     Array Size : 3142656 (3.00 GiB 3.22 GB)
-  Used Dev Size : 1047552 (1023.17 MiB 1072.69 MB)
-   Raid Devices : 4
-  Total Devices : 5
-    Persistence : Superblock is persistent
+...
 
-    Update Time : Fri Mar 28 10:14:56 2014
-          State : clean 
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
+>>> Did you ever try to figure out yourself why it got slower with higher
+>>> values? I profiled that in the past and it was a CPU/memory limitation -
+>>> the md thread went to 100%, searching for stripe-heads.
+>>
+>> This may be true at the limits, but going from 512 to 1024 to 2048 to
+>> 4096 with a 3 disk rust array isn't going to peak the CPU.  And
+>> somewhere with this setup, usually between 1024 and 2048, throughput
+>> will begin to tail off, even with plenty of CPU and memory B/W remaining.
+> 
+> Sorry, not in my experience. 
 
-         Layout : left-symmetric
-     Chunk Size : 512K
+This is the behavior everyone sees, because this is how md behaves.  If your experience is different then you should demonstrate it.  
 
-           Name : RecordFileServer:5  (local to host RecordFileServer)
-           UUID : 5fb7e243:01760f20:c773f451:09928fa0
-         Events : 20
+> So it would be interesting to see real measused values.  But then I definitely never tested raid6 with 3 drives, as this only provides a single data drive.
 
-    Number   Major   Minor   RaidDevice State
-       0       7       51        0      active sync   /dev/loop51
-       1       7       52        1      active sync   /dev/loop52
-       2       7       53        2      active sync   /dev/loop53
-       5       7       54        3      active sync   /dev/loop54
+The point above is that an md write thread won't saturate the processor, regardless of the size of the stripe cache, with a small count rust array.  I simply chose a very low number to make the point clear.  I didn't state a RAID level here.  Whether it's RAID5 or 6 is irrelevant to the point.
 
-       4       7       55        -      spare   /dev/loop55
+>>> So I really wonder how you got the impression that the stripe cache size
+>>> should have different values for differnt kinds of drives.
+>>
+>> Because higher aggregate throughputs require higher stripe_cache_size
+>> values, and some drive types (SSDs) have significantly higher throughput
+>> than others (rust), usually [3|4] to 1 for discrete SSDs, much greater
+>> for PCIe SSDs.
+> 
+> As I said, it would be interesting to see real numbers and profiling data.
+
+Here are numbers for an md RAID5 SSD array, 64KB chunk.
+
+5 x Intel 520s MLC 480G SATA3
+Intel Xeon E3-1230V2 quad core, 1MB L2, 8MB L3, 3.3GHz/3.7GHz turbo
+2x DDR3 = 21 GB/s memory bandwidth
+Debian 6 kernel 3.2
+
+Parallel FIO throughput
+16 threads, 256KB block size, O_DIRECT, libaio, queue depth 16, 8 GB/thread, 128 GB total written:
+
+stripe_cache_size = 256
+    READ: io=131072MB, aggrb=2496MB/s, minb=2556MB/s, maxb=2556MB/s, mint=52508msec, maxt=52508msec
+   WRITE: io=131072MB, aggrb=928148KB/s, minb=950424KB/s, maxb=950424KB/s, mint=144608msec, maxt=144608msec
+
+stripe_cache_size = 512
+    READ: io=131072MB, aggrb=2497MB/s, minb=2557MB/s, maxb=2557MB/s, mint=52484msec, maxt=52484msec
+   WRITE: io=131072MB, aggrb=978170KB/s, minb=978MB/s, maxb=978MB/s, mint=137213msec, maxt=137213msec
+
+stripe_cache_size = 2048
+    READ: io=131072MB, aggrb=2502MB/s, minb=2562MB/s, maxb=2562MB/s, mint=52382msec, maxt=52382msec
+   WRITE: io=131072MB, aggrb=996MB/s, minb=1020MB/s, maxb=1020MB/s, mint=131631msec, maxt=131631msec
+
+stripe_cache_size = 4096
+    READ: io=131072MB, aggrb=2498MB/s, minb=2558MB/s, maxb=2558MB/s, mint=52465msec, maxt=52465msec
+   WRITE: io=131072MB, aggrb=1596MB/s, minb=1634MB/s, maxb=1634MB/s, mint=82126msec, maxt=82126msec
+
+stripe_cache_size = 8192
+    READ: io=131072MB, aggrb=2498MB/s, minb=2558MB/s, maxb=2558MB/s, mint=52469msec, maxt=52469msec
+   WRITE: io=131072MB, aggrb=1514MB/s, minb=1550MB/s, maxb=1550MB/s, mint=86565msec, maxt=86565msec
+
+stripe_cache_size = 16384
+    READ: io=131072MB, aggrb=2482MB/s, minb=2542MB/s, maxb=2542MB/s, mint=52807msec, maxt=52807msec
+   WRITE: io=131072MB, aggrb=1377MB/s, minb=1410MB/s, maxb=1410MB/s, mint=95191msec, maxt=95191msec
+
+stripe_cache_size = 32768
+    READ: io=131072MB, aggrb=2498MB/s, minb=2557MB/s, maxb=2557MB/s, mint=52481msec, maxt=52481msec
+   WRITE: io=131072MB, aggrb=1139MB/s, minb=1166MB/s, maxb=1166MB/s, mint=115102msec, maxt=115102msec
 
 
+The effect I described is clearly demonstrated here: increasing stripe_cache_size beyond the optimal value causes write throughput to decrease.  With this SSD array a value of 4096 achieves peak sequential application write throughput of 1.6 GB/s.  Throughput with parity is 2 GB/s, or 400 MB/s per drive.  Note what I said previously, above, when I described the table figures:  "...4096 is usually optimal for SSDs with 400MB/s measured write throughput."  Thus, those figures are not "theoretical" as you claimed, but are based on actual testing.  The same is true for rust, though I haven't performed such testing on rust.  Others on this list have submitted rust numbers, but not with testing quite as thorough as the above.  I invite you to perform FIO testing on your rust array and submit you
+ r results.  They should confirm what I stated in the table above.
+
+
+On 3/20/2014 10:35 AM, Bernd Schubert wrote:
+> Why should the stripe-cache size differ between SSDs and rotating
+> disks? Did you ever try to figure out yourself why it got slower with
+> higher values? I profiled that in the past and it was a CPU/memory
+> limitation - the md thread went to 100%, searching for stripe-heads.
+
+
+The results above do not seem corroborate your claim.  The decrease in throughput from 1.63 GB/s to 1.16 GB/s, when increasing stripe_cache_size from 4096 to 32768, is a slope not a cliff.  If CPU/DRAM starvation were the problem, I would think this would be a cliff and not a slope.
+
+As I stated previously, I am simply characterizing the behavior of stripe_cache_size values and their real world impact on throughput and memory consumption.  I have not speculated to this point as to the cause of the observed behavior.  I have not profiled execution.  I don't know the code.  I am not a kernel hacker.  I am not a programmer.  What I have observed in reports on this list and in testing is that there is a direct correlation between optimal stripe_cache_size and device write throughput.
+
+Cheers,
+
+Stan
