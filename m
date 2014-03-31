@@ -1,210 +1,59 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH 3.2 108/200] md/raid5: Fix CPU hotplug callback registration
-Date: Mon, 31 Mar 2014 00:23:35 +0100
-Message-ID: <lsq.1396221815.398470322@decadent.org.uk>
-References: <lsq.1396221814.369444335@decadent.org.uk>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid6check.c patches
+Date: Mon, 31 Mar 2014 17:14:37 +1100
+Message-ID: <20140331171437.7b417aed@notabene.brown>
+References: <20140326180943.GA1959@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <lsq.1396221814.369444335@decadent.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: akpm@linux-foundation.org, Oleg Nesterov <oleg@redhat.com>, NeilBrown <neilb@suse.de>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/6/KPD3tJl3tSMvEJw7VOIhX"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140326180943.GA1959@lazy.lzy>
+Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-3.2.56-rc1 review patch.  If anyone has any objections, please let me know.
+--Sig_/6/KPD3tJl3tSMvEJw7VOIhX
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-------------------
+On Wed, 26 Mar 2014 19:09:44 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-From: Oleg Nesterov <oleg@redhat.com>
+> Hi Neil,
+>=20
+> about two weeks ago I sent three (3)
+> patches for raid6check.c, but I got
+> no feedback since then.
+>=20
+> This is just a reminder, in case you
+> missed them.
 
-commit 789b5e0315284463617e106baad360cb9e8db3ac upstream.
+Thanks for the reminder.  I've now applied all 3 patches.
 
-Subsystems that want to register CPU hotplug callbacks, as well as perform
-initialization for the CPUs that are already online, often do it as shown
-below:
+thanks,
+NeilBrown
 
-	get_online_cpus();
+--Sig_/6/KPD3tJl3tSMvEJw7VOIhX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-	register_cpu_notifier(&foobar_cpu_notifier);
+iQIVAwUBUzkHzTnsnt1WYoG5AQI19g//WAqhuSHqkPzAo+BoOalo5JdsjxOYR5Sr
+V8BmJE2auKix/jv6RF9E9Zpmf0K8rB0tN1vfQAV2zVVcur6D0et93UycPRKySqG6
+XDXqLIU7EFrBlFONE1q2V+EvyQNGJt1a4g75QHjKN5MDKDzDiALZjTfQRVPcFYsA
+adc4Bt/b/+hUFOJB3PAfwdsacZIApT1dE68jatyQsfW9sHYExGM2Vjg51LaXZZXL
+Hy25sTWonKCeArkN+TH9OAs/J0ZP+6NNHVz4Td9wnr3NxCm8tvAWnZPYbfwB0voj
+f9vrTlNrMN1dqd1Aao9UUTl3ngpH1JvwTx7gPDnGcNzq9yv/y2B6scFyMpouEOQc
+gsO8H0sLQREc93R9tnN2euj8jmVm3abGFOeiN24feuKR87y7fh0p+6QFi3DtabLS
+CosOsEBkIsi0O036v7+dZ5kdlLXWCx+XfRLA4nxDuwabmjyUmMhKeJ35M/VXVUW+
+QnV1EgIomxGUtGFnu2a4SJhlACodZWcLlQS/hym+ZuzLuNaglI4Hx918DtIhvzsx
+OrnY2w1V7bvC4pqIPCr71O+qFj+CPgNikkziu3cYuZSUSAbLrwGZeWEGaPVH+lYF
+DH3XoM+CKpObS6GKFMRUTxAUL/OQ6bfUMsJzeQ+NKNuIjaIA4LCTL3FkMlUfvrF7
+TVvq6aGw5Ng=
+=4BQh
+-----END PGP SIGNATURE-----
 
-	put_online_cpus();
-
-This is wrong, since it is prone to ABBA deadlocks involving the
-cpu_add_remove_lock and the cpu_hotplug.lock (when running concurrently
-with CPU hotplug operations).
-
-Interestingly, the raid5 code can actually prevent double initialization and
-hence can use the following simplified form of callback registration:
-
-	register_cpu_notifier(&foobar_cpu_notifier);
-
-	get_online_cpus();
-
-	for_each_online_cpu(cpu)
-		init_cpu(cpu);
-
-	put_online_cpus();
-
-A hotplug operation that occurs between registering the notifier and calling
-get_online_cpus(), won't disrupt anything, because the code takes care to
-perform the memory allocations only once.
-
-So reorganize the code in raid5 this way to fix the deadlock with callback
-registration.
-
-Cc: linux-raid@vger.kernel.org
-Fixes: 36d1c6476be51101778882897b315bd928c8c7b5
-Signed-off-by: Oleg Nesterov <oleg@redhat.com>
-[Srivatsa: Fixed the unregister_cpu_notifier() deadlock, added the
-free_scratch_buffer() helper to condense code further and wrote the changelog.]
-Signed-off-by: Srivatsa S. Bhat <srivatsa.bhat@linux.vnet.ibm.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/md/raid5.c | 90 ++++++++++++++++++++++++++----------------------------
- 1 file changed, 44 insertions(+), 46 deletions(-)
-
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4450,23 +4450,43 @@ raid5_size(struct mddev *mddev, sector_t
- 	return sectors * (raid_disks - conf->max_degraded);
- }
- 
-+static void free_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
-+{
-+	safe_put_page(percpu->spare_page);
-+	kfree(percpu->scribble);
-+	percpu->spare_page = NULL;
-+	percpu->scribble = NULL;
-+}
-+
-+static int alloc_scratch_buffer(struct r5conf *conf, struct raid5_percpu *percpu)
-+{
-+	if (conf->level == 6 && !percpu->spare_page)
-+		percpu->spare_page = alloc_page(GFP_KERNEL);
-+	if (!percpu->scribble)
-+		percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
-+
-+	if (!percpu->scribble || (conf->level == 6 && !percpu->spare_page)) {
-+		free_scratch_buffer(conf, percpu);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
- static void raid5_free_percpu(struct r5conf *conf)
- {
--	struct raid5_percpu *percpu;
- 	unsigned long cpu;
- 
- 	if (!conf->percpu)
- 		return;
- 
--	get_online_cpus();
--	for_each_possible_cpu(cpu) {
--		percpu = per_cpu_ptr(conf->percpu, cpu);
--		safe_put_page(percpu->spare_page);
--		kfree(percpu->scribble);
--	}
- #ifdef CONFIG_HOTPLUG_CPU
- 	unregister_cpu_notifier(&conf->cpu_notify);
- #endif
-+
-+	get_online_cpus();
-+	for_each_possible_cpu(cpu)
-+		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
- 	put_online_cpus();
- 
- 	free_percpu(conf->percpu);
-@@ -4492,15 +4512,7 @@ static int raid456_cpu_notify(struct not
- 	switch (action) {
- 	case CPU_UP_PREPARE:
- 	case CPU_UP_PREPARE_FROZEN:
--		if (conf->level == 6 && !percpu->spare_page)
--			percpu->spare_page = alloc_page(GFP_KERNEL);
--		if (!percpu->scribble)
--			percpu->scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
--
--		if (!percpu->scribble ||
--		    (conf->level == 6 && !percpu->spare_page)) {
--			safe_put_page(percpu->spare_page);
--			kfree(percpu->scribble);
-+		if (alloc_scratch_buffer(conf, percpu)) {
- 			pr_err("%s: failed memory allocation for cpu%ld\n",
- 			       __func__, cpu);
- 			return notifier_from_errno(-ENOMEM);
-@@ -4508,10 +4520,7 @@ static int raid456_cpu_notify(struct not
- 		break;
- 	case CPU_DEAD:
- 	case CPU_DEAD_FROZEN:
--		safe_put_page(percpu->spare_page);
--		kfree(percpu->scribble);
--		percpu->spare_page = NULL;
--		percpu->scribble = NULL;
-+		free_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
- 		break;
- 	default:
- 		break;
-@@ -4523,40 +4532,29 @@ static int raid456_cpu_notify(struct not
- static int raid5_alloc_percpu(struct r5conf *conf)
- {
- 	unsigned long cpu;
--	struct page *spare_page;
--	struct raid5_percpu __percpu *allcpus;
--	void *scribble;
--	int err;
-+	int err = 0;
- 
--	allcpus = alloc_percpu(struct raid5_percpu);
--	if (!allcpus)
-+	conf->percpu = alloc_percpu(struct raid5_percpu);
-+	if (!conf->percpu)
- 		return -ENOMEM;
--	conf->percpu = allcpus;
-+
-+#ifdef CONFIG_HOTPLUG_CPU
-+	conf->cpu_notify.notifier_call = raid456_cpu_notify;
-+	conf->cpu_notify.priority = 0;
-+	err = register_cpu_notifier(&conf->cpu_notify);
-+	if (err)
-+		return err;
-+#endif
- 
- 	get_online_cpus();
--	err = 0;
- 	for_each_present_cpu(cpu) {
--		if (conf->level == 6) {
--			spare_page = alloc_page(GFP_KERNEL);
--			if (!spare_page) {
--				err = -ENOMEM;
--				break;
--			}
--			per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
--		}
--		scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
--		if (!scribble) {
--			err = -ENOMEM;
-+		err = alloc_scratch_buffer(conf, per_cpu_ptr(conf->percpu, cpu));
-+		if (err) {
-+			pr_err("%s: failed memory allocation for cpu%ld\n",
-+			       __func__, cpu);
- 			break;
- 		}
--		per_cpu_ptr(conf->percpu, cpu)->scribble = scribble;
- 	}
--#ifdef CONFIG_HOTPLUG_CPU
--	conf->cpu_notify.notifier_call = raid456_cpu_notify;
--	conf->cpu_notify.priority = 0;
--	if (err == 0)
--		err = register_cpu_notifier(&conf->cpu_notify);
--#endif
- 	put_online_cpus();
- 
- 	return err;
+--Sig_/6/KPD3tJl3tSMvEJw7VOIhX--
