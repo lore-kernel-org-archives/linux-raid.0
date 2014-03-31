@@ -1,59 +1,39 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid6check.c patches
-Date: Mon, 31 Mar 2014 17:14:37 +1100
-Message-ID: <20140331171437.7b417aed@notabene.brown>
-References: <20140326180943.GA1959@lazy.lzy>
+Subject: Re: Check/repair command?
+Date: Mon, 31 Mar 2014 17:22:26 +1100
+Message-ID: <20140331172226.5739a50f@notabene.brown>
+References: <53308AB3.6030807@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6/KPD3tJl3tSMvEJw7VOIhX"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140326180943.GA1959@lazy.lzy>
+In-Reply-To: <53308AB3.6030807@ubuntu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/6/KPD3tJl3tSMvEJw7VOIhX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 26 Mar 2014 19:09:44 +0100 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
-
-> Hi Neil,
->=20
-> about two weeks ago I sent three (3)
-> patches for raid6check.c, but I got
-> no feedback since then.
->=20
-> This is just a reminder, in case you
-> missed them.
-
-Thanks for the reminder.  I've now applied all 3 patches.
-
-thanks,
-NeilBrown
-
---Sig_/6/KPD3tJl3tSMvEJw7VOIhX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBUzkHzTnsnt1WYoG5AQI19g//WAqhuSHqkPzAo+BoOalo5JdsjxOYR5Sr
-V8BmJE2auKix/jv6RF9E9Zpmf0K8rB0tN1vfQAV2zVVcur6D0et93UycPRKySqG6
-XDXqLIU7EFrBlFONE1q2V+EvyQNGJt1a4g75QHjKN5MDKDzDiALZjTfQRVPcFYsA
-adc4Bt/b/+hUFOJB3PAfwdsacZIApT1dE68jatyQsfW9sHYExGM2Vjg51LaXZZXL
-Hy25sTWonKCeArkN+TH9OAs/J0ZP+6NNHVz4Td9wnr3NxCm8tvAWnZPYbfwB0voj
-f9vrTlNrMN1dqd1Aao9UUTl3ngpH1JvwTx7gPDnGcNzq9yv/y2B6scFyMpouEOQc
-gsO8H0sLQREc93R9tnN2euj8jmVm3abGFOeiN24feuKR87y7fh0p+6QFi3DtabLS
-CosOsEBkIsi0O036v7+dZ5kdlLXWCx+XfRLA4nxDuwabmjyUmMhKeJ35M/VXVUW+
-QnV1EgIomxGUtGFnu2a4SJhlACodZWcLlQS/hym+ZuzLuNaglI4Hx918DtIhvzsx
-OrnY2w1V7bvC4pqIPCr71O+qFj+CPgNikkziu3cYuZSUSAbLrwGZeWEGaPVH+lYF
-DH3XoM+CKpObS6GKFMRUTxAUL/OQ6bfUMsJzeQ+NKNuIjaIA4LCTL3FkMlUfvrF7
-TVvq6aGw5Ng=
-=4BQh
------END PGP SIGNATURE-----
-
---Sig_/6/KPD3tJl3tSMvEJw7VOIhX--
+LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KSGFzaDogU0hBMQ0KDQpPbiBNb24s
+IDI0IE1hciAyMDE0IDE1OjQyOjQzIC0wNDAwIFBoaWxsaXAgU3VzaSA8cHN1c2lAdWJ1bnR1LmNv
+bT4gd3JvdGU6DQoNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQ0KPiBIYXNo
+OiBTSEExDQo+IA0KPiBJIGtub3cgeW91IGNhbiBpbml0aWF0ZSBhIGNoZWNrL3JlcGFpciBieSB3
+cml0aW5nIHRvIHRoZSByaWdodCBmaWxlIGluDQo+IHN5c2ZzLCBidXQgSSBjYW4gbm90IGZpbmQg
+dGhlIHByb3BlciB3YXkgdG8gZG8gdGhpcyB2aWEgbWRhZG0uICBBbSBJDQo+IGp1c3QgYmxpbmQg
+b3IgaXMgaXQgbWlzc2luZz8NCg0KWW91IGFyZSBub3QgYmxpbmQuICBJdCBpcyBtaXNzaW5nLg0K
+KHBhdGNoZXMgd2VsY29tZTotKSApDQoNCkl0J3Mgb24gbXkgbGlzdCwgYnV0IHRoYXQgZG9lc24n
+dCBwcm9taXNlIG11Y2ggdGhlc2UgZGF5cyBJJ20gYWZyYWlkLg0KDQpOZWlsQnJvd24NCi0tLS0t
+QkVHSU4gUEdQIFNJR05BVFVSRS0tLS0tDQpWZXJzaW9uOiBHbnVQRyB2Mi4wLjIyIChHTlUvTGlu
+dXgpDQoNCmlRSVZBd1VCVXprSm9qbnNudDFXWW9HNUFRSkU0UkFBdDhDTmJtTnduK0UySDRJems2
+eVk4RzR4VzB6a3hPTnMNCms2aERxNGZMRFd2K0NYbXpQYWZMalY2dks2QWw2MHNQdTdsRzk0V2lI
+OHZxdXhGVmd0N0tsb3N6bDM3OWM2ZlENCkhRb2o1YVNwRys1bmp4cldINC9FYVMvMDlUM2d0SGo1
+Ymkzd1RlY3lnOTRPT21Ham00TUpvd21HdytrSTZLRlYNCmJoR29LbWlFZTlOOW02MEpQRVRwNW1p
+SFFwalZkTWZ3RU5DN1pkZFRnQ25zbXI3cG5aNFBWTFo1bWpUZ2JoQnYNCnI1SmRRWGw0eXQ0RXl1
+SHZCYTJ0TXN0bE5ZRjVyUmNUbGg1dHRzOUlMR0FXQSs0eFMrZnRpNnZIZ2Q1YXpSUXANClQvZmNP
+NVRpbWFyOVdNY3hmSmVrZnpCVTFGMS9ETWhLaWVMV1VhU0RvOXBYMHA0N1lpRGZSWENvK3ZvVFRP
+TzgNCmNDdjNSTjI3YnNEWnBNYU9BQ2dPcTJoaDhqdTZ0clQzQllQZkdxcnRGZEovSlhyZDVMUVVZ
+cll2YjJSdGZXVDENCnU4eWVYREZveW81a3dSRnlpWXZ6MFg4UHBvaE40dXVsN3czdFRkUTdudFJ2
+TmpjUVN6UUEyTTBsS3A3T2x4cjENClNoK3QxbjJKdElQbGpjcjFQRiszbHFydUJ1dHBXc1llNzdi
+SDVoZnYxQXQwQkRmWlJuMTVKZ2huRVZPenZtdlENCjg4elNCbGRicVNSWE8yVTBOUkJzbWtQcmxF
+UVpXMEZWYXIvUGpOcnllT2FZbWdPZ2ZEUjVhSFo5eHFXY0pEKzYNCitOcFA4dWNGRlNVT3pnUEV2
+anI0SXR4REFtdUJlamVDZVVVaThNNWo4Q0tQcndhUEE2V0NXRWFBeklTZ1gwalcNCjczTHVrM3k5
+dEZZPQ0KPWR5bksNCi0tLS0tRU5EIFBHUCBTSUdOQVRVUkUtLS0tLQ0K
