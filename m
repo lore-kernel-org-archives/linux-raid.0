@@ -1,50 +1,79 @@
-From: bobzer <bobzer@gmail.com>
-Subject: Re: strange status raid 5
-Date: Mon, 31 Mar 2014 10:35:10 -0400
-Message-ID: <CADzS=aqECRsNh_e=0W4wQSnVxa63=pOjDQH29V8ruiJttR5kbw@mail.gmail.com>
-References: <CADzS=apR=2D=t47wS9PBHzEdeOS96LE-CbTEBxnd9BLj_=f7jg@mail.gmail.com>
- <alpine.DEB.2.02.1403311627060.747@uplift.swm.pp.se>
+From: Yorik <yoriks13@westnet.com.au>
+Subject: Re: RAIS5 Rebuild Help - Possible Data Offset
+Date: Tue, 1 Apr 2014 11:49:01 +0800
+Message-ID: <CAFth78ybasJD9D+L3_r0zrmrD4Le8oFgXjqAS-sN0ai6C8LKjQ@mail.gmail.com>
+References: <CAFth78x1SkCEUmETFt+F+79UpjUbhanNLUbZoWa7Hxi3EzsdMw@mail.gmail.com>
+	<20140131102551.GA2425@cthulhu.home.robinhill.me.uk>
+	<CAFth78xfsaBLzg9TC=UkEoQiafpg-oVJyoxbYgWyrVHCyAuHew@mail.gmail.com>
+	<20140331172953.3f37f6c2@notabene.brown>
+	<CAFth78wtf5X0ycUuKCTV3QSvs4Uv8mvvZYH2Vqhwc2WwOqkHfg@mail.gmail.com>
+	<20140331181227.69c4e583@notabene.brown>
+	<CAFth78xfP7rEVJxWS=aL0zUPGSyDnmrPWcgE=XxjYSuWU4_zvQ@mail.gmail.com>
+	<20140331193704.609a7f1f@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1403311627060.747@uplift.swm.pp.se>
+In-Reply-To: <20140331193704.609a7f1f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry to not be precise enough
-here are the command and result i tried:
-# mdadm --re-add /dev/md0 /dev/sdb1
-mdadm: --re-add for /dev/sdb1 to /dev/md0 is not possible
+Hi Neil
 
-# mdadm --add /dev/md0 /dev/sdb1
-mdadm: /dev/sdb1 reports being an active member for /dev/md0, but a
---re-add fails.
-mdadm: not performing --add as that would convert /dev/sdb1 in to a spare.
-mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdb1" first.
+Thanks very much for your help and pointers. This is what I was
+thinking a while ago when I was looking at this. Suffered a few very
+quick failures in quick succession and probably got too trigger happy
+on my rebuilding in between.
+I will look deeper and report back if I come up with anything useful.
 
-Also i check my disk and seem ok :
-#smartcll -l selftest /dev/sdb1
-=== START OF READ SMART DATA SECTION ===
-SMART Self-test log structure revision number 1
-Num  Test_Description    Status                  Remaining
-LifeTime(hours)  LBA_of_first_error
-# 1  Extended offline    Completed without error       00%     14046         -
-# 2  Short offline       Completed without error       00%     14041         -
+Thanks again.
 
+Cheers
+Derek
 
-Thanks for helping me
-
-On Mon, Mar 31, 2014 at 10:28 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> On Mon, 31 Mar 2014, bobzer wrote:
+On 31 March 2014 16:37, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 31 Mar 2014 15:24:07 +0800 Yorik <yoriks13@westnet.com.au> wrote:
 >
->> so there i tried to re-add the disk that doesn't works
+>> Hi Neil
+>>
+>> Thanks for your quick reply. :) Output as follows. and yes I agree.
+>> sdf is strange, also some devices think the Array has different number
+>> of devices Active.. It all got quite muddled up at the time of
+>> failure.
 >
+> So.....
+> sdf thinks
+>    Raid Devices : 6
+> others think
+>    Raid Devices : 8
 >
-> "Doesn't work" isn't a helpful problem description. Please provide output
-> from dmesg when you do this, error message (if any) from CLI, what command
-> you tried with, etc.
+> So that's not going to work.
+> However if we just ignore sdf, then sdg and sdi thinkg
 >
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
+>      Array UUID : a5cb0ced:fee37e80:bb291f1a:c5b2f600
+>
+> while the rest think:
+>
+>      Array UUID : e32ad2c6:5f99dd8f:2572c3a8:c485db00
+>
+> So you have at most 5 device which think they are the same array,
+> which isn't enough for an 8-device RAID6.
+>
+> It looks like you have tried to --create the array several times,
+> at
+>
+>   Creation Time : Tue Feb  4 00:28:54 2014
+>   Creation Time : Tue Feb  4 00:33:56 2014
+>   Creation Time : Tue Feb  4 00:38:19 2014
+>
+> to be precise.
+>
+> Your only real chance is to find out the real geometry of the
+> array before all the problem happened, and create it properly...
+> It might be worth checking sda sdb and sdc (with out partitions)
+> as well as sdd1 sde1 sdf1 sdg1 sdi1 to see if there is anything there.
+>
+> But if you have backups or some other way to regenerate the data ......
+>
+> NeilBrown
