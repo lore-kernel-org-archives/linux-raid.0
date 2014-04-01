@@ -1,64 +1,148 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
+From: "nixbugz" <nixbugz@outlook.com>
 Subject: Re: Can't grow IMSM RAID5
-Date: Tue, 1 Apr 2014 16:08:24 +0000
-Message-ID: <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
-References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
+Date: Tue, 1 Apr 2014 18:34:07 +0100
+Message-ID: <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl>
+References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl> <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed	reply-type=original
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
-Content-Language: en-US
-Content-ID: <6EFE7AA97F1E0748BC92D5E8546B7F81@intel.com>
+In-Reply-To: <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "nixbugz@outlook.com" <nixbugz@outlook.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: "Jiang, Dave" <dave.jiang@intel.com>
+Cc: linux-raid@vger.kernel.org, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE0LTA0LTAxIGF0IDE2OjQyICswMTAwLCBuaXhidWd6IHdyb3RlOg0KPiBIZWxs
-bw0KPiANCj4gSeKAmW0gc3R1Y2sgdHJ5aW5nIHRvIGFkZCBhIDR0aCBkaXNjIHRvIGFuIElNU00g
-UkFJRDUgY29udGFpbmVyOg0KPiANCj4gIyBtZGFkbSAtYSAvZGV2L21kMTI3IC9kZXYvc2RiDQo+
-IG1kYWRtOiBhZGRlZCAvZGV2L3NkYg0KPiANCj4gIyBtZGFkbSAtLWdyb3cgLS1yYWlkLWRldmlj
-ZXM9NCANCj4gL2Rldi9tZDEyNyAtLWJhY2t1cC1maWxlPS9tbnQvc3BhcmUvcmFpZC1iYWNrdXAt
-ZmlsZQ0KPiBtZGFkbTogQ2Fubm90IHJlYWQgc3VwZXJibG9jayBmb3IgL2Rldi9tZDEyNw0KDQpJ
-IHRoaW5rIHlvdSBuZWVkIHRvIGdyb3cgdGhlIFJBSUQgdm9sdW1lIGFuZCBub3QgdGhlIGNvbnRh
-aW5lcj8gU28gaXQNCndvdWxkIGJlIC9kZXYvbWQwIG9yIC9kZXYvbWQxIGluc3RlYWQgb2YgL2Rl
-di9tZDEyNz8gSGVyZSdzIFVSTCB0byB0aGUNCkxpbnV4IElNU00gdXNlcidzIG1hbnVhbCB0aGF0
-IGhvcGVmdWxseSBtYXkgYmUgb2YgdXNlOg0KaHR0cDovL3d3dy5pbnRlbC5jb20vc3VwcG9ydC9j
-aGlwc2V0cy9yc3RlL3NiL0NTLTAzMzYyMi5odG0NCg0KPiANCj4gIyBjYXQgL3Byb2MvbWRzdGF0
-DQo+IFBlcnNvbmFsaXRpZXMgOiBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XQ0KPiBtZDAgOiBhY3Rp
-dmUgcmFpZDUgc2RkWzJdIHNkYVsxXSBzZGNbMF0NCj4gICAgICAgMTg4NzQzNjgwMCBibG9ja3Mg
-c3VwZXIgZXh0ZXJuYWw6L21kMTI3LzAgbGV2ZWwgNSwgMTI4ayBjaHVuaywgDQo+IGFsZ29yaXRo
-bSAwIFszLzNdIFtVVVVdDQo+IA0KPiBtZDEgOiBhY3RpdmUgKGF1dG8tcmVhZC1vbmx5KSByYWlk
-NSBzZGNbMl0gc2RkWzFdIHNkYVswXQ0KPiAgICAgICA2NjA3NzY5NiBibG9ja3Mgc3VwZXIgZXh0
-ZXJuYWw6L21kMTI3LzEgbGV2ZWwgNSwgMTI4ayBjaHVuaywgYWxnb3JpdGhtIA0KPiAwIFszLzNd
-IFtVVVVdDQo+IA0KPiBtZDEyNyA6IGluYWN0aXZlIHNkYlszXShTKSBzZGFbMl0oUykgc2RjWzFd
-KFMpIHNkZFswXShTKQ0KPiAgICAgICAxMjYxMiBibG9ja3Mgc3VwZXIgZXh0ZXJuYWw6aW1zbQ0K
-PiANCj4gdW51c2VkIGRldmljZXM6IDxub25lPg0KPiANCj4gIyBtZGFkbSDigJNWDQo+IG1kYWRt
-IC0gdjMuMyAtIDNyZCBTZXB0ZW1iZXIgMjAxMw0KPiANCj4gDQo+IEkgZG9u4oCZdCBrbm93IGlm
-IHRoaXMgaXMgcmVsYXRlZCBidXQgbWRtb24gaGFzIHRyb3VibGUgZmluZGluZyB0aGUgcG9ydHM6
-DQo+IA0KPiAjIG1kYWRtIC0tZGV0YWlsLXBsYXRmb3JtIC12DQo+IG1kYWRtOiBjaGVja2luZyBt
-ZXRhZGF0YSAwLjkwDQo+IG1kYWRtOiAwLjkwIG1ldGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5k
-ZW50DQo+IG1kYWRtOiBjaGVja2luZyBtZXRhZGF0YSAxLngNCj4gbWRhZG06IDEueCBtZXRhZGF0
-YSBpcyBwbGF0Zm9ybSBpbmRlcGVuZGVudA0KPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgZGRm
-DQo+IG1kYWRtOiBkZGYgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQNCj4gbWRhZG06
-IGNoZWNraW5nIG1ldGFkYXRhIGltc20NCj4gbWRtb246IGZvdW5kIEludGVsKFIpIFNBVEEgUkFJ
-RCBjb250cm9sbGVyIGF0IDAwMDA6MDA6MWYuMi4NCj4gICAgICAgIFBsYXRmb3JtIDogSW50ZWwo
-UikgTWF0cml4IFN0b3JhZ2UgTWFuYWdlcg0KPiAgICAgICAgIFZlcnNpb24gOiAxMS42LjAuMTcw
-Mg0KPiAgICAgUkFJRCBMZXZlbHMgOiByYWlkMCByYWlkMSByYWlkMTAgcmFpZDUNCj4gICAgIENo
-dW5rIFNpemVzIDogNGsgOGsgMTZrIDMyayA2NGsgMTI4aw0KPiAgICAgMlRCIHZvbHVtZXMgOiBz
-dXBwb3J0ZWQNCj4gICAgICAgMlRCIGRpc2tzIDogc3VwcG9ydGVkDQo+ICAgICAgIE1heCBEaXNr
-cyA6IDYNCj4gICAgIE1heCBWb2x1bWVzIDogMiBwZXIgYXJyYXksIDQgcGVyIGNvbnRyb2xsZXIN
-Cj4gSS9PIENvbnRyb2xsZXIgOiAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjFmLjIg
-KFNBVEEpDQo+IG1kbW9uOiBmYWlsZWQgdG8gZGV0ZXJtaW5lIHBvcnQgbnVtYmVyIGZvciANCj4g
-L3N5cy9kZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDoxZi4yL2F0YTEvaG9zdDAvdGFyZ2V0MDow
-OjAvMDowOjA6MA0KPiBtZG1vbjogZmFpbGVkIHRvIGVudW1lcmF0ZSBwb3J0cyBvbiBTQVRBIGNv
-bnRyb2xsZXIgYXQgMDAwMDowMDoxZi4yLg0KPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgbWJy
-DQo+IG1kYWRtOiBtYnIgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQNCj4gbWRhZG06
-IGNoZWNraW5nIG1ldGFkYXRhIGdwdA0KPiBtZGFkbTogZ3B0IG1ldGFkYXRhIGlzIHBsYXRmb3Jt
-IGluZGVwZW5kZW50DQo+ICMNCg0KQXJ0dXIsIGFueSBpZGVhcyB3aHkgbWRtb24gaXNuJ3QgaGFw
-cHkgaW4gdGhpcyBpbnN0YW5jZT8NCg0KPiBUaGFua3MgDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNj
-cmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFp
-ZCIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5v
-cmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
-cmRvbW8taW5mby5odG1sDQo=
+-----Original Message-----=20
+=46rom: Jiang, Dave
+Sent: Tuesday, April 1, 2014 5:08 PM
+To: nixbugz@outlook.com
+Cc: linux-raid@vger.kernel.org ; Paszkiewicz, Artur
+Subject: Re: Can't grow IMSM RAID5
+
+On Tue, 2014-04-01 at 16:42 +0100, nixbugz wrote:
+> Hello
+>
+> I=E2=80=99m stuck trying to add a 4th disc to an IMSM RAID5 container=
+:
+>
+> # mdadm -a /dev/md127 /dev/sdb
+> mdadm: added /dev/sdb
+>
+> # mdadm --grow --raid-devices=3D4
+> /dev/md127 --backup-file=3D/mnt/spare/raid-backup-file
+> mdadm: Cannot read superblock for /dev/md127
+
+I think you need to grow the RAID volume and not the container? So it
+would be /dev/md0 or /dev/md1 instead of /dev/md127? Here's URL to the
+Linux IMSM user's manual that hopefully may be of use:
+http://www.intel.com/support/chipsets/rste/sb/CS-033622.htm
+
+>
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sdd[2] sda[1] sdc[0]
+>       1887436800 blocks super external:/md127/0 level 5, 128k chunk,
+> algorithm 0 [3/3] [UUU]
+>
+> md1 : active (auto-read-only) raid5 sdc[2] sdd[1] sda[0]
+>       66077696 blocks super external:/md127/1 level 5, 128k chunk,=20
+> algorithm
+> 0 [3/3] [UUU]
+>
+> md127 : inactive sdb[3](S) sda[2](S) sdc[1](S) sdd[0](S)
+>       12612 blocks super external:imsm
+>
+> unused devices: <none>
+>
+> # mdadm =E2=80=93V
+> mdadm - v3.3 - 3rd September 2013
+>
+>
+> I don=E2=80=99t know if this is related but mdmon has trouble finding=
+ the ports:
+>
+> # mdadm --detail-platform -v
+> mdadm: checking metadata 0.90
+> mdadm: 0.90 metadata is platform independent
+> mdadm: checking metadata 1.x
+> mdadm: 1.x metadata is platform independent
+> mdadm: checking metadata ddf
+> mdadm: ddf metadata is platform independent
+> mdadm: checking metadata imsm
+> mdmon: found Intel(R) SATA RAID controller at 0000:00:1f.2.
+>        Platform : Intel(R) Matrix Storage Manager
+>         Version : 11.6.0.1702
+>     RAID Levels : raid0 raid1 raid10 raid5
+>     Chunk Sizes : 4k 8k 16k 32k 64k 128k
+>     2TB volumes : supported
+>       2TB disks : supported
+>       Max Disks : 6
+>     Max Volumes : 2 per array, 4 per controller
+> I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+> mdmon: failed to determine port number for
+> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0
+> mdmon: failed to enumerate ports on SATA controller at 0000:00:1f.2.
+> mdadm: checking metadata mbr
+> mdadm: mbr metadata is platform independent
+> mdadm: checking metadata gpt
+> mdadm: gpt metadata is platform independent
+> #
+
+Artur, any ideas why mdmon isn't happy in this instance?
+
+> Thanks
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+N=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BDy=EF=BF=BD=EF=BF=BD=D8=B2X=EF=BF=BD=
+=EF=BF=BDv=D8=96)=EF=BF=BD{n=C7=89=EF=BF=BD=EF=BF=BD{=EF=BF=BD=EF=BF=BD=
+=EF=BF=BD{y=EF=BF=BD=CA=87=EF=BF=BD=EF=BF=BDj=07=EF=BF=BDf=EF=BF=BD=EF=BF=
+=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
+=BF=BDj:v=EF=BF=BD=EF=BF=BDwj=D8=B6=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=
+=BDzZ=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDj=EF=BF=BD=EF=BF=BD
+
+
+
+Thanks for your quick response.  I wasn't sure whether to grow containe=
+r or=20
+volume but this from man mdadm decided it:
+
+      Using  GROW  on containers is currently supported only for Intel'=
+s=20
+IMSM
+      container format.   The  number  of  devices  in  a  container  c=
+an=20
+be
+      increased  - which affects all arrays in the container ...
+
+It gives the same message anyway when applied to the volume md0.
+
+This extract from the Intel doc you linked to says the same (note that =
+md0=20
+is the container here :-)
+
+    The example below adds a single disk to the RAID container and then=
+=20
+grows the
+    volume(s). Because IMSM volumes inside a container must span the sa=
+me
+    number of disks, all volumes are expanded.
+=2E..
+        mdadm =E2=80=93a /dev/md0 /dev/sde
+        mdadm =E2=80=93G /dev/md0 =E2=80=93n 4 --backup-file=3D/tmp/bac=
+kup
+
+Might it be something to do with what's already on the new drive?
+This is an Intel DQ77MK motherboard.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
