@@ -1,82 +1,64 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: Recent 3.x kernels: Memory leak causing OOMs
-Date: Tue, 1 Apr 2014 16:58:17 +0100
-Message-ID: <20140401155815.GF20061@arm.com>
-References: <alpine.DEB.2.02.1402161406120.26926@chino.kir.corp.google.com>
- <20140216225000.GO30257@n2100.arm.linux.org.uk>
- <1392670951.24429.10.camel@sakura.staff.proxad.net>
- <20140217210954.GA21483@n2100.arm.linux.org.uk>
- <20140315101952.GT21483@n2100.arm.linux.org.uk>
- <20140317180748.644d30e2@notabene.brown>
- <20140317181813.GA24144@arm.com>
- <20140317193316.GF21483@n2100.arm.linux.org.uk>
- <20140401091959.GA10912@n2100.arm.linux.org.uk>
- <20140401113851.GA15317@n2100.arm.linux.org.uk>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: Re: Can't grow IMSM RAID5
+Date: Tue, 1 Apr 2014 16:08:24 +0000
+Message-ID: <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
+References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140401113851.GA15317@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
 Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, David Rientjes <rientjes@google.com>, Maxime Bizon <mbizon@freebox.fr>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-ID: <6EFE7AA97F1E0748BC92D5E8546B7F81@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "nixbugz@outlook.com" <nixbugz@outlook.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, Apr 01, 2014 at 12:38:51PM +0100, Russell King - ARM Linux wrote:
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index aacf6bf352d8..604bad2fa442 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -123,8 +123,14 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
->  		bio = r1_bio->bios[j];
->  		bio->bi_vcnt = RESYNC_PAGES;
->  
-> -		if (bio_alloc_pages(bio, gfp_flags))
-> -			goto out_free_bio;
-> +		if (bio_alloc_pages(bio, gfp_flags)) {
-> +			/*
-> +			 * Mark this as having no pages - bio_alloc_pages
-> +			 * removes any it allocated.
-> +			 */
-> +			bio->bi_vcnt = 0;
-> +			goto out_free_all_bios;
-> +		}
->  	}
->  	/* If not user-requests, copy the page pointers to all bios */
->  	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
-> @@ -138,9 +144,25 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
->  
->  	return r1_bio;
->  
-> +out_free_all_bios:
-> +	j = -1;
->  out_free_bio:
-> -	while (++j < pi->raid_disks)
-> -		bio_put(r1_bio->bios[j]);
-> +	while (++j < pi->raid_disks) {
-> +		bio = r1_bio->bios[j];
-> +		if (bio->bi_vcnt) {
-> +			struct bio_vec *bv;
-> +			int i;
-> +			/*
-> +			 * Annoyingly, BIO has no way to do this, so we have
-> +			 * to do it manually.  Given the trouble here, and
-> +			 * the lack of BIO support for cleaning up, I don't
-> +			 * care about linux/bio.h's comment about this helper.
-> +			 */
-> +			bio_for_each_segment_all(bv, bio, i)
-> +				__free_page(bv->bv_page);
-> +		}
-
-Do you still need the 'if' block here? bio_for_each_segment_all() checks
-for bio->bi_vcnt which was set to 0 above.
-
--- 
-Catalin
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+T24gVHVlLCAyMDE0LTA0LTAxIGF0IDE2OjQyICswMTAwLCBuaXhidWd6IHdyb3RlOg0KPiBIZWxs
+bw0KPiANCj4gSeKAmW0gc3R1Y2sgdHJ5aW5nIHRvIGFkZCBhIDR0aCBkaXNjIHRvIGFuIElNU00g
+UkFJRDUgY29udGFpbmVyOg0KPiANCj4gIyBtZGFkbSAtYSAvZGV2L21kMTI3IC9kZXYvc2RiDQo+
+IG1kYWRtOiBhZGRlZCAvZGV2L3NkYg0KPiANCj4gIyBtZGFkbSAtLWdyb3cgLS1yYWlkLWRldmlj
+ZXM9NCANCj4gL2Rldi9tZDEyNyAtLWJhY2t1cC1maWxlPS9tbnQvc3BhcmUvcmFpZC1iYWNrdXAt
+ZmlsZQ0KPiBtZGFkbTogQ2Fubm90IHJlYWQgc3VwZXJibG9jayBmb3IgL2Rldi9tZDEyNw0KDQpJ
+IHRoaW5rIHlvdSBuZWVkIHRvIGdyb3cgdGhlIFJBSUQgdm9sdW1lIGFuZCBub3QgdGhlIGNvbnRh
+aW5lcj8gU28gaXQNCndvdWxkIGJlIC9kZXYvbWQwIG9yIC9kZXYvbWQxIGluc3RlYWQgb2YgL2Rl
+di9tZDEyNz8gSGVyZSdzIFVSTCB0byB0aGUNCkxpbnV4IElNU00gdXNlcidzIG1hbnVhbCB0aGF0
+IGhvcGVmdWxseSBtYXkgYmUgb2YgdXNlOg0KaHR0cDovL3d3dy5pbnRlbC5jb20vc3VwcG9ydC9j
+aGlwc2V0cy9yc3RlL3NiL0NTLTAzMzYyMi5odG0NCg0KPiANCj4gIyBjYXQgL3Byb2MvbWRzdGF0
+DQo+IFBlcnNvbmFsaXRpZXMgOiBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XQ0KPiBtZDAgOiBhY3Rp
+dmUgcmFpZDUgc2RkWzJdIHNkYVsxXSBzZGNbMF0NCj4gICAgICAgMTg4NzQzNjgwMCBibG9ja3Mg
+c3VwZXIgZXh0ZXJuYWw6L21kMTI3LzAgbGV2ZWwgNSwgMTI4ayBjaHVuaywgDQo+IGFsZ29yaXRo
+bSAwIFszLzNdIFtVVVVdDQo+IA0KPiBtZDEgOiBhY3RpdmUgKGF1dG8tcmVhZC1vbmx5KSByYWlk
+NSBzZGNbMl0gc2RkWzFdIHNkYVswXQ0KPiAgICAgICA2NjA3NzY5NiBibG9ja3Mgc3VwZXIgZXh0
+ZXJuYWw6L21kMTI3LzEgbGV2ZWwgNSwgMTI4ayBjaHVuaywgYWxnb3JpdGhtIA0KPiAwIFszLzNd
+IFtVVVVdDQo+IA0KPiBtZDEyNyA6IGluYWN0aXZlIHNkYlszXShTKSBzZGFbMl0oUykgc2RjWzFd
+KFMpIHNkZFswXShTKQ0KPiAgICAgICAxMjYxMiBibG9ja3Mgc3VwZXIgZXh0ZXJuYWw6aW1zbQ0K
+PiANCj4gdW51c2VkIGRldmljZXM6IDxub25lPg0KPiANCj4gIyBtZGFkbSDigJNWDQo+IG1kYWRt
+IC0gdjMuMyAtIDNyZCBTZXB0ZW1iZXIgMjAxMw0KPiANCj4gDQo+IEkgZG9u4oCZdCBrbm93IGlm
+IHRoaXMgaXMgcmVsYXRlZCBidXQgbWRtb24gaGFzIHRyb3VibGUgZmluZGluZyB0aGUgcG9ydHM6
+DQo+IA0KPiAjIG1kYWRtIC0tZGV0YWlsLXBsYXRmb3JtIC12DQo+IG1kYWRtOiBjaGVja2luZyBt
+ZXRhZGF0YSAwLjkwDQo+IG1kYWRtOiAwLjkwIG1ldGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5k
+ZW50DQo+IG1kYWRtOiBjaGVja2luZyBtZXRhZGF0YSAxLngNCj4gbWRhZG06IDEueCBtZXRhZGF0
+YSBpcyBwbGF0Zm9ybSBpbmRlcGVuZGVudA0KPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgZGRm
+DQo+IG1kYWRtOiBkZGYgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQNCj4gbWRhZG06
+IGNoZWNraW5nIG1ldGFkYXRhIGltc20NCj4gbWRtb246IGZvdW5kIEludGVsKFIpIFNBVEEgUkFJ
+RCBjb250cm9sbGVyIGF0IDAwMDA6MDA6MWYuMi4NCj4gICAgICAgIFBsYXRmb3JtIDogSW50ZWwo
+UikgTWF0cml4IFN0b3JhZ2UgTWFuYWdlcg0KPiAgICAgICAgIFZlcnNpb24gOiAxMS42LjAuMTcw
+Mg0KPiAgICAgUkFJRCBMZXZlbHMgOiByYWlkMCByYWlkMSByYWlkMTAgcmFpZDUNCj4gICAgIENo
+dW5rIFNpemVzIDogNGsgOGsgMTZrIDMyayA2NGsgMTI4aw0KPiAgICAgMlRCIHZvbHVtZXMgOiBz
+dXBwb3J0ZWQNCj4gICAgICAgMlRCIGRpc2tzIDogc3VwcG9ydGVkDQo+ICAgICAgIE1heCBEaXNr
+cyA6IDYNCj4gICAgIE1heCBWb2x1bWVzIDogMiBwZXIgYXJyYXksIDQgcGVyIGNvbnRyb2xsZXIN
+Cj4gSS9PIENvbnRyb2xsZXIgOiAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8wMDAwOjAwOjFmLjIg
+KFNBVEEpDQo+IG1kbW9uOiBmYWlsZWQgdG8gZGV0ZXJtaW5lIHBvcnQgbnVtYmVyIGZvciANCj4g
+L3N5cy9kZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDoxZi4yL2F0YTEvaG9zdDAvdGFyZ2V0MDow
+OjAvMDowOjA6MA0KPiBtZG1vbjogZmFpbGVkIHRvIGVudW1lcmF0ZSBwb3J0cyBvbiBTQVRBIGNv
+bnRyb2xsZXIgYXQgMDAwMDowMDoxZi4yLg0KPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgbWJy
+DQo+IG1kYWRtOiBtYnIgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQNCj4gbWRhZG06
+IGNoZWNraW5nIG1ldGFkYXRhIGdwdA0KPiBtZGFkbTogZ3B0IG1ldGFkYXRhIGlzIHBsYXRmb3Jt
+IGluZGVwZW5kZW50DQo+ICMNCg0KQXJ0dXIsIGFueSBpZGVhcyB3aHkgbWRtb24gaXNuJ3QgaGFw
+cHkgaW4gdGhpcyBpbnN0YW5jZT8NCg0KPiBUaGFua3MgDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNj
+cmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFp
+ZCIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5v
+cmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
+cmRvbW8taW5mby5odG1sDQo=
