@@ -1,81 +1,82 @@
-From: "nixbugz" <nixbugz@outlook.com>
-Subject: Can't grow IMSM RAID5
-Date: Tue, 1 Apr 2014 16:42:27 +0100
-Message-ID: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
+From: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: Recent 3.x kernels: Memory leak causing OOMs
+Date: Tue, 1 Apr 2014 16:58:17 +0100
+Message-ID: <20140401155815.GF20061@arm.com>
+References: <alpine.DEB.2.02.1402161406120.26926@chino.kir.corp.google.com>
+ <20140216225000.GO30257@n2100.arm.linux.org.uk>
+ <1392670951.24429.10.camel@sakura.staff.proxad.net>
+ <20140217210954.GA21483@n2100.arm.linux.org.uk>
+ <20140315101952.GT21483@n2100.arm.linux.org.uk>
+ <20140317180748.644d30e2@notabene.brown>
+ <20140317181813.GA24144@arm.com>
+ <20140317193316.GF21483@n2100.arm.linux.org.uk>
+ <20140401091959.GA10912@n2100.arm.linux.org.uk>
+ <20140401113851.GA15317@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed	reply-type=original
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20140401113851.GA15317@n2100.arm.linux.org.uk>
+Content-Language: en-US
+Sender: owner-linux-mm@kvack.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, David Rientjes <rientjes@google.com>, Maxime Bizon <mbizon@freebox.fr>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-raid.ids
 
-Hello
+On Tue, Apr 01, 2014 at 12:38:51PM +0100, Russell King - ARM Linux wrote:
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index aacf6bf352d8..604bad2fa442 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -123,8 +123,14 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+>  		bio = r1_bio->bios[j];
+>  		bio->bi_vcnt = RESYNC_PAGES;
+>  
+> -		if (bio_alloc_pages(bio, gfp_flags))
+> -			goto out_free_bio;
+> +		if (bio_alloc_pages(bio, gfp_flags)) {
+> +			/*
+> +			 * Mark this as having no pages - bio_alloc_pages
+> +			 * removes any it allocated.
+> +			 */
+> +			bio->bi_vcnt = 0;
+> +			goto out_free_all_bios;
+> +		}
+>  	}
+>  	/* If not user-requests, copy the page pointers to all bios */
+>  	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
+> @@ -138,9 +144,25 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+>  
+>  	return r1_bio;
+>  
+> +out_free_all_bios:
+> +	j = -1;
+>  out_free_bio:
+> -	while (++j < pi->raid_disks)
+> -		bio_put(r1_bio->bios[j]);
+> +	while (++j < pi->raid_disks) {
+> +		bio = r1_bio->bios[j];
+> +		if (bio->bi_vcnt) {
+> +			struct bio_vec *bv;
+> +			int i;
+> +			/*
+> +			 * Annoyingly, BIO has no way to do this, so we have
+> +			 * to do it manually.  Given the trouble here, and
+> +			 * the lack of BIO support for cleaning up, I don't
+> +			 * care about linux/bio.h's comment about this helper.
+> +			 */
+> +			bio_for_each_segment_all(bv, bio, i)
+> +				__free_page(bv->bv_page);
+> +		}
 
-I=E2=80=99m stuck trying to add a 4th disc to an IMSM RAID5 container:
+Do you still need the 'if' block here? bio_for_each_segment_all() checks
+for bio->bi_vcnt which was set to 0 above.
 
-# mdadm -a /dev/md127 /dev/sdb
-mdadm: added /dev/sdb
-
-# mdadm --grow --raid-devices=3D4=20
-/dev/md127 --backup-file=3D/mnt/spare/raid-backup-file
-mdadm: Cannot read superblock for /dev/md127
-
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdd[2] sda[1] sdc[0]
-      1887436800 blocks super external:/md127/0 level 5, 128k chunk,=20
-algorithm 0 [3/3] [UUU]
-
-md1 : active (auto-read-only) raid5 sdc[2] sdd[1] sda[0]
-      66077696 blocks super external:/md127/1 level 5, 128k chunk, algo=
-rithm=20
-0 [3/3] [UUU]
-
-md127 : inactive sdb[3](S) sda[2](S) sdc[1](S) sdd[0](S)
-      12612 blocks super external:imsm
-
-unused devices: <none>
-
-# mdadm =E2=80=93V
-mdadm - v3.3 - 3rd September 2013
-
-
-I don=E2=80=99t know if this is related but mdmon has trouble finding t=
-he ports:
-
-# mdadm --detail-platform -v
-mdadm: checking metadata 0.90
-mdadm: 0.90 metadata is platform independent
-mdadm: checking metadata 1.x
-mdadm: 1.x metadata is platform independent
-mdadm: checking metadata ddf
-mdadm: ddf metadata is platform independent
-mdadm: checking metadata imsm
-mdmon: found Intel(R) SATA RAID controller at 0000:00:1f.2.
-       Platform : Intel(R) Matrix Storage Manager
-        Version : 11.6.0.1702
-    RAID Levels : raid0 raid1 raid10 raid5
-    Chunk Sizes : 4k 8k 16k 32k 64k 128k
-    2TB volumes : supported
-      2TB disks : supported
-      Max Disks : 6
-    Max Volumes : 2 per array, 4 per controller
-I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-mdmon: failed to determine port number for=20
-/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0
-mdmon: failed to enumerate ports on SATA controller at 0000:00:1f.2.
-mdadm: checking metadata mbr
-mdadm: mbr metadata is platform independent
-mdadm: checking metadata gpt
-mdadm: gpt metadata is platform independent
-#
-
-Thanks=20
+-- 
+Catalin
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
