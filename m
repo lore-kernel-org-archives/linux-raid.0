@@ -1,148 +1,96 @@
-From: "nixbugz" <nixbugz@outlook.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
 Subject: Re: Can't grow IMSM RAID5
-Date: Tue, 1 Apr 2014 18:34:07 +0100
-Message-ID: <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl>
-References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl> <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
+Date: Tue, 1 Apr 2014 18:05:30 +0000
+Message-ID: <1396375529.172158.15.camel@djiang5-desk1.amr.corp.intel.com>
+References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
+	 <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
+	 <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed	reply-type=original
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
+In-Reply-To: <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl>
+Content-Language: en-US
+Content-ID: <CB9665E409DFEE4BB94DD4E43CB7DB1D@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: linux-raid@vger.kernel.org, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: "nixbugz@outlook.com" <nixbugz@outlook.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
------Original Message-----=20
-=46rom: Jiang, Dave
-Sent: Tuesday, April 1, 2014 5:08 PM
-To: nixbugz@outlook.com
-Cc: linux-raid@vger.kernel.org ; Paszkiewicz, Artur
-Subject: Re: Can't grow IMSM RAID5
-
-On Tue, 2014-04-01 at 16:42 +0100, nixbugz wrote:
-> Hello
->
-> I=E2=80=99m stuck trying to add a 4th disc to an IMSM RAID5 container=
-:
->
-> # mdadm -a /dev/md127 /dev/sdb
-> mdadm: added /dev/sdb
->
-> # mdadm --grow --raid-devices=3D4
-> /dev/md127 --backup-file=3D/mnt/spare/raid-backup-file
-> mdadm: Cannot read superblock for /dev/md127
-
-I think you need to grow the RAID volume and not the container? So it
-would be /dev/md0 or /dev/md1 instead of /dev/md127? Here's URL to the
-Linux IMSM user's manual that hopefully may be of use:
-http://www.intel.com/support/chipsets/rste/sb/CS-033622.htm
-
->
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sdd[2] sda[1] sdc[0]
->       1887436800 blocks super external:/md127/0 level 5, 128k chunk,
-> algorithm 0 [3/3] [UUU]
->
-> md1 : active (auto-read-only) raid5 sdc[2] sdd[1] sda[0]
->       66077696 blocks super external:/md127/1 level 5, 128k chunk,=20
-> algorithm
-> 0 [3/3] [UUU]
->
-> md127 : inactive sdb[3](S) sda[2](S) sdc[1](S) sdd[0](S)
->       12612 blocks super external:imsm
->
-> unused devices: <none>
->
-> # mdadm =E2=80=93V
-> mdadm - v3.3 - 3rd September 2013
->
->
-> I don=E2=80=99t know if this is related but mdmon has trouble finding=
- the ports:
->
-> # mdadm --detail-platform -v
-> mdadm: checking metadata 0.90
-> mdadm: 0.90 metadata is platform independent
-> mdadm: checking metadata 1.x
-> mdadm: 1.x metadata is platform independent
-> mdadm: checking metadata ddf
-> mdadm: ddf metadata is platform independent
-> mdadm: checking metadata imsm
-> mdmon: found Intel(R) SATA RAID controller at 0000:00:1f.2.
->        Platform : Intel(R) Matrix Storage Manager
->         Version : 11.6.0.1702
->     RAID Levels : raid0 raid1 raid10 raid5
->     Chunk Sizes : 4k 8k 16k 32k 64k 128k
->     2TB volumes : supported
->       2TB disks : supported
->       Max Disks : 6
->     Max Volumes : 2 per array, 4 per controller
-> I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-> mdmon: failed to determine port number for
-> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0
-> mdmon: failed to enumerate ports on SATA controller at 0000:00:1f.2.
-> mdadm: checking metadata mbr
-> mdadm: mbr metadata is platform independent
-> mdadm: checking metadata gpt
-> mdadm: gpt metadata is platform independent
-> #
-
-Artur, any ideas why mdmon isn't happy in this instance?
-
-> Thanks
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-N=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BDy=EF=BF=BD=EF=BF=BD=D8=B2X=EF=BF=BD=
-=EF=BF=BDv=D8=96)=EF=BF=BD{n=C7=89=EF=BF=BD=EF=BF=BD{=EF=BF=BD=EF=BF=BD=
-=EF=BF=BD{y=EF=BF=BD=CA=87=EF=BF=BD=EF=BF=BDj=07=EF=BF=BDf=EF=BF=BD=EF=BF=
-=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
-=BF=BDj:v=EF=BF=BD=EF=BF=BDwj=D8=B6=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=
-=BDzZ=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDj=EF=BF=BD=EF=BF=BD
-
-
-
-Thanks for your quick response.  I wasn't sure whether to grow containe=
-r or=20
-volume but this from man mdadm decided it:
-
-      Using  GROW  on containers is currently supported only for Intel'=
-s=20
-IMSM
-      container format.   The  number  of  devices  in  a  container  c=
-an=20
-be
-      increased  - which affects all arrays in the container ...
-
-It gives the same message anyway when applied to the volume md0.
-
-This extract from the Intel doc you linked to says the same (note that =
-md0=20
-is the container here :-)
-
-    The example below adds a single disk to the RAID container and then=
-=20
-grows the
-    volume(s). Because IMSM volumes inside a container must span the sa=
-me
-    number of disks, all volumes are expanded.
-=2E..
-        mdadm =E2=80=93a /dev/md0 /dev/sde
-        mdadm =E2=80=93G /dev/md0 =E2=80=93n 4 --backup-file=3D/tmp/bac=
-kup
-
-Might it be something to do with what's already on the new drive?
-This is an Intel DQ77MK motherboard.
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gVHVlLCAyMDE0LTA0LTAxIGF0IDE4OjM0ICswMTAwLCBuaXhidWd6IHdyb3RlOg0KPiAtLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLSANCj4gRnJvbTogSmlhbmcsIERhdmUNCj4gU2VudDogVHVl
+c2RheSwgQXByaWwgMSwgMjAxNCA1OjA4IFBNDQo+IFRvOiBuaXhidWd6QG91dGxvb2suY29tDQo+
+IENjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZyA7IFBhc3praWV3aWN6LCBBcnR1cg0KPiBT
+dWJqZWN0OiBSZTogQ2FuJ3QgZ3JvdyBJTVNNIFJBSUQ1DQo+IA0KPiBPbiBUdWUsIDIwMTQtMDQt
+MDEgYXQgMTY6NDIgKzAxMDAsIG5peGJ1Z3ogd3JvdGU6DQo+ID4gSGVsbG8NCj4gPg0KPiA+IEni
+gJltIHN0dWNrIHRyeWluZyB0byBhZGQgYSA0dGggZGlzYyB0byBhbiBJTVNNIFJBSUQ1IGNvbnRh
+aW5lcjoNCj4gPg0KPiA+ICMgbWRhZG0gLWEgL2Rldi9tZDEyNyAvZGV2L3NkYg0KPiA+IG1kYWRt
+OiBhZGRlZCAvZGV2L3NkYg0KPiA+DQo+ID4gIyBtZGFkbSAtLWdyb3cgLS1yYWlkLWRldmljZXM9
+NA0KPiA+IC9kZXYvbWQxMjcgLS1iYWNrdXAtZmlsZT0vbW50L3NwYXJlL3JhaWQtYmFja3VwLWZp
+bGUNCj4gPiBtZGFkbTogQ2Fubm90IHJlYWQgc3VwZXJibG9jayBmb3IgL2Rldi9tZDEyNw0KPiAN
+Cj4gSSB0aGluayB5b3UgbmVlZCB0byBncm93IHRoZSBSQUlEIHZvbHVtZSBhbmQgbm90IHRoZSBj
+b250YWluZXI/IFNvIGl0DQo+IHdvdWxkIGJlIC9kZXYvbWQwIG9yIC9kZXYvbWQxIGluc3RlYWQg
+b2YgL2Rldi9tZDEyNz8gSGVyZSdzIFVSTCB0byB0aGUNCj4gTGludXggSU1TTSB1c2VyJ3MgbWFu
+dWFsIHRoYXQgaG9wZWZ1bGx5IG1heSBiZSBvZiB1c2U6DQo+IGh0dHA6Ly93d3cuaW50ZWwuY29t
+L3N1cHBvcnQvY2hpcHNldHMvcnN0ZS9zYi9DUy0wMzM2MjIuaHRtDQo+IA0KPiA+DQo+ID4gIyBj
+YXQgL3Byb2MvbWRzdGF0DQo+ID4gUGVyc29uYWxpdGllcyA6IFtyYWlkNl0gW3JhaWQ1XSBbcmFp
+ZDRdDQo+ID4gbWQwIDogYWN0aXZlIHJhaWQ1IHNkZFsyXSBzZGFbMV0gc2RjWzBdDQo+ID4gICAg
+ICAgMTg4NzQzNjgwMCBibG9ja3Mgc3VwZXIgZXh0ZXJuYWw6L21kMTI3LzAgbGV2ZWwgNSwgMTI4
+ayBjaHVuaywNCj4gPiBhbGdvcml0aG0gMCBbMy8zXSBbVVVVXQ0KPiA+DQo+ID4gbWQxIDogYWN0
+aXZlIChhdXRvLXJlYWQtb25seSkgcmFpZDUgc2RjWzJdIHNkZFsxXSBzZGFbMF0NCj4gPiAgICAg
+ICA2NjA3NzY5NiBibG9ja3Mgc3VwZXIgZXh0ZXJuYWw6L21kMTI3LzEgbGV2ZWwgNSwgMTI4ayBj
+aHVuaywgDQo+ID4gYWxnb3JpdGhtDQo+ID4gMCBbMy8zXSBbVVVVXQ0KPiA+DQo+ID4gbWQxMjcg
+OiBpbmFjdGl2ZSBzZGJbM10oUykgc2RhWzJdKFMpIHNkY1sxXShTKSBzZGRbMF0oUykNCj4gPiAg
+ICAgICAxMjYxMiBibG9ja3Mgc3VwZXIgZXh0ZXJuYWw6aW1zbQ0KPiA+DQo+ID4gdW51c2VkIGRl
+dmljZXM6IDxub25lPg0KPiA+DQo+ID4gIyBtZGFkbSDigJNWDQo+ID4gbWRhZG0gLSB2My4zIC0g
+M3JkIFNlcHRlbWJlciAyMDEzDQo+ID4NCj4gPg0KPiA+IEkgZG9u4oCZdCBrbm93IGlmIHRoaXMg
+aXMgcmVsYXRlZCBidXQgbWRtb24gaGFzIHRyb3VibGUgZmluZGluZyB0aGUgcG9ydHM6DQo+ID4N
+Cj4gPiAjIG1kYWRtIC0tZGV0YWlsLXBsYXRmb3JtIC12DQo+ID4gbWRhZG06IGNoZWNraW5nIG1l
+dGFkYXRhIDAuOTANCj4gPiBtZGFkbTogMC45MCBtZXRhZGF0YSBpcyBwbGF0Zm9ybSBpbmRlcGVu
+ZGVudA0KPiA+IG1kYWRtOiBjaGVja2luZyBtZXRhZGF0YSAxLngNCj4gPiBtZGFkbTogMS54IG1l
+dGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5kZW50DQo+ID4gbWRhZG06IGNoZWNraW5nIG1ldGFk
+YXRhIGRkZg0KPiA+IG1kYWRtOiBkZGYgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQN
+Cj4gPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgaW1zbQ0KPiA+IG1kbW9uOiBmb3VuZCBJbnRl
+bChSKSBTQVRBIFJBSUQgY29udHJvbGxlciBhdCAwMDAwOjAwOjFmLjIuDQo+ID4gICAgICAgIFBs
+YXRmb3JtIDogSW50ZWwoUikgTWF0cml4IFN0b3JhZ2UgTWFuYWdlcg0KPiA+ICAgICAgICAgVmVy
+c2lvbiA6IDExLjYuMC4xNzAyDQo+ID4gICAgIFJBSUQgTGV2ZWxzIDogcmFpZDAgcmFpZDEgcmFp
+ZDEwIHJhaWQ1DQo+ID4gICAgIENodW5rIFNpemVzIDogNGsgOGsgMTZrIDMyayA2NGsgMTI4aw0K
+PiA+ICAgICAyVEIgdm9sdW1lcyA6IHN1cHBvcnRlZA0KPiA+ICAgICAgIDJUQiBkaXNrcyA6IHN1
+cHBvcnRlZA0KPiA+ICAgICAgIE1heCBEaXNrcyA6IDYNCj4gPiAgICAgTWF4IFZvbHVtZXMgOiAy
+IHBlciBhcnJheSwgNCBwZXIgY29udHJvbGxlcg0KPiA+IEkvTyBDb250cm9sbGVyIDogL3N5cy9k
+ZXZpY2VzL3BjaTAwMDA6MDAvMDAwMDowMDoxZi4yIChTQVRBKQ0KPiA+IG1kbW9uOiBmYWlsZWQg
+dG8gZGV0ZXJtaW5lIHBvcnQgbnVtYmVyIGZvcg0KPiA+IC9zeXMvZGV2aWNlcy9wY2kwMDAwOjAw
+LzAwMDA6MDA6MWYuMi9hdGExL2hvc3QwL3RhcmdldDA6MDowLzA6MDowOjANCj4gPiBtZG1vbjog
+ZmFpbGVkIHRvIGVudW1lcmF0ZSBwb3J0cyBvbiBTQVRBIGNvbnRyb2xsZXIgYXQgMDAwMDowMDox
+Zi4yLg0KPiA+IG1kYWRtOiBjaGVja2luZyBtZXRhZGF0YSBtYnINCj4gPiBtZGFkbTogbWJyIG1l
+dGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5kZW50DQo+ID4gbWRhZG06IGNoZWNraW5nIG1ldGFk
+YXRhIGdwdA0KPiA+IG1kYWRtOiBncHQgbWV0YWRhdGEgaXMgcGxhdGZvcm0gaW5kZXBlbmRlbnQN
+Cj4gPiAjDQo+IA0KPiBBcnR1ciwgYW55IGlkZWFzIHdoeSBtZG1vbiBpc24ndCBoYXBweSBpbiB0
+aGlzIGluc3RhbmNlPw0KPiANCj4gVGhhbmtzIGZvciB5b3VyIHF1aWNrIHJlc3BvbnNlLiAgSSB3
+YXNuJ3Qgc3VyZSB3aGV0aGVyIHRvIGdyb3cgY29udGFpbmVyIG9yIA0KPiB2b2x1bWUgYnV0IHRo
+aXMgZnJvbSBtYW4gbWRhZG0gZGVjaWRlZCBpdDoNCj4gDQo+ICAgICAgIFVzaW5nICBHUk9XICBv
+biBjb250YWluZXJzIGlzIGN1cnJlbnRseSBzdXBwb3J0ZWQgb25seSBmb3IgSW50ZWwncyANCj4g
+SU1TTQ0KPiAgICAgICBjb250YWluZXIgZm9ybWF0LiAgIFRoZSAgbnVtYmVyICBvZiAgZGV2aWNl
+cyAgaW4gIGEgIGNvbnRhaW5lciAgY2FuIA0KPiBiZQ0KPiAgICAgICBpbmNyZWFzZWQgIC0gd2hp
+Y2ggYWZmZWN0cyBhbGwgYXJyYXlzIGluIHRoZSBjb250YWluZXIgLi4uDQo+IA0KPiBJdCBnaXZl
+cyB0aGUgc2FtZSBtZXNzYWdlIGFueXdheSB3aGVuIGFwcGxpZWQgdG8gdGhlIHZvbHVtZSBtZDAu
+DQo+IA0KPiBUaGlzIGV4dHJhY3QgZnJvbSB0aGUgSW50ZWwgZG9jIHlvdSBsaW5rZWQgdG8gc2F5
+cyB0aGUgc2FtZSAobm90ZSB0aGF0IG1kMCANCj4gaXMgdGhlIGNvbnRhaW5lciBoZXJlIDotKQ0K
+PiANCj4gICAgIFRoZSBleGFtcGxlIGJlbG93IGFkZHMgYSBzaW5nbGUgZGlzayB0byB0aGUgUkFJ
+RCBjb250YWluZXIgYW5kIHRoZW4gDQo+IGdyb3dzIHRoZQ0KPiAgICAgdm9sdW1lKHMpLiBCZWNh
+dXNlIElNU00gdm9sdW1lcyBpbnNpZGUgYSBjb250YWluZXIgbXVzdCBzcGFuIHRoZSBzYW1lDQo+
+ICAgICBudW1iZXIgb2YgZGlza3MsIGFsbCB2b2x1bWVzIGFyZSBleHBhbmRlZC4NCj4gLi4uDQo+
+ICAgICAgICAgbWRhZG0g4oCTYSAvZGV2L21kMCAvZGV2L3NkZQ0KPiAgICAgICAgIG1kYWRtIOKA
+k0cgL2Rldi9tZDAg4oCTbiA0IC0tYmFja3VwLWZpbGU9L3RtcC9iYWNrdXANCj4gDQo+IE1pZ2h0
+IGl0IGJlIHNvbWV0aGluZyB0byBkbyB3aXRoIHdoYXQncyBhbHJlYWR5IG9uIHRoZSBuZXcgZHJp
+dmU/DQo+IFRoaXMgaXMgYW4gSW50ZWwgRFE3N01LIG1vdGhlcmJvYXJkLg0KDQpPb29wcyBteSBi
+YWQuIEl0J3MgYmVlbiBhIHdoaWxlIHNpbmNlIEkgcGxheWVkIHdpdGggdGhlIGdyb3cgZmVhdHVy
+ZS4NCkV2ZW4gaWYgdGhlcmUncyBzb21ldGhpbmcgb24gdGhlIGRyaXZlLCBpdCBkb2Vzbid0IG1h
+a2Ugc2Vuc2UgdG8gbWUgd2h5DQppdCBjb21wbGFpbnMgbm90IGFibGUgdG8gcmVhZCB0aGUgc3Vw
+ZXJibG9jayBvbiAvZGV2L21kMTI3LiBBbmQgYWRkaW5nDQp0aGUgZHJpdmUgdG8gdGhlIGNvbnRh
+aW5lciBzaG91bGQndmUgdXBkYXRlZCB0aGUgc3VwZXIgYmxvY2sgb24gdGhhdA0KZHJpdmUgSSB3
+b3VsZCB0aGluay4uLi4gQWx0aG91Z2ggSSB3b25kZXIgaWYgdGhlIG1kbW9uIGlzc3VlIGlzIGEN
+CmNsdWUuLi4uIEkgYXNzdW1lIGFsbCB0aGUgZHJpdmVzIGFyZSBhdHRhY2hlZCB0byB0aGUgSW50
+ZWwgQUhDSQ0KY29udHJvbGxlciByaWdodD8gTWF5YmUgQXJ0dXIgd2lsbCBoYXZlIGEgYmV0dGVy
+IGlkZWEgYXMgaGUgaXMgbXVjaCBtb3JlDQpmYW1pbGlhciB3aXRoIHRoZSBhY3R1YWwgY29kZS4g
+DQo=
