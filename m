@@ -1,135 +1,159 @@
-From: Christian Schmitz <schnet@hotmail.com>
-Subject: RE: Problem Syncing raid1
-Date: Wed, 2 Apr 2014 22:18:10 +0000
-Message-ID: <BAY177-W35793297D3F640EF11F48C86D0@phx.gbl>
-References: <BAY177-W404434C6EBAB450FA96A77C86D0@phx.gbl>,<CADNH=7EwjLirv+zdUKu-Hsrw1djLNpPoz=WSg4pJwUc0giRzOw@mail.gmail.com>,<BAY177-W961648C4893E888EECA18C86D0@phx.gbl>,<CAK_KU4bh3S+rwMmJt4_8pyrOYbiLn83BHYabF79c4M59UoW1TA@mail.gmail.com>
+From: "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Subject: RE: Can't grow IMSM RAID5
+Date: Wed, 2 Apr 2014 12:11:45 +0000
+Message-ID: <3B9FD4FFCF3F8A43B0125797A2BB89691A618B48@IRSMSX102.ger.corp.intel.com>
+References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl>
+ <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com>
+ <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl>
+ <1396375529.172158.15.camel@djiang5-desk1.amr.corp.intel.com>
+ <DUB113-DS8A84CB0AD235F1E36B421A96D0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK_KU4bh3S+rwMmJt4_8pyrOYbiLn83BHYabF79c4M59UoW1TA@mail.gmail.com>
+In-Reply-To: <DUB113-DS8A84CB0AD235F1E36B421A96D0@phx.gbl>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: nixbugz <nixbugz@outlook.com>, "Jiang, Dave" <dave.jiang@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks, i will run smartctl as soon i finish recover the server data.
-
-Tomorrow i will give news.
-
-Best regards.
-Christian
-
-
-be free, be linux
-
-
-----------------------------------------
-> Date: Wed, 2 Apr 2014 18:08:31 -0400
-> Subject: Re: Problem Syncing raid1
-> From: sdvileskis@gmail.com
-> To: schnet@hotmail.com
-> CC: mathias.buren@gmail.com; linux-raid@vger.kernel.org
->
-> The good news is your realloc_sector_cnt is 0.
->
-> However, run:
-> smartctl -t long /dev/sda
-> smartctl -t long /dev/sdb
->
-> if you haven't done it in a while
-> It will tell the controller on the disk to check all the sectors and =
-remap any.
->
-> It will generally take several hours to complete, but if SMART detect=
-s
-> any bad sectors it will attempt to remap them. (The OS and badblocks
-> won't know the difference)
-> You can run the smart test while the disk is online/mounted without
-> problems, but the more you lay off the disks, the faster it will run.
->
-> On Wed, Apr 2, 2014 at 5:56 PM, Christian Schmitz <schnet@hotmail.com=
-> wrote:
->> The system freeze, i suspect that is a bad sector because is allways=
- in the same point of syncing.
->>
->> I do a low level format and all test to SDB, so the problem is in SD=
-A.
->>
->> Like a deja vu my server was exactly the same problem, now i am doin=
-g the ddrescue to server disk and found badblock. This reforce the badb=
-lock intuition.
->>
->> #smartctl -a /dev/sda
->> SMART overall-health self-assessment test result: PASSED
->> ID# ATTRIBUTE_NAME FLAG VALUE WORST THRESH TYPE UPDATED WHEN_FAILED =
-RAW_VALUE
->> 1 Raw_Read_Error_Rate 0x002f 200 193 051 Pre-fail Always - 25
->> 3 Spin_Up_Time 0x0027 201 196 021 Pre-fail Always - 916
->> 4 Start_Stop_Count 0x0032 099 099 000 Old_age Always - 1032
->> 5 Reallocated_Sector_Ct 0x0033 200 200 140 Pre-fail Always - 0
->>
->> I think that badblock was caused in power failure, so is a logical b=
-adblock and not phisical badblock. But to lowlevel format, and run the =
-manufacturer tools i need sync the raid to ship the data to SDB disk.
->>
->> =BFHow i can use badblock in a raid device?
->> badblock /dev/md0?
->> badblock /dev/sda2?
->> The raid hangup if badblock does something?
->>
->> Thanks for your answer.
->> Christian
->> be free, be linux
->>
->>
->> ----------------------------------------
->>> Date: Wed, 2 Apr 2014 22:36:49 +0100
->>> Subject: Re: Problem Syncing raid1
->>> From: mathias.buren@gmail.com
->>> To: schnet@hotmail.com
->>> CC: linux-raid@vger.kernel.org
->>>
->>> On 2 April 2014 21:56, Christian Schmitz <schnet@hotmail.com> wrote=
-:
->>>> Hi everyone,
->>>> I have a linux with the following configuration:
->>>> /dev/md0 ( degraded mode) (/dev/sda2)
->>>>
->>>> /dev/md1 ( full mode) (/dev/sda3 /dev/sdb3)
->>>>
->>>> The problem is if i add /dev/sdb2 to /dev/md0 start the syncing, b=
-ut when reach 7% the system crash.
->>>> I am sure that the main problem is one ( or more) badblock into /d=
-ev/sda2.
->>>
->>> Crash? What does that mean? Kernel panic? Freeze? Reboot?
->>> How do you know sda2 (which is sda) has bad blocks? Does it tell yo=
-u?
->>> Did you check the SMART data and run badblocks (non-destructivei f =
-you
->>> want) on it?
->>>
->>>>
->>>> How i can do to syncing the disk?.
->>>> Obviously Is the first step to change the disk.
->>>
->>> If it's broken, sure.
->>>
->>>>
->>>> Best Regards
->>>> Christian
->>>>
->>>
->>>
->>> REgards,
->>> Mathias
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
- 		 	   		  --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBuaXhidWd6IFttYWlsdG86bml4
+YnVnekBvdXRsb29rLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBBcHJpbCAyLCAyMDE0IDM6MzUg
+QU0NCj4gVG86IEppYW5nLCBEYXZlDQo+IENjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZzsg
+UGFzemtpZXdpY3osIEFydHVyDQo+IFN1YmplY3Q6IFJlOiBDYW4ndCBncm93IElNU00gUkFJRDUN
+Cj4gDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEppYW5nLCBEYXZlDQo+
+IFNlbnQ6IFR1ZXNkYXksIEFwcmlsIDEsIDIwMTQgNzowNSBQTQ0KPiBUbzogbml4YnVnekBvdXRs
+b29rLmNvbQ0KPiBDYzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcgOyBQYXN6a2lld2ljeiwg
+QXJ0dXINCj4gU3ViamVjdDogUmU6IENhbid0IGdyb3cgSU1TTSBSQUlENQ0KPiANCj4gT24gVHVl
+LCAyMDE0LTA0LTAxIGF0IDE4OjM0ICswMTAwLCBuaXhidWd6IHdyb3RlOg0KPiA+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogSmlhbmcsIERhdmUNCj4gPiBTZW50OiBUdWVz
+ZGF5LCBBcHJpbCAxLCAyMDE0IDU6MDggUE0NCj4gPiBUbzogbml4YnVnekBvdXRsb29rLmNvbQ0K
+PiA+IENjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZyA7IFBhc3praWV3aWN6LCBBcnR1cg0K
+PiA+IFN1YmplY3Q6IFJlOiBDYW4ndCBncm93IElNU00gUkFJRDUNCj4gPg0KPiA+IE9uIFR1ZSwg
+MjAxNC0wNC0wMSBhdCAxNjo0MiArMDEwMCwgbml4YnVneiB3cm90ZToNCj4gPiA+IEhlbGxvDQo+
+ID4gPg0KPiA+ID4gSeKAmW0gc3R1Y2sgdHJ5aW5nIHRvIGFkZCBhIDR0aCBkaXNjIHRvIGFuIElN
+U00gUkFJRDUgY29udGFpbmVyOg0KPiA+ID4NCj4gPiA+ICMgbWRhZG0gLWEgL2Rldi9tZDEyNyAv
+ZGV2L3NkYg0KPiA+ID4gbWRhZG06IGFkZGVkIC9kZXYvc2RiDQo+ID4gPg0KPiA+ID4gIyBtZGFk
+bSAtLWdyb3cgLS1yYWlkLWRldmljZXM9NA0KPiA+ID4gL2Rldi9tZDEyNyAtLWJhY2t1cC1maWxl
+PS9tbnQvc3BhcmUvcmFpZC1iYWNrdXAtZmlsZQ0KPiA+ID4gbWRhZG06IENhbm5vdCByZWFkIHN1
+cGVyYmxvY2sgZm9yIC9kZXYvbWQxMjcNCj4gPg0KDQpJcyB5b3VyIE9TIGluc3RhbGxlZCBvbiB0
+aGlzIGFycmF5PyBXaGF0IGRpc3RyaWJ1dGlvbiBpcyB0aGlzPyBJcyBpdCBzeXN0ZW1kIGJhc2Vk
+PyBJdCBhcHBlYXJzIHRoYXQgdGhlcmUgaXMgYW4gaXNzdWUgd2l0aCBtZG1vbiBpbiBzdWNoIGNh
+c2UuIEl0IGNhbid0IGFjY2VzcyBhIG5ldyBkaXNrIHRvIHdyaXRlIG1ldGFkYXRhLiBZb3UgY2Fu
+IGNoZWNrIHRoaXMgYnkgZG9pbmcgbWRhZG0gLUUgL2Rldi9zZGIuIElmIGl0IGRvZXNuJ3Qgc2hv
+dyBhbnkgbWV0YWRhdGEgb24gdGhpcyBkaXNrIGJ1dCB0aGUgZGlzayBpcyBpbiB0aGUgY29udGFp
+bmVyLCB0aGVuIGl0IGlzIHRoaXMgcHJvYmxlbS4gQXMgYSB3b3JrYXJvdW5kLCBwbGVhc2UgdHJ5
+IHRoaXM6DQoNCjEuIFJlbW92ZSB0aGUgbmV3IGRpc2sgZnJvbSB0aGUgY29udGFpbmVyDQojIG1k
+YWRtIC1yIC9kZXYvbWQxMjcgL2Rldi9zZGINCg0KMi4gVGFrZW92ZXIgbWRtb24gZm9yIHRoaXMg
+YXJyYXkNCiMgbWRtb24gLS10YWtlb3ZlciAvZGV2L21kMTI3DQoNCjMuIEFkZCB0aGUgZGlzayBh
+Z2FpbiBhbmQgZ3JvdyB0aGUgYXJyYXk6DQojIG1kYWRtIC1hIC9kZXYvbWQxMjcgL2Rldi9zZGIN
+CiMgZXhwb3J0IE1EQURNX0VYUEVSSU1FTlRBTD0xDQojIG1kYWRtIC0tZ3JvdyAtLXJhaWQtZGV2
+aWNlcz00IC9kZXYvbWQxMjcgLS1iYWNrdXAtZmlsZT0vbW50L3NwYXJlL3JhaWQtYmFja3VwLWZp
+bGUNCg0KPiA+IEkgdGhpbmsgeW91IG5lZWQgdG8gZ3JvdyB0aGUgUkFJRCB2b2x1bWUgYW5kIG5v
+dCB0aGUgY29udGFpbmVyPyBTbyBpdA0KPiA+IHdvdWxkIGJlIC9kZXYvbWQwIG9yIC9kZXYvbWQx
+IGluc3RlYWQgb2YgL2Rldi9tZDEyNz8gSGVyZSdzIFVSTCB0byB0aGUNCj4gPiBMaW51eCBJTVNN
+IHVzZXIncyBtYW51YWwgdGhhdCBob3BlZnVsbHkgbWF5IGJlIG9mIHVzZToNCj4gPiBodHRwOi8v
+d3d3LmludGVsLmNvbS9zdXBwb3J0L2NoaXBzZXRzL3JzdGUvc2IvQ1MtMDMzNjIyLmh0bQ0KPiA+
+DQo+ID4gPg0KPiA+ID4gIyBjYXQgL3Byb2MvbWRzdGF0DQo+ID4gPiBQZXJzb25hbGl0aWVzIDog
+W3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0NCj4gPiA+IG1kMCA6IGFjdGl2ZSByYWlkNSBzZGRbMl0g
+c2RhWzFdIHNkY1swXQ0KPiA+ID4gICAgICAgMTg4NzQzNjgwMCBibG9ja3Mgc3VwZXIgZXh0ZXJu
+YWw6L21kMTI3LzAgbGV2ZWwgNSwgMTI4ayBjaHVuaywNCj4gPiA+IGFsZ29yaXRobSAwIFszLzNd
+IFtVVVVdDQo+ID4gPg0KPiA+ID4gbWQxIDogYWN0aXZlIChhdXRvLXJlYWQtb25seSkgcmFpZDUg
+c2RjWzJdIHNkZFsxXSBzZGFbMF0NCj4gPiA+ICAgICAgIDY2MDc3Njk2IGJsb2NrcyBzdXBlciBl
+eHRlcm5hbDovbWQxMjcvMSBsZXZlbCA1LCAxMjhrIGNodW5rLA0KPiA+ID4gYWxnb3JpdGhtDQo+
+ID4gPiAwIFszLzNdIFtVVVVdDQo+ID4gPg0KPiA+ID4gbWQxMjcgOiBpbmFjdGl2ZSBzZGJbM10o
+Uykgc2RhWzJdKFMpIHNkY1sxXShTKSBzZGRbMF0oUykNCj4gPiA+ICAgICAgIDEyNjEyIGJsb2Nr
+cyBzdXBlciBleHRlcm5hbDppbXNtDQo+ID4gPg0KPiA+ID4gdW51c2VkIGRldmljZXM6IDxub25l
+Pg0KPiA+ID4NCj4gPiA+ICMgbWRhZG0g4oCTVg0KPiA+ID4gbWRhZG0gLSB2My4zIC0gM3JkIFNl
+cHRlbWJlciAyMDEzDQo+ID4gPg0KPiA+ID4NCj4gPiA+IEkgZG9u4oCZdCBrbm93IGlmIHRoaXMg
+aXMgcmVsYXRlZCBidXQgbWRtb24gaGFzIHRyb3VibGUgZmluZGluZyB0aGUgcG9ydHM6DQo+ID4g
+Pg0KPiA+ID4gIyBtZGFkbSAtLWRldGFpbC1wbGF0Zm9ybSAtdg0KPiA+ID4gbWRhZG06IGNoZWNr
+aW5nIG1ldGFkYXRhIDAuOTANCj4gPiA+IG1kYWRtOiAwLjkwIG1ldGFkYXRhIGlzIHBsYXRmb3Jt
+IGluZGVwZW5kZW50DQo+ID4gPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgMS54DQo+ID4gPiBt
+ZGFkbTogMS54IG1ldGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5kZW50DQo+ID4gPiBtZGFkbTog
+Y2hlY2tpbmcgbWV0YWRhdGEgZGRmDQo+ID4gPiBtZGFkbTogZGRmIG1ldGFkYXRhIGlzIHBsYXRm
+b3JtIGluZGVwZW5kZW50DQo+ID4gPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgaW1zbQ0KPiA+
+ID4gbWRtb246IGZvdW5kIEludGVsKFIpIFNBVEEgUkFJRCBjb250cm9sbGVyIGF0IDAwMDA6MDA6
+MWYuMi4NCj4gPiA+ICAgICAgICBQbGF0Zm9ybSA6IEludGVsKFIpIE1hdHJpeCBTdG9yYWdlIE1h
+bmFnZXINCj4gPiA+ICAgICAgICAgVmVyc2lvbiA6IDExLjYuMC4xNzAyDQo+ID4gPiAgICAgUkFJ
+RCBMZXZlbHMgOiByYWlkMCByYWlkMSByYWlkMTAgcmFpZDUNCj4gPiA+ICAgICBDaHVuayBTaXpl
+cyA6IDRrIDhrIDE2ayAzMmsgNjRrIDEyOGsNCj4gPiA+ICAgICAyVEIgdm9sdW1lcyA6IHN1cHBv
+cnRlZA0KPiA+ID4gICAgICAgMlRCIGRpc2tzIDogc3VwcG9ydGVkDQo+ID4gPiAgICAgICBNYXgg
+RGlza3MgOiA2DQo+ID4gPiAgICAgTWF4IFZvbHVtZXMgOiAyIHBlciBhcnJheSwgNCBwZXIgY29u
+dHJvbGxlcg0KPiA+ID4gSS9PIENvbnRyb2xsZXIgOiAvc3lzL2RldmljZXMvcGNpMDAwMDowMC8w
+MDAwOjAwOjFmLjIgKFNBVEEpDQo+ID4gPiBtZG1vbjogZmFpbGVkIHRvIGRldGVybWluZSBwb3J0
+IG51bWJlciBmb3INCj4gPiA+IC9zeXMvZGV2aWNlcy9wY2kwMDAwOjAwLzAwMDA6MDA6MWYuMi9h
+dGExL2hvc3QwL3RhcmdldDA6MDowLzA6MDowOjANCj4gPiA+IG1kbW9uOiBmYWlsZWQgdG8gZW51
+bWVyYXRlIHBvcnRzIG9uIFNBVEEgY29udHJvbGxlciBhdCAwMDAwOjAwOjFmLjIuDQo+ID4gPiBt
+ZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgbWJyDQo+ID4gPiBtZGFkbTogbWJyIG1ldGFkYXRhIGlz
+IHBsYXRmb3JtIGluZGVwZW5kZW50DQo+ID4gPiBtZGFkbTogY2hlY2tpbmcgbWV0YWRhdGEgZ3B0
+DQo+ID4gPiBtZGFkbTogZ3B0IG1ldGFkYXRhIGlzIHBsYXRmb3JtIGluZGVwZW5kZW50DQo+ID4g
+PiAjDQo+ID4NCj4gPiBBcnR1ciwgYW55IGlkZWFzIHdoeSBtZG1vbiBpc24ndCBoYXBweSBpbiB0
+aGlzIGluc3RhbmNlPw0KPiA+DQoNClRoaXMgaXMgbm90IHJlbGF0ZWQgdG8gdGhlIGlzc3VlIHdp
+dGggZ3Jvdy4gSSB0aGluayB0aGlzIGlzIGNhdXNlZCBiZSBhIGNoYW5nZSBpcyBzeXNmcyB3aGlj
+aCBtZGFkbSBpcyBub3QgYXdhcmUgb2YgKHRoZSBhdGExIGRpciBiZWZvcmUgaG9zdDApLiBJdCB3
+b24ndCBjYXVzZSBhbnkgcHJvYmxlbXMsIGJ1dCBpdCBzaG91bGQgYmUgZml4ZWQuIEkgd2lsbCBs
+b29rIGludG8gdGhpcy4NCg0KPiA+IFRoYW5rcyBmb3IgeW91ciBxdWljayByZXNwb25zZS4gIEkg
+d2Fzbid0IHN1cmUgd2hldGhlciB0byBncm93IGNvbnRhaW5lcg0KPiA+IG9yDQo+ID4gdm9sdW1l
+IGJ1dCB0aGlzIGZyb20gbWFuIG1kYWRtIGRlY2lkZWQgaXQ6DQo+ID4NCj4gPiAgICAgICBVc2lu
+ZyAgR1JPVyAgb24gY29udGFpbmVycyBpcyBjdXJyZW50bHkgc3VwcG9ydGVkIG9ubHkgZm9yIElu
+dGVsJ3MNCj4gPiBJTVNNDQo+ID4gICAgICAgY29udGFpbmVyIGZvcm1hdC4gICBUaGUgIG51bWJl
+ciAgb2YgIGRldmljZXMgIGluICBhICBjb250YWluZXIgIGNhbg0KPiA+IGJlDQo+ID4gICAgICAg
+aW5jcmVhc2VkICAtIHdoaWNoIGFmZmVjdHMgYWxsIGFycmF5cyBpbiB0aGUgY29udGFpbmVyIC4u
+Lg0KPiA+DQo+ID4gSXQgZ2l2ZXMgdGhlIHNhbWUgbWVzc2FnZSBhbnl3YXkgd2hlbiBhcHBsaWVk
+IHRvIHRoZSB2b2x1bWUgbWQwLg0KPiA+DQo+ID4gVGhpcyBleHRyYWN0IGZyb20gdGhlIEludGVs
+IGRvYyB5b3UgbGlua2VkIHRvIHNheXMgdGhlIHNhbWUgKG5vdGUgdGhhdCBtZDANCj4gPiBpcyB0
+aGUgY29udGFpbmVyIGhlcmUgOi0pDQo+ID4NCj4gPiAgICAgVGhlIGV4YW1wbGUgYmVsb3cgYWRk
+cyBhIHNpbmdsZSBkaXNrIHRvIHRoZSBSQUlEIGNvbnRhaW5lciBhbmQgdGhlbg0KPiA+IGdyb3dz
+IHRoZQ0KPiA+ICAgICB2b2x1bWUocykuIEJlY2F1c2UgSU1TTSB2b2x1bWVzIGluc2lkZSBhIGNv
+bnRhaW5lciBtdXN0IHNwYW4gdGhlIHNhbWUNCj4gPiAgICAgbnVtYmVyIG9mIGRpc2tzLCBhbGwg
+dm9sdW1lcyBhcmUgZXhwYW5kZWQuDQo+ID4gLi4uDQo+ID4gICAgICAgICBtZGFkbSDigJNhIC9k
+ZXYvbWQwIC9kZXYvc2RlDQo+ID4gICAgICAgICBtZGFkbSDigJNHIC9kZXYvbWQwIOKAk24gNCAt
+LWJhY2t1cC1maWxlPS90bXAvYmFja3VwDQo+ID4NCj4gPiBNaWdodCBpdCBiZSBzb21ldGhpbmcg
+dG8gZG8gd2l0aCB3aGF0J3MgYWxyZWFkeSBvbiB0aGUgbmV3IGRyaXZlPw0KPiA+IFRoaXMgaXMg
+YW4gSW50ZWwgRFE3N01LIG1vdGhlcmJvYXJkLg0KPiANCj4gT29vcHMgbXkgYmFkLiBJdCdzIGJl
+ZW4gYSB3aGlsZSBzaW5jZSBJIHBsYXllZCB3aXRoIHRoZSBncm93IGZlYXR1cmUuDQo+IEV2ZW4g
+aWYgdGhlcmUncyBzb21ldGhpbmcgb24gdGhlIGRyaXZlLCBpdCBkb2Vzbid0IG1ha2Ugc2Vuc2Ug
+dG8gbWUgd2h5DQo+IGl0IGNvbXBsYWlucyBub3QgYWJsZSB0byByZWFkIHRoZSBzdXBlcmJsb2Nr
+IG9uIC9kZXYvbWQxMjcuIEFuZCBhZGRpbmcNCj4gdGhlIGRyaXZlIHRvIHRoZSBjb250YWluZXIg
+c2hvdWxkJ3ZlIHVwZGF0ZWQgdGhlIHN1cGVyIGJsb2NrIG9uIHRoYXQNCj4gZHJpdmUgSSB3b3Vs
+ZCB0aGluay4uLi4gQWx0aG91Z2ggSSB3b25kZXIgaWYgdGhlIG1kbW9uIGlzc3VlIGlzIGENCj4g
+Y2x1ZS4uLi4gSSBhc3N1bWUgYWxsIHRoZSBkcml2ZXMgYXJlIGF0dGFjaGVkIHRvIHRoZSBJbnRl
+bCBBSENJDQo+IGNvbnRyb2xsZXIgcmlnaHQ/IE1heWJlIEFydHVyIHdpbGwgaGF2ZSBhIGJldHRl
+ciBpZGVhIGFzIGhlIGlzIG11Y2ggbW9yZQ0KPiBmYW1pbGlhciB3aXRoIHRoZSBhY3R1YWwgY29k
+ZS4NCj4gTu+/ve+/ve+/vXLvv71577+977+92LJY77+977+9dtiWKe+/vXtux4nvv73vv71777+9
+77+977+9e3nvv73Kh++/ve+/vWoNCu+/vWbvv73vv73vv73vv71677+977+9d++/ve+/ve+/ve+/
+vWo6du+/ve+/vXdq2Lbvv73vv70NCu+/ve+/vXpa77+977+977+977+977+9au+/ve+/vQ0KPiAN
+Cj4gDQo+IA0KPiANCj4gDQo+IFRoZSA0IGRyaXZlcyBhcmUgb24gdGhlIGZpcnN0IDQgU0FUQSBw
+b3J0cyAtIHRoZSBJbnRlbCBSU1QgcG9ydHMuDQo+IEFzIGZvciBtZG1vbiwgbXkgQyBpcyB2ZXJ5
+IHJ1c3R5IGJ1dCBpdCBsb29rcyBsaWtlIHRoaXMgcm91dGluZSBpbg0KPiBzdXBlci1pbnRlbC5j
+IGlzIGV4cGVjdGluZyBkaXJzIGNhbGxlZCAiaG9zdFswLTldKiI6DQo+IA0KPiBzdGF0aWMgaW50
+IGFoY2lfZ2V0X3BvcnRfY291bnQoY29uc3QgY2hhciAqaGJhX3BhdGgsIGludCAqcG9ydF9jb3Vu
+dCkNCj4gew0KPiAgICAgICAgIHN0cnVjdCBkaXJlbnQgKmVudDsNCj4gICAgICAgICBESVIgKmRp
+cjsNCj4gICAgICAgICBpbnQgaG9zdF9iYXNlID0gLTE7DQo+IA0KPiAgICAgICAgICpwb3J0X2Nv
+dW50ID0gMDsNCj4gICAgICAgICBpZiAoKGRpciA9IG9wZW5kaXIoaGJhX3BhdGgpKSA9PSBOVUxM
+KQ0KPiAgICAgICAgICAgICAgICAgcmV0dXJuIC0xOw0KPiANCj4gICAgICAgICBmb3IgKGVudCA9
+IHJlYWRkaXIoZGlyKTsgZW50OyBlbnQgPSByZWFkZGlyKGRpcikpIHsNCj4gICAgICAgICAgICAg
+ICAgIGludCBob3N0Ow0KPiANCj4gICAgICAgICAgICAgICAgIGlmIChzc2NhbmYoZW50LT5kX25h
+bWUsICJob3N0JWQiLCAmaG9zdCkgIT0gMSkNCj4gICAgICAgICAgICAgICAgICAgICAgICAgY29u
+dGludWU7DQo+IA0KPiANCj4gd2hpY2ggZG9uJ3QgZXhpc3QgaW4gdGhlIGZpbGUtc3lzdGVtIGF0
+IHRoYXQgcG9pbnQNCj4gDQo+ICQgbHMgL3N5cy9idXMvcGNpL2RyaXZlcnMvYWhjaS8wMDAwOjAw
+OjFmLjINCj4gYXRhMSAgICAgICAgICAgICAgICAgICAgICBkM2NvbGRfYWxsb3dlZCAgbW9kYWxp
+YXMgICByZXNvdXJjZTENCj4gYXRhMiAgICAgICAgICAgICAgICAgICAgICBkZXZpY2UgICAgICAg
+ICAgbXNpX2J1cyAgICByZXNvdXJjZTINCj4gYXRhMyAgICAgICAgICAgICAgICAgICAgICBkbWFf
+bWFza19iaXRzICAgbXNpX2lycXMgICByZXNvdXJjZTMNCj4gYXRhNCAgICAgICAgICAgICAgICAg
+ICAgICBkcml2ZXIgICAgICAgICAgbnVtYV9ub2RlICByZXNvdXJjZTQNCj4gYXRhNSAgICAgICAg
+ICAgICAgICAgICAgICBlbmFibGUgICAgICAgICAgcG93ZXIgICAgICByZXNvdXJjZTUNCj4gYXRh
+NiAgICAgICAgICAgICAgICAgICAgICBmaXJtd2FyZV9ub2RlICAgcmVtb3ZlICAgICBzdWJzeXN0
+ZW0NCj4gYnJva2VuX3Bhcml0eV9zdGF0dXMgICAgICBpb21tdV9ncm91cCAgICAgcmVzY2FuICAg
+ICBzdWJzeXN0ZW1fZGV2aWNlDQo+IGNsYXNzICAgICAgICAgICAgICAgICAgICAgaXJxICAgICAg
+ICAgICAgIHJlc2V0ICAgICAgc3Vic3lzdGVtX3ZlbmRvcg0KPiBjb25maWcgICAgICAgICAgICAg
+ICAgICAgIGxvY2FsX2NwdWxpc3QgICByZXNvdXJjZSAgIHVldmVudA0KPiBjb25zaXN0ZW50X2Rt
+YV9tYXNrX2JpdHMgIGxvY2FsX2NwdXMgICAgICByZXNvdXJjZTAgIHZlbmRvcg0KPiAkDQo+IA0K
+PiBidXQgZG8gaW4gdGhlIGF0YSogZGlycw0KPiANCj4gJCBscyAvc3lzL2J1cy9wY2kvZHJpdmVy
+cy9haGNpLzAwMDA6MDA6MWYuMi9hdGExDQo+IGF0YV9wb3J0ICBob3N0MCAgbGluazEgIHBvd2Vy
+ICB1ZXZlbnQNCj4gJA0KPiANCj4gT25lIG1vcmUgdGhpbmcsIGlzIGl0IG5vcm1hbCB0byBzZWUg
+dGhpcyBtZXNzYWdlIHJlcGVhdGVkIG9uIHNodXRkb3duPw0KPiBtZGFkbTogQ2Fubm90IGdldCBl
+eGNsdXNpdmUgYWNjZXNzIHRvIC9kZXYvbWQwOlBlcmhhcHMgYSBydW5uaW5nIHByb2Nlc3MsDQo+
+IG1vdW50ZWQgZmlsZXN5c3RlbSBvciBhY3RpdmUgdm9sdW1lIGdyb3VwPw0KPiANCg0K
