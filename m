@@ -1,207 +1,109 @@
-From: "nixbugz" <nixbugz@outlook.com>
-Subject: Re: Can't grow IMSM RAID5
-Date: Wed, 2 Apr 2014 02:35:25 +0100
-Message-ID: <DUB113-DS8A84CB0AD235F1E36B421A96D0@phx.gbl>
-References: <DUB113-DS14AD0971A94EC90C73E3A6A9620@phx.gbl> <1396368503.172158.6.camel@djiang5-desk1.amr.corp.intel.com> <DUB113-DS32C3A824A4ED3C133290E0A9620@phx.gbl> <1396375529.172158.15.camel@djiang5-desk1.amr.corp.intel.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Hardware advice for software raid
+Date: Wed, 02 Apr 2014 04:42:17 -0500
+Message-ID: <533BDB79.7020902@hardwarefreak.com>
+References: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1396375529.172158.15.camel@djiang5-desk1.amr.corp.intel.com>
+In-Reply-To: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: linux-raid@vger.kernel.org, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------Original Message-----=20
-=46rom: Jiang, Dave
-Sent: Tuesday, April 1, 2014 7:05 PM
-To: nixbugz@outlook.com
-Cc: linux-raid@vger.kernel.org ; Paszkiewicz, Artur
-Subject: Re: Can't grow IMSM RAID5
+On 4/1/2014 2:09 PM, Barrett Lewis wrote:
+> I have a dedicated, consumer hw, media/file server with a 6 drive
+> raid6 of 2tb drives, all plugged directly into the sata ports on my
+> motherboard, an asrock z77. =20
 
-On Tue, 2014-04-01 at 18:34 +0100, nixbugz wrote:
-> -----Original Message-----=20
-> From: Jiang, Dave
-> Sent: Tuesday, April 1, 2014 5:08 PM
-> To: nixbugz@outlook.com
-> Cc: linux-raid@vger.kernel.org ; Paszkiewicz, Artur
-> Subject: Re: Can't grow IMSM RAID5
->
-> On Tue, 2014-04-01 at 16:42 +0100, nixbugz wrote:
-> > Hello
-> >
-> > I=E2=80=99m stuck trying to add a 4th disc to an IMSM RAID5 contain=
-er:
-> >
-> > # mdadm -a /dev/md127 /dev/sdb
-> > mdadm: added /dev/sdb
-> >
-> > # mdadm --grow --raid-devices=3D4
-> > /dev/md127 --backup-file=3D/mnt/spare/raid-backup-file
-> > mdadm: Cannot read superblock for /dev/md127
->
-> I think you need to grow the RAID volume and not the container? So it
-> would be /dev/md0 or /dev/md1 instead of /dev/md127? Here's URL to th=
+There are 6 models of the Asrock z77.  All but one contain a PCH
+heatsink designed to look cool rather than properly cool the chip.  The
+Asrock z77 Extreme 11 has a fan so is an exception, and also has an
+onboard 8 port LSI SAS controller (9211-8i), so I assume you do not hav=
 e
-> Linux IMSM user's manual that hopefully may be of use:
-> http://www.intel.com/support/chipsets/rste/sb/CS-033622.htm
->
-> >
-> > # cat /proc/mdstat
-> > Personalities : [raid6] [raid5] [raid4]
-> > md0 : active raid5 sdd[2] sda[1] sdc[0]
-> >       1887436800 blocks super external:/md127/0 level 5, 128k chunk=
-,
-> > algorithm 0 [3/3] [UUU]
-> >
-> > md1 : active (auto-read-only) raid5 sdc[2] sdd[1] sda[0]
-> >       66077696 blocks super external:/md127/1 level 5, 128k chunk,
-> > algorithm
-> > 0 [3/3] [UUU]
-> >
-> > md127 : inactive sdb[3](S) sda[2](S) sdc[1](S) sdd[0](S)
-> >       12612 blocks super external:imsm
-> >
-> > unused devices: <none>
-> >
-> > # mdadm =E2=80=93V
-> > mdadm - v3.3 - 3rd September 2013
-> >
-> >
-> > I don=E2=80=99t know if this is related but mdmon has trouble findi=
-ng the ports:
-> >
-> > # mdadm --detail-platform -v
-> > mdadm: checking metadata 0.90
-> > mdadm: 0.90 metadata is platform independent
-> > mdadm: checking metadata 1.x
-> > mdadm: 1.x metadata is platform independent
-> > mdadm: checking metadata ddf
-> > mdadm: ddf metadata is platform independent
-> > mdadm: checking metadata imsm
-> > mdmon: found Intel(R) SATA RAID controller at 0000:00:1f.2.
-> >        Platform : Intel(R) Matrix Storage Manager
-> >         Version : 11.6.0.1702
-> >     RAID Levels : raid0 raid1 raid10 raid5
-> >     Chunk Sizes : 4k 8k 16k 32k 64k 128k
-> >     2TB volumes : supported
-> >       2TB disks : supported
-> >       Max Disks : 6
-> >     Max Volumes : 2 per array, 4 per controller
-> > I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-> > mdmon: failed to determine port number for
-> > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0
-> > mdmon: failed to enumerate ports on SATA controller at 0000:00:1f.2=
-=2E
-> > mdadm: checking metadata mbr
-> > mdadm: mbr metadata is platform independent
-> > mdadm: checking metadata gpt
-> > mdadm: gpt metadata is platform independent
-> > #
->
-> Artur, any ideas why mdmon isn't happy in this instance?
->
-> Thanks for your quick response.  I wasn't sure whether to grow contai=
-ner=20
-> or
-> volume but this from man mdadm decided it:
->
->       Using  GROW  on containers is currently supported only for Inte=
-l's
-> IMSM
->       container format.   The  number  of  devices  in  a  container =
- can
-> be
->       increased  - which affects all arrays in the container ...
->
-> It gives the same message anyway when applied to the volume md0.
->
-> This extract from the Intel doc you linked to says the same (note tha=
-t md0
-> is the container here :-)
->
->     The example below adds a single disk to the RAID container and th=
-en
-> grows the
->     volume(s). Because IMSM volumes inside a container must span the =
-same
->     number of disks, all volumes are expanded.
-> ...
->         mdadm =E2=80=93a /dev/md0 /dev/sde
->         mdadm =E2=80=93G /dev/md0 =E2=80=93n 4 --backup-file=3D/tmp/b=
-ackup
->
-> Might it be something to do with what's already on the new drive?
-> This is an Intel DQ77MK motherboard.
+the Extreme 11.
 
-Ooops my bad. It's been a while since I played with the grow feature.
-Even if there's something on the drive, it doesn't make sense to me why
-it complains not able to read the superblock on /dev/md127. And adding
-the drive to the container should've updated the super block on that
-drive I would think.... Although I wonder if the mdmon issue is a
-clue.... I assume all the drives are attached to the Intel AHCI
-controller right? Maybe Artur will have a better idea as he is much mor=
-e
-familiar with the actual code.
-N=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BDy=EF=BF=BD=EF=BF=BD=D8=B2X=EF=BF=BD=
-=EF=BF=BDv=D8=96)=EF=BF=BD{n=C7=89=EF=BF=BD=EF=BF=BD{=EF=BF=BD=EF=BF=BD=
-=EF=BF=BD{y=EF=BF=BD=CA=87=EF=BF=BD=EF=BF=BDj=07=EF=BF=BDf=EF=BF=BD=EF=BF=
-=BD=EF=BF=BD=EF=BF=BDz=EF=BF=BD=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
-=BF=BDj:v=EF=BF=BD=EF=BF=BDwj=D8=B6=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=
-=BDzZ=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDj=EF=BF=BD=EF=BF=BD
+> A while back I had a problem which seemed
+> like cascade failure of drives, but Stan Hoeppner and Phil Turmel
+> helped me to figure out it was a PSU having gone bad and delivering
+> dirty power.
+>=20
+> After replacing the PSU things worked fine, or so I thought.  At some
+> point I noticed I have quite a bit of trouble making it through a
+> resync without the machine locking up.  When I realized it wasn't tie=
+d
+> to a resync in particular but any extended heavy I/O, I lowered the
+> sync_speed_max to 10,000, I was able to get through a repair (no
+> mismatches found!).
 
+With consumer PC hardware random lockups occurring only under heavy dis=
+k
+IO are most often the result of thermal buildup in the PCH (Northbridge=
+)
+chip.  This can occur when all the drives are connected to its SATA
+ports as in your case, but it can also occur when using one or more
+SAS/SATA HBAs if the PCIe slots are connected through the PCH.  The odd=
+s
+are very good that your lockups are a result of the poor PCH heatsink
+design on the Asrock boards exacerbated by insufficient case airflow
+across the heatsink.  What case is this z77 board in?  Be specific
+please so I can pull up the schematic.
 
+Regardless of case the solution is straightforward and inexpensive:
+install a low profile solid copper active cooler, such as this one:
 
+http://www.frozencpu.com/products/6717/vid-102/Enzotech_SLF-1_Forged_Co=
+pper_Northbridge_Southbridge_Low-Profile_Heatsink.html?tl=3Dg40c16s501
 
+The SLF-1 has 53-59mm hole spacing.  Asrock doesn't provide such
+information in their manual and after 30 minutes I can't find forum
+posts or other sources presenting this info.  Measure your PCH heatsink
+mounting hole spacing before ordering.  If it's less than 53mm
+center-to-center you need the SLF-30, and if it's more than 59mm you
+need the SLF-40.  If you think your case airflow over the PCH is
+actually greater than zero you can go with the CNB-R1 passive unit whic=
+h
+has 3 mounting rings to fit all hole spacings.  But with it you lose tw=
+o
+expansion slots.  Here's the product lineup:
 
-The 4 drives are on the first 4 SATA ports - the Intel RST ports.
-As for mdmon, my C is very rusty but it looks like this routine in=20
-super-intel.c is expecting dirs called "host[0-9]*":
+http://www.enzotechnology.com/air_cooling.htm
 
-static int ahci_get_port_count(const char *hba_path, int *port_count)
-{
-        struct dirent *ent;
-        DIR *dir;
-        int host_base =3D -1;
+There are other brands.  Enzo products are solid copper and compact,
+with these 3 fan models fitting under your PCIe cards.  You lose no PCI
+slots as with nearly all other chipset coolers.  I recommend them
+because they are high quality and work well, which is why they are also
+more expensive than most others.  That being the case, ~$35 including
+shipping is a small sum to part with to eliminate the lockups.
 
-        *port_count =3D 0;
-        if ((dir =3D opendir(hba_path)) =3D=3D NULL)
-                return -1;
+> I'm guessing that the motherboard has some problem (perhaps
+> originating from the bad PSU?), and I want to switch to a dedicated
+> HBA card to make this more modular.
 
-        for (ent =3D readdir(dir); ent; ent =3D readdir(dir)) {
-                int host;
+The one glaring problem is the woefully inadequate PCH heatsink.
+Replacing it as suggested will very likely eliminate the lockups, for
+about 1/8th the cost of a discrete LSI HBA.  And if it doesn't you will
+still have increased the lifespan of the PCH chip by at least a couple
+of years due to lowering operating temperature by 10-15=B0C or more.
 
-                if (sscanf(ent->d_name, "host%d", &host) !=3D 1)
-                        continue;
+> Stan had suggested the LSI SATA/SAS 9211-8i in many threads in the
+> archives.  If I use this card as my HBA, is there any particular
+> motherboard which would be better suited than others?
 
+Wait and cross this bridge later.  If it turns out this board has other
+problems that we can't identify and fix, there's a micro-ATX Intel
+server board with 6 SATA-2 ports on the PCH, socket LGA 1155, dual Inte=
+l
+GbE ports, integrated video, etc for ~$160 at Newegg.  Your CPU,  RAM,
+and drives will drop right in, and you won't have to spend another $200
+on the LSI.  It'll save you ~$150 overall compared to a consumer board+=
+LSI.
 
-which don't exist in the file-system at that point
+Cheers,
 
-$ ls /sys/bus/pci/drivers/ahci/0000:00:1f.2
-ata1                      d3cold_allowed  modalias   resource1
-ata2                      device          msi_bus    resource2
-ata3                      dma_mask_bits   msi_irqs   resource3
-ata4                      driver          numa_node  resource4
-ata5                      enable          power      resource5
-ata6                      firmware_node   remove     subsystem
-broken_parity_status      iommu_group     rescan     subsystem_device
-class                     irq             reset      subsystem_vendor
-config                    local_cpulist   resource   uevent
-consistent_dma_mask_bits  local_cpus      resource0  vendor
-$
-
-but do in the ata* dirs
-
-$ ls /sys/bus/pci/drivers/ahci/0000:00:1f.2/ata1
-ata_port  host0  link1  power  uevent
-$
-
-One more thing, is it normal to see this message repeated on shutdown?
-mdadm: Cannot get exclusive access to /dev/md0:Perhaps a running proces=
-s,=20
-mounted filesystem or active volume group?
+Stan
 
 
 --
