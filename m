@@ -1,31 +1,34 @@
-From: David Lamparter <equinox@diac24.net>
-Subject: Re: [linux-lvm] [LVM/RAID BUG DATA DESTRUCTION] 3.12.14 raid1
- initialisation + --write-mostly destroys LV
-Date: Wed, 2 Apr 2014 14:15:14 +0200
-Message-ID: <20140402121514.GK113782@jupiter.n2.diac24.net>
-References: <20140402120320.GJ113782@jupiter.n2.diac24.net>
+From: Christian Schmitz <schnet@hotmail.com>
+Subject: Problem Syncing raid1
+Date: Wed, 2 Apr 2014 20:56:50 +0000
+Message-ID: <BAY177-W404434C6EBAB450FA96A77C86D0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140402120320.GJ113782@jupiter.n2.diac24.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: LVM general discussion and development <linux-lvm@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 02, 2014 at 02:03:21PM +0200, David Lamparter wrote:
-> lvconvert --type raid1 -m 1 eidolon/root
-> lvchange --writemostly /dev/sda4:y --writebehind 32768 eidolon/root
-[...]
-> The raid1 was still initialising (around 20%) when I executed the second
-> command, output from /sys/block/*/stat leads me to believe the sync direction
-> was inverted from the newly-added device to the existing one.
-[...]
-> [950580.682165] mdX: bitmap initialized from disk: read 4 pages, set 98948 of 122880 bits
+Hi everyone,
+I have a linux with the following configuration:
+/dev/md0 ( degraded mode)=A0 (/dev/sda2)
 
-A quick disk inspection with dd/hexdump indicates that garbage starts
-around 19.5%, which lines up with "98948 of 122880" above.
+/dev/md1 ( full mode) (/dev/sda3 /dev/sdb3)
 
+The problem is if i add /dev/sdb2 to /dev/md0 start the syncing, but wh=
+en reach 7% the system crash.
+I am sure that the main problem is one ( or more) badblock into /dev/sd=
+a2.
 
--David
+How i can do to syncing the disk?.
+Obviously Is the first step to change the disk.
+
+Best Regards
+Christian
+
+be free, be linux 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
