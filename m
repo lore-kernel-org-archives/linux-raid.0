@@ -1,112 +1,166 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Hardware advice for software raid
-Date: Wed, 02 Apr 2014 04:42:17 -0500
-Message-ID: <533BDB79.7020902@hardwarefreak.com>
-References: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Christian Schmitz <schnet@hotmail.com>
+Subject: RE: Problem Syncing raid1
+Date: Thu, 3 Apr 2014 19:54:54 +0000
+Message-ID: <BAY177-W48FA7C4D5A92389BFC0667C86C0@phx.gbl>
+References: <BAY177-W404434C6EBAB450FA96A77C86D0@phx.gbl>,<CADNH=7EwjLirv+zdUKu-Hsrw1djLNpPoz=WSg4pJwUc0giRzOw@mail.gmail.com>,<BAY177-W961648C4893E888EECA18C86D0@phx.gbl>,<CAK_KU4bh3S+rwMmJt4_8pyrOYbiLn83BHYabF79c4M59UoW1TA@mail.gmail.com>,<BAY177-W35793297D3F640EF11F48C86D0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
+In-Reply-To: <BAY177-W35793297D3F640EF11F48C86D0@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Barrett Lewis <barrett.lewis.mitsi@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 4/1/2014 2:09 PM, Barrett Lewis wrote:
-> I have a dedicated, consumer hw, media/file server with a 6 drive
-> raid6 of 2tb drives, all plugged directly into the sata ports on my
-> motherboard, an asrock z77. =20
+Well i do
+dd if=3Dserver.img of=3D/dev/sde2
+where sde is the new disk for server data.
+dd was aborted saying input/output error.
+at 750mb ( 0.7G of 550G of partition)
+So as you say i do
+smartctl -t long /dev/sde2
+It takes 150 minutes.
+After that i do:
+dd if=3Dserver.img of=3D/dev/sde2
+Is running since 6 hours so seem solved 750mb error.
 
-There are 6 models of the Asrock z77.  All but one contain a PCH
-heatsink designed to look cool rather than properly cool the chip.  The
-Asrock z77 Extreme 11 has a fan so is an exception, and also has an
-onboard 8 port LSI SAS controller (9211-8i), so I assume you do not hav=
-e
-the Extreme 11.
+I am starting=A0 the smartctl -t long to all hard disk jejejeje.
 
-> A while back I had a problem which seemed
-> like cascade failure of drives, but Stan Hoeppner and Phil Turmel
-> helped me to figure out it was a PSU having gone bad and delivering
-> dirty power.
->=20
-> After replacing the PSU things worked fine, or so I thought.  At some
-> point I noticed I have quite a bit of trouble making it through a
-> resync without the machine locking up.  When I realized it wasn't tie=
-d
-> to a resync in particular but any extended heavy I/O, I lowered the
-> sync_speed_max to 10,000, I was able to get through a repair (no
-> mismatches found!).
+Best regards
+Christian
 
-With consumer PC hardware random lockups occurring only under heavy dis=
-k
-IO are most often the result of thermal buildup in the PCH (Northbridge=
-)
-chip.  This can occur when all the drives are connected to its SATA
-ports as in your case, but it can also occur when using one or more
-SAS/SATA HBAs if the PCIe slots are connected through the PCH.  The odd=
-s
-are very good that your lockups are a result of the poor PCH heatsink
-design on the Asrock boards exacerbated by insufficient case airflow
-across the heatsink.  What case is this z77 board in?  Be specific
-please so I can pull up the schematic.
-
-Regardless of case the solution is straightforward and inexpensive:
-install a low profile solid copper active cooler, such as this one:
-
-http://www.frozencpu.com/products/6717/vid-102/Enzotech_SLF-1_Forged_Co=
-pper_Northbridge_Southbridge_Low-Profile_Heatsink.html?tl=3Dg40c16s501
-
-The SLF-1 has 53-59mm hole spacing.  Asrock doesn't provide such
-information in their manual and after 30 minutes I can't find forum
-posts or other sources presenting this info.  Measure your PCH heatsink
-mounting hole spacing before ordering.  If it's less than 53mm
-center-to-center you need the SLF-30, and if it's more than 59mm you
-need the SLF-40.  If you think your case airflow over the PCH is
-actually greater than zero you can go with the CNB-R1 passive unit whic=
-h
-has 3 mounting rings to fit all hole spacings.  But with it you lose tw=
-o
-expansion slots.  Here's the product lineup:
-
-http://www.enzotechnology.com/air_cooling.htm
-
-There are other brands.  Enzo products are solid copper and compact,
-with these 3 fan models fitting under your PCIe cards.  You lose no PCI
-slots as with nearly all other chipset coolers.  I recommend them
-because they are high quality and work well, which is why they are also
-more expensive than most others.  That being the case, ~$35 including
-shipping is a small sum to part with to eliminate the lockups.
-
-> I'm guessing that the motherboard has some problem (perhaps
-> originating from the bad PSU?), and I want to switch to a dedicated
-> HBA card to make this more modular.
-
-The one glaring problem is the woefully inadequate PCH heatsink.
-Replacing it as suggested will very likely eliminate the lockups, for
-about 1/8th the cost of a discrete LSI HBA.  And if it doesn't you will
-still have increased the lifespan of the PCH chip by at least a couple
-of years due to lowering operating temperature by 10-15=B0C or more.
-
-> Stan had suggested the LSI SATA/SAS 9211-8i in many threads in the
-> archives.  If I use this card as my HBA, is there any particular
-> motherboard which would be better suited than others?
-
-Wait and cross this bridge later.  If it turns out this board has other
-problems that we can't identify and fix, there's a micro-ATX Intel
-server board with 6 SATA-2 ports on the PCH, socket LGA 1155, dual Inte=
-l
-GbE ports, integrated video, etc for ~$160 at Newegg.  Your CPU,  RAM,
-and drives will drop right in, and you won't have to spend another $200
-on the LSI.  It'll save you ~$150 overall compared to a consumer board+=
-LSI.
-
-Cheers,
-
-Stan
+be free, be linux
 
 
---
+----------------------------------------
+> From: schnet@hotmail.com
+> To: linux-raid@vger.kernel.org
+> Subject: RE: Problem Syncing raid1
+> Date: Wed, 2 Apr 2014 22:18:10 +0000
+>
+> Thanks, i will run smartctl as soon i finish recover the server data.
+>
+> Tomorrow i will give news.
+>
+> Best regards.
+> Christian
+>
+>
+> be free, be linux
+>
+>
+> ----------------------------------------
+>> Date: Wed, 2 Apr 2014 18:08:31 -0400
+>> Subject: Re: Problem Syncing raid1
+>> From: sdvileskis@gmail.com
+>> To: schnet@hotmail.com
+>> CC: mathias.buren@gmail.com; linux-raid@vger.kernel.org
+>>
+>> The good news is your realloc_sector_cnt is 0.
+>>
+>> However, run:
+>> smartctl -t long /dev/sda
+>> smartctl -t long /dev/sdb
+>>
+>> if you haven't done it in a while
+>> It will tell the controller on the disk to check all the sectors and=
+ remap any.
+>>
+>> It will generally take several hours to complete, but if SMART detec=
+ts
+>> any bad sectors it will attempt to remap them. (The OS and badblocks
+>> won't know the difference)
+>> You can run the smart test while the disk is online/mounted without
+>> problems, but the more you lay off the disks, the faster it will run=
+=2E
+>>
+>> On Wed, Apr 2, 2014 at 5:56 PM, Christian Schmitz <schnet@hotmail.co=
+m> wrote:
+>>> The system freeze, i suspect that is a bad sector because is allway=
+s in the same point of syncing.
+>>>
+>>> I do a low level format and all test to SDB, so the problem is in S=
+DA.
+>>>
+>>> Like a deja vu my server was exactly the same problem, now i am doi=
+ng the ddrescue to server disk and found badblock. This reforce the bad=
+block intuition.
+>>>
+>>> #smartctl -a /dev/sda
+>>> SMART overall-health self-assessment test result: PASSED
+>>> ID# ATTRIBUTE_NAME FLAG VALUE WORST THRESH TYPE UPDATED WHEN_FAILED=
+ RAW_VALUE
+>>> 1 Raw_Read_Error_Rate 0x002f 200 193 051 Pre-fail Always - 25
+>>> 3 Spin_Up_Time 0x0027 201 196 021 Pre-fail Always - 916
+>>> 4 Start_Stop_Count 0x0032 099 099 000 Old_age Always - 1032
+>>> 5 Reallocated_Sector_Ct 0x0033 200 200 140 Pre-fail Always - 0
+>>>
+>>> I think that badblock was caused in power failure, so is a logical =
+badblock and not phisical badblock. But to lowlevel format, and run the=
+ manufacturer tools i need sync the raid to ship the data to SDB disk.
+>>>
+>>> =BFHow i can use badblock in a raid device?
+>>> badblock /dev/md0?
+>>> badblock /dev/sda2?
+>>> The raid hangup if badblock does something?
+>>>
+>>> Thanks for your answer.
+>>> Christian
+>>> be free, be linux
+>>>
+>>>
+>>> ----------------------------------------
+>>>> Date: Wed, 2 Apr 2014 22:36:49 +0100
+>>>> Subject: Re: Problem Syncing raid1
+>>>> From: mathias.buren@gmail.com
+>>>> To: schnet@hotmail.com
+>>>> CC: linux-raid@vger.kernel.org
+>>>>
+>>>> On 2 April 2014 21:56, Christian Schmitz <schnet@hotmail.com> wrot=
+e:
+>>>>> Hi everyone,
+>>>>> I have a linux with the following configuration:
+>>>>> /dev/md0 ( degraded mode) (/dev/sda2)
+>>>>>
+>>>>> /dev/md1 ( full mode) (/dev/sda3 /dev/sdb3)
+>>>>>
+>>>>> The problem is if i add /dev/sdb2 to /dev/md0 start the syncing, =
+but when reach 7% the system crash.
+>>>>> I am sure that the main problem is one ( or more) badblock into /=
+dev/sda2.
+>>>>
+>>>> Crash? What does that mean? Kernel panic? Freeze? Reboot?
+>>>> How do you know sda2 (which is sda) has bad blocks? Does it tell y=
+ou?
+>>>> Did you check the SMART data and run badblocks (non-destructivei f=
+ you
+>>>> want) on it?
+>>>>
+>>>>>
+>>>>> How i can do to syncing the disk?.
+>>>>> Obviously Is the first step to change the disk.
+>>>>
+>>>> If it's broken, sure.
+>>>>
+>>>>>
+>>>>> Best Regards
+>>>>> Christian
+>>>>>
+>>>>
+>>>>
+>>>> REgards,
+>>>> Mathias
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+ 		 	   		  --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
