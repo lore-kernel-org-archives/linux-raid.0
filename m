@@ -1,45 +1,40 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [patch]raid5: get_active_stripe avoids device_lock
-Date: Tue, 8 Apr 2014 12:05:53 +0800
-Message-ID: <20140408040553.GB20886@kernel.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Assistance needed with a failed RAID-5 array
+Date: Tue, 8 Apr 2014 10:21:26 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1404081014410.10236@uplift.swm.pp.se>
+References: <5342F15E.5040509@a-1networks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <5342F15E.5040509@a-1networks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
+To: Alan Worstell <aworstell@a-1networks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 7 Apr 2014, Alan Worstell wrote:
 
-For sequential workload (or request size big workload), get_active_stripe can
-find cached stripe. In this case, we always hold device_lock, which exposes a
-lot of lock contention for such workload. If stripe count isn't 0, we don't
-need hold the lock actually, since we just increase its count. And this is the
-hot code path for such workload. Unfortunately we must delete the BUG_ON.
+> Hello,
+> This morning I discovered that a raid-5 array I had created last week is
+> listing all 3 drives in a failed state:
+>
+> md1 : active raid5 sdm1[4](F) sdp1[3](F) sdl1[1](F) sdo1[0](F)
+>       3726024192 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/0]
+> [___]
+>
+> This array has some pretty critical stuff on it I would like to get
+> back. Here is a link with /var/log/messages, dmesg, and the output
+> of|mdadm --examine on all of the members: |||
+> http://filebin.net/ryi7vq7reg
+> Any assistance would be greatly appreciated.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
----
- drivers/md/raid5.c |    9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+There are a lot of problems related to sdd, but that doesn't seem to be 
+part of the above array.
 
-Index: linux/drivers/md/raid5.c
-===================================================================
---- linux.orig/drivers/md/raid5.c	2014-04-08 09:16:39.377536607 +0800
-+++ linux/drivers/md/raid5.c	2014-04-08 09:16:39.369536607 +0800
-@@ -679,14 +679,9 @@ get_active_stripe(struct r5conf *conf, s
- 				init_stripe(sh, sector, previous);
- 				atomic_inc(&sh->count);
- 			}
--		} else {
-+		} else if (!atomic_add_unless(&sh->count, 1, 0)) {
- 			spin_lock(&conf->device_lock);
--			if (atomic_read(&sh->count)) {
--				BUG_ON(!list_empty(&sh->lru)
--				    && !test_bit(STRIPE_EXPANDING, &sh->state)
--				    && !test_bit(STRIPE_ON_UNPLUG_LIST, &sh->state)
--					);
--			} else {
-+			if (!atomic_read(&sh->count)) {
- 				if (!test_bit(STRIPE_HANDLE, &sh->state))
- 					atomic_inc(&conf->active_stripes);
- 				BUG_ON(list_empty(&sh->lru) &&
+I would advice you to try to use --assemble --force on the above md1, 
+however the event count on all the component drives are quite diverse (52, 
+81, 41 and 29). If this device contains important data, how can the event 
+count be so low? You seem to have created it 4-5 days ago?
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
