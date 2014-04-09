@@ -1,86 +1,152 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH] Fix race between --create and --incremental
-Date: Wed,  9 Apr 2014 17:14:59 +0200
-Message-ID: <1397056499-6743-1-git-send-email-artur.paszkiewicz@intel.com>
+From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
+Subject: Re: Hardware advice for software raid
+Date: Wed, 9 Apr 2014 15:21:19 -0500
+Message-ID: <CAPSPcXj9Or2n0EmLUhnMXQ8hfgAAF0xc_-K1X9eeg=DacQN8tQ@mail.gmail.com>
+References: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
+	<533BDB79.7020902@hardwarefreak.com>
+	<CAPSPcXi+RHQMtRA0v61dKH6jSnNgKAKK_1XvqnHe7hqsV2ZrPg@mail.gmail.com>
+	<534372B5.6010506@hardwarefreak.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <534372B5.6010506@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This modifies locking in Create to eliminate a situation where
---incremental can assemble a device between write_init_super() and
-add_disk(), which causes Create to fail.
+On Mon, Apr 7, 2014 at 10:53 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> Replacing the heatsink is low cost, low risk.  If it doesn't fix the
+> problem and you end up replacing the mobo you can likely use it on the
+> new board's PCH as well.
 
-It sporadically occurs e.g. when metadata is written on a device,
-causing an udev change event which triggers mdadm --incremental.
+Good point, I'm down for just owning a good chipset heatsink for this
+or any other board.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- Create.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+> Due to ever increasing integration, most mobos today have a single
+> system support chip in place of the previous north/south bridge duo.
+> Aftermarket heatsinks are typically sized such that larger units are for
+> the "northbridge" and smaller units for the "southbridge".
+> "Northbridge" heatsinks are typically used for single chip systems as
+> the mounting footprint and thermal output are similar.
 
-diff --git a/Create.c b/Create.c
-index 692ff52..bac9181 100644
---- a/Create.c
-+++ b/Create.c
-@@ -833,6 +833,7 @@ int Create(struct supertype *st, char *mddev,
- 
- 	infos = xmalloc(sizeof(*infos) * total_slots);
- 	enable_fds(total_slots);
-+	map_lock(&map);
- 	for (pass=1; pass <=2 ; pass++) {
- 		struct mddev_dev *moved_disk = NULL; /* the disk that was moved out of the insert point */
- 
-@@ -886,7 +887,7 @@ int Create(struct supertype *st, char *mddev,
- 						pr_err("failed to open %s "
- 							"after earlier success - aborting\n",
- 							dv->devname);
--						goto abort;
-+						goto abort_locked;
- 					}
- 					fstat(fd, &stb);
- 					inf->disk.major = major(stb.st_rdev);
-@@ -898,7 +899,7 @@ int Create(struct supertype *st, char *mddev,
- 							 fd, dv->devname,
- 							 dv->data_offset)) {
- 					ioctl(mdfd, STOP_ARRAY, NULL);
--					goto abort;
-+					goto abort_locked;
- 				}
- 				st->ss->getinfo_super(st, inf, NULL);
- 				safe_mode_delay = inf->safe_mode_delay;
-@@ -924,7 +925,7 @@ int Create(struct supertype *st, char *mddev,
- 					pr_err("ADD_NEW_DISK for %s "
- 					       "failed: %s\n",
- 					       dv->devname, strerror(errno));
--					goto abort;
-+					goto abort_locked;
- 				}
- 				break;
- 			}
-@@ -941,7 +942,6 @@ int Create(struct supertype *st, char *mddev,
- 			 * the subarray cursor such that ->getinfo_super once
- 			 * again returns container info.
- 			 */
--			map_lock(&map);
- 			st->ss->getinfo_super(st, &info_new, NULL);
- 			if (st->ss->external && s->level != LEVEL_CONTAINER &&
- 			    !same_uuid(info_new.uuid, info.uuid, 0)) {
-@@ -966,12 +966,12 @@ int Create(struct supertype *st, char *mddev,
- 					   info_new.uuid, path);
- 				free(path);
- 			}
--			map_unlock(&map);
- 
- 			flush_metadata_updates(st);
- 			st->ss->free_super(st);
- 		}
- 	}
-+	map_unlock(&map);
- 	free(infos);
- 
- 	if (s->level == LEVEL_CONTAINER) {
--- 
-1.8.4.5
+Thanks for explaining this, I was getting really confused.
 
+> Measure between the approximate centers of the two spring loaded plastic
+> mounting tabs.  You don't need an exact measurement to 1mm, but a
+> ballpark.  The hole spacing is fairly standardized by the industry.
+> Your measurement should fall into one of 3 ranges, and this will dictate
+> which heatsink you buy:
+>
+> 47.5 - 53mm
+> 53   - 59mm
+> 59   - 63mm
+>
+
+I ran home during lunch and tried to get a quick measurement.  I kept
+coming up with 53mm which makes me nervous since it straddles two of
+your ranges, but I measured twice. Since you say the bigger passive
+cooler is better anyway, maybe I should get that CNB-R1, with the
+multiple mounting rings?
+
+My only hesitation is if I do ever decide to go with a discrete HBA
+(and potentially needed more than one if I had more than 8 drives) I
+would be using more of those expansion slots.
+
+On Mon, Apr 7, 2014 at 10:53 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 4/7/2014 2:28 PM, Barrett Lewis wrote:
+>> Sorry for the delay, I didn't want to reply until I got time to get
+>> down into the machine and do some research.
+> ...
+>> On Wed, Apr 2, 2014 at 4:42 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>>
+>>> There are 6 models of the Asrock z77.  All but one contain a PCH
+>>> heatsink designed to look cool rather than properly cool the chip.  The
+>>> Asrock z77 Extreme 11 has a fan so is an exception, and also has an
+>>> onboard 8 port LSI SAS controller (9211-8i), so I assume you do not have
+>>> the Extreme 11.
+>>
+>>  Mine is the Z77 Extreme4, picture below.
+>
+> Yep, same as all Z77s but for the Extreme 11.
+>
+>>> With consumer PC hardware random lockups occurring only under heavy disk
+>>> IO are most often the result of thermal buildup in the PCH (Northbridge)
+>>> chip.  This can occur when all the drives are connected to its SATA
+>>> ports as in your case, but it can also occur when using one or more
+>>> SAS/SATA HBAs if the PCIe slots are connected through the PCH.  The odds
+>>> are very good that your lockups are a result of the poor PCH heatsink
+>>> design on the Asrock boards exacerbated by insufficient case airflow
+>>> across the heatsink.  What case is this z77 board in?  Be specific
+>>> please so I can pull up the schematic.
+>>
+>> The case is an NZXT H2.  It has all (and only) the stock fans running.
+>
+> This case seems to have a have a decent airflow design.
+>
+>> Overheating would fit the way it is fine until a long heavy operation,
+>> and even then doesn't crash until a random time a ways into the
+>> operation.
+>> Much of the hardware stuff is outside of my domain of knowledge which
+>> is why I was leaning towards buying new equipment.
+>
+> Replacing the heatsink is low cost, low risk.  If it doesn't fix the
+> problem and you end up replacing the mobo you can likely use it on the
+> new board's PCH as well.
+>
+>> Is the PCH the part I circled in yellow?  http://i.imgur.com/safg5iW.jpg
+>
+> Yep, that's it.  Notice the aesthetic cover attached over the heat sink
+> fins?  The aluminum heatsink under it has high thermal resistance due to
+> being aluminum and having a small fin surface area.  That cover
+> increases the thermal resistance further by preventing airflow from
+> reaching the fins.  Couple this with the fact that low quality thermal
+> interface material (TIM, paste, tape) is used on factory installed mobo
+> chipset heatsinks, and this demonstrates why the chip is likely getting
+> too hot under IO load.
+>
+>> I've been doing a lot of googling and and see that the northbridge is
+>> usually between the PCIe slot and the CPU but there doesn't seem to be
+>> any large object in that place on this board.
+>
+> Due to ever increasing integration, most mobos today have a single
+> system support chip in place of the previous north/south bridge duo.
+> Aftermarket heatsinks are typically sized such that larger units are for
+> the "northbridge" and smaller units for the "southbridge".
+> "Northbridge" heatsinks are typically used for single chip systems as
+> the mounting footprint and thermal output are similar.
+>
+>> Can you confirm this is the proper part for me to measure for a new heatsink?
+>
+> I can.  It is.
+>
+> Do not attempt this with the system running.  Power down, remove all
+> external cables and sit the chassis on a table.  Ground yourself by
+> touching the chassis or a metal table leg, etc, to discharge any static
+> from your body.
+>
+> Measure between the approximate centers of the two spring loaded plastic
+> mounting tabs.  You don't need an exact measurement to 1mm, but a
+> ballpark.  The hole spacing is fairly standardized by the industry.
+> Your measurement should fall into one of 3 ranges, and this will dictate
+> which heatsink you buy:
+>
+> 47.5 - 53mm
+> 53   - 59mm
+> 59   - 63mm
+>
+> Let me know the measurement and I'll recommend the best unit for your
+> application.  It seems you won't be using all of your expansion slots
+> any time soon so going with a taller passive unit shouldn't be a
+> problem.  A taller/larger passive unit in a case with good airflow is
+> preferable to a low profile unit w/fan due to 2/3:1 greater mass, no fan
+> to fail, no noise.  After you select the heatsink I'll give you tips on
+> removing the current one and installing the new one.  Proper
+> installation is more important than which heatsink you install, as doing
+> it wrong may result in higher temperatures than what you have now.
+>
+> As always, the devil is in the details.
+>
+> Cheers,
+>
+> Stan
+>
