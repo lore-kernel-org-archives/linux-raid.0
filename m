@@ -1,152 +1,206 @@
-From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
-Subject: Re: Hardware advice for software raid
-Date: Wed, 9 Apr 2014 15:21:19 -0500
-Message-ID: <CAPSPcXj9Or2n0EmLUhnMXQ8hfgAAF0xc_-K1X9eeg=DacQN8tQ@mail.gmail.com>
-References: <CAPSPcXjo5J-Omj+94RkKPXSNUwBHT4GWKmkYuWV9htniZNf+sw@mail.gmail.com>
-	<533BDB79.7020902@hardwarefreak.com>
-	<CAPSPcXi+RHQMtRA0v61dKH6jSnNgKAKK_1XvqnHe7hqsV2ZrPg@mail.gmail.com>
-	<534372B5.6010506@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Fix race between --create and --incremental
+Date: Thu, 10 Apr 2014 10:33:37 +1000
+Message-ID: <20140410103337.30c9dc7c@notabene.brown>
+References: <1397056499-6743-1-git-send-email-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/2hRNIv/LLuCY1KcKLXrc.pg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <534372B5.6010506@hardwarefreak.com>
+In-Reply-To: <1397056499-6743-1-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 7, 2014 at 10:53 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> Replacing the heatsink is low cost, low risk.  If it doesn't fix the
-> problem and you end up replacing the mobo you can likely use it on the
-> new board's PCH as well.
+--Sig_/2hRNIv/LLuCY1KcKLXrc.pg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Good point, I'm down for just owning a good chipset heatsink for this
-or any other board.
+On Wed,  9 Apr 2014 17:14:59 +0200 Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 
-> Due to ever increasing integration, most mobos today have a single
-> system support chip in place of the previous north/south bridge duo.
-> Aftermarket heatsinks are typically sized such that larger units are for
-> the "northbridge" and smaller units for the "southbridge".
-> "Northbridge" heatsinks are typically used for single chip systems as
-> the mounting footprint and thermal output are similar.
+> This modifies locking in Create to eliminate a situation where
+> --incremental can assemble a device between write_init_super() and
+> add_disk(), which causes Create to fail.
+>=20
+> It sporadically occurs e.g. when metadata is written on a device,
+> causing an udev change event which triggers mdadm --incremental.
+>=20
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-Thanks for explaining this, I was getting really confused.
+Thanks for the patch.
+I've taken the liberty of changing it a little.  I didn't like the fact that
+we dropped the lock and then took it again.  It probably doesn't matter, but
+it feels cleaner to hold it the whole time.
 
-> Measure between the approximate centers of the two spring loaded plastic
-> mounting tabs.  You don't need an exact measurement to 1mm, but a
-> ballpark.  The hole spacing is fairly standardized by the industry.
-> Your measurement should fall into one of 3 ranges, and this will dictate
-> which heatsink you buy:
->
-> 47.5 - 53mm
-> 53   - 59mm
-> 59   - 63mm
->
+So this is the result.  Let me know if you disagree at all.
 
-I ran home during lunch and tried to get a quick measurement.  I kept
-coming up with 53mm which makes me nervous since it straddles two of
-your ranges, but I measured twice. Since you say the bigger passive
-cooler is better anyway, maybe I should get that CNB-R1, with the
-multiple mounting rings?
+Thanks,
+NeilBrown
 
-My only hesitation is if I do ever decide to go with a discrete HBA
-(and potentially needed more than one if I had more than 8 drives) I
-would be using more of those expansion slots.
+=46rom a22b82ef078a37f98e0a08c23dca32fa38792d97 Mon Sep 17 00:00:00 2001
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Date: Wed, 9 Apr 2014 17:14:59 +0200
+Subject: [PATCH] Fix race between --create and --incremental
 
-On Mon, Apr 7, 2014 at 10:53 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 4/7/2014 2:28 PM, Barrett Lewis wrote:
->> Sorry for the delay, I didn't want to reply until I got time to get
->> down into the machine and do some research.
-> ...
->> On Wed, Apr 2, 2014 at 4:42 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>
->>> There are 6 models of the Asrock z77.  All but one contain a PCH
->>> heatsink designed to look cool rather than properly cool the chip.  The
->>> Asrock z77 Extreme 11 has a fan so is an exception, and also has an
->>> onboard 8 port LSI SAS controller (9211-8i), so I assume you do not have
->>> the Extreme 11.
->>
->>  Mine is the Z77 Extreme4, picture below.
->
-> Yep, same as all Z77s but for the Extreme 11.
->
->>> With consumer PC hardware random lockups occurring only under heavy disk
->>> IO are most often the result of thermal buildup in the PCH (Northbridge)
->>> chip.  This can occur when all the drives are connected to its SATA
->>> ports as in your case, but it can also occur when using one or more
->>> SAS/SATA HBAs if the PCIe slots are connected through the PCH.  The odds
->>> are very good that your lockups are a result of the poor PCH heatsink
->>> design on the Asrock boards exacerbated by insufficient case airflow
->>> across the heatsink.  What case is this z77 board in?  Be specific
->>> please so I can pull up the schematic.
->>
->> The case is an NZXT H2.  It has all (and only) the stock fans running.
->
-> This case seems to have a have a decent airflow design.
->
->> Overheating would fit the way it is fine until a long heavy operation,
->> and even then doesn't crash until a random time a ways into the
->> operation.
->> Much of the hardware stuff is outside of my domain of knowledge which
->> is why I was leaning towards buying new equipment.
->
-> Replacing the heatsink is low cost, low risk.  If it doesn't fix the
-> problem and you end up replacing the mobo you can likely use it on the
-> new board's PCH as well.
->
->> Is the PCH the part I circled in yellow?  http://i.imgur.com/safg5iW.jpg
->
-> Yep, that's it.  Notice the aesthetic cover attached over the heat sink
-> fins?  The aluminum heatsink under it has high thermal resistance due to
-> being aluminum and having a small fin surface area.  That cover
-> increases the thermal resistance further by preventing airflow from
-> reaching the fins.  Couple this with the fact that low quality thermal
-> interface material (TIM, paste, tape) is used on factory installed mobo
-> chipset heatsinks, and this demonstrates why the chip is likely getting
-> too hot under IO load.
->
->> I've been doing a lot of googling and and see that the northbridge is
->> usually between the PCIe slot and the CPU but there doesn't seem to be
->> any large object in that place on this board.
->
-> Due to ever increasing integration, most mobos today have a single
-> system support chip in place of the previous north/south bridge duo.
-> Aftermarket heatsinks are typically sized such that larger units are for
-> the "northbridge" and smaller units for the "southbridge".
-> "Northbridge" heatsinks are typically used for single chip systems as
-> the mounting footprint and thermal output are similar.
->
->> Can you confirm this is the proper part for me to measure for a new heatsink?
->
-> I can.  It is.
->
-> Do not attempt this with the system running.  Power down, remove all
-> external cables and sit the chassis on a table.  Ground yourself by
-> touching the chassis or a metal table leg, etc, to discharge any static
-> from your body.
->
-> Measure between the approximate centers of the two spring loaded plastic
-> mounting tabs.  You don't need an exact measurement to 1mm, but a
-> ballpark.  The hole spacing is fairly standardized by the industry.
-> Your measurement should fall into one of 3 ranges, and this will dictate
-> which heatsink you buy:
->
-> 47.5 - 53mm
-> 53   - 59mm
-> 59   - 63mm
->
-> Let me know the measurement and I'll recommend the best unit for your
-> application.  It seems you won't be using all of your expansion slots
-> any time soon so going with a taller passive unit shouldn't be a
-> problem.  A taller/larger passive unit in a case with good airflow is
-> preferable to a low profile unit w/fan due to 2/3:1 greater mass, no fan
-> to fail, no noise.  After you select the heatsink I'll give you tips on
-> removing the current one and installing the new one.  Proper
-> installation is more important than which heatsink you install, as doing
-> it wrong may result in higher temperatures than what you have now.
->
-> As always, the devil is in the details.
->
-> Cheers,
->
-> Stan
->
+This modifies locking in Create to eliminate a situation where
+--incremental can assemble a device between write_init_super() and
+add_disk(), which causes Create to fail.
+
+It sporadically occurs e.g. when metadata is written on a device,
+causing an udev change event which triggers mdadm --incremental.
+
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/Create.c b/Create.c
+index 9247d46bbfac..98bbdd40a161 100644
+--- a/Create.c
++++ b/Create.c
+@@ -740,7 +740,9 @@ int Create(struct supertype *st, char *mddev,
+=20
+ 	map_update(&map, fd2devnm(mdfd), info.text_version,
+ 		   info.uuid, chosen_name);
+-	map_unlock(&map);
++	/* Keep map locked until devices have been added to array
++	 * to stop another mdadm from finding and using those devices.
++	 */
+=20
+ 	if (s->bitmap_file && vers < 9003) {
+ 		major_num =3D BITMAP_MAJOR_HOSTENDIAN;
+@@ -753,18 +755,18 @@ int Create(struct supertype *st, char *mddev,
+ 	if (s->bitmap_file && strcmp(s->bitmap_file, "internal")=3D=3D0) {
+ 		if ((vers%100) < 2) {
+ 			pr_err("internal bitmaps not supported by this kernel.\n");
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		if (!st->ss->add_internal_bitmap) {
+ 			pr_err("internal bitmaps not supported with %s metadata\n",
+ 				st->ss->name);
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		if (!st->ss->add_internal_bitmap(st, &s->bitmap_chunk,
+ 						 c->delay, s->write_behind,
+ 						 bitmapsize, 1, major_num)) {
+ 			pr_err("Given bitmap chunk size not supported.\n");
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		s->bitmap_file =3D NULL;
+ 	}
+@@ -790,7 +792,7 @@ int Create(struct supertype *st, char *mddev,
+ 		if (container_fd < 0) {
+ 			pr_err("Cannot get exclusive "
+ 				"open on container - weird.\n");
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		if (mdmon_running(st->container_devnm)) {
+ 			if (c->verbose)
+@@ -805,7 +807,7 @@ int Create(struct supertype *st, char *mddev,
+ 	if (rv) {
+ 		pr_err("failed to set array info for %s: %s\n",
+ 			mddev, strerror(errno));
+-		goto abort;
++		goto abort_locked;
+ 	}
+=20
+ 	if (s->bitmap_file) {
+@@ -816,18 +818,18 @@ int Create(struct supertype *st, char *mddev,
+ 				 c->delay, s->write_behind,
+ 				 bitmapsize,
+ 				 major_num)) {
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		bitmap_fd =3D open(s->bitmap_file, O_RDWR);
+ 		if (bitmap_fd < 0) {
+ 			pr_err("weird: %s cannot be openned\n",
+ 				s->bitmap_file);
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 		if (ioctl(mdfd, SET_BITMAP_FILE, bitmap_fd) < 0) {
+ 			pr_err("Cannot set bitmap file for %s: %s\n",
+ 				mddev, strerror(errno));
+-			goto abort;
++			goto abort_locked;
+ 		}
+ 	}
+=20
+@@ -884,7 +886,7 @@ int Create(struct supertype *st, char *mddev,
+ 						pr_err("failed to open %s "
+ 							"after earlier success - aborting\n",
+ 							dv->devname);
+-						goto abort;
++						goto abort_locked;
+ 					}
+ 					fstat(fd, &stb);
+ 					inf->disk.major =3D major(stb.st_rdev);
+@@ -896,7 +898,7 @@ int Create(struct supertype *st, char *mddev,
+ 							 fd, dv->devname,
+ 							 dv->data_offset)) {
+ 					ioctl(mdfd, STOP_ARRAY, NULL);
+-					goto abort;
++					goto abort_locked;
+ 				}
+ 				st->ss->getinfo_super(st, inf, NULL);
+ 				safe_mode_delay =3D inf->safe_mode_delay;
+@@ -922,7 +924,7 @@ int Create(struct supertype *st, char *mddev,
+ 					pr_err("ADD_NEW_DISK for %s "
+ 					       "failed: %s\n",
+ 					       dv->devname, strerror(errno));
+-					goto abort;
++					goto abort_locked;
+ 				}
+ 				break;
+ 			}
+@@ -939,7 +941,6 @@ int Create(struct supertype *st, char *mddev,
+ 			 * the subarray cursor such that ->getinfo_super once
+ 			 * again returns container info.
+ 			 */
+-			map_lock(&map);
+ 			st->ss->getinfo_super(st, &info_new, NULL);
+ 			if (st->ss->external && s->level !=3D LEVEL_CONTAINER &&
+ 			    !same_uuid(info_new.uuid, info.uuid, 0)) {
+@@ -964,12 +965,12 @@ int Create(struct supertype *st, char *mddev,
+ 					   info_new.uuid, path);
+ 				free(path);
+ 			}
+-			map_unlock(&map);
+=20
+ 			flush_metadata_updates(st);
+ 			st->ss->free_super(st);
+ 		}
+ 	}
++	map_unlock(&map);
+ 	free(infos);
+=20
+ 	if (s->level =3D=3D LEVEL_CONTAINER) {
+
+--Sig_/2hRNIv/LLuCY1KcKLXrc.pg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU0Xm5znsnt1WYoG5AQIHXw//aF/bDUAw8FRhJem3jrL2om6TmIs9hH4B
+13E2h3B268wAeFnmx2PK4hQpXijbi010LAKKg+ZvBfuyHkASR/zHnS4DBZwRXTvf
+zomrtehc6Y5yLwNhF1nsrPLtlOHfj6w9g+z7k5eUS5NAiM1CSp5y/I+e6sqRhL+Z
+cQXAYhVjl+DG4jamh73/5UA2tP/sqHx/vbfB62b7OKfjkmw1Qh7e7naQ+6nhtM//
+/fKgZVe8YO2LSV6Y9lTGfotpqmsmCgPi6y3/6hbWVK71mSTboRjme4y2Ue1qckbe
+EzjJ5uQHxnvaGLoNdfKFhBWW8kL60gfqkzMuSIjhdxwMmKO8885yDLfwIQZ0Y2ZS
+0RpgvdmVC7szDLHBivTjgmVCJGORqHzhe/iGefYTZoVoZ8XZgU1hyBQc0PippV1N
+0Z7ebmsukyxT/0YDrq8AM0Gtjr0Syob2Y4gf9D2xY1R80m+3wtcaIIrazL8OGVu/
+IIv8o4O60KIF7UCvLh/dCFjFb1vPsikT3jRMTobFokE1gfqvxcV8IkD4kZs1xujm
+9CueJ87ZGVSt5avy/OPuxC+1+hJrS9CGG9HG5j32GXfATcV/Q1gGPHLehPSEWB5L
+p9z+NkGVTFLvHA4GTRJ1fKd4xJYNo2/d9gacoG63FjAq3B8KbSMmfy98zbYs2Y2B
+K/C64FIGYRQ=
+=F7hO
+-----END PGP SIGNATURE-----
+
+--Sig_/2hRNIv/LLuCY1KcKLXrc.pg--
