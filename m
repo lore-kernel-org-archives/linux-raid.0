@@ -1,206 +1,32 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fix race between --create and --incremental
-Date: Thu, 10 Apr 2014 10:33:37 +1000
-Message-ID: <20140410103337.30c9dc7c@notabene.brown>
-References: <1397056499-6743-1-git-send-email-artur.paszkiewicz@intel.com>
+From: peter davidson <merrymeetpete@hotmail.com>
+Subject: Nvidia Raid5 Failure
+Date: Thu, 10 Apr 2014 06:00:56 +0100
+Message-ID: <DUB122-W521994A2683B8CBD327D3DA3550@phx.gbl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2hRNIv/LLuCY1KcKLXrc.pg"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1397056499-6743-1-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/2hRNIv/LLuCY1KcKLXrc.pg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Folks,
 
-On Wed,  9 Apr 2014 17:14:59 +0200 Artur Paszkiewicz
-<artur.paszkiewicz@intel.com> wrote:
+My computer suddenly shut down due to a failed memory module - damaging the 1.8TB RAID5 array of three disks.
 
-> This modifies locking in Create to eliminate a situation where
-> --incremental can assemble a device between write_init_super() and
-> add_disk(), which causes Create to fail.
->=20
-> It sporadically occurs e.g. when metadata is written on a device,
-> causing an udev change event which triggers mdadm --incremental.
->=20
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+The computer was able to boot with a degraded array (Windows 7 OS was on the array) but I was unable to get the array to rebuild using the Nvidia toolset - either at BIOS level or in Windows 7. Now the computer will not boot from the array.
 
-Thanks for the patch.
-I've taken the liberty of changing it a little.  I didn't like the fact that
-we dropped the lock and then took it again.  It probably doesn't matter, but
-it feels cleaner to hold it the whole time.
+I had something very similar to this happen a few weeks ago when the mother board failed - I was able to limp things along to get a backup of all important data.
 
-So this is the result.  Let me know if you disagree at all.
+I am interested to know if LINUX will be able to recover the array for me this time. Having got part way through this process before on the previous failure (which led me to this forum), I am keen to follow this through as an exercise knowing I have a backup of the really important stuff. 
 
-Thanks,
-NeilBrown
+I intend to build LINUX onto a new disk and work through this in the coming days - what would be my best choice of distro for this exercise? I am hoping to find something that has all the relevant tools and is relatively simple to get up and running with a friendly GUI to help me navigate round.
 
-=46rom a22b82ef078a37f98e0a08c23dca32fa38792d97 Mon Sep 17 00:00:00 2001
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Date: Wed, 9 Apr 2014 17:14:59 +0200
-Subject: [PATCH] Fix race between --create and --incremental
+I used to work on various databases running on UNIX servers so I hope I can still can find my way round a terminal window.
 
-This modifies locking in Create to eliminate a situation where
---incremental can assemble a device between write_init_super() and
-add_disk(), which causes Create to fail.
+Thanks in advance for any support anyone can offer me!
 
-It sporadically occurs e.g. when metadata is written on a device,
-causing an udev change event which triggers mdadm --incremental.
+Regards,
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Create.c b/Create.c
-index 9247d46bbfac..98bbdd40a161 100644
---- a/Create.c
-+++ b/Create.c
-@@ -740,7 +740,9 @@ int Create(struct supertype *st, char *mddev,
-=20
- 	map_update(&map, fd2devnm(mdfd), info.text_version,
- 		   info.uuid, chosen_name);
--	map_unlock(&map);
-+	/* Keep map locked until devices have been added to array
-+	 * to stop another mdadm from finding and using those devices.
-+	 */
-=20
- 	if (s->bitmap_file && vers < 9003) {
- 		major_num =3D BITMAP_MAJOR_HOSTENDIAN;
-@@ -753,18 +755,18 @@ int Create(struct supertype *st, char *mddev,
- 	if (s->bitmap_file && strcmp(s->bitmap_file, "internal")=3D=3D0) {
- 		if ((vers%100) < 2) {
- 			pr_err("internal bitmaps not supported by this kernel.\n");
--			goto abort;
-+			goto abort_locked;
- 		}
- 		if (!st->ss->add_internal_bitmap) {
- 			pr_err("internal bitmaps not supported with %s metadata\n",
- 				st->ss->name);
--			goto abort;
-+			goto abort_locked;
- 		}
- 		if (!st->ss->add_internal_bitmap(st, &s->bitmap_chunk,
- 						 c->delay, s->write_behind,
- 						 bitmapsize, 1, major_num)) {
- 			pr_err("Given bitmap chunk size not supported.\n");
--			goto abort;
-+			goto abort_locked;
- 		}
- 		s->bitmap_file =3D NULL;
- 	}
-@@ -790,7 +792,7 @@ int Create(struct supertype *st, char *mddev,
- 		if (container_fd < 0) {
- 			pr_err("Cannot get exclusive "
- 				"open on container - weird.\n");
--			goto abort;
-+			goto abort_locked;
- 		}
- 		if (mdmon_running(st->container_devnm)) {
- 			if (c->verbose)
-@@ -805,7 +807,7 @@ int Create(struct supertype *st, char *mddev,
- 	if (rv) {
- 		pr_err("failed to set array info for %s: %s\n",
- 			mddev, strerror(errno));
--		goto abort;
-+		goto abort_locked;
- 	}
-=20
- 	if (s->bitmap_file) {
-@@ -816,18 +818,18 @@ int Create(struct supertype *st, char *mddev,
- 				 c->delay, s->write_behind,
- 				 bitmapsize,
- 				 major_num)) {
--			goto abort;
-+			goto abort_locked;
- 		}
- 		bitmap_fd =3D open(s->bitmap_file, O_RDWR);
- 		if (bitmap_fd < 0) {
- 			pr_err("weird: %s cannot be openned\n",
- 				s->bitmap_file);
--			goto abort;
-+			goto abort_locked;
- 		}
- 		if (ioctl(mdfd, SET_BITMAP_FILE, bitmap_fd) < 0) {
- 			pr_err("Cannot set bitmap file for %s: %s\n",
- 				mddev, strerror(errno));
--			goto abort;
-+			goto abort_locked;
- 		}
- 	}
-=20
-@@ -884,7 +886,7 @@ int Create(struct supertype *st, char *mddev,
- 						pr_err("failed to open %s "
- 							"after earlier success - aborting\n",
- 							dv->devname);
--						goto abort;
-+						goto abort_locked;
- 					}
- 					fstat(fd, &stb);
- 					inf->disk.major =3D major(stb.st_rdev);
-@@ -896,7 +898,7 @@ int Create(struct supertype *st, char *mddev,
- 							 fd, dv->devname,
- 							 dv->data_offset)) {
- 					ioctl(mdfd, STOP_ARRAY, NULL);
--					goto abort;
-+					goto abort_locked;
- 				}
- 				st->ss->getinfo_super(st, inf, NULL);
- 				safe_mode_delay =3D inf->safe_mode_delay;
-@@ -922,7 +924,7 @@ int Create(struct supertype *st, char *mddev,
- 					pr_err("ADD_NEW_DISK for %s "
- 					       "failed: %s\n",
- 					       dv->devname, strerror(errno));
--					goto abort;
-+					goto abort_locked;
- 				}
- 				break;
- 			}
-@@ -939,7 +941,6 @@ int Create(struct supertype *st, char *mddev,
- 			 * the subarray cursor such that ->getinfo_super once
- 			 * again returns container info.
- 			 */
--			map_lock(&map);
- 			st->ss->getinfo_super(st, &info_new, NULL);
- 			if (st->ss->external && s->level !=3D LEVEL_CONTAINER &&
- 			    !same_uuid(info_new.uuid, info.uuid, 0)) {
-@@ -964,12 +965,12 @@ int Create(struct supertype *st, char *mddev,
- 					   info_new.uuid, path);
- 				free(path);
- 			}
--			map_unlock(&map);
-=20
- 			flush_metadata_updates(st);
- 			st->ss->free_super(st);
- 		}
- 	}
-+	map_unlock(&map);
- 	free(infos);
-=20
- 	if (s->level =3D=3D LEVEL_CONTAINER) {
-
---Sig_/2hRNIv/LLuCY1KcKLXrc.pg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU0Xm5znsnt1WYoG5AQIHXw//aF/bDUAw8FRhJem3jrL2om6TmIs9hH4B
-13E2h3B268wAeFnmx2PK4hQpXijbi010LAKKg+ZvBfuyHkASR/zHnS4DBZwRXTvf
-zomrtehc6Y5yLwNhF1nsrPLtlOHfj6w9g+z7k5eUS5NAiM1CSp5y/I+e6sqRhL+Z
-cQXAYhVjl+DG4jamh73/5UA2tP/sqHx/vbfB62b7OKfjkmw1Qh7e7naQ+6nhtM//
-/fKgZVe8YO2LSV6Y9lTGfotpqmsmCgPi6y3/6hbWVK71mSTboRjme4y2Ue1qckbe
-EzjJ5uQHxnvaGLoNdfKFhBWW8kL60gfqkzMuSIjhdxwMmKO8885yDLfwIQZ0Y2ZS
-0RpgvdmVC7szDLHBivTjgmVCJGORqHzhe/iGefYTZoVoZ8XZgU1hyBQc0PippV1N
-0Z7ebmsukyxT/0YDrq8AM0Gtjr0Syob2Y4gf9D2xY1R80m+3wtcaIIrazL8OGVu/
-IIv8o4O60KIF7UCvLh/dCFjFb1vPsikT3jRMTobFokE1gfqvxcV8IkD4kZs1xujm
-9CueJ87ZGVSt5avy/OPuxC+1+hJrS9CGG9HG5j32GXfATcV/Q1gGPHLehPSEWB5L
-p9z+NkGVTFLvHA4GTRJ1fKd4xJYNo2/d9gacoG63FjAq3B8KbSMmfy98zbYs2Y2B
-K/C64FIGYRQ=
-=F7hO
------END PGP SIGNATURE-----
-
---Sig_/2hRNIv/LLuCY1KcKLXrc.pg--
+Peter.
+ 		 	   		  
