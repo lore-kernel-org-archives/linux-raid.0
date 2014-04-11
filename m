@@ -1,98 +1,96 @@
-From: "Manibalan P" <pmanibalan@amiindia.co.in>
-Subject: RE: raid6 - data integrity issue - data mis-compare on rebuilding RAID 6 - with 100 Mb resync speed.
-Date: Fri, 11 Apr 2014 17:41:12 +0530
-Message-ID: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: dmcrypt on top of raid5, or raid5 on top of dmcrypt?
+Date: Fri, 11 Apr 2014 12:59:53 -0700
+Message-ID: <20140411195953.GN9923@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi Neil,
+I have a btrfs filesystem with many many files which got slow likely due to
+btrfs optimization issues, but someone pointed out that I should also look
+at write amplification problems.
 
-Also, I found the data corruption issue on RHEL 6.5.
+This is my current array:
+gargamel:~# mdadm --detail /dev/md8
+/dev/md8:
+        Version : 1.2
+  Creation Time : Thu Mar 25 20:15:00 2010
+     Raid Level : raid5
+     Array Size : 7814045696 (7452.05 GiB 8001.58 GB)
+  Used Dev Size : 1953511424 (1863.01 GiB 2000.40 GB)
+    Persistence : Superblock is persistent
+  Intent Bitmap : Internal
+         Layout : left-symmetric
+     Chunk Size : 512K   < I guess this is too big
 
-For your kind attention, I up-ported the md code [raid5.c + raid5.h]
-from FC11 kernel to CentOS 6.4, and there is no mis-compare with the
-up-ported code.
+http://superuser.com/questions/305716/bad-performance-with-linux-software-raid5-and-luks-encryption
+says:
+"LUKS has a botleneck, that is it just spawns one thread per block device.
 
-Thanks,
-Manibalan.
+Are you placing the encryption on top of the RAID 5? Then from the point of
+view of your OS you just have one device, then it is using just one thread
+for all those disks, meaning disks are working in a serial way rather than
+parallel."
+but it was disputed in a reply.
+Does someone know if this is still valid/correct in 3.14?
 
------Original Message-----
-From: Manibalan P 
-Sent: Monday, March 24, 2014 6:46 PM
-To: 'linux-raid@vger.kernel.org'
-Cc: neilb@suse.de
-Subject: RE: raid6 - data integrity issue - data mis-compare on
-rebuilding RAID 6 - with 100 Mb resync speed.
+Since I'm going to recreate the filesystem considering the troubles I've had
+with it, I might as well do it better this time :)
+(but doing the copy back will take days, so I'd rather get it right the first time)
 
-Hi,
+How would you recommend I create the array when I rebuild it?
 
-I have performed the following tests to narrow down the integrity issue.
+This filesystem contains may backup with many files, most small, and ideally
+identical stuff is hardlinked together (many files, many hardlinks)
+gargamel:~# btrfs fi df /mnt/btrfs_pool2
+Data, single: total=3.28TiB, used=2.29TiB
+System, DUP: total=8.00MiB, used=384.00KiB
+System, single: total=4.00MiB, used=0.00
+Metadata, DUP: total=74.50GiB, used=70.11GiB  <<< muchos metadata
+Metadata, single: total=8.00MiB, used=0.00
 
-1. RAID 6, single drive failure - NO ISSUE
-	a. Running IO
-	b. mdadm set faulty and remove a drive
-	c. mdadm add the drive back
- There is no mis-compare happen in this path.
 
-2. RAID 6, two drive failure - write during Degrade and verify after
-rebuild 
-	a. remove two drives, to make the RAID array degraded.
-	b. now run write IO write cycle, wait till the write cycle
-completes
-	c. insert the drives back one by one, and wait till the re-build
-completes and a RAID array become optimal.
-	d. now perform the verification cycle.
-There is no mis-compare happened in this path also.
+#1 move the intent bitmap to another device. I have /boot on swraid1 with
+   ext4, so I'll likely use this (man page says ext3 only, but I hope ext4
+   is good too, right?)
+#2 change chunk size to something smaller? 128K better?
+#3 anything else?
 
-During All my test, the sync_Speed_max and min is set to 100Mb
+Then, I used this for dmcrypt:
+cryptsetup luksFormat --align-payload=8192 -s 256 -c aes-xts-plain64  
 
-So, as you referred in your previous mail, the corruption might be
-happening only during resync and IO happens in parallel.
+The align-payload was good for my SSD, but probably not for a hard drive.
+http://wiki.drewhess.com/wiki/Creating_an_encrypted_filesystem_on_a_partition
+says
+"To calculate this value, multiply your RAID chunk size in bytes by the
+number of data disks in the array (N/2 for RAID 1, N-1 for RAID 5 and N-2
+for RAID 6), and divide by 512 bytes per sector."
 
-Also, I tested with upstream 2.6.32 kernel from git:
-"http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ -
-tags/v2.6.32"
-	And I am facing mis-compare issue in this kernel as well.  on
-RAID 6, two drive failure with high sync_speed.
+So 512K * 4 / 512 = 4K
+In other words, I can do align-payload=4096 for a small reduction of write
+amplification, or =1024 if I change my raid chunk size to 128K
 
-Thanks,
-Manibalan.
+Correct? 
+Do you recommend that I indeed rebuild that raid5 with a chunk size of 128K?
 
------Original Message-----
-From: NeilBrown [mailto:neilb@suse.de]
-Sent: Thursday, March 13, 2014 11:49 AM
-To: Manibalan P
-Cc: linux-raid@vger.kernel.org
-Subject: Re: raid6 - data integrity issue - data mis-compare on
-rebuilding RAID 6 - with 100 Mb resync speed.
+Other bits I found that can maybe help others:
+http://superuser.com/questions/305716/bad-performance-with-linux-software-raid5-and-luks-encryption
 
-On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P"
-<pmanibalan@amiindia.co.in>
-wrote:
+This seems to help work around the write amplification a bit:
+for i in /sys/block/md*/md/stripe_cache_size; do echo 16384 > $i; done
 
-> >
-> >Was the array fully synced before you started the test?
-> 
-> Yes , IO is started, only after the re-sync is completed.
->  And to add more info,
->              I am facing this mis-compare only with high resync speed 
-> (30M to 100M), I ran the same test with resync speed min -10M and max
-> - 30M, without any issue. So the  issue has relationship with 
-> sync_speed_max / min.
+This looks like an easy thing, done.
 
-So presumably it is an interaction between recovery and IO.  Maybe if we
-write to a stripe that is being recoverred, or recover a stripe that is
-being written to, then something gets confused.
-
-I'll have a look to see what I can find.
+If you have other suggestions/comments, please share :)
 
 Thanks,
-NeilBrown
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
