@@ -1,39 +1,98 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Some info given by 'mdadm --detail --export' are not convenient to
- use
-Date: Fri, 11 Apr 2014 13:01:49 +0200
-Message-ID: <5347CB9D.5090702@gmail.com>
+From: "Manibalan P" <pmanibalan@amiindia.co.in>
+Subject: RE: raid6 - data integrity issue - data mis-compare on rebuilding RAID 6 - with 100 Mb resync speed.
+Date: Fri, 11 Apr 2014 17:41:12 +0530
+Message-ID: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-Hello,
+Hi Neil,
 
-I'm writing a tool that relies udev lib in order to manage block
-devices connected to my computer.
+Also, I found the data corruption issue on RHEL 6.5.
 
-One thing that I need is to retrieve disks contained by a RAID array.
+For your kind attention, I up-ported the md code [raid5.c + raid5.h]
+from FC11 kernel to CentOS 6.4, and there is no mis-compare with the
+up-ported code.
 
-The current usefull information exported by udev are, for example:
+Thanks,
+Manibalan.
 
-MD_DEVICES=3
-MD_DEVICE_loop0p1_DEV=/dev/loop0p1
-MD_DEVICE_loop0p1_ROLE=0
-MD_DEVICE_loop1p1_DEV=/dev/loop1p1
-MD_DEVICE_loop1p1_ROLE=1
-MD_DEVICE_loop2p1_DEV=/dev/loop2p1
-MD_DEVICE_loop2p1_ROLE=2
+-----Original Message-----
+From: Manibalan P 
+Sent: Monday, March 24, 2014 6:46 PM
+To: 'linux-raid@vger.kernel.org'
+Cc: neilb@suse.de
+Subject: RE: raid6 - data integrity issue - data mis-compare on
+rebuilding RAID 6 - with 100 Mb resync speed.
 
-but this is not really easy to exploit since I need to know the disk
-names in order to poke the devices used by the array :-/
+Hi,
 
-why not simply using ?
+I have performed the following tests to narrow down the integrity issue.
 
-MD_DEVICE_DEV_1=/dev/loop0p1
-MD_DEVICE_ROLE_1=0
+1. RAID 6, single drive failure - NO ISSUE
+	a. Running IO
+	b. mdadm set faulty and remove a drive
+	c. mdadm add the drive back
+ There is no mis-compare happen in this path.
 
-Thanks
+2. RAID 6, two drive failure - write during Degrade and verify after
+rebuild 
+	a. remove two drives, to make the RAID array degraded.
+	b. now run write IO write cycle, wait till the write cycle
+completes
+	c. insert the drives back one by one, and wait till the re-build
+completes and a RAID array become optimal.
+	d. now perform the verification cycle.
+There is no mis-compare happened in this path also.
+
+During All my test, the sync_Speed_max and min is set to 100Mb
+
+So, as you referred in your previous mail, the corruption might be
+happening only during resync and IO happens in parallel.
+
+Also, I tested with upstream 2.6.32 kernel from git:
+"http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ -
+tags/v2.6.32"
+	And I am facing mis-compare issue in this kernel as well.  on
+RAID 6, two drive failure with high sync_speed.
+
+Thanks,
+Manibalan.
+
+-----Original Message-----
+From: NeilBrown [mailto:neilb@suse.de]
+Sent: Thursday, March 13, 2014 11:49 AM
+To: Manibalan P
+Cc: linux-raid@vger.kernel.org
+Subject: Re: raid6 - data integrity issue - data mis-compare on
+rebuilding RAID 6 - with 100 Mb resync speed.
+
+On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P"
+<pmanibalan@amiindia.co.in>
+wrote:
+
+> >
+> >Was the array fully synced before you started the test?
+> 
+> Yes , IO is started, only after the re-sync is completed.
+>  And to add more info,
+>              I am facing this mis-compare only with high resync speed 
+> (30M to 100M), I ran the same test with resync speed min -10M and max
+> - 30M, without any issue. So the  issue has relationship with 
+> sync_speed_max / min.
+
+So presumably it is an interaction between recovery and IO.  Maybe if we
+write to a stripe that is being recoverred, or recover a stripe that is
+being written to, then something gets confused.
+
+I'll have a look to see what I can find.
+
+Thanks,
+NeilBrown
