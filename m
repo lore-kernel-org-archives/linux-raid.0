@@ -1,127 +1,159 @@
-From: peter davidson <merrymeetpete@hotmail.com>
-Subject: =?windows-1256?Q?RE:_Nvidia?= =?windows-1256?Q?_Raid5_Fai?=
- =?windows-1256?Q?lure=FE?=
-Date: Thu, 10 Apr 2014 19:23:30 +0100
-Message-ID: <DUB122-W450A53FCD6136C54261512A3550@phx.gbl>
+From: "Scott D'Vileskis" <sdvileskis@gmail.com>
+Subject: Re: Nvidia Raid5 Failure
+Date: Fri, 11 Apr 2014 00:15:37 -0400
+Message-ID: <CAK_KU4ab9OrmM06D6aPiNK44JpPudQOz=1Q9fTJ63NtGrwPedQ@mail.gmail.com>
+References: <DUB122-W521994A2683B8CBD327D3DA3550@phx.gbl>
+	<CAK_KU4ZHZik=_=2=fMPW1c_y-xc0DW_9=ucsYQXU2e=eSOtYQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1256"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAK_KU4ZHZik=_=2=fMPW1c_y-xc0DW_9=ucsYQXU2e=eSOtYQg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: peter davidson <merrymeetpete@hotmail.com>
 List-Id: linux-raid.ids
 
-SGkgU2NvdHQgLSB0aGFua3MgZm9yIHlvdXIgcmVzcG9uc2UgLSBzb21lIGNvbW1lbnRzIGJlbG93
-Li4uDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gRGF0ZTog
-VGh1LCAxMCBBcHIgMjAxNCAxMDozNjozMiAtMDQwMA0KPiBTdWJqZWN0OiBSZTogTnZpZGlhIFJh
-aWQ1IEZhaWx1cmUNCj4gRnJvbTogc2R2aWxlc2tpc0BnbWFpbC5jb20NCj4gVG86IG1lcnJ5bWVl
-dHBldGVAaG90bWFpbC5jb20NCj4gQ0M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQo+DQo+
-IEkgd291bGQgYWR2aXNlIGtlZXBpbmcgb3BlcmF0aW5nIHN5c3RlbXMgb2ZmIFJBSUQgYXJyYXlz
-IGluIGdlbmVyYWwsDQo+IFdpbmRvd3Mgb3IgTGludXgsIGJlY2F1c2UgbW9zdCBib290bG9hZGVy
-cyBhcmUgbG9hZGVkIHRvIGEgc2luZ2xlDQo+IGRpc2suIElmICp0aGF0IGRpc2sgZmFpbHMsIHlv
-dSBtYXkgbm90IGJlIGFibGUgdG8gYm9vdCwgZXZlbiBpZiB5b3VyDQo+IFJBSUQgaXMgaW4gZGVn
-cmFkZWQgbW9kZS4gSGF2aW5nIHlvdXIgZGF0YSBvbiB0aGUgUkFJRCBhbmQgYSBzZXBhcmF0ZQ0K
-PiBPUyBkaXNrIGFsbG93cyB0cm91Ymxlc2hvb3Rpbmcgd2l0aCBPUyB0b29scyAoTlZJRElBJ3Mg
-dG9vbGtpdCBpbg0KPiBXaW5kb3dzLCBNREFETSBpbiBMaW51eCwgb3IgbWljcm9zb2Z0J3MgZGlz
-ayBtYW5hZ2VyIGluIFdpbmRvd3MpLg0KDQoNCkkgdG90YWxseSBzZWUgdGhlIGxvZ2ljIG9mIHRo
-aXMgbm93IC0gaXQgd2FzIG15IGZpcnN0IGZvcmF5IGludG8gdGhlIHdvcmxkIG9mIFJBSUQ1IC0g
-SSByZWFsbHkgZGlkbid0IHRoaW5rIGl0IHRocm91Z2ggbG9uZyBhbmQgaGFyZCBlbm91Z2ghDQoN
-Cg0KPiBJIHdvdWxkIGFsc28gYWR2aXNlIGFnYWluc3Qgd2hhdCBpcyBrbm93biBhcyAnZmFrZSBy
-YWlkJyBjb250cm9sbGVycw0KPiBsaWtlIHlvdXIgTlZJRElBIGhhcmR3YXJlIGxpa2VseSBpcywg
-KG9yIFByb21pc2UsIGhpZ2hwb2ludCwgSW50ZWwsDQo+IGV0YykgYmVjYXVzZSBpdCBjYW4gYmUg
-ZGlmZmljdWx0IHRvIHJlY292ZXIgZGF0YSBpZiB5b3UgaGF2ZSBhDQo+IGNvbnRyb2xsZXIvbW9i
-byBmYWlsdXJlIHdpdGhvdXQgZXhhY3QgaGFyZHdhcmUuDQoNCg0KQWdhaW4gLSBzcG90IG9uISBJ
-IGJvdWdoIGFuIG9sZCBtb3RoZXJib2FyZCBmcm9tIHRoZSBzYW1lIG1hbnVmYWN0dXJlciB0byBy
-ZWNvdmVyIHRoZSBkYXRhIHdpdGguIFdoZW4gSSBmaXJzdCB1c2VkIHRoZSBSQUlEIGZlYXR1cmVz
-IG9uIHRoZSBib2FyZCBJIGRpZG4ndCByZWFsaXNlIHRoYXQgdGhlcmUgd2VyZSBmbGF2b3VycyBv
-ZiBSQUlENSAtIG5vdyBJIGtub3cgaG93IGZsYWt5IGEgcHJvcG9zaXRpb24gYSBwcm9wcmlldGFy
-eSBmYWtlIHJhaWQgaXMuDQoNCg0KPiBGb3IgU2V0dGluZyB1cCBMaW51eCwgSSB3b3VsZCBhZHZp
-c2UgcGlja2luZyB1cCBhIDY0IG9yIDEyMEdCIFNTRCwNCj4gKGV2ZW4gYSAxNi8zMkdCIHdvdWxk
-IGJlIGVub3VnaCkuIEZvciB5b3VyIGZpcnN0IHN0ZXBzIGluIExpbnV4LCBJDQo+IHdvdWxkIGdv
-IHdpdGggYSBmbGF2b3Igb2YgVWJ1bnR1IExpbnV4LiAoWFVidW50dSBpcyByZWFsbHkgbmljZSwg
-YW5kDQo+IGRvZW4ndCBoYXZlIHRoZSBiYXN0YXJkaXplZCBVbml0eSBkZXNrdG9wIGVudmlyb25t
-ZW50KS4gRnJvbSBtb3N0DQo+IG1vZGVybiBMaW51eCBkaXN0cm9zLCB5b3UgY2FuIHNldHVwIFJB
-SUQgYXJyYXlzIGF0IGluc3RhbGwgdGltZSwgb3INCj4gd2FpdCB1bnRpbCB5b3VyIGRlc2t0b3Ag
-aXMgdXAgYW5kIHJ1bm5pbmcgYW5kIGRvIGl0IGZyb20gR1VJIHRvb2xzDQoNCg0KSSBib290ZWQg
-dXAgYSBsaXZlIENEIG9mIFVidW50dSB3aGVuIEkgaGFkIHRoZSBmYWlsdXJlIGZpcnN0IHRpbWUg
-cm91bmQgLSBJIHRob3VnaHQgdGhlIExJVkUgQ0Qgd291bGQgYmUgcGFzc2l2ZSBpbiB0ZXJtcyBv
-ZiBjaGFuZ2luZyB0aGUgZGlzayBkYXRhLiBJIHdhcyBzdXJwcmlzZWQgdG8gc2VlIHRoYXQgd2l0
-aCB0aGUgUkFJRGVkIGRpc2tzIGF0dGFjaGVkIHRvIHRoZSBzeXN0ZW0gdGhlIHN0YXJ0IHVwIHBy
-b2Nlc3MgdHJpZWQgdG8gY3JlYXRlIHRoZSBhcnJheSAtIGl0IGZhaWxlZCB0byBzdGFydCBpdCBh
-bmQgbWFya2VkIGl0IGFzIGRlZ3JhZGVkIGluIHRoZSBmaXJzdCBpbnN0YW5jZS4NCg0KDQpPbiBh
-IHNlY29uZCBydW4gb2YgdGhlIGxpdmUgQ0QgdGhlIGFycmF5IHdhcyBtYXJrZWQgYXMgZmFpbGVk
-IChJIHRoaW5rIHRoYXQncyB0aGUgcmlnaHQgdGVybSkgYW5kIHRoZSBrZXJuZWwgcGFuaWNrZWQg
-YXQgc3RhcnQgdXAgKHNvIGRpZCBJISkuIEF0IHRoYXQgcG9pbnQgSSBicmVhZCBib2FyZGVkIG15
-IG9sZCBtb3RoZXJib2FyZCBhbmQgbWFuYWdlZCB0byB1c2UgdGhlIE5WSURJQSBCSU9TIGFwcGxp
-Y2F0aW9uIHRvIHJlY3JlYXRlIHRoZSBhcnJheSBhbmQgdG8gbXkgcmVsaWVmIEkgd2FzIGFibGUg
-dG8gcmVjcmVhdGUgdGhlIGFycmF5IGFuZCBxdWlja2x5IHNldCBhYm91dCBiYWNraW5nIHVwIGV2
-ZXJ5dGhpbmcgaW1wb3J0YW50IHdpdGggdGhlIGd1dHMgb2YgdGhlIFBDIGhhbmdpbmcgb3V0IGFs
-bCBvdmVyIHRoZSBwbGFjZS4NCg0KDQpUaGUgZmlyc3QgZmFpbHVyZSB3YXMgbW90aGVyYm9hcmQg
-cmVsYXRlZCBhbmQgdGhlIGRpc2tzIHdlcmUgc3RpbGwgcGVyZmVjdGx5IHN5bmNocm9uaXNlZCAt
-IHRoZSBzZWNvbmQgZmFpbHVyZSBvbiB0aGUgcmVwbGFjZW1lbnQgbW90aGVyYm9hcmQgd2FzIGEg
-c3lzdGVtIGNyYXNoIHdoaWNoIGFwcGVhcnMgdG8gaGF2ZSBiZWVuIGNhdXNlZCBieSBhIGZhaWxp
-bmcgUkFNIG1vZHVsZS4gVGhpcyB0aW1lIHRoZSBOVklESUEgc29mdHdhcmUgc2hvd2VkIHRoZSBh
-cnJheSBhcyBkZWdyYWRlZCAtIEkgZm9sbG93ZWQgdGhlIHNhbWUgcHJvY2VkdXJlIGFzIGJlZm9y
-ZSBhbmQgdGhlIGFycmF5IGRpZCBub3QgcmVjcmVhdGUgcHJvcGVybHkuIEkgY2Fubm90IGdldCBp
-dCB0byByZWJ1aWxkIHdoYXQgaXMgYXBwYXJlbnRseSB0aGUgb3V0IG9mIHN5bmMgZGlzay4gSXQg
-YWxzbyBubyBsb25nZXIgd2FudHMgdG8gYm9vdCBmcm9tIHRoZSBhcnJheSAtIGFsdGhvdWdoIGl0
-IHdhcyBkb2luZyBzbyBiZWZvcmUgaW4gZGVncmFkZWQgbW9kZSBiZWZvcmUgSSBhdHRlbXB0ZWQg
-dG8gYWRkIGluIHRoZSB0aGlyZCBkaXNrLg0KDQoNCldpbGwgWFVidW50dSBtYWtlIGEgc2ltaWxh
-ciBhdHRlbXB0IGFzIFVidW50dSBhdCBzdGFydGluZyB0aGUgYXJyYXkgdXAgZHVyaW5nIGEgYm9v
-dD8gSXMgaXQgc2FmZSBmb3IgdGhpcyB0byBoYXBwZW4gaW4gdGVybXMgb2YgY2hhbmdpbmcgYW55
-IGRhdGEgdGhhdCBtYXkgYmUgbGVmdCBvbiB0aGUgZGlza3M/IENhbiBJIHN0b3AgWFVidW50dSBh
-dHRlbXB0aW5nIHRvIGNyZWF0ZSBhbnkgYXJyYXlzIG9uIGRldGVjdGlvbj8gSSBoYXZlIGEgMTYw
-R0IgSURFIGRpc2sgdG8gcGxheSB3aXRoIGZvciBub3cgLSB3aWxsIHNlZSBob3cgSSBnZXQgYWxv
-bmcgd2l0aCBYVWJ1bnR1IGJlZm9yZSBidXlpbmcgaXQgYW4gU1NEIHRvIGxpdmUgb24uIEl0IG1p
-Z2h0IGJlIHVzZWZ1bCBmb3IgbWUgdG8gc2V0dXAgYSBkdWFsIGJvb3QgbWFjaGluZSB3aXRoIHBh
-cnRpdGlvbnMgb24gYW4gU1NEIGZvciBXaW5kb3dzIDcgYW5kIFhVYnVudHUuDQoNCg0KPiBBbm90
-aGVyIGlkZWEgaXMgdG8gZ3JhYiBhIGRpc2tsZXNzIE5BUyBhcHBsaWFuY2UgbGlrZSBhIExlbm92
-by9Jb21lZ2ENCj4gSVg0IDMwMEQgb3IgYSBTeW5vbG9neSBmb3IgJDIwMC00MDAgYW5kIG1vdmUg
-eW91ciBkaXNrcyBvdmVyLiAoWW91J2xsDQo+IGxpa2VseSBoYXZlIHRvIGJhY2sgdXAgYWxsIHlv
-dXIgZGF0YSBhbmQgd2lwZSB5b3VyIGRpc2tzIHRob3VnaCkuIEkNCj4gbGlrZSB0aGUgTGVub3Zv
-L0lvbWVnYSBwcm9kdWN0IGJlY2F1c2UgaXMgdXNlcyBhIGN1c3RvbSBidWlsZCBvZg0KPiBEZWJp
-YW4gTGludXggYW5kIGxpbnV4IHNvZnR3YXJlIFJBSUQsIHdoaWNoIEkgY291bGQgYWx3YXlzIHJl
-Y292ZXIgaW4NCj4gbXkgbGludXggRGVza3RvcCBpZiBJIGhhZCBhIE5BUyBoYXJkd2FyZSBmYWls
-dXJlLg0KDQoNCkkgbGlrZSB0aGlzIGlkZWEgYSBsb3QgLSBteSBiYW5rIGFjY291bnQgZG9lc24n
-dCEgVGhlIExlbm92by9Jb21lZ2EgZGV2aWNlcyBhcmUgbWluaW11bSCjMjQwIG92ZXIgaGVyZSAt
-IEkgc2VlIHRoZXkgYXJlIG11Y2ggY2hlYXBlciBpbiB0aGUgVVMhIEkgd2lsbCBsb29rIGludG8g
-dGhpcyBhcyBhIHNlbnNpYmxlIHdheSBmb3J3YXJkIG9uY2UgdGhlIGR1c3QgaGFzIHNldHRsZWQu
-DQoNCg0KDQo+IEdvb2QgbHVjayENCg0KDQpJIGNvdWxkIHVzZSBzb21lIGFib3V0IG5vdyAtIGFs
-b25nIHdpdGggYSBzZW5zaWJsZSBiYWNrdXAgc3RyYXRlZ3kgLSBJIGFtIHRoaW5raW5nIG9mIHVz
-aW5nIGEgMlRCIGV4dGVybmFsIGRpc2sgdG8gbWFrZSBpbWFnZXMgLyBjb3BpZXMgb2YgYWxsIHVz
-ZWZ1bCBkYXRhIGFuZCBwb3NzaWJseSB0aGUgT1MgcGFydGl0aW9ucyBvbmNlIHJlLWJ1aWx0IQ0K
-DQoNClRoYW5rcyBhZ2FpbiBmb3IgdGFraW5nIHRoZSB0aW1lIHRvIHJlc3BvbmQgc28gZnVsbHku
-DQoNCg0KUGV0ZXIuDQoNCg0KDQo+IE9uIFRodSwgQXByIDEwLCAyMDE0IGF0IDE6MDAgQU0sIHBl
-dGVyIGRhdmlkc29uDQo+IDxtZXJyeW1lZXRwZXRlQGhvdG1haWwuY29tPiB3cm90ZToNCj4+IEhp
-IEZvbGtzLA0KPj4NCj4+IE15IGNvbXB1dGVyIHN1ZGRlbmx5IHNodXQgZG93biBkdWUgdG8gYSBm
-YWlsZWQgbWVtb3J5IG1vZHVsZSAtIGRhbWFnaW5nIHRoZSAxLjhUQiBSQUlENSBhcnJheSBvZiB0
-aHJlZSBkaXNrcy4NCj4+DQo+PiBUaGUgY29tcHV0ZXIgd2FzIGFibGUgdG8gYm9vdCB3aXRoIGEg
-ZGVncmFkZWQgYXJyYXkgKFdpbmRvd3MgNyBPUyB3YXMgb24gdGhlIGFycmF5KSBidXQgSSB3YXMg
-dW5hYmxlIHRvIGdldCB0aGUgYXJyYXkgdG8gcmVidWlsZCB1c2luZyB0aGUgTnZpZGlhIHRvb2xz
-ZXQgLSBlaXRoZXIgYXQgQklPUyBsZXZlbCBvciBpbiBXaW5kb3dzIDcuIE5vdyB0aGUgY29tcHV0
-ZXIgd2lsbCBub3QgYm9vdCBmcm9tIHRoZSBhcnJheS4NCj4+DQo+PiBJIGhhZCBzb21ldGhpbmcg
-dmVyeSBzaW1pbGFyIHRvIHRoaXMgaGFwcGVuIGEgZmV3IHdlZWtzIGFnbyB3aGVuIHRoZSBtb3Ro
-ZXIgYm9hcmQgZmFpbGVkIC0gSSB3YXMgYWJsZSB0byBsaW1wIHRoaW5ncyBhbG9uZyB0byBnZXQg
-YSBiYWNrdXAgb2YgYWxsIGltcG9ydGFudCBkYXRhLg0KPj4NCj4+IEkgYW0gaW50ZXJlc3RlZCB0
-byBrbm93IGlmIExJTlVYIHdpbGwgYmUgYWJsZSB0byByZWNvdmVyIHRoZSBhcnJheSBmb3IgbWUg
-dGhpcyB0aW1lLiBIYXZpbmcgZ290IHBhcnQgd2F5IHRocm91Z2ggdGhpcyBwcm9jZXNzIGJlZm9y
-ZSBvbiB0aGUgcHJldmlvdXMgZmFpbHVyZSAod2hpY2ggbGVkIG1lIHRvIHRoaXMgZm9ydW0pLCBJ
-IGFtIGtlZW4gdG8gZm9sbG93IHRoaXMgdGhyb3VnaCBhcyBhbiBleGVyY2lzZSBrbm93aW5nIEkg
-aGF2ZSBhIGJhY2t1cCBvZiB0aGUgcmVhbGx5IGltcG9ydGFudCBzdHVmZi4NCj4+DQo+PiBJIGlu
-dGVuZCB0byBidWlsZCBMSU5VWCBvbnRvIGEgbmV3IGRpc2sgYW5kIHdvcmsgdGhyb3VnaCB0aGlz
-IGluIHRoZSBjb21pbmcgZGF5cyAtIHdoYXQgd291bGQgYmUgbXkgYmVzdCBjaG9pY2Ugb2YgZGlz
-dHJvIGZvciB0aGlzIGV4ZXJjaXNlPyBJIGFtIGhvcGluZyB0byBmaW5kIHNvbWV0aGluZyB0aGF0
-IGhhcyBhbGwgdGhlIHJlbGV2YW50IHRvb2xzIGFuZCBpcyByZWxhdGl2ZWx5IHNpbXBsZSB0byBn
-ZXQgdXAgYW5kIHJ1bm5pbmcgd2l0aCBhIGZyaWVuZGx5IEdVSSB0byBoZWxwIG1lIG5hdmlnYXRl
-IHJvdW5kLg0KPj4NCj4+IEkgdXNlZCB0byB3b3JrIG9uIHZhcmlvdXMgZGF0YWJhc2VzIHJ1bm5p
-bmcgb24gVU5JWCBzZXJ2ZXJzIHNvIEkgaG9wZSBJIGNhbiBzdGlsbCBjYW4gZmluZCBteSB3YXkg
-cm91bmQgYSB0ZXJtaW5hbCB3aW5kb3cuDQo+Pg0KPj4gVGhhbmtzIGluIGFkdmFuY2UgZm9yIGFu
-eSBzdXBwb3J0IGFueW9uZSBjYW4gb2ZmZXIgbWUhDQo+Pg0KPj4gUmVnYXJkcywNCj4+DQo+PiBQ
-ZXRlci4NCj4+IC0tDQo+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
-bGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4NCj4+IHRoZSBib2R5IG9mIGEgbWVzc2Fn
-ZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiAtLQ0KPiBUbyB1
-bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGlu
-dXgtcmFpZCIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtl
-cm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCBodHRwOi8vdmdlci5rZXJuZWwub3Jn
-L21ham9yZG9tby1pbmZvLmh0bWwgCQkgCSAgIAkJICA=
+OP Peter and I exchanged a few Emails and I recommended he start with
+a flavor of Ubuntu on a spare hard drive, and loop devices to learn
+mdadm. He found it helpful and thought it might help someone else, and
+despite this mailing list
+ """ not really really suitable for "how to get started with Linux"
+information. """"  the following is our EMail:
+
+I would advise setting up Xubuntu on your spare drive, and leaving
+your RAID disks completely disconnected while you learn mdadm.
+
+On that drive, create a few blank 1GB files, and loop devices:
+fallocate -l 1G file1.img
+losetup /dev/loop0 file1.img
+fallocate -l 1G file2.img
+losetup /dev/loop1 file2.img
+fallocate -l 1G file3.img
+losetup /dev/loop2 file3.img
+fallocate -l 1G file4.img
+losetup /dev/loop3 file4.img
+
+Then you can create a raid array with these fake hard drives
+(/dev/loop0, /dev/loop1, etc...)
+mdadm --create -n4 -l5 /dev/md0 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+
+Check rebuild status with:
+cat /proc/mdstat
+
+Create a file system:
+mkfs.ext4 /dev/md0
+
+Mount the filesystem
+mkdir /mnt/testraid
+mount /dev/md0 /mnt/testraid
+
+Copy some files to it, maybe a movie, episode of SVU, etc, then:
+mplayer somemovie.mkv
+
+Then, while watching the movie, fail a disk
+mdadm --fail /dev/md0 /dev/loop3
+mdadm --remove /dev/md0  /dev/loop3
+
+Check status, delete the loop device, delete the file:
+cat /proc/mdstat
+losetup -d /dev/loop3
+rm file4.img
+
+And I'll leave it to you to figure out how to create a new loop disk,
+readd it to the raid, and resync while before your movie completes..
+
+Once you are familiar and want to tackle your real drives.. From the
+command line you can usu mdadm commands to attempt to --assemble the
+array in degraded mode. When using the mdadm commands I believe there
+are some special options for running in readonly mode, and/or not starting
+it unless all devices are available. You may even need to use the
+--force command if your drives are out of sync but you trust the data
+on them.
+When you start deleting superblocks and using the --create flag is
+when you have to be careful.
+
+-----------------------------------------------------------------------------------------
+
+Hi Scot - excellent email - thanks a million...
+
+Various hiccups getting the hardware ready but those were not
+insurmountable. Install went OK and I remember how excited I used to
+get about using the UNIX OS - various things are coming back to me.
+
+I considered writing up the various tweaks to your instructions on the
+mail server - do you think that would be a valid exercise that someone
+else might gain from?
+
+In case your feeling sceptical...
+
+unused devices: <none>
+peter@peter-MS-7374:~$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 loop3[4] loop2[2] loop1[1] loop0[0]
+      3142656 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [UUU_]
+      [================>....]  recovery = 82.4% (864464/1047552)
+finish=0.1min speed=27014K/sec
+
+unused devices: <none>
+peter@peter-MS-7374:~$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 loop3[4] loop2[2] loop1[1] loop0[0]
+      3142656 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+
+The film was an episode of Homelands - it didn't even hiccup!
+
+If you have any other exercise suggestions to help me get up to speed
+then I am all ears - off to bed now - somehow it got late!
+
+Thanks for you assistance.
+
+Peter.
+
+
+---------------------------------------------------------
+
+Peter,
+For further exercises (to familiarize yourself with creating,
+breaking, and rebuilding a raid), I recommend the following additional
+scenarios:
+
+a) With a working raid up and running, unmount the filesystem, stop
+the array, then stop one of your loop devices. Try to assemble the
+array with the missing disk, start and stop the array a few times, and
+also familiarize yourself with the --run and --no-degraded options, as
+well as the --examine features for understanding superblocks. Remember
+just mounting filesystems may change metadata on the raid disks, so
+this and this will impact the data integrity on the raid, even if you
+don't manipulate any files.
+b) After you have messed around a bit, maybe even changed some data in
+degraded mode, stop the array, restart your 'missing' loop device and
+attempt to restart the raid array with all the devices. After the
+array starts degraded, you'll likely have to --add the disk again for
+the rebuild to start.
+c) Try to --create an array with your existing loop devices and check
+out all the warnings you'll get about existing memberships in raid
+arrays. You'll find that, with the exception of the --zero-superblock
+command, it is usually pretty difficult to break things. If you
+somehow convince mdadm to start or recreate an array with questionable
+disks (like with the --assume-clean) option, familiarize yourself with
+the various filesystem check tools.
+
+--Scott
+
+That leads me to the following general questions about mdadm and linux raid...
+I have certainly RTFM and learned many things in the past dozen years
+or so from internet examples, broken arrays, kernel panics on suspend,
+bad drive cabling, mistypes using dd, blowing away the first gig of a
+partition, growing, shrinking, migrating, etc. Are there formal test
+cases and scenarios for mdadm and linux-raid?
+
+Also many of the emails I have seen pass through this mailing list
+involve some interesting combinations of raid device superblock
+mismatches that beg the question.. How could you have possibly gotten
+your raid components into *that* state...
+
+In addition to the typical use cases covered in the manual (creating
+an array, growing, shrinking, replacing disks, etc) it might be
+interesting to have a list of misuse cases for folks to try and work
+out..  (Ooops, I accidentally blew away my superblock, what can I do
+without a full rebuild)
