@@ -1,86 +1,97 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Guess the size of a RAID{5,6} device
-Date: Sat, 12 Apr 2014 18:24:48 +1000
-Message-ID: <20140412182448.3de6d253@notabene.brown>
-References: <5347A58B.2060308@gmail.com>
-	<20140412095049.6cce32a6@notabene.brown>
-	<5348F550.2040609@gmail.com>
+Subject: Re: cannot re-assmble mdadm array
+Date: Sat, 12 Apr 2014 19:54:02 +1000
+Message-ID: <20140412195402.3f2a720e@notabene.brown>
+References: <1250925833.23839319.1397286490552.JavaMail.root@cds036>
+	<400635298.23842674.1397287112819.JavaMail.root@cds036>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/c2y/.MTX9wdR5RKj4rrTszk"; protocol="application/pgp-signature"
+ boundary="Sig_/s0q1rJ8Lylib=UXEWMvBVIy"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5348F550.2040609@gmail.com>
+In-Reply-To: <400635298.23842674.1397287112819.JavaMail.root@cds036>
 Sender: linux-raid-owner@vger.kernel.org
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Andrew Ryder <tireman@shaw.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/c2y/.MTX9wdR5RKj4rrTszk
+--Sig_/s0q1rJ8Lylib=UXEWMvBVIy
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 12 Apr 2014 10:12:00 +0200 Francis Moreau <francis.moro@gmail.com>
-wrote:
+On Sat, 12 Apr 2014 01:18:32 -0600 (MDT) Andrew Ryder <tireman@shaw.ca> wro=
+te:
 
-> Hello Neil,
 >=20
-> On 04/12/2014 01:50 AM, NeilBrown wrote:
-> > On Fri, 11 Apr 2014 10:19:23 +0200 Francis Moreau <francis.moro@gmail.c=
-om>
-> > wrote:
-> >=20
-> >> Hello,
-> >>
-> >> I'd like to know if it's possible to get the size of a RAID{5,6} which
-> >> is not created yet but the size of the partitions which will make up t=
-he
-> >> array are.
-> >=20
-> > How precise does the "guess" need to be?
-> >=20
+> # mdadm --assemble --run --force -vvv /dev/md2=20
 >=20
-> I just need an approximation in order to report to user some information
-> about the (raided) partition my tool is about to create.
->=20
-> > If you subtract about 128Meg from the size of the partitions, round dow=
-n the
->=20
-> Just to be sure the size of the partitions is equal to the min size of
-> all partitions ?
+> mdadm: looking for devices for /dev/md2
+> mdadm: /dev/disk/by-id/ata-ST2000DL003-9VT166_5YD4PLD3-part1 is not one of
+> /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9CZB04511-part1,/dev/disk/by-id/=
+ata-SAMSUNG_HD204UI_S2HGJ9BZB13889-part1,/dev/disk/by-id/ata-ST2000DL001-9V=
+T156_5YD1516L-part1,/dev/disk/by-id/ata-ST3000DM001-1CH166_Z1F31KGY-part1
+> mdadm: /dev/disk/by-id/ata-ST2000DL003-9VT166_5YD4PSMK-part1 is not one of
+> /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9CZB04511-part1,/dev/disk/by-id/=
+ata-SAMSUNG_HD204UI_S2HGJ9BZB13889-part1,/dev/disk/by-id/ata-ST2000DL001-9V=
+T156_5YD1516L-part1,/dev/disk/by-id/ata-ST3000DM001-1CH166_Z1F31KGY-part1
+> mdadm: /dev/disk/by-id/ata-ST2000DL003-9VT166_5YD4QHNL-part1 is not one of
+> /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9CZB04511-part1,/dev/disk/by-id/=
+ata-SAMSUNG_HD204UI_S2HGJ9BZB13889-part1,/dev/disk/by-id/ata-ST2000DL001-9V=
+T156_5YD1516L-part1,/dev/disk/by-id/ata-ST3000DM001-1CH166_Z1F31KGY-part1
+> mdadm: Not a listed device for /dev/md1.
+> mdadm: Not a listed device for /dev/md3.
+> mdadm: Not a listed device for /dev/md1.
+> mdadm: Not a listed device for /dev/md3.
+> mdadm: Not a listed device for /dev/md1.
+> mdadm: Not a listed device for /dev/md3.
+> mdadm: Not a listed device for /dev/md1.
+> mdadm: Not a listed device for /dev/md3.
+> mdadm: /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9CZB04511-part1 is identi=
+fied as a member of /dev/md2, slot 0.
+> mdadm: /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9BZB13889-part1 is identi=
+fied as a member of /dev/md2, slot 1.
+> mdadm: /dev/disk/by-id/ata-ST2000DL001-9VT156_5YD1516L-part1 is identifie=
+d as a member of /dev/md2, slot 2.
+> mdadm: /dev/disk/by-id/ata-ST3000DM001-1CH166_Z1F31KGY-part1 is identifie=
+d as a member of /dev/md2, slot 3.
+> mdadm: added /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9BZB13889-part1 to =
+/dev/md2 as 1
+> mdadm: added /dev/disk/by-id/ata-ST2000DL001-9VT156_5YD1516L-part1 to /de=
+v/md2 as 2 (possibly out of date)
+> mdadm: added /dev/disk/by-id/ata-ST3000DM001-1CH166_Z1F31KGY-part1 to /de=
+v/md2 as 3 (possibly out of date)
+> mdadm: added /dev/disk/by-id/ata-SAMSUNG_HD204UI_S2HGJ9CZB04511-part1 to =
+/dev/md2 as 0
+> mdadm: failed to RUN_ARRAY /dev/md2: Input/output error
 
-Correct.
+I haven't looked closely, but what version of mdadm is this?
+And what happens if you try the latest=20
+  git clone git://neil.brown.name/mdadm;cd mdadm;make;./mdadm....
 
 NeilBrown
 
-
+> mdadm: Not enough devices to start the array.
 >=20
-> > a multiple of the chunk size then multiply by the number of data disks,=
- you
-> > should come quite close.
->=20
-> Thanks, that should do the trick.
 
-
---Sig_/c2y/.MTX9wdR5RKj4rrTszk
+--Sig_/s0q1rJ8Lylib=UXEWMvBVIy
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU0j4UDnsnt1WYoG5AQJTWA/+NRTA2k6OZ+YsygxKKKQCB3JlxzcBJzri
-sQlvdoNPj8GDqVmY7DvRnlltQtM37VqPJXD6+nqPtQU73q8hdFBDLRQq3+WbK/hy
-DdUSKZQgUU53/Cgit5ksEKJ0g+Ry+DdskH0x7x+Miw7lZwF0Yl5rnG+r3YKUmN6y
-IxMyN44rH0lYcguH/urwcabtE8Oo4aFvWUKJXBI/DbffMQWZPUgC2AqlR+OlTGx+
-9DXmzXHE2/Kxv7XlkdYIOkS4tnwTXZUlHbuOfRE8I7uDA+2+NzFaz0Uf4NU0njqd
-GtwnhXl5PHkjHJBXJbAHiz8uOJn/PFAejE5+r1tptOHWBX0Ope9VPzN4KNncsDHG
-9f+bWhh9infW9E6m+QNBhYg7pvTtklTPB0SwatIwY7/EZ+RoCMJYfKrfXiKrdMsj
-nSVeOU8W3Ktjy38qOeRaaOESHicM/jBugxWzmJmwb6lUngVuKQNrxfQTa98y6sR7
-lM1ItE1HrijMiSL1bDxlxDQRrrZ4Uni7AH6b0ilDQ4qJKB6Yf7m3Bh0bsj03jC9/
-Hv5o26bFstRBftG2bfrGlw6aH/l3I3RB8w/yFOWEZnybB83VRRJhlwBurOHuru56
-3nWi9TsgDagvC9U6rap6P4TTQ0HgX/38LWevGrOUlKvq8+Qt3XryV1LayIf5EO+s
-yueHuC6R65g=
-=67Kc
+iQIVAwUBU0kNOjnsnt1WYoG5AQLMjRAAtryZ677Wz3nXhV1x1XeVN01W4EEsVpO1
+bGfo3J4ATcJVGUKEhTHMvXfu89bh5Nbgy47wJbUOT3qWO6YmFbfrta3DEPVPazVj
+3G4Pue50cMSJrDxhkMlkgnUy/2HrXDhyfdPxUZssZnb1970ETmdbenTENL+iS9cx
+ys+RKq0W30r7OnHASqV+E3OmCsNTJ3CKgEpv6yVvmAjhr3mJIZ50ySJuKBtqWGlN
+Rq236RbgR5tpC26OsWgPznnwSuTY25YcrAAr5l1vKAPerSpAFbOzckr325HvPs9y
+KAnOsZ5h3UoOHsu717S6xx02KK1BykQ9Dz93MDjFiGCWIviTyN97Ud2leaeecLIE
+qjSsxnsPgCslsT2I91N8bN7Qr3zfM3jev0UgRACfidJDRmoyYVXx2Vei6xkQYgau
+zTdCCqLMMfdG0qXDwqTtqlPlQPRR0K/0BgL+O1AUV6/9Aw9LjrOrdjXq76Xhnx7S
+USZ4w240GZBZ2E2zYuXhjiGH2tV88MIOeK1cCtOwScCUb8K1ig3Ur8RfBEBwdl6R
+OBK6auCFOpNtJSDIjW8VfVrZMS4hsibb5buuiCW3HM4M4EY3IrVHiIaJWV+KJHXT
+bd8PuuE4fvMyA8B6my8anFOBsCu6f7Mw0hxXF2qpbgmwPoctX93kCqmu84Ibh82A
+EmXu+o0izy4=
+=/qvB
 -----END PGP SIGNATURE-----
 
---Sig_/c2y/.MTX9wdR5RKj4rrTszk--
+--Sig_/s0q1rJ8Lylib=UXEWMvBVIy--
