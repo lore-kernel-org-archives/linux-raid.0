@@ -1,58 +1,79 @@
-From: "Samsung" <noreply@ec.com>
-Subject: Bluetooth Headsets
-Date: Tue, 15 Apr 2014 01:32:29 +0300
-Message-ID: <04f02644$41744$1e940642202431@multicommotorsl>
-Reply-To: "Samsung" <multicomsystemskenya@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch]raid5: delete another BUG_ON
+Date: Tue, 15 Apr 2014 08:47:03 +1000
+Message-ID: <20140415084703.46b99886@notabene.brown>
+References: <20140414061417.GA26258@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/BR8YIFU2s/H_elsmOWP/QTO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140414061417.GA26258@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bluetooth headsets are hands-free, wire-free devices that you simply at=
-tach onto your ear, Whether you are driving,walking down the street or =
-around the home trying to get chores done, holding the phone interrupts=
- your movement and gives you one less hand to work with.=20
-The freedom Bluetooth devices provide can make the simplest tasks easie=
-r. If you are in the middle of listening to a song and you receive a ph=
-one call, this headsets allow you to answer the phone with just the tou=
-ch of a button,without interupting with your music.
+--Sig_/BR8YIFU2s/H_elsmOWP/QTO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Advantages:
+On Mon, 14 Apr 2014 14:14:17 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-=95    Wireless: Cell phones and Bluetooth headsets can connect through=
- radio frequency which makes them completely wireless.
-=95    Small Size: Bluetooth headsets are small and lightweight which m=
-akes it easy to wear them and carry them.=20
-=95    Echo Cancellation Technology: many cell phones and Bluetooth hea=
-dsets these days are equipped with noise cancellation technology that e=
-liminates the external noise and offers clear sound in the headphones.=20
-=95    High Compatibility: Bluetooth headsets are compatible with all B=
-luetooth enabled devices like mobile phones, PDAs, PCs, laptops and mus=
-ic players etc.=20
+>=20
+> I hit another BUG_ON with e240c1839d11152b0355442. In __get_priority_stri=
+pe(),
+> stripe count equals to 0 initially. Between atomic_inc and BUG_ON,
+> get_active_stripe() finds the stripe. So the stripe count isn't 1 any mor=
+e.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid5.c |    1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> Index: linux/drivers/md/raid5.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux.orig/drivers/md/raid5.c	2014-04-14 11:44:11.448492119 +0800
+> +++ linux/drivers/md/raid5.c	2014-04-14 11:52:19.158359774 +0800
+> @@ -4371,7 +4371,6 @@ static struct stripe_head *__get_priorit
+>  	}
+>  	list_del_init(&sh->lru);
+>  	atomic_inc(&sh->count);
+> -	BUG_ON(atomic_read(&sh->count) !=3D 1);
+>  	return sh;
+>  }
+> =20
 
+What if we made those two lines:
+=20
+  BUG_ON(atomic_inc_return(&sh->count) !=3D 1);
 
-Get your own Original set of Samsung bluetooth handsfree device today @=
- an affordable discounted price of only 2,800/=3D Kshs.The package come=
-s handy with (bluetooth headset,USB charging cable and Headphone connec=
-tors).
+??
 
-Please COPY the below link to your browser to view the photos of the Bl=
-uetooth headset device:
-http://www.multicomsystems.kbo.co.ke/_item?item_id=3D5671933811097600
+NeilBrown
 
-"FREE DELIVERY WITHIN NAIROBI"..
+--Sig_/BR8YIFU2s/H_elsmOWP/QTO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-Regards,
-Bluetooth Team
-Celll:0721-946602
-Nairobi
+iQIVAwUBU0xlZznsnt1WYoG5AQIw7BAAoICiwyK+d1k2KgWNAinBEE4I0LQ6wwQo
+m46VGUNXma8vZc46e38KmHt0fqsiz0bcjiEJt2gZ8/1ysqjRV8aMwmVjsyIFWTlD
+BUGupjdOG0RrkPGaJusBz4zcg3KN+kQUXn1NVt4tEqBz4SUs7/RnsF6JJIPT7cRj
+uprnTLzJKpz7s2dRb6o6BDAZuz0DYhwFc3zJS0wP0cG1glColJoXu/8re3yQESqh
+5yezsnP3F7soZTVfGAeRu+GQMzgRypHNCCz0oMcQLFipbWQW1HopKWsyxFbxkkKu
+WPoH8f+6+MEJEHhReWm3Hc3d3idETtfpTFwQmoKc2zuC3Ir1MzbkHHAytSmlaz7+
+EVDn1K/9QZBPl/FRS28u0ph++rUxqbXOFuZvMZBpZjv7/cKFSYWi6D2CM741O+ZR
+6+URk6auMiOuKQ0MB6AAJZZIoyKY5+x40VO7Fpsqeiorciqe8jfvIcKvNmd1BiGr
+ogapRnWcdfWmgp+bE5tu4y7RY8HZU9bWg5eYSyq/PtVGWyhnGONnpamLJIGwDQsh
+uMrfSlY0U/S9MFxD9HC/FW9ZI5PdwgN3FyAUKkATAIXm+RjvFXo2fHuIirWvOh9d
+Z916NgKCPAOjtEw7ITdwlMqmLnFhqAEjujN6lwnyKeFJ5oV/cg7oRUk96pkL7u94
+H/Wa0tdjb7k=
+=bfdS
+-----END PGP SIGNATURE-----
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/BR8YIFU2s/H_elsmOWP/QTO--
