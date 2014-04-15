@@ -1,80 +1,37 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: Force mdadm to not prompt the user
-Date: Tue, 15 Apr 2014 08:41:44 +0200
-Message-ID: <534CD4A8.6030205@gmail.com>
-References: <534BFFB8.2030203@gmail.com> <20140415084830.1cbf299c@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] Create: don't default to bitmap=internal when it is not supported
+Date: Tue, 15 Apr 2014 10:01:44 +0200
+Message-ID: <1397548904-31199-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140415084830.1cbf299c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 04/15/2014 12:48 AM, NeilBrown wrote:
-> On Mon, 14 Apr 2014 17:33:12 +0200 Francis Moreau <francis.moro@gmail.com>
-> wrote:
-> 
->> Hello,
->>
->> I'm using mdadm in script which setup a system automtically.
->>
->> When creating a RAID array, I'd like mdadm to not prompt the user.
->>
->> Currently I get:
->>
->> # mdadm --create array1 --force --metadata=1.0 --level=raid1
->> --raid-devices=3 /dev/vdb1 /dev/vdc1 /dev/vdd1
->> mdadm: /dev/vdb1 appears to be part of a raid array:
->>        level=raid0 devices=0 ctime=Thu Jan  1 01:00:00 1970
->> mdadm: metadata will over-write last partition on /dev/vdb1.
->> Continue creating array?
->>
->> I thought that using --force would do the trick, but it didn't.
->>
->> I'm using mdadm - v3.3 - 3rd September 2013
->>
->> Is there any other way to achieve that ?
-> 
-> run
->    man mdadm
-> 
-> search for "prompt".... doesn't find anything.
-> search for "ask".  Ahh, there is the answer.
-> 
+For large arrays (component size > 100GB) if write-intent bitmap is not
+enabled, then it is set by default to "internal", even if the metadata
+format does support internal bitmaps, which causes Create to fail.
 
-ah, sorry I missed it.
+This patch adds checking if add_internal_bitmap is set in the
+superswitch before setting bitmap_file to "internal".
 
-In the meantime I tried the --zero-superblock in order to clean the
-metadata from /dev/vdb1:
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ Create.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-# mdadm --create array1 --force --metadata=1.0 --level=raid1
---raid-devices=3 /dev/vdb1 /dev/vdc1 /dev/vdd1
-mdadm: /dev/vdb1 appears to be part of a raid array:
-       level=raid0 devices=0 ctime=Thu Jan  1 01:00:00 1970
-mdadm: metadata will over-write last partition on /dev/vdb1.
-Continue creating array? n
-mdadm: create aborted.
-
-# mdadm --zero-superblock /dev/vdb1
-mdadm: Unrecognised md component device - /dev/vdb1
-
-# mdadm --zero-superblock --force /dev/vdb1
-mdadm: Unrecognised md component device - /dev/vdb1
-
-# mdadm --create array1 --force --metadata=1.0 --level=raid1
---raid-devices=3 /dev/vdb1 /dev/vdc1 /dev/vdd1
-mdadm: /dev/vdb1 appears to be part of a raid array:
-       level=raid0 devices=0 ctime=Thu Jan  1 01:00:00 1970
-mdadm: metadata will over-write last partition on /dev/vdb1.
-Continue creating array? n
-
-mdadm doesn't tell me which metadata it sees but I tried the different
-ones and got the same result.
-
-What am I missing ?
-
-Thanks.
+diff --git a/Create.c b/Create.c
+index e42627c..602f79c 100644
+--- a/Create.c
++++ b/Create.c
+@@ -509,6 +509,7 @@ int Create(struct supertype *st, char *mddev,
+ 
+ 	if (!s->bitmap_file &&
+ 	    s->level >= 1 &&
++	    st->ss->add_internal_bitmap &&
+ 	    (s->write_behind || s->size > 100*1024*1024ULL)) {
+ 		if (c->verbose > 0)
+ 			pr_err("automatically enabling write-intent bitmap on large array\n");
+-- 
+1.8.4.5
 
