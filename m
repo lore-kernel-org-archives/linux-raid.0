@@ -1,42 +1,46 @@
-From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
-Subject: Re: raid6 - data integrity issue - data mis-compare on rebuilding
- RAID 6 - with 100 Mb resync speed.
-Date: Wed, 23 Apr 2014 12:19:24 +0300
-Message-ID: <20140423091924.GG18930@reaktio.net>
-References: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
+From: "Manibalan P" <pmanibalan@amiindia.co.in>
+Subject: RE: raid6 - data integrity issue - data mis-compare on rebuilding RAID 6 - with 100 Mb resync speed.
+Date: Wed, 23 Apr 2014 14:55:15 +0530
+Message-ID: <13688C12F44C7C428726663F950CA2530985D414@venus.in.megatrends.com>
+References: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com> <20140423091924.GG18930@reaktio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <20140423091924.GG18930@reaktio.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Manibalan P <pmanibalan@amiindia.co.in>
+To: =?iso-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
 Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Fri, Apr 11, 2014 at 05:41:12PM +0530, Manibalan P wrote:
-> Hi Neil,
-> 
-> Also, I found the data corruption issue on RHEL 6.5.
-> 
+>On Fri, Apr 11, 2014 at 05:41:12PM +0530, Manibalan P wrote:
+>> Hi Neil,
+>> 
+>> Also, I found the data corruption issue on RHEL 6.5.
+>> 
 
-Did you file a bug about the corruption to redhat bugzilla?
+>Did you file a bug about the corruption to redhat bugzilla?
 
--- Pasi
+Yes, today I raised a support ticket with Redhat regarding this issue.
 
-> For your kind attention, I up-ported the md code [raid5.c + raid5.h]
-> from FC11 kernel to CentOS 6.4, and there is no mis-compare with the
+Manibalan
+
+>-- Pasi
+
+> For your kind attention, I up-ported the md code [raid5.c + raid5.h] 
+> from FC11 kernel to CentOS 6.4, and there is no mis-compare with the 
 > up-ported code.
 > 
 > Thanks,
 > Manibalan.
 > 
 > -----Original Message-----
-> From: Manibalan P 
+> From: Manibalan P
 > Sent: Monday, March 24, 2014 6:46 PM
 > To: 'linux-raid@vger.kernel.org'
 > Cc: neilb@suse.de
-> Subject: RE: raid6 - data integrity issue - data mis-compare on
+> Subject: RE: raid6 - data integrity issue - data mis-compare on 
 > rebuilding RAID 6 - with 100 Mb resync speed.
 > 
 > Hi,
@@ -49,26 +53,25 @@ Did you file a bug about the corruption to redhat bugzilla?
 > 	c. mdadm add the drive back
 >  There is no mis-compare happen in this path.
 > 
-> 2. RAID 6, two drive failure - write during Degrade and verify after
-> rebuild 
+> 2. RAID 6, two drive failure - write during Degrade and verify after 
+> rebuild
 > 	a. remove two drives, to make the RAID array degraded.
-> 	b. now run write IO write cycle, wait till the write cycle
-> completes
-> 	c. insert the drives back one by one, and wait till the re-build
+> 	b. now run write IO write cycle, wait till the write cycle completes
+> 	c. insert the drives back one by one, and wait till the re-build 
 > completes and a RAID array become optimal.
 > 	d. now perform the verification cycle.
 > There is no mis-compare happened in this path also.
 > 
 > During All my test, the sync_Speed_max and min is set to 100Mb
 > 
-> So, as you referred in your previous mail, the corruption might be
+> So, as you referred in your previous mail, the corruption might be 
 > happening only during resync and IO happens in parallel.
 > 
 > Also, I tested with upstream 2.6.32 kernel from git:
-> "http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ -
+> "http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/ - 
 > tags/v2.6.32"
-> 	And I am facing mis-compare issue in this kernel as well.  on
-> RAID 6, two drive failure with high sync_speed.
+> 	And I am facing mis-compare issue in this kernel as well.  on RAID 6, 
+> two drive failure with high sync_speed.
 > 
 > Thanks,
 > Manibalan.
@@ -78,7 +81,7 @@ Did you file a bug about the corruption to redhat bugzilla?
 > Sent: Thursday, March 13, 2014 11:49 AM
 > To: Manibalan P
 > Cc: linux-raid@vger.kernel.org
-> Subject: Re: raid6 - data integrity issue - data mis-compare on
+> Subject: Re: raid6 - data integrity issue - data mis-compare on 
 > rebuilding RAID 6 - with 100 Mb resync speed.
 > 
 > On Wed, 12 Mar 2014 13:09:28 +0530 "Manibalan P"
@@ -90,20 +93,21 @@ Did you file a bug about the corruption to redhat bugzilla?
 > > 
 > > Yes , IO is started, only after the re-sync is completed.
 > >  And to add more info,
-> >              I am facing this mis-compare only with high resync speed 
-> > (30M to 100M), I ran the same test with resync speed min -10M and max
+> >              I am facing this mis-compare only with high resync 
+> > speed (30M to 100M), I ran the same test with resync speed min -10M 
+> > and max
 > > - 30M, without any issue. So the  issue has relationship with 
 > > sync_speed_max / min.
 > 
-> So presumably it is an interaction between recovery and IO.  Maybe if we
-> write to a stripe that is being recoverred, or recover a stripe that is
-> being written to, then something gets confused.
+> So presumably it is an interaction between recovery and IO.  Maybe if 
+> we write to a stripe that is being recoverred, or recover a stripe 
+> that is being written to, then something gets confused.
 > 
 > I'll have a look to see what I can find.
 > 
 > Thanks,
 > NeilBrown
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
