@@ -1,37 +1,47 @@
-From: "Administrador do Sistema" <zunaidali90@gmail.com>
-Subject: *sua caixa de correio*
-Date: Wed, 23 Apr 2014 20:35:51 +0530
-Message-ID: <20140423150002.9504A356CE1__49863.4377996952$1398266322$gmane$org@sspslssdmail-31.ssp.ma.gov.br>
-Reply-To: upgradeunits24@mail2webmaster.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: raid6 - data integrity issue - data mis-compare on rebuilding
+ RAID 6 - with 100 Mb resync speed.
+Date: Wed, 23 Apr 2014 10:02:00 -0700
+Message-ID: <CAPcyv4gg6N_FYOZmooXTUYT22AOuBmqFuin_TiKqn8A9DOCnqw@mail.gmail.com>
+References: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
+	<20140423170755.1aa92ba6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <20140423170755.1aa92ba6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <zunaidali90@gmail.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Manibalan P <pmanibalan@amiindia.co.in>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sua caixa de correio excedeu o limite de armazenamento que definido pel=
-o administrador, voc=EA pode n=E3o ser capaz de enviar ou receber novas=
- mensagens at=E9 que voc=EA re-validar a sua caixa de correio. Para vol=
-tar a validar a sua caixa de correio, por favor envie os seguintes dado=
-s abaixo:
+On Wed, Apr 23, 2014 at 12:07 AM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 11 Apr 2014 17:41:12 +0530 "Manibalan P" <pmanibalan@amiindia.co.in>
+> wrote:
+>
+>> Hi Neil,
+>>
+>> Also, I found the data corruption issue on RHEL 6.5.
+>>
+>> For your kind attention, I up-ported the md code [raid5.c + raid5.h]
+>> from FC11 kernel to CentOS 6.4, and there is no mis-compare with the
+>> up-ported code.
+>
+> This narrows it down to between 2.6.29 and 2.6.32 - is that correct?
+>
+> So it is probably the change to RAID6 to support async parity calculations.
+>
+> Looking at the code always makes my head spin.
+>
+> Dan : have you any ideas?
+>
+> It seems that writing to a double-degraded RAID6 while it is recovering to
+> a space can trigger data corruption.
+>
+> 2.6.29 works
+> 2.6.32 doesn't
+> 3.8.0 still doesn't.
+>
+> I suspect async parity calculations.
 
-Nome:
-Nome de usu=E1rio:
-Senha:
-Confirme a Senha:
-Endere=E7o de E-mail:
-N=FAmero de telefone:
-
-Se voc=EA n=E3o conseguir revalidar sua caixa de correio, a caixa de co=
-rreio ser=E1 desativado!
-
-obrigado
-Administrador do Sistema
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'll take a look.  I've had cleanups of that code on my backlog for "a
+while now (TM)".
