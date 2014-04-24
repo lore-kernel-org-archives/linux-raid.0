@@ -1,38 +1,35 @@
-From: Jeff Wiegley <jeffw@csun.edu>
-Subject: Repaired the sectors of a drive, how do I get the md to assemble
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Repaired the sectors of a drive, how do I get the md to assemble
  and start degraded?
-Date: Thu, 24 Apr 2014 08:05:27 -0700
-Message-ID: <53592837.8020406@csun.edu>
+Date: Thu, 24 Apr 2014 19:27:36 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se>
+References: <53592837.8020406@csun.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <53592837.8020406@csun.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Jeff Wiegley <jeffw@csun.edu>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have a storage box that I'm attempting to get data off of.
+On Thu, 24 Apr 2014, Jeff Wiegley wrote:
 
-The box was pulled by another because mdadm shut the md device
-off due to hard drive errors. and because the OS harddive (separate)
-had a motor failure. I replace the OS drive and install a fresh
-copy of Ubuntu server 14.04.
+> How do I do this? how do I specify a command to take these 15 drives, 
+> mark two of them failed and force the assembly and start of the 
+> remaining 13 good drives (though one has probably been marked as failed 
+> in the past?)
 
-When I brought the machine up I thought we were in luck because
-it auto assembled and started the Raid 6 array were all the data is.
-But it showed that 2 of the 15 drives were off line... [UUUUUU_UUUUU_UU]
-something like that. So I mounted the fs and began a tar backup to
-another storage location overnight.
+Try to use --assemble with all working drives (not the failed ones). If it 
+doesn't work, add --force. Do not use --create --assume-clean unless you 
+really really know what you're doing. If you go down that route, first 
+make sure you do mdadm --examine on all devices so you know what the 
+superblocks contained before you erase them (which is what --create will 
+do).
 
-During the night it failed a third drive (which is probably what
-brought it down in the first place.) I have been able to repair the
-drive with Seagate's SeaTools. Now I want to plug the drive back in
-and bring the array up in the 2-drive degraded state.
+Did you try to re-add the failed drives initially? If you had been using a 
+bitmap, they might have come online and successfully added, and then you 
+could have run md repair and avoided data loss altogether.
 
-How do I do this? how do I specify a command to take these 15 drives,
-mark two of them failed and force the assembly and start of the
-remaining 13 good drives (though one has probably been marked as failed
-in the past?)
-
-- Jeff
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
