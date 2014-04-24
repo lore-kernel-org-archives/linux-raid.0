@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC mdadm PATCH 01/11] sysfs: fix sysfs_set_array() to accept
- valid negative array levels
-Date: Thu, 24 Apr 2014 00:22:22 -0700
-Message-ID: <20140424072222.4515.47283.stgit@viggo.jf.intel.com>
+Subject: [RFC mdadm PATCH 02/11] make must_be_container() more selective
+Date: Thu, 24 Apr 2014 00:22:27 -0700
+Message-ID: <20140424072227.4515.73210.stgit@viggo.jf.intel.com>
 References: <20140424071902.4515.19684.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,31 +13,46 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, jes.sorensen@redhat.com, artur.paszkiewicz@intel.com, dave.jiang@intel.com
 List-Id: linux-raid.ids
 
-From: Dan Williams <dan.j.william@intel.com>
-
-Assume this FIXME was to prevent loading a personality for containers.
-Fix it up to accept the values that correlate with the actual md kernel
-personalities.
+Cache configurations in mid-assembly may appear to be a "container" as
+they are 0-sized and external.  Teach must_be_container() to look for
+"external:<metadata name>" as the container identfier from
+<sysfs>/md/metadata_version.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- sysfs.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ util.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/sysfs.c b/sysfs.c
-index 9a1d856960e8..4cbd4e5d051b 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -628,8 +628,9 @@ int sysfs_set_array(struct mdinfo *info, int vers)
- 			return 1;
- 		}
- 	}
--	if (info->array.level < 0)
--		return 0; /* FIXME */
-+	/* containers have no personality, they're rather bland */
-+	if (info->array.level <= LEVEL_CONTAINER)
-+		return 0;
- 	rv |= sysfs_set_str(info, NULL, "level",
- 			    map_num(pers, info->array.level));
- 	if (info->reshape_active && info->delta_disks != UnSet)
+diff --git a/util.c b/util.c
+index afb2bb110f24..93f9200fa4c7 100644
+--- a/util.c
++++ b/util.c
+@@ -1176,18 +1176,19 @@ int get_dev_size(int fd, char *dname, unsigned long long *sizep)
+ }
+ 
+ /* Return true if this can only be a container, not a member device.
+- * i.e. is and md device and size is zero
++ * i.e. is and md device and the text_version matches an external
++ * metadata format
+  */
+ int must_be_container(int fd)
+ {
+-	unsigned long long size;
+-	if (md_get_version(fd) < 0)
++	struct mdinfo *sra = sysfs_read(fd, NULL, GET_VERSION);
++	struct superswitch *ss;
++
++	if (!sra)
+ 		return 0;
+-	if (get_dev_size(fd, NULL, &size) == 0)
+-		return 1;
+-	if (size == 0)
+-		return 1;
+-	return 0;
++	ss = version_to_superswitch(sra->text_version);
++	sysfs_free(sra);
++	return ss ? ss->external : 0;
+ }
+ 
+ /* Sets endofpart parameter to the last block used by the last GPT partition on the device.
 
