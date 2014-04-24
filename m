@@ -1,35 +1,101 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Repaired the sectors of a drive, how do I get the md to assemble
- and start degraded?
-Date: Thu, 24 Apr 2014 19:27:36 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se>
-References: <53592837.8020406@csun.edu>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH 1/3] md/isrt: base infrastructure and metadata loading
+Date: Thu, 24 Apr 2014 10:33:31 -0700
+Message-ID: <CAA9_cmfLyiDQp7naxJPxRsUe-KGwRYOZF9cLNuztmLhYno11qg@mail.gmail.com>
+References: <20140424061756.3187.2633.stgit@viggo.jf.intel.com>
+	<20140424061849.3187.48229.stgit@viggo.jf.intel.com>
+	<20140424172450.7ec9452b@notabene.brown>
+	<CAA9_cmcfGvBVTbxbBKBsgsnkyAux_VyKcM3V6v+tY5quQTotkQ@mail.gmail.com>
+	<20140424180252.490434c6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53592837.8020406@csun.edu>
+In-Reply-To: <20140424180252.490434c6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Wiegley <jeffw@csun.edu>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, jes.sorensen@redhat.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Dave Jiang <dave.jiang@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 24 Apr 2014, Jeff Wiegley wrote:
+On Thu, Apr 24, 2014 at 1:02 AM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, 24 Apr 2014 00:38:01 -0700 Dan Williams <dan.j.williams@intel.com>
+> wrote:
+>
+>> On Thu, Apr 24, 2014 at 12:24 AM, NeilBrown <neilb@suse.de> wrote:
+>> > On Wed, 23 Apr 2014 23:18:49 -0700 Dan Williams <dan.j.williams@intel.com>
+>> > wrote:
+>> >
+>> >> Initial md / block boilerplate for the Intel (R) Smart Response
+>> >> Technology compatibility driver.  Supports reading the packed  metadata
+>> >> and parsing it into a cache lookup tree.
+>> >>
+>> >> Cc: Dave Jiang <dave.jiang@intel.com>
+>> >> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> >
+>> > It would really help in reviewing this to have a glossary.
+>> >
+>> > There are frames and segments and sectors and pages.
+>> >
+>> > I hope sectors are 512 bytes and pages are PAGE_SIZE, which may or may not be
+>> > 4096.
+>> >
+>> > And there are 16 sectors per frame, so I guess space is allocated in the
+>> > cache in 8K aligned frames ??
+>> >
+>> > There are 64 segments per page so if pages did happen to be 4096 bytes, that
+>> > makes 64 bytes per segment.  What are they?
+>> >
+>> > There is a list somewhere of 32byte frame descriptors which is read into a
+>> > single vmalloced region (why? you keep page pointers, so why not read it into
+>> > separate pages?)
+>> > How is this organised?  I might be able to work that out from the code, but
+>> > I'd rather not.
+>> >
+>> > Please don't make me guess, I'm not good at it.
+>> >
+>> > I guess it didn't help that diff out the header after the code.  I got bored
+>> > before I got there and didn't read all to words, so maybe some answers are in
+>> > there.  They don't really stand out though.
+>>
+>> No, they don't.  Let me throw together a proper cheat sheet.
+>
+> Thanks.
+>
+>
+>>
+>> > You've chosen '8' for the 'level' number.
+>>
+>> Hmm, ok.  I use -12 in the mdadm bits, I neglected to go back and fix
+>> up the kernel.
+>>
+>> > As this is an array which doesn't have redundancy, I'd rather a number <= 0.
+>> > I think there are places where I assume >=1 has redundancy and understands
+>> > spares etc.
+>> >
+>> > Should conf->count be a kref??? Just a thought, not a requirement.
+>>
+>> Doesn't kref == 0 imply object destroyed?  It's a count of pending
+>> metadata events.
+>
+> kref means that in a kobject.  Elsewhere it means whatever you want.
+>
+> mpb_read_endio would kref_put(&conf->ref, release)
+>
+> where release would get the conf and wake_up(&conf->eventq);
+>
+> It probably isn't a big win..
 
-> How do I do this? how do I specify a command to take these 15 drives, 
-> mark two of them failed and force the assembly and start of the 
-> remaining 13 good drives (though one has probably been marked as failed 
-> in the past?)
+Yes, but I should train my brain that kref != object lifetime, it's
+just a ref...
 
-Try to use --assemble with all working drives (not the failed ones). If it 
-doesn't work, add --force. Do not use --create --assume-clean unless you 
-really really know what you're doing. If you go down that route, first 
-make sure you do mdadm --examine on all devices so you know what the 
-superblocks contained before you erase them (which is what --create will 
-do).
+...or is it?
+static inline void kref_get(struct kref *kref)
+{
+        /* If refcount was 0 before incrementing then we have a race
+         * condition when this kref is freeing by some other thread right now.
+         * In this case one should use kref_get_unless_zero()
+         */
+        WARN_ON_ONCE(atomic_inc_return(&kref->refcount) < 2);
+}
 
-Did you try to re-add the failed drives initially? If you had been using a 
-bitmap, they might have come online and successfully added, and then you 
-could have run md repair and avoided data loss altogether.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Seems we would need kref_get_zero_ok(), right?
