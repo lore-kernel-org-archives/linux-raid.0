@@ -1,42 +1,51 @@
-From: "L.M.J" <linuxmasterjedi@free.fr>
-Subject: Re: Corrupted ext4 filesystem after mdadm manipulation error
-Date: Thu, 24 Apr 2014 21:56:54 +0200
-Message-ID: <20140424215654.0447d300@netstation>
-References: <20140424070548.445497dd@netstation>
-	<20140424194832.2d0a867f@netstation>
-	<CAK_KU4a+Ep7=F=NSbb-hqN6Rvayx4QPWm-M2403OHn5-LVaNZw@mail.gmail.com>
-	<20140424203506.5fdee0d3@netstation>
-	<CAK_KU4Zh-azXEEzW4f1m=boCZDKevqaSHxW0XoAgRdrCbm2PkA@mail.gmail.com>
-	<CAK_KU4aDDaUSGgcGBwCeO+yE0Qa_pUmMdAHMu7pqO7dqEEC71g@mail.gmail.com>
+From: Jeff Wiegley <jeffw@csun.edu>
+Subject: Re: Repaired the sectors of a drive, how do I get the md to assemble
+ and start degraded?
+Date: Thu, 24 Apr 2014 13:24:41 -0700
+Message-ID: <53597309.8070506@csun.edu>
+References: <53592837.8020406@csun.edu> <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK_KU4aDDaUSGgcGBwCeO+yE0Qa_pUmMdAHMu7pqO7dqEEC71g@mail.gmail.com>
+In-Reply-To: <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Scott D'Vileskis <sdvileskis@gmail.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Le Thu, 24 Apr 2014 15:43:33 -0400,
-"Scott D'Vileskis" <sdvileskis@gmail.com> a =E9crit :
+I don't want to simply re-add the failed drives as I believe
+they will start re-syncing won't they? I don't want their data
+lost and overwritten. I want the drive to be treated like it
+never failed in the first place.
 
-> Note, if you dare to --create the array again with your two previous =
-disks, you'll want to create the array
-> with the 'missing' disk in the right place.
->=20
-> mdadm --create /dev/md0 missing /dev/sdc1 /dev/sdd1=A0=20
-> (Assuming your original array was sdb, sdc, sdd)=20
->=20
-> You'll probably need a force and maybe a start-degraded.
->=20
-> Then, I would try the recovery on the resulting drive.
+I might have some filesystem corruption but not as much as I
+will if the entire drive is resynced.
 
-I think I have enough messed up with my drives, It might be dangerous t=
-o recreate again and again the
-array :-(
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I also cannot repair the two other dead drives. So I need this
+drive treated as is so that array can come up degraded. Then I
+can get what data I can off it before replacing all drives
+and probably starting fresh.
+
+- Jeff
+
+On 4/24/2014 10:27 AM, Mikael Abrahamsson wrote:
+> On Thu, 24 Apr 2014, Jeff Wiegley wrote:
+>
+>> How do I do this? how do I specify a command to take these 15 drives,
+>> mark two of them failed and force the assembly and start of the
+>> remaining 13 good drives (though one has probably been marked as failed
+>> in the past?)
+>
+> Try to use --assemble with all working drives (not the failed ones). If it
+> doesn't work, add --force. Do not use --create --assume-clean unless you
+> really really know what you're doing. If you go down that route, first
+> make sure you do mdadm --examine on all devices so you know what the
+> superblocks contained before you erase them (which is what --create will
+> do).
+>
+> Did you try to re-add the failed drives initially? If you had been using a
+> bitmap, they might have come online and successfully added, and then you
+> could have run md repair and avoided data loss altogether.
+>
+
