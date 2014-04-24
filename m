@@ -1,146 +1,96 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC mdadm PATCH 08/11] imsm: read cache metadata
-Date: Thu, 24 Apr 2014 00:23:01 -0700
-Message-ID: <20140424072301.4515.25655.stgit@viggo.jf.intel.com>
-References: <20140424071902.4515.19684.stgit@viggo.jf.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [RFC PATCH 1/3] md/isrt: base infrastructure and metadata
+ loading
+Date: Thu, 24 Apr 2014 17:24:50 +1000
+Message-ID: <20140424172450.7ec9452b@notabene.brown>
+References: <20140424061756.3187.2633.stgit@viggo.jf.intel.com>
+	<20140424061849.3187.48229.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ShrjP+BSmVzgrBbEFGDQhgs"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140424071902.4515.19684.stgit@viggo.jf.intel.com>
+In-Reply-To: <20140424061849.3187.48229.stgit@viggo.jf.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, jes.sorensen@redhat.com, artur.paszkiewicz@intel.com, dave.jiang@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, jes.sorensen@redhat.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Dave Jiang <dave.jiang@intel.com>
 List-Id: linux-raid.ids
 
-Add support for identifying cache volumes and retrieving the associated
-cache mpb located at the start of the volume marked with a
-DEV_NVC_VOLUME flag.
+--Sig_/ShrjP+BSmVzgrBbEFGDQhgs
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- super-intel.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++--------
- 1 files changed, 47 insertions(+), 8 deletions(-)
+On Wed, 23 Apr 2014 23:18:49 -0700 Dan Williams <dan.j.williams@intel.com>
+wrote:
 
-diff --git a/super-intel.c b/super-intel.c
-index acc46368322f..f179d80b8209 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -345,6 +345,7 @@ static unsigned int mpb_sectors(struct imsm_super *mpb)
- struct intel_dev {
- 	struct imsm_dev *dev;
- 	struct intel_dev *next;
-+	struct nv_cache_control_data *nvc;
- 	unsigned index;
- };
- 
-@@ -3086,6 +3087,7 @@ static void free_devlist(struct intel_super *super)
- 
- 	while (super->devlist) {
- 		dv = super->devlist->next;
-+		free(super->devlist->nvc);
- 		free(super->devlist->dev);
- 		free(super->devlist);
- 		super->devlist = dv;
-@@ -3467,9 +3469,34 @@ static void end_migration(struct imsm_dev *dev, struct intel_super *super,
- }
- #endif
- 
--static int parse_raid_devices(struct intel_super *super)
-+static int load_cache(int fd, struct intel_dev *dv)
- {
--	int i;
-+	struct imsm_dev *dev = dv->dev;
-+	struct imsm_map *map = get_imsm_map(dev, MAP_X);
-+	off_t offset = pba_of_lba0(map) << 9;
-+	ssize_t size = (sizeof(*dv->nvc) + 511) & ~511;
-+	int ret;
-+
-+	if (posix_memalign((void**) &dv->nvc, 512, size) != 0) {
-+		pr_err("Failed to allocate cache anchor buffer"
-+				" for %.16s\n", dev->volume);
-+		return 1;
-+	}
-+
-+	ret = pread(fd, dv->nvc, size, offset);
-+	if (ret != size) {
-+		pr_err("Failed to read cache metadata for %.16s: %s\n",
-+			dev->volume, strerror(errno));
-+		free(dv->nvc);
-+		dv->nvc = NULL;
-+	}
-+
-+	return ret != size;
-+}
-+
-+static int load_raid_devices(int fd, struct intel_super *super)
-+{
-+	int i, err;
- 	struct imsm_dev *dev_new;
- 	size_t len, len_migr;
- 	size_t max_len = 0;
-@@ -3496,6 +3523,16 @@ static int parse_raid_devices(struct intel_super *super)
- 		dv->index = i;
- 		dv->next = super->devlist;
- 		super->devlist = dv;
-+
-+		/* volumes that serve as caches have metadata at offset-0 from
-+		 * the start of the volume
-+		 */
-+		if (dv->dev->status & DEV_NVC_VOLUME) {
-+			err = load_cache(fd, dv);
-+			if (err)
-+				return err;
-+		} else
-+			dv->nvc = NULL;
- 	}
- 
- 	/* ensure that super->buf is large enough when all raid devices
-@@ -3718,8 +3755,7 @@ static void clear_hi(struct intel_super *super)
- 	}
- }
- 
--static int
--load_and_parse_mpb(int fd, struct intel_super *super, char *devname, int keep_fd)
-+static int load_mpb(int fd, struct intel_super *super, char *devname, int keep_fd)
- {
- 	int err;
- 
-@@ -3729,7 +3765,10 @@ load_and_parse_mpb(int fd, struct intel_super *super, char *devname, int keep_fd
- 	err = load_imsm_disk(fd, super, devname, keep_fd);
- 	if (err)
- 		return err;
--	err = parse_raid_devices(super);
-+	err = load_raid_devices(fd, super);
-+	if (err)
-+		return err;
-+
- 	clear_hi(super);
- 	return err;
- }
-@@ -4384,13 +4423,13 @@ static int get_super_block(struct intel_super **super_list, char *devnm, char *d
- 	}
- 
- 	find_intel_hba_capability(dfd, s, devname);
--	err = load_and_parse_mpb(dfd, s, NULL, keep_fd);
-+	err = load_mpb(dfd, s, NULL, keep_fd);
- 
- 	/* retry the load if we might have raced against mdmon */
- 	if (err == 3 && devnm && mdmon_running(devnm))
- 		for (retry = 0; retry < 3; retry++) {
- 			usleep(3000);
--			err = load_and_parse_mpb(dfd, s, NULL, keep_fd);
-+			err = load_mpb(dfd, s, NULL, keep_fd);
- 			if (err != 3)
- 				break;
- 		}
-@@ -4473,7 +4512,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
- 		free_imsm(super);
- 		return 2;
- 	}
--	rv = load_and_parse_mpb(fd, super, devname, 0);
-+	rv = load_mpb(fd, super, devname, 0);
- 
- 	if (rv) {
- 		if (devname)
+> Initial md / block boilerplate for the Intel (R) Smart Response
+> Technology compatibility driver.  Supports reading the packed  metadata
+> and parsing it into a cache lookup tree.
+>=20
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
+It would really help in reviewing this to have a glossary.
+
+There are frames and segments and sectors and pages.
+
+I hope sectors are 512 bytes and pages are PAGE_SIZE, which may or may not =
+be
+4096.
+
+And there are 16 sectors per frame, so I guess space is allocated in the
+cache in 8K aligned frames ??
+
+There are 64 segments per page so if pages did happen to be 4096 bytes, that
+makes 64 bytes per segment.  What are they?
+
+There is a list somewhere of 32byte frame descriptors which is read into a
+single vmalloced region (why? you keep page pointers, so why not read it in=
+to
+separate pages?)
+How is this organised?  I might be able to work that out from the code, but
+I'd rather not.
+
+Please don't make me guess, I'm not good at it.
+
+I guess it didn't help that diff out the header after the code.  I got bored
+before I got there and didn't read all to words, so maybe some answers are =
+in
+there.  They don't really stand out though.
+
+
+You've chosen '8' for the 'level' number.
+As this is an array which doesn't have redundancy, I'd rather a number <=3D=
+ 0.
+I think there are places where I assume >=3D1 has redundancy and understands
+spares etc.
+
+Should conf->count be a kref??? Just a thought, not a requirement.
+
+
+NeilBrown
+
+
+--Sig_/ShrjP+BSmVzgrBbEFGDQhgs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU1i8Qznsnt1WYoG5AQIhuBAAgPjGQIy9bd9Pb4gOdAR84OqrDxx1uBLE
+HYdZCLmCWRGQIpzrvFCprcYZVLcnCUM3U8y5jGIrj2dNk3H2sZZYgzaJ8TQrC/ki
+iILHoZQHuBxYzLEH11YBA0vkgJ+KjF8IX2hAhBl9f+quhtSFeYayw2tRIVtS1vdY
+F4aqJm/PNu6HWPmvHun+dwEw41TcqB5AewHo/9sQFvv2zOn8nKYM+AbEtCIy8Phn
+k074tDYOZHP1Q58i7D+LCBSnb+uus02YQZ6NAXNxfN29P9NBDWUAFm48ryGlmX4M
+QmbHygz0nouyjo9/lbqXDIO5vP5MOBjdjC0kcK43R2+oU92YLUosPCf+6jf43Ipy
+HqTpkhiskql/WPjRTj4PlUNuOX1ex/QwEb4mt5xTSlXjXR5au3w7Nzcz8VThm038
+tQZZKsw7NKn+tEO425GtPV9s3bGTrvld+/eS2qrc1p2rsg6NnvqhM5rwJuotJ9o7
+VY0no3zeJEituE23rVKA+yeG+MlTquSCdDkdT/vOnPeiatpscVBC9glfSPvvKR7c
+zK2tl5G37y27Ub8glqcQUUVw6EmedGKjZsnaGMXmwwbNjdKfE/piH2GYF2OvpQSH
+zNB5mMF2RrOoGkc1XgbHROnsgnhRMzaUyxMvDe2mjOIhPPmRnnJiVm/BGkteRVYa
+UMDOlouHPjA=
+=8rJF
+-----END PGP SIGNATURE-----
+
+--Sig_/ShrjP+BSmVzgrBbEFGDQhgs--
