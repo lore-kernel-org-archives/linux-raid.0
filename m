@@ -1,7 +1,7 @@
-From: "Scott D'Vileskis" <sdvileskis@gmail.com>
+From: "L.M.J" <linuxmasterjedi@free.fr>
 Subject: Re: Corrupted ext4 filesystem after mdadm manipulation error
-Date: Fri, 25 Apr 2014 09:36:12 -0400
-Message-ID: <CAK_KU4a0FCwG2fjAQYX4jM2xC9SbMc=qp_7T_v4hC5eztDFqOA@mail.gmail.com>
+Date: Fri, 25 Apr 2014 16:43:56 +0200
+Message-ID: <20140425164356.368e9026@netstation>
 References: <20140424070548.445497dd@netstation>
 	<20140424194832.2d0a867f@netstation>
 	<CAK_KU4a+Ep7=F=NSbb-hqN6Rvayx4QPWm-M2403OHn5-LVaNZw@mail.gmail.com>
@@ -13,129 +13,145 @@ References: <20140424070548.445497dd@netstation>
 	<20140425071340.1ac35ded@netstation>
 	<alpine.DEB.2.02.1404250802070.19744@uplift.swm.pp.se>
 	<2ecef7f1-fde7-48c9-87bf-47ff617956b3@email.android.com>
+	<CAK_KU4a0FCwG2fjAQYX4jM2xC9SbMc=qp_7T_v4hC5eztDFqOA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2ecef7f1-fde7-48c9-87bf-47ff617956b3@email.android.com>
+In-Reply-To: <CAK_KU4a0FCwG2fjAQYX4jM2xC9SbMc=qp_7T_v4hC5eztDFqOA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "L. M. J" <linuxmasterjedi@free.fr>
+To: Scott D'Vileskis <sdvileskis@gmail.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Drive B has bogus data on it., since it was resync'd with C & D in the
-wrong order. Fortunately, your --add should have only have changed B,
-not C & D.
+Le Fri, 25 Apr 2014 09:36:12 -0400,
+"Scott D'Vileskis" <sdvileskis@gmail.com> a =E9crit :
 
-As a last ditch effort, try the --create again but with the two
-potentially good disks in the right order:
+> As a last ditch effort, try the --create again but with the two
+> potentially good disks in the right order:
+>=20
+> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D3 missing /dev/s=
+dc1 /dev/sdd1
 
-mdadm --create /dev/md0 --level=5 --raid-devices=3 missing /dev/sdc1 /dev/sdd1
 
-Note: The following is where I have reproduced your problem with loop devices
-
-#Create 3 200MB files
-root@Breadman:/home/scott# mkdir raidtesting
-root@Breadman:/home/scott# cd raidtesting/
-root@Breadman:/home/scott/raidtesting# fallocate -l200000000 sdb
-root@Breadman:/home/scott/raidtesting# fallocate -l200000000 sdc
-root@Breadman:/home/scott/raidtesting# fallocate -l200000000 sdd
-root@Breadman:/home/scott/raidtesting# losetup /dev/loop2 sdb
-root@Breadman:/home/scott/raidtesting# losetup /dev/loop3 sdc
-root@Breadman:/home/scott/raidtesting# losetup /dev/loop4 sdd
-root@Breadman:/home/scott/raidtesting# mdadm --create /dev/md0 -n3 -l5
-/dev/loop2 /dev/loop3 /dev/loop4
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
-
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-md0 : active raid5 loop4[3] loop3[1] loop2[0]
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
-
-root@Breadman:/home/scott/raidtesting# mkfs.reiserfs /dev/md0
-mkfs.reiserfs 3.6.21 (2009 www.namesys.com)
-<SNIP>
-ReiserFS is successfully created on /dev/md0.
-root@Breadman:/home/scott/raidtesting# mkdir temp
-root@Breadman:/home/scott/raidtesting# mount /dev/md0 temp/
-
-#Then I copied a file to it:
-root@Breadman:/home/scott/raidtesting# md5sum temp/systemrescuecd-x86-0.4.3.iso
-b88ce25b156619a9a344889bc92b1833  temp/systemrescuecd-x86-0.4.3.iso
-
-#And failed a disk
-root@Breadman:/home/scott/raidtesting# umount temp/
-root@Breadman:/home/scott/raidtesting# mdadm --fail /dev/md0 /dev/loop2
-mdadm: set /dev/loop2 faulty in /dev/md0
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-md0 : active raid5 loop4[3] loop3[1] loop2[0](F)
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
-
-#Stopped array, removed disk, replaced disk by creating a new file
-root@Breadman:/home/scott/raidtesting# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-root@Breadman:/home/scott/raidtesting# losetup -d /dev/loop2
-root@Breadman:/home/scott/raidtesting# rm sdb
-root@Breadman:/home/scott/raidtesting# fallocate -l200000000 sdb-new
-root@Breadman:/home/scott/raidtesting# losetup /dev/loop2 sdb-new
-
-#WRONG: Create array in wrong order
-root@Breadman:/home/scott/raidtesting# mdadm --create /dev/md0
---assume-clean -l5 -n3 /dev/loop3 /dev/loop4 /dev/loop2
-mdadm: /dev/loop3 appears to be part of a raid array:
-       level=raid5 devices=3 ctime=Fri Apr 25 09:10:31 2014
-mdadm: /dev/loop4 appears to be part of a raid array:
-       level=raid5 devices=3 ctime=Fri Apr 25 09:10:31 2014
+root@gateway:~# mdadm --create /dev/md0 --level=3D5 --raid-devices=3D3 =
+missing /dev/sdc1 /dev/sdd1
+mdadm: /dev/sdc1 appears to be part of a raid array:
+    level=3Draid5 devices=3D3 ctime=3DFri Apr 25 16:20:32 2014
+mdadm: /dev/sdd1 appears to be part of a raid array:
+    level=3Draid5 devices=3D3 ctime=3DFri Apr 25 16:20:32 2014
 Continue creating array? y
-mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md0 started.
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0]
-[raid1] [raid10]
-md0 : active raid5 loop2[2] loop4[1] loop3[0]
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
 
-root@Breadman:/home/scott/raidtesting# mount /dev/md0 temp/
-mount: you must specify the filesystem type
 
-#Nope, doesn't mount, filesystem clobbered, or not?
+root@gateway:~# ls -l /dev/md*
+brw-rw---- 1 root disk   9, 0 2014-04-25 16:34 /dev/md0
+brw-rw---- 1 root disk 254, 0 2014-04-25 16:19 /dev/md_d0
+lrwxrwxrwx 1 root root      7 2014-04-25 16:04 /dev/md_d0p1 -> md/d0p1
+lrwxrwxrwx 1 root root      7 2014-04-25 16:04 /dev/md_d0p2 -> md/d0p2
+lrwxrwxrwx 1 root root      7 2014-04-25 16:04 /dev/md_d0p3 -> md/d0p3
+lrwxrwxrwx 1 root root      7 2014-04-25 16:04 /dev/md_d0p4 -> md/d0p4
 
-root@Breadman:/home/scott/raidtesting# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
+/dev/md:
+total 0
+brw------- 1 root root 254, 0 2014-04-25 16:04 d0
+brw------- 1 root root 254, 1 2014-04-25 16:04 d0p1
+brw------- 1 root root 254, 2 2014-04-25 16:04 d0p2
+brw------- 1 root root 254, 3 2014-04-25 16:04 d0p3
+brw------- 1 root root 254, 4 2014-04-25 16:04 d0p4
 
-#Recreate the array, with missing disk in the right place
-root@Breadman:/home/scott/raidtesting# mdadm --create /dev/md0 -l5 -n3
-missing /dev/loop3 /dev/loop4
-mdadm: /dev/loop3 appears to be part of a raid array:
-       level=raid5 devices=3 ctime=Fri Apr 25 09:17:38 2014
-mdadm: /dev/loop4 appears to be part of a raid array:
-       level=raid5 devices=3 ctime=Fri Apr 25 09:17:38 2014
-Continue creating array? y
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
-root@Breadman:/home/scott/raidtesting# mount /dev/md0 temp/
-root@Breadman:/home/scott/raidtesting# ls temp/
-systemrescuecd-x86-0.4.3.iso
-root@Breadman:/home/scott/raidtesting# md5sum temp/systemrescuecd-x86-0.4.3.iso
-b88ce25b156619a9a344889bc92b1833  temp/systemrescuecd-x86-0.4.3.iso
 
-#Notice we are in degraded mode
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-md0 : active raid5 loop4[2] loop3[1]
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
+root@gateway:~# cat /proc/mdstat=20
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [r=
+aid4] [raid10]=20
+md0 : active raid5 sdd1[2] sdc1[1]
+      3907023872 blocks level 5, 64k chunk, algorithm 2 [3/2] [_UU]
+     =20
+unused devices: <none>
 
-#Add our replacement disk:
-root@Breadman:/home/scott/raidtesting# mdadm --add /dev/md0 /dev/loop2
-mdadm: added /dev/loop2
 
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-md0 : active raid5 loop2[3] loop4[2] loop3[1]
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
-      [============>........]  recovery = 62.1% (121316/194048)
-finish=0.0min speed=12132K/sec
+root@gateway:~# pvscan=20
+  No matching physical volumes found
 
-#After a while (short while with 200MB loop devices):
-root@Breadman:/home/scott/raidtesting# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0]
-[raid1] [raid10]
-md0 : active raid5 loop2[3] loop4[2] loop3[1]
-      388096 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+
+root@gateway:~# pvdisplay=20
+
+
+
+root@gateway:~# dd if=3D/dev/md0 of=3D/tmp/md0.dd count=3D10 bs=3D1M
+10+0 enregistrements lus
+10+0 enregistrements =E9crits
+10485760 octets (10 MB) copi=E9s, 0,271947 s, 38,6 MB/s
+
+
+I can see in /tmp/md0.dd a lot of binary stuff, and sometimes, text :
+
+physical_volumes {
+
+pv0 {
+id =3D "5DZit9-6o5V-a1vu-1D1q-fnc0-syEj-kVwAnW"
+device =3D "/dev/md0"
+
+status =3D ["ALLOCATABLE"]
+flags =3D []
+dev_size =3D 7814047360
+pe_start =3D 384
+pe_count =3D 953863
+}
+}
+
+logical_volumes {
+
+lvdata {
+id =3D "JiwAjc-qkvI-58Ru-RO8n-r63Z-ll3E-SJazO7"
+status =3D ["READ", "WRITE", "VISIBLE"]
+flags =3D []
+segment_count =3D 1
+
+segment1 {
+start_extent =3D 0
+extent_count =3D 115200
+
+type =3D "striped"
+stripe_count =3D 1        # linear
+
+stripes =3D [
+
+[...]
+
+lvdata_snapshot_J5 {
+id =3D "Mcvgul-Qo2L-1sPB-LvtI-KuME-fiiM-6DXeph"
+status =3D ["READ"]
+flags =3D []
+segment_count =3D 1
+
+segment1 {
+start_extent =3D 0
+extent_count =3D 25600
+
+type =3D "striped"
+stripe_count =3D 1        # linear
+
+stripes =3D [
+"pv0", 284160
+]
+}
+}
+
+
+[...]
+
+lvdata_snapshot_J5 is a snap I've created a few days before my mdadm ch=
+aos, so i'm pretty sure some datas are
+still on the drives... Am I wrong ?
+
+Thanks
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
