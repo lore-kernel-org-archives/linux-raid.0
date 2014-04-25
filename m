@@ -1,34 +1,49 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 1/3] md/isrt: base infrastructure and metadata loading
-Date: Thu, 24 Apr 2014 16:55:19 -0700
-Message-ID: <CAPcyv4jvjUqVvk0ZOOnxL+QNhDbhSVxLPAk60voS4WQjUrZ=ag@mail.gmail.com>
-References: <20140424061756.3187.2633.stgit@viggo.jf.intel.com>
-	<20140424061849.3187.48229.stgit@viggo.jf.intel.com>
-	<20140424172450.7ec9452b@notabene.brown>
-	<CAA9_cmcfGvBVTbxbBKBsgsnkyAux_VyKcM3V6v+tY5quQTotkQ@mail.gmail.com>
-	<20140424180252.490434c6@notabene.brown>
-	<CAA9_cmfLyiDQp7naxJPxRsUe-KGwRYOZF9cLNuztmLhYno11qg@mail.gmail.com>
-	<20140425094454.2004b0e6@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Repaired the sectors of a drive, how do I get the md to assemble
+ and start degraded?
+Date: Fri, 25 Apr 2014 05:31:25 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1404250526310.19744@uplift.swm.pp.se>
+References: <53592837.8020406@csun.edu> <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se> <53597309.8070506@csun.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140425094454.2004b0e6@notabene.brown>
+In-Reply-To: <53597309.8070506@csun.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <jes.sorensen@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Dave Jiang <dave.jiang@intel.com>
+To: Jeff Wiegley <jeffw@csun.edu>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Apr 24, 2014 at 4:44 PM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, 24 Apr 2014 10:33:31 -0700 Dan Williams <dan.j.williams@intel.com>
-[..]
-> It isn't really a big improvement, so maybe it isn't worth it.
-> But it does make it obvious that we are only waiting for the reads that we
-> just submitted.  With the current code I see conf->count and wonder what else
-> we could be waiting for.
->
-> Up to you - maybe just leave it as it is.
-> (But please use 'READ', not '0' as the first arg to submit_bio).
->
+On Thu, 24 Apr 2014, Jeff Wiegley wrote:
 
-Will do, and for the other point I do like the removal of
-unnecessarily global state.
+> I don't want to simply re-add the failed drives as I believe
+> they will start re-syncing won't they? I don't want their data
+> lost and overwritten. I want the drive to be treated like it
+> never failed in the first place.
+>
+> I might have some filesystem corruption but not as much as I
+> will if the entire drive is resynced.
+>
+> I also cannot repair the two other dead drives. So I need this
+> drive treated as is so that array can come up degraded. Then I
+> can get what data I can off it before replacing all drives
+> and probably starting fresh.
+
+What do you mean by "repair"?
+
+Well, anyway, if you --assemble --force with all parity drives gone, no 
+resync will be done.
+
+As long as you do not use --create, no "bad" information will be synced 
+even if you use the previously failed drives. If their even count is way 
+off, then --assemble --force might give you a lot more corruption.
+
+But my original point was that if you have a RAID6 with bitmap and two 
+drives are kicked out, but they are not dead, it's better to re-add them 
+back in, let things re-sync. You then run a "repair" on the volume so you 
+try to make sure that any UNC read errors are repaired by md.
+
+Right now, you have no parity and any other UNC sectors will have to be 
+written to in order for you to get your data.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
