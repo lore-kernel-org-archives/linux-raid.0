@@ -1,49 +1,35 @@
 From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Repaired the sectors of a drive, how do I get the md to assemble
- and start degraded?
-Date: Fri, 25 Apr 2014 05:31:25 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1404250526310.19744@uplift.swm.pp.se>
-References: <53592837.8020406@csun.edu> <alpine.DEB.2.02.1404241923510.19744@uplift.swm.pp.se> <53597309.8070506@csun.edu>
+Subject: Re: Why would a recreation cause a different number of blocks??
+Date: Fri, 25 Apr 2014 05:34:41 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1404250533040.19744@uplift.swm.pp.se>
+References: <20140424070548.445497dd@netstation> <20140424194832.2d0a867f@netstation> <CAK_KU4a+Ep7=F=NSbb-hqN6Rvayx4QPWm-M2403OHn5-LVaNZw@mail.gmail.com> <20140424203506.5fdee0d3@netstation> <CAK_KU4Zh-azXEEzW4f1m=boCZDKevqaSHxW0XoAgRdrCbm2PkA@mail.gmail
+ <53598F69.5070700@csun.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53597309.8070506@csun.edu>
+In-Reply-To: <53598F69.5070700@csun.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jeff Wiegley <jeffw@csun.edu>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 On Thu, 24 Apr 2014, Jeff Wiegley wrote:
 
-> I don't want to simply re-add the failed drives as I believe
-> they will start re-syncing won't they? I don't want their data
-> lost and overwritten. I want the drive to be treated like it
-> never failed in the first place.
->
-> I might have some filesystem corruption but not as much as I
-> will if the entire drive is resynced.
->
-> I also cannot repair the two other dead drives. So I need this
-> drive treated as is so that array can come up degraded. Then I
-> can get what data I can off it before replacing all drives
-> and probably starting fresh.
+> Why did my block counts change? The disk partitions weren't touched
+> or changed at any point. Shouldn't I have gotten the same size?
 
-What do you mean by "repair"?
+Defaults in mdadm has changed over time, so data offsets might be 
+different. In order to get the exact same data offset you need to use the 
+same mdadm version as was originally used, or at least know the values it 
+used and use mdadm 3.3 that allows you to specify these data at creation 
+time,
 
-Well, anyway, if you --assemble --force with all parity drives gone, no 
-resync will be done.
+> The created device isn't work. There is suppose to be luks encrypted 
+> volume there but luksOpen reports there is no luks header. (and there 
+> use to be). Would the odd change in size indicate total corruption?
 
-As long as you do not use --create, no "bad" information will be synced 
-even if you use the previously failed drives. If their even count is way 
-off, then --assemble --force might give you a lot more corruption.
-
-But my original point was that if you have a RAID6 with bitmap and two 
-drives are kicked out, but they are not dead, it's better to re-add them 
-back in, let things re-sync. You then run a "repair" on the volume so you 
-try to make sure that any UNC read errors are repaired by md.
-
-Right now, you have no parity and any other UNC sectors will have to be 
-written to in order for you to get your data.
+No, the change in size indicates that data offsets are not the same so 
+your beginning of volume is now in the wrong place.
 
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
