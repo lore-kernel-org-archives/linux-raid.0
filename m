@@ -1,53 +1,55 @@
-From: Dragon <Sunghost@gmx.de>
-Subject: Raid6 Root crashed
-Date: Wed, 30 Apr 2014 11:44:45 +0200
-Message-ID: <trinity-90b4c7d3-4ba3-45e8-8416-be2cc7835aa7-1398851085504@3capp-gmx-bs55>
-References: <trinity-97a7ea27-17c1-4edb-b2bc-d09d87f74e73-1398850867149@3capp-gmx-bs66>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] Create: don't default to bitmap=internal when it is not
+ supported
+Date: Wed, 30 Apr 2014 13:34:31 +0200
+Message-ID: <5360DFC7.2040906@intel.com>
+References: <1397548904-31199-1-git-send-email-artur.paszkiewicz@intel.com> <20140428141922.02c361eb@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140428141922.02c361eb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
- 
-i have a 6x3TB SW Raid6 under Debian Wheezy. md0 is for the system, md1 is for swap and md2 for files. While i copy some files from a 8disk to the md2 i got a kernel panic and the system halts. i have to shut it down on the hard way. After that i reboot and got a problem with md0 and the system wont boot.
- 
-Mesage:
+On 04/28/2014 06:19 AM, NeilBrown wrote:
+> On Tue, 15 Apr 2014 10:01:44 +0200 Artur Paszkiewicz
+> <artur.paszkiewicz@intel.com> wrote:
+> 
+>> For large arrays (component size > 100GB) if write-intent bitmap is not
+>> enabled, then it is set by default to "internal", even if the metadata
+>> format does support internal bitmaps, which causes Create to fail.
+>>
+>> This patch adds checking if add_internal_bitmap is set in the
+>> superswitch before setting bitmap_file to "internal".
+>>
+>> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> ---
+>>  Create.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/Create.c b/Create.c
+>> index e42627c..602f79c 100644
+>> --- a/Create.c
+>> +++ b/Create.c
+>> @@ -509,6 +509,7 @@ int Create(struct supertype *st, char *mddev,
+>>  
+>>  	if (!s->bitmap_file &&
+>>  	    s->level >= 1 &&
+>> +	    st->ss->add_internal_bitmap &&
+>>  	    (s->write_behind || s->size > 100*1024*1024ULL)) {
+>>  		if (c->verbose > 0)
+>>  			pr_err("automatically enabling write-intent bitmap on large array\n");
+> 
+> Applied (at last:-)
+> 
+> Thanks,
+> NeilBrown
 
-md0: cannot start dirty degraded array
-md0: failed to run raid set
-failed to run_array md0 inpu/output error
-...
-md0 is already in use
-gave up waiting for root device common problems...
-alert! dev/disk/by-uuid/eb8r..... does not exist.
-dropping to a shell!
-cant access tty job control turned off
-((initframs)
+Thanks, but it seems it is not applied yet. I don't see it in the
+repository.
 
-proc/mdstat:
+Artur
 
-md0: inactive sda2[0] sdf2[5] sde2[4] sdd2[3] sdc2[2] sdb2[1]
-
-So Partition sdg2 is missing. SDG was the last i added to the raid.
-
-mdadm detail shows:
-
-Raid Devices: 7
-Total Devices: 6
-Active D: 6
-Working D: 6
-Failed D: 0
-Spare D: 0
-Number
-0...active sync sda2
-...
-5...active sync sdf2
-6 removed 
-
-This shows me that sdg2 is missing.
-I do an examine on sdg2 and it shows no problems, superblock is persistant. The UUID's for all 3 mds are correct in the mdadm.conf. I am unsure what to do next. I think it must be a mdadm --assemble --force /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2 /dev/sde2 /dev/sdf2 missing.
- 
-Sorry but i cant connect via ssh and must write the lines from screen. What should i do next?
