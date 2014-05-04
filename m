@@ -1,171 +1,128 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: task mdadm blocked when stopping array, 3.15rc3
-Date: Sat, 3 May 2014 17:16:18 -0600
-Message-ID: <D2C55A8C-95E1-4DC0-8DC1-3D640C2CF5A8@colorremedies.com>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: "L.M.J" <linuxmasterjedi@free.fr>
+Subject: Big mistake while changing a RAID5 disk (was Corrupted ext4
+ filesystem ...)
+Date: Sun, 4 May 2014 10:33:37 +0200
+Message-ID: <20140504103337.1db08101@netstation>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When I issue mdadm -S /dev/md0, I get a hang which does not recover after 30+ minutes. This is what appears in dmesg (partial), but I also have issued sysrq-w and included a followup dmesg and journalctl both of which are attached to this kernel bug because it's so wide it just looks ugly in email:
+Hello,
 
-https://bugzilla.kernel.org/show_bug.cgi?id=75451
+  Sorry to ask for help again, I want to start from a fresh email to be sure I explain my problem correctly.
 
-dmesg partial:
+  Here is my story 10 days again :
+ 
+  1) My 2 years old 3 disks RAID5 got a faulty drive : sdb, sdc and sdd remains good.
 
-[  596.109426] rawhide.localdomain kernel: kworker/u6:7 (76) used greatest stack depth: 1872 bytes left
-[  600.363333] rawhide.localdomain kernel: INFO: task mdadm:1209 blocked for more than 120 seconds.
-[  600.363668] rawhide.localdomain kernel:       Not tainted 3.15.0-0.rc3.git3.1.fc21.x86_64 #1
-[  600.363668] rawhide.localdomain kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  600.363668] rawhide.localdomain kernel: mdadm           D ffff880088abcd40  5464  1209   1055 0x00000080
-[  600.363668] rawhide.localdomain kernel:  ffff880088be7c40 0000000000000046 ffff880088abcd40 00000000001d5dc0
-[  600.363668] rawhide.localdomain kernel:  ffff880088be7fd8 00000000001d5dc0 ffff880099193380 ffff880000144710
-[  600.363668] rawhide.localdomain kernel:  ffff880000144600 ffff880088be7c60 ffff880000144778 0000000000000001
-[  600.363668] rawhide.localdomain kernel: Call Trace:
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff817ec479>] schedule+0x29/0x70
-[  600.363668] rawhide.localdomain kernel:  [<ffffffffa031cbe5>] raise_barrier+0x135/0x1a0 [raid10]
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff810eed10>] ? abort_exclusive_wait+0xb0/0xb0
-[  600.363668] rawhide.localdomain kernel:  [<ffffffffa031d58c>] stop+0x1c/0x90 [raid10]
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff8160589b>] __md_stop+0x1b/0x60
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff81613337>] do_md_stop+0x157/0x570
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff81614099>] ? md_ioctl+0x179/0x1d40
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff810f8f6d>] ? trace_hardirqs_on_caller+0x15d/0x200
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff81614cf5>] md_ioctl+0xdd5/0x1d40
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff810dbb26>] ? local_clock+0x16/0x30
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff810f5a7f>] ? lock_release_holdtime.part.28+0xf/0x200
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff8135e90a>] ? avc_has_perm+0x15a/0x350
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff8135e7e4>] ? avc_has_perm+0x34/0x350
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff813b0bcc>] blkdev_ioctl+0x1cc/0x840
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff8127e763>] block_ioctl+0x43/0x50
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff812513e0>] do_vfs_ioctl+0x2f0/0x520
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff81251691>] SyS_ioctl+0x81/0xa0
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff81155eac>] ? __audit_syscall_entry+0x9c/0xf0
-[  600.363668] rawhide.localdomain kernel:  [<ffffffff817fca29>] system_call_fastpath+0x16/0x1b
-[  600.363668] rawhide.localdomain kernel: 2 locks held by mdadm/1209:
-[  600.363668] rawhide.localdomain kernel:  #0:  (&mddev->reconfig_mutex){+.+.+.}, at: [<ffffffff816132ba>] do_md_stop+0xda/0x570
-[  600.363668] rawhide.localdomain kernel:  #1:  (&mddev->open_mutex){+.+.+.}, at: [<ffffffff816132cf>] do_md_stop+0xef/0x570
-[  631.441218] rawhide.localdomain systemd[1]: Starting dnf makecache...
-[  632.838884] rawhide.localdomain dnf[1213]: Config time: 0.079
-[  632.845277] rawhide.localdomain dnf[1213]: cachedir: /var/cache/dnf/x86_64/21
-[  632.886277] rawhide.localdomain dnf[1213]: dnf version: 0.4.20
-[  632.903309] rawhide.localdomain dnf[1213]: Making cache files for all metadata files.
-[  632.977230] rawhide.localdomain dnf[1213]: Metadata cache refreshed recently.
-[  633.153699] rawhide.localdomain systemd[1]: Started dnf makecache.
-[  720.363842] rawhide.localdomain kernel: INFO: task mdadm:1209 blocked for more than 120 seconds.
-[  720.364012] rawhide.localdomain kernel:       Not tainted 3.15.0-0.rc3.git3.1.fc21.x86_64 #1
-[  720.364948] rawhide.localdomain kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  720.373340] rawhide.localdomain kernel: mdadm           D ffff880088abcd40  5464  1209   1055 0x00000080
-[  720.374515] rawhide.localdomain kernel:  ffff880088be7c40 0000000000000046 ffff880088abcd40 00000000001d5dc0
-[  720.375523] rawhide.localdomain kernel:  ffff880088be7fd8 00000000001d5dc0 ffff880099193380 ffff880000144710
-[  720.376624] rawhide.localdomain kernel:  ffff880000144600 ffff880088be7c60 ffff880000144778 0000000000000001
-[  720.377007] rawhide.localdomain kernel: Call Trace:
-[  720.377762] rawhide.localdomain kernel:  [<ffffffff817ec479>] schedule+0x29/0x70
-[  720.378217] rawhide.localdomain kernel:  [<ffffffffa031cbe5>] raise_barrier+0x135/0x1a0 [raid10]
-[  720.378922] rawhide.localdomain kernel:  [<ffffffff810eed10>] ? abort_exclusive_wait+0xb0/0xb0
-[  720.383370] rawhide.localdomain kernel:  [<ffffffffa031d58c>] stop+0x1c/0x90 [raid10]
-[  720.385210] rawhide.localdomain kernel:  [<ffffffff8160589b>] __md_stop+0x1b/0x60
-[  720.385842] rawhide.localdomain kernel:  [<ffffffff81613337>] do_md_stop+0x157/0x570
-[  720.386619] rawhide.localdomain kernel:  [<ffffffff81614099>] ? md_ioctl+0x179/0x1d40
-[  720.387351] rawhide.localdomain kernel:  [<ffffffff810f8f6d>] ? trace_hardirqs_on_caller+0x15d/0x200
-[  720.387924] rawhide.localdomain kernel:  [<ffffffff81614cf5>] md_ioctl+0xdd5/0x1d40
-[  720.388639] rawhide.localdomain kernel:  [<ffffffff810dbb26>] ? local_clock+0x16/0x30
-[  720.389361] rawhide.localdomain kernel:  [<ffffffff810f5a7f>] ? lock_release_holdtime.part.28+0xf/0x200
-[  720.389917] rawhide.localdomain kernel:  [<ffffffff8135e90a>] ? avc_has_perm+0x15a/0x350
-[  720.390633] rawhide.localdomain kernel:  [<ffffffff8135e7e4>] ? avc_has_perm+0x34/0x350
-[  720.391295] rawhide.localdomain kernel:  [<ffffffff813b0bcc>] blkdev_ioctl+0x1cc/0x840
-[  720.391835] rawhide.localdomain kernel:  [<ffffffff8127e763>] block_ioctl+0x43/0x50
-[  720.392501] rawhide.localdomain kernel:  [<ffffffff812513e0>] do_vfs_ioctl+0x2f0/0x520
-[  720.393187] rawhide.localdomain kernel:  [<ffffffff81251691>] SyS_ioctl+0x81/0xa0
-[  720.393692] rawhide.localdomain kernel:  [<ffffffff81155eac>] ? __audit_syscall_entry+0x9c/0xf0
-[  720.393894] rawhide.localdomain kernel:  [<ffffffff817fca29>] system_call_fastpath+0x16/0x1b
-[  720.394313] rawhide.localdomain kernel: 2 locks held by mdadm/1209:
-[  720.394798] rawhide.localdomain kernel:  #0:  (&mddev->reconfig_mutex){+.+.+.}, at: [<ffffffff816132ba>] do_md_stop+0xda/0x570
-[  720.395450] rawhide.localdomain kernel:  #1:  (&mddev->open_mutex){+.+.+.}, at: [<ffffffff816132cf>] do_md_stop+0xef/0x570
+  2) I maked sdb1 as faulty : mdadm --fail /dev/md0 /dev/sdb1
 
+  3) Stopped my computer, removed sdb and put a new hard drive
 
+  4) Restarted the computer and then, the RAID5 didn't want to start by itself (should be in degraded mode).
+  Maybe I've mixed up SATA cables ?
 
-avc_has_perm looks selinux related, but enforcing=0
+  5) I'm not a mdadm expert, after a couple of minutes on Google, I've found a command who looked quite
+  good to me. I made a new partition on sdb (sdb1) and : 
+  ~# mdadm -Cv /dev/md0 --assume-clean --level=5 --raid-devices=3 /dev/sdc1 /dev/sdd1 /dev/sdb1
+  -> several mistakes here : "-C" was not a good option, mix drive order...
 
-Also, after rebooting it's possible to stop the array without error. It only seems to happen when issued shortly after umount. So I'm not really sure what's going on here.
+  6) I had LVM on this md0, so I ran pvdisplay, pvscan, vgdisplay but they returned empty information...
 
+  7) At this time, I didn't know I've did a big mistake... Then, I try to rebuild the array :
+  ~# mdadm --create /dev/md0 --level=5 --raid-devices=3 missing /dev/sdd1 /dev/sdc1
+  Here am I again : "--create" was not a good option, but I put the right number of drives...
+  I guess I've lost all my chance to recover my data here :-(
 
+  8) Then, I try :
+  ~# mdadm --assemble --force /dev/md0 /dev/sdc1 /dev/sdd1
+  ~# mdadm --add /dev/md0 /dev/sdb1
+  pvdisplay still returned empty information.
 
+  9) To be sure if I've wiped out my data or not, I did this
+  ~# dd if=/dev/md0 bs=512 count=255 skip=1 of=/tmp/md0.txt
+  md0 first bytes still contains valid informations !   
 
-Setup:
-VirtualBox 4.3.10 2.5G RAM, 3 CPUs, 3x 8GB virtual disks are on SATA
-+ Fedora Rawhide
+	[..]
+	physical_volumes {
+		pv0 {
+			id = "5DZit9-6o5V-a1vu-1D1q-fnc0-syEj-kVwAnW"
+			device = "/dev/md0"
+			status = ["ALLOCATABLE"]
+			flags = []
+			dev_size = 7814047360
+			pe_start = 384
+			pe_count = 953863
+		}
+	}
+	logical_volumes {
+		lvdata {
+			id = "JiwAjc-qkvI-58Ru-RO8n-r63Z-ll3E-SJazO7"
+			status = ["READ", "WRITE", "VISIBLE"]
+			flags = []
+			segment_count = 1
+	[..]
+       
+   That's the reason I still want to try to recover my data...
+   So, I've done a 
+   ~# pvcreate --uuid "5DZit9-6o5V-a1vu-1D1q-fnc0-syEj-kVwAnW" 
+	--restorefile /etc/lvm/archive/lvm-raid_00302.vg /dev/md0 
+   ~# vgcfgrestore lvm-raid
+   ~# lvs -a -o +devices
+        LV     VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert  Devices
+        lvmp   lvm-raid -wi-a-  80,00g                                        /dev/md0(263680)
+   ~# lvchange -ay /dev/lvm-raid/lv*
+   ~# mount /home/foo/RAID_mp/  (ext4 partition)
+   ~# df -h /home/foo/RAID_mp
+      Filesystem                            Size  Used Avail Use%   Mounted on
+      /dev/mapper/lvm--raid-lvmp   79G   61G   19G  77%   /home/foo/RAID_mp
+   ~# ls -la /home/foo/RAID_mp
+      total 0
 
-Versions:
-kernel-3.15.0-0.rc3.git0.1.fc21.x86_64
-kernel-3.15.0-0.rc3.git3.1.fc21.x86_64 (debug kernel)
-mdadm-3.3-7.fc21.x86_64
+    -> that's the big problem, my filesystem seems now corrupted...
+   
 
+  8) Sad of my presumed mistakes, I asked help (too late) to linux-lvm and linux-raid
+     I tried to recreate the array again without sdb and add it again : same problem.
 
-Reproduce steps:
-# mdadm -C /dev/md0 -n 3 -l raid10 --assume-clean /dev/sd[bcd]
-# mkfs.xfs /dev/md0
-# mount /dev/md0 /mnt
-# umount /mnt
-# mdadm -S /dev/md0
+  9) I did a fsck on a /dev/mapper/lvm--raid-lvmp snapshot (avoid modification on the original filesystem). It
+  recovered around 50% of the files only, all located in lost+found/ directory with names starting with
+  #xxxxx.
 
---hang--
+  10) Last news : yesterday, I rebooted my computer after an upgrade and now, the RAID is not available again.
+  ~# cat /proc/mdstat 
+     Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+     md0 : inactive sdb1[2](S)
+           1953511936 blocks
+      
+     md_d0 : inactive sdc1[1](S)
+           1953511936 blocks
 
-Additional info:
+   What is md_d0 ? Where is my RAID5 md0 with sdb1/sdc1/sdd1 ?
+   Maybe that's a problem from /etc/mdadm/mdadm.conf ?
+   ~# cat /etc/mdadm/mdadm.conf
+   [...]
+   # definitions of existing MD arrays
+   ARRAY /dev/md0 level=raid5 num-devices=3 UUID=eb75a31a:35312029:5e3c6b8a:6edaa46b
+   ARRAY /dev/md0 level=raid5 num-devices=3 UUID=71b4b533:64c36783:5e3c6b8a:6edaa46b
+   [...]
 
-# mdadm -D /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Sat May  3 16:47:43 2014
-     Raid Level : raid10
-     Array Size : 12570624 (11.99 GiB 12.87 GB)
-  Used Dev Size : 8380416 (7.99 GiB 8.58 GB)
-   Raid Devices : 3
-  Total Devices : 3
-    Persistence : Superblock is persistent
+   My mdadm config seems really fuck up, no ? Any chance to recover something ?
 
-    Update Time : Sat May  3 16:47:43 2014
-          State : clean 
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : near=2
-     Chunk Size : 512K
-
-           Name : rawhide.localdomain:0  (local to host rawhide.localdomain)
-           UUID : c9aa4d6c:0870ebeb:1fb70b0a:3af4bdf3
-         Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
-       2       8       48        2      active sync   /dev/sdd
+   Thanks
 
 
 
-# mkfs.xfs /dev/md0
-log stripe unit (524288 bytes) is too large (maximum is 256KiB)
-log stripe unit adjusted to 32KiB
-meta-data=/dev/md0               isize=256    agcount=16, agsize=196480 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=0
-data     =                       bsize=4096   blocks=3142656, imaxpct=25
-         =                       sunit=128    swidth=384 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal log           bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=8 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 
-## Not included in dmesg, but included in journalctl (which is attached to bug report also) is this suspicious udev entry from systemd:
-[  450.100607] rawhide.localdomain systemd-udevd[310]: worker [1210] /devices/virtual/block/md0 timeout; kill it
-[  450.109793] rawhide.localdomain systemd-udevd[310]: seq 1902 '/devices/virtual/block/md0' killed
-[  450.114924] rawhide.localdomain systemd-udevd[310]: worker [1210] terminated by signal 9 (Killed)
+
+
+
 
 
 
