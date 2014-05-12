@@ -1,51 +1,49 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: boot fails incrementally starting raid arrays
-Date: Sun, 11 May 2014 21:04:25 -0500
-Message-ID: <53702C29.9070906@hardwarefreak.com>
-References: <536FC1F4.8060802@gmx.at>
-Reply-To: stan@hardwarefreak.com
+From: United Nations <maj@junin.gob.ar>
+Subject: =?utf-8?Q?Felicit=C4=83ri?=
+Date: Mon, 12 May 2014 12:22:58 -0300 (ART)
+Message-ID: <132381478.422760.1399908178095.JavaMail.zimbra__28440.3173639022$1399908963$gmane$org@junin.gob.ar>
+Reply-To: United Nations <unitednationsgrants@admin.in.th>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <536FC1F4.8060802@gmx.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven <steven-e@gmx.at>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/11/2014 1:31 PM, Steven wrote:
-> Hello Guy's,
-> 
-> i recently setuped a small ubuntu 14.4 Server, with 1x SSD Drive (Ubuntu
-> installation on it) and 2x 3TB HDD drive, wich i combined to a Raid1
-> with mdadm (File Shares are on the Raid).
-> 
-> now sometimes (arround every 3 time) i reboot, the Server hangs on boot:
-> 
-> |incrementally starting raid arrays
-> mdadm: Create user root not found
-> mdadm: create group disk not found
-> incrementally started raid arrays|
-> 
-> these 4 lines keep repeating ( i waited arround 10 mins) if i reboot
-> with ctrl + alt + del, the sever starts normal.
-> If i look at the raid with  "|mdadm --detail /dev/md0" everything looks ok.
-> 
-> as i'M just a linux beginer and didn't find anything related to that
-> error on the web, im really desperate.
-> 
-> As far as i figured the problem out, something within the initramfs
-> seems to go wrong?
-> I allready tried to add these boot options to Grub
-> bootdegraded=true
-> raid=noautodetect
-> 
-> didn't help.
 
-You're not booting the OS from the md array, but from a single SSD,
-thus nothing about the array is needed in grub nor in the initrd image.
- The array should be started via post-boot scripts.
 
-Cheers,
+=46elicit=C4=83ri=20
 
-Stan
+Sunte=C8=9Bi unul dintre beneficiarii de pe ordinea de zi a Na=C8=9Biun=
+ilor Unite 2014/2015 Grant Award. Informa=C8=9Biile dvs. au fost verifi=
+cate =C8=99i suma de =C8=99ase milioane de euro (6.000.000,00) a fost a=
+cordat pentru a v=C4=83 =C3=AEn programul de granturi al Na=C8=9Biunilo=
+r Unite ca Date tale au fost listate pe lista c=C3=A2=C8=99tig=C4=83toa=
+re.=20
+
+Aceast=C4=83 sum=C4=83 urmeaz=C4=83 a fi utilizate de dumneavoastr=C4=83=
+ pentru orice scop, de care vor beneficia foloseste comunitatea ta.=20
+
+Informa=C8=9Biile de care avem nevoie pentru verificare sunt:=20
+
+Numele complet:=20
+adresa:=20
+Urm=C4=83tor de Kin:=20
+
+Va oferi, de asemenea, un cont bancar care premiile de finan=C8=9Bare a=
+r trebui s=C4=83 fie depus =C3=AEn. Ve=C8=9Bi avea nevoie, de asemenea,=
+ s=C4=83 pl=C4=83teasc=C4=83 doar o tax=C4=83 administrativ=C4=83 de 72=
+1 de euro (=C8=99apte sute dou=C4=83zeci =C8=99i unu de euro).=20
+
+Ajunge =C3=AEnapoi la noi c=C3=A2t mai cur=C3=A2nd posibil, astfel =C3=AE=
+nc=C3=A2t s=C4=83 pute=C8=9Bi trimite certificatul c=C3=A2=C8=99tig=C4=83=
+toare.=20
+
+Biroul Organiza=C8=9Biei Na=C8=9Biunilor Unite.=20
+2014/2015
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
