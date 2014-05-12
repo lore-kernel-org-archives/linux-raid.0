@@ -1,46 +1,67 @@
-From: Steven <steven-e@gmx.at>
-Subject: boot fails incrementally starting raid arrays
-Date: Sun, 11 May 2014 20:31:16 +0200
-Message-ID: <536FC1F4.8060802@gmx.at>
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST] two bug fixes for md - both tagged  for -stable.
+Date: Mon, 12 May 2014 11:12:00 +1000
+Message-ID: <20140512111200.32a4b189@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/VCMJLpP3E3/HKtFnqUCaFpq"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Chris Murphy <lists@colorremedies.com>
 List-Id: linux-raid.ids
 
-Hello Guy's,
+--Sig_/VCMJLpP3E3/HKtFnqUCaFpq
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-i recently setuped a small ubuntu 14.4 Server, with 1x SSD Drive (Ubuntu 
-installation on it) and 2x 3TB HDD drive, wich i combined to a Raid1 
-with mdadm (File Shares are on the Raid).
+The following changes since commit d1db0eea852497762cab43b905b879dfcd3b8987:
 
-now sometimes (arround every 3 time) i reboot, the Server hangs on boot:
+  Linux 3.15-rc3 (2014-04-27 19:29:27 -0700)
 
-|incrementally starting raid arrays
-mdadm: Create user root not found
-mdadm: create group disk not found
-incrementally started raid arrays|
+are available in the git repository at:
 
-these 4 lines keep repeating ( i waited arround 10 mins) if i reboot 
-with ctrl + alt + del, the sever starts normal.
-If i look at the raid with  "|mdadm --detail /dev/md0" everything looks ok.
+  git://neil.brown.name/md/ tags/md/3.15-fixes
 
-as i'M just a linux beginer and didn't find anything related to that 
-error on the web, im really desperate.
+for you to fetch changes up to 0f62fb220aa4ebabe8547d3a9ce4a16d3c045f21:
 
-As far as i figured the problem out, something within the initramfs 
-seems to go wrong?
-I allready tried to add these boot options to Grub
-bootdegraded=true
-raid=noautodetect
+  md: avoid possible spinning md thread at shutdown. (2014-05-06 09:49:31 +=
+1000)
 
-didn't help.
+----------------------------------------------------------------
+Two bugfixes for md in 3.15
 
-Maybe anyone here can help me out?
+Both tagged for -stable.
 
-regards
-Steven
-|
+----------------------------------------------------------------
+NeilBrown (2):
+      md/raid10: call wait_barrier() for each request submitted.
+      md: avoid possible spinning md thread at shutdown.
 
+ drivers/md/md.c     |  3 ++-
+ drivers/md/raid10.c | 13 +++++++------
+ 2 files changed, 9 insertions(+), 7 deletions(-)
+
+--Sig_/VCMJLpP3E3/HKtFnqUCaFpq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU3Af4Dnsnt1WYoG5AQIS7A//Ub+Zm2xu+MZTbqBviyd5ZW7N5YDVJ1CA
+dLutVSX7o37CsMzVlV3spBsuDS3rmtVx9LjCsi+QYwQq9jgWs0Y1WQO778ndWmXI
+CXucKw3pS6zFDIwZusO0iIz+8CNoKY/9hDoav/oIY7+7p5TbrbNQTei8LmIlUf+K
+yXyHNFz/q8+oyGQDgAoBt+PRrGm+PE5hERjZChnxBrkQA4/Q10Nd7CpvsXXKmYnI
+pCox/TRw1ZnQeI2Vg9Gm5IDBfzaSHYrWrGEgFws9zz2KfoBhT5+SQmdJtWeQ0Gp8
+FFzv08O0/7tO/kc1CY2bDa2SI8iKN6fr+sT13q5gNxL4bYuBsBwQrHaIyb64VMZ5
+uYiYn3R2jM2Ms2Iqu4KSxwNTIOf421bH+F5tc1IYqrK9crJUUnq31bCqrBYtOzal
+OuhOuLc49P1e+MURqqqxKr3gDMmnqVE8qNbT6lCuq1CT2prQFj4wQRwme1n5k8M4
+kusocxs6LKbDeQowbtm1+f5BB87C9dbkOZxYg8XwxiZ0gMMJnsFKH2NP6wT8GCq4
+VWjWq6zufMkEZ8BeMVhCGys/YGLH/fuPVrfFtW0DmEdWhuUT3u+CetU5WU+HQc1W
+Ye9KF624gTLHMvxC5A2NHKWf9LN3gpkZR3wCKFFA9kf1BoIyRZCMoSSBbTY+7ZRn
+FMHD8TTJiYQ=
+=7Ke4
+-----END PGP SIGNATURE-----
+
+--Sig_/VCMJLpP3E3/HKtFnqUCaFpq--
