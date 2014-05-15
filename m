@@ -1,100 +1,135 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: IMSM - problem with reshape+systemd
-Date: Thu, 15 May 2014 14:45:20 +1000
-Message-ID: <20140515144520.483db580@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F078F1EE0@IRSMSX105.ger.corp.intel.com>
-	<20140424143138.222bd1f8@notabene.brown>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Re: Sequential writing to degraded RAID6 causing a lot of reading
+Date: Thu, 15 May 2014 09:04:27 +0200
+Message-ID: <CAAOsTSmvGOwhmFW4PRfkmVnSApNKrsZfa6RAbjEhwQh-+ko1vQ@mail.gmail.com>
+References: <CAAOsTSmnbtejYvjoMpdOzrGFM0+PW45uuf-uBNkR4HUkgyaWDg@mail.gmail.com>
+	<20120524144822.747b446b@notabene.brown>
+	<CAAOsTSm47hy6YF-5fodB+2G6n1E=+Ces_PWsSo7F6GKEF_R1iA@mail.gmail.com>
+	<20120528113145.1b8ac4ab@notabene.brown>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RvlIB/ZF3EuGS0d6ymXVVmu"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140424143138.222bd1f8@notabene.brown>
+In-Reply-To: <20120528113145.1b8ac4ab@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/RvlIB/ZF3EuGS0d6ymXVVmu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello Neil,
 
-On Thu, 24 Apr 2014 14:31:38 +1000 NeilBrown <neilb@suse.de> wrote:
+did you make some progress on this issue by any chance?
 
-> On Fri, 18 Apr 2014 09:24:35 +0000 "Baldysiak, Pawel"
-> <pawel.baldysiak@intel.com> wrote:
->=20
-> > Hi Neil/All.
-> > We have discovered some problems with IMSM array reshape under OSs mana=
-ged by systemd.
-> > In case of reshape of arrays with IMSM metadata, mdadm manages the whol=
-e reshape process and it needs to be running in background.
-> > If we reboot while reshaping, array will be assembled at startup
-> > by udevworker by IMPORT{program}=3D"mdadm -I /dev/sdX --export --offroo=
-t" part of udev rule array.
-> > Mdadm will fork and continue to reshape an array from checkpoint.
-> > However, systemd will treat udevworker as hanged process and it will be=
- killed due to timeout with all its children (reshape will hang then).
-> > I had planned to propose a patch for this problem, where additional uni=
-t file will be added
-> > and udev will start systemd-service for mdadm -I command (see below),
-> > but then we will lose information about exported variables - the ones t=
-hat are used to trigger mdadm-last-resort service.
-> >=20
-> > Do You have any idea how to solve this problem, and keep both functiona=
-lities?
->=20
-> Hi,
->  thanks for raising this issue.
->=20
->  I think we need to address this using "mdadm --grow --continue".
->=20
->  e.g. in used we run "mdadm -I --freeze-reshape --export" and arrange for
->  that to report some setting if a reshape is needed.
->  If it is needed, we set SYSTEMD_WANTS to some service which will run "md=
-adm
->  --grow --continue $device".
->=20
->  Possibly we could get mdadm to run "systemctl start mdadm-reshape@$dev"
->  instead of forking, like it now does for running mdmon.
->=20
->  I might have a poke at the code and see what falls out.
->=20
+I am hitting the same problem again on degraded RAID 6 missing two
+drives, kernel Debian 3.13.10-1, mdadm v3.2.5.
 
-Hi,
- I've just pushed some changes out to git://neil.brown.name/mdadm (and gith=
-ub)
-which will hopefully address this problem.
+Thanks.
 
-I've added a new systemd unit, and mdadm will try to "systemctl start" it
-rather than continuing on in the back ground.
+Patrik
 
-It seems to work in at least one simple test case for me.  Can you check th=
-at
-it works for you?
-
-Thanks,
-NeilBrown
-
---Sig_/RvlIB/ZF3EuGS0d6ymXVVmu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU3RGYDnsnt1WYoG5AQIVAA/+MH6UoTs62I22G+FMGgWCcel4adLDYx1x
-xBOVZYL2+ngiha/rX0ZoikIO8SUNhmOeG4tg0SNWaTrEY+gBGCL4KyBN6CP6aFSe
-EU6kzl7iG9DF7Dbvq8ibNFPxT5nZ244K5af2LnLht9YrdHOKy52d6Nn63Ozs98CQ
-z/bYulkYKWoAnHzmYlmJXzrNh+5N+VQq9Jsjdy0ZsbpbaTVu+18bd8lZJkXnlcI7
-fgj22DIwJz+nWfInzWKTAenYm9mdGNkHvMilrc8nQCL/xcqsMi9Y41t/KqNtffXj
-fSoSIu2gIOdt4SBqLI41sgyRSPiGmQ1woBDsZDipNP3h9Zk2AyURo96CmPj/2iZd
-e62ErebjGIYG+clKu5a2HYHtTKiNZXGh9S+Hw9tuYKR4Ok5rfu9H7TNVtiiw6kwu
-CP/qYYrXBL8N/pScX+WvZdMQV2jR36iIoLRcHPv/Y0v8UJG7U+7XOzZPllbgEF8X
-KWIf7/H5S+3lFHeegJmXz9WegL7hBuocMVuVgux671BZyFINGzFXQBk3SH49gAqK
-OpuopbJHE6hcxYZl0SzMKN6tw+9uuHa2mGU8XGtBeB/3J/Cqad49CBnGKFkhLsB/
-haKqrx9yLhMA0qxalPNr2yViSLmZd1VpUCOuVFhcuRwZVmWDk8X/xEXLnx4To3CJ
-OB3FsXCFqQ4=
-=SYv7
------END PGP SIGNATURE-----
-
---Sig_/RvlIB/ZF3EuGS0d6ymXVVmu--
+2012-05-28 3:31 GMT+02:00 NeilBrown <neilb@suse.de>:
+>
+> On Thu, 24 May 2012 14:37:28 +0200 Patrik Horn=EDk <patrik@dsl.sk> wr=
+ote:
+>
+> > On Thu, May 24, 2012 at 6:48 AM, NeilBrown <neilb@suse.de> wrote:
+>
+> > > Firstly, degraded RAID6 with a left-symmetric layout is quite dif=
+ferent from
+> > > an optimal RAID5 because there are Q blocks sprinkled around and =
+some D
+> > > blocks missing.  So there will always be more work to do.
+> > >
+> > > Degraded left-symmetric-6 is quite similar to optimal RAID5 as th=
+e same data
+> > > is stored in the same place - so reading should be exactly the sa=
+me.
+> > > However writing is generally different and the code doesn't make =
+any attempt
+> > > to notice and optimise cases that happen to be similar to RAID5.
+> >
+> > Actually I have left-symmetric-6 without one of the "regular" drive=
+s
+> > not the one with only Qs on it, so it should be similar to degraded
+> > RAID6 with a left-symmetric in this regard.
+>
+> Yes, it should - I had assumed wrongly ;-)
+>
+> >
+> > > A particular issue is that while RAID5 does read-modify-write whe=
+n updating a
+> > > single block in an array with 5 or more devices (i.e. it reads th=
+e old data
+> > > block and the parity block, subtracts the old from parity and add=
+s the new,
+> > > then writes both back), RAID6 does not. It always does a reconstr=
+uct-write,
+> > > so on a 6-device RAID6 it will read the other 4 data blocks, comp=
+ute P and Q,
+> > > and write them out with the new data.
+> > > If it did read-modify-write it might be able to get away with rea=
+ding just P,
+> > > Q, and the old data block - 3 reads instead of 4.  However subtra=
+cting from
+> > > the Q block is more complicated that subtracting from the P block=
+ and has not
+> > > been implemented.
+> >
+> > OK, I did not know that. In my case I have 8 drives RAID6 degraded =
+to
+> > 7 drives, so it would be plus to have it implemented the RAID5 way.
+> > But anyway I was thinking the whole-stripe detection should work in
+> > this case.
+> >
+> > > But that might not be the issue you are hitting - it simply shows=
+ that RAID6
+> > > is different from RAID5 in important but non-obvious ways.
+> > >
+> > > Yes, RAID5 and RAID6 do try to detect whole-stripe write and writ=
+e them out
+> > > without reading.  This is not always possible though.
+> > > Maybe if you told us how many devices were in your arrays (which =
+may be
+> > > import to understand exactly what is happening), what the chunk s=
+ize is, and
+> > > exactly what command you use to write "lots of data".  That might=
+ help
+> > > understand what is happening.
+> >
+> > The RAID5 is 5 drives, the RAID6 arrays are 7 of 8 drives, chunk si=
+ze
+> > is 64K. I am using command dd if=3D/dev/zero of=3Dfile bs=3DX count=
+=3DY, it
+> > behaves the same for bs between 64K to 1 MB. Actually internal read
+> > speed from every drive is slightly higher that write speed, about c=
+ca
+> > 10%. The ratio between write speed to the array and write speed to
+> > individual drive is cca 5.5 - 5.7.
+>
+> I cannot really picture how the read speed can be higher than the wri=
+te
+> speed.  The spindle doesn't speed up for reads and slow down for writ=
+es does
+> it?  But that's not really relevant.
+>
+> A 'dd' with large block size should be a good test.  I just did a sim=
+ple
+> experiment.  With a 4-drive non-degraded RAID6 I get about a 1:100 ra=
+tio for
+> reads to writes for an extended write to the filesystem.
+> If I fail one device it becomes 1:1.  Something certainly seems wrong=
+ there.
+>
+> RAID5 behaves more as you would expect - many more writes than reads.
+>
+> I've made a note to look into this when I get a chance.
+>
+> Thanks for the report.
+>
+> NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
