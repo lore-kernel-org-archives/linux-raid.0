@@ -1,259 +1,316 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC]raid5: adjust operation order of handle_stripe
-Date: Tue, 20 May 2014 17:21:37 +1000
-Message-ID: <20140520172137.0f72c113@notabene.brown>
-References: <20140512011659.GA13135@kernel.org>
+Subject: Re: IMSM - problem with reshape+systemd
+Date: Tue, 20 May 2014 17:02:49 +1000
+Message-ID: <20140520170249.695a0638@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F078F1EE0@IRSMSX105.ger.corp.intel.com>
+	<20140424143138.222bd1f8@notabene.brown>
+	<20140515144520.483db580@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F07908533@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/9Tk87pfSPY+32k464jK7VxX"; protocol="application/pgp-signature"
+ boundary="Sig_/W92Ep4ICNZxT5tkq02ut6FM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140512011659.GA13135@kernel.org>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07908533@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/9Tk87pfSPY+32k464jK7VxX
+--Sig_/W92Ep4ICNZxT5tkq02ut6FM
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 12 May 2014 09:16:59 +0800 Shaohua Li <shli@kernel.org> wrote:
+On Fri, 16 May 2014 16:07:58 +0000 "Baldysiak, Pawel"
+<pawel.baldysiak@intel.com> wrote:
+
+> On Thursday, May 15, 2014 6:45 AM NeilBrown [neilb@suse.de] wrote:
+> > To: NeilBrown
+> > Cc: Baldysiak, Pawel; linux-raid@vger.kernel.org; Paszkiewicz, Artur
+> > Subject: Re: IMSM - problem with reshape+systemd
+> >=20
+> > On Thu, 24 Apr 2014 14:31:38 +1000 NeilBrown <neilb@suse.de> wrote:
+> >=20
+> > > On Fri, 18 Apr 2014 09:24:35 +0000 "Baldysiak, Pawel"
+> > > <pawel.baldysiak@intel.com> wrote:
+> > >
+> > > > Hi Neil/All.
+> > > > We have discovered some problems with IMSM array reshape under OSs
+> > managed by systemd.
+> > > > In case of reshape of arrays with IMSM metadata, mdadm manages the
+> > whole reshape process and it needs to be running in background.
+> > > > If we reboot while reshaping, array will be assembled at startup=20
+> > > > by udevworker by IMPORT{program}=3D"mdadm -I /dev/sdX --export --of=
+froot"
+> > part of udev rule array.
+> > > > Mdadm will fork and continue to reshape an array from checkpoint.
+> > > > However, systemd will treat udevworker as hanged process and it=20
+> > > > will be
+> > killed due to timeout with all its children (reshape will hang then).
+> > > > I had planned to propose a patch for this problem, where=20
+> > > > additional unit file will be added and udev will start=20
+> > > > systemd-service for mdadm -I command (see below), but then we will=
+=20
+> > > > lose information about
+> > exported variables - the ones that are used to trigger=20
+> > mdadm-last-resort service.
+> > > >
+> > > > Do You have any idea how to solve this problem, and keep both
+> > functionalities?
+> > >
+> > > Hi,
+> > >  thanks for raising this issue.
+> > >
+> > >  I think we need to address this using "mdadm --grow --continue".
+> > >
+> > >  e.g. in used we run "mdadm -I --freeze-reshape --export" and=20
+> > > arrange for  that to report some setting if a reshape is needed.
+> > >  If it is needed, we set SYSTEMD_WANTS to some service which will=20
+> > > run "mdadm  --grow --continue $device".
+> > >
+> > >  Possibly we could get mdadm to run "systemctl start mdadm-
+> > reshape@$dev"
+> > >  instead of forking, like it now does for running mdmon.
+> > >
+> > >  I might have a poke at the code and see what falls out.
+> > >
+> >=20
+> > Hi,
+> >  I've just pushed some changes out to git://neil.brown.name/mdadm (and
+> > github) which will hopefully address this problem.
+> >=20
+> > I've added a new systemd unit, and mdadm will try to "systemctl start"=
+=20
+> > it rather than continuing on in the back ground.
+> >=20
+> > It seems to work in at least one simple test case for me.  Can you=20
+> > check that it works for you?
+> >=20
+> > Thanks,
+> > NeilBrown
+>=20
+> Hi Neil.
+> I have tested your patch, and it seems it does not work well.=20
+> In case of incremental assemble of IMSM RAID array - routine
+> "reshape_array" is always called from "reshape_container" with "forked" v=
+ariable set to "1".
+> In this  case  starting new unit file will be skipped. If we want to
+> do it that way - whole routine that starts mdadm-grow-continue unit
+> file should be moved to assemble_container_content and be run instead of =
+calling "Grow_continue".
+
+Thanks for testing.  I've push out some changes which should fix this issue.
+
 
 >=20
-> For a full stripe write, the ideal operation order is handle_stripe_dirty=
-ing(),
-> raid_run_ops(), set R5_Wantwrite bit, and ops_run_io(). In this way, one
-> handle_stripe() will dispatch IO for the stripe, otherwise there are more=
- extra
-> rounds of handle_stripe(). In a high speed raid5 array, handle_stripe()
-> consumes considered cpu time. Reducing its overhead has around 10% perfor=
-mance
-> boost.
+> Also, I have made patch with alternative method which you mentioned befor=
+e:=20
+> > >  e.g. in used we run "mdadm -I --freeze-reshape --export" and=20
+> > > arrange for  that to report some setting if a reshape is needed.
+> > >  If it is needed, we set SYSTEMD_WANTS to some service which will=20
+> > > run "mdadm  --grow --continue $device".
+> Please see below.
 >=20
-> This patch makes handle_stripe() operations follow the ideal order. It al=
-so
-> moves handle_stripe_clean_event() up, as it handles completed stripe. And=
- if I
-> don't change handle_stripe_clean_event() order, I saw some states confuse=
-d with
-> other changes.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> What do you think about it? Which way is better?
 
-handle_stripe() now calls raid_run_ops twice, which is quite a change.
-I would need a clear statement of why that is OK.
-If the xor etc operations are being performed asynchronously you will get
-very different behaviour than if they are synchronous.  That might all work
-perfectly, but again I'd like to be sure that question has been considered
-and answered.
-
-Also you seem to have about 3 changes in this patch.
-
-- change raid_run_ops to be passed ops_request by reference instead of by
-  value.  This would be easier to review in a separate patch.
-- move handle_stripe_clean_event(), as you mention above.  Having this
-  in a separate patch and explaining why it makes sense would be good.
-- the main change that you want to make would be then a simple small patch
-  with few distractions and so easier to review.
-
-It might be a good idea to take this opportunity to split handle_stripe() up
-a bit.  As you say, some of the code handles completed stripes, some flags
-desired changes, and some executes those changes.  Having those pieces in
-different functions would improve the code a lot.
-
-Would you like to make that change (please) ?
+Your approach only works when the array is assembled from udev.
+However we really want systemd to be used in all cases, including when the
+reshape is started from a terminal window.  Having a uniform approach is go=
+od.
 
 Thanks,
 NeilBrown
 
 
-> ---
->  drivers/md/raid5.c |   39 +++++++++++++++++++++------------------
->  1 file changed, 21 insertions(+), 18 deletions(-)
+
+> If you decide to apply my patch - last commit "Grow: try to let "--grow -=
+-continue" from systemd complete a reshape."should be reverted.
 >=20
-> Index: linux/drivers/md/raid5.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux.orig/drivers/md/raid5.c	2014-05-06 17:19:13.868225752 +0800
-> +++ linux/drivers/md/raid5.c	2014-05-06 17:20:25.367326852 +0800
-> @@ -1633,7 +1633,7 @@ static void ops_run_check_pq(struct stri
->  			   &sh->ops.zero_sum_result, percpu->spare_page, &submit);
->  }
+> Thanks
+> Pawel Baldysiak
+>=20
+> ----
+>=20
+> Add new unit file - mdadm-reshape-continue
+>=20
+> If assemble operation is started by udev, then monitoring the reshape in =
+the background won't work.
+> So, if udev detects that array is started, and under reshape - it should =
+ask systemd to start --grow --continue.
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+>=20
+> >From f36a416027a49c605e278a54e75b5cc03528b32c Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Wed, 14 May 2014 16:34:06 +1000
+> Subject: [PATCH 1/1] Add new systemd unit file - mdadm-grow-continue
+>=20
+> If assemble operation is started by udev, then monitoring the reshape
+> in the background won't work.
+> So, if udev detects that array is started, and under reshape - it
+> should ask systemd to start --grow --continue.
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  Assemble.c                           |  3 +++
+>  Incremental.c                        |  5 +++++
+>  Makefile                             |  1 +
+>  mdadm.h                              |  1 +
+>  systemd/mdadm-grow-continue@.service | 18 ++++++++++++++++++
+>  udev-md-raid-assembly.rules          |  3 ++-
+>  6 files changed, 30 insertions(+), 1 deletion(-)
+>  create mode 100644 systemd/mdadm-grow-continue@.service
+>=20
+> diff --git a/Assemble.c b/Assemble.c
+> index 8977928..8085e4d 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1913,6 +1913,9 @@ int assemble_container_content(struct supertype *st=
+, int mdfd,
 > =20
-> -static void raid_run_ops(struct stripe_head *sh, unsigned long ops_reque=
-st)
-> +static void raid_run_ops(struct stripe_head *sh, unsigned long *ops_requ=
-est)
->  {
->  	int overlap_clear =3D 0, i, disks =3D sh->disks;
->  	struct dma_async_tx_descriptor *tx =3D NULL;
-> @@ -1644,12 +1644,12 @@ static void raid_run_ops(struct stripe_h
-> =20
->  	cpu =3D get_cpu();
->  	percpu =3D per_cpu_ptr(conf->percpu, cpu);
-> -	if (test_bit(STRIPE_OP_BIOFILL, &ops_request)) {
-> +	if (test_and_clear_bit(STRIPE_OP_BIOFILL, ops_request)) {
->  		ops_run_biofill(sh);
->  		overlap_clear++;
+>  		err =3D Grow_continue(mdfd, st, content, c->backup_file,
+>  				    c->freeze_reshape);
+> +		if (c->export && result) {
+> +			*result |=3D INCR_RESHAPE;
+> +		}
+>  	} else switch(content->array.level) {
+>  		case LEVEL_LINEAR:
+>  		case LEVEL_MULTIPATH:
+> diff --git a/Incremental.c b/Incremental.c
+> index c937258..903603a 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -484,6 +484,9 @@ int Incremental(struct mddev_dev *devlist, struct con=
+text *c,
+>  		printf("MD_DEVICE=3D%s\n", fd2devnm(mdfd));
+>  		printf("MD_DEVNAME=3D%s\n", md_devname);
+>  		printf("MD_FOREIGN=3D%s\n", trustworthy =3D=3D FOREIGN ? "yes" : "no");
+> +		if (!st->ss->external) {
+> +			printf("MD_RESHAPE=3D%s\n", info.reshape_active !=3D 0 ? "yes" : "no"=
+);
+> +		}
 >  	}
 > =20
-> -	if (test_bit(STRIPE_OP_COMPUTE_BLK, &ops_request)) {
-> +	if (test_and_clear_bit(STRIPE_OP_COMPUTE_BLK, ops_request)) {
->  		if (level < 6)
->  			tx =3D ops_run_compute5(sh, percpu);
->  		else {
-> @@ -1659,26 +1659,26 @@ static void raid_run_ops(struct stripe_h
->  				tx =3D ops_run_compute6_2(sh, percpu);
+>  	/* 7/ Is there enough devices to possibly start the array? */
+> @@ -1484,6 +1487,7 @@ static int Incremental_container(struct supertype *=
+st, char *devname,
+>  	else {
+>  		if (c->export) {
+>  			printf("MD_STARTED=3Dno\n");
+> +			printf("MD_RESHAPE=3Dno\n");
+>  		} else if (c->verbose)
+>  			pr_err("not enough devices to start the container\n");
+>  		return 0;
+> @@ -1623,6 +1627,7 @@ static int Incremental_container(struct supertype *=
+st, char *devname,
+>  			sep =3D ',';
 >  		}
->  		/* terminate the chain if reconstruct is not set to be run */
-> -		if (tx && !test_bit(STRIPE_OP_RECONSTRUCT, &ops_request))
-> +		if (tx && !test_and_clear_bit(STRIPE_OP_RECONSTRUCT, ops_request))
->  			async_tx_ack(tx);
+>  		printf("\n");
+> +		printf("MD_RESHAPE=3D%s\n", result & INCR_RESHAPE ? "yes" : "no");
 >  	}
 > =20
-> -	if (test_bit(STRIPE_OP_PREXOR, &ops_request))
-> +	if (test_and_clear_bit(STRIPE_OP_PREXOR, ops_request))
->  		tx =3D ops_run_prexor(sh, percpu, tx);
+>  	/* don't move spares to container with volume being activated
+> diff --git a/Makefile b/Makefile
+> index b823d85..3af030b 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -288,6 +288,7 @@ install-systemd: systemd/mdmon@.service
+>  	$(INSTALL) -D -m 644 systemd/mdmonitor.service $(DESTDIR)$(SYSTEMD_DIR)=
+/mdmonitor.service
+>  	$(INSTALL) -D -m 644 systemd/mdadm-last-resort@.timer $(DESTDIR)$(SYSTE=
+MD_DIR)/mdadm-last-resort@.timer
+>  	$(INSTALL) -D -m 644 systemd/mdadm-last-resort@.service $(DESTDIR)$(SYS=
+TEMD_DIR)/mdadm-last-resort@.service
+> +	$(INSTALL) -D -m 644 systemd/mdadm-grow-continue@.service $(DESTDIR)$(S=
+YSTEMD_DIR)/mdadm-grow-continue@.service
+>  	$(INSTALL) -D -m 755 systemd/mdadm.shutdown $(DESTDIR)$(SYSTEMD_DIR)-sh=
+utdown/mdadm.shutdown
+>  	if [ -f /etc/SuSE-release -o -n "$(SUSE)" ] ;then $(INSTALL) -D -m 755 =
+systemd/SUSE-mdadm_env.sh $(DESTDIR)$(SYSTEMD_DIR)/../scripts/mdadm_env.sh =
+;fi
 > =20
-> -	if (test_bit(STRIPE_OP_BIODRAIN, &ops_request)) {
-> +	if (test_and_clear_bit(STRIPE_OP_BIODRAIN, ops_request)) {
->  		tx =3D ops_run_biodrain(sh, tx);
->  		overlap_clear++;
->  	}
-> =20
-> -	if (test_bit(STRIPE_OP_RECONSTRUCT, &ops_request)) {
-> +	if (test_and_clear_bit(STRIPE_OP_RECONSTRUCT, ops_request)) {
->  		if (level < 6)
->  			ops_run_reconstruct5(sh, percpu, tx);
->  		else
->  			ops_run_reconstruct6(sh, percpu, tx);
->  	}
-> =20
-> -	if (test_bit(STRIPE_OP_CHECK, &ops_request)) {
-> +	if (test_and_clear_bit(STRIPE_OP_CHECK, ops_request)) {
->  		if (sh->check_state =3D=3D check_state_run)
->  			ops_run_check_p(sh, percpu);
->  		else if (sh->check_state =3D=3D check_state_run_q)
-> @@ -3780,6 +3780,41 @@ static void handle_stripe(struct stripe_
->  			handle_failed_sync(conf, sh, &s);
->  	}
-> =20
-> +	/*
-> +	 * might be able to return some write requests if the parity blocks
-> +	 * are safe, or on a failed drive
-> +	 */
-> +	pdev =3D &sh->dev[sh->pd_idx];
-> +	s.p_failed =3D (s.failed >=3D 1 && s.failed_num[0] =3D=3D sh->pd_idx)
-> +		|| (s.failed >=3D 2 && s.failed_num[1] =3D=3D sh->pd_idx);
-> +	qdev =3D &sh->dev[sh->qd_idx];
-> +	s.q_failed =3D (s.failed >=3D 1 && s.failed_num[0] =3D=3D sh->qd_idx)
-> +		|| (s.failed >=3D 2 && s.failed_num[1] =3D=3D sh->qd_idx)
-> +		|| conf->level < 6;
+> diff --git a/mdadm.h b/mdadm.h
+> index a73d42a..c868c23 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1340,6 +1340,7 @@ extern int assemble_container_content(struct supert=
+ype *st, int mdfd,
+>  #define	INCR_UNSAFE	2
+>  #define	INCR_ALREADY	4
+>  #define	INCR_YES	8
+> +#define INCR_RESHAPE	16
+>  extern struct mdinfo *container_choose_spares(struct supertype *st,
+>  					      unsigned long long min_size,
+>  					      struct domainlist *domlist,
+> diff --git a/systemd/mdadm-grow-continue@.service b/systemd/mdadm-grow-co=
+ntinue@.service
+> new file mode 100644
+> index 0000000..391284f
+> --- /dev/null
+> +++ b/systemd/mdadm-grow-continue@.service
+> @@ -0,0 +1,18 @@
+> +#  This file is part of mdadm.
+> +#
+> +#  mdadm is free software; you can redistribute it and/or modify it
+> +#  under the terms of the GNU General Public License as published by
+> +#  the Free Software Foundation; either version 2 of the License, or
+> +#  (at your option) any later version.
 > +
-> +	if (s.written &&
-> +	    (s.p_failed || ((test_bit(R5_Insync, &pdev->flags)
-> +			     && !test_bit(R5_LOCKED, &pdev->flags)
-> +			     && (test_bit(R5_UPTODATE, &pdev->flags) ||
-> +				 test_bit(R5_Discard, &pdev->flags))))) &&
-> +	    (s.q_failed || ((test_bit(R5_Insync, &qdev->flags)
-> +			     && !test_bit(R5_LOCKED, &qdev->flags)
-> +			     && (test_bit(R5_UPTODATE, &qdev->flags) ||
-> +				 test_bit(R5_Discard, &qdev->flags))))))
-> +		handle_stripe_clean_event(conf, sh, disks, &s.return_bi);
+> +[Unit]
+> +Description=3DManage MD Reshape on /dev/%I
+> +DefaultDependencies=3Dno
 > +
-> +	/* Now to consider new write requests and what else, if anything
-> +	 * should be read.  We do not handle new writes when:
-> +	 * 1/ A 'write' operation (copy+xor) is already in flight.
-> +	 * 2/ A 'check' operation is in flight, as it may clobber the parity
-> +	 *    block.
-> +	 */
-> +	if (s.to_write && !sh->reconstruct_state && !sh->check_state)
-> +		handle_stripe_dirtying(conf, sh, &s, disks);
-> +
-> +	if (s.ops_request)
-> +		raid_run_ops(sh, &s.ops_request);
-> +
->  	/* Now we check to see if any write operations have recently
->  	 * completed
->  	 */
-> @@ -3817,29 +3852,6 @@ static void handle_stripe(struct stripe_
->  			s.dec_preread_active =3D 1;
->  	}
+> +[Service]
+> +ExecStart=3D/sbin/mdadm --grow /dev/%i --continue
+> +Type=3Dforking
+> +StandardInput=3Dnull
+> +StandardOutput=3Dnull
+> +StandardError=3Dnull
+> +KillMode=3Dnone
+> diff --git a/udev-md-raid-assembly.rules b/udev-md-raid-assembly.rules
+> index 824e7a9..e46bc93 100644
+> --- a/udev-md-raid-assembly.rules
+> +++ b/udev-md-raid-assembly.rules
+> @@ -27,8 +27,9 @@ LABEL=3D"md_inc"
 > =20
-> -	/*
-> -	 * might be able to return some write requests if the parity blocks
-> -	 * are safe, or on a failed drive
-> -	 */
-> -	pdev =3D &sh->dev[sh->pd_idx];
-> -	s.p_failed =3D (s.failed >=3D 1 && s.failed_num[0] =3D=3D sh->pd_idx)
-> -		|| (s.failed >=3D 2 && s.failed_num[1] =3D=3D sh->pd_idx);
-> -	qdev =3D &sh->dev[sh->qd_idx];
-> -	s.q_failed =3D (s.failed >=3D 1 && s.failed_num[0] =3D=3D sh->qd_idx)
-> -		|| (s.failed >=3D 2 && s.failed_num[1] =3D=3D sh->qd_idx)
-> -		|| conf->level < 6;
-> -
-> -	if (s.written &&
-> -	    (s.p_failed || ((test_bit(R5_Insync, &pdev->flags)
-> -			     && !test_bit(R5_LOCKED, &pdev->flags)
-> -			     && (test_bit(R5_UPTODATE, &pdev->flags) ||
-> -				 test_bit(R5_Discard, &pdev->flags))))) &&
-> -	    (s.q_failed || ((test_bit(R5_Insync, &qdev->flags)
-> -			     && !test_bit(R5_LOCKED, &qdev->flags)
-> -			     && (test_bit(R5_UPTODATE, &qdev->flags) ||
-> -				 test_bit(R5_Discard, &qdev->flags))))))
-> -		handle_stripe_clean_event(conf, sh, disks, &s.return_bi);
-> -
->  	/* Now we might consider reading some blocks, either to check/generate
->  	 * parity, or to satisfy requests
->  	 * or to load a block that is being partially written.
-> @@ -3851,15 +3863,6 @@ static void handle_stripe(struct stripe_
->  	    || s.expanding)
->  		handle_stripe_fill(sh, &s, disks);
-> =20
-> -	/* Now to consider new write requests and what else, if anything
-> -	 * should be read.  We do not handle new writes when:
-> -	 * 1/ A 'write' operation (copy+xor) is already in flight.
-> -	 * 2/ A 'check' operation is in flight, as it may clobber the parity
-> -	 *    block.
-> -	 */
-> -	if (s.to_write && !sh->reconstruct_state && !sh->check_state)
-> -		handle_stripe_dirtying(conf, sh, &s, disks);
-> -
->  	/* maybe we need to check and possibly fix the parity for this stripe
->  	 * Any reads will already have been scheduled, so we just see if enough
->  	 * data is available.  The parity check is held off while parity
-> @@ -4014,7 +4017,7 @@ finish:
->  		}
-> =20
->  	if (s.ops_request)
-> -		raid_run_ops(sh, s.ops_request);
-> +		raid_run_ops(sh, &s.ops_request);
-> =20
->  	ops_run_io(sh, &s);
+>  # remember you can limit what gets auto/incrementally assembled by
+>  # mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
+> -ACTION=3D=3D"add|change", IMPORT{program}=3D"/sbin/mdadm --incremental -=
+-export $devnode --offroot ${DEVLINKS}"
+> +ACTION=3D=3D"add|change", IMPORT{program}=3D"/sbin/mdadm --incremental -=
+-export $devnode --offroot ${DEVLINKS} --freeze-reshape"
+>  ACTION=3D=3D"add|change", ENV{MD_STARTED}=3D=3D"*unsafe*", ENV{MD_FOREIG=
+N}=3D=3D"no", ENV{SYSTEMD_WANTS}+=3D"mdadm-last-resort@$env{MD_DEVICE}.time=
+r"
+> +ACTION=3D=3D"add|change", ENV{MD_STARTED}=3D=3D"*yes*", ENV{MD_RESHAPE}=
+=3D=3D"yes", ENV{SYSTEMD_WANTS}+=3D"mdadm-grow-continue@$env{MD_DEVICE}.ser=
+vice"
+>  ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", RUN+=3D"/sbin/mdadm -If $n=
+ame --path $env{ID_PATH}"
+>  ACTION=3D=3D"remove", ENV{ID_PATH}!=3D"?*", RUN+=3D"/sbin/mdadm -If $nam=
+e"
 > =20
 
 
---Sig_/9Tk87pfSPY+32k464jK7VxX
+--Sig_/W92Ep4ICNZxT5tkq02ut6FM
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU3sCgTnsnt1WYoG5AQJTcxAAnbKo/YJCar3garZ5cQwSxjSRK1rGkyhs
-l4BNUQ0/CHY+eIzUlx+jQPUSFfvtnen/VncdiCXMH0dhTKCC8urrxv2ZnVbWRnFN
-v2DT3n+GirSEmm2PfJUFB7H+l6gYy9VS1UbZCUST+q6FDVnzgtqkLQL+RTAqInlW
-uceIDmzFdLyRvesGftZUIiW0x+T4Op0IH25e4FTB4U2XR2fAxYgoUOKSRCUHNtrj
-k9b7BThRrAEsscIP+6kYN9c9VwWkNIAILzWmb/oQsKi21qce+nxs797WnifpkVz1
-klH7RfpZKBrLxEo9Yo5Aj2FIaJRFv+cmGQhmQtxmr+6sCMW/sFlRlK6FZd39ju30
-GXGWsrRgCOTY5CcDhQLrWmPi0bwgt7KUiG3yeTC8fXPVtTiKcEmgbVa64ZGK5yPM
-sFFVQCsec4LJsUxsoo4tVNoTVhB7KRctBWyiEjIdO058srfl8nwSyoJ1qbQIjwjW
-U8XwiRAZeUIkKbXp1VXV6rsOP9sdTK7k+VFrvvgjiGx0DA2DQWkH+x6HBBIVx5Ls
-hBsbsZ7vlazbeJQawjy3OErkmTuakzjcNXKBQVsT20Y7MXT8OV2dILUPHf+oMhxJ
-J4o2CdTC4HzBdFTcK9Rlva0Y8Jf9TC7sjNQXEyNuBR/0vb8Pu2PZKd2A2IC58RdN
-kgVpJe+ikJw=
-=BC3K
+iQIVAwUBU3r+GTnsnt1WYoG5AQK3Lw/+MlOU9I1xcZz9C0r86kMgm/FcFS1fQFD/
+yS1+XbJQFSB8zyvHztvNNBrtKIXtsGUag8fLBkzatMtTCxHJQGgfUgVb+HVYQ+iB
+bp3j73kofi91RqZ9DX8Mwc04al/yPixdReiGh1r/lG9qxSPBIQ2EC3rBHjIQFoFt
++C7ZfJDOXjGdRqAkDlaSplLnQMWpAPYdxrySXt3jjeP2x9LNDmHS+Lfw2o+Rwiz3
+v/7hBJ5hwbXw8iuJ5hF4J8jJXYMSnbIeu4NXAsOKFG3XGWDEkPSybaqrxuh69JCS
+DsHM9Bva1EhV17M0IROMLOMcjeT7X2uRHntdEdrXptmPjJprhbGDNzpj5mJPZxNj
+cBwyxDxu2yqgukLXzJo3gKfTgSHoYJOqObja8/0V0wDnZNKI/khyvKk60eIVVOio
+DE1bJg1cSFuqBQRE7HNfkQl1jVVekhrC81zWSK90JIONJVb4elyRR64Gx9+xlenQ
+7o27pIhZwsVE9VNzkwN4SFeuUWEyIxrS7bQ5JuIZ9ya82MqZF7S9URk98sX18tgu
+hyy6aVZJx2h1U3/b/kdNlTlYvknSW9ydhgL1RV8YtoAQALTsI8Hgdh8EBva6mzfd
+5evBOqguN+ZwsP2Xy6qW8mM3GNCkEpI+Yxe3OP3HBbGd44dDx2P+eIRNxr44BzUz
+n2aM661axNQ=
+=jJ4d
 -----END PGP SIGNATURE-----
 
---Sig_/9Tk87pfSPY+32k464jK7VxX--
+--Sig_/W92Ep4ICNZxT5tkq02ut6FM--
