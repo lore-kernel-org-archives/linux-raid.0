@@ -1,144 +1,96 @@
-From: Kent Overstreet <kmo@daterainc.com>
-Subject: Re: bcache errors
-Date: Mon, 19 May 2014 08:29:44 -0700
-Message-ID: <CALJ65z=AYx9i-zU6AjZ2E519J4FzhF1QP7T2YivQcvcR-WTFMg@mail.gmail.com>
-References: <CACiqTEMeRiaio55cj0dc_ErCZe5XTGsQUwqBb90Jg22uN=FvLQ@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: raid6 - data integrity issue - data mis-compare on rebuilding
+ RAID 6 - with 100 Mb resync speed.
+Date: Mon, 19 May 2014 17:22:26 -0700
+Message-ID: <CAA9_cmcMgfx4AuNrjNBy3e2oe9rFXc4i-CQT1JbCKSMDep0HFg@mail.gmail.com>
+References: <13688C12F44C7C428726663F950CA2530972DC8C@venus.in.megatrends.com>
+	<20140423170755.1aa92ba6@notabene.brown>
+	<CAPcyv4gg6N_FYOZmooXTUYT22AOuBmqFuin_TiKqn8A9DOCnqw@mail.gmail.com>
+	<20140505172110.73667211@notabene.brown>
+	<CAA9_cmcn1mkm+FYzxbo-A1ih9d4fusskyA9UpQwcA9VDA_iWWA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <CACiqTEMeRiaio55cj0dc_ErCZe5XTGsQUwqBb90Jg22uN=FvLQ@mail.gmail.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: roma1390 <roma1390@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, linux-raid@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAA9_cmcn1mkm+FYzxbo-A1ih9d4fusskyA9UpQwcA9VDA_iWWA@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Manibalan P <pmanibalan@amiindia.co.in>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'll be sending the fix out in the next pull request, in the next day or so.
+On Fri, May 16, 2014 at 11:11 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Mon, May 5, 2014 at 12:21 AM, NeilBrown <neilb@suse.de> wrote:
+>> On Wed, 23 Apr 2014 10:02:00 -0700 Dan Williams <dan.j.williams@intel.com>
+>> wrote:
+>>
+>>> On Wed, Apr 23, 2014 at 12:07 AM, NeilBrown <neilb@suse.de> wrote:
+>>> > On Fri, 11 Apr 2014 17:41:12 +0530 "Manibalan P" <pmanibalan@amiindia.co.in>
+>>> > wrote:
+>>> >
+>>> >> Hi Neil,
+>>> >>
+>>> >> Also, I found the data corruption issue on RHEL 6.5.
+>>> >>
+>>> >> For your kind attention, I up-ported the md code [raid5.c + raid5.h]
+>>> >> from FC11 kernel to CentOS 6.4, and there is no mis-compare with the
+>>> >> up-ported code.
+>>> >
+>>> > This narrows it down to between 2.6.29 and 2.6.32 - is that correct?
+>>> >
+>>> > So it is probably the change to RAID6 to support async parity calculations.
+>>> >
+>>> > Looking at the code always makes my head spin.
+>>> >
+>>> > Dan : have you any ideas?
+>>> >
+>>> > It seems that writing to a double-degraded RAID6 while it is recovering to
+>>> > a space can trigger data corruption.
+>>> >
+>>> > 2.6.29 works
+>>> > 2.6.32 doesn't
+>>> > 3.8.0 still doesn't.
+>>> >
+>>> > I suspect async parity calculations.
+>>>
+>>> I'll take a look.  I've had cleanups of that code on my backlog for "a
+>>> while now (TM)".
+>>
+>>
+>> Hi Dan,
+>>  did you have a chance to have a look?
+>>
+>> I've been consistently failing to find anything.
+>>
+>> I have a question though.
+>> If we set up a chain of async dma handling via:
+>>    ops_run_compute6_2 then ops_bio_drain then ops_run_reconstruct
+>>
+>> is it possible for the ops_complete_compute callback set up by
+>> ops_run_compute6_2 to be called before ops_run_reconstruct has been scheduled
+>> or run?
+>
+> In the absence of a dma engine we never run asynchronously, so we will
+> *always* call ops_complete_compute() before ops_run_reconstruct() in
+> the synchronous acse.  This looks confused.  We're certainly leaking
+> an uptodate state prior to the completion of the write.
+>
+>> If so, there seems to be some room for confusion over the setting for
+>> R5_UPTODATE on blocks that are being computed and then drained to.  Both will
+>> try to set the flag, so it could get set before reconstruction has run.
+>>
+>> I can't see that this would cause a problem, but then I'm not entirely sure
+>> why we clear R5_UPTODATE when we set R5_Wantdrain.
+>
+> Let me see what problems this could be causing.  I'm thinking we
+> should be protected by the global ->reconstruct_state, but something
+> is telling me we do depend on R5_UPTODATE being consistent with the
+> ongoing stripe operation.
+>
 
-On Mon, May 19, 2014 at 8:10 AM, roma1390 <roma1390@gmail.com> wrote:
-> Hello
->
-> tryed bcache on 3.13-1-amd64 (from debian)
->
-> Steps:
->
-> git clone https://github.com/g2p/bcache-tools.git
-> cd bcache-tools/
-> make
->
-> dd if=/dev/zero of=data bs=1M count=64
-> losetup -d /dev/loop0; losetup /dev/loop0 /tmp/bb/bcache-tools/data
-> make-bcache -C /dev/ram0 -B /dev/ram1
-> modprobe bcache
-> echo /dev/ram0 > /sys/fs/bcache/register
-> echo /dev/loop0 > /sys/fs/bcache/register
->
-> Got:
-> May 19 17:32:55 bump kernel: [670838.280487] bcache: register_bdev()
-> registered backing device ram0
-> May 19 17:33:02 bump kernel: [670845.209612] bcache: run_cache_set()
-> invalidating existing data
-> May 19 17:33:02 bump kernel: [670845.277214] bcache:
-> bch_cached_dev_attach() Caching ram0 as bcache0 on set
-> d01c215c-f038-4e85-9f7f-d1133f080b55
-> May 19 17:33:02 bump kernel: [670845.277230] bcache: register_cache()
-> registered cache device loop0
-> May 19 17:35:28 bump kernel: [670991.228242] INFO: task
-> bcache_writebac:6378 blocked for more than 120 seconds.
-> May 19 17:35:28 bump kernel: [670991.228246]       Tainted: G
-> C   3.13-1-amd64 #1
-> May 19 17:35:28 bump kernel: [670991.228247] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> May 19 17:35:28 bump kernel: [670991.228248] bcache_writebac D
-> ffff8804f2ab2350     0  6378      2 0x00000000
-> May 19 17:35:28 bump kernel: [670991.228251]  ffff8804f2ab2010
-> 0000000000000046 0000000000014280 0000000000014280
-> May 19 17:35:28 bump kernel: [670991.228252]  ffff880725423fd8
-> ffff8804f2ab2010 ffff8805de3bba40 ffff8807f8410000
-> May 19 17:35:28 bump kernel: [670991.228254]  ffffffffa0866790
-> 0000000000000000 0000000000000000 0000000000000000
-> May 19 17:35:28 bump kernel: [670991.228255] Call Trace:
-> May 19 17:35:28 bump kernel: [670991.228262]  [<ffffffffa0866790>] ?
-> write_dirty_finish+0x210/0x210 [bcache]
-> May 19 17:35:28 bump kernel: [670991.228265]  [<ffffffff8107bb2d>] ?
-> kthread+0x9d/0xe0
-> May 19 17:35:28 bump kernel: [670991.228266]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:35:28 bump kernel: [670991.228270]  [<ffffffff814aeacc>] ?
-> ret_from_fork+0x7c/0xb0
-> May 19 17:35:28 bump kernel: [670991.228271]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:37:28 bump kernel: [671111.112160] INFO: task
-> bcache_writebac:6378 blocked for more than 120 seconds.
-> May 19 17:37:28 bump kernel: [671111.112165]       Tainted: G
-> C   3.13-1-amd64 #1
-> May 19 17:37:28 bump kernel: [671111.112166] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> May 19 17:37:28 bump kernel: [671111.112167] bcache_writebac D
-> ffff8804f2ab2350     0  6378      2 0x00000000
-> May 19 17:37:28 bump kernel: [671111.112170]  ffff8804f2ab2010
-> 0000000000000046 0000000000014280 0000000000014280
-> May 19 17:37:28 bump kernel: [671111.112172]  ffff880725423fd8
-> ffff8804f2ab2010 ffff8805de3bba40 ffff8807f8410000
-> May 19 17:37:28 bump kernel: [671111.112174]  ffffffffa0866790
-> 0000000000000000 0000000000000000 0000000000000000
-> May 19 17:37:28 bump kernel: [671111.112175] Call Trace:
-> May 19 17:37:28 bump kernel: [671111.112183]  [<ffffffffa0866790>] ?
-> write_dirty_finish+0x210/0x210 [bcache]
-> May 19 17:37:28 bump kernel: [671111.112186]  [<ffffffff8107bb2d>] ?
-> kthread+0x9d/0xe0
-> May 19 17:37:28 bump kernel: [671111.112188]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:37:28 bump kernel: [671111.112191]  [<ffffffff814aeacc>] ?
-> ret_from_fork+0x7c/0xb0
-> May 19 17:37:28 bump kernel: [671111.112193]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:39:28 bump kernel: [671230.996097] INFO: task
-> bcache_writebac:6378 blocked for more than 120 seconds.
-> May 19 17:39:28 bump kernel: [671230.996101]       Tainted: G
-> C   3.13-1-amd64 #1
-> May 19 17:39:28 bump kernel: [671230.996102] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> May 19 17:39:28 bump kernel: [671230.996103] bcache_writebac D
-> ffff8804f2ab2350     0  6378      2 0x00000000
-> May 19 17:39:28 bump kernel: [671230.996106]  ffff8804f2ab2010
-> 0000000000000046 0000000000014280 0000000000014280
-> May 19 17:39:28 bump kernel: [671230.996108]  ffff880725423fd8
-> ffff8804f2ab2010 ffff8805de3bba40 ffff8807f8410000
-> May 19 17:39:28 bump kernel: [671230.996109]  ffffffffa0866790
-> 0000000000000000 0000000000000000 0000000000000000
-> May 19 17:39:28 bump kernel: [671230.996111] Call Trace:
-> May 19 17:39:28 bump kernel: [671230.996118]  [<ffffffffa0866790>] ?
-> write_dirty_finish+0x210/0x210 [bcache]
-> May 19 17:39:28 bump kernel: [671230.996121]  [<ffffffff8107bb2d>] ?
-> kthread+0x9d/0xe0
-> May 19 17:39:28 bump kernel: [671230.996123]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:39:28 bump kernel: [671230.996126]  [<ffffffff814aeacc>] ?
-> ret_from_fork+0x7c/0xb0
-> May 19 17:39:28 bump kernel: [671230.996127]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:41:28 bump kernel: [671350.880041] INFO: task
-> bcache_writebac:6378 blocked for more than 120 seconds.
-> May 19 17:41:28 bump kernel: [671350.880045]       Tainted: G
-> C   3.13-1-amd64 #1
-> May 19 17:41:28 bump kernel: [671350.880046] "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> May 19 17:41:28 bump kernel: [671350.880047] bcache_writebac D
-> ffff8804f2ab2350     0  6378      2 0x00000000
-> May 19 17:41:28 bump kernel: [671350.880050]  ffff8804f2ab2010
-> 0000000000000046 0000000000014280 0000000000014280
-> May 19 17:41:28 bump kernel: [671350.880051]  ffff880725423fd8
-> ffff8804f2ab2010 ffff8805de3bba40 ffff8807f8410000
-> May 19 17:41:28 bump kernel: [671350.880060]  ffffffffa0866790
-> 0000000000000000 0000000000000000 0000000000000000
-> May 19 17:41:28 bump kernel: [671350.880062] Call Trace:
-> May 19 17:41:28 bump kernel: [671350.880069]  [<ffffffffa0866790>] ?
-> write_dirty_finish+0x210/0x210 [bcache]
-> May 19 17:41:28 bump kernel: [671350.880073]  [<ffffffff8107bb2d>] ?
-> kthread+0x9d/0xe0
-> May 19 17:41:28 bump kernel: [671350.880074]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
-> May 19 17:41:28 bump kernel: [671350.880078]  [<ffffffff814aeacc>] ?
-> ret_from_fork+0x7c/0xb0
-> May 19 17:41:28 bump kernel: [671350.880079]  [<ffffffff8107ba90>] ?
-> kthread_create_on_node+0x180/0x180
+Can you share your exact test scripts?  I'm having a hard time
+reproducing this with something like:
+
+echo 100000 > /proc/sys/dev/raid/speed_limit_min
+mdadm --add /dev/md0 /dev/sd[bc]; dd if=urandom.dump of=/dev/md0
+bs=1024M oflag=sync
+
+This is a 7-drive raid6 array.
