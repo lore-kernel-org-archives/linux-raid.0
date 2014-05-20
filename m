@@ -1,240 +1,395 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Sequential writing to degraded RAID6 causing a lot of reading
-Date: Tue, 20 May 2014 21:08:44 +1000
-Message-ID: <20140520210844.78dafb14@notabene.brown>
-References: <CAAOsTSmnbtejYvjoMpdOzrGFM0+PW45uuf-uBNkR4HUkgyaWDg@mail.gmail.com>
-	<20120524144822.747b446b@notabene.brown>
-	<CAAOsTSm47hy6YF-5fodB+2G6n1E=+Ces_PWsSo7F6GKEF_R1iA@mail.gmail.com>
-	<20120528113145.1b8ac4ab@notabene.brown>
-	<CAAOsTSmvGOwhmFW4PRfkmVnSApNKrsZfa6RAbjEhwQh-+ko1vQ@mail.gmail.com>
-	<20140515171853.4cdfddd0@notabene.brown>
-	<CAAOsTSnk+_HfrHK2WVjDVXiNjB2PTzp+8L6a5McJ80TzE=KOyg@mail.gmail.com>
-	<20140520154209.0313429c@notabene.brown>
-	<CAAOsTSkzZM7Pf8k=JU=6uWKUqsq7M44FLC=fM_GVB8KD+z7qqA@mail.gmail.com>
+From: =?UTF-8?B?RGF2w63DsA==?= Steinn Geirsson <david@dsg.is>
+Subject: Re: Stuck array after reshape
+Date: Tue, 20 May 2014 19:04:48 +0000
+Message-ID: <20140520190448.467a25ca@dsg.is>
+References: <20140520185617.00b48727@dsg.is>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fGgyE6Uu1J+IdYsM.Hh1+Vb"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/3+GZZL4YIxuBT8TEDroDr+p"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAOsTSkzZM7Pf8k=JU=6uWKUqsq7M44FLC=fM_GVB8KD+z7qqA@mail.gmail.com>
+In-Reply-To: <20140520185617.00b48727@dsg.is>
 Sender: linux-raid-owner@vger.kernel.org
-To: patrik@dsl.sk
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/fGgyE6Uu1J+IdYsM.Hh1+Vb
+--Sig_/3+GZZL4YIxuBT8TEDroDr+p
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 20 May 2014 12:07:11 +0200 Patrik Horn=C3=ADk <patrik@dsl.sk> wrote:
+Some more information:
 
-> 2014-05-20 7:42 GMT+02:00 NeilBrown <neilb@suse.de>:
-> > On Thu, 15 May 2014 09:50:49 +0200 Patrik Horn=C3=ADk <patrik@dsl.sk> w=
-rote:
-> >
-> >> OK, it seems that because of that my copy operations will not be
-> >> finished yet by next week... :)
-> >>
-> >> BTW this time layout is left-symetric but the problem I guess is in
-> >> whole strip' write detection with degraded RAID6.
-> >>
-> >> Patrik
-> >>
-> >> 2014-05-15 9:18 GMT+02:00 NeilBrown <neilb@suse.de>:
-> >> > On Thu, 15 May 2014 09:04:27 +0200 Patrik Horn=C3=ADk <patrik@dsl.sk=
-> wrote:
-> >> >
-> >> >> Hello Neil,
-> >> >>
-> >> >> did you make some progress on this issue by any chance?
-> >> >
-> >> > No I haven't - sorry.
-> >> > After 2 year, I guess I really should.
-> >> >
-> >> > I'll make another note for first thing next week.
-> >
-> > Can you try the following patch and let me know if it helps?
+The backup file did not get created.
+
+Output of mdadm --examine on all array members:
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 0776e3ee:8eadc682:c8ff2ffd:d55da146
+           Name : provider:5  (local to host provider)
+  Creation Time : Fri Dec 14 19:30:10 2012
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5857157120 (2792.91 GiB 2998.86 GB)
+     Array Size : 11714312192 (11171.64 GiB 11995.46 GB)
+  Used Dev Size : 5857156096 (2792.91 GiB 2998.86 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : aeefb8d7:6ccfae75:44060614:0bfb97d8
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (5->6)
+     New Layout : left-symmetric
+
+    Update Time : Tue May 20 18:29:25 2014
+       Checksum : dfd2dc2b - correct
+         Events : 40365
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : f9d7a8cc:b8f830c4:b748a00c:d0712fef
+  Creation Time : Mon May 18 20:35:08 2009
+     Raid Level : raid1
+  Used Dev Size : 979840 (957.04 MiB 1003.36 MB)
+     Array Size : 979840 (957.04 MiB 1003.36 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Tue May 20 18:04:34 2014
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 8151619e - correct
+         Events : 2657
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       33        0      active sync   /dev/sdc1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       8       81        1      active sync   /dev/sdf1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 0776e3ee:8eadc682:c8ff2ffd:d55da146
+           Name : provider:5  (local to host provider)
+  Creation Time : Fri Dec 14 19:30:10 2012
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5857157120 (2792.91 GiB 2998.86 GB)
+     Array Size : 11714312192 (11171.64 GiB 11995.46 GB)
+  Used Dev Size : 5857156096 (2792.91 GiB 2998.86 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 4e00dec5:806115fc:f89d0c60:f000afc8
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (5->6)
+     New Layout : left-symmetric
+
+    Update Time : Tue May 20 18:29:25 2014
+       Checksum : 907c1c76 - correct
+         Events : 40365
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 0776e3ee:8eadc682:c8ff2ffd:d55da146
+           Name : provider:5  (local to host provider)
+  Creation Time : Fri Dec 14 19:30:10 2012
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5857157120 (2792.91 GiB 2998.86 GB)
+     Array Size : 11714312192 (11171.64 GiB 11995.46 GB)
+  Used Dev Size : 5857156096 (2792.91 GiB 2998.86 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : a912e9ad:a9c802bb:26d296f2:7efe0ef6
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (5->6)
+     New Layout : left-symmetric
+
+    Update Time : Tue May 20 18:29:25 2014
+       Checksum : f75ec7b8 - correct
+         Events : 40365
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : f9d7a8cc:b8f830c4:b748a00c:d0712fef
+  Creation Time : Mon May 18 20:35:08 2009
+     Raid Level : raid1
+  Used Dev Size : 979840 (957.04 MiB 1003.36 MB)
+     Array Size : 979840 (957.04 MiB 1003.36 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Tue May 20 18:04:34 2014
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 815161d0 - correct
+         Events : 2657
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       81        1      active sync   /dev/sdf1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       8       81        1      active sync   /dev/sdf1
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x6
+     Array UUID : 0776e3ee:8eadc682:c8ff2ffd:d55da146
+           Name : provider:5  (local to host provider)
+  Creation Time : Fri Dec 14 19:30:10 2012
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5857157120 (2792.91 GiB 2998.86 GB)
+     Array Size : 11714312192 (11171.64 GiB 11995.46 GB)
+  Used Dev Size : 5857156096 (2792.91 GiB 2998.86 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 4096 sectors
+          State : active
+    Device UUID : 4f8b8fa9:7b1fa78d:f949e727:e49b5647
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (5->6)
+     New Layout : left-symmetric
+
+    Update Time : Tue May 20 18:29:25 2014
+       Checksum : 4c41bc6d - correct
+         Events : 40365
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+   Device Role : Active device 4
+   Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 0776e3ee:8eadc682:c8ff2ffd:d55da146
+           Name : provider:5  (local to host provider)
+  Creation Time : Fri Dec 14 19:30:10 2012
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 5857157120 (2792.91 GiB 2998.86 GB)
+     Array Size : 11714312192 (11171.64 GiB 11995.46 GB)
+  Used Dev Size : 5857156096 (2792.91 GiB 2998.86 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 40d5699d:911a2a3f:d91abf18:49ba8467
+
+  Reshape pos'n : 8192 (8.00 MiB 8.39 MB)
+  Delta Devices : 1 (5->6)
+     New Layout : left-symmetric
+
+    Update Time : Tue May 20 18:29:25 2014
+       Checksum : 2a4e0b6 - correct
+         Events : 40365
+
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+
+
+
+On Tue, 20 May 2014 18:56:17 +0000
+Dav=C3=AD=C3=B0 Steinn Geirsson <david@dsg.is> wrote:
+
+> Hi all,
 >=20
-> I dont want to test it on production system... But I have some
-> degraded array which does not have production data on it so I will
-> think about how to test it.
+> I tried to reshape an MD RAID array, going from a 4-disk RAID5 to a
+> 6-disk RAID6. This seems to have failed and now I'm afraid to turn the
+> machine off.
 >=20
-> > I definitely reduced the number of reads significantly, but my measurem=
-ents
-> > (of a very simple test case) didn't show much speed-up.
-> >
+> What I did:
+> mdadm --add /dev/md5 /dev/sdh1
+> mdadm --add /dev/md5 /dev/sdg1
+> mdadm --grow /dev/md5
+> --backup-file /root/vg_3T_reshape_201405_mdbackup --level=3D6
+> --raid-devices=3D6
 >=20
-> I did not look at the patch itself but according to your description
-> is should eliminate the problem, should it not? What was your read /
-> write ratio after the patch?
-
-It depends a bit of what particular tests I ran and what other hacks were in
-the kernel - I did get zero reads, but that was with some hacks that aren't
-general enough to be used.
-Providing the stripe_cache_size was reasonably large, I got somewhere betwe=
-en
-1:100 and 1:10.  When things were bad, it was often close to 1:1.
-
-NeilBrown
-
-
+> The last command returned with no error, the way it usually does.
+> However, now everything that tries to access the array hangs:
+> mdadm -D /dev/md5 # hangs
+> cat /proc/mdstat # hangs
+> Trying to read mounted filesystems also hangs.
 >=20
-> Thanks.
+> The two new drives are on a brand new IBM M1015 (crossflashed to LSI
+> 9211). I have not used this controller previously, but before I tried
+> the reshape I did write a GPT partition table and successfully read it
+> back from the two drives.
 >=20
-> Patrik
+> From dmesg around this time:
+> [ 1340.951731] md: bind<sdh1>
+> [ 1346.150654] scsi_verify_blk_ioctl: 38 callbacks suppressed
+> [ 1346.150662] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.150669] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.155219] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.155228] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160528] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160535] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160688] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160694] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160913] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.160918] mdadm: sending ioctl 1261 to a partition!
+> [ 1346.185864] md: bind<sdg1>
+> [ 1370.267086] scsi_verify_blk_ioctl: 38 callbacks suppressed
+> [ 1370.267095] mdadm: sending ioctl 1261 to a partition!
+> [ 1370.267103] mdadm: sending ioctl 1261 to a partition!
+> [ 1461.662068] mdadm: sending ioctl 1261 to a partition!
+> [ 1461.662078] mdadm: sending ioctl 1261 to a partition!
+> [ 1521.675927] md/raid:md5: device sde1 operational as raid disk 0
+> [ 1521.675937] md/raid:md5: device sdd1 operational as raid disk 3
+> [ 1521.675943] md/raid:md5: device sda1 operational as raid disk 2
+> [ 1521.675949] md/raid:md5: device sdb1 operational as raid disk 1
+> [ 1521.677471] md/raid:md5: allocated 5332kB
+> [ 1521.692766] md/raid:md5: raid level 6 active with 4 out of 5
+> devices, algorithm 18
+> [ 1521.692849] RAID conf printout:
+> [ 1521.692853]  --- level:6 rd:5 wd:4
+> [ 1521.692859]  disk 0, o:1, dev:sde1
+> [ 1521.692864]  disk 1, o:1, dev:sdb1
+> [ 1521.692869]  disk 2, o:1, dev:sda1
+> [ 1521.692873]  disk 3, o:1, dev:sdd1
+> [ 1522.801181] RAID conf printout:
+> [ 1522.801190]  --- level:6 rd:6 wd:5
+> [ 1522.801196]  disk 0, o:1, dev:sde1
+> [ 1522.801201]  disk 1, o:1, dev:sdb1
+> [ 1522.801205]  disk 2, o:1, dev:sda1
+> [ 1522.801210]  disk 3, o:1, dev:sdd1
+> [ 1522.801215]  disk 4, o:1, dev:sdg1
+> [ 1522.801230] RAID conf printout:
+> [ 1522.801234]  --- level:6 rd:6 wd:5
+> [ 1522.801239]  disk 0, o:1, dev:sde1
+> [ 1522.801243]  disk 1, o:1, dev:sdb1
+> [ 1522.801248]  disk 2, o:1, dev:sda1
+> [ 1522.801252]  disk 3, o:1, dev:sdd1
+> [ 1522.801256]  disk 4, o:1, dev:sdg1
+> [ 1522.801261]  disk 5, o:1, dev:sdh1
+> [ 1522.801374] md: reshape of RAID array md5
+> [ 1522.801379] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [ 1522.801384] md: using maximum available idle IO bandwidth (but not
+> more than 200000 KB/sec) for reshape.
+> [ 1522.801396] md: using 128k window, over a total of 2928578048k.
+> [ 1522.802248] mdadm: sending ioctl 1261 to a partition!
+> [ 1522.802256] mdadm: sending ioctl 1261 to a partition!
+> [ 1522.883851] mdadm: sending ioctl 1261 to a partition!
+> [ 1522.883860] mdadm: sending ioctl 1261 to a partition!
+> [ 1525.134837] md: md_do_sync() got signal ... exiting
+> [ 1681.128046] INFO: task jbd2/dm-3-8:1494 blocked for more than 120
+> seconds.
+> [ 1681.128129] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 1681.128206] jbd2/dm-3-8     D ffff88007fc13540     0  1494      2
+> 0x00000000
+> [ 1681.128217]  ffff88007beab0a0 0000000000000046 ffff88005d0b1470
+> ffff88007a3208b0
+> [ 1681.128227]  0000000000013540 ffff88007c0dffd8 ffff88007c0dffd8
+> ffff88007beab0a0
+> [ 1681.128236]  059f7b5300000000 ffffffff81065a2f ffff88007bbe4d70
+> ffff88007fc13d90
+> [ 1681.128245] Call Trace:
+> [ 1681.128263]  [<ffffffff81065a2f>] ? timekeeping_get_ns+0xd/0x2a
+> [ 1681.128273]  [<ffffffff8111bda1>] ? wait_on_buffer+0x28/0x28
+> [ 1681.128283]  [<ffffffff813483e4>] ? io_schedule+0x59/0x71
+> [ 1681.128289]  [<ffffffff8111bda7>] ? sleep_on_buffer+0x6/0xa
+> [ 1681.128296]  [<ffffffff81348827>] ? __wait_on_bit+0x3e/0x71
+> [ 1681.128303]  [<ffffffff813488c9>] ?
+> out_of_line_wait_on_bit+0x6f/0x78 [ 1681.128310]
+> [<ffffffff8111bda1>] ? wait_on_buffer+0x28/0x28 [ 1681.128319]
+> [<ffffffff8105f575>] ? autoremove_wake_function+0x2a/0x2a
+> [ 1681.128354]  [<ffffffffa018d9c0>] ?
+> jbd2_journal_commit_transaction+0xb9b/0x1057 [jbd2]
+> [ 1681.128366]  [<ffffffff8100d02f>] ? load_TLS+0x7/0xa
+> [ 1681.128373]  [<ffffffff8100d6a3>] ? __switch_to+0x133/0x258
+> [ 1681.128389]  [<ffffffffa01910ae>] ? kjournald2+0xc0/0x20a [jbd2]
+> [ 1681.128397]  [<ffffffff8105f54b>] ? add_wait_queue+0x3c/0x3c
+> [ 1681.128412]  [<ffffffffa0190fee>] ? commit_timeout+0x5/0x5 [jbd2]
+> [ 1681.128420]  [<ffffffff8105ef05>] ? kthread+0x76/0x7e
+> [ 1681.128430]  [<ffffffff813505b4>] ? kernel_thread_helper+0x4/0x10
+> [ 1681.128438]  [<ffffffff8105ee8f>] ? kthread_worker_fn+0x139/0x139
+> [ 1681.128446]  [<ffffffff813505b0>] ? gs_change+0x13/0x13
+> [... more hung task warnings from other processes follow ...]
 >=20
-> > This is against current mainline.  If you want it against another versi=
-on and
-> > it doesn't apply easily, just ask.
-> >
-> > Thanks,
-> > NeilBrown
-> >
-> > From 98c411f93391be0dbda98d43835dd9e042faa78f Mon Sep 17 00:00:00 2001
-> > From: NeilBrown <neilb@suse.de>
-> > Date: Mon, 19 May 2014 11:16:49 +1000
-> > Subject: [PATCH] md/raid56: Don't perform reads to support writes until=
- stripe
-> >  is ready.
-> > MIME-Version: 1.0
-> > Content-Type: text/plain; charset=3DUTF-8
-> > Content-Transfer-Encoding: 8bit
-> >
-> > If it is found that we need to pre-read some blocks before a write
-> > can succeed, we normally set STRIPE_DELAYED and don't actually perform
-> > the read until STRIPE_PREREAD_ACTIVE subsequently gets set.
-> >
-> > However for a degraded RAID6 we currently perform the reads as soon
-> > as we see that a write is pending.  This significantly hurts
-> > throughput.
-> >
-> > So:
-> >  - when handle_stripe_dirtying find a block that it wants on a device
-> >    that is failed, set STRIPE_DELAY, instead of doing nothing, and
-> >  - when fetch_block detects that a read might be required to satisfy a
-> >    write, only perform the read if STRIPE_PREREAD_ACTIVE is set,
-> >    and if we would actually need to read something to complete the writ=
-e.
-> >
-> > This also helps RAID5, though less often as RAID5 supports a
-> > read-modify-write cycle.  For RAID5 the read is performed too early
-> > only if the write is not a full 4K aligned write (i.e. no an
-> > R5_OVERWRITE).
-> >
-> > Also clean up a couple of horrible bits of formatting.
-> >
-> > Reported-by: Patrik Horn=C3=ADk <patrik@dsl.sk>
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> >
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 633e20a96b34..d67202bd9118 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -292,9 +292,12 @@ static void do_release_stripe(struct r5conf *conf,=
- struct stripe_head *sh,
-> >         BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
-> >         if (test_bit(STRIPE_HANDLE, &sh->state)) {
-> >                 if (test_bit(STRIPE_DELAYED, &sh->state) &&
-> > -                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-> > +                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-> >                         list_add_tail(&sh->lru, &conf->delayed_list);
-> > -               else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-> > +                       if (atomic_read(&conf->preread_active_stripes)
-> > +                           < IO_THRESHOLD)
-> > +                               md_wakeup_thread(conf->mddev->thread);
-> > +               } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-> >                            sh->bm_seq - conf->seq_write > 0)
-> >                         list_add_tail(&sh->lru, &conf->bitmap_list);
-> >                 else {
-> > @@ -2908,8 +2911,11 @@ static int fetch_block(struct stripe_head *sh, s=
-truct stripe_head_state *s,
-> >              (s->failed >=3D 1 && fdev[0]->toread) ||
-> >              (s->failed >=3D 2 && fdev[1]->toread) ||
-> >              (sh->raid_conf->level <=3D 5 && s->failed && fdev[0]->towr=
-ite &&
-> > +             (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PRE=
-READ_ACTIVE, &sh->state)) &&
-> >               !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
-> > -            (sh->raid_conf->level =3D=3D 6 && s->failed && s->to_write=
-))) {
-> > +            (sh->raid_conf->level =3D=3D 6 && s->failed && s->to_write=
- &&
-> > +             s->towrite < sh->raid_conf->raid_disks - 2 &&
-> > +             (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PRE=
-READ_ACTIVE, &sh->state))))) {
-> >                 /* we would like to get this block, possibly by computi=
-ng it,
-> >                  * otherwise read it if the backing disk is insync
-> >                  */
-> > @@ -3115,7 +3121,8 @@ static void handle_stripe_dirtying(struct r5conf =
-*conf,
-> >                     !test_bit(R5_LOCKED, &dev->flags) &&
-> >                     !(test_bit(R5_UPTODATE, &dev->flags) ||
-> >                     test_bit(R5_Wantcompute, &dev->flags))) {
-> > -                       if (test_bit(R5_Insync, &dev->flags)) rcw++;
-> > +                       if (test_bit(R5_Insync, &dev->flags))
-> > +                               rcw++;
-> >                         else
-> >                                 rcw +=3D 2*disks;
-> >                 }
-> > @@ -3136,10 +3143,10 @@ static void handle_stripe_dirtying(struct r5con=
-f *conf,
-> >                             !(test_bit(R5_UPTODATE, &dev->flags) ||
-> >                             test_bit(R5_Wantcompute, &dev->flags)) &&
-> >                             test_bit(R5_Insync, &dev->flags)) {
-> > -                               if (
-> > -                                 test_bit(STRIPE_PREREAD_ACTIVE, &sh->=
-state)) {
-> > -                                       pr_debug("Read_old block "
-> > -                                                "%d for r-m-w\n", i);
-> > +                               if (test_bit(STRIPE_PREREAD_ACTIVE,
-> > +                                            &sh->state)) {
-> > +                                       pr_debug("Read_old block %d for=
- r-m-w\n",
-> > +                                                i);
-> >                                         set_bit(R5_LOCKED, &dev->flags);
-> >                                         set_bit(R5_Wantread, &dev->flag=
-s);
-> >                                         s->locked++;
-> > @@ -3162,10 +3169,9 @@ static void handle_stripe_dirtying(struct r5conf=
- *conf,
-> >                             !(test_bit(R5_UPTODATE, &dev->flags) ||
-> >                               test_bit(R5_Wantcompute, &dev->flags))) {
-> >                                 rcw++;
-> > -                               if (!test_bit(R5_Insync, &dev->flags))
-> > -                                       continue; /* it's a failed driv=
-e */
-> > -                               if (
-> > -                                 test_bit(STRIPE_PREREAD_ACTIVE, &sh->=
-state)) {
-> > +                               if (test_bit(R5_Insync, &dev->flags) &&
-> > +                                   test_bit(STRIPE_PREREAD_ACTIVE,
-> > +                                            &sh->state)) {
-> >                                         pr_debug("Read_old block "
-> >                                                 "%d for Reconstruct\n",=
- i);
-> >                                         set_bit(R5_LOCKED, &dev->flags);
+>=20
+> This machine is running debian wheezy. mdadm version is 3.2.5-1 from
+> debian wheezy. Kernel is 3.2.18-1 from wheezy (3.2.0-2-amd64).
+>=20
+> Any help would be much appreciated! Especially if the data is
+> recoverable. It's possible that the reshape process never actually got
+> started and rebooting the machine without the new disks will make
+> everything "just work"... but I don't want to try that just yet, in
+> case it prevents future data recovery work.
+>=20
+> Any thoughts? Or more debug info I could provide to diagnose this?
+>=20
+> Best regards,
+> Dav=C3=AD=C3=B0
 
 
---Sig_/fGgyE6Uu1J+IdYsM.Hh1+Vb
+--Sig_/3+GZZL4YIxuBT8TEDroDr+p
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU3s3vDnsnt1WYoG5AQJZ4Q/+MBOjrzVe4fadjQ2qqL8YYIn3wMk4iXMI
-URd5Q/vHsUYHmeNcE0UMsU/q5gEKN9i+SaE5Bh6nKa+jLdWNviAlEbE1lz99sI/w
-LRlXfhm91A7tkFgSnVraL+SYN4sMLmT+5zOmFj8JrdX06AK2TqXkfGIhO8JHFrGN
-7Euc31aT2mvBzpn0vIzTab2gF31Ri6paTgdMP4JizLst1m3VhSFrB9z12H8HmNHw
-lGQ0UPTpcvCzlhokyNKcIAzqHCi+6Wm5rfUPI2V9hhqm4cvLdRoTKWC3tT6gaNYd
-bbwIdAkeE8gAUqtxNIy8dMYjeURKI2A5hd36W1gSOUIhWjJaz9DH62ByM0oHmcll
-yeTM3ftMVXx9LQtCLXqNzI/t4/wo+DT0O+021GO5tzwyMhCdHJctP9r+Pse/V00x
-0HUMYhCFOYFtofrag6O6oNk64WWpQsLBbHBAUndvbgU3Cim9R7u7v9Fy0QxubvmO
-EdeB583pRj1ue2j47SCUyx3F5cwEpMY/h4B+nMSkw2czL8dgHujMpr5EU4wajhuC
-oXR0Xx93rFz95ZEqvDRA1dykr7FJfPj0LfLqwaBkoRhCTz6huOpFpaUMbrNGojKI
-6rQ7KfMYmRz0jtDGQ7pswvR/pQzmFHVe72GH5MrUb52h8f4Lw+pp1xrfUo80jdGK
-0+iHK3KLneI=
-=FBeA
+iQIcBAEBAgAGBQJTe6dQAAoJEI9CLKE3JSPgpcsP/iRDvDiazVmrSYHi0oX7e+bG
+IB9cuTu0rp17ZGLUHJW7juM/nFj9YEIHG1yX6gJQMyDmDNxLYWrxhl5bQrKQP4At
+C7izNKYhucSTlTDNyFCLEC5d6yR/2H2rdije4d/lKx5e04FqVA6+Gfg1NjPexLEC
+jYgA3M057ShCSG8Fci6hBXK2HV5IJtjXUZeRvSsHmgVZJNCGgya/gQ2HfdVGmK/R
+Vyom5blGy1YeJ86msnTFsHvVoEYwz7cy6BcD4uXaXcU2C3k11Ux7YxiGS5iRJ2Be
+TZnGeJEAXmlgnG0COCeovBfycpWrm2QcE9/MKIPOjTB3N0Bd3H5pPMBcbK6dyfga
+9HSRanowDiMoY4Tr17GyFsBOx1N2qxLXNyCBsSbnVdCiWv1+EogjUBHq+/yZ6uXg
+6I6hFaITVnz0a5R+QuJmmPsB4okKgiuPlK1ODApUWKK3D4F9bEO8tVXxGdb1I+4P
+QCtoZXFxmX7llqlermlTk018Sdlaz12/pwyToONSotj2A0hYzJbj0ukqYTgiEoJM
+J7exSWA9OduvLEsS5GDWVfe+GsCbePOhsmi64lFf9NnfHmQOQfWScGK9CBTSPO3+
+zXYt2YKhwV0MuDyDMTsjn0t251bIrYfCyriBqhIjJg0kvQShi7oUn5t940hXz0VJ
+SGR7xz8LYA+s8ONq426T
+=50hg
 -----END PGP SIGNATURE-----
 
---Sig_/fGgyE6Uu1J+IdYsM.Hh1+Vb--
+--Sig_/3+GZZL4YIxuBT8TEDroDr+p--
