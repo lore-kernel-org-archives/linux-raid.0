@@ -1,263 +1,457 @@
-From: NeilBrown <neilb@suse.de>
+From: Shaohua Li <shli@kernel.org>
 Subject: Re: [RFC]raid5: add an option to avoid copy data from bio to stripe
  cache
-Date: Wed, 21 May 2014 17:01:12 +1000
-Message-ID: <20140521170112.16ae2d11@notabene.brown>
+Date: Wed, 21 May 2014 17:57:44 +0800
+Message-ID: <20140521095744.GA5158@kernel.org>
 References: <20140428065841.GA28726@kernel.org>
-	<20140428101748.GA17026@infradead.org>
-	<20140428204407.226c88e4@notabene.brown>
-	<20140429020124.GA24123@kernel.org>
-	<20140429170725.0b4687a8@notabene.brown>
-	<20140429111358.GA10584@kernel.org>
+ <20140428101748.GA17026@infradead.org>
+ <20140428204407.226c88e4@notabene.brown>
+ <20140429020124.GA24123@kernel.org>
+ <20140429170725.0b4687a8@notabene.brown>
+ <20140429111358.GA10584@kernel.org>
+ <20140521170112.16ae2d11@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jbVPi7519VDdoZFq/BrZBv7"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140429111358.GA10584@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140521170112.16ae2d11@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: NeilBrown <neilb@suse.de>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/jbVPi7519VDdoZFq/BrZBv7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 21, 2014 at 05:01:12PM +1000, NeilBrown wrote:
+> On Tue, 29 Apr 2014 19:13:58 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Tue, Apr 29, 2014 at 05:07:25PM +1000, NeilBrown wrote:
+> > > On Tue, 29 Apr 2014 10:01:24 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > 
+> > > > On Mon, Apr 28, 2014 at 08:44:07PM +1000, NeilBrown wrote:
+> > > > > On Mon, 28 Apr 2014 03:17:48 -0700 Christoph Hellwig <hch@infradead.org>
+> > > > > wrote:
+> > > > > 
+> > > > > > On Mon, Apr 28, 2014 at 02:58:41PM +0800, Shaohua Li wrote:
+> > > > > > > 
+> > > > > > > The stripe cache has two goals:
+> > > > > > > 1. cache data, so next time if data can be found in stripe cache, disk access
+> > > > > > > can be avoided.
+> > > > > > 
+> > > > > > I think this is mostly a side effect.  We have a much larger and better
+> > > > > > tuned page cache to take care of this.
+> > > > > > 
+> > > > > > > 2. stable data. data is copied from bio to stripe cache and calculated parity.
+> > > > > > > data written to disk is from stripe cache, so if upper layer changes bio data,
+> > > > > > > data written to disk isn't impacted.
+> > > > > > > 
+> > > > > > > In my environment, I can guarantee 2 will not happen.
+> > > > > > 
+> > > > > > Why just in your environment?  Now that we got stable pages in the page
+> > > > > > cache this should always be the case.
+> > > > > 
+> > > > > Hmm... I hadn't realised that we were guaranteed stabled pages always (if
+> > > > > requested).  It seems that we are.
+> > > > > 
+> > > > > > 
+> > > > > > > Of course, this shouldn't be enabled by default, so I added an option to
+> > > > > > > control it.
+> > > > > > 
+> > > > > > Unless careful benchmarking in various scenarious shows adverse effects
+> > > > > > this should be the default.  And if we can find adverse effects we need
+> > > > > > to look into them.
+> > > > > 
+> > > > > Certainly some benchmarking is needed.
+> > > > > 
+> > > > > We should set
+> > > > > 
+> > > > >  mddev->queue->backing_dev_info.capabilities |= BDI_CAP_STABLE_WRITES
+> > > > > 
+> > > > > if and only iff 'skip_copy' is set. Then test various cases just to confirm
+> > > > > that it is generally an improvement.
+> > > > 
+> > > > IIRC, we switched from 'force wait page writeback' to 'wait page writeback if
+> > > > required' because of performance issues reported, so we shoudn't always enable
+> > > > BDI_CAP_STABLE_WRITES. Is it safe to set/clear BDI_CAP_STABLE_WRITES at
+> > > > runtime, if we use 'skip_copy' to control it? Ofcourse, we don't need runtime
+> > > > changing the setting, but we need a mechanism to setup it before array runs.
+> > > 
+> > > So for md/RAID5 the trade off is:
+> > >  - If we set BDI_CAP_STABLE_WRITES then processes might sometimes have to wait
+> > >    for the writeout to complete where otherwise they would not
+> > >  - If we don't then RAID5 *always* has to copy the page into the stripe cache.
+> > > 
+> > > It isn't at all clear to me which is best.  It is very possible that copying
+> > > costs a lot.  But then waiting for read-modify-write cycles can be a real
+> > > cost too....
+> > > 
+> > > I think it is perfectly safe to change BDI_CAP_STABLE_WRITES while the array
+> > > is suspended. So
+> > >   mddev_suspend(mddev);
+> > >   change BDI_CAP_STABLE_WRITES
+> > >   mddev_resume(mddev);
+> > > 
+> > > should be safe.
+> > 
+> > sounds good.
+> >  
+> > > > 
+> > > > As of performance, the 'skip_copy' is very helpful (> 30% boost) for my raid5
+> > > > array (with 6 fast PCIe SSD) for 1M request size workload. Nothing changed for
+> > > > 4k randwrite workload.
+> > > 
+> > > It would be really good to see comparison for sequential and random loads on
+> > > various filesytems with both rotating and SSD devices, in RAID5 and RAID6,
+> > > with various numbers of devices.
+> > > :-)
+> > > 
+> > > If you'd like to update your patch to adjust BDI_CAP_STABLE_WRITES when
+> > > skip_copy is changed, I'll apply it so that people can test it.
+> > 
+> > Here it is.
+> 
+> I've removed this patch for now.  It causes a nasty crash when running the
+> 07changelevels test in the mdadm test suite.
+> I've haven't looked at why this might be.
 
-On Tue, 29 Apr 2014 19:13:58 +0800 Shaohua Li <shli@kernel.org> wrote:
+Forgot to reset orig_page in resize_stripes(), fixed now.
+ 
+> And re the other patch you send, I meant to also say to please use
+> __test_and_clear_bit().  This version is sufficient when the variable is only
+> used by one thread, and it is slightly more efficient.
 
-> On Tue, Apr 29, 2014 at 05:07:25PM +1000, NeilBrown wrote:
-> > On Tue, 29 Apr 2014 10:01:24 +0800 Shaohua Li <shli@kernel.org> wrote:
-> >=20
-> > > On Mon, Apr 28, 2014 at 08:44:07PM +1000, NeilBrown wrote:
-> > > > On Mon, 28 Apr 2014 03:17:48 -0700 Christoph Hellwig <hch@infradead=
-.org>
-> > > > wrote:
-> > > >=20
-> > > > > On Mon, Apr 28, 2014 at 02:58:41PM +0800, Shaohua Li wrote:
-> > > > > >=20
-> > > > > > The stripe cache has two goals:
-> > > > > > 1. cache data, so next time if data can be found in stripe cach=
-e, disk access
-> > > > > > can be avoided.
-> > > > >=20
-> > > > > I think this is mostly a side effect.  We have a much larger and =
-better
-> > > > > tuned page cache to take care of this.
-> > > > >=20
-> > > > > > 2. stable data. data is copied from bio to stripe cache and cal=
-culated parity.
-> > > > > > data written to disk is from stripe cache, so if upper layer ch=
-anges bio data,
-> > > > > > data written to disk isn't impacted.
-> > > > > >=20
-> > > > > > In my environment, I can guarantee 2 will not happen.
-> > > > >=20
-> > > > > Why just in your environment?  Now that we got stable pages in th=
-e page
-> > > > > cache this should always be the case.
-> > > >=20
-> > > > Hmm... I hadn't realised that we were guaranteed stabled pages alwa=
-ys (if
-> > > > requested).  It seems that we are.
-> > > >=20
-> > > > >=20
-> > > > > > Of course, this shouldn't be enabled by default, so I added an =
-option to
-> > > > > > control it.
-> > > > >=20
-> > > > > Unless careful benchmarking in various scenarious shows adverse e=
-ffects
-> > > > > this should be the default.  And if we can find adverse effects w=
-e need
-> > > > > to look into them.
-> > > >=20
-> > > > Certainly some benchmarking is needed.
-> > > >=20
-> > > > We should set
-> > > >=20
-> > > >  mddev->queue->backing_dev_info.capabilities |=3D BDI_CAP_STABLE_WR=
-ITES
-> > > >=20
-> > > > if and only iff 'skip_copy' is set. Then test various cases just to=
- confirm
-> > > > that it is generally an improvement.
-> > >=20
-> > > IIRC, we switched from 'force wait page writeback' to 'wait page writ=
-eback if
-> > > required' because of performance issues reported, so we shoudn't alwa=
-ys enable
-> > > BDI_CAP_STABLE_WRITES. Is it safe to set/clear BDI_CAP_STABLE_WRITES =
-at
-> > > runtime, if we use 'skip_copy' to control it? Ofcourse, we don't need=
- runtime
-> > > changing the setting, but we need a mechanism to setup it before arra=
-y runs.
-> >=20
-> > So for md/RAID5 the trade off is:
-> >  - If we set BDI_CAP_STABLE_WRITES then processes might sometimes have =
-to wait
-> >    for the writeout to complete where otherwise they would not
-> >  - If we don't then RAID5 *always* has to copy the page into the stripe=
- cache.
-> >=20
-> > It isn't at all clear to me which is best.  It is very possible that co=
-pying
-> > costs a lot.  But then waiting for read-modify-write cycles can be a re=
-al
-> > cost too....
-> >=20
-> > I think it is perfectly safe to change BDI_CAP_STABLE_WRITES while the =
-array
-> > is suspended. So
-> >   mddev_suspend(mddev);
-> >   change BDI_CAP_STABLE_WRITES
-> >   mddev_resume(mddev);
-> >=20
-> > should be safe.
->=20
-> sounds good.
-> =20
-> > >=20
-> > > As of performance, the 'skip_copy' is very helpful (> 30% boost) for =
-my raid5
-> > > array (with 6 fast PCIe SSD) for 1M request size workload. Nothing ch=
-anged for
-> > > 4k randwrite workload.
-> >=20
-> > It would be really good to see comparison for sequential and random loa=
-ds on
-> > various filesytems with both rotating and SSD devices, in RAID5 and RAI=
-D6,
-> > with various numbers of devices.
-> > :-)
-> >=20
-> > If you'd like to update your patch to adjust BDI_CAP_STABLE_WRITES when
-> > skip_copy is changed, I'll apply it so that people can test it.
->=20
-> Here it is.
+Yes, I actually tried, but no improvement, but of course it should be slightly
+more efficient, I'll have such change in next post.
 
-I've removed this patch for now.  It causes a nasty crash when running the
-07changelevels test in the mdadm test suite.
-
-First we get
-
- kernel: [ 8282.822194] WARNING: CPU: 0 PID: 16377 at /home/git/md/drivers/=
-md/raid5.c:1404 raid_run
-
-which is
-
-+		BUG_ON(sh->dev[i].page !=3D sh->dev[i].orig_page);
-which I changed to WARN_ON,
-
-then
-kernel: [ 8284.116364] BUG: sleeping function called from invalid context a=
-t /home/git/md/kernel/locking/rwsem.c:20
-kernel: [ 8284.116369] in_atomic(): 1, irqs_disabled(): 0, pid: 16377, name=
-: md0_raid5
-kernel: [ 8284.116372] INFO: lockdep is turned off.
-kernel: [ 8284.116379] Preemption disabled at:[<ffffffff81a63de4>] handle_s=
-tripe_expansion+0x134/0x1e0
-kernel: [ 8284.116380]=20
-kernel: [ 8284.116385] CPU: 0 PID: 16377 Comm: md0_raid5 Tainted: G      D =
-W     3.15.0-rc5+ #855
-kernel: [ 8284.116388] Hardware name: HP ProLiant ML310 G3, BIOS W02 04/17/=
-2006
-kernel: [ 8284.116400]  ffff8800d25641d0 ffff8800b7403888 ffffffff81c62893 =
-0000000000000000
-kernel: [ 8284.116409]  ffff8800b74038b0 ffffffff810c4dea ffff88014091d410 =
-ffff88014091d470
-kernel: [ 8284.116415]  ffff8800d25641d0 ffff8800b74038d8 ffffffff81c716e5 =
-ffff8800d25641d0
-kernel: [ 8284.116416] Call Trace:
-kernel: [ 8284.116422]  [<ffffffff81c62893>] dump_stack+0x4e/0x7a
-kernel: [ 8284.116429]  [<ffffffff810c4dea>] __might_sleep+0x15a/0x250
-kernel: [ 8284.116436]  [<ffffffff81c716e5>] down_read+0x25/0xa0
-kernel: [ 8284.116445]  [<ffffffff810a6dcf>] exit_signals+0x1f/0x120
-kernel: [ 8284.116453]  [<ffffffff81093d35>] do_exit+0xb5/0xc70
-kernel: [ 8284.116462]  [<ffffffff810f7bcd>] ? kmsg_dump+0x1ad/0x220
-kernel: [ 8284.116465]  [<ffffffff810f7a40>] ? kmsg_dump+0x20/0x220
-kernel: [ 8284.116473]  [<ffffffff81055515>] oops_end+0x85/0xc0
-kernel: [ 8284.116480]  [<ffffffff81055686>] die+0x46/0x70
-kernel: [ 8284.116487]  [<ffffffff8105250a>] do_general_protection+0xca/0x1=
-50
-kernel: [ 8284.116494]  [<ffffffff81c739d2>] general_protection+0x22/0x30
-kernel: [ 8284.116501]  [<ffffffff8166a0a9>] ? memcpy+0x29/0x110
-kernel: [ 8284.116508]  [<ffffffff81638275>] ? async_memcpy+0xc5/0x160
-kernel: [ 8284.116516]  [<ffffffff81a63de4>] handle_stripe_expansion+0x134/=
-0x1e0
-kernel: [ 8284.116522]  [<ffffffff81a6496e>] handle_stripe+0xade/0x23e0
-
-I've haven't looked at why this might be.
-
-And re the other patch you send, I meant to also say to please use
-__test_and_clear_bit().  This version is sufficient when the variable is on=
-ly
-used by one thread, and it is slightly more efficient.
-
-NeilBrown
+Thanks,
+Shaohua
 
 
->=20
->=20
-> Subject: raid5: add an option to avoid copy data from bio to stripe cache
->=20
-> The stripe cache has two goals:
-> 1. cache data, so next time if data can be found in stripe cache, disk ac=
-cess
-> can be avoided.
-> 2. stable data. data is copied from bio to stripe cache and calculated pa=
-rity.
-> data written to disk is from stripe cache, so if upper layer changes bio =
-data,
-> data written to disk isn't impacted.
->=20
-> In my environment, I can guarantee 2 will not happen. And BDI_CAP_STABLE_=
-WRITES
-> can guarantee 2 too. For 1, it's not common too. block plug mechanism will
-> dispatch a bunch of sequentail small requests together. And since I'm usi=
-ng
-> SSD, I'm using small chunk size. It's rare case stripe cache is really us=
-eful.
->=20
-> So I'd like to avoid the copy from bio to stripe cache and it's very help=
-ful
-> for performance. In my 1M randwrite tests, avoid the copy can increase the
-> performance more than 30%.
->=20
-> Of course, this shouldn't be enabled by default. It's reported enabling
-> BDI_CAP_STABLE_WRITES can harm some workloads before, so I added an optio=
-n to
-> control it.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> ---
->  drivers/md/raid5.c |  104 ++++++++++++++++++++++++++++++++++++++++++++++=
--------
->  drivers/md/raid5.h |    4 +-
->  2 files changed, 94 insertions(+), 14 deletions(-)
->=20
+raid5: add an option to avoid copy data from bio to stripe cache
 
+The stripe cache has two goals:
+1. cache data, so next time if data can be found in stripe cache, disk access
+can be avoided.
+2. stable data. data is copied from bio to stripe cache and calculated parity.
+data written to disk is from stripe cache, so if upper layer changes bio data,
+data written to disk isn't impacted.
 
---Sig_/jbVPi7519VDdoZFq/BrZBv7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+In my environment, I can guarantee 2 will not happen. And BDI_CAP_STABLE_WRITES
+can guarantee 2 too. For 1, it's not common too. block plug mechanism will
+dispatch a bunch of sequentail small requests together. And since I'm using
+SSD, I'm using small chunk size. It's rare case stripe cache is really useful.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+So I'd like to avoid the copy from bio to stripe cache and it's very helpful
+for performance. In my 1M randwrite tests, avoid the copy can increase the
+performance more than 30%.
 
-iQIVAwUBU3xPODnsnt1WYoG5AQKDYRAAr7WJxhD2rtkdgIX445PeH3CRN7u7LGl9
-x2AUMhEh9eH0bAIBXMod4KmVtNlaiecHx5EcWS7P3YzEjj6bUR8qd/JW7mHaKoxN
-h1c5UtVCpEjMv5O+BHbWcnir+dcnNecg+AZPAL9WFpGrR+CozlvUe21rn1B8HWod
-lZnwSxbUE07yQowIXly/J4iszTnZZrlo54Rn5qFKuJ+6kJyRuRihjkzvX42NIYC/
-lxRWXzBwkRKQxiroeLN7mXPiu7bewlqzlOLDoZVmPznrK0RibGQ9sV44GDUA2I5Y
-c755dR2Y/q8TCE8dsGzajW+LTX5Ya+hs85gSfiViplxkR4Xq582d2d21qhNFyfqE
-+e9AHXeh5QrqQl0Hni/xssCsOC1/SOhiSVA5PqndQ6sBcwhBNcgG+BiA26Ujy0iN
-3ID8lJ9hG+SNG/0U1z6s1UKf8aSkJypuZMgXriDvBsvgtheo2+uw4L9E7OhNqxp6
-w+329M7XRGiqfuk42CoWZhMUE5KYaWE3uaXi6PzRgEU7JxIi7vJ/quxLikI8Km4t
-g8ziCKilTuVQTt/GiFXypdGwzy+cemFsHb87g2yAiEwwRqDJyXuKhf+M++snBSCZ
-Were3O3bEfCWaM1CThAvm3u5C19AWjmbweE0oHhYjbgtcrBV5DClrbK4pUbQEr7/
-dLOz6r/iv78=
-=QP0k
------END PGP SIGNATURE-----
+Of course, this shouldn't be enabled by default. It's reported enabling
+BDI_CAP_STABLE_WRITES can harm some workloads before, so I added an option to
+control it.
 
---Sig_/jbVPi7519VDdoZFq/BrZBv7--
+Neilb:
+  changed BUG_ON to WARN_ON
+  Removed some assignments from raid5_build_block which are now not needed.
+
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+---
+ drivers/md/raid5.c |  119 +++++++++++++++++++++++++++++++++++++++++++----------
+ drivers/md/raid5.h |    4 +
+ 2 files changed, 101 insertions(+), 22 deletions(-)
+
+Index: linux/drivers/md/raid5.c
+===================================================================
+--- linux.orig/drivers/md/raid5.c	2014-05-21 17:44:28.395267473 +0800
++++ linux/drivers/md/raid5.c	2014-05-21 17:47:04.021310997 +0800
+@@ -479,6 +479,7 @@ static void shrink_buffers(struct stripe
+ 	int num = sh->raid_conf->pool_size;
+ 
+ 	for (i = 0; i < num ; i++) {
++		WARN_ON(sh->dev[i].page != sh->dev[i].orig_page);
+ 		p = sh->dev[i].page;
+ 		if (!p)
+ 			continue;
+@@ -499,6 +500,7 @@ static int grow_buffers(struct stripe_he
+ 			return 1;
+ 		}
+ 		sh->dev[i].page = page;
++		sh->dev[i].orig_page = page;
+ 	}
+ 	return 0;
+ }
+@@ -855,6 +857,9 @@ static void ops_run_io(struct stripe_hea
+ 			if (test_bit(R5_ReadNoMerge, &sh->dev[i].flags))
+ 				bi->bi_rw |= REQ_NOMERGE;
+ 
++			if (test_bit(R5_SkipCopy, &sh->dev[i].flags))
++				WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
++			sh->dev[i].vec.bv_page = sh->dev[i].page;
+ 			bi->bi_vcnt = 1;
+ 			bi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			bi->bi_io_vec[0].bv_offset = 0;
+@@ -899,6 +904,9 @@ static void ops_run_io(struct stripe_hea
+ 			else
+ 				rbi->bi_iter.bi_sector = (sh->sector
+ 						  + rrdev->data_offset);
++			if (test_bit(R5_SkipCopy, &sh->dev[i].flags))
++				WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
++			sh->dev[i].rvec.bv_page = sh->dev[i].page;
+ 			rbi->bi_vcnt = 1;
+ 			rbi->bi_io_vec[0].bv_len = STRIPE_SIZE;
+ 			rbi->bi_io_vec[0].bv_offset = 0;
+@@ -927,8 +935,9 @@ static void ops_run_io(struct stripe_hea
+ }
+ 
+ static struct dma_async_tx_descriptor *
+-async_copy_data(int frombio, struct bio *bio, struct page *page,
+-	sector_t sector, struct dma_async_tx_descriptor *tx)
++async_copy_data(int frombio, struct bio *bio, struct page **page,
++	sector_t sector, struct dma_async_tx_descriptor *tx,
++	struct stripe_head *sh)
+ {
+ 	struct bio_vec bvl;
+ 	struct bvec_iter iter;
+@@ -965,11 +974,16 @@ async_copy_data(int frombio, struct bio
+ 		if (clen > 0) {
+ 			b_offset += bvl.bv_offset;
+ 			bio_page = bvl.bv_page;
+-			if (frombio)
+-				tx = async_memcpy(page, bio_page, page_offset,
++			if (frombio) {
++				if (sh->raid_conf->skip_copy &&
++				    b_offset == 0 && page_offset == 0 &&
++				    clen == STRIPE_SIZE)
++					*page = bio_page;
++				else
++					tx = async_memcpy(*page, bio_page, page_offset,
+ 						  b_offset, clen, &submit);
+-			else
+-				tx = async_memcpy(bio_page, page, b_offset,
++			} else
++				tx = async_memcpy(bio_page, *page, b_offset,
+ 						  page_offset, clen, &submit);
+ 		}
+ 		/* chain the operations */
+@@ -1045,8 +1059,8 @@ static void ops_run_biofill(struct strip
+ 			spin_unlock_irq(&sh->stripe_lock);
+ 			while (rbi && rbi->bi_iter.bi_sector <
+ 				dev->sector + STRIPE_SECTORS) {
+-				tx = async_copy_data(0, rbi, dev->page,
+-					dev->sector, tx);
++				tx = async_copy_data(0, rbi, &dev->page,
++					dev->sector, tx, sh);
+ 				rbi = r5_next_bio(rbi, dev->sector);
+ 			}
+ 		}
+@@ -1384,6 +1398,7 @@ ops_run_biodrain(struct stripe_head *sh,
+ 			BUG_ON(dev->written);
+ 			wbi = dev->written = chosen;
+ 			spin_unlock_irq(&sh->stripe_lock);
++			WARN_ON(dev->page != dev->orig_page);
+ 
+ 			while (wbi && wbi->bi_iter.bi_sector <
+ 				dev->sector + STRIPE_SECTORS) {
+@@ -1393,9 +1408,15 @@ ops_run_biodrain(struct stripe_head *sh,
+ 					set_bit(R5_SyncIO, &dev->flags);
+ 				if (wbi->bi_rw & REQ_DISCARD)
+ 					set_bit(R5_Discard, &dev->flags);
+-				else
+-					tx = async_copy_data(1, wbi, dev->page,
+-						dev->sector, tx);
++				else {
++					tx = async_copy_data(1, wbi, &dev->page,
++						dev->sector, tx, sh);
++					if (dev->page != dev->orig_page) {
++						set_bit(R5_SkipCopy, &dev->flags);
++						clear_bit(R5_UPTODATE, &dev->flags);
++						clear_bit(R5_OVERWRITE, &dev->flags);
++					}
++				}
+ 				wbi = r5_next_bio(wbi, dev->sector);
+ 			}
+ 		}
+@@ -1426,7 +1447,7 @@ static void ops_complete_reconstruct(voi
+ 		struct r5dev *dev = &sh->dev[i];
+ 
+ 		if (dev->written || i == pd_idx || i == qd_idx) {
+-			if (!discard)
++			if (!discard && !test_bit(R5_SkipCopy, &dev->flags))
+ 				set_bit(R5_UPTODATE, &dev->flags);
+ 			if (fua)
+ 				set_bit(R5_WantFUA, &dev->flags);
+@@ -1839,8 +1860,10 @@ static int resize_stripes(struct r5conf
+ 		osh = get_free_stripe(conf, hash);
+ 		unlock_device_hash_lock(conf, hash);
+ 		atomic_set(&nsh->count, 1);
+-		for(i=0; i<conf->pool_size; i++)
++		for(i=0; i<conf->pool_size; i++) {
+ 			nsh->dev[i].page = osh->dev[i].page;
++			nsh->dev[i].orig_page = osh->dev[i].page;
++		}
+ 		for( ; i<newsize; i++)
+ 			nsh->dev[i].page = NULL;
+ 		nsh->hash_lock_index = hash;
+@@ -1896,6 +1919,7 @@ static int resize_stripes(struct r5conf
+ 			if (nsh->dev[i].page == NULL) {
+ 				struct page *p = alloc_page(GFP_NOIO);
+ 				nsh->dev[i].page = p;
++				nsh->dev[i].orig_page = p;
+ 				if (!p)
+ 					err = -ENOMEM;
+ 			}
+@@ -2133,24 +2157,20 @@ static void raid5_end_write_request(stru
+ }
+ 
+ static sector_t compute_blocknr(struct stripe_head *sh, int i, int previous);
+-	
++
+ static void raid5_build_block(struct stripe_head *sh, int i, int previous)
+ {
+ 	struct r5dev *dev = &sh->dev[i];
+ 
+ 	bio_init(&dev->req);
+ 	dev->req.bi_io_vec = &dev->vec;
+-	dev->req.bi_vcnt++;
+-	dev->req.bi_max_vecs++;
++	dev->req.bi_max_vecs = 1;
+ 	dev->req.bi_private = sh;
+-	dev->vec.bv_page = dev->page;
+ 
+ 	bio_init(&dev->rreq);
+ 	dev->rreq.bi_io_vec = &dev->rvec;
+-	dev->rreq.bi_vcnt++;
+-	dev->rreq.bi_max_vecs++;
++	dev->rreq.bi_max_vecs = 1;
+ 	dev->rreq.bi_private = sh;
+-	dev->rvec.bv_page = dev->page;
+ 
+ 	dev->flags = 0;
+ 	dev->sector = compute_blocknr(sh, i, previous);
+@@ -2750,6 +2770,11 @@ handle_failed_stripe(struct r5conf *conf
+ 		/* and fail all 'written' */
+ 		bi = sh->dev[i].written;
+ 		sh->dev[i].written = NULL;
++		if (test_and_clear_bit(R5_SkipCopy, &sh->dev[i].flags)) {
++			WARN_ON(test_bit(R5_UPTODATE, &sh->dev[i].flags));
++			sh->dev[i].page = sh->dev[i].orig_page;
++		}
++
+ 		if (bi) bitmap_end = 1;
+ 		while (bi && bi->bi_iter.bi_sector <
+ 		       sh->dev[i].sector + STRIPE_SECTORS) {
+@@ -2991,12 +3016,17 @@ static void handle_stripe_clean_event(st
+ 			dev = &sh->dev[i];
+ 			if (!test_bit(R5_LOCKED, &dev->flags) &&
+ 			    (test_bit(R5_UPTODATE, &dev->flags) ||
+-			     test_bit(R5_Discard, &dev->flags))) {
++			     test_bit(R5_Discard, &dev->flags) ||
++			     test_bit(R5_SkipCopy, &dev->flags))) {
+ 				/* We can return any write requests */
+ 				struct bio *wbi, *wbi2;
+ 				pr_debug("Return write for disc %d\n", i);
+ 				if (test_and_clear_bit(R5_Discard, &dev->flags))
+ 					clear_bit(R5_UPTODATE, &dev->flags);
++				if (test_and_clear_bit(R5_SkipCopy, &dev->flags)) {
++					WARN_ON(test_bit(R5_UPTODATE, &dev->flags));
++					dev->page = dev->orig_page;
++				}
+ 				wbi = dev->written;
+ 				dev->written = NULL;
+ 				while (wbi && wbi->bi_iter.bi_sector <
+@@ -3015,6 +3045,8 @@ static void handle_stripe_clean_event(st
+ 						0);
+ 			} else if (test_bit(R5_Discard, &dev->flags))
+ 				discard_pending = 1;
++			WARN_ON(test_bit(R5_SkipCopy, &dev->flags));
++			WARN_ON(dev->page != dev->orig_page);
+ 		}
+ 	if (!discard_pending &&
+ 	    test_bit(R5_Discard, &sh->dev[sh->pd_idx].flags)) {
+@@ -5355,6 +5387,50 @@ raid5_preread_bypass_threshold = __ATTR(
+ 					raid5_store_preread_threshold);
+ 
+ static ssize_t
++raid5_show_skip_copy(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	if (conf)
++		return sprintf(page, "%d\n", conf->skip_copy);
++	else
++		return 0;
++}
++
++static ssize_t
++raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
++{
++	struct r5conf *conf = mddev->private;
++	unsigned long new;
++	if (len >= PAGE_SIZE)
++		return -EINVAL;
++	if (!conf)
++		return -ENODEV;
++
++	if (kstrtoul(page, 10, &new))
++		return -EINVAL;
++	new = !!new;
++	if (new == conf->skip_copy)
++		return len;
++
++	mddev_suspend(mddev);
++	conf->skip_copy = new;
++	if (new)
++		mddev->queue->backing_dev_info.capabilities |=
++						BDI_CAP_STABLE_WRITES;
++	else
++		mddev->queue->backing_dev_info.capabilities &=
++						~BDI_CAP_STABLE_WRITES;
++	mddev_resume(mddev);
++	return len;
++}
++
++static struct md_sysfs_entry
++raid5_skip_copy = __ATTR(skip_copy, S_IRUGO | S_IWUSR,
++					raid5_show_skip_copy,
++					raid5_store_skip_copy);
++
++
++static ssize_t
+ stripe_cache_active_show(struct mddev *mddev, char *page)
+ {
+ 	struct r5conf *conf = mddev->private;
+@@ -5439,6 +5515,7 @@ static struct attribute *raid5_attrs[] =
+ 	&raid5_stripecache_active.attr,
+ 	&raid5_preread_bypass_threshold.attr,
+ 	&raid5_group_thread_cnt.attr,
++	&raid5_skip_copy.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
+Index: linux/drivers/md/raid5.h
+===================================================================
+--- linux.orig/drivers/md/raid5.h	2014-05-21 17:44:28.395267473 +0800
++++ linux/drivers/md/raid5.h	2014-05-21 17:44:28.387267574 +0800
+@@ -232,7 +232,7 @@ struct stripe_head {
+ 		 */
+ 		struct bio	req, rreq;
+ 		struct bio_vec	vec, rvec;
+-		struct page	*page;
++		struct page	*page, *orig_page;
+ 		struct bio	*toread, *read, *towrite, *written;
+ 		sector_t	sector;			/* sector of this page */
+ 		unsigned long	flags;
+@@ -299,6 +299,7 @@ enum r5dev_flags {
+ 			 * data in, and now is a good time to write it out.
+ 			 */
+ 	R5_Discard,	/* Discard the stripe */
++	R5_SkipCopy,	/* Don't copy data from bio to stripe cache */
+ };
+ 
+ /*
+@@ -436,6 +437,7 @@ struct r5conf {
+ 	atomic_t		pending_full_writes; /* full write backlog */
+ 	int			bypass_count; /* bypassed prereads */
+ 	int			bypass_threshold; /* preread nice */
++	int			skip_copy; /* Don't copy data from bio to stripe cache */
+ 	struct list_head	*last_hold; /* detect hold_list promotions */
+ 
+ 	atomic_t		reshape_stripes; /* stripes with pending writes for reshape */
