@@ -1,206 +1,263 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Stuck array after reshape
-Date: Wed, 21 May 2014 09:33:06 +1000
-Message-ID: <20140521093306.7032d8d1@notabene.brown>
-References: <20140520185617.00b48727@dsg.is>
+Subject: Re: [RFC]raid5: add an option to avoid copy data from bio to stripe
+ cache
+Date: Wed, 21 May 2014 17:01:12 +1000
+Message-ID: <20140521170112.16ae2d11@notabene.brown>
+References: <20140428065841.GA28726@kernel.org>
+	<20140428101748.GA17026@infradead.org>
+	<20140428204407.226c88e4@notabene.brown>
+	<20140429020124.GA24123@kernel.org>
+	<20140429170725.0b4687a8@notabene.brown>
+	<20140429111358.GA10584@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2s/nHTzozkyZcbBn/TL6tEW"; protocol="application/pgp-signature"
+ boundary="Sig_/jbVPi7519VDdoZFq/BrZBv7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140520185617.00b48727@dsg.is>
+In-Reply-To: <20140429111358.GA10584@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?RGF2w63DsA==?= Steinn Geirsson <david@dsg.is>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/2s/nHTzozkyZcbBn/TL6tEW
-Content-Type: text/plain; charset=UTF-8
+--Sig_/jbVPi7519VDdoZFq/BrZBv7
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 20 May 2014 18:56:17 +0000 Dav=C3=AD=C3=B0 Steinn Geirsson <david@d=
-sg.is> wrote:
+On Tue, 29 Apr 2014 19:13:58 +0800 Shaohua Li <shli@kernel.org> wrote:
 
-> Hi all,
+> On Tue, Apr 29, 2014 at 05:07:25PM +1000, NeilBrown wrote:
+> > On Tue, 29 Apr 2014 10:01:24 +0800 Shaohua Li <shli@kernel.org> wrote:
+> >=20
+> > > On Mon, Apr 28, 2014 at 08:44:07PM +1000, NeilBrown wrote:
+> > > > On Mon, 28 Apr 2014 03:17:48 -0700 Christoph Hellwig <hch@infradead=
+.org>
+> > > > wrote:
+> > > >=20
+> > > > > On Mon, Apr 28, 2014 at 02:58:41PM +0800, Shaohua Li wrote:
+> > > > > >=20
+> > > > > > The stripe cache has two goals:
+> > > > > > 1. cache data, so next time if data can be found in stripe cach=
+e, disk access
+> > > > > > can be avoided.
+> > > > >=20
+> > > > > I think this is mostly a side effect.  We have a much larger and =
+better
+> > > > > tuned page cache to take care of this.
+> > > > >=20
+> > > > > > 2. stable data. data is copied from bio to stripe cache and cal=
+culated parity.
+> > > > > > data written to disk is from stripe cache, so if upper layer ch=
+anges bio data,
+> > > > > > data written to disk isn't impacted.
+> > > > > >=20
+> > > > > > In my environment, I can guarantee 2 will not happen.
+> > > > >=20
+> > > > > Why just in your environment?  Now that we got stable pages in th=
+e page
+> > > > > cache this should always be the case.
+> > > >=20
+> > > > Hmm... I hadn't realised that we were guaranteed stabled pages alwa=
+ys (if
+> > > > requested).  It seems that we are.
+> > > >=20
+> > > > >=20
+> > > > > > Of course, this shouldn't be enabled by default, so I added an =
+option to
+> > > > > > control it.
+> > > > >=20
+> > > > > Unless careful benchmarking in various scenarious shows adverse e=
+ffects
+> > > > > this should be the default.  And if we can find adverse effects w=
+e need
+> > > > > to look into them.
+> > > >=20
+> > > > Certainly some benchmarking is needed.
+> > > >=20
+> > > > We should set
+> > > >=20
+> > > >  mddev->queue->backing_dev_info.capabilities |=3D BDI_CAP_STABLE_WR=
+ITES
+> > > >=20
+> > > > if and only iff 'skip_copy' is set. Then test various cases just to=
+ confirm
+> > > > that it is generally an improvement.
+> > >=20
+> > > IIRC, we switched from 'force wait page writeback' to 'wait page writ=
+eback if
+> > > required' because of performance issues reported, so we shoudn't alwa=
+ys enable
+> > > BDI_CAP_STABLE_WRITES. Is it safe to set/clear BDI_CAP_STABLE_WRITES =
+at
+> > > runtime, if we use 'skip_copy' to control it? Ofcourse, we don't need=
+ runtime
+> > > changing the setting, but we need a mechanism to setup it before arra=
+y runs.
+> >=20
+> > So for md/RAID5 the trade off is:
+> >  - If we set BDI_CAP_STABLE_WRITES then processes might sometimes have =
+to wait
+> >    for the writeout to complete where otherwise they would not
+> >  - If we don't then RAID5 *always* has to copy the page into the stripe=
+ cache.
+> >=20
+> > It isn't at all clear to me which is best.  It is very possible that co=
+pying
+> > costs a lot.  But then waiting for read-modify-write cycles can be a re=
+al
+> > cost too....
+> >=20
+> > I think it is perfectly safe to change BDI_CAP_STABLE_WRITES while the =
+array
+> > is suspended. So
+> >   mddev_suspend(mddev);
+> >   change BDI_CAP_STABLE_WRITES
+> >   mddev_resume(mddev);
+> >=20
+> > should be safe.
 >=20
-> I tried to reshape an MD RAID array, going from a 4-disk RAID5 to a
-> 6-disk RAID6. This seems to have failed and now I'm afraid to turn the
-> machine off.
+> sounds good.
+> =20
+> > >=20
+> > > As of performance, the 'skip_copy' is very helpful (> 30% boost) for =
+my raid5
+> > > array (with 6 fast PCIe SSD) for 1M request size workload. Nothing ch=
+anged for
+> > > 4k randwrite workload.
+> >=20
+> > It would be really good to see comparison for sequential and random loa=
+ds on
+> > various filesytems with both rotating and SSD devices, in RAID5 and RAI=
+D6,
+> > with various numbers of devices.
+> > :-)
+> >=20
+> > If you'd like to update your patch to adjust BDI_CAP_STABLE_WRITES when
+> > skip_copy is changed, I'll apply it so that people can test it.
 >=20
-> What I did:
-> mdadm --add /dev/md5 /dev/sdh1
-> mdadm --add /dev/md5 /dev/sdg1
-> mdadm --grow /dev/md5 --backup-file /root/vg_3T_reshape_201405_mdbackup
-> --level=3D6 --raid-devices=3D6
->=20
-> The last command returned with no error, the way it usually does.
-> However, now everything that tries to access the array hangs:
-> mdadm -D /dev/md5 # hangs
-> cat /proc/mdstat # hangs
-> Trying to read mounted filesystems also hangs.
->=20
-> The two new drives are on a brand new IBM M1015 (crossflashed to LSI
-> 9211). I have not used this controller previously, but before I tried
-> the reshape I did write a GPT partition table and successfully read it
-> back from the two drives.
->=20
-> From dmesg around this time:
-> [ 1340.951731] md: bind<sdh1>
-> [ 1346.150654] scsi_verify_blk_ioctl: 38 callbacks suppressed
-> [ 1346.150662] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.150669] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.155219] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.155228] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160528] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160535] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160688] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160694] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160913] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.160918] mdadm: sending ioctl 1261 to a partition!
-> [ 1346.185864] md: bind<sdg1>
-> [ 1370.267086] scsi_verify_blk_ioctl: 38 callbacks suppressed
-> [ 1370.267095] mdadm: sending ioctl 1261 to a partition!
-> [ 1370.267103] mdadm: sending ioctl 1261 to a partition!
-> [ 1461.662068] mdadm: sending ioctl 1261 to a partition!
-> [ 1461.662078] mdadm: sending ioctl 1261 to a partition!
-> [ 1521.675927] md/raid:md5: device sde1 operational as raid disk 0
-> [ 1521.675937] md/raid:md5: device sdd1 operational as raid disk 3
-> [ 1521.675943] md/raid:md5: device sda1 operational as raid disk 2
-> [ 1521.675949] md/raid:md5: device sdb1 operational as raid disk 1
-> [ 1521.677471] md/raid:md5: allocated 5332kB
-> [ 1521.692766] md/raid:md5: raid level 6 active with 4 out of 5
-> devices, algorithm 18
-> [ 1521.692849] RAID conf printout:
-> [ 1521.692853]  --- level:6 rd:5 wd:4
-> [ 1521.692859]  disk 0, o:1, dev:sde1
-> [ 1521.692864]  disk 1, o:1, dev:sdb1
-> [ 1521.692869]  disk 2, o:1, dev:sda1
-> [ 1521.692873]  disk 3, o:1, dev:sdd1
-> [ 1522.801181] RAID conf printout:
-> [ 1522.801190]  --- level:6 rd:6 wd:5
-> [ 1522.801196]  disk 0, o:1, dev:sde1
-> [ 1522.801201]  disk 1, o:1, dev:sdb1
-> [ 1522.801205]  disk 2, o:1, dev:sda1
-> [ 1522.801210]  disk 3, o:1, dev:sdd1
-> [ 1522.801215]  disk 4, o:1, dev:sdg1
-> [ 1522.801230] RAID conf printout:
-> [ 1522.801234]  --- level:6 rd:6 wd:5
-> [ 1522.801239]  disk 0, o:1, dev:sde1
-> [ 1522.801243]  disk 1, o:1, dev:sdb1
-> [ 1522.801248]  disk 2, o:1, dev:sda1
-> [ 1522.801252]  disk 3, o:1, dev:sdd1
-> [ 1522.801256]  disk 4, o:1, dev:sdg1
-> [ 1522.801261]  disk 5, o:1, dev:sdh1
-> [ 1522.801374] md: reshape of RAID array md5
-> [ 1522.801379] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [ 1522.801384] md: using maximum available idle IO bandwidth (but not
-> more than 200000 KB/sec) for reshape.
-> [ 1522.801396] md: using 128k window, over a total of 2928578048k.
-> [ 1522.802248] mdadm: sending ioctl 1261 to a partition!
-> [ 1522.802256] mdadm: sending ioctl 1261 to a partition!
-> [ 1522.883851] mdadm: sending ioctl 1261 to a partition!
-> [ 1522.883860] mdadm: sending ioctl 1261 to a partition!
-> [ 1525.134837] md: md_do_sync() got signal ... exiting
+> Here it is.
 
-This line is strange.  Something killed the kernel thread which is performi=
-ng
-the reshape.  I cannot imagine what would have done that, but it does seem =
-to
-explain why things aren't working.
+I've removed this patch for now.  It causes a nasty crash when running the
+07changelevels test in the mdadm test suite.
 
-When you are increasing the size of the array - as you are in this case - y=
-ou
-don't really need a backup file, and even if you give one it will ony be
-used for the first few stripes.  So that fact that it no longer exists is
-expected.
+First we get
 
-Based on the --examine output that you subsequently post, the reshape has
-started, but didn't get very far.  If you stop and restart the array it
-should continue.
+ kernel: [ 8282.822194] WARNING: CPU: 0 PID: 16377 at /home/git/md/drivers/=
+md/raid5.c:1404 raid_run
 
-Don't remove the new devices as you suggest below.  Just a clean reboot or=
-=20
-  mdadm -S /dev/md5
-  mdadm -A /dev/md5 /dev/sd[abdegh]1
+which is
 
-should do the trick.
++		BUG_ON(sh->dev[i].page !=3D sh->dev[i].orig_page);
+which I changed to WARN_ON,
 
-You data should be completely safe.
+then
+kernel: [ 8284.116364] BUG: sleeping function called from invalid context a=
+t /home/git/md/kernel/locking/rwsem.c:20
+kernel: [ 8284.116369] in_atomic(): 1, irqs_disabled(): 0, pid: 16377, name=
+: md0_raid5
+kernel: [ 8284.116372] INFO: lockdep is turned off.
+kernel: [ 8284.116379] Preemption disabled at:[<ffffffff81a63de4>] handle_s=
+tripe_expansion+0x134/0x1e0
+kernel: [ 8284.116380]=20
+kernel: [ 8284.116385] CPU: 0 PID: 16377 Comm: md0_raid5 Tainted: G      D =
+W     3.15.0-rc5+ #855
+kernel: [ 8284.116388] Hardware name: HP ProLiant ML310 G3, BIOS W02 04/17/=
+2006
+kernel: [ 8284.116400]  ffff8800d25641d0 ffff8800b7403888 ffffffff81c62893 =
+0000000000000000
+kernel: [ 8284.116409]  ffff8800b74038b0 ffffffff810c4dea ffff88014091d410 =
+ffff88014091d470
+kernel: [ 8284.116415]  ffff8800d25641d0 ffff8800b74038d8 ffffffff81c716e5 =
+ffff8800d25641d0
+kernel: [ 8284.116416] Call Trace:
+kernel: [ 8284.116422]  [<ffffffff81c62893>] dump_stack+0x4e/0x7a
+kernel: [ 8284.116429]  [<ffffffff810c4dea>] __might_sleep+0x15a/0x250
+kernel: [ 8284.116436]  [<ffffffff81c716e5>] down_read+0x25/0xa0
+kernel: [ 8284.116445]  [<ffffffff810a6dcf>] exit_signals+0x1f/0x120
+kernel: [ 8284.116453]  [<ffffffff81093d35>] do_exit+0xb5/0xc70
+kernel: [ 8284.116462]  [<ffffffff810f7bcd>] ? kmsg_dump+0x1ad/0x220
+kernel: [ 8284.116465]  [<ffffffff810f7a40>] ? kmsg_dump+0x20/0x220
+kernel: [ 8284.116473]  [<ffffffff81055515>] oops_end+0x85/0xc0
+kernel: [ 8284.116480]  [<ffffffff81055686>] die+0x46/0x70
+kernel: [ 8284.116487]  [<ffffffff8105250a>] do_general_protection+0xca/0x1=
+50
+kernel: [ 8284.116494]  [<ffffffff81c739d2>] general_protection+0x22/0x30
+kernel: [ 8284.116501]  [<ffffffff8166a0a9>] ? memcpy+0x29/0x110
+kernel: [ 8284.116508]  [<ffffffff81638275>] ? async_memcpy+0xc5/0x160
+kernel: [ 8284.116516]  [<ffffffff81a63de4>] handle_stripe_expansion+0x134/=
+0x1e0
+kernel: [ 8284.116522]  [<ffffffff81a6496e>] handle_stripe+0xade/0x23e0
+
+I've haven't looked at why this might be.
+
+And re the other patch you send, I meant to also say to please use
+__test_and_clear_bit().  This version is sufficient when the variable is on=
+ly
+used by one thread, and it is slightly more efficient.
 
 NeilBrown
 
 
-
-> [ 1681.128046] INFO: task jbd2/dm-3-8:1494 blocked for more than 120
-> seconds.
-> [ 1681.128129] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 1681.128206] jbd2/dm-3-8     D ffff88007fc13540     0  1494      2
-> 0x00000000
-> [ 1681.128217]  ffff88007beab0a0 0000000000000046 ffff88005d0b1470
-> ffff88007a3208b0
-> [ 1681.128227]  0000000000013540 ffff88007c0dffd8 ffff88007c0dffd8
-> ffff88007beab0a0
-> [ 1681.128236]  059f7b5300000000 ffffffff81065a2f ffff88007bbe4d70
-> ffff88007fc13d90
-> [ 1681.128245] Call Trace:
-> [ 1681.128263]  [<ffffffff81065a2f>] ? timekeeping_get_ns+0xd/0x2a
-> [ 1681.128273]  [<ffffffff8111bda1>] ? wait_on_buffer+0x28/0x28
-> [ 1681.128283]  [<ffffffff813483e4>] ? io_schedule+0x59/0x71
-> [ 1681.128289]  [<ffffffff8111bda7>] ? sleep_on_buffer+0x6/0xa
-> [ 1681.128296]  [<ffffffff81348827>] ? __wait_on_bit+0x3e/0x71
-> [ 1681.128303]  [<ffffffff813488c9>] ? out_of_line_wait_on_bit+0x6f/0x78
-> [ 1681.128310]  [<ffffffff8111bda1>] ? wait_on_buffer+0x28/0x28
-> [ 1681.128319]  [<ffffffff8105f575>] ?
-> autoremove_wake_function+0x2a/0x2a
-> [ 1681.128354]  [<ffffffffa018d9c0>] ?
-> jbd2_journal_commit_transaction+0xb9b/0x1057 [jbd2]
-> [ 1681.128366]  [<ffffffff8100d02f>] ? load_TLS+0x7/0xa
-> [ 1681.128373]  [<ffffffff8100d6a3>] ? __switch_to+0x133/0x258
-> [ 1681.128389]  [<ffffffffa01910ae>] ? kjournald2+0xc0/0x20a [jbd2]
-> [ 1681.128397]  [<ffffffff8105f54b>] ? add_wait_queue+0x3c/0x3c
-> [ 1681.128412]  [<ffffffffa0190fee>] ? commit_timeout+0x5/0x5 [jbd2]
-> [ 1681.128420]  [<ffffffff8105ef05>] ? kthread+0x76/0x7e
-> [ 1681.128430]  [<ffffffff813505b4>] ? kernel_thread_helper+0x4/0x10
-> [ 1681.128438]  [<ffffffff8105ee8f>] ? kthread_worker_fn+0x139/0x139
-> [ 1681.128446]  [<ffffffff813505b0>] ? gs_change+0x13/0x13
-> [... more hung task warnings from other processes follow ...]
 >=20
 >=20
-> This machine is running debian wheezy. mdadm version is 3.2.5-1 from
-> debian wheezy. Kernel is 3.2.18-1 from wheezy (3.2.0-2-amd64).
+> Subject: raid5: add an option to avoid copy data from bio to stripe cache
 >=20
-> Any help would be much appreciated! Especially if the data is
-> recoverable. It's possible that the reshape process never actually got
-> started and rebooting the machine without the new disks will make
-> everything "just work"... but I don't want to try that just yet, in case
-> it prevents future data recovery work.
+> The stripe cache has two goals:
+> 1. cache data, so next time if data can be found in stripe cache, disk ac=
+cess
+> can be avoided.
+> 2. stable data. data is copied from bio to stripe cache and calculated pa=
+rity.
+> data written to disk is from stripe cache, so if upper layer changes bio =
+data,
+> data written to disk isn't impacted.
 >=20
-> Any thoughts? Or more debug info I could provide to diagnose this?
+> In my environment, I can guarantee 2 will not happen. And BDI_CAP_STABLE_=
+WRITES
+> can guarantee 2 too. For 1, it's not common too. block plug mechanism will
+> dispatch a bunch of sequentail small requests together. And since I'm usi=
+ng
+> SSD, I'm using small chunk size. It's rare case stripe cache is really us=
+eful.
 >=20
-> Best regards,
-> Dav=C3=AD=C3=B0
+> So I'd like to avoid the copy from bio to stripe cache and it's very help=
+ful
+> for performance. In my 1M randwrite tests, avoid the copy can increase the
+> performance more than 30%.
+>=20
+> Of course, this shouldn't be enabled by default. It's reported enabling
+> BDI_CAP_STABLE_WRITES can harm some workloads before, so I added an optio=
+n to
+> control it.
+>=20
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+>  drivers/md/raid5.c |  104 ++++++++++++++++++++++++++++++++++++++++++++++=
+-------
+>  drivers/md/raid5.h |    4 +-
+>  2 files changed, 94 insertions(+), 14 deletions(-)
+>=20
 
 
---Sig_/2s/nHTzozkyZcbBn/TL6tEW
+--Sig_/jbVPi7519VDdoZFq/BrZBv7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU3vmMjnsnt1WYoG5AQIazQ//cQzt8wQ48yaJpo/9pbmvfYs/+mgx8zeR
-6YRYDiTtBR8nMvLV0oQgmKFLqCyVTOutRT+FlLAZDpeaj0b9WpAwmLfAa0PVJ164
-nkiVggEvP+R+AZBI6HiQhEPAiGoZjStFFX9Pv7cgHzcviWUQ+yPlbCT3hBuhiWaj
-6bS1C0BvXVQ/t6VS6w95FyJ8Q1kKYP/XteUk0r1HyMU8HzRmuca3fBLeidqw22ws
-+SMQ0U0mbDbR5Fc+tY6WcPcoaGMChxI7MRpW5OnguM/b2ndOn2uPUgKXjbhGq0CS
-wBEJGM39CkrWo4xQxr5Q8pPxWwcx1lBac6VxvnBZHynp4JKhQ7ud6K4H2JYODWFf
-9MBOqtPd+0SXlZaJvITslitakFi7Jp1JvvYsefyVOD/Pb/pi9ku+/3hHD5EzDlPh
-5L6Bhs3/beZ/P1N3W5cBvhjsdni5baOyJPengWCxlFxSUHI8A+rLjjQjekaJneV7
-iN77g+MyFg//9eEpHVwzH2bdOKbx/59HsmIzQ1hZTF1PDyeyLTijfYTSAeqyzcrA
-ET0gC7KJtQBHXedhn3vo/Sd3pHSCbF5SJzt+dLQYw1hP7xMQGZzzm/bww5YkXSG7
-4Fpu9+FHlHJv02ZlxSxC1oOuXqhKmEagkdenbk6bWuuvgyQ1xNy6pcHqDyBXd3VK
-SHaGbxelD0Q=
-=DJCg
+iQIVAwUBU3xPODnsnt1WYoG5AQKDYRAAr7WJxhD2rtkdgIX445PeH3CRN7u7LGl9
+x2AUMhEh9eH0bAIBXMod4KmVtNlaiecHx5EcWS7P3YzEjj6bUR8qd/JW7mHaKoxN
+h1c5UtVCpEjMv5O+BHbWcnir+dcnNecg+AZPAL9WFpGrR+CozlvUe21rn1B8HWod
+lZnwSxbUE07yQowIXly/J4iszTnZZrlo54Rn5qFKuJ+6kJyRuRihjkzvX42NIYC/
+lxRWXzBwkRKQxiroeLN7mXPiu7bewlqzlOLDoZVmPznrK0RibGQ9sV44GDUA2I5Y
+c755dR2Y/q8TCE8dsGzajW+LTX5Ya+hs85gSfiViplxkR4Xq582d2d21qhNFyfqE
++e9AHXeh5QrqQl0Hni/xssCsOC1/SOhiSVA5PqndQ6sBcwhBNcgG+BiA26Ujy0iN
+3ID8lJ9hG+SNG/0U1z6s1UKf8aSkJypuZMgXriDvBsvgtheo2+uw4L9E7OhNqxp6
+w+329M7XRGiqfuk42CoWZhMUE5KYaWE3uaXi6PzRgEU7JxIi7vJ/quxLikI8Km4t
+g8ziCKilTuVQTt/GiFXypdGwzy+cemFsHb87g2yAiEwwRqDJyXuKhf+M++snBSCZ
+Were3O3bEfCWaM1CThAvm3u5C19AWjmbweE0oHhYjbgtcrBV5DClrbK4pUbQEr7/
+dLOz6r/iv78=
+=QP0k
 -----END PGP SIGNATURE-----
 
---Sig_/2s/nHTzozkyZcbBn/TL6tEW--
+--Sig_/jbVPi7519VDdoZFq/BrZBv7--
