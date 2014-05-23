@@ -1,81 +1,215 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Re: Broken raid 5
-Date: Fri, 23 May 2014 10:50:02 +0100
-Message-ID: <537F19CA.30704@mpstor.com>
-References: <43607931-ad0a-4dbc-b258-188297cbb951@email.android.com> <537DDC84.3010003@mpstor.com> <01734799-2b9f-4ab5-8be2-9f6dc928379f@email.android.com>
+From: Marnitz Gray <marnitz@xdesigns.co.za>
+Subject: Seeking help fixing a failed array
+Date: Fri, 23 May 2014 12:14:36 +0200
+Message-ID: <CAGcAkBKnp8J5zGuwgVv98zMrDLVPZWAi57rqpgLW6VByAcm94g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary=e89a8f839d712cd25404fa0e7f0b
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01734799-2b9f-4ab5-8be2-9f6dc928379f@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "L. M. J" <linuxmasterjedi@free.fr>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/05/14 19:49, L. M. J wrote:
-> On 22 mai 2014 13:16:20 CEST, Benjamin ESTRABAUD <be@mpstor.com> wrot=
-e:
->> On 21/05/14 23:05, L. M. J wrote:
->>> Hi,
->>>
->>>    Very short story : I've created an array on top of another one,
->> I presume that you actually mean that you created an array ontop of =
-the
->>
->> disks from another array.
->>
->>   so I lost my array and my data.
->>>
->>>    Is there =C3=A0 way to recover RAID 5 meta data on each disk to =
-be able
->> to rebuilt the previous raid 5?
->>>
->> Well, if you used the same metadata version (like 1.2 for instance),
->> the
->> "old" metadata would have been overwritten by your new RAID metadata
->> (assuming you built the RAID on the same drives/partitions) so that
->> would be gone as well.
->>
->> Even if you were able to rebuild the "previous" RAID (also assuming =
-it
->> was a RAID5), if your current RAID build has completed the data woul=
-d
->> have been thoroughly destroyed by the build process and recovery wou=
-ld
->> be insanely hard.
->>
->>> Thabks
->>>
->>
->> Regards,
->> Ben.
->
-> Strange, answer 1 seems different speech, have a look : http://server=
-fault.com/questions/499051/mdadm-mdadm-cannot-open-dev-sda1-device-or-r=
-esource-busy
->
-Hi,
+--e89a8f839d712cd25404fa0e7f0b
+Content-Type: text/plain; charset=UTF-8
 
-I'm not sure this SO question (how to create a RAID10 with the contents=
-=20
-from one drive) relates to your problem. The first answer is about=20
-creating a RAID10 with a device missing (the device that currently hold=
-s=20
-the data), formatting the RAID so that the data from the "missing" RAID=
-=20
-device can first be copied, and then adding the data to the RAID. This=20
-is to avoid having to copy any data to an intermediate drive when=20
-reusing a drive (with valid data) to create a RAID.
+Hello good people of linux-raid.
 
-Regards,
-Ben.
+I come here seeking advice on how to repair my raid 5 which I have
+managed to royally break.
+The raid was initially created in 2009 with 5 1.5TB hdds. Since then I
+have replaced 2 drives, 1 with a 2TB and 1 with a 3TB.
+The current mdadm version is mdadm - v3.3 - 3rd September 2013
+The /etc/debian_version file reads: jessie/sid
 
-> Thanks
->
+The story:
+My intention was to replace all the 1.5TB drives with 3TB drives, and
+then grow the size of the array.
+Yesterday I replaced /dev/sdf, with a 3TB and re-sync'd the array.
+The process finished sometime during the night with no errors, so this
+morning I continued and replaced /dev/sdb. However, after booting the
+machine I was unable to re-mount the partition (the error was on the
+lines of: specify filesystem type).
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+After fumbling around with a couple of mdadm --assembles, removing the
+new drive and replacing the old 1.5TB, re-trying some more assembles,
+I stumbled upon the wiki article
+(https://raid.wiki.kernel.org/index.php/RAID_Recovery) which led me
+here.
+
+I thus turn to the list seeking advice/help or simply guidance.
+Attached is the current mdadm --examine of all drives, however, my
+attempted assembles have clearly damaged something.
+
+Heres the breakdown of the drives currently in the system (90% sure
+this is correct):
+/dev/sda: OS Hdd, not part of the raid
+/dev/sdb: 1.5TB HDD removed this morning
+/dev/sdc: 3TB added yesterday, replaced /dev/sdg
+/dev/sdd: 2TB HDD, replaced a failed 1.5TB a few years back
+/dev/sde: 1.5TB HDD, has not been replaced, should be part of the array
+/dev/sdf: 3TB HDD, replaced a failed 1.5TB last year
+/dev/sdg: 1.5TB HDD removed yesterday (replaced by /dev/sdc)
+
+My assumption is that I need to try re-creating the array with drives b,c,d,e,f.
+
+Here is the mdadm --assemble --force output for those drives:
+mdadm --assemble --force --verbose /dev/md0 /dev/sdb /dev/sdc /dev/sdd
+/dev/sde /dev/sdf
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdb is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
+mdadm: added /dev/sde to /dev/md0 as 1
+mdadm: added /dev/sdd to /dev/md0 as 2
+mdadm: added /dev/sdb to /dev/md0 as 3 (possibly out of date)
+mdadm: no uptodate device for slot 8 of /dev/md0
+mdadm: added /dev/sdc to /dev/md0 as 5
+mdadm: added /dev/sdf to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 3 drives and 1 spare - not enough to
+start the array.
+
+Where did this all go wrong:
+I believe the 3TB drive that I plugged in this morning came out of a
+Seagate BlackArmor NAS400. It thus likely had other superblock
+information on it which confused mdadm (purely speculative, I'm not
+sure if this is even likely/possible).
+
+I currently have 4 3TB drives spare, however, I do not have any spare
+SATA ports to plug them into. While the data on the raid isn't
+critical, I would be rather sad (and cry for many days) if it
+disappeared.
+
+Any suggestions welcome.
+
+Thanks in advance,
+Marnitz Gray
+
+--e89a8f839d712cd25404fa0e7f0b
+Content-Type: text/plain; charset=US-ASCII; name="raid.status.txt"
+Content-Disposition: attachment; filename="raid.status.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hvjb4tkq0
+
+L2Rldi9zZGE6CiAgIE1CUiBNYWdpYyA6IGFhNTUKUGFydGl0aW9uWzBdIDogICAgMzA3Mjc1MTky
+IHNlY3RvcnMgYXQgICAgICAgICAgIDYzICh0eXBlIDgzKQpQYXJ0aXRpb25bMV0gOiAgICAgIDUz
+MDE0NTAgc2VjdG9ycyBhdCAgICAzMDcyNzUyNTUgKHR5cGUgMDUpCi9kZXYvc2RhMjoKICAgTUJS
+IE1hZ2ljIDogYWE1NQpQYXJ0aXRpb25bMF0gOiAgICAgIDUzMDEzODcgc2VjdG9ycyBhdCAgICAg
+ICAgICAgNjMgKHR5cGUgODIpCi9kZXYvc2RiOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwog
+ICAgICAgIFZlcnNpb24gOiAwLjkwLjAwCiAgICAgICAgICAgVVVJRCA6IGQxNDEzZGIyOjg3Yjdh
+MzEyOmE3ZWJmNzgyOjkxOWE3NjUyCiAgQ3JlYXRpb24gVGltZSA6IFRodSBNYXkgIDcgMDg6MjY6
+MzggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogIFVzZWQgRGV2IFNpemUgOiAxNDY1MTM4
+NDk2ICgxMzk3LjI2IEdpQiAxNTAwLjMwIEdCKQogICAgIEFycmF5IFNpemUgOiA1ODYwNTUzOTg0
+ICg1NTg5LjA2IEdpQiA2MDAxLjIxIEdCKQogICBSYWlkIERldmljZXMgOiA1CiAgVG90YWwgRGV2
+aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMAoKICAgIFVwZGF0ZSBUaW1lIDogRnJpIE1heSAy
+MyAwNjoyNDowMiAyMDE0CiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6
+IDQKV29ya2luZyBEZXZpY2VzIDogNQogRmFpbGVkIERldmljZXMgOiAxCiAgU3BhcmUgRGV2aWNl
+cyA6IDEKICAgICAgIENoZWNrc3VtIDogMzBhNGM4MmMgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50
+cyA6IDExNjcxOTMKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCiAgICAgQ2h1bmsg
+U2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3Rh
+dGUKdGhpcyAgICAgMyAgICAgICA4ICAgICAgIDY0ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZQoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDQ4ICAgICAgICAwICAgICAgYWN0
+aXZlIHN5bmMgICAvZGV2L3NkZAogICAxICAgICAxICAgICAgIDggICAgICAgMzIgICAgICAgIDEg
+ICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDIgICAgIDIgICAgICAgOCAgICAgICAxNiAg
+ICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIKICAgMyAgICAgMyAgICAgICA4ICAg
+ICAgIDY0ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZQogICA0ICAgICA0ICAg
+ICAgIDAgICAgICAgIDAgICAgICAgIDQgICAgICBmYXVsdHkgcmVtb3ZlZAogICA1ICAgICA1ICAg
+ICAgIDggICAgICAgODAgICAgICAgIDUgICAgICBzcGFyZSAgIC9kZXYvc2RmCi9kZXYvc2RjOgog
+ICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwLjkwLjAwCiAgICAg
+ICAgICAgVVVJRCA6IGQxNDEzZGIyOjg3YjdhMzEyOmE3ZWJmNzgyOjkxOWE3NjUyCiAgQ3JlYXRp
+b24gVGltZSA6IFRodSBNYXkgIDcgMDg6MjY6MzggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlk
+NQogIFVzZWQgRGV2IFNpemUgOiAxNDY1MTM4NDk2ICgxMzk3LjI2IEdpQiAxNTAwLjMwIEdCKQog
+ICAgIEFycmF5IFNpemUgOiA1ODYwNTUzOTg0ICg1NTg5LjA2IEdpQiA2MDAxLjIxIEdCKQogICBS
+YWlkIERldmljZXMgOiA1CiAgVG90YWwgRGV2aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMAoK
+ICAgIFVwZGF0ZSBUaW1lIDogRnJpIE1heSAyMyAwOTo0MTowNCAyMDE0CiAgICAgICAgICBTdGF0
+ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6IDMKV29ya2luZyBEZXZpY2VzIDogNAogRmFpbGVk
+IERldmljZXMgOiAyCiAgU3BhcmUgRGV2aWNlcyA6IDEKICAgICAgIENoZWNrc3VtIDogMzBhNGY2
+ODMgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDExNjcxOTkKCiAgICAgICAgIExheW91dCA6
+IGxlZnQtc3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFq
+b3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgNSAgICAgICA4ICAgICAgIDgw
+ICAgICAgICA1ICAgICAgc3BhcmUgICAvZGV2L3NkZgoKICAgMCAgICAgMCAgICAgICA4ICAgICAg
+IDQ4ICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZAogICAxICAgICAxICAgICAg
+IDggICAgICAgMzIgICAgICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDIgICAg
+IDIgICAgICAgOCAgICAgICAxNiAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIK
+ICAgMyAgICAgMyAgICAgICAwICAgICAgICAwICAgICAgICAzICAgICAgZmF1bHR5IHJlbW92ZWQK
+ICAgNCAgICAgNCAgICAgICAwICAgICAgICAwICAgICAgICA0ICAgICAgZmF1bHR5IHJlbW92ZWQK
+ICAgNSAgICAgNSAgICAgICA4ICAgICAgIDgwICAgICAgICA1ICAgICAgc3BhcmUgICAvZGV2L3Nk
+ZgovZGV2L3NkZDoKICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDog
+MC45MC4wMAogICAgICAgICAgIFVVSUQgOiBkMTQxM2RiMjo4N2I3YTMxMjphN2ViZjc4Mjo5MTlh
+NzY1MgogIENyZWF0aW9uIFRpbWUgOiBUaHUgTWF5ICA3IDA4OjI2OjM4IDIwMDkKICAgICBSYWlk
+IExldmVsIDogcmFpZDUKICBVc2VkIERldiBTaXplIDogMTQ2NTEzODQ5NiAoMTM5Ny4yNiBHaUIg
+MTUwMC4zMCBHQikKICAgICBBcnJheSBTaXplIDogNTg2MDU1Mzk4NCAoNTU4OS4wNiBHaUIgNjAw
+MS4yMSBHQikKICAgUmFpZCBEZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiA1ClByZWZlcnJl
+ZCBNaW5vciA6IDAKCiAgICBVcGRhdGUgVGltZSA6IEZyaSBNYXkgMjMgMDk6NDE6MDQgMjAxNAog
+ICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiAzCldvcmtpbmcgRGV2aWNl
+cyA6IDQKIEZhaWxlZCBEZXZpY2VzIDogMgogIFNwYXJlIERldmljZXMgOiAxCiAgICAgICBDaGVj
+a3N1bSA6IDMwYTRmNjQzIC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAxMTY3MTk5CgogICAg
+ICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAg
+IE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDIgICAg
+ICAgOCAgICAgICAxNiAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIKCiAgIDAg
+ICAgIDAgICAgICAgOCAgICAgICA0OCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGQKICAgMSAgICAgMSAgICAgICA4ICAgICAgIDMyICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkYwogICAyICAgICAyICAgICAgIDggICAgICAgMTYgICAgICAgIDIgICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RiCiAgIDMgICAgIDMgICAgICAgMCAgICAgICAgMCAgICAgICAgMyAg
+ICAgIGZhdWx0eSByZW1vdmVkCiAgIDQgICAgIDQgICAgICAgMCAgICAgICAgMCAgICAgICAgNCAg
+ICAgIGZhdWx0eSByZW1vdmVkCiAgIDUgICAgIDUgICAgICAgOCAgICAgICA4MCAgICAgICAgNSAg
+ICAgIHNwYXJlICAgL2Rldi9zZGYKL2Rldi9zZGU6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZj
+CiAgICAgICAgVmVyc2lvbiA6IDAuOTAuMDAKICAgICAgICAgICBVVUlEIDogZDE0MTNkYjI6ODdi
+N2EzMTI6YTdlYmY3ODI6OTE5YTc2NTIKICBDcmVhdGlvbiBUaW1lIDogVGh1IE1heSAgNyAwODoy
+NjozOCAyMDA5CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1CiAgVXNlZCBEZXYgU2l6ZSA6IDE0NjUx
+Mzg0OTYgKDEzOTcuMjYgR2lCIDE1MDAuMzAgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDU4NjA1NTM5
+ODQgKDU1ODkuMDYgR2lCIDYwMDEuMjEgR0IpCiAgIFJhaWQgRGV2aWNlcyA6IDUKICBUb3RhbCBE
+ZXZpY2VzIDogNQpQcmVmZXJyZWQgTWlub3IgOiAwCgogICAgVXBkYXRlIFRpbWUgOiBGcmkgTWF5
+IDIzIDA5OjQxOjA0IDIwMTQKICAgICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2Vz
+IDogMwpXb3JraW5nIERldmljZXMgOiA0CiBGYWlsZWQgRGV2aWNlcyA6IDIKICBTcGFyZSBEZXZp
+Y2VzIDogMQogICAgICAgQ2hlY2tzdW0gOiAzMGE0ZjY1MSAtIGNvcnJlY3QKICAgICAgICAgRXZl
+bnRzIDogMTE2NzE5OQoKICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVu
+ayBTaXplIDogNjRLCgogICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBT
+dGF0ZQp0aGlzICAgICAxICAgICAgIDggICAgICAgMzIgICAgICAgIDEgICAgICBhY3RpdmUgc3lu
+YyAgIC9kZXYvc2RjCgogICAwICAgICAwICAgICAgIDggICAgICAgNDggICAgICAgIDAgICAgICBh
+Y3RpdmUgc3luYyAgIC9kZXYvc2RkCiAgIDEgICAgIDEgICAgICAgOCAgICAgICAzMiAgICAgICAg
+MSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMKICAgMiAgICAgMiAgICAgICA4ICAgICAgIDE2
+ICAgICAgICAyICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYgogICAzICAgICAzICAgICAgIDAg
+ICAgICAgIDAgICAgICAgIDMgICAgICBmYXVsdHkgcmVtb3ZlZAogICA0ICAgICA0ICAgICAgIDAg
+ICAgICAgIDAgICAgICAgIDQgICAgICBmYXVsdHkgcmVtb3ZlZAogICA1ICAgICA1ICAgICAgIDgg
+ICAgICAgODAgICAgICAgIDUgICAgICBzcGFyZSAgIC9kZXYvc2RmCi9kZXYvc2RmOgogICAgICAg
+ICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwLjkwLjAwCiAgICAgICAgICAg
+VVVJRCA6IGQxNDEzZGIyOjg3YjdhMzEyOmE3ZWJmNzgyOjkxOWE3NjUyCiAgQ3JlYXRpb24gVGlt
+ZSA6IFRodSBNYXkgIDcgMDg6MjY6MzggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogIFVz
+ZWQgRGV2IFNpemUgOiAxNDY1MTM4NDk2ICgxMzk3LjI2IEdpQiAxNTAwLjMwIEdCKQogICAgIEFy
+cmF5IFNpemUgOiA1ODYwNTUzOTg0ICg1NTg5LjA2IEdpQiA2MDAxLjIxIEdCKQogICBSYWlkIERl
+dmljZXMgOiA1CiAgVG90YWwgRGV2aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMAoKICAgIFVw
+ZGF0ZSBUaW1lIDogRnJpIE1heSAyMyAwOTo0MTowNCAyMDE0CiAgICAgICAgICBTdGF0ZSA6IGNs
+ZWFuCiBBY3RpdmUgRGV2aWNlcyA6IDMKV29ya2luZyBEZXZpY2VzIDogNAogRmFpbGVkIERldmlj
+ZXMgOiAyCiAgU3BhcmUgRGV2aWNlcyA6IDEKICAgICAgIENoZWNrc3VtIDogMzBhNGY2NWYgLSBj
+b3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDExNjcxOTkKCiAgICAgICAgIExheW91dCA6IGxlZnQt
+c3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBN
+aW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgMCAgICAgICA4ICAgICAgIDQ4ICAgICAg
+ICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZAoKICAgMCAgICAgMCAgICAgICA4ICAgICAg
+IDQ4ICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZAogICAxICAgICAxICAgICAg
+IDggICAgICAgMzIgICAgICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDIgICAg
+IDIgICAgICAgOCAgICAgICAxNiAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIK
+ICAgMyAgICAgMyAgICAgICAwICAgICAgICAwICAgICAgICAzICAgICAgZmF1bHR5IHJlbW92ZWQK
+ICAgNCAgICAgNCAgICAgICAwICAgICAgICAwICAgICAgICA0ICAgICAgZmF1bHR5IHJlbW92ZWQK
+ICAgNSAgICAgNSAgICAgICA4ICAgICAgIDgwICAgICAgICA1ICAgICAgc3BhcmUgICAvZGV2L3Nk
+ZgovZGV2L3NkZzoKICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDog
+MC45MC4wMAogICAgICAgICAgIFVVSUQgOiBkMTQxM2RiMjo4N2I3YTMxMjphN2ViZjc4Mjo5MTlh
+NzY1MgogIENyZWF0aW9uIFRpbWUgOiBUaHUgTWF5ICA3IDA4OjI2OjM4IDIwMDkKICAgICBSYWlk
+IExldmVsIDogcmFpZDUKICBVc2VkIERldiBTaXplIDogMTQ2NTEzODQ5NiAoMTM5Ny4yNiBHaUIg
+MTUwMC4zMCBHQikKICAgICBBcnJheSBTaXplIDogNTg2MDU1Mzk4NCAoNTU4OS4wNiBHaUIgNjAw
+MS4yMSBHQikKICAgUmFpZCBEZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiA1ClByZWZlcnJl
+ZCBNaW5vciA6IDAKCiAgICBVcGRhdGUgVGltZSA6IFRodSBNYXkgMjIgMTQ6MDc6MzkgMjAxNAog
+ICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA1CldvcmtpbmcgRGV2aWNl
+cyA6IDUKIEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVj
+a3N1bSA6IDMwYTNkZmI1IC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAxMTY2NzU5CgogICAg
+ICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAg
+IE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDQgICAg
+ICAgOCAgICAgICAxNiAgICAgICAgNCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIKCiAgIDAg
+ICAgIDAgICAgICAgOCAgICAgICA2NCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGUKICAgMSAgICAgMSAgICAgICA4ICAgICAgIDQ4ICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZAogICAyICAgICAyICAgICAgIDggICAgICAgMzIgICAgICAgIDIgICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RjCiAgIDMgICAgIDMgICAgICAgOCAgICAgICA4MCAgICAgICAgMyAg
+ICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGYKICAgNCAgICAgNCAgICAgICA4ICAgICAgIDE2ICAg
+ICAgICA0ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYgo=
+--e89a8f839d712cd25404fa0e7f0b--
