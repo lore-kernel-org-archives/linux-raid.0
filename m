@@ -1,33 +1,32 @@
 From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Seeking help fixing a failed array
-Date: Sat, 24 May 2014 11:36:10 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1405241129020.29282@uplift.swm.pp.se>
-References: <CAGcAkBKnp8J5zGuwgVv98zMrDLVPZWAi57rqpgLW6VByAcm94g@mail.gmail.com>
+Date: Sat, 24 May 2014 11:39:36 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1405241137470.29282@uplift.swm.pp.se>
+References: <CAGcAkBKnp8J5zGuwgVv98zMrDLVPZWAi57rqpgLW6VByAcm94g@mail.gmail.com> <alpine.DEB.2.02.1405241129020.29282@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGcAkBKnp8J5zGuwgVv98zMrDLVPZWAi57rqpgLW6VByAcm94g@mail.gmail.com>
+In-Reply-To: <alpine.DEB.2.02.1405241129020.29282@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
 To: Marnitz Gray <marnitz@xdesigns.co.za>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 23 May 2014, Marnitz Gray wrote:
+On Sat, 24 May 2014, Mikael Abrahamsson wrote:
 
-> Hello good people of linux-raid.
+> Your output seems to indicate that you have one drive with an event 
+> count that is 6 events off the others. This most likely means it's safe 
+> to use --assemble --force in order to make this get accepted.
 
-Your output seems to indicate that you have one drive with an event count 
-that is 6 events off the others. This most likely means it's safe to use 
---assemble --force in order to make this get accepted.
+Actually, it seems you have two drives with event counts that are off, one 
+more than the other. Make sure you only add the drives with the highest 
+event count, then add the last drive later so it gets sync:ed from the 
+other drives. The event count isn't that much off (I believe it was 40 
+events) even on the most differing one, so even with that your filesystem 
+shouldn't be too much at risk.
 
-You didnt' state if you had space for more drives in your system, but you 
-seem to have a recent mdadm and hopefully then a recent kernel, hook up 
-the new drive to the system at the same time as the old one, add it as a 
-spare, and use mdadm --replace. Then it'll online-replace the drive you 
-want to change without degrading the array. This is a lot safer procedure.
-
-Also consider going RAID6 if at all possible, you could do that when 
-you're done replaceing all the drives with 3TB ones.
+Until you have everything under control I wouldn't write the filesystem 
+read/write though, to avoid further problems...
 
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
