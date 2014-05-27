@@ -1,106 +1,170 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Rebuilding a RAID5 array after drive (hardware) failure
-Date: Tue, 27 May 2014 09:03:23 +1000
-Message-ID: <20140527090323.2f68b473@notabene.brown>
-References: <CAG__1a52uiLi8PAm6deHyx14yQ8JfOmaiOicEn86kYBqJG_1HQ@mail.gmail.com>
-	<20140522144905.50511c1a@notabene.brown>
-	<CAG__1a4-MxTjiFMt4n3YsK0DxLvcT2raadcPLvKDuOam9JgPXw@mail.gmail.com>
-	<CAG__1a7QFWguQ_YDzDCLO1xM9DMe8bZs-p97-Jc0CYCjpdusXg@mail.gmail.com>
-	<20140526104640.0895483c@notabene.brown>
-	<CAG__1a6yGqmU3CD4HV5uSFL8h3Eu5=mK03kjOp1sw2xhsdhSyg@mail.gmail.com>
+From: Steve Lorimer <steve.lorimer@gmail.com>
+Subject: "not enough operational devices (2/4 failed)" Can I recover?
+Date: Tue, 27 May 2014 05:54:26 -0400
+Message-ID: <CAE-NPOiJ7=u1OJ8sHQS3zu4UU9a-bWEL+2PQ7Qa7PdLHCE4bMA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HCC_WISRYnf09nhNV3Xu8=W"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a6yGqmU3CD4HV5uSFL8h3Eu5=mK03kjOp1sw2xhsdhSyg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Duffield <forumscollective@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/HCC_WISRYnf09nhNV3Xu8=W
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi all
 
-On Mon, 26 May 2014 21:57:15 +0200 George Duffield
-<forumscollective@gmail.com> wrote:
+Looking for some advice please.
 
-> >> - Can it be renamed to md0?
-> >
-> > Sure.
-> > If this is being assembled by the initrd, then either the initrd must s=
-et the
-> > hostname to "fileserver" before mdadm gets to assemble the array, or the
-> > initrd must contain an /etc/mdadm.conf which lists "/dev/md0" has havin=
-g the
-> > UUID of this array.
-> >
-> > NeilBrown
-> >
->=20
-> I'm learning a few things the hard way here e.g. I had saved my
-> mdadm.conf to a file in the home folder of the default user so I could
-> reference it later if needs be - no flash, no file.  Next time email
-> it to myself.
->=20
-> If I were to run sudo update-initramfs -u would that restore things or
-> pretty much make md127 permanent.
+My raid array failed today. I'm a total raid noob, so I'm really not
+sure what the right thing to do is, and am worried I'll unnecessarily
+lose data.
 
-I can't see.  Each distro has their own 'initramfs' building code.
-What I would probably do is:
-  - run update-initramfs
-    mkdir /tmp/i; cd /tmp/i; zcat /boot/initramfs | cpio -idv
-      # note, filename might be wrong
-  - inspect /tmp/i/etc/mdadm.conf and  fstab etc etc and make sure
-    "/dev/md0" is used and "/dev/md127" isn't.=20
-  - make changes as necessary
-  - find | cpio -oc | gzip --best > /boot/initramfs.test
+I had to boot using a Live CD in order to get this information, so not
+sure if some valuable information is missing.
 
-then figure a way to boot from /boot/initramfs.test
+Here are results from running some commands listed on the
+RAID_recovery page of the raid wiki
 
->=20
-> In the event update-initramfs -u is not the way to go, it there an
-> example of a good mdadm.conf floating about that I can reference to
-> make the necessary changes?
+$ dmesg | grep raid
 
-It is really worth making the effort to read the man page and understand how
-to make your own /etc/mdadm.conf
+[  185.301031] raid6: int64x1   1675 MB/s
+[  185.318020] raid6: int64x2   2171 MB/s
+[  185.335017] raid6: int64x4   1511 MB/s
+[  185.352039] raid6: int64x8   1425 MB/s
+[  185.369003] raid6: sse2x1    3851 MB/s
+[  185.386012] raid6: sse2x2    4746 MB/s
+[  185.403004] raid6: sse2x4    6378 MB/s
+[  185.403006] raid6: using algorithm sse2x4 (6378 MB/s)
+[  185.681200] md: raid6 personality registered for level 6
+[  185.681203] md: raid5 personality registered for level 5
+[  185.681205] md: raid4 personality registered for level 4
+[  185.681519] md/raid:md127: device sdb1 operational as raid disk 2
+[  185.681521] md/raid:md127: device sdc1 operational as raid disk 0
+[  185.682031] md/raid:md127: allocated 4312kB
+[  185.682077] md/raid:md127: not enough operational devices (2/4 failed)
+[  185.682386] md/raid:md127: failed to run raid set.
 
-   mdadm -Ds
+$ mdadm --examine /dev/sd[a-z]1
 
-is a good start, but should be examined and edited to make sure it matches
-your requirements.
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 4dc53f9d:f0c55279:a9cb9592:a59607c9
+           Name : NAS:0
+  Creation Time : Sat Sep 10 12:37:59 2011
+     Raid Level : raid5
+   Raid Devices : 4
 
-All you really need is:
+ Avail Dev Size : 3907027053 (1863.02 GiB 2000.40 GB)
+     Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : e8369dbc:bf591efa:f0ccc359:9d164ec8
 
-    ARRAY /dev/md0 UUID=3Dwhatever:xxxxxxx......
+    Update Time : Tue May 27 04:54:37 2014
+       Checksum : a17a88c0 - correct
+         Events : 1026050
 
-That is it.
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-NeilBrown
+   Device Role : Active device 2
+   Array State : A.A. ('A' == active, '.' == missing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 4dc53f9d:f0c55279:a9cb9592:a59607c9
+           Name : NAS:0
+  Creation Time : Sat Sep 10 12:37:59 2011
+     Raid Level : raid5
+   Raid Devices : 4
 
+ Avail Dev Size : 3907027053 (1863.02 GiB 2000.40 GB)
+     Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 78221e11:02acc1c8:c4eb01bf:f0852cbe
 
+    Update Time : Tue May 27 04:54:37 2014
+       Checksum : 1fbb54b8 - correct
+         Events : 1026050
 
---Sig_/HCC_WISRYnf09nhNV3Xu8=W
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+         Layout : left-symmetric
+     Chunk Size : 512K
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+   Device Role : Active device 0
+   Array State : A.A. ('A' == active, '.' == missing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 4dc53f9d:f0c55279:a9cb9592:a59607c9
+           Name : NAS:0
+  Creation Time : Sat Sep 10 12:37:59 2011
+     Raid Level : raid5
+   Raid Devices : 4
 
-iQIVAwUBU4PIPDnsnt1WYoG5AQLBvw/8D8pO91MrYKMv442eNgY6xkGsilEFzfAW
-oiO4aVWqxuhp+1JXBJthGleLlObYtZTRuMXPsksTtWXxIyuL2Is+meo+3CMzjcH/
-h33iXfN0yqFbwkSjW+wCxPxsCtJfBKh1F4vGBu3j35z+71OQieMokwcjAcd3FB8+
-VEuG04SOMfW2Ke53Wn+AE9GHfDcqFFjTM8rII9+mHZHlzf5iCQalvQ+RC57QyEjA
-qDrSqcsUglGux6LaIP/lJpp4HerNPsEaGRzTgs916Gy1HMNLvNt6jMGctYpQ+vgx
-WlxINHwILKYMLTZW0cZjZnrkkB0GIWbLO+UUqgs4aAZY647oOqqBFK1ku0y/fEHc
-EQzLWMJv0aXimBgACktHB4nJ1Lqv49nu28Wt9ZFBOCnBEesjwJLEr3MVI6+II5pg
-Q+ZUqrl/wY6bHzlUOUY+ruSD1vXYanUcCSctSC2Q0lCfYJ5q5DmTryj97zwHh7vx
-OsvgdWnh7DuYE6Yp2liw/2IwASi9+Gz/anMNDPZ8TFKTic96GfU4u9sVKGsnSQCJ
-jPzfEocaIYKoWxsM1HqC6TA7uBq7aDRceIgo/8VU1srd5J1yH7b2jQAC+7awRCnN
-7KagWESGRXYdSEr3PMNPAhprUlvr76Nk9VM9NHXO+3PQQX35ehTlYjTWPNmJOzUr
-ujOCI/vKCww=
-=TfOq
------END PGP SIGNATURE-----
+ Avail Dev Size : 3907027053 (1863.02 GiB 2000.40 GB)
+     Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : fd282483:d2647838:f6b9897e:c216616c
 
---Sig_/HCC_WISRYnf09nhNV3Xu8=W--
+    Update Time : Mon Oct  7 04:21:22 2013
+       Checksum : 6df566b8 - correct
+         Events : 32621
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 4dc53f9d:f0c55279:a9cb9592:a59607c9
+           Name : NAS:0
+  Creation Time : Sat Sep 10 12:37:59 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907027053 (1863.02 GiB 2000.40 GB)
+     Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : e84657dd:0882a7c8:5918b191:2fc3da02
+
+    Update Time : Tue May 27 04:46:12 2014
+       Checksum : 33ab6fe - correct
+         Events : 1026039
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAA. ('A' == active, '.' == missing)
+
+$ mdadm --examine /dev/sd[a-z]1 | egrep 'Event|/dev/sd'
+
+/dev/sdb1:
+         Events : 1026050
+/dev/sdc1:
+         Events : 1026050
+/dev/sdd1:
+         Events : 32621
+/dev/sde1:
+         Events : 1026039
+
+Any and all advice greatly appreciated.
+
+TIA
+Steve
