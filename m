@@ -1,43 +1,81 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/1] driver/md/block: Alloc space for member flush_rq
-Date: Wed, 28 May 2014 11:03:14 -0400
-Message-ID: <20140528150314.GB25249@redhat.com>
-References: <1401258172-17381-1-git-send-email-zhen-hual@hp.com>
+From: George Duffield <forumscollective@gmail.com>
+Subject: Re: Understanding raid array status: Active vs Clean
+Date: Wed, 28 May 2014 20:05:18 +0200
+Message-ID: <CAG__1a6CODiNW__exOuG+6V4eiejKyq8EBXSPeF66Cn6WS=kfQ@mail.gmail.com>
+References: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1401258172-17381-1-git-send-email-zhen-hual@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 28 2014 at  2:22am -0400,
-Li, Zhen-Hua <zhen-hual@hp.com> wrote:
+Anyone able to provide some insight please?
 
-> This patch is trying to fix a kernel crash bug.
-> 
-> When kernel boots on a HP large system, it crashes.
-> The reason is when blk_rq_init is called, the second parameter rq , which
-> is a member as q->flush_rq, is NULL. Kernel does not allocate space for it.
-> 
-> This fix adds an alloc for flush_rq member when request_queue is created in
-> struct mapped_device *alloc_dev(int minor);
-> 
-> Bug Details:
-> Error message:
-> 
-> [   62.931942] BUG: unable to handle kernel NULL pointer dereference at (null)
-> [   62.931949] IP: [<ffffffff812b3f30>] blk_rq_init+0x40/0x160^M
-> [   62.931949] PGD 0 ^M
-> [   62.931951] Oops: 0002 [#1] SMP
-
-You didn't specify which kernel you're running.  But this was fixed for
-v3.15-rc6 via linux.git commit 7982e90c3a5 ("block: fix q->flush_rq NULL
-pointer crash on dm-mpath flush").  And then there was the follow-on fix
-from linux.git commit 708f04d2ab ("block: free q->flush_rq in
-blk_init_allocated_queue error paths")
-
-So all this is to say: Nack to your patch, we've already fixed the issue
-differently.
+On Mon, May 26, 2014 at 10:08 PM, George Duffield
+<forumscollective@gmail.com> wrote:
+> I recently created a raid 5 array under Arch Linux running on a HP
+> Microserver using pretty much the same topography as I do under Ubuntu
+> Server.  The creation process went fine and the array is accessible,
+> however, from the outset it's only ever reported status as Active
+> rather than Clean.
+>
+> After creating the array, watch -d cat /proc/mdstat returned:
+>
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sda1[0] sdc1[2] sde1[5] sdb1[1] sdd1[3]
+>       11720536064 blocks super 1.2 level 5, 512k chunk, algorithm 2
+> [5/5] [UUUUU]
+>       bitmap: 2/22 pages [8KB], 65536KB chunk
+>
+> unused devices: <none>
+>
+> which to me pretty much looks like the array sync completed successfully.
+>
+> I then updated the config file, assembled the array and formatted it using:
+> mdadm --detail --scan >> /etc/mdadm.conf
+> mdadm --assemble --scan
+> mkfs.ext4 -v -L offsitestorage -b 4096 -E stride=128,stripe-width=512 /dev/md0
+>
+> mdadm --detail /dev/md0 returns:
+>
+> /dev/md0:
+>         Version : 1.2
+>   Creation Time : Thu Apr 17 01:13:52 2014
+>      Raid Level : raid5
+>      Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
+>   Used Dev Size : 2930134016 (2794.39 GiB 3000.46 GB)
+>    Raid Devices : 5
+>   Total Devices : 5
+>     Persistence : Superblock is persistent
+>
+>   Intent Bitmap : Internal
+>
+>     Update Time : Thu Apr 17 18:55:01 2014
+>           State : active
+>  Active Devices : 5
+> Working Devices : 5
+>  Failed Devices : 0
+>   Spare Devices : 0
+>
+>          Layout : left-symmetric
+>      Chunk Size : 512K
+>
+>            Name : audioliboffsite:0  (local to host audioliboffsite)
+>            UUID : aba348c6:8dc7b4a7:4e282ab5:40431aff
+>          Events : 11306
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8        1        0      active sync   /dev/sda1
+>        1       8       17        1      active sync   /dev/sdb1
+>        2       8       33        2      active sync   /dev/sdc1
+>        3       8       49        3      active sync   /dev/sdd1
+>        5       8       65        4      active sync   /dev/sde1
+>
+> So, I'm now left wondering why the state of the array isn't "clean"?
+> Is it normal for arrays to show a state of "active" instead of clean
+> under Arch - is it simply a matter of Arch is packaged with a more
+> recent version of mdadm than Ubuntu Server?
+>
+> Thx
