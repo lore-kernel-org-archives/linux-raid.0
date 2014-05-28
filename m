@@ -1,55 +1,85 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: Which RAID do you recommend for home use?
-Date: Tue, 27 May 2014 14:16:08 -0500
-Message-ID: <CAJvUf-BVTNd9jK3oXyX3uUAj9x6F0j+Aqg4UCrRUmdSPsGdRiA@mail.gmail.com>
-References: <b4ea2d0e-15bc-40b0-b836-aab134b0e0b7@email.android.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Eivind Sarto <eivindsarto@gmail.com>
+Subject: [patch 1/1] raid5: avoid release list until last reference of the stripe
+Date: Tue, 27 May 2014 18:35:11 -0700
+Message-ID: <CC9129A7-569A-4065-A14B-C03A9E6DD091@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: multipart/mixed; boundary="Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b4ea2d0e-15bc-40b0-b836-aab134b0e0b7@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "L. M. J" <linuxmasterjedi@free.fr>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Tue, May 27, 2014 at 1:47 PM, L. M. J <linuxmasterjedi@free.fr> wrote:
-> Since I've broken my RAID 5, I can restart my raid array from scratch. I have 3 disks, but I can get another. I could go to RAID 6 or 10. That's for personal use, mostly store static data. Hardware is very common...
-> Is it worth to lose one extra capacity drive for my needs? Which RAID will fit my needs?
 
-How big are the drives?  What are your goals?  Any performance requirements?
+--Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Although rule #1 is "RAID is not backup", many people, particular in
-simple home server situations, use RAID as an excuse for not having
-proper backups.  The real intent behind RAID is nonstop availability,
-which is usually not required in a home environment (in other words,
-if your home RAID goes down, how much will it cost you until you can
-bring it back up?).  That said, in the absence of real backups, I
-suppose RAID is better than no-RAID (with the caveat that there are
-still plenty of scenarios where permanent data loss is a real
-possibility).
+This simple patch will reduce the number of times stripes are queued on =
+the release_list.
+Currently stripes are queued more than twice as many times on this list =
+as they need to be.
 
-For home use and "mostly static data", raid-10 is probably not what
-you want.  If you are using RAID as a proxy for real backups, more
-redundancy is better than less, so I'd buy another drive and go with
-RAID-6.  Also consider, if these are large (>2 TB) consumer-grade
-drives, then rebuild times will be quite long.  During rebuild, your
-drives are stressed heavily, so the possibility of failure goes up
-considerably.  Again, more redundancy is your friend.
+-eivind=
 
-On the other hand, if you have real backups, and can tolerate the
-downtime, RAID-5 is probably adequate.
+--Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE
+Content-Disposition: attachment;
+	filename=raid5_avoid_release_list_until_last_reference.patch
+Content-Type: application/octet-stream;
+	x-unix-mode=0644;
+	name="raid5_avoid_release_list_until_last_reference.patch"
+Content-Transfer-Encoding: 7bit
 
-Depending on your particular needs, there are another couple
-possibilities that might interest you:
+Author: Eivind Sarto <esarto@fusionio.com>
+Date: Fri Apr 11 12:54:33 2014
 
-snapraid - http://snapraid.sourceforge.net/ - like raid-5 or raid-6 (I
-believe it now supports even more levels of parity), but not in "real
-time".  The idea is that your data is mostly static (think large media
-collection), so it doesn't make sense to have extra drives spinning
-all the time for on-the-fly parity calculations.  Just update your
-parity data as-needed (either by hand or e.g. nightly cron job).
+raid5: avoid release list until last reference of the stripe
 
-zfs - http://zfsonlinux.org/ - arguably a "competitor" to linux md, it
-does provide "raid-z3", which is zfs's branding for triple-parity raid
-(zfs raid-z1 is basically raid-5, raid-z2 is effectively raid-6).
-Gives you a little more protection if you're going without backups.
+The (lockless) release_list reduces lock contention, but there is excessive
+queueing and dequeuing of stripes on this list.  A stripe will currently be
+queued on the release_list with a stripe reference count > 1.  This can cause
+the raid5 kernel thread(s) to dequeue the stripe and decrement the refcount
+without doing any other useful processing of the stripe.  The are two cases
+when the stripe can be put on the release_list multiple times before it is
+actually handled by the kernel thread(s).
+1) make_request() activates the stripe processing in 4k increments.  When a
+   write request is large enough to span multiple chunks of a stripe_head, the
+   first 4k chunk adds the stripe to the plug list.  The next 4k chunk that is
+   processed for the same stripe puts the stripe on the release_list with a
+   refcount=2.  This can cause the kernel thread to process and decrement the
+   stripe before the stripe us unplugged, which again will put it back on the
+   release_list.
+2) Whenever IO is scheduled on a stripe (pre-read and/or write), the stripe
+   refcount is set to the number of active IO (for each chunk).  The stripe is
+   released as each IO complete, and can be queued and dequeued multiple times
+   on the release_list, until its refcount finally reached zero.
+
+This simple patch will ensure a stripe is only queued on the release_list when
+its refcount=1 and is ready to be handled by the kernel thread(s).  I added some
+instrumentation to raid5 and counted the number of times striped were queued on
+the release_list for a variety of write IO sizes.  Without this patch the number
+of times stripes got queued on the release_list was 100-500% higher than with
+the patch.  The excess queuing will increase with the IO size.  The patch also
+improved throughput by 5-10%.
+
+Signed-off-by: Eivind Sarto <esarto@fusionio.com>
+
+Index: current/drivers/md/raid5.c
+===================================================================
+--- current.orig/drivers/md/raid5.c
++++ current/drivers/md/raid5.c
+@@ -423,6 +423,11 @@ static void release_stripe(struct stripe
+ 	int hash;
+ 	bool wakeup;
+ 
++	/* Avoid release_list until the last reference.
++	 */
++	if (atomic_add_unless(&sh->count, -1, 1))
++		return;
++
+ 	if (unlikely(!conf->mddev->thread) ||
+ 		test_and_set_bit(STRIPE_ON_RELEASE_LIST, &sh->state))
+ 		goto slow_path;
+
+--Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE--
