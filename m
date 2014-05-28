@@ -1,72 +1,135 @@
-From: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Subject: [PATCH 1/1] driver/md/block: Alloc space for member flush_rq
-Date: Wed, 28 May 2014 14:22:52 +0800
-Message-ID: <1401258172-17381-1-git-send-email-zhen-hual@hp.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [patch 1/3]raid5: adjust order of some operations in
+ handle_stripe
+Date: Wed, 28 May 2014 18:09:09 +0800
+Message-ID: <20140528100909.GA17675@kernel.org>
+References: <20140522112431.GA10509@kernel.org>
+ <20140528125937.5555437e@notabene.brown>
+ <20140528034507.GA1650@kernel.org>
+ <20140528145435.3713a236@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140528145435.3713a236@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch is trying to fix a kernel crash bug.
+On Wed, May 28, 2014 at 02:54:35PM +1000, NeilBrown wrote:
+> On Wed, 28 May 2014 11:45:07 +0800 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Wed, May 28, 2014 at 12:59:37PM +1000, NeilBrown wrote:
+> > > On Thu, 22 May 2014 19:24:31 +0800 Shaohua Li <shli@kernel.org> wrote:
+> > > 
+> > > > 
+> > > > This is to revert ef5b7c69b7a1b8b8744a6168b6f. handle_stripe_clean_event()
+> > > > handles finished stripes, which really should be the first thing to do. The
+> > > > original changelog says checking reconstruct_state should be the first as
+> > > > handle_stripe_clean_event can clear some dev->flags and impact checking
+> > > > reconstruct_state code path. It's unclear to me why this happens, because I
+> > > > thought written finish and reconstruct_state equals to *_result can't happen in
+> > > > the same time.
+> > > 
+> > > "unclear to me" "I thought" are sufficient to justify a change, though they
+> > > are certainly sufficient to ask a question.
+> > > 
+> > > Are you asking a question or submitting a change?
+> > > 
+> > > You may well be correct that if reconstruct_state is not
+> > > reconstruct_state_idle, then handle_stripe_clean_event cannot possible be
+> > > called.  In that case, maybe we should change the code flow to make that more
+> > > obvious, but certainly the changelog comment should be clear about exactly
+> > > why.
+> > 
+> > I'm sorry, it's more like a question. I really didn't understand why we have
+> > ef5b7c69b7a1b8b8744a6168b6f, so I'm not 100% sure about. It would be great you
+> > can help share a hint.
+> 
+> It's a while ago and I don't remember, but I suspect that I added that patch
+> because handle_stripe_clean_event was about to change to clear R5_UPTODATE,
+> and this code which was previously *after* handle_stripe_clean_event tested
+> R5_UPTODATE (and could BUG if it wasn't set).
+> 
+> You may well be right that the two pieces of code cannot both run in the one
+> invocation of handle_stripe().  I haven't analysed the code closely to be
+> sure, but on casual reflection it seems likely.  However we always need to be
+> careful of races in unusual situations.
 
-When kernel boots on a HP large system, it crashes.
-The reason is when blk_rq_init is called, the second parameter rq , which
-is a member as q->flush_rq, is NULL. Kernel does not allocate space for it.
+Sure. The whole piece of code of handle_stripe is hard to understand.
 
-This fix adds an alloc for flush_rq member when request_queue is created in
-struct mapped_device *alloc_dev(int minor);
+> If that is correct, and if there are two (or more) different situations in
+> which handle_stripe runs, maybe one after IO has completed and one after
+> reconstruction has completed, and one when new devices have been added,
+> then there might be value in clearly delineating these so we don't bother
+> testing for cases that cannot happen.
 
-Bug Details:
-Error message:
+Since run_io will increase stripe counter, if IO is running, the stripe can't
+be handled again. So either IO is finished, handle_stripe handles the finished
+IO (handle_stripe_clean_event) and then handle new requests in the stripe.
+Doing handle_stripe_clean_event first is ok. So could another reconstruction be
+scheduled before the IO? It sounds no. Either the stripe has towrite, so there
+there is overlap, new bio to the stripe will wait. Or stripe has LOCKED set, so
+reconstruction can't be rescheduled.
 
-[   62.931942] BUG: unable to handle kernel NULL pointer dereference at (null)
-[   62.931949] IP: [<ffffffff812b3f30>] blk_rq_init+0x40/0x160^M
-[   62.931949] PGD 0 ^M
-[   62.931951] Oops: 0002 [#1] SMP
+> 
+> If it is not correct, then your proposed change might be dangerous.
+> 
+> 
+> >  
+> > > > 
+> > > > I also moved checking reconstruct_state code path after handle_stripe_dirtying.
+> > > > If that code sets reconstruct_state to reconstruct_state_idle, the order change
+> > > > will make us miss one handle_stripe_dirtying. But the stripe will be eventually
+> > > > handled again when written is finished.
+> > > 
+> > > You haven't said here why this patch is a good thing, only why it isn't
+> > > obviously bad.  I really need some justification to make a change and you
+> > > haven't provided any, at least not in this changelog comment.
+> > 
+> > ok, I'll add more about this.
+> >  
+> > > Maybe we need a completely different approach.
+> > > Instead of repeatedly shuffling code inside handle_stripe(), how about we put
+> > > all of handle_stripe inside a loop which runs as long as STRIPE_HANDLE is set
+> > > and sh->count == 1.
+> > > ie.
+> > > 
+> > > 	if (test_and_set_bit_lock(STRIPE_ACTIVE, &sh->state)) {
+> > > 		/* already being handled, ensure it gets handled
+> > > 		 * again when current action finishes */
+> > > 		set_bit(STRIPE_HANDLE, &sh->state);
+> > > 		return;
+> > > 	}
+> > > 
+> > >         do {
+> > > 	        clear_bit(STRIPE_HANDLE, &sh->state);
+> > >                 __handle_stripe(sh);
+> > >         } while (test_bit(STRIPE_HANDLE, &sh->state)
+> > >                  && atomic_read(&sh->count) == 1);
+> > > 	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
+> > > 
+> > > 
+> > > where the rest of the current handle_stripe() goes in to __handle_stripe().
+> > > 
+> > > Would that address your performance concerns, or is there still too much
+> > > overhead?
+> > 
+> > Let me try. One issue here is we still have massive cache miss when checking
+> > stripe/dev state. I suppose this doesn't help but data should prove.
+> 
+> That would be great - thanks.
+> If you can identify exactly where the cache misses are causing a problem, we
+> might be able to optimise around that.
 
-[   62.932019] Call Trace:
-[   62.932025]  [<ffffffff812bc5b8>] blk_flush_complete_seq+0x2d8/0x300
-[   62.932027]  [<ffffffff812bca55>] blk_insert_flush+0x1e5/0x250
-[   62.932029]  [<ffffffff812b3038>] __elv_add_request+0x1d8/0x2d0
-[   62.932031]  [<ffffffff812ba630>] blk_flush_plug_list+0x140/0x230
-[   62.932033]  [<ffffffff812baab4>] blk_finish_plug+0x14/0x40
-[   62.932041]  [<ffffffffa0311e0c>] _xfs_buf_ioapply+0x2fc/0x3d0 [xfs]
-[   62.932053]  [<ffffffffa036e63f>] ? xlog_bdstrat+0x1f/0x50 [xfs]
-[   62.932061]  [<ffffffffa0313716>] xfs_buf_iorequest+0x46/0x90 [xfs]
-[   62.932071]  [<ffffffffa036e63f>] xlog_bdstrat+0x1f/0x50 [xfs]
-[   62.932080]  [<ffffffffa0370385>] xlog_sync+0x265/0x450 [xfs]
-[   62.932090]  [<ffffffffa0370602>] xlog_state_release_iclog+0x92/0xb0 [xfs]
-[   62.932099]  [<ffffffffa03713ba>] _xfs_log_force+0x15a/0x290 [xfs]
-[   62.932108]  [<ffffffffa0371516>] xfs_log_force+0x26/0x80 [xfs]
-[   62.932117]  [<ffffffffa0371594>] xfs_log_worker+0x24/0x50 [xfs]
-[   62.932122]  [<ffffffff8108ce8b>] process_one_work+0x17b/0x460
-[   62.932125]  [<ffffffff8108dc5b>] worker_thread+0x11b/0x400
-[   62.932126]  [<ffffffff8108db40>] ? rescuer_thread+0x400/0x400
-[   62.932130]  [<ffffffff81094ca1>] kthread+0xe1/0x100
-[   62.932133]  [<ffffffff81094bc0>] ? kthread_create_on_node+0x1a0/0x1a0
-[   62.932140]  [<ffffffff8162ae3c>] ret_from_fork+0x7c/0xb0
-[   62.932141]  [<ffffffff81094bc0>] ? kthread_create_on_node+0x1a0/0x1a0
+I tried. It's slightly better than without any change, but still not as good as
+adjusting the order (which cuts the run times of handle_stripe). But I then hit
+a quick hang with such change, so can't run long time test.
 
-Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
----
- drivers/md/dm.c | 4 ++++
- 1 file changed, 4 insertions(+)
+When checking perf annotate, some obvious cache miss comes from checking
+dev->flags in analysis_stripe and checking conf->disks[]. But it's not an issue
+one hotspot uses > 50% CPU. Other code in handle_stripe contributes overhead.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 455e649..9ff6df6 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1893,6 +1893,10 @@ static struct mapped_device *alloc_dev(int minor)
- 	if (!md->queue)
- 		goto bad_queue;
- 
-+	md->queue->flush_rq = kzalloc(sizeof(struct request), GFP_KERNEL);
-+	if (!md->queue->flush_rq)
-+		goto bad_disk;
-+
- 	dm_init_md_queue(md);
- 
- 	md->disk = alloc_disk(1);
--- 
-2.0.0-rc0
+Thanks,
+Shaohua
