@@ -1,85 +1,57 @@
-From: Eivind Sarto <eivindsarto@gmail.com>
-Subject: [patch 1/1] raid5: avoid release list until last reference of the stripe
-Date: Tue, 27 May 2014 18:35:11 -0700
-Message-ID: <CC9129A7-569A-4065-A14B-C03A9E6DD091@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Type: multipart/mixed; boundary="Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE"
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [patch 1/1] raid5: avoid release list until last reference of
+ the stripe
+Date: Wed, 28 May 2014 12:01:13 +1000
+Message-ID: <20140528120113.7545de1a@notabene.brown>
+References: <CC9129A7-569A-4065-A14B-C03A9E6DD091@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/wSX4Exq4841ox9rDL85U.yx"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CC9129A7-569A-4065-A14B-C03A9E6DD091@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: Eivind Sarto <eivindsarto@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE
+--Sig_/wSX4Exq4841ox9rDL85U.yx
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
 
-This simple patch will reduce the number of times stripes are queued on =
-the release_list.
-Currently stripes are queued more than twice as many times on this list =
-as they need to be.
+On Tue, 27 May 2014 18:35:11 -0700 Eivind Sarto <eivindsarto@gmail.com> wro=
+te:
 
--eivind=
+> This simple patch will reduce the number of times stripes are queued on t=
+he release_list.
+> Currently stripes are queued more than twice as many times on this list a=
+s they need to be.
+>=20
+> -eivind
 
---Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE
-Content-Disposition: attachment;
-	filename=raid5_avoid_release_list_until_last_reference.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="raid5_avoid_release_list_until_last_reference.patch"
-Content-Transfer-Encoding: 7bit
+Applied, thanks.
 
-Author: Eivind Sarto <esarto@fusionio.com>
-Date: Fri Apr 11 12:54:33 2014
+NeilBrown
 
-raid5: avoid release list until last reference of the stripe
+--Sig_/wSX4Exq4841ox9rDL85U.yx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-The (lockless) release_list reduces lock contention, but there is excessive
-queueing and dequeuing of stripes on this list.  A stripe will currently be
-queued on the release_list with a stripe reference count > 1.  This can cause
-the raid5 kernel thread(s) to dequeue the stripe and decrement the refcount
-without doing any other useful processing of the stripe.  The are two cases
-when the stripe can be put on the release_list multiple times before it is
-actually handled by the kernel thread(s).
-1) make_request() activates the stripe processing in 4k increments.  When a
-   write request is large enough to span multiple chunks of a stripe_head, the
-   first 4k chunk adds the stripe to the plug list.  The next 4k chunk that is
-   processed for the same stripe puts the stripe on the release_list with a
-   refcount=2.  This can cause the kernel thread to process and decrement the
-   stripe before the stripe us unplugged, which again will put it back on the
-   release_list.
-2) Whenever IO is scheduled on a stripe (pre-read and/or write), the stripe
-   refcount is set to the number of active IO (for each chunk).  The stripe is
-   released as each IO complete, and can be queued and dequeued multiple times
-   on the release_list, until its refcount finally reached zero.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-This simple patch will ensure a stripe is only queued on the release_list when
-its refcount=1 and is ready to be handled by the kernel thread(s).  I added some
-instrumentation to raid5 and counted the number of times striped were queued on
-the release_list for a variety of write IO sizes.  Without this patch the number
-of times stripes got queued on the release_list was 100-500% higher than with
-the patch.  The excess queuing will increase with the IO size.  The patch also
-improved throughput by 5-10%.
+iQIVAwUBU4VDaTnsnt1WYoG5AQJaAw/+JG531ERphXjMs5qpKjuaW9j/XPeW09Bl
+wtooyQRnyunhXDHO4V54OAiA50hh442MOJl5XEOK19O+8wx/ZKETXKVUU+yZx93/
+NQlXocsrqsZGo8ahimraHAskJ1kdIaLG76HStv3pRBZktr3J8dJFS7v0fcJxqN9p
+1qosKFnC8KWDIFCs0sx4ytTWI8RESAWpKIWqeaLMNv7VF5rIRBY+QGKtp2NFcOpU
+CihScDcIE3crpDld2U4ph6Jmvrb78Ts3YxyUx84bcvzO9jz/kwKq5KOFmUdPY7eB
+6Mh9D/XGQF5Vrufv1fz46+DPCt4ontFAQkc2q3DqyXoHUp1uPN/s0csc5r2YNSkw
+wv9a8y6mkg0X8VGKhAfyPSO/PP1V3aK+y9x1gEx1hxr8ai5CJnMV1zZJizUIgnRy
+HLLRf1hUCahjBHLJy9bvoQkrwXtYWxCKmXFSw9eL4REM2B/z6m85cfMBcEhHjOTc
+QMHsIOMgBSaEMNxMXSwVYwbKjcYnQnVlgozAanB5hsZBw/JPAduonDhFJrpAEtV1
+o/wFwZx8nJgGLm9zf1oJHLnxE4cPvXnxGsKMOaKgcOBUXWQ6pt2AjxjArt2jMJi9
+zJm/cYtLqTP3PlbnJugSmQCWOkNN+OP6zi3s81ChM5eRYX8CoQAiHM/isx80GK3a
+VbjwAN8ZxFk=
+=bk2n
+-----END PGP SIGNATURE-----
 
-Signed-off-by: Eivind Sarto <esarto@fusionio.com>
-
-Index: current/drivers/md/raid5.c
-===================================================================
---- current.orig/drivers/md/raid5.c
-+++ current/drivers/md/raid5.c
-@@ -423,6 +423,11 @@ static void release_stripe(struct stripe
- 	int hash;
- 	bool wakeup;
- 
-+	/* Avoid release_list until the last reference.
-+	 */
-+	if (atomic_add_unless(&sh->count, -1, 1))
-+		return;
-+
- 	if (unlikely(!conf->mddev->thread) ||
- 		test_and_set_bit(STRIPE_ON_RELEASE_LIST, &sh->state))
- 		goto slow_path;
-
---Apple-Mail=_C2A89D08-A665-4BD9-B2AD-AAC01360C2FE--
+--Sig_/wSX4Exq4841ox9rDL85U.yx--
