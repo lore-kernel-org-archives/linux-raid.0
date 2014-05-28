@@ -1,72 +1,72 @@
-From: linuxmasterjedi@free.fr
-Subject: Re: Which RAID do you recommend for home use?
-Date: Wed, 28 May 2014 08:10:33 +0200 (CEST)
-Message-ID: <1402139037.9078673.1401257433030.JavaMail.root@zimbra32-e6.priv.proxad.net>
-References: <CAJvUf-BVTNd9jK3oXyX3uUAj9x6F0j+Aqg4UCrRUmdSPsGdRiA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJvUf-BVTNd9jK3oXyX3uUAj9x6F0j+Aqg4UCrRUmdSPsGdRiA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>, linux-raid@vger.kernel.org
+From: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Subject: [PATCH 1/1] driver/md/block: Alloc space for member flush_rq
+Date: Wed, 28 May 2014 14:22:52 +0800
+Message-ID: <1401258172-17381-1-git-send-email-zhen-hual@hp.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>
 List-Id: linux-raid.ids
 
-Hi,
+This patch is trying to fix a kernel crash bug.
 
-> ----- Mail original -----
-> De: "Matt Garman" <matthew.garman@gmail.com>
-> =C3=80: "L. M. J" <linuxmasterjedi@free.fr>
-> Cc: "Mdadm" <linux-raid@vger.kernel.org>
-> Envoy=C3=A9: Mardi 27 Mai 2014 21:16:08
-> Objet: Re: Which RAID do you recommend for home use?
+When kernel boots on a HP large system, it crashes.
+The reason is when blk_rq_init is called, the second parameter rq , which
+is a member as q->flush_rq, is NULL. Kernel does not allocate space for it.
 
-> How big are the drives?  What are your goals?  Any performance requir=
-ements?
-Got 3 TB drives.
-My  goals : tolerate a drive fail, most important stored data : family =
-pictures!
-Performance requirements : not the main target
-Got backup : Yes, on a USB drive and on LTO2 tape (yes, for home use !)
+This fix adds an alloc for flush_rq member when request_queue is created in
+struct mapped_device *alloc_dev(int minor);
 
+Bug Details:
+Error message:
 
+[   62.931942] BUG: unable to handle kernel NULL pointer dereference at (null)
+[   62.931949] IP: [<ffffffff812b3f30>] blk_rq_init+0x40/0x160^M
+[   62.931949] PGD 0 ^M
+[   62.931951] Oops: 0002 [#1] SMP
 
-=46or home use and "mostly static data", raid-10 is probably not what
-you want.  If you are using RAID as a proxy for real backups, more
-redundancy is better than less, so I'd buy another drive and go with
-RAID-6.  Also consider, if these are large (>2 TB) consumer-grade
-drives, then rebuild times will be quite long.  During rebuild, your
-drives are stressed heavily, so the possibility of failure goes up
-considerably.  Again, more redundancy is your friend.
+[   62.932019] Call Trace:
+[   62.932025]  [<ffffffff812bc5b8>] blk_flush_complete_seq+0x2d8/0x300
+[   62.932027]  [<ffffffff812bca55>] blk_insert_flush+0x1e5/0x250
+[   62.932029]  [<ffffffff812b3038>] __elv_add_request+0x1d8/0x2d0
+[   62.932031]  [<ffffffff812ba630>] blk_flush_plug_list+0x140/0x230
+[   62.932033]  [<ffffffff812baab4>] blk_finish_plug+0x14/0x40
+[   62.932041]  [<ffffffffa0311e0c>] _xfs_buf_ioapply+0x2fc/0x3d0 [xfs]
+[   62.932053]  [<ffffffffa036e63f>] ? xlog_bdstrat+0x1f/0x50 [xfs]
+[   62.932061]  [<ffffffffa0313716>] xfs_buf_iorequest+0x46/0x90 [xfs]
+[   62.932071]  [<ffffffffa036e63f>] xlog_bdstrat+0x1f/0x50 [xfs]
+[   62.932080]  [<ffffffffa0370385>] xlog_sync+0x265/0x450 [xfs]
+[   62.932090]  [<ffffffffa0370602>] xlog_state_release_iclog+0x92/0xb0 [xfs]
+[   62.932099]  [<ffffffffa03713ba>] _xfs_log_force+0x15a/0x290 [xfs]
+[   62.932108]  [<ffffffffa0371516>] xfs_log_force+0x26/0x80 [xfs]
+[   62.932117]  [<ffffffffa0371594>] xfs_log_worker+0x24/0x50 [xfs]
+[   62.932122]  [<ffffffff8108ce8b>] process_one_work+0x17b/0x460
+[   62.932125]  [<ffffffff8108dc5b>] worker_thread+0x11b/0x400
+[   62.932126]  [<ffffffff8108db40>] ? rescuer_thread+0x400/0x400
+[   62.932130]  [<ffffffff81094ca1>] kthread+0xe1/0x100
+[   62.932133]  [<ffffffff81094bc0>] ? kthread_create_on_node+0x1a0/0x1a0
+[   62.932140]  [<ffffffff8162ae3c>] ret_from_fork+0x7c/0xb0
+[   62.932141]  [<ffffffff81094bc0>] ? kthread_create_on_node+0x1a0/0x1a0
 
-On the other hand, if you have real backups, and can tolerate the
-downtime, RAID-5 is probably adequate.
+Signed-off-by: Li, Zhen-Hua <zhen-hual@hp.com>
+---
+ drivers/md/dm.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Sound like RAID5 is still the way to go for me then !
-
-
-
-Depending on your particular needs, there are another couple
-possibilities that might interest you:
-
-snapraid - http://snapraid.sourceforge.net/ - like raid-5 or raid-6 (I
-believe it now supports even more levels of parity), but not in "real
-time".  The idea is that your data is mostly static (think large media
-collection), so it doesn't make sense to have extra drives spinning
-all the time for on-the-fly parity calculations.  Just update your
-parity data as-needed (either by hand or e.g. nightly cron job).
-
-zfs - http://zfsonlinux.org/ - arguably a "competitor" to linux md, it
-does provide "raid-z3", which is zfs's branding for triple-parity raid
-(zfs raid-z1 is basically raid-5, raid-z2 is effectively raid-6).
-Gives you a little more protection if you're going without backups.
-
-I would like to stay on basic md array, to be able to rebuilt it from a=
- sysresccd or so...
-
-Thanks !
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 455e649..9ff6df6 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1893,6 +1893,10 @@ static struct mapped_device *alloc_dev(int minor)
+ 	if (!md->queue)
+ 		goto bad_queue;
+ 
++	md->queue->flush_rq = kzalloc(sizeof(struct request), GFP_KERNEL);
++	if (!md->queue->flush_rq)
++		goto bad_disk;
++
+ 	dm_init_md_queue(md);
+ 
+ 	md->disk = alloc_disk(1);
+-- 
+2.0.0-rc0
