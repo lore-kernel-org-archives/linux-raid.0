@@ -1,68 +1,19 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] DM RAID: fix a couple integer overflows
-Date: Thu, 29 May 2014 11:23:23 +0300
-Message-ID: <20140529082323.GA9209@mwanda>
+From: "Kong Hui" <huik@long.com.hk>
+Subject: Get back to me
+Date: Thu, 29 May 2014 16:36:50 -0700
+Message-ID: <20140529233555.6639FEF4675__4664.8675729104$1401410148$gmane$org@tintin.portobello.school.nz>
+Reply-To: <konghui2014@yeah.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-My static checker complains that if "num_raid_params" is UINT_MAX then
-the "if (num_raid_params + 1 > argc) {" check doesn't work as intended.
+I am a bank director from Hong Kong, I want you to be my partner in a
+business project of mutual benefit. Get back to me if interested.
 
-The other change is that I moved the "if (argc != (num_raid_devs * 2))"
-condition forward a few lines so it was before the call to
-context_alloc().  If we had an integer overflow inside that function
-then it would lead to an immediate crash.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Static checker stuff.  Not tested.
-
-diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
-index 4880b69..e0d53fe 100644
---- a/drivers/md/dm-raid.c
-+++ b/drivers/md/dm-raid.c
-@@ -1189,7 +1189,7 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 	argv++;
- 
- 	/* Skip over RAID params for now and find out # of devices */
--	if (num_raid_params + 1 > argc) {
-+	if (num_raid_params >= argc) {
- 		ti->error = "Arguments do not agree with counts given";
- 		return -EINVAL;
- 	}
-@@ -1200,6 +1200,12 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 		return -EINVAL;
- 	}
- 
-+	argc -= num_raid_params + 1; /* +1: we already have num_raid_devs */
-+	if (argc != (num_raid_devs * 2)) {
-+		ti->error = "Supplied RAID devices does not match the count given";
-+		return -EINVAL;
-+	}
-+
- 	rs = context_alloc(ti, rt, (unsigned)num_raid_devs);
- 	if (IS_ERR(rs))
- 		return PTR_ERR(rs);
-@@ -1208,16 +1214,8 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 	if (ret)
- 		goto bad;
- 
--	ret = -EINVAL;
--
--	argc -= num_raid_params + 1; /* +1: we already have num_raid_devs */
- 	argv += num_raid_params + 1;
- 
--	if (argc != (num_raid_devs * 2)) {
--		ti->error = "Supplied RAID devices does not match the count given";
--		goto bad;
--	}
--
- 	ret = dev_parms(rs, argv);
- 	if (ret)
- 		goto bad;
+Thank you,
+Kong Hui.
