@@ -1,119 +1,206 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Understanding raid array status: Active vs Clean
-Date: Thu, 29 May 2014 15:16:58 +1000
-Message-ID: <20140529151658.3bfc97e5@notabene.brown>
-References: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
+Subject: Re: How to identify a failed md array
+Date: Thu, 29 May 2014 15:18:51 +1000
+Message-ID: <20140529151851.2508bdb6@notabene.brown>
+References: <20140526200711.000030e2@localhost>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_N=5KXkNfUef72fVkkL0ESH"; protocol="application/pgp-signature"
+ boundary="Sig_/iXGuE5U=Z0FAXX+w5+8tFhP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
+In-Reply-To: <20140526200711.000030e2@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Duffield <forumscollective@gmail.com>
+To: Sebastian Herbszt <herbszt@gmx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/_N=5KXkNfUef72fVkkL0ESH
+--Sig_/iXGuE5U=Z0FAXX+w5+8tFhP
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 26 May 2014 22:08:40 +0200 George Duffield
-<forumscollective@gmail.com> wrote:
+On Mon, 26 May 2014 20:07:11 +0200 Sebastian Herbszt <herbszt@gmx.de> wrote:
 
-> I recently created a raid 5 array under Arch Linux running on a HP
-> Microserver using pretty much the same topography as I do under Ubuntu
-> Server.  The creation process went fine and the array is accessible,
-> however, from the outset it's only ever reported status as Active
-> rather than Clean.
+> Hello,
 >=20
-> After creating the array, watch -d cat /proc/mdstat returned:
->=20
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sda1[0] sdc1[2] sde1[5] sdb1[1] sdd1[3]
->       11720536064 blocks super 1.2 level 5, 512k chunk, algorithm 2
-> [5/5] [UUUUU]
->       bitmap: 2/22 pages [8KB], 65536KB chunk
->=20
-> unused devices: <none>
->=20
-> which to me pretty much looks like the array sync completed successfully.
->=20
-> I then updated the config file, assembled the array and formatted it usin=
-g:
-> mdadm --detail --scan >> /etc/mdadm.conf
-> mdadm --assemble --scan
-> mkfs.ext4 -v -L offsitestorage -b 4096 -E stride=3D128,stripe-width=3D512=
- /dev/md0
->=20
-> mdadm --detail /dev/md0 returns:
+> I am wondering how to identify a failed md array.
+> Lets assume the following array
 >=20
 > /dev/md0:
 >         Version : 1.2
->   Creation Time : Thu Apr 17 01:13:52 2014
->      Raid Level : raid5
->      Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
->   Used Dev Size : 2930134016 (2794.39 GiB 3000.46 GB)
->    Raid Devices : 5
->   Total Devices : 5
+>   Creation Time : Mon May 26 19:10:59 2014
+>      Raid Level : raid1
+>      Array Size : 10176 (9.94 MiB 10.42 MB)
+>   Used Dev Size : 10176 (9.94 MiB 10.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
 >     Persistence : Superblock is persistent
 >=20
->   Intent Bitmap : Internal
->=20
->     Update Time : Thu Apr 17 18:55:01 2014
->           State : active
->  Active Devices : 5
-> Working Devices : 5
+>     Update Time : Mon May 26 19:10:59 2014
+>           State : clean
+>  Active Devices : 2
+> Working Devices : 2
 >  Failed Devices : 0
 >   Spare Devices : 0
 >=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->            Name : audioliboffsite:0  (local to host audioliboffsite)
->            UUID : aba348c6:8dc7b4a7:4e282ab5:40431aff
->          Events : 11306
+>            Name : test:0  (local to host test)
+>            UUID : cac8fd48:44219a96:5de7e757:4e21a3e2
+>          Events : 17
 >=20
 >     Number   Major   Minor   RaidDevice State
->        0       8        1        0      active sync   /dev/sda1
->        1       8       17        1      active sync   /dev/sdb1
->        2       8       33        2      active sync   /dev/sdc1
->        3       8       49        3      active sync   /dev/sdd1
->        5       8       65        4      active sync   /dev/sde1
+>        0     254        0        0      active sync   /dev/dm-0
+>        1     254        1        1      active sync   /dev/dm-1
 >=20
-> So, I'm now left wondering why the state of the array isn't "clean"?
-> Is it normal for arrays to show a state of "active" instead of clean
-> under Arch - is it simply a matter of Arch is packaged with a more
-> recent version of mdadm than Ubuntu Server?
+> with
+>=20
+> /sys/block/md0/md/array_state:clean
+> /sys/block/md0/md/dev-dm-0/state:in_sync
+> /sys/block/md0/md/dev-dm-1/state:in_sync
+>=20
+> and
+>=20
+> disk0: 0 20480 linear 7:0 0
+> disk1: 0 20480 linear 7:1 0
+>=20
+> If dm-0 gets changed to "disk0: 0 20480 error" and we read from the
+> array (dd if=3D/dev/md0 count=3D1 iflag=3Ddirect of=3D/dev/null) the brok=
+en
+> disk gets detected by md:
+>=20
+> [84688.483607] md/raid1:md0: dm-0: rescheduling sector 0
+> [84688.483654] md/raid1:md0: redirecting sector 0 to other mirror: dm-1
+> [84688.483670] md: super_written gets error=3D-5, uptodate=3D0
+> [84688.483672] md/raid1:md0: Disk failure on dm-0, disabling device.
+> md/raid1:md0: Operation continuing on 1 devices.
+> [84688.483676] md: super_written gets error=3D-5, uptodate=3D0
+> [84688.494174] RAID1 conf printout:
+> [84688.494178]  --- wd:1 rd:2
+> [84688.494181]  disk 0, wo:1, o:0, dev:dm-0
+> [84688.494182]  disk 1, wo:0, o:1, dev:dm-1
+> [84688.494183] RAID1 conf printout:
+> [84688.494184]  --- wd:1 rd:2
+> [84688.494184]  disk 1, wo:0, o:1, dev:dm-1
+>=20
+> /dev/md0:
+>         Version : 1.2
+>   Creation Time : Mon May 26 19:10:59 2014
+>      Raid Level : raid1
+>      Array Size : 10176 (9.94 MiB 10.42 MB)
+>   Used Dev Size : 10176 (9.94 MiB 10.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Mon May 26 19:27:41 2014
+>           State : clean, degraded
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+>=20
+>            Name : test:0  (local to host test)
+>            UUID : cac8fd48:44219a96:5de7e757:4e21a3e2
+>          Events : 20
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       0        0        0      removed
+>        1     254        1        1      active sync   /dev/dm-1
+>=20
+>        0     254        0        -      faulty   /dev/dm-0
+>=20
+> md0 : active raid1 dm-1[1] dm-0[0](F)
+>       10176 blocks super 1.2 [2/1] [_U]
+>=20
+> /sys/block/md0/md/array_state:clean
+> /sys/block/md0/md/dev-dm-0/state:faulty,write_error
+> /sys/block/md0/md/dev-dm-1/state:in_sync
+> /sys/block/md0/md/degraded:1
+>=20
+> However if I also change dm-1 to "disk1: 0 20480 error" and read
+> again there is no visible state change:
+>=20
+> /dev/md0:
+>         Version : 1.2
+>   Creation Time : Mon May 26 19:10:59 2014
+>      Raid Level : raid1
+>      Array Size : 10176 (9.94 MiB 10.42 MB)
+>   Used Dev Size : 10176 (9.94 MiB 10.42 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Mon May 26 19:27:41 2014
+>           State : clean, degraded
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       0        0        0      removed
+>        1     254        1        1      active sync   /dev/dm-1
+>=20
+>        0     254        0        -      faulty   /dev/dm-0
+>=20
+> md0 : active raid1 dm-1[1] dm-0[0](F)
+>       10176 blocks super 1.2 [2/1] [_U]
+>=20
+> /sys/block/md0/md/array_state:clean
+> /sys/block/md0/md/dev-dm-0/state:faulty,write_error
+> /sys/block/md0/md/dev-dm-1/state:in_sync
+> /sys/block/md0/md/degraded:1
+>=20
+> On write to the array we get
+>=20
+> [85498.660247] md: super_written gets error=3D-5, uptodate=3D0
+> [85498.666464] quiet_error: 268 callbacks suppressed
+> [85498.666470] Buffer I/O error on device md0, logical block 2528
+> [85498.666476] Buffer I/O error on device md0, logical block 2528
+> [85498.666486] Buffer I/O error on device md0, logical block 2542
+> [85498.666490] Buffer I/O error on device md0, logical block 2542
+> [85498.666496] Buffer I/O error on device md0, logical block 0
+> [85498.666499] Buffer I/O error on device md0, logical block 0
+> [85498.666508] Buffer I/O error on device md0, logical block 1
+> [85498.666512] Buffer I/O error on device md0, logical block 1
+> [85498.666518] Buffer I/O error on device md0, logical block 2543
+> [85498.666524] Buffer I/O error on device md0, logical block 2543
+> [85498.866388] md: super_written gets error=3D-5, uptodate=3D0
+>=20
+> and the only change is
+>=20
+> /sys/block/md0/md/dev-dm-1/state:in_sync,write_error,want_replacement
+>=20
+> How can I identify a failed array?
+> array_state reports "clean", the last raid member stays "in_sync" and
+> the value in degraded doesn't equal raid_disks.
 
-I doubt there is a difference between Ubuntu and Arch here.
+You know the array is "failed" when you get an IO error.
 
-The array should show "active" in "mdadm --detail" output for 200ms after t=
-he
-last write, and then switch to 'clean'.
-So if you are writing every 100ms, it will always say "active".
+When a RAID1 array gets down to just one drive remaining, it starts acting
+like it is just one drive.
+How do you tell if is single plain ordinary drive is failed?  You get an IO
+error.  ditto with RAID1.
 
 NeilBrown
 
---Sig_/_N=5KXkNfUef72fVkkL0ESH
+--Sig_/iXGuE5U=Z0FAXX+w5+8tFhP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU4bCyjnsnt1WYoG5AQL3exAAttfkoF0aU/P5eX0ZWWk29Dz6vqGnlWug
-aZAjmokz7x2DTmMsgm/vZBZdM7R0x79+nrE2klouZ+SLKSFXXmW3ZONGgTr1crLF
-kDbRcUwqoezx6dgyT1vSsC2FnSTAM5pDHOexirUZ+EpiZcW2grVuwwlKg9yDK7ug
-g2fHqh+XVJeBSGejD3U2EOfXZiIITlz6b0xqBWWNFdGdRLhbDbWeTUx5zUZEaZVI
-fzpYz7qIbCm2vsf9i3JJhfeAcW+rGRObZDDOgFKE6sxfdk9QmecXKHD8OXCpu74c
-9w5VGtgxirbZfTuAbQLNZkWckhL4f2DANiGyC+cpJzloNPa85pe79jVARSGW5b6H
-etRT/VtxQv2B6KSz2CoTfdhgOOKhcR77wsCjJn1Kt7w12a/A3gFkffqc1IU5a6Oa
-uHdERHQFy7Wnc0FerZ9kVlB6k95USbpS7OcW9f0CyRH3wDJYzaLsC+wltzwiCsjd
-RGHlBD51idKfBzWyVar/RdRnGcfx4d3lFaWbxuB1woRxA3pYeRl/vYK0ruGaS7iU
-q8yOnP+sh85rW4go4SZidHBEJW4iypoancICypa6nc/uRHrVtNmSYGS9XktmOfbK
-J+dTIVt7qeJKfLGyzqOSxpm6cm7s3Ojn+Mp93xW0dytJ+YrN4TMfWATE1gs1q6U6
-XB+w2h6SJLQ=
-=IMGb
+iQIVAwUBU4bDOznsnt1WYoG5AQLUnxAAvocbTeTCJj5ARJTVAL+s3zWLs/rK63Pj
+RHcF1Tvl2gc84EWe9+zr1y7Y9/DDjterFsuKCEp9+ad/JV0oZWT1S9Y1vCXgW6vi
+wxyqXAVaW/j2OMT07oXoDrySoVCyV5I1Q6qiUWXH94g4LQ2/WfJ7M0uJc85b4d1O
+p0VaI7bnnwfj/g7Uzw3yiEvOrzvI0+/GidjJtrXK8waYkjouDVf/RhMKgkELpUBi
+PQzMgf0ggaLrVXy3Gh441JDEpS0+gQlFGFAbiweFTcawjhI8wvfw/QUpwipYV6mu
+CKf6oe+0rsx8fB9SFgeiNgw9+fTo74zZBNVehh9C/nwORYNAKSWzpjYrphvM0SLv
+4ytjortF85NHBwJuNDHKpa54QdLp/bBMu3Usj4F8ujLa6GsZlHbrZYGyqLqnEK7N
+dNhmXaIUtOArfF6Gt3EcIBpbkipNXqn2xJwiYpwnFOe139fjcJNs8fRcb87p+Y0G
+ixq61Ro5FE+agvURFbGvi9hOeFYeWiACBZkmyAty00WTgFjb5C+HoZ9cimzHk/+O
+O+b7LyxK6t73tMzcFGSBBZb5xIXNoVFGFhUZZxEsuFzI9VOn+X86kEFtp3xe+If4
+vD1rOwOFxo1sQ3xgUHQnMGMqgAzCURSyMoXPvUP/G5iDeWa2V39JgI/kDGYB/UvN
+Z8/IqL1oF8g=
+=6D+4
 -----END PGP SIGNATURE-----
 
---Sig_/_N=5KXkNfUef72fVkkL0ESH--
+--Sig_/iXGuE5U=Z0FAXX+w5+8tFhP--
