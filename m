@@ -1,69 +1,59 @@
-From: Thomas Leuxner <tlx@leuxner.net>
-Subject: Keep existing slot number after replacing drive
-Date: Fri, 30 May 2014 13:53:26 +0200
-Message-ID: <20140530115326.GB4500@nihlus.leuxner.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="H+4ONPRPur6+Ovig"
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] imsm: retry load_and_parse_mpb if we suspect mdmon has made modifications
+Date: Fri, 30 May 2014 15:18:33 +0200
+Message-ID: <1401455913-28657-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
+If the checksum verification fails in mdadm and mdmon is running, retry
+the load to get a consistent snapshot of the mpb.
 
---H+4ONPRPur6+Ovig
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Based on db575f3b
 
-Hi,
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ super-intel.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-after removing a faulty drive from an array the slot number gets increased =
-for the drive replaced:
+diff --git a/super-intel.c b/super-intel.c
+index f0a7ab5..037c018 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4422,6 +4422,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ {
+ 	struct intel_super *super;
+ 	int rv;
++	int retry;
+ 
+ 	if (test_partition(fd))
+ 		/* IMSM not allowed on partitions */
+@@ -4444,6 +4445,22 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 	}
+ 	rv = load_and_parse_mpb(fd, super, devname, 0);
+ 
++	/* retry the load if we might have raced against mdmon */
++	if (rv == 3) {
++		struct mdstat_ent *mdstat = mdstat_by_component(fd2devnm(fd));
++
++		if (mdmon_running(mdstat->devnm) && getpid() != mdmon_pid(mdstat->devnm)) {
++			for (retry = 0; retry < 3; retry++) {
++				usleep(3000);
++				rv = load_and_parse_mpb(fd, super, devname, 0);
++				if (rv != 3)
++					break;
++			}
++		}
++
++		free_mdstat(mdstat);
++	}
++
+ 	if (rv) {
+ 		if (devname)
+ 			pr_err("Failed to load all information "
+-- 
+1.8.4.5
 
-# mdadm -D /dev/md1
-/dev/md1:
-       Version : 1.2
- Creation Time : Thu May  8 22:42:14 2014
-    Raid Level : raid1
-    Array Size : 979953 (957.15 MiB 1003.47 MB)
- Used Dev Size : 979953 (957.15 MiB 1003.47 MB)
-  Raid Devices : 2
- Total Devices : 2
-   Persistence : Superblock is persistent
-
-   Update Time : Fri May 30 13:26:45 2014
-         State : clean=20
-Active Devices : 2
-Working Devices : 2
-Failed Devices : 0
- Spare Devices : 0
-
-          Name : nihlus:1
-          UUID : dde5fcbe:2f49d417:6b2fd8cf:a0a5a71c
-        Events : 107
-
-   Number   Major   Minor   RaidDevice State
-      0       8        2        0      active sync   /dev/sda2
-      2       8       18        1      active sync   /dev/sdb2
-
-Is there a way to to reuse the old slot (1 in this case) when adding the ne=
-w disk rather than skipping a slot?
-
-Regards
-Thomas
-
---H+4ONPRPur6+Ovig
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlOIcTYACgkQ+meF/S97aXgyUgCeOncFtrSw1rU8q27zPqfkDOVO
-txsAn1679AnGZ5K/jck+mtjY4Kz/F3Gf
-=RHyL
------END PGP SIGNATURE-----
-
---H+4ONPRPur6+Ovig--
