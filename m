@@ -1,45 +1,39 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: How to identify a failed md array
-Date: Sun, 1 Jun 2014 19:23:39 +0200
-Message-ID: <20140601192339.000062d9@localhost>
-References: <20140526200711.000030e2@localhost>
-	<20140529151851.2508bdb6@notabene.brown>
+From: "Andrew Hodgetts" <andrew.hodgetts@btinternet.com>
+Subject: Help fixing broken array after power loss
+Date: Sun, 1 Jun 2014 19:37:07 +0100
+Message-ID: <002001cf7dc8$7e4c3b10$7ae4b130$@btinternet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140529151851.2508bdb6@notabene.brown>
+Content-Language: en-gb
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Sebastian Herbszt <herbszt@gmx.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> 
-> On Mon, 26 May 2014 20:07:11 +0200 Sebastian Herbszt <herbszt@gmx.de> wrote:
-> 
+Hi
 
-[snip]
+I have a challenge!!
+I've been upgrading my array with larger disks, then needed to remove one of
+the disk from the array (long story) so I shrunk the array and was in the
+process of reducing the number of disks when I lost power and have now lost
+the ability to mount the array.
+So I'm now in a state where I don't know if 9 or 10 disks are in the array,
+all I know is it will not start.  Because I've been swapping disks out I
+don't know what order the disks are supposed to be in to re-start the array.
 
-> > How can I identify a failed array?
-> > array_state reports "clean", the last raid member stays "in_sync" and
-> > the value in degraded doesn't equal raid_disks.
-> 
-> You know the array is "failed" when you get an IO error.
-> 
-> When a RAID1 array gets down to just one drive remaining, it starts acting
-> like it is just one drive.
-> How do you tell if is single plain ordinary drive is failed?  You get an IO
-> error.  ditto with RAID1.
-> 
-> NeilBrown
-> 
+Running Mdadm 3.2.5 on debian kernel 3.2.0-4-amd64
 
-Since md knows the current state I hoped it would provide the required
-information for an application to distinguish between degraded and failed
-arrays. Any reason this is not the case?
-This would allow mdadm to not only report "DegradedArray" but also
-"FailedArray". Currently it does not generate any event when the last drive
-fails.
+I can 'start' the array with 9/10 disks (using devices a-j alphabetically)
+but it is not mountable, the filesystem type is 'jbd' when it should be ext4
 
-Sebastian
+What can I do to get this working/what info can I provide so you can help?
+
+Cheers
+Andy
+
+
+
+
+
