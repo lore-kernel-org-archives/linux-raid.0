@@ -1,99 +1,106 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Do not set default 'before.layout' when reshaping from
- RAID4 to RAID4
-Date: Mon, 2 Jun 2014 12:30:21 +1000
-Message-ID: <20140602123021.1184b461@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918CE9@IRSMSX105.ger.corp.intel.com>
+Subject: Re: [PATCH 1/1] md: Do only necessary operations when adding device
+ to RO array
+Date: Mon, 2 Jun 2014 12:34:11 +1000
+Message-ID: <20140602123411.4becb274@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918BF9@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rHDZO4=_6SGxhFBPlqq6FF1"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918CE9@IRSMSX105.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+ boundary="Sig_/xATcL7zslM_AsVrNQ78JuvW"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918BF9@IRSMSX105.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/rHDZO4=_6SGxhFBPlqq6FF1
-Content-Type: text/plain; charset=UTF-8
+--Sig_/xATcL7zslM_AsVrNQ78JuvW
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 30 May 2014 14:38:09 +0000 "Baldysiak, Pawel"
+On Fri, 30 May 2014 13:17:14 +0000 "Baldysiak, Pawel"
 <pawel.baldysiak@intel.com> wrote:
 
-> Commit fdcad551e9a54c4aa8c4b63160b76e2c539a0441
-> brings some changes to reshape process.
-> Setting 'before.layout' when reshaping from RAID4 to another RAID4 is
-> not really necessary.
-> If reshape is restarted 'before.layout' will be compared with
-> 'info->array.layout' in reshape_array(). Changes brought by mentioned
-> commit will cause this comparation return as false, becouse 'array.layout'
-> is always set to 'ALGORITHM_PARITY_N' in analyse_change() for RAID4, so
-> reshape will not be continued after reboot/stop.
-> This patch reverts unnecessary changes.
->=20
-> Signed-off-by: Pawel Baldysiak pawel.baldysiak@intel.com
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->=20
-> ---
-> Grow.c | 1 -
-> 1 file changed, 1 deletion(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 487111e..9dc157a 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1338,7 +1338,6 @@ char *analyse_change(char *devname, struct mdinfo *=
-info, struct reshape *re)
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 switch (re->level) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 case 4:
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 re->before.layout =3D 0;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 re->after.layout =3D=
- 0;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 break;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 case 5:
+> Commit 8313b8e57f55b15e5b7f7fc5d1630bbf686a9a97 changed
+> way of adding device to read-only array. Used routine
+> md_reap_sync_thread() which also trigger finish_reshape(),
+> can break reshape process, if it was restarted.
 
-Applied, thanks.  Though you seem to have forgotten how to make patches
-properly.  That one was totally white-space damaged.
+Exactly how can it break?
+
+This is probably fixed by a couple of patches in my for-next branch which I
+will be sending to Linus shortly.
 
 NeilBrown
 
---Sig_/rHDZO4=_6SGxhFBPlqq6FF1
+
+> This part of function should do only necessary operations, that is:
+> 1) call ->spare_active
+> 2) clear saved_raid_disk if array is no longer degraded
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>=20
+> ---
+> drivers/md/md.c | 10 ++++++----
+> 1 file changed, 6 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 237b7e0..cf073de2 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7820,11 +7820,13 @@ void md_check_recovery(struct mddev *mddev)
+>                                                 * As we only add devices =
+that are already in-sync,
+>                                                 * we can activate the spa=
+res immediately.
+>                                                 */
+> +                                             struct md_rdev *rdev;
+>                                                remove_and_add_spares(mdde=
+v, NULL);
+> -                                              /* There is no thread, but=
+ we need to call
+> -                                              * ->spare_active and clear=
+ saved_raid_disk
+> -                                              */
+> -                                              md_reap_sync_thread(mddev);
+> +                                             mddev->pers->spare_active(m=
+ddev);
+> +                                             rdev_for_each(rdev, mddev)
+> +                                                             if (!mddev-=
+>degraded ||
+> +                                                                 test_bi=
+t(In_sync, &rdev->flags))
+> +                                                                        =
+     rdev->saved_raid_disk =3D -1;
+>                                                clear_bit(MD_RECOVERY_NEED=
+ED, &mddev->recovery);
+>                                                goto unlock;
+>                                }
+> --
+> 1.9.0
+
+
+--Sig_/xATcL7zslM_AsVrNQ78JuvW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU4vhvTnsnt1WYoG5AQKwJxAAkKvtZ/1M2cvxCIusQFZItCbP5Dn4Up6u
-vUA+T6Sl3SByOdQ8c5ABTkNvn5pG2IM5FRxeT9Vygk0i2QLpPOzkDRqiEFQnP7i1
-YHogV0mhaBPgpHH29JKUC/5s6kfmSKsAxi2OsIPq78Zrd+puQRj4rDmYSk5LRZh4
-xNreWDGivwX00UA9w8H0e61G+DHYMkle/X3h7kcbZ9qbAKIu500rQtFX28+rnTVg
-JNr6knHwUz62DmbQIagaxpBgrntODaftQBJsa4XsZYCuI7Px1v+E3k26Gti9RnGn
-1fy/AtgWRUmMVqh9YT6xmatxhA5vzZ9kw8Yxk8zY1D3OBADhalm4wfM7Fc5U821o
-OasurwjcdL26fRO/pl9/yfqPmD/cDlBMhY+HuXoFtYzwTwhad1gCGYtZJI020ogz
-+dJc69/FLau9JOUFp80uHUb9gePTZSXGom6fTpLrRKYYE+a/DqavdrKiG0CI34Xr
-/OiJxyAv8Bk8yzKQXLaRMNh9TZAeenFgxJSOABa4jsaWVUp1b7JfdmLmi4E9bNvv
-tmRTtOQvCwJpAlK3aeT7xmVRZMt/1vaWqsgHoQKy7y93U4E5kbU5O0MSRbzmyMMQ
-fB5nUm7mz4kPO9u4VTwxbse5FLW47vC0punHO8K6AuJwwhFRG/a69xQyc12Gqqqk
-iyyyHDVE+40=
-=dvSm
+iQIVAwUBU4vioznsnt1WYoG5AQJgXw/9ExzeUsgFvJdiXgBTmRUJsEFc65vlyxaa
+QZsjtaKLCdQbb7veIztS/xmxFB7EIQfwXk26MtqDEX98oISOWA37E0ioVPKgLhVH
+7OTHMbDgoua0qEbzbElY990VDwlvov7BetC3pkCHoAUpqh6GRm6V6VyhPU6wrQor
+5XfJHJw00/9bNwBBXs2j+7jhwDSEDIRzt02zLoSSjonuOeSscAFv7bI25oKEc0Qz
+tFqdJ/lrrNsCHT/ONm6ALcDJj5U/NPAYl78m+wQgbMezWo6IPug2u56PMKIBZEoG
+4Z2u35a41GvjEzTrXhnTGk1776w1I1xXlyMwKrlFkcVvOz0tdi+ur3Qwyuw3/Pkk
+gXLnTF7s7bpCbR6h9KGZov8Rlsyeoo8HGg1BBis3ZTDnQ48zHBUW1wBYMwVk3Adm
+snH7Xq3BSVP0CdiuTlrJp3Mzjfbga6IKCW0hwqHOZ0vxNKLT0RPzD3Iz8bisd1sM
+SnJE70DvJDyMEqQM+3JEJQ+t7Ft5fErMdz8xHoo+pAK5Dxloy02UJfaFByVAxrb4
+7/XBvKlBqzK3zDcpAc1HKN6PRszaYrbmIRasyZeGpPGfCURreMBXRuSpqFLDjbck
+SkwGk3dBJ6oN+8fmNscqI0pyT4vfBTazWMrs9I7TiaUZzl3qM4joP94Jc5DPNQ8g
+UML29LwbkTA=
+=Se5W
 -----END PGP SIGNATURE-----
 
---Sig_/rHDZO4=_6SGxhFBPlqq6FF1--
+--Sig_/xATcL7zslM_AsVrNQ78JuvW--
