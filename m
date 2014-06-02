@@ -1,84 +1,69 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] Grow: Do not fork via systemd if freeze_reshape is
- set
-Date: Mon, 2 Jun 2014 12:42:26 +1000
-Message-ID: <20140602124226.31b4c3da@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918D3F@IRSMSX105.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/cyu_fPgWKb.RWpNkqytc49L"; protocol="application/pgp-signature"
+From: Davide Guarisco <guarisco@sbcglobal.net>
+Subject: Recovering RAID set after OS disk failed
+Date: Sun, 1 Jun 2014 22:37:54 -0700
+Message-ID: <7C19F7E4-7354-4C2C-A53E-DA546B569201@sbcglobal.net>
+Mime-Version: 1.0 (Mac OS X Mail 7.2 \(1874\))
+Content-Type: multipart/signed; boundary="Apple-Mail=_DDD354AE-CC19-4705-9221-99761E3BD037"; protocol="application/pgp-signature"; micalg=pgp-sha1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918D3F@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/cyu_fPgWKb.RWpNkqytc49L
-Content-Type: text/plain; charset=UTF-8
+
+--Apple-Mail=_DDD354AE-CC19-4705-9221-99761E3BD037
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-On Fri, 30 May 2014 14:40:11 +0000 "Baldysiak, Pawel"
-<pawel.baldysiak@intel.com> wrote:
+Hello and sorry if this is not the place for a relatively =93newbie=94 =
+question.
 
-> Mdadm should not run 'grow-continue' unit file for container if
-> '--freeze-reshape' argument is passed. Otherwise it will be ignored,
-> and reshape will start anyway.
->=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
-> Grow.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 158a709..487111e 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -3472,7 +3472,7 @@ int reshape_container(char *container, char *devnam=
-e,
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 =C2=A0*/
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 ping_monitor(container);
->=20
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 if (!forked && !check_env("MDADM_NO_SYSTEMCTL"))
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- if (!forked && !freeze_reshape && !check_env("MDADM_NO_SYSTEMCTL"))
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (continue_via_systemd(container))
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
->=20
+Five years ago I built a NAS box running on Ubuntu server then-current =
+version. The NAS has 4 SATA drives (the RAID set) and a PATA system =
+drive (for the OS). Now the system drive has failed (click of death). I =
+believe the that RAID data is still safe and sound, but my question is =
+how to proceed in such a scenario. (I do have a backup but it=92s fairly =
+old). I do not remember exactly how I created the RAID set, other than =
+being with mdadm and probably RAID 5.=20
 
-Applied - thanks.
+I have now replaced the failed PATA drive with a new 32 GB PATA SSD, and =
+installed Ubuntu Server 14.04. The system is up and running and it sees =
+the four SATA drives. I have installed Webmin and I am ready to recover =
+the RAID set.=20
 
-NeilBrown
 
---Sig_/cyu_fPgWKb.RWpNkqytc49L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I read the Wiki and it suggests running a =93permutation=94 Perl script. =
+Is this a reasonable thing to do?=20
+I could not find much information on a case like this in a Goole search, =
+so any help appreciated.=20
+
+
+
+--Apple-Mail=_DDD354AE-CC19-4705-9221-99761E3BD037
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Version: GnuPG/MacGPG2 v2.0.22 (Darwin)
+Comment: GPGTools - http://gpgtools.org
 
-iQIVAwUBU4vkkjnsnt1WYoG5AQLLLRAAm1QYn0WtrixQdtL7X5dkxxKBOXMW0EWq
-cRTfBXvSyEss/efKBitlk8staX3j8Dop+cMUwJ3E53cgArwZq5S+d+Tt7tsAsGbj
-eizSktgaaqaiLobf0ivWUA/3WX1lLxsBzHF/od1WZELwHHrh73sNUMLiWlvXBVPc
-RyxxTw2XtYUz5WfOgKX2N6ddZFOew6bvKwLahGKP35gKgQjFnBKgZc32ljeHqaVw
-vQwIXzSz8Yxr9s1w8H3sgh1XrwgMOdlEPfcYCbh1TUfD9Wg1t3UUofakCrChQx4F
-li6Dqm7mqVuJ7iScIK3s+j+VPiuQwcg2whGiTOEYXvbD6R2DQ9yWeJbIhg1xkBT7
-sCXXdG7q01PE/IF3/R9BPK9qCVedZNmHtTHXXfrHAbLS8NQWuYdpiDzDFivhr3bJ
-n74JCfh83moYj1KScMgbEz7jdVXirxYOqsgxiLuOojqV2YGXC1OTHAzv4wLtRP3L
-o7p+FTz3163S5EBo5q/FwrfNGtM4xbbr5QO/bh6RDaw12QsmlZvvrI81ZmOeClJ2
-nP6asEf44rUxfvv+W8bOIVyGje/85+RAPS9PFEPrCBKMk+vAXz4rnfdFW81MuC/W
-VVrny58yHE/if15X4MO56YtyjNVfKtnDMZORCWdp2SSVsXA1UOMmFCipsBxnfyY7
-4wXxkfCrbTI=
-=6a2E
+iQIcBAEBAgAGBQJTjA2yAAoJEOP6S0R9UICWOIAP/j8gwG80T5phPtWHkySwhMaV
+Fb3WR29dNbECvFWMU9OmeBxOOfrQdbiyL+ODdhk2VN4FbL2CMrjCYBgn97FpRbeM
+uWJJmd/s2b2NM1AO+7/KMDXQMx6HUnfpuYIVNlIM5gjrKCbErUTtuO4YkMxqTJDW
+eM2YpWKDkxxOX2MHTtRVstHsH6ojdP17BqZcZoHI9cLh0l5ATRyA2j4gnQZ8Uqar
+aJkMJ/jsTVPdE2u0pqih0T423Lrf3PJpkmye38HzfhN1HJCj1DwuMNsZwj95qsCC
+fRe7W9QPMc88gozZwfFT0LwvjmAy/bGEdxv+moVF82TWMuk7QOryd4vkCPe7eLxE
+Atc11nQbo6W8leHEeq8Y6TJgzH2nLfkGWMCmbSNGxH61RWU4sr7w7X9+ovRx31Ek
+pCQKdVFz2yUXX3hHJAe+Aie7W1QeHTaq2dqz0UGZZrsWnZhD6oDIw9ToGyzz3fM/
+Xffjh3ZnU8HCWaUn9GKmdLYd+GClZT8tmALk9U+qhyeniS8p6BCXP8WkpwJ5zYDw
+cxk0O77qhX27MJu5Bs59nQ8Pl31H7QjDUJgT8lv9ruN19I9LfvP90ZEDhIZaOku8
+axz10eyQoZSXL6PlrXWxSzBwz+d1bjHMfda7RIyLX7GXlqCaXpFDMJZikhFkb8pM
+NVr9MkV4jtStjpAnw9mn
+=wZ45
 -----END PGP SIGNATURE-----
 
---Sig_/cyu_fPgWKb.RWpNkqytc49L--
+--Apple-Mail=_DDD354AE-CC19-4705-9221-99761E3BD037--
