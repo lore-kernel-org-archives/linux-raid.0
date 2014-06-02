@@ -1,106 +1,111 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] md: Do only necessary operations when adding device
- to RO array
-Date: Mon, 2 Jun 2014 12:34:11 +1000
-Message-ID: <20140602123411.4becb274@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918BF9@IRSMSX105.ger.corp.intel.com>
+Subject: Re: [PATCH] imsm: retry load_and_parse_mpb if we suspect mdmon has
+ made modifications
+Date: Mon, 2 Jun 2014 12:36:56 +1000
+Message-ID: <20140602123656.2e52d529@notabene.brown>
+References: <1401455913-28657-1-git-send-email-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/xATcL7zslM_AsVrNQ78JuvW"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918BF9@IRSMSX105.ger.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+ boundary="Sig_/Vkq=nECyli+5fn/cnLqpX.z"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1401455913-28657-1-git-send-email-artur.paszkiewicz@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
---Sig_/xATcL7zslM_AsVrNQ78JuvW
+--Sig_/Vkq=nECyli+5fn/cnLqpX.z
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 30 May 2014 13:17:14 +0000 "Baldysiak, Pawel"
-<pawel.baldysiak@intel.com> wrote:
+On Fri, 30 May 2014 15:18:33 +0200 Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 
-> Commit 8313b8e57f55b15e5b7f7fc5d1630bbf686a9a97 changed
-> way of adding device to read-only array. Used routine
-> md_reap_sync_thread() which also trigger finish_reshape(),
-> can break reshape process, if it was restarted.
+> If the checksum verification fails in mdadm and mdmon is running, retry
+> the load to get a consistent snapshot of the mpb.
+>=20
+> Based on db575f3b
+>=20
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  super-intel.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>=20
+> diff --git a/super-intel.c b/super-intel.c
+> index f0a7ab5..037c018 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -4422,6 +4422,7 @@ static int load_super_imsm(struct supertype *st, in=
+t fd, char *devname)
+>  {
+>  	struct intel_super *super;
+>  	int rv;
+> +	int retry;
+> =20
+>  	if (test_partition(fd))
+>  		/* IMSM not allowed on partitions */
+> @@ -4444,6 +4445,22 @@ static int load_super_imsm(struct supertype *st, i=
+nt fd, char *devname)
+>  	}
+>  	rv =3D load_and_parse_mpb(fd, super, devname, 0);
+> =20
+> +	/* retry the load if we might have raced against mdmon */
+> +	if (rv =3D=3D 3) {
+> +		struct mdstat_ent *mdstat =3D mdstat_by_component(fd2devnm(fd));
+> +
+> +		if (mdmon_running(mdstat->devnm) && getpid() !=3D mdmon_pid(mdstat->de=
+vnm)) {
+> +			for (retry =3D 0; retry < 3; retry++) {
+> +				usleep(3000);
+> +				rv =3D load_and_parse_mpb(fd, super, devname, 0);
+> +				if (rv !=3D 3)
+> +					break;
+> +			}
+> +		}
 
-Exactly how can it break?
+The only thing you use from mdstat is devnm, and that is the thing you pass=
+ed
+to mdstat_by_component to get mdstat....
 
-This is probably fixed by a couple of patches in my for-next branch which I
-will be sending to Linus shortly.
+Can you just do
+   char *devnm =3D fd2devnm(fd);
+   if (mdmon_running(devnm) && ......)
+
+??
 
 NeilBrown
 
 
-> This part of function should do only necessary operations, that is:
-> 1) call ->spare_active
-> 2) clear saved_raid_disk if array is no longer degraded
->=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->=20
-> ---
-> drivers/md/md.c | 10 ++++++----
-> 1 file changed, 6 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 237b7e0..cf073de2 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7820,11 +7820,13 @@ void md_check_recovery(struct mddev *mddev)
->                                                 * As we only add devices =
-that are already in-sync,
->                                                 * we can activate the spa=
-res immediately.
->                                                 */
-> +                                             struct md_rdev *rdev;
->                                                remove_and_add_spares(mdde=
-v, NULL);
-> -                                              /* There is no thread, but=
- we need to call
-> -                                              * ->spare_active and clear=
- saved_raid_disk
-> -                                              */
-> -                                              md_reap_sync_thread(mddev);
-> +                                             mddev->pers->spare_active(m=
-ddev);
-> +                                             rdev_for_each(rdev, mddev)
-> +                                                             if (!mddev-=
->degraded ||
-> +                                                                 test_bi=
-t(In_sync, &rdev->flags))
-> +                                                                        =
-     rdev->saved_raid_disk =3D -1;
->                                                clear_bit(MD_RECOVERY_NEED=
-ED, &mddev->recovery);
->                                                goto unlock;
->                                }
-> --
-> 1.9.0
+> +
+> +		free_mdstat(mdstat);
+> +	}
+> +
+>  	if (rv) {
+>  		if (devname)
+>  			pr_err("Failed to load all information "
 
 
---Sig_/xATcL7zslM_AsVrNQ78JuvW
+--Sig_/Vkq=nECyli+5fn/cnLqpX.z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU4vioznsnt1WYoG5AQJgXw/9ExzeUsgFvJdiXgBTmRUJsEFc65vlyxaa
-QZsjtaKLCdQbb7veIztS/xmxFB7EIQfwXk26MtqDEX98oISOWA37E0ioVPKgLhVH
-7OTHMbDgoua0qEbzbElY990VDwlvov7BetC3pkCHoAUpqh6GRm6V6VyhPU6wrQor
-5XfJHJw00/9bNwBBXs2j+7jhwDSEDIRzt02zLoSSjonuOeSscAFv7bI25oKEc0Qz
-tFqdJ/lrrNsCHT/ONm6ALcDJj5U/NPAYl78m+wQgbMezWo6IPug2u56PMKIBZEoG
-4Z2u35a41GvjEzTrXhnTGk1776w1I1xXlyMwKrlFkcVvOz0tdi+ur3Qwyuw3/Pkk
-gXLnTF7s7bpCbR6h9KGZov8Rlsyeoo8HGg1BBis3ZTDnQ48zHBUW1wBYMwVk3Adm
-snH7Xq3BSVP0CdiuTlrJp3Mzjfbga6IKCW0hwqHOZ0vxNKLT0RPzD3Iz8bisd1sM
-SnJE70DvJDyMEqQM+3JEJQ+t7Ft5fErMdz8xHoo+pAK5Dxloy02UJfaFByVAxrb4
-7/XBvKlBqzK3zDcpAc1HKN6PRszaYrbmIRasyZeGpPGfCURreMBXRuSpqFLDjbck
-SkwGk3dBJ6oN+8fmNscqI0pyT4vfBTazWMrs9I7TiaUZzl3qM4joP94Jc5DPNQ8g
-UML29LwbkTA=
-=Se5W
+iQIVAwUBU4vjSDnsnt1WYoG5AQL+bQ/7Bf0rHvzzH4y8uWgi7Rb+CKmN+KMA/Vl4
+PrqyUOrpRIj+b4sqKj4H4V24YiC98MJ0/SqKIQOprBl3rNrZu2MQ+hknY7J+knGO
+DCo1x3hpow413PakUlsvmL0eWqwApydHJ/4DX/eZkJFOyJ3ih4S7u/ugyJRU6D4E
+S15/v5BnM/Gkz/qEaoujSEV78DPhS8Tn9y4RQkhufEhZz/pV2QzC0/fwRGs/UBJY
+H4sQxdUx1YJLPDm0pZMPNY7YMEe7ssMylSKZvKH8N01Tpn6rQVSB5pQG4oQLYJEe
+iWlFbNp+pq6ZDffO2ghEOJUxPrFH82PVVn03MmswPMWQMp0xeuPfEfGetjAedv4u
+Y65euoXmlM5Zj56Graq7lkDUVHJHTAWr2/7W8QPP6iiIH39THzmUEeqTsJSr/kqf
+KVo1IvJydEhHwSSQPtO6gRsBzDc0GNpkYQpAcrveoD+i0QP95mJB3QL/U6+6RD5h
+C0zO1wMPPQX4Qs+wEA5p8s3Oor3eYbzLwAYFxOEP03N6v5+vEyaQAzEWboOJeSuW
+p40DR55vIvm+ODygpKgZciqOogksrFH1Z3IzuON/olgMsePtMLAS3Y+uSQYOVOdM
+yGi7LaXWAk6hjiJH8/QG0x4G3LPMDMacFwlZuGXJReM2Qn2QQfqSiQkT+3YKdXpr
+rHuoQWe9OJI=
+=bmW7
 -----END PGP SIGNATURE-----
 
---Sig_/xATcL7zslM_AsVrNQ78JuvW--
+--Sig_/Vkq=nECyli+5fn/cnLqpX.z--
