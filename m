@@ -1,160 +1,137 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC] Process requests instead of bios to use a scheduler
-Date: Mon, 2 Jun 2014 09:32:58 +1000
-Message-ID: <20140602093258.22aa2c05@notabene.brown>
-References: <5385DECE.5060507@profitbricks.com>
+Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
+Date: Mon, 2 Jun 2014 12:19:55 +1000
+Message-ID: <20140602121955.10a72b32@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kkuXPDsd_HotET_frxcqU_v"; protocol="application/pgp-signature"
+ boundary="Sig_/qrb85J1JFKhsboA6=wzP.1Z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5385DECE.5060507@profitbricks.com>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Florian-Ewald =?UTF-8?B?TcO8?= =?UTF-8?B?bGxlcg==?= <florian-ewald.mueller@profitbricks.com>
+To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/kkuXPDsd_HotET_frxcqU_v
+--Sig_/qrb85J1JFKhsboA6=wzP.1Z
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 28 May 2014 15:04:14 +0200 Sebastian Parschauer
-<sebastian.riemer@profitbricks.com> wrote:
+On Fri, 30 May 2014 13:11:43 +0000 "Baldysiak, Pawel"
+<pawel.baldysiak@intel.com> wrote:
 
-> Hi Neil,
+> Changes introduced in commit:
+> 0431869cec4c673309d9aa30a2df4b778bc0bd24
+> enabled adding devices to partially assembled array.
+> It causes assemble process to override checking controller of device.
 >=20
-> at ProfitBricks we use the raid0 driver stacked on top of raid1 to form
-> a RAID-10. Above there is LVM and SCST/ib_srpt.
-
-Any particular reason you don't use the raid10 driver?
-
-
+> For example:
+> If ones created IMSM array will be stopped, and some disks will be
+> attached to different controller, mdadm will allow to fully assemble this
+> array as one md device (due to marge one part to another).
 >=20
-> We've extended the md driver for our 3.4 based kernels to do full bio
-> accounting (by adding ticks and in-flights). Then, we've extended it to
-> use the request-by-request mode using blk_init_queue() and an
-> md_request_function() selectable by a module parameter and extended
-> mdadm. This way the block layer provides the accounting and the
-> possibility to select a scheduler.
-> With the ticks we maintain a latency statistic. This way we can compare
-> both modes.
->=20
-> My colleague Florian is in CC as he has been the main developer for this.
->=20
-> We did some fio 2.1.7 tests with iodepth 64, posixaio, 10 LVs with 1M
-> chunks sequential I/O and 10 LVs with 4K chunks sequential as well as
-> random I/O - one fio call per device. After 60s all fio processes are
-> killed.
-> Test systems have four 1 TB Seagate Constellation HDDs in RAID-10. LVs
-> are 20G in size each.
->=20
-> The biggest issue in our cloud is unfairness leading to high latency,
-> SRP timeouts and reconnects. This way we would need a scheduler for our
-> raid0 device.
+> This patch resolve this problem by forbidding merge operation
+> on arrays with IMSM metadata.
 
-Having a scheduler for RAID0 doesn't make any sense to me.
-RAID0 simply passes each request down to the appropriate underlying device.
-That device then does its own scheduling.
+Why do you think this is a good thing?
+You seem to be saying "You cannot access that data  because I don't like
+which controllers you have attached it to".
 
-Adding a scheduler may well make sense for RAID1 (the current "scheduler"
-only does some read balancing and is rather simplistic) and for RAID4/5/6/1=
-0.
+My thought is that you should provide access to data whenever possible.
 
-But not for RAID0 .... was that a typo?
+Is there some important situation where the current behaviour will cause re=
+al
+problems?
 
-
-> The difference is tremendous when comparing the results of 4K random
-> writes fighting against 1M sequential writes. With a scheduler the
-> maximum write latency dropped from 10s to 1.6s. The other statistic
-> values are number of bios for scheduler none and number of requests for
-> other schedulers. First read, then write.
->=20
-> Scheduler: none
-> <      8 ms: 0 2139
-> <     16 ms: 0 9451
-> <     32 ms: 0 10277
-> <     64 ms: 0 3586
-> <    128 ms: 0 5169
-> <    256 ms: 2 31688
-> <    512 ms: 3 115360
-> <   1024 ms: 2 283681
-> <   2048 ms: 0 420918
-> <   4096 ms: 0 10625
-> <   8192 ms: 0 220
-> <  16384 ms: 0 4
-> <  32768 ms: 0 0
-> <  65536 ms: 0 0
-> >=3D 65536 ms: 0 0
->  maximum ms: 660 9920
->=20
-> Scheduler: deadline
-> <      8 ms: 2 435
-> <     16 ms: 1 997
-> <     32 ms: 0 1560
-> <     64 ms: 0 4345
-> <    128 ms: 1 11933
-> <    256 ms: 2 46366
-> <    512 ms: 0 182166
-> <   1024 ms: 1 75903
-> <   2048 ms: 0 146
-> <   4096 ms: 0 0
-> <   8192 ms: 0 0
-> <  16384 ms: 0 0
-> <  32768 ms: 0 0
-> <  65536 ms: 0 0
-> >=3D 65536 ms: 0 0
->  maximum ms: 640 1640
-
-Could you do a graph?  I like graphs :-)
-I can certainly seem something has changed here...
-
->=20
-> We clone the bios from the request and put them into a bio list. The
-> request is marked as in-flight and afterwards the bios are processed
-> one-by-one the same way as with the other mode.
->=20
-> Is it safe to do it like this with a scheduler?
-
-I see nothing inherently wrong with the theory.  The details of the code are
-much more important.
-
->=20
-> Any concerns regarding the write-intent bitmap?
-
-Only that it has to keep working.
-
->=20
-> Do you have any other concerns?
->=20
-> We can provide you with the full test results, the test scripts and also
-> some code parts if you wish.
-
-I'm not against improving the scheduling in various md raid levels, though
-not RAID0 as I mentioned above.
-
-Show me the code and I might be able to provide a more detailed opinion.
+Maybe a warning might be appropriate, but failure doesn't seem sensible...
 
 NeilBrown
 
---Sig_/kkuXPDsd_HotET_frxcqU_v
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>=20
+> ---
+> Assemble.c | 23 +++++++++++++++++++++++
+> 1 file changed, 23 insertions(+)
+>=20
+> diff --git a/Assemble.c b/Assemble.c
+> index a57d384..9fb65e5 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1329,6 +1329,29 @@ try_again:
+>                                                return 1;
+>                                }
+>                                for (dv =3D pre_exist->devs; dv; dv =3D dv=
+->next) {
+> +                                             if (strncmp(mp->metadata, "=
+imsm", 4) =3D=3D 0 && !c->force) {
+> +                                                             int dfd;
+> +                                                             char dn[20];
+> +                                                             struct supe=
+rtype *st2;
+> +                                                             sprintf(dn,=
+ "%d:%d", dv->disk.major,
+> +                                                                        =
+                     dv->disk.minor);
+> +                                                             st2 =3D dup=
+_super(st);
+> +                                                             dfd =3D dev=
+_open(dn, O_RDONLY);
+> +                                                             if ((dfd > =
+0) && (st2->ss->load_super(st2, dfd, NULL) ||
+> +                                                                  (st->s=
+s->compare_super(st, st2) !=3D 0))) {
+> +                                                                        =
+     pr_err("IMSM metadata mismatch!\n");
+> +                                                                        =
+     pr_err("Aborting...\n");
+> +                                                                        =
+     close(dfd);
+> +                                                             } else {
+> +                                                                        =
+     pr_err("IMSM Array already partially assembled!\n");
+> +                                                                        =
+     pr_err("Aborting...\n");
+> +                                                             }
+> +                                                             if (st2) {
+> +                                                                        =
+     st2->ss->free_super(st2);
+> +                                                                        =
+     free(st2);
+> +                                                             }
+> +                                                             return 1;
+> +                                             }
+>                                                /* We want to add this dev=
+ice to our list,
+>                                                 * but it could already be=
+ there if "mdadm -I"
+>                                                 * started *after* we chec=
+ked for O_EXCL.
+> --
+> 1.9.0
+
+
+--Sig_/qrb85J1JFKhsboA6=wzP.1Z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU4u4Kjnsnt1WYoG5AQJseg//fEtsxqQwejsOx1W8HLWpYDZzKo7qkbgz
-0DnX9JmcNl9IklbfMDOxaeIMbsbv8OtEoTibF5FbUkeeEZd3u+rgLPEhZct7wlXG
-v/nFpgX30xLnylS4rHVTE/AFI+9xhBrX5iTH+fg+zJjIvjtoL+amA/jvSPcGYiQh
-dLcAZC8NaD/B/G5vjgYDOeudSNXkkWcU5kMz/Q5KlKiy8ZpbTBsaQI1UL+URwjSe
-Hw0CiQRBymAEVzTic1o1un87JgY91MlJJfk3I18AoIUAfJcd0Vsv9pw9W5YPxK/k
-Gwrx1oMi4gvxzfSdv+49zqU7U/HYYecp+ey8Rdz6mibq4dYGuAvT8H9zCI0ENyPE
-fnyGSHPEw8zdbd5KRrXCl4O+a5jV5NzOrzZ1H++QT908pxUFfo1gMPFBbw1Spc5m
-AZWFbXOQqkICH6wR+myoMwfY5bUCh5wlEzJkmHvD5YZuwVQ690EN8Espa4ZeEtDb
-UOit3VFfRIqDfTbRJmqHHgS32mlJUKwXqnvwuUG90W+JHGUAqmOoSVWqkHIdojkv
-gCD6Nb/vTd1oSuCXBeWjYdGOS7yIjrdIgofYitYVjgP3BjvoXwz8pGzjDQnI15T/
-bc58URQB2O0sBwJpPBgVkyf7vfjbGjZgcWWw4nJtq4Ees6oF44HUGHh/fhoMwgaG
-y1HcJI9w5Fk=
-=T9o4
+iQIVAwUBU4vfSznsnt1WYoG5AQLxrBAAiIJINm0XwAD+FNecY6ZP4HmyVlwhZk7O
+grjVmIHQkMj9L7LoDEGBoZ79/eA0HfKZlYDhmoaERqOosqbawCPT3iwmmfUpngQY
+m7bCUlht1w7HZg9CIcrVcx1yOMIQ5t045bG5V/RLbjMXls3taB0RdFHQXOgNguEv
+PqL2vDxckjg0iJmtNmJPHyZZcklbSlHrLqI9GRXhCMWOoDCcEsRYLjPZ9qPAO1si
+RQf5X+63rbwOUO6GT8JcQGViv73eASWyK56BKQu9T53GOYJevbsr5TRk18orpXFG
+9EuT+WNHmWke/tC73btFdiyLoADu7XV0TTUO8+FE8Gbm0uUE4UiwLr3fZz8SrhXf
+ybsTvcAiuXW3aFhMF8hFHN3REwgFQ7WG+pa+lOPFr5T6ZvOA+oqO+vV6c98QaFoI
+j4jeDewFOMeW5TGjsJGeVmEVyPJPJ6AuIfdbFqQWsKIf/txk9ehcUAkUO1IiSCxb
+eMcXHOh5HZj08oKIVzFLHvXZ5HxrXiQ42YA0PhRNngq6yUPOA39al/IxLftkLJPL
+4y1EN/g4rM8JpP0YeeLOB8kW3XpOz5zsAlTpIzN83X9WC+dWdqvhaK5ch++2QLAc
+xCF99j+zaYhx2jeYG8j44WqOEl9tZva4dO3C8aF3GrASt/GMO/euzRY8la0l0+yA
+QCFkKyaoqxA=
+=azld
 -----END PGP SIGNATURE-----
 
---Sig_/kkuXPDsd_HotET_frxcqU_v--
+--Sig_/qrb85J1JFKhsboA6=wzP.1Z--
