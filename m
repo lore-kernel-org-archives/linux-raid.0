@@ -1,112 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] Grow: Use 'forked' also for reshape_container in
- Grow_continue
-Date: Mon, 2 Jun 2014 12:39:47 +1000
-Message-ID: <20140602123947.7b01bc3a@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918D0F@IRSMSX105.ger.corp.intel.com>
+Subject: Re: [PATCH 2/2] Grow: Do not fork via systemd if freeze_reshape is
+ set
+Date: Mon, 2 Jun 2014 12:42:26 +1000
+Message-ID: <20140602124226.31b4c3da@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918D3F@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qx=wQvZ7xNQXpR1uZU9Cdtf"; protocol="application/pgp-signature"
+ boundary="Sig_/cyu_fPgWKb.RWpNkqytc49L"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918D0F@IRSMSX105.ger.corp.intel.com>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F07918D3F@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/qx=wQvZ7xNQXpR1uZU9Cdtf
+--Sig_/cyu_fPgWKb.RWpNkqytc49L
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 30 May 2014 14:39:28 +0000 "Baldysiak, Pawel"
+On Fri, 30 May 2014 14:40:11 +0000 "Baldysiak, Pawel"
 <pawel.baldysiak@intel.com> wrote:
 
-> Similar to commit 06e293d0970e36b1ed049b9d3ccb21a870e9d2eb
-> same thing should be done for reshape_container in Grow_continue
+> Mdadm should not run 'grow-continue' unit file for container if
+> '--freeze-reshape' argument is passed. Otherwise it will be ignored,
+> and reshape will start anyway.
 >=20
 > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->=20
 > ---
 > Grow.c | 2 +-
 > 1 file changed, 1 insertion(+), 1 deletion(-)
 >=20
 > diff --git a/Grow.c b/Grow.c
-> index 2af6c96..158a709 100644
+> index 158a709..487111e 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -4950,7 +4950,7 @@ int Grow_continue(int mdfd, struct supertype *st, s=
-truct mdinfo *info,
+> @@ -3472,7 +3472,7 @@ int reshape_container(char *container, char *devnam=
+e,
 > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 close(cfd);
+=C2=A0=C2=A0 =C2=A0*/
 > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret_val =3D reshape_container(st->contain=
-er_devnm, NULL, mdfd,
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0st, info, 0, backup_file,
+=C2=A0=C2=A0 ping_monitor(container);
+>=20
 > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 0, 1,
+=C2=A0 if (!forked && !check_env("MDADM_NO_SYSTEMCTL"))
 > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ if (!forked && !freeze_reshape && !check_env("MDADM_NO_SYSTEMCTL"))
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 =C2=A0=C2=A0=C2=A0 0, forked,
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (continue_via_systemd(container))
 > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
 =A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A01 | info->reshape_active,
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0freeze_reshape);
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 } else
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>=20
 
-
-Applied (After fixing up whitespace damage) - thanks.
+Applied - thanks.
 
 NeilBrown
 
---Sig_/qx=wQvZ7xNQXpR1uZU9Cdtf
+--Sig_/cyu_fPgWKb.RWpNkqytc49L
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU4vj8znsnt1WYoG5AQI6AhAAljls30ZxyDnxLlYMJC1i2AwW1QPaNnrB
-Yb4xq2rgvZL7xhPxITahvtD2VQ/nBykiEvWNo4LcpYIgD5ATdtRl74+eqSFWl2dK
-YGm1oiWJApc+oqUVFkxTFuhEmtRkOlpWalvssh7WL15fYNO76UTOEG2dPy27tzjF
-WWHkDPaOg+TcEMBWzZEBhldeqw+tBFe2LYa/SsIpY2/OATfqcDVLyr42nvGoFBfi
-TIweqYT9Oetjc3K+EZwuMlPQl0qr9bkDtVbzt5Quti1PYPF1VSj+bNsAjuQwsqsW
-FQsw5ogBPXX4bjAQqu5r5F6UXF3ELbvNju+K432NzdGWrH4xsMTzLYER4A8i99nc
-VLK4QEB2Z2KWIRwWBfUOx2itVgQCc/h8TiImslBllqG23HoZrgxYmx7i6e8GnNIC
-5JyjfhfGQNpWe1WQMfSnNMCbfCo9cjOFil5HAHpT/zTBAsz4c4+zYbUwOEZYAVhS
-TACunyQ9xJUBDhd6nVsqpr0Ma9KVLwQ57XiPTh+BQEFprmQ2HGxKNVW6DB9p6lav
-3aVmb3nTYCIS8tdqQDBLc/wVlTUujpaG5YHLEd/VrOqOJs5OrgaCpfB6qsL9IOcA
-UCNqAZceZbTwMwEv6q3Cq6fRONDPA7XClm7x21lMcryfHnOlA9bO+dNT3gR8/2nc
-hn3uuU2xwto=
-=EjIQ
+iQIVAwUBU4vkkjnsnt1WYoG5AQLLLRAAm1QYn0WtrixQdtL7X5dkxxKBOXMW0EWq
+cRTfBXvSyEss/efKBitlk8staX3j8Dop+cMUwJ3E53cgArwZq5S+d+Tt7tsAsGbj
+eizSktgaaqaiLobf0ivWUA/3WX1lLxsBzHF/od1WZELwHHrh73sNUMLiWlvXBVPc
+RyxxTw2XtYUz5WfOgKX2N6ddZFOew6bvKwLahGKP35gKgQjFnBKgZc32ljeHqaVw
+vQwIXzSz8Yxr9s1w8H3sgh1XrwgMOdlEPfcYCbh1TUfD9Wg1t3UUofakCrChQx4F
+li6Dqm7mqVuJ7iScIK3s+j+VPiuQwcg2whGiTOEYXvbD6R2DQ9yWeJbIhg1xkBT7
+sCXXdG7q01PE/IF3/R9BPK9qCVedZNmHtTHXXfrHAbLS8NQWuYdpiDzDFivhr3bJ
+n74JCfh83moYj1KScMgbEz7jdVXirxYOqsgxiLuOojqV2YGXC1OTHAzv4wLtRP3L
+o7p+FTz3163S5EBo5q/FwrfNGtM4xbbr5QO/bh6RDaw12QsmlZvvrI81ZmOeClJ2
+nP6asEf44rUxfvv+W8bOIVyGje/85+RAPS9PFEPrCBKMk+vAXz4rnfdFW81MuC/W
+VVrny58yHE/if15X4MO56YtyjNVfKtnDMZORCWdp2SSVsXA1UOMmFCipsBxnfyY7
+4wXxkfCrbTI=
+=6a2E
 -----END PGP SIGNATURE-----
 
---Sig_/qx=wQvZ7xNQXpR1uZU9Cdtf--
+--Sig_/cyu_fPgWKb.RWpNkqytc49L--
