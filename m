@@ -1,97 +1,133 @@
-From: =?UTF-8?B?S8WRdsOhcmkgUMOpdGVy?= <peter@kovari.priv.hu>
-Subject: RE: Recovering RAID set after OS disk failed
-Date: Mon, 2 Jun 2014 14:36:50 +0200
-Message-ID: <000801cf7e5f$53ffce20$fbff6a60$@kovari.priv.hu>
-References: <7C19F7E4-7354-4C2C-A53E-DA546B569201@sbcglobal.net>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH] imsm: retry load_and_parse_mpb if we suspect mdmon has
+ made modifications
+Date: Mon, 02 Jun 2014 15:02:59 +0200
+Message-ID: <538C7603.3050204@intel.com>
+References: <1401455913-28657-1-git-send-email-artur.paszkiewicz@intel.com> <20140602123656.2e52d529@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7C19F7E4-7354-4C2C-A53E-DA546B569201@sbcglobal.net>
-Content-Language: hu
+In-Reply-To: <20140602123656.2e52d529@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 List-Id: linux-raid.ids
 
-Hi Davide,
+On 06/02/2014 04:36 AM, NeilBrown wrote:
+> On Fri, 30 May 2014 15:18:33 +0200 Artur Paszkiewicz
+> <artur.paszkiewicz@intel.com> wrote:
+> 
+>> If the checksum verification fails in mdadm and mdmon is running, retry
+>> the load to get a consistent snapshot of the mpb.
+>>
+>> Based on db575f3b
+>>
+>> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+>> ---
+>>  super-intel.c | 17 +++++++++++++++++
+>>  1 file changed, 17 insertions(+)
+>>
+>> diff --git a/super-intel.c b/super-intel.c
+>> index f0a7ab5..037c018 100644
+>> --- a/super-intel.c
+>> +++ b/super-intel.c
+>> @@ -4422,6 +4422,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+>>  {
+>>  	struct intel_super *super;
+>>  	int rv;
+>> +	int retry;
+>>  
+>>  	if (test_partition(fd))
+>>  		/* IMSM not allowed on partitions */
+>> @@ -4444,6 +4445,22 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+>>  	}
+>>  	rv = load_and_parse_mpb(fd, super, devname, 0);
+>>  
+>> +	/* retry the load if we might have raced against mdmon */
+>> +	if (rv == 3) {
+>> +		struct mdstat_ent *mdstat = mdstat_by_component(fd2devnm(fd));
+>> +
+>> +		if (mdmon_running(mdstat->devnm) && getpid() != mdmon_pid(mdstat->devnm)) {
+>> +			for (retry = 0; retry < 3; retry++) {
+>> +				usleep(3000);
+>> +				rv = load_and_parse_mpb(fd, super, devname, 0);
+>> +				if (rv != 3)
+>> +					break;
+>> +			}
+>> +		}
+> 
+> The only thing you use from mdstat is devnm, and that is the thing you passed
+> to mdstat_by_component to get mdstat....
+> 
+> Can you just do
+>    char *devnm = fd2devnm(fd);
+>    if (mdmon_running(devnm) && ......)
+> 
+> ??
+> 
+I can't do that because mdmon_running and mdmon_pid need a devnm of a
+container device, and the only thing we have here is the file descriptor
+of a component device. So I used mdstat_by_component to get the
+container devnm. Do you have an idea how to get that reliably without
+reading mdstat?
 
-Open / ssh a console on your NAS box, and issue the following command a=
-nd send us the results:=20
-$ cat /proc/mdstat
+I have overlooked that mdstat_by_component can return NULL here. I've
+added a check for this in the patch below.
 
-Please also issue the following commands
+Thanks,
+Artur
 
-mdadm --examine /dev/sdX[Y]
+From dfb12870a482654b405ec1d4d9d3a8ba69a6290c Mon Sep 17 00:00:00 2001
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Date: Tue, 27 May 2014 15:30:54 +0200
+Subject: [PATCH] imsm: retry load_and_parse_mpb if we suspect mdmon has made
+ modifications
 
-Where X is one of the raid drive's name and Y is the partition number, =
-if you created the raid set on partitions. (If not, then leave the numb=
-er.) So, for example (assuming that your OS drive is /dev/sda, so your =
-raid drives are /dev/sdb, /dev/sdc and so on) issue the following comma=
-nds:
+If the checksum verification fails in mdadm and mdmon is running, retry
+the load to get a consistent snapshot of the mpb.
 
-$ mdadm --examine /dev/sdb
-or
-$ mdadm --examine /dev/sdb1
+Based on db575f3b
 
-and so on for all 4 drives. And send back the results.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ super-intel.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-p.s.
-Before everything else,  you might try  auto assembling th eset by:
-$ mdadm -v --assemble --scan
+diff --git a/super-intel.c b/super-intel.c
+index f0a7ab5..9dd807a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4422,6 +4422,7 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ {
+ 	struct intel_super *super;
+ 	int rv;
++	int retry;
+ 
+ 	if (test_partition(fd))
+ 		/* IMSM not allowed on partitions */
+@@ -4444,6 +4445,22 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
+ 	}
+ 	rv = load_and_parse_mpb(fd, super, devname, 0);
+ 
++	/* retry the load if we might have raced against mdmon */
++	if (rv == 3) {
++		struct mdstat_ent *mdstat = mdstat_by_component(fd2devnm(fd));
++
++		if (mdstat && mdmon_running(mdstat->devnm) && getpid() != mdmon_pid(mdstat->devnm)) {
++			for (retry = 0; retry < 3; retry++) {
++				usleep(3000);
++				rv = load_and_parse_mpb(fd, super, devname, 0);
++				if (rv != 3)
++					break;
++			}
++		}
++
++		free_mdstat(mdstat);
++	}
++
+ 	if (rv) {
+ 		if (devname)
+ 			pr_err("Failed to load all information "
 
-It might assemble your raid set for you successfully out of the box.  (=
-If not, send here the output.)
-If this assembles your set successfully, then you just need to save you=
-r config in /etc/mdam/mdadm.conf, do an initramfs update and you are go=
-od to go.
-So to save the config issue:
-$ mdadm --examine --scan >> /etc/mdadm/mdadm.conf
-
-then update initramfs so th eset will auto assmble on next boot:
-$ update-initramfs -k all -u
-
-Best regards,
-Peter
------------------------------------------------------------------------=
-----------------------------------------
-=EF=82=9B: peter@kovari.priv.hu
-=EF=82=9B: pkovari@gmail.com
-=EF=83=BC:  www.kovari.priv.hu
-
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
-kernel.org] On Behalf Of Davide Guarisco
-Sent: Monday, June 2, 2014 7:38 AM
-To: linux-raid@vger.kernel.org
-Subject: Recovering RAID set after OS disk failed
-
-Hello and sorry if this is not the place for a relatively =E2=80=9Cnewb=
-ie=E2=80=9D question.
-
-=46ive years ago I built a NAS box running on Ubuntu server then-curren=
-t version. The NAS has 4 SATA drives (the RAID set) and a PATA system d=
-rive (for the OS). Now the system drive has failed (click of death). I =
-believe the that RAID data is still safe and sound, but my question is =
-how to proceed in such a scenario. (I do have a backup but it=E2=80=99s=
- fairly old). I do not remember exactly how I created the RAID set, oth=
-er than being with mdadm and probably RAID 5.=20
-
-I have now replaced the failed PATA drive with a new 32 GB PATA SSD, an=
-d installed Ubuntu Server 14.04. The system is up and running and it se=
-es the four SATA drives. I have installed Webmin and I am ready to reco=
-ver the RAID set.=20
-
-
-I read the Wiki and it suggests running a =E2=80=9Cpermutation=E2=80=9D=
- Perl script. Is this a reasonable thing to do?=20
-I could not find much information on a case like this in a Goole search=
-, so any help appreciated.=20
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
