@@ -1,89 +1,109 @@
 From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Subject: RE: [PATCH 1/1] md: Do only necessary operations when adding device
- to RO array
-Date: Tue, 3 Jun 2014 08:29:10 +0000
-Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F0791C04E@IRSMSX105.ger.corp.intel.com>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918BF9@IRSMSX105.ger.corp.intel.com>
- <20140602123411.4becb274@notabene.brown>
+Subject: RE: [PATCH] Forbid merging with partially assembled IMSM array
+Date: Tue, 3 Jun 2014 09:03:16 +0000
+Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
+ <20140602121955.10a72b32@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140602123411.4becb274@notabene.brown>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140602121955.10a72b32@notabene.brown>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-
-
-> On Monday, June 02, 2014 4:34 AM NeilBrown Wrote:
-> To: Baldysiak, Pawel
-> Cc: linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org; Paszkiewicz,
-> Artur
-> Subject: Re: [PATCH 1/1] md: Do only necessary operations when adding
-> device to RO array
-> 
-> On Fri, 30 May 2014 13:17:14 +0000 "Baldysiak, Pawel"
+>On Monday, June 02, 2014 4:20 AM NeilBrown [neilb@suse.de] wrote: 
+> On Fri, 30 May 2014 13:11:43 +0000 "Baldysiak, Pawel"
 > <pawel.baldysiak@intel.com> wrote:
 > 
-> > Commit 8313b8e57f55b15e5b7f7fc5d1630bbf686a9a97 changed way of
-> adding
-> > device to read-only array. Used routine
-> > md_reap_sync_thread() which also trigger finish_reshape(), can break
-> > reshape process, if it was restarted.
+> > Changes introduced in commit:
+> > 0431869cec4c673309d9aa30a2df4b778bc0bd24
+> > enabled adding devices to partially assembled array.
+> > It causes assemble process to override checking controller of device.
+> >
+> > For example:
+> > If ones created IMSM array will be stopped, and some disks will be
+> > attached to different controller, mdadm will allow to fully assemble
+> > this array as one md device (due to marge one part to another).
+> >
+> > This patch resolve this problem by forbidding merge operation on
+> > arrays with IMSM metadata.
 > 
-> Exactly how can it break?
+> Why do you think this is a good thing?
+> You seem to be saying "You cannot access that data  because I don't like
+> which controllers you have attached it to".
 > 
-> This is probably fixed by a couple of patches in my for-next branch which I will
-> be sending to Linus shortly.
+> My thought is that you should provide access to data whenever possible.
+> 
+> Is there some important situation where the current behaviour will cause
+> real problems?
+> 
+> Maybe a warning might be appropriate, but failure doesn't seem sensible...
 > 
 > NeilBrown
 > 
- 
-Hi Neil, 
-I have checked your patches from "for-next", and this issue is fixed.
-Reshape process is continued correctly after restart.
-Thanks!
+Hi Neil,
+
+Sorry for all this mess with white-space corruption.
+
+Intel platforms have separate OpROMs for each controller.
+OpROMs manage SW RAIDs at startup and don't support arrays spanned across different controllers.
+In this case array will become degraded or failed after reboot anyway, because each OpROM will overwrite metadata on disks based on disks attached to specific controller.
+User should never be able to assemble IMSM array with disks under different controllers by default.
+You can always use "--force" to override this check.
 
 Pawel Baldysiak
 
-> > This part of function should do only necessary operations, that is:
-> > 1) call ->spare_active
-> > 2) clear saved_raid_disk if array is no longer degraded
 > >
 > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 > > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 > >
 > > ---
-> > drivers/md/md.c | 10 ++++++----
-> > 1 file changed, 6 insertions(+), 4 deletions(-)
+> > Assemble.c | 23 +++++++++++++++++++++++
+> > 1 file changed, 23 insertions(+)
 > >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c index 237b7e0..cf073de2
-> > 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -7820,11 +7820,13 @@ void md_check_recovery(struct mddev
-> *mddev)
-> >                                                 * As we only add devices that are already in-sync,
-> >                                                 * we can activate the spares immediately.
-> >                                                 */
-> > +                                             struct md_rdev *rdev;
-> >                                                remove_and_add_spares(mddev, NULL);
-> > -                                              /* There is no thread, but we need to call
-> > -                                              * ->spare_active and clear saved_raid_disk
-> > -                                              */
-> > -                                              md_reap_sync_thread(mddev);
-> > +                                             mddev->pers->spare_active(mddev);
-> > +                                             rdev_for_each(rdev, mddev)
-> > +                                                             if (!mddev->degraded ||
-> > +                                                                 test_bit(In_sync, &rdev->flags))
-> > +
-> > + rdev->saved_raid_disk = -1;
-> >                                                clear_bit(MD_RECOVERY_NEEDED, &mddev-
-> >recovery);
-> >                                                goto unlock;
+> > diff --git a/Assemble.c b/Assemble.c
+> > index a57d384..9fb65e5 100644
+> > --- a/Assemble.c
+> > +++ b/Assemble.c
+> > @@ -1329,6 +1329,29 @@ try_again:
+> >                                                return 1;
 > >                                }
+> >                                for (dv = pre_exist->devs; dv; dv =
+> > dv->next) {
+> > +                                             if (strncmp(mp->metadata, "imsm", 4) == 0 && !c-
+> >force) {
+> > +                                                             int dfd;
+> > +                                                             char dn[20];
+> > +                                                             struct supertype *st2;
+> > +                                                             sprintf(dn, "%d:%d", dv->disk.major,
+> > +                                                                                             dv->disk.minor);
+> > +                                                             st2 = dup_super(st);
+> > +                                                             dfd = dev_open(dn, O_RDONLY);
+> > +                                                             if ((dfd > 0) && (st2->ss->load_super(st2,
+> dfd, NULL) ||
+> > +                                                                  (st->ss->compare_super(st, st2) != 0))) {
+> > +                                                                             pr_err("IMSM metadata
+> mismatch!\n");
+> > +                                                                             pr_err("Aborting...\n");
+> > +                                                                             close(dfd);
+> > +                                                             } else {
+> > +                                                                             pr_err("IMSM Array already
+> partially assembled!\n");
+> > +                                                                             pr_err("Aborting...\n");
+> > +                                                             }
+> > +                                                             if (st2) {
+> > +                                                                             st2->ss->free_super(st2);
+> > +                                                                             free(st2);
+> > +                                                             }
+> > +                                                             return 1;
+> > +                                             }
+> >                                                /* We want to add this device to our list,
+> >                                                 * but it could already be there if "mdadm -I"
+> >                                                 * started *after* we checked for O_EXCL.
 > > --
 > > 1.9.0
+
