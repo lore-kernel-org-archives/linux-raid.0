@@ -1,418 +1,163 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: Recovering RAID set after OS disk failed
-Date: Wed, 04 Jun 2014 15:20:16 +1000
-Message-ID: <538EAC90.9030201@eyal.emu.id.au>
-References: <7C19F7E4-7354-4C2C-A53E-DA546B569201@sbcglobal.net> <000801cf7e5f$53ffce20$fbff6a60$@kovari.priv.hu> <A2FAF98E-1CEC-41C5-8AA4-9CE707A477F6@sbcglobal.net> <538D65AC.1090706@eyal.emu.id.au> <A5637DAF-91A1-4313-9314-13058D65F0C0@sbcglobal.net>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Subject: RE: [PATCH] Forbid merging with partially assembled IMSM array
+Date: Wed, 4 Jun 2014 09:25:47 +0000
+Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F0791D2DE@IRSMSX105.ger.corp.intel.com>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
+	<20140602121955.10a72b32@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
+ <20140604123046.02e224d6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A5637DAF-91A1-4313-9314-13058D65F0C0@sbcglobal.net>
+In-Reply-To: <20140604123046.02e224d6@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
+> On Wednesday, June 04, 2014 4:31 AM NeilBrown [neilb@suse.de] wrote:
+> Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
+> 
+> On Tue, 3 Jun 2014 09:03:16 +0000 "Baldysiak, Pawel"
+> <pawel.baldysiak@intel.com> wrote:
+> 
+> > >On Monday, June 02, 2014 4:20 AM NeilBrown [neilb@suse.de] wrote:
+> > > On Fri, 30 May 2014 13:11:43 +0000 "Baldysiak, Pawel"
+> > > <pawel.baldysiak@intel.com> wrote:
+> > >
+> > > > Changes introduced in commit:
+> > > > 0431869cec4c673309d9aa30a2df4b778bc0bd24
+> > > > enabled adding devices to partially assembled array.
+> > > > It causes assemble process to override checking controller of device.
+> > > >
+> > > > For example:
+> > > > If ones created IMSM array will be stopped, and some disks will be
+> > > > attached to different controller, mdadm will allow to fully
+> > > > assemble this array as one md device (due to marge one part to
+> another).
+> > > >
+> > > > This patch resolve this problem by forbidding merge operation on
+> > > > arrays with IMSM metadata.
+> > >
+> > > Why do you think this is a good thing?
+> > > You seem to be saying "You cannot access that data  because I don't
+> > > like which controllers you have attached it to".
+> > >
+> > > My thought is that you should provide access to data whenever possible.
+> > >
+> > > Is there some important situation where the current behaviour will
+> > > cause real problems?
+> > >
+> > > Maybe a warning might be appropriate, but failure doesn't seem
+> sensible...
+> > >
+> > > NeilBrown
+> > >
+> > Hi Neil,
+> >
+> > Sorry for all this mess with white-space corruption.
+> >
+> > Intel platforms have separate OpROMs for each controller.
+> > OpROMs manage SW RAIDs at startup and don't support arrays spanned
+> across different controllers.
+> > In this case array will become degraded or failed after reboot anyway,
+> because each OpROM will overwrite metadata on disks based on disks
+> attached to specific controller.
+> 
+> If this is true, then surely we will never get into the situation where the same
+> metadata is seen on different controller: the OpROM will have 'fixed' it
+> already.
+> 
+> > User should never be able to assemble IMSM array with disks under
+> different controllers by default.
+> 
+> I ask again:
+>    "Is there some important situation where the current behaviour will cause
+>     real problems?"
+> 
+> If not, I don't feel that the change is justified.
+> 
+> NeilBrown
 
+Hi Neil
+ 
+There are several cases where not forbidding this operation can cause problems.
+For example, if user will create IMSM array at one platform, then stop it, detach devices,
+and hotplug them to another platform (mixed between two different controllers) - 
+everything will be looking good (array will be incrementally assembled without any errors) until reboot.
+After that, user will be confused why array is degraded/failed and will be at risk of losing data.
+Also, creation of IMSM array under different controllers is forbidden, so there is no point in allowing that it in assemble process.
 
-On 06/04/14 15:00, Davide Guarisco wrote:
->
-> On Jun 2, 2014, at 23:05, Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote=
-:
->
->> Davide,
->>
->> Do you expect a partition table or do you use the whole disk as the =
-fs (or whatever
->> higher layers you have)?
->
->
-> I do not remember. It=E2=80=99s possible I originally setup two parti=
-tions, one for Time Machine and one as shared storage.
->
->
->>
->> What does your /etc/fstab entry say?
->
->
-> fstab is all new, so it says:
->
-> davide@gecko:/etc$ cat fstab
-> # /etc/fstab: static file system information.
-> #
-> # Use 'blkid' to print the universally unique identifier for a
-> # device; this may be used with UUID=3D as a more robust way to name =
-devices
-> # that works even if disks are added and removed. See fstab(5).
-> #
-> # <file system> <mount point>   <type>  <options>       <dump>  <pass=
->
-> /dev/mapper/gecko--vg-root /               ext4    errors=3Dremount-r=
-o 0       1
-> # /boot was on /dev/sda1 during installation
-> UUID=3D89a63dd3-93fb-4a37-acd5-34f6790ef3e7 /boot           ext2    d=
-efaults        0       2
-> /dev/mapper/gecko--vg-swap_1 none            swap    sw              =
-0       0
->
->
->
->
->>
->> Did you try a simple
->> 	sudo mount /dev/md0
->>
->> You do not say if you rebooted (to let initrd) do its thing.
->>
->> Eyal
->
->
-> All right, I will reboot now=E2=80=A6
->
-> After reboot:
->
-> davide@gecko:~$ sudo fdisk -l
-> [sudo] password for davide:
-> no talloc stackframe at ../source3/param/loadparm.c:4864, leaking mem=
-ory
->
-> Disk /dev/sda: 31.9 GB, 31937527808 bytes
-> 255 heads, 63 sectors/track, 3882 cylinders, total 62377984 sectors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x000384c2
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sda1   *        2048      499711      248832   83  Linux
-> /dev/sda2          501758    62375935    30937089    5  Extended
-> /dev/sda5          501760    62375935    30937088   8e  Linux LVM
->
-> Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 secto=
-rs
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0xe3494e66
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1              63  1953520064   976760001   fd  Linux raid au=
-todetect
->
-> Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 secto=
-rs
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x6b47e429
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1              63  1953520064   976760001   fd  Linux raid au=
-todetect
->
-> Disk /dev/sde: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 secto=
-rs
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0xfdfcb365
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sde1              63  1953520064   976760001   fd  Linux raid au=
-todetect
->
-> Disk /dev/sdd: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 secto=
-rs
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x6303429f
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdd1              63  1953520064   976760001   fd  Linux raid au=
-todetect
->
-> Disk /dev/md0: 3000.6 GB, 3000606523392 bytes
-> 2 heads, 4 sectors/track, 732569952 cylinders, total 5860559616 secto=
-rs
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 131072 bytes / 393216 bytes
-> Disk identifier: 0x00000000
->
-> Disk /dev/md0 doesn't contain a valid partition table
->
-> Disk /dev/mapper/gecko--vg-root: 29.5 GB, 29536288768 bytes
-> 255 heads, 63 sectors/track, 3590 cylinders, total 57688064 sectors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x00000000
->
-> Disk /dev/mapper/gecko--vg-root doesn't contain a valid partition tab=
-le
->
-> Disk /dev/mapper/gecko--vg-swap_1: 2139 MB, 2139095040 bytes
-> 255 heads, 63 sectors/track, 260 cylinders, total 4177920 sectors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x00000000
->
-> Disk /dev/mapper/gecko--vg-swap_1 doesn't contain a valid partition t=
-able
->
->
->
-> Now trying to mount md0:
->
-> davide@gecko:~$ sudo mount /dev/md0
-> mount: can't find /dev/md0 in /etc/fstab or /etc/mtab
->
->
-> OK, I am lost now.
->
-> Davide
+If you really think this is no justification - I will prepare a patch that will print warning,
+but in my opinion this operation should be allowed only with "--force"... 
 
-So you do not have an fstab entry, no problem. File systems usually mou=
-nt just fine
-with automatic detection (replace mountPoint with the directory where i=
-t usually mounts).
-	sudo mount -o ro /dev/md0 /mountPoint
-[if it looks good then you can remove the readonly option '-o ro']
+Thanks
+Pawel Baldysiak
 
-Or you can check the array directly:
-	sudo file -s /dev/md0
+> 
+> > You can always use "--force" to override this check.
+> >
+> > Pawel Baldysiak
+> >
+> > > >
+> > > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> > > > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> > > >
+> > > > ---
+> > > > Assemble.c | 23 +++++++++++++++++++++++
+> > > > 1 file changed, 23 insertions(+)
+> > > >
+> > > > diff --git a/Assemble.c b/Assemble.c index a57d384..9fb65e5 100644
+> > > > --- a/Assemble.c
+> > > > +++ b/Assemble.c
+> > > > @@ -1329,6 +1329,29 @@ try_again:
+> > > >                                                return 1;
+> > > >                                }
+> > > >                                for (dv = pre_exist->devs; dv; dv =
+> > > > dv->next) {
+> > > > +                                             if
+> > > > + (strncmp(mp->metadata, "imsm", 4) == 0 && !c-
+> > > >force) {
+> > > > +                                                             int dfd;
+> > > > +                                                             char dn[20];
+> > > > +                                                             struct supertype *st2;
+> > > > +                                                             sprintf(dn, "%d:%d", dv->disk.major,
+> > > > +                                                                                             dv->disk.minor);
+> > > > +                                                             st2 = dup_super(st);
+> > > > +                                                             dfd = dev_open(dn, O_RDONLY);
+> > > > +                                                             if
+> > > > + ((dfd > 0) && (st2->ss->load_super(st2,
+> > > dfd, NULL) ||
+> > > > +                                                                  (st->ss->compare_super(st, st2) !=
+> 0))) {
+> > > > +
+> > > > + pr_err("IMSM metadata
+> > > mismatch!\n");
+> > > > +                                                                             pr_err("Aborting...\n");
+> > > > +                                                                             close(dfd);
+> > > > +                                                             } else {
+> > > > +
+> > > > + pr_err("IMSM Array already
+> > > partially assembled!\n");
+> > > > +                                                                             pr_err("Aborting...\n");
+> > > > +                                                             }
+> > > > +                                                             if (st2) {
+> > > > +                                                                             st2->ss->free_super(st2);
+> > > > +                                                                             free(st2);
+> > > > +                                                             }
+> > > > +                                                             return 1;
+> > > > +                                             }
+> > > >                                                /* We want to add this device to our list,
+> > > >                                                 * but it could already be there if "mdadm -I"
+> > > >                                                 * started *after* we checked for O_EXCL.
+> > > > --
+> > > > 1.9.0
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in the body of a message to majordomo@vger.kernel.org More
+> majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
 
-=46or me I get:
-
-$ sudo file -s /dev/md0
-/dev/md0: Linux rev 1.0 ext4 filesystem data, UUID=3D1db56f55-de4f-435e=
--80ed-e525f07d30df, volume name "data1" (needs journal recovery) (exten=
-ts) (64bit) (large files) (huge files)
-
-If there is no fs showing then you probably did have some partitions. O=
-r it did
-not assemble correctly (hope not).
-
-cheers
-
->>
->> On 06/03/14 15:49, Davide Guarisco wrote:
->>> Peter, thanks for your help. Below are the answers.
->>>
->>>
->>> On Jun 2, 2014, at 05:36, K=C5=91v=C3=A1ri P=C3=A9ter <peter@kovari=
-=2Epriv.hu> wrote:
->>>
->>>> Hi Davide,
->>>>
->>>> Open / ssh a console on your NAS box, and issue the following comm=
-and and send us the results:
->>>> $ cat /proc/mdstat
->>>
->>>
->>> Personalities :
->>> unused devices: <none>
->>>
->>>
->>>
->>>>
->>>> Please also issue the following commands
->>>>
->>>> mdadm --examine /dev/sdX[Y]
->>>
->>> $ mdadm =E2=80=94examine /dev/sdb
->>> mdadm: cannot open /dev/sdb: Permission denied
->>>
->>>
->>> $ sudo mdadm =E2=80=94examine /dev/sdb
->>> /dev/sdb:
->>> 	MBR Magic : aa55
->>> Partition[0] : 1953520002 sectors at       63 (type fd)
->>>
->>>
->>> $ sudo mdadm =E2=80=94examine /dev/sdb1
->>> /dev/sdb1:
->>>            Magic : a92b4efc
->>>          Version : 0.90.00
->>>             UUID : f8a943c7:2ffa13d0:9770de34:eca2e81c (local to ho=
-st gecko)
->>>    Creation Time : Tue Mar  3 23:27:50 2009
->>>       Raid Level : raid5
->>>    Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
->>>       Array Size : 2930279808 (2794.53 GiB 3000.61 GB)
->>>     Raid Devices : 4
->>>    Total Devices : 4
->>> Preferred Minor : 0
->>>
->>>      Update Time : Wed May 28 21:52:54 2014
->>>            State : clean
->>>   Active Devices : 4
->>> Working Devices : 4
->>>   Failed Devices : 0
->>>    Spare Devices : 0
->>>         Checksum : 2d5185d8 - correct
->>>           Events : 46
->>>
->>>           Layout : left-symmetric
->>>       Chunk Size : 128K
->>>
->>>        Number   Major   Minor   RaidDevice State
->>> this     0       8       17        0      active sync   /dev/sdb1
->>>
->>>     0     0       8       17        0      active sync   /dev/sdb1
->>>     1     1       8       33        1      active sync   /dev/sdc1
->>>     2     2       8       49        2      active sync   /dev/sdd1
->>>     3     3       8       65        3      active sync   /dev/sde1
->>>
->>>
->>>> mdadm --examine /dev/sdc1
->>>
->>> /dev/sdc1:
->>>            Magic : a92b4efc
->>>          Version : 0.90.00
->>>             UUID : f8a943c7:2ffa13d0:9770de34:eca2e81c (local to ho=
-st gecko)
->>>    Creation Time : Tue Mar  3 23:27:50 2009
->>>       Raid Level : raid5
->>>    Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
->>>       Array Size : 2930279808 (2794.53 GiB 3000.61 GB)
->>>     Raid Devices : 4
->>>    Total Devices : 4
->>> Preferred Minor : 0
->>>
->>>      Update Time : Wed May 28 21:52:54 2014
->>>            State : clean
->>>   Active Devices : 4
->>> Working Devices : 4
->>>   Failed Devices : 0
->>>    Spare Devices : 0
->>>         Checksum : 2d5185ea - correct
->>>           Events : 46
->>>
->>>           Layout : left-symmetric
->>>       Chunk Size : 128K
->>>
->>>        Number   Major   Minor   RaidDevice State
->>> this     1       8       33        1      active sync   /dev/sdc1
->>>
->>>     0     0       8       17        0      active sync   /dev/sdb1
->>>     1     1       8       33        1      active sync   /dev/sdc1
->>>     2     2       8       49        2      active sync   /dev/sdd1
->>>     3     3       8       65        3      active sync   /dev/sde1
->>>
->>>
->>> =E2=80=A6etc. So it seems to me that we are OK, with the RAID 5 set=
- setup on /dev/sdb1, /dev/sdc1, /dev/sdd1, /dev/sde1.
->>>
->>>>
->>>> Where X is one of the raid drive's name and Y is the partition num=
-ber, if you created the raid set on partitions. (If not, then leave the=
- number.) So, for example (assuming that your OS drive is /dev/sda, so =
-your raid drives are /dev/sdb, /dev/sdc and so on) issue the following =
-commands:
->>>>
->>>> $ mdadm --examine /dev/sdb
->>>> or
->>>> $ mdadm --examine /dev/sdb1
->>>>
->>>> and so on for all 4 drives. And send back the results.
->>>>
->>>> p.s.
->>>> Before everything else,  you might try  auto assembling th eset by=
-:
->>>> $ mdadm -v --assemble =E2=80=94scan
->>>
->>> Trying this holding my breath=E2=80=A6.
->>>
->>>> mdadm -v --assemble --scan
->>>
->>> mdadm: looking for devices for /dev/md0
->>> mdadm: no recogniseable superblock on /dev/dm-1
->>> mdadm: no recogniseable superblock on /dev/dm-0
->>> mdadm: no RAID superblock on /dev/sde
->>> mdadm: no RAID superblock on /dev/sdd
->>> mdadm: no RAID superblock on /dev/sdb
->>> mdadm: no RAID superblock on /dev/sdc
->>> mdadm: no RAID superblock on /dev/sda5
->>> mdadm: no RAID superblock on /dev/sda2
->>> mdadm: no RAID superblock on /dev/sda1
->>> mdadm: no RAID superblock on /dev/sda
->>> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
->>> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
->>> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.
->>> mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 1.
->>> mdadm: added /dev/sdc1 to /dev/md0 as 1
->>> mdadm: added /dev/sdd1 to /dev/md0 as 2
->>> mdadm: added /dev/sde1 to /dev/md0 as 3
->>> mdadm: added /dev/sdb1 to /dev/md0 as 0
->>> mdadm: /dev/md0 has been started with 4 drives.
->>>
->>>
->>> OK, this seems successful as well. My RAID is /dev/md0.
->>>
->>>
->>>
->>>
->>>>
->>>> It might assemble your raid set for you successfully out of the bo=
-x.  (If not, send here the output.)
->>>> If this assembles your set successfully, then you just need to sav=
-e your config in /etc/mdam/mdadm.conf, do an initramfs update and you a=
-re good to go.
->>>> So to save the config issue:
->>>> $ mdadm --examine --scan >> /etc/mdadm/mdadm.conf
->>>
->>>> cat /etc/mdadm/mdadm.conf
->>>
->>> ARRAY /dev/md0 UUID=3Df8a943c7:2ffa13d0:9770de34:eca2e81c
->>>
->>>
->>>
->>>>
->>>> then update initramfs so th eset will auto assmble on next boot:
->>>> $ update-initramfs -k all -u
->>>
->>>> update-initramfs -k all -u
->>>
->>> update-initramfs: Generating /boot/initrd.img-3.13.0-24-generic
->>>
->>>
->>>
->>> But now:
->>>
->>>> sudo fdisk -l
->>>
->>> Disk /dev/md0: 3000.6 GB, 3000606523392 bytes
->>> 2 heads, 4 sectors/track, 732569952 cylinders, total 5860559616 sec=
-tors
->>> Units =3D sectors of 1 * 512 =3D 512 bytes
->>> Sector size (logical/physical): 512 bytes / 512 bytes
->>> I/O size (minimum/optimal): 131072 bytes / 393216 bytes
->>> Disk identifier: 0x00000000
->>>
->>> Disk /dev/md0 doesn=E2=80=99t contain a valid partition table
->>>
->>>
->>>
->>> How do I fix this and how to I gain access to /dev/md0?
->>>
->>> Thanks,
->>> 	Davide
->>
->> --
->> Eyal Lebedinsky (eyal@eyal.emu.id.au)
-
-
---=20
-Eyal Lebedinsky (eyal@eyal.emu.id.au)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
