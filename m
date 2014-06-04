@@ -1,163 +1,49 @@
-From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Subject: RE: [PATCH] Forbid merging with partially assembled IMSM array
-Date: Wed, 4 Jun 2014 09:25:47 +0000
-Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F0791D2DE@IRSMSX105.ger.corp.intel.com>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
-	<20140602121955.10a72b32@notabene.brown>
-	<84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
- <20140604123046.02e224d6@notabene.brown>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: Home desktop/server RAID upgrade
+Date: Wed, 04 Jun 2014 20:29:16 +0800
+Message-ID: <538F111C.9070206@fnarfbargle.com>
+References: <CAK2H+ef2YNuy9aoipDjYGWJKMi=soW393dKz00iMN8cUuBd+Og@mail.gmail.com>	<20140530212907.0b00e8a3@netstation>	<CAK2H+efDHKGVEdNHUXcDjbHSLKBLDu-DZTTxH9aN2vt+TLHy3A@mail.gmail.com>	<5389B463.5020100@hesbynett.no>	<8mtskybo2j1i4l2bqu51l7ll.1401554092920@email.android.com>	<CAK2H+ecb=HXRKgcguyRF_V0peoN9BPKb81e4rye1+xzONfLe0w@mail.gmail.com>	<538B4173.3030202@hesbynett.no> <CAK2H+ecPFA4yOm+PWoq-jF20KJh1xMKqyRB0WOTdFAVE7t0W1A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140604123046.02e224d6@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <CAK2H+ecPFA4yOm+PWoq-jF20KJh1xMKqyRB0WOTdFAVE7t0W1A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: Mark Knecht <markknecht@gmail.com>, David Brown <david.brown@hesbynett.no>
+Cc: Craig Curtin <craigc@prosis.com.au>, "L.M.J" <linuxmasterjedi@free.fr>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> On Wednesday, June 04, 2014 4:31 AM NeilBrown [neilb@suse.de] wrote:
-> Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
-> 
-> On Tue, 3 Jun 2014 09:03:16 +0000 "Baldysiak, Pawel"
-> <pawel.baldysiak@intel.com> wrote:
-> 
-> > >On Monday, June 02, 2014 4:20 AM NeilBrown [neilb@suse.de] wrote:
-> > > On Fri, 30 May 2014 13:11:43 +0000 "Baldysiak, Pawel"
-> > > <pawel.baldysiak@intel.com> wrote:
-> > >
-> > > > Changes introduced in commit:
-> > > > 0431869cec4c673309d9aa30a2df4b778bc0bd24
-> > > > enabled adding devices to partially assembled array.
-> > > > It causes assemble process to override checking controller of device.
-> > > >
-> > > > For example:
-> > > > If ones created IMSM array will be stopped, and some disks will be
-> > > > attached to different controller, mdadm will allow to fully
-> > > > assemble this array as one md device (due to marge one part to
-> another).
-> > > >
-> > > > This patch resolve this problem by forbidding merge operation on
-> > > > arrays with IMSM metadata.
-> > >
-> > > Why do you think this is a good thing?
-> > > You seem to be saying "You cannot access that data  because I don't
-> > > like which controllers you have attached it to".
-> > >
-> > > My thought is that you should provide access to data whenever possible.
-> > >
-> > > Is there some important situation where the current behaviour will
-> > > cause real problems?
-> > >
-> > > Maybe a warning might be appropriate, but failure doesn't seem
-> sensible...
-> > >
-> > > NeilBrown
-> > >
-> > Hi Neil,
-> >
-> > Sorry for all this mess with white-space corruption.
-> >
-> > Intel platforms have separate OpROMs for each controller.
-> > OpROMs manage SW RAIDs at startup and don't support arrays spanned
-> across different controllers.
-> > In this case array will become degraded or failed after reboot anyway,
-> because each OpROM will overwrite metadata on disks based on disks
-> attached to specific controller.
-> 
-> If this is true, then surely we will never get into the situation where the same
-> metadata is seen on different controller: the OpROM will have 'fixed' it
-> already.
-> 
-> > User should never be able to assemble IMSM array with disks under
-> different controllers by default.
-> 
-> I ask again:
->    "Is there some important situation where the current behaviour will cause
->     real problems?"
-> 
-> If not, I don't feel that the change is justified.
-> 
-> NeilBrown
+On 01/06/14 23:59, Mark Knecht wrote:
+>
+>     These VMs are the area where my current RAID6 (5 drive, 16k chunk
+> size) seems to have been a bad decision. The machine is powered off
+> every night. Loading these VMs takes at least 10-15 minutes each
+> morning where I see disk activity lights just grinding away the whole
+> time. If I had a single _performance_ goal in upgrading the disks it
+> would be to improve this significantly. Craig's SSD RAID1 suggestion
+> would certainly help here but at 240GB there wouldn't be a lot of room
+> left. That may be OK though.
+>
 
-Hi Neil
- 
-There are several cases where not forbidding this operation can cause problems.
-For example, if user will create IMSM array at one platform, then stop it, detach devices,
-and hotplug them to another platform (mixed between two different controllers) - 
-everything will be looking good (array will be incrementally assembled without any errors) until reboot.
-After that, user will be confused why array is degraded/failed and will be at risk of losing data.
-Also, creation of IMSM array under different controllers is forbidden, so there is no point in allowing that it in assemble process.
+Just a data point. I run between 4 & 10 VM's here 24/7 (always 4, 
+sometimes 10). I started them out on a 3 drive RAID-5 on 7200RPM disks, 
+then migrated them across to a RAID-10 of 15k SAS drives, and from there 
+to a 6x240GB RAID-10 of SSD's.
 
-If you really think this is no justification - I will prepare a patch that will print warning,
-but in my opinion this operation should be allowed only with "--force"... 
+I would _never_ go back to rotating media now. Some of my batch tasks in 
+a Windows 7 VM took up to an hour on the disks. I'm down to 20-30 
+minutes max now. Granted my workload is pretty atypical.
 
-Thanks
-Pawel Baldysiak
+Much less power, less noise and less heat. Lots to love.
 
-> 
-> > You can always use "--force" to override this check.
-> >
-> > Pawel Baldysiak
-> >
-> > > >
-> > > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > > > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> > > >
-> > > > ---
-> > > > Assemble.c | 23 +++++++++++++++++++++++
-> > > > 1 file changed, 23 insertions(+)
-> > > >
-> > > > diff --git a/Assemble.c b/Assemble.c index a57d384..9fb65e5 100644
-> > > > --- a/Assemble.c
-> > > > +++ b/Assemble.c
-> > > > @@ -1329,6 +1329,29 @@ try_again:
-> > > >                                                return 1;
-> > > >                                }
-> > > >                                for (dv = pre_exist->devs; dv; dv =
-> > > > dv->next) {
-> > > > +                                             if
-> > > > + (strncmp(mp->metadata, "imsm", 4) == 0 && !c-
-> > > >force) {
-> > > > +                                                             int dfd;
-> > > > +                                                             char dn[20];
-> > > > +                                                             struct supertype *st2;
-> > > > +                                                             sprintf(dn, "%d:%d", dv->disk.major,
-> > > > +                                                                                             dv->disk.minor);
-> > > > +                                                             st2 = dup_super(st);
-> > > > +                                                             dfd = dev_open(dn, O_RDONLY);
-> > > > +                                                             if
-> > > > + ((dfd > 0) && (st2->ss->load_super(st2,
-> > > dfd, NULL) ||
-> > > > +                                                                  (st->ss->compare_super(st, st2) !=
-> 0))) {
-> > > > +
-> > > > + pr_err("IMSM metadata
-> > > mismatch!\n");
-> > > > +                                                                             pr_err("Aborting...\n");
-> > > > +                                                                             close(dfd);
-> > > > +                                                             } else {
-> > > > +
-> > > > + pr_err("IMSM Array already
-> > > partially assembled!\n");
-> > > > +                                                                             pr_err("Aborting...\n");
-> > > > +                                                             }
-> > > > +                                                             if (st2) {
-> > > > +                                                                             st2->ss->free_super(st2);
-> > > > +                                                                             free(st2);
-> > > > +                                                             }
-> > > > +                                                             return 1;
-> > > > +                                             }
-> > > >                                                /* We want to add this device to our list,
-> > > >                                                 * but it could already be there if "mdadm -I"
-> > > >                                                 * started *after* we checked for O_EXCL.
-> > > > --
-> > > > 1.9.0
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+240GB drives are a bit of a price sweet spot, and still were when I 
+bought these 6 over a year ago. I just went with 3 from Intel and 3 from 
+Samsung just to spread the risk a little bit. 3 are on the MB AHCI 
+controller and 3 on an LSI SAS.
 
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
