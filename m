@@ -1,122 +1,176 @@
 From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: [RFC PATCH 3/4] md: handle IO latency accounting in rqfn mode
-Date: Wed,  4 Jun 2014 19:10:01 +0200
-Message-ID: <1401901802-16296-4-git-send-email-sebastian.riemer@profitbricks.com>
+Subject: [RFC PATCH 4/4] mdadm: introduce '--use-requestfn' create/assembly option
+Date: Wed,  4 Jun 2014 19:10:02 +0200
+Message-ID: <1401901802-16296-5-git-send-email-sebastian.riemer@profitbricks.com>
 References: <20140602202050.14903534@notabene.brown>
  <1401901802-16296-1-git-send-email-sebastian.riemer@profitbricks.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1401901802-16296-1-git-send-email-sebastian.riemer@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Florian-Ewald Mueller <florian-ewald.mueller@profitbricks.com>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Cc: linux-raid@vger.kernel.org, Sebastian Parschauer <sebastian.riemer@profitbricks.com>
 List-Id: linux-raid.ids
 
-From: Florian-Ewald Mueller <florian-ewald.mueller@profitbricks.com>
+With that option it is possible to tell the kernel via the writable
+module parameter 'rq_mode' that it should use the request function
+mode (request-by-request) instead of the default make request
+function mode (bio-by-bio). The advantage is that a scheduler can
+be used and the block layer cares for statistics.
 
-Also in the request function mode, the IO latency accounting should
-be done. In contrast to the make request mode, it is done per
-request.
-
-Signed-off-by: Florian-Ewald Mueller <florian-ewald.mueller@profitbricks.com>
-[spars: changed description, merged commits, fixed checkpatch warnings]
 Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
 ---
- drivers/md/md.c |   48 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 33 insertions(+), 15 deletions(-)
+ Assemble.c |    4 ++++
+ Create.c   |    4 ++++
+ ReadMe.c   |    3 +++
+ mdadm.c    |    5 +++++
+ mdadm.h    |    3 +++
+ util.c     |   34 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 53 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0e5c420..5858af0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -75,6 +75,9 @@ struct md_request_clone {
- 	struct mddev	*mdp;
- 	struct request	*req;
- 	struct bio_list	bios;
-+#ifdef BIO_ACCOUNTING_EXTENSION
-+	unsigned long	ticks;
-+#endif	/* BIO_ACCOUNTING_EXTENSION */
- 	atomic_t	cnt;
- 	int		err;
- };
-@@ -307,18 +310,34 @@ static inline long atomic64_set_if_greater(atomic64_t *v, long val)
- 	return old;
- }
- 
-+static inline void md_account_io_latency(struct mddev *mddev,
-+					 unsigned long duration, int rw)
-+{
-+	struct md_stats *sp = &mddev->stats;
-+	unsigned long msecs = jiffies_to_msecs(duration);
-+	int idx;
-+
-+	BUILD_BUG_ON(ARRAY_SIZE(sp->latency_table[0]) != 2);
-+	BUILD_BUG_ON(ARRAY_SIZE(sp->max_latency) != 2);
-+
-+	if (likely(duration > 0) && msecs > 0) {
-+		idx = ilog2(msecs) - MD_LATENCY_LOGBASE + 1;
-+		idx = clamp(idx, 0, (int)ARRAY_SIZE(sp->latency_table) - 1);
-+	} else {
-+		idx = 0;
-+	}
-+	atomic64_set_if_greater(&sp->max_latency[rw], duration);
-+	atomic64_inc(&sp->latency_table[idx][rw]);
-+}
-+
- static void md_bio_endio(struct bio *bio, int err)
- {
- 	struct md_bio_private *mbp = bio->bi_private;
- 	struct mddev *mddev = mbp->mddev;
--	struct md_stats *sp = &mddev->stats;
- 
- 	unsigned int sectors = mbp->sectors;
--	int cpu, idx, rw = bio_data_dir(bio);
--	unsigned long ms, ticks;
--
--	BUILD_BUG_ON(ARRAY_SIZE(sp->latency_table[0]) != 2);
--	BUILD_BUG_ON(ARRAY_SIZE(sp->max_latency) != 2);
-+	int cpu, rw = bio_data_dir(bio);
-+	unsigned long ticks;
- 
- 	ticks = (long)jiffies - (long)mbp->ticks;
- 
-@@ -330,15 +349,7 @@ static void md_bio_endio(struct bio *bio, int err)
- 	part_round_stats(cpu, &mddev->gendisk->part0);
- 	part_stat_unlock();
- 
--	ms = jiffies_to_msecs(ticks);
--	if (likely(ticks > 0) && ms > 0) {
--		idx = ilog2(ms) - MD_LATENCY_LOGBASE + 1;
--		idx = clamp(idx, 0, (int)ARRAY_SIZE(sp->latency_table) - 1);
--	} else {
--		idx = 0;
--	}
--	atomic64_set_if_greater(&sp->max_latency[rw], ticks);
--	atomic64_inc(&sp->latency_table[idx][rw]);
-+	md_account_io_latency(mddev, ticks, rw);
- 
- 	bio->bi_private = mbp->orig_bio_private;
- 	bio->bi_end_io = mbp->orig_bio_endio;
-@@ -463,6 +474,10 @@ static inline void md_make_request_bio(struct mddev *mddev, struct bio *bio)
- static inline void md_request_clone_release(struct md_request_clone *rcl)
- {
- 	if (atomic_dec_and_test(&rcl->cnt)) {
-+#ifdef BIO_ACCOUNTING_EXTENSION
-+		unsigned long diff = (long)jiffies - (long)rcl->ticks;
-+		md_account_io_latency(rcl->mdp, diff, rq_data_dir(rcl->req));
-+#endif	/* BIO_ACCOUNTING_EXTENSION */
- 		blk_end_request_all(rcl->req, rcl->err);
- 		kmem_cache_free(md_request_clone_cache, rcl);
+diff --git a/Assemble.c b/Assemble.c
+index a57d384..d35d218 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1275,6 +1275,10 @@ int Assemble(struct supertype *st, char *mddev,
+ 		       mddev ? mddev : "further assembly");
+ 		return 1;
  	}
-@@ -512,6 +527,9 @@ static inline int md_process_request(struct mddev *mddev, struct request *req)
- 	rcl->err = 0;
- 	rcl->req = req;
- 	rcl->mdp = mddev;
-+#ifdef BIO_ACCOUNTING_EXTENSION
-+	rcl->ticks = jiffies;
-+#endif	/* BIO_ACCOUNTING_EXTENSION */
- 	atomic_set(&rcl->cnt, 1);
- 	bio_list_init(&rcl->bios);
- 	bio = req->bio;
++	if (set_rq_mode(c->use_requestfn) != 0) {
++		pr_err("Cannot set the request function mode - cannot assemble.\n");
++		return 1;
++	}
+ 
+ 	if (devlist == NULL)
+ 		devlist = conf_get_devs();
+diff --git a/Create.c b/Create.c
+index 330c5b4..dc576f1 100644
+--- a/Create.c
++++ b/Create.c
+@@ -138,6 +138,10 @@ int Create(struct supertype *st, char *mddev,
+ 		pr_err("This level does not support spare devices\n");
+ 		return 1;
+ 	}
++	if (set_rq_mode(c->use_requestfn) != 0) {
++		pr_err("Cannot set the request function mode.\n");
++		return 1;
++	}
+ 
+ 	if (subdevs == 1 && strcmp(devlist->devname, "missing") != 0) {
+ 		/* If given a single device, it might be a container, and we can
+diff --git a/ReadMe.c b/ReadMe.c
+index bd8c85e..ecb829f 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -150,6 +150,7 @@ struct option long_options[] = {
+     {"force",	  0, 0, Force},
+     {"update",	  1, 0, 'U'},
+     {"freeze-reshape", 0, 0, FreezeReshape},
++    {"use-requestfn", 0, 0, UseRequestFn},
+ 
+     /* Management */
+     {"add",       0, 0, Add},
+@@ -372,6 +373,7 @@ char Help_create[] =
+ "  --name=       -N   : Textual name for array - max 32 characters\n"
+ "  --bitmap-chunk=    : bitmap chunksize in Kilobytes.\n"
+ "  --delay=      -d   : bitmap update delay in seconds.\n"
++"  --use-requestfn    : Tell the kernel to process requests instead of bios.\n"
+ "\n"
+ ;
+ 
+@@ -456,6 +458,7 @@ char Help_assemble[] =
+ "  --update=     -U   : Update superblock: try '-A --update=?' for option list.\n"
+ "  --no-degraded      : Assemble but do not start degraded arrays.\n"
+ "  --readonly    -o   : Mark the array as read-only. No resync will start.\n"
++"  --use-requestfn    : Tell the kernel to process requests instead of bios.\n"
+ ;
+ 
+ char Help_manage[] =
+diff --git a/mdadm.c b/mdadm.c
+index be990b8..35ff339 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -652,6 +652,11 @@ int main(int argc, char *argv[])
+ 		case O(INCREMENTAL, FreezeReshape):
+ 			c.freeze_reshape = 1;
+ 			continue;
++		case O(CREATE, UseRequestFn):
++		case O(ASSEMBLE, UseRequestFn):
++		case O(INCREMENTAL, UseRequestFn):
++			c.use_requestfn = 1;
++			continue;
+ 		case O(CREATE,'u'): /* uuid of array */
+ 		case O(ASSEMBLE,'u'): /* uuid of array */
+ 			if (ident.uuid_set) {
+diff --git a/mdadm.h b/mdadm.h
+index c0726bf..bb9f043 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -343,6 +343,7 @@ enum special_options {
+ 	Dump,
+ 	Restore,
+ 	Action,
++	UseRequestFn,
+ };
+ 
+ enum prefix_standard {
+@@ -417,6 +418,7 @@ struct context {
+ 	char	*backup_file;
+ 	int	invalid_backup;
+ 	char	*action;
++	int	use_requestfn;
+ };
+ 
+ struct shape {
+@@ -1355,6 +1357,7 @@ extern int remove_disk(int mdfd, struct supertype *st,
+ 		       struct mdinfo *sra, struct mdinfo *info);
+ extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
+ unsigned long long min_recovery_start(struct mdinfo *array);
++extern int set_rq_mode(int use_requestfn);
+ 
+ extern char *human_size(long long bytes);
+ extern char *human_size_brief(long long bytes, int prefix);
+diff --git a/util.c b/util.c
+index 7937eb6..b9c6cc3 100644
+--- a/util.c
++++ b/util.c
+@@ -1968,3 +1968,37 @@ void reopen_mddev(int mdfd)
+ 	if (fd >= 0 && fd != mdfd)
+ 		dup2(fd, mdfd);
+ }
++
++/*
++ * 0: make request fn mode (bio-by-bio)
++ * 1: request fn mode (request-by-request)
++ */
++#define BIO_MODE "0\n"
++#define REQ_MODE "1\n"
++
++int set_rq_mode(int use_requestfn)
++{
++	int fd, rv = 0;
++	ssize_t size, wbytes;
++	char *mode;
++
++	fd = open("/sys/module/md_mod/parameters/rq_mode", O_WRONLY);
++	if (fd < 0) {
++		if (errno != ENOENT || use_requestfn)
++			rv = 1;
++		goto out;
++	}
++	if (use_requestfn) {
++		mode = REQ_MODE;
++		size = sizeof(REQ_MODE);
++	} else {
++		mode = BIO_MODE;
++		size = sizeof(BIO_MODE);
++	}
++	wbytes = write(fd, mode, size);
++	if (wbytes != size)
++		rv = 1;
++	close(fd);
++out:
++	return rv;
++}
 -- 
 1.7.9.5
 
