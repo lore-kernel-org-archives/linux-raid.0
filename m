@@ -1,186 +1,88 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
-Date: Wed, 4 Jun 2014 12:30:46 +1000
-Message-ID: <20140604123046.02e224d6@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
-	<20140602121955.10a72b32@notabene.brown>
-	<84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/awVa=HvqXy=8HG9yVb_VUWW"; protocol="application/pgp-signature"
+From: Eivind Sarto <eivindsarto@gmail.com>
+Subject: Re: [patch 1/1] raid0: discard requests do not align to chunk boundary
+Date: Tue, 3 Jun 2014 21:51:22 -0700
+Message-ID: <3F3A3793-56FF-4F64-B5FE-C056402CC080@gmail.com>
+References: <4267B3A0-F0E8-407C-86D8-45ABC46D1464@gmail.com> <20140604122036.11175d7a@notabene.brown>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: multipart/mixed; boundary="Apple-Mail=_48F63083-80F1-4229-9455-8E77522F05A3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
+In-Reply-To: <20140604122036.11175d7a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Eivind Sarto <eivindsarto@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/awVa=HvqXy=8HG9yVb_VUWW
-Content-Type: text/plain; charset=US-ASCII
+
+--Apple-Mail=_48F63083-80F1-4229-9455-8E77522F05A3
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+Oops.  This one.
+-eivind
+
+--Apple-Mail=_48F63083-80F1-4229-9455-8E77522F05A3
+Content-Disposition: attachment;
+	filename=raid0_discard_requests_do_not_align_to_chunk_boundary.patch
+Content-Type: application/octet-stream;
+	name="raid0_discard_requests_do_not_align_to_chunk_boundary.patch"
+Content-Transfer-Encoding: 7bit
+
+Author: Eivind Sarto <esarto@fusionio.com>
+Date: Tue Jun  3 14:07:29 2014
+
+raid0: discard requests do not align to chunk boundary
+
+Raid0 sets max_discard_sectors equal to chunk_size.  However, that does
+make blkdev_issue_discard() to issue chunk-aligned REQ_DISCARD to raid0.
+If blkdev_issue_discard() is called with a non-chunk-aligned sector, it will
+break the request into multiple chunk-sized bio requests, but all the bio
+requests to raid0 will stay mis-aligned (and raid0 will need to split them all).
+
+This patch sets the device queue discard granularity + alignment.
+It will make blkdev_issue_discard() always break REQ_DISCARD requests into
+aligned requests to raid0, after the first partial/mis-aligned request has been
+issued.
+
+Signed-off-by: Eivind Sarto <esarto@fusionio.com>
+
+--- a/drivers/md/raid0.c	2014-06-02 11:26:29.000000000 -0700
++++ b/drivers/md/raid0.c	2014-06-03 11:56:05.000000000 -0700
+@@ -440,6 +440,8 @@ static int raid0_run(struct mddev *mddev
+ 	blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+ 	blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+ 	blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
++	mddev->queue->limits.discard_alignment = mddev->chunk_sectors << 9;
++	mddev->queue->limits.discard_granularity = mddev->chunk_sectors << 9;
+ 
+ 	/* if private is not null, we are here after takeover */
+ 	if (mddev->private == NULL) {
+
+--Apple-Mail=_48F63083-80F1-4229-9455-8E77522F05A3
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-On Tue, 3 Jun 2014 09:03:16 +0000 "Baldysiak, Pawel"
-<pawel.baldysiak@intel.com> wrote:
 
-> >On Monday, June 02, 2014 4:20 AM NeilBrown [neilb@suse.de] wrote:=20
-> > On Fri, 30 May 2014 13:11:43 +0000 "Baldysiak, Pawel"
-> > <pawel.baldysiak@intel.com> wrote:
-> >=20
-> > > Changes introduced in commit:
-> > > 0431869cec4c673309d9aa30a2df4b778bc0bd24
-> > > enabled adding devices to partially assembled array.
-> > > It causes assemble process to override checking controller of device.
-> > >
-> > > For example:
-> > > If ones created IMSM array will be stopped, and some disks will be
-> > > attached to different controller, mdadm will allow to fully assemble
-> > > this array as one md device (due to marge one part to another).
-> > >
-> > > This patch resolve this problem by forbidding merge operation on
-> > > arrays with IMSM metadata.
-> >=20
-> > Why do you think this is a good thing?
-> > You seem to be saying "You cannot access that data  because I don't like
-> > which controllers you have attached it to".
-> >=20
-> > My thought is that you should provide access to data whenever possible.
-> >=20
-> > Is there some important situation where the current behaviour will cause
-> > real problems?
-> >=20
-> > Maybe a warning might be appropriate, but failure doesn't seem sensible=
-...
-> >=20
-> > NeilBrown
-> >=20
-> Hi Neil,
+On Jun 3, 2014, at 7:20 PM, NeilBrown <neilb@suse.de> wrote:
+
+> On Tue, 3 Jun 2014 14:18:53 -0700 Eivind Sarto <eivindsarto@gmail.com> =
+wrote:
 >=20
-> Sorry for all this mess with white-space corruption.
+>> Raid0 only sets max_discard_sectors, but does not force alignment of =
+discard requests.  Discard request
+>> will be broken up into chunk-sized REQ_DISCARD by =
+blkdev_issue_discard(), but if the sector is not=20
+>> chunk-aligned, each REQ_DISCARD to raid0 will all remain unaligned =
+and raid0 will ned to split them all.
+>>=20
+>> This patch will prevent splitting of REQ_DISCARD requests.
+>>=20
+>> -eivind
 >=20
-> Intel platforms have separate OpROMs for each controller.
-> OpROMs manage SW RAIDs at startup and don't support arrays spanned across=
- different controllers.
-> In this case array will become degraded or failed after reboot anyway, be=
-cause each OpROM will overwrite metadata on disks based on disks attached t=
-o specific controller.
-
-If this is true, then surely we will never get into the situation where the
-same metadata is seen on different controller: the OpROM will have 'fixed' =
-it
-already.
-
-> User should never be able to assemble IMSM array with disks under differe=
-nt controllers by default.
-
-I ask again:
-   "Is there some important situation where the current behaviour will cause
-    real problems?"
-
-If not, I don't feel that the change is justified.
-
-NeilBrown
-
-> You can always use "--force" to override this check.
+> Which patch would that be, exactly.  :-)
 >=20
-> Pawel Baldysiak
->=20
-> > >
-> > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> > >
-> > > ---
-> > > Assemble.c | 23 +++++++++++++++++++++++
-> > > 1 file changed, 23 insertions(+)
-> > >
-> > > diff --git a/Assemble.c b/Assemble.c
-> > > index a57d384..9fb65e5 100644
-> > > --- a/Assemble.c
-> > > +++ b/Assemble.c
-> > > @@ -1329,6 +1329,29 @@ try_again:
-> > >                                                return 1;
-> > >                                }
-> > >                                for (dv =3D pre_exist->devs; dv; dv =3D
-> > > dv->next) {
-> > > +                                             if (strncmp(mp->metadat=
-a, "imsm", 4) =3D=3D 0 && !c-
-> > >force) {
-> > > +                                                             int dfd;
-> > > +                                                             char dn=
-[20];
-> > > +                                                             struct =
-supertype *st2;
-> > > +                                                             sprintf=
-(dn, "%d:%d", dv->disk.major,
-> > > +                                                                    =
-                         dv->disk.minor);
-> > > +                                                             st2 =3D=
- dup_super(st);
-> > > +                                                             dfd =3D=
- dev_open(dn, O_RDONLY);
-> > > +                                                             if ((df=
-d > 0) && (st2->ss->load_super(st2,
-> > dfd, NULL) ||
-> > > +                                                                  (s=
-t->ss->compare_super(st, st2) !=3D 0))) {
-> > > +                                                                    =
-         pr_err("IMSM metadata
-> > mismatch!\n");
-> > > +                                                                    =
-         pr_err("Aborting...\n");
-> > > +                                                                    =
-         close(dfd);
-> > > +                                                             } else {
-> > > +                                                                    =
-         pr_err("IMSM Array already
-> > partially assembled!\n");
-> > > +                                                                    =
-         pr_err("Aborting...\n");
-> > > +                                                             }
-> > > +                                                             if (st2=
-) {
-> > > +                                                                    =
-         st2->ss->free_super(st2);
-> > > +                                                                    =
-         free(st2);
-> > > +                                                             }
-> > > +                                                             return =
-1;
-> > > +                                             }
-> > >                                                /* We want to add this=
- device to our list,
-> > >                                                 * but it could alread=
-y be there if "mdadm -I"
-> > >                                                 * started *after* we =
-checked for O_EXCL.
-> > > --
-> > > 1.9.0
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> NeilBrown
 
 
---Sig_/awVa=HvqXy=8HG9yVb_VUWW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU46E1jnsnt1WYoG5AQKh4Q/8C97jQ9/ELBp5m6U9kjGVlKf27mjMBXtN
-p7x9u4b9ZRd2nhSgcUpdhdPLFBbSTqrgMulsHV4JglE/gn3Z3VeFzurokmQ9jClZ
-XqMJ6YbJM9hCzwSdINB/FlwEDOOt78xAMdUQt1Gadzgufgg6U4O0KA4I4xwjhdky
-Y5YHTlnAUAC6QQauGqWXI+4RXhvwL04xGCZ1py1q8jDOK0yU12TV0f2BGdFwh8wX
-h6fzmGfl2d7l67wWSK+5+flMuWwS29vTLeoySs5doWUnt6oTL1gCLvPhyOX6RxFA
-k8iJIT/xvahgyrHdyhMQMGmSxELOFDRNeBINJHWM85B/BvuDKH2faBLGhM+h9JmP
-m/X83MHPP8oFl6SbaplE4gK1P+xG2c97vdLq5fNqU2ULg2Trg2pfK59o8SOOYOwt
-MU92UIWxU371tSX92oAjUhT/xXf+37izoYnQkK10vStg3ZJgqcr5dQZUoTRWRP/n
-Nhnr3t25/XLANypOZppDeq/7bLupoBkVboROkOgb0j6Ai7y+Qh6+qBE2vUZRMR1p
-uVkSfv/pyafgiRqCeOuzD+vP+OhBSuLm8j00KwLDs9rKJe2PBEL2VFMiGDG7dSrj
-Wnji1ww5ra1UCMT1MFQGbsAfCyXQ6ZD49hsKRUHNvGgNUA9YxgJePGIwANziG0p5
-6fAz1ux5WcY=
-=HC0q
------END PGP SIGNATURE-----
-
---Sig_/awVa=HvqXy=8HG9yVb_VUWW--
+--Apple-Mail=_48F63083-80F1-4229-9455-8E77522F05A3--
