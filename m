@@ -1,62 +1,65 @@
-From: Chris Murphy <lists@colorremedies.com>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: writing zeros to bad sector results in persistent read error
-Date: Sat, 7 Jun 2014 18:52:16 -0600
-Message-ID: <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
-References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Sat, 7 Jun 2014 20:50:43 -0500
+Message-ID: <CAAMCDeddsKzi71KDBPik5i+wBp+On3gochDs_PqKoP9bN2szCQ@mail.gmail.com>
+References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com>
+ <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140607075140.277c0880@natsu>
+In-Reply-To: <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
-Cc: Roman Mamedov <rm@romanrm.net>, Roger Heflin <rogerheflin@gmail.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>, Roman Mamedov <rm@romanrm.net>
 List-Id: linux-raid.ids
 
-I wrote:
-> How can there still be pending bad sectors, and yet no error and LBA =
-reported?
+Check messages file and see if it has in the last few weeks reporting
+sectors bad.
 
-So I started another -t long test. And it comes up with an LBA not prev=
-iously reported.
+Or do a dd if=/dev/sda of=/dev/null read test until it hits something,
+then correct it, then continue on.
 
-# 1  Extended offline    Completed: read failure       60%      1214   =
-      430234064
+Or do repeated long/selective tests to see if you can find them.
 
-# dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8
-dd: writing to =91/dev/sda=92: Input/output error
-1+0 records in
-0+0 records out
-0 bytes (0 B) copied, 3.63342 s, 0.0 kB/s
+Though, I had a seagate disk that I was able to get all of the pending
+to be fixed, I had to remove the disk from the raid as it still would
+randomly pause for 7 seconds while reading sectors that were not yet
+classified as pending.   I tried a number of things to try to get the
+disk to behave and/or replace those bad sectors, but finally gave up
+on that disk and just replaced it (out of warranty) as I could not
+ever get it to behave right.
 
-On this sector the technique fails.
-
-# dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8 oflag=3Ddi=
-rect
-8+0 records in
-8+0 records out
-4096 bytes (4.1 kB) copied, 3.73824 s, 1.1 kB/s
-
-This technique works.
-
-However, this seems like a contradiction. A complete -t long results in=
-:
-
-# 1  Extended offline    Completed without error       00%      1219   =
-      -
-
-and yet
-
-197 Current_Pending_Sector  0x0022   100   100   000    Old_age   Alway=
-s       -       16
-
-How are there 16 pending sectors, with no errors found during the exten=
-ded offline test? In order to fix this without SMART reporting the affe=
-cted LBAs, I'd have to write to every sector on the drive. This seems l=
-ike bad design or implementation.
-
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, Jun 7, 2014 at 7:52 PM, Chris Murphy <lists@colorremedies.com> wrote:
+> I wrote:
+>> How can there still be pending bad sectors, and yet no error and LBA reported?
+>
+> So I started another -t long test. And it comes up with an LBA not previously reported.
+>
+> # 1  Extended offline    Completed: read failure       60%      1214         430234064
+>
+> # dd if=/dev/zero of=/dev/sda seek=430234064 count=8
+> dd: writing to '/dev/sda': Input/output error
+> 1+0 records in
+> 0+0 records out
+> 0 bytes (0 B) copied, 3.63342 s, 0.0 kB/s
+>
+> On this sector the technique fails.
+>
+> # dd if=/dev/zero of=/dev/sda seek=430234064 count=8 oflag=direct
+> 8+0 records in
+> 8+0 records out
+> 4096 bytes (4.1 kB) copied, 3.73824 s, 1.1 kB/s
+>
+> This technique works.
+>
+> However, this seems like a contradiction. A complete -t long results in:
+>
+> # 1  Extended offline    Completed without error       00%      1219         -
+>
+> and yet
+>
+> 197 Current_Pending_Sector  0x0022   100   100   000    Old_age   Always       -       16
+>
+> How are there 16 pending sectors, with no errors found during the extended offline test? In order to fix this without SMART reporting the affected LBAs, I'd have to write to every sector on the drive. This seems like bad design or implementation.
+>
+> Chris Murphy
