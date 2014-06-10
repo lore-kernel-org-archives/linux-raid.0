@@ -1,104 +1,75 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Unable to re-assemble a raid 10 after it has FAILED.
-Date: Tue, 10 Jun 2014 21:30:44 +1000
-Message-ID: <20140610213044.4b6a7996@notabene.brown>
-References: <CAEp9EKjgt1RTkYzhSX-UQN2-WhV3iCKPr_DTnHN_KmorvFNsvg@mail.gmail.com>
-	<CAEp9EKg462T+7E35RnarP6y41wGgNv3R_jAXEhxiLBg_vukW3g@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: writing zeros to bad sector results in persistent read error
+Date: Tue, 10 Jun 2014 09:40:30 -0400
+Message-ID: <53970ACE.6080001@turmel.org>
+References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> <20140609193723.79F1B3809B0@gemini.denx.de> <19559C36-08B4-4C2F-ABC3-9DE79BE37B54@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/=WarB1/s/bDAN__bW0_V42H"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEp9EKg462T+7E35RnarP6y41wGgNv3R_jAXEhxiLBg_vukW3g@mail.gmail.com>
+In-Reply-To: <19559C36-08B4-4C2F-ABC3-9DE79BE37B54@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alberto Morell <amp4tj@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>, Wolfgang Denk <wd@denx.de>, Roman Mamedov <rm@romanrm.net>
+Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/=WarB1/s/bDAN__bW0_V42H
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 06/09/2014 10:48 PM, Chris Murphy wrote:
+> 
+> On Jun 9, 2014, at 1:37 PM, Wolfgang Denk <wd@denx.de> wrote:
+> 
+>> Dear Chris,
+>> 
+>> In message
+>> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> you
+>> wrote:
+>>> 
+>>> # dd if=/dev/zero of=/dev/sda seek=430234064 count=8 oflag=direct
+>>> 8+0 records in 8+0 records out 4096 bytes (4.1 kB) copied,
+>>> 3.73824 s, 1.1 kB/s
+>> 
+>> This has been pointed out before - if this is a 4k sector drive, 
+>> then you should really write in units of 4 k, not 8 x 512 bytes as 
+>> you do here.
+> 
+> It worked so, why?
 
-On Tue, 10 Jun 2014 13:04:28 +0200 Alberto Morell <amp4tj@gmail.com> wrote:
+Because writing 512 bytes into a 4096 byte physical sector requires a
+read-modify-write cycle.  That will fail if the physical sector is
+unreadable.  If you try to overwrite a bad 4k sector with eight 512-byte
+writes, each will trigger an RMW, and the 'R' of the RMW will fail for
+all eight logical sectors.  If you tell dd to use a block size of 4k, a
+single write will be created and passed to the drive encompassing all
+eight logical sectors at once.  So the drive doesn't need an RMW
+cycle--a write attempt can be made without the preceding read.  Then the
+drive has the opportunity to complete its rewrite or remap logic.
 
-> Hi!
->=20
-> I have a raid 10 devices with 4 components. I make the raid fails, by
-> making two components fail (using "mdadm --set-faulty <device>"). When
-> I add the two devices back, they are added as spare devices. Then, I
-> can get the raid active again only creating the raid again using
-> "mdadm --create --assume-clean...". Re-assembling the device does not
-> work with error message:
->=20
-> mdadm: failed to RUN_ARRAY /dev/md/hdd: Input/output error
-> mdadm: Not enough devices to start the array.
->=20
-> I am trying to automate the raid configuration and the "mdadm --create
-> ..." option is not convenient as I would have to know all the creation
-> parameters.
->=20
-> Below is the command sequence.
->=20
-> Thanks is advance,
->=20
-> Alberto Morell.
->=20
->=20
-> [root@os2 raid_tools]# mdadm --version
-> mdadm - v3.2.6 - 25th October 2012
->=20
-> [root@os2 ~]# mdadm --create /dev/md/hdd --metadata=3D1.0 --auto=3Dmd --n=
-ame=3Dhdd \
-> --chunk=3D256 --bitmap=3Dinternal --bitmap-chunk=3D65536 --level=3Draid10=
- --run \
-> --raid-devices=3D4 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
->=20
-> [root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sde1
-> mdadm: set /dev/sde1 faulty in /dev/md/hdd
-> [root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sdf1
-> mdadm: set /dev/sdf1 faulty in /dev/md/hdd
+> The drive interface only accepts LBAs based on 512 byte sectors, so 
+> bs=512 count=8 is the same as bs=4096 count=1, it has to get
+> translated into 512 byte LBAs regardless.
 
-So now your array is dead.  I assume you expected this.
+The sector address does have to be translated to 512-byte LBAs.  That
+has nothing to do with the *size* of each write.  So *NO*, it is *not*
+the same.
 
->=20
-> [root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sde1
-> mdadm: hot removed /dev/sde1 from /dev/md/hdd
-> [root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sdf1
-> mdadm: hot removed /dev/sdf1 from /dev/md/hdd
-> [root@os2 ~]# mdadm --add /dev/md/hdd /dev/sde1
-> mdadm: re-added /dev/sde1
-> [root@os2 ~]# mdadm --add /dev/md/hdd /dev/sdf1
-> mdadm: re-added /dev/sdf1
+"dd" is a terrible tool, except when it is perfect.  As a general rule,
+if you aren't specifying 'bs=' every time you use it, you've messed up.
+ And if you specify 'direct', remember that each block sized read or
+write issued by dd will have to *complete* through the whole driver
+stack before dd will issue the next one.
 
-Adding good things to dead things doesn't make the dead thing undead.
-You don't want to do this.
+> If it were a 4096 byte logical sector drive I'd agree.
 
-If and array is dead, the best thing to do is to stop it, before trying to
-re-add anything, and (after checking the all the devices are really working)
-assemble with --force.
-That is the best way to breath life into a dead array.
+You do know that drives are physically incapable of writing partial
+sectors?  It has to be emulated, either in drive firmware or OS driver
+stack.  What you've written suggests you've missed that basic reality.
+The rest is operator error.  Roman and Wolfgang were too polite when
+pointing out the need for bs=4096 -- it isn't 'should', it is 'must'.
 
-NeilBrown
+As for the secure erase, I too am surprised that it didn't take care of
+pending errors.  But I am *not* surprised that that new errors were
+discovered shortly after, as pending errors are only ever discovered
+when *reading*.
 
---Sig_/=WarB1/s/bDAN__bW0_V42H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+HTH,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU5bsZDnsnt1WYoG5AQLZrQ//Wz5zkndPNu2MCYYHyqHjrn1VsdwYN/+B
-0DlRhGTrxLT9XAUgkoX3TRQQee2DxzOFDbx8Wwf1FZLdT4rrL/9RSM0r30MNKX6D
-cNOwQ5lp4u0MwoXB6sV4acRIgD+PqQww5Q7Wws6cumngkB2Be8ERUAYfLq5vmmmq
-/p5cLtSfPoNkf23W4cMAvQ1g+UVnJJ+6BC2OOTUAktnYageiRy4DGc+s0tbtCj/P
-Um5MSGN4vv8P5qhAzd3rf0pjrQ5p7J2JOBO6ogKv1UHdJCibrNlK5/2g3xvU+hLw
-AkhRz4s7ULltLm64Z5keRb5+Ea+aNwOLxm4liRO0EPliOr/LWIB+fXofc+3dhKVK
-qDwixvqtrgv9XKgfGFflDSliFs7baLR/muCyATR0e8JfYsiwQ7ymFxcenN1ZQkUt
-2IPhS3vYeXEOxZBUGG/2fLYALNvR05a47ZMHaxuoAZu8BgFdStG7bh3pC15p80PZ
-yuKsr27phvjzRGDDzrl5yhI+jdp155fnUuCh3edIKq7fQ4I/7+bYL+f1yUc11zHk
-PFrR1VZ4qDSkH33nyhXcRotqLCyr2pvGVEviy1GmVQk+PC3WqyyBzrOUWmrU1rRD
-KGJqEnknI8HW33MWuGfAlYaQEj5q2YpS8VzqqeSUEeYf7zMiGF6UZDPOWdyOrTjn
-V6N7tvIfrg0=
-=fxIk
------END PGP SIGNATURE-----
-
---Sig_/=WarB1/s/bDAN__bW0_V42H--
+Phil
