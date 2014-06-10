@@ -1,108 +1,105 @@
-From: Wilson Jonathan <piercing_male@hotmail.com>
-Subject: Re: writing zeros to bad sector results in persistent read error
-Date: Tue, 10 Jun 2014 07:52:30 +0100
-Message-ID: <BLU436-SMTP219AA7248E603D2B8669A1F98280@phx.gbl>
-References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com>
-	 <20140607075140.277c0880@natsu>
-	 <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
-	 <BLU436-SMTP1535675BF98253D9B967F17982E0@phx.gbl>
-	 <BBD6BB5F-9D33-413B-AD74-3DC3EA34D6AB@colorremedies.com>
+From: Alberto Morell <amp4tj@gmail.com>
+Subject: Fwd: Unable to re-assemble a raid 10 after it has FAILED.
+Date: Tue, 10 Jun 2014 13:04:28 +0200
+Message-ID: <CAEp9EKg462T+7E35RnarP6y41wGgNv3R_jAXEhxiLBg_vukW3g@mail.gmail.com>
+References: <CAEp9EKjgt1RTkYzhSX-UQN2-WhV3iCKPr_DTnHN_KmorvFNsvg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BBD6BB5F-9D33-413B-AD74-3DC3EA34D6AB@colorremedies.com>
+In-Reply-To: <CAEp9EKjgt1RTkYzhSX-UQN2-WhV3iCKPr_DTnHN_KmorvFNsvg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2014-06-09 at 18:09 -0600, Chris Murphy wrote:
-> On Jun 8, 2014, at 2:10 AM, Wilson Jonathan <piercing_male@hotmail.co=
-m> wrote:
->=20
-> > On Sat, 2014-06-07 at 18:52 -0600, Chris Murphy wrote:
-> >> I wrote:
-> >>> How can there still be pending bad sectors, and yet no error and =
-LBA reported?
-> >>=20
-> >> So I started another -t long test. And it comes up with an LBA not=
- previously reported.
-> >>=20
-> >> # 1  Extended offline    Completed: read failure       60%      12=
-14         430234064
-> >>=20
-> >> # dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8
-> >> dd: writing to =E2=80=98/dev/sda=E2=80=99: Input/output error
-> >> 1+0 records in
-> >> 0+0 records out
-> >> 0 bytes (0 B) copied, 3.63342 s, 0.0 kB/s
-> >>=20
-> >> On this sector the technique fails.
-> >>=20
-> >> # dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8 oflag=
-=3Ddirect
-> >> 8+0 records in
-> >> 8+0 records out
-> >> 4096 bytes (4.1 kB) copied, 3.73824 s, 1.1 kB/s
-> >=20
-> > I may be missing something here, but surely after all this faffing =
-about
-> > and errors isn't it about time to replicate the data to a new drive=
- and
-> > then hit this one repeatedly with a very large hammer.
-> >=20
-> > The law of diminishing returns must surely be coming into play by n=
-ow.
->=20
-> No the question here isn't what's the right course of action from thi=
-s point. This is an academic question: whether the reported behavior(s)=
- are as designed.
->=20
-> From an enterprise perspective, my understanding is even one bad sect=
-or is disqualifying and the drive goes back to the manufacturer if it's=
- under warranty; or otherwise demoted for less important use if it's no=
-t.
->=20
-> For consumer drives, which this is, all the manufacturers will say th=
-e drive is functioning as designed with bad sectors *if* they're being =
-reallocated. Maybe some of them won't quibble and will send a replaceme=
-nt drive anyway.
->=20
-> But what I'm reporting is an instance where an ATA Secure Erase defin=
-itely did not fix up a single one of the bad sectors. Maybe that's cons=
-istent with the spec, I don't know, but it's not what I'd expect seeing=
- as every sector, those with an without LBA's assigned, are overwritten=
-=2E Yet pending sectors were not remapped. Further, with all sectors ov=
-erwritten by software (not merely the ATA Secure Erase command) yields =
-no errors yet SMART reports there are still pending sectors, yet it's o=
-wn extended test says there are none. I think that's bad behavior. But =
-perhaps I don't understand the design and it's actually working as desi=
-gned.
->=20
+Hi!
 
-Thanks for the clarification over this being an academic question rathe=
-r
-than a live, real world disk is playing up, what should I do type
-question.
+I have a raid 10 devices with 4 components. I make the raid fails, by
+making two components fail (using "mdadm --set-faulty <device>"). When
+I add the two devices back, they are added as spare devices. Then, I
+can get the raid active again only creating the raid again using
+"mdadm --create --assume-clean...". Re-assembling the device does not
+work with error message:
 
-Your mention of the secure erase not, or seemingly not, re-mapping does
-raise an important question. If it does indeed remap, due to data
-change, but does not change the count then its an oddity, however if
-secure erase fails to remap and does not change the data at all then
-there is the potential for live data to be recoverable (although it
-would be a small amount) in some form, perhaps by directly driving the
-disk (as apposed to os control) or even moving the platters to another
-disk case or some other method dependent on the time and effort involve=
-d
-being worth it.=20
+mdadm: failed to RUN_ARRAY /dev/md/hdd: Input/output error
+mdadm: Not enough devices to start the array.
 
->=20
-> Chris Murphy
+I am trying to automate the raid configuration and the "mdadm --create
+..." option is not convenient as I would have to know all the creation
+parameters.
+
+Below is the command sequence.
+
+Thanks is advance,
+
+Alberto Morell.
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[root@os2 raid_tools]# mdadm --version
+mdadm - v3.2.6 - 25th October 2012
+
+[root@os2 ~]# mdadm --create /dev/md/hdd --metadata=1.0 --auto=md --name=hdd \
+--chunk=256 --bitmap=internal --bitmap-chunk=65536 --level=raid10 --run \
+--raid-devices=4 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+
+[root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sde1
+mdadm: set /dev/sde1 faulty in /dev/md/hdd
+[root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sdf1
+mdadm: set /dev/sdf1 faulty in /dev/md/hdd
+
+[root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sde1
+mdadm: hot removed /dev/sde1 from /dev/md/hdd
+[root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sdf1
+mdadm: hot removed /dev/sdf1 from /dev/md/hdd
+[root@os2 ~]# mdadm --add /dev/md/hdd /dev/sde1
+mdadm: re-added /dev/sde1
+[root@os2 ~]# mdadm --add /dev/md/hdd /dev/sdf1
+mdadm: re-added /dev/sdf1
+
+[root@os2 raid_tools]# mdadm --detail /dev/md/hdd /dev/md/hdd:
+        Version : 1.0
+  Creation Time : Tue Jun 10 10:57:23 2014
+     Raid Level : raid10
+  Used Dev Size : 4193280 (4.00 GiB 4.29 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Jun 10 10:59:25 2014
+          State : active, FAILED, Not Started
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : near=2
+     Chunk Size : 256K
+
+           Name : hdd
+           UUID : 3398fe2d:48bfbff8:6ff2acaf:7cd020c5
+         Events : 60
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       0        0        2      removed
+       3       0        0        3      removed
+
+       2       8       65        -      spare   /dev/sde1
+       3       8       81        -      spare   /dev/sdf1
+
+[root@os2 raid_tools]# mdadm --assemble /dev/md/hdd --force --run
+--uuid=3398fe2d:48bfbff8:6ff2acaf:7cd020c5 --verbose /dev/sdc1
+/dev/sdd1 /dev/sde1 /dev/sdf1
+mdadm: looking for devices for /dev/md/hdd
+mdadm: /dev/sdc1 is identified as a member of /dev/md/hdd, slot 0.
+mdadm: /dev/sdd1 is identified as a member of /dev/md/hdd, slot 1.
+mdadm: /dev/sde1 is identified as a member of /dev/md/hdd, slot -1.
+mdadm: /dev/sdf1 is identified as a member of /dev/md/hdd, slot -1.
+mdadm: added /dev/sdd1 to /dev/md/hdd as 1
+mdadm: no uptodate device for slot 2 of /dev/md/hdd
+mdadm: no uptodate device for slot 3 of /dev/md/hdd
+mdadm: added /dev/sde1 to /dev/md/hdd as -1
+mdadm: added /dev/sdf1 to /dev/md/hdd as -1
+mdadm: added /dev/sdc1 to /dev/md/hdd as 0
+mdadm: failed to RUN_ARRAY /dev/md/hdd: Input/output error
+mdadm: Not enough devices to start the array.
