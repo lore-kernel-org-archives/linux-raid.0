@@ -1,84 +1,72 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: writing zeros to bad sector results in persistent read error
-Date: Mon, 9 Jun 2014 18:09:56 -0600
-Message-ID: <BBD6BB5F-9D33-413B-AD74-3DC3EA34D6AB@colorremedies.com>
-References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> <BLU436-SMTP1535675BF98253D9B967F17982E0@phx.gbl>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID-10 explicitly defined drive pairs?
+Date: Tue, 10 Jun 2014 10:11:22 +1000
+Message-ID: <20140610101122.53d16123@notabene.brown>
+References: <20111212115459.GC20730@fi.muni.cz>
+	<4EE61EAE.20101@anonymous.org.uk>
+	<20120106150823.GX25976@fi.muni.cz>
+	<20120107075526.59ed433c@notabene.brown>
+	<CAGRgLy4Q5FhHMAeU3egqEfFKR_h1HneReg0sD_+hCmsF3WDzQw@mail.gmail.com>
+	<20120322213114.61fd4e44@notabene.brown>
+	<CAGRgLy7N7m4zFY-EKe8ApUGSR3ZCUpOTZcRvLVLd5WAN2f+k9g@mail.gmail.com>
+	<CAGRgLy7BaVTjacaqMVD1JNYgtTn6MAk9bN-GzDC8B0CypJWJmw@mail.gmail.com>
+	<CAGRgLy5tauPMAoy=3QkErvtQPjz3FrNYTxQ-2rxTP6nO5tRXXQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/TShRXui4t/iEzje=oQ02XR5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP1535675BF98253D9B967F17982E0@phx.gbl>
+In-Reply-To: <CAGRgLy5tauPMAoy=3QkErvtQPjz3FrNYTxQ-2rxTP6nO5tRXXQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <piercing_male@hotmail.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/TShRXui4t/iEzje=oQ02XR5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Jun 8, 2014, at 2:10 AM, Wilson Jonathan <piercing_male@hotmail.com>=
- wrote:
+On Mon, 9 Jun 2014 17:26:38 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> On Sat, 2014-06-07 at 18:52 -0600, Chris Murphy wrote:
->> I wrote:
->>> How can there still be pending bad sectors, and yet no error and LB=
-A reported?
->>=20
->> So I started another -t long test. And it comes up with an LBA not p=
-reviously reported.
->>=20
->> # 1  Extended offline    Completed: read failure       60%      1214=
-         430234064
->>=20
->> # dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8
->> dd: writing to =91/dev/sda=92: Input/output error
->> 1+0 records in
->> 0+0 records out
->> 0 bytes (0 B) copied, 3.63342 s, 0.0 kB/s
->>=20
->> On this sector the technique fails.
->>=20
->> # dd if=3D/dev/zero of=3D/dev/sda seek=3D430234064 count=3D8 oflag=3D=
-direct
->> 8+0 records in
->> 8+0 records out
->> 4096 bytes (4.1 kB) copied, 3.73824 s, 1.1 kB/s
->=20
-> I may be missing something here, but surely after all this faffing ab=
-out
-> and errors isn't it about time to replicate the data to a new drive a=
-nd
-> then hit this one repeatedly with a very large hammer.
->=20
-> The law of diminishing returns must surely be coming into play by now=
-=2E
+> > Why do you refuse to freeze the array if it's not "idle"? What will
+> > happen is that current recover/resync will abort, drives will be
+> > added, and on unfreezing, array will resume (restart?) recovery with
+> > all drives. If array was resyncing, however, it will start recovering
+> > the newly added drives, because kernel prefers recovery over resync
+> > (as we discussed earlier).
+> Indeed, since dea3786ae2cf74ecb0087d1bea1aa04e9091ad5c, I see that you
+> agree to freeze the array also in case it is recovering.
 
-No the question here isn't what's the right course of action from this =
-point. This is an academic question: whether the reported behavior(s) a=
-re as designed.
+I guess I did..... though I don't remember seeing the email that you have
+quoted.  I can see it in my inbox, but it seems that I never replied.  Maybe
+I was too busy that day :-(
 
-=46rom an enterprise perspective, my understanding is even one bad sect=
-or is disqualifying and the drive goes back to the manufacturer if it's=
- under warranty; or otherwise demoted for less important use if it's no=
-t.
+If there other outstanding issues, feel free to resend.
+(If I don't reply it is more likely to be careless than deliberate, so in
+general you should feel free to resend if I don't respond in a week or so).
 
-=46or consumer drives, which this is, all the manufacturers will say th=
-e drive is functioning as designed with bad sectors *if* they're being =
-reallocated. Maybe some of them won't quibble and will send a replaceme=
-nt drive anyway.
+NeilBrown
 
-But what I'm reporting is an instance where an ATA Secure Erase definit=
-ely did not fix up a single one of the bad sectors. Maybe that's consis=
-tent with the spec, I don't know, but it's not what I'd expect seeing a=
-s every sector, those with an without LBA's assigned, are overwritten. =
-Yet pending sectors were not remapped. Further, with all sectors overwr=
-itten by software (not merely the ATA Secure Erase command) yields no e=
-rrors yet SMART reports there are still pending sectors, yet it's own e=
-xtended test says there are none. I think that's bad behavior. But perh=
-aps I don't understand the design and it's actually working as designed=
-=2E
+--Sig_/TShRXui4t/iEzje=oQ02XR5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iQIVAwUBU5ZNKjnsnt1WYoG5AQKhkw//clHVSx1dsm7KkkXD+kma1b40VKCzfi1C
+hKq5T7WrT93Z5ybjRbcW+EfmgiZ9am2fJaa66nbdXMIArjkjt5CdDPk3eIVCOjaH
+LZjOZiftYLVmPMczmNpJmcU1BM/SQi3Rizav5uIzOr7A8yWEwj5p9Kz6P+7+lo22
+xNlxnAU8BfX2Vt2xAFout13K+4NrhlDxurOxXuInrPCD9JpBg7l2b7lpd0EF+ksN
+BACPefVNOenT/C1uMUo7mgrXtIVbAsBSzR6lh4DWEOiTXg6zg7S2LT0SQZPJMKlq
+Lkm/DXCItOcUHaZmDHrTM7m+M5QQElYpzpTcZEHyr+QVE4KJaV/VQkXUpTp+nuvG
+E36EBeOZGkg8oDB9qE8La0Fj90PHOdj9CgPvjhTQ1wtKyg7+eV+vg2DUJamlgG2e
+QJg67etsuxiXgAJn1QZI5pH5qN1Oi788AyABoyogQqu3xS6YhArxaK1TuF2OiWnj
+hK7cItSgJ3du6YUAnneUF9RAkXK62C3e/LiKwZDh1bHOIK71AoZZlhb6lZ3S1CNt
+wvB/W2A+O+2CV/5rgyG/+ADZPEWkJTV1ZXsoLiAdPVhHyqvbidIMgdSjkr+hIpIf
+uWS6Ih02BJUjjmwPIu6UUJf4ybvPCI5WL2q2KItW6udZhkxZcNHVXB3i72i+nJse
+mohtBGWzTIA=
+=vYpX
+-----END PGP SIGNATURE-----
+
+--Sig_/TShRXui4t/iEzje=oQ02XR5--
