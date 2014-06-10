@@ -1,106 +1,99 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mismatches after growing raid1 and re-adding a failed drive
-Date: Tue, 10 Jun 2014 10:21:05 +1000
-Message-ID: <20140610102105.6e544fd7@notabene.brown>
-References: <CAGRgLy6YHMe-CRB1h4WHC-1xtdy5nURecf51LWu9WRaCy8Nw6w@mail.gmail.com>
+Subject: Re: [patch 1/1] raid5: speedup sync_request processing
+Date: Tue, 10 Jun 2014 11:10:23 +1000
+Message-ID: <20140610111023.7a2e6ecd@notabene.brown>
+References: <EC0B81A7-E03B-442F-B523-4B7154ABDC34@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/LK8cKHZhnX6z41km9LHdO8v"; protocol="application/pgp-signature"
+ boundary="Sig_/+8bMCJVgV2JQChVy9mEJi8t"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6YHMe-CRB1h4WHC-1xtdy5nURecf51LWu9WRaCy8Nw6w@mail.gmail.com>
+In-Reply-To: <EC0B81A7-E03B-442F-B523-4B7154ABDC34@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Eivind Sarto <eivindsarto@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/LK8cKHZhnX6z41km9LHdO8v
+--Sig_/+8bMCJVgV2JQChVy9mEJi8t
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 6 Jun 2014 14:59:32 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Mon, 9 Jun 2014 17:06:19 -0700 Eivind Sarto <eivindsarto@gmail.com> wrot=
+e:
 
-> Hi Neil,
-> testing the following scenario:
+> Ignore previous email.  Forgot to attach patch.
 >=20
-> 1) create a raid1 with drives A and B, wait for resync to complete
-> (verify mismatch_cnt is 0)
-> 2) drive B fails, array continues to operate as degraded, new data is
-> written to array
-> 3) add a fresh drive C to array (after zeroing any possible superblock on=
- C)
-> 4) wait for C recovery to complete
+> This is a trivial patch that improves rebuild/resync speed of raid5 array=
+s.
+> Instead of having the resync-thread handle the stripe, it now just sets S=
+TRIPE_HANDLE and
+> releases the stripe.  Allowing the resync-thread to return immediately an=
+d schedule more operations.
 >=20
-> At this point, for some reason "bitmap->events_cleared" is not
-> updated, it remains 0, although the bitmap is clear.
-
-We should update events_cleared after the first write after the array became
-optimal.  I assume you didn't write to the array while the array was
-recovering or afterwards?
-
+> The speedup will increase with more drives in the array.  And it will inc=
+rease further if additional
+> kworker threads are enabled.  But, it improves with just the default raid=
+5d() running.
 >=20
-> 5) grow the array by one slot:
-> mdadm --grow /dev/md1 --raid-devices=3D3 --forc
-> 6) re-add drive B back
-> mdadm --manage /dev/md1 --re-add /dev/sdb
+> Note: I posted this patch a while back, but nothing happened.  Not accept=
+ed, not rejected.
 >=20
-> MD accepts this drive, because in super_1_validate:
->         /* If adding to array with a bitmap, then we can accept an
->          * older device, but not too old.
->          */
->         if (ev1 < mddev->bitmap->events_cleared)
->             return 0;
-> Since events_cleared=3D=3D0, this condition DOES NOT hold, and drive B is=
- accepted
-
-Yes, that is bad.  I guess we need to update events_cleared when recovery
-completes because bits in the bitmap are cleared then too.
-
-Either bitmap_end_sync or the two places that call it need to update
-events_cleared just like bitmap_endwrite does.
-
+> Trying one more time.
 >=20
-> 7) recovery begins and completes immediately as the bitmap is clear
-> 8) issuing "echo check > ..." yields in a lot of mismatched
-> (naturally, as B's data was not synced)
->=20
-> Is this a valid scenario? Any idea why events_cleared is not updated?
+> -eivind
 
-Yes, scenario is valid.  It is a bug and should be fixed.
+I looked through my mail and found you posted much the same patch on 11th
+February.
+I replied as below.  You never resent (or if you did, I never got it).  You
+did reply with some numbers, but that isn't the same as resubmitting the
+patch with a proper description at the top.
 
-Would you like to write and test a patch as discussed above?
+Your new patch does mention some performance numbers in the comment so that=
+ I
+a lot better.  I've applied it.
 
 Thanks,
 NeilBrown
 
 
+Hi,
+ thanks for the patch.
+ When you include a patch as an attachment, I find it easier to work with if
+ it is "text/plain" rather than "application/octet-stream".
 
-> Kernel is 3.8.13
->=20
-> Thanks,
-> Alex.
+ As your patch is justified as a performance improvement, please include
+ some measurements together with a rough description of the hardware (one or
+ two sentences).
+
+ Also, the performance improvement requires that multi-threading is enabled,
+ which isn't the default.  Please measure the effect of the patch when
+ multi-threading not enabled.
+ Maybe we should make the change you suggest be conditional on threading
+ being enabled, but we can't know without numbers.
+
+Thanks,
+NeilBrown
 
 
---Sig_/LK8cKHZhnX6z41km9LHdO8v
+--Sig_/+8bMCJVgV2JQChVy9mEJi8t
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU5ZPcTnsnt1WYoG5AQI+yA/+IhP+R+T00O6lY4e6evkCmqUSxkzGgHrI
-82KmbGG14E6Xdp9saB3/TBTNcMu/oIp4NixiEhLvGLBg2rTisxvLcmQAm0XW7Qbe
-tKHDAy00AU2wmwjxZvciB6xxe7aEFZa2T8X0eh7DI0YVjEE2swT/NuSSSX1EPplr
-cFKv5/9y4LOGj8pUBLhUFllR/7o5IjaD+xbI7tRD9Rkt9WdMleshzJfHMQFgOG4d
-PaK1UCPxWejVVf2HuLGBf3RyQ0Ch8ecKQw08uywNLFPl0USnMSD7MjIvrIORlG61
-KnyRqpF/Dbt3MueFBD+5T4uuxQjtOvXfcjsSvA9kWFPk2/q6SiPUMVKdRY4f+C19
-BZzCresKhTowtQNQsdjf0uQ5WIad6SskcKda+ktnFa8pLgtOb4M77YaE8S0QWmur
-2BpvAyitcGrUbThr5voKASUf0xG92FrJ6FVWX81gZlDzZE4EhbKNA3GRj2dVCEg9
-jzAo7MZojo9ygxQpWZK7J7Tb5GznUXa5i2r6SBC5lytcXosHL7AeXYY95mcSatuK
-7fjhxpR1DBbrjJolE9fyA02sTi+pFD2yNPu5oN84zZZHi4ZMwffSBMz/V56aQoia
-KQJkVWFLVgYKUr525bQS5zDoM8jtqTz+vvkAYaxe4rw17+lOvO5uQmN30qZ3WuUe
-4JoKomqKRiI=
-=udew
+iQIVAwUBU5Za/znsnt1WYoG5AQKyNg/8C7HHN4AtUzc3W92+V/jZGUOcY/fwo/xz
+X+u00YGe7ic8V167Bk2Y62zh9hqGOjkhwITzoHEeKAq56DNNNBnugHUfr3X4gMgK
+lEU2iHstJ0jPBdP5Od+YLqffKef2/iIBkOVcpyNeYir1EbsE9HgLXxuoaY2nA9Ji
+iD1Qk3WIQMItHiY8PcL5ruDom5jFMKPjEVU6bhI1RrX5eAXa2UAtBjIMtoPhEkHc
+cw3UZZJrjQtJZkyJpxAVy+xktese+fYu0GP8uF0enFpe315D8PoG5kqgx/Z7o2Do
+vOJfjH4LJ5Kn5RBEMr2c7Qn044yu/MTs/XdpbbzGcfM8O8QQqEz0OGxVFHN11/Z8
+yD5cxUbjELTWelxbw6dR8K3sheLOyD7UESdWZNs1Z2W0ivRgxVpLnFPyvDQC6Wnr
+n86spZkoDfjLqtMKn2drBCEB4qdBrD5fas64S7gWPnm3eXjfTutCU6r1PQEcLS9C
+EloSzqsBGLmWmb7WYbeumVf6tvMIigsHEMlFeqnaUVrNZeem2ZwR6fbeAm4JAcXt
+uEzUWISZrwIvvFW5/tuCigBZPVRVVOfzkNyT+WGNrQXAQ5RdcqRH15fEuvUlmd+S
+rFuPfqwMKLrZZ03VQdR3mtQDmwa/jGYR+UNb34eWFCWe7e5VC1Jf/E5F4JVKokgh
+9wuVU8yOH9M=
+=ZieU
 -----END PGP SIGNATURE-----
 
---Sig_/LK8cKHZhnX6z41km9LHdO8v--
+--Sig_/+8bMCJVgV2JQChVy9mEJi8t--
