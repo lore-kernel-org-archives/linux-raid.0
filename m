@@ -1,38 +1,25 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: writing zeros to bad sector results in persistent read error
-Date: Mon, 09 Jun 2014 21:37:23 +0200
-Message-ID: <20140609193723.79F1B3809B0@gemini.denx.de>
-References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Eivind Sarto <eivindsarto@gmail.com>
+Subject: [patch 1/1] raid5: speedup sync_request processing
+Date: Mon, 9 Jun 2014 17:03:25 -0700
+Message-ID: <8133F95E-0053-4DCB-B5BB-480A8278B281@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>, Roman Mamedov <rm@romanrm.net>, Roger Heflin <rogerheflin@gmail.com>
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Dear Chris,
+This is a trivial patch that improves rebuild/resync speed of raid5 arrays.
+Instead of having the resync-thread handle the stripe, it now just sets STRIPE_HANDLE and
+releases the stripe.  Allowing the resync-thread to return immediately and schedule more operations.
 
-In message <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> you wrote:
->
-> # dd if=/dev/zero of=/dev/sda seek=430234064 count=8 oflag=direct
-> 8+0 records in
-> 8+0 records out
-> 4096 bytes (4.1 kB) copied, 3.73824 s, 1.1 kB/s
+The speedup will increase with more drives in the array.  And it will increase further if additional
+kworker threads are enabled.  But, it improves with just the default raid5d() running.
 
-This has been pointed out before - if this is a 4k sector drive, then
-you should really write in units of 4 k, not 8 x 512 bytes as you do
-here.
+Note: I posted this patch a while back, but nothing happened.  Not accepted, not rejected.
 
-Best regards,
+Trying one more time.
 
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-"Security is mostly a superstition. It does not  exist  in  nature...
-Life is either a daring adventure or nothing."         - Helen Keller
+-eivind
