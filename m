@@ -1,56 +1,63 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: RAID-10 explicitly defined drive pairs?
-Date: Wed, 11 Jun 2014 19:05:20 +0300
-Message-ID: <CAGRgLy706GQmVQSvxnLkXyYooaghjteVx9c11LdRxDjYyBwdDw@mail.gmail.com>
-References: <20111212115459.GC20730@fi.muni.cz>
-	<4EE61EAE.20101@anonymous.org.uk>
-	<20120106150823.GX25976@fi.muni.cz>
-	<20120107075526.59ed433c@notabene.brown>
-	<CAGRgLy4Q5FhHMAeU3egqEfFKR_h1HneReg0sD_+hCmsF3WDzQw@mail.gmail.com>
-	<20120322213114.61fd4e44@notabene.brown>
-	<CAGRgLy7N7m4zFY-EKe8ApUGSR3ZCUpOTZcRvLVLd5WAN2f+k9g@mail.gmail.com>
-	<CAGRgLy7BaVTjacaqMVD1JNYgtTn6MAk9bN-GzDC8B0CypJWJmw@mail.gmail.com>
-	<CAGRgLy5tauPMAoy=3QkErvtQPjz3FrNYTxQ-2rxTP6nO5tRXXQ@mail.gmail.com>
-	<20140610101122.53d16123@notabene.brown>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: md-raid paranoia mode?
+Date: Wed, 11 Jun 2014 19:31:20 +0200
+Message-ID: <20140611173120.GA2437@lazy.lzy>
+References: <5397FBCE.3060009@bartk.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140610101122.53d16123@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <5397FBCE.3060009@bartk.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Bart Kus <me@bartk.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks, Neil.
-What we do now:
-- we refuse freezing/re-adding drives if array is not idle or
-recovering (e.g., resyncing)
-- otherwise, we freeze, add/re-add drives, unfreeze
+On Tue, Jun 10, 2014 at 11:48:46PM -0700, Bart Kus wrote:
+> Hello,
+> 
+> As far as I understand, md-raid relies on the underlying devices to inform
+> it of IO errors before it'll seek redundant/parity data to fulfill the read
+> request.  I have, however, seen certain hard drives report successful reads
+> while returning garbage data.
+> 
+> Is it possible to set md-raid into a paranoid mode, in which it reads all
+> available data and confirms integrity?  Here's how it would work:
+> 
+> RAID6: read data + parity 1 + parity 2.  If 1 of the 3 mismatches, correct
+> it, and write corrected data to the corrupt source.  Log the event.  If all
+> 3 disagree, alert user somehow.
+> RAID5: read data + parity.  If they mismatch, alert user somehow.
+> RAID1: read data 1 + data 2.  If they mismatch, alert user somehow.
+> 
+> You can see this is mostly useful for RAID6 mode, where there is a chance at
+> automated recovery.  However, it can also be used to prevent silent data
+> corruption in the other modes, by making it not silent.
 
-Thanks!
-Alex.
+Hi Bart,
 
+this was discussed some times ago, mainly for RAID6.
+One compromise was "raid6check", which run in user space.
 
+The main objection is the performance drop, that such a
+reading method will have, which, of course, will require
+an enable/disable switch.
 
-On Tue, Jun 10, 2014 at 3:11 AM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 9 Jun 2014 17:26:38 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> > Why do you refuse to freeze the array if it's not "idle"? What will
->> > happen is that current recover/resync will abort, drives will be
->> > added, and on unfreezing, array will resume (restart?) recovery with
->> > all drives. If array was resyncing, however, it will start recovering
->> > the newly added drives, because kernel prefers recovery over resync
->> > (as we discussed earlier).
->> Indeed, since dea3786ae2cf74ecb0087d1bea1aa04e9091ad5c, I see that you
->> agree to freeze the array also in case it is recovering.
->
-> I guess I did..... though I don't remember seeing the email that you have
-> quoted.  I can see it in my inbox, but it seems that I never replied.  Maybe
-> I was too busy that day :-(
->
-> If there other outstanding issues, feel free to resend.
-> (If I don't reply it is more likely to be careless than deliberate, so in
-> general you should feel free to resend if I don't respond in a week or so).
->
-> NeilBrown
+I do not want to write for Neil, but I guess reasonable
+patches, doing what you propose, will be accepted.
+
+bye,
+
+pg
+
+> 
+> --Bart
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+
+piergiorgio
