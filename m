@@ -1,102 +1,76 @@
-From: Bart Kus <me@bartk.us>
-Subject: Re: md-raid paranoia mode?
-Date: Wed, 11 Jun 2014 03:34:01 -0700
-Message-ID: <53983099.8030801@bartk.us>
-References: <5397FBCE.3060009@bartk.us> <CAH3kUhH06kpJNqb-zdcv5nu2e1FeZuotcW0SjBbWDOCcasm9OA@mail.gmail.com>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Subject: RE: [PATCH] Do not set default 'before.layout' when reshaping from
+ RAID4 to RAID4
+Date: Wed, 11 Jun 2014 15:18:44 +0000
+Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F07925A6B@IRSMSX105.ger.corp.intel.com>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918CE9@IRSMSX105.ger.corp.intel.com>
+ <20140602123021.1184b461@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhH06kpJNqb-zdcv5nu2e1FeZuotcW0SjBbWDOCcasm9OA@mail.gmail.com>
+In-Reply-To: <20140602123021.1184b461@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Doing the periodic check does not prevent corruption of read() data=20
-though (RAID6 case).  Copied files may be corrupted, even though the=20
-RAID would eventually fix itself after a repair is done.
-
-Yes, there is a performance penalty, but data integrity is also=20
-improved.  Paranoid mode should probably not be the default, but I woul=
-d=20
-like the choice to improve data integrity at the expense of some small=20
-speed penalty.  ZFS implements this anti-corruption checking by using=20
-checksums on their data.  We don't have a simple checksumming mechanism=
-=20
-in md-raid, but we do have the full stripe data available ready for=20
-verification.
-
-BTW, the idea of a daily repair operation doesn't work when it takes 14=
-=20
-hours to repair a large RAID.  That would only leave 10 hours of each=20
-day for normal speed access.  I schedule repairs weekly, though.
-
---Bart
-
-
-On 6/11/2014 2:53 AM, Roberto Spadim wrote:
-> Hi
-> IMHO
->
-> For silent corrupt i think it's better a periodic raid check=20
-> instead of a paranoid mode
->
-> Normally a silent corrupt occurs with an 'old disk' or with old data,=
-=20
-> but it don't occurs at every disk read (must check disk studies)
->
-> I think a 'paranoid' mode is nice, but i think it will reduce all=20
-> system performace, maybe an crond daily check is better than a 'all=20
-> read, check' (paranoid)
->
-> Em quarta-feira, 11 de junho de 2014, Bart Kus <me@bartk.us=20
-> <mailto:me@bartk.us>> escreveu:
->
->     Hello,
->
->     As far as I understand, md-raid relies on the underlying devices
->     to inform it of IO errors before it'll seek redundant/parity data
->     to fulfill the read request.  I have, however, seen certain hard
->     drives report successful reads while returning garbage data.
->
->     Is it possible to set md-raid into a paranoid mode, in which it
->     reads all available data and confirms integrity?  Here's how it
->     would work:
->
->     RAID6: read data + parity 1 + parity 2.  If 1 of the 3 mismatches=
-,
->     correct it, and write corrected data to the corrupt source.  Log
->     the event.  If all 3 disagree, alert user somehow.
->     RAID5: read data + parity.  If they mismatch, alert user somehow.
->     RAID1: read data 1 + data 2.  If they mismatch, alert user someho=
-w.
->
->     You can see this is mostly useful for RAID6 mode, where there is =
-a
->     chance at automated recovery.  However, it can also be used to
->     prevent silent data corruption in the other modes, by making it
->     not silent.
->
->     --Bart
->
->     --
->     To unsubscribe from this list: send the line "unsubscribe
->     linux-raid" in
->     the body of a message to majordomo@vger.kernel.org
->     More majordomo info at http://vger.kernel.org/majordomo-info.html
->
->
->
-> --=20
-> Roberto Spadim
-> SPAEmpresarial
-> Eng. Automa=C3=A7=C3=A3o e Controle
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBPbiBNb25kYXksIEp1bmUgMDIsIDIwMTQgNDozMCBBTSBOZWlsQnJvd24gd3JvdGU6DQo+IFRv
+OiBCYWxkeXNpYWssIFBhd2VsDQo+IENjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZzsgUGFz
+emtpZXdpY3osIEFydHVyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIERvIG5vdCBzZXQgZGVmYXVs
+dCAnYmVmb3JlLmxheW91dCcgd2hlbiByZXNoYXBpbmcgZnJvbQ0KPiBSQUlENCB0byBSQUlENA0K
+PiANCj4gT24gRnJpLCAzMCBNYXkgMjAxNCAxNDozODowOSArMDAwMCAiQmFsZHlzaWFrLCBQYXdl
+bCINCj4gPHBhd2VsLmJhbGR5c2lha0BpbnRlbC5jb20+IHdyb3RlOg0KPiANCj4gPiBDb21taXQg
+ZmRjYWQ1NTFlOWE1NGM0YWE4YzRiNjMxNjBiNzZlMmM1MzlhMDQ0MQ0KPiA+IGJyaW5ncyBzb21l
+IGNoYW5nZXMgdG8gcmVzaGFwZSBwcm9jZXNzLg0KPiA+IFNldHRpbmcgJ2JlZm9yZS5sYXlvdXQn
+IHdoZW4gcmVzaGFwaW5nIGZyb20gUkFJRDQgdG8gYW5vdGhlciBSQUlENCBpcw0KPiA+IG5vdCBy
+ZWFsbHkgbmVjZXNzYXJ5Lg0KPiA+IElmIHJlc2hhcGUgaXMgcmVzdGFydGVkICdiZWZvcmUubGF5
+b3V0JyB3aWxsIGJlIGNvbXBhcmVkIHdpdGgNCj4gPiAnaW5mby0+YXJyYXkubGF5b3V0JyBpbiBy
+ZXNoYXBlX2FycmF5KCkuIENoYW5nZXMgYnJvdWdodCBieSBtZW50aW9uZWQNCj4gPiBjb21taXQg
+d2lsbCBjYXVzZSB0aGlzIGNvbXBhcmF0aW9uIHJldHVybiBhcyBmYWxzZSwgYmVjb3VzZSAnYXJy
+YXkubGF5b3V0Jw0KPiA+IGlzIGFsd2F5cyBzZXQgdG8gJ0FMR09SSVRITV9QQVJJVFlfTicgaW4g
+YW5hbHlzZV9jaGFuZ2UoKSBmb3IgUkFJRDQsDQo+ID4gc28gcmVzaGFwZSB3aWxsIG5vdCBiZSBj
+b250aW51ZWQgYWZ0ZXIgcmVib290L3N0b3AuDQo+ID4gVGhpcyBwYXRjaCByZXZlcnRzIHVubmVj
+ZXNzYXJ5IGNoYW5nZXMuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBQYXdlbCBCYWxkeXNpYWsg
+cGF3ZWwuYmFsZHlzaWFrQGludGVsLmNvbQ0KPiA+IFJldmlld2VkLWJ5OiBBcnR1ciBQYXN6a2ll
+d2ljeiA8YXJ0dXIucGFzemtpZXdpY3pAaW50ZWwuY29tPg0KPiA+DQo+ID4gLS0tDQo+ID4gR3Jv
+dy5jIHwgMSAtDQo+ID4gMSBmaWxlIGNoYW5nZWQsIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRp
+ZmYgLS1naXQgYS9Hcm93LmMgYi9Hcm93LmMNCj4gPiBpbmRleCA0ODcxMTFlLi45ZGMxNTdhIDEw
+MDY0NA0KPiA+IC0tLSBhL0dyb3cuYw0KPiA+ICsrKyBiL0dyb3cuYw0KPiA+IEBAIC0xMzM4LDcg
+KzEzMzgsNiBAQCBjaGFyICphbmFseXNlX2NoYW5nZShjaGFyICpkZXZuYW1lLCBzdHJ1Y3QNCj4g
+PiBtZGluZm8gKmluZm8sIHN0cnVjdCByZXNoYXBlICpyZSkNCj4gPg0KPiA+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHN3aXRj
+aCAocmUtPmxldmVsKSB7DQo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNhc2UgNDoNCj4gPiAtwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgIHJlLT5iZWZvcmUubGF5b3V0ID0gMDsNCj4gPiDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCByZS0+YWZ0ZXIubGF5b3V0ID0gMDsNCj4gPiDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBicmVhazsNCj4gPiDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgY2FzZSA1Og0KPiAN
+Cj4gQXBwbGllZCwgdGhhbmtzLiAgVGhvdWdoIHlvdSBzZWVtIHRvIGhhdmUgZm9yZ290dGVuIGhv
+dyB0byBtYWtlIHBhdGNoZXMNCj4gcHJvcGVybHkuICBUaGF0IG9uZSB3YXMgdG90YWxseSB3aGl0
+ZS1zcGFjZSBkYW1hZ2VkLg0KPiANCj4gTmVpbEJyb3duDQoNCkhpIE5laWwsDQpTb3JyeSBmb3Ig
+dGhpcyB3aGl0ZS1zcGFjZSBkYW1hZ2Ugb25lIGFnYWluLi4uDQpUaGVyZSBpcyBtaXN0YWtlIGlu
+IHBhdGNoIGFwcGxpZWQgdG8geW91ciByZXBvc2l0b3J5IC0gd3JvbmcgbGluZSBpcyByZW1vdmVk
+Lg0KQmVsb3cgaXMgdGhlIHBhdGNoLCB3aGljaCBmaXhlcyB0aGlzIGlzc3VlOg0KDQpQYXdlbCBC
+YWxkeXNpYWsNCg0KRnJvbTogUGF3ZWwgQmFsZHlzaWFrIDxwYXdlbC5iYWxkeXNpYWtAaW50ZWwu
+Y29tPg0KRGF0ZTogV2VkLCAxMSBKdW4gMjAxNCAxNjo1NDo1OSArMDIwMA0KU3ViamVjdDogW1BB
+VENIIDEvMV0gR3JvdzogZml4IHJlbW92YWwgb2YgbGluZSBpbiB3cm9uZyBjYXNlDQoNCkNvbW1p
+dCAxOGQ5YmNmYTMzOTM5Y2VlMzQ1ZDRkNzczNWJjNjA4MWJjYzQwOWM4DQpyZW1vdmVkIHdyb25n
+IGxpbmUgKGluIGNhc2UgUkFJRDAtPlJBSUQ0KS4NClRoaXMgcGF0Y2ggY29ycmVjdHMgdGhpcyBt
+aXN0YWtlDQoobGluZSBzaG91bGQgYmUgcmVtb3ZlZCBpbiBjYXNlIFJBSUQ0LT5SQUlENCkuDQoN
+ClNpZ25lZC1vZmYtYnk6IFBhd2VsIEJhbGR5c2lhayA8cGF3ZWwuYmFsZHlzaWFrQGludGVsLmNv
+bT4NCi0tLQ0KIEdyb3cuYyB8IDIgKy0NCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyks
+IDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL0dyb3cuYyBiL0dyb3cuYw0KaW5kZXggMTI3
+MzBlMi4uYTJmNGYxNCAxMDA2NDQNCi0tLSBhL0dyb3cuYw0KKysrIGIvR3Jvdy5jDQpAQCAtMTMy
+NCw2ICsxMzI0LDcgQEAgY2hhciAqYW5hbHlzZV9jaGFuZ2UoY2hhciAqZGV2bmFtZSwgc3RydWN0
+IG1kaW5mbyAqaW5mbywgc3RydWN0IHJlc2hhcGUgKnJlKQ0KIA0KIAkJc3dpdGNoIChyZS0+bGV2
+ZWwpIHsNCiAJCWNhc2UgNDoNCisJCQlyZS0+YmVmb3JlLmxheW91dCA9IDA7DQogCQkJcmUtPmFm
+dGVyLmxheW91dCA9IDA7DQogCQkJYnJlYWs7DQogCQljYXNlIDU6DQpAQCAtMTMzOSw3ICsxMzQw
+LDYgQEAgY2hhciAqYW5hbHlzZV9jaGFuZ2UoY2hhciAqZGV2bmFtZSwgc3RydWN0IG1kaW5mbyAq
+aW5mbywgc3RydWN0IHJlc2hhcGUgKnJlKQ0KIA0KIAkJc3dpdGNoIChyZS0+bGV2ZWwpIHsNCiAJ
+CWNhc2UgNDoNCi0JCQlyZS0+YmVmb3JlLmxheW91dCA9IDA7DQogCQkJcmUtPmFmdGVyLmxheW91
+dCA9IDA7DQogCQkJYnJlYWs7DQogCQljYXNlIDU6DQotLSANCjEuOS4wDQo=
