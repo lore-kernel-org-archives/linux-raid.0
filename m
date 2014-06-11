@@ -1,34 +1,98 @@
-From: Bart Kus <me@bartk.us>
-Subject: md-raid paranoia mode?
-Date: Tue, 10 Jun 2014 23:48:46 -0700
-Message-ID: <5397FBCE.3060009@bartk.us>
+From: Alberto Morell <amp4tj@gmail.com>
+Subject: Re: Unable to re-assemble a raid 10 after it has FAILED.
+Date: Wed, 11 Jun 2014 09:24:18 +0200
+Message-ID: <CAEp9EKjcckfJ0Az+-CAU=i+xW=DzsQ_m5r20fOSWJuj9KVw2oQ@mail.gmail.com>
+References: <CAEp9EKjgt1RTkYzhSX-UQN2-WhV3iCKPr_DTnHN_KmorvFNsvg@mail.gmail.com>
+	<CAEp9EKg462T+7E35RnarP6y41wGgNv3R_jAXEhxiLBg_vukW3g@mail.gmail.com>
+	<20140610213044.4b6a7996@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140610213044.4b6a7996@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On Tue, Jun 10, 2014 at 1:30 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 10 Jun 2014 13:04:28 +0200 Alberto Morell <amp4tj@gmail.com> wrote:
+>
+>> Hi!
+>>
+>> I have a raid 10 devices with 4 components. I make the raid fails, by
+>> making two components fail (using "mdadm --set-faulty <device>"). When
+>> I add the two devices back, they are added as spare devices. Then, I
+>> can get the raid active again only creating the raid again using
+>> "mdadm --create --assume-clean...". Re-assembling the device does not
+>> work with error message:
+>>
+>> mdadm: failed to RUN_ARRAY /dev/md/hdd: Input/output error
+>> mdadm: Not enough devices to start the array.
+>>
+>> I am trying to automate the raid configuration and the "mdadm --create
+>> ..." option is not convenient as I would have to know all the creation
+>> parameters.
+>>
+>> Below is the command sequence.
+>>
+>> Thanks is advance,
+>>
+>> Alberto Morell.
+>>
+>>
+>> [root@os2 raid_tools]# mdadm --version
+>> mdadm - v3.2.6 - 25th October 2012
+>>
+>> [root@os2 ~]# mdadm --create /dev/md/hdd --metadata=1.0 --auto=md --name=hdd \
+>> --chunk=256 --bitmap=internal --bitmap-chunk=65536 --level=raid10 --run \
+>> --raid-devices=4 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+>>
+>> [root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sde1
+>> mdadm: set /dev/sde1 faulty in /dev/md/hdd
+>> [root@os2 ~]# mdadm --set-faulty /dev/md/hdd /dev/sdf1
+>> mdadm: set /dev/sdf1 faulty in /dev/md/hdd
+>
+> So now your array is dead.  I assume you expected this.
+>
 
-As far as I understand, md-raid relies on the underlying devices to 
-inform it of IO errors before it'll seek redundant/parity data to 
-fulfill the read request.  I have, however, seen certain hard drives 
-report successful reads while returning garbage data.
+>>
+>> [root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sde1
+>> mdadm: hot removed /dev/sde1 from /dev/md/hdd
+>> [root@os2 ~]# mdadm --remove /dev/md/hdd /dev/sdf1
+>> mdadm: hot removed /dev/sdf1 from /dev/md/hdd
+>> [root@os2 ~]# mdadm --add /dev/md/hdd /dev/sde1
+>> mdadm: re-added /dev/sde1
+>> [root@os2 ~]# mdadm --add /dev/md/hdd /dev/sdf1
+>> mdadm: re-added /dev/sdf1
+>
+> Adding good things to dead things doesn't make the dead thing undead.
+> You don't want to do this.
+>
+> If and array is dead, the best thing to do is to stop it, before trying to
+> re-add anything, and (after checking the all the devices are really working)
+> assemble with --force.
+> That is the best way to breath life into a dead array.
+>
+> NeilBrown
 
-Is it possible to set md-raid into a paranoid mode, in which it reads 
-all available data and confirms integrity?  Here's how it would work:
+That sequence solved the problem:
+1. After the array is dead, stop it
 
-RAID6: read data + parity 1 + parity 2.  If 1 of the 3 mismatches, 
-correct it, and write corrected data to the corrupt source.  Log the 
-event.  If all 3 disagree, alert user somehow.
-RAID5: read data + parity.  If they mismatch, alert user somehow.
-RAID1: read data 1 + data 2.  If they mismatch, alert user somehow.
+[root@os2 raid_tools]# mdadm --stop /dev/md127
+mdadm: stopped /dev/md127
 
-You can see this is mostly useful for RAID6 mode, where there is a 
-chance at automated recovery.  However, it can also be used to prevent 
-silent data corruption in the other modes, by making it not silent.
+2. Then, assemble the array with the proper components.
 
---Bart
+[root@os2 raid_tools]# mdadm --assemble /dev/md/hdd --force --run
+--uuid=085d48f6:e6e38d1c:a476006f:cd3a3e51 --verbose /dev/sdc1
+/dev/sdd1 /dev/sde1 /dev/sdf1
 
+The array started with only three components, but then I added the
+fourth just with a "mdadm --add"
+
+(Before, I was first re-adding the failed components, and after that,
+stopping and re-assembling the array)
+
+Thanks a lot!
+
+Alberto Morell.
