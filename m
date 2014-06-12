@@ -1,33 +1,70 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: WD Red vs SE/RE drives for mdadm RAID1 (TLER?)
-Date: Wed, 11 Jun 2014 22:28:51 -0400
-Message-ID: <53991063.7010804@turmel.org>
-References: <CAK2H+edi4WQvJC-AZpxVY16FqqUubcOqg-Nqmc5u3H4LkSWmoQ@mail.gmail.com> <53990DB2.1060604@fnarfbargle.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: md-raid paranoia mode?
+Date: Thu, 12 Jun 2014 12:28:14 +0600
+Message-ID: <20140612122814.2db74377@natsu>
+References: <5397FBCE.3060009@bartk.us>
+	<53990D44.300@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/iYakQu7lSPo9doa_TJO7d6K"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53990DB2.1060604@fnarfbargle.com>
+In-Reply-To: <53990D44.300@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Bart Kus <me@bartk.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/11/2014 10:17 PM, Brad Campbell wrote:
-> On 11/06/14 23:35, Mark Knecht wrote:
->> I need to purchase a couple of new drives for a mdadm type RAID1. In
->> reviewing the WD website I did not find the TLER feature on the WD Red
->> spec sheets. The TLER feature is clearly called out on both the SE &
->> RE lines.
->>
-> 
-> It's there. I have several of them here and they all have it. I also
-> have 12 greens of which 11 have TLER (must be early models). I know the
-> new ones don't.
+--Sig_/iYakQu7lSPo9doa_TJO7d6K
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I took delivery of four brand new Reds today -- haven't opened the boxes
-yet.  I'll verify tomorrow for y'all, but I'll be shocked and dismayed
-if SCTERC doesn't default to 7.0 seconds.
+On Thu, 12 Jun 2014 10:15:32 +0800
+Brad Campbell <lists2009@fnarfbargle.com> wrote:
 
-Phil
+> On 11/06/14 14:48, Bart Kus wrote:
+> > Hello,
+> >
+> > As far as I understand, md-raid relies on the underlying devices to
+> > inform it of IO errors before it'll seek redundant/parity data to
+> > fulfill the read request.  I have, however, seen certain hard drives
+> > report successful reads while returning garbage data.
+>=20
+> If you have drives that return garbage as valid data then you have far=20
+> greater problems than what you are suggesting will fix. So much so I=20
+> suggest you document these instances and start banging a drum announcing=
+=20
+> them in a name and shame campaign. That sort of behavior from storage=20
+> devices is never ok, and the manufacturer needs to know that.
 
+If your RAM can return garbage, that's not a justification for having ECC R=
+AM.
+ECC RAM is a gimmick invented by weak conformist people. Instead, you shoul=
+d go
+and loudly scream at the manufacturer who sold you that RAM! Errors from RAM
+are never OK! RAM should always work perfectly! And if it doesn't, you have
+greater problems. We shall not tolerate this behavior! So go get a drum and
+start banging it as loudly as you can! Name and shame the manufacturer who
+sold you that RAM. Fight the power, brother!!!
+
+You can probably tell just how sick I am of reasoning like yours. That's why
+we can't have nice things (md-side resiliency for the cases when you need/w=
+ant
+it), and sadly Neil is of the same opinion as you.
+
+--=20
+With respect,
+Roman
+
+--Sig_/iYakQu7lSPo9doa_TJO7d6K
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlOZSH4ACgkQTLKSvz+PZwhDcQCgjU56bipX4GMstg08YF+rCAva
+sB4AnjMmEW+aoNCfmBCbOmoS9JewC7OT
+=XTMM
+-----END PGP SIGNATURE-----
+
+--Sig_/iYakQu7lSPo9doa_TJO7d6K--
