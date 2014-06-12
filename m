@@ -1,45 +1,52 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: md-raid paranoia mode?
-Date: Thu, 12 Jun 2014 16:30:55 +0800
-Message-ID: <5399653F.1040503@fnarfbargle.com>
-References: <5397FBCE.3060009@bartk.us>	<53990D44.300@fnarfbargle.com>	<20140612122814.2db74377@natsu>	<5399561A.4030405@hesbynett.no> <20140612140644.352e8c69@natsu>
+Date: Thu, 12 Jun 2014 14:53:57 +0600
+Message-ID: <20140612145357.5be5656c@natsu>
+References: <5397FBCE.3060009@bartk.us>
+	<53990D44.300@fnarfbargle.com>
+	<20140612122814.2db74377@natsu>
+	<5399561A.4030405@hesbynett.no>
+	<20140612140644.352e8c69@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/9MGIMRf4xsNFO7ac.Fs2NuY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20140612140644.352e8c69@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>, David Brown <david.brown@hesbynett.no>
-Cc: Bart Kus <me@bartk.us>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: David Brown <david.brown@hesbynett.no>, Brad Campbell <lists2009@fnarfbargle.com>, Bart Kus <me@bartk.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/9MGIMRf4xsNFO7ac.Fs2NuY
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On 12/06/14 16:06, Roman Mamedov wrote:
-> In one case which Brad was describing, it was a hardware design fault 
-> in his RAID controller, resulting in it returning bad data only when 
-> all ports are utilized at high speeds. If MD had online checksum 
-> mismatch detection, it would alert him immediately that something's 
-> going wrong, rather than have this bug happily chew through all his 
-> data, with "months of read/modify/write cycles combined with corrupt 
-> data spread the corruption all over the array".
+On Thu, 12 Jun 2014 14:06:44 +0600
+Roman Mamedov <rm@romanrm.net> wrote:
 
+> Which is sad, since MD (on RAID6) *has* all the parity information needed=
+ to
+> recover a read error, and there isn't even any need for a special filesys=
+tem
+> on top of it, but it's like it just won't help you, almost out of princip=
+le.
 
-Yeah, you are right it would have possibly spared some of my data. 
-Having said if I'd been paying attention to the mismatch counts at the 
-end of my monthly scrubs I'd have noticed it a _lot_ sooner also. I had 
-the tools, I was just not using them right. My fault, not md's.
+s/error/corruption/
 
-Having said that, if I'd not gone through that I'd probably still not 
-have comprehensive and complete backups, and I'd not have 
-developed/found tools to allow me to better monitor my systems. So while 
-it was a painful experience, it was not catastrophic and (as Calvin's 
-dad would say) it built some more character.
+--=20
+With respect,
+Roman
 
-I'm a lot older, and hopefully wiser from the experience. I also know my 
-time is better spent with monitoring and backups than developing code to 
-build that feature into md. While that would paper over one part of the 
-storage chain, backups and monitoring covers me end to end.
+--Sig_/9MGIMRf4xsNFO7ac.Fs2NuY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-Dolphins are so intelligent that within a few weeks they can train 
-Americans to stand at the edge of the pool and throw them fish.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlOZaqUACgkQTLKSvz+PZwgzdQCeKWfZmDs/0e0mcIvrScZg61TD
+zHIAn3Qq3JLem14s5JQH05tL8rsRjy55
+=jFIX
+-----END PGP SIGNATURE-----
+
+--Sig_/9MGIMRf4xsNFO7ac.Fs2NuY--
