@@ -1,247 +1,112 @@
-From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
-Subject: RE: [PATCH] Forbid merging with partially assembled IMSM array
-Date: Fri, 13 Jun 2014 09:48:16 +0000
-Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F0792870C@IRSMSX105.ger.corp.intel.com>
-References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
-	<20140602121955.10a72b32@notabene.brown>
-	<84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
-	<20140604123046.02e224d6@notabene.brown>
-	<84A53BEA6EAC69439B7E311E9B17A76F0791D2DE@IRSMSX105.ger.corp.intel.com>
- <20140605162730.33e36f25@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Help with corrupted MDADM Raid6
+Date: Fri, 13 Jun 2014 20:25:41 +1000
+Message-ID: <20140613202541.584dc8f1@notabene.brown>
+References: <CAH4F3SZ4Q8MO5Ci8ihSrLf1myo8pTfJ8SNC5EwJZQHf_H44GPA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/iJuuaaM49JF0Hn5t/7pRN1P"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140605162730.33e36f25@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <CAH4F3SZ4Q8MO5Ci8ihSrLf1myo8pTfJ8SNC5EwJZQHf_H44GPA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
+To: "ptschack ." <ptschack@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->On Thursday, June 05, 2014 8:28 AM NeilBrown [neilb@suse.de] wrote:
-> To: Baldysiak, Pawel
-> Cc: linux-raid@vger.kernel.org; Paszkiewicz, Artur
-> Subject: Re: [PATCH] Forbid merging with partially assembled IMSM 
->array
-> 
-> On Wed, 4 Jun 2014 09:25:47 +0000 "Baldysiak, Pawel"
-> <pawel.baldysiak@intel.com> wrote:
-> 
-> 
-> > Hi Neil
-> >
-> > There are several cases where not forbidding this operation can 
-> > cause
-> problems.
-> > For example, if user will create IMSM array at one platform, then 
-> > stop it, detach devices, and hotplug them to another platform (mixed 
-> > between two different controllers) - everything will be looking good 
-> > (array
-> will be incrementally assembled without any errors) until reboot.
-> > After that, user will be confused why array is degraded/failed and 
-> > will be at
-> risk of losing data.
-> > Also, creation of IMSM array under different controllers is 
-> > forbidden, so
-> there is no point in allowing that it in assemble process.
-> >
-> > If you really think this is no justification - I will prepare a 
-> > patch that will print warning, but in my opinion this operation 
-> > should be allowed
-> only with "--force"...
-> >
-> 
-> I came across a situation once where someone was trying to crash-dump 
-> onto an IMSM array.  'crashdump' does some sort of kexec thing and 
-> runs a very minimal kernel/installation  which just does crash dumps.
-> 
-> It didn't work because mdadm couldn't find the OpROM in that context 
-> and so refused the assemble the array.
-> I really don't like that sort of thing happening.
-> If the OpROM is going to destroy your data (or whatever it does) when 
-> you plug different devices into different controllers, then that is 
-> the OpROM's problem, not mine.  I just want to make sure people can 
-> get at their data in as many situations as possible.
-> 
-> 
-> A warning is probably OK, though I wonder if anyone would ever see it.
-> However the code would need improvement.
-> Doing a strcmp for "imsm" is not acceptable.
-> 
-> I'm not even sure I understand what they rest of the code is trying to do.
-> It doesn't seem to make reference to separate OpROMs....
-> 
-> NeilBrown
-> 
+--Sig_/iJuuaaM49JF0Hn5t/7pRN1P
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Neil,
+On Fri, 13 Jun 2014 10:34:55 +0200 "ptschack ." <ptschack@googlemail.com>
+wrote:
 
-Here is the patch that adds warning message.
+> Hi,
+>=20
+> I fear I may have messed up my MDADM RAID 6. Some info:
+>=20
+> The RAID consists of 11 hard drives (3 TB each), 2 of which are
+> spares. It used to be 6 drives, no spares.
+>=20
+> This happened: one drive (/dev/sdg) kept giving me SMART warnings
+> (failure imminent). As I was trying to do a fresh install at the time,
+> i restored a backup of my system drive (an ssd which is is wholly
+> independent of the RAID) and booted off of that.
+> I hadn't realized that the backup was too old, from the time before i
+> grew the raid... Apparently mdadm tried to mount the raid as it used
+> to be (6 drives), and now it says the raid consists of 6 drives, all
+> spares!
 
-Thanks
-Pawel Baldysiak
+That doesn't make sense.  md store the important information about an array
+on the drive of the array.  The information in /etc/mdadm.conf is largely
+advisory.
+The mdadm.conf that you attached looks perfectly OK and would work with
+either the old 6-drive array or the new 9+2 drive array.
 
-From a0270724eb42e24a74508f5b0ec35afc64f17cf7 Mon Sep 17 00:00:00 2001
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Date: Fri, 13 Jun 2014 10:55:19 +0200
-Subject: [PATCH 1/1] IMSM: Add warning message when assemble spanned container
+> Plus the drive /dev/sdg seems to have totally failed now :(
+>=20
+> I guess I somehow need to re-assemble (or re-create) the raid6 in a
+> degraded state, since one drive failed, but I'm not entirely clear on
+> how to do that. One question is if I should include the spares in a
+> reassembly or add them later.
+>=20
+> Can anyone help?
 
-Due to several changes in code assemble with disks
-spanned between different controllers can be obtained
-in some cases. After IMSM container will be assembled, check HBA of
-disks, and print proper warning if mismatch is detected.
+Hopefully.
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- Assemble.c       | 28 ++++++++++++++++++++++++++++
- platform-intel.h |  1 +
- 2 files changed, 29 insertions(+)
+>=20
+> I have attached the outputs of dumpe2fs and mdadm --examine of the
+> drives, plus my mdadm.conf.
 
-diff --git a/Assemble.c b/Assemble.c
-index 63e09ac..3542b16 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -23,6 +23,7 @@
-  */
- 
- #include	"mdadm.h"
-+#include	"platform-intel.h"
- #include	<ctype.h>
- 
- static int name_matches(char *found, char *required, char *homehost)
-@@ -1001,6 +1002,33 @@ static int start_array(int mdfd,
- 					content->array.raid_disks);
- 			fprintf(stderr, "\n");
- 		}
-+		if (st->ss == &super_imsm && !check_env("IMSM_NO_PLATFORM")) {
-+			struct sys_dev *idev;
-+			char *hba_path = NULL;
-+			char *dev_path = devt_to_devpath(makedev(devices->i.disk.major,
-+					devices->i.disk.minor));
-+
-+			for (idev = find_intel_devices(); idev; idev = idev->next) {
-+				if (strstr(dev_path, idev->path)) {
-+					hba_path = idev->path;
-+					break;
-+				}
-+			}
-+			free(dev_path);
-+
-+			if (hba_path) {
-+				for (i = 1; (unsigned)i < okcnt+sparecnt; i++) {
-+					if (!devt_attached_to_hba(makedev(devices[i].i.disk.major,
-+							devices[i].i.disk.minor), hba_path)) {
-+						pr_err("WARNING - IMSM container assembled with disks "
-+							"under different HBAs!\n"
-+							"       This operation is not supported "
-+							"and can lead to data loss.\n");
-+						break;
-+					}
-+				}
-+			}
-+		}
- 		st->ss->free_super(st);
- 		sysfs_uevent(content, "change");
- 		if (err_ok && okcnt < (unsigned)content->array.raid_disks)
-diff --git a/platform-intel.h b/platform-intel.h
-index bcd84b7..999a601 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -203,6 +203,7 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver);
- struct sys_dev *find_intel_devices(void);
- const struct imsm_orom *find_imsm_capability(enum sys_dev_type hba_id);
- const struct imsm_orom *find_imsm_orom(void);
-+int devt_attached_to_hba(dev_t dev, const char *hba_path);
- int disk_attached_to_hba(int fd, const char *hba_path);
- char *devt_to_devpath(dev_t dev);
- int path_attached_to_hba(const char *disk_path, const char *hba_path);
--- 
-1.9.3
+sdk1 is the only device to show an md superblock, and it was last updated on
+6th April, so it is rather old.  That is presumably before you made the arr=
+ay
+larger.
+
+sda1, sdb1 sdc1 sdd1 sde1 sdf1 sdh1 sdi1 sdj1 sdk1 all appear to contain
+ext3fs or ext4fs superblocks.  I think some of those are from before the
+devices were added into the array.  Quite possibly md doesn't over-write the
+ext3 superblock.
+
+I wonder if maybe the array is actually on the whole devices rather than on
+the partitions.  What does
+
+  mdadm --examine /dev/sd[abcdefghijk]
+
+report?
 
 
-> 
-> 
-> 
-> > Thanks
-> > Pawel Baldysiak
-> >
-> > >
-> > > > You can always use "--force" to override this check.
-> > > >
-> > > > Pawel Baldysiak
-> > > >
-> > > > > >
-> > > > > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > > > > > Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> > > > > >
-> > > > > > ---
-> > > > > > Assemble.c | 23 +++++++++++++++++++++++
-> > > > > > 1 file changed, 23 insertions(+)
-> > > > > >
-> > > > > > diff --git a/Assemble.c b/Assemble.c index a57d384..9fb65e5
-> > > > > > 100644
-> > > > > > --- a/Assemble.c
-> > > > > > +++ b/Assemble.c
-> > > > > > @@ -1329,6 +1329,29 @@ try_again:
-> > > > > >                                                return 1;
-> > > > > >                                }
-> > > > > >                                for (dv = pre_exist->devs; 
-> > > > > > dv; dv =
-> > > > > > dv->next) {
-> > > > > > +                                             if 
-> > > > > > + (strncmp(mp->metadata, "imsm", 4) == 0 && !c-
-> > > > > >force) {
-> > > > > > +                                                             int dfd;
-> > > > > > +                                                             char dn[20];
-> > > > > > +                                                             struct supertype *st2;
-> > > > > > +                                                             
-> > > > > > + sprintf(dn, "%d:%d", dv-
-> >disk.major,
-> > > > > > +                                                                                             dv->disk.minor);
-> > > > > > +                                                             st2 = dup_super(st);
-> > > > > > +                                                             
-> > > > > > + dfd = dev_open(dn, O_RDONLY);
-> > > > > > +
-> > > > > > + if ((dfd > 0) && (st2->ss->load_super(st2,
-> > > > > dfd, NULL) ||
-> > > > > > +
-> > > > > > + (st->ss->compare_super(st, st2) !=
-> > > 0))) {
-> > > > > > +
-> > > > > > + pr_err("IMSM metadata
-> > > > > mismatch!\n");
-> > > > > > +                                                                             pr_err("Aborting...\n");
-> > > > > > +                                                                             
-> > > > > > + close(dfd);
-> > > > > > +
-> > > > > > + } else {
-> > > > > > +
-> > > > > > + pr_err("IMSM Array already
-> > > > > partially assembled!\n");
-> > > > > > +                                                                             pr_err("Aborting...\n");
-> > > > > > +                                                             }
-> > > > > > +                                                             if (st2) {
-> > > > > > +                                                                             st2->ss->free_super(st2);
-> > > > > > +                                                                             free(st2);
-> > > > > > +                                                             }
-> > > > > > +                                                             return 1;
-> > > > > > +                                             }
-> > > > > >                                                /* We want to add this device to our list,
-> > > > > >                                                 * but it could already be there if "mdadm -I"
-> > > > > >                                                 * started *after* we checked for O_EXCL.
-> > > > > > --
-> > > > > > 1.9.0
-> > > >
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > > > in the body of a message to majordomo@vger.kernel.org More
-> > > majordomo
-> > > > info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+Certainly *don't* try to create the array until you have tried all other
+options.
+
+If you do find mdadm superblocks on the whole devices, then you could try
+
+ mdadm --assemble /dev/sd[a-k]
+
+possibly remove devices from the list which don't work.  Possibly add
+"--force" if not including "--force" doesn't work.
+
+NeilBrown
+
+--Sig_/iJuuaaM49JF0Hn5t/7pRN1P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU5rRpjnsnt1WYoG5AQKvLg/+J026IN7DjrokpZLT83Fom4USuU8Ligfr
+ytZSja0MszCLCUraa0ggLjkzv13MpTWhIrqdKP3lr4GnZBjfuOXuVzh6qh7MkRlQ
+3JHRUVWtcpIrBGvzZP11nCfSFqlX+LoBiQsIHxmTbqGEY956vfqBT7P8yj/+OEGs
+Ckn9BLC+0YWxIcNq6AdvkmSLla9VFd3uo7gFALDdECla8LjxnYBmnWVu2UC4GgCA
+FG2QViBKjXsNPLThcxeIJLwryN2GOPUJEh+ZObHelRnbLZdioadNXdg26SCOvZW7
+GwYjAivKx2+ezDEYSA5Fm1juF/d10ZYkp9hDCjXKnWZooBs+NBv4riFXCMgJ+yjc
+KraRZt+Uwh9IAWZLI1nSnNOhwXVe0Z2rbnruIPw7RHvDyVD7pZIOEppGRB19cAOj
++A1Ih938XtkChxPViy+2Z5QardAJX59zUgxDqgYZM9oUeBm7yjeuCrSdP5sQIBXi
+yk4cf5XG7b+UgvVeRCZzTxLBpoQxPpotynfPgeW3i9blzM45v/CzphzwxK6//WLe
+p9u0wuCO4inGXN01zeVQAhOKljdAS9foBl5tBrYTBL0wX1JlYPqyXBkJItn/Lsyi
+7+SK+Py5UA674QV/nLDO+z5Edmw3vUfeaQp+MGGx9hLaK0XXG/ZmQpYrSlCWSJKk
+k+k+VvMjDxI=
+=gau2
+-----END PGP SIGNATURE-----
+
+--Sig_/iJuuaaM49JF0Hn5t/7pRN1P--
