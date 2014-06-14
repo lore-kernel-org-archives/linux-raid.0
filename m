@@ -1,158 +1,103 @@
-From: "ptschack ." <ptschack@googlemail.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Help with corrupted MDADM Raid6
-Date: Sat, 14 Jun 2014 11:54:58 +0200
-Message-ID: <CAH4F3SZm-Va4a-2ac0E-_GHde0Vcqgrw0xs0GPn+hBkTjnsL9Q@mail.gmail.com>
+Date: Sat, 14 Jun 2014 20:31:46 +1000
+Message-ID: <20140614203146.5e99a84f@notabene.brown>
 References: <CAH4F3SZ4Q8MO5Ci8ihSrLf1myo8pTfJ8SNC5EwJZQHf_H44GPA@mail.gmail.com>
 	<20140613202541.584dc8f1@notabene.brown>
+	<CAH4F3SZm-Va4a-2ac0E-_GHde0Vcqgrw0xs0GPn+hBkTjnsL9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=089e0115ebd0741e4604fbc8c938
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Upcm7f_RYwqh0HoeuOZbNvT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140613202541.584dc8f1@notabene.brown>
+In-Reply-To: <CAH4F3SZm-Va4a-2ac0E-_GHde0Vcqgrw0xs0GPn+hBkTjnsL9Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: "ptschack ." <ptschack@googlemail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---089e0115ebd0741e4604fbc8c938
-Content-Type: text/plain; charset=UTF-8
+--Sig_/Upcm7f_RYwqh0HoeuOZbNvT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Neil,
+On Sat, 14 Jun 2014 11:54:58 +0200 "ptschack ." <ptschack@googlemail.com>
+wrote:
 
-I ran mdadm --examine on the devices (as opposed to the partitions)
-and was surprised:
-Apparently the superblocks are present on some the devices, even if I
-remember differently.
-I attached the output of mdadm to this mail.
+> Hi Neil,
+>=20
+> I ran mdadm --examine on the devices (as opposed to the partitions)
+> and was surprised:
+> Apparently the superblocks are present on some the devices, even if I
+> remember differently.
+> I attached the output of mdadm to this mail.
+>=20
+> For the sake of clarity, this is how the raid looked like before it
+> all went wrong:
+>=20
+> 11 Drives (/dev/sd[abcdefghijk]) alltogether as a RAID 6.
+> 2 of those are spares (/dev/sd[jk]).
+> 1 is either close to failing of has failed (/dev/sdg).
+>=20
+> I tried
+>=20
+> mdadm --assemble --run /dev/md0 -v /dev/sd[abcdefghi]
+>=20
+> which gave me
+>=20
+> mdadm: looking for devices for /dev/md0
+> mdadm: no RAID superblock on /dev/sdg
+> mdadm: /dev/sdg has no superblock - assembly aborted
+>=20
+> So it seems I somehow have to restore the superblocks on drives
+> /dev/sd[ghijk], or at least on /dev/sd[ghi].
+> Is this possible? Any help would be greatly appreciated!
+>=20
+> Regards,
+> -P.
 
-For the sake of clarity, this is how the raid looked like before it
-all went wrong:
+Well, you've definitely made progress.  You've found 6 of the devices.
+They all look consistent and it appears the array was completely coherent a=
+t=20
+    Mon Jun  9 21:52:48 2014
 
-11 Drives (/dev/sd[abcdefghijk]) alltogether as a RAID 6.
-2 of those are spares (/dev/sd[jk]).
-1 is either close to failing of has failed (/dev/sdg).
+You think that the 7th device is dead or dying, so you just need to find 2
+more (1 would do).
 
-I tried
+Presumably these are sdh and shi, but it is very strange that we cannot find
+the superblock on either of them.
+When was the last time the machine was rebooted prio to the date given  -9th
+Jun?
+Do you have boot logs from that time?  What lines contain 'md'??
+Particularly "bind" lines will show you exactly which devices were included.
 
-mdadm --assemble --run /dev/md0 -v /dev/sd[abcdefghi]
+Maybe also try
 
-which gave me
+  od -x /dev/sdh | grep '4efc a92b'
 
-mdadm: looking for devices for /dev/md0
-mdadm: no RAID superblock on /dev/sdg
-mdadm: /dev/sdg has no superblock - assembly aborted
+If the superblock is at some strange location, that might find it.
 
-So it seems I somehow have to restore the superblocks on drives
-/dev/sd[ghijk], or at least on /dev/sd[ghi].
-Is this possible? Any help would be greatly appreciated!
+NeilBrown
 
-Regards,
--P.
 
---089e0115ebd0741e4604fbc8c938
-Content-Type: text/plain; charset=US-ASCII; name="mdadm_--examine_devices.txt"
-Content-Disposition: attachment; filename="mdadm_--examine_devices.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hweqijn01
+--Sig_/Upcm7f_RYwqh0HoeuOZbNvT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-L2Rldi9zZGE6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDEu
-MgogICAgRmVhdHVyZSBNYXAgOiAweDEKICAgICBBcnJheSBVVUlEIDogMmQxOGY1NTY6MGNiYWQy
-NjM6MDE3YTg3YWY6YWFkYWM4ZjcKICAgICAgICAgICBOYW1lIDogYnJhaW46MCAgKGxvY2FsIHRv
-IGhvc3QgYnJhaW4pCiAgQ3JlYXRpb24gVGltZSA6IFN1biBNYXIgIDMgMDI6MzQ6MzAgMjAxMwog
-ICAgIFJhaWQgTGV2ZWwgOiByYWlkNgogICBSYWlkIERldmljZXMgOiA5CgogQXZhaWwgRGV2IFNp
-emUgOiA1ODYwMjcxMDI0ICgyNzk0LjQwIEdpQiAzMDAwLjQ2IEdCKQogICAgIEFycmF5IFNpemUg
-OiAyMDUxMDk0NzUyMCAoMTk1NjAuNzYgR2lCIDIxMDAzLjIxIEdCKQogIFVzZWQgRGV2IFNpemUg
-OiA1ODYwMjcwNzIwICgyNzk0LjM5IEdpQiAzMDAwLjQ2IEdCKQogICAgRGF0YSBPZmZzZXQgOiAy
-NjIxNDQgc2VjdG9ycwogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMKICAgICAgICAgIFN0YXRl
-IDogY2xlYW4KICAgIERldmljZSBVVUlEIDogMjA1ZTllZjg6ZGViNzdlZjA6YzE2MTZmNjU6NDg4
-ZWUwN2IKCkludGVybmFsIEJpdG1hcCA6IDggc2VjdG9ycyBmcm9tIHN1cGVyYmxvY2sKICAgIFVw
-ZGF0ZSBUaW1lIDogTW9uIEp1biAgOSAyMTo1Mjo0OCAyMDE0CiAgICAgICBDaGVja3N1bSA6IDJi
-MzUxYjM4IC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAzOTI5NQoKICAgICAgICAgTGF5b3V0
-IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogNjRLCgogICBEZXZpY2UgUm9sZSA6
-IEFjdGl2ZSBkZXZpY2UgMAogICBBcnJheSBTdGF0ZSA6IEFBQUFBQUFBQSAoJ0EnID09IGFjdGl2
-ZSwgJy4nID09IG1pc3NpbmcpCgovZGV2L3NkYjoKICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMK
-ICAgICAgICBWZXJzaW9uIDogMS4yCiAgICBGZWF0dXJlIE1hcCA6IDB4MQogICAgIEFycmF5IFVV
-SUQgOiAyZDE4ZjU1NjowY2JhZDI2MzowMTdhODdhZjphYWRhYzhmNwogICAgICAgICAgIE5hbWUg
-OiBicmFpbjowICAobG9jYWwgdG8gaG9zdCBicmFpbikKICBDcmVhdGlvbiBUaW1lIDogU3VuIE1h
-ciAgMyAwMjozNDozMCAyMDEzCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ2CiAgIFJhaWQgRGV2aWNl
-cyA6IDkKCiBBdmFpbCBEZXYgU2l6ZSA6IDU4NjAyNzEwMjQgKDI3OTQuNDAgR2lCIDMwMDAuNDYg
-R0IpCiAgICAgQXJyYXkgU2l6ZSA6IDIwNTEwOTQ3NTIwICgxOTU2MC43NiBHaUIgMjEwMDMuMjEg
-R0IpCiAgVXNlZCBEZXYgU2l6ZSA6IDU4NjAyNzA3MjAgKDI3OTQuMzkgR2lCIDMwMDAuNDYgR0Ip
-CiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNldCA6IDggc2Vj
-dG9ycwogICAgICAgICAgU3RhdGUgOiBjbGVhbgogICAgRGV2aWNlIFVVSUQgOiBmODE1MDAzNzo3
-MjBjOTgxZjpmNmE0NzZlMjpiOThmZDIzYQoKSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3JzIGZy
-b20gc3VwZXJibG9jawogICAgVXBkYXRlIFRpbWUgOiBNb24gSnVuICA5IDIxOjUyOjQ4IDIwMTQK
-ICAgICAgIENoZWNrc3VtIDogZDRhOTZjNDkgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDM5
-Mjk1CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2
-NEsKCiAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSAxCiAgIEFycmF5IFN0YXRlIDogQUFB
-QUFBQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZykKCi9kZXYvc2RjOgogICAgICAg
-ICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAxLjIKICAgIEZlYXR1cmUgTWFw
-IDogMHgxCiAgICAgQXJyYXkgVVVJRCA6IDJkMThmNTU2OjBjYmFkMjYzOjAxN2E4N2FmOmFhZGFj
-OGY3CiAgICAgICAgICAgTmFtZSA6IGJyYWluOjAgIChsb2NhbCB0byBob3N0IGJyYWluKQogIENy
-ZWF0aW9uIFRpbWUgOiBTdW4gTWFyICAzIDAyOjM0OjMwIDIwMTMKICAgICBSYWlkIExldmVsIDog
-cmFpZDYKICAgUmFpZCBEZXZpY2VzIDogOQoKIEF2YWlsIERldiBTaXplIDogNTg2MDI3MTAyNCAo
-Mjc5NC40MCBHaUIgMzAwMC40NiBHQikKICAgICBBcnJheSBTaXplIDogMjA1MTA5NDc1MjAgKDE5
-NTYwLjc2IEdpQiAyMTAwMy4yMSBHQikKICBVc2VkIERldiBTaXplIDogNTg2MDI3MDcyMCAoMjc5
-NC4zOSBHaUIgMzAwMC40NiBHQikKICAgIERhdGEgT2Zmc2V0IDogMjYyMTQ0IHNlY3RvcnMKICAg
-U3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiAgICBEZXZp
-Y2UgVVVJRCA6IDEzOGZhODgyOjAxNjRkYTViOjVlZmVhNzk3OmJkZGY2MDQxCgpJbnRlcm5hbCBC
-aXRtYXAgOiA4IHNlY3RvcnMgZnJvbSBzdXBlcmJsb2NrCiAgICBVcGRhdGUgVGltZSA6IE1vbiBK
-dW4gIDkgMjE6NTI6NDggMjAxNAogICAgICAgQ2hlY2tzdW0gOiAxODUzZTY2MSAtIGNvcnJlY3QK
-ICAgICAgICAgRXZlbnRzIDogMzkyOTUKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmlj
-CiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDIK
-ICAgQXJyYXkgU3RhdGUgOiBBQUFBQUFBQUEgKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNzaW5n
-KQoKL2Rldi9zZGQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6
-IDEuMgogICAgRmVhdHVyZSBNYXAgOiAweDEKICAgICBBcnJheSBVVUlEIDogMmQxOGY1NTY6MGNi
-YWQyNjM6MDE3YTg3YWY6YWFkYWM4ZjcKICAgICAgICAgICBOYW1lIDogYnJhaW46MCAgKGxvY2Fs
-IHRvIGhvc3QgYnJhaW4pCiAgQ3JlYXRpb24gVGltZSA6IFN1biBNYXIgIDMgMDI6MzQ6MzAgMjAx
-MwogICAgIFJhaWQgTGV2ZWwgOiByYWlkNgogICBSYWlkIERldmljZXMgOiA5CgogQXZhaWwgRGV2
-IFNpemUgOiA1ODYwMjcxMDI0ICgyNzk0LjQwIEdpQiAzMDAwLjQ2IEdCKQogICAgIEFycmF5IFNp
-emUgOiAyMDUxMDk0NzUyMCAoMTk1NjAuNzYgR2lCIDIxMDAzLjIxIEdCKQogIFVzZWQgRGV2IFNp
-emUgOiA1ODYwMjcwNzIwICgyNzk0LjM5IEdpQiAzMDAwLjQ2IEdCKQogICAgRGF0YSBPZmZzZXQg
-OiAyNjIxNDQgc2VjdG9ycwogICBTdXBlciBPZmZzZXQgOiA4IHNlY3RvcnMKICAgICAgICAgIFN0
-YXRlIDogY2xlYW4KICAgIERldmljZSBVVUlEIDogOTZlYjhhMmY6MDMxOTE1OTY6NWY5NzE5MGI6
-NjBkMDk2N2UKCkludGVybmFsIEJpdG1hcCA6IDggc2VjdG9ycyBmcm9tIHN1cGVyYmxvY2sKICAg
-IFVwZGF0ZSBUaW1lIDogTW9uIEp1biAgOSAyMTo1Mjo0OCAyMDE0CiAgICAgICBDaGVja3N1bSA6
-IGIwMTg4MThhIC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAzOTI5NQoKICAgICAgICAgTGF5
-b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogNjRLCgogICBEZXZpY2UgUm9s
-ZSA6IEFjdGl2ZSBkZXZpY2UgMwogICBBcnJheSBTdGF0ZSA6IEFBQUFBQUFBQSAoJ0EnID09IGFj
-dGl2ZSwgJy4nID09IG1pc3NpbmcpCgovZGV2L3NkZToKICAgICAgICAgIE1hZ2ljIDogYTkyYjRl
-ZmMKICAgICAgICBWZXJzaW9uIDogMS4yCiAgICBGZWF0dXJlIE1hcCA6IDB4MQogICAgIEFycmF5
-IFVVSUQgOiAyZDE4ZjU1NjowY2JhZDI2MzowMTdhODdhZjphYWRhYzhmNwogICAgICAgICAgIE5h
-bWUgOiBicmFpbjowICAobG9jYWwgdG8gaG9zdCBicmFpbikKICBDcmVhdGlvbiBUaW1lIDogU3Vu
-IE1hciAgMyAwMjozNDozMCAyMDEzCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ2CiAgIFJhaWQgRGV2
-aWNlcyA6IDkKCiBBdmFpbCBEZXYgU2l6ZSA6IDU4NjAyNzEwMjQgKDI3OTQuNDAgR2lCIDMwMDAu
-NDYgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDIwNTEwOTQ3NTIwICgxOTU2MC43NiBHaUIgMjEwMDMu
-MjEgR0IpCiAgVXNlZCBEZXYgU2l6ZSA6IDU4NjAyNzA3MjAgKDI3OTQuMzkgR2lCIDMwMDAuNDYg
-R0IpCiAgICBEYXRhIE9mZnNldCA6IDI2MjE0NCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNldCA6IDgg
-c2VjdG9ycwogICAgICAgICAgU3RhdGUgOiBjbGVhbgogICAgRGV2aWNlIFVVSUQgOiA2ODg2MTkw
-YzplNDE4MDBlODo0NTJmMWQwZTowZjY4ZGFiNgoKSW50ZXJuYWwgQml0bWFwIDogOCBzZWN0b3Jz
-IGZyb20gc3VwZXJibG9jawogICAgVXBkYXRlIFRpbWUgOiBNb24gSnVuICA5IDIxOjUyOjQ4IDIw
-MTQKICAgICAgIENoZWNrc3VtIDogMTlkOTRiZDQgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6
-IDM5Mjk1CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNpemUg
-OiA2NEsKCiAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSA0CiAgIEFycmF5IFN0YXRlIDog
-QUFBQUFBQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZykKCi9kZXYvc2RmOgogICAg
-ICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAxLjIKICAgIEZlYXR1cmUg
-TWFwIDogMHgxCiAgICAgQXJyYXkgVVVJRCA6IDJkMThmNTU2OjBjYmFkMjYzOjAxN2E4N2FmOmFh
-ZGFjOGY3CiAgICAgICAgICAgTmFtZSA6IGJyYWluOjAgIChsb2NhbCB0byBob3N0IGJyYWluKQog
-IENyZWF0aW9uIFRpbWUgOiBTdW4gTWFyICAzIDAyOjM0OjMwIDIwMTMKICAgICBSYWlkIExldmVs
-IDogcmFpZDYKICAgUmFpZCBEZXZpY2VzIDogOQoKIEF2YWlsIERldiBTaXplIDogNTg2MDI3MTAy
-NCAoMjc5NC40MCBHaUIgMzAwMC40NiBHQikKICAgICBBcnJheSBTaXplIDogMjA1MTA5NDc1MjAg
-KDE5NTYwLjc2IEdpQiAyMTAwMy4yMSBHQikKICBVc2VkIERldiBTaXplIDogNTg2MDI3MDcyMCAo
-Mjc5NC4zOSBHaUIgMzAwMC40NiBHQikKICAgIERhdGEgT2Zmc2V0IDogMjYyMTQ0IHNlY3RvcnMK
-ICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiAgICBE
-ZXZpY2UgVVVJRCA6IGZhMzE5YmZiOmZmZTkxNGYwOjM2NDIzZmFmOjMzNjM0MDkyCgpJbnRlcm5h
-bCBCaXRtYXAgOiA4IHNlY3RvcnMgZnJvbSBzdXBlcmJsb2NrCiAgICBVcGRhdGUgVGltZSA6IE1v
-biBKdW4gIDkgMjE6NTI6NDggMjAxNAogICAgICAgQ2hlY2tzdW0gOiA4ZGY3ZDY5OCAtIGNvcnJl
-Y3QKICAgICAgICAgRXZlbnRzIDogMzkyOTUKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0
-cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNl
-IDUKICAgQXJyYXkgU3RhdGUgOiBBQUFBQUFBQUEgKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNz
-aW5nKQoKL2Rldi9zZGc6CiAgIE1CUiBNYWdpYyA6IGFhNTUKUGFydGl0aW9uWzBdIDogICA0Mjk0
-OTY3Mjk1IHNlY3RvcnMgYXQgICAgICAgICAgICAxICh0eXBlIGVlKQoKL2Rldi9zZGg6CiAgIE1C
-UiBNYWdpYyA6IGFhNTUKUGFydGl0aW9uWzBdIDogICA0Mjk0OTY3Mjk1IHNlY3RvcnMgYXQgICAg
-ICAgICAgICAxICh0eXBlIGVlKQoKL2Rldi9zZGk6CiAgIE1CUiBNYWdpYyA6IGFhNTUKUGFydGl0
-aW9uWzBdIDogICA0Mjk0OTY3Mjk1IHNlY3RvcnMgYXQgICAgICAgICAgICAxICh0eXBlIGVlKQoK
-L2Rldi9zZGo6CiAgIE1CUiBNYWdpYyA6IGFhNTUKUGFydGl0aW9uWzBdIDogICA0Mjk0OTY3Mjk1
-IHNlY3RvcnMgYXQgICAgICAgICAgICAxICh0eXBlIGVlKQoKL2Rldi9zZGs6CiAgIE1CUiBNYWdp
-YyA6IGFhNTUKUGFydGl0aW9uWzBdIDogICA0Mjk0OTY3Mjk1IHNlY3RvcnMgYXQgICAgICAgICAg
-ICAxICh0eXBlIGVlKQ==
---089e0115ebd0741e4604fbc8c938--
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU5wkkjnsnt1WYoG5AQKzYw//RLMNeYVD1s+Cr5Kgb+BVO0K5EIKDAzXO
+GEbXGRVY/EVvOwYCrqbv7wO225ZeTUQLdwLwyEUxn+fenNcgRNIOj2PcWNgVLo/x
+3EotEY8ZtkalNVg+07N7sN6mPlqptSaDUxkF1CXyGoSgm09mbGvp6gv9AUBaXIor
+NAMsOSasYxMuNVvjjFWML3sJb8PvQCFRzSwyU0uZUHLGzeuupUcrV8EtHMvppHCY
+o0C7/71SSmAQVzmFxYWyu+8yd6rI+yM8L9/UwKtDjLfKf6efmFdzu8E572NG8PQD
+AKCFgvmk9IZM6WT8Bl6yqdTQ4DHhV9aIikItkRMuGEnr5t91mQ07jZXOvYflWOOy
+Jo5c2uhK+p2fexCsgq0W3SOvfXBfqn6UdggwcPtHGgj/XaX4oYwB3avp/16/05GO
+ZncZ+iTI92VQKnOMcqWLYE+Ouhjf+x2o4499TUFthUZ1NRHFJ0fEkt4lE2edJKg/
+SQ0mOlm4+t44VjH8mx9ZPvmmMlm3Vz6Rkjyzjrptw+/ge2JhO7DnjdkY6mkrdWgH
+GxyMvnXUjKH9IOmDSt6S92iPhqpbJv3HbdXweM21+gqbk5wntyM3EvOrR3vpMLAQ
+4wTltLYCUSTLFfm3HymBFcLHvRYN1No+dSVu9UhLilZ+Kzj1PgyUcTkPNHJ7KDis
+0PGPZqo/Vwc=
+=ed5l
+-----END PGP SIGNATURE-----
+
+--Sig_/Upcm7f_RYwqh0HoeuOZbNvT--
