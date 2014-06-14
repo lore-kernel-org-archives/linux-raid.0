@@ -1,123 +1,85 @@
-From: "ptschack ." <ptschack@googlemail.com>
-Subject: Re: Help with corrupted MDADM Raid6
-Date: Sat, 14 Jun 2014 19:14:33 +0200
-Message-ID: <CAH4F3Sb78S6mf-SRdNg-efiMUFHJvZ+Qc0uuTNsRWW4VNqyu2A@mail.gmail.com>
-References: <CAH4F3SZ4Q8MO5Ci8ihSrLf1myo8pTfJ8SNC5EwJZQHf_H44GPA@mail.gmail.com>
-	<20140613202541.584dc8f1@notabene.brown>
-	<CAH4F3SZm-Va4a-2ac0E-_GHde0Vcqgrw0xs0GPn+hBkTjnsL9Q@mail.gmail.com>
-	<20140614203146.5e99a84f@notabene.brown>
-	<CAH4F3SYerAqXZ_un-vytvTyAJh+NMA5it3R4_gbgOsjLB8GvAA@mail.gmail.com>
-	<20140614220618.5fcd36b5@notabene.brown>
+From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+Subject: RAID newbie, 1 vs 5, chunk sizes
+Date: Sat, 14 Jun 2014 22:01:40 +0100
+Message-ID: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140614220618.5fcd36b5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi,
 
-you are a lifesaver, it worked! The RAID is currently rebuilding and
-the data is all there, phew!
-In the future I will always keep copies of the superblocks backed up :-P
+Sorry if this is the wrong list. Most of the stuff out there seems
+outdated, and i have some specific doubts.
 
-Send me your PayPal address if you want me to buy you a beer :)
+I'm trying to decide how to best create a RAID array and what
+configuration to use. This is a desktop system, nothing
+mission-critical, but i'd like it to be reasonably tailored to the
+hardware and intended usage, and have questions about default values.
 
-Greetings,
--P.
+Hardware:
+    1x Toshiba DT01ACA100 - 32MB bus, 931.0 GiB (1 TB; 1000204886016 bytes)
+    2x Seagate ST1000DM0003 - 64MB bus, 931.0 GiB (1 TB; 1000204886016 bytes)
+and
+    1x Maxtor 6G160E0 - 8MB bus, 149.1 GiB (160 GB; 160041885696 bytes)
 
-On Sat, Jun 14, 2014 at 2:06 PM, NeilBrown <neilb@suse.de> wrote:
-> On Sat, 14 Jun 2014 13:19:57 +0200 "ptschack ." <ptschack@googlemail.com>
-> wrote:
->
->> Hi Neil,
->>
->> regrettably, I do not have logs from Jun 9th. This is what happened, in Detail:
->>
->> Before I grew the RAID, I made a backup of the system drive (Sometime
->> around the beginning of may). Then I grew the RAID and the dm-crypt
->> container on it.
->> I then noticed that ext4 filesystems cannot be grown above a certain
->> limit, which is why I decided to convert to BTRFS.
->> Prior to Jun 9th I upgraded Ubuntu from 12.04 LTS to 14.04 LTS. The
->> reason was that I wanted the newest BTRFS utils for the conversion.
->> The conversion went smoothly, but the Ubuntu upgrade messed with some
->> services running on the server (e.g. various configs for web apps,
->> nothing to do with the raid). So I wanted to do a fresh install. I
->> didn't do a backup of the system, because I had the old backup which
->> had worked before.
->>
->> I attempted the fresh install, looking at the disks with GParted
->> beforehand (as I said earlier, my theory is that GParted might have
->> messed up some of the md superblocks).
->> So after the fresh install, I wasn't able to start the RAID (error
->> message was input/output error).
->> So I thought I'll just restore the old backup, since that worked
->> perfectly, and then make my way from there.
->>
->> After the restore, The system asked me if I wanted to start a degraded
->> RAID. I thought it meant the raid was degraded because of the failing
->> drive, and said yes.
->> It then showed me a Raid with 6 Drives, all spares. At this point the
->> panic started to set in :(
->>
->> I have attached some log excerpts from the beginning of may, before I
->> made the backup and the old RAID was functioning (kern.log and syslog,
->> grepped for 'md').
->>
->> Furthermore, searching for the superblock with od gave me the following:
->>
->> od -x /dev/sdh | grep '4efc a92b'
->>
->> 20234525260 8a2a c251 a28b 2f92 f63e 8d72 4efc a92b
->> 103362752200 4efc a92b 3412 ad92 b451 bc40 5897 d215
->>
->> od -x /dev/sdi | grep '4efc a92b'
->>
->> 135674640060 4efc a92b 89de a9d8 d2b8 395e 6f37 4597
->>
->> I don't think those are the superblocks, but rather the "magic number"
->> being present somewhere on the drive :(
->
-> Yes, I think you are correct.
->
->>
->> Doing further research I found this:
->> http://kevin.deldycke.com/2007/03/how-to-recover-a-raid-array-after-having-zero-ized-superblocks/
->>
->> Is there any "safe" way to restore the superblocks, or is re-creating
->> the RAID my final option?
->
-> It looks like the only option left is to create the array again.
-> Providing you use --assume-clean and don't add spares, this is fairly safe
-> and you can try it again if you get it wrong.
->
-> It might be good to use 'dd' to backup the first few megabytes of each drive
-> just to be safe:  "mdadm --create" will only overwrite the metadata which is
-> in the first few K, so maybe that is enough, but more doesn't hurt.
->
-> Based on the logs use attached (which did have useful "bind" and
-> "operational as" lines) the order should be:
->
-> sda sdb sdc sdd sde sdf sdi sdh sdg
->
-> So something like
->  mdadm -C /dev/md0 -l6 -n9 -c 64 --assume-clean \
->    --data-offset=262144s /dev/sd{a,b,c,d,e,f,i,h} missing
->
-> Then try 'fsck -n' or similar.  If that looks good, try
->   echo check > /sys/block/md0/md/sync_action
-> and when that finished, check that "mismatch_cnt" is small.
->
-> If it is all good you should be safe to add another device and  let it
-> rebuild.
->
-> Then you can add a bitmap (--grow --bitmap=internal).  I wouldn't add the
-> bitmap until the array seems to be otherwise OK.
->
-> If the filesystem appears to be badly corrupted, you should stop the array,
-> and possibly try a different order of devices.
->
-> NeilBrown
+The 3 1TB disks all show similar data using
+# fdisk -l /dev/sda
+
+    Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+    255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+    Units = sectors of 1 * 512 = 512 bytes
+    Sector size (logical/physical): 512 bytes / 4096 bytes
+    I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+
+The Maxtor is different, of course. The system has 8GiB RAM and a
+Phenom II quadcore, running Debian Wheezy (stable) at the moment. The
+motherboard's an Asus M2nPV-VM. On top the the software RAID i intend
+to put LVM and then XFS for the / partition. Then i'll want to use
+Xen. One of the VMs will be my regular desktop, another may be a
+Windows HVM, another for LAN streaming, other(s) for trying out
+distros...
+
+My first question is: does the disk cache size *significantly* affect
+performance? Are there any caveats? I assume not (i've already used
+another Seagate with maybe 32MB of cache and the Maxtor in a RAID1
+159GB array) but i ask because i'm trying to decide between the 2
+Seagates in RAID1 + the Toshiba *or* all 3 in RAID5.
+I don't intend to put the system under heavy load, but that may be
+relative if i want to run 2-3 VMs in Xen and doing some streaming or
+running a webserver or what not. It seems to me the overhead RAID5 has
+on a system is either irrelevant for this kind of light usage or not
+so much an issue with modern hardware (although the motherboard's the
+bottlebeck here).
+
+Secondly, the chunks. How do they relate to sectors and why are they
+different in fdisk output? From [1] the chunk size should be at least
+4KiB, so 4096 bytes seems to match sector size. Am i making the right
+assumptions? Or the wrong ones even if the conclusion may be correct?
+Chunk size is irrelevant to RAID1, so i assume the 4 KiB value would
+apply; but for RAID5 128 KiB are suggested[2], which seems a big
+difference. Is there a formula for this? A rule of thumb?
+If i go for RAID5 i'd have to consider stripes, which would be 3*4KiB
+in size? Of should i use only 2*4KiB as the 3rd chunk is for parity?
+
+The partition type will depend on the RAID type. I've used whole disks
+for RAID1, but i'd probably use partitions slightly smaller if i go
+for RAID5. I'm assuming binary units are the way to go here,
+regardless of vendor usage (and other issues). I'll just have to get
+used to the 931 GiB figure.
+
+Sorry if this is a big message or miss-directed but i'd really like
+some experienced suggestions before i go re/installing stuff and
+creating VMs.
+
+Thanks,
+Nuno
+
+[1] https://raid.wiki.kernel.org/index.php/Chunk_size
+[2] https://raid.wiki.kernel.org/index.php/RAID_setup#RAID-5
+
+
+-- 
+"On the internet, nobody knows you're a dog."
