@@ -1,154 +1,51 @@
-From: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
-Subject: Found duplicate PV: using /dev/sda3 not /dev/md1
-Date: Sat, 14 Jun 2014 23:58:53 +0200
-Message-ID: <1896515726.20140614235853@oudeis.org>
-Reply-To: =?ISO-8859-1?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+Subject: Re: RAID newbie, 1 vs 5, chunk sizes
+Date: Sun, 15 Jun 2014 12:50:34 +0100
+Message-ID: <CADqA9ubFPVG96u6T4RT2oJeaZ9rYSy6S9jp1At4vaKmjPVeJTA@mail.gmail.com>
+References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
+ <539CC4F8.90905@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <539CC4F8.90905@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi,
+Hi,
 
-today I replaced two old 750GB disks in a RAID1 with two new 1TB
-disks:
+Thanks for your reply. The more i search the more i realize this is
+*very* subjective.
 
-/dev/md0 (sda1, sdb1) (root filesystem)
-/dev/md1 (sda3, sdb3) LVM with /var (and others)
+On Sat, Jun 14, 2014 at 10:56 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>
+> If you're working predominantly with large media files you'll want a
+> large chunk/stripe for data transfer efficiency from the platters with
+> the fewest seeks.  If you have a mixed workload with small and large
+> files, it's best to use a small chunk size, such as 32 or 64KB.
 
-- remove 750GB sdb, add new 1TB sdb, fdisk & sync sda -> sdb md0 and md1
-- remove 750GB sda, add new 1TB sda, fdisk & sync sdb -> sda md0 (md1 pending)
-here I had some problems with grub, system did not boot from new sdb,
-so I switched SATA ports on both disks and worked on grub & bios to
-finally boot from sdb (maybe this was were the sh!t hit the fan)
+The workload will vary: i have some ~240 GiB of media (ISO files,
+movies, photos, music - in increacing order of usage) that i intend to
+share on the LAN via SMB/CIFS through a Xen VM. This would be the
+biggest chunk of data. Then i have about 50 GiB of personal stuff,
+mostly pdf, txt, docx and similar.
+The remainder will be used for Xen VMs to work as servers (a web
+front-end for that samba share,for instance) and a Windows VM or two,
+MySQL databases (nothing big), etc.
 
-on next boot, LVM reported the following:
+In the end i guess it fits the mixed-workload scenario. With all the
+subjectivity, can i change the chunk size once the array is created?
+Will that "rechunk" existing data - is it feasable - or will it just
+use the new value for new data?
 
-Found duplicate PV efP9J0elVh1bokdArXcwsCB0KW0Yy9Ya: using /dev/sda3 not /dev/md1
+> All of that stated, your filesystem setup, specifically write barrier
+> support and journal mode, along with those slow disk spindles, will be a
+> much more significant impediment to performance than your chunk size.
 
-this doesn't look good, does it?
+LVM2 seems to support barriers now, the main issue will be how XFS
+behaves under Xen with barriers. I'd also use mostly ext4.
 
-is there any way to convince LVM to use md1 instead of sda3,
-preferrably without shutting down/rebooting the server? (remember,
-/var is an LVM volume) otherwise, I need to drive 70km, but that's OK
-if necessary.
+I'm inclined to giving RAID5 a try, i'll dig some more.
 
-[root@gateway ~]# pvdisplay
-  Found duplicate PV efP9J0elVh1bokdArXcwsCB0KW0Yy9Ya: using /dev/sda3 not /dev/md1
-  --- Physical volume ---
-  PV Name               /dev/sda3
-  VG Name               vg_gateway
-  PV Size               688.64 GB / not usable 1.56 MB
-  Allocatable           yes
-  PE Size (KByte)       4096
-  Total PE              176291
-  Free PE               154787
-  Allocated PE          21504
-  PV UUID               efP9J0-elVh-1bok-dArX-cwsC-B0KW-0Yy9Ya
-
-[root@gateway ~]# mdadm --misc -D /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Thu May 26 02:42:30 2011
-     Raid Level : raid1
-     Array Size : 8385792 (8.00 GiB 8.59 GB)
-  Used Dev Size : 8385792 (8.00 GiB 8.59 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Jun 14 23:55:03 2014
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : e305eb48:ccdead21:b2113316:370d4eaa
-         Events : 0.138466
-
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-
-[root@gateway ~]# mdadm --misc -D /dev/md1
-/dev/md1:
-        Version : 0.90
-  Creation Time : Mon Jun  6 23:12:19 2011
-     Raid Level : raid1
-     Array Size : 722089536 (688.64 GiB 739.42 GB)
-  Used Dev Size : 722089536 (688.64 GiB 739.42 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Jun 14 23:56:06 2014
-          State : clean, degraded, recovering
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 1
-
- Rebuild Status : 96% complete
-
-           UUID : 7b278c55:0642253d:7f816378:91d6e631
-         Events : 0.300608
-
-    Number   Major   Minor   RaidDevice State
-       2       8        3        0      spare rebuilding   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-
-[root@gateway ~]# lvdisplay
-  Found duplicate PV efP9J0elVh1bokdArXcwsCB0KW0Yy9Ya: using /dev/sda3 not /dev/md1
-  --- Logical volume ---
-  LV Name                /dev/vg_gateway/lv_home
-  VG Name                vg_gateway
-  LV UUID                yeBeOp-yho6-rIvS-sGhr-lpWL-T3ss-T1L9tk
-  LV Write Access        read/write
-  LV Status              available
-  # open                 1
-  LV Size                12.00 GB
-  Current LE             3072
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           253:0
-
-  --- Logical volume ---
-  LV Name                /dev/vg_gateway/lv_var
-  VG Name                vg_gateway
-  LV UUID                j5P82N-irO3-AS1k-TQtk-KwSG-PZWS-j8jsx2
-  LV Write Access        read/write
-  LV Status              available
-  # open                 1
-  LV Size                12.00 GB
-  Current LE             3072
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           253:1
-
-  --- Logical volume ---
-  LV Name                /dev/vg_gateway/lv_data
-  VG Name                vg_gateway
-  LV UUID                ihCove-bOaa-HfYn-KNcU-5P4a-OYzO-XrbzEU
-  LV Write Access        read/write
-  LV Status              available
-  # open                 1
-  LV Size                60.00 GB
-  Current LE             15360
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           253:2
-
-tnx in advance.
-
+Cheers,
+Nuno
