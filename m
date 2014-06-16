@@ -1,109 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: PATCH: RAID10-layout-descriptions
-Date: Mon, 16 Jun 2014 06:43:17 +1000
-Message-ID: <20140616064317.22366dea@notabene.brown>
-References: <1402852943.4708.8.camel@heisenberg.scientia.net>
+From: Pete <psid@riverland.net.au>
+Subject: How to fix this superblock?
+Date: Mon, 16 Jun 2014 10:59:27 +0930
+Message-ID: <20140616105927.828a6765.psid@riverland.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1402852943.4708.8.camel@heisenberg.scientia.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 15 Jun 2014 19:22:23 +0200 Christoph Anton Mitterer
-<calestyo@scientia.net> wrote:
+Hi all. Please excuse, newbie here, finding out how much I don't know
+about md.
 
-> Hi Neil.
-> 
-> As mentioned on GitHub before I'm trying to clean up some old patches or
-> get them merged.
-> 
-> 
-> I lost a bit track on what we've discussed about them before,...
-> 
-> One thing I remember is that you didn't like unicode and tbl(1) being
-> used.
+I have a RAID1 array which is running in degraded mode. When I try to
+re-add the device that used to be part of the array, I'm told that it's
+too small, though it used to be fine.
 
-tbl I can live with.  Unicode I cannot.
-In some contexts Unicode may be ok (non-English words) but not for
-line-drawing characters and not for special punctuation.  troff should be
-able to create those characters itself and you should tell it what you want.
+/proc/mdstat:
 
-> 
-> Well of course we can talk about that again,... but I think this is
-> 2014, so literally everyone has unicode and I think the explanations
-> benefit from it (actually I see more and more manpages using unicode).
+md1 : active raid1 sdc3[2]
+      2920305508 blocks super 1.0 [2/1] [_U]
 
-It's not true that "literally everyone" has enough water to drink.
-Suggesting they have Unicode is ridiculous.
+When I try to re-add the device that used to be part of the array, mdadm
+says it's not large enough:
 
-> 
-> With respect to tbl(1) and the box drawings... I think you were
-> complaining that this doesn't work with groff when rendering e.g. to
-> PDF.... well I guess you're right, but the question is probably: is
-> anyone in the world doing this?
+# mdadm --add /dev/md1 /dev/sdb3
+mdadm: /dev/sdb3 not large enough to join array
 
-Google  for "manpages pdf"
+The partition tables hadn't changed when this started. Since then I've
+re-partitioned sdb to make sdb3 a few GB bigger, but it's still not
+large enough.
 
-There are certainly web sites that display man pages in HTML, so that is a
-minimum requirement.
-The correct approach is not "do what I think is cool" but "do the same sort
-of think that all other man pages do to maximize interoperability".
+Looking at the working device's superblock, there's a heap of "failed"
+so I'm guessing that superblock has been damaged:
 
+# mdadm -E /dev/sdc3
 
-> I mean for manpages it seems to work quite well and IMHO improves
-> readability and understandability of the explanations quite a lot... and
-> we can't just cover any side way on how the nroff files might be used,
-> and for which rendering doesn't work.
+/dev/sdc3:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 129ec25f:f07e292a:5bf0829d:19793e6c
+           Name : pioneer:1  (local to host pioneer)
+  Creation Time : Thu Nov 21 21:19:12 2013
+     Raid Level : raid1
+   Raid Devices : 2
 
-The idea of following standards is that if everyone does, then you *do* cover
-all conforming uses of the code.
+  Used Dev Size : 5841405976 (2785.40 GiB 2990.80 GB)
+     Array Size : 5840611016 (2785.02 GiB 2990.39 GB)
+      Used Size : 5840611016 (2785.02 GiB 2990.39 GB)
+   Super Offset : 5841406232 sectors
+          State : clean
+    Device UUID : 6bbc382c:244cf1ad:4fd61c87:4e40e592
 
-Some of that "standard" is in "man 7 man-pages".  Some of it is simply
-defacto.
+    Update Time : Fri Jun 13 17:05:57 2014
+       Checksum : 93cf5353 - correct
+         Events : 444384
 
-( of 18508 man pages on my laptop, 333 contain Unicode.
- Some is in peoples names. Some are in month names for non-western
- calendar.
- There are occasional "copyright" characters which should be \*(co.
-
- mmcli.8  uses some unicode quotes, which is wrong.  I'm sure there are 
-           troff special directives for that
- screen.1 does too
- systemd.time.7 and timedatectl  use an arrow instead of \[->]
- and several use accented characters and non-latin characters which is
- probably OK.
-)
-> 
-> 
-> After all,... I think the patches below contain lots of valuable
-> information which is currently missing in the manpages... so having that
-> information merged somehow is surely better than not.
-> Actually the same is IMHO fully missing for the different RAID 5/6
-> layouts.
-
-Yes, the patches contain valuable improvements.  Unfortunately some are
-blended with regressions which make them hard to use.
-Others just fix problems which were introduced earlier in the series, which
-is poor form.
-
-When sending patches by email it is greatly preferred to send one patch per
-email.  This makes it a lot easier to apply (using "git am"), and a lot
-easier to reply to.
-
-I may try to pick the usable bits out of the patches later in the month as I
-do like some of the improvements.  But I'd rather not have to :-)
-
-Thanks,
-NeilBrown
+    Array Slot : 2 (failed, failed, 1, failed, failed, failed, failed,
+failed, failed, failed, failed, failed, failed, failed, failed, failed,
+failed, failed, failed, failed, failed, failed, failed, failed, failed,
+failed, failed, failed, failed, failed, failed, failed, failed, failed,
+ [snip]
+failed) Array State : _U 383 failed
 
 
-> 
-> I'd be happy if someone could look into spelling issues and that like.
-> 
-> Cheers,
-> Chris.
+Could it be that whatever happened to the superblock on sdc3 is giving
+it an incorrect idea of the array size? Is that something I can fix?
 
+Would I be better off creating a new array on sdb3+missing and copying
+data to that? Then I would zero the superblock on sdc3 and hopefully
+add it to the new array.
+
+Would appreciate any help.
+
+Thanks.  Pete
