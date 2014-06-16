@@ -1,83 +1,42 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Found duplicate PV: using /dev/sda3 not /dev/md1
-Date: Mon, 16 Jun 2014 10:35:26 -0400
-Message-ID: <539F00AE.9090504@turmel.org>
-References: <1896515726.20140614235853@oudeis.org> <1454723160.20140615203503@oudeis.org> <539E5A90.3080207@turmel.org> <19411862.20140616155327@oudeis.org>
+From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+Subject: Re: RAID newbie, 1 vs 5, chunk sizes
+Date: Mon, 16 Jun 2014 17:14:30 +0100
+Message-ID: <CADqA9ubBicDLwrdgOYNT04P0SO8pi+FK-ipjONY+59ThV0zGKw@mail.gmail.com>
+References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
+ <539E5504.1080809@turmel.org> <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
+ <539EFF1C.3000009@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19411862.20140616155327@oudeis.org>
+In-Reply-To: <539EFF1C.3000009@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?UmFpbmVyIEbDvGdlbnN0ZWlu?= <rfu@oudeis.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Rainer,
+Thanks for the tips.
 
-[CC to list added back.  Use reply-to-all on kernel.org lists]
+On Mon, Jun 16, 2014 at 3:28 PM, Phil Turmel <philip@turmel.org> wrote:
+> Modern consumer-grade drives that have it are listed as "NAS" duty
+> drives.
 
-On 06/16/2014 09:53 AM, Rainer F=C3=BCgenstein wrote:
->=20
-> PT> Your problem is that you are using version 0.90 metadata.  It and=
- v1.0
-> PT> put the superblock at the end of the member devices, and it canno=
-t be
-> PT> found if the device size changes.  Plus, the data starts at secto=
-r zero,
-> PT> so if the MD superblock isn't found, the device content is identi=
-fied
-> PT> without the raid layer.
->=20
-> If I understand it correctly, the error happened (apart from the
-> superblock version) because of the reboot(s) before a) md1 was grown
-> and/or/maybe b) sync was finished.
+Marketing... The one that is taking the lead is WD Red WD10EFRX. Can't
+find the Toshiba DT01ACA100 at an affordable price anymore and Seagate
+is everywhere.
+Back to a previous question (assuming i have the drives sorted out first):
 
-Probably, but v0.9 arrays are vulnerable to whole-disk vs. partition
-misidentification, and should never be used on a partition that
-encompasses the end of a disk.
+If i create a RAID10 with 3 1TB drives, with --layout=f2, would this
+give me 2TB of space +1TB redundancy? Is this a 1E?
+Using: mdadm --create /dev/md0 --verbose --chunk=128 --level=10
+--layout=f2 --raid-devices=3 /dev/sd[abd]1
 
-> PT> These metadata formats should only be used with boot partitions t=
-hat
-> PT> need to be readable without assembling the array.
-> this was how the centos installer created the raid (with 0.90). will
-> keep it that way on md0 (which holds /boot and root).
->=20
-> PT> You need to stop /dev/md1 as soon as possible to eliminate the ch=
-ances
-> PT> of further corruption.
->=20
-> [root@gateway home]# mdadm --manage --stop /dev/md1
-> mdadm: fail to stop array /dev/md1: Device or resource busy
-> Perhaps a running process, mounted filesystem or active volume group?
->=20
-> [root@gateway home]# lsof | grep md1
-> md1_raid1   461      root  cwd       DIR                9,0     4096 =
-         2 /
-> md1_raid1   461      root  rtd       DIR                9,0     4096 =
-         2 /
-> md1_raid1   461      root  txt   unknown                             =
-           /proc/461/exe
->=20
-> since nothing else than md1_raid1 is accessing /dev/md1, I assume it
-> is safe to --force --stop?
+If so, what would be the difference to a RAID5:
+mdadm --create /dev/md0 --verbose --chunk=512 --level=5
+--raid-devices=3 /dev/sd[abd]1
 
-What is running as process ID 461?  That needs to be killed off, and an=
-y
-mount involving /dev/md1 stopped.
+Besides one having redundancy and the other having parity; and that
+RAID5 must compute parity (is that really so horrendously slow
+nowadays?).
 
-> PT> If you must keep the server online, I recommend the following ste=
-ps:
->=20
-> big thanks, your strategy is much better than the one I had planned
-> (and fills some knowledge gaps).
-
-Your situation is the primary reason I recommend LVM.
-
-Phil
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Other than tiobench, any other benchmarking tools you guys recommend?
+(I've decided to just go slow and test every layer out before moving
+to the next, i.e. 1st RAID, LVM, FSs, Xen, apps.)
