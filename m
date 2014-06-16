@@ -1,73 +1,81 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Mon, 16 Jun 2014 10:28:44 -0400
-Message-ID: <539EFF1C.3000009@turmel.org>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com> <539E5504.1080809@turmel.org> <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
+Subject: Re: Found duplicate PV: using /dev/sda3 not /dev/md1
+Date: Mon, 16 Jun 2014 10:35:26 -0400
+Message-ID: <539F00AE.9090504@turmel.org>
+References: <1896515726.20140614235853@oudeis.org> <1454723160.20140615203503@oudeis.org> <539E5A90.3080207@turmel.org> <19411862.20140616155327@oudeis.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
+In-Reply-To: <19411862.20140616155327@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>, linux-raid@vger.kernel.org
+To: =?UTF-8?B?UmFpbmVyIEbDvGdlbnN0ZWlu?= <rfu@oudeis.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Nuno,
+Hi Rainer,
 
-On 06/16/2014 08:36 AM, Nuno Magalh=C3=A3es wrote:
-> Hi,
+[CC to list added back.  Use reply-to-all on kernel.org lists]
+
+On 06/16/2014 09:53 AM, Rainer F=C3=BCgenstein wrote:
 >=20
-> On Mon, Jun 16, 2014 at 3:23 AM, Phil Turmel <philip@turmel.org> wrot=
-e:
->> Before going any further, check the TLER/ERC support for these drive=
-s.
+> PT> Your problem is that you are using version 0.90 metadata.  It and=
+ v1.0
+> PT> put the superblock at the end of the member devices, and it canno=
+t be
+> PT> found if the device size changes.  Plus, the data starts at secto=
+r zero,
+> PT> so if the MD superblock isn't found, the device content is identi=
+fied
+> PT> without the raid layer.
 >=20
-> Both Seagate ST1000DM0003 don't have that:
-> Warning: device does not support SCT Error Recovery Control command
+> If I understand it correctly, the error happened (apart from the
+> superblock version) because of the reboot(s) before a) md1 was grown
+> and/or/maybe b) sync was finished.
 
-Hunch confirmed.  Don't use these Seagates in a raid.
+Probably, but v0.9 arrays are vulnerable to whole-disk vs. partition
+misidentification, and should never be used on a partition that
+encompasses the end of a disk.
 
-> The Toshiba DT01ACA100 seems to have, but disabled:
-> SCT Error Recovery Control:
->            Read: Disabled
->           Write: Disabled
+> PT> These metadata formats should only be used with boot partitions t=
+hat
+> PT> need to be readable without assembling the array.
+> this was how the centos installer created the raid (with 0.90). will
+> keep it that way on md0 (which holds /boot and root).
 >=20
-> I couldn't find any specs with specific details on this feature for
-> the Toshiba, and i'm not sure if it's safe to issue smartctl -l
-> scterc,70,70 on a drive thay may not support it. If it's disabled as
-> an incentive to buy more expensive drives, will the drive just ignore
-> this command or will it decide to roast?
+> PT> You need to stop /dev/md1 as soon as possible to eliminate the ch=
+ances
+> PT> of further corruption.
+>=20
+> [root@gateway home]# mdadm --manage --stop /dev/md1
+> mdadm: fail to stop array /dev/md1: Device or resource busy
+> Perhaps a running process, mounted filesystem or active volume group?
+>=20
+> [root@gateway home]# lsof | grep md1
+> md1_raid1   461      root  cwd       DIR                9,0     4096 =
+         2 /
+> md1_raid1   461      root  rtd       DIR                9,0     4096 =
+         2 /
+> md1_raid1   461      root  txt   unknown                             =
+           /proc/461/exe
+>=20
+> since nothing else than md1_raid1 is accessing /dev/md1, I assume it
+> is safe to --force --stop?
 
-No, you can issue the command to these drives, and they'll work
-correctly.  They just need to be told this every time they power up.
-You'll need to put the command in rc.local or wherever your distro
-recommends.  Older consumer-grade drives are often like this.  The
-drives have the support, but power up with it disabled.
+What is running as process ID 461?  That needs to be killed off, and an=
+y
+mount involving /dev/md1 stopped.
 
-As the industry moved to monetize raid capabilities, the support in
-consumer drives was phased out.  Otherwise identical, but higher-priced
-drives then appeared on the market to fill the gap.
+> PT> If you must keep the server online, I recommend the following ste=
+ps:
+>=20
+> big thanks, your strategy is much better than the one I had planned
+> (and fills some knowledge gaps).
 
-> Are there any - recommended - consumer-grade drives out there that do
-> support TLER? I was going for 1TB@7200, but that can change. I starte=
-d
-> disliking Seagate after a ST31000528AS died on me. They bought Maxtor
-> a long time ago and recently bought Samsung's disk division. I've had
-> no qualms with Toshiba. I'm not so sure on WD, they used to be less
-> that good; and haven't tried Hitachi. What say you?
-
-Modern consumer-grade drives that have it are listed as "NAS" duty
-drives.  The WD Red are good examples, and what I've been buying lately=
-=2E
- With the NAS labeling, they also power up with the support enabled.
-Typically 7.0 seconds.
-
-I haven't seen any reports of "green" drives that are suitable for raid
-service.
-
-HTH,
+Your situation is the primary reason I recommend LVM.
 
 Phil
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
