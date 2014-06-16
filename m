@@ -1,57 +1,108 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Sun, 15 Jun 2014 22:23:00 -0400
-Message-ID: <539E5504.1080809@turmel.org>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
+From: Pete <psid@riverland.net.au>
+Subject: Re: How to fix this superblock?
+Date: Mon, 16 Jun 2014 11:54:36 +0930
+Message-ID: <20140616115436.dbf865af.psid@riverland.net.au>
+References: <20140616105927.828a6765.psid@riverland.net.au>
+	<20140616114829.6e6b7fa6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
+In-Reply-To: <20140616114829.6e6b7fa6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/14/2014 05:01 PM, Nuno Magalh=C3=A3es wrote:
-> Hi,
->=20
-> Sorry if this is the wrong list. Most of the stuff out there seems
-> outdated, and i have some specific doubts.
->=20
-> I'm trying to decide how to best create a RAID array and what
-> configuration to use. This is a desktop system, nothing
-> mission-critical, but i'd like it to be reasonably tailored to the
-> hardware and intended usage, and have questions about default values.
->=20
-> Hardware:
->     1x Toshiba DT01ACA100 - 32MB bus, 931.0 GiB (1 TB; 1000204886016 =
-bytes)
->     2x Seagate ST1000DM0003 - 64MB bus, 931.0 GiB (1 TB; 100020488601=
-6 bytes)
-> and
->     1x Maxtor 6G160E0 - 8MB bus, 149.1 GiB (160 GB; 160041885696 byte=
-s)
+On Mon, 16 Jun 2014 11:48:29 +1000
+NeilBrown <neilb@suse.de> wrote:
 
-Before going any further, check the TLER/ERC support for these drives.
-(The Seagate xxxxxDM003 is ringing warning bells for me.)  The output o=
-f
-"smartctl -l scterc /dev/sdX" for each one will do.  If you get anythin=
-g
-other than "7.0 seconds" or similar, you'll need special boot-time
-scripting.  If you get "not supported", I wouldn't even consider puttin=
-g
-the drive into any raid array.
+> On Mon, 16 Jun 2014 10:59:27 +0930 Pete <psid@riverland.net.au> wrote:
+> 
+> > Hi all. Please excuse, newbie here, finding out how much I don't know
+> > about md.
+> > 
+> > I have a RAID1 array which is running in degraded mode. When I try to
+> > re-add the device that used to be part of the array, I'm told that it's
+> > too small, though it used to be fine.
+> > 
+> > /proc/mdstat:
+> > 
+> > md1 : active raid1 sdc3[2]
+> >       2920305508 blocks super 1.0 [2/1] [_U]
+> > 
+> > When I try to re-add the device that used to be part of the array, mdadm
+> > says it's not large enough:
+> > 
+> > # mdadm --add /dev/md1 /dev/sdb3
+> > mdadm: /dev/sdb3 not large enough to join array
+> > 
+> > The partition tables hadn't changed when this started. Since then I've
+> > re-partitioned sdb to make sdb3 a few GB bigger, but it's still not
+> > large enough.
+> > 
+> > Looking at the working device's superblock, there's a heap of "failed"
+> > so I'm guessing that superblock has been damaged:
+> > 
+> > # mdadm -E /dev/sdc3
+> > 
+> > /dev/sdc3:
+> >           Magic : a92b4efc
+> >         Version : 1.0
+> >     Feature Map : 0x0
+> >      Array UUID : 129ec25f:f07e292a:5bf0829d:19793e6c
+> >            Name : pioneer:1  (local to host pioneer)
+> >   Creation Time : Thu Nov 21 21:19:12 2013
+> >      Raid Level : raid1
+> >    Raid Devices : 2
+> > 
+> >   Used Dev Size : 5841405976 (2785.40 GiB 2990.80 GB)
+> >      Array Size : 5840611016 (2785.02 GiB 2990.39 GB)
+> >       Used Size : 5840611016 (2785.02 GiB 2990.39 GB)
+> >    Super Offset : 5841406232 sectors
+> >           State : clean
+> >     Device UUID : 6bbc382c:244cf1ad:4fd61c87:4e40e592
+> > 
+> >     Update Time : Fri Jun 13 17:05:57 2014
+> >        Checksum : 93cf5353 - correct
+> >          Events : 444384
+> > 
+> >     Array Slot : 2 (failed, failed, 1, failed, failed, failed, failed,
+> > failed, failed, failed, failed, failed, failed, failed, failed, failed,
+> > failed, failed, failed, failed, failed, failed, failed, failed, failed,
+> > failed, failed, failed, failed, failed, failed, failed, failed, failed,
+> >  [snip]
+> > failed) Array State : _U 383 failed
+> > 
+> > 
+> > Could it be that whatever happened to the superblock on sdc3 is giving
+> > it an incorrect idea of the array size? Is that something I can fix?
+> > 
+> > Would I be better off creating a new array on sdb3+missing and copying
+> > data to that? Then I would zero the superblock on sdc3 and hopefully
+> > add it to the new array.
+> > 
+> > Would appreciate any help.
+> 
+> I suspect that upgrading to a newer mdadm would solve most of these problems.
+> What are you running? (mdadm -V)
+> Try:
+> 
+>   cd /tmp
+>   git clone git://neil.brown.name/mdadm
+>   cd mdadm
+>   make
+>   ./mdadm ......
+> 
+> NeilBrown
 
-Search this list's archives for details on "timeout mismatch", "scterc"=
-,
-and the consequences of ignoring this.
+Thanks Neil. It's several years old, Ubuntu 8.04:
+mdadm - v2.6.3 - 20th August 2007
 
-If you do have good error recovery timeouts, continue with Stan's advic=
-e.
+The server doesn't have git and I can't apt-get it since 8.04 is beyond
+support. I will try booting a live CD on it when I get a chance.
 
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'd like to install a newer system, but it's used for production so
+that will take some planning.
+
+Regards.  Pete
