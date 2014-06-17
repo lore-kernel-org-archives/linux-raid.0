@@ -1,59 +1,34 @@
-From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Tue, 17 Jun 2014 01:41:38 +0100
-Message-ID: <CADqA9uajh-vnYFLPyeqV4kLinGwaQDhm0kR2JA+A22OrVabuNg@mail.gmail.com>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
- <539E5504.1080809@turmel.org> <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
- <539EFF1C.3000009@turmel.org> <CADqA9ubBicDLwrdgOYNT04P0SO8pi+FK-ipjONY+59ThV0zGKw@mail.gmail.com>
+Date: Tue, 17 Jun 2014 08:47:32 +0800
+Message-ID: <539F9024.7040806@fnarfbargle.com>
+References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com> <539E5504.1080809@turmel.org> <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com> <539EFF1C.3000009@turmel.org> <CADqA9ubBicDLwrdgOYNT04P0SO8pi+FK-ipjONY+59ThV0zGKw@mail.gmail.com> <CADqA9uajh-vnYFLPyeqV4kLinGwaQDhm0kR2JA+A22OrVabuNg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADqA9ubBicDLwrdgOYNT04P0SO8pi+FK-ipjONY+59ThV0zGKw@mail.gmail.com>
+In-Reply-To: <CADqA9uajh-vnYFLPyeqV4kLinGwaQDhm0kR2JA+A22OrVabuNg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jun 16, 2014 at 5:14 PM, Nuno Magalh=C3=A3es <nunomagalhaes@eu.=
-ipp.pt> wrote:
-> The one that is taking the lead is WD Red WD10EFRX. Can't
-> find the Toshiba DT01ACA100 at an affordable price anymore and Seagat=
-e
-> is everywhere.
+On 17/06/14 08:41, Nuno Magalh=C3=A3es wrote:
+> The WD Red has "intellipower" meaning it can - supposedly - go from
+> 5400 to 7200, depending on various conditions and who you ask. This
+> means that if i wanted to combine it with the DT01 (traditional 7200)=
+,
+> the overall speed of the array would be dictated by the Red, right?
 
-The WD Red has "intellipower" meaning it can - supposedly - go from
-5400 to 7200, depending on various conditions and who you ask. This
-means that if i wanted to combine it with the DT01 (traditional 7200),
-the overall speed of the array would be dictated by the Red, right?
-Doesn't this increase the change that a power outage would leave the
-array with a piece of new data only on the DT01? The point of having
-the array in the first place would be for it to recover, but that
-means RAID1 in this case. If that new chunk had it's parity (not yet
-written) on the Red in a RAID5, would it recover? I think i've read
-somewhere these drives have some sort of technology to mitigate power
-issues which, at the time, i read as "watch battery inside" or
-something.
-
-I do have a UPS, a crappy one that'll hold for about 10m. The
-problem's that i haven't gotten the serial connection working properly
-yet (so no way to tell the system the power is out). Such an outage is
-rare here, though.
-
-As for the DT01:
-# smartctl -l scterc,70,70 /dev/sda
-    SCT Error Recovery Control set to:
-           Read:     70 (7.0 seconds)
-          Write:     70 (7.0 seconds)
-=2E..which will have to go into an init script.
+I don't know who keeps perpetuating this myth, but it is just that.=20
+"intellipower" is just another name for slow. It just means slow spindl=
+e=20
+speeds and clever use of caching algorithms to make it feel faster than=
+=20
+it really is. It's a marketing name only. They do not, and have never=20
+had the ability to change speeds.
 
 
-On Mon, Jun 16, 2014 at 10:02 PM, Mark Knecht <markknecht@gmail.com> wr=
-ote:
-> I'd not head of tiobench before. It seems quite out of date looking a=
-t
-> the website which suggests it hasn't been updated in 12 years.
-
-Didn't know that, thanks for the pointers. :)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
