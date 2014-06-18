@@ -1,85 +1,65 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Wed, 18 Jun 2014 12:58:59 +0100
-Message-ID: <CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
-	<539E5504.1080809@turmel.org>
-	<CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
-	<2036850.atdiKx507N@eseries.newtech.fi>
+Date: Wed, 18 Jun 2014 20:16:16 +0800
+Message-ID: <53A18310.6020900@fnarfbargle.com>
+References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>	<539E5504.1080809@turmel.org>	<CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>	<2036850.atdiKx507N@eseries.newtech.fi> <CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2036850.atdiKx507N@eseries.newtech.fi>
+In-Reply-To: <CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dag@newtech.fi
-Cc: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>, Linux-RAID <linux-raid@vger.kernel.org>
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, dag@newtech.fi
+Cc: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18 June 2014 11:19, Dag Nygren <dag@newtech.fi> wrote:
-> On Monday 16 June 2014 13:36:44 Nuno Magalh=C3=A3es wrote:
->> Hi,
->>
->> On Mon, Jun 16, 2014 at 3:23 AM, Phil Turmel <philip@turmel.org> wro=
-te:
->> > Before going any further, check the TLER/ERC support for these dri=
-ves.
->>
->> Both Seagate ST1000DM0003 don't have that:
->> Warning: device does not support SCT Error Recovery Control command
->>
->> The Toshiba DT01ACA100 seems to have, but disabled:
->> SCT Error Recovery Control:
->>            Read: Disabled
->>           Write: Disabled
->>
->> I couldn't find any specs with specific details on this feature for
->> the Toshiba, and i'm not sure if it's safe to issue smartctl -l
->> scterc,70,70 on a drive thay may not support it. If it's disabled as
->> an incentive to buy more expensive drives, will the drive just ignor=
+On 18/06/14 19:58, Mathias Bur=C3=A9n wrote:
+> On 18 June 2014 11:19, Dag Nygren <dag@newtech.fi> wrote:
+
+>> Just love my HGST 4 TB drives. The first ones that haven't
+>> developed any pending/remapped sectors during the 9 months
+>> they have been in 24/7 use. Previously tried different Seagates, wit=
+h
+>> constant problems (And yes - Had the SCT turned on). Also tested a W=
+D red,
+>> but saw similar symptoms developing and so degraded that to a storag=
 e
->> this command or will it decide to roast?
+>> disk for my boy...
+>> HGST was some 20=E2=82=AC more expensive and hard to get here but de=
+finitely
+>> worth it.
 >>
->> Are there any - recommended - consumer-grade drives out there that d=
-o
->> support TLER? I was going for 1TB@7200, but that can change. I start=
-ed
->> disliking Seagate after a ST31000528AS died on me. They bought Maxto=
-r
->> a long time ago and recently bought Samsung's disk division. I've ha=
-d
->> no qualms with Toshiba. I'm not so sure on WD, they used to be less
->> that good; and haven't tried Hitachi. What say you?
 >
-> Just love my HGST 4 TB drives. The first ones that haven't
-> developed any pending/remapped sectors during the 9 months
-> they have been in 24/7 use. Previously tried different Seagates, with
-> constant problems (And yes - Had the SCT turned on). Also tested a WD=
- red,
-> but saw similar symptoms developing and so degraded that to a storage
-> disk for my boy...
-> HGST was some 20=E2=82=AC more expensive and hard to get here but def=
-initely
-> worth it.
 >
-> YMMV
->
-> Dag
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If we're comparing drives, my 8x WD20EARS / EARX have been spinning
+> for years. 2 drives just failed after ~3.4 years uptime (24/7) and
+> over 400,000 head parkings. They had weekly SMART self-test and
+> monthly RAID6 scrubs, and a few unexpected power losses. Good value.
+> But YMMV.
 
+My experience has been almost any drive, no matter how naff can be made=
+=20
+to last well by simply keeping them spinning and at a roughly constant=20
+temperature. I generally replace my bulk storage drives at about 4=20
+years. My first lot were Maxtor 250G cheapies and all 12 of them went=20
+for over 4.5 years. My current batch are WD Green 2TB and they all have=
+=20
+~26,000 hours on them. One of my SAS drives has over 49,000 hours on it=
+=2E=20
+Even a set of cheap Maxtor DiamondMAX 22 1TB drives lasted near enough=20
+to 25,000 hours before I relegated them to an off-line backup machine.
 
-If we're comparing drives, my 8x WD20EARS / EARX have been spinning
-for years. 2 drives just failed after ~3.4 years uptime (24/7) and
-over 400,000 head parkings. They had weekly SMART self-test and
-monthly RAID6 scrubs, and a few unexpected power losses. Good value.
-But YMMV.
+The constant has been keeping them running 24/7 and doing a pretty=20
+thorough burn in to weed out the early life failures.
 
-Mathias
+=46or example the random WD Green 2T I picked has 26,917 hours and 60=20
+power cycles. Most of those would have been caused over a 12 week perio=
+d=20
+when I had power issues with the UPS and none would have been off long=20
+enough to noticeably let the drive cool down.
+
+Keep 'em spinning and warm.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
