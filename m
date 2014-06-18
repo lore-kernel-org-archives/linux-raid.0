@@ -1,53 +1,101 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Wed, 18 Jun 2014 23:34:33 +0600
-Message-ID: <20140618233433.20b43198@natsu>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
-	<539E5504.1080809@turmel.org>
-	<CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
-	<2036850.atdiKx507N@eseries.newtech.fi>
-	<CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: mismatches after growing raid1 and re-adding a failed drive
+Date: Wed, 18 Jun 2014 20:42:14 +0300
+Message-ID: <CAGRgLy6j0h5dd+AJP8XKq3Yx-jpqD7gWVSqs68e7fuv4Aaefsg@mail.gmail.com>
+References: <CAGRgLy6YHMe-CRB1h4WHC-1xtdy5nURecf51LWu9WRaCy8Nw6w@mail.gmail.com>
+	<20140610102105.6e544fd7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0DTY9qHpML+Gq3VjFtpK3vW"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
+In-Reply-To: <20140610102105.6e544fd7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
-Cc: dag@newtech.fi, Nuno =?UTF-8?B?TWFnYWxow6Nlcw==?= <nunomagalhaes@eu.ipp.pt>, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/0DTY9qHpML+Gq3VjFtpK3vW
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Wed, 18 Jun 2014 12:58:59 +0100
-Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
+On Tue, Jun 10, 2014 at 3:21 AM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 6 Jun 2014 14:59:32 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>> testing the following scenario:
+>>
+>> 1) create a raid1 with drives A and B, wait for resync to complete
+>> (verify mismatch_cnt is 0)
+>> 2) drive B fails, array continues to operate as degraded, new data is
+>> written to array
+>> 3) add a fresh drive C to array (after zeroing any possible superblock on C)
+>> 4) wait for C recovery to complete
+>>
+>> At this point, for some reason "bitmap->events_cleared" is not
+>> updated, it remains 0, although the bitmap is clear.
+>
+> We should update events_cleared after the first write after the array became
+> optimal.  I assume you didn't write to the array while the array was
+> recovering or afterwards?
+You are right, I did not. I tried writing to the array after it
+becomes optimal, and indeed events_cleared gets updated, and from this
+point I am unable to re-add the drive after growing the array.
 
-> If we're comparing drives, my 8x WD20EARS / EARX have been spinning
-> for years. 2 drives just failed after ~3.4 years uptime (24/7) and
-> over 400,000 head parkings. They had weekly SMART self-test and
-> monthly RAID6 scrubs, and a few unexpected power losses. Good value.
 
-Why do you hate your drives so much, or haven't you heard of 'wdidle3'?
-Or maybe I misunderstand and this whole endeavor was actually an experiment=
- on
-how soon will they fail from all that ridiculous amount of head parkings.
+>
+>>
+>> 5) grow the array by one slot:
+>> mdadm --grow /dev/md1 --raid-devices=3 --forc
+>> 6) re-add drive B back
+>> mdadm --manage /dev/md1 --re-add /dev/sdb
+>>
+>> MD accepts this drive, because in super_1_validate:
+>>         /* If adding to array with a bitmap, then we can accept an
+>>          * older device, but not too old.
+>>          */
+>>         if (ev1 < mddev->bitmap->events_cleared)
+>>             return 0;
+>> Since events_cleared==0, this condition DOES NOT hold, and drive B is accepted
+>
+> Yes, that is bad.  I guess we need to update events_cleared when recovery
+> completes because bits in the bitmap are cleared then too.
+>
+> Either bitmap_end_sync or the two places that call it need to update
+> events_cleared just like bitmap_endwrite does.
+>
+>>
+>> 7) recovery begins and completes immediately as the bitmap is clear
+>> 8) issuing "echo check > ..." yields in a lot of mismatched
+>> (naturally, as B's data was not synced)
+>>
+>> Is this a valid scenario? Any idea why events_cleared is not updated?
+>
+> Yes, scenario is valid.  It is a bug and should be fixed.
+>
+> Would you like to write and test a patch as discussed above?
 
---=20
-With respect,
-Roman
+I started looking at what's going on in the bitmap code, and I see
+that I need to look more:) For example, in bitmap_endwrite() I see
+that it sets events_cleared before even checking the value of the
+counter. So I definitely don't understand how the bitmap works.
 
---Sig_/0DTY9qHpML+Gq3VjFtpK3vW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+For my particular use-case, once a drive gets replaced like in the
+above scenario, it is guaranteed that the old drive will not be
+re-added unless its superblock is zeroed. But I wonder if there is
+some other scenario, in which not updating bitmap->events_cleared when
+recovery completes can bite us.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Thanks,
+Alex.
 
-iEYEARECAAYFAlOhzakACgkQTLKSvz+PZwj3pgCfS5elJslyd8GgU0XskldNmDSA
-Wy8AnRCQdLINP9ZQCWG0XS399bjzIp/R
-=V7eu
------END PGP SIGNATURE-----
 
---Sig_/0DTY9qHpML+Gq3VjFtpK3vW--
+
+>
+> Thanks,
+> NeilBrown
+>
+>
+>
+>> Kernel is 3.8.13
+>>
+>> Thanks,
+>> Alex.
+>
