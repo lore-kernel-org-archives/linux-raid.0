@@ -1,46 +1,28 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Tue, 17 Jun 2014 14:50:23 -0500
-Message-ID: <53A09BFF.4030901@hardwarefreak.com>
+Date: Wed, 18 Jun 2014 10:55:31 +0800
+Message-ID: <53A0FFA3.6060302@fnarfbargle.com>
 References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com> <539E5504.1080809@turmel.org> <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com> <539EFF1C.3000009@turmel.org> <CADqA9ubBicDLwrdgOYNT04P0SO8pi+FK-ipjONY+59ThV0zGKw@mail.gmail.com> <CADqA9uajh-vnYFLPyeqV4kLinGwaQDhm0kR2JA+A22OrVabuNg@mail.gmail.com> <539F9024.7040806@fnarfbargle.com> <CADqA9uYH0g2wNghmGPCLWcSq-E8bD43Rx_gSiN68rTUHibwX_w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CADqA9uYH0g2wNghmGPCLWcSq-E8bD43Rx_gSiN68rTUHibwX_w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Nuno_Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>, linux-raid@vger.kernel.org
+To: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/17/2014 4:09 AM, Nuno Magalh=E3es wrote:
-=2E..
-> The question remains: what are the implications of having 7200 drives
-> and 5400 drives in a RAID1, 10 or 5? It'll be as slow as the slowest
-> drive, correct? What about any syncing issues during a power outage?
+On 17/06/14 17:09, Nuno Magalh=C3=A3es wrote:
+> On Tue, Jun 17, 2014 at 1:47 AM, Brad Campbell
+> <lists2009@fnarfbargle.com> wrote:
+>> They do not, and have never had the ability to change speeds.
+>
+> I didn't mean changing speeds during I/O, that would be quite a feat;
+> what seems to be perceived is slowing speed in idle states.
 
-You already know these answers.  At this point in the thread you're
-seeking hand holding, not knowledge acquisition, or you simply like to
-chat.  This list is not intended to be that type of resource.  That's
-what web forums are for.
-
-> Any takes on the Hitachis?
-
-There are hundreds of drive models suitable for RAID use.  Each
-manufacturer clearly identifies in their documentation which of their
-drives fit the bill.  There really is no reason you should need to ask
-on this list if drives from a particular manufacturer are suitable.  If
-you're seeking consumer drives with ERC/TLER due to cost reasons, that'=
-s
-not a technical issue, but a dollars issue, and not on topic here.
-
-We understand this is your first RAID system, but at some point you hav=
-e
-to remove the training wheels from your bike.
-
-Cheers,
-
-Stan
+Perceived by whom? The drives has 2 steady state speeds. Spun up and=20
+stopped. Nothing in between.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
