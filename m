@@ -1,50 +1,77 @@
-From: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Subject: Re: RAID newbie, 1 vs 5, chunk sizes
-Date: Thu, 19 Jun 2014 07:45:00 +0100
-Message-ID: <BLU436-SMTP21129DA8D8E77FBD7B995C898130@phx.gbl>
-References: <CADqA9ua4xuJM3J6mQY7jXrt-5f6Rsv3aFaxyiqL1e80t70R6Rg@mail.gmail.com>
-	 <539E5504.1080809@turmel.org>
-	 <CADqA9ub=-=V_RMF+G2ZniQG06oDJ6KDhdPhDuPeufHFpgs4Mdw@mail.gmail.com>
-	 <2036850.atdiKx507N@eseries.newtech.fi>
-	 <CADNH=7E+xTPoM4LL_DJrpWxJjsw0aV_w7fVEosu1uc=1dsh16A@mail.gmail.com>
-	 <20140618233433.20b43198@natsu>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Subject: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer
+ dereference at (null)
+Date: Thu, 19 Jun 2014 09:02:57 +0200
+Message-ID: <53A28B21.7070500@profihost.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140618233433.20b43198@natsu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, dag@newtech.fi, Nuno =?ISO-8859-1?Q?Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>, Lars Ellenberg <lars.ellenberg@linbit.com>
 List-Id: linux-raid.ids
 
-On Wed, 2014-06-18 at 23:34 +0600, Roman Mamedov wrote:
-> On Wed, 18 Jun 2014 12:58:59 +0100
-> Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
->=20
-> > If we're comparing drives, my 8x WD20EARS / EARX have been spinning
-> > for years. 2 drives just failed after ~3.4 years uptime (24/7) and
-> > over 400,000 head parkings. They had weekly SMART self-test and
-> > monthly RAID6 scrubs, and a few unexpected power losses. Good value=
-=2E
->=20
-> Why do you hate your drives so much, or haven't you heard of 'wdidle3=
-'?
-> Or maybe I misunderstand and this whole endeavor was actually an expe=
-riment on
-> how soon will they fail from all that ridiculous amount of head parki=
-ngs.
+Hi,
 
-I was going to say the same, but you beat me to it. The "huge" head
-parking figure is down to a firmware bug. I would also note that "some"
-WD REDS also have the same problem (seems to be limited batch(es) in my
-personal experience, 2 out of 6, and idle3ctl for linux fixes the
-problem).
+while using vanilla 3.10.44 with drbd on top of a md raid1.
+
+I'm pretty often hitting the followin kernel bug.
+
+It reminds me of:
+http://lists.openwall.net/linux-kernel/2014/02/19/428
+
+But i don't use bcache.
+
+[sched_delayed] sched: RT throttling activated
+BUG: unable to handle kernel NULL pointer dereference at (null)
+IP: [<ffffffff8128105c>] blk_add_request_payload+0xc/0x90
+PGD 0
+Oops: 0002 [#1] SMP
+Modules linked in: vhost_net tun macvtap macvlan dlm sctp netconsole
+drbd lru_cache xt_multiport iptable_filter ip_tables x_tables iscsi_tcp
+libiscsi_tcp libiscsi scsi_transport_iscsi nfsd auth_rpcgss oid_registry
+bonding ext2 8021q garp fuse acpi_cpufreq mperf coretemp kvm_intel kvm
+microcode i2c_i801 i7core_edac edac_core button dm_mod raid1 md_mod
+usb_storage ohci_hcd usbhid sg sd_mod uhci_hcd ehci_pci ehci_hcd ahci
+libahci usbcore ixgbe(O) usb_common igb i2c_algo_bit mpt2sas i2c_core
+raid_class ptp scsi_transport_sas pps_core
+CPU: 0 PID: 636 Comm: md124_raid1 Tainted: G O 3.10.41+76-ph #1
+Hardware name: Supermicro X8DT3/X8DT3, BIOS 2.1 03/17/2012
+task: ffff880811e16400 ti: ffff88081324c000 task.ti: ffff88081324c000
+RIP: 0010:[<ffffffff8128105c>] [<ffffffff8128105c>]
+blk_add_request_payload+0xc/0x90
+RSP: 0018:ffff88081324dac8 EFLAGS: 00010086
+RAX: ffff88080b686b40 RBX: ffff88080af19028 RCX: 0000000000000000
+RDX: 0000000000000018 RSI: ffffea00202b7200 RDI: ffff88080af19028
+RBP: ffff88081324dac8 R08: ffffea00202b7200 R09: 00000000006f4a62
+R10: 000000000000243d R11: 0000000000000000 R12: ffff8808145b9400
+R13: ffff8810139a6000 R14: 0000000004400000 R15: ffff88080adc8000
+FS: 0000000000000000(0000) GS:ffff88081fc00000(0000) knlGS:0000000000000000
+CS: 0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000000 CR3: 0000000001a0b000 CR4: 00000000000007f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400Stack:
+ffff88081324db18 ffffffffa01b515f ffffea00202b7200 000000000b637800
+ffff88081324db18 ffff88080af19028 ffff880812f18818 ffff88081324dca8
+ffff8810139a6000 ffff8808145b9800 ffff88081324db88 ffffffffa01b5318
+Call Trace:
+[<ffffffffa01b515f>] sd_setup_discard_cmnd+0x13f/0x260 [sd_mod]
+[<ffffffffa01b5318>] sd_prep_fn+0x98/0xbb0 [sd_mod]
+[<ffffffff812b1750>] ? merge+0x50/0xa0
+[<ffffffff81281180>] ? blk_start_plug+0x50/0x50
+[<ffffffff81286eb2>] blk_peek_request+0x132/0x250
+[<ffffffff8138ae96>] scsi_request_fn+0x46/0x520
+[<ffffffff81285a62>] __blk_run_queue+0x32/0x40
+[<ffffffff81285b34>] queue_unplugged+0x34/0xb0
+[<ffffffff81287343>] blk_flush_plug_list+0x183/0x220
+[<ffffffff812873f3>] blk_finish_plug+0x13/0x50
+[<ffffffffa008ac56>] raid1d+0x706/0xee0 [raid1]
+[<ffffffff81057ada>] ? try_to_del_timer_sync+0x4a/0x60
+[<ffffffff81057b42>] ? del_timer_sync+0x52/0x60
+[<ffffffff81056e10>] ? usleep_range+0x40/0x40
+[<ffffffffa00d5abd>] md_thread+0x11d/0x170 [md_mod]
+[<ffffffff8106ca20>] ? finish_wait+0x80/0x80
 
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Stefan
