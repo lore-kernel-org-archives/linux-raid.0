@@ -1,44 +1,66 @@
-From: Matthias Eble <psychotrahe@gmail.com>
-Subject: Re: md kernel thread hung in raid1_add_disk
-Date: Fri, 20 Jun 2014 22:29:28 +0200
-Message-ID: <CAKbOo_JeT9mRgnrL-+xciWqaupgMnwqw4OhCo7p38P7yLLqSTg@mail.gmail.com>
-References: <CAKbOo_+414WYYfwEqRnhgdxp-GJGq0_koVaN89RvEydHZ3QZ=w@mail.gmail.com>
-	<20140611094516.6a310ba8@notabene.brown>
+From: Bill <billstuff2001@sbcglobal.net>
+Subject: raid5 (re)-add recovery data corruption
+Date: Sat, 21 Jun 2014 00:31:39 -0500
+Message-ID: <53A518BB.60709@sbcglobal.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140611094516.6a310ba8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil, hi list,
+Hi Neil,
 
->>    * OS is Rhel6, kernel is 2.6.32-358.6.2.el6.x86_64
->
-> Presumably you are running such an ancient kernel because you have a support
-> contract with Redhat?  In that case it would be best to ask them.
->
-> If you have problems with a recent kernel this is certainly the best place to
-> ask...
+I'm running a test on 3.14.8 and seeing data corruption after a recovery.
+I have this array:
 
-understood. Still I'd like to post our current findings, if someone
-with the same problem
-will ever find this thread in the list archives:
+     md5 : active raid5 sdc1[2] sdb1[1] sda1[0] sde1[4] sdd1[3]
+           16777216 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+           bitmap: 0/1 pages [0KB], 2048KB chunk
 
-* The Bug is very likely fixed by vanilla's
-  e2d599252 md/raid1,raid10: use freeze_array in place of
-raise_barrier in various places
-* The commit was applied to RHEL's 2.6.32-407 kernel (RHEL 6.5; Fri Aug  2 2013)
-* according to the commit message, the deadlock problem was
-"particularly noticeable
-  by commits 050b66152f87c7 (raid10) and 6b740b8d79252f13 (raid1)"
-   * these were applied with RHEL's 2.6.32-300 (Fri Aug 17 2012)
+with an xfs filesystem on it:
+     /dev/md5 on /hdtv/data5 type xfs 
+(rw,noatime,barrier,swalloc,allocsize=256m,logbsize=256k,largeio)
 
-Since we ran -358 and the call traces directed us exactly to the lines
-of code that were
-fixed by the freeze_array commit, we're quite confident that the
-update fixed our issue.
+and I do this in a loop:
 
-Matthias
+1. start writing 1/4 GB files to the filesystem
+2. fail a disk. wait a bit
+3. remove it. wait a bit
+4. add the disk back into the array
+5. wait for the array to sync and the file writes to finish
+6. checksum the files.
+7. wait a bit and do it all again
+
+The checksum QC will eventually fail, usually after a few hours.
+
+My last test failed after 4 hours:
+
+     18:51:48 - mdadm /dev/md5 -f /dev/sdc1
+     18:51:58 - mdadm /dev/md5 -r /dev/sdc1
+     18:52:06 - start writing 3 files
+     18:52:08 - mdadm /dev/md5 -a /dev/sdc1
+     18:52:18 - array recovery done
+     18:52:23 - writes finished. QC failed for one of three files.
+
+dmesg shows no errors and the disks are operating normally.
+
+If I "check" /dev/md5 it shows mismatch_cnt = 896
+If I dump the raw data on sd[abcde]1 underneath the bad file, it shows
+sd[abde]1 are correct, and sdc1 has some chunks of old data from a 
+previous file.
+
+If I fail sdc1, --zero-superblock it, and add it, it then syncs and the 
+QC is correct.
+
+So somehow is seems like md is loosing track of some changes which need 
+to be
+written to sdc1 in the recovery. But rarely - in this case it failed 
+after 175 cycles.
+
+Do you have any idea what could be happening here?
+
+Thanks,
+Bill
+
