@@ -1,66 +1,132 @@
-From: Bill <billstuff2001@sbcglobal.net>
-Subject: raid5 (re)-add recovery data corruption
-Date: Sat, 21 Jun 2014 00:31:39 -0500
-Message-ID: <53A518BB.60709@sbcglobal.net>
+From: Stefan Priebe <s.priebe@profihost.ag>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer
+ dereference at (null)
+Date: Sat, 21 Jun 2014 19:48:22 +0200
+Message-ID: <53A5C566.4050904@profihost.ag>
+References: <53A28B21.7070500@profihost.ag> <yq1ionwjn15.fsf@sermon.lab.mkp.net> <20140620155321.GA24389@soda.linbit> <yq1wqcbil0c.fsf@sermon.lab.mkp.net> <20140620182956.GB24389@soda.linbit>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140620182956.GB24389@soda.linbit>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Lars Ellenberg <lars.ellenberg@linbit.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi Lars,
+Am 20.06.2014 20:29, schrieb Lars Ellenberg:
+> On Fri, Jun 20, 2014 at 12:49:39PM -0400, Martin K. Petersen wrote:
+>>>>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
+>>
+>> Lars,
+>>
+>> Lars> Any bio allocated that will be passed down with REQ_DISCARD has to
+>> Lars> be allocated with nr_iovecs = 1 (at least), even though it must
+>> Lars> not contain any bio_vec payload.
+>>
+>> True. Although the correct answer is: Any discard request must be issued
+>> by blkdev_issue_discard(). That's the interface.
+>>
+>> The hacks we do to carry the information inside the bio constitute an
+>> internal interface that is subject to change (it is just about to,
+>> actually).
+>>
+>> Lars> Though DRBD in 3.10 is not supposed to accept discard requests.
+>> Lars> So I'm not sure how it manages to pass them down?
 
-I'm running a test on 3.14.8 and seeing data corruption after a recovery.
-I have this array:
+your're absolutely right - a collegue installed drbd 8.4.4 as a module. 
+I didn't knew that. Sorry.
 
-     md5 : active raid5 sdc1[2] sdb1[1] sda1[0] sde1[4] sdd1[3]
-           16777216 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-           bitmap: 0/1 pages [0KB], 2048KB chunk
+So your attached patch will fix it?
 
-with an xfs filesystem on it:
-     /dev/md5 on /hdtv/data5 type xfs 
-(rw,noatime,barrier,swalloc,allocsize=256m,logbsize=256k,largeio)
-
-and I do this in a loop:
-
-1. start writing 1/4 GB files to the filesystem
-2. fail a disk. wait a bit
-3. remove it. wait a bit
-4. add the disk back into the array
-5. wait for the array to sync and the file writes to finish
-6. checksum the files.
-7. wait a bit and do it all again
-
-The checksum QC will eventually fail, usually after a few hours.
-
-My last test failed after 4 hours:
-
-     18:51:48 - mdadm /dev/md5 -f /dev/sdc1
-     18:51:58 - mdadm /dev/md5 -r /dev/sdc1
-     18:52:06 - start writing 3 files
-     18:52:08 - mdadm /dev/md5 -a /dev/sdc1
-     18:52:18 - array recovery done
-     18:52:23 - writes finished. QC failed for one of three files.
-
-dmesg shows no errors and the disks are operating normally.
-
-If I "check" /dev/md5 it shows mismatch_cnt = 896
-If I dump the raw data on sd[abcde]1 underneath the bad file, it shows
-sd[abde]1 are correct, and sdc1 has some chunks of old data from a 
-previous file.
-
-If I fail sdc1, --zero-superblock it, and add it, it then syncs and the 
-QC is correct.
-
-So somehow is seems like md is loosing track of some changes which need 
-to be
-written to sdc1 in the recovery. But rarely - in this case it failed 
-after 175 cycles.
-
-Do you have any idea what could be happening here?
-
-Thanks,
-Bill
-
+>> drbd_receiver.c:
+>>
+>> static unsigned long wire_flags_to_bio(struct drbd_conf *mdev, u32 dpf)
+>> {
+>>          return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
+>>                  (dpf & DP_FUA ? REQ_FUA : 0) |
+>>                  (dpf & DP_FLUSH ? REQ_FLUSH : 0) |
+>>                  (dpf & DP_DISCARD ? REQ_DISCARD : 0);
+>> }
+>>
+>> [...]
+>>
+>> /* mirrored write */
+>> static int receive_Data(struct drbd_tconn *tconn, struct packet_info
+>> *pi)
+>> {
+>> [...]
+>>         dp_flags = be32_to_cpu(p->dp_flags);
+>>         rw |= wire_flags_to_bio(mdev, dp_flags);
+>> [...]
+>>
+>> That's pretty busticated. I suggest you simply remove REQ_DISCARD from
+>> that helper for now.
+>>
+>> It's also a good idea to disable discard and write same on the client
+>> side when you set up the request queue:
+>>
+>> 	blk_queue_max_discard_sectors(q, 0);
+>> 	blk_queue_max_write_same_sectors(q, 0);
+>
+> Our main development still happens out-of-tree,
+> trying to be compatible to a large range of kernel versions.
+>
+> linux upstream DRBD is supposed to handle discards "correctly"
+> (even though not using the proper interface blkdev_issue_discard).
+>
+> But it does not, because one fix apparently slipped through
+> when preparing the pull request.
+>
+> So linux upstream needs:
+> diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
+> index b6c8aaf..5b17ec8 100644
+> --- a/drivers/block/drbd/drbd_receiver.c
+> +++ b/drivers/block/drbd/drbd_receiver.c
+> @@ -1337,8 +1337,11 @@ int drbd_submit_peer_request(struct drbd_device *device,
+>   		return 0;
+>   	}
+>
+> +	/* Discards don't have any payload.
+> +	 * But the scsi layer still expects a bio_vec it can use internally,
+> +	 * see sd_setup_discard_cmnd() and blk_add_request_payload(). */
+>   	if (peer_req->flags & EE_IS_TRIM)
+> -		nr_pages = 0; /* discards don't have any payload. */
+> +		nr_pages = 1;
+>
+>   	/* In most cases, we will only need one bio.  But in case the lower
+>   	 * level restrictions happen to be different at this offset on this
+>
+> I'll prepare a proper patch with commit message later.
+>
+> linux upstream DRBD also does blk_queue_max_write_same_sectors(q, 0)
+> and blk_queue_max_discard_sectors(q, DRBD_MAX_DISCARD_SECTORS)
+>
+> -------
+> For linux 3.10, things are different.
+>
+> DRBD in linux 3.10 does not set QUEUE_FLAG_DISCARD,
+> and does not announce discard capabilities in any other way,
+> even though it already contains some preparation steps
+> (those pieces your grep foo managed to find above...)
+>
+> DRBD does a handshake, and if there is no discard capability announced,
+> the peer is supposed to never send discards (and stop announcing them
+> on his side), even if the peer's DRBD version already supports
+> and announces discard capabilities.
+>
+> So I'm still not really seeing how discard requests would be issued
+> by that version of DRBD.
+> The local submit path should not allow them (no QUEUE_FLAG_DISCARD set)
+> and the remote submit path should not allow them either,
+> for the same reason, and because the DRBD handshake does not allow them.
+>
+> So my current guess would be that Stefan prepared a 3.10.44
+> + "upstream DRBD", but unfortunately not upstream enough?
+>
+> Stefan, please give more details how to trigger this,
+> with which exact DRBD versions on the peers, and what action.
+>
+> 	Lars
+>
