@@ -1,137 +1,66 @@
 From: George Duffield <forumscollective@gmail.com>
-Subject: Re: Understanding raid array status: Active vs Clean
-Date: Sun, 22 Jun 2014 16:32:31 +0200
-Message-ID: <CAG__1a4kX1gM+ntmcLkevCm6kwVbgSMGmPi-ec6+b1RGKznouw@mail.gmail.com>
-References: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
-	<20140529151658.3bfc97e5@notabene.brown>
-	<1C901CF6-75BD-4B54-9F5D-7E2C35633CBC@gmail.com>
-	<20140529160623.5b9e37e5@notabene.brown>
-	<CAG__1a5j-0O7LOb6opz4MLPCjbxRNDXiaG6W=Xxt3JJ9eXfRRA@mail.gmail.com>
-	<CAG__1a5XK1yt70ox_12hLjpBpY=YRcaJ6-MYHiEJ_RTpxFujoA@mail.gmail.com>
-	<20140618150326.GA28569@cthulhu.home.robinhill.me.uk>
-	<CAG__1a7m2BakDGUtP==YunzmBr8WDXVVv4i2WE=sYhBNKYjM1w@mail.gmail.com>
-	<CAG__1a7zGbxzkR_a2ci4rw3xacxGYt07aBiAsFjGPYowXBPCcQ@mail.gmail.com>
+Subject: Adding a new drive to an array
+Date: Sun, 22 Jun 2014 17:49:15 +0200
+Message-ID: <CAG__1a6i-UsOJpy+5GdwV_a-cVDCi_F_5KztwkFbNUEONDhH5w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a7zGbxzkR_a2ci4rw3xacxGYt07aBiAsFjGPYowXBPCcQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Can anyone give me some hints as to why this array would remain Active
-rather than report Clean?  Any help/ insights much appreciated.
+I've got a RAID5 array comprised of 4 x 3TB drives which is 97% full
+and would like to grow the array by adding a 5th drive of the same
+make/ model.
 
-On Wed, Jun 18, 2014 at 6:04 PM, George Duffield
-<forumscollective@gmail.com> wrote:
-> # cat /sys/block/md0/md/safe_mode_delay returns:
->
-> 0.203
->
-> changing the value to 0.500:
-> # echo 0.503 > /sys/block/md0/md/safe_mode_delay
->
-> makes no difference to the array state.
->
->
->
-> On Wed, Jun 18, 2014 at 5:57 PM, George Duffield
-> <forumscollective@gmail.com> wrote:
->> Thx Robin
->>
->> I've run:
->> # mdadm --manage /dev/md0 --re-add /dev/sdb1
->> mdadm: re-added /dev/sdb1
->>
->> # mdadm --detail /dev/md0 now returns:
->>
->> /dev/md0:
->>         Version : 1.2
->>   Creation Time : Thu Apr 17 01:13:52 2014
->>      Raid Level : raid5
->>      Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
->>   Used Dev Size : 2930134016 (2794.39 GiB 3000.46 GB)
->>    Raid Devices : 5
->>   Total Devices : 5
->>     Persistence : Superblock is persistent
->>
->>   Intent Bitmap : Internal
->>
->>     Update Time : Wed Jun 18 19:46:38 2014
->>           State : active
->>  Active Devices : 5
->> Working Devices : 5
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>            Name : audioliboffsite:0  (local to host audioliboffsite)
->>            UUID : aba348c6:8dc7b4a7:4e282ab5:40431aff
->>          Events : 11319
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       17        0      active sync   /dev/sdb1
->>        1       8       65        1      active sync   /dev/sde1
->>        2       8       81        2      active sync   /dev/sdf1
->>        3       8       33        3      active sync   /dev/sdc1
->>        5       8       49        4      active sync   /dev/sdd1
->>
->>
->> # watch cat /proc/mdstat returns:
->>
->> Personalities : [raid6] [raid5] [raid4]
->> md0 : active raid5 sdb1[0] sdd1[5] sdc1[3] sde1[1] sdf1[2]
->>       11720536064 blocks super 1.2 level 5, 512k chunk, algorithm 2
->> [5/5] [UUUUU]
->>       bitmap: 0/22 pages [0KB], 65536KB chunk
->>
->> unused devices: <none>
->>
->>
->> # watch -d 'grep md0 /proc/diskstats' returns:
->>    9       0 md0 348 0 2784 0 0 0 0 0 0 0 0
->>
->> and the output never changes.
->>
->> So, array seems OK, and I'm back to the question that started this
->> thread - why would this array's state be Active rather than Clean?
->>
->>
->>
->>
->> On Wed, Jun 18, 2014 at 5:03 PM, Robin Hill <robin@robinhill.me.uk> wrote:
->>> On Wed Jun 18, 2014 at 03:25:27PM +0200, George Duffield wrote:
->>>
->>>> A little more information if it helps deciding on the best recovery
->>>> strategy.  As can be seen all drives still in the array have event
->>>> count:
->>>> Events : 11314
->>>>
->>>> The drive that fell out of the array has an event count of:
->>>> Events : 11306
->>>>
->>>> Unless mdadm writes to the drives when a machine is booted or the
->>>> array partitioned I know for certain that the array has not been
->>>> written to i.e. no files have been added or deleted.
->>>>
->>>> Per https://raid.wiki.kernel.org/index.php/RAID_Recovery it would seem
->>>> to me the following guidance applies:
->>>> If the event count closely matches but not exactly, use "mdadm
->>>> --assemble --force /dev/mdX <list of devices>" to force mdadm to
->>>> assemble the array anyway using the devices with the closest possible
->>>> event count. If the event count of a drive is way off, this probably
->>>> means that drive has been out of the array for a long time and
->>>> shouldn't be included in the assembly. Re-add it after the assembly so
->>>> it's sync:ed up using information from the drives with closest event
->>>> counts.
->>>>
->>>> However, in my case the array has been auto assebled by mdadm at boot
->>>> time.  How would I best go about adding /dev/sdb1 back into the array?
->>>>
->>> That doesn't matter here - a force assemble would have left out the
->>> drive with the lower event count as well. As there's a bitmap on the
->>> array then either a --re-add or a --add (these should be treated the
->>> same for arrays with persistent superblocks) should just synch any
->>> differences since the disk was failed.
+Looking at https://raid.wiki.kernel.org/index.php/Growing it seems the
+approach (after partitioning the drive) is to:
+
+1) add the drive to the pool: # mdadm --add /dev/md127 /dev/sdX1
+2) grow the array: # mdadm --grow --raid-devices=3D5
+--backup-file=3D~/grow_md127.backup  /dev/md127
+3) edit mdadm.conf to include the 5th drive i.e. num-devices=3D5
+4) determine raid stride size calculated with chunk / block
+4) ensure the array is unmounted and resize ext4: # resize2fs -S
+ascertained_stride_size -p /dev/md127
+
+Is the above correct, apart from making sure I have a good backup and
+do this via UPS power, are there any other considerations?
+
+
+I'm also wondering whether there's a faster way to achieve the addition=
+/resync
+
+Looking at man mdadm it mentions:
+--assume-clean
+              Tell mdadm that the array pre-existed and is known to be
+clean.  It can be useful when trying to recover from a major failure
+as you can be sure that no data will be affected unless you actually
+write to the array.  It can also be used when creating a
+              RAID1 or RAID10 if you want to avoid the initial resync,
+however this practice =E2=80=94 while normally safe =E2=80=94 is not re=
+commended.  Use
+this only if you really know what you are doing.
+
+              When the devices that will be part of a new array were
+filled with zeros before creation the operator knows the array is
+actually clean. If that is the case, such as after running badblocks,
+this argument can be used to tell mdadm the facts the opera=E2=80=90
+              tor knows.
+
+              When  an  array  is resized to a larger size with --grow
+--size=3D the new space is normally resynced in that same way that the
+whole array is resynced at creation.  From Linux version 3.0,
+--assume-clean can be used with that command to avoid the auto=E2=80=90
+              matic resync.
+
+
+Does this mean that after partitioning the drive I can avoid the
+entire resync operation by calling: # mdadm --grow --assume-clean
+--raid-devices=3D5 --backup-file=3D~/grow_md127.backup  /dev/md127 ?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
