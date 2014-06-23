@@ -1,33 +1,37 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Fwd: Adding a new drive to an array
-Date: Mon, 23 Jun 2014 19:48:46 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1406231947350.18361@uplift.swm.pp.se>
-References: <CAG__1a6i-UsOJpy+5GdwV_a-cVDCi_F_5KztwkFbNUEONDhH5w@mail.gmail.com> <alpine.DEB.2.02.1406221931230.18361@uplift.swm.pp.se> <CAG__1a4EG1PNpy_3Zt23OuEaEn1jTsF3-0-o21EQJBRCTPVORg@mail.gmail.com>
- <CAG__1a5M8RKfk1en3j8Cz9hBsPtB+g=znbzOE3hYOZZ2ZgU++g@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer dereference at (null)
+Date: Mon, 23 Jun 2014 15:37:03 -0400
+Message-ID: <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
+References: <53A28B21.7070500@profihost.ag>
+	<yq1ionwjn15.fsf@sermon.lab.mkp.net>
+	<20140620155321.GA24389@soda.linbit>
+	<yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+	<20140620182956.GB24389@soda.linbit>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a5M8RKfk1en3j8Cz9hBsPtB+g=znbzOE3hYOZZ2ZgU++g@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: George Duffield <forumscollective@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20140620182956.GB24389@soda.linbit> (Lars Ellenberg's message of
+	"Fri, 20 Jun 2014 20:29:56 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
+To: Lars Ellenberg <lars.ellenberg@linbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-On Mon, 23 Jun 2014, George Duffield wrote:
+>>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
 
-> What is the purpose of --assume-clean then when man states:
-> When  an  array  is resized to a larger size with --grow --size= the
-> new space is normally resynced in that  same  way  that  the whole
-> array  is  resynced at creation.  From Linux version 3.0,
-> --assume-clean can be used with that command to avoid the  automatic
-> resync.
-> ^^^ What is the automatic resync being referred to in man?
+Lars,
 
-It means the parity blocks are ale correct. If you don't care about this, 
-then fine, use --assume-clean.
+Thanks for fixing this. 
 
-MD has sensible defaults, don't muck around with them unless you know what 
-you're doing.
+I'd still like to see you use the lib call instead like you do for
+zeroout. I have some patches in the pipeline for multi-range discard
+support and things are going to break for drbd if you manually roll
+bios.
+
+Lars> linux upstream DRBD also does blk_queue_max_write_same_sectors(q,
+Lars> 0) and blk_queue_max_discard_sectors(q, DRBD_MAX_DISCARD_SECTORS)
+
+Great!
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Martin K. Petersen	Oracle Linux Engineering
