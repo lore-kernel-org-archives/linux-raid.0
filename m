@@ -1,66 +1,72 @@
-From: George Duffield <forumscollective@gmail.com>
-Subject: Fwd: Adding a new drive to an array
-Date: Mon, 23 Jun 2014 16:47:07 +0200
-Message-ID: <CAG__1a5M8RKfk1en3j8Cz9hBsPtB+g=znbzOE3hYOZZ2ZgU++g@mail.gmail.com>
-References: <CAG__1a6i-UsOJpy+5GdwV_a-cVDCi_F_5KztwkFbNUEONDhH5w@mail.gmail.com>
-	<alpine.DEB.2.02.1406221931230.18361@uplift.swm.pp.se>
-	<CAG__1a4EG1PNpy_3Zt23OuEaEn1jTsF3-0-o21EQJBRCTPVORg@mail.gmail.com>
+From: Theodotos Andreou <theo@ubuntucy.org>
+Subject: Re: Restoring a RAID 10 disk array
+Date: Mon, 23 Jun 2014 17:52:29 +0300
+Message-ID: <53A83F2D.9060101@ubuntucy.org>
+References: <53A833DF.8050004@ubuntucy.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a4EG1PNpy_3Zt23OuEaEn1jTsF3-0-o21EQJBRCTPVORg@mail.gmail.com>
+In-Reply-To: <53A833DF.8050004@ubuntucy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Consider adding two drives and go to RAID6.
+On 23/06/2014 05:04 =CE=BC=CE=BC, Theodotos Andreou wrote:
+> Hi to all,
 >
-> http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162
+> I have a RAID 1 RAID 10 setup that failed. I booted with a recovery=20
+> usb (grml) to try to recover the system. Let me explain the setup to =
+you.
+>
+> This is my parted listing:
+>
+> http://pastebin.com/6QdyXRQN
+>
+> The first partitions (/dev/sd[ad]1) are for EFI. No RAID here
+>
+> The second partitions (/dev/sd[ad]2) are the /boot filesystem. This=20
+> used to be /dev/md0 and it is a RAID 1 setup.
+>
+> The third partitions (/dev/sd[ad]3) is the LVM physical volume which=20
+> hosts all the rest. It used to be /dev/md1 and it is a RAID 10 setup.
+>
+> For the parted listing it looks like there is some partition table=20
+> corruption on /dev/sdd.
+>
+> When I try 'mdadm --verbose --assembly --scan' I get:
+>
+> http://pastebin.com/iqGF9En7
+>
+> The output of 'mdadm -Evvvvs' is:
+>
+> http://pastebin.com/kizjT7xE
+>
+> Assuming I replace the sdd disk and create the appropriate partition=20
+> scheme, what is the correct methodology to restore my md devices? I=20
+> don't care much about /dev/md0 but mostly for the /dev/md1 partition=20
+> where there are all the data.
+>
+> Regards
+>
+> Theo
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+It turns out the sdd disk was unplugged and I mistakenly took the USB=20
+drive as the internal disk. This explains why the UUIDs did not match=20
+the device name.
 
-Isn't what you're really saying then is that it's best to abandon RAID
-altogether when dealing with large storage requirements utilising high
-capacity drives?  Filling each drive individually and backing it up to
-another drive presumably involves a lot less iro r/w operations and if
-one fails you simply replace it with another of the same or larger
-size and be done with it.  Just make sure you have current backups
-(which you need to have even if using RAID).  The only real downside
-then is the inability to deal with the storage as a consolidated whole
-(I'm guessing LVM would be just as problematic as RAID if a drive in a
-volume fails)?
+After I plugged the sdd disk back all went back to normal.
 
->> Looking at https://raid.wiki.kernel.org/index.php/Growing it seems the
->> approach (after partitioning the drive) is to:
->>
->> 1) add the drive to the pool: # mdadm --add /dev/md127 /dev/sdX1
->> 2) grow the array: # mdadm --grow --raid-devices=5
->> --backup-file=~/grow_md127.backup  /dev/md127
->
->
-> Make sure the backup file is NOT on a filesystem that is on the md being
-> resized. Put it on /root or something instead.
->
->
->> 3) edit mdadm.conf to include the 5th drive i.e. num-devices=5
->> 4) determine raid stride size calculated with chunk / block
->> 4) ensure the array is unmounted and resize ext4: # resize2fs -S
->> ascertained_stride_size -p /dev/md127
->
->
-> Yeah, that looks about right. Don't know if you really need step 4, just
-> enmount and resize, I would imagine that if you have a reasonable resent
-> version of the tools it'll figure out the stride size automatically.
->
-> You cannot avoid the resync, so stop looking into weird options. The
-> resizing will take days.
->
+So next time... Don't panic! :)
 
-What are weird options for if not to be used ;-)
-
-What is the purpose of --assume-clean then when man states:
-When  an  array  is resized to a larger size with --grow --size= the
-new space is normally resynced in that  same  way  that  the whole
-array  is  resynced at creation.  From Linux version 3.0,
---assume-clean can be used with that command to avoid the  automatic
-resync.
-
-^^^ What is the automatic resync being referred to in man?
+Sorry for the false alarm guys
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
