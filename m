@@ -1,35 +1,44 @@
-From: George Duffield <forumscollective@gmail.com>
-Subject: Re: Fwd: Adding a new drive to an array
-Date: Tue, 24 Jun 2014 10:10:42 +0200
-Message-ID: <CAG__1a5mwewruEu1s58jpNw=EtVktZx3gauk7QQtDytCgRHLDQ@mail.gmail.com>
-References: <CAG__1a6i-UsOJpy+5GdwV_a-cVDCi_F_5KztwkFbNUEONDhH5w@mail.gmail.com>
-	<alpine.DEB.2.02.1406221931230.18361@uplift.swm.pp.se>
-	<CAG__1a4EG1PNpy_3Zt23OuEaEn1jTsF3-0-o21EQJBRCTPVORg@mail.gmail.com>
-	<CAG__1a5M8RKfk1en3j8Cz9hBsPtB+g=znbzOE3hYOZZ2ZgU++g@mail.gmail.com>
-	<20140623154023.GA7171@cthulhu.home.robinhill.me.uk>
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+Subject: Re: sd_setup_discard_cmnd: BUG: unable to handle kernel NULL pointer
+ dereference at (null)
+Date: Tue, 24 Jun 2014 13:53:24 +0200
+Message-ID: <20140624115324.GB17123@soda.linbit>
+References: <53A28B21.7070500@profihost.ag>
+ <yq1ionwjn15.fsf@sermon.lab.mkp.net>
+ <20140620155321.GA24389@soda.linbit>
+ <yq1wqcbil0c.fsf@sermon.lab.mkp.net>
+ <20140620182956.GB24389@soda.linbit>
+ <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140623154023.GA7171@cthulhu.home.robinhill.me.uk>
+Content-Disposition: inline
+In-Reply-To: <yq1vbrrh0yo.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Jens Axboe <axboe@kernel.dk>, konrad.wilk@oracle.com, elder@linaro.org, Josh Durgin <josh.durgin@inktank.com>, Greg KH <gregkh@linuxfoundation.org>
 List-Id: linux-raid.ids
 
-> Any parity RAID certainly starts to run into issues in this area. RAID-6
-> is significantly safer than RAID-5 but will also reach a point where
-> it's no longer statistically viable. Higher parity options could be used
-> then - they're not currently supported by md, but there's been some ideas
-> floated over the last year or so. Non-parity RAID options (e.g. RAID-10)
-> are far safer in this respect but have a higher storage overhead.
->
-> Manual duplication is unlikely to offer any practical advantages over
-> RAID-10 though (or layered RAID-1/RAID-0 if you prefer more control over
-> the layout).
->
+On Mon, Jun 23, 2014 at 03:37:03PM -0400, Martin K. Petersen wrote:
+> >>>>> "Lars" == Lars Ellenberg <lars.ellenberg@linbit.com> writes:
+> 
+> Lars,
+> 
+> Thanks for fixing this. 
+> 
+> I'd still like to see you use the lib call instead like you do for
+> zeroout. I have some patches in the pipeline for multi-range discard
+> support and things are going to break for drbd if you manually roll
+> bios.
 
-Intuitively I'd think manual duplication would be a lot cheaper in
-terms of storage cost and scale a lot easier?
+Okay, thanks for the heads up.
+I think we just did this so we would not
+have to use a synchronous interface there.
 
->> > You cannot avoid the resync, so stop looking into weird options. The
->> > resizing will take days.
-Thanks, I'm done looking ;-)
+We are receiving (from network) and submitting (to lower level IO stack)
+in the same context and would like the submit to be async.
+
+Do you intend to provide an asynchronous interface?
+
+	Lars
+
