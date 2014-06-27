@@ -1,199 +1,158 @@
-From: Joe Thornber <thornber@redhat.com>
-Subject: Re: [dm-devel] [PATCH] dm-io: Prevent the danging point of the sync
- io callback function
-Date: Fri, 27 Jun 2014 16:11:06 +0100
-Message-ID: <20140627151105.GA30592@debian>
-References: <1403841690-4401-1-git-send-email-huangminfei@ucloud.cn>
+From: Alin Dobre <alin.dobre@elastichosts.com>
+Subject: Re: Deadlock/high load
+Date: Fri, 27 Jun 2014 17:12:20 +0100
+Message-ID: <53AD97E4.80303@elastichosts.com>
+References: <5399C40F.3070509@elastichosts.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1403841690-4401-1-git-send-email-huangminfei@ucloud.cn>
-Sender: linux-kernel-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: agk@redhat.com, snitzer@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Minfei Huang <huangminfei@ucloud.cn>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <5399C40F.3070509@elastichosts.com>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Chris Mason <clm@fb.com>
 List-Id: linux-raid.ids
 
-On Fri, Jun 27, 2014 at 12:01:30PM +0800, Minfei Huang wrote:
-> The io address in callback function will become the danging point,
-> cause by the thread of sync io wakes up by other threads
-> and return to relieve the io address,
+Hello,
 
-Yes, well found.  I prefer the following fix however.
+When using parity md raid backed up by faster SSD disks, with btrfs on
+top of it, at intensive I/O, the machine enters a sort of deadlock and
+the load average starts to grow until a point where the machine is no
+longer responsive.
 
-- Joe
+At the time when the deadlock happens, there are 2 processes that
+consume 100% CPU, as reported by atop:
+P1. mdX_raidY
+P2. btrfs-trasaction
+where X is the number of the md device, 130 in our case, Y is the raid
+level, which is one of 4, 5, or 6, since it only happens when using
+parity raid. Sometimes there's also a kworker process along with the two
+above. I'm going to paste the SysRq dump for these processes at the end
+of this e-mail.
+
+As stated by the tests table below, it doesn't happen with a file system
+other than btrfs, and it doesn't happen with linear raid configurations
+(raid 0, 1, 10).
+
+I managed to reproduce the problem only by using ramdisks instead of
+SSDs for the base block storage layer. It doesn't reproduce with slower
+spinning disks, even some older SSD disks, so the speed is an important
+factor for this race condition.
+
+I have used all current kernels, starting from 3.15, to 3.16-rc2, and
+linux-next-20140624. The problem is still there.
+
+Here are the steps to reproduce.
+
+R1. Install Bonnie++ disk benchmark tool. I installed it manually from
+[1]. Also, make sure you configured ramdisk block devices in the kernel.
+
+R2. Create the md array on top of the /dev/ramX blocks:
+mdadm --create --auto=md \
+  --level=6 --raid-devices=10 \
+  --bitmap=internal --bitmap-chunk=65536 \
+  --metadata=0.90 --assume-clean \
+  --run --force \
+  /dev/md130 \
+  /dev/ram{0..9}
+
+R3. Create and mount the filesystem
+mkfs.btrfs -K -f -d single -m single /dev/md130
+# (a plain "mkfs.ext4 /dev/md130" was used for the ext4 test, see below)
+mount /dev/md130 /tmp/test
+
+R4. Create the test environment
+mkdir /tmp/test/bonnie
+chown nobody /tmp/test/bonnie
+
+R5. Run bonnie
+bonnie++ -d /tmp/test/bonnie -s 20480m -m test -r 10240 -x 100 -u nobody
 
 
+After between 1 and 12 run cycles, the machine enters the state
+described at the beginning of this e-mail.
 
-Author: Joe Thornber <ejt@redhat.com>
-Date:   Fri Jun 27 15:49:29 2014 +0100
+Below are the tests I have performed, with the result. FAIL means that
+the machines breaks and the problem happens.
+T1. md raid 6 + btrfs + discard => FAIL
+T2. md raid 6 + btrfs - discard => FAIL
+T3. md raid 5 + btrfs + discard => FAIL
+T4. md raid 4 + btrfs + discard => FAIL
+T5. md raid 6 + ext4 - discard => PASS
+T6. md raid 10 + btrfs + discard => PASS
+T7. md raid 0 + btrfs + discard => PASS
+T8. md raid 1 + btrfs + discard => PASS
+T9. btrfs + discard => PASS
 
-    [dm-io] Fix a race condition in the wake up code for sync_io
-    
-    There's a race condition between the atomic_dec_and_test(&io->count)
-    in dec_count() and the waking of the sync_io() thread.  If the thread
-    is spuriously woken immediately after the decrement it may exit,
-    making the on the stack io struct invalid, yet the dec_count could
-    still be using it.
-    
-    There are smaller fixes than the one here (eg, just take the io object
-    off the stack).  But I feel this code could use a clean up.
-    
-    - simplify dec_count().
-    
-      - It always calls a callback fn now.
-      - It always frees the io object back to the pool.
-    
-    - sync_io()
-    
-      - Take the io object off the stack and allocate it from the pool the
-        same as async_io.
-      - Use a completion object rather than an explicit io_schedule()
-        loop.  The callback triggers the completion.
-    
-    Reported by: Minfei Huang
+The discard option (as in mount -o ssd,discard) is present in the above
+tests to be able to make the environment as close as our production
+machines as possible. But in the end it doesn't seem to be a root cause.
+Also, this is the case for raid 6, this is the level we use on our
+production machines, and it has been preferred over other levels for
+many of the tests.
 
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index 3842ac7..a0982e81 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -10,6 +10,7 @@
- #include <linux/device-mapper.h>
- 
- #include <linux/bio.h>
-+#include <linux/completion.h>
- #include <linux/mempool.h>
- #include <linux/module.h>
- #include <linux/sched.h>
-@@ -32,7 +33,6 @@ struct dm_io_client {
- struct io {
- 	unsigned long error_bits;
- 	atomic_t count;
--	struct task_struct *sleeper;
- 	struct dm_io_client *client;
- 	io_notify_fn callback;
- 	void *context;
-@@ -111,28 +111,27 @@ static void retrieve_io_and_region_from_bio(struct bio *bio, struct io **io,
-  * We need an io object to keep track of the number of bios that
-  * have been dispatched for a particular io.
-  *---------------------------------------------------------------*/
--static void dec_count(struct io *io, unsigned int region, int error)
-+static void complete_io(struct io *io)
- {
--	if (error)
--		set_bit(region, &io->error_bits);
-+	unsigned long error_bits = io->error_bits;
-+	io_notify_fn fn = io->callback;
-+	void *context = io->context;
- 
--	if (atomic_dec_and_test(&io->count)) {
--		if (io->vma_invalidate_size)
--			invalidate_kernel_vmap_range(io->vma_invalidate_address,
--						     io->vma_invalidate_size);
-+	if (io->vma_invalidate_size)
-+		invalidate_kernel_vmap_range(io->vma_invalidate_address,
-+					     io->vma_invalidate_size);
- 
--		if (io->sleeper)
--			wake_up_process(io->sleeper);
-+	mempool_free(io, io->client->pool);
-+	fn(error_bits, context);
-+}
- 
--		else {
--			unsigned long r = io->error_bits;
--			io_notify_fn fn = io->callback;
--			void *context = io->context;
-+static void dec_count(struct io *io, unsigned int region, int error)
-+{
-+	if (error)
-+		set_bit(region, &io->error_bits);
- 
--			mempool_free(io, io->client->pool);
--			fn(r, context);
--		}
--	}
-+	if (atomic_dec_and_test(&io->count))
-+		complete_io(io);
- }
- 
- static void endio(struct bio *bio, int error)
-@@ -375,48 +374,49 @@ static void dispatch_io(int rw, unsigned int num_regions,
- 	dec_count(io, 0, 0);
- }
- 
-+struct sync_io {
-+	unsigned long error_bits;
-+	struct completion complete;
-+};
-+
-+static void sync_complete(unsigned long error, void *context)
-+{
-+	struct sync_io *sio = context;
-+	sio->error_bits = error;
-+	complete(&sio->complete);
-+}
-+
- static int sync_io(struct dm_io_client *client, unsigned int num_regions,
- 		   struct dm_io_region *where, int rw, struct dpages *dp,
- 		   unsigned long *error_bits)
- {
--	/*
--	 * gcc <= 4.3 can't do the alignment for stack variables, so we must
--	 * align it on our own.
--	 * volatile prevents the optimizer from removing or reusing
--	 * "io_" field from the stack frame (allowed in ANSI C).
--	 */
--	volatile char io_[sizeof(struct io) + __alignof__(struct io) - 1];
--	struct io *io = (struct io *)PTR_ALIGN(&io_, __alignof__(struct io));
-+	struct io *io;
-+	struct sync_io sio;
- 
- 	if (num_regions > 1 && (rw & RW_MASK) != WRITE) {
- 		WARN_ON(1);
- 		return -EIO;
- 	}
- 
-+	init_completion(&sio.complete);
-+
-+	io = mempool_alloc(client->pool, GFP_NOIO);
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
--	io->sleeper = current;
-+	io->callback = sync_complete;
-+	io->context = &sio;
- 	io->client = client;
- 
- 	io->vma_invalidate_address = dp->vma_invalidate_address;
- 	io->vma_invalidate_size = dp->vma_invalidate_size;
- 
- 	dispatch_io(rw, num_regions, where, dp, io, 1);
--
--	while (1) {
--		set_current_state(TASK_UNINTERRUPTIBLE);
--
--		if (!atomic_read(&io->count))
--			break;
--
--		io_schedule();
--	}
--	set_current_state(TASK_RUNNING);
-+	wait_for_completion_io(&sio.complete);
- 
- 	if (error_bits)
--		*error_bits = io->error_bits;
-+		*error_bits = sio.error_bits;
- 
--	return io->error_bits ? -EIO : 0;
-+	return sio.error_bits ? -EIO : 0;
- }
- 
- static int async_io(struct dm_io_client *client, unsigned int num_regions,
-@@ -434,7 +434,6 @@ static int async_io(struct dm_io_client *client, unsigned int num_regions,
- 	io = mempool_alloc(client->pool, GFP_NOIO);
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
--	io->sleeper = NULL;
- 	io->client = client;
- 	io->callback = fn;
- 	io->context = context;
+And the SysRq "t" dump follows, for the 2 main processes above. The full
+output is available at [3]. You can also find some information in the
+SysRq output from the original report at [2].
+
+md130_raid6     R  running task        0  1146      2 0x00080008
+ffffea005be81e00 0000000000000000 0000000000000000 ffff880ffb107af8
+ffffffff818478a0 0000000000000000 0000000000000000 ffff880ffb107b20
+ffffffff818478a0 0000000000000000 ffff881c0810f478 0000000180190018
+Call Trace:
+[<ffffffff818478a0>] ? __slab_free+0x20b/0x2d9
+[<ffffffff818478a0>] ? __slab_free+0x20b/0x2d9
+[<ffffffff81178dd4>] ? kmem_cache_free+0x17e/0x1a3
+[<ffffffff8113a809>] ? mempool_free_slab+0x12/0x14
+[<ffffffff8113ac77>] ? mempool_free+0x71/0x7a
+[<ffffffff813b3dd4>] ? bio_put+0x59/0x68
+[<ffffffff810f4518>] ? select_task_rq_fair+0x532/0x565
+[<ffffffff81616cea>] ? handle_stripe+0x1a97/0x1c06
+[<ffffffff810ff20b>] ? autoremove_wake_function+0xd/0x2f
+[<ffffffff8160f11b>] ? release_inactive_stripe_list+0x65/0x108
+[<ffffffff81617077>] ? handle_active_stripes.isra.30+0x21e/0x2b3
+[<ffffffff81617501>] ? raid5d+0x358/0x3c1
+[<ffffffff810d7ec5>] ? del_timer_sync+0x25/0x43
+[<ffffffff8163410a>] ? md_thread+0x10f/0x125
+[<ffffffff810ff1fe>] ? __wake_up_sync+0xd/0xd
+[<ffffffff81633ffb>] ? md_register_thread+0xcb/0xcb
+[<ffffffff810e72cc>] ? kthread+0xd6/0xde
+[<ffffffff810e71f6>] ? kthread_create_on_node+0x167/0x167
+[<ffffffff8185043c>] ? ret_from_fork+0x7c/0xb0
+[<ffffffff810e71f6>] ? kthread_create_on_node+0x167/0x167
+
+btrfs-transacti S ffff882026d119c0     0   704      2 0x00000000
+ffff8817f9c77df8 0000000000000002 ffff8817f9c77fd8 ffff8817fbf45f90
+00000000000119c0 ffff881ffb173420 ffff8817fbf45748 ffff8817f9c77d40
+ffffffff810f45b2 ffff8817f9c77d88 ffffffff810f8d15 ffff8817f9c77d90
+Call Trace:
+[<ffffffff810f45b2>] ? __enqueue_entity+0x67/0x69
+[<ffffffff810f8d15>] ? enqueue_entity+0x4bd/0x5e1
+[<ffffffff8106040c>] ? physflat_send_IPI_mask+0x9/0xb
+[<ffffffff8105a0f2>] ? native_smp_send_reschedule+0x56/0x58
+[<ffffffff810ed64a>] ? resched_task+0x45/0x48
+[<ffffffff8184d4d8>] schedule+0x65/0x67
+[<ffffffff8184cb07>] schedule_timeout+0x13f/0x167
+[<ffffffff810d7a6d>] ? __internal_add_timer+0xb5/0xb5
+[<ffffffff812f1ba1>] transaction_kthread+0x1a2/0x1cb
+[<ffffffff812f19ff>] ? btrfs_cleanup_transaction+0x45b/0x45b
+[<ffffffff810e72cc>] kthread+0xd6/0xde
+[<ffffffff810e71f6>] ? kthread_create_on_node+0x167/0x167
+[<ffffffff8185043c>] ret_from_fork+0x7c/0xb0
+[<ffffffff810e71f6>] ? kthread_create_on_node+0x167/0x167
+
+
+I can reproduce this under different testing conditions and gather some
+more data, if requested.
+
+Thank for any insight or feedback.
+
+Links referenced above:
+[1]
+http://archive.ubuntu.com/ubuntu/pool/main/b/bonnie++/bonnie++_1.97.1.tar.gz
+[2] http://permalink.gmane.org/gmane.comp.file-systems.btrfs/35865
+[3] http://84.45.121.180/sysrq.txt
+
+
+Cheers,
+Alin.
