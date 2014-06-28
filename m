@@ -1,93 +1,132 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Understanding raid array status: Active vs Clean
-Date: Sat, 28 Jun 2014 15:29:39 +1000
-Message-ID: <20140628152939.367e4b2d@notabene.brown>
-References: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
-	<20140529151658.3bfc97e5@notabene.brown>
-	<1C901CF6-75BD-4B54-9F5D-7E2C35633CBC@gmail.com>
-	<20140529160623.5b9e37e5@notabene.brown>
-	<CAG__1a5j-0O7LOb6opz4MLPCjbxRNDXiaG6W=Xxt3JJ9eXfRRA@mail.gmail.com>
-	<CAG__1a5XK1yt70ox_12hLjpBpY=YRcaJ6-MYHiEJ_RTpxFujoA@mail.gmail.com>
-	<20140618150326.GA28569@cthulhu.home.robinhill.me.uk>
-	<CAG__1a7m2BakDGUtP==YunzmBr8WDXVVv4i2WE=sYhBNKYjM1w@mail.gmail.com>
-	<CAG__1a7zGbxzkR_a2ci4rw3xacxGYt07aBiAsFjGPYowXBPCcQ@mail.gmail.com>
-	<CAG__1a4kX1gM+ntmcLkevCm6kwVbgSMGmPi-ec6+b1RGKznouw@mail.gmail.com>
-	<20140623120102.7d85ac52@notabene.brown>
-	<CAG__1a7T2atsQ1eQMhR1Wp6xd72fNdyf5XX+kbihRbY1Urd0Ww@mail.gmail.com>
+From: Bill <billstuff2001@sbcglobal.net>
+Subject: Re: raid5 (re)-add recovery data corruption
+Date: Sat, 28 Jun 2014 18:43:00 -0500
+Message-ID: <53AF5304.7020401@sbcglobal.net>
+References: <53A518BB.60709@sbcglobal.net> <20140623113641.79965998@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/U2y3X.sEaJH44c+d=c3FBOy"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAG__1a7T2atsQ1eQMhR1Wp6xd72fNdyf5XX+kbihRbY1Urd0Ww@mail.gmail.com>
+In-Reply-To: <20140623113641.79965998@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Duffield <forumscollective@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/U2y3X.sEaJH44c+d=c3FBOy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 06/22/2014 08:36 PM, NeilBrown wrote:
+> On Sat, 21 Jun 2014 00:31:39 -0500 Bill<billstuff2001@sbcglobal.net>  wrote:
+>
+>> Hi Neil,
+>>
+>> I'm running a test on 3.14.8 and seeing data corruption after a recovery.
+>> I have this array:
+>>
+>>       md5 : active raid5 sdc1[2] sdb1[1] sda1[0] sde1[4] sdd1[3]
+>>             16777216 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
+>>             bitmap: 0/1 pages [0KB], 2048KB chunk
+>>
+>> with an xfs filesystem on it:
+>>       /dev/md5 on /hdtv/data5 type xfs
+>> (rw,noatime,barrier,swalloc,allocsize=256m,logbsize=256k,largeio)
+>>
+>> and I do this in a loop:
+>>
+>> 1. start writing 1/4 GB files to the filesystem
+>> 2. fail a disk. wait a bit
+>> 3. remove it. wait a bit
+>> 4. add the disk back into the array
+>> 5. wait for the array to sync and the file writes to finish
+>> 6. checksum the files.
+>> 7. wait a bit and do it all again
+>>
+>> The checksum QC will eventually fail, usually after a few hours.
+>>
+>> My last test failed after 4 hours:
+>>
+>>       18:51:48 - mdadm /dev/md5 -f /dev/sdc1
+>>       18:51:58 - mdadm /dev/md5 -r /dev/sdc1
+>>       18:52:06 - start writing 3 files
+>>       18:52:08 - mdadm /dev/md5 -a /dev/sdc1
+>>       18:52:18 - array recovery done
+>>       18:52:23 - writes finished. QC failed for one of three files.
+>>
+>> dmesg shows no errors and the disks are operating normally.
+>>
+>> If I "check" /dev/md5 it shows mismatch_cnt = 896
+>> If I dump the raw data on sd[abcde]1 underneath the bad file, it shows
+>> sd[abde]1 are correct, and sdc1 has some chunks of old data from a
+>> previous file.
+>>
+>> If I fail sdc1, --zero-superblock it, and add it, it then syncs and the
+>> QC is correct.
+>>
+>> So somehow is seems like md is loosing track of some changes which need
+>> to be
+>> written to sdc1 in the recovery. But rarely - in this case it failed
+>> after 175 cycles.
+>>
+>> Do you have any idea what could be happening here?
+> No.  As you say, it looks like md is not setting a bit in the bitmap
+> correctly, or ignoring one that is set, or maybe clearing one that shouldn't
+> be cleared.
+> The last is most likely I would guess.
 
-On Sat, 28 Jun 2014 05:01:00 +0200 George Duffield
-<forumscollective@gmail.com> wrote:
+Neil,
 
-> >> > changing the value to 0.500:
-> >> > # echo 0.503 > /sys/block/md0/md/safe_mode_delay
-> >> >
-> >> > makes no difference to the array state.
-> >
-> > What if you write a smaller number?  e.g. 0.1
->=20
-> No change to array state.
->=20
-> > What does /sys/block/md0/md/array_state show?
->=20
-> Funnily enough, it shows Clean
+I'm still digging through this but I found something that might help 
+narrow it
+down - the bitmap stays dirty after the re-add and recovery is complete:
+
+         Filename : /dev/sde1
+            Magic : 6d746962
+          Version : 4
+             UUID : 609846f8:ad08275f:824b3cb4:2e180e57
+           Events : 5259
+   Events Cleared : 5259
+            State : OK
+        Chunksize : 2 MB
+           Daemon : 5s flush period
+       Write Mode : Normal
+        Sync Size : 4194304 (4.00 GiB 4.29 GB)
+           Bitmap : 2048 bits (chunks), 2 dirty (0.1%)
+                                        ^^^^^^^^^^^^^^
+
+This is after 1/2 hour idle. sde1 was the one removed / re-added, but
+all five disks show the same bitmap info, and the event count matches 
+that of
+the array (5259). At this point the QC check fails.
+
+Then I manually failed, removed and re-added /dev/sde1, and shortly the 
+array
+synced the dirty chunks:
+
+         Filename : /dev/sde1
+            Magic : 6d746962
+          Version : 4
+             UUID : 609846f8:ad08275f:824b3cb4:2e180e57
+           Events : 5275
+   Events Cleared : 5259
+            State : OK
+        Chunksize : 2 MB
+           Daemon : 5s flush period
+       Write Mode : Normal
+        Sync Size : 4194304 (4.00 GiB 4.29 GB)
+           Bitmap : 2048 bits (chunks), 0 dirty (0.0%)
+                                        ^^^^^^^^^^^^^^
+
+Now the QC check succeeds and an array "check" shows no mismatches.
+
+So it seems like md is ignoring a set bit in the bitmap, which then gets 
+noticed
+with the fail / remove / re-add sequence.
 
 
-Ahh - I found it.
-In get_array_info() in drivers/md/md.c:
+> Are you able to run you your test one a slightly older kernel to see how long
+> the bug has been around.
+> A full 'git bisect' would be wonderful, but also a lot of work and I don't
+> really expect it.  Any extra data point would help though.
+>
+> Maybe I'll see if I can reproduce it myself....
+>
+> NeilBrown
 
-	if (mddev->in_sync)
-		info.state =3D (1<<MD_SB_CLEAN);
-	if (mddev->bitmap && mddev->bitmap_info.offset)
-		info.state =3D (1<<MD_SB_BITMAP_PRESENT);
-
-
-that last line should be "|=3D".
-
-Because you have a bitmap, the 'clean' state is being hidden.
-
-Though if you have a bitmap, the 'clean' state isn't really important becau=
-se
-the bitmap knows which regions are 'clean' and which are not.
-
-But it should be fixed.  I'll send a patch next week.
-
-Thanks for persisting.
-
-NeilBrown
-
---Sig_/U2y3X.sEaJH44c+d=c3FBOy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU65Swznsnt1WYoG5AQLY9xAAjXteE1BSeL7RUZNOcaVCMVvXIMJ7rj+l
-x1/Htc7Rz/VCZb5dFIIONZOp00rqgzyfF4rD4xb+I0vZ8poeiULRdreexpxSfna1
-7bLrCWfGsdgCF6LI1ngeTXiz4T/016CdE6MFZmukbNzh2JOP7CGxBQuLsPhlXY/p
-78e3s5icet3Ijs2OiTiLL8VLHA2s4KKcIhYnm4AgBwQLHd9Kdkav8AKjSDgFzh9p
-oOqS0k8eCQljI7OmBDKvmdHzrOlZ9sxicXqjM5RvkyFspgDyUCgXDO1j/VR6CJ6e
-D0fe8Tr4WJqZFi4RCdXAEgEh4XziN3jnDaKS/nxgxhCQiFcdmr020hyyyOLQJ+nJ
-8Zgws12/Q1MbvfflKMovKfBYO3H9aViVoXqS/SZ1zOsGReHwjS41du074W7ZnGUN
-xBJys+MfDcfScFQdpYd3WSCSjAAZ7Oi0GoAEG/C+fjKX5mmL/TzuzHVhRqQEYxSR
-9qoJTQ8kevGJp1dJqi/p9+LDsqHBAB34m7oTKTQZWE9QK3vKUuOq9zVCl85VBOzN
-qs29/hPqsROCFpnjrt0GosHHiqw2yLl0IcnyrSxxL34rwUpZdOix8cRa0ZJtnfL/
-V1RTZGqBABnFXLe5s6jfyVXALCM3cCmXh6LXEUAWltQgby1hKOVims/vHtadPoYD
-zegTUob6YvA=
-=njh2
------END PGP SIGNATURE-----
-
---Sig_/U2y3X.sEaJH44c+d=c3FBOy--
