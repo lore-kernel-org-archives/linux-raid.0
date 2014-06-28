@@ -1,114 +1,36 @@
-From: Minfei Huang <huangminfei@ucloud.cn>
-Subject: [PATCH] dm-io: Fix a race condition in the wake up code for sync_io
-Date: Sat, 28 Jun 2014 08:21:46 +0800
-Message-ID: <1403914906-577-1-git-send-email-huangminfei@ucloud.cn>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, neilb@suse.de
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Minfei Huang <huangminfei@ucloud.cn>
+From: George Duffield <forumscollective@gmail.com>
+Subject: Re: Understanding raid array status: Active vs Clean
+Date: Sat, 28 Jun 2014 05:01:00 +0200
+Message-ID: <CAG__1a7T2atsQ1eQMhR1Wp6xd72fNdyf5XX+kbihRbY1Urd0Ww@mail.gmail.com>
+References: <CAG__1a4MRV6gJL38XLAurtoSiD3rLBTmWpcS5HYvPpSfPR88UQ@mail.gmail.com>
+	<20140529151658.3bfc97e5@notabene.brown>
+	<1C901CF6-75BD-4B54-9F5D-7E2C35633CBC@gmail.com>
+	<20140529160623.5b9e37e5@notabene.brown>
+	<CAG__1a5j-0O7LOb6opz4MLPCjbxRNDXiaG6W=Xxt3JJ9eXfRRA@mail.gmail.com>
+	<CAG__1a5XK1yt70ox_12hLjpBpY=YRcaJ6-MYHiEJ_RTpxFujoA@mail.gmail.com>
+	<20140618150326.GA28569@cthulhu.home.robinhill.me.uk>
+	<CAG__1a7m2BakDGUtP==YunzmBr8WDXVVv4i2WE=sYhBNKYjM1w@mail.gmail.com>
+	<CAG__1a7zGbxzkR_a2ci4rw3xacxGYt07aBiAsFjGPYowXBPCcQ@mail.gmail.com>
+	<CAG__1a4kX1gM+ntmcLkevCm6kwVbgSMGmPi-ec6+b1RGKznouw@mail.gmail.com>
+	<20140623120102.7d85ac52@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140623120102.7d85ac52@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-There's a race condition between the atomic_dec_and_test(&io->count)
-in dec_count() and the waking of the sync_io() thread.  If the thread
-is spuriously woken immediately after the decrement it may exit,
-making the on the stack io struct invalid, yet the dec_count could
-still be using it.
+>> > changing the value to 0.500:
+>> > # echo 0.503 > /sys/block/md0/md/safe_mode_delay
+>> >
+>> > makes no difference to the array state.
+>
+> What if you write a smaller number?  e.g. 0.1
 
-There are smaller fixes than the one here (eg, just take the io object
-off the stack).  But I feel this code could use a clean up.
+No change to array state.
 
-- simplify dec_count().
+> What does /sys/block/md0/md/array_state show?
 
-  - It always calls a callback fn now.
-  - It always frees the io object back to the pool.
-
-- sync_io()
-
-  - Take the io object off the stack and allocate it from the pool the
-    same as async_io.
-  - Use a completion object rather than an explicit io_schedule()
-    loop.  The callback triggers the completion.
-
-Signed-off-by: Minfei Huang <huangminfei@ucloud.cn>
----
- drivers/md/dm-io.c |   22 +++++++++-------------
- 1 files changed, 9 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index 3842ac7..05583da 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -10,6 +10,7 @@
- #include <linux/device-mapper.h>
- 
- #include <linux/bio.h>
-+#include <linux/completion.h>
- #include <linux/mempool.h>
- #include <linux/module.h>
- #include <linux/sched.h>
-@@ -32,7 +33,7 @@ struct dm_io_client {
- struct io {
- 	unsigned long error_bits;
- 	atomic_t count;
--	struct task_struct *sleeper;
-+	struct completion *wait;
- 	struct dm_io_client *client;
- 	io_notify_fn callback;
- 	void *context;
-@@ -121,8 +122,8 @@ static void dec_count(struct io *io, unsigned int region, int error)
- 			invalidate_kernel_vmap_range(io->vma_invalidate_address,
- 						     io->vma_invalidate_size);
- 
--		if (io->sleeper)
--			wake_up_process(io->sleeper);
-+		if (io->wait)
-+			complete(io->wait);
- 
- 		else {
- 			unsigned long r = io->error_bits;
-@@ -387,6 +388,7 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
- 	 */
- 	volatile char io_[sizeof(struct io) + __alignof__(struct io) - 1];
- 	struct io *io = (struct io *)PTR_ALIGN(&io_, __alignof__(struct io));
-+	DECLARE_COMPLETION_ONSTACK(wait);
- 
- 	if (num_regions > 1 && (rw & RW_MASK) != WRITE) {
- 		WARN_ON(1);
-@@ -395,7 +397,7 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
- 
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
--	io->sleeper = current;
-+	io->wait = &wait;
- 	io->client = client;
- 
- 	io->vma_invalidate_address = dp->vma_invalidate_address;
-@@ -403,15 +405,9 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
- 
- 	dispatch_io(rw, num_regions, where, dp, io, 1);
- 
--	while (1) {
--		set_current_state(TASK_UNINTERRUPTIBLE);
--
--		if (!atomic_read(&io->count))
--			break;
--
--		io_schedule();
-+	while (atomic_read(&io->count) != 0) {
-+		wait_for_completion_io_timeout(&wait, 5);
- 	}
--	set_current_state(TASK_RUNNING);
- 
- 	if (error_bits)
- 		*error_bits = io->error_bits;
-@@ -434,7 +430,7 @@ static int async_io(struct dm_io_client *client, unsigned int num_regions,
- 	io = mempool_alloc(client->pool, GFP_NOIO);
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
--	io->sleeper = NULL;
-+	io->wait = NULL;
- 	io->client = client;
- 	io->callback = fn;
- 	io->context = context;
--- 
-1.7.1
+Funnily enough, it shows Clean
