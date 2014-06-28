@@ -1,227 +1,208 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid5 (re)-add recovery data corruption
-Date: Mon, 30 Jun 2014 13:40:45 +1000
-Message-ID: <20140630134045.601cd33d@notabene.brown>
-References: <53A518BB.60709@sbcglobal.net>
-	<20140623113641.79965998@notabene.brown>
-	<53AF5304.7020401@sbcglobal.net>
-	<20140630132335.4361445e@notabene.brown>
+From: huangminfei <huangminfei@ucloud.cn>
+Subject: Re: [PATCH] dm-io: Fix a race condition in the wake up
+ code for sync_io
+Date: Sat, 28 Jun 2014 09:26:08 +0800 (CST)
+Message-ID: <370509b3.4d53.146e01459a6.Coremail.huangminfei@ucloud.cn>
+References: <1403914906-577-1-git-send-email-huangminfei@ucloud.cn>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/kgKA=1fxk.pGq1m2w.BIXe1"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140630132335.4361445e@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill <billstuff2001@sbcglobal.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="===============7751663058842163498=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1403914906-577-1-git-send-email-huangminfei@ucloud.cn>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Minfei Huang <huangminfei@ucloud.cn>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, agk <agk@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/kgKA=1fxk.pGq1m2w.BIXe1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+--===============7751663058842163498==
+Content-Type: multipart/alternative;
+	boundary="----=_Part_49094_539240027.1403918768550"
 
-On Mon, 30 Jun 2014 13:23:35 +1000 NeilBrown <neilb@suse.de> wrote:
+------=_Part_49094_539240027.1403918768550
+Content-Type: text/plain; charset=GBK
+Content-Transfer-Encoding: base64
 
-> On Sat, 28 Jun 2014 18:43:00 -0500 Bill <billstuff2001@sbcglobal.net> wro=
-te:
->=20
-> > On 06/22/2014 08:36 PM, NeilBrown wrote:
-> > > On Sat, 21 Jun 2014 00:31:39 -0500 Bill<billstuff2001@sbcglobal.net> =
- wrote:
-> > >
-> > >> Hi Neil,
-> > >>
-> > >> I'm running a test on 3.14.8 and seeing data corruption after a reco=
-very.
-> > >> I have this array:
-> > >>
-> > >>       md5 : active raid5 sdc1[2] sdb1[1] sda1[0] sde1[4] sdd1[3]
-> > >>             16777216 blocks level 5, 64k chunk, algorithm 2 [5/5] [U=
-UUUU]
-> > >>             bitmap: 0/1 pages [0KB], 2048KB chunk
-> > >>
-> > >> with an xfs filesystem on it:
-> > >>       /dev/md5 on /hdtv/data5 type xfs
-> > >> (rw,noatime,barrier,swalloc,allocsize=3D256m,logbsize=3D256k,largeio)
-> > >>
-> > >> and I do this in a loop:
-> > >>
-> > >> 1. start writing 1/4 GB files to the filesystem
-> > >> 2. fail a disk. wait a bit
-> > >> 3. remove it. wait a bit
-> > >> 4. add the disk back into the array
-> > >> 5. wait for the array to sync and the file writes to finish
-> > >> 6. checksum the files.
-> > >> 7. wait a bit and do it all again
-> > >>
-> > >> The checksum QC will eventually fail, usually after a few hours.
-> > >>
-> > >> My last test failed after 4 hours:
-> > >>
-> > >>       18:51:48 - mdadm /dev/md5 -f /dev/sdc1
-> > >>       18:51:58 - mdadm /dev/md5 -r /dev/sdc1
-> > >>       18:52:06 - start writing 3 files
-> > >>       18:52:08 - mdadm /dev/md5 -a /dev/sdc1
-> > >>       18:52:18 - array recovery done
-> > >>       18:52:23 - writes finished. QC failed for one of three files.
-> > >>
-> > >> dmesg shows no errors and the disks are operating normally.
-> > >>
-> > >> If I "check" /dev/md5 it shows mismatch_cnt =3D 896
-> > >> If I dump the raw data on sd[abcde]1 underneath the bad file, it sho=
-ws
-> > >> sd[abde]1 are correct, and sdc1 has some chunks of old data from a
-> > >> previous file.
-> > >>
-> > >> If I fail sdc1, --zero-superblock it, and add it, it then syncs and =
-the
-> > >> QC is correct.
-> > >>
-> > >> So somehow is seems like md is loosing track of some changes which n=
-eed
-> > >> to be
-> > >> written to sdc1 in the recovery. But rarely - in this case it failed
-> > >> after 175 cycles.
-> > >>
-> > >> Do you have any idea what could be happening here?
-> > > No.  As you say, it looks like md is not setting a bit in the bitmap
-> > > correctly, or ignoring one that is set, or maybe clearing one that sh=
-ouldn't
-> > > be cleared.
-> > > The last is most likely I would guess.
-> >=20
-> > Neil,
-> >=20
-> > I'm still digging through this but I found something that might help=20
-> > narrow it
-> > down - the bitmap stays dirty after the re-add and recovery is complete:
-> >=20
-> >          Filename : /dev/sde1
-> >             Magic : 6d746962
-> >           Version : 4
-> >              UUID : 609846f8:ad08275f:824b3cb4:2e180e57
-> >            Events : 5259
-> >    Events Cleared : 5259
-> >             State : OK
-> >         Chunksize : 2 MB
-> >            Daemon : 5s flush period
-> >        Write Mode : Normal
-> >         Sync Size : 4194304 (4.00 GiB 4.29 GB)
-> >            Bitmap : 2048 bits (chunks), 2 dirty (0.1%)
-> >                                         ^^^^^^^^^^^^^^
-> >=20
-> > This is after 1/2 hour idle. sde1 was the one removed / re-added, but
-> > all five disks show the same bitmap info, and the event count matches=20
-> > that of
-> > the array (5259). At this point the QC check fails.
-> >=20
-> > Then I manually failed, removed and re-added /dev/sde1, and shortly the=
-=20
-> > array
-> > synced the dirty chunks:
-> >=20
-> >          Filename : /dev/sde1
-> >             Magic : 6d746962
-> >           Version : 4
-> >              UUID : 609846f8:ad08275f:824b3cb4:2e180e57
-> >            Events : 5275
-> >    Events Cleared : 5259
-> >             State : OK
-> >         Chunksize : 2 MB
-> >            Daemon : 5s flush period
-> >        Write Mode : Normal
-> >         Sync Size : 4194304 (4.00 GiB 4.29 GB)
-> >            Bitmap : 2048 bits (chunks), 0 dirty (0.0%)
-> >                                         ^^^^^^^^^^^^^^
-> >=20
-> > Now the QC check succeeds and an array "check" shows no mismatches.
-> >=20
-> > So it seems like md is ignoring a set bit in the bitmap, which then get=
-s=20
-> > noticed
-> > with the fail / remove / re-add sequence.
->=20
-> Thanks, that helps a lot ... maybe.
->=20
-> I have a theory.  This patch explains it and should fix it.
-> I'm not sure this is the patch I will go with if it works, but it will he=
-lp
-> confirm my theory.
-> Can you test it?
->=20
-> thanks,
-> NeilBrown
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 34846856dbc6..27387a3740c8 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7906,6 +7906,15 @@ void md_check_recovery(struct mddev *mddev)
->  			clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
->  			clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
->  			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
-> +			/* If there is a bitmap, we need to make sure
-> +			 * all writes that started before we added a spare
-> +			 * complete before we start doing a recovery.
-> +			 * Otherwise the write might complete and set
-> +			 * a bit in the bitmap after the recovery has
-> +			 * checked that bit and skipped that region.
-> +			 */
-> +			mddev->pers->quiesce(mddev, 1);
-> +			mddev->pers->quiesce(mddev, 0);
->  		} else if (mddev->recovery_cp < MaxSector) {
->  			set_bit(MD_RECOVERY_SYNC, &mddev->recovery);
->  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->=20
+CgpTb3JyeSwgSSBoYXZlIGEgbWlzdGFrZS4KdGhlIGZ1bmN0aW9uIGNvbXBsZXRlIHdpbGwgcmVj
+b3JkIHRoZSBmbGFnIHRvIGluZGljYXRlIGl0IGhhdmUgYmVlbiBleGVjdXRlZC4KCgpTbyB0aGUg
+d2Fsa2luZyBwYXRoIG9mIHN5bmMgaW8gaXMgY29ycmVudCB0byB1c2UgZnVuY3Rpb24gd2FpdF9m
+b3JfY29tcGxldGlvbl9pby4KQXRocm91Z2ggc3luYyBpbyBtYXkgYmUgZmluaXNoZWQsICB0aGUg
+dGhyZWFkIGRvIG5vdCBiZSBoYW5nZWQuCgoKQXBvbG9naXplIGZvciBteSBtaXN0YWtlLgoKCgpU
+aGVyZSdzIGEgcmFjZSBjb25kaXRpb24gYmV0d2VlbiB0aGUgYXRvbWljX2RlY19hbmRfdGVzdCgm
+aW8tPmNvdW50KQppbiBkZWNfY291bnQoKSBhbmQgdGhlIHdha2luZyBvZiB0aGUgc3luY19pbygp
+IHRocmVhZC4gIElmIHRoZSB0aHJlYWQKaXMgc3B1cmlvdXNseSB3b2tlbiBpbW1lZGlhdGVseSBh
+ZnRlciB0aGUgZGVjcmVtZW50IGl0IG1heSBleGl0LAptYWtpbmcgdGhlIG9uIHRoZSBzdGFjayBp
+byBzdHJ1Y3QgaW52YWxpZCwgeWV0IHRoZSBkZWNfY291bnQgY291bGQKc3RpbGwgYmUgdXNpbmcg
+aXQuCgpUaGVyZSBhcmUgc21hbGxlciBmaXhlcyB0aGFuIHRoZSBvbmUgaGVyZSAoZWcsIGp1c3Qg
+dGFrZSB0aGUgaW8gb2JqZWN0Cm9mZiB0aGUgc3RhY2spLiAgQnV0IEkgZmVlbCB0aGlzIGNvZGUg
+Y291bGQgdXNlIGEgY2xlYW4gdXAuCgotIHNpbXBsaWZ5IGRlY19jb3VudCgpLgoKIC0gSXQgYWx3
+YXlzIGNhbGxzIGEgY2FsbGJhY2sgZm4gbm93LgogLSBJdCBhbHdheXMgZnJlZXMgdGhlIGlvIG9i
+amVjdCBiYWNrIHRvIHRoZSBwb29sLgoKLSBzeW5jX2lvKCkKCiAtIFRha2UgdGhlIGlvIG9iamVj
+dCBvZmYgdGhlIHN0YWNrIGFuZCBhbGxvY2F0ZSBpdCBmcm9tIHRoZSBwb29sIHRoZQogICBzYW1l
+IGFzIGFzeW5jX2lvLgogLSBVc2UgYSBjb21wbGV0aW9uIG9iamVjdCByYXRoZXIgdGhhbiBhbiBl
+eHBsaWNpdCBpb19zY2hlZHVsZSgpCiAgIGxvb3AuICBUaGUgY2FsbGJhY2sgdHJpZ2dlcnMgdGhl
+IGNvbXBsZXRpb24uCgpTaWduZWQtb2ZmLWJ5OiBNaW5mZWkgSHVhbmcgPGh1YW5nbWluZmVpQHVj
+bG91ZC5jbj4KLS0tCmRyaXZlcnMvbWQvZG0taW8uYyB8ICAgMjIgKysrKysrKysrLS0tLS0tLS0t
+LS0tLQoxIGZpbGVzIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMTMgZGVsZXRpb25zKC0pCgpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9kbS1pby5jIGIvZHJpdmVycy9tZC9kbS1pby5jCmluZGV4
+IDM4NDJhYzcuLjA1NTgzZGEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvZG0taW8uYworKysgYi9k
+cml2ZXJzL21kL2RtLWlvLmMKQEAgLTEwLDYgKzEwLDcgQEAKI2luY2x1ZGUgPGxpbnV4L2Rldmlj
+ZS1tYXBwZXIuaD4KCiNpbmNsdWRlIDxsaW51eC9iaW8uaD4KKyNpbmNsdWRlIDxsaW51eC9jb21w
+bGV0aW9uLmg+CiNpbmNsdWRlIDxsaW51eC9tZW1wb29sLmg+CiNpbmNsdWRlIDxsaW51eC9tb2R1
+bGUuaD4KI2luY2x1ZGUgPGxpbnV4L3NjaGVkLmg+CkBAIC0zMiw3ICszMyw3IEBAIHN0cnVjdCBk
+bV9pb19jbGllbnQgewpzdHJ1Y3QgaW8gewogICAgdW5zaWduZWQgbG9uZyBlcnJvcl9iaXRzOwog
+ICAgYXRvbWljX3QgY291bnQ7Ci0gICAgc3RydWN0IHRhc2tfc3RydWN0ICpzbGVlcGVyOworICAg
+IHN0cnVjdCBjb21wbGV0aW9uICp3YWl0OwogICAgc3RydWN0IGRtX2lvX2NsaWVudCAqY2xpZW50
+OwogICAgaW9fbm90aWZ5X2ZuIGNhbGxiYWNrOwogICAgdm9pZCAqY29udGV4dDsKQEAgLTEyMSw4
+ICsxMjIsOCBAQCBzdGF0aWMgdm9pZCBkZWNfY291bnQoc3RydWN0IGlvICppbywgdW5zaWduZWQg
+aW50IHJlZ2lvbiwgaW50IGVycm9yKQogICAgICAgICAgICBpbnZhbGlkYXRlX2tlcm5lbF92bWFw
+X3JhbmdlKGlvLT52bWFfaW52YWxpZGF0ZV9hZGRyZXNzLAogICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIGlvLT52bWFfaW52YWxpZGF0ZV9zaXplKTsKCi0gICAgICAgIGlmIChpby0+c2xlZXBl
+cikKLSAgICAgICAgICAgIHdha2VfdXBfcHJvY2Vzcyhpby0+c2xlZXBlcik7CisgICAgICAgIGlm
+IChpby0+d2FpdCkKKyAgICAgICAgICAgIGNvbXBsZXRlKGlvLT53YWl0KTsKCiAgICAgICAgZWxz
+ZSB7CiAgICAgICAgICAgIHVuc2lnbmVkIGxvbmcgciA9IGlvLT5lcnJvcl9iaXRzOwpAQCAtMzg3
+LDYgKzM4OCw3IEBAIHN0YXRpYyBpbnQgc3luY19pbyhzdHJ1Y3QgZG1faW9fY2xpZW50ICpjbGll
+bnQsIHVuc2lnbmVkIGludCBudW1fcmVnaW9ucywKICAgICAqLwogICAgdm9sYXRpbGUgY2hhciBp
+b19bc2l6ZW9mKHN0cnVjdCBpbykgKyBfX2FsaWdub2ZfXyhzdHJ1Y3QgaW8pIC0gMV07CiAgICBz
+dHJ1Y3QgaW8gKmlvID0gKHN0cnVjdCBpbyAqKVBUUl9BTElHTigmaW9fLCBfX2FsaWdub2ZfXyhz
+dHJ1Y3QgaW8pKTsKKyAgICBERUNMQVJFX0NPTVBMRVRJT05fT05TVEFDSyh3YWl0KTsKCiAgICBp
+ZiAobnVtX3JlZ2lvbnMgPiAxICYmIChydyAmIFJXX01BU0spICE9IFdSSVRFKSB7CiAgICAgICAg
+V0FSTl9PTigxKTsKQEAgLTM5NSw3ICszOTcsNyBAQCBzdGF0aWMgaW50IHN5bmNfaW8oc3RydWN0
+IGRtX2lvX2NsaWVudCAqY2xpZW50LCB1bnNpZ25lZCBpbnQgbnVtX3JlZ2lvbnMsCgogICAgaW8t
+PmVycm9yX2JpdHMgPSAwOwogICAgYXRvbWljX3NldCgmaW8tPmNvdW50LCAxKTsgLyogc2VlIGRp
+c3BhdGNoX2lvKCkgKi8KLSAgICBpby0+c2xlZXBlciA9IGN1cnJlbnQ7CisgICAgaW8tPndhaXQg
+PSAmd2FpdDsKICAgIGlvLT5jbGllbnQgPSBjbGllbnQ7CgogICAgaW8tPnZtYV9pbnZhbGlkYXRl
+X2FkZHJlc3MgPSBkcC0+dm1hX2ludmFsaWRhdGVfYWRkcmVzczsKQEAgLTQwMywxNSArNDA1LDkg
+QEAgc3RhdGljIGludCBzeW5jX2lvKHN0cnVjdCBkbV9pb19jbGllbnQgKmNsaWVudCwgdW5zaWdu
+ZWQgaW50IG51bV9yZWdpb25zLAoKICAgIGRpc3BhdGNoX2lvKHJ3LCBudW1fcmVnaW9ucywgd2hl
+cmUsIGRwLCBpbywgMSk7CgotICAgIHdoaWxlICgxKSB7Ci0gICAgICAgIHNldF9jdXJyZW50X3N0
+YXRlKFRBU0tfVU5JTlRFUlJVUFRJQkxFKTsKLQotICAgICAgICBpZiAoIWF0b21pY19yZWFkKCZp
+by0+Y291bnQpKQotICAgICAgICAgICAgYnJlYWs7Ci0KLSAgICAgICAgaW9fc2NoZWR1bGUoKTsK
+KyAgICB3aGlsZSAoYXRvbWljX3JlYWQoJmlvLT5jb3VudCkgIT0gMCkgeworICAgICAgICB3YWl0
+X2Zvcl9jb21wbGV0aW9uX2lvX3RpbWVvdXQoJndhaXQsIDUpOwogICAgfQotICAgIHNldF9jdXJy
+ZW50X3N0YXRlKFRBU0tfUlVOTklORyk7CgogICAgaWYgKGVycm9yX2JpdHMpCiAgICAgICAgKmVy
+cm9yX2JpdHMgPSBpby0+ZXJyb3JfYml0czsKQEAgLTQzNCw3ICs0MzAsNyBAQCBzdGF0aWMgaW50
+IGFzeW5jX2lvKHN0cnVjdCBkbV9pb19jbGllbnQgKmNsaWVudCwgdW5zaWduZWQgaW50IG51bV9y
+ZWdpb25zLAogICAgaW8gPSBtZW1wb29sX2FsbG9jKGNsaWVudC0+cG9vbCwgR0ZQX05PSU8pOwog
+ICAgaW8tPmVycm9yX2JpdHMgPSAwOwogICAgYXRvbWljX3NldCgmaW8tPmNvdW50LCAxKTsgLyog
+c2VlIGRpc3BhdGNoX2lvKCkgKi8KLSAgICBpby0+c2xlZXBlciA9IE5VTEw7CisgICAgaW8tPndh
+aXQgPSBOVUxMOwogICAgaW8tPmNsaWVudCA9IGNsaWVudDsKICAgIGlvLT5jYWxsYmFjayA9IGZu
+OwogICAgaW8tPmNvbnRleHQgPSBjb250ZXh0OwotLQoxLjcuMQoK
+------=_Part_49094_539240027.1403918768550
+Content-Type: text/html; charset=GBK
+Content-Transfer-Encoding: base64
 
-Don't even bother trying that - it will definitely deadlock.
+PGRpdj48L2Rpdj48ZGl2IHN0eWxlPSJjb2xvcjojMDAwOyBmb250LXNpemU6IDE0cHg7Zm9udC1m
+YW1pbHk6IGFyaWFsOyI+PGRpdj48YnI+PC9kaXY+PGRpdj5Tb3JyeSwgSSBoYXZlIGEgbWlzdGFr
+ZS48L2Rpdj48ZGl2PnRoZSBmdW5jdGlvbiBjb21wbGV0ZSB3aWxsIHJlY29yZCB0aGUgZmxhZyB0
+byBpbmRpY2F0ZSBpdCBoYXZlIGJlZW4gZXhlY3V0ZWQuPC9kaXY+PGRpdj48YnI+PC9kaXY+PGRp
+dj5TbyB0aGUgd2Fsa2luZyBwYXRoIG9mIHN5bmMgaW8gaXMgY29ycmVudCB0byB1c2UgZnVuY3Rp
+b24mbmJzcDs8c3BhbiBzdHlsZT0ibGluZS1oZWlnaHQ6IDEuNzsiPndhaXRfZm9yX2NvbXBsZXRp
+b25faW8uPC9zcGFuPjwvZGl2PjxkaXY+PHNwYW4gc3R5bGU9ImxpbmUtaGVpZ2h0OiAxLjc7Ij5B
+dGhyb3VnaCBzeW5jIGlvIG1heSBiZSBmaW5pc2hlZCwgJm5ic3A7dGhlIHRocmVhZCBkbyBub3Qg
+YmUgaGFuZ2VkLjwvc3Bhbj48L2Rpdj48ZGl2Pjxicj48L2Rpdj48ZGl2PkFwb2xvZ2l6ZSBmb3Ig
+bXkgbWlzdGFrZS48L2Rpdj48ZGl2Pjxicj48L2Rpdj48L2Rpdj48YmxvY2txdW90ZSBpZD0iaXNS
+ZXBseUNvbnRlbnQiIHN0eWxlPSJwYWRkaW5nLWxlZnQ6MWV4OyBtYXJnaW46IDBweCAwcHggMHB4
+IDAuOGV4OyBCT1JERVItTEVGVDogI2NjYyAxcHggc29saWQiPjxicj4gVGhlcmUncyBhIHJhY2Ug
+Y29uZGl0aW9uIGJldHdlZW4gdGhlIGF0b21pY19kZWNfYW5kX3Rlc3QoJmFtcDtpby0mZ3Q7Y291
+bnQpPGJyPmluIGRlY19jb3VudCgpIGFuZCB0aGUgd2FraW5nIG9mIHRoZSBzeW5jX2lvKCkgdGhy
+ZWFkLiAmbmJzcDtJZiB0aGUgdGhyZWFkPGJyPmlzIHNwdXJpb3VzbHkgd29rZW4gaW1tZWRpYXRl
+bHkgYWZ0ZXIgdGhlIGRlY3JlbWVudCBpdCBtYXkgZXhpdCw8YnI+bWFraW5nIHRoZSBvbiB0aGUg
+c3RhY2sgaW8gc3RydWN0IGludmFsaWQsIHlldCB0aGUgZGVjX2NvdW50IGNvdWxkPGJyPnN0aWxs
+IGJlIHVzaW5nIGl0Ljxicj48YnI+VGhlcmUgYXJlIHNtYWxsZXIgZml4ZXMgdGhhbiB0aGUgb25l
+IGhlcmUgKGVnLCBqdXN0IHRha2UgdGhlIGlvIG9iamVjdDxicj5vZmYgdGhlIHN0YWNrKS4gJm5i
+c3A7QnV0IEkgZmVlbCB0aGlzIGNvZGUgY291bGQgdXNlIGEgY2xlYW4gdXAuPGJyPjxicj4tIHNp
+bXBsaWZ5IGRlY19jb3VudCgpLjxicj48YnI+ICZuYnNwOy0gSXQgYWx3YXlzIGNhbGxzIGEgY2Fs
+bGJhY2sgZm4gbm93Ljxicj4gJm5ic3A7LSBJdCBhbHdheXMgZnJlZXMgdGhlIGlvIG9iamVjdCBi
+YWNrIHRvIHRoZSBwb29sLjxicj48YnI+LSBzeW5jX2lvKCk8YnI+PGJyPiAmbmJzcDstIFRha2Ug
+dGhlIGlvIG9iamVjdCBvZmYgdGhlIHN0YWNrIGFuZCBhbGxvY2F0ZSBpdCBmcm9tIHRoZSBwb29s
+IHRoZTxicj4gJm5ic3A7ICZuYnNwO3NhbWUgYXMgYXN5bmNfaW8uPGJyPiAmbmJzcDstIFVzZSBh
+IGNvbXBsZXRpb24gb2JqZWN0IHJhdGhlciB0aGFuIGFuIGV4cGxpY2l0IGlvX3NjaGVkdWxlKCk8
+YnI+ICZuYnNwOyAmbmJzcDtsb29wLiAmbmJzcDtUaGUgY2FsbGJhY2sgdHJpZ2dlcnMgdGhlIGNv
+bXBsZXRpb24uPGJyPjxicj5TaWduZWQtb2ZmLWJ5OiBNaW5mZWkgSHVhbmcgJmx0OzxhIGhyZWY9
+Im1haWx0bzpodWFuZ21pbmZlaUB1Y2xvdWQuY24iPmh1YW5nbWluZmVpQHVjbG91ZC5jbjwvYT4m
+Z3Q7PGJyPi0tLTxicj4gZHJpdmVycy9tZC9kbS1pby5jIHwgJm5ic3A7IDIyICsrKysrKysrKy0t
+LS0tLS0tLS0tLS08YnI+IDEgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCAxMyBkZWxl
+dGlvbnMoLSk8YnI+PGJyPmRpZmYgLS1naXQgYS9kcml2ZXJzL21kL2RtLWlvLmMgYi9kcml2ZXJz
+L21kL2RtLWlvLmM8YnI+aW5kZXggMzg0MmFjNy4uMDU1ODNkYSAxMDA2NDQ8YnI+LS0tIGEvZHJp
+dmVycy9tZC9kbS1pby5jPGJyPisrKyBiL2RyaXZlcnMvbWQvZG0taW8uYzxicj5AQCAtMTAsNiAr
+MTAsNyBAQDxicj4gI2luY2x1ZGUgJmx0O2xpbnV4L2RldmljZS1tYXBwZXIuaCZndDs8YnI+IDxi
+cj4gI2luY2x1ZGUgJmx0O2xpbnV4L2Jpby5oJmd0Ozxicj4rI2luY2x1ZGUgJmx0O2xpbnV4L2Nv
+bXBsZXRpb24uaCZndDs8YnI+ICNpbmNsdWRlICZsdDtsaW51eC9tZW1wb29sLmgmZ3Q7PGJyPiAj
+aW5jbHVkZSAmbHQ7bGludXgvbW9kdWxlLmgmZ3Q7PGJyPiAjaW5jbHVkZSAmbHQ7bGludXgvc2No
+ZWQuaCZndDs8YnI+QEAgLTMyLDcgKzMzLDcgQEAgc3RydWN0IGRtX2lvX2NsaWVudCB7PGJyPiBz
+dHJ1Y3QgaW8gezxicj4gJm5ic3A7ICZuYnNwOyB1bnNpZ25lZCBsb25nIGVycm9yX2JpdHM7PGJy
+PiAmbmJzcDsgJm5ic3A7IGF0b21pY190IGNvdW50Ozxicj4tJm5ic3A7ICZuYnNwOyBzdHJ1Y3Qg
+dGFza19zdHJ1Y3QgKnNsZWVwZXI7PGJyPismbmJzcDsgJm5ic3A7IHN0cnVjdCBjb21wbGV0aW9u
+ICp3YWl0Ozxicj4gJm5ic3A7ICZuYnNwOyBzdHJ1Y3QgZG1faW9fY2xpZW50ICpjbGllbnQ7PGJy
+PiAmbmJzcDsgJm5ic3A7IGlvX25vdGlmeV9mbiBjYWxsYmFjazs8YnI+ICZuYnNwOyAmbmJzcDsg
+dm9pZCAqY29udGV4dDs8YnI+QEAgLTEyMSw4ICsxMjIsOCBAQCBzdGF0aWMgdm9pZCBkZWNfY291
+bnQoc3RydWN0IGlvICppbywgdW5zaWduZWQgaW50IHJlZ2lvbiwgaW50IGVycm9yKTxicj4gJm5i
+c3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgaW52YWxpZGF0ZV9rZXJuZWxf
+dm1hcF9yYW5nZShpby0mZ3Q7dm1hX2ludmFsaWRhdGVfYWRkcmVzcyw8YnI+ICZuYnNwOyAmbmJz
+cDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNw
+OyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7aW8tJmd0O3ZtYV9pbnZhbGlkYXRl
+X3NpemUpOzxicj4gPGJyPi0mbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgaWYgKGlvLSZndDtz
+bGVlcGVyKTxicj4tJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgd2Fr
+ZV91cF9wcm9jZXNzKGlvLSZndDtzbGVlcGVyKTs8YnI+KyZuYnNwOyAmbmJzcDsgJm5ic3A7ICZu
+YnNwOyBpZiAoaW8tJmd0O3dhaXQpPGJyPismbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5i
+c3A7ICZuYnNwOyBjb21wbGV0ZShpby0mZ3Q7d2FpdCk7PGJyPiA8YnI+ICZuYnNwOyAmbmJzcDsg
+Jm5ic3A7ICZuYnNwOyBlbHNlIHs8YnI+ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJz
+cDsgJm5ic3A7IHVuc2lnbmVkIGxvbmcgciA9IGlvLSZndDtlcnJvcl9iaXRzOzxicj5AQCAtMzg3
+LDYgKzM4OCw3IEBAIHN0YXRpYyBpbnQgc3luY19pbyhzdHJ1Y3QgZG1faW9fY2xpZW50ICpjbGll
+bnQsIHVuc2lnbmVkIGludCBudW1fcmVnaW9ucyw8YnI+ICZuYnNwOyAmbmJzcDsgJm5ic3A7Ki88
+YnI+ICZuYnNwOyAmbmJzcDsgdm9sYXRpbGUgY2hhciBpb19bc2l6ZW9mKHN0cnVjdCBpbykgKyBf
+X2FsaWdub2ZfXyhzdHJ1Y3QgaW8pIC0gMV07PGJyPiAmbmJzcDsgJm5ic3A7IHN0cnVjdCBpbyAq
+aW8gPSAoc3RydWN0IGlvICopUFRSX0FMSUdOKCZhbXA7aW9fLCBfX2FsaWdub2ZfXyhzdHJ1Y3Qg
+aW8pKTs8YnI+KyZuYnNwOyAmbmJzcDsgREVDTEFSRV9DT01QTEVUSU9OX09OU1RBQ0sod2FpdCk7
+PGJyPiA8YnI+ICZuYnNwOyAmbmJzcDsgaWYgKG51bV9yZWdpb25zICZndDsgMSAmYW1wOyZhbXA7
+IChydyAmYW1wOyBSV19NQVNLKSAhPSBXUklURSkgezxicj4gJm5ic3A7ICZuYnNwOyAmbmJzcDsg
+Jm5ic3A7IFdBUk5fT04oMSk7PGJyPkBAIC0zOTUsNyArMzk3LDcgQEAgc3RhdGljIGludCBzeW5j
+X2lvKHN0cnVjdCBkbV9pb19jbGllbnQgKmNsaWVudCwgdW5zaWduZWQgaW50IG51bV9yZWdpb25z
+LDxicj4gPGJyPiAmbmJzcDsgJm5ic3A7IGlvLSZndDtlcnJvcl9iaXRzID0gMDs8YnI+ICZuYnNw
+OyAmbmJzcDsgYXRvbWljX3NldCgmYW1wO2lvLSZndDtjb3VudCwgMSk7IC8qIHNlZSBkaXNwYXRj
+aF9pbygpICovPGJyPi0mbmJzcDsgJm5ic3A7IGlvLSZndDtzbGVlcGVyID0gY3VycmVudDs8YnI+
+KyZuYnNwOyAmbmJzcDsgaW8tJmd0O3dhaXQgPSAmYW1wO3dhaXQ7PGJyPiAmbmJzcDsgJm5ic3A7
+IGlvLSZndDtjbGllbnQgPSBjbGllbnQ7PGJyPiA8YnI+ICZuYnNwOyAmbmJzcDsgaW8tJmd0O3Zt
+YV9pbnZhbGlkYXRlX2FkZHJlc3MgPSBkcC0mZ3Q7dm1hX2ludmFsaWRhdGVfYWRkcmVzczs8YnI+
+QEAgLTQwMywxNSArNDA1LDkgQEAgc3RhdGljIGludCBzeW5jX2lvKHN0cnVjdCBkbV9pb19jbGll
+bnQgKmNsaWVudCwgdW5zaWduZWQgaW50IG51bV9yZWdpb25zLDxicj4gPGJyPiAmbmJzcDsgJm5i
+c3A7IGRpc3BhdGNoX2lvKHJ3LCBudW1fcmVnaW9ucywgd2hlcmUsIGRwLCBpbywgMSk7PGJyPiA8
+YnI+LSZuYnNwOyAmbmJzcDsgd2hpbGUgKDEpIHs8YnI+LSZuYnNwOyAmbmJzcDsgJm5ic3A7ICZu
+YnNwOyBzZXRfY3VycmVudF9zdGF0ZShUQVNLX1VOSU5URVJSVVBUSUJMRSk7PGJyPi08YnI+LSZu
+YnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyBpZiAoIWF0b21pY19yZWFkKCZhbXA7aW8tJmd0O2Nv
+dW50KSk8YnI+LSZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7IGJyZWFr
+Ozxicj4tPGJyPi0mbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgaW9fc2NoZWR1bGUoKTs8YnI+
+KyZuYnNwOyAmbmJzcDsgd2hpbGUgKGF0b21pY19yZWFkKCZhbXA7aW8tJmd0O2NvdW50KSAhPSAw
+KSB7PGJyPismbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgd2FpdF9mb3JfY29tcGxldGlvbl9p
+b190aW1lb3V0KCZhbXA7d2FpdCwgNSk7PGJyPiAmbmJzcDsgJm5ic3A7IH08YnI+LSZuYnNwOyAm
+bmJzcDsgc2V0X2N1cnJlbnRfc3RhdGUoVEFTS19SVU5OSU5HKTs8YnI+IDxicj4gJm5ic3A7ICZu
+YnNwOyBpZiAoZXJyb3JfYml0cyk8YnI+ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAqZXJy
+b3JfYml0cyA9IGlvLSZndDtlcnJvcl9iaXRzOzxicj5AQCAtNDM0LDcgKzQzMCw3IEBAIHN0YXRp
+YyBpbnQgYXN5bmNfaW8oc3RydWN0IGRtX2lvX2NsaWVudCAqY2xpZW50LCB1bnNpZ25lZCBpbnQg
+bnVtX3JlZ2lvbnMsPGJyPiAmbmJzcDsgJm5ic3A7IGlvID0gbWVtcG9vbF9hbGxvYyhjbGllbnQt
+Jmd0O3Bvb2wsIEdGUF9OT0lPKTs8YnI+ICZuYnNwOyAmbmJzcDsgaW8tJmd0O2Vycm9yX2JpdHMg
+PSAwOzxicj4gJm5ic3A7ICZuYnNwOyBhdG9taWNfc2V0KCZhbXA7aW8tJmd0O2NvdW50LCAxKTsg
+Lyogc2VlIGRpc3BhdGNoX2lvKCkgKi88YnI+LSZuYnNwOyAmbmJzcDsgaW8tJmd0O3NsZWVwZXIg
+PSBOVUxMOzxicj4rJm5ic3A7ICZuYnNwOyBpby0mZ3Q7d2FpdCA9IE5VTEw7PGJyPiAmbmJzcDsg
+Jm5ic3A7IGlvLSZndDtjbGllbnQgPSBjbGllbnQ7PGJyPiAmbmJzcDsgJm5ic3A7IGlvLSZndDtj
+YWxsYmFjayA9IGZuOzxicj4gJm5ic3A7ICZuYnNwOyBpby0mZ3Q7Y29udGV4dCA9IGNvbnRleHQ7
+PGJyPi0tIDxicj4xLjcuMTxicj48YnI+PC9ibG9ja3F1b3RlPg==
+------=_Part_49094_539240027.1403918768550--
 
-Please try this instead.
 
-NeilBrown
+--===============7751663058842163498==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 34846856dbc6..f8cd0bd83402 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7501,6 +7501,16 @@ void md_do_sync(struct md_thread *thread)
- 			    rdev->recovery_offset < j)
- 				j =3D rdev->recovery_offset;
- 		rcu_read_unlock();
-+
-+		/* If there is a bitmap, we need to make sure
-+		 * all writes that started before we added a spare
-+		 * complete before we start doing a recovery.
-+		 * Otherwise the write might complete and set
-+		 * a bit in the bitmap after the recovery has
-+		 * checked that bit and skipped that region.
-+		 */
-+		mddev->pers->quiesce(mddev, 1);
-+		mddev->pers->quiesce(mddev, 0);
- 	}
-=20
- 	printk(KERN_INFO "md: %s of RAID array %s\n", desc, mdname(mddev));
 
---Sig_/kgKA=1fxk.pGq1m2w.BIXe1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU7DcPTnsnt1WYoG5AQJAhhAApeWtYXPm8XEWb6fEvojCMg49vfd3CrpT
-9/Swba00Ao55nEwVmuPB4InHKDkYq3VFwDZt9a0djpd1/cHrXx7WX0r3rPDKSDwS
-VXn6jsPdw1cveEkKCbcr/6TeNYDYSm5VTM54LHWYRpR3SdiT5DuF5ClyOLeEqt12
-wFvKv/JDWNcdulUD4Lg8gR+J1z4p2cq6Ichchaejl775oQ+szSwmcC+KtiyQOz2d
-sMIycONG4Z7jUb1/HCWC2518F38WUb3BIgL/s9ix1Q3fyq9WwePo4IIHB1i2yY6I
-qsYJZ1MQJIYqyDm8Py7gt/4OUL5XnThVClVZ0KC174i+l92ojw+Z1Zn4yb5s4Ydb
-AM16glVCyUoL5SsuP9Hxx9cq0ArPHXiOtLpCktM61oKxTy9frR0uhB8hA+SyGZQD
-de54D+IpATmHvJelcTW9rjA4zhAMH4QB85qe2mzoIoDyTx6565Dy8NjLh2lxbc+n
-doCNktK8j/vHI59khKZZVsYTvzUjcPTRlDl8LxoMqL6gxeqG7dSjcUU70WfiDC+2
-pbMf478GX2gmNfCsn2UNfUwdVLN/z0qJvxhrO7PTZDXFxM3aglYLL9DHS6FrufBT
-WaPZFN+9mfzsVF4L+RI5MJmbjvklEjCGAIVnX40joip/2r3qfYwfexgeOLp3+/av
-3uze0Rmbn8s=
-=jFXC
------END PGP SIGNATURE-----
-
---Sig_/kgKA=1fxk.pGq1m2w.BIXe1--
+--===============7751663058842163498==--
