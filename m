@@ -1,65 +1,65 @@
-From: "John Stoffel" <john@stoffel.org>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
 Subject: Re: strange problem with raid6 read errors on active non-degraded
  array
-Date: Wed, 2 Jul 2014 15:01:39 -0400
-Message-ID: <21428.22291.488446.833507@quad.stoffel.home>
-References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt>
-	<20140702204502.6b538fa8@notabene.brown>
-	<20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt>
-	<21428.13989.101969.396667@quad.stoffel.home>
-	<20140702193706.Horde.Q4yuGvYRo99TtFFSw8qw6-A@webmail.aeiou.pt>
+Date: Wed, 02 Jul 2014 23:34:53 +0200
+Message-ID: <53B47AFD.6000802@shiftmail.org>
+References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt> <20140702204502.6b538fa8@notabene.brown> <20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt> <20140702152429.742a3e8ea8bd100f5b3bae1f@bbaw.de> <20140702151406.Horde.HZoGSPYRo99TtBOu1q6B-GA@webmail.aeiou.pt> <53B434BD.30301@shiftmail.org> <20140702192825.Horde.18y4TPYRo99TtE9JC9kSzUA@webmail.aeiou.pt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140702193706.Horde.Q4yuGvYRo99TtFFSw8qw6-A@webmail.aeiou.pt>
+In-Reply-To: <20140702192825.Horde.18y4TPYRo99TtE9JC9kSzUA@webmail.aeiou.pt>
 Sender: linux-raid-owner@vger.kernel.org
 To: Pedro Teixeira <finas@aeiou.pt>
-Cc: John Stoffel <john@stoffel.org>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: =?UTF-8?B?TGFycyBUw6R1YmVy?= <taeuber@bbaw.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 02/07/2014 20:28, Pedro Teixeira wrote:
+>
+> Hi Ethan,
+>
+> The thing here is that some of the bad blocks ( if not all ) that are 
+> giving read errors are not on the bad blocks list.
+>
 
-Pedro> I can't destroy the fs at the moment. The problem is not
-Pedro> filesystem related as md throws an error when reading with dd
-Pedro> when the filesystem is not mounted.
+Are you sure? Please note that the offset is a complex topic because an 
+offset given by fsck will be a sector offset in the md0 sense, while the 
+device badblock list contains offset in the device sense, which means 
+that to convert one onto the other you have to divide, or multiply, by 
+the number of data disks, approximately, and handle the remainder 
+manually also considering the problem of the rotating parity. Not 
+simple. Is this the computation that you did?
 
-I hope you have backups of all this data, because I stongly suspect
-you've run into either an MD coding problem, or you have the data
-structures so confused that MD really needs to be re-built from
-scratch.  
+> Specifically, the ones that show up when doing a fsck are not on any 
+> drive. For these sectors fsck tries to re-write then and md still 
+> throws an error but they are not added to the list.
+>
 
-Pedro> The controler is flashed with the latest P19 firmware IT mode,
-Pedro> meaning that disks are "passed-though". No raid or jbod.
+Not "added" but "removed". Writing to a bad block should create valid 
+content so they should be removed from the list. If they don't then 
+indeed there is probably a bug in the MD code, see my previous post.
 
-JBOD means Just a Bunch Of Disks, which is what you have, so good.  
+> I replaced sdm with a new disk. this was one that had a bunch or bad 
+> blocks reported by md, and after finishing the rebuild ( with no 
+> errors at all ) the --examine-badblocks still gives me the exact same 
+> list of errors. I would expect that replacing the disk by a new one 
+> would clear the errors.
+>
 
-Pedro> Power supply has a singe 12v rail and total output of 800w.
+This is the correct behaviour by design.
+Source disks did not have valid content in those positions, so good data 
+cannot be created from nothing. Badblocks will be replicated onto the 
+new disk.
+"Bad" here is more a synonym of "containing invalid data", not really 
+"unreadable surface".
 
-Should be ok then.
+> as I know the disks are good, is there any way of reseting the bad 
+> blocks list without destroying the filesystem?
+>
 
-Pedro> Graphics card is a pcie 1x nvidia card. I have a very similar
-Pedro> machine, that has the same case, the same power supply, the
-Pedro> same LSI controller in the same mode with the same firmware,
-Pedro> same OS, same kernel. Diferences are the motherboard Z87
-Pedro> chipset and i7 cpu, and the hard disks are 16x 4TB seagate
-Pedro> HDD's in raid6 created the exact same way as this one. I have
-Pedro> no problems with it.
+This one I don't know but doing that would probably not help to find the 
+bug.
 
-Hmm... so how did the system crash and lose the disk(s) in the fist
-place?  Did the cables get knocked?  Are they in a disk cage or hot
-swap bays?  Why kinds of physical cabling are you using here?    
+Regads
+EW
 
-The suggestion to use blktrace to examine how IO flows into the MD
-device and then down into the various devices is a good one, but I
-don't have any good suggestions on what to do here.
-
-But in any case, I'll repeat this now.  Backup your data, and
-basically assume some of it is toast and needs to be restored or
-re-created if at all possible.  With all the errors you're showing,
-there's bound to be major filesystem corruption and even undetected
-corruption in some files on there.  Not a good place to be.
-
-Too bad you can't just copy the data off to the other machine with the
-16 x 4Tb disks.  That would give you a good chance to save your data.
-
-John
