@@ -1,62 +1,47 @@
-From: Pedro Teixeira <finas@aeiou.pt>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: strange problem with raid6 read errors on active non-degraded
  array
-Date: Wed, 02 Jul 2014 11:07:13 +0100
-Message-ID: <20140702110713.Horde.4jCzQvYRo99Ts9nRe3Oy26A@webmail.aeiou.pt>
+Date: Wed, 2 Jul 2014 16:11:09 +0600
+Message-ID: <20140702161109.70843874@natsu>
 References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt>
- <20140702155224.072d09ef@natsu>
+	<20140702155224.072d09ef@natsu>
+	<20140702110713.Horde.4jCzQvYRo99Ts9nRe3Oy26A@webmail.aeiou.pt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed	DelSp=Yes
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/waWjtY5OmGhBeXQw_H0LuC_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140702155224.072d09ef@natsu>
-Content-Disposition: inline
+In-Reply-To: <20140702110713.Horde.4jCzQvYRo99Ts9nRe3Oy26A@webmail.aeiou.pt>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
+To: Pedro Teixeira <finas@aeiou.pt>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Roman,
+--Sig_/waWjtY5OmGhBeXQw_H0LuC_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-    Thanks for the reply and the correction on the "dd" command.
+On Wed, 02 Jul 2014 11:07:13 +0100
+Pedro Teixeira <finas@aeiou.pt> wrote:
 
-    - ext4 is in the kernel as the fs wouldn't mount otherwise and the =
-=20
-tools are the latest ones ( e2fsprogs 1.42.10 )
+> [88623.524481] Buffer I/O error on device md0, logical block 458227712
 
-    root@nas3:/# fsck.ext4 -V
-    e2fsck 1.42.10 (18-May-2014)
-    Using EXT2FS Library version 1.42.10, 18-May-2014
+Ah sorry I have missed these messages quoted in the original mail. Then of
+course, it is not an FS issue.
 
-   - Doing the correct "dd" command ( dd if=3D/dev/md0  of=3Dteste.txt =
-=20
-skip=3D458227712 count=3D16 bs=3D4096 ) will net the same dmesg errors =
-and a =20
-0 bytes file.
+--=20
+With respect,
+Roman
 
-dd: reading `/dev/md0': Input/output error
-0+0 records in
-0+0 records out
-0 bytes (0 B) copied, 0.000268007 s, 0.0 kB/s
+--Sig_/waWjtY5OmGhBeXQw_H0LuC_
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-[88623.524481] Buffer I/O error on device md0, logical block 458227712
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-  - I'm sure this is not a filesystem problem, but something fishy =20
-with dm. As all disks are active and synced if one would have bad =20
-sectors dm should read the sector from another one, but aparently it =20
-is not doing that.
+iEYEARECAAYFAlOz2r0ACgkQTLKSvz+PZwgfbQCfXn92Cj33B3oklR6Ev+Fyz26M
+syoAn0pSJEu9njuNyUDY2+AK9e5VgZ+a
+=PQ5v
+-----END PGP SIGNATURE-----
 
-Cheers
-Pedro
-
-
-_______________________________________________________________________=
-_________
-Mensagem enviada atrav=C3=A9s do email gr=C3=A1tis AEIOU
-http://www.aeiou.pt
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/waWjtY5OmGhBeXQw_H0LuC_--
