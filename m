@@ -1,130 +1,54 @@
-From: Ethan Wilson <ethan.wilson@shiftmail.org>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: strange problem with raid6 read errors on active non-degraded
  array
-Date: Wed, 02 Jul 2014 18:35:09 +0200
-Message-ID: <53B434BD.30301@shiftmail.org>
-References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt> <20140702204502.6b538fa8@notabene.brown> <20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt> <20140702152429.742a3e8ea8bd100f5b3bae1f@bbaw.de> <20140702151406.Horde.HZoGSPYRo99TtBOu1q6B-GA@webmail.aeiou.pt>
+Date: Wed, 2 Jul 2014 12:43:17 -0400
+Message-ID: <21428.13989.101969.396667@quad.stoffel.home>
+References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt>
+	<20140702204502.6b538fa8@notabene.brown>
+	<20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140702151406.Horde.HZoGSPYRo99TtBOu1q6B-GA@webmail.aeiou.pt>
+In-Reply-To: <20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pedro Teixeira <finas@aeiou.pt>, =?UTF-8?B?TGFycyBUw6R1YmVy?= <taeuber@bbaw.de>
-Cc: linux-raid@vger.kernel.org
+To: Pedro Teixeira <finas@aeiou.pt>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You have multiple bad-blocks list (an MD feature) which are already ful=
-l=20
-of sectors. Those are earlier disk errors which were stored on MD=20
-headers (one list per drive).
+>>>>> "Pedro" =3D=3D Pedro Teixeira <finas@aeiou.pt> writes:
 
-MD will not try to read from such sectors anymore, and during reads MD=20
-will return error to the upper layers immediately. This is if the strip=
-e=20
-does not have enough good components to read after excluding the bad=20
-blocks, e.g. raid5 is able to tolerate up to 1 disk with badblocks in a=
-=20
-stripe, so with 2 badblocks in 2 different disks in the same stripes MD=
-=20
-will return a read error immediately and without trying.
-That's why in dmesg you are seeing read errors from MD but not from the=
-=20
-component devices.
+Pedro> cpu is a phenom x6, 8gb ram. controller is LSI 9201-i16. hdd's a=
+re =20
+Pedro> seagate sshd ST1000DX001.
 
-Now the question is how could so many badblocks be recorded on your arr=
-ay.
-It seems very unlikely that so many disks of your array are in such bad=
-=20
-shape .  This might indicate an MD bug in the badblocks code.
-I am thinking some form of erroneous propagation of bad blocks, so that=
-=20
-e.g. writing to an area where an MD badblock exists, instead of clearin=
-g=20
-the bad block could have propagated the badblock to the other disks in=20
-the same stripe. Something like that.
+Pedro> So I run the "dd if=3D/dev/md0 of=3D/dev/null=A0 bs=3D4096" and =
+it failed on =20
+Pedro> alot of places. I had to restart the command several times with =
+the =20
+Pedro> skip parameter set to a couple of blocks after the last block er=
+ror. =20
+Pedro> It run for about 1.5TB of the total 13TB of the volume.
+Pedro> The md volume didn't drop any drive when running this.
 
-See if you can check that writing to a bad block clears it. It will be=20
-difficult to compute the correct offset to write to, though. You might=20
-want to do some trials-and-errors with dd together with blktrace. If yo=
-u=20
-can do that, you might want to check that it behaves correctly even whe=
-n=20
-writing something that does not align to 512b or 4k . Obviously this=20
-test is desctructive wrt your data in that location.
+Can you destroy the filesystem and re-create the RAID6 from scratch by
+any chance?  Or can you maybe create a smaller array with only 6
+devices to run some tests? =20
 
-Another easier test is if to try to read with dd from a component devic=
-e=20
-itself. If MD has recorded (even if happened long time in the past) a=20
-bad block there, the direct read with dd should also hit it, return=20
-error and stop, because badblocks in the surface of disks do not heal b=
-y=20
-themselves with time.
+Can you provide more details on your ext4 filesystem using tune2fs?
+Have you tried using XFS instead?  Does the filesystem have a logfile
+or not?  And does a full fsck run to completion? =20
 
-Another test is to read from md0 with dd from an area where you see tha=
-t=20
-only 1 disk has badblocks (probably requires some trial and error with=20
-blktrace because the offsets of md0 are not equal to the offsets of the=
-=20
-component devices) . If MD works correctly, with such read it should=20
-"heal" the badblock: compute from parity from the other disks, then=20
-write over the badblock. The MD badblock should disappear.
+Have you checked all the cables?  Do you have RAID firmware on the LSI
+card by any chance, or are they setup as JBOD?  Could you have a too
+small a power supply so you're seeing corruption on the system due to
+low voltage on one of the 5V or 12V rails?  Can you try powering half
+the disks from another power supply as a test? =20
 
-The last 2 tests I described should not be destructive except in case o=
-f=20
-MD bugs.
+Do you have a graphics card in the system?  If so, can you pull it and
+run it headless, or maybe put in a less power hungry card? =20
 
-EW
-
-
-On 02/07/2014 16:14, Pedro Teixeira wrote:
-> Hi Lars,
->
-> the output of those commands:
->
-> root@nas3:/# cat /sys/block/sdb/queue/physical_block_size
-> 4096
-> root@nas3:/# cat /sys/block/md0/queue/physical_block_size
-> 4096
-> root@nas3:/#
->
-> The strange thing here is that dmesg is not poluted with sata errors=20
-> like it is usual when a hard disk has bad sectors or some other=20
-> hardware problem. the only thing in dmesg that hints to why reading=20
-> the md volume fails are from dm itself.
->
-> Cheers
-> Pedro
->
->
-> Citando Lars T=C3=A4uber
->> Hi Pedro,
->>
->> maybe an issue with the logical/physical blocksize?
->> What tell these commands:
->>
->> cat /sys/block/sdb/queue/physical_block_size
->> cat /sys/block/md0/queue/physical_block_size
->>
->> Seagate says there are 4096 bytes/sector on this devices.
->>
->> Lars
->
->
->
-> _____________________________________________________________________=
-___________=20
->
-> Mensagem enviada atrav=C3=A9s do email gr=C3=A1tis AEIOU
-> http://www.aeiou.pt
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+John
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
