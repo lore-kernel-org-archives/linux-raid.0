@@ -1,8 +1,8 @@
 From: Pedro Teixeira <finas@aeiou.pt>
 Subject: Re: strange problem with raid6 read errors on active non-degraded
  array
-Date: Thu, 03 Jul 2014 11:39:03 +0100
-Message-ID: <20140703113903.Horde.oHFZO-YRo99TtTLHrpYDfrA@webmail.aeiou.pt>
+Date: Thu, 03 Jul 2014 22:06:04 +0100
+Message-ID: <20140703220604.Horde.INYPOvYRo99TtcW8JM7TniA@webmail.aeiou.pt>
 References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt>
  <20140702204502.6b538fa8@notabene.brown>
  <20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt>
@@ -15,35 +15,38 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20140703124046.74272588@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I ended up understanding the command but if I run it manually it =20
-doesn't work. bad_block is cleared but the --examine-badblocks stills =20
-shows it. and after stopping/assembling the md volume the bad block =20
-shows up again.
+I was able to fix the volume and the filesystem!
 
-root@nas3:~# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-root@nas3:~# mdadm --assemble /dev/md0
-mdadm: failed to get exclusive lock on mapfile - continue anyway...
-mdadm: /dev/md0 has been started with 16 drives.
-root@nas3:~# cat /sys/block/md0/md/dev-sdq/bad_blocks
-211996592 128
-root@nas3:~# echo "-211996592 128" > /sys/block/md0/md/dev-sdq/bad_bloc=
-ks
-root@nas3:~# cat /sys/block/md0/md/dev-sdq/bad_blocks
-root@nas3:~# mdadm --examine-badblocks /dev/sdq
-Bad-blocks on /dev/sdq:
-            211996592 for 128 sectors
-root@nas3:~#
+  - the command Neil posted didn't work but I got the idea and made a =20
+script that cleared the list for all disks. The --examine-bad-blocks =20
+still lists the bad blocks, and stopping and assembling the volume =20
+again will populate the bad block list again. Still, I cleared them =20
+all again and issued a "repair" on the volume. I got a bunch of errors =
+=20
+from a couple of disks, mostly sdk and sdb but the volume synced till =20
+the end, and after stopping it and assembling it again, no bad blocks =20
+in any disk, and --examine-bad-blocks also showed no bad blocks. I =20
+have since replaced sdk and sdb, with no errors when syncing and no =20
+errors on dmesg. After that I fsck'd the filesystem, and it's up and =20
+running again. I will now replace the other two disks that exibited =20
+read errors when repairing the volume as soon as I get some =20
+replacements.
+
+Thanks all for the help!!!
+
+As a sugestion, I would make md distinguish a read error that is =20
+caused by no good strip available due to bad block list from other =20
+read errors to ease troubleshooting and maybe implement a way to clear =
+=20
+bad block list from disks with mdadm ( and maybe forcing a resync of =20
+that strip after the list is cleared ).
 
 
-so "cat /sys/block/md0/md/dev-sdq/bad_blocks" shows now bad blocks, =20
-but the --examine-badblocks still lists it.
-
-
+Cheers
+Pedro
 
 _______________________________________________________________________=
 _________
