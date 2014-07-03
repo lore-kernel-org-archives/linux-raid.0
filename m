@@ -1,59 +1,63 @@
-From: Pedro Teixeira <finas@aeiou.pt>
-Subject: Re: strange problem with raid6 read errors on active non-degraded
- array
-Date: Thu, 03 Jul 2014 22:06:04 +0100
-Message-ID: <20140703220604.Horde.INYPOvYRo99TtcW8JM7TniA@webmail.aeiou.pt>
-References: <20140702103241.Horde.iempNvYRo99Ts9G5Op7ionA@webmail.aeiou.pt>
- <20140702204502.6b538fa8@notabene.brown>
- <20140702125434.Horde.abbwKfYRo99Ts-L6UvsCEIA@webmail.aeiou.pt>
- <20140703124046.74272588@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST] two minor bugfixes for md in 3.16.
+Date: Fri, 4 Jul 2014 08:20:48 +1000
+Message-ID: <20140704082048.4c0b5c59@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed	DelSp=Yes
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140703124046.74272588@notabene.brown>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/JpKUQlrh2DtXAe_ppXNhJFA"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bill <billstuff2001@sbcglobal.net>, George Duffield <forumscollective@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I was able to fix the volume and the filesystem!
+--Sig_/JpKUQlrh2DtXAe_ppXNhJFA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-  - the command Neil posted didn't work but I got the idea and made a =20
-script that cleared the list for all disks. The --examine-bad-blocks =20
-still lists the bad blocks, and stopping and assembling the volume =20
-again will populate the bad block list again. Still, I cleared them =20
-all again and issued a "repair" on the volume. I got a bunch of errors =
-=20
-from a couple of disks, mostly sdk and sdb but the volume synced till =20
-the end, and after stopping it and assembling it again, no bad blocks =20
-in any disk, and --examine-bad-blocks also showed no bad blocks. I =20
-have since replaced sdk and sdb, with no errors when syncing and no =20
-errors on dmesg. After that I fsck'd the filesystem, and it's up and =20
-running again. I will now replace the other two disks that exibited =20
-read errors when repairing the volume as soon as I get some =20
-replacements.
+The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
 
-Thanks all for the help!!!
+  Linux 3.16-rc3 (2014-06-29 14:11:36 -0700)
 
-As a sugestion, I would make md distinguish a read error that is =20
-caused by no good strip available due to bad block list from other =20
-read errors to ease troubleshooting and maybe implement a way to clear =
-=20
-bad block list from disks with mdadm ( and maybe forcing a resync of =20
-that strip after the list is cleared ).
+are available in the git repository at:
 
+  git://neil.brown.name/md tags/md/3.16-fixes
 
-Cheers
-Pedro
+for you to fetch changes up to 133d4527eab8d199a62eee6bd433f0776842df2e:
 
-_______________________________________________________________________=
-_________
-Mensagem enviada atrav=C3=A9s do email gr=C3=A1tis AEIOU
-http://www.aeiou.pt
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  md: flush writes before starting a recovery. (2014-07-03 10:44:45 +1000)
+
+----------------------------------------------------------------
+two minor bugfixes for md in 3.16.
+
+----------------------------------------------------------------
+NeilBrown (2):
+      md: make sure GET_ARRAY_INFO ioctl reports correct "clean" status
+      md: flush writes before starting a recovery.
+
+ drivers/md/md.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+--Sig_/JpKUQlrh2DtXAe_ppXNhJFA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU7XXQDnsnt1WYoG5AQI+xQ//b08gmYUSTWbLN1QBopUdy/fB/VUSoOrG
+LhS+ZETgiYCCov69Tbgf08mnoqYBNcQI+O28kC0FJpSWVN0janxbPPS83rT5v5mB
+QHhAQw67cqAO9pjw5a3OQCnevWVp5Kvlkj4/jWmgHBK6tbdopCBIpyE+ElWyJS4k
+61XpmdskQM1IEiGhWd4vNl1b1Q/HHonAyQSYfn+BzHq+nxzt8H9blBG85u4Vl6DK
+YKKMNAwS3KY+MvFrV4JYB7tVACoJKMFg5LSFivgoyNvz1a+Wp8FsGqxuRLaFXfRF
+hXCT2LqBogu+2vvGUFEaPrVKe8UpUCBssM/JzIgYS29FMo+7brUdMlNDGEkB/f/X
++FsRYw2My0raTDiEqcjiZKifIhRftQ7amDPiSIb1UgLlzJJttNSJik4ugLe04E8h
+HtlQiiFwqHm+3SdLiqfCFzf6LqyZKu87449lOHQaMHgwrG7j4todzRVUUlcPimOA
+uyaaDDjfBd/o2UntTqlhzzvJce5CezND/m4WqFtZHld0SBwxtkayrKK37Pab6wU4
+6/93lICrKQFSdLmUaqEN2W+UHsrPFM+pdLGr7qW5vTASXoimkdJ1ddp6pgBXtDxr
+ja9NWc0fRiptinZkje0dRrpmFu2janC0H7BjOktoKfcSicvhVzlKqpSYHKG0RdMv
+mMrp2ZGgTtk=
+=R4AJ
+-----END PGP SIGNATURE-----
+
+--Sig_/JpKUQlrh2DtXAe_ppXNhJFA--
