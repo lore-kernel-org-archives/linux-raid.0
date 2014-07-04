@@ -1,63 +1,42 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] two minor bugfixes for md in 3.16.
-Date: Fri, 4 Jul 2014 08:20:48 +1000
-Message-ID: <20140704082048.4c0b5c59@notabene.brown>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Subject: [PATCH] Grow: Do not use grow-continue unit file if reshape is
+ starting
+Date: Fri, 4 Jul 2014 08:59:00 +0000
+Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F19CC0430@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/JpKUQlrh2DtXAe_ppXNhJFA"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bill <billstuff2001@sbcglobal.net>, George Duffield <forumscollective@gmail.com>, lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/JpKUQlrh2DtXAe_ppXNhJFA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Mdadm should use mdadm-grow-continue unit file only if
+reshape is going to be continued. Otherwise, array specific
+reshape with IMSM metadata will fail to start, due to
+missing information about ongoing migration -
+grow-continue will try to start again the reshape process.
 
-The following changes since commit 4c834452aad01531db949414f94f817a86348d59:
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ Grow.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  Linux 3.16-rc3 (2014-06-29 14:11:36 -0700)
+diff --git a/Grow.c b/Grow.c
+index a2f4f14..0cd9442 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -3272,7 +3272,7 @@ started:
+ 		return 1;
+ 	}
+ 
+-	if (!forked && !check_env("MDADM_NO_SYSTEMCTL"))
++	if (restart && !forked && !check_env("MDADM_NO_SYSTEMCTL"))
+ 		if (continue_via_systemd(container ?: sra->sys_name)) {
+ 			free(fdlist);
+ 			free(offsets);
+-- 
+1.9.3
 
-are available in the git repository at:
-
-  git://neil.brown.name/md tags/md/3.16-fixes
-
-for you to fetch changes up to 133d4527eab8d199a62eee6bd433f0776842df2e:
-
-  md: flush writes before starting a recovery. (2014-07-03 10:44:45 +1000)
-
-----------------------------------------------------------------
-two minor bugfixes for md in 3.16.
-
-----------------------------------------------------------------
-NeilBrown (2):
-      md: make sure GET_ARRAY_INFO ioctl reports correct "clean" status
-      md: flush writes before starting a recovery.
-
- drivers/md/md.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
---Sig_/JpKUQlrh2DtXAe_ppXNhJFA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU7XXQDnsnt1WYoG5AQI+xQ//b08gmYUSTWbLN1QBopUdy/fB/VUSoOrG
-LhS+ZETgiYCCov69Tbgf08mnoqYBNcQI+O28kC0FJpSWVN0janxbPPS83rT5v5mB
-QHhAQw67cqAO9pjw5a3OQCnevWVp5Kvlkj4/jWmgHBK6tbdopCBIpyE+ElWyJS4k
-61XpmdskQM1IEiGhWd4vNl1b1Q/HHonAyQSYfn+BzHq+nxzt8H9blBG85u4Vl6DK
-YKKMNAwS3KY+MvFrV4JYB7tVACoJKMFg5LSFivgoyNvz1a+Wp8FsGqxuRLaFXfRF
-hXCT2LqBogu+2vvGUFEaPrVKe8UpUCBssM/JzIgYS29FMo+7brUdMlNDGEkB/f/X
-+FsRYw2My0raTDiEqcjiZKifIhRftQ7amDPiSIb1UgLlzJJttNSJik4ugLe04E8h
-HtlQiiFwqHm+3SdLiqfCFzf6LqyZKu87449lOHQaMHgwrG7j4todzRVUUlcPimOA
-uyaaDDjfBd/o2UntTqlhzzvJce5CezND/m4WqFtZHld0SBwxtkayrKK37Pab6wU4
-6/93lICrKQFSdLmUaqEN2W+UHsrPFM+pdLGr7qW5vTASXoimkdJ1ddp6pgBXtDxr
-ja9NWc0fRiptinZkje0dRrpmFu2janC0H7BjOktoKfcSicvhVzlKqpSYHKG0RdMv
-mMrp2ZGgTtk=
-=R4AJ
------END PGP SIGNATURE-----
-
---Sig_/JpKUQlrh2DtXAe_ppXNhJFA--
