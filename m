@@ -1,144 +1,241 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Grow: Do not use grow-continue unit file if reshape is
- starting
-Date: Tue, 8 Jul 2014 11:34:12 +1000
-Message-ID: <20140708113412.10e3a8df@notabene.brown>
-References: <84A53BEA6EAC69439B7E311E9B17A76F19CC0430@IRSMSX105.ger.corp.intel.com>
-	<20140707110613.3b558b33@notabene.brown>
-	<84A53BEA6EAC69439B7E311E9B17A76F19CC0918@IRSMSX105.ger.corp.intel.com>
+Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
+Date: Tue, 8 Jul 2014 12:00:15 +1000
+Message-ID: <20140708120015.59229346@notabene.brown>
+References: <84A53BEA6EAC69439B7E311E9B17A76F07918BDA@IRSMSX105.ger.corp.intel.com>
+	<20140602121955.10a72b32@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F0791C0DD@IRSMSX105.ger.corp.intel.com>
+	<20140604123046.02e224d6@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F0791D2DE@IRSMSX105.ger.corp.intel.com>
+	<20140605162730.33e36f25@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F0792870C@IRSMSX105.ger.corp.intel.com>
+	<20140625141551.04c262a4@notabene.brown>
+	<84A53BEA6EAC69439B7E311E9B17A76F19CBF8F4@IRSMSX105.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/io9Y/T9pgi.IYa49Gi2Xtgw"; protocol="application/pgp-signature"
+ boundary="Sig_/Zl+NSV3s..Mj/cvJu1z6kGR"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F19CC0918@IRSMSX105.ger.corp.intel.com>
+In-Reply-To: <84A53BEA6EAC69439B7E311E9B17A76F19CBF8F4@IRSMSX105.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Paszkiewicz, Artur" <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/io9Y/T9pgi.IYa49Gi2Xtgw
+--Sig_/Zl+NSV3s..Mj/cvJu1z6kGR
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 7 Jul 2014 14:18:40 +0000 "Baldysiak, Pawel"
+On Mon, 30 Jun 2014 12:22:22 +0000 "Baldysiak, Pawel"
 <pawel.baldysiak@intel.com> wrote:
 
-> > On Monday, July 07, 2014 3:06 AM Neil Brown wrote:
+> > On Wednesday, June 25, 2014 6:16 AM NeilBrown wrote:
 > > To: Baldysiak, Pawel
 > > Cc: linux-raid@vger.kernel.org; Paszkiewicz, Artur
-> > Subject: Re: [PATCH] Grow: Do not use grow-continue unit file if reshap=
-e is
-> > starting
+> > Subject: Re: [PATCH] Forbid merging with partially assembled IMSM array
+> > (...)
+> > Could you please:
 > >=20
-> > On Fri, 4 Jul 2014 08:59:00 +0000 "Baldysiak, Pawel"
-> > <pawel.baldysiak@intel.com> wrote:
+> >  1/ move the code to super-intel.c and add a new superswitch method cal=
+led
+> >   "validate_array" or something like that.
+> >   You can't pass the 'devices' array in as only Assemble.c knows about =
+that,
+> >   so filling the ->links in the mdinfo structure and pass the devices i=
+n as a
+> >   list.
 > >=20
-> > > Mdadm should use mdadm-grow-continue unit file only if reshape is
-> > > going to be continued. Otherwise, array specific reshape with IMSM
-> > > metadata will fail to start, due to missing information about ongoing
-> > > migration - grow-continue will try to start again the reshape process.
+> >  2/ Don't use a signed variable when you really want an unsigned variab=
+le!
+> >     ('i' in the above code)
+> >  3/ Don't break strings to fit 80 columns.  I know we have done that in=
+ the
+> >     past, but I think it is more trouble than it is worth.  Do break the
+> >     string after "\n", but not elsewhere.
 > >=20
-> > I don't think I agree.  I think mdadm should always use mdadm-grow-
-> > continue unit file if it is available.
+> > Then I'll apply it.
 > >=20
-> > Please explain in more detail what problem you are seeing.
-> >=20
+> > Thanks,
 > > NeilBrown
-> >=20
 >=20
 > Hi Neil
->=20
-> If we try to do array-specific reshape (e.g. change from level 0 to 5)=20
-> mdadm will impose all changes to metadata and start reshape - before runn=
-ing grow-continue.
-> After that  grow-continue will see that reshape progress is '0', so will =
-overwrite "restart" by setting it to =3D0.
+> Below is the patch with changes.
+> Thanks
+> Pawel Baldysiak
 
-I assume you are referring to this code:
-	if (st->ss->external && restart && (info->reshape_progress =3D=3D 0)) {
-          .....
-		if ((verify_reshape_position(info, reshape.level) >=3D 0) &&
-		    (info->reshape_progress =3D=3D 0))
-			restart =3D 0;
-	}
+Thanks.  I've applied your patch.
+(though I generally prefer patches as separate emails - they are easier to
+apply that way).
 
-in reshape_array().
-
-> Then it will try to impose all changes again and fail - with error:
-> "Cannot set device shape for /dev/md/vol" - It will be unable to write ch=
-anges to sysfs,
-> due to already started reshape (which freeze at '0' progress).
->=20
-> We can try to fix it by moving part of code that runs grow-continue in re=
-shape_array earlier,
->  so "start_reshape() " will be executed by grow-continue (I am testing th=
-at kind of patch now),=20
-> or forbid running grow-continue when reshape is about to start (patch is =
-tested, attach in my prev mail).
->=20
-> What do you think about that?
-> Do you have any other idea how to fix this issue?
-
-I suspect that the real problem is in the code above.
-Maybe it should read the "sync_action" attribute and if it is "reshape", th=
-en
-this is obviously a restart and it shouldn't set "restart" to 0.
-
-Can you try something like that?
-
+Thanks,
 NeilBrown
 
 
+
+
+
+
 >=20
-> Thanks
-> Pawel Baldysiak
+> >From 7c18b28b7df82f35863674f3674b2a7e6a3f4040 Mon Sep 17 00:00:00 2001
+> From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Date: Mon, 30 Jun 2014 14:15:27 +0200
+> Subject: [PATCH 1/1] IMSM: Add warning message when assemble spanned cont=
+ainer
 >=20
-> > >
-> > > Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> > > ---
-> > >  Grow.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/Grow.c b/Grow.c
-> > > index a2f4f14..0cd9442 100644
-> > > --- a/Grow.c
-> > > +++ b/Grow.c
-> > > @@ -3272,7 +3272,7 @@ started:
-> > >  		return 1;
-> > >  	}
-> > >
-> > > -	if (!forked && !check_env("MDADM_NO_SYSTEMCTL"))
-> > > +	if (restart && !forked && !check_env("MDADM_NO_SYSTEMCTL"))
-> > >  		if (continue_via_systemd(container ?: sra->sys_name)) {
-> > >  			free(fdlist);
-> > >  			free(offsets);
+> Due to several changes in code assemble with disks
+> spanned between different controllers can be obtained
+> in some cases. After IMSM container will be assembled, check HBA of
+> disks, and print proper warning if mismatch is detected.
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  Assemble.c       | 16 ++++++++++++++++
+>  mdadm.h          |  3 +++
+>  platform-intel.h |  1 +
+>  super-intel.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 63 insertions(+)
+>=20
+> diff --git a/Assemble.c b/Assemble.c
+> index 63e09ac..aca28be 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1001,6 +1001,22 @@ static int start_array(int mdfd,
+>  					content->array.raid_disks);
+>  			fprintf(stderr, "\n");
+>  		}
+> +
+> +		if (st->ss->validate_container) {
+> +			struct mdinfo *devices_list;
+> +			struct mdinfo *info_devices =3D xmalloc(sizeof(struct mdinfo)*(okcnt+=
+sparecnt));
+> +			unsigned int count;
+> +			devices_list =3D NULL;
+> +			for (count =3D 0; count < okcnt+sparecnt; count++) {
+> +				info_devices[count] =3D devices[count].i;
+> +				info_devices[count].next =3D devices_list;
+> +				devices_list =3D &info_devices[count];
+> +			}
+> +			if (st->ss->validate_container(devices_list))
+> +				pr_err("Mismatch detected!\n");
+> +			free(info_devices);
+> +		}
+> +
+>  		st->ss->free_super(st);
+>  		sysfs_uevent(content, "change");
+>  		if (err_ok && okcnt < (unsigned)content->array.raid_disks)
+> diff --git a/mdadm.h b/mdadm.h
+> index 1734cfd..f60866c 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -965,6 +965,9 @@ extern struct superswitch {
+>  	/* for external backup area */
+>  	int (*recover_backup)(struct supertype *st, struct mdinfo *info);
+> =20
+> +	/* validate container after assemble */
+> +	int (*validate_container)(struct mdinfo *info);
+> +
+>  	int swapuuid; /* true if uuid is bigending rather than hostendian */
+>  	int external;
+>  	const char *name; /* canonical metadata name */
+> diff --git a/platform-intel.h b/platform-intel.h
+> index bcd84b7..8226be3 100644
+> --- a/platform-intel.h
+> +++ b/platform-intel.h
+> @@ -204,6 +204,7 @@ struct sys_dev *find_intel_devices(void);
+>  const struct imsm_orom *find_imsm_capability(enum sys_dev_type hba_id);
+>  const struct imsm_orom *find_imsm_orom(void);
+>  int disk_attached_to_hba(int fd, const char *hba_path);
+> +int devt_attached_to_hba(dev_t dev, const char *hba_path);
+>  char *devt_to_devpath(dev_t dev);
+>  int path_attached_to_hba(const char *disk_path, const char *hba_path);
+>  const char *get_sys_dev_type(enum sys_dev_type);
+> diff --git a/super-intel.c b/super-intel.c
+> index 9dd807a..a4d1e17 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -10484,6 +10484,48 @@ abort:
+> =20
+>  	return ret_val;
+>  }
+> +
+> +/***********************************************************************=
+********
+> + * Function:	validate_container_imsm
+> + * Description: This routine validates container after assemble,
+> + *		eg. if devices in container are under the same controller.
+> + *
+> + * Parameters:
+> + *	info	: linked list with info about devices used in array
+> + * Returns:
+> + *	1 : HBA mismatch
+> + *	0 : Success
+> + ***********************************************************************=
+*******/
+> +int validate_container_imsm(struct mdinfo *info)
+> +{
+> +	if (!check_env("IMSM_NO_PLATFORM")) {
+> +		struct sys_dev *idev;
+> +		struct mdinfo *dev;
+> +		char *hba_path =3D NULL;
+> +		char *dev_path =3D devt_to_devpath(makedev(info->disk.major,
+> +										info->disk.minor));
+> +
+> +		for (idev =3D find_intel_devices(); idev; idev =3D idev->next) {
+> +			if (strstr(dev_path, idev->path)) {
+> +				hba_path =3D idev->path;
+> +				break;
+> +			}
+> +		}
+> +		free(dev_path);
+> +
+> +		if (hba_path) {
+> +			for (dev =3D info->next; dev; dev =3D dev->next) {
+> +				if (!devt_attached_to_hba(makedev(dev->disk.major,
+> +						dev->disk.minor), hba_path)) {
+> +					pr_err("WARNING - IMSM container assembled with disks under differe=
+nt HBAs!\n"
+> +						"       This operation is not supported and can lead to data loss.=
+\n");
+> +					return 1;
+> +				}
+> +			}
+> +		}
+> +	}
+> +	return 0;
+> +}
+>  #endif /* MDASSEMBLE */
+> =20
+>  struct superswitch super_imsm =3D {
+> @@ -10527,6 +10569,7 @@ struct superswitch super_imsm =3D {
+>  	.free_super	=3D free_super_imsm,
+>  	.match_metadata_desc =3D match_metadata_desc_imsm,
+>  	.container_content =3D container_content_imsm,
+> +	.validate_container =3D validate_container_imsm,
+> =20
+>  	.external	=3D 1,
+>  	.name =3D "imsm",
 
 
-
---=20
-
---=20
-
---Sig_/io9Y/T9pgi.IYa49Gi2Xtgw
+--Sig_/Zl+NSV3s..Mj/cvJu1z6kGR
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU7tKlDnsnt1WYoG5AQIFqA//SoqSS3NF40m81NkVun9GbKjp6Mc9CxDl
-4EX6q8G2/W68ltTzezkiaf5JhGfvOWdFvbAdAtb7pQnRtuc8b7xM9PxdefsiAJiM
-3PZvWOuhu8LA2iCGmFWvyvY8VK8L1rscK96TFqjvraAmi0A5kAkeb0dh/l0+ZFei
-PcgJroanDtjZDwqgrq9ppZ/P/34o8CiSqLtWpjr1+DhfuOkS3yU35LvQGW1C/gR5
-ZpDw0RsTgq/3NMBlu0hDsg3RD82uD7MErg9Fb1djDxrBKCXlwnDT0ywSSoA+IBE4
-O+z9j8D7h+30XpkHJfThQoqq5Tb+yeaSF4en5+JBmdcMlXZVRwPtEAtjvyHebR57
-lsLA2InpQRK0P1Eyq2rtXJhDojQ72i5u4B7sk8orkFF3KwT11xsVvn8ch3alTip+
-cy1gTkjBKL0pN+d+/kTE9jxmS0HdvSOG08n41Je/iXc5GeeIpArspKnmCQeOoKJ9
-s67rEivvmfnyv2YpX3fbgJzeZRACTODc9C3HgCfVOzZgcWNECxCIprxN1qRytUsm
-vUZGXLkek+MYcadCTTx+2dQ6d7eVui5lCWnz4ykfjXCwJbt0pyqShmcOET3vmg+y
-/ts5aCrF84XzH6FA+v8y3kD4640aPdHitQ3ZjraoEvUlHe26r0Wu8D00DRvLymGO
-3PZD5lFkcF8=
-=25/a
+iQIVAwUBU7tQrznsnt1WYoG5AQIJCBAAnN7PTHR7ZKoYYI3IRS8ow2KXeX6fmJ42
+KgciFFRK4kmVXl77GuubIR3jWgn3qVPEURwFiZRnLgFJ+HTTQYUp1R9fxDudKGR7
++3Y9+bCxDKXe2cwO4PP642EqWtjpCwIaaGFbj2t/5UIcH6/yAnTB/B8aMkj3unQK
+rTC+yhOrAAVyzzy+FdPN/C6eXkZ4OcJeDjqMAkv4p+LIg1Gqzm96ltuyy5ngdmjf
+FJ3YaZvUKx8a3N1+H+Mcy4g62WhcaG2Pe/xLSQgtGXNVO/li5NqtZKGhU2+tolLn
+ipmHbIysevwoZV4RLuaj9dOCQywYH+3C9Nm5teyuGgS+1JAo2mi6H9N3nE1WdHXV
+8LVtQlApdwBDqNpgYKYFYFx/BIFaNwRLBgw08fo4h2MYb/2T0uyDMTTZ8zRvQgF3
+0CBrjqB6HQz8QaUuiG7HQWtXT5Z2iuGM0dqaIv81zvdOP2b01J6T55QoM79fY7Ra
+EGbndIbDMKsyOlkwAFbpbG68zMwUmJCszqzaRwkbPeAO/On9+FH5gOY/dw7atVC9
+HmFlFzE7QNxqbGzjTQ1FVHVv+RyAl9N3O76awslod3UvhUeSAQVi45JLpwbVoXC8
++KIEMfyWDXkQVvcdwuKW/CN+iaNsBZoUrtLtEVxC+Mlk5nfL7MYQyHtCECuWialo
+wCSw4AF5wTk=
+=Ix5v
 -----END PGP SIGNATURE-----
 
---Sig_/io9Y/T9pgi.IYa49Gi2Xtgw--
+--Sig_/Zl+NSV3s..Mj/cvJu1z6kGR--
