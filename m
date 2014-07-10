@@ -1,125 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: no automatic resync after device disconnect then reconnect
-Date: Thu, 10 Jul 2014 10:36:21 +1000
-Message-ID: <20140710103621.0c1dd7d3@notabene.brown>
-References: <883F6A2C-C8F6-4A27-B7BF-2FB98F395592@colorremedies.com>
- <20140710085840.78a65722@notabene.brown>
- <17DF6122-CD4A-4093-BA6B-4F1A98657655@colorremedies.com>
+Subject: Re: [patch 1/2]RAID5: make stripe size configurable
+Date: Thu, 10 Jul 2014 15:39:36 +1000
+Message-ID: <20140710153936.6f042277@notabene.brown>
+References: <20140708010018.GA8941@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/CRwKcGXjTIde.X9rqE7Q5Id"; protocol="application/pgp-signature"
+ boundary="Sig_/NVfb.Z_Z5xaRfM.TIVakWnn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17DF6122-CD4A-4093-BA6B-4F1A98657655@colorremedies.com>
+In-Reply-To: <20140708010018.GA8941@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/CRwKcGXjTIde.X9rqE7Q5Id
+--Sig_/NVfb.Z_Z5xaRfM.TIVakWnn
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 9 Jul 2014 17:57:03 -0600 Chris Murphy <lists@colorremedies.com>
-wrote:
+On Tue, 8 Jul 2014 09:00:18 +0800 Shaohua Li <shli@kernel.org> wrote:
 
 >=20
-> On Jul 9, 2014, at 4:58 PM, NeilBrown <neilb@suse.de> wrote:
->=20
-> > On Wed, 9 Jul 2014 16:44:27 -0600 Chris Murphy <lists@colorremedies.com>
-> > wrote:
-> >=20
-> >> This is in a VM, no data at risk.
-> >>=20
-> >> Two problems:
-> >>=20
-> >> 1. I intentionally removed one of two md raid1 member devices, boot de=
-graded succeeds, clean power off, reconnect the removed md member device, b=
-oot succeeds but an automatic resync does not occur for the previously disc=
-onnect md members. Maybe this is expected, I'm not sure, but I'd think a be=
-tter user experience would be autoresync perhaps with a notification?
-> >=20
-> > Do you?  Maybe the device was removed from the array because it is faul=
-ty.
-> > Do you *really* want a faulty device automatically added back into your=
- array?
->=20
-> OK maybe not.
->=20
-> > It is quite possible to set up udev rules and configure mdadm policy to=
- do
-> > this.  I just don't think it is a sensible default.
->=20
-> Fair enough.
->=20
->=20
-> >=20
-> >>=20
-> >> 2. For the raid set with a bitmap, this command succeeds
-> >> # mdadm --manage /dev/md126 --re-add /dev/sdb3
-> >=20
-> > Good to know.
-> >=20
-> >>=20
-> >> However, for the raid set without bitmap (seems the same otherwise, sa=
-me metadata version), it fails:
-> >> # mdadm --manage /dev/md127 --re-add /dev/sdb2
-> >> mdadm: --re-add for /dev/sdb2 to /dev/md127 is not possible
-> >=20
-> > You need a bitmap to --re-add.
->=20
-> OK.
->=20
-> > Without a bit map, you are just adding an unused device to an array and
-> > "--add" is the command to use.
-> > If you set up the mdadm policy (in mdadm.conf) suitably then
-> >   mdadm -I /dev/sdb2
-> >=20
-> > would find the add and --add it for you (I think).
->=20
->=20
-> [root@localhost ~]# mdadm -I /dev/sdb2
-> mdadm: not adding /dev/sdb2 to active array (without --run) /dev/md/boot
+> stripe size is 4k default. Bigger stripe size is considered harmful, beca=
+use if
+> IO size is small, big stripe size can cause a lot of unnecessary IO/parity
+> calculation. But if upper layer always sends full stripe write to RAID5 a=
+rray,
+> this drawback goes away. And bigger stripe size can improve performance
+> actually in this case because of bigger size IO and less stripes to handl=
+e. In
+> my full stripe write test case, 16k stripe size can improve throughput 40=
+% -
+> 120% depending on RAID5 configuration.
 
-That is why I said "set up the mdadm policy".
+Hi,
+ certainly interesting.
+ I'd really like to see more precise numbers though.  What config gives 40%,
+ what config gives 120% etc.
 
- "mdadm mdadm.conf", search for POLICY and particular "action=3D".
+ I'm not keen on adding a number that has to be tuned though.  I'd really
+ like to understand exactly where the performance gain comes from.
+ Is it that the requests being sent down are larger, or just better managed=
+ -
+ or is it some per-stripe_head overhead that is being removed.
 
+ e.g. if we sorted the stripe_heads and handled them in batches of adjacent
+ addresses, might that provide the same speed up?
+
+ I'm certain there  is remove for improving the scheduling of the
+ stripe_heads, I'm just not sure what the right approach is though.
+ I'd like to explore that more before make the stripe_heads bigger.
+
+ Also I really don't like depending on multi-page allocations.  If we were
+ going to go this way I think I'd want an array of single pages, not a
+ multi-page.
+
+
+Thanks,
 NeilBrown
 
-> [root@localhost ~]# mdadm -I /dev/sdb2 --run /dev/md/boot
-> mdadm: --incremental can only handle one device.
-> [root@localhost ~]# mdadm --manage /dev/md127 --add /dev/sdb2
-> mdadm: added /dev/sdb2
->=20
-> /proc/mdstat
-> md127 : active raid1 sdb2[2] sda2[0]
->       716224 blocks super 1.2 [2/2] [UU]
->=20
->=20
->=20
-> Thanks,
->=20
-> Chris Murphy
 
---Sig_/CRwKcGXjTIde.X9rqE7Q5Id
+--Sig_/NVfb.Z_Z5xaRfM.TIVakWnn
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU73gBTnsnt1WYoG5AQJy2BAAultMz8rodY01KKMuaQPjiZoag04xtjmx
-fY6pM4p2HKS3aNfsOzPFTf3nJfYFumjmFVApNHAZOUPp582a1VGga15ViBKaP44/
-WlmbhM+dGSzi3nWJwjExNgz8GmtoPoeiMqkjoHIcweMYr+CKFYxWGZv2YcybadWB
-YvcfNLGKYa2ZSNLwOLaXTTBJt4uJlM44aj5xROchaWjAgxFN2jOzyGt+CfzHm2aD
-jZg54I4G9gYgLktZnuDcRAPGEPLkPEAjf/zrO6PccNCmctbtuejI/GrzlCLAH8ub
-SyS7fQCgxCEUrNQOAzkAz/7wuAJvsVgYtZwpGNY9jFU/ifjLgvElXtm40qh/DljW
-ZIemLlzD7ND71m37qEJOMrcMDDANpNXePR4ppDvMy2g2/LZ9fb/InQgJyrqSUVdR
-ZOxvrC2MhgevG0X4ERDBle639d8eoo/mpJYH5rpm+cmgUA48WOd8AYSwB4ITvFsH
-InypoB0PYdK0kl3wSo7Q7mN4hHXZrt5hs3qQX3ir0OWjfvy0VMmy8X07jK6hDqw3
-AwBHLYkgVcTouc1J0ZBrIYb9GPGzvPM/a0CgTIpR02XUvp08Dmxl5l07Y1rlqHxK
-avJ+GIm4Qigk3jXGpEyd4DtFk5HVFmpxmvG0anvEeu8ypIuC+TTP3GqFSAEmyzB6
-rGuUj9docSE=
-=uhrw
+iQIVAwUBU74nGDnsnt1WYoG5AQJPBhAAuqgE6w4ypfVJJ1ni3AxmACmGWCnivHX9
+oKuQV2xhmvACwTMd9dgbohjViLFj1sV2nr4jQm2OAPJqVPrHXdnSO/0NWOxhx4DZ
+pUIhrnpBd/NkMrTq9/orUVLEmKL0i+VnOPIBe876GXJf++M4JLGLCvtbP0eLvMG2
+vW/nUYraSTVKXUDJ/GVBqJXwBQDzqHgO8NdvqmrtgT0JTdYfLAw3agnZ38xBK1Iq
+7DWpp+xc4TLAUWsZWqeAtmbx/OIRQs2sqZAaBX1PpaoZl/g30S3SMikIfM51gH2h
+R56ZtpV2UktyGOl/p4SZle+OoUr73FY8noFZMtmqVmelxkL540EmH8v/k4kuqFYq
+X7fsZLfytC8KxQwL4hF0/Ot2ck7GgmIRCBF0vArFuCF1ADsmoizHiY+fZ+KglMRs
+nJpJfTdO30PWmfWunf3G2Vu5NKCn6r6WluE0oQPNlK4729XN41IEOWoVZNnBRTiU
+NsitvZVJC1drJWNb7cXvN8QLLZOgixBGo4x+FXF4pPCVYsfzSTKS7I74EvIX3UJD
+sdWIPhLipWwmX7PYUAvEqSLTQfUNcbW+W9qJoioa2qHMXybTROJQuxQMIn7QK3tc
+YPq8iq022RWUXVe+FJ8L61wiVYwvygJko/GVMl1beGxnYIFqqZ5mOnax8MxSL15U
+zyTRMX5+yb4=
+=eyIb
 -----END PGP SIGNATURE-----
 
---Sig_/CRwKcGXjTIde.X9rqE7Q5Id--
+--Sig_/NVfb.Z_Z5xaRfM.TIVakWnn--
