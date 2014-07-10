@@ -1,84 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch 1/2]RAID5: make stripe size configurable
-Date: Thu, 10 Jul 2014 15:39:36 +1000
-Message-ID: <20140710153936.6f042277@notabene.brown>
-References: <20140708010018.GA8941@kernel.org>
+From: Wilson Jonathan <i400s@hotmail.com>
+Subject: Partitioning on top of raid mirror device questions.
+Date: Thu, 10 Jul 2014 12:24:37 +0100
+Message-ID: <BLU436-SMTP80DC26546309D9E205B561E10E0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NVfb.Z_Z5xaRfM.TIVakWnn"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140708010018.GA8941@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/NVfb.Z_Z5xaRfM.TIVakWnn
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+In my system I am running a few virtual systems, currently they reside
+in raw files.
 
-On Tue, 8 Jul 2014 09:00:18 +0800 Shaohua Li <shli@kernel.org> wrote:
+Initially I created a raid1 partition, with an ext4 file system on top
+of the whole partition.
 
->=20
-> stripe size is 4k default. Bigger stripe size is considered harmful, beca=
-use if
-> IO size is small, big stripe size can cause a lot of unnecessary IO/parity
-> calculation. But if upper layer always sends full stripe write to RAID5 a=
-rray,
-> this drawback goes away. And bigger stripe size can improve performance
-> actually in this case because of bigger size IO and less stripes to handl=
-e. In
-> my full stripe write test case, 16k stripe size can improve throughput 40=
-% -
-> 120% depending on RAID5 configuration.
+/dev/md/md85 from /dev/sda5 /dev/sdb5 mirror 120G
 
-Hi,
- certainly interesting.
- I'd really like to see more precise numbers though.  What config gives 40%,
- what config gives 120% etc.
+However I know from experience that raw files can be a bit slow (totally
+different setup, raid6), so I wondered about the possibility of creating
+3 individual partitions on top of the raid and if this would improve
+performance.
 
- I'm not keen on adding a number that has to be tuned though.  I'd really
- like to understand exactly where the performance gain comes from.
- Is it that the requests being sent down are larger, or just better managed=
- -
- or is it some per-stripe_head overhead that is being removed.
+Having read the man, it seems that partitions on top of raid are fine,
+and no special options are required in the raid creation.
 
- e.g. if we sorted the stripe_heads and handled them in batches of adjacent
- addresses, might that provide the same speed up?
+Now the questions.
 
- I'm certain there  is remove for improving the scheduling of the
- stripe_heads, I'm just not sure what the right approach is though.
- I'd like to explore that more before make the stripe_heads bigger.
+Alignment... 
 
- Also I really don't like depending on multi-page allocations.  If we were
- going to go this way I think I'd want an array of single pages, not a
- multi-page.
+Now I understand that the base disk partitions require alignment based
+on the drive... and I assume mdadm then creates its internal structure
+so that it is also aligned, or does it? 
 
+My wondering here is that I know mdadm has an area that holds data bout
+the raid, then another area that holds the data... if the data area
+(chunks? I may have the wrong term) was not aligned to the underlying
+drives then would a write of "chunkX" potentially partially write to
+disk area62 and disk area63 (for example) causing the underlying disk to
+do a RMR.
 
-Thanks,
-NeilBrown
+If we assume that raid/base disk is all hunky dory alignment wise, this
+then brings me on to partitions on top of the raid...
 
+As raid when partitioned pretends to be a block disk device; when I used
+gdisk to look at it without performing anything except a look at its
+layout it reports its a normal disk, 512bytes, first usable sector 34,
+partitions will be aligned on 2048 sector boundaries.
 
---Sig_/NVfb.Z_Z5xaRfM.TIVakWnn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+So my question is am I correct in thinking that "md85 partition 01" will
+align to (an imaginary) 2048 boundary on "md85" which will align to the
+real 2048 boundary on "sda5/sdb5"?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+I may just stick with raw files but as I am in the process of upgrading
+it piqued my interest and might be worth converting to partitions, or
+possibly LVM which seems the preferred or most documented option (bit
+I'm not sure I want to add a whole new set of skills and learning curve
+at the moment). 
 
-iQIVAwUBU74nGDnsnt1WYoG5AQJPBhAAuqgE6w4ypfVJJ1ni3AxmACmGWCnivHX9
-oKuQV2xhmvACwTMd9dgbohjViLFj1sV2nr4jQm2OAPJqVPrHXdnSO/0NWOxhx4DZ
-pUIhrnpBd/NkMrTq9/orUVLEmKL0i+VnOPIBe876GXJf++M4JLGLCvtbP0eLvMG2
-vW/nUYraSTVKXUDJ/GVBqJXwBQDzqHgO8NdvqmrtgT0JTdYfLAw3agnZ38xBK1Iq
-7DWpp+xc4TLAUWsZWqeAtmbx/OIRQs2sqZAaBX1PpaoZl/g30S3SMikIfM51gH2h
-R56ZtpV2UktyGOl/p4SZle+OoUr73FY8noFZMtmqVmelxkL540EmH8v/k4kuqFYq
-X7fsZLfytC8KxQwL4hF0/Ot2ck7GgmIRCBF0vArFuCF1ADsmoizHiY+fZ+KglMRs
-nJpJfTdO30PWmfWunf3G2Vu5NKCn6r6WluE0oQPNlK4729XN41IEOWoVZNnBRTiU
-NsitvZVJC1drJWNb7cXvN8QLLZOgixBGo4x+FXF4pPCVYsfzSTKS7I74EvIX3UJD
-sdWIPhLipWwmX7PYUAvEqSLTQfUNcbW+W9qJoioa2qHMXybTROJQuxQMIn7QK3tc
-YPq8iq022RWUXVe+FJ8L61wiVYwvygJko/GVMl1beGxnYIFqqZ5mOnax8MxSL15U
-zyTRMX5+yb4=
-=eyIb
------END PGP SIGNATURE-----
+My intention is to add 2 more disks to the mirror raid, which while not
+changing the write performance I believe will improve the read
+performance... at least as far as I can tell, again is this assumption
+correct?
 
---Sig_/NVfb.Z_Z5xaRfM.TIVakWnn--
+Thanks in advance. 
+
+Jon.
+
