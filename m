@@ -1,50 +1,29 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Partitioning on top of raid mirror device questions.
-Date: Fri, 11 Jul 2014 10:29:37 -0600
-Message-ID: <9FC642F9-82DA-41CF-BEDB-F79E2A47462F@colorremedies.com>
-References: <BLU436-SMTP80DC26546309D9E205B561E10E0@phx.gbl>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Drive replace question
+Date: Fri, 11 Jul 2014 13:13:38 -0400
+Message-ID: <20140711171338.GA7295@animx.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP80DC26546309D9E205B561E10E0@phx.gbl>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wilson Jonathan <i400s@hotmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+When a drive is being replaced and has lots of errors, does it get kicked
+before the resync is completed?
 
-On Jul 10, 2014, at 5:24 AM, Wilson Jonathan <i400s@hotmail.com> wrote:
->=20
-> If we assume that raid/base disk is all hunky dory alignment wise, th=
-is
-> then brings me on to partitions on top of the raid=85
+I'm performing this action now on a system with kernel 3.14.6.  I don't
+believe the mdadm version makes a difference but it's debian version 3.3-2
 
-Since you're going to use LVM anyway, why not use LVM raid? Make each w=
-hole disk (or partition) a PV. Then at the time you create an LV, choos=
-e the raid level. This consolidates the additional partitioning, mdadm,=
- and lvm steps all into a single lvm step.
+Here's the mdstat for that array:
+md1 : active raid1 sde[3](R) sdj[2] sdk[1]
+      1465138448 blocks super 1.0 [2/2] [UU]
+      [>....................]  recovery =  0.0% (419648/1465138448) finish=174.5min speed=139882K/sec
+      bitmap: 3/11 pages [12KB], 65536KB chunk
 
+sdj is being replaced by sde.  Currently, md1 is not in use.
 
-> I may just stick with raw files but as I am in the process of upgradi=
-ng
-> it piqued my interest and might be worth converting to partitions, or
-> possibly LVM which seems the preferred or most documented option (bit
-> I'm not sure I want to add a whole new set of skills and learning cur=
-ve
-> at the moment).=20
-
-I found qcow2 files had the best performance. And if your use case even=
- remotely benefits from snapshotting, qcow2 performs much better than (=
-conventional) LVM snapshotting. The new LVM thin provisioning snapshott=
-ing makes snapshots perform the same as the original LV, but the libvir=
-t integration work to use thin pools isn't done yet, I think.
-
-
-Chris Murphy
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
