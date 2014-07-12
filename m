@@ -1,89 +1,34 @@
-From: "Wilson, Jonathan" <i400s@hotmail.com>
-Subject: Re: Partitioning on top of raid mirror device questions.
-Date: Sat, 12 Jul 2014 11:47:35 +0100
-Message-ID: <BLU436-SMTP1964880FFD3C6E510316330E1080@phx.gbl>
-References: <BLU436-SMTP80DC26546309D9E205B561E10E0@phx.gbl>
-	 <53BE925A.1000509@turmel.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID6 questions (mdadm 3.2.6/3.3.x)
+Date: Sat, 12 Jul 2014 14:29:03 +0200
+Message-ID: <20140712122903.GA5608@lazy.lzy>
+References: <53C06815.2020302@dobrotescu.ca>
+ <B953BC37-3769-4D9A-97FF-5EFE7C59EEA4@colorremedies.com>
+ <20140712112034.6b04d49f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53BE925A.1000509@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <20140712112034.6b04d49f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Chris Murphy <lists@colorremedies.com>, Vlad Dobrotescu <vlad@dobrotescu.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2014-07-10 at 09:17 -0400, Phil Turmel wrote:
-> Good morning Jonathan,
-> 
-> On 07/10/2014 07:24 AM, Wilson Jonathan wrote:
-> 
-> [trim /]
-> 
-[snipped]
-> 
-> > I may just stick with raw files but as I am in the process of upgrading
-> > it piqued my interest and might be worth converting to partitions, or
-> > possibly LVM which seems the preferred or most documented option (bit
-> > I'm not sure I want to add a whole new set of skills and learning curve
-> > at the moment). 
-> 
-> I always use LVM on top of my arrays.  It is also alignment-friendly,
-> and is *very* handy when you need to rearrange a machine's storage
-> without downtime.  I prefer it over partitions within the raid.
+On Sat, Jul 12, 2014 at 11:20:34AM +1000, NeilBrown wrote:
+[...]
+> I'm hoping that one day the RAID support in LVM2 will be better than mdadm,
+> and then I can just fade away and no-one will notice that I am gone.
 
-In the end I decided just partitions would be enough, although there
-were a couple of gotchas... 
-
-The first was I have to manually manage them which is not really a
-problem; which I found out when trying to clone my working env from P1
-to P2 "block devices to clone must be libvirt managed storage volumes"
-but easy enough to do a dd or I could probably use the "qemu-img
-convert" using P1 and P2 as the from and to options (not tested, on my
-todo list).
-
-The second was that moving from a wheezy system to a new jessie
-(although there were other possible causes in initial miss configuring
-of "import from existing") seemed to be enough to trigger a "hardware
-has changed" within the XP virtual machine and then one to many
-activated counts caused a "this product has been installed to many
-times, use the phone..." (thankfully the phone MS auto system still
-works even tho' MS no longer supports it)
+I think a lot of people will notice... :-)
 
 > 
-> > My intention is to add 2 more disks to the mirror raid, which while not
-> > changing the write performance I believe will improve the read
-> > performance... at least as far as I can tell, again is this assumption
-> > correct?
+> http://downatthirdman.files.wordpress.com/2010/06/grinning-chesire-cat.jpg
 > 
-> It will improve multiple-threaded reads, or multiple simultaneous
-> programs' reads.  It will not improve single-threaded streaming reads.
-> 
+> NeilBrown
 
-Interesting to know... and my initial observation is that the
-boot-to-idle time "feels" faster.
+bye,
 
-There was one final problem that bit me, but with hindsight should have
-been obvious...
+-- 
 
-My on disk partition(s) was 120G, raid on top, then what should have
-been 4 partitions of 30G (the original raw file virtual size) but the
-4th partition was fractionally smaller than 30G (about 29.99G) because I
-forgot to take into account the on disk raid metadata information would
-take up space. Obvious when you think about it, DOH!, but as I only need
-2 working envs, and one "this copy works and is set up how I like it"
-for backup re-replication I can live with it and use the 4th partition
-as a scratch test bed :-)
-
-
-> HTH,
-> 
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+piergiorgio
