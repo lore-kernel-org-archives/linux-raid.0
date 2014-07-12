@@ -1,70 +1,89 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: RAID6 questions (mdadm 3.2.6/3.3.x)
-Date: Fri, 11 Jul 2014 21:46:17 -0600
-Message-ID: <D7AA36E1-683F-4E39-87C1-8089EA968E30@colorremedies.com>
-References: <53C06815.2020302@dobrotescu.ca> <B953BC37-3769-4D9A-97FF-5EFE7C59EEA4@colorremedies.com> <53C0A994.1050508@dobrotescu.ca>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Wilson, Jonathan" <i400s@hotmail.com>
+Subject: Re: Partitioning on top of raid mirror device questions.
+Date: Sat, 12 Jul 2014 11:47:35 +0100
+Message-ID: <BLU436-SMTP1964880FFD3C6E510316330E1080@phx.gbl>
+References: <BLU436-SMTP80DC26546309D9E205B561E10E0@phx.gbl>
+	 <53BE925A.1000509@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53C0A994.1050508@dobrotescu.ca>
+In-Reply-To: <53BE925A.1000509@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, 2014-07-10 at 09:17 -0400, Phil Turmel wrote:
+> Good morning Jonathan,
+> 
+> On 07/10/2014 07:24 AM, Wilson Jonathan wrote:
+> 
+> [trim /]
+> 
+[snipped]
+> 
+> > I may just stick with raw files but as I am in the process of upgrading
+> > it piqued my interest and might be worth converting to partitions, or
+> > possibly LVM which seems the preferred or most documented option (bit
+> > I'm not sure I want to add a whole new set of skills and learning curve
+> > at the moment). 
+> 
+> I always use LVM on top of my arrays.  It is also alignment-friendly,
+> and is *very* handy when you need to rearrange a machine's storage
+> without downtime.  I prefer it over partitions within the raid.
 
-On Jul 11, 2014, at 9:20 PM, Vlad Dobrotescu <vlad@dobrotescu.ca> wrote=
-:
+In the end I decided just partitions would be enough, although there
+were a couple of gotchas... 
 
-> On 11/07/2014 21:09, Chris Murphy wrote:
->> On Jul 11, 2014, at 4:41 PM, Vlad Dobrotescu<vlad@dobrotescu.ca>  wr=
-ote:
->>> 6. mdadm on top of LVM2 LGs (not the other way around): would there=
- be any issues or performance penalties?
->> You're not assured what PV the LV's are located on. So those 6 LVs y=
-ou're using as md members might not be on six physical devices. One dri=
-ve dies, you can lose the whole array. You're better off using LVM raid=
-, or doing things conventionally by first creating the md raid set and =
-then making the md logical device a PV.
-> Thanks for the advice, it makes a lot of sense. However, this questio=
-n wasn't focused on the RAID6 itself, but related to some fancy (crazy?=
-) mirroring scheme for the Linux partition I was considering: take a LV=
- chunk from the VG that sits on the RAID6 and mirror (md RAID1) it with=
- a partition from the SSD I'll be using for keeping the ext4 journal fo=
-r the big data partition.
+The first was I have to manually manage them which is not really a
+problem; which I found out when trying to clone my working env from P1
+to P2 "block devices to clone must be libvirt managed storage volumes"
+but easy enough to do a dd or I could probably use the "qemu-img
+convert" using P1 and P2 as the from and to options (not tested, on my
+todo list).
 
-Sounds a bit nutty, no offense. It's complicated, non-standard, and the=
-refore at high risk of user induced data loss.
+The second was that moving from a wheezy system to a new jessie
+(although there were other possible causes in initial miss configuring
+of "import from existing") seemed to be enough to trigger a "hardware
+has changed" within the XP virtual machine and then one to many
+activated counts caused a "this product has been installed to many
+times, use the phone..." (thankfully the phone MS auto system still
+works even tho' MS no longer supports it)
 
-It's basically raid61, which tells me you want the data always for sure=
- always available. Because raid61 is about uptime. The problem is, you'=
-re not going to get that because you've overbuilt the storage stack and=
- haven't considered (or mentioned) other fail points like the network, =
-the power supply, power itself. So it just sounds wrongly overbuilt bec=
-ause the data can't possibly require this kind of uptime, chances are y=
-ou're confusing raid with back ups. If the data is both important and i=
-t really needs to be available, build yourself a gluster cluster.
+> 
+> > My intention is to add 2 more disks to the mirror raid, which while not
+> > changing the write performance I believe will improve the read
+> > performance... at least as far as I can tell, again is this assumption
+> > correct?
+> 
+> It will improve multiple-threaded reads, or multiple simultaneous
+> programs' reads.  It will not improve single-threaded streaming reads.
+> 
 
-> In this way I can have a functional OS even if I take all the RAID6 d=
-isks offline. Of course, this can be achieved in other ways as well.
+Interesting to know... and my initial observation is that the
+boot-to-idle time "feels" faster.
 
-Well if everything you care about on this raid6 fits on an SSD partitio=
-n, why don't you just set up an hourly rsync to the raid6 and use the S=
-SD volume for live work? And then if you accidentally delete a file or =
-crash when writing to the SSD chances are the states of the raid6 LV an=
-d the SSD volume are different and one is recoverable. If you raid1 the=
-m, any accidents affect both and you're hosed.
+There was one final problem that bit me, but with hindsight should have
+been obvious...
 
->=20
-> Anyhow, do you have any estimation of the speed penalty when overlayi=
-ng such layers (md-md, md-lvm, =85)?
-
-No. But what you're talking about is md raid6> lv > md raid1, so three =
-layers.
+My on disk partition(s) was 120G, raid on top, then what should have
+been 4 partitions of 30G (the original raw file virtual size) but the
+4th partition was fractionally smaller than 30G (about 29.99G) because I
+forgot to take into account the on disk raid metadata information would
+take up space. Obvious when you think about it, DOH!, but as I only need
+2 working envs, and one "this copy works and is set up how I like it"
+for backup re-replication I can live with it and use the 4th partition
+as a scratch test bed :-)
 
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> HTH,
+> 
+> Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
