@@ -1,53 +1,42 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Identify actual drives/partitions behind RAID
-Date: Tue, 15 Jul 2014 09:33:25 +0100
-Message-ID: <CADNH=7EKofDgGmX3zZvk00UWb_h0tQ0uxVGmqR+9cwxk9fp8tQ@mail.gmail.com>
-References: <CAHCQOsCarp3nnCyKWGpy=_Xn=NnX_qcn8tSumpNJAc5=q9Weqg@mail.gmail.com>
+From: Pete <psid@riverland.net.au>
+Subject: Re: How to fix this superblock?
+Date: Tue, 15 Jul 2014 21:28:53 +0930
+Message-ID: <20140715212853.33cddb41.psid@riverland.net.au>
+References: <20140616105927.828a6765.psid@riverland.net.au>
+	<20140616114829.6e6b7fa6@notabene.brown>
+	<20140616115436.dbf865af.psid@riverland.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHCQOsCarp3nnCyKWGpy=_Xn=NnX_qcn8tSumpNJAc5=q9Weqg@mail.gmail.com>
+In-Reply-To: <20140616115436.dbf865af.psid@riverland.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sachin Garg <sgarg.bugreporter@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15 July 2014 02:55, Sachin Garg <sgarg.bugreporter@gmail.com> wrote:
-> Hi,
->
-> I want to be able to identify the exact device creating truble for my
-> RAID-5 backed LVM.
->
-> The issue:
->
-> I have a 4 disc RAID-5 array that holds my /home asan LVM volume
-> group. Recently, I am getting errors like:
->
-> Buffer I/O error on device dm-7, logical block 10526729
->
-> So, I do:
->
-> # dmsetup table /dev/dm-7
-> 0 251658240 linear 9:127 2048
->
-> Major 9, Minor 127 is my MD device "/dev/md127"
->
-> My /dev/md127 is made up of 4 disk partitions.
->
-> I want to know on what disk does "logical block 10526729" lie so that
-> I can identify the culprit and replace that disk.
->
-> Any ideas?
-> Best,
-> Sachin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 16 Jun 2014 11:54:36 +0930
+Pete <psid@riverland.net.au> wrote:
+> On Mon, 16 Jun 2014 11:48:29 +1000
+> NeilBrown <neilb@suse.de> wrote:
+> > On Mon, 16 Jun 2014 10:59:27 +0930 Pete <psid@riverland.net.au> wrote:
 
-That's an odd way of going about it. Why not just scrub/check the
-array and see what MD comes back with? Also, "smartctl -t long
-/dev/sdX" tests.
+> > > When I try to re-add the device that used to be part of the array, mdadm
+> > > says it's not large enough:
+> > > 
+> > > # mdadm --add /dev/md1 /dev/sdb3
+> > > mdadm: /dev/sdb3 not large enough to join array
+> > > 
+> > > The partition tables hadn't changed when this started. Since then I've
+> > > re-partitioned sdb to make sdb3 a few GB bigger, but it's still not
+> > > large enough.
+> > > 
+> > > Looking at the working device's superblock, there's a heap of "failed"
+..
+> > I suspect that upgrading to a newer mdadm would solve most of these problems.
 
-Regards,
-Mathias
+I booted a debian7 live CD. parted wouldn't read the partition table on
+sdb so I re-partitioned sdb. Then mdadm was able to --add sdb3. Rebooted
+to the old ubuntu - all looking good now.
+
+Thanks for your help.  Pete
+
