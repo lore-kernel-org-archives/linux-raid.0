@@ -1,42 +1,59 @@
-From: Pete <psid@riverland.net.au>
-Subject: Re: How to fix this superblock?
-Date: Tue, 15 Jul 2014 21:28:53 +0930
-Message-ID: <20140715212853.33cddb41.psid@riverland.net.au>
-References: <20140616105927.828a6765.psid@riverland.net.au>
-	<20140616114829.6e6b7fa6@notabene.brown>
-	<20140616115436.dbf865af.psid@riverland.net.au>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: raid5: offload stripe handle to workqueue
+Date: Tue, 15 Jul 2014 18:49:45 +0300
+Message-ID: <20140715154945.GA29698@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140616115436.dbf865af.psid@riverland.net.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: shli@kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 16 Jun 2014 11:54:36 +0930
-Pete <psid@riverland.net.au> wrote:
-> On Mon, 16 Jun 2014 11:48:29 +1000
-> NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 16 Jun 2014 10:59:27 +0930 Pete <psid@riverland.net.au> wrote:
+Hello Shaohua Li,
 
-> > > When I try to re-add the device that used to be part of the array, mdadm
-> > > says it's not large enough:
-> > > 
-> > > # mdadm --add /dev/md1 /dev/sdb3
-> > > mdadm: /dev/sdb3 not large enough to join array
-> > > 
-> > > The partition tables hadn't changed when this started. Since then I've
-> > > re-partitioned sdb to make sdb3 a few GB bigger, but it's still not
-> > > large enough.
-> > > 
-> > > Looking at the working device's superblock, there's a heap of "failed"
-..
-> > I suspect that upgrading to a newer mdadm would solve most of these problems.
+The patch 851c30c9badf: "raid5: offload stripe handle to workqueue"
+from Aug 28, 2013, leads to the following static checker warning:
 
-I booted a debian7 live CD. parted wouldn't read the partition table on
-sdb so I re-partitioned sdb. Then mdadm was able to --add sdb3. Rebooted
-to the old ubuntu - all looking good now.
+	drivers/md/raid5.c:5554 alloc_thread_groups()
+	warn: integer overflows in allocation
 
-Thanks for your help.  Pete
+drivers/md/raid5.c
+  5537  static int alloc_thread_groups(struct r5conf *conf, int cnt,
+                                                            ^^^^^^^
+"cnt" comes from the user as an unsigned long in
+raid5_store_group_thread_cnt() but we truncate it to int here.  It would
+be cleaner if the types were the same through out.
 
+  5538                                 int *group_cnt,
+  5539                                 int *worker_cnt_per_group,
+  5540                                 struct r5worker_group **worker_groups)
+  5541  {
+  5542          int i, j, k;
+  5543          ssize_t size;
+  5544          struct r5worker *workers;
+  5545  
+  5546          *worker_cnt_per_group = cnt;
+  5547          if (cnt == 0) {
+  5548                  *group_cnt = 0;
+  5549                  *worker_groups = NULL;
+  5550                  return 0;
+  5551          }
+  5552          *group_cnt = num_possible_nodes();
+  5553          size = sizeof(struct r5worker) * cnt;
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Integer overflow #1.
+
+  5554          workers = kzalloc(size * *group_cnt, GFP_NOIO);
+                                  ^^^^^^^^^^^^^^^^^
+Integer overflow #2.
+
+  5555          *worker_groups = kzalloc(sizeof(struct r5worker_group) *
+  5556                                  *group_cnt, GFP_NOIO);
+
+
+TODO-list: 2014-07-14: raid5: integer overflows in alloc_thread_groups()
+
+regards,
+dan carpenter
