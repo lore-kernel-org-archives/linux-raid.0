@@ -1,85 +1,96 @@
-From: Eivind Sarto <eivindsarto@gmail.com>
-Subject: [patch 1/1] raid0: prevent unaligned discard requests
-Date: Wed, 16 Jul 2014 12:04:01 -0700
-Message-ID: <0B8EAC15-8427-45AC-A614-7A7B9D567923@gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Content-Type: multipart/mixed; boundary="Apple-Mail=_817BFFF8-B21F-4045-9D38-4BBDC38703BC"
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Grow: Do not try to restart if reshape is running
+Date: Thu, 17 Jul 2014 14:11:01 +1000
+Message-ID: <20140717141101.7318564a@notabene.brown>
+References: <20140716102034.18952.74271.stgit@gklab-154-222.intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/t__qt_NfuySOcsYiB_9GtH."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140716102034.18952.74271.stgit@gklab-154-222.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-
---Apple-Mail=_817BFFF8-B21F-4045-9D38-4BBDC38703BC
+--Sig_/t__qt_NfuySOcsYiB_9GtH.
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
 
-This is a simple patch that prevents blkdev_issue_discard() from issuing =
-mis-aligned REQ_DISCARD to raid0.
-Currently, raid0 only sets max_discard_sectors equal to chunk size.  But =
-that will only break a larger discard request
-into multiple chunk sized requests.  It will not align those requests.  =
-If the original (big) request is not chunk-aligned,
-blkdev_issue_discard() will issue mis-aligned chunk-sized discards to =
-raid0, and raid0 will have to split them all.
-The patch comment had example block traces that illustrates the problem.
+On Wed, 16 Jul 2014 12:20:34 +0200 Pawel Baldysiak
+<pawel.baldysiak@intel.com> wrote:
 
+> Grow process did not check if reshape is already started
+> when deciding about restarting.
+> Sync_action should be checked in this case, and if
+> reshape is running - restart flag should not be set.
+> Otherwise, Grow process will fail to write data to
+> sysfs, and reshape will not be continued.
+>=20
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  Grow.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index a2f4f14..9ba7f76 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2822,6 +2822,7 @@ static int reshape_array(char *container, int fd, c=
+har *devname,
+>  	unsigned long long array_size;
+>  	int done;
+>  	struct mdinfo *sra =3D NULL;
+> +	char buf[20];
+> =20
+>  	/* when reshaping a RAID0, the component_size might be zero.
+>  	 * So try to fix that up.
+> @@ -2869,7 +2870,9 @@ static int reshape_array(char *container, int fd, c=
+har *devname,
+>  		goto release;
+>  	}
+> =20
+> -	if (st->ss->external && restart && (info->reshape_progress =3D=3D 0)) {
+> +	if (st->ss->external && restart && (info->reshape_progress =3D=3D 0) &&
+> +		!((sysfs_get_str(info, NULL, "sync_action", buf, sizeof(buf)) > 0) &&
+> +		(strncmp(buf, "reshape", 7) =3D=3D 0))) {
+>  		/* When reshape is restarted from '0', very begin of array
+>  		 * it is possible that for external metadata reshape and array
+>  		 * configuration doesn't happen.
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Applied, thanks.
 
---Apple-Mail=_817BFFF8-B21F-4045-9D38-4BBDC38703BC
-Content-Disposition: attachment;
-	filename=raid0_prevent_unaligned_discard_requests.patch
-Content-Type: application/octet-stream;
-	name="raid0_prevent_unaligned_discard_requests.patch"
-Content-Transfer-Encoding: 7bit
+Though I reindented it so that it was more obvious that the '!' applied tot
+he 'strncmp' as well.
 
-Author: Eivind Sarto <esarto@fusionio.com>
-Date: Tue Jun  3 14:07:29 2014
+NeilBrown
 
-raid0: prevent unaligned discard requests
+--Sig_/t__qt_NfuySOcsYiB_9GtH.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Raid0 sets max_discard_sectors equal to chunk_size.  However, that does
-make blkdev_issue_discard() to issue chunk-aligned REQ_DISCARD to raid0.
-If blkdev_issue_discard() is called with a non-chunk-aligned sector, it will
-break the request into multiple chunk-sized bio requests, but all the bio
-requests to raid0 will stay mis-aligned (and raid0 will need to split them all).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-This patch sets the device queue discard granularity.
-It will make blkdev_issue_discard() always break REQ_DISCARD requests into
-aligned requests to raid0, after the first partial/mis-aligned request has been
-issued.
+iQIVAwUBU8dM1Tnsnt1WYoG5AQLa6w/9F0CGwxPyFcORwB0y9/TsUCkFd8q+An7R
+PFo838nFJtSp05bwcfNBIm3S2fvAcQtsvEAEGdMFEWV+xOESbDHOnVAQlbImw7JA
+UgpsC0yOnamPJjp8Gijb4futWnegpviUdxY6bntJQp6Z4frkRmtNXM1TN9c/5UYL
+gtoAdZYWQh3Ch8wWGhOWljdapsKK/Zt4Yg2iPRUKsckC6lycPu7UdAHKqxST71/0
+hAT5xZOyd7qZ7VWoST38jK24OQa30TJmoFGC26xJMuK/Z/zJ2J536UrwyyYhaJdh
+dJw/Gy9d2+leIov2LYYvatQ3Te2KrKG+s/KJztxmxVaYHKQa6wDLIC4UzRsgfz4r
+HYT2ANhSV6vqro4cSNCXZHAMIxzDt71kuGJWMXOncYoKSAzzM9pr1KncMmNDgkRc
+Gb6Dl6wHwqVODPgTRtGhJxJRJurliJTRkL0y5givt/C02JwzqYSSId0+0iV4xkyK
+vHfVzEHddcWbAYa9D2azeqnTVf3fACEmJb22Zt50bpEsRWFwSaI36aLaFdSAd+i7
+27uV4veNMNGtohtkoKv42YRsLLZBWtJOkWFDNQErfflQOpGjSlcGSK+9ctCBEmjC
+oUFtILJ0zCN5Fm4qP8UfjPYvXtKR/ER4Bg66jVtjaVEHrpkAbc326waNsN8wL9yy
+fpGVosb03f0=
+=RYph
+-----END PGP SIGNATURE-----
 
-Here is a trace of a discard request to a raid0 with a 32k chunk, before and 
-after the patch.
-Before: # blkdiscard -v -l 131072 -o 8192 /dev/md0
-  9,0    0        1     0.000000000 16681  Q   D 16 + 64 [blkdiscard]
-  9,0    0        2     0.000001780 16681  X   D 16 / 64 [blkdiscard]
-  9,0    0        3     0.000040254 16681  Q   D 80 + 64 [blkdiscard]
-  9,0    0        4     0.000040726 16681  X   D 80 / 128 [blkdiscard]
-  9,0    0        5     0.000060695 16681  Q   D 144 + 64 [blkdiscard]
-  9,0    0        6     0.000060971 16681  X   D 144 / 192 [blkdiscard]
-  9,0    0        7     0.000072825 16681  Q   D 208 + 64 [blkdiscard]
-  9,0    0        8     0.000073059 16681  X   D 208 / 256 [blkdiscard]
-After: # blkdiscard -v -l 131072 -o 8192 /dev/md0
-  9,0    0        1     3.681411377 13326  Q   D 16 + 48 [blkdiscard]
-  9,0    0        2     3.681441401 13326  Q   D 64 + 64 [blkdiscard]
-  9,0    0        3     3.681450093 13326  Q   D 128 + 64 [blkdiscard]
-  9,0    0        4     3.681455989 13326  Q   D 192 + 64 [blkdiscard]
-  9,0    0        5     3.681474018 13326  Q   D 256 + 16 [blkdiscard]
-
-Signed-off-by: Eivind Sarto <esarto@fusionio.com>
-
---- a/drivers/md/raid0.c	2014-06-02 11:26:29.000000000 -0700
-+++ b/drivers/md/raid0.c	2014-06-03 11:56:05.000000000 -0700
-@@ -440,6 +440,8 @@ static int raid0_run(struct mddev *mddev
- 	blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
- 	blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
- 	blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
-+	/* prevent unaligned discard requests */
-+	mddev->queue->limits.discard_granularity = mddev->chunk_sectors << 9;
- 
- 	/* if private is not null, we are here after takeover */
- 	if (mddev->private == NULL) {
-
---Apple-Mail=_817BFFF8-B21F-4045-9D38-4BBDC38703BC--
+--Sig_/t__qt_NfuySOcsYiB_9GtH.--
