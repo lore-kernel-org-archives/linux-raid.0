@@ -1,96 +1,100 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Grow: Do not try to restart if reshape is running
-Date: Thu, 17 Jul 2014 14:11:01 +1000
-Message-ID: <20140717141101.7318564a@notabene.brown>
-References: <20140716102034.18952.74271.stgit@gklab-154-222.intel.com>
+From: Samuli Suominen <ssuominen@gentoo.org>
+Subject: [PATCH] Parallel make bug in Makefile of mdadm-3.3.1 (corrupted udev
+ rules and/or systemd services)
+Date: Thu, 17 Jul 2014 10:30:05 +0300
+Message-ID: <53C77B7D.2090907@gentoo.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/t__qt_NfuySOcsYiB_9GtH."; protocol="application/pgp-signature"
+Content-Type: multipart/mixed;
+ boundary="------------080002070304050708050802"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140716102034.18952.74271.stgit@gklab-154-222.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/t__qt_NfuySOcsYiB_9GtH.
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
+--------------080002070304050708050802
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-On Wed, 16 Jul 2014 12:20:34 +0200 Pawel Baldysiak
-<pawel.baldysiak@intel.com> wrote:
+If you run with:
 
-> Grow process did not check if reshape is already started
-> when deciding about restarting.
-> Sync_action should be checked in this case, and if
-> reshape is running - restart flag should not be set.
-> Otherwise, Grow process will fail to write data to
-> sysfs, and reshape will not be continued.
->=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  Grow.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index a2f4f14..9ba7f76 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -2822,6 +2822,7 @@ static int reshape_array(char *container, int fd, c=
-har *devname,
->  	unsigned long long array_size;
->  	int done;
->  	struct mdinfo *sra =3D NULL;
-> +	char buf[20];
-> =20
->  	/* when reshaping a RAID0, the component_size might be zero.
->  	 * So try to fix that up.
-> @@ -2869,7 +2870,9 @@ static int reshape_array(char *container, int fd, c=
-har *devname,
->  		goto release;
->  	}
-> =20
-> -	if (st->ss->external && restart && (info->reshape_progress =3D=3D 0)) {
-> +	if (st->ss->external && restart && (info->reshape_progress =3D=3D 0) &&
-> +		!((sysfs_get_str(info, NULL, "sync_action", buf, sizeof(buf)) > 0) &&
-> +		(strncmp(buf, "reshape", 7) =3D=3D 0))) {
->  		/* When reshape is restarted from '0', very begin of array
->  		 * it is possible that for external metadata reshape and array
->  		 * configuration doesn't happen.
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+$ export MAKEFLAGS="-j9"
+$ make install install-systemd
 
-Applied, thanks.
+As in, combine "install" and "install-systemd" in the same command using
+parallel make,
+the content of .service files could end up in .rules, or otherway around
+because GNU
+make fill run them in parallel and the commands might ran at the same
+time, and both
+use same variables $file and same temporary files .install.tmp
 
-Though I reindented it so that it was more obvious that the '!' applied tot
-he 'strncmp' as well.
+This was reported at,
+https://bugs.gentoo.org/show_bug.cgi?id=517218
 
-NeilBrown
+The immediate workaround is,
 
---Sig_/t__qt_NfuySOcsYiB_9GtH.
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+$ export MAKEFLAGS="-j9"
+$ make install
+$ make install-systemd
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+And the attach patch makes it full proof so they can be ran at the same
+line.
 
-iQIVAwUBU8dM1Tnsnt1WYoG5AQLa6w/9F0CGwxPyFcORwB0y9/TsUCkFd8q+An7R
-PFo838nFJtSp05bwcfNBIm3S2fvAcQtsvEAEGdMFEWV+xOESbDHOnVAQlbImw7JA
-UgpsC0yOnamPJjp8Gijb4futWnegpviUdxY6bntJQp6Z4frkRmtNXM1TN9c/5UYL
-gtoAdZYWQh3Ch8wWGhOWljdapsKK/Zt4Yg2iPRUKsckC6lycPu7UdAHKqxST71/0
-hAT5xZOyd7qZ7VWoST38jK24OQa30TJmoFGC26xJMuK/Z/zJ2J536UrwyyYhaJdh
-dJw/Gy9d2+leIov2LYYvatQ3Te2KrKG+s/KJztxmxVaYHKQa6wDLIC4UzRsgfz4r
-HYT2ANhSV6vqro4cSNCXZHAMIxzDt71kuGJWMXOncYoKSAzzM9pr1KncMmNDgkRc
-Gb6Dl6wHwqVODPgTRtGhJxJRJurliJTRkL0y5givt/C02JwzqYSSId0+0iV4xkyK
-vHfVzEHddcWbAYa9D2azeqnTVf3fACEmJb22Zt50bpEsRWFwSaI36aLaFdSAd+i7
-27uV4veNMNGtohtkoKv42YRsLLZBWtJOkWFDNQErfflQOpGjSlcGSK+9ctCBEmjC
-oUFtILJ0zCN5Fm4qP8UfjPYvXtKR/ER4Bg66jVtjaVEHrpkAbc326waNsN8wL9yy
-fpGVosb03f0=
-=RYph
------END PGP SIGNATURE-----
+Thanks,
+Samuli
 
---Sig_/t__qt_NfuySOcsYiB_9GtH.--
+--------------080002070304050708050802
+Content-Type: text/x-patch;
+ name="parallel-make.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="parallel-make.patch"
+
+diff -ur mdadm-3.3.1.orig/Makefile mdadm-3.3.1/Makefile
+--- mdadm-3.3.1.orig/Makefile	2014-06-05 09:45:56.000000000 +0300
++++ mdadm-3.3.1/Makefile	2014-07-17 09:52:51.670100989 +0300
+@@ -281,26 +281,26 @@
+ 	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+ 
+ install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules
+-	@for file in 63-md-raid-arrays.rules 64-md-raid-assembly.rules ; \
+-	do sed -e 's,BINDIR,$(BINDIR),g' udev-$${file#??-} > .install.tmp && \
+-	   echo $(INSTALL) -D -m 644 udev-$${file#??-} $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+-	   $(INSTALL) -D -m 644 .install.tmp $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+-	   rm -f .install.tmp; \
++	@for file1 in 63-md-raid-arrays.rules 64-md-raid-assembly.rules ; \
++	do sed -e 's,BINDIR,$(BINDIR),g' udev-$${file1#??-} > .install.tmp.1 && \
++	   echo $(INSTALL) -D -m 644 udev-$${file1#??-} $(DESTDIR)$(UDEVDIR)/rules.d/$$file1 ; \
++	   $(INSTALL) -D -m 644 .install.tmp.1 $(DESTDIR)$(UDEVDIR)/rules.d/$$file1 ; \
++	   rm -f .install.tmp.1; \
+ 	done
+ 
+ install-systemd: systemd/mdmon@.service
+-	@for file in mdmon@.service mdmonitor.service mdadm-last-resort@.timer \
++	@for file2 in mdmon@.service mdmonitor.service mdadm-last-resort@.timer \
+ 		mdadm-last-resort@.service ; \
+-	do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp && \
+-	   echo $(INSTALL) -D -m 644 systemd/$$file $(DESTDIR)$(SYSTEMD_DIR)/$$file ; \
+-	   $(INSTALL) -D -m 644 .install.tmp $(DESTDIR)$(SYSTEMD_DIR)/$$file ; \
+-	   rm -f .install.tmp; \
++	do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file2 > .install.tmp.2 && \
++	   echo $(INSTALL) -D -m 644 systemd/$$file2 $(DESTDIR)$(SYSTEMD_DIR)/$$file2 ; \
++	   $(INSTALL) -D -m 644 .install.tmp.2 $(DESTDIR)$(SYSTEMD_DIR)/$$file2 ; \
++	   rm -f .install.tmp.2; \
+ 	done
+-	@for file in mdadm.shutdown ; \
+-	do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp && \
+-	   echo $(INSTALL) -D -m 755  systemd/$$file $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file ; \
+-	   $(INSTALL) -D -m 755  .install.tmp $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file ; \
+-	   rm -f .install.tmp; \
++	@for file3 in mdadm.shutdown ; \
++	do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file3 > .install.tmp.3 && \
++	   echo $(INSTALL) -D -m 755  systemd/$$file3 $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file3 ; \
++	   $(INSTALL) -D -m 755  .install.tmp.3 $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file3 ; \
++	   rm -f .install.tmp.3; \
+ 	done
+ 	if [ -f /etc/SuSE-release -o -n "$(SUSE)" ] ;then $(INSTALL) -D -m 755 systemd/SUSE-mdadm_env.sh $(DESTDIR)$(SYSTEMD_DIR)/../scripts/mdadm_env.sh ;fi
+ 
+
+--------------080002070304050708050802--
