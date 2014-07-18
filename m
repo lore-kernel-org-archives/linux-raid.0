@@ -1,74 +1,130 @@
-From: Killian De Volder <killian.de.volder@megasoft.be>
-Subject: Re: Unable to reduce raid size.
-Date: Fri, 18 Jul 2014 13:19:11 +0200
-Message-ID: <53C902AF.9070404@megasoft.be>
-References: <53C8DFEE.7000000@megasoft.be>	<20140718194043.1c938b2c@notabene.brown>	<53C8EFC1.1050105@megasoft.be> <20140718204808.5cbbe0cb@notabene.brown>
+From: Samuli Suominen <ssuominen@gentoo.org>
+Subject: Re: [PATCH] Parallel make bug in Makefile of mdadm-3.3.1 (corrupted
+ udev rules and/or systemd services)
+Date: Fri, 18 Jul 2014 16:51:43 +0300
+Message-ID: <53C9266F.40300@gentoo.org>
+References: <53C77B7D.2090907@gentoo.org> <20140717182517.23bf37d3@notabene.brown> <53C789E1.50604@gentoo.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140718204808.5cbbe0cb@notabene.brown>
+In-Reply-To: <53C789E1.50604@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Seems to have worked for me. Think I understand what went wrong there.
+This new patch, that only changes the filename, was tested and verified
+to fix the problem in the downstream Gentoo bug,
+https://bugs.gentoo.org/show_bug.cgi?id=517218#c18
+So you were right :)
 
-Thank you, the smaller disk has now been added, and it's rebuilding.
-
-Killian De Volder
-
-On 18-07-14 12:48, NeilBrown wrote:
-> On Fri, 18 Jul 2014 11:58:25 +0200 Killian De Volder
-> <killian.de.volder@megasoft.be> wrote:
->
->> Bytes are cheap, but screens are small (you'll have to scroll more).
+On 17/07/14 11:31, Samuli Suominen wrote:
+> On 17/07/14 11:25, NeilBrown wrote:
+>> On Thu, 17 Jul 2014 10:30:05 +0300 Samuli Suominen <ssuominen@gentoo.org>
+>> wrote:
 >>
->> "This condition isn't treated as an error by mdadm, so it isn't the cause."
->> This is not an error, but if the size isn't changed, the end result will be
->> component size of /dev/md125 unchanged at 2858285568K (skimmed the source code of mdadm, might have gotten it wrong though)
+>>> If you run with:
+>>>
+>>> $ export MAKEFLAGS="-j9"
+>>> $ make install install-systemd
+>>>
+>>> As in, combine "install" and "install-systemd" in the same command using
+>>> parallel make,
+>>> the content of .service files could end up in .rules, or otherway around
+>>> because GNU
+>>> make fill run them in parallel and the commands might ran at the same
+>>> time, and both
+>>> use same variables $file and same temporary files .install.tmp
+>>>
+>>> This was reported at,
+>>> https://bugs.gentoo.org/show_bug.cgi?id=517218
+>>>
+>>> The immediate workaround is,
+>>>
+>>> $ export MAKEFLAGS="-j9"
+>>> $ make install
+>>> $ make install-systemd
+>>>
+>>> And the attach patch makes it full proof so they can be ran at the same
+>>> line.
+>>>
+>>> Thanks,
+>>> Samuli
+>> Hi,
+>>  thanks for the bug report and the patch!
 >>
->> Full Strace below
-> Thanks.   It doesn't actually contain any surprises, but having seen it I
-> easily found the bug..... hard to explain.
+>> I don't think it is necessary to change the name for the variable (file ->
+>> file1, file2 or file3).  Just leave it as 'file'.
+>> However changing the name is important.  Could you send a patch which just
+>> does that, and I'll apply it.
+>>
+>> Also if the patch could be included inline in the mail, rather than as an
+>> attachment, that would be nice.
+>>
+>> (But if you don't want to bother, I'll make the fix anyway and credit you).
+>>
+>> Thanks,
+>> NeilBrown
+> Thanks for the review, I wasn't 100% sure which I should be changing,
+> the variable, or the filename,
+> so I changed both.
+> So, you are most likely correct.
 >
-> The "SET_ARRAY_INFO" ioctl can be used to set the 'size' of the array, but
-> only
-> if the size fits in a signed int as a positive number.
-> However mdadm tests if it fits in an *unsigned* int.
-> So any size between 2^31 and 2^32 K can not effectively be set by mdadm.
+> Here is the patch that only changes the filename,
 >
-> I think this patch to mdadm will fix it - can you test?
+> --- mdadm-3.3.1.orig/Makefile
+> +++ mdadm-3.3.1/Makefile
+> @@ -282,25 +282,25 @@
+>  
+>  install-udev: udev-md-raid-arrays.rules udev-md-raid-assembly.rules
+>      @for file in 63-md-raid-arrays.rules 64-md-raid-assembly.rules ; \
+> -    do sed -e 's,BINDIR,$(BINDIR),g' udev-$${file#??-} > .install.tmp && \
+> +    do sed -e 's,BINDIR,$(BINDIR),g' udev-$${file#??-} > .install.tmp.1
+> && \
+>         echo $(INSTALL) -D -m 644 udev-$${file#??-}
+> $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+> -       $(INSTALL) -D -m 644 .install.tmp
+> $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+> -       rm -f .install.tmp; \
+> +       $(INSTALL) -D -m 644 .install.tmp.1
+> $(DESTDIR)$(UDEVDIR)/rules.d/$$file ; \
+> +       rm -f .install.tmp.1; \
+>      done
+>  
+>  install-systemd: systemd/mdmon@.service
+>      @for file in mdmon@.service mdmonitor.service
+> mdadm-last-resort@.timer \
+>          mdadm-last-resort@.service ; \
+> -    do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp && \
+> +    do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp.2 && \
+>         echo $(INSTALL) -D -m 644 systemd/$$file
+> $(DESTDIR)$(SYSTEMD_DIR)/$$file ; \
+> -       $(INSTALL) -D -m 644 .install.tmp
+> $(DESTDIR)$(SYSTEMD_DIR)/$$file ; \
+> -       rm -f .install.tmp; \
+> +       $(INSTALL) -D -m 644 .install.tmp.2
+> $(DESTDIR)$(SYSTEMD_DIR)/$$file ; \
+> +       rm -f .install.tmp.2; \
+>      done
+>      @for file in mdadm.shutdown ; \
+> -    do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp && \
+> +    do sed -e 's,BINDIR,$(BINDIR),g' systemd/$$file > .install.tmp.3 && \
+>         echo $(INSTALL) -D -m 755  systemd/$$file
+> $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file ; \
+> -       $(INSTALL) -D -m 755  .install.tmp
+> $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file ; \
+> -       rm -f .install.tmp; \
+> +       $(INSTALL) -D -m 755  .install.tmp.3
+> $(DESTDIR)$(SYSTEMD_DIR)-shutdown/$$file ; \
+> +       rm -f .install.tmp.3; \
+>      done
+>      if [ -f /etc/SuSE-release -o -n "$(SUSE)" ] ;then $(INSTALL) -D -m
+> 755 systemd/SUSE-mdadm_env.sh
+> $(DESTDIR)$(SYSTEMD_DIR)/../scripts/mdadm_env.sh ;fi
 >
-> diff --git a/Grow.c b/Grow.c
-> index ea9cc60e1f18..af59347ca75e 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1813,7 +1813,7 @@ int Grow_reshape(char *devname, int fd,
->  		if (s->size == MAX_SIZE)
->  			s->size = 0;
->  		array.size = s->size;
-> -		if ((unsigned)array.size != s->size) {
-> +		if (array.size != (signed long long)s->size) {
->  			/* got truncated to 32bit, write to
->  			 * component_size instead
->  			 */
->
->
-> The code that is reporting an error is setting the used size of each
-> individual device.
-> If you make the devices in an array bigger (typically if they are LVM volumes
-> and you resize them), then you cannot make the array bigger without first
-> telling md that the devices have changed size.
-> So mdadm first tells the kernel that the devices are big enough.  If they
-> were already that big, the kernel will return EBUSY, and mdadm will ignore it.
-> If the aren't really that big, the kernel will round down to the real size.
->
-> In your case the underlying devices hadn't changed size so mdadm was doing
-> something unnecessary and got an error which it ignored.
->
-> Thanks,
-> NeilBrown
->
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
