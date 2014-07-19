@@ -1,184 +1,107 @@
-From: Killian De Volder <killian.de.volder@megasoft.be>
-Subject: Fwd: Re: Two Questions about Linux MD
-Date: Sat, 19 Jul 2014 10:52:20 +0200
-Message-ID: <53CA31C4.2020705@megasoft.be>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Two Questions about Linux MD
+Date: Sat, 19 Jul 2014 19:21:57 +1000
+Message-ID: <20140719192157.48487e7c@notabene.brown>
 References: <53CA304E.4040908@megasoft.be>
+	<53CA31C4.2020705@megasoft.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/Ogoqs=aZ3chROZMIIk0/k3V"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53CA304E.4040908@megasoft.be>
+In-Reply-To: <53CA31C4.2020705@megasoft.be>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Killian De Volder <killian.de.volder@megasoft.be>, Henry Cai <henryplusplus@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/Ogoqs=aZ3chROZMIIk0/k3V
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 19 Jul 2014 10:52:20 +0200 Killian De Volder
+<killian.de.volder@megasoft.be> wrote:
 
-See answser below:
+>=20
+>=20
+> See answser below:
+>=20
+> Ps. You added extra spaces on the bit line ? Why did you do this ?
+> You should be using monospace fonts / fixed-with for mailing lists.
+>=20
+> Killian De Volder
+>=20
+> On 19-07-14 05:15, Henry Cai wrote:
+> > 1> The first question, as the wiki:
+> > https://raid.wiki.kernel.org/index.php/Initial_Array_Creation
+> >
+> > There has the sentence, "For raid5 there is an optimisation: mdadm
+> > takes one of the disks and marks it as 'spare' ", what I want to know
+> > is the optimisation for what? The result of the optimisation is that
+> > when initial create, the RAID5 is do recovery not resync.
+> >
+> > And in the mdadm man
+> > page:http://www.linuxmanpages.com/man8/mdadm.8.php, also has an option
+> > --force, describe as follow: "Normally mdadm will not allow creation
+> > of an array with only one device, and will try to create a raid5 array
+> > with one missing drive (as this makes the initial resync work faster).
+> > With --force, mdadm will not try to be so clever. "
+> Don't know how this is faster, sorry, maybe someone else on the mailing
+> list know.
 
-Ps. You added extra spaces on the bit line ? Why did you do this ?
-You should be using monospace fonts / fixed-with for mailing lists.
+I suspect you can work it out if you try.
+Think about the exact sequence of IO requests needed to correct the parity
+blocks assuming the are not correct.
+Now think of the exact sequence of IO requests needed to recover to a spare.
+Remember the seeking is slow on rotating storage.
+Remember also that the parity block changes device every chunk.
 
-Killian De Volder
-
-On 19-07-14 05:15, Henry Cai wrote:
-> 1> The first question, as the wiki:
-> https://raid.wiki.kernel.org/index.php/Initial_Array_Creation
->
-> There has the sentence, "For raid5 there is an optimisation: mdadm
-> takes one of the disks and marks it as 'spare' ", what I want to know
-> is the optimisation for what? The result of the optimisation is that
-> when initial create, the RAID5 is do recovery not resync.
->
-> And in the mdadm man
-> page:http://www.linuxmanpages.com/man8/mdadm.8.php, also has an option
-> --force, describe as follow: "Normally mdadm will not allow creation
-> of an array with only one device, and will try to create a raid5 array
-> with one missing drive (as this makes the initial resync work faster).
-> With --force, mdadm will not try to be so clever. "
-Don't know how this is faster, sorry, maybe someone else on the mailing
-list know.
-> 2> The second question, I understand how the write intent bitmap work.
-> But I donot know how it solve the follow problem. With your example:
->
-> Write indent map for 512K disk using 64K chunks
->
-> Bit 1: Synchronized
-> Bit 0: Not synced
->
-> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-> | Bit   | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
->
-> And, if there are 4 data disks, and 1 parity disk for RAID5, total
-> with 5 disks: D1 D2 D3 D4 P.
->
-> when write the disk D1's Chunk 1, and the D1 disk power connector
-> flies off, and write fail, so the bitmap as follow:
-> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-> | Bit   | 0 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
->
-> Before the disk D1 power on, another disk Chunk2 write fail for the
-> same reason, how to address this scene? Or the RAID will not
-> writeable? Now, the bitmap as follow:
->
-> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-> | Bit   | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 1 |
-If you lose 2 disk out of a raid5 it's game over, unless you can reuse
-a disk to get (some of) the data back.
-(Note: bad blocks don't have to result in a disk fail.)
-It will most certainly become not writeable, and readable to.
-Since now you are missing 1 out of 4 chunks in this example.
-> When the D1 come back, it will find there are 2 Chunks need
-> reconstruct, so will the read the data from D2 D3 D3 and P, and do
-> xor, and write the result to D2?
-It will write it to D1 (typo on your end probably).
-But given this question you might first want to look into
-how raid works before asking specific linux-raid questions ?
-> Another situation is when the system power cut down abnormally when
-> write Chunk1 Chunk2, the bitmap as follow:
-> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-> | Bit   | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 1 |
->
-> When system boot, will do resync for Chunk1 and Chunk2?
-Yes, the state of the machine (reboot or not) is not important for
-linux-raid, it checks in what state the _raid_ is and acts on that.
-
-If you reboot during a resync, bitmaps can be helpfully.
-Without a bitmap, linux-raid doesn't know where it was with the sync and would
-have to start over from scratch.
-
-> Last, if bitmap save on all disks, how to keep the bitmap consistent?
-> How to address the situation that the bitmaps are different when read
-> from the disks after system boot?
-If linux-raid has troubles keeping the bitmap consistent,
-I'd be a lot more concerned about your data :)
-Also they probably use some tricks with write barriers, and flushes
-and other data to figure out which ones to use.
-
-That's for someone smarter on the list.
->
-> Henry
->
-> 2014-07-18 23:30 GMT+08:00 Killian De Volder <killian.de.volder@megasoft.be>:
->> I) Can you give the complete mdadm command used to create it ?
->> Normally it should create a RAID5 without spares. (unless instructed otherwise/you passed the wrong options)
->> Also giving us the output of mdadm --detail /dev/mdXXX could help
->>
->> II) ***Disclaimer*** following information below might not be accurate, but such a system could work.
->> If it's incorrect it should help you understand when someone corrects me.
->>
->> mdadm --examine /dev/sdXX shows me "Internal Bitmap : 8 sectors from superblock"
->> This would indicate there is a bitmap on each drive (although I'm not sure, theoretically you could RAID it, but why increase complexity).
->>
->> However the RAID only need 1 write indent map.
->> But in the worst case scenario only 1 disk is left, so a copy is maintained on each drive.
->>
->> Example:
->> Write indent map for 512K disk using 64K chunks
->>
->> Bit 1: Synchronized
->> Bit 0: Not synced
->>
->> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
->> | Bit   | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
->>
->> When you write in Chunk 1, the bit is set to 0.
->> Now assume 1 of the disk power connector flies of, and the write to the chunk fails.
->> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
->> | Bit   | 0 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
->>
->> Meanwhile another write is done to Chunk 2, new bitmap:
->> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
->> | Bit   | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 1 |
->>
->> Now when you plug the disk back in it looks for unwritten chunks, and it find 1 and 2, now it nows it can start from this.
->> (Note it reject the bitmap of the disk you plugged back in.)
->>
->> In case you are building a new raid something simular occurs:
->> This would be the start bitmap:
->> | Chunk | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
->> | Bit   | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
->>
->> As each chunk is sycned the bit is set to 1:
->> C1234578
->> B0000000 Later it becomes:
->> B1000000 Then later it becomes
->> B1100000 ...
->>
->> So at any point you can reboot, and the raid will know where to continue by looking at the non-sycned bitmaps.
->>
->> Also see the wiki: https://raid.wiki.kernel.org/index.php/Write-intent_bitmap
->>
->> Killian De Volder
->>
->> On 18-07-14 16:21, Henry Cai wrote:
->>> Hi,
->>>
->>> Here, I got two confusing questions about Linux MD:
->>>
->>> I.  Why when initial create RAID5, mdadm marks a physical disk as "spare"?
->>>
->>>     Is this for random write with RMW, or for "sync" speed?
->>>
->>>
->>> II. The write intent bitmap, each disk in RAID with a "write intent
->>> bitmap", or the whole RAID with one "write intent bitmap"?
->>>
->>>     If the whole RAID with one "write intent bitmap", how to know
->>> which disk's data need reconstruct, or just use the data disks'
->>>
->>>    data to calculate the P data, and write to the P disk? If the only
->>> one "write intent bitmap", how to decide which disk to save
->>>
->>>    the "write intent bitmap"?
->>>
->>> And is there has any MD design architecture document?
->>>
->>> Thanks a lot
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm sure you'll work it out.
 
 
 
+> > Last, if bitmap save on all disks, how to keep the bitmap consistent?
+> > How to address the situation that the bitmaps are different when read
+> > from the disks after system boot?
+> If linux-raid has troubles keeping the bitmap consistent,
+> I'd be a lot more concerned about your data :)
+> Also they probably use some tricks with write barriers, and flushes
+> and other data to figure out which ones to use.
+>=20
+> That's for someone smarter on the list.
+
+If the different copies of the bitmap contain different contents, then it
+must be safe to use any of them.
+
+Think through the different scenarios that could result in an inconsistency
+and see if this is true.
+
+Remember that when we bit is set in the bitmap (to say that we intend to
+write to the corresponding region), we wait until the new bitmap has been
+written to all devices before permitting the write to commence.
+
+NeilBrown
+
+
+--Sig_/Ogoqs=aZ3chROZMIIk0/k3V
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU8o4tjnsnt1WYoG5AQK61g//bCoxRX0oTLl6j/9kYIQPKmd/rDv56iBw
+kimslTAb8MTHsAeHy6Gm7EgOywMgez+nfzFWC691zzmRcqLZZbBVNsEkfR2m7sTP
+OUk/K/pVyN80Yc8R+cqNRb3c1EOgXyqo2W1bZmNuqh9i4dv4CTwh32aWLL4bDkg/
+eZMhVZVOIayHLCmoYyszk13fIZ1zPzXo2U1M+CUwLzrSm5t6pL/VMjroP1QGX27e
+OZj2oZogqjdE/K2ADVnyVYa4b8n818DZSemEVknINwdCNXv4vYDFiZxJQ3O13BKY
+pYcN2xaR4wwJ3sVY7irscI9Qfp9xmMfDNOLxFBEsgm67doiFFI+hUwjfk0IphDan
+PqwOyOkUqouPN+rGcpupzMHTK7+VhC/dvng/K7d+G0of69i78AWoZd02N/iNjpxo
+CieG2izJg6VcCpVFi359Sg/+xWIek1EQJFMkj3Q+rN8uhgQEp+//W+Mdy/o5aPFk
+YmKxEZUOK6PUuKxopVpB9nmD9dtHtaQfN+FvJMSi7N4VEC45mv7C3wfjE21CTXBd
+0dfEbJXTtfwsDWW5ksNV7Ap0/wMr8R+L8QpScUSDr1IEbEd5c6DwrCvDJJeZG63x
+RsDu9v6iDyOyyl6vkBNNDWV0v4OK1hwYYHeY1IIQneG1zxdo7hHomgtOoZpB4zgv
+fS6fkfHo8IE=
+=8Ozy
+-----END PGP SIGNATURE-----
+
+--Sig_/Ogoqs=aZ3chROZMIIk0/k3V--
