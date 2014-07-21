@@ -1,72 +1,152 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Drive replace question
-Date: Mon, 21 Jul 2014 17:35:46 +1000
-Message-ID: <20140721173546.40e8338c@notabene.brown>
-References: <20140711171338.GA7295@animx.eu.org>
+From: Samuli Suominen <ssuominen@gentoo.org>
+Subject: Re: [PATCH] IMSM: move "validate_container_imsm" to be included in
+ mdassemble
+Date: Mon, 21 Jul 2014 10:47:44 +0300
+Message-ID: <53CCC5A0.7090004@gentoo.org>
+References: <20140718150127.10665.91982.stgit@gklab-154-222.intel.com> <20140721165743.4be73256@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/CFm1RC2e=TyavxbhAYVLtlK"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140711171338.GA7295@animx.eu.org>
+In-Reply-To: <20140721165743.4be73256@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
---Sig_/CFm1RC2e=TyavxbhAYVLtlK
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 11 Jul 2014 13:13:38 -0400 Wakko Warner <wakko@animx.eu.org> wrote:
+On 21/07/14 09:57, NeilBrown wrote:
+> On Fri, 18 Jul 2014 17:01:27 +0200 Pawel Baldysiak
+> <pawel.baldysiak@intel.com> wrote:
+>
+>> Commit 0c21b485e4beb7bcfe631412a231f7c1ea1067bc added new
+>> function in imsm superswitch. This function should be
+>> included in mdassemble.
+>>
+>> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+>> ---
+>>  super-intel.c |   82 +++++++++++++++++++++++++++++----------------------------
+>>  1 file changed, 41 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/super-intel.c b/super-intel.c
+>> index b4efa72..e28ac7d 100644
+>> --- a/super-intel.c
+>> +++ b/super-intel.c
+>> @@ -9048,6 +9048,47 @@ int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds,
+>>  	return 0;
+>>  }
+>>  
+>> +/*******************************************************************************
+>> + * Function:	validate_container_imsm
+>> + * Description: This routine validates container after assemble,
+>> + *		eg. if devices in container are under the same controller.
+>> + *
+>> + * Parameters:
+>> + *	info	: linked list with info about devices used in array
+>> + * Returns:
+>> + *	1 : HBA mismatch
+>> + *	0 : Success
+>> + ******************************************************************************/
+>> +int validate_container_imsm(struct mdinfo *info)
+>> +{
+>> +	if (!check_env("IMSM_NO_PLATFORM")) {
+>> +		struct sys_dev *idev;
+>> +		struct mdinfo *dev;
+>> +		char *hba_path = NULL;
+>> +		char *dev_path = devt_to_devpath(makedev(info->disk.major,
+>> +										info->disk.minor));
+>> +
+>> +		for (idev = find_intel_devices(); idev; idev = idev->next) {
+>> +			if (strstr(dev_path, idev->path)) {
+>> +				hba_path = idev->path;
+>> +				break;
+>> +			}
+>> +		}
+>> +		free(dev_path);
+>> +
+>> +		if (hba_path) {
+>> +			for (dev = info->next; dev; dev = dev->next) {
+>> +				if (!devt_attached_to_hba(makedev(dev->disk.major,
+>> +						dev->disk.minor), hba_path)) {
+>> +					pr_err("WARNING - IMSM container assembled with disks under different HBAs!\n"
+>> +						"       This operation is not supported and can lead to data loss.\n");
+>> +					return 1;
+>> +				}
+>> +			}
+>> +		}
+>> +	}
+>> +	return 0;
+>> +}
+>>  #ifndef MDASSEMBLE
+>>  /*******************************************************************************
+>>   * Function:	init_migr_record_imsm
+>> @@ -10524,47 +10565,6 @@ abort:
+>>  	return ret_val;
+>>  }
+>>  
+>> -/*******************************************************************************
+>> - * Function:	validate_container_imsm
+>> - * Description: This routine validates container after assemble,
+>> - *		eg. if devices in container are under the same controller.
+>> - *
+>> - * Parameters:
+>> - *	info	: linked list with info about devices used in array
+>> - * Returns:
+>> - *	1 : HBA mismatch
+>> - *	0 : Success
+>> - ******************************************************************************/
+>> -int validate_container_imsm(struct mdinfo *info)
+>> -{
+>> -	if (!check_env("IMSM_NO_PLATFORM")) {
+>> -		struct sys_dev *idev;
+>> -		struct mdinfo *dev;
+>> -		char *hba_path = NULL;
+>> -		char *dev_path = devt_to_devpath(makedev(info->disk.major,
+>> -										info->disk.minor));
+>> -
+>> -		for (idev = find_intel_devices(); idev; idev = idev->next) {
+>> -			if (strstr(dev_path, idev->path)) {
+>> -				hba_path = idev->path;
+>> -				break;
+>> -			}
+>> -		}
+>> -		free(dev_path);
+>> -
+>> -		if (hba_path) {
+>> -			for (dev = info->next; dev; dev = dev->next) {
+>> -				if (!devt_attached_to_hba(makedev(dev->disk.major,
+>> -						dev->disk.minor), hba_path)) {
+>> -					pr_err("WARNING - IMSM container assembled with disks under different HBAs!\n"
+>> -						"       This operation is not supported and can lead to data loss.\n");
+>> -					return 1;
+>> -				}
+>> -			}
+>> -		}
+>> -	}
+>> -	return 0;
+>> -}
+>>  #endif /* MDASSEMBLE */
+>>  
+>>  struct superswitch super_imsm = {
+>
+> Applied, thanks.
+>
+> Though I do wonder if we really need mdassemble.  Is there a convincing
+> use-case?
+>
+> NeilBrown
+>
 
-> When a drive is being replaced and has lots of errors, does it get kicked
-> before the resync is completed?
+This is why we are packaging mdassemble in Gentoo's sys-fs/mdadm package:
 
-If it doesn't have a bad block log, then "yes".
-If it does, then "no, as long as  it doesn't have too many error".
+http://bugs.gentoo.org/show_bug.cgi?id=211426
 
->=20
-> I'm performing this action now on a system with kernel 3.14.6.  I don't
-> believe the mdadm version makes a difference but it's debian version 3.3-2
+Quoting from the bug:
 
-The version of mdadm that created the array does make a difference.  Not all
-versions create a bad block log.  3.3 and later will create a bad block log.
+"mdassemble is a lightweight program to assemble raid devices that can
+be called directly for an initramfs filesystem. It weights 88ko compiled
+statically with dietlibc."
 
-NeilBrown
+So the use case seems to be initramfs, embedded, minimal systems
 
-
->=20
-> Here's the mdstat for that array:
-> md1 : active raid1 sde[3](R) sdj[2] sdk[1]
->       1465138448 blocks super 1.0 [2/2] [UU]
->       [>....................]  recovery =3D  0.0% (419648/1465138448) fin=
-ish=3D174.5min speed=3D139882K/sec
->       bitmap: 3/11 pages [12KB], 65536KB chunk
->=20
-> sdj is being replaced by sde.  Currently, md1 is not in use.
->=20
-
-
---Sig_/CFm1RC2e=TyavxbhAYVLtlK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU8zC0jnsnt1WYoG5AQIhXxAAkZcH5LDhvg3vWrGsturaQV0a8ETGNl9S
-QalCpw09Z5QVbQCoPBx8+ZgvRw4Ub+y+MRhPIGveCo8Q/7fMghb3QauaUlRB/Y79
-otGS0CvtorHZwkbmUmwKYaqPAPyTcME/u1SuuhvMgJKelt4wVa7YSsPT5Dc2eQud
-pxWauSHbff/w1VYS4bYcAjVQKxLXqoUnHXftESYuONcBjIBJf0gkT7YgH7AzVXx7
-MyFYddj4gh/f+hvyJapHo/EuLs56ycwoyT4iiY2/P1i6HITPpQjE6hJqnhIi7rl4
-His3f30sOGcIihv6U5ToVGSBOknG+XlQHLqc0fBR/4lgOv9XSDA9TD++eOhrmQ1Y
-d1vc1mhxsk5f8VBlDSFgak5X9KoUZ8RDdsP6FyNnXwGbuY3bC6/QUf4yU7Q2ri6C
-R3CFHqTWbRf2+bpO1gLFOADY94rUAOtvzxvMKFRXXyJN9GqdCpkfoBJ2W6vwWFR4
-E+/+4HbROKvCwK7S1AxzuiyeDnY8mdWjLmrEhZwy1hd7zwIqulXje4Q6QQwycWih
-jIU0jBB9FokQkdN6r19ponH4R/kPxr43HW/t3jO9FdeVSYmzbfqCeo59LhbvmQ+K
-7saCAN9Y0GslcAAXThwMaAs8cWRXu4t0yYIpT02I6xAlXLRIR0xlcA4bR3+xCNAs
-byp84y9lFIc=
-=lYYz
------END PGP SIGNATURE-----
-
---Sig_/CFm1RC2e=TyavxbhAYVLtlK--
+- Samuli
