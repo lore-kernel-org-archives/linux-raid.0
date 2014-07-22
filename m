@@ -1,64 +1,235 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Booting after Debian upgrade: /dev/md5 does not exist
-Date: Tue, 22 Jul 2014 12:12:48 -0600
-Message-ID: <5610FF26-A3E8-4A2A-A1BE-099696D6874C@colorremedies.com>
-References: <53CE1C39.3070000@tesco.net> <53CE592B.6030706@turmel.org> <53CE654E.2000800@tesco.net> <53CE7E70.2000800@turmel.org> <53CE89E1.10109@tesco.net> <7EA5355B-DE4B-4EEA-9592-8056FA9A7B7C@colorremedies.com> <53CEA1DE.2040405@turmel.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=utf-8
+From: Theophanis Kontogiannis <tkonto@gmail.com>
+Subject: Problem with RAID-5 not adding disks
+Date: Wed, 23 Jul 2014 01:11:31 +0300
+Message-ID: <53CEE193.60409@gmail.com>
+References: <53CEE0E4.4070906@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-7
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53CEA1DE.2040405@turmel.org>
+In-Reply-To: <53CEE0E4.4070906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On Jul 22, 2014, at 11:39 AM, Phil Turmel <philip@turmel.org> wrote:
+Dear List.
 
-> Hi Chris,
->=20
-> On 07/22/2014 12:57 PM, Chris Murphy wrote:
->>=20
->> On Jul 22, 2014, at 9:57 AM, Ron Leach <ronleach@tesco.net> wrote:
->>>=20
->>> D5s2:/# ./lsdrv
->> [snip]
->>> =E2=94=82 =E2=94=9Csda7 37.25g [8:7] MD raid1 (2) inactive {5bad4c7=
-c:780696f4:e201a2f5:7bba85d7}
->> [snip]
->>> =E2=94=9Csdb7 37.25g [8:23] MD raid1 (2) inactive {5bad4c7c:780696f=
-4:e201a2f5:7bba85d7}
->>=20
->>=20
->> They are in the lsdrv listing, but the raid is not activated. The pr=
-oblem is a RAID UUID mismatch between mdadm.conf and libblkid (I'm assu=
-ming the tree lsdrv is generating ultimately comes from libblkid, I cou=
-ld be wrong.)
->=20
-> lsdrv calls out to udev's "vol_id" utility if present, otherwise call=
-s
-> out to "blkid" in "probe" mode.  So yes, libblkid.
->=20
->> 5bad4c7c:780696f4:fbaacbb9:204d67b9 ## mdadm.conf
->> 5bad4c7c:780696f4:e201a2f5:7bba85d7 ## libblkid
->>=20
->> Therefore it's not being assembled.
->=20
-> Good catch.  UUIDs make my eyes cross.
->=20
-> In this case, since the initramfs is auto-assembling everything, its
-> getting a high minor number instead of the desired minor number.
->=20
-> Ron, while md126 is assembled, you should get a report from blkid for
-> that filesystem.  Then your fstab can pick it up by UUID instead of
-> device name.
+Hello.
 
-Right. Once the raid is active, libblkid will become aware of the files=
-ystem/volume UUID, and it's that UUID to put in fstab. So two different=
- UUIDs: raid goes in mdadm.conf, and volume goes in fstab.
+I have the following problem with my CEntOS 6.5 RAID-5
+
+Array of five disks.
+
+At some point in time I added the fifth disk, however I do not remember
+if I added it as a spare or to go up to RAID-6.
+
+The power and faulty UPS caught me so my RAID-5 has failed (alongside
+with the on board controller :) )
+
+After replacing the MB, I am in the following situation:
+
+        /dev/md0:
+                Version : 1.2
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+          Used Dev Size : 976630272 (931.39 GiB 1000.07 GB)
+           Raid Devices : 5
+          Total Devices : 2
+            Persistence : Superblock is persistent
+
+            Update Time : Sat Jul 12 22:11:39 2014
+                  State : active, FAILED, Not Started
+         Active Devices : 2
+        Working Devices : 2
+         Failed Devices : 0
+          Spare Devices : 0
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+                   UUID : 953836cd:23314476:5db06922:c886893d
+                 Events : 16855
+
+            Number   Major   Minor   RaidDevice State
+               0       0        0        0      removed
+               1       8       32        1      active sync   /dev/sdc
+               2       0        0        2      removed
+               4       8       64        3      active sync   /dev/sde
+               4       0        0        4      removed
 
 
-Chris Murphy--
+
+Every effort to add at least one more disk ends up in error:
+
+[root ~]# mdadm /dev/md0 --re-add /dev/sdd
+mdadm: --re-add for /dev/sdd to /dev/md0 is not possible
+
+I also made sure that the devices are in the correct physical order.
+
+
+    mdadm --examine /dev/sd[b-f]
+
+
+        /dev/sdb:
+                  Magic : a92b4efc
+                Version : 1.2
+            Feature Map : 0x2
+             Array UUID : 953836cd:23314476:5db06922:c886893d
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+           Raid Devices : 5
+
+         Avail Dev Size : 1953260911 (931.39 GiB 1000.07 GB)
+             Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
+          Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
+            Data Offset : 262144 sectors
+           Super Offset : 8 sectors
+        Recovery Offset : 0 sectors
+                  State : active
+            Device UUID : 7117d844:783abda5:093ee4d9:ba0ac2f0
+
+            Update Time : Sat Jul 12 21:32:42 2014
+               Checksum : 31569c40 - correct
+                 Events : 16845
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+           Device Role : Active device 0
+           Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+        /dev/sdc:
+                  Magic : a92b4efc
+                Version : 1.2
+            Feature Map : 0x0
+             Array UUID : 953836cd:23314476:5db06922:c886893d
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+           Raid Devices : 5
+
+         Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
+             Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
+          Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
+            Data Offset : 262144 sectors
+           Super Offset : 8 sectors
+                  State : active
+            Device UUID : 18bf4347:08c262ec:694eba7f:eb8e6b26
+
+            Update Time : Sat Jul 12 22:11:39 2014
+               Checksum : 55e8716a - correct
+                 Events : 16855
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+           Device Role : Active device 1
+           Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+        /dev/sdd:
+                  Magic : a92b4efc
+                Version : 1.2
+            Feature Map : 0x0
+             Array UUID : 953836cd:23314476:5db06922:c886893d
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+           Raid Devices : 5
+
+         Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
+             Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
+          Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
+            Data Offset : 262144 sectors
+           Super Offset : 8 sectors
+                  State : active
+            Device UUID : 4f77c847:2f567632:66bb5600:9fb2eeba
+
+            Update Time : Sat Jul 12 21:32:42 2014
+               Checksum : b19f455b - correct
+                 Events : 16855
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+           Device Role : Active device 2
+           Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+        /dev/sde:
+                  Magic : a92b4efc
+                Version : 1.2
+            Feature Map : 0x0
+             Array UUID : 953836cd:23314476:5db06922:c886893d
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+           Raid Devices : 5
+
+         Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
+             Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
+          Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
+            Data Offset : 262144 sectors
+           Super Offset : 8 sectors
+                  State : active
+            Device UUID : 51b43b6e:7bb8a070:f6375540:28e0b75c
+
+            Update Time : Sat Jul 12 22:11:39 2014
+               Checksum : f80197e3 - correct
+                 Events : 16855
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+           Device Role : Active device 3
+           Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D missing)
+        /dev/sdf:
+                  Magic : a92b4efc
+                Version : 1.2
+            Feature Map : 0x0
+             Array UUID : 953836cd:23314476:5db06922:c886893d
+                   Name : tweety.example.com:0  (local to host
+        tweety.example.com)
+          Creation Time : Fri Feb 21 18:06:31 2014
+             Raid Level : raid5
+           Raid Devices : 5
+
+         Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
+             Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
+          Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
+            Data Offset : 262144 sectors
+           Super Offset : 8 sectors
+                  State : clean
+            Device UUID : 9f7b1355:936e12f2:813c83a0:13854a6b
+
+            Update Time : Sat Jul 12 22:11:39 2014
+               Checksum : cf0bbec1 - correct
+                 Events : 16855
+
+                 Layout : left-symmetric
+             Chunk Size : 512K
+
+           Device Role : Active device 4
+           Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D missing)
+
+
+Any chance to revive this array?
+
+
+--=20
+
+Kind Regards,
+Theophanis Kontogiannis
+
+=CC=D6=D7
+=C8=CA
+
+
+
+--
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
