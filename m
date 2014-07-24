@@ -1,81 +1,121 @@
-From: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Subject: Re: Fedora 20 RAID 6 errors on rebuild / check / repair
-Date: Thu, 24 Jul 2014 10:45:05 +0100
-Message-ID: <BLU436-SMTP705A7998D9280DFFC19D5698FF0@phx.gbl>
-References: <CAF-KpgZ+8pPp62CN5p4rkwSk0nSv_JdkXGLnUWMaDEj2MmVcGg@mail.gmail.com>
-	 <53D0B6C1.7030908@uni-konstanz.de>
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: Re: /sys/block/md126 still exists even after stopping the array
+Date: Thu, 24 Jul 2014 15:40:22 +0200
+Message-ID: <53D10CC6.4070009@profitbricks.com>
+References: <53A99B76.3020603@gmail.com> <20140625110348.48ab2d7a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53D0B6C1.7030908@uni-konstanz.de>
+In-Reply-To: <20140625110348.48ab2d7a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kay Diederichs <kay.diederichs@uni-konstanz.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, Francis Moreau <francis.moro@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2014-07-24 at 09:33 +0200, Kay Diederichs wrote:
-> On 07/24/2014 04:29 AM, George Rapp wrote:
-> > Hi -
-> > 
-> > I have a Fedora 20 media server / MythTV backend utilizing a HighPoint
-> > RocketRAID 2720SGL controller (Amazon product link:
-> > http://is.gd/yqo2i1). The server performs fine under normal (minimal)
-> > read-write operations, but during any high-I/O operations (rebuild
-> > after mdadm --add, RAID check initiated by "echo check >
-> > /sys/block/md6/md/sync_action" or "echo repair > ..."), I get sporadic
-> > errors and poor performance on my RAID 6 array, /dev/md6.
-> > 
-> > Wondering if there is anything I can tweak to make my configuration
-> > more stable. The inability to check or repair this RAID device has me
-> > nervous.
-> > 
-> > The problems seem to start when I see the following error message in
-> > /var/log/syslog:
-> > 
-> >> Jul 22 21:23:37 backend3 kernel: [95876.375990] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> >> Jul 22 21:23:37 backend3 kernel: [95876.376153] ata5.00: failed command: READ DMA
-> >> Jul 22 21:23:37 backend3 kernel: [95876.376284] ata5.00: cmd c8/00:08:40:11:81/00:00:00:00:00/e3 tag 11 dma 4096 in
-> >> Jul 22 21:23:37 backend3 kernel: [95876.376284]          res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-> >> Jul 22 21:23:37 backend3 kernel: [95876.376750] ata5.00: status: { DRDY }
-> >> Jul 22 21:23:37 backend3 kernel: [95876.376874] ata5: hard resetting link
-> >> Jul 22 21:23:37 backend3 kernel: ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> >> Jul 22 21:23:37 backend3 kernel: ata5.00: failed command: READ DMA
-> >> Jul 22 21:23:37 backend3 kernel: ata5.00: cmd c8/00:08:40:11:81/00:00:00:00:00/e3 tag 11 dma 4096 in
-> >>          res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-> >> Jul 22 21:23:37 backend3 kernel: ata5.00: status: { DRDY }
-> >> Jul 22 21:23:37 backend3 kernel: ata5: hard resetting link
-> >> Jul 22 21:23:40 backend3 kernel: [95878.742281] ata5.00: configured for UDMA/133
-> >> Jul 22 21:23:40 backend3 kernel: [95878.742413] ata5.00: device reported invalid CHS sector 0
-> >> Jul 22 21:23:40 backend3 kernel: [95878.742542] ata5: EH complete
-> >> Jul 22 21:23:40 backend3 kernel: ata5.00: configured for UDMA/133
-> >> Jul 22 21:23:40 backend3 kernel: ata5.00: device reported invalid CHS sector 0
-> >> Jul 22 21:23:40 backend3 kernel: ata5: EH complete
-> > 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-The above tends to point to a hardware problem with any of the
-following.. disk, cable, controller.
+On 25.06.2014 03:03, NeilBrown wrote:
+> On Tue, 24 Jun 2014 17:38:30 +0200 Francis Moreau
+> <francis.moro@gmail.com> wrote:
+> 
+>> Hello,
+>> 
+>> I'm having the folloing behaviour with kernel 3.14.5 and mdadm
+>> v3.3.1.
+>> 
+>> After stopping all arrays, I still can see one of them in
+>> /sys/block/:
+>> 
+>> # cat /proc/mdstat Personalities : [raid1] md125 : active raid1
+>> sdb3[1] sda3[0] 483688448 blocks super 1.2 [2/2] [UU] 
+>> [======>..............]  resync = 34.9% (169161280/483688448) 
+>> finish=44.0min speed=118852K/sec bitmap: 3/4 pages [12KB],
+>> 65536KB chunk
+>> 
+>> md126 : active raid1 sdb2[1] sda2[0] 4038656 blocks super 1.2
+>> [2/2] [UU]
+>> 
+>> md127 : active raid1 sdb1[1] sda1[0] 524224 blocks super 1.0
+>> [2/2] [UU]
+>> 
+>> unused devices: <none>
+>> 
+>> # mdadm --stop /dev/md12[567] mdadm: stopped /dev/md125 mdadm:
+>> stopped /dev/md126 mdadm: stopped /dev/md127
+>> 
+>> # cat /proc/mdstat Personalities : [raid1] unused devices:
+>> <none>
+>> 
+>> # ls /sys/block/ md126  sda  sdb  sdc  sr0
+>> 
+>> # ls /sys/block/md126/md/ array_size  array_state  bitmap
+>> chunk_size  component_size  layout level  max_read_errors
+>> metadata_version  new_dev  raid_disks reshape_direction
+>> reshape_position  resync_start  safe_mode_delay
+>> 
+>> # dmesg .... [ 1573.715476] md125: detected capacity change from
+>> 495296970752 to 0 [ 1573.715626] md: md125 stopped. [
+>> 1573.715633] md: unbind<sdb3> [ 1573.740681] md:
+>> export_rdev(sdb3) [ 1573.740694] md: unbind<sda3> [ 1573.754008]
+>> md: export_rdev(sda3) [ 1573.773398] md126: detected capacity
+>> change from 4135583744 to 0 [ 1573.773403] md: md126 stopped. [
+>> 1573.773410] md: unbind<sdb2> [ 1573.820652] md:
+>> export_rdev(sdb2) [ 1573.820664] md: unbind<sda2> [ 1573.873974]
+>> md: export_rdev(sda2) [ 1573.889904] md127: detected capacity
+>> change from 536805376 to 0 [ 1573.889910] md: md127 stopped. [
+>> 1573.889917] md: unbind<sdb1> [ 1573.913978] md:
+>> export_rdev(sdb1) [ 1573.914033] md: unbind<sda1> [ 1573.940627]
+>> md: export_rdev(sda1)
+>> 
+>> After waiting a couple of min, stopping again md126 worked:
+>> 
+>> [ 1835.755661] md: md126 stopped.
+>> 
+>> Is this expected ?
+> 
+> No overly surprising.
+> 
+> This is probably caused by udev, or something udev runs, opening
+> /dev/md126 after it has been stopped.  This has the effect of
+> creating an empty inactive array. e.g.
+> 
+> mknod /dev/test b 9 57 < /dev/test
+> 
+> will make /sys/block/md57 appear.
+> 
+> It is a bit untidy, but shouldn't cause problems.
+> 
+> NeilBrown
+> 
 
-My own experience of such messages, they where always caused by
-connection problems in the cables with one being "broken" in a similar
-way to how a pair of head phones cut out until the cable is "wobbled"
-near the jack plug.
 
-Basically a broken wire in the sata cable that works "most of the time"
-but under load fails. It was very badly "kinked" near the plug due to
-bad case design not allowing much room between the side panel and the
-back of the drive and over time and multiple side panel removals moving
-the cable to different drives had degraded the integrity.
+Hi Neil,
 
-The second time I had the above was caused by a loose socket on an add
-in card (really cheap one), the vibrations from the washing machine spin
-dry sequence would cause it to error if under high load (working out
-that two unrelated events had to occur at the same time took a while,
-especially as the drive in the second sata socket never had any issues);
-it was eventually resolved by using a small piece of selotape which
-lifted one side of the cable connector causing a tighter fit on the
-contact side... a true "bodge-it and scarper" fix that would make an
-engineer proud ;-)
+we are also noticing this issue with udev-215 on Gentoo. They've
+switched over to systemd. Deactivating all udev rules doesn't help. So
+it must be an issue in the code. udev-204 works fine.
+When stopping udev, then it is possible to stop the MD array and it
+remains stopped (/sys/block/mdX disappears). Looks like they do
+something really strange there.
 
+Do you have any advice how to fix this in another way but to change
+the kernel or to downgrade udev?
 
+File a systemd bug?
 
+Cheers,
+Sebastian
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJT0QzGAAoJEH4DRb7WXajZXooIALBi2HzzXL0aLx6aKf3EHIRb
+/PmRFhGdHZlGcETbgYflbuFYz30rLs3AYfOm+/PpGNpatppxuKkEddEq/2Lp/wJn
+2cQt6cd2F6fOdgMq9MK3tM2nnj4HRPpqpq5huvnvijTYsPXRYvepjQUxFtd7/G/L
+z/41cRGeeLOhlwfoUeWIwm1XKsetLgUl8VyKmxxtBRwCA5UZjfdE9u1X7TUxxA7d
+ZRtASftmtXqjtxLHRzV+0LRSDgBBAYLzrJTlrgPf5oN+rW/NtjNxld5V0oqynrsW
+WawC3ntc+z79tPtfHSLV1icshhmkfhcQzWjOcmW4RypFF/7h+3zTBBi262FEiGM=
+=CvmT
+-----END PGP SIGNATURE-----
