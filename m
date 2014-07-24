@@ -1,85 +1,82 @@
-From: George Rapp <george.rapp@gmail.com>
-Subject: Re: Fedora 20 RAID 6 errors on rebuild / check / repair
-Date: Thu, 24 Jul 2014 15:22:06 -0400
-Message-ID: <CAF-KpgZSfQmSML0em6RuAfXOT0f==cNqFbtsTc05Axxjfw4Pmg@mail.gmail.com>
-References: <CAF-KpgZ+8pPp62CN5p4rkwSk0nSv_JdkXGLnUWMaDEj2MmVcGg@mail.gmail.com>
- <53D0B6C1.7030908@uni-konstanz.de> <BLU436-SMTP705A7998D9280DFFC19D5698FF0@phx.gbl>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Problem with RAID-5 not adding disks
+Date: Thu, 24 Jul 2014 20:50:11 +0100
+Message-ID: <20140724195011.GA31258@cthulhu.home.robinhill.me.uk>
+References: <53CEE0E4.4070906@gmail.com>
+ <53CEE193.60409@gmail.com>
+ <CAAMCDed1o8Ta80sdvefhrLhnmAfeQd5SBmYuWH4Xby6a+m6C2Q@mail.gmail.com>
+ <53CFF7B7.3010902@gmail.com>
+ <CAAMCDefnMznYnNxoMyhfduhcJkJ1z3iGHD2xD1HEpac1TOxWvg@mail.gmail.com>
+ <53D144BD.90301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP705A7998D9280DFFC19D5698FF0@phx.gbl>
+Content-Disposition: inline
+In-Reply-To: <53D144BD.90301@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Cc: Kay Diederichs <kay.diederichs@uni-konstanz.de>, linux-raid@vger.kernel.org
+To: Theophanis Kontogiannis <tkonto@gmail.com>
+Cc: Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jul 24, 2014 at 5:45 AM, Wilson, Jonathan
-<piercing_male@hotmail.com> wrote:
-> On Thu, 2014-07-24 at 09:33 +0200, Kay Diederichs wrote:
->> On 07/24/2014 04:29 AM, George Rapp wrote:
->> > [snip]
->> >
->> >> Jul 22 21:23:37 backend3 kernel: [95876.375990] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->> >> Jul 22 21:23:37 backend3 kernel: [95876.376153] ata5.00: failed command: READ DMA
->> >> Jul 22 21:23:37 backend3 kernel: [95876.376284] ata5.00: cmd c8/00:08:40:11:81/00:00:00:00:00/e3 tag 11 dma 4096 in
->> >> Jul 22 21:23:37 backend3 kernel: [95876.376284]          res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
->> >> Jul 22 21:23:37 backend3 kernel: [95876.376750] ata5.00: status: { DRDY }
->> >> Jul 22 21:23:37 backend3 kernel: [95876.376874] ata5: hard resetting link
->> >> Jul 22 21:23:37 backend3 kernel: ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
->> >> Jul 22 21:23:37 backend3 kernel: ata5.00: failed command: READ DMA
->> >> Jul 22 21:23:37 backend3 kernel: ata5.00: cmd c8/00:08:40:11:81/00:00:00:00:00/e3 tag 11 dma 4096 in
->> >>          res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
->> >> Jul 22 21:23:37 backend3 kernel: ata5.00: status: { DRDY }
->> >> Jul 22 21:23:37 backend3 kernel: ata5: hard resetting link
->> >> Jul 22 21:23:40 backend3 kernel: [95878.742281] ata5.00: configured for UDMA/133
->> >> Jul 22 21:23:40 backend3 kernel: [95878.742413] ata5.00: device reported invalid CHS sector 0
->> >> Jul 22 21:23:40 backend3 kernel: [95878.742542] ata5: EH complete
->> >> Jul 22 21:23:40 backend3 kernel: ata5.00: configured for UDMA/133
->> >> Jul 22 21:23:40 backend3 kernel: ata5.00: device reported invalid CHS sector 0
->> >> Jul 22 21:23:40 backend3 kernel: ata5: EH complete
->> >
->
-> The above tends to point to a hardware problem with any of the
-> following.. disk, cable, controller.
->
-> My own experience of such messages, they where always caused by
-> connection problems in the cables with one being "broken" in a similar
-> way to how a pair of head phones cut out until the cable is "wobbled"
-> near the jack plug.
->
-> Basically a broken wire in the sata cable that works "most of the time"
-> but under load fails. It was very badly "kinked" near the plug due to
-> bad case design not allowing much room between the side panel and the
-> back of the drive and over time and multiple side panel removals moving
-> the cable to different drives had degraded the integrity.
 
-Jonathan -
+--9amGYk9869ThD9tj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your reply. I am planning on moving this system to another
-case that (1) is larger and (2) has some better ability to attenuate
-vibrations. I might also replace my cables.
+On Thu Jul 24, 2014 at 08:39:09PM +0300, Theophanis Kontogiannis wrote:
 
-> The second time I had the above was caused by a loose socket on an add
-> in card (really cheap one), the vibrations from the washing machine spin
-> dry sequence would cause it to error if under high load (working out
-> that two unrelated events had to occur at the same time took a while,
-> especially as the drive in the second sata socket never had any issues);
-> it was eventually resolved by using a small piece of selotape which
-> lifted one side of the cable connector causing a tighter fit on the
-> contact side... a true "bodge-it and scarper" fix that would make an
-> engineer proud ;-)
+> Hi Roger, Hi List,
+>=20
+> With a high heart bit rate I tried this:
+>=20
+> mdadm --create /dev/md0 --assume-clean --level=3D5 --raid-devices=3D5  /d=
+ev/sdb /dev/sdc /dev/sde /dev/sdd missing
+>=20
+> IT WORKED!
+>=20
+> Now I have mounted my date back.
+>=20
+> BUT:
+>=20
+> 1. I have one failing disk according to SMART (that is /dev/sdc)
+>=20
+> 2. /dev/sdb and /dev/sdd have a little smaller size then the others:
+>=20
+> blockdev --getsz /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf
+> 1953523055
+> 1953525168
+> 1953523055
+> 1953525168
+> 1953523055
+>=20
+All 1TB disks should be exactly the same size (manufacturers are using
+standard sizes for all disks nowadays). Are these drives all on the same
+controllers? This looks like maybe the BIOS is reserving some space on
+the disks, which may have overwritten something in the original array.
 
-The last three tools used on this server have been epoxy, a pop rivet
-gun, and a sheet metal bending bar. I understand your solution (what
-we in the US would call "redneck engineering") perfectly... 8^)
+Have you run a fsck across the array after reassembling it? I suspect
+you may find the filesystem size doesn't match the original one.
 
-Thanks again.
--- 
-George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
-Work: george.rapp -- at -- hp.com (or) george.rapp.ctr -- at -- dfas.mil
+Regards,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-A wise and frugal government, which shall restrain men from injuring
-one another, which shall leave them otherwise free to regulate their
-own pursuits of industry and improvement, and shall not take from the
-mouth of labor the bread it has earned. This is the sum of
-good government... - Thomas Jefferson, First Inaugural Address
+--9amGYk9869ThD9tj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlPRY3MACgkQShxCyD40xBK85QCfWLbTnbPfdLZfwTwUcu7N0wWE
+3M4An2rEewRhSm0A0Y+si9rKBVBKK9up
+=0+nO
+-----END PGP SIGNATURE-----
+
+--9amGYk9869ThD9tj--
