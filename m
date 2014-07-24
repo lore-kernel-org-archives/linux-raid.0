@@ -1,404 +1,54 @@
-From: Theophanis Kontogiannis <tkonto@gmail.com>
-Subject: Re: Problem with RAID-5 not adding disks
-Date: Thu, 24 Jul 2014 18:31:14 +0300
-Message-ID: <53D126C2.3030704@gmail.com>
-References: <53CEE0E4.4070906@gmail.com> <53CEE193.60409@gmail.com> <CAAMCDed1o8Ta80sdvefhrLhnmAfeQd5SBmYuWH4Xby6a+m6C2Q@mail.gmail.com> <53CFF7B7.3010902@gmail.com> <CAAMCDefnMznYnNxoMyhfduhcJkJ1z3iGHD2xD1HEpac1TOxWvg@mail.gmail.com>
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: Re: udev 215 creates inactive MD devices upon stopping them
+Date: Thu, 24 Jul 2014 17:48:05 +0200
+Message-ID: <53D12AB5.5090102@profitbricks.com>
+References: <53D11CCA.1050602@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-7
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDefnMznYnNxoMyhfduhcJkJ1z3iGHD2xD1HEpac1TOxWvg@mail.gmail.com>
+In-Reply-To: <53D11CCA.1050602@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: systemd-devel@freedesktop.org, Kay Sievers <kay@vrfy.org>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, artur.paszkiewicz@intel.com, Francis Moreau <francis.moro@gmail.com>
 List-Id: linux-raid.ids
 
-Hi Roger,
+[resending to the correct mailing list]
 
-Hi All,
+Hi,
 
-Apparently this is the reason I can not solve it out myself.
+as discussed on linux-raid, please fix the bug that udev 215 creates
+inactive MD devices upon stopping them.
 
-According to the following all looks OK and all devices are in place,
-clean, with correct SB version and in the correct physical sequence
-(correct me if I am wrong):
+Reference: http://www.spinics.net/lists/raid/msg46676.html
+Reported-by: Francis Moreau <francis.moro@gmail.com>
 
- mdadm --examine /dev/sd[b-f]|grep Version
-        Version : 1.2
-        Version : 1.2
-        Version : 1.2
-        Version : 1.2
-        Version : 1.2
+An open() call to /dev/mdX after creating it with mknod is enough to
+create such inactive MD device.
 
-mdadm --examine /dev/sd[b-f]|grep Role
-   Device Role : Active device 0
-   Device Role : Active device 1
-   Device Role : Active device 2
-   Device Role : Active device 3
-   Device Role : Active device 4
+According to Artur the issue is caused by this change in udev:
 
-
-mdadm --examine /dev/sd[b-f]|grep Event
-         Events : 16845
-         Events : 16855
-         Events : 16855
-         Events : 16855
-         Events : 16855
-
-mdadm --examine /dev/sd[b-f]|grep Update
-    Update Time : Sat Jul 12 21:32:42 2014
-    Update Time : Sat Jul 12 22:11:39 2014
-    Update Time : Sat Jul 12 21:32:42 2014
-    Update Time : Sat Jul 12 22:11:39 2014
-    Update Time : Sat Jul 12 22:11:39 2014
-
-
-However this is what confuses me and maybe is the reason of my problem.
-However I can not evaluate it:
-
- mdadm --examine /dev/sd[b-f]|grep State
-          State : active
-   Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-          State : clean
-   Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
-          State : active
-   Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-          State : active
-   Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D missing)
-          State : clean
-   Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D missing)
-
-
-
-Any ideas?
-
-Kind Regards,
-Theophanis Kontogiannis
-
-=CC=D6=D7
-=C8=CA
-
-On 24/07/14 03:06, Roger Heflin wrote:
-> it shows one of the disks as not fresh (sdb) and it shows sdd and sdf
-> as not being found with a valid superblock at all.
+> commit 3ebdb81ef088afd3b4c72b516beb5610f8c93a0d
+> Author: Kay Sievers <kay at vrfy.org>
+> Date:   Sun Apr 13 19:54:27 2014 -0700
 >
-> You probably need to do some looking around and see if you can figure
-> out where they are or what is going on.
+>      udev: serialize/synchronize block device event handling with file locks
 >
-> This may help you find them:
-> mdadm --examine /dev/<device>
-> you may need to repeat for any and all unused devices you find on the
-> system and then fix whatever caused the disks to be missing or use th=
-e
-> device it is now at.
+> http://cgit.freedesktop.org/systemd/systemd/commit/?id=3ebdb81ef088afd3b4c72b516beb5610f8c93a0d
 >
-> On Wed, Jul 23, 2014 at 12:58 PM, Theophanis Kontogiannis
-> <tkonto@gmail.com> wrote:
->> Hi Roger,
->>
->> Thank you for the info.
->>
->> Results:
->>
->> [root ~#] mdadm --assemble --force /dev/md0 /dev/sdb /dev/sdc /dev/s=
-dd
->> /dev/sde /dev/sdf
->> mdadm: Marking array /dev/md0 as 'clean'
->> mdadm: failed to add /dev/sdd to /dev/md0: Invalid argument
->> mdadm: failed to add /dev/sdf to /dev/md0: Invalid argument
->> mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
->> [root ~#]
->>
->> md: sdd does not have a valid v1.2 superblock, not importing!
->> md: md_import_device returned -22
->> md: bind<sde>
->> md: sdf does not have a valid v1.2 superblock, not importing!
->> md: md_import_device returned -22
->> md: bind<sdc>
->> md: kicking non-fresh sdb from array!
->> md: unbind<sdb>
->> md: export_rdev(sdb)
->> bio: create slab <bio-1> at 1
->> md/raid:md0: device sdc operational as raid disk 1
->> md/raid:md0: device sde operational as raid disk 3
->> md/raid:md0: allocated 5366kB
->> md/raid:md0: not enough operational devices (3/5 failed)
->> RAID conf printout:
->>  --- level:5 rd:5 wd:2
->>  disk 1, o:1, dev:sdc
->>  disk 3, o:1, dev:sde
->> md/raid:md0: failed to run raid set.
->> md: pers->run() failed ...
->>
->>
->>
->> [root@tweety ~]# cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4]
->> md0 : inactive sdc[1] sde[4]
->>       1953263024 blocks super 1.2
->>
->> unused devices: <none>
->>
->>
->>
->> Anything else I could do?
->>
->>
->> Kind Regards,
->> Theophanis Kontogiannis
->>
->> =CC=D6=D7
->> =C8=CA
->>
->> On 23/07/14 03:10, Roger Heflin wrote:
->>> mdadm --stop /dev/mdXX stop
->>> mdadm --assemble --force /dev/mdXX <list all devices good or bad th=
-at
->>> were previously in the array>
->>>
->>> The assemble with force should make it turn it on with enough disks=
-=2E
->>> Then re-add the remaining.
->>>
->>> I have had to do this a number of times when a subset of my sata po=
-rts acted up.
->>>
->>> On Tue, Jul 22, 2014 at 5:11 PM, Theophanis Kontogiannis
->>> <tkonto@gmail.com> wrote:
->>>> Dear List.
->>>>
->>>> Hello.
->>>>
->>>> I have the following problem with my CEntOS 6.5 RAID-5
->>>>
->>>> Array of five disks.
->>>>
->>>> At some point in time I added the fifth disk, however I do not rem=
-ember
->>>> if I added it as a spare or to go up to RAID-6.
->>>>
->>>> The power and faulty UPS caught me so my RAID-5 has failed (alongs=
-ide
->>>> with the on board controller :) )
->>>>
->>>> After replacing the MB, I am in the following situation:
->>>>
->>>>         /dev/md0:
->>>>                 Version : 1.2
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>           Used Dev Size : 976630272 (931.39 GiB 1000.07 GB)
->>>>            Raid Devices : 5
->>>>           Total Devices : 2
->>>>             Persistence : Superblock is persistent
->>>>
->>>>             Update Time : Sat Jul 12 22:11:39 2014
->>>>                   State : active, FAILED, Not Started
->>>>          Active Devices : 2
->>>>         Working Devices : 2
->>>>          Failed Devices : 0
->>>>           Spare Devices : 0
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>                    UUID : 953836cd:23314476:5db06922:c886893d
->>>>                  Events : 16855
->>>>
->>>>             Number   Major   Minor   RaidDevice State
->>>>                0       0        0        0      removed
->>>>                1       8       32        1      active sync   /dev=
-/sdc
->>>>                2       0        0        2      removed
->>>>                4       8       64        3      active sync   /dev=
-/sde
->>>>                4       0        0        4      removed
->>>>
->>>>
->>>>
->>>> Every effort to add at least one more disk ends up in error:
->>>>
->>>> [root ~]# mdadm /dev/md0 --re-add /dev/sdd
->>>> mdadm: --re-add for /dev/sdd to /dev/md0 is not possible
->>>>
->>>> I also made sure that the devices are in the correct physical orde=
-r.
->>>>
->>>>
->>>>     mdadm --examine /dev/sd[b-f]
->>>>
->>>>
->>>>         /dev/sdb:
->>>>                   Magic : a92b4efc
->>>>                 Version : 1.2
->>>>             Feature Map : 0x2
->>>>              Array UUID : 953836cd:23314476:5db06922:c886893d
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>            Raid Devices : 5
->>>>
->>>>          Avail Dev Size : 1953260911 (931.39 GiB 1000.07 GB)
->>>>              Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
->>>>           Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
->>>>             Data Offset : 262144 sectors
->>>>            Super Offset : 8 sectors
->>>>         Recovery Offset : 0 sectors
->>>>                   State : active
->>>>             Device UUID : 7117d844:783abda5:093ee4d9:ba0ac2f0
->>>>
->>>>             Update Time : Sat Jul 12 21:32:42 2014
->>>>                Checksum : 31569c40 - correct
->>>>                  Events : 16845
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>            Device Role : Active device 0
->>>>            Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D miss=
-ing)
->>>>         /dev/sdc:
->>>>                   Magic : a92b4efc
->>>>                 Version : 1.2
->>>>             Feature Map : 0x0
->>>>              Array UUID : 953836cd:23314476:5db06922:c886893d
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>            Raid Devices : 5
->>>>
->>>>          Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->>>>              Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
->>>>           Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
->>>>             Data Offset : 262144 sectors
->>>>            Super Offset : 8 sectors
->>>>                   State : active
->>>>             Device UUID : 18bf4347:08c262ec:694eba7f:eb8e6b26
->>>>
->>>>             Update Time : Sat Jul 12 22:11:39 2014
->>>>                Checksum : 55e8716a - correct
->>>>                  Events : 16855
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>            Device Role : Active device 1
->>>>            Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D miss=
-ing)
->>>>         /dev/sdd:
->>>>                   Magic : a92b4efc
->>>>                 Version : 1.2
->>>>             Feature Map : 0x0
->>>>              Array UUID : 953836cd:23314476:5db06922:c886893d
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>            Raid Devices : 5
->>>>
->>>>          Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->>>>              Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
->>>>           Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
->>>>             Data Offset : 262144 sectors
->>>>            Super Offset : 8 sectors
->>>>                   State : active
->>>>             Device UUID : 4f77c847:2f567632:66bb5600:9fb2eeba
->>>>
->>>>             Update Time : Sat Jul 12 21:32:42 2014
->>>>                Checksum : b19f455b - correct
->>>>                  Events : 16855
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>            Device Role : Active device 2
->>>>            Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D miss=
-ing)
->>>>         /dev/sde:
->>>>                   Magic : a92b4efc
->>>>                 Version : 1.2
->>>>             Feature Map : 0x0
->>>>              Array UUID : 953836cd:23314476:5db06922:c886893d
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>            Raid Devices : 5
->>>>
->>>>          Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->>>>              Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
->>>>           Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
->>>>             Data Offset : 262144 sectors
->>>>            Super Offset : 8 sectors
->>>>                   State : active
->>>>             Device UUID : 51b43b6e:7bb8a070:f6375540:28e0b75c
->>>>
->>>>             Update Time : Sat Jul 12 22:11:39 2014
->>>>                Checksum : f80197e3 - correct
->>>>                  Events : 16855
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>            Device Role : Active device 3
->>>>            Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D miss=
-ing)
->>>>         /dev/sdf:
->>>>                   Magic : a92b4efc
->>>>                 Version : 1.2
->>>>             Feature Map : 0x0
->>>>              Array UUID : 953836cd:23314476:5db06922:c886893d
->>>>                    Name : tweety.example.com:0  (local to host
->>>>         tweety.example.com)
->>>>           Creation Time : Fri Feb 21 18:06:31 2014
->>>>              Raid Level : raid5
->>>>            Raid Devices : 5
->>>>
->>>>          Avail Dev Size : 1953263024 (931.39 GiB 1000.07 GB)
->>>>              Array Size : 3906521088 (3725.55 GiB 4000.28 GB)
->>>>           Used Dev Size : 1953260544 (931.39 GiB 1000.07 GB)
->>>>             Data Offset : 262144 sectors
->>>>            Super Offset : 8 sectors
->>>>                   State : clean
->>>>             Device UUID : 9f7b1355:936e12f2:813c83a0:13854a6b
->>>>
->>>>             Update Time : Sat Jul 12 22:11:39 2014
->>>>                Checksum : cf0bbec1 - correct
->>>>                  Events : 16855
->>>>
->>>>                  Layout : left-symmetric
->>>>              Chunk Size : 512K
->>>>
->>>>            Device Role : Active device 4
->>>>            Array State : .A.AA ('A' =3D=3D active, '.' =3D=3D miss=
-ing)
->>>>
->>>>
->>>> Any chance to revive this array?
->>>>
->>>>
->>>> --
->>>>
->>>> Kind Regards,
->>>> Theophanis Kontogiannis
->>>>
->>>> =CC=D6=D7
->>>> =C8=CA
->>>>
->>>>
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It seems that they have already disabled this for dm for some reason,
+> but not for md:
+>
+> commit e918a1b5a94f270186dca59156354acd2a596494
+> Author: Kay Sievers <kay@vrfy.org>
+> Date:   Tue Jun 3 16:49:38 2014 +0200
+>
+>     udev: exclude device-mapper from block device ownership event locking
+>
+> http://cgit.freedesktop.org/systemd/systemd/commit/?id=e918a1b5a94f270186dca59156354acd2a596494
+>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Sebastian
+
+
