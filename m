@@ -1,98 +1,70 @@
-From: George Rapp <george.rapp@gmail.com>
-Subject: Re: Fedora 20 RAID 6 errors on rebuild / check / repair
-Date: Fri, 25 Jul 2014 12:57:34 -0400
-Message-ID: <CAF-KpgZRHUf3UjarndNXourz0i8MeEhz7P4qRYJhVYQoTJfuLg@mail.gmail.com>
-References: <CAF-KpgZ+8pPp62CN5p4rkwSk0nSv_JdkXGLnUWMaDEj2MmVcGg@mail.gmail.com>
- <53D0B6C1.7030908@uni-konstanz.de>
+From: jiao hui <jiaohui@bwstor.com.cn>
+Subject: [PATCH] md/raid1: always set MD_RECOVERY_INTR flag in raid1 error
+ handler to avoid potential data corruption
+Date: Mon, 28 Jul 2014 16:09:33 +0800
+Message-ID: <1406534973.21454.3.camel@fedws>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53D0B6C1.7030908@uni-konstanz.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kay Diederichs <kay.diederichs@uni-konstanz.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+Cc: guomingyang@nrchpc.ac.cn, zhaomeng@bwstor.com.cn
 List-Id: linux-raid.ids
 
-On Thu, Jul 24, 2014 at 3:33 AM, Kay Diederichs
-<kay.diederichs@uni-konstanz.de> wrote:
-> On 07/24/2014 04:29 AM, George Rapp wrote:
->> Hi -
->> [big snip]
->>
+From 1fdbfb8552c00af55d11d7a63cdafbdf1749ff63 Mon Sep 17 00:00:00 2001
+From: Jiao Hui <simonjiaoh@gmail.com>
+Date: Mon, 28 Jul 2014 11:57:20 +0800
+Subject: [PATCH] md/raid1: always set MD_RECOVERY_INTR flag in raid1 error handler to avoid potential data corruption
 
-Kay
+    In the recovery of raid1 with bitmap, if a bitmap bit has a NEEDED or RESYNC flag,
+    actual resync io will happen. The sync_thread check each rdev, if any rdev is missing
+    or has a FAULTY flag, the array is still_degraded, then the bitmap bit NEEDED flag
+    not cleared. Otherwise, we cleared NEEDED flag and set RESYNC flag. The RESYNC flag cleared
+    in bitmap_cond_end_sync or bitmap_close_sync.
 
-Thanks for your feedback. I'll try to address the details of what you
-asked below.
+    If the only disk which is being recovered fails again when raid1 recovery is in progress.
+    The resync_thread can't find a non-In_sync disk to write, then the remaining recovery skipped.
+    RAID1 error handler only set MD_RECOVERY_INTR flag when a In_sync disk fails. But the disk
+    being reocvered is non-In_sync, then md_do_sync can't got the INTR singal to break, and the
+    mddev->curr_resync is uptodated to max_sectors (mddev->dev_sectors). When raid1 personality
+    tries to finish resync process, no bitmap bit with RESYNC flag can set back to NEEDED flag,
+    and bitmap_close_sync clear the RESYNC flag. When the disk is added back, the area from
+    the offset of last recovery to the end of bitmap-chunk is skipped by resync_thread forever.
+    
+    Signed-off-by: JiaoHui <jiaohui@bwstor.com.cn>
 
-> this is not necessarily a RAID problem. Can you exclude the possibility
-> that one or more of the disks have a hardware problem, like the one you
-> replaced which showed
->>> Device: /dev/sdf [SAT], 35 Currently unreadable (pending) sectors
-> Hardware problems would explain the problems you have.
->
-> What does smartctl report about your disks, in particular:
-> Offline_Uncorrectable
-> Current_Pending_Sector
-> Reallocated_Sector_Ct
+---
+ drivers/md/raid1.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I don't think any of my current disks are showing signs of hardware
-problems, looking for the values you suggested:
-
-[root@backend3 gwr]# smartctl -a /dev/sdb | grep -E
-"Uncorrectable|Pending|Reallocated"
-  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail
-Always       -       0
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age
-Always       -       0
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
-Offline      -       0
-
-[root@backend3 gwr]# smartctl -a /dev/sdd | grep -E
-"Uncorrectable|Pending|Reallocated"
-  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail
-Always       -       0
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age
-Always       -       8
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
-Offline      -       8
-
-[root@backend3 gwr]# smartctl -a /dev/sde | grep -E
-"Uncorrectable|Pending|Reallocated"
-  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
-Always       -       0
-196 Reallocated_Event_Count 0x0032   200   200   000    Old_age
-Always       -       0
-197 Current_Pending_Sector  0x0032   200   200   000    Old_age
-Always       -       0
-198 Offline_Uncorrectable   0x0030   100   253   000    Old_age
-Offline      -       0
-
-[root@backend3 gwr]# smartctl -a /dev/sdf | grep -E
-"Uncorrectable|Pending|Reallocated"
-  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail
-Always       -       0
-197 Current_Pending_Sector  0x0012   100   100   000    Old_age
-Always       -       0
-198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
-Offline      -       0
-
-I can't get smartctl to tell me anything about /dev/sdc at the moment
-
-> And, is it always ATA 5.00 that is mentioned in syslog? dmesg and the
-> "lsdrv" script (google for it) are useful in diagnosing this.
-
-No, all five disks in the array (ATA 5.00 through 9.00) are mentioned
-at times in syslog. There doesn't appear to be any rhyme nor reason to
-it.
-
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index aacf6bf..51d06eb 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1391,16 +1391,16 @@ static void error(struct mddev *mddev, struct md_rdev *rdev)
+ 		return;
+ 	}
+ 	set_bit(Blocked, &rdev->flags);
++	/*
++	 * if recovery is running, make sure it aborts.
++	 */
++	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	if (test_and_clear_bit(In_sync, &rdev->flags)) {
+ 		unsigned long flags;
+ 		spin_lock_irqsave(&conf->device_lock, flags);
+ 		mddev->degraded++;
+ 		set_bit(Faulty, &rdev->flags);
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
+-		/*
+-		 * if recovery is running, make sure it aborts.
+-		 */
+-		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	} else
+ 		set_bit(Faulty, &rdev->flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
 -- 
-George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
-Work: george.rapp -- at -- hp.com (or) george.rapp.ctr -- at -- dfas.mil
+1.8.3.1
 
-A wise and frugal government, which shall restrain men from injuring
-one another, which shall leave them otherwise free to regulate their
-own pursuits of industry and improvement, and shall not take from the
-mouth of labor the bread it has earned. This is the sum of
-good government... - Thomas Jefferson, First Inaugural Address
+
+
