@@ -1,143 +1,166 @@
-From: jiao hui <jiaohui@bwstor.com.cn>
-Subject: Re: [PATCH] md/raid1: always set MD_RECOVERY_INTR flag in raid1 error
- handler to avoid potential data corruption
-Date: Tue, 29 Jul 2014 14:50:04 +0800
-Message-ID: <CAEuG+XJhbjGDWhFTdX0h+be-TNVUQUfgWPZVcaxwT4wvzoPbLA@mail.gmail.com>
-References: <1406534973.21454.3.camel@fedws>
-	<20140729124415.60ecdf3d@notabene.brown>
+From: "Matthias Appel" <appel.matthias@gmail.com>
+Subject: Crash during recover
+Date: Tue, 29 Jul 2014 12:30:53 +0200
+Message-ID: <026c01cfab18$2f479960$8dd6cc20$@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140729124415.60ecdf3d@notabene.brown>
+Content-Language: de
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: jiao hui <jiaohui@bwstor.com.cn>, linux-raid <linux-raid@vger.kernel.org>, guomingyang <guomingyang@nrchpc.ac.cn>, zhaomeng <zhaomeng@bwstor.com.cn>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi neil,
+Hi all,
 
-The patch works. I test it on Centos 7.0 for fifty rounds=EF=BC=8C no
-consistency issue found=E3=80=82
+I have a problem with my 4 disk software raid 5.
+I had a defective disk which I identified and changed and the rebuild
+started.
 
-Best Regards.
-jiaohui
+But somewhere around 6pm the machine crashed and I had to reset it this
+morning.
+The problem is the raid won't start because it complains about missing
+drives.
 
-On Tue, Jul 29, 2014 at 10:44 AM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 28 Jul 2014 16:09:33 +0800 jiao hui <jiaohui@bwstor.com.cn> w=
-rote:
->
->> >From 1fdbfb8552c00af55d11d7a63cdafbdf1749ff63 Mon Sep 17 00:00:00 2=
-001
->> From: Jiao Hui <simonjiaoh@gmail.com>
->> Date: Mon, 28 Jul 2014 11:57:20 +0800
->> Subject: [PATCH] md/raid1: always set MD_RECOVERY_INTR flag in raid1=
- error handler to avoid potential data corruption
->>
->>     In the recovery of raid1 with bitmap, if a bitmap bit has a NEED=
-ED or RESYNC flag,
->>     actual resync io will happen. The sync_thread check each rdev, i=
-f any rdev is missing
->>     or has a FAULTY flag, the array is still_degraded, then the bitm=
-ap bit NEEDED flag
->>     not cleared. Otherwise, we cleared NEEDED flag and set RESYNC fl=
-ag. The RESYNC flag cleared
->>     in bitmap_cond_end_sync or bitmap_close_sync.
->>
->>     If the only disk which is being recovered fails again when raid1=
- recovery is in progress.
->>     The resync_thread can't find a non-In_sync disk to write, then t=
-he remaining recovery skipped.
->>     RAID1 error handler only set MD_RECOVERY_INTR flag when a In_syn=
-c disk fails. But the disk
->>     being reocvered is non-In_sync, then md_do_sync can't got the IN=
-TR singal to break, and the
->>     mddev->curr_resync is uptodated to max_sectors (mddev->dev_secto=
-rs). When raid1 personality
->>     tries to finish resync process, no bitmap bit with RESYNC flag c=
-an set back to NEEDED flag,
->>     and bitmap_close_sync clear the RESYNC flag. When the disk is ad=
-ded back, the area from
->>     the offset of last recovery to the end of bitmap-chunk is skippe=
-d by resync_thread forever.
->>
->>     Signed-off-by: JiaoHui <jiaohui@bwstor.com.cn>
->>
->> ---
->>  drivers/md/raid1.c | 8 ++++----
->>  1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index aacf6bf..51d06eb 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -1391,16 +1391,16 @@ static void error(struct mddev *mddev, struc=
-t md_rdev *rdev)
->>               return;
->>       }
->>       set_bit(Blocked, &rdev->flags);
->> +     /*
->> +      * if recovery is running, make sure it aborts.
->> +      */
->> +     set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>       if (test_and_clear_bit(In_sync, &rdev->flags)) {
->>               unsigned long flags;
->>               spin_lock_irqsave(&conf->device_lock, flags);
->>               mddev->degraded++;
->>               set_bit(Faulty, &rdev->flags);
->>               spin_unlock_irqrestore(&conf->device_lock, flags);
->> -             /*
->> -              * if recovery is running, make sure it aborts.
->> -              */
->> -             set_bit(MD_RECOVERY_INTR, &mddev->recovery);
->>       } else
->>               set_bit(Faulty, &rdev->flags);
->>       set_bit(MD_CHANGE_DEVS, &mddev->flags);
->
->
-> Hi,
->  thanks for the report and the patch.
->
-> If the recovery process gets a write error it will abort the current =
-bitmap
-> region by calling bitmap_end_sync() in end_sync_write().
-> However you are talking about a different situation where a normal IO=
- write
-> gets and error and fails a drive.  Then the recovery aborts without a=
-borting
-> the current bitmap region.
->
-> I think I would rather fix the bug by calling end_sync_write() at the=
- place
-> where the recovery decides to abort, as in the following patch.
-> Would you be able to test it please and confirm that it works?
->
-> A similar fix will probably be needed for raid10.
->
-> Thanks,
-> NeilBrown
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 56e24c072b62..4f007a410f4b 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2668,9 +2668,11 @@ static sector_t sync_request(struct mddev *mdd=
-ev, sector_t sector_nr, int *skipp
->
->         if (write_targets =3D=3D 0 || read_targets =3D=3D 0) {
->                 /* There is nowhere to write, so all non-sync
-> -                * drives must be failed - so we are finished
-> +                * drives must be failed - so we are finished.
-> +                * But abort the current bitmap region though.
->                  */
->                 sector_t rv;
-> +               bitmap_end_sync(mddev->bitmap, sector_nr, &sync_block=
-s, 1);
->                 if (min_bad > 0)
->                         max_sector =3D sector_nr + min_bad;
->                 rv =3D max_sector - sector_nr;
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I did mdadm -examine and saw the event counter on one disk was slightly off
+and obviously two disks fell off the raid the same time, giving me ..AA like
+you see down below.
+
+I tried to force assemble the array and I got the message about the event
+counter being adjusted.
+I assumed the raid would start now, like multiple times before I had same
+issues with multiple failing drives/controllers
+
+But this time not....I says that the raid is missing 2 disks but examine
+looks not this bad AFAIKS.
+I read the recovery wiki entry, but there it tells me to recreate the array
+without initial sync but I don't want to go this way because I think this
+should only be the last resort.
+
+Can anybody look at the mdadm --examine of my disks and tell me why my raid
+is complaining about missing disks and how to recover from this issue:
+
+If you need some more information, pleas tell me, what you need and I will
+try to get it!
+
+Thanks in advance,
+
+Matthias
+
+
+
+
+Here is the --examine of the disks after the force-assemble
+
+/dev/sda:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 2e92b765:730a9310:870e48a2:7f759d45
+           Name : backup:0
+  Creation Time : Mon Aug 26 17:04:55 2013
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : c98c2108:b11f4325:1f253a63:41e34ffc
+
+    Update Time : Mon Jul 28 18:05:08 2014
+       Checksum : a815fb01 - correct
+         Events : 97489
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : ..AA ('A' == active, '.' == missing)
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 2e92b765:730a9310:870e48a2:7f759d45
+           Name : backup:0
+  Creation Time : Mon Aug 26 17:04:55 2013
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 1c3c0ae0:95795583:5dab91d2:e3c6c498
+
+    Update Time : Mon Jul 28 18:04:41 2014
+       Checksum : e9dc6dfb - correct
+         Events : 97489
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : A.AA ('A' == active, '.' == missing)
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 2e92b765:730a9310:870e48a2:7f759d45
+           Name : backup:0
+  Creation Time : Mon Aug 26 17:04:55 2013
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 346359eb:bc603745:24a9fdbb:8066b03a
+
+    Update Time : Mon Jul 28 18:05:08 2014
+       Checksum : 426619bd - correct
+         Events : 97489
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : ..AA ('A' == active, '.' == missing)
+/dev/sde:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 2e92b765:730a9310:870e48a2:7f759d45
+           Name : backup:0
+  Creation Time : Mon Aug 26 17:04:55 2013
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 8790405120 (8383.18 GiB 9001.37 GB)
+  Used Dev Size : 5860270080 (2794.39 GiB 3000.46 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : fef8f1d6:146d44c5:80ff2aa5:31943690
+
+    Update Time : Mon Jul 28 18:05:08 2014
+       Checksum : ecbf3d9a - correct
+         Events : 97489
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : ..AA ('A' == active, '.' == missing)
+
+
+
