@@ -1,42 +1,45 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Gionatan Danti <g.danti@assyoma.it>
 Subject: Re: On URE and RAID rebuild - again!
-Date: Wed, 30 Jul 2014 13:13:24 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
-References: <53D8ACF0.1070202@assyoma.it>
+Date: Wed, 30 Jul 2014 15:05:29 +0200
+Message-ID: <53D8ED99.90606@assyoma.it>
+References: <53D8ACF0.1070202@assyoma.it> <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53D8ACF0.1070202@assyoma.it>
+In-Reply-To: <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org, g.danti@assyoma.it
 List-Id: linux-raid.ids
 
-On Wed, 30 Jul 2014, Gionatan Danti wrote:
+On 30/07/2014 13:13, Mikael Abrahamsson wrote:
+>
+> There has been much discussion about the URE figures. Some people
+> interpret it one way, others another way. There is nobody here that
+> knows for sure. Ask your HDD vendor, if they answer, do share here!
+>
+- Ouch! -
+I was hoping that HDD vendors were somewhat more open about their URE 
+calculations... It's time for some lab test, I think!
+ >
+> When MD encounters an URE, it should calculate that block from parity
+> information and write it. I have personally had problems with this not
+> happening, seems it might be that if the URE doesn't happen repeatedly,
+> MD might not re-write. All parity raid levels should behave the same, so
+> this should work identically for RAID1, RAID10, RAID5 and RAID6.
+>
+What about _degraded_ array state? In other words, if a degraded RAID5 
+experiences a URE during rebuild, what happens? I read that most 
+hardware based RAID card both stop rebuilding _and_ kill the entire 
+array. From my understanding, mdadm should stop rebuilding but the array 
+can the restarted, mounted and backupped. Right?
 
-> QUESTION n.1: Is this explanation correct?
-> QUESTION n.2: URE define a probability or a statistical evidence?
-
-There has been much discussion about the URE figures. Some people 
-interpret it one way, others another way. There is nobody here that knows 
-for sure. Ask your HDD vendor, if they answer, do share here!
-
-> 3) From what I understand having read some other mails, in the case of URE 
-> during RAID rebuild mdadm will _stop_ the rebuild and inform you of what 
-> happened. However, you could re-start the array, remount it and try to 
-> recover data via normal filesystem copy. If, and when, the filesystem will 
-> try to read the data affected by URE, mdadm will report back to it a "read 
-> error" and the filesystem can react as it want (re-try the copy, report back 
-> to user, abort the copy, etc.)
-> QUESTION n.3: is it what really happen on parity RAID (5,6)?
-> QUESTION n.4: what about mirror-striped array as RAID10? They follow the same 
-> behavior?
-
-When MD encounters an URE, it should calculate that block from parity 
-information and write it. I have personally had problems with this not 
-happening, seems it might be that if the URE doesn't happen repeatedly, MD 
-might not re-write. All parity raid levels should behave the same, so this 
-should work identically for RAID1, RAID10, RAID5 and RAID6.
+Regards.
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
