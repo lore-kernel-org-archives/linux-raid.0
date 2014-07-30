@@ -1,96 +1,82 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 - RMW logic
-Date: Thu, 31 Jul 2014 07:30:07 +1000
-Message-ID: <20140731073007.3fe4817a@notabene.brown>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD17358639B87@EXCHANGE.collogia.de>
+Subject: Re: On URE and RAID rebuild - again!
+Date: Thu, 31 Jul 2014 07:31:21 +1000
+Message-ID: <20140731073121.38cd1773@notabene.brown>
+References: <53D8ACF0.1070202@assyoma.it>
+	<alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
+	<53D8ED99.90606@assyoma.it>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/3T4/xd.nY2KNmyBxaW6DTgl"; protocol="application/pgp-signature"
+ boundary="Sig_/cuMABT_QhV4Q_3CtSfzeP=l"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD17358639B87@EXCHANGE.collogia.de>
+In-Reply-To: <53D8ED99.90606@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/3T4/xd.nY2KNmyBxaW6DTgl
+--Sig_/cuMABT_QhV4Q_3CtSfzeP=l
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 30 Jul 2014 20:24:30 +0000 Markus Stockhausen
-<stockhausen@collogia.de> wrote:
+On Wed, 30 Jul 2014 15:05:29 +0200 Gionatan Danti <g.danti@assyoma.it> wrot=
+e:
 
-> Hi,
+> On 30/07/2014 13:13, Mikael Abrahamsson wrote:
+> >
+> > There has been much discussion about the URE figures. Some people
+> > interpret it one way, others another way. There is nobody here that
+> > knows for sure. Ask your HDD vendor, if they answer, do share here!
+> >
+> - Ouch! -
+> I was hoping that HDD vendors were somewhat more open about their URE=20
+> calculations... It's time for some lab test, I think!
+>  >
+> > When MD encounters an URE, it should calculate that block from parity
+> > information and write it. I have personally had problems with this not
+> > happening, seems it might be that if the URE doesn't happen repeatedly,
+> > MD might not re-write. All parity raid levels should behave the same, so
+> > this should work identically for RAID1, RAID10, RAID5 and RAID6.
+> >
+> What about _degraded_ array state? In other words, if a degraded RAID5=20
+> experiences a URE during rebuild, what happens? I read that most=20
+> hardware based RAID card both stop rebuilding _and_ kill the entire=20
+> array. From my understanding, mdadm should stop rebuilding but the array=
+=20
+> can the restarted, mounted and backupped. Right?
 >=20
-> the last days I tried to understand the RAID6 logic when recalculating
-> P/Q parity (or syndrome) if only parts of a stripe are updated. As far
-> as I get the current implementation right it will always read the whole
-> stripe and build parities from scratch. E.g. updating a single chunk
-> on a 10 disk RAID6 will read the other 7 data blocks to write the block
-> plus 2 P/Q parities afterwards. Compared to the best case 3 read plus
-> 3 write operations this can be quite a heavy impact. RAID5 at least
-> has a shortcut for that.
+> Regards.
 >=20
-> Being no specialist at all - but having some ideas - I would like to
-> get some feedback about the following way to improve the scenario.
->=20
-> 1) Write a modified gen_syndrome function (call it xor_syndrome)
-> like in lib/raid6/xxx.c that allows to XOR an existing P/Q parity
-> without overwriting it. The cost of that function would be the same
-> as it only changes a few assembler commands.
->=20
-> 2) Enhance the ops_run_prexor to call this xor_syndrome function
-> for an RAID6. Fill the not relevant pages (R5_wantdrain) with an
-> empty page or NULL. So the gen_syndrome will only find zeroes.
-> With this call P/Q will have a pre-xored version.
->=20
-> 3) Enhance ops_run_reconstruct6 to allow processing of changed
-> blocks only. We will call xor_snydrome from there too, to XOR
-> the prexored P/Q once again.
->=20
-> 4) Enhance handle_stripe_dirtying so it will allow calculation of
-> RCW versus RMW costs for the RAID6 case.
->=20
-> Did I miss something? And if not: Will the doubled CPU consumption=20
-> for P/Q calculation justify that way of implementation? At least
-> we can avoid IOs on slow disks.
->=20
-> Maybe it has been discussed before but I did not find it on the
-> mailing list.
->=20
-> Thanks in advance.
->=20
-> Markus
 
-Please see
-  http://comments.gmane.org/gmane.linux.raid/42559
+Yes, you can usually get your data back with mdadm.
 
-Yes, this is something we probably want.
-The previous effort stalled somehow.  Maybe it just needs someone to start
-pushing again.
+With latest code, a URE during recovery will cause a bad-block to be record=
+ed
+on the recovered device, and recovery will continue.  You end up with a
+working array that has a few unreadable blocks on it.
 
 NeilBrown
 
---Sig_/3T4/xd.nY2KNmyBxaW6DTgl
+--Sig_/cuMABT_QhV4Q_3CtSfzeP=l
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU9lj3znsnt1WYoG5AQId9Q/+IMdZ9cQfSxBsYhnZyG9uAGQTjmKO7W1X
-/kRZBNvL1CBjoEKfIln7hurgBfmCnRBtnJVJAat3Ve20gobQqR9OntWl9bciQS3b
-Z6WyWQXYAuK7wvPUix3SWq3japV2IHJSYCgH/A2FbNElAL8kSVC0P0JBt0IkGBIH
-eRROfWZ/pBuq/tx3dTH+oo/yLXa7QV2rr+TSE6V2HDYvrFXjfOpPKafMPJGg3+Os
-xw2GEeARKXr5I6MTtU7x1w3XVgRSsJ9Kjo7l9bk8yCxKB6SUCK5rfM61wHsFIUxG
-DN0PR1ZYL4VCUgy+sD5dQahOwJ7ALW7O8+tMkeKGBP2m1DhjazjJTu/vBpv+CeYY
-YLC3RvsuuI+0h8vrkk8qCw3SP/WhwWDBb+6TbNjHeaiWH7kRLKalwylgHcwX8mn6
-rMCbMrb2u6r9nmMZ1RcBe3s8y1Q5fnQFgF4JwwC1nq/qs+QqWFQycRfrR3JLsFGN
-ZzRKqDj8FiygWUZ4q86PKWLzPibtvZjXO0DcajXEKgrJK+t29JzvBnio8msm2Lod
-ht9f13kD34NMd0DGTnkwji3yHBIVWGzgaOa3nC9oQweTukYYBMmNCxSEngpieYlP
-bBEhzZXLkgcWAqyhf0FIrWhEnsJhdYzdT5Uo9QnpdxDSVovYR5J/J7Xmtgz/Rrpk
-E9fUX4tZJ54=
-=xQH0
+iQIVAwUBU9lkKTnsnt1WYoG5AQKUZRAAtSdPPB4Dnsr8gyDjOrUrVyFQTGF35IuO
+B0WCVWvCpwe8rAhoUrWcQ/iGN8tQsIeHGXt4+H6y+kjdBJbuo8pZ1y38NcsXIHYh
+RgomLeoOWzFLudqWA320BpXVkYt1JyCiK26QGdna11uzWvVNAgc2labhrFp+Gsbg
+fUoiPKOhGUj3tW1CkQD6Nwx1sOq6cxVqC39ImlYeeegcRLBoZ3atKeR2up1duENq
+qi+aH5X4E4W1SnfXUZBCviXNqxqTjLbFLlcqyP39sUKV9xPyK7TuCWcdN1xG+0PU
+sTOcq/K9A1GzqkuFbHK6NzsDm1n2a2WNc6ChzXaOuTvCYKqf/KK3+FFfHkOLqclG
+73WZlNz8lkznJYrKPAIKN3dPkbKtb8msgqHMQs29jptfzoojra1hTyTGYgRUJ0+D
+GwriKjZZ8vK18yvV3BA+xfj0ZpIMo8SEOc1LzenCRe9P3bv8Z+0uWAqa7WEc03nc
+/4L5Ll2RiElq4TiR90m+eibL33OhI3l14F0F3xyiQKqV3/XgMLytHNhpvvBohIUw
+lOLPusKFBS6n9YkCquhzS0GKOoEZ+6D4gWOzK3SCK7EMxbUxNjvwoB9j0aoXUxk9
+2B5GzeeAXCdnoh7TP0B5fEsxhXRhwk7sMfynxN2YYBlE+lpz0JOiIyhirhIp1wdB
+AudFb+EdIkA=
+=WLMM
 -----END PGP SIGNATURE-----
 
---Sig_/3T4/xd.nY2KNmyBxaW6DTgl--
+--Sig_/cuMABT_QhV4Q_3CtSfzeP=l--
