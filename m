@@ -1,69 +1,52 @@
-From: chrisbuendia@rocketmail.com
-Subject: A recommendation from Commission Notice - Need Account Information
-Date: Thu, 31 Jul 2014 10:38:28 -0400 (EDT)
-Message-ID: <20140731143828.67586D8BBA@hfan17.xwing17.dkbhosting.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
+From: Greg Thelen <gthelen@google.com>
+Subject: [PATCH] dm bufio: fully initialize shrinker
+Date: Thu, 31 Jul 2014 09:07:19 -0700
+Message-ID: <1406822839-2423-1-git-send-email-gthelen@google.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Neil Brown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov@parallels.com>, Dave Chinner <dchinner@redhat.com>, linux-raid@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Greg Thelen <gthelen@google.com>
 List-Id: linux-raid.ids
 
-=0D
-Hello,=0D
-=0D
-CONGRATULATIONS!=0D
-=0D
-Wow - you=E2=80=99re about to start getting a TON of =0D
-AUTOMATED commissions deposited into your=0D
-account!=0D
-=0D
-You already have some waiting for you.  However,=0D
-we need you to finish ACTIVATING YOUR ACCOUNT:=0D
-=0D
-=3D=3D> http://pakerpaker.secretmon.clicksureCPA.com/=0D
-=0D
-Please take 2 minutes to do this.  If you don=E2=80=99t, we =0D
-can=E2=80=99t deposit any more commissions into your bank!=0D
-=0D
-=3D=3D> http://pakerpaker.secretmon.clicksureCPA.com/=0D
-=0D
-=0D
-Thank you!=0D
-=0D
--Secret Money System=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-Want More Information?=0D
-Click or Copy Paste : =3D=3D> http://pakerpaker.secretmon.clicksureCPA.=
-com/=0D
-              =0D
-NOTE: If your email account doesn't automatically turn the URL above in=
-to a link, =0D
-      you can copy and paste it into your browser.=0D
-=0D
-Click below to view the webpage that your friend has recommended:=0D
-=0D
-=0D
-Commission Notice - Need Account Information has used the Tell-a-Friend=
- form to send you this link.=0D
-=0D
-We look forward to your visit!=0D
-=0D
+1d3d4437eae1 ("vmscan: per-node deferred work") added a flags field to
+struct shrinker assuming that all shrinkers were zero filled.  The dm
+bufio shrinker is not zero filled, which leaves arbitrary kmalloc() data
+in flags.  So far the only defined flags bit is SHRINKER_NUMA_AWARE.
+But there are proposed patches which add other bits to shrinker.flags
+(e.g. memcg awareness).
+
+Rather than simply initializing the shrinker, this patch uses kzalloc()
+when allocating the dm_bufio_client to ensure that the embedded shrinker
+and any other similar structures are zeroed.
+
+This fixes theoretical over aggressive shrinking of dm bufio objects.
+If the uninitialized dm_bufio_client.shrinker.flags contains
+SHRINKER_NUMA_AWARE then shrink_slab() would call the dm shrinker for
+each numa node rather than just once.  This has been broken since 3.12.
+
+Signed-off-by: Greg Thelen <gthelen@google.com>
+---
+ drivers/md/dm-bufio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index 4e84095833db..d724459860d9 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1541,7 +1541,7 @@ struct dm_bufio_client *dm_bufio_client_create(struct block_device *bdev, unsign
+ 	BUG_ON(block_size < 1 << SECTOR_SHIFT ||
+ 	       (block_size & (block_size - 1)));
+ 
+-	c = kmalloc(sizeof(*c), GFP_KERNEL);
++	c = kzalloc(sizeof(*c), GFP_KERNEL);
+ 	if (!c) {
+ 		r = -ENOMEM;
+ 		goto bad_client;
+-- 
+2.0.0.526.g5318336
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
