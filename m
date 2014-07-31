@@ -1,63 +1,92 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [PATCH] dm bufio: fully initialize shrinker
-Date: Thu, 31 Jul 2014 12:35:46 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1407311235130.1571@file01.intranet.prod.int.rdu2.redhat.com>
-References: <1406822839-2423-1-git-send-email-gthelen@google.com>
+From: Josh Triplett <josh@joshtriplett.org>
+Subject: [PATCH 1/5] Add __designated_init, wrapping
+ __attribute__((designated_init))
+Date: Thu, 31 Jul 2014 16:47:23 -0700
+Message-ID: <3130b0553b15518e3bef6d14c80280beed0f5ff9.1406850006.git.josh@joshtriplett.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1406822839-2423-1-git-send-email-gthelen@google.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Vladimir Davydov <vdavydov@parallels.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: akpm@linux-foundation.org, "J. Bruce Fields" <bfields@fieldses.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Christopher Li <sparse@chrisli.org>, Ingo Molnar <mingo@redhat.com>, Jeff Layton <jlayton@poochiereds.net>, Michal Marek <mmarek@suse.cz>, Neil Brown <neilb@suse.de>, Steven Rostedt <rostedt@goodmis.org>, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-sparse@vger.kernel.org
 List-Id: linux-raid.ids
 
+GCC 4.10 and newer, and Sparse, supports
+__attribute__((designated_init)), which marks a structure as requiring
+a designated initializer rather than a positional one.  This helps
+reduce churn and errors when used with _ops structures and similar
+structures designed for future extension.
 
-On Thu, 31 Jul 2014, Greg Thelen wrote:
+Add a wrapper __designated_init, which turns into
+__attribute__((designated_init)) for Sparse or sufficiently new GCC.
+Enable the corresponding warning as an error.
 
-> 1d3d4437eae1 ("vmscan: per-node deferred work") added a flags field to
-> struct shrinker assuming that all shrinkers were zero filled.  The dm
-> bufio shrinker is not zero filled, which leaves arbitrary kmalloc() data
-> in flags.  So far the only defined flags bit is SHRINKER_NUMA_AWARE.
-> But there are proposed patches which add other bits to shrinker.flags
-> (e.g. memcg awareness).
-> 
-> Rather than simply initializing the shrinker, this patch uses kzalloc()
-> when allocating the dm_bufio_client to ensure that the embedded shrinker
-> and any other similar structures are zeroed.
-> 
-> This fixes theoretical over aggressive shrinking of dm bufio objects.
-> If the uninitialized dm_bufio_client.shrinker.flags contains
-> SHRINKER_NUMA_AWARE then shrink_slab() would call the dm shrinker for
-> each numa node rather than just once.  This has been broken since 3.12.
-> 
-> Signed-off-by: Greg Thelen <gthelen@google.com>
+The following semantic patch can help mark structures containing
+function pointers as requiring designated initializers:
 
-Acked-by: Mikulas Patocka <mpatocka@redhat.com>
-Cc: stable@vger.kernel.org	#v3.12
+@@
+identifier I, f;
+type T;
+@@
 
-> ---
->  drivers/md/dm-bufio.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-> index 4e84095833db..d724459860d9 100644
-> --- a/drivers/md/dm-bufio.c
-> +++ b/drivers/md/dm-bufio.c
-> @@ -1541,7 +1541,7 @@ struct dm_bufio_client *dm_bufio_client_create(struct block_device *bdev, unsign
->  	BUG_ON(block_size < 1 << SECTOR_SHIFT ||
->  	       (block_size & (block_size - 1)));
->  
-> -	c = kmalloc(sizeof(*c), GFP_KERNEL);
-> +	c = kzalloc(sizeof(*c), GFP_KERNEL);
->  	if (!c) {
->  		r = -ENOMEM;
->  		goto bad_client;
-> -- 
-> 2.0.0.526.g5318336
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> 
+struct I {
+	...
+	T (*f)(...);
+	...
+}
++ __designated_init
+;
+
+Signed-off-by: Josh Triplett <josh@joshtriplett.org>
+---
+ Makefile                      | 3 +++
+ include/linux/compiler-gcc4.h | 4 ++++
+ include/linux/compiler.h      | 5 +++++
+ 3 files changed, 12 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index f6a7794..83773c2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -744,6 +744,9 @@ KBUILD_CFLAGS   += $(call cc-option,-Werror=strict-prototypes)
+ # Prohibit date/time macros, which would make the build non-deterministic
+ KBUILD_CFLAGS   += $(call cc-option,-Werror=date-time)
+ 
++# Disallow positional initialization of designated structs
++KBUILD_CFLAGS += $(call cc-option,-Werror=designated-init)
++
+ # use the deterministic mode of AR if available
+ KBUILD_ARFLAGS := $(call ar-option,D)
+ 
+diff --git a/include/linux/compiler-gcc4.h b/include/linux/compiler-gcc4.h
+index 2507fd2..5cd3c26 100644
+--- a/include/linux/compiler-gcc4.h
++++ b/include/linux/compiler-gcc4.h
+@@ -85,4 +85,8 @@
+ #if GCC_VERSION >= 40800 || (defined(__powerpc__) && GCC_VERSION >= 40600)
+ #define __HAVE_BUILTIN_BSWAP16__
+ #endif
++
++#if GCC_VERSION >= 41000 || defined(__CHECKER__)
++#define __designated_init __attribute__((designated_init))
++#endif
+ #endif /* CONFIG_ARCH_USE_BUILTIN_BSWAP */
+diff --git a/include/linux/compiler.h b/include/linux/compiler.h
+index d5ad7b1..c2334b2 100644
+--- a/include/linux/compiler.h
++++ b/include/linux/compiler.h
+@@ -266,6 +266,11 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
+ #define __always_inline inline
+ #endif
+ 
++/* Marks a struct as requiring designated initializers, never positional. */
++#ifndef __designated_init
++#define __designated_init
++#endif
++
+ #endif /* __KERNEL__ */
+ 
+ /*
+-- 
+2.0.1
+
