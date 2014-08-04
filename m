@@ -1,71 +1,103 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: On URE and RAID rebuild - again!
-Date: Tue, 05 Aug 2014 00:44:04 +0200
-Message-ID: <35916d10dab6084e6f28da2e0975fce7@assyoma.it>
-References: <53D8ACF0.1070202@assyoma.it>
- <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
- <53D8ED99.90606@assyoma.it> <20140731073121.38cd1773@notabene.brown>
- <53D9ED48.9000307@assyoma.it> <1370eb7a35b628323646a86094a26912@assyoma.it>
- <20140803134834.7773b0ab@notabene.brown> <53DF8A31.8060609@assyoma.it>
- <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] V2 cast print arguments in super-ddf.c
+Date: Tue, 5 Aug 2014 09:00:55 +1000
+Message-ID: <20140805090055.2b0b6dd5@notabene.brown>
+References: <1407145424-14116-1-git-send-email-normand@linux.vnet.ibm.com>
+	<1407163983-29770-1-git-send-email-normand@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/89u4ha4T6zn9lZ5y3M1c7SG"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se>
+In-Reply-To: <1407163983-29770-1-git-send-email-normand@linux.vnet.ibm.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org, g.danti@assyoma.it
+To: Michel Normand <normand@linux.vnet.ibm.com>
+Cc: linux-raid@vger.kernel.org, Guy Menanteau <menantea@linux.vnet.ibm.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
 List-Id: linux-raid.ids
 
-Il 2014-08-04 20:40 Mikael Abrahamsson ha scritto:
-> 
-> Why do you think that's wrong? 10^-14 is what the vendor guarantees. I
-> have had drives with worse performance (after a couple of months I had
-> several UNC sectors without reading much).
-> 
-> Your claim about the article being wrong is the same as saying that
-> the risk reported of getting into a car accident is wrong because
-> you've driven that amount of kilometers but haven't been in an
-> accident yet.
-> 
-> This is statistics, marketing and warranty, not guaranteed behavior.
+--Sig_/89u4ha4T6zn9lZ5y3M1c7SG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Yes, I understand this. However, the linked article (and many others) 
-state:
-"If you have a 2TB drive, you write 2TB to it, and then you fully read 
-that, just over 6 times, then you will run into one read error, 
-theoretically speaking."
+On Mon,  4 Aug 2014 16:53:03 +0200 Michel Normand
+<normand@linux.vnet.ibm.com> wrote:
 
-I read my 500 GB drive over _60_ times, reading 3x more total data than 
-stated above.
+> From: Guy Menanteau <menantea@linux.vnet.ibm.com>
+>=20
+> V2 differs only by correct From and Signe-off fields.
+>=20
+> as per rhbz https://bugzilla.redhat.com/show_bug.cgi?id=3D1125883
+> the mdadm is failing on ppc64 and ppc64le architectures.
+> =3D=3D=3D
+> super-ddf.c: In function '_set_config_size':
+> super-ddf.c:2849:4: error: format '%llx' expects argument of type 'long l=
+ong unsigned int', but argument 6 has type '__u64' [-Werror=3Dformat=3D]
+>     pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
+>     ^
+> super-ddf.c:2855:2: error: format '%llx' expects argument of type 'long l=
+ong unsigned int', but argument 6 has type '__u64' [-Werror=3Dformat=3D]
+>   dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
+>   ^
+> cc1: all warnings being treated as errors
+> <builtin>: recipe for target 'super-ddf.o' failed
+> =3D=3D=3D
 
-I started the entire discussion to know how UREs are calculated, trying 
-to understand if they are expressed as probability ("1 probabily over 
-10^14 that we can not read a sector) or a statistical record ("we found 
-that 1 on 10^14 is not readable").
+Thanks a lot of the patch.  I've applied it and it will be in mdadm-3.3.2.
 
-If defined as a probability, I am very lucky: if my math is OK, I should 
-have only 0.5% to read about 40 TB of data (my math is: 
-(1-(1/10^14))^(3*(10^14))). If, on the other hand, UREs are defined as 
-statistical evidence (as MTBF), environment and test conditions (eg: 
-duty cycle, read/write distribution, etc) are absolutely critical to 
-understand  what this parameter really mean for us.
+NeilBrown
 
-I'm under impression (and maybe I'm wrong, as usual :)) that UREs mainly 
-depends on incomplete writes and/or unsable sectors. If this is the 
-case, maybe the published URE values are related to the entire HDD 
-warranty. In other word, they should be read as "in normal condition, 
-with typical loads, out HDD will exibit about 1/10^14 unrecoverable 
-error during the entire disk lifespan".
 
-It is reasonable? Or I am horribly wrong?
-Regards.
+>=20
+> Signed-off-by: <menantea@linux.vnet.ibm.com>
+> Signed-off-by: Michel Normand <normand@linux.vnet.ibm.com>
+> ---
+>  super-ddf.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/super-ddf.c b/super-ddf.c
+> index 8957c2e..bc0ce2c 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -2847,13 +2847,15 @@ static void _set_config_size(struct phys_disk_ent=
+ry *pde, const struct dl *dl)
+>  		__u64 wsp =3D cfs - t;
+>  		if (wsp > 1024*1024*2ULL && wsp > dl->size / 16) {
+>  			pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
+> -			       __func__, dl->major, dl->minor, wsp);
+> +			       __func__, dl->major, dl->minor,
+> +			       (unsigned long long)wsp);
+>  		} else
+>  			cfs =3D t;
+>  	}
+>  	pde->config_size =3D cpu_to_be64(cfs);
+>  	dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
+> -		__func__, dl->major, dl->minor, cfs, dl->size-cfs);
+> +		__func__, dl->major, dl->minor,
+> +		(unsigned long long)cfs, (unsigned long long)(dl->size-cfs));
+>  }
+> =20
+>  /* Add a device to a container, either while creating it or while
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+
+--Sig_/89u4ha4T6zn9lZ5y3M1c7SG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU+AQpznsnt1WYoG5AQLbuBAAnEKna1aTHCK42UBf6234x3n/2b4pAC0M
+6k1ffESGgAvhH3NtDnU9smFrH4U1LGz2EtZ76G5F+vT4q9QAe8KHxMKGSPN92jdh
+YHv3qBv/X2eFtjzGV96J21EN4rM6EWktPURR7851eli3JchBPCtJyCcBlBw32D1y
+8/y3CoKORx+GR39QdyUGQBihT7+FLApF3juHsfoAmrcS16z9GFvG0nV4m4NuRdh/
+duhRNXqeKUB1sPsvy10yjriq7djPviuHATfdS6tRUHsyk++fchjDBZC+vTJPCjcj
+GpMcXZ1wd6nvsBJc5f1tyrZ6gWJkQ6FwX2l5HT2pg/NW8S0XLVZhVRBDI1P8ZB/X
+WOYc1QXF1v2BWo4dE4IB0azNdfsCpBQAgoBcgGS6FtGficT6esHYFZqqGjuaQz6O
+IUx6012AqCbN4jnUTtlJ5C+H3+vlY0IiOIq8MJaFcY5CYwMzvgo1m0F7gxFNyMo1
+T9CiN5tfS3qieJta+aeN/4znxHg2cn/WO7/4wDfJhr6AU8mddzOYZ8fLXtBV3KqE
+4JFeBCMQITqnjdHOLJholDVtMCbclJHlCG0eM3558FksuuCfGMt+Te3mHzZ/Qi+Q
+S6mXDl6DDH9ZODYmp7OR+uI5VW5SLJwMPKwd2at+1pnfmgfGvlnsLGamd9N/nJ0q
+OmkOKsmbeDk=
+=Tfie
+-----END PGP SIGNATURE-----
+
+--Sig_/89u4ha4T6zn9lZ5y3M1c7SG--
