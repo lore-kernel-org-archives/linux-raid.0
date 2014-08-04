@@ -1,153 +1,81 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 - RMW logic
-Date: Mon, 4 Aug 2014 11:22:28 +1000
-Message-ID: <20140804112228.6ef95b10@notabene.brown>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD17358639B87@EXCHANGE.collogia.de>
-	<20140731073007.3fe4817a@notabene.brown>
-	<12EF8D94C6F8734FB2FF37B9FBEDD17358639D05@EXCHANGE.collogia.de>
+Subject: Re: Are we forced to use bad blocks list?
+Date: Mon, 4 Aug 2014 11:38:59 +1000
+Message-ID: <20140804113859.63b5ac90@notabene.brown>
+References: <53DA5340.7080507@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/CIl4p692T0r6juZyc_uN=sX"; protocol="application/pgp-signature"
+ boundary="Sig_/qYMhZ5s/3WLuYNpXZXk4QOi"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD17358639D05@EXCHANGE.collogia.de>
+In-Reply-To: <53DA5340.7080507@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Ethan Wilson <ethan.wilson@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/CIl4p692T0r6juZyc_uN=sX
+--Sig_/qYMhZ5s/3WLuYNpXZXk4QOi
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 31 Jul 2014 06:43:52 +0000 Markus Stockhausen
-<stockhausen@collogia.de> wrote:
+On Thu, 31 Jul 2014 16:31:28 +0200 Ethan Wilson <ethan.wilson@shiftmail.org>
+wrote:
 
-> > Von: linux-raid-owner@vger.kernel.org=20
-> > Gesendet: Mittwoch, 30. Juli 2014 23:30
-> > An: Markus Stockhausen
-> > Cc: linux-raid@vger.kernel.org
-> > Betreff: Re: RAID6 - RMW logic
-> >=20
-> > On Wed, 30 Jul 2014 20:24:30 +0000 Markus Stockhausen
-> > <stockhausen@collogia.de> wrote:
-> >=20
-> > > Hi,
-> > >
-> > > the last days I tried to understand the RAID6 logic when recalculating
-> > > P/Q parity (or syndrome) if only parts of a stripe are updated. As far
-> > > ...
-> >
-> > Please see
-> >   http://comments.gmane.org/gmane.linux.raid/42559
-> >=20
-> > Yes, this is something we probably want.
-> > The previous effort stalled somehow.  Maybe it just needs someone to st=
-art
-> > pushing again.
-> >=20
-> > NeilBrown
->=20
-> Hi,
->=20
-> thanks for the link. Crawling through the modifcation I isolated two steps
-> that we must achieve in first place to get it on track. I'm far away from
-> implementing a full patch so I focus on what I understand.
->=20
-> 1) Implement a generic switch so we can configure rmw/rcw handling
-> on the fly. Without any RAID6 rmw patches yet it will simply focus on the
-> current RAID5 implementation. Later on RAID6 can use it too and we
-> are able to  compare rmw versus rcw performance in all cases.
-> I would name the parameter enable_rmw and default it to 1. In RAID6 case=
+> Dear MD developers,
+> it seems that with mdadm 3.3.1 , if an array has bad blocks disabled=20
+> (e.g. "--update=3Dno-bbl"  was invoked) and we want to add a disk to that=
 =20
-> it will be ignored.
+> array, e.g. a spare, that one will be created by mdadm with BBL enabled=20
+> during the --add operation.
 >=20
-> -> Ok with that?
+> There is apparently no "--add --no-bbl" option in mdadm, so the BBL will=
+=20
+> result in being forcibly active for that disk, it seems to me.
+>=20
+> It is indeed possible to "--stop" the array and then "--assemble=20
+> --update=3Dno-bbl" so to clear the BBL flag in all disks, but this=20
+> requires stopping the array, which for a production system often is not=20
+> possible, and not justified for just adding a spare.
+>=20
+> Can I add a "feature request" to have BBL optional, and/or to default=20
+> BBL presence/absence so that it conforms to the presence/absence of BBLs=
+=20
+> in the other disks of the array which is already running?
+>=20
+> The same problem probably happens when mdadm monitor daemon moves spares=
+=20
+> among the spare-group: it should probably understand if the receiving=20
+> array is configured for BBL or not, and add a spare of the same type.
+>=20
 
-No, sorry.  Or not very.
+Why don't you want bad-block-lists?
 
-In that email thread I pointed you to I wrote:
+I'm not necessarily against having some why to avoid getting them
+automatically ... possibly a 'policy' option in mdadm.conf.
+But I'd like to make sure I understand all of your thinking first.
 
-- Can you  explain *why* rcw is sometimes better than rmw even on large
-  arrays? Even a fairly hand-wavy arguement would help.  And it would go in
-  the comment at the top of the patch that adds enable_rmw.
-
-
-I see you've posted a patch, but there is no "why".
-I don't like adding configuration options.  If there is some clear and easy
-to understand benefit, like "this trades throughput against latency", then I
-might be able to live with one, because it would be easy to tell people how
-to tune it.
-
-Why would I ever disable rmw?  Don't say "choose the option that performs b=
-est
-for your workload", because that is nearly meaningless: workloads change fr=
-om
-moment to moment.  If rwm is good in some cases and bad in others, then we
-should at least make sure we understand why, and then hopefully get the md
-driver  to auto-detect the different cases.
-
-There might be a case for allowing an option like that to support a
-"developer only preview" of the code.  i.e.  Add the rmw-for-RAID6 code, fi=
-nd
-that is slows down some workloads, get confused about why, ask for help,
-people are only happy to  test if it is in mainline, so use a developer-only
-config option.
-Then at least I could tell people when to turn it on: only if you are a
-developer.
-
+Thanks,
 NeilBrown
 
-
->=20
-> 2) The previous patch was quite tricky with handling the P/Q calculation.
-> It combined a gen_syndrome run with 2 extra xor runs. Additionally it
-> saved P/Q delta in spare pages. Maybe to avoid patching gen_syndrome=20
-> functions. I understand the discussion that the flag "subtract" and the h=
-andling
-> of the second spare page is not easy to understand. As explained in my
-> last mail I would enhance the syndrome functions with the option to XOR t=
-he=20
-> target P/Q pages instead of only storing the calculated values. This woul=
-d allow=20
-> to work the same way the RAID5 shortcut does. See ops_run_prexor that use=
-s=20
-> parity page to store the interim result.
->=20
-> >From a performance perspective I would write separate logic in /lib/raid=
-6=20
-> by copying the existing functions. Another approach could be to change=20
-> all gen_syndrome functions to xor the destination page - and empty the
-> target page in advance for the rcw case. In all cases this patch will be =
-quite=20
-> huge but I should be easy to understand and to verify.
->=20
-> -> Suggestions?
->=20
-> Best regards.
->=20
-> Markus
-
-
---Sig_/CIl4p692T0r6juZyc_uN=sX
+--Sig_/qYMhZ5s/3WLuYNpXZXk4QOi
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU97gVDnsnt1WYoG5AQI6VA//Qq0Kh8Vo699Z+x0UEhJ46J513wokpfoc
-Jy2Pj5oGa4LiVn34LFQQdPVRfAzLKaRhE7XTJ8qtGoV7kfy86Ksi1V3G+NEIB4rR
-VBctQvCs958H4fr28d2DrP+Px90CkSZAznQL/1oMrrXEVxLlpsLAW6zpcFwBoT6m
-Tg4gzOSI/oxj8jzGxSThDZf/IchUGMvZzHkghGvC0GHMt4YBNg0Nax3U6eMW2NJS
-pqGVa8haMpPfGchGeG+1KbZibz7kvff+PDjpmksoD+P5uX5taO50GKTqg/FOy96R
-PvjgtOzQQwol1xISYfgrb31zNTUkZALHtQgGAaAaqylb9AxsOi4DmdCXbsSqYSLx
-1KO4IfuFMrxQcAloRBBIfplIKJbK2KOXAumWRAslJpncBY2lGtrgnSYThS0MGL27
-9J1swKYYAo/PdQ0jEzlhD9ilg9iKMHd8s1/mWgeEBzKSMPhj/wx1fGw4u8bGXcI6
-wkNWiJTG9SjSPcj5akoT5ulx6bQoS8pAn8yMeM9MDOeeLdkXpd1fNLVw8Ux3zBkD
-M9Si9kMe/Ao1MvCihlOF/Mf/jLlsdydTEUnTCJNqhm3OoVTYpNvnsMcUE5VUGDDi
-rfDhjbTb/UFBAKrPoBYZqhK+xAHGFaS6mwTyT5SnkeAj/EgATDLv7eMWsKJtN41v
-8sNx1xehR8g=
-=Ld2m
+iQIVAwUBU97kMznsnt1WYoG5AQK0XxAAsH9bCLh8akvzTKcsknZDleEkc9uT+zU6
+hojdHYBpqVH/FiCVfdHwzot1dOqoDRiMaSfoZoXMqwJRhxz8DnED1EqUL/J8/xkO
+HMuf3BA0gYWWerbfAsAnZMOBC5MZY15qBrKfuGEZUYO/MTZWtGw+6JFOaeb8eRWF
+N2oTtiHGup7TKfF84ylDS8aqdDPQHtbOrdArfKfm/B7ZVloh7iAGSfcISZ/5n0Er
+aJy3zR76DjwxvwTDvH4nYde4/NDnmIeH2e0oUfkcBcm1UnMuEq1sYOGxBxSRan5f
+rUR4XOkhCMNoT5RzGdUp6bQAuwz4GoyCl6J/MXcaRBNVgdYzVNtVMpkF2nj8Y0iM
+PNxYEHoNAes03rVVrpAoaM/p2QcB9oRws7RpYbFu++t+S07rGsVqgrEZaLaxPBV2
+sTjdUJzkDw/PS0N7+UvkIVlXDLlvKGI/j9WFEgasnWvZWjeQYoi4KXrfKAMBtk29
+pUTOy0Snmoh4BXyNw7aOBiJS4yqtBM1oFoPTnCA2bJqfhAnU1+xs1TVmls8Epeee
+NxhEJMZtxRl/WOhyChiity8WyZUB4hKycAM3KyvkRtUnD11TraYyotXMt8xBCOIO
+70+s12sV/FycS5aWReKmG3p8Mpo3WutpiEg69e59bJuygldvfX702vDsCu8P/TLT
+A5QG1LQG05g=
+=25Kw
 -----END PGP SIGNATURE-----
 
---Sig_/CIl4p692T0r6juZyc_uN=sX--
+--Sig_/qYMhZ5s/3WLuYNpXZXk4QOi--
