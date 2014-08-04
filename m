@@ -1,80 +1,61 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: On URE and RAID rebuild - again!
-Date: Mon, 04 Aug 2014 15:27:13 +0200
-Message-ID: <53DF8A31.8060609@assyoma.it>
-References: <53D8ACF0.1070202@assyoma.it>	<alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>	<53D8ED99.90606@assyoma.it>	<20140731073121.38cd1773@notabene.brown>	<53D9ED48.9000307@assyoma.it>	<1370eb7a35b628323646a86094a26912@assyoma.it> <20140803134834.7773b0ab@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Michel Normand <normand@linux.vnet.ibm.com>
+Subject: [PATCH] V2 cast print arguments in super-ddf.c
+Date: Mon,  4 Aug 2014 16:53:03 +0200
+Message-ID: <1407163983-29770-1-git-send-email-normand@linux.vnet.ibm.com>
+References: <1407145424-14116-1-git-send-email-normand@linux.vnet.ibm.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140803134834.7773b0ab@notabene.brown>
+In-Reply-To: <1407145424-14116-1-git-send-email-normand@linux.vnet.ibm.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org, g.danti@assyoma.it
+To: linux-raid@vger.kernel.org
+Cc: Guy Menanteau <menantea@linux.vnet.ibm.com>
 List-Id: linux-raid.ids
 
+From: Guy Menanteau <menantea@linux.vnet.ibm.com>
 
+V2 differs only by correct From and Signe-off fields.
 
-On 03/08/2014 05:48, NeilBrown wrote:
+as per rhbz https://bugzilla.redhat.com/show_bug.cgi?id=1125883
+the mdadm is failing on ppc64 and ppc64le architectures.
+===
+super-ddf.c: In function '_set_config_size':
+super-ddf.c:2849:4: error: format '%llx' expects argument of type 'long long unsigned int', but argument 6 has type '__u64' [-Werror=format=]
+    pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
+    ^
+super-ddf.c:2855:2: error: format '%llx' expects argument of type 'long long unsigned int', but argument 6 has type '__u64' [-Werror=format=]
+  dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
+  ^
+cc1: all warnings being treated as errors
+<builtin>: recipe for target 'super-ddf.o' failed
+===
 
-> You are very unlikely to see UREs just be reading the drive over and over a
-> again.  You easily do that for years and not get an error.  Or maybe you got
-> one just then.
+Signed-off-by: <menantea@linux.vnet.ibm.com>
+Signed-off-by: Michel Normand <normand@linux.vnet.ibm.com>
+---
+ super-ddf.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-True. I read over 40 TB from this disk and I haven't find any error. 
-Some SMART attribute reported so far:
-ID  NAME                    FLAG     V     W     T      R
-197 Current_Pending_Sector  0x0012   100   100   000    0
-198 Offline_Uncorrectable   0x0010   100   100   000    0
-
-As you can find, no error was reported, and I don't find anything 
-suspicious in dmesg. At least, this should prove that article as this 
-[1] are quite wrong.
-
-Maybe URE errors are related to unsuccessful writes in the first place. 
-I will try to repeat the test intermixing read with full-disk writes.
-
-
-[1] 
-http://subnetmask255x4.wordpress.com/2008/10/28/sata-unrecoverable-errors-and-how-that-impacts-raid/
-
-> If you want to see how the system responds when it hits a URE, you can use the
-> hdparm command and the "--make-bad-sector" option.  There is also a
-> "--repair-sector" option which will (hopefully) repair the sector when you
-> are done.
->
-> NeilBrown
->
->
->>
->> Thanks.
->>
->> Il 2014-07-31 09:16 Gionatan Danti ha scritto:
->>>> Yes, you can usually get your data back with mdadm.
->>>>
->>>> With latest code, a URE during recovery will cause a bad-block to be
->>>> recorded
->>>> on the recovered device, and recovery will continue.  You end up with
->>>> a
->>>> working array that has a few unreadable blocks on it.
->>>>
->>>> NeilBrown
->>>
->>> This is very good news :)
->>> I case of parity RAID I assume the entire stripe is marked as bad, but
->>> with mirror (eg: RAID10) only a single block (often 512B) is marked
->>> bad on the recovered device, right?
->>>
->>>  From what mdadm/kernel version the new behavior is implemented? Maybe
->>> the software RAID on my CentOS 6.5 is stronger then expected ;)
->>>
->>> Regards.
->>
->
-
+diff --git a/super-ddf.c b/super-ddf.c
+index 8957c2e..bc0ce2c 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -2847,13 +2847,15 @@ static void _set_config_size(struct phys_disk_entry *pde, const struct dl *dl)
+ 		__u64 wsp = cfs - t;
+ 		if (wsp > 1024*1024*2ULL && wsp > dl->size / 16) {
+ 			pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
+-			       __func__, dl->major, dl->minor, wsp);
++			       __func__, dl->major, dl->minor,
++			       (unsigned long long)wsp);
+ 		} else
+ 			cfs = t;
+ 	}
+ 	pde->config_size = cpu_to_be64(cfs);
+ 	dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
+-		__func__, dl->major, dl->minor, cfs, dl->size-cfs);
++		__func__, dl->major, dl->minor,
++		(unsigned long long)cfs, (unsigned long long)(dl->size-cfs));
+ }
+ 
+ /* Add a device to a container, either while creating it or while
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+1.7.9.5
+
