@@ -1,61 +1,33 @@
-From: Michel Normand <normand@linux.vnet.ibm.com>
-Subject: [PATCH] V2 cast print arguments in super-ddf.c
-Date: Mon,  4 Aug 2014 16:53:03 +0200
-Message-ID: <1407163983-29770-1-git-send-email-normand@linux.vnet.ibm.com>
-References: <1407145424-14116-1-git-send-email-normand@linux.vnet.ibm.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: On URE and RAID rebuild - again!
+Date: Mon, 4 Aug 2014 20:40:32 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se>
+References: <53D8ACF0.1070202@assyoma.it> <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se> <53D8ED99.90606@assyoma.it> <20140731073121.38cd1773@notabene.brown> <53D9ED48.9000307@assyoma.it> <1370eb7a35b628323646a86094a26912@assyoma.it>
+ <20140803134834.7773b0ab@notabene.brown> <53DF8A31.8060609@assyoma.it>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1407145424-14116-1-git-send-email-normand@linux.vnet.ibm.com>
+In-Reply-To: <53DF8A31.8060609@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Guy Menanteau <menantea@linux.vnet.ibm.com>
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Guy Menanteau <menantea@linux.vnet.ibm.com>
+On Mon, 4 Aug 2014, Gionatan Danti wrote:
 
-V2 differs only by correct From and Signe-off fields.
+> As you can find, no error was reported, and I don't find anything 
+> suspicious in dmesg. At least, this should prove that article as this 
+> [1] are quite wrong.
 
-as per rhbz https://bugzilla.redhat.com/show_bug.cgi?id=1125883
-the mdadm is failing on ppc64 and ppc64le architectures.
-===
-super-ddf.c: In function '_set_config_size':
-super-ddf.c:2849:4: error: format '%llx' expects argument of type 'long long unsigned int', but argument 6 has type '__u64' [-Werror=format=]
-    pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
-    ^
-super-ddf.c:2855:2: error: format '%llx' expects argument of type 'long long unsigned int', but argument 6 has type '__u64' [-Werror=format=]
-  dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
-  ^
-cc1: all warnings being treated as errors
-<builtin>: recipe for target 'super-ddf.o' failed
-===
+Why do you think that's wrong? 10^-14 is what the vendor guarantees. I 
+have had drives with worse performance (after a couple of months I had 
+several UNC sectors without reading much).
 
-Signed-off-by: <menantea@linux.vnet.ibm.com>
-Signed-off-by: Michel Normand <normand@linux.vnet.ibm.com>
----
- super-ddf.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Your claim about the article being wrong is the same as saying that the 
+risk reported of getting into a car accident is wrong because you've 
+driven that amount of kilometers but haven't been in an accident yet.
 
-diff --git a/super-ddf.c b/super-ddf.c
-index 8957c2e..bc0ce2c 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -2847,13 +2847,15 @@ static void _set_config_size(struct phys_disk_entry *pde, const struct dl *dl)
- 		__u64 wsp = cfs - t;
- 		if (wsp > 1024*1024*2ULL && wsp > dl->size / 16) {
- 			pr_err("%s: %x:%x: workspace size 0x%llx too big, ignoring\n",
--			       __func__, dl->major, dl->minor, wsp);
-+			       __func__, dl->major, dl->minor,
-+			       (unsigned long long)wsp);
- 		} else
- 			cfs = t;
- 	}
- 	pde->config_size = cpu_to_be64(cfs);
- 	dprintf("%s: %x:%x config_size %llx, DDF structure is %llx blocks\n",
--		__func__, dl->major, dl->minor, cfs, dl->size-cfs);
-+		__func__, dl->major, dl->minor,
-+		(unsigned long long)cfs, (unsigned long long)(dl->size-cfs));
- }
- 
- /* Add a device to a container, either while creating it or while
+This is statistics, marketing and warranty, not guaranteed behavior.
+
 -- 
-1.7.9.5
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
