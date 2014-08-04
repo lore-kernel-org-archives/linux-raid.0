@@ -1,58 +1,80 @@
-From: Ethan Wilson <ethan.wilson@shiftmail.org>
-Subject: Re: Are we forced to use bad blocks list?
-Date: Mon, 04 Aug 2014 14:37:59 +0200
-Message-ID: <53DF7EA7.2070408@shiftmail.org>
-References: <53DA5340.7080507@shiftmail.org> <20140804113859.63b5ac90@notabene.brown>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: On URE and RAID rebuild - again!
+Date: Mon, 04 Aug 2014 15:27:13 +0200
+Message-ID: <53DF8A31.8060609@assyoma.it>
+References: <53D8ACF0.1070202@assyoma.it>	<alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>	<53D8ED99.90606@assyoma.it>	<20140731073121.38cd1773@notabene.brown>	<53D9ED48.9000307@assyoma.it>	<1370eb7a35b628323646a86094a26912@assyoma.it> <20140803134834.7773b0ab@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140804113859.63b5ac90@notabene.brown>
+In-Reply-To: <20140803134834.7773b0ab@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org, g.danti@assyoma.it
 List-Id: linux-raid.ids
 
-On 04/08/2014 03:38, NeilBrown wrote:
-> On Thu, 31 Jul 2014 16:31:28 +0200 Ethan Wilson<ethan.wilson@shiftmail.org>
-> wrote:
+
+
+On 03/08/2014 05:48, NeilBrown wrote:
+
+> You are very unlikely to see UREs just be reading the drive over and over a
+> again.  You easily do that for years and not get an error.  Or maybe you got
+> one just then.
+
+True. I read over 40 TB from this disk and I haven't find any error. 
+Some SMART attribute reported so far:
+ID  NAME                    FLAG     V     W     T      R
+197 Current_Pending_Sector  0x0012   100   100   000    0
+198 Offline_Uncorrectable   0x0010   100   100   000    0
+
+As you can find, no error was reported, and I don't find anything 
+suspicious in dmesg. At least, this should prove that article as this 
+[1] are quite wrong.
+
+Maybe URE errors are related to unsuccessful writes in the first place. 
+I will try to repeat the test intermixing read with full-disk writes.
+
+
+[1] 
+http://subnetmask255x4.wordpress.com/2008/10/28/sata-unrecoverable-errors-and-how-that-impacts-raid/
+
+> If you want to see how the system responds when it hits a URE, you can use the
+> hdparm command and the "--make-bad-sector" option.  There is also a
+> "--repair-sector" option which will (hopefully) repair the sector when you
+> are done.
 >
->> Dear MD developers,
->> it seems that with mdadm 3.3.1 , if an array has bad blocks disabled
->> ....
->> array is configured for BBL or not, and add a spare of the same type.
->>
-> Why don't you want bad-block-lists?
->
-> I'm not necessarily against having some why to avoid getting them
-> automatically ... possibly a 'policy' option in mdadm.conf.
-> But I'd like to make sure I understand all of your thinking first.
->
-> Thanks,
 > NeilBrown
+>
+>
+>>
+>> Thanks.
+>>
+>> Il 2014-07-31 09:16 Gionatan Danti ha scritto:
+>>>> Yes, you can usually get your data back with mdadm.
+>>>>
+>>>> With latest code, a URE during recovery will cause a bad-block to be
+>>>> recorded
+>>>> on the recovered device, and recovery will continue.  You end up with
+>>>> a
+>>>> working array that has a few unreadable blocks on it.
+>>>>
+>>>> NeilBrown
+>>>
+>>> This is very good news :)
+>>> I case of parity RAID I assume the entire stripe is marked as bad, but
+>>> with mirror (eg: RAID10) only a single block (often 512B) is marked
+>>> bad on the recovered device, right?
+>>>
+>>>  From what mdadm/kernel version the new behavior is implemented? Maybe
+>>> the software RAID on my CentOS 6.5 is stronger then expected ;)
+>>>
+>>> Regards.
+>>
+>
 
-Hello Neil,
-
-Well... on the ML, I think that we saw the badblocks code triggered only 
-once, and it was with the recent thread of Pedro Teixeira.
-
-It seemed to me that his error condition could indicate that there might 
-be a bug in the bad blocks code. It's not clear to me how those zillions 
-of bad sectors could have been stored without some bug such as an 
-erroneous propagation of bad blocks, or erroneous handling or degraded 
-mode (he said he operated with a doubly degraded raid6 after 3 disks 
-dropped out).
-
-Additionally, when he did fsck, that should have cleared the bad blocks 
-which were being written over, but he said that
-"When doing a fsck.ext4 of /dev/md0 it returns the following ( and I can 
-do it over and over again with the exact same errors) ..... "
-I think 'exact same errors' is not supposed to happen if I understand 
-the intent of BBL correctly.
-
-So, I can't be sure, but I have the feeling it's possible that there are 
-still a few bugs in the BBL code. MD RAID in general is very stable and 
-I really like it so much, but maybe on production systems I'd keep the 
-BBL disabled still for a while, if possible.
-
-Thanks,
-EW
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
