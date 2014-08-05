@@ -1,90 +1,120 @@
-From: "Mandar Joshi" <mandar.joshi@calsoftinc.com>
-Subject: Full stripe write in RAID6
-Date: Tue, 5 Aug 2014 21:55:46 +0530
-Message-ID: <01b101cfb0c9$e8fcf240$baf6d6c0$@calsoftinc.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: On URE and RAID rebuild - again!
+Date: Tue, 5 Aug 2014 21:01:59 +0200
+Message-ID: <20140805190159.GA2897@lazy.lzy>
+References: <53D8ACF0.1070202@assyoma.it>
+ <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se>
+ <53D8ED99.90606@assyoma.it>
+ <20140731073121.38cd1773@notabene.brown>
+ <53D9ED48.9000307@assyoma.it>
+ <1370eb7a35b628323646a86094a26912@assyoma.it>
+ <20140803134834.7773b0ab@notabene.brown>
+ <53DF8A31.8060609@assyoma.it>
+ <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se>
+ <35916d10dab6084e6f28da2e0975fce7@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-References: 
-In-Reply-To: 
-Content-Language: en-us
+Content-Disposition: inline
+In-Reply-To: <35916d10dab6084e6f28da2e0975fce7@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGksDQqgoKCgoKCgoKCgoKCgoKAgSWYgSSBhbSB3cml0aW5nIGVudGlyZSBzdHJpcGUgdGhlbiB3
-aGV0aGVyIFJBSUQ2IG1kIGRyaXZlcg0KbmVlZCB0byByZWFkIGFueSBvZiB0aGUgYmxvY2tzIGZy
-b20gdW5kZXJseWluZyBkZXZpY2U/IA0KoKCgoKCgoKCgoKCgoKCgIA0KoKCgoKCgoKCgoKCgoKCg
-IEkgaGF2ZSBjcmVhdGVkIFJBSUQ2IGRldmljZSB3aXRoIGRlZmF1bHQgKDUxMkspIGNodW5rIHNp
-emUNCndpdGggdG90YWwgNiBSQUlEIGRldmljZXMuIGNhdCAvc3lzL2Jsb2NrL21kMTI3L3F1ZXVl
-L29wdGltYWxfaW9fc2l6ZSA9DQoyMDk3MTUyIEkgYmVsaWV2ZSB0aGlzIGlzIGZ1bGwgc3RyaXBl
-ICg1MTJLICogNCBkYXRhIGRpc2tzKS4gDQpJZiBJIHdyaXRlIDJNQiBkYXRhLCBJIGFtIGV4cGVj
-dGVkIHRvIGRpcnR5IGVudGlyZSBzdHJpcGUgaGVuY2Ugd2hhdCBJDQpiZWxpZXZlIEkgbmVlZCBu
-b3QgcmVxdWlyZSB0byByZWFkIGVpdGhlciBhbnkgb2YgdGhlIGRhdGEgYmxvY2sgb3IgcGFyaXR5
-DQpibG9ja3MuIFRodXMgYXZvaWRpbmcgUkFJRDYgcGVuYWx0aWVzLiBXaGV0aGVyIG1kL3JhaWQg
-ZHJpdmVyIHN1cHBvcnRzIGZ1bGwNCnN0cmlwZSB3cml0ZXMgYnkgYXZvaWRpbmcgUkFJRCA2IHBl
-bmFsdGllcz8NCg0KSSBhbHNvIGV4cGVjdGVkIDYgZGlza3Mgd2lsbCByZWNlaXZlIDUxMksgd3Jp
-dGVzIGVhY2guICg0IGRhdGEgZGlzayArIDINCnBhcml0eSBkaXNrcykuIA0KDQpJZiBJIGRvIElP
-IGRpcmVjdGx5IG9uIGJsb2NrIGRldmljZSAvZGV2L21kMTI3LCBJIGRvIG9ic2VydmUgcmVhZHMg
-aGFwcGVuaW5nDQpvbiBtZCBkZXZpY2UgYW5kIHVuZGVybHlpbmcgcmFpZCBkZXZpY2VzIGFzIHdl
-bGwuIA0KDQojbWRzdGF0IG8vcDoNCm1kMTI3IDogYWN0aXZlIHJhaWQ2IHNkYWgxWzVdIHNkYWkx
-WzRdIHNkYWoxWzNdIHNkY2cxWzJdIHNkY2gxWzFdIHNkY2kxWzBdDQqgoKCgoCA0MTkyNjY1NiBi
-bG9ja3Mgc3VwZXIgMS4yIGxldmVsIDYsIDUxMmsgY2h1bmssIGFsZ29yaXRobSAyIFs2LzZdDQpb
-VVVVVVVVXQ0KDQoNCg0KIyB0aW1lIChkZCBpZj0vZGV2L3plcm8gb2Y9L2Rldi9tZDEyNyBicz0y
-TSBjb3VudD0xICYmIHN5bmMpDQoNCiMgaW9zdGF0OjoNCkRldmljZTqgoKCgoKCgoKCgoCB0cHOg
-oCBCbGtfcmVhZC9zoKAgQmxrX3dydG4vc6CgIEJsa19yZWFkoKAgQmxrX3dydG4NCnNkYWoxoKCg
-oKCgoKCgoKAgMTkuODCgoKCgoKCgoCAxLjYwoKCgoKCgIDIwNS4yMKCgoKCgoKCgoCA4oKCgoKCg
-IDEwMjYNCnNkYWkxoKCgoKCgoKAgoKCgMTguMjCgoKCgoKCgoCAwLjAwoKCgoKCgIDIwNS4yMKCg
-oKCgoKCgoCAwoKCgoKCgIDEwMjYNCnNkYWgxoKCgoKCgoKCgoKAgMzMuNjCgoKCgoKCgIDExLjIw
-oKCgoKCgIDM0NC40MKCgoKCgoKCgIDU2oKCgoKCgIDE3MjINCnNkY2cxoKCgoKCgoKCgoKAgMjAu
-MjCgoKCgoKCgoCAwLjAwoKCgoKCgIDIwNS4yMKCgoKCgoKCgoCAwoKCgoKCgIDEwMjYNCnNkY2kx
-oKCgoKCgoKCgoKAgMzEuMDCgoKCgoKCgoCAzLjIwoKCgoKCgIDM0NC40MKCgoKCgoKCgIDE2oKCg
-oKCgIDE3MjINCnNkY2gxoKCgoKCgoKCgoKAgMzQuMDCgoKCgoKAgMTIwLjAwoKCgoKCgIDIwNS4y
-MKCgoKCgoKAgNjAwoKCgoKCgIDEwMjYNCm1kMTI3oKCgoKCgoKCgoCAxMTkuMjCgoKCgoKAgMTM0
-LjQwoKCgoKCgIDgxOS4yMKCgoKCgoKAgNjcyoKCgoKCgIDQwOTYNCg0KDQpTbyB0byBhdm9pZCBj
-YWNoZSBlZmZlY3QsIGlmIGFueSAoPykgSSBhbSB1c2luZyByYXcgZGV2aWNlIHRvIHBlcmZvcm0g
-SU8uDQpUaGVuIGZvciBvbmUgc3RyaXBlIHdyaXRlIEkgZG8gb2JzZXJ2ZSBubyByZWFkcyBoYXBw
-ZW5pbmcuIA0KQXQgdGhlIHNhbWUgdGltZSBJIGFsc28gc2VlIGZldyBkaXNrcyBnZXR0aW5nIG1v
-cmUgd3JpdGVzIHRoYW4gZXhwZWN0ZWQuIERpZA0Kbm90IGdldCB3aHk/DQoNCiMgcmF3IC1xYQ0K
-L2Rldi9yYXcvcmF3MTqgIGJvdW5kIHRvIG1ham9yIDksIG1pbm9yIDEyNw0KDQojdGltZSAoZGQg
-aWY9L2Rldi96ZXJvIG9mPS9kZXYvcmF3L3JhdzEgYnM9Mk0gY291bnQ9MSAmJiBzeW5jKQ0KDQoj
-IGlvc3RhdCBzaG93czoNCkRldmljZTqgoKCgoKCgoKCgoCB0cHOgoCBCbGtfcmVhZC9zoKAgQmxr
-X3dydG4vc6CgIEJsa19yZWFkoKAgQmxrX3dydG4NCnNkYWoxoKCgoKCgoKCgoKCgIDcuMDCgoKCg
-oKCgoCAwLjAwoKCgoKCgIDIwNS4yMKCgoKCgoKCgoCAwoKCgoKCgIDEwMjYNCnNkYWkxoKCgoKCg
-oKCgoKCgIDYuMjCgoKCgoKCgoCAwLjAwoKCgoKCgIDIwNS4yMKCgoKCgoKCgoCAwoKCgoKCgIDEw
-MjYNCnNkYWgxoKCgoKCgoKCgoKCgIDkuODCgoKCgoKCgoCAwLjAwoKCgoKCgIDI0Ni44MKCgoKCg
-oKCgoCAwoKCgoKCgIDEyMzQNCnNkY2cxoKCgoKCgoKCgoKCgIDYuODCgoKCgoKCgoCAwLjAwoKCg
-oKCgIDIwNS4yMKCgoKCgoKCgoCAwoKCgoKCgIDEwMjYNCnNkY2kxoKCgoKCgoKCgoKCgIDkuNjCg
-oKCgoKCgoCAwLjAwoKCgoKCgIDI0Ni44MKCgoKCgoKCgoCAwoKCgoKCgIDEyMzQNCnNkY2gxoKCg
-oKCgoKCgoKCgIDYuODCgoKCgoKCgoCAwLjAwoKCgoKCgIDIwNS4yMKCgoKCgoKCgoCAwoKCgoKCg
-IDEwMjYNCm1kMTI3oKCgoKCgoKCgoKCgIDAuODCgoKCgoKCgoCAwLjAwoKCgoKCgIDgxOS4yMKCg
-oKCgoKCgoCAwoKCgoKCgIDQwOTYNCg0KSSBhc3N1bWUgaWYgSSBwZXJmb3JtIHdyaXRlcyBpbiBt
-dWx0aXBsZXMgb2Ygk29wdGltYWxfaW9fc2l6ZZQgSSB3b3VsZCBiZQ0KZG9pbmcgZnVsbCBzdHJp
-cGUgd3JpdGVzIHRodXMgYXZvaWRpbmcgcmVhZHMuIEJ1dCB1bmZvcnR1bmF0ZWx5IHdpdGggdHdv
-IDJNDQp3cml0ZXMsIEkgZG8gc2VlIHJlYWRzIGhhcHBlbmluZyBmb3Igc29tZSB0aGVzZSBkcml2
-ZXMuIFNhbWUgY2FzZSBmb3INCmNvdW50PTQgb3IgNiAoZXF1YWwgdG8gZGF0YSBkaXNrcyBvciB0
-b3RhbCBkaXNrcykuDQojIHRpbWUgKGRkIGlmPS9kZXYvemVybyBvZj0vZGV2L3Jhdy9yYXcxIGJz
-PTJNIGNvdW50PTIgJiYgc3luYykNCg0KDQpEZXZpY2U6oKCgoKCgoKCgoKAgdHBzoKAgQmxrX3Jl
-YWQvc6CgIEJsa193cnRuL3OgoCBCbGtfcmVhZKCgIEJsa193cnRuDQpzZGFqMaCgoKCgoKCgoKCg
-IDEzLjQwoKCgoKCgIDIwNC44MKCgoKCgoCA0MTAuMDCgoKCgoKAgMTAyNKCgoKCgoCAyMDUwDQpz
-ZGFpMaCgoKCgoKCgoKCgIDExLjIwoKCgoKCgoKAgMC4wMKCgoKCgoCA0MTAuMDCgoKCgoKCgoKAg
-MKCgoKCgoCAyMDUwDQpzZGFoMaCgoKCgoKCgoKCgIDE1LjgwoKCgoKCgoKAgMC4wMKCgoKCgoCA0
-NjQuNDCgoKCgoKCgoKAgMKCgoKCgoCAyMzIyDQpzZGNnMaCgoKCgoKCgoKCgIDEzLjIwoKCgoKCg
-IDIwNC44MKCgoKCgoCA0MTAuMDCgoKCgoKAgMTAyNKCgoKCgoCAyMDUwDQpzZGNpMaCgoKCgoKCg
-oKCgIDE2LjYwoKCgoKCgoKAgMC4wMKCgoKCgoCA0NjQuNDCgoKCgoKCgoKAgMKCgoKCgoCAyMzIy
-DQpzZGNoMaCgoKCgoKCgoKCgIDEyLjQwoKCgoKCgIDE5Mi4wMKCgoKCgoCA0MTAuMDCgoKCgoKCg
-IDk2MKCgoKCgoCAyMDUwDQptZDEyN6CgoKCgoKCgoKCgoCAxLjYwoKCgoKCgoKAgMC4wMKCgoKCg
-IDE2MzguNDCgoKCgoKCgoKAgMKCgoKCgoCA4MTkyDQoNCg0KSSByZWFkIGFib3V0IJMvc3lzL2Js
-b2NrL21kMTI3L21kL21kL3ByZXJlYWRfYnlwYXNzX3RocmVzaG9sZJQuIA0KSSB0cmllZCBzZXR0
-aW5nIHRoaXMgdG8gMCBhcyB3ZWxsIGFzIHN1Z2dlc3RlZCBzb21ld2hlcmUuIEJ1dCBubyBoZWxw
-Lg0KDQpJIGJlbGlldmUgUkFJRDYgcGVuYWx0aWVzIHdpbGwgZXhpc3QgaWYgaXSScyBhIHJhbmRv
-bSB3cml0ZSwgYnV0IGluIGNhc2Ugb2YNCnNlcS4gd3JpdGUsIHdoZXRoZXIgdGhleSB3aWxsIHN0
-aWxsIGV4aXN0IGluIHNvbWUgb3RoZXIgZm9ybSBpbiBMaW51eA0KbWQvcmFpZCBkcml2ZXI/DQpN
-eSBhaW0gaXMgdG8gbWF4aW1pemUgUkFJRDYgV3JpdGUgSU8gcmF0ZSB3aXRoIHNlcXVlbnRpYWwg
-V3JpdGVzIHdpdGhvdXQNClJBSUQ2IHBlbmFsdGllcy4NCg0KUmVjdGlmeSBtZSB3aGVyZXZlciBt
-eSBhc3N1bXB0aW9ucyBhcmUgd3JvbmcuIExldCBtZSBrbm93IGlmIGFueSBvdGhlcg0KY29uZmln
-dXJhdGlvbiBwYXJhbSAoZm9yIGJsb2NrIGRldmljZSBvciBtZCBkZXZpY2UpIGlzIHJlcXVpcmVk
-IHRvIGFjaGlldmUNCnRoZSBzYW1lLg0KDQotLQ0KTWFuZGFyIEpvc2hpDQo=
+On Tue, Aug 05, 2014 at 12:44:04AM +0200, Gionatan Danti wrote:
+[...]
+> Yes, I understand this. However, the linked article (and many others) state:
+> "If you have a 2TB drive, you write 2TB to it, and then you fully read that,
+> just over 6 times, then you will run into one read error, theoretically
+> speaking."
 
+This means they, who wrote the article, did not
+really *tested* what they wrote.
+Which already tells us a lot about the quality
+of the article itself.
+
+> I read my 500 GB drive over _60_ times, reading 3x more total data than
+> stated above.
+> 
+> I started the entire discussion to know how UREs are calculated, trying to
+> understand if they are expressed as probability ("1 probabily over 10^14
+> that we can not read a sector) or a statistical record ("we found that 1 on
+> 10^14 is not readable").
+
+What's the difference between "probability" and
+"statistical record"?
+Is not one calculated with the other?
+
+> If defined as a probability, I am very lucky: if my math is OK, I should
+> have only 0.5% to read about 40 TB of data (my math is:
+> (1-(1/10^14))^(3*(10^14))). If, on the other hand, UREs are defined as
+
+I'm to lazy to try to understand what 3*10^14 is.
+What is it?
+
+> statistical evidence (as MTBF), environment and test conditions (eg: duty
+> cycle, read/write distribution, etc) are absolutely critical to understand
+> what this parameter really mean for us.
+
+I'm under the impression you did not grasp the
+concept of probability is such contex.
+Given that it is not clear how the manufacturers
+compute their numbers, both cases you describe
+are the same.
+All the possible conditions are included in the
+probability computation.
+
+You can state: under worst case scenario, *each*
+bit has a probability of 10E-14 of being wrong.
+What does this mean?
+
+> I'm under impression (and maybe I'm wrong, as usual :)) that UREs mainly
+> depends on incomplete writes and/or unsable sectors. If this is the case,
+> maybe the published URE values are related to the entire HDD warranty. In
+> other word, they should be read as "in normal condition, with typical loads,
+> out HDD will exibit about 1/10^14 unrecoverable error during the entire disk
+> lifespan".
+
+As already wrote by others, it is not clear what
+that number (10E-14) means.
+A common understanding could be, as stated above,
+each bit has a *probability* of 10E-14 of being wrong.
+
+Practically, it does *not* mean that reading 10E14 bit
+will deliver one bit wrong sistematically.
+
+Furthermore, as already again stated, very likely
+an "average" HDD has much lower URE probability.
+
+> 
+> It is reasonable? Or I am horribly wrong?
+
+Is this pure curiosity from your side or are
+you trying to achieve something?
+
+There is a report, from CERN I think, provinding
+real world statistics about HDD problems.
+
+http://storagemojo.com/2007/09/19/cerns-data-corruption-research/
+
+bye,
+
+pg
+
+> Regards.
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+
+piergiorgio
