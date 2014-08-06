@@ -1,102 +1,95 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: After reshaping raid1 to raid0 with bitmap, then stop md panic
-Date: Wed, 6 Aug 2014 16:37:02 +1000
-Message-ID: <20140806163702.15592dc6@notabene.brown>
-References: <324320204.17911195.1407221719669.JavaMail.zimbra@redhat.com>
-	<11051344.17913061.1407222186494.JavaMail.zimbra@redhat.com>
+Subject: Re: One patch just review the code
+Date: Wed, 6 Aug 2014 16:44:20 +1000
+Message-ID: <20140806164420.09e4df13@notabene.brown>
+References: <705044700.17914512.1407222497904.JavaMail.zimbra@redhat.com>
+	<1122994629.17915693.1407222727992.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/W6DV+PE/B.rycQs0_IDtnWk"; protocol="application/pgp-signature"
+ boundary="Sig_/kXW0LF48JvsWV+bTwCLswRT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <11051344.17913061.1407222186494.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1122994629.17915693.1407222727992.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Xiao Ni <xni@redhat.com>
 Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes.sorensen@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/W6DV+PE/B.rycQs0_IDtnWk
+--Sig_/kXW0LF48JvsWV+bTwCLswRT
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 5 Aug 2014 03:03:06 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
+On Tue, 5 Aug 2014 03:12:07 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
 
-> Dear all
+> Hi all
+>=20
+>    I'm reading the code of md. I find there is a problem. I know now ther=
+e are arrays mark[SYNC_MARKS] mark_cnt[SYNC_MARKS]=20
+> store the information about how many sectors finish recovery and the mome=
+nt.
 >=20
 >=20
->    I faced one problem that the system panic after reshaping raid1 to rai=
-d0 with bitmap.
-> The dmesg and calltrace information is like this:
+> 7825       currspeed =3D ((unsigned long)(io_sectors-mddev->resync_mark_c=
+nt))/2
+> 7826          /((jiffies-mddev->resync_mark)/HZ +1) +1;
+>  =20
+>    But when calculate the speed of recovery, the sectors used to calculat=
+e contains
+> the sectors which are not finished recovery.
 >=20
->    You can easily reproduce this by those steps:
->    1. mdadm -CR /dev/md0 -l1 -n2 /dev/loop[0-1] --bitmap=3Dinternal
->    2. mdadm --wait /dev/md0
->    3. mdadm --grow -l0 /dev/md0
->    4. mdadm -S /dev/md0
-...
+>    When assign value to mark_cnt[next], it subtract the sectors which don=
+'t finish recovery.
+> So I think when calculate the recovery speed we should subtract the secto=
+rs not finishing
+> recovery too.
 >=20
-> [ 1485.646746] BUG: unable to handle kernel NULL pointer dereference at 0=
-000000000000038
-> [ 1485.654724] IP: [<ffffffff8148db2e>] bitmap_daemon_work+0x24e/0x450
+> 7638          mark_cnt[next] =3D io_sectors - atomic_read(&mddev->recover=
+y_active);
+>=20
+>    So I try to modify and the patch is:
+>=20
+> --- linux-stable/drivers/md/md.c 2014-07-30 14:36:37.327535805 +0800
+> +++ fix/md.c   2014-07-31 16:40:57.151493177 +0800
+> @@ -7652,7 +7652,7 @@
+>        */ =20
+>       cond_resched();
+> =20
+> -     currspeed =3D ((unsigned long)(io_sectors-mddev->resync_mark_cnt))/2
+> +     currspeed =3D ((unsigned long)(io_sectors-atomic_read(&mddev->recov=
+ery_active)-mddev->resync_mark_cnt))/2
+>          /((jiffies-mddev->resync_mark)/HZ +1) +1;
+> =20
+>       if (currspeed > speed_min(mddev)) {
+>=20
+>    Am I right?
 
-Yes, RAID0 doesn't support bitmaps, so this cannot possibly work.
+Yes, that looks right.
+If you create a properly formatted patch, and wrap that long line nicely I'=
+ll
+apply it.
 
-Following patch should turn the crash into a clean failure.
-
-Thanks for the report,
+Thanks,
 NeilBrown
 
-
-=46rom 1bdb20e16166240a4ca3b861c48defefaf218874 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 6 Aug 2014 16:34:27 +1000
-Subject: [PATCH] md: check for bitmap compatability when changing raid leve=
-ls.
-
-If an array has a bitmap, then it cannot be converted to
-a level which does not support bitmaps.
-
-Reported-by: Xiao Ni <xni@redhat.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1379b1a3b9ff..3bd13b276e45 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3500,6 +3500,12 @@ level_store(struct mddev *mddev, const char *buf, si=
-ze_t len)
- 		       mdname(mddev), clevel);
- 		return -EINVAL;
- 	}
-+	if (mddev->bitmap && !pers->quiesce) {
-+		module_put(pers->owner);
-+		printk(KERN_WARNING "md: %s: %s does not support a bitmap\n",
-+		       mdname(mddev), clevel);
-+		return -EINVAL;
-+	}
-=20
- 	rdev_for_each(rdev, mddev)
- 		rdev->new_raid_disk =3D rdev->raid_disk;
-
---Sig_/W6DV+PE/B.rycQs0_IDtnWk
+--Sig_/kXW0LF48JvsWV+bTwCLswRT
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU+HNDznsnt1WYoG5AQLDaw/+NNt3GWUq6ksTLnkXG530zA3pd/+dlQxU
-XoL/at3JSdpBFPSXIFytQwnE35XdlaSMHBQ0oqgh2CJVIcpAZl7sAaqQIrUrBAYX
-0gPyVkHO9efaU0zBR5jUxfegIlaiQZapLSil8qkKR7rat3EVzJVe5dqHGSz8kHg0
-ni5DgVyYGjC1wMH6+DzzCtvr/VqmKdKTQasJQ+PUx6LAY+V68eeWrWHAdpshHqTl
-y8WLRUN6fjCivoKSSICGXypKn2yf4g4bltkWAE3AlwxTMyeiij8AcchnWen0N681
-n5fESxQuN+V2YN340KV9BGCkyAn7Rj1mPdP7h/GFYOwqHKMCqKurTErl7G6iaZN5
-xXaA+PQOzezhtS3t44agu0wJLrbAYD0vnbMYNW9xAKBYV9RfbTH4QDnTahUushxl
-Fvtz/kg8WQDZCYNF0V0ScHlFs0h4lhzGtrKODIFdHYQcAnXCJCGAyO92ksZDh11c
-8h6Wbnyal+GVLWfFMahMAAsrL4N7xJ5lWxpxMjpM5egM58eLROmLPb0aMjt1e+1x
-fn/B+ORs8LREEjhU0Md1rDzL2MqBZvknsgSpqm8PIBDIe4hP20BskJOTdP3ip+Qj
-sMERT2tl4GjAeXg4lqcvBksfE9X2Ds6/FbEoBLRbM/WvQlPYIYl6xJ06UfY8KI/d
-XsooXiA98FM=
-=koRD
+iQIVAwUBU+HOxDnsnt1WYoG5AQLhBRAAvQfIPRztV4/XzxkwE8tH3H+SIxPs5mE2
+onsBIAlW0biAlOsq05W3kAv4bz8gCtL2KvTZzHH8irsdWgBQlANTUXZV3lsg98eZ
+CMhDwsooqfM/hsnGVufDIrrYFc8XT5yKCUvoPM9jBIUVBlsp1fwKQdtrPQtIJZyO
+0o/LiLhOO+lfLKm4LKNZc74uFjEoSajubPG9H+//Yfa+B8HPsgPhum5RZ2LxIVEZ
+cxI+YCKHS2PhJsqcMREKMoOrxZizvpPaKQtWqU31v/vsqIY4N4QpSXy2/s6G6IuS
+8MLtR5AnMqderj5kaSxFxdBQHtqtgw0pA/IvmK/ZGb1VZkr1wOzW3cUWN5FrVFW+
+8c7wG42zs3Ga25ZLYHJ3yG/TYp3VzkO2ZDNvsRuxrV91cL9TFYAGfGNBl3ZLGERR
+6HOpaSkGbWpCM9k6grI2esp8xtIMjKmp7/4QUuj0YHETMx1EffHXimTBs+ex2XOW
+LmKacwIyoviJm00tqpUu4NAkX12AUtfBlP1EEyeoXry2rTt/w7obh4HmVSTsKIde
+OZc+9O7PJa50W4dW7wB6e3GFl3K3ucpRzHcaA/vC+pPyYgsFf8sv66QjxX0nxFHo
+uBceNbp3hBCPMVXG7zcKGy3zBogfM5pCCOdGVwf0sGHJR7vqEAnyZ05hqrGfL5qy
+/9GSJkCqm6A=
+=Gsyb
 -----END PGP SIGNATURE-----
 
---Sig_/W6DV+PE/B.rycQs0_IDtnWk--
+--Sig_/kXW0LF48JvsWV+bTwCLswRT--
