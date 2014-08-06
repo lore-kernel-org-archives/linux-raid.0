@@ -1,57 +1,41 @@
-From: =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>
-Subject: [PATCH] IMSM: do not use comma expression for simple assignments
-Date: Wed,  6 Aug 2014 10:19:39 +0200
-Message-ID: <1407313179-24598-1-git-send-email-j@bitron.ch>
+From: =?ISO-8859-15?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+Subject: Re[3]: Found duplicate PV: using /dev/sda3 not /dev/md1
+Date: Wed, 6 Aug 2014 14:49:39 +0200
+Message-ID: <434471753.20140806144939@oudeis.org>
+References: <1896515726.20140614235853@oudeis.org>
+ <1454723160.20140615203503@oudeis.org> <539E5A90.3080207@turmel.org>
+ <19411862.20140616155327@oudeis.org> <539F00AE.9090504@turmel.org>
+ <1153494452.20140616202024@oudeis.org> <539F5049.2080407@turmel.org>
+ <145561825.20140616222858@oudeis.org> <539F5970.3060504@turmel.org>
+ <1353040832.20140617032748@oudeis.org> <53A02D0C.90409@turmel.org>
+ <1769771799.20140617161255@oudeis.org>
+Reply-To: =?ISO-8859-15?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1769771799.20140617161255@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>
+To: =?ISO-8859-15?Q?Rainer_F=FCgenstein?= <rfu@oudeis.org>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=46ixes build with gcc 4.9.
+Hi,
 
-error: right-hand operand of comma expression has no effect
-  snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
-  ^
+I assume we hit a dead end here?
 
-Signed-off-by: J=C3=BCrg Billeter <j@bitron.ch>
----
- super-intel.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+RF> [root@gateway ~]# dmsetup ls
+RF> vg_gateway-lv_data      (253, 2)
+RF> vg_gateway-lv_var       (253, 1)
+RF> vg_gateway-lv_home      (253, 0)
+RF> [root@gateway ~]#
 
-diff --git a/super-intel.c b/super-intel.c
-index e28ac7d..f24d101 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5069,13 +5069,13 @@ static int write_super_imsm_spares(struct intel=
-_super *super, int doclose)
- 	__u32 sum;
- 	struct dl *d;
-=20
--	spare->mpb_size =3D __cpu_to_le32(sizeof(struct imsm_super)),
--	spare->generation_num =3D __cpu_to_le32(1UL),
-+	spare->mpb_size =3D __cpu_to_le32(sizeof(struct imsm_super));
-+	spare->generation_num =3D __cpu_to_le32(1UL);
- 	spare->attributes =3D MPB_ATTRIB_CHECKSUM_VERIFY;
--	spare->num_disks =3D 1,
--	spare->num_raid_devs =3D 0,
--	spare->cache_size =3D mpb->cache_size,
--	spare->pwr_cycle_count =3D __cpu_to_le32(1),
-+	spare->num_disks =3D 1;
-+	spare->num_raid_devs =3D 0;
-+	spare->cache_size =3D mpb->cache_size;
-+	spare->pwr_cycle_count =3D __cpu_to_le32(1);
-=20
- 	snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
- 		 MPB_SIGNATURE MPB_VERSION_RAID0);
---=20
-2.0.4
+[...] (see my last mail regarding this topic)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I wonder what will happen if I mdadmin --resize /dev/md1? presumably
+it will overwrite this stray LVM superblock and raid volume content
+will be the same as it was a few weeks ago, when this problem first
+occured?
+
+tnx
+
