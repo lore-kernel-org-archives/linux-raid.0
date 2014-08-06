@@ -1,59 +1,34 @@
 From: Chris Murphy <lists@colorremedies.com>
 Subject: Re: On URE and RAID rebuild - again!
-Date: Wed, 6 Aug 2014 10:34:02 -0600
-Message-ID: <47BC249A-F0A4-4130-B6DE-26D2CCD72B56@colorremedies.com>
-References: <53D8ACF0.1070202@assyoma.it> <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se> <53D8ED99.90606@assyoma.it> <20140731073121.38cd1773@notabene.brown> <53D9ED48.9000307@assyoma.it> <1370eb7a35b628323646a86094a26912@assyoma.it> <20140803134834.7773b0ab@notabene.brown> <53DF8A31.8060609@assyoma.it> <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se> <35916d10dab6084e6f28da2e0975fce7@assyoma.it>
+Date: Wed, 6 Aug 2014 11:05:35 -0600
+Message-ID: <4B848DDA-8DC8-4629-BC16-9325E61ADE2F@colorremedies.com>
+References: <53D8ACF0.1070202@assyoma.it> <alpine.DEB.2.02.1407301310100.7929@uplift.swm.pp.se> <53D8ED99.90606@assyoma.it> <20140731073121.38cd1773@notabene.brown> <53D9ED48.9000307@assyoma.it> <1370eb7a35b628323646a86094a26912@assyoma.it> <20140803134834.7773b0ab@notabene.brown> <53DF8A31.8060609@assyoma.it> <alpine.DEB.2.02.1408042037470.7929@uplift.swm.pp.se> <35916d10dab6084e6f28da2e0975fce7@assyoma.it> <20140805190159.GA2897@lazy.lzy> <228fa3bd137e034e9ec974094f37b368@assyoma.it>
 Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <35916d10dab6084e6f28da2e0975fce7@assyoma.it>
+In-Reply-To: <228fa3bd137e034e9ec974094f37b368@assyoma.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-On Aug 4, 2014, at 4:44 PM, Gionatan Danti <g.danti@assyoma.it> wrote:
-
-> Il 2014-08-04 20:40 Mikael Abrahamsson ha scritto:
->> Why do you think that's wrong? 10^-14 is what the vendor guarantees. I
->> have had drives with worse performance (after a couple of months I had
->> several UNC sectors without reading much).
->> Your claim about the article being wrong is the same as saying that
->> the risk reported of getting into a car accident is wrong because
->> you've driven that amount of kilometers but haven't been in an
->> accident yet.
->> This is statistics, marketing and warranty, not guaranteed behavior.
+On Aug 5, 2014, at 1:42 PM, Gionatan Danti <g.danti@assyoma.it> wrote:
 > 
-> Yes, I understand this. However, the linked article (and many others) state:
-> "If you have a 2TB drive, you write 2TB to it, and then you fully read that, just over 6 times, then you will run into one read error, theoretically speaking."
+> I am trying to imagine _how_ the various vendors arrive at the claimed number and _how much_ we have confidence in URE rate.
 
-A while ago I brought up the fact the less than sign is ignored in such assertions. And that's why they draw the wrong conclusions.
+I'd say it's next to useless, and a different question needs to be asked which is how much redundancy is a good value relative to the value of the data; and then coming up with a strategy that meets the uptime and redundancy preference for a given budget.
 
-
-> I read my 500 GB drive over _60_ times, reading 3x more total data than stated above.
-
-Right and it wouldn't surprise me if you could read it 600 times without unrecoverable read error. Also note that the spec doesn't require that you read every sector. You could have read one sector 24414062500 times to arrive at just over 1E14 bits read, assuming it's a 512 byte drive.
-
-http://arxiv.org/pdf/cs/0701166.pdf
-
-
-> I started the entire discussion to know how UREs are calculated, trying to understand if they are expressed as probability ("1 probabily over 10^14 that we can not read a sector) or a statistical record ("we found that 1 on 10^14 is not readable").
-
-Neither. Both conclusions are overreach based on what the spec says. The spec is not stating an average, and we also know from a large body of publicly available information that drive failure rates aren't constant with age. So the distribution is actually quite complex.
-
-
-
-> If defined as a probability, I am very lucky: if my math is OK, I should have only 0.5% to read about 40 TB of data (my math is: (1-(1/10^14))^(3*(10^14))). If, on the other hand, UREs are defined as statistical evidence (as MTBF), environment and test conditions (eg: duty cycle, read/write distribution, etc) are absolutely critical to understand  what this parameter really mean for us.
-
-
-A URE isn't a failure to a manufacturer. Strictly speaking they're only promising less than one error per 12TB of bits read,in this example. If a read error happens more frequently, the implicit performance hasn't been met and you're entitled to a replacement. Otherwise you're not. But in practice manufacturers hand out RMAs for warranty drives for almost any reason which is why almost half of the drives they take back under warranty have no spec busting problems per their testing. So what parameters users have for "failure" vs the manufacturer, aren't exactly aligned.
-
-
+>> Furthermore, as already again stated, very likely
+>> an "average" HDD has much lower URE probability.
 > 
-> I'm under impression (and maybe I'm wrong, as usual :)) that UREs mainly depends on incomplete writes and/or unsable sectors. If this is the case, maybe the published URE values are related to the entire HDD warranty. In other word, they should be read as "in normal condition, with typical loads, out HDD will exibit about 1/10^14 unrecoverable error during the entire disk lifespan".
+> This is reassuring :)
 
-You can only arrive at this conclusion by ignoring the < sign that all the manufacturers use (or the explicitly stated "less than" phrasing).
+The spec only accounts for the drive itself. Not the cables, the controller, the computer's non-ECC memory, and notably one of the greatest sources of data loss: user error. It also doesn't account for the complete implosion of the drive, for any number of reasons, head impacts the spinning surface and either destroys the data on the surface or the read/write head; actuator death; spindle motor death, logic board death, power supply death, etc.
 
+So to mitigate drive and cable problems we use RAID. For controller, logic board, power supply failure concerns, we use clusters. More than a handful of URE's, even if they were to bust the manufacturer spec, is the loss of a single drive represents hours or days of rebuild because one drive holds so much more data today.
+
+Right now, md RAID 6 + XFS + Gluster clusters is a rather straightforward setup. For volume snapshots to mitigate user induced data loss, LVM2 thinly provisioned LV's can be used. I haven't tested it yet but I think the LVM2 integrated RAID does work with thinp LV's, so it's possible to remove a layer if you're OK with the different LVM raid management tools compared to mdadm.
 
 Chris Murphy
+
