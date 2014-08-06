@@ -1,383 +1,138 @@
-From: luvar@plaintext.sk
-Subject: stray raid10 with 9 hdd with -n3 layout
-Date: Wed, 6 Aug 2014 08:55:36 +0100 (GMT+01:00)
-Message-ID: <2137843278.261407311736686.JavaMail.root@shiva>
-References: <1564432307.211407311660054.JavaMail.root@shiva>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_8_1125681043.1407311736679"
+From: mdraid.pkoch@dfgh.net (Peter Koch)
+Subject: need expert advice for growing raid10-array
+Date: Wed, 6 Aug 2014 11:12:45 +0200
+Message-ID: <201408060912.s769Cj3l024338@portal.naev.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1564432307.211407311660054.JavaMail.root@shiva>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-------=_Part_8_1125681043.1407311736679
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Dear md experts,
 
-Hi,
-I have personal nas with open media vault. It is working quite good, if it is up and running. When I turn it off for a week, it does not assemble my raid, or it assembles it in degraded mode. Problem is in hardware. I use port replicators. They probably need to be warmed up before they provide access to all hdd. Beside this problem, can someone guide me to magic of linux software raid?
+I was running a linux box with with a 16 slot SATA enclosure. The
+first two disks (sda + sdb, 160GB each) were used as a raid0-array
+(root, swap, etc.). The remaining 14 disks (2TB each) were used as
+a 13 disk raid10-array (sdc, sdd, ..., sdo) with one hotspare disk (sdp)
 
-I have one disk for OS (no raid, no problems :)
-Than I have three disks without raid.
-And than I have nine disks which should assemble single raid with raid10, n3 layout. I have done mdadm --examine on all of them. Results are attached. I reference all disks by ID. Here is my mdadm.conf:
+No we needed more space and I upgraded my kernel to a newer version,
+replaced mdadm 3.2 with version 3.3, bought a second sata box with
+another 16 slots and 4 more 2TB disks.
 
-root@nas:~# grep ARRAY /etc/mdadm/mdadm.conf 
-ARRAY /dev/md/3 metadata=1.2 name=nas:3 devices=/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0VD64,/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DJTWJ,/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DHUUW,/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DUVZY,/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0WAP9,/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0VCHR,/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXG1C12P3593,/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1CHAWF,/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0V9A4
+Since I now have 2 separate enclosures I wanted to separate the disks
+such that mirroring happens between the two enclosures.
 
-See that if you do "grep "Array UUID" *" command on all attachement, that all disks have same array UUID and despite this, array state is not same from point of view of given disk:
-root@nas:~/temp/raid10n3examine$ grep "Array State" *
-disk1-ata-ST320LT012-9WS14C_W0V0VD64:               Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-disk2-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DJTWJ:   Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-disk3-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DHUUW:   Array State : ..A.....A ('A' == active, '.' == missing, 'R' == replacing)
-disk4-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DUVZY:   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-disk5-ata-ST320LT012-9WS14C_W0V0WAP9:               Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-disk6-ata-ST320LT012-9WS14C_W0V0VCHR:               Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-disk7-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXG1C12P3593:   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-disk8-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1CHAWF:   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-disk9-ata-ST320LT012-9WS14C_W0V0V9A4:               Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
+Now both enclosures contain 9 disks, sda to sdi in the first box
+and sdj to sdr in the second box.
 
+The former sda and sdb now is sda and sdj. And here are the positions
+of the 14 raid10-disks plus 2 new disks:
 
-I have these questions:
- 1. why does my array assemble automatically?
- 2. is there possibility to assemble array in a such way, that array will "elect" which data is on more disks and rewrite last disk if needed?
- 3. is there possibility to assemble array in cooperation with filesystem? That filesystem will have chance to choose blocks from all three disks and choose correct one from his point of view?
- 4. what should I do to have my data OK?
+disk00 (formerly /dev/sdc) moved to box1, now sdb
+disk01 (formerly /dev/sdd) moved to box2, now sdk
+disk02 (formerly /dev/sde) moved to box1, now sdc
+disk03 (formerly /dev/sdf) moved to box2, now sdl
+disk04 (formerly /dev/sdg) moved to box1, now sdd
+disk05 (formerly /dev/sdh) moved to box2, now sdm
+disk06 (formerly /dev/sdi) moved to box1, now sde
+disk07 (formerly /dev/sdj) moved to box2, now sdn
+disk08 (formerly /dev/sdk) moved to box1, now sdf
+disk09 (formerly /dev/sdl) moved to box2, now sdo
+disk10 (formerly /dev/sdm) moved to box1, now sdg
+disk11 (formerly /dev/sdn) moved to box2, now sdp
+disk12 (formerly /dev/sdo) moved to box1, now sdh
+spare0 (formerly /dev/sdp) moved to box2, now sdq
+new disk in box1, now sdi
+new disk in box2, now sdr
 
-PS: I have lvm on top of that raid with a few volumes. All volumes with ext4 fs on them.
+I wanted to grow the the raid10-array to 16 disks and
+then add to two hot spares (one in each box)
 
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk1-ata-ST320LT012-9WS14C_W0V0VD64
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk1-ata-ST320LT012-9WS14C_W0V0VD64
+I therefore added /dev/sdi and /dev/sdr with the follwowing
+command:
 
-/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0VD64:
-          Magic : a92b4efc
+mdadm /dev/md5 --add /dev/sdi /dev/sdr
+
+After that my raid10-array had 3 hot spares. I did not check
+the order of the hot spares but assumed it was sdq sdi sdr
+
+I then did
+
+mdadm --grow /dev/md5 --raid-devices=16
+
+And here's what the situation is now:
+
+Info from /proc/mdstat:
+md5 : active raid10 sdb[0] sdi[14] sdq[13] sdr[15] sdh[12] sdp[11] sdg[10] sdo[9] sdf[8] sdn[7] sde[6] sdm[5] sdd[4] sdl[3] sdc[2] sdk[1]
+      12696988672 blocks super 1.2 512K chunks 2 near-copies [16/16] [UUUUUUUUUUUUUUUU]
+      [==>..................]  reshape = 13.1% (1663374208/12696988672) finish=892.4min speed=206060K/sec
+
+Output from mdadm -D:
+/dev/md5:
         Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
+  Creation Time : Sun Feb 10 16:58:10 2013
      Raid Level : raid10
-   Raid Devices : 9
+     Array Size : 12696988672 (12108.79 GiB 13001.72 GB)
+  Used Dev Size : 1953382912 (1862.89 GiB 2000.26 GB)
+   Raid Devices : 16
+  Total Devices : 16
+    Persistence : Superblock is persistent
 
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 83c3c3be:9e845320:8a29784f:acdb4835
+    Update Time : Tue Aug  5 19:03:46 2014
+          State : clean, reshaping
+ Active Devices : 16
+Working Devices : 16
+ Failed Devices : 0
+  Spare Devices : 0
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Jul 21 08:25:33 2014
-       Checksum : ba8a7659 - correct
-         Events : 54403
+         Layout : near=2
+     Chunk Size : 512K
 
-         Layout : near=3
-     Chunk Size : 128K
+ Reshape Status : 13% complete
+  Delta Devices : 3, (13->16)
 
-   Device Role : Active device 0
-   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+           Name : backup:5  (local to host backup)
+           UUID : 9030ff07:6a292a3c:26589a26:8c92a488
+         Events : 787
 
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk2-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DJTWJ
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk2-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DJTWJ
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync set-A   /dev/sdb
+       1       8      160        1      active sync set-B   /dev/sdk
+       2       8       32        2      active sync set-A   /dev/sdc
+       3       8      176        3      active sync set-B   /dev/sdl
+       4       8       48        4      active sync set-A   /dev/sdd
+       5       8      192        5      active sync set-B   /dev/sdm
+       6       8       64        6      active sync set-A   /dev/sde
+       7       8      208        7      active sync set-B   /dev/sdn
+       8       8       80        8      active sync set-A   /dev/sdf
+       9       8      224        9      active sync set-B   /dev/sdo
+      10       8       96       10      active sync set-A   /dev/sdg
+      11       8      240       11      active sync set-B   /dev/sdp
+      12       8      112       12      active sync set-A   /dev/sdh
+      14       8      128       13      active sync set-B   /dev/sdi
+      13      65        0       14      active sync set-A   /dev/sdq
+      15      65       16       15      active sync set-B   /dev/sdr
 
-/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DJTWJ:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
+Now here are my questions: What's the meaning of sync set-A
+and sync set-B. Seems like set-B contains the mirrors of set-A.
+But if this was true then disk-13 and disk-14 somehow were
+swapped.
 
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 2a28c3b4:eedae163:2bef10b4:ca5d625d
+What's the difference between column 1 and column 4 in
+mdadm -D output?
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 30 08:26:45 2014
-       Checksum : 80c756df - correct
-         Events : 54423
+Should I have done:
 
-         Layout : near=3
-     Chunk Size : 128K
+mdadm /dev/md5 --add /dev/sdi
+mdadm /dev/md5 --add /dev/sdr
 
-   Device Role : Active device 1
-   Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
+instead of:
 
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk3-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DHUUW
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk3-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DHUUW
+mdadm /dev/md5 --add /dev/sdi /dev/sdr
 
-/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DHUUW:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
+If one of my disk-enclosures will completely fail - will my raid10
+array still be usable? Or must I swap disk 13 with disk 14 to
+correctly separate the mirrors.
 
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : active
-    Device UUID : ca4d24bf:a8803950:9d3187e9:4e94fb0b
+Kind regards
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 30 09:06:50 2014
-       Checksum : 5b87a49b - correct
-         Events : 54426
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 2
-   Array State : ..A.....A ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk4-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DUVZY
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk4-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DUVZY
-
-/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1DUVZY:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 25509aed:47f4ea45:4333a46e:b5354e9d
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Jul 21 08:25:33 2014
-       Checksum : 9629d661 - correct
-         Events : 54403
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 3
-   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk5-ata-ST320LT012-9WS14C_W0V0WAP9
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk5-ata-ST320LT012-9WS14C_W0V0WAP9
-
-/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0WAP9:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : bd194e66:0c30ff7f:c32f2ceb:559d8890
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 30 08:26:45 2014
-       Checksum : b8b11dbd - correct
-         Events : 54423
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 4
-   Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk6-ata-ST320LT012-9WS14C_W0V0VCHR
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk6-ata-ST320LT012-9WS14C_W0V0VCHR
-
-/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0VCHR:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 9e7ecbc9:36fa64a3:a3fc5d7d:862d939b
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 30 08:26:45 2014
-       Checksum : dcd0a9da - correct
-         Events : 54423
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 5
-   Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk7-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXG1C12P3593
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk7-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXG1C12P3593
-
-/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXG1C12P3593:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 94ad8e88:769cabee:896b2080:0f0d9178
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Jul 21 08:25:33 2014
-       Checksum : c69deba2 - correct
-         Events : 54403
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 6
-   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk8-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1CHAWF
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk8-ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1CHAWF
-
-/dev/disk/by-id/ata-WDC_WD3200BPVT-80JJ5T0_WD-WXF1EC1CHAWF:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 230dc753:4ddbb8de:cd80ddce:0f59338b
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Jul 21 08:25:33 2014
-       Checksum : e342eb53 - correct
-         Events : 54403
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 7
-   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679
-Content-Type: application/octet-stream;
-	name=disk9-ata-ST320LT012-9WS14C_W0V0V9A4
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=disk9-ata-ST320LT012-9WS14C_W0V0V9A4
-
-/dev/disk/by-id/ata-ST320LT012-9WS14C_W0V0V9A4:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 78e085ee:6bf8cbfc:507b0f37:2ff66460
-           Name : nas:3  (local to host nas)
-  Creation Time : Sun Dec  8 21:36:53 2013
-     Raid Level : raid10
-   Raid Devices : 9
-
- Avail Dev Size : 625140400 (298.09 GiB 320.07 GB)
-     Array Size : 937709952 (894.27 GiB 960.21 GB)
-  Used Dev Size : 625139968 (298.09 GiB 320.07 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=432 sectors
-          State : clean
-    Device UUID : 7f05af72:19c0b056:806f23c3:2b29c339
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 30 08:26:45 2014
-       Checksum : 1cf56522 - correct
-         Events : 54423
-
-         Layout : near=3
-     Chunk Size : 128K
-
-   Device Role : Active device 8
-   Array State : .AA.AA..A ('A' == active, '.' == missing, 'R' == replacing)
-
-------=_Part_8_1125681043.1407311736679--
+Peter Koch
