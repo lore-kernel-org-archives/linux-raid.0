@@ -1,44 +1,60 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [PATCH] Recovery speed is wrong
-Date: Thu, 7 Aug 2014 09:37:41 -0400 (EDT)
-Message-ID: <1135772294.19428712.1407418661354.JavaMail.zimbra@redhat.com>
-References: <1888683818.19423710.1407418230213.JavaMail.zimbra@redhat.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Status of Tripe Parity RAID
+Date: Thu, 07 Aug 2014 21:34:49 +0200
+Message-ID: <53E3D4D9.1050502@hesbynett.no>
+References: <D00269CC.3E6BB%ronnyegner@ronnyegner-consulting.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1888683818.19423710.1407418230213.JavaMail.zimbra@redhat.com>
+In-Reply-To: <D00269CC.3E6BB%ronnyegner@ronnyegner-consulting.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ronny Egner <ronnyegner@ronnyegner-consulting.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all
+On 02/08/14 10:11, Ronny Egner wrote:
+> Dear All,
+>
+> i would like to ask about the status of Tripe Parity RAID.
+>
+> I=B4ve found some posts on the list from Andrea Mazzoleni dating back=
+ to
+> 2013
+> but after that nothing seemed to be moving.
+>
+> If this is currently not on the wish list i would like to add that as
+> Feature Request :-)
+>
+>
+> Thanks Neil for this great piece of software.
+>
 
-   When we calculate the speed of recovery, the numerator that contains the recovery done sectors.
-It's need to subtract the sectors which don't finish recovery.
+I believe Andrea got the code working for doing the multiple parity rai=
+d=20
+calculations, but I don't know how complete it is.  I have looked at hi=
+s=20
+maths, and agree that it is solid - and I think the general opinion is=20
+that he has found the best algorithms for the task (better than the one=
+=20
+I came up with, and better than the one used by ZFS for triple parity).
+
+As far as I know, no work has been done on integrating this into the md=
+=20
+code itself, nor into the mdadm code.
+
+As Neil says, we don't need a feature request on this - it is already=20
+requested.  We need someone who is able to spend the time putting it=20
+together.  The mathematical bit is in place, so it doesn't have to be a=
+=20
+person (or people) who understands that part so well.
 
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
+David
 
-diff -urN linux-stable/drivers/md/md.c fix/md.c
---- linux-stable/drivers/md/md.c 2014-07-30 14:36:37.327535805 +0800
-+++ fix/md.c   2014-08-07 16:07:12.559503942 +0800
-@@ -7376,7 +7376,7 @@
-   struct mddev *mddev2;
-   unsigned int currspeed = 0,
-       window;
--  sector_t max_sectors,j, io_sectors;
-+  sector_t max_sectors,j, io_sectors, recovery_done;
-   unsigned long mark[SYNC_MARKS];
-   unsigned long update_time;
-   sector_t mark_cnt[SYNC_MARKS];
-@@ -7652,7 +7652,8 @@
-       */  
-      cond_resched();
- 
--     currspeed = ((unsigned long)(io_sectors-mddev->resync_mark_cnt))/2
-+     recovery_done = io_sectors - atomic_read(&mddev->recovery_active);
-+     currspeed = ((unsigned long)recovery_done - mddev->resync_mark_cnt)/2
-         /((jiffies-mddev->resync_mark)/HZ +1) +1;
- 
-      if (currspeed > speed_min(mddev)) {
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
