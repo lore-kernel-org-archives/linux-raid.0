@@ -1,16 +1,16 @@
 From: Xiao Ni <xni@redhat.com>
-Subject: Re: After reshaping raid1 to raid0 with bitmap, then stop md panic
-Date: Fri, 8 Aug 2014 03:34:06 -0400 (EDT)
-Message-ID: <1873811381.19925148.1407483246395.JavaMail.zimbra@redhat.com>
-References: <324320204.17911195.1407221719669.JavaMail.zimbra@redhat.com> <11051344.17913061.1407222186494.JavaMail.zimbra@redhat.com> <20140806163702.15592dc6@notabene.brown> <1783178354.19231525.1407405817606.JavaMail.zimbra@redhat.com> <20140807202913.570be307@notabene.brown> <20140808154506.544472c2@notabene.brown>
+Subject: Re: [PATCH] Recovery speed is wrong
+Date: Fri, 8 Aug 2014 03:36:47 -0400 (EDT)
+Message-ID: <2083091497.19925833.1407483407203.JavaMail.zimbra@redhat.com>
+References: <1888683818.19423710.1407418230213.JavaMail.zimbra@redhat.com> <1135772294.19428712.1407418661354.JavaMail.zimbra@redhat.com> <20140808122155.306ab784@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140808154506.544472c2@notabene.brown>
+In-Reply-To: <20140808122155.306ab784@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <jes.sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
@@ -18,154 +18,95 @@ List-Id: linux-raid.ids
 ----- Original Message -----
 > From: "NeilBrown" <neilb@suse.de>
 > To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org, "Jes Sorensen" <jes.sorensen@redhat.com>
-> Sent: Friday, August 8, 2014 1:45:06 PM
-> Subject: Re: After reshaping raid1 to raid0 with bitmap, then stop md panic
+> Cc: linux-raid@vger.kernel.org
+> Sent: Friday, August 8, 2014 10:21:55 AM
+> Subject: Re: [PATCH] Recovery speed is wrong
 > 
-> On Thu, 7 Aug 2014 20:29:13 +1000 NeilBrown <neilb@suse.de> wrote:
+> On Thu, 7 Aug 2014 09:37:41 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
 > 
-> > On Thu, 7 Aug 2014 06:03:37 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
+> > Hi all
 > > 
-> > > 
-> > > 
-> > > ----- Original Message -----
-> > > > From: "NeilBrown" <neilb@suse.de>
-> > > > To: "Xiao Ni" <xni@redhat.com>
-> > > > Cc: linux-raid@vger.kernel.org, "Jes Sorensen"
-> > > > <jes.sorensen@redhat.com>
-> > > > Sent: Wednesday, August 6, 2014 2:37:02 PM
-> > > > Subject: Re: After reshaping raid1 to raid0 with bitmap, then stop md
-> > > > panic
-> > > > 
-> > > > On Tue, 5 Aug 2014 03:03:06 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
-> > > > 
-> > > > > Dear all
-> > > > > 
-> > > > > 
-> > > > >    I faced one problem that the system panic after reshaping raid1 to
-> > > > >    raid0
-> > > > >    with bitmap.
-> > > > > The dmesg and calltrace information is like this:
-> > > > > 
-> > > > >    You can easily reproduce this by those steps:
-> > > > >    1. mdadm -CR /dev/md0 -l1 -n2 /dev/loop[0-1] --bitmap=internal
-> > > > >    2. mdadm --wait /dev/md0
-> > > > >    3. mdadm --grow -l0 /dev/md0
-> > > > >    4. mdadm -S /dev/md0
-> > > > ...
-> > > > > 
-> > > > > [ 1485.646746] BUG: unable to handle kernel NULL pointer dereference
-> > > > > at
-> > > > > 0000000000000038
-> > > > > [ 1485.654724] IP: [<ffffffff8148db2e>]
-> > > > > bitmap_daemon_work+0x24e/0x450
-> > > > 
-> > > > Yes, RAID0 doesn't support bitmaps, so this cannot possibly work.
-> > > > 
-> > > > Following patch should turn the crash into a clean failure.
-> > > > 
-> > > > Thanks for the report,
-> > > > NeilBrown
-> > > > 
-> > > > 
-> > > > From 1bdb20e16166240a4ca3b861c48defefaf218874 Mon Sep 17 00:00:00 2001
-> > > > From: NeilBrown <neilb@suse.de>
-> > > > Date: Wed, 6 Aug 2014 16:34:27 +1000
-> > > > Subject: [PATCH] md: check for bitmap compatability when changing raid
-> > > > levels.
-> > > > 
-> > > > If an array has a bitmap, then it cannot be converted to
-> > > > a level which does not support bitmaps.
-> > > > 
-> > > > Reported-by: Xiao Ni <xni@redhat.com>
-> > > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > > 
-> > > > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > > > index 1379b1a3b9ff..3bd13b276e45 100644
-> > > > --- a/drivers/md/md.c
-> > > > +++ b/drivers/md/md.c
-> > > > @@ -3500,6 +3500,12 @@ level_store(struct mddev *mddev, const char
-> > > > *buf,
-> > > > size_t len)
-> > > >  		       mdname(mddev), clevel);
-> > > >  		return -EINVAL;
-> > > >  	}
-> > > > +	if (mddev->bitmap && !pers->quiesce) {
-> > > > +		module_put(pers->owner);
-> > > > +		printk(KERN_WARNING "md: %s: %s does not support a bitmap\n",
-> > > > +		       mdname(mddev), clevel);
-> > > > +		return -EINVAL;
-> > > > +	}
-> > > >  
-> > > >  	rdev_for_each(rdev, mddev)
-> > > >  		rdev->new_raid_disk = rdev->raid_disk;
-> > > > 
-> > > 
-> > > Hi Neil
-> > > 
-> > >    I have tried the patch, but it can reshape to raid0 still, then stop
-> > >    the raid0, the system
-> > > panics.
-> > > 
-> > >    What does pers->quiesce mean? I'm not familiar with md code.
-> > > 
-> > > Best Regards
-> > > Xiao
-> > 
-> > 
-> > "quiesce" is a function that makes the array "quiescent" - it stops all IO
-> > from happening.
-> > The set_bitmap_file() function has:
-> > 
-> > 	if (mddev->pers) {
-> > 		if (!mddev->pers->quiesce)
-> > 			return -EBUSY;
-> > 
-> > 
-> > So I thought it was safe to assume that if there was a quiesce function
-> > then
-> > the personality handled bitmaps.  Obviously not.
-> > I'll have to fix that up...
+> >    When we calculate the speed of recovery, the numerator that contains the
+> >    recovery done sectors.
+> > It's need to subtract the sectors which don't finish recovery.
 > 
-> Can you confirm that this works please?
-> Thanks.
+> Thanks,
+> I've applied the patch.  However it needed some fixing up first.  If you are
+> going to be sending more patches, you need to get these details right.
 > 
+> I suggest using "quilt" to create patches.  There are other options, I mostly
+> use 'git' and 'stg' myself, but quilt is easy to get started with:
+> > 
+> > 
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > 
+> > diff -urN linux-stable/drivers/md/md.c fix/md.c
+> > --- linux-stable/drivers/md/md.c 2014-07-30 14:36:37.327535805 +0800
+> > +++ fix/md.c   2014-08-07 16:07:12.559503942 +0800
+> 
+> This makes it look like the file "fix/md.c" is being patched, which confuses
+> programs that apply patches (like "git am").
+> If you really want to do it by hand, then:
+> 
+>   cp drivers/md/md.c drivers/md/md.c.orig
+>   # edit drivers/md/md.c
+>   # compile and test
+>   diff -u drivers/md/md.c.orig drivers/md/md.c > /tmp/diff
+> 
+> and post /tmp/diff.
+> 
+> > @@ -7376,7 +7376,7 @@
+> >    struct mddev *mddev2;
+> >    unsigned int currspeed = 0,
+> >        window;
+> > -  sector_t max_sectors,j, io_sectors;
+> > +  sector_t max_sectors,j, io_sectors, recovery_done;
+> >    unsigned long mark[SYNC_MARKS];
+> >    unsigned long update_time;
+> >    sector_t mark_cnt[SYNC_MARKS];
+>  ^^^^
+> 
+> There are spaces here.  They should be 'tabs'.  Probably your mail program
+> thinks it knows better and is converting spaces to tabs.
+> If you cannot get it not to do that, then add the patch as an attachment.
+> I MUCH prefer patches to be inline in the text, not as an attachment, but an
+> attachment is MUCH better than converting all the tabs to spaces.
+> 
+> > @@ -7652,7 +7652,8 @@
+> >        */
+> >       cond_resched();
+> >  
+> > -     currspeed = ((unsigned long)(io_sectors-mddev->resync_mark_cnt))/2
+> > +     recovery_done = io_sectors - atomic_read(&mddev->recovery_active);
+> > +     currspeed = ((unsigned long)recovery_done - mddev->resync_mark_cnt)/2
+> >          /((jiffies-mddev->resync_mark)/HZ +1) +1;
+> 
+> I also kept the inner brackets, so that reads:
+> 
+> > +     currspeed = ((unsigned long)(recovery_done -
+> > mddev->resync_mark_cnt))/2
+> 
+> I think the extra brackets make it clear that it is the difference that needs
+> to be cast, not just the first value.  The result is the same, but this very
+> is (to me) more readable.
+> 
+> Thanks,
 > NeilBrown
 > 
-> From a8461a61c241a25afedbe493c13d98a6e0cf4246 Mon Sep 17 00:00:00 2001
-> From: NeilBrown <neilb@suse.de>
-> Date: Wed, 6 Aug 2014 16:34:27 +1000
-> Subject: [PATCH] md/raid0: check for bitmap compatability when changing raid
->  levels.
 > 
-> If an array has a bitmap, then it cannot be converted to raid0.
-> 
-> Reported-by: Xiao Ni <xni@redhat.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 407a99e46f69..cf91f5910c7c 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -685,6 +685,12 @@ static void *raid0_takeover(struct mddev *mddev)
->  	 *  raid10 - assuming we have all necessary active disks
->  	 *  raid1 - with (N -1) mirror drives faulty
->  	 */
-> +
-> +	if (mddev->bitmap) {
-> +		printk(KERN_ERR "md/raid0: %s: cannot takeover array with bitmap\n",
-> +		       mdname(mddev));
-> +		return ERR_PTR(-EBUSY);
-> +	}
->  	if (mddev->level == 4)
->  		return raid0_takeover_raid45(mddev);
->  
+> >  
+> >       if (currspeed > speed_min(mddev)) {
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 > 
-> 
+
 Hi Neil
 
-   The problem can be fixed by this patch.
+   Thanks very much for the detailed information. I need to study the git tools to create and sendmail
+patches. I'll notice those problems.
 
 Best Regards
 Xiao
