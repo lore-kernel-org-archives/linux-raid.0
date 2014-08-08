@@ -1,38 +1,41 @@
-From: mdraid.pkoch@dfgh.net (Peter Koch)
-Subject: parallel access to RAID10-array
-Date: Fri, 8 Aug 2014 19:31:35 +0200
-Message-ID: <201408081731.s78HVZbJ018183@portal.naev.de>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Fwd: Making spare device into active
+Date: Fri, 8 Aug 2014 19:45:00 +0200
+Message-ID: <CAAOsTSmDv=9pB2QJx+2OazzSfwJ8MZN=kb_qccg+K+6L4K0Pig@mail.gmail.com>
+References: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
+Reply-To: patrik@dsl.sk
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 
-References: 
+In-Reply-To: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Dear readers,
+Hello Neil,
 
-I created 4 raid1-array and besides the different devices the
-mdadm command was exactly the same for all 4 arrays:
+I am experiencing the problem with one RAID6 array.
 
-md1 : active raid1 sdo1[1] sda1[0]
-      504768 blocks [2/2] [UU]
+- I was running degraded array with 3 of 5 drives. When adding fourth
+HDD one of the drives reported read errors, later disconnected and
+then it was kicked out from array. (It was maybe doing of controller
+and not drive, not important.)
 
-md2 : active raid1 sdo2[1] sda2[0]
-      8000448 blocks [2/2] [UU]
+- The array has internal intent bitmap. After the drive reconnected
+I've tried it to --re-add to array with 2 of 5 drives. I am not sure
+if that should work? But it did not, recovery got interrupted just
+after start and drive was marked as spare.
 
-md3 : active raid1 sdo3[1] sda3[0]
-      4996032 blocks [2/2] [UU]
+- Right now I want to assemble array to get data out of it. Is it
+possible to change "device role" field in device's superblock so it
+can be assembled? I I have --examine and --detail output from before
+the problem and so I know at which position the kicked drive belongs.
 
-md4 : active raid1 sdo4[1] sda4[0]
-      147332160 blocks [2/2] [UU]
-      bitmap: 0/2 pages [0KB], 65536KB chunk
+- Changing device role field seems much safer way than recreating
+array with --assume-clean, because with recreating too much things can
+go wrong...
 
-md4 has a bitmap while md1,2,3 do not. I'm
-using mdadm 3.3 with a 3.14.12 kernel.
+Thanks.
 
-Is that a new feature of mdadm 3.3?
-Any other explanation?
-
-Kind regards
-
-Peter Koch
+Patrik
