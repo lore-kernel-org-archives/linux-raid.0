@@ -1,16 +1,14 @@
 From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
-Subject: Fwd: Making spare device into active
-Date: Fri, 8 Aug 2014 19:45:00 +0200
-Message-ID: <CAAOsTSmDv=9pB2QJx+2OazzSfwJ8MZN=kb_qccg+K+6L4K0Pig@mail.gmail.com>
-References: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
+Subject: Making spare device into active
+Date: Fri, 8 Aug 2014 19:25:24 +0200
+Message-ID: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
 Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Neil Brown <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hello Neil,
