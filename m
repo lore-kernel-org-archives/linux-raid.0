@@ -1,109 +1,101 @@
-From: Killian De Volder <killian.de.volder@megasoft.be>
-Subject: Mdadm misuse or bug ? mdadm: Cannot find 8:18: No such file or directory
-Date: Sat, 09 Aug 2014 00:10:13 +0200
-Message-ID: <53E54AC5.4010904@megasoft.be>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Making spare device into active
+Date: Sat, 9 Aug 2014 10:31:59 +1000
+Message-ID: <20140809103159.338bef61@notabene.brown>
+References: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/b55AGtifXTGOdfO7fZMpRTP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Patrik =?UTF-8?B?SG9ybsOtaw==?= <patrik@dsl.sk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm having some trouble with a disk of unknown cause.
-As a result the disk is now "failed"
+--Sig_/b55AGtifXTGOdfO7fZMpRTP
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-#dmesg
-[362288.463008] ata3: exception Emask 0x10 SAct 0x0 SErr 0x90202 action 0xe frozen
-...
-[377997.666956] md: super_written gets error=-5, uptodate=0
-[377997.666960] md/raid1:md126: Disk failure on sdb3, disabling device
+On Fri, 8 Aug 2014 19:25:24 +0200 Patrik Horn=C3=ADk <patrik@dsl.sk> wrote:
 
-I replugged the disk, and added it again to the raid (it is now called sdf instead of sdb):
+> Hello Neil,
+>=20
+> I am experiencing the problem with one RAID6 array.
+>=20
+> - I was running degraded array with 3 of 5 drives. When adding fourth
+> HDD one of the drives reported read errors, later disconnected and
+> then it was kicked out from array. (It was maybe doing of controller
+> and not drive, not important.)
+>=20
+> - The array has internal intent bitmap. After the drive reconnected
+> I've tried it to --re-add to array with 2 of 5 drives. I am not sure
+> if that should work? But it did not, recovery got interrupted just
+> after start and drive was marked as spare.
 
-# cat /proc/mdstat:
-md126 : active raid1 sdf2[5] sdd2[0] sde2[3] sdc2[2] sdb2[4](F)
-      102272 blocks super 1.2 [4/4] [UUUU]
+No, that is not expected to work.  RAID6 survives 2 device failures, not 3.
+Once three have failed, the array has failed.  You have to stop it, and may=
+be
+put it back together.
 
-So I wanted to remove the failed disk:
+>=20
+> - Right now I want to assemble array to get data out of it. Is it
+> possible to change "device role" field in device's superblock so it
+> can be assembled? I I have --examine and --detail output from before
+> the problem and so I know at which position the kicked drive belongs.
 
-# mdadm /dev/md126 -r failed
-mdadm: Cannot find 8:18: No such file or directory
+Best option is to assemble with --force.
+If that works then you might have a bit of data corruption, but most of the
+array should be fine.
 
-# strace mdadm /dev/md126 -r failed
-execve("/sbin/mdadm", ["mdadm", "/dev/md126", "-r", "failed"], [/* 99 vars */]) = 0
-uname({sys="Linux", node="*****", ...}) = 0
-brk(0)                                  = 0x22b8000
-brk(0x22b91c0)                          = 0x22b91c0
-arch_prctl(ARCH_SET_FS, 0x22b8880)      = 0
-brk(0x22da1c0)                          = 0x22da1c0
-brk(0x22db000)                          = 0x22db000
-time(NULL)                              = 1407534997
-getpid()                                = 15706
-open("/dev/md126", O_RDWR)              = 3
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-ioctl(3, RAID_VERSION, 0x7ffff00550c0)  = 0
-open("/etc/mdadm.conf", O_RDONLY)       = 4
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f906273d000
-read(4, "ARRAY /dev/md/main metadata=1.2 "..., 4096) = 286
-read(4, "", 4096)                       = 0
-read(4, "", 4096)                       = 0
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-close(4)                                = 0
-munmap(0x7f906273d000, 4096)            = 0
-open("/etc/mdadm.conf.d", O_RDONLY)     = -1 ENOENT (No such file or directory)
-uname({sys="Linux", node="qantourisc", ...}) = 0
-geteuid()                               = 0
-ioctl(3, GET_ARRAY_INFO, 0x7ffff0054e90) = 0
-ioctl(3, RAID_VERSION, 0x7ffff0054d70)  = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-open("/proc/devices", O_RDONLY)         = 4
-fstat(4, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f906273d000
-read(4, "Character devices:\n  1 mem\n  2 p"..., 1024) = 734
-read(4, "", 1024)                       = 0
-close(4)                                = 0
-munmap(0x7f906273d000, 4096)            = 0
-open("/sys/block/md126/md/component_size", O_RDONLY) = 4
-read(4, "102272\n", 50)                 = 7
-close(4)                                = 0
-ioctl(3, RAID_VERSION, 0x7ffff0052c10)  = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-open("/sys/block/md126/md/metadata_version", O_RDONLY) = 4
-read(4, "1.2\n", 1024)                  = 4
-close(4)                                = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-ioctl(3, GET_ARRAY_INFO, 0x7ffff0054ee0) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-ioctl(3, GET_DISK_INFO, 0x7ffff0054e40) = 0
-mknod("/dev/.tmp.md.15706:8:18", S_IFBLK|0600, makedev(8, 18)) = 0
-open("/dev/.tmp.md.15706:8:18", O_RDONLY|O_DIRECT) = -1 ENXIO (No such device or address)
-unlink("/dev/.tmp.md.15706:8:18")       = 0
-mknod("/tmp/.tmp.md.15706:8:18", S_IFBLK|0600, makedev(8, 18)) = 0
-open("/tmp/.tmp.md.15706:8:18", O_RDONLY|O_DIRECT) = -1 ENXIO (No such device or address)
-unlink("/tmp/.tmp.md.15706:8:18")       = 0
-stat("8:18", 0x7ffff0054f30)            = -1 ENOENT (No such file or directory)
-write(2, "mdadm: Cannot find 8:18: No such"..., 51mdadm: Cannot find 8:18: No such file or directory
-) = 51
-exit_group(1)                           = ?
-+++ exited with 1 +++
+If it fails, you probably need to carefully re-create the array with all the
+right bits in the right places.  Maybe sure to create it degraded so that it
+doesn't automatically resync, otherwise if you did something wrong you could
+suddenly lose all hope.
+
+But before you do any of that, you should make sure your drives and
+controller are actually working.  Completely.
+If any drive has any bad blocks, then get a replacement drive and copy
+everything (maybe using ddrescue) from the failing drive to a good drive.
+
+There is no way to just change arbitrary fields in the superblock, so you
+cannot simply "set the device role".
+
+Good luck.
+
+NeilBrown
 
 
-PS. If anyone has an idea why this slot keeps failing ?
-First it was failing every 12 hours, probably related to vibrations.
-Found a loose power connector so re plugged that.
-Then it ran OK for ~2 weeks, today it failed.
-Might of course be chance ?
+>=20
+> - Changing device role field seems much safer way than recreating
+> array with --assume-clean, because with recreating too much things can
+> go wrong...
+>=20
+> Thanks.
+>=20
+> Patrik
 
--- Kind regard, Killian
 
+--Sig_/b55AGtifXTGOdfO7fZMpRTP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU+VsBTnsnt1WYoG5AQIR6g/8Cj+kycccE2iVSIXLuSxKclBgdrKA+e1S
+HHBNoOpXLJT6rEbJMqU9wBYgQajfM8Y0twRdr9yYHTEIghfXWu47EO2zAGh+h5DR
+gY+zxQvBPx7jvE9AhJTvnlqB+cMWTh6F3e8uWKNYo3YqgxQA6PIBI5yCFlHe3CbL
+Bd9TQ3WEJePQ0ucvWgF0syfyW78YKUn2lpI+xUfg3ju8H/HhECF3U7eLi8VieNXL
+bn5yx6+h/dp3a/xFhw+4y9fGe8HGdk1QSQobmGdIYWHWVyQDNFn3jzhJFEB04siA
+2RMko0XfD+ZYc3RoXYmBiRKdO2jS4oonUHBUbefl3Q4SLRFnbO7+1tN8dClEsw7W
+Yccsebk7piPM8YxYbLoONhTN6lQPPDF4HSs7bH7NuLnWR8U6pDlr1L0/SKPLn+A5
+1v3fttFLrn9rKxS4d8d5XKsyGVg6W/7vyH+yDsM8ljuFZ7CcAomh+SgJf0ox0Vsh
+rqUT90lrNP9ywcMCnhCe16Tv5JoSlLk93/eF8VW9a3qNyrk6f7Sj+nKJkE9w5SQx
+W6yZ6wdU7v9cA0ZJRTMXJHoF4bEI6OxUQGIGtPgBnG+Ry/39HUUDBvi9Rt7003+9
+fceJTwnoOgvTSHLu+5uMuK/yzKoLcOBwc7981CvbHPKoiFoUu3nhFhJxYCcj2p1Q
+i2XtUiZraXs=
+=V/HT
+-----END PGP SIGNATURE-----
+
+--Sig_/b55AGtifXTGOdfO7fZMpRTP--
