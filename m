@@ -1,116 +1,71 @@
-From: Killian De Volder <killian.de.volder@megasoft.be>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Mdadm misuse or bug ? mdadm: Cannot find 8:18: No such file or
  directory
-Date: Sat, 09 Aug 2014 09:52:09 +0200
-Message-ID: <53E5D329.4040004@megasoft.be>
-References: <53E54AC5.4010904@megasoft.be> <20140809104915.05b8da17@notabene.brown>
+Date: Sat, 9 Aug 2014 18:23:16 +1000
+Message-ID: <20140809182316.0c16ac48@notabene.brown>
+References: <53E54AC5.4010904@megasoft.be>
+	<20140809104915.05b8da17@notabene.brown>
+	<53E5D329.4040004@megasoft.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/angGQhOZKLTrn+VE3uf1pgw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140809104915.05b8da17@notabene.brown>
+In-Reply-To: <53E5D329.4040004@megasoft.be>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Killian De Volder <killian.de.volder@megasoft.be>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doesn't work since sdb has been ejected. Strace below.
+--Sig_/angGQhOZKLTrn+VE3uf1pgw
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-package manager: mdadm 3.3-r2
-#mdadm -V: mdadm - v3.3 - 3rd September 2013
+On Sat, 09 Aug 2014 09:52:09 +0200 Killian De Volder
+<killian.de.volder@megasoft.be> wrote:
 
-Just tried 3.3-r3 and 3.2.6-r1 same issue.
-(There are no older in the package manager to try fast.)
+> Doesn't work since sdb has been ejected. Strace below.
+>=20
+> package manager: mdadm 3.3-r2
+> #mdadm -V: mdadm - v3.3 - 3rd September 2013
+>=20
+> Just tried 3.3-r3 and 3.2.6-r1 same issue.
+> (There are no older in the package manager to try fast.)
+>=20
+> #strace mdadm /dev/md126 -r /dev/sdb2
 
-#strace mdadm /dev/md126 -r /dev/sdb2
-execve("/sbin/mdadm", ["mdadm", "/dev/md126", "-r", "/dev/sdb2"], [/* 99 vars */]) = 0
-uname({sys="Linux", node="********", ...}) = 0
-brk(0)                                  = 0x212d000
-brk(0x212e1c0)                          = 0x212e1c0
-arch_prctl(ARCH_SET_FS, 0x212d880)      = 0
-brk(0x214f1c0)                          = 0x214f1c0
-brk(0x2150000)                          = 0x2150000
-time(NULL)                              = 1407569631
-getpid()                                = 6499
-open("/dev/md126", O_RDWR)              = 3
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-ioctl(3, RAID_VERSION, 0x7ffffed2ffa0)  = 0
-open("/etc/mdadm.conf", O_RDONLY)       = 4
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f804b529000
-read(4, "ARRAY /dev/md/main metadata=1.2 "..., 4096) = 286
-read(4, "", 4096)                       = 0
-read(4, "", 4096)                       = 0
-fstat(4, {st_mode=S_IFREG|0644, st_size=286, ...}) = 0
-close(4)                                = 0
-munmap(0x7f804b529000, 4096)            = 0
-open("/etc/mdadm.conf.d", O_RDONLY)     = -1 ENOENT (No such file or directory)
-uname({sys="Linux", node="*********", ...}) = 0
-geteuid()                               = 0
-ioctl(3, GET_ARRAY_INFO, 0x7ffffed2fd70) =
-ioctl(3, RAID_VERSION, 0x7ffffed2fc50)  = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-open("/proc/devices", O_RDONLY)         = 4
-fstat(4, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
-mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f804b529000
-read(4, "Character devices:\n  1 mem\n  2 p"..., 1024) = 734
-read(4, "", 1024)                       = 0
-close(4)                                = 0
-munmap(0x7f804b529000, 4096)            = 0
-open("/sys/block/md126/md/component_size", O_RDONLY) = 4
-read(4, "102272\n", 50)                 = 7
-close(4)                                = 0
-ioctl(3, RAID_VERSION, 0x7ffffed2daf0)  = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-open("/sys/block/md126/md/metadata_version", O_RDONLY) = 4
-read(4, "1.2\n", 1024)                  = 4
-close(4)                                = 0
-fstat(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(9, 126), ...}) = 0
-readlink("/sys/dev/block/9:126", "../../devices/virtual/block/md12"..., 199) = 33
-open("/dev/sdb2", O_RDONLY|O_DIRECT)    = -1 ENOENT (No such file or directory)
-stat("/dev/sdb2", 0x7ffffed2fe10)       = -1 ENOENT (No such file or directory)
-write(2, "mdadm: Cannot find /dev/sdb2: No"..., 56mdadm: Cannot find /dev/sdb2: No such file or directory
-) = 56
-exit_group(1)                           = ?
-+++ exited with 1 +++
+I note that you put "/dev/sdb2" on the end of the line.
 
-Killian De Volder
 
-On 09-08-14 02:49, NeilBrown wrote:
-> On Sat, 09 Aug 2014 00:10:13 +0200 Killian De Volder
-> <killian.de.volder@megasoft.be> wrote:
->
->> I'm having some trouble with a disk of unknown cause.
->> As a result the disk is now "failed"
->>
->> #dmesg
->> [362288.463008] ata3: exception Emask 0x10 SAct 0x0 SErr 0x90202 action 0xe frozen
->> ...
->> [377997.666956] md: super_written gets error=-5, uptodate=0
->> [377997.666960] md/raid1:md126: Disk failure on sdb3, disabling device
->>
->> I replugged the disk, and added it again to the raid (it is now called sdf instead of sdb):
->>
->> # cat /proc/mdstat:
->> md126 : active raid1 sdf2[5] sdd2[0] sde2[3] sdc2[2] sdb2[4](F)
->>       102272 blocks super 1.2 [4/4] [UUUU]
->>
->> So I wanted to remove the failed disk:
->>
->> # mdadm /dev/md126 -r failed
->> mdadm: Cannot find 8:18: No such file or directory
-> Hmm.. that looks broken.
-> What version of mdadm is this?
-> Does
->    mdadm /dev/md126 -r detached
-> work?
-> How about
->    mdadm /dev/md127 -r sdb2
->
-> Thanks,
-> NeilBrown
+> > How about
+> >    mdadm /dev/md127 -r sdb2
 
+I note that I just put "sdb2" on the end of the line.  Perhaps I should have
+been explicit and say 'not "/dev/sdb2", just "sdb2"'.  It does make a
+difference.
+
+NeilBrown
+
+
+--Sig_/angGQhOZKLTrn+VE3uf1pgw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU+XadTnsnt1WYoG5AQIv0hAAg1y1AKDrfrljILVPUG+LyQH3sDpsSsuG
+4EPhfSMWPnyfNFpghKCMRbVHA7fRDsTQAIrtbnNRKhxlaroloyPtuUY/uhRLEvmh
+LkwEgmSt/btOa5o+VXGum9nNFi/SBa8eCpdQ0ZjokX7KMB1CYz1+mdQT8uUsmRDU
+qJ7dppP5FXoEPolkaUDyPEvLQWiL/+l/y9ZvX4i+GZLvoCI0TqL731hBwmwMfeRL
+NxN0cGXstaDuFyFhe9S5xGuBjKE/w8XmzyIHQ1Roho9h5PruunhO4Ng+J86FnhMZ
+i15now8eVlcnE3qITjvR1ECE8b9vnZYitony0n53x/cVrp73K+95MeBIOtBHGVVB
+MLIzH2pts8Q0NgnCMOmKvKvMEbSu/MYIhNDuoYSUHaq6bFJ57J/qEGtyiB+VUOzD
+H6oDySvWow3KgjVTCq0tKtpUUtWfC2fy9naS4x74N2oJMHqAJme2jlZsD2m9cr0k
+diyVI4TFDWK3MTMpeQzZ/1ZGBEze+6ZrKTmKlxxxsSoYl8GV9XLY5RQNR5S5YWPL
+GRrVTr/rcEn+G5X/u0FFVjB8RnjkILosfog/rEsj3YaENdPLiT1K2DsS+V+z0O1z
+nHxWNlGqyIFikp4zQVPbRE6v2Zv0dIcWAFz3KJvVAzKWhHjrGc1AuMoEfW7oikcH
+CNqCAQjvYqI=
+=qmE8
+-----END PGP SIGNATURE-----
+
+--Sig_/angGQhOZKLTrn+VE3uf1pgw--
