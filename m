@@ -1,10 +1,10 @@
 From: <stockhausen@collogia.de>
-Subject: [PATCH v1 3/8]     raid6 algorithms: improve test program
-Date: Sun, 10 Aug 2014 11:56:42 +0000
-Message-ID: <99a70809-0aea-4945-97c1-d0ae1232e5e9@EXCHANGE.collogia.de>
+Subject: [PATCH v1 4/8]     raid6 algorithms: show xor_syndrome() benchmarks on startup
+Date: Sun, 10 Aug 2014 11:56:48 +0000
+Message-ID: <afc3b6f7-3671-4946-9cf9-f9ffa55143de@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-43982794-bdd4-4d8d-ae88-e69231d0cff3"
+	boundary="----=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,112 +13,104 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-43982794-bdd4-4d8d-ae88-e69231d0cff3
+------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e
 Content-Type: text/plain
 
-commit 9e94ae70f96c699bfe6d012fc2ce71b34476c898
+commit b84f0bfead0da0334aeff90a291fd00a84881538
 Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-Date:   Sun Aug 10 09:35:50 2014 +0000
+Date:   Sun Aug 10 09:39:12 2014 +0000
 
-    raid6 algorithms: improve test program
+    raid6 algorithms: show xor_syndrome() benchmarks on startup
     
-    It is always helpful to have a test tool in place if we implement
-    new data critical algorithms. So add some test routines to the raid6
-    checker that can prove if the new xor_syndrome() works as expected.
+    The benchmark numbers of the gen_syndrome() functions are displayed in
+    the kernel log. Do the same for the xor_syndrome() functions. This
+    will help to analyze performance problems and give an rough estimate
+    how well the algorithm works. The choice of the fastest algorithm will
+    still depend on the gen_syndrome() performance.
     
-    Run through all permutations of start/stop pages per algorithm and
-    simulate a xor_syndrome() assisted rmw run. After each rmw check if
-    the recovery algorithm still confirms that the stripe is fine.
+    With the start/stop page implementation the speed can vary a lot in real
+    life. E.g. a change of page 0 & page 15 on a stripe will be harder to
+    compute than the case where page 0 & page 1 are XOR candidates. To be not
+    to enthusiatic about the expected speeds we will run a worse case test
+    that simulates a change on the upper half of the stripe. So we do:
+    
+    1) calculation of P/Q for the upper pages
+    
+    2) continuation of Q for the lower (empty) pages
 
-diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-index 5a485b7..e2eb6b1 100644
---- a/lib/raid6/test/test.c
-+++ b/lib/raid6/test/test.c
-@@ -28,11 +28,11 @@ char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE];
- char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
- 
--static void makedata(void)
-+static void makedata(int start, int stop)
+diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
+index f0b1aa3..dc1ec40 100644
+--- a/lib/raid6/algos.c
++++ b/lib/raid6/algos.c
+@@ -131,11 +131,12 @@ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
+ static inline const struct raid6_calls *raid6_choose_gen(
+ 	void *(*const dptrs)[(65536/PAGE_SIZE)+2], const int disks)
  {
- 	int i, j;
- 
--	for (i = 0; i < NDISKS; i++) {
-+	for (i = start; i <= stop; i++) {
- 		for (j = 0; j < PAGE_SIZE; j++)
- 			data[i][j] = rand();
- 
-@@ -91,34 +91,55 @@ int main(int argc, char *argv[])
- {
+-	unsigned long perf, bestperf, j0, j1;
++	unsigned long perf, bestgenperf, bestxorperf, j0, j1;
++	int start = (disks>>1)-1, stop = disks-3;	/* work on the second half of the disks */
  	const struct raid6_calls *const *algo;
- 	const struct raid6_recov_calls *const *ra;
--	int i, j;
-+	int i, j, p1, p2;
- 	int err = 0;
+ 	const struct raid6_calls *best;
  
--	makedata();
-+	makedata(0, NDISKS-1);
+-	for (bestperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
++	for (bestgenperf = 0, bestxorperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
+ 		if (!best || (*algo)->prefer >= best->prefer) {
+ 			if ((*algo)->valid && !(*algo)->valid())
+ 				continue;
+@@ -153,19 +154,46 @@ static inline const struct raid6_calls *raid6_choose_gen(
+ 			}
+ 			preempt_enable();
  
- 	for (ra = raid6_recov_algos; *ra; ra++) {
- 		if ((*ra)->valid  && !(*ra)->valid())
- 			continue;
+-			if (perf > bestperf) {
+-				bestperf = perf;
++			if (perf > bestgenperf) {
++				bestgenperf = perf;
+ 				best = *algo;
+ 			}
+-			printk("raid6: %-8s %5ld MB/s\n", (*algo)->name,
++			printk("raid6: %-8s gen() %5ld MB/s\n", (*algo)->name,
+ 			       (perf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
 +
- 		raid6_2data_recov = (*ra)->data2;
- 		raid6_datap_recov = (*ra)->datap;
- 
- 		printf("using recovery %s\n", (*ra)->name);
- 
- 		for (algo = raid6_algos; *algo; algo++) {
--			if (!(*algo)->valid || (*algo)->valid()) {
--				raid6_call = **algo;
-+			if ((*algo)->valid && !(*algo)->valid())
++			if (!(*algo)->hasxor)
 +				continue;
 +
-+			raid6_call = **algo;
++			perf = 0;
 +
-+			/* Nuke syndromes */
-+			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
++			preempt_disable();
++			j0 = jiffies;
++			while ((j1 = jiffies) == j0)
++				cpu_relax();
++			while (time_before(jiffies,
++					    j1 + (1<<RAID6_TIME_JIFFIES_LG2))) {
++				(*algo)->xor_syndrome(disks, start, stop,
++                                                     PAGE_SIZE, *dptrs);
++				perf++;
++			}
++			preempt_enable();
 +
-+			/* Generate assumed good syndrome */
-+			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
-+						(void **)&dataptrs);
++			if (best == *algo)
++				bestxorperf = perf;
 +
-+			for (i = 0; i < NDISKS-1; i++)
-+				for (j = i+1; j < NDISKS; j++)
-+					err += test_disks(i, j);
-+
-+			if (!raid6_call.hasxor)
-+				continue;
-+
-+			for (p1 = 0; p1 < NDISKS-2; p1++)
-+				for (p2 = p1; p2 < NDISKS-2; p2++) {
- 
--				/* Nuke syndromes */
--				memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
-+					/* Simulate rmw run */
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+								(void **)&dataptrs);
-+					makedata(p1, p2);
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+                                                                (void **)&dataptrs);
- 
--				/* Generate assumed good syndrome */
--				raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
--							(void **)&dataptrs);
-+					for (i = 0; i < NDISKS-1; i++)
-+						for (j = i+1; j < NDISKS; j++)
-+							err += test_disks(i, j);
-+				}
- 
--				for (i = 0; i < NDISKS-1; i++)
--					for (j = i+1; j < NDISKS; j++)
--						err += test_disks(i, j);
--			}
++			printk("raid6: %-8s xor() %5ld MB/s\n", (*algo)->name,
++			       (perf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2+1));
  		}
- 		printf("\n");
  	}
+ 
+ 	if (best) {
+-		printk("raid6: using algorithm %s (%ld MB/s)\n",
++		printk("raid6: using algorithm %s gen() %ld MB/s",
+ 		       best->name,
+-		       (bestperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
++		       (bestgenperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
++		if (best->hasxor)
++			printk(", xor() %ld MB/s, rmw enabled",
++			       (bestxorperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2+1));
++		printk("\n");
+ 		raid6_call = *best;
+ 	} else
+ 		printk("raid6: Yikes!  No algorithm found!\n");
 
-------=_NextPartTM-000-43982794-bdd4-4d8d-ae88-e69231d0cff3
+------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -178,4 +170,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-43982794-bdd4-4d8d-ae88-e69231d0cff3--
+------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e--
