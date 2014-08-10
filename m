@@ -1,10 +1,10 @@
 From: <stockhausen@collogia.de>
-Subject: [PATCH v1 1/8]     raid5: introduce configuration option rmw_level
-Date: Sun, 10 Aug 2014 11:56:30 +0000
-Message-ID: <ec01734b-6458-49a6-a286-0016ac95cbc4@EXCHANGE.collogia.de>
+Subject: [PATCH v1 2/8]     raid6 algorithms: delta syndrome dummy functions
+Date: Sun, 10 Aug 2014 11:56:36 +0000
+Message-ID: <fbd693ba-5112-4503-95b3-b13509592e72@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-062be645-4c5b-4264-9e0b-d32808d5f443"
+	boundary="----=_NextPartTM-000-126af329-172f-4750-ad91-7805521829bb"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,187 +13,438 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-062be645-4c5b-4264-9e0b-d32808d5f443
+------=_NextPartTM-000-126af329-172f-4750-ad91-7805521829bb
 Content-Type: text/plain
 
-commit 669a741254c4b8daa22ce091081259dce7f6ba71
+commit c7afa4b260ab9b22950620ea5aa1f5abbb984519
 Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-Date:   Sun Aug 10 09:25:55 2014 +0000
+Date:   Sun Aug 10 09:33:18 2014 +0000
 
-    raid5: introduce configuration option rmw_level
+    raid6 algorithms: delta syndrome dummy functions
     
-    Depending on the RAID level md currently allows optimized rmw logic
-    for write operations. It is totally missing in RAID6 code and will be
-    implemented in this patch series. To support easier testing of such a
-    code this patch allows manual control of the rmw/rcw descision through
-    the new interface /sys/block/mdX/md/rmw_level.
+    Implementing rmw functionality for RAID6 requires optimized syndrome
+    calculation. Up to now we can only generate a complete syndrome. The
+    target P/Q pages are always overwritten. With this patch we provide
+    a framework for inplace P/Q modification. Although a lot of coding
+    was added it follows a simple rule: Duplicate existing gen_syndrome()
+    functions to (still empty) xor_syndrome() ones.
     
-    The configuration can handle three levels of control.
+    xor_syndrome() has two additional parameters: start & stop. These
+    will indicate the first and last page that are changing during a
+    rmw run. That makes it possible to avoid several unneccessary loops
+    and speed up calculation. The caller needs to implement the following
+    logic to make the functions work.
     
-    rmw_level=0: Disable rmw for all RAID types. This level is enforced
-    for RAID6 and from now on allowed for RAID4/5. Hardware assisted
-    P/Q calculation has no implementation path yet to factor in/out
-    chunks of a syndrome. Enforcing this level can be benefical for slow
-    CPUs with hardware syndrome support and fast SSDs.
+    1) xor_syndrome(disks, start, stop, ...): "Remove" all data of source
+    blocks inside P/Q between (and including) start and end.
     
-    rmw_level=1: Estimate rmw IOs and rcw IOs. Execute rmw only if we will
-    save IOs. This equals the "old" unpatched behaviour and will be the
-    default for RAID4/5.
+    2) modify any block with start <= block <= stop
     
-    rmw_level=2: Execute rmw even if calculated IOs for rmw and rcw are
-    equal. We might have higher CPU consumption because of calculating the
-    parity twice but it can be benefical otherwise. E.g. RAID4 with fast
-    dedicated parity disk/SSD. The option is implemented just to be
-    forward-looking.
+    3) xor_syndrome(disks, start, stop, ...): "Reinsert" all data of
+    source blocks into P/Q between (and including) start and end.
     
-    If we switch/grow between RAID levels the flag will be automatically
-    adapted to the default sane value required for that level.
+    Additionally relax the setting of /sys/block/mdX/md/rmw_level to
+    allow rmw enabling if the choosen algorithm offers xor_syndrome().
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6234b2e..ba32c1f 100644
+index ba32c1f..c1a0dfe 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3103,14 +3103,14 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 	 * that in case of drive failure or read-error correction, we
- 	 * generate correct data from the parity.
- 	 */
--	if (conf->max_degraded == 2 ||
-+	if (conf->rmw_level == PARITY_DISABLE_RMW ||
- 	    (recovery_cp < MaxSector && sh->sector >= recovery_cp)) {
- 		/* Calculate the real rcw later - for now make it
- 		 * look like rcw is cheaper
- 		 */
- 		rcw = 1; rmw = 2;
--		pr_debug("force RCW max_degraded=%u, recovery_cp=%llu sh->sector=%llu\n",
--			 conf->max_degraded, (unsigned long long)recovery_cp,
-+		pr_debug("force RCW rmw_level=%u, recovery_cp=%llu sh->sector=%llu\n",
-+			 conf->rmw_level, (unsigned long long)recovery_cp,
- 			 (unsigned long long)sh->sector);
- 	} else for (i = disks; i--; ) {
- 		/* would I have to read this buffer for read_modify_write */
-@@ -3138,7 +3138,7 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 	pr_debug("for sector %llu, rmw=%d rcw=%d\n",
- 		(unsigned long long)sh->sector, rmw, rcw);
- 	set_bit(STRIPE_HANDLE, &sh->state);
--	if (rmw < rcw && rmw > 0) {
-+	if ((rmw < rcw || (rmw == rcw && conf->rmw_level == PARITY_PREFER_RMW)) && rmw > 0) {
- 		/* prefer read-modify-write, but need to get some data */
- 		if (conf->mddev->queue)
- 			blk_add_trace_msg(conf->mddev->queue,
-@@ -3165,7 +3165,7 @@ static void handle_stripe_dirtying(struct r5conf *conf,
- 			}
- 		}
- 	}
--	if (rcw <= rmw && rcw > 0) {
-+	if ((rcw < rmw || (rcw == rmw && conf->rmw_level != PARITY_PREFER_RMW)) && rcw > 0) {
- 		/* want reconstruct write, but need to get some data */
- 		int qread =0;
- 		rcw = 0;
-@@ -5364,6 +5364,49 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
- 				raid5_store_stripe_cache_size);
+@@ -5393,8 +5393,8 @@ raid5_store_rmw_level(struct mddev  *mddev, const char *page, size_t len)
+ 	    new != PARITY_PREFER_RMW)
+ 		return -EINVAL;
  
- static ssize_t
-+raid5_show_rmw_level(struct mddev  *mddev, char *page)
+-	/* RAID6 does not support rmw yet */
+-	if (new != PARITY_DISABLE_RMW && conf->level == 6)
++	/* RAID6 supports rmw depending on algorithm */
++	if (new != PARITY_DISABLE_RMW && conf->level == 6 && !raid6_call.hasxor)
+ 		return -EINVAL;
+ 
+ 	conf->rmw_level = new;
+diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
+index 73069cb..0384980 100644
+--- a/include/linux/raid/pq.h
++++ b/include/linux/raid/pq.h
+@@ -72,9 +72,11 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
+ /* Routine choices */
+ struct raid6_calls {
+ 	void (*gen_syndrome)(int, size_t, void **);
++	void (*xor_syndrome)(int, int, int, size_t, void **);
+ 	int  (*valid)(void);	/* Returns 1 if this routine set is usable */
+ 	const char *name;	/* Name of this routine set */
+ 	int prefer;		/* Has special performance attribute */
++	int hasxor;		/* Has additional XOR method */
+ };
+ 
+ /* Selected algorithm */
+diff --git a/lib/raid6/altivec.uc b/lib/raid6/altivec.uc
+index 7cc12b5..bdad7de 100644
+--- a/lib/raid6/altivec.uc
++++ b/lib/raid6/altivec.uc
+@@ -104,6 +104,24 @@ static void raid6_altivec$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	preempt_enable();
+ }
+ 
++static void noinline
++raid6_altivec$#_gen_syndrome_real(int disks, int start, int stop,
++				  size_t bytes, void **ptrs)
 +{
-+	struct r5conf *conf = mddev->private;
-+	if (conf)
-+		return sprintf(page, "%d\n", conf->rmw_level);
-+	else
-+		return 0;
++	/* enable hasxor if implemented */
 +}
 +
-+static ssize_t
-+raid5_store_rmw_level(struct mddev  *mddev, const char *page, size_t len)
++static void raid6_altivec$#_xor_syndrome(int disks, int start, int stop,
++					 tsize_t bytes, void **ptrs)
 +{
-+	struct r5conf *conf = mddev->private;
-+	unsigned long new;
++	preempt_disable();
++	enable_kernel_altivec();
 +
-+	if (!conf)
-+		return -ENODEV;
++	raid6_altivec$#_xor_syndrome_real(disks, start, stop, bytes, ptrs);
 +
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+
-+	if (kstrtoul(page, 10, &new))
-+		return -EINVAL;
-+
-+	if (new != PARITY_DISABLE_RMW &&
-+	    new != PARITY_PREFER_RCW &&
-+	    new != PARITY_PREFER_RMW)
-+		return -EINVAL;
-+
-+	/* RAID6 does not support rmw yet */
-+	if (new != PARITY_DISABLE_RMW && conf->level == 6)
-+		return -EINVAL;
-+
-+	conf->rmw_level = new;
-+	return len;
++	preempt_enable();
 +}
 +
-+static struct md_sysfs_entry
-+raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
-+			 raid5_show_rmw_level,
-+			 raid5_store_rmw_level);
-+
-+static ssize_t
- raid5_show_preread_threshold(struct mddev *mddev, char *page)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -5527,6 +5570,7 @@ static struct attribute *raid5_attrs[] =  {
- 	&raid5_preread_bypass_threshold.attr,
- 	&raid5_group_thread_cnt.attr,
- 	&raid5_skip_copy.attr,
-+	&raid5_rmw_level.attr,
- 	NULL,
- };
- static struct attribute_group raid5_attrs_group = {
-@@ -5850,10 +5894,13 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ int raid6_have_altivec(void);
+ #if $# == 1
+ int raid6_have_altivec(void)
+@@ -119,9 +137,11 @@ int raid6_have_altivec(void)
  
- 	conf->chunk_sectors = mddev->new_chunk_sectors;
- 	conf->level = mddev->new_level;
--	if (conf->level == 6)
-+	if (conf->level == 6) {
- 		conf->max_degraded = 2;
--	else
-+		conf->rmw_level = PARITY_DISABLE_RMW;
-+	} else {
- 		conf->max_degraded = 1;
-+		conf->rmw_level = PARITY_PREFER_RCW;
-+	}
- 	conf->algorithm = mddev->new_layout;
- 	conf->reshape_progress = mddev->reshape_position;
- 	if (conf->reshape_progress != MaxSector) {
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index bc72cd4..90a9097 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -340,6 +340,15 @@ enum {
- 	STRIPE_OP_RECONSTRUCT,
- 	STRIPE_OP_CHECK,
+ const struct raid6_calls raid6_altivec$# = {
+ 	raid6_altivec$#_gen_syndrome,
++	raid6_altivec$#_xor_syndrome,
+ 	raid6_have_altivec,
+ 	"altivecx$#",
+-	0
++	0,
++	0,			/* XOR not yet implemented */
  };
+ 
+ #endif /* CONFIG_ALTIVEC */
+diff --git a/lib/raid6/avx2.c b/lib/raid6/avx2.c
+index bc3b1dd..225ca38 100644
+--- a/lib/raid6/avx2.c
++++ b/lib/raid6/avx2.c
+@@ -87,11 +87,19 @@ static void raid6_avx21_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_avx21_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
 +
-+/*
-+ * RAID parity calculation preferences
-+ */
-+enum {
-+	PARITY_DISABLE_RMW = 0,
-+	PARITY_PREFER_RCW,
-+	PARITY_PREFER_RMW,
-+};
+ const struct raid6_calls raid6_avx2x1 = {
+ 	raid6_avx21_gen_syndrome,
++	raid6_avx21_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x1",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
  /*
-  * Plugging:
-  *
-@@ -397,7 +406,7 @@ struct r5conf {
- 	spinlock_t		hash_locks[NR_STRIPE_HASH_LOCKS];
- 	struct mddev		*mddev;
- 	int			chunk_sectors;
--	int			level, algorithm;
-+	int			level, algorithm, rmw_level;
- 	int			max_degraded;
- 	int			raid_disks;
- 	int			max_nr_stripes;
+@@ -148,11 +156,19 @@ static void raid6_avx22_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_avx22_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_avx2x2 = {
+ 	raid6_avx22_gen_syndrome,
++	raid6_avx22_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x2",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ #ifdef CONFIG_X86_64
+@@ -240,11 +256,19 @@ static void raid6_avx24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_avx24_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_avx2x4 = {
+ 	raid6_avx24_gen_syndrome,
++	raid6_avx24_xor_syndrome,
+ 	raid6_have_avx2,
+ 	"avx2x4",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ #endif
+ 
+diff --git a/lib/raid6/int.uc b/lib/raid6/int.uc
+index 5b50f8d..283a9a3 100644
+--- a/lib/raid6/int.uc
++++ b/lib/raid6/int.uc
+@@ -107,11 +107,19 @@ static void raid6_int$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	}
+ }
+ 
++static void raid6_int$#_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_intx$# = {
+ 	raid6_int$#_gen_syndrome,
+-	NULL,		/* always valid */
++	raid6_int$#_xor_syndrome,
++	NULL,			/* always valid */
+ 	"int" NSTRING "x$#",
+-	0
++	0,
++	0			/* XOR not yet implemented */
+ };
+ 
+ #endif
+diff --git a/lib/raid6/mmx.c b/lib/raid6/mmx.c
+index 590c71c..6ed27c7 100644
+--- a/lib/raid6/mmx.c
++++ b/lib/raid6/mmx.c
+@@ -74,11 +74,19 @@ static void raid6_mmx1_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_mmx1_xor_syndrome(int disks, int start, int stop,
++				    size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_mmxx1 = {
+ 	raid6_mmx1_gen_syndrome,
++	raid6_mmx1_xor_syndrome,
+ 	raid6_have_mmx,
+ 	"mmxx1",
+-	0
++	0,
++	0			/* XOR not yet implemented */
+ };
+ 
+ /*
+@@ -132,11 +140,19 @@ static void raid6_mmx2_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_mmx2_xor_syndrome(int disks, int start, int stop,
++				    size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_mmxx2 = {
+ 	raid6_mmx2_gen_syndrome,
++	raid6_mmx2_xor_syndrome,
+ 	raid6_have_mmx,
+ 	"mmxx2",
+-	0
++	0,
++	0			/* XOR not yet implemented */
+ };
+ 
+ #endif
+diff --git a/lib/raid6/neon.c b/lib/raid6/neon.c
+index 36ad470..a0af518 100644
+--- a/lib/raid6/neon.c
++++ b/lib/raid6/neon.c
+@@ -40,11 +40,26 @@
+ 					(unsigned long)bytes, ptrs);	\
+ 		kernel_neon_end();					\
+ 	}								\
++	static void raid6_neon ## _n ## _xor_syndrome(int disks,	\
++					int start, int stop,		\
++					size_t bytes, void **ptrs)	\
++	{								\
++		void raid6_neon ## _n  ## _xor_syndrome_real(int,	\
++						int, int,		\
++						unsigned long, void**);	\
++		kernel_neon_begin();					\
++		raid6_neon ## _n ## _xor_syndrome_real(disks,		\
++					start, stop,			\
++					(unsigned long)bytes, ptrs);	\
++		kernel_neon_end();					\
++	}								\
+ 	struct raid6_calls const raid6_neonx ## _n = {			\
+ 		raid6_neon ## _n ## _gen_syndrome,			\
++		raid6_neon ## _n ## _xor_syndrome,			\
+ 		raid6_have_neon,					\
+ 		"neonx" #_n,						\
+-		0							\
++		0,							\
++		0		/* XOR not yet implemented */		\
+ 	}
+ 
+ static int raid6_have_neon(void)
+diff --git a/lib/raid6/neon.uc b/lib/raid6/neon.uc
+index 1b9ed79..c5e30f0 100644
+--- a/lib/raid6/neon.uc
++++ b/lib/raid6/neon.uc
+@@ -78,3 +78,9 @@ void raid6_neon$#_gen_syndrome_real(int disks, unsigned long bytes, void **ptrs)
+ 		vst1q_u8(&q[d+NSIZE*$$], wq$$);
+ 	}
+ }
++
++void raid6_neon$#_xor_syndrome_real(int disks, int start, int stop,
++				    unsigned long bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
+diff --git a/lib/raid6/sse1.c b/lib/raid6/sse1.c
+index f762971..5a43c87 100644
+--- a/lib/raid6/sse1.c
++++ b/lib/raid6/sse1.c
+@@ -90,11 +90,19 @@ static void raid6_sse11_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_sse11_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_sse1x1 = {
+ 	raid6_sse11_gen_syndrome,
++	raid6_sse11_xor_syndrome,
+ 	raid6_have_sse1_or_mmxext,
+ 	"sse1x1",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ /*
+@@ -152,11 +160,20 @@ static void raid6_sse12_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_sse12_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
++
+ const struct raid6_calls raid6_sse1x2 = {
+ 	raid6_sse12_gen_syndrome,
++	raid6_sse12_xor_syndrome,
+ 	raid6_have_sse1_or_mmxext,
+ 	"sse1x2",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ #endif
+diff --git a/lib/raid6/sse2.c b/lib/raid6/sse2.c
+index 85b82c8..7ec2b6e 100644
+--- a/lib/raid6/sse2.c
++++ b/lib/raid6/sse2.c
+@@ -88,11 +88,19 @@ static void raid6_sse21_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_sse21_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_sse2x1 = {
+ 	raid6_sse21_gen_syndrome,
++	raid6_sse21_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x1",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ /*
+@@ -150,11 +158,20 @@ static void raid6_sse22_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_sse22_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
++
+ const struct raid6_calls raid6_sse2x2 = {
+ 	raid6_sse22_gen_syndrome,
++	raid6_sse22_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x2",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ #ifdef CONFIG_X86_64
+@@ -248,11 +265,20 @@ static void raid6_sse24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
+ 
++static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
++
+ const struct raid6_calls raid6_sse2x4 = {
+ 	raid6_sse24_gen_syndrome,
++	raid6_sse24_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x4",
+-	1			/* Has cache hints */
++	1,			/* Has cache hints */
++	0			/* XOR not yet implemented */
+ };
+ 
+ #endif /* CONFIG_X86_64 */
+diff --git a/lib/raid6/tilegx.uc b/lib/raid6/tilegx.uc
+index e7c2945..ce619c1 100644
+--- a/lib/raid6/tilegx.uc
++++ b/lib/raid6/tilegx.uc
+@@ -78,9 +78,17 @@ void raid6_tilegx$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	}
+ }
+ 
++void raid6_tilegx$#_gen_syndrome(int disks, int start, int stop,
++				 size_t bytes, void **ptrs)
++{
++	/* enable hasxor if implemented */
++}
++
+ const struct raid6_calls raid6_tilegx$# = {
+ 	raid6_tilegx$#_gen_syndrome,
++	raid6_tilegx$#_xor_syndrome,
+ 	NULL,
+ 	"tilegx$#",
+-	0
++	0,
++	0			/* XOR not yet implemented */
+ };
 
-------=_NextPartTM-000-062be645-4c5b-4264-9e0b-d32808d5f443
+------=_NextPartTM-000-126af329-172f-4750-ad91-7805521829bb
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -253,4 +504,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-062be645-4c5b-4264-9e0b-d32808d5f443--
+------=_NextPartTM-000-126af329-172f-4750-ad91-7805521829bb--
