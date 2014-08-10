@@ -1,10 +1,10 @@
 From: <stockhausen@collogia.de>
-Subject: [PATCH v1 4/8]     raid6 algorithms: show xor_syndrome() benchmarks on startup
-Date: Sun, 10 Aug 2014 11:56:48 +0000
-Message-ID: <afc3b6f7-3671-4946-9cf9-f9ffa55143de@EXCHANGE.collogia.de>
+Subject: [PATCH v1 5/8]     async_pq: add logic for improved rmw syndrome calculation
+Date: Sun, 10 Aug 2014 11:56:53 +0000
+Message-ID: <bf274981-f9a5-4535-930e-9fb44ad8c7dd@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e"
+	boundary="----=_NextPartTM-000-c33ed49d-21b7-4183-8cfa-35f0a9dae48a"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,104 +13,101 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e
+------=_NextPartTM-000-c33ed49d-21b7-4183-8cfa-35f0a9dae48a
 Content-Type: text/plain
 
-commit b84f0bfead0da0334aeff90a291fd00a84881538
+commit 8dc90c15e1cccd6d17dc056ada38aba8879c914f
 Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-Date:   Sun Aug 10 09:39:12 2014 +0000
+Date:   Sun Aug 10 09:41:57 2014 +0000
 
-    raid6 algorithms: show xor_syndrome() benchmarks on startup
+    async_pq: add logic for improved rmw syndrome calculation
     
-    The benchmark numbers of the gen_syndrome() functions are displayed in
-    the kernel log. Do the same for the xor_syndrome() functions. This
-    will help to analyze performance problems and give an rough estimate
-    how well the algorithm works. The choice of the fastest algorithm will
-    still depend on the gen_syndrome() performance.
+    raid5 uses async syndrome functions where possible. Adapt that
+    layer so we have a seamless integration of the new xor_syndrome()
+    calls. This is achieved by introducing the new submit flag
+    ASYNC_TX_PQ_XOR_DST. If it is active the caller wants to factor
+    in/out blocks of the syndrome.
     
-    With the start/stop page implementation the speed can vary a lot in real
-    life. E.g. a change of page 0 & page 15 on a stripe will be harder to
-    compute than the case where page 0 & page 1 are XOR candidates. To be not
-    to enthusiatic about the expected speeds we will run a worse case test
-    that simulates a change on the upper half of the stripe. So we do:
+    For now we focus on the synchronous implementation as the DMA
+    assisted feature cannot be tested. The only known device to support
+    P/Q calculation is an IOP13XX. See arch/arm/mach-iop13xx/setup.c.
+    An implementation of the RAID6 rmw cycle will therefore always run
+    on the CPU.
     
-    1) calculation of P/Q for the upper pages
-    
-    2) continuation of Q for the lower (empty) pages
+    The patch will determine the first and the last block within a
+    stripe that conatins changed data. These parameters are handed over
+    to xor_syndrome() that can avoid unneeded CPU cycles. To use this
+    feature the caller must fill NULL pointers for data pages that
+    won't change during a rmw run.
 
-diff --git a/lib/raid6/algos.c b/lib/raid6/algos.c
-index f0b1aa3..dc1ec40 100644
---- a/lib/raid6/algos.c
-+++ b/lib/raid6/algos.c
-@@ -131,11 +131,12 @@ static inline const struct raid6_recov_calls *raid6_choose_recov(void)
- static inline const struct raid6_calls *raid6_choose_gen(
- 	void *(*const dptrs)[(65536/PAGE_SIZE)+2], const int disks)
+diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
+index d05327c..52922d8 100644
+--- a/crypto/async_tx/async_pq.c
++++ b/crypto/async_tx/async_pq.c
+@@ -124,6 +124,7 @@ do_sync_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
  {
--	unsigned long perf, bestperf, j0, j1;
-+	unsigned long perf, bestgenperf, bestxorperf, j0, j1;
-+	int start = (disks>>1)-1, stop = disks-3;	/* work on the second half of the disks */
- 	const struct raid6_calls *const *algo;
- 	const struct raid6_calls *best;
+ 	void **srcs;
+ 	int i;
++	int start = -1, stop = disks - 3;
  
--	for (bestperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
-+	for (bestgenperf = 0, bestxorperf = 0, best = NULL, algo = raid6_algos; *algo; algo++) {
- 		if (!best || (*algo)->prefer >= best->prefer) {
- 			if ((*algo)->valid && !(*algo)->valid())
- 				continue;
-@@ -153,19 +154,46 @@ static inline const struct raid6_calls *raid6_choose_gen(
- 			}
- 			preempt_enable();
- 
--			if (perf > bestperf) {
--				bestperf = perf;
-+			if (perf > bestgenperf) {
-+				bestgenperf = perf;
- 				best = *algo;
- 			}
--			printk("raid6: %-8s %5ld MB/s\n", (*algo)->name,
-+			printk("raid6: %-8s gen() %5ld MB/s\n", (*algo)->name,
- 			       (perf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
-+
-+			if (!(*algo)->hasxor)
-+				continue;
-+
-+			perf = 0;
-+
-+			preempt_disable();
-+			j0 = jiffies;
-+			while ((j1 = jiffies) == j0)
-+				cpu_relax();
-+			while (time_before(jiffies,
-+					    j1 + (1<<RAID6_TIME_JIFFIES_LG2))) {
-+				(*algo)->xor_syndrome(disks, start, stop,
-+                                                     PAGE_SIZE, *dptrs);
-+				perf++;
+ 	if (submit->scribble)
+ 		srcs = submit->scribble;
+@@ -134,10 +135,21 @@ do_sync_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 		if (blocks[i] == NULL) {
+ 			BUG_ON(i > disks - 3); /* P or Q can't be zero */
+ 			srcs[i] = (void*)raid6_empty_zero_page;
+-		} else
++		} else {
+ 			srcs[i] = page_address(blocks[i]) + offset;
++			if (i < disks - 2) {
++				stop = i;
++				if (start == -1)
++					start = i;
 +			}
-+			preempt_enable();
-+
-+			if (best == *algo)
-+				bestxorperf = perf;
-+
-+			printk("raid6: %-8s xor() %5ld MB/s\n", (*algo)->name,
-+			       (perf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2+1));
- 		}
++		}
  	}
+-	raid6_call.gen_syndrome(disks, len, srcs);
++	if (submit->flags & ASYNC_TX_PQ_XOR_DST) {
++		BUG_ON(!raid6_call.hasxor);
++		if (start >= 0)
++			raid6_call.xor_syndrome(disks, start, stop, len, srcs);
++	} else
++		raid6_call.gen_syndrome(disks, len, srcs);
+ 	async_tx_sync_epilog(submit);
+ }
  
- 	if (best) {
--		printk("raid6: using algorithm %s (%ld MB/s)\n",
-+		printk("raid6: using algorithm %s gen() %ld MB/s",
- 		       best->name,
--		       (bestperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
-+		       (bestgenperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2));
-+		if (best->hasxor)
-+			printk(", xor() %ld MB/s, rmw enabled",
-+			       (bestxorperf*HZ) >> (20-16+RAID6_TIME_JIFFIES_LG2+1));
-+		printk("\n");
- 		raid6_call = *best;
- 	} else
- 		printk("raid6: Yikes!  No algorithm found!\n");
+@@ -178,7 +190,8 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 	if (device)
+ 		unmap = dmaengine_get_unmap_data(device->dev, disks, GFP_NOIO);
+ 
+-	if (unmap &&
++	/* XORing P/Q is only implemented in software */
++	if (unmap && !(submit->flags & ASYNC_TX_PQ_XOR_DST) &&
+ 	    (src_cnt <= dma_maxpq(device, 0) ||
+ 	     dma_maxpq(device, DMA_PREP_CONTINUE) > 0) &&
+ 	    is_dma_pq_aligned(device, offset, 0, len)) {
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index 179b38f..388574e 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -60,12 +60,15 @@ struct dma_chan_ref {
+  * dependency chain
+  * @ASYNC_TX_FENCE: specify that the next operation in the dependency
+  * chain uses this operation's result as an input
++ * @ASYNC_TX_PQ_XOR_DST: do not overwrite the syndrome but XOR it with the
++ * input data. Required for rmw case.
+  */
+ enum async_tx_flags {
+ 	ASYNC_TX_XOR_ZERO_DST	 = (1 << 0),
+ 	ASYNC_TX_XOR_DROP_DST	 = (1 << 1),
+ 	ASYNC_TX_ACK		 = (1 << 2),
+ 	ASYNC_TX_FENCE		 = (1 << 3),
++	ASYNC_TX_PQ_XOR_DST	 = (1 << 4),
+ };
+ 
+ /**
 
-------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e
+------=_NextPartTM-000-c33ed49d-21b7-4183-8cfa-35f0a9dae48a
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -170,4 +167,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-7b0c26c6-04aa-4999-abec-26bbf0888f1e--
+------=_NextPartTM-000-c33ed49d-21b7-4183-8cfa-35f0a9dae48a--
