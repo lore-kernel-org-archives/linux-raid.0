@@ -1,123 +1,116 @@
-From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
-Subject: Re: Making spare device into active
-Date: Sat, 9 Aug 2014 10:33:49 +0200
-Message-ID: <CAAOsTSn=SCbBmEoViMvVvRmR9GbdVovLAJyFo_v2EFk2v+-TaQ@mail.gmail.com>
-References: <CAAOsTSmkyCqLxrG-q2PQxnbXiAC1zz=qw6+ekMUmY=N+ZoHZ-w@mail.gmail.com>
-	<20140809103159.338bef61@notabene.brown>
-Reply-To: patrik@dsl.sk
+From: <stockhausen@collogia.de>
+Subject: [PATCH v1 0/8] raid6: support read-modify-write
+Date: Sun, 10 Aug 2014 11:56:23 +0000
+Message-ID: <70b876f5-2336-4af1-bdc7-da789ecc3599@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-ff859fb9-7fb3-422b-b0b8-9dd32788cc4a"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140809103159.338bef61@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2014-08-09 2:31 GMT+02:00 NeilBrown <neilb@suse.de>:
-> On Fri, 8 Aug 2014 19:25:24 +0200 Patrik Horn=EDk <patrik@dsl.sk> wro=
-te:
->
->> Hello Neil,
->>
->> I am experiencing the problem with one RAID6 array.
->>
->> - I was running degraded array with 3 of 5 drives. When adding fourt=
-h
->> HDD one of the drives reported read errors, later disconnected and
->> then it was kicked out from array. (It was maybe doing of controller
->> and not drive, not important.)
->>
->> - The array has internal intent bitmap. After the drive reconnected
->> I've tried it to --re-add to array with 2 of 5 drives. I am not sure
->> if that should work? But it did not, recovery got interrupted just
->> after start and drive was marked as spare.
->
-> No, that is not expected to work.  RAID6 survives 2 device failures, =
-not 3.
-> Once three have failed, the array has failed.  You have to stop it, a=
-nd maybe
-> put it back together.
->
 
-I know what RAID6 is. There were no user writes at the time of kicking
-out the drive so re-add with bitmap can theoretically work? I hoped
-there were no writes at all so the drive can be re-added. But in any
-case if you issue re-add and it cant be re-added mdadm should not
-touch the drive and mark it spare. That is what complicated things,
-after that it is not possible to reassemble the array without changing
-device role back to active.
+This is a multi-part message in MIME format.
 
->>
->> - Right now I want to assemble array to get data out of it. Is it
->> possible to change "device role" field in device's superblock so it
->> can be assembled? I I have --examine and --detail output from before
->> the problem and so I know at which position the kicked drive belongs=
-=2E
->
-> Best option is to assemble with --force.
-> If that works then you might have a bit of data corruption, but most =
-of the
-> array should be fine.
->
+------=_NextPartTM-000-ff859fb9-7fb3-422b-b0b8-9dd32788cc4a
+Content-Type: text/plain
 
-Should assemble with --force work also in this case, when one drive is
-marked spare in his superblock? I am not 100% if I tried it, I choosed
-different way for now.
+Hello all.
 
-=46or now I used dm snapshots over drives and recreated array on them.
-It worked so I am rescuing data I need this way and will decide what
-to do next.
+First of all thanks to an older patch from Kumar Sundararajan and 
+Dan Williams that helped me to understand RAID6 logic inside md 
+better. Everything is based on ideas & discussions that started
+with http://marc.info/?l=linux-raid&m=136624783417452&w=1
 
-Were write intent bitmaps destroyed when I tried to re-add drive? Now
-on snapshots it is of course destroyed because I recreated array, but
-on the drives I have bitmaps after failing array and trying re-add
-kicked drive back.
+So once again. Implement RMW support for RAID6. This time improve
+syndrome calculation too. The logic was split into very small  
+parts. Each having a detailed explanation about what is going on.
+A few things to note:
 
-There were no user space writes at the time, but some lower layers
-maybe wrote something. If the bitmaps are preserved, is there any tool
-to show their content and find out which chunks can be incorrect?
+1) Patches are based on official 3.16 kernel git.
 
-> If it fails, you probably need to carefully re-create the array with =
-all the
-> right bits in the right places.  Maybe sure to create it degraded so =
-that it
-> doesn't automatically resync, otherwise if you did something wrong yo=
-u could
-> suddenly lose all hope.
->
-> But before you do any of that, you should make sure your drives and
-> controller are actually working.  Completely.
-> If any drive has any bad blocks, then get a replacement drive and cop=
-y
-> everything (maybe using ddrescue) from the failing drive to a good dr=
-ive.
->
-> There is no way to just change arbitrary fields in the superblock, so=
- you
-> cannot simply "set the device role".
->
-> Good luck.
+2) The required optimized syndrome functions were implemented if
+possible. Generic & SSE2 are the ones that I could write & test
+on my machine. If you want to test/benchmark this patch ensure
+that you force select one of the two. Programmers with appropriate
+hardware in their hands are encouraged to send the missing 
+algorithms.
 
-Thanks. For now it seems that data is intact.
+3) raid6 test program was enhanced to verify algorithm correctness. 
+This first release is based on single threaded tests writing blocks 
+with random data and size directly onto the /dev/mdX device using 
+dd.  Afterwards a md check run verified consistency of the array.
+So we are in need for experienced stress testers.
 
->
-> NeilBrown
->
->
->>
->> - Changing device role field seems much safer way than recreating
->> array with --assume-clean, because with recreating too much things c=
-an
->> go wrong...
->>
->> Thanks.
->>
->> Patrik
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+4) With only a VM on my laptop available I have no real benchmark
+numbers. They should be on par and sometimes even higher (or less 
+CPU consuming) than the old patch because of the syndrome redesign.
+Maybe testers can contribute some numbers.
+
+Any kind of feedback appreciated.
+
+Markus
+
+
+------=_NextPartTM-000-ff859fb9-7fb3-422b-b0b8-9dd32788cc4a
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-ff859fb9-7fb3-422b-b0b8-9dd32788cc4a--
