@@ -1,88 +1,62 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] md updates for 3.17
-Date: Mon, 11 Aug 2014 15:07:46 +1000
-Message-ID: <20140811150746.448ec9e4@notabene.brown>
+From: Killian De Volder <killian.de.volder@megasoft.be>
+Subject: Re: Mdadm misuse or bug ? mdadm: Cannot find 8:18: No such file or
+ directory
+Date: Mon, 11 Aug 2014 09:05:13 +0200
+Message-ID: <53E86B29.2080605@megasoft.be>
+References: <53E54AC5.4010904@megasoft.be>	<20140809104915.05b8da17@notabene.brown>	<53E5D329.4040004@megasoft.be>	<20140809182316.0c16ac48@notabene.brown>	<53E5DCB6.4010809@megasoft.be> <20140811104035.5abbfe57@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/ZYXXkPaiRBPN+S4QDJQj+Od"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140811104035.5abbfe57@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Xiao Ni <xni@redhat.com>, jiao hui <jiaohui@bwstor.com.cn>, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZYXXkPaiRBPN+S4QDJQj+Od
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+The world thanks you. :)
 
-The following changes since commit 64aa90f26c06e1cb2aacfb98a7d0eccfbd6c1a91:
+Killian De Volder
 
-  Linux 3.16-rc7 (2014-07-27 12:41:55 -0700)
+On 11-08-14 02:40, NeilBrown wrote:
+> On Sat, 09 Aug 2014 10:32:54 +0200 Killian De Volder
+> <killian.de.volder@megasoft.be> wrote:
+>
+>> sdb2 worked ! (And sorry for not trying sdb2, mdadm asks for /dev/md? so you naturally write /dev/sd? for the disk thereafter too :) )
+>> Now the question should -r failed work ?
+> Yes it "should", but it appears that I broke it for mdadm 3.3.
+> It'll be fixed in 3.3.2 by
+>   http://git.neil.brown.name/?p=mdadm.git;a=commitdiff;h=b47024f1c5fde5d4fbc65807b9b29e06c056584e
+> and a couple of prior commits.
+>
+> Thanks,
+> NeilBrown
+>
+>
+>> Killian De Volder
+>>
+>> On 09-08-14 10:23, NeilBrown wrote:
+>>> On Sat, 09 Aug 2014 09:52:09 +0200 Killian De Volder
+>>> <killian.de.volder@megasoft.be> wrote:
+>>>
+>>>> Doesn't work since sdb has been ejected. Strace below.
+>>>>
+>>>> package manager: mdadm 3.3-r2
+>>>> #mdadm -V: mdadm - v3.3 - 3rd September 2013
+>>>>
+>>>> Just tried 3.3-r3 and 3.2.6-r1 same issue.
+>>>> (There are no older in the package manager to try fast.)
+>>>>
+>>>> #strace mdadm /dev/md126 -r /dev/sdb2
+>>> I note that you put "/dev/sdb2" on the end of the line.
+>>>
+>>>
+>>>>> How about
+>>>>>    mdadm /dev/md127 -r sdb2
+>>> I note that I just put "sdb2" on the end of the line.  Perhaps I should have
+>>> been explicit and say 'not "/dev/sdb2", just "sdb2"'.  It does make a
+>>> difference.
+>>>
+>>> NeilBrown
+>>>
 
-are available in the git repository at:
-
-  git://neil.brown.name/md/ tags/md/3.17
-
-for you to fetch changes up to d66b1b395a59027a1c054e1fc57d582cb4194491:
-
-  md: don't allow bitmap file to be added to raid0/linear. (2014-08-08 15:4=
-3:20 +1000)
-
-
-I've nearly isolated another bug - raid6 can sometime get corrupt during
-recovery.  Once that is properly understood and tested I'll send it separat=
-ely.
-
-Thanks,
-NeilBrown
-
-----------------------------------------------------------------
-md updates for 3.17
-
-Most interesting is that md devices (major =3D=3D 9) with
-minor numbers of 512 or more will no longer be created
-simply by opening a block device file.  They can only
-be created by writing to
-   /sys/module/md_mod/parameters/new_array
-The 'auto-create-on-open' semantic is cumbersome and we
-need to start moving away from it.
-
-----------------------------------------------------------------
-NeilBrown (4):
-      md/raid1,raid10: always abort recover on write error.
-      md: disable probing for md devices 512 and over.
-      md/raid0: check for bitmap compatability when changing raid levels.
-      md: don't allow bitmap file to be added to raid0/linear.
-
-Xiao Ni (1):
-      md: Recovery speed is wrong
-
- drivers/md/md.c     | 13 +++++++------
- drivers/md/raid0.c  |  6 ++++++
- drivers/md/raid1.c  |  8 ++++----
- drivers/md/raid10.c | 11 +++++------
- 4 files changed, 22 insertions(+), 16 deletions(-)
-
---Sig_/ZYXXkPaiRBPN+S4QDJQj+Od
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU+hPoznsnt1WYoG5AQLzPA/+KLecqI3qi+ulcNyS6g4mfczuIbrR8HWZ
-bJfrW8qcO4GHG4Ai4YPzbFWnQPH0jlpYd+L5TfLAHYc0r/weurMUzybSyef/0jVc
-7X+dwBSh7hLpx4NZZsgMIruz7em/nmnRq56xnrs1WrBYpAem8UyCxv9sJTuYzp4b
-J2DbgMCicg03FAcPTfNxLvBYwRvc6nnRlrr4gzm4V2E/TP4s9DxcAkV6jymx0fFP
-S8Tj85P+MRBA34dwt1CvApbTfxF64VFRGtErrJsAcn1vDjD1EP6gGFD+E5dBQ/7l
-jlOG2cWi2SaqchQW3zr0vjHoRLYwpsTEGVa8RaxjgS3PMgpvtF0lJxyJR4XlJBb9
-KAKNYkOSvUO1F4BVf2jZ3RCapN+3sBya8QkkNWzmRQv4cCQx8W+8xK4DfQfekFHc
-7zDe2b5zVsBdh7kalqcY/+jyqT/grsKINVtbH6BI581rFA6SVJxt+wsBM64Pf9+a
-TOxOatA23oOpbj+XX+yTuE8a5EfnLNTvAbQjxmvgFShsTdWee1CGFVGPmt37aNu9
-ax4U8TKxRoToi6JSz8XnPf0EHVfOqA2XGf60mFiHkMys2LCCPBBrV2pvfBFnpziL
-Snj1zuafwOJc0PsFtXrj05TTu2/i93l3YZjSFUN1Rry2hoSYnZ2md5NLV/iBWewg
-dkR5ATJC5uE=
-=5RiD
------END PGP SIGNATURE-----
-
---Sig_/ZYXXkPaiRBPN+S4QDJQj+Od--
