@@ -1,62 +1,59 @@
-From: Killian De Volder <killian.de.volder@megasoft.be>
-Subject: Re: Mdadm misuse or bug ? mdadm: Cannot find 8:18: No such file or
- directory
-Date: Mon, 11 Aug 2014 09:05:13 +0200
-Message-ID: <53E86B29.2080605@megasoft.be>
-References: <53E54AC5.4010904@megasoft.be>	<20140809104915.05b8da17@notabene.brown>	<53E5D329.4040004@megasoft.be>	<20140809182316.0c16ac48@notabene.brown>	<53E5DCB6.4010809@megasoft.be> <20140811104035.5abbfe57@notabene.brown>
+From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
+Subject: Reads from write-mostly HDD instead from  _non_ write-mostly SDD as expected?
+Date: Mon, 11 Aug 2014 16:06:50 +0200
+Message-ID: <2087754.WKjlnWuPkK@matkor-toshiba>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140811104035.5abbfe57@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The world thanks you. :)
+Hi!
+I am trying to use two --write-mostly HDDs (sda5 & sdd5) and single SDD=
+ (sdc1)=20
+as RAID0 for my database partition.
 
-Killian De Volder
+# cat /proc/mdstat                                                     =
+                                                                       =
+                                                                       =
+                                    =20
+Personalities : [raid10] [raid1]=20
+md9 : active raid1 sdc1[0] sda5[3](W) sdd5[4](W)
+      117152576 blocks super 1.2 [3/3] [UUU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
-On 11-08-14 02:40, NeilBrown wrote:
-> On Sat, 09 Aug 2014 10:32:54 +0200 Killian De Volder
-> <killian.de.volder@megasoft.be> wrote:
->
->> sdb2 worked ! (And sorry for not trying sdb2, mdadm asks for /dev/md? so you naturally write /dev/sd? for the disk thereafter too :) )
->> Now the question should -r failed work ?
-> Yes it "should", but it appears that I broke it for mdadm 3.3.
-> It'll be fixed in 3.3.2 by
->   http://git.neil.brown.name/?p=mdadm.git;a=commitdiff;h=b47024f1c5fde5d4fbc65807b9b29e06c056584e
-> and a couple of prior commits.
->
-> Thanks,
-> NeilBrown
->
->
->> Killian De Volder
->>
->> On 09-08-14 10:23, NeilBrown wrote:
->>> On Sat, 09 Aug 2014 09:52:09 +0200 Killian De Volder
->>> <killian.de.volder@megasoft.be> wrote:
->>>
->>>> Doesn't work since sdb has been ejected. Strace below.
->>>>
->>>> package manager: mdadm 3.3-r2
->>>> #mdadm -V: mdadm - v3.3 - 3rd September 2013
->>>>
->>>> Just tried 3.3-r3 and 3.2.6-r1 same issue.
->>>> (There are no older in the package manager to try fast.)
->>>>
->>>> #strace mdadm /dev/md126 -r /dev/sdb2
->>> I note that you put "/dev/sdb2" on the end of the line.
->>>
->>>
->>>>> How about
->>>>>    mdadm /dev/md127 -r sdb2
->>> I note that I just put "sdb2" on the end of the line.  Perhaps I should have
->>> been explicit and say 'not "/dev/sdb2", just "sdb2"'.  It does make a
->>> difference.
->>>
->>> NeilBrown
->>>
+but seems as reads are directed to wrong drive (sdd):
 
+Device: rrqm/s    r/s  rMB/s  avgrq-sz r_await  svctm   %util
+sdc     0.00     0.00   0.00     35.24    0.00   0.82   11.50
+sda     0.07     1.10   0.01     32.57   31.39   1.92   30.32
+sdd     0.37   268.23   3.18     28.05   13.95   2.43  100.45
+md9     0.00   268.57   3.18     24.89    0.00   0.00    0.00
+
+
+How can I fix it?
+
+At beginning it worked as expected (all reads from sdc),  later I did f=
+ew --
+add/--replace  --write-mostly operations and it broke.
+
+TIA, regards,
+
+Linux 3.14.7-1 #1 SMP Thu Jun 12 14:32:56 CEST 2014 x86_64=20
+mdadm - v3.3.1 - 5th June 2014
+
+
+--=20
+Mateusz Korniak
+"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
+=BCni=C5=9B,
+ 	kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
+				Nikos Kazantzakis - "Grek Zorba"
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
