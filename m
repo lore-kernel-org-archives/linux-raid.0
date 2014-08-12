@@ -1,62 +1,21 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: Clone failed
-Date: Tue, 12 Aug 2014 00:57:33 -0400 (EDT)
-Message-ID: <186578391.21147864.1407819453181.JavaMail.zimbra@redhat.com>
-References: <192555642.20505182.1407722576334.JavaMail.zimbra@redhat.com> <270921245.20505628.1407722766562.JavaMail.zimbra@redhat.com> <20140811125909.3e936159@notabene.brown>
+From: Can Jeuleers <can.jeuleers@gmail.com>
+Subject: Re: Sleepy drives and MD RAID 6
+Date: Tue, 12 Aug 2014 07:55:47 +0200
+Message-ID: <53E9AC63.1020809@gmail.com>
+References: <CAH_2GheOOaJRp7YimEsorFzGUJyObG2QsOpu87CYvwLPwz-V+A@mail.gmail.com> <53E96C21.2050309@nuclearwinter.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140811125909.3e936159@notabene.brown>
+In-Reply-To: <53E96C21.2050309@nuclearwinter.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 08/12/2014 03:21 AM, Larkin Lowrey wrote:
+> Also, leaving spin-up to the controller is
+> also not so hot since some controllers spin-up the drives sequentially
+> rather than in parallel.
 
-
------ Original Message -----
-> From: "NeilBrown" <neilb@suse.de>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Monday, August 11, 2014 10:59:09 AM
-> Subject: Re: Clone failed
-> 
-> On Sun, 10 Aug 2014 22:06:06 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
-> 
-> > Hi all
-> > 
-> >    Could you help me about this? I tried to git clone
-> >    git://git.neil.brown.name/md.git.
-> > But it always failed. I tried to search the way to resolve this, but I
-> > don't find the
-> > right method.
-> > 
-> > [root@dhcp-12-129 aprilava]# git clone git://neil.brown.name/md
-> > Initialized empty Git repository in /home/neil/md/.git/
-> > remote: fatal: Out of memory, realloc failed
-> > remote: aborting due to possible repository corruption on the remote side.
-> > fatal: early EOF
-> > fatal: index-pack failed
-> > 
-> >    What should I do? Could you help me?
-> > 
-> 
-> You would probably be more successful if you cloned linux from some local git
-> tree and then just 'fetch'ed or 'pull'ed from my tree.
-> 
-> It seems that fetching the full tree now requires over a gigabyte of memory
-> on the server, and my VM only had that much.
-> I've added some swap so it should cope now if you really want to clone
-> entirely from my tree.
-> 
-> NeilBrown
-> 
-
-Hi Neil
-
-   Thanks very much. I have cloned it successfully. 
-
-
-Best Regards
-Xiao
+Sequential spin-up is a feature to some, because it avoids large power
+spikes.
