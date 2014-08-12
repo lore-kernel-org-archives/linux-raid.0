@@ -1,59 +1,77 @@
-From: Mateusz Korniak <mateusz-lists@ant.gliwice.pl>
-Subject: Reads from write-mostly HDD instead from  _non_ write-mostly SDD as expected?
-Date: Mon, 11 Aug 2014 16:06:50 +0200
-Message-ID: <2087754.WKjlnWuPkK@matkor-toshiba>
+From: Adam Talbot <ajtalbot1@gmail.com>
+Subject: Sleepy drives and MD RAID 6
+Date: Mon, 11 Aug 2014 18:03:17 -0700
+Message-ID: <CAH_2GheOOaJRp7YimEsorFzGUJyObG2QsOpu87CYvwLPwz-V+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
-I am trying to use two --write-mostly HDDs (sda5 & sdd5) and single SDD=
- (sdc1)=20
-as RAID0 for my database partition.
+I need help from the Linux RAID pros.
 
-# cat /proc/mdstat                                                     =
-                                                                       =
-                                                                       =
-                                    =20
-Personalities : [raid10] [raid1]=20
-md9 : active raid1 sdc1[0] sda5[3](W) sdd5[4](W)
-      117152576 blocks super 1.2 [3/3] [UUU]
-      bitmap: 1/1 pages [4KB], 65536KB chunk
+To make a very long story short; I have a 7 disk in a RAID 6 array.  I
+put the drives to sleep after 7 minutes of inactivity.  When I go to
+use this array the spin up time is causing applications to hang.
+Current spin up time is 50 seconds, but will be getting worse as I add
+drives.
 
-but seems as reads are directed to wrong drive (sdd):
+Here is the MUCH longer description including more specs (DingbatCA):
+http://forums.gentoo.org/viewtopic-p-7599010.html
 
-Device: rrqm/s    r/s  rMB/s  avgrq-sz r_await  svctm   %util
-sdc     0.00     0.00   0.00     35.24    0.00   0.82   11.50
-sda     0.07     1.10   0.01     32.57   31.39   1.92   30.32
-sdd     0.37   268.23   3.18     28.05   13.95   2.43  100.45
-md9     0.00   268.57   3.18     24.89    0.00   0.00    0.00
+Any help would be greatly appreciated.  I think this would make a
+great wiki article.
 
+More details bellow:
+root@nas:/data# smartctl -a /dev/sdd | grep Spin_Up
+  3 Spin_Up_Time            0x0027   150   137   021    Pre-fail
+Always       -       9608
 
-How can I fix it?
+root@nas:/data# time (touch foo ; sync)
+real    0m49.004s
+user    0m0.000s
+sys     0m0.004s
 
-At beginning it worked as expected (all reads from sdc),  later I did f=
-ew --
-add/--replace  --write-mostly operations and it broke.
+root@nas:/data# time (touch foo ; sync)
+real    0m50.647s
+user    0m0.000s
+sys     0m0.008s
 
-TIA, regards,
+root@nas:/data# df -h /data
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md125      9.1T  3.8T  5.4T  42% /data
 
-Linux 3.14.7-1 #1 SMP Thu Jun 12 14:32:56 CEST 2014 x86_64=20
-mdadm - v3.3.1 - 5th June 2014
+root@nas:/data# mdadm -D /dev/md125
+/dev/md125:
+        Version : 1.2
+  Creation Time : Wed Jun 18 07:54:38 2014
+     Raid Level : raid6
+     Array Size : 9766909440 (9314.45 GiB 10001.32 GB)
+  Used Dev Size : 1953381888 (1862.89 GiB 2000.26 GB)
+   Raid Devices : 7
+  Total Devices : 7
+    Persistence : Superblock is persistent
 
+    Update Time : Mon Aug 11 16:30:16 2014
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
 
---=20
-Mateusz Korniak
-"(...) mam brata - powa=C5=BCny, domator, liczykrupa, hipokryta, pobo=C5=
-=BCni=C5=9B,
- 	kr=C3=B3tko m=C3=B3wi=C4=85c - podpora spo=C5=82ecze=C5=84stwa."
-				Nikos Kazantzakis - "Grek Zorba"
+         Layout : left-symmetric
+     Chunk Size : 512K
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           Name : nas:data  (local to host nas)
+           UUID : 74f9ce7a:df1c2698:c8ec7259:5fdb2618
+         Events : 1038642
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+       3       8       49        2      active sync   /dev/sdd1
+       4       8       65        3      active sync   /dev/sde1
+       5       8       81        4      active sync   /dev/sdf1
+       7       8      145        5      active sync   /dev/sdj1
+       6       8      129        6      active sync   /dev/sdi1
