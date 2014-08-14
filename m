@@ -1,82 +1,114 @@
-From: Adam Talbot <ajtalbot1@gmail.com>
-Subject: Re: Sleepy drives and MD RAID 6
-Date: Thu, 14 Aug 2014 12:33:53 -0700
-Message-ID: <CAH_2GhcX71wyHH9H3Qvyu8hCye+=nB9jD2LMLiGRTh_apYT6Vw@mail.gmail.com>
-References: <CAH_2GheOOaJRp7YimEsorFzGUJyObG2QsOpu87CYvwLPwz-V+A@mail.gmail.com>
-	<20140812092901.60f007e6@natsu>
-	<53ECFB87.3010700@tmr.com>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: Unable to re-add a disk  after a reboot.
+Date: Thu, 14 Aug 2014 18:08:30 -0500
+Message-ID: <53ED416E.8010504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53ECFB87.3010700@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I live in Portland OR USA.  My basement runs about 68F (20C) peak.
-That is with my NAS at 100% activity for 40hours+.  That is why
-cooling was not included in my calculation.  One could also include
-2~3 year drive warranties into the equation of spin up/down.  Wow.
-This whole topic is becoming a really good Wiki article.
+Hi,
 
-I remember a staggering option some where in the firmware of the
-cards.  I am going to check that tonight, before I spend any moneys.
+   I just finished converting a 3-disk raid5 to 4-disk raid6. After a 
+reboot to start clean, I noticed that one of the disk (the new one I 
+just added) was missing in /proc/partitions. This was disk 4 in my 
+/dev/md0. Assuming some cable issue, I powered off, wiggled the cables 
+and restarted and the device was found by kernel. However, md0 shows 
+device missing and array degraded
 
-I have two SSD's (240GB) RAID1.  I never knew I could break the
-journal out to other drives?!  Got any links/information on how to do
-this?
+    lata [rramesh] 280 > cat /proc/mdstat
+    Personalities : [raid6] [raid5] [raid4]
+    md0 : active raid6 sdb1[0] sdd1[3] sdc1[1]
+           3906763776 blocks super 1.2 level 6, 512k chunk, algorithm 2
+    [4/3] [UUU_]
 
-On Thu, Aug 14, 2014 at 11:10 AM, Bill Davidsen <davidsen@tmr.com> wrote:
-> Roman Mamedov wrote:
->>
->> On Mon, 11 Aug 2014 18:03:17 -0700
->> Adam Talbot <ajtalbot1@gmail.com> wrote:
->>
->>> I need help from the Linux RAID pros.
->>>
->>> To make a very long story short; I have a 7 disk in a RAID 6 array.  I
->>> put the drives to sleep after 7 minutes of inactivity.
->>
->>
->> It is well known that repeatedly spinning a drive down/up is absolutely
->> the
->> worst possible thing you can do to it, from a long term reliability
->> standpoint.
->> So my personal suggestion would be to reconsider if you really want this.
->> The
->> power consumption from 7 spinning drives with no access should be no
->> higher
->> than 60-70 watt; IMHO saving that amount, is not something that's worth
->> risking
->> your disks and data for.
->>
-> Unless you live in someplace really cold, there's the cost of pumping that
-> heat out of the room. Running A/C can almost double your power cost, and
-> running the room hot shortens your component life. In other words there's
-> more cost than the power for most people. Even if my hardware can run at
-> 90F, I can't.
->
-> There appears to be a partial solution, get a small SDD (<$100) and put the
-> journal on it. Get two, run RAID1 if you must. Then configure the system to
-> write the journal with all data (data=journal), and the write will be really
-> fast, even if they don't fully complete for a minute or so. Doesn't help
-> reads, of course. Turns the journal into cache, sort of.
->
-> I have the feeling that sequential spin is an option in a driver, but I
-> can't remember or quickly find where. I say this because I had to set it on
-> one machine I had, spinning up the whole array at one caused the power
-> supply to overload, and until I could get a bigger one which would fit I set
-> an option. That was long enough that I can't remember where I found that.
-> Turn it off and all seven drives will ask for power at once, which probably
-> isn't a great thing, but not my system.
->
-> --
-> Bill Davidsen <davidsen@tmr.com>
->   "We have more to fear from the bungling of the incompetent than from
-> the machinations of the wicked."  - from Slashdot
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    unused devices: <none>
+
+However my attempt to --re-add does not work.
+
+    lata [rramesh] 277 > sudo mdadm /dev/md0 --verbose --re-add /dev/sde1
+    mdadm: --re-add for /dev/sde1 to /dev/md0 is not possible
+    lata [rramesh] 278 > sudo mdadm -E /dev/sde1
+    /dev/sde1:
+               Magic : a92b4efc
+             Version : 1.2
+         Feature Map : 0x0
+          Array UUID : 730051d9:f4c58e0c:504fd1d9:798a84a4
+                Name : lata:0  (local to host lata)
+       Creation Time : Sun Oct  6 16:41:01 2013
+          Raid Level : raid6
+        Raid Devices : 4
+
+      Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
+          Array Size : 3906763776 (3725.78 GiB 4000.53 GB)
+       Used Dev Size : 3906763776 (1862.89 GiB 2000.26 GB)
+         Data Offset : 262144 sectors
+        Super Offset : 8 sectors
+               State : clean
+         Device UUID : 03898148:47c40cc2:f365082e:9f7f06cf
+
+         Update Time : Thu Aug 14 08:53:16 2014
+            Checksum : 346e9226 - correct
+              Events : 1191488
+
+              Layout : left-symmetric
+          Chunk Size : 512K
+
+        Device Role : Active device 3
+        Array State : AAAA ('A' == active, '.' == missing)
+    lata [rramesh] 279 > fgrep UUID /etc/mdadm/mdadm.conf
+    # ARRAY /dev/md/0 metadata=1.2
+    UUID=0e9f76b5:4a89171a:a930bccd:78749144 name=zym:0
+    ARRAY /dev/md0 metadata=1.2 spares=1 name=lata:0
+    UUID=730051d9:f4c58e0c:504fd1d9:798a84a4
+
+I checked the SMART and it shows a lot of reallocated_sector_ct errors 
+also. So, the disk is dying, but I am not able understand why mdadm 
+would not add.
+
+    SMART Attributes Data Structure revision number: 16
+    Vendor Specific SMART Attributes with Thresholds:
+    ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE     
+    UPDATED  WHEN_FAILED RAW_VALUE
+       1 Raw_Read_Error_Rate     0x000b   091   091   016 Pre-fail 
+    Always       -       53
+       2 Throughput_Performance  0x0005   100   100   054 Pre-fail 
+    Offline      -       0
+       3 Spin_Up_Time            0x0007   135   135   024 Pre-fail 
+    Always       -       426 (Average 425)
+       4 Start_Stop_Count        0x0012   100   100   000 Old_age  
+    Always       -       59
+    *5 Reallocated_Sector_Ct   0x0033   001   001   005 Pre-fail 
+    Always   FAILING_NOW 330*
+       7 Seek_Error_Rate         0x000b   098   098   067 Pre-fail 
+    Always       -       2
+       8 Seek_Time_Performance   0x0005   100   100   020 Pre-fail 
+    Offline      -       0
+       9 Power_On_Hours          0x0012   100   100   000 Old_age  
+    Always       -       3445
+      10 Spin_Retry_Count        0x0013   100   100   060 Pre-fail 
+    Always       -       0
+      12 Power_Cycle_Count       0x0032   100   100   000 Old_age  
+    Always       -       59
+    192 Power-Off_Retract_Count 0x0032   100   100   000 Old_age  
+    Always       -       548
+    193 Load_Cycle_Count        0x0012   100   100   000 Old_age  
+    Always       -       548
+    194 Temperature_Celsius     0x0002   153   153   000 Old_age  
+    Always       -       39 (Min/Max 21/43)
+    196 Reallocated_Event_Count 0x0032   001   001   000 Old_age  
+    Always       -       17604
+    197 Current_Pending_Sector  0x0022   001   001   000 Old_age  
+    Always       -       13256
+    198 Offline_Uncorrectable   0x0008   100   100   000 Old_age  
+    Offline      -       0
+    199 UDMA_CRC_Error_Count    0x000a   200   200   000 Old_age  
+    Always       -       0
+
+Any recommendations while I am waiting to get a replacement.
+
+Ramesh
+
