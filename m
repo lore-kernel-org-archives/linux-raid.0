@@ -1,68 +1,126 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: How to use --freeze-reshape and is it safe?
-Date: Thu, 14 Aug 2014 10:59:01 -0500
-Message-ID: <CABY_QbVSk0totc-z=7pZ9kV1RxV=qSZc2GnhM87YHfhYM5t6LA@mail.gmail.com>
-References: <53EC4B63.90703@gmail.com>
-	<20140814155633.567baece@notabene.brown>
-	<53EC5658.3050708@gmail.com>
-	<20140814173057.3913f5e1@notabene.brown>
+From: Adam Talbot <ajtalbot1@gmail.com>
+Subject: Re: Sleepy drives and MD RAID 6
+Date: Thu, 14 Aug 2014 09:50:51 -0700
+Message-ID: <CAH_2GhcVeVv7Uh5Gw9nwmkzisABuTkHPK9hXUxzb=EPkBNu+dQ@mail.gmail.com>
+References: <CAH_2GheOOaJRp7YimEsorFzGUJyObG2QsOpu87CYvwLPwz-V+A@mail.gmail.com>
+	<53E96C21.2050309@nuclearwinter.com>
+	<53E9AC63.1020809@gmail.com>
+	<BLU436-SMTP2487F2FA5F4B1A1A1B1E87B98EA0@phx.gbl>
+	<CAH_2GhfBKiJAT=+zCFH0_xkmyTfWFi=c-F+z8rwL1x++UwU+KA@mail.gmail.com>
+	<CAH_2Ghc+M2dCQBs3iRXYPZwKAsvY-TbS852VxhReT4k8HBQkQQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140814173057.3913f5e1@notabene.brown>
+In-Reply-To: <CAH_2Ghc+M2dCQBs3iRXYPZwKAsvY-TbS852VxhReT4k8HBQkQQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "Wilson, Jonathan" <piercing_male@hotmail.com>
+Cc: Can Jeuleers <can.jeuleers@gmail.com>, linux-raid@vger.kernel.org, rm@romanrm.net
 List-Id: linux-raid.ids
 
->
-> When you convert a raid5 to a raid6 it will assume that an extra drive is
-> being added as well.
-> Firstly the array is instantaneously converted from an optimal RAID5 in
-> left-symmetric layout to a degraded RAID6 in left-symmetric-6 layout.
->
-> Then the reshape process is started which reads each stripe in the
-> left-symmetric-6 layout and writes it back in the raid6:left-symmetric layout.
->
-> (if you specify a different number of final devices it all still works in one
-> pass, but the dance is more complex).
->
-> If this is done without changing the data offset, then every stripe is
-> written on top of the old location of the same stripe so if the host crashed
-> in the middle of the write, data would be lost.
-> So mdadm copies each stripe to a backup-file before allowing the data to be
-> relocated.  This causes a lot more IO than required to move the data, but is
-> a lot safer.
->
-> With newer kernels (v3.5) and mdadm (v3.3) a reshape can move the data_offset
-> at the same time so that it is only ever writing to an unused area of the
-> devices.  This should be much faster.
-> However it requires that the data_offset is high enough that there is room to
-> move it backwards.  mdadm 3.3 creates arrays with a reasonably large
-> data_offset.  With arrays created earlier you might need to
->  - shrink the filesystem
->  - shrink the --size of the array
->
-> md can either increase or decrease the data offset.
-> The later requires free space at the start of the array so data_offset must
-> be large.  The former requires free space at the end of the array, so size
-> must be less than the maximum.  "mdadm --examine" will report "Unused space"
-> both "before" and "after" which indicates how much data_offset can be moved.
-> If either of these are larger than 1 chunk, then mdadm will make use of it.
->
-> To answer you question: there is no "second pass".  The only way to make it
-> faster is to have a recent kernel and mdadm and make sure there is sufficient
-> Unused space, either "before" or "after".
->
-> NeilBrown
+I am running out of ideas.  Does anyone know how to wake a disk with a
+non-blocking, and non-caching method?
+I have tried the following commands:
+dd if=/dev/sdh of=/dev/null bs=4096 count=1 iflag=direct,nonblock
+hdparm --dco-identify /dev/sdh   (This gets cached after the 3~10th
+time running)
+hdparm --read-sector 48059863 /dev/sdh
 
-I may be wrong here, but wouldn't going back and forth on the same
-disk make the operation slow. I mean trying to compute Q and
-distribute will require read followed by a write to several disk
-making seek the bottleneck. Would it not be better to first build Q on
-the new disk and do the distribution later as you may be able to read
-multiple blocks, parallelize reads, and combine writes.  I am not
-claiming deep knowledge of disk's inner working here. Just bouncing
-thoughts.
+Any ideas?
 
-Ramesh
+On Wed, Aug 13, 2014 at 9:07 AM, Adam Talbot <ajtalbot1@gmail.com> wrote:
+> Arg!!  Am I hitting some kind of blocking at the Linux kernel?? No
+> matter what I do, I can't seem to get the drives to spin up in
+> parallel.  Any ideas?
+>
+> A simple test case trying to get two drives to spin up at once.
+> root@nas:~# hdparm -C /dev/sdh /dev/sdg
+> /dev/sdh:
+>  drive state is:  standby
+>
+> /dev/sdg:
+>  drive state is:  standby
+>
+> #Two terminal windows dd'ing sdg and sdh at the same time.
+> root@nas:~/dm_drive_sleeper# time dd if=/dev/sdh of=/dev/null bs=4096
+> count=1 iflag=direct
+> 1+0 records in
+> 1+0 records out
+> 4096 bytes (4.1 kB) copied, 14.371 s, 0.3 kB/s
+>
+> real   0m28.139s ############# WHY?! ################
+> user   0m0.000s
+> sys   0m0.000s
+>
+> #A single drive spin-up
+> root@nas:~/dm_drive_sleeper# time dd if=/dev/sdh of=/dev/null bs=4096
+> count=1 iflag=direct
+> 1+0 records in
+> 1+0 records out
+> 4096 bytes (4.1 kB) copied, 14.4212 s, 0.3 kB/s
+>
+> real   0m14.424s
+> user   0m0.000s
+> sys   0m0.000s
+>
+> On Tue, Aug 12, 2014 at 8:23 AM, Adam Talbot <ajtalbot1@gmail.com> wrote:
+>> Thank you all for the input.  At this point I think I am going to write a
+>> simple daemon to do dm power management. I still think this would be a good
+>> feature set to roll into the driver stack, or madam-tools.
+>>
+>> As far as wear and tear on the disks. Yes, starting and stopping the drives
+>> shortens their life span. I don't trust my disks, regardless of
+>> starting/stopping, that is why I run RAID 6. Lets say I use my NAS with it's
+>> 7 disks for 2 hours a day, 7 days a week @ 10 watts per drive.  The current
+>> price for power in my area is $0.11 per kilowatt-hour. That comes out to be
+>> $5.62 per year to run my drives for 2 hours, daily.  But if I run my drives
+>> 24/7 it would cost me $67.45/year.  Basically it would cost me an extra
+>> $61.83/year to run the drives 24/7.  The 2TB 5400RPM SATA drives I have been
+>> picking up from local surplus, or auction websites are costing me $40~$50,
+>> including shipping and tax.  In other words I could buy a new disk every
+>> 8~10 months to replace failures and it would be the same cost. Drives don't
+>> fail that fast, even if I was start/stopping them 10 times daily. This is
+>> also completely ignoring the fact that drive prices are failing.  Sorry to
+>> disappoint, but I am going to spin down my array and save some money.
+>>
+>>
+>>
+>>
+>> On Tue, Aug 12, 2014 at 2:46 AM, Wilson, Jonathan
+>> <piercing_male@hotmail.com> wrote:
+>>>
+>>> On Tue, 2014-08-12 at 07:55 +0200, Can Jeuleers wrote:
+>>> > On 08/12/2014 03:21 AM, Larkin Lowrey wrote:
+>>> > > Also, leaving spin-up to the controller is
+>>> > > also not so hot since some controllers spin-up the drives sequentially
+>>> > > rather than in parallel.
+>>> >
+>>> > Sequential spin-up is a feature to some, because it avoids large power
+>>> > spikes.
+>>>
+>>> I vaguely recall older drives had a jumper to set a delayed spin up so
+>>> they stayed in a low power (possibly un-spun up) mode when power was
+>>> applied and only woke up when a command was received (I think any
+>>> command, not a specific "wake up" one).
+>>>
+>>> Also as mentioned some controllers may also only wake drives one after
+>>> the other, likewise mdriad does not care about the underlying
+>>> hardware/driver stack, only that it eventually responds, and even then I
+>>> believe it will happily wait till the end of time if no response or
+>>> error is propagated up the stack; hence the time out in scsi_device
+>>> stack not in the mdraid.
+>>>
+>>>
+>>>
+>>> > --
+>>> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> > the body of a message to majordomo@vger.kernel.org
+>>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> >
+>>>
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
