@@ -1,85 +1,41 @@
-From: NeilBrown <neilb@suse.de>
+From: mdraid.pkoch@dfgh.net (Peter Koch)
 Subject: Re: memory leak with linux-3.14.16
-Date: Sun, 17 Aug 2014 06:36:58 +1000
-Message-ID: <20140817063658.79406706@notabene.brown>
-References: <201408161345.s7GDj5gR027016@portal.naev.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/M7UbLii=DszG2+QE6T49MdT"; protocol="application/pgp-signature"
+Date: Sun, 17 Aug 2014 10:55:04 +0200
+Message-ID: <201408170855.s7H8t420028767@portal.naev.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201408161345.s7GDj5gR027016@portal.naev.de>
+In-Reply-To: 
+References: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Koch <mdraid.pkoch@dfgh.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/M7UbLii=DszG2+QE6T49MdT
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Dear Neil,
 
-On Sat, 16 Aug 2014 15:45:05 +0200 mdraid.pkoch@dfgh.net (Peter Koch) wrote:
+> That won't help.  Data stored in kmalloc-256 won't get swapped out - it stays
+> in RAM.  So unless you can hot-plus 20Gig of RAM ....
 
-> Dear Neil,
->=20
-> > The only bug I know of was fixed in 3.14.6.
-> > I said 3.14.16 before - sorry about typo.
->=20
-> No wonder 3.14.16 behaves exactly as 3.14.12 did
->=20
-> My server now has reshaped 2.28TB and lost 9.14GB of RAM
-> so memory is still leaking at 4GB per TB
->=20
-> > Hmm... don't know about that bug.
-> > Does /proc/slabinfo show some slab much bigger than the rest?
->=20
-> I'm not a memory expert, so I made a copy of /proc/slabinfo and
-> compared this copy with /proc/slabinfo in an endless loop.
->=20
-> There are two values which are unusually high and
-> are going up constantly:
->=20
-> radix_tree_node   403942
-> kmalloc-256       38283576
->=20
-> 38283576 chunks of 256 bytes are exactly those 9.14GB of
-> RAM that have leaked so far.
->=20
-> > If you gracefully shutdown and reboot it should keep pick up where it l=
-eft
-> > off but with more memory free.
->=20
-> Last time my machine crashed when about 10TB of data was reshaped.
-> And my machine has 32GB of RAM plus 8GB of swap. According to my
-> calculations I need 13TB * 4GB/TB =3D 52GB of RAM, so adding another
-> 20GB of swapspace should keep my server running until the reshape
-> has finished.
+Thanks for the info. I read it when almost all my memory were in
+kmalloc-256. Half an hour later my machine would have crashed despite
+the increased swapspace. So I could do a graceful reboot and the reshape
+has sucessfully finished in the meantime.
 
-That won't help.  Data stored in kmalloc-256 won't get swapped out - it sta=
-ys
-in RAM.  So unless you can hot-plus 20Gig of RAM ....
+Now I'm going to add those three drives to my array one by one. I'm doing
+this because I cannot physically swap drive 13 and 14 (the next maintenance
+window for such an operation would be in october). I will grow the array
+to 14 drives today since my main concern is to put the data on an even
+number of disks where the mirrors are separated correctly.
 
-NeilBrown
+Then I will add drive 14 and 15 in one step.
 
---Sig_/M7UbLii=DszG2+QE6T49MdT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+By the way: Will a raid10 array with an even number of drives survife
+if one half of the drives go offline during a reshape operation that
+adds an even number of drives?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Should I download linux 3.14.17 sources and wait for a patch? If only
+a missing kfree() has to be added somewhere I can do that by hand and
+recompile 3.14.16.
 
-iQIVAwUBU+/A6jnsnt1WYoG5AQLIcBAAqr2G9toEwPokN59N0KYcmD6hAoDbf77e
-JJxNnE0ZEl6QGt+b6cDQBKa70MwZGyIcJrXMytLBzSSIRTQWAi+IXDuaRfZCr388
-ZuPl8epZcPYvQ+IO4jHlj2BiNaTJYHe7ik0/1Oa7KLQar+72uWo6p8+KWr7Hkn7l
-2v4KAgjwA43I0v4Dc6VLJNzvGI75i4omb1XUg0KYOwqMFNSzyUwfI4YVSV3UBnic
-J4rnPQ8Lgw6g93q/Vq3nwOIUIxm3q8NJHgHGxNEozxNKxGEoTi7YADu1Q1YaJou0
-zdkrnvx3ONDqGEX1T1c98mleb/PDFmloFJ+KMVEN/2mKtxzEKkOpEiJc/A8H01S+
-mdcXaQfkBGwOpVpo7JVi+L8a++sOs14ENPnYN4tIm4vWVaMiboxFMWT6c3H3kUsm
-Og+JX5AA+TaCzzaXETXUHuiy8f+i3f3ViSId90b1lSpAvQRmdUNKmwNXoE+c62u9
-vu99wPaIvzuwsYz64DVi3ZiEs5SCJiwR01lZ6Wqq1Buy0FXYKl1YIE/gCEXaM4aa
-bRGBIxUBqMuugJ05/pTCwBSX3Agm1Tue8bs2PHz8YO/a/1PoD7JqSzsyIcbD4Lot
-dFKf41cO4BrU8DWuwFluxKYrFKjaIo7Zk/+yLMemA3VJKcOkCTTRpHFGDgE1hIsy
-SbSpXNSMLkw=
-=LT7W
------END PGP SIGNATURE-----
+Would it help you if I setup another machine and try to reproduce the
+problem with linux 3.15.x, 3.16.x and 3.17.x?
 
---Sig_/M7UbLii=DszG2+QE6T49MdT--
+Peter
