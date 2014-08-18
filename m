@@ -1,207 +1,215 @@
-From: "Mandar Joshi" <mandar.joshi@calsoftinc.com>
-Subject: RE: Full stripe write in RAID6
-Date: Mon, 18 Aug 2014 21:25:25 +0530
-Message-ID: <01d701cfbafc$d3545cc0$79fd1640$@calsoftinc.com>
-References: <01b101cfb0c9$e8fcf240$baf6d6c0$@calsoftinc.com> <20140806164720.2aac2c5a@notabene.brown>
+From: Larkin Lowrey <llowrey@nuclearwinter.com>
+Subject: Re: Sleepy drives and MD RAID 6
+Date: Mon, 18 Aug 2014 11:16:06 -0500
+Message-ID: <53F226C6.5030101@nuclearwinter.com>
+References: <CAH_2GheOOaJRp7YimEsorFzGUJyObG2QsOpu87CYvwLPwz-V+A@mail.gmail.com>	<53E96C21.2050309@nuclearwinter.com>	<53E9AC63.1020809@gmail.com>	<BLU436-SMTP2487F2FA5F4B1A1A1B1E87B98EA0@phx.gbl>	<CAH_2GhfBKiJAT=+zCFH0_xkmyTfWFi=c-F+z8rwL1x++UwU+KA@mail.gmail.com>	<CAH_2Ghc+M2dCQBs3iRXYPZwKAsvY-TbS852VxhReT4k8HBQkQQ@mail.gmail.com>	<CAH_2GhcVeVv7Uh5Gw9nwmkzisABuTkHPK9hXUxzb=EPkBNu+dQ@mail.gmail.com>	<53ECEB42.8080400@nuclearwinter.com>	<CAH_2Ghd5WZLhhct9drM1kgsNiYAQrWXeNxarSaST18PcuYc7HA@mail.gmail.com>	<53ECFA65.7050500@nuclearwinter.com> <CAH_2GheHG7N7PY22kxeDnLeCkmXg8AsHu6t_NX+Mi9PxPYfk2Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140806164720.2aac2c5a@notabene.brown>
-Content-Language: en-us
+In-Reply-To: <CAH_2GheHG7N7PY22kxeDnLeCkmXg8AsHu6t_NX+Mi9PxPYfk2Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Adam Talbot <ajtalbot1@gmail.com>
+Cc: "Wilson, Jonathan" <piercing_male@hotmail.com>, Can Jeuleers <can.jeuleers@gmail.com>, linux-raid@vger.kernel.org, rm@romanrm.net
 List-Id: linux-raid.ids
 
-Thanks Neil for the reply...
-Comments inline...
+Yes, the SAS2008 will not spin up the drives in parallel no matter what
+I try.
 
------Original Message-----
-=46rom: NeilBrown [mailto:neilb@suse.de]=20
-Sent: Wednesday, August 06, 2014 12:17 PM
-To: Mandar Joshi
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Full stripe write in RAID6
+--Larkin
 
-On Tue, 5 Aug 2014 21:55:46 +0530 "Mandar Joshi"
-<mandar.joshi@calsoftinc.com> wrote:
+On 8/18/2014 10:41 AM, Adam Talbot wrote:
+> Can you confirm the LSI 2008 SAS Controller is, or is not, effected by
+> this problem?
+>
+> On Thu, Aug 14, 2014 at 11:05 AM, Larkin Lowrey
+> <llowrey@nuclearwinter.com> wrote:
+>> My LSI SAS controller (SAS2008) is newer and may behave differently but
+>> I guessing this is your problem.
+>>
+>> I've been very happy with my HighPoint controllers (difficult to say in
+>> public). I have an 8 port Rocket 2720SGL ($150) and a 16 port RocketRaid
+>> 2740 ($400+) . Both have worked flawlessly and performance has been
+>> excellent. The 16 port card actually has two 8 port controllers on it
+>> bridged together. I think you're better off with 2 8 port cards.
+>>
+>> The 8 port RocketRaid 2680 is slower (3Gb/s) but should be fine for
+>> spinning rust and is about $100. I don't have any experience with those.
+>> I found one on ebay for $45 so there may be some good deals on that one
+>> since it's a generation older.
+>>
+>> --Larkin
+>>
+>> On 8/14/2014 12:37 PM, Adam Talbot wrote:
+>>> For testing I use two windows, just to make sure they are run
+>>> independent. My shell script uses "(setsid put_some_command_here
+>>> /dev/$i > /dev/null 2>&1 &)" to make sure the command is forced into
+>>> the background.
+>>>
+>>> Hummm... A controller issue?
+>>> lspci | grep LSI
+>>> 07:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E
+>>> PCI-Express Fusion-MPT SAS (rev 02)
+>>> 09:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E
+>>> PCI-Express Fusion-MPT SAS (rev 08)
+>>> 0b:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E
+>>> PCI-Express Fusion-MPT SAS (rev 02)
+>>> lspci | grep -i sata  (On-board)
+>>> 00:1f.2 IDE interface: Intel Corporation 631xESB/632xESB/3100 Chipset
+>>> SATA IDE Controller (rev 09)
+>>>
+>>> All but 1 of my drives are run through my 3X 4-port LSI cards.
+>>> /dev/sdb is running through the onboard Intel SATA controller. Each
+>>> drive takes 10 secounds to spin up. With a 7 disk RAID 6, I would
+>>> expect a read/write to succeed 50 seconds (5 drives) after the
+>>> request.  But on my system it always takes 40 seconds?!
+>>>
+>>> Quick test. sdb & sdc at the same time (Intel + LSI):
+>>> root@nas:~/dm_drive_sleeper# time (dd if=/dev/sdc of=/dev/null bs=512k
+>>> count=16 iflag=direct)
+>>> 16+0 records in
+>>> 16+0 records out
+>>> 8388608 bytes (8.4 MB) copied, 10.2006 s, 822 kB/s
+>>>
+>>> real 0m10.202s
+>>> user 0m0.000s
+>>> sys 0m0.000s
+>>>
+>>> sdf & sde at the same time (LSI + LSI):root@nas:~/dm_drive_sleeper#
+>>> time (dd if=/dev/sdf of=/dev/null bs=512k count=16 iflag=direct)
+>>> 16+0 records in
+>>> 16+0 records out
+>>> 8388608 bytes (8.4 MB) copied, 10.2417 s, 819 kB/s
+>>>
+>>> real 0m20.208s
+>>> user 0m0.000s
+>>> sys 0m0.000s
+>>>
+>>> I blame the LSI cards!??!?   I have been looking for an excuse to
+>>> upgrade, and now I have it!  Any clue where I can find a
+>>> dumb/cheap/used 12-port (Or 2X 8-port).  My drive cage has 15 ports,
+>>> standard SATA/SAS connections.  So I will have to pick up some adapter
+>>> cables regardless of the new card type.
+>>>
+>>> In other news, Larkin I owe you a beer/coffee/tea.
+>>>
+>>> On Thu, Aug 14, 2014 at 10:00 AM, Larkin Lowrey
+>>> <llowrey@nuclearwinter.com> wrote:
+>>>> Have you tried the dd command w/o nonblock and putting it in the
+>>>> background via &? You could then use the 'wait' command to wait for them
+>>>> to finish.
+>>>>
+>>>> I did dust off some old memories and recalled that one of my SAS
+>>>> controllers (LSI) does the spin ups serially no matter what and I ended
+>>>> up moving these low duty cycle drives to my other SAS controller
+>>>> (Marvell) and put my always spinning drives on the LSI. I've never seen
+>>>> this behavior from any of my AHCI SATA controllers.
+>>>>
+>>>> --Larkin
+>>>>
+>>>> On 8/14/2014 11:50 AM, Adam Talbot wrote:
+>>>>> I am running out of ideas.  Does anyone know how to wake a disk with a
+>>>>> non-blocking, and non-caching method?
+>>>>> I have tried the following commands:
+>>>>> dd if=/dev/sdh of=/dev/null bs=4096 count=1 iflag=direct,nonblock
+>>>>> hdparm --dco-identify /dev/sdh   (This gets cached after the 3~10th
+>>>>> time running)
+>>>>> hdparm --read-sector 48059863 /dev/sdh
+>>>>>
+>>>>> Any ideas?
+>>>>>
+>>>>> On Wed, Aug 13, 2014 at 9:07 AM, Adam Talbot <ajtalbot1@gmail.com> wrote:
+>>>>>> Arg!!  Am I hitting some kind of blocking at the Linux kernel?? No
+>>>>>> matter what I do, I can't seem to get the drives to spin up in
+>>>>>> parallel.  Any ideas?
+>>>>>>
+>>>>>> A simple test case trying to get two drives to spin up at once.
+>>>>>> root@nas:~# hdparm -C /dev/sdh /dev/sdg
+>>>>>> /dev/sdh:
+>>>>>>  drive state is:  standby
+>>>>>>
+>>>>>> /dev/sdg:
+>>>>>>  drive state is:  standby
+>>>>>>
+>>>>>> #Two terminal windows dd'ing sdg and sdh at the same time.
+>>>>>> root@nas:~/dm_drive_sleeper# time dd if=/dev/sdh of=/dev/null bs=4096
+>>>>>> count=1 iflag=direct
+>>>>>> 1+0 records in
+>>>>>> 1+0 records out
+>>>>>> 4096 bytes (4.1 kB) copied, 14.371 s, 0.3 kB/s
+>>>>>>
+>>>>>> real   0m28.139s ############# WHY?! ################
+>>>>>> user   0m0.000s
+>>>>>> sys   0m0.000s
+>>>>>>
+>>>>>> #A single drive spin-up
+>>>>>> root@nas:~/dm_drive_sleeper# time dd if=/dev/sdh of=/dev/null bs=4096
+>>>>>> count=1 iflag=direct
+>>>>>> 1+0 records in
+>>>>>> 1+0 records out
+>>>>>> 4096 bytes (4.1 kB) copied, 14.4212 s, 0.3 kB/s
+>>>>>>
+>>>>>> real   0m14.424s
+>>>>>> user   0m0.000s
+>>>>>> sys   0m0.000s
+>>>>>>
+>>>>>> On Tue, Aug 12, 2014 at 8:23 AM, Adam Talbot <ajtalbot1@gmail.com> wrote:
+>>>>>>> Thank you all for the input.  At this point I think I am going to write a
+>>>>>>> simple daemon to do dm power management. I still think this would be a good
+>>>>>>> feature set to roll into the driver stack, or madam-tools.
+>>>>>>>
+>>>>>>> As far as wear and tear on the disks. Yes, starting and stopping the drives
+>>>>>>> shortens their life span. I don't trust my disks, regardless of
+>>>>>>> starting/stopping, that is why I run RAID 6. Lets say I use my NAS with it's
+>>>>>>> 7 disks for 2 hours a day, 7 days a week @ 10 watts per drive.  The current
+>>>>>>> price for power in my area is $0.11 per kilowatt-hour. That comes out to be
+>>>>>>> $5.62 per year to run my drives for 2 hours, daily.  But if I run my drives
+>>>>>>> 24/7 it would cost me $67.45/year.  Basically it would cost me an extra
+>>>>>>> $61.83/year to run the drives 24/7.  The 2TB 5400RPM SATA drives I have been
+>>>>>>> picking up from local surplus, or auction websites are costing me $40~$50,
+>>>>>>> including shipping and tax.  In other words I could buy a new disk every
+>>>>>>> 8~10 months to replace failures and it would be the same cost. Drives don't
+>>>>>>> fail that fast, even if I was start/stopping them 10 times daily. This is
+>>>>>>> also completely ignoring the fact that drive prices are failing.  Sorry to
+>>>>>>> disappoint, but I am going to spin down my array and save some money.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> On Tue, Aug 12, 2014 at 2:46 AM, Wilson, Jonathan
+>>>>>>> <piercing_male@hotmail.com> wrote:
+>>>>>>>> On Tue, 2014-08-12 at 07:55 +0200, Can Jeuleers wrote:
+>>>>>>>>> On 08/12/2014 03:21 AM, Larkin Lowrey wrote:
+>>>>>>>>>> Also, leaving spin-up to the controller is
+>>>>>>>>>> also not so hot since some controllers spin-up the drives sequentially
+>>>>>>>>>> rather than in parallel.
+>>>>>>>>> Sequential spin-up is a feature to some, because it avoids large power
+>>>>>>>>> spikes.
+>>>>>>>> I vaguely recall older drives had a jumper to set a delayed spin up so
+>>>>>>>> they stayed in a low power (possibly un-spun up) mode when power was
+>>>>>>>> applied and only woke up when a command was received (I think any
+>>>>>>>> command, not a specific "wake up" one).
+>>>>>>>>
+>>>>>>>> Also as mentioned some controllers may also only wake drives one after
+>>>>>>>> the other, likewise mdriad does not care about the underlying
+>>>>>>>> hardware/driver stack, only that it eventually responds, and even then I
+>>>>>>>> believe it will happily wait till the end of time if no response or
+>>>>>>>> error is propagated up the stack; hence the time out in scsi_device
+>>>>>>>> stack not in the mdraid.
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>> --
+>>>>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>>>>>
+>>>>>>>> --
+>>>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> Hi,
->                 If I am writing entire stripe then whether RAID6 md=20
-> driver need to read any of the blocks from underlying device?
->                =20
->                 I have created RAID6 device with default (512K) chunk=
-=20
-> size with total 6 RAID devices. cat=20
-> /sys/block/md127/queue/optimal_io_size =3D
-> 2097152 I believe this is full stripe (512K * 4 data disks).=20
-> If I write 2MB data, I am expected to dirty entire stripe hence what =
-I=20
-> believe I need not require to read either any of the data block or=20
-> parity blocks. Thus avoiding RAID6 penalties. Whether md/raid driver=20
-> supports full stripe writes by avoiding RAID 6 penalties?
->=20
-> I also expected 6 disks will receive 512K writes each. (4 data disk +=
-=20
-> 2 parity disks).
-
-Your expectation is correct in theory, but it doesn't always quite work=
- like that in practice.
-The write request will arrive at the raid6 driver in smaller chunks and=
- it doesn't always decide correctly whether it should wait for more wri=
-tes to arrive, or if it should start reading now.
-
-It would certainly be good to "fix" the scheduling in raid5/raid6, but =
-no one have worked out how yet.
-
-NeilBrown
-
-[Mandar] Tuning sysfs/.../md/stripe_cache_size=3D32768 significantly lo=
-wered pre-reads as discussed above. As it does not force queue for comp=
-letion, stripe handling gets time to dirty next entire full stripes, th=
-us avoiding pre-reads. Still some of the stripe were not lucky to exper=
-ience the same.
-=46urther tuning sysfs/.../md/preread_bypass_threshold=3Dstripe_cache_s=
-ize i.e. 32768, almost eliminated pre-reads in my case.
-Neil mentioned that "raid6 driver gets write request in smaller chunks.=
-"
-Also correct if my understanding below is wrong.
-Is it because md/raid driver does not have its own io scheduler which c=
-an merge requests? Can we not have io scheduler for md?
-When I do any buffered write request on md/raid6, I always get multiple=
- 4K requests. I think in absence of io scheduler, its because of Buffer=
-ed IO writes (from the page-cache) will always be in one-page units?
-Due to this reason, whether md/raid6 driver was designed in such way th=
-at its internal stripe handling considers stripe =3D 4K * noOfDisks?=20
-Why design does not consider internal stripe =3D chunk_size * noOfDisks=
-?
-I think it will help file systems which can do submit_bio with larger s=
-ize(?)
-Is there any config-setting or patch to improve on in this case?
-In case of direct IO, pages will be accumulated and then given to md/ra=
-id6, hence md/raid6 can receive more than 4K requests.
-But again here, with direct io I could not get a write request more tha=
-n chunk size of it. Any specific reason?
-
-
-
->=20
-> If I do IO directly on block device /dev/md127, I do observe reads=20
-> happening on md device and underlying raid devices as well.
->=20
-> #mdstat o/p:
-> md127 : active raid6 sdah1[5] sdai1[4] sdaj1[3] sdcg1[2] sdch1[1]=20
-> sdci1[0]
->       41926656 blocks super 1.2 level 6, 512k chunk, algorithm 2 [6/6=
-]=20
-> [UUUUUU]
->=20
->=20
->=20
-> # time (dd if=3D/dev/zero of=3D/dev/md127 bs=3D2M count=3D1 && sync)
->=20
-> # iostat::
-> Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrt=
-n
-> sdaj1            19.80         1.60       205.20          8       102=
-6
-> sdai1            18.20         0.00       205.20          0       102=
-6
-> sdah1            33.60        11.20       344.40         56       172=
-2
-> sdcg1            20.20         0.00       205.20          0       102=
-6
-> sdci1            31.00         3.20       344.40         16       172=
-2
-> sdch1            34.00       120.00       205.20        600       102=
-6
-> md127           119.20       134.40       819.20        672       409=
-6
->=20
->=20
-> So to avoid cache effect, if any (?) I am using raw device to perform=
- IO.
-> Then for one stripe write I do observe no reads happening.=20
-> At the same time I also see few disks getting more writes than=20
-> expected. Did not get why?
->=20
-> # raw -qa
-> /dev/raw/raw1:  bound to major 9, minor 127
->=20
-> #time (dd if=3D/dev/zero of=3D/dev/raw/raw1 bs=3D2M count=3D1 && sync=
-)
->=20
-> # iostat shows:
-> Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrt=
-n
-> sdaj1             7.00         0.00       205.20          0       102=
-6
-> sdai1             6.20         0.00       205.20          0       102=
-6
-> sdah1             9.80         0.00       246.80          0       123=
-4
-> sdcg1             6.80         0.00       205.20          0       102=
-6
-> sdci1             9.60         0.00       246.80          0       123=
-4
-> sdch1             6.80         0.00       205.20          0       102=
-6
-> md127             0.80         0.00       819.20          0       409=
-6
->=20
-> I assume if I perform writes in multiples of =E2=80=9Coptimal_io_size=
-=E2=80=9D I would=20
-> be doing full stripe writes thus avoiding reads. But unfortunately=20
-> with two 2M writes, I do see reads happening for some these drives.=20
-> Same case for
-> count=3D4 or 6 (equal to data disks or total disks).
-> # time (dd if=3D/dev/zero of=3D/dev/raw/raw1 bs=3D2M count=3D2 && syn=
-c)
->=20
->=20
-> Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrt=
-n
-> sdaj1            13.40       204.80       410.00       1024       205=
-0
-> sdai1            11.20         0.00       410.00          0       205=
-0
-> sdah1            15.80         0.00       464.40          0       232=
-2
-> sdcg1            13.20       204.80       410.00       1024       205=
-0
-> sdci1            16.60         0.00       464.40          0       232=
-2
-> sdch1            12.40       192.00       410.00        960       205=
-0
-> md127             1.60         0.00      1638.40          0       819=
-2
->=20
->=20
-> I read about =E2=80=9C/sys/block/md127/md/md/preread_bypass_threshold=
-=E2=80=9D.=20
-> I tried setting this to 0 as well as suggested somewhere. But no help=
-=2E
->=20
-> I believe RAID6 penalties will exist if it=E2=80=99s a random write, =
-but in=20
-> case of seq. write, whether they will still exist in some other form=20
-> in Linux md/raid driver?
-> My aim is to maximize RAID6 Write IO rate with sequential Writes=20
-> without
-> RAID6 penalties.
->=20
-> Rectify me wherever my assumptions are wrong. Let me know if any othe=
-r=20
-> configuration param (for block device or md device) is required to=20
-> achieve the same.
->=20
-> --
-> Mandar Joshi
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
