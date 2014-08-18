@@ -1,154 +1,110 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: memory leak with linux-3.14.16
-Date: Mon, 18 Aug 2014 15:01:57 +1000
-Message-ID: <20140818150157.3ef9c9e0@notabene.brown>
-References: <201408170855.s7H8t420028767@portal.naev.de>
+Subject: ALERT: md/raid6 data corruption risk.
+Date: Mon, 18 Aug 2014 16:16:24 +1000
+Message-ID: <20140818161624.7176991f@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//ljOw7SoPMf2f2RytbOJ=T3"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201408170855.s7H8t420028767@portal.naev.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Peter Koch <mdraid.pkoch@dfgh.net>
-Cc: linux-raid@vger.kernel.org
+ boundary="Sig_/h+nr1f+vI=rg.cU8rGhF+bx"; protocol="application/pgp-signature"
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+Cc: Manibalan P <pmanibalan@amiindia.co.in>, Dan Williams <dan.j.williams@intel.com>, Yuri Tikhonov <yur@emcraft.com>, Jes Sorensen <Jes.Sorensen@redhat.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_//ljOw7SoPMf2f2RytbOJ=T3
+--Sig_/h+nr1f+vI=rg.cU8rGhF+bx
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 17 Aug 2014 10:55:04 +0200 mdraid.pkoch@dfgh.net (Peter Koch) wrote:
 
-> Dear Neil,
->=20
-> > That won't help.  Data stored in kmalloc-256 won't get swapped out - it=
- stays
-> > in RAM.  So unless you can hot-plus 20Gig of RAM ....
->=20
-> Thanks for the info. I read it when almost all my memory were in
-> kmalloc-256. Half an hour later my machine would have crashed despite
-> the increased swapspace. So I could do a graceful reboot and the reshape
-> has sucessfully finished in the meantime.
->=20
-> Now I'm going to add those three drives to my array one by one. I'm doing
-> this because I cannot physically swap drive 13 and 14 (the next maintenan=
-ce
-> window for such an operation would be in october). I will grow the array
-> to 14 drives today since my main concern is to put the data on an even
-> number of disks where the mirrors are separated correctly.
->=20
-> Then I will add drive 14 and 15 in one step.
->=20
-> By the way: Will a raid10 array with an even number of drives survife
-> if one half of the drives go offline during a reshape operation that
-> adds an even number of drives?
+Hi all,
+ There is a risk of data loss with md/raid6 arrays running on Linux since
+ 2.6.32.
+ If:
+   - the array is doubly degraded
+   - one or both failed devices are being recovered, and
+   - the array is written to
 
-Should do, yes.
+ then it is possible for data on the array to be lost.  The patch below fix=
+es
+ the problem.  If you apply the patch to an older kernel which has separate
+ handle_stripe5() and handle_stripe6() functions, be sure that patch changes
+ handle_stripe6().
 
->=20
-> Should I download linux 3.14.17 sources and wait for a patch? If only
-> a missing kfree() has to be added somewhere I can do that by hand and
-> recompile 3.14.16.
+ There is no risk to an optimal array or a singly-degraded array.  There is
+ also no risk on a doubly-degraded array which is not recovering a device or
+ is not receiving write requests.
 
-The following pair of patches should fix your problems.  Should be easy to
-apply by hand to whatever kernel you want to use.
+ If you have data on a RAID6 array, please consider how to avoid corruption,
+ possibly by applying the patch, possibly by removing any hot spares so
+ recovery does not automatically start.
 
->=20
-> Would it help you if I setup another machine and try to reproduce the
-> problem with linux 3.15.x, 3.16.x and 3.17.x?
-
-No thanks.  memory leaks are quite easy to find - just enable
-CONFIG_DEBUG_KMEMLEAK and there they are....
-I found about 4 but these are the only important ones.  The second one might
-not seem so important from the description, but it is.  Not freeing that
-memory causes it to be re-used in a slightly incorrect way.
-
-Thanks for the report.
+ This patch will be sent upstream shortly and will subsequently appear in
+ future "-stable" kernels.
 
 NeilBrown
 
-
-=46rom 83a1ebfa292042b11b1e173b3fc50f243cb01c8b Mon Sep 17 00:00:00 2001
+=46rom f94e37dce722ec7b6666fd04be357f422daa02b5 Mon Sep 17 00:00:00 2001
 From: NeilBrown <neilb@suse.de>
-Date: Mon, 18 Aug 2014 13:56:38 +1000
-Subject: [PATCH] md/raid10: fix memory leak when reshaping a RAID10.
+Date: Wed, 13 Aug 2014 09:57:07 +1000
+Subject: [PATCH] md/raid6: avoid data corruption during recovery of
+ double-degraded RAID6
 
-raid10 reshape clears unwanted bits from a bio->bi_flags using
-a method which, while clumsy, worked until 3.10 when BIO_OWNS_VEC
-was added.
-Since then it clears that bit but shouldn't.  This results in a
-memory leak.
+During recovery of a double-degraded RAID6 it is possible for
+some blocks not to be recovered properly, leading to corruption.
 
-So change to used the approved method of clearing unwanted bits.
+If a write happens to one block in a stripe that would be written to a
+missing device, and at the same time that stripe is recovering data
+to the other missing device, then that recovered data may not be written.
 
-As this causes a memory leak which can consume all of memory
-the fix is suitable for -stable.
+This patch skips, in the double-degraded case, an optimisation that is
+only safe for single-degraded arrays.
 
-Fixes: a38352e0ac02dbbd4fa464dc22d1352b5fbd06fd
-Cc: stable@vger.kernel.org (v3.10+)
-Reported-by: mdraid.pkoch@dfgh.net (Peter Koch)
+Bug was introduced in 2.6.32 and fix is suitable for any kernel since
+then.  In an older kernel with separate handle_stripe5() and
+handle_stripe6() functions that patch must change handle_stripe6().
+
+Cc: stable@vger.kernel.org (2.6.32+)
+Fixes: 6c0069c0ae9659e3a91b68eaed06a5c6c37f45c8
+Cc: Yuri Tikhonov <yur@emcraft.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Reported-by: "Manibalan P" <pmanibalan@amiindia.co.in>
+Resolves: https://bugzilla.redhat.com/show_bug.cgi?id=3D1090423
 Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index b08c18871323..d9073a10f2f2 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4410,7 +4410,7 @@ read_more:
- 	read_bio->bi_private =3D r10_bio;
- 	read_bio->bi_end_io =3D end_sync_read;
- 	read_bio->bi_rw =3D READ;
--	read_bio->bi_flags &=3D ~(BIO_POOL_MASK - 1);
-+	read_bio->bi_flags &=3D (~0UL << BIO_RESET_BITS);
- 	read_bio->bi_flags |=3D 1 << BIO_UPTODATE;
- 	read_bio->bi_vcnt =3D 0;
- 	read_bio->bi_iter.bi_size =3D 0;
-=46rom afad1968a35676fa39ebe64603ffd7fbf4ceea10 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Mon, 18 Aug 2014 13:59:50 +1000
-Subject: [PATCH] md/raid10: Fix memory leak when raid10 reshape completes.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 6b2d615d1094..183588b11fc1 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3817,6 +3817,8 @@ static void handle_stripe(struct stripe_head *sh)
+ 				set_bit(R5_Wantwrite, &dev->flags);
+ 				if (prexor)
+ 					continue;
++				if (s.failed > 1)
++					continue;
+ 				if (!test_bit(R5_Insync, &dev->flags) ||
+ 				    ((i =3D=3D sh->pd_idx || i =3D=3D sh->qd_idx)  &&
+ 				     s.failed =3D=3D 0))
 
-When a raid10 commences a resync/recovery/reshape it allocates
-some buffer space.
-When a resync/recovery completes the buffer space is freed.  But not
-when the reshape completes.
-This can result in a small memory leak.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index d9073a10f2f2..a46124ecafc7 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2953,6 +2953,7 @@ static sector_t sync_request(struct mddev *mddev, sec=
-tor_t sector_nr,
- 		 */
- 		if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)) {
- 			end_reshape(conf);
-+			close_sync(conf);
- 			return 0;
- 		}
-=20
-
---Sig_//ljOw7SoPMf2f2RytbOJ=T3
+--Sig_/h+nr1f+vI=rg.cU8rGhF+bx
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU/GIxTnsnt1WYoG5AQJvRg//XcA0bC9VCPnBM73+Pw5ayPHaiQx4sAHN
-8gUSjCl0n9PDeI82Prsl5qjE8ggdFRwV/f9cksTXR5w45uV3IaTob+0rgPEfvTzT
-Opj8UjR5PlBC+SPizqEXNSbPQbhf+JsFf92b+9VX8DmQXooe6cQnjl8zmc0jdZ8a
-ExXZIr76f4vYhoXdIZmsQ22MUxXvRbCiYYWpClI9FpJrwINf0n+UhC4LswOtxXBT
-/lZAxYOFoLWH2PTNigECACpC0w/AElH86LKNlEfdLDgfIJjgkaBJ+y2rx7AjMfjk
-5fJz1o2S9O0t2VzZnkodmqpghqwhIu2oNBvrEAnilGPxNyUtwfexefbrTrdWVVbU
-9wHxr5R2ymCOvjNKY6I5SgOJkLPC5nQwwjhVpJSc2pdDwktGBhHsVRRymZsQs56h
-JDOt5oJS+vARnJQ+7KsXhZNldwVoIF1fCpXXR0Y5Jkfc0ErKL3xvW4tsxTI1vXMw
-j/3iZAXodCOhkZxDwJDh8H1rzH8mwmPCb8PU54fUmchlXoJux6pSi9v28GiV2XtF
-/X3a36vq4vHsEshXBbeXk0rt3zpsgkWlFyViAxXBXvqwUhgAxFbjIOl1ovbqkavO
-jpZYjtX+koRoVUnHQZIQETCcZ/LCvMb8G96a0ge9i9VstRky/FOYoM1NkEMGZAWS
-l/KOCdffa1A=
-=nckP
+iQIVAwUBU/GaODnsnt1WYoG5AQKcvRAAoEcdWHs2QIeatehf8GKko5UFelknfSyV
+mbMTcMLJ/9DAN0dafkzMerDNr+oRqSqamsCbt5MNe73Epp4pMBGp+t/zx0eraKfA
+qZv3LKYVT+NVfGJWfSNP5sBsduLKRSehoEHk/V1idneT1545LkUjdN24LbDA6Adu
+W5BzTt0UoQqx5HFwlfUQDnLG2MyNyyZPFRbfiviXAVZZ/L8xv67WDtc2uhPJDtnF
+dB4wE2qStOz+7fOxQuF1/bRC43wsVYqGkB3qXcowjqQYvxbd6ZpmPpylhuoktW8t
+LDaJ34UEotAXQf3OWcHQydmzrgSp/+krfie1EufZNo3zVYnZyDF4hOT9UiTIJ0qU
+BbBF8jRDKCWx3tylvYaPaOL4VDovnOtIzC8aYYyjTIw7i5WIaK9V00YHO6d8oLYx
+jCHgcw78o1ZeMv1bgUvvH006OrjfxAKbWAgRuGLgX71yj1BUncR7bqQ2NtcGNyL5
+Up8YryRHd7mwWMCrLMehQ/zAH6TEHpPO7FTOVA3zhwl4KS+jLr/TBAvdijIkTPAv
+PP8fVMXOlNNy7qTS71A5aDcV6j4U9/LE9kUZFrZYH8PIMnvpWHs+zt4cTaWRgBrq
+eN3McaehqI2w/i+7peJ9DNdXF6zP6yTZ9NshVo6TvMoXTo5xvkXteiaOm3fajSyS
+0IJVSUYQGXE=
+=udRr
 -----END PGP SIGNATURE-----
 
---Sig_//ljOw7SoPMf2f2RytbOJ=T3--
+--Sig_/h+nr1f+vI=rg.cU8rGhF+bx--
