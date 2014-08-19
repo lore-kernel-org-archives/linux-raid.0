@@ -1,49 +1,81 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: Can I replace raid6 disk using dd?
-Date: Mon, 18 Aug 2014 21:49:39 -0500
-Message-ID: <53F2BB43.4030408@gmail.com>
-References: <CABY_QbV8=y_VnsYk6XC0MEZ7-Np-20PoJLsyKoZA6BzdvUMguA@mail.gmail.com> <53F2B6D8.4030208@shiftmail.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid5.c internal stripe layout
+Date: Tue, 19 Aug 2014 13:06:23 +1000
+Message-ID: <20140819130623.780c27e3@notabene.brown>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD1735863E62B@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/4oSk19dfcpGCdXi.qRP4Yq="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53F2B6D8.4030208@shiftmail.org>
+In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD1735863E62B@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ethan Wilson <ethan.wilson@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Markus Stockhausen <stockhausen@collogia.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/18/2014 09:30 PM, Ethan Wilson wrote:
-> On 18/08/2014 21:26, Ram Ramesh wrote:
->> I had a recent disk failure in my 4x2TB raid6 and as a temporary fix I
->> added a 4tb drive to prevent the drive from being degraded while I
->> researched for a new drive.
->>
->> Now that I have purchased a new drive, I am wondering if it is ok to
->> simply dd the first 2tb of the 4tb drive to replace the drive. I am
->> asking because my case/motherboard does not have another HD slot to
->> add the new disk
->> in parallel with raid6. I was thinking of shutting down the machines,
->> moving the 4tb memmebr and the new drive to another machine, making
->> image copy (only 2tb), and putting the
->> 2tb drive back in the original machine and rebooting. Will this work?
->
->
-> I think it should work, if metadata is 1.1 or 1.2 . I'm not sure if it 
-> is 1.0 .
-> You can also attach it via USB with an adapter, and do a replace (look 
-> up "want_replacement") then shutdown, swap the drives, and turn on again.
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-I thought about USB. First I do not have one, but that is a small 
-problem to overcome. I was thinking more in terms of
-performance. USB will slow things down as it is 2.0 (old MB) and dd 
-should be real fast (130+ MB, based on the replacement)
-But, I agree that mdadm replace is safer. Do I have to remove bitmap for 
-replacement? I don't think so, but this is a newer operation and less 
-info is available, so making sure.
+--Sig_/4oSk19dfcpGCdXi.qRP4Yq=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Ramesh
+On Mon, 18 Aug 2014 18:32:57 +0000 Markus Stockhausen
+<stockhausen@collogia.de> wrote:
 
+> Hi,
+>=20
+> I'm wondering if there are any pros/cons for handling stripes in memory
+> exactly in the same layout as on disks. There are several places that cou=
+ld
+> be simplified if parity disks would be always at the end (DDD..DDPQ). Of=
+=20
+> course one would have to do the mapping during read/write operations.
+>=20
+> Cases for optimization would be:
+>=20
+> - replace conditions "i =3D=3D pd_idx || i =3D=3D qd_qdx" with "i>=3Dpd_i=
+dx"
+> - run data disk loops starting/ending with pd_idx (triple parity raid som=
+eday?)
+> - remove syndrome disk order calculation functions
+> - Shaohua's last patch could cross chunks
+> - ...
+>=20
+> Just in case I missed a discussion I'm interested if patches are welcome.
+
+My guess is that you would just end up moving the complexity from one place
+to another.
+If I'm wrong and the change ends up making a noticeable improvement in code
+readability, then I would certainly consider it.  But I'm pretty sure it
+would be a big change, so it would need to bring a real improvement.
+
+So I'm sceptical but happy to be proven wrong.
+
+NeilBrown
+
+
+>=20
+> Markus
+
+
+--Sig_/4oSk19dfcpGCdXi.qRP4Yq=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU/K/MDnsnt1WYoG5AQKaeg//fpVn/bLlp4iST6EDYniVU4JY2LiH/rMh
+PCAim+HlN9PNTRxL5NAuqRgDYZGWkkhDDMd89AL5ghKxBWEPVCHtMPtoX1tDmkmX
+36BBrlNK4QxBKb17OhjT1DdKKuU9XmxFdlva7zYrc6ahguPltqZ8P5PWqdfzdBua
+LXxJo2HoTSuW86ZVNVXevbM0SVMuzdLIPIDvH3RDUAwu7P8jy4Z95yLARif1hZHj
+K28eRU9T2yreWksdPlTvCVeag7EHg583kBecQjWKEfr2/7PZJ7ijuXxAz6K2OxFh
+H7AZyLo6G1X1bLb+N981mUaGvqqkdP30xH6qJ7VbQiUp0s6mHDswTyfzGG0lmP91
+hU3uJRMYaoLh75a6ndA5o87knlO6neN0NdWYeBFcoQTUfaqqNp7z8LNvuXroy6hV
+r7nD+27VIg3kf371nOPxmna2r15Rgr4cWjv7+UtUtVYlg2LHjf939iLiQqkTnxLy
+o8N6AjCF5878N9WJrIpkKelY8QeqNgXMgPVguoK7NcJ53rua2S34Mxe9ZuAf4S5c
+W4ZiY5pJ4cW4G2w/BPBlrhKFiiXIBQlICS1RHwQZknBJw7+UgPALKynbrhgXC8oe
+n9JyA3Rup/VWYC/giuKnGKgJFo5F2wXeuPmdPGuU9BMBg705GUbvj+DGIaThhVi2
+h+6EAFgXk2g=
+=xEVA
+-----END PGP SIGNATURE-----
+
+--Sig_/4oSk19dfcpGCdXi.qRP4Yq=--
