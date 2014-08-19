@@ -1,10 +1,10 @@
 From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: [PATCH v2 6/6] raid5: introduce configuration option rmw_level
-Date: Tue, 19 Aug 2014 16:36:56 +0000
-Message-ID: <23c42c02-d75e-46f9-8a7c-d59c1a48da76@EXCHANGE.collogia.de>
+Subject: [PATCH v2 3/6] raid6 algorithms: xor_syndrome() for generic int
+Date: Tue, 19 Aug 2014 16:36:38 +0000
+Message-ID: <d8ea6d45-2b04-4084-b9cb-6e38ff142969@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-ec3ad7bb-5327-499c-b798-354b38d5d7e1"
+	boundary="----=_NextPartTM-000-6ac6f4f9-8763-4345-9ed8-be1f100f7fbd"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,114 +13,77 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-ec3ad7bb-5327-499c-b798-354b38d5d7e1
+------=_NextPartTM-000-6ac6f4f9-8763-4345-9ed8-be1f100f7fbd
 Content-Type: text/plain
 
-commit a70013beafc2cc768a6a8f65b1decc28fca30cae
+commit 792ad6dd60e0e45f240d1a6e9cdad6bd45be6d46
 Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-Date:   Tue Aug 19 16:26:36 2014 +0000
+Date:   Tue Aug 19 16:00:57 2014 +0000
 
-    raid5: introduce configuration option rmw_level
+    raid6 algorithms: xor_syndrome() for generic int
     
-    v2: no changes
+    v2: xor_syndrome() with function header
     
-    Depending on the available coding we allow optimized rmw logic for write
-    operations. To support easier testing this patch allows manual control
-    of the rmw/rcw descision through the interface /sys/block/mdX/md/rmw_level.
-    
-    The configuration can handle three levels of control.
-    
-    rmw_level=0: Disable rmw for all RAID types. Hardware assisted P/Q
-    calculation has no implementation path yet to factor in/out chunks of
-    a syndrome. Enforcing this level can be benefical for slow CPUs with
-    hardware syndrome support and fast SSDs.
-    
-    rmw_level=1: Estimate rmw IOs and rcw IOs. Execute rmw only if we will
-    save IOs. This equals the "old" unpatched behaviour and will be the
-    default.
-    
-    rmw_level=2: Execute rmw even if calculated IOs for rmw and rcw are
-    equal. We might have higher CPU consumption because of calculating the
-    parity twice but it can be benefical otherwise. E.g. RAID4 with fast
-    dedicated parity disk/SSD. The option is implemented just to be
-    forward-looking and will ONLY work with this patch!
+    Start the algorithms with the very basic one. It is left and right
+    optimized. That means we can avoid all calculations for unneeded pages
+    above the right stop offset. For pages below the left start offset we
+    still need the syndrome multiplication but without reading data pages.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index eb63e31..3b525f8 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5408,6 +5408,49 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
- 				raid5_store_stripe_cache_size);
+diff --git a/lib/raid6/int.uc b/lib/raid6/int.uc
+index 5ca60be..558aeac 100644
+--- a/lib/raid6/int.uc
++++ b/lib/raid6/int.uc
+@@ -107,9 +107,47 @@ static void raid6_int$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	}
+ }
  
- static ssize_t
-+raid5_show_rmw_level(struct mddev  *mddev, char *page)
++static void raid6_int$#_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
 +{
-+	struct r5conf *conf = mddev->private;
-+	if (conf)
-+		return sprintf(page, "%d\n", conf->rmw_level);
-+	else
-+		return 0;
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	unative_t wd$$, wq$$, wp$$, w1$$, w2$$;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks-2];	/* XOR parity */
++	q = dptr[disks-1];	/* RS syndrome */
++
++	for ( d = 0 ; d < bytes ; d += NSIZE*$# ) {
++		/* P/Q data pages */
++		wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
++		for ( z = z0-1 ; z >= start ; z-- ) {
++			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			wp$$ ^= wd$$;
++			w2$$ = MASK(wq$$);
++			w1$$ = SHLBYTE(wq$$);
++			w2$$ &= NBYTES(0x1d);
++			w1$$ ^= w2$$;
++			wq$$ = w1$$ ^ wd$$;
++		}
++		/* P/Q left side optimization */
++		for ( z = start-1 ; z >= 0 ; z-- ) {
++			w2$$ = MASK(wq$$);
++			w1$$ = SHLBYTE(wq$$);
++			w2$$ &= NBYTES(0x1d);
++			wq$$ = w1$$ ^ w2$$;
++		}
++		*(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		*(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++	}
++
 +}
 +
-+static ssize_t
-+raid5_store_rmw_level(struct mddev  *mddev, const char *page, size_t len)
-+{
-+	struct r5conf *conf = mddev->private;
-+	unsigned long new;
-+
-+	if (!conf)
-+		return -ENODEV;
-+
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+
-+	if (kstrtoul(page, 10, &new))
-+		return -EINVAL;
-+
-+	if (new != PARITY_DISABLE_RMW && !raid6_call.xor_syndrome)
-+		return -EINVAL;
-+
-+	if (new != PARITY_DISABLE_RMW &&
-+	    new != PARITY_ENABLE_RMW &&
-+	    new != PARITY_PREFER_RMW)
-+		return -EINVAL;
-+
-+	conf->rmw_level = new;
-+	return len;
-+}
-+
-+static struct md_sysfs_entry
-+raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
-+			 raid5_show_rmw_level,
-+			 raid5_store_rmw_level);
-+
-+
-+static ssize_t
- raid5_show_preread_threshold(struct mddev *mddev, char *page)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -5571,6 +5614,7 @@ static struct attribute *raid5_attrs[] =  {
- 	&raid5_preread_bypass_threshold.attr,
- 	&raid5_group_thread_cnt.attr,
- 	&raid5_skip_copy.attr,
-+	&raid5_rmw_level.attr,
- 	NULL,
- };
- static struct attribute_group raid5_attrs_group = {
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index cbb00e2..1893b3a 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -347,6 +347,7 @@ enum {
- enum {
- 	PARITY_DISABLE_RMW = 0,
- 	PARITY_ENABLE_RMW,
-+	PARITY_PREFER_RMW,
- };
- 
- /*
+ const struct raid6_calls raid6_intx$# = {
+ 	raid6_int$#_gen_syndrome,
+-	NULL,			/* XOR not yet implemented */
++	raid6_int$#_xor_syndrome,
+ 	NULL,			/* always valid */
+ 	"int" NSTRING "x$#",
+ 	0
 
-------=_NextPartTM-000-ec3ad7bb-5327-499c-b798-354b38d5d7e1
+------=_NextPartTM-000-6ac6f4f9-8763-4345-9ed8-be1f100f7fbd
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -180,4 +143,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-ec3ad7bb-5327-499c-b798-354b38d5d7e1--
+------=_NextPartTM-000-6ac6f4f9-8763-4345-9ed8-be1f100f7fbd--
