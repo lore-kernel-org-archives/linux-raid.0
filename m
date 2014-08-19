@@ -1,96 +1,50 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Correct RAID options
-Date: Tue, 19 Aug 2014 18:42:47 -0500
-Message-ID: <CAAMCDedj+Lj0_JPCjOOJaaswXLVK+Ogyyo7XUhOj9qMqyz1AXg@mail.gmail.com>
-References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: [PATCH v2 0/6] raid6: support read-modify-write
+Date: Tue, 19 Aug 2014 19:46:41 -0400
+Message-ID: <21491.57825.401637.881344@quad.stoffel.home>
+References: <677cbe3b-4301-4650-962a-043f6ae59086@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+In-Reply-To: <677cbe3b-4301-4650-962a-043f6ae59086@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: savage@savage.za.org
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Markus Stockhausen <stockhausen@collogia.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For reads bigger block sizes are better (file size does not appear to matter).
+>>>>> "Markus" == Markus Stockhausen <stockhausen@collogia.de> writes:
 
-Depending on alignment a 8k file could cause 2 blocks to be read off
-of 2 separate disks, using more spindles and taking longer.
+Markus> 300 seconds random write with 8 threads
+Markus> 3,2TB (10*400GB) RAID6 64K chunk without spare 
+Markus> group_thread_cnt=4
 
-The bigger the block io size on the raid disk the less likely with the
-same file size you have to read from 2 different disks.
+Markus> bsize   rmw_level=1   rmw_level=0   rmw_level=1   rmw_level=0
+Markus>         skip_copy=1   skip_copy=1   skip_copy=0   skip_copy=0
+Markus>    4K      115 KB/s      141 KB/s      165 KB/s      140 KB/s
+Markus>    8K      225 KB/s      275 KB/s      324 KB/s      274 KB/s
+Markus>   16K      434 KB/s      536 KB/s      640 KB/s      534 KB/s
+Markus>   32K      751 KB/s    1,051 KB/s    1,234 KB/s    1,045 KB/s
+Markus>   64K    1,339 KB/s    1,958 KB/s    2,282 KB/s    1,962 KB/s
+Markus>  128K    2,673 KB/s    3,862 KB/s    4,113 KB/s    3,898 KB/s
+Markus>  256K    7,685 KB/s    7,539 KB/s    7,557 KB/s    7,638 KB/s
+Markus>  512K   19,556 KB/s   19,558 KB/s   19,652 KB/s   19,688 Kb/s
 
-When I tested random read rates I found that no matter what the file
-size was a bigger block size on the raid was always better.   It
-appear to come down to minimizing the number of disk spindles that
-have to be used for each file read.
+Which is the current 3.16.0 implementation?  I can't keep it straight
+in my head and you don't clearly specify which set is what we have
+now, and which is your patch and it's option(s) in place.
 
-So my practice was always to set the block size to as big as possible,
-I believe some of the controllers I was using could go as high as
-1mbyte.
+What type of system did you run this test on?  How much CPU/RAM, etc?
+Can you should the configuration of the filesystem/MD volume you wrote
+too as well?  Sorry to be picky here, I'm just trying to see what this
+buys us.  Were the disks using SATA?  IDE?  What speed are the disks?  
 
-On Tue, Aug 19, 2014 at 1:38 PM, Chris Knipe <savage@savage.za.org> wrote:
-> Hi All,
->
-> I'm sitting with a bit of a catch 22 and need some feedback / inputs please.
-> This isn't strictly md related as all servers has MegaRAID SAS controllers
-> with BBUs and I am running hardware raid.  So my apologies about the off
-> topic posting, but the theory remains the same I presume.   All the servers
-> store millions of small (< 2mb) files, in a structured directory structure
-> to keep the amount of files per directory in check.
->
-> Firstly, I have a bunch (3) of front end servers, all configured in RAID10
-> and consisting of 8 x 4TB SATAIII drives.  Up to now they have performed
-> very well, with roughly 30% reads and 70% writes.  This is absolutely fine
-> as RAID10 does give much better write performance and we expect this.  I
-> can't recall what the benches said when I tested this many, many months ago,
-> but it was good and IO wait even under heavy heavy usage is very little...
->
-> The problem now is coming in that the servers are reaching their capacity
-> and the arrays are starting to fill up.  Deleting files, isn't really an
-> option for me as I want to keep them as long as possible.  So, let's get a
-> server to archive data on.
->
-> So, a new server, 15 x 4TB SATAIII drives again, on a MegaRAID controller.
-> With the understanding that the "archives" will be read more than written to
-> (we only write here once we move data from the RAID10 arrays), I opted for
-> RAID5 rather.  The higher spindle count surely should count for something.
-> Well.  The server was configured, array initialised, and tests shows more
-> than 1gb/s in write speeds - faster than the RAID10 arrays.  I am pleased!
->
-> What's the problem?  Well the front end servers does an enormous amount of
-> random read/writes (30/70 split), 24x7.  Some 3 million files are added
-> (written) per day, of which roughly 30% are read again.  So, the majority of
-> the IO activity is writing to disk.  With all the writing going on, there is
-> effectively zero IO left for reading data.  I can't read (or should we say
-> "move") data off the server faster than what it is being written.  The
-> moment I start to do any amount of significant read requests, the IO wait
-> jumps through the roof and the write speeds obviously also crawl to a halt.
-> I suspect due to the seek time on the spindles, which does make sense and
-> all of that.  So there still isn't really any problem here that we don't
-> know about already.
->
-> Now, I realise that this is a really, really open question in terms of
-> interpretation, but what raid levels with high spindle counts (say 8, 12 or
-> 15 or so) will provide for the best "overall" and balanced read/write
-> performance in terms of random IO?  I do not necessarily need blistering
-> performance in terms of speeds due to the small file sizes, but I do need
-> blistering fast performance in terms of IOPS and random read/writes...  All
-> file systems currently EXT4 and all raid disks running with a 64K block
-> size.
->
-> Many thanks, and once again my apologise for my theoretical question rather
-> than md specific question.
->
-> --
-> Chris.
->
->
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also, how does the SSE2 optimization work?  Can it be turned on/off?
+And how much speedup does it provide?  
+
+Otherwise, I don't see any huge improvements with the  numbers, and
+the only consistent win is the rmw_level=1, skip_copy=0 case.  But
+even then when the bsize is big enough it's slower than other
+options.  So is it a win overall?
+
+John
