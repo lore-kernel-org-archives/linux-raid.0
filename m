@@ -1,103 +1,74 @@
-From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: AW: [PATCH v1 0/8] raid6: support read-modify-write
-Date: Tue, 19 Aug 2014 16:40:25 +0000
-Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735863EB4C@EXCHANGE.collogia.de>
-References: <70b876f5-2336-4af1-bdc7-da789ecc3599@EXCHANGE.collogia.de>,<20140819171652.3fc62742@notabene.brown>
+From: Chris Knipe <savage@savage.za.org>
+Subject: Correct RAID options
+Date: Tue, 19 Aug 2014 20:38:52 +0200
+Message-ID: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+Reply-To: <savage@savage.za.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-ffee0efb-06a6-431a-a068-f2f487a77ec3"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140819171652.3fc62742@notabene.brown>
-Content-Language: de-DE
+Content-Language: en-za
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi All,
 
-This is a multi-part message in MIME format.
+I'm sitting with a bit of a catch 22 and need some feedback / inputs please.
+This isn't strictly md related as all servers has MegaRAID SAS controllers
+with BBUs and I am running hardware raid.  So my apologies about the off
+topic posting, but the theory remains the same I presume.   All the servers
+store millions of small (< 2mb) files, in a structured directory structure
+to keep the amount of files per directory in check.
 
-------=_NextPartTM-000-ffee0efb-06a6-431a-a068-f2f487a77ec3
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Firstly, I have a bunch (3) of front end servers, all configured in RAID10
+and consisting of 8 x 4TB SATAIII drives.  Up to now they have performed
+very well, with roughly 30% reads and 70% writes.  This is absolutely fine
+as RAID10 does give much better write performance and we expect this.  I
+can't recall what the benches said when I tested this many, many months ago,
+but it was good and IO wait even under heavy heavy usage is very little...
 
-> Von: NeilBrown [neilb@suse.de]=0A=
-> Gesendet: Dienstag, 19. August 2014 09:16=0A=
-> An: Markus Stockhausen=0A=
-> Cc: linux-raid@vger.kernel.org=0A=
-> Betreff: Re: [PATCH v1 0/8] raid6: support read-modify-write=0A=
-> =0A=
-> Thanks for your effort so far.  If you can revise the patches so:=0A=
->  - config option is last=0A=
->  - 'hasxor' is not used=0A=
-> I'll put them all in my git tree to make it a little easier for people to=
-=0A=
-> test, and probably do a little myself.=0A=
-=0A=
-Sent and hopefully up to your expectations.=0A=
-=0A=
-> Thanks=0A=
-> NeilBrown=0A=
-=0A=
-Markus=
-------=_NextPartTM-000-ffee0efb-06a6-431a-a068-f2f487a77ec3
-Content-Type: text/plain;
-	name="InterScan_Disclaimer.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="InterScan_Disclaimer.txt"
+The problem now is coming in that the servers are reaching their capacity
+and the arrays are starting to fill up.  Deleting files, isn't really an
+option for me as I want to keep them as long as possible.  So, let's get a
+server to archive data on.
 
-****************************************************************************
-Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
-Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
-vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-Weitergabe dieser Mail ist nicht gestattet.
+So, a new server, 15 x 4TB SATAIII drives again, on a MegaRAID controller.
+With the understanding that the "archives" will be read more than written to
+(we only write here once we move data from the RAID10 arrays), I opted for
+RAID5 rather.  The higher spindle count surely should count for something.
+Well.  The server was configured, array initialised, and tests shows more
+than 1gb/s in write speeds - faster than the RAID10 arrays.  I am pleased!
 
-Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
-manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-rechtsverbindliche Willenserklärung.
+What's the problem?  Well the front end servers does an enormous amount of
+random read/writes (30/70 split), 24x7.  Some 3 million files are added
+(written) per day, of which roughly 30% are read again.  So, the majority of
+the IO activity is writing to disk.  With all the writing going on, there is
+effectively zero IO left for reading data.  I can't read (or should we say
+"move") data off the server faster than what it is being written.  The
+moment I start to do any amount of significant read requests, the IO wait
+jumps through the roof and the write speeds obviously also crawl to a halt.
+I suspect due to the seek time on the spindles, which does make sense and
+all of that.  So there still isn't really any problem here that we don't
+know about already.
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
+Now, I realise that this is a really, really open question in terms of
+interpretation, but what raid levels with high spindle counts (say 8, 12 or
+15 or so) will provide for the best "overall" and balanced read/write
+performance in terms of random IO?  I do not necessarily need blistering
+performance in terms of speeds due to the small file sizes, but I do need
+blistering fast performance in terms of IOPS and random read/writes...  All
+file systems currently EXT4 and all raid disks running with a 64K block
+size.
 
-Vorstand:
-Kadir Akin
-Dr. Michael Höhnerbach
+Many thanks, and once again my apologise for my theoretical question rather
+than md specific question.
 
-Vorsitzender des Aufsichtsrates:
-Hans Kristian Langva
+--
+Chris.
 
-Registergericht: Amtsgericht Köln
-Registernummer: HRB 52 497
 
-This e-mail may contain confidential and/or privileged information. If you
-are not the intended recipient (or have received this e-mail in error)
-please notify the sender immediately and destroy this e-mail. Any
-unauthorized copying, disclosure or distribution of the material in this
-e-mail is strictly forbidden.
 
-e-mails sent over the internet may have been written under a wrong name or
-been manipulated. That is why this message sent as an e-mail is not a
-legally binding declaration of intention.
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
 
-executive board:
-Kadir Akin
-Dr. Michael Höhnerbach
 
-President of the supervisory board:
-Hans Kristian Langva
-
-Registry office: district court Cologne
-Register number: HRB 52 497
-
-****************************************************************************
-
-------=_NextPartTM-000-ffee0efb-06a6-431a-a068-f2f487a77ec3--
