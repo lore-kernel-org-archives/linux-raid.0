@@ -1,104 +1,82 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v1 0/8] raid6: support read-modify-write
-Date: Tue, 19 Aug 2014 17:16:52 +1000
-Message-ID: <20140819171652.3fc62742@notabene.brown>
-References: <70b876f5-2336-4af1-bdc7-da789ecc3599@EXCHANGE.collogia.de>
+Subject: [GIT PULL REQUEST] bugfixes for md.
+Date: Tue, 19 Aug 2014 17:25:18 +1000
+Message-ID: <20140819172518.63aaeea2@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/2nJgoVzMh0Xz0zWVxjvx+SC"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70b876f5-2336-4af1-bdc7-da789ecc3599@EXCHANGE.collogia.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: stockhausen@collogia.de
-Cc: linux-raid@vger.kernel.org
+ boundary="Sig_/oq_OViAl6=Tn8/_r9Y4lK0q"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Peter Koch <mdraid.pkoch@dfgh.net>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/2nJgoVzMh0Xz0zWVxjvx+SC
+--Sig_/oq_OViAl6=Tn8/_r9Y4lK0q
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 10 Aug 2014 11:56:23 +0000 <stockhausen@collogia.de> wrote:
 
-> Hello all.
->=20
-> First of all thanks to an older patch from Kumar Sundararajan and=20
-> Dan Williams that helped me to understand RAID6 logic inside md=20
-> better. Everything is based on ideas & discussions that started
-> with http://marc.info/?l=3Dlinux-raid&m=3D136624783417452&w=3D1
->=20
-> So once again. Implement RMW support for RAID6. This time improve
-> syndrome calculation too. The logic was split into very small =20
-> parts. Each having a detailed explanation about what is going on.
+Here are the bug-fixes I promised :-)
+Funny how you start looking for one and other start appearing.
 
-Thanks a lot for these patches.  The size you split them in is good.
-The order is ... not quite right.
-It is important for each patch to make sense by itself and for everything to
-work sensibly at every point.
-Yet your first patch allows PARITY_PREFER_RMW to be set for RAID6 even thou=
-gh
-RAID6 doesn't support it yet ... that doesn't make sense.
-
-Also I don't like that fact that you added functions with empty definitions,
-even if you later filled out some definitions.
-I would prefer to not have the 'hasxor' field, but to expect 'xor_syndrome'
-to be NULL for some methods.
-Then the RAID6 code would only try RMW is xor_syndrome was non-NULL.
-Then you just add a complete xor_syndrome function and it becomes usable.
-
-So I'd probably have that patches:
- 1/ add declarations for xor_syndrome and the code to
-    report benchmarks on boo, but no actuall xor_syndrome code yet.
- 2/ improve test program
- 3/ xor_syndrome for generic_int
- 4/ add logic for improved rmw_syndrome.
-    This always uses rmw for RAID6 if xor_syndrome is defined
- 5/ xor_syndrome for SSE2
- 6/ config option
-
-Maybe swap the order for 4 and 5.
-
-I want the config option to be last because I don't want it to go upstream,
-but everything before it should be able to.
-
-The other thing that is missing from this are performance numbers.
-Any numbers at all would be a good start.  If we can collect number from
-different use case to get a good overview of the improvement (or not) this
-brings, then we might have case for including it upstream.
-I realise you know this and made it clear in your point 4.  I just want to
-emphasis it again.  I might do some testing myself, but we really need
-someone with a larger number of devices to tell us how much better this mak=
-es
-things work for them.
-
-Thanks for your effort so far.  If you can revise the patches so:
- - config option is last
- - 'hasxor' is not used
-I'll put them all in my git tree to make it a little easier for people to
-test, and probably do a little myself.
-
-Thanks
+Thanks,
 NeilBrown
 
---Sig_/2nJgoVzMh0Xz0zWVxjvx+SC
+
+The following changes since commit 7d1311b93e58ed55f3a31cc8f94c4b8fe988a2b9:
+
+  Linux 3.17-rc1 (2014-08-16 10:40:26 -0600)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md/3.17-fixes
+
+for you to fetch changes up to cb8b12b5d81cf8522076f99a90bc3b795825c3b3:
+
+  md/raid10: always initialise ->state on newly allocated r10_bio (2014-08-=
+19 17:20:27 +1000)
+
+----------------------------------------------------------------
+md bugfixes for 3.17
+
+ - raid6 data corruption during recovery
+ - raid6 livelock
+ - raid10 memory leaks.
+
+----------------------------------------------------------------
+NeilBrown (6):
+      md/raid5: avoid livelock caused by non-aligned writes.
+      md/raid6: avoid data corruption during recovery of double-degraded RA=
+ID6
+      md/raid10: fix memory leak when reshaping a RAID10.
+      md/raid10: Fix memory leak when raid10 reshape completes.
+      md/raid10: avoid memory leak on error path during reshape.
+      md/raid10: always initialise ->state on newly allocated r10_bio
+
+ drivers/md/raid10.c | 7 ++++++-
+ drivers/md/raid5.c  | 4 +++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+--Sig_/oq_OViAl6=Tn8/_r9Y4lK0q
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU/L55Dnsnt1WYoG5AQLNJg/6AvEIjZ5lhr1W6DYhRwVx2rJMzbrLuq7I
-Iv9Anb42L3BZlObD9VdCSEu8VIPVaSqc/Vy448ltNvotugj9T87E1k4guCCYUeJE
-Ydmkemy/nFy9EeDqKishYzUG1jupWjOyAKymmKgsRw4QHfP+/N/w3SADdvepY6mv
-Erlyf7GLELyO801L2byFpQgWPNG5eJRF+qJAWZSV+L8cBH5MFJKONADZ1Z5s9yik
-WQAX7iMMJYUo4wSKDlxcZAntHRelWp5+dZbnyW2nRfQ1XaFujl0LnPq03kSB0dg2
-EGH7AhJJAElk4oZiB/N7TtMGbWL1LBeJ41fh8dCcvzLoDtEHYPi1I17JPEqhnkni
-qRSJtRXES2j0Ky90kH3n0m3kw976pSY9NsssChf0g8MMWrmkJ3VwjLHxfPhnyj69
-8UYdJKEonH/Zxy4Z81+es3qYg6NdUru9HB1Y63M0szA1KrKx/xP6LzLBlgxjbbEz
-WjkgtiO3+Ec5HFfWGw8Q1gT4/Z4FpMk4y6IC+mlmW/zQqdphgHmw3/g4b6B4BHCZ
-jDCmPVALzatTujVrfrT8ZO8nDKsV3j1EA+AdsU1hVbnOi9kT534oq3EkwNy+uSRa
-q/CXL/6J1CPkKMJe+fBXp9AiCkPrqCbdqho64IarGhY4h17JydBt18SONMev4AVB
-MhcuDoepTFg=
-=xHrc
+iQIVAwUBU/L73jnsnt1WYoG5AQJ+8Q/9GpdaFcujvSluo4j4pBpKDE48Wc+w4Vn/
+n+TWzT1+3U8oqXUzBMYcQoMaN+o4JdxjPyoEQfGSadPtOsN7vfk3EeMWr2UJuB35
+jT3B4+Rzn2cVYaklO5YR7gKCvA+9y8l6Bu968+o8qdfUviMbD4F7JsVE3D6mX0S2
+UxCBCLSjSKBQLAk8IGZfWI7DmEzlEokDkX1B1TcjUoW9ITGKt4koae+q6DNE7va6
+7fkPnbAAkVCEK6YixqRiBraDkyTo+eDGEoqHDZ976LJxEoctm2wUpVRnTs5QTFTX
+qleEaZ5yFY/EfKfLJuiEiP3pfOl6pxB0C3yVxfSQz7o3fmNN5u78u7K2rsjR+0mo
+HGHKZI+6IDPTCrm1qu2TtBw+kn5cdqdIyNALpGoY59uL6LvfQ3wv88VUGYgjehBu
+tcu1kwP3jhgnZMo5c4tSpYYhjeFIDaYJifszbkavBr7fsz6z/+/BLzt2Oc+jWHt/
+Mw+ZH5R05AEPMIJtS7QxLV2ZRlfvhnBUbVW422oZXrBdCh+OuAzuH9ejF5ViBtSi
+rUUcQMvPRuuUHS3dpfElsmwBqSQC5I0hJ7dLe7RZ8v69Vzb0YyR8iZycQPLzDoPV
+3fzy/lgjVmIJvdGa0Z6xk8Qr7+/34/RXYPif4S9GPzbmt7UOLl6AyIdCHgYBs/oi
+RRYjA3Nha54=
+=HXbp
 -----END PGP SIGNATURE-----
 
---Sig_/2nJgoVzMh0Xz0zWVxjvx+SC--
+--Sig_/oq_OViAl6=Tn8/_r9Y4lK0q--
