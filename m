@@ -1,10 +1,10 @@
 From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: [PATCH v2 2/6] raid6 algorithms: improve test program
-Date: Tue, 19 Aug 2014 16:36:33 +0000
-Message-ID: <fe68c6ba-b41d-4875-8bfe-26b63c15ff0e@EXCHANGE.collogia.de>
+Subject: [PATCH v2 4/6] raid6 algorithms: xor_syndrome() for SSE2
+Date: Tue, 19 Aug 2014 16:36:44 +0000
+Message-ID: <f6b12bcf-5b1c-4494-87a7-a9294b29c3de@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-2bfe8339-2cc2-4a46-9c98-86b64886d10b"
+	boundary="----=_NextPartTM-000-cac0e95b-495d-4f16-84a5-0daeb0d6e637"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,114 +13,289 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-2bfe8339-2cc2-4a46-9c98-86b64886d10b
+------=_NextPartTM-000-cac0e95b-495d-4f16-84a5-0daeb0d6e637
 Content-Type: text/plain
 
-commit f4cdc7692f170c9cdb4064b229d6405e82eb45f9
+commit e29b508f254ffbeec70918e6506213c541a4590f
 Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-Date:   Tue Aug 19 15:59:42 2014 +0000
+Date:   Tue Aug 19 16:04:35 2014 +0000
 
-    raid6 algorithms: improve test program
+    raid6 algorithms: xor_syndrome() for SSE2
     
-    v2: No changes since last version
+    v2: xor_syndrome() with function header
     
-    It is always helpful to have a test tool in place if we implement
-    new data critical algorithms. So add some test routines to the raid6
-    checker that can prove if the new xor_syndrome() works as expected.
+    The second and (last) optimized XOR syndrome calculation. This version
+    supports right and left side optimization. All CPUs with architecture
+    older than Haswell will benefit from it.
     
-    Run through all permutations of start/stop pages per algorithm and
-    simulate a xor_syndrome() assisted rmw run. After each rmw check if
-    the recovery algorithm still confirms that the stripe is fine.
+    It should be noted that SSE2 movntdq kills performance for memory areas
+    that are read and written simultaneously in chunks smaller than cache
+    line size. So use movdqa instead for P/Q writes in sse21 and sse22 XOR
+    functions.
 
-diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-index 5a485b7..3bebbab 100644
---- a/lib/raid6/test/test.c
-+++ b/lib/raid6/test/test.c
-@@ -28,11 +28,11 @@ char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE];
- char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
+diff --git a/lib/raid6/sse2.c b/lib/raid6/sse2.c
+index 31acd59..1d2276b 100644
+--- a/lib/raid6/sse2.c
++++ b/lib/raid6/sse2.c
+@@ -88,9 +88,58 @@ static void raid6_sse21_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
  
--static void makedata(void)
-+static void makedata(int start, int stop)
- {
- 	int i, j;
- 
--	for (i = 0; i < NDISKS; i++) {
-+	for (i = start; i <= stop; i++) {
- 		for (j = 0; j < PAGE_SIZE; j++)
- 			data[i][j] = rand();
- 
-@@ -91,34 +91,55 @@ int main(int argc, char *argv[])
- {
- 	const struct raid6_calls *const *algo;
- 	const struct raid6_recov_calls *const *ra;
--	int i, j;
-+	int i, j, p1, p2;
- 	int err = 0;
- 
--	makedata();
-+	makedata(0, NDISKS-1);
- 
- 	for (ra = raid6_recov_algos; *ra; ra++) {
- 		if ((*ra)->valid  && !(*ra)->valid())
- 			continue;
 +
- 		raid6_2data_recov = (*ra)->data2;
- 		raid6_datap_recov = (*ra)->datap;
++static void raid6_sse21_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++ {
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks-2];	/* XOR parity */
++	q = dptr[disks-1];	/* RS syndrome */
++
++	kernel_fpu_begin();
++
++	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
++
++	for ( d = 0 ; d < bytes ; d += 16 ) {
++		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
++		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
++		asm volatile("pxor %xmm4,%xmm2");
++		/* P/Q data pages */
++		for ( z = z0-1 ; z >= start ; z-- ) {
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
++			asm volatile("pxor %xmm5,%xmm2");
++			asm volatile("pxor %xmm5,%xmm4");
++		}
++		/* P/Q left side optimization */
++		for ( z = start-1 ; z >= 0 ; z-- ) {
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pxor %xmm5,%xmm4");
++		}
++		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
++		/* Don't use movntdq for r/w memory area < cache line */
++		asm volatile("movdqa %%xmm4,%0" : "=m" (q[d]));
++		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
++	}
++
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++}
++
+ const struct raid6_calls raid6_sse2x1 = {
+ 	raid6_sse21_gen_syndrome,
+-	NULL,			/* XOR not yet implemented */
++	raid6_sse21_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x1",
+ 	1			/* Has cache hints */
+@@ -151,9 +200,76 @@ static void raid6_sse22_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
  
- 		printf("using recovery %s\n", (*ra)->name);
++ static void raid6_sse22_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++ {
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks-2];	/* XOR parity */
++	q = dptr[disks-1];	/* RS syndrome */
++
++	kernel_fpu_begin();
++
++	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
++
++	for ( d = 0 ; d < bytes ; d += 32 ) {
++		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
++		asm volatile("movdqa %0,%%xmm6" :: "m" (dptr[z0][d+16]));
++		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
++		asm volatile("movdqa %0,%%xmm3" : : "m" (p[d+16]));
++		asm volatile("pxor %xmm4,%xmm2");
++		asm volatile("pxor %xmm6,%xmm3");
++		/* P/Q data pages */
++		for ( z = z0-1 ; z >= start ; z-- ) {
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pxor %xmm7,%xmm7");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("pcmpgtb %xmm6,%xmm7");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("paddb %xmm6,%xmm6");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pand %xmm0,%xmm7");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
++			asm volatile("movdqa %0,%%xmm7" :: "m" (dptr[z][d+16]));
++			asm volatile("pxor %xmm5,%xmm2");
++			asm volatile("pxor %xmm7,%xmm3");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++		}
++		/* P/Q left side optimization */
++		for ( z = start-1 ; z >= 0 ; z-- ) {
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pxor %xmm7,%xmm7");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("pcmpgtb %xmm6,%xmm7");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("paddb %xmm6,%xmm6");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pand %xmm0,%xmm7");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++		}
++		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
++		asm volatile("pxor %0,%%xmm6" : : "m" (q[d+16]));
++		/* Don't use movntdq for r/w memory area < cache line */
++		asm volatile("movdqa %%xmm4,%0" : "=m" (q[d]));
++		asm volatile("movdqa %%xmm6,%0" : "=m" (q[d+16]));
++		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
++		asm volatile("movdqa %%xmm3,%0" : "=m" (p[d+16]));
++	}
++
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++ }
++
+ const struct raid6_calls raid6_sse2x2 = {
+ 	raid6_sse22_gen_syndrome,
+-	NULL,			/* XOR not yet implemented */
++	raid6_sse22_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x2",
+ 	1			/* Has cache hints */
+@@ -250,9 +366,117 @@ static void raid6_sse24_gen_syndrome(int disks, size_t bytes, void **ptrs)
+ 	kernel_fpu_end();
+ }
  
- 		for (algo = raid6_algos; *algo; algo++) {
--			if (!(*algo)->valid || (*algo)->valid()) {
--				raid6_call = **algo;
-+			if ((*algo)->valid && !(*algo)->valid())
-+				continue;
++ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++ {
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
 +
-+			raid6_call = **algo;
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks-2];	/* XOR parity */
++	q = dptr[disks-1];	/* RS syndrome */
 +
-+			/* Nuke syndromes */
-+			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
++	kernel_fpu_begin();
 +
-+			/* Generate assumed good syndrome */
-+			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
-+						(void **)&dataptrs);
++	asm volatile("movdqa %0,%%xmm0" :: "m" (raid6_sse_constants.x1d[0]));
 +
-+			for (i = 0; i < NDISKS-1; i++)
-+				for (j = i+1; j < NDISKS; j++)
-+					err += test_disks(i, j);
++	for ( d = 0 ; d < bytes ; d += 64 ) {
++		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
++		asm volatile("movdqa %0,%%xmm6" :: "m" (dptr[z0][d+16]));
++		asm volatile("movdqa %0,%%xmm12" :: "m" (dptr[z0][d+32]));
++		asm volatile("movdqa %0,%%xmm14" :: "m" (dptr[z0][d+48]));
++		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
++		asm volatile("movdqa %0,%%xmm3" : : "m" (p[d+16]));
++		asm volatile("movdqa %0,%%xmm10" : : "m" (p[d+32]));
++		asm volatile("movdqa %0,%%xmm11" : : "m" (p[d+48]));
++		asm volatile("pxor %xmm4,%xmm2");
++		asm volatile("pxor %xmm6,%xmm3");
++		asm volatile("pxor %xmm12,%xmm10");
++		asm volatile("pxor %xmm14,%xmm11");
++		/* P/Q data pages */
++		for ( z = z0-1 ; z >= start ; z-- ) {
++			asm volatile("prefetchnta %0" :: "m" (dptr[z][d]));
++			asm volatile("prefetchnta %0" :: "m" (dptr[z][d+32]));
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pxor %xmm7,%xmm7");
++			asm volatile("pxor %xmm13,%xmm13");
++			asm volatile("pxor %xmm15,%xmm15");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("pcmpgtb %xmm6,%xmm7");
++			asm volatile("pcmpgtb %xmm12,%xmm13");
++			asm volatile("pcmpgtb %xmm14,%xmm15");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("paddb %xmm6,%xmm6");
++			asm volatile("paddb %xmm12,%xmm12");
++			asm volatile("paddb %xmm14,%xmm14");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pand %xmm0,%xmm7");
++			asm volatile("pand %xmm0,%xmm13");
++			asm volatile("pand %xmm0,%xmm15");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++			asm volatile("pxor %xmm13,%xmm12");
++			asm volatile("pxor %xmm15,%xmm14");
++			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
++			asm volatile("movdqa %0,%%xmm7" :: "m" (dptr[z][d+16]));
++			asm volatile("movdqa %0,%%xmm13" :: "m" (dptr[z][d+32]));
++			asm volatile("movdqa %0,%%xmm15" :: "m" (dptr[z][d+48]));
++			asm volatile("pxor %xmm5,%xmm2");
++			asm volatile("pxor %xmm7,%xmm3");
++			asm volatile("pxor %xmm13,%xmm10");
++			asm volatile("pxor %xmm15,%xmm11");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++			asm volatile("pxor %xmm13,%xmm12");
++			asm volatile("pxor %xmm15,%xmm14");
++		}
++		asm volatile("prefetchnta %0" :: "m" (q[d]));
++		asm volatile("prefetchnta %0" :: "m" (q[d+32]));
++		/* P/Q left side optimization */
++		for ( z = start-1 ; z >= 0 ; z-- ) {
++			asm volatile("pxor %xmm5,%xmm5");
++			asm volatile("pxor %xmm7,%xmm7");
++			asm volatile("pxor %xmm13,%xmm13");
++			asm volatile("pxor %xmm15,%xmm15");
++			asm volatile("pcmpgtb %xmm4,%xmm5");
++			asm volatile("pcmpgtb %xmm6,%xmm7");
++			asm volatile("pcmpgtb %xmm12,%xmm13");
++			asm volatile("pcmpgtb %xmm14,%xmm15");
++			asm volatile("paddb %xmm4,%xmm4");
++			asm volatile("paddb %xmm6,%xmm6");
++			asm volatile("paddb %xmm12,%xmm12");
++			asm volatile("paddb %xmm14,%xmm14");
++			asm volatile("pand %xmm0,%xmm5");
++			asm volatile("pand %xmm0,%xmm7");
++			asm volatile("pand %xmm0,%xmm13");
++			asm volatile("pand %xmm0,%xmm15");
++			asm volatile("pxor %xmm5,%xmm4");
++			asm volatile("pxor %xmm7,%xmm6");
++			asm volatile("pxor %xmm13,%xmm12");
++			asm volatile("pxor %xmm15,%xmm14");
++		}
++		asm volatile("movntdq %%xmm2,%0" : "=m" (p[d]));
++		asm volatile("movntdq %%xmm3,%0" : "=m" (p[d+16]));
++		asm volatile("movntdq %%xmm10,%0" : "=m" (p[d+32]));
++		asm volatile("movntdq %%xmm11,%0" : "=m" (p[d+48]));
++		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
++		asm volatile("pxor %0,%%xmm6" : : "m" (q[d+16]));
++		asm volatile("pxor %0,%%xmm12" : : "m" (q[d+32]));
++		asm volatile("pxor %0,%%xmm14" : : "m" (q[d+48]));
++		asm volatile("movntdq %%xmm4,%0" : "=m" (q[d]));
++		asm volatile("movntdq %%xmm6,%0" : "=m" (q[d+16]));
++		asm volatile("movntdq %%xmm12,%0" : "=m" (q[d+32]));
++		asm volatile("movntdq %%xmm14,%0" : "=m" (q[d+48]));
++	}
++	asm volatile("sfence" : : : "memory");
++	kernel_fpu_end();
++ }
 +
-+			if (!raid6_call.xor_syndrome)
-+				continue;
 +
-+			for (p1 = 0; p1 < NDISKS-2; p1++)
-+				for (p2 = p1; p2 < NDISKS-2; p2++) {
- 
--				/* Nuke syndromes */
--				memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
-+					/* Simulate rmw run */
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+								(void **)&dataptrs);
-+					makedata(p1, p2);
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+                                                                (void **)&dataptrs);
- 
--				/* Generate assumed good syndrome */
--				raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
--							(void **)&dataptrs);
-+					for (i = 0; i < NDISKS-1; i++)
-+						for (j = i+1; j < NDISKS; j++)
-+							err += test_disks(i, j);
-+				}
- 
--				for (i = 0; i < NDISKS-1; i++)
--					for (j = i+1; j < NDISKS; j++)
--						err += test_disks(i, j);
--			}
- 		}
- 		printf("\n");
- 	}
+ const struct raid6_calls raid6_sse2x4 = {
+ 	raid6_sse24_gen_syndrome,
+-	NULL,			/* XOR not yet implemented */
++	raid6_sse24_xor_syndrome,
+ 	raid6_have_sse2,
+ 	"sse2x4",
+ 	1			/* Has cache hints */
 
-------=_NextPartTM-000-2bfe8339-2cc2-4a46-9c98-86b64886d10b
+------=_NextPartTM-000-cac0e95b-495d-4f16-84a5-0daeb0d6e637
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -180,4 +355,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-2bfe8339-2cc2-4a46-9c98-86b64886d10b--
+------=_NextPartTM-000-cac0e95b-495d-4f16-84a5-0daeb0d6e637--
