@@ -1,82 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] bugfixes for md.
-Date: Tue, 19 Aug 2014 17:25:18 +1000
-Message-ID: <20140819172518.63aaeea2@notabene.brown>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
+Subject: Re: Can I replace raid6 disk using dd?
+Date: Tue, 19 Aug 2014 11:08:10 +0200
+Message-ID: <53F313FA.5040106@shiftmail.org>
+References: <CABY_QbV8=y_VnsYk6XC0MEZ7-Np-20PoJLsyKoZA6BzdvUMguA@mail.gmail.com> <53F2B6D8.4030208@shiftmail.org> <53F2BB43.4030408@gmail.com> <53F2F82E.7070204@megasoft.be>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/oq_OViAl6=Tn8/_r9Y4lK0q"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Peter Koch <mdraid.pkoch@dfgh.net>, Dan Williams <dan.j.williams@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <53F2F82E.7070204@megasoft.be>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/oq_OViAl6=Tn8/_r9Y4lK0q
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 19/08/2014 09:09, Killian De Volder wrote:
+> No need to remove the bitmap.
+> But be very careful that the disk is exactly the same size (or bigger).
+> I recently had a disk that was slightly smaller then advertised !
+>
+> But if it's a raid6 why not just jank a disk ?
+> It's still going to be redundant, but only on 1 disk.
+>
+> Killian De Volder
+> Megasoft bvba
+> killian.de.volder@megasoft.be
+>
 
-
-Here are the bug-fixes I promised :-)
-Funny how you start looking for one and other start appearing.
-
-Thanks,
-NeilBrown
-
-
-The following changes since commit 7d1311b93e58ed55f3a31cc8f94c4b8fe988a2b9:
-
-  Linux 3.17-rc1 (2014-08-16 10:40:26 -0600)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ tags/md/3.17-fixes
-
-for you to fetch changes up to cb8b12b5d81cf8522076f99a90bc3b795825c3b3:
-
-  md/raid10: always initialise ->state on newly allocated r10_bio (2014-08-=
-19 17:20:27 +1000)
-
-----------------------------------------------------------------
-md bugfixes for 3.17
-
- - raid6 data corruption during recovery
- - raid6 livelock
- - raid10 memory leaks.
-
-----------------------------------------------------------------
-NeilBrown (6):
-      md/raid5: avoid livelock caused by non-aligned writes.
-      md/raid6: avoid data corruption during recovery of double-degraded RA=
-ID6
-      md/raid10: fix memory leak when reshaping a RAID10.
-      md/raid10: Fix memory leak when raid10 reshape completes.
-      md/raid10: avoid memory leak on error path during reshape.
-      md/raid10: always initialise ->state on newly allocated r10_bio
-
- drivers/md/raid10.c | 7 ++++++-
- drivers/md/raid5.c  | 4 +++-
- 2 files changed, 9 insertions(+), 2 deletions(-)
-
---Sig_/oq_OViAl6=Tn8/_r9Y4lK0q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU/L73jnsnt1WYoG5AQJ+8Q/9GpdaFcujvSluo4j4pBpKDE48Wc+w4Vn/
-n+TWzT1+3U8oqXUzBMYcQoMaN+o4JdxjPyoEQfGSadPtOsN7vfk3EeMWr2UJuB35
-jT3B4+Rzn2cVYaklO5YR7gKCvA+9y8l6Bu968+o8qdfUviMbD4F7JsVE3D6mX0S2
-UxCBCLSjSKBQLAk8IGZfWI7DmEzlEokDkX1B1TcjUoW9ITGKt4koae+q6DNE7va6
-7fkPnbAAkVCEK6YixqRiBraDkyTo+eDGEoqHDZ976LJxEoctm2wUpVRnTs5QTFTX
-qleEaZ5yFY/EfKfLJuiEiP3pfOl6pxB0C3yVxfSQz7o3fmNN5u78u7K2rsjR+0mo
-HGHKZI+6IDPTCrm1qu2TtBw+kn5cdqdIyNALpGoY59uL6LvfQ3wv88VUGYgjehBu
-tcu1kwP3jhgnZMo5c4tSpYYhjeFIDaYJifszbkavBr7fsz6z/+/BLzt2Oc+jWHt/
-Mw+ZH5R05AEPMIJtS7QxLV2ZRlfvhnBUbVW422oZXrBdCh+OuAzuH9ejF5ViBtSi
-rUUcQMvPRuuUHS3dpfElsmwBqSQC5I0hJ7dLe7RZ8v69Vzb0YyR8iZycQPLzDoPV
-3fzy/lgjVmIJvdGa0Z6xk8Qr7+/34/RXYPif4S9GPzbmt7UOLl6AyIdCHgYBs/oi
-RRYjA3Nha54=
-=HXbp
------END PGP SIGNATURE-----
-
---Sig_/oq_OViAl6=Tn8/_r9Y4lK0q--
+I think it would not be accepted by MD if the size was smaller than 
+needed. At least with --replace. With the dd thing I don't know: it 
+might trust the metadata and bypass the check.... I'd be careful in that 
+case indeed.
