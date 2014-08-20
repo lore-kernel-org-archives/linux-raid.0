@@ -1,131 +1,163 @@
-From: Chris Knipe <savage@savage.za.org>
-Subject: Re: Correct RAID options
-Date: Wed, 20 Aug 2014 03:24:36 +0200
-Message-ID: <CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
+From: Craig Curtin <craigc@prosis.com.au>
+Subject: RE: Correct RAID options
+Date: Wed, 20 Aug 2014 02:38:27 +0000
+Message-ID: <E78FE8BDBAD07C43A60163E7D1716EEC0183A6C7C5@PROSIS-W2K8-1.prosis.local>
 References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
 	<53F3EA59.6030808@hesbynett.no>
+ <CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53F3EA59.6030808@hesbynett.no>
+In-Reply-To: <CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: Chris Knipe <savage@savage.za.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Aug 20, 2014 at 2:22 AM, David Brown <david.brown@hesbynett.no> wrote:
-
-> In general, a 15 disk raid5 array is asking for trouble.  At least make it
-> raid6.
-
-At this stage the IO load on the archiver with the 15 disk RAID5 is
--very- minimal.  It's not even writing 8MB/s currently as the front
-end RAID10 servers are obviously severely hampered whilst doing the
-concurrent read/write requests. Now that it is our peak times, load
-averages shoot up to over 80 due to IO wait from time to time, so this
-is kinda critical for me right now :-(
-
-Just a bit more background as was asked in the other replies...
-Front end Servers are Dell PowerEdge R720 DX150s (8 x 4TB SATA-III,
-64GB Ram, and Dual Xeon E5-2620 Hex-Core @ 2.00GHz)
-The archiver is custom built (no brand name) and consists of the 15 x
-4TB SATA-II drives, 32GB Ram, and a single Xeon E3-1245 Quad-Core @
-3.3Ghz
-
-Now the archiver we added is new - so I can't really comment at this
-stage on how it is performing as it is not getting any real work from
-the front ends.  During our standard benching (hdparm / dd / bonnie)
-with no load on the archiver in terms of IO, performance was more than
-adequate.
-
-In terms of the front-ends with our "normal" load distribution of a
-70/30 split between writes/reads, there's no serious performance
-problems.  With over 500 concurrent application threads per server
-accessing the files on the disks, load averages are generally around
-the 3 to 5 range, with very minimal IO wait.  Munin reports "disk
-utilization" between 20% and 30%, "disk latency" sub 100ms, and "disk
-throughput" at about 30MB/s if I have to average all of this out.
-
-Since we've now started to move data from the front ends to the
-archiver, we have obviously thrown the 70/30 split out of the window,
-and all stats are basically now off the charts. "disk utilization" is
-averaging between 90% to 100%. The reading of the data from the front
-end servers is obviously causing a bottleneck, and I can confirm this
-seeing that as soon as we stop the archiving process that reads the
-data on the front ends and writes it to the archiver, the load on the
-servers return to normal.
-
-In terms of adding more front end servers - it is definitely an option
-yes.  Being brand name servers they do come at a premium however so I
-would ideally like to have this as a last resort.  The premium cost,
-together with the limited storage capacity basically made us opt to
-rather try and offload some of the storage requirements to cheaper
-alternatives (more than double the capacity - even at RAID10, for less
-than half the price - realistically, we will be more than happy with
-half the performance as well, so I'm not expecting miracles either).
-
-RAID rebuilds are already problematic on the front end servers (RAID
-10 over 8 x 4TB) with a single drive failure whilst the server is
-under load takes approximately 8 odd hours to rebuild if memory serves
-me correctly.  We've had a few failures in the past (even a double
-drive failure at the same time), but nothing recent that I can recall
-accurately.
-
-I was never aware that bigger block sizes would increase read
-performance though - this is interesting and something I can
-definitely explore.  I am talking under correction, but I believe the
-MegaRAIDs we're using can even go bigger than 1mbyte blocks.  I'll
-have to check on this.  Bigger blocks does mean wasting more space
-though if the files written are smaller and can't necessarily fill up
-an entire block, right?  I suppose when you start talking about 12TB
-and 50TB arrays, the amount of wasted space really becomes
-insignificant, or am I mistaken?
-
-SANs unfortunately is out of the question as this is hosted
-infrastructure at a provider that does not offer SANs as part of their
-product offerings.
-
-
-> But the general idea is to have a set of raid1 mirrors (or possible Linux md
-> raid10,far2 pairs if the traffic is read-heavy), and then tie them all
-> together using a linear concatenation rather than raid0 stripes.  When you
-
-Can I perhaps ask that you just elaborate a bit on what you mean by
-linear concatenation?  I am presuming you are not referring to RAID 10
-'per say' here as to your comment to use this rather than RAID 0
-stripes.  XFS by itself, is also a good option - I honestly do not
-know why this wasn't given consideration when we initially set the
-machines up.  By the sound of it, all of them are now going to be
-facing a rebuild.
-
-> I am assuming your files are fairly small - if your reads or writes are
-> often smaller than a full stripe of raid10 or raid5, performance will suffer
-> greatly compared to XFS on a linear concat.
-
-The files are VERY evenly distributed using md5 hashes.  We have 16
-top level directories, 255 second level directories, and 4094 third
-level directories.  Each third level directory currently holds between
-4K and 4.5K files per directory (the archiver servers should have
-roughly three or four times that amount once the disks are full).
-Files are generally between 250kb and 750kb, a small percentage are a
-bit larger to the 1.5mb range, and I can almost guarantee that not one
-single file will exceed the 5mb range.  I'm not sure what the stripe
-size is at this stage but it is more than likely what ever the default
-is for the controller (64kb?)
-
-I think to explore XFS would need to be my first port of call here.
-Take one of the front ends out of production tomorrow when load has
-quieted down, trash it, and rebuild it.  Then we'll more than likely
-need 2 or 3 weeks for the disks to fill up again with files before
-we're really going to see how it compares.
-
-If I can perhaps just get some clarity in terms of the physical disk
-layouts / configurations that you would recommend, I would appreciate
-it greately.  You're obviously not talking about a simple RAID 10
-array here, even though I think just XFS over EXT4 would already do us
-wonders.
-
-Many thanks for all the responces!
-
---
-Chris.
+Q2hyaXMsDQoNCkkgYXNzdW1lIHRoYXQgeW91ciBhcHBsaWNhdGlvbiB3aWxsIGhhbmRsZSBpdCBP
+SyBpZiB0aGUgQXJjaGl2ZSBpcyBvZmZsaW5lID8gSSB1bmRlcnN0YW5kIHlvdSBoYXZlIHRocm91
+Z2hwdXQgaXNzdWVzIG5vdywgYnV0IGlmIHlvdSBsb3NlIHRoZSBSQUlENSBzZXR1cCBpdCBpcyBn
+b2luZyB0byB0YWtlIGEgbG9uZyB0aW1lIHRvIHJlY292ZXIgcmVhbGx5IG5lZWQgdG8gcmVidWls
+ZCB0aGF0IGFzIFJBSUQ2IEFTQVAgLSBwYXJ0aWN1bGFybHkgaWYgaXQgaXMgb25seSB1bmRlciBs
+aWdodCBsb2FkIG5vdy4NCg0KTm93IHRoYXQgeW91IGhhdmUgY2xhcmlmaWVkIHdoYXQgeW91ciBz
+ZXJ2ZXJzIGFyZSBhbmQgaG93IHRoZXkgYXJlIHBlcmZvcm1pbmcgLSBJIHdvdWxkIHN1Z2dlc3Qg
+YW5vdGhlciBvcHRpb24gd291bGQgYmUgYW4gZXh0ZXJuYWwgU0FUQSBzdG9yYWdlIHN5c3RlbSAt
+IGZvciBjb3N0IHlvdSBjYW4gbm90IGdvIHBhc3QgdGhlIFByb21pc2UgZXF1aXBtZW50LiBZb3Ug
+Y291bGQgd2hhY2sgYWRkaXRpb25hbCBTQVRBIGRyaXZlcyBpbiBvbmUgb2YgdGhlc2Ugb24geW91
+ciBmcm9udCBlbmQgc2VydmVycyAodGhleSBoYXZlIG1vZGVscyB3aXRoIGRpZmZlcmVudCBjb25u
+ZWN0aW9uIG9wdGlvbnMgLSBFU0FUQSwgU0FTLCBGQyBldGMgZXRjKSBhbmQgdGhpcyB3b3VsZCBn
+aXZlIHlvdSBtb3JlIHNwYWNlIG9uIHRoZSBmcm9udCBlbmQgYXMgd2VsbCBhcyBtb3JlIHNwaW5k
+bGVzIHRvIGhhbmRsZSB0aGUgd3JpdGluZyBldGMgLSBpdCB3b3VsZCBhbHNvIGdpdmUgeW91IHRo
+ZSBhYmlsaXR5IHRvIG1lc3MgYXJvdW5kIHdpdGggZGlmZmVyZW50IGZpbGUgc3lzdGVtcyBldGMu
+DQoNClRoZXNlIFByb21pc2Ugc3lzdGVtcyBoYXZlIGluYnVpbHQgUkFJRCBjb250cm9sbGVycyBz
+byB5b3UgY2FuIGZvcm1hdCBhcyBhcHByb3ByaWF0ZSBhbmQgcHJlc2VudCB0aGVtIHRvIHRoZSBz
+eXN0ZW0gYXMgd2hhdGV2ZXIgZGlzayB5b3Ugd2lzaCBpLmUuIG11bHRpcGxlIGxvZ2ljYWwgZGlz
+a3MsIG11bHRpcGxlIExVTnMgZXRjIGV0YykNCg0KQ3JhaWcNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86
+bGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBDaHJpcyBLbmlw
+ZQ0KU2VudDogV2VkbmVzZGF5LCAyMCBBdWd1c3QgMjAxNCAxMToyNSBBTQ0KVG86IERhdmlkIEJy
+b3duDQpDYzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBDb3JyZWN0
+IFJBSUQgb3B0aW9ucw0KDQpPbiBXZWQsIEF1ZyAyMCwgMjAxNCBhdCAyOjIyIEFNLCBEYXZpZCBC
+cm93biA8ZGF2aWQuYnJvd25AaGVzYnluZXR0Lm5vPiB3cm90ZToNCg0KPiBJbiBnZW5lcmFsLCBh
+IDE1IGRpc2sgcmFpZDUgYXJyYXkgaXMgYXNraW5nIGZvciB0cm91YmxlLiAgQXQgbGVhc3QNCj4g
+bWFrZSBpdCByYWlkNi4NCg0KQXQgdGhpcyBzdGFnZSB0aGUgSU8gbG9hZCBvbiB0aGUgYXJjaGl2
+ZXIgd2l0aCB0aGUgMTUgZGlzayBSQUlENSBpcw0KLXZlcnktIG1pbmltYWwuICBJdCdzIG5vdCBl
+dmVuIHdyaXRpbmcgOE1CL3MgY3VycmVudGx5IGFzIHRoZSBmcm9udCBlbmQgUkFJRDEwIHNlcnZl
+cnMgYXJlIG9idmlvdXNseSBzZXZlcmVseSBoYW1wZXJlZCB3aGlsc3QgZG9pbmcgdGhlIGNvbmN1
+cnJlbnQgcmVhZC93cml0ZSByZXF1ZXN0cy4gTm93IHRoYXQgaXQgaXMgb3VyIHBlYWsgdGltZXMs
+IGxvYWQgYXZlcmFnZXMgc2hvb3QgdXAgdG8gb3ZlciA4MCBkdWUgdG8gSU8gd2FpdCBmcm9tIHRp
+bWUgdG8gdGltZSwgc28gdGhpcyBpcyBraW5kYSBjcml0aWNhbCBmb3IgbWUgcmlnaHQgbm93IDot
+KA0KDQpKdXN0IGEgYml0IG1vcmUgYmFja2dyb3VuZCBhcyB3YXMgYXNrZWQgaW4gdGhlIG90aGVy
+IHJlcGxpZXMuLi4NCkZyb250IGVuZCBTZXJ2ZXJzIGFyZSBEZWxsIFBvd2VyRWRnZSBSNzIwIERY
+MTUwcyAoOCB4IDRUQiBTQVRBLUlJSSwgNjRHQiBSYW0sIGFuZCBEdWFsIFhlb24gRTUtMjYyMCBI
+ZXgtQ29yZSBAIDIuMDBHSHopIFRoZSBhcmNoaXZlciBpcyBjdXN0b20gYnVpbHQgKG5vIGJyYW5k
+IG5hbWUpIGFuZCBjb25zaXN0cyBvZiB0aGUgMTUgeCA0VEIgU0FUQS1JSSBkcml2ZXMsIDMyR0Ig
+UmFtLCBhbmQgYSBzaW5nbGUgWGVvbiBFMy0xMjQ1IFF1YWQtQ29yZSBAIDMuM0doeg0KDQpOb3cg
+dGhlIGFyY2hpdmVyIHdlIGFkZGVkIGlzIG5ldyAtIHNvIEkgY2FuJ3QgcmVhbGx5IGNvbW1lbnQg
+YXQgdGhpcyBzdGFnZSBvbiBob3cgaXQgaXMgcGVyZm9ybWluZyBhcyBpdCBpcyBub3QgZ2V0dGlu
+ZyBhbnkgcmVhbCB3b3JrIGZyb20gdGhlIGZyb250IGVuZHMuICBEdXJpbmcgb3VyIHN0YW5kYXJk
+IGJlbmNoaW5nIChoZHBhcm0gLyBkZCAvIGJvbm5pZSkgd2l0aCBubyBsb2FkIG9uIHRoZSBhcmNo
+aXZlciBpbiB0ZXJtcyBvZiBJTywgcGVyZm9ybWFuY2Ugd2FzIG1vcmUgdGhhbiBhZGVxdWF0ZS4N
+Cg0KSW4gdGVybXMgb2YgdGhlIGZyb250LWVuZHMgd2l0aCBvdXIgIm5vcm1hbCIgbG9hZCBkaXN0
+cmlidXRpb24gb2YgYQ0KNzAvMzAgc3BsaXQgYmV0d2VlbiB3cml0ZXMvcmVhZHMsIHRoZXJlJ3Mg
+bm8gc2VyaW91cyBwZXJmb3JtYW5jZSBwcm9ibGVtcy4gIFdpdGggb3ZlciA1MDAgY29uY3VycmVu
+dCBhcHBsaWNhdGlvbiB0aHJlYWRzIHBlciBzZXJ2ZXIgYWNjZXNzaW5nIHRoZSBmaWxlcyBvbiB0
+aGUgZGlza3MsIGxvYWQgYXZlcmFnZXMgYXJlIGdlbmVyYWxseSBhcm91bmQgdGhlIDMgdG8gNSBy
+YW5nZSwgd2l0aCB2ZXJ5IG1pbmltYWwgSU8gd2FpdC4gIE11bmluIHJlcG9ydHMgImRpc2sgdXRp
+bGl6YXRpb24iIGJldHdlZW4gMjAlIGFuZCAzMCUsICJkaXNrIGxhdGVuY3kiIHN1YiAxMDBtcywg
+YW5kICJkaXNrIHRocm91Z2hwdXQiIGF0IGFib3V0IDMwTUIvcyBpZiBJIGhhdmUgdG8gYXZlcmFn
+ZSBhbGwgb2YgdGhpcyBvdXQuDQoNClNpbmNlIHdlJ3ZlIG5vdyBzdGFydGVkIHRvIG1vdmUgZGF0
+YSBmcm9tIHRoZSBmcm9udCBlbmRzIHRvIHRoZSBhcmNoaXZlciwgd2UgaGF2ZSBvYnZpb3VzbHkg
+dGhyb3duIHRoZSA3MC8zMCBzcGxpdCBvdXQgb2YgdGhlIHdpbmRvdywgYW5kIGFsbCBzdGF0cyBh
+cmUgYmFzaWNhbGx5IG5vdyBvZmYgdGhlIGNoYXJ0cy4gImRpc2sgdXRpbGl6YXRpb24iIGlzIGF2
+ZXJhZ2luZyBiZXR3ZWVuIDkwJSB0byAxMDAlLiBUaGUgcmVhZGluZyBvZiB0aGUgZGF0YSBmcm9t
+IHRoZSBmcm9udCBlbmQgc2VydmVycyBpcyBvYnZpb3VzbHkgY2F1c2luZyBhIGJvdHRsZW5lY2ss
+IGFuZCBJIGNhbiBjb25maXJtIHRoaXMgc2VlaW5nIHRoYXQgYXMgc29vbiBhcyB3ZSBzdG9wIHRo
+ZSBhcmNoaXZpbmcgcHJvY2VzcyB0aGF0IHJlYWRzIHRoZSBkYXRhIG9uIHRoZSBmcm9udCBlbmRz
+IGFuZCB3cml0ZXMgaXQgdG8gdGhlIGFyY2hpdmVyLCB0aGUgbG9hZCBvbiB0aGUgc2VydmVycyBy
+ZXR1cm4gdG8gbm9ybWFsLg0KDQpJbiB0ZXJtcyBvZiBhZGRpbmcgbW9yZSBmcm9udCBlbmQgc2Vy
+dmVycyAtIGl0IGlzIGRlZmluaXRlbHkgYW4gb3B0aW9uIHllcy4gIEJlaW5nIGJyYW5kIG5hbWUg
+c2VydmVycyB0aGV5IGRvIGNvbWUgYXQgYSBwcmVtaXVtIGhvd2V2ZXIgc28gSSB3b3VsZCBpZGVh
+bGx5IGxpa2UgdG8gaGF2ZSB0aGlzIGFzIGEgbGFzdCByZXNvcnQuICBUaGUgcHJlbWl1bSBjb3N0
+LCB0b2dldGhlciB3aXRoIHRoZSBsaW1pdGVkIHN0b3JhZ2UgY2FwYWNpdHkgYmFzaWNhbGx5IG1h
+ZGUgdXMgb3B0IHRvIHJhdGhlciB0cnkgYW5kIG9mZmxvYWQgc29tZSBvZiB0aGUgc3RvcmFnZSBy
+ZXF1aXJlbWVudHMgdG8gY2hlYXBlciBhbHRlcm5hdGl2ZXMgKG1vcmUgdGhhbiBkb3VibGUgdGhl
+IGNhcGFjaXR5IC0gZXZlbiBhdCBSQUlEMTAsIGZvciBsZXNzIHRoYW4gaGFsZiB0aGUgcHJpY2Ug
+LSByZWFsaXN0aWNhbGx5LCB3ZSB3aWxsIGJlIG1vcmUgdGhhbiBoYXBweSB3aXRoIGhhbGYgdGhl
+IHBlcmZvcm1hbmNlIGFzIHdlbGwsIHNvIEknbSBub3QgZXhwZWN0aW5nIG1pcmFjbGVzIGVpdGhl
+cikuDQoNClJBSUQgcmVidWlsZHMgYXJlIGFscmVhZHkgcHJvYmxlbWF0aWMgb24gdGhlIGZyb250
+IGVuZCBzZXJ2ZXJzIChSQUlEDQoxMCBvdmVyIDggeCA0VEIpIHdpdGggYSBzaW5nbGUgZHJpdmUg
+ZmFpbHVyZSB3aGlsc3QgdGhlIHNlcnZlciBpcyB1bmRlciBsb2FkIHRha2VzIGFwcHJveGltYXRl
+bHkgOCBvZGQgaG91cnMgdG8gcmVidWlsZCBpZiBtZW1vcnkgc2VydmVzIG1lIGNvcnJlY3RseS4g
+IFdlJ3ZlIGhhZCBhIGZldyBmYWlsdXJlcyBpbiB0aGUgcGFzdCAoZXZlbiBhIGRvdWJsZSBkcml2
+ZSBmYWlsdXJlIGF0IHRoZSBzYW1lIHRpbWUpLCBidXQgbm90aGluZyByZWNlbnQgdGhhdCBJIGNh
+biByZWNhbGwgYWNjdXJhdGVseS4NCg0KSSB3YXMgbmV2ZXIgYXdhcmUgdGhhdCBiaWdnZXIgYmxv
+Y2sgc2l6ZXMgd291bGQgaW5jcmVhc2UgcmVhZCBwZXJmb3JtYW5jZSB0aG91Z2ggLSB0aGlzIGlz
+IGludGVyZXN0aW5nIGFuZCBzb21ldGhpbmcgSSBjYW4gZGVmaW5pdGVseSBleHBsb3JlLiAgSSBh
+bSB0YWxraW5nIHVuZGVyIGNvcnJlY3Rpb24sIGJ1dCBJIGJlbGlldmUgdGhlIE1lZ2FSQUlEcyB3
+ZSdyZSB1c2luZyBjYW4gZXZlbiBnbyBiaWdnZXIgdGhhbiAxbWJ5dGUgYmxvY2tzLiAgSSdsbCBo
+YXZlIHRvIGNoZWNrIG9uIHRoaXMuICBCaWdnZXIgYmxvY2tzIGRvZXMgbWVhbiB3YXN0aW5nIG1v
+cmUgc3BhY2UgdGhvdWdoIGlmIHRoZSBmaWxlcyB3cml0dGVuIGFyZSBzbWFsbGVyIGFuZCBjYW4n
+dCBuZWNlc3NhcmlseSBmaWxsIHVwIGFuIGVudGlyZSBibG9jaywgcmlnaHQ/ICBJIHN1cHBvc2Ug
+d2hlbiB5b3Ugc3RhcnQgdGFsa2luZyBhYm91dCAxMlRCIGFuZCA1MFRCIGFycmF5cywgdGhlIGFt
+b3VudCBvZiB3YXN0ZWQgc3BhY2UgcmVhbGx5IGJlY29tZXMgaW5zaWduaWZpY2FudCwgb3IgYW0g
+SSBtaXN0YWtlbj8NCg0KU0FOcyB1bmZvcnR1bmF0ZWx5IGlzIG91dCBvZiB0aGUgcXVlc3Rpb24g
+YXMgdGhpcyBpcyBob3N0ZWQgaW5mcmFzdHJ1Y3R1cmUgYXQgYSBwcm92aWRlciB0aGF0IGRvZXMg
+bm90IG9mZmVyIFNBTnMgYXMgcGFydCBvZiB0aGVpciBwcm9kdWN0IG9mZmVyaW5ncy4NCg0KDQo+
+IEJ1dCB0aGUgZ2VuZXJhbCBpZGVhIGlzIHRvIGhhdmUgYSBzZXQgb2YgcmFpZDEgbWlycm9ycyAo
+b3IgcG9zc2libGUNCj4gTGludXggbWQNCj4gcmFpZDEwLGZhcjIgcGFpcnMgaWYgdGhlIHRyYWZm
+aWMgaXMgcmVhZC1oZWF2eSksIGFuZCB0aGVuIHRpZSB0aGVtIGFsbA0KPiB0b2dldGhlciB1c2lu
+ZyBhIGxpbmVhciBjb25jYXRlbmF0aW9uIHJhdGhlciB0aGFuIHJhaWQwIHN0cmlwZXMuICBXaGVu
+DQo+IHlvdQ0KDQpDYW4gSSBwZXJoYXBzIGFzayB0aGF0IHlvdSBqdXN0IGVsYWJvcmF0ZSBhIGJp
+dCBvbiB3aGF0IHlvdSBtZWFuIGJ5IGxpbmVhciBjb25jYXRlbmF0aW9uPyAgSSBhbSBwcmVzdW1p
+bmcgeW91IGFyZSBub3QgcmVmZXJyaW5nIHRvIFJBSUQgMTAgJ3BlciBzYXknIGhlcmUgYXMgdG8g
+eW91ciBjb21tZW50IHRvIHVzZSB0aGlzIHJhdGhlciB0aGFuIFJBSUQgMCBzdHJpcGVzLiAgWEZT
+IGJ5IGl0c2VsZiwgaXMgYWxzbyBhIGdvb2Qgb3B0aW9uIC0gSSBob25lc3RseSBkbyBub3Qga25v
+dyB3aHkgdGhpcyB3YXNuJ3QgZ2l2ZW4gY29uc2lkZXJhdGlvbiB3aGVuIHdlIGluaXRpYWxseSBz
+ZXQgdGhlIG1hY2hpbmVzIHVwLiAgQnkgdGhlIHNvdW5kIG9mIGl0LCBhbGwgb2YgdGhlbSBhcmUg
+bm93IGdvaW5nIHRvIGJlIGZhY2luZyBhIHJlYnVpbGQuDQoNCj4gSSBhbSBhc3N1bWluZyB5b3Vy
+IGZpbGVzIGFyZSBmYWlybHkgc21hbGwgLSBpZiB5b3VyIHJlYWRzIG9yIHdyaXRlcw0KPiBhcmUg
+b2Z0ZW4gc21hbGxlciB0aGFuIGEgZnVsbCBzdHJpcGUgb2YgcmFpZDEwIG9yIHJhaWQ1LCBwZXJm
+b3JtYW5jZQ0KPiB3aWxsIHN1ZmZlciBncmVhdGx5IGNvbXBhcmVkIHRvIFhGUyBvbiBhIGxpbmVh
+ciBjb25jYXQuDQoNClRoZSBmaWxlcyBhcmUgVkVSWSBldmVubHkgZGlzdHJpYnV0ZWQgdXNpbmcg
+bWQ1IGhhc2hlcy4gIFdlIGhhdmUgMTYgdG9wIGxldmVsIGRpcmVjdG9yaWVzLCAyNTUgc2Vjb25k
+IGxldmVsIGRpcmVjdG9yaWVzLCBhbmQgNDA5NCB0aGlyZCBsZXZlbCBkaXJlY3Rvcmllcy4gIEVh
+Y2ggdGhpcmQgbGV2ZWwgZGlyZWN0b3J5IGN1cnJlbnRseSBob2xkcyBiZXR3ZWVuIDRLIGFuZCA0
+LjVLIGZpbGVzIHBlciBkaXJlY3RvcnkgKHRoZSBhcmNoaXZlciBzZXJ2ZXJzIHNob3VsZCBoYXZl
+IHJvdWdobHkgdGhyZWUgb3IgZm91ciB0aW1lcyB0aGF0IGFtb3VudCBvbmNlIHRoZSBkaXNrcyBh
+cmUgZnVsbCkuDQpGaWxlcyBhcmUgZ2VuZXJhbGx5IGJldHdlZW4gMjUwa2IgYW5kIDc1MGtiLCBh
+IHNtYWxsIHBlcmNlbnRhZ2UgYXJlIGEgYml0IGxhcmdlciB0byB0aGUgMS41bWIgcmFuZ2UsIGFu
+ZCBJIGNhbiBhbG1vc3QgZ3VhcmFudGVlIHRoYXQgbm90IG9uZSBzaW5nbGUgZmlsZSB3aWxsIGV4
+Y2VlZCB0aGUgNW1iIHJhbmdlLiAgSSdtIG5vdCBzdXJlIHdoYXQgdGhlIHN0cmlwZSBzaXplIGlz
+IGF0IHRoaXMgc3RhZ2UgYnV0IGl0IGlzIG1vcmUgdGhhbiBsaWtlbHkgd2hhdCBldmVyIHRoZSBk
+ZWZhdWx0IGlzIGZvciB0aGUgY29udHJvbGxlciAoNjRrYj8pDQoNCkkgdGhpbmsgdG8gZXhwbG9y
+ZSBYRlMgd291bGQgbmVlZCB0byBiZSBteSBmaXJzdCBwb3J0IG9mIGNhbGwgaGVyZS4NClRha2Ug
+b25lIG9mIHRoZSBmcm9udCBlbmRzIG91dCBvZiBwcm9kdWN0aW9uIHRvbW9ycm93IHdoZW4gbG9h
+ZCBoYXMgcXVpZXRlZCBkb3duLCB0cmFzaCBpdCwgYW5kIHJlYnVpbGQgaXQuICBUaGVuIHdlJ2xs
+IG1vcmUgdGhhbiBsaWtlbHkgbmVlZCAyIG9yIDMgd2Vla3MgZm9yIHRoZSBkaXNrcyB0byBmaWxs
+IHVwIGFnYWluIHdpdGggZmlsZXMgYmVmb3JlIHdlJ3JlIHJlYWxseSBnb2luZyB0byBzZWUgaG93
+IGl0IGNvbXBhcmVzLg0KDQpJZiBJIGNhbiBwZXJoYXBzIGp1c3QgZ2V0IHNvbWUgY2xhcml0eSBp
+biB0ZXJtcyBvZiB0aGUgcGh5c2ljYWwgZGlzayBsYXlvdXRzIC8gY29uZmlndXJhdGlvbnMgdGhh
+dCB5b3Ugd291bGQgcmVjb21tZW5kLCBJIHdvdWxkIGFwcHJlY2lhdGUgaXQgZ3JlYXRlbHkuICBZ
+b3UncmUgb2J2aW91c2x5IG5vdCB0YWxraW5nIGFib3V0IGEgc2ltcGxlIFJBSUQgMTAgYXJyYXkg
+aGVyZSwgZXZlbiB0aG91Z2ggSSB0aGluayBqdXN0IFhGUyBvdmVyIEVYVDQgd291bGQgYWxyZWFk
+eSBkbyB1cyB3b25kZXJzLg0KDQpNYW55IHRoYW5rcyBmb3IgYWxsIHRoZSByZXNwb25jZXMhDQoN
+Ci0tDQpDaHJpcy4NCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUg
+bGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRv
+IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQoNCkRpc2NsYWltZXINCg0KQ09O
+RklERU5USUFMDQoNClRoaXMgbWVzc2FnZSBjb250YWlucyBjb25maWRlbnRpYWwgaW5mb3JtYXRp
+b24gYW5kIGlzIGludGVuZGVkIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCByZWNpcGllbnRzLiBJZiB5
+b3UgYXJlIG5vdCB0aGUgbmFtZWQgYWRkcmVzc2VlIHlvdSBzaG91bGQgbm90IGRpc3NlbWluYXRl
+LCBkaXN0cmlidXRlIG9yIGNvcHkgdGhpcyBlLW1haWwuIFBsZWFzZSBub3RpZnkgdGhlIHNlbmRl
+ciBpbW1lZGlhdGVseSBieSBlLW1haWwgaWYgeW91IGhhdmUgcmVjZWl2ZWQgdGhpcyBlLW1haWwg
+YnkgbWlzdGFrZSBhbmQgZGVsZXRlIHRoaXMgZS1tYWlsIGZyb20geW91ciBzeXN0ZW0uDQoNCkRp
+c2NsYWltZXINCg0KQ09ORklERU5USUFMDQoNClRoaXMgbWVzc2FnZSBjb250YWlucyBjb25maWRl
+bnRpYWwgaW5mb3JtYXRpb24gYW5kIGlzIGludGVuZGVkIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBy
+ZWNpcGllbnRzLiBJZiB5b3UgYXJlIG5vdCB0aGUgbmFtZWQgYWRkcmVzc2VlIHlvdSBzaG91bGQg
+bm90IGRpc3NlbWluYXRlLCBkaXN0cmlidXRlIG9yIGNvcHkgdGhpcyBlLW1haWwuIFBsZWFzZSBu
+b3RpZnkgdGhlIHNlbmRlciBpbW1lZGlhdGVseSBieSBlLW1haWwgaWYgeW91IGhhdmUgcmVjZWl2
+ZWQgdGhpcyBlLW1haWwgYnkgbWlzdGFrZSBhbmQgZGVsZXRlIHRoaXMgZS1tYWlsIGZyb20geW91
+ciBzeXN0ZW0uDQo=
