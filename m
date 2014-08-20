@@ -1,68 +1,158 @@
-From: Chris Knipe <savage@savage.za.org>
-Subject: Re: Correct RAID options
-Date: Wed, 20 Aug 2014 05:05:36 +0200
-Message-ID: <CA+4TWFtj5nKJrG8XkDYXvDTD-CqUOFtQYiyWE1rbONWzNMSyWw@mail.gmail.com>
-References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
-	<53F3EA59.6030808@hesbynett.no>
-	<CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
-	<E78FE8BDBAD07C43A60163E7D1716EEC0183A6C7C5@PROSIS-W2K8-1.prosis.local>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md: fix for wrong state in superblock issue in assemble
+ process
+Date: Wed, 20 Aug 2014 13:28:21 +1000
+Message-ID: <20140820132821.02249d39@notabene.brown>
+References: <CADhVsC7qcRtDzYs7ChghReihOYWAx+czwVoWi9+H7SuvT0iOgQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_//eg1bBiP9t9S9xkG7p0ei+h"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <E78FE8BDBAD07C43A60163E7D1716EEC0183A6C7C5@PROSIS-W2K8-1.prosis.local>
+In-Reply-To: <CADhVsC7qcRtDzYs7ChghReihOYWAx+czwVoWi9+H7SuvT0iOgQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Craig Curtin <craigc@prosis.com.au>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Thiruvadi Rajaraman <trajaraman@mvista.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 20, 2014 at 4:38 AM, Craig Curtin <craigc@prosis.com.au> wrote:
+--Sig_//eg1bBiP9t9S9xkG7p0ei+h
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> I assume that your application will handle it OK if the Archive is offline ? I understand you have throughput issues now, but if you lose the RAID5 setup it is going to take a long time to recover really need to rebuild that as RAID6 ASAP - particularly if it is only under light load now.
+On Mon, 18 Aug 2014 15:04:43 +0530 Thiruvadi Rajaraman
+<trajaraman@mvista.com> wrote:
 
-Correct.  I will however lose data as I would need to delete old data
-off the front end servers instead of archiving it in order not run out
-of disk space (which will be catastrophic).  It's not an ideal
-situation, but it's not a major loss either at this point in time.  Up
-to a day or three ago, we deleted anyways.  So yes, I am more than
-likely trashing the archive server and rebuilding it (or not using it
-at all and rather expanding on the front end servers - against my
-better judgement).
+Hi,
+ you sent this email as HTML.  That means you would have got an automatic
+ message from the kernel.org mail server telling you that it wasn't
+ accepted.  Yet you didn't bother to try sending it again as plain text....
 
 
-> Now that you have clarified what your servers are and how they are performing - I would suggest another option would be an external SATA storage system - for cost you can not go past the Promise equipment. You could whack additional SATA drives in one of these on your front end servers (they have models with different connection options - ESATA, SAS, FC etc etc) and this would give you more space on the front end as well as more spindles to handle the writing etc - it would also give you the ability to mess around with different file systems etc.
+> >From b3261f3d73e87ebcefd3951b0f8667c54f531360 Mon Sep 17 00:00:00 2001
+> From: Thiruvadi Rajaraman <trajaraman@mvista.com>
+> Date: Wed, 23 Jul 2014 06:46:22 +0530
+> Subject: [PATCH] md: fix for wrong state in superblock issue
+>=20
+> This patch has created on top of linux stable kernel "v2.6.32".
 
-I really don't want to be a PITA, but these are leased servers (sorry
-if I haven't been clear). We do not even have physical access to the
-servers, frankly, they are half way around the world from where I am
-:-)  Hardware changes in any way or form is not going to happen.  The
-provider is simply not going to play - we've tried before. We've tried
-so badly before that it was easier / quicker to cancel a server and
-order a new one, instead of having them fix something.  Yes, it's sad,
-but that's what is there and that's unfortunately the way it currently
-is.
+I'm only really interested in patches based on current mainline kernel (3.1=
+6)
+or something reasonably recent.
 
-I really do not need a 'blue sky' here.  I know what I am doing is
--insanely- resource intensive and frankly speaking, I am -amazed- at
-how well these front end servers are coping up to now.  There are
-limits, and sure we are hitting those limits.  The question really is
-what can be done to achieve the best performance with what we have?
-RAID10/EXT4 isn't working now that we are reading and writing
-extensively at the same time - it was more than likely a bad /
-uneducated / inexperienced choice.  I understand that, I accept that.
+>=20
+> The multipath md array assemble process by,
+>=20
+> # mdadm -A /dev/mdx /dev/sdx /dev/sdy ...
 
-Will XFS give any amount of reasonable increases in performance to
-justify a format / reinstall (let's forget about backups and downtime
-now), or would the only viable option be the expensive one, and get
-more servers (touch wood - the load balancers thankfully are nowhere
-near max capacity)?  I don't have the experience or the tools to
-properly bench servers simulating our current IO load, so I'm really
-hoping that someone more experienced will be able to chip in here with
-some definitive answers (if that is even possible).  If what I have
-currently is as good as it is going to, reasonably, get then so be it
-as well.  If that's the case I have no option but to increase the
-amount of front end servers and I can close my eyes and accept that
-too.
+I'm not very keen of fixing bugs in md/multipath.  I would really like to
+remove it completely, but people might be using it.  If there a known bugs,
+then people might stop  using it, and that would be good.
 
---
-Chris.
+dm/multipath is much better and is actually supported.  Is there  a reason
+you don't use that?  See the multipath-tools package.
+
+>=20
+> which showing "wrong state in superblock" message because of dev_roles[d]
+> of disk in md array is not updated with individual disk number while
+> adding the removed disk to md array in assemble process.
+>=20
+> Issue solved by updating the dev_roles[raid disk] superblock detail with
+> specific raid disk number during the array add process.
+>=20
+> ---
+>  drivers/md/md.c |   13 ++++++++++++-
+>  1 files changed, 12 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4ce6e2f..7ba2a0d 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1460,6 +1460,9 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t
+> *rdev)
+>                         sb->dev_roles[i] =3D cpu_to_le16(0xffff);
+>         }
+>=20
+> +       if (sb->level =3D=3D cpu_to_le32(LEVEL_MULTIPATH))
+> +               sb->dev_number =3D 0;
+> +
+
+So you are forcing the dev_number to always be zero on multipath.  That mak=
+es
+sense.  I'm surprised it isn't already zero... What code sets it to a
+non-zero number?
+It seems that the kernel doesn't set dev_number at all at present.  I think=
+ it
+is best to leave it that way.
+
+
+
+>         sb->sb_csum =3D calc_sb_1_csum(sb);
+>  }
+>=20
+> @@ -1643,10 +1646,15 @@ static int bind_rdev_to_array(mdk_rdev_t * rdev,
+> mddev_t * mddev)
+>          */
+>         if (rdev->desc_nr < 0) {
+>                 int choice =3D 0;
+> -               if (mddev->pers) choice =3D mddev->raid_disks;
+> +               if (mddev->pers && mddev->level !=3D LEVEL_MULTIPATH)
+> +                       choice =3D mddev->raid_disks;
+>                 while (find_rdev_nr(mddev, choice))
+>                         choice++;
+>                 rdev->desc_nr =3D choice;
+> +               if (mddev->level =3D=3D LEVEL_MULTIPATH) {
+> +                       rdev->raid_disk =3D rdev->desc_nr;
+> +                       set_bit(In_sync, &rdev->flags);
+> +               }
+
+This looks wrong.  It isn't the job of bind_rdev_to_array to set ->raid_dis=
+k.
+That is by by ->hot_add_disk.
+
+>         } else {
+>                 if (find_rdev_nr(mddev, rdev->desc_nr))
+>                         return -EBUSY;
+> @@ -4845,6 +4853,9 @@ static int add_new_disk(mddev_t * mddev,
+> mdu_disk_info_t *info)
+>                         if (err)
+>                                 unbind_rdev_from_array(rdev);
+>                 }
+> +               if (!err && mddev->level =3D=3D LEVEL_MULTIPATH) {
+> +                       err =3D mddev->pers->hot_add_disk(mddev, rdev);
+> +               }
+>                 if (err)
+>                         export_rdev(rdev);
+>                 else
+
+This possibly makes sense, but I would rather modify the earlier condition
+which called ->hot_add_disk of ->hot_remove_disk is missing.
+
+But the real question is: why do you want to use md/multipath?  Can I
+convince you not to?
+
+Thanks,
+NeilBrown
+
+
+--Sig_//eg1bBiP9t9S9xkG7p0ei+h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU/QV1Tnsnt1WYoG5AQIJUA//edsil38qumVIjFuk6XV/NuBfrjf9BUFz
+7tDlmh0CnVLVZhG1ee9zOmVp8jI9iX+1jaqKJefUVJSnnD3JCyUY64UN/pGWiM2j
+9vah5K4v6jk8T0OyMyNsP8soZonWQJfQGQWbFeYcbDKt3qmVT1so6vC9uAgxPrM5
+7whoNgDqyI4yB+QrcvIK3elNYU6ZtbH5TApwhZCGJNIvelCjdmePvjiRkfT3FX7d
+Lm4mQKha4HfrcQ5s7wTyt8Awvx01OBS3bldXp6cl2WsdzfLS+4+s4jfpsNH3wvx/
+EIq7UcFOvxMb6SkclXB+PZvKXY/4UVbrJCIhCLhcskx2uqUqdTs8IJq3pyJ9FfIk
+uMhS407Otr8y2WvJvLuK60DaS5qXG+k48Ftf/ZF0ifo+UpkEhHUP8iOuZZxov0KB
+RqmJim7MKHgp5m8EDuYisM+gzN4pQdSv27/QipIuwPRqll3aHdwLJc9DFcFzp2fv
+zHf8NOczgNCAVr7y/0XyvrK7eK09QN7mRmmC7VbU57JP/uMkspPtrq2DHaHOh5K5
+bgB6b8/yo47ksdDszdvT+CXAVkYXhyJWlFQXsWiuxU3UJP/axz66voDBKPrtg+f9
+NafODa5/oFPW2FhgIYNJSbcXFGmxFbjoezKqJJVRrw6R+ZhnDuhMtCyND5E8OkUm
+11rwQlKFo+c=
+=fC1v
+-----END PGP SIGNATURE-----
+
+--Sig_//eg1bBiP9t9S9xkG7p0ei+h--
