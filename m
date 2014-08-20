@@ -1,101 +1,131 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Chris Knipe <savage@savage.za.org>
 Subject: Re: Correct RAID options
-Date: Wed, 20 Aug 2014 02:22:49 +0200
-Message-ID: <53F3EA59.6030808@hesbynett.no>
+Date: Wed, 20 Aug 2014 03:24:36 +0200
+Message-ID: <CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
 References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+	<53F3EA59.6030808@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+In-Reply-To: <53F3EA59.6030808@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: savage@savage.za.org, linux-raid@vger.kernel.org
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Aug 20, 2014 at 2:22 AM, David Brown <david.brown@hesbynett.no> wrote:
 
-Hi,
+> In general, a 15 disk raid5 array is asking for trouble.  At least make it
+> raid6.
 
-This mailing list is for raid on Linux.  While it is dominated by md 
-raid, it covers hardware raid too.
+At this stage the IO load on the archiver with the 15 disk RAID5 is
+-very- minimal.  It's not even writing 8MB/s currently as the front
+end RAID10 servers are obviously severely hampered whilst doing the
+concurrent read/write requests. Now that it is our peak times, load
+averages shoot up to over 80 due to IO wait from time to time, so this
+is kinda critical for me right now :-(
 
-In general, a 15 disk raid5 array is asking for trouble.  At least make 
-it raid6.
+Just a bit more background as was asked in the other replies...
+Front end Servers are Dell PowerEdge R720 DX150s (8 x 4TB SATA-III,
+64GB Ram, and Dual Xeon E5-2620 Hex-Core @ 2.00GHz)
+The archiver is custom built (no brand name) and consists of the 15 x
+4TB SATA-II drives, 32GB Ram, and a single Xeon E3-1245 Quad-Core @
+3.3Ghz
 
-However, when I hear of multiple parallel access to lots of small files, 
-I think of XFS over a linear concat.  If Stan Hoeppner is following at 
-the moment, I'm sure he can help here - he is an expert on this sort of 
-thing.
+Now the archiver we added is new - so I can't really comment at this
+stage on how it is performing as it is not getting any real work from
+the front ends.  During our standard benching (hdparm / dd / bonnie)
+with no load on the archiver in terms of IO, performance was more than
+adequate.
 
-But the general idea is to have a set of raid1 mirrors (or possible 
-Linux md raid10,far2 pairs if the traffic is read-heavy), and then tie 
-them all together using a linear concatenation rather than raid0 
-stripes.  When you have XFS on this, it divides up the disk space into 
-blocks that can be accessed independently.  Thus it can access both the 
-data and metadata relating to a file within a single raid1 pair - and 
-simultaneously access other files on other pairs.  The block 
-partitioning is done by directory, so it only works well if the parallel 
-accesses are spread across a range of different directories.
+In terms of the front-ends with our "normal" load distribution of a
+70/30 split between writes/reads, there's no serious performance
+problems.  With over 500 concurrent application threads per server
+accessing the files on the disks, load averages are generally around
+the 3 to 5 range, with very minimal IO wait.  Munin reports "disk
+utilization" between 20% and 30%, "disk latency" sub 100ms, and "disk
+throughput" at about 30MB/s if I have to average all of this out.
 
-I am assuming your files are fairly small - if your reads or writes are 
-often smaller than a full stripe of raid10 or raid5, performance will 
-suffer greatly compared to XFS on a linear concat.
+Since we've now started to move data from the front ends to the
+archiver, we have obviously thrown the 70/30 split out of the window,
+and all stats are basically now off the charts. "disk utilization" is
+averaging between 90% to 100%. The reading of the data from the front
+end servers is obviously causing a bottleneck, and I can confirm this
+seeing that as soon as we stop the archiving process that reads the
+data on the front ends and writes it to the archiver, the load on the
+servers return to normal.
 
-mvh.,
+In terms of adding more front end servers - it is definitely an option
+yes.  Being brand name servers they do come at a premium however so I
+would ideally like to have this as a last resort.  The premium cost,
+together with the limited storage capacity basically made us opt to
+rather try and offload some of the storage requirements to cheaper
+alternatives (more than double the capacity - even at RAID10, for less
+than half the price - realistically, we will be more than happy with
+half the performance as well, so I'm not expecting miracles either).
 
-David
+RAID rebuilds are already problematic on the front end servers (RAID
+10 over 8 x 4TB) with a single drive failure whilst the server is
+under load takes approximately 8 odd hours to rebuild if memory serves
+me correctly.  We've had a few failures in the past (even a double
+drive failure at the same time), but nothing recent that I can recall
+accurately.
+
+I was never aware that bigger block sizes would increase read
+performance though - this is interesting and something I can
+definitely explore.  I am talking under correction, but I believe the
+MegaRAIDs we're using can even go bigger than 1mbyte blocks.  I'll
+have to check on this.  Bigger blocks does mean wasting more space
+though if the files written are smaller and can't necessarily fill up
+an entire block, right?  I suppose when you start talking about 12TB
+and 50TB arrays, the amount of wasted space really becomes
+insignificant, or am I mistaken?
+
+SANs unfortunately is out of the question as this is hosted
+infrastructure at a provider that does not offer SANs as part of their
+product offerings.
 
 
-On 19/08/14 20:38, Chris Knipe wrote:
-> Hi All,
->
-> I'm sitting with a bit of a catch 22 and need some feedback / inputs please.
-> This isn't strictly md related as all servers has MegaRAID SAS controllers
-> with BBUs and I am running hardware raid.  So my apologies about the off
-> topic posting, but the theory remains the same I presume.   All the servers
-> store millions of small (< 2mb) files, in a structured directory structure
-> to keep the amount of files per directory in check.
->
-> Firstly, I have a bunch (3) of front end servers, all configured in RAID10
-> and consisting of 8 x 4TB SATAIII drives.  Up to now they have performed
-> very well, with roughly 30% reads and 70% writes.  This is absolutely fine
-> as RAID10 does give much better write performance and we expect this.  I
-> can't recall what the benches said when I tested this many, many months ago,
-> but it was good and IO wait even under heavy heavy usage is very little...
->
-> The problem now is coming in that the servers are reaching their capacity
-> and the arrays are starting to fill up.  Deleting files, isn't really an
-> option for me as I want to keep them as long as possible.  So, let's get a
-> server to archive data on.
->
-> So, a new server, 15 x 4TB SATAIII drives again, on a MegaRAID controller.
-> With the understanding that the "archives" will be read more than written to
-> (we only write here once we move data from the RAID10 arrays), I opted for
-> RAID5 rather.  The higher spindle count surely should count for something.
-> Well.  The server was configured, array initialised, and tests shows more
-> than 1gb/s in write speeds - faster than the RAID10 arrays.  I am pleased!
->
-> What's the problem?  Well the front end servers does an enormous amount of
-> random read/writes (30/70 split), 24x7.  Some 3 million files are added
-> (written) per day, of which roughly 30% are read again.  So, the majority of
-> the IO activity is writing to disk.  With all the writing going on, there is
-> effectively zero IO left for reading data.  I can't read (or should we say
-> "move") data off the server faster than what it is being written.  The
-> moment I start to do any amount of significant read requests, the IO wait
-> jumps through the roof and the write speeds obviously also crawl to a halt.
-> I suspect due to the seek time on the spindles, which does make sense and
-> all of that.  So there still isn't really any problem here that we don't
-> know about already.
->
-> Now, I realise that this is a really, really open question in terms of
-> interpretation, but what raid levels with high spindle counts (say 8, 12 or
-> 15 or so) will provide for the best "overall" and balanced read/write
-> performance in terms of random IO?  I do not necessarily need blistering
-> performance in terms of speeds due to the small file sizes, but I do need
-> blistering fast performance in terms of IOPS and random read/writes...  All
-> file systems currently EXT4 and all raid disks running with a 64K block
-> size.
->
-> Many thanks, and once again my apologise for my theoretical question rather
-> than md specific question.
->
+> But the general idea is to have a set of raid1 mirrors (or possible Linux md
+> raid10,far2 pairs if the traffic is read-heavy), and then tie them all
+> together using a linear concatenation rather than raid0 stripes.  When you
 
+Can I perhaps ask that you just elaborate a bit on what you mean by
+linear concatenation?  I am presuming you are not referring to RAID 10
+'per say' here as to your comment to use this rather than RAID 0
+stripes.  XFS by itself, is also a good option - I honestly do not
+know why this wasn't given consideration when we initially set the
+machines up.  By the sound of it, all of them are now going to be
+facing a rebuild.
+
+> I am assuming your files are fairly small - if your reads or writes are
+> often smaller than a full stripe of raid10 or raid5, performance will suffer
+> greatly compared to XFS on a linear concat.
+
+The files are VERY evenly distributed using md5 hashes.  We have 16
+top level directories, 255 second level directories, and 4094 third
+level directories.  Each third level directory currently holds between
+4K and 4.5K files per directory (the archiver servers should have
+roughly three or four times that amount once the disks are full).
+Files are generally between 250kb and 750kb, a small percentage are a
+bit larger to the 1.5mb range, and I can almost guarantee that not one
+single file will exceed the 5mb range.  I'm not sure what the stripe
+size is at this stage but it is more than likely what ever the default
+is for the controller (64kb?)
+
+I think to explore XFS would need to be my first port of call here.
+Take one of the front ends out of production tomorrow when load has
+quieted down, trash it, and rebuild it.  Then we'll more than likely
+need 2 or 3 weeks for the disks to fill up again with files before
+we're really going to see how it compares.
+
+If I can perhaps just get some clarity in terms of the physical disk
+layouts / configurations that you would recommend, I would appreciate
+it greately.  You're obviously not talking about a simple RAID 10
+array here, even though I think just XFS over EXT4 would already do us
+wonders.
+
+Many thanks for all the responces!
+
+--
+Chris.
