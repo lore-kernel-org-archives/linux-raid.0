@@ -1,108 +1,77 @@
-From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: AW: [PATCH v1 0/0] raid5: fix init_stripe() inconsistencies
-Date: Wed, 20 Aug 2014 08:13:27 +0000
-Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735863EE95@EXCHANGE.collogia.de>
-References: <fb820ed5-44e5-4596-b8d4-956027be204a@EXCHANGE.collogia.de>,<20140820133658.1e8f1fb9@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH v1 0/0] raid5: fix init_stripe() inconsistencies
+Date: Wed, 20 Aug 2014 19:19:15 +1000
+Message-ID: <20140820191915.088eaa12@notabene.brown>
+References: <fb820ed5-44e5-4596-b8d4-956027be204a@EXCHANGE.collogia.de>
+	<20140820133658.1e8f1fb9@notabene.brown>
+	<12EF8D94C6F8734FB2FF37B9FBEDD1735863EE95@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-75c959ac-800a-4b7b-837d-51beb1550778"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/yD54en2.tTliJEhN_6Qp0rB"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140820133658.1e8f1fb9@notabene.brown>
-Content-Language: de-DE
+In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD1735863EE95@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Markus Stockhausen <stockhausen@collogia.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-This is a multi-part message in MIME format.
-
-------=_NextPartTM-000-75c959ac-800a-4b7b-837d-51beb1550778
-Content-Type: text/plain; charset="us-ascii"
+--Sig_/yD54en2.tTliJEhN_6Qp0rB
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-> Von: NeilBrown [neilb@suse.de]=0A=
-> Gesendet: Mittwoch, 20. August 2014 05:36=0A=
-> An: Markus Stockhausen=0A=
-> Cc: linux-raid@vger.kernel.org=0A=
-> Betreff: Re: [PATCH v1 0/0] raid5: fix init_stripe() inconsistencies=0A=
-> ...=0A=
-> For future reference:=0A=
->  - put "md" at the start of the subject line. e.g. "md/raid5:"=0A=
->  - use "git show --format=3Demail" or some other incantation which=0A=
->    avoids  indenting the description.  Also avoid the "commit"=0A=
->    line.  Author: and Date: are redundant but I don't think they=0A=
->    are actually hurting.=0A=
->  - Be sure to include a Signed-off-by: line.  Find and read the DCO=0A=
->    (Developer's Certificate of Origin) to know what that means.=0A=
->    This patch is sufficiently trivial that I won't insist, but it is a go=
-od=0A=
->    habit to get into (git commit --amend --sign --no-edit)=0A=
-=0A=
-Hi Neil,=0A=
-=0A=
-Good to know. Adapted my generator scripts for that. Do you want me to =0A=
-resend the RMW patches that way?=0A=
-=0A=
-Markus=0A=
-------=_NextPartTM-000-75c959ac-800a-4b7b-837d-51beb1550778
-Content-Type: text/plain;
-	name="InterScan_Disclaimer.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="InterScan_Disclaimer.txt"
+On Wed, 20 Aug 2014 08:13:27 +0000 Markus Stockhausen
+<stockhausen@collogia.de> wrote:
 
-****************************************************************************
-Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
-Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
-vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-Weitergabe dieser Mail ist nicht gestattet.
+> > Von: NeilBrown [neilb@suse.de]
+> > Gesendet: Mittwoch, 20. August 2014 05:36
+> > An: Markus Stockhausen
+> > Cc: linux-raid@vger.kernel.org
+> > Betreff: Re: [PATCH v1 0/0] raid5: fix init_stripe() inconsistencies
+> > ...
+> > For future reference:
+> >  - put "md" at the start of the subject line. e.g. "md/raid5:"
+> >  - use "git show --format=3Demail" or some other incantation which
+> >    avoids  indenting the description.  Also avoid the "commit"
+> >    line.  Author: and Date: are redundant but I don't think they
+> >    are actually hurting.
+> >  - Be sure to include a Signed-off-by: line.  Find and read the DCO
+> >    (Developer's Certificate of Origin) to know what that means.
+> >    This patch is sufficiently trivial that I won't insist, but it is a =
+good
+> >    habit to get into (git commit --amend --sign --no-edit)
+>=20
+> Hi Neil,
+>=20
+> Good to know. Adapted my generator scripts for that. Do you want me to=20
+> resend the RMW patches that way?
 
-Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
-manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-rechtsverbindliche Willenserklärung.
+Probably -  I definitely want the s-o-b.  Wait 'til I've had a change to ha=
+ve
+a look though.
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
+Thanks,
+NeilBrown
 
-Vorstand:
-Kadir Akin
-Dr. Michael Höhnerbach
+--Sig_/yD54en2.tTliJEhN_6Qp0rB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Vorsitzender des Aufsichtsrates:
-Hans Kristian Langva
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-Registergericht: Amtsgericht Köln
-Registernummer: HRB 52 497
+iQIVAwUBU/RoEznsnt1WYoG5AQK2Vg/+MYH4d6M7F4feJZUQyYebjpOBFQ6A1dbh
+/xh6steeYZi/Qpf0UD9qGjA8M6zIusLIWV+20zVHkPZycXNjZ5KJrkIF8KUWyT7l
+IAI+7DcHNNHWE5kxHgBfc2gCZ9HIfqSBns3iR8Ri1kLcY6NEAkBC0HzIGw4npkwv
+M8Flxk3pkiMdHsP6Fr5bgwehQy9qxWnxiCfU2H0Ex1K1mUgWOuSJWvH0d9S6ga9f
++dCD9TUd/t3E3RC6MRPpY0TupIlRQvt6HiI4vu14zEKNPaEK48KoSFrVtoW8MvHV
+8Xi/cOXaAP57pnHsqoXcVxgImTW8yRwWH9g5NDGq9C5qvquevZcjF4aEuS+TB26y
++iooIItMKPXBLszoEfIcjySh2p+kurpBqZhPyq248zRuhmMFheVFzuDwQ+fe5OmO
+4QRZsEi5EyOXRiW6BeMSPeGb7RC78AxGkwX03AqNqB5cLdy4i4UDKGVlDby2Q+S9
+JJuBPMLj+ahQm8w+3+LQVg8bQso+oRe4Dafqz+iHy6KnGoHi4T6EOdfTb0Fytc2M
+eujcbIKCqDTp4+4FJcMDf98ZoUqSazCHN+YoFSGk/MAZCNZmRSL93f2qW1//F3qn
+cRYUmnin8VzHhD4J0x09tr0jWGipxLJgXjCC1TFkGAJwUW1a0HDN/i/itW4o+353
+TrGydZMPWnU=
+=4sbu
+-----END PGP SIGNATURE-----
 
-This e-mail may contain confidential and/or privileged information. If you
-are not the intended recipient (or have received this e-mail in error)
-please notify the sender immediately and destroy this e-mail. Any
-unauthorized copying, disclosure or distribution of the material in this
-e-mail is strictly forbidden.
-
-e-mails sent over the internet may have been written under a wrong name or
-been manipulated. That is why this message sent as an e-mail is not a
-legally binding declaration of intention.
-
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
-
-executive board:
-Kadir Akin
-Dr. Michael Höhnerbach
-
-President of the supervisory board:
-Hans Kristian Langva
-
-Registry office: district court Cologne
-Register number: HRB 52 497
-
-****************************************************************************
-
-------=_NextPartTM-000-75c959ac-800a-4b7b-837d-51beb1550778--
+--Sig_/yD54en2.tTliJEhN_6Qp0rB--
