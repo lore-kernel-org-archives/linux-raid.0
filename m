@@ -1,39 +1,61 @@
-From: Chris Knipe <savage@savage.za.org>
-Subject: Re: Correct RAID options
-Date: Wed, 20 Aug 2014 16:45:18 +0200
-Message-ID: <CA+4TWFsbgnSmim+RCMtkX-16sO+NZ=MLY+5hQ8nmF1PshQ1uWw@mail.gmail.com>
-References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
-	<53F3EA59.6030808@hesbynett.no>
-	<CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
-	<53F44F18.1020401@hesbynett.no>
+From: "Mandar Joshi" <mandar.joshi@calsoftinc.com>
+Subject: performance degrade with RAID6 against RAID0
+Date: Thu, 21 Aug 2014 00:17:54 +0530
+Message-ID: <005101cfbca7$419a3820$c4cea860$@calsoftinc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <53F44F18.1020401@hesbynett.no>
+References: 
+In-Reply-To: 
+Content-Language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+Hi,
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 I want to know how much p=
+erformance degrade (if any) is
+expected when same disks-same config settings are used for RAID0 and RA=
+ID6.
 
-Thanks for all the valued feedback and recommendations.  Chris
-Schanzle has been a great help in tweaking what we already have and we
-are seeing considerable improvements after making some changes as to
-how (i|d)nodes are being cached and slab caches and what not.  There
-still is fundamental issues based on other's recommendations that goes
-back to how the servers was setup to begin with.
+With the help of few mails on this mailing list and information availab=
+le on
+opensource, I tuned my disks/raid with which I got following,
+Linux kernel used: 2.6.32 RHEL6.4
 
-I'm slowly tweaking and getting everything stable again to a degree
-where it actually works, and then we will more than likely deploy a
-new front-end configured correctly (1M stripe sizes, xfs, proper mkfs
-options, etc.) before starting some rolling process to move load and
-reinstall each front-end server correctly.  We do need to
-unfortunately take this drastic step as the raid arrays needs to be
-trashed and re-created obviously.
+Underlying scsi devices config set at:
+max_sectors_kb=3D8192, scheduler=3Dnoop (or deadline)
+Buffered IO using xdd, dd:: block size=3D4MB, all sequential writes
+IO done directly on md/raid device /dev/mdX
 
-Definitely learned a lot, and I'm sure that a lot of really useful
-information has made it to the archives as well!
+6 disks buffered IO total write speed =3D 1000 MBps i.e. around 165 MBp=
+s per
+disk
+
+RAID0: 64KB chunk size 6 disks =3D 980 MBps i.e. around 164 MBps per di=
+sk
+
+RAID6: 64KB chunk size 6 (4 + 2) disks with stripe_cache_size =3D 8192,
+preread_bypass_threshold =3D 8192. No pre-reads seen.
+Gives=20
+340 MBps i.e. around 85 MBps per data disks (4)
+i.e. around 45-50% drop is seen.
+
+Same IO tool and IO settings used for all 3 experiments.
+
+In general, Is this much drop expected with RAID6 against same RAID 0
+config?
+If not, Is any configuration setting is missing?
+If I could drive RAID0 with line speed should I expect same with RAID6 =
+also.
+
+Thanks in advance,
+Mandar Joshi
+
 
 --
-Chris.
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
