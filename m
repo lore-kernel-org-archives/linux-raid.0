@@ -1,100 +1,179 @@
-From: Craig Curtin <craigc@prosis.com.au>
-Subject: RE: Correct RAID options
-Date: Wed, 20 Aug 2014 03:37:27 +0000
-Message-ID: <E78FE8BDBAD07C43A60163E7D1716EEC0183A6CA02@PROSIS-W2K8-1.prosis.local>
-References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
-	<53F3EA59.6030808@hesbynett.no>
-	<CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
-	<E78FE8BDBAD07C43A60163E7D1716EEC0183A6C7C5@PROSIS-W2K8-1.prosis.local>
- <CA+4TWFtj5nKJrG8XkDYXvDTD-CqUOFtQYiyWE1rbONWzNMSyWw@mail.gmail.com>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: [PATCH v2 0/6] raid6: support read-modify-write
+Date: Wed, 20 Aug 2014 06:30:46 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735863ED72@EXCHANGE.collogia.de>
+References: <677cbe3b-4301-4650-962a-043f6ae59086@EXCHANGE.collogia.de>,<21491.57825.401637.881344@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-b9066506-9599-45c6-a799-b91d0927ffa3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+4TWFtj5nKJrG8XkDYXvDTD-CqUOFtQYiyWE1rbONWzNMSyWw@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <21491.57825.401637.881344@quad.stoffel.home>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Knipe <savage@savage.za.org>
+To: John Stoffel <john@stoffel.org>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-T0sgLSBzb3JyeSBidXQgSSB3aWxsIGhhdmUgdG8gZ2V0IHNvbWVvbmUgZWxzZSB0byBjaGlwIGlu
-IHJlIHRoZSBYRlMgc2l0dWF0aW9uLg0KDQpJIHdvdWxkIHNheSB0aG91Z2ggdGhhdCBpcyBzb3Vu
-ZHMgbGlrZSB5b3UgYXJlIHBhaW50aW5nIHlvdXJzZWxmIGludG8gYSB2ZXJ5IHRpZ2h0IGNvcm5l
-ciBhbmQgeW91IG1pZ2h0IHdhbnQgdG8gZmluZCBhIEhvc3RlZCBzaXRlIHRoYXQgb2ZmZXJzIG1v
-cmUgb3B0aW9ucyB0aGFuIHlvdSBhcHBlYXIgdG8gaGF2ZSBhdmFpbGFibGUuDQoNCkNyYWlnDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBja25pcGVAc2F2YWdlLnphLm9yZyBb
-bWFpbHRvOmNrbmlwZUBzYXZhZ2UuemEub3JnXSBPbiBCZWhhbGYgT2YgQ2hyaXMgS25pcGUNClNl
-bnQ6IFdlZG5lc2RheSwgMjAgQXVndXN0IDIwMTQgMTowNiBQTQ0KVG86IENyYWlnIEN1cnRpbg0K
-Q2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogQ29ycmVjdCBSQUlE
-IG9wdGlvbnMNCg0KT24gV2VkLCBBdWcgMjAsIDIwMTQgYXQgNDozOCBBTSwgQ3JhaWcgQ3VydGlu
-IDxjcmFpZ2NAcHJvc2lzLmNvbS5hdT4gd3JvdGU6DQoNCj4gSSBhc3N1bWUgdGhhdCB5b3VyIGFw
-cGxpY2F0aW9uIHdpbGwgaGFuZGxlIGl0IE9LIGlmIHRoZSBBcmNoaXZlIGlzIG9mZmxpbmUgPyBJ
-IHVuZGVyc3RhbmQgeW91IGhhdmUgdGhyb3VnaHB1dCBpc3N1ZXMgbm93LCBidXQgaWYgeW91IGxv
-c2UgdGhlIFJBSUQ1IHNldHVwIGl0IGlzIGdvaW5nIHRvIHRha2UgYSBsb25nIHRpbWUgdG8gcmVj
-b3ZlciByZWFsbHkgbmVlZCB0byByZWJ1aWxkIHRoYXQgYXMgUkFJRDYgQVNBUCAtIHBhcnRpY3Vs
-YXJseSBpZiBpdCBpcyBvbmx5IHVuZGVyIGxpZ2h0IGxvYWQgbm93Lg0KDQpDb3JyZWN0LiAgSSB3
-aWxsIGhvd2V2ZXIgbG9zZSBkYXRhIGFzIEkgd291bGQgbmVlZCB0byBkZWxldGUgb2xkIGRhdGEg
-b2ZmIHRoZSBmcm9udCBlbmQgc2VydmVycyBpbnN0ZWFkIG9mIGFyY2hpdmluZyBpdCBpbiBvcmRl
-ciBub3QgcnVuIG91dCBvZiBkaXNrIHNwYWNlICh3aGljaCB3aWxsIGJlIGNhdGFzdHJvcGhpYyku
-ICBJdCdzIG5vdCBhbiBpZGVhbCBzaXR1YXRpb24sIGJ1dCBpdCdzIG5vdCBhIG1ham9yIGxvc3Mg
-ZWl0aGVyIGF0IHRoaXMgcG9pbnQgaW4gdGltZS4gIFVwIHRvIGEgZGF5IG9yIHRocmVlIGFnbywg
-d2UgZGVsZXRlZCBhbnl3YXlzLiAgU28geWVzLCBJIGFtIG1vcmUgdGhhbiBsaWtlbHkgdHJhc2hp
-bmcgdGhlIGFyY2hpdmUgc2VydmVyIGFuZCByZWJ1aWxkaW5nIGl0IChvciBub3QgdXNpbmcgaXQg
-YXQgYWxsIGFuZCByYXRoZXIgZXhwYW5kaW5nIG9uIHRoZSBmcm9udCBlbmQgc2VydmVycyAtIGFn
-YWluc3QgbXkgYmV0dGVyIGp1ZGdlbWVudCkuDQoNCg0KPiBOb3cgdGhhdCB5b3UgaGF2ZSBjbGFy
-aWZpZWQgd2hhdCB5b3VyIHNlcnZlcnMgYXJlIGFuZCBob3cgdGhleSBhcmUgcGVyZm9ybWluZyAt
-IEkgd291bGQgc3VnZ2VzdCBhbm90aGVyIG9wdGlvbiB3b3VsZCBiZSBhbiBleHRlcm5hbCBTQVRB
-IHN0b3JhZ2Ugc3lzdGVtIC0gZm9yIGNvc3QgeW91IGNhbiBub3QgZ28gcGFzdCB0aGUgUHJvbWlz
-ZSBlcXVpcG1lbnQuIFlvdSBjb3VsZCB3aGFjayBhZGRpdGlvbmFsIFNBVEEgZHJpdmVzIGluIG9u
-ZSBvZiB0aGVzZSBvbiB5b3VyIGZyb250IGVuZCBzZXJ2ZXJzICh0aGV5IGhhdmUgbW9kZWxzIHdp
-dGggZGlmZmVyZW50IGNvbm5lY3Rpb24gb3B0aW9ucyAtIEVTQVRBLCBTQVMsIEZDIGV0YyBldGMp
-IGFuZCB0aGlzIHdvdWxkIGdpdmUgeW91IG1vcmUgc3BhY2Ugb24gdGhlIGZyb250IGVuZCBhcyB3
-ZWxsIGFzIG1vcmUgc3BpbmRsZXMgdG8gaGFuZGxlIHRoZSB3cml0aW5nIGV0YyAtIGl0IHdvdWxk
-IGFsc28gZ2l2ZSB5b3UgdGhlIGFiaWxpdHkgdG8gbWVzcyBhcm91bmQgd2l0aCBkaWZmZXJlbnQg
-ZmlsZSBzeXN0ZW1zIGV0Yy4NCg0KSSByZWFsbHkgZG9uJ3Qgd2FudCB0byBiZSBhIFBJVEEsIGJ1
-dCB0aGVzZSBhcmUgbGVhc2VkIHNlcnZlcnMgKHNvcnJ5IGlmIEkgaGF2ZW4ndCBiZWVuIGNsZWFy
-KS4gV2UgZG8gbm90IGV2ZW4gaGF2ZSBwaHlzaWNhbCBhY2Nlc3MgdG8gdGhlIHNlcnZlcnMsIGZy
-YW5rbHksIHRoZXkgYXJlIGhhbGYgd2F5IGFyb3VuZCB0aGUgd29ybGQgZnJvbSB3aGVyZSBJIGFt
-DQo6LSkgIEhhcmR3YXJlIGNoYW5nZXMgaW4gYW55IHdheSBvciBmb3JtIGlzIG5vdCBnb2luZyB0
-byBoYXBwZW4uICBUaGUgcHJvdmlkZXIgaXMgc2ltcGx5IG5vdCBnb2luZyB0byBwbGF5IC0gd2Un
-dmUgdHJpZWQgYmVmb3JlLiBXZSd2ZSB0cmllZCBzbyBiYWRseSBiZWZvcmUgdGhhdCBpdCB3YXMg
-ZWFzaWVyIC8gcXVpY2tlciB0byBjYW5jZWwgYSBzZXJ2ZXIgYW5kIG9yZGVyIGEgbmV3IG9uZSwg
-aW5zdGVhZCBvZiBoYXZpbmcgdGhlbSBmaXggc29tZXRoaW5nLiAgWWVzLCBpdCdzIHNhZCwgYnV0
-IHRoYXQncyB3aGF0IGlzIHRoZXJlIGFuZCB0aGF0J3MgdW5mb3J0dW5hdGVseSB0aGUgd2F5IGl0
-IGN1cnJlbnRseSBpcy4NCg0KSSByZWFsbHkgZG8gbm90IG5lZWQgYSAnYmx1ZSBza3knIGhlcmUu
-ICBJIGtub3cgd2hhdCBJIGFtIGRvaW5nIGlzDQotaW5zYW5lbHktIHJlc291cmNlIGludGVuc2l2
-ZSBhbmQgZnJhbmtseSBzcGVha2luZywgSSBhbSAtYW1hemVkLSBhdCBob3cgd2VsbCB0aGVzZSBm
-cm9udCBlbmQgc2VydmVycyBhcmUgY29waW5nIHVwIHRvIG5vdy4gIFRoZXJlIGFyZSBsaW1pdHMs
-IGFuZCBzdXJlIHdlIGFyZSBoaXR0aW5nIHRob3NlIGxpbWl0cy4gIFRoZSBxdWVzdGlvbiByZWFs
-bHkgaXMgd2hhdCBjYW4gYmUgZG9uZSB0byBhY2hpZXZlIHRoZSBiZXN0IHBlcmZvcm1hbmNlIHdp
-dGggd2hhdCB3ZSBoYXZlPw0KUkFJRDEwL0VYVDQgaXNuJ3Qgd29ya2luZyBub3cgdGhhdCB3ZSBh
-cmUgcmVhZGluZyBhbmQgd3JpdGluZyBleHRlbnNpdmVseSBhdCB0aGUgc2FtZSB0aW1lIC0gaXQg
-d2FzIG1vcmUgdGhhbiBsaWtlbHkgYSBiYWQgLyB1bmVkdWNhdGVkIC8gaW5leHBlcmllbmNlZCBj
-aG9pY2UuICBJIHVuZGVyc3RhbmQgdGhhdCwgSSBhY2NlcHQgdGhhdC4NCg0KV2lsbCBYRlMgZ2l2
-ZSBhbnkgYW1vdW50IG9mIHJlYXNvbmFibGUgaW5jcmVhc2VzIGluIHBlcmZvcm1hbmNlIHRvIGp1
-c3RpZnkgYSBmb3JtYXQgLyByZWluc3RhbGwgKGxldCdzIGZvcmdldCBhYm91dCBiYWNrdXBzIGFu
-ZCBkb3dudGltZSBub3cpLCBvciB3b3VsZCB0aGUgb25seSB2aWFibGUgb3B0aW9uIGJlIHRoZSBl
-eHBlbnNpdmUgb25lLCBhbmQgZ2V0IG1vcmUgc2VydmVycyAodG91Y2ggd29vZCAtIHRoZSBsb2Fk
-IGJhbGFuY2VycyB0aGFua2Z1bGx5IGFyZSBub3doZXJlIG5lYXIgbWF4IGNhcGFjaXR5KT8gIEkg
-ZG9uJ3QgaGF2ZSB0aGUgZXhwZXJpZW5jZSBvciB0aGUgdG9vbHMgdG8gcHJvcGVybHkgYmVuY2gg
-c2VydmVycyBzaW11bGF0aW5nIG91ciBjdXJyZW50IElPIGxvYWQsIHNvIEknbSByZWFsbHkgaG9w
-aW5nIHRoYXQgc29tZW9uZSBtb3JlIGV4cGVyaWVuY2VkIHdpbGwgYmUgYWJsZSB0byBjaGlwIGlu
-IGhlcmUgd2l0aCBzb21lIGRlZmluaXRpdmUgYW5zd2VycyAoaWYgdGhhdCBpcyBldmVuIHBvc3Np
-YmxlKS4gIElmIHdoYXQgSSBoYXZlIGN1cnJlbnRseSBpcyBhcyBnb29kIGFzIGl0IGlzIGdvaW5n
-IHRvLCByZWFzb25hYmx5LCBnZXQgdGhlbiBzbyBiZSBpdCBhcyB3ZWxsLiAgSWYgdGhhdCdzIHRo
-ZSBjYXNlIEkgaGF2ZSBubyBvcHRpb24gYnV0IHRvIGluY3JlYXNlIHRoZSBhbW91bnQgb2YgZnJv
-bnQgZW5kIHNlcnZlcnMgYW5kIEkgY2FuIGNsb3NlIG15IGV5ZXMgYW5kIGFjY2VwdCB0aGF0IHRv
-by4NCg0KLS0NCkNocmlzLg0KDQpEaXNjbGFpbWVyDQoNCkNPTkZJREVOVElBTA0KDQpUaGlzIG1l
-c3NhZ2UgY29udGFpbnMgY29uZmlkZW50aWFsIGluZm9ybWF0aW9uIGFuZCBpcyBpbnRlbmRlZCBv
-bmx5IGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50cy4gSWYgeW91IGFyZSBub3QgdGhlIG5hbWVk
-IGFkZHJlc3NlZSB5b3Ugc2hvdWxkIG5vdCBkaXNzZW1pbmF0ZSwgZGlzdHJpYnV0ZSBvciBjb3B5
-IHRoaXMgZS1tYWlsLiBQbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgaW1tZWRpYXRlbHkgYnkgZS1t
-YWlsIGlmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGJ5IG1pc3Rha2UgYW5kIGRlbGV0
-ZSB0aGlzIGUtbWFpbCBmcm9tIHlvdXIgc3lzdGVtLg0KDQpEaXNjbGFpbWVyDQoNCkNPTkZJREVO
-VElBTA0KDQpUaGlzIG1lc3NhZ2UgY29udGFpbnMgY29uZmlkZW50aWFsIGluZm9ybWF0aW9uIGFu
-ZCBpcyBpbnRlbmRlZCBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50cy4gSWYgeW91IGFy
-ZSBub3QgdGhlIG5hbWVkIGFkZHJlc3NlZSB5b3Ugc2hvdWxkIG5vdCBkaXNzZW1pbmF0ZSwgZGlz
-dHJpYnV0ZSBvciBjb3B5IHRoaXMgZS1tYWlsLiBQbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgaW1t
-ZWRpYXRlbHkgYnkgZS1tYWlsIGlmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGJ5IG1p
-c3Rha2UgYW5kIGRlbGV0ZSB0aGlzIGUtbWFpbCBmcm9tIHlvdXIgc3lzdGVtLg0K
+
+This is a multi-part message in MIME format.
+
+------=_NextPartTM-000-b9066506-9599-45c6-a799-b91d0927ffa3
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+> Von: John Stoffel [john@stoffel.org]=0A=
+> Gesendet: Mittwoch, 20. August 2014 01:46=0A=
+> An: Markus Stockhausen=0A=
+> Cc: linux-raid@vger.kernel.org=0A=
+> Betreff: Re: [PATCH v2 0/6] raid6: support read-modify-write=0A=
+> =0A=
+> >>>>> "Markus" =3D=3D Markus Stockhausen <stockhausen@collogia.de> writes=
+:=0A=
+> =0A=
+> Markus> 300 seconds random write with 8 threads=0A=
+> Markus> 3,2TB (10*400GB) RAID6 64K chunk without spare=0A=
+> Markus> group_thread_cnt=3D4=0A=
+> =0A=
+> Markus> bsize   rmw_level=3D1   rmw_level=3D0   rmw_level=3D1   rmw_level=
+=3D0=0A=
+> Markus>         skip_copy=3D1   skip_copy=3D1   skip_copy=3D0   skip_copy=
+=3D0=0A=
+> Markus>    4K      115 KB/s      141 KB/s      165 KB/s      140 KB/s=0A=
+> Markus>    8K      225 KB/s      275 KB/s      324 KB/s      274 KB/s=0A=
+> Markus>   16K      434 KB/s      536 KB/s      640 KB/s      534 KB/s=0A=
+> Markus>   32K      751 KB/s    1,051 KB/s    1,234 KB/s    1,045 KB/s=0A=
+> Markus>   64K    1,339 KB/s    1,958 KB/s    2,282 KB/s    1,962 KB/s=0A=
+> Markus>  128K    2,673 KB/s    3,862 KB/s    4,113 KB/s    3,898 KB/s=0A=
+> Markus>  256K    7,685 KB/s    7,539 KB/s    7,557 KB/s    7,638 KB/s=0A=
+> Markus>  512K   19,556 KB/s   19,558 KB/s   19,652 KB/s   19,688 Kb/s=0A=
+> =0A=
+> Which is the current 3.16.0 implementation?  I can't keep it straight=0A=
+> in my head and you don't clearly specify which set is what we have=0A=
+> now, and which is your patch and it's option(s) in place.=0A=
+=0A=
+Standard of 3.16 in the above numbers is rmw_level=3D0/skip_copy=3D0.=0A=
+My patch will be rmw_level=3D1/skip_copy=3D0. I just included skip copy as=
+=0A=
+I found it on the mailing list and was interested how rmw plays with stable=
+=0A=
+pages without need for bio page copies.=0A=
+ =0A=
+> What type of system did you run this test on?  How much CPU/RAM, etc?=0A=
+> Can you should the configuration of the filesystem/MD volume you wrote=0A=
+> too as well?  Sorry to be picky here, I'm just trying to see what this=0A=
+> buys us.  Were the disks using SATA?  IDE?  What speed are the disks?=0A=
+=0A=
+It is a single E5630 with 24GB RAM. Although this should not matter as I=0A=
+made direct I/O. My tests wrote directly to /dev/md0 no filesystem in betwe=
+en.=0A=
+Disks are a bunch of 500GB-1TB SATA I/II 7200rpm. Server/Desktop mixed.=0A=
+ =0A=
+> Also, how does the SSE2 optimization work?  Can it be turned on/off?=0A=
+> And how much speedup does it provide?=0A=
+=0A=
+SSE2 optimization is not an option it is a must. The RAID6 algorithms are =
+=0A=
+choosen on startup. In my case the system chooses the SSE2 implementation.=
+=0A=
+The old patch used the already available implementation of gen_syndrome().=
+=0A=
+This always overwrote the parity blocks and needed extra spare pages. The =
+=0A=
+discussion result about it was, that md should use an inplace syndrome =0A=
+calculation for the rmw case. Thus I was forced to copy the algorithms to a=
+ =0A=
+new xor_syndrome() call. =0A=
+=0A=
+Difference between standard and SSE optimized gen_syndrome is in my=0A=
+case 1-2GB/sec versus 9-10GB/sec (iirc). So it won't make any sense to offe=
+r=0A=
+rmw and fall back to a xor_syndrome() calulation with a default implementat=
+ion=0A=
+that is 5 times slower.=0A=
+=0A=
+To avoid side effects the patch will disable rmw if the choosen existing =
+=0A=
+optimized gen_syndrome() function does not offer a xor_syndrome() =0A=
+"brother".=0A=
+=0A=
+> Otherwise, I don't see any huge improvements with the  numbers, and=0A=
+> the only consistent win is the rmw_level=3D1, skip_copy=3D0 case.  But=0A=
+> even then when the bsize is big enough it's slower than other=0A=
+> options.  So is it a win overall?=0A=
+=0A=
+This was the maximum of hardware that I could find in the short time. The=
+=0A=
+original patch post gives better numbers because it used 12 disks. For me=
+=0A=
+reasonable raid6 configurations range from 10-16 disks. So for the upper=0A=
+end the caluclation shows even more potential (but must be proven). =0A=
+=0A=
+From simple math for 16 disks:=0A=
+- Update one block or one chunk=0A=
+- RCW case: 13 read  I/Os + 3 write I/Os=0A=
+- RMW case: 3 read I/Os + 3 write I/Os=0A=
+ =0A=
+> John=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-b9066506-9599-45c6-a799-b91d0927ffa3
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
+
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
+
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-b9066506-9599-45c6-a799-b91d0927ffa3--
