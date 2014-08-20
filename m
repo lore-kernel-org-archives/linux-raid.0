@@ -1,91 +1,100 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v1 0/0] raid5: fix init_stripe() inconsistencies
-Date: Wed, 20 Aug 2014 13:36:58 +1000
-Message-ID: <20140820133658.1e8f1fb9@notabene.brown>
-References: <fb820ed5-44e5-4596-b8d4-956027be204a@EXCHANGE.collogia.de>
+From: Craig Curtin <craigc@prosis.com.au>
+Subject: RE: Correct RAID options
+Date: Wed, 20 Aug 2014 03:37:27 +0000
+Message-ID: <E78FE8BDBAD07C43A60163E7D1716EEC0183A6CA02@PROSIS-W2K8-1.prosis.local>
+References: <027801cfbbdc$d33970f0$79ac52d0$@savage.za.org>
+	<53F3EA59.6030808@hesbynett.no>
+	<CA+4TWFtG0ofkzQH0-k-rjOakasQNvcNZDgit=KknE6TCaKXpgg@mail.gmail.com>
+	<E78FE8BDBAD07C43A60163E7D1716EEC0183A6C7C5@PROSIS-W2K8-1.prosis.local>
+ <CA+4TWFtj5nKJrG8XkDYXvDTD-CqUOFtQYiyWE1rbONWzNMSyWw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/l4qwP0EnBabf59FvgmIIbTu"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fb820ed5-44e5-4596-b8d4-956027be204a@EXCHANGE.collogia.de>
+In-Reply-To: <CA+4TWFtj5nKJrG8XkDYXvDTD-CqUOFtQYiyWE1rbONWzNMSyWw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: linux-raid@vger.kernel.org
+To: Chris Knipe <savage@savage.za.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/l4qwP0EnBabf59FvgmIIbTu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 13 Aug 2014 09:37:31 +0000 Markus Stockhausen
-<stockhausen@collogia.de> wrote:
-
-> commit 639a347254c4b8daa22ce09c281259dce7f6ba71
-> Author: Markus Stockhausen <markus.stockhausen@collogia.de>
-> Date:   Sun Aug 10 09:25:55 2014 +0000
->=20
->     raid5: fix init_stripe() inconsistencies=20
->=20
->     1) remove_hash() is not necessary. We will only be called right after
->     get_free_stripe(). There we have already a call to remove_hash().
->=20
->     2) Tracing prints out the sector of the freed stripe and not the sect=
-or
->     that we want to initialize.
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7f66741..c4cd245 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -527,9 +527,7 @@ static void init_stripe(struct stripe_head *sh, secto=
-r_t sector, int previous)
->  	BUG_ON(stripe_operations_active(sh));
-> =20
->  	pr_debug("init_stripe called, stripe %llu\n",
-> -		(unsigned long long)sh->sector);
-> -
-> -	remove_hash(sh);
-> +		(unsigned long long)sector);
->  retry:
->  	seq =3D read_seqcount_begin(&conf->gen_lock);
->  	sh->generation =3D conf->generation - previous;
-
-Applied, thanks.
-
-For future reference:
- - put "md" at the start of the subject line. e.g. "md/raid5:"
- - use "git show --format=3Demail" or some other incantation which
-   avoids  indenting the description.  Also avoid the "commit"
-   line.  Author: and Date: are redundant but I don't think they
-   are actually hurting.
- - Be sure to include a Signed-off-by: line.  Find and read the DCO
-   (Developer's Certificate of Origin) to know what that means.
-   This patch is sufficiently trivial that I won't insist, but it is a good
-   habit to get into (git commit --amend --sign --no-edit)
-
-Thanks,
-NeilBrown
-
---Sig_/l4qwP0EnBabf59FvgmIIbTu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU/QX2jnsnt1WYoG5AQKjUw//W3vo8E/M7HCP+E/xq9kCkYuNSHP+/qz+
-qZxRD+1P/Qnk/BJGjOaLXQBW51CQyk++RtVaAEETwWlCysJVc6yYMZBv7WF3ooZp
-QAnQp+ldq2xM1yfsmro1+5OwErPVeWCwGPm5xjap0oTw5Z3Ap8q+3FfEISb6PqUf
-9SoyndqcFl7OOKSILPt+A+qOAEs/yMyBR9eEHo/4XRtNhNZmthTECLv0TE21dchj
-BbKCaJeHp4lf2/G142Ko7YkUI/FVyW/Nwia14oyUUeK20lnOTCG66S7ZJOv6OPYh
-ACdul0ZMuOCvqGkqUJGSWjAr07IHV0dokRX2QWgEWaeKnlugImxPBltyz/vY3n6b
-+S5RZELxY6P761IslHC+CsAJ9Gv/ikHK+9FVGGRWrfE5W9d3NvMizAb5QQAdH2Z+
-YC6KnWl5YdH8DXG/IRnAg+9Wie9hZFVyzvFU9CQNA5lFqtc0Eq9xS1tjm91YCOGx
-nEC+3/tX1O2i+h8h1wTxX2tLExRJ7gc+1eejll3AcLfWFIA/B1SR5kZb3cYn3+TI
-Ad9dhcMXO/6ImoupkVAAHOWFGu03tJE49U2+cErvYGas0XOobLF/0iGWZi2ELgvf
-Pf0ylQOjpixWKq2XVcYbX5tRoc+q9PZ7i81PuYliBUfUeJ1IePt8IUziG5Rveq49
-tUKXdnV0Aj4=
-=iaRX
------END PGP SIGNATURE-----
-
---Sig_/l4qwP0EnBabf59FvgmIIbTu--
+T0sgLSBzb3JyeSBidXQgSSB3aWxsIGhhdmUgdG8gZ2V0IHNvbWVvbmUgZWxzZSB0byBjaGlwIGlu
+IHJlIHRoZSBYRlMgc2l0dWF0aW9uLg0KDQpJIHdvdWxkIHNheSB0aG91Z2ggdGhhdCBpcyBzb3Vu
+ZHMgbGlrZSB5b3UgYXJlIHBhaW50aW5nIHlvdXJzZWxmIGludG8gYSB2ZXJ5IHRpZ2h0IGNvcm5l
+ciBhbmQgeW91IG1pZ2h0IHdhbnQgdG8gZmluZCBhIEhvc3RlZCBzaXRlIHRoYXQgb2ZmZXJzIG1v
+cmUgb3B0aW9ucyB0aGFuIHlvdSBhcHBlYXIgdG8gaGF2ZSBhdmFpbGFibGUuDQoNCkNyYWlnDQoN
+Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBja25pcGVAc2F2YWdlLnphLm9yZyBb
+bWFpbHRvOmNrbmlwZUBzYXZhZ2UuemEub3JnXSBPbiBCZWhhbGYgT2YgQ2hyaXMgS25pcGUNClNl
+bnQ6IFdlZG5lc2RheSwgMjAgQXVndXN0IDIwMTQgMTowNiBQTQ0KVG86IENyYWlnIEN1cnRpbg0K
+Q2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogQ29ycmVjdCBSQUlE
+IG9wdGlvbnMNCg0KT24gV2VkLCBBdWcgMjAsIDIwMTQgYXQgNDozOCBBTSwgQ3JhaWcgQ3VydGlu
+IDxjcmFpZ2NAcHJvc2lzLmNvbS5hdT4gd3JvdGU6DQoNCj4gSSBhc3N1bWUgdGhhdCB5b3VyIGFw
+cGxpY2F0aW9uIHdpbGwgaGFuZGxlIGl0IE9LIGlmIHRoZSBBcmNoaXZlIGlzIG9mZmxpbmUgPyBJ
+IHVuZGVyc3RhbmQgeW91IGhhdmUgdGhyb3VnaHB1dCBpc3N1ZXMgbm93LCBidXQgaWYgeW91IGxv
+c2UgdGhlIFJBSUQ1IHNldHVwIGl0IGlzIGdvaW5nIHRvIHRha2UgYSBsb25nIHRpbWUgdG8gcmVj
+b3ZlciByZWFsbHkgbmVlZCB0byByZWJ1aWxkIHRoYXQgYXMgUkFJRDYgQVNBUCAtIHBhcnRpY3Vs
+YXJseSBpZiBpdCBpcyBvbmx5IHVuZGVyIGxpZ2h0IGxvYWQgbm93Lg0KDQpDb3JyZWN0LiAgSSB3
+aWxsIGhvd2V2ZXIgbG9zZSBkYXRhIGFzIEkgd291bGQgbmVlZCB0byBkZWxldGUgb2xkIGRhdGEg
+b2ZmIHRoZSBmcm9udCBlbmQgc2VydmVycyBpbnN0ZWFkIG9mIGFyY2hpdmluZyBpdCBpbiBvcmRl
+ciBub3QgcnVuIG91dCBvZiBkaXNrIHNwYWNlICh3aGljaCB3aWxsIGJlIGNhdGFzdHJvcGhpYyku
+ICBJdCdzIG5vdCBhbiBpZGVhbCBzaXR1YXRpb24sIGJ1dCBpdCdzIG5vdCBhIG1ham9yIGxvc3Mg
+ZWl0aGVyIGF0IHRoaXMgcG9pbnQgaW4gdGltZS4gIFVwIHRvIGEgZGF5IG9yIHRocmVlIGFnbywg
+d2UgZGVsZXRlZCBhbnl3YXlzLiAgU28geWVzLCBJIGFtIG1vcmUgdGhhbiBsaWtlbHkgdHJhc2hp
+bmcgdGhlIGFyY2hpdmUgc2VydmVyIGFuZCByZWJ1aWxkaW5nIGl0IChvciBub3QgdXNpbmcgaXQg
+YXQgYWxsIGFuZCByYXRoZXIgZXhwYW5kaW5nIG9uIHRoZSBmcm9udCBlbmQgc2VydmVycyAtIGFn
+YWluc3QgbXkgYmV0dGVyIGp1ZGdlbWVudCkuDQoNCg0KPiBOb3cgdGhhdCB5b3UgaGF2ZSBjbGFy
+aWZpZWQgd2hhdCB5b3VyIHNlcnZlcnMgYXJlIGFuZCBob3cgdGhleSBhcmUgcGVyZm9ybWluZyAt
+IEkgd291bGQgc3VnZ2VzdCBhbm90aGVyIG9wdGlvbiB3b3VsZCBiZSBhbiBleHRlcm5hbCBTQVRB
+IHN0b3JhZ2Ugc3lzdGVtIC0gZm9yIGNvc3QgeW91IGNhbiBub3QgZ28gcGFzdCB0aGUgUHJvbWlz
+ZSBlcXVpcG1lbnQuIFlvdSBjb3VsZCB3aGFjayBhZGRpdGlvbmFsIFNBVEEgZHJpdmVzIGluIG9u
+ZSBvZiB0aGVzZSBvbiB5b3VyIGZyb250IGVuZCBzZXJ2ZXJzICh0aGV5IGhhdmUgbW9kZWxzIHdp
+dGggZGlmZmVyZW50IGNvbm5lY3Rpb24gb3B0aW9ucyAtIEVTQVRBLCBTQVMsIEZDIGV0YyBldGMp
+IGFuZCB0aGlzIHdvdWxkIGdpdmUgeW91IG1vcmUgc3BhY2Ugb24gdGhlIGZyb250IGVuZCBhcyB3
+ZWxsIGFzIG1vcmUgc3BpbmRsZXMgdG8gaGFuZGxlIHRoZSB3cml0aW5nIGV0YyAtIGl0IHdvdWxk
+IGFsc28gZ2l2ZSB5b3UgdGhlIGFiaWxpdHkgdG8gbWVzcyBhcm91bmQgd2l0aCBkaWZmZXJlbnQg
+ZmlsZSBzeXN0ZW1zIGV0Yy4NCg0KSSByZWFsbHkgZG9uJ3Qgd2FudCB0byBiZSBhIFBJVEEsIGJ1
+dCB0aGVzZSBhcmUgbGVhc2VkIHNlcnZlcnMgKHNvcnJ5IGlmIEkgaGF2ZW4ndCBiZWVuIGNsZWFy
+KS4gV2UgZG8gbm90IGV2ZW4gaGF2ZSBwaHlzaWNhbCBhY2Nlc3MgdG8gdGhlIHNlcnZlcnMsIGZy
+YW5rbHksIHRoZXkgYXJlIGhhbGYgd2F5IGFyb3VuZCB0aGUgd29ybGQgZnJvbSB3aGVyZSBJIGFt
+DQo6LSkgIEhhcmR3YXJlIGNoYW5nZXMgaW4gYW55IHdheSBvciBmb3JtIGlzIG5vdCBnb2luZyB0
+byBoYXBwZW4uICBUaGUgcHJvdmlkZXIgaXMgc2ltcGx5IG5vdCBnb2luZyB0byBwbGF5IC0gd2Un
+dmUgdHJpZWQgYmVmb3JlLiBXZSd2ZSB0cmllZCBzbyBiYWRseSBiZWZvcmUgdGhhdCBpdCB3YXMg
+ZWFzaWVyIC8gcXVpY2tlciB0byBjYW5jZWwgYSBzZXJ2ZXIgYW5kIG9yZGVyIGEgbmV3IG9uZSwg
+aW5zdGVhZCBvZiBoYXZpbmcgdGhlbSBmaXggc29tZXRoaW5nLiAgWWVzLCBpdCdzIHNhZCwgYnV0
+IHRoYXQncyB3aGF0IGlzIHRoZXJlIGFuZCB0aGF0J3MgdW5mb3J0dW5hdGVseSB0aGUgd2F5IGl0
+IGN1cnJlbnRseSBpcy4NCg0KSSByZWFsbHkgZG8gbm90IG5lZWQgYSAnYmx1ZSBza3knIGhlcmUu
+ICBJIGtub3cgd2hhdCBJIGFtIGRvaW5nIGlzDQotaW5zYW5lbHktIHJlc291cmNlIGludGVuc2l2
+ZSBhbmQgZnJhbmtseSBzcGVha2luZywgSSBhbSAtYW1hemVkLSBhdCBob3cgd2VsbCB0aGVzZSBm
+cm9udCBlbmQgc2VydmVycyBhcmUgY29waW5nIHVwIHRvIG5vdy4gIFRoZXJlIGFyZSBsaW1pdHMs
+IGFuZCBzdXJlIHdlIGFyZSBoaXR0aW5nIHRob3NlIGxpbWl0cy4gIFRoZSBxdWVzdGlvbiByZWFs
+bHkgaXMgd2hhdCBjYW4gYmUgZG9uZSB0byBhY2hpZXZlIHRoZSBiZXN0IHBlcmZvcm1hbmNlIHdp
+dGggd2hhdCB3ZSBoYXZlPw0KUkFJRDEwL0VYVDQgaXNuJ3Qgd29ya2luZyBub3cgdGhhdCB3ZSBh
+cmUgcmVhZGluZyBhbmQgd3JpdGluZyBleHRlbnNpdmVseSBhdCB0aGUgc2FtZSB0aW1lIC0gaXQg
+d2FzIG1vcmUgdGhhbiBsaWtlbHkgYSBiYWQgLyB1bmVkdWNhdGVkIC8gaW5leHBlcmllbmNlZCBj
+aG9pY2UuICBJIHVuZGVyc3RhbmQgdGhhdCwgSSBhY2NlcHQgdGhhdC4NCg0KV2lsbCBYRlMgZ2l2
+ZSBhbnkgYW1vdW50IG9mIHJlYXNvbmFibGUgaW5jcmVhc2VzIGluIHBlcmZvcm1hbmNlIHRvIGp1
+c3RpZnkgYSBmb3JtYXQgLyByZWluc3RhbGwgKGxldCdzIGZvcmdldCBhYm91dCBiYWNrdXBzIGFu
+ZCBkb3dudGltZSBub3cpLCBvciB3b3VsZCB0aGUgb25seSB2aWFibGUgb3B0aW9uIGJlIHRoZSBl
+eHBlbnNpdmUgb25lLCBhbmQgZ2V0IG1vcmUgc2VydmVycyAodG91Y2ggd29vZCAtIHRoZSBsb2Fk
+IGJhbGFuY2VycyB0aGFua2Z1bGx5IGFyZSBub3doZXJlIG5lYXIgbWF4IGNhcGFjaXR5KT8gIEkg
+ZG9uJ3QgaGF2ZSB0aGUgZXhwZXJpZW5jZSBvciB0aGUgdG9vbHMgdG8gcHJvcGVybHkgYmVuY2gg
+c2VydmVycyBzaW11bGF0aW5nIG91ciBjdXJyZW50IElPIGxvYWQsIHNvIEknbSByZWFsbHkgaG9w
+aW5nIHRoYXQgc29tZW9uZSBtb3JlIGV4cGVyaWVuY2VkIHdpbGwgYmUgYWJsZSB0byBjaGlwIGlu
+IGhlcmUgd2l0aCBzb21lIGRlZmluaXRpdmUgYW5zd2VycyAoaWYgdGhhdCBpcyBldmVuIHBvc3Np
+YmxlKS4gIElmIHdoYXQgSSBoYXZlIGN1cnJlbnRseSBpcyBhcyBnb29kIGFzIGl0IGlzIGdvaW5n
+IHRvLCByZWFzb25hYmx5LCBnZXQgdGhlbiBzbyBiZSBpdCBhcyB3ZWxsLiAgSWYgdGhhdCdzIHRo
+ZSBjYXNlIEkgaGF2ZSBubyBvcHRpb24gYnV0IHRvIGluY3JlYXNlIHRoZSBhbW91bnQgb2YgZnJv
+bnQgZW5kIHNlcnZlcnMgYW5kIEkgY2FuIGNsb3NlIG15IGV5ZXMgYW5kIGFjY2VwdCB0aGF0IHRv
+by4NCg0KLS0NCkNocmlzLg0KDQpEaXNjbGFpbWVyDQoNCkNPTkZJREVOVElBTA0KDQpUaGlzIG1l
+c3NhZ2UgY29udGFpbnMgY29uZmlkZW50aWFsIGluZm9ybWF0aW9uIGFuZCBpcyBpbnRlbmRlZCBv
+bmx5IGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50cy4gSWYgeW91IGFyZSBub3QgdGhlIG5hbWVk
+IGFkZHJlc3NlZSB5b3Ugc2hvdWxkIG5vdCBkaXNzZW1pbmF0ZSwgZGlzdHJpYnV0ZSBvciBjb3B5
+IHRoaXMgZS1tYWlsLiBQbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgaW1tZWRpYXRlbHkgYnkgZS1t
+YWlsIGlmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGJ5IG1pc3Rha2UgYW5kIGRlbGV0
+ZSB0aGlzIGUtbWFpbCBmcm9tIHlvdXIgc3lzdGVtLg0KDQpEaXNjbGFpbWVyDQoNCkNPTkZJREVO
+VElBTA0KDQpUaGlzIG1lc3NhZ2UgY29udGFpbnMgY29uZmlkZW50aWFsIGluZm9ybWF0aW9uIGFu
+ZCBpcyBpbnRlbmRlZCBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcmVjaXBpZW50cy4gSWYgeW91IGFy
+ZSBub3QgdGhlIG5hbWVkIGFkZHJlc3NlZSB5b3Ugc2hvdWxkIG5vdCBkaXNzZW1pbmF0ZSwgZGlz
+dHJpYnV0ZSBvciBjb3B5IHRoaXMgZS1tYWlsLiBQbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgaW1t
+ZWRpYXRlbHkgYnkgZS1tYWlsIGlmIHlvdSBoYXZlIHJlY2VpdmVkIHRoaXMgZS1tYWlsIGJ5IG1p
+c3Rha2UgYW5kIGRlbGV0ZSB0aGlzIGUtbWFpbCBmcm9tIHlvdXIgc3lzdGVtLg0K
