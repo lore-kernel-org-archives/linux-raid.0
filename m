@@ -1,68 +1,46 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Shrinking number of devices on a RAID-10 (near 2) array
-Date: Sat, 23 Aug 2014 16:31:10 +0000
-Message-ID: <20140823163110.GE11855@bitfolk.com>
+From: Adam Talbot <ajtalbot1@gmail.com>
+Subject: Re: RAID partitions, or RAID disks and partition array?
+Date: Sat, 23 Aug 2014 15:20:34 -0700
+Message-ID: <CAH_2GhfhEvYVog=YG98uqrORn81dC8P3u7nqMgQf7c1+4Ena5Q@mail.gmail.com>
+References: <CAH_2Ghc3tW4rD_iS7LO47ot6xURJq-RTrEyd3Z-swN2vA=4pPA@mail.gmail.com>
+	<20140823111847.724eabe2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20140823111847.724eabe2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Thank you all for the feed back.  I never knew the FD vs DA partition
+stuff.  I have been using FD with metadata 1.2.  Time to fix that. :-)
 
-I am aware that for a very long time it was not possible to change
-the number of devices in an mdadm RAID-10. But then recently I am
-sure I saw threads here alluding to this being possible. e.g.:
+Any chance at a wiki article about this?
 
-    http://marc.info/?l=linux-raid&m=140768923829685&w=2
-
-I have a 6 device RAID-10 near=2 array that I would like to shrink
-down to 4 devices.
-
-I have compiled mdadm 3.3.2 and am using kernel 3.16.0.
-
-$ sudo mdadm --detail /dev/md2
-/dev/md2:
-        Version : 0.90
-  Creation Time : Sun Jun  4 08:18:58 2006
-     Raid Level : raid10
-     Array Size : 471859200 (450.00 GiB 483.18 GB)
-  Used Dev Size : 309363520 (295.03 GiB 316.79 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Aug 23 15:23:38 2014
-          State : active 
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : near=2
-     Chunk Size : 64K
-
-           UUID : 3905b303:ca604b72:be5949c4:ab051b7a
-         Events : 0.312149991
-
-    Number   Major   Minor   RaidDevice State
-       0       8       51        0      active sync   /dev/sdd3
-       1       8       67        1      active sync   /dev/sde3
-       2       8       83        2      active sync   /dev/sdf3
-       3       8       19        3      active sync   /dev/sdb3
-       4       8       35        4      active sync   /dev/sdc3
-       5       8        3        5      active sync   /dev/sda3
-
-$ sudo ./mdadm --grow -n4 /dev/md2 --backup-file /var/tmp/mdadm.backup
-mdadm: Cannot set new_data_offset: RAID10 reshape not
-       supported on this kernel
-
-Is that not yet possible, then?
-
-(Each device is 320GB so it should all fit with only four of them)
-
-Cheers,
-Andy
+On Fri, Aug 22, 2014 at 6:18 PM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 22 Aug 2014 09:52:11 -0700 Adam Talbot <ajtalbot1@gmail.com> wrote:
+>
+>> I hope this is an easy one.  I have two drives I would like to mirror
+>> as my boot drive.
+>> 1) Should I mirror the drives, then partition the RAID device (md0)?
+>> 2) Should I partition the the drives then RAID the partitions?
+>>
+>> What is the best practice, and why?
+>
+> I always do '1'.  I use 1.0 metadata so each drive can be used by itself quite
+> apart from RAID, or can be part of the array.
+> Boot sectors etc are mirrored so you don't need to be sure that grub writes
+> to both devices or whatever.
+>
+> However this is "my" practice rather than "best" practice.  It is entirely
+> possible that grub might try to be too clever, see a RAID1 and want to do
+> something to the underlying drives - and then fail when they look wrong.
+>
+> Ultimately this is a question about how your distro is configured and how
+> your boot loader works much more than it is a question about md/raid.
+>
+> Once you choose a distro, you should see what that distro recommends and do
+> that, because that is the only configuration you can hope to get support for.
+>
+> NeilBrown
