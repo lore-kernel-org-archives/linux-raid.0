@@ -1,70 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID partitions, or RAID disks and partition array?
-Date: Sat, 23 Aug 2014 11:18:47 +1000
-Message-ID: <20140823111847.724eabe2@notabene.brown>
-References: <CAH_2Ghc3tW4rD_iS7LO47ot6xURJq-RTrEyd3Z-swN2vA=4pPA@mail.gmail.com>
+From: Andy Smith <andy@strugglers.net>
+Subject: Shrinking number of devices on a RAID-10 (near 2) array
+Date: Sat, 23 Aug 2014 16:31:10 +0000
+Message-ID: <20140823163110.GE11855@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/onjULYxcSbHfMOtClrF6yKz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH_2Ghc3tW4rD_iS7LO47ot6xURJq-RTrEyd3Z-swN2vA=4pPA@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Talbot <ajtalbot1@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/onjULYxcSbHfMOtClrF6yKz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Fri, 22 Aug 2014 09:52:11 -0700 Adam Talbot <ajtalbot1@gmail.com> wrote:
+I am aware that for a very long time it was not possible to change
+the number of devices in an mdadm RAID-10. But then recently I am
+sure I saw threads here alluding to this being possible. e.g.:
 
-> I hope this is an easy one.  I have two drives I would like to mirror
-> as my boot drive.
-> 1) Should I mirror the drives, then partition the RAID device (md0)?
-> 2) Should I partition the the drives then RAID the partitions?
->=20
-> What is the best practice, and why?
+    http://marc.info/?l=linux-raid&m=140768923829685&w=2
 
-I always do '1'.  I use 1.0 metadata so each drive can be used by itself qu=
-ite
-apart from RAID, or can be part of the array.
-Boot sectors etc are mirrored so you don't need to be sure that grub writes
-to both devices or whatever.
+I have a 6 device RAID-10 near=2 array that I would like to shrink
+down to 4 devices.
 
-However this is "my" practice rather than "best" practice.  It is entirely
-possible that grub might try to be too clever, see a RAID1 and want to do
-something to the underlying drives - and then fail when they look wrong.
+I have compiled mdadm 3.3.2 and am using kernel 3.16.0.
 
-Ultimately this is a question about how your distro is configured and how
-your boot loader works much more than it is a question about md/raid.
+$ sudo mdadm --detail /dev/md2
+/dev/md2:
+        Version : 0.90
+  Creation Time : Sun Jun  4 08:18:58 2006
+     Raid Level : raid10
+     Array Size : 471859200 (450.00 GiB 483.18 GB)
+  Used Dev Size : 309363520 (295.03 GiB 316.79 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-Once you choose a distro, you should see what that distro recommends and do
-that, because that is the only configuration you can hope to get support fo=
-r.
+    Update Time : Sat Aug 23 15:23:38 2014
+          State : active 
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 0
 
-NeilBrown
+         Layout : near=2
+     Chunk Size : 64K
 
---Sig_/onjULYxcSbHfMOtClrF6yKz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+           UUID : 3905b303:ca604b72:be5949c4:ab051b7a
+         Events : 0.312149991
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+    Number   Major   Minor   RaidDevice State
+       0       8       51        0      active sync   /dev/sdd3
+       1       8       67        1      active sync   /dev/sde3
+       2       8       83        2      active sync   /dev/sdf3
+       3       8       19        3      active sync   /dev/sdb3
+       4       8       35        4      active sync   /dev/sdc3
+       5       8        3        5      active sync   /dev/sda3
 
-iQIVAwUBU/fr9znsnt1WYoG5AQJdQg/+MstMmxLLgKfikDcACBUJ2sUWCvPgkSF0
-VOh7ajWzoprIgzH9sNgMiXUCVBxTdttkVlqOvBjhhXSYKKzl/JX3iCfIQCZyQd/a
-7UKbQjPWyZwjB78QcJV8aXBY8Y6Bi4c+BJYJbFdXckXT7F/IhmQxfxDyFwfldqAk
-Ki9ObtMSaEcSxryM78tix2Tx5nx6sccWk89i7/63CaVCGWH9Mqao1cW9LV9A4h1k
-3GNrzObGLIL72uJkOP0ckhHnfy9PNYHhrGSajHqojhIDC73noby20SZ3UV/NFg8e
-GBb/4OuN+k9m60CHEmBEGk5ipf1AWnPm54+DyUW4XLcFtzPhnyQpMqLC3P6f85r/
-uS4EVayDVnxIYPYou19AScITPgCcejsS/ZsAPjY+Uwa8QpLlZvS2mgZFSo7f8uZm
-AkjwOZ/h17BWGn+RLFUVPuTT0XRHYlBEIUMel+5DgIs4NCaL4fvt6+VzE8hVc1qx
-5lG/BCxi4FNI/X9e5fPgzMd5057mSBejJ86+6eiq2/5ZIhhzdr0p9i//uEUdw6kx
-Oz45xwUponKYRobfq15HCgKHIk9aoaGfCJDe5yczzKSdtMnI4qPb834cctuEak1S
-3933QhckrsQnMsxJyWiTHrg3mCAdj1bS5pxZnT4UfCq5XFzODu/GoQtl9xsiBu9j
-oFRY1IXBxkk=
-=0UD8
------END PGP SIGNATURE-----
+$ sudo ./mdadm --grow -n4 /dev/md2 --backup-file /var/tmp/mdadm.backup
+mdadm: Cannot set new_data_offset: RAID10 reshape not
+       supported on this kernel
 
---Sig_/onjULYxcSbHfMOtClrF6yKz--
+Is that not yet possible, then?
+
+(Each device is 320GB so it should all fit with only four of them)
+
+Cheers,
+Andy
