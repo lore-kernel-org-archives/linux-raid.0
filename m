@@ -1,10 +1,10 @@
 From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: [PATCH v3 4/6] md/raid6 algorithms: xor_syndrome() for SSE2
-Date: Sun, 24 Aug 2014 08:12:42 +0000
-Message-ID: <0404711c-936d-4bb9-ac68-4e179babb4d5@EXCHANGE.collogia.de>
+Subject: [PATCH v3 6/6] md/raid5: introduce configuration option rmw_level
+Date: Sun, 24 Aug 2014 08:12:54 +0000
+Message-ID: <71f790b8-0cdc-4436-947c-944a2c088ca4@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-48eecd2a-8624-4a4f-ae26-514b535ac67a"
+	boundary="----=_NextPartTM-000-c7d323c7-ccfc-4dd2-b767-df9838ff8934"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,287 +13,112 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-48eecd2a-8624-4a4f-ae26-514b535ac67a
+------=_NextPartTM-000-c7d323c7-ccfc-4dd2-b767-df9838ff8934
 Content-Type: text/plain
 
-md/raid6 algorithms: xor_syndrome() for SSE2
+md/raid5: introduce configuration option rmw_level
 
 v3: s-o-b comment
 
-The second and (last) optimized XOR syndrome calculation. This version
-supports right and left side optimization. All CPUs with architecture
-older than Haswell will benefit from it.
+Depending on the available coding we allow optimized rmw logic for write
+operations. To support easier testing this patch allows manual control
+of the rmw/rcw descision through the interface /sys/block/mdX/md/rmw_level.
 
-It should be noted that SSE2 movntdq kills performance for memory areas
-that are read and written simultaneously in chunks smaller than cache
-line size. So use movdqa instead for P/Q writes in sse21 and sse22 XOR
-functions.
+The configuration can handle three levels of control.
+
+rmw_level=0: Disable rmw for all RAID types. Hardware assisted P/Q
+calculation has no implementation path yet to factor in/out chunks of
+a syndrome. Enforcing this level can be benefical for slow CPUs with
+hardware syndrome support and fast SSDs.
+
+rmw_level=1: Estimate rmw IOs and rcw IOs. Execute rmw only if we will
+save IOs. This equals the "old" unpatched behaviour and will be the
+default.
+
+rmw_level=2: Execute rmw even if calculated IOs for rmw and rcw are
+equal. We might have higher CPU consumption because of calculating the
+parity twice but it can be benefical otherwise. E.g. RAID4 with fast
+dedicated parity disk/SSD. The option is implemented just to be
+forward-looking and will ONLY work with this patch!
 
 Signed-off-by: Markus Stockhausen <stockhausen@collogia.de>
 
-diff --git a/lib/raid6/sse2.c b/lib/raid6/sse2.c
-index 31acd59..1d2276b 100644
---- a/lib/raid6/sse2.c
-+++ b/lib/raid6/sse2.c
-@@ -88,9 +88,58 @@ static void raid6_sse21_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	kernel_fpu_end();
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index eb63e31..3b525f8 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5408,6 +5408,49 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
+ 				raid5_store_stripe_cache_size);
  
-+
-+static void raid6_sse21_xor_syndrome(int disks, int start, int stop,
-+				     size_t bytes, void **ptrs)
-+ {
-+	u8 **dptr = (u8 **)ptrs;
-+	u8 *p, *q;
-+	int d, z, z0;
-+
-+	z0 = stop;		/* P/Q right side optimization */
-+	p = dptr[disks-2];	/* XOR parity */
-+	q = dptr[disks-1];	/* RS syndrome */
-+
-+	kernel_fpu_begin();
-+
-+	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
-+
-+	for ( d = 0 ; d < bytes ; d += 16 ) {
-+		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
-+		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
-+		asm volatile("pxor %xmm4,%xmm2");
-+		/* P/Q data pages */
-+		for ( z = z0-1 ; z >= start ; z-- ) {
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
-+			asm volatile("pxor %xmm5,%xmm2");
-+			asm volatile("pxor %xmm5,%xmm4");
-+		}
-+		/* P/Q left side optimization */
-+		for ( z = start-1 ; z >= 0 ; z-- ) {
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pxor %xmm5,%xmm4");
-+		}
-+		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
-+		/* Don't use movntdq for r/w memory area < cache line */
-+		asm volatile("movdqa %%xmm4,%0" : "=m" (q[d]));
-+		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
-+	}
-+
-+	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
+ static ssize_t
++raid5_show_rmw_level(struct mddev  *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	if (conf)
++		return sprintf(page, "%d\n", conf->rmw_level);
++	else
++		return 0;
 +}
 +
- const struct raid6_calls raid6_sse2x1 = {
- 	raid6_sse21_gen_syndrome,
--	NULL,			/* XOR not yet implemented */
-+	raid6_sse21_xor_syndrome,
- 	raid6_have_sse2,
- 	"sse2x1",
- 	1			/* Has cache hints */
-@@ -151,9 +200,76 @@ static void raid6_sse22_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	kernel_fpu_end();
- }
++static ssize_t
++raid5_store_rmw_level(struct mddev  *mddev, const char *page, size_t len)
++{
++	struct r5conf *conf = mddev->private;
++	unsigned long new;
++
++	if (!conf)
++		return -ENODEV;
++
++	if (len >= PAGE_SIZE)
++		return -EINVAL;
++
++	if (kstrtoul(page, 10, &new))
++		return -EINVAL;
++
++	if (new != PARITY_DISABLE_RMW && !raid6_call.xor_syndrome)
++		return -EINVAL;
++
++	if (new != PARITY_DISABLE_RMW &&
++	    new != PARITY_ENABLE_RMW &&
++	    new != PARITY_PREFER_RMW)
++		return -EINVAL;
++
++	conf->rmw_level = new;
++	return len;
++}
++
++static struct md_sysfs_entry
++raid5_rmw_level = __ATTR(rmw_level, S_IRUGO | S_IWUSR,
++			 raid5_show_rmw_level,
++			 raid5_store_rmw_level);
++
++
++static ssize_t
+ raid5_show_preread_threshold(struct mddev *mddev, char *page)
+ {
+ 	struct r5conf *conf = mddev->private;
+@@ -5571,6 +5614,7 @@ static struct attribute *raid5_attrs[] =  {
+ 	&raid5_preread_bypass_threshold.attr,
+ 	&raid5_group_thread_cnt.attr,
+ 	&raid5_skip_copy.attr,
++	&raid5_rmw_level.attr,
+ 	NULL,
+ };
+ static struct attribute_group raid5_attrs_group = {
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index cbb00e2..1893b3a 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -347,6 +347,7 @@ enum {
+ enum {
+ 	PARITY_DISABLE_RMW = 0,
+ 	PARITY_ENABLE_RMW,
++	PARITY_PREFER_RMW,
+ };
  
-+ static void raid6_sse22_xor_syndrome(int disks, int start, int stop,
-+				     size_t bytes, void **ptrs)
-+ {
-+	u8 **dptr = (u8 **)ptrs;
-+	u8 *p, *q;
-+	int d, z, z0;
-+
-+	z0 = stop;		/* P/Q right side optimization */
-+	p = dptr[disks-2];	/* XOR parity */
-+	q = dptr[disks-1];	/* RS syndrome */
-+
-+	kernel_fpu_begin();
-+
-+	asm volatile("movdqa %0,%%xmm0" : : "m" (raid6_sse_constants.x1d[0]));
-+
-+	for ( d = 0 ; d < bytes ; d += 32 ) {
-+		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
-+		asm volatile("movdqa %0,%%xmm6" :: "m" (dptr[z0][d+16]));
-+		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
-+		asm volatile("movdqa %0,%%xmm3" : : "m" (p[d+16]));
-+		asm volatile("pxor %xmm4,%xmm2");
-+		asm volatile("pxor %xmm6,%xmm3");
-+		/* P/Q data pages */
-+		for ( z = z0-1 ; z >= start ; z-- ) {
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pxor %xmm7,%xmm7");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("pcmpgtb %xmm6,%xmm7");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("paddb %xmm6,%xmm6");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pand %xmm0,%xmm7");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
-+			asm volatile("movdqa %0,%%xmm7" :: "m" (dptr[z][d+16]));
-+			asm volatile("pxor %xmm5,%xmm2");
-+			asm volatile("pxor %xmm7,%xmm3");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+		}
-+		/* P/Q left side optimization */
-+		for ( z = start-1 ; z >= 0 ; z-- ) {
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pxor %xmm7,%xmm7");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("pcmpgtb %xmm6,%xmm7");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("paddb %xmm6,%xmm6");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pand %xmm0,%xmm7");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+		}
-+		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
-+		asm volatile("pxor %0,%%xmm6" : : "m" (q[d+16]));
-+		/* Don't use movntdq for r/w memory area < cache line */
-+		asm volatile("movdqa %%xmm4,%0" : "=m" (q[d]));
-+		asm volatile("movdqa %%xmm6,%0" : "=m" (q[d+16]));
-+		asm volatile("movdqa %%xmm2,%0" : "=m" (p[d]));
-+		asm volatile("movdqa %%xmm3,%0" : "=m" (p[d+16]));
-+	}
-+
-+	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
-+ }
-+
- const struct raid6_calls raid6_sse2x2 = {
- 	raid6_sse22_gen_syndrome,
--	NULL,			/* XOR not yet implemented */
-+	raid6_sse22_xor_syndrome,
- 	raid6_have_sse2,
- 	"sse2x2",
- 	1			/* Has cache hints */
-@@ -250,9 +366,117 @@ static void raid6_sse24_gen_syndrome(int disks, size_t bytes, void **ptrs)
- 	kernel_fpu_end();
- }
- 
-+ static void raid6_sse24_xor_syndrome(int disks, int start, int stop,
-+				     size_t bytes, void **ptrs)
-+ {
-+	u8 **dptr = (u8 **)ptrs;
-+	u8 *p, *q;
-+	int d, z, z0;
-+
-+	z0 = stop;		/* P/Q right side optimization */
-+	p = dptr[disks-2];	/* XOR parity */
-+	q = dptr[disks-1];	/* RS syndrome */
-+
-+	kernel_fpu_begin();
-+
-+	asm volatile("movdqa %0,%%xmm0" :: "m" (raid6_sse_constants.x1d[0]));
-+
-+	for ( d = 0 ; d < bytes ; d += 64 ) {
-+		asm volatile("movdqa %0,%%xmm4" :: "m" (dptr[z0][d]));
-+		asm volatile("movdqa %0,%%xmm6" :: "m" (dptr[z0][d+16]));
-+		asm volatile("movdqa %0,%%xmm12" :: "m" (dptr[z0][d+32]));
-+		asm volatile("movdqa %0,%%xmm14" :: "m" (dptr[z0][d+48]));
-+		asm volatile("movdqa %0,%%xmm2" : : "m" (p[d]));
-+		asm volatile("movdqa %0,%%xmm3" : : "m" (p[d+16]));
-+		asm volatile("movdqa %0,%%xmm10" : : "m" (p[d+32]));
-+		asm volatile("movdqa %0,%%xmm11" : : "m" (p[d+48]));
-+		asm volatile("pxor %xmm4,%xmm2");
-+		asm volatile("pxor %xmm6,%xmm3");
-+		asm volatile("pxor %xmm12,%xmm10");
-+		asm volatile("pxor %xmm14,%xmm11");
-+		/* P/Q data pages */
-+		for ( z = z0-1 ; z >= start ; z-- ) {
-+			asm volatile("prefetchnta %0" :: "m" (dptr[z][d]));
-+			asm volatile("prefetchnta %0" :: "m" (dptr[z][d+32]));
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pxor %xmm7,%xmm7");
-+			asm volatile("pxor %xmm13,%xmm13");
-+			asm volatile("pxor %xmm15,%xmm15");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("pcmpgtb %xmm6,%xmm7");
-+			asm volatile("pcmpgtb %xmm12,%xmm13");
-+			asm volatile("pcmpgtb %xmm14,%xmm15");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("paddb %xmm6,%xmm6");
-+			asm volatile("paddb %xmm12,%xmm12");
-+			asm volatile("paddb %xmm14,%xmm14");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pand %xmm0,%xmm7");
-+			asm volatile("pand %xmm0,%xmm13");
-+			asm volatile("pand %xmm0,%xmm15");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+			asm volatile("pxor %xmm13,%xmm12");
-+			asm volatile("pxor %xmm15,%xmm14");
-+			asm volatile("movdqa %0,%%xmm5" :: "m" (dptr[z][d]));
-+			asm volatile("movdqa %0,%%xmm7" :: "m" (dptr[z][d+16]));
-+			asm volatile("movdqa %0,%%xmm13" :: "m" (dptr[z][d+32]));
-+			asm volatile("movdqa %0,%%xmm15" :: "m" (dptr[z][d+48]));
-+			asm volatile("pxor %xmm5,%xmm2");
-+			asm volatile("pxor %xmm7,%xmm3");
-+			asm volatile("pxor %xmm13,%xmm10");
-+			asm volatile("pxor %xmm15,%xmm11");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+			asm volatile("pxor %xmm13,%xmm12");
-+			asm volatile("pxor %xmm15,%xmm14");
-+		}
-+		asm volatile("prefetchnta %0" :: "m" (q[d]));
-+		asm volatile("prefetchnta %0" :: "m" (q[d+32]));
-+		/* P/Q left side optimization */
-+		for ( z = start-1 ; z >= 0 ; z-- ) {
-+			asm volatile("pxor %xmm5,%xmm5");
-+			asm volatile("pxor %xmm7,%xmm7");
-+			asm volatile("pxor %xmm13,%xmm13");
-+			asm volatile("pxor %xmm15,%xmm15");
-+			asm volatile("pcmpgtb %xmm4,%xmm5");
-+			asm volatile("pcmpgtb %xmm6,%xmm7");
-+			asm volatile("pcmpgtb %xmm12,%xmm13");
-+			asm volatile("pcmpgtb %xmm14,%xmm15");
-+			asm volatile("paddb %xmm4,%xmm4");
-+			asm volatile("paddb %xmm6,%xmm6");
-+			asm volatile("paddb %xmm12,%xmm12");
-+			asm volatile("paddb %xmm14,%xmm14");
-+			asm volatile("pand %xmm0,%xmm5");
-+			asm volatile("pand %xmm0,%xmm7");
-+			asm volatile("pand %xmm0,%xmm13");
-+			asm volatile("pand %xmm0,%xmm15");
-+			asm volatile("pxor %xmm5,%xmm4");
-+			asm volatile("pxor %xmm7,%xmm6");
-+			asm volatile("pxor %xmm13,%xmm12");
-+			asm volatile("pxor %xmm15,%xmm14");
-+		}
-+		asm volatile("movntdq %%xmm2,%0" : "=m" (p[d]));
-+		asm volatile("movntdq %%xmm3,%0" : "=m" (p[d+16]));
-+		asm volatile("movntdq %%xmm10,%0" : "=m" (p[d+32]));
-+		asm volatile("movntdq %%xmm11,%0" : "=m" (p[d+48]));
-+		asm volatile("pxor %0,%%xmm4" : : "m" (q[d]));
-+		asm volatile("pxor %0,%%xmm6" : : "m" (q[d+16]));
-+		asm volatile("pxor %0,%%xmm12" : : "m" (q[d+32]));
-+		asm volatile("pxor %0,%%xmm14" : : "m" (q[d+48]));
-+		asm volatile("movntdq %%xmm4,%0" : "=m" (q[d]));
-+		asm volatile("movntdq %%xmm6,%0" : "=m" (q[d+16]));
-+		asm volatile("movntdq %%xmm12,%0" : "=m" (q[d+32]));
-+		asm volatile("movntdq %%xmm14,%0" : "=m" (q[d+48]));
-+	}
-+	asm volatile("sfence" : : : "memory");
-+	kernel_fpu_end();
-+ }
-+
-+
- const struct raid6_calls raid6_sse2x4 = {
- 	raid6_sse24_gen_syndrome,
--	NULL,			/* XOR not yet implemented */
-+	raid6_sse24_xor_syndrome,
- 	raid6_have_sse2,
- 	"sse2x4",
- 	1			/* Has cache hints */
+ /*
 
-------=_NextPartTM-000-48eecd2a-8624-4a4f-ae26-514b535ac67a
+------=_NextPartTM-000-c7d323c7-ccfc-4dd2-b767-df9838ff8934
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -353,4 +178,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-48eecd2a-8624-4a4f-ae26-514b535ac67a--
+------=_NextPartTM-000-c7d323c7-ccfc-4dd2-b767-df9838ff8934--
