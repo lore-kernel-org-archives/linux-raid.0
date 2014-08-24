@@ -1,10 +1,10 @@
 From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: [PATCH v3 2/6] md/raid6 algorithms: improve test program
-Date: Sun, 24 Aug 2014 08:12:30 +0000
-Message-ID: <8cbf77b7-2819-4d43-9f6a-de25b084c381@EXCHANGE.collogia.de>
+Subject: [PATCH v3 3/6] md/raid6 algorithms: xor_syndrome() for generic int
+Date: Sun, 24 Aug 2014 08:12:36 +0000
+Message-ID: <3b3e7a17-b33c-46f5-990f-d8cc41ec66d8@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-4426ee90-379c-4d85-82dd-f6f0d6eabad6"
+	boundary="----=_NextPartTM-000-495eb919-dca3-419e-a679-dc93cd561824"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -13,112 +13,75 @@ List-Id: linux-raid.ids
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-4426ee90-379c-4d85-82dd-f6f0d6eabad6
+------=_NextPartTM-000-495eb919-dca3-419e-a679-dc93cd561824
 Content-Type: text/plain
 
-md/raid6 algorithms: improve test program
+md/raid6 algorithms: xor_syndrome() for generic int
 
 v3: s-o-b comment
 
-It is always helpful to have a test tool in place if we implement
-new data critical algorithms. So add some test routines to the raid6
-checker that can prove if the new xor_syndrome() works as expected.
-
-Run through all permutations of start/stop pages per algorithm and
-simulate a xor_syndrome() assisted rmw run. After each rmw check if
-the recovery algorithm still confirms that the stripe is fine.
+Start the algorithms with the very basic one. It is left and right
+optimized. That means we can avoid all calculations for unneeded pages
+above the right stop offset. For pages below the left start offset we
+still need the syndrome multiplication but without reading data pages.
 
 Signed-off-by: Markus Stockhausen <stockhausen@collogia.de>
 
-diff --git a/lib/raid6/test/test.c b/lib/raid6/test/test.c
-index 5a485b7..3bebbab 100644
---- a/lib/raid6/test/test.c
-+++ b/lib/raid6/test/test.c
-@@ -28,11 +28,11 @@ char *dataptrs[NDISKS];
- char data[NDISKS][PAGE_SIZE];
- char recovi[PAGE_SIZE], recovj[PAGE_SIZE];
- 
--static void makedata(void)
-+static void makedata(int start, int stop)
- {
- 	int i, j;
- 
--	for (i = 0; i < NDISKS; i++) {
-+	for (i = start; i <= stop; i++) {
- 		for (j = 0; j < PAGE_SIZE; j++)
- 			data[i][j] = rand();
- 
-@@ -91,34 +91,55 @@ int main(int argc, char *argv[])
- {
- 	const struct raid6_calls *const *algo;
- 	const struct raid6_recov_calls *const *ra;
--	int i, j;
-+	int i, j, p1, p2;
- 	int err = 0;
- 
--	makedata();
-+	makedata(0, NDISKS-1);
- 
- 	for (ra = raid6_recov_algos; *ra; ra++) {
- 		if ((*ra)->valid  && !(*ra)->valid())
- 			continue;
-+
- 		raid6_2data_recov = (*ra)->data2;
- 		raid6_datap_recov = (*ra)->datap;
- 
- 		printf("using recovery %s\n", (*ra)->name);
- 
- 		for (algo = raid6_algos; *algo; algo++) {
--			if (!(*algo)->valid || (*algo)->valid()) {
--				raid6_call = **algo;
-+			if ((*algo)->valid && !(*algo)->valid())
-+				continue;
-+
-+			raid6_call = **algo;
-+
-+			/* Nuke syndromes */
-+			memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
-+
-+			/* Generate assumed good syndrome */
-+			raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
-+						(void **)&dataptrs);
-+
-+			for (i = 0; i < NDISKS-1; i++)
-+				for (j = i+1; j < NDISKS; j++)
-+					err += test_disks(i, j);
-+
-+			if (!raid6_call.xor_syndrome)
-+				continue;
-+
-+			for (p1 = 0; p1 < NDISKS-2; p1++)
-+				for (p2 = p1; p2 < NDISKS-2; p2++) {
- 
--				/* Nuke syndromes */
--				memset(data[NDISKS-2], 0xee, 2*PAGE_SIZE);
-+					/* Simulate rmw run */
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+								(void **)&dataptrs);
-+					makedata(p1, p2);
-+					raid6_call.xor_syndrome(NDISKS, p1, p2, PAGE_SIZE,
-+                                                                (void **)&dataptrs);
- 
--				/* Generate assumed good syndrome */
--				raid6_call.gen_syndrome(NDISKS, PAGE_SIZE,
--							(void **)&dataptrs);
-+					for (i = 0; i < NDISKS-1; i++)
-+						for (j = i+1; j < NDISKS; j++)
-+							err += test_disks(i, j);
-+				}
- 
--				for (i = 0; i < NDISKS-1; i++)
--					for (j = i+1; j < NDISKS; j++)
--						err += test_disks(i, j);
--			}
- 		}
- 		printf("\n");
+diff --git a/lib/raid6/int.uc b/lib/raid6/int.uc
+index 5ca60be..558aeac 100644
+--- a/lib/raid6/int.uc
++++ b/lib/raid6/int.uc
+@@ -107,9 +107,47 @@ static void raid6_int$#_gen_syndrome(int disks, size_t bytes, void **ptrs)
  	}
+ }
+ 
++static void raid6_int$#_xor_syndrome(int disks, int start, int stop,
++				     size_t bytes, void **ptrs)
++{
++	u8 **dptr = (u8 **)ptrs;
++	u8 *p, *q;
++	int d, z, z0;
++
++	unative_t wd$$, wq$$, wp$$, w1$$, w2$$;
++
++	z0 = stop;		/* P/Q right side optimization */
++	p = dptr[disks-2];	/* XOR parity */
++	q = dptr[disks-1];	/* RS syndrome */
++
++	for ( d = 0 ; d < bytes ; d += NSIZE*$# ) {
++		/* P/Q data pages */
++		wq$$ = wp$$ = *(unative_t *)&dptr[z0][d+$$*NSIZE];
++		for ( z = z0-1 ; z >= start ; z-- ) {
++			wd$$ = *(unative_t *)&dptr[z][d+$$*NSIZE];
++			wp$$ ^= wd$$;
++			w2$$ = MASK(wq$$);
++			w1$$ = SHLBYTE(wq$$);
++			w2$$ &= NBYTES(0x1d);
++			w1$$ ^= w2$$;
++			wq$$ = w1$$ ^ wd$$;
++		}
++		/* P/Q left side optimization */
++		for ( z = start-1 ; z >= 0 ; z-- ) {
++			w2$$ = MASK(wq$$);
++			w1$$ = SHLBYTE(wq$$);
++			w2$$ &= NBYTES(0x1d);
++			wq$$ = w1$$ ^ w2$$;
++		}
++		*(unative_t *)&p[d+NSIZE*$$] ^= wp$$;
++		*(unative_t *)&q[d+NSIZE*$$] ^= wq$$;
++	}
++
++}
++
+ const struct raid6_calls raid6_intx$# = {
+ 	raid6_int$#_gen_syndrome,
+-	NULL,			/* XOR not yet implemented */
++	raid6_int$#_xor_syndrome,
+ 	NULL,			/* always valid */
+ 	"int" NSTRING "x$#",
+ 	0
 
-------=_NextPartTM-000-4426ee90-379c-4d85-82dd-f6f0d6eabad6
+------=_NextPartTM-000-495eb919-dca3-419e-a679-dc93cd561824
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -178,4 +141,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-4426ee90-379c-4d85-82dd-f6f0d6eabad6--
+------=_NextPartTM-000-495eb919-dca3-419e-a679-dc93cd561824--
