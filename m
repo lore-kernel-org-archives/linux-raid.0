@@ -1,101 +1,127 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
-Date: Sun, 24 Aug 2014 14:39:44 +0000
-Message-ID: <20140824143944.GC19874@bitfolk.com>
-References: <20140823163110.GE11855@bitfolk.com>
- <20140824130939.461501b4@notabene.brown>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: [PATCH v3 5/6] md/raid5: activate raid6 rmw feature
+Date: Sun, 24 Aug 2014 17:22:55 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735863FC91@EXCHANGE.collogia.de>
+References: <5e18e849-8c3d-4812-8fb2-9da8df0ea883@EXCHANGE.collogia.de>,<21497.57016.978419.117894@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-3f7cfc07-ca31-4510-8e32-a4cfc5e2ee2e"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140824130939.461501b4@notabene.brown>
+In-Reply-To: <21497.57016.978419.117894@quad.stoffel.home>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
 
-Thanks for the quick response!
+This is a multi-part message in MIME format.
 
-On Sun, Aug 24, 2014 at 01:09:39PM +1000, NeilBrown wrote:
-> raid10 reshape is only supported for v1.x metadata, and you have 0.90.
-> This is because it needs to move the data_offset and 0.90 cannot do that.
-> 
-> I see you have already adjusted the --array-size correctly - good.
-> 
-> You can achieve your result by:
-> 
->  1/ stop the array and assemble with --update=metadata.  This will convert the
->     array to v1.0
+------=_NextPartTM-000-3f7cfc07-ca31-4510-8e32-a4cfc5e2ee2e
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I've now done this, so:
+> Von: John Stoffel [john@stoffel.org]=0A=
+> Gesendet: Sonntag, 24. August 2014 14:46=0A=
+> An: Markus Stockhausen=0A=
+> Cc: linux-raid@vger.kernel.org=0A=
+> Betreff: Re: [PATCH v3 5/6] md/raid5: activate raid6 rmw feature=0A=
+> ...=0A=
+> Also, how does the patch look when you have a simple 4 disk RAID6 array? =
+ =0A=
+> I would hope that since the parity overhead is much higher, it would show=
+ =0A=
+> more improvement as well.=0A=
+=0A=
+Maybe I did not explain exactly what this patch is for. To boil it down to =
+four=0A=
+short and simple key facts.=0A=
+=0A=
+- The current kernel implementation of RAID6 is very I/O expensive for smal=
+l =0A=
+changes. We always need to read all unchanged blocks of the same stripe, =
+=0A=
+recalulate the parity and write the new data block plus two parities. So a =
+single=0A=
+block change will produce n (number of disks) I/Os. The source code calls i=
+t =0A=
+RCU - reconstruct write.=0A=
+=0A=
+- With the patch we will only read the old data of the to be changed block =
+& the =0A=
+parities, recalculate the parities with the new data and rewrite everthing =
+back. A =0A=
+single block change will only have 6 I/Os regardless of the number of disks=
+. It =0A=
+is called RMW - read modify write. =0A=
+=0A=
+- This patch will only kick in if you have 7 or more disks in a RAID6. And =
+ONLY=0A=
+if I/Os RMW < I/Os RCU. This should answer your question above.=0A=
+=0A=
+- The more disks we have and the smaller the changed data is the more benef=
+it=0A=
+we will get from that patch.  =0A=
+=0A=
+Markus=
+------=_NextPartTM-000-3f7cfc07-ca31-4510-8e32-a4cfc5e2ee2e
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
-$ sudo mdadm --detail /dev/md2
-/dev/md2:
-        Version : 1.0
-  Creation Time : Sun Jun  4 08:18:59 2006
-     Raid Level : raid10
-     Array Size : 618726528 (590.06 GiB 633.58 GB)
-  Used Dev Size : 309363264 (295.03 GiB 316.79 GB)
-   Raid Devices : 6
-  Total Devices : 6
-    Persistence : Superblock is persistent
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
-    Update Time : Sun Aug 24 14:29:15 2014
-          State : active 
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
 
-         Layout : near=2
-     Chunk Size : 64K
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
-           Name : 2
-           UUID : 3905b303:ca604b72:be5949c4:ab051b7a
-         Events : 1
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
 
-    Number   Major   Minor   RaidDevice State
-       0       8       51        0      active sync   /dev/sdd3
-       1       8       67        1      active sync   /dev/sde3
-       2       8       83        2      active sync   /dev/sdf3
-       3       8       19        3      active sync   /dev/sdb3
-       4       8       35        4      active sync   /dev/sdc3
-       5       8        3        5      active sync   /dev/sda3
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
 
-I noticed something: The assemble with update re-set the array size
-to 928089792 (885.10 GiB 950.36 GB).
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
 
-(the above --detail is after all steps below)
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
 
->  2/ "mdadm /dev/md2 --grow --disks=4"  That should perform the reshape.
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
 
-I assume that should have been --raid-devices; --disks seems to be a
-syntax error. :)
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
 
-Firstly it told me the array was too big, as expected.
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
 
-$ sudo ./mdadm /dev/md2 --grow --raid-devices=4
-mdadm: this change will reduce the size of the array.
-       use --grow --array-size first to truncate array.
-       e.g. mdadm --grow /dev/md2 --array-size 618726528
-unfreeze
+President of the supervisory board:
+Hans Kristian Langva
 
-Okay.
+Registry office: district court Cologne
+Register number: HRB 52 497
 
-$ sudo ./mdadm --grow /dev/md2 --array-size 618726528
+****************************************************************************
 
-But:
-
-$ sudo ./mdadm /dev/md2 --grow --raid-devices=4
-mdadm: Cannot set new_data_offset: RAID10 reshape not
-       supported on this kernel
-
-> I guess the error message could be better....
-
-Will be happy to send the trivial patch once we get to the bottom of
-this!
-
-Cheers,
-Andy
+------=_NextPartTM-000-3f7cfc07-ca31-4510-8e32-a4cfc5e2ee2e--
