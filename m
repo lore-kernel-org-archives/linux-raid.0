@@ -1,57 +1,77 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
-Date: Mon, 25 Aug 2014 11:34:03 +0000
-Message-ID: <20140825113402.GF19874@bitfolk.com>
-References: <20140823163110.GE11855@bitfolk.com>
- <20140824130939.461501b4@notabene.brown>
- <20140824143944.GC19874@bitfolk.com>
- <20140825103234.GH11855@bitfolk.com>
- <20140825212614.5be558c9@notabene.brown>
+From: Peter Hoeg <peter@hoeg.com>
+Subject: Add BBL to existing array
+Date: Wed, 27 Aug 2014 18:32:13 +0800
+Message-ID: <20140827103213.GE15857@dolores.internal.speartail.com>
+References: <20140827090707.GA15857@dolores.internal.speartail.com>
+ <20140827192721.57c57c3b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140825212614.5be558c9@notabene.brown>
+In-Reply-To: <20140827192721.57c57c3b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi,
 
-On Mon, Aug 25, 2014 at 09:26:14PM +1000, NeilBrown wrote:
-> What does "mdadm --examine" on one of the devices report now that it is v1.0?
-> 
-> Particularly interested in the "Unused Space :" line.
+this isn't so much a question as it trying to document the situation
+with BBL's on Debian jessie, although if I've overlooked something,
+please let me know.
 
-/dev/sda3:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : 3905b303:ca604b72:be5949c4:ab051b7a
-           Name : 2
-  Creation Time : Sun Jun  4 08:18:59 2006
-     Raid Level : raid10
-   Raid Devices : 6
+Purpose: Add BBL to a RAID created by an earlier version of mdadm
+without BBL support.
 
- Avail Dev Size : 618726528 (295.03 GiB 316.79 GB)
-     Array Size : 928089792 (885.10 GiB 950.36 GB)
-   Super Offset : 618727392 sectors
-   Unused Space : before=0 sectors, after=864 sectors
-          State : active
-    Device UUID : e30176be:81a57e84:1f2aa206:9515150f
+# mdadm --version
 
-    Update Time : Sun Aug 24 14:29:15 2014
-       Checksum : bd599c72 - correct
-         Events : 1
+mdadm - v3.3 - 3rd September 2013
 
-         Layout : near=2
-     Chunk Size : 64K
 
-   Device Role : Active device 5
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+# uname -a
 
-All other devices report same (apart from UUID/checksum/role).
+Linux edith 3.14-2-amd64 #1 SMP Debian 3.14.15-2 (2014-08-09) x86_64 GNU/Linux
 
-Cheers,
-Andy
+
+# cat /proc/mdstat
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sda2[0] sdd2[4] sdc2[3] sdb2[1]
+      5859439616 blocks super 1.2 level 6, 512k chunk, algorithm 2 [4/4] [UUUU]
+      bitmap: 1/2 pages [4KB], 1048576KB chunk
+
+unused devices: <none>
+
+
+As the system boots from the RAID, I thought I could be clever and
+simply edit /usr/share/initramfs-tools/scripts/local-top/mdadm and
+change the "--assemble" statements to add "--update=bbl" which should
+take care of things after a reboot.
+
+It basically runs:
+# mdadm --assemble --scan --run --auto=yes
+
+so it would become:
+# mdadm --assemble --update=bbl --scan --run --auto=yes
+
+
+That didn't work. I ended up in the initramfs and had to manually bring
+up the RAID as well as LVM to get the machine booted.
+
+Now, according to the manual with the version of mdadm on the machine,
+'--update=bbl' is supported, however when asking mdadm directly, it
+doesn't seem to be the case:
+
+# mdadm --assemble --update=?
+
+mdadm: Valid --update options are:
+     'sparc2.2', 'super-minor', 'uuid', 'name', 'resync',
+     'summaries', 'homehost', 'byteorder', 'devicesize',
+     'no-bitmap', 'metadata', 'revert-reshape'
+
+So in all likelyhood, this is a Debian packaging issue.
+
+If anyone answers, please CC me as I am not subscribed to the list, thanks.
+
+--
+Regards,
+Peter
