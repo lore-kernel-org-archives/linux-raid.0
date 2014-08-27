@@ -1,96 +1,86 @@
-From: Peter Hoeg <peter@hoeg.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Add BBL to existing array
-Date: Wed, 27 Aug 2014 19:29:08 +0800
-Message-ID: <20140827112908.GF15857@dolores.internal.speartail.com>
+Date: Wed, 27 Aug 2014 21:52:06 +1000
+Message-ID: <20140827215206.51e6e37e@notabene.brown>
 References: <20140827090707.GA15857@dolores.internal.speartail.com>
- <20140827192721.57c57c3b@notabene.brown>
- <20140827103213.GE15857@dolores.internal.speartail.com>
- <20140827210700.5a9b3e60@notabene.brown>
+	<20140827192721.57c57c3b@notabene.brown>
+	<20140827103213.GE15857@dolores.internal.speartail.com>
+	<20140827210700.5a9b3e60@notabene.brown>
+	<20140827112908.GF15857@dolores.internal.speartail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/Bu7KbpK.LLoksl1TcmZFG2="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140827210700.5a9b3e60@notabene.brown>
+In-Reply-To: <20140827112908.GF15857@dolores.internal.speartail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Peter Hoeg <peter@hoeg.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+--Sig_/Bu7KbpK.LLoksl1TcmZFG2=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> It basically runs:
->> # mdadm --assemble --scan --run --auto=yes
->>
->> so it would become:
->> # mdadm --assemble --update=bbl --scan --run --auto=yes
->
->Sorry, --update and --scan are incompatible.
+On Wed, 27 Aug 2014 19:29:08 +0800 Peter Hoeg <peter@hoeg.com> wrote:
 
-That explains that...
-
->> That didn't work. I ended up in the initramfs and had to manually bring
->> up the RAID as well as LVM to get the machine booted.
->
->That would have been a good time to wield the --update=bbl seeing you were
->assembling the array anyway.
-
-I actually did - I ran:
-
-mdadm --assemble --update=bbl /dev/md0
-
-Which returned without error, but it doesn't seem to have changed
-anything (or am I looking in the wrong place?)
-
-# mdadm --detail /dev/md0
-
-/dev/md0:
-        Version : 1.2
-  Creation Time : Fri Jan 11 15:02:11 2013
-     Raid Level : raid6
-     Array Size : 5859439616 (5588.00 GiB 6000.07 GB)
-  Used Dev Size : 2929719808 (2794.00 GiB 3000.03 GB)
-   Raid Devices : 4
-  Total Devices : 4
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Wed Aug 27 19:23:06 2014
-          State : active
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : nas2:md0
-           UUID : d6c281be:30db3be9:b1316603:00f77a7d
-         Events : 190523
-
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       3       8       34        2      active sync   /dev/sdc2
-       4       8       50        3      active sync   /dev/sdd2
-
-Or is the 4KB mentioned in /proc/mdstat ?
-
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid6 sda2[0] sdd2[4] sdc2[3] sdb2[1]
-      5859439616 blocks super 1.2 level 6, 512k chunk, algorithm 2 [4/4] [UUUU]
-      bitmap: 1/2 pages [4KB], 1048576KB chunk
-                        ^^^^^
-
-unused devices: <none>
+> Neil,
+>=20
+> >> It basically runs:
+> >> # mdadm --assemble --scan --run --auto=3Dyes
+> >>
+> >> so it would become:
+> >> # mdadm --assemble --update=3Dbbl --scan --run --auto=3Dyes
+> >
+> >Sorry, --update and --scan are incompatible.
+>=20
+> That explains that...
+>=20
+> >> That didn't work. I ended up in the initramfs and had to manually bring
+> >> up the RAID as well as LVM to get the machine booted.
+> >
+> >That would have been a good time to wield the --update=3Dbbl seeing you =
+were
+> >assembling the array anyway.
+>=20
+> I actually did - I ran:
+>=20
+> mdadm --assemble --update=3Dbbl /dev/md0
+>=20
+> Which returned without error, but it doesn't seem to have changed
+> anything (or am I looking in the wrong place?)
+>=20
+> # mdadm --detail /dev/md0
 
 
->Oops.  I forgot to update that list when I added 'bbl' and 'no-bbl'.
->
->Will be fixed in 3.3.3.
+A bbl exist separately on each component device.
+Try=20
+   mdadm --examine /dev/sda2
 
-Looking forward to seeing that in Debian in 2017... ;-)
+look for
+   Bad Block Log : 512 entries available at offset XXX sectors
 
---
-Regards,
-Peter
+NeilBrown
+
+--Sig_/Bu7KbpK.LLoksl1TcmZFG2=
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU/3GZjnsnt1WYoG5AQJfOQ/+JKgoWigXKrOtarTM6ObhhNUfzCY5rHGP
+Qaf4QmiAasg8o4uDaqfJaXMoGMxgr7i1KKUkQnvORXzuoIA/flr/sjax/8PxQ5SO
+LArX3D7fF6cRV+5PHKwW9e+oi1lElhkLMuULK5I0ZFU7z9D9fY1cO1CmIBPez4XH
+YG+5ia3ZeTodJsjie8cMq0g6LrV2y+BIxAX/uyDc7KKYOA9UMVGbU91GcxpCdDug
+3KQBbc95EXzSWvPjlNTFk4N1NAVOOmUnozpz5Dx7RV5KKrqg/rlaFvS5tTXcGWD7
+LuRWeeqtP3lC7MKu9k3r+R/rJ4AFi7yLJcIG88QQ/PxEKvgIH9Tz3cmmSIZi/6+/
+tNUJZYjO8lA0auc0yQnkiX4X6bxnxBVeFfEJ3JwyQoMYdjsW5kVMLonaXFCYGJ7R
+IieAuWSg8rKaNUisWM+MdG0bD1zNu2rswX3Lq4zgZ4n8tGkJ4KcHduico3p1/1sF
+MAjb2KNxjvauVy23wxigmlDnpOnHvJQNs3TFsBZPeK2nip0Z8Fplx4Eiqu61J68x
+J3gT8c1Xk/A35xqyAWsG94TnbhfmRQpio1PwwSpCw844tCjdxHShUsmWKDDL8kNE
+fDEhhb38FP2iRIWCyrNBu4QQ4MWPcIYE4hap4YfN3duTJgSM5VQTrfpXu721pMf7
+VIYPFSrS7Xo=
+=Ei9I
+-----END PGP SIGNATURE-----
+
+--Sig_/Bu7KbpK.LLoksl1TcmZFG2=--
