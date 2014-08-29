@@ -1,25 +1,32 @@
-From: Adam Talbot <ajtalbot1@gmail.com>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Good hardware for mdadm
-Date: Fri, 29 Aug 2014 14:52:13 -0700
-Message-ID: <CAH_2GhebF9=74XP7y+jj+m0a59EjYx-DgJWBKZyvQtgd4T2G9w@mail.gmail.com>
-References: <ltqnvm$80o$1@ger.gmane.org>
-	<CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>
-	<ltqscm$qp5$1@ger.gmane.org>
+Date: Fri, 29 Aug 2014 17:38:30 -0500
+Message-ID: <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
+References: <ltqnvm$80o$1@ger.gmane.org> <CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>
+ <ltqscm$qp5$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <ltqscm$qp5$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Paul van der Vlis <paul@vandervlis.nl>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have found placing /boot + MBR on a DOM (Disk on module) to be very
-effective.
+No bios I have seen automatically handles it unless the disks are
+total dead, some of the hardware raid controlers may properly deal
+with a disk returning an error and go to the other mirror, the low end
+quality raid controllers start around $200.
 
-Perhaps we should be asking how the MBR got broken in the first place?
+Outside of the raid controllers I don't believe any of the bioses
+themselves will do it, so you are unlikely to find any hardware that
+does that.
 
-On Fri, Aug 29, 2014 at 2:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
+Likely he is talking about putting the boot block on multiple disks
+and and use the bbr menu or the bios boot disk selection to pick
+another disk.
+
+On Fri, Aug 29, 2014 at 4:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
 > Hi Roberto,
 >
 > op 29-08-14 22:44, Roberto Spadim schreef:
