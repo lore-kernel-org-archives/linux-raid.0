@@ -1,185 +1,120 @@
-From: Fabio Bacigalupo <info1@open-haus.de>
-Subject: Seeking help to get a failed RAID5 system back to life
-Date: Fri, 29 Aug 2014 04:07:40 +0200
-Message-ID: <CAGgRf0Qe1EU6wZm4BbWqs0diwwnBCeStiVAXaOdHV88Ttn=vfw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
+Date: Fri, 29 Aug 2014 13:53:12 +1000
+Message-ID: <20140829135312.5a6e78bc@notabene.brown>
+References: <20140823163110.GE11855@bitfolk.com>
+	<20140824130939.461501b4@notabene.brown>
+	<20140824143944.GC19874@bitfolk.com>
+	<20140825103234.GH11855@bitfolk.com>
+	<20140825212614.5be558c9@notabene.brown>
+	<20140825113402.GF19874@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/p35UkYjtlWc6w2wGRA.AMUl"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140825113402.GF19874@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+--Sig_/p35UkYjtlWc6w2wGRA.AMUl
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I have been trying all night to get my system back to work. One of the
-two remaining hard-drives suddenly stopped working today. I read and
-tried everything I could find that seemed to not make things worse
-than they are. Finally I stumbled upon this page [1] on the Linux Raid
-wiki which recommends to consult this mailing list.
+On Mon, 25 Aug 2014 11:34:03 +0000 Andy Smith <andy@strugglers.net> wrote:
 
-I had a RAID 5 installation with three disks but disk 0 (I assume as
-it was /dev/sda3) has been taken out for a while. The disks reside in
-a remote server.
+> Hi Neil,
+>=20
+> On Mon, Aug 25, 2014 at 09:26:14PM +1000, NeilBrown wrote:
+> > What does "mdadm --examine" on one of the devices report now that it is=
+ v1.0?
+> >=20
+> > Particularly interested in the "Unused Space :" line.
+>=20
+> /dev/sda3:
+>           Magic : a92b4efc
+>         Version : 1.0
+>     Feature Map : 0x0
+>      Array UUID : 3905b303:ca604b72:be5949c4:ab051b7a
+>            Name : 2
+>   Creation Time : Sun Jun  4 08:18:59 2006
+>      Raid Level : raid10
+>    Raid Devices : 6
+>=20
+>  Avail Dev Size : 618726528 (295.03 GiB 316.79 GB)
+>      Array Size : 928089792 (885.10 GiB 950.36 GB)
+>    Super Offset : 618727392 sectors
+>    Unused Space : before=3D0 sectors, after=3D864 sectors
+>           State : active
+>     Device UUID : e30176be:81a57e84:1f2aa206:9515150f
+>=20
+>     Update Time : Sun Aug 24 14:29:15 2014
+>        Checksum : bd599c72 - correct
+>          Events : 1
+>=20
+>          Layout : near=3D2
+>      Chunk Size : 64K
+>=20
+>    Device Role : Active device 5
+>    Array State : AAAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
+=3D replacing)
+>=20
+> All other devices report same (apart from UUID/checksum/role).
 
-Sorry if this is obvious to you but I am totally stuck. I always run
-into dead ends.
+'after=3D864' should be plenty.
 
-Your help is very much appreciated!
+mdadm writes '128' to 'new_offset'
+This is bigger than 'data_offset' (which must be zero, or it would have been
+reported), mddev->dev_sectors is 618726528 while rdev->sectors is 618727392
+(difference is 864), so=20
+		if (new_offset - rdev->data_offset
+		    + mddev->dev_sectors > rdev->sectors)
+cannot return 'true'.  Yet it seems that it does.
 
-Thank you for any hints,
-Fabio
+Ahh.. somewhere else returns -E2BIG:
 
-I could gather the following information:
+	if (mddev->pers && mddev->persistent &&
+	    !super_types[mddev->major_version]
+	    .allow_new_offset(rdev, new_offset))
+		return -E2BIG;
 
-================================================================================
-
-# mdadm --examine /dev/sd*3
-mdadm: No md superblock detected on /dev/sda3.
-/dev/sdb3:
-    Magic : a92b4efc
-    Version : 0.90.00
-    UUID : f07f4bc6:36864b49:776c2c25:004bd7b2
-    Creation Time : Wed May  4 08:18:11 2011
-    Raid Level : raid5
-    Used Dev Size : 1462766336 (1395.00 GiB 1497.87 GB)
-    Array Size : 2925532672 (2790.01 GiB 2995.75 GB)
-    Raid Devices : 3
-    Total Devices : 1
-    Preferred Minor : 127
-
-    Update Time : Thu Aug 28 19:55:59 2014
-    State : clean
-    Active Devices : 1
-    Working Devices : 1
-    Failed Devices : 1
-    Spare Devices : 0
-    Checksum : 490fa722 - correct
-    Events : 68856340
-
-    Layout : left-symmetric
-    Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       19        1      active sync   /dev/sdb3
-
-   0     0       0        0        0      removed
-   1     1       8       19        1      active sync   /dev/sdb3
-   2     2       0        0        2      faulty removed
-/dev/sdc3:
-    Magic : a92b4efc
-    Version : 0.90.00
-    UUID : f07f4bc6:36864b49:776c2c25:004bd7b2
-    Creation Time : Wed May  4 08:18:11 2011
-    Raid Level : raid5
-    Used Dev Size : 1462766336 (1395.00 GiB 1497.87 GB)
-    Array Size : 2925532672 (2790.01 GiB 2995.75 GB)
-    Raid Devices : 3
-    Total Devices : 2
-    Preferred Minor : 127
-
-    Update Time : Thu Aug 28 19:22:19 2014
-    State : active
-    Active Devices : 2
-    Working Devices : 2
-    Failed Devices : 0
-    Spare Devices : 0
-    Checksum : 44f4f557 - correct
-    Events : 68856326
-
-    Layout : left-symmetric
-    Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       35        2      active sync   /dev/sdc3
-
-   0     0       0        0        0      removed
-   1     1       8       19        1      active sync   /dev/sdb3
-   2     2       8       35        2      active sync   /dev/sdc3
+But super_1_allow_new_offset always succeeds if new_offset >
+rdev->data_offset, so that cannot be the problem.
 
 
-================================================================================
+I know.  rdev->sectors isn't "Super Offset", it is only "Avail Dev Size".
+You need to
+  echo 618727392 > /sys/block/md2/md/dev-sda3/size
+and same for the other devices.
 
-# mdadm --examine /dev/sd[b]
-/dev/sdb:
-   MBR Magic : aa55
-Partition[0] :      4737024 sectors at         2048 (type 83)
-Partition[2] :   2925532890 sectors at      4739175 (type fd)
+I looks like I need to get mdadm to be more clever when it gets -E2BIG.
+Can you check that the above works?
 
-
-================================================================================
-
-Disk /dev/sdc has been replaced with a new hard drive as the old one
-had input/output errors.
-
-I assume this is weired and showed /dev/sdb3 before (changing things):
-
-# cat /proc/mdstat
-Personalities : [raid1]
-unused devices: <none>
-
-I tried to copy the structure from /dev/sdb to /dev/sdc which assumably work:
-
-# sgdisk -R /dev/sdc /dev/sdb
-
-***************************************************************
-Found invalid GPT and valid MBR; converting MBR to GPT format
-in memory.
-***************************************************************
-
-The operation has completed successfully.
-
-# sgdisk -G /dev/sdc
-
-The operation has completed successfully.
-
-# fdisk -l
-
--- Removed /dev/sda --
-
-Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes, 2930277168 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk label type: dos
-Disk identifier: 0x0005fb16
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1            2048     4739071     2368512   83  Linux
-/dev/sdb3   *     4739175  2930272064  1462766445   fd  Linux raid autodetect
-WARNING: fdisk GPT support is currently new, and therefore in an
-experimental phase. Use at your own discretion.
-
-Disk /dev/sdc: 1500.3 GB, 1500301910016 bytes, 2930277168 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk label type: gpt
-
-#         Start          End    Size  Type            Name
- 1         2048      4739071    2.3G  Linux filesyste Linux filesystem
- 3      4739175   2930272064    1.4T  Linux RAID      Linux RAID
+Thanks,
+NeilBrown
 
 
-# mdadm --assemble /dev/md127 /dev/sd[bc]3
-mdadm: no RAID superblock on /dev/sdc3
-mdadm: /dev/sdc3 has no superblock - assembly aborted
+--Sig_/p35UkYjtlWc6w2wGRA.AMUl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-# mdadm --assemble /dev/md127 /dev/sd[b]3
-mdadm: /dev/md127 assembled from 1 drive - not enough to start the array.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-# mdadm --misc -QD /dev/sd[bc]3
-mdadm: /dev/sdb3 does not appear to be an md device
-mdadm: /dev/sdc3 does not appear to be an md device
+iQIVAwUBU//5KDnsnt1WYoG5AQKICw//ZgBrHX32b+0nKjr5kiHuMnQflBpmv4Y4
+mF2DwNQR8XWl4Y9drcn7HaBkc841Zo4PYU/54Ml0xQ6ETGtXpra1hIMi4xR9NrmU
+WcBd5hmPnKdoWFZu8YfMFKLPqxztmX1pnOX+GwVWTf+Nr+7OXBGH5kN2dcQiMi1S
+mYQidjOigAytn2tPpl7BNPzCSfgmubTvAjdPIqesm3v8a2VXODWv9mo3aNSYMCnU
+kNzFsFAop3P625eVKu3ZRs17vBz/3BG4CTZ5cX7mlN3SAgUPGz260gNpPFXVIaRL
+4UCcC52hB18wpx4Kx2dsfxVWOELO44I45kpGkEy6Ncw6J8L28jpJ5LsHLXw16Owt
+095YGItFvBThgS5h2NYpA+ajUwwv/ZmP9KhHwsp7RhTfw0YI9ML3GdgBS2b3lbPI
+V0dkkkhf5vppHL1NS+LSIMGXDS5nU1WW0TNp37G47hKvgZdXTmxWIKesTPm8XjJI
+qv0BCOWcfESU38NUE4IRDtw809zEtZw5OASEa9xiowTvzvvkItJc7cno+0BtFWJY
+Lr3+QARtRI7/VAiLdVlIEHShNl6dOkJaf5GpKjqCuH2x6AxRQdy91TUvF5A6h6rW
+j7WOE7tTWi+xRBYZ9cGt9musaygvuZAKN7paEymvxb9uqcavNdjfdpBkdagfCdRE
+O0LizQVfvqY=
+=AIA4
+-----END PGP SIGNATURE-----
 
-# mdadm --detail /dev/md127
-/dev/md127:
-        Version :
-     Raid Level : raid0
-  Total Devices : 0
-
-          State : inactive
-
-    Number   Major   Minor   RaidDevice
-
-
-[1] https://raid.wiki.kernel.org/index.php/RAID_Recovery
+--Sig_/p35UkYjtlWc6w2wGRA.AMUl--
