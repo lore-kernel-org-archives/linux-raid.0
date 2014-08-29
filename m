@@ -1,119 +1,251 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
-Date: Fri, 29 Aug 2014 16:04:43 +1000
-Message-ID: <20140829160443.3893adaa@notabene.brown>
-References: <20140824130939.461501b4@notabene.brown>
-	<20140824143944.GC19874@bitfolk.com>
-	<20140825103234.GH11855@bitfolk.com>
-	<20140825212614.5be558c9@notabene.brown>
-	<20140825113402.GF19874@bitfolk.com>
-	<20140829135312.5a6e78bc@notabene.brown>
-	<20140829040231.GP19874@bitfolk.com>
-	<20140829141812.17c35df7@notabene.brown>
-	<20140829042618.GQ19874@bitfolk.com>
-	<20140829143528.588cf640@notabene.brown>
-	<20140829044226.GR19874@bitfolk.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Seeking help to get a failed RAID5 system back to life
+Date: Fri, 29 Aug 2014 08:46:27 +0100
+Message-ID: <20140829074627.GA8321@cthulhu.home.robinhill.me.uk>
+References: <CAGgRf0Qe1EU6wZm4BbWqs0diwwnBCeStiVAXaOdHV88Ttn=vfw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/5b31J=3NHVZHK.IXOPkKf26"; protocol="application/pgp-signature"
+	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140829044226.GR19874@bitfolk.com>
+Content-Disposition: inline
+In-Reply-To: <CAGgRf0Qe1EU6wZm4BbWqs0diwwnBCeStiVAXaOdHV88Ttn=vfw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>
+To: Fabio Bacigalupo <info1@open-haus.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5b31J=3NHVZHK.IXOPkKf26
-Content-Type: text/plain; charset=US-ASCII
+
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 29 Aug 2014 04:42:26 +0000 Andy Smith <andy@strugglers.net> wrote:
+On Fri Aug 29, 2014 at 04:07:40AM +0200, Fabio Bacigalupo wrote:
 
-> Hi Neil,
+> Hello,
 >=20
-> On Fri, Aug 29, 2014 at 02:35:28PM +1000, NeilBrown wrote:
-> > On Fri, 29 Aug 2014 04:26:18 +0000 Andy Smith <andy@strugglers.net> wro=
-te:
-> > > Sorry, still no joy:
-> > >=20
-> > > # echo 309363696 > /sys/block/md2/md/dev-sda3/size
-> > > # cat /sys/block/md2/md/dev-sda3/size
-> > > 309363264
-> >=20
-> > Try use "/bin/echo" so you get an error message.
-> > Also try smaller numbers.  Can you write anything larger than what is a=
-lready
-> > there?  Increasing by 64 (match the 128 sectors that mdadm wants for
-> > new_offset) should  be enough.
+> I have been trying all night to get my system back to work. One of the
+> two remaining hard-drives suddenly stopped working today. I read and
+> tried everything I could find that seemed to not make things worse
+> than they are. Finally I stumbled upon this page [1] on the Linux Raid
+> wiki which recommends to consult this mailing list.
 >=20
-> I can't even increase it by 64 from what it is now:
+> I had a RAID 5 installation with three disks but disk 0 (I assume as
+> it was /dev/sda3) has been taken out for a while. The disks reside in
+> a remote server.
 >=20
-> # /bin/echo 309363328 > /sys/block/md2/md/dev-sda3/size
-> # cat /sys/block/md2/md/dev-sda3/size
-> 309363264
+That's a disaster waiting to happen. You should never leave a RAID array
+in a degraded state for any longer than is absolutely necessary,
+otherwise you might as well not bother running RAID at all.
+
+> Sorry if this is obvious to you but I am totally stuck. I always run
+> into dead ends.
 >=20
-> In fact I can't increase it by 1, and /bin/echo doesn't say why.
+> Your help is very much appreciated!
 >=20
+> Thank you for any hints,
+> Fabio
+>=20
+> I could gather the following information:
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>=20
+> # mdadm --examine /dev/sd*3
+> mdadm: No md superblock detected on /dev/sda3.
+> /dev/sdb3:
+>     Magic : a92b4efc
+>     Version : 0.90.00
+>     UUID : f07f4bc6:36864b49:776c2c25:004bd7b2
+>     Creation Time : Wed May  4 08:18:11 2011
+>     Raid Level : raid5
+>     Used Dev Size : 1462766336 (1395.00 GiB 1497.87 GB)
+>     Array Size : 2925532672 (2790.01 GiB 2995.75 GB)
+>     Raid Devices : 3
+>     Total Devices : 1
+>     Preferred Minor : 127
+>=20
+>     Update Time : Thu Aug 28 19:55:59 2014
+>     State : clean
+>     Active Devices : 1
+>     Working Devices : 1
+>     Failed Devices : 1
+>     Spare Devices : 0
+>     Checksum : 490fa722 - correct
+>     Events : 68856340
+>=20
+>     Layout : left-symmetric
+>     Chunk Size : 64K
+>=20
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       19        1      active sync   /dev/sdb3
+>=20
+>    0     0       0        0        0      removed
+>    1     1       8       19        1      active sync   /dev/sdb3
+>    2     2       0        0        2      faulty removed
+> /dev/sdc3:
+>     Magic : a92b4efc
+>     Version : 0.90.00
+>     UUID : f07f4bc6:36864b49:776c2c25:004bd7b2
+>     Creation Time : Wed May  4 08:18:11 2011
+>     Raid Level : raid5
+>     Used Dev Size : 1462766336 (1395.00 GiB 1497.87 GB)
+>     Array Size : 2925532672 (2790.01 GiB 2995.75 GB)
+>     Raid Devices : 3
+>     Total Devices : 2
+>     Preferred Minor : 127
+>=20
+>     Update Time : Thu Aug 28 19:22:19 2014
+>     State : active
+>     Active Devices : 2
+>     Working Devices : 2
+>     Failed Devices : 0
+>     Spare Devices : 0
+>     Checksum : 44f4f557 - correct
+>     Events : 68856326
+>=20
+>     Layout : left-symmetric
+>     Chunk Size : 64K
+>=20
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       35        2      active sync   /dev/sdc3
+>=20
+>    0     0       0        0        0      removed
+>    1     1       8       19        1      active sync   /dev/sdb3
+>    2     2       8       35        2      active sync   /dev/sdc3
+>=20
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>=20
+> # mdadm --examine /dev/sd[b]
+> /dev/sdb:
+>    MBR Magic : aa55
+> Partition[0] :      4737024 sectors at         2048 (type 83)
+> Partition[2] :   2925532890 sectors at      4739175 (type fd)
+>=20
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>=20
+> Disk /dev/sdc has been replaced with a new hard drive as the old one
+> had input/output errors.
+>=20
+Are the above --examine results from before or after the replacement?
+Was the old /dev/sdc data replicated onto the replacement disk?
 
-Hmm.... I've obviously been assuming something that was wrong.
+> I assume this is weired and showed /dev/sdb3 before (changing things):
+>=20
+> # cat /proc/mdstat
+> Personalities : [raid1]
+> unused devices: <none>
+>=20
+> I tried to copy the structure from /dev/sdb to /dev/sdc which assumably w=
+ork:
+>=20
+This shouldn't be needed if the old disk was replicated before being
+replaced.
 
-So I did some experiments myself....
+> # sgdisk -R /dev/sdc /dev/sdb
+>=20
+> ***************************************************************
+> Found invalid GPT and valid MBR; converting MBR to GPT format
+> in memory.
+> ***************************************************************
+>=20
+> The operation has completed successfully.
+>=20
+> # sgdisk -G /dev/sdc
+>=20
+> The operation has completed successfully.
+>=20
+> # fdisk -l
+>=20
+> -- Removed /dev/sda --
+>=20
+> Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes, 2930277168 sectors
+> Units =3D sectors of 1 * 512 =3D 512 bytes
+> Sector size (logical/physical): 512 bytes / 512 bytes
+> I/O size (minimum/optimal): 512 bytes / 512 bytes
+> Disk label type: dos
+> Disk identifier: 0x0005fb16
+>=20
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdb1            2048     4739071     2368512   83  Linux
+> /dev/sdb3   *     4739175  2930272064  1462766445   fd  Linux raid autode=
+tect
+> WARNING: fdisk GPT support is currently new, and therefore in an
+> experimental phase. Use at your own discretion.
+>=20
+> Disk /dev/sdc: 1500.3 GB, 1500301910016 bytes, 2930277168 sectors
+> Units =3D sectors of 1 * 512 =3D 512 bytes
+> Sector size (logical/physical): 512 bytes / 512 bytes
+> I/O size (minimum/optimal): 512 bytes / 512 bytes
+> Disk label type: gpt
+>=20
+> #         Start          End    Size  Type            Name
+>  1         2048      4739071    2.3G  Linux filesyste Linux filesystem
+>  3      4739175   2930272064    1.4T  Linux RAID      Linux RAID
+>=20
+>=20
+> # mdadm --assemble /dev/md127 /dev/sd[bc]3
+> mdadm: no RAID superblock on /dev/sdc3
+> mdadm: /dev/sdc3 has no superblock - assembly aborted
+>=20
+> # mdadm --assemble /dev/md127 /dev/sd[b]3
+> mdadm: /dev/md127 assembled from 1 drive - not enough to start the array.
+>=20
+> # mdadm --misc -QD /dev/sd[bc]3
+> mdadm: /dev/sdb3 does not appear to be an md device
+> mdadm: /dev/sdc3 does not appear to be an md device
+>=20
+> # mdadm --detail /dev/md127
+> /dev/md127:
+>         Version :
+>      Raid Level : raid0
+>   Total Devices : 0
+>=20
+>           State : inactive
+>=20
+>     Number   Major   Minor   RaidDevice
+>=20
+>=20
+> [1] https://raid.wiki.kernel.org/index.php/RAID_Recovery
 
-If you apply the following patch to mdadm, stop the array, and then assemble
-with --update=3Ddevicesize, you should then be able to reshape the array to
-fewer devices.
+If the initial --examine results were done on the same disks as the
+--assemble then I'm rather confused as to why mdadm would find a
+superblock for one and not for the other. Could you post the mdadm and
+kernel versions - possibly there's a bug that's been fixed in newer
+releases.
 
-This isn't a final solution, I need to think about the whole thing more
-carefully.  But it will work for you.
+If the --examine was on the old disk and this wasn't replicated onto the
+new one then I'm not sure what you're expecting to happen here - you've
+lost 2 disks in a 3-disk RAID-5 so your data is now toast.
 
-Thanks for your patience.
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-NeilBrown
-
-diff --git a/super1.c b/super1.c
-index 727a08a110e0..efa1042ab47a 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1251,6 +1251,17 @@ static int update_super1(struct supertype *st, struc=
-t mdinfo *info,
- 			misc->device_size - __le64_to_cpu(sb->data_offset));
- 		printf("Size is %llu\n", (unsigned long long)
- 		       __le64_to_cpu(sb->data_size));
-+	} else if (strcmp(update, "devicesize") =3D=3D 0 &&
-+		   !(__le32_to_cpu(sb->feature_map)&MD_FEATURE_BITMAP_OFFSET) &&
-+		   __le64_to_cpu(sb->super_offset) >
-+		   __le64_to_cpu(sb->data_offset)) {
-+		/* set data_size to device size less data_offset */
-+		printf("Size was %llu\n", (unsigned long long)
-+		       __le64_to_cpu(sb->data_size));
-+		sb->data_size =3D __cpu_to_le64(
-+			__le64_to_cpu(sb->super_offset) - __le64_to_cpu(sb->data_offset));
-+		printf("Size is %llu\n", (unsigned long long)
-+		       __le64_to_cpu(sb->data_size));
- 	} else if (strcmp(update, "revert-reshape") =3D=3D 0) {
- 		rv =3D -2;
- 		if (!(sb->feature_map & __cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE)))
-
---Sig_/5b31J=3NHVZHK.IXOPkKf26
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--ew6BAiZeqk4r7MaW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Version: GnuPG v2
 
-iQIVAwUBVAAX+znsnt1WYoG5AQIOqRAAlh2AxWqrPdj74iTHNfD3Vx+KEFtrRWxp
-lkZ9uQXcJnZj3IC7mSU0ftEpHUsnFk1tBE4gXDLMaFu91GNytoECCJCO669FemYz
-HuOQ1X2NmGlVYI9xt2VSlGBkoCG97G2MyILnj97HKAjqP1EXS/WOugGtLx8vstw7
-54RP6F9DkcT5GSbVXt3uUuCKB+7HxAXd+buGLfn6GsN0As3zulmHyUCgF2LRVDQv
-hAeLv5c+CSFP0XRDPZtZQKL3mLGd3c+33CaaRACPcEnsuPERaxKMDkdJ7qUMSIER
-eKIggj+e3YDalsb7AQcEzI5cmJ0VHHT+bI0LsdwtrzQWtuBAqJAeS+Rv5CNRPsx9
-VKpElRWX/NrvP8TP+1R3OpFaslpTqqrQUw/fwgz0rCgc4Pbq1bFlT2sNMvTg3XC9
-lOE9iZZXVHqb6JZiQArX+leylQ2NJTVNlr0/PT0aqIniiXF0BeqqEPhWNW9ntPL9
-UGe541V0nXwTmCyiDWof3aFlLv4lBK6N4k73v8udkNrvD0fuwYdNV6YvkAxRTUOr
-wRRxTRvsGiQAtpLIEJ8pTJAg2KnEfKBzag+Vfyu57MU3idaZ5K1/k7+/mZd4Ho+o
-S0I+YFnYeA4Y/+S+g+6H2YJse8CtSaYzg5qdMmZ3/jVjldOyXvy+BHcfLmrAurS9
-r2UVEGwu4jM=
-=etvo
+iEYEARECAAYFAlQAL9IACgkQShxCyD40xBJREgCgxhvql2iLSw6wN4Qc2jl1xqPK
+7nQAmgOaK4ojlJBddisswuPOvsMLBFp9
+=ZkFo
 -----END PGP SIGNATURE-----
 
---Sig_/5b31J=3NHVZHK.IXOPkKf26--
+--ew6BAiZeqk4r7MaW--
