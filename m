@@ -1,49 +1,69 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
-Date: Fri, 29 Aug 2014 04:42:26 +0000
-Message-ID: <20140829044226.GR19874@bitfolk.com>
-References: <20140824130939.461501b4@notabene.brown>
- <20140824143944.GC19874@bitfolk.com>
- <20140825103234.GH11855@bitfolk.com>
- <20140825212614.5be558c9@notabene.brown>
- <20140825113402.GF19874@bitfolk.com>
- <20140829135312.5a6e78bc@notabene.brown>
- <20140829040231.GP19874@bitfolk.com>
- <20140829141812.17c35df7@notabene.brown>
- <20140829042618.GQ19874@bitfolk.com>
- <20140829143528.588cf640@notabene.brown>
+From: "Glen Whittenberg" <glenewhittenberg@gmail.com>
+Subject: Failed drive in RAID10 using Intel IHC
+Date: Thu, 28 Aug 2014 22:08:58 -0700
+Message-ID: <00ed01cfc347$5851bd80$08f53880$@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140829143528.588cf640@notabene.brown>
+Content-language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+What to do... I have a SUPERMICRO SuperServer 5017R-MTF server with 4
+Western Digital WDE SATA drives in it. This was setup in the BIOS as a
+RAID10 Array then OpenSUSE dropped on it. It appears one of the drives is
+off line now. Here is the good part, like the BIOS RAID thing is not enough.
+This is a single volume and it also boots off of it. What can I do to repair
+this? Some info is below. Please let me know what else is needed. Thanks!
 
-On Fri, Aug 29, 2014 at 02:35:28PM +1000, NeilBrown wrote:
-> On Fri, 29 Aug 2014 04:26:18 +0000 Andy Smith <andy@strugglers.net> wrote:
-> > Sorry, still no joy:
-> > 
-> > # echo 309363696 > /sys/block/md2/md/dev-sda3/size
-> > # cat /sys/block/md2/md/dev-sda3/size
-> > 309363264
-> 
-> Try use "/bin/echo" so you get an error message.
-> Also try smaller numbers.  Can you write anything larger than what is already
-> there?  Increasing by 64 (match the 128 sectors that mdadm wants for
-> new_offset) should  be enough.
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md125 : inactive sdc[0](S)
+      1105 blocks super external:imsm
 
-I can't even increase it by 64 from what it is now:
+md126 : active raid10 sda[2] sdb[1] sdd[0]
+      3711641600 blocks super external:/md127/0 64K chunks 2 near-copies
+[4/3] [UU_U]
+      [=============>.......]  resync = 68.7% (2550717632/3711641856)
+finish=157.5min speed=122779K/sec
 
-# /bin/echo 309363328 > /sys/block/md2/md/dev-sda3/size
-# cat /sys/block/md2/md/dev-sda3/size
-309363264
+md127 : inactive sda[2](S) sdd[1](S) sdb[0](S)
+      9459 blocks super external:imsm
 
-In fact I can't increase it by 1, and /bin/echo doesn't say why.
+unused devices: <none>
 
-Cheers,
-Andy
+# mdadm --version
+mdadm - v3.3 - 3rd September 2013
+
+# mdadm --detail /dev/md126
+/dev/md126:
+      Container : /dev/md/RAID_0, member 0
+     Raid Level : raid10
+     Array Size : 3711641600 (3539.70 GiB 3800.72 GB)
+  Used Dev Size : 1855820928 (1769.85 GiB 1900.36 GB)
+   Raid Devices : 4
+  Total Devices : 3
+
+          State : active, degraded, resyncing
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : near=2
+     Chunk Size : 64K
+
+  Resync Status : 69% complete
+
+
+           UUID : dd2ab43b:37dd6ee2:8d78e0a9:ba8c4eec
+    Number   Major   Minor   RaidDevice State
+       2       8        0        0      active sync set-A   /dev/sda
+       1       8       16        1      active sync set-B   /dev/sdb
+       4       0        0        4      removed
+       0       8       48        3      active sync set-B   /dev/sdd
+
+
