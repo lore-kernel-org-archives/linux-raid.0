@@ -1,69 +1,66 @@
-From: "Glen Whittenberg" <glenewhittenberg@gmail.com>
-Subject: Failed drive in RAID10 using Intel IHC
-Date: Thu, 28 Aug 2014 22:08:58 -0700
-Message-ID: <00ed01cfc347$5851bd80$08f53880$@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Robert Long <boblong@k9heritage.com>
+Subject: Mirroring seek optimization
+Date: Thu, 28 Aug 2014 22:39:57 -0700
+Message-ID: <2020F0B3-0B1E-4512-9E75-0D0DE7F0FB61@k9heritage.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-language: en-us
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What to do... I have a SUPERMICRO SuperServer 5017R-MTF server with 4
-Western Digital WDE SATA drives in it. This was setup in the BIOS as a
-RAID10 Array then OpenSUSE dropped on it. It appears one of the drives is
-off line now. Here is the good part, like the BIOS RAID thing is not enough.
-This is a single volume and it also boots off of it. What can I do to repair
-this? Some info is below. Please let me know what else is needed. Thanks!
+Hi Again,
 
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md125 : inactive sdc[0](S)
-      1105 blocks super external:imsm
+=46irst, the code base that I was working from is now 2 years old. Whil=
+e I doubt that the raid1.c code has changed significantly I could be ve=
+ry wrong. At that time the load balancing algorithm was simply to attem=
+pt to split the actively seeked area of the disk into two parts, and ha=
+ve one disk take the low half and one take the high half. The effect of=
+ that, in read intensive applications, is to cut in half the overall se=
+ek length for each disk in the mirror, resulting in considerable seek t=
+ime savings and overall higher throughput. A moving average of sector a=
+ddresses needs to be maintained to make this work, but this is quite ea=
+sily done. The more writing happens, the more this advantage is lost. T=
+he problem with this approach, though not a large one, is that is that =
+a numerical average is not actually representative of the middle of the=
+ work area due to outliers, clusters of reads, etc.
 
-md126 : active raid10 sda[2] sdb[1] sdd[0]
-      3711641600 blocks super external:/md127/0 64K chunks 2 near-copies
-[4/3] [UU_U]
-      [=============>.......]  resync = 68.7% (2550717632/3711641856)
-finish=157.5min speed=122779K/sec
+A solution to this is to maintain a running median of the sector addres=
+s. When this is done you get a measurable increase in throughput, at th=
+e cost of greater computational overhead. The method that I used to mai=
+ntain a moving median involves the creation of an equal sized min heap =
+and max heap connected together at the head of each. This connection po=
+int represents the current median sector of access requests to the mirr=
+or.
 
-md127 : inactive sda[2](S) sdd[1](S) sdb[0](S)
-      9459 blocks super external:imsm
+Today I fired up the machine that I used to develop and test this modif=
+ication. It took some time just to locate the modified raid1.c file :) =
+The machine, in addition to the boot drive, is equipped with a couple o=
+f 1 TB Hitachi disk drives that were used for test purposes. To be hone=
+st I don=92t remember the name of the test software that I used, but it=
+ seems that it was a pretty performance standard utility, not something=
+ I put together myself. Perhaps you could jog my memory. As I mentioned=
+ previously the improvement was around 7% with read only testing of ran=
+dom seeks.
 
-unused devices: <none>
+If this is of interest I will gladly post the NOT PRODUCTION READY code=
+=2E (I took some shortcuts in the code for testing purposes, primarily =
+in the assignment of drives to the array so that I didn=92t have to fig=
+ure out how the existing code does such a nice job of drive allocation.=
+)
 
-# mdadm --version
-mdadm - v3.3 - 3rd September 2013
+On the other hand, if the improvement is deemed to be insufficient then=
+ I will chuck the code into the dust bin of history. Given the continue=
+d rise in the use of SSDs, seek optimization becomes less relevant ever=
+y day.
 
-# mdadm --detail /dev/md126
-/dev/md126:
-      Container : /dev/md/RAID_0, member 0
-     Raid Level : raid10
-     Array Size : 3711641600 (3539.70 GiB 3800.72 GB)
-  Used Dev Size : 1855820928 (1769.85 GiB 1900.36 GB)
-   Raid Devices : 4
-  Total Devices : 3
+Bob Long
 
-          State : active, degraded, resyncing
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : near=2
-     Chunk Size : 64K
-
-  Resync Status : 69% complete
-
-
-           UUID : dd2ab43b:37dd6ee2:8d78e0a9:ba8c4eec
-    Number   Major   Minor   RaidDevice State
-       2       8        0        0      active sync set-A   /dev/sda
-       1       8       16        1      active sync set-B   /dev/sdb
-       4       0        0        4      removed
-       0       8       48        3      active sync set-B   /dev/sdd
-
-
+PS
+This is all the =93documentation=94 that exists other than a few commen=
+ts sprinkled throughout the code.--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
