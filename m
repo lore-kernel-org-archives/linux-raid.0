@@ -1,66 +1,119 @@
-From: Robert Long <boblong@k9heritage.com>
-Subject: Mirroring seek optimization
-Date: Thu, 28 Aug 2014 22:39:57 -0700
-Message-ID: <2020F0B3-0B1E-4512-9E75-0D0DE7F0FB61@k9heritage.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
+Date: Fri, 29 Aug 2014 16:04:43 +1000
+Message-ID: <20140829160443.3893adaa@notabene.brown>
+References: <20140824130939.461501b4@notabene.brown>
+	<20140824143944.GC19874@bitfolk.com>
+	<20140825103234.GH11855@bitfolk.com>
+	<20140825212614.5be558c9@notabene.brown>
+	<20140825113402.GF19874@bitfolk.com>
+	<20140829135312.5a6e78bc@notabene.brown>
+	<20140829040231.GP19874@bitfolk.com>
+	<20140829141812.17c35df7@notabene.brown>
+	<20140829042618.GQ19874@bitfolk.com>
+	<20140829143528.588cf640@notabene.brown>
+	<20140829044226.GR19874@bitfolk.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/5b31J=3NHVZHK.IXOPkKf26"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140829044226.GR19874@bitfolk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Again,
+--Sig_/5b31J=3NHVZHK.IXOPkKf26
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-=46irst, the code base that I was working from is now 2 years old. Whil=
-e I doubt that the raid1.c code has changed significantly I could be ve=
-ry wrong. At that time the load balancing algorithm was simply to attem=
-pt to split the actively seeked area of the disk into two parts, and ha=
-ve one disk take the low half and one take the high half. The effect of=
- that, in read intensive applications, is to cut in half the overall se=
-ek length for each disk in the mirror, resulting in considerable seek t=
-ime savings and overall higher throughput. A moving average of sector a=
-ddresses needs to be maintained to make this work, but this is quite ea=
-sily done. The more writing happens, the more this advantage is lost. T=
-he problem with this approach, though not a large one, is that is that =
-a numerical average is not actually representative of the middle of the=
- work area due to outliers, clusters of reads, etc.
+On Fri, 29 Aug 2014 04:42:26 +0000 Andy Smith <andy@strugglers.net> wrote:
 
-A solution to this is to maintain a running median of the sector addres=
-s. When this is done you get a measurable increase in throughput, at th=
-e cost of greater computational overhead. The method that I used to mai=
-ntain a moving median involves the creation of an equal sized min heap =
-and max heap connected together at the head of each. This connection po=
-int represents the current median sector of access requests to the mirr=
-or.
+> Hi Neil,
+>=20
+> On Fri, Aug 29, 2014 at 02:35:28PM +1000, NeilBrown wrote:
+> > On Fri, 29 Aug 2014 04:26:18 +0000 Andy Smith <andy@strugglers.net> wro=
+te:
+> > > Sorry, still no joy:
+> > >=20
+> > > # echo 309363696 > /sys/block/md2/md/dev-sda3/size
+> > > # cat /sys/block/md2/md/dev-sda3/size
+> > > 309363264
+> >=20
+> > Try use "/bin/echo" so you get an error message.
+> > Also try smaller numbers.  Can you write anything larger than what is a=
+lready
+> > there?  Increasing by 64 (match the 128 sectors that mdadm wants for
+> > new_offset) should  be enough.
+>=20
+> I can't even increase it by 64 from what it is now:
+>=20
+> # /bin/echo 309363328 > /sys/block/md2/md/dev-sda3/size
+> # cat /sys/block/md2/md/dev-sda3/size
+> 309363264
+>=20
+> In fact I can't increase it by 1, and /bin/echo doesn't say why.
+>=20
 
-Today I fired up the machine that I used to develop and test this modif=
-ication. It took some time just to locate the modified raid1.c file :) =
-The machine, in addition to the boot drive, is equipped with a couple o=
-f 1 TB Hitachi disk drives that were used for test purposes. To be hone=
-st I don=92t remember the name of the test software that I used, but it=
- seems that it was a pretty performance standard utility, not something=
- I put together myself. Perhaps you could jog my memory. As I mentioned=
- previously the improvement was around 7% with read only testing of ran=
-dom seeks.
+Hmm.... I've obviously been assuming something that was wrong.
 
-If this is of interest I will gladly post the NOT PRODUCTION READY code=
-=2E (I took some shortcuts in the code for testing purposes, primarily =
-in the assignment of drives to the array so that I didn=92t have to fig=
-ure out how the existing code does such a nice job of drive allocation.=
-)
+So I did some experiments myself....
 
-On the other hand, if the improvement is deemed to be insufficient then=
- I will chuck the code into the dust bin of history. Given the continue=
-d rise in the use of SSDs, seek optimization becomes less relevant ever=
-y day.
+If you apply the following patch to mdadm, stop the array, and then assemble
+with --update=3Ddevicesize, you should then be able to reshape the array to
+fewer devices.
 
-Bob Long
+This isn't a final solution, I need to think about the whole thing more
+carefully.  But it will work for you.
 
-PS
-This is all the =93documentation=94 that exists other than a few commen=
-ts sprinkled throughout the code.--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for your patience.
+
+NeilBrown
+
+diff --git a/super1.c b/super1.c
+index 727a08a110e0..efa1042ab47a 100644
+--- a/super1.c
++++ b/super1.c
+@@ -1251,6 +1251,17 @@ static int update_super1(struct supertype *st, struc=
+t mdinfo *info,
+ 			misc->device_size - __le64_to_cpu(sb->data_offset));
+ 		printf("Size is %llu\n", (unsigned long long)
+ 		       __le64_to_cpu(sb->data_size));
++	} else if (strcmp(update, "devicesize") =3D=3D 0 &&
++		   !(__le32_to_cpu(sb->feature_map)&MD_FEATURE_BITMAP_OFFSET) &&
++		   __le64_to_cpu(sb->super_offset) >
++		   __le64_to_cpu(sb->data_offset)) {
++		/* set data_size to device size less data_offset */
++		printf("Size was %llu\n", (unsigned long long)
++		       __le64_to_cpu(sb->data_size));
++		sb->data_size =3D __cpu_to_le64(
++			__le64_to_cpu(sb->super_offset) - __le64_to_cpu(sb->data_offset));
++		printf("Size is %llu\n", (unsigned long long)
++		       __le64_to_cpu(sb->data_size));
+ 	} else if (strcmp(update, "revert-reshape") =3D=3D 0) {
+ 		rv =3D -2;
+ 		if (!(sb->feature_map & __cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE)))
+
+--Sig_/5b31J=3NHVZHK.IXOPkKf26
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVAAX+znsnt1WYoG5AQIOqRAAlh2AxWqrPdj74iTHNfD3Vx+KEFtrRWxp
+lkZ9uQXcJnZj3IC7mSU0ftEpHUsnFk1tBE4gXDLMaFu91GNytoECCJCO669FemYz
+HuOQ1X2NmGlVYI9xt2VSlGBkoCG97G2MyILnj97HKAjqP1EXS/WOugGtLx8vstw7
+54RP6F9DkcT5GSbVXt3uUuCKB+7HxAXd+buGLfn6GsN0As3zulmHyUCgF2LRVDQv
+hAeLv5c+CSFP0XRDPZtZQKL3mLGd3c+33CaaRACPcEnsuPERaxKMDkdJ7qUMSIER
+eKIggj+e3YDalsb7AQcEzI5cmJ0VHHT+bI0LsdwtrzQWtuBAqJAeS+Rv5CNRPsx9
+VKpElRWX/NrvP8TP+1R3OpFaslpTqqrQUw/fwgz0rCgc4Pbq1bFlT2sNMvTg3XC9
+lOE9iZZXVHqb6JZiQArX+leylQ2NJTVNlr0/PT0aqIniiXF0BeqqEPhWNW9ntPL9
+UGe541V0nXwTmCyiDWof3aFlLv4lBK6N4k73v8udkNrvD0fuwYdNV6YvkAxRTUOr
+wRRxTRvsGiQAtpLIEJ8pTJAg2KnEfKBzag+Vfyu57MU3idaZ5K1/k7+/mZd4Ho+o
+S0I+YFnYeA4Y/+S+g+6H2YJse8CtSaYzg5qdMmZ3/jVjldOyXvy+BHcfLmrAurS9
+r2UVEGwu4jM=
+=etvo
+-----END PGP SIGNATURE-----
+
+--Sig_/5b31J=3NHVZHK.IXOPkKf26--
