@@ -1,55 +1,82 @@
-From: Roberto Spadim <rspadim@gmail.com>
-Subject: Re: Good hardware for mdadm
-Date: Fri, 29 Aug 2014 17:44:21 -0300
-Message-ID: <CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>
-References: <ltqnvm$80o$1@ger.gmane.org>
+From: Andy Smith <andy@strugglers.net>
+Subject: Re: Shrinking number of devices on a RAID-10 (near 2) array
+Date: Fri, 29 Aug 2014 20:45:04 +0000
+Message-ID: <20140829204502.GT19874@bitfolk.com>
+References: <20140825103234.GH11855@bitfolk.com>
+ <20140825212614.5be558c9@notabene.brown>
+ <20140825113402.GF19874@bitfolk.com>
+ <20140829135312.5a6e78bc@notabene.brown>
+ <20140829040231.GP19874@bitfolk.com>
+ <20140829141812.17c35df7@notabene.brown>
+ <20140829042618.GQ19874@bitfolk.com>
+ <20140829143528.588cf640@notabene.brown>
+ <20140829044226.GR19874@bitfolk.com>
+ <20140829160443.3893adaa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ltqnvm$80o$1@ger.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140829160443.3893adaa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul van der Vlis <paul@vandervlis.nl>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i use two or more boot disks, if the first raid1 disk don't boot bios
-go to second boot disk, third, etc etc, you must write grub to mbr of
-each disk
-i'm using dell server r410 if i'm not wrong
+Hi Neil,
 
-2014-08-29 17:31 GMT-03:00 Paul van der Vlis <paul@vandervlis.nl>:
-> Hello,
->
-> I like mdadm and I am using it many years. But in my opinion it has one
-> disadvantage: when the MBR of the boot-disk is corrupt, the machine will
-> not boot.
->
-> A bios could check this. Wait for some kind of signal from Grub or
-> Linux, and after a timeout boot from another disk. But I don't know
-> about a bios with that feature.
->
-> A PCIe card could do something like that, but I don't know about such a
-> PCIe card.
->
-> Is there such hardware?
-> What do you do to avoid this problem?
->
-> With regards,
-> Paul van der Vlis.
->
->
->
->
-> --
-> Paul van der Vlis Linux systeembeheer, Groningen
-> http://www.vandervlis.nl/
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Aug 29, 2014 at 04:04:43PM +1000, NeilBrown wrote:
+> On Fri, 29 Aug 2014 04:42:26 +0000 Andy Smith <andy@strugglers.net> wrote:
+> > In fact I can't increase it by 1, and /bin/echo doesn't say why.
+> > 
+> 
+> Hmm.... I've obviously been assuming something that was wrong.
+> 
+> So I did some experiments myself....
+> 
+> If you apply the following patch to mdadm, stop the array, and then assemble
+> with --update=devicesize, you should then be able to reshape the array to
+> fewer devices.
 
+Thanks, I think we are getting somewhere:
 
+# ./mdadm --stop /dev/md2
+mdadm: stopped /dev/md2
+# ./mdadm --assemble --update=devicesize /dev/md2
+Size was 618726528
+Size is 618727392
+Size was 618726528
+Size is 618727392
+Size was 618726528
+Size is 618727392
+Size was 618726528
+Size is 618727392
+Size was 618726528
+Size is 618727392
+Size was 618726528
+Size is 618727392
+mdadm: /dev/md2 has been started with 6 drives.
+# logout
+$ head -5 /proc/mdstat
+Personalities : [raid1] [raid10]
+md2 : active raid10 sdd3[0] sda3[5] sdc3[4] sdb3[3] sdf3[2] sde3[1]
+      928089792 blocks super 1.0 64K chunks 2 near-copies [6/6] [UUUUUU]
 
--- 
-Roberto Spadim
+$ sudo ./mdadm /dev/md2 --grow --raid-devices=4
+mdadm: this change will reduce the size of the array.
+       use --grow --array-size first to truncate array.
+       e.g. mdadm --grow /dev/md2 --array-size 618726528
+unfreeze
+$ sudo ./mdadm --grow /dev/md2 --array-size 618726528
+$ sudo ./mdadm /dev/md2 --grow --raid-devices=4
+$ head -5 /proc/mdstat
+Personalities : [raid1] [raid10]
+md2 : active raid10 sdd3[0] sda3[5] sdc3[4] sdb3[3] sdf3[2] sde3[1]
+      618726528 blocks super 1.0 64K chunks 2 near-copies [4/4] [UUUU]
+      [>....................]  reshape =  0.0% (211136/618726528) finish=244.1min speed=42227K/sec
+
+> Thanks for your patience.
+
+No problem, glad we got to the bottom of it!
+
+Cheers,
+Andy
