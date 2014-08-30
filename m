@@ -1,56 +1,86 @@
 From: Paul van der Vlis <paul@vandervlis.nl>
 Subject: Re: Good hardware for mdadm
-Date: Sat, 30 Aug 2014 10:35:27 +0200
-Message-ID: <lts2cg$crt$1@ger.gmane.org>
-References: <ltqnvm$80o$1@ger.gmane.org> <CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com> <ltqscm$qp5$1@ger.gmane.org> <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
+Date: Sat, 30 Aug 2014 10:45:11 +0200
+Message-ID: <lts2un$j2o$1@ger.gmane.org>
+References: <ltqnvm$80o$1@ger.gmane.org>	<CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>	<ltqscm$qp5$1@ger.gmane.org> <CAH3kUhE1veLpy1k4=SvQO4vwNkkUevLUaaZ=B5Q3RB5rDWRV_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
+In-Reply-To: <CAH3kUhE1veLpy1k4=SvQO4vwNkkUevLUaaZ=B5Q3RB5rDWRV_Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-op 30-08-14 00:38, Roger Heflin schreef:
-> No bios I have seen automatically handles it unless the disks are
-> total dead, 
+op 30-08-14 02:44, Roberto Spadim schreef:
+> i'm considering that you are using x86, x86_64 hardware, what's your
+> application?
 
-That's my experience too.
+I am a sysadmin and I administrate many machines: webservers and
+mailservers located in a datacenter, fileservers located at firms, etc.
 
-> some of the hardware raid controlers may properly deal
-> with a disk returning an error and go to the other mirror, the low end
-> quality raid controllers start around $200.
+> there's no bios test (must check if the newer version of this server
+> have uefi and work differente), it just don't boot the disk and go to
+> next boot
+> but for your question: yes... maybe with 'lucky' it can't boot, a
+> "bad" (crashed) grub could stop server startup
+> 
+> maybe others questions that you could check before solving this boot
+> problem is why use a "bad" disk?
 
-Hardware raid controllers have other disadvantages, like using a
-proprietary format for storing information on disk. And in many cases
-you have to use tools from the manufacturer. That are reasons for me to
-like mdadm.
+I would replace it when I would know it's bad.
 
-Maybe it could be done with a hardware raid controller in JBOD mode.
+> why shutdown a server?
 
-( And hardware controllers are not perfect too, I've seen simular
-problems with an HP smart array. First when I've removed the first
-harddisk the system did boot from the second. )
+Kernel updates.
 
-> Outside of the raid controllers I don't believe any of the bioses
-> themselves will do it, so you are unlikely to find any hardware that
-> does that.
+> why remote startup a server?
 
-It could be done with a PCIe card too. Some kind of fake-raid adapter
-what uses mdadm.
+Because it's work to go to such a location.
 
-> Likely he is talking about putting the boot block on multiple disks
-> and and use the bbr menu or the bios boot disk selection to pick
-> another disk.
+> why use a 'bad' disk?
 
-Not sure what a "bbr menu" is. But realize that the servers I use are
-remote.
+I would replace it when I would know it's bad.
+
+> if it's a ha system, 
+
+Not really. Maybe.
+
+> include a human to check monthly, or something
+> like it, if the server is ok clean,something like it, 
+
+You can't check that way if a MBR boots.
+
+> since ha
+> probably include a real time application or a security or risk
+> application, or anything like it
+
+I don't know about such an application. But maybe it would be possible
+to read the MBR and check it with a copy. I was looking for a redundant
+solution, maybe I must forget that.
+
+> probably you must check others solutions at hardware level, some
+> computers have dual bios (yes if one bios is lost you have the other
+> to boot the computer), 
+
+That's not the problem. I did not see often problems with a bad bios on
+a good-running system.
+
+> maybe an openbios could help
+
+It's difficult to buy hardware for coreboot. And I don't think coreboot
+can check the booting process.
+
+>, or a uefi bios, must check what's better
+
+Do you know about UEFI bios-es who can check the process?
 
 With regards,
 Paul van der Vlis.
 
-> On Fri, Aug 29, 2014 at 4:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
+> 
+> 
+> 2014-08-29 18:47 GMT-03:00 Paul van der Vlis <paul@vandervlis.nl>:
 >> Hi Roberto,
 >>
 >> op 29-08-14 22:44, Roberto Spadim schreef:
@@ -122,10 +152,8 @@ Paul van der Vlis.
 >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 > 
 
 
