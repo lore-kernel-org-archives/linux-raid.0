@@ -1,41 +1,56 @@
 From: Paul van der Vlis <paul@vandervlis.nl>
 Subject: Re: Good hardware for mdadm
-Date: Sat, 30 Aug 2014 10:25:19 +0200
-Message-ID: <lts1pf$6gh$1@ger.gmane.org>
-References: <ltqnvm$80o$1@ger.gmane.org>	<CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>	<ltqscm$qp5$1@ger.gmane.org> <CAH_2GhebF9=74XP7y+jj+m0a59EjYx-DgJWBKZyvQtgd4T2G9w@mail.gmail.com>
+Date: Sat, 30 Aug 2014 10:35:27 +0200
+Message-ID: <lts2cg$crt$1@ger.gmane.org>
+References: <ltqnvm$80o$1@ger.gmane.org> <CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com> <ltqscm$qp5$1@ger.gmane.org> <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH_2GhebF9=74XP7y+jj+m0a59EjYx-DgJWBKZyvQtgd4T2G9w@mail.gmail.com>
+In-Reply-To: <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-op 29-08-14 23:52, Adam Talbot schreef:
-> I have found placing /boot + MBR on a DOM (Disk on module) to be very
-> effective.
+op 30-08-14 00:38, Roger Heflin schreef:
+> No bios I have seen automatically handles it unless the disks are
+> total dead, 
 
-Maybe a good DOM is more reliable then a good harddisk. But it's not
-redundant.
+That's my experience too.
 
-> Perhaps we should be asking how the MBR got broken in the first place?
+> some of the hardware raid controlers may properly deal
+> with a disk returning an error and go to the other mirror, the low end
+> quality raid controllers start around $200.
 
-I am using mdadm about 12 years, and I've seen many times that a system
-did not come up after booting. And when I removed the boot-disk, it did
-come up.
+Hardware raid controllers have other disadvantages, like using a
+proprietary format for storing information on disk. And in many cases
+you have to use tools from the manufacturer. That are reasons for me to
+like mdadm.
 
-I must say it's less then for a few years, maybe I am using better
-disks. But I am looking for something what's better.
+Maybe it could be done with a hardware raid controller in JBOD mode.
 
-What helps, is that there is something like IPMI. So when there is a
-problem and IPMI is working fine, you can boot by hand from another disk.
+( And hardware controllers are not perfect too, I've seen simular
+problems with an HP smart array. First when I've removed the first
+harddisk the system did boot from the second. )
+
+> Outside of the raid controllers I don't believe any of the bioses
+> themselves will do it, so you are unlikely to find any hardware that
+> does that.
+
+It could be done with a PCIe card too. Some kind of fake-raid adapter
+what uses mdadm.
+
+> Likely he is talking about putting the boot block on multiple disks
+> and and use the bbr menu or the bios boot disk selection to pick
+> another disk.
+
+Not sure what a "bbr menu" is. But realize that the servers I use are
+remote.
 
 With regards,
 Paul van der Vlis.
 
-
-> On Fri, Aug 29, 2014 at 2:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
+> On Fri, Aug 29, 2014 at 4:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
 >> Hi Roberto,
 >>
 >> op 29-08-14 22:44, Roberto Spadim schreef:
