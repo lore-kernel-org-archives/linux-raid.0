@@ -1,166 +1,162 @@
-From: Paul van der Vlis <paul@vandervlis.nl>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Good hardware for mdadm
-Date: Sat, 30 Aug 2014 10:45:11 +0200
-Message-ID: <lts2un$j2o$1@ger.gmane.org>
-References: <ltqnvm$80o$1@ger.gmane.org>	<CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>	<ltqscm$qp5$1@ger.gmane.org> <CAH3kUhE1veLpy1k4=SvQO4vwNkkUevLUaaZ=B5Q3RB5rDWRV_Q@mail.gmail.com>
+Date: Sat, 30 Aug 2014 04:53:48 -0500
+Message-ID: <CAAMCDeePxPc3VryFibYBYkstZXU42kxAZQTFcsSbY6e-uzUfLA@mail.gmail.com>
+References: <ltqnvm$80o$1@ger.gmane.org> <CAH3kUhH=ZdfRtMw+FiRz4c7qkt8UgbHuoTKiUKyq5Uu9AxHBsQ@mail.gmail.com>
+ <ltqscm$qp5$1@ger.gmane.org> <CAAMCDedo1N1RybUQ4=fd=R9TDtY=TF-aYomYmxA2d250fmgjbA@mail.gmail.com>
+ <lts2cg$crt$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhE1veLpy1k4=SvQO4vwNkkUevLUaaZ=B5Q3RB5rDWRV_Q@mail.gmail.com>
+In-Reply-To: <lts2cg$crt$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Paul van der Vlis <paul@vandervlis.nl>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-op 30-08-14 02:44, Roberto Spadim schreef:
-> i'm considering that you are using x86, x86_64 hardware, what's your
-> application?
+That means you need an external config tool  (serial, ilo or IMM that
+allows remote console access), I rarely go into the data center that
+all of the hw I run is in, and because of the remote console access
+can fix all but truly broken hw without having hands in the DC).
+For most low end enterprise hw this option adds $200-300 to the price.
+   If using the simplest (serial) the given mb bios must support
+serial and all add-on bioses must also properly support serial.   I
+have messed with machines that when using serial you cannot see/access
+some of the add on bioses which limits what you can do.   ILO/IMM
+(full graphics console remote type setups) don't have this deficiency
+and can in some cases actually allow one to present a remote boot cd
+to a device and rescue boot it.
 
-I am a sysadmin and I administrate many machines: webservers and
-mailservers located in a datacenter, fileservers located at firms, etc.
+The MBR did not get broken, it was broken like this as originally
+designed 30 years ago, it was always setup to be only able to deal
+with totally dead drivers (ie drive not showing up at all).
 
-> there's no bios test (must check if the newer version of this server
-> have uefi and work differente), it just don't boot the disk and go to
-> next boot
-> but for your question: yes... maybe with 'lucky' it can't boot, a
-> "bad" (crashed) grub could stop server startup
-> 
-> maybe others questions that you could check before solving this boot
-> problem is why use a "bad" disk?
-
-I would replace it when I would know it's bad.
-
-> why shutdown a server?
-
-Kernel updates.
-
-> why remote startup a server?
-
-Because it's work to go to such a location.
-
-> why use a 'bad' disk?
-
-I would replace it when I would know it's bad.
-
-> if it's a ha system, 
-
-Not really. Maybe.
-
-> include a human to check monthly, or something
-> like it, if the server is ok clean,something like it, 
-
-You can't check that way if a MBR boots.
-
-> since ha
-> probably include a real time application or a security or risk
-> application, or anything like it
-
-I don't know about such an application. But maybe it would be possible
-to read the MBR and check it with a copy. I was looking for a redundant
-solution, maybe I must forget that.
-
-> probably you must check others solutions at hardware level, some
-> computers have dual bios (yes if one bios is lost you have the other
-> to boot the computer), 
-
-That's not the problem. I did not see often problems with a bad bios on
-a good-running system.
-
-> maybe an openbios could help
-
-It's difficult to buy hardware for coreboot. And I don't think coreboot
-can check the booting process.
-
->, or a uefi bios, must check what's better
-
-Do you know about UEFI bios-es who can check the process?
-
-With regards,
-Paul van der Vlis.
-
-> 
-> 
-> 2014-08-29 18:47 GMT-03:00 Paul van der Vlis <paul@vandervlis.nl>:
->> Hi Roberto,
->>
->> op 29-08-14 22:44, Roberto Spadim schreef:
->>> i use two or more boot disks, if the first raid1 disk don't boot bios
->>> go to second boot disk, third, etc etc,
->>
->> In my opinion this only works when the boot-disk is completely defect or
->> removed. Not when the data in the MBR on that boot-disk is corrupt.
->>
->> Or did you test this, or do you have other reasons to believe that your
->> bios will handle this correct?
->>
->> With the boot-disk I mean the disk what's in the bios the first disk. So
->> this could also be the second raid1 disk. Or an USB stick.
->>
->>> you must write grub to mbr of each disk
->>
->> Of course.
->>
->> With regards,
->> Paul van der Vlis.
->>
->>> i'm using dell server r410 if i'm not wrong
+On Sat, Aug 30, 2014 at 3:35 AM, Paul van der Vlis <paul@vandervlis.nl> wrote:
+> op 30-08-14 00:38, Roger Heflin schreef:
+>> No bios I have seen automatically handles it unless the disks are
+>> total dead,
+>
+> That's my experience too.
+>
+>> some of the hardware raid controlers may properly deal
+>> with a disk returning an error and go to the other mirror, the low end
+>> quality raid controllers start around $200.
+>
+> Hardware raid controllers have other disadvantages, like using a
+> proprietary format for storing information on disk. And in many cases
+> you have to use tools from the manufacturer. That are reasons for me to
+> like mdadm.
+>
+> Maybe it could be done with a hardware raid controller in JBOD mode.
+>
+> ( And hardware controllers are not perfect too, I've seen simular
+> problems with an HP smart array. First when I've removed the first
+> harddisk the system did boot from the second. )
+>
+>> Outside of the raid controllers I don't believe any of the bioses
+>> themselves will do it, so you are unlikely to find any hardware that
+>> does that.
+>
+> It could be done with a PCIe card too. Some kind of fake-raid adapter
+> what uses mdadm.
+>
+>> Likely he is talking about putting the boot block on multiple disks
+>> and and use the bbr menu or the bios boot disk selection to pick
+>> another disk.
+>
+> Not sure what a "bbr menu" is. But realize that the servers I use are
+> remote.
+>
+> With regards,
+> Paul van der Vlis.
+>
+>> On Fri, Aug 29, 2014 at 4:47 PM, Paul van der Vlis <paul@vandervlis.nl> wrote:
+>>> Hi Roberto,
 >>>
->>> 2014-08-29 17:31 GMT-03:00 Paul van der Vlis <paul@vandervlis.nl>:
->>>> Hello,
+>>> op 29-08-14 22:44, Roberto Spadim schreef:
+>>>> i use two or more boot disks, if the first raid1 disk don't boot bios
+>>>> go to second boot disk, third, etc etc,
+>>>
+>>> In my opinion this only works when the boot-disk is completely defect or
+>>> removed. Not when the data in the MBR on that boot-disk is corrupt.
+>>>
+>>> Or did you test this, or do you have other reasons to believe that your
+>>> bios will handle this correct?
+>>>
+>>> With the boot-disk I mean the disk what's in the bios the first disk. So
+>>> this could also be the second raid1 disk. Or an USB stick.
+>>>
+>>>> you must write grub to mbr of each disk
+>>>
+>>> Of course.
+>>>
+>>> With regards,
+>>> Paul van der Vlis.
+>>>
+>>>> i'm using dell server r410 if i'm not wrong
 >>>>
->>>> I like mdadm and I am using it many years. But in my opinion it has one
->>>> disadvantage: when the MBR of the boot-disk is corrupt, the machine will
->>>> not boot.
+>>>> 2014-08-29 17:31 GMT-03:00 Paul van der Vlis <paul@vandervlis.nl>:
+>>>>> Hello,
+>>>>>
+>>>>> I like mdadm and I am using it many years. But in my opinion it has one
+>>>>> disadvantage: when the MBR of the boot-disk is corrupt, the machine will
+>>>>> not boot.
+>>>>>
+>>>>> A bios could check this. Wait for some kind of signal from Grub or
+>>>>> Linux, and after a timeout boot from another disk. But I don't know
+>>>>> about a bios with that feature.
+>>>>>
+>>>>> A PCIe card could do something like that, but I don't know about such a
+>>>>> PCIe card.
+>>>>>
+>>>>> Is there such hardware?
+>>>>> What do you do to avoid this problem?
+>>>>>
+>>>>> With regards,
+>>>>> Paul van der Vlis.
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>> --
+>>>>> Paul van der Vlis Linux systeembeheer, Groningen
+>>>>> http://www.vandervlis.nl/
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>>>
->>>> A bios could check this. Wait for some kind of signal from Grub or
->>>> Linux, and after a timeout boot from another disk. But I don't know
->>>> about a bios with that feature.
->>>>
->>>> A PCIe card could do something like that, but I don't know about such a
->>>> PCIe card.
->>>>
->>>> Is there such hardware?
->>>> What do you do to avoid this problem?
->>>>
->>>> With regards,
->>>> Paul van der Vlis.
 >>>>
 >>>>
->>>>
->>>>
->>>> --
->>>> Paul van der Vlis Linux systeembeheer, Groningen
->>>> http://www.vandervlis.nl/
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>>
 >>>
 >>>
->>
->>
->>
->>
->>
->> --
->> Paul van der Vlis Linux systeembeheer, Groningen
->> http://www.vandervlis.nl/
->>
+>>>
+>>>
+>>> --
+>>> Paul van der Vlis Linux systeembeheer, Groningen
+>>> http://www.vandervlis.nl/
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >> --
 >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 >> the body of a message to majordomo@vger.kernel.org
 >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
-
-
-
-
-
--- 
-Paul van der Vlis Linux systeembeheer, Groningen
-http://www.vandervlis.nl/
-
+>>
+>
+>
+>
+>
+>
+> --
+> Paul van der Vlis Linux systeembeheer, Groningen
+> http://www.vandervlis.nl/
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
