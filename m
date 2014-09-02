@@ -1,56 +1,87 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: ext4 vs btrfs performance on SSD array
-Date: Tue, 2 Sep 2014 10:55:15 -0400
-Message-ID: <20140902145515.GD6232@thunk.org>
-References: <CAEp=YLgzsLbmEfGB5YKVcHP4CQ-_z1yxnZ0tpo7gjKZ2e1ma5g@mail.gmail.com>
- <20140902000822.GA20473@dastard>
- <20140902012222.GA21405@infradead.org>
- <20140902113104.GD5049@thunk.org>
- <20140902142024.GB19412@quack.suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140902142024.GB19412@quack.suse.cz>
-Sender: owner-linux-mm@kvack.org
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Nikolai Grigoriev <ngrigoriev@gmail.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-mm@kvack.org, Jens Axboe <axboe@kernel.dk>
+From: Eivind Sarto <eivindsarto@gmail.com>
+Subject: Re: raid1 data corruption during resync
+Date: Tue, 2 Sep 2014 09:43:31 -0700
+Message-ID: <C949B8BA-E447-4F7D-950F-A3385470A3AE@gmail.com>
+References: <20A5228D-DD63-4A6C-B2C6-B0C38996E636@gmail.com> <E16BE56A-06CE-4614-A663-D28730671108@redhat.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <E16BE56A-06CE-4614-A663-D28730671108@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Brassow Jonathan <jbrassow@redhat.com>
+Cc: Eivind Sarto <eivindsarto@gmail.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 02, 2014 at 04:20:24PM +0200, Jan Kara wrote:
-> On Tue 02-09-14 07:31:04, Ted Tso wrote:
-> > >  - the very small max readahead size
-> > 
-> > For things like the readahead size, that's probably something that we
-> > should autotune, based the time it takes to read N sectors.  i.e.,
-> > start N relatively small, such as 128k, and then bump it up based on
-> > how long it takes to do a sequential read of N sectors until it hits a
-> > given tunable, which is specified in milliseconds instead of kilobytes.
->   Actually the amount of readahead we do is autotuned (based on hit rate).
-> So I would keep the setting in sysfs as the maximum size adaptive readahead
-> can ever read and we can bump it up. We can possibly add another feedback
-> into the readahead code to tune actualy readahead size depending on device
-> speed but we'd have to research exactly what algorithm would work best.
 
-I do think we will need to add a time based cap when bump up the max
-adaptive readahead; otherwise what could happen is that if we are
-streaming off of a slow block device, the readhaead could easily grow
-to the point where it starts affecting the latency of competing read
-requests to the slow block device.
+On Sep 2, 2014, at 7:10 AM, Brassow Jonathan <jbrassow@redhat.com> wrot=
+e:
 
-I suppose we could make the argument that it's not needed, because most of
-situations where we might be using slow block devices, the streaming
-reader will likely have exclusive use of the device, since no one
-would be crazy enough to say, try to run a live CD-ROM image when USB
-sticks are so cheap.  :-)
+> There is absolutely an issue with the mentioned commit.
+>=20
+> We are seeing symptoms of a different sort.  Our testing group is doi=
+ng device fault testing.  (They are using LVM to create the RAID device=
+s, but as you know, that uses the same underlying kernel code.)  We enc=
+ounter situations where the resync thread is stuck waiting for a barrie=
+r to come down, but it never does.  All I/O to the RAID1 device blocks.
+>=20
+> There are a few different variations to how the problem manifests its=
+elf, but I have bisected the kernel to this commit (79ef3a8).
+>=20
+> Unfortunately, it does take quite some time (hours) to reproduce the =
+issue with our test scripts.  I will try testing this proposed patch wh=
+ile I try to figure out what the patch is doing and what might have gon=
+e wrong.
+>=20
+> brassow
+>=20
+>=20
+> On Aug 29, 2014, at 2:29 PM, Eivind Sarto wrote:
+>=20
+>> I am seeing occasional data corruption during raid1 resync.
+>> Reviewing the raid1 code, I suspect that commit 79ef3a8aa1cb1523cc23=
+1c9a90a278333c21f761 introduced a bug.
+>> Prior to this commit raise_barrier() used to wait for conf->nr_pendi=
+ng to become zero.  It no longer does this.
+>> It is not easy to reproduce the corruption, so I wanted to ask about=
+ the following potential fix while I am still testing it.
+>> Once I validate that the fix indeed works, I will post a proper patc=
+h.
+>> Do you have any feedback?
+>>=20
+>> =97 drivers/md/raid1.c	2014-08-22 15:19:15.000000000 -0700
+>> +++ /tmp/raid1.c	2014-08-29 12:07:51.000000000 -0700
+>> @@ -851,7 +851,7 @@ static void raise_barrier(struct r1conf=20
+>> 	 *    handling.
+>> 	 */
+>> 	wait_event_lock_irq(conf->wait_barrier,
+>> -			    !conf->array_frozen &&
+>> +			    !conf->array_frozen && !conf->nr_pending &&
+>> 			    conf->barrier < RESYNC_DEPTH &&
+>> 			    (conf->start_next_window >=3D
+>> 			     conf->next_resync + RESYNC_SECTORS),
+>>=20
+>>=20
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 
-So maybe in practice it won't matter, but I think some kind of time
-based cap would probably be a good idea.
+The suggested patch is not the right thing to do.  I got confused about=
+ the big comment  about /* Barriers=85. */  The comment suggests that c=
+onf->nr_pending is used for the implementation of barriers.  This is no=
+t the case.  The new barrier code no longer uses nr_pending.
+nr_pending is now only used when freezing the array.
+Sorry for the confusion.
+I back-ported the new barrier code to an older version of linux.  I cou=
+ld have introduced a bug during the back-porting.  I will try and upgra=
+de my system to a newer kernel and see if I can reproduce the corruptio=
+n.
 
-						- Ted
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-eivind--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
