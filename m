@@ -1,33 +1,51 @@
-From: Theodore Ts'o <tytso@mit.edu>
+From: Zack Coffey <clickwir@gmail.com>
 Subject: Re: ext4 vs btrfs performance on SSD array
-Date: Tue, 2 Sep 2014 07:31:04 -0400
-Message-ID: <20140902113104.GD5049@thunk.org>
+Date: Tue, 2 Sep 2014 08:55:07 -0400
+Message-ID: <CAA8KC9Lgjf_FBXnKAaJtp6=NCWsoCFOobgi5b84BXfAcbgynJQ@mail.gmail.com>
 References: <CAEp=YLgzsLbmEfGB5YKVcHP4CQ-_z1yxnZ0tpo7gjKZ2e1ma5g@mail.gmail.com>
- <20140902000822.GA20473@dastard>
- <20140902012222.GA21405@infradead.org>
+	<20140902000822.GA20473@dastard>
+	<20140902012222.GA21405@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
 In-Reply-To: <20140902012222.GA21405@infradead.org>
 Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Nikolai Grigoriev <ngrigoriev@gmail.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-mm@kvack.org, Jens Axboe <axboe@kernel.dk>
+Cc: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-raid.ids
 
+While I'm sure some of those settings were selected with good reason,
+maybe there can be a few options (2 or 3) that have some basic
+intelligence at creation to pick a more sane option.
+
+Some checks to see if an option or two might be better suited for the
+fs. Like the RAID5 stripe size. Leave the default as is, but maybe a
+quick speed test to automatically choose from a handful of the most
+common values. If they fail or nothing better is found, then apply the
+default value just like it would now.
+
+
+On Mon, Sep 1, 2014 at 9:22 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Sep 02, 2014 at 10:08:22AM +1000, Dave Chinner wrote:
+>> Pretty obvious difference: avgrq-sz. btrfs is doing 512k IOs, ext4
+>> and XFS are doing is doing 128k IOs because that's the default block
+>> device readahead size.  'blockdev --setra 1024 /dev/sdd' before
+>> mounting the filesystem will probably fix it.
+>
+> Btw, it's really getting time to make Linux storage fs work out the
+> box.  There's way to many things that are stupid by default and we
+> require everyone to fix up manually:
+>
+>  - the ridiculously low max_sectors default
 >  - the very small max readahead size
-
-For things like the readahead size, that's probably something that we
-should autotune, based the time it takes to read N sectors.  i.e.,
-start N relatively small, such as 128k, and then bump it up based on
-how long it takes to do a sequential read of N sectors until it hits a
-given tunable, which is specified in milliseconds instead of kilobytes.
-
 >  - replacing cfq with deadline (or noop)
-
-Unfortunately, that will break ionice and a number of other things...
-
-      	       	     		     		  - Ted
+>  - the too small RAID5 stripe cache size
+>
+> and probably a few I forgot about.  It's time to make things perform
+> well out of the box..
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
