@@ -1,36 +1,59 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Will the write request starve?
-Date: Wed, 3 Sep 2014 01:59:08 -0400 (EDT)
-Message-ID: <1482714710.31831797.1409723948805.JavaMail.zimbra@redhat.com>
-References: <1275697636.31829381.1409722922411.JavaMail.zimbra@redhat.com>
+From: =?ISO-8859-1?Q?Jan-Simon_M=F6ller?= <dl9pf@gmx.de>
+Subject: Re: [PATCH RFC 0/6] LLVMLinux: Patches to enable the
+	kernel to be compiled with clang/LLVM
+Date: Wed, 03 Sep 2014 01:04:15 +0200
+Message-ID: <4f99918c-77da-4a2b-9757-a397aaf7b0d4@email.android.com>
+References: <1409697153-7006-1-git-send-email-behanw@converseincode.com>
+	<05DCB0B8-AA7C-495F-B8E6-0803052DD273@holtmann.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1275697636.31829381.1409722922411.JavaMail.zimbra@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: jes sorensen <jes.sorensen@redhat.com>
+Content-Type: multipart/mixed; boundary="===============3412699199527121603=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <05DCB0B8-AA7C-495F-B8E6-0803052DD273@holtmann.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Marcel Holtmann <marcel@holtmann.org>, behanw@converseincode.com
+Cc: linux-raid@vger.kernel.org, john.johansen@canonical.com, Herbert Xu <herbert@gondor.apana.org.au>, snitzer@redhat.com, linux-security-module@vger.kernel.org, jbacik@fb.com, kernel list <linux-kernel@vger.kernel.org>, Fabian Frederick <fabf@skynet.be>, clm@fb.com, dm-devel@redhat.com, linux-btrfs@vger.kernel.org, james.l.morris@oracle.com, Andrew Morton <akpm@linux-foundation.org>, serge@hallyn.com, Linus Torvalds <torvalds@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Alasdair Kergon <agk@redhat.com>, linux-crypto@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
+--===============3412699199527121603==
+Content-Type: multipart/alternative;
+	boundary="----TP44NQV41JQWL2QJALAE6ICYA77HFH"
+Content-Transfer-Encoding: 7bit
 
-   I meet a problem and I can't find the answer. Could you help me?
-When raid5d want to handle a request, it need to get stripes by __get_priority_stripe.
-In the __get_priority_stripe function, it always try to get stripe from handle_list. 
+------TP44NQV41JQWL2QJALAE6ICYA77HFH
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-   Make an assumption that the raid of level 5 is assembled with 4 disks, and the raid 
-is normal. Now the a write request just want to write a single chunk, so we choose RMW 
-and the stripe will put on the delay_list, then activate it and put it to hold_list. 
-But if there are many read requests after the write request, when raid5d handle stripes
-it will get stripe from handle_list. So will the write request starve? 
+Same deal there, too!
 
-   Certainly I know it will not, because many tests have been done. But I can't find 
-the reason why it will not starve. 
+Best,
+JS
+------TP44NQV41JQWL2QJALAE6ICYA77HFH
+Content-Type: text/html;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-   And there is a variable bypass_count, what's the function about it? If bypass_count <
-bypass_threshold, it can get a chance to wait for the next write request to get a full write.
-So avoid read requests. Am I right?
+Same deal there, too!<br>
+<br>
+Best,<br>
+JS
+------TP44NQV41JQWL2QJALAE6ICYA77HFH--
 
-Best Regards
-Xiao
+
+--===============3412699199527121603==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============3412699199527121603==--
