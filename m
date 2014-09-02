@@ -1,133 +1,107 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [RFC]RAID5: batch adjacent full stripe write
-Date: Tue, 2 Sep 2014 16:52:40 +1000
-Message-ID: <20140902165240.3affa8b0@notabene.brown>
-References: <20140818082531.GA13732@kernel.org>
+From: Zack Coffey <clickwir@gmail.com>
+Subject: Re: ext4 vs btrfs performance on SSD array
+Date: Tue, 2 Sep 2014 06:39:22 -0400
+Message-ID: <CAA8KC9L4u7uhOFnY3tA44ow2NRZGtYqG7zjZ0zA4OLqNMomLoQ@mail.gmail.com>
+References: <CAEp=YLgzsLbmEfGB5YKVcHP4CQ-_z1yxnZ0tpo7gjKZ2e1ma5g@mail.gmail.com>
+	<20140902000822.GA20473@dastard>
+	<20140902012222.GA21405@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/3cTN=8Z9_yzf3W_nFF+N7v9"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140818082531.GA13732@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/alternative; boundary=089e0111d4208b1977050212bb8b
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140902012222.GA21405@infradead.org>
+Sender: owner-linux-mm@kvack.org
+Cc: linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/3cTN=8Z9_yzf3W_nFF+N7v9
-Content-Type: text/plain; charset=US-ASCII
+--089e0111d4208b1977050212bb8b
+Content-Type: text/plain; charset=UTF-8
+
+While I'm sure some of those settings were selected with good reason, maybe
+there can be a few options (2 or 3) that have some basic intelligence at
+creation to pick a more sane option.
+
+Some checks to see if an option or two might be better suited for the fs.
+Like the RAID5 stripe size. Leave the default as is, but maybe a quick
+speed test to automatically choose from a handful of the most common
+values. If they fail or nothing better is found, then apply the default
+value just like it would now.
+On Sep 1, 2014 9:23 PM, "Christoph Hellwig" <hch@infradead.org> wrote:
+
+> On Tue, Sep 02, 2014 at 10:08:22AM +1000, Dave Chinner wrote:
+> > Pretty obvious difference: avgrq-sz. btrfs is doing 512k IOs, ext4
+> > and XFS are doing is doing 128k IOs because that's the default block
+> > device readahead size.  'blockdev --setra 1024 /dev/sdd' before
+> > mounting the filesystem will probably fix it.
+>
+> Btw, it's really getting time to make Linux storage fs work out the
+> box.  There's way to many things that are stupid by default and we
+> require everyone to fix up manually:
+>
+>  - the ridiculously low max_sectors default
+>  - the very small max readahead size
+>  - replacing cfq with deadline (or noop)
+>  - the too small RAID5 stripe cache size
+>
+> and probably a few I forgot about.  It's time to make things perform
+> well out of the box..
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+--089e0111d4208b1977050212bb8b
+Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 18 Aug 2014 16:25:31 +0800 Shaohua Li <shli@kernel.org> wrote:
+<p dir=3D"ltr">While I&#39;m sure some of those settings were selected with=
+ good reason, maybe there can be a few options (2 or 3) that have some basi=
+c intelligence at creation to pick a more sane option.</p>
+<p dir=3D"ltr">Some checks to see if an option or two might be better suite=
+d for the fs. Like the RAID5 stripe size. Leave the default as is, but mayb=
+e a quick speed test to automatically choose from a handful of the most com=
+mon values. If they fail or nothing better is found, then apply the default=
+ value just like it would now.</p>
 
->=20
-> stripe cache is 4k size. Even adjacent full stripe writes are handled in =
-4k
-> unit. Idealy we should use big size for adjacent full stripe writes. Bigg=
-er
-> stripe cache size means less stripes runing in the state machine so can r=
-educe
-> cpu overhead. And also bigger size can cause bigger IO size dispatched to=
- under
-> layer disks.
->=20
-> With below patch, we will automatically batch adjacent full stripe write
-> together. Such stripes will form to a container and be added to the conta=
-iner
-> list. Only the first stripe of a container will be put to handle_list and=
- so
-> run handle_stripe(). Some steps of handle_stripe() are extended to cover =
-whole
-> container stripes, including ops_run_io, ops_run_biodrain and so on. With=
- this
-> patch, we have less stripes running in handle_stripe() and we send IO of =
-whole
-> container stripes together to increase IO size.
->=20
-> Stripes added to a container have some limitations. A container can only
-> include full stripe write and can't cross chunk boundary to make sure str=
-ipes
-> have the same parity disk. Stripes in a container must in the same state =
-(no
-> written, toread and so on). If a stripe is in a container, all new read/w=
-rite
-> to add_stripe_bio will be blocked to overlap conflict till the container =
-are
-> handled. The limitations will make sure stripes in a container in exactly=
- the
-> same state in the life circly of the container.
->=20
-> I did test running 160k randwrite in a RAID5 array with 32k chunk size an=
-d 6
-> PCIe SSD. This patch improves around 30% performance and IO size to under=
- layer
-> disk is exactly 32k. I also run a 4k randwrite test in the same array to =
-make
-> sure the performance isn't changed with the patch.
->=20
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
+<div class=3D"gmail_quote">On Sep 1, 2014 9:23 PM, &quot;Christoph Hellwig&=
+quot; &lt;<a href=3D"mailto:hch@infradead.org">hch@infradead.org</a>&gt; wr=
+ote:<br type=3D"attribution"><blockquote class=3D"gmail_quote" style=3D"mar=
+gin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+On Tue, Sep 02, 2014 at 10:08:22AM +1000, Dave Chinner wrote:<br>
+&gt; Pretty obvious difference: avgrq-sz. btrfs is doing 512k IOs, ext4<br>
+&gt; and XFS are doing is doing 128k IOs because that&#39;s the default blo=
+ck<br>
+&gt; device readahead size.=C2=A0 &#39;blockdev --setra 1024 /dev/sdd&#39; =
+before<br>
+&gt; mounting the filesystem will probably fix it.<br>
+<br>
+Btw, it&#39;s really getting time to make Linux storage fs work out the<br>
+box.=C2=A0 There&#39;s way to many things that are stupid by default and we=
+<br>
+require everyone to fix up manually:<br>
+<br>
+=C2=A0- the ridiculously low max_sectors default<br>
+=C2=A0- the very small max readahead size<br>
+=C2=A0- replacing cfq with deadline (or noop)<br>
+=C2=A0- the too small RAID5 stripe cache size<br>
+<br>
+and probably a few I forgot about.=C2=A0 It&#39;s time to make things perfo=
+rm<br>
+well out of the box..<br>
+--<br>
+To unsubscribe from this list: send the line &quot;unsubscribe linux-btrfs&=
+quot; in<br>
+the body of a message to <a href=3D"mailto:majordomo@vger.kernel.org">major=
+domo@vger.kernel.org</a><br>
+More majordomo info at=C2=A0 <a href=3D"http://vger.kernel.org/majordomo-in=
+fo.html" target=3D"_blank">http://vger.kernel.org/majordomo-info.html</a><b=
+r>
+</blockquote></div>
 
+--089e0111d4208b1977050212bb8b--
 
-Thanks for posting this ... and sorry for taking so long to look at it - I'm
-still fighting of the flu so I'm not thinking a clearly as I would like so
-I'll have to look over this again once I'm fully recovered.
-
-I think I like it.  It seems more complex than I would like, which makes it
-harder to review, but it probably needs to be that complex to actually work.
-
-I'm a bit worried about the ->scribble  usage.  The default chunk size of
-512K with means 128 stripe_heads in a batch.  On a 64 bit machine that is
-1kilobyte of pointers per device.  8 devices in a RAID6 means more than 8K
-needs to be allocated for ->scribble.  That has a risk of failing.
-
-Maybe it would make sense to use a flex_array
-(Documentation/flexible-arrays.txt).
-
-Splitting out the changes for ->scribble into a separate patch might help.
-
-The testing for "can this stripe_head be batched" seems a bit clumsy - lots
-of loops hunting for problems.
-Could we just set a "don't batch" flag whenever something happens that makes
-a stripe un-batchable?  Have another flag that gets set when a stripe becom=
-es
-a full-write stripe?
-
-Can we call the collections of stripe_heads "batch"es rather than
-"container"s?   mdadm already used the name "containers" for something else,
-and I think "batch" fits better.
-
-I think it might be useful if we could start batching together stripe_heads
-that are in the same stripe, even before they are full-write.  That might
-help the scheduling and avoid some of the unnecessary pre-reading that we
-currently do.  I haven't really thought properly about it and don't expect
-you to do that, but I thought I'd mention it anyway.
-
-Do any of the above changes seem reasonable to you?
-
-Thanks,
-NeilBrown
-
-
-
---Sig_/3cTN=8Z9_yzf3W_nFF+N7v9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVAVpODnsnt1WYoG5AQKy/Q/8DFCMiZqioI2xsBa54IiQD+b4HopYUfWC
-RVN0J54JopQlv4OYiJS4SJxrt4yxnmDbJOxp5uw/GY8dcOUVssS2OHFfM17PQ2zJ
-/LljTfCyISGMlwRxWzz6G7HD6YtjY0SwMZ41OgbnXqWvyeeSRgV4rKuuTrthcC/5
-0jlL/LR1E4lRBdCtdiIQYPvSIdJYHT1hzeIC/AUeYXL8SLAs8xod+knXOnoR2pRr
-kdZfvcLtuJQf43T0H1WB5Jt7+/03Pw0HAy5E/HYf2nguAVJmwCCFDJnGlndlkXSU
-ImBZrDEqcPkZLLeqkSHOa283M6yoxawKgTyyq7dm9w8Y2pipnBLw2ZpqYV2TBP4d
-9v3cJtti+eJq+zNfgZNJvqvOssdAGlWuCFrxwzMJT8WFCknaR6sWNrywsqusC0RZ
-61cFOpwp2OFcsiVmiRe5S4WLWz20VtOu0tKhLT1EafItiRY6BHGMowepMQi9PwUk
-xCJEeKSFFFJbeGCxF0+DCHLH/Q1N5k8CAUyFy4ctmsAjS92muof/KhQiLdmi3avQ
-nHPxXp0bhNBAI2TXgB1WN4aZ4nhGqNX1zAJqBKCUzr68K4LbcLy4nBh9jSf3wC7B
-aPu3XF4sZBfSw4HvZbIgIQLqYAwLf/pCesiW/bTTLeToZ+0yctG01CN1nrAJCcIA
-R6jWDjY+ZZA=
-=X+XH
------END PGP SIGNATURE-----
-
---Sig_/3cTN=8Z9_yzf3W_nFF+N7v9--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
