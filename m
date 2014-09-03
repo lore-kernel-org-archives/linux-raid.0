@@ -1,239 +1,28 @@
-From: NeilBrown <neilb@suse.de>
+From: Brassow Jonathan <jbrassow@redhat.com>
 Subject: Re: raid1 data corruption during resync
-Date: Wed, 3 Sep 2014 11:31:51 +1000
-Message-ID: <20140903113151.4099292b@notabene.brown>
-References: <20A5228D-DD63-4A6C-B2C6-B0C38996E636@gmail.com>
-	<EAC50175-42D9-43BA-ADE2-1A50BD0581CB@redhat.com>
-	<18B7DF88-26D1-44B8-8F72-2159A2DF868D@gmail.com>
-	<20140903095507.032e8c6d@notabene.brown>
-	<F9B1D613-79EF-488E-8D41-4C1BDBC6D4BE@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/FfFlOPrzomp2vw5I+zhIlH."; protocol="application/pgp-signature"
+Date: Tue, 2 Sep 2014 20:45:16 -0500
+Message-ID: <7703179B-1291-4471-B84F-FEE1E28F31A0@redhat.com>
+References: <20A5228D-DD63-4A6C-B2C6-B0C38996E636@gmail.com> <EAC50175-42D9-43BA-ADE2-1A50BD0581CB@redhat.com> <18B7DF88-26D1-44B8-8F72-2159A2DF868D@gmail.com> <20140903095507.032e8c6d@notabene.brown> <F9B1D613-79EF-488E-8D41-4C1BDBC6D4BE@redhat.com> <20140903113151.4099292b@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9B1D613-79EF-488E-8D41-4C1BDBC6D4BE@redhat.com>
+In-Reply-To: <20140903113151.4099292b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brassow Jonathan <jbrassow@redhat.com>
+To: NeilBrown <neilb@suse.de>
 Cc: Eivind Sarto <eivindsarto@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/FfFlOPrzomp2vw5I+zhIlH.
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2 Sep 2014 20:18:06 -0500 Brassow Jonathan <jbrassow@redhat.com>
-wrote:
+On Sep 2, 2014, at 8:31 PM, NeilBrown wrote:
 
->=20
-> On Sep 2, 2014, at 6:55 PM, NeilBrown wrote:
->=20
-> > On Tue, 2 Sep 2014 15:07:26 -0700 Eivind Sarto <eivindsarto@gmail.com> =
-wrote:
-> >=20
-> >>=20
-> >> On Sep 2, 2014, at 12:24 PM, Brassow Jonathan <jbrassow@redhat.com> wr=
-ote:
-> >>=20
-> >>>=20
-> >>> On Aug 29, 2014, at 2:29 PM, Eivind Sarto wrote:
-> >>>=20
-> >>>> I am seeing occasional data corruption during raid1 resync.
-> >>>> Reviewing the raid1 code, I suspect that commit 79ef3a8aa1cb1523cc23=
-1c9a90a278333c21f761 introduced a bug.
-> >>>> Prior to this commit raise_barrier() used to wait for conf->nr_pendi=
-ng to become zero.  It no longer does this.
-> >>>> It is not easy to reproduce the corruption, so I wanted to ask about=
- the following potential fix while I am still testing it.
-> >>>> Once I validate that the fix indeed works, I will post a proper patc=
-h.
-> >>>> Do you have any feedback?
-> >>>>=20
-> >>>> =E2=80=94 drivers/md/raid1.c	2014-08-22 15:19:15.000000000 -0700
-> >>>> +++ /tmp/raid1.c	2014-08-29 12:07:51.000000000 -0700
-> >>>> @@ -851,7 +851,7 @@ static void raise_barrier(struct r1conf=20
-> >>>> 	 *    handling.
-> >>>> 	 */
-> >>>> 	wait_event_lock_irq(conf->wait_barrier,
-> >>>> -			    !conf->array_frozen &&
-> >>>> +			    !conf->array_frozen && !conf->nr_pending &&
-> >>>> 			    conf->barrier < RESYNC_DEPTH &&
-> >>>> 			    (conf->start_next_window >=3D
-> >>>> 			     conf->next_resync + RESYNC_SECTORS),
-> >>>=20
-> >>> This patch does not work - at least, it doesn't fix the issues I'm se=
-eing.  My system hangs (in various places, like the resync thread) after co=
-mmit 79ef3a8.  When testing this patch, I also added some code to dm-raid.c=
- to allow me to print-out some of the variables when I encounter a problem.=
-  After applying this patch and printing the variables, I see:
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: start_next_window =
-=3D 12288
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: current_window_req=
-uests =3D -46
-> >>> 5257
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: next_window_reques=
-ts =3D -11562
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: nr_pending =3D 0
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: nr_waiting =3D 0
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: nr_queued  =3D 0
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: barrier =3D 1
-> >>> Sep  2 14:04:15 bp-01 kernel: device-mapper: raid: array_frozen =3D 0
-> >>>=20
-> >>> Some of those values look pretty bizarre to me and suggest the accoun=
-ting is pretty messed up.
-> >>>=20
-> >>> brassow
-> >>>=20
-> >>=20
-> >> After reviewing commit 79ef3a8aa1cb1523cc231c9a90a278333c21f761 I noti=
-ce that wait_barrier() will now only exclude writes.  User reads are not ex=
-cluded even if the fall within the resync window.
-> >> The old implementation used to exclude both reads and writes while res=
-ync-IO is active.
-> >> Could this be a cause of data corruption?
-> >>=20
-> >=20
-> > Could be.
-> > From read_balance:
-> >=20
-> > 	if (conf->mddev->recovery_cp < MaxSector &&
-> > 	    (this_sector + sectors >=3D conf->next_resync))
-> > 		choose_first =3D 1;
-> > 	else
-> > 		choose_first =3D 0;
-> >=20
-> > This used to be safe because a read immediately before next_resync woul=
-d wait
-> > until all resync requests completed.  But now that read requests don't =
-block
-> > it isn't safe.
-> > Probably best to make this:
-> >=20
-> >    choose_first =3D (conf->mddev->recovery_cp < this_sector + sectors);
-> >=20
-> > Can you test that?
->=20
-> Unfortunately, I doubt very much that that will solve the issue that I am=
- seeing.  (Although, I'd welcome this fix also.)
->=20
-> I have predominantly been testing RHEL kernels, but I've seen this with t=
-he latest upstream kernel as well.  When doing fault testing, like failing =
-a drive while the resync is happening, the processes can become hung.  Here=
-'s one example, but they vary:
->=20
-> INFO: task mdX_resync:11334 blocked for more than 120 seconds.           =
-      =20
->       Not tainted 2.6.32-497.el6.x86_64 #1                               =
-      =20
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.=
-      =20
-> mdX_resync    D 0000000000000000     0 11334      2 0x00000080           =
-      =20
->  ffff8801fada5be0 0000000000000046 ffff88021a3bcc00 0000000300000001     =
-      =20
->  ffff880218b92200 ffff880218668f50 0000000000000282 0000000000000003     =
-      =20
->  0000000000000001 0000000000000282 ffff88021bfb45f8 ffff8801fada5fd8     =
-      =20
-> Call Trace:                                                              =
-      =20
->  [<ffffffff8140e439>] ? md_wakeup_thread+0x39/0x70                       =
-      =20
->  [<ffffffffa02b81dd>] sync_request+0x26d/0xb90 [raid1]                   =
-      =20
->  [<ffffffff81064b90>] ? default_wake_function+0x0/0x20                   =
-      =20
->  [<ffffffff810577e9>] ? __wake_up_common+0x59/0x90                       =
-      =20
->  [<ffffffff8109eb00>] ? autoremove_wake_function+0x0/0x40                =
-      =20
->  [<ffffffff8105bd23>] ? __wake_up+0x53/0x70                              =
-      =20
->  [<ffffffff81414a47>] md_do_sync+0x6c7/0xd20                             =
-      =20
->  [<ffffffff814154f5>] md_thread+0x115/0x150                              =
-      =20
->  [<ffffffff814153e0>] ? md_thread+0x0/0x150                              =
-      =20
->  [<ffffffff8109e66e>] kthread+0x9e/0xc0                                  =
-      =20
->  [<ffffffff8100c20a>] child_rip+0xa/0x20                                 =
-      =20
->  [<ffffffff8109e5d0>] ? kthread+0x0/0xc0                                 =
-      =20
->  [<ffffffff8100c200>] ? child_rip+0x0/0x20                               =
-      =20
->=20
->=20
-> and...
->=20
->=20
-> INFO: task kjournald:10732 blocked for more than 120 seconds.            =
-      =20
->       Not tainted 2.6.32-497.el6.x86_64 #1                               =
-      =20
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.=
-      =20
-> kjournald     D 0000000000000008     0 10732      2 0x00000080           =
-      =20
->  ffff8801d71238b0 0000000000000046 0000000000000000 0000000300000001     =
-      =20
->  ffff880218b92200 ffff880218668f50 000003783fd7424b 0000000000000003     =
-      =20
->  0000000000000001 000000010035a163 ffff880219135af8 ffff8801d7123fd8     =
-      =20
-> Call Trace:                                                              =
-      =20
->  [<ffffffffa02b463f>] wait_barrier+0xcf/0x280 [raid1]                    =
-      =20
->  [<ffffffff8109eb00>] ? autoremove_wake_function+0x0/0x40                =
-      =20
->  [<ffffffffa02b71bf>] make_request+0x8f/0xe40 [raid1]                    =
-      =20
->  [<ffffffff81126af5>] ? mempool_alloc_slab+0x15/0x20                     =
-      =20
->  [<ffffffff81126c93>] ? mempool_alloc+0x63/0x140                         =
-      =20
->  [<ffffffff811c9d6b>] ? bio_alloc_bioset+0x5b/0xf0                       =
-      =20
->  [<ffffffffa02cf018>] raid_map+0x18/0x20 [dm_raid]
->=20
-> Bisecting has revealed that the commit that is the subject of this thread=
- is the root of the problem.  It does take a long time to reproduce the iss=
-ue with the scripts that I have, but if there is info I can get you, let me=
- know.
->=20
->  brassow
+> Thanks for the details Jon.  I don't suppose you have a stack trace from an
+> upstream kernel?  Not that I doubt you have one, and I suspect it is very
+> similar.  But I've learnt not to trust "suspect" and "presume" and "no doubt".
+> 
+> I'll have a look anyway.
 
-Thanks for the details Jon.  I don't suppose you have a stack trace from an
-upstream kernel?  Not that I doubt you have one, and I suspect it is very
-similar.  But I've learnt not to trust "suspect" and "presume" and "no doub=
-t".
+Indeed - me too.  I'll get started on recreating it on the latest upstream kernel now.  It does take several hours to reproduce on average, so I likely won't send the update until tomorrow.
 
-I'll have a look anyway.
+ brassow
 
-Thanks,
-NeilBrown
-
---Sig_/FfFlOPrzomp2vw5I+zhIlH.
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVAZvhznsnt1WYoG5AQKPcg/+NGl06w9OTkleCrPeFt2ITAk20XwoB+YF
-o8Rp2PwiGeKJs+KVtCo+n1HChFvhXeMeTAsiAU7qeWWf2IcDfFA9vuKug/wLLMkB
-dmN410O5iF0k6ACdcekINDJA5I7t0WV3djDn7En06KPEwqLRcuOR3yJL+Nrm1KU9
-2HIx+knTkkv/sdz+/sDNQJPuToPGE6DSyty/14tHiBrtA+IGKH+67JtwWQAYKqyW
-z9EoQs4kHBPhqrhBRgvKveJho8ZWNThFJLJVKWuhs6/iG6c5S326S6lDFzTJVZ2U
-ctC4rgAkWEVP8PBfiHYzswyRGCtFio6P5BhfdOg/kmYsBSf0eoigUZl2kwYkkukW
-xI4EzRbCxrLW8JStb4S0iU8NntydBnG67MdEZiYCnDyLpVH7sJ+5c1DtO0AUmEMQ
-AsShYJ0lrU+bzeA7Gn1zP6Kpa/J1lOmAHE/HKviL+zGGvBBeni8FyjbBaQWKGTYO
-hfJJqUl5rygMmKF7u88fykWlJERW/8fnP4F9IDx+YAX2EBMPwFsgvPJ/BFjJKJuw
-O8ElBabtexymFayL4/Gw/4j80y/z9p1Mbw6gVecIrnDfBPpu9UQFFQ9dEg2qQmyh
-kpxwfFRHVwNSNezOO4xvfp+4C2bfODKpPxICksctUuJK5u7viuv0YzD1nYHqxHZ0
-hHLtEOJhoF0=
-=b2AU
------END PGP SIGNATURE-----
-
---Sig_/FfFlOPrzomp2vw5I+zhIlH.--
