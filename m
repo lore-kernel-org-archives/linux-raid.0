@@ -1,28 +1,74 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Re: raid1 data corruption during resync
-Date: Tue, 2 Sep 2014 20:45:16 -0500
-Message-ID: <7703179B-1291-4471-B84F-FEE1E28F31A0@redhat.com>
-References: <20A5228D-DD63-4A6C-B2C6-B0C38996E636@gmail.com> <EAC50175-42D9-43BA-ADE2-1A50BD0581CB@redhat.com> <18B7DF88-26D1-44B8-8F72-2159A2DF868D@gmail.com> <20140903095507.032e8c6d@notabene.brown> <F9B1D613-79EF-488E-8D41-4C1BDBC6D4BE@redhat.com> <20140903113151.4099292b@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/1] Grow: Report when grow needs metadata update
+Date: Wed, 3 Sep 2014 13:28:10 +1000
+Message-ID: <20140903132810.4e593b3c@notabene.brown>
+References: <20140824130939.461501b4@notabene.brown>
+	<1409345232-24837-1-git-send-email-andy@strugglers.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/dR7wtQG.bk+46Lf2u+KV0Xw"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140903113151.4099292b@notabene.brown>
+In-Reply-To: <1409345232-24837-1-git-send-email-andy@strugglers.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Eivind Sarto <eivindsarto@gmail.com>, linux-raid@vger.kernel.org
+To: Andy Smith <andy@strugglers.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/dR7wtQG.bk+46Lf2u+KV0Xw
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Sep 2, 2014, at 8:31 PM, NeilBrown wrote:
+On Fri, 29 Aug 2014 20:47:12 +0000 Andy Smith <andy@strugglers.net> wrote:
 
-> Thanks for the details Jon.  I don't suppose you have a stack trace from an
-> upstream kernel?  Not that I doubt you have one, and I suspect it is very
-> similar.  But I've learnt not to trust "suspect" and "presume" and "no doubt".
-> 
-> I'll have a look anyway.
+> Report when the array's metadata needs updating instead of just
+> reporting the generic "kernel too old" message.
+>=20
+> Signed-off-by: Andy Smith <andy@strugglers.net>
+> ---
+>  Grow.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index a9c8589..76bb35a 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2255,7 +2255,9 @@ static int set_new_data_offset(struct mdinfo *sra, =
+struct supertype *st,
+>  		if (info2.space_before =3D=3D 0 &&
+>  		    info2.space_after =3D=3D 0) {
+>  			/* Metadata doesn't support data_offset changes */
+> -			return 1;
+> +			pr_err("%s: Metadata version doesn't support"
+> +			       " data_offset changes\n", devname);
+> +			goto release;
+>  		}
+>  		if (before > info2.space_before)
+>  			before =3D info2.space_before;
 
-Indeed - me too.  I'll get started on recreating it on the latest upstream kernel now.  It does take several hours to reproduce on average, so I likely won't send the update until tomorrow.
+Applied, thanks.
 
- brassow
+NeilBrown
 
+--Sig_/dR7wtQG.bk+46Lf2u+KV0Xw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVAaKyjnsnt1WYoG5AQJSzw/+KXpGF3OXLcczSbERh6+NQ1rjNNS4X2BU
+tyNyE/Mt6iR6awmNkAjUirfV9/iLGIrjNtKkveH/TXnllpxfMULLn4ivqrdqa/91
++umNsaLyIY3URTofwjhzX6sQTXzkAAXIoovLxumj0UwjbjkKh++DUAHZu5yZQ5oh
+u1RrXAWjDZUGRNnbownF+qE8LR7hQGEDFQgpk/uVgl8CPpyKAH7aK+DTzq9w9ULT
+v2uBJ0qbI9BdFB2KjgTTUP5Dkub/nChZMDoAfRIrWuL7gMMj7qClT0PxYg32qWjC
+apUNc46nOrD6L6/au4/lPpdzYuNIMLpTokLteF9qAEXrU3tWMxDu/9XIt52D+ewF
+VMvY6mhV8WX7MHZreAABDnNiJqVkTbtoPDh88vHvjt826qjcI8JPBAZbR1zgEWQS
+U/F94vS8WDbuV87yzVUq/xDsEeTm6VZLPZmvpTNHDYbkDNJW7FlUDDzufvokyTV1
+h3m0GMf360epQvfRMCY+6h+MZPksRD+0IBMK/o5HfgksL2AGf4UWoZfMZ0RtnOhG
+3GdMdIa34obYshbvJ74Pe1iyPXMP2mh8Hp4Wm6pvPeQMLYZrm8ckCrntVetXQm38
+JVwbK2Jm5tnQPk4cm0ykx+le5jj99GGKqgAxCPLftfS9wjcYGMEzzGDfJJwgixv+
+E+7TAHYW/LU=
+=4WuQ
+-----END PGP SIGNATURE-----
+
+--Sig_/dR7wtQG.bk+46Lf2u+KV0Xw--
