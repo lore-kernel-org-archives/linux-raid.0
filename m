@@ -1,131 +1,150 @@
-From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: AW: AW: RAID456 direct I/O write performance
-Date: Fri, 5 Sep 2014 18:06:06 +0000
-Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173586435A5@EXCHANGE.collogia.de>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD17358642FF8@EXCHANGE.collogia.de>
- <12EF8D94C6F8734FB2FF37B9FBEDD17358643012@EXCHANGE.collogia.de>,<5408D5CC.101@shiftmail.org>
+From: behanw@converseincode.com
+Subject: [PATCH v2] crypto, dm: LLVMLinux: Remove VLAIS usage from dm-crypt
+Date: Fri,  5 Sep 2014 16:02:18 -0700
+Message-ID: <1409958138-2727-1-git-send-email-behanw@converseincode.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5408D5CC.101@shiftmail.org>
-Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Ethan Wilson <ethan.wilson@shiftmail.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: agk@redhat.com, dm-devel@redhat.com, snitzer@redhat.com
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, torvalds@linux-foundation.org, =?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>, Behan Webster <behanw@converseincode.com>, pageexec@freemail.hu
 List-Id: linux-raid.ids
 
+=46rom: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
 
-This is a multi-part message in MIME format.
+The use of variable length arrays in structs (VLAIS) in the Linux Kerne=
+l code
+precludes the use of compilers which don't implement VLAIS (for instanc=
+e the
+Clang compiler). This patch instead allocates the appropriate amount of=
+ memory
+using an char array.
 
-------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+struct shash_desc contains a flexible array member member ctx declared =
+with
+CRYPTO_MINALIGN_ATTR, so sizeof(struct shash_desc) aligns the beginning
+of the array declared after struct shash_desc with long long.
 
-> Von: Ethan Wilson [ethan.wilson@shiftmail.org]=0A=
-> Gesendet: Donnerstag, 4. September 2014 23:12=0A=
-> An: linux-raid@vger.kernel.org=0A=
-> Betreff: Re: AW: RAID456 direct I/O write performance=0A=
-> =0A=
-> On 04/09/2014 18:30, Markus Stockhausen wrote:=0A=
-> > A perf record of the 1 writer test gives:=0A=
-> >=0A=
-> >      38.40%      swapper  [kernel.kallsyms]   [k] default_idle=0A=
-> >      13.14%    md0_raid5  [kernel.kallsyms]   [k] _raw_spin_unlock_irqr=
-estore=0A=
-> >      13.05%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_enter=
-=0A=
-> >      10.01%          iot  [raid456]           [k] raid5_unplug=0A=
-> >       9.06%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_exit=
-=0A=
-> >       3.39%    md0_raid5  [kernel.kallsyms]   [k] __kernel_fpu_begin=0A=
-> >       1.67%    md0_raid5  [xor]               [k] xor_sse_2_pf64=0A=
-> >       0.87%          iot  [kernel.kallsyms]   [k] finish_task_switch=0A=
-> >=0A=
-> > I'm confused and clueless. Especially I cannot see where the=0A=
-> > 10% overhead in the source of raid5_unplug might come=0A=
-> > from? Any idea from someone with better insight?=0A=
-> =0A=
-> I am no kernel developer but I have read that the CPU time for serving=0A=
-> interrupts is often accounted to the random process which has the bad=0A=
-> luck to be running at the time the interrupt comes and steals the CPU. I=
-=0A=
-> read this for top, htop etc, which have probably a different accounting=
-=0A=
-> mechanism than perf, but maybe something similar happens here, because=0A=
-> _raw_spin_unlock_irqrestore at 13% looks too absurd to me.=0A=
-> In fact, probably as soon as the interrupts are re-enabled by=0A=
-> _raw_spin_unlock_irqrestore, the CPU often goes serving one interrupt=0A=
-> that was queued, and this is before the function=0A=
-> _raw_spin_unlock_irqrestore exits, so the time is really accounted there=
-=0A=
-> and that's why it's so high.=0A=
-=0A=
-Thanks Ethan for the explanation. =0A=
-=0A=
-In between I found the reason for the slowness. RAID5 handles direct IO=0A=
-write requests sequentially with each one restarting the raid5d() worker=0A=
-thread (more lke sync IO). The raid1d() worker thread can batch those =0A=
-requests. Maybe Neil can tell if that behaviour is desired.=0A=
-=0A=
-=0A=
-------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3
-Content-Type: text/plain;
-	name="InterScan_Disclaimer.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="InterScan_Disclaimer.txt"
+No trailing padding is required because it is not a struct type that ca=
+n
+be used in an array.
 
-****************************************************************************
-Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
-Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
-vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-Weitergabe dieser Mail ist nicht gestattet.
+The CRYPTO_MINALIGN_ATTR is required so that desc is aligned with long =
+long
+as would be the case for a struct containing a member with
+CRYPTO_MINALIGN_ATTR.
 
-Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
-manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-rechtsverbindliche Willenserklärung.
+Signed-off-by: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+Cc: pageexec@freemail.hu
+---
+ drivers/md/dm-crypt.c | 38 ++++++++++++++++++--------------------
+ 1 file changed, 18 insertions(+), 20 deletions(-)
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index cd15e08..ad696b8 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -526,29 +526,28 @@ static int crypt_iv_lmk_one(struct crypt_config *=
+cc, u8 *iv,
+ 			    u8 *data)
+ {
+ 	struct iv_lmk_private *lmk =3D &cc->iv_gen_private.lmk;
+-	struct {
+-		struct shash_desc desc;
+-		char ctx[crypto_shash_descsize(lmk->hash_tfm)];
+-	} sdesc;
++	char sdesc[sizeof(struct shash_desc) +
++		crypto_shash_descsize(lmk->hash_tfm)] CRYPTO_MINALIGN_ATTR;
++	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
+ 	struct md5_state md5state;
+ 	__le32 buf[4];
+ 	int i, r;
+=20
+-	sdesc.desc.tfm =3D lmk->hash_tfm;
+-	sdesc.desc.flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
++	desc->tfm =3D lmk->hash_tfm;
++	desc->flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
+=20
+-	r =3D crypto_shash_init(&sdesc.desc);
++	r =3D crypto_shash_init(desc);
+ 	if (r)
+ 		return r;
+=20
+ 	if (lmk->seed) {
+-		r =3D crypto_shash_update(&sdesc.desc, lmk->seed, LMK_SEED_SIZE);
++		r =3D crypto_shash_update(desc, lmk->seed, LMK_SEED_SIZE);
+ 		if (r)
+ 			return r;
+ 	}
+=20
+ 	/* Sector is always 512B, block size 16, add data of blocks 1-31 */
+-	r =3D crypto_shash_update(&sdesc.desc, data + 16, 16 * 31);
++	r =3D crypto_shash_update(desc, data + 16, 16 * 31);
+ 	if (r)
+ 		return r;
+=20
+@@ -557,12 +556,12 @@ static int crypt_iv_lmk_one(struct crypt_config *=
+cc, u8 *iv,
+ 	buf[1] =3D cpu_to_le32((((u64)dmreq->iv_sector >> 32) & 0x00FFFFFF) |=
+ 0x80000000);
+ 	buf[2] =3D cpu_to_le32(4024);
+ 	buf[3] =3D 0;
+-	r =3D crypto_shash_update(&sdesc.desc, (u8 *)buf, sizeof(buf));
++	r =3D crypto_shash_update(desc, (u8 *)buf, sizeof(buf));
+ 	if (r)
+ 		return r;
+=20
+ 	/* No MD5 padding here */
+-	r =3D crypto_shash_export(&sdesc.desc, &md5state);
++	r =3D crypto_shash_export(desc, &md5state);
+ 	if (r)
+ 		return r;
+=20
+@@ -679,10 +678,9 @@ static int crypt_iv_tcw_whitening(struct crypt_con=
+fig *cc,
+ 	struct iv_tcw_private *tcw =3D &cc->iv_gen_private.tcw;
+ 	u64 sector =3D cpu_to_le64((u64)dmreq->iv_sector);
+ 	u8 buf[TCW_WHITENING_SIZE];
+-	struct {
+-		struct shash_desc desc;
+-		char ctx[crypto_shash_descsize(tcw->crc32_tfm)];
+-	} sdesc;
++	char sdesc[sizeof(struct shash_desc)
++		+ crypto_shash_descsize(tcw->crc32_tfm)] CRYPTO_MINALIGN_ATTR;
++	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
+ 	int i, r;
+=20
+ 	/* xor whitening with sector number */
+@@ -691,16 +689,16 @@ static int crypt_iv_tcw_whitening(struct crypt_co=
+nfig *cc,
+ 	crypto_xor(&buf[8], (u8 *)&sector, 8);
+=20
+ 	/* calculate crc32 for every 32bit part and xor it */
+-	sdesc.desc.tfm =3D tcw->crc32_tfm;
+-	sdesc.desc.flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
++	desc->tfm =3D tcw->crc32_tfm;
++	desc->flags =3D CRYPTO_TFM_REQ_MAY_SLEEP;
+ 	for (i =3D 0; i < 4; i++) {
+-		r =3D crypto_shash_init(&sdesc.desc);
++		r =3D crypto_shash_init(desc);
+ 		if (r)
+ 			goto out;
+-		r =3D crypto_shash_update(&sdesc.desc, &buf[i * 4], 4);
++		r =3D crypto_shash_update(desc, &buf[i * 4], 4);
+ 		if (r)
+ 			goto out;
+-		r =3D crypto_shash_final(&sdesc.desc, &buf[i * 4]);
++		r =3D crypto_shash_final(desc, &buf[i * 4]);
+ 		if (r)
+ 			goto out;
+ 	}
+--=20
+1.9.1
 
-Vorstand:
-Kadir Akin
-Dr. Michael Höhnerbach
-
-Vorsitzender des Aufsichtsrates:
-Hans Kristian Langva
-
-Registergericht: Amtsgericht Köln
-Registernummer: HRB 52 497
-
-This e-mail may contain confidential and/or privileged information. If you
-are not the intended recipient (or have received this e-mail in error)
-please notify the sender immediately and destroy this e-mail. Any
-unauthorized copying, disclosure or distribution of the material in this
-e-mail is strictly forbidden.
-
-e-mails sent over the internet may have been written under a wrong name or
-been manipulated. That is why this message sent as an e-mail is not a
-legally binding declaration of intention.
-
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
-
-executive board:
-Kadir Akin
-Dr. Michael Höhnerbach
-
-President of the supervisory board:
-Hans Kristian Langva
-
-Registry office: district court Cologne
-Register number: HRB 52 497
-
-****************************************************************************
-
-------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
