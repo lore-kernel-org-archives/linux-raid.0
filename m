@@ -1,45 +1,35 @@
-From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH] Create.c: Try few more times to stop array after failed
- creation
-Date: Fri, 05 Sep 2014 16:26:13 +0200
-Message-ID: <20140905142612.10761.82358.stgit@gklab-154-222.intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ext4 vs btrfs performance on SSD array
+Date: Fri, 5 Sep 2014 09:08:08 -0700
+Message-ID: <20140905160808.GA7967@infradead.org>
+References: <CAEp=YLgzsLbmEfGB5YKVcHP4CQ-_z1yxnZ0tpo7gjKZ2e1ma5g@mail.gmail.com>
+ <20140902000822.GA20473@dastard>
+ <20140902012222.GA21405@infradead.org>
+ <20140903100158.34916d34@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140903100158.34916d34@notabene.brown>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Nikolai Grigoriev <ngrigoriev@gmail.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-mm@kvack.org, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-raid.ids
 
-Sometimes after failure in creation (exp. due to duplicate devices
-in create command) newly created empty md array will not be stopped
-due to openers>1 (create_mddev will not manage to drop lock).
-In this case ioctl() will return error - this needs to be checked
-and if occurs - sending STOP_ARRAY should be repeat after delay
-to make sure that mddev is stopped correctly.
+On Wed, Sep 03, 2014 at 10:01:58AM +1000, NeilBrown wrote:
+> Do we still need maximums at all?
 
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- Create.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I don't think we do.  At least on any system I work with I have to
+increase them to get good performance without any adverse effect on
+throttling.
 
-diff --git a/Create.c b/Create.c
-index 330c5b4..7c8e53e 100644
---- a/Create.c
-+++ b/Create.c
-@@ -904,7 +904,12 @@ int Create(struct supertype *st, char *mddev,
- 				if (st->ss->add_to_super(st, &inf->disk,
- 							 fd, dv->devname,
- 							 dv->data_offset)) {
--					ioctl(mdfd, STOP_ARRAY, NULL);
-+					int count = 5;
-+					while (count &&
-+					       (ioctl(mdfd, STOP_ARRAY, NULL) < 0)) {
-+						usleep(100000);
-+						count--;
-+					}
- 					goto abort_locked;
- 				}
- 				st->ss->getinfo_super(st, inf, NULL);
+> So can we just remove the limit on max_sectors and the RAID5 stripe cache
+> size?  I'm certainly keen to remove the later and just use a mempool if the
+> limit isn't needed.
+> I have seen reports that a very large raid5 stripe cache size can cause
+> a reduction in performance.  I don't know why but I suspect it is a bug that
+> should be found and fixed.
+> 
+> Do we need max_sectors ??
 
+I'll send a patch to remove it and watch for the fireworks..
