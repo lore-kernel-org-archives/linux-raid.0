@@ -1,85 +1,74 @@
 From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: raid5: direct IO and md_wakeup_thread
-Date: Fri, 5 Sep 2014 17:52:53 +0000
-Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735864357D@EXCHANGE.collogia.de>
+Subject: AW: AW: RAID456 direct I/O write performance
+Date: Fri, 5 Sep 2014 18:06:06 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD173586435A5@EXCHANGE.collogia.de>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD17358642FF8@EXCHANGE.collogia.de>
+ <12EF8D94C6F8734FB2FF37B9FBEDD17358643012@EXCHANGE.collogia.de>,<5408D5CC.101@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-e13bc510-7475-4ee2-a3eb-a971e7a5c1b1"
+	boundary="----=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5408D5CC.101@shiftmail.org>
 Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Ethan Wilson <ethan.wilson@shiftmail.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
 This is a multi-part message in MIME format.
 
-------=_NextPartTM-000-e13bc510-7475-4ee2-a3eb-a971e7a5c1b1
+------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Neil,=0A=
+> Von: Ethan Wilson [ethan.wilson@shiftmail.org]=0A=
+> Gesendet: Donnerstag, 4. September 2014 23:12=0A=
+> An: linux-raid@vger.kernel.org=0A=
+> Betreff: Re: AW: RAID456 direct I/O write performance=0A=
+> =0A=
+> On 04/09/2014 18:30, Markus Stockhausen wrote:=0A=
+> > A perf record of the 1 writer test gives:=0A=
+> >=0A=
+> >      38.40%      swapper  [kernel.kallsyms]   [k] default_idle=0A=
+> >      13.14%    md0_raid5  [kernel.kallsyms]   [k] _raw_spin_unlock_irqr=
+estore=0A=
+> >      13.05%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_enter=
 =0A=
-I hope you are doing better after the flu. Maybe you find some time =0A=
-to explain the following codings in raid5.c to me. At least one of=0A=
-the patchs seems to be signed off by you. The RAID5 I'm using has =0A=
-default settings.=0A=
+> >      10.01%          iot  [raid456]           [k] raid5_unplug=0A=
+> >       9.06%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_exit=
 =0A=
-1) Generally speaking of md_wakup_thread() calls. Does it make=0A=
-any sense to call them the from within raid5d()? Or when being =0A=
-implemented at locations that might be called from the =0A=
-make_request() path too - for simplicity no further caller destinction =0A=
-was programmed.=0A=
- =0A=
-1) In case of a single direct I/O writer to the /dev/md0 device the =0A=
-following coding will always fire the md_wakeup_thread(). That=0A=
-is one reason for alternating raid5d loops one with data to =0A=
-process and the next without. Is that corner case wanted?=0A=
+> >       3.39%    md0_raid5  [kernel.kallsyms]   [k] __kernel_fpu_begin=0A=
+> >       1.67%    md0_raid5  [xor]               [k] xor_sse_2_pf64=0A=
+> >       0.87%          iot  [kernel.kallsyms]   [k] finish_task_switch=0A=
+> >=0A=
+> > I'm confused and clueless. Especially I cannot see where the=0A=
+> > 10% overhead in the source of raid5_unplug might come=0A=
+> > from? Any idea from someone with better insight?=0A=
+> =0A=
+> I am no kernel developer but I have read that the CPU time for serving=0A=
+> interrupts is often accounted to the random process which has the bad=0A=
+> luck to be running at the time the interrupt comes and steals the CPU. I=
 =0A=
-static void handle_stripe(struct stripe_head *sh)=0A=
-        ...=0A=
-        ops_run_io(sh, &s);=0A=
+> read this for top, htop etc, which have probably a different accounting=
 =0A=
-        if (s.dec_preread_active) {=0A=
-                /* We delay this until after ops_run_io so that if make_req=
-uest=0A=
-                 * is waiting on a flush, it won't continue until the write=
-s=0A=
-                 * have actually been submitted.=0A=
-                 */=0A=
-                atomic_dec(&conf->preread_active_stripes);=0A=
-                if (atomic_read(&conf->preread_active_stripes) <=0A=
-                    IO_THRESHOLD)=0A=
-                        md_wakeup_thread(conf->mddev->thread); */=0A=
-        }=0A=
+> mechanism than perf, but maybe something similar happens here, because=0A=
+> _raw_spin_unlock_irqrestore at 13% looks too absurd to me.=0A=
+> In fact, probably as soon as the interrupts are re-enabled by=0A=
+> _raw_spin_unlock_irqrestore, the CPU often goes serving one interrupt=0A=
+> that was queued, and this is before the function=0A=
+> _raw_spin_unlock_irqrestore exits, so the time is really accounted there=
 =0A=
-2) The wakeup_thread() in the following preread path seems=0A=
-to be unnecesary or will a double call wake the thread twice?=0A=
+> and that's why it's so high.=0A=
 =0A=
-void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,=0A=
-                              struct list_head *temp_inactive_list, int mst=
-wake)=0A=
-{=0A=
-        BUG_ON(!list_empty(&sh->lru));=0A=
-        BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);=0A=
-        if (test_bit(STRIPE_HANDLE, &sh->state)) {=0A=
-                if (test_bit(STRIPE_DELAYED, &sh->state) &&=0A=
-                    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {=0A=
-                        list_add_tail(&sh->lru, &conf->delayed_list);=0A=
-                        if (atomic_read(&conf->preread_active_stripes)=0A=
-                            < IO_THRESHOLD)=0A=
-                                md_wakeup_thread(conf->mddev->thread);=0A=
-                } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&=0A=
-                        ...=0A=
-                }=0A=
-                md_wakeup_thread(conf->mddev->thread);=0A=
-                ...=0A=
+Thanks Ethan for the explanation. =0A=
 =0A=
-Thanks in advance.=0A=
+In between I found the reason for the slowness. RAID5 handles direct IO=0A=
+write requests sequentially with each one restarting the raid5d() worker=0A=
+thread (more lke sync IO). The raid1d() worker thread can batch those =0A=
+requests. Maybe Neil can tell if that behaviour is desired.=0A=
 =0A=
-Markus=
-------=_NextPartTM-000-e13bc510-7475-4ee2-a3eb-a971e7a5c1b1
+=0A=
+------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3
 Content-Type: text/plain;
 	name="InterScan_Disclaimer.txt"
 Content-Transfer-Encoding: 7bit
@@ -139,4 +128,4 @@ Register number: HRB 52 497
 
 ****************************************************************************
 
-------=_NextPartTM-000-e13bc510-7475-4ee2-a3eb-a971e7a5c1b1--
+------=_NextPartTM-000-f9e84103-58c1-42a1-8f14-fbd93671f0d3--
