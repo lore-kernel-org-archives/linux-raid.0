@@ -1,52 +1,45 @@
-From: Ethan Wilson <ethan.wilson@shiftmail.org>
-Subject: Re: AW: RAID456 direct I/O write performance
-Date: Thu, 04 Sep 2014 23:12:44 +0200
-Message-ID: <5408D5CC.101@shiftmail.org>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD17358642FF8@EXCHANGE.collogia.de> <12EF8D94C6F8734FB2FF37B9FBEDD17358643012@EXCHANGE.collogia.de>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH] Create.c: Try few more times to stop array after failed
+ creation
+Date: Fri, 05 Sep 2014 16:26:13 +0200
+Message-ID: <20140905142612.10761.82358.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD17358643012@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-On 04/09/2014 18:30, Markus Stockhausen wrote:
-> A perf record of the 1 writer test gives:
->
->      38.40%      swapper  [kernel.kallsyms]   [k] default_idle
->      13.14%    md0_raid5  [kernel.kallsyms]   [k] _raw_spin_unlock_irqrestore
->      13.05%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_enter
->      10.01%          iot  [raid456]           [k] raid5_unplug
->       9.06%      swapper  [kernel.kallsyms]   [k] tick_nohz_idle_exit
->       3.39%    md0_raid5  [kernel.kallsyms]   [k] __kernel_fpu_begin
->       1.67%    md0_raid5  [xor]               [k] xor_sse_2_pf64
->       0.87%          iot  [kernel.kallsyms]   [k] finish_task_switch
->
-> I'm confused and clueless. Especially I cannot see where the
-> 10% overhead in the source of raid5_unplug might come
-> from? Any idea from someone with better insight?
+Sometimes after failure in creation (exp. due to duplicate devices
+in create command) newly created empty md array will not be stopped
+due to openers>1 (create_mddev will not manage to drop lock).
+In this case ioctl() will return error - this needs to be checked
+and if occurs - sending STOP_ARRAY should be repeat after delay
+to make sure that mddev is stopped correctly.
 
-I am no kernel developer but I have read that the CPU time for serving 
-interrupts is often accounted to the random process which has the bad 
-luck to be running at the time the interrupt comes and steals the CPU. I 
-read this for top, htop etc, which have probably a different accounting 
-mechanism than perf, but maybe something similar happens here, because 
-_raw_spin_unlock_irqrestore at 13% looks too absurd to me.
-In fact, probably as soon as the interrupts are re-enabled by 
-_raw_spin_unlock_irqrestore, the CPU often goes serving one interrupt 
-that was queued, and this is before the function 
-_raw_spin_unlock_irqrestore exits, so the time is really accounted there 
-and that's why it's so high.
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ Create.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-OTOH I would like to ask kernel experts one thing if I may: does anybody 
-know a way to get a stack trace for a process which is currently running 
-in kernel mode and is running NOW on a CPU and it is not stopped waiting 
-in a queue? I know about /proc/pid/stack but that one shows 
-0xffffffffffffffff for such a case. Being able to do that would help to 
-answer the above question too...
-
-Thanks
-EW
+diff --git a/Create.c b/Create.c
+index 330c5b4..7c8e53e 100644
+--- a/Create.c
++++ b/Create.c
+@@ -904,7 +904,12 @@ int Create(struct supertype *st, char *mddev,
+ 				if (st->ss->add_to_super(st, &inf->disk,
+ 							 fd, dv->devname,
+ 							 dv->data_offset)) {
+-					ioctl(mdfd, STOP_ARRAY, NULL);
++					int count = 5;
++					while (count &&
++					       (ioctl(mdfd, STOP_ARRAY, NULL) < 0)) {
++						usleep(100000);
++						count--;
++					}
+ 					goto abort_locked;
+ 				}
+ 				st->ss->getinfo_super(st, inf, NULL);
 
