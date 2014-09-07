@@ -1,65 +1,65 @@
-From: Behan Webster <behanw@converseincode.com>
-Subject: Re: [PATCH v2] crypto, dm: LLVMLinux: Remove VLAIS usage from dm-crypt
-Date: Sat, 06 Sep 2014 19:10:06 -0700
-Message-ID: <540BBE7E.2060108@converseincode.com>
-References: <1409958138-2727-1-git-send-email-behanw@converseincode.com> <540AC9F7.9000202@gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: raid1_end_read_request does not retry failed READ from a recovering drive
+Date: Sun, 7 Sep 2014 17:18:16 +0300
+Message-ID: <CAGRgLy6B0ZWtr1xv7_-qAzww+UNcfausrxRnMzDBP3n5348e7A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <540AC9F7.9000202@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Milan Broz <gmazyland@gmail.com>, agk@redhat.com, dm-devel@redhat.com, snitzer@redhat.com
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, torvalds@linux-foundation.org, =?UTF-8?B?SmFuLVNpbW9uIE3Dtg==?= =?UTF-8?B?bGxlcg==?= <dl9pf@gmx.de>, pageexec@freemail.hu
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 09/06/14 01:46, Milan Broz wrote:
-> On 09/06/2014 01:02 AM, behanw@converseincode.com wrote:
->> From: Jan-Simon M=C3=B6ller <dl9pf@gmx.de>
->>
->> The use of variable length arrays in structs (VLAIS) in the Linux Ke=
-rnel code
->> precludes the use of compilers which don't implement VLAIS (for inst=
-ance the
->> Clang compiler). This patch instead allocates the appropriate amount=
- of memory
->> using an char array.
-> Well, if clang (or C99 code) is now preferred for kernel, why not.
->
-> Just please commit the patch series en bloc (together with the patche=
-s
-> removing VLAIS from crypto code you posted to cryptoapi list).
-They seemed more separate than that. However, happy to post them as a=20
-patch set.
+Hi Neil,
+we see the following issue:
 
->> -	struct {
->> -		struct shash_desc desc;
->> -		char ctx[crypto_shash_descsize(lmk->hash_tfm)];
->> -	} sdesc;
->> +	char sdesc[sizeof(struct shash_desc) +
->> +		crypto_shash_descsize(lmk->hash_tfm)] CRYPTO_MINALIGN_ATTR;
->> +	struct shash_desc *desc =3D (struct shash_desc *)sdesc;
-> TBH, this looks even more uglier that the previous code :-)
-I'm not claiming it's prettier. Merely C99. :)
+# RAID1 has 2 drives A and B, drive B is recovering
+# READ request arrives
+# read_balanace selects drive B to read from, because READ sector
+comes before B->recovery_offset
+# READ is issued to drive B, but fails (drive B fails again)
 
-> (But tglx already complained on different patch and I fully agree tha=
-t crypto code
-> should not use this kind of construction in the first place...
-> It would be very nice to introduce at least some macro hiding these c=
-razy
-> stack allocations later.)
-I actually agree with you and tglx. Will fix.
+Now raid1_end_read_request() has the following code:
 
-As I said to tglx, we were asked not to hide things with macro magic in=
-=20
-some of our non-crypto VLAIS removal patches. Happy to use macros in=20
-this case.
+    if (uptodate)
+        set_bit(R1BIO_Uptodate, &r1_bio->state);
+    else {
+        /* If all other devices have failed, we want to return
+         * the error upwards rather than fail the last device.
+         * Here we redefine "uptodate" to mean "Don't want to retry"
+         */
+        unsigned long flags;
+        spin_lock_irqsave(&conf->device_lock, flags);
+        if (r1_bio->mddev->degraded == conf->raid_disks ||
+            (r1_bio->mddev->degraded == conf->raid_disks-1 &&
+             !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
+            uptodate = 1;
+        spin_unlock_irqrestore(&conf->device_lock, flags);
+    }
+
+According to this code uptodate wrongly becomes 1, because:
+r1_bio->mddev->degraded == conf->raid_disks-1 is TRUE
+and
+!test_bit(Faulty, &conf->mirrors[mirror].rdev->flags) is also TRUE
+
+Indeed, drive B is not marked as Faulty, but also not marked as In_sync.
+However, this function treats !Faulty being equal to In_Sync, so it
+decides that the last good drive failed, so it does not retry the
+READ.
+
+As a result, there is IO error, while we should have retried the READ
+from the healthy drive.
+
+This is happening in 3.8.13, but your master branch seems to have the
+same issue.
+
+What is a reasonable fix?
+1) Do not read from drives which are !In_sync (a bit scary to read
+from such drive)
+2) replace !Faulty to In_sync check
+3) do both
+
+ Can you pls advise?
 
 Thanks,
-
-Behan
-
---=20
-Behan Webster
-behanw@converseincode.com
+Alex.
