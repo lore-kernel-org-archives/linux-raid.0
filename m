@@ -1,184 +1,141 @@
-From: Markus Stockhausen <stockhausen@collogia.de>
-Subject: AW: raid5: direct IO and md_wakeup_thread
-Date: Mon, 8 Sep 2014 07:24:55 +0000
-Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD17358644B61@EXCHANGE.collogia.de>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD1735864357D@EXCHANGE.collogia.de>,<20140908164615.0a7eb26d@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID0 size over 2 TB
+Date: Mon, 8 Sep 2014 17:28:32 +1000
+Message-ID: <20140908172832.7543b241@notabene.brown>
+References: <20140906230928.BB645CEE@pobox.sk>
+	<20140908170037.451e2376@notabene.brown>
+	<20140908091811.1DD1140C@pobox.sk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPartTM-000-1c863075-380b-43a1-982c-40cac74147c1"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/QxEfmeq_J0g/xz3xCnFp/kf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140908164615.0a7eb26d@notabene.brown>
-Content-Language: de-DE
+In-Reply-To: <20140908091811.1DD1140C@pobox.sk>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: azurIt <azurit@pobox.sk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-This is a multi-part message in MIME format.
-
-------=_NextPartTM-000-1c863075-380b-43a1-982c-40cac74147c1
-Content-Type: text/plain; charset="us-ascii"
+--Sig_/QxEfmeq_J0g/xz3xCnFp/kf
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-> Von: NeilBrown [neilb@suse.de]=0A=
-> Gesendet: Montag, 8. September 2014 08:46=0A=
-> An: Markus Stockhausen=0A=
-> Cc: linux-raid@vger.kernel.org=0A=
-> Betreff: Re: raid5: direct IO and md_wakeup_thread=0A=
-> =0A=
-> On Fri, 5 Sep 2014 17:52:53 +0000 Markus Stockhausen=0A=
-> <stockhausen@collogia.de> wrote:=0A=
-> =0A=
-> > Hi Neil,=0A=
-> >=0A=
-> > I hope you are doing better after the flu. Maybe you find some time=0A=
-> > to explain the following codings in raid5.c to me. At least one of=0A=
-> > the patchs seems to be signed off by you. The RAID5 I'm using has=0A=
-> > default settings.=0A=
-> >=0A=
-> > 1) Generally speaking of md_wakup_thread() calls. Does it make=0A=
-> > any sense to call them the from within raid5d()? Or when being=0A=
-> > implemented at locations that might be called from the=0A=
-> > make_request() path too - for simplicity no further caller destinction=
-=0A=
-> > was programmed.=0A=
-> =0A=
-> I doesn't make sense to all md_wakeup_thread() from somewhere that is *on=
-ly*=0A=
-> called within raid5d().  However most of raid5d() is handle_stripe() and=
-=0A=
-> handle_stripe() is called from other places.  So it could make sence to c=
-all=0A=
-> md_wakeup_thread from within handle_stripe().=0A=
-> =0A=
-> make_request() very likely wants to call md_wakeup_thread().... though I'=
-m=0A=
-> wondering if I understand that part of the question properly.=0A=
-> =0A=
-> >=0A=
-> > 1) In case of a single direct I/O writer to the /dev/md0 device the=0A=
-> > following coding will always fire the md_wakeup_thread(). That=0A=
-> > is one reason for alternating raid5d loops one with data to=0A=
-> > process and the next without. Is that corner case wanted?=0A=
-> =0A=
-> Is this a problem?  We often do things just in case they are needed,=0A=
-> providing the cost isn't too great.=0A=
-> =0A=
-> If there was a measurable cost it might make sense to=0A=
-> =0A=
->     clear_bit(THREAD_WAKEUP, &mddev->thread->flags);=0A=
-> =0A=
-> in raid5d() at the top of the while loop in raid5d().  We would need to m=
-ove=0A=
-> the md_check_recovery() call to the end of the function then.=0A=
-> =0A=
-> >=0A=
-> > static void handle_stripe(struct stripe_head *sh)=0A=
-> >         ...=0A=
-> >         ops_run_io(sh, &s);=0A=
-> >=0A=
-> >         if (s.dec_preread_active) {=0A=
-> >                 /* We delay this until after ops_run_io so that if make=
-_request=0A=
-> >                  * is waiting on a flush, it won't continue until the w=
-rites=0A=
-> >                  * have actually been submitted.=0A=
-> >                  */=0A=
-> >                 atomic_dec(&conf->preread_active_stripes);=0A=
-> >                 if (atomic_read(&conf->preread_active_stripes) <=0A=
-> >                     IO_THRESHOLD)=0A=
-> >                         md_wakeup_thread(conf->mddev->thread); */=0A=
-> >         }=0A=
-> >=0A=
-> > 2) The wakeup_thread() in the following preread path seems=0A=
-> > to be unnecesary or will a double call wake the thread twice?=0A=
-> =0A=
-> Unnecessary in some cases, necessary in others.  Tracking exactly when it=
- is=0A=
-> necessary would be complex and error prone.=0A=
-> =0A=
-> Are you just trying to understand the code, or is there something that yo=
-u=0A=
-> think is a problem that could be fixed?=0A=
-=0A=
-HI Neil,=0A=
-=0A=
-thanks for the explanations. I tried to understand the reason for the=0A=
-"bad" benchmark numbers during my direct IO write tests for my rmw=0A=
-patch. I only choose it to avoid caching side effects. Even with 64 =0A=
-threads there is still a large gap to the theoretical maximum. So I =0A=
-reduced the test to 1 writer and took some time to have a look how =0A=
-raid5.c handles sync/direct writes. See my other post with only 5MB/s=0A=
-4K direct writes to ramdisk backed raid5 md. =0A=
-=0A=
-With that insight I started to compare it to raid1.c. After some =0A=
-iterations it came to my mind that the empty raid5d() runs between=0A=
-two sync writes might give extra latency and so I looked for corners =0A=
-where md_wakeup_thread() might be unnecessary. The result are=0A=
-the questions above.=0A=
-=0A=
-I'll give the clear_bit(THREAD_WAKEUP,...) a try.=0A=
-=0A=
-Markus=
-------=_NextPartTM-000-1c863075-380b-43a1-982c-40cac74147c1
-Content-Type: text/plain;
-	name="InterScan_Disclaimer.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="InterScan_Disclaimer.txt"
+On Mon, 08 Sep 2014 09:18:11 +0200 "azurIt" <azurit@pobox.sk> wrote:
 
-****************************************************************************
-Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
-Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
-irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
-vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
-Weitergabe dieser Mail ist nicht gestattet.
+> >
+> > CC: linux-raid@vger.kernel.org
+> >On Sat, 06 Sep 2014 23:09:28 +0200 "azurIt" <azurit@pobox.sk> wrote:
+> >
+> >> Hi,
+> >>=20
+> >> i'm having problems with growing my RAID0 array over 2 TB. I installed=
+ two 4 TB drives, created 4 TB partitions but array cannot be resized over =
+2 TB. Superblock versoin is 0.90 and kernel version is 3.2.53 - according t=
+o linux RAID wiki, it should support 4 TB component/array size:
+> >> https://raid.wiki.kernel.org/index.php/RAID_superblock_formats#The_ver=
+sion-0.90_Superblock_Format
+> >>=20
+> >> Some more info:
+> >>=20
+> >> # mdadm --detail /dev/md2
+> >> /dev/md2:
+> >>         Version : 0.90
+> >>   Creation Time : Tue Sep 28 16:54:04 2010
+> >>      Raid Level : raid1
+> >>      Array Size : 2147483520 (2048.00 GiB 2199.02 GB)
+> >>   Used Dev Size : 2147483520 (2048.00 GiB 2199.02 GB)
+> >>    Raid Devices : 2
+> >>   Total Devices : 2
+> >> Preferred Minor : 2
+> >>     Persistence : Superblock is persistent
+> >>=20
+> >>     Update Time : Sat Sep  6 23:04:44 2014
+> >>           State : clean=20
+> >>  Active Devices : 2
+> >> Working Devices : 2
+> >>  Failed Devices : 0
+> >>   Spare Devices : 0
+> >>=20
+> >>            UUID : 9a363004:ad04abfe:2e31e1c3:caf66df4
+> >>          Events : 0.77066
+> >>=20
+> >>     Number   Major   Minor   RaidDevice State
+> >>        0       8       33        0      active sync   /dev/sdc1
+> >>        1       8       49        1      active sync   /dev/sdd1
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >>=20
+> >> # fdisk /dev/sdd
+> >>=20
+> >> WARNING: GPT (GUID Partition Table) detected on '/dev/sdd'! The util f=
+disk doesn't support GPT. Use GNU Parted.
+> >
+> >Why are you using "fdisk" even though "fdisk" is telling you not to use =
+it?
+> >
+> >What does
+> >  cat /proc/partitions
+> >
+> >say about the sizes of the partitions?
+> >
+> >NeilBrown
+> >
+>=20
+>=20
+>=20
+> I, of course, didn't use fdisk to create partitions - they were created u=
+sing cgdisk, but it's graphical tool so i wasn't able to send output from i=
+t, so i get output from fdisk to prove, that partitions are large enough.
 
-Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
-manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
-rechtsverbindliche Willenserklärung.
+Yet fdisk *didn't* prove that the partitions are large enough - it said the
+partitions were:
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
+/dev/sdd1               1  4294967295  2147483647+  ee  GPT
+                                       ^^^^^^^^^^^
 
-Vorstand:
-Kadir Akin
-Dr. Michael Höhnerbach
+2 Gig.
 
-Vorsitzender des Aufsichtsrates:
-Hans Kristian Langva
+And /proc/partitions tells me:
 
-Registergericht: Amtsgericht Köln
-Registernummer: HRB 52 497
+>=20
+>=20
+> # cat /proc/partitions
+> major minor  #blocks  name
+>=20
+>    9        2 2147483520 md2
+>    8       32 3907018584 sdc
+>    8       33 2147483647 sdc1
+>    8       48 3907018584 sdd
+>    8       49 2147483647 sdd1
 
-This e-mail may contain confidential and/or privileged information. If you
-are not the intended recipient (or have received this e-mail in error)
-please notify the sender immediately and destroy this e-mail. Any
-unauthorized copying, disclosure or distribution of the material in this
-e-mail is strictly forbidden.
+that the partitions are 2Gig.  You need to sort the partition size out.  I
+cannot help you.  I have no experience with GPT.  Maybe a reboot?
 
-e-mails sent over the internet may have been written under a wrong name or
-been manipulated. That is why this message sent as an e-mail is not a
-legally binding declaration of intention.
+NeilBrown
 
-Collogia
-Unternehmensberatung AG
-Ubierring 11
-D-50678 Köln
+--Sig_/QxEfmeq_J0g/xz3xCnFp/kf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-executive board:
-Kadir Akin
-Dr. Michael Höhnerbach
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-President of the supervisory board:
-Hans Kristian Langva
+iQIVAwUBVA1aoDnsnt1WYoG5AQLXRg/9H0nXE5fHnYLW0qLjN22TxoO+cYCjsCBj
+GZhKR8ShhoQylLbymxw1udiVtSAwrv1mYUabzk73c4PJ5n3Kn3IFrc6k6hrFaJH9
+uoP0cEaPysyDhMe1qDlIX20inJFOpIr1qN5z6IOiWjTsvE32/dk09LF2fCzJ2/Nn
+p010yxRB4OYmo9l4DLu83SXW97CnetKNrYJEJDU2zchiOnZcDD39xriXZtn1PAgi
+nLa4Z9rYWXwOBKEJUqwONpFvcReOIREi3kkOpTN+JRb+CjQc/OdzUpGHwlARXSeB
+d1NkYSP4lT1WV6AU4k2LYoGlIrF+rITV+kyzGyST7ApC82Epeha5AJN5K9xIyhVn
+gm6wi976Llj+v0ahFOkIYZX0jDYOfZmpFbF4C18c+smHS0gssqI56NltkgLM19Xf
+62E5fRTvz0WOFDxZ0oRrpwPsuyUdmWY3HLLfBgh0DAFCseBfdtvOV9zwGpu/CiY+
+I9igrBCD4eXOy2S9X/j1ju2zrbnTRWWU8/+w24/xQkAv3+MPTizTdnvmx0atuad/
+dI7RzwvmYLhC4BJXYb9G5PuTqtDJ/rbEf6GUpFdOE5nVMDQi6R5Zupa/UHXq1+4P
+a9Z90Br9WAao2tmrcwUDLn+1GzdGjYLpDYpQiY3bkB26ax+0xGBSZ5NbPV92vCGN
+d775ezfU17c=
+=Q4Ej
+-----END PGP SIGNATURE-----
 
-Registry office: district court Cologne
-Register number: HRB 52 497
-
-****************************************************************************
-
-------=_NextPartTM-000-1c863075-380b-43a1-982c-40cac74147c1--
+--Sig_/QxEfmeq_J0g/xz3xCnFp/kf--
