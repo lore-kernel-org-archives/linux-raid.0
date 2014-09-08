@@ -1,59 +1,71 @@
-From: Brassow Jonathan <jbrassow@redhat.com>
-Subject: Fwd: raid1 data corruption during resync
-Date: Mon, 8 Sep 2014 10:52:49 -0500
-Message-ID: <CEEAB94E-18F3-4087-A866-B412582F7B8D@redhat.com>
-References: <D4FE2D75-4208-48C9-A4D0-432F092E5AE9@redhat.com>
-Mime-Version: 1.0 (Apple Message framework v1085)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Robert Long <boblong@k9heritage.com>
+Subject: Mirroring seek optimization resend
+Date: Mon, 8 Sep 2014 10:13:12 -0700
+Message-ID: <9300C887-1255-4AE6-806B-390332D10382@k9heritage.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
-Cc: NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Again,
 
+=46irst, the code base that I was working from is now 2 years old. Whil=
+e I doubt that the raid1.c code has changed significantly I could be ve=
+ry wrong. At that time the load balancing algorithm was simply to attem=
+pt to split the actively seeked area of the disk into two parts, and ha=
+ve one disk take the low half and one take the high half. The effect of=
+ that, in read intensive applications, is to cut in half the overall se=
+ek length for each disk in the mirror, resulting in considerable seek t=
+ime savings and overall higher throughput. A moving average of sector a=
+ddresses needs to be maintained to make this work, but this is quite ea=
+sily done. The more writing happens, the more this advantage is lost. T=
+he problem with this approach, though not a large one, is that is that =
+a numerical average is not actually representative of the middle of the=
+ work area due to outliers, clusters of reads, etc.
 
-Begin forwarded message:
+A solution to this is to maintain a running median of the sector addres=
+s. When this is done you get a measurable increase in throughput, at th=
+e cost of greater computational overhead. The method that I used to mai=
+ntain a moving median involves the creation of an equal sized min heap =
+and max heap connected together at the head of each. This connection po=
+int represents the current median sector of access requests to the mirr=
+or.
 
-> From: Brassow Jonathan <jbrassow@redhat.com>
-> Date: September 4, 2014 9:01:58 AM CDT
-> To: NeilBrown <neilb@suse.de>
-> Cc: Eivind Sarto <eivindsarto@gmail.com>, "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
-> Subject: Re: raid1 data corruption during resync
-> 
-> 
-> On Sep 4, 2014, at 12:28 AM, NeilBrown wrote:
-> 
->> 
->> Neither of these explain the hang you are seeing.
->> I note that the "md0-resync" thread isn't listed.  I don't suppose you know
->> what it was doing (stack trace)??
->> Also, had  "md: md0: sync done" appeared in syslog yet?
-> 
-> The sync has not yet completed (no message).  I'm not sure why the resync thread didn't automatically report, but I've grabbed the entire trace from the machine ('echo t > /proc/sysrq-trigger') and it appears there.  The traces are attached.  (Would you rather have something so large posted in-line?)
+Today I fired up the machine that I used to develop and test this modif=
+ication. It took some time just to locate the modified raid1.c file :) =
+The machine, in addition to the boot drive, is equipped with a couple o=
+f 1 TB Hitachi disk drives that were used for test purposes. To be hone=
+st I don=92t remember the name of the test software that I used, but it=
+ seems that it was a pretty performance standard utility, not something=
+ I put together myself. Perhaps you could jog my memory. As I mentioned=
+ previously the improvement was around 7% with read only testing of ran=
+dom seeks.
 
-I didn't see this message come through yet.  I am resending it with only the trace you requested from the mdX_resync thread.  If you need the entire list of traces, I can try resending that.
+If this is of interest I will gladly post the NOT PRODUCTION READY code=
+=2E (I took some shortcuts in the code for testing purposes, primarily =
+in the assignment of drives to the array so that I didn=92t have to fig=
+ure out how the existing code does such a nice job of drive allocation.=
+)
 
- brassow
+On the other hand, if the improvement is deemed to be insufficient then=
+ I will chuck the code into the dust bin of history. Given the continue=
+d rise in the use of SSDs, seek optimization becomes less relevant ever=
+y day.
 
-Sep  4 08:52:00 bp-01 kernel: mdX_resync      D 0000000000000008     0 12374      2 0x00000080
-Sep  4 08:52:00 bp-01 kernel: ffff880207a5bb38 0000000000000046 0000000000000296 ffff88021727efc0
-Sep  4 08:52:00 bp-01 kernel: ffff880207a58010 0000000000012bc0 0000000000012bc0 ffff880214de0f40
-Sep  4 08:52:00 bp-01 kernel: ffff880207a5bb60 ffff88040171e178 ffff88040171e100 ffff880207a5bb58
-Sep  4 08:52:00 bp-01 kernel: Call Trace:
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81580549>] schedule+0x29/0x70
-Sep  4 08:52:00 bp-01 kernel: [<ffffffffa038a122>] raise_barrier+0xe2/0x160 [raid1]
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108eb00>] ? bit_waitqueue+0xe0/0xe0
-Sep  4 08:52:00 bp-01 kernel: [<ffffffffa038b701>] sync_request+0x161/0x9e0 [raid1]
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108ee13>] ? __wake_up+0x53/0x70
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460009>] md_do_sync+0x849/0xd40
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108847f>] ? put_prev_entity+0x2f/0x400
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460816>] md_thread+0x116/0x150
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8158006e>] ? __schedule+0x34e/0x6e0
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460700>] ? md_rdev_init+0x110/0x110
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8107083e>] kthread+0xce/0xf0
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81070770>] ? kthread_freezable_should_stop+0x70/0x70
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff8158412c>] ret_from_fork+0x7c/0xb0
-Sep  4 08:52:00 bp-01 kernel: [<ffffffff81070770>] ? kthread_freezable_should_stop+0x70/0x70
+Please give me some feedback, even if you are not interested let me kno=
+w why.
 
+Cheers,
+
+Bob Long
+
+PS
+This is all the =93documentation=94 that exists other than a few commen=
+ts sprinkled throughout the code.--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
