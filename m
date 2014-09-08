@@ -1,109 +1,137 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Create.c: Try few more times to stop array after failed
- creation
-Date: Mon, 8 Sep 2014 16:33:37 +1000
-Message-ID: <20140908163337.6129ef3e@notabene.brown>
-References: <20140905142612.10761.82358.stgit@gklab-154-222.intel.com>
+Subject: Re: raid5: direct IO and md_wakeup_thread
+Date: Mon, 8 Sep 2014 16:46:15 +1000
+Message-ID: <20140908164615.0a7eb26d@notabene.brown>
+References: <12EF8D94C6F8734FB2FF37B9FBEDD1735864357D@EXCHANGE.collogia.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/yYsXR1Cp9imhglrzMjtFS9W"; protocol="application/pgp-signature"
+ boundary="Sig_/a_k0ANt_XPAW1vHKbtjpHVq"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140905142612.10761.82358.stgit@gklab-154-222.intel.com>
+In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD1735864357D@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+To: Markus Stockhausen <stockhausen@collogia.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/yYsXR1Cp9imhglrzMjtFS9W
+--Sig_/a_k0ANt_XPAW1vHKbtjpHVq
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 05 Sep 2014 16:26:13 +0200 Pawel Baldysiak
-<pawel.baldysiak@intel.com> wrote:
+On Fri, 5 Sep 2014 17:52:53 +0000 Markus Stockhausen
+<stockhausen@collogia.de> wrote:
 
-> Sometimes after failure in creation (exp. due to duplicate devices
-> in create command) newly created empty md array will not be stopped
-> due to openers>1 (create_mddev will not manage to drop lock).
-> In this case ioctl() will return error - this needs to be checked
-> and if occurs - sending STOP_ARRAY should be repeat after delay
-> to make sure that mddev is stopped correctly.
+> Hi Neil,
 >=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> ---
->  Create.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+> I hope you are doing better after the flu. Maybe you find some time=20
+> to explain the following codings in raid5.c to me. At least one of
+> the patchs seems to be signed off by you. The RAID5 I'm using has=20
+> default settings.
 >=20
-> diff --git a/Create.c b/Create.c
-> index 330c5b4..7c8e53e 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -904,7 +904,12 @@ int Create(struct supertype *st, char *mddev,
->  				if (st->ss->add_to_super(st, &inf->disk,
->  							 fd, dv->devname,
->  							 dv->data_offset)) {
-> -					ioctl(mdfd, STOP_ARRAY, NULL);
-> +					int count =3D 5;
-> +					while (count &&
-> +					       (ioctl(mdfd, STOP_ARRAY, NULL) < 0)) {
-> +						usleep(100000);
-> +						count--;
-> +					}
->  					goto abort_locked;
->  				}
->  				st->ss->getinfo_super(st, inf, NULL);
+> 1) Generally speaking of md_wakup_thread() calls. Does it make
+> any sense to call them the from within raid5d()? Or when being=20
+> implemented at locations that might be called from the=20
+> make_request() path too - for simplicity no further caller destinction=20
+> was programmed.
 
-I don't like this.  I don't really like any of the other loops like this th=
-at
-are already in the code either.  I wonder if we can avoid the need for it.
+I doesn't make sense to all md_wakeup_thread() from somewhere that is *only*
+called within raid5d().  However most of raid5d() is handle_stripe() and
+handle_stripe() is called from other places.  So it could make sence to call
+md_wakeup_thread from within handle_stripe().
 
-Given that the array hasn't been started yet, no other process can actually
-be *using* the array.  And given that we have an O_EXCL open at this point,
-no other process can be trying to stop/start the array.
-So it should be safe to change the kernel to not fail in this situation.
+make_request() very likely wants to call md_wakeup_thread().... though I'm
+wondering if I understand that part of the question properly.
 
-If you apply this kernel patch:
+> =20
+> 1) In case of a single direct I/O writer to the /dev/md0 device the=20
+> following coding will always fire the md_wakeup_thread(). That
+> is one reason for alternating raid5d loops one with data to=20
+> process and the next without. Is that corner case wanted?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1294238610df..1bf3fe1ecc79 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5362,7 +5362,7 @@ static int do_md_stop(struct mddev * mddev, int mode,
- 	mddev_lock_nointr(mddev);
-=20
- 	mutex_lock(&mddev->open_mutex);
--	if (atomic_read(&mddev->openers) > !!bdev ||
-+	if ((mddev->pers && atomic_read(&mddev->openers) > !!bdev) ||
- 	    mddev->sysfs_active ||
- 	    mddev->sync_thread ||
- 	    (bdev && !test_bit(MD_STILL_CLOSED, &mddev->flags))) {
+Is this a problem?  We often do things just in case they are needed,
+providing the cost isn't too great.
 
+If there was a measurable cost it might make sense to=20
 
-does that fir your problem?  Can you see any reason not to allow STOP_ARRAY
-to succeed in this situation?
+    clear_bit(THREAD_WAKEUP, &mddev->thread->flags);
+
+in raid5d() at the top of the while loop in raid5d().  We would need to move
+the md_check_recovery() call to the end of the function then.
+
+>=20
+> static void handle_stripe(struct stripe_head *sh)
+>         ...
+>         ops_run_io(sh, &s);
+>=20
+>         if (s.dec_preread_active) {
+>                 /* We delay this until after ops_run_io so that if make_r=
+equest
+>                  * is waiting on a flush, it won't continue until the wri=
+tes
+>                  * have actually been submitted.
+>                  */
+>                 atomic_dec(&conf->preread_active_stripes);
+>                 if (atomic_read(&conf->preread_active_stripes) <
+>                     IO_THRESHOLD)
+>                         md_wakeup_thread(conf->mddev->thread); */
+>         }
+>=20
+> 2) The wakeup_thread() in the following preread path seems
+> to be unnecesary or will a double call wake the thread twice?
+
+Unnecessary in some cases, necessary in others.  Tracking exactly when it is
+necessary would be complex and error prone.
+
+Are you just trying to understand the code, or is there something that you
+think is a problem that could be fixed?
 
 Thanks,
 NeilBrown
 
---Sig_/yYsXR1Cp9imhglrzMjtFS9W
+
+>=20
+> void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+>                               struct list_head *temp_inactive_list, int m=
+stwake)
+> {
+>         BUG_ON(!list_empty(&sh->lru));
+>         BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
+>         if (test_bit(STRIPE_HANDLE, &sh->state)) {
+>                 if (test_bit(STRIPE_DELAYED, &sh->state) &&
+>                     !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+>                         list_add_tail(&sh->lru, &conf->delayed_list);
+>                         if (atomic_read(&conf->preread_active_stripes)
+>                             < IO_THRESHOLD)
+>                                 md_wakeup_thread(conf->mddev->thread);
+>                 } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+>                         ...
+>                 }
+>                 md_wakeup_thread(conf->mddev->thread);
+>                 ...
+>=20
+> Thanks in advance.
+>=20
+> Markus
+
+--Sig_/a_k0ANt_XPAW1vHKbtjpHVq
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVA1NwTnsnt1WYoG5AQIAyA//ZOpEtT8w0A5MvJMeqoCULHZuCxPcm7MQ
-+jaNPN1X4aLsfPN2Yz0k0qAu0ZMtQjVCbvZ7Z2pHiWlq/kPe1fBr6I1N6r3mAggT
-6eFSXU3iOW88WR9V4YQuynqrIEvPtOvqEX5vNyfzM8qhnrwpg0fvyJeM/wY4VYAD
-1x8q1pxcxIccsR7yI1KFKy89itmUj3116RsKXCT08te/gIxsDRDUu5aj1N2jhILj
-rR02ZKBTot+X6cER2wTfOQ+EWOhAQI4pMIL0hYYpaHa7VTImFdSDak+zL42rbtN6
-RA55bsEInESjPxTxVdu2gnEnu+3DyCR521J4gnWmsR4New0S82xKFtS2srhgLiWj
-ECsRvGt/7wpFqzKD32Cd3hiKVT2xlDeQmG2AyDAsrznFLHUCPveMpWen3At4N7z3
-HDIXajUhwD+8HosYwsjpGOWT+KUXd1mxyAOwc5e3qE9oD0tnD/UzQlxqjBl/LsB5
-iaVtTM5NMCrvGb7ihAxp1pZhdpC0CI96UdxYc2GOcIdQEgPKQIVkvqEjg4cYFWPN
-aDeubyBLXZqhPbbV/ZYWC05rC7qGNhF9Yz4XBQRuTJT323QJMVXqRbEhxAhknJK9
-I2c/6zEzjqY4V90FN1It1Hzcqu3q0Km8QXTxbC/J990qC/z3KquOcr+o0E3exUyZ
-x/M5q8i+v4Q=
-=ghYi
+iQIVAwUBVA1QuDnsnt1WYoG5AQK8Yg//WBCtjHcjCu+PH4SxDNnyFkkUQ0b7Txdl
+hDbnUW5wAdRZGvhkmGpwbhUoad0aQXdjLwYFMsrUpGZLwxHozsP3Lp1KvE/+5lLr
+XlSLmAvAL6LgHfX0lk2lOW9Vn5CK0JeuVu5XuXOypEdd5JSmt+EPdC3KQJu/qyg1
+jEt3uACiTGM3h3XGZz2TDZlU16L4smzzpQaEkrZSDOEuu1fzX05MVqKstTTCm8Dd
+3t7sydgcYDKRc1j5dFK0yApe9ks+bno41FzhdhJBcS3FE72iThRrDDE4ZtzT1Vj7
+TMRfQEQq1yPDKYIVO4uEreDfEYnP3KO9OXc59ReBjcQM0ePnHk/jHVkCZUngPxjO
+V88XxQDwhenT4nK6PEX3CgGa6vxOORRGbHyAzkDbRL/w103zNxX4PL+8J5PD6QUo
+XH86OR0Ho8IyPDbCR3/QjlHwxtTvPZQGluf7d2rGXRRrfetBvs4Bdkbn5ARH7q11
+3lPDpD9dFiGvtVQZo00b6C1oKR5pxBgdZjCAjrVPHnFq6zHAGXkh1i+86x6wSNNL
+RoZffKYueEJfo3OKA0uJXNi6C59Jlqt12lDiFzj8krsXCOvw0OT9bCoTwRbRHl93
+Q7OypKya4zOv5od4brSHNr22mHZuwF+NcKKvhkY1VpqYmGd8TGcmwZd98uXHZPRh
+UhkzhhAxrVk=
+=5TEo
 -----END PGP SIGNATURE-----
 
---Sig_/yYsXR1Cp9imhglrzMjtFS9W--
+--Sig_/a_k0ANt_XPAW1vHKbtjpHVq--
