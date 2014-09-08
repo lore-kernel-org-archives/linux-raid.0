@@ -1,55 +1,59 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Question about RAID1 plug/unplug code
-Date: Mon, 8 Sep 2014 16:55:52 +0300
-Message-ID: <CAGRgLy4WTXdF4Tp1pf0BJ-VPR3Yhx_xyzbCAXBzNDpeYTPvkmw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Fwd: raid1 data corruption during resync
+Date: Mon, 8 Sep 2014 10:52:49 -0500
+Message-ID: <CEEAB94E-18F3-4087-A866-B412582F7B8D@redhat.com>
+References: <D4FE2D75-4208-48C9-A4D0-432F092E5AE9@redhat.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi Neil,
-We have been seeing high latency on the md/raid1 block device, due to
-the fact that all WRITEs are handed off to raid1d thread. This thread
-also calls bitmap_unplug(), which writes the bitmap synchronously.
-While it waits for the bitmap, it cannot trigger other WRITEs waiting
-in its pending_bio_list. This is especially seen with SSDs: MD's
-latency is much higher that SSD latency (I have been stoned by Peter
-Grandi when I brought up this issue previously for raid5).
 
-Then I have noticed the commit:
 
-commit f54a9d0e59c4bea3db733921ca9147612a6f292c
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Aug 2 08:33:20 2012 +1000
+Begin forwarded message:
 
-    md/raid1: submit IO from originating thread instead of md thread.
+> From: Brassow Jonathan <jbrassow@redhat.com>
+> Date: September 4, 2014 9:01:58 AM CDT
+> To: NeilBrown <neilb@suse.de>
+> Cc: Eivind Sarto <eivindsarto@gmail.com>, "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
+> Subject: Re: raid1 data corruption during resync
+> 
+> 
+> On Sep 4, 2014, at 12:28 AM, NeilBrown wrote:
+> 
+>> 
+>> Neither of these explain the hang you are seeing.
+>> I note that the "md0-resync" thread isn't listed.  I don't suppose you know
+>> what it was doing (stack trace)??
+>> Also, had  "md: md0: sync done" appeared in syslog yet?
+> 
+> The sync has not yet completed (no message).  I'm not sure why the resync thread didn't automatically report, but I've grabbed the entire trace from the machine ('echo t > /proc/sysrq-trigger') and it appears there.  The traces are attached.  (Would you rather have something so large posted in-line?)
 
-Looking at the code, I learned that to avoid switching into raid1d,
-the caller has to use blk_start_plug/blk_finish_plug. So I added these
-calls in our kernel module, which submits bios to MD. Results were
-awesome, MD latency got down significantly.
+I didn't see this message come through yet.  I am resending it with only the trace you requested from the mdX_resync thread.  If you need the entire list of traces, I can try resending that.
 
-So I have several questions about this plug/unplug thing.
+ brassow
 
-1/ Originally this infrastructure was supposed to help IO schedulers
-in merging requests. It is useful when one has a bunch of requests to
-submit in one shot.
-But in MD case, thus infrastructure is used for a different purpose:
-not to merge requests (which may help bandwidth, but probably not
-latency), but to avoid making raid1d a bottleneck, to be able to
-submit requests from multiple threads in parallel, which brings down
-latency significantly in our case. Indeed "struct blk_plug" has a
-special "cb_list", which is used only by MD.
-In my case I have only individual bios (not a bunch of bios), and I
-after wrap them with plug/unplug, MD latency gets better. So we are
-using the plug infrastructure for a different purpose.
-Is my understanding correct? Was this your intention?
+Sep  4 08:52:00 bp-01 kernel: mdX_resync      D 0000000000000008     0 12374      2 0x00000080
+Sep  4 08:52:00 bp-01 kernel: ffff880207a5bb38 0000000000000046 0000000000000296 ffff88021727efc0
+Sep  4 08:52:00 bp-01 kernel: ffff880207a58010 0000000000012bc0 0000000000012bc0 ffff880214de0f40
+Sep  4 08:52:00 bp-01 kernel: ffff880207a5bb60 ffff88040171e178 ffff88040171e100 ffff880207a5bb58
+Sep  4 08:52:00 bp-01 kernel: Call Trace:
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81580549>] schedule+0x29/0x70
+Sep  4 08:52:00 bp-01 kernel: [<ffffffffa038a122>] raise_barrier+0xe2/0x160 [raid1]
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108eb00>] ? bit_waitqueue+0xe0/0xe0
+Sep  4 08:52:00 bp-01 kernel: [<ffffffffa038b701>] sync_request+0x161/0x9e0 [raid1]
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108ee13>] ? __wake_up+0x53/0x70
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460009>] md_do_sync+0x849/0xd40
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8108847f>] ? put_prev_entity+0x2f/0x400
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460816>] md_thread+0x116/0x150
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8158006e>] ? __schedule+0x34e/0x6e0
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81460700>] ? md_rdev_init+0x110/0x110
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8107083e>] kthread+0xce/0xf0
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81070770>] ? kthread_freezable_should_stop+0x70/0x70
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff8158412c>] ret_from_fork+0x7c/0xb0
+Sep  4 08:52:00 bp-01 kernel: [<ffffffff81070770>] ? kthread_freezable_should_stop+0x70/0x70
 
-2/ Now that md/raid1 submits WRITEs from several threads in parallel,
-is there any issue you can think of? Like for example, multiple
-threads now call bitmap_unplug() in parallel. Is this alright?
-
-Thanks!
-Alex.
