@@ -1,131 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Question about RAID1 plug/unplug code
-Date: Tue, 9 Sep 2014 11:45:38 +1000
-Message-ID: <20140909114538.552a4a7d@notabene.brown>
-References: <CAGRgLy4WTXdF4Tp1pf0BJ-VPR3Yhx_xyzbCAXBzNDpeYTPvkmw@mail.gmail.com>
+Subject: Re: Mirroring seek optimization resend
+Date: Tue, 9 Sep 2014 12:21:13 +1000
+Message-ID: <20140909122113.16b6b953@notabene.brown>
+References: <9300C887-1255-4AE6-806B-390332D10382@k9heritage.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/DV.uyjuqpfy/UHops5M0W2p"; protocol="application/pgp-signature"
+ boundary="Sig_/=Upg=tCoDE5zoy/bD447gB="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy4WTXdF4Tp1pf0BJ-VPR3Yhx_xyzbCAXBzNDpeYTPvkmw@mail.gmail.com>
+In-Reply-To: <9300C887-1255-4AE6-806B-390332D10382@k9heritage.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Robert Long <boblong@k9heritage.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/DV.uyjuqpfy/UHops5M0W2p
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/=Upg=tCoDE5zoy/bD447gB=
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 8 Sep 2014 16:55:52 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Mon, 8 Sep 2014 10:13:12 -0700 Robert Long <boblong@k9heritage.com> wrot=
+e:
 
-> Hi Neil,
-> We have been seeing high latency on the md/raid1 block device, due to
-> the fact that all WRITEs are handed off to raid1d thread. This thread
-> also calls bitmap_unplug(), which writes the bitmap synchronously.
-> While it waits for the bitmap, it cannot trigger other WRITEs waiting
-> in its pending_bio_list. This is especially seen with SSDs: MD's
-> latency is much higher that SSD latency (I have been stoned by Peter
-> Grandi when I brought up this issue previously for raid5).
+> Hi Again,
 >=20
-> Then I have noticed the commit:
+> First, the code base that I was working from is now 2 years old. While I =
+doubt that the raid1.c code has changed significantly I could be very wrong=
+. At that time the load balancing algorithm was simply to attempt to split =
+the actively seeked area of the disk into two parts, and have one disk take=
+ the low half and one take the high half. The effect of that, in read inten=
+sive applications, is to cut in half the overall seek length for each disk =
+in the mirror, resulting in considerable seek time savings and overall high=
+er throughput. A moving average of sector addresses needs to be maintained =
+to make this work, but this is quite easily done. The more writing happens,=
+ the more this advantage is lost. The problem with this approach, though no=
+t a large one, is that is that a numerical average is not actually represen=
+tative of the middle of the work area due to outliers, clusters of reads, e=
+tc.
 >=20
-> commit f54a9d0e59c4bea3db733921ca9147612a6f292c
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Thu Aug 2 08:33:20 2012 +1000
+> A solution to this is to maintain a running median of the sector address.=
+ When this is done you get a measurable increase in throughput, at the cost=
+ of greater computational overhead. The method that I used to maintain a mo=
+ving median involves the creation of an equal sized min heap and max heap c=
+onnected together at the head of each. This connection point represents the=
+ current median sector of access requests to the mirror.
 >=20
->     md/raid1: submit IO from originating thread instead of md thread.
+> Today I fired up the machine that I used to develop and test this modific=
+ation. It took some time just to locate the modified raid1.c file :) The ma=
+chine, in addition to the boot drive, is equipped with a couple of 1 TB Hit=
+achi disk drives that were used for test purposes. To be honest I don=E2=80=
+=99t remember the name of the test software that I used, but it seems that =
+it was a pretty performance standard utility, not something I put together =
+myself. Perhaps you could jog my memory. As I mentioned previously the impr=
+ovement was around 7% with read only testing of random seeks.
 >=20
-> Looking at the code, I learned that to avoid switching into raid1d,
-> the caller has to use blk_start_plug/blk_finish_plug. So I added these
-> calls in our kernel module, which submits bios to MD. Results were
-> awesome, MD latency got down significantly.
-
-That's good to hear.
-
+> If this is of interest I will gladly post the NOT PRODUCTION READY code. =
+(I took some shortcuts in the code for testing purposes, primarily in the a=
+ssignment of drives to the array so that I didn=E2=80=99t have to figure ou=
+t how the existing code does such a nice job of drive allocation.)
 >=20
-> So I have several questions about this plug/unplug thing.
+> On the other hand, if the improvement is deemed to be insufficient then I=
+ will chuck the code into the dust bin of history. Given the continued rise=
+ in the use of SSDs, seek optimization becomes less relevant every day.
 >=20
-> 1/ Originally this infrastructure was supposed to help IO schedulers
-> in merging requests. It is useful when one has a bunch of requests to
-> submit in one shot.
-
-That is exactly the whole point of plugging:  allow the device to handle a
-batch of requests together instead of one at a time.
-
-> But in MD case, thus infrastructure is used for a different purpose:
-> not to merge requests (which may help bandwidth, but probably not
-> latency), but to avoid making raid1d a bottleneck, to be able to
-> submit requests from multiple threads in parallel, which brings down
-> latency significantly in our case. Indeed "struct blk_plug" has a
-> special "cb_list", which is used only by MD.
-
-I don't think the way md uses plugging is conceptually different from any
-other use: it is always about gathering a batch together.
-"cb_list" is handled by blk_check_plugged() which is also used by
-block/umem.c and btrfs.
-
-The base plugging code assumes that it is only gathering a batch of requests
-for a single device - if the target device changes then the batch is flushe=
-d.
-It also assumed that it was "struct request" that was batched.
-Devices like md that want to queue 'struct bio', something else was needed.
-Also with layered devices it can be useful to gather multiple batches for
-multiple layers.
-So I created "cb_list" etc and a more generic interface.
-
-> In my case I have only individual bios (not a bunch of bios), and I
-> after wrap them with plug/unplug, MD latency gets better. So we are
-> using the plug infrastructure for a different purpose.
-> Is my understanding correct? Was this your intention?
-
-I don't really understand what you are doing.  There is no point in using
-plugging for individual bios.  The  main point for raid1 writes is to gather
-a lot of writes together so that all multiple bitmap bits can be set all at
-once.
-It should be possible to submit individual bios directly from make_request
-without passing them to raid1d and without using plugging.  You might end up
-making more bitmap updates, but you might not.
-
-
+> Please give me some feedback, even if you are not interested let me know =
+why.
 >=20
-> 2/ Now that md/raid1 submits WRITEs from several threads in parallel,
-> is there any issue you can think of? Like for example, multiple
-> threads now call bitmap_unplug() in parallel. Is this alright?
 
-Hmmm... there could be an issue there.  It is possible that some callers of
-bitmap_unplug won't block when they should.  bitmap_unplug should probably
-wait unconditionally.
+Hi Bob,
+ If you post the code I'll try to find time to look at it.  If you don't, I
+ won't :-)
+
+ I personally have no pressing desire to improve RAID1 read performance, but
+ others have occasionally shown an interest in the past.  Maybe they aren't
+ paying attention or have lost interest.  Maybe they don't think their
+ interest matters (which wouldn't be true).
+
+ To be honest, "I've got some code that once did something good with some
+ tests that I don't remember and probably isn't production ready and may not
+ even work" just doesn't sound exciting.
+ On the other hand "here is some code" at least provides something concrete
+ to look at.
 
 NeilBrown
 
-
->=20
-> Thanks!
-> Alex.
-
-
---Sig_/DV.uyjuqpfy/UHops5M0W2p
+--Sig_/=Upg=tCoDE5zoy/bD447gB=
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVA5bwjnsnt1WYoG5AQKXhA/+K2vLOXP7M4znfN4C2H/Ql4J+/VRqChLk
-klUAeVISklwCvvJYNLFjXPsK89ElOHbeDaW6Ncb24LKqOFeHDh38HcJRI27njJxj
-o3/QasgRx0yGjbQUj2KIZr3vauoeir4jzi9gP3xLvIQUmT6ozghkRw0Vg7kKdn2g
-Cc3MVq8GiD3ljkUOlDjTXyk0Paxogc104OXGIpu1Cj3xALQbESQ5LZysk3lPlH57
-jCpLwnA6vdpVBjakdBGPuSZjoCNYuqo+aX8NCf3V4V0XHhgNEyC4WmENybchnZ7s
-ifDkNU/nRUOoIkhVCafx7KettFR6wWBpnz2lPP3Adhrm2ABqd2lCg6O+gONbOaL3
-COGT1/cvjb459mSAkTJxYj8ARw2yhVwFLVVbzYql/ulb4g2PPrmWcyQQGhTeCsgN
-YFKZfBLNEsW1efkOyhr68TeY9EFtHe+ztWiEiZ4755Rut+ngTbypeGMhIJccxeuL
-PSscMrlaxT+X/5/Q+mE0GVpNxobCEoitXGP22wBlnrRC6cXrNVlus3QcEjy4iiaR
-0uqN6izhYCIEon7TtiQO6UJQlOVyDHwjfk57Gufdz/O0B/B2vorJv0FNtoWAzCs3
-HueUYaGKDCX3/Cbjs3lqtpU9vsLhYXMMVhlqsRqwA7TU4jPvPcOdREY6+GxEuhGo
-K4OPJq7CJt4=
-=9kO2
+iQIVAwUBVA5kGTnsnt1WYoG5AQLkEBAAw1NPG0jLddrItS24ewd6InFHaJmgJlx7
+Oj/wSjHv3a3NzcNCl/bFPwn3mcbnFpIJn9lPAbiyDGLR1aaJ3BSnGdcjhbEKhfBZ
+22f9yu3MOpkFLmfGIF7puEOthaE8lhUJJX/ytesue3G6uIlkOkFUlO7QUtg7ggud
+/yH97BPl80DdEsMXAT3q7Rx0ASMYNjn38GQyEwc8rPJoeM76+sa3r5U3kYbXYDXN
+fojUwSdBbfK85lCrGWGwbMfhWVM5t1iWxhlZTW2Gmm2zN/4faQye5kMEy0qgJ1gh
+cNCKR0lHN2kgnRIlgkV4OFVTJ8+DmUaFFChzjzYvXjvZsQ7kNnbyfwr0XQz4wTTl
+DKV5x90WwL1Ck4zHaTGpWtLcwcvGfbh2HxGYpPVrDLND3HEnazpOMQmkDMJMgnzt
+6hU6pPAdh/tQpzZDltXxeY6M9CQF54ld3Iu2jk/u8eGpOBm/ShXYsoUlceuf0FTG
+VNqcv749e/t7UDJX3+OFiaiyzygGx5WbTVx0d8I2jRb/oiK9GsWp9LrAx4Pf7DAB
+zbZTAo2XoTSLRqlx4fX6diplHfNlV5xZ09gdPnk/fkFSBh7zrUH8I6/CXBZrXeBi
+IF16C+TyrmqyFaSO/QdEFdKvSd2zRhL03bwjuy8B6FzpnV8R/m/ViEuKmY1mbtIe
+g6/6UQsD/6w=
+=RDMp
 -----END PGP SIGNATURE-----
 
---Sig_/DV.uyjuqpfy/UHops5M0W2p--
+--Sig_/=Upg=tCoDE5zoy/bD447gB=--
