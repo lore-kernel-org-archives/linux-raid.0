@@ -1,69 +1,140 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID456 direct I/O write performance
-Date: Tue, 9 Sep 2014 13:24:31 +1000
-Message-ID: <20140909132431.24456db1@notabene.brown>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD17358642FF8@EXCHANGE.collogia.de>
-	<12EF8D94C6F8734FB2FF37B9FBEDD17358643012@EXCHANGE.collogia.de>
-	<5408D5CC.101@shiftmail.org>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: Question about RAID1 plug/unplug code
+Date: Tue, 9 Sep 2014 11:33:13 +0300
+Message-ID: <CAGRgLy4QAz6KVncLsVypsOD85jMUNaOgrFc13=knHMXb92SvXw@mail.gmail.com>
+References: <CAGRgLy4WTXdF4Tp1pf0BJ-VPR3Yhx_xyzbCAXBzNDpeYTPvkmw@mail.gmail.com>
+	<20140909114538.552a4a7d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//m.OM8fCq8W4gglo1zoj+Fg"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5408D5CC.101@shiftmail.org>
+In-Reply-To: <20140909114538.552a4a7d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ethan Wilson <ethan.wilson@shiftmail.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Yair Hershko <yair@zadarastorage.com>
 List-Id: linux-raid.ids
 
---Sig_//m.OM8fCq8W4gglo1zoj+Fg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Thu, 04 Sep 2014 23:12:44 +0200 Ethan Wilson <ethan.wilson@shiftmail.org>
-wrote:
 
-> OTOH I would like to ask kernel experts one thing if I may: does anybody=
-=20
-> know a way to get a stack trace for a process which is currently running=
-=20
-> in kernel mode and is running NOW on a CPU and it is not stopped waiting=
-=20
-> in a queue? I know about /proc/pid/stack but that one shows=20
-> 0xffffffffffffffff for such a case. Being able to do that would help to=20
-> answer the above question too...
+On Tue, Sep 9, 2014 at 4:45 AM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 8 Sep 2014 16:55:52 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>> We have been seeing high latency on the md/raid1 block device, due to
+>> the fact that all WRITEs are handed off to raid1d thread. This thread
+>> also calls bitmap_unplug(), which writes the bitmap synchronously.
+>> While it waits for the bitmap, it cannot trigger other WRITEs waiting
+>> in its pending_bio_list. This is especially seen with SSDs: MD's
+>> latency is much higher that SSD latency (I have been stoned by Peter
+>> Grandi when I brought up this issue previously for raid5).
+>>
+>> Then I have noticed the commit:
+>>
+>> commit f54a9d0e59c4bea3db733921ca9147612a6f292c
+>> Author: NeilBrown <neilb@suse.de>
+>> Date:   Thu Aug 2 08:33:20 2012 +1000
+>>
+>>     md/raid1: submit IO from originating thread instead of md thread.
+>>
+>> Looking at the code, I learned that to avoid switching into raid1d,
+>> the caller has to use blk_start_plug/blk_finish_plug. So I added these
+>> calls in our kernel module, which submits bios to MD. Results were
+>> awesome, MD latency got down significantly.
+>
+> That's good to hear.
+>
+>>
+>> So I have several questions about this plug/unplug thing.
+>>
+>> 1/ Originally this infrastructure was supposed to help IO schedulers
+>> in merging requests. It is useful when one has a bunch of requests to
+>> submit in one shot.
+>
+> That is exactly the whole point of plugging:  allow the device to handle a
+> batch of requests together instead of one at a time.
+>
+>> But in MD case, thus infrastructure is used for a different purpose:
+>> not to merge requests (which may help bandwidth, but probably not
+>> latency), but to avoid making raid1d a bottleneck, to be able to
+>> submit requests from multiple threads in parallel, which brings down
+>> latency significantly in our case. Indeed "struct blk_plug" has a
+>> special "cb_list", which is used only by MD.
+>
+> I don't think the way md uses plugging is conceptually different from any
+> other use: it is always about gathering a batch together.
+> "cb_list" is handled by blk_check_plugged() which is also used by
+> block/umem.c and btrfs.
+>
+> The base plugging code assumes that it is only gathering a batch of requests
+> for a single device - if the target device changes then the batch is flushed.
+> It also assumed that it was "struct request" that was batched.
+> Devices like md that want to queue 'struct bio', something else was needed.
+> Also with layered devices it can be useful to gather multiple batches for
+> multiple layers.
+> So I created "cb_list" etc and a more generic interface.
+>
+>> In my case I have only individual bios (not a bunch of bios), and I
+>> after wrap them with plug/unplug, MD latency gets better. So we are
+>> using the plug infrastructure for a different purpose.
+>> Is my understanding correct? Was this your intention?
+>
+> I don't really understand what you are doing.  There is no point in using
+> plugging for individual bios.  The  main point for raid1 writes is to gather
+> a lot of writes together so that all multiple bitmap bits can be set all at
+> once.
+> It should be possible to submit individual bios directly from make_request
+> without passing them to raid1d and without using plugging.
+Can you pls explain how it is possible?
+You have this code for WRITEs:
+        cb = blk_check_plugged(raid1_unplug, mddev, sizeof(*plug));
+        if (cb)
+            plug = container_of(cb, struct raid1_plug_cb, cb);
+        else
+            plug = NULL;
+        spin_lock_irqsave(&conf->device_lock, flags);
+        if (plug) {
+            bio_list_add(&plug->pending, mbio);
+            plug->pending_cnt++;
+        } else {
+            bio_list_add(&conf->pending_bio_list, mbio);
+            conf->pending_count++;
+        }
+        spin_unlock_irqrestore(&conf->device_lock, flags);
 
-The contents of the stack would change while it was being inspected, so it
-would be impossible  to get a meaningful trace.
+If the thread blk_check_plugged returns NULL, then you always hand the
+WRITE to raid1d. So the only option to avoid handoff to raid1d is for
+the caller to plug. Otherwise, all WRITEs are handed off to raid1d and
+latency becomes terrible.
+So in my case, I use plug/unplug for individual bios only to avoid the
+handoff to raid1d.
+What am I missing in this analysis?
 
-Maybe you could disable all but one CPU.  Then whenever you try to look at
-the stack of another process it must have scheduled and so will have a
-stable visible stack...
 
-Or maybe you would use "perf record -g" to get some stack information, I'm
-not sure.
+ > You might end up
+> making more bitmap updates, but you might not.
+>
+>
+>>
+>> 2/ Now that md/raid1 submits WRITEs from several threads in parallel,
+>> is there any issue you can think of? Like for example, multiple
+>> threads now call bitmap_unplug() in parallel. Is this alright?
+>
+> Hmmm... there could be an issue there.  It is possible that some callers of
+> bitmap_unplug won't block when they should.  bitmap_unplug should probably
+> wait unconditionally.
+Ok, so you say there is a bug with bitmap updates when WRITE is
+submitted directly from make_request. Is this something we should fix?
 
-NeilBrown
+Alex.
 
---Sig_//m.OM8fCq8W4gglo1zoj+Fg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVA5y7znsnt1WYoG5AQKAAQ//c3Ag0bKH0E94ohnd8ABrw7wn4+NNEjyn
-O9YOBrR/+1r7L+MY0mO3KiangjNBbyZBoyFHMp9kEW41f5G3iCnmx66QI2YoOAcH
-KLMX79wVxl2Alc9CHGjaVHkmaMXZkUIDIqqIU3jEj5VlIR9GT+Z3eV4pTVauMAQ3
-0Abpqs+eYwDN+mS6edLbHZRNXwLz9p2hz2V/fBz+fugksn1MZYN0K3mSxAV78kIC
-iI7bhVtgPopdAOoPZTte08yME0zyd4ThJE5YCCpL74o9FTwuwtSRtLAKuLgmofCh
-HgUBhSO0mejcd2m+/0ua1VnKM42b5q6vwBoNR644onlQn+eVLCfu+ToHVRIktq5k
-ZXku9kGlGwTqc1WnstI94GAVDCWNcPkUpCcdGLzx8PNnUOe90gx7ffWRWFQ1mj3g
-jeFTkAjVqSaWfunH8yUcb0/+1jD7Hi12ktf32N1gMX9GL+pA958I0n9Yq7zqXbXK
-ZrZ3gpjnl95ClwjX9hs5xKEj8g4F7vAcZZejysPI/cyfO/uZQxpUkRSLeqUWE5jb
-NdZHmP2AfZjc+xda1oifazqW0+/xNS0Ekq+vM4OoAJXKAtxdH0HPf2pCTZSNo/vP
-jI1vtXa0X5frNSaj7NLWFvrL+29EqS0tsmfGBT9HPLkrEv8VVjHaBwyeKWGlyHHU
-cyecp2L/svU=
-=4FP7
------END PGP SIGNATURE-----
-
---Sig_//m.OM8fCq8W4gglo1zoj+Fg--
+>
+> NeilBrown
+>
+>
+>>
+>> Thanks!
+>> Alex.
+>
