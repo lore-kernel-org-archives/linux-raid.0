@@ -1,101 +1,112 @@
 From: shli@kernel.org
-Subject: [patch v2 3/6] raid5: track overwrite disk count
-Date: Wed, 10 Sep 2014 20:40:12 +0800
-Message-ID: <20140910124307.949031189@kernel.org>
+Subject: [patch v2 5/6] raid5: handle io error of batch list
+Date: Wed, 10 Sep 2014 20:40:14 +0800
+Message-ID: <20140910124320.020561161@kernel.org>
 References: <20140910124009.810771309@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid5-track-full-stripe-write.patch
+Content-Disposition: inline; filename=raid5-handle-batch-io-err.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Track overwrite disk count, so we can know if a stripe is a full stripe write.
+If io error happens in any stripe of a batch list, the batch list will be
+split, then normal process will run for the stripes in the list.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   14 +++++++++++++-
- drivers/md/raid5.h |    4 ++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/md/raid5.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.h |    1 +
+ 2 files changed, 48 insertions(+)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2014-09-10 19:21:10.495349803 +0800
-+++ linux/drivers/md/raid5.c	2014-09-10 19:21:10.491349853 +0800
-@@ -556,6 +556,7 @@ retry:
+--- linux.orig/drivers/md/raid5.c	2014-09-10 19:21:14.723296649 +0800
++++ linux/drivers/md/raid5.c	2014-09-10 19:21:14.715296750 +0800
+@@ -1073,6 +1073,9 @@ again:
+ 			pr_debug("skip op %ld on disc %d for sector %llu\n",
+ 				bi->bi_rw, i, (unsigned long long)sh->sector);
+ 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
++			if (sh->batch_head)
++				set_bit(STRIPE_BATCH_ERR,
++					&sh->batch_head->state);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
+ 		}
+ 
+@@ -2382,6 +2385,9 @@ static void raid5_end_write_request(stru
  	}
- 	if (read_seqcount_retry(&conf->gen_lock, seq))
- 		goto retry;
-+	sh->overwrite_disks = 0;
- 	insert_hash(conf, sh);
- 	sh->cpu = smp_processor_id();
- 	set_bit(STRIPE_BATCH_READY, &sh->state);
-@@ -713,6 +714,12 @@ get_active_stripe(struct r5conf *conf, s
- 	return sh;
+ 	rdev_dec_pending(rdev, conf->mddev);
+ 
++	if (sh->batch_head && !uptodate)
++		set_bit(STRIPE_BATCH_ERR, &sh->batch_head->state);
++
+ 	if (!test_and_clear_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags))
+ 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+@@ -4050,6 +4056,45 @@ static int clear_batch_ready(struct stri
+ 	return 0;
  }
  
-+static bool is_full_stripe_write(struct stripe_head *sh)
++static void check_break_stripe_batch_list(struct stripe_head *sh)
 +{
-+	BUG_ON(sh->overwrite_disks > (sh->disks - sh->raid_conf->max_degraded));
-+	return sh->overwrite_disks == (sh->disks - sh->raid_conf->max_degraded);
++	struct stripe_head *head_sh, *next;
++	int i;
++
++	if (!test_and_clear_bit(STRIPE_BATCH_ERR, &sh->state))
++		return;
++
++	head_sh = sh;
++	do {
++		sh = list_first_entry(&sh->batch_list,
++			struct stripe_head, batch_list);
++		BUG_ON(sh == head_sh);
++	} while (!test_bit(STRIPE_DEGRADED, &sh->state));
++
++	while (sh != head_sh) {
++		next = list_first_entry(&sh->batch_list,
++			struct stripe_head, batch_list);
++		list_del_init(&sh->batch_list);
++
++		sh->state = head_sh->state & (~((1 << STRIPE_ACTIVE) |
++			(1 << STRIPE_PREREAD_ACTIVE) | (1 << STRIPE_DEGRADED)));
++		sh->check_state = head_sh->check_state;
++		sh->reconstruct_state = head_sh->reconstruct_state;
++		for (i = 0; i < sh->disks; i++)
++			sh->dev[i].flags = head_sh->dev[i].flags &
++				(~((1 << R5_WriteError) | (1 << R5_Overlap)));
++
++		spin_lock_irq(&sh->stripe_lock);
++		sh->batch_head = NULL;
++		spin_unlock_irq(&sh->stripe_lock);
++
++		set_bit(STRIPE_HANDLE, &sh->state);
++		release_stripe(sh);
++
++		sh = next;
++	}
 +}
 +
- /* Determine if 'data_offset' or 'new_data_offset' should be used
-  * in this stripe_head.
-  */
-@@ -1418,6 +1425,7 @@ ops_run_biodrain(struct stripe_head *sh,
- 			spin_lock_irq(&sh->stripe_lock);
- 			chosen = dev->towrite;
- 			dev->towrite = NULL;
-+			sh->overwrite_disks = 0;
- 			BUG_ON(dev->written);
- 			wbi = dev->written = chosen;
- 			spin_unlock_irq(&sh->stripe_lock);
-@@ -2708,7 +2716,8 @@ static int add_stripe_bio(struct stripe_
- 				sector = bio_end_sector(bi);
- 		}
- 		if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
--			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
-+			if (!test_and_set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags))
-+				sh->overwrite_disks++;
+ static void handle_stripe(struct stripe_head *sh)
+ {
+ 	struct stripe_head_state s;
+@@ -4072,6 +4117,8 @@ static void handle_stripe(struct stripe_
+ 		return;
  	}
  
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-@@ -2780,6 +2789,7 @@ handle_failed_stripe(struct r5conf *conf
- 		/* fail all writes first */
- 		bi = sh->dev[i].towrite;
- 		sh->dev[i].towrite = NULL;
-+		sh->overwrite_disks = 0;
- 		spin_unlock_irq(&sh->stripe_lock);
- 		if (bi)
- 			bitmap_end = 1;
-@@ -4576,12 +4586,14 @@ static void make_discard_request(struct
- 		}
- 		set_bit(STRIPE_DISCARD, &sh->state);
- 		finish_wait(&conf->wait_for_overlap, &w);
-+		sh->overwrite_disks = 0;
- 		for (d = 0; d < conf->raid_disks; d++) {
- 			if (d == sh->pd_idx || d == sh->qd_idx)
- 				continue;
- 			sh->dev[d].towrite = bi;
- 			set_bit(R5_OVERWRITE, &sh->dev[d].flags);
- 			raid5_inc_bi_active_stripes(bi);
-+			sh->overwrite_disks++;
- 		}
- 		spin_unlock_irq(&sh->stripe_lock);
- 		if (conf->mddev->bitmap) {
++	check_break_stripe_batch_list(sh);
++
+ 	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
+ 		spin_lock(&sh->stripe_lock);
+ 		/* Cannot process 'sync' concurrently with 'discard' */
 Index: linux/drivers/md/raid5.h
 ===================================================================
---- linux.orig/drivers/md/raid5.h	2014-09-10 19:21:10.495349803 +0800
-+++ linux/drivers/md/raid5.h	2014-09-10 19:21:10.491349853 +0800
-@@ -210,6 +210,10 @@ struct stripe_head {
- 	atomic_t		count;	      /* nr of active thread/requests */
- 	int			bm_seq;	/* sequence number for bitmap flushes */
- 	int			disks;		/* disks in stripe */
-+	int			overwrite_disks; /* total overwrite disks in stripe,
-+						  * this is only checked when stripe
-+						  * has STRIPE_BATCH_READY
-+						  */
- 	enum check_states	check_state;
- 	enum reconstruct_states reconstruct_state;
- 	spinlock_t		stripe_lock;
+--- linux.orig/drivers/md/raid5.h	2014-09-10 19:21:14.723296649 +0800
++++ linux/drivers/md/raid5.h	2014-09-10 19:21:14.719296699 +0800
+@@ -336,6 +336,7 @@ enum {
+ 	STRIPE_DISCARD,
+ 	STRIPE_ON_RELEASE_LIST,
+ 	STRIPE_BATCH_READY,
++	STRIPE_BATCH_ERR,
+ };
+ 
+ /*
 
