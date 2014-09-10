@@ -1,112 +1,107 @@
 From: shli@kernel.org
-Subject: [patch v2 5/6] raid5: handle io error of batch list
-Date: Wed, 10 Sep 2014 20:40:14 +0800
-Message-ID: <20140910124320.020561161@kernel.org>
+Subject: [patch v2 6/6] raid5: handle expansion/resync case with stripe batching
+Date: Wed, 10 Sep 2014 20:40:15 +0800
+Message-ID: <20140910124326.392941811@kernel.org>
 References: <20140910124009.810771309@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline; filename=raid5-handle-batch-io-err.patch
+Content-Disposition: inline; filename=raid5-handle-resync-stripe-for-batching.patch
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If io error happens in any stripe of a batch list, the batch list will be
-split, then normal process will run for the stripes in the list.
+expansion/resync can grab a stripe when the stripe is in batch list. Since all
+stripes in batch list must be in the same state, we can't allow some stripes
+run into expansion/resync. So we delay expansion/resync for stripe in batch
+list.
 
 Signed-off-by: Shaohua Li <shli@fusionio.com>
 ---
- drivers/md/raid5.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid5.h |    1 +
- 2 files changed, 48 insertions(+)
+ drivers/md/raid5.c |   22 +++++++++++++++-------
+ drivers/md/raid5.h |    5 +++++
+ 2 files changed, 20 insertions(+), 7 deletions(-)
 
 Index: linux/drivers/md/raid5.c
 ===================================================================
---- linux.orig/drivers/md/raid5.c	2014-09-10 19:21:14.723296649 +0800
-+++ linux/drivers/md/raid5.c	2014-09-10 19:21:14.715296750 +0800
-@@ -1073,6 +1073,9 @@ again:
- 			pr_debug("skip op %ld on disc %d for sector %llu\n",
- 				bi->bi_rw, i, (unsigned long long)sh->sector);
- 			clear_bit(R5_LOCKED, &sh->dev[i].flags);
-+			if (sh->batch_head)
-+				set_bit(STRIPE_BATCH_ERR,
-+					&sh->batch_head->state);
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 		}
+--- linux.orig/drivers/md/raid5.c	2014-09-10 19:21:16.759271053 +0800
++++ linux/drivers/md/raid5.c	2014-09-10 19:21:16.755271103 +0800
+@@ -3371,8 +3371,10 @@ unhash:
+ 			struct stripe_head, batch_list);
+ 		list_del_init(&sh->batch_list);
  
-@@ -2382,6 +2385,9 @@ static void raid5_end_write_request(stru
+-		sh->state = head_sh->state & (~((1 << STRIPE_ACTIVE) |
+-			(1 << STRIPE_PREREAD_ACTIVE)));
++		set_mask_bits(&sh->state, ~STRIPE_EXPAND_SYNC_FLAG,
++			head_sh->state & (~((1 << STRIPE_ACTIVE) |
++			(1 << STRIPE_PREREAD_ACTIVE) |
++			STRIPE_EXPAND_SYNC_FLAG)));
+ 		sh->check_state = head_sh->check_state;
+ 		sh->reconstruct_state = head_sh->reconstruct_state;
+ 		for (i = 0; i < sh->disks; i++) {
+@@ -3384,6 +3386,8 @@ unhash:
+ 		spin_lock_irq(&sh->stripe_lock);
+ 		sh->batch_head = NULL;
+ 		spin_unlock_irq(&sh->stripe_lock);
++		if (sh->state & STRIPE_EXPAND_SYNC_FLAG)
++			set_bit(STRIPE_HANDLE, &sh->state);
+ 		release_stripe(sh);
  	}
- 	rdev_dec_pending(rdev, conf->mddev);
  
-+	if (sh->batch_head && !uptodate)
-+		set_bit(STRIPE_BATCH_ERR, &sh->batch_head->state);
-+
- 	if (!test_and_clear_bit(R5_DOUBLE_LOCKED, &sh->dev[i].flags))
- 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
- 	set_bit(STRIPE_HANDLE, &sh->state);
-@@ -4050,6 +4056,45 @@ static int clear_batch_ready(struct stri
- 	return 0;
+@@ -3391,6 +3395,8 @@ unhash:
+ 	head_sh->batch_head = NULL;
+ 	spin_unlock_irq(&head_sh->stripe_lock);
+ 	wake_up_nr(&conf->wait_for_overlap, wakeup_nr);
++	if (head_sh->state & STRIPE_EXPAND_SYNC_FLAG)
++		set_bit(STRIPE_HANDLE, &head_sh->state);
  }
  
-+static void check_break_stripe_batch_list(struct stripe_head *sh)
-+{
-+	struct stripe_head *head_sh, *next;
-+	int i;
-+
-+	if (!test_and_clear_bit(STRIPE_BATCH_ERR, &sh->state))
-+		return;
-+
-+	head_sh = sh;
-+	do {
-+		sh = list_first_entry(&sh->batch_list,
-+			struct stripe_head, batch_list);
-+		BUG_ON(sh == head_sh);
-+	} while (!test_bit(STRIPE_DEGRADED, &sh->state));
-+
-+	while (sh != head_sh) {
-+		next = list_first_entry(&sh->batch_list,
-+			struct stripe_head, batch_list);
-+		list_del_init(&sh->batch_list);
-+
-+		sh->state = head_sh->state & (~((1 << STRIPE_ACTIVE) |
-+			(1 << STRIPE_PREREAD_ACTIVE) | (1 << STRIPE_DEGRADED)));
-+		sh->check_state = head_sh->check_state;
-+		sh->reconstruct_state = head_sh->reconstruct_state;
-+		for (i = 0; i < sh->disks; i++)
-+			sh->dev[i].flags = head_sh->dev[i].flags &
-+				(~((1 << R5_WriteError) | (1 << R5_Overlap)));
-+
-+		spin_lock_irq(&sh->stripe_lock);
-+		sh->batch_head = NULL;
-+		spin_unlock_irq(&sh->stripe_lock);
-+
-+		set_bit(STRIPE_HANDLE, &sh->state);
-+		release_stripe(sh);
-+
-+		sh = next;
-+	}
-+}
-+
- static void handle_stripe(struct stripe_head *sh)
- {
- 	struct stripe_head_state s;
-@@ -4072,6 +4117,8 @@ static void handle_stripe(struct stripe_
- 		return;
- 	}
+ static void handle_stripe_dirtying(struct r5conf *conf,
+@@ -3853,8 +3859,8 @@ static void analyse_stripe(struct stripe
  
-+	check_break_stripe_batch_list(sh);
-+
- 	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
+ 	memset(s, 0, sizeof(*s));
+ 
+-	s->expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+-	s->expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
++	s->expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state) && !sh->batch_head;
++	s->expanded = test_bit(STRIPE_EXPAND_READY, &sh->state) && !sh->batch_head;
+ 	s->failed_num[0] = -1;
+ 	s->failed_num[1] = -1;
+ 
+@@ -4076,8 +4082,10 @@ static void check_break_stripe_batch_lis
+ 			struct stripe_head, batch_list);
+ 		list_del_init(&sh->batch_list);
+ 
+-		sh->state = head_sh->state & (~((1 << STRIPE_ACTIVE) |
+-			(1 << STRIPE_PREREAD_ACTIVE) | (1 << STRIPE_DEGRADED)));
++		set_mask_bits(&sh->state, ~STRIPE_EXPAND_SYNC_FLAG,
++			head_sh->state & (~((1 << STRIPE_ACTIVE) |
++			(1 << STRIPE_PREREAD_ACTIVE) | (1 << STRIPE_DEGRADED) |
++			STRIPE_EXPAND_SYNC_FLAG)));
+ 		sh->check_state = head_sh->check_state;
+ 		sh->reconstruct_state = head_sh->reconstruct_state;
+ 		for (i = 0; i < sh->disks; i++)
+@@ -4119,7 +4127,7 @@ static void handle_stripe(struct stripe_
+ 
+ 	check_break_stripe_batch_list(sh);
+ 
+-	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
++	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state) && !sh->batch_head) {
  		spin_lock(&sh->stripe_lock);
  		/* Cannot process 'sync' concurrently with 'discard' */
+ 		if (!test_bit(STRIPE_DISCARD, &sh->state) &&
 Index: linux/drivers/md/raid5.h
 ===================================================================
---- linux.orig/drivers/md/raid5.h	2014-09-10 19:21:14.723296649 +0800
-+++ linux/drivers/md/raid5.h	2014-09-10 19:21:14.719296699 +0800
-@@ -336,6 +336,7 @@ enum {
- 	STRIPE_DISCARD,
- 	STRIPE_ON_RELEASE_LIST,
- 	STRIPE_BATCH_READY,
-+	STRIPE_BATCH_ERR,
+--- linux.orig/drivers/md/raid5.h	2014-09-10 19:21:16.759271053 +0800
++++ linux/drivers/md/raid5.h	2014-09-10 19:21:16.755271103 +0800
+@@ -339,6 +339,11 @@ enum {
+ 	STRIPE_BATCH_ERR,
  };
  
++#define STRIPE_EXPAND_SYNC_FLAG \
++	((1 << STRIPE_EXPAND_SOURCE) |\
++	(1 << STRIPE_EXPAND_READY) |\
++	(1 << STRIPE_EXPANDING) |\
++	(1 << STRIPE_SYNC_REQUESTED))
  /*
+  * Operation request flags
+  */
 
