@@ -1,63 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [patch v2 0/6] raid5: automatically batch adjacent full stripe
- write
-Date: Thu, 11 Sep 2014 17:15:25 +1000
-Message-ID: <20140911171525.4ec2a88d@notabene.brown>
-References: <20140910124009.810771309@kernel.org>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Add disks and convert level 0 to level 5
+Date: Thu, 11 Sep 2014 08:27:32 +0100
+Message-ID: <20140911072732.GA12582@cthulhu.home.robinhill.me.uk>
+References: <loom.20140831T143354-68@post.gmane.org>
+ <20140901083137.4772c8c5@notabene.brown>
+ <8CF94689-0AD6-4B87-BC0C-815F794549E7@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/IKQ6l6pjoJBwmiu._.C+qQ5"; protocol="application/pgp-signature"
+	protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140910124009.810771309@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8CF94689-0AD6-4B87-BC0C-815F794549E7@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@kernel.org
+To: Michael Muratet <muratetm@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/IKQ6l6pjoJBwmiu._.C+qQ5
-Content-Type: text/plain; charset=US-ASCII
+
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 10 Sep 2014 20:40:09 +0800 shli@kernel.org wrote:
+On Wed Sep 10, 2014 at 11:15:24AM -0500, Michael Muratet wrote:
 
-> This is the 2nd attempt to make adjacent full stripe write together. The =
-main
-> change against v1 is how to detect if stripes can be batched. Also some b=
-ugs
-> are fixed.
+> I have a two-disk RAID0 system that is working splendidly, thanks to
+> the list for the help.
 >=20
+> I managed to get my hands on more identical disks and since I have the
+> disks and because I'm adding precious data, I'd like to add two more
+> disks and grow to RAID5.
+>=20
+> I have partitioned the two new drives to type 'fd', /dev/sde and /dev/sdf
+>=20
+> I believe the command to accomplish the change is this:
+>=20
+> mdadm /dev/md0 --grow --level=3D5 --add /dev/sde /dev/sdf
+>=20
+If you've partitioned the drives then presumably you'd want to use the
+partitions here (/dev/sde1 and /dev/sdf1?) rather than the full drives.
 
-Thanks a lot for this - it looks quite good.  I've read through most of it
-and don't see anything worth mentioning.... except maybe to wonder why
-to_addr_page() has an unused 'sh' argument.  Maybe I'll just remove that(?).
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-I've pushed it you the 'devel' branch of my md git tree.  I'll try to do so=
-me
-testing of my own next week.
-
-Thanks,
-NeilBrown
-
---Sig_/IKQ6l6pjoJBwmiu._.C+qQ5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+--jI8keyz6grp/JLjh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Version: GnuPG v2
 
-iQIVAwUBVBFMDTnsnt1WYoG5AQIMRw//cXKD8JEbS4gbKD5gTpyfF2EDxZdniBiB
-DlJRJnOC+fWjLUakHHKuu77vDOTqwRFFI6YLS0P6MkUgIfd1t82ojK0jGpefHuby
-0Qi6Jqi2+72AhR6jV91wk9+TzK63tlrPc6ueCRJvrCp4H1gdeeUfzsAi51s11w7h
-0igXat/HmOmLskHVEMwoW53eqEUMPAEH8GxJVLtAxlWOQHNk2aj8goW6bxLciN6b
-ePG4259kQbE/b/Ug+Z1jv/lxftXdTXfk+womCf1gLn8M/NH75KHJjCS/vunLyciu
-d69x6dHnirZlf24E7I4/uuoLWtHFYiOWQI3HKYOc8Ij7fX9tveSXMirPorSzK3JW
-qUyOYKYrAmy7JxNk1aHLYgqssDtmkwCtUiarb+yDCZetermg3QCCh6tIqXssXnm5
-/PZI2i+tyb2JDyVPdXkWribpR+2zbwNXzvwFPkpHO0lWcdlxSrdzDdLyUk247HZX
-kGZoDLaxO35l+JRnfoGYalWYnsOpEMf/nOEtuVpDV5j37aweFWX1lKRNMQWETJDu
-uwGnIvweUAwPH50l5Kjco1ONsbSRvGyJn9opNiqm84lXlCH9gFcM/2CpBvLlo/xb
-w8O09DFW9MzA+vEHyn6LAqpx0osTKF0O2HsmLW+kFa+pykGtZbbXrPJZkIhL8YRx
-45C/CwqQ1ZQ=
-=xyy1
+iEYEARECAAYFAlQRTuMACgkQShxCyD40xBKxHQCeKr7bgXAj9NRvyqacdOYzCzyp
+HXIAoNEOOWPkM6BVwMfVjxnDmz3P4Sl/
+=SWp/
 -----END PGP SIGNATURE-----
 
---Sig_/IKQ6l6pjoJBwmiu._.C+qQ5--
+--jI8keyz6grp/JLjh--
