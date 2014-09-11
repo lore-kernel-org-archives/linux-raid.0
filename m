@@ -1,38 +1,37 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [patch v2 0/6] raid5: automatically batch adjacent full stripe
- write
-Date: Thu, 11 Sep 2014 22:38:12 +0800
-Message-ID: <20140911143812.GA12404@kernel.org>
-References: <20140910124009.810771309@kernel.org>
- <20140911171525.4ec2a88d@notabene.brown>
+From: system.admin@yum.de
+Subject: access to old raid1 partitions after reinstall on two new disks
+Date: Thu, 11 Sep 2014 18:02:57 +0200
+Message-ID: <5411C7B1.1010205@yum.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140911171525.4ec2a88d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 11, 2014 at 05:15:25PM +1000, NeilBrown wrote:
-> On Wed, 10 Sep 2014 20:40:09 +0800 shli@kernel.org wrote:
-> 
-> > This is the 2nd attempt to make adjacent full stripe write together. The main
-> > change against v1 is how to detect if stripes can be batched. Also some bugs
-> > are fixed.
-> > 
-> 
-> Thanks a lot for this - it looks quite good.  I've read through most of it
-> and don't see anything worth mentioning.... except maybe to wonder why
-> to_addr_page() has an unused 'sh' argument.  Maybe I'll just remove that(?).
+Hello there,
 
-Can be removed. I just want the parameters of to_addr_conv/page are the same.
+we have a machine running on four raid-1 partitions (2 disks). The
+system had to be reinstalled on two new disks since one of the old disks
+failed and we afterwards saw defective sectors on the remaining disk. So
+the system was restored from backup on two complete new disks. We now
+have the disk with the defective sectors on which the old system was
+installed as third disk installed in the machine. Since we could not
+recover everything from backup, we would like to start the old raid
+devices from the old disk again and try to access the old filesystems
+again.
 
-> I've pushed it you the 'devel' branch of my md git tree.  I'll try to do some
-> testing of my own next week.
+The fresh installed system has of course the same md0, md1, md2, md3
+devices as the old one had. Therefore I wonder how to access the old
+raid devices, which had the same names.
 
-Thanks!
+Is there a way to get the old partitions running as additional raid
+devices like md4, md5, md6 and md7 (or under different names) and should
+it be possible to mount the filesystems of those new / old raid devices
+in the fresh installed system?
 
-Thanks,
-Shaohua
+Thanks for your help!
+
+Regards
+Hans
