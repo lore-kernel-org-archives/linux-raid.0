@@ -1,66 +1,63 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Status of discard support in MD RAID
-Date: Fri, 12 Sep 2014 15:39:15 +0600
-Message-ID: <20140912153915.473bc562@natsu>
-References: <1ED0286A-56DA-491D-853A-1C1045449201@redhat.com>
-	<26CB8B36-9CD9-4EE0-BFF2-4B183DBDD033@colorremedies.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/DCGgG2pbpjAA59d27Djl=+C"; protocol="application/pgp-signature"
+From: Marco Schindler <marco.schindler@gmail.com>
+Subject: Re: frequent disk activity with mdadm-3.3
+Date: Fri, 12 Sep 2014 14:15:35 +0200
+Message-ID: <BDDC2624-8578-4720-A526-56EFDFBE26C4@gmail.com>
+References: <AB305DF4-9DCC-47E1-9B29-130E211D4B4E@gmail.com> <20140912082403.549fc298@notabene.brown> <164CD08B-99CA-4007-855A-7B0561B4EC76@gmail.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <26CB8B36-9CD9-4EE0-BFF2-4B183DBDD033@colorremedies.com>
+In-Reply-To: <164CD08B-99CA-4007-855A-7B0561B4EC76@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Brassow Jonathan <jbrassow@redhat.com>, "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/DCGgG2pbpjAA59d27Djl=+C
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+ok, that=92s interesting.
+the process id is _not_ mdadm daemon and it looks like the spindown its=
+elf is triggering the process.
 
-On Thu, 11 Sep 2014 18:46:04 -0600
-Chris Murphy <lists@colorremedies.com> wrote:
+ps ax | grep mdadm
+28956 ?        Ss     0:00 mdadm --monitor --scan --daemonise --pid-fil=
+e /var/run/mdadm.pid --syslog
 
-> If it doesn't, a check check > md/sync_action will report mismatches in
-> md/mismatch_cnt; and a repair will probably corrupt the volume.
+grep sda /var/log/messages
+Sep 12 13:55:04 alina spindown: sda is now inactive.
+Sep 12 13:55:09 alina kernel: mdadm(29737): READ block 3907028992 on sd=
+a (8 sectors)
+Sep 12 13:55:17 alina kernel: mdadm(29737): READ block 3907029152 on sd=
+a (8 sectors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 0 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 8 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 8 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 3907029167 on sd=
+a (1 sectors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 3907029166 on sd=
+a (1 sectors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 0 on sda (1 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 0 on sda (1 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 3907029152 on sd=
+a (8 sectors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 0 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 8 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 8 on sda (8 sect=
+ors)
+Sep 12 13:55:26 alina kernel: mdadm(29737): READ block 8 on sda (8 sect=
+ors)
+Sep 12 13:56:12 alina spindown: sda is now active.
 
-At least with RAID1/10, why would it?
+here=92s the output of blktrace -d /dev/sda during that time.
+https://dl.dropboxusercontent.com/u/3464720/blktrace.tar.bz2
 
-> and you can't do repair type scrubs.
-
-If the FS issues TRIM on a certain region, by definition it no longer cares
-about what's stored there (as it's is no longer in use by the FS). So even =
-if
-a repair ends up coping some data from one SSD to another, in effect changi=
-ng
-the contents of that region, this should not affect anything whatsoever from
-the FS standpoint.
-
-Technically perhaps that still counts as a "corruption", but not of anything
-in the filesystem metadata or user data, just of unused regions. So not as
-scary as it first sounds.
-
-The only case where you'd run into problems with this, is if some apps expe=
-ct
-to read back zeroes on TRIM'ed regions, e.g. Qemu in the "detect-zeroes=3Du=
-nmap"
-mode. But using that would be dangerous even on a single SSD with
-non-deterministic TRIM, so mdraid changes nothing here.
-
---=20
-With respect,
-Roman
-
---Sig_/DCGgG2pbpjAA59d27Djl=+C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlQSv0MACgkQTLKSvz+PZwgOXACgmBurWx4a/0SzqR418how5xMw
-D/EAn01TV6UfpoL+CXB9z2E7Kauv1xxF
-=fkDG
------END PGP SIGNATURE-----
-
---Sig_/DCGgG2pbpjAA59d27Djl=+C--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
