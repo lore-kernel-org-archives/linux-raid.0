@@ -1,66 +1,57 @@
-From: martin f krafft <madduck@madduck.net>
-Subject: Re: Speeding up reading with RAID1 and --write-mostly
-Date: Sat, 13 Sep 2014 18:23:01 +0200
-Message-ID: <20140913162301.GB14969@fishbowl.rw.madduck.net>
-References: <20140913060143.GA15849@fishbowl.rw.madduck.net>
- <CAH3kUhGEaon77fpNm2mjRwPbNMZe9BLK3eA6LTB4xQeg0hMF-Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="U+BazGySraz5kW0T"
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Status of discard support in MD RAID
+Date: Sat, 13 Sep 2014 14:19:06 -0600
+Message-ID: <68C63E6D-EECB-4AE9-9697-8B5B1C3DF4A2@colorremedies.com>
+References: <1ED0286A-56DA-491D-853A-1C1045449201@redhat.com> <26CB8B36-9CD9-4EE0-BFF2-4B183DBDD033@colorremedies.com> <20140912153915.473bc562@natsu>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAH3kUhGEaon77fpNm2mjRwPbNMZe9BLK3eA6LTB4xQeg0hMF-Q@mail.gmail.com>
+In-Reply-To: <20140912153915.473bc562@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: "linux-raid@vger.kernel.org Raid" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---U+BazGySraz5kW0T
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Sep 12, 2014, at 3:39 AM, Roman Mamedov <rm@romanrm.net> wrote:
 
-also sprach Roberto Spadim <roberto@spadim.com.br> [2014-09-13 13:56 +0200]:
-> Try a bcache or something like it
+> On Thu, 11 Sep 2014 18:46:04 -0600
+> Chris Murphy <lists@colorremedies.com> wrote:
+> 
+>> If it doesn't, a check check > md/sync_action will report mismatches in
+>> md/mismatch_cnt; and a repair will probably corrupt the volume.
+> 
+> At least with RAID1/10, why would it?
 
-The problem with a cache is that the data have to be read once from
-the slow disk anyway, whereas I am proposing to keep a shadow copy
-on rotational disk, really, just in case the MMC may need to be
-removed at some point.
+It's a good question.
 
---=20
-@martinkrafft | http://madduck.net/ | http://two.sentenc.es/
-=20
-"a fundamentalist is someone who hates sin more than he loves virtue."
-                                                     -- john h. schaar
-=20
-spamtraps: madduck.bogus@madduck.net
+On the one hand:
+ftp://ftp.t10.org/t10/document.08/08-347r1.pdf
 
---U+BazGySraz5kW0T
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/sig-policy/999bbcc4/current)
+In particular slides 5, 8, 9.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+And then on the other hand:
+https://lkml.org/lkml/2010/11/19/193
 
-iQLvBAEBCgDZBQJUFG9lwBEaaHR0cDovL21hcnRpbi1rcmFmZnQubmV0L2dwZy9z
-aWctcG9saWN5LzU1Yzk4ODJkOTk5YmJjYzQvMjAxMTAxMjQxMTI1P3NoYTUxMnN1
-bT0xY2FkOTZmZDI3ZDMyMzNmNTNlMjI4NDk1MzM2NDgxMDdlNWVlOGQ1YmU2NTUy
-NTFkNzRjOGYxYzVjM2JjNDJmMjMwNGZhNTE1MTUwZjdiZDRkZDA1ZTk4MTk5MjRm
-MDQ5NTEzZWU5OTYyY2E3MTcwOWY4MWQ5NDUxNTg1MmJkOAAKCRBVyYgtmZu8xKeS
-EADKce7sp3JAniZ/YkZip3XGIKUBRsbi7fDgT0ceRzvZangTtfLZTmlNBhp/2O1W
-yLGAcF52OrJKXmPLMh9B/+hA9iphrW3fvp19MJkai51LuzhrbAqaK0CjuDbeYzdJ
-fs3SRhPkj5KSEdLIMRCskzDulv6HwpTZjN6RgSKpY4L5bq1B+fkAJBC+o2f+jU/9
-4bSlww3De1VnFhPbueqpBXZBsuQpr0U+IKzsjCJwu07iLNnPEcOLOKY0eUEe+rcP
-Tu536pb0V0Ggg90NnHRhJd5hJc1XZBTHteq0zKbbGubaJjVJrW7LBj/ThF9MvEg4
-POzGm+dEMq5f9BNU/a4qduvMkyc3eePSnmCDxVn1A4l6Hugq5TuJSFhgUtPsDaXm
-GeAJLQmbg57C4rnIW158lOkr5mgC7vFs8bkrTMEozB02ZluerLmfAWKzh3svk3bt
-9XhfcEJ1BIeC9vEV7XrXAqvca1LnUBkwwnJlhxx3kTl6Jgte3LrpqwX9pQ4sgBl7
-19T5+BGoXBaA/qtIFu164q7MkiZM36olp94XH7FizLjk3wpenlpAeLYbNpyPHfsF
-R4dMaRG6/RFAkjUmtlwN/FMjlCDLR4niwVwKJV8mYAa1Liut0grGCCQFk9ncPf+M
-XOAUXkz1oih6mR/TyNkfAHK5WMhUhQo34vHLPJUoTWwrFQ==
-=KOL3
------END PGP SIGNATURE-----
+It's an overstatement to have said "repair will probably corrupt" when everything is working normally. I can't know that. What happens in the case of a crash, power failure, or a drive that dies? If drive 1of2 fully dies, then the user has a more certain outcome, at least it's one non-deterministic drive 2of2 remaining to use as a source to rebuild with a new drive.
 
---U+BazGySraz5kW0T--
+But the non-deterministic output from SSD trimmed blocks means the user can't depend on raid mechanism to confirm whether the rebuild worked. There will always be mismatches on check, and we have no way of knowing if those mismatches occur only in trimmed areas that we don't care about, or in data/metadata areas that we do care about. What's the work around? Separately degrade mount each mirror and produce a file checksum list and compare them? Ick.
+
+ZFS and Btrfs wouldn't get tripped up, because their scrubs only operate on in-use blocks. So that's also a plausible work around for non-deterministic trim. But I don't know how well tested delete followed by trim is on either of them. Like Ted says, the filesystem has to be certain the delete has committed to stable media before issuing trim or all bets are off.
+
+
+> 
+>> and you can't do repair type scrubs.
+> 
+> If the FS issues TRIM on a certain region, by definition it no longer cares
+> about what's stored there (as it's is no longer in use by the FS). So even if
+> a repair ends up coping some data from one SSD to another, in effect changing
+> the contents of that region, this should not affect anything whatsoever from
+> the FS standpoint.
+
+That's true, it should not, so long as everything else is working normally and correctly. But we still lose the ability to verify the veracity of the repair.
+
+
+Chris Murphy
 
