@@ -1,67 +1,493 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Speeding up reading with RAID1 and --write-mostly
-Date: Mon, 15 Sep 2014 14:11:33 +1000
-Message-ID: <20140915141133.0a4da9ad@notabene.brown>
-References: <20140913060143.GA15849@fishbowl.rw.madduck.net>
-	<CAH3kUhGEaon77fpNm2mjRwPbNMZe9BLK3eA6LTB4xQeg0hMF-Q@mail.gmail.com>
-	<20140913162301.GB14969@fishbowl.rw.madduck.net>
+From: Andy Smith <andy@strugglers.net>
+Subject: grub-probe: "found two disks with the index 3 for RAID md2" after
+ changing superblock 0.9 to 1.0
+Date: Mon, 15 Sep 2014 06:47:41 +0000
+Message-ID: <20140915064741.GH11855@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+895=fZ5o1Ilp.B.z8G0xp0"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140913162301.GB14969@fishbowl.rw.madduck.net>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@madduck.net>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+895=fZ5o1Ilp.B.z8G0xp0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Sat, 13 Sep 2014 18:23:01 +0200 martin f krafft <madduck@madduck.net>
-wrote:
+During the process of shrinking the number of devices in a raid-10
+array from 6 down to 4=B9, I needed to upgrade the superblock from 0.9
+to 1.0.
 
-> also sprach Roberto Spadim <roberto@spadim.com.br> [2014-09-13 13:56 +020=
-0]:
-> > Try a bcache or something like it
->=20
-> The problem with a cache is that the data have to be read once from
-> the slow disk anyway, whereas I am proposing to keep a shadow copy
-> on rotational disk, really, just in case the MMC may need to be
-> removed at some point.
->=20
+Now, when I run grub-probe on that host it gives me complaints like
+this:
 
-It is a persistent cache though.  So it only needs to be read once.
-If the cache SD is the same sizes as the main device then it should never
-ever need to read again.
+    error: found two disks with the index 3 for RAID md2.
+    error: superfluous RAID member (6 found).
 
-But I suspect you will find that SD cards aren't really fast enough for your
-needs.  It wouldn't hurt to experiment on just an SD card and see how it
-performs.
+(many times over)
 
-NeilBrown
+Searching around I learn that it may be because grub looks at the
+end of the disk and finds an md superblock but cannot tell if it is
+for the entire disk or for the final partition on the disk:
 
---Sig_/+895=fZ5o1Ilp.B.z8G0xp0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+    http://savannah.gnu.org/bugs/index.php?34250
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+In my case, I have four disks sda to sdd all of which have three
+partitions on them, and md2 is composed of the third (last)
+partition.
 
-iQIVAwUBVBZm9Tnsnt1WYoG5AQK1XxAAurFNdP2lgdwwtzqOmkvs8n5EGzZ95Aa+
-H9Iuw9TTkPg7yXxVKvagRMU+fA4zO9azYMqQ0I3iTHH9wTTMonYyXCPgOaKMoBFx
-ZlHKSRxFT7+uBHUvsVqiSic3ALvW+MAavmE4C2XlJqH+9cThdBlPxX8eWuT7Vkrs
-MIfKdXkthFGgd0wLI9U+68kpN821gLNNimx8Snd6HYq1uvuBDpGoKLPnyoumoqbD
-I96sFJncxjueNv2kO+ta59lde7z/Ii1ZH4comoRStoi5al6Wj7gkR7CSpXnCmjUV
-53c3qPEyzO2dsre1c7i/xesSZuEQDfDWjGCLevt7AjNvU328dzMTBwptz895qY+C
-1DwMdItnO5rpSzPnbXkIBroGIGANlh1vuelj50A9P8sbwtqASHwMD86mUpzyHF08
-KeBYZLLFE4p38rXO2cuVmCKurhUeVFbKRajnL7HzpY/6/dxgYvbhDhXzJLtaR5t5
-gGt7XwmTYEUg1ACNDze7ICD7QNUGZU76X5t4a6Gy6z6S9FfU2jzrceYcGkpnk9Zb
-Lueji2mJOoqwNuTTQ2JAQUB+giJX6qEC3bNU+aLRMqWc7QBUOcFR4N0AgNaHp+ji
-k49XSOjfLoEF83Zwhc5SDdApW8cwDARyVnixxSP5TAtbTQufF0xugUl7DOVwJ7ez
-/vUESYpFNk0=
-=Ee05
------END PGP SIGNATURE-----
+    $ cat /proc/mdstat=20
+    Personalities : [raid1] [raid10]=20
+    md2 : active raid10 sdd3[0] sdb3[3] sdc3[4] sda3[5]
+          618726528 blocks super 1.0 64K chunks 2 near-copies [4/4] [UU=
+UU]
 
---Sig_/+895=fZ5o1Ilp.B.z8G0xp0--
+    md1 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+          5874688 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUU=
+U]
+
+    md0 : active raid1 sdd1[0] sdc1[3] sdb1[2] sda1[1]
+          256896 blocks [4/4] [UUUU]
+
+    unused devices: <none>
+
+The thing is, that bug report is quite old and is marked closed, and
+also states:
+
+    "The problem is that 0.9x metadata block doesn't have enough
+    info to check it. With 1.x we have no such problem."
+
+Of course, it *is* 1.x superblock. Did the poster actually mean to
+say that they have no problem with v1.1 and v1.2 (because they are
+located at or near the beginning of the device, not at the end)?
+
+The host is Debian wheezy with grub-pc package version
+1.99-27+deb7u2 so if that bug is closed due to a fix, I would expect
+to have it by now.
+
+There is also a Debian bug bearing some similarity, and that is also
+marked fixed upstream and references the above Gnu bug report.
+
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D620390
+
+The host still boots but that may be because md2 is not involved in
+booting anyway.
+
+Do other people experience this?
+
+Is it unavoidable with v1.0 superblock?
+
+If so, is there any way to convert to 1.1 or 1.2 without recreating
+the array?
+
+Verbose grub-probe output is appended.
+
+Cheers,
+Andy
+
+=B9 The thread describing that is here:
+  http://marc.info/?l=3Dlinux-raid&m=3D140881268031291&w=3D2
+
+$ sudo grub-probe --target=3Dfs -v /boot/grub
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd0.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd1.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd2.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd3.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd4.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd5.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd6.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd7.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd8.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd9.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd10.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: Scanning for dmraid_nv RAID devices on disk hd11.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: scanning hd0 for LVM.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: scanning hd1 for LVM.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: scanning hd2 for LVM.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: scanning hd3 for LVM.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: scanning hd4 for LVM.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: scanning hd5 for LVM.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: scanning hd6 for LVM.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: scanning hd7 for LVM.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: scanning hd8 for LVM.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: scanning hd9 for LVM.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: scanning hd10 for LVM.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: scanning hd11 for LVM.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd0.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd1.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd2.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd3.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd4.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd5.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd6.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd7.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd8.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd9.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd10.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd11.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd0.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd1.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd2.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd3.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd4.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd5.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd6.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd7.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd8.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd9.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd10.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd11.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd0.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd0,msdos3=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Found array md2 (mdraid09).
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd0,msdos2=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd0,msdos1=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Found array md0 (mdraid09).
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd1.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd1,msdos3=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd1,msdos2=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd1,msdos1=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd2.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd2,msdos3=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd2,msdos2=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd2,msdos1=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd3.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd3,msdos3=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd3,msdos2=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd3,msdos1=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd4.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd5.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd6.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd7.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd8.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd9.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd10.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: Scanning for mdraid09 RAID devices on disk hd11.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk md0.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd0.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd0,msdos3=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd0,msdos2=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Found array md/1 (mdraid1x).
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd0,msdos1=
+=2E
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd1.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd1,msdos3=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+error: found two disks with the index 3 for RAID md2.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd1,msdos2=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd1,msdos1=
+=2E
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd2.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd2,msdos3=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd2,msdos2=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd2,msdos1=
+=2E
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd3.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd3,msdos3=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+error: superfluous RAID member (6 found).
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd3,msdos2=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd3,msdos1=
+=2E
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd4.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd5.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd6.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd7.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd8.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd9.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd10.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: Scanning for mdraid1x RAID devices on disk hd11.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: scanning md/1 for LVM.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning md0 for LVM.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning md2 for LVM.
+grub-probe: info: scanning hd0 for LVM.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: scanning hd0,msdos3 for LVM.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd0,msdos2 for LVM.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd0,msdos1 for LVM.
+grub-probe: info: the size of hd0 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd1 for LVM.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: scanning hd1,msdos3 for LVM.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd1,msdos2 for LVM.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd1,msdos1 for LVM.
+grub-probe: info: the size of hd1 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd2 for LVM.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: scanning hd2,msdos3 for LVM.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd2,msdos2 for LVM.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd2,msdos1 for LVM.
+grub-probe: info: the size of hd2 is 625142448.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd3 for LVM.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: scanning hd3,msdos3 for LVM.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: scanning hd3,msdos2 for LVM.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd3,msdos1 for LVM.
+grub-probe: info: the size of hd3 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: scanning hd4 for LVM.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd4 is 625134827.
+grub-probe: info: scanning hd5 for LVM.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd5 is 976773168.
+grub-probe: info: scanning hd6 for LVM.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd6 is 3907029168.
+grub-probe: info: scanning hd7 for LVM.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd7 is 5860533168.
+grub-probe: info: scanning hd8 for LVM.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd8 is 3907029168.
+grub-probe: info: scanning hd9 for LVM.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd9 is 3907029168.
+grub-probe: info: scanning hd10 for LVM.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd10 is 976773168.
+grub-probe: info: scanning hd11 for LVM.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: no LVM signature found.
+grub-probe: info: the size of hd11 is 5860533168.
+grub-probe: info: opening mduuid/78cf4169e31908f4e667021c582159fb.
+ext2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
