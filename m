@@ -1,76 +1,30 @@
-From: martin f krafft <madduck@madduck.net>
-Subject: Re: Speeding up reading with RAID1 and --write-mostly
-Date: Mon, 15 Sep 2014 09:44:50 +0200
-Message-ID: <20140915074450.GA27163@fishbowl.rw.madduck.net>
-References: <20140915141133.0a4da9ad@notabene.brown>
+From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+Subject: Re: [dm-devel] [PATCH v3 01/12] crypto: LLVMLinux: Add macro to
+ remove use of VLAIS in crypto code
+Date: Mon, 15 Sep 2014 10:06:54 +0200
+Message-ID: <CAHXqBFK=o2Q3CUPWaL_8TDBJbGjfEOx_HnQzooy33wuKWyu5Gw@mail.gmail.com>
+References: <1410766234-1634-1-git-send-email-behanw@converseincode.com> <1410766234-1634-2-git-send-email-behanw@converseincode.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="ikeVEW9yuYc//A+q"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140915141133.0a4da9ad@notabene.brown>
- <CAH3kUhGEaon77fpNm2mjRwPbNMZe9BLK3eA6LTB4xQeg0hMF-Q@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1410766234-1634-2-git-send-email-behanw@converseincode.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: agk@redhat.com, clm@fb.com, David Miller <davem@davemloft.net>, fabf@skynet.be, Herbert Xu <herbert@gondor.apana.org.au>, jbacik@fb.com, snitzer@redhat.com, tadeusz.struk@intel.com, thomas.lendacky@amd.com, linux-ima-user@lists.sourceforge.net, qat-linux@intel.com, d.kasatkin@samsung.com, Bruce Allan <bruce.w.allan@intel.com>, Linux Kernel <linux-kernel@vger.kernel.org>, john.griffin@intel.com, linux-raid@vger.kernel.org, linux-security-module@vger.kernel.org, Behan Webster <behanw@converseincode.com>, linux-crypto@vger.kernel.org, james.l.morris@oracle.com, Linus Torvalds <torvalds@linux-foundation.org>, linux-ima-devel@lists.sourceforge.net, Andrew Morton <akpm@linux-foundation.org>, zohar@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, "Serge E. Hallyn" <serge@hallyn.com>
 List-Id: linux-raid.ids
 
+2014-09-15 9:30 GMT+02:00  <behanw@converseincode.com>:
+[...]
+> +#define SHASH_DESC_ON_STACK(shash, tfm)                             =
+     \
+> +       char __desc[sizeof(struct shash_desc) +                   \
+> +               crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR; \
+> +       struct shash_desc *shash =3D (struct shash_desc *)__desc
+> +
 
---ikeVEW9yuYc//A+q
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+char shash##__desc[] or similar? Otherwise it won't work if you use
+this macro twice in the same block.
 
-also sprach Roberto Spadim <roberto@spadim.com.br> [2014-09-13 13:56 +0200]:
-> Try a bcache or something like it
-
-also sprach NeilBrown <neilb@suse.de> [2014-09-15 06:11 +0200]:
-> It is a persistent cache though.
-
-Oh cool, and it optimises writing too, I'll definitely will check it
-out, thank you!
-
-> But I suspect you will find that SD cards aren't really fast
-> enough for your needs.  It wouldn't hurt to experiment on just an
-> SD card and see how it performs.
-
-Sure, and this will be much easier to set up. However, even my cheap
-camera SD outperforms my rotational disk, especially with dmcrypt=E2=80=A6
-
---=20
-@martinkrafft | http://madduck.net/ | http://two.sentenc.es/
-=20
-an egg has the shortest sex-life of all: if gets laid once; it gets
-eaten once. it also has to come in a box with 11 others, and the
-only person who will sit on its face is its mother.
-=20
-spamtraps: madduck.bogus@madduck.net
-
---ikeVEW9yuYc//A+q
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/sig-policy/999bbcc4/current)
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQLvBAEBCgDZBQJUFpjvwBEaaHR0cDovL21hcnRpbi1rcmFmZnQubmV0L2dwZy9z
-aWctcG9saWN5LzU1Yzk4ODJkOTk5YmJjYzQvMjAxMTAxMjQxMTI1P3NoYTUxMnN1
-bT0xY2FkOTZmZDI3ZDMyMzNmNTNlMjI4NDk1MzM2NDgxMDdlNWVlOGQ1YmU2NTUy
-NTFkNzRjOGYxYzVjM2JjNDJmMjMwNGZhNTE1MTUwZjdiZDRkZDA1ZTk4MTk5MjRm
-MDQ5NTEzZWU5OTYyY2E3MTcwOWY4MWQ5NDUxNTg1MmJkOAAKCRBVyYgtmZu8xDsT
-EACnuM5bwzNvyUJc7DLhWlMDkda+F9GhErExCSIanyFqVHB8/DO2EkAg/+oJHIS0
-0++Gyj0jdeLIKxcgZHmXzkhIJJEIPGbwBs5XimNyO2xRauOtrdd/LRbiwFOorE1M
-X/yMruj8SISoDilAu6Y4eNtV+5l+3fhah3ZFUg4UU0mQCWVQLZ0VRYA+efx5sdNE
-iTODR10QOATy1/Jbqhe0Jl2L3JtUsh3d1mKEL7ENbnzh/Ud73LIblKV910E2UP8P
-cMbFEyZbXE4XjvbH2xXaR9SgypPulPaK97DEHrCXfrUSGBpRf3jlzoGTEBxOhRaa
-jqiHE14mkx2xqi1Ierw/bQq8vEubwQDpyOKXcx0FUyBQ9WaJvKG/s9S3F/5dpT6S
-uJ2V5oR2z3PMIaFzQJAoN6ZoM6Tvq19hTus5meJ7seg+RRkLE9U1kD+qMfrSyqJP
-WgGPJ8e0tuDdHC6iBNlr4lOYI+2B5sxfp4vtlmxApN7H+3yfdxhAf7J4NzFPmIBq
-Gkhjk2pys0FxDTSwZhKTon5pvNqMkrovoAeoeaQW5u03wKavnMdo6kTKWdWsfdZQ
-Ucwt3JthNT8aXVY+qgog/KnHCbcq5T46TDKsS8grvVbkLtm4fw8iddZZ3oNjTpaS
-4vkzLlkAMpKndp7XeixMy2GFSPU8s7vtgZUqF7j2H2CP+A==
-=Iz+r
------END PGP SIGNATURE-----
-
---ikeVEW9yuYc//A+q--
-
+Best Regards,
+Micha=C5=82 Miros=C5=82aw
