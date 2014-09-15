@@ -1,54 +1,76 @@
-From: behanw@converseincode.com
-Subject: [PATCH v3 02/12] btrfs: LLVMLinux: Remove VLAIS
-Date: Mon, 15 Sep 2014 00:30:24 -0700
-Message-ID: <1410766234-1634-3-git-send-email-behanw@converseincode.com>
-References: <1410766234-1634-1-git-send-email-behanw@converseincode.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: martin f krafft <madduck@madduck.net>
+Subject: Re: Speeding up reading with RAID1 and --write-mostly
+Date: Mon, 15 Sep 2014 09:44:50 +0200
+Message-ID: <20140915074450.GA27163@fishbowl.rw.madduck.net>
+References: <20140915141133.0a4da9ad@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1410766234-1634-1-git-send-email-behanw@converseincode.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: agk@redhat.com, clm@fb.com, davem@davemloft.net, dm-devel@redhat.com, fabf@skynet.be, herbert@gondor.apana.org.au, jbacik@fb.com, snitzer@redhat.com, tadeusz.struk@intel.com
-Cc: thomas.lendacky@amd.com, linux-ima-user@lists.sourceforge.net, qat-linux@intel.com, d.kasatkin@samsung.com, bruce.w.allan@intel.com, linux-kernel@vger.kernel.org, john.griffin@intel.com, linux-raid@vger.kernel.org, linux-security-module@vger.kernel.org, =?UTF-8?q?Vin=C3=ADcius=20Tinti?= <viniciustinti@gmail.com>, linux-crypto@vger.kernel.org, james.l.morris@oracle.com, torvalds@linux-foundation.org, linux-ima-devel@lists.sourceforge.net, Behan Webster <behanw@converseincode.com>, akpm@linux-foundation.org, zohar@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, serge@hallyn.com
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ikeVEW9yuYc//A+q"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140915141133.0a4da9ad@notabene.brown>
+ <CAH3kUhGEaon77fpNm2mjRwPbNMZe9BLK3eA6LTB4xQeg0hMF-Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>, NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-RnJvbTogVmluw61jaXVzIFRpbnRpIDx2aW5pY2l1c3RpbnRpQGdtYWlsLmNvbT4KClJlcGxhY2Vk
-IHRoZSB1c2Ugb2YgYSBWYXJpYWJsZSBMZW5ndGggQXJyYXkgSW4gU3RydWN0IChWTEFJUykgd2l0
-aCBhIEM5OQpjb21wbGlhbnQgZXF1aXZhbGVudC4gVGhpcyBpcyB0aGUgb3JpZ2luYWwgVkxBSVMg
-c3RydWN0LgoKc3RydWN0IHsKCXN0cnVjdCBzaGFzaF9kZXNjIHNoYXNoOwoJY2hhciBjdHhbY3J5
-cHRvX3NoYXNoX2Rlc2NzaXplKHRmbSldOwp9IGRlc2M7CgpUaGlzIHBhdGNoIGluc3RlYWQgYWxs
-b2NhdGVzIHRoZSBhcHByb3ByaWF0ZSBhbW91bnQgb2YgbWVtb3J5IHVzaW5nIGEKY2hhciBhcnJh
-eSB1c2luZyB0aGUgU0hBU0hfREVTQ19PTl9TVEFDSyBtYWNyby4KClRoZSBuZXcgY29kZSBjYW4g
-YmUgY29tcGlsZWQgd2l0aCBib3RoIGdjYyBhbmQgY2xhbmcuCgpTaWduZWQtb2ZmLWJ5OiBWaW7D
-rWNpdXMgVGludGkgPHZpbmljaXVzdGludGlAZ21haWwuY29tPgpSZXZpZXdlZC1ieTogSmFuLVNp
-bW9uIE3DtmxsZXIgPGRsOXBmQGdteC5kZT4KUmV2aWV3ZWQtYnk6IE1hcmsgQ2hhcmxlYm9pcyA8
-Y2hhcmxlYm1AZ21haWwuY29tPgpTaWduZWQtb2ZmLWJ5OiBCZWhhbiBXZWJzdGVyIDxiZWhhbndA
-Y29udmVyc2VpbmNvZGUuY29tPgpDYzogIkRhdmlkIFMuIE1pbGxlciIgPGRhdmVtQGRhdmVtbG9m
-dC5uZXQ+CkNjOiBIZXJiZXJ0IFh1IDxoZXJiZXJ0QGdvbmRvci5hcGFuYS5vcmcuYXU+Ci0tLQog
-ZnMvYnRyZnMvaGFzaC5jIHwgMTYgKysrKysrKy0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDcg
-aW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy9idHJmcy9oYXNo
-LmMgYi9mcy9idHJmcy9oYXNoLmMKaW5kZXggODU4ODlhYS4uNGJmNGQzYSAxMDA2NDQKLS0tIGEv
-ZnMvYnRyZnMvaGFzaC5jCisrKyBiL2ZzL2J0cmZzL2hhc2guYwpAQCAtMzMsMTggKzMzLDE2IEBA
-IHZvaWQgYnRyZnNfaGFzaF9leGl0KHZvaWQpCiAKIHUzMiBidHJmc19jcmMzMmModTMyIGNyYywg
-Y29uc3Qgdm9pZCAqYWRkcmVzcywgdW5zaWduZWQgaW50IGxlbmd0aCkKIHsKLQlzdHJ1Y3Qgewot
-CQlzdHJ1Y3Qgc2hhc2hfZGVzYyBzaGFzaDsKLQkJY2hhciBjdHhbY3J5cHRvX3NoYXNoX2Rlc2Nz
-aXplKHRmbSldOwotCX0gZGVzYzsKKwlTSEFTSF9ERVNDX09OX1NUQUNLKHNoYXNoLCB0Zm0pOwor
-CXUzMiAqY3R4ID0gKHUzMiAqKXNoYXNoX2Rlc2NfY3R4KHNoYXNoKTsKIAlpbnQgZXJyOwogCi0J
-ZGVzYy5zaGFzaC50Zm0gPSB0Zm07Ci0JZGVzYy5zaGFzaC5mbGFncyA9IDA7Ci0JKih1MzIgKilk
-ZXNjLmN0eCA9IGNyYzsKKwlzaGFzaC0+dGZtID0gdGZtOworCXNoYXNoLT5mbGFncyA9IDA7CisJ
-KmN0eCA9IGNyYzsKIAotCWVyciA9IGNyeXB0b19zaGFzaF91cGRhdGUoJmRlc2Muc2hhc2gsIGFk
-ZHJlc3MsIGxlbmd0aCk7CisJZXJyID0gY3J5cHRvX3NoYXNoX3VwZGF0ZShzaGFzaCwgYWRkcmVz
-cywgbGVuZ3RoKTsKIAlCVUdfT04oZXJyKTsKIAotCXJldHVybiAqKHUzMiAqKWRlc2MuY3R4Owor
-CXJldHVybiAqY3R4OwogfQotLSAKMS45LjEKCi0tCmRtLWRldmVsIG1haWxpbmcgbGlzdApkbS1k
-ZXZlbEByZWRoYXQuY29tCmh0dHBzOi8vd3d3LnJlZGhhdC5jb20vbWFpbG1hbi9saXN0aW5mby9k
-bS1kZXZlbA==
+
+--ikeVEW9yuYc//A+q
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+also sprach Roberto Spadim <roberto@spadim.com.br> [2014-09-13 13:56 +0200]:
+> Try a bcache or something like it
+
+also sprach NeilBrown <neilb@suse.de> [2014-09-15 06:11 +0200]:
+> It is a persistent cache though.
+
+Oh cool, and it optimises writing too, I'll definitely will check it
+out, thank you!
+
+> But I suspect you will find that SD cards aren't really fast
+> enough for your needs.  It wouldn't hurt to experiment on just an
+> SD card and see how it performs.
+
+Sure, and this will be much easier to set up. However, even my cheap
+camera SD outperforms my rotational disk, especially with dmcrypt=E2=80=A6
+
+--=20
+@martinkrafft | http://madduck.net/ | http://two.sentenc.es/
+=20
+an egg has the shortest sex-life of all: if gets laid once; it gets
+eaten once. it also has to come in a box with 11 others, and the
+only person who will sit on its face is its mother.
+=20
+spamtraps: madduck.bogus@madduck.net
+
+--ikeVEW9yuYc//A+q
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/sig-policy/999bbcc4/current)
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQLvBAEBCgDZBQJUFpjvwBEaaHR0cDovL21hcnRpbi1rcmFmZnQubmV0L2dwZy9z
+aWctcG9saWN5LzU1Yzk4ODJkOTk5YmJjYzQvMjAxMTAxMjQxMTI1P3NoYTUxMnN1
+bT0xY2FkOTZmZDI3ZDMyMzNmNTNlMjI4NDk1MzM2NDgxMDdlNWVlOGQ1YmU2NTUy
+NTFkNzRjOGYxYzVjM2JjNDJmMjMwNGZhNTE1MTUwZjdiZDRkZDA1ZTk4MTk5MjRm
+MDQ5NTEzZWU5OTYyY2E3MTcwOWY4MWQ5NDUxNTg1MmJkOAAKCRBVyYgtmZu8xDsT
+EACnuM5bwzNvyUJc7DLhWlMDkda+F9GhErExCSIanyFqVHB8/DO2EkAg/+oJHIS0
+0++Gyj0jdeLIKxcgZHmXzkhIJJEIPGbwBs5XimNyO2xRauOtrdd/LRbiwFOorE1M
+X/yMruj8SISoDilAu6Y4eNtV+5l+3fhah3ZFUg4UU0mQCWVQLZ0VRYA+efx5sdNE
+iTODR10QOATy1/Jbqhe0Jl2L3JtUsh3d1mKEL7ENbnzh/Ud73LIblKV910E2UP8P
+cMbFEyZbXE4XjvbH2xXaR9SgypPulPaK97DEHrCXfrUSGBpRf3jlzoGTEBxOhRaa
+jqiHE14mkx2xqi1Ierw/bQq8vEubwQDpyOKXcx0FUyBQ9WaJvKG/s9S3F/5dpT6S
+uJ2V5oR2z3PMIaFzQJAoN6ZoM6Tvq19hTus5meJ7seg+RRkLE9U1kD+qMfrSyqJP
+WgGPJ8e0tuDdHC6iBNlr4lOYI+2B5sxfp4vtlmxApN7H+3yfdxhAf7J4NzFPmIBq
+Gkhjk2pys0FxDTSwZhKTon5pvNqMkrovoAeoeaQW5u03wKavnMdo6kTKWdWsfdZQ
+Ucwt3JthNT8aXVY+qgog/KnHCbcq5T46TDKsS8grvVbkLtm4fw8iddZZ3oNjTpaS
+4vkzLlkAMpKndp7XeixMy2GFSPU8s7vtgZUqF7j2H2CP+A==
+=Iz+r
+-----END PGP SIGNATURE-----
+
+--ikeVEW9yuYc//A+q--
+
