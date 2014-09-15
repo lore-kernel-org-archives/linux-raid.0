@@ -1,34 +1,32 @@
-From: Behan Webster <behanw@converseincode.com>
-Subject: Re: [PATCH v3 11/12] security, crypto: LLVMLinux: Remove VLAIS from
- ima_crypto.c
-Date: Mon, 15 Sep 2014 07:25:16 -0700
-Message-ID: <5416F6CC.3050203@converseincode.com>
-References: <1410766234-1634-1-git-send-email-behanw@converseincode.com>	<1410766234-1634-12-git-send-email-behanw@converseincode.com> <CA+55aFx8FN2Rq+d3v9rsDbTyX3hwm6TvudvZrL5wgf7fX3aQjA@mail.gmail.com>
+From: Eric Mei <meijia@gmail.com>
+Subject: read error recovery threshold
+Date: Mon, 15 Sep 2014 10:56:11 -0600
+Message-ID: <CAK=nhWO75WOJNCOXG+_ynug3ta6939b-8fyz0R1D-ENXF7jEGg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFx8FN2Rq+d3v9rsDbTyX3hwm6TvudvZrL5wgf7fX3aQjA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alasdair G Kergon <agk@redhat.com>, Chris Mason <clm@fb.com>, David Miller <davem@davemloft.net>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Fabian Frederick <fabf@skynet.be>, Herbert Xu <herbert@gondor.apana.org.au>, Josef Bacik <jbacik@fb.com>, Mike Snitzer <snitzer@redhat.com>, tadeusz.struk@intel.com, Andrew Morton <akpm@linux-foundation.org>, Bruce Allan <bruce.w.allan@intel.com>, Dmitry Kasatkin <d.kasatkin@samsung.com>, James Morris <james.l.morris@oracle.com>, john.griffin@intel.com, linux-btrfs <linux-btrfs@vger.kernel.org>, Linux Crypto Mailing List <linux-crypto@vger.kernel.org>, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, LSM List <linux-security-module@vger.kernel.org>, Neil Brown <neilb@suse.de>, qat-lin
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/15/14 07:21, Linus Torvalds wrote:
-> On Mon, Sep 15, 2014 at 12:30 AM,  <behanw@converseincode.com> wrote:
->> From: Behan Webster <behanw@converseincode.com>
->>
->> Replaced the use of a Variable Length Array In Struct (VLAIS) with a C99
->> compliant equivalent. This patch allocates the appropriate amount of memory
->> using a char array using the SHASH_DESC_ON_STACK macro.
-> You only made the first case use SHASH_DESC_ON_STACK, the two other
-> cases you left in the ugly format. Was that just an oversight, or was
-> there some reason for it?
->
-Oversight. Will Fix.
+Hi,
 
-Behan
+After a read error detected, RAID6 will initiate a recovery procedure
+try to correct it, until the number of read error exceeds a threshold,
+which is "conf->max_nr_stripes" (see raid5_end_read_request()), I'm
+wondering the reasoning behind this. To me the threshold seems a drive
+property, but max_nr_stripes is a array-wide cache setting and can be
+changed at runtime. In our specific case, we observed a drive emitting
+lots of read errors without being marked as faulty because the larger
+max_nr_stripes
+setting.
 
--- 
-Behan Webster
-behanw@converseincode.com
+Look at other part of MD code, there is "mddev::max_corr_read_errors"
+which is set to 20, but only RAID10 makes use of it. Also the comment
+above MD_DEFAULT_MAX_CORRECTED_READ_ERRORS says "...We divide the read
+error count by 2 for every hour elapsed between read errors", but I
+don't see any code matching this description.
+
+Any thoughts? Thanks
+
+Eric
