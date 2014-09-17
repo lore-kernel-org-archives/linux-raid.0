@@ -1,90 +1,120 @@
-From: Behan Webster <behanw@converseincode.com>
-Subject: Re: [PATCH v3 01/12] crypto: LLVMLinux: Add macro to remove use of
- VLAIS in crypto code
-Date: Wed, 17 Sep 2014 08:26:19 -0700
-Message-ID: <5419A81B.2030705@converseincode.com>
-References: <1410766234-1634-1-git-send-email-behanw@converseincode.com> <1410766234-1634-2-git-send-email-behanw@converseincode.com> <20140917092212.GA1213@gondor.apana.org.au> <54196D5C.6040104@samsung.com> <20140917113035.GB2129@gondor.apana.org.au>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: raid1_end_read_request does not retry failed READ from a
+ recovering drive
+Date: Wed, 17 Sep 2014 20:57:13 +0300
+Message-ID: <CAGRgLy54ByqUG8bTyPr_rDrNMbyFYRU+rx4LEWVqMHOw2=k=Dg@mail.gmail.com>
+References: <CAGRgLy6B0ZWtr1xv7_-qAzww+UNcfausrxRnMzDBP3n5348e7A@mail.gmail.com>
+	<20140908171702.5b2853fc@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-security-module-owner@vger.kernel.org>
-In-Reply-To: <20140917113035.GB2129@gondor.apana.org.au>
-Sender: linux-security-module-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>, Dmitry Kasatkin <d.kasatkin@samsung.com>
-Cc: agk@redhat.com, clm@fb.com, davem@davemloft.net, dm-devel@redhat.com, fabf@skynet.be, jbacik@fb.com, snitzer@redhat.com, tadeusz.struk@intel.com, akpm@linux-foundation.org, bruce.w.allan@intel.com, james.l.morris@oracle.com, john.griffin@intel.com, linux-btrfs@vger.kernel.org, linux-crypto@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-security-module@vger.kernel.org, neilb@suse.de, qat-linux@intel.com, serge@hallyn.com, thomas.lendacky@amd.com, zohar@linux.vnet.ibm.com, torvalds@linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20140908171702.5b2853fc@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09/17/14 04:30, Herbert Xu wrote:
-> On Wed, Sep 17, 2014 at 02:15:40PM +0300, Dmitry Kasatkin wrote:
->> On 17/09/14 12:22, Herbert Xu wrote:
->>> On Mon, Sep 15, 2014 at 12:30:23AM -0700, behanw@converseincode.com=
- wrote:
->>>> From: Behan Webster <behanw@converseincode.com>
->>>>
->>>> Add a macro which replaces the use of a Variable Length Array In S=
-truct (VLAIS)
->>>> with a C99 compliant equivalent. This macro instead allocates the =
-appropriate
->>>> amount of memory using an char array.
->>>>
->>>> The new code can be compiled with both gcc and clang.
->>>>
->>>> struct shash_desc contains a flexible array member member ctx decl=
-ared with
->>>> CRYPTO_MINALIGN_ATTR, so sizeof(struct shash_desc) aligns the begi=
-nning
->>>> of the array declared after struct shash_desc with long long.
->>>>
->>>> No trailing padding is required because it is not a struct type th=
-at can
->>>> be used in an array.
->>>>
->>>> The CRYPTO_MINALIGN_ATTR is required so that desc is aligned with =
-long long
->>>> as would be the case for a struct containing a member with
->>>> CRYPTO_MINALIGN_ATTR.
->>>>
->>>> Signed-off-by: Behan Webster <behanw@converseincode.com>
->>> Acked-by: Herbert Xu <herbert@gondor.apana.org.au>
->>>
->>> Thanks,
->> Just in case.
->> I would still follow advice from "Micha=C5=82 Miros=C5=82aw" to use =
-shash##__desc[]
-Absolutely. I will be posting a v4 patchset . Just waiting a bit more=20
-for more comments on v3.
+Hi Neil,
 
-The macro from v4 will look like this which I believe will satisfy the=20
-concern and indeed be safer than my previous version.
+On Mon, Sep 8, 2014 at 10:17 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sun, 7 Sep 2014 17:18:16 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+> wrote:
+>
+>> Hi Neil,
+>> we see the following issue:
+>>
+>> # RAID1 has 2 drives A and B, drive B is recovering
+>> # READ request arrives
+>> # read_balanace selects drive B to read from, because READ sector
+>> comes before B->recovery_offset
+>> # READ is issued to drive B, but fails (drive B fails again)
+>>
+>> Now raid1_end_read_request() has the following code:
+>>
+>>     if (uptodate)
+>>         set_bit(R1BIO_Uptodate, &r1_bio->state);
+>>     else {
+>>         /* If all other devices have failed, we want to return
+>>          * the error upwards rather than fail the last device.
+>>          * Here we redefine "uptodate" to mean "Don't want to retry"
+>>          */
+>>         unsigned long flags;
+>>         spin_lock_irqsave(&conf->device_lock, flags);
+>>         if (r1_bio->mddev->degraded == conf->raid_disks ||
+>>             (r1_bio->mddev->degraded == conf->raid_disks-1 &&
+>>              !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
+>>             uptodate = 1;
+>>         spin_unlock_irqrestore(&conf->device_lock, flags);
+>>     }
+>>
+>> According to this code uptodate wrongly becomes 1, because:
+>> r1_bio->mddev->degraded == conf->raid_disks-1 is TRUE
+>> and
+>> !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags) is also TRUE
+>>
+>> Indeed, drive B is not marked as Faulty, but also not marked as In_sync.
+>> However, this function treats !Faulty being equal to In_Sync, so it
+>> decides that the last good drive failed, so it does not retry the
+>> READ.
+>>
+>> As a result, there is IO error, while we should have retried the READ
+>> from the healthy drive.
+>>
+>> This is happening in 3.8.13, but your master branch seems to have the
+>> same issue.
+>>
+>> What is a reasonable fix?
+>> 1) Do not read from drives which are !In_sync (a bit scary to read
+>> from such drive)
+>
+> It is perfectly safe to read from a !In_sync device providing you are before
+> ->recovery_offset.
+>
+>
+>> 2) replace !Faulty to In_sync check
+>
+> That probably makes sense... though that could race with raid1_spare_active().
+> If a read-error returned just after raid1_spare_active() set In_sync, and
+> before 'count' was subtracted from ->degraded, we would still set uptodate
+> when we shouldn't.
+> It probably make sense to put all of raid1_spare_active inside the spinlock -
+> it doesn't get call often enough that performance is an issue (I hope).
+>
+> So:
+>  1/ change !Faulty to In_sync
+>  2/ extend the spinlock in raid1_spare_active to cover the whole function.
 
-+#define SHASH_DESC_ON_STACK(shash, tfm)                               =
-   \
-+       char __##shash##_desc[sizeof(struct shash_desc) +        \
-+               crypto_shash_descsize(tfm)] CRYPTO_MINALIGN_ATTR; \
-+       struct shash_desc *shash =3D (struct shash_desc *)__##shash##_d=
-esc
 
-Hmm. Is it worth adding a comment with this macro explaining the reason=
- this works? Essentially much of what is in the commit message?
- =20
+I made these fixes and reproduced the issue. However, the result is
+not what we expect:
 
-> Oh yes of course.  My ack is more about the approach.
+# raid1_end_read_request() now indeed adds the r1_bio into retry_list,
+as we wanted
+# raid1d calls fix_read_error()
+# fix_read_error() searches for an In_sync drive to read the data
+from. It finds such drive (this is our good drive A)
+# now fix_read_error() wants to rewrite the bad area. But it rewrites
+only on those drives that are In_sync (except the drive it got the
+data from). In our case, it never tries to rewrite the data on drive B
+(drive B is not marked Faulty and not marked In_sync). As a result,
+md_error() is not called, so drive B is still not marked as Failed
+when fix_read_error() completes
+# so handle_read_error() retries the original READ by calling
+read_balance(), which again in my case selects the recovering drive
+B...
 
-Wonderful!
+And then the whole flow repeats itself again and again...and READ
+never completes.
 
-Indeed. I would have asked for you to wait for v4 anyways. :)
+Maybe we should not allow selecting recovering drives for READ? Or
+some other approach?
 
-Thank you,
+Thanks,
+Alex.
 
-Behan
 
---=20
-Behan Webster
-behanw@converseincode.com
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-securit=
-y-module" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>
+> Thanks,
+> NeilBrown
