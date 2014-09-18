@@ -1,116 +1,175 @@
-From: NeilBrown <neilb@suse.de>
+From: Marco Schindler <marco.schindler@gmail.com>
 Subject: Re: frequent disk activity with mdadm-3.3
-Date: Thu, 18 Sep 2014 20:03:47 +1000
-Message-ID: <20140918200347.762845bb@notabene.brown>
-References: <AB305DF4-9DCC-47E1-9B29-130E211D4B4E@gmail.com>
-	<20140912082403.549fc298@notabene.brown>
-	<164CD08B-99CA-4007-855A-7B0561B4EC76@gmail.com>
-	<BDDC2624-8578-4720-A526-56EFDFBE26C4@gmail.com>
-	<20140915101830.3c85d423@notabene.brown>
-	<DDAF4EEF-EFA9-4B0E-BB97-E5D8B9788A70@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/SA6wjNLNDzxXvSSl/AIg4Qx"; protocol="application/pgp-signature"
+Date: Thu, 18 Sep 2014 12:38:55 +0200
+Message-ID: <D28F9C01-C75C-4B69-932F-FA2425DEDDB4@gmail.com>
+References: <AB305DF4-9DCC-47E1-9B29-130E211D4B4E@gmail.com> <20140912082403.549fc298@notabene.brown> <164CD08B-99CA-4007-855A-7B0561B4EC76@gmail.com> <BDDC2624-8578-4720-A526-56EFDFBE26C4@gmail.com> <20140915101830.3c85d423@notabene.brown> <DDAF4EEF-EFA9-4B0E-BB97-E5D8B9788A70@gmail.com> <20140918200347.762845bb@notabene.brown>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DDAF4EEF-EFA9-4B0E-BB97-E5D8B9788A70@gmail.com>
+In-Reply-To: <20140918200347.762845bb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marco Schindler <marco.schindler@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/SA6wjNLNDzxXvSSl/AIg4Qx
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 15 Sep 2014 12:52:07 +0200 Marco Schindler
-<marco.schindler@gmail.com> wrote:
+On 18.09.2014, at 12:03, NeilBrown <neilb@suse.de> wrote:
 
->=20
-> On 15.09.2014, at 02:18, NeilBrown <neilb@suse.de> wrote:
->=20
-> > It would help to get "udevadm monitor" info to correlate with this.
-> > Presumably some uevent is generated when the spindown happens.  udev mi=
-ght
-> > respond to this by reading from the device, which defeats the purpose...
-> >=20
-> >=20
-> >>=20
-> >> here=E2=80=99s the output of blktrace -d /dev/sda during that time.
-> >> https://dl.dropboxusercontent.com/u/3464720/blktrace.tar.bz2
-> >=20
-> > That suggest that something is reading the metadata from the device alm=
-ost
-> > constantly.  Mostly a 'kworker' thread.  I don't know what would cause =
-that.
-> >=20
-> > Let's look at the 'udevadm monitor' trace first and see what that shows.
->=20
-> here=E2=80=99s the output of udevadm monitor during the spindown cycle wh=
-ile mdadm-3.3 is installed.
->=20
-> monitor will print the received events for:
-> UDEV - the event which udev sends out after rule processing
-> KERNEL - the kernel uevent
->=20
-> KERNEL[299719.336261] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
-> UDEV  [299720.646760] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
-> KERNEL[299780.202901] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda (block)
-> UDEV  [299781.567308] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda (block)
-> KERNEL[299841.090818] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
-> UDEV  [299842.407035] change   /devices/pci0000:00/0000:00:06.0/0000:09:0=
-0.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
->=20
-> please note that the issue immediately disappears when downgrading to mda=
-dm-3.2 without touching anything else.
-> I see the udev rules have been updated in mdadm-3.3..
+> Getting a "change" even on spindown is causing the problem I suspect.
+> A change in 3.3.1 causes "mdadm -I" to be run on a device when it 'changes'.
+> That will read from the device which will wake it up.
+> (commit 25392f5fc59f96fb76 - revert it and the symptom will probably go away).
+> 
+> I really think the "bug" here is that the change event is emitted on
+> 'spindown', but maybe the bug is that the exact meaning of 'change' isn't
+> well documented.
+> 
+> I can probably get "mdadm -I" to use O_EXCL which will fail on devices
+> already in an array, but I'm not sure that is a complete solution.  You could
+> still get wakeups on other devices.
+> 
+> Can you rung the 'udevadm monitor' again, but this time with '--property'.
+> Maybe there is some property associated with spindown events which we can use
+> to ignore them.
+> 
+> NeilBrown
 
-Getting a "change" even on spindown is causing the problem I suspect.
-A change in 3.3.1 causes "mdadm -I" to be run on a device when it 'changes'.
-That will read from the device which will wake it up.
-(commit 25392f5fc59f96fb76 - revert it and the symptom will probably go awa=
-y).
+sure. I also took separate logs for standby and wakeup.
 
-I really think the "bug" here is that the change event is emitted on
-'spindown', but maybe the bug is that the exact meaning of 'change' isn't
-well documented.
+change events only occur when the drive goes standby (see below).
+strangely enough, there are no events when the drive wakes up.
 
-I can probably get "mdadm -I" to use O_EXCL which will fail on devices
-already in an array, but I'm not sure that is a complete solution.  You cou=
-ld
-still get wakeups on other devices.
+monitor will print the received events for:
+UDEV - the event which udev sends out after rule processing
+KERNEL - the kernel uevent
 
-Can you rung the 'udevadm monitor' again, but this time with '--property'.
-Maybe there is some property associated with spindown events which we can u=
-se
-to ignore them.
+KERNEL[558130.868218] change   /devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda (block)
+ACTION=change
+DEVNAME=/dev/sda
+DEVPATH=/devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda
+DEVTYPE=disk
+MAJOR=8
+MINOR=0
+SEQNUM=3239
+SUBSYSTEM=block
 
-NeilBrown
+KERNEL[558132.028485] change   /devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
+ACTION=change
+DEVNAME=/dev/sdb
+DEVPATH=/devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb
+DEVTYPE=disk
+MAJOR=8
+MINOR=16
+SEQNUM=3240
+SUBSYSTEM=block
 
---Sig_/SA6wjNLNDzxXvSSl/AIg4Qx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+UDEV  [558139.263973] change   /devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda (block)
+ACTION=change
+DEVLINKS=/dev/disk/by-id/ata-WDC_WD20EARS-00S8B1_WD-WCAVY1872131 /dev/disk/by-id/wwn-0x50014ee203dca984 /dev/disk/by-path/pci-0000:09:00.0-sas-0x4433221103000000-lun-0
+DEVNAME=/dev/sda
+DEVPATH=/devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:0/end_device-0:0/target0:0:0/0:0:0:0/block/sda
+DEVTYPE=disk
+ID_ATA=1
+ID_ATA_DOWNLOAD_MICROCODE=1
+ID_ATA_FEATURE_SET_AAM=1
+ID_ATA_FEATURE_SET_AAM_CURRENT_VALUE=254
+ID_ATA_FEATURE_SET_AAM_ENABLED=0
+ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE=128
+ID_ATA_FEATURE_SET_HPA=1
+ID_ATA_FEATURE_SET_HPA_ENABLED=1
+ID_ATA_FEATURE_SET_PM=1
+ID_ATA_FEATURE_SET_PM_ENABLED=1
+ID_ATA_FEATURE_SET_PUIS=1
+ID_ATA_FEATURE_SET_PUIS_ENABLED=0
+ID_ATA_FEATURE_SET_SECURITY=1
+ID_ATA_FEATURE_SET_SECURITY_ENABLED=0
+ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN=408
+ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN=408
+ID_ATA_FEATURE_SET_SMART=1
+ID_ATA_FEATURE_SET_SMART_ENABLED=1
+ID_ATA_SATA=1
+ID_ATA_SATA_SIGNAL_RATE_GEN1=1
+ID_ATA_SATA_SIGNAL_RATE_GEN2=1
+ID_ATA_WRITE_CACHE=1
+ID_ATA_WRITE_CACHE_ENABLED=1
+ID_BUS=ata
+ID_FS_LABEL=alina.o81.5:media3
+ID_FS_LABEL_ENC=alina.o81.5:media3
+ID_FS_TYPE=linux_raid_member
+ID_FS_USAGE=raid
+ID_FS_UUID=058bd7b0-455c-0d7e-6de0-a845ea05ee38
+ID_FS_UUID_ENC=058bd7b0-455c-0d7e-6de0-a845ea05ee38
+ID_FS_UUID_SUB=da1c1cad-6661-174c-b0b9-4bc1a712902d
+ID_FS_UUID_SUB_ENC=da1c1cad-6661-174c-b0b9-4bc1a712902d
+ID_FS_VERSION=1.2
+ID_MODEL=WDC_WD20EARS-00S8B1
+ID_MODEL_ENC=WDC\x20WD20EARS-00S8B1\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+ID_PATH=pci-0000:09:00.0-sas-0x4433221103000000-lun-0
+ID_PATH_TAG=pci-0000_09_00_0-sas-0x4433221103000000-lun-0
+ID_REVISION=80.00A80
+ID_SERIAL=WDC_WD20EARS-00S8B1_WD-WCAVY1872131
+ID_SERIAL_SHORT=WD-WCAVY1872131
+ID_TYPE=disk
+ID_WWN=0x50014ee203dca984
+ID_WWN_WITH_EXTENSION=0x50014ee203dca984
+MAJOR=8
+MINOR=0
+SEQNUM=3239
+SUBSYSTEM=block
+USEC_INITIALIZED=2003
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVBquAznsnt1WYoG5AQKaQA//clFisrotmygI03JkDaT5MrIc3sLw7FVi
-kyN6TKdHulQQaIlgm8SChKT8b1ZrGVsorvH5wv7tu/xkHHcf7xKtSDwQde0soy5J
-8cdMnnli9K8iBhgNNAa7cEmphkZHY0riF0CZZFRFjjQCoX2GmylqL+6mQGau/kuZ
-+xS2p9vsDidL5lzMuurM9b3imGT0maguFfbrGzrpg7LEpRNyrNCmXVeNrYxsgi8x
-YkMKuCPJdK25W+YUqJgVJU8OUbrDnLmiVh6NULWW+y/STseBdYeWhbe0FZ03rQrF
-r6D3Z1FcwXK7aN5Efy0V+tn/U6tsa+SCBLSXobZE81qacyQBQTlSkl0AalG3/h77
-rfMw0mOPudPIWoBYu9a0KMWESAhT6XmboWC9EvVdXtHlbgYBpVggP+AKw0pRUbYP
-Q+GM63aOTUEIENH5eBkfh5nTsaAfW6wR8SCzoD8dbmv5TXgqeBg7496uQcyeivyn
-CDyqlfPeDgO9Blo4dGEcao+jpWmo/pAYAse4laQ74qwgbNKqLSkUpllQaLfC/DWH
-8RCgsLqkB8+4BheDiuWy6A3qj8mFEvq5N2c+IuOYXAnsNAAM4pZOLei4mTQXZv0W
-Ex5GhXbkk+zdMRykBE9AKHDX+w+GYJwyYX3ibVYKaR8sJG3r5mpBIjo5YAo9OunH
-QajFZgF/aSU=
-=fyTQ
------END PGP SIGNATURE-----
-
---Sig_/SA6wjNLNDzxXvSSl/AIg4Qx--
+UDEV  [558139.293742] change   /devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb (block)
+ACTION=change
+DEVLINKS=/dev/disk/by-id/ata-WDC_WD20EARS-00S8B1_WD-WCAVY1879365 /dev/disk/by-id/wwn-0x50014ee25931e63a /dev/disk/by-path/pci-0000:09:00.0-sas-0x4433221102000000-lun-0
+DEVNAME=/dev/sdb
+DEVPATH=/devices/pci0000:00/0000:00:06.0/0000:09:00.0/host0/port-0:1/end_device-0:1/target0:0:1/0:0:1:0/block/sdb
+DEVTYPE=disk
+ID_ATA=1
+ID_ATA_DOWNLOAD_MICROCODE=1
+ID_ATA_FEATURE_SET_AAM=1
+ID_ATA_FEATURE_SET_AAM_CURRENT_VALUE=254
+ID_ATA_FEATURE_SET_AAM_ENABLED=0
+ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE=128
+ID_ATA_FEATURE_SET_HPA=1
+ID_ATA_FEATURE_SET_HPA_ENABLED=1
+ID_ATA_FEATURE_SET_PM=1
+ID_ATA_FEATURE_SET_PM_ENABLED=1
+ID_ATA_FEATURE_SET_PUIS=1
+ID_ATA_FEATURE_SET_PUIS_ENABLED=0
+ID_ATA_FEATURE_SET_SECURITY=1
+ID_ATA_FEATURE_SET_SECURITY_ENABLED=0
+ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN=408
+ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN=408
+ID_ATA_FEATURE_SET_SMART=1
+ID_ATA_FEATURE_SET_SMART_ENABLED=1
+ID_ATA_SATA=1
+ID_ATA_SATA_SIGNAL_RATE_GEN1=1
+ID_ATA_SATA_SIGNAL_RATE_GEN2=1
+ID_ATA_WRITE_CACHE=1
+ID_ATA_WRITE_CACHE_ENABLED=1
+ID_BUS=ata
+ID_FS_LABEL=alina.o81.5:media3
+ID_FS_LABEL_ENC=alina.o81.5:media3
+ID_FS_TYPE=linux_raid_member
+ID_FS_USAGE=raid
+ID_FS_UUID=058bd7b0-455c-0d7e-6de0-a845ea05ee38
+ID_FS_UUID_ENC=058bd7b0-455c-0d7e-6de0-a845ea05ee38
+ID_FS_UUID_SUB=ade4cbb9-501c-cd2c-00b2-607f1699133b
+ID_FS_UUID_SUB_ENC=ade4cbb9-501c-cd2c-00b2-607f1699133b
+ID_FS_VERSION=1.2
+ID_MODEL=WDC_WD20EARS-00S8B1
+ID_MODEL_ENC=WDC\x20WD20EARS-00S8B1\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+ID_PATH=pci-0000:09:00.0-sas-0x4433221102000000-lun-0
+ID_PATH_TAG=pci-0000_09_00_0-sas-0x4433221102000000-lun-0
+ID_REVISION=80.00A80
+ID_SERIAL=WDC_WD20EARS-00S8B1_WD-WCAVY1879365
+ID_SERIAL_SHORT=WD-WCAVY1879365
+ID_TYPE=disk
+ID_WWN=0x50014ee25931e63a
+ID_WWN_WITH_EXTENSION=0x50014ee25931e63a
+MAJOR=8
+MINOR=16
+SEQNUM=3240
+SUBSYSTEM=block
+USEC_INITIALIZED=2361
