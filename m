@@ -1,39 +1,63 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Martin Senebald <martin@senebald.de>
 Subject: Re: raid5 missing disks during chunk size grow
-Date: Mon, 22 Sep 2014 13:44:18 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1409221342090.14735@uplift.swm.pp.se>
-References: <374D34B3-E7F5-48AD-9A22-23C76AA0A60F@senebald.de>
-Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1157418266-1411386151=:14735"
+Date: Mon, 22 Sep 2014 13:55:24 +0200
+Message-ID: <719BBDB5-4E57-49D9-AFA2-0552141D7C41@senebald.de>
+References: <374D34B3-E7F5-48AD-9A22-23C76AA0A60F@senebald.de> <alpine.DEB.2.02.1409221342090.14735@uplift.swm.pp.se>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <374D34B3-E7F5-48AD-9A22-23C76AA0A60F@senebald.de>
+In-Reply-To: <alpine.DEB.2.02.1409221342090.14735@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Senebald <martin@senebald.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Am 22.09.2014 um 13:44 schrieb Mikael Abrahamsson <swmike@swm.pp.se>:
 
----137064504-1157418266-1411386151=:14735
-Content-Type: TEXT/PLAIN; CHARSET=UTF-8; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
+> On Mon, 22 Sep 2014, Martin Senebald wrote:
+>=20
+>> My idea was, first bringing back the disks in the array then continu=
+e the grow (using the backup file)
+>> add / re-add disk was not working, so i assumed recreate the array w=
+ith =97assume-clean would bring me closer.
+>=20
+> Was this an idea you had that you didn't do, or did you actually exec=
+ute on it?
 
-On Mon, 22 Sep 2014, Martin Senebald wrote:
+I did ..=20
 
-> My idea was, first bringing back the disks in the array then continue the grow (using the backup file)
-> add / re-add disk was not working, so i assumed recreate the array with —assume-clean would bring me closer.
+>=20
+>> What would be the best way to tackle this problem?
+>=20
+> Send mdadm --examine from all 6 component drives to the list and let'=
+s take it from there.
 
-Was this an idea you had that you didn't do, or did you actually execute 
-on it?
+the current state of the disks:
 
-> What would be the best way to tackle this problem?
+https://gist.github.com/daquan/94239614fc3b67789c9a#file-current-state
 
-Send mdadm --examine from all 6 component drives to the list and let's 
-take it from there. Under no circumstances do --create on the components.
+the state before the =97create=20
 
-What kernel version and mdadm version do you have?
+https://gist.github.com/daquan/94239614fc3b67789c9a#file-before-create-=
+assume-clean
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1157418266-1411386151=:14735--
+
+> Under no circumstances do --create on the components.
+
+that sounds not so promising anymore :-/
+
+>=20
+> What kernel version and mdadm version do you have?
+>=20
+> --=20
+> Mikael Abrahamsson    email: swmike@swm.pp.se
+>=20
+
+
+BR Martin
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
