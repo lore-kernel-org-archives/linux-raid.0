@@ -1,61 +1,49 @@
-From: Ian Young <ian@duffrecords.com>
-Subject: Re: not enough operational mirrors
-Date: Mon, 22 Sep 2014 10:17:46 -0700
-Message-ID: <CANs+QMxHe3SBAk=VaUQuwOSGyv9p8dJjFsxPT+hvf+c20T23=g@mail.gmail.com>
-References: <CANs+QMzWWqh-5MemOrbguaq7fNzJPDaYUH66K0rgGrnaXY7FNA@mail.gmail.com>
-	<20140922154717.6cd3cab2@notabene.brown>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Moving root to raid, weird raid behaviour
+Date: Mon, 22 Sep 2014 19:29:46 +0100
+Message-ID: <54206A9A.8010308@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140922154717.6cd3cab2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I forced the three good disks and the one that was behind by two
-events to assemble:
+I'm not sure if this is weird raid, stupid grub2 or incompetent newbie,
+but whatever ... and the system is my development/test system so if it
+gets trashed it's no disaster, but I would like to understand what is
+going on ...
 
-mdadm --assemble --force /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sde2
+Old setup
+/ = sdb2
+/var = sdc2
+/home = mdX (sdb3, sdc3), mirror
 
-Then I added the other two disks and let it sync overnight:
+I added sdd and made a new
+/ = mdY (sdd3, missing) mirror
+and added sdd4 to mdX
+/home = mdX (sdb3 sdc3 sdd4)
 
-mdadm --add --force /dev/md0 /dev/sdd2
-mdadm --add --force /dev/md0 /dev/sdf2
+Weirdo one - sdd4 mirrored and synced fine. Then I rebooted ...
+mdX = (sdb3 sdc3 missing)
+mdZ = (sdd4 missing missing)
 
-I rebooted the system in recovery mode and the root filesystem is
-back!  However, / is read-only and my /srv partition, which is the
-largest and has most of my data, can't mount.  When I try to examine
-the array, it says "no md superblock detected on /dev/md0."  On top of
-the software RAID, I have four logical volumes.  Here is the full LVM
-configuration:
+wtf?!?!? - oh and both of them share the same uuid. The obvious (but it
+shouldn't make any difference?) possibility is that sdb and sdc are
+500Gb, partitioned identically. sdd is 1Tb, so sdd4 is twice the size of
+the other two.
 
-http://pastebin.com/gzdZq5DL
+The other weirdo is I'm trying to migrate from grub/mbr to grub2/gpt. Of
+course that's causing me fun, but I've managed to get the system booting
+fine from mdY. Only snag is, when I list /dev, mdY isn't there! mount
+shows it as mounted on / but that's the only place I can find it!
 
-How do I recover the superblock?
+mdadm v3.2.6
+kernel 3.14.14-gentoo
 
-On Sun, Sep 21, 2014 at 10:47 PM, NeilBrown <neilb@suse.de> wrote:
-> On Sun, 21 Sep 2014 22:32:19 -0700 Ian Young <ian@duffrecords.com> wrote:
->
->> My 6-drive software RAID 10 array failed.  The individual drives
->> failed one at a time over the past few months but it's been an
->> extremely busy summer and I didn't have the free time to RMA the
->> drives and rebuild the array.  Now I'm wishing I had acted sooner
->> because three of the drives are marked as removed and the array
->> doesn't have enough mirrors to start.  I followed the recovery
->> instructions at raid.wiki.kernel.org and, before making things any
->> worse, saved the status using mdadm --examine and consulted this
->> mailing list.  Here's the status:
->>
->> http://pastebin.com/KkV8e8Gq
->>
->> I can see that the event counts on sdd2 and sdf2 are significantly far
->> behind, so we can consider that data too old.  sdc2 is only behind by
->> two events, so any data loss there should be minimal.  If I can make
->> the array start with sd[abce]2 I think that will be enough to mount
->> the filesystem, back up my data, and start replacing drives.  How do I
->> do that?
->
-> Use the "--force" option with "--assemble".
->
-> NeilBrown
+Any ideas what's going on? I've googled, but everything I find looks out
+of date or not relevant.
+
+Cheers,
+Wol
