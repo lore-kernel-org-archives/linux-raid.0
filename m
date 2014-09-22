@@ -1,71 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: read error recovery threshold
-Date: Mon, 22 Sep 2014 13:35:37 +1000
-Message-ID: <20140922133537.20222f9c@notabene.brown>
-References: <CAK=nhWO75WOJNCOXG+_ynug3ta6939b-8fyz0R1D-ENXF7jEGg@mail.gmail.com>
+Subject: Re: What happens with array when external write-intent bitmap
+ fails?
+Date: Mon, 22 Sep 2014 13:37:13 +1000
+Message-ID: <20140922133713.53a1ff27@notabene.brown>
+References: <CAA91j0X2WSyF_QuZdoWWNgDCZV7TKJbhQmq_vOrygqzkg3yK8g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/lOoi4Vv99zC2X2xawmaOHYJ"; protocol="application/pgp-signature"
+ boundary="Sig_/TFR7Jga+lgHaDvoj/EYeb.e"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK=nhWO75WOJNCOXG+_ynug3ta6939b-8fyz0R1D-ENXF7jEGg@mail.gmail.com>
+In-Reply-To: <CAA91j0X2WSyF_QuZdoWWNgDCZV7TKJbhQmq_vOrygqzkg3yK8g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Mei <meijia@gmail.com>
+To: Andrei Borzenkov <arvidjaar@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lOoi4Vv99zC2X2xawmaOHYJ
+--Sig_/TFR7Jga+lgHaDvoj/EYeb.e
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 15 Sep 2014 10:56:11 -0600 Eric Mei <meijia@gmail.com> wrote:
+On Tue, 16 Sep 2014 17:42:13 +0400 Andrei Borzenkov <arvidjaar@gmail.com>
+wrote:
 
-> Hi,
+> Theoretically write-intent is optional, so if it fails it would be
+> possible to simply discard it and continue. But I have seen statement
+> that if external write-intent bitmap file is not available at time of
+> assembly, starting of array fails.
 >=20
-> After a read error detected, RAID6 will initiate a recovery procedure
-> try to correct it, until the number of read error exceeds a threshold,
-> which is "conf->max_nr_stripes" (see raid5_end_read_request()), I'm
-> wondering the reasoning behind this. To me the threshold seems a drive
-> property, but max_nr_stripes is a array-wide cache setting and can be
-> changed at runtime. In our specific case, we observed a drive emitting
-> lots of read errors without being marked as faulty because the larger
-> max_nr_stripes
-> setting.
->=20
-> Look at other part of MD code, there is "mddev::max_corr_read_errors"
-> which is set to 20, but only RAID10 makes use of it. Also the comment
-> above MD_DEFAULT_MAX_CORRECTED_READ_ERRORS says "...We divide the read
-> error count by 2 for every hour elapsed between read errors", but I
-> don't see any code matching this description.
->=20
-> Any thoughts? Thanks
+> Thank you for clarification.
 
-Yes, it is inconsistent.
-It wasn't designed to be inconsistent, it just happened.
-Patch with good justification will be looked on kindly.
+What exactly did you want clarified?
+
+I suggest the best thing to do is to use "losetup" to create some loop-back
+devices.  Then use mdadm to create an array using those devices.
+Then simulate the failure mode that you are concerned about and see what
+happens.
+
+If you find that the documentation does not agree with reality, please
+consider posting details.
 
 Thanks,
 NeilBrown
 
---Sig_/lOoi4Vv99zC2X2xawmaOHYJ
+>=20
+> -andrei
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/TFR7Jga+lgHaDvoj/EYeb.e
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVB+ZCjnsnt1WYoG5AQJjgA//anC3XYkXxggTXnzqeICloyXMOzTGtUVs
-C16YAuVxXNpWKGh2z3nbmjef1KAX90lTyUfhVwY4PIFfkqWzrp5TfYdBYvtAXCN3
-MV7gE6MCxVjyTbq72o1AxSJCKsHnXwVqZVXLq5TqBK8F17aWOzgE6h4LhpbkjuGZ
-1D5kVjz7NntPLE3oqYwL4RqFA6/feVUKuPFydKwBUBmUPE7g/v4z3OtvrNDtfOrX
-HkurapGaqMr+bRzmMIsxFw3r8jarV1YgVQ8j6p2yT0yQjfYpHZmYhVbh0X4y+xqb
-n3FmYRBvsRb6j8Mcxz24GgFwTB16BaGctFvptj/D/McuCojT+A1qelZie1Af3o0m
-Q3zGsdCX4wK3YubMk3YvZqB8YNNBrnfrH3V+8MOAzrgqvzhQuft2lbG/eztms+gf
-Xr5LSsiZTxhquNjyB0byn/LlpTEUTexS6H3FpVUUnFhBfKcqeyAqlcK/9Uv+qjA9
-DiTudIQKVccdECB+7IxVdJebNP9uzMc/1vkj6VHq5BSSmk8ehaCsEalmQ3abEgCF
-vgE9MXk6mLVTxPEX7nvLlKQ6t+m9p1yaBoVgTSEJAP6EYSKvdTXTsmUFV6XnI8BP
-GDJBj/Ot+Yn2SmOvxptXq5YOr6hNY+osFbitwPuFLGjD4guZlo+skjmNFhYvuGEf
-gxoC5pup64M=
-=FskW
+iQIVAwUBVB+ZaTnsnt1WYoG5AQKd/g//T79ps6X+EW2lmlmdCjanbZA4bPBEMwZI
+FXOY2PYRaskOeAYvDS0oylhFcjZzOSLegRRy7fFLYFAHZSMF2aExtf2rnjJxYL1d
+drtoVvLmbtjwL6rQRAePD1XG+ER59OzFbJCiavqe+plXBel8lMiYNK1ikpEgau3z
+XoRPE75DRqAA+UkANCC6kPB28KJqnJY2lddMvEnjzQn4ZnD3i8T9CxiBSEfwqAtD
+Q9oITwgL0jA6pNq3L9rpPr4ur3UKvQW/ygAKSvyJvGxQejk4zmz5qWmGtzh1K+RD
+JiytHj7hFxngDAP5UxVXInmCCN74Sgi7xBX/Gdy31B8OgRpZ2Q7a2s90rrFXTIV7
+s7Ooq0Rm3act3/m8CqX/7ZPFaXbymi3htQ8aPLaHYZaW1njHiH4zSH2NeV5F5FvS
+rHN7rzD6SDhEzBWnoGBiWGA3YiWjia4yetLBHrzVugeJgmXwKgJolBSRTiXQtGzO
+351VDDXR277vlugUBzNCYNttmZUC83QkuzeVYvzZMkLSYVWXqoNLXUa4/SzdK+k2
+5BLLKhDJLJKkYk4u/fwpOGqqxeCvQq44H09zoM/bO4u0c1mIqUK2nyiQw56m6UQM
+lPG+eamuGSh0XU2aPRfRjBZVVQ73xAoVz5N1dBvnhsI39t+13V9nXNx6ouuCkQ1i
+EjaZKFtKd6I=
+=dQWG
 -----END PGP SIGNATURE-----
 
---Sig_/lOoi4Vv99zC2X2xawmaOHYJ--
+--Sig_/TFR7Jga+lgHaDvoj/EYeb.e--
