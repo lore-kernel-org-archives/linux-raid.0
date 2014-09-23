@@ -1,140 +1,106 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid5 missing disks during chunk size grow
-Date: Tue, 23 Sep 2014 10:32:46 +1000
-Message-ID: <20140923103246.7bd0acf6@notabene.brown>
-References: <374D34B3-E7F5-48AD-9A22-23C76AA0A60F@senebald.de>
-	<alpine.DEB.2.02.1409221342090.14735@uplift.swm.pp.se>
-	<719BBDB5-4E57-49D9-AFA2-0552141D7C41@senebald.de>
+Subject: Re: Moving root to raid, weird raid behaviour
+Date: Tue, 23 Sep 2014 10:37:04 +1000
+Message-ID: <20140923103704.7116d112@notabene.brown>
+References: <54206A9A.8010308@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/CDcnIWKiMj6MJuWC_yNidpy"; protocol="application/pgp-signature"
+ boundary="Sig_/YWtUxB4hnAdS7j7oRvR+xdB"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <719BBDB5-4E57-49D9-AFA2-0552141D7C41@senebald.de>
+In-Reply-To: <54206A9A.8010308@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Senebald <martin@senebald.de>
+To: Wols Lists <antlists@youngman.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/CDcnIWKiMj6MJuWC_yNidpy
-Content-Type: text/plain; charset=UTF-8
+--Sig_/YWtUxB4hnAdS7j7oRvR+xdB
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 22 Sep 2014 13:55:24 +0200 Martin Senebald <martin@senebald.de> wro=
-te:
+On Mon, 22 Sep 2014 19:29:46 +0100 Wols Lists <antlists@youngman.org.uk>
+wrote:
 
-> Am 22.09.2014 um 13:44 schrieb Mikael Abrahamsson <swmike@swm.pp.se>:
+> I'm not sure if this is weird raid, stupid grub2 or incompetent newbie,
+> but whatever ... and the system is my development/test system so if it
+> gets trashed it's no disaster, but I would like to understand what is
+> going on ...
 >=20
-> > On Mon, 22 Sep 2014, Martin Senebald wrote:
-> >=20
-> >> My idea was, first bringing back the disks in the array then continue =
-the grow (using the backup file)
-> >> add / re-add disk was not working, so i assumed recreate the array wit=
-h =E2=80=94assume-clean would bring me closer.
-> >=20
-> > Was this an idea you had that you didn't do, or did you actually execut=
-e on it?
+> Old setup
+> / =3D sdb2
+> /var =3D sdc2
+> /home =3D mdX (sdb3, sdc3), mirror
 >=20
-> I did ..=20
+> I added sdd and made a new
+> / =3D mdY (sdd3, missing) mirror
+> and added sdd4 to mdX
+> /home =3D mdX (sdb3 sdc3 sdd4)
+>=20
+> Weirdo one - sdd4 mirrored and synced fine. Then I rebooted ...
+> mdX =3D (sdb3 sdc3 missing)
+> mdZ =3D (sdd4 missing missing)
 
-oops. Though maybe I should say OOOPS.
+You probably have something silly in your initrd which is making invalid
+assumptions.
+What does /etc/mdadm.conf in your initrd/initramfs contain?
 
-Part of your array had one chunk size, part of the array had another.  By
-using "create" you had to choose one chunk size or the other.  Obviously
-neither is correct of the whole device.
+>=20
+> wtf?!?!? - oh and both of them share the same uuid. The obvious (but it
+> shouldn't make any difference?) possibility is that sdb and sdc are
+> 500Gb, partitioned identically. sdd is 1Tb, so sdd4 is twice the size of
+> the other two.
+>=20
+> The other weirdo is I'm trying to migrate from grub/mbr to grub2/gpt. Of
+> course that's causing me fun, but I've managed to get the system booting
+> fine from mdY. Only snag is, when I list /dev, mdY isn't there! mount
+> shows it as mounted on / but that's the only place I can find it!
 
-You are now in a situation where you have made a mess and you need to someh=
-ow
-recover your data.  It is all there, but how patient and careful can you be?
-
-By far the safest approach would be to find some other storage solution into
-which you can restore all the data.  Then you can try to restore the data
-there and see if it look OK.
-
-There are three sections  to the data:
-
- 1/ the early part of the array which has been reshaped to the new chunk si=
-ze.
- 2/ the part of the array which is stored in the backup file.
- 3/ the late part of the array which has not been reshaped yet.
+udev should create it.  'udevadm trigger' should cause udev to create device
+files for all devices.  That should  be done as part of the boot sequence.
+If you run "udevadm trigger" does /dev/mdX get created?
 
 
-Depending on which chunksize you used when you created the array (and
-assuming the the newly created array has the same data-offset as the old
-array), then either '1' or '3' should be available directly in the newly
-created array.  Calculating the exact start and size requires care.  I
-suggest you try to work it out and I can check your calculations.
+>=20
+> mdadm v3.2.6
+> kernel 3.14.14-gentoo
+>=20
+> Any ideas what's going on? I've googled, but everything I find looks out
+> of date or not relevant.
 
-If you copy that out, then 'create' the array with the other chunk size you
-should be able to copy the other large section.
-
-Getting the data out of the backup file might require careful reading of a
-hex dump of that file to read the 'superblock' to find out exactly what is
-store there and  where.  It shouldn't be difficult but does need care.
-
-If  you do go down this path, please feel free to ask for more specifics and
-ask me to check your calculations.
-
-For future reference "--assemble --force" is your friend.
+"out of date or not relevant"?? You must have been looking on the
+Internet ?!?! :-)
 
 NeilBrown
 
+
 >=20
-> >=20
-> >> What would be the best way to tackle this problem?
-> >=20
-> > Send mdadm --examine from all 6 component drives to the list and let's =
-take it from there.
->=20
-> the current state of the disks:
->=20
-> https://gist.github.com/daquan/94239614fc3b67789c9a#file-current-state
->=20
-> the state before the =E2=80=94create=20
->=20
-> https://gist.github.com/daquan/94239614fc3b67789c9a#file-before-create-as=
-sume-clean
->=20
->=20
-> > Under no circumstances do --create on the components.
->=20
-> that sounds not so promising anymore :-/
->=20
-> >=20
-> > What kernel version and mdadm version do you have?
-> >=20
-> > --=20
-> > Mikael Abrahamsson    email: swmike@swm.pp.se
-> >=20
->=20
->=20
-> BR Martin
->=20
+> Cheers,
+> Wol
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/CDcnIWKiMj6MJuWC_yNidpy
+--Sig_/YWtUxB4hnAdS7j7oRvR+xdB
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVCC/rjnsnt1WYoG5AQKBYA//fOauZlhq1EOwgWci4W3Jxse3vlYYxyGF
-orh41Vib3Id4nzESE80lTVcR/sB+31iqubRjZEgz5SWAnYUBEr6/7QY29vsb+UJx
-Q1CYQ1wI5cZMrvqqjP9DSzqEzZrwBImGPCWDoxNvoC90cs0bFrNPhYwArqcN68QS
-ylsp07ytSkWXJmFnleGWFpKNYBdyzYDo61nAqk1MKNVZPtq1QmCvZuu+968bTINB
-NuFt9WjBuRQo52sUtlgCAi05nStcne/KP89YCb0sLkrT5rg+vk1grjgPs2PT3FK5
-x6PT/I8mYJvnFua+fGEQN+V2na6eAvvuh5pv7AyWHd+asQ1/oxJ1S4rwDg2AFjHy
-BiYJzHiDnDiD7RJBMX2hEjS0IeeC4tMBjV0+Fw8RHGms76QxZlNJCN5wX1qy8cCL
-VRwPKczkL/aKMWv58PabipBr5HwHqG0hZUrq2GSw1VhgrieygzUp6dzUwT5k7vw+
-PsF7mkmqF2NATO5RId8VWVHfJReJrjPNApFQSdRaispTYFbSByPm3zqS9tbR4W1Q
-7SfhKX8RYbqZEnSpSNZgcp86yFBRnaHS/SNL1ygxJiUe+awg5SGDT+elsw1p4mn1
-sk8mYoyZVb+xcf3ADfpxy4N60jgfeksEQwLSfqXmlvMCHLaEN1XQVpAk/+KSHzMP
-FFV9gtk3wx0=
-=rRy1
+iQIVAwUBVCDAsDnsnt1WYoG5AQIO/A/7B9m5ndE77y+z9/mT/6djlj9lS2Jy3oHY
+Yb42Tq1fItThabyO9W6jvvX8KH71uhBhhOK0CNOSKFupcBhODBno3SpQURrhGVD3
+wZNXcpUtXS8Ow4mQMN+eNS8mzVSDd7VVDXSo04Xgd/d7NYYH947opJvzU+uj4te5
+RJ0KxEfdN9uegodMghZqlI875ql7aX0jlxWJ8Bxy7rFCmf0pe0WOyX1iPDMJSpUW
+GaTXL0a+rCpTTBfb16V/jYpr5P07uL/5NIOp4vjDSASqKGNrWEwdtSQhTIhnTL+w
+NrP5yQ6gOU6cLMQ/7JSi/ak9t6TcgvUe8qndRl0YgI1SYKd5RDwI3q/1p6z8/cm6
+3Cgc2oxJZjxfZaKzYu4zQY1xkuD1apCP3EfC8coZTui5LeOMjCIVsGaXqQVicDqX
+QCiHKtZFzSaos8wf1ZQRIFRCtxtnVHsMrrvKFF3lzOFbd7KIvQs/frcjKXOQJU9O
+KDoQAcik9vA4fPysTyJCpIFvVHsj/cT6yPjgvlmawVadVpK3Rs+FdylUoSEW3S7P
++1PpHvMGtz+6qHtCkgX2SBUxtScMnaXy4nt16BGvzy5cs2Y0pDM658T3bw0yib/R
+WvXUoFunsQGUNo4srR7z7ZverX14XAplxVG1vMZ5uOXXsotvgN3eblj6Dt1pvhsE
+Ozbwkwg513M=
+=QiVC
 -----END PGP SIGNATURE-----
 
---Sig_/CDcnIWKiMj6MJuWC_yNidpy--
+--Sig_/YWtUxB4hnAdS7j7oRvR+xdB--
