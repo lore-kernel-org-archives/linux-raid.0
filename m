@@ -1,89 +1,16 @@
-From: behanw@converseincode.com
-Subject: [PATCH v4 08/12] crypto,
-	dm: LLVMLinux: Remove VLAIS usage from dm-crypt
-Date: Mon, 22 Sep 2014 21:42:13 -0700
-Message-ID: <1411447337-22362-9-git-send-email-behanw@converseincode.com>
-References: <1411447337-22362-1-git-send-email-behanw@converseincode.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "lilofile" <lilofile@aliyun.com>
+Subject: =?UTF-8?B?YmVoaW5kX3dyaXRlcw==?=
+Date: Tue, 23 Sep 2014 13:11:44 +0800
+Message-ID: <f97276ac-b272-4986-9e2e-a421e0adeb87@aliyun.com>
+References: <1385118796.8091.31.camel@bews002.euractiv.com>	<528FBBE5.80404@hardwarefreak.com>	<1385369796.2076.16.camel@bews002.euractiv.com>	<5293EF32.9090301@hardwarefreak.com>	<20131126025210.GL8803@dastard>	<52941C5D.1000305@hardwarefreak.com> <20131126061458.GM8803@dastard>,529455CB.6050907@hardwarefreak.com,3c94e3bd-c74f-44ed-a1da-443b08edc43e@aliyun.com <36ffd6f7-bfb0-4298-a18c-f45b07cab326@aliyun.com>,5296C98D.8000302@hardwarefreak.com,e93182b7-34a4-4a7c-8f78-e5dae83a3cae@aliyun.com,2cd32253-a361-4c98-a7b4-f373a9959c39@aliyun.com,836f4ec1-2f40-4359-963e-bda4cba6cff2@aliyun.com
+Reply-To: "lilofile" <lilofile@aliyun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1411447337-22362-1-git-send-email-behanw@converseincode.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: agk@redhat.com, clm@fb.com, davem@davemloft.net, dm-devel@redhat.com, fabf@skynet.be, herbert@gondor.apana.org.au, jbacik@fb.com, snitzer@redhat.com, tadeusz.struk@intel.com
-Cc: john.griffin@intel.com, Behan Webster <behanw@converseincode.com>, linux-ima-devel@lists.sourceforge.net, qat-linux@intel.com, pageexec@freemail.hu, zohar@linux.vnet.ibm.com, gmazyland@gmail.com, serge@hallyn.com, thomas.lendacky@amd.com, linux-ima-user@lists.sourceforge.net, d.kasatkin@samsung.com, linux-raid@vger.kernel.org, james.l.morris@oracle.com, bruce.w.allan@intel.com, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-crypto@vger.kernel.org, =?UTF-8?q?Jan-Simon=20M=C3=B6ller?= <dl9pf@gmx.de>, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: 836f4ec1-2f40-4359-963e-bda4cba6cff2@aliyun.com
+Sender: linux-raid-owner@vger.kernel.org
+To: stan <stan@hardwarefreak.com>, Linux RAID <linux-raid@vger.kernel.org>, lilofile <lilofile@aliyun.com>
 List-Id: linux-raid.ids
 
-RnJvbTogSmFuLVNpbW9uIE3DtmxsZXIgPGRsOXBmQGdteC5kZT4KClJlcGxhY2VkIHRoZSB1c2Ug
-b2YgYSBWYXJpYWJsZSBMZW5ndGggQXJyYXkgSW4gU3RydWN0IChWTEFJUykgd2l0aCBhIEM5OQpj
-b21wbGlhbnQgZXF1aXZhbGVudC4gVGhpcyBwYXRjaCBhbGxvY2F0ZXMgdGhlIGFwcHJvcHJpYXRl
-IGFtb3VudCBvZiBtZW1vcnkKdXNpbmcgYSBjaGFyIGFycmF5IHVzaW5nIHRoZSBTSEFTSF9ERVND
-X09OX1NUQUNLIG1hY3JvLgoKVGhlIG5ldyBjb2RlIGNhbiBiZSBjb21waWxlZCB3aXRoIGJvdGgg
-Z2NjIGFuZCBjbGFuZy4KClNpZ25lZC1vZmYtYnk6IEphbi1TaW1vbiBNw7ZsbGVyIDxkbDlwZkBn
-bXguZGU+ClNpZ25lZC1vZmYtYnk6IEJlaGFuIFdlYnN0ZXIgPGJlaGFud0Bjb252ZXJzZWluY29k
-ZS5jb20+ClJldmlld2VkLWJ5OiBNYXJrIENoYXJsZWJvaXMgPGNoYXJsZWJtQGdtYWlsLmNvbT4K
-QWNrZWQtYnk6IEhlcmJlcnQgWHUgPGhlcmJlcnRAZ29uZG9yLmFwYW5hLm9yZy5hdT4KQ2M6IHBh
-Z2VleGVjQGZyZWVtYWlsLmh1CkNjOiBnbWF6eWxhbmRAZ21haWwuY29tCkNjOiAiRGF2aWQgUy4g
-TWlsbGVyIiA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4KLS0tCiBkcml2ZXJzL21kL2RtLWNyeXB0LmMg
-fCAzNCArKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwg
-MTQgaW5zZXJ0aW9ucygrKSwgMjAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9t
-ZC9kbS1jcnlwdC5jIGIvZHJpdmVycy9tZC9kbS1jcnlwdC5jCmluZGV4IGNkMTVlMDguLmZjOTNi
-OTMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbWQvZG0tY3J5cHQuYworKysgYi9kcml2ZXJzL21kL2Rt
-LWNyeXB0LmMKQEAgLTUyNiwyOSArNTI2LDI2IEBAIHN0YXRpYyBpbnQgY3J5cHRfaXZfbG1rX29u
-ZShzdHJ1Y3QgY3J5cHRfY29uZmlnICpjYywgdTggKml2LAogCQkJICAgIHU4ICpkYXRhKQogewog
-CXN0cnVjdCBpdl9sbWtfcHJpdmF0ZSAqbG1rID0gJmNjLT5pdl9nZW5fcHJpdmF0ZS5sbWs7Ci0J
-c3RydWN0IHsKLQkJc3RydWN0IHNoYXNoX2Rlc2MgZGVzYzsKLQkJY2hhciBjdHhbY3J5cHRvX3No
-YXNoX2Rlc2NzaXplKGxtay0+aGFzaF90Zm0pXTsKLQl9IHNkZXNjOworCVNIQVNIX0RFU0NfT05f
-U1RBQ0soZGVzYywgbG1rLT5oYXNoX3RmbSk7CiAJc3RydWN0IG1kNV9zdGF0ZSBtZDVzdGF0ZTsK
-IAlfX2xlMzIgYnVmWzRdOwogCWludCBpLCByOwogCi0Jc2Rlc2MuZGVzYy50Zm0gPSBsbWstPmhh
-c2hfdGZtOwotCXNkZXNjLmRlc2MuZmxhZ3MgPSBDUllQVE9fVEZNX1JFUV9NQVlfU0xFRVA7CisJ
-ZGVzYy0+dGZtID0gbG1rLT5oYXNoX3RmbTsKKwlkZXNjLT5mbGFncyA9IENSWVBUT19URk1fUkVR
-X01BWV9TTEVFUDsKIAotCXIgPSBjcnlwdG9fc2hhc2hfaW5pdCgmc2Rlc2MuZGVzYyk7CisJciA9
-IGNyeXB0b19zaGFzaF9pbml0KGRlc2MpOwogCWlmIChyKQogCQlyZXR1cm4gcjsKIAogCWlmIChs
-bWstPnNlZWQpIHsKLQkJciA9IGNyeXB0b19zaGFzaF91cGRhdGUoJnNkZXNjLmRlc2MsIGxtay0+
-c2VlZCwgTE1LX1NFRURfU0laRSk7CisJCXIgPSBjcnlwdG9fc2hhc2hfdXBkYXRlKGRlc2MsIGxt
-ay0+c2VlZCwgTE1LX1NFRURfU0laRSk7CiAJCWlmIChyKQogCQkJcmV0dXJuIHI7CiAJfQogCiAJ
-LyogU2VjdG9yIGlzIGFsd2F5cyA1MTJCLCBibG9jayBzaXplIDE2LCBhZGQgZGF0YSBvZiBibG9j
-a3MgMS0zMSAqLwotCXIgPSBjcnlwdG9fc2hhc2hfdXBkYXRlKCZzZGVzYy5kZXNjLCBkYXRhICsg
-MTYsIDE2ICogMzEpOworCXIgPSBjcnlwdG9fc2hhc2hfdXBkYXRlKGRlc2MsIGRhdGEgKyAxNiwg
-MTYgKiAzMSk7CiAJaWYgKHIpCiAJCXJldHVybiByOwogCkBAIC01NTcsMTIgKzU1NCwxMiBAQCBz
-dGF0aWMgaW50IGNyeXB0X2l2X2xta19vbmUoc3RydWN0IGNyeXB0X2NvbmZpZyAqY2MsIHU4ICpp
-diwKIAlidWZbMV0gPSBjcHVfdG9fbGUzMigoKCh1NjQpZG1yZXEtPml2X3NlY3RvciA+PiAzMikg
-JiAweDAwRkZGRkZGKSB8IDB4ODAwMDAwMDApOwogCWJ1ZlsyXSA9IGNwdV90b19sZTMyKDQwMjQp
-OwogCWJ1ZlszXSA9IDA7Ci0JciA9IGNyeXB0b19zaGFzaF91cGRhdGUoJnNkZXNjLmRlc2MsICh1
-OCAqKWJ1Ziwgc2l6ZW9mKGJ1ZikpOworCXIgPSBjcnlwdG9fc2hhc2hfdXBkYXRlKGRlc2MsICh1
-OCAqKWJ1Ziwgc2l6ZW9mKGJ1ZikpOwogCWlmIChyKQogCQlyZXR1cm4gcjsKIAogCS8qIE5vIE1E
-NSBwYWRkaW5nIGhlcmUgKi8KLQlyID0gY3J5cHRvX3NoYXNoX2V4cG9ydCgmc2Rlc2MuZGVzYywg
-Jm1kNXN0YXRlKTsKKwlyID0gY3J5cHRvX3NoYXNoX2V4cG9ydChkZXNjLCAmbWQ1c3RhdGUpOwog
-CWlmIChyKQogCQlyZXR1cm4gcjsKIApAQCAtNjc5LDEwICs2NzYsNyBAQCBzdGF0aWMgaW50IGNy
-eXB0X2l2X3Rjd193aGl0ZW5pbmcoc3RydWN0IGNyeXB0X2NvbmZpZyAqY2MsCiAJc3RydWN0IGl2
-X3Rjd19wcml2YXRlICp0Y3cgPSAmY2MtPml2X2dlbl9wcml2YXRlLnRjdzsKIAl1NjQgc2VjdG9y
-ID0gY3B1X3RvX2xlNjQoKHU2NClkbXJlcS0+aXZfc2VjdG9yKTsKIAl1OCBidWZbVENXX1dISVRF
-TklOR19TSVpFXTsKLQlzdHJ1Y3QgewotCQlzdHJ1Y3Qgc2hhc2hfZGVzYyBkZXNjOwotCQljaGFy
-IGN0eFtjcnlwdG9fc2hhc2hfZGVzY3NpemUodGN3LT5jcmMzMl90Zm0pXTsKLQl9IHNkZXNjOwor
-CVNIQVNIX0RFU0NfT05fU1RBQ0soZGVzYywgdGN3LT5jcmMzMl90Zm0pOwogCWludCBpLCByOwog
-CiAJLyogeG9yIHdoaXRlbmluZyB3aXRoIHNlY3RvciBudW1iZXIgKi8KQEAgLTY5MSwxNiArNjg1
-LDE2IEBAIHN0YXRpYyBpbnQgY3J5cHRfaXZfdGN3X3doaXRlbmluZyhzdHJ1Y3QgY3J5cHRfY29u
-ZmlnICpjYywKIAljcnlwdG9feG9yKCZidWZbOF0sICh1OCAqKSZzZWN0b3IsIDgpOwogCiAJLyog
-Y2FsY3VsYXRlIGNyYzMyIGZvciBldmVyeSAzMmJpdCBwYXJ0IGFuZCB4b3IgaXQgKi8KLQlzZGVz
-Yy5kZXNjLnRmbSA9IHRjdy0+Y3JjMzJfdGZtOwotCXNkZXNjLmRlc2MuZmxhZ3MgPSBDUllQVE9f
-VEZNX1JFUV9NQVlfU0xFRVA7CisJZGVzYy0+dGZtID0gdGN3LT5jcmMzMl90Zm07CisJZGVzYy0+
-ZmxhZ3MgPSBDUllQVE9fVEZNX1JFUV9NQVlfU0xFRVA7CiAJZm9yIChpID0gMDsgaSA8IDQ7IGkr
-KykgewotCQlyID0gY3J5cHRvX3NoYXNoX2luaXQoJnNkZXNjLmRlc2MpOworCQlyID0gY3J5cHRv
-X3NoYXNoX2luaXQoZGVzYyk7CiAJCWlmIChyKQogCQkJZ290byBvdXQ7Ci0JCXIgPSBjcnlwdG9f
-c2hhc2hfdXBkYXRlKCZzZGVzYy5kZXNjLCAmYnVmW2kgKiA0XSwgNCk7CisJCXIgPSBjcnlwdG9f
-c2hhc2hfdXBkYXRlKGRlc2MsICZidWZbaSAqIDRdLCA0KTsKIAkJaWYgKHIpCiAJCQlnb3RvIG91
-dDsKLQkJciA9IGNyeXB0b19zaGFzaF9maW5hbCgmc2Rlc2MuZGVzYywgJmJ1ZltpICogNF0pOwor
-CQlyID0gY3J5cHRvX3NoYXNoX2ZpbmFsKGRlc2MsICZidWZbaSAqIDRdKTsKIAkJaWYgKHIpCiAJ
-CQlnb3RvIG91dDsKIAl9Ci0tIAoxLjkuMQoKLS0KZG0tZGV2ZWwgbWFpbGluZyBsaXN0CmRtLWRl
-dmVsQHJlZGhhdC5jb20KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2Rt
-LWRldmVs
+in struct bitmap,what the behind_writes variable means?
