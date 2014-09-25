@@ -1,79 +1,44 @@
-From: =?utf-8?B?5bCP6IyD?= <santoscantarini@santoscantarini.com.ar>
-Subject: =?utf-8?B?55So5LqG5LiA5qyh5L2g5bCx5Lya6KeJ5b6X5piv5pyA5aW955qE55+t5L+h5Y+R6YCB5bmz5Y+wIA==?=
-	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
-	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
-	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
-	=?utf-8?B?ICAgICAgICBqaGRyejdwa20=?=
-Date: Thu, 25 Sep 2014 13:08:26 +0800
-Message-ID: <20140925130837275647@santoscantarini.com.ar>
-Reply-To: <dingxj8@aliyun.com>
+From: Chao Yu <chao2.yu@samsung.com>
+Subject: [PATCH] md: avoid potential long delay under pers_lock
+Date: Thu, 25 Sep 2014 15:28:34 +0800
+Message-ID: <002801cfd892$696e39d0$3c4aad70$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux2007@sina.cn, linux2011@foxmail.com, linux212@21cn.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-language: zh-cn
+Sender: linux-kernel-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-DQogIOi/meS4quefreS/oeWPkemAgeW5s+WPsOWunuWcqOaYr+WkquWlveeUqOS6hu+8jOWGjeS5
-n+S4jeaEgeaJvuS4jeWIsOWlveeahOW5s+WPsOS6hu+8jOWPquimgeaYr+S9oOWPkeeahOWGheWu
-ueaYr+ato+inhOeahO+8jOi9u+advuWwseWPr+S7peWPkemAgeWHuuWOu+OAguWKoFFRMTkzOTg5
-NzI15YW35L2T5ZKo6K+i77yM5Y+v5Lul5byA6LSm5Y+35rWL5pWI5p6c44CCDQoNCg0KDQoNCg0K
-IA0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0K
-DQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoN
-Cg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0K
-DQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCueZveS6hu+8jOiRo+S5neaY
-n+WwseaYr+WNouWGm+i2heeahOS4gOadoeeLl+OAgiAgICDnjrDlnKjvvIzni5fpg73mlaLlkqzk
-urrkuobvvIHokaPkuZ3mmJ/nmoTlvJ/lvJ/okaPlm5vllpznq5/nhLblmqPlvKDliLDliLDlnLDm
-iorng5/lpLTmiZTliLDoh6rlt7Hlrp3otJ3lpbPlhL/nmoTohLjkuIrjgIIgICAg5LuW55qE5b+D
-5Lit5piv5L2V5YW255qE5oSk5oCS77yM5aaC5p6c5Y2i5Yab6LaF44CB6JGj5Zub55m96Imy5aSn
-5rSL6ams6IO45YmN6YKj5Z2X55m95aup55qE55qu6IKJ5omA5ZC45byV77yM5b+D5Lit5pqX5pqX
-5oSf5Y+577yM6YO96K+055m95Lq65q+b5a2U57KX5aSn77yM5L2T5q+b5pe655ub77yM5L2G5piv
-6L+Z5Liq5aWz5Lq65pi+54S25LiN5piv77yM55qu6IKk55m955qZ6ICM5LiU57uG6IW777yM5aaC
-5ZCM5aW25rK55LiA6Iis77yM5aW55piv5LiN5piv5re36KGA5ZGi4oCU4oCU55yL5LiK5Y675aW5
-55yf5pyJ54K55YOP6aOO55qE6K+d77yM6YKj5LmI6Ieq5bex5bCx5L2N5LqO6L+Z5Zy65Y+w6aOO
-55qE5Y+w6aOO55y86YeM44CCICAgIOavq+aXoOeWkemXrueahOaYr++8jOiHquW3sei/meS4quWw
-j+Wwj+eahOW4guWcuueoveafpeiCoemVv+W3sue7j+i/m+WFpeS6huWIsOmSseWxgOmVv+eahOag
-uOW/g+WboumYn++8jOaIkOS4uuS6huecn+ato+eahOWroeezu+OAgiAgICDkuI3ov4fvvIzku5bo
-v5jmmK/kuI3mlL7lv4PlpI/lsI/mtJvljrvlgZrkuobvvIzkuI3llp3lsLHkuI3mmK/kurrkuobv
-vIzlj6rog73kuIDkuKrlrZfvvIzigJzllp3igJ3jgIIgICAg5L2V5Lqs55Sf55yL4oCc56iL5bqm
-4oCd5beu5LiN5aSa5LqG77yM6LW36Lqr5ZGK6L6e77yM6YGT77ya4oCc5pma5LiK6L+Y5pyJ5Liq
-5Lya77yB5L2g5Lus5oWi5oWi5Zad77yB4oCdICAgIOi9rOi6q+i/m+WFpeWPpuWkluS4gOS4quWM
-heWOou+8jOi/mei+ue+8jOaxquS4nOW5s+aVtOaMuuedgOiCmuWtkOW4puedgOS4iuW/teS6huiA
-g+eCueWIhuW4g++8jOeEtuWQjueUseS9leivl+mfteWSjOeOi+W7uueUt+WPkeWHhuiAg+ivgeOA
-giAgICDmtJvmsLTljr/ljr/ln47kuIDlhbHmnInkupTmiYDliJ3kuK3vvIzkuaHkuIvliJ3kuK3m
-nIkxN+aJgO+8jOS4uuS6huiAg+ivleWFrOW5s++8jOmBv+WFjeW+h+engeiInuW8iueOsOixoe+8
-jOaJgOacieiAg+eUn+mDveimgembhuS4reWcqOa0m+awtOWOv+WfjueahOS4reWwj+WtpuiAg+iv
-le+8jOmCo+WGme+8jOmDreWPuOmVv+aMguWQjeeahOS5pu+8jOWPr+S4jeiDveaciemUmeivr+OA
-guKAnSAgICDkuKTkurrorqrorqrnmoTlh7rkuobkuZDlt6LphZLlkKfvvIzlt7LmmK/mt7HlpJzv
-vIzlsYjlsI/lhYPnnIvkuobkuIvmiYvmnLrnn63kv6HvvIzmirHmrYnlnLDlr7nlpI/lsI/mtJvv
-vIzpgZPvvJrigJzlk6Xku6zvvIzmnInkuIDlp5HlqJjlj6zllKTvvIzmiJHopoHljrvlronmiprl
-pbnlr4Llr57nmoTlsI/lv4PngbXkuobjgIIJDQrlhYPmopfnnYDohJblrZDpl67jgIIgICAg6L+Z
-5bCP5a2Q5LuO5p2l5LiN5ZCD5LqP77yM5LiN5YGa5peg55So5Yqf44CCICAgIOKAnOWNs+S9v+ay
-oeacieWOn+mimO+8jOWPr+aYr+i/meWll+KAmOenmOexjeKAmemHjOmdoueahOefpeivhueCueW+
-iOWFqOmdou+8jOWvueaIkeS7rOaIkOe7qeeahOaPkOmrmOi/mOaYr+W+iOacieeUqOeahOOAguKA
-neS9leivl+mftemBk+OAgiAgICDlpbnkuIDor7TvvIzlhbjor5for43vvIzlr7nor5for43nmoTp
-ibTotY/og73lipvpnZ7luLjpq5jotoXvvIzov5nlh6Dlj6Xor5flpoLlkIzlpKfplKTkuIDmoLfl
-h7vmiZPlnKjku5bnmoTog7jlj6PkuIrvvIzlj6rop4nlvpflv4PohI/kuI3lgZzlnLDot7Pliqjj
-gIIgICAg6L+Z56eN5oSf6KeJ5Y+q5pyJ5LuW5Zyo6L695a6B5Y2a54mp6aaG55yL5Yiw6KKr6KqJ
-5Li64oCc6I2J5Zyj4oCd55qE5ZSQ5Luj5aSn5Lmm5rOV5a625byg5pet55qE44CK5Y+k5bCx5aaC
-6YeK6YeN6LSf5Zyw56uZ6LW35p2l77yM5Y675pWj5Y+R5Lyg5Y2V5LqG77yM5Y6f5p2l77yM6L+Z
-6YeM55yf5q2j5oeC5Yy75a2m55qE5bCx5LuW5LiA5Liq44CCICAgIOS4gOacieihjOS6uui1sOi/
-h++8jOaItOedgOe7tuW4pueahOWls+WtqeWtkOWwsei1sOS4iuWOu++8jOmAkui/h+WOu+S4gOW8
-oOS8oOWNle+8jOeEtuWQjuivtO+8muKAnOaIkeS7rOacieS4k+WutuS5ieiviu+8jOaCqOWmguae
-nOacieS7gOS5iOS4jeWxiOWwj+WFg+aEpOaAkuWcsOWjsOmfs++8muKAnOaIkeiNie+8geiwgeWV
-iu+8geaJvuatu+WViu+8jOiAgeWtkOato+WBmuaipuWQg+Wog+Wog+mbquezleWRou+8geKAnSAg
-ICDigJzlk5DlvZPigJ3kuIDlo7Dpl6jooqvmi4nlvIDkuobvvIzlsI/lhYPmiYvph4zmi47kuobk
-uIDmoLnpkqLnrYvvvIzmgJLmsJTlhrLlhrLvvIznnIvmoLflrZDopoHnu5nmnaXkurrkuIDpob/n
-i6Dmj43vvIEgICAg5LiA55yL5p2l5Lq65piv5aSP57O75YiX5Luk5bGI5bCP5YWD556g55uu57uT
-6IiM55qE5LqL5Lu25ZCO77yM5LuW5Lus5LmL6Ze05bey57uP5LiN5LuF5LuF5pyJ5Y+L6LCK77yM
-5Zyo5bGI5bCP5YWD5b+D55uu5Lit77yM5LuW5bey57uP5piv56We5LiA6Iis55qE5a2Y5Zyo77yM
-6YKj5Y+v5piv6LCB5Lmf5LiN6Zq+5Lyk5LiA5YiG5LiA5q+r55qE44CCICAgIOWboOatpO+8jOmZ
-pOmdnuWkp+S6i+WPkeeUn++8jOS7lue7neWvueS4jeWPr+iDveS4jeadpeeahOOAgiAg5Yi25pyN
-5LqG77yM5Zi/77yM6L+Z5pWI546H6L+Y5oy66auY55qE44CC5aSP5pOO5aSp5b+D6YGT44CCICAg
-IOWkj+aTjuWkqeS7juayoeaciei1sOato+mXqO+8jOaOqOW8gOS8l+S6uu+8jOWNleaJi+S4gOaS
-kemZouWime+8jOmjnui6q+i2iui/h++8jOWFtuS7luWHoOS4quWwj+WtkOS5n+i3s+i/m+S6humZ
-ouWtkOOAgiAgICDlpI/mk47lpKnku47lpI/mr5vom4vlj6Pooovph4zmkbjlh7rku4XmnInnmoTk
-uIDpopfng5/vvIwJDQo=
+printk may cause long time lapse if value of printk_delay in sysctl is
+configured large by user. If register_md_personality takes long time to print in
+spinlock pers_lock, we may encounter high CPU usage rate when there are other
+pers_lock competitors who may be blocked to spin.
+We can avoid this condition by moving printk out of coverage of pers_lock
+spinlock.
 
+Signed-off-by: Chao Yu <chao2.yu@samsung.com>
+---
+ drivers/md/md.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e02de05..5fcf215 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7200,9 +7200,10 @@ static const struct file_operations md_seq_fops = {
+ 
+ int register_md_personality(struct md_personality *p)
+ {
++	printk(KERN_INFO "md: %s personality registered for level %d\n",
++						p->name, p->level);
+ 	spin_lock(&pers_lock);
+ 	list_add_tail(&p->list, &pers_list);
+-	printk(KERN_INFO "md: %s personality registered for level %d\n", p->name, p->level);
+ 	spin_unlock(&pers_lock);
+ 	return 0;
+ }
+-- 
+2.0.1.474.g72c7794
