@@ -1,193 +1,79 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Moving root to raid, weird raid behaviour
-Date: Thu, 25 Sep 2014 10:05:21 +1000
-Message-ID: <20140925100521.4740dc9f@notabene.brown>
-References: <54206A9A.8010308@youngman.org.uk>
-	<20140923103704.7116d112@notabene.brown>
-	<542134C3.4090003@youngman.org.uk>
-	<542325F0.9010306@youngman.org.uk>
+From: =?utf-8?B?5bCP6IyD?= <santoscantarini@santoscantarini.com.ar>
+Subject: =?utf-8?B?55So5LqG5LiA5qyh5L2g5bCx5Lya6KeJ5b6X5piv5pyA5aW955qE55+t5L+h5Y+R6YCB5bmz5Y+wIA==?=
+	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
+	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
+	=?utf-8?B?ICAgICAgICAgICAgICAgICAgICA=?=
+	=?utf-8?B?ICAgICAgICBqaGRyejdwa20=?=
+Date: Thu, 25 Sep 2014 13:08:26 +0800
+Message-ID: <20140925130837275647@santoscantarini.com.ar>
+Reply-To: <dingxj8@aliyun.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/dE+2XF.rZKF9GaoBxjj03ph"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <542325F0.9010306@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux2007@sina.cn, linux2011@foxmail.com, linux212@21cn.com
 List-Id: linux-raid.ids
 
---Sig_/dE+2XF.rZKF9GaoBxjj03ph
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 24 Sep 2014 21:13:36 +0100 Wols Lists <antlists@youngman.org.uk>
-wrote:
-
-> I've just had a flash of inspiration, and if I'm right it's a pretty
-> nasty "feature", but surely it would have bitten people before me...
->=20
-> What's the purpose of the array name? And what's going on with multiple
-> arrays all sharing the same name? This system I'm working on, all three
-> arrays are called "ashdown:0".
-
-The name is just a name.  It can be used to identify arrays and it can be
-used to create a symlink in /dev/md, but it is not assumed to be unique.
-
->=20
-> And I've just thoroughly screwed up my dev system - I've lost /home ...
-> all because I did a --wipe-superblock on a DIFFERENT partition on a
-> DIFFERENT array!
-
-Oops :-(
-
->=20
-> (Oh, and I've got the boot sequence moaning that sdd and sdd4 have very
-> similar superblocks - wtf? sdd DOESN'T HAVE a superblock as far as I know=
-!)
-
-"mdadm -E /dev/sdd" would tell you.
-If you have a 0.90 superblock on sdd4, and sdd4 starts at a multiple for 64K
-from the start of the device, then that superblock will appear to exist on
-sdd as well.  This is one of the several reasons that we use 1.x metadata.
-
->=20
-> But that thing about array names, what I've been doing is creating array
-> 0 (or 1), and when I reboot, it gets changed to 127 or whatever, so the
-> next array I create is 0 (or 1), etc etc. There seems to be precious
-> little mention of names, what they do etc, they're treated as an
-> afterthought. I didn't even realise arrays *had* names, until I noticed
-> a reference to "mdhome" or something like that. Does that mean I can do
-> "mdadm --create /dev/mdhome ..." ?
-
-Sure can.  or "/dev/md/home"  or just "home".
-
-If the array gets assembled at '127' despite being created as '1', then the=
-re
-is something different in the boot environment.  Presumably the array is
-assembled before the host name is set, and the mdadm.conf in the initrd (I
-think you said there wasn't one..) doesn't list the array with the correct
-name.
-Without one of those hints (the hostname is stored in the metadata so mdadm
-knows if the array is "local" or "foreign" so it knows how much to trust the
-name), mdadm will punt and use a number like 127.
-
-NeilBrown
-
-
->=20
-> Any light to shed?
->=20
-> (At least I now grok grub2 enough to achieve what I want to, it's just
-> that it's now making the raid mess worse as grub2 doesn't like it when
-> arrays disappear under it!)
->=20
-> Cheers,
-> Wol
->=20
-> On 23/09/14 09:52, Wols Lists wrote:
-> > On 23/09/14 01:37, NeilBrown wrote:
-> >> On Mon, 22 Sep 2014 19:29:46 +0100 Wols Lists
-> >> <antlists@youngman.org.uk> wrote:
-> >>
-> >>> I'm not sure if this is weird raid, stupid grub2 or incompetent
-> >>> newbie, but whatever ... and the system is my development/test
-> >>> system so if it gets trashed it's no disaster, but I would like
-> >>> to understand what is going on ...
-> >>>
-> >>> Old setup / =3D sdb2 /var =3D sdc2 /home =3D mdX (sdb3, sdc3), mirror
-> >>>
-> >>> I added sdd and made a new / =3D mdY (sdd3, missing) mirror and
-> >>> added sdd4 to mdX /home =3D mdX (sdb3 sdc3 sdd4)
-> >>>
-> >>> Weirdo one - sdd4 mirrored and synced fine. Then I rebooted ...=20
-> >>> mdX =3D (sdb3 sdc3 missing) mdZ =3D (sdd4 missing missing)
-> >>
-> >> You probably have something silly in your initrd which is making
-> >> invalid assumptions. What does /etc/mdadm.conf in your
-> >> initrd/initramfs contain?
-> >=20
-> > There shouldn't be anything there. I bombed into a grub2 shell, and
-> > mdadm.conf appeared to be the empty default. I also used ark to peer
-> > into the initramfs file and there didn't appear to be an mdadm.conf.
-> >=20
-> > But I've just had a bit of an uh-oh moment. Bear in mind I have two
-> > /boot's (mdY/boot and sdb2/boot), and two grubs or more (sda, sdb,
-> > sdd), I could be barking up a wrong tree. So that's my next step, try
-> > and *make* *sure* which grub I'm working with! Too many variables...
-> >>
-> >>>
-> >>> wtf?!?!? - oh and both of them share the same uuid. The obvious
-> >>> (but it shouldn't make any difference?) possibility is that sdb
-> >>> and sdc are 500Gb, partitioned identically. sdd is 1Tb, so sdd4
-> >>> is twice the size of the other two.
-> >>>
-> >>> The other weirdo is I'm trying to migrate from grub/mbr to
-> >>> grub2/gpt. Of course that's causing me fun, but I've managed to
-> >>> get the system booting fine from mdY. Only snag is, when I list
-> >>> /dev, mdY isn't there! mount shows it as mounted on / but that's
-> >>> the only place I can find it!
-> >>
-> >> udev should create it.  'udevadm trigger' should cause udev to
-> >> create device files for all devices.  That should  be done as part
-> >> of the boot sequence. If you run "udevadm trigger" does /dev/mdX
-> >> get created?
-> >>
-> > No errors, no messages, no disk ...
-> >>
-> >>>
-> >>> mdadm v3.2.6 kernel 3.14.14-gentoo
-> >>>
-> >>> Any ideas what's going on? I've googled, but everything I find
-> >>> looks out of date or not relevant.
-> >>
-> >> "out of date or not relevant"?? You must have been looking on the=20
-> >> Internet ?!?! :-)
-> >=20
-> > :-)
-> >=20
-> > The search results were mostly ubuntu (I run gentoo, but so what),
-> > grub1, I'm migrating to grub2, and any mention of root/boot got plenty
-> > of results about not finding root and failing to boot, but absolutely
-> > nothing about successfully booting off a root that wasn't there! Plus
-> > they all seemed to be 2010 or earlier ...
-> >>
-> >> NeilBrown
-> >>
-> > Cheers,
-> > Wol
-> >=20
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQogIOi/meS4quefreS/oeWPkemAgeW5s+WPsOWunuWcqOaYr+WkquWlveeUqOS6hu+8jOWGjeS5
+n+S4jeaEgeaJvuS4jeWIsOWlveeahOW5s+WPsOS6hu+8jOWPquimgeaYr+S9oOWPkeeahOWGheWu
+ueaYr+ato+inhOeahO+8jOi9u+advuWwseWPr+S7peWPkemAgeWHuuWOu+OAguWKoFFRMTkzOTg5
+NzI15YW35L2T5ZKo6K+i77yM5Y+v5Lul5byA6LSm5Y+35rWL5pWI5p6c44CCDQoNCg0KDQoNCg0K
+IA0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0K
+DQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoN
+Cg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0K
+DQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCueZveS6hu+8jOiRo+S5neaY
+n+WwseaYr+WNouWGm+i2heeahOS4gOadoeeLl+OAgiAgICDnjrDlnKjvvIzni5fpg73mlaLlkqzk
+urrkuobvvIHokaPkuZ3mmJ/nmoTlvJ/lvJ/okaPlm5vllpznq5/nhLblmqPlvKDliLDliLDlnLDm
+iorng5/lpLTmiZTliLDoh6rlt7Hlrp3otJ3lpbPlhL/nmoTohLjkuIrjgIIgICAg5LuW55qE5b+D
+5Lit5piv5L2V5YW255qE5oSk5oCS77yM5aaC5p6c5Y2i5Yab6LaF44CB6JGj5Zub55m96Imy5aSn
+5rSL6ams6IO45YmN6YKj5Z2X55m95aup55qE55qu6IKJ5omA5ZC45byV77yM5b+D5Lit5pqX5pqX
+5oSf5Y+577yM6YO96K+055m95Lq65q+b5a2U57KX5aSn77yM5L2T5q+b5pe655ub77yM5L2G5piv
+6L+Z5Liq5aWz5Lq65pi+54S25LiN5piv77yM55qu6IKk55m955qZ6ICM5LiU57uG6IW777yM5aaC
+5ZCM5aW25rK55LiA6Iis77yM5aW55piv5LiN5piv5re36KGA5ZGi4oCU4oCU55yL5LiK5Y675aW5
+55yf5pyJ54K55YOP6aOO55qE6K+d77yM6YKj5LmI6Ieq5bex5bCx5L2N5LqO6L+Z5Zy65Y+w6aOO
+55qE5Y+w6aOO55y86YeM44CCICAgIOavq+aXoOeWkemXrueahOaYr++8jOiHquW3sei/meS4quWw
+j+Wwj+eahOW4guWcuueoveafpeiCoemVv+W3sue7j+i/m+WFpeS6huWIsOmSseWxgOmVv+eahOag
+uOW/g+WboumYn++8jOaIkOS4uuS6huecn+ato+eahOWroeezu+OAgiAgICDkuI3ov4fvvIzku5bo
+v5jmmK/kuI3mlL7lv4PlpI/lsI/mtJvljrvlgZrkuobvvIzkuI3llp3lsLHkuI3mmK/kurrkuobv
+vIzlj6rog73kuIDkuKrlrZfvvIzigJzllp3igJ3jgIIgICAg5L2V5Lqs55Sf55yL4oCc56iL5bqm
+4oCd5beu5LiN5aSa5LqG77yM6LW36Lqr5ZGK6L6e77yM6YGT77ya4oCc5pma5LiK6L+Y5pyJ5Liq
+5Lya77yB5L2g5Lus5oWi5oWi5Zad77yB4oCdICAgIOi9rOi6q+i/m+WFpeWPpuWkluS4gOS4quWM
+heWOou+8jOi/mei+ue+8jOaxquS4nOW5s+aVtOaMuuedgOiCmuWtkOW4puedgOS4iuW/teS6huiA
+g+eCueWIhuW4g++8jOeEtuWQjueUseS9leivl+mfteWSjOeOi+W7uueUt+WPkeWHhuiAg+ivgeOA
+giAgICDmtJvmsLTljr/ljr/ln47kuIDlhbHmnInkupTmiYDliJ3kuK3vvIzkuaHkuIvliJ3kuK3m
+nIkxN+aJgO+8jOS4uuS6huiAg+ivleWFrOW5s++8jOmBv+WFjeW+h+engeiInuW8iueOsOixoe+8
+jOaJgOacieiAg+eUn+mDveimgembhuS4reWcqOa0m+awtOWOv+WfjueahOS4reWwj+WtpuiAg+iv
+le+8jOmCo+WGme+8jOmDreWPuOmVv+aMguWQjeeahOS5pu+8jOWPr+S4jeiDveaciemUmeivr+OA
+guKAnSAgICDkuKTkurrorqrorqrnmoTlh7rkuobkuZDlt6LphZLlkKfvvIzlt7LmmK/mt7HlpJzv
+vIzlsYjlsI/lhYPnnIvkuobkuIvmiYvmnLrnn63kv6HvvIzmirHmrYnlnLDlr7nlpI/lsI/mtJvv
+vIzpgZPvvJrigJzlk6Xku6zvvIzmnInkuIDlp5HlqJjlj6zllKTvvIzmiJHopoHljrvlronmiprl
+pbnlr4Llr57nmoTlsI/lv4PngbXkuobjgIIJDQrlhYPmopfnnYDohJblrZDpl67jgIIgICAg6L+Z
+5bCP5a2Q5LuO5p2l5LiN5ZCD5LqP77yM5LiN5YGa5peg55So5Yqf44CCICAgIOKAnOWNs+S9v+ay
+oeacieWOn+mimO+8jOWPr+aYr+i/meWll+KAmOenmOexjeKAmemHjOmdoueahOefpeivhueCueW+
+iOWFqOmdou+8jOWvueaIkeS7rOaIkOe7qeeahOaPkOmrmOi/mOaYr+W+iOacieeUqOeahOOAguKA
+neS9leivl+mftemBk+OAgiAgICDlpbnkuIDor7TvvIzlhbjor5for43vvIzlr7nor5for43nmoTp
+ibTotY/og73lipvpnZ7luLjpq5jotoXvvIzov5nlh6Dlj6Xor5flpoLlkIzlpKfplKTkuIDmoLfl
+h7vmiZPlnKjku5bnmoTog7jlj6PkuIrvvIzlj6rop4nlvpflv4PohI/kuI3lgZzlnLDot7Pliqjj
+gIIgICAg6L+Z56eN5oSf6KeJ5Y+q5pyJ5LuW5Zyo6L695a6B5Y2a54mp6aaG55yL5Yiw6KKr6KqJ
+5Li64oCc6I2J5Zyj4oCd55qE5ZSQ5Luj5aSn5Lmm5rOV5a625byg5pet55qE44CK5Y+k5bCx5aaC
+6YeK6YeN6LSf5Zyw56uZ6LW35p2l77yM5Y675pWj5Y+R5Lyg5Y2V5LqG77yM5Y6f5p2l77yM6L+Z
+6YeM55yf5q2j5oeC5Yy75a2m55qE5bCx5LuW5LiA5Liq44CCICAgIOS4gOacieihjOS6uui1sOi/
+h++8jOaItOedgOe7tuW4pueahOWls+WtqeWtkOWwsei1sOS4iuWOu++8jOmAkui/h+WOu+S4gOW8
+oOS8oOWNle+8jOeEtuWQjuivtO+8muKAnOaIkeS7rOacieS4k+WutuS5ieiviu+8jOaCqOWmguae
+nOacieS7gOS5iOS4jeWxiOWwj+WFg+aEpOaAkuWcsOWjsOmfs++8muKAnOaIkeiNie+8geiwgeWV
+iu+8geaJvuatu+WViu+8jOiAgeWtkOato+WBmuaipuWQg+Wog+Wog+mbquezleWRou+8geKAnSAg
+ICDigJzlk5DlvZPigJ3kuIDlo7Dpl6jooqvmi4nlvIDkuobvvIzlsI/lhYPmiYvph4zmi47kuobk
+uIDmoLnpkqLnrYvvvIzmgJLmsJTlhrLlhrLvvIznnIvmoLflrZDopoHnu5nmnaXkurrkuIDpob/n
+i6Dmj43vvIEgICAg5LiA55yL5p2l5Lq65piv5aSP57O75YiX5Luk5bGI5bCP5YWD556g55uu57uT
+6IiM55qE5LqL5Lu25ZCO77yM5LuW5Lus5LmL6Ze05bey57uP5LiN5LuF5LuF5pyJ5Y+L6LCK77yM
+5Zyo5bGI5bCP5YWD5b+D55uu5Lit77yM5LuW5bey57uP5piv56We5LiA6Iis55qE5a2Y5Zyo77yM
+6YKj5Y+v5piv6LCB5Lmf5LiN6Zq+5Lyk5LiA5YiG5LiA5q+r55qE44CCICAgIOWboOatpO+8jOmZ
+pOmdnuWkp+S6i+WPkeeUn++8jOS7lue7neWvueS4jeWPr+iDveS4jeadpeeahOOAgiAg5Yi25pyN
+5LqG77yM5Zi/77yM6L+Z5pWI546H6L+Y5oy66auY55qE44CC5aSP5pOO5aSp5b+D6YGT44CCICAg
+IOWkj+aTjuWkqeS7juayoeaciei1sOato+mXqO+8jOaOqOW8gOS8l+S6uu+8jOWNleaJi+S4gOaS
+kemZouWime+8jOmjnui6q+i2iui/h++8jOWFtuS7luWHoOS4quWwj+WtkOS5n+i3s+i/m+S6humZ
+ouWtkOOAgiAgICDlpI/mk47lpKnku47lpI/mr5vom4vlj6Pooovph4zmkbjlh7rku4XmnInnmoTk
+uIDpopfng5/vvIwJDQo=
 
 
---Sig_/dE+2XF.rZKF9GaoBxjj03ph
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVCNcQTnsnt1WYoG5AQLDEBAAtLBGFDtdPjvilVzdAJmACwrXrKdnyT1L
-+0t4XYwE4PFebZuBc5t7yfrtTQgYyHh0J/sOdAx3r009HWb5yUM7c0bWfScBOPEO
-WpAKKT+a0l4ylo23zrPk/6a6nB4UsXzge3w/+YnvjREpV1rPBfYuvTPczFWXLHmB
-wx/iAeurs2hpo5jPmtX7udwWCXqVVWPf5HsS9U7dlBffOIlowwDgfwXHpq5Fto/y
-fZWDlsfjkMa8YkxunBUs6wLz3hCp+ePAERTvz84CbUQujjiUhXN4JbkzPGn6YZPK
-fJ3oXSZUDECseFd+ynsE8UPEta6dftNDCy9KTBRZ6vUai+Ca3tjxicupjO9Tv4Ey
-MFfJY0ZT2B7+dD6aEHuOhgFveIo9bZObKvv89k3tBdkBW9gfGKUz9YDbqDQCQXUG
-zLxiVTV4ZCzgbnoRu4SsYwyoW0ruagSr1zxFqXUsVuv8DkGePXjmjsl8+l31HZQU
-l97KIRgjf9VthNTqvGcKnrvU2c9Jg3Ub8Mbss9CsCgsq5Hp04Iz9u6b+NpdZit7A
-xh+8T4i0H3w7VgFOI8qH0nfM40SCmne/EERsBmdBx/kDCoXAaOo4nizzL5sNefgD
-mOfDMg/LmVX7BPbrX1vYD79Xv8ZgMsFu0XXyJ8fhRYYB2tn8InnSILEIji57WBEE
-cPlwN3+Yybs=
-=hoYs
------END PGP SIGNATURE-----
-
---Sig_/dE+2XF.rZKF9GaoBxjj03ph--
