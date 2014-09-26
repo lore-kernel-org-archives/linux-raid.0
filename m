@@ -1,7 +1,7 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+From: Francis Moreau <francis.moro@gmail.com>
 Subject: Re: /sys/block/md126 still exists even after stopping the array
-Date: Fri, 26 Sep 2014 13:23:41 +0200
-Message-ID: <54254CBD.5080704@intel.com>
+Date: Fri, 26 Sep 2014 14:21:04 +0200
+Message-ID: <54255A30.9010406@gmail.com>
 References: <53A99B76.3020603@gmail.com>	<20140625110348.48ab2d7a@notabene.brown>	<54243ED7.6090904@gmail.com>	<20140926103348.5f5ea568@notabene.brown>	<54253E9F.4070505@gmail.com> <20140926204445.1ec830b9@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20140926204445.1ec830b9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Francis Moreau <francis.moro@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid <linux-raid@vger.kernel.org>, sebastian.riemer@profitbricks.com
 List-Id: linux-raid.ids
 
@@ -52,6 +52,34 @@ On 09/26/2014 12:44 PM, NeilBrown wrote:
 > 
 > Without seeing your patch I can't guess what it happening, but I am *certain*
 > that md_release() would get called providing md_open didn't return an error.
+
+Here's the patch:
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 73aedcb..08ead8d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6703,6 +6703,8 @@ static int md_open(struct block_device *bdev,
+fmode_t mode)
+ 	struct mddev *mddev = mddev_find(bdev->bd_dev);
+ 	int err;
+
++	printk("md_open(): opened by %s\n", current->comm);
++
+ 	if (!mddev)
+ 		return -ENODEV;
+
+@@ -6735,6 +6737,8 @@ static void md_release(struct gendisk *disk,
+fmode_t mode)
+ {
+  	struct mddev *mddev = disk->private_data;
+
++	printk("md_release(): released by %s\n", current->comm);
++
+ 	BUG_ON(!mddev);
+ 	atomic_dec(&mddev->openers);
+ 	mddev_put(mddev);
+
 > 
 > It might be helpful to print out the pid and the md device number too
 >  task_tgid_vnr(current)
@@ -59,193 +87,114 @@ On 09/26/2014 12:44 PM, NeilBrown wrote:
 >   mdname(mddev)
 > give the name of the device.
 > 
+
+Here's the new trace, this time md_release() was called, so I probably
+did something wrong the first time, sorry for that.
+
+[    1.470744] md_open(): md127 opened by mdadm [388]
+[    1.485437] md_release(): md127 released by mdadm [388]
+[    1.486888] md_open(): md126 opened by mdadm [381]
+[    1.487468] md_release(): md126 released by mdadm [381]
+[    1.488646] md_open(): md125 opened by mdadm [383]
+[    1.489074] md_release(): md125 released by mdadm [383]
+[    1.490555] md_open(): md127 opened by mdadm [385]
+[    1.512556] md_release(): md127 released by mdadm [385]
+[    1.512582] md_open(): md127 opened by mdadm [385]
+[    1.512682] md_open(): md126 opened by mdadm [384]
+[    1.553414] md_release(): md126 released by mdadm [384]
+[    1.553442] md_open(): md126 opened by mdadm [384]
+[    1.553549] md_open(): md125 opened by mdadm [382]
+[    1.573263] md_release(): md125 released by mdadm [382]
+[    1.573288] md_open(): md125 opened by mdadm [382]
+[    1.601034] md_open(): md125 opened by mdadm [459]
+[    1.601041] md_release(): md125 released by mdadm [459]
+[    1.601065] md_open(): md126 opened by mdadm [459]
+[    1.601067] md_release(): md126 released by mdadm [459]
+[    1.601090] md_open(): md127 opened by mdadm [459]
+[    1.601092] md_release(): md127 released by mdadm [459]
+[    1.601130] md_open(): md127 opened by mdadm [459]
+[    1.601220] md_release(): md127 released by mdadm [459]
+[    1.601633] md_open(): md126 opened by mdadm [459]
+[    1.601661] md_release(): md126 released by mdadm [459]
+[    1.601673] md_open(): md125 opened by mdadm [459]
+[    1.601695] md_release(): md125 released by mdadm [459]
+[    1.606127] md_open(): md125 opened by mdadm [454]
+[    1.608682] md_open(): md126 opened by mdadm [453]
+[    1.609514] md_open(): md127 opened by mdadm [448]
+[    1.622512] md_release(): md126 released by mdadm [453]
+[    1.623028] md_release(): md127 released by mdadm [448]
+[    1.625288] md_open(): md126 opened by systemd-udevd [363]
+[    1.625391] md_release(): md125 released by mdadm [454]
+[    1.625619] md_open(): md127 opened by systemd-udevd [368]
+[    1.625737] md_open(): md125 opened by systemd-udevd [366]
+[    1.637137] md_release(): md125 released by systemd-udevd [366]
+[    1.643982] md_open(): md125 opened by mdadm [476]
+[    1.644071] md_release(): md127 released by systemd-udevd [368]
+[    1.647787] md_release(): md125 released by mdadm [382]
+[    1.648171] md_release(): md126 released by systemd-udevd [363]
+[    1.651629] md_open(): md126 opened by mdadm [479]
+[    1.656666] md_open(): md127 opened by mdadm [480]
+[    1.657771] md_release(): md125 released by mdadm [476]
+[    1.659312] md_open(): md125 opened by systemd-udevd [365]
+[    1.663193] md_release(): md127 released by mdadm [385]
+[    1.673669] md_release(): md125 released by systemd-udevd [365]
+[    1.685527] md_release(): md127 released by mdadm [480]
+[    1.685599] md_release(): md126 released by mdadm [479]
+[    1.686058] md_open(): md126 opened by systemd-udevd [366]
+[    1.686282] md_release(): md126 released by systemd-udevd [366]
+[    1.691024] md_open(): md127 opened by systemd-udevd [363]
+[    1.695415] md_release(): md126 released by mdadm [384]
+[    1.707163] md_release(): md127 released by systemd-udevd [363]
+
+>>> mdadm --stop --scan <<<
+
+[   89.975162] md_open(): md125 opened by mdadm [930]
+[   89.975305] md_release(): md125 released by mdadm [930]
+[   89.977434] md_open(): md125 opened by mdadm [932]
+[   89.978813] md_open(): md125 opened by mdadm [930]
+[   89.979365] md_release(): md125 released by mdadm [932]
+[   89.979693] md_open(): md125 opened by systemd-udevd [931]
+[   89.985790] md_release(): md125 released by systemd-udevd [931]
+[   90.179911] md_release(): md125 released by mdadm [930]
+[   90.180168] md_open(): md127 opened by mdadm [459]
+[   90.180187] md_release(): md127 released by mdadm [459]
+[   90.180199] md_open(): md126 opened by mdadm [459]
+[   90.180205] md_release(): md126 released by mdadm [459]
+[   90.180556] md_open(): md126 opened by mdadm [930]
+[   90.180653] md_release(): md126 released by mdadm [930]
+[   90.180690] md_open(): md126 opened by mdadm [930]
+[   90.180758] md_open(): mdX opened by mdadm [459]
+[   90.180995] md_open(): md125 opened by mdadm [459]
+[   90.181056] md_release(): md125 released by mdadm [459]
+[   90.182717] md_open(): md127 opened by mdadm [459]
+[   90.182725] md_release(): md127 released by mdadm [459]
+[   90.182732] md_open(): md126 opened by mdadm [459]
+[   90.182761] md_release(): md126 released by mdadm [459]
+[   90.182770] md_open(): md125 opened by mdadm [459]
+[   90.182775] md_release(): md125 released by mdadm [459]
+[   90.182940] md_release(): md126 released by mdadm [930]
+[   90.183167] md_open(): md127 opened by mdadm [930]
+[   90.183257] md_release(): md127 released by mdadm [930]
+[   90.183288] md_open(): md127 opened by mdadm [930]
+[   90.183461] md_open(): md127 opened by mdadm [459]
+[   90.183488] md_release(): md127 released by mdadm [459]
+[   90.183499] md_open(): md125 opened by mdadm [459]
+[   90.183505] md_release(): md125 released by mdadm [459]
+[   90.183686] md_release(): md127 released by mdadm [930]
+
+
 > Probably there is a 'change' event happening just before the 'remove' event,
 > and udev runs "mdadm" on the 'change' event, and that ends up happening after
 > the device has been removed.
 > 
 > Is this really a problem?  Can't you just ignore it and pretend it isn't
 > there?
-> 
-> NeilBrown
-> 
->>
->> Here's the details of what I did:
->>
->> --- %< ---
->> [root@localhost ~]# cat /proc/mdstat
->> Personalities : [raid1]
->> md125 : active raid1 vdc1[1] vdb1[0]
->>       65472 blocks super 1.0 [2/2] [UU]
->>
->> md126 : active raid1 vdc2[1] vdb2[0]
->>       209536 blocks super 1.2 [2/2] [UU]
->>
->> md127 : active raid1 vdb3[0] vdc3[1]
->>       1819584 blocks super 1.2 [2/2] [UU]
->>
->> unused devices: <none>
->>
->> [root@localhost ~]# mdadm --stop --scan
->>
->> [root@localhost ~]# dmesg | grep md_
->> [    1.474207] md_open(): opened by mdadm
->> [    1.475316] md_open(): opened by mdadm
->> [    1.492880] md_open(): opened by mdadm
->> [    1.493201] md_open(): opened by mdadm
->> [    1.494690] md_open(): opened by mdadm
->> [    1.499369] md_open(): opened by mdadm
->> [    1.533566] md_open(): opened by mdadm
->> [    1.533697] md_open(): opened by mdadm
->> [    1.554419] md_open(): opened by mdadm
->> [    1.574451] md_open(): opened by mdadm
->> [    1.574666] md_open(): opened by mdadm
->> [    1.574877] md_open(): opened by mdadm
->> [    1.576822] md_open(): opened by systemd-udevd
->> [    1.576895] md_open(): opened by systemd-udevd
->> [    1.577029] md_open(): opened by systemd-udevd
->> [    1.581850] md_open(): opened by mdadm
->> [    1.584054] md_open(): opened by systemd-udevd
->> [    1.584770] md_open(): opened by mdadm
->> [    1.585175] md_open(): opened by mdadm
->> [    1.586328] md_open(): opened by systemd-udevd
->> [    1.586933] md_open(): opened by systemd-udevd
->> [    1.651265] md_open(): opened by mdadm
->> [    1.651320] md_open(): opened by mdadm
->> [    1.651364] md_open(): opened by mdadm
->> [    1.651437] md_open(): opened by mdadm
->> [    1.652376] md_open(): opened by mdadm
->> [    1.652452] md_open(): opened by mdadm
->> [   33.486704] md_open(): opened by mdadm
->> [   33.489259] md_open(): opened by mdadm
->> [   33.491000] md_open(): opened by mdadm
->> [   33.491767] md_open(): opened by systemd-udevd
->> [   33.692255] md_open(): opened by mdadm
->> [   33.692288] md_open(): opened by mdadm
->> [   33.692606] md_open(): opened by mdadm
->> [   33.692858] md_open(): opened by mdadm
->> [   33.692942] md_open(): opened by mdadm
->> [   33.693237] md_open(): opened by mdadm
->> [   33.694254] md_open(): opened by mdadm
->> [   33.694275] md_open(): opened by mdadm
->> [   33.694373] md_open(): opened by mdadm
->> [   33.695558] md_open(): opened by mdadm
->> [   33.695679] md_open(): opened by mdadm
->> [   33.695855] md_open(): opened by mdadm
->> [   33.695894] md_open(): opened by mdadm
->>
->> [root@localhost ~]# ls /dev/md125
->> /dev/md125
->>
->> [root@localhost ~]# fuser /dev/md125
->>
->> [root@localhost ~]# ps aux | grep "mdadm\|systemd-udevd"
->> root       366  0.0  0.1  38172  1696 ?        Ss   06:04   0:00
->> /usr/lib/systemd/systemd-udevd
->> root       465  0.0  0.0   4964   924 ?        Ss   06:04   0:00
->> /sbin/mdadm --monitor --scan --daemonise --syslog
->> --pid-file=/run/mdadm/mdadm.pid
->>
->> [root@localhost ~]# ls -l /proc/366/fd/
->> total 0
->> lrwx------ 1 root root 64 Sep 26 06:04 0 -> /dev/null
->> lrwx------ 1 root root 64 Sep 26 06:04 1 -> /dev/null
->> lrwx------ 1 root root 64 Sep 26 06:04 10 -> socket:[8665]
->> lr-x------ 1 root root 64 Sep 26 06:04 11 -> /etc/udev/hwdb.bin
->> lrwx------ 1 root root 64 Sep 26 06:04 12 -> anon_inode:[eventpoll]
->> lrwx------ 1 root root 64 Sep 26 06:04 2 -> /dev/null
->> lrwx------ 1 root root 64 Sep 26 06:04 3 -> socket:[8144]
->> lrwx------ 1 root root 64 Sep 26 06:04 4 -> socket:[8103]
->> lrwx------ 1 root root 64 Sep 26 06:04 5 -> socket:[8660]
->> lrwx------ 1 root root 64 Sep 26 06:04 6 -> /run/udev/queue.bin
->> lr-x------ 1 root root 64 Sep 26 06:04 7 -> anon_inode:inotify
->> lrwx------ 1 root root 64 Sep 26 06:04 8 -> anon_inode:[signalfd]
->> lrwx------ 1 root root 64 Sep 26 06:04 9 -> socket:[8664]
->>
->> [root@localhost ~]# ls -l /proc/465/fd/
->> total 0
->> lrwx------ 1 root root 64 Sep 26 06:04 0 -> /dev/null
->> lrwx------ 1 root root 64 Sep 26 06:04 1 -> /dev/null
->> lrwx------ 1 root root 64 Sep 26 06:04 2 -> /dev/null
->> lr-x------ 1 root root 64 Sep 26 06:06 4 -> /proc/mdstat
->> lrwx------ 1 root root 64 Sep 26 06:06 5 -> socket:[10038]
->>
->> [root@localhost ~]# cat /proc/mdstat
->> Personalities : [raid1]
->> unused devices: <none>
->>
->> [root@localhost ~]# ls /sys/block/md125/md/
->> array_size  array_state  bitmap/  chunk_size  component_size  layout
->> level  max_read_errors  metadata_version  new_dev  raid_disks
->> reshape_direction  reshape_position  resync_start  safe_mode_delay
->>
->> --- >% ---
->>
->> So in my understanding, only mdadm and udevd are opening the MD devices
->> and mdamd was the last to open the device. For some unknown reasons,
->> md_release() is never called.
->>
->> This happens with:
->>
->>  - kernel 3.14.19
->>  - mdadm 3.3.2
->>  - systemd 208
->>
->> Can you see something wrong here ?
->>
->> Thanks.
->> --
 
-Hi,
+Well, if you list the block devices that the kernel detected in order to
+operate on them, it could. I don't know exactly what would be the result
+to use it but it could confuse some tools.
 
-I have also been debugging this issue and I came up with this
-fix/workaround. It works for me. Can you take a look a this?
+Is there a way to check that the 'ghost' device has been removed by
+poking sysfs ?
 
-Thanks,
-Artur
-
-From c547e39789cde93d4a7ea1d3f845d61b82e4f0ed Mon Sep 17 00:00:00 2001
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Date: Fri, 26 Sep 2014 12:20:46 +0200
-Subject: [PATCH] md: avoid creating new devices for stopped arrays in
- md_open()
-
-When an array is about to be destroyed, set mddev->gendisk->private_data
-to NULL as it is no longer needed and check it in md_open(). If
-bdev->bd_disk->private_data is NULL, then this indicates that the array
-is stopped and return -ENODEV.
-
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- drivers/md/md.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1294238..7109d48 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -449,6 +449,7 @@ static void mddev_put(struct mddev *mddev)
-                bs = mddev->bio_set;
-                mddev->bio_set = NULL;
-                if (mddev->gendisk) {
-+                       mddev->gendisk->private_data = NULL;
-                        /* We did a probe so need to clean up.  Call
-                         * queue_work inside the spinlock so that
-                         * flush_workqueue() after mddev_find will
-@@ -6693,9 +6694,14 @@ static int md_open(struct block_device *bdev, fmode_t mode)
-         * Succeed if we can lock the mddev, which confirms that
-         * it isn't being stopped right now.
-         */
--       struct mddev *mddev = mddev_find(bdev->bd_dev);
-+       struct mddev *mddev;
-        int err;
-
-+       if (!bdev->bd_disk->private_data)
-+               return -ENODEV;
-+
-+       mddev = mddev_find(bdev->bd_dev);
-+
-        if (!mddev)
-                return -ENODEV;
-
--- 
-1.8.4.5
+Thanks
