@@ -1,84 +1,71 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: avoid potential long delay under pers_lock
-Date: Fri, 26 Sep 2014 10:36:20 +1000
-Message-ID: <20140926103620.7c397832@notabene.brown>
+From: Chao Yu <chao2.yu@samsung.com>
+Subject: RE: [PATCH] md: avoid potential long delay under pers_lock
+Date: Fri, 26 Sep 2014 16:56:44 +0800
+Message-ID: <004c01cfd967$fa1012d0$ee303870$@samsung.com>
 References: <002801cfd892$696e39d0$3c4aad70$@samsung.com>
+ <20140925165114.GE10814@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/jASjM37T=RQ9pDhaA_8U+Al"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <002801cfd892$696e39d0$3c4aad70$@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chao Yu <chao2.yu@samsung.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <20140925165114.GE10814@khazad-dum.debian.net>
+Content-language: zh-cn
+Sender: linux-raid-owner@vger.kernel.org
+To: 'Henrique de Moraes Holschuh' <hmh@hmh.eng.br>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/jASjM37T=RQ9pDhaA_8U+Al
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> -----Original Message-----
+> From: Henrique de Moraes Holschuh [mailto:hmh@hmh.eng.br]
+> Sent: Friday, September 26, 2014 12:51 AM
+> To: Chao Yu
+> Cc: neilb@suse.de; linux-raid@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] md: avoid potential long delay under pers_lock
+> 
+> On Thu, 25 Sep 2014, Chao Yu wrote:
+> > printk may cause long time lapse if value of printk_delay in sysctl is
+> > configured large by user. If register_md_personality takes long time to print in
+> > spinlock pers_lock, we may encounter high CPU usage rate when there are other
+> > pers_lock competitors who may be blocked to spin.
+> > We can avoid this condition by moving printk out of coverage of pers_lock
+> > spinlock.
+> >
+> > Signed-off-by: Chao Yu <chao2.yu@samsung.com>
+> > ---
+> >  drivers/md/md.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index e02de05..5fcf215 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -7200,9 +7200,10 @@ static const struct file_operations md_seq_fops = {
+> >
+> >  int register_md_personality(struct md_personality *p)
+> >  {
+> > +	printk(KERN_INFO "md: %s personality registered for level %d\n",
+> > +						p->name, p->level);
+> >  	spin_lock(&pers_lock);
+> >  	list_add_tail(&p->list, &pers_list);
+> > -	printk(KERN_INFO "md: %s personality registered for level %d\n", p->name, p->level);
+> >  	spin_unlock(&pers_lock);
+> >  	return 0;
+> >  }
+> 
+> Wouldn't it make more sense to move the printk after the spin_unlock ?
 
-On Thu, 25 Sep 2014 15:28:34 +0800 Chao Yu <chao2.yu@samsung.com> wrote:
-
-> printk may cause long time lapse if value of printk_delay in sysctl is
-> configured large by user. If register_md_personality takes long time to p=
-rint in
-> spinlock pers_lock, we may encounter high CPU usage rate when there are o=
-ther
-> pers_lock competitors who may be blocked to spin.
-> We can avoid this condition by moving printk out of coverage of pers_lock
-> spinlock.
->=20
-> Signed-off-by: Chao Yu <chao2.yu@samsung.com>
-> ---
->  drivers/md/md.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index e02de05..5fcf215 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7200,9 +7200,10 @@ static const struct file_operations md_seq_fops =
-=3D {
-> =20
->  int register_md_personality(struct md_personality *p)
->  {
-> +	printk(KERN_INFO "md: %s personality registered for level %d\n",
-> +						p->name, p->level);
->  	spin_lock(&pers_lock);
->  	list_add_tail(&p->list, &pers_list);
-> -	printk(KERN_INFO "md: %s personality registered for level %d\n", p->nam=
-e, p->level);
->  	spin_unlock(&pers_lock);
->  	return 0;
->  }
-
-I'm not sure I see the pressing need for this - have you noticed actual
-problems?
-However it seems to make sense so I've applied it.
+As original printk msg in {,un}register_md_personality shows '{,un}registered'
+which means the main job is done before printk, it's better to move the printk
+after spin_unlock in both {,un}register_md_personality. But IMHO, it's another
+minor issue, should we fix in this patch?
 
 Thanks,
-NeilBrown
+Yu
 
---Sig_/jASjM37T=RQ9pDhaA_8U+Al
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> 
+> --
+>   "One disk to rule them all, One disk to find them. One disk to bring
+>   them all and in the darkness grind them. In the Land of Redmond
+>   where the shadows lie." -- The Silicon Valley Tarot
+>   Henrique Holschuh
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIUAwUBVCS1BDnsnt1WYoG5AQLr6A/4gQrk0LUF0nzgvvq3Id2C0AFmx8zuoXFt
-PbT3zTlEMNqOXurdy63KMnM21OmMkl+N+SeQtrqWiodjtJGvGpwnvsgyI/Tvugnw
-RJ6uIk9HdsmfwOZ7/6e4thTq5xp8uQtblqrMQbKwjAbN0u6R4JVr7qF2sxZO1UGa
-3WThI4vii4le5UjGjoDD3ImWIpBoFCBbBTYU20E2Y6nokUaZNenE2VEFj3ZNP6cH
-wIJeK/Lji+Q58tpjlHTzkslsWwsLsGYhTr2C11Fkcil4gQ/x5D46a90FgP5g70aC
-wYNdM/2oGIkkbByg1CZg1qA3H5CN3y29/FT+otVDgz+aCmfwe60h6kDkwsa2P5by
-m9fmdVe0/ncPgRPAT0fyKXRXmRG/aFazwrZRmJTplnZ7bmb64PYWzjqica1XnLVC
-WYMNPentmLfbzWehTSyoB321kvVk/ylqk99I0n2NjVbPoYrH0oo/mJoPJhmBjrEh
-znddy9iOgbhCEX6gzYsllMeyO3dVaM/9F0lcfAN1e+WG+Ttotcrr820Zb4//24wl
-QfAJSUN+SXUGvhs+mC1JIoroLWrN4PKUghKnqgSByMGTqM3EXJJOjHrLRbbOiwdi
-RicFpwyiayko0ZjpSOOh2kIAv9usTr9YZfvhZKOGe2IjJER+qT5z/4OzLypX3YJF
-7/V86MkR2Q==
-=7zVt
------END PGP SIGNATURE-----
-
---Sig_/jASjM37T=RQ9pDhaA_8U+Al--
