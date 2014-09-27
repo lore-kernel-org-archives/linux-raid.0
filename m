@@ -1,84 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [GIT PULL REQUEST] late md/raid1 bug fixes for 3.17
-Date: Sat, 27 Sep 2014 10:09:23 +1000
-Message-ID: <20140927100923.5238a4e9@notabene.brown>
-References: <20140924121805.1b8c3bd9@notabene.brown>
-	<5425B998.7080304@sbcglobal.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/o2CcMRCnIKPpBS/GbhlbJnR"; protocol="application/pgp-signature"
+From: Behan Webster <behanw@converseincode.com>
+Subject: [PATCH] md, sysfs, LLVMLinux: Remove nested function from bcache sysfs
+Date: Fri, 26 Sep 2014 18:09:29 -0700
+Message-ID: <1411780169-3260-1-git-send-email-behanw@converseincode.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5425B998.7080304@sbcglobal.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: BillStuff <billstuff2001@sbcglobal.net>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+To: kmo@daterainc.com
+Cc: behanw@converseincode.com, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-raid.ids
 
---Sig_/o2CcMRCnIKPpBS/GbhlbJnR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Replace the use of nested functions where a normal function will suffice.
 
-On Fri, 26 Sep 2014 14:08:08 -0500 BillStuff <billstuff2001@sbcglobal.net>
-wrote:
+Nested functions are not liked by upstream kernel developers in general. Their
+use breaks the use of clang as a compiler, and doesn't make the code any
+better.
 
-> On 09/23/2014 09:18 PM, NeilBrown wrote:
-> [snip]
-> >        md/raid1: intialise start_next_window for READ case to avoid hang
-> >
->=20
-> Neil, I've been testing these patches for the past week or two to see if=
-=20
-> they help a raid1 "check" hang I had.
->=20
-> They seem to help, but I noticed the above patch is different from what=20
-> you originally sent on the list.
->=20
-> The original patch has an extra chunk:
->=20
-> @@ -1444,6 +1445,7 @@ read_again:
-> 		r1_bio->state =3D 0;
-> 		r1_bio->mddev =3D mddev;
-> 		r1_bio->sector =3D bio->bi_iter.bi_sector + sectors_handled;
-> +		start_next_window =3D wait_barrier(conf, bio);
-> 		goto retry_write;
-> 	}
->=20
-> Is the correct patch with or without this chunk?
->=20
-> Thanks,
-> Bill
+This code now works for both gcc and clang.
 
-That hunk was wrong.
-This new r1_bio is attached to the previous one and they all complete (and
-particularly all "allow_barrier") as a unit.  So only one wait_barrier is
-needed.
+Signed-off-by: Behan Webster <behanw@converseincode.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/md/bcache/sysfs.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-That chunk only has any affect if you have a bad-blocks list with bad blocks
-in it, and try to write a range of the device which includes the bad block.
+diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
+index b3ff57d..53d8baa 100644
+--- a/drivers/md/bcache/sysfs.c
++++ b/drivers/md/bcache/sysfs.c
+@@ -731,6 +731,11 @@ static struct attribute *bch_cache_set_internal_files[] = {
+ };
+ KTYPE(bch_cache_set_internal);
+ 
++static int __bch_cache_cmp(const void *l, const void *r)
++{
++	return *((uint16_t *) r) - *((uint16_t *) l);
++}
++
+ SHOW(__bch_cache)
+ {
+ 	struct cache *ca = container_of(kobj, struct cache, kobj);
+@@ -755,9 +760,6 @@ SHOW(__bch_cache)
+ 					       CACHE_REPLACEMENT(&ca->sb));
+ 
+ 	if (attr == &sysfs_priority_stats) {
+-		int cmp(const void *l, const void *r)
+-		{	return *((uint16_t *) r) - *((uint16_t *) l); }
+-
+ 		struct bucket *b;
+ 		size_t n = ca->sb.nbuckets, i;
+ 		size_t unused = 0, available = 0, dirty = 0, meta = 0;
+@@ -786,7 +788,7 @@ SHOW(__bch_cache)
+ 			p[i] = ca->buckets[i].prio;
+ 		mutex_unlock(&ca->set->bucket_lock);
+ 
+-		sort(p, n, sizeof(uint16_t), cmp, NULL);
++		sort(p, n, sizeof(uint16_t), __bch_cache_cmp, NULL);
+ 
+ 		while (n &&
+ 		       !cached[n - 1])
+-- 
+1.9.1
 
-Thanks,
-NeilBrown
-
---Sig_/o2CcMRCnIKPpBS/GbhlbJnR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVCYAODnsnt1WYoG5AQLCug//fhKV6/R99QSWAHcBxSD9rF9QZ7I4NL8z
-Q5ewhpgnsnjz4MIsoSrt62qa9Pz3yekbyIzFHNnsVl4HksKQFgNwGBUth+14f9Cr
-4cscHlpSnKCOlCA9Zgr+izWtkc6WLu1Ow1J11WRvattLbqjtQYMZTPYOh0NzCikY
-pFJvpqcJAa3fMZ/NG67vJCVHJqb+SVFn9gT/oLmEfYYQNrbrdTscbsAeiVHMbssT
-fHKVMFmRkuel687OpxxBRmqLdJDdqF/mIcQPAIu9423G1l9vVB5xEWup0YWP/jmF
-K7cvdhXnpbwrt+YIjxtyKKNir1ibIZUQJc/N+Cz6ymRsbd0En4NU+5/w5FHKzSGw
-0kuTdE5hcwRX6NtyeZCd/C/Tv9h55KCcV+mfQxXhRTsUZJjCQnpQ4dS0IOY7/XjI
-Kq+orsJl8lkUesGhHTJIZ2Ybmuwuf614ew+8jxptj5+DsarnH3+N8zeItnx7vnRm
-nzpoYDatv3hy+fXsveOuQ3QBdjQodg+x/PMdKQbjDQFyIy3oIJ1tPNK7z3ojpc/G
-jpw5vurn2BMO8khEzgt6Ge9WP+MsXF5HiFusoQHzmUzun8CrgGMghKoJ8BDie3Cw
-A6ZcoZmoma2/hBGf9/z/9ICOCW67UOyT8Z3juOClSTK7nOJ++3iPNFBpzcdCJP0O
-dx8uiQVRGN8=
-=8kkV
------END PGP SIGNATURE-----
-
---Sig_/o2CcMRCnIKPpBS/GbhlbJnR--
