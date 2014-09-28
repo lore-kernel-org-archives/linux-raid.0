@@ -1,63 +1,49 @@
-From: Behan Webster <behanw@converseincode.com>
-Subject: [PATCH] md, sysfs, LLVMLinux: Remove nested function from bcache sysfs
-Date: Fri, 26 Sep 2014 18:09:29 -0700
-Message-ID: <1411780169-3260-1-git-send-email-behanw@converseincode.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: kmo@daterainc.com
-Cc: behanw@converseincode.com, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de, Arnd Bergmann <arnd@arndb.de>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH] dm: sparse: Annotate field with __rcu for checking
+Date: Sun, 28 Sep 2014 00:34:10 -0700
+Message-ID: <20140928073409.GC5015@linux.vnet.ibm.com>
+References: <1411671049-20441-1-git-send-email-bobby.prani@gmail.com>
+Reply-To: paulmck@linux.vnet.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1411671049-20441-1-git-send-email-bobby.prani@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pranith Kumar <bobby.prani@gmail.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "maintainer:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, josh@joshtriplett.org
 List-Id: linux-raid.ids
 
-Replace the use of nested functions where a normal function will suffice.
+On Thu, Sep 25, 2014 at 02:50:43PM -0400, Pranith Kumar wrote:
+> Annotate the map field with __rcu since this is a rcu pointer which is checked
+> by sparse.
+> 
+> Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
 
-Nested functions are not liked by upstream kernel developers in general. Their
-use breaks the use of clang as a compiler, and doesn't make the code any
-better.
+Queued them both, thank you!
 
-This code now works for both gcc and clang.
+Josh, given this change, are you OK with my applying your Reviewed-by
+to the RCU_INIT_POINTER() patch?
 
-Signed-off-by: Behan Webster <behanw@converseincode.com>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
- drivers/md/bcache/sysfs.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+							Thanx, Paul
 
-diff --git a/drivers/md/bcache/sysfs.c b/drivers/md/bcache/sysfs.c
-index b3ff57d..53d8baa 100644
---- a/drivers/md/bcache/sysfs.c
-+++ b/drivers/md/bcache/sysfs.c
-@@ -731,6 +731,11 @@ static struct attribute *bch_cache_set_internal_files[] = {
- };
- KTYPE(bch_cache_set_internal);
- 
-+static int __bch_cache_cmp(const void *l, const void *r)
-+{
-+	return *((uint16_t *) r) - *((uint16_t *) l);
-+}
-+
- SHOW(__bch_cache)
- {
- 	struct cache *ca = container_of(kobj, struct cache, kobj);
-@@ -755,9 +760,6 @@ SHOW(__bch_cache)
- 					       CACHE_REPLACEMENT(&ca->sb));
- 
- 	if (attr == &sysfs_priority_stats) {
--		int cmp(const void *l, const void *r)
--		{	return *((uint16_t *) r) - *((uint16_t *) l); }
--
- 		struct bucket *b;
- 		size_t n = ca->sb.nbuckets, i;
- 		size_t unused = 0, available = 0, dirty = 0, meta = 0;
-@@ -786,7 +788,7 @@ SHOW(__bch_cache)
- 			p[i] = ca->buckets[i].prio;
- 		mutex_unlock(&ca->set->bucket_lock);
- 
--		sort(p, n, sizeof(uint16_t), cmp, NULL);
-+		sort(p, n, sizeof(uint16_t), __bch_cache_cmp, NULL);
- 
- 		while (n &&
- 		       !cached[n - 1])
--- 
-1.9.1
-
+> ---
+>  drivers/md/dm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 32b958d..746411b 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -140,7 +140,7 @@ struct mapped_device {
+>  	 * Use dm_get_live_table{_fast} or take suspend_lock for
+>  	 * dereference.
+>  	 */
+> -	struct dm_table *map;
+> +	struct dm_table __rcu *map;
+> 
+>  	unsigned long flags;
+> 
+> -- 
+> 2.1.0
+> 
