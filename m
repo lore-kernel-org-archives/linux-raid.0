@@ -1,247 +1,275 @@
-From: Francis Moreau <francis.moro@gmail.com>
-Subject: Re: /sys/block/md126 still exists even after stopping the array
-Date: Mon, 29 Sep 2014 10:45:17 +0200
-Message-ID: <54291C1D.7010005@gmail.com>
-References: <53A99B76.3020603@gmail.com>	<20140625110348.48ab2d7a@notabene.brown>	<54243ED7.6090904@gmail.com>	<20140926103348.5f5ea568@notabene.brown>	<54253E9F.4070505@gmail.com>	<20140926204445.1ec830b9@notabene.brown>	<54255A30.9010406@gmail.com> <20140929143735.5fa54253@notabene.brown>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: dmadm question
+Date: Mon, 29 Sep 2014 10:38:03 -0700
+Message-ID: <CAA9_cmc_YXg1=uVCm1wQ999ZMOihEv6HB-AO0FL8aiTwvFCQag@mail.gmail.com>
+References: <661E720A-B65C-4C24-B6A4-A4439596DEB9@lukeodom.com>
+	<20140915103154.59bc7293@notabene.brown>
+	<56516488c20b6b78729f14731fe8aecf.squirrel@webmail.lukeodom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20140929143735.5fa54253@notabene.brown>
+In-Reply-To: <56516488c20b6b78729f14731fe8aecf.squirrel@webmail.lukeodom.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, sebastian.riemer@profitbricks.com
+To: luke@lukeodom.com
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Hello Neil,
+Hmm, I wonder if this is a regression.  The last time I saw this
+problem I introduced commit:
 
-On 09/29/2014 06:37 AM, NeilBrown wrote:
-> On Fri, 26 Sep 2014 14:21:04 +0200 Francis Moreau <francis.moro@gmail.com>
-> wrote:
-> 
->> On 09/26/2014 12:44 PM, NeilBrown wrote:
->>> On Fri, 26 Sep 2014 12:23:27 +0200 Francis Moreau <francis.moro@gmail.com>
->>> wrote:
+commit b276dd33c74a51598e37fc72e6fb8f5ebd6620f2
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Thu Aug 25 19:14:24 2011 -0700
+
+    imsm: fix reserved sectors for spares
+
+    Different OROMs reserve different amounts of space for the migratio=
+n area.
+    When activating a spare minimize the reserved space otherwise a val=
+id spare
+    can be prevented from joining an array with a migration area smalle=
+r than
+    IMSM_RESERVED_SECTORS.
+
+    This may result in an array that cannot be reshaped, but that is le=
+ss
+    surprising than not being able to rebuild a degraded array.
+    imsm_reserved_sectors() already reports the minimal value which add=
+s to
+    the confusion when trying rebuild an array because mdadm -E indicat=
+es
+    that the device has enough space.
+
+    Cc: Anna Czarnowska <anna.czarnowska@intel.com>
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+=2E..but I notice now the logic was replaced with:
+
+commit b81221b74eba9fd7f670a8d3d4bfbda43ec91993
+Author: Czarnowska, Anna <anna.czarnowska@intel.com>
+Date:   Mon Sep 19 12:57:48 2011 +0000
+
+    imsm: Calculate reservation for a spare based on active disks in co=
+ntainer
+
+    New function to calculate minimum reservation to expect from a spar=
+e
+    is introduced.
+
+    The required amount of space at the end of the disk depends on what=
+ we
+    plan to do with the spare and what array we want to use it in.
+    For creating new subarray in an empty container the full reservatio=
+n of
+    MPB_SECTOR_COUNT + IMSM_RESERVED_SECTORS is required.
+
+    For recovery or OLCE on a volume using new metadata format at least
+    MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION is required.
+    The additional space for migration optimization included in
+    IMSM_RESERVED_SECTORS is not necessary and is not reserved by some =
+oroms.
+
+    MPB_SECTOR_CNT alone is not sufficient as it does not include the
+    reservation at the end of subarray.
+
+    However if the real reservation on active disks is smaller than thi=
+s
+    (when the array uses old metadata format) we should use the real va=
+lue.
+    This will allow OLCE and recovery to start on the spare even if the=
+ volume
+    doesn't have the reservation we normally use for new volumes.
+
+    Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+=2E..which raises the absolute minimum reserved sectors to a number >
+MPB_SECTOR_CNT.
+
+My thought is that we should always favor spare replacement over
+features like reshape, and dirty-stripe-log.  Commit b81221b74eba
+appears to favor the latter.
+
+
+
+On Mon, Sep 15, 2014 at 7:07 AM, Luke Odom <luke@lukeodom.com> wrote:
+> Drive is exact same model as old one. Output of requested commands:
+>
+> # mdadm --manage /dev/md127 --remove /dev/sdb
+> mdadm: hot removed /dev/sdb from /dev/md127
+> # mdadm --zero /dev/sdb
+> # mdadm --manage /dev/md127 --add /dev/sdb
+> mdadm: added /dev/sdb
+> # ps aux | grep mdmon
+> root      1937  0.0  0.1  10492 10484 ?        SLsl 14:04   0:00 mdmo=
+n md127
+> root      2055  0.0  0.0   2420   928 pts/0    S+   14:06   0:00 grep=
+ mdmon
+>
+> md: unbind<sdb>
+> md: export_rdev(sdb)
+> md: bind<sdb>
+>
+>
+>
+> On Sun, September 14, 2014 5:31 pm, NeilBrown wrote:
+>> On 12 Sep 2014 18:49:54 -0700 Luke Odom <luke@lukeodom.com> wrote:
+>>
+>>>   I had a raid1 subarray running within an imsm container. One of t=
+he
+>>> drives died so I replaced it. I can get the new drive into the imsm
+>>> container but I can=E2=80=99t add it to the raid1 array within that
+>>> container. I=E2=80=99ve read the man page and can=E2=80=99t see to =
+figure it out.
+>>> Any help would be greatly appreciated. Using mdadm 3.2.5 on debian
+>>> squeeze.
+>>
+>> This  should just happen automatically.  As soon as you add the devi=
+ce to
+>> the
+>> container, mdmon notices and adds it to the raid1.
+>>
+>> However it appears not to have happened...
+>>
+>> I assume the new drive is exactly the same size as the old drive?
+>> Try removing the new device from md127, run "mdadm --zero" on it, th=
+en add
+>> it
+>> back again.
+>> Do any messages appear in the kernel logs when you do that?
+>>
+>> Is "mdmon md127" running?
+>>
+>> NeilBrown
+>>
+>>
 >>>
->>>> Hello Neil,
->>>>
->>>> On 09/26/2014 02:33 AM, NeilBrown wrote:
->>>>> On Thu, 25 Sep 2014 18:12:07 +0200 Francis Moreau <francis.moro@gmail.com>
->>>>> wrote:
->>>> [...]
->>>>>> I tried to find out what could have opened the md device by using fuser,
->>>>>> but fuser reports no users.
->>>>>
->>>>> It is probably a transient open/close.
->>>>>
->>>>
->>>> If it's open/close wouldn't the 'close' part make the device disapear ?
 >>>
->>> No. It's ... complicated.
 >>>
->>>>
->>>>>>
->>>>>> I took a look to the udev rules which are the one shipped by mdadm 3.3.2
->>>>>> but nothing keep the device opened during the remove event.
->>>>>>
->>>>>> Could you give me some hints here to debug this ?
->>>>>
->>>>> Modify md_open in drivers/md/md.c to add
->>>>>    printk("Opened by %s\n", current->comm);
->>>>>
->>>>> and build a new kernel.  That will tell you the name of the process which
->>>>> opened the device.
->>>>>
->>>>
->>>> I did that I also added a trace in md_release() but strangely no trace
->>>> were outputed from there.
 >>>
->>> Without seeing your patch I can't guess what it happening, but I am *certain*
->>> that md_release() would get called providing md_open didn't return an error.
->>
->> Here's the patch:
->>
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 73aedcb..08ead8d 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -6703,6 +6703,8 @@ static int md_open(struct block_device *bdev,
->> fmode_t mode)
->>  	struct mddev *mddev = mddev_find(bdev->bd_dev);
->>  	int err;
->>
->> +	printk("md_open(): opened by %s\n", current->comm);
->> +
->>  	if (!mddev)
->>  		return -ENODEV;
->>
->> @@ -6735,6 +6737,8 @@ static void md_release(struct gendisk *disk,
->> fmode_t mode)
->>  {
->>   	struct mddev *mddev = disk->private_data;
->>
->> +	printk("md_release(): released by %s\n", current->comm);
->> +
->>  	BUG_ON(!mddev);
->>  	atomic_dec(&mddev->openers);
->>  	mddev_put(mddev);
->>
+>>> root@ds6790:~# cat /proc/mdstat
+>>> Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+>>> md126 : active raid1 sda[0]
+>>>       976759808 blocks super external:/md127/0 [2/1] [U_]
 >>>
->>> It might be helpful to print out the pid and the md device number too
->>>  task_tgid_vnr(current)
->>> will give you the pid.
->>>   mdname(mddev)
->>> give the name of the device.
+>>>
+>>>
+>>>
+>>> md127 : inactive sdb[0](S) sda[1](S)
+>>>       4901 blocks super external:imsm
+>>>
+>>>
+>>>
+>>>
+>>> unused devices: <none>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> root@ds6790:~# mdadm --detail /dev/md126
+>>> /dev/md126:
+>>>       Container : /dev/md127, member 0
+>>>      Raid Level : raid1
+>>>      Array Size : 976759808 (931.51 GiB 1000.20 GB)
+>>>   Used Dev Size : 976759940 (931.51 GiB 1000.20 GB)
+>>>    Raid Devices : 2
+>>>   Total Devices : 1
+>>>
+>>>
+>>>
+>>>
+>>>           State : active, degraded
+>>>  Active Devices : 1
+>>> Working Devices : 1
+>>>  Failed Devices : 0
+>>>   Spare Devices : 0
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>            UUID : 1be60edf:5c16b945:86434b6b:2714fddb
+>>>     Number   Major   Minor   RaidDevice State
+>>>        0       8        0        0      active sync
+>>> /dev/sda
+>>>        1       0        0        1      removed
+>>>
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> root@ds6790:~# mdadm --examine /dev/md127
+>>> /dev/md127:
+>>>           Magic : Intel Raid ISM Cfg Sig.
+>>>         Version : 1.1.00
+>>>     Orig Family : 6e37aa48
+>>>          Family : 6e37aa48
+>>>      Generation : 00640a43
+>>>      Attributes : All supported
+>>>            UUID : ac27ba68:f8a3618d:3810d44f:25031c07
+>>>        Checksum : 513ef1f6 correct
+>>>     MPB Sectors : 1
+>>>           Disks : 2
+>>>    RAID Devices : 1
+>>>
+>>>
+>>>
+>>>
+>>>   Disk00 Serial : 9XG3RTL0
+>>>           State : active
+>>>              Id : 00000002
+>>>     Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+>>>
+>>>
+>>>
+>>>
+>>> [Volume0]:
+>>>            UUID : 1be60edf:5c16b945:86434b6b:2714fddb
+>>>      RAID Level : 1
+>>>         Members : 2
+>>>           Slots : [U_]
+>>>     Failed disk : 1
+>>>       This Slot : 0
+>>>      Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+>>>    Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+>>>   Sector Offset : 0
+>>>     Num Stripes : 7630936
+>>>      Chunk Size : 64 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : degraded
+>>>     Dirty State : dirty
+>>>
+>>>
+>>>
+>>>
+>>>   Disk01 Serial : XG3RWMF
+>>>           State : failed
+>>>              Id : ffffffff
+>>>     Usable Size : 1953519880 (931.51 GiB 1000.20 GB)
+>>>
+>>>
+>>>
+>>>
 >>>
 >>
->> Here's the new trace, this time md_release() was called, so I probably
->> did something wrong the first time, sorry for that.
 >>
->> [    1.470744] md_open(): md127 opened by mdadm [388]
->> [    1.485437] md_release(): md127 released by mdadm [388]
->> [    1.486888] md_open(): md126 opened by mdadm [381]
->> [    1.487468] md_release(): md126 released by mdadm [381]
->> [    1.488646] md_open(): md125 opened by mdadm [383]
->> [    1.489074] md_release(): md125 released by mdadm [383]
->> [    1.490555] md_open(): md127 opened by mdadm [385]
->> [    1.512556] md_release(): md127 released by mdadm [385]
->> [    1.512582] md_open(): md127 opened by mdadm [385]
->> [    1.512682] md_open(): md126 opened by mdadm [384]
->> [    1.553414] md_release(): md126 released by mdadm [384]
->> [    1.553442] md_open(): md126 opened by mdadm [384]
->> [    1.553549] md_open(): md125 opened by mdadm [382]
->> [    1.573263] md_release(): md125 released by mdadm [382]
->> [    1.573288] md_open(): md125 opened by mdadm [382]
->> [    1.601034] md_open(): md125 opened by mdadm [459]
->> [    1.601041] md_release(): md125 released by mdadm [459]
->> [    1.601065] md_open(): md126 opened by mdadm [459]
->> [    1.601067] md_release(): md126 released by mdadm [459]
->> [    1.601090] md_open(): md127 opened by mdadm [459]
->> [    1.601092] md_release(): md127 released by mdadm [459]
->> [    1.601130] md_open(): md127 opened by mdadm [459]
->> [    1.601220] md_release(): md127 released by mdadm [459]
->> [    1.601633] md_open(): md126 opened by mdadm [459]
->> [    1.601661] md_release(): md126 released by mdadm [459]
->> [    1.601673] md_open(): md125 opened by mdadm [459]
->> [    1.601695] md_release(): md125 released by mdadm [459]
->> [    1.606127] md_open(): md125 opened by mdadm [454]
->> [    1.608682] md_open(): md126 opened by mdadm [453]
->> [    1.609514] md_open(): md127 opened by mdadm [448]
->> [    1.622512] md_release(): md126 released by mdadm [453]
->> [    1.623028] md_release(): md127 released by mdadm [448]
->> [    1.625288] md_open(): md126 opened by systemd-udevd [363]
->> [    1.625391] md_release(): md125 released by mdadm [454]
->> [    1.625619] md_open(): md127 opened by systemd-udevd [368]
->> [    1.625737] md_open(): md125 opened by systemd-udevd [366]
->> [    1.637137] md_release(): md125 released by systemd-udevd [366]
->> [    1.643982] md_open(): md125 opened by mdadm [476]
->> [    1.644071] md_release(): md127 released by systemd-udevd [368]
->> [    1.647787] md_release(): md125 released by mdadm [382]
->> [    1.648171] md_release(): md126 released by systemd-udevd [363]
->> [    1.651629] md_open(): md126 opened by mdadm [479]
->> [    1.656666] md_open(): md127 opened by mdadm [480]
->> [    1.657771] md_release(): md125 released by mdadm [476]
->> [    1.659312] md_open(): md125 opened by systemd-udevd [365]
->> [    1.663193] md_release(): md127 released by mdadm [385]
->> [    1.673669] md_release(): md125 released by systemd-udevd [365]
->> [    1.685527] md_release(): md127 released by mdadm [480]
->> [    1.685599] md_release(): md126 released by mdadm [479]
->> [    1.686058] md_open(): md126 opened by systemd-udevd [366]
->> [    1.686282] md_release(): md126 released by systemd-udevd [366]
->> [    1.691024] md_open(): md127 opened by systemd-udevd [363]
->> [    1.695415] md_release(): md126 released by mdadm [384]
->> [    1.707163] md_release(): md127 released by systemd-udevd [363]
->>
->>>>> mdadm --stop --scan <<<
->>
->> [   89.975162] md_open(): md125 opened by mdadm [930]
->> [   89.975305] md_release(): md125 released by mdadm [930]
->> [   89.977434] md_open(): md125 opened by mdadm [932]
->> [   89.978813] md_open(): md125 opened by mdadm [930]
->> [   89.979365] md_release(): md125 released by mdadm [932]
->> [   89.979693] md_open(): md125 opened by systemd-udevd [931]
->> [   89.985790] md_release(): md125 released by systemd-udevd [931]
->> [   90.179911] md_release(): md125 released by mdadm [930]
->> [   90.180168] md_open(): md127 opened by mdadm [459]
->> [   90.180187] md_release(): md127 released by mdadm [459]
->> [   90.180199] md_open(): md126 opened by mdadm [459]
->> [   90.180205] md_release(): md126 released by mdadm [459]
->> [   90.180556] md_open(): md126 opened by mdadm [930]
->> [   90.180653] md_release(): md126 released by mdadm [930]
->> [   90.180690] md_open(): md126 opened by mdadm [930]
->> [   90.180758] md_open(): mdX opened by mdadm [459]
->> [   90.180995] md_open(): md125 opened by mdadm [459]
->> [   90.181056] md_release(): md125 released by mdadm [459]opened by mdadm [968]
->> [   90.182717] md_open(): md127 opened by mdadm [459]
->> [   90.182725] md_release(): md127 released by mdadm [459]
->> [   90.182732] md_open(): md126 opened by mdadm [459]
->> [   90.182761] md_release(): md126 released by mdadm [459]
->> [   90.182770] md_open(): md125 opened by mdadm [459]
->> [   90.182775] md_release(): md125 released by mdadm [459]
->> [   90.182940] md_release(): md126 released by mdadm [930]
->> [   90.183167] md_open(): md127 opened by mdadm [930]
->> [   90.183257] md_release(): md127 released by mdadm [930]
->> [   90.183288] md_open(): md127 opened by mdadm [930]
->> [   90.183461] md_open(): md127 opened by mdadm [459]
->> [   90.183488] md_release(): md127 released by mdadm [459]
->> [   90.183499] md_open(): md125 opened by mdadm [459]
->> [   90.183505] md_release(): md125 released by mdadm [459]
->> [   90.183686] md_release(): md127 released by mdadm [930]
-> 
-> So what were pids 930 and 459?
-> One was presumably the "mdadm -Ss"  - probably 930.
-> Is 459 the "mdadm --monitor" ??  That might be useful hint.
-> 
-
-yes.
-
-[456] is:  /sbin/mdadm --monitor --scan --daemonise --syslog
---pid-file=/run/mdadm/mdadm.pid
-
-and [930] is 'mdamd -Ss'.
-
-> 
->>
->>
->>> Probably there is a 'change' event happening just before the 'remove' event,
->>> and udev runs "mdadm" on the 'change' event, and that ends up happening after
->>> the device has been removed.
->>>
->>> Is this really a problem?  Can't you just ignore it and pretend it isn't
->>> there?
->>
->> Well, if you list the block devices that the kernel detected in order to
->> operate on them, it could. I don't know exactly what would be the result
->> to use it but it could confuse some tools.
->>
->> Is there a way to check that the 'ghost' device has been removed by
->> poking sysfs ?
-> 
-> If you look at /sys/block/md*/md/array_state, those that contain 'inactive'
-> or 'clear' might be 'ghosts', or might be in the process of being assembled.
-> If you write 'clear' to the same file they should disappear.... unless udev
-> does something to re-create them.
-> 
-
-It's in 'clear' state, and writing 'clear' doesn't make the device disapear.
-
-[root@localhost ~]# dmesg -c >/dev/null
-[root@localhost ~]# echo clear >/sys/block/md125/md/array_state
-[root@localhost ~]# dmesg
-[  254.106252] md: md125 stopped.
-[  254.108182] md_open(): mdX opened by mdadm [968]
-
-[  254.109103] md_open(): md125 opened by mdadm [459]
-  [  254.109127] md_open(): md125 opened by mdadm [459]
-  [  254.109281] md_release(): md125 released by mdadm [459]
-
-  [  254.109337] md_open(): md125 opened by mdadm [968]
-  [  254.109572] md_release(): md125 released by mdadm [968]
-
-  [  254.109847] md_open(): md125 opened by systemd-udevd [967]
-  [  254.109986] md_release(): md125 released by systemd-udevd [967]
-
-In that sequence, it seems that mdadm [459] is missing a md_release()
-here. Is this expected ?
-
-Thanks
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
