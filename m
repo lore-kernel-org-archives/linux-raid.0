@@ -1,47 +1,36 @@
-From: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Subject: UEFI and mdadm questions.
-Date: Wed, 1 Oct 2014 17:33:15 +0100
-Message-ID: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] dm-log-userspace: fix memory leak on failure path in dm_ulog_tfr_init()
+Date: Wed,  1 Oct 2014 22:58:35 +0200
+Message-ID: <1412197115-32593-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 List-Id: linux-raid.ids
 
-From what I can tell with UEFI I need to set up a UEFI partition with a
-FAT format.
+If cn_add_callback() fails in dm_ulog_tfr_init(), it does not
+deallocate prealloced memory but calls cn_del_callback().
+It looks like a misprint.
 
-On my current BIOS system I have a Biosboot 1M, /boot Raid1 200M and /
-Raid 1 40G.
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Obviously Grub installs to the mbr, and then installs a bit into
-Biosboot which can read raids, hence it can read and boot from /boot.
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/md/dm-log-userspace-transfer.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Further, from what I can tell, into the UEFI partition can go either a
-kernel & initramfs with UEFI support, or a "loader" that then loads the
-kernel.
-
-What I am unsure about are... 
-
-1)  Can the loader/kernel understand md raid? so the / can be in a bog
-standard raid1 v1.2?
-
-2) I'm guessing I would no longer need the /boot as that would be
-replaced by what ever was in the UEFI partition?
-
-3) as my "/boot" is currently in a raid 1 my life is simple, should any
-changes occur they are replicated to the drives I have set up as /boot
-raid 1, and I installed the mbr portion of boot loader manually on each
-disk and tested pulling one, and then booting from another.. it
-worked :-)
-So I would like to keep things, if not simple, at least less likely to
-have problems because I forgot to install duplicates of the UEFI on all
-the disks... so can I use a .90v raid1 on the UEFI partition, then
-format it as fat... so that all copies of what ever is in the UEFI
-partition are replicated across the multiple raid1 disks, instead of
-having to remember to copy what ever is in there manually to ach disk?
-
-Jon.
-
+diff --git a/drivers/md/dm-log-userspace-transfer.c b/drivers/md/dm-log-userspace-transfer.c
+index b428c0ae63d5..39ad9664d397 100644
+--- a/drivers/md/dm-log-userspace-transfer.c
++++ b/drivers/md/dm-log-userspace-transfer.c
+@@ -272,7 +272,7 @@ int dm_ulog_tfr_init(void)
+ 
+ 	r = cn_add_callback(&ulog_cn_id, "dmlogusr", cn_ulog_callback);
+ 	if (r) {
+-		cn_del_callback(&ulog_cn_id);
++		kfree(prealloced_cn_msg);
+ 		return r;
+ 	}
+ 
+-- 
+1.9.1
