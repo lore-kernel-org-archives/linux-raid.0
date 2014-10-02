@@ -1,84 +1,149 @@
-From: Anthonys Lists <antlists@youngman.org.uk>
-Subject: Re: UEFI and mdadm questions.
-Date: Thu, 02 Oct 2014 01:17:55 +0100
-Message-ID: <542C99B3.6060809@youngman.org.uk>
-References: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [dm-devel] dm-raid: add RAID discard support
+Date: Thu, 2 Oct 2014 14:04:10 +1000
+Message-ID: <20141002140410.1b379f74@notabene.brown>
+References: <1411491106-23676-1-git-send-email-heinzm@redhat.com>
+	<yq18ulaszpk.fsf@sermon.lab.mkp.net>
+	<20140924093308.120fe616@notabene.brown>
+	<yq1zjdpsqry.fsf@sermon.lab.mkp.net>
+	<7C39EB56-623A-4318-A558-258ABA32FF12@redhat.com>
+	<20140924142157.33475baa@notabene.brown>
+	<5422A4C4.4020707@redhat.com>
+	<20141001125625.1e0d356a@notabene.brown>
+	<20141001133237.GB16521@redhat.com>
+	<20141002093403.25cc832f@notabene.brown>
+	<20141002013135.GA21091@redhat.com>
+	<20141002120049.58dba551@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Wilson, Jonathan" <piercing_male@hotmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/0AyWikMcAkej.VCMJqRbFG_"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141002120049.58dba551@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Heinz Mauelshagen <heinzm@redhat.com>, device-mapper development <dm-devel@redhat.com>, Shaohua Li <shli@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/10/2014 17:33, Wilson, Jonathan wrote:
+--Sig_/0AyWikMcAkej.VCMJqRbFG_
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I've just been struggling with exactly this trying to move my gentoo 
-system on to raid ...
->  From what I can tell with UEFI I need to set up a UEFI partition with a
-> FAT format.
 
-I believe so, yes.
->
-> On my current BIOS system I have a Biosboot 1M, /boot Raid1 200M and /
-> Raid 1 40G.
->
-> Obviously Grub installs to the mbr, and then installs a bit into
-> Biosboot which can read raids, hence it can read and boot from /boot.
+I plan to submit this to Linus tomorrow, hopefully for 3.7, unless there are
+complaints. It is in my for-next branch now.
 
-Is this grub1, or grub2? I gather grub1 actually CAN'T read raid, which 
-is why you need to use raid version 0.9. Grub then thinks the disk is 
-plain ext4 or whatever, and reads it fine. grub2 actually handles raid, 
-and therefore is happy with newer raids like 1.2
->
-> Further, from what I can tell, into the UEFI partition can go either a
-> kernel & initramfs with UEFI support, or a "loader" that then loads the
-> kernel.
->
-> What I am unsure about are...
->
-> 1)  Can the loader/kernel understand md raid? so the / can be in a bog
-> standard raid1 v1.2?
+Thanks,
+NeilBrown
 
-Don't think so. Apparently the kernel can NOT put a raid array together 
-so you have a catch-22 - the kernel needs the raid in order to start 
-user-space, but it needs user-space in order to find the raid ... :-(
 
-So you need an initramfs to solve the conundrum. And of course, grub1 
-doesn't work with uefi :-(
->
-> 2) I'm guessing I would no longer need the /boot as that would be
-> replaced by what ever was in the UEFI partition?
+=46rom aec6f821ed92fac5ae4f1db50279a3999de5872a Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 2 Oct 2014 13:45:00 +1000
+Subject: [PATCH] md/raid5: disable 'DISCARD' by default due to safety
+ concerns.
 
-You do need /boot - not least so grub2 can find its config file (that's 
-not quite true, but close enough...)
+It has come to my attention (thanks Martin) that 'discard_zeroes_data'
+is only a hint.  Some devices in some cases don't do what it
+says on the label.
 
->
-> 3) as my "/boot" is currently in a raid 1 my life is simple, should any
-> changes occur they are replicated to the drives I have set up as /boot
-> raid 1, and I installed the mbr portion of boot loader manually on each
-> disk and tested pulling one, and then booting from another.. it
-> worked :-)
+The use of DISCARD in RAID5 depends on reads from discarded regions
+being predictably zero.  If a write to a previously discarded region
+performs a read-modify-write cycle it assumes that the parity block
+was consistent with the data blocks.  If all were zero, this would
+be the case.  If some are and some aren't this would not be the case.
+This could lead to data corruption after a device failure when
+data needs to be reconstructed from the parity.
 
-In the world of grub2/raid1.2 I wish things looked that simple. From my 
-"badly burned novice" viewpoint, I don't think it is.
+As we cannot trust 'discard_zeroes_data', ignore it by default
+and so disallow DISCARD on all raid4/5/6 arrays.
 
-> So I would like to keep things, if not simple, at least less likely to
-> have problems because I forgot to install duplicates of the UEFI on all
-> the disks... so can I use a .90v raid1 on the UEFI partition, then
-> format it as fat... so that all copies of what ever is in the UEFI
-> partition are replicated across the multiple raid1 disks, instead of
-> having to remember to copy what ever is in there manually to ach disk?
+As many devices are trustworthy, and as there are benefits to using
+DISCARD, add a module parameter to over-ride this caution and cause
+DISCARD to work if discard_zeroes_data is set.
 
-Interesting idea ... but I get the impression that once you've set up 
-the uefi partition and got it working, you shouldn't normally ever need 
-to go back to it. This is, I think, one of those cases you need to set 
-up a crib sheet and not do anything without it, as you'll forget from 
-one time to the next (which is why, I think, you want to use raid :-) 
-Personally, I *wouldn't* want to use raid, on the assumption that I'm 
-going to screw it up and  don't want a mirror trashing disk2 as I trash 
-disk1.
+If a site want to enable DISCARD on some arrays but not on others they
+should select DISCARD support at the filesystem level, and set the
+raid456 module parameter.
+    raid456.devices_handle_discard_safely=3DY
 
-Cheers,
-Wol
+As this is a data-safety issue, I believe this patch is suitable for
+-stable.
+DISCARD support for RAID456 was added in 3.7
+
+Cc: Shaohua Li <shli@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: Heinz Mauelshagen <heinzm@redhat.com>
+Cc: stable@vger.kernel.org (3.7+)
+Fixes: 620125f2bf8ff0c4969b79653b54d7bcc9d40637
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 183588b11fc1..9f0fbecd1eb5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -64,6 +64,10 @@
+ #define cpu_to_group(cpu) cpu_to_node(cpu)
+ #define ANY_GROUP NUMA_NO_NODE
+=20
++static bool devices_handle_discard_safely =3D false;
++module_param(devices_handle_discard_safely, bool, 0644);
++MODULE_PARM_DESC(devices_handle_discard_safely,
++		 "Set to Y if all devices in each array reliably return zeroes on reads =
+from discarded regions");
+ static struct workqueue_struct *raid5_wq;
+ /*
+  * Stripe cache
+@@ -6208,7 +6212,7 @@ static int run(struct mddev *mddev)
+ 		mddev->queue->limits.discard_granularity =3D stripe;
+ 		/*
+ 		 * unaligned part of discard request will be ignored, so can't
+-		 * guarantee discard_zerors_data
++		 * guarantee discard_zeroes_data
+ 		 */
+ 		mddev->queue->limits.discard_zeroes_data =3D 0;
+=20
+@@ -6233,6 +6237,18 @@ static int run(struct mddev *mddev)
+ 			    !bdev_get_queue(rdev->bdev)->
+ 						limits.discard_zeroes_data)
+ 				discard_supported =3D false;
++			/* Unfortunately, discard_zeroes_data is not currently
++			 * a guarantee - just a hint.  So we only allow DISCARD
++			 * if the sysadmin has confirmed that only safe devices
++			 * are in use by setting a module parameter.
++			 */
++			if (!devices_handle_discard_safely) {
++				if (discard_supported) {
++					pr_info("md/raid456: discard support disabled due to uncertainty.\n");
++					pr_info("Set raid456.devices_handle_discard_safely=3DY to override.\n=
+");
++				}
++				discard_supported =3D false;
++			}
+ 		}
+=20
+ 		if (discard_supported &&
+
+--Sig_/0AyWikMcAkej.VCMJqRbFG_
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVCzOuznsnt1WYoG5AQIB4xAAvzMtpITo0/kg1yF2RHNL0rU++YL7FZjh
+z5ZVX1k5NU+MZWOZ+FA1zloLbY+oBxJAMYx1AjqqxSzTmH2BbXWKqbcCDBnxR0yw
+706xAk+tYiJwNxE5wNxpdhxHWT9W2jIwBWYlSRThG5m0+L5UrmWBjzGjJ4eWySxG
+b212kCzfmQd89b0v/e/r6CLQsVr0PQTl+de3Nvi4n0LgSAztc+T9ru8l+4VJJu5V
+2La6iDjzyM7VrIuLBRCZaM01WWYC7mawONQ2O9tpJ4o7fixFXah7OtydyUvcdZcn
+jWe8Qbz3m8QZ562CIKiRcuAssOzmSdru5ZE06jqnFWuUk5+DLK7M8+m7k0D3jF4M
+9PE8uffr+RRSOHU5zR8sYiCE78hfBCWolzTOtdqFVxbtzGVvo2oslasXNUhFsJK3
+9spW6C+SvC9XLGuuA673x67FQz9WTMyWpyCR7pg0TOhLmKpPyP5I2Ghd89a9MLDY
+7zXskk8S34kATRUxBkXb2ms+BIX/2u33sacRUF9hZ+HPPm29kaFG0KYQJ+FUXH1h
+9hllPzxIDW09coB1KBjN+kKuxR3uYmdVw8qKrGLS6MkzkR7FCyR1NbMl8lPwiLOs
+xZsbxVlpFFIbOjPIpt3cK6dnb779CpM81uh4VmBmy82YY0gy/4XmUHN48884txW0
+lVA16iZfVeY=
+=TW1W
+-----END PGP SIGNATURE-----
+
+--Sig_/0AyWikMcAkej.VCMJqRbFG_--
