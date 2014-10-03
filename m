@@ -1,136 +1,164 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: UEFI and mdadm questions.
-Date: Fri, 3 Oct 2014 01:04:05 -0400
-Message-ID: <E82F134B-634B-46B9-A835-846CA89728FB@colorremedies.com>
-References: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST] one last-minute update for md/raid5
+Date: Fri, 3 Oct 2014 15:38:01 +1000
+Message-ID: <20141003153801.7cd83266@notabene.brown>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/blMCYqA47lJao73nKoxOIyF"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Shaohua Li <shli@kernel.org>, Mike Snitzer <snitzer@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-
-On Oct 1, 2014, at 12:33 PM, "Wilson, Jonathan" <piercing_male@hotmail.=
-com> wrote:
-
-> From what I can tell with UEFI I need to set up a UEFI partition with=
- a
-> FAT format.
-
-It's a particular kind of FAT, that's defined as EFI FAT, the idea bein=
-g that if the originating FAT ever changes, EFI FAT won't.
-
->=20
-> On my current BIOS system I have a Biosboot 1M, /boot Raid1 200M and =
-/
-> Raid 1 40G.
->=20
-> Obviously Grub installs to the mbr, and then installs a bit into
-> Biosboot which can read raids, hence it can read and boot from /boot.
-
-BIOSboot applies to GPT disks on BIOS computers, not MBR. On MBR disks,=
- the GRUB stage1 code jumps to stage2 code in the MBR gap which is the =
-region between the MBR and the first partition's starting LBA.
-
->=20
-> Further, from what I can tell, into the UEFI partition can go either =
-a
-> kernel & initramfs with UEFI support, or a "loader" that then loads t=
-he
-> kernel.
-
-No. An OSLoader is required, it's an EFI application. Its job is to loa=
-d a kernel and initramfs. The kernel and initramfs could be on the ESP =
-(EFI System partition) but this is fraught with limitations. The expect=
-ation is that the kernel and initramfs are on some other partition of t=
-he same disk. Of course if you're using GRUB it doesn't care and will f=
-ind a kernel/initramfs off another disk also, or even off md raid.
-
-In the case of GRUB, it directly understands pretty much every filesyst=
-em used on linux, so it can read kernel+initramfs from ext4, or ext4 on=
- mdraid, or on LVM, or on Btrfs (including multiple devices).
-
->=20
-> What I am unsure about are...=20
->=20
-> 1)  Can the loader/kernel understand md raid? so the / can be in a bo=
-g
-> standard raid1 v1.2?
-
-If the EFI OSLoader is GRUB2, then yes.
+--Sig_/blMCYqA47lJao73nKoxOIyF
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
->=20
-> 2) I'm guessing I would no longer need the /boot as that would be
-> replaced by what ever was in the UEFI partition?
+Hi Linus,
+ I hope this is in time for 3.17...
+ It turns out that 'discard_zeroes_data' is not a guarantee, and RAID4/5/6
+ really depends on it for DISCARD to be handled safely.
+ So it is safest to default to disabling DISCARD on these arrays until some
+ sort of whitelist arrangement can be found.
 
-The ESP isn't a replacement for /boot. But you can have a unified /boot=
- and / on a single file system, and GRUB2 can boot from it, including i=
-f that volume is on an md device. GRUB2 even boots off md raid6 (it's s=
-orta crazy and badass at the same time, but in my testing it does work =
-with the BIOS being the limiting factor as to how many drives are recog=
-nized at this stage).
-
+Thanks,
+NeilBrown
 
 
->=20
-> 3) as my "/boot" is currently in a raid 1 my life is simple, should a=
-ny
-> changes occur they are replicated to the drives I have set up as /boo=
-t
-> raid 1, and I installed the mbr portion of boot loader manually on ea=
-ch
-> disk and tested pulling one, and then booting from another.. it
-> worked :-)
-> So I would like to keep things, if not simple, at least less likely t=
-o
-> have problems because I forgot to install duplicates of the UEFI on a=
-ll
-> the disks=85 so can I use a .90v raid1 on the UEFI partition,
+The following changes since commit fe82dcec644244676d55a1384c958d5f67979adb:
 
-That solution isn't that simple because it requires too many things tha=
-t aren't supported by any distribution. And also it increases the chanc=
-es of corruption because of course the EFI firmware only sees these par=
-tition/volumes as single devices, not as md devices that need to be ass=
-embled first into a logical device. Some EFI firmwares do reportedly wr=
-ite to the ESP, so if they write to one and not the other, while also n=
-ot changing the metadata on either partition, there's no way to know wh=
-ich one is valid now. So that's just a mess. And even if your firmware =
-doesn't write to the ESP ever, what about dual boot? That too would be =
-proscribed because the ESP is shared among multiple OS's. So the idea i=
-s just way off the rails of anything standardized or widely supported. =
-Will it work? Yes. But do you want to support something this non-standa=
-rd?
+  Linux 3.17-rc7 (2014-09-28 14:29:07 -0700)
 
-An alternative is a single static grub.cfg on the EFI System partition =
-that points to the real grub.cfg on an mdraid1 / or /boot. Since the ES=
-P's are identical, and never need updating again, this is much safer. Y=
-ou can also dispense with this ridiculously bad idea most all linux dis=
-tros have right now of persistently mounting the ESP at /boot/efi (and =
-persistently mount it rw as well! really bad!).
+are available in the git repository at:
 
-The way to do this is with the grub configfile command. The most straig=
-htforward way to do it is let grub-mkconfig create a grub.cfg for you, =
-and then copy past the parts that tell GRUB how to find /. For example =
-it needs to know the mduuid so it knows there's an mdraid volume to ass=
-embled, and also the volume uuid so it knows what filesystem volume it =
-should find the file one, and then "configfile /boot/grub/grub.cfg" and=
- it'll load that grub.cfg. And it's that grub.cfg that your system shou=
-ld update - of course you have to figure out how your system knows to u=
-pdate the grub.cfg so that it does it correctly without stepping on you=
-r ESP grub.cfg (for one comment out the /boot/efi line in fstab and the=
-n unmount the ESP). This is distribution specific.
+  git://neil.brown.name/md tags/md/3.17-final-fix
 
-Either way it's a bit complicated to figure out initially.
+for you to fetch changes up to 8e0e99ba64c7ba46133a7c8a3e3f7de01f23bd93:
 
+  md/raid5: disable 'DISCARD' by default due to safety concerns. (2014-10-0=
+2 13:45:00 +1000)
 
-Chris Murphy
+----------------------------------------------------------------
+One fix for raid5 discard issue.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----------------------------------------------------------------
+NeilBrown (1):
+      md/raid5: disable 'DISCARD' by default due to safety concerns.
+
+ drivers/md/raid5.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+commit 8e0e99ba64c7ba46133a7c8a3e3f7de01f23bd93
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Oct 2 13:45:00 2014 +1000
+
+    md/raid5: disable 'DISCARD' by default due to safety concerns.
+   =20
+    It has come to my attention (thanks Martin) that 'discard_zeroes_data'
+    is only a hint.  Some devices in some cases don't do what it
+    says on the label.
+   =20
+    The use of DISCARD in RAID5 depends on reads from discarded regions
+    being predictably zero.  If a write to a previously discarded region
+    performs a read-modify-write cycle it assumes that the parity block
+    was consistent with the data blocks.  If all were zero, this would
+    be the case.  If some are and some aren't this would not be the case.
+    This could lead to data corruption after a device failure when
+    data needs to be reconstructed from the parity.
+   =20
+    As we cannot trust 'discard_zeroes_data', ignore it by default
+    and so disallow DISCARD on all raid4/5/6 arrays.
+   =20
+    As many devices are trustworthy, and as there are benefits to using
+    DISCARD, add a module parameter to over-ride this caution and cause
+    DISCARD to work if discard_zeroes_data is set.
+   =20
+    If a site want to enable DISCARD on some arrays but not on others they
+    should select DISCARD support at the filesystem level, and set the
+    raid456 module parameter.
+        raid456.devices_handle_discard_safely=3DY
+   =20
+    As this is a data-safety issue, I believe this patch is suitable for
+    -stable.
+    DISCARD support for RAID456 was added in 3.7
+   =20
+    Cc: Shaohua Li <shli@kernel.org>
+    Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+    Cc: Mike Snitzer <snitzer@redhat.com>
+    Cc: Heinz Mauelshagen <heinzm@redhat.com>
+    Cc: stable@vger.kernel.org (3.7+)
+    Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+    Acked-by: Mike Snitzer <snitzer@redhat.com>
+    Fixes: 620125f2bf8ff0c4969b79653b54d7bcc9d40637
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 183588b11fc1..9f0fbecd1eb5 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -64,6 +64,10 @@
+ #define cpu_to_group(cpu) cpu_to_node(cpu)
+ #define ANY_GROUP NUMA_NO_NODE
+=20
++static bool devices_handle_discard_safely =3D false;
++module_param(devices_handle_discard_safely, bool, 0644);
++MODULE_PARM_DESC(devices_handle_discard_safely,
++		 "Set to Y if all devices in each array reliably return zeroes on reads =
+from discarded regions");
+ static struct workqueue_struct *raid5_wq;
+ /*
+  * Stripe cache
+@@ -6208,7 +6212,7 @@ static int run(struct mddev *mddev)
+ 		mddev->queue->limits.discard_granularity =3D stripe;
+ 		/*
+ 		 * unaligned part of discard request will be ignored, so can't
+-		 * guarantee discard_zerors_data
++		 * guarantee discard_zeroes_data
+ 		 */
+ 		mddev->queue->limits.discard_zeroes_data =3D 0;
+=20
+@@ -6233,6 +6237,18 @@ static int run(struct mddev *mddev)
+ 			    !bdev_get_queue(rdev->bdev)->
+ 						limits.discard_zeroes_data)
+ 				discard_supported =3D false;
++			/* Unfortunately, discard_zeroes_data is not currently
++			 * a guarantee - just a hint.  So we only allow DISCARD
++			 * if the sysadmin has confirmed that only safe devices
++			 * are in use by setting a module parameter.
++			 */
++			if (!devices_handle_discard_safely) {
++				if (discard_supported) {
++					pr_info("md/raid456: discard support disabled due to uncertainty.\n");
++					pr_info("Set raid456.devices_handle_discard_safely=3DY to override.\n=
+");
++				}
++				discard_supported =3D false;
++			}
+ 		}
+=20
+ 		if (discard_supported &&
+
+--Sig_/blMCYqA47lJao73nKoxOIyF
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVC42OTnsnt1WYoG5AQLgfxAAmuyhWBx2dB1gDyBKd2vkfYHZkD0aks+F
+Xk7OEyI5n6X8HmExl+49B/PLE3Gbcif7QpC4Z92ifuxoOPScgYAxkSHh2fXhnN5K
+gYsnB7+55H2OnlaW3VmS5xsoQ5IWqQj6DGk0O+HrpVv/qSJF0RpD1S0cJrF14Kto
+11xUNWm8H+/IVsAyB7SiaRvf4IfxeSWx4xlZQozugWJ0EAP8YoVyQemgHO8Hqf2+
+TJeKznx+3iPfiyaF+YykXqkwXvWb0gr2QO35MCGCRLWUl10koQ+dlq3XuZs2RYvI
+D4iTA2ERBEBMJU1PN9wynQmoKxRoYbXi+hVcbT+GksXjyo6yY9Lc0Yd5zBoSv1yV
+R7fw0elHMn4NmxA+Cr+8hZx7kTgF3l2lyQOOxDCeuTOZ4iR95AAwoE5DqvcaNUPp
+jNIlVBopokWQaFVUkIP17gUZYYledjR9hTaHtEcvv02QFSU8ztfqicRrBO1R5Bjr
+uoRLDvMDjw96DJAMKg1VgiP8LXliNYXi9PwSXDuQPFL7yu5vSzt9caW3AONgZIY8
+ALZ9yfZRpxKyWE+hoAHgHJyO8WUaueMmJt5K/6+MsRTH6nxvpo2pWMm8QR000K2S
+u4/T+0su5i7rwN5lcT4kyhesZWMdQ/Qi/QITdZuD9sPU0O/PkBZUhmLn1K34wlrP
+bbKpkxybMwo=
+=SYYL
+-----END PGP SIGNATURE-----
+
+--Sig_/blMCYqA47lJao73nKoxOIyF--
