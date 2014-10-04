@@ -1,38 +1,30 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: build-sys: do not depend on check_rundir for executables
-Date: Sat, 04 Oct 2014 21:27:08 +0400
-Message-ID: <1412443628.428300.8315.nullmailer@msgid.tls.msk.ru>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
+Subject: raid6 appears not-degraded just after creation
+Date: Sat, 04 Oct 2014 22:14:01 +0200
+Message-ID: <54305509.30001@shiftmail.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The problem is that the link lines will always be executed
-even if the executables are up to date.
+MD Raid6 appears not-degraded during initial resync just after creation:
 
-If anything, this check_rundir should be a dependency of
-install target, or some other "phony" target like this,
-since check_rundir is phony by itself.
+md106 : active raid6 sdbv1[7] sdbr1[6] sdbq1[5] sdbp1[4] sdbo1[3] 
+sdbn1[2] sdbm1[1] sdbl1[0]
+       3144938496 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[8/8] [UUUUUUUU]
+       [======>..............]  resync = 34.3% (179834012/524156416) 
+finish=54.3min speed=105637K/sec
 
-Signed-off-by: Michael Tokarev <mjt@tls.msk.ru>
+and also from sys filesystem:
 
---- a/Makefile
-+++ b/Makefile
-@@ -172,7 +172,7 @@ everything-test: all mdadm.static swap_super test_stripe \
- # mdadm.uclibc and mdassemble.uclibc don't work on x86-64
- # mdadm.tcc doesn't work..
- 
--mdadm : check_rundir $(OBJS)
-+mdadm : $(OBJS)
- 	$(CC) $(CFLAGS) $(LDFLAGS) -o mdadm $(OBJS) $(LDLIBS)
- 
- mdadm.static : $(OBJS) $(STATICOBJS)
-@@ -195,7 +195,7 @@ mdmon.O2 : $(MON_SRCS) $(INCL) mdmon.h
- 	$(CC) -o mdmon.O2 $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -DHAVE_STDINT_H -O2 -D_FORTIFY_SOURCE=2 $(MON_SRCS)
- 
- # use '-z now' to guarantee no dynamic linker interactions with the monitor thread
--mdmon : check_rundir $(MON_OBJS)
-+mdmon : $(MON_OBJS)
- 	$(CC) $(CFLAGS) $(LDFLAGS) $(MON_LDFLAGS) -Wl,-z,now -o mdmon $(MON_OBJS) $(LDLIBS)
- msg.o: msg.c msg.h
- 
+cat /sys/block/md106/md/degraded
+0
+
+(kernel 3.14.19)
+
+Is this normal?
+EW
