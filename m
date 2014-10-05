@@ -1,291 +1,312 @@
-From: Jean-Paul Sergent <jpsergent@gmail.com>
-Subject: Re: 2 disk raid 5 failure
-Date: Sun, 5 Oct 2014 02:55:25 -0700
-Message-ID: <CANuKpt=ujnZh1R+g8O6QxGW4=CLOJAePB-+tFaTKz+XaNVvOYw@mail.gmail.com>
-References: <CANuKpt=QJsham0TQWR1Cu1EC8GLyc0aSdU4p3DOznBRrEea11A@mail.gmail.com>
-	<20141005194105.4377c295@notabene.brown>
-	<CANuKptm=Y3L-xUfGfB5GO3yV63buHeWsfxMYKjUVPP8paGhs0A@mail.gmail.com>
-	<CANuKptnEodSbv5ywzMtBq4TZXeOmdd7g0Awo1SXB=xm9kD=EQg@mail.gmail.com>
-	<20141005205242.31d630da@notabene.brown>
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Re: Please advise, strange "not enough to start the array while not clean"
+Date: Sun, 5 Oct 2014 17:40:36 +0200
+Message-ID: <CAAOsTSmcCuz94DB0mO8+Y3xfthLTzq8TViSv4fsbMqSm26W15A@mail.gmail.com>
+References: <CAAOsTSkaFdum4LD8aOkOsG-f45fTjRSUPb=EqguJi4yaNjcSdQ@mail.gmail.com>
+	<20140922131940.58f97093@notabene.brown>
+	<CAAOsTSncnYC=hTMtQ8O-dOAdkqueqP3=kJJi6jfoAb1CwQtvHA@mail.gmail.com>
+	<20140922165602.43330805@notabene.brown>
+	<CAAOsTSmC7YNzguxF+e978wLmUR_4J1Xb+EfdqbpCj8FCquUrAg@mail.gmail.com>
+	<20140922201701.77f5cc66@notabene.brown>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141005205242.31d630da@notabene.brown>
+In-Reply-To: <20140922201701.77f5cc66@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Great, so its mostly media, movies and stuff. So no real tragedy if I
-loose it. but I'll go ahead and do both then copy the few essential
-files I think I have off of it.
+Hello,
 
-Do you know why version 3.3 had those problems and 3.3.2 works?
+so it worked as we expected and it was most probably caused by that bug=
+=2E
 
-Anyways, thanks again.
+Thanks for the assistance.
 
--JP
+Patrik
 
-On Sun, Oct 5, 2014 at 2:52 AM, NeilBrown <neilb@suse.de> wrote:
-> On Sun, 5 Oct 2014 02:38:53 -0700 Jean-Paul Sergent <jpsergent@gmail.com>
-> wrote:
+2014-09-22 12:17 GMT+02:00 NeilBrown <neilb@suse.de>:
+> On Mon, 22 Sep 2014 09:20:35 +0200 Patrik Horn=EDk <patrik@dsl.sk> wr=
+ote:
 >
->> haha, you're awesome, did an apt-get update && apt-get install mdadm.
->> Got version:
+>> Well I browsed through the sources of latest mdadm version at night
+>> instead of sleeping :) and was searching how it got clean flag set t=
+o
+>> 0. And was not sure exactly about that line there and from which
+>> device it gets clean state. So the bug was that it can get it from n=
+ot
+>> current device? It makes sense because first device identified by
+>> mdadm is old md101 device.
+>
+> Correct.
+>
 >>
->> mdadm - v3.3.2 - 21st August 2014
+>> So will it work then if I use 3.3 and somehow dont give it md101
+>> device? By stopping it before -A call or by manually specifying othe=
+r
+>> drives? Or you really recommend to build latest version of mdadm?
+>
+>   mdadm -S /dev/mdXX list-of-devices-that-are-working
+>
+> should start the array for you using 3.3.
+> Then
+>    mdadm /dev/mdXX --re-add /dev/md101
+>
+> will re-add the device and hopefully do a quick bitmap-based rebuild.
+>
 >>
->> and all is good, re-added drives automatically, threw out the one with
->> the oldest event, which had bad sectors.
+>> What is expected behaviour with 3.3.1+? Can it be started with all
+>> devices and it should automatically start to recover md101? If so wh=
+at
+>> is best way, to start it without md101 and then use -re-add to add i=
+t,
+>> start it without md101 and use -add or start it also with md101?
 >
-> Excellent :-)
+> --add should have the same effect as --re-add.
 >
->>
->> Thanks so much.
->>
->> One last question though, the filesystem was XFS. Should I repair the
->> degraded raid first with a spare disk? or should I do an xfs scrub
->> first?
+> I think mdadm 3.3.1 will just assemble the array without md101 and yo=
+u then
+> have to --re-add that yourself.  To get it re-added automatically you=
+ needed
+> to have "policy action=3Dre-add" or similar in mdadm.conf, and then u=
+se
+>   mdadm -I /dev/devicename
+> on each device.  That should put the whole array together and re-add =
+anything
+> that needs it.
 >
-> It hardly matters.  If another device is going to fail, either action could
-> cause it by putting stress on the system.  If not, doing both in parallel is
-> perfectly safe.
->
-> If you have some really really important files, it might make sense to copy
-> them off before doing anything else.
-> I would probably start the array recovering, then start running the xfs scrub
-> tool.
+> I think.
 >
 > NeilBrown
 >
 >
 >>
->> -JP
+>> Thank you very much.
 >>
->> On Sun, Oct 5, 2014 at 2:21 AM, Jean-Paul Sergent <jpsergent@gmail.com> wrote:
->> > I'm recovering with a liveUSB of debian, the system this raid is on
->> > normally runs fedora 20, I'm not sure what version of mdadm was
->> > running on that system. I can find out if I need to.
+>> 2014-09-22 8:56 GMT+02:00 NeilBrown <neilb@suse.de>:
+>> > On Mon, 22 Sep 2014 08:34:21 +0200 Patrik Horn=EDk <patrik@dsl.sk>=
+ wrote:
+>> >
+>> >> - Well what is exact meaning of --no-degraded then? Because I am =
+using
+>> >> it also on RAID6 arrays that are missing one drive and mdadm star=
+ts
+>> >> them. I thought until today that it is against assembling for exa=
+mple
+>> >> RAID6 array with missing more than two drives or to be more preci=
+se
+>> >> array with number of drives it used last time. (I did not look at=
+ the
+>> >> code what does it exactly. It is mdadm 3.3 on Debian.)
+>> >
+>> > Sorry, I confused myself.
+>> > "--no-degraded" means "Only start the array if all expected device=
+s are
+>> > present".
+>> > So if the array "knows" that one device is missing, it will start =
+if all
+>> > other devices are present.  But if it "thinks" that all devices ar=
+e working,
+>> > then it will only start if all the devices ar there.
+>> >
+>> >>
+>> >> - Well array was shutdown cleanly manually by mdadm -S. Cant the =
+not
+>> >> clean classification be result of md101 device between find devic=
+es or
+>> >> result of first two assemble tries?
+>> >
+>> > If the state still says "Clean" (which it does, thanks), the mdadm=
+ should
+>> > treat it as 'clean'.
+>> >
+>> > I think you are probably hitting the bug fixed by
+>> >
+>> >  http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dcommitdiff;h=3D56bb=
+c588f7f0f3bdd3ec23f02109b427c1d3b8f1
+>> >
+>> > which is in 3.3.1.
+>> >
+>> > So a new version of mdadm should fix it.
+>> >
+>> > NeilBrown
 >> >
 >> >
->> > root@debian:~# mdadm --version
->> > mdadm - v3.3 - 3rd September 2013
 >> >
+>> >>
+>> >> - Anyway as I mentioned superblock on all five devices has clean =
+state. Example:
+>> >> /dev/sdk1:
+>> >>           Magic : XXXXXXX
+>> >>         Version : 1.2
+>> >>     Feature Map : 0x1
+>> >>      Array UUID : XXXXXXXXXXXXXXXXXXXXX
+>> >>            Name :
+>> >>   Creation Time : Thu Aug XXXXXXXX
+>> >>      Raid Level : raid6
+>> >>    Raid Devices : 6
+>> >>
+>> >>  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
+>> >>      Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
+>> >>   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
+>> >>     Data Offset : 262144 sectors
+>> >>    Super Offset : 8 sectors
+>> >>    Unused Space : before=3D262056 sectors, after=3D911 sectors
+>> >>           State : clean
+>> >>     Device UUID : YYYYYYYYYYYYYYYYYYYY
+>> >>
+>> >> Internal Bitmap : 8 sectors from superblock
+>> >>     Update Time : Mon Sep 22 02:23:45 2014
+>> >>   Bad Block Log : 512 entries available at offset 72 sectors
+>> >>        Checksum : ZZZZZZZZ - correct
+>> >>          Events : EEEEEE
+>> >>
+>> >>          Layout : left-symmetric
+>> >>      Chunk Size : 512K
+>> >>
+>> >>    Device Role : Active device 4
+>> >>    Array State : AAAAA. ('A' =3D=3D active, '.' =3D=3D missing, '=
+R' =3D=3D replacing)
+>> >>
+>> >> - md101 has Events count lower by 16 than others devices.
+>> >>
+>> >> - Please I need little more assurance what is exact state of arra=
+y and
+>> >> explain why it is behaving as it is behaving, so I can be sure wh=
+at
+>> >> steps are needed and what happens. The data on array is important=
+=2E
+>> >> Patrik Horn=EDk
+>> >> =B9=E9fredaktor www.DSL.sk
+>> >> Tel.: +421 905 385 666
+>> >> Email: patrik@dsl.sk
+>> >>
+>> >>
+>> >> 2014-09-22 5:19 GMT+02:00 NeilBrown <neilb@suse.de>:
+>> >> > On Mon, 22 Sep 2014 04:11:20 +0200 Patrik Horn=EDk <patrik@dsl.=
+sk> wrote:
+>> >> >
+>> >> >> Hello Neil,
+>> >> >>
+>> >> >> I've got this situation unfamiliar to me on RAID6 array md1 wi=
+th important data.
+>> >> >>
+>> >> >> - It is RAID6 with 6 devices, 5 are partitions and 1 is anothe=
+r RAID0
+>> >> >> array md101 from two smaller drives. One of the smaller drives=
+ froze,
+>> >> >> so md101 got kicked out from md1 and marked as faulty in md1. =
+After
+>> >> >> while I've stopped md1 without removing md101 from it first. T=
+hen I
+>> >> >> rebooted and assembled md101.
+>> >> >>
+>> >> >> - First I tried mdadm -A --no-degraded -u UUID /dev/md1 but go=
+t
+>> >> >> "mdadm: /dev/md1 assembled from 5 drives (out of 6), but not s=
+tarted."
+>> >> >> so I stopped the md1.
+>> >> >>
+>> >> >> - Second time I started it with -v and got:
+>> >> >>
+>> >> >> mdadm: /dev/md101 is identified as a member of /dev/md1, slot =
+5.
+>> >> >> mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 4=
+=2E
+>> >> >> mdadm: /dev/sdi1 is identified as a member of /dev/md1, slot 1=
+=2E
+>> >> >> mdadm: /dev/sdh1 is identified as a member of /dev/md1, slot 2=
+=2E
+>> >> >> mdadm: /dev/sdg1 is identified as a member of /dev/md1, slot 0=
+=2E
+>> >> >> mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 3=
+=2E
+>> >> >> mdadm: added /dev/sdi1 to /dev/md1 as 1
+>> >> >> mdadm: added /dev/sdh1 to /dev/md1 as 2
+>> >> >> mdadm: added /dev/sde1 to /dev/md1 as 3
+>> >> >> mdadm: added /dev/sdk1 to /dev/md1 as 4
+>> >> >> mdadm: added /dev/md101 to /dev/md1 as 5 (possibly out of date=
+)
+>> >> >> mdadm: added /dev/sdg1 to /dev/md1 as 0
+>> >> >> mdadm: /dev/md1 assembled from 5 drives (out of 6), but not st=
+arted.
+>> >> >>
+>> >> >> - On third time I tried without --nodegraded with mdadm -A -v =
+-u UUID
+>> >> >> /dev/md1. This is what I've got:
+>> >> >>
+>> >> >> mdadm: /dev/md101 is identified as a member of /dev/md1, slot =
+5.
+>> >> >> mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 4=
+=2E
+>> >> >> mdadm: /dev/sdi1 is identified as a member of /dev/md1, slot 1=
+=2E
+>> >> >> mdadm: /dev/sdh1 is identified as a member of /dev/md1, slot 2=
+=2E
+>> >> >> mdadm: /dev/sdg1 is identified as a member of /dev/md1, slot 0=
+=2E
+>> >> >> mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 3=
+=2E
+>> >> >> mdadm: added /dev/sdi1 to /dev/md1 as 1
+>> >> >> mdadm: added /dev/sdh1 to /dev/md1 as 2
+>> >> >> mdadm: added /dev/sde1 to /dev/md1 as 3
+>> >> >> mdadm: added /dev/sdk1 to /dev/md1 as 4
+>> >> >> mdadm: added /dev/md101 to /dev/md1 as 5 (possibly out of date=
+)
+>> >> >> mdadm: added /dev/sdg1 to /dev/md1 as 0
+>> >> >> mdadm: /dev/md1 assembled from 5 drives - not enough to start =
+the
+>> >> >> array while not clean - consider --force.
+>> >> >>
+>> >> >> Array md1 has bitmap. All drive devices have all same Events, =
+their
+>> >> >> state is clean and Device Role is Active device. md101 has act=
+ive
+>> >> >> state and lower Events.
+>> >> >>
+>> >> >> Is this expected behavior? My theory is that it is caused by m=
+d101 and
+>> >> >> I should start array md1 without it (by for example stopping m=
+d101)
+>> >> >> and then re-add it. Is that a case or is it something else?
+>> >> >>
+>> >> >> Thanks.
+>> >> >>
+>> >> >> Best regards,
+>> >> >>
+>> >> >> Patrik
+>> >> >
+>> >> >
+>> >> > The array is clearly degraded as one of the devices failed and =
+hasn't been
+>> >> > recovered yet, so using --nodegraded is counter productive, as =
+you
+>> >> > discovered.
+>> >> >
+>> >> > It appears that the array is also marked as 'dirty'.  That sugg=
+ests that it
+>> >> > wasn't shut down cleanly.
+>> >> > What does "mdadm --examine" of some device show?
+>> >> >
+>> >> > You probably need to re-assemble the array with --force like it=
+ suggests,
+>> >> > then add the failed device and let it recover.
+>> >> >
+>> >> > NeilBrown
+>> >> >
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-r=
+aid" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
+l
 >> >
->> > root@debian:~# mdadm -A /dev/md0 --force -vv /dev/sdb /dev/sdc
->> > /dev/sde /dev/sdf /dev/sdg
->> > mdadm: looking for devices for /dev/md0
->> > mdadm: /dev/sdb is identified as a member of /dev/md0, slot 2.
->> > mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
->> > mdadm: /dev/sde is identified as a member of /dev/md0, slot 0.
->> > mdadm: /dev/sdf is identified as a member of /dev/md0, slot 3.
->> > mdadm: /dev/sdg is identified as a member of /dev/md0, slot 4.
->> > mdadm: added /dev/sdc to /dev/md0 as 1
->> > mdadm: added /dev/sdb to /dev/md0 as 2
->> > mdadm: added /dev/sdf to /dev/md0 as 3 (possibly out of date)
->> > mdadm: added /dev/sdg to /dev/md0 as 4 (possibly out of date)
->> > mdadm: added /dev/sde to /dev/md0 as 0
->> > mdadm: /dev/md0 assembled from 3 drives - not enough to start the array.
->> >
->> > Thanks,
->> > -JP
->> >
->> > On Sun, Oct 5, 2014 at 1:41 AM, NeilBrown <neilb@suse.de> wrote:
->> >> On Sat, 4 Oct 2014 22:43:01 -0700 Jean-Paul Sergent <jpsergent@gmail.com>
->> >> wrote:
->> >>
->> >>> Greetings,
->> >>>
->> >>> Recently I lost 2 disks, out of 5, in my raid 5 array from a bad SATA power
->> >>> cable. It was a Y splitter and it shorted... it was cheap. I was wondering
->> >>> if there was any chance in getting my data back.
->> >>>
->> >>> Of the 2 disks that blew out, one actually had bad/unreadable sectors on
->> >>> the disk and the other disk seems fine. I have cloned both disks with DD to
->> >>> 2 new disks and forced the one disk to clone even with errors. The
->> >>> remaining 3 disks are in tact. The events number on the array for all 5
->> >>> disks are very close to each other:
->> >>>
->> >>>          Events : 201636
->> >>>          Events : 201636
->> >>>          Events : 201636
->> >>>          Events : 201630
->> >>>          Events : 201633
->> >>>
->> >>> Which from my reading gives me some hope, but I'm not sure. I have not done
->> >>> "recovering a failed software raid" on the wiki yet, the part about
->> >>> using a loop device to protect your array. I thought I would send a
->> >>> message out to this list first before going down
->> >>> that route.
->> >>>
->> >>> I did try to do a mdadm --force --assemble on the array but is says that it
->> >>> only has 3 disks which isn't enough to start the array. I don't want to do
->> >>> anything else before consulting the mailing list first.
->> >>
->> >> --force --assemble really is what you want.  It should work.
->> >> What does
->> >>    mdadm -A /dev/md1 --force -vv /dev/sdb /dev/sdc /dev/sde /dev/sdf /dev/sdg
->> >>
->> >> report??
->> >> What version of mdadm (mdadm -V) do you have?
->> >>
->> >> NeilBrown
->> >>
->> >>
->> >>>
->> >>> below I have pasted the mdadm --examine from each member drive. Any help would
->> >>> be greatly appreciated.
->> >>>
->> >>> Thanks,
->> >>> -JP
->> >>>
->> >>> /dev/sdb:
->> >>>           Magic : a92b4efc
->> >>>         Version : 1.2
->> >>>     Feature Map : 0x0
->> >>>      Array UUID : 7de100f5:4f30f751:62456293:fe98f735
->> >>>            Name : b1ackb0x:1
->> >>>   Creation Time : Sun Jan 13 00:01:44 2013
->> >>>      Raid Level : raid5
->> >>>    Raid Devices : 5
->> >>>
->> >>>  Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
->> >>>      Array Size : 5860548608 (5589.05 GiB 6001.20 GB)
->> >>>   Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
->> >>>     Data Offset : 2048 sectors
->> >>>    Super Offset : 8 sectors
->> >>>    Unused Space : before=1968 sectors, after=816 sectors
->> >>>           State : clean
->> >>>     Device UUID : 71d7c3d7:7b232399:51571715:711da6f6
->> >>>
->> >>>     Update Time : Tue Apr 29 02:49:21 2014
->> >>>        Checksum : cd29f83c - correct
->> >>>          Events : 201636
->> >>>
->> >>>          Layout : left-symmetric
->> >>>      Chunk Size : 512K
->> >>>
->> >>>    Device Role : Active device 2
->> >>>    Array State : AAA.. ('A' == active, '.' == missing, 'R' == replacing)
->> >>> /dev/sdc:
->> >>>           Magic : a92b4efc
->> >>>         Version : 1.2
->> >>>     Feature Map : 0x0
->> >>>      Array UUID : 7de100f5:4f30f751:62456293:fe98f735
->> >>>            Name : b1ackb0x:1
->> >>>   Creation Time : Sun Jan 13 00:01:44 2013
->> >>>      Raid Level : raid5
->> >>>    Raid Devices : 5
->> >>>
->> >>>  Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
->> >>>      Array Size : 5860548608 (5589.05 GiB 6001.20 GB)
->> >>>   Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
->> >>>     Data Offset : 2048 sectors
->> >>>    Super Offset : 8 sectors
->> >>>    Unused Space : before=1968 sectors, after=816 sectors
->> >>>           State : clean
->> >>>     Device UUID : b47c32b5:b2f9e81a:37150c33:8e3fa6ca
->> >>>
->> >>>     Update Time : Tue Apr 29 02:49:21 2014
->> >>>        Checksum : 1e5353af - correct
->> >>>          Events : 201636
->> >>>
->> >>>          Layout : left-symmetric
->> >>>      Chunk Size : 512K
->> >>>
->> >>>    Device Role : Active device 1
->> >>>    Array State : AAA.. ('A' == active, '.' == missing, 'R' == replacing)
->> >>> /dev/sde:
->> >>>           Magic : a92b4efc
->> >>>         Version : 1.2
->> >>>     Feature Map : 0x0
->> >>>      Array UUID : 7de100f5:4f30f751:62456293:fe98f735
->> >>>            Name : b1ackb0x:1
->> >>>   Creation Time : Sun Jan 13 00:01:44 2013
->> >>>      Raid Level : raid5
->> >>>    Raid Devices : 5
->> >>>
->> >>>  Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
->> >>>      Array Size : 5860548608 (5589.05 GiB 6001.20 GB)
->> >>>   Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
->> >>>     Data Offset : 2048 sectors
->> >>>    Super Offset : 8 sectors
->> >>>    Unused Space : before=1968 sectors, after=816 sectors
->> >>>           State : clean
->> >>>     Device UUID : 0398da5b:0bcddd81:8f7e77e9:6689ee0c
->> >>>
->> >>>     Update Time : Tue Apr 29 02:49:21 2014
->> >>>        Checksum : 24a3f586 - correct
->> >>>          Events : 201636
->> >>>
->> >>>          Layout : left-symmetric
->> >>>      Chunk Size : 512K
->> >>>
->> >>>    Device Role : Active device 0
->> >>>    Array State : AAA.. ('A' == active, '.' == missing, 'R' == replacing)
->> >>> /dev/sdf:
->> >>>           Magic : a92b4efc
->> >>>         Version : 1.2
->> >>>     Feature Map : 0x0
->> >>>      Array UUID : 7de100f5:4f30f751:62456293:fe98f735
->> >>>            Name : b1ackb0x:1
->> >>>   Creation Time : Sun Jan 13 00:01:44 2013
->> >>>      Raid Level : raid5
->> >>>    Raid Devices : 5
->> >>>
->> >>>  Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
->> >>>      Array Size : 5860548608 (5589.05 GiB 6001.20 GB)
->> >>>   Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
->> >>>     Data Offset : 2048 sectors
->> >>>    Super Offset : 8 sectors
->> >>>    Unused Space : before=1968 sectors, after=976752816 sectors
->> >>>           State : clean
->> >>>     Device UUID : 356c6d85:627a994f:753dec0d:db4fa4f2
->> >>>
->> >>>     Update Time : Tue Apr 29 02:37:38 2014
->> >>>        Checksum : 2621f9d5 - correct
->> >>>          Events : 201630
->> >>>
->> >>>          Layout : left-symmetric
->> >>>      Chunk Size : 512K
->> >>>
->> >>>    Device Role : Active device 3
->> >>>    Array State : AAAAA ('A' == active, '.' == missing, 'R' == replacing)
->> >>> /dev/sdg:
->> >>>           Magic : a92b4efc
->> >>>         Version : 1.2
->> >>>     Feature Map : 0x0
->> >>>      Array UUID : 7de100f5:4f30f751:62456293:fe98f735
->> >>>            Name : b1ackb0x:1
->> >>>   Creation Time : Sun Jan 13 00:01:44 2013
->> >>>      Raid Level : raid5
->> >>>    Raid Devices : 5
->> >>>
->> >>>  Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
->> >>>      Array Size : 5860548608 (5589.05 GiB 6001.20 GB)
->> >>>   Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
->> >>>     Data Offset : 2048 sectors
->> >>>    Super Offset : 8 sectors
->> >>>    Unused Space : before=1968 sectors, after=976752816 sectors
->> >>>           State : clean
->> >>>     Device UUID : 3dc152d8:832dd43a:a6d638e3:6e12b394
->> >>>
->> >>>     Update Time : Tue Apr 29 02:48:01 2014
->> >>>        Checksum : db9e6008 - correct
->> >>>          Events : 201633
->> >>>
->> >>>          Layout : left-symmetric
->> >>>      Chunk Size : 512K
->> >>>
->> >>>    Device Role : Active device 4
->> >>>    Array State : AAA.A ('A' == active, '.' == missing, 'R' == replacing)
->> >>> --
->> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> >>> the body of a message to majordomo@vger.kernel.org
->> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
