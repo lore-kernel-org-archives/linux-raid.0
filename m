@@ -1,84 +1,133 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: UEFI and mdadm questions.
-Date: Sun, 5 Oct 2014 16:22:59 -0400
-Message-ID: <F14F7054-A1A1-4381-ADC8-B76952338589@colorremedies.com>
-References: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl> <E82F134B-634B-46B9-A835-846CA89728FB@colorremedies.com> <54318B86.7060506@turmel.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Ian Young <ian@duffrecords.com>
+Subject: Re: not enough operational mirrors
+Date: Sun, 5 Oct 2014 14:43:26 -0700
+Message-ID: <CANs+QMyfQo=P4PkRpsi+z-QKBYcRotDzpfbyMD9ywG0OdwfGVw@mail.gmail.com>
+References: <CANs+QMzWWqh-5MemOrbguaq7fNzJPDaYUH66K0rgGrnaXY7FNA@mail.gmail.com>
+	<20140922154717.6cd3cab2@notabene.brown>
+	<CANs+QMxHe3SBAk=VaUQuwOSGyv9p8dJjFsxPT+hvf+c20T23=g@mail.gmail.com>
+	<20140923095328.0e6ed347@notabene.brown>
+	<CANs+QMyuNDsxRVLbR_4-ki79x8OHRCwwMGOmbPkLRwM38ZBAaA@mail.gmail.com>
+	<CANs+QMwarDWxRkxfrN4JXfH7W1uBSWPDkms7YC=DCa1qJNv0Gg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54318B86.7060506@turmel.org>
+In-Reply-To: <CANs+QMwarDWxRkxfrN4JXfH7W1uBSWPDkms7YC=DCa1qJNv0Gg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID Raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I've received two replacement drives and added them to the array.  One
+of them finished synchronizing and became an active member.  The
+other, sdf, has been treated as a spare.  After running a smartctl
+test on each of the drives, I found that sde has errors, preventing
+the sync process from making sdf an active member.  I have tried a
+couple of recommendations I read on various sites, such as stopping
+the array and recreating it with the "--assume-clean" option (not
+possible because a process is using the array) and growing the array
+one disk larger (not possible because this is RAID 10).  Should I try
+to repair the bad blocks or is there a way to force sde and sdf to
+sync first?
 
-On Oct 5, 2014, at 2:18 PM, Phil Turmel <philip@turmel.org> wrote:
+[root@localhost ~]# smartctl -l selftest /dev/sde
+smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.6.10-4.fc18.x86_64] (local build)
+Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
 
-> On 10/03/2014 01:04 AM, Chris Murphy wrote:
->>=20
->> No. An OSLoader is required, it's an EFI application. Its job is to
->> load a kernel and initramfs. The kernel and initramfs could be on th=
-e
->> ESP (EFI System partition) but this is fraught with limitations. The
->> expectation is that the kernel and initramfs are on some other
->> partition of the same disk. Of course if you're using GRUB it doesn'=
-t
->> care and will find a kernel/initramfs off another disk also, or even
->> off md raid.
->=20
-> An option to consider is to compile a kernel using the EFI stub optio=
-n,
-> a pre-set command line, and an embedded initramfs.  Then the kernel c=
-an
-> boot directly from the EFI FAT partition with *no bootloader*.  The
-> embedded initramfs can support any raid/lvm/partitioning scheme
-> what-so-ever.
+=== START OF READ SMART DATA SECTION ===
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining
+LifeTime(hours)  LBA_of_first_error
+# 1  Short offline       Completed: read failure       90%     11822
+      1187144704
+# 2  Short offline       Completed: read failure       90%     11814
+      1187144704
 
-Sure but then it means the kernel+initramfs is on FAT32. Ick. And there=
-'s no advantage if using maintstream storage options like md raid, lvm,=
- btrfs, xfs, ext234, reiserfs, ufs, zfs, hfs+, ntfs and more, because G=
-RUB2 already understands these things so the kernel can be located on t=
-hem.
-
-=46or appliances, there could be some advantage since there'd only be o=
-ne kernel present at a time, no fallback necessary. My Android phone, f=
-or example, has 35 partitions.
-
->=20
-> If your BIOS can be configured to try multiple boot images, it should=
- be
-> possible to have true raid fallback without using motherboard or
-> hardware raid.  (Set up md raid1 with metadata v1.0 of multiple copie=
-s
-> of the EFI FAT partition.)  I've been meaning to try this=85.
-
-Problems with this: a.) new Windows 8 hardware might require you boot W=
-indows to get to the feature enabling the firmware setup, because on su=
-ch hardware USB isn't initialized by default.
-http://mjg59.dreamwidth.org/24869.html
-
-I don't know why we don't have free software to initiate this, but I ha=
-ven't come across it so far.
-
-b.) There's no guarantee the firmware won't write to the ESP, thus rend=
-ering the individual md raid members out of sync and without their meta=
-data being updated, i.e. in effect, the logical device they become late=
-r, is corrupt. Separately they aren't corrupt, merely out of sync, but =
-you don't have an obvious way of knowing which one.
-
-c.) strictly speaking any partition with mdadm metadata should have the=
- linux raid partition type GUID set; not the EFI System partition type =
-GUID. Those GUIDs are mutually exclusive.
-
-This is why I'm still not a fan of using mdadm to raid1 an EFI System p=
-artition.
-
-
-Chris Murphy
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Sep 23, 2014 at 10:07 AM, Ian Young <ian@duffrecords.com> wrote:
+> I booted from a live CD so I could use version 3.1.10 of xfs_repair
+> (versions < 3.1.8 reportedly have a bug when using ag_stride), then
+> ran the following command:
+>
+> xfs_repair -P -o bhash=16384 -o ihash=16384 -o ag_stride=16
+> /dev/mapper/vg_raid10-srv
+>
+> It stopped after a few seconds, saying:
+>
+> xfs_repair: read failed: Input/output error
+> XFS: failed to find log head
+> zero_log: cannot find log head/tail (xlog_find_tail=5), zeroing it anyway
+> xfs_repair: libxfs_device_zero write failed: Input/output error
+>
+> However, I was able to mount the volume after that and my data was
+> still there!  Thanks for pointing me in the right direction with the
+> RAID.
+>
+> On Mon, Sep 22, 2014 at 5:55 PM, Ian Young <ian@duffrecords.com> wrote:
+>> It's XFS.  I'm running:
+>>
+>>  xfs_repair -n /dev/mapper/vg_raid10-srv
+>>
+>> I expect it will take hours or days as this volume is 8.15 TiB.
+>>
+>> On Mon, Sep 22, 2014 at 4:53 PM, NeilBrown <neilb@suse.de> wrote:
+>>> On Mon, 22 Sep 2014 10:17:46 -0700 Ian Young <ian@duffrecords.com> wrote:
+>>>
+>>>> I forced the three good disks and the one that was behind by two
+>>>> events to assemble:
+>>>>
+>>>> mdadm --assemble --force /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sde2
+>>>>
+>>>> Then I added the other two disks and let it sync overnight:
+>>>>
+>>>> mdadm --add --force /dev/md0 /dev/sdd2
+>>>> mdadm --add --force /dev/md0 /dev/sdf2
+>>>>
+>>>> I rebooted the system in recovery mode and the root filesystem is
+>>>> back!  However, / is read-only and my /srv partition, which is the
+>>>> largest and has most of my data, can't mount.  When I try to examine
+>>>> the array, it says "no md superblock detected on /dev/md0."  On top of
+>>>> the software RAID, I have four logical volumes.  Here is the full LVM
+>>>> configuration:
+>>>>
+>>>> http://pastebin.com/gzdZq5DL
+>>>>
+>>>> How do I recover the superblock?
+>>>
+>>> What sort of filesystem is it?  ext4??
+>>>
+>>> Try "fsck -n" and see if it finds anything.
+>>>
+>>> The fact that LVM found everything suggests that the array is mostly
+>>> working.  Maybe just one superblock got corrupted somehow.  If 'fsck' doesn't
+>>> get you anywhere you might need to ask on a forum dedicated to the particular
+>>> filesystem.
+>>>
+>>> NeilBrown
+>>>
+>>>
+>>>>
+>>>> On Sun, Sep 21, 2014 at 10:47 PM, NeilBrown <neilb@suse.de> wrote:
+>>>> > On Sun, 21 Sep 2014 22:32:19 -0700 Ian Young <ian@duffrecords.com> wrote:
+>>>> >
+>>>> >> My 6-drive software RAID 10 array failed.  The individual drives
+>>>> >> failed one at a time over the past few months but it's been an
+>>>> >> extremely busy summer and I didn't have the free time to RMA the
+>>>> >> drives and rebuild the array.  Now I'm wishing I had acted sooner
+>>>> >> because three of the drives are marked as removed and the array
+>>>> >> doesn't have enough mirrors to start.  I followed the recovery
+>>>> >> instructions at raid.wiki.kernel.org and, before making things any
+>>>> >> worse, saved the status using mdadm --examine and consulted this
+>>>> >> mailing list.  Here's the status:
+>>>> >>
+>>>> >> http://pastebin.com/KkV8e8Gq
+>>>> >>
+>>>> >> I can see that the event counts on sdd2 and sdf2 are significantly far
+>>>> >> behind, so we can consider that data too old.  sdc2 is only behind by
+>>>> >> two events, so any data loss there should be minimal.  If I can make
+>>>> >> the array start with sd[abce]2 I think that will be enough to mount
+>>>> >> the filesystem, back up my data, and start replacing drives.  How do I
+>>>> >> do that?
+>>>> >
+>>>> > Use the "--force" option with "--assemble".
+>>>> >
+>>>> > NeilBrown
+>>>
