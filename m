@@ -1,67 +1,59 @@
-From: Matthijs Kooijman <matthijs@stdin.nl>
-Subject: Re: MD Raid1 hangs system on read error (3.10)
-Date: Mon, 6 Oct 2014 07:32:51 +0200
-Message-ID: <20141006053250.GD1452@login.tika.stderr.nl>
-References: <20141005092700.GA1452@login.tika.stderr.nl>
- <20141006110833.5028706c@notabene.brown>
+From: Francis Moreau <francis.moro@gmail.com>
+Subject: Re: UEFI and mdadm questions.
+Date: Mon, 06 Oct 2014 08:14:59 +0200
+Message-ID: <54323363.7020308@gmail.com>
+References: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="ZJcv+A0YCCLh2VIg"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141006110833.5028706c@notabene.brown>
+In-Reply-To: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "Wilson, Jonathan" <piercing_male@hotmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello,
 
---ZJcv+A0YCCLh2VIg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 10/01/2014 06:33 PM, Wilson, Jonathan wrote:
+> From what I can tell with UEFI I need to set up a UEFI partition with a
+> FAT format.
+> 
+> On my current BIOS system I have a Biosboot 1M, /boot Raid1 200M and /
+> Raid 1 40G.
+> 
+> Obviously Grub installs to the mbr, and then installs a bit into
+> Biosboot which can read raids, hence it can read and boot from /boot.
+> 
+> Further, from what I can tell, into the UEFI partition can go either a
+> kernel & initramfs with UEFI support, or a "loader" that then loads the
+> kernel.
+> 
+> What I am unsure about are... 
+> 
+> 1)  Can the loader/kernel understand md raid? so the / can be in a bog
+> standard raid1 v1.2?
+> 
+> 2) I'm guessing I would no longer need the /boot as that would be
+> replaced by what ever was in the UEFI partition?
+> 
+> 3) as my "/boot" is currently in a raid 1 my life is simple, should any
+> changes occur they are replicated to the drives I have set up as /boot
+> raid 1, and I installed the mbr portion of boot loader manually on each
+> disk and tested pulling one, and then booting from another.. it
+> worked :-)
+> So I would like to keep things, if not simple, at least less likely to
+> have problems because I forgot to install duplicates of the UEFI on all
+> the disks... so can I use a .90v raid1 on the UEFI partition, then
+> format it as fat... so that all copies of what ever is in the UEFI
+> partition are replicated across the multiple raid1 disks, instead of
+> having to remember to copy what ever is in there manually to ach disk?
+> 
 
-Hi Neil,
+There was already a post on that subject you can find here:
+http://comments.gmane.org/gmane.linux.raid/45611
 
-> You are running 3.10.3.  It contains a bug that was fixed in 3.10.32.
->=20
-> http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commi=
-t/?id=3D9f2d289933e60ec726a7a9522e2dcdfdc82c58de
->=20
-> So if you upgrade your kernel, the problem should be gone.
-Great, I was hoping things were so simple :-)
+It might answer some of your questions.
 
-I already thought I tried upgrading the kernel at some point, but it
-seems I upgraded some older kernel package I had installed. Just
-confirmed that all the crashes happened using 3.10.3, so you're most
-certainly right.
+Bye.
 
-Thanks!
-
-Gr.
-
-Matthijs
-
---ZJcv+A0YCCLh2VIg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBCAAGBQJUMimCAAoJEDeYrxWhVlZYyNEP/0GEoIStEPZuGK/rbiA7so1g
-/UDJDHOOwrJddpUuhOklJqGOBxSgn+qvjoXZUqCWdJDXZQKMADUsP3ZF0GHpMCts
-KA8jobD4g/o+GmRDdZDTZwNmZmgPuSQZOD6MrQ758RQGfpkhI0TYnhYFBIDYmYLn
-hrtQEUexvAtUF3K2Ddn2zjnm/+FeS/gqai2ZARKcuPAHkojCIj8NTnA7GJhSsZh0
-3E7KcNZId/OTiWnABZZcXO3vhu2d6BY6oL+blsw+5dbT/Mp9Jtp+Ds0EGsRdH7Zc
-A3XleCjRPB5rnnq/ZqqnMAhA1I0Uh8df67Ys4/EzOrd6u8q6sRDr5up5Xm6g8/DO
-y//GZThNSUX+q7C2epdTOB29B5KhBR5Uj8k8KHCmVHa7owmN8US4T1GIycvxmAPJ
-oH5KZetn16PohN4z2oZs117pK0hZPYPq6skDOJr8oEcabWmbUaFC4qCps4tmBmsE
-rf9ZRzGXoxIgkPPD49lnmlZbiocQJxZq5x6aBjIouVyq7UV7dpx+o5K1o/bb2Je9
-HHWtAgVUjOgp+m33tKkae0H3+gDFVAQT1p60KqI96ehhSR2+zG8DRlv+Qucd7Pje
-yo90bS/52O5fi5MQ/l6ggpGs3jobN9PfBjChXzK/8q/TAU/M6fCQ8qmXaBeQszXd
-O7+py6cwUeqsHratGyiM
-=uGAk
------END PGP SIGNATURE-----
-
---ZJcv+A0YCCLh2VIg--
