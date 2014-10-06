@@ -1,87 +1,93 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Cancelling not pausing array check
-Date: Mon, 6 Oct 2014 14:53:14 +0100
-Message-ID: <20141006135314.GB1928@cthulhu.home.robinhill.me.uk>
-References: <CAAOsTSnYjW-r7VoOL0SiNhsdv5kn9DunrfD3izuLDzaHaBb56Q@mail.gmail.com>
- <20141006133641.GA1928@cthulhu.home.robinhill.me.uk>
- <CAAOsTSny1MUvQktS=nSLLGdvdWd3Ud4M7pPxgWKvHCamem8V4Q@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: UEFI and mdadm questions.
+Date: Mon, 06 Oct 2014 11:58:02 -0400
+Message-ID: <5432BC0A.1030208@turmel.org>
+References: <BLU436-SMTP10330CBEBC0CA1E27853BE498B80@phx.gbl> <E82F134B-634B-46B9-A835-846CA89728FB@colorremedies.com> <54318B86.7060506@turmel.org> <F14F7054-A1A1-4381-ADC8-B76952338589@colorremedies.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DBIVS5p969aUjpLe"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAAOsTSny1MUvQktS=nSLLGdvdWd3Ud4M7pPxgWKvHCamem8V4Q@mail.gmail.com>
+In-Reply-To: <F14F7054-A1A1-4381-ADC8-B76952338589@colorremedies.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Patrik =?iso-8859-1?Q?Horn=EDk?= <patrik@dsl.sk>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>, Linux-RAID Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
---DBIVS5p969aUjpLe
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon Oct 06, 2014 at 03:39:12PM +0200, Patrik Horn=EDk wrote:
-
-> 2014-10-06 15:36 GMT+02:00 Robin Hill <robin@robinhill.me.uk>:
-> > On Mon Oct 06, 2014 at 03:29:13PM +0200, Patrik Horn=EDk wrote:
-> >
-> >> Hello,
-> >>
-> >> is it possible to cancel RAID 6 array check? echo check >
-> >> /sys/block/mdX/md/sync_action apparently only pauses it and next check
-> >> continuing from saved position. (I guess /sys/block/mdX/md/sync_min)
-> >>
-> >> I want to achieve two things:
-> >>
-> >> - Start check from the start of the array.
-> >>
-> >> - Be sure I can shutdown array without any ill effect because check
-> >> was interrupted.
-> >>
-> >> I guess that position will be cleared when array is stopped and
-> >> started again, but I dont want to guess and experiment... :)
-> >>
-> >
-> > You'd echo idle to the sync_action to pause/stop the check. If you want
-> > to restart from the beginning next time, just echo 0 to sync_min
-> > (similarly, if you just want to check/repair a specific range then set
-> > sync_min and sync_max before the check/repair).
-> >
-> OK, thanks. So that should be fully working and correct way to do it
-> and I cant harm my array by this in any way?
+On 10/05/2014 04:22 PM, Chris Murphy wrote:
 >=20
-A check is always safe (well, excepting physical disk issues or issues
-with overloading the I/O subsystem, but those are issues not limited to
-check) as it's read-only.
+> On Oct 5, 2014, at 2:18 PM, Phil Turmel <philip@turmel.org> wrote:
 
-The sync_min and sync_max values need to be multiples of the chunk size
-(it throws an error otherwise), which ensures a whole stripe is being
-checked/repaired (otherwise you could have issues).
+[trim /]
 
-The kernel documentation describes setting sync_min/sync_max, so it's an
-expected operation. Whether there's another way of doing the same thing
-I don't know - I've not heard of one though.
+>> If your BIOS can be configured to try multiple boot images, it
+>> should be possible to have true raid fallback without using
+>> motherboard or hardware raid.  (Set up md raid1 with metadata v1.0
+>> of multiple copies of the EFI FAT partition.)  I've been meaning to
+>> try this=E2=80=A6.
+>=20
+> Problems with this: a.) new Windows 8 hardware might require you boot
+> Windows to get to the feature enabling the firmware setup, because on
+> such hardware USB isn't initialized by default.
+> http://mjg59.dreamwidth.org/24869.html
+>=20
+> I don't know why we don't have free software to initiate this, but I
+> haven't come across it so far.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Good to know, but totally immaterial to the boot sequence I'm
+recommending.  Boot linux of of an EFI FAT and let linux initialize the
+USB hardware in its own good time.
 
---DBIVS5p969aUjpLe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Matthew Garrett's post is really all about how to get linux into the
+Win8 box in the first place.  Once there, manipulate the boot sequence
+as you please.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+> b.) There's no guarantee the firmware won't write to the ESP, thus
+> rendering the individual md raid members out of sync and without
+> their metadata being updated, i.e. in effect, the logical device they
+> become later, is corrupt. Separately they aren't corrupt, merely out
+> of sync, but you don't have an obvious way of knowing which one.
 
-iEYEARECAAYFAlQynskACgkQShxCyD40xBJI3QCeO4J8IJv4rUZLv09q15RCdMDH
-5UIAn32NZNTwD9J0ps19n0UM57Qv4A7e
-=bzgq
------END PGP SIGNATURE-----
+This is a very good point.  In fact, I withdraw my recommendation to
+raid these partitions.  Simply have one on every disk the BIOS could
+possibly boot from, and place an EFI bootable kernel in each one (with
+embedded initramfs).
 
---DBIVS5p969aUjpLe--
+> c.) strictly speaking any partition with mdadm metadata should have
+> the linux raid partition type GUID set; not the EFI System partition
+> type GUID. Those GUIDs are mutually exclusive.
+
+The former is not true at all--mdadm does not care *at all* what
+partition types are set.  Grub might care, but it's moot if you don't
+use Grub.  :-)
+
+> This is why I'm still not a fan of using mdadm to raid1 an EFI System
+> partition.
+
+One further point:  the failure decision tree is nicer if you boot
+directly into a kernel.
+
+1) Bios locates and attempts to boot from 1st configured kernel image
+2a) Corrupted image or other disk error blocks complete load of kernel
+image--bios moves to next EFI choice (possibly on a different disk).
+2b) Successful EFI kernel load, boot encounters missing/corrupt root
+=46S--kernel drops to initramfs rescue shell
+
+versus:
+
+1) Bios locates and attempts to boot from 1st configured grub image
+2a) Corrupted image or other disk error blocks complete load of
+grub--bios moves to next EFI choice (possibly on a different disk).
+2b) Successful EFI grub load, grub encounters corrupt config or grub
+module--drop to grub shell
+2c) Successful EFI grub load, kernel & initramfs load by grub, boot
+encounters missing/corrupt root FS--kernel drops to initramfs rescue sh=
+ell
+
+I haven't had time to set it up yet, but the clear reduction in points
+of failure is compelling.  Faster boot is just icing on the cake.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
