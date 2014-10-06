@@ -1,62 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: 2 disk raid 5 failure
-Date: Mon, 6 Oct 2014 10:50:36 +1100
-Message-ID: <20141006105036.15e2cfd1@notabene.brown>
-References: <CANuKpt=QJsham0TQWR1Cu1EC8GLyc0aSdU4p3DOznBRrEea11A@mail.gmail.com>
-	<20141005194105.4377c295@notabene.brown>
-	<CANuKptm=Y3L-xUfGfB5GO3yV63buHeWsfxMYKjUVPP8paGhs0A@mail.gmail.com>
-	<CANuKptnEodSbv5ywzMtBq4TZXeOmdd7g0Awo1SXB=xm9kD=EQg@mail.gmail.com>
-	<20141005205242.31d630da@notabene.brown>
-	<CANuKpt=ujnZh1R+g8O6QxGW4=CLOJAePB-+tFaTKz+XaNVvOYw@mail.gmail.com>
+Subject: Re: MD Raid1 hangs system on read error (3.10)
+Date: Mon, 6 Oct 2014 11:08:33 +1100
+Message-ID: <20141006110833.5028706c@notabene.brown>
+References: <20141005092700.GA1452@login.tika.stderr.nl>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//+/+/5eQJb3bp4F2/V5Wb+u"; protocol="application/pgp-signature"
+ boundary="Sig_/SMyvPQOhnvUGK7w0L3vCeQ/"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANuKpt=ujnZh1R+g8O6QxGW4=CLOJAePB-+tFaTKz+XaNVvOYw@mail.gmail.com>
+In-Reply-To: <20141005092700.GA1452@login.tika.stderr.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jean-Paul Sergent <jpsergent@gmail.com>
+To: Matthijs Kooijman <matthijs@stdin.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_//+/+/5eQJb3bp4F2/V5Wb+u
+--Sig_/SMyvPQOhnvUGK7w0L3vCeQ/
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 5 Oct 2014 02:55:25 -0700 Jean-Paul Sergent <jpsergent@gmail.com>
-wrote:
+On Sun, 5 Oct 2014 11:27:01 +0200 Matthijs Kooijman <matthijs@stdin.nl> wro=
+te:
 
-> Great, so its mostly media, movies and stuff. So no real tragedy if I
-> loose it. but I'll go ahead and do both then copy the few essential
-> files I think I have off of it.
+> Hey folks,
 >=20
-> Do you know why version 3.3 had those problems and 3.3.2 works?
+> a few times now I've found my system being locked up after a read error
+> from a hard disk. It looks like the MD code that handles the read error
+> messes up and causes a GPF.
+>=20
+> After this happens, the system becomes completely unresponsive - it
+> responds to ping and opens TCP connections, but no data comes out. The
+> serial console also gives no response.
+>=20
+> After rebooting, the disk in question showed a pending sector. In the
+> most recent occurence, I found that the array was also resyncing. I'm
+> not sure if this also happened in the earlier occurences (but since the
+> pending sector didn't disappear in the next day, I'd expect no resync
+> happened before). The read errors always happened during a routine check
+> of the array.
 
-Because I introduced a bug when I added support for --replace, and my test
-suite didn't find it.  Someone else did and reported it, so I fixed it.
-Just the normal stuff :-)
+That last sentence is the clue I needed - thanks.
+
+You are running 3.10.3.  It contains a bug that was fixed in 3.10.32.
+
+http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/=
+?id=3D9f2d289933e60ec726a7a9522e2dcdfdc82c58de
+
+So if you upgrade your kernel, the problem should be gone.
 
 NeilBrown
 
---Sig_//+/+/5eQJb3bp4F2/V5Wb+u
+--Sig_/SMyvPQOhnvUGK7w0L3vCeQ/
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVDHZTDnsnt1WYoG5AQKCQw//f4uscBdJUuRLJkp+K0Ih0vIxy2TmiN+K
-jnbQhPHhNaAhZG5XqpLv60HgecHaBraWCzjispfXm/MAY0ntzQtLAvzwKzasiL92
-5qTD4OI8I6StfE1MYz7V5KNoR25VLhQT7o1svTXJVzWPLI8oAZQtd8iNdnwDrd6d
-d3XmegDJ9Z1thT1qzvJ6B0jXBx3SClflJlebgVHA8Gk+Y0slMRr8iJoMj8ir6Mn2
-SvMPpDiiq4Wab7et3r0brOsnl0uzY7Wc3ju7q+SkC+EQTUdEskk4xIcsRVOo4Mi0
-p3mRS8kTX5W0FHNHR6GVy8iOebnRvMd71eYD3ge3WLHjVfeSWJL03ok0J05+uqhS
-cZbmJO9MR0SO0/A1oGJIZh/yjqlZjcI6WGMhVYJ3DlRRZdz6/gCl12O92DoMSOmH
-IE9ti1GtozQ3V8Xo5OX3yEGzv1LHZP86mGQevJUZu6SJ8Wlgc/VVSlssoO5F3rUI
-YVi2xJOrluWEhhXQVxhJWHXSaYFcQyi9CY9i+Ys5xy04L08sjlraUsm8zxWdbAAc
-WpgiMwr2dhoHLfSBJ7VdUY4pj01PSePCLHrp1uQLfLVkVQFGDHcDlSOSyOJbEKSk
-r5iu4mtv1Be66lI4YlmGdePq1DXwzjWZlLH01XLOF714GJ8nF3xyR+GmIn/Gppsr
-9G0nW5If/Y8=
-=OIQ9
+iQIVAwUBVDHdgTnsnt1WYoG5AQL+sQ/9EAtW/1xTVvJ5gcCi1M1urvtinZHAQ1OB
+N2EhK2mClEBOjjYZ9Zjcah9dxOfWWBZUm9FfMFZrTwSIepuo66+9edYZPpVxLeyk
+2yXoxm2j3NmWuxV8Gny/gFsAGjyjmtATqrEYYxOInq3XyLtVBr+nUXyOBAn+hXad
+6YrI3fqXW1k4jaAVIoCgM/J4UZRpJODJnK1tkKK9+CR4Ch92S5zQgoxh9fuJ9TUj
+GtXyOkeVr1wD0oSuOvhlXPtbrvgZdAQDvffCdoRwxLIi67QNWmxYbB6gVY2e1CcP
+l6AfiSylnizgJUbR6UlZW805mUto3dUrRiwZ87jSwzr3Wgve3Wh9rOgENL01VlW5
+0qQlWXEhmmw+TxckMx3vhaRgnnKamEw+Ly0eGusSSfwMMIBOiqKzhWcfanvHM6La
+847HjBRIPXmJG28ZWZz6OEraoME2XKZkZcKZy3i+JCQy/ZmDHZ3oy3OqKbsJoisq
+TPVE04aKDEIrLAa7RqyidD3MCbLy2uHfcSEWD9NTksgTY4mrySg9ajEoK6bOfu68
+bk/yJpMCycnDIMOjLcTwaXKuftB3aWCqiG3aORqMPLa7j+kTdM0KITLSf/5l8rPS
+JZlp1Omt89GrFnws5uEZuraotd0SpZtEMDyVwUmeCvpkd7GGu32X99q0OWccZ4BR
+8ThYSk8vT6Q=
+=k7t7
 -----END PGP SIGNATURE-----
 
---Sig_//+/+/5eQJb3bp4F2/V5Wb+u--
+--Sig_/SMyvPQOhnvUGK7w0L3vCeQ/--
