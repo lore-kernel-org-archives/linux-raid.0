@@ -1,18 +1,34 @@
-From: Errol Neal <eneal@businessgrade.com>
-Subject: auto assemble in read-only mode?
-Date: Mon, 6 Oct 2014 09:06:35 -0400
-Message-ID: <1412600795583058500@businessgrade.com>
-Reply-To: eneal@businessgrade.com
+From: =?ISO-8859-1?Q?Patrik_Horn=EDk?= <patrik@dsl.sk>
+Subject: Cancelling not pausing array check
+Date: Mon, 6 Oct 2014 15:29:13 +0200
+Message-ID: <CAAOsTSnYjW-r7VoOL0SiNhsdv5kn9DunrfD3izuLDzaHaBb56Q@mail.gmail.com>
+Reply-To: patrik@dsl.sk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi folks. is it possible to assemble an md device in read-only mode? 
-after an array has been assembled, I know I can mark it as readonly with --misc -o /dev/md0 for example, but only after its been assembled it seems..
+Hello,
 
-tia,
+is it possible to cancel RAID 6 array check? echo check >
+/sys/block/mdX/md/sync_action apparently only pauses it and next check
+continuing from saved position. (I guess /sys/block/mdX/md/sync_min)
+
+I want to achieve two things:
+
+- Start check from the start of the array.
+
+- Be sure I can shutdown array without any ill effect because check
+was interrupted.
+
+I guess that position will be cleared when array is stopped and
+started again, but I dont want to guess and experiment... :)
+
+Thanks.
+
+Best regards,
+
+Patrik
