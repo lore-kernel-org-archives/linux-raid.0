@@ -1,80 +1,86 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: auto assemble in read-only mode?
-Date: Tue, 7 Oct 2014 18:15:20 +1100
-Message-ID: <20141007181520.359d939b@notabene.brown>
-References: <1412600795583058500@businessgrade.com>
-	<1412664991898536500@businessgrade.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Bad sequential performance of RAID5 with a lot of disk seeks
+Date: Tue, 7 Oct 2014 08:43:47 +0100
+Message-ID: <20141007074347.GA18786@cthulhu.home.robinhill.me.uk>
+References: <54336FC1.6080306@gautschi.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+HhGZ3yyM5U/FxtcKSEu91R"; protocol="application/pgp-signature"
+	protocol="application/pgp-signature"; boundary="5vNYLRcllDrimb99"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1412664991898536500@businessgrade.com>
+Content-Disposition: inline
+In-Reply-To: <54336FC1.6080306@gautschi.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Errol Neal <eneal@businessgrade.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: "P. Gautschi" <linuxlist@gautschi.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+HhGZ3yyM5U/FxtcKSEu91R
-Content-Type: text/plain; charset=US-ASCII
+
+--5vNYLRcllDrimb99
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 7 Oct 2014 02:56:31 -0400 Errol Neal <eneal@businessgrade.com> wrot=
-e:
+On Tue Oct 07, 2014 at 06:44:49AM +0200, P. Gautschi wrote:
 
-> On Mon, 10/06/2014 09:06 AM, Errol Neal <eneal@businessgrade.com> wrote:
-> > hi folks. is it possible to assemble an md device in read-only mode?=20
-> > after an array has been assembled, I know I can mark it as readonly wit=
-h --misc -o /dev/md0 for example, but only after its been assembled it seem=
-s..
-> >=20
+> I've created a RAID5 on 5 identical SATA disks. Doing some performance me=
+asurements
+> with dd I get a disappointing performance.
+> A dd with bs=3D1M on a btrfs created on md0 transfers about 110 MB/s. (bo=
+th read and write)
+> A dd on md0 has the same write speed but only about 20 MB/s on read.
+> In all of the tests I hear the disk constantly seeking. This was also the=
+ case
+> during creation of the array.
+> I also created a RAID4 to make sure that I doesn't get fooled by the stri=
+pe layout of RAID5.
+> Now I get about 110 MB/s for write and 230 MB/s for read on md0. But the =
+constant
+> seeking is still present for both read and write and during creation of t=
+he array.
 >=20
-> Hi again. No thoughts here?=20
+> Why are the disk perform so many seek operations? I think a sequential ac=
+cess on md0 should
+> cause a sequential access on the individual disk.
+>=20
+> I have to add that I did something unusual: I created the RAID4/5 with a =
+chunk size of 4KiB.
+> The idea of this was that when I'm going to use btrfs with the default no=
+desize of 16KiB
+> all node write will fill a full stripe and there won't be any RMW at all.=
+ (both fortunate
+> for performance and integrity in a power loss situation.)
+> Nevertheless I think a sequential access on the array should cause a sequ=
+ential access on the
+> disks for any chunk size if the read/write block size is a exact multiple=
+ of
+> the (numdisks-1)*chunk size.
+>=20
+> Is there any explanation for the seeks and how do I get rid of them?
+>=20
+After creating the arrays did you wait for them to finish syncing? The
+array is created in degraded mode initially and then rebuilds onto the
+additional disk (this is the fastest way to do things, unless you know
+the disks are all zeroed initially). Until this rebuild is complete then
+it'll be competing with any other disk activity.
 
-Not even 18 hours since you last asked - what do you thing this is? The
-Internet :-)
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-
-> I'm need to run a RAID1 device on two independent nodes (shared storage) =
-and I'd like to assemble the device on the "slave" node in read-only mode t=
-o prevent any sync actions and etc.=20
-
-Did you try adding the "--readonly" option to your --assemble command?
-(Always best to report everything you tried and how it failed - requires le=
-ss
-guess work).
-
-I hope you don't expect too much of a filesystem mounted from such an array
-while the  other node is writing to the array...
-
-NeilBrown
-
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/+HhGZ3yyM5U/FxtcKSEu91R
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+--5vNYLRcllDrimb99
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Version: GnuPG v2
 
-iQIVAwUBVDOTCDnsnt1WYoG5AQJG5g//ejtujG+eC1J+fld93IQZvviz3rFbSixi
-9uCxGzLc2k1MK8Ob3cfSDukECybaowOAsWf+yc+rVb/rVkrCL4gN5wzaKPRv5Qov
-0o+mJL0oe8K78GlydGpy2HCZ81ToFqGnX+FlsRdymyLLdwULTZB2Aj3OsUzCV3Pp
-zloRnkdj0AMynQOBq6O1Mp99lTuxQ1GKU7m6DrPSJgCYfY8YCOWOnAo4QkxRvIXr
-Yh5apEnk1DOCaFXim5ldDWjUsfGDnSRMzyDC8JtkMkC9egfGcwrpCS5ZH/KbE3CX
-KmeAspVFCxZfhAjb8rstVZ8zLAokq7o2gaPgNxGd3Nr7MgYwAVybD8Pp3lyfB3a0
-tu+uQGm12Mc9iRdDhsse+pwW0JhWDou3TbyBjMGwIHVr7jkDuBQrsIBTtiry8OLx
-zR4gxK1bzP4UjFFBnHe4VewWso9ke6o2DoPXOERbC/E3jDDUwhooIuWF114rIK/t
-HBktRx1hZ5Z2HMzWrmv8xtVaccsIyh/eVHUNdogRM9fPKs+lYg2FWVLVTta9mNcg
-2JNld7ovqbM7/O6k3XHLAHzhrUyDAl7/4uRKSn9f8vvXFUJgPIs2go9jscWIIvJd
-u17rm0T7L8MWlfTlkMjdIqxj/vByX+n1nEX4PlspHtY+GvdykcpbwWrGzCZabqZc
-3unMhVwUldY=
-=dCPv
+iEYEARECAAYFAlQzmbIACgkQShxCyD40xBKRPgCfRG9O3qdwP5TtTyLYMsQ3pgC1
+ZwAAni+oFSvkX4tEKM1FDnXwFPkvDsPP
+=ncZr
 -----END PGP SIGNATURE-----
 
---Sig_/+HhGZ3yyM5U/FxtcKSEu91R--
+--5vNYLRcllDrimb99--
