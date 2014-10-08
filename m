@@ -1,65 +1,52 @@
-From: XiaoNi <xni@redhat.com>
-Subject: Re: Bad sequential performance of RAID5 with a lot of disk seeks
-Date: Wed, 08 Oct 2014 17:05:32 +0800
-Message-ID: <5434FE5C.1020602@redhat.com>
-References: <54336FC1.6080306@gautschi.net>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: writing zeros to bad sector results in persistent read error
+Date: Wed, 08 Oct 2014 13:51:33 -0400
+Message-ID: <543579A5.6020504@ubuntu.com>
+References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> <20140609193723.79F1B3809B0@gemini.denx.de> <19559C36-08B4-4C2F-ABC3-9DE79BE37B54@colorremedies.com> <53970ACE.6080001@turmel.org> <6C47950B-13E8-479C-BC3B-C21C379A95FB@colorremedies.com> <yq18uof9sxz.fsf@sermon.lab.mkp.net> <CAAMCDef3tO4Ah_3gYJ_6Y0Kh_mPn+z=E5voHFYr-z7_Leuf48Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54336FC1.6080306@gautschi.net>
+In-Reply-To: <CAAMCDef3tO4Ah_3gYJ_6Y0Kh_mPn+z=E5voHFYr-z7_Leuf48Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "P. Gautschi" <linuxlist@gautschi.net>
-Cc: linux-raid@vger.kernel.org
+To: Roger Heflin <rogerheflin@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Chris Murphy <lists@colorremedies.com>, Phil Turmel <philip@turmel.org>, Wolfgang Denk <wd@denx.de>, Roman Mamedov <rm@romanrm.net>, "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/07/2014 12:44 PM, P. Gautschi wrote:
-> I've created a RAID5 on 5 identical SATA disks. Doing some performance 
-> measurements
-> with dd I get a disappointing performance.
-> A dd with bs=1M on a btrfs created on md0 transfers about 110 MB/s. 
-> (both read and write)
-> A dd on md0 has the same write speed but only about 20 MB/s on read.
-> In all of the tests I hear the disk constantly seeking. This was also 
-> the case
-> during creation of the array.
-> I also created a RAID4 to make sure that I doesn't get fooled by the 
-> stripe layout of RAID5.
-> Now I get about 110 MB/s for write and 230 MB/s for read on md0. But 
-> the constant
-> seeking is still present for both read and write and during creation 
-> of the array.
->
-> Why are the disk perform so many seek operations? I think a sequential 
-> access on md0 should
-> cause a sequential access on the individual disk.
-Hi P. Gautschi
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-     How can you find the seek operations? Do you use blktrace or other 
-commands? Can you give the
-detail commands and informations?
+On 6/29/2014 8:51 PM, Roger Heflin wrote:
+> All of this is probably the reason that this command exists:
+> 
+> hdparm --write-sector <sectornum>
+> 
+> I believe it directly sends the scsi/ata layer commands.
 
-     BTW, I think ever if you use larger chunksize when create raid, 
-there is few RMW. There is a period to wait for full write.
->
-> I have to add that I did something unusual: I created the RAID4/5 with 
-> a chunk size of 4KiB.
-> The idea of this was that when I'm going to use btrfs with the default 
-> nodesize of 16KiB
-> all node write will fill a full stripe and there won't be any RMW at 
-> all. (both fortunate
-> for performance and integrity in a power loss situation.)
-> Nevertheless I think a sequential access on the array should cause a 
-> sequential access on the
-> disks for any chunk size if the read/write block size is a exact 
-> multiple of
-> the (numdisks-1)*chunk size.
->
-> Is there any explanation for the seeks and how do I get rid of them?
->
-> Patrick
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You end up with the same results as using dd ( with oflag=direct ), it
+is just a matter of the path it takes to get there.
 
+With dd, it calls write() to pass the data to the block layer, which
+hands it to the scsi layer, which translates it into a scsi
+WRITE_10/16 command, which hands it to libata which translates it into
+an ata taskfile to be handed to the drive.
+
+With hdparm --write-sector, it builds the ata taskfile, uses the SG_IO
+ioctl to hand it to the block layer, which hands it down through the
+scsi and libata layers which see that it needs no translation and it
+goes to the drive unmodified.
+
+The resulting taskfile the drive actually sees should be the same.
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+
+iQEcBAEBAgAGBQJUNXmlAAoJEI5FoCIzSKrwMYwIAJj1c0pBxdOcCQAk4i26802S
+/lbPHhY5Xu7wR5KbZSXeEazE/vgTT7mDgjWHoe6Vl9e+Ci90KJxSFgQXNNwcYtuK
+V+UFrTyqiKAzfk8VbRj0kwxk1JuXRQesDlwCGUsBkjSO26pdhUVfxwP8I3JcOBQW
+uKRmh8PE48iq7kDWQdtxve6IPnAj/VY8AubwRAaVAvZ3xsEUBlf7UAkvA4n3WvWN
+mfO1VVWwv4zyZ6bEBoWfjj6//5C0R+q2TrnBDFD9pN/wY4TdAx0gtufiUWx0v5WG
+NNzJ9tm5z2rNo/HNi4w1gHm0JLDhSky21sNX7KyY8/1tFjqa3KQT7iQ6vxk4UJM=
+=Xv01
+-----END PGP SIGNATURE-----
