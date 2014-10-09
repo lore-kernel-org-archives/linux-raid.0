@@ -1,51 +1,100 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: writing zeros to bad sector results in persistent read error
-Date: Wed, 08 Oct 2014 13:56:51 -0400
-Message-ID: <54357AE3.4010806@ubuntu.com>
-References: <B7EA34DA-1064-45B1-B0C0-B7C423C7EB47@colorremedies.com> <20140607075140.277c0880@natsu> <0E76B97E-96DF-43A3-B8EC-4867964BF8E9@colorremedies.com> <BLU436-SMTP1535675BF98253D9B967F17982E0@phx.gbl> <BBD6BB5F-9D33-413B-AD74-3DC3EA34D6AB@colorremedies.com>
-Mime-Version: 1.0
+From: Brassow Jonathan <jbrassow@redhat.com>
+Subject: Re: Extremely High mismatch_cnt on RAID1 system
+Date: Wed, 8 Oct 2014 22:17:25 -0500
+Message-ID: <2F88B774-DFB1-4D5A-9424-190573BDA1C9@redhat.com>
+References: <CAOWcSW5+8ZkWAyXL7VTk9JO+yrozFJS8RwroKqtudkiKD-fvXA@mail.gmail.com> <5433E72E.60805@shiftmail.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BBD6BB5F-9D33-413B-AD74-3DC3EA34D6AB@colorremedies.com>
+In-Reply-To: <5433E72E.60805@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>, Wilson Jonathan <piercing_male@hotmail.com>
-Cc: "linux-raid@vger.kernel.org List" <linux-raid@vger.kernel.org>
+To: Ethan Wilson <ethan.wilson@shiftmail.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-On 6/9/2014 8:09 PM, Chris Murphy wrote:
-> But what I'm reporting is an instance where an ATA Secure Erase 
-> definitely did not fix up a single one of the bad sectors. Maybe 
-> that's consistent with the spec, I don't know, but it's not what
-> I'd expect seeing as every sector, those with an without LBA's
-> assigned, are overwritten. Yet pending sectors were not remapped.
-> Further, with all sectors overwritten by software (not merely the
-> ATA Secure Erase command) yields no errors yet SMART reports there
-> are still pending sectors, yet it's own extended test says there
-> are none. I think that's bad behavior. But perhaps I don't
-> understand the design and it's actually working as designed.
+On Oct 7, 2014, at 8:14 AM, Ethan Wilson <ethan.wilson@shiftmail.org> w=
+rote:
 
-It sounds like what happened is the secure erase successfully rewrote
-the sectors that were already flagged as pending, but did not
-decrement the pending count.
+> On 04/10/2014 15:46, Dennis Grant wrote:
+>> Hello all.
+>>=20
+>> ...
+>>=20
+>> Even after multiple checks, repairs, and rebuilds, the arrays on the
+>> bigger drives (/ and /home) are showing insanely high mismatch_cnt
+>> values. This has me concerned.
+>>=20
+>=20
+> Dennis,
+> since nobody more knowledgeable replied, I will try.
+>=20
+> Some mismatches on raid1 have been there since always, and nobody eve=
+r deeply investigated what they were caused by, nor if they happen on u=
+nallocated filesystem space or on real live data. It seems that if LVM =
+is between raid1 and the filesystem then they don't happen anymore, but=
+ again nobody is really sure of why.
+>=20
+> Recently some changes in the raid1 resync algorithm introduced some b=
+ugs that could possibly generate additional mismatches, but if you have=
+n't had resyncs then I am not so sure if such bugs and their fixes are =
+relevant. However the fixes are here:
+> https://www.kernel.org/pub/linux/kernel/v3.x/ChangeLog-3.14.20
+> search for "raid".
+>=20
+> You might want to upgrade to kernel 3.14.20, which is probably not wh=
+at your Ubuntu LTS has currently, then repair the arrays, then see if t=
+hey grow again.
+> Note that you need to do repair and not check:
+> echo repair > /sys/block/md0/md/sync_action
+> at the next "check" the mismatch_cnt should be 0 (not just after "rep=
+air", because that would count the number of mismatches that have been =
+repaired).
+>=20
+> I'd say that mismatches in general are pretty worrisome, they shouldn=
+'t happen, they are likely to indicate corruption, so if what I said do=
+esn't work, e.g. mismatches grow again, try to report it again on the l=
+ist and somebody might be able to help further to track down this probl=
+em.
 
-FYI, rather than continuing to run a smart selftest to find one
-sector, then use dd to fix it, and repeat, it would be much faster to
-use the badblocks utility to read and rewrite the whole drive.  You
-will want to make sure to use the correct sector size, and a
-sufficiently large batch size for good performance.
+The mismatches count can be incremented during operations other than ch=
+eck and repair.  I believe its behavior also varies between RAID person=
+alities.  However, if you check the =91last_sync_action=92 and see that=
+ it was a =93check=94 operation, you are probably safe to assume that t=
+he mismatch count has been computed correctly.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
+Note the following commit:
+commit c4a39551451666229b4ea5e8aae8ca0131d00665
+Author: Jonathan Brassow <jbrassow@redhat.com>
+Date:   Tue Jun 25 01:23:59 2013 -0500
 
-iQEcBAEBAgAGBQJUNXrjAAoJEI5FoCIzSKrw//cH/jgbli22/MmRpRXLOc0YJg8O
-npSEI3fusBspMWhWS+a5SGRQQQjrfiK8mK8NkAC1VrX80zI8UcLkrBNVX1NQQ7eP
-tgjJJJLN0BeQIk7RtAhO0rxajnZp19bBv7r8oRgWg9PRXrrxZHrXJNxHqUlANNsq
-70blruORy3MbTqUk8QU4qXw/y5XduhRyJEX0SDogrQwI0xJqaUWPn5CQPQnKWydr
-0q6evfdRVfLC2rg0AbQ1ksj+nRhTRkrUctXuNc/8GL4S6wR77bQwTXlyBn8E8Uec
-T6lsCs5J43e2yyRtj3c0ZWcmyuZuwKbO4LHPAA4kYf9faHV/OEWPwlAHHVC1Ggo=
-=2OuK
------END PGP SIGNATURE-----
+    MD: Remember the last sync operation that was performed
+
+    MD:  Remember the last sync operation that was performed
+
+    This patch adds a field to the mddev structure to track the last
+    sync operation that was performed.  This is especially useful when
+    it comes to what is recorded in mismatch_cnt in sysfs.  If the
+    last operation was "data-check", then it reports the number of
+    descrepancies found by the user-initiated check.  If it was a
+    "repair" operation, then it is reporting the number of
+    descrepancies repaired.  etc.
+
+    Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+Relatedly, LVM makes use of the MD RAID personalities to provide its RA=
+ID capabilities.  It does this by accessing MD through a thin device-ma=
+pper target called "dm-raid=94 - not to be confused with the similarly =
+named userspace application.  The above mentioned commit contains a cha=
+nge to the dm-raid module as well, which causes it to report =910=92 mi=
+smatches unless the =91last_sync_action=92 was a =93check=94.  So, for =
+dm-raid (and by extension LVM) the ambiguity in mismatch_count is gone,=
+ but the user must be careful when looking at the number for MD.
+
+ brassow--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
