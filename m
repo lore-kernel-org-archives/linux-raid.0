@@ -1,47 +1,42 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Good drive got kicked out - does mdadm assemble across suspend/resume
- like it does across reboots?
-Date: Sun, 12 Oct 2014 12:38:10 -0500
-Message-ID: <543ABC82.5020901@gmail.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: "bitmap file is out of date, doing full recovery"
+Date: Sun, 12 Oct 2014 21:03:57 +0300
+Message-ID: <CAGRgLy5zhV49xF=ZwULaF46Xx=8rnWcypTWxxgf0HmEPpCP+yQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-I did a minor booboo with my mdadm raid6. I suspended (not shutdown, but 
-suspend-to-ram) the machine to install a *new* disk in a hotswap bay for 
-a thorough test before usage. This machine also housed a mdadm raid6 
-array with 4 disks /dev/sd[cdeg]1 (not /dev/sdf1). When I inserted the 
-new disk, I also rearranged the disks in the hotswap cage. I think that 
-is a stupid mistake because /dev/sdg1 was also in the cage and now 
-became /dev/sdf1 and the new disk got the name /dev/sdg1. I did not 
-think much about it, since I thought mdadm would assemble after a resume 
-and will find the right disks. I did not bother to check if anything 
-happened to /dev/md0.
+Hi Neil,
+after a 2-drive raid1 unclean shutdown (crash actually), after reboot, we had:
 
-After checking the new disk (now /dev/sdg1) I added /dev/sdg1 to md0 (as 
-spare) without checking /proc/mdstat. I noticed rebuild started to my 
-surprise. I was trying to figure out what happened. It looks like resume 
-after suspend does not assemble md0 as it does for reboot. So, it looked 
-at the new /dev/sdg1 and found to be not part of md0 and degraded the 
-array. So when I added it, it thought I am adding a new drive and 
-proceeded to rebuild to fix the degraded state. A quick check of 
-/dev/sdf1 (which was /dev/sdg1 before my swap) contains everything 
-right, but got kicked out of array due to suspend-swap disk-resume issue.
+md/raid1:md24: not clean -- starting background reconstruction
+md/raid1:md24: active with 2 out of 2 mirrors
+md24: bitmap file is out of date (41 < 42) -- forcing full recovery
+created bitmap (22 pages) for device md24
+md24: bitmap file is out of date, doing full recovery
+md24: bitmap initialized from disk: read 2 pages, set 44667 of 44667 bits
 
-While this is not a disaster, I wonder if my understanding is correct? 
-Does this mean mdadm does not scan to assemble as part of resume? More 
-importantly, how should I rectify the situation like this? Reboot or 
-simply stop md0 and scan in a live system?
-Further, how do I use /dev/sdf1 (that was /dev/sdg1 before this 
-problem)? zero-superblock and add back to md0?
+The superblock of both drives had event count = 42:
+(this is a custom mdadm with some added prints):
+mdadm: looking for devices for /dev/md24
+mdadm: [/dev/md24] /dev/dm-205: slot=0, events=42,
+recovery_offset=N/A, resync_offset=0, comp_size=5854539776
+mdadm: [/dev/md24] /dev/dm-206: slot=1, events=42,
+recovery_offset=N/A, resync_offset=0, comp_size=5854539776
 
-Sorry, if this was already discussed. If so, just let me know and I will 
-search the archive manually as Google did not find it.
+But the bitmap superblock had lower event count, which resulted in a
+full resync. Is this an expected scenario in case of a crash?
 
-Thanks for your help
-Ramesh
+For example in md_update_sb, first we call
+bitmap_update_sb(mddev->bitmap), which synchronously updates the
+bitmap, and only afterwards we go ahead and update our superblocks. So
+in this case, the bitmap should not have a lower event count. Is there
+some other valid scenario, in which the bitmap can remain with a lower
+event count?
 
+Thanks,
+Alex.
