@@ -1,60 +1,47 @@
 From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: Is it safe to shutdown while mdadm --grow is in progress.
-Date: Sun, 12 Oct 2014 11:00:54 -0500
-Message-ID: <543AA5B6.6010200@gmail.com>
-References: <543A15A6.5010508@gmail.com> <20141012193555.69907c13@notabene.brown>
+Subject: Good drive got kicked out - does mdadm assemble across suspend/resume
+ like it does across reboots?
+Date: Sun, 12 Oct 2014 12:38:10 -0500
+Message-ID: <543ABC82.5020901@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141012193555.69907c13@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks. I appreciate you taking the time to respond. I would like to 
-forward this to those that maintain faq/wiki so that some one searches 
-gets the info and does not have to bother you. Is that OK?
+I did a minor booboo with my mdadm raid6. I suspended (not shutdown, but 
+suspend-to-ram) the machine to install a *new* disk in a hotswap bay for 
+a thorough test before usage. This machine also housed a mdadm raid6 
+array with 4 disks /dev/sd[cdeg]1 (not /dev/sdf1). When I inserted the 
+new disk, I also rearranged the disks in the hotswap cage. I think that 
+is a stupid mistake because /dev/sdg1 was also in the cage and now 
+became /dev/sdf1 and the new disk got the name /dev/sdg1. I did not 
+think much about it, since I thought mdadm would assemble after a resume 
+and will find the right disks. I did not bother to check if anything 
+happened to /dev/md0.
 
-I normally would go for backup before rebuild, but 15TB disk space is 
-too much to come up with, without serious $$ and need. Besides, these 
-are movies/recordings for htpc and the data is available on 
-dvds/internet. So there is inherent lack of importance. In other words, 
-I recommend backup as most do, but it looks like every one has some 
-justification not to do, and want some one else to assure them that it 
-is ok :-)
+After checking the new disk (now /dev/sdg1) I added /dev/sdg1 to md0 (as 
+spare) without checking /proc/mdstat. I noticed rebuild started to my 
+surprise. I was trying to figure out what happened. It looks like resume 
+after suspend does not assemble md0 as it does for reboot. So, it looked 
+at the new /dev/sdg1 and found to be not part of md0 and degraded the 
+array. So when I added it, it thought I am adding a new drive and 
+proceeded to rebuild to fix the degraded state. A quick check of 
+/dev/sdf1 (which was /dev/sdg1 before my swap) contains everything 
+right, but got kicked out of array due to suspend-swap disk-resume issue.
 
-Thanks and Regards
+While this is not a disaster, I wonder if my understanding is correct? 
+Does this mean mdadm does not scan to assemble as part of resume? More 
+importantly, how should I rectify the situation like this? Reboot or 
+simply stop md0 and scan in a live system?
+Further, how do I use /dev/sdf1 (that was /dev/sdg1 before this 
+problem)? zero-superblock and add back to md0?
+
+Sorry, if this was already discussed. If so, just let me know and I will 
+search the archive manually as Google did not find it.
+
+Thanks for your help
 Ramesh
-
-On 10/12/2014 03:35 AM, NeilBrown wrote:
-> On Sun, 12 Oct 2014 00:46:14 -0500 Ram Ramesh <rramesh2400@gmail.com> wrote:
->
->> I googled this topic and got differing answers. Some old ones report
->> horror stories and others suggest rebuild continues after reboot
->> normally. My array is rebuilding and it will take about 6 days to
->> complete. I am expecting bad weather in a couple of days and would like
->> to proactively shutdown the machine and reboot. Is this safe?
->>
->> If the information is already available in a clear manner, please let me
->> know.
->>
->> uname: Linux xxx 3.13.0-37-generic #64-Ubuntu SMP Mon Sep 22 21:28:38
->> UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
->> mdadm - v3.2.5 - 18th May 2012
->>
->> Thanks for your help
->>
-> It is certainly designed to be safe and my experience is that it is.
-> However it is difficult to test all corner cases so it is not impossible that
-> someone what quite work right.
-> If something does go wrong:
->   1/ don't panic
->   2/ don't try to --create the array to fix it
->   3/ report all details to this list and I'm 99.9% sure I can get your array
->      running again with all your data safe.
-> But I suspect it won't come to that.
->
-> NeilBrown
 
