@@ -1,57 +1,76 @@
-From: Ram Ramesh <rramesh2400@gmail.com>
-Subject: Re: mdadm --grow with --backup-file does not create backupfile?
-Date: Sun, 12 Oct 2014 20:49:21 -0500
-Message-ID: <543B2FA1.4030106@gmail.com>
-References: <543B2A2D.9080407@gmail.com> <20141013123914.04b960ed@notabene.brown>
+From: Weedy <weedy2887@gmail.com>
+Subject: mdadm: /dev/sdX2 has wrong raid level.
+Date: Sun, 12 Oct 2014 22:03:40 -0400
+Message-ID: <CAFE24U0enjmtxwWHYbdz-9KiXaGfvsa3_2MnyvOMngMsMG-QQw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141013123914.04b960ed@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good to know. Thanks.
+My server rebooted for some reason. Possibly disk/cable related.
+The superblocks on my raid0s now think they are raid4s. Can I reverse this?
 
-Ramesh
+# mdadm --assemble -v -f --config=/etc/mdadm.conf /dev/md1 /dev/sd[ab]2
+mdadm: looking for devices for /dev/md1
+mdadm: /dev/sda2 has wrong raid level.
+mdadm: /dev/sdb2 has wrong raid level.
 
-On 10/12/2014 08:39 PM, NeilBrown wrote:
-> On Sun, 12 Oct 2014 20:26:05 -0500 Ram Ramesh <rramesh2400@gmail.com> wrote:
->
->> I added a new disk and grew my raid6 md0 with the following command line
->>
->>      sudo mdadm --grow --raid-devices=5
->>      --backup-file=/root/grow_md0.bkp_file --layout=normalise /dev/md0
->>
->> I got a response that stated that mdadm needed to backup 384K of data.
->> However, when I checked after about 5min there was no backup file. Is
->> this expected?
-> Yes.
->
-> When increasing the size of an array, the backup file is needed  for a tiny
-> fraction of a second at the start.
-> When decreasing the size it is needed  for a tiny fraction if a second at the
-> end.
-> When the size isn't changed it is needed for the entire time.
->
-> ... unless you have a new kernel and a new mdadm, and then the backup file
-> isn't needed.
->
-> NeilBrown
->
->
->
->>      386 > sudo ls /root
->>      <no files. so no output>
->>      387 > sudo ls /root/grow_md0.bkp_file
->>      ls: cannot access /root/grow_md0.bkp_file: No such file or directory
->>
->> Ramesh
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm --examine -v /dev/sda2
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : de492a9a:c62a01a3:eb511bbd:ead87a3a
+           Name : alice:1  (local to host alice)
+  Creation Time : Tue Jul 31 00:25:03 2012
+     Raid Level : raid4
+   Raid Devices : 3
 
+ Avail Dev Size : 20240876 (9.65 GiB 10.36 GB)
+     Array Size : 20239360 (19.30 GiB 20.73 GB)
+  Used Dev Size : 20239360 (9.65 GiB 10.36 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=492 sectors
+          State : active
+    Device UUID : 436eeacc:5abe6b33:8c9f1de1:9031c001
+
+    Update Time : Sat Apr 26 23:56:01 2014
+       Checksum : c9dfcb49 - correct
+         Events : 43295
+
+     Chunk Size : 32K
+
+   Device Role : Active device 0
+   Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
+
+# mdadm --examine -v /dev/sdb2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : de492a9a:c62a01a3:eb511bbd:ead87a3a
+           Name : alice:1  (local to host alice)
+  Creation Time : Tue Jul 31 00:25:03 2012
+     Raid Level : raid4
+   Raid Devices : 3
+
+ Avail Dev Size : 20240876 (9.65 GiB 10.36 GB)
+     Array Size : 20239360 (19.30 GiB 20.73 GB)
+  Used Dev Size : 20239360 (9.65 GiB 10.36 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=1968 sectors, after=492 sectors
+          State : active
+    Device UUID : 6a01ee1d:312826ad:4be6e47a:60d5b684
+
+    Update Time : Sat Apr 26 23:56:01 2014
+       Checksum : b15bb2d7 - correct
+         Events : 43295
+
+     Chunk Size : 32K
+
+   Device Role : Active device 1
+   Array State : AA. ('A' == active, '.' == missing, 'R' == replacing)
