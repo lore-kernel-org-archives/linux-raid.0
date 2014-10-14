@@ -1,83 +1,317 @@
-From: Behan Webster <behanw@converseincode.com>
-Subject: [GIT PULL] LLVMLinux patches for v3.18
-Date: Tue, 14 Oct 2014 10:59:04 +0200
-Message-ID: <543CE5D8.1050306@converseincode.com>
+From: BillStuff <billstuff2001@sbcglobal.net>
+Subject: Re: Raid5 hang in 3.14.19
+Date: Tue, 14 Oct 2014 09:56:17 -0500
+Message-ID: <543D3991.4010608@sbcglobal.net>
+References: <5425E9D6.1050102@sbcglobal.net>	<20140929122533.3b91a543@notabene.brown>	<5428D863.7090409@sbcglobal.net>	<20140929140818.1086972e@notabene.brown>	<5428DFE1.9080600@sbcglobal.net>	<20140930075950.1d1e3865@notabene.brown>	<542B1EDC.7060803@sbcglobal.net>	<20141001085409.41399b13@notabene.brown>	<54316C34.6090304@sbcglobal.net> <20141014124245.69b143e2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-security-module-owner@vger.kernel.org>
-Sender: linux-security-module-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: akpm@linux-foundation.org, bruce.w.allan@intel.com, d.kasatkin@samsung.com, james.l.morris@oracle.com, john.griffin@intel.com, linux-btrfs@vger.kernel.org, linux-crypto@vger.kernel.org, linux-ima-devel@lists.sourceforge.net, linux-ima-user@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-security-module@vger.kernel.org, neilb@suse.de, qat-linux@intel.com, serge@hallyn.com, thomas.lendacky@amd.com, zohar@linux.vnet.ibm.com, agk@redhat.com, clm@fb.com, davem@davemloft.net, dm-devel@redhat.com, fabf@skynet.be, herbert@gondor.apana.org.au, jbacik@fb.com, snitzer@redhat.com, tadeusz.struk@intel.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20141014124245.69b143e2@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-These patches remove the use of VLAIS using a new SHASH_DESC_ON_STACK m=
-acro.
-Some of the previously accepted VLAIS removal patches haven't used this
-macro. I will
-push new patches to consistently use this macro in all those older case=
-s
-for 3.19
+On 10/13/2014 08:42 PM, NeilBrown wrote:
+> On Sun, 05 Oct 2014 11:05:08 -0500 BillStuff <billstuff2001@sbcglobal.net>
+> wrote:
+>
+>> On 09/30/2014 05:54 PM, NeilBrown wrote:
+>>> [removed alot of stuff about raid5 check hanging]
+>>> Thanks for the testing!  You have included enough information.
+>>> I didn't really like that 'sync_starting' variable when I wrote the patch,
+>>> but it seemed do the right thing.  It doesn't.
+>>>
+>>> If md_check_recovery() runs again immediately after scheduling the sync
+>>> thread to run, it will not have set sync_starting but will find ->sync_thread
+>>> is NULL and so will clear MD_RECOVERY_RUNNING.  The next time it runs, that
+>>> flag is still clear and ->sync_thread is not NULL so it will try to stop the
+>>> thread, which deadlocks.
+>>>
+>>> This patch on top of what you have should fix it... but I might end up
+>>> redoing the logic a bit.
+>>>
+>> Neil,
+>>
+>> With the second patch, my test has been running well for close to 5 days
+>> now,
+> That is good news - thanks.
 
-The following changes since commit 2d65a9f48fcdf7866aab6457bc707ca233e0=
-c791:
+Now two weeks in, this seems to be working ok with the exception of this 
+write error,
+and another "write didn't make it to both disks during recovery" hiccup 
+I'll describe below.
 
-  Merge branch 'drm-next' of git://people.freedesktop.org/~airlied/linu=
-x
-(2014-10-14 09:39:08 +0200)
+>> but something odd happened yesterday.
+>>
+>> It's on a raid1 array (md1) with both ext3 and xfs on LVM, but I suspect
+>> it happened silently on my
+>> raid5 test also.
+>>
+>> md1 : active raid1 sdh3[0] sdg3[1]
+>>         76959296 blocks [2/2] [UU]
+>>         [=>...................]  check =  9.7% (7532800/76959296)
+>> finish=108.8min speed=10628K/sec
+>>         bitmap: 0/1 pages [0KB], 65536KB chunk
+>>
+>>
+>>
+>> Again this is running kernel builds, read / write loops, and remove/
+>> (re)add / check loops.
+>> At some point while removing a disk from the array, something bad
+>> happened, the errors below
+>> appeared in the log, and the ext3 filesystem remounted readonly. xfs
+>> plowed right on through.
+>> There's no evidence of any read or write errors to the member disks,
+>> either in logs or on the
+>> disks themselves, and the raid1 checks came back with zero mismatches.
+>> fsck for the ext3 fs
+>> complained a lot but the filesystem came back into a useable state and
+>> I've restarted my tests.
+>> Below, dm-3 is xfs, dm-1 is ext3. The interesting stuff happens around
+>> 12:27:04. This was
+>> immediately after (or during?) removing sdh3 from md1.
+>>
+>> Oct  4 12:26:01 xplane kernel: md: unbind<sdg3>
+>> Oct  4 12:26:01 xplane kernel: md: export_rdev(sdg3)
+>> Oct  4 12:26:11 xplane kernel: md: bind<sdg3>
+> Removed and re-added sdg3
+>
+>
+>> Oct  4 12:26:11 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:26:11 xplane kernel:  --- wd:1 rd:2
+>> Oct  4 12:26:11 xplane kernel:  disk 0, wo:0, o:1, dev:sdh3
+>> Oct  4 12:26:11 xplane kernel:  disk 1, wo:1, o:1, dev:sdg3
+> ->add_disk included sdg3 in the array not in-sync.
+>
+>> Oct  4 12:26:12 xplane kernel: md: recovery of RAID array md1
+>> Oct  4 12:26:12 xplane kernel: md: minimum _guaranteed_  speed: 10000
+>> KB/sec/disk.
+>> Oct  4 12:26:12 xplane kernel: md: using maximum available idle IO
+>> bandwidth (but not more than 200000 KB/sec) for recovery.
+>> Oct  4 12:26:12 xplane kernel: md: using 128k window, over a total of
+>> 76959296k.
+> Recovery starts
+>
+>
+>> Oct  4 12:27:03 xplane kernel: md: md1: recovery done.
+> Recovery finishes after 51 seconds.
+>
+>> Oct  4 12:27:03 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:27:03 xplane kernel:  --- wd:2 rd:2
+>> Oct  4 12:27:03 xplane kernel:  disk 0, wo:0, o:1, dev:sdh3
+>> Oct  4 12:27:03 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+> ->spare_active() marks sdg3 at fully in-sync (not long "wo" - write only).
+>
+>> Oct  4 12:27:04 xplane kernel: md/raid1:md1: Disk failure on sdh3,
+>> disabling device.
+> sdh3 fails a second later.  Presumably this was requested by your testing
+> harness.
+>
+>
+>> Oct  4 12:27:04 xplane kernel: md/raid1:md1: Operation continuing on 1
+>> devices.
+> raid.c:error() confirms the device will not be ignored.
+>
+>
+>> Oct  4 12:27:05 xplane kernel: quiet_error: 912 callbacks suppressed
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331468
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+> Write errors start happening.
+>
+> You should only get a write error if no writes successfully completed to
+> in_sync, non-faulty devices.
+> It is possible that the write to sdg3 completed before it was marked in-sync,
+> and the write to sdh3 completed after it was marked as faulty.
+> How long after recovery completes do you fail the next device?
+> The logs suggest it is the next second, which could be anywhere from 1msec
+> to 1998 msecs.
+>
+>
+> NeilBrown
 
-are available in the git repository at:
+The script sleeps for 1 second and then fails / removes / adds the
+opposite disk. After doing all disks in the array it does a "check",
+then starts over.  I'm sure there's some script housekeeping time in there,
+but it should be right around 1 second.
 
-  git://git.linuxfoundation.org/llvmlinux/kernel.git
-tags/llvmlinux-for-v3.18
+The other hiccup that happened may be related; hopefully at least 
+informative.
 
-for you to fetch changes up to 4c5c30249452aaebf258751ea4222eba3dd3da4c=
-:
+Half of my test is the fail / remove / add loop. The other half continually
+writes files and saves a checksum. Later, when the file is deleted, it 
+re-checks
+the sum. A few days ago this second check failed:
 
-  crypto: LLVMLinux: Remove VLAIS usage from crypto/testmgr.c
-(2014-10-14 10:51:24 +0200)
+sdg3 in sync, sdh3 (re)added at 10:48:48
 
-----------------------------------------------------------------
-LLVMLinux patches for v3.18
+Oct  8 10:48:48 xplane kernel: md: bind<sdh3>
+Oct  8 10:48:49 xplane kernel: RAID1 conf printout:
+Oct  8 10:48:49 xplane kernel:  --- wd:1 rd:2
+Oct  8 10:48:49 xplane kernel:  disk 0, wo:1, o:1, dev:sdh3
+Oct  8 10:48:49 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+Oct  8 10:48:49 xplane kernel: md: recovery of RAID array md1
+Oct  8 10:48:49 xplane kernel: md: minimum _guaranteed_  speed: 10000 
+KB/sec/disk.
+Oct  8 10:48:49 xplane kernel: md: using maximum available idle IO 
+bandwidth (but not more than 200000 KB/sec) for recovery.
+Oct  8 10:48:49 xplane kernel: md: using 128k window, over a total of 
+76959296k.
 
-----------------------------------------------------------------
-Behan Webster (6):
-      crypto: LLVMLinux: Add macro to remove use of VLAIS in crypto cod=
-e
-      crypto: LLVMLinux: Remove VLAIS from crypto/mv_cesa.c
-      crypto: LLVMLinux: Remove VLAIS from crypto/n2_core.c
-      crypto: LLVMLinux: Remove VLAIS from crypto/omap_sham.c
-      crypto: LLVMLinux: Remove VLAIS from crypto/.../qat_algs.c
-      security, crypto: LLVMLinux: Remove VLAIS from ima_crypto.c
+testfile /mnt/lvtest/tmp/tmpfile02518.0xd6.tmp written at 10:51:47
 
-Jan-Simon M=C3=B6ller (5):
-      crypto: LLVMLinux: Remove VLAIS from crypto/ccp/ccp-crypto-sha.c
-      crypto, dm: LLVMLinux: Remove VLAIS usage from dm-crypt
-      crypto: LLVMLinux: Remove VLAIS usage from crypto/hmac.c
-      crypto: LLVMLinux: Remove VLAIS usage from libcrc32c.c
-      crypto: LLVMLinux: Remove VLAIS usage from crypto/testmgr.c
+Oct  8 10:51:54 xplane kernel: md: md1: recovery done.
+Oct  8 10:51:54 xplane kernel: RAID1 conf printout:
+Oct  8 10:51:54 xplane kernel:  --- wd:2 rd:2
+Oct  8 10:51:54 xplane kernel:  disk 0, wo:0, o:1, dev:sdh3
+Oct  8 10:51:54 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
 
-Vin=C3=ADcius Tinti (1):
-      btrfs: LLVMLinux: Remove VLAIS
+md5sum for /mnt/lvtest/tmp/tmpfile02518.0xd6.tmp different at 11:30 
+during QC check
 
- crypto/hmac.c                            | 25 ++++++++---------
- crypto/testmgr.c                         | 14 ++++------
- drivers/crypto/ccp/ccp-crypto-sha.c      | 13 ++++-----
- drivers/crypto/mv_cesa.c                 | 41 ++++++++++++------------=
-----
- drivers/crypto/n2_core.c                 | 11 +++-----
- drivers/crypto/omap-sham.c               | 28 ++++++++-----------
- drivers/crypto/qat/qat_common/qat_algs.c | 31 ++++++++++-----------
- drivers/md/dm-crypt.c                    | 34 ++++++++++-------------
- fs/btrfs/hash.c                          | 16 +++++------
- include/crypto/hash.h                    |  5 ++++
- lib/libcrc32c.c                          | 16 +++++------
- security/integrity/ima/ima_crypto.c      | 47
-+++++++++++++-------------------
- 12 files changed, 122 insertions(+), 159 deletions(-)
+Nothing bad showed up in the logs, for disks, filesystems or the array.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-securit=
-y-module" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ From looking at the file, it appears a chunk of it didn't get written 
+to /dev/sdh3.
+When the second QC was run, the read was from /dev/sdh3 and the sum was 
+different.
+
+I did a "check" and I got mismatch_cnt = 256; looked at the differences 
+between
+/dev/sdg3 and /dev/sdh3 and they're around 50GB into the 73GB (I was 
+expecting to find
+them near the tail end, although this might be less meaningful with the 
+bitmap.)
+
+I'm now trying to reproduce these two failures, now on 3.14.21 with the 
+2 resync start
+patches, without LVM in the middle.
+
+Thanks always for the help.
+-Bill
+
+
+
+>
+>
+>
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331469
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331470
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331471
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331472
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331473
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331474
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331475
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331476
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Buffer I/O error on device dm-3, logical
+>> block 6331477
+>> Oct  4 12:27:05 xplane kernel: lost page write due to I/O error on dm-3
+>> Oct  4 12:27:05 xplane kernel: Aborting journal on device dm-1.
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_new_blocks:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error:
+>> ext3_journal_start_sb: Detected aborted journal
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error: remounting
+>> filesystem read-only
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error:
+>> ext3_journal_start_sb: Detected aborted journal
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in
+>> ext3_writeback_write_end: IO failure
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_new_inode:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_new_inode:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_orphan_add:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_new_inode:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in ext3_new_inode:
+>> Journal has aborted
+>> Oct  4 12:27:05 xplane kernel: EXT3-fs (dm-1): error in
+>> ext3_dirty_inode: IO failure
+>> Oct  4 12:27:05 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:27:05 xplane kernel:  --- wd:1 rd:2
+>> Oct  4 12:27:05 xplane kernel:  disk 0, wo:1, o:0, dev:sdh3
+>> Oct  4 12:27:05 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+> raid1_remove_disk is called to disconnect the device from the array.
+>
+>
+>> Oct  4 12:27:05 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:27:05 xplane kernel:  --- wd:1 rd:2
+>> Oct  4 12:27:05 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+> which it has now done.
+>
+>> Oct  4 12:27:14 xplane kernel: md: unbind<sdh3>
+>> Oct  4 12:27:14 xplane kernel: md: export_rdev(sdh3)
+>> Oct  4 12:27:24 xplane kernel: md: bind<sdh3>
+>> Oct  4 12:27:24 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:27:24 xplane kernel:  --- wd:1 rd:2
+>> Oct  4 12:27:24 xplane kernel:  disk 0, wo:1, o:1, dev:sdh3
+>> Oct  4 12:27:24 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+>> Oct  4 12:27:24 xplane kernel: md: recovery of RAID array md1
+>> Oct  4 12:27:24 xplane kernel: md: minimum _guaranteed_  speed: 10000
+>> KB/sec/disk.
+>> Oct  4 12:27:24 xplane kernel: md: using maximum available idle IO
+>> bandwidth (but not more than 200000 KB/sec) for recovery.
+>> Oct  4 12:27:24 xplane kernel: md: using 128k window, over a total of
+>> 76959296k.
+>> Oct  4 12:27:33 xplane kernel: md: md1: recovery done.
+>> Oct  4 12:27:33 xplane kernel: RAID1 conf printout:
+>> Oct  4 12:27:33 xplane kernel:  --- wd:2 rd:2
+>> Oct  4 12:27:33 xplane kernel:  disk 0, wo:0, o:1, dev:sdh3
+>> Oct  4 12:27:33 xplane kernel:  disk 1, wo:0, o:1, dev:sdg3
+>> Oct  4 12:27:35 xplane kernel: md: data-check of RAID array md1
+>> Oct  4 12:27:35 xplane kernel: md: minimum _guaranteed_  speed: 10000
+>> KB/sec/disk.
+>> Oct  4 12:27:35 xplane kernel: md: using maximum available idle IO
+>> bandwidth (but not more than 200000 KB/sec) for data-check.
+>> Oct  4 12:27:35 xplane kernel: md: using 128k window, over a total of
+>> 76959296k.
+>> Oct  4 12:29:59 xplane kernel: __journal_remove_journal_head: freeing
+>> b_committed_data
+>>
+>> It seems like something got out of sync as the disk was being removed,
+>> but before the remove completed.
+>>
+>> Again, this is 3.14.19 with these 8 patches:
+>>         md/raid1: intialise start_next_window for READ case to avoid hang
+>>         md/raid1:  be more cautious where we read-balance during resync.
+>>         md/raid1: clean up request counts properly in close_sync()
+>>         md/raid1: make sure resync waits for conflicting writes to complete.
+>>         md/raid1: Don't use next_resync to determine how far resync has
+>> progressed
+>>         md/raid1: update next_resync under resync_lock.
+>>         md/raid1: count resync requests in nr_pending.
+>>         md/raid1: fix_read_error should act on all non-faulty devices.
+>>
+>>         and the two patches for the check start hang.
+>>
+>> Any ideas on what happened here?
+>>
+>> Thanks,
+>> Bill
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
