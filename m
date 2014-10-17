@@ -1,75 +1,79 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Fwd: I will pay money for the correct RAID recovery instructions
-Date: Fri, 17 Oct 2014 12:14:03 -0400
-Message-ID: <21569.16459.69850.406372@quad.stoffel.home>
-References: <CANs+QMz3jNpAneHLzN5c=EtK+RAOhQJZy=n3P0oYTRm7yNDzjg@mail.gmail.com>
-	<20141016202202.GA22898@cthulhu.home.robinhill.me.uk>
-	<CANs+QMy7d+kAxazgdk_r+iPtK45+ddSMwEQg6M_6e4giqJgJmw@mail.gmail.com>
-	<21569.8756.823611.71332@quad.stoffel.home>
-	<CAOS+5GGMGU2doP=v1LfeA5CDDmuMj4gxUcNtoK5-gJWHO9CMaw@mail.gmail.com>
-	<CAOS+5GEbNPAWfBL_uPDOuhMb4LtN+_fJ07MD7igOQmVi04mWpA@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: migrate to bad block list
+Date: Fri, 17 Oct 2014 19:06:32 +0200
+Message-ID: <20141017170632.GA3272@lazy.lzy>
+References: <E1D69AD765F9D841B8DE87D96DD21E4505DFBADD@AEMAILMBX02.lenovo.com>
+ <20141016175414.01334582@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GEbNPAWfBL_uPDOuhMb4LtN+_fJ07MD7igOQmVi04mWpA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20141016175414.01334582@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Michael Ryan <mryan@lenovoemc.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
 
-Another> Sorry to state the obvious but......  To restore the degraded
-Another> array would (based on the info you've posted) likely take
-Another> longer then temporarily moving the data to a different set of
-Another> drives.
+On Thu, Oct 16, 2014 at 05:54:14PM +1100, NeilBrown wrote:
+> On Wed, 15 Oct 2014 17:18:19 +0000 Michael Ryan <mryan@lenovoemc.com>=
+ wrote:
+>=20
+> >=20
+> > Is there any way to migrate an existing array created with mdadm v3=
+=2E2.5 and using 1.1 metadata to use a bad block list?=A0 I'm assuming =
+not as there wouldn't be space reserved for the list, but I need to ask=
+=2E
+> >=20
+> > Thanks for your response!
+>=20
+> mdadm tends to leave a fair bit of unused space on devices so that th=
+ings
+> like a bad block list can easily be added.
+> If you can stop the array, then do that and re-assemble with
+>   --update=3Dbbl
+>=20
+> and you should  get a bbl added to each device.
+>=20
+> If you cannot stop the array, but it has a bitmap, then
+> you can, for each device:
+>=20
+>   mdadm /dev/mdX --fail /dev/adevice
+>   mdadm /dev/mdX --remove /dev/adevice
+>   mdadm /dev/mdX --re-add --update=3Dbbl /dev/adevice
+>=20
+> I think that should work.  The "bblk" is a feature of the device, not=
+ of the
+> whole array.  So you can add it to each device.
 
-How do you figure this?  He hasn't posted any useful data on his array
-at all.  We know it's six 3Tb disks in RAID10, so that's at most 9Tb
-of data.  Moving 3Tb (bad disk ddrescue'd onto new disk) is only 3Tb
-to move.  Then the resync will of course take time.  
+is there any technical reason why it is not
+possible to enable/disable the bbl like the
+write intent bitmap?
+Something like:
 
-But if he doesn't have the spare disk space, it's probably the only way.
+mdadm --grow /dev/<md> --bbl=3D[internal|none]
 
-Another> As time seems to be a major consideration here (likely/possible
-Another> failure of sde) then surely the optimal strategy has to be to get the
-Another> data off first, then look at the rebuilding the degraded array?
+Thanks,
 
-Another> Just my 2c
+bye,
 
-Another> On 17 October 2014 15:05, John Stoffel <john@stoffel.org> wrote:
->> 
->> 
->> Ian,
->> 
->> It would also help if you posted the details of your setup using:
->> 
->> cat /proc/partitions
->> cat /proc/mdstat
->> 
->> mdadm -D /dev/md#
->> - for each of the devices above.
->> 
->> mdadm -E /dev/sd<drive><#>
->> - for each disk or partition in the array from above.
->> 
->> 
->> 
->> But the suggestions to ddrescue the going bad drive onto a new disk is
->> a good one.  On my debian system, I would do the following:
->> 
->> sudo apt-get install gddrescue
->> ddrescue /dev/sde /dev/sdf /var/tmp/ddrecue-sde.log
->> 
->> and see how that goes.
->> 
->> Good luck,
->> John
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Another> --
-Another> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-Another> the body of a message to majordomo@vger.kernel.org
-Another> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+pg
+
+> I haven't actually tested the above I think, so it might be safest to=
+ make an
+> array with loop-back devices and experiment.
+>=20
+> NeilBrown
+
+
+
+--=20
+
+piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
