@@ -1,33 +1,35 @@
-From: Per-Ola Stenborg <per-ola@stenborg.me>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Multiple drive failure after stupid mistake. Help needed
-Date: Sun, 19 Oct 2014 17:56:21 +0200
-Message-ID: <5443DF25.3020702@stenborg.me>
-References: <54438839.9080309@stenborg.me>	<alpine.DEB.2.02.1410191253010.30853@uplift.swm.pp.se>	<5443B55C.7000208@stenborg.me> <CAFE24U0GKPhkYe1faCBWohimJYL4O_PBYOJ+aLa_mSMKQCGGhw@mail.gmail.com>
+Date: Sun, 19 Oct 2014 19:06:43 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1410191905190.30853@uplift.swm.pp.se>
+References: <54438839.9080309@stenborg.me> <alpine.DEB.2.02.1410191253010.30853@uplift.swm.pp.se> <5443B55C.7000208@stenborg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFE24U0GKPhkYe1faCBWohimJYL4O_PBYOJ+aLa_mSMKQCGGhw@mail.gmail.com>
+In-Reply-To: <5443B55C.7000208@stenborg.me>
 Sender: linux-raid-owner@vger.kernel.org
-To: Weedy <weedy2887@gmail.com>
-Cc: linux-raid@vger.kernel.org, Mikael Abrahamsson <swmike@swm.pp.se>
+To: Per-Ola Stenborg <per-ola@stenborg.me>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Weedy skrev 2014-10-19 15:41:
+On Sun, 19 Oct 2014, Per-Ola Stenborg wrote:
+
+> I compiled the latest mdadm v3.3.2 - 21st August 2014
+> running
+> mdadm --assemble --force /dev/md0 /dev/sd[bcde]
+> outputs
+> mdadm: /dev/sdb is busy - skipping
+> mdadm: /dev/sdc is busy - skipping
+> mdadm: /dev/sdd is busy - skipping
+> mdadm: /dev/sde is busy - skipping
 >
-> Is sdb in another array when you try to assemble?
-> Is /proc/mdstat empty while you're trying this?
->
-No, here is the output
+> Strange. What does this mean? Is it flaged as in use in the kernel? The
 
-cat /proc/mdstat
-Personalities :
-md0 : inactive sdd[2](S) sdb[0](S) sde[4](S) sdc[1](S)
-       7814054240 blocks super 1.2
+Stop the array before you try to start it again.
 
-unused devices: <none>
+Also consider upgrading to a newer kernel if there is a backports one 
+(there should be for debian squeeze), a lot of things have happened since 
+2.6.32.
 
-there is only one array in this machine.
-
-/Per-Ola
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
