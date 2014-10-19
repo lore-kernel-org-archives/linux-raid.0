@@ -1,75 +1,33 @@
 From: Per-Ola Stenborg <per-ola@stenborg.me>
 Subject: Re: Multiple drive failure after stupid mistake. Help needed
-Date: Sun, 19 Oct 2014 14:58:04 +0200
-Message-ID: <5443B55C.7000208@stenborg.me>
-References: <54438839.9080309@stenborg.me> <alpine.DEB.2.02.1410191253010.30853@uplift.swm.pp.se>
+Date: Sun, 19 Oct 2014 17:56:21 +0200
+Message-ID: <5443DF25.3020702@stenborg.me>
+References: <54438839.9080309@stenborg.me>	<alpine.DEB.2.02.1410191253010.30853@uplift.swm.pp.se>	<5443B55C.7000208@stenborg.me> <CAFE24U0GKPhkYe1faCBWohimJYL4O_PBYOJ+aLa_mSMKQCGGhw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1410191253010.30853@uplift.swm.pp.se>
+In-Reply-To: <CAFE24U0GKPhkYe1faCBWohimJYL4O_PBYOJ+aLa_mSMKQCGGhw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: Weedy <weedy2887@gmail.com>
+Cc: linux-raid@vger.kernel.org, Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-Hi, thanks for your answer. (Tack!)
+Weedy skrev 2014-10-19 15:41:
+>
+> Is sdb in another array when you try to assemble?
+> Is /proc/mdstat empty while you're trying this?
+>
+No, here is the output
 
-My debian mdadm is ver v3.1.4 - 31st August 2010
-mdadm --assemble --force /dev/md0 /dev/sd[bcde]
-outputs
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: /dev/sdb has no superblock - assembly aborted
-
-I compiled the latest mdadm v3.3.2 - 21st August 2014
-running
-mdadm --assemble --force /dev/md0 /dev/sd[bcde]
-outputs
-mdadm: /dev/sdb is busy - skipping
-mdadm: /dev/sdc is busy - skipping
-mdadm: /dev/sdd is busy - skipping
-mdadm: /dev/sde is busy - skipping
-
-Strange. What does this mean? Is it flaged as in use in the kernel? The=
-=20
-devices are readable, I tried to read data with
-dd if=3D/dev/sdb of=3Ddump bs=3D1024 count=3D1024
-and it works, so the device is accressible.
-
-dmesg shows nothing
-
-/proc/mdstat
+cat /proc/mdstat
 Personalities :
 md0 : inactive sdd[2](S) sdb[0](S) sde[4](S) sdc[1](S)
        7814054240 blocks super 1.2
 
+unused devices: <none>
 
-uname -a
-Linux backuppc 2.6.32-5-686 #1 SMP Sat Jul 12 22:59:16 UTC 2014 i686=20
-GNU/Linux
-System is Debian squeeze-lts
+there is only one array in this machine.
 
-Best regards
-=B4
-Per-Ola Stenborg
+/Per-Ola
 
-Mikael Abrahamsson skrev 2014-10-19 12:56:
-> On Sun, 19 Oct 2014, Per-Ola Stenborg wrote:
->
->> *** PLEASE advice ***
->
-> Please post dmesg output from when you do --assemble --force, and als=
-o=20
-> please post your mdadm and kernel versions.
->
-> As a first step, compile mdadm from source and use that version, it=20
-> often helps as distributions don't generally ship with the latest mda=
-dm.
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
