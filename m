@@ -1,79 +1,196 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: migrate to bad block list
-Date: Fri, 17 Oct 2014 19:06:32 +0200
-Message-ID: <20141017170632.GA3272@lazy.lzy>
-References: <E1D69AD765F9D841B8DE87D96DD21E4505DFBADD@AEMAILMBX02.lenovo.com>
- <20141016175414.01334582@notabene.brown>
+From: Per-Ola Stenborg <per-ola@stenborg.me>
+Subject: Multiple drive failure after stupid mistake. Help needed
+Date: Sun, 19 Oct 2014 11:45:29 +0200
+Message-ID: <54438839.9080309@stenborg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141016175414.01334582@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Michael Ryan <mryan@lenovoemc.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi all,
 
-On Thu, Oct 16, 2014 at 05:54:14PM +1100, NeilBrown wrote:
-> On Wed, 15 Oct 2014 17:18:19 +0000 Michael Ryan <mryan@lenovoemc.com>=
- wrote:
->=20
-> >=20
-> > Is there any way to migrate an existing array created with mdadm v3=
-=2E2.5 and using 1.1 metadata to use a bad block list?=A0 I'm assuming =
-not as there wouldn't be space reserved for the list, but I need to ask=
-=2E
-> >=20
-> > Thanks for your response!
->=20
-> mdadm tends to leave a fair bit of unused space on devices so that th=
-ings
-> like a bad block list can easily be added.
-> If you can stop the array, then do that and re-assemble with
->   --update=3Dbbl
->=20
-> and you should  get a bbl added to each device.
->=20
-> If you cannot stop the array, but it has a bitmap, then
-> you can, for each device:
->=20
->   mdadm /dev/mdX --fail /dev/adevice
->   mdadm /dev/mdX --remove /dev/adevice
->   mdadm /dev/mdX --re-add --update=3Dbbl /dev/adevice
->=20
-> I think that should work.  The "bblk" is a feature of the device, not=
- of the
-> whole array.  So you can add it to each device.
+I have done something very stupid. After getting SMART warnings from one 
+of my disks in a 4-disk RAID5 array I decided to be proactive and change 
+the disk.
+The array consists of /dev/sd[bcde]. The failing disk is /dev/sdc.
 
-is there any technical reason why it is not
-possible to enable/disable the bbl like the
-write intent bitmap?
-Something like:
+I ran fail and remove on the WRONG disk!
 
-mdadm --grow /dev/<md> --bbl=3D[internal|none]
+mdadm --manage /dev/md0 --fail /dev/sdb
 
-Thanks,
+/proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdb[0](F) sde[4] sdd[2] sdc[1]
+       5860538880 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[4/3] [_UUU]
 
-bye,
+mdadm --manage /dev/md0 --remove /dev/sdb
 
-pg
+I exchanged the physical disk, the failing/right one, /dev/sdc.
+When booting my server I noticed my error when the array did not come up.
+I thought it was not a problem as the original /dev/sdc was readable so I
+shut the server down and put the original disk back and re-added /dev/sdb
 
-> I haven't actually tested the above I think, so it might be safest to=
- make an
-> array with loop-back devices and experiment.
->=20
-> NeilBrown
+/proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdc[1] sde[4] sdd[2]
+       5860538880 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[4/3] [_UUU]
+
+mdadm --manage /dev/md0 --add /dev/sdb
+
+All seemed fine and the array was rebuilding. But when almost done 
+/dev/sdc failed.
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdb[0] sdc[1](F) sde[4] sdd[2]
+       5860538880 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[4/2] [__UU]
+       [===================>.]  recovery = 95.3% (1862844416/1953512960) 
+finish=49.5min speed=30502K/sec
+
+A few hours late I got:
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdb[0](S) sdc[1](F) sde[4] sdd[2]
+       5860538880 blocks super 1.2 level 5, 512k chunk, algorithm 2 
+[4/2] [__UU]
 
 
+After reboot I now have
 
---=20
+/proc/mdstat
+Personalities :
+md0 : inactive sdd[2](S) sdb[0](S) sde[4](S) sdc[1](S)
+       7814054240 blocks super 1.2
 
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+unused devices: <none>
+
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : e3394a2b:77411a7d:a6f03a01:19f9b943
+            Name : backuppc:0  (local to host backuppc)
+   Creation Time : Mon Dec 19 17:43:44 2011
+      Raid Level : raid5
+    Raid Devices : 4
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : ed574f2e:b80a509b:b8a5e5a6:3d711e05
+
+     Update Time : Fri Oct 17 01:00:05 2014
+        Checksum : 4fe90596 - correct
+          Events : 5072
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : spare
+    Array State : ..AA ('A' == active, '.' == missing)
+
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : e3394a2b:77411a7d:a6f03a01:19f9b943
+            Name : backuppc:0  (local to host backuppc)
+   Creation Time : Mon Dec 19 17:43:44 2011
+      Raid Level : raid5
+    Raid Devices : 4
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4ebf1b3b:6821832c:1b520e0e:d363aa4d
+
+     Update Time : Fri Oct 17 00:04:20 2014
+        Checksum : 9d9f1587 - correct
+          Events : 5064
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : AAAA ('A' == active, '.' == missing)
+
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : e3394a2b:77411a7d:a6f03a01:19f9b943
+            Name : backuppc:0  (local to host backuppc)
+   Creation Time : Mon Dec 19 17:43:44 2011
+      Raid Level : raid5
+    Raid Devices : 4
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : ffe21a6e:3256c3d5:8cb68394:1172eb5d
+
+     Update Time : Fri Oct 17 01:00:05 2014
+        Checksum : 1092edcd - correct
+          Events : 5072
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : ..AA ('A' == active, '.' == missing)
+
+/dev/sde:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : e3394a2b:77411a7d:a6f03a01:19f9b943
+            Name : backuppc:0  (local to host backuppc)
+   Creation Time : Mon Dec 19 17:43:44 2011
+      Raid Level : raid5
+    Raid Devices : 4
+
+  Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
+      Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+   Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+     Data Offset : 2048 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 5ca79fb0:09f51c20:f5c8a851:310f5c2a
+
+     Update Time : Fri Oct 17 01:00:05 2014
+        Checksum : 2707008b - correct
+          Events : 5072
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : ..AA ('A' == active, '.' == missing)
+
+
+The /dev/sdc disk is tested with spinrite, and is verified readable.
+I've tried forcing an assembly without luck. Did I do it right? What 
+should i do now?
+
+*** PLEASE advice ***
+
+And off cause I have valuable data on the array without backup...
+
+Best regards
+
+Per-Ola
+---
