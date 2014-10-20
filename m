@@ -1,50 +1,121 @@
-From: Jason Keltz <jas@cse.yorku.ca>
-Subject: Re: question about MD raid rebuild performance degradation even with
- speed_limit_min/speed_limit_max set.
-Date: Mon, 20 Oct 2014 17:07:38 -0400
-Message-ID: <5445799A.8020205@cse.yorku.ca>
-References: <5445332B.9060009@cse.yorku.ca> <5445361E.3010503@cse.yorku.ca>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Kernel says there is not a valid superblock, but there is
+Date: Tue, 21 Oct 2014 08:09:37 +1100
+Message-ID: <20141021080937.69aaf214@notabene.brown>
+References: <544525C7.7000803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/nuV2R+25Ala38tjz2r/F1OQ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5445361E.3010503@cse.yorku.ca>
+In-Reply-To: <544525C7.7000803@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phillip Susi <phillsusi@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/20/2014 12:19 PM, Jason Keltz wrote:
-> Hi.
->
-> I'm creating a 22 x 2 TB SATA disk MD RAID10 on a new RHEL6 system. 
-> I've experimented with setting "speed_limit_min" and "speed_limit_max" 
-> kernel variables so that I get the best balance of performance during 
-> a RAID rebuild of one of the RAID1 pairs. If, for example, I set 
-> speed_limit_min AND speed_limit_max to 80000 then fail a disk when 
-> there is no other disk activity, then I do get a rebuild rate of 
-> around 80 MB/s. However, if I then start up a write intensive 
-> operation on the MD array (eg. a dd, or a mkfs on an LVM logical 
-> volume that is created on that MD), then, my write operation seems to 
-> get "full power", and my rebuild drops to around 25 MB/s. This means 
-> that the rebuild of my RAID10 disk is going to take a huge amount of 
-> time (>12 hours!!!). When I set speed_limit_min and speed_limit_max to 
-> the same value, am I not guaranteeing the rebuild speed? Is this a bug 
-> that I should be reporting to Red Hat, or a "feature"?
->
-> Thanks in advance for any help that you can provide...
->
-> Jason.
+--Sig_/nuV2R+25Ala38tjz2r/F1OQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I would like to add that I downloaded the latest version of Ubuntu, and 
-am running it on the same server with the same MD.
-When I set speed_limit_min and speed_limit_max to 80000, I was able to 
-start two large dds on the md array, and the rebuild stuck at around 71 
-MB/s, which is close enough.  This leads me to believe that the problem 
-above is probably a RHEL6 issue.  However, after I stopped the two dd 
-operations,  and raised both speed_limit_min and speed_limit_max to 
-120000, the rebuild stayed between 71-73 Mb/s for more than 10 minutes 
-.. now it seems to be at 100 MB/s... but doesn't seem to get any higher 
-(even though I had 120 MB/s and above on the RHEL system without any 
-load)... Hmm.
+On Mon, 20 Oct 2014 11:09:59 -0400 Phillip Susi <phillsusi@gmail.com> wrote:
 
-Jason.
+> When trying to assemble, the kernel complains:
+
+Which kernel?
+  uname -a
+and may as well add
+  mdadm -V
+
+as well.
+
+NeilBrown
+
+>=20
+> md: md1 stopped.
+> md: sda2 does not have a valid v1.2 superblock, not importing!
+> md: md_import_device returned -22
+> md: sdb2 does not have a valid v1.2 superblock, not importing!
+> md: md_import_device returned -22
+>=20
+> Yet the superblock looks perfectly fine according to mdadm -E:
+>=20
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 34e89993:37821273:5498dc63:07233b2c
+>            Name : devserv2:1
+>   Creation Time : Mon Jun 16 11:24:00 2014
+>      Raid Level : raid1
+>    Raid Devices : 2
+>=20
+>  Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
+>      Array Size : 158334976 (151.00 GiB 162.14 GB)
+>   Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 40c38a87:88807f78:5bf71f34:4c9b2215
+>=20
+>     Update Time : Mon Oct 20 09:56:25 2014
+>        Checksum : d2369656 - correct
+>          Events : 303
+>=20
+>=20
+>    Device Role : Active device 0
+>    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+> /dev/sdb2:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : 34e89993:37821273:5498dc63:07233b2c
+>            Name : devserv2:1
+>   Creation Time : Mon Jun 16 11:24:00 2014
+>      Raid Level : raid1
+>    Raid Devices : 2
+>=20
+>  Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
+>      Array Size : 158334976 (151.00 GiB 162.14 GB)
+>   Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
+>     Data Offset : 262144 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 0fb85e8f:e697a9a0:7bd6eac4:03b8851d
+>=20
+>     Update Time : Mon Oct 20 10:08:35 2014
+>        Checksum : 9b63a13c - correct
+>          Events : 311
+>=20
+>=20
+>    Device Role : Active device 1
+>    Array State : .A ('A' =3D=3D active, '.' =3D=3D missing)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/nuV2R+25Ala38tjz2r/F1OQ
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVEV6ETnsnt1WYoG5AQL9Ag//QKYlY+k/ZLKSnRw/IIxUC/pAJnNv3ZTB
+IlvBDhYk1xuEHLleU49/MSXI+dWpy/4TG38hbKlBftBTSC3CNMurb/lsm5dbA5eK
+IKgrIrERey2zSDH8HCn/d84do9bJXvw3xoApqE+B1WDFsQO6CwRcVEeY6EY6/cYZ
+aoVR7r7ffAx/JrUkagznjrdbbAO4qEG6vT1HsfiuqAfnHX655D1z4DKPCZnRc3fx
+we9OYYqHLdmNatR0BqVKerZffKRDNlKF+QkXaz/5NoY+r7ix8/zY2P1+vyPutOKS
+6SfMPMVVly/m8OmXlkvdUTOpW6OSX1OZOGdG486IN6M+wkHiO0k7zDrg+9A7l1AD
+FfLIdsnQmxthHTicm6ztxaeK7onSHb84kAfPI6tgr/C9N6VXVBC2VvlXBkatOG17
+s7ER6v7PCNnZvpUsUqJFwPEqu2bbTIQgqLoG8o9omtNxSeRJCSVaJi/8bAvP5y/k
+ag6j8q67SBFF1JefE13DFYjiDC0WjzEkCnchUcuxdaxRjnQG5NER/A3truhxuqXm
+YCyYd36rjqYspXc8UHkXUL9/8sb/ul6qIAqmzgzKqPWl54MJ8CAeZANFfe4ipGSG
+GIi+EMNJI/OD2ca/SFySsfoWMMfH3l4gLw8ZtHj6D615OvQ5bbAX3BVOckwUcy5Z
+ji8f1it3Yj8=
+=uuRT
+-----END PGP SIGNATURE-----
+
+--Sig_/nuV2R+25Ala38tjz2r/F1OQ--
