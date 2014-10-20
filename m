@@ -1,121 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Kernel says there is not a valid superblock, but there is
-Date: Tue, 21 Oct 2014 08:09:37 +1100
-Message-ID: <20141021080937.69aaf214@notabene.brown>
-References: <544525C7.7000803@gmail.com>
+Subject: Re: How do I set 'write-behind' on existing array?
+Date: Tue, 21 Oct 2014 08:14:29 +1100
+Message-ID: <20141021081429.509f2d72@notabene.brown>
+References: <5445011B.8040008@hanswkraus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/nuV2R+25Ala38tjz2r/F1OQ"; protocol="application/pgp-signature"
+ boundary="Sig_/qv=uI.5YYX7GRADurke5fAZ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <544525C7.7000803@gmail.com>
+In-Reply-To: <5445011B.8040008@hanswkraus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <phillsusi@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Hans Kraus <hans@hanswkraus.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/nuV2R+25Ala38tjz2r/F1OQ
+--Sig_/qv=uI.5YYX7GRADurke5fAZ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 20 Oct 2014 11:09:59 -0400 Phillip Susi <phillsusi@gmail.com> wrote:
+On Mon, 20 Oct 2014 14:33:31 +0200 Hans Kraus <hans@hanswkraus.com> wrote:
 
-> When trying to assemble, the kernel complains:
+> Hi,
+>=20
+> I want to expand an existing root array with an SSD. For that purpose I
+> try to set firstly 'write-behind' on that array. Afterwards I will add
+> the SSD, remove the HDs and re-add them with 'write-mostly'. On that
+> array is the root filesystem, therefore stopping is no option. In
+>  >/home/kraush/work/mdadm/mdadm< is the latest mdadm version from git.
+> I tried:
+> -----------------------------------------------------------------------
+> root@elefant:/home/kraush/work/mdadm/mdadm# ./mdadm --manage=20
+> --write-behind=3D4096 /dev/md4
+> mdadm: :option --write-behind not valid in manage mode
+> root@elefant:/home/kraush/work/mdadm/mdadm# ./mdadm --grow=20
+> --write-behind=3D4096 /dev/md4
+> mdadm: no changes to --grow
+> -----------------------------------------------------------------------
+> What is the correct syntax?
+>=20
 
-Which kernel?
-  uname -a
-and may as well add
-  mdadm -V
+Not quite.
 
-as well.
+"write-behind" is a property of the bitmap.
+To enable write-behind on an array you first need to remove the bitmap if
+there is one
+  mdadm /dev/md4 --grow --bitmap=3Dnone
+then add a new bitmap with the required property
+  mdadm /dev/md4 --grow --bitmap=3Dinternal --write-behind=3D4096
 
 NeilBrown
 
->=20
-> md: md1 stopped.
-> md: sda2 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
-> md: sdb2 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
->=20
-> Yet the superblock looks perfectly fine according to mdadm -E:
->=20
-> /dev/sda2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 34e89993:37821273:5498dc63:07233b2c
->            Name : devserv2:1
->   Creation Time : Mon Jun 16 11:24:00 2014
->      Raid Level : raid1
->    Raid Devices : 2
->=20
->  Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
->      Array Size : 158334976 (151.00 GiB 162.14 GB)
->   Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 40c38a87:88807f78:5bf71f34:4c9b2215
->=20
->     Update Time : Mon Oct 20 09:56:25 2014
->        Checksum : d2369656 - correct
->          Events : 303
->=20
->=20
->    Device Role : Active device 0
->    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> /dev/sdb2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 34e89993:37821273:5498dc63:07233b2c
->            Name : devserv2:1
->   Creation Time : Mon Jun 16 11:24:00 2014
->      Raid Level : raid1
->    Raid Devices : 2
->=20
->  Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
->      Array Size : 158334976 (151.00 GiB 162.14 GB)
->   Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 0fb85e8f:e697a9a0:7bd6eac4:03b8851d
->=20
->     Update Time : Mon Oct 20 10:08:35 2014
->        Checksum : 9b63a13c - correct
->          Events : 311
->=20
->=20
->    Device Role : Active device 1
->    Array State : .A ('A' =3D=3D active, '.' =3D=3D missing)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/nuV2R+25Ala38tjz2r/F1OQ
+--Sig_/qv=uI.5YYX7GRADurke5fAZ
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVEV6ETnsnt1WYoG5AQL9Ag//QKYlY+k/ZLKSnRw/IIxUC/pAJnNv3ZTB
-IlvBDhYk1xuEHLleU49/MSXI+dWpy/4TG38hbKlBftBTSC3CNMurb/lsm5dbA5eK
-IKgrIrERey2zSDH8HCn/d84do9bJXvw3xoApqE+B1WDFsQO6CwRcVEeY6EY6/cYZ
-aoVR7r7ffAx/JrUkagznjrdbbAO4qEG6vT1HsfiuqAfnHX655D1z4DKPCZnRc3fx
-we9OYYqHLdmNatR0BqVKerZffKRDNlKF+QkXaz/5NoY+r7ix8/zY2P1+vyPutOKS
-6SfMPMVVly/m8OmXlkvdUTOpW6OSX1OZOGdG486IN6M+wkHiO0k7zDrg+9A7l1AD
-FfLIdsnQmxthHTicm6ztxaeK7onSHb84kAfPI6tgr/C9N6VXVBC2VvlXBkatOG17
-s7ER6v7PCNnZvpUsUqJFwPEqu2bbTIQgqLoG8o9omtNxSeRJCSVaJi/8bAvP5y/k
-ag6j8q67SBFF1JefE13DFYjiDC0WjzEkCnchUcuxdaxRjnQG5NER/A3truhxuqXm
-YCyYd36rjqYspXc8UHkXUL9/8sb/ul6qIAqmzgzKqPWl54MJ8CAeZANFfe4ipGSG
-GIi+EMNJI/OD2ca/SFySsfoWMMfH3l4gLw8ZtHj6D615OvQ5bbAX3BVOckwUcy5Z
-ji8f1it3Yj8=
-=uuRT
+iQIVAwUBVEV7NTnsnt1WYoG5AQKZiA/9E+grqpyn8fPuKdWWJUU+4fseYwPS8V1d
+aX8aeC0tQauy22VnERnjJaGa1kLLJJOkyNbsJgIUnYzOfqviptR77ZTp2GaIr2qr
+SNEBmAzYb5qU4Uo6d2bb7262cN+kPefrdu+RZQOj8/JBBWwHx/bfK3H+0s1NYaKC
+RjNAtEgz3FliGoWRvlfmfUh13hJ4UM2ktpupVNU8utlPo5/v++DWdUhV34NIKfMo
+U/8Gg8C1r/PrhdoOT7eR2CwZPDDtidYGUAFRJUIgBE6NM4AJjiywlC26PsIyRyVK
+tYatFU7+u9mwlhKYHHTmQIiZ+H9r2I5nk4zh7nc+hTbOkjIG/O7fGm5Ag6+AFoUt
+IHny+zZ5JJ0wM7g8j7pAo1W6O5c1eCDMxDZSwdvzs2Qr/cSWBXjmfAKB0Nhgmuz6
+LHVFlL9z9BTH3l7fZvkUeyHDeDe7Kx+5fEndzgX4cHc7jiettwD1xKKf0kD4xkuz
+DNXWutKI+Dsi/4GllWXMWLd6wraHm1ghqUo+J7dGW1zlne9ByUbxw67KOjsnkoJX
+udh15GIx1parCiVHYJbiaUIvgper8jA/F6sQHfVbyODL+m9geOt8f9HUeLGuREZT
+DLkdJZWORctVgK3qi/vz88imrlMT7j/8zvSDe/dn/S1PeTne2h7LqZQTK1GC13Te
+a4EfMxWcWpo=
+=kj14
 -----END PGP SIGNATURE-----
 
---Sig_/nuV2R+25Ala38tjz2r/F1OQ--
+--Sig_/qv=uI.5YYX7GRADurke5fAZ--
