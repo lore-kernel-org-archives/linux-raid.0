@@ -1,73 +1,35 @@
-From: Phillip Susi <phillsusi@gmail.com>
-Subject: Kernel says there is not a valid superblock, but there is
-Date: Mon, 20 Oct 2014 11:09:59 -0400
-Message-ID: <544525C7.7000803@gmail.com>
+From: Jason Keltz <jas@cse.yorku.ca>
+Subject: question about MD raid rebuild performance degradation even with
+ speed_limit_min/speed_limit_max set.
+Date: Mon, 20 Oct 2014 12:19:42 -0400
+Message-ID: <5445361E.3010503@cse.yorku.ca>
+References: <5445332B.9060009@cse.yorku.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5445332B.9060009@cse.yorku.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When trying to assemble, the kernel complains:
+Hi.
 
-md: md1 stopped.
-md: sda2 does not have a valid v1.2 superblock, not importing!
-md: md_import_device returned -22
-md: sdb2 does not have a valid v1.2 superblock, not importing!
-md: md_import_device returned -22
+I'm creating a 22 x 2 TB SATA disk MD RAID10 on a new RHEL6 system. I've 
+experimented with setting "speed_limit_min" and "speed_limit_max" kernel 
+variables so that I get the best balance of performance during a RAID 
+rebuild of one of the RAID1 pairs. If, for example, I set 
+speed_limit_min AND speed_limit_max to 80000 then fail a disk when there 
+is no other disk activity, then I do get a rebuild rate of around 80 
+MB/s. However, if I then start up a write intensive operation on the MD 
+array (eg. a dd, or a mkfs on an LVM logical volume that is created on 
+that MD), then, my write operation seems to get "full power", and my 
+rebuild drops to around 25 MB/s. This means that the rebuild of my 
+RAID10 disk is going to take a huge amount of time (>12 hours!!!). When 
+I set speed_limit_min and speed_limit_max to the same value, am I not 
+guaranteeing the rebuild speed? Is this a bug that I should be reporting 
+to Red Hat, or a "feature"?
 
-Yet the superblock looks perfectly fine according to mdadm -E:
+Thanks in advance for any help that you can provide...
 
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 34e89993:37821273:5498dc63:07233b2c
-           Name : devserv2:1
-  Creation Time : Mon Jun 16 11:24:00 2014
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
-     Array Size : 158334976 (151.00 GiB 162.14 GB)
-  Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 40c38a87:88807f78:5bf71f34:4c9b2215
-
-    Update Time : Mon Oct 20 09:56:25 2014
-       Checksum : d2369656 - correct
-         Events : 303
-
-
-   Device Role : Active device 0
-   Array State : AA ('A' == active, '.' == missing)
-
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 34e89993:37821273:5498dc63:07233b2c
-           Name : devserv2:1
-  Creation Time : Mon Jun 16 11:24:00 2014
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 3900907520 (1860.10 GiB 1997.26 GB)
-     Array Size : 158334976 (151.00 GiB 162.14 GB)
-  Used Dev Size : 316669952 (151.00 GiB 162.14 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 0fb85e8f:e697a9a0:7bd6eac4:03b8851d
-
-    Update Time : Mon Oct 20 10:08:35 2014
-       Checksum : 9b63a13c - correct
-         Events : 311
-
-
-   Device Role : Active device 1
-   Array State : .A ('A' == active, '.' == missing)
+Jason.
