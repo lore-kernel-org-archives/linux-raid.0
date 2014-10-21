@@ -1,74 +1,76 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: How do I set 'write-behind' on existing array?
-Date: Tue, 21 Oct 2014 08:14:29 +1100
-Message-ID: <20141021081429.509f2d72@notabene.brown>
-References: <5445011B.8040008@hanswkraus.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] DM RAID: fix a couple integer overflows
+Date: Tue, 21 Oct 2014 15:43:54 +0300
+Message-ID: <20141021124354.GB26918@mwanda>
+References: <20140529082323.GA9209@mwanda>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/qv=uI.5YYX7GRADurke5fAZ"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5445011B.8040008@hanswkraus.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140529082323.GA9209@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/qv=uI.5YYX7GRADurke5fAZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+These array overflows are still there in linux-next.
 
-On Mon, 20 Oct 2014 14:33:31 +0200 Hans Kraus <hans@hanswkraus.com> wrote:
+regards,
+dan carpenter
 
-> Hi,
->=20
-> I want to expand an existing root array with an SSD. For that purpose I
-> try to set firstly 'write-behind' on that array. Afterwards I will add
-> the SSD, remove the HDs and re-add them with 'write-mostly'. On that
-> array is the root filesystem, therefore stopping is no option. In
->  >/home/kraush/work/mdadm/mdadm< is the latest mdadm version from git.
-> I tried:
-> -----------------------------------------------------------------------
-> root@elefant:/home/kraush/work/mdadm/mdadm# ./mdadm --manage=20
-> --write-behind=3D4096 /dev/md4
-> mdadm: :option --write-behind not valid in manage mode
-> root@elefant:/home/kraush/work/mdadm/mdadm# ./mdadm --grow=20
-> --write-behind=3D4096 /dev/md4
-> mdadm: no changes to --grow
-> -----------------------------------------------------------------------
-> What is the correct syntax?
->=20
-
-Not quite.
-
-"write-behind" is a property of the bitmap.
-To enable write-behind on an array you first need to remove the bitmap if
-there is one
-  mdadm /dev/md4 --grow --bitmap=3Dnone
-then add a new bitmap with the required property
-  mdadm /dev/md4 --grow --bitmap=3Dinternal --write-behind=3D4096
-
-NeilBrown
-
---Sig_/qv=uI.5YYX7GRADurke5fAZ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVEV7NTnsnt1WYoG5AQKZiA/9E+grqpyn8fPuKdWWJUU+4fseYwPS8V1d
-aX8aeC0tQauy22VnERnjJaGa1kLLJJOkyNbsJgIUnYzOfqviptR77ZTp2GaIr2qr
-SNEBmAzYb5qU4Uo6d2bb7262cN+kPefrdu+RZQOj8/JBBWwHx/bfK3H+0s1NYaKC
-RjNAtEgz3FliGoWRvlfmfUh13hJ4UM2ktpupVNU8utlPo5/v++DWdUhV34NIKfMo
-U/8Gg8C1r/PrhdoOT7eR2CwZPDDtidYGUAFRJUIgBE6NM4AJjiywlC26PsIyRyVK
-tYatFU7+u9mwlhKYHHTmQIiZ+H9r2I5nk4zh7nc+hTbOkjIG/O7fGm5Ag6+AFoUt
-IHny+zZ5JJ0wM7g8j7pAo1W6O5c1eCDMxDZSwdvzs2Qr/cSWBXjmfAKB0Nhgmuz6
-LHVFlL9z9BTH3l7fZvkUeyHDeDe7Kx+5fEndzgX4cHc7jiettwD1xKKf0kD4xkuz
-DNXWutKI+Dsi/4GllWXMWLd6wraHm1ghqUo+J7dGW1zlne9ByUbxw67KOjsnkoJX
-udh15GIx1parCiVHYJbiaUIvgper8jA/F6sQHfVbyODL+m9geOt8f9HUeLGuREZT
-DLkdJZWORctVgK3qi/vz88imrlMT7j/8zvSDe/dn/S1PeTne2h7LqZQTK1GC13Te
-a4EfMxWcWpo=
-=kj14
------END PGP SIGNATURE-----
-
---Sig_/qv=uI.5YYX7GRADurke5fAZ--
+On Thu, May 29, 2014 at 11:23:23AM +0300, Dan Carpenter wrote:
+> My static checker complains that if "num_raid_params" is UINT_MAX then
+> the "if (num_raid_params + 1 > argc) {" check doesn't work as intended.
+> 
+> The other change is that I moved the "if (argc != (num_raid_devs * 2))"
+> condition forward a few lines so it was before the call to
+> context_alloc().  If we had an integer overflow inside that function
+> then it would lead to an immediate crash.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Static checker stuff.  Not tested.
+> 
+> diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+> index 4880b69..e0d53fe 100644
+> --- a/drivers/md/dm-raid.c
+> +++ b/drivers/md/dm-raid.c
+> @@ -1189,7 +1189,7 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>  	argv++;
+>  
+>  	/* Skip over RAID params for now and find out # of devices */
+> -	if (num_raid_params + 1 > argc) {
+> +	if (num_raid_params >= argc) {
+>  		ti->error = "Arguments do not agree with counts given";
+>  		return -EINVAL;
+>  	}
+> @@ -1200,6 +1200,12 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>  		return -EINVAL;
+>  	}
+>  
+> +	argc -= num_raid_params + 1; /* +1: we already have num_raid_devs */
+> +	if (argc != (num_raid_devs * 2)) {
+> +		ti->error = "Supplied RAID devices does not match the count given";
+> +		return -EINVAL;
+> +	}
+> +
+>  	rs = context_alloc(ti, rt, (unsigned)num_raid_devs);
+>  	if (IS_ERR(rs))
+>  		return PTR_ERR(rs);
+> @@ -1208,16 +1214,8 @@ static int raid_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>  	if (ret)
+>  		goto bad;
+>  
+> -	ret = -EINVAL;
+> -
+> -	argc -= num_raid_params + 1; /* +1: we already have num_raid_devs */
+>  	argv += num_raid_params + 1;
+>  
+> -	if (argc != (num_raid_devs * 2)) {
+> -		ti->error = "Supplied RAID devices does not match the count given";
+> -		goto bad;
+> -	}
+> -
+>  	ret = dev_parms(rs, argv);
+>  	if (ret)
+>  		goto bad;
