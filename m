@@ -1,54 +1,40 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm raid: pointer math issue in super_sync()
-Date: Tue, 21 Oct 2014 09:25:19 -0400
-Message-ID: <20141021132519.GD20625@redhat.com>
-References: <20141021124336.GA20791@mwanda>
- <20141021124826.GC20625@redhat.com>
- <20141021125729.GC26918@mwanda>
+From: Phillip Susi <phillsusi@gmail.com>
+Subject: Re: Kernel says there is not a valid superblock, but there is
+Date: Tue, 21 Oct 2014 10:07:07 -0400
+Message-ID: <5446688B.7030405@gmail.com>
+References: <544525C7.7000803@gmail.com> <20141021080937.69aaf214@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141021125729.GC26918@mwanda>
+In-Reply-To: <20141021080937.69aaf214@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Heinz Mauelshagen <heinzm@redhat.com>, kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Oct 21 2014 at  8:57am -0400,
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
-
-> On Tue, Oct 21, 2014 at 08:48:26AM -0400, Mike Snitzer wrote:
-> > > -	memset(sb + sizeof(*sb), 0, rdev->sb_size - sizeof(*sb));
-> > > +	memset(sb + 1, 0, rdev->sb_size - sizeof(*sb));
-> > >  
-> > >  	sb->magic = cpu_to_le32(DM_RAID_MAGIC);
-> > >  	sb->features = cpu_to_le32(0);	/* No features yet */
-> > 
-> > Not following... sizeof(*sb) != sizeof(sb).  So I'm not seeing a
-> > problem.
-> > 
-> > Nor am I seeing how you think sb + 1 is equivalent to what Heinz
-> > intended (zero the memory following the sizeof(struct dm_raid_superblock)).
+On 10/20/2014 5:09 PM, NeilBrown wrote:
+> On Mon, 20 Oct 2014 11:09:59 -0400 Phillip Susi <phillsusi@gmail.com> wrote:
 > 
-> It's pointer math.
-
-Yes, I see that now..
-
-> sizeof(*sb) is 512.
+>> When trying to assemble, the kernel complains:
 > 
-> "sb + sizeof(*sb)" is the same as (void *)sb + 512 * 512.
-> "sb + 1" is the same as (void *)sb + 512.
+> Which kernel?
+>   uname -a
+> and may as well add
+>   mdadm -V
+> 
+> as well.
 
-Actually, Heinz removed the 452 bytes of padding from struct
-dm_raid_superblock, so it is more like:
+uname -a
+Linux hyper1 3.13.0-35-generic #62-Ubuntu SMP Fri Aug 15 01:58:42 UTC
+2014 x86_64 x86_64 x86_64 GNU/Linux
 
-sizeof(*sb) == sizeof(struct dm_raid_super_block) == 60
+mdadm -V
+mdadm - v3.2.5 - 18th May 2012
 
-"sb + sizeof(*sb)" is the same as (void *)sb + 60 * 60
-"sb + 1" is the same as (void *)sb + 60.
+I managed to hack around with dmsetup to create a linear mapping to the
+correct data offset that mdadm -E listed and recover my data and blow
+away and recreate the array.  I saved a dump of the superblock if you
+want them for debugging.
 
-But regardless, your broader point on the math stands.  I'll get this
-fixed up, thanks!
 
-Mike
