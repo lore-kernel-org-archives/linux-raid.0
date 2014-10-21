@@ -1,40 +1,49 @@
-From: Phillip Susi <phillsusi@gmail.com>
-Subject: Re: Kernel says there is not a valid superblock, but there is
-Date: Tue, 21 Oct 2014 10:07:07 -0400
-Message-ID: <5446688B.7030405@gmail.com>
-References: <544525C7.7000803@gmail.com> <20141021080937.69aaf214@notabene.brown>
+From: Hans Kraus <hans@hanswkraus.com>
+Subject: Problem with a dgaded array (not related to my last question)
+Date: Tue, 21 Oct 2014 22:22:20 +0200
+Message-ID: <5446C07C.6060900@hanswkraus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141021080937.69aaf214@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/20/2014 5:09 PM, NeilBrown wrote:
-> On Mon, 20 Oct 2014 11:09:59 -0400 Phillip Susi <phillsusi@gmail.com> wrote:
-> 
->> When trying to assemble, the kernel complains:
-> 
-> Which kernel?
->   uname -a
-> and may as well add
->   mdadm -V
-> 
-> as well.
+Hi,
 
-uname -a
-Linux hyper1 3.13.0-35-generic #62-Ubuntu SMP Fri Aug 15 01:58:42 UTC
-2014 x86_64 x86_64 x86_64 GNU/Linux
+At first: thanks Neil for your answer about tbe bitmap question.
 
-mdadm -V
-mdadm - v3.2.5 - 18th May 2012
+I have another problem: I tried to rebuild an array, raid 6,
+with two drives missing of five. Adding a fourth drive worked
+well. But not adding a fith drive. I got following messages:
+----------------------------------------------------------------
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --stop /dev/md126
+mdadm: stopped /dev/md126
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --assemble --update=bbl 
+/dev/md126
+mdadm: /dev/md126 has been started with 4 drives (out of 5).
+root@nashorn:/home/kraush/work/mdadm# mdadm --add /dev/md126 /dev/sdj1
+mdadm: add new device failed for /dev/sdj1 as 7: Invalid argument
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --stop /dev/md126
+mdadm: stopped /dev/md126
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --assemble --update=bbl 
+/dev/md126
+mdadm: superblock on /dev/sdj1 doesn't match others - assembly aborted
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --assemble --update=bbl 
+/dev/md126
+mdadm: superblock on /dev/sdj1 doesn't match others - assembly aborted
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --assemble  /dev/md126
+mdadm: superblock on /dev/sdj1 doesn't match others - assembly aborted
+root@nashorn:/home/kraush/work/mdadm# ./mdadm --detail /dev/sdh4
+mdadm: /dev/sdh4 does not appear to be an md device
+root@nashorn:/home/kraush/work/mdadm# mdadm --assemble  /dev/md126
+mdadm: superblock on /dev/sdj1 doesn't match others - assembly aborted
+----------------------------------------------------------------
+How do I get my array back up and the fith drive added? The size of the
+drive partition sdj1 should be sufficient for the array.
 
-I managed to hack around with dmsetup to create a linear mapping to the
-correct data offset that mdadm -E listed and recover my data and blow
-away and recreate the array.  I saved a dump of the superblock if you
-want them for debugging.
+Thanks in advance, Hans
 
-
+PS: I do know the names of the other partitions in the array but not
+their position.
