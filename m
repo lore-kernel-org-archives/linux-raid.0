@@ -1,37 +1,84 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: [PATCH] Grow: fix resize of array component size to > 32bits
-Date: Fri, 24 Oct 2014 17:55:02 -0700
-Message-ID: <1414198502-10167-1-git-send-email-jmaggard10@gmail.com>
+From: pg@lxra2.for.sabi.co.uk (Peter Grandi)
+Subject: storage with "very high Average Read/Write Request Time"
+Date: Sat, 25 Oct 2014 15:47:06 +0100
+Message-ID: <21579.47082.770855.521224@tree.ty.sabi.co.uk>
+References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
+	<54442A48.6050503@hardwarefreak.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <54442A48.6050503@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Justin Maggard <jmaggard10@gmail.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: quanjun hu <huquanjun@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>
 List-Id: linux-raid.ids
 
-If the request --size to --grow an array to is larger
-than 32bits, then mdadm may make the wrong choice and
-use ioctl instead of setting component_size via sysfs
-and the change is ignored.
+I am copying here (without endorsement or comment) some extracts by
+different people from a thread in the XFS mailing list that seems mostly
+about RAID tuning:
 
-Instead of using casts to check for a 32-bit overflow,
-just check for set bits outside of INT32_MAX.
----
- Grow.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+http://article.gmane.org/gmane.comp.file-systems.xfs.general/65029
+>>> Hi, I am using xfs on a raid 5 (~100TB) and put log on external ssd
+>>> device, the mount information is: /dev/sdc on
+>>> /data/fhgfs/fhgfs_storage type xfs
+>>> (rw,relatime,attr2,delaylog,logdev=/dev/sdb1,sunit=512,swidth=15872,noquota).
+>>> when doing only reading / only writing , the speed is very
+>>> fast(~1.5G), but when do both the speed is very slow (100M), and
+>>> high r_await(160) and w_await(200000).
+>>> 1. how can I reduce average request time?
+>>> 2. can I use ssd as write/read cache for xfs?
 
-diff --git a/Grow.c b/Grow.c
-index a9c8589..a614102 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1818,7 +1818,7 @@ int Grow_reshape(char *devname, int fd,
- 		if (s->size == MAX_SIZE)
- 			s->size = 0;
- 		array.size = s->size;
--		if (array.size != (signed)s->size) {
-+		if (s->size & ~INT32_MAX) {
- 			/* got truncated to 32bit, write to
- 			 * component_size instead
- 			 */
--- 
-1.9.1
+http://article.gmane.org/gmane.comp.file-systems.xfs.general/65034
+>> There is a ratio of 31 (thirty one) between 'swidth' and 'sunit' and
+>> assuming that this reflects the geometry of the RAID5 set and given
+>> commonly available disk sizes it can be guessed that with amazing
+>> "bravery" someone has configured a RAID5 out of 32 (thirty two) high
+>> capacity/low IOPS 3TB drives, or something similar. It is even
+>> "braver" than that: if the device name "/data/fhgfs/fhgfs_storage" is
+>> dedscriptive, this "brave" RAID5 set is supposed to hold the object
+>> storage layer of a BeeFS highly parallel filesystem, and therefore
+>> will likely have mostly-random accesses. This issue should be moved
+>> to the 'linux-raid' mailing list as from the reported information it
+>> has nothing to do with XFS.
 
+http://article.gmane.org/gmane.comp.file-systems.xfs.general/65036
+> You apparently have 31 effective SATA 7.2k RPM spindles with 256 KiB
+> chunk, 7.75 MiB stripe width, in RAID5.  That should yield 3-4.6 GiB/s
+> of streaming throughput assuming no cable, expander, nor HBA
+> limitations.  You're achieving only 1/3rd to 1/2 of this. Which
+> hardware RAID controller is this?  What are the specs?  Cache RAM,
+> host and back end cable count and type?
+> When you say read or write is fast individually, but read+write is
+> slow, what types of files are you reading and writing, and how many in
+> parallel?  This combined pattern is likely the cause of the slowdown
+> due to excessive seeking in the drives. As others mentioned this isn't
+> an XFS problem.
+> The problem is that your RAID geometry doesn't match your workload.
+> Your very wide parity stripe is apparently causing excessive seeking
+> with your read+write workload due to read-modify-write operations.  To
+> mitigate this, and to increase resiliency, you should switch to RAID6
+> with a smaller chunk.  If you need maximum capacity make a single
+> RAID6 array with 16 KiB chunk size.  This will yield a 496 KiB stripe
+> width, increasing the odds that all writes are a full stripe, and
+> hopefully eliminating much of the RMW problem.
+> A better option might be making three 10 drive RAID6 arrays (two
+> spares) with 32 KiB chunk, 256 KiB stripe width, and concatenating
+> the 3 arrays with mdadm --linear.  You'd have 24 spindles of capacity
+> and throughput instead of 31, but no more RMW operations, or at least
+> very few.  You'd format the linear md device with
+>   mkfs.xfs -d su=32k,sw=8 /dev/mdX
+> As long as your file accesses are spread fairly evenly across at
+> least 3 directories you should achieve excellent parallel throughput,
+> though single file streaming throughput will peak at 800-1200 MiB/s,
+> that of 8 drives.  With a little understanding of how this setup
+> works, you can write two streaming files and read a third without any
+> of the 3 competing with one another for disk seeks/bandwidth--which
+> is your current problem.  Or you could do one read and one write to
+> each of 3 directories, and no pair of two would interfere with the
+> other pairs.  Scale up from here.
+> Basically what we're doing is isolating each RAID LUN into a set of
+> directories.  When you write to one of those directories the file
+> goes into only one of the 3 RAID arrays.  Doing this isolates RMWs
+> for a given write to only a subset of your disks, and minimizes the
+> amount of seeks generated by parallel accesses.
