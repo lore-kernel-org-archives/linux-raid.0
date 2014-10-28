@@ -1,66 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid1 element stuck in (S) state
-Date: Wed, 29 Oct 2014 08:42:24 +1100
-Message-ID: <20141029084224.6d92d8be@notabene.brown>
-References: <87k33lwq7s.fsf@muck.riseup.net>
+Subject: Re: [PATCH] Grow: fix resize of array component size to > 32bits
+Date: Wed, 29 Oct 2014 09:19:57 +1100
+Message-ID: <20141029091957.1c4cdeae@notabene.brown>
+References: <1414198502-10167-1-git-send-email-jmaggard10@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+q63m2Dholfp9u/.10G79kk"; protocol="application/pgp-signature"
+ boundary="Sig_/krsENHcG5.0u8rLh/0Vl4XN"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87k33lwq7s.fsf@muck.riseup.net>
+In-Reply-To: <1414198502-10167-1-git-send-email-jmaggard10@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: micah anderson <micah@debian.org>
+To: Justin Maggard <jmaggard10@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+q63m2Dholfp9u/.10G79kk
+--Sig_/krsENHcG5.0u8rLh/0Vl4XN
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 27 Oct 2014 10:18:47 -0400 micah anderson <micah@debian.org> wrote:
+On Fri, 24 Oct 2014 17:55:02 -0700 Justin Maggard <jmaggard10@gmail.com>
+wrote:
 
->=20
-> Hi,
->=20
-> i've got a raid1 setup, where one drive died, it was replaced with a new
-> one, but its stuck in a (S) state and I can't seem to get it added into
-> the array, /proc/mdstat looks like this:
->=20
-> md3 : active raid1 sdc1[2](S) sdd1[1]
->       976759672 blocks super 1.2 [2/1] [_U]
->=20
-> where sdc1 is the replaced drive.
->=20
-> What is the right way to get this added back?
->
+> If the request --size to --grow an array to is larger
+> than 32bits, then mdadm may make the wrong choice and
+> use ioctl instead of setting component_size via sysfs
+> and the change is ignored.
 
-I've a feeling this bug might have been fixed.
-What versions of mdadm and Linux are you using?
+Can you explain exactly why the  current code is not sufficient?  When does
+it fail?
+If you include the explanation in a re-submission of the patch, and I am
+convinced, then I will gladly apply your patch.
 
-Are there any errors in the kernel logs when you --add the device?
-
+Thanks,
 NeilBrown
 
---Sig_/+q63m2Dholfp9u/.10G79kk
+>=20
+> Instead of using casts to check for a 32-bit overflow,
+> just check for set bits outside of INT32_MAX.
+> ---
+>  Grow.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index a9c8589..a614102 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1818,7 +1818,7 @@ int Grow_reshape(char *devname, int fd,
+>  		if (s->size =3D=3D MAX_SIZE)
+>  			s->size =3D 0;
+>  		array.size =3D s->size;
+> -		if (array.size !=3D (signed)s->size) {
+> +		if (s->size & ~INT32_MAX) {
+>  			/* got truncated to 32bit, write to
+>  			 * component_size instead
+>  			 */
+
+
+--Sig_/krsENHcG5.0u8rLh/0Vl4XN
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVFANwTnsnt1WYoG5AQLh6A/9GRH4BuSX29X5OhDy0l1/atJqQBLlcI/e
-FBDkEyn2qfN7zlV9lkEhCBQvUP21zjUpRpSGAWSKOM4ZsEWAecD0rmZuZXA+ZvrE
-R0Hme1C6ZD+ktBNpOeZgvu+5Ljlze15gyS66kZXMGhobRQ1/0A8wjVZaq1UeKYge
-5AnHstpr6pw8ErLsa0ZnDbyZyP5NDGsysSfXy2OBg5fef5HekYKCJMPfhGxWLYjr
-ivUDldYEe9DbAwO2saEBsSS1DJBydwTxLLvrLwndWtqIDco+68XdAPY8c+lnpAUN
-1OUcFkQiYIpudvAPBsk3Wt1KCTz+lb3W4ziXClIKm5+WTKPA8FGn4dF5e+lFW+B6
-Oi6+e5zF8lvWnVQjEG5CtMeW+6ROHAkpMwQmerfhcK373lqeq6EGopd4d9d2O+/r
-pFnryCj4k01IScjcHSE79D55nF6j/iIGzV+09lVG6+ZamwHDwh26JnDKzmRuQiti
-s0znVNsczPPMSB20Ms2GJiQRiMR5ZESCOnkqt5Y8oUhr4WpPTlG0c4FhQebLvFrO
-e7BuWXOHE1drU3RCK1+GyRDi4WPkhaL6JxvN1ANszn5EzueUDtHsybMDjPmrxe5N
-o0LlRpYne3cyceXel+fcxbEZOU+cDBU7dAAAOISnU8S7TEDWIbx1A0YWRCFkbWzr
-IaC/Y5VlgO8=
-=gTsM
+iQIVAwUBVFAWjTnsnt1WYoG5AQJ+WhAAuNSv985wMFYA9YxskhSmh5QjU6Y4abgj
+xaQyJVFiZ+sZ8iXKh+eY76OvSYfWnpQTAYJZrYfPGg/CXeEC/fKqdmt9zvJs1dMc
+y4/PiR6DfXQXt86VTLahxrYOgbMTIV8EOZ+n+sdgUBQ2PIjrrZZdGYux0lKnUsm0
+aN6g3R5ygdxPErbrVIYNCtaxnZPt+kJZwKCFCvrrQa8IdDAcheW6LVIXcf2iP+g/
+rnZVSKbMwizmx6omz5WbQmKTCIrvhIZ9YWwBnRXH64cESmkt4agKY9bvAhDVoQic
+oH9HHZK3ZIClXoYRuQU+j1Ih5eMgznAcxT04KXwBnEgZ47gGurHq6G2zPFn3XTIF
+kvuwrSvk7Zjp3ysI2B12glgYYw0GcTjIPFPMv4JKyebMK93X1Xmz/sP49uyYpGD9
+uFIy9+64rBQtDixH6kWXddg4vvbb5i6MRx06faHnL70fPNqaLzLTagME2dcXM1vB
+l/+c0Z/9a1qPLKcu56xAJR7Ow8k5/OO0QJrA61IC2yLVmV28FAAdsvN+Dz4hO5V+
+3coZpHtrHwQF2ZlVBEo/WgvvCsxMg8xK12opOUoV4bw/z0k5dSYMy0cw+aQO/cYg
+jC/7EtlON1A6lwGXjQGH8Vjjqt90SsN9MSz5sCuuysM3PUFVP/6IwasyJbNnkdBM
+uCRIGGg7RFo=
+=/tVX
 -----END PGP SIGNATURE-----
 
---Sig_/+q63m2Dholfp9u/.10G79kk--
+--Sig_/krsENHcG5.0u8rLh/0Vl4XN--
