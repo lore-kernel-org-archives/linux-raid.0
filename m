@@ -1,124 +1,100 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: "bitmap file is out of date, doing full recovery"
-Date: Wed, 29 Oct 2014 10:19:50 +1100
-Message-ID: <20141029101950.5528b347@notabene.brown>
-References: <CAGRgLy5zhV49xF=ZwULaF46Xx=8rnWcypTWxxgf0HmEPpCP+yQ@mail.gmail.com>
-	<20141013092426.5ea1288d@notabene.brown>
-	<CAGRgLy69gC2n0oAP8CRNBzTb+tBnwmwoJOCdKb+aRMO=Oeqf3Q@mail.gmail.com>
+From: Justin Maggard <jmaggard10@gmail.com>
+Subject: Re: [PATCH] Grow: fix resize of array component size to > 32bits
+Date: Tue, 28 Oct 2014 16:47:06 -0700
+Message-ID: <CAKgsxVQJp7C0_y9ZENG_ZpaSk9Zi0Aa1cf0-qwRFcHx1HB5v0A@mail.gmail.com>
+References: <1414198502-10167-1-git-send-email-jmaggard10@gmail.com>
+	<20141029091957.1c4cdeae@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/TZox/I1whH/npOlcQU8jI5v"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy69gC2n0oAP8CRNBzTb+tBnwmwoJOCdKb+aRMO=Oeqf3Q@mail.gmail.com>
+In-Reply-To: <20141029091957.1c4cdeae@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/TZox/I1whH/npOlcQU8jI5v
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Oct 28, 2014 at 3:19 PM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 24 Oct 2014 17:55:02 -0700 Justin Maggard <jmaggard10@gmail.com>
+> wrote:
+>
+>> If the request --size to --grow an array to is larger
+>> than 32bits, then mdadm may make the wrong choice and
+>> use ioctl instead of setting component_size via sysfs
+>> and the change is ignored.
+>
+> Can you explain exactly why the  current code is not sufficient?  When does
+> it fail?
+> If you include the explanation in a re-submission of the patch, and I am
+> convinced, then I will gladly apply your patch.
+>
 
-On Thu, 23 Oct 2014 19:04:48 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+To be honest, I can't figure out how the current comparison would have
+ever worked at all. To illustrate, here's a simple test program:
+-----
+$ ./test 0xfffffffff
+cast comparison did not detect truncation
+bit comparison detected truncation
 
-> Hi Neil,
-> I found at least one way of this happening. The problem is that in
-> md_update_sb() we allow to decrease the event count:
->=20
->     /* If this is just a dirty<->clean transition, and the array is clean
->      * and 'events' is odd, we can roll back to the previous clean state =
-*/
->     if (nospares
->         && (mddev->in_sync && mddev->recovery_cp =3D=3D MaxSector)
->         && mddev->can_decrease_events
->         && mddev->events !=3D 1) {
->         mddev->events--;
->         mddev->can_decrease_events =3D 0;
->=20
-> Then we call bitmap_update_sb(). If we crash after we update (the
-> first or all of) bitmap superblocks, then after reboot, we will see
-> that bitmap event count is less than MD superblock event count. Then
-> we decide to do full resync.
->=20
-> This can be easily reproduced by hacking bitmap_update_sb() to call
-> BUG(), after it calls write_page() in case event count was decreased.
->=20
-> Why we are decreasing the event count??? Can we always increase it?
-> u64 is a lot to increase...
+$ cat test.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
-The reason for decreasing the event count is so that we don't need to update
-the event count on spares - they can be left spun down.
-We for simple clean/dirty transitions with increment for clean->dirty and
-decrement for dirty->clean.  But we should only use this optimisation when
-everything is simple.
-We really shouldn't do this when the array is degraded.
-Do this fix your problem?
+int main(int argc, char **argv)
+{
+unsigned long long ssize = strtoull(argv[1], NULL, 0);
+int asize;
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2c73fcb82593..98fd97b10e13 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2244,6 +2244,7 @@ repeat:
- 	 * and 'events' is odd, we can roll back to the previous clean state */
- 	if (nospares
- 	    && (mddev->in_sync && mddev->recovery_cp =3D=3D MaxSector)
-+	    && mddev->degraded =3D=3D 0
- 	    && mddev->can_decrease_events
- 	    && mddev->events !=3D 1) {
- 		mddev->events--;
+asize = ssize;
+if (asize != (signed)ssize)
+printf("cast comparison detected truncation\n");
+else
+printf("cast comparison did not detect truncation \n");
+if (ssize & ~INT32_MAX)
+printf("bit comparison detected truncation\n");
+else
+printf("bit comparison did not detect truncation \n");
 
+return 0;
+}
+-----
 
->=20
-> Some other doubt that I have is that bitmap_unplug() and
-> bitmap_daemon_work() call write_page() on page index=3D0. This page
-> contains both the superblock and also some dirty bits (could not we
-> waste 4KB on bitmap superblock???). I am not sure, but I wonder
-> whether this call can race with md_update_sb (which explicitly calls
-> bitmap_update_sb), and somehow write the outdated superblock, after
-> bitmap_update_sb has completed writing it.
->=20
+I plugged lots of numbers in there, and I was never able to get the
+current cast comparison to see a difference.
 
-storage.sb_page is exactly the same as storage.filemap[0]
-So once an update has happened, the "outdated superblock" doesn't exist
-anywhere to be written out from.
+I ran into the issue by trying to grow the component size of a RAID
+array from 1TB to 3TB, and it wouldn't work if I specified the size;
+only using "max" worked.
 
-> Yet another suspect is when loading the bitmap we basically load it
-> from the first up-to-date drive. Maybe we should have scanned all the
-> bitmap superblocks, and selected one that has the higher event count
-> (although as we saw "higher" does not necessarily mean "more
-> up-to-date").
->=20
-> Anyways, back to decrementing the event count. Do you see any issue
-> with not doing this and always incrementing?
->=20
+I'm happy to re-submit if you'd like; I just thought it was a pretty
+straightforward bug.  I guess what I'm saying is, I don't understand
+why there *should* be a difference between assigning a unsigned long
+long to an int variable, and casting that unsigned long long to a
+signed type.  But
+
+-Justin
+
 > Thanks,
-> Alex.
->=20
-
-Thanks,
-NeilBrown
-
---Sig_/TZox/I1whH/npOlcQU8jI5v
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVFAkljnsnt1WYoG5AQLF0Q/+NSCJXCXt42bP/a4ifYsF3fxDdQv4yFjy
-QtOZ1hGrR6saszF7Wn8ioNGIF9ufqjpXonEa0GSLNK/Gf9NTLSuwvOVlJTISIFqr
-ynL92+Cnt6iH+JeDvVc0KwGJLMLMELWvwHCt84j3V1Bm4OzXJ1FIWVktvq0HdWHy
-ZQQoQ0+HxUWziJEP1alOUFXvnBPh2c3L7ZLRO/eb+NFcwT7KJFB0Mu2q6ZS05USh
-93X6qquTG3g9riIHQb6v4S99j/2Surb7cYeMjMDv6JgLTd9KvY0YWUvoiGxUyXzh
-12j8nCMOy8O551itT7MzEQt0j6MzW+7x7yPpDpIaH+JC9hJ+FxMGOKNGdYV2Ipf1
-JXPSAXSCjcF/1D61Tu5kZ6UF/o5SBRff6uSb88QPFD6CURtW7vwejqNWRxZEwJod
-+h4O/2nOgclFN7ORnZcFQRqmOrYDfsJ0vK93h7tMvMvY2bb1bHKuDsOKSJfmowvP
-UedwgrS1DIrQwxdQRnbIVHBAnikWr4OD6t6MvOx+yNUMkY0aYugkjXsKgymMaN8t
-mUNHlbLUGYxigXHQ7XYpfQHvMQPNUXbDnBcnhCjx9CAHUAXdkYhfRy0KSSAq8Ass
-M3OUbmN8kl69p5afMHuB21ox0uzgg9G/tvNCrqncXpNGCIQ1gdKbXQ3oV4C7055O
-ZfM+TmKomjk=
-=vSO6
------END PGP SIGNATURE-----
-
---Sig_/TZox/I1whH/npOlcQU8jI5v--
+> NeilBrown
+>
+>>
+>> Instead of using casts to check for a 32-bit overflow,
+>> just check for set bits outside of INT32_MAX.
+>> ---
+>>  Grow.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/Grow.c b/Grow.c
+>> index a9c8589..a614102 100644
+>> --- a/Grow.c
+>> +++ b/Grow.c
+>> @@ -1818,7 +1818,7 @@ int Grow_reshape(char *devname, int fd,
+>>               if (s->size == MAX_SIZE)
+>>                       s->size = 0;
+>>               array.size = s->size;
+>> -             if (array.size != (signed)s->size) {
+>> +             if (s->size & ~INT32_MAX) {
+>>                       /* got truncated to 32bit, write to
+>>                        * component_size instead
+>>                        */
+>
