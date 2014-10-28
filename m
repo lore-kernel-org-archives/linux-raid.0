@@ -1,67 +1,63 @@
-From: micah <micah@riseup.net>
-Subject: Re: Raid1 element stuck in (S) state
-Date: Tue, 28 Oct 2014 00:45:48 -0400
-Message-ID: <877fzkx0n7.fsf@muck.riseup.net>
-References: <87k33lwq7s.fsf@muck.riseup.net> <20141027165716.44eaab04@jlaw-desktop.mno.stratus.com>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
+Subject: Very small bug on assemble --force
+Date: Tue, 28 Oct 2014 15:27:02 +0100
+Message-ID: <544FA7B6.7030100@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141027165716.44eaab04@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>, micah anderson <micah@debian.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Very small bug report:
+mdadm assemble --force fails to assemble at the very last step after 
+having adjusted the event count:
 
-Hi Joe,
 
-Joe Lawrence <joe.lawrence@stratus.com> writes:
+root@storage1:/root# mdadm --assemble /dev/md106 --config 
+/etc/mdadm/mdadm.secondary.conf --force
+mdadm: forcing event count in 
+/dev/mapper/mpathid-350014ee0ac5a112e-part1(3) from 1058 upto 1061
+mdadm: forcing event count in 
+/dev/mapper/mpathid-350014ee056feaaf4-part1(4) from 1058 upto 1061
+mdadm: forcing event count in 
+/dev/mapper/mpathid-350014ee001a93ede-part1(6) from 1058 upto 1061
+mdadm: clearing FAULTY flag for device 1 in /dev/md106 for 
+/dev/mapper/mpathid-350014ee0ac5a112e-part1
+mdadm: clearing FAULTY flag for device 5 in /dev/md106 for 
+/dev/mapper/mpathid-350014ee056feaaf4-part1
+mdadm: clearing FAULTY flag for device 8 in /dev/md106 for 
+/dev/mapper/mpathid-350014ee001a93ede-part1
+mdadm: Marking array /dev/md106 as 'clean'
+mdadm: /dev/md106 assembled from 8 drives - not enough to start the array.
 
-> On Mon, 27 Oct 2014 10:18:47 -0400
-> micah anderson <micah@debian.org> wrote:
->
->> 
->> Hi,
->> 
->> i've got a raid1 setup, where one drive died, it was replaced with a new
->> one, but its stuck in a (S) state and I can't seem to get it added into
->> the array, /proc/mdstat looks like this:
->> 
->> md3 : active raid1 sdc1[2](S) sdd1[1]
->>       976759672 blocks super 1.2 [2/1] [_U]
->> 
->> where sdc1 is the replaced drive.
->
-> Hi Micah,
->
-> What does the output from mdadm --detail /dev/md3 look like?
+mdadm is wrong here: 8 devices is indeed the total number of devices for 
+this array.
+the last command started it inactive like this:
 
-# mdadm --detail /dev/md3
-/dev/md3:
-        Version : 1.2
-  Creation Time : Fri Oct 21 12:22:03 2011
-     Raid Level : raid1
-     Array Size : 976759672 (931.51 GiB 1000.20 GB)
-  Used Dev Size : 976759672 (931.51 GiB 1000.20 GB)
-   Raid Devices : 2
-  Total Devices : 2
-    Persistence : Superblock is persistent
+md106 : inactive dm-101[0](S) dm-24[9](S) dm-107[6](S) dm-103[5](S) 
+dm-123[4](S) dm-95[3](S) dm-105[2](S) dm-106[1](S)
+       4193255424 blocks super 1.2
+(maybe the blocks count is also wrong? Not adjusted for parity maybe? 
+4193255424  / 8.0 * 6.0 == 3144941568.0 almost correct)
 
-    Update Time : Mon Oct 27 21:45:01 2014
-          State : clean, degraded
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 1
+it can be fixed simply by doing:
 
-           Name : unassigned-hostname:3
-           UUID : 736c4da2:1e53a976:6b0ff39a:b0ca93c2
-         Events : 2459508
+root@storage1:/root# mdadm --stop /dev/md106
+mdadm: stopped /dev/md106
 
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       8       49        1      active sync   /dev/sdd1
+root@storage1:/root# mdadm --assemble /dev/md106 --config 
+/etc/mdadm/secondary.conf --no-degraded
+mdadm: /dev/md106 has been started with 8 drives.
 
-       2       8       33        -      spare   /dev/sdc1
-# 
+now it works:
 
+md106 : active raid6 dm-101[0] dm-24[9] dm-107[6] dm-103[5] dm-123[4] 
+dm-95[3] dm-105[2] dm-106[1]
+       3144938496 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[8/8] [UUUUUUUU]
+       bitmap: 0/1 pages [0KB], 1048576KB chunk
+
+Regards
+EW
