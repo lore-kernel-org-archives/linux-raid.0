@@ -1,163 +1,211 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm creates corrupt superblock
-Date: Wed, 29 Oct 2014 08:00:19 +1100
-Message-ID: <20141029080019.272bc844@notabene.brown>
-References: <544FDB1C.5030306@hanswkraus.com>
+Subject: Re: RAID1 removing failed disk returns EBUSY
+Date: Wed, 29 Oct 2014 08:41:13 +1100
+Message-ID: <20141029084113.57f6ae6a@notabene.brown>
+References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/wZBM0.Y0dJE_TAnFuJwhzYf"; protocol="application/pgp-signature"
+ boundary="Sig_/.wn7fGgeABPAl+rdUSg/3lC"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <544FDB1C.5030306@hanswkraus.com>
+In-Reply-To: <20141027162748.593451be@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
 List-Id: linux-raid.ids
 
---Sig_/wZBM0.Y0dJE_TAnFuJwhzYf
+--Sig_/.wn7fGgeABPAl+rdUSg/3lC
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 28 Oct 2014 19:06:20 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
+On Mon, 27 Oct 2014 16:27:48 -0400 Joe Lawrence <joe.lawrence@stratus.com>
+wrote:
 
-> Hi,
+> Hi Neil,
 >=20
-> I debugged my problem a bit more: it seems that mdadm creates a defect
-> superblock. That's repeatedly happening, but only for one drive. I
-> copied zeros to that drive (via ddrescue /dev/zero ...) and the drive
-> looks OK. The info I got:
->
+> We've encountered changes in MD and mdadm that have broken our automated
+> disk removal script.  In the past, we've been able to run the following
+> after a RAID1 disk component removal:
+>=20
+> % echo fail > /sys/block/md3/md/dev-sdr5/state
+> % echo remove > /sys/block/md3/md/dev-sdr5/state
+>=20
+> However, the latest RHEL6.6 code drop has rebased to sufficiently recent
+> MD kernel and mdadm changes, in which the previous commands occasionally
+> fail like so:
+>=20
+> * MD array is usually resyncing or checking
+> * Component disk /dev/sdr removed via HBA sysfs PCI removal
+> * Following UDEV rule fires:
+>=20
+> SUBSYSTEM=3D=3D"block", ACTION=3D=3D"remove", ENV{ID_PATH}=3D=3D"?*", \
+>         RUN+=3D"/sbin/mdadm -If $name --path $env{ID_PATH}"
+>=20
+> % mdadm --detail /dev/md3
+> /dev/md3:
+>         Version : 1.1
+>   Creation Time : Tue Oct 14 17:31:59 2014
+>      Raid Level : raid1
+>      Array Size : 25149440 (23.98 GiB 25.75 GB)
+>   Used Dev Size : 25149440 (23.98 GiB 25.75 GB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+>=20
+>   Intent Bitmap : Internal
+>=20
+>     Update Time : Wed Oct 15 14:22:34 2014
+>           State : active, degraded
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+>=20
+>            Name : localhost.localdomain:3
+>            UUID : 40ed68ee:ba41d4cd:28c361ed:be7470b8
+>          Events : 142
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0      65       21        0      faulty
+>        1      65        5        1      active sync   /dev/sdj5
+>=20
+> All attempts to remove this device fail:=20
+>=20
+> % echo remove > /sys/block/md3/md/dev-sdr5/state
+> -bash: echo: write error: Device or resource busy
+>=20
+> This can be traced to state_store():
+>=20
+>         } else if (cmd_match(buf, "remove")) {
+>                 if (rdev->raid_disk >=3D 0)
+>                         err =3D -EBUSY;
+>=20
+> After much debugging and systemtapping, I think I've figured out that the
+> sysfs scripting may fail after the following combination of changes:
+>=20
+> mdadm  8af530b07fce "Enhance incremental removal."
+> kernel 30b8feb730f9 "md/raid5: avoid deadlock when raid5 array has unack
+>                      badblocks during md_stop_writes"
+>=20
+> With these two changes:
+>=20
+> 1 - On the user side, mdadm is trying to set the array_state to read-auto
+>     on incremental removal (as invoked by UDEV rule).=20
+>=20
+> 2 - Kernel side, md_set_readonly() will set the MD_RECOVERY_FROZEN flag,
+>     wake up the mddev->thread and if there is a sync_thread, it will set
+>     MD_RECOVERY_INTR and then wait until the sync_thread is set to NULL.
+>=20
+>     When md_check_recovery() gets a chance to run as part of the
+>     raid1d() mddev->thread, it may or may not ever get to
+>     an invocation of remove_and_add_spares(), for there are but *many*
+>     conditional early exits along the way -- for example, if
+>     MD_RECOVERY_FROZEN is set, the following condition will bounce out of
+>     the routine:
+>=20
+>                 if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recov=
+ery) ||
+>                     test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))      =
+      =20
+>                         goto unlock;
+>=20
+>     the next time around, MD_RECOVERY_NEEDED will have been cleared, so
+>     all future tests will return 0 and the negation will always take the
+>     early exit path.
+>=20
+>     Back in md_set_readonly(), it may notice that the MD is still in use,
+>     so it clears the MD_RECOVERY_FROZEN and then returns -EBUSY, without
+>     setting mddev->ro.  But the damage has been done as conditions have
+>     been set such that md_check_recovery() will never call
+>     remove_and_add_spares().
+>=20
+> This would also explain why an "idle" sync_action clears the wedge: it
+> sets MD_RECOVERY_NEEDED allowing md_check_recovery() to continue executing
+> to remove_and_add_spares().
+>=20
+> As far as I can tell, this is what is happening to prevent the "remove"
+> write to /sys/block/md3/md/dev-sdr5/state from succeeding.  There are
+> certainly a lot of little bit-states between disk removal, UDEV mdadm, and
+> various MD kernel threads, so apologies if I missed an important
+> transition.
+>=20
+> Would you consider writing "idle" to the MD array sync_action file as a
+> safe and reasonable intermediate workaround step for our script?
+>=20
+> And of course, any suggestions to whether this is intended behavior (ie,
+> the removed component disk is failed, but stuck in the array)?
+>=20
+> This is fairly easy for us to reproduce with multiple MD arrays per disk
+> (one per partition) and interrupting a raid check on all of them
+> (especially when they are delayed waiting for the first to finish) by
+> removing the component disk via sysfs PCI removal.  We can provide
+> additional debug or testing if required.
+>=20
 
-and you send me the metadata of all your devices please?
+Hi Joe,
+ thanks for the details analysis!!
 
-   mkdir /tmp/dump
-   mdadm --dump /tmp/dump /dev/sde1
-   tar czvf /tmp/dump.tgz /tmp/dump
+I think the correct fix would be that MD_RECOVERY_NEEDED should be set after
+clearing MD_RECOVERY_FROZEN, like the patch below.
+Can you confirm that it works for you?
 
-and then send /tmp/dump.tgz
+Writing 'idle' should in general be safe, so that could be used as an inter=
+im.
 
-Thanks.
-
+Thanks,
 NeilBrown
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> root@nashorn:/home/kraush/work/smartctrl# mdadm --zero-superblock /dev/sd=
-e1
-> mdadm: Unrecognised md component device - /dev/sde1
-> root@nashorn:/home/kraush/work/smartctrl# mdadm --add /dev/md126 /dev/sde1
-> mdadm: add new device failed for /dev/sde1 as 4: Invalid argument
-> root@nashorn:/home/kraush/work/smartctrl# mdadm -E /dev/sde1
-> /dev/sde1:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x1
->       Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
->             Name : nashorn:126  (local to host nashorn)
->    Creation Time : Mon Oct 27 15:58:38 2014
->       Raid Level : raid1
->     Raid Devices : 2
->=20
->   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->       Array Size : 0
->    Used Dev Size : 0
->      Data Offset : 262144 sectors
->     Super Offset : 8 sectors
->     Unused Space : before=3D262056 sectors, after=3D1953260976 sectors
->            State : clean
->      Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
->=20
-> Internal Bitmap : 8 sectors from superblock
->      Update Time : Tue Oct 28 11:53:49 2014
->    Bad Block Log : 512 entries available at offset 72 sectors
->         Checksum : 6f02d040 - expected 891eedff
->           Events : 0
->=20
->=20
->     Device Role : spare
->     Array State : RR ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D r=
-eplacing)
-> root@nashorn:/home/kraush/work/smartctrl#
-> -------------------------------------------------------------------------=
-----------------------------------
-> root@nashorn:/home/kraush/work/smartctrl# cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md127 : active (auto-read-only) raid6 sda1[0] sdk1[6](S) sdl2[7](S)=20
-> sdh1[5] sdg1[4] sdf1[3] sdc1[2] sdb1[1]
->        1953017856 blocks super 1.2 level 6, 512k chunk, algorithm 2=20
-> [6/6] [UUUUUU]
->        bitmap: 0/4 pages [0KB], 65536KB chunk
->=20
-> md10 : active (auto-read-only) raid1 sdi2[0] sdl3[1]
->        87833408 blocks super 1.2 [2/2] [UU]
->        bitmap: 0/1 pages [0KB], 65536KB chunk
->=20
-> md126 : active raid1 sdd1[3] sdj1[2]
->        488254464 blocks super 1.2 [2/2] [UU]
->        bitmap: 0/4 pages [0KB], 65536KB chunk
->=20
-> md0 : active raid1 sdl1[4] sdd2[3] sdi1[5]
->        156157824 blocks super 1.2 [3/1] [U__]
->        [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.]  rec=
-overy =3D 95.6% (149290048/156157824)=20
-> finish=3D8.4min speed=3D13496K/sec
->        bitmap: 1/2 pages [4KB], 65536KB chunk
->=20
-> unused devices: <none>
-> root@nashorn:/home/kraush/work/smartctrl#
-> -------------------------------------------------------------------------=
-----------------------------------
-> dmesg:
-> [33299.387382] md: invalid superblock checksum on sde1
-> [33299.387385] md: sde1 does not have a valid v1.2 superblock, not=20
-> importing!
-> [33299.387408] md: md_import_device returned -22
-> root@nashorn:/home/kraush/work/smartctrl#
-> -------------------------------------------------------------------------=
-----------------------------------
-> root@nashorn:/home/kraush/work/mdadm# mdadm --version
-> mdadm - v3.3-161-gfed12d4 - 21st August 2014
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->=20
-> Kind regards, Hans
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c03d87b6890a..2c73fcb82593 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5261,6 +5261,7 @@ static int md_set_readonly(struct mddev *mddev, struc=
+t block_device *bdev)
+ 		printk("md: %s still in use.\n",mdname(mddev));
+ 		if (did_freeze) {
+ 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 			md_wakeup_thread(mddev->thread);
+ 		}
+ 		err =3D -EBUSY;
+@@ -5275,6 +5276,8 @@ static int md_set_readonly(struct mddev *mddev, struc=
+t block_device *bdev)
+ 		mddev->ro =3D 1;
+ 		set_disk_ro(mddev->gendisk, 1);
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++		md_wakeup_thread(mddev->thread);
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 		err =3D 0;
+ 	}
+@@ -5318,6 +5321,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 		mutex_unlock(&mddev->open_mutex);
+ 		if (did_freeze) {
+ 			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 			md_wakeup_thread(mddev->thread);
+ 		}
+ 		return -EBUSY;
 
-
---Sig_/wZBM0.Y0dJE_TAnFuJwhzYf
+--Sig_/.wn7fGgeABPAl+rdUSg/3lC
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVFAD4znsnt1WYoG5AQL8kBAAjou4cacfmG5sg1siy/XiMKP3itkZTdr7
-P9IEF2UJ7W50RDZELwUb0Oo7SgrhyHG9DdamK7NXgJ3IsC2DD5yLuVWuxBnxF8cc
-EgONRfVgbF+Ahy6iNf6eLlilGTWMm/NvLJdnbq6p3vN7vXfa4g41pvpW5GoffIhF
-polhgk/Y7aoycgxMBUC898Oru7TGWwgpVxhIkTvIngKttUGCs5oWKiXd2cmYSkHA
-MVc8mJLjdE3RZnL4q/E0q8NybiGsvQTa+AUG9Yn6vcDEoSr6MTjtkQyyv94fYcpC
-kUhrkL4yCs+V2z1u+xUFvWH9kwzgBC0wjRIxaWWFJm7mXLcJPpLkLJpOmvfJgrHM
-902x+P7z39pGQqKocuQHzy0k5gArqyaYij0Dn6ZBwtq+Q2hEZC+ZstpGyz+jhsz0
-mhJE6/mh+8QcemSnkN55hUtGUWdKPfsOwAQkMqeuP7vC6fIWPfLNBkJnVEd3Rr4z
-8J4Zu4lIg+dRS8rLn+UztOvp5di9Vp1sLJHA44PNw6S4U1C3yXwkr3EjEv8eLbfR
-Lx5woTFsxyx+i5GYsDtP5Mv9dg4aNSmVszBzc5OxMHWHRc1l7NNn21z5m62XQ5JW
-E0u/GWY6tD5LGae57nKzzw3dvDGnEXhYCQcUdb9euPqDoUHsb+29u1QxVVz1JojH
-z0W/LWbXIw8=
-=kyAL
+iQIVAwUBVFANeTnsnt1WYoG5AQI3fRAApqUgGTn8qC2LHo7PijJASbUYWxDsJxhT
+IQNDeaN66hnPhE1Zven/QrZ27Eoyx54mRinto48cU3Gke/LwCWeIKdkRDC17Yhv+
+mxBM8beSLKf/VARzkc8ScnovE1NnPdykk4bUHsz21XVRhVFAWyAdOJzzEzu1T/+v
+0L4pXdCZ5gW6EhzAR7Da+wDbmz5/fN5Iu8c87zO+/fDTB6U4B8vQPoJWRP5z4TOm
+6rswo3GfdSYyRH5oM7XpRAa6Uh1oVnWBuaFQHTzzMCLU8sskPqmtxnD9uSGOu9SV
+8MvXrOve/VJhNXZvtx9TyBjCjq7ZrPWWAVh9Jo3V+yLHpJ5PTdR2xNRFYKV0vJMP
+07Dwpttoy9m8fp6OCOrdSCToDZA3/T8IXbroKGt027KLoVuePL32NO6YgAgCpMX6
+HTtPptjKpzhzGCiytd5sMJmmwx6HBxh698JBZWj/ciTbb6N1X25LPrDb+HtS6UAm
+wSbHRDPsn5F+g3xvs7vwq64m4yG1SjvEEB6qZmaDrlRTHX9VHZ2hzas5E4nt2xUa
+YbZJQgYzhdILfyxPBzjcFei+nHvhYIuGf9IP45NREDtKm9mSiepJPuF/UNcgn4Yc
+uUVY9CHfdb8N9rl6jn3IxqQ4g1HFVucyxEAZZ9za/UL6UYfAmVSulOc911T7htKR
+UR8H7avV/ik=
+=H0Q1
 -----END PGP SIGNATURE-----
 
---Sig_/wZBM0.Y0dJE_TAnFuJwhzYf--
+--Sig_/.wn7fGgeABPAl+rdUSg/3lC--
