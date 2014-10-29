@@ -1,201 +1,78 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: RAID1 removing failed disk returns EBUSY
-Date: Wed, 29 Oct 2014 13:36:04 -0400
-Message-ID: <20141029133604.59f9549a@jlaw-desktop.mno.stratus.com>
-References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com>
-	<20141029084113.57f6ae6a@notabene.brown>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
+Subject: Re: Split RAID: Proposal for archival RAID using incremental batch
+ checksum
+Date: Wed, 29 Oct 2014 20:27:52 +0100
+Message-ID: <54513FB8.2050407@shiftmail.org>
+References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com> <20141029200501.1f01269d@notabene.brown> <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141029084113.57f6ae6a@notabene.brown>
+In-Reply-To: <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 29 Oct 2014 08:41:13 +1100
-NeilBrown <neilb@suse.de> wrote:
+On 29/10/2014 10:25, Anshuman Aggarwal wrote:
+> Right on most counts but please see comments below.
+>
+> On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
+>> Just to be sure I understand, you would have N + X devices.  Each of the N
+>> devices contains an independent filesystem and could be accessed directly if
+>> needed.  Each of the X devices contains some codes so that if at most X
+>> devices in total died, you would still be able to recover all of the data.
+>> If more than X devices failed, you would still get complete data from the
+>> working devices.
+>>
+>> Every update would only write to the particular N device on which it is
+>> relevant, and  all of the X devices.  So N needs to be quite a bit bigger
+>> than X for the spin-down to be really worth it.
+>>
+>> Am I right so far?
+> Perfectly right so far. I typically have a N to X ratio of 4 (4
+> devices to 1 data) so spin down is totally worth it for data
+> protection but more on that below.
+>
+>> For some reason the writes to X are delayed...  I don't really understand
+>> that part.
+> This delay is basically designed around archival devices which are
+> rarely read from and even more rarely written to. By delaying writes
+> on 2 criteria ( designated cache buffer filling up or preset time
+> duration from last write expiring) we can significantly reduce the
+> writes on the parity device. This assumes that we are ok to lose a
+> movie or two in case the parity disk is not totally up to date but are
+> more interested in device longevity.
+>
+>> Sounds like multi-parity RAID6 with no parity rotation and
+>>    chunksize == devicesize
+> RAID6 would present us with a joint device and currently only allows
+> writes to that directly, yes? Any writes will be striped.
 
-> On Mon, 27 Oct 2014 16:27:48 -0400 Joe Lawrence <joe.lawrence@stratus.com>
-> wrote:
-> 
-> > Hi Neil,
-> > 
-> > We've encountered changes in MD and mdadm that have broken our automated
-> > disk removal script.  In the past, we've been able to run the following
-> > after a RAID1 disk component removal:
-> > 
-> > % echo fail > /sys/block/md3/md/dev-sdr5/state
-> > % echo remove > /sys/block/md3/md/dev-sdr5/state
-> > 
-> > However, the latest RHEL6.6 code drop has rebased to sufficiently recent
-> > MD kernel and mdadm changes, in which the previous commands occasionally
-> > fail like so:
-> > 
-> > * MD array is usually resyncing or checking
-> > * Component disk /dev/sdr removed via HBA sysfs PCI removal
-> > * Following UDEV rule fires:
-> > 
-> > SUBSYSTEM=="block", ACTION=="remove", ENV{ID_PATH}=="?*", \
-> >         RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
-> > 
-> > % mdadm --detail /dev/md3
-> > /dev/md3:
-> >         Version : 1.1
-> >   Creation Time : Tue Oct 14 17:31:59 2014
-> >      Raid Level : raid1
-> >      Array Size : 25149440 (23.98 GiB 25.75 GB)
-> >   Used Dev Size : 25149440 (23.98 GiB 25.75 GB)
-> >    Raid Devices : 2
-> >   Total Devices : 2
-> >     Persistence : Superblock is persistent
-> > 
-> >   Intent Bitmap : Internal
-> > 
-> >     Update Time : Wed Oct 15 14:22:34 2014
-> >           State : active, degraded
-> >  Active Devices : 1
-> > Working Devices : 1
-> >  Failed Devices : 1
-> >   Spare Devices : 0
-> > 
-> >            Name : localhost.localdomain:3
-> >            UUID : 40ed68ee:ba41d4cd:28c361ed:be7470b8
-> >          Events : 142
-> > 
-> >     Number   Major   Minor   RaidDevice State
-> >        0      65       21        0      faulty
-> >        1      65        5        1      active sync   /dev/sdj5
-> > 
-> > All attempts to remove this device fail: 
-> > 
-> > % echo remove > /sys/block/md3/md/dev-sdr5/state
-> > -bash: echo: write error: Device or resource busy
-> > 
-> > This can be traced to state_store():
-> > 
-> >         } else if (cmd_match(buf, "remove")) {
-> >                 if (rdev->raid_disk >= 0)
-> >                         err = -EBUSY;
-> > 
-> > After much debugging and systemtapping, I think I've figured out that the
-> > sysfs scripting may fail after the following combination of changes:
-> > 
-> > mdadm  8af530b07fce "Enhance incremental removal."
-> > kernel 30b8feb730f9 "md/raid5: avoid deadlock when raid5 array has unack
-> >                      badblocks during md_stop_writes"
-> > 
-> > With these two changes:
-> > 
-> > 1 - On the user side, mdadm is trying to set the array_state to read-auto
-> >     on incremental removal (as invoked by UDEV rule). 
-> > 
-> > 2 - Kernel side, md_set_readonly() will set the MD_RECOVERY_FROZEN flag,
-> >     wake up the mddev->thread and if there is a sync_thread, it will set
-> >     MD_RECOVERY_INTR and then wait until the sync_thread is set to NULL.
-> > 
-> >     When md_check_recovery() gets a chance to run as part of the
-> >     raid1d() mddev->thread, it may or may not ever get to
-> >     an invocation of remove_and_add_spares(), for there are but *many*
-> >     conditional early exits along the way -- for example, if
-> >     MD_RECOVERY_FROZEN is set, the following condition will bounce out of
-> >     the routine:
-> > 
-> >                 if (!test_and_clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
-> >                     test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))             
-> >                         goto unlock;
-> > 
-> >     the next time around, MD_RECOVERY_NEEDED will have been cleared, so
-> >     all future tests will return 0 and the negation will always take the
-> >     early exit path.
-> > 
-> >     Back in md_set_readonly(), it may notice that the MD is still in use,
-> >     so it clears the MD_RECOVERY_FROZEN and then returns -EBUSY, without
-> >     setting mddev->ro.  But the damage has been done as conditions have
-> >     been set such that md_check_recovery() will never call
-> >     remove_and_add_spares().
-> > 
-> > This would also explain why an "idle" sync_action clears the wedge: it
-> > sets MD_RECOVERY_NEEDED allowing md_check_recovery() to continue executing
-> > to remove_and_add_spares().
-> > 
-> > As far as I can tell, this is what is happening to prevent the "remove"
-> > write to /sys/block/md3/md/dev-sdr5/state from succeeding.  There are
-> > certainly a lot of little bit-states between disk removal, UDEV mdadm, and
-> > various MD kernel threads, so apologies if I missed an important
-> > transition.
-> > 
-> > Would you consider writing "idle" to the MD array sync_action file as a
-> > safe and reasonable intermediate workaround step for our script?
-> > 
-> > And of course, any suggestions to whether this is intended behavior (ie,
-> > the removed component disk is failed, but stuck in the array)?
-> > 
-> > This is fairly easy for us to reproduce with multiple MD arrays per disk
-> > (one per partition) and interrupting a raid check on all of them
-> > (especially when they are delayed waiting for the first to finish) by
-> > removing the component disk via sysfs PCI removal.  We can provide
-> > additional debug or testing if required.
-> > 
-> 
-> Hi Joe,
->  thanks for the details analysis!!
-> 
-> I think the correct fix would be that MD_RECOVERY_NEEDED should be set after
-> clearing MD_RECOVERY_FROZEN, like the patch below.
-> Can you confirm that it works for you?
-> 
-> Writing 'idle' should in general be safe, so that could be used as an interim.
-> 
-> Thanks,
-> NeilBrown
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c03d87b6890a..2c73fcb82593 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5261,6 +5261,7 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
->  		printk("md: %s still in use.\n",mdname(mddev));
->  		if (did_freeze) {
->  			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->  			md_wakeup_thread(mddev->thread);
->  		}
->  		err = -EBUSY;
-> @@ -5275,6 +5276,8 @@ static int md_set_readonly(struct mddev *mddev, struct block_device *bdev)
->  		mddev->ro = 1;
->  		set_disk_ro(mddev->gendisk, 1);
->  		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +		md_wakeup_thread(mddev->thread);
->  		sysfs_notify_dirent_safe(mddev->sysfs_state);
->  		err = 0;
->  	}
-> @@ -5318,6 +5321,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
->  		mutex_unlock(&mddev->open_mutex);
->  		if (did_freeze) {
->  			clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-> +			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->  			md_wakeup_thread(mddev->thread);
->  		}
->  		return -EBUSY;
+I am not totally sure I understand your design, but it seems to me that 
+the following solution could work for you:
 
-Hi Neil,
+MD raid-6, maybe multi-parity (multi-parity not implemented yet in MD 
+yet, but just do a periodic scrub and 2 parities can be fine. Wake-up is 
+not so expensive that you can't scrub)
 
-In my tests, the UDEV "mdadm -If" invocation fails *and* removes the
-pulled disk from the MD array.  This is okay for our intentions, but I
-wanted to make sure that it's okay to skip any failed-but-not-removed
-state.
+Over that you put a raid1 of 2 x 4TB disks as a bcache cache device 
+(those two will never spin-down) in writeback mode with 
+writeback_running=off . This will prevent writes to backend and leave 
+the backend array spun down.
+When bcache is almost full (poll dirty_data), switch to 
+writeback_running=on and writethrough: it will wake up the backend raid6 
+array and flush all dirty data. You can then then revert to writeback 
+and writeback_running=off. After this you can spin-down the backend 
+array again.
 
-Tested-by: Joe Lawrence <joe.lawrence@stratus.com>
+You also get read caching for free, which helps the backend array to 
+stay spun down as much as possible.
 
-and should this have a
+Maybe you can modify bcache slightly so to implement an automatic 
+switching between the modes as described above, instead of polling the 
+state from outside.
 
-Fixes: 30b8feb730f9 ("md/raid5: avoid deadlock when raid5 array has unack badblocks during md_stop_writes")
+Would that work, or you are asking something different?
 
-tag to mark for stable?
+EW
 
-Thanks,
-
--- Joe
