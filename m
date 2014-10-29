@@ -1,145 +1,221 @@
-From: Jason Keltz <jas@cse.yorku.ca>
-Subject: Re: question about MD raid rebuild performance degradation even with
- speed_limit_min/speed_limit_max set.
-Date: Wed, 29 Oct 2014 16:56:51 -0400
-Message-ID: <54515493.4070402@cse.yorku.ca>
-References: <5445332B.9060009@cse.yorku.ca>	<5445361E.3010503@cse.yorku.ca>	<5445799A.8020205@cse.yorku.ca>	<20141029093822.79242658@notabene.brown>	<5450521F.8060309@cse.yorku.ca> <20141029135749.241f9e50@notabene.brown>
+From: Hans Kraus <hans@hanswkraus.com>
+Subject: Re: mdadm creates corrupt superblock
+Date: Wed, 29 Oct 2014 22:11:00 +0100
+Message-ID: <545157E4.3090204@hanswkraus.com>
+References: <544FDB1C.5030306@hanswkraus.com> <20141029080019.272bc844@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141029135749.241f9e50@notabene.brown>
+In-Reply-To: <20141029080019.272bc844@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/28/2014 10:57 PM, NeilBrown wrote:
-> On Tue, 28 Oct 2014 22:34:07 -0400 Jason Keltz <jas@cse.yorku.ca> wrote:
+Hi Neil,
+
+many thanks for your response. I rebooted the machine and got new drive
+assignments. The drive in question is now sdc1. mdadm gave an error with
+the dump, results below (nothing to report by dmesg) [by the way, I
+wasn'nt even able to create an array on that drive with
+'mdadm --create --level=1 -n 2 /dev/sdc1 missing', same error(s)]:
+-------------------------------------------------------------------------
+root@nashorn:~# mdadm -E /dev/sdb1
+/dev/sdb1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
+            Name : nashorn:126  (local to host nashorn)
+   Creation Time : Mon Oct 27 15:58:38 2014
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
+      Array Size : 976630488 (931.39 GiB 1000.07 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=0 sectors
+           State : clean
+     Device UUID : f7a91c46:e4cda0c0:1b770fd7:876634f8
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Wed Oct 29 18:42:16 2014
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 939b22d1 - correct
+          Events : 3325
+
+
+    Device Role : Active device 0
+    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+root@nashorn:~#
+-------------------------------------------------------------------------
+root@nashorn:~# mdadm -E /dev/sdh1
+/dev/sdh1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
+            Name : nashorn:126  (local to host nashorn)
+   Creation Time : Mon Oct 27 15:58:38 2014
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
+      Array Size : 976630488 (931.39 GiB 1000.07 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262046 sectors, after=0 sectors
+           State : clean
+     Device UUID : 089d1d0e:4d5ca222:dd716acb:0813815c
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Wed Oct 29 18:42:16 2014
+   Bad Block Log : 512 entries available at offset 82 sectors
+        Checksum : 16454b96 - correct
+          Events : 3325
+
+
+    Device Role : Active device 1
+    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+root@nashorn:~#
+-------------------------------------------------------------------------
+root@nashorn:~# mdadm -E /dev/sdc1
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
+            Name : nashorn:126  (local to host nashorn)
+   Creation Time : Mon Oct 27 15:58:38 2014
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
+      Array Size : 0
+   Used Dev Size : 0
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+    Unused Space : before=262056 sectors, after=1953260976 sectors
+           State : clean
+     Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Tue Oct 28 11:53:49 2014
+   Bad Block Log : 512 entries available at offset 72 sectors
+        Checksum : 6f02d040 - expected 891eedff
+          Events : 0
+
+
+    Device Role : spare
+    Array State : RR ('A' == active, '.' == missing, 'R' == replacing)
+-------------------------------------------------------------------------
+root@nashorn:~# mkdir -p /tmp/dump
+root@nashorn:~# mdadm --dump /tmp/dump /dev/sdc1
+mdadm: Failed to copy metadata from /dev/sdc1 to /tmp/dump/sdc1
+-------------------------------------------------------------------------
+Kind regards, Hans
+
+Am 28.10.2014 22:00, schrieb NeilBrown:
+> On Tue, 28 Oct 2014 19:06:20 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
 >
->> On 28/10/2014 6:38 PM, NeilBrown wrote:
->>> On Mon, 20 Oct 2014 17:07:38 -0400 Jason Keltz<jas@cse.yorku.ca>  wrote:
->>>
->>>> On 10/20/2014 12:19 PM, Jason Keltz wrote:
->>>>> Hi.
->>>>>
->>>>> I'm creating a 22 x 2 TB SATA disk MD RAID10 on a new RHEL6 system.
->>>>> I've experimented with setting "speed_limit_min" and "speed_limit_max"
->>>>> kernel variables so that I get the best balance of performance during
->>>>> a RAID rebuild of one of the RAID1 pairs. If, for example, I set
->>>>> speed_limit_min AND speed_limit_max to 80000 then fail a disk when
->>>>> there is no other disk activity, then I do get a rebuild rate of
->>>>> around 80 MB/s. However, if I then start up a write intensive
->>>>> operation on the MD array (eg. a dd, or a mkfs on an LVM logical
->>>>> volume that is created on that MD), then, my write operation seems to
->>>>> get "full power", and my rebuild drops to around 25 MB/s. This means
->>>>> that the rebuild of my RAID10 disk is going to take a huge amount of
->>>>> time (>12 hours!!!). When I set speed_limit_min and speed_limit_max to
->>>>> the same value, am I not guaranteeing the rebuild speed? Is this a bug
->>>>> that I should be reporting to Red Hat, or a "feature"?
->>>>>
->>>>> Thanks in advance for any help that you can provide...
->>>>>
->>>>> Jason.
->>>> I would like to add that I downloaded the latest version of Ubuntu, and
->>>> am running it on the same server with the same MD.
->>>> When I set speed_limit_min and speed_limit_max to 80000, I was able to
->>>> start two large dds on the md array, and the rebuild stuck at around 71
->>>> MB/s, which is close enough.  This leads me to believe that the problem
->>>> above is probably a RHEL6 issue.  However, after I stopped the two dd
->>>> operations,  and raised both speed_limit_min and speed_limit_max to
->>>> 120000, the rebuild stayed between 71-73 Mb/s for more than 10 minutes
->>>> .. now it seems to be at 100 MB/s... but doesn't seem to get any higher
->>>> (even though I had 120 MB/s and above on the RHEL system without any
->>>> load)... Hmm.
->>>>
->>> md certainly cannot "guarantee" any speed - it can only deliver what the
->>> underlying devices deliver.
->>> I know the kernels logs say something about a "guarantee".  That was added
->>> before my time and I haven't had occasion to remove it.
->>>
->>> md will normally just try to recover as fast as it can unless that exceeds
->>> one of the limits - then it will back-off.
->>> What speed it actually achieved depends on other load and the behaviour of
->>> the IO scheduler.
->>>
->>> "RHEL6" and "Ubuntu" don't mean a lot to me.  Specific kernel version might,
->>> though in the case of Redhat I know that backport lots of stuff so even the
->>> kernel version isn't very helpful.  I'm must prefer having report against
->>> mainline kernels.
->>>
->>> Rotating drives do get lower transfer speeds at higher addresses.  That might
->>> explain the 120 / 100 difference.
->> Hi Neil,
->> Thanks very much for your response.
->> I must say that I'm a little puzzled though. I'm coming from using a
->> 3Ware hardware RAID controller where I could configure how much of the
->> disk bandwidth is to be used for a rebuild versus I/O.   From what I
->> understand, you're saying that MD can only use the disk bandwidth
->> available to it.  It seems that it doesn't take any priority in the I/O
->> chain.  It will only attempt to use no less than min bandwidth, and no
->> more than max bandwidth for the rebuild, but if you're on a busy system,
->> and other system I/O needs that disk bandwidth, then there's nothing it
->> can do about it.  I guess I just don't understand why.  Why can't md be
->> given a priority in the kernel to allow the admin to decide how much
->> bandwidth goes to system I/O versus rebuild I/O.  Even in a busy system,
->> I still want to allocate at least some minimum bandwidth to MD.  In
->> fact, in the event of a disk failure, I want to have a whole lot of the
->> disk bandwidth dedicated to MD.  It's something about short term pain
->> for long term gain? I'd rather not have the users suffer at all, but if
->> they do have to suffer, I'd rather them suffer for a few hours, knowing
->> that after that, the RAID system is in a perfectly good state with no
->> bad disks as opposed to letting a bad disk resync take days because the
->> system is really busy... days during which another failure might occur!
+>> Hi,
 >>
->> Jason.
-> It isn't so much "that MD can only use..." but rather "that MD does only
-> use ...".
-Got it..
-
-> This is how the code has "always" worked and no-one has ever bothered to
-> change it, or to ask for it to be changed (that I recall).
-I'm actually not surprised to hear that since I spent a considerable  
-time trying to find articles talking about this topic, and couldn't find 
-a single thing! :)  I, on the other hand, am replacing a hardware RAID 
-system with MD, so I've been "spoiled" already! (not with the 
-performance of hardware RAID, but the functionality) :)
-
-> There are difficulties in guaranteeing a minimum when the array uses
-> partitions from devices on which other partitions are used for other things.
-> In that case I don't think it is practical to make guarantees, but that
-> needn't stop us making guarantees when we can I guess.
+>> I debugged my problem a bit more: it seems that mdadm creates a defect
+>> superblock. That's repeatedly happening, but only for one drive. I
+>> copied zeros to that drive (via ddrescue /dev/zero ...) and the drive
+>> looks OK. The info I got:
+>>
 >
-> If the configured bandwidth exceeded the physically available bandwidth I
-> don't think we would want to exclude non-resync IO completely, so the
-> guaranty would have to be:
->     N MB/sec or M% of available, whichever is less
+> and you send me the metadata of all your devices please?
 >
-> We could even implement the different approach in a back-compatible way.
-> Introduce a new setting "max_sync_percent".  By default that is unset and the
-> current algorithm applies.
-> If it is set to something below 100, non-resync IO is throttled to
-> an appropriate fraction of the actual resync throughput whenever that is
-> below sync_speed_min.
+>     mkdir /tmp/dump
+>     mdadm --dump /tmp/dump /dev/sde1
+>     tar czvf /tmp/dump.tgz /tmp/dump
 >
-> Or something like that.
-That actually sounds great!  I can certainly understand and appreciate 
-how it would be difficult to handle arrays using partitions from 
-multiple devices. Maybe the functionality only works if you're using 
-full disk devices. :)  (Okay, on second thought, that's about 99% of the 
-people using MD -- apparently, word has it that only you and I are using 
-MD full disk devices).
-
-> Some care would be needed in comparing throughput and sync throughput is
-> measured per-device, while non-resync throughput might be measured per-array.
-> Maybe the throttling would happen per-device??
+> and then send /tmp/dump.tgz
 >
-> All we need now is for someone to firm up the design and then write the code.
-Maybe someone on the list will step forward :D
-
-The truth is, as people start to combine larger and larger disks, and 
-rebuild times go up and up and up, this type of request will become more 
-common....
-
-Jas.
+> Thanks.
+>
+> NeilBrown
+>
+> =================================================================================================================================================================================================
+>> root@nashorn:/home/kraush/work/smartctrl# mdadm --zero-superblock /dev/sde1
+>> mdadm: Unrecognised md component device - /dev/sde1
+>> root@nashorn:/home/kraush/work/smartctrl# mdadm --add /dev/md126 /dev/sde1
+>> mdadm: add new device failed for /dev/sde1 as 4: Invalid argument
+>> root@nashorn:/home/kraush/work/smartctrl# mdadm -E /dev/sde1
+>> /dev/sde1:
+>>             Magic : a92b4efc
+>>           Version : 1.2
+>>       Feature Map : 0x1
+>>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
+>>              Name : nashorn:126  (local to host nashorn)
+>>     Creation Time : Mon Oct 27 15:58:38 2014
+>>        Raid Level : raid1
+>>      Raid Devices : 2
+>>
+>>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
+>>        Array Size : 0
+>>     Used Dev Size : 0
+>>       Data Offset : 262144 sectors
+>>      Super Offset : 8 sectors
+>>      Unused Space : before=262056 sectors, after=1953260976 sectors
+>>             State : clean
+>>       Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
+>>
+>> Internal Bitmap : 8 sectors from superblock
+>>       Update Time : Tue Oct 28 11:53:49 2014
+>>     Bad Block Log : 512 entries available at offset 72 sectors
+>>          Checksum : 6f02d040 - expected 891eedff
+>>            Events : 0
+>>
+>>
+>>      Device Role : spare
+>>      Array State : RR ('A' == active, '.' == missing, 'R' == replacing)
+>> root@nashorn:/home/kraush/work/smartctrl#
+>> -----------------------------------------------------------------------------------------------------------
+>> root@nashorn:/home/kraush/work/smartctrl# cat /proc/mdstat
+>> Personalities : [raid1] [raid6] [raid5] [raid4]
+>> md127 : active (auto-read-only) raid6 sda1[0] sdk1[6](S) sdl2[7](S)
+>> sdh1[5] sdg1[4] sdf1[3] sdc1[2] sdb1[1]
+>>         1953017856 blocks super 1.2 level 6, 512k chunk, algorithm 2
+>> [6/6] [UUUUUU]
+>>         bitmap: 0/4 pages [0KB], 65536KB chunk
+>>
+>> md10 : active (auto-read-only) raid1 sdi2[0] sdl3[1]
+>>         87833408 blocks super 1.2 [2/2] [UU]
+>>         bitmap: 0/1 pages [0KB], 65536KB chunk
+>>
+>> md126 : active raid1 sdd1[3] sdj1[2]
+>>         488254464 blocks super 1.2 [2/2] [UU]
+>>         bitmap: 0/4 pages [0KB], 65536KB chunk
+>>
+>> md0 : active raid1 sdl1[4] sdd2[3] sdi1[5]
+>>         156157824 blocks super 1.2 [3/1] [U__]
+>>         [===================>.]  recovery = 95.6% (149290048/156157824)
+>> finish=8.4min speed=13496K/sec
+>>         bitmap: 1/2 pages [4KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> root@nashorn:/home/kraush/work/smartctrl#
+>> -----------------------------------------------------------------------------------------------------------
+>> dmesg:
+>> [33299.387382] md: invalid superblock checksum on sde1
+>> [33299.387385] md: sde1 does not have a valid v1.2 superblock, not
+>> importing!
+>> [33299.387408] md: md_import_device returned -22
+>> root@nashorn:/home/kraush/work/smartctrl#
+>> -----------------------------------------------------------------------------------------------------------
+>> root@nashorn:/home/kraush/work/mdadm# mdadm --version
+>> mdadm - v3.3-161-gfed12d4 - 21st August 2014
+>> =================================================================================================================================================================================================
+>>
+>> Kind regards, Hans
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
