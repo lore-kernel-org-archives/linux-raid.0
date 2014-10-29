@@ -1,221 +1,92 @@
-From: Hans Kraus <hans@hanswkraus.com>
-Subject: Re: mdadm creates corrupt superblock
-Date: Wed, 29 Oct 2014 22:11:00 +0100
-Message-ID: <545157E4.3090204@hanswkraus.com>
-References: <544FDB1C.5030306@hanswkraus.com> <20141029080019.272bc844@notabene.brown>
+From: micah <micah@riseup.net>
+Subject: Re: Raid1 element stuck in (S) state
+Date: Wed, 29 Oct 2014 17:32:43 -0400
+Message-ID: <87zjcepnno.fsf@muck.riseup.net>
+References: <87k33lwq7s.fsf@muck.riseup.net> <20141029084224.6d92d8be@notabene.brown> <8761f3q8gr.fsf@muck.riseup.net> <20141030071019.1a5c57e7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141029080019.272bc844@notabene.brown>
+In-Reply-To: <20141030071019.1a5c57e7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: micah anderson <micah@debian.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+NeilBrown <neilb@suse.de> writes:
 
-many thanks for your response. I rebooted the machine and got new drive
-assignments. The drive in question is now sdc1. mdadm gave an error with
-the dump, results below (nothing to report by dmesg) [by the way, I
-wasn'nt even able to create an array on that drive with
-'mdadm --create --level=1 -n 2 /dev/sdc1 missing', same error(s)]:
--------------------------------------------------------------------------
-root@nashorn:~# mdadm -E /dev/sdb1
-/dev/sdb1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x1
-      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-            Name : nashorn:126  (local to host nashorn)
-   Creation Time : Mon Oct 27 15:58:38 2014
-      Raid Level : raid1
-    Raid Devices : 2
-
-  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-      Array Size : 976630488 (931.39 GiB 1000.07 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262056 sectors, after=0 sectors
-           State : clean
-     Device UUID : f7a91c46:e4cda0c0:1b770fd7:876634f8
-
-Internal Bitmap : 8 sectors from superblock
-     Update Time : Wed Oct 29 18:42:16 2014
-   Bad Block Log : 512 entries available at offset 72 sectors
-        Checksum : 939b22d1 - correct
-          Events : 3325
-
-
-    Device Role : Active device 0
-    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-root@nashorn:~#
--------------------------------------------------------------------------
-root@nashorn:~# mdadm -E /dev/sdh1
-/dev/sdh1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x1
-      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-            Name : nashorn:126  (local to host nashorn)
-   Creation Time : Mon Oct 27 15:58:38 2014
-      Raid Level : raid1
-    Raid Devices : 2
-
-  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-      Array Size : 976630488 (931.39 GiB 1000.07 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262046 sectors, after=0 sectors
-           State : clean
-     Device UUID : 089d1d0e:4d5ca222:dd716acb:0813815c
-
-Internal Bitmap : 8 sectors from superblock
-     Update Time : Wed Oct 29 18:42:16 2014
-   Bad Block Log : 512 entries available at offset 82 sectors
-        Checksum : 16454b96 - correct
-          Events : 3325
-
-
-    Device Role : Active device 1
-    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-root@nashorn:~#
--------------------------------------------------------------------------
-root@nashorn:~# mdadm -E /dev/sdc1
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x1
-      Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-            Name : nashorn:126  (local to host nashorn)
-   Creation Time : Mon Oct 27 15:58:38 2014
-      Raid Level : raid1
-    Raid Devices : 2
-
-  Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-      Array Size : 0
-   Used Dev Size : 0
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262056 sectors, after=1953260976 sectors
-           State : clean
-     Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
-
-Internal Bitmap : 8 sectors from superblock
-     Update Time : Tue Oct 28 11:53:49 2014
-   Bad Block Log : 512 entries available at offset 72 sectors
-        Checksum : 6f02d040 - expected 891eedff
-          Events : 0
-
-
-    Device Role : spare
-    Array State : RR ('A' == active, '.' == missing, 'R' == replacing)
--------------------------------------------------------------------------
-root@nashorn:~# mkdir -p /tmp/dump
-root@nashorn:~# mdadm --dump /tmp/dump /dev/sdc1
-mdadm: Failed to copy metadata from /dev/sdc1 to /tmp/dump/sdc1
--------------------------------------------------------------------------
-Kind regards, Hans
-
-Am 28.10.2014 22:00, schrieb NeilBrown:
-> On Tue, 28 Oct 2014 19:06:20 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
+> On Wed, 29 Oct 2014 10:03:16 -0400 micah <micah@riseup.net> wrote:
 >
->> Hi,
->>
->> I debugged my problem a bit more: it seems that mdadm creates a defect
->> superblock. That's repeatedly happening, but only for one drive. I
->> copied zeros to that drive (via ddrescue /dev/zero ...) and the drive
->> looks OK. The info I got:
->>
+>> NeilBrown <neilb@suse.de> writes:
+>> 
+>> > On Mon, 27 Oct 2014 10:18:47 -0400 micah anderson <micah@debian.org> wrote:
+>> >
+>> >> 
+>> >> Hi,
+>> >> 
+>> >> i've got a raid1 setup, where one drive died, it was replaced with a new
+>> >> one, but its stuck in a (S) state and I can't seem to get it added into
+>> >> the array, /proc/mdstat looks like this:
+>> >> 
+>> >> md3 : active raid1 sdc1[2](S) sdd1[1]
+>> >>       976759672 blocks super 1.2 [2/1] [_U]
+>> >> 
+>> >> where sdc1 is the replaced drive.
+>> >> 
+>> >> What is the right way to get this added back?
+>> >>
+>> >
+>> > I've a feeling this bug might have been fixed.
+>> > What versions of mdadm and Linux are you using?
+>> 
+>> I'm using squeeze here, and had 3.1.4-1+8efb9d1+squeeze1 installed, I
+>> just installed the backport, which is 3.2.5-3~bpo60+1.
 >
-> and you send me the metadata of all your devices please?
->
->     mkdir /tmp/dump
->     mdadm --dump /tmp/dump /dev/sde1
->     tar czvf /tmp/dump.tgz /tmp/dump
->
-> and then send /tmp/dump.tgz
->
-> Thanks.
->
-> NeilBrown
->
-> =================================================================================================================================================================================================
->> root@nashorn:/home/kraush/work/smartctrl# mdadm --zero-superblock /dev/sde1
->> mdadm: Unrecognised md component device - /dev/sde1
->> root@nashorn:/home/kraush/work/smartctrl# mdadm --add /dev/md126 /dev/sde1
->> mdadm: add new device failed for /dev/sde1 as 4: Invalid argument
->> root@nashorn:/home/kraush/work/smartctrl# mdadm -E /dev/sde1
->> /dev/sde1:
->>             Magic : a92b4efc
->>           Version : 1.2
->>       Feature Map : 0x1
->>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
->>              Name : nashorn:126  (local to host nashorn)
->>     Creation Time : Mon Oct 27 15:58:38 2014
->>        Raid Level : raid1
->>      Raid Devices : 2
->>
->>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
->>        Array Size : 0
->>     Used Dev Size : 0
->>       Data Offset : 262144 sectors
->>      Super Offset : 8 sectors
->>      Unused Space : before=262056 sectors, after=1953260976 sectors
->>             State : clean
->>       Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
->>
->> Internal Bitmap : 8 sectors from superblock
->>       Update Time : Tue Oct 28 11:53:49 2014
->>     Bad Block Log : 512 entries available at offset 72 sectors
->>          Checksum : 6f02d040 - expected 891eedff
->>            Events : 0
->>
->>
->>      Device Role : spare
->>      Array State : RR ('A' == active, '.' == missing, 'R' == replacing)
->> root@nashorn:/home/kraush/work/smartctrl#
->> -----------------------------------------------------------------------------------------------------------
->> root@nashorn:/home/kraush/work/smartctrl# cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md127 : active (auto-read-only) raid6 sda1[0] sdk1[6](S) sdl2[7](S)
->> sdh1[5] sdg1[4] sdf1[3] sdc1[2] sdb1[1]
->>         1953017856 blocks super 1.2 level 6, 512k chunk, algorithm 2
->> [6/6] [UUUUUU]
->>         bitmap: 0/4 pages [0KB], 65536KB chunk
->>
->> md10 : active (auto-read-only) raid1 sdi2[0] sdl3[1]
->>         87833408 blocks super 1.2 [2/2] [UU]
->>         bitmap: 0/1 pages [0KB], 65536KB chunk
->>
->> md126 : active raid1 sdd1[3] sdj1[2]
->>         488254464 blocks super 1.2 [2/2] [UU]
->>         bitmap: 0/4 pages [0KB], 65536KB chunk
->>
->> md0 : active raid1 sdl1[4] sdd2[3] sdi1[5]
->>         156157824 blocks super 1.2 [3/1] [U__]
->>         [===================>.]  recovery = 95.6% (149290048/156157824)
->> finish=8.4min speed=13496K/sec
->>         bitmap: 1/2 pages [4KB], 65536KB chunk
->>
->> unused devices: <none>
->> root@nashorn:/home/kraush/work/smartctrl#
->> -----------------------------------------------------------------------------------------------------------
->> dmesg:
->> [33299.387382] md: invalid superblock checksum on sde1
->> [33299.387385] md: sde1 does not have a valid v1.2 superblock, not
->> importing!
->> [33299.387408] md: md_import_device returned -22
->> root@nashorn:/home/kraush/work/smartctrl#
->> -----------------------------------------------------------------------------------------------------------
->> root@nashorn:/home/kraush/work/mdadm# mdadm --version
->> mdadm - v3.3-161-gfed12d4 - 21st August 2014
->> =================================================================================================================================================================================================
->>
->> Kind regards, Hans
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Is assume that is the version of mdadm.  You didn't say what version of Linux.
 
+Yes, that is the version of mdadm. I am running squeeze, which is a
+2.6.32-5 version of the kernel, and it is an amd64 machine.
+
+>> > Are there any errors in the kernel logs when you --add the device?
+>
+> You didn't answer this question either.  Are there any messages in the
+> kernel log: /var/log/kern.log on debian.
+> Or in the output of "dmesg".
+
+The only thing I see in the log is:
+
+[307932.328420] mdadm: sending ioctl 1261 to a partition!
+[307932.328425] mdadm: sending ioctl 1261 to a partition!
+[307932.346642] mdadm: sending ioctl 1261 to a partition!
+[307932.346648] mdadm: sending ioctl 1261 to a partition!
+[307932.352466] mdadm: sending ioctl 1261 to a partition!
+[307932.352468] mdadm: sending ioctl 1261 to a partition!
+[307932.376821] mdadm: sending ioctl 1261 to a partition!
+[307932.376824] mdadm: sending ioctl 1261 to a partition!
+[307932.377623] mdadm: sending ioctl 1261 to a partition!
+[307932.377630] mdadm: sending ioctl 1261 to a partition!
+[307932.467292] md: bind<sdc1>
+[307932.588154] RAID1 conf printout:
+[307932.588159]  --- wd:1 rd:2
+[307932.588164]  disk 0, wo:1, o:1, dev:sdc1
+[307932.588167]  disk 1, wo:0, o:1, dev:sdd1
+[307932.588248] md: recovery of RAID array md3
+[307932.588251] md: minimum _guaranteed_  speed: 50000 KB/sec/disk.
+[307932.588254] md: using maximum available idle IO bandwidth (but not more than 2000000 KB/sec) for recovery.
+[307932.588260] md: using 128k window, over a total of 976759672 blocks.
+
+but this is just when the device is added, after that it appears that
+logrotation failed and I have a zero byte kern.log, and firewall spew
+has filled up my dmesg ring.
+
+>> Can I just zero the superblock of that device and re-add it in order to
+>> resolve this?
+>
+>
+> If it resyncs and the is still spare, there was almost certainly some sort of
+> failure.  There really must be something in the kernel logs at that time.
+
+It did resync, and is still a spare.... Now that I've fixed the logs,
+I'm going to try it again to see if there is any error that happens
+after the sync finishes.
+
+micah
