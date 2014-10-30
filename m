@@ -1,156 +1,87 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Split RAID: Proposal for archival RAID using incremental batch
- checksum
-Date: Thu, 30 Oct 2014 18:25:00 +0100
-Message-ID: <20141030172500.GA2591@lazy.lzy>
-References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
- <20141029200501.1f01269d@notabene.brown>
- <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
- <54513FB8.2050407@shiftmail.org>
- <CAK-d5dZgsoy+PF2urM=N1F67w7nLGyc83muyNoT2h+gQt5ODnQ@mail.gmail.com>
+From: Ian Young <ian@duffrecords.com>
+Subject: Re: Fwd: I will pay money for the correct RAID recovery instructions
+Date: Thu, 30 Oct 2014 16:03:39 -0700
+Message-ID: <CANs+QMxQ0sEwtsmRpxdq-wKOZ3MFeCrufNuD1z+Pbk3-ADgbEg@mail.gmail.com>
+References: <CANs+QMz3jNpAneHLzN5c=EtK+RAOhQJZy=n3P0oYTRm7yNDzjg@mail.gmail.com>
+	<20141016202202.GA22898@cthulhu.home.robinhill.me.uk>
+	<CANs+QMy7d+kAxazgdk_r+iPtK45+ddSMwEQg6M_6e4giqJgJmw@mail.gmail.com>
+	<21569.8756.823611.71332@quad.stoffel.home>
+	<CAOS+5GGMGU2doP=v1LfeA5CDDmuMj4gxUcNtoK5-gJWHO9CMaw@mail.gmail.com>
+	<CAOS+5GEbNPAWfBL_uPDOuhMb4LtN+_fJ07MD7igOQmVi04mWpA@mail.gmail.com>
+	<21569.16459.69850.406372@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAK-d5dZgsoy+PF2urM=N1F67w7nLGyc83muyNoT2h+gQt5ODnQ@mail.gmail.com>
+In-Reply-To: <21569.16459.69850.406372@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Cc: Ethan Wilson <ethan.wilson@shiftmail.org>, linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Another Sillyname <anothersname@googlemail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 30, 2014 at 08:27:27PM +0530, Anshuman Aggarwal wrote:
->  What you are suggesting will work for delaying writing the checksum
-> (but still making 2 disks work non stop and lead to failure, cost
-> etc).
+Robin's solution worked.  I used ddrescue to copy sde to a new disk,
+then put the new disk in place of sde, and started the array in
+degraded mode.  Now I just need to get a replacement disk for sdf and
+the array should be all set.
 
-Hi Anshuman,
+I believe I owe Robin a pint.  Got Paypal or Google Wallet?
 
-I'm a bit missing the point here.
-
-In my experience, with my storage systems, I change
-disks because they're too small, way long before they
-are too old (way long before they fail).
-That's why I end up with a collection of small HDDs.
-which, in turn, I recycled in some custom storage
-system (using disks of different size, like explained
-in one of the links posted before).
-
-Honestly, the only reason to spin down the disks, still
-in my experience, is for reducing power consumption.
-And this can be done with a RAID-6 without problems
-and in a extremely flexible way.
-
-So, the bottom line, still in my experience, is that
-this you're describing seems quite a nice situation.
-
-Or, I did not understood what you're proposing.
-
-Thanks,
-
-bye,
-
-pg
-
-> I am proposing N independent disks which are rarely accessed. When
-> parity has to be written to the remaining 1,2 ...X disks ...it is
-> batched up (bcache is feasible) and written out once in a while
-> depending on how much write is happening. N-1 disks stay spun down and
-> only X disks wake up periodically to get checksum written to (this
-> would be tweaked by the user based on how up to date he needs the
-> parity to be (tolerance of rebuilding parity in case of crash) and vs
-> disk access for each parity write)
-> 
-> It can't be done using any RAID6 because RAID5/6 will stripe all the
-> data across the devices making any read access wake up all the
-> devices. Ditto for writing to parity on every write to a single disk.
-> 
-> The architecture being proposed is a lazy write to manage parity for
-> individual disks which won't suffer from RAID catastrophic data loss
-> and concurrent disk.
-> 
-> 
-> 
-> 
-> On 30 October 2014 00:57, Ethan Wilson <ethan.wilson@shiftmail.org> wrote:
-> > On 29/10/2014 10:25, Anshuman Aggarwal wrote:
-> >>
-> >> Right on most counts but please see comments below.
-> >>
-> >> On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
-> >>>
-> >>> Just to be sure I understand, you would have N + X devices.  Each of the
-> >>> N
-> >>> devices contains an independent filesystem and could be accessed directly
-> >>> if
-> >>> needed.  Each of the X devices contains some codes so that if at most X
-> >>> devices in total died, you would still be able to recover all of the
-> >>> data.
-> >>> If more than X devices failed, you would still get complete data from the
-> >>> working devices.
-> >>>
-> >>> Every update would only write to the particular N device on which it is
-> >>> relevant, and  all of the X devices.  So N needs to be quite a bit bigger
-> >>> than X for the spin-down to be really worth it.
-> >>>
-> >>> Am I right so far?
-> >>
-> >> Perfectly right so far. I typically have a N to X ratio of 4 (4
-> >> devices to 1 data) so spin down is totally worth it for data
-> >> protection but more on that below.
-> >>
-> >>> For some reason the writes to X are delayed...  I don't really understand
-> >>> that part.
-> >>
-> >> This delay is basically designed around archival devices which are
-> >> rarely read from and even more rarely written to. By delaying writes
-> >> on 2 criteria ( designated cache buffer filling up or preset time
-> >> duration from last write expiring) we can significantly reduce the
-> >> writes on the parity device. This assumes that we are ok to lose a
-> >> movie or two in case the parity disk is not totally up to date but are
-> >> more interested in device longevity.
-> >>
-> >>> Sounds like multi-parity RAID6 with no parity rotation and
-> >>>    chunksize == devicesize
-> >>
-> >> RAID6 would present us with a joint device and currently only allows
-> >> writes to that directly, yes? Any writes will be striped.
-> >
-> >
-> > I am not totally sure I understand your design, but it seems to me that the
-> > following solution could work for you:
-> >
-> > MD raid-6, maybe multi-parity (multi-parity not implemented yet in MD yet,
-> > but just do a periodic scrub and 2 parities can be fine. Wake-up is not so
-> > expensive that you can't scrub)
-> >
-> > Over that you put a raid1 of 2 x 4TB disks as a bcache cache device (those
-> > two will never spin-down) in writeback mode with writeback_running=off .
-> > This will prevent writes to backend and leave the backend array spun down.
-> > When bcache is almost full (poll dirty_data), switch to writeback_running=on
-> > and writethrough: it will wake up the backend raid6 array and flush all
-> > dirty data. You can then then revert to writeback and writeback_running=off.
-> > After this you can spin-down the backend array again.
-> >
-> > You also get read caching for free, which helps the backend array to stay
-> > spun down as much as possible.
-> >
-> > Maybe you can modify bcache slightly so to implement an automatic switching
-> > between the modes as described above, instead of polling the state from
-> > outside.
-> >
-> > Would that work, or you are asking something different?
-> >
-> > EW
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Oct 17, 2014 at 9:14 AM, John Stoffel <john@stoffel.org> wrote:
+>
+> Another> Sorry to state the obvious but......  To restore the degraded
+> Another> array would (based on the info you've posted) likely take
+> Another> longer then temporarily moving the data to a different set of
+> Another> drives.
+>
+> How do you figure this?  He hasn't posted any useful data on his array
+> at all.  We know it's six 3Tb disks in RAID10, so that's at most 9Tb
+> of data.  Moving 3Tb (bad disk ddrescue'd onto new disk) is only 3Tb
+> to move.  Then the resync will of course take time.
+>
+> But if he doesn't have the spare disk space, it's probably the only way.
+>
+> Another> As time seems to be a major consideration here (likely/possible
+> Another> failure of sde) then surely the optimal strategy has to be to get the
+> Another> data off first, then look at the rebuilding the degraded array?
+>
+> Another> Just my 2c
+>
+> Another> On 17 October 2014 15:05, John Stoffel <john@stoffel.org> wrote:
+>>>
+>>>
+>>> Ian,
+>>>
+>>> It would also help if you posted the details of your setup using:
+>>>
+>>> cat /proc/partitions
+>>> cat /proc/mdstat
+>>>
+>>> mdadm -D /dev/md#
+>>> - for each of the devices above.
+>>>
+>>> mdadm -E /dev/sd<drive><#>
+>>> - for each disk or partition in the array from above.
+>>>
+>>>
+>>>
+>>> But the suggestions to ddrescue the going bad drive onto a new disk is
+>>> a good one.  On my debian system, I would do the following:
+>>>
+>>> sudo apt-get install gddrescue
+>>> ddrescue /dev/sde /dev/sdf /var/tmp/ddrecue-sde.log
+>>>
+>>> and see how that goes.
+>>>
+>>> Good luck,
+>>> John
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Another> --
+> Another> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> Another> the body of a message to majordomo@vger.kernel.org
+> Another> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-
-piergiorgio
