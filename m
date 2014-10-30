@@ -1,114 +1,85 @@
 From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
 Subject: Re: Split RAID: Proposal for archival RAID using incremental batch checksum
-Date: Thu, 30 Oct 2014 20:27:27 +0530
-Message-ID: <CAK-d5dZgsoy+PF2urM=N1F67w7nLGyc83muyNoT2h+gQt5ODnQ@mail.gmail.com>
+Date: Thu, 30 Oct 2014 20:30:40 +0530
+Message-ID: <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
 References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
  <20141029200501.1f01269d@notabene.brown> <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
- <54513FB8.2050407@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54513FB8.2050407@shiftmail.org>
+In-Reply-To: <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ethan Wilson <ethan.wilson@shiftmail.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- What you are suggesting will work for delaying writing the checksum
-(but still making 2 disks work non stop and lead to failure, cost
-etc).
-I am proposing N independent disks which are rarely accessed. When
-parity has to be written to the remaining 1,2 ...X disks ...it is
-batched up (bcache is feasible) and written out once in a while
-depending on how much write is happening. N-1 disks stay spun down and
-only X disks wake up periodically to get checksum written to (this
-would be tweaked by the user based on how up to date he needs the
-parity to be (tolerance of rebuilding parity in case of crash) and vs
-disk access for each parity write)
+Would chunksize==disksize work? Wouldn't that lead to the entire
+parity be invalidated for any write to any of the disks (assuming md
+operates at a chunk level)...also please see my reply below
 
-It can't be done using any RAID6 because RAID5/6 will stripe all the
-data across the devices making any read access wake up all the
-devices. Ditto for writing to parity on every write to a single disk.
-
-The architecture being proposed is a lazy write to manage parity for
-individual disks which won't suffer from RAID catastrophic data loss
-and concurrent disk.
-
-
-
-
-On 30 October 2014 00:57, Ethan Wilson <ethan.wilson@shiftmail.org> wrote:
-> On 29/10/2014 10:25, Anshuman Aggarwal wrote:
+On 29 October 2014 14:55, Anshuman Aggarwal <anshuman.aggarwal@gmail.com> wrote:
+> Right on most counts but please see comments below.
+>
+> On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
+>> Just to be sure I understand, you would have N + X devices.  Each of the N
+>> devices contains an independent filesystem and could be accessed directly if
+>> needed.  Each of the X devices contains some codes so that if at most X
+>> devices in total died, you would still be able to recover all of the data.
+>> If more than X devices failed, you would still get complete data from the
+>> working devices.
 >>
->> Right on most counts but please see comments below.
+>> Every update would only write to the particular N device on which it is
+>> relevant, and  all of the X devices.  So N needs to be quite a bit bigger
+>> than X for the spin-down to be really worth it.
 >>
->> On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
->>>
->>> Just to be sure I understand, you would have N + X devices.  Each of the
->>> N
->>> devices contains an independent filesystem and could be accessed directly
->>> if
->>> needed.  Each of the X devices contains some codes so that if at most X
->>> devices in total died, you would still be able to recover all of the
->>> data.
->>> If more than X devices failed, you would still get complete data from the
->>> working devices.
->>>
->>> Every update would only write to the particular N device on which it is
->>> relevant, and  all of the X devices.  So N needs to be quite a bit bigger
->>> than X for the spin-down to be really worth it.
->>>
->>> Am I right so far?
+>> Am I right so far?
+>
+> Perfectly right so far. I typically have a N to X ratio of 4 (4
+> devices to 1 data) so spin down is totally worth it for data
+> protection but more on that below.
+>
 >>
->> Perfectly right so far. I typically have a N to X ratio of 4 (4
->> devices to 1 data) so spin down is totally worth it for data
->> protection but more on that below.
+>> For some reason the writes to X are delayed...  I don't really understand
+>> that part.
+>
+> This delay is basically designed around archival devices which are
+> rarely read from and even more rarely written to. By delaying writes
+> on 2 criteria ( designated cache buffer filling up or preset time
+> duration from last write expiring) we can significantly reduce the
+> writes on the parity device. This assumes that we are ok to lose a
+> movie or two in case the parity disk is not totally up to date but are
+> more interested in device longevity.
+>
 >>
->>> For some reason the writes to X are delayed...  I don't really understand
->>> that part.
+>> Sounds like multi-parity RAID6 with no parity rotation and
+>>   chunksize == devicesize
+> RAID6 would present us with a joint device and currently only allows
+> writes to that directly, yes? Any writes will be striped.
+> In any case would md raid allow the underlying device to be written to
+> directly? Also how would it know that the device has been written to
+> and hence parity has to be updated? What about the superblock which
+> the FS would not know about?
+>
+> Also except for the delayed checksum writing part which would be
+> significant if one of the objectives is to reduce the amount of
+> writes. Can we delay that in the code currently for RAID6? I
+> understand the objective of RAID6 is to ensure data recovery and we
+> are looking at a compromise in this case.
+>
+> If feasible, this can be an enhancement to MD RAID as well where N
+> devices are presented instead of a single joint device in case of
+> raid6 (maybe the multi part device can be individual disks?)
+>
+> It will certainly solve my problem of where to store the metadata. I
+> was currently hoping to just store it as a configuration file to be
+> read by the initramfs since in this case worst case scenario the
+> checksum goes out of sync and is rebuilt from scratch.
+>
 >>
->> This delay is basically designed around archival devices which are
->> rarely read from and even more rarely written to. By delaying writes
->> on 2 criteria ( designated cache buffer filling up or preset time
->> duration from last write expiring) we can significantly reduce the
->> writes on the parity device. This assumes that we are ok to lose a
->> movie or two in case the parity disk is not totally up to date but are
->> more interested in device longevity.
->>
->>> Sounds like multi-parity RAID6 with no parity rotation and
->>>    chunksize == devicesize
->>
->> RAID6 would present us with a joint device and currently only allows
->> writes to that directly, yes? Any writes will be striped.
+>> I wouldn't use device-mapper myself, but you are unlikely to get an entirely
+>> impartial opinion from me on that topic.
 >
->
-> I am not totally sure I understand your design, but it seems to me that the
-> following solution could work for you:
->
-> MD raid-6, maybe multi-parity (multi-parity not implemented yet in MD yet,
-> but just do a periodic scrub and 2 parities can be fine. Wake-up is not so
-> expensive that you can't scrub)
->
-> Over that you put a raid1 of 2 x 4TB disks as a bcache cache device (those
-> two will never spin-down) in writeback mode with writeback_running=off .
-> This will prevent writes to backend and leave the backend array spun down.
-> When bcache is almost full (poll dirty_data), switch to writeback_running=on
-> and writethrough: it will wake up the backend raid6 array and flush all
-> dirty data. You can then then revert to writeback and writeback_running=off.
-> After this you can spin-down the backend array again.
->
-> You also get read caching for free, which helps the backend array to stay
-> spun down as much as possible.
->
-> Maybe you can modify bcache slightly so to implement an automatic switching
-> between the modes as described above, instead of polling the state from
-> outside.
->
-> Would that work, or you are asking something different?
->
-> EW
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I haven't hacked around the kernel internals much so far so will have
+> to dig out that history. I will welcome any particular links/mail
+> threads I should look at for guidance (with both yours and opposing
+> points of view)
