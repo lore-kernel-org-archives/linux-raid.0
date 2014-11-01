@@ -1,217 +1,55 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Split RAID: Proposal for archival RAID using incremental batch
- checksum
-Date: Sat, 1 Nov 2014 13:55:13 +0100
-Message-ID: <20141101125513.GB2078@lazy.lzy>
-References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
- <20141029200501.1f01269d@notabene.brown>
- <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
- <54513FB8.2050407@shiftmail.org>
- <CAK-d5dZgsoy+PF2urM=N1F67w7nLGyc83muyNoT2h+gQt5ODnQ@mail.gmail.com>
- <20141030172500.GA2591@lazy.lzy>
- <CAK-d5dbL0wwC0jWgHG5KKLHgJfJ3t7=8Y7cEW=Qo1WHYA+jZbA@mail.gmail.com>
+From: Stephen Kent <smkent@smkent.net>
+Subject: mdadm named array (metadata 1.2) and udev when assembling an array in initramfs
+Date: Sat, 1 Nov 2014 11:53:56 -0700
+Message-ID: <CAC45b7=-dZX-kxDZY3KBEPZhaTuUhTcqNjTL6y8X71q9oDjiwQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAK-d5dbL0wwC0jWgHG5KKLHgJfJ3t7=8Y7cEW=Qo1WHYA+jZbA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Ethan Wilson <ethan.wilson@shiftmail.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 31, 2014 at 04:35:11PM +0530, Anshuman Aggarwal wrote:
-> Hi pg,
-> With MD raid striping all the writes not only does it keep ALL disks
-> spinning to read/write the current content, it also leads to
-> catastrophic data loss in case the rebuild/disk failure exceeds the
-> number of parity disks.
+I have set up a machine to use an md array as the root device. I have
+created the array with metadata type 1.2, name "root," on host
+"optimus" (so the full metadata name is "optimus:root").
 
-Hi Anshuman,
+I'm using Gentoo Linux (kernel 3.16.5-gentoo), and previously I had no
+initramfs so I wrote a short one to assemble the array. My initramfs
+sets the hostname and runs "mdadm -As," which correctly auto-assembles
+the root device array on /dev/md/root (even without an
+/etc/mdadm.conf).
 
-yes but do you have hard evidence that
-this is a common RAID-6 problem?
-Considering that we have now bad block list,
-write intent bitmap and proactive replacement,
-it does not seem to me really the main issue,
-having a triple fail in RAID-6.
-Considering that there are available libraries
-for more that 2 parities, I think the multiple
-failure case is quite a rarity.
-Furthermore, I suspect there are other type
-of catastrophic situation (lighting, for example)
-that can destroy an array completely.
- 
-> But more importantly, I find myself setting up multiple RAID levels
-> (at least RAID6 and now thinking of more) just to make sure that MD
-> raid will recover my data and not lose the whole cluster if an
-> additional disk fails above the number of parity!!! The biggest
-> advantage of the scheme that I have outlined is that with a single
-> check sum I am mostly assure of a failed disk restoration and worst
-> case only the media (movies/music) on the failing disk are lost not on
-> the whole cluster.
+Once the initramfs script is finished, init starts which then starts
+udev. Now, at this point the array is already assembled, but the
+/dev/md/* name is lost (and so is /run/mdadm/map) since those files
+were on the initramfs' tempfs root. udev creates a /dev/mdXXX node
+(ex. /dev/md127) and then runs a rule to try to figure out the
+/dev/md/* name, which should be /dev/md/root. The default udev rule
+calls mdadm --detail --export /dev/md127, which should print
+MD_DEVNAME=root for udev, but instead it prints
+MD_DEVNAME=optimus:root, and the symlink in /dev/md gets created as
+/dev/md/optimus:root.
 
-Each disk will have its own filesystem?
-If this is not the case, you cannot say
-if a single disk failure will lose only
-some files.
+I think this is a bug in mdadm, but I'm not sure how to dig into it. I
+have made sure that my main OS init sets the hostname before starting
+udev, and I have tried with and without "HOMEHOST optimus" in
+/etc/mdadm.conf.
 
-> Also in my experience about disks and usage, while what you are saying
-> was true a while ago when storage capacity had not hit multiple TBs.
-> Now if I am buying 3-4 TB disks they are likely to last a while
-> especially since the incremental % growth in sizes seem to be slowing
-> down.
+The workaround I am using right now is to define the array name
+manually in /etc/mdadm.conf like this:
 
-As wrote above, you can safely replace
-disks before they fail, without compromising
-the array.
+ARRAY /dev/md/root UUID=782a671c:e646f2d5:848baad0:5668ee84
 
-bye,
+This works by avoiding automatic name detection and using the defined
+name (/dev/md/root), but it really seems that mdadm should know how to
+determine MD_DEVNAME correctly for an already-started array if the
+hostname (or homehost) is correctly set. Is this a bug in mdadm? If
+so, is this the correct place to report it or is there a bug tracking
+system I should use? I am using mdadm v3.3.1.
 
-pg
- 
-> Regards,
-> Anshuman
-> 
-> On 30 October 2014 22:55, Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
-> > On Thu, Oct 30, 2014 at 08:27:27PM +0530, Anshuman Aggarwal wrote:
-> >>  What you are suggesting will work for delaying writing the checksum
-> >> (but still making 2 disks work non stop and lead to failure, cost
-> >> etc).
-> >
-> > Hi Anshuman,
-> >
-> > I'm a bit missing the point here.
-> >
-> > In my experience, with my storage systems, I change
-> > disks because they're too small, way long before they
-> > are too old (way long before they fail).
-> > That's why I end up with a collection of small HDDs.
-> > which, in turn, I recycled in some custom storage
-> > system (using disks of different size, like explained
-> > in one of the links posted before).
-> >
-> > Honestly, the only reason to spin down the disks, still
-> > in my experience, is for reducing power consumption.
-> > And this can be done with a RAID-6 without problems
-> > and in a extremely flexible way.
-> >
-> > So, the bottom line, still in my experience, is that
-> > this you're describing seems quite a nice situation.
-> >
-> > Or, I did not understood what you're proposing.
-> >
-> > Thanks,
-> >
-> > bye,
-> >
-> > pg
-> >
-> >> I am proposing N independent disks which are rarely accessed. When
-> >> parity has to be written to the remaining 1,2 ...X disks ...it is
-> >> batched up (bcache is feasible) and written out once in a while
-> >> depending on how much write is happening. N-1 disks stay spun down and
-> >> only X disks wake up periodically to get checksum written to (this
-> >> would be tweaked by the user based on how up to date he needs the
-> >> parity to be (tolerance of rebuilding parity in case of crash) and vs
-> >> disk access for each parity write)
-> >>
-> >> It can't be done using any RAID6 because RAID5/6 will stripe all the
-> >> data across the devices making any read access wake up all the
-> >> devices. Ditto for writing to parity on every write to a single disk.
-> >>
-> >> The architecture being proposed is a lazy write to manage parity for
-> >> individual disks which won't suffer from RAID catastrophic data loss
-> >> and concurrent disk.
-> >>
-> >>
-> >>
-> >>
-> >> On 30 October 2014 00:57, Ethan Wilson <ethan.wilson@shiftmail.org> wrote:
-> >> > On 29/10/2014 10:25, Anshuman Aggarwal wrote:
-> >> >>
-> >> >> Right on most counts but please see comments below.
-> >> >>
-> >> >> On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
-> >> >>>
-> >> >>> Just to be sure I understand, you would have N + X devices.  Each of the
-> >> >>> N
-> >> >>> devices contains an independent filesystem and could be accessed directly
-> >> >>> if
-> >> >>> needed.  Each of the X devices contains some codes so that if at most X
-> >> >>> devices in total died, you would still be able to recover all of the
-> >> >>> data.
-> >> >>> If more than X devices failed, you would still get complete data from the
-> >> >>> working devices.
-> >> >>>
-> >> >>> Every update would only write to the particular N device on which it is
-> >> >>> relevant, and  all of the X devices.  So N needs to be quite a bit bigger
-> >> >>> than X for the spin-down to be really worth it.
-> >> >>>
-> >> >>> Am I right so far?
-> >> >>
-> >> >> Perfectly right so far. I typically have a N to X ratio of 4 (4
-> >> >> devices to 1 data) so spin down is totally worth it for data
-> >> >> protection but more on that below.
-> >> >>
-> >> >>> For some reason the writes to X are delayed...  I don't really understand
-> >> >>> that part.
-> >> >>
-> >> >> This delay is basically designed around archival devices which are
-> >> >> rarely read from and even more rarely written to. By delaying writes
-> >> >> on 2 criteria ( designated cache buffer filling up or preset time
-> >> >> duration from last write expiring) we can significantly reduce the
-> >> >> writes on the parity device. This assumes that we are ok to lose a
-> >> >> movie or two in case the parity disk is not totally up to date but are
-> >> >> more interested in device longevity.
-> >> >>
-> >> >>> Sounds like multi-parity RAID6 with no parity rotation and
-> >> >>>    chunksize == devicesize
-> >> >>
-> >> >> RAID6 would present us with a joint device and currently only allows
-> >> >> writes to that directly, yes? Any writes will be striped.
-> >> >
-> >> >
-> >> > I am not totally sure I understand your design, but it seems to me that the
-> >> > following solution could work for you:
-> >> >
-> >> > MD raid-6, maybe multi-parity (multi-parity not implemented yet in MD yet,
-> >> > but just do a periodic scrub and 2 parities can be fine. Wake-up is not so
-> >> > expensive that you can't scrub)
-> >> >
-> >> > Over that you put a raid1 of 2 x 4TB disks as a bcache cache device (those
-> >> > two will never spin-down) in writeback mode with writeback_running=off .
-> >> > This will prevent writes to backend and leave the backend array spun down.
-> >> > When bcache is almost full (poll dirty_data), switch to writeback_running=on
-> >> > and writethrough: it will wake up the backend raid6 array and flush all
-> >> > dirty data. You can then then revert to writeback and writeback_running=off.
-> >> > After this you can spin-down the backend array again.
-> >> >
-> >> > You also get read caching for free, which helps the backend array to stay
-> >> > spun down as much as possible.
-> >> >
-> >> > Maybe you can modify bcache slightly so to implement an automatic switching
-> >> > between the modes as described above, instead of polling the state from
-> >> > outside.
-> >> >
-> >> > Would that work, or you are asking something different?
-> >> >
-> >> > EW
-> >> >
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > --
-> >
-> > piergiorgio
+(Please cc me on replies as I am not currently subscribed to the
+linux-raid list.)
 
--- 
+Thanks,
 
-piergiorgio
+Stephen
