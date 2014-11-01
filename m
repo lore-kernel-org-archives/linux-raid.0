@@ -1,106 +1,138 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: question about MD raid rebuild performance degradation even with speed_limit_min/speed_limit_max set.
-Date: Fri, 31 Oct 2014 19:44:00 +0000
-Message-ID: <21587.59008.692520.808080@tree.ty.sabi.co.uk>
-References: <5445332B.9060009@cse.yorku.ca>
-	<5445361E.3010503@cse.yorku.ca>
-	<5445799A.8020205@cse.yorku.ca>
-	<20141029093822.79242658@notabene.brown>
-	<5450521F.8060309@cse.yorku.ca>
-	<20141029135749.241f9e50@notabene.brown>
-	<54515493.4070402@cse.yorku.ca>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Trying to get POLICY working
+Date: Sat, 1 Nov 2014 11:20:01 +1100
+Message-ID: <20141101112001.344e5f20@notabene.brown>
+References: <CADvHm=ZLp08Ydp+P=gn+bu1=GgVORx0TSJoRU33z3UNubwQryQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/TWcSk+ooE10G7FCRjG3F7Id"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54515493.4070402@cse.yorku.ca>
+In-Reply-To: <CADvHm=ZLp08Ydp+P=gn+bu1=GgVORx0TSJoRU33z3UNubwQryQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Caspar Smit <c.smit@truebit.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>>> If, for example, I set speed_limit_min AND speed_limit_max to
->>>>>> 80000 then fail a disk when there is no other disk activity, the=
-n
->>>>>> I do get a rebuild rate of around 80 MB/s. However, if I then
->>>>>> start up a write intensive operation on the MD array (eg. a dd,
->>>>>> or a mkfs on an LVM logical volume that is created on that MD),
->>>>>> then, my write operation seems to get "full power", and my
->>>>>> rebuild drops to around 25 MB/s.
+--Sig_/TWcSk+ooE10G7FCRjG3F7Id
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Linux MD RAID is fundamentally an IO address remapper, and actual IO is
-scheduled and executed by the Linux block (page) IO subsystem. This
-separation is beneficial in many ways.
+On Fri, 31 Oct 2014 16:19:04 +0100 Caspar Smit <c.smit@truebit.nl> wrote:
 
-Also the bandwidth delivered by a storage device is not a single
-number. Disk drives transfer rate depend a lot on degree of randomness
-of access, and outer vs. inner regions. Common disks can therefore
-deliver bandwidth between 150MB/s and 0.5MB/s depending on the overall
-traffic investing them.
+> Hi all,
+>=20
+> I'm trying to get the POLICY framework of mdadm working but I can't seem =
+to.
+>=20
+> As i understand in the man page of mdadm the Incremental and POLICY
+> directives could allow adding a new disk without MD superblock as
+> spare to an already active array:
+>=20
+> "Note that mdadm will normally only add devices to an array which were
+> previously working (active or spare) parts of that array.  The support
+> for automatic inclusion of a new drive as a spare in some array
+> requires a configuration through POLICY in config file."
+>=20
+> Furthermore:
+>=20
+> "If no md metadata is found, the device may be still added to an array
+> as a spare if POLICY allows."
+>=20
+>=20
+> To get the basics working I created a system with 3 disks /dev/sdb,
+> /dev/sdc and /dev/sdd
+>=20
+> Created a RAID5 with one missing disk:
+>=20
+> mdadm -C /dev/md0 -l 5 -n 3 /dev/sd[b-c] missing
+>=20
+> I set the POLICY in mdadm.conf to:
+>=20
+> POLICY action=3Dforce-spare
+>=20
+> This should add any device (passed through mdadm --incremental) as
+> spare no matter what (Am i correct?)
 
-Therefore in order to deliver a consistent transfer rate to the MD
-resync kernel process the Linux block (page) IO subsystem would have to
-be quite clever in controlling the rates of usage of all the processes
-using a disk.
+That is the theory, yes.
 
->>> I'm coming from using a 3Ware hardware RAID cotntroller where I
->>> could configure how much of the disk bandwidth is to be used for a
->>> rebuild versus I/O.
+>=20
+> Now when I do:
+>=20
+> #mdadm --incremental /dev/sdd
+> mdadm: no RAID superblock on /dev/sdd.
 
-That (usually) works because the disk is completely dedicated to the
-RAID card and the RAID card can schedule all IO to it.
+The message suggests that 'guess_super' found something on the device, but
+it didn't turn out to be something useful.... not very helpful I know.
 
->>> From what I understand, you're saying that MD [ ... ] and other
->>> system I/O needs that disk bandwidth, then there's nothing it can d=
-o
->>> about it. I guess I just don't understand why. Why can't md be give=
-n
->>> a priority in the kernel to allow the admin to decide how much
->>> bandwidth goes to system I/O versus rebuild I/O.
+What does "mdadm --examine /dev/sdd" report?
+I suspect there is a partition table and that is causing the confusion.
+Try removing the partition table (dd /dev/zero to the device for a few K).
+Then try again.
 
-There is something you can do about it: rewrite the block IO subsystem
-in the Linux kernel so that it can be configured to allocate IOPS and/o=
-r
-bandwidth quotas to different processes, among them the MD resync kerne=
-l
-process (extra awesome if that is also isochronous).
+Probably need a fix like:
 
-Because as well summarized below that process is just one of many
-possible users of a given disk in a Linux based system:
+diff --git a/Incremental.c b/Incremental.c
+index c9372587f518..3156190c4603 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -196,7 +196,7 @@ int Incremental(struct mddev_dev *devlist, struct conte=
+xt *c,
+ 	policy =3D disk_policy(&dinfo);
+ 	have_target =3D policy_check_path(&dinfo, &target_array);
+=20
+-	if (st =3D=3D NULL && (st =3D guess_super(dfd)) =3D=3D NULL) {
++	if (st =3D=3D NULL && (st =3D guess_super_type(dfd, guess_array)) =3D=3D =
+NULL) {
+ 		if (c->verbose >=3D 0)
+ 			pr_err("no recognisable superblock on %s.\n",
+ 			       devname);
 
->> There are difficulties in guaranteeing a minimum when the array uses
->> partitions from devices on which other partitions are used for other
->> things.
 
-Put another way, designing MD RAID as fundamentally an IO address
-remapper, and letting the MD resync kernel process run as "just another
-process", has some big advantages and gives a lot of flexibility, but
-means relying on the kernel block subsystem to do actual IO, and
-accepting its current limitations. That is a free choice.
+and probably should improve the error messages...
 
-> The truth is, as people start to combine larger and larger
-> disks, and rebuild times go up and up and up, this type of
-> request will become more common....
+Thanks for the report.  Please let me know if that works, and what other
+difficulties you hit.
 
-Request of the type "I decided to use a physical storage design that
-behaves in a way that I don't like so MD should do magic and work aroun=
-d
-my decision" are already common. :-).
+Thanks,
+NeilBrown
 
-Using =ABlarger and larger disks=BB is a *choice people make* and if th=
-ey
-don't like the obvious consequences they should then not make that
-choice; they can instead choose to use smaller disks, or just the outer
-part of larger disks (which can` be cheaper).
 
-A critical metric for physical storage is IOPS/GB ratios (and their
-variability dependent on workload) and ooking at those ratios I
-personally think that common disks larger than 1TB are not suitable for
-many cases of "typical" live data usage, and in the day job we sometime=
-s
-build MD RAID sets made of 146GB 15k disks, because fortunately my
-colleagues understand the relevant tradeoffs too.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> Well, i know there is no MD superblock on /dev/sdd but shouldn't the
+> policy setting kick in here and add /dev/sdd as spare (and hence start
+> rebuilding) to /dev/md0?
+>=20
+> mdadm version: 3.2.5-5 (latest debian wheezy stable)
+> kernel version: 3.2.63-2 (latest debian wheezy stable)
+>=20
+> Kind regards,
+> Caspar Smit
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/TWcSk+ooE10G7FCRjG3F7Id
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBVFQnMTnsnt1WYoG5AQJQ1xAAwcWXKdzDVGy7/9/W5RP5RlJNf+AWWG8M
+ca38nQo1S62lZPAEw0B/OERnlaYXtr33Is0Mb3iv0JBCIu9doqsj6ZsZSGTCjsWw
+SuzMChnv7FAp2wKVzXrITjK75zEUUUGAIGLyHetPDlt+pWTHed6dX+wYvYe64zA5
+fImGrAtbRY1Acrqn1q7O/QOsQTqYLhhsMjq8a47gmbBg15zkqEtqWIk5LziTb7Nx
+yDPGpymnPG0ZMCnKlKtrXiw0WtLvGjyLEf3gbQhlPt13voaDCfRscrDQ+1afp1XD
+sERNaYHFeHs1q7zzj9cXG74iU65eqtjKvejdGox/sTQUxXt6E1RZvyUrqH/YVVEm
+TraTfzCKYhpOLVF4ILJyEFLW3Zwz17rUVsTWpAS1CTFFzfOp4mhy7ofXBHPxhJoL
+fcGIdHlkMnJWoBSNdonovRhiGik5l8rvlHcPTrQxF0nYDCHjr0HHEV6WWmmOjfHk
+2uOSltyrZjjZQOxVwDlYymSw47xyoDAXExLKwpMdURNuyJYk6a8Ncf556Q54C0P8
+rxBvughxvBIuS4ClEokwbX5PNA8/6d+kR2eCP2+eEX7a1IIVIOYMqkeVFiMM3nwH
+FABGIwTY1mLlW5dNB5Zw4Tz2ePsbCYjPH3v1rwc1Mu7RVig3KyKMxQnPdsw4xHmo
+Cve5EFR9lls=
+=tc3s
+-----END PGP SIGNATURE-----
+
+--Sig_/TWcSk+ooE10G7FCRjG3F7Id--
