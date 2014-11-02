@@ -1,42 +1,54 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Sat, 01 Nov 2014 23:22:04 -0400
-Message-ID: <5455A35C.2060000@turmel.org>
-References: <loom.20141031T141939-473@post.gmane.org>
+From: micah <micah@riseup.net>
+Subject: Re: Raid1 element stuck in (S) state
+Date: Sun, 02 Nov 2014 10:45:50 -0500
+Message-ID: <87tx2hobbl.fsf@muck.riseup.net>
+References: <87k33lwq7s.fsf@muck.riseup.net> <20141029084224.6d92d8be@notabene.brown> <8761f3q8gr.fsf@muck.riseup.net> <20141030071019.1a5c57e7@notabene.brown> <87zjcepnno.fsf@muck.riseup.net> <20141030094734.2451cc24@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20141031T141939-473@post.gmane.org>
+In-Reply-To: <20141030094734.2451cc24@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: micah anderson <micah@debian.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/31/2014 09:34 AM, Vince wrote:
-> Hi,
->
-> got a drive failure (bad block) during Raid5 grow (4x3TB -> 5x3TB).
-> Well... i don't have a backup file :/
-> Mdadm shows 1 drive as removed.
->
-> All 4 'good' drives are in the same reshape pos'n.
->
-> Any idea how to finish the reshape process? Or get the array back?
+NeilBrown <neilb@suse.de> writes:
 
-mdadm --stop /dev/md0
-mdadm --assemble --force --verbose /dev/md0 /dev/sd[bcdf]
+>> >> > Are there any errors in the kernel logs when you --add the device?
+>> >
+>> > You didn't answer this question either.  Are there any messages in the
+>> > kernel log: /var/log/kern.log on debian.
+>> > Or in the output of "dmesg".
+>> 
+>> The only thing I see in the log is:
+>> 
+>> [307932.328420] mdadm: sending ioctl 1261 to a partition!
+>> [307932.328425] mdadm: sending ioctl 1261 to a partition!
+>> [307932.346642] mdadm: sending ioctl 1261 to a partition!
+>> [307932.346648] mdadm: sending ioctl 1261 to a partition!
+>> [307932.352466] mdadm: sending ioctl 1261 to a partition!
+>> [307932.352468] mdadm: sending ioctl 1261 to a partition!
+>> [307932.376821] mdadm: sending ioctl 1261 to a partition!
+>> [307932.376824] mdadm: sending ioctl 1261 to a partition!
+>> [307932.377623] mdadm: sending ioctl 1261 to a partition!
+>> [307932.377630] mdadm: sending ioctl 1261 to a partition!
+>> [307932.467292] md: bind<sdc1>
+>> [307932.588154] RAID1 conf printout:
+>> [307932.588159]  --- wd:1 rd:2
+>> [307932.588164]  disk 0, wo:1, o:1, dev:sdc1
+>> [307932.588167]  disk 1, wo:0, o:1, dev:sdd1
+>> [307932.588248] md: recovery of RAID array md3
+>> [307932.588251] md: minimum _guaranteed_  speed: 50000 KB/sec/disk.
+>> [307932.588254] md: using maximum available idle IO bandwidth (but not more than 2000000 KB/sec) for recovery.
+>> [307932.588260] md: using 128k window, over a total of 976759672 blocks.
+>> 
+>> but this is just when the device is added, after that it appears that
+>> logrotation failed and I have a zero byte kern.log, and firewall spew
+>> has filled up my dmesg ring.
 
-If that doesn't work, please show us the output.
+I fixed my logging and re-added the device, and found there was a
+hardware error preventing things from syncing properly. I've resolved
+that error and now things are fine. Thanks for the push to look closer
+there!
 
-You haven't (yet) lost your array.  It's just degraded.  You should 
-investigate why the one drive was kicked out of the array instead of 
-being rewritten properly (green drives?).  In the meantime, assembly 
-with --force should give you access to the data to grab anything 
-critically important.
-
-If you share the output of "smartctl -x /dev/sdX" for at least the 
-kicked drive, we can offer further advice.
-
-Regards,
-
-Phil
+micah
