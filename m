@@ -1,55 +1,42 @@
-From: Stephen Kent <smkent@smkent.net>
-Subject: mdadm named array (metadata 1.2) and udev when assembling an array in initramfs
-Date: Sat, 1 Nov 2014 11:53:56 -0700
-Message-ID: <CAC45b7=-dZX-kxDZY3KBEPZhaTuUhTcqNjTL6y8X71q9oDjiwQ@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Raid5 drive fail during grow and no backup
+Date: Sat, 01 Nov 2014 23:22:04 -0400
+Message-ID: <5455A35C.2060000@turmel.org>
+References: <loom.20141031T141939-473@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <loom.20141031T141939-473@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have set up a machine to use an md array as the root device. I have
-created the array with metadata type 1.2, name "root," on host
-"optimus" (so the full metadata name is "optimus:root").
+On 10/31/2014 09:34 AM, Vince wrote:
+> Hi,
+>
+> got a drive failure (bad block) during Raid5 grow (4x3TB -> 5x3TB).
+> Well... i don't have a backup file :/
+> Mdadm shows 1 drive as removed.
+>
+> All 4 'good' drives are in the same reshape pos'n.
+>
+> Any idea how to finish the reshape process? Or get the array back?
 
-I'm using Gentoo Linux (kernel 3.16.5-gentoo), and previously I had no
-initramfs so I wrote a short one to assemble the array. My initramfs
-sets the hostname and runs "mdadm -As," which correctly auto-assembles
-the root device array on /dev/md/root (even without an
-/etc/mdadm.conf).
+mdadm --stop /dev/md0
+mdadm --assemble --force --verbose /dev/md0 /dev/sd[bcdf]
 
-Once the initramfs script is finished, init starts which then starts
-udev. Now, at this point the array is already assembled, but the
-/dev/md/* name is lost (and so is /run/mdadm/map) since those files
-were on the initramfs' tempfs root. udev creates a /dev/mdXXX node
-(ex. /dev/md127) and then runs a rule to try to figure out the
-/dev/md/* name, which should be /dev/md/root. The default udev rule
-calls mdadm --detail --export /dev/md127, which should print
-MD_DEVNAME=root for udev, but instead it prints
-MD_DEVNAME=optimus:root, and the symlink in /dev/md gets created as
-/dev/md/optimus:root.
+If that doesn't work, please show us the output.
 
-I think this is a bug in mdadm, but I'm not sure how to dig into it. I
-have made sure that my main OS init sets the hostname before starting
-udev, and I have tried with and without "HOMEHOST optimus" in
-/etc/mdadm.conf.
+You haven't (yet) lost your array.  It's just degraded.  You should 
+investigate why the one drive was kicked out of the array instead of 
+being rewritten properly (green drives?).  In the meantime, assembly 
+with --force should give you access to the data to grab anything 
+critically important.
 
-The workaround I am using right now is to define the array name
-manually in /etc/mdadm.conf like this:
+If you share the output of "smartctl -x /dev/sdX" for at least the 
+kicked drive, we can offer further advice.
 
-ARRAY /dev/md/root UUID=782a671c:e646f2d5:848baad0:5668ee84
+Regards,
 
-This works by avoiding automatic name detection and using the defined
-name (/dev/md/root), but it really seems that mdadm should know how to
-determine MD_DEVNAME correctly for an already-started array if the
-hostname (or homehost) is correctly set. Is this a bug in mdadm? If
-so, is this the correct place to report it or is there a bug tracking
-system I should use? I am using mdadm v3.3.1.
-
-(Please cc me on replies as I am not currently subscribed to the
-linux-raid list.)
-
-Thanks,
-
-Stephen
+Phil
