@@ -1,95 +1,33 @@
-From: Vince <stuff@hagenhuegel.de>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Mon, 3 Nov 2014 14:45:20 +0000 (UTC)
-Message-ID: <loom.20141103T151703-83@post.gmane.org>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org>
+From: gornea <gornea@zoho.com>
+Subject: Fake RAID 10 on ASRock Z97 Extreme3 with Slackware 14.1
+Date: Mon, 03 Nov 2014 17:47:48 +0100
+Message-ID: <14976849ec4.ace7bf4939116.3019157828391505014@zoho.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Phil Turmel <philip <at> turmel.org> writes:
 
-> 
-> On 10/31/2014 09:34 AM, Vince wrote:
-> > Hi,
-> >
-> > got a drive failure (bad block) during Raid5 grow (4x3TB -> 5x3TB).
-> > Well... i don't have a backup file :/
-> > Mdadm shows 1 drive as removed.
-> >
-> > All 4 'good' drives are in the same reshape pos'n.
-> >
-> > Any idea how to finish the reshape process? Or get the array back?
-> 
-> mdadm --stop /dev/md0
-> mdadm --assemble --force --verbose /dev/md0 /dev/sd[bcdf]
-> 
-> If that doesn't work, please show us the output.
-> 
-> You haven't (yet) lost your array.  It's just degraded.  You should 
-> investigate why the one drive was kicked out of the array instead of 
-> being rewritten properly (green drives?).  In the meantime, assembly 
-> with --force should give you access to the data to grab anything 
-> critically important.
-> 
-> If you share the output of "smartctl -x /dev/sdX" for at least the 
-> kicked drive, we can offer further advice.
-> 
-> Regards,
-> 
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo <at> vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Hello,
 
-Hi Phil,
+I hope I'm on the right email list. I'm facing a problem during Slackware 14.1 installation. I have a ASRock motherboard (Z97 Extreme3) with Intel Rapid Storage Technology 13. I have 4 identical new 4-TBy WD hard drives. I configured the option ROM for RAID 10. When booting with Slackware 14.1 CD md finds the array but it always mounts it read only. I tried to work on it to make writable but I was not successful. I have tried to boot with the latest Ubuntu Server CD and it works well. I have also tried to delete the RAID 10 in the option ROM and then create it with mdadm after booting with Slackware 14.1 and I always produces a read only volume. I get no errors or warnings and in general everything seems fine except that I can not write on it (for example I can not create partitions). The 
+ md version with Slackware 14.1 boot disk is 3.2.6 and the kernel is 3.10.17. So I'm starting to wonder if actually there is a know problem with that md/kernel? Or maybe there is a problem with the way I use it, but frankly I run out of ideas how to proceed further. This is the output of /proc/mdstat
 
-thx for your reply.
-Already have the raid clean and up.
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
+md126 : active (read-only) raid10 sda[3] sdb[2] sdc[1] sdd[0]
+7814032384 blocks super external:/md127/0 64K chunks 2 near-copies [4/4] [UUUU]
 
-My drive was kicked due to read errors (bad sectors).
-I fixed the bad sectors with hdparm --write-sector $bad_sector /dev/sdx
+md127 : inactive sda[3](S) sdb[2](S) sdc[1](S) sdd[0](S)
+9040 blocks super external:imsm
 
-After some tries 
-mdadm --assemble --force --verbose /dev/md0 /dev/sd[bcdf] 
-works so far.
-I was able to encrypt the drive and all logical volumes had beed detected
-correct.
-But i was unable to mount any lv (i guess due to an filesystem problem, but
-i won't run es2fscheck during broken reshape)
+unused devices: <none>
 
-So i did a backup and removed the superblock on the broken disk and added it
-as spare to /dev/md0  (mdadm --add)
+Thanks a lot for any suggestion about how to proceed! I would like to install the fake RAID if it is not impossible with Slackware 14.1. I know that eventually it is possible to install a software RAID but I would like to understand why the Intel fake RAID is not working with Slackware 14.1.
 
-Now i had 4 Disk in sync, 1 removed and 1 spare
-
-To restart the reshape i did mdadm --mdadm --readwrite /dev/md0
-Well.. i had a backup of my most important files and in that situation i was
-like... ok if all is lost now... i'll change a lot in future :)
-
-Reshape restarted at ~80% (cat /proc/mdstat) but the funny thing was, that
-all 4 drives only did write actions. No reading on the drives... I don't
-know what happens there, but i let it go
-
-After reshape was done, mdadm grabs the spare drive and started resync.
-
-After resync was done, i did e2fsck -f on logical volumes
-Finally i was able to mount all lv's without any data lost.
-
-
-
-
-
-
-
-
-
+Best regards,
+Razvan Gornea
 
 
