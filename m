@@ -1,33 +1,53 @@
-From: gornea <gornea@zoho.com>
-Subject: Fake RAID 10 on ASRock Z97 Extreme3 with Slackware 14.1
-Date: Mon, 03 Nov 2014 17:47:48 +0100
-Message-ID: <14976849ec4.ace7bf4939116.3019157828391505014@zoho.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Split RAID: Proposal for archival RAID using incremental batch
+ checksum
+Date: Mon, 3 Nov 2014 19:04:08 +0100
+Message-ID: <20141103180407.GA3076@lazy.lzy>
+References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
+ <20141029200501.1f01269d@notabene.brown>
+ <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
+ <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
+ <20141103165217.3bfd3d3e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20141103165217.3bfd3d3e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Nov 03, 2014 at 04:52:17PM +1100, NeilBrown wrote:
+[...]
+> "simple matter of programming"
+> Of course there would be a limit to how much data can be buffered in memory
+> before it has to be flushed out.
+> If you are mostly storing movies, then they are probably too large to
+> buffer.  Why not just write them out straight away?
 
-Hello,
+One scenario I can envision is the following.
 
-I hope I'm on the right email list. I'm facing a problem during Slackware 14.1 installation. I have a ASRock motherboard (Z97 Extreme3) with Intel Rapid Storage Technology 13. I have 4 identical new 4-TBy WD hard drives. I configured the option ROM for RAID 10. When booting with Slackware 14.1 CD md finds the array but it always mounts it read only. I tried to work on it to make writable but I was not successful. I have tried to boot with the latest Ubuntu Server CD and it works well. I have also tried to delete the RAID 10 in the option ROM and then create it with mdadm after booting with Slackware 14.1 and I always produces a read only volume. I get no errors or warnings and in general everything seems fine except that I can not write on it (for example I can not create partitions). The 
- md version with Slackware 14.1 boot disk is 3.2.6 and the kernel is 3.10.17. So I'm starting to wonder if actually there is a know problem with that md/kernel? Or maybe there is a problem with the way I use it, but frankly I run out of ideas how to proceed further. This is the output of /proc/mdstat
+You've a bunch of HDDs in RAID-5/6, which are
+almost always in standby (spin down).
+Together, you've 2 SSDs in RAID-10.
 
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
-md126 : active (read-only) raid10 sda[3] sdb[2] sdc[1] sdd[0]
-7814032384 blocks super external:/md127/0 64K chunks 2 near-copies [4/4] [UUUU]
+All the write (and read, if possible) operations
+are done towards the SSDs.
+When the SSD RAID is X% full, the RAID-5/6 is
+activated and the data *moved* (maybe copied, with
+proper cache policy) there.
+In case of reading (a large file), the RAID-5/6 is
+activated, the file copied to the SSD RAID, and,
+when finished, the HDDs put in standby again.
 
-md127 : inactive sda[3](S) sdb[2](S) sdc[1](S) sdd[0](S)
-9040 blocks super external:imsm
+Of course, this is *not* a block device protocol,
+it is a filesystem one.
+It is the FS that must handle the caching, because
+only the FS can know the file size, for example.
 
-unused devices: <none>
+bye,
 
-Thanks a lot for any suggestion about how to proceed! I would like to install the fake RAID if it is not impossible with Slackware 14.1. I know that eventually it is possible to install a software RAID but I would like to understand why the Intel fake RAID is not working with Slackware 14.1.
+-- 
 
-Best regards,
-Razvan Gornea
-
-
+piergiorgio
