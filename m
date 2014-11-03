@@ -1,159 +1,181 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Split RAID: Proposal for archival RAID using incremental batch
- checksum
-Date: Mon, 3 Nov 2014 16:52:17 +1100
-Message-ID: <20141103165217.3bfd3d3e@notabene.brown>
-References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
-	<20141029200501.1f01269d@notabene.brown>
-	<CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
-	<CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
+From: Caspar Smit <c.smit@truebit.nl>
+Subject: Re: Trying to get POLICY working
+Date: Mon, 3 Nov 2014 10:43:29 +0100
+Message-ID: <CADvHm=bE0zcLbDhcdQFfQG8in1Udb7gWcvR-rb9JeUoFaV-v5w@mail.gmail.com>
+References: <CADvHm=ZLp08Ydp+P=gn+bu1=GgVORx0TSJoRU33z3UNubwQryQ@mail.gmail.com>
+	<20141101112001.344e5f20@notabene.brown>
+	<20141103125416.629a4810@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/1+L5VR/okzoBxCuJfhKx0qa"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
+In-Reply-To: <20141103125416.629a4810@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/1+L5VR/okzoBxCuJfhKx0qa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Thu, 30 Oct 2014 20:30:40 +0530 Anshuman Aggarwal
-<anshuman.aggarwal@gmail.com> wrote:
+Actually BOTH your answers were correct, thank you for that.
 
-> Would chunksize=3D=3Ddisksize work? Wouldn't that lead to the entire
-> parity be invalidated for any write to any of the disks (assuming md
-> operates at a chunk level)...also please see my reply below
+1) Your hunge was correct as my disk contained a partition table (in
+my case an msdos label) and was not added with the error in my first
+mail:
 
-Operating at a chunk level would be a very poor design choice.  md/raid5
-operates in units of 1 page (4K).
+mdadm: no RAID superblock on /dev/sdd.
 
+mdadm -E /dev/sdd shows:
 
->=20
-> On 29 October 2014 14:55, Anshuman Aggarwal <anshuman.aggarwal@gmail.com>=
- wrote:
-> > Right on most counts but please see comments below.
-> >
-> > On 29 October 2014 14:35, NeilBrown <neilb@suse.de> wrote:
-> >> Just to be sure I understand, you would have N + X devices.  Each of t=
-he N
-> >> devices contains an independent filesystem and could be accessed direc=
-tly if
-> >> needed.  Each of the X devices contains some codes so that if at most X
-> >> devices in total died, you would still be able to recover all of the d=
-ata.
-> >> If more than X devices failed, you would still get complete data from =
-the
-> >> working devices.
-> >>
-> >> Every update would only write to the particular N device on which it is
-> >> relevant, and  all of the X devices.  So N needs to be quite a bit big=
-ger
-> >> than X for the spin-down to be really worth it.
-> >>
-> >> Am I right so far?
-> >
-> > Perfectly right so far. I typically have a N to X ratio of 4 (4
-> > devices to 1 data) so spin down is totally worth it for data
-> > protection but more on that below.
-> >
-> >>
-> >> For some reason the writes to X are delayed...  I don't really underst=
-and
-> >> that part.
-> >
-> > This delay is basically designed around archival devices which are
-> > rarely read from and even more rarely written to. By delaying writes
-> > on 2 criteria ( designated cache buffer filling up or preset time
-> > duration from last write expiring) we can significantly reduce the
-> > writes on the parity device. This assumes that we are ok to lose a
-> > movie or two in case the parity disk is not totally up to date but are
-> > more interested in device longevity.
-> >
-> >>
-> >> Sounds like multi-parity RAID6 with no parity rotation and
-> >>   chunksize =3D=3D devicesize
-> > RAID6 would present us with a joint device and currently only allows
-> > writes to that directly, yes? Any writes will be striped.
+/dev/sdd:
+   MBR Magic : aa55
 
-If the chunksize equals the device size, then you need a very large write f=
-or
-it to be striped.
+So it finds 'something' but clearly unusable to mdadm.
 
-> > In any case would md raid allow the underlying device to be written to
-> > directly? Also how would it know that the device has been written to
-> > and hence parity has to be updated? What about the superblock which
-> > the FS would not know about?
+Wiping the partition table and trying again resulted in a different
+error message:
 
-No, you wouldn't write to the underlying device.  You would carefully
-partition the RAID5 so each partition aligns exactly with an underlying
-device.  Then write to the partition.
+mdadm: no recognisable superblock on /dev/sdd.
 
-> >
-> > Also except for the delayed checksum writing part which would be
-> > significant if one of the objectives is to reduce the amount of
-> > writes. Can we delay that in the code currently for RAID6? I
-> > understand the objective of RAID6 is to ensure data recovery and we
-> > are looking at a compromise in this case.
+Which is better but still the disk was not added to the array.
 
-"simple matter of programming"
-Of course there would be a limit to how much data can be buffered in memory
-before it has to be flushed out.
-If you are mostly storing movies, then they are probably too large to
-buffer.  Why not just write them out straight away?
+2) To make it work i also needed the domain=default in the POLICY setting.
 
-NeilBrown
+It still gave me the:
+
+mdadm: no recognisable superblock on /dev/sdd.
+
+But now the disk got added to the array and started rebuilding.
+
+Note: ONLY setting the domain=default in POLICY without clearing the
+partition table results in:
+mdadm: no RAID superblock on /dev/sdd. and the disk will not be added
+so BOTH measures were needed.
+
+Note2: I didn't need the spare-group directive so I think
+domain=default is a special case were all disks and arrays are placed
+in the same domain.
 
 
+Furthermore i found out something which i think should not happen
+(bug?) or maybe i am wrong:
 
-> >
-> > If feasible, this can be an enhancement to MD RAID as well where N
-> > devices are presented instead of a single joint device in case of
-> > raid6 (maybe the multi part device can be individual disks?)
-> >
-> > It will certainly solve my problem of where to store the metadata. I
-> > was currently hoping to just store it as a configuration file to be
-> > read by the initramfs since in this case worst case scenario the
-> > checksum goes out of sync and is rebuilt from scratch.
-> >
-> >>
-> >> I wouldn't use device-mapper myself, but you are unlikely to get an en=
-tirely
-> >> impartial opinion from me on that topic.
-> >
-> > I haven't hacked around the kernel internals much so far so will have
-> > to dig out that history. I will welcome any particular links/mail
-> > threads I should look at for guidance (with both yours and opposing
-> > points of view)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+With a working clean array:
+
+# more /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdd[3] sdc[1] sdb[0]
+      203776 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+
+# mdadm --fail /dev/md0 /dev/sdd
+mdadm: set /dev/sdd faulty in /dev/md0
+
+# mdadm --remove /dev/md0 /dev/sdd
+mdadm: hot removed /dev/sdd from /dev/md0
+
+# mdadm --incremental /dev/sdd
+mdadm: failed to add /dev/sdd to /dev/md/0: Invalid argument.
+
+So when it actually finds a device with an MD superblock it doesn't
+add it, is this expected behavior as the disk was failed (so probably
+not a good idea to add it back) or is this a bug?
+
+Kind regards,
+Caspar
 
 
---Sig_/1+L5VR/okzoBxCuJfhKx0qa
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBVFcYETnsnt1WYoG5AQJ+xA/+LlKaIoom/6qTaXFpeTbAyOvP9xsZLqAC
-qjj01OJNkqO+3HUXYOQeO6KyJf1xVs1BP7FiQ+HvRz5cAnqAMuB//hSWwOkwUOc0
-MwcVq4X7nCZcxHj1QQrSxesjDv1ZEUrx8Vv3UxqbXoN9Tg3ICGYKaplLEMytIt1p
-T3Rc/dxAAlIaL3ecZDdoSN67KwSWXjQWMiVBOnFqoeOZe5YebnYYtBzmrwe/Ar1t
-s6olMzPnaLIHl1OdtnmuEbrXsUUOZwbw6KGq1V4y+HHV0EMXqccPl8EqEzmB4axU
-aLYMTFnjYvBp+wtQGuq9ENdWY1nXzkcQrfY71fxn5n6cDFPwf8iO/HSmi8t03TxL
-sZbFY6HIJkuTUcyrtBUjU3gg87H5iuJS1tnm8sVxQ7Rhbfn9Bpp/NdGtAnn6Oz3n
-hpuTDckFO8nIfySFlRMi3xGMwy0u893eIWcMi29AVbtk0zgJStfZuNu2/owp6Js+
-6dqTU+q4LvUjNvBgMSx4w8Ov+r59csqxNeyZhpuMio9BJ7MRCp4N4yqwfhDf1SZR
-wT3ig9GPRBlC4L1FXLUd3zSWjWZ/r7+4d8QXG2M1mtghVT79KU386VuwsCrBRHvA
-5zgmXzPrDAL9RjCf45Xu9aK5IVF2lw14S7zCm2bHFHDKIf9NBQMPYwQgLYeqZBJm
-IiReFXKXYeg=
-=eFe4
------END PGP SIGNATURE-----
-
---Sig_/1+L5VR/okzoBxCuJfhKx0qa--
+2014-11-03 2:54 GMT+01:00 NeilBrown <neilb@suse.de>:
+> On Sat, 1 Nov 2014 11:20:01 +1100 NeilBrown <neilb@suse.de> wrote:
+>
+>> On Fri, 31 Oct 2014 16:19:04 +0100 Caspar Smit <c.smit@truebit.nl> wrote:
+>>
+>> > Hi all,
+>> >
+>> > I'm trying to get the POLICY framework of mdadm working but I can't seem to.
+>> >
+>> > As i understand in the man page of mdadm the Incremental and POLICY
+>> > directives could allow adding a new disk without MD superblock as
+>> > spare to an already active array:
+>> >
+>> > "Note that mdadm will normally only add devices to an array which were
+>> > previously working (active or spare) parts of that array.  The support
+>> > for automatic inclusion of a new drive as a spare in some array
+>> > requires a configuration through POLICY in config file."
+>> >
+>> > Furthermore:
+>> >
+>> > "If no md metadata is found, the device may be still added to an array
+>> > as a spare if POLICY allows."
+>> >
+>> >
+>> > To get the basics working I created a system with 3 disks /dev/sdb,
+>> > /dev/sdc and /dev/sdd
+>> >
+>> > Created a RAID5 with one missing disk:
+>> >
+>> > mdadm -C /dev/md0 -l 5 -n 3 /dev/sd[b-c] missing
+>> >
+>> > I set the POLICY in mdadm.conf to:
+>> >
+>> > POLICY action=force-spare
+>> >
+>> > This should add any device (passed through mdadm --incremental) as
+>> > spare no matter what (Am i correct?)
+>>
+>> That is the theory, yes.
+>>
+>> >
+>> > Now when I do:
+>> >
+>> > #mdadm --incremental /dev/sdd
+>> > mdadm: no RAID superblock on /dev/sdd.
+>>
+>> The message suggests that 'guess_super' found something on the device, but
+>> it didn't turn out to be something useful.... not very helpful I know.
+>>
+>> What does "mdadm --examine /dev/sdd" report?
+>> I suspect there is a partition table and that is causing the confusion.
+>> Try removing the partition table (dd /dev/zero to the device for a few K).
+>> Then try again.
+>>
+>> Probably need a fix like:
+>>
+>> diff --git a/Incremental.c b/Incremental.c
+>> index c9372587f518..3156190c4603 100644
+>> --- a/Incremental.c
+>> +++ b/Incremental.c
+>> @@ -196,7 +196,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+>>       policy = disk_policy(&dinfo);
+>>       have_target = policy_check_path(&dinfo, &target_array);
+>>
+>> -     if (st == NULL && (st = guess_super(dfd)) == NULL) {
+>> +     if (st == NULL && (st = guess_super_type(dfd, guess_array)) == NULL) {
+>>               if (c->verbose >= 0)
+>>                       pr_err("no recognisable superblock on %s.\n",
+>>                              devname);
+>>
+>>
+>> and probably should improve the error messages...
+>>
+>> Thanks for the report.  Please let me know if that works, and what other
+>> difficulties you hit.
+>
+> Actually, don't bother.  I must have been asleep.
+>
+> Your problem is that you haven't defined a 'domain'.
+> A new spare needs to be assigned to a 'domain', and it will be attached to
+> any array in the same domain, as needed.
+>
+> You can give all devices the domain "default" with
+>
+>    POLICY domain=default
+>
+> The domain of an array is inherited from the member devices, or can be set
+> with "spare-group=" in mdadm.conf.
+>
+> So
+>
+>    POLICY domain=default action=force-spare
+>
+> should make it work for you.
+>
+> NeilBrown
