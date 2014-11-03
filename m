@@ -1,92 +1,124 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Fake RAID 10 on ASRock Z97 Extreme3 with Slackware 14.1
-Date: Tue, 4 Nov 2014 08:57:55 +1100
-Message-ID: <20141104085755.3ef82b3d@notabene.brown>
-References: <14976849ec4.ace7bf4939116.3019157828391505014@zoho.com>
+Subject: Re: [PATCH] mdadm: fix --detail for cases where device count >
+ max_devices/2
+Date: Tue, 4 Nov 2014 09:33:11 +1100
+Message-ID: <20141104093311.2dabb44c@notabene.brown>
+References: <CCCA52F1-B747-4762-8D07-12B543996470@reduxio.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/sSp=1CJtdK0MhF9cn3YXq/p"; protocol="application/pgp-signature"
+ boundary="Sig_/_f8elr++kFVk6F4HSToNzDt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <14976849ec4.ace7bf4939116.3019157828391505014@zoho.com>
+In-Reply-To: <CCCA52F1-B747-4762-8D07-12B543996470@reduxio.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: gornea <gornea@zoho.com>
+To: Or Sagi <ors@reduxio.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/sSp=1CJtdK0MhF9cn3YXq/p
+--Sig_/_f8elr++kFVk6F4HSToNzDt
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 03 Nov 2014 17:47:48 +0100 gornea <gornea@zoho.com> wrote:
+On Fri, 31 Oct 2014 11:10:33 +0200 Or Sagi <ors@reduxio.com> wrote:
 
+> mdadm misreports (less devices then there are, and as a result decides th=
+e array is degraded) in cases where there are > max_devices/2 devices.
 >=20
-> Hello,
+> This seems to fix it.
 >=20
-> I hope I'm on the right email list. I'm facing a problem during Slackware=
- 14.1 installation. I have a ASRock motherboard (Z97 Extreme3) with Intel R=
-apid Storage Technology 13. I have 4 identical new 4-TBy WD hard drives. I =
-configured the option ROM for RAID 10. When booting with Slackware 14.1 CD =
-md finds the array but it always mounts it read only. I tried to work on it=
- to make writable but I was not successful. I have tried to boot with the l=
-atest Ubuntu Server CD and it works well. I have also tried to delete the R=
-AID 10 in the option ROM and then create it with mdadm after booting with S=
-lackware 14.1 and I always produces a read only volume. I get no errors or =
-warnings and in general everything seems fine except that I can not write o=
-n it (for example I can not create partitions). The md version with Slackwa=
-re 14.1 boot disk is 3.2.6 and the kernel is 3.10.17. So I'm starting to wo=
-nder if actually there is a know problem with that md/kernel? Or maybe ther=
-e is a problem with the way I use it, but frankly I run out of ideas how to=
- proceed further. This is the output of /proc/mdstat
+> ---
+> Detail.c |    4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
 >=20
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]=
- [multipath]
-> md126 : active (read-only) raid10 sda[3] sdb[2] sdc[1] sdd[0]
-> 7814032384 blocks super external:/md127/0 64K chunks 2 near-copies [4/4] =
-[UUUU]
+> diff --git a/Detail.c b/Detail.c
+> index c4fcad9..62e5867 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -72,7 +72,7 @@ int Detail(char *dev, struct context *c)
+> 	int failed =3D 0;
+> 	struct supertype *st;
+> 	char *subarray =3D NULL;
+> -	int max_disks =3D MD_SB_DISKS; /* just a default */
+> +	int max_disks =3D MD_SB_DISKS * 2; /* just a default */
+> 	struct mdinfo *info =3D NULL;
+> 	struct mdinfo *sra;
+> 	struct mdinfo *subdev;
+> @@ -124,7 +124,7 @@ int Detail(char *dev, struct context *c)
+> 	rv =3D 0;
 >=20
-> md127 : inactive sda[3](S) sdb[2](S) sdc[1](S) sdd[0](S)
-> 9040 blocks super external:imsm
+> 	if (st)
+> -		max_disks =3D st->max_devs;
+> +		max_disks =3D st->max_devs * 2;
 >=20
-> unused devices: <none>
->=20
-> Thanks a lot for any suggestion about how to proceed! I would like to ins=
-tall the fake RAID if it is not impossible with Slackware 14.1. I know that=
- eventually it is possible to install a software RAID but I would like to u=
-nderstand why the Intel fake RAID is not working with Slackware 14.1.
->=20
+> 	if (subarray) {
+> 		/* This is a subarray of some container.
 
-More likely a problem with Slackware than with the kernel/mdadm version.
+Thanks  for the report, but this patch is too simplistic.
+Setting "max_disks" to twice the maximum is clearly wrong.
+Then it should be called twice_max_disks.
 
-It should a lot like "mdmon" isn't running.
-If you simple run
-   mdmon md127 &
+The problem is that the 'disks' array has two entries for each 'raid_disk',
+the primary disk and a possible replacement.  So we need to check that all
+references to the size of the array, or indices to it, are treated properly.
 
-you will probably get write access.
-Mdadm should do this for you, or tell systemd to, depending on configuratio=
-n.
+I think this patch should fix it.  Can you test please?
 
+Thanks,
 NeilBrown
 
---Sig_/sSp=1CJtdK0MhF9cn3YXq/p
+diff --git a/Detail.c b/Detail.c
+index c4fcad9620ba..dd72eded995d 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -295,8 +295,8 @@ int Detail(char *dev, struct context *c)
+ 		goto out;
+ 	}
+=20
+-	disks =3D xmalloc(max_disks * sizeof(mdu_disk_info_t));
+-	for (d =3D 0; d < max_disks; d++) {
++	disks =3D xmalloc(max_disks * 2 * sizeof(mdu_disk_info_t));
++	for (d =3D 0; d < max_disks * 2; d++) {
+ 		disks[d].state =3D (1<<MD_DISK_REMOVED);
+ 		disks[d].major =3D disks[d].minor =3D 0;
+ 		disks[d].number =3D disks[d].raid_disk =3D d;
+@@ -327,7 +327,7 @@ int Detail(char *dev, struct context *c)
+ 		else if (disk.raid_disk >=3D 0 && disk.raid_disk < array.raid_disks
+ 			 && disks[disk.raid_disk*2+1].state =3D=3D (1<<MD_DISK_REMOVED))
+ 			disks[disk.raid_disk*2+1] =3D disk;
+-		else if (next < max_disks)
++		else if (next < max_disks*2)
+ 			disks[next++] =3D disk;
+ 	}
+=20
+@@ -602,7 +602,7 @@ This is pretty boring
+ 	}
+ 	free(info);
+=20
+-	for (d=3D 0; d < max_disks; d++) {
++	for (d=3D 0; d < max_disks * 2; d++) {
+ 		char *dv;
+ 		mdu_disk_info_t disk =3D disks[d];
+=20
+
+--Sig_/_f8elr++kFVk6F4HSToNzDt
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBVFf6Yznsnt1WYoG5AQL3YhAAlOJHKkrJUS4dpX50p0ImQnFzygakqJyI
-NWyR27amhb7uUtlJSVZbz3tNrXLSuc6r3A+hOGoMW0n7RSSzBZqKHE0sUY3CxXSX
-4Ib/4frPc44mAh00ClLvwpzUpepXVnumvymQcYNTtRe/0hYrr6NrXN3QtSkjhFBl
-YMpMGt+ZCFvNkxtmaoNXDfgwYIYjChHrKWsbLrsRLLeD+s19/eIsO1Q+q74czwWj
-cKu4W/hxjXM7ZoNRR7FWpDZrof6M3J7ZXZIua2Mf3ElSKTW5uf+sKocGOv3G54/g
-x2j2eFylumM/YyL81cy53HoQfridsjilSrBk9nrxTeCQdpaAlhuC/FZtyEOPunau
-sjHSZNdIn42e5gb8fhWbszkfc3Egw33a5j2vRYcJ1aAsGjYgtvzoeF63MMhOeLJT
-EhGrsV1pPPokwaQxjndvQUcscJZeCKPcDpsMwdulu5+yxHPghLQGHHUweUcFZ6p4
-X9EBmOyf1cPK+7kKBSWaEPI5+ZHoEf46FjA17BRTXFWK3c3cNP6rsbOKGpPv6/UO
-R8Kv2/LQOvuVXCK0c21PV+eE+RPD1JMbo5AJbwLUt9PTaAWeQli93ZrwcgJXEYM8
-aPXewj4n1qmXkJ1pKeaDXx/crwgYOWiKYd4ENXR4x8Qqf9SoCZuzIZFIW9QN/IPX
-FUK6M3GzKIA=
-=SbUg
+iQIVAwUBVFgCpznsnt1WYoG5AQKrAg/+K93UoBHA+V3sg5mCwTRR3VJq8VlH77W0
+TzQtRv72Qjr9AC3utHmAKiMzWjuB3pXPdw/7HhWZevdPjh3gEqwNHM/SLfafDs2b
+WQOza5IOEdTEwKQf+tQnWe6VZL4RVQjbf12KMOTBQMrYAsz1oT3pi+IzdIRK7HI2
+eu0Ra+JiLBWytuIJZLyefgL417sO2T+hQXHAJld6EK+IStsTWoXELwO1CWgGzK8g
+kNo9yPMvKOphhvAF5O7j0FkXzyQBkWM04gkjI1id+pqz7MlMl7pAvIYTbtZJj1v8
+qsn7VVRCZ0MtHyyeJdEJp+IK1WOajuNr6mKsSet6FI0zJ6Ef+xiMzEG0nQbemgRM
+BiEYyOqGIwgjRQ8mfA6yzjfqOZZTHSwufaVAo6psX9+tIgKYXttNY85PuBM0HnrQ
+bb4mRGy8g3LSJKOrV+Q1S73CNb7b89oSOVmX0DKVCuyPWgN1XLLAbGXzh8xmWzuH
+KdnG964TQANcrTYU42ybhtv6m/o/bZal0Pd92/BvCIc0p93yQ07FNQH8t2i17Orm
+uEilO6dcmnM6oHRaG9+Ntrvdh7ghb48zhP3v4BKSgPL6d4/IPshUdKMlMk+Xwlv1
+H+w8Gc6xn5nMGVex6tbwN6LKnBzaFwkEiRLt8pcuz1PfKSftj1H1IukMeRTMCQTg
+0rVkIA5DCYU=
+=TThI
 -----END PGP SIGNATURE-----
 
---Sig_/sSp=1CJtdK0MhF9cn3YXq/p--
+--Sig_/_f8elr++kFVk6F4HSToNzDt--
