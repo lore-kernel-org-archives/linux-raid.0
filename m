@@ -1,50 +1,57 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Tue, 04 Nov 2014 11:17:46 -0500
-Message-ID: <5458FC2A.1050308@turmel.org>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org>
+From: Stephen Kent <smkent@smkent.net>
+Subject: Re: mdadm named array (metadata 1.2) and udev when assembling an
+ array in initramfs
+Date: Tue, 4 Nov 2014 10:17:57 -0800
+Message-ID: <CAC45b7k0HXkm2TQWnQyk==mR1KuhKEDhs4AU1eWOFy1FLiW+Mw@mail.gmail.com>
+References: <CAC45b7=-dZX-kxDZY3KBEPZhaTuUhTcqNjTL6y8X71q9oDjiwQ@mail.gmail.com>
+ <5458970B.3050305@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20141103T151703-83@post.gmane.org>
+In-Reply-To: <5458970B.3050305@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Vince,
-
-On 11/03/2014 09:45 AM, Vince wrote:
-> Phil Turmel <philip <at> turmel.org> writes:
-
-[trim /]
-
->> You haven't (yet) lost your array.  It's just degraded.  You should
->> investigate why the one drive was kicked out of the array instead of
->> being rewritten properly (green drives?).  In the meantime, assembly
->> with --force should give you access to the data to grab anything
->> critically important.
-
-[trim /]
-
-> Hi Phil,
+On Tue, Nov 4, 2014 at 1:06 AM, Michael Tokarev <mjt@tls.msk.ru> wrote:
 >
-> thx for your reply.
-> Already have the raid clean and up.
+> 01.11.2014 21:53, Stephen Kent wrote:
+> > I have set up a machine to use an md array as the root device. I have
+> > created the array with metadata type 1.2, name "root," on host
+> > "optimus" (so the full metadata name is "optimus:root").
+> >
+> > I'm using Gentoo Linux (kernel 3.16.5-gentoo), and previously I had no
+> > initramfs so I wrote a short one to assemble the array. My initramfs
+> > sets the hostname and runs "mdadm -As," which correctly auto-assembles
+> > the root device array on /dev/md/root (even without an
+> > /etc/mdadm.conf).
+> >
+> > Once the initramfs script is finished, init starts which then starts
+> > udev. Now, at this point the array is already assembled, but the
+> > /dev/md/* name is lost (and so is /run/mdadm/map) since those files
+> > were on the initramfs' tempfs root.
+>
+> This is your problem.  You should not lose neither /dev nor /run
+> when switching root.  Usual thing to do is to mount tmpfs /dev and
+> tmpfs /run in initramfs and do mount --move /dev /root/dev (and
+> the same for /run) before switching root.
+>
+> Thanks,
+>
+> /mjt
 
-Very good to hear you haven't lost your data.
+Hm, interesting. I didn't realize a mount point could be moved, that's
+good to know.
 
-> My drive was kicked due to read errors (bad sectors).
-> I fixed the bad sectors with hdparm --write-sector $bad_sector /dev/sdx
+My initramfs is a short custom shell script that I wrote, basically
+all it does is assemble the array and mount the root filesystem. I'm
+not mounting a tmpfs and/or udev on /run and /dev, so unfortunately
+there aren't any mount points to move to the target root mountpoint at
+the end of init. /run and /dev are only mounted on my machine after
+leaving the initramfs.
 
-This is a problem you haven't solved yet, I think.  The raid array 
-should have fixed this bad sector for you without kicking the drive out. 
-  The scenario is common with "green" drives and/or consumer-grade 
-drives in general.
+Fortunately, NeilBrown's patch works for me which solves the problem
+and allows mdadm to work correctly with a minimal initramfs.
 
-If you want to be sure your array is safe for the future, you should 
-search this list's archives for "timeout mismatch", "scterc", and/or 
-"URE".  Then you can set up your array to properly correct bad sectors, 
-and set your system to look for bad sectors on a regular basis.
-
-Phil
+Stephen
