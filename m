@@ -1,61 +1,77 @@
-From: Barrett Lewis <barrett.lewis.mitsi@gmail.com>
-Subject: Maintenance Checklist (sanity check request)
-Date: Mon, 3 Nov 2014 16:45:08 -0600
-Message-ID: <CAPSPcXhug=zNrS8yNANPyTFn2ri0-NgsfRs5YiCyHVX7O7HQXQ@mail.gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: mdadm named array (metadata 1.2) and udev when assembling an
+ array in initramfs
+Date: Tue, 04 Nov 2014 12:06:19 +0300
+Message-ID: <5458970B.3050305@msgid.tls.msk.ru>
+References: <CAC45b7=-dZX-kxDZY3KBEPZhaTuUhTcqNjTL6y8X71q9oDjiwQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAC45b7=-dZX-kxDZY3KBEPZhaTuUhTcqNjTL6y8X71q9oDjiwQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Stephen Kent <smkent@smkent.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am trying to put together a thorough(ish) checklist of things that I
-can run through every few months to be sure everything is all good
-with my array.  I'm interested in any suggestions about what I have as
-well as anything else I should include for catching typical problems
-of hobby level users with consumer grade hardware and just the kinds
-of things you typically ask people who come on the list with crises.
+01.11.2014 21:53, Stephen Kent wrote:
+> I have set up a machine to use an md array as the root device. I have
+> created the array with metadata type 1.2, name "root," on host
+> "optimus" (so the full metadata name is "optimus:root").
+> 
+> I'm using Gentoo Linux (kernel 3.16.5-gentoo), and previously I had no
+> initramfs so I wrote a short one to assemble the array. My initramfs
+> sets the hostname and runs "mdadm -As," which correctly auto-assembles
+> the root device array on /dev/md/root (even without an
+> /etc/mdadm.conf).
+> 
+> Once the initramfs script is finished, init starts which then starts
+> udev. Now, at this point the array is already assembled, but the
+> /dev/md/* name is lost (and so is /run/mdadm/map) since those files
+> were on the initramfs' tempfs root.
 
+This is your problem.  You should not lose neither /dev nor /run
+when switching root.  Usual thing to do is to mount tmpfs /dev and
+tmpfs /run in initramfs and do mount --move /dev /root/dev (and
+the same for /run) before switching root.
 
+Thanks,
 
-1.  Which disks are part of the array?  Is everything active?
-$ cat /proc/mdstat
+/mjt
 
-2.   # for x in /dev/sd? ; do echo "Checking $x" ; smartctl -x $x |
-grep "SCT Error Recovery Control " ; done
-a. Which disks support ERC?
-b. using "# smartctl -x /dev/sdX" on the devices supporing ERC, is ERC enabled?
-c. if supported but Disabled, enable ERC with "# smartctl -l
-scterc,70,70 /dev/sdX"
-d. Which disks to not support ERC?
-e. "$ for x in /sys/block/sd*/device/timeout ; do echo $x $(< $x) ;
-done" What are the timeouts set to for each drive from d?
-f. if any drive which does not support ERC has a default timeout, set
-it to 180 with "# echo 180 >/sys/block/sdX/device/timeout"
-g. Are any disks which support ERC using timeouts greater than the
-default?  (they should not be)
+>   udev creates a /dev/mdXXX node
+> (ex. /dev/md127) and then runs a rule to try to figure out the
+> /dev/md/* name, which should be /dev/md/root. The default udev rule
+> calls mdadm --detail --export /dev/md127, which should print
+> MD_DEVNAME=root for udev, but instead it prints
+> MD_DEVNAME=optimus:root, and the symlink in /dev/md gets created as
+> /dev/md/optimus:root.
+> 
+> I think this is a bug in mdadm, but I'm not sure how to dig into it. I
+> have made sure that my main OS init sets the hostname before starting
+> udev, and I have tried with and without "HOMEHOST optimus" in
+> /etc/mdadm.conf.
+> 
+> The workaround I am using right now is to define the array name
+> manually in /etc/mdadm.conf like this:
+> 
+> ARRAY /dev/md/root UUID=782a671c:e646f2d5:848baad0:5668ee84
+> 
+> This works by avoiding automatic name detection and using the defined
+> name (/dev/md/root), but it really seems that mdadm should know how to
+> determine MD_DEVNAME correctly for an already-started array if the
+> hostname (or homehost) is correctly set. Is this a bug in mdadm? If
+> so, is this the correct place to report it or is there a bug tracking
+> system I should use? I am using mdadm v3.3.1.
+> 
+> (Please cc me on replies as I am not currently subscribed to the
+> linux-raid list.)
+> 
+> Thanks,
+> 
+> Stephen
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-
-3. # for x in /dev/sd? ; do echo "Checking $x" ; smartctl -x $x | grep
--e "Reallocated_Sector_Ct" -e "Current_Pending_Sector" ; done
-Note which drives have nonzero reallocations or pending sectors.  Any
-drive with double digits of reallocations should be replaced.
-
-4.  Run a repair to resync the array "# echo repair >
-/sys/block/md0/md/sync_action"
-a.  did it complete without crashing?
-b.  how long did it take?
-c.  what is the value of /sys/block/md0/md/mismatch_cnt after the
-repair was performed?
-
-5.  Scan the filesystem.
-sudo service nfs-kernel-server stop
-sudo umount /dev/md0 (if this fails, "sudo lsof | grep vault", then
-"sudo kill -KILL [pid]" of any processes using it and try again)
-a. sudo e2fsck -y /dev/md0  is it clean?
-b. sudo e2fsck -fy /dev/md0 any other errors on a full scan?
-
-
-
-
-Thanks for your suggestions
