@@ -1,70 +1,32 @@
-From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: RAID 6 (containing LUKS dm-crypt) recovery help.
-Date: Fri, 7 Nov 2014 14:22:59 +0000
-Message-ID: <21596.54723.487775.652906@tree.ty.sabi.co.uk>
-References: <545C5C9D.9000309@retard.io>
-	<21596.40429.244605.398712@tree.ty.sabi.co.uk>
-	<545CAFA8.2030602@retard.io>
+From: "P. Gautschi" <linuxlist@gautschi.net>
+Subject: Re: Raid5 drive fail during grow and no backup
+Date: Fri, 07 Nov 2014 17:06:19 +0100
+Message-ID: <545CEDFB.6060806@gautschi.net>
+References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org> <5458FC2A.1050308@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <545CAFA8.2030602@retard.io>
+In-Reply-To: <5458FC2A.1050308@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
->> But assuming the above is somewhat reliable there is an
->> "interesting" situation: in "21488638704 blocks" the number
->> 21,488,638,704 is not a whole multiple of 9:
->>=20
->> $ factor 21488638704
->> 21488638704: 2 2 2 2 3 13 1801 19121
-[ ... ]
->> If you went to the lengths to write 'dd' expressions, you
->> might as well have saved the output of '--examine'. Perhaps
->> you did, but if you did not attach that output to your
->> request for help it would be rather "stunning".
-[ ... ]
->> Both numbers don't match. They are *slightly* different. In
->> particular it is rather strange that the "Used Dev Size" is
->> different. How is that possible? Have the disks shrunk a
->> little in the meantime? :-)
+ > This is a problem you haven't solved yet, I think. The raid array should have fixed this bad sector for you without kicking the drive out. The scenario is common with "green" drives and/or consumer-grade drives in general.
+ > ...
+ > Then you can set up your array to properly correct bad sectors, and set your system to look for bad sectors on
+ > a regular basis.
 
-> Yes, I saved the -E/--examine information, "just in case". :-)
+What is the behavior of mdadm when a disk reports a read error?
+- reconstruct the data, deliver it to the fs and otherwise ignore it?
+- set the disk to fail?
+- reconstruct the data, rewrite the failed data and continue with any action?
+- rewrite the failed data and reread it (bypassing the cache on the HD)?
 
-But without sending it with your request for help: rather
-"stunning".
+Do read operation always read the parity too in order to detect problems early
+before a sector on a other disks fails?
 
-> [ ... ] some disks have a 272 offset, while most others have a
-> 2048 offset, [ ... ] Did older mdadm builds on 12.04 LTS ever
-> use offsets of 272, rather than 2048?
+Can the behavior be configured in any way? I found no documentation regarding this.
 
-Given what '--examine' reports exactly where this came from does
-not matter a lot. What matters is this note (in a well written
-page!):
-
-  https://raid.wiki.kernel.org/index.php/RAID_Recovery
-  =ABRecreating an array
-  When an array is created, superblocks are written to the drive
-  and according to the defaults of mdadm, a certain area of the
-  drive is now considered "data area".
-  The data areas (that might or might not be correct) are not
-  written to, *provided* the array is created in degraded mode;
-  that is with a 'missing' device.
-  If the wrong superblock version is chosen, wrong data offset
-  (internal default value which has changed over time in mdadm),
-  chunk size (also value that has changed over time), then the
-  data area will not match what was previously on the drives.
-  The md superblock might have overwritten part of your data.
-  Use with caution!=BB
-
-You can try to recreate the MD set superblocks specifying the
-right data offset and member size for each member, as given by
-the '--examine' outputs. Google knows how...
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patrick
