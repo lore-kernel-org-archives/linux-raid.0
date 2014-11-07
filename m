@@ -1,50 +1,70 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Fri, 07 Nov 2014 08:36:42 -0500
-Message-ID: <545CCAEA.6070204@turmel.org>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org> <5458FC2A.1050308@turmel.org> <loom.20141105T200200-434@post.gmane.org> <loom.20141106T175806-337@post.gmane.org>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: RAID 6 (containing LUKS dm-crypt) recovery help.
+Date: Fri, 7 Nov 2014 14:22:59 +0000
+Message-ID: <21596.54723.487775.652906@tree.ty.sabi.co.uk>
+References: <545C5C9D.9000309@retard.io>
+	<21596.40429.244605.398712@tree.ty.sabi.co.uk>
+	<545CAFA8.2030602@retard.io>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20141106T175806-337@post.gmane.org>
+In-Reply-To: <545CAFA8.2030602@retard.io>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/06/2014 12:12 PM, Vince wrote:
-> Hi Phil,
->
->> This is a problem you haven't solved yet, I think.  The raid array
->> should have fixed this bad sector for you without kicking the drive out.
->> The scenario is common with "green" drives and/or consumer-grade
->> drives in general.
->
-> i investigated some time and now i am a bit confused.
->
-> All my 5 WD Red drives have ERC enables (7sec)
-> The kernel timeout is set to 30sec (/sys/block/sdb/device/timeout)
-> on all devices.
->
-> Unfortunately i haven't any backup of the dmesg output, but i can remeber i
-> got something like:
-> "failed command: READ FPDMA QUEUED status: { DRDY ERR } error: { UNC }".
-> This shows up several times until it ends with showing me the sector which
-> causes the problem.
->
-> My raid is still up, but as you mentioned i would like some kind of self
-> repair if a sector is unreadable instead throwing the disk out of the array.
->
-> Here is the samrtctl of one drive that fails.
->
-> Do you have any idea if i missing some settings etc?
+[ ... ]
+>> But assuming the above is somewhat reliable there is an
+>> "interesting" situation: in "21488638704 blocks" the number
+>> 21,488,638,704 is not a whole multiple of 9:
+>>=20
+>> $ factor 21488638704
+>> 21488638704: 2 2 2 2 3 13 1801 19121
+[ ... ]
+>> If you went to the lengths to write 'dd' expressions, you
+>> might as well have saved the output of '--examine'. Perhaps
+>> you did, but if you did not attach that output to your
+>> request for help it would be rather "stunning".
+[ ... ]
+>> Both numbers don't match. They are *slightly* different. In
+>> particular it is rather strange that the "Used Dev Size" is
+>> different. How is that possible? Have the disks shrunk a
+>> little in the meantime? :-)
 
-Interesting.  I use the WD Red drives, too, and recommend them.  Your 
-drive's smartctl report is clean as far as wear & tear is concerned. 
-That suggests a hardware problem elsewhere in your system.  Bad cable, 
-perhaps, or a failing power supply.
+> Yes, I saved the -E/--examine information, "just in case". :-)
 
-Beyond that, I can only recommend regular "check" scrubs, with "repair" 
-scrubs only when mismatches are discovered.
+But without sending it with your request for help: rather
+"stunning".
 
-Phil
+> [ ... ] some disks have a 272 offset, while most others have a
+> 2048 offset, [ ... ] Did older mdadm builds on 12.04 LTS ever
+> use offsets of 272, rather than 2048?
+
+Given what '--examine' reports exactly where this came from does
+not matter a lot. What matters is this note (in a well written
+page!):
+
+  https://raid.wiki.kernel.org/index.php/RAID_Recovery
+  =ABRecreating an array
+  When an array is created, superblocks are written to the drive
+  and according to the defaults of mdadm, a certain area of the
+  drive is now considered "data area".
+  The data areas (that might or might not be correct) are not
+  written to, *provided* the array is created in degraded mode;
+  that is with a 'missing' device.
+  If the wrong superblock version is chosen, wrong data offset
+  (internal default value which has changed over time in mdadm),
+  chunk size (also value that has changed over time), then the
+  data area will not match what was previously on the drives.
+  The md superblock might have overwritten part of your data.
+  Use with caution!=BB
+
+You can try to recreate the MD set superblocks specifying the
+right data offset and member size for each member, as given by
+the '--examine' outputs. Google knows how...
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
