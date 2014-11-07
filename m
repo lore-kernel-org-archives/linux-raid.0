@@ -1,501 +1,332 @@
-From: Vince <stuff@hagenhuegel.de>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Thu, 6 Nov 2014 17:12:37 +0000 (UTC)
-Message-ID: <loom.20141106T175806-337@post.gmane.org>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org> <5458FC2A.1050308@turmel.org> <loom.20141105T200200-434@post.gmane.org>
+From: xar <xar@retard.io>
+Subject: RAID 6 (containing LUKS dm-crypt) recovery help.
+Date: Fri, 07 Nov 2014 00:46:05 -0500
+Message-ID: <545C5C9D.9000309@retard.io>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Phil,
+Greetings,
 
-> This is a problem you haven't solved yet, I think.  The raid array 
-> should have fixed this bad sector for you without kicking the drive out. 
-> The scenario is common with "green" drives and/or consumer-grade 
-> drives in general.
+I have a RAID 6 (which contains a LUKS container) that I'm hoping to ge=
+t=20
+some help/insight in recovering. The server experienced some sort of=20
+hardware event that resulted in a mandatory restart of the server.
 
-i investigated some time and now i am a bit confused.
+=46or the record, after the server completed the restart, the array loo=
+ked=20
+like this, "all spares":
 
-All my 5 WD Red drives have ERC enables (7sec)
-The kernel timeout is set to 30sec (/sys/block/sdb/device/timeout)
-on all devices.
+md6 : inactive sdl1[7](S) sdh1[13](S) sdg1[14](S) sdk1[11](S)=20
+sdj1[10](S) sdi1[6](S) sdd1[2](S) sdf1[8](S) sdb1[12](S) sde1[3](S)=20
+sdc1[15](S) 21488638704 blocks super 1.2
 
-Unfortunately i haven't any backup of the dmesg output, but i can remeber i
-got something like:
-"failed command: READ FPDMA QUEUED status: { DRDY ERR } error: { UNC }".
-This shows up several times until it ends with showing me the sector which
-causes the problem.
+The server in question is Ubuntu ("Precise") 12.04.5 LTS with mdadm=20
+version 3.2.5-1ubuntu0 installed.
 
-My raid is still up, but as you mentioned i would like some kind of self
-repair if a sector is unreadable instead throwing the disk out of the array.
+The mdadm array has the following characteristics:
 
-Here is the samrtctl of one drive that fails.
+RAID level: 6
+Chunk size: 256k
+Version: 1.2
+Number of devices: 11
 
-Do you have any idea if i missing some settings etc?
+All attempts to assemble the array continued to result in the "all=20
+spare" condition (output above). Thinking that the metadata had been=20
+corrupted somehow, I set out to recreate the array.
 
+The following is the dev_number fields from the metadata, before I=20
+attempted to recreate the array:
 
-smartctl -x /dev/sdd
-smartctl 5.41 2011-06-09 r3365 [x86_64-linux-3.2.0-4-amd64] (local build)
-Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
+# for i in /dev/sd?1; do echo -n $i '' ; dd 2> /dev/null if=3D$i bs=3D1=
+=20
+count=3D4 skip=3D4256 | od -D | head -n1; done:
 
-=== START OF INFORMATION SECTION ===
-Model Family:     Western Digital Red (AF)
-Device Model:     WDC WD30EFRX-68AX9N0
-Serial Number:    WD-WMC1T2041480
-LU WWN Device Id: 5 0014ee 058d836a6
-Firmware Version: 80.00A80
-User Capacity:    3.000.592.982.016 bytes [3,00 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   9
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Thu Nov  6 18:10:11 2014 CET
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+/dev/sdb1 0000000         12
+/dev/sdc1 0000000         15
+/dev/sdd1 0000000          2
+/dev/sde1 0000000          3
+/dev/sdf1 0000000          8
+/dev/sdg1 0000000         14
+/dev/sdh1 0000000         13
+/dev/sdi1 0000000          6
+/dev/sdj1 0000000         10
+/dev/sdk1 0000000         11
+/dev/sdl1 0000000          7
 
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
+I used the following to extract the index position of each device on a=20
+device I suspected wasn't corrupted (for the record, they all returned=20
+the same data):
 
-General SMART Values:
-Offline data collection status:  (0x82)	Offline data collection activity
-					was completed without error.
-					Auto Offline Data Collection: Enabled.
-Self-test execution status:      (   0)	The previous self-test routine completed
-					without error or no self-test has ever 
-					been run.
-Total time to complete Offline 
-data collection: 		(42000) seconds.
-Offline data collection
-capabilities: 			 (0x7b) SMART execute Offline immediate.
-					Auto Offline data collection on/off support.
-					Suspend Offline collection upon new
-					command.
-					Offline surface scan supported.
-					Self-test supported.
-					Conveyance Self-test supported.
-					Selective Self-test supported.
-SMART capabilities:            (0x0003)	Saves SMART data before entering
-					power-saving mode.
-					Supports SMART auto save timer.
-Error logging capability:        (0x01)	Error logging supported.
-					General Purpose Logging supported.
-Short self-test routine 
-recommended polling time: 	 (   2) minutes.
-Extended self-test routine
-recommended polling time: 	 ( 255) minutes.
-Conveyance self-test routine
-recommended polling time: 	 (   5) minutes.
-SCT capabilities: 	       (0x70bd)	SCT Status supported.
-					SCT Error Recovery Control supported.
-					SCT Feature Control supported.
-					SCT Data Table supported.
+# dd 2> /dev/null if=3D/dev/sdc1 bs=3D2 count=3D6 skip=3D2176 | od -d
 
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAGS    VALUE WORST THRESH FAIL RAW_VALUE
-  1 Raw_Read_Error_Rate     POSR-K   200   200   051    -    1625
-  3 Spin_Up_Time            POS--K   176   173   021    -    6175
-  4 Start_Stop_Count        -O--CK   099   099   000    -    1290
-  5 Reallocated_Sector_Ct   PO--CK   200   200   140    -    0
-  7 Seek_Error_Rate         -OSR-K   200   200   000    -    0
-  9 Power_On_Hours          -O--CK   084   084   000    -    11786
- 10 Spin_Retry_Count        -O--CK   100   100   000    -    0
- 11 Calibration_Retry_Count -O--CK   100   100   000    -    0
- 12 Power_Cycle_Count       -O--CK   100   100   000    -    177
-192 Power-Off_Retract_Count -O--CK   200   200   000    -    50
-193 Load_Cycle_Count        -O--CK   200   200   000    -    1239
-194 Temperature_Celsius     -O---K   121   102   000    -    29
-196 Reallocated_Event_Count -O--CK   200   200   000    -    0
-197 Current_Pending_Sector  -O--CK   200   200   000    -    0
-198 Offline_Uncorrectable   ----CK   200   200   000    -    0
-199 UDMA_CRC_Error_Count    -O--CK   200   200   000    -    0
-200 Multi_Zone_Error_Rate   ---R--   200   200   000    -    0
-                            ||||||_ K auto-keep
-                            |||||__ C event count
-                            ||||___ R error rate
-                            |||____ S speed/performance
-                            ||_____ O updated online
-                            |______ P prefailure warning
+0000000 65534 65534     2 65534 65534 65534     4     5
+0000020 65534 65534     7     8     0     9 65534
+0000036
 
-General Purpose Log Directory Version 1
-SMART           Log Directory Version 1 [multi-sector log support]
-GP/S  Log at address 0x00 has    1 sectors [Log Directory]
-SMART Log at address 0x01 has    1 sectors [Summary SMART error log]
-SMART Log at address 0x02 has    5 sectors [Comprehensive SMART error log]
-GP    Log at address 0x03 has    6 sectors [Ext. Comprehensive SMART error log]
-SMART Log at address 0x06 has    1 sectors [SMART self-test log]
-GP    Log at address 0x07 has    1 sectors [Extended self-test log]
-SMART Log at address 0x09 has    1 sectors [Selective self-test log]
-GP    Log at address 0x10 has    1 sectors [NCQ Command Error]
-GP    Log at address 0x11 has    1 sectors [SATA Phy Event Counters]
-GP    Log at address 0x21 has    1 sectors [Write stream error log]
-GP    Log at address 0x22 has    1 sectors [Read stream error log]
-GP/S  Log at address 0x80 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x81 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x82 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x83 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x84 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x85 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x86 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x87 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x88 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x89 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8a has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8b has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8c has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8d has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8e has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x8f has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x90 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x91 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x92 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x93 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x94 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x95 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x96 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x97 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x98 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x99 has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9a has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9b has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9c has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9d has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9e has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0x9f has   16 sectors [Host vendor specific log]
-GP/S  Log at address 0xa0 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa1 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa2 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa3 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa4 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa5 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa6 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa7 has   16 sectors [Device vendor specific log]
-GP/S  Log at address 0xa8 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xa9 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xaa has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xab has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xac has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xad has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xae has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xaf has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb0 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb1 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb2 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb3 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb4 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb5 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb6 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xb7 has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xbd has    1 sectors [Device vendor specific log]
-GP/S  Log at address 0xc0 has    1 sectors [Device vendor specific log]
-GP    Log at address 0xc1 has   93 sectors [Device vendor specific log]
-GP/S  Log at address 0xe0 has    1 sectors [SCT Command/Status]
-GP/S  Log at address 0xe1 has    1 sectors [SCT Data Transfer]
+As you can see, there's already a visible mismatch between the=20
+dev_number and the listed indexes. For instance, /dev/sdc1 returned a=20
+device number of 15, but there's not a 15th position in the=20
+corresponding list.
 
-SMART Extended Comprehensive Error Log Version: 1 (6 sectors)
-Device Error Count: 6807 (device log contains only the most recent 24 errors)
-	CR     = Command Register
-	FEATR  = Features Register
-	COUNT  = Count (was: Sector Count) Register
-	LBA_48 = Upper bytes of LBA High/Mid/Low Registers ]  ATA-8
-	LH     = LBA High (was: Cylinder High) Register    ]   LBA
-	LM     = LBA Mid (was: Cylinder Low) Register      ] Register
-	LL     = LBA Low (was: Sector Number) Register     ]
-	DV     = Device (was: Device/Head) Register
-	DC     = Device Control Register
-	ER     = Error register
-	ST     = Status register
-Powered_Up_Time is measured from power on, and printed as
-DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
-SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+I pulled from log history, the last known working "layout", circa July=20
+of this year:
 
-Error 6807 [14] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+# mdadm -D /dev/md6
+/dev/md6:
+         Version : 1.2
+   Creation Time : Sat Apr 23 06:22:23 2011
+      Raid Level : raid6
+      Array Size : 17581609728 (16767.13 GiB 18003.57 GB)
+   Used Dev Size : 1953512192 (1863.01 GiB 2000.40 GB)
+    Raid Devices : 11
+   Total Devices : 10
+     Persistence : Superblock is persistent
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 02 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+     Update Time : Sat Jun 21 21:13:45 2014
+           State : clean, degraded
+  Active Devices : 10
+Working Devices : 10
+  Failed Devices : 0
+   Spare Devices : 0
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.798  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.798  IDENTIFY DEVICE
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.798  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.797  IDENTIFY DEVICE
+          Layout : left-symmetric
+      Chunk Size : 256K
 
-Error 6806 [13] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+            Name : server:6  (local to host server)
+            UUID : 6958450b:e4dfa2f3:259ff733:f343a584
+          Events : 390345
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 46 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+     Number   Major   Minor   RaidDevice State
+       12       8       17        0      active sync   /dev/sdb1
+        3       8       65        1      active sync   /dev/sde1
+        2       8       49        2      active sync   /dev/sdd1
+        8       8       81        3      active sync   /dev/sdf1
+        6       8      129        4      active sync   /dev/sdi1
+        7       8      177        5      active sync   /dev/sdl1
+        6       0        0        6      removed
+       10       8      145        7      active sync   /dev/sdj1
+       11       8      161        8      active sync   /dev/sdk1
+       13       8      113        9      active sync   /dev/sdh1
+       14       8       97       10      active sync   /dev/sdg1
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.798  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.797  IDENTIFY DEVICE
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.797  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
+The dev_numbers and index position information in conjunction with the=20
+historic data (directly above) seemed to indicate that the proper=20
+recreation order and command would be the following:
 
-Error 6805 [12] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+# mdadm --create /dev/md6 --assume-clean --level=3D6 --raid-devices=3D1=
+1=20
+--metadata=3D1.2 --chunk=3D256 /dev/sdb1 /dev/sde1 /dev/sdd1 /dev/sdf1=20
+/dev/sdi1 /dev/sdl1 /dev/sdc1 /dev/sdj1 /dev/sdk1 /dev/sdh1 /dev/sdg1
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 02 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+I ran this above command.
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.797  IDENTIFY DEVICE
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.797  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.796  IDENTIFY DEVICE
+Here is the current output of "lsdrv" which I observed several people=20
+found to be relevant on this list, from creator 'pturmel' on github:
 
-Error 6804 [11] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+PCI [ahci] 00:11.0 SATA controller: Advanced Micro Devices, Inc.=20
+[AMD/ATI] SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40)
+=E2scsi 0:0:0:0 ATA      ST31500541AS     {6XW03WTD}
+=E2=E2sda 1.36t [8:0] Partitioned (dos)
+=E2 =E2sda1 109.79m [8:1] ext4 {07f99e8c-95d2-483d-9850-05f04820c3f6}
+=E2 =E2=E2Mounted as /dev/sda1 @ /boot
+=E2 =E2sda2 2.01g [8:2] swap {d137430d-815a-4c45-a394-9bece3aa7136}
+=E2 =E2sda3 7.01g [8:3] ext4 {8db73200-8d9d-4991-9802-b13f1550a9d9}
+=E2 =E2=E2Mounted as /dev/disk/by-uuid/8db73200-8d9d-4991-9802-b13f1550=
+a9d9 @ /
+=E2 =E2sda4 1.36t [8:4] Empty/Unknown
+=E2  =E2dm-0 1.36t [252:0] xfs {db7ddb53-080c-45ba-ab4d-e45d35eb451c}
+=E2   =E2Mounted as /dev/mapper/enc @ /encrypted
+=E2scsi 1:0:0:0 ATA      ST2000DL003-9VT1 {5YD4VZLV}
+=E2=E2sdb 1.82t [8:16] Partitioned (gpt)
+=E2 =E2sdb1 1.82t [8:17] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 2:0:0:0 ATA      ST2000DM001-1CH1 {Z1E8GNFQ}
+=E2=E2sdc 1.82t [8:32] Partitioned (gpt)
+=E2 =E2sdc1 1.82t [8:33] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 3:0:0:0 ATA      ST2000DL003-9VT1 {5YD2PZM3}
+=E2=E2sdd 1.82t [8:48] Partitioned (gpt)
+=E2 =E2sdd1 1.82t [8:49] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 4:0:0:0 ATA      ST2000DL003-9VT1 {5YD2J0XD}
+=E2=E2sde 1.82t [8:64] Partitioned (gpt)
+=E2 =E2sde1 1.82t [8:65] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 5:0:0:0 ATA      ST2000DL003-9VT1 {5YD3XE9M}
+  =E2sdf 1.82t [8:80] Partitioned (gpt)
+   =E2sdf1 1.82t [8:81] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+PCI [sata_sil24] 04:04.0 RAID bus controller: Silicon Image, Inc. SiI=20
+3124 PCI-X Serial ATA Controller (rev 02)
+=E2scsi 6:0:0:0 ATA      ST2000DL003-9VT1 {5YD6JW2L}
+=E2=E2sdg 1.82t [8:96] Partitioned (gpt)
+=E2 =E2sdg1 1.82t [8:97] MD raid6 (11) inactive 'server:6'=20
+{65daae65-118b-896a-6205-0f2c4dacb4de}
+=E2scsi 7:0:0:0 ATA      ST2000DL003-9VT1 {6YD05E5Y}
+=E2=E2sdh 1.82t [8:112] Partitioned (gpt)
+=E2 =E2sdh1 1.82t [8:113] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 8:x:x:x [Empty]
+=E2scsi 9:x:x:x [Empty]
+PCI [sata_sil24] 06:04.0 RAID bus controller: Silicon Image, Inc. SiI=20
+3124 PCI-X Serial ATA Controller (rev 02)
+=E2scsi 10:0:0:0 ATA      ST32000542AS     {5XW1PVCZ}
+=E2=E2sdi 1.82t [8:128] Partitioned (gpt)
+=E2 =E2sdi1 1.82t [8:129] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 11:0:0:0 ATA      ST2000DL003-9VT1 {5YD2SND2}
+=E2=E2sdj 1.82t [8:144] Partitioned (gpt)
+=E2 =E2sdj1 1.82t [8:145] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 12:0:0:0 ATA      ST2000DL003-9VT1 {5YD4JTZP}
+=E2=E2sdk 1.82t [8:160] Partitioned (gpt)
+=E2 =E2sdk1 1.82t [8:161] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+=E2scsi 13:0:0:0 ATA      ST32000542AS     {5XW1KAEA}
+  =E2sdl 1.82t [8:176] Partitioned (gpt)
+   =E2sdl1 1.82t [8:177] MD raid6 (11) inactive 'server:6'=20
+{c88f3b40-c7d4-a33a-5007-ab8ef784c0c2}
+Other Block Devices
+=E2loop0 0.00k [7:0] Empty/Unknown
+=E2loop1 0.00k [7:1] Empty/Unknown
+=E2loop2 0.00k [7:2] Empty/Unknown
+=E2loop3 0.00k [7:3] Empty/Unknown
+=E2loop4 0.00k [7:4] Empty/Unknown
+=E2loop5 0.00k [7:5] Empty/Unknown
+=E2loop6 0.00k [7:6] Empty/Unknown
+=E2loop7 0.00k [7:7] Empty/Unknown
+=E2ram0 64.00m [1:0] Empty/Unknown
+=E2ram1 64.00m [1:1] Empty/Unknown
+=E2ram2 64.00m [1:2] Empty/Unknown
+=E2ram3 64.00m [1:3] Empty/Unknown
+=E2ram4 64.00m [1:4] Empty/Unknown
+=E2ram5 64.00m [1:5] Empty/Unknown
+=E2ram6 64.00m [1:6] Empty/Unknown
+=E2ram7 64.00m [1:7] Empty/Unknown
+=E2ram8 64.00m [1:8] Empty/Unknown
+=E2ram9 64.00m [1:9] Empty/Unknown
+=E2ram10 64.00m [1:10] Empty/Unknown
+=E2ram11 64.00m [1:11] Empty/Unknown
+=E2ram12 64.00m [1:12] Empty/Unknown
+=E2ram13 64.00m [1:13] Empty/Unknown
+=E2ram14 64.00m [1:14] Empty/Unknown
+=E2ram15 64.00m [1:15] Empty/Unknown
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 04 00 00 01 13 7f 4c 00 e0 00  Device Fault; Error: ABRT 1024
-sectors at LBA = 0x1137f4c00 = 4622076928
+=46ollowing the recreation, the array now looks like this:
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.797  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.796  IDENTIFY DEVICE
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES
-[Reserved for Serial ATA]
+# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
+[raid4] [raid10]
+md6 : active raid6 sdh1[9] sdk1[8] sdj1[7] sdc1[6] sdl1[5] sdi1[4]=20
+sdf1[3] sdd1[2] sde1[1] sdb1[0]
+       17580439296 blocks super 1.2 level 6, 256k chunk, algorithm 2=20
+[11/10] [UUUUUUUUUUU]
 
-Error 6803 [10] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+# mdadm -D /dev/md6
+/dev/md6:
+         Version : 1.2
+   Creation Time : Fri Nov  7 05:40:16 2014
+      Raid Level : raid6
+      Array Size : 17580439296 (16766.01 GiB 18002.37 GB)
+   Used Dev Size : 1953382144 (1862.89 GiB 2000.26 GB)
+    Raid Devices : 11
+   Total Devices : 11
+     Persistence : Superblock is persistent
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 02 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+     Update Time : Fri Nov  7 05:40:16 2014
+           State : clean
+  Active Devices : 11
+Working Devices : 11
+  Failed Devices : 0
+   Spare Devices : 0
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.797  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.796  IDENTIFY DEVICE
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.795  IDENTIFY DEVICE
+          Layout : left-symmetric
+      Chunk Size : 256K
 
-Error 6802 [9] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+            Name : server:6  (local to host server)
+            UUID : b306872f:5ef902a8:76f5e233:f220f4d4
+          Events : 0
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 46 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+     Number   Major   Minor   RaidDevice State
+        0       8       17        0      active sync   /dev/sdb1
+        1       8       65        1      active sync   /dev/sde1
+        2       8       49        2      active sync   /dev/sdd1
+        3       8       81        3      active sync   /dev/sdf1
+        4       8      129        4      active sync   /dev/sdi1
+        5       8      177        5      active sync   /dev/sdl1
+        6       8       33        6      active sync   /dev/sdc1
+        7       8      145        7      active sync   /dev/sdj1
+        8       8      161        8      active sync   /dev/sdk1
+        9       8      113        9      active sync   /dev/sdh1
+       10       8       97       10      active sync   /dev/sdg1
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.795  IDENTIFY DEVICE
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.795  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.795  SET FEATURES
-[Reserved for Serial ATA]
+This array should contain a LUKS container, however, it's missing. If I=
+=20
+hexdump the first 20 lines, the LUKS header is completely missing:
 
-Error 6801 [8] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+# cryptsetup luksOpen /dev/md6 luks
+Device /dev/md6 is not a valid LUKS device.
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 00 02 00 00 00 00 00 00 a0 00  Device Fault; Error: ABRT
+# hexdump -C /dev/md6 | head -n16
+00000000  0b 37 89 e0 66 96 7a d4  6c 5b 57 09 a5 8d 6a c5=20
+|.7..f.z.l[W...j.|
+00000010  a7 65 20 6e f0 db 74 db  03 d8 e9 2b 39 05 37 a4  |.e=20
+n..t....+9.7.|
+00000020  cb 25 d7 7b fd cf b5 b4  12 ad e2 24 24 de 66 42=20
+|.%.{.......$$.fB|
+00000030  61 a2 1b ea 8b 5c 04 38  7e 5e 61 11 3d ba 99 35=20
+|a....\.8~^a.=3D..5|
+00000040  b7 e9 e6 76 72 18 d2 d5  bd cd 1b ed 59 15 fb 83=20
+|...vr.......Y...|
+00000050  bc 57 94 85 31 c1 3e af  51 f1 25 50 db 57 d3 cd=20
+|.W..1.>.Q.%P.W..|
+00000060  69 d5 31 23 df 01 ef 03  e3 92 66 c6 1f 38 3f 57=20
+|i.1#......f..8?W|
+00000070  67 20 38 8c c2 ec 25 dc  59 42 b4 5d 9d 9e c1 79  |g=20
+8...%.YB.]...y|
+00000080  4a f5 e1 ad f8 08 16 d5  37 3f f6 83 62 f2 6f f5=20
+|J.......7?..b.o.|
+00000090  53 95 4f 69 ce 7c ba 4c  86 ef a1 1c 04 d7 b3 17=20
+|S.Oi.|.L........|
+000000a0  cd ea 5f 25 56 a4 0d 6f  64 e9 51 b5 71 b3 18 7f=20
+|.._%V..od.Q.q...|
+000000b0  46 e7 8b ab 08 ae f5 ed  65 0d 8f 3e 8b 03 25 5c=20
+|F.......e..>..%\|
+000000c0  bb 50 dc e6 31 33 4a 88  8e 22 20 72 f0 11 71 d0 |.P..13J.."=20
+r..q.|
+000000d0  59 c7 9d 20 f8 e2 f0 f8  75 5f ea 4a 57 d7 d7 9e  |Y..=20
+=2E...u_.JW...|
+000000e0  c8 05 85 9d d7 cf c9 ab  53 de 11 6f bf d4 e3 b2=20
+|........S..o....|
+000000f0  f6 5e 1e 46 5c 16 ae 46  a3 b5 9b f4 b9 ff ca 0c=20
+|.^.F\..F........|
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.796  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.795  IDENTIFY DEVICE
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.795  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.795  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.795  IDENTIFY DEVICE
+Is the "mdadm --create" operation that I issued, incorrect? Have I done=
+=20
+anything in error?
 
-Error 6800 [7] occurred at disk power-on lifetime: 11653 hours (485 days +
-13 hours)
-  When the command that caused the error occurred, the device was active or
-idle.
+Unfortunately, I do not have a backup of the LUKS header, as I've=20
+personally never encountered a situation like this, nor was I privy to=20
+the knowledge that LUKS headers should be backed up at all.
 
-  After command completion occurred, registers were:
-  ER -- ST COUNT  LBA_48  LH LM LL DV DC
-  -- -- -- == -- == == == -- -- -- -- --
-  04 -- 61 04 00 00 01 13 7f 4c 00 e0 00  Device Fault; Error: ABRT 1024
-sectors at LBA = 0x1137f4c00 = 4622076928
+If relevant, I did observe that /dev/sdb1 and /dev/sdg1 were showing=20
+"Offline_Uncorrectable" errors via SMART, but nothing that I could=20
+imagine would have contributed to this current predicament.
 
-  Commands leading to the command that caused the error were:
-  CR FEATR COUNT  LBA_48  LH LM LL DV DC  Powered_Up_Time  Command/Feature_Name
-  -- == -- == -- == == == -- -- -- -- --  ---------------  --------------------
-  35 00 00 04 00 00 01 13 7f 4c 00 e0 08     16:03:04.795  WRITE DMA EXT
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.795  SET FEATURES
-[Reserved for Serial ATA]
-  ec 00 00 00 00 00 00 00 00 00 00 a0 08     16:03:04.795  IDENTIFY DEVICE
-  ef 00 03 00 46 00 00 00 00 00 00 a0 08     16:03:04.794  SET FEATURES [Set
-transfer mode]
-  ef 00 10 00 02 00 00 00 00 00 00 a0 08     16:03:04.794  SET FEATURES
-[Reserved for Serial ATA]
+Is my data gone? Any and all insight are extremly welcomed and apprecia=
+ted.
 
-SMART Extended Self-test Log Version: 1 (1 sectors)
-Num  Test_Description    Status                  Remaining  LifeTime(hours)
- LBA_of_first_error
-# 1  Short offline       Completed without error       00%     11770         -
-# 2  Short offline       Completed without error       00%     11757         -
-# 3  Short offline       Completed without error       00%     11746         -
-# 4  Extended offline    Completed without error       00%     11729         -
-# 5  Extended offline    Completed without error       00%     11698         -
-# 6  Extended offline    Aborted by host               90%     11677         -
-# 7  Short offline       Completed without error       00%     11654         -
-# 8  Short offline       Completed without error       00%     11565         -
-# 9  Short offline       Completed: read failure       70%     11557         9
-#10  Short offline       Completed: read failure       70%     11557         9
-#11  Extended offline    Completed: read failure       90%     11556         9
-#12  Short offline       Completed without error       00%      1367         -
-#13  Short offline       Completed without error       00%      1346         -
-#14  Extended offline    Completed without error       00%      1327         -
-#15  Short offline       Completed without error       00%      1295         -
-#16  Short offline       Completed without error       00%      1271         -
-#17  Short offline       Completed without error       00%      1247         -
-#18  Short offline       Completed without error       00%      1223         -
-3 of 3 failed self-tests are outdated by newer successful extended offline
-self-test # 4
+Warm regards,
 
-SMART Selective self-test log data structure revision number 1
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Not_testing
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
-
-SCT Status Version:                  3
-SCT Version (vendor specific):       258 (0x0102)
-SCT Support Level:                   1
-Device State:                        Active (0)
-Current Temperature:                    29 Celsius
-Power Cycle Min/Max Temperature:     22/35 Celsius
-Lifetime    Min/Max Temperature:     15/49 Celsius
-Under/Over Temperature Limit Count:   0/0
-SCT Temperature History Version:     2
-Temperature Sampling Period:         1 minute
-Temperature Logging Interval:        1 minute
-Min/Max recommended Temperature:      0/60 Celsius
-Min/Max Temperature Limit:           -41/85 Celsius
-Temperature History Size (Index):    478 (158)
-
-Index    Estimated Time   Temperature Celsius
- 159    2014-11-06 10:13    29  **********
- ...    ..( 20 skipped).    ..  **********
- 180    2014-11-06 10:34    29  **********
- 181    2014-11-06 10:35    31  ************
- ...    ..(128 skipped).    ..  ************
- 310    2014-11-06 12:44    31  ************
- 311    2014-11-06 12:45    30  ***********
- ...    ..( 70 skipped).    ..  ***********
- 382    2014-11-06 13:56    30  ***********
- 383    2014-11-06 13:57    31  ************
- ...    ..( 82 skipped).    ..  ************
- 466    2014-11-06 15:20    31  ************
- 467    2014-11-06 15:21    30  ***********
- ...    ..( 32 skipped).    ..  ***********
-  22    2014-11-06 15:54    30  ***********
-  23    2014-11-06 15:55    29  **********
- ...    ..( 49 skipped).    ..  **********
-  73    2014-11-06 16:45    29  **********
-  74    2014-11-06 16:46    30  ***********
- ...    ..(  2 skipped).    ..  ***********
-  77    2014-11-06 16:49    30  ***********
-  78    2014-11-06 16:50    29  **********
- ...    ..( 23 skipped).    ..  **********
- 102    2014-11-06 17:14    29  **********
- 103    2014-11-06 17:15    30  ***********
- ...    ..(  9 skipped).    ..  ***********
- 113    2014-11-06 17:25    30  ***********
- 114    2014-11-06 17:26    29  **********
- ...    ..( 43 skipped).    ..  **********
- 158    2014-11-06 18:10    29  **********
-
-SCT Error Recovery Control:
-           Read:     70 (7,0 seconds)
-          Write:     70 (7,0 seconds)
-
-SATA Phy Event Counters (GP Log 0x11)
-ID      Size     Value  Description
-0x0001  2            0  Command failed due to ICRC error
-0x0002  2            0  R_ERR response for data FIS
-0x0003  2            0  R_ERR response for device-to-host data FIS
-0x0004  2            0  R_ERR response for host-to-device data FIS
-0x0005  2            0  R_ERR response for non-data FIS
-0x0006  2            0  R_ERR response for device-to-host non-data FIS
-0x0007  2            0  R_ERR response for host-to-device non-data FIS
-0x0008  2            0  Device-to-host non-data FIS retries
-0x0009  2           15  Transition from drive PhyRdy to drive PhyNRdy
-0x000a  2           15  Device-to-host register FISes sent due to a COMRESET
-0x000b  2            0  CRC errors within host-to-device FIS
-0x000f  2            0  R_ERR response for host-to-device data FIS, CRC
-0x0012  2            0  R_ERR response for host-to-device non-data FIS, CRC
-0x8000  4       363301  Vendor specific
-
-
-
-
-
-
-
-
+-xar
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
