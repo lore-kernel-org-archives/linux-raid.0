@@ -1,60 +1,50 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Fri, 07 Nov 2014 22:36:26 -0500
-Message-ID: <545D8FBA.9090701@turmel.org>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org> <5458FC2A.1050308@turmel.org> <545CEDFB.6060806@gautschi.net>
+From: Ram Ramesh <rramesh2400@gmail.com>
+Subject: What is the correct way of making image copy of a member disk in
+ md array?
+Date: Sat, 08 Nov 2014 19:44:20 -0600
+Message-ID: <545EC6F4.7010007@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <545CEDFB.6060806@gautschi.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "P. Gautschi" <linuxlist@gautschi.net>
-Cc: Vince <stuff@hagenhuegel.de>, linux-raid@vger.kernel.org
+To: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/07/2014 11:06 AM, P. Gautschi wrote:
->  > This is a problem you haven't solved yet, I think. The raid array
-> should have fixed this bad sector for you without kicking the drive out.
-> The scenario is common with "green" drives and/or consumer-grade drives
-> in general.
->  > ...
->  > Then you can set up your array to properly correct bad sectors, and
-> set your system to look for bad sectors on
->  > a regular basis.
->
-> What is the behavior of mdadm when a disk reports a read error?
-> - reconstruct the data, deliver it to the fs and otherwise ignore it?
-> - set the disk to fail?
-> - reconstruct the data, rewrite the failed data and continue with any
-> action?
-> - rewrite the failed data and reread it (bypassing the cache on the HD)?
+I have a situation with one of my disks in /dev/md0. It does not play 
+well in initial hardware detection after bootup. It works very reliably 
+once it is detected. So I like to keep its image ready should it 
+actually fail. If I add a spare to md0, this flaky disk gets kicked out 
+immediately and I do not want that to happen.
 
-Option 3.  Reconstruct and rewrite.
+  Following is a possible solution
 
-However, if the device with the bad sector is trying to recover longer 
-than the linux low level driver's timeout, bad things^TM happen. 
-Specifically, the driver resets the SATA (or SCSI) connection and 
-attempts to reconnect.  During this brief time, it will not accept 
-further I/O, so the write back of the reconstructed data fails.  Then 
-the device has experienced a *write* error, so MD fails the drive.  This 
-is the out-of-the-box behavior of consumer-grade drives in raid arrays.
+ 1. Add the new disk as spare (call it sdX).
+ 2. echo want_replacement on the flaky drive (call it sdY)
+ 3. When the copy completes and flaky drive becomes spare repeat the
+    process in the opposite direction
+ 4. Remove  the new disk from md0 when it becomes spare.
 
-> Do read operation always read the parity too in order to detect problems
-> early
-> before a sector on a other disks fails?
+Specifically, my questions are
 
-No.
+ 1. Is it possible to -re-add sdX after step 4?
+ 2. Is there a recommended/better solution for making image other than
+    the one given above? If not,
+ 3. Can I skip steps 3 & 4 and simply re-add the flaky drive after step2
+    completes ? I mean mdadm --remove sdX and --re-add sdY.
+ 4. If above step works, will there be a problem when I reboot with both
+    sdX and sdY present?
+ 5. If a reboot is a no-no, is there another method available to keep
+    the new disk (sdX) plugged in without being part of md0? I mean not
+    even as a spare.
 
-> Can the behavior be configured in any way? I found no documentation
-> regarding this.
+The reason for all this jumping through the hoops is that I want to keep 
+only one spare across multiple md devices across multiple machines. I 
+want it to be ready for the most likely job this spare will be needed 
+(based on my hunch).
 
-The administrator must schedule "check" scrubs of the array to look for 
-bad sectors, or wait for them to be found naturally.  Such scrubs will 
-also find inconsistent parity and report it.  A "repair" scrub can then 
-fix the broken parity.
+Kernel: Linux xxxxx 3.14-0.bpo.2-amd64 #1 SMP Debian 3.14.13-2~bpo70+1 
+(2014-07-31) x86_64 GNU/Linux
+mdadm: mdadm - v3.2.5 - 18th May 2012
 
-I understand that some distros include a cron job for this purpose. 
-I've always rolled my own.
-
-Phil
+Ramesh
