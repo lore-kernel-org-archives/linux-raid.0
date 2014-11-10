@@ -1,91 +1,61 @@
-From: support2341@millionaire.com
-Subject: A recommendation from Support
-Date: Mon, 10 Nov 2014 05:54:56 +0000 (GMT)
-Message-ID: <20141110055456.8CA6548942@vps91566031.123-vps.co.uk>
+From: Ethan Wilson <ethan.wilson@shiftmail.org>
+Subject: Re: md with shared disks
+Date: Mon, 10 Nov 2014 17:40:19 +0100
+Message-ID: <5460EA73.4080009@shiftmail.org>
+References: <545F2630.8090307@true.co.za>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <545F2630.8090307@true.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 09/11/2014 09:30, Anton Ekermans wrote:
+> Good day raiders,
+> I have a question on md that I cannot find (up to date) answer to.
+> We use SuperMicro server with 16 shared disks on a shared backplane 
+> between two motherboards, running up to date CentOS7.
+> If I create an array on one node, the other node can detect it. I put 
+> GFS2 on top of the array so both system can share the filesystem, but 
+> I want to know if md raid is safe to be used in this way with possibly 
+> 2 active/active nodes changing the metadata at the same time. I've 
+> disabled raid-check cron job on one node so they don't both resync the 
+> drives weekly, but I suspect there's a lot more to it than that.
+>
+> If it's not possible, then alternatively some advice on strategy to 
+> have a large active/active shared disk/filesystem would also be welcome.
 
-Hello,
+Not possible, as far as I know: MD does not reload / exchange metadata 
+information with other MD peers. MD thinks it is the only user of those 
+disks.
+If you attempt to share the arrays and then one head fails one disk and 
+starts reconstruction onto another disk, while the other head thinks the 
+array is all right, havoc will arise certainly.
 
-Hey Friend,=0D
-=0D
-As you know, I=92m always on the lookout for =0D
-real ways to make decent money.       =0D
-                                                     =0D
-Not just a measly $20 or $30 a day; I mean real money. =0D
-=0D
-$20,000 or $30,000 A DAY?!?! Now THAT is=85=0D
-=0D
-DAMN GOOD REAL MONEY!=0D
-=0D
-His 6 figure bank accounts now are a pretty good =0D
-indicator that Trevor Haynes has figured it out.=0D
-=0D
-Check this out -  http://tinyurl.com/ko7bljk=0D
-=0D
-The Millionaire Money Machine has nothing to do with =0D
-eBooks, websites, T-shirts, MLM, gambling, writing, =0D
-flipping sites or any of that.=0D
-=0D
-THIS isn=92t about making ten buck here or there. =0D
-=0D
-It=92s about making TENS OF THOUSANDS DAILY.=0D
-=0D
-You=92ll meet one Millionaire Money Machine user who =0D
-banked over $30K overnight=85 =0D
-=0D
-While he was asleep!=0D
-=0D
-Take a look -  http://tinyurl.com/ko7bljk  =0D
-=0D
-=46or a VERY LIMITED number, Haynes is giving away his =0D
-Millionaire Money Machine. No strings, No BS.=0D
-=0D
-But DO NOT WAIT on this!=0D
-=0D
-Check it out here:=0D
-=0D
--  http://tinyurl.com/ko7bljk=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-NOTE: If your email account doesn't automatically turn the URL above in=
-to a link, =0D
-      you can copy and paste it into your browser.               =0D
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=0D
-If the link is broken please use this: http://nikkanares.mmmachine.cpa.=
-clicksure.com   =0D
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=0D
+Even without this worst-case scenario, data probably will be still lost 
+because the two MDs are not cache coherent, so writes on one head will 
+not invalidate the kernel cache for the same region on the other head, 
+and this is bad because reads performed on the other head will not see 
+the changes just written if such area was cached in the kernel.
+GFS actually will attempt to invalidate such cache but I am not sure to 
+what extent: if you use raid5/6 probably it is not enough because the 
+stripe-cache will hold stale data in a way that GFS probably does not 
+know about (does not go away even with echo 3 > /proc/sys/vm/drop_caches 
+). Maybe raid0/1/10 can be safer... anybody knows if cache dropping 
+works well there?
+But the problem of consistent vision of disk failures and raid 
+reconstruction seems harder to overcome.
 
+You can do an active/passive configuration, shutting down MD on one head 
+and starting it on the other head.
+Another option is the crossed-active or whatever it is called: some 
+arrays are active on one head node, other arrays on the other head node, 
+so to share the computational and bandwidth burden.
 
-Click below to view the webpage that your friend has recommended:
+If other people have better ideas I am all ears.
 
+Regards
+EW
 
-Support has used the Tell-a-Friend form to send you this link.
-
-We look forward to your visit!
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
