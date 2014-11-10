@@ -1,63 +1,91 @@
-From: Jason Keltz <jas@cse.yorku.ca>
-Subject: Re: Raid5 drive fail during grow and no backup
-Date: Sun, 09 Nov 2014 22:20:22 -0500
-Message-ID: <54602EF6.9070909@cse.yorku.ca>
-References: <loom.20141031T141939-473@post.gmane.org> <5455A35C.2060000@turmel.org> <loom.20141103T151703-83@post.gmane.org> <5458FC2A.1050308@turmel.org> <545CEDFB.6060806@gautschi.net> <545D8FBA.9090701@turmel.org>
+From: support2341@millionaire.com
+Subject: A recommendation from Support
+Date: Mon, 10 Nov 2014 05:54:56 +0000 (GMT)
+Message-ID: <20141110055456.8CA6548942@vps91566031.123-vps.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <545D8FBA.9090701@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
 List-Id: linux-raid.ids
 
-On 07/11/2014 10:36 PM, Phil Turmel wrote:
-> On 11/07/2014 11:06 AM, P. Gautschi wrote:
->>  > This is a problem you haven't solved yet, I think. The raid array
->> should have fixed this bad sector for you without kicking the drive out.
->> The scenario is common with "green" drives and/or consumer-grade drives
->> in general.
->>  > ...
->>  > Then you can set up your array to properly correct bad sectors, and
->> set your system to look for bad sectors on
->>  > a regular basis.
->>
->> What is the behavior of mdadm when a disk reports a read error?
->> - reconstruct the data, deliver it to the fs and otherwise ignore it?
->> - set the disk to fail?
->> - reconstruct the data, rewrite the failed data and continue with any
->> action?
->> - rewrite the failed data and reread it (bypassing the cache on the HD)?
->
-> Option 3.  Reconstruct and rewrite.
->
-> However, if the device with the bad sector is trying to recover longer 
-> than the linux low level driver's timeout, bad things^TM happen. 
-> Specifically, the driver resets the SATA (or SCSI) connection and 
-> attempts to reconnect.  During this brief time, it will not accept 
-> further I/O, so the write back of the reconstructed data fails.  Then 
-> the device has experienced a *write* error, so MD fails the drive.  
-> This is the out-of-the-box behavior of consumer-grade drives in raid 
-> arrays.
 
-Hi Phil,
-Sorry to interject..
-Since I'm in the midst of setting up a 22 disk RAID 10 with 2 TB WD 
-black (desktop) drives, I wanted to be clear that I understand this 
-particular scenerio that you bring up.  Should a drive enter a deep 
-error recovery, would I be correct that the worst that should happen 
-would be a hang for the users during this recovery time, and, if the 
-driver does reset the SATA connection (as it likely would do), then a 
-potential removal of the disk from the array, but not the destruction of 
-the array?  If I had a spare disk, it would be used for a potential 
-rebuild, but I could test the original disk and re-add it back to the 
-pool at another time.
+Hello,
 
-Any feedback would be helpful.
+Hey Friend,=0D
+=0D
+As you know, I=92m always on the lookout for =0D
+real ways to make decent money.       =0D
+                                                     =0D
+Not just a measly $20 or $30 a day; I mean real money. =0D
+=0D
+$20,000 or $30,000 A DAY?!?! Now THAT is=85=0D
+=0D
+DAMN GOOD REAL MONEY!=0D
+=0D
+His 6 figure bank accounts now are a pretty good =0D
+indicator that Trevor Haynes has figured it out.=0D
+=0D
+Check this out -  http://tinyurl.com/ko7bljk=0D
+=0D
+The Millionaire Money Machine has nothing to do with =0D
+eBooks, websites, T-shirts, MLM, gambling, writing, =0D
+flipping sites or any of that.=0D
+=0D
+THIS isn=92t about making ten buck here or there. =0D
+=0D
+It=92s about making TENS OF THOUSANDS DAILY.=0D
+=0D
+You=92ll meet one Millionaire Money Machine user who =0D
+banked over $30K overnight=85 =0D
+=0D
+While he was asleep!=0D
+=0D
+Take a look -  http://tinyurl.com/ko7bljk  =0D
+=0D
+=46or a VERY LIMITED number, Haynes is giving away his =0D
+Millionaire Money Machine. No strings, No BS.=0D
+=0D
+But DO NOT WAIT on this!=0D
+=0D
+Check it out here:=0D
+=0D
+-  http://tinyurl.com/ko7bljk=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+NOTE: If your email account doesn't automatically turn the URL above in=
+to a link, =0D
+      you can copy and paste it into your browser.               =0D
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0D
+If the link is broken please use this: http://nikkanares.mmmachine.cpa.=
+clicksure.com   =0D
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0D
 
-Thanks!
 
-Jason.
+Click below to view the webpage that your friend has recommended:
 
+
+Support has used the Tell-a-Friend form to send you this link.
+
+We look forward to your visit!
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
