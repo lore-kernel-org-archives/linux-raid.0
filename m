@@ -1,94 +1,64 @@
-From: mitchellmiller@gmail.com
-Subject: A recommendation from Mitchell Miller
-Date: Thu, 13 Nov 2014 05:50:31 +0000 (GMT)
-Message-ID: <20141113055031.8B1F71486F7@vps91566031.123-vps.co.uk>
+From: Anton Ekermans <antone@true.co.za>
+Subject: Re: md with shared disks
+Date: Thu, 13 Nov 2014 15:14:16 +0200
+Message-ID: <5464AEA8.3010106@true.co.za>
+References: <545F2630.8090307@true.co.za> <546138B5.7020101@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <546138B5.7020101@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
+To: Stan Hoeppner <stan@hardwarefreak.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thank you very much for your clear response.
+The purpose of this hardware is to primarily host ample VM storage for 
+the 2 nodes itself and 3 other i7 PC/servers.
+The HA was hoped to be achieved as active/active with both nodes sharing 
+the same disks and non-cluster servers(i7) having multi-path to these 
+two nodes. This is advertised as HA active/active in storage software 
+such as Nexenta using RSF-1. However upon closer inspection, their 
+active/active means both nodes share some data and the other can take 
+over. So for me, in essence it is "active/passive + passive/active" and 
+not truly "active/active". We will try to config this way to get quasi 
+active/active for best performance with kind-of high-availability. Seems 
+the shared disks is not the problem, but combining them on a cluster is.
 
-Hello,
+Thank you again
 
-Subject: YOUR Millionaire Money Machine is Here!=0D
-=0D
-Hey Friend,=0D
-=0D
-As you know, I=92m always on the lookout for =0D
-real ways to make decent money.       =0D
-                                                     =0D
-Not just a measly $20 or $30 a day; I mean real money. =0D
-=0D
-$20,000 or $30,000 A DAY?!?! Now THAT is=85=0D
-=0D
-DAMN GOOD REAL MONEY!=0D
-=0D
-His 6 figure bank accounts now are a pretty good =0D
-indicator that Trevor Haynes has figured it out.=0D
-=0D
-Check this out -  http://crossfires.mmmachine.cpa.clicksure.com   =0D
-=0D
-The Millionaire Money Machine has nothing to do with =0D
-eBooks, websites, T-shirts, MLM, gambling, writing, =0D
-flipping sites or any of that.=0D
-=0D
-THIS isn=92t about making ten buck here or there. =0D
-=0D
-It=92s about making TENS OF THOUSANDS DAILY.=0D
-=0D
-You=92ll meet one Millionaire Money Machine user who =0D
-banked over $30K overnight=85 =0D
-=0D
-While he was asleep!=0D
-=0D
-Take a look -  http://crossfires.mmmachine.cpa.clicksure.com     =0D
-=0D
-=46or a VERY LIMITED number, Haynes is giving away his =0D
-Millionaire Money Machine. No strings, No BS.=0D
-=0D
-But DO NOT WAIT on this!=0D
-=0D
-Check it out here:=0D
-=0D
--  http://crossfires.mmmachine.cpa.clicksure.com   =0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-=0D
-NOTE: If your email account doesn't automatically turn the URL above in=
-to a link, =0D
-      you can copy and paste it into your browser.               =0D
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=0D
-If the link is broken please use this: http://crossfires.mmmachine.cpa.=
-clicksure.com   =0D
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=0D
-=0D
-        =20
+Best regards
+Untitled Document
 
-Click below to view the webpage that your friend has recommended:
+Anton Ekermans
 
+> It's not possible to do what you mention as md is not cluster aware.  It
+> will break, badly.  What most people do in such cases in create two md
+> arrays, one controlled by each host, and mirror them with DRBD, then put
+> OCFS/GFS atop DRBD.  You lose half your capacity doing this, but it's
+> the only way to do it and have all disks active.  Of course you lose
+> half your bandwidth as well.  This is a high availability solution, not
+> high performance.
+>
+> You bought this hardware to do something.  And that something wasn't
+> simply making two hosts in one box use all the disks in the box.  What
+> is the workload you plan to run on this hardware?  The workload dictates
+> the needed hardware architecture, not the other way around.  If you want
+> high availability this hardware will work using the stack architecture
+> above, and work well.  If you need high performance shared filesystem
+> access between both nodes you need an external SAS/FC RAID array and a
+> cluster FS.  In either case you're using a cluster FS which means high
+> file throughput but low metadata throughgput.
+>
+> If it's high performance you need, an option is to submit patches to
+> make md cluster aware.  Another is the LSI clustering RAID controller
+> kit for internal drives.  Don't know anything about it other than it is
+> available and apparently works with RHEL and SUSE.  Seems suitable for
+> what you express as your need.
+>
+> http://www.lsi.com/products/shared-das/pages/syncro-cs-9271-8i.aspx#tab/tab2
+>
+>
+> Cheers,
+> Stan
 
-Mitchell Miller has used the Tell-a-Friend form to send you this link.
-
-We look forward to your visit!
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
