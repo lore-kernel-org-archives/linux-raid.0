@@ -1,51 +1,48 @@
-From: Ethan Wilson <ethan.wilson@shiftmail.org>
-Subject: Re: md with shared disks
-Date: Thu, 13 Nov 2014 23:53:21 +0100
-Message-ID: <54653661.80605@shiftmail.org>
-References: <545F2630.8090307@true.co.za> <546138B5.7020101@hardwarefreak.com> <5464AEA8.3010106@true.co.za> <54651B05.1050104@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: failed RAID 5 array
+Date: Thu, 13 Nov 2014 17:56:53 -0500
+Message-ID: <54653735.90007@turmel.org>
+References: <1415807882.4241.36.camel@lappy.neofreak.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54651B05.1050104@hardwarefreak.com>
+In-Reply-To: <1415807882.4241.36.camel@lappy.neofreak.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: DeadManMoving <sequel@neofreak.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 13/11/2014 21:56, Stan Hoeppner wrote:
-> With DRBD and GFS2 it is true active/active at the block level.  You
-> just lose half your disk capacity due to the host-to-host mirroring.
+On 11/12/2014 10:58 AM, DeadManMoving wrote:
+> Hi list,
+> 
+> I have a failed RAID 5 array, composed of 4 x 2TB drives without hot
+> spare. On the fail array, it looks like there is one drive out of sync
+> (the one with a lower Events counts) and another drive with a missing or
+> corrupted superblock (dmesg is reporting "does not have a valid v1.2
+> superblock, not importing!" and i have a : Checksum : 5608a55a -
+> expected 4108a55a).
+> 
+> All drives seems good though, the problem was probably triggered by a a
+> broken communication between the external eSATA expansion card and
+> external drive enclosure (card, cable or backplane in the enclosure i
+> guess...).
+> 
+> I am now in the process of making exact copies of the drives with dd to
+> other drives.
+> 
+> I have an idea on how to try to get my data back but i would be happy if
+> someone could help/validate with the steps i intent to follow to get
+> there.
 
-Sorry but I don't share your definition of active/active.
+--create is almost always a bad idea.
 
-Would you say that a raid1 is an active/active thing?
+Just use "mdadm -vv --assemble --force /dev/mdX /dev/sd[abcd]"
 
-Doubling the number of disks and repeating the operation on both sides 
-is not active/active in the sense that people usually want.
+One drive will be left behind (the bad superblock), but the stale one
+will be revived and you'll be able to start.
 
-Active/active commonly means that you have twice the performance of 
-active/passive.
+If that doesn't work, show the output of the above command.  Do NOT do
+an mdadm --create.
 
-In this sense DRBD not only is an active/passive but it is even way 
-below the performances of an active/passive because it has to transmit 
-the data to the peer in addition to write to the disks, and this takes 
-CPU time for memcpy and interrupts, introduces latency, requires 
-additional hardware (= fast networking dedicated to DRBD). An 
-active/passive with shared disks is hence "twice" (very roughly) faster 
-than DRBD at the same price spent on the head nodes. An active/active 
-with shared disks is hence 4 times (again very roughly) faster than 
-DRBD, at the same price for the head nodes.
-
-In addition to this with DRBD you have to buy twice the number of disks, 
-which is also an additional expense. Marginally though, because a 
-shared-disk infrastructure is way more expensive than a direct-attached 
-one, but it has to be planned like that in advance, and not retrofitted 
-like you propose.
-
-His current infrastructure cannot be easily converted to DRBD without 
-major losses: if he attempts to do so he will have almost double the 
-costs of a basic DRBD shared-nothing direct-attached infrastructure or 
-exactly double the cost of a shared-disk infrastructure, intended as 
-cost per TB of data. Unfortunately, after this he will still have half 
-the performances of an active/passive shared-disk clustered-MD solution.
+Phil
 
