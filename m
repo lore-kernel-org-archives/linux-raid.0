@@ -1,209 +1,94 @@
-From: DeadManMoving <sequel@neofreak.org>
-Subject: failed RAID 5 array
-Date: Wed, 12 Nov 2014 10:58:02 -0500
-Message-ID: <1415807882.4241.36.camel@lappy.neofreak.org>
+From: mitchellmiller@gmail.com
+Subject: A recommendation from Mitchell Miller
+Date: Thu, 13 Nov 2014 05:50:31 +0000 (GMT)
+Message-ID: <20141113055031.8B1F71486F7@vps91566031.123-vps.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: DeadManMoving <sequel@neofreak.org>
+To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
 List-Id: linux-raid.ids
 
-Hi list,
 
-I have a failed RAID 5 array, composed of 4 x 2TB drives without hot
-spare. On the fail array, it looks like there is one drive out of sync
-(the one with a lower Events counts) and another drive with a missing or
-corrupted superblock (dmesg is reporting "does not have a valid v1.2
-superblock, not importing!" and i have a : Checksum : 5608a55a -
-expected 4108a55a).
+Hello,
 
-All drives seems good though, the problem was probably triggered by a a
-broken communication between the external eSATA expansion card and
-external drive enclosure (card, cable or backplane in the enclosure i
-guess...).
+Subject: YOUR Millionaire Money Machine is Here!=0D
+=0D
+Hey Friend,=0D
+=0D
+As you know, I=92m always on the lookout for =0D
+real ways to make decent money.       =0D
+                                                     =0D
+Not just a measly $20 or $30 a day; I mean real money. =0D
+=0D
+$20,000 or $30,000 A DAY?!?! Now THAT is=85=0D
+=0D
+DAMN GOOD REAL MONEY!=0D
+=0D
+His 6 figure bank accounts now are a pretty good =0D
+indicator that Trevor Haynes has figured it out.=0D
+=0D
+Check this out -  http://crossfires.mmmachine.cpa.clicksure.com   =0D
+=0D
+The Millionaire Money Machine has nothing to do with =0D
+eBooks, websites, T-shirts, MLM, gambling, writing, =0D
+flipping sites or any of that.=0D
+=0D
+THIS isn=92t about making ten buck here or there. =0D
+=0D
+It=92s about making TENS OF THOUSANDS DAILY.=0D
+=0D
+You=92ll meet one Millionaire Money Machine user who =0D
+banked over $30K overnight=85 =0D
+=0D
+While he was asleep!=0D
+=0D
+Take a look -  http://crossfires.mmmachine.cpa.clicksure.com     =0D
+=0D
+=46or a VERY LIMITED number, Haynes is giving away his =0D
+Millionaire Money Machine. No strings, No BS.=0D
+=0D
+But DO NOT WAIT on this!=0D
+=0D
+Check it out here:=0D
+=0D
+-  http://crossfires.mmmachine.cpa.clicksure.com   =0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+=0D
+NOTE: If your email account doesn't automatically turn the URL above in=
+to a link, =0D
+      you can copy and paste it into your browser.               =0D
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0D
+If the link is broken please use this: http://crossfires.mmmachine.cpa.=
+clicksure.com   =0D
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0D
+=0D
+        =20
 
-I am now in the process of making exact copies of the drives with dd to
-other drives.
-
-I have an idea on how to try to get my data back but i would be happy if
-someone could help/validate with the steps i intent to follow to get
-there.
-
-On that array, i have ~ 85% of data which is already backed up somewhere
-else, ~ 10% of data for which i do not care much, but there is ~ 5% of
-data that is really important to me and for which i do not have other
-copies around :|
-
-So, here are the steps i intend to follow once the dd process is gonna
-be over :
-
-
-- take the drives which i made the dd on it
-- try to create a new array on the two good drives, plus the one with
-the superblock problem, by respecting the order (according to data i
-have gathered from the drives), with the correct chunk size, with a
-command like this :
-
-# mdadm --create --assume-clean --level=5 --chunk=512
---raid-devices=4 /dev/md127 /dev/sdd /dev/sde /dev/sdb missing
-
-- if the array is coming up nicely, will try to validate if fs is good
-on it :
-
-# fsck.ext4 -n /dev/md127
-
-- if all is still fine, mount the array read-only and backup all i need
-as fast as possible!
-
-- then i guess i could add the drive (/dev/sdc) back to the array :
-
-# mdadm --add /dev/md127 /dev/sdc
-
-
-
-Can anyone tell me if those steps make sense? Does i miss something
-obvious? Does i have any chance to recover my data with that procedure?
-I would like to avoid trials and errors since it take 24 hours to make a
-full copy of a drive with dd (4 days for the four drives).
-
-
-
-Here is the output of mdadm --examine of my four drives :
-
-
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d707f577:a9e572d5:e5d5f10c:b232f15a
-           Name : abc:xyz  (local to host abc)
-  Creation Time : Fri Aug  9 21:55:47 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
-     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=1200 sectors
-          State : clean
-    Device UUID : 2b438b47:db326d4a:0ae82357:1b88590d
-
-    Update Time : Mon Nov 10 15:48:17 2014
-       Checksum : ebfcf43 - correct
-         Events : 9370
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAA. ('A' == active, '.' == missing, 'R' == replacing)
+Click below to view the webpage that your friend has recommended:
 
 
+Mitchell Miller has used the Tell-a-Friend form to send you this link.
 
-/dev/sdc:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0xa
-     Array UUID : d707f577:a9e572d5:e5d5f10c:b232f15a
-           Name : abx:xyz  (local to host abc)
-  Creation Time : Fri Aug  9 21:55:47 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
-     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-Recovery Offset : 0 sectors
-   Unused Space : before=1960 sectors, after=1200 sectors
-          State : active
-    Device UUID : 011e3cbb:42c0ac0a:d6815904:2150169a
-
-    Update Time : Mon Nov 10 15:44:07 2014
-  Bad Block Log : 512 entries available at offset 72 sectors - bad
-blocks present.
-       Checksum : 7ca998a5 - correct
-         Events : 9358
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+We look forward to your visit!
 
 
-
-/dev/sdd:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d707f577:a9e572d5:e5d5f10c:b232f15a
-           Name : abc:xyz  (local to host abc)
-  Creation Time : Fri Aug  9 21:55:47 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
-     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=1200 sectors
-          State : clean
-    Device UUID : 67ffc02b:c8a013a7:3f17dc65:d1040e05
-
-    Update Time : Mon Nov 10 15:48:17 2014
-       Checksum : 5608a55a - expected 4108a55a
-         Events : 9370
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAA. ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-/dev/sde:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d707f577:a9e572d5:e5d5f10c:b232f15a
-           Name : abc:xyz  (local to host abc)
-  Creation Time : Fri Aug  9 21:55:47 2013
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907027120 (1863.02 GiB 2000.40 GB)
-     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
-  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=1200 sectors
-          State : clean
-    Device UUID : 7b37a749:f1e575d1:50eea3c4:2083b9be
-
-    Update Time : Mon Nov 10 15:48:17 2014
-       Checksum : b6c477f4 - correct
-         Events : 9370
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AAA. ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-
-
-Thanks and regards,
-
-Tony
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
