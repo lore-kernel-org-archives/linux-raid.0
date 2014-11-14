@@ -1,123 +1,47 @@
-From: Patrick Gautschi <patrick@gautschi.net>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Disks never stop spinning
-Date: Fri, 14 Nov 2014 04:05:43 +0100
-Message-ID: <54657187.6020306@gautschi.net>
-References: <54610788.6060103@gautschi.net> <21604.47814.651762.246947@tree.ty.sabi.co.uk>
+Date: Fri, 14 Nov 2014 12:11:36 +0800
+Message-ID: <546580F8.2040607@fnarfbargle.com>
+References: <54610788.6060103@gautschi.net> <21604.47814.651762.246947@tree.ty.sabi.co.uk> <54657187.6020306@gautschi.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms080600040203040804080108"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21604.47814.651762.246947@tree.ty.sabi.co.uk>
+In-Reply-To: <54657187.6020306@gautschi.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg@lxra2.for.sabi.co.UK>
+To: Patrick Gautschi <patrick@gautschi.net>, Peter Grandi <pg@lxra2.for.sabi.co.UK>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
+On 14/11/14 11:05, Patrick Gautschi wrote:
+>>    #  hddtemp /dev/sd[bcdef]
+>>    /dev/sdb: SAMSUNG HD103UJ: drive is sleeping
+>>    /dev/sdc: WDC WD10EZEX-22RKKA0: drive is sleeping
+>>    /dev/sdd: ST1000DM003-9YN162: drive is sleeping
+>>    /dev/sde: SAMSUNG HD103SJ: drive is sleeping
+>>    /dev/sdf: WDC WD10EZEX-22RKKA0: drive is sleeping
+>
+> Different disks; looks like desktop types.
+>
+>> That means something else is waking up those disks. To verify
+>> this use something like:
+>
+> FS are not mounted and arrays stopped. There is nothing that wakes them up.
+> If a switch them off manually with hdparm -Y they stay off.
+>
 
---------------ms080600040203040804080108
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Are you polling them with smartmontools? I have a unit here where I had 
+to add the "standby" :
 
->    #  hddtemp /dev/sd[bcdef]
->    /dev/sdb: SAMSUNG HD103UJ: drive is sleeping
->    /dev/sdc: WDC WD10EZEX-22RKKA0: drive is sleeping
->    /dev/sdd: ST1000DM003-9YN162: drive is sleeping
->    /dev/sde: SAMSUNG HD103SJ: drive is sleeping
->    /dev/sdf: WDC WD10EZEX-22RKKA0: drive is sleeping
+DEVICESCAN -s (L/../../7/07|S/../../[1-6]/00) -n standby,q -m root -M 
+exec /usr/share/smartmontools/smartd-runner
 
-Different disks; looks like desktop types.
+.. clause in smartd.conf. This ensures smartd does not wake the disk 
+every 15 minutes for it's poll, and only polls if the drive is already 
+spinning.
 
-> That means something else is waking up those disks. To verify
-> this use something like:
+Failing that, I'd put it to sleep and it'd wake up on the next 15 
+minutes smart poll.
 
-FS are not mounted and arrays stopped. There is nothing that wakes them u=
-p.
-If a switch them off manually with hdparm -Y they stay off.
-
-
---------------ms080600040203040804080108
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIMgTCC
-BjQwggQcoAMCAQICAR4wDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
-DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
-Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
-MTAyNDIxMDE1NVoXDTE3MTAyNDIxMDE1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
-dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
-aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
-aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMcJg8zOLdgasSmkLhOr
-lr6KMoOMpohBllVHrdRvEg/q6r8jR+EK75xCGhR8ToREoqe7zM9/UnC6TS2y9UKTpT1v7RSM
-zR0t6ndl0TWBuUr/UXBhPk+Kmy7bI4yW4urC+y7P3/1/X7U8ocb8VpH/Clt+4iq7nirMcNh6
-qJR+xjOhV+VHzQMALuGYn5KZmc1NbJQYclsGkDxDz2UbFqE2+6vIZoL+jb9x4Pa5gNf1TwSD
-kOkikZB1xtB4ZqtXThaABSONdfmv/Z1pua3FYxnCFmdr/+N2JLKutIxMYqQOJebr/f/h5t95
-m4JgrM3Y/w7YX9d7YAL9jvN4SydHsU6n65cCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
-Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRTcu2SnODaywFcfH6WNU7y1LhRgjAfBgNV
-HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
-MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
-dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
-c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
-c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
-dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
-d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBAAqD
-CH14qywGXLhjjF6uHLkjd02hcdh9hrw+VUsv+q1eeQWB21jWj3kJ96AUlPCoEGZ/ynJNScWy
-6QMVQjbbMXltUfO4n4bGGdKo3awPWp61tjAFgraLJgDk+DsSvUD6EowjMTNx25GQgyYJ5RPI
-zKKR9tQW8gGK+2+RHxkUCTbYFnL6kl8Ch507rUdPPipJ9CgJFws3kDS3gOS5WFMxcjO5DwKf
-KSETEPrHh7p5shuuNktvsv6hxHTLhiMKX893gxdT3XLS9OKmCv87vkINQcNEcIIoFWbP9HOR
-z9v3vQwR4e3ksLc2JZOAFK+ssS5XMEoznzpihEP0PLc4dCBYjbvSD7kxgDwZ+Aj8Q9PkbvE9
-sIPP7ON0fz095HdThKjiVJe6vofq+n6b1NBc8XdrQvBmunwxD5nvtTW4vtN6VY7mUCmxsCie
-uoBJ9OlqmsVWQvifIYf40dJPZkk9YgGTzWLpXDSfLSplbY2LL9C9U0ptvjcDjefLTvqSFc7t
-w1sEhF0n/qpA2r0GpvkLRDmcSwVyPvmjFBGqUp/pNy8ZuPGQmHwFi2/14+xeSUDG2bwnsYJQ
-G2EdJCB6luQ57GEnTA/yKZSTKI8dDQa8Sd3zfXb19mOgSF0bBdXbuKhEpuP9wirslFe6fQ1t
-5j5R0xi72MZ8ikMu1RQZKCyDbMwazlHiMIIGRTCCBS2gAwIBAgIDCr3BMA0GCSqGSIb3DQEB
-BQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMi
-U2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20g
-Q2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTQwODA2MTMzNjQz
-WhcNMTUwODA3MTUxNzA3WjBfMRkwFwYDVQQNExBtbjkyQWUzd3p4OGJ6MWxLMR0wGwYDVQQD
-DBRwYXRyaWNrQGdhdXRzY2hpLm5ldDEjMCEGCSqGSIb3DQEJARYUcGF0cmlja0BnYXV0c2No
-aS5uZXQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC8Ub3MKfLkFS4zrU4PWUmk
-RxMBD/HZkt0UkBAf3Fppzp1T1VYsa0mfcnkIERlHNwx/TL6h7By9OYAyqx2aN1/B0zyG0FMD
-3HYVZLuaKZWr22OEpNL9nICGd4XDhlZL4et4kwdM5WsvbcYKbFKo4LjU1yLi7fzuSq7ci7gz
-/8Fs7pIBdsvKubSJ2GZ/lgqYyJWzzOho7ybjS9XQI/YpW4hzTjoHVWdUWfFS6vvnf8v8VWW4
-HBZoX+A33oP3UDd+XcQeWGulOPSjl1gTHOU8P8HHRO92NWq0eLgMfFKE5vDmivAQJ9fpeZNs
-IAP0ckLpLSpvRwfKb4GeLYZweL750hlTAgMBAAGjggLaMIIC1jAJBgNVHRMEAjAAMAsGA1Ud
-DwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFGOO/bEq
-HGfJKntCefv7RhoaIunOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1Ud
-EQQYMBaBFHBhdHJpY2tAZ2F1dHNjaGkubmV0MIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEE
-AYG1NwECAzCCASowLgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGlj
-eS5wZGYwgfcGCCsGAQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9y
-aXR5MAMCAQEagb5UaGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRo
-ZSBDbGFzcyAxIFZhbGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBw
-b2xpY3ksIHJlbGlhbmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBs
-aWFuY2Ugb2YgdGhlIHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMDYGA1UdHwQvMC0wK6Ap
-oCeGJWh0dHA6Ly9jcmwuc3RhcnRzc2wuY29tL2NydHUxLWNybC5jcmwwgY4GCCsGAQUFBwEB
-BIGBMH8wOQYIKwYBBQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3Mx
-L2NsaWVudC9jYTBCBggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMv
-c3ViLmNsYXNzMS5jbGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRz
-c2wuY29tLzANBgkqhkiG9w0BAQUFAAOCAQEAiWjJeYFYdEPLjNp5o84DkmHogRSjF98bF4tx
-Mf+SPVzfLFEbVScUZKMOgzx77YLM5XkaVniwVwoGiksyiiASPQA+ndGI94sjnAENVQ2uL0r/
-fdFEYriZSSgRLQs7ED7FuZo0Mgypbz6htlbiGK0aRhzfcLImEadqfwjfzvQOSHeqfTv8JQ7Z
-Tgh/mrUjNT/Su6DcQqtgGFpyc5byP5tJDkXGXppgT3G01HW9/qdOizCOAqxdHLmHBFQy8qa3
-yButF29Hj99i+jmxUw6KZg8YE9xp4NMNICm96dgPgciLeG99/PoTodGBMwFUYxHr8irMHek2
-1M71h7D0FarwZRDRODGCA9AwggPMAgEBMIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMN
-U3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2ln
-bmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBD
-bGllbnQgQ0ECAwq9wTAJBgUrDgMCGgUAoIICEDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0xNDExMTQwMzA1NDNaMCMGCSqGSIb3DQEJBDEWBBTdJx/TCj7k
-KP1nlKnvVxEoPiaJ8zBfBgkqhkiG9w0BCQ8xUjBQMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
-BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
-ASgwgaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
-Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50
-IENBAgMKvcEwgacGCyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UE
-ChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUg
-U2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0
-ZSBDbGllbnQgQ0ECAwq9wTANBgkqhkiG9w0BAQEFAASCAQCI3YRA32kU3nf93YCH2K8g0CQM
-vMHh7VqMt9y1Oh2fdOUO/N4lzSZ7sikGwYsvPLUI2fXe9zYH6Oau50Frn6dZCQGNMEXn7Au7
-cMukHiHnrNRS5YLrBT2478mXzQuGjCfKa7KTpzBr20Laidix4k+o0grQyt2KMA1mSGkjkVsm
-J7fjSZgaLx8yj0R3cQzYGgCzng8Jq0C6xHd53HauRFg78aGZbqnUj4Derei0nfUyXrN9e9FE
-PVN5gmTtb67v3aI47AGPiK869+m0r3r58nnGQRiirIiywUMGC9o4K058SL4CFxzpEizVoUDr
-cBxzF4ios7jXPoaFoKrbnwQJDIWzAAAAAAAA
---------------ms080600040203040804080108--
+Regards,
+Brad
