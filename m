@@ -1,66 +1,79 @@
-From: "Justin Stephenson" <justin@evensteveninc.com>
-Subject: Raid 6 Fail Event
-Date: Sun, 16 Nov 2014 15:39:56 +0000
-Message-ID: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
-Reply-To: "Justin Stephenson" <justin@evensteveninc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: Raid 6 Fail Event
+Date: Sun, 16 Nov 2014 12:52:02 -0700
+Message-ID: <3B23D2F1-09A3-4C1F-AB38-2AB0DDC2D5A7@colorremedies.com>
+References: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Stephenson <justin@evensteveninc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
 
-I am new to MDADM and have just experienced my first device fail on my 
-raid 6.
+On Nov 16, 2014, at 8:39 AM, Justin Stephenson <justin@evensteveninc.co=
+m> wrote:
 
-I am wondering if someone might be able to help by outlining a proper 
-protocol for troubleshooting and rebuilding this array (proc/mdstat 
-below).
+> Hello,
+>=20
+> I am new to MDADM and have just experienced my first device fail on m=
+y raid 6.
+>=20
+> I am wondering if someone might be able to help by outlining a proper=
+ protocol for troubleshooting and rebuilding this array (proc/mdstat be=
+low).
+>=20
+> Here is how I might approach it:
+>=20
+> - remove the device
+> - test the device
+> - if the device tests OK then re add the device
+> - if the device fails, then replace the device
+> - resync
+>=20
+> Thank-you for your consideration.
+>=20
+> Best,
+>=20
+> - Justin
+>=20
+> Here is the mdstat email
+>=20
+> -----------------
+>=20
+> This is an automatically generated mail message from mdadm
+> running on BigBlue
+>=20
+> A Fail event had been detected on md device /dev/md0.
+>=20
+> It could be related to component device /dev/sdh1.
 
-Here is how I might approach it:
+=46irst step is getting the backup current.=20
 
-- remove the device
-- test the device
-- if the device tests OK then re add the device
-- if the device fails, then replace the device
-- resync
+Second you can do this without removing the device:
 
-Thank-you for your consideration.
+# smartctl -x /dev/sdh
 
-Best,
+And then look in dmesg for errors related to its ata designation. You s=
+hould be able to get a serial number from the smartctl output and can s=
+earch that with dmesg | grep <serial#> to find out what it=92s ata desi=
+gnation (port and device number) is, then you can dmesg | grep ataX.YY =
+to get any read/write error events that explain what=92s going on.=20
 
-- Justin
+While you=92re at it the following would be helpful as well:
 
-Here is the mdstat email
+# smartctl -l scterc /dev/sdh
+# cat /sys/block/sdh/device/state
+# cat /sys/block/sdh/device/timeout
 
------------------
+These are read-only commands to determine states, they don=92t change s=
+tates so it=92s safe.
 
-This is an automatically generated mail message from mdadm
-running on BigBlue
-
-A Fail event had been detected on md device /dev/md0.
-
-It could be related to component device /dev/sdh1.
-
-Faithfully yours, etc.
-
-P.S. The /proc/mdstat file currently contains the following:
-
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid6 sdh1[5](F) sdg1[4] sdf1[3] sde1[2] sdd1[1] sdb1[6] 
-sdc1[0]
-14650666880 blocks super 1.2 level 6, 128k chunk, algorithm 2 [7/6] 
-[UUUUU_U]
-
-unused devices: <none>
-
-
---------
-Justin Stephenson
-Creative Director/Motion Designer
-416-900-6069
-http://justinstephenson.com
-
+Chris Murphy--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
