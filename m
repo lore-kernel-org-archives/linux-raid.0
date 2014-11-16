@@ -1,79 +1,66 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Raid 6 Fail Event
-Date: Sun, 16 Nov 2014 12:52:02 -0700
-Message-ID: <3B23D2F1-09A3-4C1F-AB38-2AB0DDC2D5A7@colorremedies.com>
-References: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: [PULL REQUEST] md bug fix for 3.18
+Date: Mon, 17 Nov 2014 10:03:44 +1100
+Message-ID: <20141117100344.1618836d@notabene.brown>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/P3zkI2XMKzTV_eS4evbI0AT"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Stephenson <justin@evensteveninc.com>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/P3zkI2XMKzTV_eS4evbI0AT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Nov 16, 2014, at 8:39 AM, Justin Stephenson <justin@evensteveninc.co=
-m> wrote:
 
-> Hello,
->=20
-> I am new to MDADM and have just experienced my first device fail on m=
-y raid 6.
->=20
-> I am wondering if someone might be able to help by outlining a proper=
- protocol for troubleshooting and rebuilding this array (proc/mdstat be=
-low).
->=20
-> Here is how I might approach it:
->=20
-> - remove the device
-> - test the device
-> - if the device tests OK then re add the device
-> - if the device fails, then replace the device
-> - resync
->=20
-> Thank-you for your consideration.
->=20
-> Best,
->=20
-> - Justin
->=20
-> Here is the mdstat email
->=20
-> -----------------
->=20
-> This is an automatically generated mail message from mdadm
-> running on BigBlue
->=20
-> A Fail event had been detected on md device /dev/md0.
->=20
-> It could be related to component device /dev/sdh1.
+The following changes since commit 206c5f60a3d902bc4b56dab2de3e88de5eb06108:
 
-=46irst step is getting the backup current.=20
+  Linux 3.18-rc4 (2014-11-09 14:55:29 -0800)
 
-Second you can do this without removing the device:
+are available in the git repository at:
 
-# smartctl -x /dev/sdh
+  git://neil.brown.name/md tags/md/3.18-fix
 
-And then look in dmesg for errors related to its ata designation. You s=
-hould be able to get a serial number from the smartctl output and can s=
-earch that with dmesg | grep <serial#> to find out what it=92s ata desi=
-gnation (port and device number) is, then you can dmesg | grep ataX.YY =
-to get any read/write error events that explain what=92s going on.=20
+for you to fetch changes up to 45eaf45dfa4850df16bc2e8e7903d89021137f40:
 
-While you=92re at it the following would be helpful as well:
+  md: Always set RECOVERY_NEEDED when clearing RECOVERY_FROZEN (2014-11-17 =
+09:17:46 +1100)
 
-# smartctl -l scterc /dev/sdh
-# cat /sys/block/sdh/device/state
-# cat /sys/block/sdh/device/timeout
+----------------------------------------------------------------
+One fix for md for 3.18.
 
-These are read-only commands to determine states, they don=92t change s=
-tates so it=92s safe.
+This fixes a regression introduced in 3.13.
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----------------------------------------------------------------
+NeilBrown (1):
+      md: Always set RECOVERY_NEEDED when clearing RECOVERY_FROZEN
+
+ drivers/md/md.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+--Sig_/P3zkI2XMKzTV_eS4evbI0AT
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVGktUDnsnt1WYoG5AQJ2Rg/+Pwizip2mSD0kBniuDuDuZAetEc0q3uZX
+a/0Nfsv+cG27wrn03vSEbcfgpQaStZKsB6pnV6gtESYqpQlGx5NhZAc9qbzNl4T4
+tT7rL54/2Lcuy5ai8ATJ1FK2nTNY91TfWB4I/5r219jvGUUqcFHigjJocXjq3nXl
+G9v436u+ITFgkIT12C7RxLP15J27mU6wqZu0PFrEaTAyV+nad9BkH3FOv+v8kDt8
+KEIfnAcBsDh4XaWBrmD5srenqYznuSmA3YkWTjReG6+i1XiDNSwkYhKl43RzcYoa
+u7WeSPMXs//RrBS1AdVzH/Zsstyh3McZCfmjCdRXJ31EB1myPCQrxROfqfpsZElG
+tNyan7VpUuFphuF7GmQRAWv9IKVqTap+J9YnS9lRPwcKteDnI4ev+dc1XRL+OjbD
+1FRfuOxFzfBct1qoLJRTFVEGD/RCsYnHTGgute/ke5P+aApisqlB6a1DII6hS4lb
+9JOEB+qtHeKS4yv+eilUUoy8esXskJBtdUoEn3Lh1XobtpRwtAOaq1sDf6LAeECK
+ehe9cwJK4+g7l9DGmALPiI1YDHtgcw1R+HwLAdIiBBUH7UiiZuSNB0dp51Q/ldJQ
+FJD6W4RTiUUUKFQQA4tOymplfUnEsYEV8aCs+AOCIHuGxrcNToS0zdkcE8ibS+92
+HYhJ5owRKgo=
+=LtDz
+-----END PGP SIGNATURE-----
+
+--Sig_/P3zkI2XMKzTV_eS4evbI0AT--
