@@ -1,33 +1,66 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: failed RAID 5 array
-Date: Sat, 15 Nov 2014 10:03:19 -0500
-Message-ID: <54676B37.3000707@turmel.org>
-References: <1415807882.4241.36.camel@lappy.neofreak.org> <54653735.90007@turmel.org> <1415971164.4241.38.camel@lappy.neofreak.org> <546606D4.5070406@turmel.org> <1415974131.4241.41.camel@lappy.neofreak.org> <5466173F.2060007@turmel.org> <1415980414.4241.49.camel@lappy.neofreak.org> <54662804.7040005@turmel.org> <20141115064215.99B01382C37@gemini.denx.de>
+From: "Justin Stephenson" <justin@evensteveninc.com>
+Subject: Raid 6 Fail Event
+Date: Sun, 16 Nov 2014 15:39:56 +0000
+Message-ID: <em16d8035c-84ce-4b71-bcbb-b5c965e35b04@littlez>
+Reply-To: "Justin Stephenson" <justin@evensteveninc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141115064215.99B01382C37@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: DeadManMoving <sequel@neofreak.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Wolfgang,
+Hello,
 
-On 11/15/2014 01:42 AM, Wolfgang Denk wrote:
-> Dear Phil,
-> 
-> In message <54662804.7040005@turmel.org> you wrote:
->>
->> Yes.  Braces are expanded as given.  Square brackets are expanded in the
->> order found in the filesystem, not the order given.
-> 
-> "in the order found in the filesystem" is not correct.  Pathname
-> expansion using [ ... ] patterns generates a _sorted_ list. 
+I am new to MDADM and have just experienced my first device fail on my 
+raid 6.
 
-I stand corrected.
+I am wondering if someone might be able to help by outlining a proper 
+protocol for troubleshooting and rebuilding this array (proc/mdstat 
+below).
 
-Thanks, and Regards,
+Here is how I might approach it:
 
-Phil
+- remove the device
+- test the device
+- if the device tests OK then re add the device
+- if the device fails, then replace the device
+- resync
+
+Thank-you for your consideration.
+
+Best,
+
+- Justin
+
+Here is the mdstat email
+
+-----------------
+
+This is an automatically generated mail message from mdadm
+running on BigBlue
+
+A Fail event had been detected on md device /dev/md0.
+
+It could be related to component device /dev/sdh1.
+
+Faithfully yours, etc.
+
+P.S. The /proc/mdstat file currently contains the following:
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdh1[5](F) sdg1[4] sdf1[3] sde1[2] sdd1[1] sdb1[6] 
+sdc1[0]
+14650666880 blocks super 1.2 level 6, 128k chunk, algorithm 2 [7/6] 
+[UUUUU_U]
+
+unused devices: <none>
+
+
+--------
+Justin Stephenson
+Creative Director/Motion Designer
+416-900-6069
+http://justinstephenson.com
+
