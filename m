@@ -1,110 +1,182 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Raid 6 Fail Event
-Date: Mon, 17 Nov 2014 10:19:26 -0700
-Message-ID: <AB2BF2A1-8D2D-4AC0-920F-1D182875A31B@colorremedies.com>
-References: <em90cf29a7-2a88-4bcc-a6fa-eca2cd446449@littlez>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re-assemble RAID6 from SW to HW RAID
+Date: Mon, 17 Nov 2014 22:14:24 +0000
+Message-ID: <CADNH=7H=ge5P9rm5hRjO3GhOFF-jAqFZrNMjNeEGVDwe=BOARw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <em90cf29a7-2a88-4bcc-a6fa-eca2cd446449@littlez>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Stephenson <justin@evensteveninc.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi all,
 
-On Nov 16, 2014, at 6:34 PM, Justin Stephenson <justin@evensteveninc.co=
-m> wrote:
+I've a 6 disk RAID6 array, with 1 missing disk. I moved 2 of the HDDs
+from the on-board SATA controller to a LSI MegaRAID controller where I
+created them as individual RAID0's. The data in the array isn't
+important, but it'd be nice if I can reassemble it.
 
-> Thank-you, Chris. I appreciate your help with this.
->=20
-> Backup are good. I'm a regular disk to disk to LTO guy. Here is what =
-I have turned up:
->=20
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> # smartctl -x /dev/sdh
->=20
-> big long list of stuff.
+This is what it looks like:
 
-Please post it.
+$ for I in /dev/sd?;do sudo mdadm -E $I;done
 
 
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
+           Name : ion:md0  (local to host ion)
+  Creation Time : Tue Feb  5 17:33:27 2013
+     Raid Level : raid6
+   Raid Devices : 6
 
-> I found the serial.
->=20
-> I also tried smartctl -H /dev/sdh and received
->=20
-> Overall-health self-assesment test restul: PASSED
->=20
-> 184 End-to-End_Error {flag value worst thresh} Old_age FAILING_NOW_6
+ Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+     Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 78df2586:cb5649aa:e0b6d211:d92dc224
 
-Cute, it=92s failing but it=92s overall health is passing. This is a gr=
-eat example of why the health self-assess is useless.
+    Update Time : Tue Nov  4 21:43:49 2014
+       Checksum : 50c95b7c - correct
+         Events : 97557
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
->=20
-> I did not find anything for the serial in results from dmesg
->=20
-> # smartctl -l scterc /dev/sdh
->=20
-> Warning: device does not support SCT Commands
+   Device Role : Active device 5
+   Array State : AA.AAA ('A' == active, '.' == missing)
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
+           Name : ion:md0  (local to host ion)
+  Creation Time : Tue Feb  5 17:33:27 2013
+     Raid Level : raid6
+   Raid Devices : 6
 
-Interesting it supports a SMART IV attribut but doesn=92t support SCT c=
-ommands.
+ Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+     Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 41712f8c:255b0f3e:0e345f7b:e1504e42
 
+    Update Time : Tue Nov  4 21:43:49 2014
+       Checksum : 71b191d6 - correct
+         Events : 97557
 
->=20
-> # cat /sys/block/sdh/device/state
->=20
-> Running
->=20
-> # cat /sys/block/sdh/device/timeout
->=20
-> 30
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-Since the drives you have don=92t support SCT commands, you need to set=
- the command timer to something much more than the default of 30, other=
-wise your array will not function correctly when it encounters bad sect=
-ors. In many cases the linux scsi command timer will reach 30 seconds a=
-nd reset the interface, before the typical consumer drive recovers (eit=
-her returns data successfully or an error). This could be quite long, m=
-aybe 2 minutes. Future drives you buy should have configurable SCT ERC =
-so the drive can be set to return a read error after something like 7 s=
-econds, i.e. you want the drive to give up sooner, and by informing md =
-of the problem sector range, the data is rebuilt from parity and writte=
-n back to the bad sectors on the drive where the problem gets fixed.
+   Device Role : Active device 1
+   Array State : AA.AAA ('A' == active, '.' == missing)
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
+           Name : ion:md0  (local to host ion)
+  Creation Time : Tue Feb  5 17:33:27 2013
+     Raid Level : raid6
+   Raid Devices : 6
 
+ Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+     Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a09fc60d:5c4a27a5:4b89bc33:29b01582
 
+    Update Time : Tue Nov  4 21:43:49 2014
+       Checksum : 528563ee - correct
+         Events : 97557
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
->=20
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
->=20
-> Should I replace the drive or re add and resync?
+   Device Role : Active device 3
+   Array State : AA.AAA ('A' == active, '.' == missing)
+/dev/sde:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
+           Name : ion:md0  (local to host ion)
+  Creation Time : Tue Feb  5 17:33:27 2013
+     Raid Level : raid6
+   Raid Devices : 6
 
-Well I don=92t know anything about attribute 184 End-to-End error, but =
-based on the description in wikipedia it sounds disqualifying to me.
+ Avail Dev Size : 5860271024 (2794.40 GiB 3000.46 GB)
+     Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 39c0b717:a9ca1dd7:bcba618f:caed0879
 
-I personally would get the drive replaced no matter what: either under =
-warranty, or if no warranty I=92d get a new drive and test/play with th=
-is one offline and if it proves its worth then maybe it can be a spare =
-down the road.
+    Update Time : Tue Nov  4 21:43:49 2014
+       Checksum : 55758eeb - correct
+         Events : 97557
 
-But you could also smartctl -x all the other drives and see what value =
-they have for this attribute.
+         Layout : left-symmetric
+     Chunk Size : 512K
 
->=20
-> I also went through and reseated all the SATA and power connections a=
-s I understand these can cause issues as well.
+   Device Role : Active device 4
+   Array State : AA.AAA ('A' == active, '.' == missing)
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
+           Name : ion:md0  (local to host ion)
+  Creation Time : Tue Feb  5 17:33:27 2013
+     Raid Level : raid6
+   Raid Devices : 6
 
+ Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+     Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
+  Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 93568b01:632395bf:7d0082a5:db9b6ff9
 
+    Update Time : Tue Nov  4 21:43:49 2014
+       Checksum : 49d756ca - correct
+         Events : 97557
 
+         Layout : left-symmetric
+     Chunk Size : 512K
 
-Chris Murphy--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   Device Role : Active device 0
+   Array State : AA.AAA ('A' == active, '.' == missing)
+
+$ ls -la /dev/disk/by-id/ | grep -v Cors | grep -v dm
+
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+ata-SAMSUNG_HD204UI_S2H7JR0B501861 -> ../../sdb
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+ata-WDC_WD20EARS-00J99B0_WD-WCAWZ2036074 -> ../../sdc
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+ata-WDC_WD20EARS-00MVWB0_WD-WMAZA6473013 -> ../../sdd
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+scsi-3600605b0025eff501bfd2d550b74a2d5 -> ../../sde
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+scsi-3600605b0025eff501bfd2d5709c4a486 -> ../../sdf
+lrwxrwxrwx 1 root root   9 Nov 17 22:04 wwn-0x50000f00500b6118 -> ../../sdb
+lrwxrwxrwx 1 root root   9 Nov 17 22:04 wwn-0x50014ee0030a1204 -> ../../sdd
+lrwxrwxrwx 1 root root   9 Nov 17 22:04 wwn-0x50014ee206d9cbd2 -> ../../sdc
+lrwxrwxrwx 1 root root 9 Nov 17 22:04
+wwn-0x600605b0025eff501bfd2d550b74a2d5 -> ../../sde
+lrwxrwxrwx 1 root root   9 Nov 17 22:04
+wwn-0x600605b0025eff501bfd2d5709c4a486 -> ../../sdf
+
+Any idea if this is rescuable?
+
+Thanks
