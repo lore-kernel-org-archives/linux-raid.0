@@ -1,48 +1,28 @@
-From: Phil Turmel <philip@turmel.org>
+From: Drew <drew.kay@gmail.com>
 Subject: Re: Re-assemble RAID6 from SW to HW RAID
-Date: Tue, 18 Nov 2014 08:34:15 -0500
-Message-ID: <546B4AD7.3060408@turmel.org>
-References: <CADNH=7H=ge5P9rm5hRjO3GhOFF-jAqFZrNMjNeEGVDwe=BOARw@mail.gmail.com> <CADNH=7HeKemJvN5gNtxznZWArqe2ibBaMTMJqdfsKyYAr4EcKw@mail.gmail.com>
+Date: Tue, 18 Nov 2014 11:09:46 -0800
+Message-ID: <CACJz6QunR70Rom7ht2L5f-FykciVtawXg1UkYxS6VDMkejYfnA@mail.gmail.com>
+References: <CADNH=7H=ge5P9rm5hRjO3GhOFF-jAqFZrNMjNeEGVDwe=BOARw@mail.gmail.com>
+ <CADNH=7HeKemJvN5gNtxznZWArqe2ibBaMTMJqdfsKyYAr4EcKw@mail.gmail.com> <546B4AD7.3060408@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7HeKemJvN5gNtxznZWArqe2ibBaMTMJqdfsKyYAr4EcKw@mail.gmail.com>
+In-Reply-To: <546B4AD7.3060408@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Mathias,
+On Tue, Nov 18, 2014 at 5:34 AM, Phil Turmel <philip@turmel.org> wrote:
+>
+> You should look if your MegaRAID has a 'JBOD' mode for the drives.
 
-On 11/17/2014 05:51 PM, Mathias Bur=C3=A9n wrote:
-> On 17 November 2014 22:14, Mathias Bur=C3=A9n <mathias.buren@gmail.co=
-m> wrote:
->> Hi all,
->>
->> I've a 6 disk RAID6 array, with 1 missing disk. I moved 2 of the HDD=
-s
->> from the on-board SATA controller to a LSI MegaRAID controller where=
- I
->> created them as individual RAID0's. The data in the array isn't
->> important, but it'd be nice if I can reassemble it.
+Some LSI controllers, 1068e as well as 9(2,4,6)00 series controllers,
+can be re-flashed to make them plain HBA's
 
-[trim /]
 
-> It appears to have a superblock?
+-- 
+Drew
 
-Take a close look at your new device sizes.  The hardware raid almost
-certainly shortened the devices to fit its own metadata on the end.  MD
-v1.2 metadata contains enough info to reject the SB if the used space
-doesn't fit the device.
-
-You should look if your MegaRAID has a 'JBOD' mode for the drives.
-
-Regards,
-
-Phil
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
