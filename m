@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 4/5] imsm: detail-platform improvements
-Date: Wed, 19 Nov 2014 13:53:29 +0100
-Message-ID: <1416401610-16209-5-git-send-email-artur.paszkiewicz@intel.com>
+Subject: [PATCH 5/5] imsm: use efivarfs interface for reading UEFI variables
+Date: Wed, 19 Nov 2014 13:53:30 +0100
+Message-ID: <1416401610-16209-6-git-send-email-artur.paszkiewicz@intel.com>
 References: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
@@ -10,295 +10,71 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Print platform details per OROM, not per controller, differentiate
-RST(e) platforms from legacy IMSM, print NVMe device paths, adjust port
-printing to newer sysfs path.
+Read UEFI variables using the new efivarfs interface, fallback to
+sysfs-efivars if that fails.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 ---
- platform-intel.c | 26 ++++++++++------
- platform-intel.h | 23 ++++++++++++++
- super-intel.c    | 93 ++++++++++++++++++++++++++++++++++++++------------------
- 3 files changed, 103 insertions(+), 39 deletions(-)
+ platform-intel.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
 diff --git a/platform-intel.c b/platform-intel.c
-index ae72827..54ef37f 100644
+index 54ef37f..586a2f6 100644
 --- a/platform-intel.c
 +++ b/platform-intel.c
-@@ -134,6 +134,16 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- static struct sys_dev *intel_devices=NULL;
- static time_t valid_time = 0;
+@@ -416,6 +416,7 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
  
-+struct sys_dev *device_by_id(__u16 device_id)
-+{
-+	struct sys_dev *iter;
-+
-+	for (iter = intel_devices; iter != NULL; iter = iter->next)
-+		if (iter->dev_id == device_id)
-+			return iter;
-+	return NULL;
-+}
-+
- static int devpath_to_ll(const char *dev_path, const char *entry, unsigned long long *val)
+ #define SYS_EFI_VAR_PATH "/sys/firmware/efi/vars"
++#define SYS_EFIVARS_PATH "/sys/firmware/efi/efivars"
+ #define SCU_PROP "RstScuV"
+ #define AHCI_PROP "RstSataV"
+ #define AHCI_SSATA_PROP "RstsSatV"
+@@ -426,10 +427,44 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+ 
+ #define PCI_CLASS_RAID_CNTRL 0x010400
+ 
+-int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
++static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
  {
- 	char path[strlen(dev_path) + strlen(entry) + 2];
-@@ -219,18 +229,13 @@ struct pciExpDataStructFormat {
- 	__u16 devListOffset;
- } __attribute__ ((packed));
- 
--struct devid_list {
--	__u16 devid;
--	struct devid_list *next;
--};
--
--struct orom_entry {
--	struct imsm_orom orom;
--	struct devid_list *devid_list;
--};
--
- static struct orom_entry oroms[SYS_DEV_MAX];
- 
-+const struct orom_entry *get_oroms(void)
-+{
-+	return (const struct orom_entry *)&oroms;
-+}
+ 	char path[PATH_MAX];
+ 	char buf[GUID_STR_MAX];
++	int fd;
++	ssize_t n;
 +
- const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
- {
- 	int i;
-@@ -529,6 +534,7 @@ const struct imsm_orom *find_imsm_nvme(struct sys_dev *hba)
- 			.vpa = IMSM_OROM_VOLUMES_PER_ARRAY,
- 			.vphba = IMSM_OROM_TOTAL_DISKS_NVME / 2 * IMSM_OROM_VOLUMES_PER_ARRAY,
- 			.attr = IMSM_OROM_ATTR_2TB | IMSM_OROM_ATTR_2TB_DISK,
-+			.driver_features = IMSM_OROM_CAPABILITIES_EnterpriseSystem
- 		};
- 		nvme_orom = add_orom(&nvme_orom_compat);
- 	}
-diff --git a/platform-intel.h b/platform-intel.h
-index 6b4ebd8..3e85d44 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -173,6 +173,17 @@ static inline int fls(int x)
- 	return r;
- }
- 
-+static inline int imsm_orom_is_enterprise(const struct imsm_orom *orom)
-+{
-+	return !!(orom->driver_features & IMSM_OROM_CAPABILITIES_EnterpriseSystem);
-+}
++	snprintf(path, PATH_MAX, "%s/%s-%s", SYS_EFIVARS_PATH, variable_name, guid_str(buf, guid));
 +
-+static inline int imsm_orom_is_nvme(const struct imsm_orom *orom)
-+{
-+	return memcmp(orom->signature, IMSM_NVME_OROM_COMPAT_SIGNATURE,
-+			sizeof(orom->signature)) == 0;
-+}
++	fd = open(path, O_RDONLY);
++	if (fd < 0)
++		return 1;
 +
- enum sys_dev_type {
- 	SYS_DEV_UNKNOWN = 0,
- 	SYS_DEV_SAS,
-@@ -194,6 +205,16 @@ struct efi_guid {
- 	__u8 b[16];
- };
- 
-+struct devid_list {
-+	__u16 devid;
-+	struct devid_list *next;
-+};
-+
-+struct orom_entry {
-+	struct imsm_orom orom;
-+	struct devid_list *devid_list;
-+};
-+
- static inline char *guid_str(char *buf, struct efi_guid guid)
- {
- 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
-@@ -215,4 +236,6 @@ int devt_attached_to_hba(dev_t dev, const char *hba_path);
- char *devt_to_devpath(dev_t dev);
- int path_attached_to_hba(const char *disk_path, const char *hba_path);
- const char *get_sys_dev_type(enum sys_dev_type);
-+const struct orom_entry * get_oroms(void);
- const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
-+struct sys_dev *device_by_id(__u16 device_id);
-diff --git a/super-intel.c b/super-intel.c
-index d2ee1c6..4c53019 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1709,7 +1709,8 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
- 			break;
- 		}
- 		*c = '\0';
--		if (sscanf(&path[hba_len], "host%d", &port) == 1)
-+		if ((sscanf(&path[hba_len], "ata%d", &port) == 1) ||
-+		   ((sscanf(&path[hba_len], "host%d", &port) == 1)))
- 			port -= host_base;
- 		else {
- 			if (verbose > 0) {
-@@ -1768,6 +1769,8 @@ static void print_found_intel_controllers(struct sys_dev *elem)
- 			fprintf(stderr, "SATA ");
- 		else if (elem->type == SYS_DEV_SAS)
- 			fprintf(stderr, "SAS ");
-+		else if (elem->type == SYS_DEV_NVME)
-+			fprintf(stderr, "NVMe ");
- 		fprintf(stderr, "RAID controller");
- 		if (elem->pci_id)
- 			fprintf(stderr, " at %s", elem->pci_id);
-@@ -1789,7 +1792,8 @@ static int ahci_get_port_count(const char *hba_path, int *port_count)
- 	for (ent = readdir(dir); ent; ent = readdir(dir)) {
- 		int host;
- 
--		if (sscanf(ent->d_name, "host%d", &host) != 1)
-+		if ((sscanf(ent->d_name, "ata%d", &host) != 1) &&
-+		   ((sscanf(ent->d_name, "host%d", &host) != 1)))
- 			continue;
- 		if (*port_count == 0)
- 			host_base = host;
-@@ -1805,9 +1809,15 @@ static int ahci_get_port_count(const char *hba_path, int *port_count)
- 
- static void print_imsm_capability(const struct imsm_orom *orom)
- {
--	printf("       Platform : Intel(R) Matrix Storage Manager\n");
--	printf("        Version : %d.%d.%d.%d\n", orom->major_ver, orom->minor_ver,
--	       orom->hotfix_ver, orom->build);
-+	printf("       Platform : Intel(R) ");
-+	if (orom->capabilities == 0 && orom->driver_features == 0)
-+		printf("Matrix Storage Manager\n");
-+	else
-+		printf("Rapid Storage Technology%s\n",
-+			imsm_orom_is_enterprise(orom) ? " enterprise" : "");
-+	if (orom->major_ver || orom->minor_ver || orom->hotfix_ver || orom->build)
-+		printf("        Version : %d.%d.%d.%d\n", orom->major_ver,
-+				orom->minor_ver, orom->hotfix_ver, orom->build);
- 	printf("    RAID Levels :%s%s%s%s%s\n",
- 	       imsm_orom_has_raid0(orom) ? " raid0" : "",
- 	       imsm_orom_has_raid1(orom) ? " raid1" : "",
-@@ -1836,16 +1846,18 @@ static void print_imsm_capability(const struct imsm_orom *orom)
- 	printf("      2TB disks :%s supported\n",
- 	       (orom->attr & IMSM_OROM_ATTR_2TB_DISK)?"":" not");
- 	printf("      Max Disks : %d\n", orom->tds);
--	printf("    Max Volumes : %d per array, %d per controller\n",
--	       orom->vpa, orom->vphba);
-+	printf("    Max Volumes : %d per array, %d per %s\n",
-+	       orom->vpa, orom->vphba,
-+	       imsm_orom_is_nvme(orom) ? "platform" : "controller");
- 	return;
- }
- 
- static void print_imsm_capability_export(const struct imsm_orom *orom)
- {
- 	printf("MD_FIRMWARE_TYPE=imsm\n");
--	printf("IMSM_VERSION=%d.%d.%d.%d\n",orom->major_ver, orom->minor_ver,
--			orom->hotfix_ver, orom->build);
-+	if (orom->major_ver || orom->minor_ver || orom->hotfix_ver || orom->build)
-+		printf("IMSM_VERSION=%d.%d.%d.%d\n", orom->major_ver, orom->minor_ver,
-+				orom->hotfix_ver, orom->build);
- 	printf("IMSM_SUPPORTED_RAID_LEVELS=%s%s%s%s%s\n",
- 			imsm_orom_has_raid0(orom) ? "raid0 " : "",
- 			imsm_orom_has_raid1(orom) ? "raid1 " : "",
-@@ -1889,7 +1901,6 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
- 	 * platform capabilities.  If raid support is disabled in the BIOS the
- 	 * option-rom capability structure will not be available.
- 	 */
--	const struct imsm_orom *orom;
- 	struct sys_dev *list, *hba;
- 	int host_base = 0;
- 	int port_count = 0;
-@@ -1922,15 +1933,42 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
- 		print_found_intel_controllers(list);
- 
- 	for (hba = list; hba; hba = hba->next) {
--		if (controller_path && (compare_paths(hba->path,controller_path) != 0))
-+		if (controller_path && (compare_paths(hba->path, controller_path) != 0))
- 			continue;
--		orom = find_imsm_capability(hba);
--		if (!orom)
-+		if (!find_imsm_capability(hba)) {
- 			pr_err("imsm capabilities not found for controller: %s (type %s)\n",
- 				hba->path, get_sys_dev_type(hba->type));
--		else {
--			result = 0;
--			print_imsm_capability(orom);
-+			continue;
-+		}
-+		result = 0;
++	/* read the variable attributes and ignore it */
++	n = read(fd, buf, sizeof(__u32));
++	if (n < 0) {
++		close(fd);
++		return 1;
 +	}
 +
-+	if (controller_path && result == 1) {
-+		pr_err("no active Intel(R) RAID controller found under %s\n",
-+				controller_path);
-+		return result;
-+	}
++	/* read the variable data */
++	n = read(fd, buffer, buf_size);
++	close(fd);
++	if (n < buf_size)
++		return 1;
 +
-+	const struct orom_entry *oroms = get_oroms();
-+	int i;
++	return 0;
++}
 +
-+	for (i = 0; i < SYS_DEV_MAX && oroms[i].devid_list; i++) {
-+		print_imsm_capability(&oroms[i].orom);
++static int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
++{
++	/* Try to read the variable using the new efivarfs interface first.
++	 * If that fails, fall back to the old sysfs-efivars interface. */
++	if (!read_efi_var(buffer, buf_size, variable_name, guid))
++		return 0;
 +
-+		if (imsm_orom_is_nvme(&oroms[i].orom)) {
-+			for (hba = list; hba; hba = hba->next) {
-+				if (hba->type == SYS_DEV_NVME)
-+					printf("    NVMe Device : %s\n", hba->path);
-+			}
-+			continue;
-+		}
-+
-+		struct devid_list *devid;
-+		for (devid = oroms[i].devid_list; devid; devid = devid->next) {
-+			hba = device_by_id(devid->devid);
-+			if (!hba)
-+				continue;
-+
- 			printf(" I/O Controller : %s (%s)\n",
- 				hba->path, get_sys_dev_type(hba->type));
- 			if (hba->type == SYS_DEV_SATA) {
-@@ -1943,18 +1981,14 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
- 				}
- 			}
- 		}
-+		printf("\n");
- 	}
- 
--	if (controller_path && result == 1)
--		pr_err("no active Intel(R) RAID "
--				"controller found under %s\n",controller_path);
--
- 	return result;
- }
- 
- static int export_detail_platform_imsm(int verbose, char *controller_path)
- {
--	const struct imsm_orom *orom;
- 	struct sys_dev *list, *hba;
- 	int result=1;
- 
-@@ -1969,17 +2003,18 @@ static int export_detail_platform_imsm(int verbose, char *controller_path)
- 	for (hba = list; hba; hba = hba->next) {
- 		if (controller_path && (compare_paths(hba->path,controller_path) != 0))
- 			continue;
--		orom = find_imsm_capability(hba);
--		if (!orom) {
--			if (verbose > 0)
--				pr_err("IMSM_DETAIL_PLATFORM_ERROR=NO_IMSM_CAPABLE_DEVICE_UNDER_%s\n",hba->path);
--		}
--		else {
--			print_imsm_capability_export(orom);
-+		if (!find_imsm_capability(hba) && verbose > 0)
-+			pr_err("IMSM_DETAIL_PLATFORM_ERROR=NO_IMSM_CAPABLE_DEVICE_UNDER_%s\n", hba->path);
-+		else
- 			result = 0;
--		}
- 	}
- 
-+	const struct orom_entry *oroms = get_oroms();
-+	int i;
-+
-+	for (i = 0; i < SYS_DEV_MAX && oroms[i].devid_list; i++)
-+		print_imsm_capability_export(&oroms[i].orom);
-+
- 	return result;
- }
++	char path[PATH_MAX];
++	char buf[GUID_STR_MAX];
+ 	int dfd;
+ 	ssize_t n, var_data_len;
  
 -- 
 1.8.4.5
