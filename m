@@ -1,7 +1,7 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 2/5] imsm: support for second and combined AHCI controllers in UEFI mode
-Date: Wed, 19 Nov 2014 13:53:27 +0100
-Message-ID: <1416401610-16209-3-git-send-email-artur.paszkiewicz@intel.com>
+Subject: [PATCH 3/5] imsm: add support for NVMe devices
+Date: Wed, 19 Nov 2014 13:53:28 +0100
+Message-ID: <1416401610-16209-4-git-send-email-artur.paszkiewicz@intel.com>
 References: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
@@ -10,65 +10,201 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Grantly platform introduces a second AHCI controller (sSATA) and two new
-UEFI variables for the RSTe firmware. This patch adds support for those
-variables in order to correctly determine IMSM platform capabilities in
-UEFI mode.
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
 
+Recognize Intel(R) NVMe devices as IMSM-capable.
+
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 ---
- platform-intel.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ platform-intel.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
+ platform-intel.h |  5 +++++
+ super-intel.c    | 11 +++++++----
+ 3 files changed, 56 insertions(+), 6 deletions(-)
 
 diff --git a/platform-intel.c b/platform-intel.c
-index f779d02..c5a0aa4 100644
+index c5a0aa4..ae72827 100644
 --- a/platform-intel.c
 +++ b/platform-intel.c
-@@ -401,6 +401,8 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
- #define SYS_EFI_VAR_PATH "/sys/firmware/efi/vars"
- #define SCU_PROP "RstScuV"
- #define AHCI_PROP "RstSataV"
-+#define AHCI_SSATA_PROP "RstsSatV"
-+#define AHCI_CSATA_PROP "RstCSatV"
+@@ -65,6 +65,8 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
+ 		type = SYS_DEV_SAS;
+ 	else if (strcmp(driver, "ahci") == 0)
+ 		type = SYS_DEV_SATA;
++	else if (strcmp(driver, "nvme") == 0)
++		type = SYS_DEV_NVME;
+ 	else
+ 		type = SYS_DEV_UNKNOWN;
  
- #define VENDOR_GUID \
- 	EFI_GUID(0x193dfefa, 0xa445, 0x4302, 0x99, 0xd8, 0xef, 0x3a, 0xad, 0x1a, 0x04, 0xc6)
-@@ -455,6 +457,7 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+@@ -174,7 +176,7 @@ static __u16 devpath_to_vendor(const char *dev_path)
+ 
+ struct sys_dev *find_intel_devices(void)
  {
- 	struct imsm_orom orom;
- 	const struct imsm_orom *ret;
-+	int err;
+-	struct sys_dev *ahci, *isci;
++	struct sys_dev *ahci, *isci, *nvme;
  
- 	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
- 		return imsm_platform_test(hba);
-@@ -466,7 +469,26 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
- 	if (hba->type == SYS_DEV_SATA && hba->class != PCI_CLASS_RAID_CNTRL)
- 		return NULL;
+ 	if (valid_time > time(0) - 10)
+ 		return intel_devices;
+@@ -184,14 +186,24 @@ struct sys_dev *find_intel_devices(void)
  
--	if (read_efi_variable(&orom, sizeof(orom), hba->type == SYS_DEV_SAS ? SCU_PROP : AHCI_PROP, VENDOR_GUID))
-+	err = read_efi_variable(&orom, sizeof(orom), hba->type == SYS_DEV_SAS ? SCU_PROP : AHCI_PROP, VENDOR_GUID);
+ 	isci = find_driver_devices("pci", "isci");
+ 	ahci = find_driver_devices("pci", "ahci");
++	nvme = find_driver_devices("pci", "nvme");
+ 
+-	if (!ahci) {
++	if (!isci && !ahci) {
++		ahci = nvme;
++	} else if (!ahci) {
+ 		ahci = isci;
++		struct sys_dev *elem = ahci;
++		while (elem->next)
++			elem = elem->next;
++		elem->next = nvme;
+ 	} else {
+ 		struct sys_dev *elem = ahci;
+ 		while (elem->next)
+ 			elem = elem->next;
+ 		elem->next = isci;
++		while (elem->next)
++			elem = elem->next;
++		elem->next = nvme;
+ 	}
+ 	intel_devices = ahci;
+ 	valid_time = time(0);
+@@ -497,6 +509,33 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ 	return ret;
+ }
+ 
++const struct imsm_orom *find_imsm_nvme(struct sys_dev *hba)
++{
++	static const struct imsm_orom *nvme_orom;
 +
-+	/* try to read variable for second AHCI controller */
-+	if (err && hba->type == SYS_DEV_SATA)
-+		err = read_efi_variable(&orom, sizeof(orom), AHCI_SSATA_PROP, VENDOR_GUID);
++	if (hba->type != SYS_DEV_NVME)
++		return NULL;
 +
-+	/* try to read variable for combined AHCI controllers */
-+	if (err && hba->type == SYS_DEV_SATA) {
-+		static const struct imsm_orom *csata;
-+
-+		err = read_efi_variable(&orom, sizeof(orom), AHCI_CSATA_PROP, VENDOR_GUID);
-+		if (!err) {
-+			if (!csata)
-+				csata = add_orom(&orom);
-+			add_orom_device_id(csata, hba->dev_id);
-+			return csata;
-+		}
++	if (!nvme_orom) {
++		struct imsm_orom nvme_orom_compat = {
++			.signature = IMSM_NVME_OROM_COMPAT_SIGNATURE,
++			.rlc = IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
++						IMSM_OROM_RLC_RAID10 | IMSM_OROM_RLC_RAID5,
++			.sss = IMSM_OROM_SSS_4kB | IMSM_OROM_SSS_8kB |
++						IMSM_OROM_SSS_16kB | IMSM_OROM_SSS_32kB |
++						IMSM_OROM_SSS_64kB | IMSM_OROM_SSS_128kB,
++			.dpa = IMSM_OROM_DISKS_PER_ARRAY_NVME,
++			.tds = IMSM_OROM_TOTAL_DISKS_NVME,
++			.vpa = IMSM_OROM_VOLUMES_PER_ARRAY,
++			.vphba = IMSM_OROM_TOTAL_DISKS_NVME / 2 * IMSM_OROM_VOLUMES_PER_ARRAY,
++			.attr = IMSM_OROM_ATTR_2TB | IMSM_OROM_ATTR_2TB_DISK,
++		};
++		nvme_orom = add_orom(&nvme_orom_compat);
 +	}
++	add_orom_device_id(nvme_orom, hba->dev_id);
++	return nvme_orom;
++}
 +
-+	if (err)
- 		return NULL;
+ const struct imsm_orom *find_imsm_capability(struct sys_dev *hba)
+ {
+ 	const struct imsm_orom *cap = get_orom_by_device_id(hba->dev_id);
+@@ -504,10 +543,13 @@ const struct imsm_orom *find_imsm_capability(struct sys_dev *hba)
+ 	if (cap)
+ 		return cap;
  
- 	ret = add_orom(&orom);
++	if (hba->type == SYS_DEV_NVME)
++		return find_imsm_nvme(hba);
+ 	if ((cap = find_imsm_efi(hba)) != NULL)
+ 		return cap;
+ 	if ((cap = find_imsm_hba_orom(hba)) != NULL)
+ 		return cap;
++
+ 	return NULL;
+ }
+ 
+diff --git a/platform-intel.h b/platform-intel.h
+index e41f386..6b4ebd8 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -23,6 +23,7 @@
+ struct imsm_orom {
+ 	__u8 signature[4];
+ 	#define IMSM_OROM_SIGNATURE "$VER"
++	#define IMSM_NVME_OROM_COMPAT_SIGNATURE "$NVM"
+ 	__u8 table_ver_major; /* Currently 2 (can change with future revs) */
+ 	__u8 table_ver_minor; /* Currently 2 (can change with future revs) */
+ 	__u16 major_ver; /* Example: 8 as in 8.6.0.1020 */
+@@ -60,12 +61,15 @@ struct imsm_orom {
+ 	#define IMSM_OROM_SSS_64MB (1 << 15)
+ 	__u16 dpa; /* Disks Per Array supported */
+ 	#define IMSM_OROM_DISKS_PER_ARRAY 6
++	#define IMSM_OROM_DISKS_PER_ARRAY_NVME 12
+ 	__u16 tds; /* Total Disks Supported */
+ 	#define IMSM_OROM_TOTAL_DISKS 6
++	#define IMSM_OROM_TOTAL_DISKS_NVME 12
+ 	__u8 vpa; /* # Volumes Per Array supported */
+ 	#define IMSM_OROM_VOLUMES_PER_ARRAY 2
+ 	__u8 vphba; /* # Volumes Per Host Bus Adapter supported */
+ 	#define IMSM_OROM_VOLUMES_PER_HBA 4
++	#define IMSM_OROM_VOLUMES_PER_HBA_NVME 4
+ 	/* Attributes supported. This should map to the
+ 	 * attributes in the MPB. Also, lower 16 bits
+ 	 * should match/duplicate RLC bits above.
+@@ -173,6 +177,7 @@ enum sys_dev_type {
+ 	SYS_DEV_UNKNOWN = 0,
+ 	SYS_DEV_SAS,
+ 	SYS_DEV_SATA,
++	SYS_DEV_NVME,
+ 	SYS_DEV_MAX
+ };
+ 
+diff --git a/super-intel.c b/super-intel.c
+index dabf011..d2ee1c6 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -509,7 +509,8 @@ struct imsm_update_add_remove_disk {
+ static const char *_sys_dev_type[] = {
+ 	[SYS_DEV_UNKNOWN] = "Unknown",
+ 	[SYS_DEV_SAS] = "SAS",
+-	[SYS_DEV_SATA] = "SATA"
++	[SYS_DEV_SATA] = "SATA",
++	[SYS_DEV_NVME] = "NVMe"
+ };
+ 
+ const char *get_sys_dev_type(enum sys_dev_type type)
+@@ -559,7 +560,7 @@ static int attach_hba_to_super(struct intel_super *super, struct sys_dev *device
+ 
+ 	hba = super->hba;
+ 	/* Intel metadata allows for all disks attached to the same type HBA.
+-	 * Do not sypport odf HBA types mixing
++	 * Do not support HBA types mixing
+ 	 */
+ 	if (device->type != hba->type)
+ 		return 2;
+@@ -3841,9 +3842,9 @@ static int find_intel_hba_capability(int fd, struct intel_super *super, char *de
+ 				"    but the container is assigned to Intel(R) "
+ 				"%s RAID controller (",
+ 				devname,
+-				hba_name->path,
++				get_sys_dev_type(hba_name->type),
+ 				hba_name->pci_id ? : "Err!",
+-				get_sys_dev_type(hba_name->type));
++				get_sys_dev_type(super->hba->type));
+ 
+ 			while (hba) {
+ 				fprintf(stderr, "%s", hba->pci_id ? : "Err!");
+@@ -3860,6 +3861,7 @@ static int find_intel_hba_capability(int fd, struct intel_super *super, char *de
+ 	super->orom = find_imsm_capability(hba_name);
+ 	if (!super->orom)
+ 		return 3;
++
+ 	return 0;
+ }
+ 
+@@ -5916,6 +5918,7 @@ validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
+ 		pr_vrb(": platform does not support a volume size over 2TB\n");
+ 		return 0;
+ 	}
++
+ 	return 1;
+ }
+ 
 -- 
 1.8.4.5
 
