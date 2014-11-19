@@ -1,37 +1,46 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Re-assemble RAID6 from SW to HW RAID
-Date: Wed, 19 Nov 2014 20:06:09 +0100
-Message-ID: <CADNH=7F9o6OnwywMnZEAeMybg3uQNk=rGFCL_JuoUwT1ZJMuww@mail.gmail.com>
-References: <CADNH=7H=ge5P9rm5hRjO3GhOFF-jAqFZrNMjNeEGVDwe=BOARw@mail.gmail.com>
- <CADNH=7HeKemJvN5gNtxznZWArqe2ibBaMTMJqdfsKyYAr4EcKw@mail.gmail.com>
- <546B4AD7.3060408@turmel.org> <CACJz6QunR70Rom7ht2L5f-FykciVtawXg1UkYxS6VDMkejYfnA@mail.gmail.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 1/1] bcache: Deletion of an unnecessary check before the function
+ call "kobject_put"
+Date: Wed, 19 Nov 2014 21:34:20 +0100
+Message-ID: <546CFECC.8020309@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACJz6QunR70Rom7ht2L5f-FykciVtawXg1UkYxS6VDMkejYfnA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Kent Overstreet <kmo@daterainc.com>, Neil Brown <neilb@suse.de>, linux-bcache@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-raid.ids
 
-On 18 November 2014 20:09, Drew <drew.kay@gmail.com> wrote:
-> On Tue, Nov 18, 2014 at 5:34 AM, Phil Turmel <philip@turmel.org> wrote:
->>
->> You should look if your MegaRAID has a 'JBOD' mode for the drives.
->
-> Some LSI controllers, 1068e as well as 9(2,4,6)00 series controllers,
-> can be re-flashed to make them plain HBA's
->
->
-> --
-> Drew
->
-> "Nothing in life is to be feared. It is only to be understood."
-> --Marie Curie
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Wed, 19 Nov 2014 21:25:39 +0100
 
+The kobject_put() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-Yeah I tried but it didn't appear to work. Oh well it looks like I'm
-rebuilding the array from scratch!
+This issue was detected by using the Coccinelle software.
 
-Regards
-Mathias
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/md/bcache/super.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index d4713d0..1443c55 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -2076,8 +2076,7 @@ static void bcache_exit(void)
+ {
+ 	bch_debug_exit();
+ 	bch_request_exit();
+-	if (bcache_kobj)
+-		kobject_put(bcache_kobj);
++	kobject_put(bcache_kobj);
+ 	if (bcache_wq)
+ 		destroy_workqueue(bcache_wq);
+ 	if (bcache_major)
+-- 
+2.1.3
