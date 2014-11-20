@@ -1,82 +1,80 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH v2 5/5] imsm: use efivarfs interface for reading UEFI variables
-Date: Thu, 20 Nov 2014 18:56:13 +0100
-Message-ID: <1416506173-15879-1-git-send-email-artur.paszkiewicz@intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: degraded raid troubleshooting
+Date: Thu, 20 Nov 2014 18:16:03 -0500
+Message-ID: <546E7633.60702@turmel.org>
+References: <CAAugdn4bp9im=hk=8qWkcxpzss-dzB-5Fq-3KnJH6y3AoqXxZQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAAugdn4bp9im=hk=8qWkcxpzss-dzB-5Fq-3KnJH6y3AoqXxZQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Stephen Burke <steve.burke.56@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Read UEFI variables using the new efivarfs interface, fallback to
-sysfs-efivars if that fails.
+Hi Stephen,
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- platform-intel.c | 37 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+On 11/20/2014 08:41 AM, Stephen Burke wrote:
+> I woke up this morning to my pc not booting saying that my raid was in
+> a degraded state.  I looked at the raid wiki and it told me to stop
+> what I was doing and mail the linux-raid list before doing anything
+> hasty.
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 54ef37f..37274da 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -416,6 +416,7 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
-   (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
- 
- #define SYS_EFI_VAR_PATH "/sys/firmware/efi/vars"
-+#define SYS_EFIVARS_PATH "/sys/firmware/efi/efivars"
- #define SCU_PROP "RstScuV"
- #define AHCI_PROP "RstSataV"
- #define AHCI_SSATA_PROP "RstsSatV"
-@@ -426,13 +427,47 @@ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
- 
- #define PCI_CLASS_RAID_CNTRL 0x010400
- 
--int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
-+static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
-+{
-+	char path[PATH_MAX];
-+	char buf[GUID_STR_MAX];
-+	int fd;
-+	ssize_t n;
-+
-+	snprintf(path, PATH_MAX, "%s/%s-%s", SYS_EFIVARS_PATH, variable_name, guid_str(buf, guid));
-+
-+	fd = open(path, O_RDONLY);
-+	if (fd < 0)
-+		return 1;
-+
-+	/* read the variable attributes and ignore it */
-+	n = read(fd, buf, sizeof(__u32));
-+	if (n < 0) {
-+		close(fd);
-+		return 1;
-+	}
-+
-+	/* read the variable data */
-+	n = read(fd, buffer, buf_size);
-+	close(fd);
-+	if (n < buf_size)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name, struct efi_guid guid)
- {
- 	char path[PATH_MAX];
- 	char buf[GUID_STR_MAX];
- 	int dfd;
- 	ssize_t n, var_data_len;
- 
-+	/* Try to read the variable using the new efivarfs interface first.
-+	 * If that fails, fall back to the old sysfs-efivars interface. */
-+	if (!read_efi_var(buffer, buf_size, variable_name, guid))
-+		return 0;
-+
- 	snprintf(path, PATH_MAX, "%s/%s-%s/size", SYS_EFI_VAR_PATH, variable_name, guid_str(buf, guid));
- 
- 	dprintf("EFI VAR: path=%s\n", path);
--- 
-1.8.4.5
+:-)
+
+> Here's all the info that I could find out about it.  Any help would be
+> appreciated.
+> I am running Ubuntu 12.04
+> mdadm - v3.2.5 - 18th May 2012
+> 
+> The drive in question is /dev/sdb1 on my system.  I tried to look at
+> it via fdisk but it hangs up.  What should my first steps to figure
+> out if this drive is bad and if so replace it.  Thanks.
+
+Good news: your data is still safe, and already assembled (ready to
+use).  The boot failure is a one-time warning that the number of drives
+available at shutdown didn't match the available drives at bootup.
+
+> syslog
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    2.465076]          res
+> 41/40:08:09:08:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    2.465078] ata2.00: status: { DRDY ERR }
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    2.465079] ata2.00: error: { UNC }
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    2.484536] ata2.00: configured for UDMA/133
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    2.484543] ata2: EH complete
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    3.131754] ata2.00: exception Emask
+> 0x0 SAct 0x40 SErr 0x0 action 0x0
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    3.131756] ata2.00: irq_stat 0x40000008
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    3.131758] ata2.00: failed command:
+> READ FPDMA QUEUED
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    3.131762] ata2.00: cmd
+> 60/08:30:08:08:00/00:00:00:00:00/40 tag 6 ncq 4096 in
+> 
+> Nov 20 01:14:53 ht-pc kernel: [    3.131763]          res
+> 41/40:08:09:08:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
+
+Bad news: that drive is very likely dead.  It didn't communicate at all.
+
+If you replace the drive and the replacement works, I would count that
+as definitively a bad drive.  But it could be a cable or controller
+problem.  Such things happen.
+
+Before adding the new drive, though, I would show the "mdadm -E" reports
+for each of the surviving member devices.  Just in case you encounter a
+problem during rebuild (ridiculously common for big drives in raid5).
+
+Anyways, use "mdadm /dev/md0 --add /dev/sdX1" after you partition the
+new drive.  That'll start the rebuild.
+
+Phil
+
 
