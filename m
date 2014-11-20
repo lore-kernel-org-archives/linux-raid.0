@@ -1,325 +1,719 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm creates corrupt superblock
-Date: Thu, 20 Nov 2014 08:47:09 +1100
-Message-ID: <20141120084709.36583d80@notabene.brown>
-References: <544FDB1C.5030306@hanswkraus.com>
-	<20141029080019.272bc844@notabene.brown>
-	<545157E4.3090204@hanswkraus.com>
-	<546C68F9.7070307@hanswkraus.com>
+Subject: Re: [PATCH 1/5] imsm: support for OROMs shared by multiple HBAs
+Date: Thu, 20 Nov 2014 14:07:48 +1100
+Message-ID: <20141120140748.6daa763a@notabene.brown>
+References: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
+	<1416401610-16209-2-git-send-email-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/76US1_5ug=kwj7t=Zr/GzLK"; protocol="application/pgp-signature"
+ boundary="Sig_/MZUfbdwFC9.XDX_2H=Vjh8m"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <546C68F9.7070307@hanswkraus.com>
+In-Reply-To: <1416401610-16209-2-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
---Sig_/76US1_5ug=kwj7t=Zr/GzLK
+--Sig_/MZUfbdwFC9.XDX_2H=Vjh8m
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 19 Nov 2014 10:55:05 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
+On Wed, 19 Nov 2014 13:53:26 +0100 Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 
-> Hi,
+> HBAs can share OROMs (e.g. SATA/sSATA). They are matched by PCI device
+> id. Removed populated_orom/efi and imsm_orom/efi arrays - they are
+> replaced by oroms array and functions get_orom_by_device_id(),
+> add_orom(), add_orom_device_id().
 >=20
-> I think I found the problem. 'badblocks' reports sector 64 of the HD as
-> errornous. But the HD neither reports a read error nor remaps that
-> sector.
->=20
-> Is it possible to parametrize mdadm that it doesn't use that sector?
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-I'm surprised that md is using sector 64.
-The superblock is at sectors 8,9
-The bitmap at 16..24, or something like that
-The data is at 262144 onwards.
+Hi,
+ this patch seems to make a lot more changes that the above brief descripti=
+on
+ seems to suggest.
+ Is there any chance of breaking it up into two or three parts, or at least
+ describing everything that is being changed.
 
-But that are offsets in sdb1, maybe the '64' is a sector number in 'sdb'.
+ I'm half tempted to just accept it as it is, as it is just "your" code that
+ that is being changed, but I'd like to understand it if I can.
 
-Where does 'sdb1' start in 'sdb'??
-
+Thanks,
 NeilBrown
 
 
+> ---
+>  platform-intel.c | 248 ++++++++++++++++++++++++++++++++-----------------=
+------
+>  platform-intel.h |   5 +-
+>  super-intel.c    | 134 +++++++++++++++++++++---------
+>  3 files changed, 243 insertions(+), 144 deletions(-)
 >=20
-> Regards, Hans
->=20
-> Am 29.10.2014 22:11, schrieb Hans Kraus:
-> > Hi Neil,
-> >
-> > many thanks for your response. I rebooted the machine and got new drive
-> > assignments. The drive in question is now sdc1. mdadm gave an error with
-> > the dump, results below (nothing to report by dmesg) [by the way, I
-> > wasn'nt even able to create an array on that drive with
-> > 'mdadm --create --level=3D1 -n 2 /dev/sdc1 missing', same error(s)]:
-> > -----------------------------------------------------------------------=
---
-> > root@nashorn:~# mdadm -E /dev/sdb1
-> > /dev/sdb1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x1
-> >       Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >             Name : nashorn:126  (local to host nashorn)
-> >    Creation Time : Mon Oct 27 15:58:38 2014
-> >       Raid Level : raid1
-> >     Raid Devices : 2
-> >
-> >   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >       Array Size : 976630488 (931.39 GiB 1000.07 GB)
-> >      Data Offset : 262144 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D262056 sectors, after=3D0 sectors
-> >            State : clean
-> >      Device UUID : f7a91c46:e4cda0c0:1b770fd7:876634f8
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >      Update Time : Wed Oct 29 18:42:16 2014
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : 939b22d1 - correct
-> >           Events : 3325
-> >
-> >
-> >     Device Role : Active device 0
-> >     Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D=
- replacing)
-> > root@nashorn:~#
-> > -----------------------------------------------------------------------=
---
-> > root@nashorn:~# mdadm -E /dev/sdh1
-> > /dev/sdh1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x1
-> >       Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >             Name : nashorn:126  (local to host nashorn)
-> >    Creation Time : Mon Oct 27 15:58:38 2014
-> >       Raid Level : raid1
-> >     Raid Devices : 2
-> >
-> >   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >       Array Size : 976630488 (931.39 GiB 1000.07 GB)
-> >      Data Offset : 262144 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D262046 sectors, after=3D0 sectors
-> >            State : clean
-> >      Device UUID : 089d1d0e:4d5ca222:dd716acb:0813815c
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >      Update Time : Wed Oct 29 18:42:16 2014
-> >    Bad Block Log : 512 entries available at offset 82 sectors
-> >         Checksum : 16454b96 - correct
-> >           Events : 3325
-> >
-> >
-> >     Device Role : Active device 1
-> >     Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D=
- replacing)
-> > root@nashorn:~#
-> > -----------------------------------------------------------------------=
---
-> > root@nashorn:~# mdadm -E /dev/sdc1
-> > /dev/sdc1:
-> >            Magic : a92b4efc
-> >          Version : 1.2
-> >      Feature Map : 0x1
-> >       Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >             Name : nashorn:126  (local to host nashorn)
-> >    Creation Time : Mon Oct 27 15:58:38 2014
-> >       Raid Level : raid1
-> >     Raid Devices : 2
-> >
-> >   Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >       Array Size : 0
-> >    Used Dev Size : 0
-> >      Data Offset : 262144 sectors
-> >     Super Offset : 8 sectors
-> >     Unused Space : before=3D262056 sectors, after=3D1953260976 sectors
-> >            State : clean
-> >      Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
-> >
-> > Internal Bitmap : 8 sectors from superblock
-> >      Update Time : Tue Oct 28 11:53:49 2014
-> >    Bad Block Log : 512 entries available at offset 72 sectors
-> >         Checksum : 6f02d040 - expected 891eedff
-> >           Events : 0
-> >
-> >
-> >     Device Role : spare
-> >     Array State : RR ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D=
- replacing)
-> > -----------------------------------------------------------------------=
---
-> > root@nashorn:~# mkdir -p /tmp/dump
-> > root@nashorn:~# mdadm --dump /tmp/dump /dev/sdc1
-> > mdadm: Failed to copy metadata from /dev/sdc1 to /tmp/dump/sdc1
-> > -----------------------------------------------------------------------=
---
-> > Kind regards, Hans
-> >
-> > Am 28.10.2014 22:00, schrieb NeilBrown:
-> >> On Tue, 28 Oct 2014 19:06:20 +0100 Hans Kraus <hans@hanswkraus.com>
-> >> wrote:
-> >>
-> >>> Hi,
-> >>>
-> >>> I debugged my problem a bit more: it seems that mdadm creates a defect
-> >>> superblock. That's repeatedly happening, but only for one drive. I
-> >>> copied zeros to that drive (via ddrescue /dev/zero ...) and the drive
-> >>> looks OK. The info I got:
-> >>>
-> >>
-> >> and you send me the metadata of all your devices please?
-> >>
-> >>     mkdir /tmp/dump
-> >>     mdadm --dump /tmp/dump /dev/sde1
-> >>     tar czvf /tmp/dump.tgz /tmp/dump
-> >>
-> >> and then send /tmp/dump.tgz
-> >>
-> >> Thanks.
-> >>
-> >> NeilBrown
-> >>
-> >> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >>
-> >>> root@nashorn:/home/kraush/work/smartctrl# mdadm --zero-superblock
-> >>> /dev/sde1
-> >>> mdadm: Unrecognised md component device - /dev/sde1
-> >>> root@nashorn:/home/kraush/work/smartctrl# mdadm --add /dev/md126
-> >>> /dev/sde1
-> >>> mdadm: add new device failed for /dev/sde1 as 4: Invalid argument
-> >>> root@nashorn:/home/kraush/work/smartctrl# mdadm -E /dev/sde1
-> >>> /dev/sde1:
-> >>>             Magic : a92b4efc
-> >>>           Version : 1.2
-> >>>       Feature Map : 0x1
-> >>>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >>>              Name : nashorn:126  (local to host nashorn)
-> >>>     Creation Time : Mon Oct 27 15:58:38 2014
-> >>>        Raid Level : raid1
-> >>>      Raid Devices : 2
-> >>>
-> >>>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >>>        Array Size : 0
-> >>>     Used Dev Size : 0
-> >>>       Data Offset : 262144 sectors
-> >>>      Super Offset : 8 sectors
-> >>>      Unused Space : before=3D262056 sectors, after=3D1953260976 secto=
-rs
-> >>>             State : clean
-> >>>       Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
-> >>>
-> >>> Internal Bitmap : 8 sectors from superblock
-> >>>       Update Time : Tue Oct 28 11:53:49 2014
-> >>>     Bad Block Log : 512 entries available at offset 72 sectors
-> >>>          Checksum : 6f02d040 - expected 891eedff
-> >>>            Events : 0
-> >>>
-> >>>
-> >>>      Device Role : spare
-> >>>      Array State : RR ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> >>> root@nashorn:/home/kraush/work/smartctrl#
-> >>> ---------------------------------------------------------------------=
---------------------------------------
-> >>>
-> >>> root@nashorn:/home/kraush/work/smartctrl# cat /proc/mdstat
-> >>> Personalities : [raid1] [raid6] [raid5] [raid4]
-> >>> md127 : active (auto-read-only) raid6 sda1[0] sdk1[6](S) sdl2[7](S)
-> >>> sdh1[5] sdg1[4] sdf1[3] sdc1[2] sdb1[1]
-> >>>         1953017856 blocks super 1.2 level 6, 512k chunk, algorithm 2
-> >>> [6/6] [UUUUUU]
-> >>>         bitmap: 0/4 pages [0KB], 65536KB chunk
-> >>>
-> >>> md10 : active (auto-read-only) raid1 sdi2[0] sdl3[1]
-> >>>         87833408 blocks super 1.2 [2/2] [UU]
-> >>>         bitmap: 0/1 pages [0KB], 65536KB chunk
-> >>>
-> >>> md126 : active raid1 sdd1[3] sdj1[2]
-> >>>         488254464 blocks super 1.2 [2/2] [UU]
-> >>>         bitmap: 0/4 pages [0KB], 65536KB chunk
-> >>>
-> >>> md0 : active raid1 sdl1[4] sdd2[3] sdi1[5]
-> >>>         156157824 blocks super 1.2 [3/1] [U__]
-> >>>         [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.]=
-  recovery =3D 95.6% (149290048/156157824)
-> >>> finish=3D8.4min speed=3D13496K/sec
-> >>>         bitmap: 1/2 pages [4KB], 65536KB chunk
-> >>>
-> >>> unused devices: <none>
-> >>> root@nashorn:/home/kraush/work/smartctrl#
-> >>> ---------------------------------------------------------------------=
---------------------------------------
-> >>>
-> >>> dmesg:
-> >>> [33299.387382] md: invalid superblock checksum on sde1
-> >>> [33299.387385] md: sde1 does not have a valid v1.2 superblock, not
-> >>> importing!
-> >>> [33299.387408] md: md_import_device returned -22
-> >>> root@nashorn:/home/kraush/work/smartctrl#
-> >>> ---------------------------------------------------------------------=
---------------------------------------
-> >>>
-> >>> root@nashorn:/home/kraush/work/mdadm# mdadm --version
-> >>> mdadm - v3.3-161-gfed12d4 - 21st August 2014
-> >>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >>>
-> >>>
-> >>> Kind regards, Hans
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/platform-intel.c b/platform-intel.c
+> index f347382..f779d02 100644
+> --- a/platform-intel.c
+> +++ b/platform-intel.c
+> @@ -59,6 +59,7 @@ struct sys_dev *find_driver_devices(const char *bus, co=
+nst char *driver)
+>  	struct sys_dev *list =3D NULL;
+>  	enum sys_dev_type type;
+>  	unsigned long long dev_id;
+> +	unsigned long long class;
+> =20
+>  	if (strcmp(driver, "isci") =3D=3D 0)
+>  		type =3D SYS_DEV_SAS;
+> @@ -99,6 +100,9 @@ struct sys_dev *find_driver_devices(const char *bus, c=
+onst char *driver)
+>  		if (devpath_to_ll(path, "device", &dev_id) !=3D 0)
+>  			continue;
+> =20
+> +		if (devpath_to_ll(path, "class", &class) !=3D 0)
+> +			continue;
+> +
+>  		/* start / add list entry */
+>  		if (!head) {
+>  			head =3D xmalloc(sizeof(*head));
+> @@ -114,6 +118,7 @@ struct sys_dev *find_driver_devices(const char *bus, =
+const char *driver)
+>  		}
+> =20
+>  		list->dev_id =3D (__u16) dev_id;
+> +		list->class =3D (__u32) class;
+>  		list->type =3D type;
+>  		list->path =3D realpath(path, NULL);
+>  		list->next =3D NULL;
+> @@ -127,16 +132,6 @@ struct sys_dev *find_driver_devices(const char *bus,=
+ const char *driver)
+>  static struct sys_dev *intel_devices=3DNULL;
+>  static time_t valid_time =3D 0;
+> =20
+> -static enum sys_dev_type device_type_by_id(__u16 device_id)
+> -{
+> -	struct sys_dev *iter;
+> -
+> -	for(iter =3D intel_devices; iter !=3D NULL; iter =3D iter->next)
+> -		if (iter->dev_id =3D=3D device_id)
+> -			return iter->type;
+> -	return SYS_DEV_UNKNOWN;
+> -}
+> -
+>  static int devpath_to_ll(const char *dev_path, const char *entry, unsign=
+ed long long *val)
+>  {
+>  	char path[strlen(dev_path) + strlen(entry) + 2];
+> @@ -209,16 +204,79 @@ struct pciExpDataStructFormat {
+>  	__u8  ver[4];
+>  	__u16 vendorID;
+>  	__u16 deviceID;
+> +	__u16 devListOffset;
+>  } __attribute__ ((packed));
+> =20
+> -static struct imsm_orom imsm_orom[SYS_DEV_MAX];
+> -static int populated_orom[SYS_DEV_MAX];
+> +struct devid_list {
+> +	__u16 devid;
+> +	struct devid_list *next;
+> +};
+> +
+> +struct orom_entry {
+> +	struct imsm_orom orom;
+> +	struct devid_list *devid_list;
+> +};
+> +
+> +static struct orom_entry oroms[SYS_DEV_MAX];
+> +
+> +const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
+> +{
+> +	int i;
+> +	struct devid_list *list;
+> +
+> +	for (i =3D 0; i < SYS_DEV_MAX; i++) {
+> +		for (list =3D oroms[i].devid_list; list; list =3D list->next) {
+> +			if (list->devid =3D=3D dev_id)
+> +				return &oroms[i].orom;
+> +		}
+> +	}
+> +	return NULL;
+> +}
+> +
+> +static const struct imsm_orom *add_orom(const struct imsm_orom *orom)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < SYS_DEV_MAX; i++) {
+> +		if (&oroms[i].orom =3D=3D orom)
+> +			return orom;
+> +		if (oroms[i].orom.signature[0] =3D=3D 0) {
+> +			oroms[i].orom =3D *orom;
+> +			return &oroms[i].orom;
+> +		}
+> +	}
+> +	return NULL;
+> +}
+> +
+> +static void add_orom_device_id(const struct imsm_orom *orom, __u16 dev_i=
+d)
+> +{
+> +	int i;
+> +	struct devid_list *list;
+> +	struct devid_list *prev =3D NULL;
+> +
+> +	for (i =3D 0; i < SYS_DEV_MAX; i++) {
+> +		if (&oroms[i].orom =3D=3D orom) {
+> +			for (list =3D oroms[i].devid_list; list; prev =3D list, list =3D list=
+->next) {
+> +				if (list->devid =3D=3D dev_id)
+> +					return;
+> +			}
+> +			list =3D xmalloc(sizeof(struct devid_list));
+> +			list->devid =3D dev_id;
+> +			list->next =3D NULL;
+> +
+> +			if (prev =3D=3D NULL)
+> +				oroms[i].devid_list =3D list;
+> +			else
+> +				prev->next =3D list;
+> +			return;
+> +		}
+> +	}
+> +}
+> =20
+>  static int scan(const void *start, const void *end, const void *data)
+>  {
+>  	int offset;
+> -	const struct imsm_orom *imsm_mem;
+> -	int dev;
+> +	const struct imsm_orom *imsm_mem =3D NULL;
+>  	int len =3D (end - start);
+>  	struct pciExpDataStructFormat *ptr=3D (struct pciExpDataStructFormat *)=
+data;
+> =20
+> @@ -231,81 +289,83 @@ static int scan(const void *start, const void *end,=
+ const void *data)
+>  		(ulong) __le16_to_cpu(ptr->vendorID),
+>  		(ulong) __le16_to_cpu(ptr->deviceID));
+> =20
+> -	if (__le16_to_cpu(ptr->vendorID) =3D=3D 0x8086) {
+> -		/* serach  attached intel devices by device id from OROM */
+> -		dev =3D device_type_by_id(__le16_to_cpu(ptr->deviceID));
+> -		if (dev =3D=3D SYS_DEV_UNKNOWN)
+> -			return 0;
+> -	}
+> -	else
+> +	if (__le16_to_cpu(ptr->vendorID) !=3D 0x8086)
+>  		return 0;
+> =20
+>  	for (offset =3D 0; offset < len; offset +=3D 4) {
+> -		imsm_mem =3D start + offset;
+> -		if ((memcmp(imsm_mem->signature, "$VER", 4) =3D=3D 0)) {
+> -			imsm_orom[dev] =3D *imsm_mem;
+> -			populated_orom[dev] =3D 1;
+> -			return populated_orom[SYS_DEV_SATA] && populated_orom[SYS_DEV_SAS];
+> +		const void *mem =3D start + offset;
+> +
+> +		if ((memcmp(mem, IMSM_OROM_SIGNATURE, 4) =3D=3D 0)) {
+> +			imsm_mem =3D mem;
+> +			break;
+>  		}
+>  	}
+> +
+> +	if (!imsm_mem)
+> +		return 0;
+> +
+> +	const struct imsm_orom *orom =3D add_orom(imsm_mem);
+> +
+> +	if (ptr->devListOffset) {
+> +		const __u16 *dev_list =3D (void *)ptr + ptr->devListOffset;
+> +		int i;
+> +
+> +		for (i =3D 0; dev_list[i] !=3D 0; i++)
+> +			add_orom_device_id(orom, dev_list[i]);
+> +	} else {
+> +		add_orom_device_id(orom, __le16_to_cpu(ptr->deviceID));
+> +	}
+> +
+>  	return 0;
+>  }
+> =20
+> -const struct imsm_orom *imsm_platform_test(enum sys_dev_type hba_id, int=
+ *populated,
+> -					   struct imsm_orom *imsm_orom)
+> +const struct imsm_orom *imsm_platform_test(struct sys_dev *hba)
+>  {
+> -	memset(imsm_orom, 0, sizeof(*imsm_orom));
+> -	imsm_orom->rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+> -				IMSM_OROM_RLC_RAID10 | IMSM_OROM_RLC_RAID5;
+> -	imsm_orom->sss =3D IMSM_OROM_SSS_4kB | IMSM_OROM_SSS_8kB |
+> -				IMSM_OROM_SSS_16kB | IMSM_OROM_SSS_32kB |
+> -				IMSM_OROM_SSS_64kB | IMSM_OROM_SSS_128kB |
+> -				IMSM_OROM_SSS_256kB | IMSM_OROM_SSS_512kB |
+> -				IMSM_OROM_SSS_1MB | IMSM_OROM_SSS_2MB;
+> -	imsm_orom->dpa =3D IMSM_OROM_DISKS_PER_ARRAY;
+> -	imsm_orom->tds =3D IMSM_OROM_TOTAL_DISKS;
+> -	imsm_orom->vpa =3D IMSM_OROM_VOLUMES_PER_ARRAY;
+> -	imsm_orom->vphba =3D IMSM_OROM_VOLUMES_PER_HBA;
+> -	imsm_orom->attr =3D imsm_orom->rlc | IMSM_OROM_ATTR_ChecksumVerify;
+> -	*populated =3D 1;
+> +	struct imsm_orom orom =3D {
+> +		.signature =3D IMSM_OROM_SIGNATURE,
+> +		.rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+> +					IMSM_OROM_RLC_RAID10 | IMSM_OROM_RLC_RAID5,
+> +		.sss =3D IMSM_OROM_SSS_4kB | IMSM_OROM_SSS_8kB |
+> +					IMSM_OROM_SSS_16kB | IMSM_OROM_SSS_32kB |
+> +					IMSM_OROM_SSS_64kB | IMSM_OROM_SSS_128kB |
+> +					IMSM_OROM_SSS_256kB | IMSM_OROM_SSS_512kB |
+> +					IMSM_OROM_SSS_1MB | IMSM_OROM_SSS_2MB,
+> +		.dpa =3D IMSM_OROM_DISKS_PER_ARRAY,
+> +		.tds =3D IMSM_OROM_TOTAL_DISKS,
+> +		.vpa =3D IMSM_OROM_VOLUMES_PER_ARRAY,
+> +		.vphba =3D IMSM_OROM_VOLUMES_PER_HBA
+> +	};
+> +	orom.attr =3D orom.rlc | IMSM_OROM_ATTR_ChecksumVerify;
+> =20
+>  	if (check_env("IMSM_TEST_OROM_NORAID5")) {
+> -		imsm_orom->rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+> +		orom.rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+>  				IMSM_OROM_RLC_RAID10;
+>  	}
+> -	if (check_env("IMSM_TEST_AHCI_EFI_NORAID5") && (hba_id =3D=3D SYS_DEV_S=
+AS)) {
+> -		imsm_orom->rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+> +	if (check_env("IMSM_TEST_AHCI_EFI_NORAID5") && (hba->type =3D=3D SYS_DE=
+V_SAS)) {
+> +		orom.rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+>  				IMSM_OROM_RLC_RAID10;
+>  	}
+> -	if (check_env("IMSM_TEST_SCU_EFI_NORAID5") && (hba_id =3D=3D SYS_DEV_SA=
+TA)) {
+> -		imsm_orom->rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+> +	if (check_env("IMSM_TEST_SCU_EFI_NORAID5") && (hba->type =3D=3D SYS_DEV=
+_SATA)) {
+> +		orom.rlc =3D IMSM_OROM_RLC_RAID0 | IMSM_OROM_RLC_RAID1 |
+>  				IMSM_OROM_RLC_RAID10;
+>  	}
+> =20
+> -	return imsm_orom;
+> +	const struct imsm_orom *ret =3D add_orom(&orom);
+> +
+> +	add_orom_device_id(ret, hba->dev_id);
+> +
+> +	return ret;
+>  }
+> =20
+> -static const struct imsm_orom *find_imsm_hba_orom(enum sys_dev_type hba_=
+id)
+> +static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+>  {
+>  	unsigned long align;
+> =20
+> -	if (hba_id >=3D SYS_DEV_MAX)
+> -		return NULL;
+> +	if (check_env("IMSM_TEST_OROM"))
+> +		return imsm_platform_test(hba);
+> =20
+> -	/* it's static data so we only need to read it once */
+> -	if (populated_orom[hba_id]) {
+> -		dprintf("OROM CAP: %p, pid: %d pop: %d\n",
+> -			&imsm_orom[hba_id], (int) getpid(), populated_orom[hba_id]);
+> -		return &imsm_orom[hba_id];
+> -	}
+> -	if (check_env("IMSM_TEST_OROM")) {
+> -		dprintf("OROM CAP: %p,  pid: %d pop: %d\n",
+> -			&imsm_orom[hba_id], (int) getpid(), populated_orom[hba_id]);
+> -		return imsm_platform_test(hba_id, &populated_orom[hba_id], &imsm_orom[=
+hba_id]);
+> -	}
+>  	/* return empty OROM capabilities in EFI test mode */
+> -	if (check_env("IMSM_TEST_AHCI_EFI") ||
+> -	    check_env("IMSM_TEST_SCU_EFI"))
+> +	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
+>  		return NULL;
+> =20
+>  	find_intel_devices();
+> @@ -325,9 +385,7 @@ static const struct imsm_orom *find_imsm_hba_orom(enu=
+m sys_dev_type hba_id)
+>  	scan_adapter_roms(scan);
+>  	probe_roms_exit();
+> =20
+> -	if (populated_orom[hba_id])
+> -		return &imsm_orom[hba_id];
+> -	return NULL;
+> +	return get_orom_by_device_id(hba->dev_id);
+>  }
+> =20
+>  #define GUID_STR_MAX	37  /* according to GUID format:
+> @@ -347,9 +405,7 @@ static const struct imsm_orom *find_imsm_hba_orom(enu=
+m sys_dev_type hba_id)
+>  #define VENDOR_GUID \
+>  	EFI_GUID(0x193dfefa, 0xa445, 0x4302, 0x99, 0xd8, 0xef, 0x3a, 0xad, 0x1a=
+, 0x04, 0xc6)
+> =20
+> -int populated_efi[SYS_DEV_MAX] =3D { 0, 0 };
+> -
+> -static struct imsm_orom imsm_efi[SYS_DEV_MAX];
+> +#define PCI_CLASS_RAID_CNTRL 0x010400
+> =20
+>  int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_nam=
+e, struct efi_guid guid)
+>  {
+> @@ -395,54 +451,40 @@ int read_efi_variable(void *buffer, ssize_t buf_siz=
+e, char *variable_name, struc
+>  	return 0;
+>  }
+> =20
+> -const struct imsm_orom *find_imsm_efi(enum sys_dev_type hba_id)
+> +const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+>  {
+> -	if (hba_id >=3D SYS_DEV_MAX)
+> -		return NULL;
+> +	struct imsm_orom orom;
+> +	const struct imsm_orom *ret;
+> =20
+> -	dprintf("EFI CAP: %p,  pid: %d pop: %d\n",
+> -		&imsm_efi[hba_id], (int) getpid(), populated_efi[hba_id]);
+> +	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
+> +		return imsm_platform_test(hba);
+> =20
+> -	/* it's static data so we only need to read it once */
+> -	if (populated_efi[hba_id]) {
+> -		dprintf("EFI CAP: %p, pid: %d pop: %d\n",
+> -			&imsm_efi[hba_id], (int) getpid(), populated_efi[hba_id]);
+> -		return &imsm_efi[hba_id];
+> -	}
+> -	if (check_env("IMSM_TEST_AHCI_EFI") ||
+> -	    check_env("IMSM_TEST_SCU_EFI")) {
+> -		dprintf("OROM CAP: %p,  pid: %d pop: %d\n",
+> -			&imsm_efi[hba_id], (int) getpid(), populated_efi[hba_id]);
+> -		return imsm_platform_test(hba_id, &populated_efi[hba_id], &imsm_efi[hb=
+a_id]);
+> -	}
+>  	/* OROM test is set, return that there is no EFI capabilities */
+>  	if (check_env("IMSM_TEST_OROM"))
+>  		return NULL;
+> =20
+> -	if (read_efi_variable(&imsm_efi[hba_id], sizeof(imsm_efi[0]), hba_id =
+=3D=3D SYS_DEV_SAS ? SCU_PROP : AHCI_PROP, VENDOR_GUID)) {
+> -		populated_efi[hba_id] =3D 0;
+> +	if (hba->type =3D=3D SYS_DEV_SATA && hba->class !=3D PCI_CLASS_RAID_CNT=
+RL)
+>  		return NULL;
+> -	}
+> =20
+> -	populated_efi[hba_id] =3D 1;
+> -	return &imsm_efi[hba_id];
+> -}
+> +	if (read_efi_variable(&orom, sizeof(orom), hba->type =3D=3D SYS_DEV_SAS=
+ ? SCU_PROP : AHCI_PROP, VENDOR_GUID))
+> +		return NULL;
+> =20
+> -/*
+> - * backward interface compatibility
+> - */
+> -const struct imsm_orom *find_imsm_orom(void)
+> -{
+> -	return find_imsm_hba_orom(SYS_DEV_SATA);
+> +	ret =3D add_orom(&orom);
+> +	add_orom_device_id(ret, hba->dev_id);
+> +
+> +	return ret;
+>  }
+> =20
+> -const struct imsm_orom *find_imsm_capability(enum sys_dev_type hba_id)
+> +const struct imsm_orom *find_imsm_capability(struct sys_dev *hba)
+>  {
+> -	const struct imsm_orom *cap=3DNULL;
+> +	const struct imsm_orom *cap =3D get_orom_by_device_id(hba->dev_id);
+> +
+> +	if (cap)
+> +		return cap;
+> =20
+> -	if ((cap =3D find_imsm_efi(hba_id)) !=3D NULL)
+> +	if ((cap =3D find_imsm_efi(hba)) !=3D NULL)
+>  		return cap;
+> -	if ((cap =3D find_imsm_hba_orom(hba_id)) !=3D NULL)
+> +	if ((cap =3D find_imsm_hba_orom(hba)) !=3D NULL)
+>  		return cap;
+>  	return NULL;
+>  }
+> diff --git a/platform-intel.h b/platform-intel.h
+> index 8226be3..e41f386 100644
+> --- a/platform-intel.h
+> +++ b/platform-intel.h
+> @@ -22,6 +22,7 @@
+>  /* The IMSM Capability (IMSM AHCI and ISCU OROM/EFI variable) Version Ta=
+ble definition */
+>  struct imsm_orom {
+>  	__u8 signature[4];
+> +	#define IMSM_OROM_SIGNATURE "$VER"
+>  	__u8 table_ver_major; /* Currently 2 (can change with future revs) */
+>  	__u8 table_ver_minor; /* Currently 2 (can change with future revs) */
+>  	__u16 major_ver; /* Example: 8 as in 8.6.0.1020 */
+> @@ -180,6 +181,7 @@ struct sys_dev {
+>  	char *path;
+>  	char *pci_id;
+>  	__u16  dev_id;
+> +	__u32  class;
+>  	struct sys_dev *next;
+>  };
+> =20
+> @@ -201,10 +203,11 @@ static inline char *guid_str(char *buf, struct efi_=
+guid guid)
+>  char *diskfd_to_devpath(int fd);
+>  struct sys_dev *find_driver_devices(const char *bus, const char *driver);
+>  struct sys_dev *find_intel_devices(void);
+> -const struct imsm_orom *find_imsm_capability(enum sys_dev_type hba_id);
+> +const struct imsm_orom *find_imsm_capability(struct sys_dev *hba);
+>  const struct imsm_orom *find_imsm_orom(void);
+>  int disk_attached_to_hba(int fd, const char *hba_path);
+>  int devt_attached_to_hba(dev_t dev, const char *hba_path);
+>  char *devt_to_devpath(dev_t dev);
+>  int path_attached_to_hba(const char *disk_path, const char *hba_path);
+>  const char *get_sys_dev_type(enum sys_dev_type);
+> +const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+> diff --git a/super-intel.c b/super-intel.c
+> index e28ac7d..dabf011 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -555,11 +555,26 @@ static int attach_hba_to_super(struct intel_super *=
+super, struct sys_dev *device
+>  	if (super->hba =3D=3D NULL) {
+>  		super->hba =3D alloc_intel_hba(device);
+>  		return 1;
+> -	} else
+> -		/* IMSM metadata disallows to attach disks to multiple
+> -		 * controllers.
+> -		 */
+> +	}
+> +
+> +	hba =3D super->hba;
+> +	/* Intel metadata allows for all disks attached to the same type HBA.
+> +	 * Do not sypport odf HBA types mixing
+> +	 */
+> +	if (device->type !=3D hba->type)
+> +		return 2;
+> +
+> +	/* Multiple same type HBAs can be used if they share the same OROM */
+> +	const struct imsm_orom *device_orom =3D get_orom_by_device_id(device->d=
+ev_id);
+> +
+> +	if (device_orom !=3D super->orom)
+>  		return 2;
+> +
+> +	while (hba->next)
+> +		hba =3D hba->next;
+> +
+> +	hba->next =3D alloc_intel_hba(device);
+> +	return 1;
+>  }
+> =20
+>  static struct sys_dev* find_disk_attached_hba(int fd, const char *devnam=
+e)
+> @@ -1886,13 +1901,12 @@ static int detail_platform_imsm(int verbose, int =
+enumerate_only, char *controlle
+>  		if (!list)
+>  			return 2;
+>  		for (hba =3D list; hba; hba =3D hba->next) {
+> -			orom =3D find_imsm_capability(hba->type);
+> -			if (!orom) {
+> -				result =3D 2;
+> +			if (find_imsm_capability(hba)) {
+> +				result =3D 0;
+>  				break;
+>  			}
+>  			else
+> -				result =3D 0;
+> +				result =3D 2;
+>  		}
+>  		return result;
+>  	}
+> @@ -1909,7 +1923,7 @@ static int detail_platform_imsm(int verbose, int en=
+umerate_only, char *controlle
+>  	for (hba =3D list; hba; hba =3D hba->next) {
+>  		if (controller_path && (compare_paths(hba->path,controller_path) !=3D =
+0))
+>  			continue;
+> -		orom =3D find_imsm_capability(hba->type);
+> +		orom =3D find_imsm_capability(hba);
+>  		if (!orom)
+>  			pr_err("imsm capabilities not found for controller: %s (type %s)\n",
+>  				hba->path, get_sys_dev_type(hba->type));
+> @@ -1954,7 +1968,7 @@ static int export_detail_platform_imsm(int verbose,=
+ char *controller_path)
+>  	for (hba =3D list; hba; hba =3D hba->next) {
+>  		if (controller_path && (compare_paths(hba->path,controller_path) !=3D =
+0))
+>  			continue;
+> -		orom =3D find_imsm_capability(hba->type);
+> +		orom =3D find_imsm_capability(hba);
+>  		if (!orom) {
+>  			if (verbose > 0)
+>  				pr_err("IMSM_DETAIL_PLATFORM_ERROR=3DNO_IMSM_CAPABLE_DEVICE_UNDER_%s=
+\n",hba->path);
+> @@ -3087,13 +3101,18 @@ static int compare_super_imsm(struct supertype *s=
+t, struct supertype *tst)
+>  	 * use the same Intel hba
+>  	 * If not on Intel hba at all, allow anything.
+>  	 */
+> -	if (!check_env("IMSM_NO_PLATFORM")) {
+> -		if (first->hba && sec->hba &&
+> -		    strcmp(first->hba->path, sec->hba->path) !=3D 0)  {
+> +	if (!check_env("IMSM_NO_PLATFORM") && first->hba && sec->hba) {
+> +		if (first->hba->type !=3D sec->hba->type) {
+> +			fprintf(stderr,
+> +				"HBAs of devices do not match %s !=3D %s\n",
+> +				get_sys_dev_type(first->hba->type),
+> +				get_sys_dev_type(sec->hba->type));
+> +			return 3;
+> +		}
+> +		if (first->orom !=3D sec->orom) {
+>  			fprintf(stderr,
+> -				"HBAs of devices does not match %s !=3D %s\n",
+> -				first->hba ? first->hba->path : NULL,
+> -				sec->hba ? sec->hba->path : NULL);
+> +				"HBAs of devices do not match %s !=3D %s\n",
+> +				first->hba->pci_id, sec->hba->pci_id);
+>  			return 3;
+>  		}
+>  	}
+> @@ -3832,14 +3851,13 @@ static int find_intel_hba_capability(int fd, stru=
+ct intel_super *super, char *de
+>  					fprintf(stderr, ", ");
+>  				hba =3D hba->next;
+>  			}
+> -
+> -			fprintf(stderr, ").\n");
+> -			cont_err("Mixing devices attached to multiple controllers "
+> -				 "is not allowed.\n");
+> +			fprintf(stderr, ").\n"
+> +				"    Mixing devices attached to different controllers "
+> +				"is not allowed.\n");
+>  		}
+>  		return 2;
+>  	}
+> -	super->orom =3D find_imsm_capability(hba_name->type);
+> +	super->orom =3D find_imsm_capability(hba_name);
+>  	if (!super->orom)
+>  		return 3;
+>  	return 0;
+> @@ -9061,32 +9079,68 @@ int open_backup_targets(struct mdinfo *info, int =
+raid_disks, int *raid_fds,
+>   ***********************************************************************=
+*******/
+>  int validate_container_imsm(struct mdinfo *info)
+>  {
+> -	if (!check_env("IMSM_NO_PLATFORM")) {
+> -		struct sys_dev *idev;
+> -		struct mdinfo *dev;
+> -		char *hba_path =3D NULL;
+> -		char *dev_path =3D devt_to_devpath(makedev(info->disk.major,
+> -										info->disk.minor));
+> +	if (check_env("IMSM_NO_PLATFORM"))
+> +		return 0;
+> =20
+> -		for (idev =3D find_intel_devices(); idev; idev =3D idev->next) {
+> -			if (strstr(dev_path, idev->path)) {
+> -				hba_path =3D idev->path;
+> -				break;
+> -			}
+> +	struct sys_dev *idev;
+> +	struct sys_dev *hba =3D NULL;
+> +	struct sys_dev *intel_devices =3D find_intel_devices();
+> +	char *dev_path =3D devt_to_devpath(makedev(info->disk.major,
+> +									info->disk.minor));
+> +
+> +	for (idev =3D intel_devices; idev; idev =3D idev->next) {
+> +		if (dev_path && strstr(dev_path, idev->path)) {
+> +			hba =3D idev;
+> +			break;
+>  		}
+> +	}
+> +	if (dev_path)
+>  		free(dev_path);
+> =20
+> -		if (hba_path) {
+> -			for (dev =3D info->next; dev; dev =3D dev->next) {
+> -				if (!devt_attached_to_hba(makedev(dev->disk.major,
+> -						dev->disk.minor), hba_path)) {
+> -					pr_err("WARNING - IMSM container assembled with disks under differe=
+nt HBAs!\n"
+> -						"       This operation is not supported and can lead to data loss.=
+\n");
+> -					return 1;
+> -				}
+> +	if (!hba) {
+> +		pr_err("WARNING - Cannot detect HBA for device %s!\n",
+> +				devid2kname(makedev(info->disk.major, info->disk.minor)));
+> +		return 1;
+> +	}
+> +
+> +	const struct imsm_orom *orom =3D get_orom_by_device_id(hba->dev_id);
+> +	struct mdinfo *dev;
+> +
+> +	for (dev =3D info->next; dev; dev =3D dev->next) {
+> +		dev_path =3D devt_to_devpath(makedev(dev->disk.major, dev->disk.minor)=
+);
+> +
+> +		struct sys_dev *hba2 =3D NULL;
+> +		for (idev =3D intel_devices; idev; idev =3D idev->next) {
+> +			if (dev_path && strstr(dev_path, idev->path)) {
+> +				hba2 =3D idev;
+> +				break;
+>  			}
+>  		}
+> +		if (dev_path)
+> +			free(dev_path);
+> +
+> +		const struct imsm_orom *orom2 =3D hba2 =3D=3D NULL ? NULL :
+> +				get_orom_by_device_id(hba2->dev_id);
+> +
+> +		if (hba2 && hba->type !=3D hba2->type) {
+> +			pr_err("WARNING - HBAs of devices do not match %s !=3D %s\n",
+> +				get_sys_dev_type(hba->type), get_sys_dev_type(hba2->type));
+> +			return 1;
+> +		}
+> +
+> +		if (orom !=3D orom2) {
+> +			pr_err("WARNING - IMSM container assembled with disks under different=
+ HBAs!\n"
+> +				"       This operation is not supported and can lead to data loss.\n=
+");
+> +			return 1;
+> +		}
+> +
+> +		if (!orom) {
+> +			pr_err("WARNING - IMSM container assembled with disks under HBAs with=
+out IMSM platform support!\n"
+> +				"       This operation is not supported and can lead to data loss.\n=
+");
+> +			return 1;
+> +		}
+>  	}
+> +
+>  	return 0;
+>  }
+>  #ifndef MDASSEMBLE
 
 
---Sig_/76US1_5ug=kwj7t=Zr/GzLK
+--Sig_/MZUfbdwFC9.XDX_2H=Vjh8m
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVG0P3Tnsnt1WYoG5AQImVhAAl985CZ2txegsGWP/do52YGcDqEdXncEv
-Y6D2MipFKOMqtmjkxYHtjtEyiJAZ6rrGZMVm/5QHo0aozsqLZJxPAYQfO8HZGx4P
-tqk3BG66dodUL50n+SKZY8jQ7qqjkqW/qNdihpjM57Ls7RkeE2qg87Sz0IQxchu4
-7i+264bL+M3uHSIQfO32uKPxpprJQ1UbaQFEDru0BMupbZd24upGdYQ5HotqD8q5
-w+IX8n16yonVC3ZkxkYxBbGoFa34OnIeHiFUrkBzNB1kDkTICWhPk4rFfti/uIFG
-JZCOu8HMJbQNtodwC92GxZA9sAODAeo2Rgn/fuARXhcaT+GAlwU4Q3g6B45geMpq
-TXPDDZveqG0MpfmFgiL7USxWITlDyZPLb4Tmw2AWEHihtMXX5e15ciIMW+WEzFM/
-VPayuicfel/nCrciIQ2H0AqcXsYhOIBXwwjN7VHo3cAyNe+FoLGlr8rLCwmN9YBm
-t8PcS/yGCqhZdmhMGXpyNj08nq5owNxHh85t0Jljyaoh2oTo/ph4sPl8VAQki7vY
-QasYtQcHfV0iPWWGp37P/lJkaMbeXa8sC0FMr+WC9SoPtgBdsS5WcCdv937AzVPn
-LfQCD/kthU+QOsXzmpZCLSWFNhRRR0OYw3sGBDCpJ8c52b1RZ0W7pqsvv9WFSN6U
-FllrA5c0B2c=
-=DRdz
+iQIVAwUBVG1bBDnsnt1WYoG5AQIPjBAAvYsv5T0yWBTeyQySnM4PoDCHlXg4rAhG
+YVoYcaOJWiWAduusNjGgmpqzQ4dIw8iOyv/W335wNfPglniAgTPo7Guil/bqQqdA
+x18CgLxC33wnXi1bKLNte5fZVt+j1USwTYqEtxhh7IXgrqlzzK8zik1NUuhbb73f
+S3xpaqGKQ866BzdMgwEyI6op4fYIPPai5qoN6ho+gxQXWhSQ3kuIMDj8HzgPc0AS
+S7P7rxgRpASymAs2z6aOCsWN/MZdPGsrxQIRpNZb+9yrR7b3LvS3upfXCVN8baid
+p3qQ37+jT7xICb1uYHHp+DIhPF98hHB85mBojFljQh1hQgavyXVdZwX3bAC2GaGg
+8cmruU64gAQmlpeOfYLJ0z8d6ZjsdwvQmf4Em4OG+9DJ1K5ClJh3Q5peIpoiwWAj
+CUMEHUTLLLHHeN0PNqHbJELcD7ZhI2QZ22dxY42c5lVQT5UTyXEtvCUz56mj1gx9
+Bx+uJ1GICpJGOH2XeG2piJr3rABXZjEM4oWvDd75xwIm0KOMTQhbDwsa+UHgu/of
+JV9qfWEQwtYNW+4pMfBo1Qob69mkk8A4H/b/e+PXkICIPhJr6Om9aG+gSFXZSNMQ
+zV5rjjPYDFDJRy1AehqfCcCX3Q3Dx4FW77+3jzwsqcVZ4+McgfgUsnwYco+6vMhm
+kDJXdCWFdms=
+=bi1c
 -----END PGP SIGNATURE-----
 
---Sig_/76US1_5ug=kwj7t=Zr/GzLK--
+--Sig_/MZUfbdwFC9.XDX_2H=Vjh8m--
