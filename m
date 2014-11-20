@@ -1,132 +1,127 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/5] imsm: use efivarfs interface for reading UEFI
- variables
-Date: Thu, 20 Nov 2014 14:11:18 +1100
-Message-ID: <20141120141118.07ac1027@notabene.brown>
-References: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
-	<1416401610-16209-6-git-send-email-artur.paszkiewicz@intel.com>
+From: Stephen Burke <steve.burke.56@gmail.com>
+Subject: degraded raid troubleshooting
+Date: Thu, 20 Nov 2014 08:41:51 -0500
+Message-ID: <CAAugdn4bp9im=hk=8qWkcxpzss-dzB-5Fq-3KnJH6y3AoqXxZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/0r7q_SKgPDLw1qzWlxW7qGa"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1416401610-16209-6-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/0r7q_SKgPDLw1qzWlxW7qGa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I woke up this morning to my pc not booting saying that my raid was in
+a degraded state.  I looked at the raid wiki and it told me to stop
+what I was doing and mail the linux-raid list before doing anything
+hasty.
 
-On Wed, 19 Nov 2014 13:53:30 +0100 Artur Paszkiewicz
-<artur.paszkiewicz@intel.com> wrote:
+Here's all the info that I could find out about it.  Any help would be
+appreciated.
+I am running Ubuntu 12.04
+mdadm - v3.2.5 - 18th May 2012
 
-> Read UEFI variables using the new efivarfs interface, fallback to
-> sysfs-efivars if that fails.
->=20
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  platform-intel.c | 37 ++++++++++++++++++++++++++++++++++++-
->  1 file changed, 36 insertions(+), 1 deletion(-)
->=20
-> diff --git a/platform-intel.c b/platform-intel.c
-> index 54ef37f..586a2f6 100644
-> --- a/platform-intel.c
-> +++ b/platform-intel.c
-> @@ -416,6 +416,7 @@ static const struct imsm_orom *find_imsm_hba_orom(str=
-uct sys_dev *hba)
->    (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }})
-> =20
->  #define SYS_EFI_VAR_PATH "/sys/firmware/efi/vars"
-> +#define SYS_EFIVARS_PATH "/sys/firmware/efi/efivars"
->  #define SCU_PROP "RstScuV"
->  #define AHCI_PROP "RstSataV"
->  #define AHCI_SSATA_PROP "RstsSatV"
-> @@ -426,10 +427,44 @@ static const struct imsm_orom *find_imsm_hba_orom(s=
-truct sys_dev *hba)
-> =20
->  #define PCI_CLASS_RAID_CNTRL 0x010400
-> =20
-> -int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_nam=
-e, struct efi_guid guid)
-> +static int read_efi_var(void *buffer, ssize_t buf_size, char *variable_n=
-ame, struct efi_guid guid)
->  {
->  	char path[PATH_MAX];
->  	char buf[GUID_STR_MAX];
-> +	int fd;
-> +	ssize_t n;
-> +
-> +	snprintf(path, PATH_MAX, "%s/%s-%s", SYS_EFIVARS_PATH, variable_name, g=
-uid_str(buf, guid));
-> +
-> +	fd =3D open(path, O_RDONLY);
-> +	if (fd < 0)
-> +		return 1;
-> +
-> +	/* read the variable attributes and ignore it */
-> +	n =3D read(fd, buf, sizeof(__u32));
-> +	if (n < 0) {
-> +		close(fd);
-> +		return 1;
-> +	}
-> +
-> +	/* read the variable data */
-> +	n =3D read(fd, buffer, buf_size);
-> +	close(fd);
-> +	if (n < buf_size)
-> +		return 1;
-> +
-> +	return 0;
-> +}
-> +
-> +static int read_efi_variable(void *buffer, ssize_t buf_size, char *varia=
-ble_name, struct efi_guid guid)
-> +{
-> +	/* Try to read the variable using the new efivarfs interface first.
-> +	 * If that fails, fall back to the old sysfs-efivars interface. */
-> +	if (!read_efi_var(buffer, buf_size, variable_name, guid))
-> +		return 0;
-> +
-> +	char path[PATH_MAX];
-> +	char buf[GUID_STR_MAX];
->  	int dfd;
->  	ssize_t n, var_data_len;
-> =20
+The drive in question is /dev/sdb1 on my system.  I tried to look at
+it via fdisk but it hangs up.  What should my first steps to figure
+out if this drive is bad and if so replace it.  Thanks.
 
 
-Patch 2, 3, 4 look OK.
-This one is nearly OK, but I don't like to see executable code (the
-read_efi_var call) before variable declarations (even though some versions =
-of
-C allow it).
+sburke@ht-pc:/tmp/logs$ sudo mdadm --detail /dev/md0
 
-So if you can put that 'if' *after* the variables, it will be OK.
+[sudo] password for sburke:
 
-Thanks,
-NeilBrown
+/dev/md0:
 
---Sig_/0r7q_SKgPDLw1qzWlxW7qGa
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+        Version : 1.2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+  Creation Time : Fri Dec 13 01:18:13 2013
 
-iQIVAwUBVG1b1jnsnt1WYoG5AQJSaQ//VvJD/kWN5NVr9B+xgd72rOVBaDjpOaXn
-Vk0R1U0F1DeuhLHfWTdhh8CikPvef1HCvk0xH0jTrOq1jl94mhrHOGF3sVpubFyy
-Qef4+PE8aac/YP2yV8/Dpo93pj+sZUfqlhCTDDBe+Qv25vwZoIdOGki9mO7zTQS+
-2hozK42ovs36HuAl3C8TVktoEIup9yMqVhATI+O9Hy+D7a8wdHGsudJW+p4X5liG
-9hLbGWCBXi3ns7BT0zIF145cUuIQ/wZYSrXr2z4TYgwCD7+MOgIzavby2g5Z9PVK
-8yCMDqb58qCgVfjQwC8xJbHJbPfWefpmh4QyjSEIWRpn9/WFnW41AFl4iJLb6+x3
-rfK3cxsL8Pi4FoxOVz/8Ize+MglEESpDsGihZvQaYoqpIIRrJp5DuSNFl1Rz7CjI
-cSQEdxdo+yyFRBj9KXhvTr0mPoHiOuvbmfTvxXMzXDCQIGCgY5IhAvYc3PGG3WyA
-xU6MPoP0q2Ns8IBxZpStcGHlcyRfTc10tB6+QNos1LrNgb87Zef7BUNDY9miIhYJ
-rbOTzKoKHss0cWLLuv0+JtpXRfFcXX+yDz3wysW3EJDuJHH9Jos8hjAjfAoACAy5
-mNQK0umwxG8uV3H8V2ul1U/rmPR7/1SXZzIGmo8M7BbEfipUB6KN1UL0YZGhSVtd
-WU9SIkoyLI4=
-=RG76
------END PGP SIGNATURE-----
+     Raid Level : raid5
 
---Sig_/0r7q_SKgPDLw1qzWlxW7qGa--
+     Array Size : 3906763776 (3725.78 GiB 4000.53 GB)
+
+  Used Dev Size : 1953381888 (1862.89 GiB 2000.26 GB)
+
+   Raid Devices : 3
+
+  Total Devices : 2
+
+    Persistence : Superblock is persistent
+
+
+    Update Time : Thu Nov 20 01:16:00 2014
+
+          State : clean, degraded
+
+ Active Devices : 2
+
+Working Devices : 2
+
+ Failed Devices : 0
+
+  Spare Devices : 0
+
+
+         Layout : left-symmetric
+
+     Chunk Size : 512K
+
+
+           Name : ht-pc:0  (local to host ht-pc)
+
+           UUID : 508cb42f:d2c1ea9c:e62b4121:c3d9cbc3
+
+         Events : 140
+
+
+    Number   Major   Minor   RaidDevice State
+
+       0       0        0        0      removed
+
+       1       8       33        1      active sync   /dev/sdc1
+
+       3       8       65        2      active sync   /dev/sde1
+
+sburke@ht-pc:/tmp/logs$ cat /proc/mdstat
+
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+
+md0 : active raid5 sde1[3] sdc1[1]
+
+      3906763776 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
+
+
+
+unused devices: <none>
+
+syslog
+
+Nov 20 01:14:53 ht-pc kernel: [    2.465076]          res
+41/40:08:09:08:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
+
+Nov 20 01:14:53 ht-pc kernel: [    2.465078] ata2.00: status: { DRDY ERR }
+
+Nov 20 01:14:53 ht-pc kernel: [    2.465079] ata2.00: error: { UNC }
+
+Nov 20 01:14:53 ht-pc kernel: [    2.484536] ata2.00: configured for UDMA/133
+
+Nov 20 01:14:53 ht-pc kernel: [    2.484543] ata2: EH complete
+
+Nov 20 01:14:53 ht-pc kernel: [    3.131754] ata2.00: exception Emask
+0x0 SAct 0x40 SErr 0x0 action 0x0
+
+Nov 20 01:14:53 ht-pc kernel: [    3.131756] ata2.00: irq_stat 0x40000008
+
+Nov 20 01:14:53 ht-pc kernel: [    3.131758] ata2.00: failed command:
+READ FPDMA QUEUED
+
+Nov 20 01:14:53 ht-pc kernel: [    3.131762] ata2.00: cmd
+60/08:30:08:08:00/00:00:00:00:00/40 tag 6 ncq 4096 in
+
+Nov 20 01:14:53 ht-pc kernel: [    3.131763]          res
+41/40:08:09:08:00/00:00:00:00:00/00 Emask 0x409 (media error) <F>
+
+-- 
+Steve
+www.stayathomedevs.com
+
+Game Data Editor Unity Plugin
