@@ -1,372 +1,126 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm creates corrupt superblock
-Date: Tue, 25 Nov 2014 11:12:33 +1100
-Message-ID: <20141125111233.22cd9ca1@notabene.brown>
-References: <544FDB1C.5030306@hanswkraus.com>
-	<20141029080019.272bc844@notabene.brown>
-	<545157E4.3090204@hanswkraus.com>
-	<546C68F9.7070307@hanswkraus.com>
-	<20141120084709.36583d80@notabene.brown>
-	<546E0FC2.9090606@hanswkraus.com>
+Subject: Re: [PATCH 1/5] imsm: support for OROMs shared by multiple HBAs
+Date: Tue, 25 Nov 2014 11:51:54 +1100
+Message-ID: <20141125115154.4cb8a415@notabene.brown>
+References: <1416401610-16209-1-git-send-email-artur.paszkiewicz@intel.com>
+	<1416401610-16209-2-git-send-email-artur.paszkiewicz@intel.com>
+	<20141120140748.6daa763a@notabene.brown>
+	<546E29CB.1010408@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/MBvP9.v4CQuW58QTgahDZOt"; protocol="application/pgp-signature"
+ boundary="Sig_/DhlFyvXh3cabaCsO9I39Vl9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <546E0FC2.9090606@hanswkraus.com>
+In-Reply-To: <546E29CB.1010408@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
---Sig_/MBvP9.v4CQuW58QTgahDZOt
+--Sig_/DhlFyvXh3cabaCsO9I39Vl9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 20 Nov 2014 16:58:58 +0100 Hans Kraus <hans@hanswkraus.com> wrote:
+On Thu, 20 Nov 2014 18:50:03 +0100 Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 
+> On 11/20/2014 04:07 AM, NeilBrown wrote:
+> > On Wed, 19 Nov 2014 13:53:26 +0100 Artur Paszkiewicz
+> > <artur.paszkiewicz@intel.com> wrote:
+> >=20
+> >> HBAs can share OROMs (e.g. SATA/sSATA). They are matched by PCI device
+> >> id. Removed populated_orom/efi and imsm_orom/efi arrays - they are
+> >> replaced by oroms array and functions get_orom_by_device_id(),
+> >> add_orom(), add_orom_device_id().
+> >>
+> >> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> >=20
+> > Hi,
+> >  this patch seems to make a lot more changes that the above brief descr=
+iption
+> >  seems to suggest.
+> >  Is there any chance of breaking it up into two or three parts, or at l=
+east
+> >  describing everything that is being changed.
+> >=20
+> >  I'm half tempted to just accept it as it is, as it is just "your" code=
+ that
+> >  that is being changed, but I'd like to understand it if I can.
+> >=20
+> > Thanks,
+> > NeilBrown
+> >=20
+>=20
 > Hi Neil,
 >=20
-> the partition table (output of 'sfdisk -d /dev/sdh'):
+> Splitting this up reasonably turned out to be more difficult than I
+> thought, so I'll try to provide a more detailed description of the
+> changes.=20
 >=20
-> # partition table of /dev/sdh
-> unit: sectors
+> The IMSM platform code was based on an assumption that the OROM or UEFI
+> capability structure (represented by struct imsm_orom) always belongs to
+> only one HBA. This assumption is no longer valid, because of newer
+> platforms with dual AHCI HBAs. Each HBA can have a separate OROM, but
+> some versions have a combined OROM for both HBAs.
 >=20
-> /dev/sdh1 : start=3D     2048, size=3D1953523120, Id=3D83
-> /dev/sdh2 : start=3D        0, size=3D        0, Id=3D 0
-> /dev/sdh3 : start=3D        0, size=3D        0, Id=3D 0
-> /dev/sdh4 : start=3D        0, size=3D        0, Id=3D 0
+> This patch implements this HBA-OROM relationship in struct orom_entry,
+> which matches an OROM with a list of HBA PCI ids. All the detected
+> orom_entries are stored and retrieved using a global array and the
+> functions add_orom(), add_orom_device_id() and get_orom_by_device_id().
+> This replaces the arrays: imsm_orom, populated_orom, imsm_efi,
+> populated_efi.
 >=20
-> Makes that any sense to you?
+> The scan() function is extended to find all HBAs for an OROM. The list
+> of their device ids is retrieved from the PCI Expansion ROM Data
+> Structure, hence the additional field devListOffset in struct
+> pciExpDataStructFormat.
+>=20
+> In UEFI mode we can't read the PCI Expansion ROM Data Structure and the
+> imsm_orom structures are stored in UEFI variables. They do not provide a
+> similar device id list, so we also check the HBA PCI class to make sure
+> that the HBA has RAID mode enabled.
+>=20
+> In super-intel.c there are changes which allow spanning of IMSM
+> containers over HBAs of the same type, but only if the HBAs share the
+> same OROM.  This is done by comparing imsm_orom pointers, which (outside
+> of platform-intel.c) always point to the global array containing all the
+> detected oroms. Additional warnings are added to
+> validate_container_imsm() to warn about potentially dangerous operations
+> in all the possible cases, e.g. when an array is assembled using disks
+> attached to HBAs with separate OROMs.
+>=20
+> I hope you find this description helpful and that it will make the
+> changes easier to understand.
+>=20
 
-This tells me that sdh1 starts at sector 2048 in sdh.
-So sector 64 of sdh is not in any partition.  So if sector 64 of sdh is
-faulty, that will not affect an array in sdh1....
+Much better - thanks!
 
-But you mentioned sdb before ... did the names change (I know that does
-happen).
+I've applied all 5 patches - using v2 of patch 4, and this comment for patch
+1.
 
-How did you run "badblocks" and what exactly was the output?
-
-There must be something we are missing here.
-
+Thanks,
 NeilBrown
 
 
->=20
-> Regards, Hans
->=20
-> On 11/19/2014 10:47 PM, NeilBrown wrote:
-> > On Wed, 19 Nov 2014 10:55:05 +0100 Hans Kraus <hans@hanswkraus.com> wro=
-te:
-> >
-> >> Hi,
-> >>
-> >> I think I found the problem. 'badblocks' reports sector 64 of the HD as
-> >> errornous. But the HD neither reports a read error nor remaps that
-> >> sector.
-> >>
-> >> Is it possible to parametrize mdadm that it doesn't use that sector?
-> >
-> > I'm surprised that md is using sector 64.
-> > The superblock is at sectors 8,9
-> > The bitmap at 16..24, or something like that
-> > The data is at 262144 onwards.
-> >
-> > But that are offsets in sdb1, maybe the '64' is a sector number in 'sdb=
-'.
-> >
-> > Where does 'sdb1' start in 'sdb'??
-> >
-> > NeilBrown
-> >
-> >
-> >>
-> >> Regards, Hans
-> >>
-> >> Am 29.10.2014 22:11, schrieb Hans Kraus:
-> >>> Hi Neil,
-> >>>
-> >>> many thanks for your response. I rebooted the machine and got new dri=
-ve
-> >>> assignments. The drive in question is now sdc1. mdadm gave an error w=
-ith
-> >>> the dump, results below (nothing to report by dmesg) [by the way, I
-> >>> wasn'nt even able to create an array on that drive with
-> >>> 'mdadm --create --level=3D1 -n 2 /dev/sdc1 missing', same error(s)]:
-> >>> ---------------------------------------------------------------------=
-----
-> >>> root@nashorn:~# mdadm -E /dev/sdb1
-> >>> /dev/sdb1:
-> >>>             Magic : a92b4efc
-> >>>           Version : 1.2
-> >>>       Feature Map : 0x1
-> >>>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >>>              Name : nashorn:126  (local to host nashorn)
-> >>>     Creation Time : Mon Oct 27 15:58:38 2014
-> >>>        Raid Level : raid1
-> >>>      Raid Devices : 2
-> >>>
-> >>>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >>>        Array Size : 976630488 (931.39 GiB 1000.07 GB)
-> >>>       Data Offset : 262144 sectors
-> >>>      Super Offset : 8 sectors
-> >>>      Unused Space : before=3D262056 sectors, after=3D0 sectors
-> >>>             State : clean
-> >>>       Device UUID : f7a91c46:e4cda0c0:1b770fd7:876634f8
-> >>>
-> >>> Internal Bitmap : 8 sectors from superblock
-> >>>       Update Time : Wed Oct 29 18:42:16 2014
-> >>>     Bad Block Log : 512 entries available at offset 72 sectors
-> >>>          Checksum : 939b22d1 - correct
-> >>>            Events : 3325
-> >>>
-> >>>
-> >>>      Device Role : Active device 0
-> >>>      Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> >>> root@nashorn:~#
-> >>> ---------------------------------------------------------------------=
-----
-> >>> root@nashorn:~# mdadm -E /dev/sdh1
-> >>> /dev/sdh1:
-> >>>             Magic : a92b4efc
-> >>>           Version : 1.2
-> >>>       Feature Map : 0x1
-> >>>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >>>              Name : nashorn:126  (local to host nashorn)
-> >>>     Creation Time : Mon Oct 27 15:58:38 2014
-> >>>        Raid Level : raid1
-> >>>      Raid Devices : 2
-> >>>
-> >>>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >>>        Array Size : 976630488 (931.39 GiB 1000.07 GB)
-> >>>       Data Offset : 262144 sectors
-> >>>      Super Offset : 8 sectors
-> >>>      Unused Space : before=3D262046 sectors, after=3D0 sectors
-> >>>             State : clean
-> >>>       Device UUID : 089d1d0e:4d5ca222:dd716acb:0813815c
-> >>>
-> >>> Internal Bitmap : 8 sectors from superblock
-> >>>       Update Time : Wed Oct 29 18:42:16 2014
-> >>>     Bad Block Log : 512 entries available at offset 82 sectors
-> >>>          Checksum : 16454b96 - correct
-> >>>            Events : 3325
-> >>>
-> >>>
-> >>>      Device Role : Active device 1
-> >>>      Array State : AA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> >>> root@nashorn:~#
-> >>> ---------------------------------------------------------------------=
-----
-> >>> root@nashorn:~# mdadm -E /dev/sdc1
-> >>> /dev/sdc1:
-> >>>             Magic : a92b4efc
-> >>>           Version : 1.2
-> >>>       Feature Map : 0x1
-> >>>        Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >>>              Name : nashorn:126  (local to host nashorn)
-> >>>     Creation Time : Mon Oct 27 15:58:38 2014
-> >>>        Raid Level : raid1
-> >>>      Raid Devices : 2
-> >>>
-> >>>    Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >>>        Array Size : 0
-> >>>     Used Dev Size : 0
-> >>>       Data Offset : 262144 sectors
-> >>>      Super Offset : 8 sectors
-> >>>      Unused Space : before=3D262056 sectors, after=3D1953260976 secto=
-rs
-> >>>             State : clean
-> >>>       Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
-> >>>
-> >>> Internal Bitmap : 8 sectors from superblock
-> >>>       Update Time : Tue Oct 28 11:53:49 2014
-> >>>     Bad Block Log : 512 entries available at offset 72 sectors
-> >>>          Checksum : 6f02d040 - expected 891eedff
-> >>>            Events : 0
-> >>>
-> >>>
-> >>>      Device Role : spare
-> >>>      Array State : RR ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=
-=3D replacing)
-> >>> ---------------------------------------------------------------------=
-----
-> >>> root@nashorn:~# mkdir -p /tmp/dump
-> >>> root@nashorn:~# mdadm --dump /tmp/dump /dev/sdc1
-> >>> mdadm: Failed to copy metadata from /dev/sdc1 to /tmp/dump/sdc1
-> >>> ---------------------------------------------------------------------=
-----
-> >>> Kind regards, Hans
-> >>>
-> >>> Am 28.10.2014 22:00, schrieb NeilBrown:
-> >>>> On Tue, 28 Oct 2014 19:06:20 +0100 Hans Kraus <hans@hanswkraus.com>
-> >>>> wrote:
-> >>>>
-> >>>>> Hi,
-> >>>>>
-> >>>>> I debugged my problem a bit more: it seems that mdadm creates a def=
-ect
-> >>>>> superblock. That's repeatedly happening, but only for one drive. I
-> >>>>> copied zeros to that drive (via ddrescue /dev/zero ...) and the dri=
-ve
-> >>>>> looks OK. The info I got:
-> >>>>>
-> >>>>
-> >>>> and you send me the metadata of all your devices please?
-> >>>>
-> >>>>      mkdir /tmp/dump
-> >>>>      mdadm --dump /tmp/dump /dev/sde1
-> >>>>      tar czvf /tmp/dump.tgz /tmp/dump
-> >>>>
-> >>>> and then send /tmp/dump.tgz
-> >>>>
-> >>>> Thanks.
-> >>>>
-> >>>> NeilBrown
-> >>>>
-> >>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >>>>
-> >>>>> root@nashorn:/home/kraush/work/smartctrl# mdadm --zero-superblock
-> >>>>> /dev/sde1
-> >>>>> mdadm: Unrecognised md component device - /dev/sde1
-> >>>>> root@nashorn:/home/kraush/work/smartctrl# mdadm --add /dev/md126
-> >>>>> /dev/sde1
-> >>>>> mdadm: add new device failed for /dev/sde1 as 4: Invalid argument
-> >>>>> root@nashorn:/home/kraush/work/smartctrl# mdadm -E /dev/sde1
-> >>>>> /dev/sde1:
-> >>>>>              Magic : a92b4efc
-> >>>>>            Version : 1.2
-> >>>>>        Feature Map : 0x1
-> >>>>>         Array UUID : e7caa5d1:b33fd2a5:7782fb0c:9d8d9d5b
-> >>>>>               Name : nashorn:126  (local to host nashorn)
-> >>>>>      Creation Time : Mon Oct 27 15:58:38 2014
-> >>>>>         Raid Level : raid1
-> >>>>>       Raid Devices : 2
-> >>>>>
-> >>>>>     Avail Dev Size : 1953260976 (931.39 GiB 1000.07 GB)
-> >>>>>         Array Size : 0
-> >>>>>      Used Dev Size : 0
-> >>>>>        Data Offset : 262144 sectors
-> >>>>>       Super Offset : 8 sectors
-> >>>>>       Unused Space : before=3D262056 sectors, after=3D1953260976 se=
-ctors
-> >>>>>              State : clean
-> >>>>>        Device UUID : 4d1420c6:79978477:e86412b1:24beebfc
-> >>>>>
-> >>>>> Internal Bitmap : 8 sectors from superblock
-> >>>>>        Update Time : Tue Oct 28 11:53:49 2014
-> >>>>>      Bad Block Log : 512 entries available at offset 72 sectors
-> >>>>>           Checksum : 6f02d040 - expected 891eedff
-> >>>>>             Events : 0
-> >>>>>
-> >>>>>
-> >>>>>       Device Role : spare
-> >>>>>       Array State : RR ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D replacing)
-> >>>>> root@nashorn:/home/kraush/work/smartctrl#
-> >>>>> -------------------------------------------------------------------=
-----------------------------------------
-> >>>>>
-> >>>>> root@nashorn:/home/kraush/work/smartctrl# cat /proc/mdstat
-> >>>>> Personalities : [raid1] [raid6] [raid5] [raid4]
-> >>>>> md127 : active (auto-read-only) raid6 sda1[0] sdk1[6](S) sdl2[7](S)
-> >>>>> sdh1[5] sdg1[4] sdf1[3] sdc1[2] sdb1[1]
-> >>>>>          1953017856 blocks super 1.2 level 6, 512k chunk, algorithm=
- 2
-> >>>>> [6/6] [UUUUUU]
-> >>>>>          bitmap: 0/4 pages [0KB], 65536KB chunk
-> >>>>>
-> >>>>> md10 : active (auto-read-only) raid1 sdi2[0] sdl3[1]
-> >>>>>          87833408 blocks super 1.2 [2/2] [UU]
-> >>>>>          bitmap: 0/1 pages [0KB], 65536KB chunk
-> >>>>>
-> >>>>> md126 : active raid1 sdd1[3] sdj1[2]
-> >>>>>          488254464 blocks super 1.2 [2/2] [UU]
-> >>>>>          bitmap: 0/4 pages [0KB], 65536KB chunk
-> >>>>>
-> >>>>> md0 : active raid1 sdl1[4] sdd2[3] sdi1[5]
-> >>>>>          156157824 blocks super 1.2 [3/1] [U__]
-> >>>>>          [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
->.]  recovery =3D 95.6% (149290048/156157824)
-> >>>>> finish=3D8.4min speed=3D13496K/sec
-> >>>>>          bitmap: 1/2 pages [4KB], 65536KB chunk
-> >>>>>
-> >>>>> unused devices: <none>
-> >>>>> root@nashorn:/home/kraush/work/smartctrl#
-> >>>>> -------------------------------------------------------------------=
-----------------------------------------
-> >>>>>
-> >>>>> dmesg:
-> >>>>> [33299.387382] md: invalid superblock checksum on sde1
-> >>>>> [33299.387385] md: sde1 does not have a valid v1.2 superblock, not
-> >>>>> importing!
-> >>>>> [33299.387408] md: md_import_device returned -22
-> >>>>> root@nashorn:/home/kraush/work/smartctrl#
-> >>>>> -------------------------------------------------------------------=
-----------------------------------------
-> >>>>>
-> >>>>> root@nashorn:/home/kraush/work/mdadm# mdadm --version
-> >>>>> mdadm - v3.3-161-gfed12d4 - 21st August 2014
-> >>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >>>>>
-> >>>>>
-> >>>>> Kind regards, Hans
-> >>>>> --
-> >>>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> >>>>> the body of a message to majordomo@vger.kernel.org
-> >>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>
-> >>>
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
-in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-
-
---Sig_/MBvP9.v4CQuW58QTgahDZOt
+--Sig_/DhlFyvXh3cabaCsO9I39Vl9
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVHPJcTnsnt1WYoG5AQLscg//Sey67ocwTq6A2UwQJQNEwmmSRHJuZede
-3RoB0uAKN/jkKDRJoXcowSu+tcM3hykmtRNkv+wis5wu1FJdwO2Ut/C+0vG38kvn
-g+AGB3JVNg22PMesP31EQbMe8o969mYdW6X8vbJZYitNxgjccxmV5nZmVQYVMUze
-uNqXkZq076t6ssAD22ofhXypKgWNRDjJ7EGf1EWX95C3aF/ilswWEhSV2woJnJx4
-fHYMfAjl6NBduk89c2ydTX/bSu0jJNUYu2V+OcYNy5t5GTiE5dQ2Qm78j6sHlZ8s
-uieRDeuNX8MLb4VxWY/JatYaPB5vWt3jjc8BiS58Rr5AnVKDgd0F3QXmZ4+sB/Zy
-uOr3IDYA2TSJL1fvtHl97ME/YrY7sjGuUUfV7CEWuOE39eGodoZJlwl7gUSZXG6j
-EExTclrXNJ/+UvwIchyjFct1WfDviaum/XtG8hL9SArETj4Z3qtRQ8tKP/EmOQHm
-6CuHjRpgi5IdRydcdBVAXVIxCeBeMvZ0PaV/aQY9WBqR7Rk9WMfsHCjZIdutlY2b
-PBgFfpEuSJUXrbd7+6wpmD/nk3Y/E+fwklMHjZ3jWkEPnHi0exoXzc7DzwFK7bQ7
-FyKZ/SiNT52d7+nKdHtYv2dgR+gKcVUEHzVYubUFy1gm4moxym91cE+yNydScU0o
-VS7AXaSAeFY=
-=6oBs
+iQIVAwUBVHPSqjnsnt1WYoG5AQJnzQ//dd5vN8hMcV2fKXJsfUyor+xoDAQAkS1L
+GfOEbnskmMJjVzvrW8ZNEkXKPtAeMP/bFE7s7aFGxi9lDfvpEwg2VjTxXAEvnJEs
+8YrTwuXe6OtW5kXhNROSdmlDygIRYePDV9zJ7xmK2sdnk8Sp4QnJIX2mIkNDVEhT
+Zy1Qksb+/CmR7QcmURmoolLPa+KWeut/fb6oAhawQlq/faCt0pY/58eEc9v/1HBs
+R9+KpCO5wKWxYE9Yt7GVJVNdDCjkIwjsWc6Lr+zz04kkUP22TzZDSd11rXEzQ6MT
+OwxnSmO3aLY76NfIDyf+9ey7/zyT4IF8Q+SEPqe2XN3O9F+BXn9e3jvLgPbSnEYm
+dN3gH4hA4Et0KI/LNHqyzVUVWZ7Lq/olNvAvpShB8Gv0wd5unj4RVchz9Z5so/8l
+We6xM8vTxYiXDXN4CeU3OMAnoP0+OcSy/AAxkFI+09wIb8tvWM1OIs5i32OfXzHS
+zCmVDJISeYV8ax9dNc7i1zyvg7MQd5I+M8Vc0o02t/OnfA7R94XB/1JegAfAAjX/
+CyIrQ8ZqNT3Gw2VP1zC6ePSMmi2Fmp3ZTgXp3R/MxREAMzWMUszQY9bfZyCIMmbi
+Aw5TUr4oiT43uGul3xtxzm6CWCbPNwQIKYH1vpjmX+y2rDdYASxoTzS5jiOQN/ED
+E/LfI6UFFms=
+=fzc4
 -----END PGP SIGNATURE-----
 
---Sig_/MBvP9.v4CQuW58QTgahDZOt--
+--Sig_/DhlFyvXh3cabaCsO9I39Vl9--
