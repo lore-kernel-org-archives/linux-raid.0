@@ -1,93 +1,135 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid10 - won't rebuild - assigns all added disks as spares
-Date: Tue, 25 Nov 2014 13:28:10 +1100
-Message-ID: <20141125132810.3b4aa867@notabene.brown>
-References: <5473E018.3020507@infinitedepth.com.au>
+Subject: Re: md raid performance with 3-18-rc3
+Date: Tue, 25 Nov 2014 13:37:42 +1100
+Message-ID: <20141125133742.0154a4d4@notabene.brown>
+References: <5472E7DE.5070702@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/5NuVqJsulfziQQv+3peEfMX"; protocol="application/pgp-signature"
+ boundary="Sig_/Vp1RMnDOJ9bPJngpfUGy/cX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5473E018.3020507@infinitedepth.com.au>
+In-Reply-To: <5472E7DE.5070702@caviumnetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Molyneux <jonathan@infinitedepth.com.au>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+To: Manish Awasthi <manish.awasthi@caviumnetworks.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5NuVqJsulfziQQv+3peEfMX
+--Sig_/Vp1RMnDOJ9bPJngpfUGy/cX
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 25 Nov 2014 12:49:12 +1100 Jonathan Molyneux
-<jonathan@infinitedepth.com.au> wrote:
+On Mon, 24 Nov 2014 13:40:06 +0530 Manish Awasthi
+<manish.awasthi@caviumnetworks.com> wrote:
 
-> Hi Everyone,
+> Hi,
 >=20
-> Have a strange situation that hasn't happened before.
-> Running Debian 7.7 with kernel version 3.2.63-2+deb7u1.
-> Have a raid10 that runs the server (boot's off a raid1) that after=20
-> replacing a failed disk, just won't rebuild.
+> We benchmarked the md raid driver performance on 3-18-rc3 kernel and=20
+> compared the results with that of 3.6.11. The reason for this exercise=20
+> is to understand if multithreaded raid driver has any performance=20
+> benefits over 3.6.11 which is single threaded. Here are some details=20
+> about the setup
+
+Thanks for doing this!!!! I love it when people report test results.
+
+
 >=20
-> This is what it looks like without the disk (failed & removed):
-> md1 : active raid10 sda2[6] sdc2[4] sdb2[1]
->        1952987136 blocks super 1.2 512K chunks 2 far-copies [4/3] [UUU_]
->        bitmap: 8/15 pages [32KB], 65536KB chunk
+> System: Intel(R) Xeon(R) CPU E3-1230 V2 @ 3.30GHz 4 cores (8threads),=20
+> 8GB RAM.
+> Setup: 3 SSDs create a raid5 array
+> test tool: iozone (only read/re-read, write/re-write tested), blocksize:=
+=20
+> 4k-64k, filesize: 1Gig to 200Gig
 >=20
-> Then when the disk is added:
-> md1 : active raid10 sdd2[5](S) sda2[6] sdc2[4] sdb2[1]
->        1952987136 blocks super 1.2 512K chunks 2 far-copies [4/3] [UUU_]
->        bitmap: 8/15 pages [32KB], 65536KB chunk
+> Comparison was done for speed of data transfer in kBytes/sec and also=20
+> the CPU utilization as reported by iozone.
 >=20
-> Nothing unusual is being spat out in dmesg.
-> When removing the disk:
-> [313434.073997] md: unbind<sdd2>
-> [313434.138307] md: export_rdev(sdd2)
-> When adding the disk:
-> [313468.056484] md: bind<sdd2>
+> raid on 3.18.0-rc3 performed much worse than raid on 3.6.11.
 >=20
-> This is a strange one that I haven't had before.
-> Any thoughts on how to kick the rebuild off without needing a reboot ?
+> Read/Write: raid on 3.18.0-rc3 operated at almost half the speed of raid=
+=20
+> on 3.6.11
 
-I'm sure I've seen this bug before... and fixed it.
-I don't remember the details and cannot find anything obvious in change log=
-s.
+That really isn't very good.... Can you try some of the kernels in between
+and see if there was a single point where performance dropped, or if there
+were several steps?
 
-You could try
 
-   echo recover > /sys/block/md1/md/sync_action
+>=20
+> CPU Utilization: With md raid on 3.18.0-rc3, the CPU utilization was=20
+> less than half of md raid on 3.6.11 on WRITE operations. However, for=20
+> READ operations, 3.18-0.rc3 had more CPU utilization than 3.6.11.
 
-Alternately, if you are re-adding a disk that had just been removed, you co=
-uld
+Can you use "perf" to determine where the extra time is going?
 
-   mdadm /dev/md1 --remove /dev/sdd2
-   mdadm --zero /dev/sdd2
-   mdadm /dev/md1 --add /dev/sdd2
+  perf record
+  run test
+  stop perf
+  perf report
 
-that will force a full recovery instead of just a bitmap-based recovery.
-That will of course take longer than a bitmap-based recover, but seeing the
-bitmap based recovery isn't starting, that could still be an improvement.
+or something like that.
+
+>=20
+> Also, I noticed that scaling up the CPU cores of the system scales down=20
+> the raid througput with 3.18.0-rc3.
+
+This is by writing numbers to "group_thread_cnt" ??? Can you provide a simp=
+le
+table comparing thread count to throughput?  Or maybe a graph.  I love
+graphs :-)
+
+
+>=20
+> I do have detailed logs of the comparison but I'm not sure I should send=
+=20
+> those on this mailing list.
+
+A few megabytes?  Yes.  100Meg?  No.
+
+If you could put them on a website somewhere that I can browse or download
+I'll try to have a look.
+
+>=20
+> If my observation aligns with someone else's, then what is really the=20
+> gain with multithreaded raid.
+
+Some testing shows real improvements.  Obviously we cannot test everything
+and I'm very glad to have extra testing from other people.
+If we can quantify the regressions and confirm exactly when they occurred, =
+we
+can start looking for a solution.
+
+Thanks a lot!
 
 NeilBrown
 
---Sig_/5NuVqJsulfziQQv+3peEfMX
+
+>=20
+> Manish
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/Vp1RMnDOJ9bPJngpfUGy/cX
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVHPpOjnsnt1WYoG5AQJG3BAAh07i1OA7869YcJI+CeZ1EfRijQj+J3oa
-sv9ZPfmHVyrjMZkKWiwMskQycsjFP+pjkAVrB5HCCzby9y/zUjCALVbxUCFr1Ddb
-KleGvdy4eWHwf5AQP1PKd800osH7qoJmshrTHkytxluZk9I7Etrx428TCHSjmRZ0
-OGVDfxHA72XIxzk/+LIX/2ew/hxTdCe9ObDnNk+6YpAErlxZ6snCTP+xtxq4c83B
-Yv9O+WpEUoDlBIwqMVdAJMpp0jOSpQsG4wjplsuG4qNxWXobpGEgfmQBaifrD/lz
-op5IQqnEfIKUXcxYdBAkBPLJd1tFf5cndLRIIjaSQshwlH9NX+qNtIc8zIPXJFDb
-TndSDsT7CFXKJJ9RC8KP0mZamCDu26B0R22SRNGb1P2TQWThViBNQ1hHG3y5ZypF
-e56OfwqKw8gRqMa1rbrBWiTKNv4Byaa0DN6RomT7pRH89jBOwo36dv4aSIR5/9yP
-Pq/eXEhooWtIVs05NT7tSX3iELDY5cnx9I0km6kDq0i8IeOOJrgi2+5PsEQNtWD3
-zbZj2bfW5/eTqOFSEdT7HkA330PV8L71KhMe8OXFwoVTe9UBgsJahMFeGTm0o9LG
-Tq9V2VJMxMn0xzpAH+DrRbhKKM46pn/Rehp3cipFEYkLx0IuAXyYksIo2bxPWCQY
-J4jkj1rwyM0=
-=IiPb
+iQIVAwUBVHPrdjnsnt1WYoG5AQLl4Q/+KRVSoosq2+pqk5CZDt+pZ9dzjgfaNuum
+L2tpRQW3GbQPD02WqQFHqO7wVrvxIZoP5t56USd+K4fOk1JDGn2NSaeLbUikcEei
+LBQJu4j0iAj+LJmvaohHmw/NtxbwGvqaky/iga23mC8rrLGLlB7RMtQK5iAFg1mj
+/3XjK5wGhwAYD8lSPBGgBaaiKHOVra3GSjDNAklI2oYvOLZedLC9NPQFlUqXtymw
+kLondpEQGsNYYZLg5L4Zg5AAD6mc+JFVukwCeusZMnKc5Xj2V6Y3nuehKRb+fOlb
+Pxjc/RYG2L5tAEu6GO8OzINGyArT3patckL31jao1U550N5RprP59bR+mbfTHKIp
+RoQN51for9IBI0rIUNFYTBh2zGO6WC9/wO2PH81bdyxuDaqAY+W76EiI+4zeQgJh
+y85FEJnf0rd4j4g4o3UIJZm/VeJ2abWXeIwPLxiE5D6SCmTlIv/smS/LV0F0eR6z
+MX1xZH+zS6zBpxJvesEA+0+soROmFtKaV0AtUvIBc634Kw9ySxrByH38ptztbMRj
+DJRPWcwxoZc3u7kmpMqpUKOhxWysBYz0W7bDdw66/hS9g+7YjOHA/YfrxlzdNNCd
+S0P2gHiEPda2cyhIGBt8E/MFxGf5TPO6FUi24Oow8cLyMs9HQ6T6ERsPQAfymedx
+NGqtBdG6wns=
+=XNsw
 -----END PGP SIGNATURE-----
 
---Sig_/5NuVqJsulfziQQv+3peEfMX--
+--Sig_/Vp1RMnDOJ9bPJngpfUGy/cX--
