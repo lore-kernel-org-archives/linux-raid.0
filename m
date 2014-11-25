@@ -1,123 +1,138 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: MD component device renaming with udev and MD on full disk
-Date: Tue, 25 Nov 2014 13:55:09 +1100
-Message-ID: <20141125135509.4f32aea2@notabene.brown>
-References: <546FB1B7.3050304@cse.yorku.ca>
+Subject: Re: homehost and 0.90 format
+Date: Tue, 25 Nov 2014 14:08:21 +1100
+Message-ID: <20141125140821.6ece0afb@notabene.brown>
+References: <F1F13E14A610474196571953929C020963C639@ex08.net.ucsf.edu>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/6C=8QHbOadu3V1zV=zuVM=G"; protocol="application/pgp-signature"
+ boundary="Sig_/vAIKRc+=S2YthWgAeushWx9"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <546FB1B7.3050304@cse.yorku.ca>
+In-Reply-To: <F1F13E14A610474196571953929C020963C639@ex08.net.ucsf.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jason Keltz <jas@cse.yorku.ca>
-Cc: linux-raid@vger.kernel.org
+To: "Boylan, Ross" <Ross.Boylan@ucsf.edu>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/6C=8QHbOadu3V1zV=zuVM=G
+--Sig_/vAIKRc+=S2YthWgAeushWx9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 21 Nov 2014 16:42:15 -0500 Jason Keltz <jas@cse.yorku.ca> wrote:
+On Tue, 11 Nov 2014 03:14:34 +0000 "Boylan, Ross" <Ross.Boylan@ucsf.edu>
+wrote:
 
-> Hi.
+> I am trying to figure out which of my RAID devices is considered home.  I=
+ haven't switched machines, but I have several operating systems, with diff=
+erent hostnames, on the machine.  0.90 format metadata.
 >=20
-> I have two questions about MD..
->=20
-> 1) I've written a udev rule to remap /dev/sdX devices on my system to=20
-> /dev/cXeYsZpA (controller, enclosure, slot, partition) mapping. When I=20
-> reboot the system, I see that all the devices in /dev are appropriately=20
-> renamed.  If I look at /proc/mdstat, it still has the kernel names of=20
-> the devices (/dev/sdX) even though those devices no longer exist.  If I=20
-> do an mdadm --detail /dev/mdX the system reports the proper device name=20
-> makeup.  I manually failed a device, and I got the correct device name=20
-> in the email.  I'm just wondering what command I would execute to make=20
-> /proc/mdstat update the devices in its output?
-
-Names in /dev/ are link symlinks.  They point to the device (which is
-identified by a pair of numbers: e.g. 8,1), but they aren't the device itse=
-lf.
-
-block device 8,1 is always "sda1" to the kernel, whether you access it thro=
-ugh
-a block-special file called "/dev/sda1" or "/dev/box-of-bits".
-
-The names reported by /proc/mdstat are the kernel's internal names for the
-devices.  You cannot get it to use the names that you have created in /dev.
-
-"mdadm -D" is the best way to describe an array in terms of names that you
-have chosen.
-
-
->=20
-> 2) Unrelated to 1) -- the argument re: using MD on full devices versus=20
-> partitions has been around for a long time.  I've been experimenting=20
-> with using it on full devices.  One of the arguments that I've read for=20
-> not using full devices is that apparently, if you have two devices that=20
-> are identical, but one of them is slightly smaller than the other due to=
+> Even 2 RAID devices created on the same OS don't seem to have any UUID in=
+ common.  i thought that the end of the UUID's would be the same.  For exam=
+ple, inhttp://marc.info/?l=3Dlinux-raid&m=3D123999237229707 Neil Brown says=
 =20
-> say, bad sectors, then these disks can't be used together in one MD=20
-> because they are different sizes. I'm wondering how valid that argument=20
-> is?  Surely it would make sense if MD was using full devices for it to=20
-> actually stop short of the end of the disk for situations like these...
+> > Note that 0.90 metadata does contain homehost information to some
+> > extent.  When homehost is set, the last few bytes of the uuid is set
+> > from a hash of the homehost name.  That makes it possible to test if a
+> > 0.90 array was created for 'this' host, but not to find out what host
+> > it was created for.=20
+>=20
+> mdadm.conf has
+> HOMEHOST <system>
+>=20
+> The 2 UUIDS are
+>  8691ad98:af955756:ae5efbfa:dfd20ce6
+> 6d89d3b5:19a0acce:319e1a9c:58606385
+>=20
+> Thanks,
+> Ross Boylan
 
-There is no validity at all in that argument.
-md is quite happy using devices of different sizes and will ignore extra
-space provided on the larger device.
+You need to guess-and-test.
+e.g.
 
-If you had an array with two devices of size X, and got a new device of size
-"X - delta", then it is true that the new device cannot be used in the arra=
-y.
-I think I have read a suggestion of creating partitions smaller than the
-device so that when the "X - delta" device is used, it is still big enough
-for that smaller partition.
+  mdadm --detail /dev/md7 --homehost=3Dfoo | grep UUID
 
-There are two reasons why this is an invalid argument for using partitions:
-1/ modern drives have standardised sizes.  If you have a size-X device, then
-   you will not find a size-"X - delta" device unless "delta" is very big.
-
-2/ you can use the --size option of mdadm to make the array use less than
-   the total space on the device to allow for later reconfigurations.
-
-There are other valid  reasons for preferring whole devices or partitions,
-such as some tool or other might get confused by one of the arrangements
-(e.g. lilo or and installer).  And some people might be more comfortable wi=
-th
-one than the other.
-But the size issue is completely irrelevant.
+If it says "(local to host foo)", then "foo" is the correct name.
+If not, then try a different name.
 
 NeilBrown
 
 
 >=20
-> Thanks for any help you can provide.
+> Details:
 >=20
-> Jason.
+> root@wheezy4:~# mdadm --detail /dev/md7
+> /dev/md7:
+>         Version : 0.90
+>   Creation Time : Fri Oct  3 17:20:13 2014
+>      Raid Level : raid1
+>      Array Size : 48828352 (46.57 GiB 50.00 GB)
+>   Used Dev Size : 48828352 (46.57 GiB 50.00 GB)
+>    Raid Devices : 1
+>   Total Devices : 1
+> Preferred Minor : 7
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Tue Nov  4 17:48:40 2014
+>           State : clean=20
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 0
+>   Spare Devices : 0
+>=20
+>            UUID : 8691ad98:af955756:ae5efbfa:dfd20ce6
+>          Events : 0.1
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       8       20        0      active sync   /dev/sdb4
+> root@wheezy4:~# mdadm --detail /dev/md8
+> /dev/md8:
+>         Version : 0.90
+>   Creation Time : Tue Sep 30 13:27:56 2014
+>      Raid Level : raid1
+>      Array Size : 970702784 (925.73 GiB 994.00 GB)
+>   Used Dev Size : 970702784 (925.73 GiB 994.00 GB)
+>    Raid Devices : 2
+>   Total Devices : 1
+> Preferred Minor : 8
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Mon Nov 10 18:16:11 2014
+>           State : clean, degraded=20
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 0
+>   Spare Devices : 0
+>=20
+>            UUID : 6d89d3b5:19a0acce:319e1a9c:58606385
+>          Events : 0.790792
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       8       19        0      active sync   /dev/sdb3
+>        1       0        0        1      removed
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/6C=8QHbOadu3V1zV=zuVM=G
+--Sig_/vAIKRc+=S2YthWgAeushWx9
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVHPvjTnsnt1WYoG5AQI0gA/9Hd6KBS78Eh+NaK2mW0SZaEZ4FS1m3WN6
-hgiaFS6gALCnAdFjPbNmBgcq5tsFwzrjTpZji90lwitNz8ezy0/EjRVWIrwKzOkJ
-cDl8TacIkkRoZ05CWHUAbfVS58Q68AS+ZOb/AkbidYiq1qo+0W7pG8+yuHGRLjkL
-zOBvN+k3Xo7i2dJPOstgDVdXAa4RvFxrLun3ManiKKT6VlJs3Azp9OS/0azFKuG2
-GKH133vr0nrTYfZnD4wTXQjVhM1/BNPx2kUYYgDLrsFmvoAzQ/I/gIAzvctmEk7m
-3wW+tJX5mnHORT5d0ZXNrHj2N5UyeFwefPvCSw2EACTMcA6UoCU81q/EPopps+Oe
-zcssG45pBuchizJkMxYoFjKIsjCNE41x/Zs8PpZbuchMksawKFAveK52BMO+KvNy
-fAv/q23ZvjWDlDYunEPdiR2GwhpMbeUvtohrxRMEJad6E7lqqO3Kqv5EBh3akosO
-upVSt7uvtY8PwHHGw+4tnK3UyJ9UL4GdoCl+E4JoDXmVkgUrrl1cnlG5K+gf2l77
-/8VPGfcnpyYFjrVGdSEYe361VTIKvVmTcOTzmoJYkWdhGh7RYQ+OiHEaOenJjsYq
-EpH7UlN0ujfx+vobQjjagjjek8SVC4AWiSWIKoXhfwXO3jYNsmfsKaDj3eLWCfwS
-B9PakvkIsc4=
-=+7Cb
+iQIVAwUBVHPypTnsnt1WYoG5AQLByRAAgNGbZJjVG3DC2R+aIcfPo0iAGZH9HhkU
+nijynf4/kX9vL+zWHYBEqBUaTBDNEyawgf820MzcL/H3tWUl84bl5Lfy93fUmL/5
+5+bjf/xOboRBqc8uWPhVeTwUnPYMZHjuQQJbprK4mAcuLa9y/LQN8vmrs0wDlEiY
+OEGWmOJ3yrlXbH7cWEcnyOo2Sz54xt4hKv2tjKu56CyAQryTL86Ktp4mBe2TPjOW
+xtVjFMRr8Jx2Uk3MlFk4q26PwVOWDTL7rjHHVVVeBeeCrYUe1EwrLCSsCtC0rHfS
+Qt9iET7LtMeMWtNjOapT1vJ5VgBdWAk5AbNliP2BC3W9fuow38vlzvFqeT8M6DcJ
+GSXmRlsnmb0Ps0/wVUBUgGHVo7LuN0QhXDzQkkswHIfLeOrClRvFZGxxXqdupril
+KkR/9lRQL+N14YnxHvRsjKeKEbxejioyfGwFUg6oeCTFReVzfOhqDnLZDAw+UgEJ
+mAqUO2fUDSmbQladKkjmVM8amyzrXLxpaKyUEruiCpojotz65pfIcke+pCWJcbjs
+8Jpn/FCUv62ipvrNzgSSpwte1XF+ALEWVsZZPkhAzhVrz/TzcXSF8Pf6ERn62Er3
+2vPI3lI02TA+VuoseJodYTNp0MfvAyZewF6nhYJyTxEFLLb4r22mM2ioAgmlFp08
+sdLaPVLsrnQ=
+=59Os
 -----END PGP SIGNATURE-----
 
---Sig_/6C=8QHbOadu3V1zV=zuVM=G--
+--Sig_/vAIKRc+=S2YthWgAeushWx9--
