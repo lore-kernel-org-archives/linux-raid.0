@@ -1,120 +1,73 @@
-From: "Boylan, Ross" <Ross.Boylan@ucsf.edu>
-Subject: RE: homehost and 0.90 format
-Date: Tue, 25 Nov 2014 03:31:32 +0000
-Message-ID: <F1F13E14A610474196571953929C02096432BD@ex08.net.ucsf.edu>
-References: <F1F13E14A610474196571953929C020963C639@ex08.net.ucsf.edu>,<20141125140821.6ece0afb@notabene.brown>
+From: Jonathan Molyneux <jonathan@infinitedepth.com.au>
+Subject: Re: raid10 - won't rebuild - assigns all added disks as spares
+Date: Tue, 25 Nov 2014 14:44:44 +1100
+Message-ID: <5473FB2C.4020504@infinitedepth.com.au>
+References: <5473E018.3020507@infinitedepth.com.au> <20141125132810.3b4aa867@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141125140821.6ece0afb@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <20141125132810.3b4aa867@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks; I didn't know one could do that.
+Thanks Neil,
 
-But am I correct in my understanding that if 2 arrays have the same homehost they will have the same end (last half?) of the UUID?  That would mean the 2 devices I'm looking at can't have the same homehost.
+ > echo recover > /sys/block/md1/md/sync_action
 
-I am able to guess the homehost for one of them using your trick; none of the possibilities have tried have matched the other.
+That did the trick.
 
-Ross
-________________________________________
-From: NeilBrown [neilb@suse.de]
-Sent: Monday, November 24, 2014 7:08 PM
-To: Boylan, Ross
-Cc: linux-raid@vger.kernel.org
-Subject: Re: homehost and 0.90 format
+Regards
+Jonathan
 
-On Tue, 11 Nov 2014 03:14:34 +0000 "Boylan, Ross" <Ross.Boylan@ucsf.edu>
-wrote:
-
-> I am trying to figure out which of my RAID devices is considered home.  I haven't switched machines, but I have several operating systems, with different hostnames, on the machine.  0.90 format metadata.
+On 25/11/2014 1:28 PM, NeilBrown wrote:
+> On Tue, 25 Nov 2014 12:49:12 +1100 Jonathan Molyneux
+> <jonathan@infinitedepth.com.au> wrote:
 >
-> Even 2 RAID devices created on the same OS don't seem to have any UUID in common.  i thought that the end of the UUID's would be the same.  For example, inhttp://marc.info/?l=linux-raid&m=123999237229707 Neil Brown says
-> > Note that 0.90 metadata does contain homehost information to some
-> > extent.  When homehost is set, the last few bytes of the uuid is set
-> > from a hash of the homehost name.  That makes it possible to test if a
-> > 0.90 array was created for 'this' host, but not to find out what host
-> > it was created for.
+>> Hi Everyone,
+>>
+>> Have a strange situation that hasn't happened before.
+>> Running Debian 7.7 with kernel version 3.2.63-2+deb7u1.
+>> Have a raid10 that runs the server (boot's off a raid1) that after
+>> replacing a failed disk, just won't rebuild.
+>>
+>> This is what it looks like without the disk (failed & removed):
+>> md1 : active raid10 sda2[6] sdc2[4] sdb2[1]
+>>         1952987136 blocks super 1.2 512K chunks 2 far-copies [4/3] [UUU_]
+>>         bitmap: 8/15 pages [32KB], 65536KB chunk
+>>
+>> Then when the disk is added:
+>> md1 : active raid10 sdd2[5](S) sda2[6] sdc2[4] sdb2[1]
+>>         1952987136 blocks super 1.2 512K chunks 2 far-copies [4/3] [UUU_]
+>>         bitmap: 8/15 pages [32KB], 65536KB chunk
+>>
+>> Nothing unusual is being spat out in dmesg.
+>> When removing the disk:
+>> [313434.073997] md: unbind<sdd2>
+>> [313434.138307] md: export_rdev(sdd2)
+>> When adding the disk:
+>> [313468.056484] md: bind<sdd2>
+>>
+>> This is a strange one that I haven't had before.
+>> Any thoughts on how to kick the rebuild off without needing a reboot ?
+> I'm sure I've seen this bug before... and fixed it.
+> I don't remember the details and cannot find anything obvious in change logs.
 >
-> mdadm.conf has
-> HOMEHOST <system>
+> You could try
 >
-> The 2 UUIDS are
->  8691ad98:af955756:ae5efbfa:dfd20ce6
-> 6d89d3b5:19a0acce:319e1a9c:58606385
+>     echo recover > /sys/block/md1/md/sync_action
 >
-> Thanks,
-> Ross Boylan
-
-You need to guess-and-test.
-e.g.
-
-  mdadm --detail /dev/md7 --homehost=foo | grep UUID
-
-If it says "(local to host foo)", then "foo" is the correct name.
-If not, then try a different name.
-
-NeilBrown
-
-
+> Alternately, if you are re-adding a disk that had just been removed, you could
 >
-> Details:
+>     mdadm /dev/md1 --remove /dev/sdd2
+>     mdadm --zero /dev/sdd2
+>     mdadm /dev/md1 --add /dev/sdd2
 >
-> root@wheezy4:~# mdadm --detail /dev/md7
-> /dev/md7:
->         Version : 0.90
->   Creation Time : Fri Oct  3 17:20:13 2014
->      Raid Level : raid1
->      Array Size : 48828352 (46.57 GiB 50.00 GB)
->   Used Dev Size : 48828352 (46.57 GiB 50.00 GB)
->    Raid Devices : 1
->   Total Devices : 1
-> Preferred Minor : 7
->     Persistence : Superblock is persistent
+> that will force a full recovery instead of just a bitmap-based recovery.
+> That will of course take longer than a bitmap-based recover, but seeing the
+> bitmap based recovery isn't starting, that could still be an improvement.
 >
->     Update Time : Tue Nov  4 17:48:40 2014
->           State : clean
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 0
->   Spare Devices : 0
->
->            UUID : 8691ad98:af955756:ae5efbfa:dfd20ce6
->          Events : 0.1
->
->     Number   Major   Minor   RaidDevice State
->        0       8       20        0      active sync   /dev/sdb4
-> root@wheezy4:~# mdadm --detail /dev/md8
-> /dev/md8:
->         Version : 0.90
->   Creation Time : Tue Sep 30 13:27:56 2014
->      Raid Level : raid1
->      Array Size : 970702784 (925.73 GiB 994.00 GB)
->   Used Dev Size : 970702784 (925.73 GiB 994.00 GB)
->    Raid Devices : 2
->   Total Devices : 1
-> Preferred Minor : 8
->     Persistence : Superblock is persistent
->
->     Update Time : Mon Nov 10 18:16:11 2014
->           State : clean, degraded
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 0
->   Spare Devices : 0
->
->            UUID : 6d89d3b5:19a0acce:319e1a9c:58606385
->          Events : 0.790792
->
->     Number   Major   Minor   RaidDevice State
->        0       8       19        0      active sync   /dev/sdb3
->        1       0        0        1      removed
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> NeilBrown
 
