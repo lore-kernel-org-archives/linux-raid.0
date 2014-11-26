@@ -1,49 +1,40 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: LVM RAID1 syncing component
-Date: Wed, 26 Nov 2014 08:20:55 -0500
-Message-ID: <20141126082055.72680602@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1411242255300.12886@jlaw-desktop.mno.stratus.com>
-	<CAJCQCtQauJQkKjYL6-hxYkquCHL2yXSo4034jfiJxUPO7Nw2dQ@mail.gmail.com>
+From: Jon Robison <narfman0@gmail.com>
+Subject: mdadm raid5 single drive fail, single drive out of sync terror
+Date: Wed, 26 Nov 2014 10:08:12 -0500
+Message-ID: <5475ECDC.6070309@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtQauJQkKjYL6-hxYkquCHL2yXSo4034jfiJxUPO7Nw2dQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid@vger.kernel.org, linux-lvm@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 25 Nov 2014 22:42:38 -0700
-Chris Murphy <lists@colorremedies.com> wrote:
+Hi all!
 
-> On Mon, Nov 24, 2014 at 9:07 PM, Joe Lawrence <joe.lawrence@stratus.com> wrote:
-> > Does anyone know how its possible to determine which side of an LVM RAID 1
-> > is the stale partner during RAID resync?
-> >
-> > In ordinary MD RAID, I believe you can check
-> > /sys/block/md0/md/dev-XXX/state, but LVM RAID seems to hide those files
-> > when leveraging the MD code.  I've looked though pvs/vgs/lvs manpages, but
-> > can't figure anything out there either.
-> 
-> Rather indirectly: iotop which will show you which devices are mostly
-> being read from and written to.
-> 
-> # lvs -a -o copy_percent
-> Anything less than 100% is syncing. I think.
-> 
+I upgraded to mdadm-3.3-7.fc20.x86_64, and my raid5 array would no 
+longer recognize /dev/sdb1 in my raid 5 array (which is normally 
+/dev/sd[b-f]1). I `mdadm --detail --scan`,  which resulted in a degraded 
+array, then added /dev/sdb1, and it started rebuilding happily until 25% 
+or so, when another failure seemed to occur.
 
-From the manpages I see the following attribute bits:
+I am convinced the data is fine on /dev/sd[c-f]1, and that somehow I 
+just need to inform mdadm about that, but they got out of sync and 
+/dev/sde1 thinks the array is AAAAA while the others think its AAA.. . 
+The drives also seem to think e is bad because f said e was bad or some 
+weird stuff, and sde1 is behind by ~50 events or so. That error hasn't 
+shown itself recently. I fear sdb is bad and sde is going to go soon.
 
-* lvs, lv_attr bit Volume Health: (p)artial
-* vgs, vg_attr bit (p)artial: one or more physical volumes belonging
-       to the volume group are missing from the system
-* pvs, pv_attr bit (m)issing
+Results of `mdadm --examine /dev/sd[b-f]1` are here 
+http://dpaste.com/2Z7CPVY
 
-along with the lvs copy_percent (is this similar to sync_percent) that
-you mentioned.  That's about it.
-
-Since there seems to be no real underlying MD device, I'm assuming that
-ioctls are out of the question as well.
-
--- Joe
+I'm scared and alone. Everything is off and sitting as above, though e 
+50 events behind and out of synch. New drives coming Friday and backup 
+is of course a bit old. I'm petrified to execute `mdadm --create 
+--assume-clean --level=5 --raid-devices=5 /dev/md0 /dev/sdf1 /dev/sdd1 
+/dev/sdc1 /dev/sde1 missing`, but that seems my next option unless ya'll 
+know better. I tried `mdadm --assemble -f /dev/md0 /dev/sdf1 /dev/sdd1 
+/dev/sdc1 /dev/sde1` and it said something like can't start with only 3 
+devices (which I wouldn't expect because examine still shows 4, just 
+that they are out of sync and I thought that was -f's express purpose in 
+assemble mode). Anyone have any suggestions? Thanks!
