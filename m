@@ -1,79 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: LVM RAID1 syncing component
-Date: Thu, 27 Nov 2014 07:41:58 +1100
-Message-ID: <20141127074158.2a3472f3@notabene.brown>
-References: <alpine.DEB.2.02.1411242255300.12886@jlaw-desktop.mno.stratus.com>
+Subject: Re:
+Date: Thu, 27 Nov 2014 07:49:49 +1100
+Message-ID: <20141127074949.7d437769@notabene.brown>
+References: <CABGuBc=AJZzxR9W7frK_bdhaq24p1evsOBAdB1Otb4M2hbfqWg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/sI0lDgNh1eLKpXh_IhUI.yt"; protocol="application/pgp-signature"
+ boundary="Sig_/bqvKv3M+BQi4tAY37SiAFWo"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1411242255300.12886@jlaw-desktop.mno.stratus.com>
+In-Reply-To: <CABGuBc=AJZzxR9W7frK_bdhaq24p1evsOBAdB1Otb4M2hbfqWg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Lawrence <joe.lawrence@stratus.com>
+To: Travis Williams <travis@euppc.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/sI0lDgNh1eLKpXh_IhUI.yt
+--Sig_/bqvKv3M+BQi4tAY37SiAFWo
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 24 Nov 2014 23:07:32 -0500 Joe Lawrence <joe.lawrence@stratus.com>
-wrote:
+On Wed, 26 Nov 2014 12:38:44 -0600 Travis Williams <travis@euppc.com> wrote:
 
-> Does anyone know how its possible to determine which side of an LVM RAID =
-1=20
-> is the stale partner during RAID resync?
+> Hello all,
 >=20
-> In ordinary MD RAID, I believe you can check=20
-> /sys/block/md0/md/dev-XXX/state,
+> I feel as though I must be missing something that I have had no luck
+> finding all morning.
+>=20
+> When setting up arrays with spares in a spare-group, I'm having no
+> luck finding a way to get that information from mdadm or mdstat. This
+> becomes an issue when trying to write out configs and the like, or
+> simply trying to get a feel for how arrays are setup on a system.
+>=20
+> Many tutorials/documentation/etc etc list using `mdadm --scan --detail
+> >> /etc/mdadm/mdadm.conf` as a way to write out the running config for
+> initialization at reboot.  There is never any of the spare-group
+> information listed in that output. Is there another way to see what
+> spare-group is included in a currently running array?
+>=20
+> It also isn't listed in `mdadm --scan`, or by `cat /proc/mdstat`
+>=20
+> I've primarily noticed this with Debian 7, with mdadm v3.2.5 - 18th
+> May 2012. kernel 3.2.0-4.
+>=20
+> When I modify the mdadm.conf myself and add the 'spare-group' setting
+> myself, the arrays work as expected, but I haven't been able to find a
+> way to KNOW that they are currently running that way without failing
+> drives out to see. This nearly burned me after a restart in one
+> instance that I caught out of dumb luck before anything of value was
+> lost.
+>=20
 
-Why do you believe that?
+mdadm.conf is the primary  location for spare-group information.
+When "mdadm --monitor" is run, it reads that file and uses that information.
+If you change the spare-group information in mdadm.conf, it would make sense
+to restart "mdadm --monitor" so that it uses the updated information.
 
-During a resync (after an unclean shutdown) the devices are indistinguishab=
-le.
-RAID1 reads all drives and if there is a difference it chooses one data blo=
-ck
-to write to the others - always the one with the lowest index number.
+mdadm --scan --detail >> /etc/mdadm.conf
 
-So with md or LVM it is the same: first "first" is "copied" to the "second".
+was only even meant to be a starting point - a guide.  You are still
+responsible for your mdadm.conf file.
 
 NeilBrown
 
-
->                                  but LVM RAID seems to hide those files=20
-> when leveraging the MD code.  I've looked though pvs/vgs/lvs manpages, bu=
-t=20
-> can't figure anything out there either.
->=20
-> Thanks,
->=20
-> -- Joe
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/sI0lDgNh1eLKpXh_IhUI.yt
+--Sig_/bqvKv3M+BQi4tAY37SiAFWo
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVHY7Fjnsnt1WYoG5AQKNig/8D/hT9nNQKobwgwrawVrABW+0OP0l8c6r
-3kmgyP85QsvF9edDnD7HWk/NliggfNFbEp3SVhi8OtSmFtLwcv7BIXkGhFV+xj6I
-aUWGpscML5sn1mkyCuAl9qHdCveM63M1DbKqkR9sTfaFuylpvINzU20yE+5ovGJs
-xsrYH492PxZ0MwYYhSoC+De5xn8UxAjZqWSq0hLdA4A1Z4C6IFOyrud7LM4Ydvx6
-1420pgaVC627LJNaBUqRCRypbuU7sH5yM9Mo1W/g1ukZD3pKuLnMXRJWpEWS9Ybx
-Npt+M6J0MZ+MZktcfxJFzswW7fqhW9niNaboez1bqUczJDP5QJKC1ZoE39wng82D
-kJTXvefAUdirBKCXKtH8fOFU492SHn5MxulVHTpSyC4lhJkcQgrOR0bA1XZH5zXN
-wa7BP3oCRs3OLaKnEDuhFmGaVT5boJjt1JtPUcwLGv/ZBmNhNus+aMPIKFvkY5tV
-oXHUBrsfrYGSx5lWUgKgCISYlqN27p7nhZ1vpMNfnA+xYnRnbpkpA5vXnUS2DTvh
-D9Fmt8Otb4SzvNpKiqH84Ul4K1Wq9JwkPSSuKvZct8kPYgoRG46ggYtZX+GMNSZa
-FKuduFNNIkt49LINtCek0stA4Og1FzSBl1CV9dI/jBAQFaqRyjCYeFbvUZ4aeHT6
-BxCn3YEmr7Y=
-=B1UA
+iQIVAwUBVHY87Tnsnt1WYoG5AQLq/g//W4DumjMQZTpJXhMS2RXsniR/W+hhHX7k
+DB2M3O+UtgBmYcauy4ohMuwn9OZmb1pgrv9aa0kpVHVSu7tLN1c1fAzQuJiYOYjg
+QmVfDKcJHQUllra58t2VlmAA+9ZeruxXjeVE6yJTfn0JiApYJ3mWHPZ+H1jU5Cen
+6o8xfgO/dhnhZitcmFLHUMXcVx3d9pLbzvF2phV4arwRvVhu+PYI0BKI1SNTWMB5
+dUGYWYvGXzKzV4II5HJaU5o5DrS4kwJRDwMWgIAOGKb6IlwNuW6RIyXfhFc8N9fb
+h67kWnT/i6jkZoQTqKqiW8fCsvRfT6A/KtMiwvW4b1GX71TsiPG3ri4DpwHEewv+
+nYpq2+upxlWTPmpHw5Nr2nLnOvcwuGhKvzsy18O8TPOuBJNlTICC7wRZYOi7V/40
+L2HG1wWs15lsoCBvsKS1ZJAjBAkzVk0zpjctvUri0rChluxeUa9GEAv2FHl5SeHa
+C4GTb0trA8dbV1qf0/72gDYomh54kbq0WHcooy9c49gNwLdfInT9xTiB6/jx2Dgq
+Hbo7kJQQoD1dBIvM7FK6DhoDLb2YgZlgvUJ4wpZpWE4fDyNeUJy4bVJcRbmSbdXy
+5URMln/0+KNg3UfF295upQH7K+Y6ZVbZHEbQNW2MCH3E1Dy9KJClwb/DmkZJM14+
+nUVrw7bujQk=
+=wxQf
 -----END PGP SIGNATURE-----
 
---Sig_/sI0lDgNh1eLKpXh_IhUI.yt--
+--Sig_/bqvKv3M+BQi4tAY37SiAFWo--
