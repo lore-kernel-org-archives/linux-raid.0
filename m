@@ -1,30 +1,43 @@
-From: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Subject: Raid 10 far 2 layout clarification.
-Date: Wed, 26 Nov 2014 18:30:31 +0000
-Message-ID: <BLU436-SMTP2133418C1B434E36DB60B7198700@phx.gbl>
+From: Travis Williams <travis@euppc.com>
+Subject: (unknown)
+Date: Wed, 26 Nov 2014 12:38:44 -0600
+Message-ID: <CABGuBc=AJZzxR9W7frK_bdhaq24p1evsOBAdB1Otb4M2hbfqWg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I just wanted to double check something before I return a failing SSD.
+Hello all,
 
-I set up a 2 partition raid 10 in far 2 mode... from what I understood
-it allows a mirror and stripe to exist on a 2 drive set up, so that it
-gets the benefits of stripe with the redundancy of mirror.
+I feel as though I must be missing something that I have had no luck
+finding all morning.
 
-I just wanted to double check this was correct and if so confirm that I
-can fail and remove one of the drives.
+When setting up arrays with spares in a spare-group, I'm having no
+luck finding a way to get that information from mdadm or mdstat. This
+becomes an issue when trying to write out configs and the like, or
+simply trying to get a feel for how arrays are setup on a system.
 
-Obvioulsy I will have to drop one of the drives anyway/somehow but if it
-wont hold up/keep running after failing one drive then I will have to
-deal with it in another way, probably a quick clone onto a spare disk as
-a stop gap measure until I get the replacement, as this array is my OS
-disk.
+Many tutorials/documentation/etc etc list using `mdadm --scan --detail
+>> /etc/mdadm/mdadm.conf` as a way to write out the running config for
+initialization at reboot.  There is never any of the spare-group
+information listed in that output. Is there another way to see what
+spare-group is included in a currently running array?
 
-Jon.
+It also isn't listed in `mdadm --scan`, or by `cat /proc/mdstat`
 
+I've primarily noticed this with Debian 7, with mdadm v3.2.5 - 18th
+May 2012. kernel 3.2.0-4.
 
+When I modify the mdadm.conf myself and add the 'spare-group' setting
+myself, the arrays work as expected, but I haven't been able to find a
+way to KNOW that they are currently running that way without failing
+drives out to see. This nearly burned me after a restart in one
+instance that I caught out of dumb luck before anything of value was
+lost.
+
+Thanks,
+
+-Travis
