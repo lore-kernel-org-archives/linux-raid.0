@@ -1,127 +1,104 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: LVM RAID1 syncing component
-Date: Mon, 1 Dec 2014 16:27:55 -0500
-Message-ID: <20141201162755.0235e84e@jlaw-desktop.mno.stratus.com>
+Date: Tue, 2 Dec 2014 08:41:11 +1100
+Message-ID: <20141202084111.6514ec79@notabene.brown>
 References: <alpine.DEB.2.02.1411242255300.12886@jlaw-desktop.mno.stratus.com>
 	<20141127074158.2a3472f3@notabene.brown>
 	<20141201161947.1d503df9@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/v9G5vgYU4j7SeziBE=TOTXA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20141201161947.1d503df9@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Joe Lawrence <joe.lawrence@stratus.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 1 Dec 2014 16:19:47 -0500
-Joe Lawrence <joe.lawrence@stratus.com> wrote:
+--Sig_/v9G5vgYU4j7SeziBE=TOTXA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 1 Dec 2014 16:19:47 -0500 Joe Lawrence <joe.lawrence@stratus.com>
+wrote:
 
 > On Thu, 27 Nov 2014 07:41:58 +1100
 > NeilBrown <neilb@suse.de> wrote:
-> 
-> > On Mon, 24 Nov 2014 23:07:32 -0500 Joe Lawrence <joe.lawrence@stratus.com>
+>=20
+> > On Mon, 24 Nov 2014 23:07:32 -0500 Joe Lawrence <joe.lawrence@stratus.c=
+om>
 > > wrote:
-> > 
-> > > Does anyone know how its possible to determine which side of an LVM RAID 1 
+> >=20
+> > > Does anyone know how its possible to determine which side of an LVM R=
+AID 1=20
 > > > is the stale partner during RAID resync?
-> > > 
-> > > In ordinary MD RAID, I believe you can check 
+> > >=20
+> > > In ordinary MD RAID, I believe you can check=20
 > > > /sys/block/md0/md/dev-XXX/state,
-> > 
+> >=20
 > > Why do you believe that?
-> > 
-> > During a resync (after an unclean shutdown) the devices are indistinguishable.
-> > RAID1 reads all drives and if there is a difference it chooses one data block
+> >=20
+> > During a resync (after an unclean shutdown) the devices are indistingui=
+shable.
+> > RAID1 reads all drives and if there is a difference it chooses one data=
+ block
 > > to write to the others - always the one with the lowest index number.
-> > 
-> > So with md or LVM it is the same: first "first" is "copied" to the "second".
-> 
+> >=20
+> > So with md or LVM it is the same: first "first" is "copied" to the "sec=
+ond".
+>=20
 > Hi Neil,
-> 
+>=20
 > Here's a quick example of my thought-process, where md2 is an in-sync
 > RAID1 of sdq2 and sdr2 with an internal write bitmap:
-> 
+>=20
 > % mdadm --fail /dev/md3 /dev/sdr2
 > % mdadm --remove /dev/md3 /dev/sdr2
-> 
-> [ ... File I/O to /dev/md3 ... ]
-> 
-> % mdadm -X /dev/sd[qr]2
->         Filename : /dev/sdq2
->            Magic : 6d746962
->          Version : 4
->             UUID : 073511ee:0b0c20e0:662ae8da:b53c7979
->           Events : 8526                                              << ECq
->   Events Cleared : 8498
->            State : OK
->        Chunksize : 64 MB
->           Daemon : 5s flush period
->       Write Mode : Normal
->        Sync Size : 16768896 (15.99 GiB 17.17 GB)
->           Bitmap : 256 bits (chunks), 5 dirty (2.0%)
->         Filename : /dev/sdr2
->            Magic : 6d746962
->          Version : 4
->             UUID : 073511ee:0b0c20e0:662ae8da:b53c7979
->           Events : 8513                                              << ECr
->   Events Cleared : 8498
->            State : OK
->        Chunksize : 64 MB
->           Daemon : 5s flush period
->       Write Mode : Normal
->        Sync Size : 16768896 (15.99 GiB 17.17 GB)
->           Bitmap : 256 bits (chunks), 5 dirty (2.0%)
-> 
-> [ Note that ECq > ECr, which makes sense since sdq was the remaining
->   disk standing in the RAID. ]
-> 
-> % mdadm --add /dev/md3 /dev/sdr2
-> % mdadm --detail /dev/md3
-> /dev/md3:
->         Version : 1.2
->   Creation Time : Thu Nov 13 15:47:19 2014
->      Raid Level : raid1
->      Array Size : 16768896 (15.99 GiB 17.17 GB)
->   Used Dev Size : 16768896 (15.99 GiB 17.17 GB)
->    Raid Devices : 2
->   Total Devices : 2
->     Persistence : Superblock is persistent
-> 
->   Intent Bitmap : Internal
-> 
->     Update Time : Mon Dec  1 16:07:55 2014
->           State : active, degraded, recovering 
->  Active Devices : 1
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 1
-> 
->  Rebuild Status : 0% complete
-> 
->            Name : dhcp-linux-2192-2025:3
->            UUID : 073511ee:0b0c20e0:662ae8da:b53c7979
->          Events : 8528
-> 
->     Number   Major   Minor   RaidDevice State
->        0      65        2        0      active sync   /dev/sdq2
->        1      65       18        1      spare rebuilding   /dev/sdr2
-> 
-> % head /sys/block/md3/md/dev-sd*/state
-> ==> /sys/block/md3/md/dev-sdq2/state <==
-> in_sync
-> 
-> ==> /sys/block/md3/md/dev-sdr2/state <==
-> spare
-> 
-> In this scenario, sdr was re-added to the RAID and with a lower events-
-> cleared count.  I assume that MD will only need to read the data
-> represented by the dirty bitmap bits from the "active sync" disk to the
-> "spare rebuilding" disk.  Is this not the case?
 
-D'oh!  Sorry for the edit, I meant the "events" count and not the "events
-cleared" count to determine sync direction.  I put the "<<" arrows in
-the right place but then used the wrong term everywhere else.
+You are referring to what I would call "recovery", not "resync"
+(which is why I put "(after an unclean shutdown)" in my answer to make it
+clear what circumstances I was talking about).
 
--- Joe
+resync: fixing things after an unclean shutdown
+recovery: restoring data after a device has been removed an another
+          (or possibly the same) added.
+
+I think
+
+  dmsetup info=20
+
+should provide the info you want.
+One of the fields is a sequence of letters 'D', 'a', 'A'.
+
+		 * Status characters:
+		 *  'D' =3D Dead/Failed device
+		 *  'a' =3D Alive but not in-sync
+		 *  'A' =3D Alive and in-sync
+
+Does that provide the information you wanted?
+
+NeilBrown
+
+--Sig_/v9G5vgYU4j7SeziBE=TOTXA
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVHzgdznsnt1WYoG5AQLhOg/+OEUg2YU7sVUasgYBsmOCdk3Js0tm/jJD
+p9hG1Nxdrhn08HnpLdNiy+uTgiLJUtNPk0SQV07MBxi2LvGviabtuLCsN7uSrcbp
+RU/ZAoEltr2mqsUKGGS1c8a19bFZCc/kA6dVdEZgtcJUtJUKB8eAp4TeBqq64gyZ
+WEG4DD85/1vd4mc0j2mW4na1HcVS7U7SF+qbmIKohzGitoBxJb9bhi4BzbY1/VG9
+xQ/M0fOYlKGPuVDL84m1FlEqD0fAgOuRYeYPjF5HA0yTiEIPfIt0aOTRjx8CxLPs
+MO1fTCImV3r5wASsB/Bv00qch6bxbpeel9JhHkim+uvxriUDP7gE6WZtTGf4fWDq
+G4QbXuKuK8gMqQHVsyQCSIsBLdjfdxX4DiNxAYOPjdb5136PPLvfoOeDJDxQYuLH
+ro7u+d8c22LnIG7/VadjAJbQdXGKyfAnhm2WCwIcfmWZ9O4h6YXI4m/yq7pRpQSY
+RIELUIBG8wNwetU72UijwM/dCwCEgzYQxo8BsghcCzXQUSUYVV1OSLKrBxOBSy46
+Pbfzw/ZiVt1L4v0Fv2XWPzjm2pTZTFIrt+yfLS6g/3QhGbuwHupHtlvSkrPKB51I
+8hOm74MaYlFtDYKtH4xvr7PUcnhC1BsKnMBYEa2ElulUI3pk+RG3o4Fvted6wSeB
+kRCCKPbbQ7M=
+=GfMt
+-----END PGP SIGNATURE-----
+
+--Sig_/v9G5vgYU4j7SeziBE=TOTXA--
