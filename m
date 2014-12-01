@@ -1,63 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: upgrading a RAID array in-place with larger drives.  request
- for review of my approach?
-Date: Mon, 01 Dec 2014 08:47:07 -0500
-Message-ID: <547C715B.6050309@turmel.org>
-References: <1417402553.1412807.197119853.0D7A911E@webmail.messagingengine.com> <21627.57456.206853.819767@quad.stoffel.home> <1417406691.1429321.197136309.39C9A098@webmail.messagingengine.com>
+From: Joe Thornber <thornber@redhat.com>
+Subject: Re: [patch] dm space map metadata: fix sm_bootstrap_get_nr_blocks()
+Date: Mon, 1 Dec 2014 13:56:12 +0000
+Message-ID: <20141201135611.GA3151@debian>
+References: <20141129125021.GD27251@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1417406691.1429321.197136309.39C9A098@webmail.messagingengine.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: terrygalant@mailbolt.com, John Stoffel <john@stoffel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20141129125021.GD27251@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, =?iso-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning Terry,
+Ack, thanks.
 
-On 11/30/2014 11:04 PM, terrygalant@mailbolt.com wrote:
-> Hi John,
+On Sat, Nov 29, 2014 at 03:50:21PM +0300, Dan Carpenter wrote:
+> This function isn't right and it causes a static checker warning:
 > 
-> On Sun, Nov 30, 2014, at 07:28 PM, John Stoffel wrote:
->> If you have the ability and the power and space in the chassis, i'd
->> just add in the four new drives, set them up in their RAID10 format,
+> 	drivers/md/dm-thin.c:3016 maybe_resize_data_dev()
+> 	error: potentially using uninitialized 'sb_data_size'.
 > 
-> Unfortunately I don't.  I have the 4 slots and thats it :-(
+> It should set "*count" and return zero on success the same as the
+> sm_metadata_get_nr_blocks() function does earlier.
 > 
-> If I did, it'd be pretty easy.  But no.  So that's why I'm trying to figure out how to do this right -- 'in place'.
-
-You cannot --grow your array, as that isn't supported for the "far"
-layout of raid10.  Sorry.  As you only have four slots, I recommend the
-following convoluted procedure:
-
-1) Get the new drives into the box w/ the existing array on the tail of
-the space, as follows:
-  a) Partition new drive w/ 2T and 1T partitions, with the latter large
-enough to serve as a member of the current array.
-  b) --fail and --remove the old disk.
-  c) Install the new disk, --add the 1T partition to your array.
-  d) Let it resync, then repeat for drives 2-4.
-
-2) Create a new, growable array in the collection of 2T partitions.
-With newer kernels, raid10,n2 should work.  Experiment with that if you
-aren't sure.  Make sure you enable bitmaps.
-
-3) Use pvcreate and vgextend to merge the new array into your existing
-LVM setup.
-
-4) Use pvmove to shift all of your volumes onto the new array.
-
-5) Use vgreduce to drop the old array, then --stop it and destroy it.
-
-6) Repartion each device to delete the 1T partitions and then resize the
-2T over that space.  Use --fail and --re-add to keep the array happy
-with minimal disruption.
-
-7) When all resyncing is done, --grow the array then use pvresize to
-activate the space.
-
-Enjoy!
-
-Phil
-
+> Fixes: 3241b1d3e0aa ('dm: add persistent data library')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Static checker stuff.  Not tested.
+> 
+> diff --git a/drivers/md/persistent-data/dm-space-map-metadata.c b/drivers/md/persistent-data/dm-space-map-metadata.c
+> index 786b689..f4e22bc 100644
+> --- a/drivers/md/persistent-data/dm-space-map-metadata.c
+> +++ b/drivers/md/persistent-data/dm-space-map-metadata.c
+> @@ -564,7 +564,9 @@ static int sm_bootstrap_get_nr_blocks(struct dm_space_map *sm, dm_block_t *count
+>  {
+>  	struct sm_metadata *smm = container_of(sm, struct sm_metadata, sm);
+>  
+> -	return smm->ll.nr_blocks;
+> +	*count = smm->ll.nr_blocks;
+> +
+> +	return 0;
+>  }
+>  
+>  static int sm_bootstrap_get_nr_free(struct dm_space_map *sm, dm_block_t *count)
