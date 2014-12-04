@@ -1,51 +1,33 @@
-From: zhangxiao <xiao.zhang@windriver.com>
-Subject: Re: [dm-devel] The DM_BUFIO_HASH_BITS is defined as 20, any plan
- to make it flexible?
-Date: Thu, 4 Dec 2014 09:26:19 +0800
-Message-ID: <547FB83B.8080401@windriver.com>
-References: <547D7BC6.6070708@windriver.com> <20141202140015.GB5985@redhat.com> <20141203141921.GB6993@debian>
+From: "Matthew M. Dean" <fireculex@gmail.com>
+Subject: pretty unstable raid 5 now
+Date: Wed, 3 Dec 2014 18:08:22 -0800
+Message-ID: <CAPRzDfn33EBkci823=zw=6b3jnf-0YMr1YTU_j7RQ5qseu_fvg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20141203141921.GB6993@debian>
-Sender: linux-kernel-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, agk@redhat.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2014=E5=B9=B412=E6=9C=8803=E6=97=A5 22:19, Joe Thornber wrote:
-> On Tue, Dec 02, 2014 at 09:00:17AM -0500, Mike Snitzer wrote:
->> On Tue, Dec 02 2014 at  3:43am -0500,
->> zhangxiao <xiao.zhang@windriver.com> wrote:
->>
->>> Hi Experts,
->>>
->>> See drivers/md/dm-bufio.c as below:
->>>    50 /*
->>>    51  * Buffer hash
->>>    52  */
->>>    53 #define DM_BUFIO_HASH_BITS      20
->>>    54 #define DM_BUFIO_HASH(block) \
->>>    55         ((((block) >> DM_BUFIO_HASH_BITS) ^ (block)) & \
->>>    56          ((1 << DM_BUFIO_HASH_BITS) - 1))
->>> "drivers/md/dm-bufio.c" 1854L, 45375C
->>>
->>> DM_BUFIO_HASH_BITS was defined as 20 and it maybe not fit for some
->>> use case with limited resources. Do we have any plan to make it mor=
-e
->>> flexible? Like module parameter or something else?
->>
->> No immediate plans.
->
-> That hash table has been replaced with a red/black tree.
->
-> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.g=
-it/commit/?h=3Ddm-for-3.19&id=3D4e420c452b11edf9d510c8180ac66f529e5b620=
-6
->
->
-Great Thanks!
+So I've been running a raid 5 using an openwrt box with 3 loop files
+and lvm. All was well for over a year. Now /dev/loop3 keeps dropping
+from the raid
 
-Best Regards
-Xiao
+The first time it dropped was due to the network drive actually
+locking up, it tried to start with only 1 drive and failed. I had to
+--force the loop files to start, which 2 of them actually did. I could
+no longer --re-add the drive.
+
+Using --add did add the drive to the raid but the sync started at 0%
+so have to wait for it to rebuild. 11mb/sec takes a while on a 1.5
+terabyte array.
+
+after 82% sync the router locked up I think to a oom condition, 128mb
+only. /dev/loop3 was dropped from the array again. I was able to
+--re-add. 0% SYNC AGAIN. ~30 hours wasted. This has never happened.
+
+What has changed?
+
+I upgraded from a 3.10 kernel to 3.14 and from mdadm 3.2.6 to 3.3.2
+
+Aren't bitmap's supposed to fix this? Are they useless now?
