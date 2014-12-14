@@ -1,83 +1,170 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] md updates for 3.19
-Date: Sun, 14 Dec 2014 12:37:58 +1100
-Message-ID: <20141214123758.2a737915@notabene.brown>
+From: "Neil ." <neil.perrie@gmail.com>
+Subject: Re: Lost raid 5 volume
+Date: Sun, 14 Dec 2014 04:30:51 +0000
+Message-ID: <CADhQzuo57BoMT_fLVHd=ufGR6ztSFaRqsRLZtFSwvii+YzAcLQ@mail.gmail.com>
+References: <CADhQzuraHNZ1MaMw4OP0-3+vxRcB_TAN-_R2_eaTOQcEfUv8+w@mail.gmail.com>
+	<CAB_L8sZUdZkLRPQXS+ANam=k4Tvjynkh8UzgL5WXE3qBwYUK6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/5mrRlp2ZMSuJxhPC1h6nvdK"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Henry Cai <henryplusplus@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAB_L8sZUdZkLRPQXS+ANam=k4Tvjynkh8UzgL5WXE3qBwYUK6Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Emery Guevremont <emery.guevremont@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/5mrRlp2ZMSuJxhPC1h6nvdK
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+smartctl says Overall health...: passed for all drives.
+
+This is interesting(?)
+
+ mdadm --examine for sda2 and b2 list:
+ Array State as : AAAA
+
+But sdc2 and d2 list it as ..AA
+
+root@sysresccd /mnt % mdadm --examine /dev/sda2
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf0bf1b9:f57b96be:8c749fcb:cea10311
+           Name : 'localhost.localdomain':1
+  Creation Time : Sat Oct 25 16:11:56 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11712653168 (5585.03 GiB 5996.88 GB)
+     Array Size : 17568979392 (16755.08 GiB 17990.63 GB)
+  Used Dev Size : 11712652928 (5585.03 GiB 5996.88 GB)
+   Super Offset : 11712653296 sectors
+   Unused Space : before=0 sectors, after=368 sectors
+          State : clean
+    Device UUID : 0953e84c:a25760b0:28a20bab:bd1dc41b
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sat Dec  6 14:00:02 2014
+       Checksum : dfe27505 - correct
+         Events : 3
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+root@sysresccd /mnt % mdadm --examine /dev/sdb2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf0bf1b9:f57b96be:8c749fcb:cea10311
+           Name : 'localhost.localdomain':1
+  Creation Time : Sat Oct 25 16:11:56 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 11712653168 (5585.03 GiB 5996.88 GB)
+     Array Size : 17568979392 (16755.08 GiB 17990.63 GB)
+  Used Dev Size : 11712652928 (5585.03 GiB 5996.88 GB)
+   Super Offset : 11712653296 sectors
+   Unused Space : before=0 sectors, after=368 sectors
+          State : clean
+    Device UUID : d96a56d4:c5ac346a:24765692:501f6f22
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sat Dec  6 14:00:02 2014
+       Checksum : f1ab789 - correct
+         Events : 3
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
 
 
-hi Linus,
- please pull these three patches.
+root@sysresccd /mnt % mdadm --examine /dev/sdc2
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf0bf1b9:f57b96be:8c749fcb:cea10311
+           Name : 'localhost.localdomain':1
+  Creation Time : Sat Oct 25 16:11:56 2014
+     Raid Level : raid5
+   Raid Devices : 4
 
- I did have a largish set of locking changes queued, but late testing showed
- they weren't quite as stable as I thought and while I fixed what I found, I
- decided it safer to delay them a release ... particularly as I'll be AFK f=
-or
- a few weeks.  So expect a larger batch next time :-)
+ Avail Dev Size : 11712653168 (5585.03 GiB 5996.88 GB)
+     Array Size : 17568979392 (16755.08 GiB 17990.63 GB)
+  Used Dev Size : 11712652928 (5585.03 GiB 5996.88 GB)
+   Super Offset : 11712653296 sectors
+   Unused Space : before=0 sectors, after=368 sectors
+          State : clean
+    Device UUID : 17d61cf2:2c0c4765:cb4c478c:4828aefc
 
-Thanks,
-NeilBrow
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec  7 11:18:06 2014
+       Checksum : fc228d5e - correct
+         Events : 8
 
-The following changes since commit 3a18ca061311f2f1ee9c44012f89c7436d392117:
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-  Merge tag 'ext4_for_linus_urgent' of git://git.kernel.org/pub/scm/linux/k=
-ernel/git/tytso/ext4 (2014-12-01 20:11:49 -0800)
+   Device Role : Active device 2
+   Array State : ..AA ('A' == active, '.' == missing, 'R' == replacing)
 
-are available in the git repository at:
 
-  git://neil.brown.name/md/ tags/md/3.19
+root@sysresccd /mnt % mdadm --examine /dev/sdd2
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf0bf1b9:f57b96be:8c749fcb:cea10311
+           Name : 'localhost.localdomain':1
+  Creation Time : Sat Oct 25 16:11:56 2014
+     Raid Level : raid5
+   Raid Devices : 4
 
-for you to fetch changes up to f851b60db0fd83a10034c5cc9d9e58c758457b1c:
+ Avail Dev Size : 11712653168 (5585.03 GiB 5996.88 GB)
+     Array Size : 17568979392 (16755.08 GiB 17990.63 GB)
+  Used Dev Size : 11712652928 (5585.03 GiB 5996.88 GB)
+   Super Offset : 11712653296 sectors
+   Unused Space : before=0 sectors, after=368 sectors
+          State : clean
+    Device UUID : 306bde8a:3beebe54:52e6acd2:f7681367
 
-  md: Check MD_RECOVERY_RUNNING as well as ->sync_thread. (2014-12-11 10:02=
-:10 +1100)
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec  7 11:18:06 2014
+       Checksum : 3526df7d - correct
+         Events : 8
 
-----------------------------------------------------------------
-Three fixes for md
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-----------------------------------------------------------------
-NeilBrown (2):
-      md/raid5: fetch_block must fetch all the blocks handle_stripe_dirtyin=
-g wants.
-      md: Check MD_RECOVERY_RUNNING as well as ->sync_thread.
+   Device Role : Active device 3
+   Array State : ..AA ('A' == active, '.' == missing, 'R' == replacing)
 
-kbuild test robot (1):
-      md: fix semicolon.cocci warnings
 
- drivers/md/md.c    | 38 +++++++++++++++++++++++++++-----------
- drivers/md/raid5.c |  7 +++++--
- 2 files changed, 32 insertions(+), 13 deletions(-)
 
---Sig_/5mrRlp2ZMSuJxhPC1h6nvdK
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQIVAwUBVIzp9jnsnt1WYoG5AQKSmA/+LpzBMEOzL7hL/jPKMdYg3mCk/DMsuDQp
-1XjirEjMQGtPMNxVhsJ8JLm7jToUpg9khM7W9ZS7A4Zc96Skb4hj19W7rTT975L5
-UKJqVIppURnISMCElftOxXnb/n/0vctbrKGQibOzxTQRds/HOPJbEVpHGwgb14jG
-RJENsEZ+Rbe3n7CbtUV6T8b2bpFCeFABcHrRRj9pE0LsJDPPNTt9RyxN2hqZV+XT
-ieGXMXdL9otxEYBYxAK9Yh7bcAreRXuEuB7C295jaqiKBo+mfGqVLZMBTE8acYvc
-u6FcqXh4DvOd7BPF3a/VjXooUAEBGFe85o3NL+bi5c03YsopzNTCFGsUO7mfOSGV
-90Mij/VYwDaatiwBtooC0jbQFxGb1Y/1Kk33101Z/JsaJI1fVYFvS3t91rin+PZ9
-joucxxtixAvVlYTAt3khhflCZeYFhaOHtQXbBu3PF8/wN44vQUNX9H1jqhYlD9/N
-jsM8J9Qx/X8B4RBSJJjn09286eE+e1YuahAmO0I7BKozIMNVxYtuycsiifGnC9hL
-iR0HQMHMps+lAjlZUP8qyrY4sTTqg1F9tie0qDfln1y+UrWWDyaI6J9+FhVp/KYp
-Re94hFMCeiP+euuCbj60SskeD8hTLNfEJFzZ9zlPAc4Hkcqc1qmzi171hj41hIOe
-harxNSLHx9w=
-=kWCD
------END PGP SIGNATURE-----
 
---Sig_/5mrRlp2ZMSuJxhPC1h6nvdK--
+On 14 December 2014 at 00:06, Emery Guevremont
+<emery.guevremont@gmail.com> wrote:
+> Stop your raid with mdadm -S /dev/md0 or whatever your raid device name is.
+>
+> Probably the safest thing to do is clone your drives with ddrescue.
+> You might also want to view your S.M.A.R.T. log with smarctl -a
+> /dev/sda or which ever is your device name.
+>
+> After, what you'd need to start doing is taking a backup of mdadm
+> --examine /dev/sda1 or which ever partition is your partition used for
+> raid. This will give us info on you md superblock. Post this info and
+> from there we'll be able to see how everything is setup and have a
+> better idea of your current situation.
+>
+> On Fri, Dec 12, 2014 at 7:48 PM, Neil . <neil.perrie@gmail.com> wrote:
+>> I am looking for some help in trying to recover a raid 5 volume. Is
+>> this the right place? What data should I provide to get the ball
+>> rolling?
+>>
+-snip-
