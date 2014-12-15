@@ -1,50 +1,57 @@
-From: "John L. Center" <jlcenter@comcast.net>
-Subject: udisks error creating watch file in md127 container directory
-Date: Mon, 15 Dec 2014 11:38:13 -0500
-Message-ID: <548F0E75.1050502@comcast.net>
+From: "Baldysiak, Pawel" <pawel.baldysiak@intel.com>
+Subject: RE: udisks error creating watch file in md127 container directory
+Date: Mon, 15 Dec 2014 17:30:41 +0000
+Message-ID: <84A53BEA6EAC69439B7E311E9B17A76F1A6C30F1@IRSMSX110.ger.corp.intel.com>
+References: <548F0E75.1050502@comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <548F0E75.1050502@comcast.net>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "John L. Center" <jlcenter@comcast.net>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-
-I'm running Ubuntu 14.04 with the 3.17.5 kernel.  I have 3 IMSM RAID1
-arrays set up & I noticed the following syslog messages:
-
-Dec 15 09:49:06 mariposa udisksd[3255]: udisks daemon version 2.1.3 starting
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md123/md/sync_action: No such file or
-directory (g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md123/md/degraded: No such file or directory
-(g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md125/md/sync_action: No such file or
-directory (g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md125/md/degraded: No such file or directory
-(g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md127/md/sync_action: No such file or
-directory (g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa udisksd[3255]: Error creating watch for file
-/sys/devices/virtual/block/md127/md/degraded: No such file or directory
-(g-file-error-quark, 4)
-Dec 15 09:49:06 mariposa dbus[1230]: [system] Successfully activated
-service 'org.freedesktop.UDisks2'
-
-The files (degraded,sync_action) don't exist in the container (md127,
-etc.) directories, but do exist in the array (md126, etc.) directories
-themselves.  I never noticed this before, is this something I should be
-concerned about?  I recently ran software updates, but udisks was not
-one of the packages patched.
-
-Thanks.
-
-    -John
-
-
+PiBPbiBNb25kYXksIERlY2VtYmVyIDE1LCAyMDE0IDU6MzggUE0gSm9obiBMLiBDZW50ZXIgd3Jv
+dGU6DQo+IFRvOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiB1ZGlza3Mg
+ZXJyb3IgY3JlYXRpbmcgd2F0Y2ggZmlsZSBpbiBtZDEyNyBjb250YWluZXIgZGlyZWN0b3J5DQo+
+IA0KPiBIaSwNCj4gDQo+IEknbSBydW5uaW5nIFVidW50dSAxNC4wNCB3aXRoIHRoZSAzLjE3LjUg
+a2VybmVsLiAgSSBoYXZlIDMgSU1TTSBSQUlEMSBhcnJheXMNCj4gc2V0IHVwICYgSSBub3RpY2Vk
+IHRoZSBmb2xsb3dpbmcgc3lzbG9nIG1lc3NhZ2VzOg0KPiANCj4gRGVjIDE1IDA5OjQ5OjA2IG1h
+cmlwb3NhIHVkaXNrc2RbMzI1NV06IHVkaXNrcyBkYWVtb24gdmVyc2lvbiAyLjEuMyBzdGFydGlu
+Zw0KPiBEZWMgMTUgMDk6NDk6MDYgbWFyaXBvc2EgdWRpc2tzZFszMjU1XTogRXJyb3IgY3JlYXRp
+bmcgd2F0Y2ggZm9yIGZpbGUNCj4gL3N5cy9kZXZpY2VzL3ZpcnR1YWwvYmxvY2svbWQxMjMvbWQv
+c3luY19hY3Rpb246IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkNCj4gKGctZmlsZS1lcnJvci1x
+dWFyaywgNCkgRGVjIDE1IDA5OjQ5OjA2IG1hcmlwb3NhIHVkaXNrc2RbMzI1NV06IEVycm9yIGNy
+ZWF0aW5nDQo+IHdhdGNoIGZvciBmaWxlDQo+IC9zeXMvZGV2aWNlcy92aXJ0dWFsL2Jsb2NrL21k
+MTIzL21kL2RlZ3JhZGVkOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5IChnLQ0KPiBmaWxlLWVy
+cm9yLXF1YXJrLCA0KSBEZWMgMTUgMDk6NDk6MDYgbWFyaXBvc2EgdWRpc2tzZFszMjU1XTogRXJy
+b3IgY3JlYXRpbmcNCj4gd2F0Y2ggZm9yIGZpbGUNCj4gL3N5cy9kZXZpY2VzL3ZpcnR1YWwvYmxv
+Y2svbWQxMjUvbWQvc3luY19hY3Rpb246IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkNCj4gKGct
+ZmlsZS1lcnJvci1xdWFyaywgNCkgRGVjIDE1IDA5OjQ5OjA2IG1hcmlwb3NhIHVkaXNrc2RbMzI1
+NV06IEVycm9yIGNyZWF0aW5nDQo+IHdhdGNoIGZvciBmaWxlDQo+IC9zeXMvZGV2aWNlcy92aXJ0
+dWFsL2Jsb2NrL21kMTI1L21kL2RlZ3JhZGVkOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5IChn
+LQ0KPiBmaWxlLWVycm9yLXF1YXJrLCA0KSBEZWMgMTUgMDk6NDk6MDYgbWFyaXBvc2EgdWRpc2tz
+ZFszMjU1XTogRXJyb3IgY3JlYXRpbmcNCj4gd2F0Y2ggZm9yIGZpbGUNCj4gL3N5cy9kZXZpY2Vz
+L3ZpcnR1YWwvYmxvY2svbWQxMjcvbWQvc3luY19hY3Rpb246IE5vIHN1Y2ggZmlsZSBvciBkaXJl
+Y3RvcnkNCj4gKGctZmlsZS1lcnJvci1xdWFyaywgNCkgRGVjIDE1IDA5OjQ5OjA2IG1hcmlwb3Nh
+IHVkaXNrc2RbMzI1NV06IEVycm9yIGNyZWF0aW5nDQo+IHdhdGNoIGZvciBmaWxlDQo+IC9zeXMv
+ZGV2aWNlcy92aXJ0dWFsL2Jsb2NrL21kMTI3L21kL2RlZ3JhZGVkOiBObyBzdWNoIGZpbGUgb3Ig
+ZGlyZWN0b3J5IChnLQ0KPiBmaWxlLWVycm9yLXF1YXJrLCA0KSBEZWMgMTUgMDk6NDk6MDYgbWFy
+aXBvc2EgZGJ1c1sxMjMwXTogW3N5c3RlbV0NCj4gU3VjY2Vzc2Z1bGx5IGFjdGl2YXRlZCBzZXJ2
+aWNlICdvcmcuZnJlZWRlc2t0b3AuVURpc2tzMicNCj4gDQo+IFRoZSBmaWxlcyAoZGVncmFkZWQs
+c3luY19hY3Rpb24pIGRvbid0IGV4aXN0IGluIHRoZSBjb250YWluZXIgKG1kMTI3LA0KPiBldGMu
+KSBkaXJlY3RvcmllcywgYnV0IGRvIGV4aXN0IGluIHRoZSBhcnJheSAobWQxMjYsIGV0Yy4pIGRp
+cmVjdG9yaWVzDQo+IHRoZW1zZWx2ZXMuICBJIG5ldmVyIG5vdGljZWQgdGhpcyBiZWZvcmUsIGlz
+IHRoaXMgc29tZXRoaW5nIEkgc2hvdWxkIGJlDQo+IGNvbmNlcm5lZCBhYm91dD8gIEkgcmVjZW50
+bHkgcmFuIHNvZnR3YXJlIHVwZGF0ZXMsIGJ1dCB1ZGlza3Mgd2FzIG5vdCBvbmUNCj4gb2YgdGhl
+IHBhY2thZ2VzIHBhdGNoZWQuDQo+IA0KPiBUaGFua3MuDQo+IA0KPiAgICAgLUpvaG4NCg0KDQpI
+aSBKb2huLA0KDQpFdmVyeXRoaW5nIHNlZW1zIHRvIGJlIGFscmlnaHQgLSB0aG9zZSBmaWxlcyBh
+cmUgbm90IGNyZWF0ZWQgZm9yIGNvbnRhaW5lciBkZXZpY2VzIChvbmx5IGFycmF5IGNhbiBiZSBk
+ZWdyYWRlZCwgb3IgcHJvY2VlZCB3aXRoIHN5bmMpLg0KSSBkbyBub3Qga25vdyB3aHkgdWRpc2tz
+IGlzIHRyeWluZyB0byBjcmVhdGUgd2F0Y2ggaW4gdGhpcyBjYXNlLg0KDQpUaGFua3MNClBhd2Vs
+IEJhbGR5c2lhaw0KDQo+IA0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
+c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluIHRoZQ0KPiBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21v
+IGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
