@@ -1,127 +1,109 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Question about my patch
-Date: Wed, 17 Dec 2014 16:26:00 +1100
-Message-ID: <20141217162600.69dc1933@notabene.brown>
-References: <5491043D.8020703@gmail.com>
+From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
+Subject: Re: Split RAID: Proposal for archival RAID using incremental batch checksum
+Date: Wed, 17 Dec 2014 12:10:46 +0530
+Message-ID: <CAK-d5daVxQN3JifvcA9+PL04p1L3O0KXQkgBwyhs1O6tHnHeMg@mail.gmail.com>
+References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
+ <20141029200501.1f01269d@notabene.brown> <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
+ <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
+ <20141103165217.3bfd3d3e@notabene.brown> <CAK-d5daq+-PbX1s81h01x7GdVDCijyzzPaeRAOCctEXTNideCw@mail.gmail.com>
+ <20141125095052.51f8eadc@notabene.brown> <CAK-d5dZnWpmyPfWTGB74wHojeywdiXDnT6Fs0yqYqn7bJpSL-Q@mail.gmail.com>
+ <CAK-d5dY4QEDupxjkon_+6z0Z7ggPKv=PLF60zTkeSBsbd4+mPQ@mail.gmail.com>
+ <CAK-d5dZMjbhAqgs9GOvswG6crZtrV2uSidRzt_hBJAH=m5rGKw@mail.gmail.com>
+ <20141202084611.45f56d6a@notabene.brown> <CAK-d5dajGYxda_UFK_fBET14+KDr68km0uEKfrQVqs5oShWGfg@mail.gmail.com>
+ <CAK-d5db_ubRobL=uiia_9yOFA0PMovptAG8O+Y17ORT_--FsQg@mail.gmail.com> <20141217084921.360ca442@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/uRa6+JxjtRtqd7rm0tywfL8"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5491043D.8020703@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nick <xerofoify@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20141217084921.360ca442@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/uRa6+JxjtRtqd7rm0tywfL8
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 17 December 2014 at 03:19, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 16 Dec 2014 21:55:15 +0530 Anshuman Aggarwal
+> <anshuman.aggarwal@gmail.com> wrote:
+>
+>> On 2 December 2014 at 17:26, Anshuman Aggarwal
+>> <anshuman.aggarwal@gmail.com> wrote:
+>> > It works! (Atleast on a sample 5 MB device with 5 x 1MB partitions :-)
+>> > will find more space on my drives and do a larger test but don't see
+>> > why it shouldn't work)
+>> > Here are the following caveats (and questions):
+>> > - Neil, like you pointed out, the power of 2 chunk size will probably
+>> > need a code change (in the kernel or only in the userspace tool?)
+>
+> In the kernel too.
 
-On Tue, 16 Dec 2014 23:19:09 -0500 nick <xerofoify@gmail.com> wrote:
+Is this something that you would consider implementing soon? Is there
+a performance/other impact to any other consideration to remove this
+limitation.. could you elaborate on the reason why it was there in the
+first place?
 
-> Greetings Neil,
-> As you our the maintainer for this patch I created:
->=20
-> >From ad324f9c2c8117b2f74ad73cb9c6e8185edf5395 Mon Sep 17 00:00:00 2001
-> From: Nicholas Krause <xerofoify@gmail.com>
-> Date: Tue, 16 Dec 2014 22:54:10 -0500
-> Subject: [PATCH] drivers:md: Remove unneeded argument to the function,
->  sync_request in raid5.c
->=20
-> Removes unneeded argument of go_faster for the function sync_request as t=
-his parameter is never used in the function. Further more do to this we can=
- remove this parameter for the function sync_request
-> in the file, raid5.c safely and not break any callers of this function su=
-ccessfully.
->=20
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->  drivers/md/raid5.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index c1b0d52..e7da686 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4986,8 +4986,7 @@ ret:
->  	return reshape_sectors;
->  }
-> =20
-> -/* FIXME go_faster isn't used */
-> -static inline sector_t sync_request(struct mddev *mddev, sector_t sector=
-_nr, int *skipped, int go_faster)
-> +static inline sector_t sync_request(struct mddev *mddev, sector_t sector=
-_nr, int *skipped)
->  {
->  	struct r5conf *conf =3D mddev->private;
->  	struct stripe_head *sh;
->=20
-> --=20
-> 2.1.0
->=20
-> I am wondering as I am getting a few build errors if I should sent the pa=
-tch anyway or create one that has no warnings. Below our the warnings I am =
-getting.
->=20
+If this is a case of patches are welcome, please guide on where to
+start looking/working even if its just
 
-Adding new warning is definitely not acceptable.
+>
+>> >     - Any performance or other reasons why a terabyte size chunk may
+>> > not be feasible?
+>
+> Not that I can think of.
+>
+>> > - Implications of safe_mode_delay
+>> >     - Would the metadata be updated on the block device be written to
+>> > and the parity device as well?
+>
+> Probably.  Hard to give a specific answer to vague question.
 
-The only way you could get ride of the warning is to not change the argumen=
-ts to the function, or
-to make the same change to the arguments of every sync_request function.
+I should clarify.
 
-The former is easier.
+For example in a 5 device RAID4, lets say block is being written to
+device 1 and parity is on device 5 and devices 2,3,4 are sleeping
+(spun down). If we set safe_mode_delay to 0 and md decides to update
+the parity without involving the blocks on the other 3 devices and
+just updates the parity by doing a read, compute, write to device 5
+will the metadata be updated on both device 1 and 5 even though
+safe_mode_delay is 0?
 
-i.e. there is no bug here, and nothing to fix.
+>
+>> >     - If the drive  fails which is the same as the drive being written
+>> > to, would that lack of metadata updates to the other devices affect
+>> > reconstruction?
+>
+> Again, to give a precise answer, a detailed question is needed.  Obviously
+> any change would have to made in such a way to ensure that things which
+> needed to work, did work.
 
-Thanks,
+Continuing from the previous example, lets say device 1 fails after a
+write which only updated metadata on 1 and 5 while 2,3,4 were
+sleeping. In that case to access the data from 1, md will use 2,3,4,5
+but will it then update the metadata from 5 onto 2,3,4? I hope I am
+making this clear.
 
-NeilBrown
-
-
-
-> Warnings from Build:
-> drivers/md/raid5.c:7047:2: warning: initialization from incompatible poin=
-ter type
->  .sync_request =3D sync_request,
->   ^
-> drivers/md/raid5.c:7047:2: warning: (near initialization for =E2=80=98rai=
-d6_personality.sync_request=E2=80=99)
-> drivers/md/raid5.c:7069:2: warning: initialization from incompatible poin=
-ter type
->   .sync_request =3D sync_request,
->   ^
-> drivers/md/raid5.c:7069:2: warning: (near initialization for =E2=80=98rai=
-d5_personality.sync_request=E2=80=99)
-> drivers/md/raid5.c:7092:2: warning: initialization from incompatible poin=
-ter type
->   .sync_request =3D sync_request,
->   ^
-> Thanks Nick=20
-> P.S. Sorry about the bad layout if it's hard to read tried to do my best =
-to make it readable :).
+>
+>
+>> > - Adding new devices (is it possible to move the parity to the disk
+>> > being added? How does device addition work for RAID4 ...is it added as
+>> > a zero-ed out device with parity disk remaining the same)
+>
+> RAID5 or RAID6 with ALGORITHM_PARITY_0 puts the parity on the early devices.
+> Currently if you add a device to such an array ...... I'm not sure what it
+> will do.  It should be possible to make it just write zeros out.
 >
 
---Sig_/uRa6+JxjtRtqd7rm0tywfL8
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Once again, is this something that can make its way to your roadmap?
+If so, great.. otherwise could you steer me towards where in the md
+kernel and mdadm source I should be looking to make these changes.
+Thanks again.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVJET6Dnsnt1WYoG5AQKQcw//bqx7Lg1gZmKV3A7bxJ1b6NM+CUQHuWUd
-iUVOW1j/DcBCZhZ6zjdGYdd6tzdokIbVgmB2ppiA+IN+y8q1r4zRn65aEL+/FaVQ
-qybNgcOeFCsIm3nzeSpcpGaiz6p/5W5VuBYRAY91kAntxouFdBHS6SDjQW9DTHSR
-ZjovyQ1be6ttx0VwBJ+Qwb9EMus/oNIxnwlqXrbI96jKta00Yxt4OFvyDhjPIgaQ
-U40vTRF/kCktmBx4m3PJI4BnNLXue/iv/1MAQIP0CfMylxNlRNZbnFP0RbXJ3b62
-eEu8OnSGclQFdBitZbWiRca8/ilnPR3SEBdfrSMB+HRYafiAaY7B9mvtuUFGZ6H+
-NDfnJaNDO7EzIaF4U8HWfwRWnHuo6XSK0sVAjWWr+8ViY2/b7Dml5Lu43FMERvRk
-W9SI56oYAwKQQoITknsb1/nWT7DjuG/HppJ20NHMADy7eTfs9rPhHu9TWTfzlBH0
-fGr9fOevLz12IYDNkpJaNB0h3kQH2W6qOOIBLuA9Dg7v3EgIMK6X0vrdU8YTBLfI
-Iw8POAEDqT+PeKXZBXkFclEbLHyfWFaX8gGL5HXMgG2XqrHx7K7GhWG0UJ2j1wLe
-3lbZa4kacIC/whNxCd5BAapXK1m51SUYC1rwXGzJDtk375pPOWK8Y05BOA+kXwW3
-zOXGh8E0RvI=
-=iDZS
------END PGP SIGNATURE-----
-
---Sig_/uRa6+JxjtRtqd7rm0tywfL8--
+>
+> NeilBrown
+>
+>
+>> >
+>> >
+>>
+>> Neil, sorry to try to bump this thread. Could you please look over the
+>> questions and address the points on the remaining items that can make
+>> it a working solution? Thanks
+>
