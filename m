@@ -1,34 +1,80 @@
-From: Chris Murphy <chris@colorremedies.com>
-Subject: indefinite hang when growing/reshaping
-Date: Wed, 17 Dec 2014 15:20:50 -0700
-Message-ID: <CAJCQCtQWSVbx08xafh6MDikiJOZJ6MVJ4Jx=qt=UZnX3t47A7A@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] drivers:md: Remove no longer needed fixme comment in
+ raid5.c
+Date: Thu, 18 Dec 2014 10:19:06 +1100
+Message-ID: <20141218101906.55b7772d@notabene.brown>
+References: <1418831373-18415-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/8N088tSaDk7hWDWj1k5nRVO"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1418831373-18415-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-If this is user error I'd expect a discreet error message, but I don't
-get one, just a hang during the reshape following successful --grow
-command (going from 3x device raid5 to 4x device raid5).
+--Sig_/8N088tSaDk7hWDWj1k5nRVO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md127 : active raid5 loop3[4] loop2[3] loop1[1] loop0[0]
-      2095104 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
-      [>....................]  reshape =  0.0% (0/1047552)
-finish=7.0min speed=2402K/sec
+On Wed, 17 Dec 2014 10:49:33 -0500 Nicholas Krause <xerofoify@gmail.com>
+wrote:
 
-Reproduces with:
-kernel-3.17.6-300.fc21.x86_64
-mdadm-3.3.2-1.fc21.x86_64
-and
-3.18.0-2.fc22.i686+debug
-mdadm-3.3.2-1.fc21.i686
+> Removes the no longer needed fix me comment related to not needing the ag=
+rument faster for the function,
+> sync_request. Due to getting warnings when building without the agrument =
+it seems that this fix me was
+> wrong and we must keep this agrument in order to avoid build warnings whe=
+n building without it.
+>=20
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>  drivers/md/raid5.c | 1 -
+>  1 file changed, 1 deletion(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c1b0d52..c0fde2a 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4986,7 +4986,6 @@ ret:
+>  	return reshape_sectors;
+>  }
+> =20
+> -/* FIXME go_faster isn't used */
+>  static inline sector_t sync_request(struct mddev *mddev, sector_t sector=
+_nr, int *skipped, int go_faster)
+>  {
+>  	struct r5conf *conf =3D mddev->private;
 
-Details are here:
-https://bugzilla.kernel.org/show_bug.cgi?id=89851
 
--- 
-Chris Murphy
+Why do you think the comment is no longer needed.  Is "go_faster" being used
+now?  Is there a clear explanation somewhere of why "go_faster" should not =
+be
+used?
+
+NeilBrown
+
+--Sig_/8N088tSaDk7hWDWj1k5nRVO
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVJIPajnsnt1WYoG5AQIzOw//ZXuXWuCNFtt6bfbNMmeS7+/SENzOcDdt
+4IWNIRJv+i29K0c2telwAOeE0a2LDftgEWUnNJs2l7Sg49q5ucMo02415ViIXqbK
+oWOsYvvXGeZYqMR65EQ3gZbXo5Uh1ZrgB5+rQTffCBwYBqMaYKvQ9qKS6JGqNdXK
+kYiBIvVeUr2ucXvWicavEVkR47Vi+oUxO4t/iYKOCbDkScmSMpazviiOIaclFk6o
+k2Y7e+PipXVOWdcLF/qdMMIpFPZhR6lvADasYm/8OeMXBzZEKU4qVaarIDiLpw3z
+Tlc9G0b3nNgbzNuxE+Y3FmnhQpPwTQklQ4QmckbuQXi7Q8tAwxRuW9Kx37bh6BSJ
+ZU8+D6VZgbVJXyc9gdwA5zJvfqoyZU/rpC+6w1OJb5AN/oo2ILJfBVGB86XgWC8k
+fQwbgfhX4+NHW9/yo0InGvOMDjnBPcOVEjYnimJC8iieGkB1DgS4cqTY4xduAxnk
++YlFAse7eN6hsF/6Pfmx0YB4ETrBYcYaCrhtOW7vqt/0bGmCYGGPi7f24K2meUp6
+wgU7eXU322bQwSBtYoS1N5ZGEFcDRC/TkJpJbvxP/tpX6uxpnfmJgFjBnsi1QYdo
+JHfXjhnqrGooFtLWKp6oASc70GZnVEh3RS1Yd2//cb3erEBM73CllZ+M2+hTJZDR
+8Om/HFo0Mpc=
+=w4pT
+-----END PGP SIGNATURE-----
+
+--Sig_/8N088tSaDk7hWDWj1k5nRVO--
