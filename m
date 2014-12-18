@@ -1,121 +1,134 @@
-From: Peter Kieser <peter@kieser.ca>
-Subject: Re: Question about my patch
-Date: Wed, 17 Dec 2014 22:30:31 -0800
-Message-ID: <54927487.2030700@kieser.ca>
-References: <5491043D.8020703@gmail.com> <20141217162600.69dc1933@notabene.brown>
+From: Anthony Wright <anthony@overnetdata.com>
+Subject: Re: Panic doing BLKDISCARD on a raid 5 array on linux 3.17.3
+Date: Thu, 18 Dec 2014 10:21:50 +0000
+Message-ID: <5492AABE.4050508@overnetdata.com>
+References: <5491704D.1080709@overnetdata.com> <20141218162858.47310158@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms000609050302030002000207"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141217162600.69dc1933@notabene.brown>
+In-Reply-To: <20141218162858.47310158@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, nick <xerofoify@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
-
---------------ms000609050302030002000207
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-
-
-On 2014-12-16 9:26 PM, NeilBrown wrote:
-> i.e. there is no bug here, and nothing to fix.
+On 18/12/2014 05:28, NeilBrown wrote:
+> On Wed, 17 Dec 2014 12:00:13 +0000 Anthony Wright <anthony@overnetdata.com>
+> wrote:
 >
-> Thanks,
+>> I've hit a panic bug on stock linux 3.17.3 (which includes the recent
+>> commit on BLKDISCARD in md/raid5.c) running in Dom0 under Xen 4.1.0 that
+>> I've isolated to a BLKDISCARD system call within mkfs.ext3 and only
+>> happens on a raid 5 array (it doesn't happen on a raid 1 array).
+>>
+>> The system it happens on is remote and I don't have physical access to
+>> it, but the system administrator there is fairly helpful. We're in the
+>> process of commissioning the system which needs to be done tomorrow
+>> (thursday), so I've only got 24 hours in which I can run any tests you
+>> may want. If necessary I can arrange remote access, but it's a little
+>> complex.
+>>
+>> We have 3 512GB SSDs on the system, all with a GPT partition table and
+>> the same partition layout. All the partitions have optimal alignment
+>> according to parted. One of the partitions on each SSD is assembled into
+>> a raid 1 array, another partition is assembled into a raid 5 array. Each
+>> array is the used as the only physical volume in a LVM volume group. I
+>> then create a logical volume on each array and format the logical volume
+>> with mkfs.ext3. I ran mkfs.ext3 in verbose mode and also ran strace on
+>> it in a separate session (though it was over a network) so it's possible
+>> I lost the last few packets of data.
+>>
+>> /dev/Test/Test - 400MB LV on raid 1
+>> /dev/Master/Test - 400MB LV on raid 5
+>>
+>> A) mkfs.ext3 -E nodiscard -v /dev/Test/Test - succeeds
+>> B) mkfs.ext3 -v /dev/Test/Test - succeeds
+>> C) mkfs.ext3 -E nodiscard -v /dev/Master/Test - succeeds
+>> D) mkfs.ext3 -v /dev/Master/Test - panics
+>>
+>> mkfs.ext3 output from (B)
+>> -------------------------
+>> mke2fs 1.42.9 (28-Dec-2013)
+>> fs_types for mke2fs.conf resolution: 'ext3', 'small'
+>> Discarding device blocks: done                           Discard
+>> succeeded and will return 0s - skipping inode table wipe
+>> Filesystem label=
+>> OS type: Linux
+>> Block size=1024 (log=0)
+>> Fragment size=1024 (log=0)
+>> Stride=4 blocks, Stripe width=4 blocks
+>> 51200 inodes, 204800 blocks
+>> 10240 blocks (5.00%) reserved for the super user
+>> First data block=1
+>> Maximum filesystem blocks=67371008
+>> 25 block groups
+>> 8192 blocks per group, 8192 fragments per group
+>> 2048 inodes per group
+>> Superblock backups stored on blocks:
+>>     8193, 24577, 40961, 57345, 73729
+>>
+>> Allocating group tables: done                           Writing inode
+>> tables: done                           Creating journal (4096 blocks): done
+>> Writing superblocks and filesystem accounting information: done
+>>
+>> strace output from (B) around the BLKDISCARD
+>> --------------------------------------------
+>> gettimeofday({1418806647, 890754}, NULL) = 0
+>> gettimeofday({1418806647, 890814}, NULL) = 0
+>> ioctl(3, BLKDISCARD, {0, 3000000010})   = 0
+>> write(1, "Discarding device blocks: ", 26) = 26
+>> write(1, "  1024/204800", 13)           = 13
+>> write(1, "\10\10\10\10\10\10\10\10\10\10\10\10\10", 13) = 13
+>> ioctl(3, BLKDISCARD, {100000, 3000000010}) = 0
+>> write(1, "             ", 13)           = 13
+>> write(1, "\10\10\10\10\10\10\10\10\10\10\10\10\10", 13) = 13
+>> write(1, "done                            "..., 33) = 33
+>> write(1, "Discard succeeded and will retur"..., 65) = 65
+>>
+>> mkfs.ext3 output from (D)
+>> -------------------------
+>> mke2fs 1.42.9 (28-Dec-2013)
+>> fs_types for mke2fs.conf resolution: 'ext3', 'small'
+>> <Panic>
+>>
+>> strace output from (D) around the BLKDISCARD
+>> --------------------------------------------
+>> gettimeofday({1418809706, 244197}, NULL) = 0
+>> gettimeofday({1418809706, 244259}, NULL) = 0
+>> ioctl(3, BLKDISCARD, {0, 3000000010}
+>> <Panic>
+>>
+>> I have a photograph of the panic output from a previous session which
+>> includes raid5d and blk_finish_plug in the stack trace, unfortunately I
+>> don't have the top part of the panic and vger won't accept the
+>> attachment. I also have a photograph of the console output from the
+>> crash at (D), but in this case it outputs to the console every 180 seconds:
+>>
+>> INFO: rcu_sched self-detected stall on CPU { 1}
+>> sending NMI to all CPUs:
+>> xen: vector 0x2 is not implemented
+>>
+>> thanks,
+>>
+>> Anthony Wright
+> Presumably you have deliberately enabled DISCARD support by setting the
+>   raid456.devices_handle_discard_safely
 >
-> NeilBrown
+> modules parameters?  Otherwise the DISCARD should be a no-op.
+I haven't touched the raid456.devices_handle_discard_safely setting, I
+only learnt about it when I discovered your patch while I investigated
+the crash. I'm presuming it's the default value, but if there's a way to
+confirm that please let me know.
+> It is very hard to deduce anything without the full Oops.  Do you have access
+> to another machine on the same subnet?  If so you could enable netconsole and
+> capture the full oops from the other machines (all console messages are sent
+> via UDP at a very low level).
+I've got netconsole working, but it doesn't always panic and it takes a
+while to get the system reset. Below is the output I got from the most
+recent crash:
 
-FYI:https://lkml.org/lkml/2014/8/4/206
+[63207.177400] BUG: unable to handle kernel paging request at
+0000001e00008000
 
--Peter
-
-
-
---------------ms000609050302030002000207
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIMqzCC
-BjQwggQcoAMCAQICASAwDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
-DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
-Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
-MTAyNDIxMDI1NVoXDTE3MTAyNDIxMDI1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
-dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
-aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
-aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMsohUWcASz7GfKrpTOM
-KqANy9BV7V0igWdGxA8IU77L3aTxErQ+fcxtDYZ36Z6GH0YFn7fq5RADteP0AYzrCA+EQTfi
-8q1+kA3m0nwtwXG94M5sIqsvs7lRP1aycBke/s5g9hJHryZ2acScnzczjBCAo7X1v5G3yw8M
-DP2m2RCye0KfgZ4nODerZJVzhAlOD9YejvAXZqHksw56HzElVIoYSZ3q4+RJuPXXfIoyby+Y
-2m1E+YzX5iCZXBx05gk6MKAW1vaw4/v2OOLy6FZH3XHHtOkzUreG//CsFnB9+uaYSlR65cdG
-zTsmoIK8WH1ygoXhRBm98SD7Hf/r3FELNvUCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
-Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSuVYNv7DHKufcd+q9rMfPIHeOsuzAfBgNV
-HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
-MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
-dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
-c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
-c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
-dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
-d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBADqp
-Jw3I07QWke9plNBpxUxcffc7nUrIQpJHDci91DFG7fVhHRkMZ1J+BKg5UNUxIFJ2Z9B90Mic
-c/NXcs7kPBRdn6XGO/vPc87Y6R+cWS9Nc9+fp3Enmsm94OxOwI9wn8qnr/6o3mD4noP9Jphw
-UPTXwHovjavRnhUQHLfo/i2NG0XXgTHXS2Xm0kVUozXqpYpAdumMiB/vezj1QHQJDmUdPYMc
-p+reg9901zkyT3fDW/ivJVv6pWtkh6Pw2ytZT7mvg7YhX3V50Nv860cV11mocUVcqBLv0gcT
-+HBDYtbuvexNftwNQKD5193A7zN4vG7CTYkXxytSjKuXrpEatEiFPxWgb84nVj25SU5q/r1X
-hwby6mLhkbaXslkVtwEWT3Van49rKjlK4XrUKYYWtnfzq6aSak5u0Vpxd1rY79tWhD3EdCvO
-hNz/QplNa+VkIsrcp7+8ZhP1l1b2U6MaxIVteuVMD3X0vziIwr7jxYae9FZjbxlpUemqXjcC
-0QaFfN7qI0JsQMALL7iGRBg7K0CoOBzECdD3fuZil5kU/LP9cr1BK31U0Uy651bFnAMMMkqh
-AChIbn0ei72VnbpSsrrSdF0BAGYQ8vyHae5aCg+H75dVCV33K6FuxZrf09yTz+Vx/PkdRUYk
-XmZz/OTfyJXsUOUXrym6KvI2rYpccSk5MIIGbzCCBVegAwIBAgICUcswDQYJKoZIhvcNAQEF
-BQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJT
-ZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBD
-bGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNDA4MTcxMDM5MDla
-Fw0xNjA4MTcxMzU1MzFaMIGOMRkwFwYDVQQNExBKSHI4SWdkNjhlbUUweVF6MQswCQYDVQQG
-EwJDQTEZMBcGA1UECBMQQnJpdGlzaCBDb2x1bWJpYTESMBAGA1UEBxMJVmFuY291dmVyMRUw
-EwYDVQQDEwxQZXRlciBLaWVzZXIxHjAcBgkqhkiG9w0BCQEWD3BldGVyQGtpZXNlci5jYTCC
-ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL/NmLSwzKyhFa8wVY4On4D2atW+jO4k
-qzGjt32GITxEhweeR2AeQFhmBXTwwAHGnAEWU+lQSXoIoV9Hdi8GhTeFz3A5LPTLl/wa6dmv
-8VCfYaREvoSxjEN4nsCtdU8P6NLUE4mqBe7ZiP9lDkqWgmd0fDEYjiOnJU3cdoLh5vDHOyu+
-9mmPDVEBELFgbbdQsyiINKQN5fwElQ/5hwip/5lFCrT8SYYVS7s2JwEPtvPmpl+JyOwRJakh
-VRv4Wd8Lyv/rchK4riwfMyHhuKwbbKRxs3HzSHjtsjGZ2tS1UzDEalL7ZRsHC4EvZmgBGg5E
-0l1Bz7cC4JcPIy+8G14OjZkCAwEAAaOCAtUwggLRMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSw
-MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUvDcOWQqoGGEK+KDc
-6opnV1iupIkwHwYDVR0jBBgwFoAUrlWDb+wxyrn3HfqvazHzyB3jrLswGgYDVR0RBBMwEYEP
-cGV0ZXJAa2llc2VyLmNhMIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASow
-LgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsG
-AQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5U
-aGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAyIFZh
-bGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlh
-bmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhl
-IHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9j
-cmwuc3RhcnRzc2wuY29tL2NydHUyLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYB
-BQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MyL2NsaWVudC9jYTBC
-BggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNzMi5j
-bGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
-hkiG9w0BAQUFAAOCAQEAycbEJG6nvyfbv2X4npgq1ceU+y1qYmXczCBNvNRJ2yvVXc8ljjQs
-KRDzpr8JhTCg4SMZh3C3AIOBGxrYCsyaxRL3Ssfh/6Ptg3ExIfVNj6CobB1piTrusORaVDYS
-jEtZZRR4iYt9mDRo/mZRhh4QRManZYwCXPG4mrguqQ4NLYVdgTsHYgCTRymMbyrQ0+eIGdAO
-/szcirRovADyxroMclw+TTlB7nQrovIsTVteGqe0renKR0bzdWsexQEntKpBxJLy/HTSIHeQ
-HU5r7hwjk/v1aoKlimuaKbdGTJl10BYk8+pbU8JGEl1sm1cNn4MKYwhnWFRTBEPEiXP6VyNc
-PTGCA9owggPWAgEBMIGTMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
-LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UE
-AxMvU3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAlHL
-MAkGBSsOAwIaBQCgggIbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTE0MTIxODA2MzAzMVowIwYJKoZIhvcNAQkEMRYEFEMZ4YJP7qHa1+4lZHknXv/GWjde
-MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
-BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
-ASgwgaQGCSsGAQQBgjcQBDGBljCBkzCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
-Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50
-IENBAgJRyzCBpgYLKoZIhvcNAQkQAgsxgZaggZMwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQK
-Ew1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBT
-aWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRl
-IENsaWVudCBDQQICUcswDQYJKoZIhvcNAQEBBQAEggEAcazsJJCxbwAxfLRHLFSpO00RR4T8
-PXS6R+V1Q1IfrQ7v++dPtdGhbaorXu0KeKAgrogqeUDAGGTYWPr+9vfgDlSUr0Qk4P8L1B96
-1Vm6WayAMbQSq0Q9N3HZcfLsDpoa5FOOQrDmlhFxXQ4v5xXZCUJdCuhrf9yK1/T1v6FAZ9mt
-XA9oQWUuuxMUuaNWFB3BFPGJwyljCGOaXYFaGtJYGvAUv4IKNzxBZNQ+V2CV+ozaQ9/DViC6
-A/EzlsH7SG3zNJvjJqreyniCGo/ckvfmQIRYPGbicPW/uGemWoPRaU5GQNtOUgJQKYK7ru93
-ergjjGDoJHB6OLOOIURMqzKAcwAAAAAAAA==
---------------ms000609050302030002000207--
+Anthony.
