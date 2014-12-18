@@ -1,7 +1,7 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 13/24] Copy set bits from another slot
-Date: Thu, 18 Dec 2014 10:17:34 -0600
-Message-ID: <20141218161734.GA29627@shrek.lan>
+Subject: [PATCH 14/24] Initiate recovery on node failure
+Date: Thu, 18 Dec 2014 10:17:44 -0600
+Message-ID: <20141218161744.GA29632@shrek.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,141 +11,118 @@ To: neilb@suse.de
 Cc: lzhong@suse.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-bitmap_copy_from_slot reads the bitmap from the slot mentioned.
-It then copies the set bits to the node local bitmap.
+The DLM informs us in case of node failure with the DLM slot number.
+cluster_info->recovery_map sets the bit corresponding to the slot number
+and wakes up the recovery thread.
 
-This is helper function for the resync operation on node failure.
-
-bitmap_set_memory_bits() currently assumes it is only run at startup and that
-they bitmap is currently empty.  So if it finds that a region is already
-marked as dirty, it won't mark it dirty again. Change bitmap_set_memory_bits()
-to always set the NEEDED_MASK bit if 'needed' is set.
+The recovery thread:
+1. Derives the slot number from the recovery_map
+2. Locks the bitmap corresponding to the slot
+3. Copies the set bits to the node-local bitmap
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/bitmap.c | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/bitmap.h |  2 ++
- 2 files changed, 78 insertions(+), 1 deletion(-)
+ drivers/md/md-cluster.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 49b7e33..6f7e178 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -919,6 +919,28 @@ static void bitmap_file_clear_bit(struct bitmap *bitmap, sector_t block)
- 	}
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 7d57f3f..4f1ea5f 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -16,6 +16,7 @@
+ #include <linux/dlm.h>
+ #include <linux/sched.h>
+ #include "md.h"
++#include "bitmap.h"
+ #include "md-cluster.h"
+ 
+ #define LVB_SIZE	64
+@@ -52,6 +53,8 @@ struct md_cluster_info {
+ 	struct dlm_lock_resource *bitmap_lockres;
+ 	struct list_head suspend_list;
+ 	spinlock_t suspend_lock;
++	struct md_thread *recovery_thread;
++	unsigned long recovery_map;
+ };
+ 
+ static void sync_ast(void *arg)
+@@ -187,6 +190,51 @@ out:
+ 	return s;
  }
  
-+static int bitmap_file_test_bit(struct bitmap *bitmap, sector_t block)
++void recover_bitmaps(struct md_thread *thread)
 +{
-+	unsigned long bit;
-+	struct page *page;
-+	void *paddr;
-+	unsigned long chunk = block >> bitmap->counts.chunkshift;
-+	int set = 0;
++	struct mddev *mddev = thread->mddev;
++	struct md_cluster_info *cinfo = mddev->cluster_info;
++	struct dlm_lock_resource *bm_lockres;
++	char str[64];
++	int slot, ret;
++	struct suspend_info *s, *tmp;
++	sector_t lo, hi;
 +
-+	page = filemap_get_page(&bitmap->storage, chunk);
-+	if (!page)
-+		return -EINVAL;
-+	bit = file_page_offset(&bitmap->storage, chunk);
-+	paddr = kmap_atomic(page);
-+	if (test_bit(BITMAP_HOSTENDIAN, &bitmap->flags))
-+		set = test_bit(bit, paddr);
-+	else
-+		set = test_bit_le(bit, paddr);
-+	kunmap_atomic(paddr);
-+	return set;
++	while (cinfo->recovery_map) {
++		slot = fls64((u64)cinfo->recovery_map) - 1;
++
++		/* Clear suspend_area associated with the bitmap */
++		spin_lock_irq(&cinfo->suspend_lock);
++		list_for_each_entry_safe(s, tmp, &cinfo->suspend_list, list)
++			if (slot == s->slot) {
++				list_del(&s->list);
++				kfree(s);
++			}
++		spin_unlock_irq(&cinfo->suspend_lock);
++
++		snprintf(str, 64, "bitmap%04d", slot);
++		bm_lockres = lockres_init(mddev, str, NULL, 1);
++		if (!bm_lockres) {
++			pr_err("md-cluster: Cannot initialize bitmaps\n");
++			goto clear_bit;
++		}
++
++		ret = dlm_lock_sync(bm_lockres, DLM_LOCK_PW);
++		if (ret) {
++			pr_err("md-cluster: Could not DLM lock %s: %d\n",
++					str, ret);
++			goto clear_bit;
++		}
++		ret = bitmap_copy_from_slot(mddev, slot, &lo, &hi);
++		if (ret)
++			pr_err("md-cluster: Could not copy data "
++					"from bitmap %d\n", slot);
++		dlm_unlock_sync(bm_lockres);
++clear_bit:
++		clear_bit(slot, &cinfo->recovery_map);
++	}
 +}
 +
-+
- /* this gets called when the md device is ready to unplug its underlying
-  * (slave) device queues -- before we let any writes go down, we need to
-  * sync the dirty pages of the bitmap file to disk */
-@@ -1570,11 +1592,13 @@ static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int n
- 		return;
- 	}
- 	if (!*bmc) {
--		*bmc = 2 | (needed ? NEEDED_MASK : 0);
-+		*bmc = 2;
- 		bitmap_count_page(&bitmap->counts, offset, 1);
- 		bitmap_set_pending(&bitmap->counts, offset);
- 		bitmap->allclean = 0;
- 	}
-+	if (needed)
-+		*bmc |= NEEDED_MASK;
- 	spin_unlock_irq(&bitmap->counts.lock);
+ static void recover_prep(void *arg)
+ {
  }
- 
-@@ -1810,6 +1834,57 @@ out:
- }
- EXPORT_SYMBOL_GPL(bitmap_load);
- 
-+/* Loads the bitmap associated with slot and copies the resync information
-+ * to our bitmap
-+ */
-+int bitmap_copy_from_slot(struct mddev *mddev, int slot,
-+		sector_t *low, sector_t *high)
-+{
-+	int rv = 0, i, j;
-+	sector_t block, lo = 0, hi = 0;
-+	struct bitmap_counts *counts;
-+	struct bitmap *bitmap = bitmap_create(mddev, slot);
-+	if (IS_ERR(bitmap))
-+		return PTR_ERR(bitmap);
-+	else
-+		rv = bitmap_read_sb(bitmap);
-+	if (rv)
-+		goto err;
-+
-+	rv = bitmap_init_from_disk(bitmap, 0);
-+	if (rv)
-+		goto err;
-+
-+	counts = &bitmap->counts;
-+	for (j = 0; j < counts->chunks; j++) {
-+		block = (sector_t)j << counts->chunkshift;
-+		if (bitmap_file_test_bit(bitmap, block)) {
-+			if (!lo)
-+				lo = block;
-+			hi = block;
-+			bitmap_file_clear_bit(bitmap, block);
-+			bitmap_set_memory_bits(mddev->bitmap, block, 1);
-+			bitmap_file_set_bit(mddev->bitmap, block);
+@@ -200,6 +248,16 @@ static void recover_slot(void *arg, struct dlm_slot *slot)
+ 			mddev->bitmap_info.cluster_name,
+ 			slot->nodeid, slot->slot,
+ 			cinfo->slot_number);
++	set_bit(slot->slot - 1, &cinfo->recovery_map);
++	if (!cinfo->recovery_thread) {
++		cinfo->recovery_thread = md_register_thread(recover_bitmaps,
++				mddev, "recover");
++		if (!cinfo->recovery_thread) {
++			printk("md-cluster: Could not create recovery thread\n");
++			return;
 +		}
 +	}
-+
-+	bitmap_update_sb(bitmap);
-+	/* Setting this for the ev_page should be enough.
-+	 * And we do not require both write_all and PAGE_DIRT either
-+	 */
-+	for (i = 0; i < bitmap->storage.file_pages; i++)
-+		set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
-+	bitmap_write_all(bitmap);
-+	bitmap_unplug(bitmap);
-+	*low = lo;
-+	*high = hi;
-+err:
-+	bitmap_free(bitmap);
-+	return rv;
-+}
-+EXPORT_SYMBOL_GPL(bitmap_copy_from_slot);
-+
-+
- void bitmap_status(struct seq_file *seq, struct bitmap *bitmap)
- {
- 	unsigned long chunk_kb;
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index ac3fc40..123ef8c 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -262,6 +262,8 @@ void bitmap_daemon_work(struct mddev *mddev);
++	md_wakeup_thread(cinfo->recovery_thread);
+ }
  
- int bitmap_resize(struct bitmap *bitmap, sector_t blocks,
- 		  int chunksize, int init);
-+int bitmap_copy_from_slot(struct mddev *mddev, int slot,
-+				sector_t *lo, sector_t *hi);
- #endif
- 
- #endif
+ static void recover_done(void *arg, struct dlm_slot *slots,
+@@ -342,6 +400,7 @@ static int leave(struct mddev *mddev)
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+ 	if (!cinfo)
+ 		return 0;
++	md_unregister_thread(&cinfo->recovery_thread);
+ 	lockres_free(cinfo->sb_lock);
+ 	lockres_free(cinfo->bitmap_lockres);
+ 	dlm_release_lockspace(cinfo->lockspace, 2);
 -- 
 2.1.2
 
