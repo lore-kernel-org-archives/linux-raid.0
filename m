@@ -1,206 +1,139 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid10: 6 out of 8 disks marked as stale on every restart
-Date: Thu, 18 Dec 2014 16:36:32 +1100
-Message-ID: <20141218163632.6cb57524@notabene.brown>
-References: <548B2033.5030803@kieser.ca>
+Subject: Re: Bug#763917: mdadm: rounding errors in human_size()
+Date: Thu, 18 Dec 2014 17:00:59 +1100
+Message-ID: <20141218170059.5be02ac2@notabene.brown>
+References: <20141003182454.GA9120@goneko.de>
+	<20141003182454.GA9120@goneko.de>
+	<548188B0.6000309@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/cn+Hrp+.RJhMWgtI4nYAz25"; protocol="application/pgp-signature"
+ boundary="Sig_/daJoe1/9M.CfnTnA6+Xw+79"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <548B2033.5030803@kieser.ca>
+In-Reply-To: <548188B0.6000309@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>
-Cc: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: 763917@bugs.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/cn+Hrp+.RJhMWgtI4nYAz25
+--Sig_/daJoe1/9M.CfnTnA6+Xw+79
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 12 Dec 2014 09:04:51 -0800 Peter Kieser <peter@kieser.ca> wrote:
+On Fri, 05 Dec 2014 13:28:00 +0300 Michael Tokarev <mjt@tls.msk.ru> wrote:
 
-> Hello,
+> Neil, will you take the patch in this bugreport for the next version?
 >=20
-> I have a 8 disk RAID10 array, 6 of the disks are on an LSISAS2008=20
-> controller and 2 are on a  82801JI (ICH10 Family) SATA AHCI controller. =
-=20
-> I upgraded the kernel from 3.17.1 to 3.17.6 when the issue I am having=20
-> started to occur, but reverting to an older kernel does not resolve the=20
-> issue.
+> http://bugs.debian.org/763917.
 >=20
-> Restarting the machine causes the array not to start (or be visible in=20
-> /proc/mdstat or any mention in kernel messages.) If I try to assemble=20
-> the drives, mdraid complains that 6 out of the 8 disks (coincidentally=20
-> all on the LSISAS2008 controller) are non-fresh:
+> Thanks,
 >=20
-> root@kvm:~# mdadm --assemble /dev/md3 /dev/sde /dev/sdf /dev/sdg=20
-> /dev/sdh /dev/sdi /dev/sdj /dev/sda /dev/sdb
+> /mjt
 >=20
-> Dec 11 21:08:25 kvm kernel: [  528.503736] md: kicking non-fresh sdi=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.503747] md: unbind<sdi>
-> Dec 11 21:08:25 kvm kernel: [  528.523775] md: export_rdev(sdi)
-> Dec 11 21:08:25 kvm kernel: [  528.523802] md: kicking non-fresh sdg=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.523809] md: unbind<sdg>
-> Dec 11 21:08:25 kvm kernel: [  528.531753] md: export_rdev(sdg)
-> Dec 11 21:08:25 kvm kernel: [  528.531780] md: kicking non-fresh sdf=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.531788] md: unbind<sdf>
-> Dec 11 21:08:25 kvm kernel: [  528.539749] md: export_rdev(sdf)
-> Dec 11 21:08:25 kvm kernel: [  528.539776] md: kicking non-fresh sdh=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.539785] md: unbind<sdh>
-> Dec 11 21:08:25 kvm kernel: [  528.547744] md: export_rdev(sdh)
-> Dec 11 21:08:25 kvm kernel: [  528.547771] md: kicking non-fresh sdj=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.547779] md: unbind<sdj>
-> Dec 11 21:08:25 kvm kernel: [  528.555755] md: export_rdev(sdj)
-> Dec 11 21:08:25 kvm kernel: [  528.555782] md: kicking non-fresh sde=20
-> from array!
-> Dec 11 21:08:25 kvm kernel: [  528.555790] md: unbind<sde>
-> Dec 11 21:08:25 kvm kernel: [  528.563758] md: export_rdev(sde)
-> Dec 11 21:08:25 kvm kernel: [  528.565831] md/raid10:md3: not enough=20
-> operational mirrors.
-> Dec 11 21:08:25 kvm kernel: [  528.567230] md: pers->run() failed ...
->=20
-> /dev/sda and /dev/sdb are the only drives not on the LSI controller. If=20
-> I force the assembly with 6 out of the 8 drives the RAID array comes up:
->=20
-> root@kvm:~# mdadm --assemble /dev/md3 /dev/sde /dev/sdf /dev/sdg=20
-> /dev/sdh /dev/sdi /dev/sdj --run
->=20
-> Then I add the extra drives:
->=20
-> root@kvm:~# mdadm --manage /dev/md3 --add /dev/sda
-> root@kvm:~# mdadm --manage /dev/md3 --add /dev/sdb
->=20
-> root@kvm:~# mdadm --detail /dev/md3
-> /dev/md3:
->          Version : 1.0
->    Creation Time : Thu Sep 12 18:43:56 2013
->       Raid Level : raid10
->       Array Size : 7814055936 (7452.06 GiB 8001.59 GB)
->    Used Dev Size : 1953513984 (1863.02 GiB 2000.40 GB)
->     Raid Devices : 8
->    Total Devices : 8
->      Persistence : Superblock is persistent
->=20
->      Update Time : Fri Dec 12 08:58:19 2014
->            State : active, degraded, recovering
->   Active Devices : 6
-> Working Devices : 8
->   Failed Devices : 0
->    Spare Devices : 2
->=20
->           Layout : near=3D2
->       Chunk Size : 512K
->=20
->   Rebuild Status : 76% complete
->=20
->             Name : kvm.taylor.kieser.ca:3
->             UUID : f0bc8469:9879a709:e4cc94a7:521bd273
->           Events : 82901
->=20
->      Number   Major   Minor   RaidDevice State
->         0       8      128        0      active sync /dev/sdi
->         8       8       96        1      active sync /dev/sdg
->        11       8        0        2      spare rebuilding /dev/sda
->         3       8      112        3      active sync /dev/sdh
->         4       0        0        4      removed
->        10       8       80        5      active sync /dev/sdf
->         6       8       64        6      active sync /dev/sde
->         9       8      144        7      active sync /dev/sdj
->=20
->        12       8       16        -      spare   /dev/sdb
->=20
-> This occurs every time I restart the machine. Thoughts? I tried=20
-> rebuilding the initramfs but this didn't resolve the issue. I'm also=20
-> running bcache on this machine, but on top of the mdraid.
->=20
-> /etc/mdadm.conf:
->=20
-> # definitions of existing MD arrays
-> ARRAY /dev/md/0 metadata=3D1.0 UUID=3D3b174514:49f3e22e:550cf9a7:8ed93920=
-=20
-> name=3Dlinux:0
-> ARRAY /dev/md/1 metadata=3D1.0 UUID=3D8e23f81d:73f9b393:addd1f7f:5ee1833a=
-=20
-> name=3Dlinux:1
-> ARRAY /dev/md/2 metadata=3D1.0 UUID=3Dcc5a0495:b5262855:fb3cd40a:8b237162=
-=20
-> name=3Dkvm.taylor.kieser.ca:2
-> ARRAY /dev/md/3 metadata=3D1.0 UUID=3Df0bc8469:9879a709:e4cc94a7:521bd273=
-=20
-> name=3Dkvm.taylor.kieser.ca:3
->=20
->=20
-> root@kvm:~# uname -a
-> Linux kvm 3.17.6 #3 SMP Sun Dec 7 12:16:45 PST 2014 x86_64 x86_64 x86_64=
-=20
-> GNU/Linux
->=20
-> root@kvm:~# mdadm -V
-> mdadm - v3.2.5 - 18th May 2012
->=20
-> root@kvm:~# cat /proc/mdstat
-> Personalities : [raid1] [linear] [multipath] [raid0] [raid6] [raid5]=20
-> [raid4] [raid10]
-> md127 : inactive sdk[2](S)
->        1465138448 blocks super 1.0
->=20
-> md3 : active raid10 sdb[12](S) sda[11] sdi[0] sdj[9] sde[6] sdf[10]=20
-> sdh[3] sdg[8]
->        7814055936 blocks super 1.0 512K chunks 2 near-copies [8/6]=20
-> [UU_U_UUU]
->        [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.....]  recovery =
-=3D 76.6% (1498279040/1953513984)=20
-> finish=3D4710.1min speed=3D1610K/sec
->=20
-> md1 : active raid1 sdd5[3] sdc5[2]
->        25164672 blocks super 1.0 [2/2] [UU]
->=20
-> md0 : active raid1 sdd1[3] sdc1[2]
->        16779136 blocks super 1.0 [2/2] [UU]
->=20
-> md2 : active raid1 sdd6[3] sdc6[2]
->        192472960 blocks super 1.0 [2/2] [UU]
->=20
-> unused devices: <none>
->=20
-> -Peter
->=20
->=20
+> On Fri, 3 Oct 2014 20:24:54 +0200 Jan Echternach <jan@goneko.de> wrote:
+> > Package: mdadm
+> > Version: 3.3.2-1
+> > Severity: minor
+> > Tags: patch
+> >=20
+> >=20
+> > While setting up a new system, I noticed an incorrect value in the outp=
+ut
+> > of mdadm --examine:
+> >=20
+> >  Avail Dev Size : 2095080 (1023.16 MiB 1072.68 MB)
+> >=20
+> > The 1023.16 MiB were quite irritating because the underlying partition =
+has
+> > a size of exactly 1023 MiB.
+> >=20
+> > The number of sectors seems plausible: 2095080 sectors * 512 bytes/sect=
+or
+> > are 1022.988 MiB or 1072.681 MB. I looked into the code and found an
+> > inaccuracy in human_size() and human_size_brief(). The formula used for
+> > the MiB value is essentially
+> >=20
+> >   long cMiB =3D (bytes / ( (1LL<<20) / 200LL ) +1) /2;
+> >=20
+> > but (1LL<<20) / 200LL is not an integer. It's rounded down and cMiB bec=
+omes
+> > too large. The quick fix would have been multiplying by 200 before divi=
+ding
+> > by 1<<20, but that might cause integer overflows in the GiB case.
 
-Curious.
+Given that we are doing 64bit arithmetic, we would  need about 56bits of
+bytes for there to be a rounding problem.  That's 64 petabytes.
 
-What does "mdadm --examine" report for each device immediately after boot,
-before you try assembling anything?
+I decide to just do the simple transformation.  If we get arrays close to
+petabytes I would want to make other changes, like reporting the number of
+terabytes for larger arrays.
 
-Maybe also get the output just before you shut down to compare.
-
+Thanks,
 NeilBrown
 
---Sig_/cn+Hrp+.RJhMWgtI4nYAz25
+> >=20
+> > The following patch uses a more complicated formula that computes the
+> > fractional portion separately from the integer portion. It also changes=
+ some
+> > longs to long longs to eliminate a different cause of integer overflows.
+> >=20
+> >=20
+> > --- mdadm-3.3.2/util.c	2014-10-03 19:06:51.000000000 +0200
+> > +++ mdadm-3.3.2/util.c	2014-10-03 19:08:06.000000000 +0200
+> > @@ -671,15 +671,17 @@
+> >  	if (bytes < 5000*1024)
+> >  		buf[0] =3D 0;
+> >  	else if (bytes < 2*1024LL*1024LL*1024LL) {
+> > -		long cMiB =3D (bytes / ( (1LL<<20) / 200LL ) +1) /2;
+> > +		long cMiB =3D bytes / (1LL<<20) * 100
+> > +			    + ((bytes % (1LL<<20)) * 200 / (1LL<<20) +1) /2;
+> >  		long cMB  =3D (bytes / ( 1000000LL / 200LL ) +1) /2;
+> >  		snprintf(buf, sizeof(buf), " (%ld.%02ld MiB %ld.%02ld MB)",
+> >  			cMiB/100 , cMiB % 100,
+> >  			cMB/100, cMB % 100);
+> >  	} else {
+> > -		long cGiB =3D (bytes / ( (1LL<<30) / 200LL ) +1) /2;
+> > -		long cGB  =3D (bytes / (1000000000LL/200LL ) +1) /2;
+> > -		snprintf(buf, sizeof(buf), " (%ld.%02ld GiB %ld.%02ld GB)",
+> > +		long long cGiB =3D bytes / (1LL<<30) * 100
+> > +				 + ((bytes % (1LL<<30)) * 200 / (1LL<<30) +1) /2;
+> > +		long long cGB  =3D (bytes / (1000000000LL/200LL ) +1) /2;
+> > +		snprintf(buf, sizeof(buf), " (%lld.%02lld GiB %lld.%02lld GB)",
+> >  			cGiB/100 , cGiB % 100,
+> >  			cGB/100, cGB % 100);
+> >  	}
+> > @@ -706,12 +708,14 @@
+> >  		buf[0] =3D 0;
+> >  	else if (prefix =3D=3D IEC) {
+> >  		if (bytes < 2*1024LL*1024LL*1024LL) {
+> > -			long cMiB =3D (bytes / ( (1LL<<20) / 200LL ) +1) /2;
+> > +			long cMiB =3D bytes / (1LL<<20) * 100
+>=20
+> _______________________________________________
+> pkg-mdadm-devel mailing list
+> pkg-mdadm-devel@lists.alioth.debian.org
+> http://lists.alioth.debian.org/cgi-bin/mailman/listinfo/pkg-mdadm-devel
+
+
+--Sig_/daJoe1/9M.CfnTnA6+Xw+79
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVJJn4Dnsnt1WYoG5AQJPSRAAjMT6LKOmdxfdCwZONH4f1eimE+SDMUFW
-8Aa8zGRQdjffSgnK8Dap36YDSF9DKPAgFCf9yEjqwb3GrNSdXTwl68Gcfi2Cgovo
-uXlMrUXbx8ng1DqsriXnSTD5u1mX7Z6z9dilfli3DNekwnO6BwxN/afzCffaXGMJ
-YLoMvKOfjy73EhHXJn0k7EetFmH1AAjQ6uw5B3M6Dc8BslstZmGcbsKrvjFT42Uz
-SA3KaiRl6rJ8a+TCv6xP2KHrGqDbTHgMvfltqMdFdxRArfqYs0Upgn37iqOGdHG9
-8CQg5Yvz07qk1veHakPVQyXPjwUfDQWR0TnE++CpzjHRUd4vGXYDl/FOObgKPplf
-dnVtKYf6R+sm54VsDnjQxrf9SAF9+uLVKdG/8Z+CQUaNhIzKwZYboe4Ks4iACjgL
-1Pork54/NS5oBeGlWBX+ijr2/b41Eo4f++rxajjFzY/TddVTuuclMm5mEWsMHf5F
-eRU/HzHJSK2utoYoxkpq/+k4o9K1h3sh0v9qQq7HQ9r/2zLZh5qUWX16id6Rstux
-hQ4pCBk6qxKPPEy+rOzuJ8IwG/7TAL68XL5eIE6X6vzbrVa+hzG+JeBb8I2ZmPpk
-sK0mu76mz/nj2kU+IwAINCxTTOiyi/LiP+aJ1NY+pLvpNv5xay2kaUb6iZ2TTmAA
-If0F0xbktUE=
-=37nD
+iQIVAwUBVJJtmznsnt1WYoG5AQJtQA//WinqlEwZUviLzuNDkOANxe8CIuMlDyc3
+vgEe4Z8Te49jdhq4Y4YElzlbM6KLdQ4hBPZx8hrXp4Y3VfP9iJCrRDjgzVoKuWEY
+2ZV9XONj9vOnGpU/SQF49pK/Ig9eNCF6NdRl2c0NkT9OXIgPWKsL79ujPfWwrMZh
+pKZsBGLo37peUPrOLEM4cRFXhXXPt797TWhPe6kPBBKwuaPKcSNBHQvkw2cbPMy6
+r/SLPoTSE4GqXvMyctt6XDBrjRCiq/18uDcDTdhcYzmtiGv7JHIbdCIT7TgEjQDI
+nfnCIZEl/AsonK69mSXr5ozyRNst4XxX4loWKahT5OZpVdZWRerZDGaqv/Q2Gxcz
+hWsVoDZvgF2A0VMoGeBmsF+qx1DIE7V8qQYD8ILIJLENULHxpQ6IBrdcNEPMVYra
+wN9ETIrKawtunx06aImAIjasX57C5yPpXJ5Kyzpsw0tqu5yzXSI3TzTCgtIWplTr
+FhQutJ9w9py5yIqXpINWTlmjxIWCm5joDQd4EOKisMP8MvoDd3gAySEgIO7qYHnq
+VTZ1cMY3pBYZH9l/zlEoCRLaKRCPddMPSt83HqxLdFQOimImbJ1ABT9S5d0LCAQA
+6e1ICT/O9CIKS5oEJZyjJeIAJ7gCRikn/09jYKRsoTeaeJBgn+TwklRYL+92T82Q
+XPaEAHNBrEI=
+=DrG/
 -----END PGP SIGNATURE-----
 
---Sig_/cn+Hrp+.RJhMWgtI4nYAz25--
+--Sig_/daJoe1/9M.CfnTnA6+Xw+79--
