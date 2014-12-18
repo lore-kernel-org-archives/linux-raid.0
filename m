@@ -1,53 +1,38 @@
 From: Peter Kieser <peter@kieser.ca>
-Subject: Re: raid10: 6 out of 8 disks marked as stale on every restart
-Date: Wed, 17 Dec 2014 22:26:47 -0800
-Message-ID: <549273A7.7070200@kieser.ca>
-References: <548B2033.5030803@kieser.ca> <20141218163632.6cb57524@notabene.brown>
+Subject: Re: Question about my patch
+Date: Wed, 17 Dec 2014 22:30:31 -0800
+Message-ID: <54927487.2030700@kieser.ca>
+References: <5491043D.8020703@gmail.com> <20141217162600.69dc1933@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms010608080903040605050003"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms000609050302030002000207"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141218163632.6cb57524@notabene.brown>
+In-Reply-To: <20141217162600.69dc1933@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, nick <xerofoify@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is a cryptographically signed message in MIME format.
 
---------------ms010608080903040605050003
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+--------------ms000609050302030002000207
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
 
-On 2014-12-17 9:36 PM, NeilBrown wrote:
-> Curious.
+On 2014-12-16 9:26 PM, NeilBrown wrote:
+> i.e. there is no bug here, and nothing to fix.
 >
-> What does "mdadm --examine" report for each device immediately after bo=
-ot,
-> before you try assembling anything?
->
-> Maybe also get the output just before you shut down to compare.
+> Thanks,
 >
 > NeilBrown
 
-Sadly, I had to disassemble this array and get something workable that=20
-didn't become unassembled on every restart. I did try sticking all=20
-drives on the same AHCI controller, which caused the array to be=20
-resynced on every restart instead of disassembled.
-
-I suspect this issue is caused by bcache (I'm using the md as a backing=20
-device for bcache.) The bcache maintainer states "get the md people or=20
-someone to explain _what_ they want whatever has their device open to do =
-
-on reboot."
-
-I'm going to setup a test environment and see if I can reproduce it again=
-=2E
+FYI:https://lkml.org/lkml/2014/8/4/206
 
 -Peter
 
 
---------------ms010608080903040605050003
+
+--------------ms000609050302030002000207
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -118,7 +103,7 @@ PTGCA9owggPWAgEBMIGTMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
 LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UE
 AxMvU3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAlHL
 MAkGBSsOAwIaBQCgggIbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTE0MTIxODA2MjY0N1owIwYJKoZIhvcNAQkEMRYEFORxdsc7kf9LZIVBLe+qcg6HSA7+
+MQ8XDTE0MTIxODA2MzAzMVowIwYJKoZIhvcNAQkEMRYEFEMZ4YJP7qHa1+4lZHknXv/GWjde
 MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
 BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
 ASgwgaQGCSsGAQQBgjcQBDGBljCBkzCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
@@ -127,10 +112,10 @@ ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50
 IENBAgJRyzCBpgYLKoZIhvcNAQkQAgsxgZaggZMwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQK
 Ew1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBT
 aWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRl
-IENsaWVudCBDQQICUcswDQYJKoZIhvcNAQEBBQAEggEAqXNcvwMDyAUR6RtzZkd+AgEzaAOQ
-veEeNNFwMIMsA05/q4OpepOEv56wyN4QYQJlilnQ7OnPlHq7Z2o92pdiIIMxyUNJKkSrvSl3
-WC/yZNwb+FHl91wwZAF8maQ+zSyWkqRVUePaluB2mJGbQ8H/psP/2EaUmPxkkv/3Qqpq1B+j
-cypqCOaRdQumYEHc1a11SnF4UOruYNyhXycq/SYeO1aofUMi86Rcdy5fgcMWpjGjMUpB/qHr
-AICvtAXbfOhx2C3/xPhoo9LUavxEiCRZnIBkez6BZDeVnhEp5CQmZkkrkx25ZMrBVAbKXA9H
-lJxdeXG+7hwOJIfW7OSy4Qt7OQAAAAAAAA==
---------------ms010608080903040605050003--
+IENsaWVudCBDQQICUcswDQYJKoZIhvcNAQEBBQAEggEAcazsJJCxbwAxfLRHLFSpO00RR4T8
+PXS6R+V1Q1IfrQ7v++dPtdGhbaorXu0KeKAgrogqeUDAGGTYWPr+9vfgDlSUr0Qk4P8L1B96
+1Vm6WayAMbQSq0Q9N3HZcfLsDpoa5FOOQrDmlhFxXQ4v5xXZCUJdCuhrf9yK1/T1v6FAZ9mt
+XA9oQWUuuxMUuaNWFB3BFPGJwyljCGOaXYFaGtJYGvAUv4IKNzxBZNQ+V2CV+ozaQ9/DViC6
+A/EzlsH7SG3zNJvjJqreyniCGo/ckvfmQIRYPGbicPW/uGemWoPRaU5GQNtOUgJQKYK7ru93
+ergjjGDoJHB6OLOOIURMqzKAcwAAAAAAAA==
+--------------ms000609050302030002000207--
