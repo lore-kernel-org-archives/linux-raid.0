@@ -1,7 +1,7 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 03/24] Create a separate module for clustering support
-Date: Thu, 18 Dec 2014 10:15:45 -0600
-Message-ID: <20141218161545.GA29581@shrek.lan>
+Subject: [PATCH 04/24] DLM lock and unlock functions
+Date: Thu, 18 Dec 2014 10:15:56 -0600
+Message-ID: <20141218161556.GA29589@shrek.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,89 +11,135 @@ To: neilb@suse.de
 Cc: lzhong@suse.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+A dlm_lock_resource is a structure which contains all information
+required for locking using DLM. The init function allocates the
+lock and acquires the lock in NL mode. The unlock function
+converts the lock resource to NL mode. This is done to preserve
+LVB and for faster processing of locks. The lock resource is
+DLM unlocked only in the lockres_free function, which is the end
+of life of the lock resource.
+
+Signed-off-by: Lidong Zhong <lzhong@suse.com>
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/Kconfig      | 15 +++++++++++++++
- drivers/md/Makefile     |  1 +
- drivers/md/md-cluster.c | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 47 insertions(+)
- create mode 100644 drivers/md/md-cluster.c
+ drivers/md/md-cluster.c | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 95ad936..55ea703 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -174,6 +174,21 @@ config MD_FAULTY
- 
- 	  In unsure, say N.
- 
-+
-+config MD_CLUSTER
-+	tristate "Cluster Support for MD (EXPERIMENTAL)"
-+	depends on BLK_DEV_MD
-+	depends on DLM
-+	---help---
-+	Clustering support for MD devices. This enables locking and
-+	synchronization across multiple systems on the cluster, so all
-+	nodes in the cluster can access the MD devices simultaneously.
-+
-+	This brings the redundancy (and uptime) of RAID levels across the
-+	nodes of the cluster.
-+
-+	If unsure, say N.
-+
- source "drivers/md/bcache/Kconfig"
- 
- config BLK_DEV_DM_BUILTIN
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index f26d832..a3d7bf6 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -29,6 +29,7 @@ obj-$(CONFIG_MD_RAID10)		+= raid10.o
- obj-$(CONFIG_MD_RAID456)	+= raid456.o
- obj-$(CONFIG_MD_MULTIPATH)	+= multipath.o
- obj-$(CONFIG_MD_FAULTY)		+= faulty.o
-+obj-$(CONFIG_MD_CLUSTER)	+= md-cluster.o
- obj-$(CONFIG_BCACHE)		+= bcache/
- obj-$(CONFIG_BLK_DEV_MD)	+= md-mod.o
- obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-new file mode 100644
-index 0000000..6f21bba
---- /dev/null
+index 6f21bba..e555b76 100644
+--- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -0,0 +1,31 @@
-+/*
-+ * Copyright (C) 2014, SUSE
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * (for example /usr/src/linux/COPYING); if not, write to the Free
-+ * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
+@@ -13,6 +13,110 @@
+ 
+ 
+ #include <linux/module.h>
++#include <linux/dlm.h>
++#include <linux/sched.h>
++#include "md.h"
 +
++#define LVB_SIZE	64
 +
-+#include <linux/module.h>
++struct dlm_lock_resource {
++	dlm_lockspace_t *ls;
++	struct dlm_lksb lksb;
++	char *name; /* lock name. */
++	uint32_t flags; /* flags to pass to dlm_lock() */
++	void (*bast)(void *arg, int mode); /* blocking AST function pointer*/
++	struct completion completion; /* completion for synchronized locking */
++};
 +
-+static int __init cluster_init(void)
++static void sync_ast(void *arg)
 +{
-+	pr_info("Registering Cluster MD functions\n");
-+	return 0;
++	struct dlm_lock_resource *res;
++	res = (struct dlm_lock_resource *) arg;
++	complete(&res->completion);
 +}
 +
-+static void cluster_exit(void)
++static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
 +{
++	int ret = 0;
++	init_completion(&res->completion);
++	ret = dlm_lock(res->ls, mode, &res->lksb,
++			res->flags, res->name, strlen(res->name),
++			0, sync_ast, res, res->bast);
++	if (ret)
++		return ret;
++	wait_for_completion(&res->completion);
++	return res->lksb.sb_status;
 +}
 +
-+module_init(cluster_init);
-+module_exit(cluster_exit);
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Clustering support for MD");
++static int dlm_unlock_sync(struct dlm_lock_resource *res)
++{
++	return dlm_lock_sync(res, DLM_LOCK_NL);
++}
 +
++static struct dlm_lock_resource *lockres_init(dlm_lockspace_t *lockspace,
++		char *name, void (*bastfn)(void *arg, int mode), int with_lvb)
++{
++	struct dlm_lock_resource *res = NULL;
++	int ret, namelen;
++
++	res = kzalloc(sizeof(struct dlm_lock_resource), GFP_KERNEL);
++	if (!res)
++		return NULL;
++	res->ls = lockspace;
++	namelen = strlen(name);
++	res->name = kzalloc(namelen + 1, GFP_KERNEL);
++	if (!res->name) {
++		pr_err("md-cluster: Unable to allocate resource name for"
++				" resource %s\n", name);
++		goto out_err;
++	}
++	strlcpy(res->name, name, namelen + 1);
++	if (with_lvb) {
++		res->lksb.sb_lvbptr = kzalloc(LVB_SIZE, GFP_KERNEL);
++		if (!res->lksb.sb_lvbptr) {
++			pr_err("md-cluster: Unable to allocate LVB for"
++				" resource %s\n", name);
++			goto out_err;
++		}
++		res->flags = DLM_LKF_VALBLK;
++	}
++
++	if (bastfn)
++		res->bast = bastfn;
++
++	res->flags |= DLM_LKF_EXPEDITE;
++
++	ret = dlm_lock_sync(res, DLM_LOCK_NL);
++	if (ret) {
++		pr_err("md-cluster: Unable to lock NL on new lock"
++			" resource %s\n", name);
++		goto out_err;
++	}
++	res->flags &= ~DLM_LKF_EXPEDITE;
++	res->flags |= DLM_LKF_CONVERT;
++
++	return res;
++out_err:
++	kfree(res->lksb.sb_lvbptr);
++	kfree(res->name);
++	kfree(res);
++	return NULL;
++}
++
++static void lockres_free(struct dlm_lock_resource *res)
++{
++	if (!res)
++		return;
++
++	init_completion(&res->completion);
++	dlm_unlock(res->ls, res->lksb.sb_lkid, 0, &res->lksb, res);
++	wait_for_completion(&res->completion);
++
++	kfree(res->name);
++	kfree(res->lksb.sb_lvbptr);
++	kfree(res);
++	return;
++}
+ 
+ static int __init cluster_init(void)
+ {
 -- 
 2.1.2
 
