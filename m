@@ -1,7 +1,7 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 11/24] Gather on-going resync information of other nodes
-Date: Thu, 18 Dec 2014 10:17:15 -0600
-Message-ID: <20141218161715.GA29618@shrek.lan>
+Subject: [PATCH 12/24] bitmap_create returns bitmap pointer
+Date: Thu, 18 Dec 2014 10:17:24 -0600
+Message-ID: <20141218161723.GA29622@shrek.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,231 +11,232 @@ To: neilb@suse.de
 Cc: lzhong@suse.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When a node joins, it does not know of other nodes performing resync.
-So, each node keeps the resync information in it's LVB. When a new
-node joins, it reads the LVB of each "online" bitmap.
-
-[TODO] The new node attempts to get the PW lock on other bitmap, if
-it is successful, it reads the bitmap and performs the resync (if
-required) on it's behalf.
-
-If the node does not get the PW, it requests CR and reads the LVB
-for the resync information.
+This is done to have multiple bitmaps open at the same time.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/md-cluster.c | 111 +++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/md-cluster.h |   1 +
- drivers/md/md.c         |   8 ++++
- 3 files changed, 119 insertions(+), 1 deletion(-)
+ drivers/md/bitmap.c | 59 ++++++++++++++++++++++++++++++-----------------------
+ drivers/md/bitmap.h |  2 +-
+ drivers/md/md.c     | 22 +++++++++++++-------
+ 3 files changed, 50 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 4c3ad2c..7d57f3f 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -30,6 +30,18 @@ struct dlm_lock_resource {
- 	void (*bast)(void *arg, int mode); /* blocking AST function pointer*/
- };
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 23a71a7..49b7e33 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -540,7 +540,6 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 	unsigned long sectors_reserved = 0;
+ 	int err = -EINVAL;
+ 	struct page *sb_page;
+-	int cluster_setup_done = 0;
  
-+struct suspend_info {
-+	int slot;
-+	sector_t lo;
-+	sector_t hi;
-+	struct list_head list;
-+};
-+
-+struct resync_info {
-+	__le64 lo;
-+	__le64 hi;
-+};
-+
- struct md_cluster_info {
- 	/* dlm lock space and resources for clustered raid. */
- 	dlm_lockspace_t *lockspace;
-@@ -38,6 +50,8 @@ struct md_cluster_info {
- 	struct dlm_lock_resource *sb_lock;
- 	struct mutex sb_mutex;
- 	struct dlm_lock_resource *bitmap_lockres;
-+	struct list_head suspend_list;
-+	spinlock_t suspend_lock;
- };
+ 	if (!bitmap->storage.file && !bitmap->mddev->bitmap_info.offset) {
+ 		chunksize = 128 * 1024 * 1024;
+@@ -557,6 +556,16 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 	bitmap->storage.sb_page = sb_page;
  
- static void sync_ast(void *arg)
-@@ -143,6 +157,36 @@ static char *pretty_uuid(char *dest, char *src)
- 	return dest;
- }
- 
-+static void add_resync_info(struct mddev *mddev, struct dlm_lock_resource *lockres,
-+		sector_t lo, sector_t hi)
-+{
-+	struct resync_info *ri;
-+	ri = (struct resync_info *)lockres->lksb.sb_lvbptr;
-+	ri->lo = cpu_to_le64(lo);
-+	ri->hi = cpu_to_le64(hi);
-+}
-+
-+static struct suspend_info *read_resync_info(struct mddev *mddev, struct dlm_lock_resource *lockres)
-+{
-+	struct resync_info ri;
-+	struct suspend_info *s = NULL;
-+	sector_t hi = 0;
-+
-+	dlm_lock_sync(lockres, DLM_LOCK_CR);
-+	memcpy(&ri, lockres->lksb.sb_lvbptr, sizeof(struct resync_info));
-+	hi = le64_to_cpu(ri.hi);
-+	if (ri.hi > 0) {
-+		s = kzalloc(sizeof(struct suspend_info), GFP_KERNEL);
-+		if (!s)
-+			goto out;
-+		s->hi = hi;
-+		s->lo = le64_to_cpu(ri.lo);
+ re_read:
++	/* If cluster_slot is set, the cluster is setup */
++	if (bitmap->cluster_slot >= 0) {
++		long long bm_blocks = bitmap->mddev->resync_max_sectors / (bitmap->mddev->bitmap_info.chunksize >> 9);
++		bm_blocks = bm_blocks << 3;
++		bm_blocks = DIV_ROUND_UP(bm_blocks, 4096);
++		bitmap->mddev->bitmap_info.offset += bitmap->cluster_slot * (bm_blocks << 3);
++		pr_info("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
++			bitmap->cluster_slot, (unsigned long long)bitmap->mddev->bitmap_info.offset);
 +	}
-+	dlm_unlock_sync(lockres);
-+out:
-+	return s;
-+}
 +
- static void recover_prep(void *arg)
- {
- }
-@@ -174,6 +218,53 @@ static const struct dlm_lockspace_ops md_ls_ops = {
- 	.recover_done = recover_done,
- };
+ 	if (bitmap->storage.file) {
+ 		loff_t isize = i_size_read(bitmap->storage.file->f_mapping->host);
+ 		int bytes = isize > PAGE_SIZE ? PAGE_SIZE : isize;
+@@ -637,12 +646,9 @@ re_read:
  
-+static int gather_all_resync_info(struct mddev *mddev, int total_slots)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	int i, ret = 0;
-+	struct dlm_lock_resource *bm_lockres;
-+	struct suspend_info *s;
-+	char str[64];
-+
-+
-+	for (i = 0; i < total_slots; i++) {
-+		memset(str, '\0', 64);
-+		snprintf(str, 64, "bitmap%04d", i);
-+		bm_lockres = lockres_init(mddev, str, NULL, 1);
-+		if (!bm_lockres)
-+			return -ENOMEM;
-+		if (i == (cinfo->slot_number - 1))
-+			continue;
-+
-+		bm_lockres->flags |= DLM_LKF_NOQUEUE;
-+		ret = dlm_lock_sync(bm_lockres, DLM_LOCK_PW);
-+		if (ret == -EAGAIN) {
-+			memset(bm_lockres->lksb.sb_lvbptr, '\0', LVB_SIZE);
-+			s = read_resync_info(mddev, bm_lockres);
-+			if (s) {
-+				pr_info("%s:%d Resync[%llu..%llu] in progress on %d\n",
-+						__func__, __LINE__,
-+						(unsigned long long) s->lo,
-+						(unsigned long long) s->hi, i);
-+				spin_lock_irq(&cinfo->suspend_lock);
-+				s->slot = i;
-+				list_add(&s->list, &cinfo->suspend_list);
-+				spin_unlock_irq(&cinfo->suspend_lock);
-+			}
-+			ret = 0;
-+			lockres_free(bm_lockres);
-+			continue;
-+		}
-+		if (ret)
-+			goto out;
-+		/* TODO: Read the disk bitmap sb and check if it needs recovery */
-+		dlm_unlock_sync(bm_lockres);
-+		lockres_free(bm_lockres);
-+	}
-+out:
-+	return ret;
-+}
-+
- static int join(struct mddev *mddev, int nodes)
- {
- 	struct md_cluster_info *cinfo;
-@@ -227,8 +318,17 @@ static int join(struct mddev *mddev, int nodes)
- 		goto err;
+ out:
+ 	kunmap_atomic(sb);
+-	if (nodes && !cluster_setup_done) {
+-		sector_t bm_blocks = sector_div(bitmap->mddev->resync_max_sectors,(chunksize >> 9));
+-		bm_blocks = bm_blocks << 3;
+-		/* We have bitmap supers at 4k boundaries, hence this
+-		 * is hardcoded */
+-		bm_blocks = DIV_ROUND_UP(bm_blocks, 4096);
++	/* Assiging chunksize is required for "re_read" */
++	bitmap->mddev->bitmap_info.chunksize = chunksize;
++	if (nodes && (bitmap->cluster_slot < 0)) {
+ 		err = md_setup_cluster(bitmap->mddev, nodes);
+ 		if (err) {
+ 			pr_err("%s: Could not setup cluster service (%d)\n",
+@@ -650,12 +656,6 @@ out:
+ 			goto out_no_sb;
+ 		}
+ 		bitmap->cluster_slot = md_cluster_ops->slot_number(bitmap->mddev);
+-		bitmap->mddev->bitmap_info.offset +=
+-			bitmap->cluster_slot * (bm_blocks << 3);
+-		printk("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
+-			bitmap->cluster_slot,
+-			(unsigned long long)bitmap->mddev->bitmap_info.offset);
+-		cluster_setup_done = 1;
+ 		goto re_read;
  	}
  
-+	INIT_LIST_HEAD(&cinfo->suspend_list);
-+	spin_lock_init(&cinfo->suspend_lock);
-+
-+	ret = gather_all_resync_info(mddev, nodes);
-+	if (ret)
-+		goto err;
-+
- 	return 0;
- err:
-+	lockres_free(cinfo->bitmap_lockres);
-+	lockres_free(cinfo->sb_lock);
- 	if (cinfo->lockspace)
- 		dlm_release_lockspace(cinfo->lockspace, 2);
- 	mddev->cluster_info = NULL;
-@@ -258,10 +358,19 @@ static int slot_number(struct mddev *mddev)
- 	return cinfo->slot_number - 1;
+@@ -672,7 +672,7 @@ out_no_sb:
+ 		bitmap->mddev->bitmap_info.space = sectors_reserved;
+ 	if (err) {
+ 		bitmap_print_sb(bitmap);
+-		if (cluster_setup_done)
++		if (bitmap->cluster_slot < 0)
+ 			md_cluster_stop(bitmap->mddev);
+ 	}
+ 	return err;
+@@ -1631,7 +1631,8 @@ static void bitmap_free(struct bitmap *bitmap)
+ 	if (!bitmap) /* there was no bitmap */
+ 		return;
+ 
+-	if (mddev_is_clustered(bitmap->mddev) && bitmap->mddev->cluster_info)
++	if (mddev_is_clustered(bitmap->mddev) && bitmap->mddev->cluster_info &&
++		bitmap->cluster_slot == md_cluster_ops->slot_number(bitmap->mddev))
+ 		md_cluster_stop(bitmap->mddev);
+ 
+ 	/* Shouldn't be needed - but just in case.... */
+@@ -1677,7 +1678,7 @@ void bitmap_destroy(struct mddev *mddev)
+  * initialize the bitmap structure
+  * if this returns an error, bitmap_destroy must be called to do clean up
+  */
+-int bitmap_create(struct mddev *mddev)
++struct bitmap *bitmap_create(struct mddev *mddev, int slot)
+ {
+ 	struct bitmap *bitmap;
+ 	sector_t blocks = mddev->resync_max_sectors;
+@@ -1691,7 +1692,7 @@ int bitmap_create(struct mddev *mddev)
+ 
+ 	bitmap = kzalloc(sizeof(*bitmap), GFP_KERNEL);
+ 	if (!bitmap)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	spin_lock_init(&bitmap->counts.lock);
+ 	atomic_set(&bitmap->pending_writes, 0);
+@@ -1700,6 +1701,7 @@ int bitmap_create(struct mddev *mddev)
+ 	init_waitqueue_head(&bitmap->behind_wait);
+ 
+ 	bitmap->mddev = mddev;
++	bitmap->cluster_slot = slot;
+ 
+ 	if (mddev->kobj.sd)
+ 		bm = sysfs_get_dirent(mddev->kobj.sd, "bitmap");
+@@ -1747,12 +1749,14 @@ int bitmap_create(struct mddev *mddev)
+ 	printk(KERN_INFO "created bitmap (%lu pages) for device %s\n",
+ 	       bitmap->counts.pages, bmname(bitmap));
+ 
+-	mddev->bitmap = bitmap;
+-	return test_bit(BITMAP_WRITE_ERROR, &bitmap->flags) ? -EIO : 0;
++	err = test_bit(BITMAP_WRITE_ERROR, &bitmap->flags) ? -EIO : 0;
++	if (err)
++		goto error;
+ 
++	return bitmap;
+  error:
+ 	bitmap_free(bitmap);
+-	return err;
++	return ERR_PTR(err);
  }
  
-+static void resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	add_resync_info(mddev, cinfo->bitmap_lockres, lo, hi);
-+	/* Re-acquire the lock to refresh LVB */
-+	dlm_lock_sync(cinfo->bitmap_lockres, DLM_LOCK_PW);
-+}
-+
- static struct md_cluster_operations cluster_ops = {
- 	.join   = join,
- 	.leave  = leave,
--	.slot_number = slot_number
-+	.slot_number = slot_number,
-+	.resync_info_update = resync_info_update
- };
+ int bitmap_load(struct mddev *mddev)
+@@ -2064,13 +2068,18 @@ location_store(struct mddev *mddev, const char *buf, size_t len)
+ 				return -EINVAL;
+ 			mddev->bitmap_info.offset = offset;
+ 			if (mddev->pers) {
++				struct bitmap *bitmap;
+ 				mddev->pers->quiesce(mddev, 1);
+-				rv = bitmap_create(mddev);
+-				if (!rv)
++				bitmap = bitmap_create(mddev, -1);
++				if (IS_ERR(bitmap))
++					rv = PTR_ERR(bitmap);
++				else {
++					mddev->bitmap = bitmap;
+ 					rv = bitmap_load(mddev);
+-				if (rv) {
+-					bitmap_destroy(mddev);
+-					mddev->bitmap_info.offset = 0;
++					if (rv) {
++						bitmap_destroy(mddev);
++						mddev->bitmap_info.offset = 0;
++					}
+ 				}
+ 				mddev->pers->quiesce(mddev, 0);
+ 				if (rv)
+diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+index 2e0f540..ac3fc40 100644
+--- a/drivers/md/bitmap.h
++++ b/drivers/md/bitmap.h
+@@ -233,7 +233,7 @@ struct bitmap {
+ /* the bitmap API */
  
- static int __init cluster_init(void)
-diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-index 52a21e0..51a24df 100644
---- a/drivers/md/md-cluster.h
-+++ b/drivers/md/md-cluster.h
-@@ -11,6 +11,7 @@ struct md_cluster_operations {
- 	int (*join)(struct mddev *mddev, int nodes);
- 	int (*leave)(struct mddev *mddev);
- 	int (*slot_number)(struct mddev *mddev);
-+	void (*resync_info_update)(struct mddev *mddev, sector_t lo, sector_t hi);
- };
- 
- #endif /* _MD_CLUSTER_H */
+ /* these are used only by md/bitmap */
+-int  bitmap_create(struct mddev *mddev);
++struct bitmap *bitmap_create(struct mddev *mddev, int slot);
+ int bitmap_load(struct mddev *mddev);
+ void bitmap_flush(struct mddev *mddev);
+ void bitmap_destroy(struct mddev *mddev);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index db28f21..a2c1cac 100644
+index a2c1cac..6ac6609 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -7618,6 +7618,9 @@ void md_do_sync(struct md_thread *thread)
- 	md_new_event(mddev);
- 	update_time = jiffies;
- 
-+	if (mddev_is_clustered(mddev))
-+		md_cluster_ops->resync_info_update(mddev, j, max_sectors);
+@@ -5087,12 +5087,15 @@ int md_run(struct mddev *mddev)
+ 	}
+ 	if (err == 0 && mddev->pers->sync_request &&
+ 	    (mddev->bitmap_info.file || mddev->bitmap_info.offset)) {
+-		err = bitmap_create(mddev);
+-		if (err) {
++		struct bitmap *bitmap = bitmap_create(mddev, -1);
++		if (IS_ERR(bitmap)) {
++			err = PTR_ERR(bitmap);
+ 			printk(KERN_ERR "%s: failed to create bitmap (%d)\n",
+ 			       mdname(mddev), err);
+ 			mddev->pers->stop(mddev);
+-		}
++		} else
++			mddev->bitmap = bitmap;
 +
- 	blk_start_plug(&plug);
- 	while (j < max_sectors) {
- 		sector_t sectors;
-@@ -7678,6 +7681,8 @@ void md_do_sync(struct md_thread *thread)
- 		j += sectors;
- 		if (j > 2)
- 			mddev->curr_resync = j;
-+		if (mddev_is_clustered(mddev))
-+			md_cluster_ops->resync_info_update(mddev, j, max_sectors);
- 		mddev->curr_mark_cnt = io_sectors;
- 		if (last_check == 0)
- 			/* this is the earliest that rebuild will be
-@@ -7737,6 +7742,9 @@ void md_do_sync(struct md_thread *thread)
- 	/* tell personality that we are finished */
- 	mddev->pers->sync_request(mddev, max_sectors, &skipped, 1);
- 
-+	if (mddev_is_clustered(mddev))
-+		md_cluster_ops->resync_info_update(mddev, 0, 0);
-+
- 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
- 	    mddev->curr_resync > 2) {
- 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+ 	}
+ 	if (err) {
+ 		module_put(mddev->pers->owner);
+@@ -6028,9 +6031,11 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 	if (mddev->pers) {
+ 		mddev->pers->quiesce(mddev, 1);
+ 		if (fd >= 0) {
+-			err = bitmap_create(mddev);
+-			if (!err)
++			struct bitmap *bitmap = bitmap_create(mddev, -1);
++			if (!IS_ERR(bitmap)) {
++				mddev->bitmap = bitmap;
+ 				err = bitmap_load(mddev);
++			}
+ 		}
+ 		if (fd < 0 || err) {
+ 			bitmap_destroy(mddev);
+@@ -6287,6 +6292,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 		if (mddev->recovery || mddev->sync_thread)
+ 			return -EBUSY;
+ 		if (info->state & (1<<MD_SB_BITMAP_PRESENT)) {
++			struct bitmap *bitmap;
+ 			/* add the bitmap */
+ 			if (mddev->bitmap)
+ 				return -EEXIST;
+@@ -6297,9 +6303,11 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 			mddev->bitmap_info.space =
+ 				mddev->bitmap_info.default_space;
+ 			mddev->pers->quiesce(mddev, 1);
+-			rv = bitmap_create(mddev);
+-			if (!rv)
++			bitmap = bitmap_create(mddev, -1);
++			if (!IS_ERR(bitmap)) {
++				mddev->bitmap = bitmap;
+ 				rv = bitmap_load(mddev);
++			}
+ 			if (rv)
+ 				bitmap_destroy(mddev);
+ 			mddev->pers->quiesce(mddev, 0);
 -- 
 2.1.2
 
