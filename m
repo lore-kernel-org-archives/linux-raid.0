@@ -1,66 +1,79 @@
-From: Chris Murphy <lists@colorremedies.com>
-Subject: Re: Panic doing BLKDISCARD on a raid 5 array on linux 3.17.3
-Date: Thu, 18 Dec 2014 11:05:42 -0700
-Message-ID: <CAJCQCtRv_N_EQZ==gcr8QfUbyrSuG=tUe17HG9Mg=u5WSTBmwg@mail.gmail.com>
-References: <5491704D.1080709@overnetdata.com>
-	<20141218162858.47310158@notabene.brown>
-	<5492B359.6060804@overnetdata.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: indefinite hang when growing/reshaping
+Date: Fri, 19 Dec 2014 03:14:47 -0500 (EST)
+Message-ID: <997573837.677557.1418976887168.JavaMail.zimbra@redhat.com>
+References: <CAJCQCtQWSVbx08xafh6MDikiJOZJ6MVJ4Jx=qt=UZnX3t47A7A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5492B359.6060804@overnetdata.com>
+In-Reply-To: <CAJCQCtQWSVbx08xafh6MDikiJOZJ6MVJ4Jx=qt=UZnX3t47A7A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: Chris Murphy <chris@colorremedies.com>
+Cc: linux-raid@vger.kernel.org, eguan@redhat.com, Jes Sorensen <jes.sorensen@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, Dec 18, 2014 at 3:58 AM, Anthony Wright <anthony@overnetdata.com> wrote:
-> On 18/12/2014 05:28, NeilBrown wrote:
->> I suspect md/raid5 is sending down a discard request in some way that the
->> scsi/sata layer or driver doesn't like, but without the full oops, I really
->> cannot guess what it might be.
-> We've tried 4 times to reproduce the panic we got originally, but
-> unforunately with no luck. Below are the outputs from all four crashes
-> as captured by netconsole, in case they are any help.
->
-> Crash #1
-> [63207.177400] BUG: unable to handle kernel paging request at
-> 0000001e00008000
->
-> Crash #2
-> [  531.210340] BUG: unable to handle kernel paging request at
-> 0000000100000000
-> [  531.210514] IP:[  531.210340] BUG: unable to handle kernel
-> [<ffffffff8128788e>] __blk_segment_map_sg+0x5e/0x1b0
-> paging request[  531.210632] PGD 20187f067 PUD 0  at 0000000100000000
->
-> [  531.210514] IP: [<ffffffff8128788e>] __blk_segment_map_sg+0x5e/0x1b0
-> [  531.210632] PGD 20187f067 PUD 0
-> [  531.210783] Oops: 0000 [#1] SMP
-> [  531.210932] Modules linked in: eql netconsole configfs raid456[
-> 531.210783] Oops: 0000 [#1] SMP
-> [  531.210932] Modules linked in: eql netconsole configfs raid456
-> async_raid6_recov async_memcpy async_pq async_xor xor async_tx raid6_pq
-> xt_multiport async_raid6_recov async_memcpy async_pq async_xor xor
-> async_tx raid6_pq xt_multiport xt_tcpudp iptable_filter ip_tables
-> x_tables aesni_intel aes_x86_64 glue_helper lrw xt_tcpudp iptable_filter
-> ip_tables x_tables aesni_intel aes_x86_64 glue_helper lrw gf128mul
-> ablk_helper cryptd ppdev gf128mul ablk_helper cryptd ppdev
->
-> Crash #3
-> [  268.115094] general protection fault: 0000 [#1] SMP
-> [  268.115263] Modules linked in:[  268.115094] general protection
-> fault: 0000 [#1] SMP
-> [  268.115263] Modules linked in:
->
-> Crash #4
-> [  276.325157] general protection fault: 0000 [#1] SMP
->
+Hi all
 
-Are you trimming these? Or do they literally end with nothing else
-reported? In any case you must be trimming what comes before what
-you've posted and I don't think that's a good idea, often there's
-something wrong happening well before an oops gets reported.
+   There is the same problem. I can reproduce with the same steps. And
+I can reproduce this in a different way too. I don't know whether it's 
+the same problem, but the result is the same.
+
+   The different steps are as follows:
+
+mdadm -CR /dev/md0 -l5 -n7 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdh1 -x1 /dev/sdi1  --assume-clean --bitmap=internal
+mdadm --grow -l0 /dev/md0  --backup-file=tmp0
+cat /proc/mdstat 
+Personalities : [raid6] [raid5] [raid4] [raid1] [raid0] 
+md0 : active raid5 loop3[4] loop2[3] loop1[1] loop0[0]
+      2045952 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+      [>....................]  reshape =  0.0% (0/1022976) finish=5.8min speed=2818K/sec
+      
+unused devices: <none>
+
+   There is speed 2818K/sec, but if you look by iostat, there is no speed about the disks.
 
 
--- 
-Chris Murphy
+   And there is a workaround:
+   mdadm -CR /dev/md0 -l5 -n7 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdh1 -x1 /dev/sdi1  --assume-clean --bitmap=internal
+   mdadm --grow -l0 /dev/md0
+
+   If we don't specify the backup file. The reshape can finish correctly. 
+
+Best Regards
+Xiao
+
+----- Original Message -----
+> From: "Chris Murphy" <chris@colorremedies.com>
+> To: linux-raid@vger.kernel.org
+> Sent: Thursday, December 18, 2014 6:20:50 AM
+> Subject: indefinite hang when growing/reshaping
+> 
+> If this is user error I'd expect a discreet error message, but I don't
+> get one, just a hang during the reshape following successful --grow
+> command (going from 3x device raid5 to 4x device raid5).
+> 
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md127 : active raid5 loop3[4] loop2[3] loop1[1] loop0[0]
+>       2095104 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+>       [>....................]  reshape =  0.0% (0/1047552)
+> finish=7.0min speed=2402K/sec
+> 
+> Reproduces with:
+> kernel-3.17.6-300.fc21.x86_64
+> mdadm-3.3.2-1.fc21.x86_64
+> and
+> 3.18.0-2.fc22.i686+debug
+> mdadm-3.3.2-1.fc21.i686
+> 
+> Details are here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=89851
+> 
+> --
+> Chris Murphy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
