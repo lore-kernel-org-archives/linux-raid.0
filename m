@@ -1,87 +1,72 @@
-From: Dongsu Park <dongsu.park@profitbricks.com>
-Subject: [RFC PATCH 12/17] md/raid10: make sync_request_write() call bio_copy_data()
-Date: Mon, 22 Dec 2014 12:48:39 +0100
-Message-ID: <b7767767957ca758ac492e94dfb320bea4f52dd7.1419241597.git.dongsu.park@profitbricks.com>
-References: <cover.1419241597.git.dongsu.park@profitbricks.com>
- <d26a9a0fc9a7d1529c115785ee5935d5750782bd.1419241597.git.dongsu.park@profitbricks.com>
- <f67d71b4a375ab504c2fc02e94a9d2a651686cab.1419241597.git.dongsu.park@profitbricks.com>
- <fe96db02d805ca6191dd605d03dac0d04c926fc1.1419241597.git.dongsu.park@profitbricks.com>
- <bb0051ceb5805896089ded26c0f7f06758b25105.1419241597.git.dongsu.park@profitbricks.com>
- <e4b7b017eaa81784889ebb2a4e6a7d4366adf13a.1419241597.git.dongsu.park@profitbricks.com>
- <83a9ee8a309f8e08490c5dd715a608ea054f5c33.1419241597.git.dongsu.park@profitbricks.com>
- <fc859b23b383f6f4c1e81f4210aa62cb1bdc935f.1419241597.git.dongsu.park@profitbricks.com>
- <0b6ba533a64aec98e8447bfd30c6622d0729d12e.1419241597.git.dongsu.park@profitbricks.com>
- <d42dae3d2a64fa4c3a0893f1af963151b31869e3.1419241597.git.dongsu.park@profitbricks.com>
- <4334b90a56b96ad7a11e4ba7eb97c2cf4405950d.1419241597.git.dongsu.park@profitbricks.com>
- <abe647cf7cf272220227fad4dac9c43641192f01.1419241597.git.dongsu.park@profitbricks.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <abe647cf7cf272220227fad4dac9c43641192f01.1419241597.git.dongsu.park@profitbricks.com>
-In-Reply-To: <cover.1419241597.git.dongsu.park@profitbricks.com>
-References: <cover.1419241597.git.dongsu.park@profitbricks.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kmo@daterainc.com>, Ming Lin <mlin@minggr.net>, Dongsu Park <dongsu.park@profitbricks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: 4 disks outage in RAID6
+Date: Mon, 22 Dec 2014 11:23:59 -0500
+Message-ID: <5498459F.1050600@turmel.org>
+References: <CAMvZ8g5dv-eXrgTAr58ib06LM+NhzbY7hkmFxaH7V71iL8Eg+w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAMvZ8g5dv-eXrgTAr58ib06LM+NhzbY7hkmFxaH7V71iL8Eg+w@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Kolama <indigo8472@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Kent Overstreet <kmo@daterainc.com>
+Good morning Mark,
 
-Refactor sync_request_write() of md/raid10 to use bio_copy_data()
-instead of open coding bio_vec iterations.
+On 12/20/2014 12:03 PM, Mark Kolama wrote:
+> Dear List,
+> 
+> due to a controller failure, a raid6 with 16 drives
+> lost 4 drives at once. The failure was noticed a few days later.
+> 
+> a examine output of all 16 drive is listed at
+> http://pastebin.com/4WH9xp7K
 
-Signed-off-by: Kent Overstreet <kmo@daterainc.com>
-[dpark: add more description in commit message]
-Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
----
- drivers/md/raid10.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+Ok.  In the future, paste these in your email.  kernel.org has a
+generous size limit and this sort of stuff should stay in the archives.
+ As long as posters trim replies appropriately, it's not a problem.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 32e282f..4a40354 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2107,18 +2107,11 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 		tbio->bi_vcnt = vcnt;
- 		tbio->bi_iter.bi_size = r10_bio->sectors << 9;
- 		tbio->bi_rw = WRITE;
--		tbio->bi_private = r10_bio;
- 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
--
--		for (j=0; j < vcnt ; j++) {
--			tbio->bi_io_vec[j].bv_offset = 0;
--			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
--
--			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
--			       page_address(fbio->bi_io_vec[j].bv_page),
--			       PAGE_SIZE);
--		}
- 		tbio->bi_end_io = end_sync_write;
-+		tbio->bi_private = r10_bio;
-+
-+		bio_copy_data(tbio, fbio);
- 
- 		d = r10_bio->devs[i].devnum;
- 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
-@@ -2134,17 +2127,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	 * that are active
- 	 */
- 	for (i = 0; i < conf->copies; i++) {
--		int j, d;
-+		int d;
- 
- 		tbio = r10_bio->devs[i].repl_bio;
- 		if (!tbio || !tbio->bi_end_io)
- 			continue;
- 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
- 		    && r10_bio->devs[i].bio != fbio)
--			for (j = 0; j < vcnt; j++)
--				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
--				       page_address(fbio->bi_io_vec[j].bv_page),
--				       PAGE_SIZE);
-+			bio_copy_data(tbio, fbio);
- 		d = r10_bio->devs[i].devnum;
- 		atomic_inc(&r10_bio->remaining);
- 		md_sync_acct(conf->mirrors[d].replacement->bdev,
--- 
-2.1.0
+> As you can see the event count differs on 4 drives with
+> about 150 comparing to the other 12 drives.
+> 
+> I have already tried:
+> mdadm --assemble --scan:
+> assembled from 12 drives - not enough to start the array.
+> 
+> Then i tried:
+> mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
+> /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1
+> /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1 --force
+
+This should have worked, unless the array wasn't stopped first.  You
+didn't show the actual response from mdadm, so we don't know.
+
+There have also been bugs in various assembly features, so a report of
+your kernel version and your mdadm version would be appropriate.
+
+> /proc/mdstat after that:
+> 
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : inactive sda1[0](S) sdp1[15](S) sdo1[14](S) sdn1[13](S)
+> sdm1[12](S) sdl1[11](S) sdk1[10](S) sdj1[9](S) sdi1[8](S) sdh1[7](S)
+> sdg1[6](S) sdf1[5](S) sde1[4](S) sdd1[3](S) sdc1[2](S) sdb1[1](S)
+>       62353932288 blocks super 1.2
+> 
+> No success either.
+
+Try --force again, like so:
+
+mdadm --stop /dev/md0
+
+mdadm -Avf /dev/md0 /dev/sd[a-p]1
+
+Show all of the output.  Also show the tail of dmesg where this
+operation happens.
+
+> So the next try would be recreating the array ?
+
+Absolutely not.
+
+Phil
+
