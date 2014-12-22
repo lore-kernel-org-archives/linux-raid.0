@@ -1,46 +1,42 @@
-From: Mark Kolama <indigo8472@gmail.com>
-Subject: 4 disks outage in RAID6
-Date: Sat, 20 Dec 2014 18:03:05 +0100
-Message-ID: <CAMvZ8g5dv-eXrgTAr58ib06LM+NhzbY7hkmFxaH7V71iL8Eg+w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: forumscollective@gmail.com
+Subject: Re: Expand RAID5 array or switch to RAID10
+Date: Mon, 22 Dec 2014 07:57:16 +0200
+Message-ID: <F5D9EF1B-CC07-4C0E-B7F2-53A99E21193F@gmail.com>
+References: <CAG__1a7YqAWMccgDeYksY_t10Zyy8Rc-veZM_P7aaXs-DtFdfQ@mail.gmail.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAG__1a7YqAWMccgDeYksY_t10Zyy8Rc-veZM_P7aaXs-DtFdfQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear List,
+anyone?
 
-due to a controller failure, a raid6 with 16 drives
-lost 4 drives at once. The failure was noticed a few days later.
+Sent from my iPhone
 
-a examine output of all 16 drive is listed at
-http://pastebin.com/4WH9xp7K
-
-As you can see the event count differs on 4 drives with
-about 150 comparing to the other 12 drives.
-
-I have already tried:
-mdadm --assemble --scan:
-assembled from 12 drives - not enough to start the array.
-
-Then i tried:
-mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
-/dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1
-/dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1 --force
-
-/proc/mdstat after that:
-
-Personalities : [raid6] [raid5] [raid4]
-md0 : inactive sda1[0](S) sdp1[15](S) sdo1[14](S) sdn1[13](S)
-sdm1[12](S) sdl1[11](S) sdk1[10](S) sdj1[9](S) sdi1[8](S) sdh1[7](S)
-sdg1[6](S) sdf1[5](S) sde1[4](S) sdd1[3](S) sdc1[2](S) sdb1[1](S)
-      62353932288 blocks super 1.2
-
-No success either.
-
-So the next try would be recreating the array ?
-
-Any help is appreciated, thanks in advance.
-
-Mark
+> On 17 Dec 2014, at 12:11, George Duffield <forumscollective@gmail.com> wrote:
+> 
+> Hi
+> 
+> I have a RAID5 array comprising four 3TB drives and I've basically got
+> 100GB remaining free so it's time to expand the array.  With this in
+> mind, and considering my requirement is predominantly to increase
+> capacity, I'm wondering whether it'd be best to add another 3TB drive
+> and expand the array whilst retaining RAID5 or to switch out to a
+> RAID10 array.  My thinking is 1) adding a 5th 3TB drive to the
+> existing array may result in drive failure during the rebuild; and 2)
+> RAID10 is very expensive to implement.  Hence, I'm tempted to consider
+> other options (recognising that whilst it'd be convenient I don't
+> actually need everything stored on a single array).   One such option
+> would be running two raid5 arrays comprised of 3x 3TB each yielding
+> 12TB of storage across the two arrays.
+> 
+> 
+> Questions:
+> + Is my assumption re RAID5 drive failure correct/ likely?
+> + Is there a non-destructive way to migrate from RAID5 to RAID10?
+> + 2 x RAID5 arrays seems pretty appealing - from a reliability and
+> cost effectiveness standpoint - yes/no?
