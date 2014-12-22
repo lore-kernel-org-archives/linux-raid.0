@@ -1,89 +1,86 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Expand RAID5 array or switch to RAID10
-Date: Mon, 22 Dec 2014 09:15:33 +0000
-Message-ID: <20141222091533.GA10786@cthulhu.home.robinhill.me.uk>
-References: <CAG__1a7YqAWMccgDeYksY_t10Zyy8Rc-veZM_P7aaXs-DtFdfQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yrj/dFKFPuw6o+aM"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAG__1a7YqAWMccgDeYksY_t10Zyy8Rc-veZM_P7aaXs-DtFdfQ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: George Duffield <forumscollective@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Dongsu Park <dongsu.park@profitbricks.com>
+Subject: [RFC PATCH 13/17] md/raid5: get rid of bio_fits_rdev()
+Date: Mon, 22 Dec 2014 12:48:40 +0100
+Message-ID: <e35d37b66d621c51f2eb24ff024291bd1d53422e.1419241597.git.dongsu.park@profitbricks.com>
+References: <cover.1419241597.git.dongsu.park@profitbricks.com>
+ <d26a9a0fc9a7d1529c115785ee5935d5750782bd.1419241597.git.dongsu.park@profitbricks.com>
+ <f67d71b4a375ab504c2fc02e94a9d2a651686cab.1419241597.git.dongsu.park@profitbricks.com>
+ <fe96db02d805ca6191dd605d03dac0d04c926fc1.1419241597.git.dongsu.park@profitbricks.com>
+ <bb0051ceb5805896089ded26c0f7f06758b25105.1419241597.git.dongsu.park@profitbricks.com>
+ <e4b7b017eaa81784889ebb2a4e6a7d4366adf13a.1419241597.git.dongsu.park@profitbricks.com>
+ <83a9ee8a309f8e08490c5dd715a608ea054f5c33.1419241597.git.dongsu.park@profitbricks.com>
+ <fc859b23b383f6f4c1e81f4210aa62cb1bdc935f.1419241597.git.dongsu.park@profitbricks.com>
+ <0b6ba533a64aec98e8447bfd30c6622d0729d12e.1419241597.git.dongsu.park@profitbricks.com>
+ <d42dae3d2a64fa4c3a0893f1af963151b31869e3.1419241597.git.dongsu.park@profitbricks.com>
+ <4334b90a56b96ad7a11e4ba7eb97c2cf4405950d.1419241597.git.dongsu.park@profitbricks.com>
+ <abe647cf7cf272220227fad4dac9c43641192f01.1419241597.git.dongsu.park@profitbricks.com>
+ <b7767767957ca758ac492e94dfb320bea4f52dd7.1419241597.git.dongsu.park@profitbricks.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <b7767767957ca758ac492e94dfb320bea4f52dd7.1419241597.git.dongsu.park@profitbricks.com>
+In-Reply-To: <cover.1419241597.git.dongsu.park@profitbricks.com>
+References: <cover.1419241597.git.dongsu.park@profitbricks.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kmo@daterainc.com>, Ming Lin <mlin@minggr.net>, Dongsu Park <dongsu.park@profitbricks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+From: Kent Overstreet <kmo@daterainc.com>
 
---yrj/dFKFPuw6o+aM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Remove bio_fits_rdev() completely, because ->merge_bvec_fn() has now
+gone. There's no point in calling bio_fits_rdev() only for ensuring
+aligned read from rdev.
 
-On Wed Dec 17, 2014 at 12:11:27pm +0200, George Duffield wrote:
+Signed-off-by: Kent Overstreet <kmo@daterainc.com>
+[dpark: add more description in commit message]
+Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+---
+ drivers/md/raid5.c | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 
-> Hi
->=20
-> I have a RAID5 array comprising four 3TB drives and I've basically got
-> 100GB remaining free so it's time to expand the array.  With this in
-> mind, and considering my requirement is predominantly to increase
-> capacity, I'm wondering whether it'd be best to add another 3TB drive
-> and expand the array whilst retaining RAID5 or to switch out to a
-> RAID10 array.  My thinking is 1) adding a 5th 3TB drive to the
-> existing array may result in drive failure during the rebuild; and 2)
-> RAID10 is very expensive to implement.  Hence, I'm tempted to consider
-> other options (recognising that whilst it'd be convenient I don't
-> actually need everything stored on a single array).   One such option
-> would be running two raid5 arrays comprised of 3x 3TB each yielding
-> 12TB of storage across the two arrays.
->=20
->=20
-> Questions:
-> + Is my assumption re RAID5 drive failure correct/ likely?
-> + Is there a non-destructive way to migrate from RAID5 to RAID10?
-> + 2 x RAID5 arrays seems pretty appealing - from a reliability and
-> cost effectiveness standpoint - yes/no?
-
-RAID5 with 3TB drives is definitely a dodgy area. The rebuild times are
-sufficiently long, and the amount of data that needs to be read
-sufficiently high, that an unreadable block or complete drive failure
-during rebuild are too probable to be worth the risk (in my opinion
-anyway).
-
-You can non-destructively convert from a RAID5 to a RAID0, then from the
-RAID0 to a RAID10 (near-2). This does mean going via RAID0 though, so
-there's a data-loss risk there.
-
-I wouldn't run RAID5 on these size disks at all - anything over 2T is
-too risky for my liking, no matter how many disks there are in the
-array.
-
-If you just want to reduce the risk of a secondary failure during
-rebuild, RAID6 would be the safer option. RAID10 is definitely more
-performant but there's a far higher capacity overhead, so it very much
-depends on your use case as to which would be better.
-
-My advice would be to add two additional drives, converting to RAID6 and
-expanding the array.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---yrj/dFKFPuw6o+aM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlSX4TUACgkQShxCyD40xBIn7ACg1OTiKLBqpxg6yHlpoWw50pIw
-jY0AoKWig1DW3uL3m42/KxRGQA+7+89q
-=iVj2
------END PGP SIGNATURE-----
-
---yrj/dFKFPuw6o+aM--
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c1b0d52..40e464c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4218,25 +4218,6 @@ static void raid5_align_endio(struct bio *bi, int error)
+ 	add_bio_to_retry(raid_bi, conf);
+ }
+ 
+-static int bio_fits_rdev(struct bio *bi)
+-{
+-	struct request_queue *q = bdev_get_queue(bi->bi_bdev);
+-
+-	if (bio_sectors(bi) > queue_max_sectors(q))
+-		return 0;
+-	blk_recount_segments(q, bi);
+-	if (bi->bi_phys_segments > queue_max_segments(q))
+-		return 0;
+-
+-	if (q->merge_bvec_fn)
+-		/* it's too hard to apply the merge_bvec_fn at this stage,
+-		 * just just give up
+-		 */
+-		return 0;
+-
+-	return 1;
+-}
+-
+ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
+ {
+ 	struct r5conf *conf = mddev->private;
+@@ -4290,11 +4271,9 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
+ 		align_bi->bi_bdev =  rdev->bdev;
+ 		__clear_bit(BIO_SEG_VALID, &align_bi->bi_flags);
+ 
+-		if (!bio_fits_rdev(align_bi) ||
+-		    is_badblock(rdev, align_bi->bi_iter.bi_sector,
++		if (is_badblock(rdev, align_bi->bi_iter.bi_sector,
+ 				bio_sectors(align_bi),
+ 				&first_bad, &bad_sectors)) {
+-			/* too big in some way, or has a known bad block */
+ 			bio_put(align_bi);
+ 			rdev_dec_pending(rdev, mddev);
+ 			return 0;
+-- 
+2.1.0
