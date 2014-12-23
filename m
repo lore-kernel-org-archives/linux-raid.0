@@ -1,118 +1,115 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: [PATCH 00/24] Clustered MD RAID1
-Date: Tue, 23 Dec 2014 11:24:46 -0600
-Message-ID: <5499A55E.3010705@suse.de>
+Date: Tue, 23 Dec 2014 16:47:00 -0500
+Message-ID: <21657.58068.46803.909368@quad.stoffel.home>
 References: <20141218161456.GA29504@shrek.lan>
+	<5499A55E.3010705@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141218161456.GA29504@shrek.lan>
+In-Reply-To: <5499A55E.3010705@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: lzhong@suse.com, john@stoffel.org, linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: neilb@suse.de, lzhong@suse.com, john@stoffel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Since, I missed on important setup details, I am sending an addendum to 
-explain in more detail how to setup a cluster-md.
-
-Requirements
-============
-You would require a multi-node cluster setup using corosync and
-pacemaker. You can read more about how to setup a cluster from the
-one of the guides available [3]. Make sure that you are using corosync
-version greater than 2.3.1
-
-You need to have the Distributed Lock Manager (DLM) service running on
-all the nodes of the cluster. A simple CRM configuration on my virtual
-cluster is:
-
-node 1084752262: node3
-node 1084752351: node1
-node 1084752358: node2
-primitive dlm ocf:pacemaker:controld \
-         op start interval=0 timeout=90 \
-         op stop interval=0 timeout=100 \
-         op monitor interval=60 timeout=60
-primitive stone stonith:external/libvirt \
-         params hostlist="node1,node2,node3"
-hypervisor_uri="qemu+tcp://vmhnost/system" \
-         op start timeout=120s interval=0 \
-         op stop timeout=120s interval=0 \
-         op monitor interval=40s timeout=120s \
-         meta target-role=Started
-group base-group dlm
-clone base-clone base-group \
-         meta interleave=true target-role=Started
-
-Note: The configuration may be different for your scenario.
-
-This work requires some patches for the mdadm tool [1]. The changes in
-mdadm are basic enough to get the clustered-md up and running. There are
-a couple of options checks which are missing. Use with care. You would
-need the corosync libraries to compile cluster related stuff in mdadm.
-
-Download and install the patched mdadm.
-
-A howto to use cluster-md:
-
-1. With your corosync/pacemaker based cluster with DLM running execute:
-# mdadm --create md0 --bitmap=clustered --raid-devices=2 --level=mirror 
---assume-clean <device1> <device2>
-
-With the option of --bitmap=clustered, it automatically creates multiple
-bitmaps (one for each node). The default currently is set to 4 nodes.
-However, you can set it by --nodes=<number> option.
-It also detects the cluster name which is required for creating a
-clustered md. In order to specify that, use --cluster-name=<name>
-
-2. On other nodes, issue:
-# mdadm --assemble md0 <device1> <device2>
-
-This md device can be used as a regular shared device. There are no
-restrictions on the type of filesystem or LVM you can use, as long as
-you observe clustering rules of using a shared device.
-
-There is only one special case as opposed to a regular non-clustered md, 
-which is to add a device. This is because all nodes should be able to 
-"see" the device before adding it.
-
-You can (hot) add a spare device by issuing the regular --add command.
-
-# mdadm --manage /dev/md0 --add <device3>
-
-The other nodes must acknowledge that they see the device by issuing:
-
-# mdadm --manage /dev/md0 --cluster-confirm 2:<device3>
-
-where 2 is the raid slot number. This step can be automated
-using a udev script because the module sends a udev event when another
-node issues an --add. The uevent is with the usual device name
-parameters and:
-
-EVENT=ADD_DEVICE
-DEVICE_UUID=<uuid of the device>
-RAID_DISK=<slot number>
-
-Usually, you would use blkid to find the devices uuid and issue the
---cluster-confirm command.
-
-If the node does not "see" the device, it must issue (or timeout):
-
-# mdadm --manage /dev/md0 --cluster-confirm 2:missing
-
-References:
-[1] mdadm tool changes: https://github.com/goldwynr/mdadm branch:cluster-md
-[2] Patches against stable 3.14: https://github.com/goldwynr/linux 
-branch: cluster-md-devel
-[3] A guide to setup a cluster using corosync/pacemaker
-https://www.suse.com/documentation/sle-ha-12/singlehtml/book_sleha/book_sleha.html 
-(Note: The basic concepts of this guide should work with any distro)
+This is much improved, thanks for takign the time to listen to my
+comments.  But I do have some questions and clarifications I think you
+neeed to make.  
 
 
+Goldwyn> A howto to use cluster-md:
+
+Goldwyn> 1. With your corosync/pacemaker based cluster with DLM
+Goldwyn> running execute: # mdadm --create md0 --bitmap=clustered
+Goldwyn> --raid-devices=2 --level=mirror --assume-clean <device1>
+Goldwyn> <device2>
+
+What are <device1> and <device2>?  in terms of block devices?  Are
+they local?  Shared across the cluster?  Are the iSCSI or FibreChannel
+block devices accessible from all nodes at the same time?  It's not
+clear, and this is a *key* issue to address and make sure end users
+understand.  
+
+Goldwyn> With the option of --bitmap=clustered, it automatically
+Goldwyn> creates multiple bitmaps (one for each node). The default
+Goldwyn> currently is set to 4 nodes.  However, you can set it by
+Goldwyn> --nodes=<number> option.  It also detects the cluster name
+Goldwyn> which is required for creating a clustered md. In order to
+Goldwyn> specify that, use --cluster-name=<name>
+
+Goldwyn> 2. On other nodes, issue: # mdadm --assemble md0 <device1>
+Goldwyn> <device2>
+
+Same comment here, what are the limits/restrictions/expectations of
+devices?  
+
+Goldwyn> This md device can be used as a regular shared device. There
+Goldwyn> are no restrictions on the type of filesystem or LVM you can
+Goldwyn> use, as long as you observe clustering rules of using a
+Goldwyn> shared device.
+
+Another place where you need to be more explicit.  For example, if I'm
+running ext3, I assume my cluster needs to be running in an
+Active/Passive mode, so that only one node is accessing the filesystem
+at a time, correct?
+
+But if I'm running glusterfs, I could be using the block device and
+the filesystem in an Active/Active mode?  
+
+Goldwyn> There is only one special case as opposed to a regular
+Goldwyn> non-clustered md, which is to add a device. This is because
+Goldwyn> all nodes should be able to "see" the device before adding
+Goldwyn> it.
+
+So this little snipped implies that my question above about device
+restrictions is that you MUST be able to see each device from all
+nodes, correct?  
+
+Goldwyn> You can (hot) add a spare device by issuing the regular --add
+Goldwyn> command.
+
+Goldwyn> # mdadm --manage /dev/md0 --add <device3>
+
+Again, this device needs to be visible to all nodes.  
+
+Goldwyn> The other nodes must acknowledge that they see the device by
+Goldwyn> issuing:
+
+Goldwyn> # mdadm --manage /dev/md0 --cluster-confirm 2:<device3>
+
+Goldwyn> where 2 is the raid slot number. This step can be automated
+Goldwyn> using a udev script because the module sends a udev event
+Goldwyn> when another node issues an --add. The uevent is with the
+Goldwyn> usual device name parameters and:
+
+Goldwyn> EVENT=ADD_DEVICE DEVICE_UUID=<uuid of the device>
+Goldwyn> RAID_DISK=<slot number>
+
+Goldwyn> Usually, you would use blkid to find the devices uuid and
+Goldwyn> issue the --cluster-confirm command.
+
+Goldwyn> If the node does not "see" the device, it must issue (or
+Goldwyn> timeout):
+
+Goldwyn> # mdadm --manage /dev/md0 --cluster-confirm 2:missing
+
+This seems wrong, if the other node doesn't see the new device, how
+will the other nodes know that it's there or not?  What is the
+communication channel between nodes?  Do they use the DLM?  
 
 
+And what are the performance impacts and benefits of using this setup?
+Why not use a cluster aware filesystem which already does RAID in some
+manner?  I'm honestly clueless about glusterFS or other Linux based
+cluster filesystems, haven't had any need to run them, nor the time to
+play with them.
 
--- 
--- 
-Goldwyn
+I think you've got a good start now on the documentation, but you need
+to expand more on the why and what is expected as an infrastructure.
+Just a note that all devices must be visible on all nodes would be a
+key thing to include. 
+
+Thanks,
+John
