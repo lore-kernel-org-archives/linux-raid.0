@@ -1,232 +1,122 @@
-From: "Stephan Hafiz" <forum@hafis.de>
-Subject: md_raid5 recovering failed need help
-Date: Thu, 25 Dec 2014 15:24:42 +0100
-Message-ID: <!&!AAAAAAAAAAAYAAAAAAAAAOgLllvGWotKlJcBYHqu4VUCgQAAEAAAAJjrgwWxkKFFjrGxfwSsmpoBAAAAAA==@hafis.de>
+From: Peter Kieser <peter@kieser.ca>
+Subject: Re: [PATCH 00/24] Clustered MD RAID1
+Date: Fri, 26 Dec 2014 14:35:05 -0800
+Message-ID: <549DE299.3010205@kieser.ca>
+References: <20141218161456.GA29504@shrek.lan> <5499A55E.3010705@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms000600070105040200020600"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: de
+In-Reply-To: <5499A55E.3010705@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: forum@hafis.de
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, neilb@suse.de
+Cc: lzhong@suse.com, john@stoffel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi! I=E2=80=99m from germany and my raid and me needs help.
-My english isn=E2=80=99t very good, but i think it=E2=80=99s sufficient=
-=2E And i think, this mailinglist is my last hope =E2=98=BA
+This is a cryptographically signed message in MIME format.
 
-So on, =E2=80=A6. Here ist my problem.
-The raid5 has lost 2 of 5 disks. First one disk and then the second one=
-=2E
-I have been trying for several weeks to solve the problem alone =E2=80=A6=
- unsucessful =E2=98=B9
-
-And here some informations about this disaster.
+--------------ms000600070105040200020600
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
 
+On 2014-12-23 9:24 AM, Goldwyn Rodrigues wrote:
+> This md device can be used as a regular shared device. There are no
+> restrictions on the type of filesystem or LVM you can use, as long as
+> you observe clustering rules of using a shared device.
 
-!SMART Status
-for i in a b c d e f; do echo Device  sd$i; smartctl -H /dev/sd$i | egr=
-ep overall; echo; done;
-Device sda
-SMART overall-health self-assessment test result: PASSED
+This is very vague. I feel like this is a huge layering violation. LVM=20
+or filesystem on top of mdadm should not have to be aware of what is=20
+going on below. Otherwise, I feel like other clustered filesystems that=20
+include RAID are better suited. As it stands, what are the benefits of=20
+using this over $CLUSTER_FS?
 
-Device sdb
-SMART overall-health self-assessment test result: PASSED
-
-Device sdc
-SMART overall-health self-assessment test result: PASSED
-
-Device sdd
-SMART overall-health self-assessment test result: PASSED
-
-Device sde
-SMART overall-health self-assessment test result: PASSED
-
-Device sdf
-SMART overall-health self-assessment test result: PASSED
+-Peter
 
 
+--------------ms000600070105040200020600
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-!mdadm version
-mdadm - v3.2.5 - 18th May 2012
-I have read about recent versions 3.3.x @ raid.wiki.kernel.org, i haven=
-=E2=80=99t tested this version.
-
-
-
-!superblock informations
-Only the Events from sdb1 are off
-
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x2
-     Array UUID : 19fc2188:8d10ae41:fee05ce5:06321b30
-           Name : pluto:0  (local to host pluto)
-  Creation Time : Tue Sep 24 22:45:51 2013
-     Raid Level : raid5
-   Raid Devices : 5
-
-Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-     Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
-  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-Recovery Offset : 99655656 sectors
-          State : clean
-    Device UUID : 4aab22d5:21663d86:98f49007:0b776d30
-
-    Update Time : Thu Dec 18 20:12:19 2014
-       Checksum : f7a68c46 - correct
-         Events : 195
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 19fc2188:8d10ae41:fee05ce5:06321b30
-           Name : pluto:0  (local to host pluto)
-  Creation Time : Tue Sep 24 22:45:51 2013
-     Raid Level : raid5
-   Raid Devices : 5
-
-Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-     Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
-  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 61b9afe4:ba695181:7d1a1431:3e52621b
-
-    Update Time : Sat Dec 20 20:49:35 2014
-       Checksum : 10d2aaf0 - correct
-         Events : 217
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : .AAAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 19fc2188:8d10ae41:fee05ce5:06321b30
-           Name : pluto:0  (local to host pluto)
-  Creation Time : Tue Sep 24 22:45:51 2013
-     Raid Level : raid5
-   Raid Devices : 5
-
-Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-     Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
-  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : bf5ed2c0:95e837fa:e8b8eabf:b5cc8dba
-
-    Update Time : Sun Dec 21 12:22:33 2014
-       Checksum : 93dbc2b8 - correct
-         Events : 217
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 19fc2188:8d10ae41:fee05ce5:06321b30
-           Name : pluto:0  (local to host pluto)
-  Creation Time : Tue Sep 24 22:45:51 2013
-     Raid Level : raid5
-   Raid Devices : 5
-
-Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-     Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
-  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 52f8c258:96d54789:0cbdad3d:b17e85ae
-
-    Update Time : Sun Dec 21 12:22:33 2014
-       Checksum : 2c96ff6c - correct
-         Events : 217
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 3
-   Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 19fc2188:8d10ae41:fee05ce5:06321b30
-           Name : pluto:0  (local to host pluto)
-  Creation Time : Tue Sep 24 22:45:51 2013
-     Raid Level : raid5
-   Raid Devices : 5
-
-Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-     Array Size : 11720536064 (11177.57 GiB 12001.83 GB)
-  Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-    Data Offset : 262144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 418df97d:1658bced:ca887a61:2d7f3c05
-
-    Update Time : Sun Dec 21 12:22:33 2014
-       Checksum : 30c5e317 - correct
-         Events : 217
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 4
-   Array State : ..AAA ('A' =3D=3D active, '.' =3D=3D missing)
-
-
-
-!Process Status md
-cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [r=
-aid4] [raid10]
-md0 : inactive sdf1[5](S) sdc1[1](S) sdd1[2](S) sde1[3](S) sdb1[6](S)
-      14650672357 blocks super 1.2
-
-unused devices: <none>
-
-
-
-!reassemble force
-mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/=
-sdf1 --force
-mdadm: ignoring /dev/sdd1 as it reports /dev/sdc1 as failed
-mdadm: ignoring /dev/sde1 as it reports /dev/sdc1 as failed
-mdadm: ignoring /dev/sdf1 as it reports /dev/sdc1 as failed
-mdadm: /dev/md0 assembled from 1 drive - not enough to start the array.
-
-
-
-
-i hope i don=E2=80=99t get the award =E2=80=9Epaint onself in to the co=
-rner=E2=80=9C =E2=80=A6=E2=80=A6
-
-merry christmas =E2=80=A6 David
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIMqzCC
+BjQwggQcoAMCAQICASAwDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
+DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
+Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
+MTAyNDIxMDI1NVoXDTE3MTAyNDIxMDI1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
+dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
+aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
+aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMsohUWcASz7GfKrpTOM
+KqANy9BV7V0igWdGxA8IU77L3aTxErQ+fcxtDYZ36Z6GH0YFn7fq5RADteP0AYzrCA+EQTfi
+8q1+kA3m0nwtwXG94M5sIqsvs7lRP1aycBke/s5g9hJHryZ2acScnzczjBCAo7X1v5G3yw8M
+DP2m2RCye0KfgZ4nODerZJVzhAlOD9YejvAXZqHksw56HzElVIoYSZ3q4+RJuPXXfIoyby+Y
+2m1E+YzX5iCZXBx05gk6MKAW1vaw4/v2OOLy6FZH3XHHtOkzUreG//CsFnB9+uaYSlR65cdG
+zTsmoIK8WH1ygoXhRBm98SD7Hf/r3FELNvUCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSuVYNv7DHKufcd+q9rMfPIHeOsuzAfBgNV
+HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
+MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
+dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
+c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
+c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
+dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
+d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBADqp
+Jw3I07QWke9plNBpxUxcffc7nUrIQpJHDci91DFG7fVhHRkMZ1J+BKg5UNUxIFJ2Z9B90Mic
+c/NXcs7kPBRdn6XGO/vPc87Y6R+cWS9Nc9+fp3Enmsm94OxOwI9wn8qnr/6o3mD4noP9Jphw
+UPTXwHovjavRnhUQHLfo/i2NG0XXgTHXS2Xm0kVUozXqpYpAdumMiB/vezj1QHQJDmUdPYMc
+p+reg9901zkyT3fDW/ivJVv6pWtkh6Pw2ytZT7mvg7YhX3V50Nv860cV11mocUVcqBLv0gcT
++HBDYtbuvexNftwNQKD5193A7zN4vG7CTYkXxytSjKuXrpEatEiFPxWgb84nVj25SU5q/r1X
+hwby6mLhkbaXslkVtwEWT3Van49rKjlK4XrUKYYWtnfzq6aSak5u0Vpxd1rY79tWhD3EdCvO
+hNz/QplNa+VkIsrcp7+8ZhP1l1b2U6MaxIVteuVMD3X0vziIwr7jxYae9FZjbxlpUemqXjcC
+0QaFfN7qI0JsQMALL7iGRBg7K0CoOBzECdD3fuZil5kU/LP9cr1BK31U0Uy651bFnAMMMkqh
+AChIbn0ei72VnbpSsrrSdF0BAGYQ8vyHae5aCg+H75dVCV33K6FuxZrf09yTz+Vx/PkdRUYk
+XmZz/OTfyJXsUOUXrym6KvI2rYpccSk5MIIGbzCCBVegAwIBAgICUcswDQYJKoZIhvcNAQEF
+BQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJT
+ZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBD
+bGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNDA4MTcxMDM5MDla
+Fw0xNjA4MTcxMzU1MzFaMIGOMRkwFwYDVQQNExBKSHI4SWdkNjhlbUUweVF6MQswCQYDVQQG
+EwJDQTEZMBcGA1UECBMQQnJpdGlzaCBDb2x1bWJpYTESMBAGA1UEBxMJVmFuY291dmVyMRUw
+EwYDVQQDEwxQZXRlciBLaWVzZXIxHjAcBgkqhkiG9w0BCQEWD3BldGVyQGtpZXNlci5jYTCC
+ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL/NmLSwzKyhFa8wVY4On4D2atW+jO4k
+qzGjt32GITxEhweeR2AeQFhmBXTwwAHGnAEWU+lQSXoIoV9Hdi8GhTeFz3A5LPTLl/wa6dmv
+8VCfYaREvoSxjEN4nsCtdU8P6NLUE4mqBe7ZiP9lDkqWgmd0fDEYjiOnJU3cdoLh5vDHOyu+
+9mmPDVEBELFgbbdQsyiINKQN5fwElQ/5hwip/5lFCrT8SYYVS7s2JwEPtvPmpl+JyOwRJakh
+VRv4Wd8Lyv/rchK4riwfMyHhuKwbbKRxs3HzSHjtsjGZ2tS1UzDEalL7ZRsHC4EvZmgBGg5E
+0l1Bz7cC4JcPIy+8G14OjZkCAwEAAaOCAtUwggLRMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSw
+MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQUvDcOWQqoGGEK+KDc
+6opnV1iupIkwHwYDVR0jBBgwFoAUrlWDb+wxyrn3HfqvazHzyB3jrLswGgYDVR0RBBMwEYEP
+cGV0ZXJAa2llc2VyLmNhMIIBTAYDVR0gBIIBQzCCAT8wggE7BgsrBgEEAYG1NwECAzCCASow
+LgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwgfcGCCsG
+AQUFBwICMIHqMCcWIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MAMCAQEagb5U
+aGlzIGNlcnRpZmljYXRlIHdhcyBpc3N1ZWQgYWNjb3JkaW5nIHRvIHRoZSBDbGFzcyAyIFZh
+bGlkYXRpb24gcmVxdWlyZW1lbnRzIG9mIHRoZSBTdGFydENvbSBDQSBwb2xpY3ksIHJlbGlh
+bmNlIG9ubHkgZm9yIHRoZSBpbnRlbmRlZCBwdXJwb3NlIGluIGNvbXBsaWFuY2Ugb2YgdGhl
+IHJlbHlpbmcgcGFydHkgb2JsaWdhdGlvbnMuMDYGA1UdHwQvMC0wK6ApoCeGJWh0dHA6Ly9j
+cmwuc3RhcnRzc2wuY29tL2NydHUyLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYB
+BQUHMAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MyL2NsaWVudC9jYTBC
+BggrBgEFBQcwAoY2aHR0cDovL2FpYS5zdGFydHNzbC5jb20vY2VydHMvc3ViLmNsYXNzMi5j
+bGllbnQuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3RhcnRzc2wuY29tLzANBgkq
+hkiG9w0BAQUFAAOCAQEAycbEJG6nvyfbv2X4npgq1ceU+y1qYmXczCBNvNRJ2yvVXc8ljjQs
+KRDzpr8JhTCg4SMZh3C3AIOBGxrYCsyaxRL3Ssfh/6Ptg3ExIfVNj6CobB1piTrusORaVDYS
+jEtZZRR4iYt9mDRo/mZRhh4QRManZYwCXPG4mrguqQ4NLYVdgTsHYgCTRymMbyrQ0+eIGdAO
+/szcirRovADyxroMclw+TTlB7nQrovIsTVteGqe0renKR0bzdWsexQEntKpBxJLy/HTSIHeQ
+HU5r7hwjk/v1aoKlimuaKbdGTJl10BYk8+pbU8JGEl1sm1cNn4MKYwhnWFRTBEPEiXP6VyNc
+PTGCA9owggPWAgEBMIGTMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UE
+AxMvU3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAlHL
+MAkGBSsOAwIaBQCgggIbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTE0MTIyNjIyMzUwNVowIwYJKoZIhvcNAQkEMRYEFJrB48+EjJEaq4XVWMmkcFDX+S/+
+MGwGCSqGSIb3DQEJDzFfMF0wCwYJYIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0D
+BzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwIC
+ASgwgaQGCSsGAQQBgjcQBDGBljCBkzCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0
+Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50
+IENBAgJRyzCBpgYLKoZIhvcNAQkQAgsxgZaggZMwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQK
+Ew1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBT
+aWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRl
+IENsaWVudCBDQQICUcswDQYJKoZIhvcNAQEBBQAEggEAtb1pUbT2o0tlhgyDzcPkHKP7bmRX
+HfdPguLJ/WFwZv5DMpoueQVhQNkwWnkMHY72z2E48o0VZ7FUxRhkfufkR1kjW8v6QXh7CKax
+ji3THrjNMP8MrX4SRJPVQdmqsdfu6J36LXHGOk65OTNFRJs+bTCHZxX+CDbarz5KR1h3O5HO
+Re3Qat0GKZFi/tI5BM6Cx6T7ylL9CAdUiOHGTCA13VqlVTIzPul2EUgRMUXrR8GSYsRE6iPk
+juF9RoqVBd5Mek9iBc5NWuShs3WZZHQJczRv6DXdeRnpanp87ZOrCAWyGcxOfvqIS4c+82eF
+JRbuWZ35pT6qBD2/CjUE0otPoQAAAAAAAA==
+--------------ms000600070105040200020600--
