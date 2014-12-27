@@ -1,42 +1,36 @@
-From: Marcus <shadowsor@gmail.com>
-Subject: Re: [PATCH 00/24] Clustered MD RAID1
-Date: Fri, 26 Dec 2014 16:47:36 -0800
-Message-ID: <CALFpzo4gO1A9i-JguhKprCWuicWO+HvhHA1MrfmwGUt5QuJQ8A@mail.gmail.com>
-References: <20141218161456.GA29504@shrek.lan>
-	<5499A55E.3010705@suse.de>
-	<549DE299.3010205@kieser.ca>
+From: =?UTF-8?B?6JGj5p2o?= <donglife1208@gmail.com>
+Subject: [PATCH][MD] raid : fix raid recoverying all data corruption, when
+ j=0(sectors) interrupted by "echo idle > /sys/block/md0/md/sync_action"
+Date: Sat, 27 Dec 2014 16:20:29 +0800
+Message-ID: <CAEqx_ugz0a0+E1PqmLDS=gJPyDOcg0J1hptnxQGwFF0ua9+O-Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <549DE299.3010205@kieser.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, Neil Brown <neilb@suse.de>, lzhong@suse.com, john@stoffel.org, linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I don't think it's any different than exposing the same block device
-to multiple servers, like an iSCSI or FC volume. It just allows you to
-also treat a RAID device like you would any other SAN-type block
-device by keeping the MD metadata consistent.  You still have to
-either put something on top of it that will be aware of the fact that
-other hosts can see the block device and maintains its own consistency
-(clustered FS), or be sure to only use it on one host at a time, again
-like you would treat any other SAN volume.
+Hi, Neil
 
-On Fri, Dec 26, 2014 at 2:35 PM, Peter Kieser <peter@kieser.ca> wrote:
->
-> On 2014-12-23 9:24 AM, Goldwyn Rodrigues wrote:
->>
->> This md device can be used as a regular shared device. There are no
->> restrictions on the type of filesystem or LVM you can use, as long as
->> you observe clustering rules of using a shared device.
->
->
-> This is very vague. I feel like this is a huge layering violation. LVM or
-> filesystem on top of mdadm should not have to be aware of what is going on
-> below. Otherwise, I feel like other clustered filesystems that include RAID
-> are better suited. As it stands, what are the benefits of using this over
-> $CLUSTER_FS?
->
-> -Peter
->
+I find a problem unintentionally: Raid5 is recovering, interrupted by
+"echo idle  > /sys/block/md0/md/sync_action", at this point,
+j=0(sector), after a while,  recovery thread is wake up, now j = 3
+because when j=0, mddev->curr_resync = 3 by kernel code, so recovery
+thread will start on the basic of j=3, which will lead all data
+corruption. To avoid the problem,can we amend variable j by 8 sectors
+alignment? as shown below:
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 709755f..fe4a5f9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7400,7 +7400,7 @@ void md_do_sync(struct md_thread *thread)
+        if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+            break;
+
+-       sectors = mddev->pers->sync_request(mddev, j, &skipped,
++       sectors = mddev->pers->sync_request(mddev, (j &
+~((sector_t)STRIPE_SECTORS-1)), &skipped,
+                          currspeed < speed_min(mddev));
+        if (sectors == 0) {
+            set_bit(MD_RECOVERY_INTR, &mddev->recovery);
