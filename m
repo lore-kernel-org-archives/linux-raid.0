@@ -1,51 +1,50 @@
-From: Nicholas Krause <xerofoify@gmail.com>
-Subject: [PATCH] drivers:md: Remove unneeded fix me comments in
-	dm-bio-prison.h
-Date: Sat, 27 Dec 2014 23:12:03 -0500
-Message-ID: <1419739923-28799-1-git-send-email-xerofoify@gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: fernalynbuendia@outlook.com
+Subject: A recommendation from Friend, screw college, I'm dropping out
+Date: Sun, 28 Dec 2014 11:29:19 +0000 (GMT)
+Message-ID: <20141228112919.C4FB1A89A6@vps91566031.123-vps.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: agk@redhat.com
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, snitzer@redhat.com
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: rwpremiumpainters@gmail.com, good_mom2003@hotmail.com, linux-raid@vger.kernel.org, bennukoop@gmail.com, mari0z@hotmail.com
 List-Id: linux-raid.ids
 
-Removes two unneeded fix me comments for removing the header files,
-persistent-data/dm-block-manager.h and dm-thin-metadata.h. These
-headers are needed in order to build this file successfully and
-for it to run,thus the comments should be removed as they are no
-longer needed.
 
-Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
----
- drivers/md/dm-bio-prison.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hello,
 
-diff --git a/drivers/md/dm-bio-prison.h b/drivers/md/dm-bio-prison.h
-index 74cf011..15c31cf 100644
---- a/drivers/md/dm-bio-prison.h
-+++ b/drivers/md/dm-bio-prison.h
-@@ -7,8 +7,8 @@
- #ifndef DM_BIO_PRISON_H
- #define DM_BIO_PRISON_H
- 
--#include "persistent-data/dm-block-manager.h" /* FIXME: for dm_block_t */
--#include "dm-thin-metadata.h" /* FIXME: for dm_thin_id */
-+#include "persistent-data/dm-block-manager.h"
-+#include "dm-thin-metadata.h"
- 
- #include <linux/bio.h>
- #include <linux/rbtree.h>
--- 
-2.1.0
+Hey!=0D
+=0D
+I told you I wouldn't let you down!=0D
+=0D
+=46irst, thanks for putting up that cash so we could keep production on=
+ track. I really appreciate it.=0D
+=0D
+Just give me another week and I'll have that $20k back in your pocket.=0D
+=0D
+I've found something that can fund this whole project here:=0D
+=0D
+=3D=3D> (   http://tinyurl.com/buendia915   )=0D
+=0D
+I'll pay you back and put in for the rest of the film myself.=0D
+=0D
+We'll be showing =93Mass Plan=94 at Cannes next year - guaranteed!=0D
+=0D
+Best,=0D
+=0D
+=46ernalyn Buendia
+
+Click below to view the webpage that your friend has recommended:
+
+
+=46riend, screw college, I'm dropping out has used the Tell-a-Friend fo=
+rm to send you this link.
+
+We look forward to your visit!
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
