@@ -1,51 +1,55 @@
-From: Aryeh Leib Taurog <vim@aryehleib.com>
-Subject: Reassembling RAID1 after good drive was offline [newbie]
-Date: Thu, 1 Jan 2015 19:40:48 +0200
-Message-ID: <20150101174048.GB4840@deb76.aryehleib.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Subject: [PATCH] md: dm-thin-metadata:  Remove unused function
+Date: Thu,  1 Jan 2015 18:52:57 +0100
+Message-ID: <1420134777-1290-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-I recently made a RAID1 array from a couple of extra usb drives:
+Remove the function dm_pool_get_data_block_size() that is not used anywhere.
 
-$ mdadm --create --metadata 1.2 --verbose /dev/md/backup --level=mirror -n2 /dev/sd[cd]2
+This was partially found by using a static code analysis program called cppcheck.
 
-I'm using it for my backups.  I've run into a small problem though.
-One of the drives for some reason hadn't come online when I tried to 
-assemble the array.  Trying --assemble a second time after it came online 
-apparently wasn't the right thing to do:
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/md/dm-thin-metadata.c |    9 ---------
+ drivers/md/dm-thin-metadata.h |    2 --
+ 2 files changed, 11 deletions(-)
 
-$ mdadm --assemble --scan
-mdadm: /dev/md/backup has been started with 1 drive (out of 2).
-$ mdadm --assemble --scan
-mdadm: /dev/md/backup has been started with 1 drive (out of 2).
-$ cat /proc/mdstat 
-Personalities : [raid1] 
-md126 : active (auto-read-only) raid1 sdc2[0]
-      943587136 blocks super 1.2 [2/1] [U_]
-      
-md127 : active (auto-read-only) raid1 sdd2[1]
-      943587136 blocks super 1.2 [2/1] [_U]
-
-
-AFAIK both drives are healthy, but since that happened, it refuses to 
-assemble them both in the array:
-
-$ mdadm --assemble --force /dev/md/backup /dev/sd[db]2
-mdadm: ignoring /dev/sdb2 as it reports /dev/sdd2 as failed
-mdadm: /dev/md/backup has been started with 1 drive (out of 2).
-
-I haven't mounted the volume, so I believe the drives are in sync.
-
-Is there any way to put the array back together without having to 
-resync?  It looks like I want something like --assume-clean, but that 
-flag isn't valid in assemble mode.
-
-Please cc responses to me.
-
-Thanks,
-Aryeh Leib Taurog
+diff --git a/drivers/md/dm-thin-metadata.c b/drivers/md/dm-thin-metadata.c
+index e9d33ad..c7914a5 100644
+--- a/drivers/md/dm-thin-metadata.c
++++ b/drivers/md/dm-thin-metadata.c
+@@ -1639,15 +1639,6 @@ int dm_pool_get_metadata_dev_size(struct dm_pool_metadata *pmd,
+ 	return r;
+ }
+ 
+-int dm_pool_get_data_block_size(struct dm_pool_metadata *pmd, sector_t *result)
+-{
+-	down_read(&pmd->root_lock);
+-	*result = pmd->data_block_size;
+-	up_read(&pmd->root_lock);
+-
+-	return 0;
+-}
+-
+ int dm_pool_get_data_dev_size(struct dm_pool_metadata *pmd, dm_block_t *result)
+ {
+ 	int r = -EINVAL;
+diff --git a/drivers/md/dm-thin-metadata.h b/drivers/md/dm-thin-metadata.h
+index e3c857d..6258c14 100644
+--- a/drivers/md/dm-thin-metadata.h
++++ b/drivers/md/dm-thin-metadata.h
+@@ -182,8 +182,6 @@ int dm_pool_get_free_metadata_block_count(struct dm_pool_metadata *pmd,
+ int dm_pool_get_metadata_dev_size(struct dm_pool_metadata *pmd,
+ 				  dm_block_t *result);
+ 
+-int dm_pool_get_data_block_size(struct dm_pool_metadata *pmd, sector_t *result);
+-
+ int dm_pool_get_data_dev_size(struct dm_pool_metadata *pmd, dm_block_t *result);
+ 
+ int dm_pool_block_is_used(struct dm_pool_metadata *pmd, dm_block_t b, bool *result);
+-- 
+1.7.10.4
