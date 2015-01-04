@@ -1,47 +1,65 @@
-From: Aryeh Leib Taurog <vim@aryehleib.com>
+From: pg@lxra2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: Reassembling RAID1 after good drive was offline [newbie]
-Date: Sun, 4 Jan 2015 12:20:09 +0200
-Message-ID: <20150104102009.GA4511@deb76.aryehleib.com>
+Date: Sun, 4 Jan 2015 11:10:28 +0000
+Message-ID: <21673.8100.414752.391418@tree.ty.sabi.co.uk>
 References: <54A6E5B1.2090602@tigertech.com>
+	<20150104102009.GA4511@deb76.aryehleib.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54A6E5B1.2090602@tigertech.com>
+In-Reply-To: <20150104102009.GA4511@deb76.aryehleib.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 02, 2015 at 6:38 PM, Robert L Mathews wrote:
-> Your question is about how to reassemble them without a resync,  
-> which is understandable, but the reason md isn't doing that 
-> automatically is that it thinks they might be different.
- 
-> I personally would always do a resync in such a case. A flaky cable 
-> suggests that data on it is suspect, and this is one of the things  
-> RAID 1 is for: it allows you to copy clean data to suspect 
-> partitions.
+Yet another of an endless (but not too frequent fortunately)
+stream of "wildly optimistic" messages to this mailing list...
 
-> But I'm known to be data-paranoid. Other people may have different 
-> opinions/suggestions.
+> Would the resync just copy all the data from the "good" drive
+> back to the "failed" drive?
 
-Thanks.  I tend to agree.  Would the resync just copy all the data 
-from the "good" drive back to the "failed" drive?  For diagnostic 
-purposes, it would actually be a lot more informative to compare the 
-two drives and see if there really is data corruption on one of them 
-or not.  Is there a way to do that?  If I were to demonstrate that the 
-data are in sync, I would want to reassemble without resync.
+This seems to me quite "imaginative" based on the dream that
+resync has psychic powers.
 
-Also, in my situation, since for now I'm just using a pair of external 
-drives, I could easily imagine accidentally trying to assemble the 
-array when one of the drives is powered down.  Then this situation 
-would arise again without faulty hardware.  I suppose an 'assemble' 
-script could help protect against the latter case by checking first 
-that both devices are available.
+> For diagnostic purposes, it would actually be a lot more
+> informative to compare the two drives and see if there really
+> is data corruption on one of them or not.
 
-Prudence notwithstanding, I do think there are valid cases for 
-reassembling this array without resync.  If there's a way to do that, 
-I'd still like to know.
+This seems to me "wildly optimistic" that when two blocks differ
+it is possible in the general case to determine whether one (and
+which one) or both are "corrupted".
 
-With appreciation,
-Aryeh Leib Taurog
+> Is there a way to do that?
+
+'man cmp' may show a way to "compare the two drives".
+
+> If I were to demonstrate that the data are in sync, I would
+> want to reassemble without resync.
+
+"Fantastic logic".
+
+> Also, in my situation, since for now I'm just using a pair of
+> external drives, I could easily imagine accidentally trying to
+> assemble the array when one of the drives is powered down.
+> Then this situation would arise again without faulty hardware.
+
+This may be based on the "amazing insight" that differences in
+content and event counts are the same as data corruption.
+
+> Prudence notwithstanding, I do think there are valid cases for 
+> reassembling this array without resync.
+
+I believe that you think that but I also believe the manual when
+it says "Use this only if you really know what you are doing";
+because many MD users may not have the level of skills and
+insight about RAID that you think you have, MD is designed to
+protect users by default from their own "amazing optimism",
+especially users that haven't read yet:
+
+  https://raid.wiki.kernel.org/index.php/RAID_Recovery
+  https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID
+
+> If there's a way to do that, I'd still like to know.
+
+'man mdadm' may show a way to assemble "without resync".
