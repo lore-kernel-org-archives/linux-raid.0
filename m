@@ -1,35 +1,29 @@
-From: Joe Thornber <thornber@redhat.com>
-Subject: Re: [dm-devel] Questions about the function, queue_empty in
- dm-cache-policy-mq.c
-Date: Mon, 5 Jan 2015 09:17:08 +0000
-Message-ID: <20150105091707.GA11818@debian>
-References: <54AA03E0.9020900@gmail.com>
+From: Robert L Mathews <lists@tigertech.com>
+Subject: Re: Reassembling RAID1 after good drive was offline [newbie]
+Date: Mon, 05 Jan 2015 09:25:55 -0800
+Message-ID: <54AAC923.1070501@tigertech.com>
+References: <20150104210701.GG4713@deb76.aryehleib.com> <54A9B472.9090905@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54AA03E0.9020900@gmail.com>
+In-Reply-To: <54A9B472.9090905@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: agk@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 04, 2015 at 10:24:16PM -0500, nick wrote:
-> Greetings All,
-> I have a few questions about the function I stated in the message for this email.
-> 1. What is the issues with the CPU usage for this function?
+On 1/4/15 1:45 PM, Wols Lists wrote:
 
-At the moment it can perform up to NR_QUEUE_LEVELS (16) list_empty()
-calls.  Which I consider too much work for a function that is called
-frequently.
+> It's only the other raids that have any error correction ability,
+> because they use parity etc to be able to tell which set of data is correct.
 
-> 2. What hardware is this on ?
+In theory, yes, but in practice, they don't -- or do they? I thought
+that even if you use RAID 6, md doesn't check all members on each read
+request, calculate parities, and mask silent platter-level corruption by
+ignoring a member spewing bad bits. It just uses parities to fill in
+missing data if a member fails.
 
-Irrelevant.
+Or does it actually do error detection, and I'm confused?
 
-> 3. How scalable is this function in terms of NR_QUEUE_LEVELS and how many does it need to handle?
-
-Linear.  NR_QUEUE_LEVELS is a compile time constant currently set to
-16, and unlikely to change.
-
-- Joe
+-- 
+Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
