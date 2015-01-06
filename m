@@ -1,115 +1,121 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Reassembling RAID1 after good drive was offline [newbie]
-Date: Tue, 6 Jan 2015 07:54:00 +1300
-Message-ID: <20150106075400.4a208293@notabene.brown>
-References: <20150104210701.GG4713@deb76.aryehleib.com>
-	<54A9B472.9090905@youngman.org.uk>
+From: Manish Awasthi <manish.awasthi@caviumnetworks.com>
+Subject: Re: md raid performance with 3-18-rc3
+Date: Tue, 6 Jan 2015 15:19:57 +0530
+Message-ID: <54ABAFC5.6060402@caviumnetworks.com>
+References: <5472E7DE.5070702@caviumnetworks.com> <20141125133742.0154a4d4@notabene.brown> <54758B3B.5080907@caviumnetworks.com> <20141203172101.17859aee@notabene.brown> <5486B15C.8060109@caviumnetworks.com> <5486B1C2.1000508@caviumnetworks.com> <5486B218.8070204@caviumnetworks.com> <5487FD79.7000002@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/bKnUyQHZx6l1sa+Y01kx0P2"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54A9B472.9090905@youngman.org.uk>
+In-Reply-To: <5487FD79.7000002@caviumnetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Aryeh Leib Taurog <vim@aryehleib.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/bKnUyQHZx6l1sa+Y01kx0P2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Sun, 04 Jan 2015 21:45:22 +0000 Wols Lists <antlists@youngman.org.uk>
-wrote:
+Any findings on some of the logs I shared earlier?
 
-> On 04/01/15 21:07, Aryeh Leib Taurog wrote:
-> > On Sun, 4 Jan 2015 at 11:10 Peter Grandi wrote:
-> >> Yet another of an endless (but not too frequent fortunately)
-> >> stream of "wildly optimistic" messages to this mailing list...
-> >=20
-> > No intent to offend.  I specifically put "newbie" in the subject.
-> >=20
-> >>> Would the resync just copy all the data from the "good" drive
-> >>> back to the "failed" drive?
-> >>
-> >> This seems to me quite "imaginative" based on the dream that
-> >> resync has psychic powers.
-> >=20
-> > I am not sure what you mean.  Two drives in a RAID1 array.  At one=20
-> > point, one drive failed to come on line.  Now mdadm refuses to include=
-=20
-> > that drive in the array.  So there's the "good" drive, which appears=20
-> > in the now degraded array, and the "failed" drive, which does not.  I=20
-> > have never done a resync, and I haven't seen a detailed description of=
-=20
-> > what it does, but given that mdadm seems to have decided which drive=20
-> > is good and which not, and assuming mdadm doesn't know anything about=20
-> > the contents of the data, what is so "imaginative" about the notion=20
-> > that if I add the "failed" drive to the array, it would simply copy=20
-> > all the data on the "good" drive byte-by-byte onto the "failed" drive,=
-=20
-> > overwriting whatever is currently on the "failed" drive?  I can't=20
-> > imagine how else a resync would work.  What am I missing?
->=20
-> That mirroring isn't fault-tolerant-raid? I know it's been given a raid
-> classification, but raids 1 and 0 really just give you a bigger faster
-> disk. It's only the other raids that have any error correction ability,
-> because they use parity etc to be able to tell which set of data is corre=
-ct.
+Thanks in advance for reply. I'm having trouble booting 3.12 kernel, 
+should probably sort it out soon and come back with results.
 
-Bzzt.  You lose :-)
+Manish
 
-Of course RAID1 is fault tolerant!! (I agree that RAID0 isn't).
+On 12/10/2014 01:29 PM, Manish Awasthi wrote:
+> Here is the perf report for the tests run on 3.6-11 and 3.18. 
+> Compating both the results, it just appears that raid in older version 
+> is busier than it is with the latest version. I will also monitor the 
+> system activity via `perf top` now. Also, I should be back with 
+> results on 3.12 by the weekend
+>
+> Manish
+>
+> On 12/09/2014 01:56 PM, Manish Awasthi wrote:
+>> this time with attachment:
+>>
+>> manish
+>> On 12/09/2014 01:54 PM, Manish Awasthi wrote:
+>>> resending:
+>>>
+>>>  dirty_ratio same for both the kernels.
+>>>>
+>>>> vm.dirty_background_bytes = 0
+>>>> vm.dirty_background_ratio = 10
+>>>> vm.dirty_bytes = 0
+>>>> vm.dirty_expire_centisecs = 3000
+>>>> vm.dirty_ratio = 20
+>>>> vm.dirty_writeback_centisecs = 500
+>>>>
+>>>>
+>>>> I re-ran the tests with the same set of kernel without enabling 
+>>>> multithread support on 3.18 and measured a few things with perf.
+>>>>
+>>>> perf-stat-<kernel>.txt: test ran for some time and measured various 
+>>>> parameters.
+>>>>
+>>>> Meanwhile I'm also running complete test under perf record. I'll 
+>>>> share the results soon.
+>>>>
+>>>> Manish
+>>>>
+>>>> On 12/03/2014 11:51 AM, NeilBrown wrote:
+>>>>> On Wed, 26 Nov 2014 13:41:39 +0530 Manish Awasthi
+>>>>> <manish.awasthi@caviumnetworks.com>  wrote:
+>>>>>
+>>>>>> Whatever data I have on comparison is attached, I have 
+>>>>>> consolidated this
+>>>>>> from log files to excel. See if this helps.
+>>>>> raid_3_18_performance.xls shows read throughput to be consistently 
+>>>>> 20% down
+>>>>> on 3.18 compared to 3.6.11.
+>>>>>
+>>>>> Writes are a few percent better for 4G/8G files, 20% better for 
+>>>>> 16G/32G files.
+>>>>> unchanged above that.
+>>>>> Given that you have 8G of RAM, that seems like it could be some 
+>>>>> change in
+>>>>> caching behaviour, and not necessarily a change in RAID behaviour.
+>>>>>
+>>>>> The CPU utilization roughly follows the throughput: 40% higher 
+>>>>> when write
+>>>>> throughput is 20% better.
+>>>>> Could you check if the value of /proc/sys/vm/dirty_ratio is the 
+>>>>> same for both
+>>>>> tests.  That number has changed occasionally and could affect 
+>>>>> these tests.
+>>>>>
+>>>>>
+>>>>> The second file, 3SSDs-perf-2-Cores-3.18-rc1 has the "change" numbers
+>>>>> negative where I expected positive.. i.e. negative mean an increase.
+>>>>>
+>>>>> Writes consistently have higher CPU utilisation.
+>>>>> Reads consistently have much lower CPU utilization.
+>>>>>
+>>>>> I don't know what that means ... it might not mean anything.
+>>>>>
+>>>>> Could you please run the tests between the two kernels *with* 
+>>>>> RAID.  i.e.
+>>>>> directly on an SSD.  That will give us a baseline for what changes 
+>>>>> are caused
+>>>>> by other parts of the kernel (filesystem, block layer, MM, etc).  
+>>>>> Then we can
+>>>>> see how much change RAID5 is contributing.
+>>>>>
+>>>>> The third file, 3SSDs-perf-4Core.xls seems to show significantly 
+>>>>> reduced
+>>>>> throughput across the board.
+>>>>> CPU utilization is less (better) for writes, but worse for reads.  
+>>>>> That is
+>>>>> the reverse of what the second file shows.
+>>>>>
+>>>>> I might try running some tests across a set of kernel versions and 
+>>>>> see what I
+>>>>> can come up with.
+>>>>>
+>>>>> NeilBrown
+>>>>
+>>>
+>>
+>
 
-It cannot tolerate every conceivable fault (e.g. asteroid impact), but it
-tolerates most single hardware faults.
-
-The fault is detected by the drive, possibly using a CRC, or by the
-controller (hmm.. the drive isn't responding, must be faulty!) and this fau=
-lt
-is communicated to md.  md then manages the fault by accesses the other
-device.
-
-*No* RAID level has error detection ability - *all* RAID levels (except zer=
-o)
-have error correction - providing something else detects the error.
-Parity vs mirroring makes no difference here.
-
-(All non-zero RAID levels could try to detect faults by reading all blocks
-in a stripe and comparing, but there is no threat-model which makes this a
-worthwhile practice)
-
-
-And to answer the original question: just let it resync.  Had you started
-that when you asked the question it would be done by now :-).
-
-To avoid similar problems in future:
- - use a newer mdadm (sorry, but there are bugs sometimes)
- - add an internal write-intent bitmap.  That makes the resync much faster
-   when needed
- - Possibly as '--no-degraded' when assembling arrays.
-
-NeilBrown
-
---Sig_/bKnUyQHZx6l1sa+Y01kx0P2
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVKrdyDnsnt1WYoG5AQJoqw/+LdfUdNy/IGf7h3bxsnAdhmC7keDw5nHO
-BmA/n/mmEYIchZiJON+Vv5vtI9tduEDjhWTHDWIy3VS05e/ozHJd/cgavzEI224e
-JgqyD9MxzY9cpPsWkvI3qss/J3W/2VGlqqa0MnSbdcGVY+7nWEPY7JnbJ2Y0uJRg
-1JG/4YLMS6J0AxcyfOv6vlNsJEVLdNqE/2Mj/5mkX/LqZO4WN1CBrOzX1Zx40D6w
-5stYGwHR/u1e8zvKe0kcKPSqfg+X7QMN0DcQF+5cLk+WL47eapLf+SKiznnV1Ih6
-Q/WKcqzYZXP+zIuVdC/3pk9bsiDbArqGlmt1X3YsJEafNS6YSJsbCPVpfFa4CT6Q
-8p27SZddxDai8hGic3z7UaOcIvL9CEdw/OIKtQaM/4DAhishYyxG4KKFionk+zW4
-P9tLkWMsF1L9VPDmymsDM/pqEcQXQH50008jASYbFM8rYh24Gaht64tJFF9tvmEb
-OdNZ71scCHXEN/6pZyQ9Yz3cni4xUKFryWeRq9SF9mfEo0kq52pKDypfrem15QAX
-Kt4N9XEc+ot3d2MGProSYzK6UaUJ830GwZ2MgXoYdU6+0rIRX++PziifRQkGCsog
-zucYt/ydhYRRgIXHjj2sexpzbu94Jwa7LgBXEIQIVjxNYeT9+lLy2Wi4OuaU6Zpz
-VIAWasmCrPw=
-=fIkS
------END PGP SIGNATURE-----
-
---Sig_/bKnUyQHZx6l1sa+Y01kx0P2--
