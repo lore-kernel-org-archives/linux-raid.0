@@ -1,122 +1,140 @@
-From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Subject: Re: Split RAID: Proposal for archival RAID using incremental batch checksum
-Date: Tue, 6 Jan 2015 17:10:16 +0530
-Message-ID: <CAK-d5dbccv_iwep3u6uW-zyfqho3NrjPgJ+QVQs4EBorTjgWCw@mail.gmail.com>
-References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
- <20141029200501.1f01269d@notabene.brown> <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
- <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
- <20141103165217.3bfd3d3e@notabene.brown> <CAK-d5daq+-PbX1s81h01x7GdVDCijyzzPaeRAOCctEXTNideCw@mail.gmail.com>
- <20141125095052.51f8eadc@notabene.brown> <CAK-d5dZnWpmyPfWTGB74wHojeywdiXDnT6Fs0yqYqn7bJpSL-Q@mail.gmail.com>
- <CAK-d5dY4QEDupxjkon_+6z0Z7ggPKv=PLF60zTkeSBsbd4+mPQ@mail.gmail.com>
- <CAK-d5dZMjbhAqgs9GOvswG6crZtrV2uSidRzt_hBJAH=m5rGKw@mail.gmail.com>
- <20141202084611.45f56d6a@notabene.brown> <CAK-d5dajGYxda_UFK_fBET14+KDr68km0uEKfrQVqs5oShWGfg@mail.gmail.com>
- <CAK-d5db_ubRobL=uiia_9yOFA0PMovptAG8O+Y17ORT_--FsQg@mail.gmail.com>
- <20141217084921.360ca442@notabene.brown> <CAK-d5daVxQN3JifvcA9+PL04p1L3O0KXQkgBwyhs1O6tHnHeMg@mail.gmail.com>
+From: Valentijn <v@lentijn.sess.ink>
+Subject: ignoring %s as it reports %s as failed
+Date: Tue, 06 Jan 2015 12:32:32 +0100
+Message-ID: <54ABC7D0.8080402@lentijn.sess.ink>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK-d5daVxQN3JifvcA9+PL04p1L3O0KXQkgBwyhs1O6tHnHeMg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17 December 2014 at 12:10, Anshuman Aggarwal
-<anshuman.aggarwal@gmail.com> wrote:
-> On 17 December 2014 at 03:19, NeilBrown <neilb@suse.de> wrote:
->> On Tue, 16 Dec 2014 21:55:15 +0530 Anshuman Aggarwal
->> <anshuman.aggarwal@gmail.com> wrote:
->>
->>> On 2 December 2014 at 17:26, Anshuman Aggarwal
->>> <anshuman.aggarwal@gmail.com> wrote:
->>> > It works! (Atleast on a sample 5 MB device with 5 x 1MB partitions :-)
->>> > will find more space on my drives and do a larger test but don't see
->>> > why it shouldn't work)
->>> > Here are the following caveats (and questions):
->>> > - Neil, like you pointed out, the power of 2 chunk size will probably
->>> > need a code change (in the kernel or only in the userspace tool?)
->>
->> In the kernel too.
->
-> Is this something that you would consider implementing soon? Is there
-> a performance/other impact to any other consideration to remove this
-> limitation.. could you elaborate on the reason why it was there in the
-> first place?
->
-> If this is a case of patches are welcome, please guide on where to
-> start looking/working even if its just
->
->>
->>> >     - Any performance or other reasons why a terabyte size chunk may
->>> > not be feasible?
->>
->> Not that I can think of.
->>
->>> > - Implications of safe_mode_delay
->>> >     - Would the metadata be updated on the block device be written to
->>> > and the parity device as well?
->>
->> Probably.  Hard to give a specific answer to vague question.
->
-> I should clarify.
->
-> For example in a 5 device RAID4, lets say block is being written to
-> device 1 and parity is on device 5 and devices 2,3,4 are sleeping
-> (spun down). If we set safe_mode_delay to 0 and md decides to update
-> the parity without involving the blocks on the other 3 devices and
-> just updates the parity by doing a read, compute, write to device 5
-> will the metadata be updated on both device 1 and 5 even though
-> safe_mode_delay is 0?
->
->>
->>> >     - If the drive  fails which is the same as the drive being written
->>> > to, would that lack of metadata updates to the other devices affect
->>> > reconstruction?
->>
->> Again, to give a precise answer, a detailed question is needed.  Obviously
->> any change would have to made in such a way to ensure that things which
->> needed to work, did work.
->
-> Continuing from the previous example, lets say device 1 fails after a
-> write which only updated metadata on 1 and 5 while 2,3,4 were
-> sleeping. In that case to access the data from 1, md will use 2,3,4,5
-> but will it then update the metadata from 5 onto 2,3,4? I hope I am
-> making this clear.
->
->>
->>
->>> > - Adding new devices (is it possible to move the parity to the disk
->>> > being added? How does device addition work for RAID4 ...is it added as
->>> > a zero-ed out device with parity disk remaining the same)
->>
->> RAID5 or RAID6 with ALGORITHM_PARITY_0 puts the parity on the early devices.
->> Currently if you add a device to such an array ...... I'm not sure what it
->> will do.  It should be possible to make it just write zeros out.
->>
->
-> Once again, is this something that can make its way to your roadmap?
-> If so, great.. otherwise could you steer me towards where in the md
-> kernel and mdadm source I should be looking to make these changes.
-> Thanks again.
->
->>
->> NeilBrown
->>
->>
->>> >
->>> >
->>>
->>> Neil, sorry to try to bump this thread. Could you please look over the
->>> questions and address the points on the remaining items that can make
->>> it a working solution? Thanks
->>
+Hello list,
 
-Hi Neil,
- Could you please find a minute to give your input to the above? Your
-guidance will go a long way towards making this a reality and it may
-be useful to the community at large with the new Seagate 8TB archival
-drives which seem to be more geared towards occasional use but would
-still benefit from a RAID like redundancy.
+I'm trying to resurrect an array from a Synology disk station. As 
+follows: raid5 array with 4 disks, one disk utterly broken 
+(click-clack-click), one disk thrown out of the array.
 
-Many thanks,
-Anshuman
+Please note, that I used dmsetup to create an overlay disk, so the 
+"/dev/mapper/diskXp5" actually points to a /dev/sdN5 which is the 
+original array; I'm trying to not harm the original data. Here is the 
+result of mdadm v3.2.5 running assemble+force"
+
+~# mdadm --verbose --assemble --force /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5
+mdadm: looking for devices for /dev/md99
+mdadm: /dev/mapper/disk1p5 is identified as a member of /dev/md99, slot 
+32768.
+mdadm: /dev/mapper/disk2p5 is identified as a member of /dev/md99, slot 1.
+mdadm: /dev/mapper/disk3p5 is identified as a member of /dev/md99, slot 2.
+mdadm: ignoring /dev/mapper/disk2p5 as it reports /dev/mapper/disk1p5 as 
+failed
+mdadm: ignoring /dev/mapper/disk3p5 as it reports /dev/mapper/disk1p5 as 
+failed
+mdadm: No suitable drives found for /dev/md99
+
+OK. http://permalink.gmane.org/gmane.linux.raid/45064 says I should use 
+mdadm 3.3+, and luckily I had v3.3.2 - 21st August lying around, so 
+there we go:
+
+~# ./mdadm --verbose --assemble --force /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5
+mdadm: looking for devices for /dev/md99
+mdadm: /dev/mapper/disk1p5 is identified as a member of /dev/md99, slot 
+32768.
+mdadm: /dev/mapper/disk2p5 is identified as a member of /dev/md99, slot 1.
+mdadm: /dev/mapper/disk3p5 is identified as a member of /dev/md99, slot 2.
+mdadm: no uptodate device for slot 0 of /dev/md99
+mdadm: added /dev/mapper/disk3p5 to /dev/md99 as 2
+mdadm: no uptodate device for slot 6 of /dev/md99
+mdadm: added /dev/mapper/disk2p5 to /dev/md99 as 1
+mdadm: /dev/md99 assembled from 2 drives - not enough to start the array.
+
+Hmm, that doesn't help us either. (Slight difference between the two 
+versions, 3.2.5 deploys a broken array named md99 - which you can stop 
+afterwards - and 3.3.2 seems to auto-remove the array after trying to 
+start it - not sure if I describe the inner workings correctly)
+
+Disk1 reports:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 8ad57063:cf592975:9fabcc2b:13922e19
+            Name : 2
+   Creation Time : Sun May 13 08:23:21 2012
+      Raid Level : raid5
+    Raid Devices : 4
+
+  Avail Dev Size : 1944057456 (927.00 GiB 995.36 GB)
+      Array Size : 2916086016 (2781.00 GiB 2986.07 GB)
+   Used Dev Size : 1944057344 (927.00 GiB 995.36 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4ae571dc:3c458e25:d219b536:c8b9a50e
+
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : 9a35a9ae - correct
+          Events : 744446
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+    Device Role : Active device 32768
+    Array State : .AA. ('A' == active, '.' == missing)
+
+Disk2:
+               [...]
+           State : clean
+     Device UUID : b381cfd4:d2474cc4:e4c0ad21:8565b2a5
+
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : b3569b7e - correct
+          Events : 744446
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+    Device Role : Active device 1
+    Array State : .AA. ('A' == active, '.' == missing)
+
+Disk3:
+               [...]
+           State : clean
+     Device UUID : c00d4418:c8313607:fb3a2018:d267a693
+
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : 1e1b8de5 - correct
+          Events : 744446
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+    Device Role : Active device 2
+    Array State : .AA. ('A' == active, '.' == missing)
+
+So the "Active device 32768" seems to be the culprit here, is that correct?
+
+What would be the correct way to reassemble this array?
+
+I managed to get it *working* again by recreating it with:
+./mdadm --create --assume-clean --data-offset=136 -e 1.2 --level=5 
+--bitmap=none --raid-devices=4 --chunk=64 /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5 missing
+
+... but that feels a bit rude.
+
+So, is there a "proper" way to reassemble this array?
+
+For the record: the original array was most likely created on the 
+Synology disk station itself, which currently contains mdadm - v2.6.7 (I 
+don't know if that is the version that created the array). Also, I'm not 
+sure about the kernel version that's running there, but /lib/modules 
+contains modules that have a string "vermagic=2.6.15 ARMv5 gcc-3.4" 
+inside, so that might be the kernel version that was running when things 
+went wrong.
+
+Best regards,
+
+Valentijn
