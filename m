@@ -1,121 +1,122 @@
-From: Manish Awasthi <manish.awasthi@caviumnetworks.com>
-Subject: Re: md raid performance with 3-18-rc3
-Date: Tue, 6 Jan 2015 15:19:57 +0530
-Message-ID: <54ABAFC5.6060402@caviumnetworks.com>
-References: <5472E7DE.5070702@caviumnetworks.com> <20141125133742.0154a4d4@notabene.brown> <54758B3B.5080907@caviumnetworks.com> <20141203172101.17859aee@notabene.brown> <5486B15C.8060109@caviumnetworks.com> <5486B1C2.1000508@caviumnetworks.com> <5486B218.8070204@caviumnetworks.com> <5487FD79.7000002@caviumnetworks.com>
+From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
+Subject: Re: Split RAID: Proposal for archival RAID using incremental batch checksum
+Date: Tue, 6 Jan 2015 17:10:16 +0530
+Message-ID: <CAK-d5dbccv_iwep3u6uW-zyfqho3NrjPgJ+QVQs4EBorTjgWCw@mail.gmail.com>
+References: <CAK-d5dbdF160hoa1==jWxEQZRpwQ7Sa76=9MREmp2V6Y24U8Kw@mail.gmail.com>
+ <20141029200501.1f01269d@notabene.brown> <CAK-d5dah-NyQzVNBScYoVSo2cpGA8F3vuK_Zh1YzQn5Mr+_-oQ@mail.gmail.com>
+ <CAK-d5dYm7tEY855w1CdkvPz22ukkg1DwGz_mQ_9-JRV0M=O6Rw@mail.gmail.com>
+ <20141103165217.3bfd3d3e@notabene.brown> <CAK-d5daq+-PbX1s81h01x7GdVDCijyzzPaeRAOCctEXTNideCw@mail.gmail.com>
+ <20141125095052.51f8eadc@notabene.brown> <CAK-d5dZnWpmyPfWTGB74wHojeywdiXDnT6Fs0yqYqn7bJpSL-Q@mail.gmail.com>
+ <CAK-d5dY4QEDupxjkon_+6z0Z7ggPKv=PLF60zTkeSBsbd4+mPQ@mail.gmail.com>
+ <CAK-d5dZMjbhAqgs9GOvswG6crZtrV2uSidRzt_hBJAH=m5rGKw@mail.gmail.com>
+ <20141202084611.45f56d6a@notabene.brown> <CAK-d5dajGYxda_UFK_fBET14+KDr68km0uEKfrQVqs5oShWGfg@mail.gmail.com>
+ <CAK-d5db_ubRobL=uiia_9yOFA0PMovptAG8O+Y17ORT_--FsQg@mail.gmail.com>
+ <20141217084921.360ca442@notabene.brown> <CAK-d5daVxQN3JifvcA9+PL04p1L3O0KXQkgBwyhs1O6tHnHeMg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5487FD79.7000002@caviumnetworks.com>
+In-Reply-To: <CAK-d5daVxQN3JifvcA9+PL04p1L3O0KXQkgBwyhs1O6tHnHeMg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 17 December 2014 at 12:10, Anshuman Aggarwal
+<anshuman.aggarwal@gmail.com> wrote:
+> On 17 December 2014 at 03:19, NeilBrown <neilb@suse.de> wrote:
+>> On Tue, 16 Dec 2014 21:55:15 +0530 Anshuman Aggarwal
+>> <anshuman.aggarwal@gmail.com> wrote:
+>>
+>>> On 2 December 2014 at 17:26, Anshuman Aggarwal
+>>> <anshuman.aggarwal@gmail.com> wrote:
+>>> > It works! (Atleast on a sample 5 MB device with 5 x 1MB partitions :-)
+>>> > will find more space on my drives and do a larger test but don't see
+>>> > why it shouldn't work)
+>>> > Here are the following caveats (and questions):
+>>> > - Neil, like you pointed out, the power of 2 chunk size will probably
+>>> > need a code change (in the kernel or only in the userspace tool?)
+>>
+>> In the kernel too.
+>
+> Is this something that you would consider implementing soon? Is there
+> a performance/other impact to any other consideration to remove this
+> limitation.. could you elaborate on the reason why it was there in the
+> first place?
+>
+> If this is a case of patches are welcome, please guide on where to
+> start looking/working even if its just
+>
+>>
+>>> >     - Any performance or other reasons why a terabyte size chunk may
+>>> > not be feasible?
+>>
+>> Not that I can think of.
+>>
+>>> > - Implications of safe_mode_delay
+>>> >     - Would the metadata be updated on the block device be written to
+>>> > and the parity device as well?
+>>
+>> Probably.  Hard to give a specific answer to vague question.
+>
+> I should clarify.
+>
+> For example in a 5 device RAID4, lets say block is being written to
+> device 1 and parity is on device 5 and devices 2,3,4 are sleeping
+> (spun down). If we set safe_mode_delay to 0 and md decides to update
+> the parity without involving the blocks on the other 3 devices and
+> just updates the parity by doing a read, compute, write to device 5
+> will the metadata be updated on both device 1 and 5 even though
+> safe_mode_delay is 0?
+>
+>>
+>>> >     - If the drive  fails which is the same as the drive being written
+>>> > to, would that lack of metadata updates to the other devices affect
+>>> > reconstruction?
+>>
+>> Again, to give a precise answer, a detailed question is needed.  Obviously
+>> any change would have to made in such a way to ensure that things which
+>> needed to work, did work.
+>
+> Continuing from the previous example, lets say device 1 fails after a
+> write which only updated metadata on 1 and 5 while 2,3,4 were
+> sleeping. In that case to access the data from 1, md will use 2,3,4,5
+> but will it then update the metadata from 5 onto 2,3,4? I hope I am
+> making this clear.
+>
+>>
+>>
+>>> > - Adding new devices (is it possible to move the parity to the disk
+>>> > being added? How does device addition work for RAID4 ...is it added as
+>>> > a zero-ed out device with parity disk remaining the same)
+>>
+>> RAID5 or RAID6 with ALGORITHM_PARITY_0 puts the parity on the early devices.
+>> Currently if you add a device to such an array ...... I'm not sure what it
+>> will do.  It should be possible to make it just write zeros out.
+>>
+>
+> Once again, is this something that can make its way to your roadmap?
+> If so, great.. otherwise could you steer me towards where in the md
+> kernel and mdadm source I should be looking to make these changes.
+> Thanks again.
+>
+>>
+>> NeilBrown
+>>
+>>
+>>> >
+>>> >
+>>>
+>>> Neil, sorry to try to bump this thread. Could you please look over the
+>>> questions and address the points on the remaining items that can make
+>>> it a working solution? Thanks
+>>
+
 Hi Neil,
+ Could you please find a minute to give your input to the above? Your
+guidance will go a long way towards making this a reality and it may
+be useful to the community at large with the new Seagate 8TB archival
+drives which seem to be more geared towards occasional use but would
+still benefit from a RAID like redundancy.
 
-Any findings on some of the logs I shared earlier?
-
-Thanks in advance for reply. I'm having trouble booting 3.12 kernel, 
-should probably sort it out soon and come back with results.
-
-Manish
-
-On 12/10/2014 01:29 PM, Manish Awasthi wrote:
-> Here is the perf report for the tests run on 3.6-11 and 3.18. 
-> Compating both the results, it just appears that raid in older version 
-> is busier than it is with the latest version. I will also monitor the 
-> system activity via `perf top` now. Also, I should be back with 
-> results on 3.12 by the weekend
->
-> Manish
->
-> On 12/09/2014 01:56 PM, Manish Awasthi wrote:
->> this time with attachment:
->>
->> manish
->> On 12/09/2014 01:54 PM, Manish Awasthi wrote:
->>> resending:
->>>
->>>  dirty_ratio same for both the kernels.
->>>>
->>>> vm.dirty_background_bytes = 0
->>>> vm.dirty_background_ratio = 10
->>>> vm.dirty_bytes = 0
->>>> vm.dirty_expire_centisecs = 3000
->>>> vm.dirty_ratio = 20
->>>> vm.dirty_writeback_centisecs = 500
->>>>
->>>>
->>>> I re-ran the tests with the same set of kernel without enabling 
->>>> multithread support on 3.18 and measured a few things with perf.
->>>>
->>>> perf-stat-<kernel>.txt: test ran for some time and measured various 
->>>> parameters.
->>>>
->>>> Meanwhile I'm also running complete test under perf record. I'll 
->>>> share the results soon.
->>>>
->>>> Manish
->>>>
->>>> On 12/03/2014 11:51 AM, NeilBrown wrote:
->>>>> On Wed, 26 Nov 2014 13:41:39 +0530 Manish Awasthi
->>>>> <manish.awasthi@caviumnetworks.com>  wrote:
->>>>>
->>>>>> Whatever data I have on comparison is attached, I have 
->>>>>> consolidated this
->>>>>> from log files to excel. See if this helps.
->>>>> raid_3_18_performance.xls shows read throughput to be consistently 
->>>>> 20% down
->>>>> on 3.18 compared to 3.6.11.
->>>>>
->>>>> Writes are a few percent better for 4G/8G files, 20% better for 
->>>>> 16G/32G files.
->>>>> unchanged above that.
->>>>> Given that you have 8G of RAM, that seems like it could be some 
->>>>> change in
->>>>> caching behaviour, and not necessarily a change in RAID behaviour.
->>>>>
->>>>> The CPU utilization roughly follows the throughput: 40% higher 
->>>>> when write
->>>>> throughput is 20% better.
->>>>> Could you check if the value of /proc/sys/vm/dirty_ratio is the 
->>>>> same for both
->>>>> tests.  That number has changed occasionally and could affect 
->>>>> these tests.
->>>>>
->>>>>
->>>>> The second file, 3SSDs-perf-2-Cores-3.18-rc1 has the "change" numbers
->>>>> negative where I expected positive.. i.e. negative mean an increase.
->>>>>
->>>>> Writes consistently have higher CPU utilisation.
->>>>> Reads consistently have much lower CPU utilization.
->>>>>
->>>>> I don't know what that means ... it might not mean anything.
->>>>>
->>>>> Could you please run the tests between the two kernels *with* 
->>>>> RAID.  i.e.
->>>>> directly on an SSD.  That will give us a baseline for what changes 
->>>>> are caused
->>>>> by other parts of the kernel (filesystem, block layer, MM, etc).  
->>>>> Then we can
->>>>> see how much change RAID5 is contributing.
->>>>>
->>>>> The third file, 3SSDs-perf-4Core.xls seems to show significantly 
->>>>> reduced
->>>>> throughput across the board.
->>>>> CPU utilization is less (better) for writes, but worse for reads.  
->>>>> That is
->>>>> the reverse of what the second file shows.
->>>>>
->>>>> I might try running some tests across a set of kernel versions and 
->>>>> see what I
->>>>> can come up with.
->>>>>
->>>>> NeilBrown
->>>>
->>>
->>
->
-
+Many thanks,
+Anshuman
