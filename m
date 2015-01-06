@@ -1,44 +1,37 @@
-From: Asaf Vertz <asaf.vertz@tandemg.com>
-Subject: [PATCH] dm bufio: fix time comparison
-Date: Tue, 6 Jan 2015 15:44:15 +0200
-Message-ID: <20150106134415.GA15873@ubuntu>
+From: Matt Callaghan <matt_callaghan@sympatico.ca>
+Subject: mdadm RAID6 "active" with spares and failed disks; need help
+Date: Tue, 6 Jan 2015 09:16:52 -0500
+Message-ID: <BLU436-SMTP193F87969B47A13A1B33FCF81590@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: agk@redhat.com
-Cc: snitzer@redhat.com, dm-devel@redhat.com, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-To be future-proof and for better readability the time comparison
-modified to use time_after_eq() instead of plain, error-prone math.
+I think I'm in a really bad state. Could an expert w/ mdadm please help?
 
-Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
----
- drivers/md/dm-bufio.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I have a RAID6 mdadm device, and it got really messed up with spares:
+{{{
+md2000 : active raid6 sdm1[8](S) sdo1[3] sdi1[4] sdn1[2] sdk1[0](F) 
+sdl1[6] sdp1[7]
+       11721080448 blocks super 1.1 level 6, 64k chunk, algorithm 2 
+[8/5] [__UU_UUU]
+}}}
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index c33b497..86dbbc7 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -11,6 +11,7 @@
- #include <linux/device-mapper.h>
- #include <linux/dm-io.h>
- #include <linux/slab.h>
-+#include <linux/jiffies.h>
- #include <linux/vmalloc.h>
- #include <linux/shrinker.h>
- #include <linux/module.h>
-@@ -1739,7 +1740,7 @@ static unsigned get_max_age_hz(void)
- 
- static bool older_than(struct dm_buffer *b, unsigned long age_hz)
- {
--	return (jiffies - b->last_accessed) >= age_hz;
-+	return time_after_eq(jiffies, b->last_accessed + age_hz);
- }
- 
- static void __evict_old_buffers(struct dm_bufio_client *c, unsigned long age_hz)
--- 
-1.7.0.4
+And is now really broken (inactive)
+{{{
+md2000 : inactive sdn1[2](S) sdm1[8](S) sdl1[6](S) sdp1[7](S) sdi1[4](S) 
+sdo1[3](S) sdk1[0](S)
+       13674593976 blocks super 1.1
+}}}
+
+I have a forum post going w/ full details
+http://www.linuxquestions.org/questions/linux-server-73/mdadm-raid6-active-with-spares-and-failed-disks%3B-need-help-4175530127/
+
+I /think/ I need to force re-assembly here, but I'd like some review 
+from the experts before proceeding.
+
+Thank you in advance for your time,
+~Matt/Fermulator
