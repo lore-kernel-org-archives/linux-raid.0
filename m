@@ -1,174 +1,55 @@
-From: Matt Callaghan <matt_callaghan@sympatico.ca>
-Subject: Unable to make mdadm from git (fatal error: ansidecl.h)
-Date: Wed, 7 Jan 2015 09:41:16 -0500
-Message-ID: <BLU436-SMTP110D88E7A927B5BBD9760981460@phx.gbl>
+From: NeilBrown <neilb@suse.de>
+Subject: Neil Brown is on leave
+Date: Thu, 8 Jan 2015 09:27:20 +1300
+Message-ID: <20150108092720.23c4a707@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/J/vd_gI.Yza1nO4n+be6tGR"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Manibalan P <pmanibalan@amiindia.co.in>, =?UTF-8?B?6JGj5p2o?= <donglife1208@gmail.com>, Anthony Wright <anthony@overnetdata.com>, Matt Callaghan <matt_callaghan@sympatico.ca>
 List-Id: linux-raid.ids
 
-Hi Neil,
+--Sig_/J/vd_gI.Yza1nO4n+be6tGR
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-As per http://www.spinics.net/lists/raid/msg39353.html, I also am 
-running into a recreation of RAID6 problem where the devices had 
-differing offsets due to addition to an array over time (growth) in 
-between mdadm upgrades... it seems I need a version of mdadm that 
-supports creating an array with varying data offsets per device.
+Hi,
+ various people have asked my things of late and may be a bit bothered by my
+ continuing silence.
 
-As per suggested by you:
+ I'm on leave at the moment and won't be thinking about RAID if I can help =
+it
+ until I return to work in late January.  If you haven't heard from me by t=
+he
+ second week of Feb, please ask again, but I will try to catch up by then.
 
-  git clone git://neil.brown.name/mdadm -b data_offset
-  cd mdadm
-  make
+ I'll be at linux.conf.au and would be happy to chat about RAID in person
+ there, but otherwise I'm leaving it all until after Australia Day.
 
-But it failed:
-{{{
-In file included from super0.c:27:0:
-sha1.h:29:22: fatal error: ansidecl.h: No such file or directory
-compilation terminated.
-}}}
+NeilBrown
 
-full output:
-{{{
-fermulator@fermmy-server:/usr/local/src/mdadm/mdadm_git/mdadm$ make
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-mdadm.o mdadm.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-config.o config.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-policy.o policy.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-mdstat.o mdstat.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-ReadMe.o ReadMe.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-util.o util.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-maps.o maps.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-lib.o lib.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Manage.o Manage.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Assemble.o Assemble.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Build.o Build.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Create.o Create.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Detail.o Detail.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Examine.o Examine.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Grow.o Grow.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Monitor.o Monitor.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-dlink.o dlink.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Kill.o Kill.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Query.o Query.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-Incremental.o Incremental.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-mdopen.o mdopen.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter 
--ggdb -DSendmail=\""/usr/sbin/sendmail -t"\" 
--DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\" 
--DMAP_DIR=\"/run/mdadm\" -DMAP_FILE=\"map\" -DMDMON_DIR=\"/run/mdadm\" 
--DFAILED_SLOTS_DIR=\"/run/mdadm/failed-slots\" -DUSE_PTHREADS   -c -o 
-super0.o super0.c
-In file included from super0.c:27:0:
-sha1.h:29:22: fatal error: ansidecl.h: No such file or directory
-compilation terminated.
-}}}
+--Sig_/J/vd_gI.Yza1nO4n+be6tGR
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Anything I need to do different? or is that git branch unstable atm?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVK2WqTnsnt1WYoG5AQL40Q/6AjJuq3Hq56Dvc/3N6kl8kx+kb4ITE8D8
+32yRxobMmTs08q7KX3sqZv2mS5wFgZx43zx3BXeVEmXYE/8z4JtLyy7w3XZu9r8m
+UFhpQCQOy3pe5PDMGTQH3Fo0ctvChizkuzAhKYdAFqIoI5xQC/HTC7ha0aoqD7gp
+3MyiRs1b0N1DUBp+AUYJLsLEFKe3fIPXYQNYzAV7HBfPXhQTg3naiUFe5WVsnBCF
+X4uIvdO3XS7B42amK0PWs8VAFWrfanO7DqthKauF0H2Jm9GD5iuXbTZxCpDeevgT
+NtgHn78mLoNNHfNrwyJ+NUAWwKOdNmi904r0B/WVI74sZQKsnB+bUc6eUjLNxcLW
+KmuU/8vtwcZFJHKNTi+WR2u3PjFoyv7xhkIwfVFz/IWrXzS2Bjfm+Ld4l8WxkSH6
+qo46DqNSHiPU6wD78ONScp2Q85D6iARroWihwyu5PciSF9PNLPukaJykdFDL3y9R
+iDqmBS3AABAXSq3Ov8xKvAnRfoibSOMzb271QqmHpnj1goEzv7PkVrYf2Q6Kg0i7
+/48SpHlg+jxjsroxR/CvK+qCZJyNyHU8V6dvXG8xGuooy4YyjXu/uQ0xs/7NEt2f
+6N6QG+Sxu7Q2JcfStppsoSjjFxscr9S57xn6Snr+FP7Zd0u/IGowQfu3EB73KyuE
+LIiqsdLKuAc=
+=m7kS
+-----END PGP SIGNATURE-----
+
+--Sig_/J/vd_gI.Yza1nO4n+be6tGR--
