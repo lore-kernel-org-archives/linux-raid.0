@@ -1,55 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Neil Brown is on leave
-Date: Thu, 8 Jan 2015 09:27:20 +1300
-Message-ID: <20150108092720.23c4a707@notabene.brown>
+From: Terry Hardie <thardie@instartlogic.com>
+Subject: raid5 hard lockup
+Date: Thu, 8 Jan 2015 12:02:17 -0800
+Message-ID: <CANHB05smA-HA6wEyXu3MKdMUQC10TJ7zAfNCcMneg5YiZgU4Og@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/J/vd_gI.Yza1nO4n+be6tGR"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Manibalan P <pmanibalan@amiindia.co.in>, =?UTF-8?B?6JGj5p2o?= <donglife1208@gmail.com>, Anthony Wright <anthony@overnetdata.com>, Matt Callaghan <matt_callaghan@sympatico.ca>
 List-Id: linux-raid.ids
 
---Sig_/J/vd_gI.Yza1nO4n+be6tGR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm still trying to get discard on ext4 and RAID5 to work reliably. I
+got a new hard lockup today:
 
-Hi,
- various people have asked my things of late and may be a bit bothered by my
- continuing silence.
-
- I'm on leave at the moment and won't be thinking about RAID if I can help =
-it
- until I return to work in late January.  If you haven't heard from me by t=
-he
- second week of Feb, please ask again, but I will try to catch up by then.
-
- I'll be at linux.conf.au and would be happy to chat about RAID in person
- there, but otherwise I'm leaving it all until after Australia Day.
-
-NeilBrown
-
---Sig_/J/vd_gI.Yza1nO4n+be6tGR
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVK2WqTnsnt1WYoG5AQL40Q/6AjJuq3Hq56Dvc/3N6kl8kx+kb4ITE8D8
-32yRxobMmTs08q7KX3sqZv2mS5wFgZx43zx3BXeVEmXYE/8z4JtLyy7w3XZu9r8m
-UFhpQCQOy3pe5PDMGTQH3Fo0ctvChizkuzAhKYdAFqIoI5xQC/HTC7ha0aoqD7gp
-3MyiRs1b0N1DUBp+AUYJLsLEFKe3fIPXYQNYzAV7HBfPXhQTg3naiUFe5WVsnBCF
-X4uIvdO3XS7B42amK0PWs8VAFWrfanO7DqthKauF0H2Jm9GD5iuXbTZxCpDeevgT
-NtgHn78mLoNNHfNrwyJ+NUAWwKOdNmi904r0B/WVI74sZQKsnB+bUc6eUjLNxcLW
-KmuU/8vtwcZFJHKNTi+WR2u3PjFoyv7xhkIwfVFz/IWrXzS2Bjfm+Ld4l8WxkSH6
-qo46DqNSHiPU6wD78ONScp2Q85D6iARroWihwyu5PciSF9PNLPukaJykdFDL3y9R
-iDqmBS3AABAXSq3Ov8xKvAnRfoibSOMzb271QqmHpnj1goEzv7PkVrYf2Q6Kg0i7
-/48SpHlg+jxjsroxR/CvK+qCZJyNyHU8V6dvXG8xGuooy4YyjXu/uQ0xs/7NEt2f
-6N6QG+Sxu7Q2JcfStppsoSjjFxscr9S57xn6Snr+FP7Zd0u/IGowQfu3EB73KyuE
-LIiqsdLKuAc=
-=m7kS
------END PGP SIGNATURE-----
-
---Sig_/J/vd_gI.Yza1nO4n+be6tGR--
+[506487.336582] ------------[ cut here ]------------
+[506487.336591] WARNING: CPU: 4 PID: 22829 at
+/usr/local/src/linux-lts-trusty-3.13.0/kernel/watchdog.c:245
+watchdog_overflow_callback+0x9a/0xc0()
+[506487.336592] Watchdog detected hard LOCKUP on cpu 4
+[506487.336593] Modules linked in: ast gpio_ich ttm drm_kms_helper drm
+sysimgblt sysfillrect syscopyarea mei_me lpc_ich shpchp mei joydev
+ioatdma wmi ipmi_si acpi_power_meter acpi_pad mac_hid lp parport
+raid10 raid456 async_pq async_xor xor async_memcpy async_raid6_recov
+hid_generic usbhid hid igb mpt3sas(OX) dca configfs i2c_algo_bit
+scsi_transport_sas ptp ahci libahci pps_core raid_class raid6_pq
+async_tx raid1 raid0 multipath linear
+[506487.336624] CPU: 4 PID: 22829 Comm: md3_raid5 Tainted: G
+IOX 3.13.0-43-generic #72~precise1
+[506487.336626] Hardware name: Supermicro SYS-2028TP-HC1R/X10DRT-P,
+BIOS 1.0a 08/28/2014
+[506487.336627]  00000000000000f5 ffff88103fc86ba8 ffffffff81757f91
+0000000000000007
+[506487.336631]  ffff88103fc86bf8 ffff88103fc86be8 ffffffff8106afcc
+0000000000000000
+[506487.336634]  ffff881028ca8000 0000000000000000 ffff88103fc86d18
+0000000000000000
+[506487.336637] Call Trace:
+[506487.336638]  <NMI>  [<ffffffff81757f91>] dump_stack+0x46/0x58
+[506487.336649]  [<ffffffff8106afcc>] warn_slowpath_common+0x8c/0xc0
+[506487.336652]  [<ffffffff8106b0b6>] warn_slowpath_fmt+0x46/0x50
+[506487.336654]  [<ffffffff811142aa>] watchdog_overflow_callback+0x9a/0xc0
+[506487.336659]  [<ffffffff8114ed08>] __perf_event_overflow+0x98/0x230
+[506487.336664]  [<ffffffff8102b188>] ? x86_perf_event_set_period+0xd8/0x150
+[506487.336667]  [<ffffffff8114f604>] perf_event_overflow+0x14/0x20
+[506487.336671]  [<ffffffff81032bc9>] intel_pmu_handle_irq+0x1d9/0x2d0
+[506487.336675]  [<ffffffff81193711>] ? unmap_kernel_range_noflush+0x11/0x20
+[506487.336681]  [<ffffffff8143df34>] ? ghes_copy_tofrom_phys+0x114/0x210
+[506487.336685]  [<ffffffff81766674>] perf_event_nmi_handler+0x34/0x60
+[506487.336688]  [<ffffffff81765dca>] nmi_handle.isra.3+0x8a/0x1a0
+[506487.336690]  [<ffffffff8143eff0>] ?
+ghes_print_estatus.constprop.10+0x70/0x70
+[506487.336692]  [<ffffffff81765fc8>] default_do_nmi+0x58/0x240
+[506487.336695]  [<ffffffff81766240>] do_nmi+0x90/0xd0
+[506487.336697]  [<ffffffff817651e1>] end_repeat_nmi+0x1e/0x2e
+[506487.336700]  [<ffffffff817644c9>] ? _raw_spin_lock_irqsave+0x49/0x60
+[506487.336702]  [<ffffffff817644c9>] ? _raw_spin_lock_irqsave+0x49/0x60
+[506487.336704]  [<ffffffff817644c9>] ? _raw_spin_lock_irqsave+0x49/0x60
+[506487.336705]  <<EOE>>  [<ffffffffa0142890>]
+release_inactive_stripe_list+0x50/0x160 [raid456]
+[506487.336714]  [<ffffffffa014b12f>]
+handle_active_stripes.isra.38+0x7f/0x190 [raid456]
+[506487.336718]  [<ffffffffa014b758>] raid5d+0x198/0x2f0 [raid456]
+[506487.336722]  [<ffffffff815d30a7>] md_thread+0x117/0x150
+[506487.336727]  [<ffffffff810affe0>] ? __wake_up_sync+0x20/0x20
+[506487.336729]  [<ffffffff815d2f90>] ? md_rdev_init+0x110/0x110
+[506487.336732]  [<ffffffff8108fb59>] kthread+0xc9/0xe0
+[506487.336735]  [<ffffffff8108fa90>] ? flush_kthread_worker+0xb0/0xb0
+[506487.336737]  [<ffffffff8176d5bc>] ret_from_fork+0x7c/0xb0
+[506487.336740]  [<ffffffff8108fa90>] ? flush_kthread_worker+0xb0/0xb0
+[506487.336741] ---[ end trace 4423aa98b23bcd0f ]---
