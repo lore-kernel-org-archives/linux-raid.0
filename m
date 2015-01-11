@@ -1,77 +1,73 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: superfluous md_wakeup_thread()
-Date: Thu, 08 Jan 2015 17:53:15 -0500
-Message-ID: <wrfjmw5s51gk.fsf@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+From: Johannes Thumshirn <morbidrsa@gmail.com>
+Subject: [PATCH] dm mpath: simplify failure path of dm_miltipath_init()
+Date: Sun, 11 Jan 2015 12:45:23 +0100
+Message-ID: <1420976723-20905-1-git-send-email-morbidrsa@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <morbidrsa@gmail.com>
 List-Id: linux-raid.ids
 
-Neil,
+simplify failure path of dm_miltipath_init(). Currently the cleanup of all error
+cases are open-coded. Introduce a common exit path and lables.
 
-I was looking over some md patches, and in
-commit 67f455486d2ea20b2d94d6adf5b9b783d079e321
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed May 28 13:39:22 2014 +1000
+Signed-off-by: Johannes Thumshirn <morbidrsa@gmail.com>
+---
+ drivers/md/dm-mpath.c | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
-    md/raid56: Don't perform reads to support writes until stripe is ready.
-    
-You add the following:
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ad1b9be..c1e8607 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -292,9 +292,12 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
-        BUG_ON(atomic_read(&conf->active_stripes)==0);
-        if (test_bit(STRIPE_HANDLE, &sh->state)) {
-                if (test_bit(STRIPE_DELAYED, &sh->state) &&
--                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-+                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-                        list_add_tail(&sh->lru, &conf->delayed_list);
--               else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-+                       if (atomic_read(&conf->preread_active_stripes)
-+                           < IO_THRESHOLD)
-+                               md_wakeup_thread(conf->mddev->thread);
-+               } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-                           sh->bm_seq - conf->seq_write > 0)
-                        list_add_tail(&sh->lru, &conf->bitmap_list);
-                else {
-
-However the additional md_wakeup_thread() seems unecessary as the
-resulting code now reads (pasted from current upstream):
-
-static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
-                              struct list_head *temp_inactive_list)
-{
-        BUG_ON(!list_empty(&sh->lru));
-        BUG_ON(atomic_read(&conf->active_stripes)==0);
-        if (test_bit(STRIPE_HANDLE, &sh->state)) {
-                if (test_bit(STRIPE_DELAYED, &sh->state) &&
-                    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-                        list_add_tail(&sh->lru, &conf->delayed_list);
-                        if (atomic_read(&conf->preread_active_stripes)
-                            < IO_THRESHOLD)
-                                md_wakeup_thread(conf->mddev->thread);
-                } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-                           sh->bm_seq - conf->seq_write > 0)
-                        list_add_tail(&sh->lru, &conf->bitmap_list);
-                else {
-                        clear_bit(STRIPE_DELAYED, &sh->state);
-                        clear_bit(STRIPE_BIT_DELAY, &sh->state);
-                        if (conf->worker_cnt_per_group == 0) {
-                                list_add_tail(&sh->lru, &conf->handle_list);
-                        } else {
-                                raid5_wakeup_stripe_thread(sh);
-                                return;
-                        }
-                }
-                md_wakeup_thread(conf->mddev->thread);
-
-Is there a reason to wake the thread twice?
-
-Cheers,
-Jes
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 7b6b0f0..5cc3438 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1694,16 +1694,15 @@ static int __init dm_multipath_init(void)
+ 	r = dm_register_target(&multipath_target);
+ 	if (r < 0) {
+ 		DMERR("register failed %d", r);
+-		kmem_cache_destroy(_mpio_cache);
+-		return -EINVAL;
++		r = -EINVAL;
++		goto out_mpio_cache;
+ 	}
+ 
+ 	kmultipathd = alloc_workqueue("kmpathd", WQ_MEM_RECLAIM, 0);
+ 	if (!kmultipathd) {
+ 		DMERR("failed to create workqueue kmpathd");
+-		dm_unregister_target(&multipath_target);
+-		kmem_cache_destroy(_mpio_cache);
+-		return -ENOMEM;
++		r = -ENOMEM;
++		goto out_kmultipathd;
+ 	}
+ 
+ 	/*
+@@ -1716,16 +1715,23 @@ static int __init dm_multipath_init(void)
+ 						  WQ_MEM_RECLAIM);
+ 	if (!kmpath_handlerd) {
+ 		DMERR("failed to create workqueue kmpath_handlerd");
+-		destroy_workqueue(kmultipathd);
+-		dm_unregister_target(&multipath_target);
+-		kmem_cache_destroy(_mpio_cache);
+-		return -ENOMEM;
++		r = -ENOMEM;
++		goto out_kmpath_handlerd;
+ 	}
+ 
+ 	DMINFO("version %u.%u.%u loaded",
+ 	       multipath_target.version[0], multipath_target.version[1],
+ 	       multipath_target.version[2]);
+ 
++	return 0;
++
++out_kmpath_handlerd:
++	destroy_workqueue(kmultipathd);
++out_kmultipathd:
++	dm_unregister_target(&multipath_target);
++out_mpio_cache:
++	kmem_cache_destroy(_mpio_cache);
++
+ 	return r;
+ }
+ 
+-- 
+2.1.0
