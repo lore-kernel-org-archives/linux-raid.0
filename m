@@ -1,60 +1,81 @@
-From: Valentijn Sessink <v@lentijn.sess.ink>
-Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
-Date: Mon, 12 Jan 2015 00:22:26 +0100
-Message-ID: <54B305B2.6000702@lentijn.sess.ink>
-References: <54ABEE54.6020707@sympatico.ca> <BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl> <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl>
-Sender: linux-raid-owner@vger.kernel.org
-To: Matt Callaghan <matt_callaghan@sympatico.ca>, linux-raid@vger.kernel.org
+From: Dongsu Park <dongsu.park@profitbricks.com>
+Subject: [PATCH v2 5/7] md/raid10: make sync_request_write() call bio_copy_data()
+Date: Mon, 12 Jan 2015 12:44:02 +0100
+Message-ID: <9ef99a9bae03003ae7b2fff1bf942e63aff6e45a.1421052656.git.dongsu.park@profitbricks.com>
+References: <cover.1421052656.git.dongsu.park@profitbricks.com>
+ <19cceed4e701430bfb307301a38cdf8d40fbfcac.1421052656.git.dongsu.park@profitbricks.com>
+ <0bdbbd2ef9d449be2d00e01ca7dc7f101b6cfb88.1421052656.git.dongsu.park@profitbricks.com>
+ <0117035a25929ae97e2039edc895f582d53cf217.1421052656.git.dongsu.park@profitbricks.com>
+ <63ea4e86f2a06cbe273692932bdf2499fef01644.1421052656.git.dongsu.park@profitbricks.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <63ea4e86f2a06cbe273692932bdf2499fef01644.1421052656.git.dongsu.park@profitbricks.com>
+In-Reply-To: <cover.1421052656.git.dongsu.park@profitbricks.com>
+References: <cover.1421052656.git.dongsu.park@profitbricks.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Kent Overstreet <kmo@daterainc.com>, Jens Axboe <axboe@kernel.dk>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Dongsu Park <dongsu.park@profitbricks.com>
 List-Id: linux-raid.ids
 
-Hi Matt,
+From: Kent Overstreet <kmo@daterainc.com>
 
-I'm by no means a specialist, but I have been saving a few arrays
-lately, so here's my 2 cents. From what I see, I'd say you're almost
-there, but you didn't use "--bitmap=3Dnone" in your create-statement an=
-d
-as far as I can see, there is no bitmap specified in the original raid
-blocks but there is one in the newly created one. I may be wrong
-though!, please take my advice with a grain of salt and at your own ris=
-k.
+Refactor sync_request_write() of md/raid10 to use bio_copy_data()
+instead of open coding bio_vec iterations.
 
-Also, I would not have dared to run all these statements on "live" (or
-dead, for that matter ;-) disks. See my posting (that is unfinished, bu=
-t
-I'll add info as I have time) at
-http://valentijn.sessink.nl/?p=3D557 where I use "dmsetup" to create a =
-few
-virtual disks - all writes are redirected to another device. Fun thing
-is, that after that, you can mess up all you want. You just remove the
-virtual disk and poof, everything is as it was before (failed raid and
-all, isn't that funny? :)
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Kent Overstreet <kmo@daterainc.com>
+[dpark: add more description in commit message]
+Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
+---
+ drivers/md/raid10.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-I hope this helps.
-
-Best regards,
-
-Valentijn
-
-On 11-01-15 21:26, Matt Callaghan wrote:
-> Updating this e-mail thread. I got the latest mdadm version that
-> supports data offset variance per device and attempted to reconstruct
-> RAID6 according to previous data, but so far no luck.
-> As far as I a can tell (sadly), all of my data is lost. I've updated =
-the
-> forum thread with the final details and failures.
-> http://www.linuxquestions.org/questions/linux-server-73/mdadm-raid6-a=
-ctive-with-spares-and-failed-disks%3B-need-help-4175530127/
-
---=20
-=E2=9C=89 v@lentijn.sess.ink =E2=98=8F +31777777713 (31 7x7 13)
-=E2=8C=82 durgerdamstraat 29 zaandam
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 32e282f..4a40354 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2107,18 +2107,11 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 		tbio->bi_vcnt = vcnt;
+ 		tbio->bi_iter.bi_size = r10_bio->sectors << 9;
+ 		tbio->bi_rw = WRITE;
+-		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-
+-		for (j=0; j < vcnt ; j++) {
+-			tbio->bi_io_vec[j].bv_offset = 0;
+-			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
+-
+-			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-			       page_address(fbio->bi_io_vec[j].bv_page),
+-			       PAGE_SIZE);
+-		}
+ 		tbio->bi_end_io = end_sync_write;
++		tbio->bi_private = r10_bio;
++
++		bio_copy_data(tbio, fbio);
+ 
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+@@ -2134,17 +2127,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 * that are active
+ 	 */
+ 	for (i = 0; i < conf->copies; i++) {
+-		int j, d;
++		int d;
+ 
+ 		tbio = r10_bio->devs[i].repl_bio;
+ 		if (!tbio || !tbio->bi_end_io)
+ 			continue;
+ 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
+ 		    && r10_bio->devs[i].bio != fbio)
+-			for (j = 0; j < vcnt; j++)
+-				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-				       page_address(fbio->bi_io_vec[j].bv_page),
+-				       PAGE_SIZE);
++			bio_copy_data(tbio, fbio);
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&r10_bio->remaining);
+ 		md_sync_acct(conf->mirrors[d].replacement->bdev,
+-- 
+2.1.0
