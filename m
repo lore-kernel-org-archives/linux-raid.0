@@ -1,32 +1,50 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
-Date: Mon, 12 Jan 2015 16:35:57 +0000
-Message-ID: <54B3F7ED.1000809@youngman.org.uk>
-References: <54ABEE54.6020707@sympatico.ca> <BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl> <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl> <54B305B2.6000702@lentijn.sess.ink>
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH] md:Remove no longer needed fix me comment in
+	dm-region-hash.c for removing the structure pointer,
+	*rh from the definiton of dm_region
+Date: Mon, 12 Jan 2015 22:30:23 -0500
+Message-ID: <1421119823-5864-1-git-send-email-xerofoify@gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54B305B2.6000702@lentijn.sess.ink>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: agk@redhat.com
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, snitzer@redhat.com
 List-Id: linux-raid.ids
 
-On 11/01/15 23:22, Valentijn Sessink wrote:
-> Also, I would not have dared to run all these statements on "live" (or
-> dead, for that matter ;-) disks.
+Removes the no longer needed fix me comment questioning if we need to remove
+the structure pointer,rh as defined as a structure of type dsm_region_hash
+from the definition of the structure, dm_region. Furthermore this  pointer is
+needed in order for various functions to run and build successfully in the file,
+dm-region-hash.c.
 
-I'm no expert either, but looking at the blog, I'm worried he might have
-trashed the array with almost the first thing he did :-(
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+---
+ drivers/md/dm-region-hash.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-"add" says it will add a drive as spare if it didn't originally belong
-to the array. If it adds a spare to a degraded array, the array will
-immediately start to repair itself.
-
-OOPS!!! As it sounds like exactly this could have happened - mdadm
-didn't recognise the disk as it added it.
-
-Just speculating, but unfortunately this seems quite likely :-(
-
-Cheers,
-Wol
+diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+index b929fd5..823d56f 100644
+--- a/drivers/md/dm-region-hash.c
++++ b/drivers/md/dm-region-hash.c
+@@ -99,7 +99,7 @@ struct dm_region_hash {
+ };
+ 
+ struct dm_region {
+-	struct dm_region_hash *rh;	/* FIXME: can we get rid of this ? */
++	struct dm_region_hash *rh;
+ 	region_t key;
+ 	int state;
+ 
+-- 
+2.1.0
