@@ -1,62 +1,108 @@
-From: Valentijn Sessink <v@lentijn.sess.ink>
-Subject: Re: Corrupted Cisco NSS4000 raid
-Date: Sat, 17 Jan 2015 18:27:22 +0100
-Message-ID: <54BA9B7A.9070906@lentijn.sess.ink>
-References: <54BA7E8F.1090601@excello.cz>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: RAID1 removing failed disk returns EBUSY
+Date: Sun, 18 Jan 2015 21:33:50 -0500 (EST)
+Message-ID: <1924199853.11308787.1421634830810.JavaMail.zimbra@redhat.com>
+References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com> <20141029133604.59f9549a@jlaw-desktop.mno.stratus.com> <20141113090549.296a13ee@jlaw-desktop.mno.stratus.com> <20141117100349.1d1ae1fa@notabene.brown> <54B663EC.8090607@redhat.com> <20150115082210.31bd3ea5@jlaw-desktop.mno.stratus.com> <2054919975.10444188.1421385612513.JavaMail.zimbra@redhat.com> <20150116101031.30c04df3@jlaw-desktop.mno.stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54BA7E8F.1090601@excello.cz>
+In-Reply-To: <20150116101031.30c04df3@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
 List-Id: linux-raid.ids
 
-Hello Jan,
 
-On 17-01-15 16:23, Jan Hejl wrote:
-> right after finish rebuilding faulty, but still usable, RAID array on
-> Cisco NSS4000 NAS box, array stopped working completly.
 
-I'd go for
-mdadm --assemble --force --run /dev/md666 $sdb $sdc $sdd
-... because sdb, sdc and sdd seem to have the same number of "events" -
-and sde has a lower number. However, sdc is a "spare" according to the
-mdadm information, so that may not work, in which case you could try to
-assemble sdb, sdd and sde and then later on try to recreate the array
-with sdc in it.
+----- Original Message -----
+> From: "Joe Lawrence" <joe.lawrence@stratus.com>
+> To: "Xiao Ni" <xni@redhat.com>
+> Cc: "NeilBrown" <neilb@suse.de>, linux-raid@vger.kernel.org, "Bill Ku=
+zeja" <william.kuzeja@stratus.com>
+> Sent: Friday, January 16, 2015 11:10:31 PM
+> Subject: Re: RAID1 removing failed disk returns EBUSY
+>=20
+> On Fri, 16 Jan 2015 00:20:12 -0500
+> Xiao Ni <xni@redhat.com> wrote:
+> >=20
+> > Hi Joe
+> >=20
+> >    Thanks for reminding me. I didn't do that. Now it can remove
+> >    successfully after writing
+> > "idle" to sync_action.
+> >=20
+> >    I thought wrongly that the patch referenced in this mail is fixe=
+d for
+> >    the problem.
+>=20
+> So it sounds like even with 3.18 and a new mdadm, this bug still
+> persists?
+>=20
+> -- Joe
+>=20
+> --
 
-sdb..d are variables in my "assemble" command, because I'd NEVER do this
-on a live disk. Please see my posting about what I did to "clone" the
-disks with dmsetup: http://valentijn.sessink.nl/?p=557 (I'm sure there
-are other ways - having a disk image with "dd" would also help).
+Hi Joe
 
-For dd to fill unreadable sectors of the source disks with zeroes,
-you'll need a few options, otherwise dd will stop, or, even worse, just
-"ignore" unreadable sectors like this: 01234xxx89  -> becomes 0123489 at
-the target disk. What you want is 0123400089 (unreadable, but not
-truncated). "conv=sync,noerror" is, IIRC, the right option but please
-check this (I didn't)
+   I'm a little confused now. Does the patch 45eaf45dfa4850df16bc2e8e79=
+03d89021137f40 from linux-stable
+resolve the problem?
 
-Using 3 out of 4 disks will not help you work around read errors on the
-disks themselves, so you may want to use smartctl first to see what the
-disk statuses are. Using /dev/sde in the array could work, but as it has
-a lower "events" count, you can expect to lose some data.
+   My environment is:
 
-I woudn't go for 4 out of 4 disks, because that will start rebuilding
-the array as soon as you have it read/write and you don't want to change
-data on any one of the disks.
+[root@dhcp-12-133 mdadm]# mdadm --version
+mdadm - v3.3.2-18-g93d3bd3 - 18th December 2014  (this is the newest up=
+stream)
+[root@dhcp-12-133 mdadm]# uname -r
+3.18.2
 
-If "assemble" doesn't work, you could use "create". Please note that
-different versions of mdadm have different ideas about "Data Offset",
-and only the newest mdadm can handle a user defined data offset, with
-the "--data-offset" option. So your best bet for now is using
-assemble+force, although I have seen situations where mdadm will just
-not assemble the array due to one or more disks having different
-information than mdadm expects.
 
-I hope this helps. Good luck.
+   My steps are:
 
-Best regards,
+[root@dhcp-12-133 mdadm]# lsblk=20
+sdb                       8:16   0 931.5G  0 disk=20
+=E2=94=94=E2=94=80sdb1                    8:17   0     5G  0 part=20
+sdc                       8:32   0 186.3G  0 disk=20
+sdd                       8:48   0 931.5G  0 disk=20
+=E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part=20
+[root@dhcp-12-133 mdadm]# mdadm -CR /dev/md0 -l1 -n2 /dev/sdb1 /dev/sdd=
+1 --assume-clean
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=3D0.90
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
 
-Valentijn
+   Then I unplug the disk.
+
+[root@dhcp-12-133 mdadm]# lsblk=20
+sdc                       8:32   0 186.3G  0 disk =20
+sdd                       8:48   0 931.5G  0 disk =20
+=E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part =20
+  =E2=94=94=E2=94=80md0                   9:0    0     5G  0 raid1=20
+[root@dhcp-12-133 mdadm]# echo faulty > /sys/block/md0/md/dev-sdb1/stat=
+e=20
+[root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/stat=
+e=20
+-bash: echo: write error: Device or resource busy
+[root@dhcp-12-133 mdadm]# echo idle > /sys/block/md0/md/sync_action=20
+[root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/stat=
+e=20
+
+
+   Now after I set idle to sync_action, it can be removed as you said i=
+n the mail.
+It's a good workaround. Is this OK?=20
+
+Best Regards
+Xiao
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
