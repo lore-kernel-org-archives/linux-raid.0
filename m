@@ -1,28 +1,128 @@
-From: "Peter Wong" <peterwong@hangsengbank.com>
-Subject: Interesse
-Date: Mon, 19 Jan 2015 03:22:04 -0800
-Message-ID: <b0080009d63fbb5d60277b0137c152eb.squirrel__21394.2644223154$1421673122$gmane$org@secure167.servconfig.com>
-Reply-To: peterwong913@yahoo.com.hk
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Subject: Re: RAID1 removing failed disk returns EBUSY
+Date: Mon, 19 Jan 2015 12:56:50 -0500
+Message-ID: <20150119125650.22a75dd3@jlaw-desktop.mno.stratus.com>
+References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com>
+	<20141029133604.59f9549a@jlaw-desktop.mno.stratus.com>
+	<20141113090549.296a13ee@jlaw-desktop.mno.stratus.com>
+	<20141117100349.1d1ae1fa@notabene.brown>
+	<54B663EC.8090607@redhat.com>
+	<20150115082210.31bd3ea5@jlaw-desktop.mno.stratus.com>
+	<2054919975.10444188.1421385612513.JavaMail.zimbra@redhat.com>
+	<20150116101031.30c04df3@jlaw-desktop.mno.stratus.com>
+	<1924199853.11308787.1421634830810.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1924199853.11308787.1421634830810.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
 List-Id: linux-raid.ids
 
-Jeg vil foresl=E5 relasjoner som er av felles interesse. Det er overf=F8=
-ring
-av en stor sum penger.Jeg skriver til deg fordi du har blitt anbefalt t=
-il
-meg som en som kan v=E6re egnet for mitt prosjekt.
-Ta kontakt med meg p=E5 min personlige e-postadresse; en rask respons, =
-ville
-jeg stor pris p=E5 det.
+On Sun, 18 Jan 2015 21:33:50 -0500
+Xiao Ni <xni@redhat.com> wrote:
 
-Med v=E5re beste =F8nsker
-Peter Wong
+>=20
+>=20
+> ----- Original Message -----
+> > From: "Joe Lawrence" <joe.lawrence@stratus.com>
+> > To: "Xiao Ni" <xni@redhat.com>
+> > Cc: "NeilBrown" <neilb@suse.de>, linux-raid@vger.kernel.org, "Bill =
+Kuzeja" <william.kuzeja@stratus.com>
+> > Sent: Friday, January 16, 2015 11:10:31 PM
+> > Subject: Re: RAID1 removing failed disk returns EBUSY
+> >=20
+> > On Fri, 16 Jan 2015 00:20:12 -0500
+> > Xiao Ni <xni@redhat.com> wrote:
+> > >=20
+> > > Hi Joe
+> > >=20
+> > >    Thanks for reminding me. I didn't do that. Now it can remove
+> > >    successfully after writing
+> > > "idle" to sync_action.
+> > >=20
+> > >    I thought wrongly that the patch referenced in this mail is fi=
+xed for
+> > >    the problem.
+> >=20
+> > So it sounds like even with 3.18 and a new mdadm, this bug still
+> > persists?
+> >=20
+> > -- Joe
+> >=20
+> > --
+>=20
+> Hi Joe
+>=20
+>    I'm a little confused now. Does the patch 45eaf45dfa4850df16bc2e8e=
+7903d89021137f40 from linux-stable
+> resolve the problem?
+>=20
+>    My environment is:
+>=20
+> [root@dhcp-12-133 mdadm]# mdadm --version
+> mdadm - v3.3.2-18-g93d3bd3 - 18th December 2014  (this is the newest =
+upstream)
+> [root@dhcp-12-133 mdadm]# uname -r
+> 3.18.2
+>=20
+>=20
+>    My steps are:
+>=20
+> [root@dhcp-12-133 mdadm]# lsblk=20
+> sdb                       8:16   0 931.5G  0 disk=20
+> =E2=94=94=E2=94=80sdb1                    8:17   0     5G  0 part=20
+> sdc                       8:32   0 186.3G  0 disk=20
+> sdd                       8:48   0 931.5G  0 disk=20
+> =E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part=20
+> [root@dhcp-12-133 mdadm]# mdadm -CR /dev/md0 -l1 -n2 /dev/sdb1 /dev/s=
+dd1 --assume-clean
+> mdadm: Note: this array has metadata at the start and
+>     may not be suitable as a boot device.  If you plan to
+>     store '/boot' on this device please ensure that
+>     your boot-loader understands md/v1.x metadata, or use
+>     --metadata=3D0.90
+> mdadm: Defaulting to version 1.2 metadata
+> mdadm: array /dev/md0 started.
+>=20
+>    Then I unplug the disk.
+>=20
+> [root@dhcp-12-133 mdadm]# lsblk=20
+> sdc                       8:32   0 186.3G  0 disk =20
+> sdd                       8:48   0 931.5G  0 disk =20
+> =E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part =20
+>   =E2=94=94=E2=94=80md0                   9:0    0     5G  0 raid1=20
+> [root@dhcp-12-133 mdadm]# echo faulty > /sys/block/md0/md/dev-sdb1/st=
+ate=20
+> [root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/st=
+ate=20
+> -bash: echo: write error: Device or resource busy
+> [root@dhcp-12-133 mdadm]# echo idle > /sys/block/md0/md/sync_action=20
+> [root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/st=
+ate=20
+>=20
+>=20
+>    Now after I set idle to sync_action, it can be removed as you said=
+ in the mail.
+> It's a good workaround. Is this OK?=20
+>=20
+> Best Regards
+> Xiao
 
+Hi Xiao,
 
+According to my notes, the "idle" sync_action was always a viable
+workaround, with or with this change.
+
+Neil's patch should have made it possible to issue only a
+"faulty" and "remove" to remove the RAID component.
+
+I don't have an exact version, but it appears that my mdadm version was
+an upstream git from Oct 27-th timeframe.
+
+-- Joe
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
