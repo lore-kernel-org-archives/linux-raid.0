@@ -1,46 +1,68 @@
-From: nick <xerofoify@gmail.com>
-Subject: Re: [PATCH RESEND] md:Remove no longer needed fix me
- comment in dm-region-hash.c for removing the structure pointer,
- *rh from the definiton of dm_region
-Date: Tue, 20 Jan 2015 06:36:10 -0500
-Message-ID: <54BE3DAA.5080900@gmail.com>
-References: <1421723781-21984-1-git-send-email-xerofoify@gmail.com>
-	<20150120111951.GB17599@agk-dp.fab.redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH] IMSM: Clear migration record on disks more often
+Date: Tue, 20 Jan 2015 13:52:25 +0100
+Message-ID: <20150120125225.3110.88243.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20150120111951.GB17599@agk-dp.fab.redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: agk@redhat.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, snitzer@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-Alasdair,
-Unless we use a union or something similar there seems to be no easy 
-way without rewriting a lot of an already function driver file.
-Cheers,
-Nick
+Migration record is not always cleared after successful migration. This can
+block another reshape from being started. Migration will not be continued via
+systemd service due to error in verifying reshape position. This patch added
+clearing migration record when disk is added to container, and after successful
+migration.
 
-On 2015-01-20 06:19 AM, Alasdair G Kergon wrote:
-> On Mon, Jan 19, 2015 at 10:16:21PM -0500, Nicholas Krause wrote:
->> Removes the no longer needed fix me comment questioning if we need to remove
->> the structure pointer,rh as defined as a structure of type dsm_region_hash
->> from the definition of the structure, dm_region. Furthermore this  pointer is
->> needed in order for various functions to run and build successfully in the file,
->> dm-region-hash.c.
->  
-> You've misunderstood the comment!
-> Is there a better alternative to having every dm_region struct store its own copy of
-> this pointer?
-> 
-> Alasdair
-> 
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ super-intel.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/super-intel.c b/super-intel.c
+index 4c53019..2406991 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5055,6 +5055,14 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	}
+ 
+ 	get_dev_size(fd, NULL, &size);
++	/* clear migr_rec when adding disk to container */
++	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
++	if (lseek64(fd, size - 512, SEEK_SET) >= 0) {
++		if (write(fd, super->migr_rec_buf,
++			MIGR_REC_BUF_SIZE) != MIGR_REC_BUF_SIZE)
++			perror("Write migr_rec failed");
++	}
++
+ 	size /= 512;
+ 	serialcpy(dd->disk.serial, dd->serial);
+ 	set_total_blocks(&dd->disk, size);
+@@ -10648,6 +10656,23 @@ static int imsm_manage_reshape(
+ 
+ 	}
+ 
++	/* clear migr_rec on disks after successful migration */
++	struct dl *d;
++
++	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
++	for (d = super->disks; d; d = d->next) {
++		if (d->index < 0 || is_failed(&d->disk))
++			continue;
++		unsigned long long dsize;
++
++		get_dev_size(d->fd, NULL, &dsize);
++		if (lseek64(d->fd, dsize - 512, SEEK_SET) >= 0) {
++			if (write(d->fd, super->migr_rec_buf,
++				MIGR_REC_BUF_SIZE) != MIGR_REC_BUF_SIZE)
++				perror("Write migr_rec failed");
++		}
++	}
++
+ 	/* return '1' if done */
+ 	ret_val = 1;
+ abort:
+
