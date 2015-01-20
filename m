@@ -1,25 +1,29 @@
-From: Apple Yin <bravery.apple@gmail.com>
-Subject: Is it possible to use bad_blocks to simulate write_error and activate hot-replace?
-Date: Tue, 20 Jan 2015 16:25:58 +0800
-Message-ID: <CAFvwruiLUQNiZTMz6bRYEa4HVKHUqA_Q52K0aQ-jvooZDeKQVg@mail.gmail.com>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [dm-devel] [PATCH RESEND] md:Remove no longer needed fix me
+	comment in dm-region-hash.c for removing the structure pointer, *rh
+	from the definiton of dm_region
+Date: Tue, 20 Jan 2015 11:19:51 +0000
+Message-ID: <20150120111951.GB17599@agk-dp.fab.redhat.com>
+References: <1421723781-21984-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1421723781-21984-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: agk@redhat.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, snitzer@redhat.com
 List-Id: linux-raid.ids
 
-I want to test hot-replace when a write error is recorded in a
-bad-block log. Here is my steps:
+On Mon, Jan 19, 2015 at 10:16:21PM -0500, Nicholas Krause wrote:
+> Removes the no longer needed fix me comment questioning if we need to remove
+> the structure pointer,rh as defined as a structure of type dsm_region_hash
+> from the definition of the structure, dm_region. Furthermore this  pointer is
+> needed in order for various functions to run and build successfully in the file,
+> dm-region-hash.c.
+ 
+You've misunderstood the comment!
+Is there a better alternative to having every dm_region struct store its own copy of
+this pointer?
 
-1. create raid5 with 3 disks (sdb sdc sdd), and 1 spare (sde)
-
-2. echo 2097152 512 > /sys/block/md192/md/dev-sdb/bad_blocks  /* set 1
-badblock from 1G of sdb*/
-
-3. dd if=/dev/zero of=/dev/md192 bs=1M count=1024 seek=2048 /* from 2G of md */
-    dd if=/dev/zero of=/dev/md192 bs=1M count=1024 seek=2000 /* near to 2G */
-
-
-No write error happen, sdb is not marked as want_replacement and not
-start the rebuild. Anyone help ?
+Alasdair
