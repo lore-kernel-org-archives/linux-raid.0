@@ -1,59 +1,27 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: kernel refuses devices mdadm -E accepts
-Date: Mon, 19 Jan 2015 17:52:49 -0600
-Message-ID: <CAAMCDed18UGs42LD6CCWOFEYDe16xFq4GqnM1Lxhp0YHEgLFXQ@mail.gmail.com>
-References: <CAA-O0XjoD3fQaMpYYmy4kpBSxD+K9TKX_QGr9mcNVuye43XWHg@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: livelock on MD RAID5
+Date: Mon, 19 Jan 2015 22:24:25 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1501192207260.20870@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA-O0XjoD3fQaMpYYmy4kpBSxD+K9TKX_QGr9mcNVuye43XWHg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wesley W. Terpstra" <wesley@terpstra.ca>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-cat /proc/mdstat
+Hi Neil
 
-if the device is in use mdadm -E will work but you cannot create a
-device because one already has it.
+I saw your patch "md/raid5: avoid livelock caused by non-aligned writes". 
+That patch is only for RAID 6, but we are seeing similar livelock on RAID5 
+(mdX_raid5 is constantly looping in 
+raid5d/handle_active_stripes/handle_stripe/ops_run_io and some submitted 
+bios get stuck). The livelock happens when we issue I/O and simulate disk 
+failure.
 
-On Mon, Jan 19, 2015 at 5:01 PM, Wesley W. Terpstra <wesley@terpstra.ca> wrote:
-> I have a raid5 array for which every disk, when examined with "mdadm
-> -E /dev/sd[abcd]4" shows a Version: 1.2 superblock with a valid
-> checksum.
->
-> However, when I try:
-> mdadm -A /dev/md/backing /dev/sd[abcd]4
-> mdadm says:
-> mdadm: failed to add /dev/sdc4 to /dev/md/backing: Invalid argument
-> mdadm: failed to add /dev/sdb4 to /dev/md/backing: Invalid argument
-> mdadm: failed to add /dev/sda4 to /dev/md/backing: Invalid argument
-> mdadm: failed to add /dev/sdd4 to /dev/md/backing: Invalid argument
-> mdadm: /dev/md/backing assembled from 0 drives - need all 4 to start
-> it (use --run to insist)
-> The kernel says:
-> md: sdc4 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
-> md: sdb4 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
-> md: sda4 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
-> md: sdd4 does not have a valid v1.2 superblock, not importing!
-> md: md_import_device returned -22
->
-> I was in the middle of a reshape of this 4-disk raid5 when something
-> rebooted the computer. The system seems otherwise fine, and I suspect
-> someone in the house.
->
-> What is the correct next step? Should I try --run ? I would obviously
-> prefer not to lose the data on this array. I expect that the reshape
-> was NOT complete, so just recreating the array will probably corrupt
-> its contents.
->
-> Kernel version 3.17.8 and mdadm version 3.3.2.
->
-> Thanks for any help. If I lose this array, I am going to face a lot of grief...
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Do you think that the same issue could happen on RAID5 too?
+
+Do you think that the patch "md/raid5: fetch_block must fetch all the 
+blocks handle_stripe_dirtying wants." could fix it?
+
+Mikulas
