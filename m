@@ -1,86 +1,168 @@
-From: Valentijn <v@lentijn.sess.ink>
-Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
-Date: Thu, 22 Jan 2015 10:47:38 +0100
-Message-ID: <54C0C73A.4080409@lentijn.sess.ink>
-References: <54ABEE54.6020707@sympatico.ca> <BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl> <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl> <54B305B2.6000702@lentijn.sess.ink> <54B3F7ED.1000809@youngman.org.uk> <BLU436-SMTP1430CA88C11B0E46F15BB3F81480@phx.gbl>
+From: Dush <tomdush@gmail.com>
+Subject: All drive in Raid 5 are in 'spare' mode
+Date: Thu, 22 Jan 2015 23:23:44 +0000
+Message-ID: <CAL7hTOd5uHK4+oQYUvVU4eNH5836i-LU3fFS56+bOcw9f_DoPQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP1430CA88C11B0E46F15BB3F81480@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Callaghan <matt_callaghan@sympatico.ca>, Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Matt,
+Hi,
 
-As long as your data is still somewhere on these disks, all is not - 
-necessarily - lost. You could still try using dumpe2fs (and later 
-e2fsck) and/or dumpe2fs with different superblocks. And even if you 
-cannot find your file system by any means, you could try to use the 
-"foremost" utility to scrape off images, documents and the like from 
-these disks.
+I have a RAID 5 composed by 4x 500Go hdd but for some days, it's 'inactive'.
 
-So I still don't think all is lost. However, I do think that will cost 
-more time. You may want to dedicate a spare machine to this task, 
-because of the resources.
+I'm not raid expert and I prefer asking before doing an unrecoverable mistake...
 
-I see that your mdadm says this, somewhere along your odyssee:
-mdadm: /dev/sdk1 appears to contain an ext2fs file system
-        size=1695282944K  mtime=Tue Apr 12 11:10:24 1977
-... which could mean (I'm not sure, I'm just guessing) that due to the 
-internal bitmap, your fs has been overwritten.
+Is it possible to fix this raid (md126)?
+Is it possible to recover data on it?
+Do I have a disk to change or it's "just" a desynchronization between disks?
 
-Your new array in fact said:
-Internal Bitmap : 8 sectors from superblock
-     Update Time : Wed Jan  7 09:46:44 2015
-   Bad Block Log : 512 entries available at offset 72 sectors
-        Checksum : c7603819 - correct
-          Events : 0
-... as far as I understand, this means that 8 blocks from the 
-superblock, some - whatever size - sectors were occupied by the Internal 
-Bitmap, which, in turn, would mean your filesystem superblock has been 
-overwritten.
+Thanks for your help
 
-The good news is: there is more than one superblock.
+# mdadm --version
+mdadm - v3.3.2 - 21st August 2014
 
-BTW, didn't you have the right raid drive ordering from the original 
-disks? You did have output of "mdadm --examine" after the array broke 
-down, didn't you? So your "create" statement is, by definition, correct 
-if a new "--examine" output shows the same output - hence the filesystem 
-is correct if the latter is the case?
+Linux Kernel: 3.18.2-2
 
-So please try if "dumpe2fs -h -o superblock=32768" does anything. Or 
-98304, 163840, 229376. Dumpe2fs just dumps the fs header, nothing more.
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md127 : active raid5 sdd2[2] sde2[1] sdc2[0] sdb2[3]
+      16530624 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-If dumpe2fs doesn't do anything (but complain that it "Couldn't find 
-valid filesystem superblock"), then you could still try if "foremost" 
-finds anything. It's not that hard to use, you simply dedicate some 
-storage to it and tell it to scrape your array. It *will* find things 
-and it's up to you to see if
-1) documents, images and the like are all 64K or 128K or less - and/or 
-contain large blocks of rubbish. This probably means you have the wrong 
-array config, because foremost in this case only finds single "chunks" 
-with correct data - if a file is longer, it doesn't find it and/or spews 
-out random data from other images
-2) documents, images etcetera are OK. This means your array is OK. You 
-then can use foremost to scrape off everything (it may take weeks but it 
-could work), or simply try to find where the filesystem superblock hangs 
-out (if the array is in good order, the fs superblock must be somewhere, 
-right?)
+md126 : inactive sde3[1](S) sdd3[4](S) sdc3[0](S) sdb3[3](S)
+      1929888000 blocks
 
-Please, please try to do as little as possible on the real disks. Use 
-dmsetup to create snapshots. Copy the disks. Use hardware that is in 
-good state - you don't want to loose your data that you just found back 
-because the memory is flakey, do you? ;-)
+unused devices: <none>
 
-I hope it's going to work.
+# mdadm --examine /dev/sd[a-z]3
+mdadm: No md superblock detected on /dev/sda3.
+/dev/sdb3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
 
-Best regards,
+    Update Time : Wed Jan 21 20:55:48 2015
+          State : active
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 6e656c69 - correct
+         Events : 49656
 
-Valentijn
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-On 01/21/15 01:34, Matt Callaghan wrote:
-> I tried again with the --bitmap=none, clearly that was a miss on my part.
-> However, still even with that correction, and attempting across varying
-> combinations of "drive ordering", the filesystem appears corrupt.
+      Number   Major   Minor   RaidDevice State
+this     3       8       19        3      active sync   /dev/sdb3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       8       19        3      active sync   /dev/sdb3
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sdc3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653d5 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       35        0      active sync   /dev/sdc3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sdd3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653e7 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       51        4      spare   /dev/sdd3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sde3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653f7 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       67        1      active sync   /dev/sde3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
