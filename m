@@ -1,155 +1,31 @@
 From: "Wesley W. Terpstra" <wesley@terpstra.ca>
-Subject: BUG drivers/md/md.c: data-offset reshape renders array unloadable
-Date: Sat, 24 Jan 2015 22:44:10 +0100
-Message-ID: <CAA-O0Xjustt5=nNoDzXukY=f-7OwRk=yqug8MCpxcXCt4MdiTw@mail.gmail.com>
+Subject: Re: BUG drivers/md/md.c: data-offset reshape renders array unloadable
+Date: Sat, 24 Jan 2015 23:23:18 +0100
+Message-ID: <CAA-O0XgXc0H4H__8ygLzt_BBW3NpEseG9NZBTZ_syMdir8D=mA@mail.gmail.com>
+References: <CAA-O0Xjustt5=nNoDzXukY=f-7OwRk=yqug8MCpxcXCt4MdiTw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a11333f6431c684050d6cce04
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAA-O0Xjustt5=nNoDzXukY=f-7OwRk=yqug8MCpxcXCt4MdiTw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---001a11333f6431c684050d6cce04
-Content-Type: text/plain; charset=UTF-8
+On Sat, Jan 24, 2015 at 10:44 PM, Wesley W. Terpstra <wesley@terpstra.ca> wrote:
+> The reshape was going fine and was probably
+> around 50% done when the system was rebooted.
 
-On Wed, Jan 21, 2015 at 1:37 PM, Wesley W. Terpstra <wesley@terpstra.ca> wrote:
-> Try: madam -A -o --run --force --freeze-reshape /dev/md120 /dev/sd[a-d]4
-> It failed the same as before. Logs in mdadm-a.log and dmesg.log
+It is also possible the system was hung, but continued the reshape
+until completion.
 
-I have now tried 3.18.3, and had exactly the same problem.
-To recap, for anyone new to this thread:
+> First, it is obviously the last test in super_1_load that is rejecting
+> the array. The superblock reports more sectors than are calculated, so
+> the check
+>         if (sectors < le64_to_cpu(sb->data_size)) {
+> fails.
 
-I have a raid5 array with 4 disks. I did a reshape to change the
-data-offset from 5120 to 8192, changing nothing else. The number of
-disks remained the same. The reshape was going fine and was probably
-around 50% done when the system was rebooted. All the superblocks have
-matching event counts, all checksums pass, and all disks have clean
-bills of health. However, any attempt to reassemble the array fails.
-
-I have gone ahead and applied a patch to md.c to diagnose WHY it does
-not assemble the array. Find the patch I used (against 3.18.3)
-attached. When I try to assemble the array using my patched 3.18.3,
-this is what I see:
-
-[    5.830139] md: FYI: 8192 old 8192 new
-[    5.830167] md: sectors mismatch 5842894848 < 5842897920 on sdc4
-[    5.830199] md: sdc4 does not have a valid v1.2 superblock, not importing!
-[    5.830635] md: md_import_device returned -22
-
-First, it is obviously the last test in super_1_load that is rejecting
-the array. The superblock reports more sectors than are calculated, so
-the check
-        if (sectors < le64_to_cpu(sb->data_size)) {
-fails.
-
-IMO, it seems that the problem is that the superblock has had
-rdev->data_offset updated prematurely! The reshape was incomplete, so
-I would have expected data_offset to still be 5120 and new_data_offset
-to be 8192. If data_offset HAD been 5120, the two values compared in
-the failing inequality would be equal.
-
-I am considering simply modifying my superblock to reset data_offset
-to 5120 and see if the reshape then resumes correctly. Is this the
-correct fix to recover my array? I imagine the source of my problems
-must be a bug somewhere in mdadm reshape that updates both
-new_data_offset and data_offset at the same time when doing a
-data-offset reshape..?
-
---001a11333f6431c684050d6cce04
-Content-Type: application/octet-stream; name="debug.patch"
-Content-Disposition: attachment; filename="debug.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i5biwstg5
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbWQvbWQuYyBiL2RyaXZlcnMvbWQvbWQuYwppbmRleCA5MjMz
-YzcxLi41YzZhNTZhIDEwMDY0NAotLS0gYS9kcml2ZXJzL21kL21kLmMKKysrIGIvZHJpdmVycy9t
-ZC9tZC5jCkBAIC0xMzg1LDYgKzEzODUsOCBAQCBzdGF0aWMgaW50IHN1cGVyXzFfbG9hZChzdHJ1
-Y3QgbWRfcmRldiAqcmRldiwgc3RydWN0IG1kX3JkZXYgKnJlZmRldiwgaW50IG1pbm9yXwogCQlz
-Yl9zdGFydCA9IDg7CiAJCWJyZWFrOwogCWRlZmF1bHQ6CisJCXByaW50aygibWQ6IGludmFsaWQg
-c3VwZXJibG9jayBtaW5vciAlZCBvbiAlc1xuIiwKKwkJCW1pbm9yX3ZlcnNpb24sIGJkZXZuYW1l
-KHJkZXYtPmJkZXYsYikpOwogCQlyZXR1cm4gLUVJTlZBTDsKIAl9CiAJcmRldi0+c2Jfc3RhcnQg
-PSBzYl9zdGFydDsKQEAgLTEzOTMsMTcgKzEzOTUsMzkgQEAgc3RhdGljIGludCBzdXBlcl8xX2xv
-YWQoc3RydWN0IG1kX3JkZXYgKnJkZXYsIHN0cnVjdCBtZF9yZGV2ICpyZWZkZXYsIGludCBtaW5v
-cl8KIAkgKiBhbmQgaXQgaXMgc2FmZSB0byByZWFkIDRrLCBzbyB3ZSBkbyB0aGF0CiAJICovCiAJ
-cmV0ID0gcmVhZF9kaXNrX3NiKHJkZXYsIDQwOTYpOwotCWlmIChyZXQpIHJldHVybiByZXQ7Ci0K
-KwlpZiAocmV0KSB7CisJCXByaW50aygibWQ6IGNhbm5vdCByZWFkIHN1cGVyYmxvY2sgb24gJXNc
-biIsCisJCQliZGV2bmFtZShyZGV2LT5iZGV2LGIpKTsKKwkJcmV0dXJuIHJldDsKKwl9CisJCiAJ
-c2IgPSBwYWdlX2FkZHJlc3MocmRldi0+c2JfcGFnZSk7CiAKLQlpZiAoc2ItPm1hZ2ljICE9IGNw
-dV90b19sZTMyKE1EX1NCX01BR0lDKSB8fAotCSAgICBzYi0+bWFqb3JfdmVyc2lvbiAhPSBjcHVf
-dG9fbGUzMigxKSB8fAotCSAgICBsZTMyX3RvX2NwdShzYi0+bWF4X2RldikgPiAoNDA5Ni0yNTYp
-LzIgfHwKLQkgICAgbGU2NF90b19jcHUoc2ItPnN1cGVyX29mZnNldCkgIT0gcmRldi0+c2Jfc3Rh
-cnQgfHwKLQkgICAgKGxlMzJfdG9fY3B1KHNiLT5mZWF0dXJlX21hcCkgJiB+TURfRkVBVFVSRV9B
-TEwpICE9IDApCisJaWYgKHNiLT5tYWdpYyAhPSBjcHVfdG9fbGUzMihNRF9TQl9NQUdJQykpIHsK
-KwkJcHJpbnRrKCJtZDogYmFkIG1hZ2ljICV4IG9uICVzXG4iLAorCQkJc2ItPm1hZ2ljLCBiZGV2
-bmFtZShyZGV2LT5iZGV2LGIpKTsKIAkJcmV0dXJuIC1FSU5WQUw7Ci0KKwl9CisJaWYgKHNiLT5t
-YWpvcl92ZXJzaW9uICE9IGNwdV90b19sZTMyKDEpKSB7CisJCXByaW50aygibWQ6IHdyb25nIG1h
-am9yIHZlcnNpb24gJWQgJXNcbiIsCisJCQlzYi0+bWFqb3JfdmVyc2lvbiwgYmRldm5hbWUocmRl
-di0+YmRldixiKSk7CisJCXJldHVybiAtRUlOVkFMOworCX0KKwlpZiAobGUzMl90b19jcHUoc2It
-Pm1heF9kZXYpID4gKDQwOTYtMjU2KS8yKSB7CisJCXByaW50aygibWQ6IHRvbyBtYW55IGRldmlj
-ZXMgJWQgb24gJXNcbiIsCisJCQlzYi0+bWF4X2RldiwgYmRldm5hbWUocmRldi0+YmRldixiKSk7
-CisJCXJldHVybiAtRUlOVkFMOworCX0KKwlpZiAobGU2NF90b19jcHUoc2ItPnN1cGVyX29mZnNl
-dCkgIT0gcmRldi0+c2Jfc3RhcnQpIHsKKwkJcHJpbnRrKCJtZDogc3VwZXJibG9jayBub3Qgd2hl
-cmUgZXhwZWN0ZWQsICVkIG9uICVzXG4iLAorCQkJc2ItPm1heF9kZXYsIGJkZXZuYW1lKHJkZXYt
-PmJkZXYsYikpOworCQlyZXR1cm4gLUVJTlZBTDsKKwl9CisJaWYgKChsZTMyX3RvX2NwdShzYi0+
-ZmVhdHVyZV9tYXApICYgfk1EX0ZFQVRVUkVfQUxMKSAhPSAwKSB7CisJCXByaW50aygibWQ6IHJl
-cXVpcmVkIGZlYXR1cmUgdW5zdXBwb3J0ZWQgYnkga2VybmVsICV4IG9uICVzXG4iLAorCQkJc2It
-PmZlYXR1cmVfbWFwLCBiZGV2bmFtZShyZGV2LT5iZGV2LGIpKTsKKwkJcmV0dXJuIC1FSU5WQUw7
-CisJfQogCWlmIChjYWxjX3NiXzFfY3N1bShzYikgIT0gc2ItPnNiX2NzdW0pIHsKIAkJcHJpbnRr
-KCJtZDogaW52YWxpZCBzdXBlcmJsb2NrIGNoZWNrc3VtIG9uICVzXG4iLAogCQkJYmRldm5hbWUo
-cmRldi0+YmRldixiKSk7CkBAIC0xNDE2LDkgKzE0NDAsMTIgQEAgc3RhdGljIGludCBzdXBlcl8x
-X2xvYWQoc3RydWN0IG1kX3JkZXYgKnJkZXYsIHN0cnVjdCBtZF9yZGV2ICpyZWZkZXYsIGludCBt
-aW5vcl8KIAl9CiAJaWYgKHNiLT5wYWQwIHx8CiAJICAgIHNiLT5wYWQzWzBdIHx8Ci0JICAgIG1l
-bWNtcChzYi0+cGFkMywgc2ItPnBhZDMrMSwgc2l6ZW9mKHNiLT5wYWQzKSAtIHNpemVvZihzYi0+
-cGFkM1sxXSkpKQorCSAgICBtZW1jbXAoc2ItPnBhZDMsIHNiLT5wYWQzKzEsIHNpemVvZihzYi0+
-cGFkMykgLSBzaXplb2Yoc2ItPnBhZDNbMV0pKSkgewogCQkvKiBTb21lIHBhZGRpbmcgaXMgbm9u
-LXplcm8sIG1pZ2h0IGJlIGEgbmV3IGZlYXR1cmUgKi8KKwkJcHJpbnRrKCJtZDogbm9uLXplcm8g
-cGFkZGluZyBvbiAlc1xuIiwKKwkJICAgICAgIGJkZXZuYW1lKHJkZXYtPmJkZXYsYikpOwogCQly
-ZXR1cm4gLUVJTlZBTDsKKwl9CiAKIAlyZGV2LT5wcmVmZXJyZWRfbWlub3IgPSAweGZmZmY7CiAJ
-cmRldi0+ZGF0YV9vZmZzZXQgPSBsZTY0X3RvX2NwdShzYi0+ZGF0YV9vZmZzZXQpOwpAQCAtMTQz
-MywxMiArMTQ2MCwyNCBAQCBzdGF0aWMgaW50IHN1cGVyXzFfbG9hZChzdHJ1Y3QgbWRfcmRldiAq
-cmRldiwgc3RydWN0IG1kX3JkZXYgKnJlZmRldiwgaW50IG1pbm9yXwogCWlmIChyZGV2LT5zYl9z
-aXplICYgYm1hc2spCiAJCXJkZXYtPnNiX3NpemUgPSAocmRldi0+c2Jfc2l6ZSB8IGJtYXNrKSAr
-IDE7CiAKKwlwcmludGsoIm1kOiBGWUk6ICVsZCBvbGQgJWxkIG5ld1xuIiwgcmRldi0+ZGF0YV9v
-ZmZzZXQsIHJkZXYtPm5ld19kYXRhX29mZnNldCk7CisJCiAJaWYgKG1pbm9yX3ZlcnNpb24KLQkg
-ICAgJiYgcmRldi0+ZGF0YV9vZmZzZXQgPCBzYl9zdGFydCArIChyZGV2LT5zYl9zaXplLzUxMikp
-CisJICAgICYmIHJkZXYtPmRhdGFfb2Zmc2V0IDwgc2Jfc3RhcnQgKyAocmRldi0+c2Jfc2l6ZS81
-MTIpKSB7CisJCXByaW50aygibWQ6IGRhdGFfb2Zmc2V0PSVsZCA8ICVsZCBvbiAlc1xuIiwKKwkJ
-ICAgICAgIHJkZXYtPmRhdGFfb2Zmc2V0LAorCQkgICAgICAgc2Jfc3RhcnQgKyAocmRldi0+c2Jf
-c2l6ZS81MTIpLAorCQkgICAgICAgYmRldm5hbWUocmRldi0+YmRldixiKSk7CiAJCXJldHVybiAt
-RUlOVkFMOworCX0KIAlpZiAobWlub3JfdmVyc2lvbgotCSAgICAmJiByZGV2LT5uZXdfZGF0YV9v
-ZmZzZXQgPCBzYl9zdGFydCArIChyZGV2LT5zYl9zaXplLzUxMikpCisJICAgICYmIHJkZXYtPm5l
-d19kYXRhX29mZnNldCA8IHNiX3N0YXJ0ICsgKHJkZXYtPnNiX3NpemUvNTEyKSkgeworCQlwcmlu
-dGsoIm1kOiBuZXdfZGF0YV9vZmZzZXQ9JWxkIDwgJWxkIG9uICVzXG4iLAorCQkgICAgICAgcmRl
-di0+bmV3X2RhdGFfb2Zmc2V0LAorCQkgICAgICAgc2Jfc3RhcnQgKyAocmRldi0+c2Jfc2l6ZS81
-MTIpLAorCQkgICAgICAgYmRldm5hbWUocmRldi0+YmRldixiKSk7CiAJCXJldHVybiAtRUlOVkFM
-OworCX0KIAogCWlmIChzYi0+bGV2ZWwgPT0gY3B1X3RvX2xlMzIoTEVWRUxfTVVMVElQQVRIKSkK
-IAkJcmRldi0+ZGVzY19uciA9IC0xOwpAQCAtMTQ2MCwxMSArMTQ5OSwxNyBAQCBzdGF0aWMgaW50
-IHN1cGVyXzFfbG9hZChzdHJ1Y3QgbWRfcmRldiAqcmRldiwgc3RydWN0IG1kX3JkZXYgKnJlZmRl
-diwgaW50IG1pbm9yXwogCQl1NjQgKmJicDsKIAkJaW50IGk7CiAJCWludCBzZWN0b3JzID0gbGUx
-Nl90b19jcHUoc2ItPmJibG9nX3NpemUpOwotCQlpZiAoc2VjdG9ycyA+IChQQUdFX1NJWkUgLyA1
-MTIpKQorCQlpZiAoc2VjdG9ycyA+IChQQUdFX1NJWkUgLyA1MTIpKSB7CisJCQlwcmludGsoIm1k
-OiBiYWQgYmxvY2sgbWFwIHRvbyBiaWcgJWQgb24gJXNcbiIsCisJCQkgICAgICAgc2VjdG9ycywg
-YmRldm5hbWUocmRldi0+YmRldixiKSk7CiAJCQlyZXR1cm4gLUVJTlZBTDsKKwkJfQogCQlvZmZz
-ZXQgPSBsZTMyX3RvX2NwdShzYi0+YmJsb2dfb2Zmc2V0KTsKLQkJaWYgKG9mZnNldCA9PSAwKQor
-CQlpZiAob2Zmc2V0ID09IDApIHsKKwkJCXByaW50aygibWQ6IGJhZCBibG9jayBtYXAgdG9vIGJp
-ZyAlZCBvbiAlc1xuIiwKKwkJCSAgICAgICBzZWN0b3JzLCBiZGV2bmFtZShyZGV2LT5iZGV2LGIp
-KTsKIAkJCXJldHVybiAtRUlOVkFMOworCQl9CiAJCWJiX3NlY3RvciA9IChsb25nIGxvbmcpb2Zm
-c2V0OwogCQlpZiAoIXN5bmNfcGFnZV9pbyhyZGV2LCBiYl9zZWN0b3IsIHNlY3RvcnMgPDwgOSwK
-IAkJCQkgIHJkZXYtPmJiX3BhZ2UsIFJFQUQsIHRydWUpKQpAQCAtMTQ4MCw4ICsxNTI1LDExIEBA
-IHN0YXRpYyBpbnQgc3VwZXJfMV9sb2FkKHN0cnVjdCBtZF9yZGV2ICpyZGV2LCBzdHJ1Y3QgbWRf
-cmRldiAqcmVmZGV2LCBpbnQgbWlub3JfCiAJCQlpZiAoYmIgKyAxID09IDApCiAJCQkJYnJlYWs7
-CiAJCQlpZiAobWRfc2V0X2JhZGJsb2NrcygmcmRldi0+YmFkYmxvY2tzLAotCQkJCQkgICAgIHNl
-Y3RvciwgY291bnQsIDEpID09IDApCisJCQkJCSAgICAgc2VjdG9yLCBjb3VudCwgMSkgPT0gMCkg
-eworCQkJCXByaW50aygibWQ6IHNldCBiYWQgYmxvY2tzIGZhaWxlZCBvbiAlc1xuIiwKKwkJCQkg
-ICAgICAgYmRldm5hbWUocmRldi0+YmRldixiKSk7CiAJCQkJcmV0dXJuIC1FSU5WQUw7CisJCQl9
-CiAJCX0KIAl9IGVsc2UgaWYgKHNiLT5iYmxvZ19vZmZzZXQgIT0gMCkKIAkJcmRldi0+YmFkYmxv
-Y2tzLnNoaWZ0ID0gMDsKQEAgLTE1MTUsOCArMTU2MywxMSBAQCBzdGF0aWMgaW50IHN1cGVyXzFf
-bG9hZChzdHJ1Y3QgbWRfcmRldiAqcmRldiwgc3RydWN0IG1kX3JkZXYgKnJlZmRldiwgaW50IG1p
-bm9yXwogCQlzZWN0b3JzIC09IHJkZXYtPmRhdGFfb2Zmc2V0OwogCX0gZWxzZQogCQlzZWN0b3Jz
-ID0gcmRldi0+c2Jfc3RhcnQ7Ci0JaWYgKHNlY3RvcnMgPCBsZTY0X3RvX2NwdShzYi0+ZGF0YV9z
-aXplKSkKKwlpZiAoc2VjdG9ycyA8IGxlNjRfdG9fY3B1KHNiLT5kYXRhX3NpemUpKSB7CisJCXBy
-aW50aygibWQ6IHNlY3RvcnMgbWlzbWF0Y2ggJWxkIDwgJWxsZCBvbiAlc1xuIiwKKwkJCXNlY3Rv
-cnMsIGxlNjRfdG9fY3B1KHNiLT5kYXRhX3NpemUpLCBiZGV2bmFtZShyZGV2LT5iZGV2LGIpKTsK
-IAkJcmV0dXJuIC1FSU5WQUw7CisJfQogCXJkZXYtPnNlY3RvcnMgPSBsZTY0X3RvX2NwdShzYi0+
-ZGF0YV9zaXplKTsKIAlyZXR1cm4gcmV0OwogfQo=
---001a11333f6431c684050d6cce04--
+Thus, an alternative explanation could be that the the sb->data_size
+was not updated after the reshape completed. The superblocks have a
+"Feature Map: 0x0" according to mdadm. I gather from reading
+linux/raid/md_p.h that it should at least have
+MD_FEATURE_RESHAPE_ACTIVE, if the reshape were still in progress.
