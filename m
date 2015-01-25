@@ -1,53 +1,65 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Monitor Queue Depth for RAID-5 md device
-Date: Sun, 25 Jan 2015 11:17:38 -0600
-Message-ID: <CAB-428m9Za7Y3tdsrZ8Ck6wKg9T8S_03Ag25gu6rdsmaKxoNKA@mail.gmail.com>
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Subject: [PATCH] md: fix raid5 livelock
+Date: Sun, 25 Jan 2015 21:06:20 +0100
+Message-ID: <54C54CBC.50101@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "neilb@suse.de >> NeilBrown" <neilb@suse.de>
+Cc: "dm-devel >> device-mapper development" <dm-devel@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Is there any way to monitor number of outstanding requests on the
-raid-5 md device ?
+From: Heinz Mauelshagen <heinzm@redhat.com>
 
-I have a raid-5 array in /dev/md0 which contains /dev/sd[bcde] drives.
-However, I don't always see 0 in avgqu-sz field of iostat utility:
+Hi Neil,
 
- # iostat -xk 1 /dev/md0
-Linux 3.13.0Write-Hole-Monitor (mist01-umh)     01/25/2015
-_x86_64_        (8 CPU)
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.12    0.00    0.02    0.05    0.00   99.80
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s
-avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
-md0               0.00     0.00    0.00 15048.00     0.00 60192.00
-8.00     0.00    0.00    0.00    0.00   0.00   0.00
+the reconstruct write optimization in raid5, function fetch_block causes
+livelocks in LVM raid4/5 tests.
 
-However, when I run iostats for actual devices (/dev/sd[bcde]) I can
-see the queue depth. This is also true for some other fields like
-%util:
+Test scenarios:
+the tests wait for full initial array resynchronization before making a 
+filesystem
+on the raid4/5 logical volume, mounting it, writing to the filesystem 
+and failing
+one physical volume holding a raiddev.
 
-# iostat -xk 1 /dev/sd[bcde]
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.40    0.00   15.44    0.00    0.00   84.17
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s
-avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
-sdb            9463.00  9057.00  385.00  352.00 39304.00 37480.00
-208.37     3.04    4.12    3.46    4.84   1.28  94.40
-sde            8966.00  9592.00  355.00  376.00 37196.00 39388.00
-209.53     2.88    3.93    3.37    4.46   1.27  93.20
-sdd            9467.00  9098.00  374.00  361.00 39364.00 37516.00
-209.20     2.75    3.73    3.38    4.09   1.25  92.00
-sdc            9171.00  9339.00  368.00  369.00 38160.00 38512.00
-208.07     3.21    4.34    3.76    4.92   1.27  93.60
+In short, we're seeing livelocks on fully synchronized raid4/5 arrays 
+with a failed device.
 
-In this example, there are 209 or 208 requests pending on the queue of
-each device. Can I say that there is like 209 requests is pending on
-the queue in the /dev/md0 device too ? In other word, take the maximum
-value of the backend device queue depth as a queue depth of md device
-?
+This patch fixes the issue but likely in a suboptimnal way.
 
-Thanks
-Alireza
+Do you think there is a better solution to avoid livelocks on 
+reconstruct writes?
+
+Regards,
+Heinz
+
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
+Tested-by: Jon Brassow <jbrassow@redhat.com>
+Tested-by: Heinz Mauelshagen <heinzm@redhat.com>
+
+---
+  drivers/md/raid5.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c1b0d52..0fc8737 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2915,7 +2915,7 @@ static int fetch_block(struct stripe_head *sh, 
+struct stripe_head_state *s,
+              (s->failed >= 1 && fdev[0]->toread) ||
+              (s->failed >= 2 && fdev[1]->toread) ||
+              (sh->raid_conf->level <= 5 && s->failed && fdev[0]->towrite &&
+-             (!test_bit(R5_Insync, &dev->flags) || 
+test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) &&
++             (!test_bit(R5_Insync, &dev->flags) || 
+test_bit(STRIPE_PREREAD_ACTIVE, &sh->state) || s->non_overwrite) &&
+               !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
+              ((sh->raid_conf->level == 6 ||
+                sh->sector >= sh->raid_conf->mddev->recovery_cp)
+-- 
+2.1.0
+
