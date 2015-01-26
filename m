@@ -1,65 +1,50 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: [PATCH] md: fix raid5 livelock
-Date: Sun, 25 Jan 2015 21:06:20 +0100
-Message-ID: <54C54CBC.50101@redhat.com>
+From: Nick Krause <xerofoify@gmail.com>
+Subject: Re: [PATCH RESEND] md:Remove no longer needed fix me
+ comment in dm-region-hash.c for removing the structure pointer,
+ *rh from the definiton of dm_region
+Date: Mon, 26 Jan 2015 15:09:34 -0500
+Message-ID: <CAPDOMVhR3aaBM=kEVW5mTPrPtMYSkAN8wyykJJWg5DJVVvMd_Q@mail.gmail.com>
+References: <1421723781-21984-1-git-send-email-xerofoify@gmail.com>
+	<20150120111951.GB17599@agk-dp.fab.redhat.com>
+	<54BE3DAA.5080900@gmail.com>
+	<20150120114032.GC17599@agk-dp.fab.redhat.com>
+	<CAPDOMVi8LE6qHQb4iEU1ZNcBz4dbi0OZvMYDqarpU=btc0NnkQ@mail.gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de >> NeilBrown" <neilb@suse.de>
-Cc: "dm-devel >> device-mapper development" <dm-devel@redhat.com>, linux-raid@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAPDOMVi8LE6qHQb4iEU1ZNcBz4dbi0OZvMYDqarpU=btc0NnkQ@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: nick <xerofoify@gmail.com>, agk@redhat.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, snitzer@redhat.com
 List-Id: linux-raid.ids
 
-From: Heinz Mauelshagen <heinzm@redhat.com>
-
-Hi Neil,
-
-the reconstruct write optimization in raid5, function fetch_block causes
-livelocks in LVM raid4/5 tests.
-
-Test scenarios:
-the tests wait for full initial array resynchronization before making a 
-filesystem
-on the raid4/5 logical volume, mounting it, writing to the filesystem 
-and failing
-one physical volume holding a raiddev.
-
-In short, we're seeing livelocks on fully synchronized raid4/5 arrays 
-with a failed device.
-
-This patch fixes the issue but likely in a suboptimnal way.
-
-Do you think there is a better solution to avoid livelocks on 
-reconstruct writes?
-
-Regards,
-Heinz
-
-Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
-Tested-by: Jon Brassow <jbrassow@redhat.com>
-Tested-by: Heinz Mauelshagen <heinzm@redhat.com>
-
----
-  drivers/md/raid5.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c1b0d52..0fc8737 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2915,7 +2915,7 @@ static int fetch_block(struct stripe_head *sh, 
-struct stripe_head_state *s,
-              (s->failed >= 1 && fdev[0]->toread) ||
-              (s->failed >= 2 && fdev[1]->toread) ||
-              (sh->raid_conf->level <= 5 && s->failed && fdev[0]->towrite &&
--             (!test_bit(R5_Insync, &dev->flags) || 
-test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) &&
-+             (!test_bit(R5_Insync, &dev->flags) || 
-test_bit(STRIPE_PREREAD_ACTIVE, &sh->state) || s->non_overwrite) &&
-               !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
-              ((sh->raid_conf->level == 6 ||
-                sh->sector >= sh->raid_conf->mddev->recovery_cp)
--- 
-2.1.0
-
+On Tue, Jan 20, 2015 at 8:17 AM, Nick Krause <xerofoify@gmail.com> wrote:
+> On Tue, Jan 20, 2015 at 6:40 AM, Alasdair G Kergon <agk@redhat.com> wrote:
+>> On Tue, Jan 20, 2015 at 06:36:10AM -0500, nick wrote:
+>>> Unless we use a union or something similar there seems to be no easy
+>>> way without rewriting a lot of an already function driver file.
+>>
+>> The comment does not restrict itself to 'easy ways'.
+>>
+>> Alasdair
+>>
+>>
+> Then I suggest that I look into this form. Sorry about wasting your time.
+> Nick
+Alasdir,
+After thinking about this for a while, there seems to no way unless we
+rewrite this driver and most of the functions. This is due to lots of
+callers on this pointer.
+Further more due to this I assume either removing the FIXME or
+investigating how much memory these pointers use under various
+workloads.
+Nick
