@@ -1,104 +1,18 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] dm cache: fix up IS_ERR vs NULL confusion
-Date: Wed, 28 Jan 2015 09:46:09 +0300
-Message-ID: <20150128064609.GD30893@mwanda>
+From: "lilofile" <lilofile@aliyun.com>
+Subject: =?UTF-8?B?cmFpZDUgVW5wbHVnIHRoZSBkaXNr?=
+Date: Wed, 28 Jan 2015 14:44:44 +0800
+Message-ID: <2c82c493-1fd8-4e59-9f9c-ecd2ab4296e3@aliyun.com>
+Reply-To: "lilofile" <lilofile@aliyun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Joe Thornber <ejt@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: lilofile <lilofile@aliyun.com>, stan <stan@hardwarefreak.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-It used to be that this code used ERR_PTRs consistently, but a recent
-change mixed it up.  The code sometimes returns NULL, sometimes an
-ERR_PTR, some code assumes everything is an ERR_PTR and some assumes it
-returns NULL on error.  I've changed it back so that now everything is
-an ERR_PTR again.
+kernel  linux 3.10, centos
+when I use 5 disk to create raid5,after sync complete, I unplug a disk,and wait a moment, then replug the same disk.
 
-These new bugs were caught by static checking:
-
-drivers/md/dm-cache-target.c:2409 cache_create() warn: 'cmd' isn't an ERR_PTR
-drivers/md/dm-cache-metadata.c:754 lookup_or_open() error: 'cmd' dereferencing possible ERR_PTR()
-drivers/md/dm-cache-metadata.c:757 lookup_or_open() error: 'cmd' dereferencing possible ERR_PTR()
-
-I also reversed some tests for failure so that it was more clear and had
-fewer indent levels.
-
-Fixes: 9b1cc9f251af ('dm cache: share cache-metadata object across inactive and active DM tables')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-The one question I have is that I made dm_cache_metadata_open() either
-preserve the error code or return -EINVAL.  I haven't tested this so I
-guess review carefully.  This patch should probably be back ported to
-stable or folded into Joe's.
-
-diff --git a/drivers/md/dm-cache-metadata.c b/drivers/md/dm-cache-metadata.c
-index 21b1562..3b08cdf 100644
---- a/drivers/md/dm-cache-metadata.c
-+++ b/drivers/md/dm-cache-metadata.c
-@@ -681,10 +681,8 @@ static struct dm_cache_metadata *metadata_open(struct block_device *bdev,
- 	struct dm_cache_metadata *cmd;
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
--	if (!cmd) {
--		DMERR("could not allocate metadata struct");
--		return NULL;
--	}
-+	if (!cmd)
-+		return ERR_PTR(-ENOMEM);
- 
- 	atomic_set(&cmd->ref_count, 1);
- 	init_rwsem(&cmd->root_lock);
-@@ -745,18 +743,19 @@ static struct dm_cache_metadata *lookup_or_open(struct block_device *bdev,
- 		return cmd;
- 
- 	cmd = metadata_open(bdev, data_block_size, may_format_device, policy_hint_size);
--	if (cmd) {
--		mutex_lock(&table_lock);
--		cmd2 = lookup(bdev);
--		if (cmd2) {
--			mutex_unlock(&table_lock);
--			__destroy_persistent_data_objects(cmd);
--			kfree(cmd);
--			return cmd2;
--		}
--		list_add(&cmd->list, &table);
-+	if (IS_ERR(cmd))
-+		return cmd;
-+
-+	mutex_lock(&table_lock);
-+	cmd2 = lookup(bdev);
-+	if (cmd2) {
- 		mutex_unlock(&table_lock);
-+		__destroy_persistent_data_objects(cmd);
-+		kfree(cmd);
-+		return cmd2;
- 	}
-+	list_add(&cmd->list, &table);
-+	mutex_unlock(&table_lock);
- 
- 	return cmd;
- }
-@@ -778,11 +777,16 @@ struct dm_cache_metadata *dm_cache_metadata_open(struct block_device *bdev,
- 						 bool may_format_device,
- 						 size_t policy_hint_size)
- {
--	struct dm_cache_metadata *cmd = lookup_or_open(bdev, data_block_size,
--						       may_format_device, policy_hint_size);
--	if (cmd && !same_params(cmd, data_block_size)) {
-+	struct dm_cache_metadata *cmd;
-+
-+	cmd = lookup_or_open(bdev, data_block_size,
-+			     may_format_device, policy_hint_size);
-+	if (IS_ERR(cmd))
-+		return cmd;
-+
-+	if (!same_params(cmd, data_block_size)) {
- 		dm_cache_metadata_close(cmd);
--		return NULL;
-+		return ERR_PTR(-EINVAL);
- 	}
- 
- 	return cmd;
+the original 4 disk are still a raid5 which is degraded.
+I find the single disk  become a new raid5,but inactive,what the reason?
