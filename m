@@ -1,112 +1,120 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] IMSM: Clear migration record on disks more often
-Date: Thu, 29 Jan 2015 14:13:14 +1100
-Message-ID: <20150129141314.3ffca025@notabene.brown>
-References: <20150120125225.3110.88243.stgit@gklab-154-222.intel.com>
+Subject: Re: superfluous md_wakeup_thread()
+Date: Thu, 29 Jan 2015 14:28:16 +1100
+Message-ID: <20150129142816.32b1f7dc@notabene.brown>
+References: <wrfjmw5s51gk.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/Kd5hPyIgBqdGNLhVxnv19/Y"; protocol="application/pgp-signature"
+ boundary="Sig_/T_gqnf9pJ8/ellDcGFuqo2m"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150120125225.3110.88243.stgit@gklab-154-222.intel.com>
+In-Reply-To: <wrfjmw5s51gk.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/Kd5hPyIgBqdGNLhVxnv19/Y
+--Sig_/T_gqnf9pJ8/ellDcGFuqo2m
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 20 Jan 2015 13:52:25 +0100 Pawel Baldysiak
-<pawel.baldysiak@intel.com> wrote:
+On Thu, 08 Jan 2015 17:53:15 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-> Migration record is not always cleared after successful migration. This c=
-an
-> block another reshape from being started. Migration will not be continued=
- via
-> systemd service due to error in verifying reshape position. This patch ad=
-ded
-> clearing migration record when disk is added to container, and after succ=
-essful
-> migration.
+> Neil,
 >=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> ---
->  super-intel.c |   25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
+> I was looking over some md patches, and in
+> commit 67f455486d2ea20b2d94d6adf5b9b783d079e321
+> Author: NeilBrown <neilb@suse.de>
+> Date:   Wed May 28 13:39:22 2014 +1000
 >=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 4c53019..2406991 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5055,6 +5055,14 @@ static int add_to_super_imsm(struct supertype *st,=
- mdu_disk_info_t *dk,
->  	}
-> =20
->  	get_dev_size(fd, NULL, &size);
-> +	/* clear migr_rec when adding disk to container */
-> +	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
-> +	if (lseek64(fd, size - 512, SEEK_SET) >=3D 0) {
-> +		if (write(fd, super->migr_rec_buf,
-> +			MIGR_REC_BUF_SIZE) !=3D MIGR_REC_BUF_SIZE)
-> +			perror("Write migr_rec failed");
-> +	}
-> +
->  	size /=3D 512;
->  	serialcpy(dd->disk.serial, dd->serial);
->  	set_total_blocks(&dd->disk, size);
-> @@ -10648,6 +10656,23 @@ static int imsm_manage_reshape(
-> =20
->  	}
-> =20
-> +	/* clear migr_rec on disks after successful migration */
-> +	struct dl *d;
-> +
-> +	memset(super->migr_rec_buf, 0, MIGR_REC_BUF_SIZE);
-> +	for (d =3D super->disks; d; d =3D d->next) {
-> +		if (d->index < 0 || is_failed(&d->disk))
-> +			continue;
-> +		unsigned long long dsize;
-> +
-> +		get_dev_size(d->fd, NULL, &dsize);
-> +		if (lseek64(d->fd, dsize - 512, SEEK_SET) >=3D 0) {
-> +			if (write(d->fd, super->migr_rec_buf,
-> +				MIGR_REC_BUF_SIZE) !=3D MIGR_REC_BUF_SIZE)
-> +				perror("Write migr_rec failed");
-> +		}
-> +	}
-> +
->  	/* return '1' if done */
->  	ret_val =3D 1;
->  abort:
+>     md/raid56: Don't perform reads to support writes until stripe is read=
+y.
+>    =20
+> You add the following:
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index ad1b9be..c1e8607 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -292,9 +292,12 @@ static void do_release_stripe(struct r5conf *conf, s=
+truct stripe_head *sh,
+>         BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
+>         if (test_bit(STRIPE_HANDLE, &sh->state)) {
+>                 if (test_bit(STRIPE_DELAYED, &sh->state) &&
+> -                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+> +                   !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+>                         list_add_tail(&sh->lru, &conf->delayed_list);
+> -               else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+> +                       if (atomic_read(&conf->preread_active_stripes)
+> +                           < IO_THRESHOLD)
+> +                               md_wakeup_thread(conf->mddev->thread);
+> +               } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+>                            sh->bm_seq - conf->seq_write > 0)
+>                         list_add_tail(&sh->lru, &conf->bitmap_list);
+>                 else {
+>=20
+> However the additional md_wakeup_thread() seems unecessary as the
+> resulting code now reads (pasted from current upstream):
+>=20
+> static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+>                               struct list_head *temp_inactive_list)
+> {
+>         BUG_ON(!list_empty(&sh->lru));
+>         BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
+>         if (test_bit(STRIPE_HANDLE, &sh->state)) {
+>                 if (test_bit(STRIPE_DELAYED, &sh->state) &&
+>                     !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+>                         list_add_tail(&sh->lru, &conf->delayed_list);
+>                         if (atomic_read(&conf->preread_active_stripes)
+>                             < IO_THRESHOLD)
+>                                 md_wakeup_thread(conf->mddev->thread);
+>                 } else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+>                            sh->bm_seq - conf->seq_write > 0)
+>                         list_add_tail(&sh->lru, &conf->bitmap_list);
+>                 else {
+>                         clear_bit(STRIPE_DELAYED, &sh->state);
+>                         clear_bit(STRIPE_BIT_DELAY, &sh->state);
+>                         if (conf->worker_cnt_per_group =3D=3D 0) {
+>                                 list_add_tail(&sh->lru, &conf->handle_lis=
+t);
+>                         } else {
+>                                 raid5_wakeup_stripe_thread(sh);
+>                                 return;
+>                         }
+>                 }
+>                 md_wakeup_thread(conf->mddev->thread);
+>=20
+> Is there a reason to wake the thread twice?
 
+Nope.  No reason at all.  Clearly I need to find a way to get people to
+review my patches *before* I commit them....
+Maybe I should try posting them to the list more :-)
 
-Thanks.
-I replaced both "size - 512" with "size - MIGR_REC_POSITION" and applied
-the patch.
+Would you like to send a patch to revert that pointless change?
 
+Thanks,
 NeilBrown
 
---Sig_/Kd5hPyIgBqdGNLhVxnv19/Y
+--Sig_/T_gqnf9pJ8/ellDcGFuqo2m
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVMmlSjnsnt1WYoG5AQKy2w/+L13jIieb43iZ9+sNYub2BN1Cv1JJxYjZ
-K+p3tqX7q1s6JzUJmbdwTuDrwrZ/NA6znV0iPelOIyYqFe+OcLkZMQlDhMckIAGy
-emSK4rfjU7RhUH9HEI0+yySVV9Nhk2fxvjpf8SOw/HiCs3xWRVvMHeuswCutNvUj
-Prixj9XMB0Dt5uD3mZF2KbzbSfMcXh6nNslFcOU8VX91MFFanx27S1hwrhKGgSoJ
-g62BnKjyjSr3AyQZtXO2ede7LcWITDqoFaj5WwSz6LP+Ncxf4B59TBW6lZWKicuw
-VWSHvofKbz/D0Gkinj5TmTHtMVa4CVPtmpfKgffmWt9PJnYH6+cp/kWwDUwaAVrI
-M8JKYuFAdWsBXJUjPyfPGoO1ZLQ0D+jDvxgod8f2IJaFG7/mbXooJJh3/8RkRoST
-aAYhOviENtTq7W0G+xIMGWEPfJUmCu8LxaRi3c3KmKfKeqYSZ9C/VqpdrpWgMJNz
-EfI9tK1/OQ+qnA4xFyOSkdFm65ky7HYipp/jOHLcSWhJmet0YzvXHwIdg+6lg8gi
-iDf+JpeQwuzMdK0onoB24X7/0sko8SAc8e5MezcdFvDHTkwSD1KxcCehzpLiohU0
-2Rb9taNQkf9+Z4GjlKxHHkl5p8cbXEKxpwHogV/yvFa1aEUW52jo7V0Rwa8VpWkg
-Wi1a1w5EMYI=
-=sF7f
+iQIVAwUBVMmo0Dnsnt1WYoG5AQIN8RAAvxE+COUNeZJOwTh3jUT6t47MjWM596sh
+vByyvjiKXoC8X9yt6GmCf83l8GL+/3vbjAcQtPhJZ8klILRIgk1WbBq9Z+yCmOjg
+zBk1fSw2qQtWfUmiJal51UytwvYDBRvniz5LPbzt5z1eV8VTXVSWDobBcVoiFGVi
+c98DLhjMkv4ri0Tt6Aqmr+jgzbbBnyIWpfgb+1Txvg7BXi9CbqWstZya4Ezs98/8
+iy4urf3Ww6T7/HQLC7nLyB/sCImXM/2vGIbeJwpUBuxAbEVhbx0cFttXaGGJYvat
+DYaKz8Xy27zoXgoPsBOUVVhuiPqheTdQOZRnv5TgtX1BKZcy1Xh13ZhY4g++zOUM
+m53ZJ2A2zHHgTbgkANAFmTFJ9lA3PIvfXkGREhFZQvTnrDKsWwKYKR5JbWLLb43J
+ZxVjzfDDGcViBM8J/FZVCc7nVN6ZMmtf77+qM0r+2t+Ze+XN8QVcCcd7aJ8WyUGh
+LGGWIx/JPpIIZgVMapYN9iPUUapcL2yRUmRtix4BEDf4c90BziLEkTlu/hbdNMAx
+M847u3kXFLYNkvVriE/TQgPeyTDuBds/1FQuKUEJxo+xJi4ykrFS3YSnKIAMpp0M
+phKxTVPEnp7yPRSyox1gNzJwc4Blgfm9v/KZT5YjFcqHU7TyKQClOv/gD+gLoGfE
+6a9PbGrfStE=
+=BYeH
 -----END PGP SIGNATURE-----
 
---Sig_/Kd5hPyIgBqdGNLhVxnv19/Y--
+--Sig_/T_gqnf9pJ8/ellDcGFuqo2m--
