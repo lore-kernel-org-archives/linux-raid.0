@@ -1,259 +1,36 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: RAID1 removing failed disk returns EBUSY
-Date: Thu, 29 Jan 2015 07:14:16 -0500 (EST)
-Message-ID: <371504811.2053160.1422533656432.JavaMail.zimbra@redhat.com>
-References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com> <20141117100349.1d1ae1fa@notabene.brown> <54B663EC.8090607@redhat.com> <20150115082210.31bd3ea5@jlaw-desktop.mno.stratus.com> <2054919975.10444188.1421385612513.JavaMail.zimbra@redhat.com> <20150116101031.30c04df3@jlaw-desktop.mno.stratus.com> <1924199853.11308787.1421634830810.JavaMail.zimbra@redhat.com> <20150129145217.1cb31d5c@notabene.brown>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: superfluous md_wakeup_thread()
+Date: Thu, 29 Jan 2015 10:07:27 -0500
+Message-ID: <wrfj7fw54ocw.fsf@ultrasam.lan.trained-monkey.org>
+References: <wrfjmw5s51gk.fsf@redhat.com>
+	<20150129142816.32b1f7dc@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150129145217.1cb31d5c@notabene.brown>
+In-Reply-To: <20150129142816.32b1f7dc@notabene.brown> (NeilBrown's message of
+	"Thu, 29 Jan 2015 14:28:16 +1100")
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Joe Lawrence <joe.lawrence@stratus.com>, linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-
------ Original Message -----
-> From: "NeilBrown" <neilb@suse.de>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: "Joe Lawrence" <joe.lawrence@stratus.com>, linux-raid@vger.kernel=
-=2Eorg, "Bill Kuzeja" <william.kuzeja@stratus.com>
-> Sent: Thursday, January 29, 2015 11:52:17 AM
-> Subject: Re: RAID1 removing failed disk returns EBUSY
->=20
-> On Sun, 18 Jan 2015 21:33:50 -0500 (EST) Xiao Ni <xni@redhat.com> wro=
-te:
->=20
-> >=20
-> >=20
-> > ----- Original Message -----
-> > > From: "Joe Lawrence" <joe.lawrence@stratus.com>
-> > > To: "Xiao Ni" <xni@redhat.com>
-> > > Cc: "NeilBrown" <neilb@suse.de>, linux-raid@vger.kernel.org, "Bil=
-l
-> > > Kuzeja" <william.kuzeja@stratus.com>
-> > > Sent: Friday, January 16, 2015 11:10:31 PM
-> > > Subject: Re: RAID1 removing failed disk returns EBUSY
-> > >=20
-> > > On Fri, 16 Jan 2015 00:20:12 -0500
-> > > Xiao Ni <xni@redhat.com> wrote:
-> > > >=20
-> > > > Hi Joe
-> > > >=20
-> > > >    Thanks for reminding me. I didn't do that. Now it can remove
-> > > >    successfully after writing
-> > > > "idle" to sync_action.
-> > > >=20
-> > > >    I thought wrongly that the patch referenced in this mail is =
-fixed
-> > > >    for
-> > > >    the problem.
-> > >=20
-> > > So it sounds like even with 3.18 and a new mdadm, this bug still
-> > > persists?
-> > >=20
-> > > -- Joe
-> > >=20
-> > > --
-> >=20
-> > Hi Joe
-> >=20
-> >    I'm a little confused now. Does the patch
-> >    45eaf45dfa4850df16bc2e8e7903d89021137f40 from linux-stable
-> > resolve the problem?
-> >=20
-> >    My environment is:
-> >=20
-> > [root@dhcp-12-133 mdadm]# mdadm --version
-> > mdadm - v3.3.2-18-g93d3bd3 - 18th December 2014  (this is the newes=
-t
-> > upstream)
-> > [root@dhcp-12-133 mdadm]# uname -r
-> > 3.18.2
-> >=20
-> >=20
-> >    My steps are:
-> >=20
-> > [root@dhcp-12-133 mdadm]# lsblk
-> > sdb                       8:16   0 931.5G  0 disk
-> > =E2=94=94=E2=94=80sdb1                    8:17   0     5G  0 part
-> > sdc                       8:32   0 186.3G  0 disk
-> > sdd                       8:48   0 931.5G  0 disk
-> > =E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part
-> > [root@dhcp-12-133 mdadm]# mdadm -CR /dev/md0 -l1 -n2 /dev/sdb1 /dev=
-/sdd1
-> > --assume-clean
-> > mdadm: Note: this array has metadata at the start and
-> >     may not be suitable as a boot device.  If you plan to
-> >     store '/boot' on this device please ensure that
-> >     your boot-loader understands md/v1.x metadata, or use
-> >     --metadata=3D0.90
-> > mdadm: Defaulting to version 1.2 metadata
-> > mdadm: array /dev/md0 started.
-> >=20
-> >    Then I unplug the disk.
-> >=20
-> > [root@dhcp-12-133 mdadm]# lsblk
-> > sdc                       8:32   0 186.3G  0 disk
-> > sdd                       8:48   0 931.5G  0 disk
-> > =E2=94=94=E2=94=80sdd1                    8:49   0     5G  0 part
-> >   =E2=94=94=E2=94=80md0                   9:0    0     5G  0 raid1
-> > [root@dhcp-12-133 mdadm]# echo faulty > /sys/block/md0/md/dev-sdb1/=
-state
-> > [root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/=
-state
-> > -bash: echo: write error: Device or resource busy
-> > [root@dhcp-12-133 mdadm]# echo idle > /sys/block/md0/md/sync_action
-> > [root@dhcp-12-133 mdadm]# echo remove > /sys/block/md0/md/dev-sdb1/=
-state
-> >=20
->=20
-> I cannot reproduce this - using linux 3.18.2.  I'd be surprised if md=
-adm
-> version affects things.
-
-Hi Neil
-
-   I'm very curious, because it can reproduce in my machine 100%.
-
->=20
-> This error (Device or resoource busy) implies that rdev->raid_disk is=
- >=3D 0
-> (tested in state_store()).
->=20
-> ->raid_disk is set to -1 by remove_and_add_spares() providing:
->   1/ it isn't Blocked (which is very unlikely)
->   2/ hot_remove_disk succeeds, which it will if nr_pending is zero, a=
-nd
->   3/ nr_pending is zero.
-
-   I remember I have tired to check those reasons. But it's really is t=
-he reason 1
-which is very unlikely.
-
-   I add some code in the function array_state_show
-
-    array_state_show(struct mddev *mddev, char *page) {
-        enum array_state st =3D inactive;
-        struct md_rdev *rdev;
-
-        rdev_for_each_rcu(rdev, mddev) {
-                printk(KERN_ALERT "search for %s\n", rdev->bdev->bd_dis=
-k->disk_name);
-                if (test_bit(Blocked, &rdev->flags))
-                        printk(KERN_ALERT "rdev is Blocked\n");
-                else
-                        printk(KERN_ALERT "rdev is not Blocked\n");
-    }
-
-  When I echo 1 > /sys/block/sdc/device/delete, then I ran command:
-
-[root@dhcp-12-133 md]# cat /sys/block/md0/md/array_state=20
-read-auto
-[root@dhcp-12-133 md]# dmesg=20
-[ 2679.559185] search for sdc
-[ 2679.559189] rdev is Blocked
-[ 2679.559190] search for sdb
-[ 2679.559190] rdev is not Blocked
-  =20
-  So sdc is Blocked
-
-
->=20
-> So it seems most likely that either:
->  1/ nr_pending is non-zero, or
->  2/ remove_and_add_spares() didn't run.
->=20
-> nr_pending can only get set if IO is generated, and your sequence of =
-steps
-> don't show any IO.  It is possible that something else (e.g. started =
-by udev)
-> triggered some IO.  How long that IO can stay pending might depend on=
- exactly
-> how you unplug the device.
-> In my tests I used
->    echo 1 > /sys/block/sdXX/../../delete
-> which may have a different effect to what you do.
->=20
-> However the fact that writing 'idle' to sync_action releases the devi=
-ce seems
-> to suggest the nr_pending has dropped to zero.  So either
->   - remove_and_add_spares didn't run, or
->   - remove_and_add_spares ran during a small window when nr_pending w=
-as
->     elevated, and then didn't run again when nr_pending was reduced t=
-o zero.
->=20
-> Ahh.... that rings bells....
->=20
-> I have the following patch in the SLES kernel which I have applied to
-> mainline yet (and given how old it is, that is really slack of me).
->=20
-> Can you apply the following and see if the symptom goes away please?
-
-   I have tried the patch, the problem is still exist.
->=20
+NeilBrown <neilb@suse.de> writes:
+>> Is there a reason to wake the thread twice?
+>
+> Nope.  No reason at all.  Clearly I need to find a way to get people to
+> review my patches *before* I commit them....
+> Maybe I should try posting them to the list more :-)
+>
+> Would you like to send a patch to revert that pointless change?
+>
 > Thanks,
 > NeilBrown
->=20
-> From: Hannes Reinecke <hare@suse.de>
-> Date: Thu, 26 Jul 2012 11:12:18 +0200
-> Subject: [PATCH] md: wakeup thread upon rdev_dec_pending()
->=20
-> After each call to rdev_dec_pending() we should wakeup the
-> md thread if the device is found to be faulty.
-> Otherwise we'll incur heavy delays on failing devices.
->=20
-> Signed-off-by: Neil Brown <nfbrown@suse.de>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
->=20
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index 03cec5bdcaae..4cc2f59b2994 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -439,13 +439,6 @@ struct mddev {
->  	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
->  };
-> =20
-> -static inline void rdev_dec_pending(struct md_rdev *rdev, struct mdd=
-ev
-> *mddev)
-> -{
-> -	int faulty =3D test_bit(Faulty, &rdev->flags);
-> -	if (atomic_dec_and_test(&rdev->nr_pending) && faulty)
-> -		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> -}
-> -
->  static inline void md_sync_acct(struct block_device *bdev, unsigned =
-long
->  nr_sectors)
->  {
->  	atomic_add(nr_sectors, &bdev->bd_contains->bd_disk->sync_io);
-> @@ -624,4 +617,14 @@ static inline int mddev_check_plugged(struct mdd=
-ev
-> *mddev)
->  	return !!blk_check_plugged(md_unplug, mddev,
->  				   sizeof(struct blk_plug_cb));
->  }
-> +
-> +static inline void rdev_dec_pending(struct md_rdev *rdev, struct mdd=
-ev
-> *mddev)
-> +{
-> +	int faulty =3D test_bit(Faulty, &rdev->flags);
-> +	if (atomic_dec_and_test(&rdev->nr_pending) && faulty) {
-> +		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-> +		md_wakeup_thread(mddev->thread);
-> +	}
-> +}
-> +
->  #endif /* _MD_MD_H */
->=20
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Ah phew, so I didn't lose my last marbles ... I read over it a couple of
+times and I was sure you had a reason, but I just couldn't figure out
+why :)
+
+I'll send you a patch!
+
+Cheers,
+Jes
