@@ -1,45 +1,90 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH] md: do_release_stripe(): No need to call md_wakeup_thread() twice
-Date: Thu, 29 Jan 2015 12:38:29 -0500
-Message-ID: <1422553109-29247-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: RAID1 removing failed disk returns EBUSY
+Date: Thu, 29 Jan 2015 21:19:01 -0500 (EST)
+Message-ID: <1282724195.2440807.1422584341926.JavaMail.zimbra@redhat.com>
+References: <20141027162748.593451be@jlaw-desktop.mno.stratus.com> <20150115082210.31bd3ea5@jlaw-desktop.mno.stratus.com> <2054919975.10444188.1421385612513.JavaMail.zimbra@redhat.com> <20150116101031.30c04df3@jlaw-desktop.mno.stratus.com> <1924199853.11308787.1421634830810.JavaMail.zimbra@redhat.com> <20150119125650.22a75dd3@jlaw-desktop.mno.stratus.com> <1063248306.12205209.1421738206544.JavaMail.zimbra@redhat.com> <20150123101129.5c56dd6e@jlaw-desktop.mno.stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150123101129.5c56dd6e@jlaw-desktop.mno.stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Joe Lawrence <joe.lawrence@stratus.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Bill Kuzeja <william.kuzeja@stratus.com>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-67f455486d2ea20b2d94d6adf5b9b783d079e321 introduced a call to
-md_wakeup_thread() when adding to the delayed_list. However the md
-thread is woken up unconditionally just below.
 
-Remove the unnecessary wakeup call.
+----- Original Message -----
+> From: "Joe Lawrence" <joe.lawrence@stratus.com>
+> To: "Xiao Ni" <xni@redhat.com>
+> Cc: "NeilBrown" <neilb@suse.de>, linux-raid@vger.kernel.org, "Bill Kuzeja" <william.kuzeja@stratus.com>
+> Sent: Friday, January 23, 2015 11:11:29 PM
+> Subject: Re: RAID1 removing failed disk returns EBUSY
+> 
+> On Tue, 20 Jan 2015 02:16:46 -0500
+> Xiao Ni <xni@redhat.com> wrote:
+> > Joe
+> > 
+> >    Thanks for the explanation. So echo "idle" to sync_action is a
+> >    workaround
+> > without the patch.
+> >  
+> >    It looks like the patch is not enough to fix the problem.
+> > Do you have a try with the new patch? Is the problem still exist in
+> > your environment?
+> > 
+> >    If your environment have no problem, can you give me the version number?
+> >    I'll
+> > have a try with the same version too.
+> 
+> Hi Xiao,
+> 
+> Bill and I did some more testing yesterday and I think we've figured
+> out the confusion.  Running a 3.18+ kernel and an upstream mdadm, it
+> was the udev invocation of "mdadm -If <dev>" that was automatically
+> removing the device for us.
+> 
+> If we ran with an older mdadm and got the MD wedged in the faulty
+> condition, then nothing we echoed into the sysfs state file ('idle'
+> 'fail' or 'remove')  would change anything.  I think this agrees with
+> your testing report.
+> 
+> So two things:
+> 
+> 1 - Did you make / make install the latest mdadm and see it try to run
+> mdadm -If on the removed disk?  (You could also try manually running
+> it.)
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/md/raid5.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+  I make sure I have install the latest mdadm
+  [root@dhcp-12-133 ~]# mdadm --version
+  mdadm - v3.3.2-18-g93d3bd3 - 18th December 2014
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c1b0d52..41494d9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -296,12 +296,9 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
- 	BUG_ON(atomic_read(&conf->active_stripes)==0);
- 	if (test_bit(STRIPE_HANDLE, &sh->state)) {
- 		if (test_bit(STRIPE_DELAYED, &sh->state) &&
--		    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-+		    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 			list_add_tail(&sh->lru, &conf->delayed_list);
--			if (atomic_read(&conf->preread_active_stripes)
--			    < IO_THRESHOLD)
--				md_wakeup_thread(conf->mddev->thread);
--		} else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
-+		else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
- 			   sh->bm_seq - conf->seq_write > 0)
- 			list_add_tail(&sh->lru, &conf->bitmap_list);
- 		else {
--- 
-2.1.0
+  It can prove this, right?
 
+  It's strange when I ran mdadm -If
+
+[root@dhcp-12-133 ~]# mdadm -If sdc
+mdadm: sdc does not appear to be a component of any array
+[root@dhcp-12-133 ~]# cat /proc/mdstat 
+Personalities : [raid1] 
+md0 : active (auto-read-only) raid1 sdd1[1] sdc1[0](F)
+      5238784 blocks super 1.2 [2/1] [_U]
+      
+unused devices: <none>
+
+  I unplug the device manually from the machine. The machine is on my desk.
+
+
+> 
+> 2 - I think the sysfs interface to the removed disks is still broken in
+> cases where (1) doesn't occur.
+> 
+> Thanks,
+> 
+> -- Joe
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
