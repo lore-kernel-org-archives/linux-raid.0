@@ -1,88 +1,83 @@
-From: LuVar <luvar@plaintext.sk>
-Subject: Re: unsynchronized raid10 with different events count
-Date: Sat, 31 Jan 2015 17:14:06 +0100 (GMT+01:00)
-Message-ID: <850189010.36671422720846038.JavaMail.root@shiva>
-References: <2049102750.36641422714825909.JavaMail.root@shiva>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md: do_release_stripe(): No need to call
+ md_wakeup_thread() twice
+Date: Mon, 2 Feb 2015 10:25:23 +1100
+Message-ID: <20150202102523.0556178f@notabene.brown>
+References: <1422553109-29247-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/zNXmJz3ly8B.SW9=jwMHkAr"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2049102750.36641422714825909.JavaMail.root@shiva>
+In-Reply-To: <1422553109-29247-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-finally,
-I have run --re-add thing. It seems that it is what I wanted. My array is now OK.
+--Sig_/zNXmJz3ly8B.SW9=jwMHkAr
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-So only one question remains. Is there any possibility to make improvements and make array autoassemble if there are clear that in raid10, there is consistent highest events count for at least one drive for raid1 subparts? I have layout=n3 for situations when one drive fails, to be able to correctly recover from others two same copies and to know that given data are probably ok if they are same.
+On Thu, 29 Jan 2015 12:38:29 -0500 Jes.Sorensen@redhat.com wrote:
 
------ "LuVar" <luvar@plaintext.sk> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> 67f455486d2ea20b2d94d6adf5b9b783d079e321 introduced a call to
+> md_wakeup_thread() when adding to the delayed_list. However the md
+> thread is woken up unconditionally just below.
+>=20
+> Remove the unnecessary wakeup call.
+>=20
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  drivers/md/raid5.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c1b0d52..41494d9 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -296,12 +296,9 @@ static void do_release_stripe(struct r5conf *conf, s=
+truct stripe_head *sh,
+>  	BUG_ON(atomic_read(&conf->active_stripes)=3D=3D0);
+>  	if (test_bit(STRIPE_HANDLE, &sh->state)) {
+>  		if (test_bit(STRIPE_DELAYED, &sh->state) &&
+> -		    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+> +		    !test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  			list_add_tail(&sh->lru, &conf->delayed_list);
+> -			if (atomic_read(&conf->preread_active_stripes)
+> -			    < IO_THRESHOLD)
+> -				md_wakeup_thread(conf->mddev->thread);
+> -		} else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+> +		else if (test_bit(STRIPE_BIT_DELAY, &sh->state) &&
+>  			   sh->bm_seq - conf->seq_write > 0)
+>  			list_add_tail(&sh->lru, &conf->bitmap_list);
+>  		else {
 
-> Hi,
-> I have found out something myself. According
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery#Trying_to_assemble_using_--force
-> wiki page, assembling with force can solve my problem. By reading
-> manpage ob mdadm, I have reat this:
-> 
-> <cite>
->        -f, --force
->               Assemble  the array even if the metadata on some devices
-> appears to be out-of-date.  If mdadm cannot find enough working
-> devices to start the array, but can find some devices that are
-> recorded as having failed, then it will mark those devices as working
-> so that the array can be started.  An array which requires --force to
-> be started may contain data corruption.  Use it carefully.
-> </cite>
-> 
-> My new answer is, would it use in raid10 (layout n3) disks with same,
-> highest, event count? If yes, I assume, that result will be 100%
-> consistent. Currently, I have these events count:
-> 
->          Events : 55060
->          Events : 55041
->          Events : 55060
-> 
->          Events : 55060
->          Events : 55041
->          Events : 55041
-> 
->          Events : 55060
->          Events : 55060
->          Events : 55041
-> 
-> So for each part of raid0, I have three disks in raid1. In each raid1,
-> there is at least one disk with events = 55060. So if force will use
-> them to restore (sync) content on other raid1 disks, it should be 100%
-> consistent. WHY does not do this mdraid automatically when I request
-> assemble? There is no risk of dataloss from my point ow view, if the
-> biggest event count is contained at least on one part of raid.
-> 
-> Thanks for fast reply,
-> LuVar
-> 
-> ----- "LuVar" <luvar@plaintext.sk> wrote:
-> 
-> > Hi,
-> > I have raid with 9 devices, layout n3. It is not possible to
-> > autoassemble it with all devices, because 4 devices has different
-> > number of events... How can I assemble it fully and sync with 5
-> > devices which have slightly more events? My current state after
-> mdadm
-> > --assemble /dev/...... is this: http://pastebin.com/vEpd8WWW
-> >
-> > I know that I can delete those 4 disks and add them again, but I do
-> > not want to experiment if removed and newly added disk will be on
-> > correct place in raid and also I would like to not synchronize whole
-> > disks. They miss only a few events. Is there any possibility?
-> >
-> > PS: here is complete examine output:
-> > http://cwillu.com:8080/188.121.181.8/8 and cat /proc/mdstat is here:
-> > http://cwillu.com:8080/188.121.181.8/9
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> linux-raid"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Applied, thanks.
+
+NeilBrown
+
+--Sig_/zNXmJz3ly8B.SW9=jwMHkAr
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVM614znsnt1WYoG5AQIa2Q/7BZyRvMprFDMgk1DbiQQM108XaaOvoWfo
+i2r3fuexSJLI+neEex84Bx1y04zMfaSCjc7fkuRvz8D1Iq2gqRWmX5Dcy1ZtmUns
+5vYmQPkxoyG5TGHZEolO0l7y+KLrus13+gqjA0ioE7X8d9Pd1MVliegVoGrlPmK3
+i1zGw/ULUElI8fHSJ+ylC3E1KcPFZf9Yi2CGmhR6ei0Q4TbMX+T37OoTsWuY7fw+
+rYdT2QGfx0tNVxxyGEqZNtqAEKWDO0Dt4x5EiSH098wDIm8pbsFKwAd4YHrSRSD5
+vJwqOxU7M5W3ToVCbDBeOFVoaxZGMU0lBzabYnP2N5EbG6mj3X0DMwI8/jpA8Am6
+701VLPJ64fi0fVAcY/FTVKiY9S2BXOOlH0DYz7c1dlpnVV9JmhCaiTeBfebOzoWa
+rwDidcp3wRbFljcquG3nYif2DrY2jxdwAGsm8UPpG81CZ/3K/ZPnguFZVNXoY/SC
+0pmM7pNbVcGPfb7rRqEQpS6WPfKuCzDsCdYMWIMO0a4B+DEDPzg13F7Kuq8zuwRV
+6ptwZnnVrX4aEnrjewDgRahVVjRl8xQa9mV8XI4Rl7lf9BzJ20Cb2RkWajyEGFN/
+mFEYrBAH4iqaXST8HSX3vkjKUhOShBv/pTcflEnfV0KXy8p9Rf5iRLBzWoeg9Ecg
+Md3YclKZbXw=
+=u8eC
+-----END PGP SIGNATURE-----
+
+--Sig_/zNXmJz3ly8B.SW9=jwMHkAr--
