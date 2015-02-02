@@ -1,138 +1,120 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/3] md/bitmap: Delete an unnecessary check before the
- function call "kfree"
-Date: Tue, 3 Feb 2015 06:46:03 +1100
-Message-ID: <20150203064603.1ae5cfec@notabene.brown>
-References: <5307CAA2.8060406@users.sourceforge.net>
-	<alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
-	<530A086E.8010901@users.sourceforge.net>
-	<alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
-	<530A72AA.3000601@users.sourceforge.net>
-	<alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
-	<530B5FB6.6010207@users.sourceforge.net>
-	<alpine.DEB.2.10.1402241710370.2074@hadrien>
-	<530C5E18.1020800@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251014170.2080@hadrien>
-	<530CD2C4.4050903@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251840450.7035@hadrien>
-	<530CF8FF.8080600@users.sourceforge.net>
-	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
-	<530DD06F.4090703@users.sourceforge.net>
-	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
-	<5317A59D.4@users.sourceforge.net>
-	<54CF93BB.40206@users.sourceforge.net>
-	<54CF95CA.90102@users.sourceforge.net>
+From: alpha lin <lin.alpha@gmail.com>
+Subject: Fwd: update mdadm version to 3.3.2 in Centos 6.4
+Date: Tue, 3 Feb 2015 06:26:44 +0800
+Message-ID: <CAKtQofvwqzOUiYV0R-E=seF7DyP3w-ytO9oQ-1jw3NjtXq500Q@mail.gmail.com>
+References: <CAKtQoftv3uf-Y1va7QV=qFiJZO0CdSJ7QtfHj7P1Mg5oyj0fRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/6/ZrM9HD6FUceyxl9CY/AX8"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <54CF95CA.90102@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAKtQoftv3uf-Y1va7QV=qFiJZO0CdSJ7QtfHj7P1Mg5oyj0fRw@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/6/ZrM9HD6FUceyxl9CY/AX8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 02 Feb 2015 16:20:42 +0100 SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
-
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Mon, 2 Feb 2015 15:10:57 +0100
->=20
-> The kfree() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
->=20
-> * This issue was detected by using the Coccinelle software.
->=20
-> * Let us also move an assignment for the variable "pages" to the place
->   directly before it is really needed for a loop.
->=20
-> * Let us also move another kfree() call into a block which should belong
->   to a previous check for the variable "bp".
->=20
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/md/bitmap.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index da3604e..47d72df 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -1586,15 +1586,15 @@ static void bitmap_free(struct bitmap *bitmap)
->  	bitmap_file_unmap(&bitmap->storage);
-> =20
->  	bp =3D bitmap->counts.bp;
-> -	pages =3D bitmap->counts.pages;
-> =20
->  	/* free all allocated memory */
-> -
-> -	if (bp) /* deallocate the page memory */
-> +	if (bp) { /* deallocate the page memory */
-> +		pages =3D bitmap->counts.pages;
->  		for (k =3D 0; k < pages; k++)
-> -			if (bp[k].map && !bp[k].hijacked)
-> +			if (!bp[k].hijacked)
->  				kfree(bp[k].map);
-> -	kfree(bp);
-> +		kfree(bp);
-> +	}
->  	kfree(bitmap);
->  }
-> =20
-
-Hi,
- I'm somewhat amused that you removed a test for one kfree, but imposed a
- test on another.  I realised the second test was already there, but why not
- just:
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index da3604e73e8a..ad13b2e1bf1f 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1592,7 +1592,7 @@ static void bitmap_free(struct bitmap *bitmap)
-=20
- 	if (bp) /* deallocate the page memory */
- 		for (k =3D 0; k < pages; k++)
--			if (bp[k].map && !bp[k].hijacked)
-+			if (!bp[k].hijacked)
- 				kfree(bp[k].map);
- 	kfree(bp);
- 	kfree(bitmap);
+Forgot to mention that my Centos 6.4 x64 system has upgrade kernel to 3.16.0.
+So the failure is base on kernel 3.16.0
 
 
-It makes the intention of the patch much clearer.
+---------- Forwarded message ----------
+From: alpha lin <lin.alpha@gmail.com>
+Date: Mon, Feb 2, 2015 at 10:30 PM
+Subject: update mdadm version to 3.3.2 in Centos 6.4
+To: linux-raid@vger.kernel.org
 
-I'd probably prefer to leave the code as it is.  I don't think either patch
-is really an improvement in readability, and readability trumps performance
-in places like this.
 
-Thanks,
-NeilBrown
+Hi All,
 
---Sig_/6/ZrM9HD6FUceyxl9CY/AX8
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+    I would like to know the possibility of update the mdadm package
+from 3.2.5 to 3.3.2 in Redhat Centos 6.4 x64 system.
+    The problem I have is I found that I can create a raid volume
+without any problem. But when reboot the system. The md volume become
+inactive.
+    Below is my step:
+    1. Check out mdadm package from the github.
+    2. unzip the mdadm package and execute "make" and "make install"
+    3. reboot.
+    4. after system reboot, run mdadm to create a imsm RAID Volume.
+   [root@localhost rules.d]# mdadm --version
+    mdadm - v3.3.2 - 21st August 2014
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+[root@localhost rules.d]# mdadm --detail-platform
+       Platform : Intel(R) Rapid Storage Technology enterprise
+        Version : 3.7.0.1049
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+    2TB volumes : supported
+      2TB disks : supported
+      Max Disks : 6
+    Max Volumes : 2 per array, 4 per controller
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+          Port2 : /dev/sda (3JV9BZRP)
+          Port3 : /dev/sdb (1346095A3033)
+          Port4 : /dev/sdc (1346095A2FEC)
+          Port5 : /dev/sdd (1346095A3042)
+          Port0 : - no device attached -
+          Port1 : - no device attached -
 
-iQIVAwUBVM/T/Dnsnt1WYoG5AQKbig//c528vXYW1/Z2m/oKP+mQAiwysNiS/qqp
-FpTQSFnOCAER/rWef8Y+VTl02E7Q7GhYWNLsraftD8RETSqD8YZ8u2IeGCaoAfIi
-AfgL4xjHBg+JB1hN3rLSLLtPPSpGUF2Oev5bHUf/ztNplNpwnTs1Gj+cgTJyKgee
-7HNxha+71ll+S+9i1qH0/A/pAFkrzaTp6uN+JNtxMHMOUTE1XEt0WB4pozpb+K9h
-cDtV7aj+URYSDjmoQrv2CdiCEC2EdTJnbbp8ifqTPflYFYFO5xNH0NqJE388Me68
-txBmjmSDATSaRNcyk9OAB7pdTzQvaypsxRs+I6wNJtLzMY01brtSkiyiCUKUn3Qi
-SaNmg/BXNno9/Bvrzsvw7qq0p7YkTgb8WfG0jxv0hGO58urfru9wAKKwFJbNcurA
-Rog31I5cfmeyLglUdxRIBVnllCOPSyHZjge5+otpDsT6+V0UsEZU/kpppjxbNkoP
-75UJxou1jI9g5TyFCEZFPmC11JI/uyJHhILu+03UYFat9nkkkqYMHnN6Nu6TnP7i
-3nOPELxi/BQxxL6oiV0aLHvejA266mqYug/N/omB6smHcCq86QyG0blszsrqihda
-byCZ0QwEGNiFp9Zkd3s0v8PFEGFbN+8/JlmQhTIv+HXsTvkiAlzEGJCctpLVDxp/
-Nga6KDYr3dE=
-=g19a
------END PGP SIGNATURE-----
+[root@localhost rules.d]# mdadm -C /dev/md0 /dev/sd[b-d] -n 3 -e imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+mdadm: /dev/sdc appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+mdadm: /dev/sdd appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+Continue creating array? y
+mdadm: container /dev/md0 prepared.
 
---Sig_/6/ZrM9HD6FUceyxl9CY/AX8--
+[root@localhost rules.d]# mdadm -C /dev/md/Volume0 /dev/md0 -n 3 -l 5
+mdadm: array /dev/md/Volume0 started.
+
+5. check raid stat
+[root@localhost rules.d]# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md127 : active raid5 sdb[2] sdd[1] sdc[0]
+      234434560 blocks super external:/md0/0 level 5, 128k chunk,
+algorithm 0 [3/3] [UUU]
+      [>....................]  resync =  0.8% (1027072/117217664)
+finish=18.8min speed=102707K/sec
+
+md0 : inactive sdd[2](S) sdc[1](S) sdb[0](S)
+      3315 blocks super external:imsm
+
+unused devices: <none>
+[root@localhost rules.d]#
+[root@localhost dev]# mdmon md0
+mdmon: md0 already managed
+
+6. reboot the system again.  check the md again.
+[root@localhost Desktop]# cat /proc/mdstat
+Personalities :
+md125 : inactive sdi[1](S) sdh[0](S)
+      6306 blocks super external:imsm
+
+md126 : inactive sdg[0](S)
+      3153 blocks super external:imsm
+
+md127 : inactive sdg[0]
+      117217664 blocks super external:/md126/0
+
+unused devices: <none>
+[root@localhost Desktop]#
+
+I found the device label change from sd[a-d] to sd[f-i]
+[root@localhost rules.d]# mdadm --detail-platform
+       Platform : Intel(R) Rapid Storage Technology enterprise
+        Version : 3.7.0.1049
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+    2TB volumes : supported
+      2TB disks : supported
+      Max Disks : 6
+    Max Volumes : 2 per array, 4 per controller
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+          Port2 : /dev/sdf (3JV9BZRP)
+          Port3 : /dev/sdg (1346095A3033)
+          Port4 : /dev/sdh (1346095A2FEC)
+          Port5 : /dev/sdi (1346095A3042)
+          Port0 : - no device attached -
+          Port1 : - no device attached -
+
+Any idea? Does anything missing in my setup ?
