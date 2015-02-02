@@ -1,23 +1,107 @@
-From: =?utf-8?b?SsO2cmc=?= Habenicht <j.habenicht@gmx.de>
-Subject: Array died during grow; now resync stopped
-Date: Mon, 2 Feb 2015 09:41:02 +0000 (UTC)
-Message-ID: <loom.20150202T100454-579@post.gmane.org>
+From: alpha lin <lin.alpha@gmail.com>
+Subject: update mdadm version to 3.3.2 in Centos 6.4
+Date: Mon, 2 Feb 2015 22:30:39 +0800
+Message-ID: <CAKtQoftv3uf-Y1va7QV=qFiJZO0CdSJ7QtfHj7P1Mg5oyj0fRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgYWxsLAoKSSBoYWQgYSBzZXJ2ZXIgY3Jhc2ggZHVyaW5nIGFuIGFycmF5IGdyb3cuCkNvbW1hbmRsaW5lIHdhcyAibWRhZG0gLS1ncm93IC9kZXYvbWQwIC0tcmFpZC1kZXZpY2VzPTYgLS1jaHVuaz0xTSIKCk5vdyB0aGUgc3luYyBpcyBzdHVjayBhdCAyNyUgYW5kIHdvbnQgY29udGludWUuCiQgY2F0IC9wcm9jL21kc3RhdApQZXJzb25hbGl0aWVzIDogW3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0gCm1kMCA6IGFjdGl2ZSByYWlkNSBzZGUxWzBdIHNkZzFbOV0gc2RjMVs2XSBzZGIxWzddIHNkZDFbOF0gc2RmMVs1XQogICAgICA1ODYwNTQ4NjA4IGJsb2NrcyBzdXBlciAxLjAgbGV2ZWwgNSwgMjU2ayBjaHVuaywgYWxnb3JpdGhtIDIgWzYvNl0KW1VVVVVVVV0KICAgICAgWz09PT09Pi4uLi4uLi4uLi4uLi4uLl0gIHJlc2hhcGUgPSAyNy45JSAoNDEwMjI5NzYwLzE0NjUxMzcxNTIpCmZpbmlzaD04NjcwMDIwMTI4LjBtaW4gc3BlZWQ9MEsvc2VjCiAgICAgIAp1bnVzZWQgZGV2aWNlczogPG5vbmU+CgoKJCBtZGFkbSAtRCAvZGV2L21kMAovZGV2L21kMDoKICAgICAgICBWZXJzaW9uIDogMS4wCiAgQ3JlYXRpb24gVGltZSA6IFRodSBPY3QgIDcgMDk6
- Mjg6MDQgMjAxMAogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogICAgIEFycmF5IFNpemUgOiA1ODYwNTQ4NjA4ICg1NTg5LjA1IEdpQiA2MDAxLjIwIEdCKQogIFVzZWQgRGV2IFNpemUgOiAxNDY1MTM3MTUyICgxMzk3LjI2IEdpQiAxNTAwLjMwIEdCKQogICBSYWlkIERldmljZXMgOiA2CiAgVG90YWwgRGV2aWNlcyA6IDYKICAgIFBlcnNpc3RlbmNlIDogU3VwZXJibG9jayBpcyBwZXJzaXN0ZW50CgogICAgVXBkYXRlIFRpbWUgOiBTdW4gRmViICAxIDEzOjMwOjA1IDIwMTUKICAgICAgICAgIFN0YXRlIDogY2xlYW4sIHJlc2hhcGluZyAKIEFjdGl2ZSBEZXZpY2VzIDogNgpXb3JraW5nIERldmljZXMgOiA2CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAoKICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogMjU2SwoKIFJlc2hhcGUgU3RhdHVzIDogMjclIGNvbXBsZXRlCiAgRGVsdGEgRGV2aWNlcyA6IDEsICg1LT42KQogIE5ldyBDaHVua3NpemUgOiAxMDI0SwoKICAgICAgICAgICBOYW1lIDogc3RlbGxpOjMgIChsb2NhbCB0byBob3N0IHN0ZWxsaSkKICAgICAgICAgICBVVUlEIDogNT
- I4NTdkNzc6MzgwNmU0NDY6NDc3ZDQ4NjU6ZDcxMTQ1MWUKICAgICAgICAgRXZlbnRzIDogMjI1NDg2OQoKICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCiAgICAgICAwICAgICAgIDggICAgICAgNjUgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RlMQogICAgICAgNSAgICAgICA4ICAgICAgIDgxICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZjEKICAgICAgIDggICAgICAgOCAgICAgICA0OSAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGQxCiAgICAgICA3ICAgICAgIDggICAgICAgMTcgICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiMQogICAgICAgNiAgICAgICA4ICAgICAgIDMzICAgICAgICA0ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYzEKICAgICAgIDkgICAgICAgOCAgICAgICA5NyAgICAgICAgNSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGcxCgoKc21hcnRjcmwgcmVwb3J0cyB0aGUgZGlza3MgYXJlIE9LLiBObyByZW1hcHBlZCBzZWN0b3JzLCBubyBwZW5kaW5nIHdyaXRlcywgZXRjLgoKVGhlIHN5c3RlbSBsb2FkIGtlZXBzIGF0
- IDIuMDoKJCBjYXQgL3Byb2MvbG9hZGF2ZyAKMi4wMCAyLjAwIDEuOTUgMS8xNDAgMjkzNwp3aGljaCBtYXkgYmUgY2F1c2VkIGJ5IHVkZXZkIGFuZCBtZDBfcmVzaGFwZQokIHBzIGZheAogIFBJRCBUVFkgICAgICBTVEFUICAgVElNRSBDT01NQU5ECiAgICAyID8gICAgICAgIFMgICAgICAwOjAwIFtrdGhyZWFkZF0KLi4uCiAxNjcxID8gICAgICAgIEQgICAgICAwOjAwICBcXyBbbWQwX3Jlc2hhcGVdCi4uLgogMTI4OSA/ICAgICAgICBTcyAgICAgMDowMSAvc2Jpbi91ZGV2ZCAtLWRhZW1vbgogMTY3MiA/ICAgICAgICBEICAgICAgMDowMCAgXF8gL3NiaW4vdWRldmQgLS1kYWVtb24KCgpDb3VsZCB0aGlzIGJlIGNhdXNlZCBieSBhIHNvZnR3YXJlIGxvY2s/CgpUaGUgc3lzdGVtIGdvdCAyRyBSQU0gYW5kIDJHIHN3YXAuIElzIHRoaXMgc3VmZmljaWVudCB0byBjb21wbGV0ZT8KJCBmcmVlCiAgICAgICAgICAgICB0b3RhbCAgICAgICB1c2VkICAgICAgIGZyZWUgICAgIHNoYXJlZCAgICBidWZmZXJzICAgICBjYWNoZWQKTWVtOiAgICAgICAxNzk5MTI0ICAgICAzNTE4MDggICAgMTQ0NzMxNiAgICAgICAgNTQwICAgICAgMTQ2MjAgICAgIDI4NjIxNg
- otLysgYnVmZmVycy9jYWNoZTogICAgICA1MDk3MiAgICAxNzQ4MTUyClN3YXA6ICAgICAgMjEwNDUwOCAgICAgICAgICAwICAgIDIxMDQ1MDgKCgpBbmQgaW4gZG1lc2cgSSBmb3VuZCB0aGlzOgokIGRtZXNnIHwgbGVzcwpbICAgIDUuNDU2OTQxXSBtZDogYmluZDxzZGcxPgpbICAgMTEuMDE1MDE0XSB4b3I6IG1lYXN1cmluZyBzb2Z0d2FyZSBjaGVja3N1bSBzcGVlZApbICAgMTEuMDUxMzg0XSAgICBwcmVmZXRjaDY0LXNzZTogIDMyOTEuMDAwIE1CL3NlYwpbICAgMTEuMDkxMzc1XSAgICBnZW5lcmljX3NzZTogIDMxMjkuMDAwIE1CL3NlYwpbICAgMTEuMDkxMzc4XSB4b3I6IHVzaW5nIGZ1bmN0aW9uOiBwcmVmZXRjaDY0LXNzZSAoMzI5MS4wMDAgTUIvc2VjKQpbICAgMTEuMTU5MzY1XSByYWlkNjogc3NlMngxICAgIDEyNDYgTUIvcwpbICAgMTEuMjI3MzQzXSByYWlkNjogc3NlMngyICAgIDIwNDQgTUIvcwpbICAgMTEuMjk1MzI3XSByYWlkNjogc3NlMng0ICAgIDI0ODcgTUIvcwpbICAgMTEuMjk1MzMxXSByYWlkNjogdXNpbmcgYWxnb3JpdGhtIHNzZTJ4NCAoMjQ4NyBNQi9zKQpbICAgMTEuMjk1MzM0XSByYWlkNjogdXNpbmcgaW50eDEgcmVj
- b3ZlcnkgYWxnb3JpdGhtClsgICAxMS4zMjg3NzFdIG1kOiByYWlkNiBwZXJzb25hbGl0eSByZWdpc3RlcmVkIGZvciBsZXZlbCA2ClsgICAxMS4zMjg3NzZdIG1kOiByYWlkNSBwZXJzb25hbGl0eSByZWdpc3RlcmVkIGZvciBsZXZlbCA1ClsgICAxMS4zMjg3NzldIG1kOiByYWlkNCBwZXJzb25hbGl0eSByZWdpc3RlcmVkIGZvciBsZXZlbCA0ClsgICAxOS44NDA4OTBdIGJpbzogY3JlYXRlIHNsYWIgPGJpby0xPiBhdCAxClsgIDE1OS43MDE0MDZdIG1kOiBtZDAgc3RvcHBlZC4KWyAgMTU5LjcwMTQxM10gbWQ6IHVuYmluZDxzZGcxPgpbICAxNTkuNzA5OTAyXSBtZDogZXhwb3J0X3JkZXYoc2RnMSkKWyAgMTU5LjcwOTk4MF0gbWQ6IHVuYmluZDxzZGQxPgpbICAxNTkuNzIxODU2XSBtZDogZXhwb3J0X3JkZXYoc2RkMSkKWyAgMTU5LjcyMTk1NV0gbWQ6IHVuYmluZDxzZGIxPgpbICAxNTkuNzMzODgzXSBtZDogZXhwb3J0X3JkZXYoc2RiMSkKWyAgMTU5LjczMzk5MV0gbWQ6IHVuYmluZDxzZGMxPgpbICAxNTkuNzQ5ODU2XSBtZDogZXhwb3J0X3JkZXYoc2RjMSkKWyAgMTU5Ljc0OTk1NF0gbWQ6IHVuYmluZDxzZGYxPgpbICAxNTkuNzY5ODg1XSBtZD
- ogZXhwb3J0X3JkZXYoc2RmMSkKWyAgMTU5Ljc2OTk4NV0gbWQ6IHVuYmluZDxzZGUxPgpbICAxNTkuNzgxODczXSBtZDogZXhwb3J0X3JkZXYoc2RlMSkKWyAgMTYwLjQ3MTQ2MF0gbWQ6IG1kMCBzdG9wcGVkLgpbICAxNjAuNDkwMzI5XSBtZDogYmluZDxzZGYxPgpbICAxNjAuNDkwNDc4XSBtZDogYmluZDxzZGQxPgpbICAxNjAuNDkwNjg5XSBtZDogYmluZDxzZGIxPgpbICAxNjAuNDkwOTExXSBtZDogYmluZDxzZGMxPgpbICAxNjAuNDkxMTY0XSBtZDogYmluZDxzZGcxPgpbICAxNjAuNDkxNDA4XSBtZDogYmluZDxzZGUxPgpbICAxNjAuNDkyNjE2XSBtZC9yYWlkOm1kMDogcmVzaGFwZSB3aWxsIGNvbnRpbnVlClsgIDE2MC40OTI2MzhdIG1kL3JhaWQ6bWQwOiBkZXZpY2Ugc2RlMSBvcGVyYXRpb25hbCBhcyByYWlkIGRpc2sgMApbICAxNjAuNDkyNjQwXSBtZC9yYWlkOm1kMDogZGV2aWNlIHNkZzEgb3BlcmF0aW9uYWwgYXMgcmFpZCBkaXNrIDUKWyAgMTYwLjQ5MjY0MV0gbWQvcmFpZDptZDA6IGRldmljZSBzZGMxIG9wZXJhdGlvbmFsIGFzIHJhaWQgZGlzayA0ClsgIDE2MC40OTI2NDJdIG1kL3JhaWQ6bWQwOiBkZXZpY2Ugc2RiMSBvcGVyYXRp
- b25hbCBhcyByYWlkIGRpc2sgMwpbICAxNjAuNDkyNjQ0XSBtZC9yYWlkOm1kMDogZGV2aWNlIHNkZDEgb3BlcmF0aW9uYWwgYXMgcmFpZCBkaXNrIDIKWyAgMTYwLjQ5MjY0NV0gbWQvcmFpZDptZDA6IGRldmljZSBzZGYxIG9wZXJhdGlvbmFsIGFzIHJhaWQgZGlzayAxClsgIDE2MC40OTMxODddIG1kL3JhaWQ6bWQwOiBhbGxvY2F0ZWQgMGtCClsgIDE2MC40OTMyNTNdIG1kL3JhaWQ6bWQwOiByYWlkIGxldmVsIDUgYWN0aXZlIHdpdGggNiBvdXQgb2YgNiBkZXZpY2VzLAphbGdvcml0aG0gMgpbICAxNjAuNDkzMjU2XSBSQUlEIGNvbmYgcHJpbnRvdXQ6ClsgIDE2MC40OTMyNTddICAtLS0gbGV2ZWw6NSByZDo2IHdkOjYKWyAgMTYwLjQ5MzI1OV0gIGRpc2sgMCwgbzoxLCBkZXY6c2RlMQpbICAxNjAuNDkzMjYxXSAgZGlzayAxLCBvOjEsIGRldjpzZGYxClsgIDE2MC40OTMyNjJdICBkaXNrIDIsIG86MSwgZGV2OnNkZDEKWyAgMTYwLjQ5MzI2M10gIGRpc2sgMywgbzoxLCBkZXY6c2RiMQpbICAxNjAuNDkzMjY0XSAgZGlzayA0LCBvOjEsIGRldjpzZGMxClsgIDE2MC40OTMyNjZdICBkaXNrIDUsIG86MSwgZGV2OnNkZzEKWyAgMTYwLjQ5MzMzNl0gbW
- QwOiBkZXRlY3RlZCBjYXBhY2l0eSBjaGFuZ2UgZnJvbSAwIHRvIDYwMDEyMDE3NzQ1OTIKWyAgMTYwLjQ5MzM0MF0gbWQ6IHJlc2hhcGUgb2YgUkFJRCBhcnJheSBtZDAKWyAgMTYwLjQ5MzM0Ml0gbWQ6IG1pbmltdW0gX2d1YXJhbnRlZWRfICBzcGVlZDogMTAwMCBLQi9zZWMvZGlzay4KWyAgMTYwLjQ5MzM0M10gbWQ6IHVzaW5nIG1heGltdW0gYXZhaWxhYmxlIGlkbGUgSU8gYmFuZHdpZHRoIChidXQgbm90IG1vcmUKdGhhbiAyMDAwMDAgS0Ivc2VjKSBmb3IgcmVzaGFwZS4KWyAgMTYwLjQ5MzM1MV0gbWQ6IHVzaW5nIDEyOGsgd2luZG93LCBvdmVyIGEgdG90YWwgb2YgMTQ2NTEzNzE1MmsuClsgIDE2MC45NTE0MDRdICBtZDA6IHVua25vd24gcGFydGl0aW9uIHRhYmxlClsgIDE5MC45ODQ4NzFdIHVkZXZkWzEyODldOiB3b3JrZXIgWzE2NzJdIC9kZXZpY2VzL3ZpcnR1YWwvYmxvY2svbWQwCnRpbWVvdXQ7IGtpbGwgaXQKWyAgMTkwLjk4NDkwMV0gdWRldmRbMTI4OV06IHNlcSAyMjU5ICcvZGV2aWNlcy92aXJ0dWFsL2Jsb2NrL21kMCcga2lsbGVkCgoKCiQgbWRhZG0gLS12ZXJzaW9uCm1kYWRtIC0gdjMuMy4xIC0gNXRoIEp1bmUgMjAxNAoKdW5h
- bWUgLWEKTGludXggWFhYWFggMy4xNC4xNC1nZW50b28gIzMgU01QIFNhdCBKYW4gMzEgMTg6NDU6MDQgQ0VUIDIwMTUgeDg2XzY0IEFNRApBdGhsb24odG0pIElJIFgyIDI0MGUgUHJvY2Vzc29yIEF1dGhlbnRpY0FNRCBHTlUvTGludXgKCgpDdXJyZW50bHkgSSBjYW4ndCBhY2Nlc3MgdGhlIGFycmF5IHRvIHJlYWQgdGhlIHJlbWFpbmluZyBkYXRhLCBub3IgY2FuIEkKY29udGludWUgdGhlIGFycmF5IGdyb3cuCkNhbiB5b3UgaGVscCBtZSBnZXQgaXQgcnVubmluZz8KCgpiZXN0IHJlZ2FyZHMgCkrDtnJnCgoKCg==
+Hi All,
 
+    I would like to know the possibility of update the mdadm package
+from 3.2.5 to 3.3.2 in Redhat Centos 6.4 x64 system.
+    The problem I have is I found that I can create a raid volume
+without any problem. But when reboot the system. The md volume become
+inactive.
+    Below is my step:
+    1. Check out mdadm package from the github.
+    2. unzip the mdadm package and execute "make" and "make install"
+    3. reboot.
+    4. after system reboot, run mdadm to create a imsm RAID Volume.
+   [root@localhost rules.d]# mdadm --version
+    mdadm - v3.3.2 - 21st August 2014
+
+[root@localhost rules.d]# mdadm --detail-platform
+       Platform : Intel(R) Rapid Storage Technology enterprise
+        Version : 3.7.0.1049
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+    2TB volumes : supported
+      2TB disks : supported
+      Max Disks : 6
+    Max Volumes : 2 per array, 4 per controller
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+          Port2 : /dev/sda (3JV9BZRP)
+          Port3 : /dev/sdb (1346095A3033)
+          Port4 : /dev/sdc (1346095A2FEC)
+          Port5 : /dev/sdd (1346095A3042)
+          Port0 : - no device attached -
+          Port1 : - no device attached -
+
+[root@localhost rules.d]# mdadm -C /dev/md0 /dev/sd[b-d] -n 3 -e imsm
+mdadm: /dev/sdb appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+mdadm: /dev/sdc appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+mdadm: /dev/sdd appears to be part of a raid array:
+       level=container devices=0 ctime=Thu Jan  1 08:00:00 1970
+Continue creating array? y
+mdadm: container /dev/md0 prepared.
+
+[root@localhost rules.d]# mdadm -C /dev/md/Volume0 /dev/md0 -n 3 -l 5
+mdadm: array /dev/md/Volume0 started.
+
+5. check raid stat
+[root@localhost rules.d]# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md127 : active raid5 sdb[2] sdd[1] sdc[0]
+      234434560 blocks super external:/md0/0 level 5, 128k chunk,
+algorithm 0 [3/3] [UUU]
+      [>....................]  resync =  0.8% (1027072/117217664)
+finish=18.8min speed=102707K/sec
+
+md0 : inactive sdd[2](S) sdc[1](S) sdb[0](S)
+      3315 blocks super external:imsm
+
+unused devices: <none>
+[root@localhost rules.d]#
+[root@localhost dev]# mdmon md0
+mdmon: md0 already managed
+
+6. reboot the system again.  check the md again.
+[root@localhost Desktop]# cat /proc/mdstat
+Personalities :
+md125 : inactive sdi[1](S) sdh[0](S)
+      6306 blocks super external:imsm
+
+md126 : inactive sdg[0](S)
+      3153 blocks super external:imsm
+
+md127 : inactive sdg[0]
+      117217664 blocks super external:/md126/0
+
+unused devices: <none>
+[root@localhost Desktop]#
+
+I found the device label change from sd[a-d] to sd[f-i]
+[root@localhost rules.d]# mdadm --detail-platform
+       Platform : Intel(R) Rapid Storage Technology enterprise
+        Version : 3.7.0.1049
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+    2TB volumes : supported
+      2TB disks : supported
+      Max Disks : 6
+    Max Volumes : 2 per array, 4 per controller
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+          Port2 : /dev/sdf (3JV9BZRP)
+          Port3 : /dev/sdg (1346095A3033)
+          Port4 : /dev/sdh (1346095A2FEC)
+          Port5 : /dev/sdi (1346095A3042)
+          Port0 : - no device attached -
+          Port1 : - no device attached -
+
+Any idea? Does anything missing in my setup ?
