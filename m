@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 02/26] md/raid5: separate large if clause out of
- fetch_block().
+Subject: [md PATCH 03/26] md/raid5: separate out the easy conditions in
+ need_this_block.
 Date: Wed, 04 Feb 2015 08:42:28 +1100
-Message-ID: <20150203214228.3448.76818.stgit@notabene.brown>
+Message-ID: <20150203214228.3448.37737.stgit@notabene.brown>
 References: <20150203213948.3448.80258.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,57 +13,69 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-fetch_block() has a very large and hard to read 'if' condition.
-
-Separate it into its own function so that it can be
-made more readable.
+Some of the conditions in need_this_block have very straight
+forward motivation.  Separate those out and document them.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid5.c |   19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ drivers/md/raid5.c |   38 +++++++++++++++++++++++++++++---------
+ 1 file changed, 29 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 274db1834d43..5a980fe7c982 100644
+index 5a980fe7c982..21c1e796a0d6 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2895,14 +2895,14 @@ static int want_replace(struct stripe_head *sh, int disk_idx)
-  * Returns 1 when no more member devices need to be checked, otherwise returns
-  * 0 to tell the loop in handle_stripe_fill to continue
-  */
--static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
--		       int disk_idx, int disks)
-+
-+static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
-+			   int disk_idx, int disks)
- {
- 	struct r5dev *dev = &sh->dev[disk_idx];
+@@ -2903,14 +2903,34 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
  	struct r5dev *fdev[2] = { &sh->dev[s->failed_num[0]],
  				  &sh->dev[s->failed_num[1]] };
  
--	/* is the data in this block needed, and can we get it? */
- 	if (!test_bit(R5_LOCKED, &dev->flags) &&
- 	    !test_bit(R5_UPTODATE, &dev->flags) &&
- 	    (dev->toread ||
-@@ -2919,7 +2919,18 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
+-	if (!test_bit(R5_LOCKED, &dev->flags) &&
+-	    !test_bit(R5_UPTODATE, &dev->flags) &&
+-	    (dev->toread ||
+-	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
+-	     s->syncing || s->expanding ||
+-	     (s->replacing && want_replace(sh, disk_idx)) ||
+-	     (s->failed >= 1 && fdev[0]->toread) ||
+-	     (s->failed >= 2 && fdev[1]->toread) ||
++
++	if (test_bit(R5_LOCKED, &dev->flags) ||
++	    test_bit(R5_UPTODATE, &dev->flags))
++		/* No point reading this as we already have it or have
++		 * decided to get it.
++		 */
++		return 0;
++
++	if (dev->toread ||
++	    (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)))
++		/* We need this block to directly satisfy a request */
++		return 1;
++
++	if (s->syncing || s->expanding ||
++	    (s->replacing && want_replace(sh, disk_idx)))
++		/* When syncing, or expanding we read everything.
++		 * When replacing, we need the replaced block.
++		 */
++		return 1;
++
++	if ((s->failed >= 1 && fdev[0]->toread) ||
++	    (s->failed >= 2 && fdev[1]->toread))
++		/* If we want to read from a failed device, then
++		 * we need to actually read every other device.
++		 */
++		return 1;
++
++	if (
+ 	     (sh->raid_conf->level <= 5 && s->failed && fdev[0]->towrite &&
+ 	      (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) &&
+ 	      !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
+@@ -2919,7 +2939,7 @@ static int need_this_block(struct stripe_head *sh, struct stripe_head_state *s,
  	      && s->failed && s->to_write &&
  	      (s->to_write - s->non_overwrite <
  	       sh->raid_conf->raid_disks - sh->raid_conf->max_degraded) &&
--	      (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))))) {
-+	      (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)))))
-+		return 1;
-+	return 0;
-+}
-+
-+static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
-+		       int disk_idx, int disks)
-+{
-+	struct r5dev *dev = &sh->dev[disk_idx];
-+
-+	/* is the data in this block needed, and can we get it? */
-+	if (need_this_block(sh, s, disk_idx, disks)) {
- 		/* we would like to get this block, possibly by computing it,
- 		 * otherwise read it if the backing disk is insync
- 		 */
+-	      (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)))))
++	      (!test_bit(R5_Insync, &dev->flags) || test_bit(STRIPE_PREREAD_ACTIVE, &sh->state))))
+ 		return 1;
+ 	return 0;
+ }
 
 
