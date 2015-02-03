@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 16/26] md/raid5: use ->lock to protect accessing raid5
- sysfs attributes.
+Subject: [md PATCH 15/26] md: remove need for mddev_lock() in md_seq_show()
 Date: Wed, 04 Feb 2015 08:42:29 +1100
-Message-ID: <20150203214229.3448.45933.stgit@notabene.brown>
+Message-ID: <20150203214229.3448.55762.stgit@notabene.brown>
 References: <20150203213948.3448.80258.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,100 +12,58 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is important that mddev->private isn't freed while
-a sysfs attribute function is accessing it.
+The only access in md_seq_show that could suffer from races
+not protected by ->lock is walking the rdev list.
+This can receive sufficient protection from 'rcu'.
 
-So use mddev->lock to protect the setting of ->private to NULL, and
-take that lock when checking ->private for NULL and de-referencing it
-in the sysfs access functions.
+So use rdev_for_each_rcu() and get rid of mddev_lock().
 
-This only applies to the read ('show') side of access.  Write
-access will be handled separately.
+Now reading /proc/mdstat will never block in md_seq_show.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid5.c |   44 ++++++++++++++++++++++++++++----------------
- 1 file changed, 28 insertions(+), 16 deletions(-)
+ drivers/md/md.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dab908b2aa9a..d5b80174b3b3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5354,11 +5354,14 @@ static void raid5d(struct md_thread *thread)
- static ssize_t
- raid5_show_stripe_cache_size(struct mddev *mddev, char *page)
- {
--	struct r5conf *conf = mddev->private;
-+	struct r5conf *conf;
-+	int ret = 0;
-+	spin_lock(&mddev->lock);
-+	conf = mddev->private;
- 	if (conf)
--		return sprintf(page, "%d\n", conf->max_nr_stripes);
--	else
--		return 0;
-+		ret = sprintf(page, "%d\n", conf->max_nr_stripes);
-+	spin_unlock(&mddev->lock);
-+	return ret;
- }
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 421d47e2d457..4caa414fe6a3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6950,9 +6950,6 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 		return 0;
+ 	}
  
- int
-@@ -5422,11 +5425,14 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
- static ssize_t
- raid5_show_preread_threshold(struct mddev *mddev, char *page)
- {
--	struct r5conf *conf = mddev->private;
-+	struct r5conf *conf;
-+	int ret = 0;
-+	spin_lock(&mddev->lock);
-+	conf = mddev->private;
- 	if (conf)
--		return sprintf(page, "%d\n", conf->bypass_threshold);
--	else
--		return 0;
-+		ret = sprintf(page, "%d\n", conf->bypass_threshold);
-+	spin_unlock(&mddev->lock);
-+	return ret;
- }
+-	if (mddev_lock(mddev) < 0)
+-		return -EINTR;
+-
+ 	spin_lock(&mddev->lock);
+ 	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
+ 		seq_printf(seq, "%s : %sactive", mdname(mddev),
+@@ -6966,7 +6963,8 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 		}
  
- static ssize_t
-@@ -5456,11 +5462,14 @@ raid5_preread_bypass_threshold = __ATTR(preread_bypass_threshold,
- static ssize_t
- raid5_show_skip_copy(struct mddev *mddev, char *page)
- {
--	struct r5conf *conf = mddev->private;
-+	struct r5conf *conf;
-+	int ret = 0;
-+	spin_lock(&mddev->lock);
-+	conf = mddev->private;
- 	if (conf)
--		return sprintf(page, "%d\n", conf->skip_copy);
--	else
--		return 0;
-+		ret = sprintf(page, "%d\n", conf->skip_copy);
-+	spin_unlock(&mddev->lock);
-+	return ret;
- }
+ 		sectors = 0;
+-		rdev_for_each(rdev, mddev) {
++		rcu_read_lock();
++		rdev_for_each_rcu(rdev, mddev) {
+ 			char b[BDEVNAME_SIZE];
+ 			seq_printf(seq, " %s[%d]",
+ 				bdevname(rdev->bdev,b), rdev->desc_nr);
+@@ -6982,6 +6980,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 				seq_printf(seq, "(R)");
+ 			sectors += rdev->sectors;
+ 		}
++		rcu_read_unlock();
  
- static ssize_t
-@@ -5512,11 +5521,14 @@ raid5_stripecache_active = __ATTR_RO(stripe_cache_active);
- static ssize_t
- raid5_show_group_thread_cnt(struct mddev *mddev, char *page)
- {
--	struct r5conf *conf = mddev->private;
-+	struct r5conf *conf;
-+	int ret = 0;
-+	spin_lock(&mddev->lock);
-+	conf = mddev->private;
- 	if (conf)
--		return sprintf(page, "%d\n", conf->worker_cnt_per_group);
--	else
--		return 0;
-+		ret = sprintf(page, "%d\n", conf->worker_cnt_per_group);
-+	spin_unlock(&mddev->lock);
-+	return ret;
- }
+ 		if (!list_empty(&mddev->disks)) {
+ 			if (mddev->pers)
+@@ -7025,7 +7024,6 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 		seq_printf(seq, "\n");
+ 	}
+ 	spin_unlock(&mddev->lock);
+-	mddev_unlock(mddev);
  
- static int alloc_thread_groups(struct r5conf *conf, int cnt,
+ 	return 0;
+ }
 
 
