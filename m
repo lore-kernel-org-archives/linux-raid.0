@@ -1,68 +1,84 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] 2 fixes for md in 3.19
-Date: Wed, 4 Feb 2015 08:35:23 +1100
-Message-ID: <20150204083523.7e573cbb@notabene.brown>
+Subject: [md PATCH 00/26] Pending md patches.
+Date: Wed, 04 Feb 2015 08:42:28 +1100
+Message-ID: <20150203213948.3448.80258.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/EBO9WZv6CZKIO_qzuBulhOZ"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Mikulas Patocka <mpatocka@redhat.com>, Heinz Mauelshagen <heinzm@redhat.com>, Alasdair G Kergon <agk@redhat.com>, Peter Zijlstra <peterz@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/EBO9WZv6CZKIO_qzuBulhOZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I probably don't post my pending patches as often as I
+should ... I think I got out of the habit somewhere there.
+So I'll try to do better.
 
-The following changes since commit 59343cd7c4809cf7598789e1cd14563780ae4239:
+Following are a collection of patches that I hope to submit
+for 3.20.  There is lots of clean-up and some re-arranging
+of locking to make sure that accesses to /proc/mdstat and
+most accesses to sysfs files never block.
 
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2015-01-27=
- 13:55:36 -0800)
+Review and testing most welcome.
 
-are available in the git repository at:
+All of these are in my "for-next" branch, and so are in
+linux-next.
 
-  git://neil.brown.name/md/ tags/md/3.19-fixes
+Thanks,
+NeilBrown
 
-for you to fetch changes up to d95901433436aeb921eac58bfd8a2aa77f110384:
 
-  md/bitmap: fix a might_sleep() warning. (2015-02-02 17:08:03 +1100)
+---
 
-----------------------------------------------------------------
-Two fixes for md
+Hannes Reinecke (1):
+      md: wakeup thread upon rdev_dec_pending()
 
-1/ Another live lock, needs backporting
-2/ work-around false positive with new warnings.
+Jes Sorensen (1):
+      md: do_release_stripe(): No need to call md_wakeup_thread() twice
 
-----------------------------------------------------------------
-NeilBrown (2):
-      md/raid5: fix another livelock caused by non-aligned writes.
-      md/bitmap: fix a might_sleep() warning.
+NeilBrown (24):
+      md/raid5: separate large if clause out of fetch_block().
+      md/raid5: separate out the easy conditions in need_this_block.
+      md/raid5: need_this_block: start simplifying the last two conditions.
+      md/raid5: need_this_block: tidy/fix last condition.
+      md: rename mddev->write_lock to mddev->lock
+      md: make ->congested robust against personality changes.
+      md: make merge_bvec_fn more robust in face of personality changes.
+      md/linear: remove rcu protections in favour of suspend/resume
+      md: split detach operation out from ->stop.
+      md: rename ->stop to ->free
+      md: level_store: group all important changes into one place.
+      md: protect ->pers changes with mddev->lock
+      md/bitmap: protect clearing of ->bitmap by mddev->lock
+      md: remove need for mddev_lock() in md_seq_show()
+      md/raid5: use ->lock to protect accessing raid5 sysfs attributes.
+      md: remove mddev_lock() from md_attr_show()
+      md: remove mddev_lock from rdev_attr_show()
+      md: remove unnecessary 'buf' from get_bitmap_file.
+      md: tidy up set_bitmap_file
+      md: move GET_BITMAP_FILE ioctl out from mddev_lock.
+      md: minor cleanup in safe_delay_store.
+      md: use mddev->lock to protect updates to resync_{min,max}.
+      md: move mddev_lock and related to md.h
+      md: make reconfig_mutex optional for writes to md sysfs files.
 
- drivers/md/bitmap.c | 13 +++++++++++++
- drivers/md/raid5.c  |  5 +++++
- 2 files changed, 18 insertions(+)
 
---Sig_/EBO9WZv6CZKIO_qzuBulhOZ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+ drivers/md/bitmap.c    |   15 +
+ drivers/md/dm-raid.c   |    8 
+ drivers/md/faulty.c    |    8 
+ drivers/md/linear.c    |   67 +---
+ drivers/md/md.c        |  814 ++++++++++++++++++++++++++++++------------------
+ drivers/md/md.h        |   57 +++
+ drivers/md/multipath.c |   22 -
+ drivers/md/raid0.c     |   29 +-
+ drivers/md/raid1.c     |   52 +--
+ drivers/md/raid1.h     |    3 
+ drivers/md/raid10.c    |   37 --
+ drivers/md/raid10.h    |    3 
+ drivers/md/raid5.c     |  334 ++++++++++++--------
+ drivers/md/raid5.h     |    1 
+ 14 files changed, 848 insertions(+), 602 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+--
+Signature
 
-iQIVAwUBVNE/HDnsnt1WYoG5AQIIAg/8C0+U+4TBZ9svFC9RYz01wsiPfqP0GtAK
-uX4pIA3mrEulygBzc+3OURADh8Cbwm3/86ou+o7ug7MpLXrUFzkgOVDD2i1J0HqO
-W5vRQbrH+vgFYfC7sCzf9DX7Jqwa+96p1tfV7VaWW5nToQIp3U8HAMcpLuC9BR7Q
-YDU+fMeQIMPxiEZ2p+Upm0KRZJ4wgjE9hBLa9/2Q58+it4l+HAVCgSQktGDN7XIA
-FFBFfsY8ZRICEEdcs9csUtxPgwjLt4qWbIY8LplfuDbtUDdD5U5PhrK/+cdT83Sd
-STgXfvadXihP/qKQBB0/fyUq1vEPrvz+JshWcWhDjY1o7HP6v1nymffrnvHcK5Mm
-HpnythFcz/1D6gDC4+/PDblemOfBBTwGOM0DLtNNfZRKVL+I/5C3JrAItUW4addd
-nnj9M00CjzBL6QPFCZ10BGzlG/7C1Iz2RM+ukO/yB7/ZHrati3MbOSlR3FkYARRG
-rntm9aA565Ew8QcXrihg07M0hjEH5N7r6bJsn/G6J3rlY2G5K1D8shtlG73mq2fC
-tlt89SicI7f8vw0c6RfeMdGj4hMTdAYvJRODbTRMMJtoNED9tiLqwmBpo5JPzTcC
-H8SBYjm/vhpDqOCOCHNAtMD/xg5ys636GdIAdeL1NF7gRnMahNvMeX0QqgSqi/+G
-bJV4+EnYyAA=
-=CyzQ
------END PGP SIGNATURE-----
-
---Sig_/EBO9WZv6CZKIO_qzuBulhOZ--
