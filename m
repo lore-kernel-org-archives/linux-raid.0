@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 21/26] md: move GET_BITMAP_FILE ioctl out from mddev_lock.
-Date: Wed, 04 Feb 2015 08:42:30 +1100
-Message-ID: <20150203214230.3448.64544.stgit@notabene.brown>
+Subject: [md PATCH 20/26] md: tidy up set_bitmap_file
+Date: Wed, 04 Feb 2015 08:42:29 +1100
+Message-ID: <20150203214229.3448.97532.stgit@notabene.brown>
 References: <20150203213948.3448.80258.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,137 +12,62 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It makes more sense to report bitmap_info->file, rather than
-bitmap->file (the later is only available once the array is
-active).
-
-With that change, use mddev->lock to protect bitmap_info being
-set to NULL, and we can call get_bitmap_file() without taking
-the mutex.
+1/ delay setting mddev->bitmap_info.file until 'f' looks
+   usable, so we don't have to unset it.
+2/ Don't allow bitmap file to be set if bitmap_info.file
+   is already set.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   58 ++++++++++++++++++++++++++++++-------------------------
- drivers/md/md.h |    1 +
- 2 files changed, 33 insertions(+), 26 deletions(-)
+ drivers/md/md.c |   16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1e32f2e93d1d..f11aff6bd5e2 100644
+index 01793f24f8de..1e32f2e93d1d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -5292,8 +5292,11 @@ static int do_md_stop(struct mddev *mddev, int mode,
+@@ -5851,22 +5851,24 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
  
- 		bitmap_destroy(mddev);
- 		if (mddev->bitmap_info.file) {
--			fput(mddev->bitmap_info.file);
-+			struct file *f = mddev->bitmap_info.file;
-+			spin_lock(&mddev->lock);
- 			mddev->bitmap_info.file = NULL;
-+			spin_unlock(&mddev->lock);
-+			fput(f);
+ 	if (fd >= 0) {
+ 		struct inode *inode;
+-		if (mddev->bitmap)
++		struct file *f;
++
++		if (mddev->bitmap || mddev->bitmap_info.file)
+ 			return -EEXIST; /* cannot add when bitmap is present */
+-		mddev->bitmap_info.file = fget(fd);
++		f = fget(fd);
+ 
+-		if (mddev->bitmap_info.file == NULL) {
++		if (f == NULL) {
+ 			printk(KERN_ERR "%s: error: failed to get bitmap file\n",
+ 			       mdname(mddev));
+ 			return -EBADF;
  		}
- 		mddev->bitmap_info.offset = 0;
  
-@@ -5503,32 +5506,30 @@ static int get_bitmap_file(struct mddev *mddev, void __user * arg)
- {
- 	mdu_bitmap_file_t *file = NULL; /* too big for stack allocation */
- 	char *ptr;
--	int err = -ENOMEM;
-+	int err;
- 
- 	file = kmalloc(sizeof(*file), GFP_NOIO);
--
- 	if (!file)
--		goto out;
-+		return -ENOMEM;
- 
-+	err = 0;
-+	spin_lock(&mddev->lock);
- 	/* bitmap disabled, zero the first byte and copy out */
--	if (!mddev->bitmap || !mddev->bitmap->storage.file) {
-+	if (!mddev->bitmap_info.file)
- 		file->pathname[0] = '\0';
--		goto copy_out;
--	}
--
--	ptr = d_path(&mddev->bitmap->storage.file->f_path,
--		     file->pathname, sizeof(file->pathname));
--	if (IS_ERR(ptr))
--		goto out;
--
--	memmove(file->pathname, ptr,
--		sizeof(file->pathname)-(ptr-file->pathname));
-+	else if ((ptr = d_path(&mddev->bitmap_info.file->f_path,
-+			       file->pathname, sizeof(file->pathname))),
-+		 IS_ERR(ptr))
-+		err = PTR_ERR(ptr);
-+	else
-+		memmove(file->pathname, ptr,
-+			sizeof(file->pathname)-(ptr-file->pathname));
-+	spin_unlock(&mddev->lock);
- 
--copy_out:
--	err = 0;
--	if (copy_to_user(arg, file, sizeof(*file)))
-+	if (err == 0 &&
-+	    copy_to_user(arg, file, sizeof(*file)))
- 		err = -EFAULT;
--out:
-+
- 	kfree(file);
- 	return err;
- }
-@@ -5900,9 +5901,13 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
- 		mddev->pers->quiesce(mddev, 0);
- 	}
- 	if (fd < 0) {
--		if (mddev->bitmap_info.file)
+-		inode = mddev->bitmap_info.file->f_mapping->host;
++		inode = f->f_mapping->host;
+ 		if (!S_ISREG(inode->i_mode)) {
+ 			printk(KERN_ERR "%s: error: bitmap file must be a regular file\n",
+ 			       mdname(mddev));
+ 			err = -EBADF;
+-		} else if (!(mddev->bitmap_info.file->f_mode & FMODE_WRITE)) {
++		} else if (!(f->f_mode & FMODE_WRITE)) {
+ 			printk(KERN_ERR "%s: error: bitmap file must open for write\n",
+ 			       mdname(mddev));
+ 			err = -EBADF;
+@@ -5876,10 +5878,10 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+ 			err = -EBUSY;
+ 		}
+ 		if (err) {
 -			fput(mddev->bitmap_info.file);
--		mddev->bitmap_info.file = NULL;
-+		struct file *f = mddev->bitmap_info.file;
-+		if (f) {
-+			spin_lock(&mddev->lock);
-+			mddev->bitmap_info.file = NULL;
-+			spin_unlock(&mddev->lock);
+-			mddev->bitmap_info.file = NULL;
 +			fput(f);
-+		}
- 	}
- 
- 	return err;
-@@ -6315,6 +6320,11 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 	case SET_DISK_FAULTY:
- 		err = set_disk_faulty(mddev, new_decode_dev(arg));
- 		goto out;
-+
-+	case GET_BITMAP_FILE:
-+		err = get_bitmap_file(mddev, argp);
-+		goto out;
-+
- 	}
- 
- 	if (cmd == ADD_NEW_DISK)
-@@ -6406,10 +6416,6 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 	 * Commands even a read-only array can execute:
- 	 */
- 	switch (cmd) {
--	case GET_BITMAP_FILE:
--		err = get_bitmap_file(mddev, argp);
--		goto unlock;
--
- 	case RESTART_ARRAY_RW:
- 		err = restart_array(mddev);
- 		goto unlock;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 8770308a8052..b4fbd6a63fcf 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -393,6 +393,7 @@ struct mddev {
- 	 *   in_sync - and related safemode and MD_CHANGE changes
- 	 *   pers (also protected by reconfig_mutex and pending IO).
- 	 *   clearing ->bitmap
-+	 *   clearing ->bitmap_info.file
- 	 */
- 	spinlock_t			lock;
- 	wait_queue_head_t		sb_wait;	/* for waiting on superblock updates */
+ 			return err;
+ 		}
++		mddev->bitmap_info.file = f;
+ 		mddev->bitmap_info.offset = 0; /* file overrides offset */
+ 	} else if (mddev->bitmap == NULL)
+ 		return -ENOENT; /* cannot remove what isn't there */
 
 
