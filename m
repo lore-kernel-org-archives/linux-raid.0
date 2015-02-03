@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 14/26] md/bitmap: protect clearing of ->bitmap by
- mddev->lock
+Subject: [md PATCH 16/26] md/raid5: use ->lock to protect accessing raid5
+ sysfs attributes.
 Date: Wed, 04 Feb 2015 08:42:29 +1100
-Message-ID: <20150203214229.3448.64267.stgit@notabene.brown>
+Message-ID: <20150203214229.3448.45933.stgit@notabene.brown>
 References: <20150203213948.3448.80258.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,40 +13,100 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This makes it safe to inspect the struct while holding only
-the spinlock.
+It is important that mddev->private isn't freed while
+a sysfs attribute function is accessing it.
+
+So use mddev->lock to protect the setting of ->private to NULL, and
+take that lock when checking ->private for NULL and de-referencing it
+in the sysfs access functions.
+
+This only applies to the read ('show') side of access.  Write
+access will be handled separately.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/bitmap.c |    2 ++
- drivers/md/md.h     |    1 +
- 2 files changed, 3 insertions(+)
+ drivers/md/raid5.c |   44 ++++++++++++++++++++++++++++----------------
+ 1 file changed, 28 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 1695ee5f3ffc..3424b1915fc4 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1619,7 +1619,9 @@ void bitmap_destroy(struct mddev *mddev)
- 		return;
- 
- 	mutex_lock(&mddev->bitmap_info.mutex);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index dab908b2aa9a..d5b80174b3b3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5354,11 +5354,14 @@ static void raid5d(struct md_thread *thread)
+ static ssize_t
+ raid5_show_stripe_cache_size(struct mddev *mddev, char *page)
+ {
+-	struct r5conf *conf = mddev->private;
++	struct r5conf *conf;
++	int ret = 0;
 +	spin_lock(&mddev->lock);
- 	mddev->bitmap = NULL; /* disconnect from the md device */
++	conf = mddev->private;
+ 	if (conf)
+-		return sprintf(page, "%d\n", conf->max_nr_stripes);
+-	else
+-		return 0;
++		ret = sprintf(page, "%d\n", conf->max_nr_stripes);
 +	spin_unlock(&mddev->lock);
- 	mutex_unlock(&mddev->bitmap_info.mutex);
- 	if (mddev->thread)
- 		mddev->thread->timeout = MAX_SCHEDULE_TIMEOUT;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e41559dccdc9..8770308a8052 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -392,6 +392,7 @@ struct mddev {
- 	 *   clearing MD_CHANGE_*
- 	 *   in_sync - and related safemode and MD_CHANGE changes
- 	 *   pers (also protected by reconfig_mutex and pending IO).
-+	 *   clearing ->bitmap
- 	 */
- 	spinlock_t			lock;
- 	wait_queue_head_t		sb_wait;	/* for waiting on superblock updates */
++	return ret;
+ }
+ 
+ int
+@@ -5422,11 +5425,14 @@ raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
+ static ssize_t
+ raid5_show_preread_threshold(struct mddev *mddev, char *page)
+ {
+-	struct r5conf *conf = mddev->private;
++	struct r5conf *conf;
++	int ret = 0;
++	spin_lock(&mddev->lock);
++	conf = mddev->private;
+ 	if (conf)
+-		return sprintf(page, "%d\n", conf->bypass_threshold);
+-	else
+-		return 0;
++		ret = sprintf(page, "%d\n", conf->bypass_threshold);
++	spin_unlock(&mddev->lock);
++	return ret;
+ }
+ 
+ static ssize_t
+@@ -5456,11 +5462,14 @@ raid5_preread_bypass_threshold = __ATTR(preread_bypass_threshold,
+ static ssize_t
+ raid5_show_skip_copy(struct mddev *mddev, char *page)
+ {
+-	struct r5conf *conf = mddev->private;
++	struct r5conf *conf;
++	int ret = 0;
++	spin_lock(&mddev->lock);
++	conf = mddev->private;
+ 	if (conf)
+-		return sprintf(page, "%d\n", conf->skip_copy);
+-	else
+-		return 0;
++		ret = sprintf(page, "%d\n", conf->skip_copy);
++	spin_unlock(&mddev->lock);
++	return ret;
+ }
+ 
+ static ssize_t
+@@ -5512,11 +5521,14 @@ raid5_stripecache_active = __ATTR_RO(stripe_cache_active);
+ static ssize_t
+ raid5_show_group_thread_cnt(struct mddev *mddev, char *page)
+ {
+-	struct r5conf *conf = mddev->private;
++	struct r5conf *conf;
++	int ret = 0;
++	spin_lock(&mddev->lock);
++	conf = mddev->private;
+ 	if (conf)
+-		return sprintf(page, "%d\n", conf->worker_cnt_per_group);
+-	else
+-		return 0;
++		ret = sprintf(page, "%d\n", conf->worker_cnt_per_group);
++	spin_unlock(&mddev->lock);
++	return ret;
+ }
+ 
+ static int alloc_thread_groups(struct r5conf *conf, int cnt,
 
 
