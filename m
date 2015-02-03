@@ -1,37 +1,39 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: update mdadm version to 3.3.2 in Centos 6.4
-Date: Tue, 03 Feb 2015 08:19:37 -0500
-Message-ID: <wrfjtwz3t9na.fsf@redhat.com>
-References: <CAKtQoftv3uf-Y1va7QV=qFiJZO0CdSJ7QtfHj7P1Mg5oyj0fRw@mail.gmail.com>
+From: Weedy <weedy2887@gmail.com>
+Subject: Off-Topic Write cache disabling?
+Date: Tue, 3 Feb 2015 12:45:44 -0500
+Message-ID: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKtQoftv3uf-Y1va7QV=qFiJZO0CdSJ7QtfHj7P1Mg5oyj0fRw@mail.gmail.com>
-	(alpha lin's message of "Mon, 2 Feb 2015 22:30:39 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: alpha lin <lin.alpha@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-alpha lin <lin.alpha@gmail.com> writes:
-> Hi All,
->
->     I would like to know the possibility of update the mdadm package
-> from 3.2.5 to 3.3.2 in Redhat Centos 6.4 x64 system.
->     The problem I have is I found that I can create a raid volume
-> without any problem. But when reboot the system. The md volume become
-> inactive.
->     Below is my step:
->     1. Check out mdadm package from the github.
->     2. unzip the mdadm package and execute "make" and "make install"
->     3. reboot.
->     4. after system reboot, run mdadm to create a imsm RAID Volume.
->    [root@localhost rules.d]# mdadm --version
->     mdadm - v3.3.2 - 21st August 2014
+Is there a kernel option or sysfs toggle that disables write caching?
+Or forces the kernel to commit everything constantly.
 
-Any reason why you haven't upgraded to centos 6.6? 6.4 is ancient, and
-6.6 will at least come with mdadm-3.3.
+------
+I don't really want to join another ML, especially a higher traffic
+one just to ask this when it only bugs me sometimes. But I'll shut up
+if this is unwanted.
+------
 
-Jes
+I use a similar kernel config with respect to selected options on all
+my systems but this only effect my laptop.
+On any of my personal system or system I have remote access too
+nr_dirty drifts up and down and nr_writeback stays around 0 (assuming
+the system isn't working hard).
+On my laptop both nr_dirty and nr_writeback stay at 0. I can make them
+go up to 10ish if I untar something but then almost immediately go
+back to 0. If I didn't know better I would swear dirty_*_centisecs or
+something was set to a near instant commit interval but I haven't
+found evidence of that. The hard drive light blinks almost constantly
+once a second, even if I'm at a X login screen.
+As I said this doesn't bug me most of the time but if I let my FF
+session get too large or start multiple VMs anything that might make
+me swap a little, the machine pretty much dies from IOWAIT. Which I'm
+guessing is because it's trying to flush (syncfs?) imediately and
+constantly.
 
-
+You guys spend all day in the IO subsystem, any idea where I can keep
+looking? It has persisted across reboots and kernel updates.
