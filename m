@@ -1,74 +1,52 @@
 From: Bernd Schubert <bernd.schubert@fastmail.fm>
 Subject: Re: Off-Topic Write cache disabling?
-Date: Wed, 04 Feb 2015 13:45:33 +0100
-Message-ID: <54D2146D.8020108@fastmail.fm>
-References: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com> <CAAMCDedvF+Nv9LYqM7Ddgg2xMQKtgQDntOsG0krxWCV4H+zQmA@mail.gmail.com>
+Date: Wed, 04 Feb 2015 13:46:24 +0100
+Message-ID: <54D214A0.7090000@fastmail.fm>
+References: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDedvF+Nv9LYqM7Ddgg2xMQKtgQDntOsG0krxWCV4H+zQmA@mail.gmail.com>
+In-Reply-To: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>, Weedy <weedy2887@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Weedy <weedy2887@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 02/03/2015 07:49 PM, Roger Heflin wrote:
-> In general if you completely disable write caching things will likely
-> be unusable.    When I have benchmarked things attempting to turn off
-> write cache performance has been mostly unusable.
+On 02/03/2015 06:45 PM, Weedy wrote:
+> Is there a kernel option or sysfs toggle that disables write caching?
+> Or forces the kernel to commit everything constantly.
 > 
-> I usually change /etc/sysctl.conf and change these entries to control
-> the amount of dirty cache.
+> ------
+> I don't really want to join another ML, especially a higher traffic
+> one just to ask this when it only bugs me sometimes. But I'll shut up
+> if this is unwanted.
+> ------
 > 
-> vm.dirty_background_bytes = 25000000
-> vm.dirty_bytes = 50000000
+> I use a similar kernel config with respect to selected options on all
+> my systems but this only effect my laptop.
+> On any of my personal system or system I have remote access too
+> nr_dirty drifts up and down and nr_writeback stays around 0 (assuming
+> the system isn't working hard).
+> On my laptop both nr_dirty and nr_writeback stay at 0. I can make them
+> go up to 10ish if I untar something but then almost immediately go
+> back to 0. If I didn't know better I would swear dirty_*_centisecs or
+> something was set to a near instant commit interval but I haven't
+> found evidence of that. The hard drive light blinks almost constantly
+> once a second, even if I'm at a X login screen.
+> As I said this doesn't bug me most of the time but if I let my FF
+> session get too large or start multiple VMs anything that might make
+> me swap a little, the machine pretty much dies from IOWAIT. Which I'm
+> guessing is because it's trying to flush (syncfs?) imediately and
+> constantly.
 > 
-> That says max dirty allowed is 50mb, and it syncs down to 25mb when it syncs.
-
-Er, where do you have this from? 
-dirty_background_bytes and dirty_bytes are more about non-blocking and 
-blocking dirty writes. And about the amount of dirty data that triggers 
-it (i.e. there is no need to flush temporary file data to disk if files
-get immediately deleted after writing them)
- 
-linux/Documentation/sysctl/vm.txt
-
-==============================================================
-
-dirty_background_bytes
-
-Contains the amount of dirty memory at which the background kernel
-flusher threads will start writeback.
-
-Note: dirty_background_bytes is the counterpart of dirty_background_ratio. Only
-one of them may be specified at a time. When one sysctl is written it is
-immediately taken into account to evaluate the dirty memory limits and the
-other appears as 0 when read.
-
-==============================================================
+> You guys spend all day in the IO subsystem, any idea where I can keep
+> looking? It has persisted across reboots and kernel updates.
 
 
-==============================================================
-
-dirty_bytes
-
-Contains the amount of dirty memory at which a process generating disk writes
-will itself start writeback.
-
-Note: dirty_bytes is the counterpart of dirty_ratio. Only one of them may be
-specified at a time. When one sysctl is written it is immediately taken into
-account to evaluate the dirty memory limits and the other appears as 0 when
-read.
-
-Note: the minimum value allowed for dirty_bytes is two pages (in bytes); any
-value lower than this limit will be ignored and the old configuration will be
-retained.
-
-==============================================================
+Try mount -osync or force your application to write with direct IO.
 
 
-
+Cheers,
 Bernd
