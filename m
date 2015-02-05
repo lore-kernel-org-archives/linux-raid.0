@@ -1,96 +1,102 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Array died during grow; now resync stopped
-Date: Thu, 5 Feb 2015 15:40:34 +1100
-Message-ID: <20150205154034.2d2b629f@notabene.brown>
-References: <loom.20150202T100454-579@post.gmane.org>
-	<20150203064056.5dbba8c5@notabene.brown>
-	<trinity-d6d8d6b9-e19b-4ff6-a39f-3748b5fb2e13-1422959753855@3capp-gmx-bs42>
-	<20150204174556.426eb865@notabene.brown>
-	<trinity-85824e10-6eeb-490e-91e9-29cac6bb884e-1423051086472@3capp-gmx-bs24>
+Subject: Re: Off-Topic Write cache disabling?
+Date: Thu, 5 Feb 2015 15:47:25 +1100
+Message-ID: <20150205154725.3ea10167@notabene.brown>
+References: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/eAV5e2YDd1Utw/1v/oIOsGS"; protocol="application/pgp-signature"
+ boundary="Sig_/rwCYxutgE/fD=kAg=Bh=.OW"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <trinity-85824e10-6eeb-490e-91e9-29cac6bb884e-1423051086472@3capp-gmx-bs24>
+In-Reply-To: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?SsO2cmc=?= Habenicht <j.habenicht@gmx.de>
+To: Weedy <weedy2887@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/eAV5e2YDd1Utw/1v/oIOsGS
-Content-Type: text/plain; charset=UTF-8
+--Sig_/rwCYxutgE/fD=kAg=Bh=.OW
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 4 Feb 2015 12:58:06 +0100 "J=C3=B6rg Habenicht" <j.habenicht@gmx.de=
-> wrote:
+On Tue, 3 Feb 2015 12:45:44 -0500 Weedy <weedy2887@gmail.com> wrote:
 
-> It works! :-)) The array syncs!
-
-Excellent!
-
+> Is there a kernel option or sysfs toggle that disables write caching?
+> Or forces the kernel to commit everything constantly.
 >=20
+> ------
+> I don't really want to join another ML, especially a higher traffic
+> one just to ask this when it only bugs me sometimes. But I'll shut up
+> if this is unwanted.
+> ------
 >=20
-> > > >What does
-> > > >cat /proc/1671/stack
-> > > >cat /proc/1672/stack
-> > > >show?
-> > >=20
-> > > $ cat /proc/1671/stack
-> > > cat: /proc/1671/stack: No such file or directory
-> >=20
-> > I guess you don't have that feature compiled into your kernel.
->=20
-> Guess so. I'm going to look to the missing CONFIG_ line.
+> I use a similar kernel config with respect to selected options on all
+> my systems but this only effect my laptop.
 
-CONFIG_STACKTRACE ... in case you haven't found it already.
+Maybe it has something to do with "laptop_mode"
+ =20
+    /proc/sys/vm/laptop_mode
+    https://www.kernel.org/doc/Documentation/laptops/laptop-mode.txt
 
-> >=20
-> > And this is stuck in the same place.... what what is consuming all the
-> > stripes I wonder....
->=20
-> Do you like me to collect more information?
+> On any of my personal system or system I have remote access too
+> nr_dirty drifts up and down and nr_writeback stays around 0 (assuming
+> the system isn't working hard).
+> On my laptop both nr_dirty and nr_writeback stay at 0. I can make them
+> go up to 10ish if I untar something but then almost immediately go
+> back to 0. If I didn't know better I would swear dirty_*_centisecs or
+> something was set to a near instant commit interval but I haven't
+> found evidence of that. The hard drive light blinks almost constantly
+> once a second, even if I'm at a X login screen.
 
-No thanks, the required information was further down.  They were all consum=
-ed
-by the reshape (which needs at least twice the largest chunk size).
+That doesn't quite sound like laptop mode...
 
+laptop mode syncs things more aggressively when the disk is spinning, and
+more lazily when it isn't ... or something like that.
 
-> > If you double it, the problem should go away.
-> >=20
-> > mdadm should  do that for you .... I wonder why it didn't.
-> >=20
->=20
-> Do you like to have more test results?
+So I can imagine nr_dirty staying low - any read will spin the disk, and th=
+at
+will quickly flush out any dirty pages.
+The once-a-second blink is harder to explain.
 
-I had a look at the code and it was fairly obvious.  mdadm adjusts the stri=
-pe
-cache based on the 'old' chunk size.  It never includes the 'new' chunk size
-in those calculations.  I've made a note to fix that.
+Still, it would be worth checking if laptop mode is enabled, and if so
+disable it and see if anything changes.
 
-Thanks,
 NeilBrown
 
 
---Sig_/eAV5e2YDd1Utw/1v/oIOsGS
+
+> As I said this doesn't bug me most of the time but if I let my FF
+> session get too large or start multiple VMs anything that might make
+> me swap a little, the machine pretty much dies from IOWAIT. Which I'm
+> guessing is because it's trying to flush (syncfs?) imediately and
+> constantly.
+>=20
+> You guys spend all day in the IO subsystem, any idea where I can keep
+> looking? It has persisted across reboots and kernel updates.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/rwCYxutgE/fD=kAg=Bh=.OW
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVNL0Qjnsnt1WYoG5AQLQFRAApwVJaucU90HnzdkL9dSiR7kelwo0qwXD
-fWE1PhDEge434YRObs7hO/YU5UFfVKrCGT0ANRF8urURMiBMLu9Brb2QyLhS+T6y
-KhTwFfahsmMU5gFCszL3fXdFR0NIfiNniCuM1bsUwE/hS4TxAr40o1Asq1ELa3M0
-PRvv96rk0wSj+TdStudI3/Y5LpIX1lvS0V61CaCaYwFKh6uuSdJ7yr1kDyg7I9ey
-V1sb+C8QR9YnUVcMKA6MYAyisWrIKkhx9ujVJEy1/cs5Xu+iZev4aNS/pK5jhtyb
-DMaYwtjjWflVdA2eGiyDKNOeCv+WcJK0PTgC9bIImsAKf9GYRSkZOEotGGss3CVA
-cISilpF+C8+2cdp+zdtgajn06khOZjjS+NH9EFpOXNlh89SBoCWTpA/yUg3iAZ9P
-LBfI3fsoSqr/udVPj2C8OmFDpNGeI3mJn59NFcpPzs1XaaS/jNy2e+JVeuseqD/6
-4vMMpDVCUedAEiVp4wsYM5MOA6yK+O/88BNS1uIQF2SxULwcPunFAseBD+peRUzM
-PwNY6nY7xn2oaP34NNBVocs+FP77gvPm9CxSggcXOo92cg+QJUJNyfnLViG7EYzZ
-9YFXDJrMBd67EH0AgVAhnR9EIirxyI9gy+f67Co5g7tz+VFmIANkEVseAwWKE7OJ
-Hb9K4APHlKQ=
-=i0Nt
+iQIVAwUBVNL13Tnsnt1WYoG5AQJ8TQ/9FOcmtPyOO2uBHTzvRcnwemfH0caplAC8
+tZKwdP9iqAofqo/IN5hV/nv1KWDcgRUeQydgYn1An6aoGvaD0OeFiezk7urZ0uNQ
+Zp1B4caK8U23wdCKg2MqTelQ4uX+iWBENB/fskl5N9VWAn8dfawU1CDMBVt4nB+Y
+odf2dqfweuw2L4UypUCp38uDi9eka1Q9eeIC3eynHBQXxhVQjy+9/no59Cj41mHu
+xYsAiAcqmfmk7aaIjVfiD6DuoO/+F0g8cw6wtZI+h4T+NNW+xej27KigOZOyg+K7
+jJnyB80+Xs/kuG4/rujGlf2y++H9zhrOjnbJk8K+0ZE8SkqZE9UJvVZRKP0yk8iW
+CWx8IpOqRdrKaY7zsbCtmME7EzCnmhjLm0XVtkLzs5XcFWkd7OQdV0zDqPmfAygK
+KvDhbZ9m7IXWKbd1D1YvF2Pbki1yWscEjjTRQ3JTV0rMp6uVj4E6miMQwY0hHj5H
+lBkLLO53CrEYq3CZXvbPDZBm5WXqWb4JBfx1JoD/v0ZmW8Nk2J0cBLGP11RsqbXn
+fQDscE1fVIt/lEDCzNawhLidS8ij7KGRwZTbzr65PXuLNbDoSvcJ0wo/b1zMLGuU
+qtIVQW1nlH73ka4dUOoaN8Y24Gos8y5zprKtz9MK3biKCqWzFHSFhqJnsCOLO9z5
+Pr+kQbmljLY=
+=Mg7M
 -----END PGP SIGNATURE-----
 
---Sig_/eAV5e2YDd1Utw/1v/oIOsGS--
+--Sig_/rwCYxutgE/fD=kAg=Bh=.OW--
