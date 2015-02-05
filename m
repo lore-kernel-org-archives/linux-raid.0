@@ -1,87 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: BUG drivers/md/md.c: data-offset reshape renders array
- unloadable
-Date: Thu, 5 Feb 2015 17:14:02 +1100
-Message-ID: <20150205171402.7dc2f394@notabene.brown>
+From: "Wesley W. Terpstra" <wesley@terpstra.ca>
+Subject: Re: BUG drivers/md/md.c: data-offset reshape renders array unloadable
+Date: Thu, 5 Feb 2015 09:17:32 +0100
+Message-ID: <CAA-O0Xj0su7yFBKEZVLaFHiMwc98Ra=4VKy8evuaZ1=dhXTcyw@mail.gmail.com>
 References: <CAA-O0Xjustt5=nNoDzXukY=f-7OwRk=yqug8MCpxcXCt4MdiTw@mail.gmail.com>
 	<CAA-O0XgXc0H4H__8ygLzt_BBW3NpEseG9NZBTZ_syMdir8D=mA@mail.gmail.com>
 	<CAA-O0Xjw8H1nPsi+MsQnrLxv=gC2tj3=W=t3aMnCE6ESUHMF8w@mail.gmail.com>
+	<20150205171402.7dc2f394@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/9PtkrQSEuS1TC257YngTnKQ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA-O0Xjw8H1nPsi+MsQnrLxv=gC2tj3=W=t3aMnCE6ESUHMF8w@mail.gmail.com>
+In-Reply-To: <20150205171402.7dc2f394@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wesley W. Terpstra" <wesley@terpstra.ca>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/9PtkrQSEuS1TC257YngTnKQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Feb 5, 2015 at 7:14 AM, NeilBrown <neilb@suse.de> wrote:
+> A v1.2 array normally has data from the data_offset all the way to the end of
+> the device (maybe rounded  down to chunk size).
 
-On Sun, 25 Jan 2015 17:46:20 +0100 "Wesley W. Terpstra" <wesley@terpstra.ca>
-wrote:
+Right. So in my case there were 5120 sectors unused at the start.
+Unfortunately, I do not know whether the array initially had a 'size'
+that included the trailing 3072 sectors or not.
 
-> On Sat, Jan 24, 2015 at 11:23 PM, Wesley W. Terpstra <wesley@terpstra.ca>=
- wrote:
-> >> First, it is obviously the last test in super_1_load that is rejecting
-> >> the array. The superblock reports more sectors than are calculated, so
-> >> the check
-> >>         if (sectors < le64_to_cpu(sb->data_size)) {
-> >> fails.
-> >
-> > Thus, an alternative explanation could be that the the sb->data_size
-> > was not updated after the reshape completed.
->=20
-> I can confirm that this was the problem.
->=20
-> I manually modified my super block using the attached quick hack.
-> Thereafter I was able to reassemble the array and fsck everything
-> successfully.
->=20
-> I will try and see if I can reproduce the problem tomorrow. It's a
-> pretty nasty bug to have a reshape complete and render your array
-> unassemblable.
+What I do know: before reshape I had a chunk size of 512K and 4 disks
+in raid5. When I created the array, tools at the time did not support
+--data-offset, but I probably specified all the options I could find
+saying I wanted 4M alignment. I reshaped the array from 1 disk to 2 to
+3 to 4 as I added disks.
 
-Thanks for all the details and analysis!!!
+Unfortunately, I do not have a record of what 'mdadm -E' said before I
+started the reshape.
 
-A v1.2 array normally has data from the data_offset all the way to the end =
-of
-the device (maybe rounded  down to chunk size).
+Before I fixed the superblock:
+ Avail Dev Size : 5842897920 (2786.11 GiB 2991.56 GB)
+     Array Size : 8764342272 (8358.33 GiB 8974.69 GB)
+  Used Dev Size : 5842894848 (2786.11 GiB 2991.56 GB)
+    Data Offset : 8192 sectors
 
-So you normally wouldn't be able to increase the data_offset from 5120 to
-8192 unless you first reduced the --size of the array (having reduced the
-size of any filesystem first).
-Did you do that?  That should have reduced sb->data_size appropriately.
+After I fixed the superblock:
+ Avail Dev Size : 5842894848 (2786.11 GiB 2991.56 GB)
+     Array Size : 8764342272 (8358.33 GiB 8974.69 GB)
+    Data Offset : 8192 sectors
 
-If you did --grow the --size first, that should have reduced sb->data_size.
-If you didn't the --grow --data-offset should have failed.
+> So you normally wouldn't be able to increase the data_offset from 5120 to
+> 8192 unless you first reduced the --size of the array (having reduced the
+> size of any filesystem first).
 
-Obviously one of those 'should's didn't...
+Well, it let me do it.
 
-NeilBrown
+> Did you do that?  That should have reduced sb->data_size appropriately.
 
---Sig_/9PtkrQSEuS1TC257YngTnKQ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+No. I just went ahead and increased the data offset.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+> If you did --grow the --size first, that should have reduced sb->data_size.
 
-iQIVAwUBVNMKKjnsnt1WYoG5AQJ2dhAAmwobqsKqov+7KdPzQm3H7/KZPLqic2x2
-YpGJZgKefXrj1OSZO/13uIb7iY4UMmbpf8bWO/DOtJSi+rSjBj60Y9oN9A+csXb3
-awOaBE+r62gawIthEV3Fkn8v0h/mMKiTEG7cDDswUZeWMJGPRTrgF9R+Vlr7Ansy
-/gOO59iyl16uGh++J1Gt6mnvH9lLjsxAuV9eE0RkgKb4hRv2l12hVOAz08y9WW4p
-MOMKQUvUVVvlSv9v9D9Snh9lyaHM3v9jfXlBXss2SrhJ0bZCUC3jTDGFli64WVdj
-/1lmk8fbnZzUC4AtePvSm2wsd8Llf8F0fpWUqmmf7Yak5JOoP0ux4UKswdSEcoFJ
-OHNR95+2rY1oRirVPe6B9f0HS5uRhcj+pSSb+uE5+ynyAvAS7VCoBuzdOaMDrGSM
-ozxD716+hf2JHC1txTj01lRXre/pwhmmHaRmKDj/1OCN475Thvktwtx/hecx6J8k
-En/erfuHRDOmF2HhHIfwjPwKPZMOGb+MXYtOQFaz3uOX+bpK2FFjBKheshZamM/e
-/HPlqsRpCbKTAfITFNh9ngjzk2dT2ZWug3bCkrz7327/CaKtxT8Ssf9NaknN0de3
-KWSnPYOCm9rdsY0fJ6hKcBuXGJhqFqi+jzEyMuHi/VXFShKBDC5JONtEkTgJ8LQ/
-1jCPYbK5rXU=
-=OwgG
------END PGP SIGNATURE-----
+I did not do this step.
 
---Sig_/9PtkrQSEuS1TC257YngTnKQ--
+> If you didn't the --grow --data-offset should have failed.
+
+I did this directly, and it let me. I had a slightly older kernel when
+I started the reshape. 3.17.7 and mdadm 3.3.2.
