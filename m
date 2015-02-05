@@ -1,102 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Off-Topic Write cache disabling?
-Date: Thu, 5 Feb 2015 15:47:25 +1100
-Message-ID: <20150205154725.3ea10167@notabene.brown>
-References: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
+Subject: Re: unsynchronized raid10 with different events count
+Date: Thu, 5 Feb 2015 15:52:52 +1100
+Message-ID: <20150205155252.053096e9@notabene.brown>
+References: <2049102750.36641422714825909.JavaMail.root@shiva>
+	<850189010.36671422720846038.JavaMail.root@shiva>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/rwCYxutgE/fD=kAg=Bh=.OW"; protocol="application/pgp-signature"
+ boundary="Sig_/xtiSFwY6bJBynDGtUApBxpR"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFE24U1G9+bqTzK4eD-cenyc5CGQQdrcu7S9Ks4CsHPS9wJ4zA@mail.gmail.com>
+In-Reply-To: <850189010.36671422720846038.JavaMail.root@shiva>
 Sender: linux-raid-owner@vger.kernel.org
-To: Weedy <weedy2887@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: LuVar <luvar@plaintext.sk>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/rwCYxutgE/fD=kAg=Bh=.OW
+--Sig_/xtiSFwY6bJBynDGtUApBxpR
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 3 Feb 2015 12:45:44 -0500 Weedy <weedy2887@gmail.com> wrote:
+On Sat, 31 Jan 2015 17:14:06 +0100 (GMT+01:00) LuVar <luvar@plaintext.sk>
+wrote:
 
-> Is there a kernel option or sysfs toggle that disables write caching?
-> Or forces the kernel to commit everything constantly.
+> Hi,
+> finally,
+> I have run --re-add thing. It seems that it is what I wanted. My array is=
+ now OK.
 >=20
-> ------
-> I don't really want to join another ML, especially a higher traffic
-> one just to ask this when it only bugs me sometimes. But I'll shut up
-> if this is unwanted.
-> ------
->=20
-> I use a similar kernel config with respect to selected options on all
-> my systems but this only effect my laptop.
+> So only one question remains. Is there any possibility to make improvemen=
+ts and make array autoassemble if there are clear that in raid10, there is =
+consistent highest events count for at least one drive for raid1 subparts? =
+I have layout=3Dn3 for situations when one drive fails, to be able to corre=
+ctly recover from others two same copies and to know that given data are pr=
+obably ok if they are same.
 
-Maybe it has something to do with "laptop_mode"
- =20
-    /proc/sys/vm/laptop_mode
-    https://www.kernel.org/doc/Documentation/laptops/laptop-mode.txt
+It appears from the mdstat you posted:
 
-> On any of my personal system or system I have remote access too
-> nr_dirty drifts up and down and nr_writeback stays around 0 (assuming
-> the system isn't working hard).
-> On my laptop both nr_dirty and nr_writeback stay at 0. I can make them
-> go up to 10ish if I untar something but then almost immediately go
-> back to 0. If I didn't know better I would swear dirty_*_centisecs or
-> something was set to a near instant commit interval but I haven't
-> found evidence of that. The hard drive light blinks almost constantly
-> once a second, even if I'm at a X login screen.
+Personalities : [raid10]=20
+md3 : active raid10 sdj[9] sdl[13] sdm[6] sdi[3] sdb[10]
+      937709952 blocks super 1.2 128K chunks 3 near-copies [9/5] [U_UU__UU_]
+      bitmap: 4/7 pages [16KB], 65536KB chunk
 
-That doesn't quite sound like laptop mode...
+unused devices: <none>
 
-laptop mode syncs things more aggressively when the disk is spinning, and
-more lazily when it isn't ... or something like that.
 
-So I can imagine nr_dirty staying low - any read will spin the disk, and th=
-at
-will quickly flush out any dirty pages.
-The once-a-second blink is harder to explain.
+That it *did* autoassemble and provide you with a working array.  It just
+didn't include all the devices - because some of them looked old and mdadm
+couldn't be sure they were reliable.
 
-Still, it would be worth checking if laptop mode is enabled, and if so
-disable it and see if anything changes.
+You did the correct thing to --re-add them.  That is how you tell mdadm
+"these devices are reliable, even though someone went wrong before and they
+didn't get updated with the latest event count".
+
+So it appears to me that everything is working correctly.
 
 NeilBrown
 
-
-
-> As I said this doesn't bug me most of the time but if I let my FF
-> session get too large or start multiple VMs anything that might make
-> me swap a little, the machine pretty much dies from IOWAIT. Which I'm
-> guessing is because it's trying to flush (syncfs?) imediately and
-> constantly.
->=20
-> You guys spend all day in the IO subsystem, any idea where I can keep
-> looking? It has persisted across reboots and kernel updates.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/rwCYxutgE/fD=kAg=Bh=.OW
+--Sig_/xtiSFwY6bJBynDGtUApBxpR
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVNL13Tnsnt1WYoG5AQJ8TQ/9FOcmtPyOO2uBHTzvRcnwemfH0caplAC8
-tZKwdP9iqAofqo/IN5hV/nv1KWDcgRUeQydgYn1An6aoGvaD0OeFiezk7urZ0uNQ
-Zp1B4caK8U23wdCKg2MqTelQ4uX+iWBENB/fskl5N9VWAn8dfawU1CDMBVt4nB+Y
-odf2dqfweuw2L4UypUCp38uDi9eka1Q9eeIC3eynHBQXxhVQjy+9/no59Cj41mHu
-xYsAiAcqmfmk7aaIjVfiD6DuoO/+F0g8cw6wtZI+h4T+NNW+xej27KigOZOyg+K7
-jJnyB80+Xs/kuG4/rujGlf2y++H9zhrOjnbJk8K+0ZE8SkqZE9UJvVZRKP0yk8iW
-CWx8IpOqRdrKaY7zsbCtmME7EzCnmhjLm0XVtkLzs5XcFWkd7OQdV0zDqPmfAygK
-KvDhbZ9m7IXWKbd1D1YvF2Pbki1yWscEjjTRQ3JTV0rMp6uVj4E6miMQwY0hHj5H
-lBkLLO53CrEYq3CZXvbPDZBm5WXqWb4JBfx1JoD/v0ZmW8Nk2J0cBLGP11RsqbXn
-fQDscE1fVIt/lEDCzNawhLidS8ij7KGRwZTbzr65PXuLNbDoSvcJ0wo/b1zMLGuU
-qtIVQW1nlH73ka4dUOoaN8Y24Gos8y5zprKtz9MK3biKCqWzFHSFhqJnsCOLO9z5
-Pr+kQbmljLY=
-=Mg7M
+iQIVAwUBVNL3JTnsnt1WYoG5AQLhDA/+KLX70U7xsTw55PgR6I6DcTDJHp4o1JDB
+3RapA14P+HqX+Sr1aKgwWhgell2UX1xvl/fWpj7jhurffnicqLwYJza52y4uOv/X
+ews5Mn2VdGYwt8a5ULVVYTuxkUlA0gqyjrJea24VhBcu+zeGG2pd7ObkTkhJ901a
+zsD0GqT2hbqThblx5WIMmTgZwtiEa8y0tpjrrUWRTviaJg+lbn4D1GxwbylNJcHh
++3SafIH98roirTzMpT52TulnscqqzBEFs+KW6QDo9oc1LSGJLC1Tc3gnNVKTFCvC
+5GmLawgVQe9Uc4B8tg5paD60aNHpNArVXsuT4rXony+zGzIok0s6DmipYCGe2vh4
+wS/oHmTR518ISN3jxHd/UqF/jrtCyca4SMsnbuid4MO5EeiTBqZWY87dkOLPAVxC
++c/nTV7sqtwnF0l4ee0PSMg9GSo+rzglsRbyAkkU9ibaoTpz9Ww/+nT9M8Gh4BLc
+15YjI8AgtETHw1ywyo961MzQ3YZkzeM/9PFw9AUf0LXt4DaBepIUuXQu7BOi8EY0
+iNvk7+ZoGOxeIyxyoBe8gWzCl+Ed9j/8fxY44pl1O5OUpdNWBgEPFnicdHburSbD
+iYUYQaudE9TnycjywdaIL2D31JkHwxV+caI5ARsq7PlzFPq9GC3a6qLb6zmf7Gzi
+dtOK/N1N4AE=
+=BGoN
 -----END PGP SIGNATURE-----
 
---Sig_/rwCYxutgE/fD=kAg=Bh=.OW--
+--Sig_/xtiSFwY6bJBynDGtUApBxpR--
