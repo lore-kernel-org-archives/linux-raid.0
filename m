@@ -1,165 +1,144 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md: 'array_size' sysfs attribute
-Date: Fri, 6 Feb 2015 09:34:53 +1100
-Message-ID: <20150206093453.5caa1782@notabene.brown>
-References: <20150205110237.GA7933@mwanda>
+Subject: Re: [PATCH 00/24] Clustered MD RAID1
+Date: Fri, 6 Feb 2015 13:39:52 +1100
+Message-ID: <20150206133952.173f1975@notabene.brown>
+References: <20141218161456.GA29504@shrek.lan>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/wm6p4vWrI3tRzcTnqARHMSx"; protocol="application/pgp-signature"
+ boundary="Sig_/Ii+GQN=QD16p.ymDNO/TJ38"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150205110237.GA7933@mwanda>
+In-Reply-To: <20141218161456.GA29504@shrek.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: dan.j.williams@intel.com, linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: lzhong@suse.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wm6p4vWrI3tRzcTnqARHMSx
+--Sig_/Ii+GQN=QD16p.ymDNO/TJ38
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 5 Feb 2015 14:02:37 +0300 Dan Carpenter <dan.carpenter@oracle.com>
-wrote:
+On Thu, 18 Dec 2014 10:14:57 -0600 Goldwyn Rodrigues <rgoldwyn@suse.de> wro=
+te:
 
-> Hello Dan Williams,
+> Hello,
 >=20
-> The patch b522adcde9c4: "md: 'array_size' sysfs attribute" from Mar
-> 31, 2009, leads to the following static checker warning:
+> This is an attempt to make MD-RAID cluster-aware. The advantage of
+> redundancy can help highly available systems to improve uptime.
+> Currently, the implementation is limited to RAID1 but with further work
+> (and some positive feedback), we could extend this to other compatible
+> RAID scenarios.
 >=20
-> 	drivers/md/md.c:5069 md_run()
-> 	error: we previously assumed 'mddev->pers' could be null (see line 4936)
+> The design document (first patch) is pretty descriptive of how
+> the md has been made cluster-aware and how DLM is used to safeguard data
+> and communication.
 >=20
-> This code is really old.  I don't know why my stupid scripts are marking
-> it as a new warning.=20
-
-Probably because it really is a new warning.  The problem is that your
-"stupid scripts" (and we need more like them!!) are identifying the wrong
-commit.
-
-commit 516253a32c7abf3bc5754b1210106173ed191f7c
-Author: NeilBrown <neilb@suse.de>
-Date:   Mon Dec 15 12:56:58 2014 +1100
-
-    md: protect ->pers changes with mddev->lock
-
-is the guilty party (only in -next at present).  It delays the setting of
-mddev->pers, but doesn't change all intermediate uses for mddev->pers into
-pers.
-
-I've just merged:
--		       (unsigned long long)mddev->pers->size(mddev, 0, 0) / 2);
-+		       (unsigned long long)pers->size(mddev, 0, 0) / 2);
-
-into that patch.
-
-
->                       We don't set "mddev->pers" to non-NULL until the
-> end of the function so it looks like a real bug and that "pers->size"
-> was intended.  When I fix that bug then it un-silences this warning:
+> This work requires some patches to the mdadm tool [1]
 >=20
-> 	drivers/md/md.c:5080 md_run()
-> 	error: we previously assumed 'mddev->pers' could be null (see line 4936)
+> A quick howto:
 >=20
-> And that also is a real bug, but I'm not sure the right fix for that.
+> 1. With your corosync/pacemaker based cluster running execute:
+> # mdadm --create md0 --bitmap=3Dclustered --raid-devices=3D2 --level=3Dmi=
+rror --assume-clean /dev/sda /dev/sdb
 >=20
-> Basically, it's bugs all the way down from the code, to the fix, to the
-> static checker.  *sigh*.
+> 2. On other nodes, issue:
+> # mdadm --assemble md0 /dev/sda /dev/sdb
 >=20
-> drivers/md/md.c
->   5060          err =3D pers->run(mddev);
->   5061          if (err)
->   5062                  printk(KERN_ERR "md: pers->run() failed ...\n");
->   5063          else if (pers->size(mddev, 0, 0) < mddev->array_sectors) {
->   5064                  WARN_ONCE(!mddev->external_size, "%s: default siz=
-e too small,"
->   5065                            " but 'external_size' not in effect?\n"=
-, __func__);
->   5066                  printk(KERN_ERR
->   5067                         "md: invalid array_size %llu > default siz=
-e %llu\n",
->   5068                         (unsigned long long)mddev->array_sectors /=
- 2,
->   5069                         (unsigned long long)mddev->pers->size(mdde=
-v, 0, 0) / 2);
->                                                    ^^^^^^^^^^^^^^^^^^
-> This should be "pers->size()".
+> References:
+> [1] mdadm tool changes: https://github.com/goldwynr/mdadm branch:cluster-=
+md
+> [2] Patches against stable 3.14: https://github.com/goldwynr/linux branch=
+: cluster-md-devel
 >=20
->   5070                  err =3D -EINVAL;
->   5071          }
->   5072          if (err =3D=3D 0 && pers->sync_request &&
->   5073              (mddev->bitmap_info.file || mddev->bitmap_info.offset=
-)) {
->   5074                  err =3D bitmap_create(mddev);
->   5075                  if (err)
->   5076                          printk(KERN_ERR "%s: failed to create bit=
-map (%d)\n",
->   5077                                 mdname(mddev), err);
->   5078          }
->   5079          if (err) {
->   5080                  mddev_detach(mddev);
->                         ^^^^^^^^^^^^^^^^^^^
-> mddev_detach() will oops if mddev->pers() is not set.  We could set
-> mdev->pers earlier, I suppose.
-
-mddev_detach doesn't really need ->pers in this case.  I've merged:
-
-@@ -5134,7 +5134,7 @@ static void mddev_detach(struct mddev *mddev)
- 		wait_event(bitmap->behind_wait,
- 			   atomic_read(&bitmap->behind_writes) =3D=3D 0);
- 	}
--	if (mddev->pers->quiesce) {
-+	if (mddev->pers && mddev->pers->quiesce) {
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
- 	}
+> Regards,
+>=20
 
 
-Thanks a lot to you and your static checker!!
+hi Goldwyn,
+ thanks for these - and sorry for the long delay.   Lots of leave over
+ southern summer, and the lots of email etc to deal with.
 
+This patch set is very close and I am tempted to just apply it and then
+fix things up with subsequent patches.  In order to allow that, could you
+please:
+  - rebase against current upstream
+  - fix the checkpatch.pl errors and warnings.
+    The "WARNING: line over 80 characters" are often a judgement call
+    so I'm not particularly worried about those.  Most, if not all, of
+    the others should be followed just to have consistent layout.
+
+Then I'll queue them up for 3.21, providing I don't find anything that would
+hurt non-cluster usage ....
+ On that topic: why initialise rv to -EINVAL in "metadata_update sends
+ message...".  That looks wrong.
+
+I noticed that a number of times a patch will revert something that a
+previous patch added.  It would be much nicer to fold these changes back in=
+to
+the original patch.  Often this is just extra blank lines, but occasionally
+variable names are changed (md -> mddev).  It should be given the final name
+when introduced.  Every chunk in every patch should be directly relevant to
+that patch.
+
+Some other issues, that could possibly be fixed up afterwards:
+
+ - Is a clustername 64 bytes or 63 bytes?  I would have thought 64,
+   but the use of strlcpy make is 63 plus a nul.  Is that really what is
+   wanted?
+
+ - Based on https://lkml.org/lkml/2012/10/23/580 it might be good to add
+   "default n" to Kconfig, and possible add a WARN() if anyone tries to use
+   the code.
+
+ - I'm a bit concerned about the behaviour on node failure.
+   When a node fails, two things must happen w.r.t the bits in that node's
+   bitmap.
+   1/ The corresponding regions of the array need to be resynced.  You do h=
+ave
+      code to do this.
+   2/ Other nodes must avoid read-balancing on those regions until the
+      resync has completed. =20
+
+   You do have code for this second bit, but it looks wrong.  It avoids
+   read-balancing if ->area_resyncing().  That isn't sufficient.
+   The "area_resyncing" is always (I assume) a relatively small region of
+   the array which will be completely resynced quite quickly.  It must be
+   because writes are blocked to this area.  However the region in which
+   we must disable re-balancing can be much larger.  It covers *all* bits
+   that are set in any unsynced bitmap.  So it isn't just the area that is
+   currently being synced, but all areas that will be synced.
+
+ - I think md_reload_sb() might be too simple.  It probably should check th=
+at
+   nothing serious has changed.  The "mddev->raid_disks =3D 0" look suspici=
+ous.
+   I'll have to think about this a bit more.
+
+That's all I can see for now.  I'll have another look once I have it all in=
+ my tree.
+
+Thanks,
 NeilBrown
 
->=20
->   5081                  pers->free(mddev, mddev->private);
->   5082                  module_put(pers->owner);
->   5083                  bitmap_destroy(mddev);
->   5084                  return err;
->   5085          }
->   5086          if (mddev->queue) {
->   5087                  mddev->queue->backing_dev_info.congested_data =3D=
- mddev;
->   5088                  mddev->queue->backing_dev_info.congested_fn =3D m=
-d_congested;
->   5089                  blk_queue_merge_bvec(mddev->queue, md_mergeable_b=
-vec);
->   5090          }
->=20
-> regards,
-> dan carpenter
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/wm6p4vWrI3tRzcTnqARHMSx
+--Sig_/Ii+GQN=QD16p.ymDNO/TJ38
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVNPwDTnsnt1WYoG5AQLHNxAAj8l6Lu25OxF8JwEV9HZrRuUR4OUC1M/R
-KWpwsefM8Pkx0CbgW97EkPQEaYwCVMOZOlYdBeur3Ra/TWOFrNtNchloFeS+xu2J
-1GEj5rpeKemhR1Hk4MHM8YhjZCeYbiOa0WSPpiRRNuysxMQfwn1zg9vB4kFHNSMc
-PemJckG1hyxq66E+dEULduEwVrePdgFLf0SPIC59QXymUV4tjhcjCo2ppZOyltvW
-Q4eGx6V4kRdmYPQOFwMv0DHs62cI7ww7oLq6c4bpOUXDX96DjZw/ar1p9BA5OSLe
-LzdCSFtkjde78gxljfBFEL+U6O8OhH/xOz3g+2CeO14pXeXGB7C0e49nD+6bD8xv
-mzSuQGoJ7tzH53AFLNNCzaRPgc/j33Lj4RWOtKRcdjns/MXv32Fw6RJIuTe66tTf
-vy1ant38qKSiQd846/MDT2eMhW8ZlLzLoxyu1lHqWj+jhGxwj/i7e7RkNvIeBsoD
-L4Qr2QMOZ+NqYRHzgrfpKNxECPbc1xMgGZegHAEPI7aE40p+PS4AiNRRFLd2U/Xy
-6tCwuphJpVftjdtygecVbfhNCygYapJPu5mRYugay4bdCkiSGl3w7cPgPvpl0jBm
-/r4UTj2MCjmzcKawjHkrUYmpfAG/gOXsfKGkPobxbZRbOvuDEx6WwxVRwj78zZju
-y9NhwjWDOnA=
-=Wu5+
+iQIVAwUBVNQpeDnsnt1WYoG5AQIEWg/7BpWm851YYEtybqYiaq6Mh2JaA4Je72/5
+4p08TRExbVcPBbc/Lw4bpIMimuTetYXTMAO6n5fszRFmiIcq7zrHKLBcmkDj4aZ6
+7eEJUDI0x1xti4kHOokSs0hBa9mVkJHL+5WPzBhpMVQc5pVLXC0Nqq0X9MCcc+qm
+YBVwkRRr2N7KwCQh0OJ6AKUo1qJ6PK1LMtPZMFSg0cyT85pRdAIp5hvXGK5tKoP4
+OGhnQUEOguQW25UmSdnQnm2bgLyW2d034b3sw4WLJY0oLyAaLsQu6DUG9JXBuKJN
+uY39/HPOcZVrt2D7P8+DT4zHfskFIQnBT1c5ar3to7G5YOinlySvMAd2syfLDzGz
+lN7yOAH2RnQHaNwStYZDkbjhLYeUlg9VRJwL1j0VEzDhu7xLHxqwx1NC2duLGXiw
+NIMI5oJfiwaiqmaYoJjWMX3ViubMa4LkKD2GIloxEwEk7D6tkHVWyJV3ciGoNhKk
+qlmSvD4r+7R6oEVehyeJK7X01kdkfNdbQ55HsEFUhirVdEJg8c3VuLYSpyCrOEMG
+UxN/MxMA7M7YPDCryX2nYYBpXpbDKlZgx2d+vzSgBo2/m5Uj/Yeu6yAykehwQ1Xy
+m5CkFsenFsHJVsMYc4/9uc79ItxKDST7nbSiX7Ja4cEL7EkrLcyudxvSSMNRNjbl
+gLP1IpEgkjk=
+=83Pv
 -----END PGP SIGNATURE-----
 
---Sig_/wm6p4vWrI3tRzcTnqARHMSx--
+--Sig_/Ii+GQN=QD16p.ymDNO/TJ38--
