@@ -1,144 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 00/24] Clustered MD RAID1
-Date: Fri, 6 Feb 2015 13:39:52 +1100
-Message-ID: <20150206133952.173f1975@notabene.brown>
-References: <20141218161456.GA29504@shrek.lan>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
+Date: Fri, 6 Feb 2015 12:39:30 +0100
+Message-ID: <20150206113930.GK23123@twins.programming.kicks-ass.net>
+References: <54D3D24E.5060303@cybernetics.com>
+ <20150206085133.2c1ab892@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/Ii+GQN=QD16p.ymDNO/TJ38"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20141218161456.GA29504@shrek.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: lzhong@suse.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150206085133.2c1ab892@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
---Sig_/Ii+GQN=QD16p.ymDNO/TJ38
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Feb 06, 2015 at 08:51:33AM +1100, NeilBrown wrote:
+> That is exactly what is happening here.  However I don't think that is an
+> "observed problem" but rather an "observed false-positive".
+> 
+> If nothing inside the outer loop blocks, then in particular
+> generic_make_request will not be called, so nothing will be added to the
+> queue that blk_schedule_flush_plug flushes.
+> So the first time through the loop, a call the 'schedule()' may not actually
+> block, but every subsequent time it will.
+> So there is no actual problem here.
+> 
+> So I'd be included to add sched_annotate_sleep() in blk_flush_plug_list().
+> 
+> Peter: what do you think is the best way to silence this warning.
 
-On Thu, 18 Dec 2014 10:14:57 -0600 Goldwyn Rodrigues <rgoldwyn@suse.de> wro=
-te:
+> > Call Trace:
 
-> Hello,
->=20
-> This is an attempt to make MD-RAID cluster-aware. The advantage of
-> redundancy can help highly available systems to improve uptime.
-> Currently, the implementation is limited to RAID1 but with further work
-> (and some positive feedback), we could extend this to other compatible
-> RAID scenarios.
->=20
-> The design document (first patch) is pretty descriptive of how
-> the md has been made cluster-aware and how DLM is used to safeguard data
-> and communication.
->=20
-> This work requires some patches to the mdadm tool [1]
->=20
-> A quick howto:
->=20
-> 1. With your corosync/pacemaker based cluster running execute:
-> # mdadm --create md0 --bitmap=3Dclustered --raid-devices=3D2 --level=3Dmi=
-rror --assume-clean /dev/sda /dev/sdb
->=20
-> 2. On other nodes, issue:
-> # mdadm --assemble md0 /dev/sda /dev/sdb
->=20
-> References:
-> [1] mdadm tool changes: https://github.com/goldwynr/mdadm branch:cluster-=
-md
-> [2] Patches against stable 3.14: https://github.com/goldwynr/linux branch=
-: cluster-md-devel
->=20
-> Regards,
->=20
+> >  [<ffffffff8027ee62>] __might_sleep+0x82/0x90
+> >  [<ffffffff803bee06>] generic_make_request_checks+0x36/0x2d0
+> >  [<ffffffff803bf0b3>] generic_make_request+0x13/0x100
+> >  [<ffffffff8054983b>] raid1_unplug+0x12b/0x170
+> >  [<ffffffff803c1302>] blk_flush_plug_list+0xa2/0x230
+> >  [<ffffffff80646383>] io_schedule+0x43/0x80
+> >  [<ffffffff80646787>] bit_wait_io+0x27/0x50
 
+Well, I don't know. I don't particularly like the whole blk_flush_plug()
+thing scheduling while on its way to schedule. If you ever end up
+calling io_schedule() from it there's 'fun'.
 
-hi Goldwyn,
- thanks for these - and sorry for the long delay.   Lots of leave over
- southern summer, and the lots of email etc to deal with.
+Also, how likely is it to actually schedule when doing all that? This
+block layer stuff is somewhat impenetrable for me, too many callbacks.
 
-This patch set is very close and I am tempted to just apply it and then
-fix things up with subsequent patches.  In order to allow that, could you
-please:
-  - rebase against current upstream
-  - fix the checkpatch.pl errors and warnings.
-    The "WARNING: line over 80 characters" are often a judgement call
-    so I'm not particularly worried about those.  Most, if not all, of
-    the others should be followed just to have consistent layout.
+You have some words on how its unlikely, but I can't even find _where_
+it would schedule :/ All I see is a loop calling ->make_request_fn() and
+god only knows where that ends up.
 
-Then I'll queue them up for 3.21, providing I don't find anything that would
-hurt non-cluster usage ....
- On that topic: why initialise rv to -EINVAL in "metadata_update sends
- message...".  That looks wrong.
+So there appear to be two blk_flush_plug() variants, one with an
+@from_schedule = true, which seems to really try not to schedule, which
+seems to suggest the 'false' one (the one above) is meant to schedule?
 
-I noticed that a number of times a patch will revert something that a
-previous patch added.  It would be much nicer to fold these changes back in=
-to
-the original patch.  Often this is just extra blank lines, but occasionally
-variable names are changed (md -> mddev).  It should be given the final name
-when introduced.  Every chunk in every patch should be directly relevant to
-that patch.
+If scheduling is the rule rather than the exception, the above is
+properly broken.
 
-Some other issues, that could possibly be fixed up afterwards:
+But again, I don't know.
 
- - Is a clustername 64 bytes or 63 bytes?  I would have thought 64,
-   but the use of strlcpy make is 63 plus a nul.  Is that really what is
-   wanted?
+If you're confident that scheduling is rare for _ALL_ (current and
+future) block device implementations, not just the raid one, then you
+can annotate blk_flush_plug_list() I suppose.
 
- - Based on https://lkml.org/lkml/2012/10/23/580 it might be good to add
-   "default n" to Kconfig, and possible add a WARN() if anyone tries to use
-   the code.
-
- - I'm a bit concerned about the behaviour on node failure.
-   When a node fails, two things must happen w.r.t the bits in that node's
-   bitmap.
-   1/ The corresponding regions of the array need to be resynced.  You do h=
-ave
-      code to do this.
-   2/ Other nodes must avoid read-balancing on those regions until the
-      resync has completed. =20
-
-   You do have code for this second bit, but it looks wrong.  It avoids
-   read-balancing if ->area_resyncing().  That isn't sufficient.
-   The "area_resyncing" is always (I assume) a relatively small region of
-   the array which will be completely resynced quite quickly.  It must be
-   because writes are blocked to this area.  However the region in which
-   we must disable re-balancing can be much larger.  It covers *all* bits
-   that are set in any unsynced bitmap.  So it isn't just the area that is
-   currently being synced, but all areas that will be synced.
-
- - I think md_reload_sb() might be too simple.  It probably should check th=
-at
-   nothing serious has changed.  The "mddev->raid_disks =3D 0" look suspici=
-ous.
-   I'll have to think about this a bit more.
-
-That's all I can see for now.  I'll have another look once I have it all in=
- my tree.
-
-Thanks,
-NeilBrown
-
---Sig_/Ii+GQN=QD16p.ymDNO/TJ38
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVNQpeDnsnt1WYoG5AQIEWg/7BpWm851YYEtybqYiaq6Mh2JaA4Je72/5
-4p08TRExbVcPBbc/Lw4bpIMimuTetYXTMAO6n5fszRFmiIcq7zrHKLBcmkDj4aZ6
-7eEJUDI0x1xti4kHOokSs0hBa9mVkJHL+5WPzBhpMVQc5pVLXC0Nqq0X9MCcc+qm
-YBVwkRRr2N7KwCQh0OJ6AKUo1qJ6PK1LMtPZMFSg0cyT85pRdAIp5hvXGK5tKoP4
-OGhnQUEOguQW25UmSdnQnm2bgLyW2d034b3sw4WLJY0oLyAaLsQu6DUG9JXBuKJN
-uY39/HPOcZVrt2D7P8+DT4zHfskFIQnBT1c5ar3to7G5YOinlySvMAd2syfLDzGz
-lN7yOAH2RnQHaNwStYZDkbjhLYeUlg9VRJwL1j0VEzDhu7xLHxqwx1NC2duLGXiw
-NIMI5oJfiwaiqmaYoJjWMX3ViubMa4LkKD2GIloxEwEk7D6tkHVWyJV3ciGoNhKk
-qlmSvD4r+7R6oEVehyeJK7X01kdkfNdbQ55HsEFUhirVdEJg8c3VuLYSpyCrOEMG
-UxN/MxMA7M7YPDCryX2nYYBpXpbDKlZgx2d+vzSgBo2/m5Uj/Yeu6yAykehwQ1Xy
-m5CkFsenFsHJVsMYc4/9uc79ItxKDST7nbSiX7Ja4cEL7EkrLcyudxvSSMNRNjbl
-gLP1IpEgkjk=
-=83Pv
------END PGP SIGNATURE-----
-
---Sig_/Ii+GQN=QD16p.ymDNO/TJ38--
+Otherwise I would suggest adding them one at a time in whatever blk
+device thing likes to go schedule on us. Also, add a comment that
+explains why its rare for the future us who need to look at it again.
