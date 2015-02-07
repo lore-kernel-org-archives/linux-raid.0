@@ -1,7 +1,7 @@
 From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
 Subject: Re: md resync ignoring unreadable sectors
-Date: Sun, 08 Feb 2015 10:43:42 +1100
-Message-ID: <54D6A32E.6070505@eyal.emu.id.au>
+Date: Sun, 08 Feb 2015 10:49:54 +1100
+Message-ID: <54D6A4A2.20909@eyal.emu.id.au>
 References: <20150208024745.01b9d3ff@natsu>	<54D69433.9060605@eyal.emu.id.au> <20150208040438.156a8554@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
@@ -28,26 +28,10 @@ On 08/02/15 10:04, Roman Mamedov wrote:
 >
 > I wouldn't expect mdadm to have any headers or unused areas as far as 133 MB
 > into a RAID member.
+>
 
-Roman,
-
-You may want to read
-	https://raid.wiki.kernel.org/index.php/RAID_superblock_formats
-
-For me:
-
-# parted -l
-...
-Number  Start   End     Size    File system  Name  Flags
-  1      1049kB  4001GB  4001GB
-...
-
-# mdadm --examine /dev/sdc1
-...
-   Data Offset : 262144 sectors
-...
-
-With required alignment etc. it may reach your 133MB.
+You can also read the earlier discussion starting 26/Feb/14:
+	Subject: how to handle bad sectors in md control areas?
 
 cheers
 
