@@ -1,47 +1,58 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: md resync ignoring unreadable sectors
-Date: Sun, 8 Feb 2015 12:23:19 -0500
-Message-ID: <21719.39815.552196.408539@quad.stoffel.home>
-References: <20150208024745.01b9d3ff@natsu>
-	<54D69433.9060605@eyal.emu.id.au>
-	<20150208040438.156a8554@natsu>
+From: Marc Widmer <metafor@gmail.com>
+Subject: raid md126, md127 problem after reboot, howto fix?
+Date: Sun, 08 Feb 2015 20:03:51 +0100
+Message-ID: <54D7B317.5010809@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150208040438.156a8554@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Roman" == Roman Mamedov <rm@romanrm.net> writes:
+Hi List
 
-Roman> On Sun, 08 Feb 2015 09:39:47 +1100
-Roman> Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
+I have no deep unterstand about raids, beside setting them up initially and
+replacing disks if needed. So this error has never happened to me before:
 
->> The error did not show up during normal operation (or during scrub), only during the smartctl long test.
->> What triggered the error for you?
+After a reboot i have a really strange behaviour on my server. Disks are
+not marked faulty, but raid is "fallend apart".
 
-Roman> Just appeared during boot-up after a reboot (after 50 days uptime) which was
-Roman> performed for some hardware upgrades (RAM, SATA controller). The error doesn't
-Roman> go away after swapping the SATA controller for different one.
+/proc/mdstat shows me:
 
->> I looked up the size of the different parts of the RAID to arrive at that conclusion. Dumping the sectors
->> around the bad area also showed it to be all zeroes.
+md126 : active raid1 sda1[0]
+       10485696 blocks [2/1] [U_]
 
-Roman> I wouldn't expect mdadm to have any headers or unused areas as
-Roman> far as 133 MB into a RAID member.
+md127 : active raid1 sda2[0]
+       721558464 blocks [2/1] [U_]
 
-Roman,
+md1 : active raid1 sdb1[1]
+       10485696 blocks [2/1] [_U]
 
-I would immediately add in a third RAID1 member, wait for it to
-resync, then pull out the bad drive and write zeros to the entire
-drive to force any and all bad sectors to get over-written and
-hopefully reallocated from good sectors.  
+md2 : active raid1 sdb2[1]
+       721558464 blocks [2/1] [_U]
 
-But I'd also treat the drive as suspect and replace it ASAP.  Keet it
-around as a scratch drive, or a temp space area you don't care about
-if you like, but not of important data if at all possible.
+wished would be something similar to:
+md1 : active raid1 sdb1[1] sda1[0]
+       10238912 blocks [2/2] [UU]
 
-John
+md2 : active raid1 sdb2[1] sda2[0]
+       1942746048 blocks [2/2] [UU]
+
+Currently only md1, md2 are running. nmon shows me, that only disks sdb is
+active, sda is not doing anything.
+
+I run debian squeeze.
+
+I am a bit concerned what to do, because at the moment i run on one disk
+only and if things go wrong i end up with a server not running (downtime)
+and possible data loss (beside backups).
+
+Any ideas what i should do? Howto put the raid back together, possibly in
+live mode, without rebooting in rescue mode and risk long downtime?
+
+Any help would be greatly appreciated as by now the only thing i had to do
+was resyncing a disk after usual hd crash.
+
+Best
+marc
