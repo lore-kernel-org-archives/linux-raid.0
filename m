@@ -1,69 +1,50 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: Re: raid md126, md127 problem after reboot, howto fix?
-Date: Mon, 09 Feb 2015 10:55:06 +0100
-Message-ID: <54D883FA.8080401@profitbricks.com>
-References: <54D7B317.5010809@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH RESEND] Monitor: fix for regression with container devices
+Date: Mon,  9 Feb 2015 11:13:50 +0100
+Message-ID: <1423476830-15635-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54D7B317.5010809@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc Widmer <metafor@gmail.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 08.02.2015 20:03, Marc Widmer wrote:
-> Hi List
-> 
-> I have no deep unterstand about raids, beside setting them up initially and
-> replacing disks if needed. So this error has never happened to me before:
-> 
-> After a reboot i have a really strange behaviour on my server. Disks are
-> not marked faulty, but raid is "fallend apart".
-> 
-> /proc/mdstat shows me:
-> 
-> md126 : active raid1 sda1[0]
->       10485696 blocks [2/1] [U_]
-> 
-> md127 : active raid1 sda2[0]
->       721558464 blocks [2/1] [U_]
-> 
-> md1 : active raid1 sdb1[1]
->       10485696 blocks [2/1] [_U]
-> 
-> md2 : active raid1 sdb2[1]
->       721558464 blocks [2/1] [_U]
-> 
-> wished would be something similar to:
-> md1 : active raid1 sdb1[1] sda1[0]
->       10238912 blocks [2/2] [UU]
-> 
-> md2 : active raid1 sdb2[1] sda2[0]
->       1942746048 blocks [2/2] [UU]
-> 
-> Currently only md1, md2 are running. nmon shows me, that only disks sdb is
-> active, sda is not doing anything.
-> 
-> I run debian squeeze.
-> 
-> I am a bit concerned what to do, because at the moment i run on one disk
-> only and if things go wrong i end up with a server not running (downtime)
-> and possible data loss (beside backups).
-> 
-> Any ideas what i should do? Howto put the raid back together, possibly in
-> live mode, without rebooting in rescue mode and risk long downtime?
+This patch fixes 2 problems introduced by commit 9a518d8: not closing a
+file descriptor and ignoring container devices. Array state is always
+"inactive" for containers, so we make sure that the device is not a
+container by reading also the "level" sysfs entry.
 
-Just stop all arrays which aren't in use at the moment and assemble them
-manually. If they are already running degraded, then add the now
-unassociated disks to their respective running arrays.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ Monitor.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-$ mdadm --stop /dev/md126
-$ mdadm --stop /dev/md127
-$ mdadm /dev/md1 --add /dev/sda1
-$ mdadm /dev/md2 --add /dev/sda2
+diff --git a/Monitor.c b/Monitor.c
+index 971d2ec..66d67ba 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -483,11 +483,17 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+ 		    strncmp(buf,"inact",5) == 0) {
+ 			if (fd >= 0)
+ 				close(fd);
+-			if (!st->err)
+-				alert("DeviceDisappeared", dev, NULL, ainfo);
+-			st->err++;
+-			return 0;
++			fd = sysfs_open(st->devnm, NULL, "level");
++			if (fd < 0 || read(fd, buf, 10) != 0) {
++				if (fd >= 0)
++					close(fd);
++				if (!st->err)
++					alert("DeviceDisappeared", dev, NULL, ainfo);
++				st->err++;
++				return 0;
++			}
+ 		}
++		close(fd);
+ 	}
+ 	fd = open(dev, O_RDONLY);
+ 	if (fd < 0) {
+-- 
+2.1.4
 
-This could require some syncing but then everything should be normal again.
-
-Cheers,
-Sebastian
