@@ -1,50 +1,35 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH RESEND] Monitor: fix for regression with container devices
-Date: Mon,  9 Feb 2015 11:13:50 +0100
-Message-ID: <1423476830-15635-1-git-send-email-artur.paszkiewicz@intel.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: raid md126, md127 problem after reboot, howto fix?
+Date: Mon, 09 Feb 2015 10:22:50 +0000
+Message-ID: <54D88A7A.4000207@youngman.org.uk>
+References: <54D7B317.5010809@gmail.com> <54D883FA.8080401@profitbricks.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <54D883FA.8080401@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Marc Widmer <metafor@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch fixes 2 problems introduced by commit 9a518d8: not closing a
-file descriptor and ignoring container devices. Array state is always
-"inactive" for containers, so we make sure that the device is not a
-container by reading also the "level" sysfs entry.
+On 09/02/15 09:55, Sebastian Parschauer wrote:
+>> > Any ideas what i should do? Howto put the raid back together, possibly in
+>> > live mode, without rebooting in rescue mode and risk long downtime?
+> Just stop all arrays which aren't in use at the moment and assemble them
+> manually. If they are already running degraded, then add the now
+> unassociated disks to their respective running arrays.
+> 
+> $ mdadm --stop /dev/md126
+> $ mdadm --stop /dev/md127
+> $ mdadm /dev/md1 --add /dev/sda1
+> $ mdadm /dev/md2 --add /dev/sda2
+> 
+> This could require some syncing but then everything should be normal again.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
----
- Monitor.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+This isn't just a Debian/Ubuntu problem - I run gentoo.
 
-diff --git a/Monitor.c b/Monitor.c
-index 971d2ec..66d67ba 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -483,11 +483,17 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 		    strncmp(buf,"inact",5) == 0) {
- 			if (fd >= 0)
- 				close(fd);
--			if (!st->err)
--				alert("DeviceDisappeared", dev, NULL, ainfo);
--			st->err++;
--			return 0;
-+			fd = sysfs_open(st->devnm, NULL, "level");
-+			if (fd < 0 || read(fd, buf, 10) != 0) {
-+				if (fd >= 0)
-+					close(fd);
-+				if (!st->err)
-+					alert("DeviceDisappeared", dev, NULL, ainfo);
-+				st->err++;
-+				return 0;
-+			}
- 		}
-+		close(fd);
- 	}
- 	fd = open(dev, O_RDONLY);
- 	if (fd < 0) {
--- 
-2.1.4
+And isn't there a re-add option? That will hopefully just require a
+recovery rather than a total resync.
 
+Cheers,
+Wol
