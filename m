@@ -1,86 +1,75 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
-Date: Mon, 9 Feb 2015 10:10:00 +0100
-Message-ID: <20150209091000.GN5029@twins.programming.kicks-ass.net>
-References: <54D3D24E.5060303@cybernetics.com>
- <20150206085133.2c1ab892@notabene.brown>
- <20150206113930.GK23123@twins.programming.kicks-ass.net>
- <20150209121357.29f19d36@notabene.brown>
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: Re: raid md126, md127 problem after reboot, howto fix?
+Date: Mon, 09 Feb 2015 10:41:22 +0100
+Message-ID: <54D880C2.4080501@profitbricks.com>
+References: <54D7B317.5010809@gmail.com> <54D7D551.2030800@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150209121357.29f19d36@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <54D7D551.2030800@youngman.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Marc Widmer <metafor@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 09, 2015 at 12:13:57PM +1100, NeilBrown wrote:
-> I had to re-read the code (And your analysis) a couple of times to be sure ...
-
-Sorry :-)
-
-> However, when io_schedule() explicitly calls blk_flush_plug(), then
-> @from_schedule=false variant is used, and the unplug functions are allowed to
-> allocate memory and block and maybe even call mempool_alloc() which might
-> call io_schedule().
+On 08.02.2015 22:29, Wols Lists wrote:
+> On 08/02/15 19:03, Marc Widmer wrote:
+>> Hi List
+>>
+>> I have no deep unterstand about raids, beside setting them up initially and
+>> replacing disks if needed. So this error has never happened to me before:
+>>
+>> After a reboot i have a really strange behaviour on my server. Disks are
+>> not marked faulty, but raid is "fallend apart".
+>>
+>> /proc/mdstat shows me:
+>>
+>> md126 : active raid1 sda1[0]
+>>       10485696 blocks [2/1] [U_]
+>>
+>> md127 : active raid1 sda2[0]
+>>       721558464 blocks [2/1] [U_]
+>>
+>> md1 : active raid1 sdb1[1]
+>>       10485696 blocks [2/1] [_U]
+>>
+>> md2 : active raid1 sdb2[1]
+>>       721558464 blocks [2/1] [_U]
+>>
+>> wished would be something similar to:
+>> md1 : active raid1 sdb1[1] sda1[0]
+>>       10238912 blocks [2/2] [UU]
+>>
+>> md2 : active raid1 sdb2[1] sda2[0]
+>>       1942746048 blocks [2/2] [UU]
+>>
+>> Currently only md1, md2 are running. nmon shows me, that only disks sdb is
+>> active, sda is not doing anything.
+>>
+>> I run debian squeeze.
 > 
-> This shouldn't be a problem as blk_flush_plug() spliced out the plug list, so
-> any recursive call will find an empty list and do nothing.
+> What version of mdadm are you running? 3.2.6 or thereabouts?
+>>
+>> I am a bit concerned what to do, because at the moment i run on one disk
+>> only and if things go wrong i end up with a server not running (downtime)
+>> and possible data loss (beside backups).
+>>
+>> Any ideas what i should do? Howto put the raid back together, possibly in
+>> live mode, without rebooting in rescue mode and risk long downtime?
+>>
+>> Any help would be greatly appreciated as by now the only thing i had to do
+>> was resyncing a disk after usual hd crash.
+>>
+> The reason I ask is this looks like a bug I had - if I'm right it's a
+> known problem and you need to upgrade mdadm.
 
-Unless, something along the way stuck something back on, right? So
-should we stick an:
+Yeah, pretty much sounds like the bad udev rules with Squeeze and old
+mdadm. E.g. deactivation of the MD udev rules and assembling via init
+scripts is a way to workaround this.
 
-	WARN_ON(current->in_iowait);
+I have some test VMs providing MD RAID-1 on iSCSI targets and have seen
+the same issue when logging in to the targets. Deactivation of the udev
+rules and manual assembly helped.
 
-somewhere near where things are added to this plug list? (and move the
-blk_flush_plug() call inside of where that's actually true of course).
-
-> Worst case is that a wait_event loop that calls io_schedule() (i.e.
-> wait_on_bit_io()) might not block in the first call to io_schedule()
-> if the unplugging needed to wait.  Every subsequent call will block as
-> required as there is nothing else to add requests to the plug queue.
-
-Again, assuming @cond will not actually stick something on this list.
-Which if we add the above we'll get warned about.
-
-> It isn't that scheduling is "rare" - it is that it can only occur once in a
-> loop which doesn't expect it.
-
-With the above WARN stuck in, agreed.
-
-> So I propose the following, though I haven't tested it.
-> 
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index e628cb11b560..b0f12ab3df23 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -4374,6 +4374,11 @@ void __sched io_schedule(void)
->  
->  	delayacct_blkio_start();
->  	atomic_inc(&rq->nr_iowait);
-> +	/* Any sleeping in blk_flush_plug() should not
-> +	 * trigger the "do not call blocking ops" warning
-> +	 * as it can only happen once in a wait_event loop.
-> +	 */
-
-Might I suggest the 'regular' multi-line comment style, and a reference
-to the above WARN that makes everything actually work?
-
-	/*
-	 * multi-line
-	 *  comments have an empty
-	 *    line at the start... As per CodingStyle ch. 8
-	 */
-
-> +	sched_annotate_sleep();
->  	blk_flush_plug(current);
-
-Also, at this point, should we put it in blk_flush_plug()?
-
-
-The only thing that really goes wrong then is if people 'forget' to put
-a loop around io_schedule().
+Cheers,
+Sebastian
