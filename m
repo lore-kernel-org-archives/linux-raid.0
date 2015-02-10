@@ -1,93 +1,147 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wierd: Degrading while recovering raid5
-Date: Tue, 10 Feb 2015 08:51:22 -0500
-Message-ID: <54DA0CDA.2010800@turmel.org>
-References: <CAP7a4UQCB=jdf7=sz8MoYL+WGbMbT_09_xL460DLX-epLAS0Sw@mail.gmail.com> <54D9B4AD.8010204@websitemanagers.com.au>
+From: Valentijn <v@lentijn.sess.ink>
+Subject: ignoring %s as it reports %s as failed
+Date: Tue, 10 Feb 2015 16:54:44 +0100
+Message-ID: <54DA29C4.2010000@lentijn.sess.ink>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54D9B4AD.8010204@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Kyle Logue <teque5@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Kyle,
+Hello list,
 
-Your symptoms look like classic timeout mismatch.  Details interleaved.
+This is a repost - I sent it to linux-raid back in January, but you were 
+all still having holidays - or hangovers or anything.
 
-On 02/10/2015 02:35 AM, Adam Goryachev wrote:
+I was wondering why "--assemble --force" didn't work for a particular 
+(failed) raid-device. I got it to work and the data is safe now, but the 
+question about the non-working assembly remains.
 
-> There are other people who will jump in and help you with your problem,
-> but I'll add a couple of pointers while you are waiting. See below.
+I was trying to resurrect an array from a Synology disk station. As 
+follows: raid5 array with 4 disks, one disk utterly broken 
+(click-clack-click), one disk thrown out of the array.
 
-> On 10/02/15 15:20, Kyle Logue wrote:
->> Hey all:
->>
->> I have a 5 disk software raid5 that was working fine until I decided
->> to swap out an old disk with a new one.
->>
->> mdadm /dev/md0 --add /dev/sda1
->> mdadm /dev/md0 --fail /dev/sde1
+Please note, that I used dmsetup to create an overlay disk, so the 
+"/dev/mapper/diskXp5" actually points to a /dev/sdN5 which is the 
+original array; I'm trying to not harm the original data. Here is the 
+result of mdadm v3.2.5 running assemble+force:
 
-As Adam pointed out, you should have used --replace, but you probably
-wouldn't have made it through the replace function anyways.
+~# mdadm --verbose --assemble --force /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5
+mdadm: looking for devices for /dev/md99
+mdadm: /dev/mapper/disk1p5 is identified as a member of /dev/md99, slot 
+32768.
+mdadm: /dev/mapper/disk2p5 is identified as a member of /dev/md99, slot 1.
+mdadm: /dev/mapper/disk3p5 is identified as a member of /dev/md99, slot 2.
+mdadm: ignoring /dev/mapper/disk2p5 as it reports /dev/mapper/disk1p5 as 
+failed
+mdadm: ignoring /dev/mapper/disk3p5 as it reports /dev/mapper/disk1p5 as 
+failed
+mdadm: No suitable drives found for /dev/md99
 
->> At this point it started automatically rebuilding the array.
->> About 60%? of the way in it stops and I see a lot of this repeated in
->> my dmesg:
->>
->> [Mon Feb  9 18:06:48 2015] ata5.00: exception Emask 0x0 SAct 0x0 SErr
->> 0x0 action 0x6 frozen
->> [Mon Feb  9 18:06:48 2015] ata5.00: failed command: SMART
->> [Mon Feb  9 18:06:48 2015] ata5.00: cmd
->> b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 7
->> [Mon Feb  9 18:06:48 2015]          res
->> 40/00:ff:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
-                                                 ^^^^^^^^^
-Smoking gun.
+OK. http://permalink.gmane.org/gmane.linux.raid/45064 says I should use 
+mdadm 3.3+, and luckily I had v3.3.2 - 21st August lying around, so 
+there we go:
 
->> [Mon Feb  9 18:06:48 2015] ata5.00: status: { DRDY }
->> [Mon Feb  9 18:06:48 2015] ata5: hard resetting link
->> [Mon Feb  9 18:06:58 2015] ata5: softreset failed (1st FIS failed)
->> [Mon Feb  9 18:06:58 2015] ata5: hard resetting link
->> [Mon Feb  9 18:07:08 2015] ata5: softreset failed (1st FIS failed)
->> [Mon Feb  9 18:07:08 2015] ata5: hard resetting link
->> [Mon Feb  9 18:07:12 2015] ata5: SATA link up 1.5 Gbps (SStatus 113
->> SControl 310)
->> [Mon Feb  9 18:07:12 2015] ata5.00: configured for UDMA/33
->> [Mon Feb  9 18:07:12 2015] ata5: EH complete
+~# ./mdadm --verbose --assemble --force /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5
+mdadm: looking for devices for /dev/md99
+mdadm: /dev/mapper/disk1p5 is identified as a member of /dev/md99, slot 
+32768.
+mdadm: /dev/mapper/disk2p5 is identified as a member of /dev/md99, slot 1.
+mdadm: /dev/mapper/disk3p5 is identified as a member of /dev/md99, slot 2.
+mdadm: no uptodate device for slot 0 of /dev/md99
+mdadm: added /dev/mapper/disk3p5 to /dev/md99 as 2
+mdadm: no uptodate device for slot 6 of /dev/md99
+mdadm: added /dev/mapper/disk2p5 to /dev/md99 as 1
+mdadm: /dev/md99 assembled from 2 drives - not enough to start the array.
 
-Notice that after a timeout error, the drive is unresponsive for several
-more seconds -- about 24 in your case.
+Hmm, that doesn't help us either. (Slight difference between the two 
+versions, 3.2.5 deploys a broken array named md99 - which you can stop 
+afterwards - and 3.3.2 seems to auto-remove the array after trying to 
+start it - not sure if I describe the inner workings correctly)
 
-> ....  read about timing mismatches
-> between the kernel and the hard drive, and how to solve that. There was
-> another post earlier today with some links to specific posts that will
-> be helpful (check the online archive).
+Disk1 reports:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : 8ad57063:cf592975:9fabcc2b:13922e19
+            Name : 2
+   Creation Time : Sun May 13 08:23:21 2012
+      Raid Level : raid5
+    Raid Devices : 4
 
-That would have been me.  Start with this link for a description of what
-you are experiencing:
+  Avail Dev Size : 1944057456 (927.00 GiB 995.36 GB)
+      Array Size : 2916086016 (2781.00 GiB 2986.07 GB)
+   Used Dev Size : 1944057344 (927.00 GiB 995.36 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4ae571dc:3c458e25:d219b536:c8b9a50e
 
-http://marc.info/?l=linux-raid&m=135811522817345&w=1
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : 9a35a9ae - correct
+          Events : 744446
 
-First, you need to protect yourself from timeout mismatch due to the use
-of desktop-grade drives.  (Enterprise and raid-rated drives don't have
-this problem.)
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-{ If you were stuck in the middle of a replace a you had just
-worked-around your timeout problem, it would likely continue and
-complete.  You've lost that opportunity. }
+    Device Role : Active device 32768
+    Array State : .AA. ('A' == active, '.' == missing)
 
-Show us the output of "smartctl -x" for all of your drives if you'd like
-advice on your particular drives.  (Pasted inline is preferred.)
+Disk2:
+               [...]
+           State : clean
+     Device UUID : b381cfd4:d2474cc4:e4c0ad21:8565b2a5
 
-Second, you need to find and overwrite (with zeros) the bad sectors on
-your drives.  Or ddrescue to a complete set of replacement drives and
-assemble those.
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : b3569b7e - correct
+          Events : 744446
 
-Third, you need to set up a cron job to scrub your array regularly to
-clean out UREs before they accumulate beyond MD's ability to handle it
-(20 read errors in an hour, 10 per hour sustained).
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-Phil
+    Device Role : Active device 1
+    Array State : .AA. ('A' == active, '.' == missing)
+
+Disk3:
+               [...]
+           State : clean
+     Device UUID : c00d4418:c8313607:fb3a2018:d267a693
+
+     Update Time : Sun Dec 28 10:41:55 2014
+        Checksum : 1e1b8de5 - correct
+          Events : 744446
+
+          Layout : left-symmetric
+      Chunk Size : 64K
+
+    Device Role : Active device 2
+    Array State : .AA. ('A' == active, '.' == missing)
+
+So the "Active device 32768" seems to be the culprit here, is that correct?
+
+What would be the correct way to reassemble this array?
+
+I managed to get it *working* again by recreating it with:
+./mdadm --create --assume-clean --data-offset=136 -e 1.2 --level=5 
+--bitmap=none --raid-devices=4 --chunk=64 /dev/md99 /dev/mapper/disk1p5 
+/dev/mapper/disk2p5 /dev/mapper/disk3p5 missing
+
+... but that feels a bit rude.
+
+So, is there a "proper" way to reassemble this array?
+
+For the record: the original array was most likely created on the 
+Synology disk station itself, which currently contains mdadm - v2.6.7 (I 
+don't know if that is the version that created the array). Also, I'm not 
+sure about the kernel version that's running there, but /lib/modules 
+contains modules that have a string "vermagic=2.6.15 ARMv5 gcc-3.4" 
+inside, so that might be the kernel version that was running when things 
+went wrong.
+
+Best regards,
+
+Valentijn
