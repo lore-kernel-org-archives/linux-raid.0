@@ -1,123 +1,105 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
-Date: Tue, 10 Feb 2015 13:50:17 +1100
-Message-ID: <20150210135017.7659e49c@notabene.brown>
-References: <54D3D24E.5060303@cybernetics.com>
-	<20150206085133.2c1ab892@notabene.brown>
-	<20150206113930.GK23123@twins.programming.kicks-ass.net>
-	<20150209121357.29f19d36@notabene.brown>
-	<20150209091000.GN5029@twins.programming.kicks-ass.net>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Upgrading storage server
+Date: Mon, 9 Feb 2015 22:16:25 -0500
+Message-ID: <21721.30729.509462.974269@quad.stoffel.home>
+References: <54D8A9AD.3060700@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/wMd/doZnmBXJf9nN073BVL9"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150209091000.GN5029@twins.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <54D8A9AD.3060700@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <adam@websitemanagers.com.au>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/wMd/doZnmBXJf9nN073BVL9
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 9 Feb 2015 10:10:00 +0100 Peter Zijlstra <peterz@infradead.org> wro=
-te:
+Adam> After making a whole string of mistakes in building a iSCSI
+Adam> server about 2 years ago, I'm now looking to replace it without
+Adam> all the wrong turns/mistakes. I was hoping you could all offer
+Adam> some advice on hardware selection/choices.
 
-> On Mon, Feb 09, 2015 at 12:13:57PM +1100, NeilBrown wrote:
-> > I had to re-read the code (And your analysis) a couple of times to be s=
-ure ...
->=20
-> Sorry :-)
+I remember those discussions, they were quite informative and it was
+interesting seeing Stan help you out.  Now that you've got this system
+working well, or at least well enough, what is the biggest remaining
+problem you have?
 
-My point was that actually reading it (rather than assuming I knew what it
-said) actually helped!
+I've become a big fan of supermicro FatTwin systems, and they might be
+what you want here for your setup.  But I'd also think about maybe you
+want to go to fewer larger PCIe SSD cards in mirrored pairs instead
+for better performance.  Or is performance a problem still?  
 
->=20
-> > However, when io_schedule() explicitly calls blk_flush_plug(), then
-> > @from_schedule=3Dfalse variant is used, and the unplug functions are al=
-lowed to
-> > allocate memory and block and maybe even call mempool_alloc() which mig=
-ht
-> > call io_schedule().
-> >=20
-> > This shouldn't be a problem as blk_flush_plug() spliced out the plug li=
-st, so
-> > any recursive call will find an empty list and do nothing.
->=20
-> Unless, something along the way stuck something back on, right? So
-> should we stick an:
->=20
-> 	WARN_ON(current->in_iowait);
->=20
-> somewhere near where things are added to this plug list? (and move the
-> blk_flush_plug() call inside of where that's actually true of course).
+There's also *alot* to be said for simply replicating what you have,
+but with larger SSDs, say 1Tb each, and keeping the rest of the system
+and config exactly the same.  Limit the changes, esp since you went
+through so much pain before.  
 
-No, I don't think so.
+Now I might also think about upgrading all the clients to 10Gb as
+well, and just moving to a completely 10G network if possible.  I seem
+to remember that you didn't have any way to throttle or setup Quality
+of Service limits on your iSCSI vs. other network traffic, which is
+why you ended up splitting up the traffic like this, so that a single
+VM couldn't bring the rest to their knees when a user did something
+silly.  
 
-It is certainly possible that some request on plug->cb_list could add
-something to plug->list - which is processed after ->cb_list.
+So again, if it's working well now, don't chage your architecture at
+all, just change some of the components for higher capacity or
+performance.  This will also let you stress test the new cluster pair
+next to your production setup before you migrate the VMs over to the
+new setup and then move the old offsite.  
 
-I think the best way to think about this is that the *problem* was that a
-wait_event loop could spin without making any progress.   So any time that
-clear forward progress is made it is safe sleep without necessitating the
-warning.  Hence sched_annotate_sleep() is reasonable.
-blk_flush_plug() with definitely have dispatched some requests if it
-might_sleep(), so the sleep is OK.
+One warning is that you will need to make sure that the link between
+the two sites has enough bandwidth and low enough RTT so that you can
+properly replicate between them, esp if the end users will be
+generating a bunch of data that changes alot.  
 
 
->=20
-> The only thing that really goes wrong then is if people 'forget' to put
-> a loop around io_schedule().
+Adam> The target usage as above is an iSCSI server as the backend to a bunch 
+Adam> of VM's. Currently I have two identical storage servers, using 7 x SSD 
+Adam> with Linux MD Raid, then using LVM to divide it up for each VM, and then 
+Adam> DRBD on top to sync the two servers together, on the top is ietd to 
+Adam> share the multiple DRBD devices out. The two servers have a single 
+Adam> 10Gbps connection between them for DRBD to sync the data. They also have 
+Adam> a second 10Gbps ethernet for iscsi to use, with a pair of 1Gbps for 
+Adam> management (on board). I have 8 x PC's running Xen with 2 x 1Gbps 
+Adam> ethernet for iSCSI and one 1Gbps ethernet for the "user"/management LAN.
 
-You mean like in congestion_wait() ??
+Adam> Current hardware of the storage servers are:
+Adam> 7 x Intel 480GB SSD Model SSDSC2CW480A3
+Adam> 1 x Intel 180GB SSD Model SSDSC2CT180A4  (for the OS)
+Adam> 1 x LSI Logic SAS2308 PCI-Express (8 x SATA connections)
+Adam> 1 x Intel Dual port 10Gbps 82599EB SFI/SFP+ Ethernet
+Adam> 1 x Intel Xeon CPU E3-1230 V2 @ 3.30GHz
+Adam> Motherboard Intel S1200 
+Adam> http://ark.intel.com/products/67494/Intel-Server-Board-S1200BTLR
 
-Though that is mostly called inside a loop...
+Adam> What I'm hoping to achieve is to purchase two new (identical) servers, 
+Adam> using current recommended (and well supported for the new few years) 
+Adam> parts, and then move the two existing servers to a remote site, 
+Adam> combining with DRBD proxy to give a full, "live" off-site backup 
+Adam> solution. (Note, by backup I mean Disaster Recovery, not backup).
 
+Adam> I would also like to be able to grow the total size of the data further 
+Adam> if needed, currently I have 7 x 480G in RAID5, which is likely somewhat 
+Adam> sub-optimal. Options include moving to larger size SSD, or at perhaps 
+Adam> splitting into 2 x RAID5 arrays. The advantage of larger SSD's would be 
+Adam> a smaller "system", with lower complexity, while using more smaller 
+Adam> drives would provide (potentially) better performance, since each drive 
+Adam> (regardless of size) has the same overall performance (both throughput 
+Adam> and IOPS).
 
-NeilBrown
+Adam> I would appreciate any advise or suggestions you can make to help me 
+Adam> avoid the many mistakes I made last time.
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 92f4b4b288dd..7334be27823d 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1111,6 +1111,14 @@ static inline void blk_flush_plug(struct task_struct=
- *tsk)
- {
- 	struct blk_plug *plug =3D tsk->plug;
-=20
-+	/*
-+	 * Any sleeping in blk_flush_plug() should not
-+	 * trigger the "do not call blocking ops" warning
-+	 * as it makes clear forward process (requests are
-+	 * dispatched) and so it will not cause indefinite
-+	 * looping in a higher level wait loop.
-+	 */
-+	sched_annotate_sleep();
- 	if (plug)
- 		blk_flush_plug_list(plug, false);
- }
+Adam> Regards,
+Adam> Adam
 
---Sig_/wMd/doZnmBXJf9nN073BVL9
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Adam> -- 
+Adam> Adam Goryachev
+Adam> Website Managers
+Adam> www.websitemanagers.com.au
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVNlx6Tnsnt1WYoG5AQII4xAAvxIL9CCTxIJZCpSM8/BOsv6ynSaZTiHD
-E7mGWVZLh9jCimmx5yFEoBUOEPaVFcA1fZDVzS/UgyGYlG/0rT6plthNkyzpEXcm
-eWcAzuFFxFmxSxZxuaiaq+qyJBBONgEb+UH8e/OnJf+x1Dl/x3E6a1qaz5gqD9VX
-leeiSNcWGhxP9VfMgI8AVOuZxM8dmqhAP5u52mTF/MMA1tHu2UzwSN5bTj6ctEdP
-8Bc4+TPHXjUj3sZJWZMiOciggjx4eOECwfgF0XINgk7DtAZXblfKqjxj6xb5fHhD
-UNt1ZQLuuyNcJc/P8Evn3/+aDheWNfMW3o4+RQJJ+XZZmfoMm0tGdj6ostdZiPoy
-vYScpHE0bGW1use+1cNIfr/snAVpcyY2JpKtl3TRJT2EWqZJeyozcI0jhtPc49O2
-Vi6s9W5dalca0qUgYLrhsOpY5QIk+f/lGHq4SWc64JbxTtUnBa9Pz5lmxYfiTx15
-xftIoGA3D9/6q+/nXKqu1kawyk5G6Md7FBfobtIXbjiP7GcK36tYLJj9Q+uOgEcT
-sen5DLZ521d88C62fgW1KHuh7YSsddy9J45W8lCzyjt+IOhYneWdmu2bPvUJ2dYm
-teUNPNPJS1Aw9ihr2BtO/PFLyiQV0saOS+PlE+zpLhbj4Y5zOeDB+XUprykTXgLT
-QN1M3WCgeVs=
-=nVw3
------END PGP SIGNATURE-----
-
---Sig_/wMd/doZnmBXJf9nN073BVL9--
+Adam> --
+Adam> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+Adam> the body of a message to majordomo@vger.kernel.org
+Adam> More majordomo info at  http://vger.kernel.org/majordomo-info.html
