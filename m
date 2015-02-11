@@ -1,45 +1,168 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH 1/1] mddev_create(): choose /dev/md/ name over /dev/mdX
-Date: Wed, 11 Feb 2015 14:53:09 -0500
-Message-ID: <1423684389-10977-2-git-send-email-Jes.Sorensen@redhat.com>
-References: <1423684389-10977-1-git-send-email-Jes.Sorensen@redhat.com>
+From: Dush <tomdush@gmail.com>
+Subject: All drive in Raid 5 are in 'spare' mode
+Date: Wed, 11 Feb 2015 19:56:30 +0000
+Message-ID: <CAL7hTOctZ4tAoPSbO3iFEohRyXuvcY4=6yQj8U-FpoAhV6sT0w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1423684389-10977-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi,
 
-/dev/mdX is created automatically if we create /dev/md/X, but
-/dev/md/X isn't created automatically if we create /dev/mdX.
+I have a RAID 5 composed by 4x 500Go hdd but for some days, it's 'inactive'.
 
-By chosing /dev/md/X as the default name from /dev/mdX, we achieve
-consistency when creating new arrays.
+I'm not raid expert and I prefer asking before doing an unrecoverable mistake...
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- mdopen.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Is it possible to fix this raid (md126)?
+Is it possible to recover data on it?
+Do I have a disk to change or it's "just" a desynchronization between disks?
 
-diff --git a/mdopen.c b/mdopen.c
-index 2c9d745..db75d09 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -338,7 +338,11 @@ int create_mddev(char *dev, char *name, int autof, int trustworthy,
- 
- 	sprintf(devname, "/dev/%s", devnm);
- 
--	if (dev && dev[0] == '/')
-+	if (dev && strncmp(dev, "/dev/md", 7) == 0 &&
-+	    dev[7] != '/' && strlen(dev) > 7) {
-+		strcpy(chosen, "/dev/md/");
-+		strcpy(chosen + 8, dev + 7);
-+	} else if (dev && dev[0] == '/')
- 		strcpy(chosen, dev);
- 	else if (cname[0] == 0)
- 		strcpy(chosen, devname);
--- 
-2.1.0
+Thanks for your help
 
+# mdadm --version
+mdadm - v3.3.2 - 21st August 2014
+
+Linux Kernel: 3.18.2-2
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md127 : active raid5 sdd2[2] sde2[1] sdc2[0] sdb2[3]
+      16530624 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+
+md126 : inactive sde3[1](S) sdd3[4](S) sdc3[0](S) sdb3[3](S)
+      1929888000 blocks
+
+unused devices: <none>
+
+# mdadm --examine /dev/sd[a-z]3
+mdadm: No md superblock detected on /dev/sda3.
+/dev/sdb3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 20:55:48 2015
+          State : active
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 6e656c69 - correct
+         Events : 49656
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       19        3      active sync   /dev/sdb3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       8       19        3      active sync   /dev/sdb3
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sdc3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653d5 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       35        0      active sync   /dev/sdc3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sdd3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653e7 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       51        4      spare   /dev/sdd3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
+/dev/sde3:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 3327f442:a00b59b2:1397f3c2:236c0edf
+  Creation Time : Tue Jan 27 13:03:52 2009
+     Raid Level : raid5
+  Used Dev Size : 482472000 (460.12 GiB 494.05 GB)
+     Array Size : 1447416000 (1380.36 GiB 1482.15 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 126
+
+    Update Time : Wed Jan 21 23:34:52 2015
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 6e6653f7 - correct
+         Events : 49666
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       67        1      active sync   /dev/sde3
+
+   0     0       8       35        0      active sync   /dev/sdc3
+   1     1       8       67        1      active sync   /dev/sde3
+   2     2       0        0        2      faulty removed
+   3     3       0        0        3      faulty removed
+   4     4       8       51        4      spare   /dev/sdd3
