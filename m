@@ -1,46 +1,49 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wierd: Degrading while recovering raid5
-Date: Tue, 10 Feb 2015 21:14:21 -0500
-Message-ID: <54DABAFD.6070101@turmel.org>
-References: <CAP7a4UQCB=jdf7=sz8MoYL+WGbMbT_09_xL460DLX-epLAS0Sw@mail.gmail.com>	<54D9B4AD.8010204@websitemanagers.com.au>	<54DA0CDA.2010800@turmel.org> <CAP7a4USu+650JJh9yX-WUU6eyxOGowa5r72W8JABCJpLnO=gtg@mail.gmail.com>
+Subject: Re: ignoring %s as it reports %s as failed
+Date: Tue, 10 Feb 2015 21:26:45 -0500
+Message-ID: <54DABDE5.4040305@turmel.org>
+References: <54DA29C4.2010000@lentijn.sess.ink>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAP7a4USu+650JJh9yX-WUU6eyxOGowa5r72W8JABCJpLnO=gtg@mail.gmail.com>
+In-Reply-To: <54DA29C4.2010000@lentijn.sess.ink>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyle Logue <teque5@gmail.com>, linux-raid@vger.kernel.org
+To: Valentijn <v@lentijn.sess.ink>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Kyle,
+Hi Valentijn,
 
-{ Convention on kernel.org lists is reply-to-all, trim replies, and
-either bottom post or interleave }
-
-On 02/10/2015 04:50 PM, Kyle Logue wrote:
-> Phil:
+On 02/10/2015 10:54 AM, Valentijn wrote:
+> Hello list,
 > 
-> Thanks for your detailed response. That link does seem to describe my
-> problem and I do understand that desktop grade drives are sub-optimal.
-> It was many years ago when I first set up this array on my home
-> theater pc.  Until now I had no idea about the cron job - I'll make
-> sure to implement that. I am preparing to move to 6 tb disks sometime
-> soon and i'll definitely go enterprise this time.
+> This is a repost - I sent it to linux-raid back in January, but you were
+> all still having holidays - or hangovers or anything.
+
+Lots of work travel for me for the past year or so. :-(  I'm sorry we
+couldn't help then.
+
+> So the "Active device 32768" seems to be the culprit here, is that correct?
+
+Yup.
+
+> I managed to get it *working* again by recreating it with:
+> ./mdadm --create --assume-clean --data-offset=136 -e 1.2 --level=5
+> --bitmap=none --raid-devices=4 --chunk=64 /dev/md99 /dev/mapper/disk1p5
+> /dev/mapper/disk2p5 /dev/mapper/disk3p5 missing
 > 
-> Regarding the drive timeout: I understand that I need to increase it
-> from 30 seconds to something larger (2+ min) but am unaware how to do
-> this. Is it a kernel variable? I'll keep googling but this seems like
-> it's whats going to save me.
-> 
-> tl;dr: How do I change the drive timeout?
+> ... but that feels a bit rude.
 
-Put something like this in /etc/rc.local or wherever your distro suggests:
+Indeed.  Many people use --create to their eventual dismay.  But --force
+won't fix a misrecorded device role.
 
-for x in /sys/block/sd[a-f]/device/timeout ; do
-  echo 180 > $x
-done
+> So, is there a "proper" way to reassemble this array?
 
-Where the [a-f] is adjusted to suit your needs, and only for non-raid
-non-scterc drives.
+I would dig around in the superblock to fix the role.  Not terribly
+user-friendly though.
+
+A carefully constructed --create --assume-clean would have been my next
+recommended step, preferably with a bootable thumb drive with the latest
+stable kernel and latest mdadm version.
 
 Phil
