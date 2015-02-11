@@ -1,67 +1,44 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wierd: Degrading while recovering raid5
-Date: Wed, 11 Feb 2015 09:28:23 -0500
-Message-ID: <54DB6707.5030901@turmel.org>
-References: <CAP7a4URzYsvw9aEd117FAs9_AE4fk1FuHQAmQQqreb3Y1yvOdg@mail.gmail.com>
+Subject: Re: RAID 1 metadata - keep separate from mirror disks ?
+Date: Wed, 11 Feb 2015 09:49:20 -0500
+Message-ID: <54DB6BF0.3040309@turmel.org>
+References: <79c7cd53-bb6c-4058-95ad-7ebd56cf1056@default>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAP7a4URzYsvw9aEd117FAs9_AE4fk1FuHQAmQQqreb3Y1yvOdg@mail.gmail.com>
+In-Reply-To: <79c7cd53-bb6c-4058-95ad-7ebd56cf1056@default>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyle Logue <teque5@gmail.com>, linux-raid@vger.kernel.org
+To: Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/11/2015 01:23 AM, Kyle Logue wrote:
-> Phil:
+Good morning Suresh,
+
+On 02/11/2015 07:14 AM, Suresh Babu Kandukuru wrote:
+> Hi There,
 > 
-> For a while I really thought that was going to work. I swapped out the
-> sata cable and set the timeout to 10 minutes. At about 70% rebuilt I
-> got the following dmesg which seems to indicate the death of my sdc
-> drive.
+> On the RAID 1  metadata: is there  any way to keep the metadata
+> separate from the mirror disks?  Could you  guide us on this ?,
+> please. In general, we need to keep all metadata off the device
+> itself, leaving all the device available for user data. This is
+> particularly important in the migration case, where we want to take
+> an existing LUN and add a second leg to it to create the mirror
+> device without changing any of the data or metadata on the LUN.
 
-Ten minutes is way overkill.  The three minutes I suggested is already
-extreme, and most drives will only need two minutes.
+If you look at "man 4 md" you'll see some options.  If a legacy array
+type meets your needs, you can operate without metadata at all.  Use
+"mdadm --build" to assemble your raid at each boot.
 
-> Here is my question: I still have this sde that I manually failed and
-> hasn't been touched. Can i force re-add it to the array and just take
-> the data corruption hit?
+Or, if your storage server can insert a leg ahead of you current LUN,
+you can then create the array with an explicit data offset matching the
+size of the inserted leg.  Create it degraded with the existing LUN,
+then add (a) LUN(s) to start mirroring.  This process will leave you the
+option to resize with more legs later.
 
-No, sde is being replaced by sda, so it's no help for sdc.  If you put
-it back into service, it would have to take the role of sda.  (Forced
-assembly, though, not a re-add.)  If the array was in use during your
-first replacement attempt, the differences could be substantial.
+Or you can add a leg to the end and create your array with version 1.0
+metadata, which is placed at the end of the device.
 
-I'm not sure how MD will handle the rebuild status in this case.
-Hopefully, it will take you back to a working, non-rebuilding array.  If
-you try this, you should test with a set of overlay devices as described
-on the wiki.
-
-> I'd rather have to revert part of my data than all of it. The drive
-> counts are significantly different now, but I haven't mounted the
-> drives since the beginning. I haven't tried it but I saw someone else
-> online get a message like 'raid has failed so using --add cannot work
-> and might destroy data'. Is there a force add? What are my chances?
-
-The right answer here depends on whether the array was in use.  If it
-wasn't, I'd try to use sde in place of sda to get back to a
-non-rebuilding array.  If the test run succeeds, undo the overlays and
-do it for real.  Then zero the superblock on sda, add it back as a
-spare, then --replace sdc.
-
-If the trial doesn't work (or the changes to sda too great), the
-alternative is to ddrescue sdc onto a spare disk (sde would be available
-at that point, if it's useless for assembly).  Then manually reassemble
-and let the rebuild finish.  If you run into more errors on the other
-members, you may have to repeat the ddrescue process for each.
-
-Whichever path you take, when done, consider switching to raid6 using
-the extra drive.  That's far more secure than a hot spare (if a little
-slower).
-
-I did notice one other issue in your posted dmesg:  misaligned
-partitions.  This cripples MD's ability to fix UREs on the fly or during
-a scrub.  You *must* rebuild your array with properly aligned partitions
-before you quit.
+Finally, you could write your own metadata container service for use
+with mdmon.  (That's a bit beyond my ability, sorry.)
 
 Phil
