@@ -1,83 +1,127 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: dead RAID6 array on CentOS6.6 / kernel 3.19
-Date: Wed, 11 Feb 2015 15:26:05 +1100
-Message-ID: <20150211152605.0c1bf94e@notabene.brown>
-References: <54DAB614.70302@athompso.net>
-	<54DAC0E2.2070303@turmel.org>
-	<54DAC42F.3090600@athompso.net>
-	<54DAC7A4.40407@turmel.org>
+Subject: Re: [PATCH RESEND] Monitor: fix for regression with container
+ devices
+Date: Wed, 11 Feb 2015 15:38:14 +1100
+Message-ID: <20150211153814.333cb17a@notabene.brown>
+References: <1423476830-15635-1-git-send-email-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/20UwX4mICsjg4VoEuOJtJvq"; protocol="application/pgp-signature"
+ boundary="Sig_/UlezOo5xUotKFca5.P3l832"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54DAC7A4.40407@turmel.org>
+In-Reply-To: <1423476830-15635-1-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: athompso@athompso.net, linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
---Sig_/20UwX4mICsjg4VoEuOJtJvq
+--Sig_/UlezOo5xUotKFca5.P3l832
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Feb 2015 22:08:20 -0500 Phil Turmel <philip@turmel.org> wrote:
+On Mon,  9 Feb 2015 11:13:50 +0100 Artur Paszkiewicz
+<artur.paszkiewicz@intel.com> wrote:
 
-> Hi Adam,
+> This patch fixes 2 problems introduced by commit 9a518d8: not closing a
+> file descriptor and ignoring container devices. Array state is always
+> "inactive" for containers, so we make sure that the device is not a
+> container by reading also the "level" sysfs entry.
 >=20
-> { Dropped members-only lists from CC }
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Reviewed-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+> ---
+>  Monitor.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
 >=20
-> On 02/10/2015 09:53 PM, Adam Thompson wrote:
->=20
-> >> [root@muug ~]# mdadm --verbose --misc --run --readonly /dev/md127
-> >> mdadm: /dev/md127 does not appear to be active.
+> diff --git a/Monitor.c b/Monitor.c
+> index 971d2ec..66d67ba 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -483,11 +483,17 @@ static int check_array(struct state *st, struct mds=
+tat_ent *mdstat,
+>  		    strncmp(buf,"inact",5) =3D=3D 0) {
+>  			if (fd >=3D 0)
+>  				close(fd);
+> -			if (!st->err)
+> -				alert("DeviceDisappeared", dev, NULL, ainfo);
+> -			st->err++;
+> -			return 0;
+> +			fd =3D sysfs_open(st->devnm, NULL, "level");
+> +			if (fd < 0 || read(fd, buf, 10) !=3D 0) {
+> +				if (fd >=3D 0)
+> +					close(fd);
+> +				if (!st->err)
+> +					alert("DeviceDisappeared", dev, NULL, ainfo);
+> +				st->err++;
+> +				return 0;
+> +			}
+>  		}
+> +		close(fd);
+>  	}
+>  	fd =3D open(dev, O_RDONLY);
+>  	if (fd < 0) {
 
-Supporting this sort of usage seemed like a good idea long long ago, but=20
-it doesn't turn out to be really useful, so I haven't maintained it at all.
+Thanks for the patch.
 
-> >=20
-> >=20
-> > Also, kernel 3.19, which I mentioned we're running, pretty much *is* my
-> > definition of an up-to-date kernel... how much newer do you want me to
-> > try, and where would you recommend I find such a thing in a bootable im=
-age?
->=20
-> You're right, 3.19 should be fine.  I'm stumped.  Looks like a bug.
-> Adding Neil ....
+I don't think I agree with the logic of using 'level' though.
+For the sort of arrays  that I need to ignore here, 'level' will be empty.
 
-I think it is an mdadm bug.  I don't see a mention of mdadm version number
-(but I didn't look very hard).
-If you are using 3.3, update to at least 3.3.1
+It would make sense to test 'metadata' though.  If that starts 'external:',
+then we don't want to ignore the array.
 
-(just
-  cd /tmp
-  git clone git://neil.brown.name/mdadm
-  cd mdadm
-  make
-  ./mdadm --assemble --force /dev/md127 .....
-)
+Could you confirm that this works please?
 
+Thanks,
 NeilBrown
 
---Sig_/20UwX4mICsjg4VoEuOJtJvq
+diff --git a/Monitor.c b/Monitor.c
+index 971d2ecbea72..6e085cb24993 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -483,11 +483,18 @@ static int check_array(struct state *st, struct mdsta=
+t_ent *mdstat,
+ 		    strncmp(buf,"inact",5) =3D=3D 0) {
+ 			if (fd >=3D 0)
+ 				close(fd);
+-			if (!st->err)
+-				alert("DeviceDisappeared", dev, NULL, ainfo);
+-			st->err++;
+-			return 0;
++			fd =3D sysfs_open(st->devnm, NULL, "metadata");
++			if (fd < 0 || read(fd, buf, 9) !=3D 9 ||
++			    strncmp(buf, "external:", 9) !=3D 0) {
++				if (fd >=3D 0)
++					close(fd);
++				if (!st->err)
++					alert("DeviceDisappeared", dev, NULL, ainfo);
++				st->err++;
++				return 0;
++			}
+ 		}
++		close(fd);
+ 	}
+ 	fd =3D open(dev, O_RDONLY);
+ 	if (fd < 0) {
+
+--Sig_/UlezOo5xUotKFca5.P3l832
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVNrZ3Tnsnt1WYoG5AQJ6HRAApMsrsOc3iFccz9Y7qBiuRcVFOnrvs3JO
-V8s771x91B64jtDlnzqjurcfVWEFFIwsaTjhcOy02NLt7EJY30dhvl6kVFw/IzMH
-k6iTPmFPEQmZoIZ6dz5bdOUZuzJBfrwzvI/668nWP2RAsq3yXzg10u/XQsCufIQR
-+fib8DGE5umVvLC7RvxaWjQd6YZ+a8MErPWvDfyKqcjAQYQmCCx1UtUGfpOFX9TT
-d3sTWmZNZ4l14Eth0A/RMDe/CY8/je+kJ5JkYQ/ZCUSVCyZeN9JeHx0Q/sgoPsrR
-bIcESxgOxdL7dhmvePpXV4O38V6PHV5XuRsnC9buRrApWvgNDtClBqFRK7/5PPd1
-DH7iscvvmOYRQmmKxsPz7b+eUFonu01brKK1EJiCnxCWJRV3kUvNTsMdTzsOdGgP
-+1dOJ3hdm3qBNXLKeF4Xpr4Vk4FySdNGqs1AjLTFTEQaNuklcS+ZIU/OKUDm86XQ
-Als/xQHyPxCp000ZM067K01p+gtnWXwAHxgU+itrsdaQgzTo9KiGeW6ZjFstlm/D
-Sr/72VrYw+yrfm0yIZFzV9hHWS3eMiURfy3/qFMSIyZR2ePbsfBQ50lQIfspA/k5
-9l8efiY2/XFwBTRB4bp9wnBqFVWyCNYsCu3XFnX3zZGBKgI4BsCKaEBjIxzEMG2B
-63iVBIPyuTc=
-=LbFz
+iQIVAwUBVNrctjnsnt1WYoG5AQJVzw/6Aus38M5HL/peudCU6BtcsmhG76iNmBIu
+51Hn5bKZgGYQqeK6WuZt788a2oxn4ltXS5d0XXQPNVpXKVFllPK45EYAjZZXS+5+
+/E/9Op8eaQ20TWpBwbXyBvhyM3Mlm36CoiyJFVTBUWM56P385EphPsb/oK562tD1
+0i/fd0ZQ91UMGe5JmRAcen+E6mNP2ndvh0D2BtY7f1/mI4aNdYnA6y7RtoocEkgs
+QaDPpQFrM70NSkQHCPgxLD8ZQoI9a5z6wFxSi4Ql4wJqUTxZ4Pw9S2FteqOSJLnm
+FarqAdZ8a2enq4oYtp2Hrmwg0tp4IimLJS7OJea+xBTdj+x6nzDCqK2va1Ks+e6K
+YyoEwhMN6ErODKODVwSyLxwJ1iKKwRPUumlz3rIWmaVClZrbBvn2pxdazLeTp2eU
+ZNt2PeesPCl4htO273btnj2avJFNRcXqaL2v15FBmo7Fz9gyq9yCyg3hYzv/Fpup
+/b9/ck1XbXnUNMfQX35hNbmPMfM7a9ohuaqQiz4+qKS2MdHzzc8VfpmcD+4DAxC/
+3vAWmJb0DJLp/HpIwS4ag/WAkRmKmq41OB29DLRV85BdX1YRpJ5jmL+l9CRqBW+v
+ZRWL8Vg144szhRpLAjALLrVFmk8ZbwaHIbfaJIGMgmCGHHNEAYk1PZ0keGLIiHPQ
+qsBt3RObdTI=
+=HWCU
 -----END PGP SIGNATURE-----
 
---Sig_/20UwX4mICsjg4VoEuOJtJvq--
+--Sig_/UlezOo5xUotKFca5.P3l832--
