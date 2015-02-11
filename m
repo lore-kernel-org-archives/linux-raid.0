@@ -1,49 +1,42 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: ignoring %s as it reports %s as failed
-Date: Tue, 10 Feb 2015 21:26:45 -0500
-Message-ID: <54DABDE5.4040305@turmel.org>
-References: <54DA29C4.2010000@lentijn.sess.ink>
+Subject: Re: dead RAID6 array on CentOS6.6 / kernel 3.19
+Date: Tue, 10 Feb 2015 21:39:30 -0500
+Message-ID: <54DAC0E2.2070303@turmel.org>
+References: <54DAB614.70302@athompso.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54DA29C4.2010000@lentijn.sess.ink>
+In-Reply-To: <54DAB614.70302@athompso.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Valentijn <v@lentijn.sess.ink>, linux-raid@vger.kernel.org
+To: athompso@athompso.net, linux-raid@vger.kernel.org
+Cc: "Board, MUUG" <board@muug.mb.ca>, elrepo@lists.elrepo.org
 List-Id: linux-raid.ids
 
-Hi Valentijn,
+Hi Adam,
 
-On 02/10/2015 10:54 AM, Valentijn wrote:
-> Hello list,
-> 
-> This is a repost - I sent it to linux-raid back in January, but you were
-> all still having holidays - or hangovers or anything.
+On 02/10/2015 08:53 PM, Adam Thompson wrote:
+> So, I was doing some work on the new server tonight, stopping/starting
+> NFS caused a kernel panic, and I thought rebooting would be a good
+> idea... Apparently not!
 
-Lots of work travel for me for the past year or so. :-(  I'm sorry we
-couldn't help then.
+> Sure enough, no array.
+>> [root@muug ~]# cat /proc/mdstat
+>> Personalities : [raid1] [raid6] [raid5] [raid4] [raid10]
+>> md0 : active raid1 sdm1[0] sdn1[1]
+>>       1048512 blocks super 1.0 [2/2] [UU]
+>>       bitmap: 0/1 pages [0KB], 65536KB chunk
+>>
+>> md127 : inactive sdk[10] sdj[9] sdi[8] sdl[12]
+>>       15627550048 blocks super 1.2
+>>
+>> unused devices: <none>
 
-> So the "Active device 32768" seems to be the culprit here, is that correct?
+Not really no array -- this remnant is inactive.  On older kernel /
+mdadm combinations, you have to --stop the inactive array before you try
+again.  Please add --verbose to your --assemble --force
 
-Yup.
-
-> I managed to get it *working* again by recreating it with:
-> ./mdadm --create --assume-clean --data-offset=136 -e 1.2 --level=5
-> --bitmap=none --raid-devices=4 --chunk=64 /dev/md99 /dev/mapper/disk1p5
-> /dev/mapper/disk2p5 /dev/mapper/disk3p5 missing
-> 
-> ... but that feels a bit rude.
-
-Indeed.  Many people use --create to their eventual dismay.  But --force
-won't fix a misrecorded device role.
-
-> So, is there a "proper" way to reassemble this array?
-
-I would dig around in the superblock to fix the role.  Not terribly
-user-friendly though.
-
-A carefully constructed --create --assume-clean would have been my next
-recommended step, preferably with a bootable thumb drive with the latest
-stable kernel and latest mdadm version.
+If that doesn't work, use a bootable thumb drive with current kernel and
+mdadm and --assemble --force again.
 
 Phil
