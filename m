@@ -1,39 +1,43 @@
 From: Adam Thompson <athompso@athompso.net>
-Subject: Re: dead RAID6 array on CentOS6.6 / kernel 3.19
-Date: Tue, 10 Feb 2015 21:26:32 -0600
-Message-ID: <54DACBE8.70106@athompso.net>
-References: <54DAB614.70302@athompso.net> <54DAC0E2.2070303@turmel.org> <54DAC42F.3090600@athompso.net> <54DAC7A4.40407@turmel.org>
+Subject: Re: [Board] dead RAID6 array on CentOS6.6 / kernel 3.19
+Date: Tue, 10 Feb 2015 21:37:36 -0600
+Message-ID: <54DACE80.3010004@athompso.net>
+References: <b8upe28pe441l7y4sd2vv61c.1423623489558@email.android.com>
 Reply-To: athompso@athompso.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54DAC7A4.40407@turmel.org>
+In-Reply-To: <b8upe28pe441l7y4sd2vv61c.1423623489558@email.android.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: Trevor Cordes <trevor@tecnopolis.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2015-02-10 09:08 PM, Phil Turmel wrote:
-> Hi Adam,
+On 2015-02-10 08:58 PM, Trevor Cordes wrote:
+> The big first question is was it lying when it said starting bg recon. 
+> Probably. How can it rebuild a 3+ drive failure.
 >
-> { Dropped members-only lists from CC }
+> If so it should be possible to really force. As in wild wacky stuff. 
+> I've done that before.
 >
-> On 02/10/2015 09:53 PM, Adam Thompson wrote:
+> I can look at it more after the meeting our tomorrow morning.
 >
->>> [root@muug ~]# mdadm --verbose --misc --run --readonly /dev/md127
->>> mdadm: /dev/md127 does not appear to be active.
->>
->> Also, kernel 3.19, which I mentioned we're running, pretty much *is* my
->> definition of an up-to-date kernel... how much newer do you want me to
->> try, and where would you recommend I find such a thing in a bootable image?
-> You're right, 3.19 should be fine.  I'm stumped.  Looks like a bug.
-> Adding Neil ....
->
-> Phil
+> Was the reboot a clean or a sysreq? Did it sync first?
 
-One thing I just remembered... this was originally a nine-drive array 
-that got expanded.  The server has been rebooted many times since then, 
-however, without incident until tonight.
+Manually initiated by reboot(8), which is a link to telinit(8), which 
+merely sends a signal to init(8), which actually did the reboot.
+No idea if /dev/md127 correctly stopped or not, syslogd stops before 
+those messages get logged, and I was working remotely through SSH 
+instead of to the virtual console connection.
+I would assume the sync(2) happened correctly; this is breakage way down 
+at the MD layer, not the FS layer.
+
+You're right, RAID6 can't rebuild from a 3-drive failure.  I've gone 
+back through the messages I sent, and it looks like there was no 
+hot-spare, so I suspect this is just the default code path, where it 
+tries to rebuild anything it can, then figures out it can't.
+
 
 -- 
 -Adam Thompson
