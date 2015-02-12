@@ -1,48 +1,62 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: please help - raid 1 degraded
-Date: Thu, 12 Feb 2015 12:10:41 +1100
-Message-ID: <54DBFD91.7080507@websitemanagers.com.au>
-References: <20150211180403.GA14805@fnord.prismnet.com> <54DBD3E2.80701@websitemanagers.com.au> <20150212000940.GA49579@eris.prismnet.com> <54DBF587.6050004@websitemanagers.com.au> <20150212010200.GA51009@eris.prismnet.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: All drive in Raid 5 are in 'spare' mode
+Date: Wed, 11 Feb 2015 20:41:21 -0500
+Message-ID: <54DC04C1.4010107@turmel.org>
+References: <CAL7hTOctZ4tAoPSbO3iFEohRyXuvcY4=6yQj8U-FpoAhV6sT0w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150212010200.GA51009@eris.prismnet.com>
+In-Reply-To: <CAL7hTOctZ4tAoPSbO3iFEohRyXuvcY4=6yQj8U-FpoAhV6sT0w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: sunruh@prismnet.com
-Cc: linux-raid@vger.kernel.org
+To: Dush <tomdush@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/02/15 12:02, sunruh@prismnet.com wrote:
-> ok, so now the really important questions: once done, what files/stats 
-> do i need to save off for the next time it craters?
+Hi Dush,
 
-I think the usual information requested is the following:
-fdisk -lu /dev/sd?
-mdadm --manage --query /dev/sd?
-mdadm --manage --detail /dev/md*
-mdadm --manage --examine /dev/sd?
-cat /proc/mdstat
-ls -l /dev/disk/by-id/
+On 02/11/2015 02:56 PM, Dush wrote:
+> Hi,
+> 
+> I have a RAID 5 composed by 4x 500Go hdd but for some days, it's 'inactive'.
+> 
+> I'm not raid expert and I prefer asking before doing an unrecoverable mistake...
+> 
+> Is it possible to fix this raid (md126)?
+> Is it possible to recover data on it?
 
-If you can keep a copy of all those things, then you will be much 
-further ahead than many people. Of course, RAID1 is just so much 
-easier/simpler than RAID5/RAID6, so usually you won't need any of that. 
-RAID1 is simple mirror, so if you have two disks, one with data, one 
-without, then you just need to decide which disk has the data, and start 
-with that.
-It is even possible to start two MD arrays, one from each disk, and then 
-compare the contents to decide which one you want to keep.
-Or, you can simply mount the device directly (skipping any MD data at 
-the beginning if needed).
+Probably.  Very good report, btw.
 
-Like I said, RAID1 is by far the simplest type of RAID if you want 
-redundancy and can fit your dataset onto a single device.
+> Do I have a disk to change or it's "just" a desynchronization between disks?
 
-Glad you had a successful recovery :)
+One disk is now truly a spare (/dev/sdd3), which suggests you already
+tried to '--add' it and didn't get anywhere.
 
-Regards,
-Adam
+Step one:  collect some forensics for later.  syslog or dmesg containing
+your failure events.  Can be trimmed to just device and md stuff.
+"smartctl -x /dev/sdX" for each drive involved in the arrays.
 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Then, we'll try the simple stuff.
+
+Make sure the array is stopped with:
+
+mdadm --stop /dev/md126
+
+Then, force assemble it without sdd:
+
+mdadm --assemble --force --verbose --run /dev/md126 /dev/sd[bce]3
+
+If that works, mount it and catch a backup of critical files.
+
+Then add your /dev/sdd3 back to the array and let it rebuild:
+
+mdadm --add /dev/md126 /dev/sdd3
+
+It may not make it through the rebuild if you have the common timeout
+mismatch problem.[1]  Show the dmesg and smartctl data (pasted inline is
+preferred) and we'll see.
+
+Phil
+
+Recent typical case:
+[1] http://marc.info/?l=linux-raid&m=142353387024935&w=1
+
