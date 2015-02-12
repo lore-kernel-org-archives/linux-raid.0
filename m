@@ -1,372 +1,48 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH RESEND] Change way of printing name of a process
-Date: Thu, 12 Feb 2015 13:54:44 +1100
-Message-ID: <20150212135444.60fc99c3@notabene.brown>
-References: <20150211212401.14402.5228.stgit@gklab-154-222.intel.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: please help - raid 1 degraded
+Date: Thu, 12 Feb 2015 14:12:35 +1100
+Message-ID: <54DC1A23.1080307@eyal.emu.id.au>
+References: <20150211180403.GA14805@fnord.prismnet.com> <54DBD3E2.80701@websitemanagers.com.au> <20150212000940.GA49579@eris.prismnet.com> <54DBF587.6050004@websitemanagers.com.au> <20150212010200.GA51009@eris.prismnet.com> <54DBFD91.7080507@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+D4qarRtOQ4.w5CGy1rc6dj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150211212401.14402.5228.stgit@gklab-154-222.intel.com>
+In-Reply-To: <54DBFD91.7080507@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+D4qarRtOQ4.w5CGy1rc6dj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 11 Feb 2015 22:25:03 +0100 Pawel Baldysiak
-<pawel.baldysiak@intel.com> wrote:
-
-> Sometimes mdadm prints messages with wrong name "mdmon",
-> and vice versa.
-> This patch solves this problem by changing method of determining
-> process name.
-> Now "Name" will be set in const at start of a program,
-> previously was hardcoded as #define.
->=20
-> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  Grow.c        |   18 +++++++++---------
->  Incremental.c |    4 ++--
->  Monitor.c     |    4 ++--
->  ReadMe.c      |    2 +-
->  mdadm.c       |    7 ++++---
->  mdadm.h       |    6 +++---
->  mdmon.c       |    2 ++
->  mdmon.h       |    3 +--
->  super-intel.c |    2 +-
->  sysfs.c       |    8 ++++----
->  xmalloc.c     |   12 ++++++++----
->  11 files changed, 37 insertions(+), 31 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 6ff225a..4a01a31 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1919,7 +1919,7 @@ size_change_error:
->  		int err;
->  		err =3D remove_disks_for_takeover(st, sra, array.layout);
->  		if (err) {
-> -			dprintf(Name": Array cannot be reshaped\n");
-> +			dprintf("%s: Array cannot be reshaped\n", Name);
->  			if (cfd > -1)
->  				close(cfd);
->  			rv =3D 1;
-> @@ -2133,7 +2133,7 @@ static int verify_reshape_position(struct mdinfo *i=
-nfo, int level)
->  		char *ep;
->  		unsigned long long position =3D strtoull(buf, &ep, 0);
-> =20
-> -		dprintf(Name": Read sync_max sysfs entry is: %s\n", buf);
-> +		dprintf("%s: Read sync_max sysfs entry is: %s\n", Name, buf);
->  		if (!(ep =3D=3D buf || (*ep !=3D 0 && *ep !=3D '\n' && *ep !=3D ' ')))=
- {
->  			position *=3D get_data_disks(level,
->  						   info->new_layout,
-> @@ -3494,8 +3494,8 @@ int reshape_container(char *container, char *devnam=
-e,
->  		return 1;
->  	default: /* parent */
->  		if (!freeze_reshape)
-> -			printf(Name ": multi-array reshape continues"
-> -			       " in background\n");
-> +			printf("%s: multi-array reshape continues"
-> +			       " in background\n", Name);
->  		return 0;
->  	case 0: /* child */
->  		map_fork();
-> @@ -3557,8 +3557,8 @@ int reshape_container(char *container, char *devnam=
-e,
-> =20
->  		fd =3D open_dev(mdstat->devnm);
->  		if (fd < 0) {
-> -			printf(Name ": Device %s cannot be opened for reshape.",
-> -			       adev);
-> +			printf("%s: Device %s cannot be opened for reshape.",
-> +			       Name, adev);
->  			break;
->  		}
-> =20
-> @@ -3573,8 +3573,8 @@ int reshape_container(char *container, char *devnam=
-e,
->  			 * This is possibly interim until the behaviour of
->  			 * reshape_array is resolved().
->  			 */
-> -			printf(Name ": Multiple reshape execution detected for "
-> -			       "device  %s.", adev);
-> +			printf("%s: Multiple reshape execution detected for "
-> +			       "device  %s.", Name, adev);
->  			close(fd);
->  			break;
->  		}
-> @@ -4611,7 +4611,7 @@ int Grow_restart(struct supertype *st, struct mdinf=
-o *info, int *fdlist, int cnt
->  			st->ss->free_super(st);
->  			offsets[j] =3D dinfo.data_offset * 512;
->  		}
-> -		printf(Name ": restoring critical section\n");
-> +		printf("%s: restoring critical section\n", Name);
-> =20
->  		if (restore_stripes(fdlist, offsets,
->  				    info->array.raid_disks,
-> diff --git a/Incremental.c b/Incremental.c
-> index 13b68bc..38c9989 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -1710,9 +1710,9 @@ int IncrementalRemove(char *devname, char *id_path,=
- int verbose)
->  	char buf[32];
-> =20
->  	if (!id_path)
-> -		dprintf(Name ": incremental removal without --path <id_path> "
-> +		dprintf("%s: incremental removal without --path <id_path> "
->  			"lacks the possibility to re-add new device in this "
-> -			"port\n");
-> +			"port\n", Name);
-> =20
->  	if (strchr(devname, '/')) {
->  		pr_err("incremental removal requires a "
-> diff --git a/Monitor.c b/Monitor.c
-> index 971d2ec..7a5203c 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -381,14 +381,14 @@ static void alert(char *event, char *dev, char *dis=
-c, struct alert_info *info)
->  			if (info->mailfrom)
->  				fprintf(mp, "From: %s\n", info->mailfrom);
->  			else
-> -				fprintf(mp, "From: " Name " monitoring <root>\n");
-> +				fprintf(mp, "From: %s monitoring <root>\n", Name);
->  			fprintf(mp, "To: %s\n", info->mailaddr);
->  			fprintf(mp, "Subject: %s event on %s:%s\n\n",
->  				event, dev, hname);
-> =20
->  			fprintf(mp,
->  				"This is an automatically generated"
-> -				" mail message from " Name "\n");
-> +				" mail message from %s\n", Name);
->  			fprintf(mp, "running on %s\n\n", hname);
-> =20
->  			fprintf(mp,
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 445c388..87a4916 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -30,7 +30,7 @@
->  #ifndef VERS_DATE
->  #define VERS_DATE "21st August 2014"
->  #endif
-> -char Version[] =3D Name " - v" VERSION " - " VERS_DATE "\n";
-> +char Version[] =3D "mdadm - v" VERSION " - " VERS_DATE "\n";
-> =20
->  /*
->   * File: ReadMe.c
-> diff --git a/mdadm.c b/mdadm.c
-> index c856fcd..475c71c 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -38,6 +38,7 @@ static int misc_list(struct mddev_dev *devlist,
->  		     struct mddev_ident *ident,
->  		     char *dump_directory,
->  		     struct supertype *ss, struct context *c);
-> +const char Name[] =3D "mdadm";
-> =20
->  int main(int argc, char *argv[])
->  {
-> @@ -771,12 +772,12 @@ int main(int argc, char *argv[])
->  			if (strcmp(c.update,"?") =3D=3D 0 ||
->  			    strcmp(c.update, "help") =3D=3D 0) {
->  				outf =3D stdout;
-> -				fprintf(outf, Name ": ");
-> +				fprintf(outf, "%s: ", Name);
->  			} else {
->  				outf =3D stderr;
->  				fprintf(outf,
-> -					Name ": '--update=3D%s' is invalid.  ",
-> -					c.update);
-> +					"%s: '--update=3D%s' is invalid.  ",
-> +					Name, c.update);
->  			}
->  			fprintf(outf, "Valid --update options are:\n"
->  		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'resync',\n"
-> diff --git a/mdadm.h b/mdadm.h
-> index fc1fd31..c8d079c 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -180,6 +180,8 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __=
-offset, int __whence));
-> =20
->  #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
-> =20
-> +extern const char Name[];
-> +
->  /* general information that might be extracted from a superblock */
->  struct mdinfo {
->  	mdu_array_info_t	array;
-> @@ -262,8 +264,6 @@ struct createinfo {
->  	struct supertype *supertype;
->  };
-> =20
-> -#define Name "mdadm"
-> -
->  enum mode {
->  	ASSEMBLE=3D1,
->  	BUILD,
-> @@ -1457,7 +1457,7 @@ static inline int xasprintf(char **strp, const char=
- *fmt, ...) {
->  	return ret;
->  }
-> =20
-> -#define pr_err(fmt ...) fprintf(stderr, Name ": " fmt)
-> +#define pr_err(fmt, args...) fprintf(stderr, "%s: "fmt, Name, ##args)
->  #define cont_err(fmt ...) fprintf(stderr, "       " fmt)
-> =20
->  void *xmalloc(size_t len);
-> diff --git a/mdmon.c b/mdmon.c
-> index 27045a1..ee12b7c 100644
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -67,6 +67,8 @@
->  #include	"mdadm.h"
->  #include	"mdmon.h"
-> =20
-> +char const Name[] =3D "mdmon";
-> +
->  struct active_array *discard_this;
->  struct active_array *pending_discard;
-> =20
-> diff --git a/mdmon.h b/mdmon.h
-> index 5a8e120..aa750c6 100644
-> --- a/mdmon.h
-> +++ b/mdmon.h
-> @@ -18,8 +18,7 @@
->   * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
->   */
-> =20
-> -#undef pr_err
-> -#define pr_err(fmt ...) fprintf(stderr, "mdmon: " fmt)
-> +extern const char Name[];
-> =20
->  enum array_state { clear, inactive, suspended, readonly, read_auto,
->  		   clean, active, write_pending, active_idle, bad_word};
-> diff --git a/super-intel.c b/super-intel.c
-> index 4b23b9a..d900339 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1386,7 +1386,7 @@ static int imsm_check_attributes(__u32 attributes)
->  		}
-> =20
->  		if (not_supported)
-> -			dprintf(Name "(IMSM): Unknown attributes : %x\n", not_supported);
-> +			dprintf("%s (IMSM): Unknown attributes : %x\n", Name, not_supported);
-> =20
->  		ret_val =3D 0;
->  	}
-> diff --git a/sysfs.c b/sysfs.c
-> index 9a1d856..ceab27f 100644
-> --- a/sysfs.c
-> +++ b/sysfs.c
-> @@ -413,8 +413,8 @@ int sysfs_set_str(struct mdinfo *sra, struct mdinfo *=
-dev,
->  	n =3D write(fd, val, strlen(val));
->  	close(fd);
->  	if (n !=3D strlen(val)) {
-> -		dprintf(Name ": failed to write '%s' to '%s' (%s)\n",
-> -			val, fname, strerror(errno));
-> +		dprintf("%s: failed to write '%s' to '%s' (%s)\n",
-> +			Name, val, fname, strerror(errno));
->  		return -1;
->  	}
->  	return 0;
-> @@ -450,8 +450,8 @@ int sysfs_uevent(struct mdinfo *sra, char *event)
->  	n =3D write(fd, event, strlen(event));
->  	close(fd);
->  	if (n !=3D (int)strlen(event)) {
-> -		dprintf(Name ": failed to write '%s' to '%s' (%s)\n",
-> -			event, fname, strerror(errno));
-> +		dprintf("%s: failed to write '%s' to '%s' (%s)\n",
-> +			Name, event, fname, strerror(errno));
->  		return -1;
->  	}
->  	return 0;
-> diff --git a/xmalloc.c b/xmalloc.c
-> index 8d42a7c..75ae4e2 100644
-> --- a/xmalloc.c
-> +++ b/xmalloc.c
-> @@ -37,7 +37,8 @@ void *xmalloc(size_t len)
->  	char *msg;
->  	if (rv)
->  		return rv;
-> -	msg =3D Name ": memory allocation failure - aborting\n";
-> +	msg =3D ": memory allocation failure - aborting\n";
-> +	write(2, Name, strlen(Name));
->  	exit(4+!!write(2, msg, strlen(msg)));
->  }
-> =20
-> @@ -47,7 +48,8 @@ void *xrealloc(void *ptr, size_t len)
->  	char *msg;
->  	if (rv)
->  		return rv;
-> -	msg =3D Name ": memory allocation failure - aborting\n";
-> +	msg =3D  ": memory allocation failure - aborting\n";
-> +	write(2, Name, strlen(Name));
->  	exit(4+!!write(2, msg, strlen(msg)));
->  }
-> =20
-> @@ -57,7 +59,8 @@ void *xcalloc(size_t num, size_t size)
->  	char *msg;
->  	if (rv)
->  		return rv;
-> -	msg =3D Name ": memory allocation failure - aborting\n";
-> +	msg =3D  ": memory allocation failure - aborting\n";
-> +	write(2, Name, strlen(Name));
->  	exit(4+!!write(2, msg, strlen(msg)));
->  }
-> =20
-> @@ -67,6 +70,7 @@ char *xstrdup(const char *str)
->  	char *msg;
->  	if (rv)
->  		return rv;
-> -	msg =3D Name ": memory allocation failure - aborting\n";
-> +	msg =3D  ": memory allocation failure - aborting\n";
-> +	write(2, Name, strlen(Name));
->  	exit(4+!!write(2, msg, strlen(msg)));
->  }
 
 
-Thanks.
-I applied this patch, then made a number of other changes so some of it isn=
-'t
-needed.
-In particular, dprintf now always includes the Name and __func__, and pr_err
-now always includes the Name.
+On 12/02/15 12:10, Adam Goryachev wrote:
+> On 12/02/15 12:02, sunruh@prismnet.com wrote:
+>> ok, so now the really important questions: once done, what files/stats do i need to save off for the next time it craters?
+>
+> I think the usual information requested is the following:
+> fdisk -lu /dev/sd?
+> mdadm --manage --query /dev/sd?
+> mdadm --manage --detail /dev/md*
+> mdadm --manage --examine /dev/sd?
 
-NeilBrown
+Maybe
+	mdadm --misc --query   /dev/md*
+         mdadm --misc --detail  /dev/md*
+         mdadm --misc --examine /dev/sd*
 
---Sig_/+D4qarRtOQ4.w5CGy1rc6dj
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+> cat /proc/mdstat
+> ls -l /dev/disk/by-id/
+>
+> If you can keep a copy of all those things, then you will be much further ahead than many people. Of course, RAID1 is just so much easier/simpler than RAID5/RAID6, so usually you won't need any of that. RAID1 is simple mirror, so if you have two disks, one with data, one without, then you just need to decide which disk has the data, and start with that.
+> It is even possible to start two MD arrays, one from each disk, and then compare the contents to decide which one you want to keep.
+> Or, you can simply mount the device directly (skipping any MD data at the beginning if needed).
+>
+> Like I said, RAID1 is by far the simplest type of RAID if you want redundancy and can fit your dataset onto a single device.
+>
+> Glad you had a successful recovery :)
+>
+> Regards,
+> Adam
+>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVNwV9Dnsnt1WYoG5AQL3wg//XLExwSAn8y0fKGr+6hr5veiDOuacoIpz
-7uwam3xLccD6Nv226h/Tv3rL59NI2KAD++1WyeRfZRv7T8BxwrzZWvQ8UEmu1cS6
-aJDiW4IuEYh+HBIDiY7OV50rqi5eqoe8kaKSb0yBVhVrhIBaZBCheVWRl9m+Q7IX
-fQRrg/SUOiUUbm7Ap/NDSqr4AbjPTALWyPsxXh4sGDrzCINraI7Gxp1mpeCkNWe/
-uzYH6mPIMvmH0tYk5bwfUbNeBarZKc6yLpj5xmnkRFEvyMkwlatpJzZY65tk2KKE
-c5dsmhQuh/heQg2ETK+uZBKpCiAonoUBim8qOqfe8tZacBm00Wc1e8SVQIECLFZ5
-ksA3qgJRunoYE+XddGAg2lLD7kc6dP6R5wAXhtNCt9Y5rctY4nvDwjyWRDtAqtP5
-qUX2KtoeRCvS4p25pB9B5ZWcf7pJpLxIMmD4VgwML3H6guJ+wNjga0+QFQE5oXsT
-zWKCKse6pb2cs6MayvxNTioQghIXIKzvJHcblpwHyqWv8w1rCCi6i4M7hYuVOaey
-zn2b65yDza5InEt1XLlVxAdLeVrcGAA5A3Ym4EIKNLl8srkkfhd5U2bgw44mvpjF
-0R8nW0Wz4uAGwgtJXlWA6WIW0ipX/m2yiABQ62NEerO/0uYQ/uSDbwe/9+EISsfX
-riZ5LRHpqRQ=
-=GtTc
------END PGP SIGNATURE-----
-
---Sig_/+D4qarRtOQ4.w5CGy1rc6dj--
+-- 
+Eyal Lebedinsky (eyal@eyal.emu.id.au)
