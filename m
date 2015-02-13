@@ -1,191 +1,159 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
-Date: Fri, 13 Feb 2015 16:26:00 +1100
-Message-ID: <20150213162600.059fffb2@notabene.brown>
-References: <54D3D24E.5060303@cybernetics.com>
-	<20150206085133.2c1ab892@notabene.brown>
-	<20150206113930.GK23123@twins.programming.kicks-ass.net>
-	<20150209121357.29f19d36@notabene.brown>
-	<20150209091000.GN5029@twins.programming.kicks-ass.net>
-	<20150210135017.7659e49c@notabene.brown>
-	<20150210092936.GW21418@twins.programming.kicks-ass.net>
+Subject: Re: raid1 narrow_write_error with 4K disks, sd "bad block number
+ requested" messages
+Date: Fri, 13 Feb 2015 17:01:32 +1100
+Message-ID: <20150213170132.0c61c508@notabene.brown>
+References: <54C9006A.2030807@stratus.com>
+	<20150205155953.64e9b1e4@notabene.brown>
+	<54DCD8DD.7080103@stratus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/9FmO31../+OH1BUi+4oTm/4"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150210092936.GW21418@twins.programming.kicks-ass.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
+ boundary="Sig_/1TNMfviArU99CctkHjEZ/GD"; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <54DCD8DD.7080103@stratus.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Nate Dailey <nate.dailey@stratus.com>
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/9FmO31../+OH1BUi+4oTm/4
+--Sig_/1TNMfviArU99CctkHjEZ/GD
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 10 Feb 2015 10:29:36 +0100 Peter Zijlstra <peterz@infradead.org>
+On Thu, 12 Feb 2015 11:46:21 -0500 Nate Dailey <nate.dailey@stratus.com>
 wrote:
 
-> On Tue, Feb 10, 2015 at 01:50:17PM +1100, NeilBrown wrote:
-> > On Mon, 9 Feb 2015 10:10:00 +0100 Peter Zijlstra <peterz@infradead.org>=
- wrote:
-> > > > However, when io_schedule() explicitly calls blk_flush_plug(), then
-> > > > @from_schedule=3Dfalse variant is used, and the unplug functions ar=
-e allowed to
-> > > > allocate memory and block and maybe even call mempool_alloc() which=
- might
-> > > > call io_schedule().
-> > > >=20
-> > > > This shouldn't be a problem as blk_flush_plug() spliced out the plu=
-g list, so
-> > > > any recursive call will find an empty list and do nothing.
-> > >=20
-> > > Unless, something along the way stuck something back on, right? So
-> > > should we stick an:
-> > >=20
-> > > 	WARN_ON(current->in_iowait);
-> > >=20
-> > > somewhere near where things are added to this plug list? (and move the
-> > > blk_flush_plug() call inside of where that's actually true of course).
-> >=20
-> > No, I don't think so.
-> >=20
-> > It is certainly possible that some request on plug->cb_list could add
-> > something to plug->list - which is processed after ->cb_list.
-> >=20
-> > I think the best way to think about this is that the *problem* was that=
- a
-> > wait_event loop could spin without making any progress.   So any time t=
-hat
-> > clear forward progress is made it is safe sleep without necessitating t=
-he
-> > warning.  Hence sched_annotate_sleep() is reasonable.
-> > blk_flush_plug() with definitely have dispatched some requests if it
-> > might_sleep(), so the sleep is OK.
+> On 02/04/2015 11:59 PM, NeilBrown wrote:
+> > On Wed, 28 Jan 2015 10:29:46 -0500 Nate Dailey <nate.dailey@stratus.com>
+> > wrote:
+> >
+> >> I'm writing about something that appears to be an issue with raid1's
+> >> narrow_write_error, particular to non-512-byte-sector disks. Here's wh=
+at
+> >> I'm doing:
+> >>
+> >> - 2 disk raid1, 4K disks, each connected to a different SAS HBA
+> >> - mount a filesystem on the raid1, run a test that writes to it
+> >> - remove one of the SAS HBAs (echo 1 >
+> >> /sys/bus/pci/devices/0000\:45\:00.0/remove)
+> >>
+> >> At this point, writes fail and narrow_write_error breaks them up and
+> >> retries, one sector at a time. But these are 512-byte sectors, and sd
+> >> doesn't like it:
+> >>
+> >> [ 2645.310517] sd 3:0:1:0: [sde] Bad block number requested
+> >> [ 2645.310610] sd 3:0:1:0: [sde] Bad block number requested
+> >> [ 2645.310690] sd 3:0:1:0: [sde] Bad block number requested
+> >> ...
+> >>
+> >> There appears to be no real harm done, but there can be a huge number =
+of
+> >> these messages in the log.
+> >>
+> >> I can avoid this by disabling bad block tracking, but it looks like
+> >> maybe the superblock's bblog_shift is intended to address this exact
+> >> issue. However, I don't see a way to change it. Presumably this is
+> >> something mdadm should be setting up? I don't see bblog_shift ever set
+> >> to anything other than 0.
+> >>
+> >> This is on a RHEL 7.1 kernel, version 3.10.0-221.el7. I took a look at
+> >> upstream sd and md changes and nothing jumps out at me that would have
+> >> affected this (but I have not tested to see if the bad block messages =
+do
+> >> or do not happen on an upstream kernel).
+> >>
+> >> I'd appreciate any advice re: how to handle this. Thanks!
+> >
+> > Thanks for the report.
+> >
+> > narrow_write_error() should use bdev_logical_block_size() and round up =
+to
+> > that.
+> > Possibly mdadm should get the same information and set bblog_shift
+> > accordingly when creating a bad block log.
+> >
+> > I've made a note to fix that, but I'm happy to review  patches too :-)
+> >
+> > thanks,
+> > NeilBrown
+> >
 >=20
-> Well, yes, but you forget that this gets us back into recursion land.
-> io_schedule() calling io_schedule() calling io_schedule() and *boom*
-> stack overflow -> dead machine.
+> I will post a narrow_write_error patch shortly.
 >=20
-> We must either guarantee io_schedule() will never call io_schedule() or
-> that io_schedule() itself will not add new work to the current plug such
-> that calling io_schedule() itself will not recurse on the blk stuff.
+> I did some experimentation with setting the bblog_shift in mdadm, but it=
+=20
+> didn't work out the way I expected. It turns out that the value is only=20
+> loaded from the superblock if:
 >=20
-> Pick either option, but pick one.
+> 1453        if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BAD_BLOCKS) &&
+> 1454            rdev->badblocks.count =3D=3D 0) {
+> ...
+> 1473                rdev->badblocks.shift =3D sb->bblog_shift;
+>=20
+> And this feature bit is only set if any bad blocks have actually been=20
+> recorded.
+>=20
+> It also appears to me that the shift is used when loading the bad blocks=
+=20
+> from the superblock, but not when storing the bad block list in the=20
+> superblock.
+>=20
+> Seems like these are bugs, but I'm not certain how the code is supposed=20
+> to work (and am getting in a bit over my head with this).
 
-I choose ... Buzz Lightyear !!!
+Yes, that's probably a bug.
+The
 
-Sorry, go carried away there.  Uhhmm.  I think I pick a/  (But I expect I'll
-find a goat... ho hum).
+	} else if (sb->bblog_offset !=3D 0)
+		rdev->badblocks.shift =3D 0;
 
-Does this look credible?
+should be
 
-Thanks,
+	} else if (sb->bblog_offset !=3D 0)
+		rdev->badblocks.shift =3D sb->bblog_shift;
+
+>=20
+> In any case, it doesn't appear to me that there's any harm in having the=
+=20
+> bblog_shift not match the disk's block size (right?).
+
+Having the bblog_shift larger than the disk's block size certainly should n=
+ot
+be a problem.  Having it small only causes the problem that you have already
+discovered.
+
 NeilBrown
 
 
-From: NeilBrown <neilb@suse.de>
-Date: Fri, 13 Feb 2015 15:49:17 +1100
-Subject: [PATCH] sched: prevent recursion in io_schedule()
+>=20
+> Nate Dailey
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-io_schedule() calls blk_flush_plug() which, depending on the
-contents of current->plug, can initiate arbitrary blk-io requests.
 
-Note that this contrasts with blk_schedule_flush_plug() which requires
-all non-trivial work to be handed off to a separate thread.
-
-This makes it possible for io_schedule() to recurse, and initiating
-block requests could possibly call mempool_alloc() which, in times of
-memory pressure, uses io_schedule().
-
-Apart from any stack usage issues, io_schedule() will not behave
-correctly when called recursively as delayacct_blkio_start() does
-not allow for repeated calls.
-
-So:
- - use in_iowait to detect recursion.  Set it earlier, and restore
-   it to the old value.
- - move the call to "raw_rq" after the call to blk_flush_plug().
-   As this is some sort of per-cpu thing, we want some chance that
-   we are on the right CPU
- - When io_schedule() is called recurively, use blk_schedule_flush_plug()
-   which cannot further recurse.
- - as this makes io_schedule() a lot more complex and as io_schedule()
-   must match io_schedule_timeout(), but all the changes in io_schedule_tim=
-eout()
-   and make io_schedule a simple wrapper for that.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Peter Zijlstra <peterz@infradead.org>
-
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 1f37fe7f77a4..90f3de8bc7ca 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4420,30 +4420,27 @@ EXPORT_SYMBOL_GPL(yield_to);
-  */
- void __sched io_schedule(void)
- {
--	struct rq *rq =3D raw_rq();
--
--	delayacct_blkio_start();
--	atomic_inc(&rq->nr_iowait);
--	blk_flush_plug(current);
--	current->in_iowait =3D 1;
--	schedule();
--	current->in_iowait =3D 0;
--	atomic_dec(&rq->nr_iowait);
--	delayacct_blkio_end();
-+	io_schedule_timeout(MAX_SCHEDULE_TIMEOUT);
- }
- EXPORT_SYMBOL(io_schedule);
-=20
- long __sched io_schedule_timeout(long timeout)
- {
--	struct rq *rq =3D raw_rq();
-+	struct rq *rq;
- 	long ret;
-+	int old_iowait =3D current->in_iowait;
-+
-+	current->in_iowait =3D 1;
-+	if (old_iowait)
-+		blk_schedule_flush_plug(current);
-+	else
-+		blk_flush_plug(current);
-=20
- 	delayacct_blkio_start();
-+	rq =3D raw_rq();
- 	atomic_inc(&rq->nr_iowait);
--	blk_flush_plug(current);
--	current->in_iowait =3D 1;
- 	ret =3D schedule_timeout(timeout);
--	current->in_iowait =3D 0;
-+	current->in_iowait =3D old_iowait;
- 	atomic_dec(&rq->nr_iowait);
- 	delayacct_blkio_end();
- 	return ret;
-
---Sig_/9FmO31../+OH1BUi+4oTm/4
+--Sig_/1TNMfviArU99CctkHjEZ/GD
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVN2K6Dnsnt1WYoG5AQILyA//VBT6XrziB4i1pjAqpW87FiFwsAXo/Y1q
-U+zzcaJTQbC+fudxCTwp7WVAdRBXr7nIDmrzRKAW6Ls3hGImaEEJEvEVyBHeobcd
-l+X034YGpr4RDajU878GBYCFP6VsFn8Ts2gt35gyXF94vhkr0+4NhQapYO6Hf4l/
-3srLIriZaI0klXKEMMNJ995cdA3kvwedgvduNbXT4mwlk8NtBAw8IfxJE6E7d+nj
-WICLP+2JC8ZEwZwdnS1DGj2fPGRXen3WXz7dQTQOCoQv/FvIBW3nV1PvwVnWv0oe
-XH4rLbxv5W8YGtKUz+iH8cki4VjO9toKQijnjBNjqj5PUebvR+rQWuxlwLxuLd+h
-hDIusJSSGFIbYAr1luofkBC29WFcB2ffNrzbg1s199PA30JeZLmBOxFAHWpRNRJf
-icg3psurg8kkPfEapFiI/5s1VjJp5MSYZ1uPtU4WccbDwtvJ4VhXwKwr37yj06xJ
-Fg8IPtT05yxeJSkMAM9jjMiYr2Q9g0HlwwbYe57SGVtPb4gH17g3xWL1YuGmdVjT
-vV8aec/dt7+SyesOpYyxCMXU1jyUx17up++9bnUKu9VR/LeD80n9aVoZ7q07OJXV
-asA9dtD5DKywgoL1YF1a2y4CGp+gfjxE9MSNIpmPRbdVHvQWzEc68SGoJYH1Q7bM
-QJ7cZg4Qr+4=
-=D5UB
+iQIVAwUBVN2TPDnsnt1WYoG5AQKw9g//WPdyu1xSwhRh1m94dnT+W45C0YU01Tzm
+BK2u+fhidr+h5bIFQRRWgZTSVdOiBrP8RMXrKHRVjH9u8UaQHhBbszibP7yMuSpm
+bLgWEEEsKpMLaq9R3mWOmCSNQNAUi1YZfIib2BCXjJ2Sy9iyORpfxSLXNDdYqBo7
+AZgSyKzh4t0SyKjTtE6YS00SK12Ak60lbnzI4iOZ1fC3kH64Tca8x5YcfSJr3d09
+3+NlXTiCI+ZVU90A81VBrIVy3n+Bh6RJrySqW6RPutFnRRoUtY3tvG7GxGx4NEp/
+ua3FUjWhOV6G91DU8ZMLj0FxJVNj84UcwIqdbqJmh+pvl/uy/suXcG1mOrKXxQRP
+BzSGj0H+wIhVbBgZ922mWB4pHpqgQtBuolsmH6fc+BN9D8ai3TilSPTQKsoEdaBu
+KsbtXeMVIb6kPmAVQXa5Uqtjt9P+uynQ2aEPQSLoI1aBGrPHm7GLZFyZXy57h+ar
+9kl9lbcjd+ZjLaDVb9rQIYqDX/KebS2W4jisozZ9o9/1HBVrZwAXLzToabsDSBpP
+9enM4i28l4sJqt/mQ4Tc3wWvgHLN5YTJ87gcaIPn42i/og4sQhrv3qGpO70VtVkZ
+NBaK36PKxCEJ+XLm193BYx4WI7DTWtKQMxQ/Ce+PFxV9hqKbz8Qc1xlvH9CrbY6B
+r11jnvidINI=
+=La0f
 -----END PGP SIGNATURE-----
 
---Sig_/9FmO31../+OH1BUi+4oTm/4--
+--Sig_/1TNMfviArU99CctkHjEZ/GD--
