@@ -1,56 +1,46 @@
-From: gary <gary.mdjiang@gmail.com>
-Subject: mdadm failed to remove internal bitmap
-Date: Fri, 13 Feb 2015 17:46:46 +0800
-Message-ID: <54DDC806.5010803@gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
+Date: Fri, 13 Feb 2015 11:27:46 +0100
+Message-ID: <20150213102746.GO2896@worktop.programming.kicks-ass.net>
+References: <54D3D24E.5060303@cybernetics.com>
+ <20150206085133.2c1ab892@notabene.brown>
+ <20150206113930.GK23123@twins.programming.kicks-ass.net>
+ <20150209121357.29f19d36@notabene.brown>
+ <20150209091000.GN5029@twins.programming.kicks-ass.net>
+ <20150210135017.7659e49c@notabene.brown>
+ <20150210092936.GW21418@twins.programming.kicks-ass.net>
+ <20150213162600.059fffb2@notabene.brown>
+ <20150213083250.GN2896@worktop.programming.kicks-ass.net>
+ <20150213194953.0368355d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150213194953.0368355d@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Feb 13, 2015 at 07:49:53PM +1100, NeilBrown wrote:
+> > Like said, that will still recursive call delayacct_blkio_*() and would
+> > increase nr_iowait for a second time; while arguably its still the same
+> > one io-wait instance.
+> 
+> No it doesn't.  There is no "blk_flush_plug" call between the
+> delayacct_blkio_*() calls.
 
-I used v3.3.1 mdadm to do some test for bitmap, but when switch bitmap from
-internal to none, the output shows fail info about remove internal 
-bitmap, is it
-just a warning? Since the bitmap seems to be cleared, and it doesn't 
-show with
-v3.2.6 mdadm with the same steps.
+Duh, clearly I needed to still wake up :/
 
-linux:~ # mdadm --create md0 --raid-devices=2 --level=mirror 
---assume-clean /dev/vdb /dev/vdc
-mdadm: Note: this array has metadata at the start and
-     may not be suitable as a boot device.  If you plan to
-     store '/boot' on this device please ensure that
-     your boot-loader understands md/v1.x metadata, or use
-     --metadata=0.90
-Continue creating array? y
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md/md0 started.
-linux:~ # cat /proc/mdstat
-Personalities : [raid1]
-md127 : active raid1 vdc[1] vdb[0]
-       523712 blocks super 1.2 [2/2] [UU]
+> I've moved blk_flush_plug to the beginning of the function.
 
-unused devices: <none>
-linux:~ # mdadm --grow --bitmap=internal /dev/md127
-linux:~ # cat /proc/mdstat
-Personalities : [raid1]
-md127 : active raid1 vdc[1] vdb[0]
-       523712 blocks super 1.2 [2/2] [UU]
-       bitmap: 1/1 pages [4KB], 65536KB chunk
+> I wondered if it really make sense to call blk_flush_plug with nr_iowait
+> elevated and delayacct_blkio active.  blk_flush_plug() could call schedule()
+> for non-"io" reasons and maybe that could upset stuff???
 
-unused devices: <none>
-linux:~ # mdadm --grow --bitmap=none /dev/md127
-mdadm: failed to remove internal bitmap.
-linux:~ # cat /proc/mdstat
-Personalities : [raid1]
-md127 : active raid1 vdc[1] vdb[0]
-       523712 blocks super 1.2 [2/2] [UU]
+Yeah, good question that. Lemme ponder that a bit.
 
-unused devices: <none>
+> I don't really know.  I'm happy with your version.  I don't suppose anyone
+> else is paying attention and could give a third opinion....
 
-Thanks,
-Gary
+:-)
