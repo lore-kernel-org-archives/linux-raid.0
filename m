@@ -1,59 +1,50 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: All drive in Raid 5 are in 'spare' mode
-Date: Mon, 16 Feb 2015 15:03:28 -0500
-Message-ID: <54E24D10.7030901@turmel.org>
-References: <CAL7hTOctZ4tAoPSbO3iFEohRyXuvcY4=6yQj8U-FpoAhV6sT0w@mail.gmail.com> <54DC04C1.4010107@turmel.org> <CAL7hTOfhWiCmKVVCtpmHuB-OJkZjQsuaKZMN8oFKAArh=NuSHQ@mail.gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: md_raid5 using 100% CPU and hang with status resync=PENDING, if a drive is removed during initialization
+Date: Mon, 16 Feb 2015 15:36:46 -0500
+Message-ID: <wrfjpp99pp9d.fsf@redhat.com>
+References: <CD8664C5675EDF49A5E76D7DB099D7B32611BB56@VENUS1.in.megatrends.com>
+	<20141231164800.GL19091@reaktio.net>
+	<CD8664C5675EDF49A5E76D7DB099D7B326130D6E@VENUS1.in.megatrends.com>
+	<20150203093040.569aa5e1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAL7hTOfhWiCmKVVCtpmHuB-OJkZjQsuaKZMN8oFKAArh=NuSHQ@mail.gmail.com>
+In-Reply-To: <20150203093040.569aa5e1@notabene.brown> (NeilBrown's message of
+	"Tue, 3 Feb 2015 09:30:40 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dush <tomdush@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Manibalan P <pmanibalan@amiindia.co.in>, Pasi =?utf-8?B?S8Okcmtrw6Rp?= =?utf-8?B?bmVu?= <pasik@iki.fi>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Dush,
+NeilBrown <neilb@suse.de> writes:
+> On Mon, 2 Feb 2015 07:10:14 +0000 Manibalan P <pmanibalan@amiindia.co.in>
+> wrote:
+>
+>> Dear All,
+>> 	Any updates on this issue.
+>
+> Probably the same as:
+>
+>   http://marc.info/?l=linux-raid&m=142283560704091&w=2
 
-{Convention on kernel.org is to trim replies and either bottom post or
-interleave.  Please don't top-post.}
+Hi Neil,
 
-On 02/16/2015 02:38 PM, Dush wrote:
-> Hi Phil,
-> 
-> Thanks for your answer!
-> 
-> Unfortunately, I think I just loosed a disk (sde)... I don't see it
-> anymore in /dev , I have in dmesg:
-> d
-> [   12.280021] ata7: softreset failed (1st FIS failed)
-> [   22.280019] ata7: softreset failed (1st FIS failed)
-> [   57.280015] ata7: softreset failed (1st FIS failed)
-> [   57.280222] ata7: limiting SATA link speed to 1.5 Gbps
-> [   62.453345] ata7: softreset failed (device not ready)
-> [   62.453558] ata7: reset failed, giving up
+I ran some tests on this one against the latest Linus' tree as of today
+(1fa185ebcbcefdc5229c783450c9f0439a69f0c1) which I believe includes all
+your pending 3.20 patches.
 
-Where are the forensics I asked for as "Step one"?  Did you read about
-and fix any timeout mismatch issue?
+I am able to reproduce Manibalan's hangs on a system with 4 SSDs if I
+run fio on top of a device while it is resyncing and I fail one of the
+devices.
 
-[trim /]
+I can reproduce the issue for raid4 and raid5, but I don't see it if I
+I use a raid6.
 
-> You was right, I already tried to start the raid and it succeed to do
-> it with 3 drives: b, c and e. Then I added the d because I thought it
-> was de-synchronized.
-> Now I think my drive e was out of this raid for a while and I started
-> to had trouble because d started to had some issues.
-> 
-> Is it possible to force raid to start with b, c and d (forcing d to be
-> 'normal')? Time for me to copy everything to another drive...
+The following sequence consistently reproduces the problem for me:
 
-No.  sdd3 was converted to a spare.
+mdadm -C /dev/md111 -f -e 1.2 -l5 -n4 /dev/sd[ghij]3
+fio --name=md111 --filename=/dev/md111 --thread --numjobs=10 --direct=1 --group_reporting --unlink=0 --loops=1 --offset=0 --randrepeat=1 --norandommap --scramble_buffers=1 --stonewall --rw=randwrite --bs=8704 --iodepth=4000 --runtime=3000 --blockalign=512
+mdadm /dev/md111 -f /dev/sdg3
 
-Also, your device names have changed.  You *must* keep track of which
-one is which "RaidDevice".  Specifically, what was "sde" now appears to
-be "sdd".  Did you reboot?  You know that device names are not
-guaranteed to be consistent from one boot to the next, I hope.  Show an
-excerpt from "ls -l /dev/disk/by-id/" with your next report so we know
-which drive serial number has which name.
-
-Phil
+Cheers,
+Jes
