@@ -1,73 +1,37 @@
-From: Chris <email.bug@arcor.de>
-Subject: Re: re-add POLICY
-Date: Mon, 16 Feb 2015 12:23:46 +0000 (UTC)
-Message-ID: <loom.20150216T124230-883@post.gmane.org>
-References: <loom.20150214T222329-324@post.gmane.org> <20150216142845.0d50207c@notabene.brown>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 1 metadata - keep separate from mirror disks ?
+Date: Mon, 16 Feb 2015 08:02:31 -0500
+Message-ID: <54E1EA67.3040308@turmel.org>
+References: <79c7cd53-bb6c-4058-95ad-7ebd56cf1056@default> <54DB6BF0.3040309@turmel.org> <17135927-75bb-499a-8f43-6748c872feb0@default>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <17135927-75bb-499a-8f43-6748c872feb0@default>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>, linux-raid@vger.kernel.org
+Cc: Ankur Bose <ankur.bose@oracle.com>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb <at> suse.de> writes:
- 
-> Does your array have a write-intent bitmap configured?
-> If it does, then "POLICY action=re-add" really should work.
+Hi Suresh,
 
-Thank you for your insight. You are correct, the array has no write-intent
-bitmap.
+On 02/16/2015 06:37 AM, Suresh Babu Kandukuru wrote:
+> Yeh . Thank Phil . it is quite useful .  Now we see there are two
+> options . 1) without metadata 2) externally managed metadata . But we
+> would like to keep the metadata external to mirror leg ( like on host
+> local drive )  for the reasons mentioned below , not the externally
+> managed metadata , just by keeping metadata on mirror legs . Do we
+> have any option with md driver ?
 
- 
-> If it doesn't, then maybe you need "POLICY action=spare".
+I'm not sure I understand your follow-up question.  You've restated my
+answer, and re-iterated your preference to not have metadata on the
+member devices.
 
-OK, I will test this when the notebook is back in the house.
+So you need to write a service to handle metadata the way you want.  Or
+write scripts that will do --build operations at appropriate times
+without metadata.
 
+I'm not entirely clear why the on-member metadata is unacceptable, but
+as such, either remaining option needs some code of your own.
 
-
-Actually, the man page had kind of kept me from trying this, because it
-mentions the condition "if the device is bare", and I didn't want arbitrary
-bare disk, partition, or free space to be automatically added, but just to
-trigger an automatic try with raid members that got pulled and are save to
-re-sync. (e.g. after the occasional bad block error that gets remapped by
-the hardrives firmware)
-
-[man page: spare works] "as  above  and  additionally:  if  the device is
-bare it can become a spare if there is any array that it is a candidate for
-based on domains and metadata."
-
-Also, I wouldn't want a temporarily removed raid member to be added as spare
-to some other array. Only have them added (re-synced even if no bitmap
-re-add is possible) to the array they belong according to their superblock.
-
- 
-> This isn't the default, because depending on exactly how/why the device
-> failed, it may not be safe to treat it as a spare.
-
-OK, I can imagine detecting the corner cases may require some inteligent
-error logging.
-
-What I am looking for is a safe re-sync configuration option between
-bitmap-based re-add, and treating a device as arbitrary spare drive.
-
-
-Practically, this could be something like an additional action=re-sync
-option in between re-add/spare, or having the "re-add" action also do
-(non-bitmap) full re-syncs, if the device is in a clean state.
-
-
-May recording the fail event count in the remaining superblocks help, as
-described in
-http://permalink.gmane.org/gmane.linux.raid/48077
-help to detect the clean state?
-
-Kind Regards,
-Chris
-
-
-
-
-
-
-
+Phil
