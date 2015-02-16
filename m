@@ -1,42 +1,59 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: What are mdadm maintainers to do?
-Date: Mon, 16 Feb 2015 14:44:11 -0500
-Message-ID: <54E2488B.5060903@turmel.org>
-References: <loom.20150214T222329-324@post.gmane.org> <20150216142845.0d50207c@notabene.brown> <loom.20150216T124230-883@post.gmane.org> <54E1EDEA.1030503@turmel.org> <loom.20150216T165111-551@post.gmane.org> <54E226B5.1080500@turmel.org> <loom.20150216T183419-387@post.gmane.org>
+Subject: Re: All drive in Raid 5 are in 'spare' mode
+Date: Mon, 16 Feb 2015 15:03:28 -0500
+Message-ID: <54E24D10.7030901@turmel.org>
+References: <CAL7hTOctZ4tAoPSbO3iFEohRyXuvcY4=6yQj8U-FpoAhV6sT0w@mail.gmail.com> <54DC04C1.4010107@turmel.org> <CAL7hTOfhWiCmKVVCtpmHuB-OJkZjQsuaKZMN8oFKAArh=NuSHQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20150216T183419-387@post.gmane.org>
+In-Reply-To: <CAL7hTOfhWiCmKVVCtpmHuB-OJkZjQsuaKZMN8oFKAArh=NuSHQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris <email.bug@arcor.de>, linux-raid@vger.kernel.org
+To: Dush <tomdush@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/16/2015 12:48 PM, Chris wrote:
-> 
-> Thank you for the additional information, it calls for action.
-> 
-> 
-> OK, calling for a solution to stop desktop drives from causing data loss and
-> affecting the mdadm reputation:
-> 
-> 
-> I gather that mdadm could ship with one additional udev rule that calls a
-> script to check/set scterc, or falls back to increasing the system timout.
-> 
-> Phil, you mentioned having posted such a script, could you prepare it for
-> addition to the mdadm package?
+Hi Dush,
 
-No, I've posted snippets for users to customize in their own rc.local or
-distro equivalent.  I vaguely recall posting a generic script for some
-common cases, but I've personally converted to raid-rated drives
-everywhere in the past couple years.
+{Convention on kernel.org is to trim replies and either bottom post or
+interleave.  Please don't top-post.}
 
-Somebody else will have to tackle this.
+On 02/16/2015 02:38 PM, Dush wrote:
+> Hi Phil,
+> 
+> Thanks for your answer!
+> 
+> Unfortunately, I think I just loosed a disk (sde)... I don't see it
+> anymore in /dev , I have in dmesg:
+> d
+> [   12.280021] ata7: softreset failed (1st FIS failed)
+> [   22.280019] ata7: softreset failed (1st FIS failed)
+> [   57.280015] ata7: softreset failed (1st FIS failed)
+> [   57.280222] ata7: limiting SATA link speed to 1.5 Gbps
+> [   62.453345] ata7: softreset failed (device not ready)
+> [   62.453558] ata7: reset failed, giving up
 
-> Would maintainers be ok with adding such a udev rule and script to the package?
+Where are the forensics I asked for as "Step one"?  Did you read about
+and fix any timeout mismatch issue?
 
-Not my call, but keep in mind that this will add a dependency on
-smartmontools or whatever means is used to access/write to scterc.
+[trim /]
+
+> You was right, I already tried to start the raid and it succeed to do
+> it with 3 drives: b, c and e. Then I added the d because I thought it
+> was de-synchronized.
+> Now I think my drive e was out of this raid for a while and I started
+> to had trouble because d started to had some issues.
+> 
+> Is it possible to force raid to start with b, c and d (forcing d to be
+> 'normal')? Time for me to copy everything to another drive...
+
+No.  sdd3 was converted to a spare.
+
+Also, your device names have changed.  You *must* keep track of which
+one is which "RaidDevice".  Specifically, what was "sde" now appears to
+be "sdd".  Did you reboot?  You know that device names are not
+guaranteed to be consistent from one boot to the next, I hope.  Show an
+excerpt from "ls -l /dev/disk/by-id/" with your next report so we know
+which drive serial number has which name.
 
 Phil
