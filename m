@@ -1,203 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md_raid5 using 100% CPU and hang with status resync=PENDING, if
- a drive is removed during initialization
-Date: Wed, 18 Feb 2015 12:16:56 +1100
-Message-ID: <20150218121656.0584e09d@notabene.brown>
-References: <CD8664C5675EDF49A5E76D7DB099D7B32611BB56@VENUS1.in.megatrends.com>
-	<20141231164800.GL19091@reaktio.net>
-	<CD8664C5675EDF49A5E76D7DB099D7B326130D6E@VENUS1.in.megatrends.com>
-	<20150203093040.569aa5e1@notabene.brown>
-	<wrfjpp99pp9d.fsf@redhat.com>
-	<wrfjd259o4iy.fsf@redhat.com>
-	<wrfj61b0gk6l.fsf@redhat.com>
-	<20150218112741.08495514@notabene.brown>
-	<wrfjh9ukf2y6.fsf@redhat.com>
-	<wrfjsie4do37.fsf@redhat.com>
+Subject: [GIT PULL REQUEST] some more bugfixes for md.
+Date: Wed, 18 Feb 2015 12:31:46 +1100
+Message-ID: <20150218123146.7424b524@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/5VQweliLQ0tWMd5G7jBiU2R"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjsie4do37.fsf@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Manibalan P <pmanibalan@amiindia.co.in>, Pasi =?UTF-8?B?S8Okcmtrw6Rp?= =?UTF-8?B?bmVu?= <pasik@iki.fi>, linux-raid <linux-raid@vger.kernel.org>
+ boundary="Sig_/l3B/WEN6I4r90s3WkBgePl9"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Nate Dailey <nate.dailey@stratus.com>, Jes Sorensen <Jes.Sorensen@redhat.com>, Manibalan P <pmanibalan@amiindia.co.in>
 List-Id: linux-raid.ids
 
---Sig_/5VQweliLQ0tWMd5G7jBiU2R
+--Sig_/l3B/WEN6I4r90s3WkBgePl9
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 17 Feb 2015 20:07:24 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
-wrote:
 
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> > NeilBrown <neilb@suse.de> writes:
-> >> On Tue, 17 Feb 2015 19:03:30 -0500 Jes Sorensen <Jes.Sorensen@redhat.c=
-om>
-> >> wrote:
-> >>
-> >>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> >>> > Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> >>> >> NeilBrown <neilb@suse.de> writes:
-> >>> >>> On Mon, 2 Feb 2015 07:10:14 +0000 Manibalan P <pmanibalan@amiindi=
-a.co.in>
-> >>> >>> wrote:
-> >>> >>>
-> >>> >>>> Dear All,
-> >>> >>>> 	Any updates on this issue.
-> >>> >>>
-> >>> >>> Probably the same as:
-> >>> >>>
-> >>> >>>   http://marc.info/?l=3Dlinux-raid&m=3D142283560704091&w=3D2
-> >>> >>
-> >>> >> Hi Neil,
-> >>> >>
-> >>> >> I ran some tests on this one against the latest Linus' tree as of =
-today
-> >>> >> (1fa185ebcbcefdc5229c783450c9f0439a69f0c1) which I believe include=
-s all
-> >>> >> your pending 3.20 patches.
-> >>> >>
-> >>> >> I am able to reproduce Manibalan's hangs on a system with 4 SSDs i=
-f I
-> >>> >> run fio on top of a device while it is resyncing and I fail one of=
- the
-> >>> >> devices.
-> >>> >
-> >>> > Since Manibalan mentioned this issue wasn't present in earlier kern=
-els,
-> >>> > I started trying to track down what change caused it.
-> >>> >
-> >>> > So far I have been able to reproduce the hang as far back as 3.10.
-> >>>=20
-> >>> After a lot of bisecting I finally traced the issue back to this comm=
-it:
-> >>>=20
-> >>> a7854487cd7128a30a7f4f5259de9f67d5efb95f is the first bad commit
-> >>> commit a7854487cd7128a30a7f4f5259de9f67d5efb95f
-> >>> Author: Alexander Lyakas <alex.bolshoy@gmail.com>
-> >>> Date:   Thu Oct 11 13:50:12 2012 +1100
-> >>>=20
-> >>>     md: When RAID5 is dirty, force reconstruct-write instead of
-> >>> read-modify-write.
-> >>>    =20
-> >>>     Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-> >>>     Suggested-by: Yair Hershko <yair@zadarastorage.com>
-> >>>     Signed-off-by: NeilBrown <neilb@suse.de>
-> >>>=20
-> >>> If I revert that one I cannot reproduce the hang, applying it reprodu=
-ces
-> >>> the hang consistently.
-> >>
-> >> Thanks for all the research!
-> >>
-> >> That is consistent with what you already reported.
-> >> You noted that it doesn't affect RAID6, and RAID6 doesn't have an RMW =
-cycle.
-> >>
-> >> Also, one  of the early emails from Manibalan contained:
-> >>
-> >> handling stripe 273480328, state=3D0x2041 cnt=3D1, pd_idx=3D5, qd_idx=
-=3D-1
-> >> , check:0, reconstruct:0
-> >> check 5: state 0x10 read           (null) write           (null) writt=
-en           (null)
-> >> check 4: state 0x11 read           (null) write           (null) writt=
-en           (null)
-> >> check 3: state 0x0 read           (null) write           (null) writte=
-n           (null)
-> >> check 2: state 0x11 read           (null) write           (null) writt=
-en           (null)
-> >> check 1: state 0x11 read           (null) write           (null) writt=
-en           (null)
-> >> check 0: state 0x18 read           (null) write ffff8808029b6b00 writt=
-en           (null)
-> >> locked=3D0 uptodate=3D3 to_read=3D0 to_write=3D1 failed=3D1 failed_num=
-=3D3,-1
-> >> force RCW max_degraded=3D1, recovery_cp=3D7036944 sh->sector=3D2734803=
-28
-> >> for sector 273480328, rmw=3D2 rcw=3D1
-> >>
-> >> So it is forcing RCW, even though a single block update is usually han=
-dled
-> >> with RMW.
-> >>
-> >> In this stripe, the parity disk is '5' and disk 3 has failed.
-> >> That means to perform an RCW, we need to read the parity block in order
-> >> to reconstruct the content of the failed disk.  And if we were to do t=
-hat,
-> >> we may as well just do an RMW.
-> >>
-> >> So I think the correct fix would be to only force RCW when the array
-> >> is not degraded.
-> >>
-> >> So something like this:
-> >>
-> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> >> index aa76865b804b..fa8f8b94bfa8 100644
-> >> --- a/drivers/md/raid5.c
-> >> +++ b/drivers/md/raid5.c
-> >> @@ -3170,7 +3170,8 @@ static void handle_stripe_dirtying(struct r5conf=
- *conf,
-> >>  	 * generate correct data from the parity.
-> >>  	 */
-> >>  	if (conf->max_degraded =3D=3D 2 ||
-> >> -	    (recovery_cp < MaxSector && sh->sector >=3D recovery_cp)) {
-> >> +	    (recovery_cp < MaxSector && sh->sector >=3D recovery_cp &&
-> >> +	     s->failed =3D=3D 0)) {
-> >>  		/* Calculate the real rcw later - for now make it
-> >>  		 * look like rcw is cheaper
-> >>  		 */
-> >>
-> >>
-> >> I think reverting the whole patch is not necessary and discards useful
-> >> functionality while the array is not degraded.
-> >>
-> >> Can you test this patch please?
-> >
-> > Actually I just tried this one - I was on my way home and grabbed food
-> > on the way, and thought there was a better solution than to revert.
-> >
-> > I'll give your solution a spin too.
->=20
-> I tried your patch, as expected that also resolves the problem. Not sure
-> which solution is better, so I'll let you pick.
+hi Linus,
+Please pull these three fixes, one tagged for -stable.
 
-Thanks!
-
->=20
-> Note whichever patch you choose it is applicable for stable-3.6+
-
-3.6??=20
-
-$ git describe --contains a7854487cd7128a30a7f4f5259
-v3.7-rc1~10^2~7
-
-so I assume 3.7.
-Doesn't apply to 3.6, so I'll assume a typo.
-
+Thanks,
 NeilBrown
 
---Sig_/5VQweliLQ0tWMd5G7jBiU2R
+
+The following changes since commit 53a6ab4d3f6d6dc87ec8f14998b4b5536ee2968c:
+
+  md/raid10: fix conversion from RAID0 to RAID10 (2015-02-12 14:09:57 +1100)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md/3.20-fixes
+
+for you to fetch changes up to 26ac107378c4742978216be1005b7291b799c7b2:
+
+  md/raid5: Fix livelock when array is both resyncing and degraded. (2015-0=
+2-18 11:35:14 +1100)
+
+----------------------------------------------------------------
+3 bug md fixes for 3.20
+
+yet-another-livelock in raid5, and a problem with write errors
+to 4K-block devices.
+
+----------------------------------------------------------------
+Nate Dailey (1):
+      md/raid1: round up to bdev_logical_block_size in narrow_write_error
+
+NeilBrown (2):
+      md/raid10: round up to bdev_logical_block_size in narrow_write_error.
+      md/raid5: Fix livelock when array is both resyncing and degraded.
+
+ drivers/md/raid1.c  | 3 ++-
+ drivers/md/raid10.c | 3 ++-
+ drivers/md/raid5.c  | 3 ++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
+
+--Sig_/l3B/WEN6I4r90s3WkBgePl9
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVOPoCDnsnt1WYoG5AQKfaxAAvrrCAuHY8uP9+83gEvFyiJpB4NNUnuK2
-uNxe3VdntzuMK0+xBCgSROc/mPtz5TIByH5wTKm4hTgy9RA5coWurOz0Tp9gupJs
-oxmclzIBV5za7qDd9t1M97qPhgXrzLly8XX5US4OK58ZZDKT2bay0ltLddMctMEL
-H0gP51/IIfeZ97kofxgdRRYqfMXXVRdrg1Y12uWVPPcFBNlhFg+QJH6+WtOZxPlf
-ypxg1z4slV2WsQkbebaBfBRbX3r0m8qN/LHZKxCUUKFl9C0Yu0qXMrHX5BnnAOyw
-mIgGIZqDhJYDncFaku0TxkaGqukgSDgd6W66LddZYjTMe/x/zfnIwYsovfgE0cQB
-xp1ackylJkyIgdBGWuRtHGYBi2sp16SDJisKs2rBx5vU2tBy2B5ZzxMIp6gfsaAX
-AsHyqHGeWzIM3V6dYvAR8KsSP6Z0NDZo/VZa/+W+AXz2N80LmYXcT9RLNJj3CBSu
-ySxFQLoWqlHB/5JWKiynrAq6e28A97x6bQ/HbuzQp46XUM0vNaiBPqzImzngjLWO
-kvJDX1eLSu304ielUF5LrePMr0yGewsdWd4FrgO914TbGpwoTN3lF6Ls6UiIZT6A
-jmCTmj8WkO0XkUtyrPoUR/f3Qi7tQmENz40nAA0USbV51pMytOvHWwTSBj/duwm0
-CB39nfxEX7g=
-=C3J+
+iQIVAwUBVOPrgjnsnt1WYoG5AQK3jRAAua7sp0/zsS5PGddFW9PxFh7nyUQCfjR+
+1offdgBP9sWBdBO+GJTxBTkl0s98gSzq32/vnPifn8Dpcafv4Jy21rV9og5jdZN4
++RWq15Pq2Hh6F4RtYLaktdPbnHJ8+2YJ62g5U5db9vPEVuYels7McdIeloQ6AiYF
+vQLP7OS05C24anZ/ayQoZBThyUiftDfHye3P7DYa/OQG4ZsO9Pd8s2ARgXovvups
+oZJpeBzTct0rDYW03JrPiN0Ap7W9yqZoCo0E5XoZbEqCmagMNc1Mv675dcJJaaCY
+uOSsCDteng9IcLSHtsTK9rFQQO8Twt4qkHtD1TvgVIiX3riFKrfcOp5OdxYL6ChY
+haNHLgJC7S7Kr7kogc54+nx/0m44Z9anUwdzt3B7eD6rOPxwrKCQ1IzUzqoKIRcz
+QSSkfmOwLD00Zy6Z5GqBtDjSiXKIgJ1Ws2HcBU/hj/oeO77l4m1f8W/DzbqulPZx
+4t7zWYDZMantpOcbr7QaQPtHLuoblBn+Rw82IINLUDy3uBjUeyV1ouZGyGYX5ehT
+vr3x9H0tezActfNV3a09QUTlxI5MEZ5CdPV4BhaR2MS2b5WHzqYg0XmnLecBG5wp
+SmEe2yGDlXSdKw4v2z2n7rMDYsean+GsQYKsHoQYjQxDcsFfvpAZPr33HGi5R6/z
+/h+CK45A4IU=
+=qHYS
 -----END PGP SIGNATURE-----
 
---Sig_/5VQweliLQ0tWMd5G7jBiU2R--
+--Sig_/l3B/WEN6I4r90s3WkBgePl9--
