@@ -1,67 +1,80 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] Revert "md: When RAID5 is dirty, force reconstruct-write instead of read-modify-write."
-Date: Tue, 17 Feb 2015 20:08:36 -0500
-Message-ID: <wrfj4mqkdo17.fsf@redhat.com>
-References: <1424218444-4022-1-git-send-email-Jes.Sorensen@redhat.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
+Date: Wed, 18 Feb 2015 12:09:36 +1100
+Message-ID: <20150218120936.3c7beed2@notabene.brown>
+References: <20150206085133.2c1ab892@notabene.brown>
+	<20150206113930.GK23123@twins.programming.kicks-ass.net>
+	<20150209121357.29f19d36@notabene.brown>
+	<20150209091000.GN5029@twins.programming.kicks-ass.net>
+	<20150210135017.7659e49c@notabene.brown>
+	<20150210092936.GW21418@twins.programming.kicks-ass.net>
+	<20150213162600.059fffb2@notabene.brown>
+	<20150213083250.GN2896@worktop.programming.kicks-ass.net>
+	<20150213194953.0368355d@notabene.brown>
+	<20150213102746.GO2896@worktop.programming.kicks-ass.net>
+	<20150213144803.GA11574@worktop.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1424218444-4022-1-git-send-email-Jes.Sorensen@redhat.com> (Jes
-	Sorensen's message of "Tue, 17 Feb 2015 19:14:04 -0500")
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/TaG/BqeDjBm_Aa6xQBbOoo+"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150213144803.GA11574@worktop.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-Jes.Sorensen@redhat.com writes:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> This reverts commit a7854487cd7128a30a7f4f5259de9f67d5efb95f.
->
-> The above patch would cause lockups of RAID4/5 arrays if a drive is
-> going faulty during reconstruction.
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  drivers/md/raid5.c | 19 +++----------------
->  1 file changed, 3 insertions(+), 16 deletions(-)
+--Sig_/TaG/BqeDjBm_Aa6xQBbOoo+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Please ignore this one - per previous email, there is a better way<tm>
+On Fri, 13 Feb 2015 15:48:03 +0100 Peter Zijlstra <peterz@infradead.org>
+wrote:
 
-Cheers,
-Jes
+> On Fri, Feb 13, 2015 at 11:27:46AM +0100, Peter Zijlstra wrote:
+>=20
+> > > I've moved blk_flush_plug to the beginning of the function.
+> >=20
+> > > I wondered if it really make sense to call blk_flush_plug with nr_iow=
+ait
+> > > elevated and delayacct_blkio active.  blk_flush_plug() could call sch=
+edule()
+> > > for non-"io" reasons and maybe that could upset stuff???
+> >=20
+> > Yeah, good question that. Lemme ponder that a bit.
+>=20
+> Yes, I thikn your version makes most sense as, you say, even regular
+> schedule() call nested in my version would go towards blk delayacct --
+> and I doubt that was the intent; even though the current kernel works
+> that way.
+>=20
+> I'll move the now rudimentary io_schedule() into sched.h as an inline.
 
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index aa76865..bc3a085 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3159,25 +3159,12 @@ static void handle_stripe_dirtying(struct r5conf *conf,
->  				   int disks)
->  {
->  	int rmw = 0, rcw = 0, i;
-> -	sector_t recovery_cp = conf->mddev->recovery_cp;
-> -
-> -	/* RAID6 requires 'rcw' in current implementation.
-> -	 * Otherwise, check whether resync is now happening or should start.
-> -	 * If yes, then the array is dirty (after unclean shutdown or
-> -	 * initial creation), so parity in some stripes might be inconsistent.
-> -	 * In this case, we need to always do reconstruct-write, to ensure
-> -	 * that in case of drive failure or read-error correction, we
-> -	 * generate correct data from the parity.
-> -	 */
-> -	if (conf->max_degraded == 2 ||
-> -	    (recovery_cp < MaxSector && sh->sector >= recovery_cp)) {
-> -		/* Calculate the real rcw later - for now make it
-> +	if (conf->max_degraded == 2) {
-> +		/* RAID6 requires 'rcw' in current implementation
-> +		 * Calculate the real rcw later - for now fake it
->  		 * look like rcw is cheaper
->  		 */
->  		rcw = 1; rmw = 2;
-> -		pr_debug("force RCW max_degraded=%u, recovery_cp=%llu sh->sector=%llu\n",
-> -			 conf->max_degraded, (unsigned long long)recovery_cp,
-> -			 (unsigned long long)sh->sector);
->  	} else for (i = disks; i--; ) {
->  		/* would I have to read this buffer for read_modify_write */
->  		struct r5dev *dev = &sh->dev[i];
+Thanks.
+
+Are you OK with this going to -stable for 3.19?
+
+NeilBrown
+
+--Sig_/TaG/BqeDjBm_Aa6xQBbOoo+
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVOPmUDnsnt1WYoG5AQKlqw/+JIOoF3pIESzETgCli5VPCz7Ru6/EqfQ8
+dNNHrtbXjFWq2XjTKLIt/CsLXIpUyf/NEpeGW4c5Ycb2U87GyYDHEYQbD0qVKZUx
+9rLCKELP230WZjGI/VBSCbJer3wygJCc02G+dkVr19xpHi0B1khutlVU5/4yS5PZ
+Zw4TXJEUG90xZul1rPgBU2RIsPMEwu0+aYJxjP9F2w3NQ70kFnPyEdoW8ARi59Ry
+/QW59rgQBiUAMaAZmhdhrdaPisVFTDuKCnihPE64JUz+SwVXFJSpJVoHfiqTz3rs
+SJ0lT4l2wSYK+HM58/G2oTyUta3YbWwvKsv4YAE3n76AsPsD0i+eeUQweG1VifQe
+w42eA0fwfk5yLB/Cpv/XMdTNq8b295SdNqZ69bKF+/WgAuLQkvJ9oDS8nQVNafwp
++kUQdoUGwv6me0v2OZlxj8Ri604/0LU45k8R5iPp95Gy+8np/upF29MEQYJouBqq
+k4sefEaOynl98vix9+fur4x3i50Sa3ymc5E1ootmIMoi8e2Pio5FXsZyHOhNuD9J
+A+h75veJ1w2dA7NJsB/vNPMg3aAWSyxYftr2AkgttFslWaj/Lypvy4PZCYxonCbQ
+Ary8Xhht5VTDK0MnGsr040WI8e9AzgZuXC5aELBQxirUZ0AAi/6Q2lBedpfWMMLt
+sNlb7q9HMhY=
+=910t
+-----END PGP SIGNATURE-----
+
+--Sig_/TaG/BqeDjBm_Aa6xQBbOoo+--
