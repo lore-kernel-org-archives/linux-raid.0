@@ -1,113 +1,153 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/3] md raid: enhancements to support the device mapper
- dm-raid target
-Date: Wed, 18 Feb 2015 13:03:28 +1100
-Message-ID: <20150218130328.3ce5ab53@notabene.brown>
-References: <1423853282-6218-1-git-send-email-heinzm@redhat.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: md_raid5 using 100% CPU and hang with status resync=PENDING, if a drive is removed during initialization
+Date: Wed, 18 Feb 2015 00:05:22 -0500
+Message-ID: <wrfjvbizdd2l.fsf@redhat.com>
+References: <CD8664C5675EDF49A5E76D7DB099D7B32611BB56@VENUS1.in.megatrends.com>
+	<20141231164800.GL19091@reaktio.net>
+	<CD8664C5675EDF49A5E76D7DB099D7B326130D6E@VENUS1.in.megatrends.com>
+	<20150203093040.569aa5e1@notabene.brown> <wrfjpp99pp9d.fsf@redhat.com>
+	<wrfjd259o4iy.fsf@redhat.com> <wrfj61b0gk6l.fsf@redhat.com>
+	<20150218112741.08495514@notabene.brown> <wrfjh9ukf2y6.fsf@redhat.com>
+	<wrfjsie4do37.fsf@redhat.com> <20150218121656.0584e09d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/VV1Zo=yI_+zDXHJ4UvFgOMV"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1423853282-6218-1-git-send-email-heinzm@redhat.com>
+In-Reply-To: <20150218121656.0584e09d@notabene.brown> (NeilBrown's message of
+	"Wed, 18 Feb 2015 12:16:56 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: heinzm@redhat.com
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: NeilBrown <neilb@suse.de>
+Cc: Manibalan P <pmanibalan@amiindia.co.in>, Pasi =?utf-8?B?S8Okcmtrw6Rp?= =?utf-8?B?bmVu?= <pasik@iki.fi>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/VV1Zo=yI_+zDXHJ4UvFgOMV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+NeilBrown <neilb@suse.de> writes:
+> On Tue, 17 Feb 2015 20:07:24 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
+> wrote:
+>
+>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>> > NeilBrown <neilb@suse.de> writes:
+>> >> On Tue, 17 Feb 2015 19:03:30 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
+>> >> wrote:
+>> >>
+>> >>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>> >>> > Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>> >>> >> NeilBrown <neilb@suse.de> writes:
+>> >>> >>> On Mon, 2 Feb 2015 07:10:14 +0000 Manibalan P
+>> >>> >>> <pmanibalan@amiindia.co.in>
+>> >>> >>> wrote:
+>> >>> >>>
+>> >>> >>>> Dear All,
+>> >>> >>>> 	Any updates on this issue.
+>> >>> >>>
+>> >>> >>> Probably the same as:
+>> >>> >>>
+>> >>> >>>   http://marc.info/?l=linux-raid&m=142283560704091&w=2
+>> >>> >>
+>> >>> >> Hi Neil,
+>> >>> >>
+>> >>> >> I ran some tests on this one against the latest Linus' tree as of today
+>> >>> >> (1fa185ebcbcefdc5229c783450c9f0439a69f0c1) which I believe includes all
+>> >>> >> your pending 3.20 patches.
+>> >>> >>
+>> >>> >> I am able to reproduce Manibalan's hangs on a system with 4 SSDs if I
+>> >>> >> run fio on top of a device while it is resyncing and I fail one of the
+>> >>> >> devices.
+>> >>> >
+>> >>> > Since Manibalan mentioned this issue wasn't present in earlier kernels,
+>> >>> > I started trying to track down what change caused it.
+>> >>> >
+>> >>> > So far I have been able to reproduce the hang as far back as 3.10.
+>> >>> 
+>> >>> After a lot of bisecting I finally traced the issue back to this commit:
+>> >>> 
+>> >>> a7854487cd7128a30a7f4f5259de9f67d5efb95f is the first bad commit
+>> >>> commit a7854487cd7128a30a7f4f5259de9f67d5efb95f
+>> >>> Author: Alexander Lyakas <alex.bolshoy@gmail.com>
+>> >>> Date:   Thu Oct 11 13:50:12 2012 +1100
+>> >>> 
+>> >>>     md: When RAID5 is dirty, force reconstruct-write instead of
+>> >>> read-modify-write.
+>> >>>     
+>> >>>     Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+>> >>>     Suggested-by: Yair Hershko <yair@zadarastorage.com>
+>> >>>     Signed-off-by: NeilBrown <neilb@suse.de>
+>> >>> 
+>> >>> If I revert that one I cannot reproduce the hang, applying it reproduces
+>> >>> the hang consistently.
+>> >>
+>> >> Thanks for all the research!
+>> >>
+>> >> That is consistent with what you already reported.
+>> >> You noted that it doesn't affect RAID6, and RAID6 doesn't have an RMW cycle.
+>> >>
+>> >> Also, one  of the early emails from Manibalan contained:
+>> >>
+>> >> handling stripe 273480328, state=0x2041 cnt=1, pd_idx=5, qd_idx=-1
+>> >> , check:0, reconstruct:0
+>> >> check 5: state 0x10 read           (null) write           (null) written           (null)
+>> >> check 4: state 0x11 read           (null) write           (null) written           (null)
+>> >> check 3: state 0x0 read           (null) write           (null) written           (null)
+>> >> check 2: state 0x11 read           (null) write           (null) written           (null)
+>> >> check 1: state 0x11 read           (null) write           (null) written           (null)
+>> >> check 0: state 0x18 read           (null) write ffff8808029b6b00 written           (null)
+>> >> locked=0 uptodate=3 to_read=0 to_write=1 failed=1 failed_num=3,-1
+>> >> force RCW max_degraded=1, recovery_cp=7036944 sh->sector=273480328
+>> >> for sector 273480328, rmw=2 rcw=1
+>> >>
+>> >> So it is forcing RCW, even though a single block update is usually handled
+>> >> with RMW.
+>> >>
+>> >> In this stripe, the parity disk is '5' and disk 3 has failed.
+>> >> That means to perform an RCW, we need to read the parity block in order
+>> >> to reconstruct the content of the failed disk.  And if we were to do that,
+>> >> we may as well just do an RMW.
+>> >>
+>> >> So I think the correct fix would be to only force RCW when the array
+>> >> is not degraded.
+>> >>
+>> >> So something like this:
+>> >>
+>> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> >> index aa76865b804b..fa8f8b94bfa8 100644
+>> >> --- a/drivers/md/raid5.c
+>> >> +++ b/drivers/md/raid5.c
+>> >> @@ -3170,7 +3170,8 @@ static void handle_stripe_dirtying(struct r5conf *conf,
+>> >>  	 * generate correct data from the parity.
+>> >>  	 */
+>> >>  	if (conf->max_degraded == 2 ||
+>> >> -	    (recovery_cp < MaxSector && sh->sector >= recovery_cp)) {
+>> >> +	    (recovery_cp < MaxSector && sh->sector >= recovery_cp &&
+>> >> +	     s->failed == 0)) {
+>> >>  		/* Calculate the real rcw later - for now make it
+>> >>  		 * look like rcw is cheaper
+>> >>  		 */
+>> >>
+>> >>
+>> >> I think reverting the whole patch is not necessary and discards useful
+>> >> functionality while the array is not degraded.
+>> >>
+>> >> Can you test this patch please?
+>> >
+>> > Actually I just tried this one - I was on my way home and grabbed food
+>> > on the way, and thought there was a better solution than to revert.
+>> >
+>> > I'll give your solution a spin too.
+>> 
+>> I tried your patch, as expected that also resolves the problem. Not sure
+>> which solution is better, so I'll let you pick.
+>
+> Thanks!
+>
+>> 
+>> Note whichever patch you choose it is applicable for stable-3.6+
+>
+> 3.6?? 
+>
+> $ git describe --contains a7854487cd7128a30a7f4f5259
+> v3.7-rc1~10^2~7
+>
+> so I assume 3.7.
+> Doesn't apply to 3.6, so I'll assume a typo.
 
-On Fri, 13 Feb 2015 19:47:59 +0100 heinzm@redhat.com wrote:
+Too many kernels in one day, you win - 3.7 it is :)
 
-> From: Heinz Mauelshagen <heinzm@redhat.com>
->=20
-> I'm enhancing the device mapper raid target (dm-raid) to take
-> advantage of so far unused md raid kernel funtionality:
-> takeover, reshape, resize, addition and removal of devices to/from raid s=
-ets.
->=20
-> This series of patches remove constraints doing so.
->=20
->=20
-> Patch #1:
-> add 2 API functions to allow dm-raid to access the raid takeover
-> and resize functionality (namely md_takeover() and md_resize());
-> reshape APIs are not needed in lieu of the existing personalilty ones
->=20
-> Patch #2:
-> because device mapper core manages a request queue per mapped device
-> utilizing the md make_request API to pass on bios via the dm-raid target,
-> no md instance underneath it needs to manage a request queue of its own.
-> Thus dm-raid can't use the md raid0 personality as is, because the latter
-> accesses the request queue unconditionally in 3 places via mddev->queue
-> which this patch addresses.
->=20
-> Patch #3:
-> when dm-raid processes a down takeover to raid0, it needs to destroy
-> any existing bitmap, because raid0 does not require one. The patch
-> exports the bitmap_destroy() API to allow dm-raid to remove bitmaps.
->=20
->=20
-> Heinz Mauelshagen (3):
->   md core:   add 2 API functions for takeover and resize to support dm-ra=
-id
->   md raid0:  access mddev->queue (request queue member) conditionally
->              because it is not set when accessed from dm-raid
->   md bitmap: export bitmap_destroy() to support dm-raid down takover to r=
-aid0
->=20
->  drivers/md/bitmap.c |  1 +
->  drivers/md/md.c     | 39 ++++++++++++++++++++++++++++++---------
->  drivers/md/md.h     |  3 +++
->  drivers/md/raid0.c  | 48 +++++++++++++++++++++++++++---------------------
->  4 files changed, 61 insertions(+), 30 deletions(-)
->=20
-
-Hi Heinz,
- I don't object to these patches if you will find the exported functionality
- useful, but I am a little surprised by them.
-
- I would expect that dm-raid wouldn't ask md to 'takeover' from one level to
- another, but instead would
-   - suspend the dm device
-   - dismantle the array using the old level
-   - assemble the array using the new level
-   - resume the dm device
-
- The reason md needs 'takeover' is because it doesn't have the same
- device/target separation that dm does.
-
- I was particularly surprised that you wanted to use md/raid0.c  It is no
- better than dm/dm-stripe.c and managing two different stripe engines under
- LVM doesn't see like a good idea.
-
- Is there some reason that I have missed which makes it easier to use
- 'takeover' rather than suspend/resume?
-
-Thanks,
-NeilBrown
-
---Sig_/VV1Zo=yI_+zDXHJ4UvFgOMV
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVOPy8Dnsnt1WYoG5AQLAxhAAsoCmfndC1Sa4s+OAG2fP6XgNTfdfXZ5V
-ftH4zN18uBERDF47wCwCl+cm3ZQ2dGIn9aCW6glOHzDjIhqTknQrkegt+F6JvS/a
-VeWKuipn8/4t3EQWxsCW99BZK5P/SvUv5b/Ql1T6Ltj/kfZWufLRG0/zU/bbZeqn
-4KP50GjGM1Ub72Cy8EF/ywA5IcCT/ZGt2fGGKs/zuIe3K10608NNnofW3UUW676s
-w1J5BPsEzF1TkWdxBCFydxq13/5NE+sWv8tn3rJz9ZY+uIMYrn/Z/KjJiGrR1NNB
-heNuaRWx+f1SJYl52Vh6i5pHOE35L0KUkPTp5WPLAtBtHp/ICYpT8vXj+RjD30cn
-4DEPbwwFO58lDyorFv8BIYNTW1fTBkcjI8+nIGlMS/YbptUz0pnaEwukhG9Dfuat
-KYWmHq1b+YP1CWKTCsnMXP23fzdGN2TkbCuKouhL7BQexypRtXM7CZcwpJ9Rf5rX
-y4IhQsfk+UqaSjiW8X+BCoF553FSEMcPreXgh1NRqFwkwyXyiYaj81j96AVNOxVy
-gvi5Gxie+tvc+Z30S9snEIdODRmG1Uj1AnYQ0b2Wlrywg/XNiAibcsvFA0/Wem79
-rNI5kDJqdagAXQ43YPZeTNv3f93QlvRWD+zIFFFf35HVHFY9lvtzfm/IO5HYvfL/
-a3FSxVGhoxo=
-=q+AK
------END PGP SIGNATURE-----
-
---Sig_/VV1Zo=yI_+zDXHJ4UvFgOMV--
+Jes
