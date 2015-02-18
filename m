@@ -1,50 +1,53 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
-Date: Wed, 18 Feb 2015 14:47:27 +0100
-Message-ID: <20150218134727.GX5029@twins.programming.kicks-ass.net>
-References: <20150209121357.29f19d36@notabene.brown>
- <20150209091000.GN5029@twins.programming.kicks-ass.net>
- <20150210135017.7659e49c@notabene.brown>
- <20150210092936.GW21418@twins.programming.kicks-ass.net>
- <20150213162600.059fffb2@notabene.brown>
- <20150213083250.GN2896@worktop.programming.kicks-ass.net>
- <20150213194953.0368355d@notabene.brown>
- <20150213102746.GO2896@worktop.programming.kicks-ass.net>
- <20150213144803.GA11574@worktop.ger.corp.intel.com>
- <20150218120936.3c7beed2@notabene.brown>
+From: Chris <email.bug@arcor.de>
+Subject: help with the little script (erc timout fix)
+Date: Wed, 18 Feb 2015 15:04:53 +0000 (UTC)
+Message-ID: <loom.20150218T155053-576@post.gmane.org>
+References: <loom.20150214T222329-324@post.gmane.org> <20150216142845.0d50207c@notabene.brown> <loom.20150216T124230-883@post.gmane.org> <54E1EDEA.1030503@turmel.org> <loom.20150216T165111-551@post.gmane.org> <54E226B5.1080500@turmel.org> <loom.20150216T183419-387@post.gmane.org> <20150217104906.62d36c62@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150218120936.3c7beed2@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 18, 2015 at 12:09:36PM +1100, NeilBrown wrote:
-> On Fri, 13 Feb 2015 15:48:03 +0100 Peter Zijlstra <peterz@infradead.org>
-> wrote:
-> 
-> > On Fri, Feb 13, 2015 at 11:27:46AM +0100, Peter Zijlstra wrote:
-> > 
-> > > > I've moved blk_flush_plug to the beginning of the function.
-> > > 
-> > > > I wondered if it really make sense to call blk_flush_plug with nr_iowait
-> > > > elevated and delayacct_blkio active.  blk_flush_plug() could call schedule()
-> > > > for non-"io" reasons and maybe that could upset stuff???
-> > > 
-> > > Yeah, good question that. Lemme ponder that a bit.
-> > 
-> > Yes, I thikn your version makes most sense as, you say, even regular
-> > schedule() call nested in my version would go towards blk delayacct --
-> > and I doubt that was the intent; even though the current kernel works
-> > that way.
-> > 
-> > I'll move the now rudimentary io_schedule() into sched.h as an inline.
-> 
-> Thanks.
-> 
-> Are you OK with this going to -stable for 3.19?
 
-OK, lets do that.
+Hello,
+
+by adapting what I could find, I compiled the following short snippet now.
+
+Could list members please look at this novice code and suggest a way to 
+determine the containing disk device $HDD_DEV from the parition/disk,
+before I dare to test this.
+
+
+
+In udev-md-raid-assembly.rules, below LABEL="md_inc" (section only handling
+all md suppported devices) add:
+
+# fix timouts for redundant raids, if possible
+IMPORT{program}="BINDIR/mdadm --examine --export $tempnode"
+TEST="/usr/sbin/smartctl", ENV{MD_LEVEL}=="raid[1-9]*",
+RUN+="BINDIR/mdadm-erc-timout-fix.sh $tempnode"
+
+And in a new mdadm-erc-timout-fix.sh file implement:
+
+  #! /bin/sh
+
+  HDD_DEV= $1 somehow stipping off the tailing numbers?
+
+  if smartctl -l scterc ${HDD_DEV} | grep -q Disabled ; then
+    /usr/sbin/smartctl -l scterc,70,70 ${HDD_DEV}
+  else
+    if ! smartctl -l scterc ${HDD_DEV} | grep -q seconds ; then
+      echo 180 >/sys/block/${HDD_DEV}/device/timeout
+    fi
+  fi
+
+Correct execution during boot would seem to require that distro
+package managers hook smartctl and the script into the initramfs
+generation.
+
+Regards,
+Chris
+
