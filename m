@@ -1,49 +1,50 @@
-From: Iakiv Shchelkunov <iakiv.shchelkunov@globallogic.com>
-Subject: mdadm monitoring for RAID-1 - no events after pulling out all disks.
-Date: Wed, 18 Feb 2015 13:42:06 +0200
-Message-ID: <CAMvRQV2Pc4Crv8APkH6XZrLrQcCst7kzoMZ6HBaprbcnG5e3mw@mail.gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: RAID1 might_sleep() warning on 3.19-rc7
+Date: Wed, 18 Feb 2015 14:47:27 +0100
+Message-ID: <20150218134727.GX5029@twins.programming.kicks-ass.net>
+References: <20150209121357.29f19d36@notabene.brown>
+ <20150209091000.GN5029@twins.programming.kicks-ass.net>
+ <20150210135017.7659e49c@notabene.brown>
+ <20150210092936.GW21418@twins.programming.kicks-ass.net>
+ <20150213162600.059fffb2@notabene.brown>
+ <20150213083250.GN2896@worktop.programming.kicks-ass.net>
+ <20150213194953.0368355d@notabene.brown>
+ <20150213102746.GO2896@worktop.programming.kicks-ass.net>
+ <20150213144803.GA11574@worktop.ger.corp.intel.com>
+ <20150218120936.3c7beed2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150218120936.3c7beed2@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-Hello everyone. Please, help me with one mdadm monitoring issue.
-I use mdadm 3.2.5 on Debian 7.6. Besides system HDD, I have 2 SSDs
-with the same partition table.
-I have an array RAID1 over those SSDs with the same partitions in it.
-As I need to monitor mdadm errors, I have a tool for monitoring.
-So, I do next:
-mdadm =E2=80=93assemble /dev/md1 /dev/sda1 /dev/sdb1
-            //run the md which was created earlier
-mdadm --monitor --daemonize --scan --syslog
---program=3D/usr/local/mdmonitor            //monitoring
+On Wed, Feb 18, 2015 at 12:09:36PM +1100, NeilBrown wrote:
+> On Fri, 13 Feb 2015 15:48:03 +0100 Peter Zijlstra <peterz@infradead.org>
+> wrote:
+> 
+> > On Fri, Feb 13, 2015 at 11:27:46AM +0100, Peter Zijlstra wrote:
+> > 
+> > > > I've moved blk_flush_plug to the beginning of the function.
+> > > 
+> > > > I wondered if it really make sense to call blk_flush_plug with nr_iowait
+> > > > elevated and delayacct_blkio active.  blk_flush_plug() could call schedule()
+> > > > for non-"io" reasons and maybe that could upset stuff???
+> > > 
+> > > Yeah, good question that. Lemme ponder that a bit.
+> > 
+> > Yes, I thikn your version makes most sense as, you say, even regular
+> > schedule() call nested in my version would go towards blk delayacct --
+> > and I doubt that was the intent; even though the current kernel works
+> > that way.
+> > 
+> > I'll move the now rudimentary io_schedule() into sched.h as an inline.
+> 
+> Thanks.
+> 
+> Are you OK with this going to -stable for 3.19?
 
-The md  /dev/md1 is running, everything is okey.
-When I pull out the first SSD and try to write anything on active
-array, mdadm calls my program with parameters =E2=80=9CFail=E2=80=9D (o=
-r =E2=80=9CFailSpare=E2=80=9D),
-the md device name /dev/md1 and partition name, as it=E2=80=99s suppose=
-d to
-do.
-But when I pull out second SSD and there is no one SSD is present,
-then try to write data on the md, mdadm doesn=E2=80=99t run my program =
-to
-inform about fail.
-Also /proc/mdstat isn=E2=80=99t changed  =E2=80=93 the array is still =E2=
-=80=98active=E2=80=99, even
-without any physically present SSD. Of course, I can=E2=80=99t do any w=
-rite
-operations, I=E2=80=99ve got an error trying to do that, but I have no =
-event
-from mdadm monitoring.
-Has anybody faced with similar troubles? Is there any solution?
-
-Thanks in advance for your time, Iakiv.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+OK, lets do that.
