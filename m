@@ -1,138 +1,126 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH/RFC/RFT] md: allow resync to go faster when there is
- competing IO.
-Date: Thu, 19 Feb 2015 17:04:18 +1100
-Message-ID: <20150219170418.57ab0e86@notabene.brown>
+From: Chris Murphy <lists@colorremedies.com>
+Subject: Re: What are mdadm maintainers to do? (error recovery redundancy/data loss)
+Date: Wed, 18 Feb 2015 23:12:37 -0700
+Message-ID: <CAJCQCtQWBYRu7DFrdoKzj7G1-UKDJKBqyVn=6p91oagLfqd_Kw@mail.gmail.com>
+References: <loom.20150214T222329-324@post.gmane.org>
+	<20150216142845.0d50207c@notabene.brown>
+	<loom.20150216T124230-883@post.gmane.org>
+	<54E1EDEA.1030503@turmel.org>
+	<loom.20150216T165111-551@post.gmane.org>
+	<54E226B5.1080500@turmel.org>
+	<loom.20150216T183419-387@post.gmane.org>
+	<20150217104906.62d36c62@notabene.brown>
+	<loom.20150217T080345-764@post.gmane.org>
+	<CAJCQCtQvoB0yPPc=RXPPyJhpaFwH0pQTRCRaR_ycTbzHrD6rLw@mail.gmail.com>
+	<54E3C51C.2080106@websitemanagers.com.au>
+	<CAJCQCtTv-HMX77GWqA+_1rfkWodsTETp_Y3w5En-N4nGCymWsA@mail.gmail.com>
+	<loom.20150218T102011-486@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//HUq_7zsUpcA4ZcJAAlh8.i"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <loom.20150218T102011-486@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_//HUq_7zsUpcA4ZcJAAlh8.i
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-
-Hi all,
- as you probably know, when md is doing resync and notices other IO it
- throttles the resync to a configured "minimum", which defaults to
- 1MB/sec/device.
-
- On a lot of modern devices, that is extremely slow.
-
- I don't want to change the default (not all drives are the same) so I
- wanted to come up with something that it a little bit dynamic.
-
- After a bit of pondering and a bit of trial and error, I have the followin=
-g.
- It sometimes does what I want.  I don't think it is ever really bad.
-
- I'd appreciate it if people could test it on different hardware, different
- configs, different loads.
-
- What I have been doing is running
-  while :; do cat /sys/block/md0/md/sync_speed; sleep 5;=20
-  done > /root/some-file
-
- while a resync is happening and a load is being imposed.
-
- I do this with the old kernel and with this patch applied, then use
- gnuplot to look at the sync_speed graphs.
-
- I'd like to see that the new code is never slower than the old, and rarely=
- more
- than 20% of the available throughput when there is significant load.
-
- Any test results or other observations most welcome,
-
-Thanks,
-NeilBrown
+On Wed, Feb 18, 2015 at 4:04 AM, Chris <email.bug@arcor.de> wrote:
+>>
+>
+> Hello all,
+>
+> the discussion about SCTERC boils down to letting the drive attempt ERC a
+> little more or less. For any given disk experience seems to tell the slight
+> difference is, that if ERC is allowed longer you may see the first
+> unrecoverable erros (UREs) just a little (maybe only a month) later.
 
 
 
-When md notices non-sync IO happening while it is trying
-to resync (or reshape or recover) it slows down to the
-set minimum.
 
-The default minimum might have made sense many years ago
-but the drives have become faster.  Changing the default
-to match the times isn't really a long term solution.
+>
+> UREs are inevitable. Thus, if I run a filesystem on just a single drive it
+> will get corrupted at some point, nothing to do about it.
 
-This patch changes the code so that instead of waiting until the speed
-has dropped to the target, it just waits until pending requests
-have completed, and then waits about as long again.
-This means that the delay inserted is a function of the speed
-of the devices.
+On a single randomly selective drive, I disagree. In aggregate, that's
+true, eventually it will happen, you just won't know which drive or
+when it'll happen. I have a number of 5+ year old drives that have
+never reported a  URE. Meanwhile another drive has so many bad sectors
+I only keep it around for abusive purposes.
 
-Test show that:
- - for some loads, the resync speed is unchanged.  For those loads
-   increasing the minimum doesn't change the speed either.
-   So this is a good result.  To increase resync speed under such
-   loads we would probably need to increase the resync window
-   size.
 
- - for other loads, resync speed does increase to a reasonable
-   fraction (e.g. 20%) of maximum possible, and throughput of
-   the load only drops a little bit (e.g. 10%)
 
- - for other loads, throughput of the non-sync load drops quite a bit
-   more.  These seem to be latency-sensitive loads.
+>
+> Wait, except..., use a redundant raid! And here it makes a lot of a
+> difference that the drive's ERC actually terminates before the controller
+> timeout, to not loose all your redundacy again and be in hight risk of UREs
+> showing up during the re-sync.
+>
+> So for a proper comparison we need to look at the difference it makes in the
+> usage scenarios (error delay vs. loosing redundant error resilence + URE
+> triggering), not at the single recoverable/unrecoverable error incidence. It
+> looks to me, that it makes a lot of a differnce to redundant raids and no
+> qualitative difference to single disk filesystems.
+>
+> And we need to keep in mind that single disk filesystems do also depend on
+> the disk to stop grinding away with ERC attempts before the controller
+> timout. Otherwise disk reset may make the system clear buffers and loose
+> open files? Without prolonging the linux default controller timout, SCTERC
+> can prevent that where supported.
 
-So it isn't a perfect solution, but it is mostly an improvement.
+To get to one size fits all, where SCT ERC is disabled (consumer
+drive), and the kernel command timer is increased accordingly, we
+still need the delay reportable to user space. You can't have a by
+default 2-3 minute showstopper without an explanation so that the user
+can tune this back to 30 seconds or get rid of the drive or some other
+mitigation. Otherwise this is a 2-3 minute silent failure. I know a
+huge number of users who would assume this is a crash and force power
+off the system.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
+The option where SCT ERC is configurable, you could also do this one
+size fits all by setting this to say 50-70 deciseconds, and for read
+failures to cause  recovery if raid1+ is used, or cause a read retry
+if it's single, raid0, or linear. In other words, control the retries
+in software for these drives.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 94741ee6ae69..ce6624b3cc1b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7669,11 +7669,20 @@ void md_do_sync(struct md_thread *thread)
- 			/((jiffies-mddev->resync_mark)/HZ +1) +1;
-=20
- 		if (currspeed > speed_min(mddev)) {
--			if ((currspeed > speed_max(mddev)) ||
--					!is_mddev_idle(mddev, 0)) {
-+			if (currspeed > speed_max(mddev)) {
- 				msleep(500);
- 				goto repeat;
- 			}
-+			if (!is_mddev_idle(mddev, 0)) {
-+				/*
-+				 * Give other IO more of a chance.
-+				 * The faster the devices, the less we wait.
-+				 */
-+				unsigned long start =3D jiffies;
-+				wait_event(mddev->recovery_wait,
-+					   !atomic_read(&mddev->recovery_active));
-+				schedule_timeout_uninterruptible(jiffies-start);
-+			}
- 		}
- 	}
- 	printk(KERN_INFO "md: %s: %s %s.\n",mdname(mddev), desc,
 
---Sig_//HUq_7zsUpcA4ZcJAAlh8.i
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
 
-iQIVAwUBVOV84jnsnt1WYoG5AQJclw/+M7Bjq4ygNIymCrSzNVX89ylXt3vn+Wz5
-JWTxKSbdL3JSLAC/Y4PA3P9T/2LYV3tXP6qN646bNQ74SCNwUkZ7cjMJuXWwUptv
-dzViL4ff1hRT4jxsjAKZdSrtR5ofXkMiFqk/NPUoqu3YJZ41Dpe1DQBUwr7VErv9
-QX/+VmlOFcr7PNevdqXA5PvqVzzj3sXRYPzdMhHFfdX+TwdvyuEtDiJFCktHYhnG
-3DMMiJs41WQzqDtEnhr5e+RUZ1kNlJ1zv3986yYqeP5ISGJa0rl8geOctiCZYRiA
-z0wwe65V6K5c525SBgKXzXZohC/yitmXJHZrC/3l/U3vg3Ys3FtWx288mvuxy2Ar
-bC4MPGks6m4Cseu2okbJ6Erl29TxZFd57rDT8MxQymlIc7S/NCiARQV3YYHHxOaa
-vOOFg2wtiNnpyWfl54lNOHAVEKOztyIuclZVfolzQZVcj41cS4x48U0Jd+jvF4ls
-LYJPlwUa8mmpPENdky1ygXUfGLPCRUAEI8KVs8qZghj4sUKK9YyAmbioIzcCBToJ
-/5ZqL3RsMW39XFccehthVJmSFKAEYkH7aj9XEUx6/DP6AInnunv1m9hkAfYGSEyC
-/lggAxaDaUQwDU2R3nB10Uqi+yIZeaschNv3k8Qg45jCw0ET3pSfYYRJgZTgq2S0
-dIkCVDRqIaY=
-=IAoJ
------END PGP SIGNATURE-----
+>> I don't know if a udev rule can say "If the drive exclusively uses md,
+>> lvm, btrfs, zfs raid1, 4+ or nested of those, and if the drive does
+>> not support configurable SCT ERC, then change the kernel command timer
+>> for those devices to ~120 seconds" then that might be a plausible
+>> solution to use consumer drives the manufacturer rather explicitly
+>> proscribes from use in raid...
+>
+> The script called by the udev rule could do that, but can be kept as simple
+> as proposed, and can set SCTERC regardles, because setting SCTERC below the
+> controller timout makes a qualitative difference in running the redundant
+> arrays and a marginal difference in running non-redundant filesystems. (And
+> nevertheless, set long controller timout for devices that don's support SCTERC.)
 
---Sig_//HUq_7zsUpcA4ZcJAAlh8.i--
+I can't agree at all, lacking facts, that this change is marginal for
+non-redundant configurations. I've seen no data how common long
+recovery incidents are, or how much more common data loss would be if
+long recovery were prevented.
+
+The mere fact they exist suggests they're necessary. It may very well
+be that the ECC code or hardware used is so slow that it really does
+take so unbelievably long (really 30 seconds is an eternity, and a
+minute seems outrageous, and 2-3 minutes seems wholly ridiculous as in
+worthy of brutal unrelenting ridicule); but that doesn't even matter
+even if it is true, that's the behavior of the ECC whether we like it
+or not, we can't just willy nilly turn these things off without
+understanding the consequences. Just saying it's marginal doesn't make
+it true.
+
+So if SCT ERC is short, now you have to have a mitigation for the
+possibly higher number of URE's this will result in, in the form of
+kernel instigated read retries on read fail. And in fact, this may be
+false. The retries the drive does internally might be completely
+different than the kernel doing another read. The way data is encoded
+on the drive these days bears no resemblance to discreet 1's and 0's.
+
+And you also need a reliable opt out for SSD's. Their failures seem
+rather different.
+
+-- 
+Chris Murphy
