@@ -1,39 +1,136 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: mdadm raid 5 one disk overwritten file system failed
-Date: Thu, 19 Feb 2015 22:15:59 +0000
-Message-ID: <54E6609F.2080406@youngman.org.uk>
-References: <020601d04c17$08c10290$1a4307b0$@johnandre.net> <alpine.DEB.2.02.1502191218140.4007@uplift.swm.pp.se> <021f01d04c4c$5def1740$19cd45c0$@johnandre.net> <alpine.DEB.2.02.1502191521450.4007@uplift.swm.pp.se> <54E5F5A7.3090609@websitemanagers.com.au>
+From: Eric Mei <meijia@gmail.com>
+Subject: Re: [PATCH] [md] raid5: check faulty flag for array status during
+ recovery.
+Date: Thu, 19 Feb 2015 15:49:32 -0700
+Message-ID: <54E6687C.6020408@gmail.com>
+References: <94BC57C5-6223-435B-96FD-7DA2F6B4E561@gmail.com> <20150220085147.03bb2247@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54E5F5A7.3090609@websitemanagers.com.au>
+In-Reply-To: <20150220085147.03bb2247@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, John Andre Taule <post@johnandre.net>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, eric.mei@seagate.com
 List-Id: linux-raid.ids
 
-On 19/02/15 14:39, Adam Goryachev wrote:
-> From memory, there are filesystems which will do what you are asking
-> (check that the data received from disk is correct, use multiple 'disks'
-> and ensure protection from x failed drives, etc. I am certain zfs and
-> btrfs both support this. (I've never used either due to stability
-> concerns, but I read about them every now and then....)
+Hi Neil, You are absolutely right we need RCU lock for this. Thank you=20
+so much!
 
-When I used Pr1mes, I don't remember whether it was hardware or
-software, but I believe their drives implemented some form of parity
-check and recovery.
+Eric
 
-Basically, every eight-bit byte you wrote went to disk as sixteen bits -
-a data byte and a parity byte. I don't know how it worked but (1) you
-could reconstruct either byte from the other, and (2) for any 1-bit
-error you could tell which of the data or parity bytes was corrupt. For
-any 2-bit error I think you had a 90% chance of telling which byte was
-corrupt - something like that anyway.
+On 2015-02-19 2:51 PM, NeilBrown wrote:
+> On Tue, 6 Jan 2015 15:24:24 -0700 Eric Mei <meijia@gmail.com> wrote:
+>
+>> Hi Neil,
+>>
+>> In a MDRAID derived work we found and fixed a data corruption bug. W=
+e think this also affect vanilla MDRAID, but we didn=E2=80=99t directly=
+ prove that by constructing a test to show the corruption. Following is=
+ the theoretical analysis, please kindly review and see if I missed som=
+ething.
+>>
+>> To rebuild a stripe, MD checks whether array will be optimal after r=
+ebuild complete, if that=E2=80=99s true, we=E2=80=99ll mark the WIB bit=
+ to be cleared, the purpose is to enable =E2=80=9Cincremental rebuild=E2=
+=80=9D. The code section is like this:
+>>
+>> 	/* Need to check if array will still be degraded after recovery/res=
+ync
+>> 	 * We don't need to check the 'failed' flag as when that gets set,
+>> 	 * recovery aborts.
+>> 	 */
+>> 	for (i =3D 0; i < conf->raid_disks; i++)
+>> 		if (conf->disks[i].rdev =3D=3D NULL)
+>> 			still_degraded =3D 1;
+>>
+>> The problem is that only checking rdev =3D=3D NULL might not be enou=
+gh. Suppose both 2 drives D0 and D1 failed and marked as Faulty; We imm=
+ediately removed D0 from array, but because some lingering IO on D1, it=
+ remains in array with Faulty flags on. A new drive pulled in, rebuild =
+against D0 starts. Now because no rdev is NULL, MD thinks array will be=
+ optimal. If some writes happened before rebuild reaches the region, th=
+eir dirty bits in WIB will be cleared. When later add D1 back into arra=
+y, we=E2=80=99ll skip rebuilding those stripes, thus data corruption.
+>>
+>> The attached patch (against 3.18.0-rc6) is supposed to fix this issu=
+e.
+>>
+>> Thanks
+>> Eric
+>>
+> Hi Eric,
+>   sorry for the delay, and thanks for the reminder...
+>
+> The issue you described could only affect RAID6 as it requires the ar=
+ray to
+> continue with two failed drives.
+>
+> However in the RAID6 case I think you are correct - there is a chance=
+ of
+> corruption if there is a double failure and a delay in removing one d=
+evice.
+>
+> Your patch isn't quite safe as conf->disks[i].rdev can become NULL at=
+ any
+> moment, so it could become NULL between testing and de-referencing.
+> So I've modified it as follows.
+>
+> Thanks,
+> NeilBrown
+>
+>
+>
+> Author: Eric Mei <eric.mei@seagate.com>
+> Date:   Tue Jan 6 09:35:02 2015 -0800
+>
+>      raid5: check faulty flag for array status during recovery.
+>     =20
+>      When we have more than 1 drive failure, it's possible we start
+>      rebuild one drive while leaving another faulty drive in array.
+>      To determine whether array will be optimal after building, curre=
+nt
+>      code only check whether a drive is missing, which could potentia=
+lly
+>      lead to data corruption. This patch is to add checking Faulty fl=
+ag.
+>     =20
+>      Signed-off-by: NeilBrown <neilb@suse.de>
+>
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index bc6d7595ad76..022a0d99e110 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -5120,12 +5120,17 @@ static inline sector_t sync_request(struct md=
+dev *mddev, sector_t sector_nr, int
+>   		schedule_timeout_uninterruptible(1);
+>   	}
+>   	/* Need to check if array will still be degraded after recovery/re=
+sync
+> -	 * We don't need to check the 'failed' flag as when that gets set,
+> -	 * recovery aborts.
+> +	 * Note in case of > 1 drive failures it's possible we're rebuildin=
+g
+> +	 * one drive while leaving another faulty drive in array.
+>   	 */
+> -	for (i =3D 0; i < conf->raid_disks; i++)
+> -		if (conf->disks[i].rdev =3D=3D NULL)
+> +	rcu_read_lock();
+> +	for (i =3D 0; i < conf->raid_disks; i++) {
+> +		struct md_rdev *rdev =3D ACCESS_ONCE(conf->disks[i].rdev);
+> +
+> +		if (rdev =3D=3D NULL || test_bit(Faulty, &rdev->flags))
+>   			still_degraded =3D 1;
+> +	}
+> +	rcu_read_unlock();
+>  =20
+>   	bitmap_start_sync(mddev->bitmap, sector_nr, &sync_blocks, still_de=
+graded);
+>  =20
 
-Of course, that's no use if your hacker feeds their corrupt stream
-through your parity mechanism, or if 0x00000000 is valid when read from
-disk.
-
-Cheers,
-Wol
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
