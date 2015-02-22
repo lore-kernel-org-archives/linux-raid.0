@@ -1,25 +1,30 @@
-From: Christer Solskogen <christer.solskogen@gmail.com>
-Subject: Optimal chunk size for RAID5?
-Date: Sun, 22 Feb 2015 12:31:23 +0100
-Message-ID: <mccemd$8pi$1@ger.gmane.org>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Optimal chunk size for RAID5?
+Date: Sun, 22 Feb 2015 17:30:47 +0500
+Message-ID: <20150222173047.1ea65d67@natsu>
+References: <mccemd$8pi$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <mccemd$8pi$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christer Solskogen <christer.solskogen@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Sun, 22 Feb 2015 12:31:23 +0100
+Christer Solskogen <christer.solskogen@gmail.com> wrote:
 
-I'm about to create a RAID5 with three 4TB disks (ST4000VN000
-  from Seagate) and I wonder what the optimal chunk size is/should be.
-There are so many different views on the internet that I've almost lost 
-faith in the internets.
+> There are so many different views on the internet
 
-Is there even such a thing as optimal chunk size?
-Are there any other stuff I should think about?
+...and yet you're asking for some more? :)
+
+> Is there even such a thing as optimal chunk size?
+
+64K should be fine:
+http://louwrentius.com/linux-raid-level-and-chunk-size-the-benchmarks.html
 
 -- 
-chs
-
+With respect,
+Roman
