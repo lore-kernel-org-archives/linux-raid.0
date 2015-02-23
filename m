@@ -1,22 +1,34 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Inject I/O latency for RAID5/6 read and writes
-Date: Mon, 23 Feb 2015 12:32:47 -0600
-Message-ID: <CAB-428=gcsgxa1k83h0QWmijhe_kXaLMQZqs+m=Zb0OWX06geA@mail.gmail.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: RAID6 write I/O amplification?
+Date: Tue, 24 Feb 2015 04:58:35 +0500
+Message-ID: <20150224045835.14e40dcb@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I needed to inject I/O completion latency in the RAID5/6 codes for
-test purpose. I was wondering where would be the good place in
-md/raid5.c code to add delay ?
+Hello,
 
-So far I have tried adding mdelay/udelay in raid5_end_write_request()
-and it seems it works to increase I/O completion of writes. However,
-adding delay in raid5_end_read_request() does not really change the
-read I/O latency. Any idea ?
+Got a bit of a "how does it actually work" question...
 
---Alireza
+Suppose I have an MD RAID6 of 8 drives, with 64KB chunk size.
+
+I am rewriting a 4KB filesystem sector somewhere on that RAID (not crossing
+the stripe boundary).
+
+What's the amount of disk I/O in total this will result in?
+
+I assume the RAID will need to read data from all drives, recompute parity,
+then write to the data stripe where the updated piece happened to be, and also
+write to two parity stripes.
+
+Is this done at a stripe granularity, so 6x64KB reads, 3x64KB writes?
+Or down to individual sectors (pages), i.e. 6x4KB reads, 3x4KB writes?
+Or am I describing this algorithm correctly at all?
+
+-- 
+With respect,
+Roman
