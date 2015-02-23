@@ -1,173 +1,115 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: An old "write-mostly" read balance issue
-Date: Mon, 23 Feb 2015 11:03:32 +1100
-Message-ID: <20150223110332.4c135de9@notabene.brown>
-References: <54D78357.7020808@yandex.ru>
+Subject: Re: Metadata > 0.90 and auto-assemble
+Date: Mon, 23 Feb 2015 11:17:18 +1100
+Message-ID: <20150223111718.34cd5d30@notabene.brown>
+References: <54EA25D3.8020300@gentoo.org>
+	<CAJCQCtSPPm3ipb49SCeNFvgQ21y4HseqovBPg28LKXzvP5PY8Q@mail.gmail.com>
+	<54EA5004.3090104@gentoo.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/k4SzwAz771ffVNa9zy1ty+8"; protocol="application/pgp-signature"
+ boundary="Sig_/PnSut_QeW3ozNHetCjuPTue"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <54D78357.7020808@yandex.ru>
+In-Reply-To: <54EA5004.3090104@gentoo.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>
-Cc: linux-raid@vger.kernel.org, tomas.hodek@volny.cz
+To: Joshua Kinard <kumba@gentoo.org>
+Cc: Chris Murphy <lists@colorremedies.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/k4SzwAz771ffVNa9zy1ty+8
+--Sig_/PnSut_QeW3ozNHetCjuPTue
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 08 Feb 2015 18:40:07 +0300 Dark Penguin <darkpenguin@yandex.ru> wro=
-te:
+On Sun, 22 Feb 2015 16:54:12 -0500 Joshua Kinard <kumba@gentoo.org> wrote:
 
-> There is an old issue about RAID1 read-balancing when "write-mostly"=20
-> disks are present.
+> On 02/22/2015 16:29, Chris Murphy wrote:
+> > On Sun, Feb 22, 2015 at 11:54 AM, Joshua Kinard <kumba@gentoo.org> wrot=
+e:
+> >> I'd like to
+> >> avoid this if possible, as I haven't had to use an initramfs for norma=
+l booting
+> >> in the past, as long as I stay on metadata 0.90.  So I thought I'd ask=
+ what the
+> >> official stance is on this.
+> >=20
+> > https://raid.wiki.kernel.org/index.php/Autodetect
+> >=20
+> > Official stance is that it's deprecated, but people still use it.
 >=20
-> The problem is, according to the manual, "md driver will avoid reading=20
-> from these devices if at all possible".
->=20
-> One way to understand this statement is that these drives will never be=20
-> read from, except when the main drive can not be read from. There are A=20
-> LOT of situations when this is the expected and desired behaviour:
-> - People mirroring an SSD with an HDD and suffering a performance loss;
-> - People mirroring a fast HDD with a slow HDD for reliability, for=20
-> example, mirroring a 300Gb WD Raptor to a 300Gb partition on a 3Tb 5900=20
-> "green" drive for backup; since the larger drive may be used for=20
-> something other than this RAID, many would prefer it to be spared the=20
-> workload.
-> - In my case, I have a home RAID1 storage, which is idle 95% of the=20
-> time, and 95% of the remaining 5% I only read from it. So I want one of=20
-> the drives to spin down and never turn on, in order to avoid wearing=20
-> down the mechanics. They say, "The best way to keep a device from=20
-> breaking is to turn it off and not use it". :) But even if I simply=20
-> retrieve the contents of my volume, that request is apparently enough to=
-=20
-> load the first drive to 100% for a split second, which causes the second=
-=20
-> drive to spin up, which is extremely undesirable.
->=20
-> I've spent a lot of time looking for the answer "why does it spin up",=20
-> and "normal forum users" couldn not even help me, but then I found out=20
-> that there is another way to read that statement: apparently, there are=20
-> other people who would like to see whatever little benefit reading from=20
-> the second drive could give them. I can not say which side is a=20
-> majority, but I respect their wishes as well, and personally I'm fine=20
-> with any default behaviour as long as I have what I need.
->=20
-> I've found a patch for that:
-> http://marc.info/?l=3Dlinux-raid&m=3D135982797322422
-> Apparently, it can be used with any kernel, but I'm not good enough to=20
-> make sure nothing's broken everytime I upgrade the kernel, and frankly,=20
-> I think there are A LOT of people who wish to see the behaviour I would=20
-> expect. So my plea is for the developers to accept this patch and make=20
-> this behaviour optional, if not default. At least give us a compile=20
-> option to build the kernel this way! There are people out there who use=20
-> RAID1 at home and not in production, and therefore care less about=20
-> performance than home storage idling, and who understand the words "if=20
-> at all possible" in the more obvious way! I think that's the whole=20
-> reason why the "write-mostly" option is there in the first place, but if=
-=20
-> there are people who don't agree with me - I'm not going to argue, they=20
-> can have it their way, just give us the option to do what we want, too!
->=20
->=20
+> Yeah, but it's a pretty useful feature.  I can't see why autodetect for s=
+imple
+> setups (several disks or partitions and building a basic array out of the=
+m) is
+> maintained, while userspace autodetect is required for the more complex s=
+etups.
 
-Hi,
- thanks for reporting this.  It is definitely a bug.  It was introduced by=
-=20
+The in-kernel autodetect is only maintained because tearing it out and
+throwing it away (my preferred option) would be a user-visible regression,
+and those are not permitted.
 
-commit 9dedf60313fa4dddfd5b9b226a0ef12a512bf9dc
-    md/raid1: read balance chooses idlest disk for SSD
+The user-space version is more general and more flexible.  If the
+kernel-space version works for you, you can keep using it.  But if you want
+features added to it, you are out of luck.
 
+As others have said, creating a simple initrd is really not that hard.  Once
+you spend the time to make it work, you will find that it "just works" and
+wonder why you ever cared before.
 
- I don't recall seeing the patch from Tomas Hodek which you provided a link
-for  - sorry Tomas.
-
-I prefer the second of the two patches.  I will submit the following to Lin=
-us
-some time this week.
-
-Thanks for pursuing this Dark Penguin.
+There is even a README.initramfs in the mdadm source.  It was written 10
+years ago so I cannot promise it is 100% correct, but it is a reasonably go=
+od
+and very simple starting point.
 
 NeilBrown
 
-From: Tomas Hodek <tomas.hodek@volny.cz>
-Date: Mon, 23 Feb 2015 11:00:38 +1100
-Subject: [PATCH] Subject: md/raid1: fix read balance when a drive is
- write-mostly.
 
-When a drive is marked write-mostly it should only be the
-target of reads if there is no other option.
+>=20
+> But I suppose this has been discussed before in detail, though I cannot f=
+ind
+> said discussion.  The RAID Boot page has this one example only:
+>=20
+> "This approach can cause problems in several situations (imagine moving p=
+art of
+> an old array onto another machine before wiping and repurposing it: reboo=
+t and
+> watch in horror as the piece of dead array gets assembled as part of the
+> running RAID array, ruining it); kernel autodetect is correspondingly dep=
+recated."
+>=20
+> Which I find to be rather unconvincing.  The cited example is a fault of =
+the
+> user not torching the superblock before moving the disks or trying to use
+> them...and I've done this to myself on several occasions.  mdadm --misc
+> --zero-superblock and 'dd' saved the day in less than ~30s.
+>=20
+> Are there any other discussions that might be more convincing, or offer up
+> other points of view?  Perhaps there's a point I've yet to consider that =
+might
+> be enlightening.
+>=20
+> Thanks!,
+>=20
 
-This behaviour was broken by
 
-commit 9dedf60313fa4dddfd5b9b226a0ef12a512bf9dc
-    md/raid1: read balance chooses idlest disk for SSD
-
-which causes a write-mostly device to be *preferred* is some cases.
-
-Restore correct behaviour by checking and setting
-best_dist_disk and best_pending_disk rather than best_disk.
-
-We only need to test one of these as they are both changed
-from -1 or >=3D0 at the same time.
-
-As we leave min_pending and best_dist unchanged, any non-write-mostly
-device will appear better than the write-mostly device.
-
-Reported-by: tomas.hodek@volny.cz
-Reported-by: Dark Penguin <darkpenguin@yandex.ru>
-Signed-off-by: NeilBrown <neilb@suse.de>
-Link: http://marc.info/?l=3Dlinux-raid&m=3D135982797322422
-Fixes: 9dedf60313fa4dddfd5b9b226a0ef12a512bf9dc
-Cc: stable@vger.kernel.org (3.6+)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 0b6349f9c5c5..7742e0999bf2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -560,7 +560,7 @@ static int read_balance(struct r1conf *conf, struct r1b=
-io *r1_bio, int *max_sect
- 		if (test_bit(WriteMostly, &rdev->flags)) {
- 			/* Don't balance among write-mostly, just
- 			 * use the first as a last resort */
--			if (best_disk < 0) {
-+			if (best_dist_disk < 0) {
- 				if (is_badblock(rdev, this_sector, sectors,
- 						&first_bad, &bad_sectors)) {
- 					if (first_bad < this_sector)
-@@ -569,7 +569,8 @@ static int read_balance(struct r1conf *conf, struct r1b=
-io *r1_bio, int *max_sect
- 					best_good_sectors =3D first_bad - this_sector;
- 				} else
- 					best_good_sectors =3D sectors;
--				best_disk =3D disk;
-+				best_dist_disk =3D disk;
-+				best_pending_disk =3D disk;
- 			}
- 			continue;
- 		}
-
---Sig_/k4SzwAz771ffVNa9zy1ty+8
+--Sig_/PnSut_QeW3ozNHetCjuPTue
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVOpuVDnsnt1WYoG5AQJH0Q/8C5vc9+lRyXtPAcCKS2m9qKfGfCJaQ/g3
-hCXXoFZIyCCuGjfEUeyVKHh2T6/vyhrJzzm+M7ea59arHeEiZimbnHErUZYLPS0H
-LiWHMg575QbC53aNuAAV1IbH9vlELYuEcJl2MeeYI3V2riIb8mFeRfwAtuuO4CCX
-zDO7YqUGpuKtC7qEBYILxft/qjiAwa7YnZ+UyB1oBhtTuEOFdSLAZ4kcblP1ktGv
-JojbeFwkKHYktaKUtKkUudXBr1Qgp226tPoP2Pf1R4Uq8iS9v2mY6yE0lIwEf8Rp
-MkbjsGEd9biLDLaZQXIoZ9oXPQz5/qPrJOPEW06b5bJ8LmBoUXaNR1DhgXIy+obY
-ZaPGxPGAriREC1y/1dBl9mF5Q7b+dK2XstAhLJ2LiyVgYpeYivBhQh3Q51LcKVIL
-5LSKvsiPUfOC3RUtV3BpIDKq/WQupPLlyNtYfRWAo8wpYSVDXRr9YhUrxhobHXyA
-dQ0vBmd6TcKn7MNinvbX6EAkzDEK/QZCi30UiTaoMKSlB0whBf9eb21GKZ0/QYJ8
-IkaCM33XqPWb/f21w/pcJNDIEFfJTsi0Olv0PmZ+wCqxhEmHujx0AZuaqfQ/YIIL
-uUXpCALKKlRTcuDCa9bf+V40oPl12Wt2DrguhYRuKwji7F0J3K4rvfmYqYGOsRJL
-YoSQGVzBZrY=
-=NNJX
+iQIVAwUBVOpxjjnsnt1WYoG5AQIXFA/5AZ4C9HPrITmpD0TEjZCVWQ5eCaWqCPix
+cVM11h97KF+ncVAhP9hstH/07J+dOW8KerzmRutdmeOz3DEy/5dhx+e5dnjuyRBj
+8lX2xduVXqGVEUy62Pdbl99fcgR5CDM9qsjGEkkZpGmR6fvXov4zBfJgEx9rYoa2
+DJJN2nReM9qBBES3fdL2xwU7owTCq58QSk9KBwj3opm6kPW1pTom6x+L6Na4RzYB
+dh0d37ouVE9zDgtxfyooY9iFZ4PpDoawu6Y0H40I3COxQD0Bx/gmPYaz93kZ76UZ
+6q3wq+EJOaYTCxUTK1JTlqMV2egm/8+JVOgymoj/kMsck1C1AFjETGK9OuAVsBQj
+fZseDVbC8gvAtJqr3jQut2t6vVIokBfMhtjsv0ogvjbMnO60wLSVeCNc8/eHUuCl
+q7N5Q+3GJEBxqh2qBwjJChv3Yb6qS4+pIbNABxhAzj5uLYDfwch5NDipJzYwebfU
+V54051nrk5IFEVPtm6jP95XhrnP+d7aYq/I0TSYcuAqOSC21f/Aom63qiQrSVnk0
+dugh/SrYJvR5OsKdZV+UrGduefDeBhUHPrY5OuxJ4S4dl+060aqyJ4k0uI5Ij+Qp
+R6ZDHm4JHJNX15CHgYBNBBs3nwjuUToAOY+3NG4+hoR4+vG76WgE5HFgbJdnEkDL
+DxjCBJuPoVQ=
+=l4HY
 -----END PGP SIGNATURE-----
 
---Sig_/k4SzwAz771ffVNa9zy1ty+8--
+--Sig_/PnSut_QeW3ozNHetCjuPTue--
