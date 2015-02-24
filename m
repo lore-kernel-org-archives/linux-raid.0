@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 2/5] Check return of stat() to avoid covscan complaining
-Date: Tue, 24 Feb 2015 16:00:37 -0500
-Message-ID: <1424811640-26569-3-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 5/5] write_super_imsm_spares(): C statements are terminated by ;
+Date: Tue, 24 Feb 2015 16:00:40 -0500
+Message-ID: <1424811640-26569-6-git-send-email-Jes.Sorensen@redhat.com>
 References: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,26 +14,33 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Assemble.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ super-intel.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 131f871..b392214 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -688,7 +688,11 @@ static int load_devices(struct devs *devices, char *devmap,
- 			close(dfd);
- 		}
+diff --git a/super-intel.c b/super-intel.c
+index 819e0da..7f75b53 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5115,13 +5115,13 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
+ 	__u32 sum;
+ 	struct dl *d;
  
--		stat(devname, &stb);
-+		if (stat(devname, &stb)) {
-+			pr_err("Unsable to stat(%s) - skipping device.\n",
-+			       devname);
-+			continue;
-+		}
+-	spare->mpb_size = __cpu_to_le32(sizeof(struct imsm_super)),
+-	spare->generation_num = __cpu_to_le32(1UL),
++	spare->mpb_size = __cpu_to_le32(sizeof(struct imsm_super));
++	spare->generation_num = __cpu_to_le32(1UL);
+ 	spare->attributes = MPB_ATTRIB_CHECKSUM_VERIFY;
+-	spare->num_disks = 1,
+-	spare->num_raid_devs = 0,
+-	spare->cache_size = mpb->cache_size,
+-	spare->pwr_cycle_count = __cpu_to_le32(1),
++	spare->num_disks = 1;
++	spare->num_raid_devs = 0;
++	spare->cache_size = mpb->cache_size;
++	spare->pwr_cycle_count = __cpu_to_le32(1);
  
- 		if (c->verbose > 0)
- 			pr_err("%s is identified as a member of %s, slot %d%s.\n",
+ 	snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
+ 		 MPB_SIGNATURE MPB_VERSION_RAID0);
 -- 
 2.1.0
 
