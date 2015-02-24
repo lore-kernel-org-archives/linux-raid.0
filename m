@@ -1,31 +1,39 @@
-From: =?UTF-8?B?VG9tw6HFoSBIb2Rlaw==?= <tomas.hodek@volny.cz>
-Subject: Re: An old "write-mostly" read balance issue
-Date: Tue, 24 Feb 2015 09:20:58 +0100
-Message-ID: <54EC346A.3080003@volny.cz>
-References: <54D78357.7020808@yandex.ru> <20150223110332.4c135de9@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 2/5] Check return of stat() to avoid covscan complaining
+Date: Tue, 24 Feb 2015 16:00:37 -0500
+Message-ID: <1424811640-26569-3-git-send-email-Jes.Sorensen@redhat.com>
+References: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150223110332.4c135de9@notabene.brown>
+In-Reply-To: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Dark Penguin <darkpenguin@yandex.ru>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: artur.paszkiewicz@intel.com, linux-raid@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
 List-Id: linux-raid.ids
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Dne 23.2.2015 v 01:03 NeilBrown napsal(a):
-> Hi,
->   thanks for reporting this.  It is definitely a bug.  It was introduced by
->
->
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ Assemble.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Hello,
+diff --git a/Assemble.c b/Assemble.c
+index 131f871..b392214 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -688,7 +688,11 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			close(dfd);
+ 		}
+ 
+-		stat(devname, &stb);
++		if (stat(devname, &stb)) {
++			pr_err("Unsable to stat(%s) - skipping device.\n",
++			       devname);
++			continue;
++		}
+ 
+ 		if (c->verbose > 0)
+ 			pr_err("%s is identified as a member of %s, slot %d%s.\n",
+-- 
+2.1.0
 
-Thank you that you have marked a current write-mostly behaviour as the bug.
-
-If you think that I can help you, please tell me.
-
-
-Best regards,
-Tomas
