@@ -1,117 +1,100 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: [PATCH 2/5] Check return of stat() to avoid covscan complaining
-Date: Tue, 24 Feb 2015 16:56:29 -0500
-Message-ID: <wrfj61ar55yq.fsf@redhat.com>
+Date: Wed, 25 Feb 2015 09:03:01 +1100
+Message-ID: <20150225090301.5158921d@notabene.brown>
 References: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>
 	<1424811640-26569-3-git-send-email-Jes.Sorensen@redhat.com>
 	<20150225081243.1fe91420@notabene.brown>
+	<wrfj61ar55yq.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/q/MDxBn5/1YTSlRx76izJEc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150225081243.1fe91420@notabene.brown> (NeilBrown's message of
-	"Wed, 25 Feb 2015 08:12:43 +1100")
+In-Reply-To: <wrfj61ar55yq.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
 Cc: artur.paszkiewicz@intel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Tue, 24 Feb 2015 16:00:37 -0500 Jes.Sorensen@redhat.com wrote:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> ---
->>  Assemble.c | 6 +++++-
->>  1 file changed, 5 insertions(+), 1 deletion(-)
->> 
->> diff --git a/Assemble.c b/Assemble.c
->> index 131f871..b392214 100644
->> --- a/Assemble.c
->> +++ b/Assemble.c
->> @@ -688,7 +688,11 @@ static int load_devices(struct devs *devices, char *devmap,
->>  			close(dfd);
->>  		}
->>  
->> -		stat(devname, &stb);
->> +		if (stat(devname, &stb)) {
->> +			pr_err("Unsable to stat(%s) - skipping device.\n",
->> +			       devname);
->> +			continue;
->> +		}
->>  
->>  		if (c->verbose > 0)
->>  			pr_err("%s is identified as a member of %s, slot %d%s.\n",
->
-> I've applied the other 4.  I think I'd rather this one was fixed by changing
->   stat(devname,
-> to
->   fstat(dfd,
-> and keep dfd open a bit longer.
->
-> Does this look OK to you?
+--Sig_/q/MDxBn5/1YTSlRx76izJEc
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I got the warning from covscan because we ignored the return value from
-stat, so I think you still need to check the return value from fstat()
-as well.
+On Tue, 24 Feb 2015 16:56:29 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
+wrote:
 
-Cheers,
-Jes
+> NeilBrown <neilb@suse.de> writes:
+> > On Tue, 24 Feb 2015 16:00:37 -0500 Jes.Sorensen@redhat.com wrote:
+> >
+> >> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> >>=20
+> >> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> >> ---
+> >>  Assemble.c | 6 +++++-
+> >>  1 file changed, 5 insertions(+), 1 deletion(-)
+> >>=20
+> >> diff --git a/Assemble.c b/Assemble.c
+> >> index 131f871..b392214 100644
+> >> --- a/Assemble.c
+> >> +++ b/Assemble.c
+> >> @@ -688,7 +688,11 @@ static int load_devices(struct devs *devices, cha=
+r *devmap,
+> >>  			close(dfd);
+> >>  		}
+> >> =20
+> >> -		stat(devname, &stb);
+> >> +		if (stat(devname, &stb)) {
+> >> +			pr_err("Unsable to stat(%s) - skipping device.\n",
+> >> +			       devname);
+> >> +			continue;
+> >> +		}
+> >> =20
+> >>  		if (c->verbose > 0)
+> >>  			pr_err("%s is identified as a member of %s, slot %d%s.\n",
+> >
+> > I've applied the other 4.  I think I'd rather this one was fixed by cha=
+nging
+> >   stat(devname,
+> > to
+> >   fstat(dfd,
+> > and keep dfd open a bit longer.
+> >
+> > Does this look OK to you?
+>=20
+> I got the warning from covscan because we ignored the return value from
+> stat, so I think you still need to check the return value from fstat()
+> as well.
 
->
-> Thanks,
-> NeilBrown
->
-> diff --git a/Assemble.c b/Assemble.c
-> index 131f871a6d1e..1e529c1b3126 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
-> @@ -576,13 +576,13 @@ static int load_devices(struct devs *devices, char *devmap,
->  		struct stat stb;
->  		struct supertype *tst;
->  		int i;
-> +		int dfd;
->  
->  		if (tmpdev->used != 1)
->  			continue;
->  		/* looks like a good enough match to update the super block if needed */
->  #ifndef MDASSEMBLE
->  		if (c->update) {
-> -			int dfd;
->  			/* prepare useful information in info structures */
->  			struct stat stb2;
->  			int err;
-> @@ -652,7 +652,6 @@ static int load_devices(struct devs *devices, char *devmap,
->  			if (tst->ss->store_super(tst, dfd))
->  				pr_err("Could not re-write superblock on %s.\n",
->  				       devname);
-> -			close(dfd);
->  
->  			if (strcmp(c->update, "uuid")==0 &&
->  			    ident->bitmap_fd >= 0 && !bitmap_done) {
-> @@ -666,9 +665,9 @@ static int load_devices(struct devs *devices, char *devmap,
->  		} else
->  #endif
->  		{
-> -			int dfd = dev_open(devname,
-> -					   tmpdev->disposition == 'I'
-> -					   ? O_RDWR : (O_RDWR|O_EXCL));
-> +			dfd = dev_open(devname,
-> +				       tmpdev->disposition == 'I'
-> +				       ? O_RDWR : (O_RDWR|O_EXCL));
->  			tst = dup_super(st);
->  
->  			if (dfd < 0 || tst->ss->load_super(tst, dfd, NULL) != 0) {
-> @@ -685,10 +684,10 @@ static int load_devices(struct devs *devices, char *devmap,
->  				return -1;
->  			}
->  			tst->ss->getinfo_super(tst, content, devmap + devcnt * content->array.raid_disks);
-> -			close(dfd);
->  		}
->  
-> -		stat(devname, &stb);
-> +		fstat(dfd, &stb);
-> +		close(dfd);
->  
->  		if (c->verbose > 0)
->  			pr_err("%s is identified as a member of %s, slot %d%s.\n",
+I hope not.
+You can only get errors from fstat if you do something stupid like passing
+NULL as the stat pointer, or passing a non-open file descriptior.
+So if covscan complains, then covscan is broken.
+
+In contrast, stat can certainly given an error, such a ENOENT, which cannot
+possibly be avoided by not being stupid.
+
+NeilBrown
+
+--Sig_/q/MDxBn5/1YTSlRx76izJEc
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVOz1FTnsnt1WYoG5AQLBZg/+NDYgV/UhjnPHtV1JudgfhUoagp98PDoU
+kCHkqwos1ziyq2wZ+HjWlURe6BEmjaazMIAUxIPZC6zLQrkB4LDahOw6WXFNcc4j
+ku+PMxgDF081G9DWv8TqUN3hyPEcRqxC3/5cowB300RiOx7ovdTaMdq5v5tUlwBa
+ZWcqUtpTacWsM9OPXXwfEFjhsNZPcbiIcy/GwqsQOhPyiy/7kRkh+5Wuhu1iHAE8
+qXYCsxPd/RDm5ud2gTYnLc3Cl7CFFj+1iCHF5Wqz0u2t0iohU59KNxx71KpEFusb
+UeYnoePJzLjOyUMPrnboBQtyC3u8+cuZm4YC4eIPmLfdPJMisGMSgS4kG2FroZBK
+JNKry2ESuRoNFyvwTQLZsS52rA1Kg59F3POEhay678HxYnXT1sdgG+EwhL6+v+Qr
+5RpjEaG5LBEk4HJN5jl4V4g29x5BUQoAzV3cD4CCydhpDX+LycNin1aKNW0658s+
+/ysT613rsYhef7o41ogXFhYxaHVBmFArqTeObztbzHvXczy2eRAcHTY4G7K0rhBL
+y2rlJ8kJkw7ShgQh6OSCuSlFkikNE66hlLd062QKxxuVF38EPVVjYbDPraxpM8we
+wxfawPmXQ8rcS0ErctIa3/Zk87C6p8cMzOxyouPhI5Nxn8z876IgtoVwx3iDECFK
+jAbpA6pMCow=
+=jTaF
+-----END PGP SIGNATURE-----
+
+--Sig_/q/MDxBn5/1YTSlRx76izJEc--
