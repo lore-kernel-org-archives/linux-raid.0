@@ -1,35 +1,34 @@
 From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [PATCH md] recover_bitmaps() can be static
+Subject: [md:for-next 14/48] drivers/md/md-cluster.c:190:6: sparse: symbol
+ 'recover_bitmaps' was not declared. Should it be static?
 Date: Sat, 28 Feb 2015 07:04:37 +0800
-Message-ID: <20150227230437.GA47128@snb>
-References: <201502280727.kOhvF4kI%fengguang.wu@intel.com>
+Message-ID: <201502280727.kOhvF4kI%fengguang.wu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201502280727.kOhvF4kI%fengguang.wu@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Cc: kbuild-all@01.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-drivers/md/md-cluster.c:190:6: sparse: symbol 'recover_bitmaps' was not declared. Should it be static?
+tree:   git://neil.brown.name/md for-next
+head:   5d98513a2e546337c0deb93d772eb0c988d47c1d
+commit: e94987db2ed983aea4e45d22db9e17c6bbf2a623 [14/48] Initiate recovery on node failure
+reproduce:
+  # apt-get install sparse
+  git checkout e94987db2ed983aea4e45d22db9e17c6bbf2a623
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+
+sparse warnings: (new ones prefixed by >>)
+
+   drivers/md/md-cluster.c:178:15: sparse: restricted __le64 degrades to integer
+>> drivers/md/md-cluster.c:190:6: sparse: symbol 'recover_bitmaps' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
 ---
- md-cluster.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 1f82d0d..c71217a 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -187,7 +187,7 @@ out:
- 	return s;
- }
- 
--void recover_bitmaps(struct md_thread *thread)
-+static void recover_bitmaps(struct md_thread *thread)
- {
- 	struct mddev *mddev = thread->mddev;
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
+0-DAY kernel test infrastructure                Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
