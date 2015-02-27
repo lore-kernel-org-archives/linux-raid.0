@@ -1,220 +1,397 @@
-From: Chris <email.bug@arcor.de>
-Subject: smartctl-timeouts_v1.0 (erc timeout fix)
-Date: Fri, 27 Feb 2015 13:31:35 +0100
-Message-ID: <20150227133135.673e2261@smtp.arcor.de>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH 3/5] add_orom(): Compare content of struct imsm_orom rather
+ than pointers to it
+Date: Fri, 27 Feb 2015 14:39:42 +0100
+Message-ID: <54F0739E.50207@intel.com>
+References: <1424811640-26569-1-git-send-email-Jes.Sorensen@redhat.com>	<1424811640-26569-4-git-send-email-Jes.Sorensen@redhat.com>	<54EDA91E.5050005@intel.com> <wrfjvbiq2mzo.fsf@redhat.com>	<54EDF91F.40200@intel.com> <wrfj1tld3oa9.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/shKYAi2Z_dZjlqU0I=75+l5"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfj1tld3oa9.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---MP_/shKYAi2Z_dZjlqU0I=75+l5
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On 02/25/2015 06:15 PM, Jes Sorensen wrote:
+> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+>> On 02/25/2015 01:29 PM, Jes Sorensen wrote:
+>>> Artur Paszkiewicz <artur.paszkiewicz@intel.com> writes:
+>>>> On 02/24/2015 10:00 PM, Jes.Sorensen@redhat.com wrote:
+>>>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>>
+>>>>> This avoids adding the same orom entry to the oroms list multiple
+>>>>> times, as the comparison of pointers is never going to succeed, in
+>>>>> particular when '*orom' points to a local stack variable in the
+>>>>> calling function.
+>>>>>
+>>>>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>> ---
+>>>>>  platform-intel.c | 4 ++--
+>>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>>
+>>>>> diff --git a/platform-intel.c b/platform-intel.c
+>>>>> index 37274da..a4ffa9f 100644
+>>>>> --- a/platform-intel.c
+>>>>> +++ b/platform-intel.c
+>>>>> @@ -255,8 +255,8 @@ static const struct imsm_orom *add_orom(const struct imsm_orom *orom)
+>>>>>  	int i;
+>>>>>  
+>>>>>  	for (i = 0; i < SYS_DEV_MAX; i++) {
+>>>>> -		if (&oroms[i].orom == orom)
+>>>>> -			return orom;
+>>>>> +		if (!memcmp(&oroms[i].orom, orom, sizeof(struct imsm_orom)))
+>>>>> +			return &oroms[i].orom;
+>>>>>  		if (oroms[i].orom.signature[0] == 0) {
+>>>>>  			oroms[i].orom = *orom;
+>>>>>  			return &oroms[i].orom;
+>>>>>
+>>>>
+>>>> Hi Jes,
+>>>>
+>>>> You are right that this can add the same entry multiple times, but this
+>>>> is how it is supposed to work. The oroms list should contain all the
+>>>> platform's oroms and they can be the same, this is why memcmp() should
+>>>> not be used here. We don't want to compare the contents of the
+>>>> structure, just its address. Sorry if it's not clear.
+>>>
+>>> Artur,
+>>>
+>>> Then the code is fundamentally broken, since you end up comparing a
+>>> stack variable against the oroms array when you call it from
+>>> find_imsm_efi(). Worse you can end up returning the local stack variable
+>>> declared in find_imsm_efi() to the calling function - there is no way
+>>> that can be correct.
+>>>
+>>> Look at this:
+>>>
+>>> static const struct imsm_orom *add_orom(const struct imsm_orom *orom)
+>>> {
+>>>         int i;
+>>>
+>>>         for (i = 0; i < SYS_DEV_MAX; i++) {
+>>>                 if (&oroms[i].orom == orom)
+>>>                         return orom;
+>>>                 if (oroms[i].orom.signature[0] == 0) {
+>>>                         oroms[i].orom = *orom;
+>>>                         return &oroms[i].orom;
+>>>                 }
+>>>         }
+>>>         return NULL;
+>>> }
+>>>
+>>> const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+>>> {
+>>>         struct imsm_orom orom;
+>>>         const struct imsm_orom *ret;
+>>>         int err;
+>>>
+>>> ....
+>>>
+>>>         ret = add_orom(&orom);
+>>>         add_orom_device_id(ret, hba->dev_id);
+>>>
+>>>         return ret;
+>>> }
+>>
+>> I can't see how this can lead to returning a stack variable. The oroms
+>> array is global and add_orom() will always return a pointer to a struct
+>> in this array. This comparison will always fail when we pass a pointer
+>> to a stack variable to add_orom():
+>>
+>> if (&oroms[i].orom == orom)
+>> 	return orom;
+>>
+>> This was meant to prevent adding an orom again like this:
+>>
+>> ret = add_orom(&orom);
+>> add_orom(ret);
+>>
+>> Maybe it would be more appropriate to return NULL to indicate that
+>> nothing was added instead of returning back the same pointer. I can do a
+>> patch for this. What do you think?
+> 
+> It will fail because we know we're comparing a stack pointer, but it
+> raises red flags with tools like coverity and it is really bad coding
+> practice to rely on hacks like this.
+> 
+> I also don't understand why you want to keep a table of identical
+> entries in the orom structure if multiple identical entries are found.
+> Each entry ought to match onto a specific physical controller, unless I
+> get something wrong?
+> 
 
+OK, you're right, it is a hack. I thought it over and redesigned those
+orom functions. This should make it simpler and more consistent.
 
-Hi,
+Thanks,
+Artur
 
-here they are now. The smartctl-timeouts scripts fix commonly
-mismatching defaults with drives that have no error recovery timeout
-configured, which has often lead to data loss.
+From 673ecf1c0539f0050cc5934203af6d79cd68234d Mon Sep 17 00:00:00 2001
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Date: Fri, 27 Feb 2015 10:34:20 +0100
+Subject: [PATCH] imsm: simplified multiple OROMs support
 
-To test, extract the files to /etc/udev/rules.d/ and
-*reboot*. For me, the rules somehow had no effect without
-rebooting.
+Replaced oroms array with list, add_orom() now only appends to this list
+and add_orom_device_id() only appends devid_list node to an orom_entry.
 
-Please test, report, and then ship it with smartctl/mdadm.
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ platform-intel.c | 96 +++++++++++++++++++++++++++-----------------------------
+ platform-intel.h |  4 ++-
+ super-intel.c    | 18 +++++------
+ 3 files changed, 57 insertions(+), 61 deletions(-)
 
-Cheers,
-Chris
---MP_/shKYAi2Z_dZjlqU0I=75+l5
-Content-Type: application/zip
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=smartctl-timeouts_v1.0.zip
+diff --git a/platform-intel.c b/platform-intel.c
+index 37274da..9c89c20 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -229,65 +229,61 @@ struct pciExpDataStructFormat {
+ 	__u16 devListOffset;
+ } __attribute__ ((packed));
+ 
+-static struct orom_entry oroms[SYS_DEV_MAX];
+-
+-const struct orom_entry *get_oroms(void)
+-{
+-	return (const struct orom_entry *)&oroms;
+-}
++struct orom_entry *orom_entries;
+ 
+ const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
+ {
+-	int i;
+-	struct devid_list *list;
++	struct orom_entry *entry;
++	struct devid_list *devid;
+ 
+-	for (i = 0; i < SYS_DEV_MAX; i++) {
+-		for (list = oroms[i].devid_list; list; list = list->next) {
+-			if (list->devid == dev_id)
+-				return &oroms[i].orom;
++	for (entry = orom_entries; entry; entry = entry->next) {
++		for (devid = entry->devid_list; devid; devid = devid->next) {
++			if (devid->devid == dev_id)
++				return &entry->orom;
+ 		}
+ 	}
++
+ 	return NULL;
+ }
+ 
+-static const struct imsm_orom *add_orom(const struct imsm_orom *orom)
++static struct orom_entry *add_orom(const struct imsm_orom *orom)
+ {
+-	int i;
+-
+-	for (i = 0; i < SYS_DEV_MAX; i++) {
+-		if (&oroms[i].orom == orom)
+-			return orom;
+-		if (oroms[i].orom.signature[0] == 0) {
+-			oroms[i].orom = *orom;
+-			return &oroms[i].orom;
+-		}
+-	}
+-	return NULL;
++	struct orom_entry *list;
++	struct orom_entry *prev = NULL;
++
++	for (list = orom_entries; list; prev = list, list = list->next)
++		;
++
++	list = xmalloc(sizeof(struct orom_entry));
++	list->orom = *orom;
++	list->devid_list = NULL;
++	list->next = NULL;
++
++	if (prev == NULL)
++		orom_entries = list;
++	else
++		prev->next = list;
++
++	return list;
+ }
+ 
+-static void add_orom_device_id(const struct imsm_orom *orom, __u16 dev_id)
++static void add_orom_device_id(struct orom_entry *entry, __u16 dev_id)
+ {
+-	int i;
+ 	struct devid_list *list;
+ 	struct devid_list *prev = NULL;
+ 
+-	for (i = 0; i < SYS_DEV_MAX; i++) {
+-		if (&oroms[i].orom == orom) {
+-			for (list = oroms[i].devid_list; list; prev = list, list = list->next) {
+-				if (list->devid == dev_id)
+-					return;
+-			}
+-			list = xmalloc(sizeof(struct devid_list));
+-			list->devid = dev_id;
+-			list->next = NULL;
+-
+-			if (prev == NULL)
+-				oroms[i].devid_list = list;
+-			else
+-				prev->next = list;
++	for (list = entry->devid_list; list; prev = list, list = list->next) {
++		if (list->devid == dev_id)
+ 			return;
+-		}
+ 	}
++	list = xmalloc(sizeof(struct devid_list));
++	list->devid = dev_id;
++	list->next = NULL;
++
++	if (prev == NULL)
++		entry->devid_list = list;
++	else
++		prev->next = list;
+ }
+ 
+ static int scan(const void *start, const void *end, const void *data)
+@@ -321,7 +317,7 @@ static int scan(const void *start, const void *end, const void *data)
+ 	if (!imsm_mem)
+ 		return 0;
+ 
+-	const struct imsm_orom *orom = add_orom(imsm_mem);
++	struct orom_entry *orom = add_orom(imsm_mem);
+ 
+ 	if (ptr->devListOffset) {
+ 		const __u16 *dev_list = (void *)ptr + ptr->devListOffset;
+@@ -367,11 +363,11 @@ const struct imsm_orom *imsm_platform_test(struct sys_dev *hba)
+ 				IMSM_OROM_RLC_RAID10;
+ 	}
+ 
+-	const struct imsm_orom *ret = add_orom(&orom);
++	struct orom_entry *ret = add_orom(&orom);
+ 
+ 	add_orom_device_id(ret, hba->dev_id);
+ 
+-	return ret;
++	return &ret->orom;
+ }
+ 
+ static const struct imsm_orom *find_imsm_hba_orom(struct sys_dev *hba)
+@@ -508,7 +504,7 @@ static int read_efi_variable(void *buffer, ssize_t buf_size, char *variable_name
+ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ {
+ 	struct imsm_orom orom;
+-	const struct imsm_orom *ret;
++	struct orom_entry *ret;
+ 	int err;
+ 
+ 	if (check_env("IMSM_TEST_AHCI_EFI") || check_env("IMSM_TEST_SCU_EFI"))
+@@ -529,14 +525,14 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ 
+ 	/* try to read variable for combined AHCI controllers */
+ 	if (err && hba->type == SYS_DEV_SATA) {
+-		static const struct imsm_orom *csata;
++		static struct orom_entry *csata;
+ 
+ 		err = read_efi_variable(&orom, sizeof(orom), AHCI_CSATA_PROP, VENDOR_GUID);
+ 		if (!err) {
+ 			if (!csata)
+ 				csata = add_orom(&orom);
+ 			add_orom_device_id(csata, hba->dev_id);
+-			return csata;
++			return &csata->orom;
+ 		}
+ 	}
+ 
+@@ -546,12 +542,12 @@ const struct imsm_orom *find_imsm_efi(struct sys_dev *hba)
+ 	ret = add_orom(&orom);
+ 	add_orom_device_id(ret, hba->dev_id);
+ 
+-	return ret;
++	return &ret->orom;
+ }
+ 
+ const struct imsm_orom *find_imsm_nvme(struct sys_dev *hba)
+ {
+-	static const struct imsm_orom *nvme_orom;
++	static struct orom_entry *nvme_orom;
+ 
+ 	if (hba->type != SYS_DEV_NVME)
+ 		return NULL;
+@@ -574,7 +570,7 @@ const struct imsm_orom *find_imsm_nvme(struct sys_dev *hba)
+ 		nvme_orom = add_orom(&nvme_orom_compat);
+ 	}
+ 	add_orom_device_id(nvme_orom, hba->dev_id);
+-	return nvme_orom;
++	return &nvme_orom->orom;
+ }
+ 
+ const struct imsm_orom *find_imsm_capability(struct sys_dev *hba)
+diff --git a/platform-intel.h b/platform-intel.h
+index 2ead431..631fa76 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -213,8 +213,11 @@ struct devid_list {
+ struct orom_entry {
+ 	struct imsm_orom orom;
+ 	struct devid_list *devid_list;
++	struct orom_entry *next;
+ };
+ 
++extern struct orom_entry *orom_entries;
++
+ static inline char *guid_str(char *buf, struct efi_guid guid)
+ {
+ 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+@@ -235,6 +238,5 @@ int devt_attached_to_hba(dev_t dev, const char *hba_path);
+ char *devt_to_devpath(dev_t dev);
+ int path_attached_to_hba(const char *disk_path, const char *hba_path);
+ const char *get_sys_dev_type(enum sys_dev_type);
+-const struct orom_entry * get_oroms(void);
+ const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+ struct sys_dev *device_by_id(__u16 device_id);
+diff --git a/super-intel.c b/super-intel.c
+index 819e0da..53269fd 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1948,13 +1948,12 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
+ 		return result;
+ 	}
+ 
+-	const struct orom_entry *oroms = get_oroms();
+-	int i;
++	const struct orom_entry *entry;
+ 
+-	for (i = 0; i < SYS_DEV_MAX && oroms[i].devid_list; i++) {
+-		print_imsm_capability(&oroms[i].orom);
++	for (entry = orom_entries; entry; entry = entry->next) {
++		print_imsm_capability(&entry->orom);
+ 
+-		if (imsm_orom_is_nvme(&oroms[i].orom)) {
++		if (imsm_orom_is_nvme(&entry->orom)) {
+ 			for (hba = list; hba; hba = hba->next) {
+ 				if (hba->type == SYS_DEV_NVME)
+ 					printf("    NVMe Device : %s\n", hba->path);
+@@ -1963,7 +1962,7 @@ static int detail_platform_imsm(int verbose, int enumerate_only, char *controlle
+ 		}
+ 
+ 		struct devid_list *devid;
+-		for (devid = oroms[i].devid_list; devid; devid = devid->next) {
++		for (devid = entry->devid_list; devid; devid = devid->next) {
+ 			hba = device_by_id(devid->devid);
+ 			if (!hba)
+ 				continue;
+@@ -2007,11 +2006,10 @@ static int export_detail_platform_imsm(int verbose, char *controller_path)
+ 			result = 0;
+ 	}
+ 
+-	const struct orom_entry *oroms = get_oroms();
+-	int i;
++	const struct orom_entry *entry;
+ 
+-	for (i = 0; i < SYS_DEV_MAX && oroms[i].devid_list; i++)
+-		print_imsm_capability_export(&oroms[i].orom);
++	for (entry = orom_entries; entry; entry = entry->next)
++		print_imsm_capability_export(&entry->orom);
+ 
+ 	return result;
+ }
+-- 
+2.1.4
 
-UEsDBBQDAAAIAJVuWUZvRgp5dwIAAMQGAAAlAAAAOTktdGVzdF9tZGFkbV9zbWFydGN0bC10aW1l
-b3V0cy5ydWxlc71TTW/TQBC951cMpocW6gSOHCKUyi5EStIqditVCFkb76Rd4t219gNqSv87szYu
-IoRKEVV98nr8PvzeeJBdnGRXWZ7OX4yjVaXLTXQMH87ys3EkeSFUWaDi0WDwEm6Y4hVCrR0qJ1gF
-pZa1VnSwoNfAjGGNhUN3g0BPLVhf19o45LBqQPKjQbq4vJsmxWlW5Ffn6f14HFVC+dvCMMELiXKF
-Zku71Y2UFvab5BHRwgaNwlZakh0gAgTrdG1JgXEJa6Nl51SoawJDRNgIDtmGwXSezSGGqXLEsJxM
-k6NhR88lWfgvfm0g4nwdDQfT+fnZMr8rJQ/Y+/GD+x2TXnjQRtMfQzDvX+1qYUeCJPpofgHROdiP
-lxCP8u7YkNnkJJ390ZxQIiyK+I5gkHvFmSobWiBrxUpUwjUULXPe0quHWlUN0O70DUjNfYVUhK84
-WHTASudp6YxXsRMSWygeQ2hJsoa0WvTaO2+QCFsI8EYxKUo4nWT56WQ669k5fhUlQm10jcYFtHXI
-eNjjklWhW7CSGVe6qlXT3oEtjaidPRr0TRL62jBJTY7sSqhRtyFxjLekqbC9C38AHDiUNdWLXdLz
-pJill+ks5Bwy/vQ2fvc5FBOGyzS5WCSTRV4k6SVRd2lVzW7om3+g1qyypLZVSlcUNdN+ZF8PfEwS
-QGO0obSNwdIJreDXV1tg/Iu3TqJyrQPi73ekpoBEeHm3id/eaZ6nWU5PRt6aLqw+XpotLxavaYSu
-HHkqZmSoeDvko+0GbNETxv06ufjBxNDewAGdyGi0r9Murx9P5lNpta9FLuzmOXPcijHIt/YIGDZ1
-H39dek9mjsJ71Njf109QSwMEFAMAAAgAWGpbRh6HOeh/BQAAMAwAABgAAABzbWFydGN0bC10aW1l
-b3V0c19SRUFETUV9Vk2P0zAQvftXjPbCLsq2J4S0HFAFBSFBF3WLxA25ttuaOnawnS7l1/PGSTYt
-FKpKiez5fDNvJiLVMmaV3W22tQltTrScz95+mgux2hn6+zapaBs8pf7epkwq+ByDcyaS9Jq0TXt6
-kpVKhait34ocuqtodOu19OpIKcvcpqqobexPWKrr4N2RaguvWe2gR9psZOtg6tHmHeloDyaJvJOZ
-dvJgyAcyMYYIuyocTDwOvjmujd228FfR486qHRQShU02npyRmnIQWmZJLqQ0KcmOqUWDa1obUhKZ
-aVofqdXmQLF1JpFuYxfawSpD1ttspbO/ZLbBV0L6Ir830RtHddCsMyIBwzDjC55/o0FqJ/3WIKA5
-Z3Mq0MRwsMXC2gW1H9wXB3hImNjZpuDEso2JY8wdZGOoSG9nxjJtQuQDG6kBGHbtRse598MQzTxJ
-l5EXMj0wQqyURtg4hnU5tx5lynYrc+fp3exh9W724aPYGGQZGTQ+70Fi9OcPqw+L93c0/5mjVJmA
-O5rCGS5ZEZ38sg2bnpqsppzYtCQ20dPSQNGsQ8iVoOEHHU+tb1y77QVuu/cBOD5MBqFszsHgvhrN
-rI3xfasbfSfGiydm0K0DAoBF0ZTDSvorvSIFuKfpmKalWHw47fxOe0cnlq6jaZxESFcQu+oqeAxt
-HCL1sjY3QizuV/M7ehNiNADI/DSq5Y4b2pHzR5Y/WhuBGtebGQduUiPVXm65RzweMfWudyHsjR7z
-YEDyfylvfal51/NR1ht0Bf+Ws9WH+8XsYzcz/mTk9Xz55uaJl89rQPkcuKJdQwRsHGrXDeMoGaRh
-/h438dEmJovUnW2eBs4B4zadaSFxk1PF/B6opm1B64npIsSKS27BBrBy7PMyniqWKS03Eq/gIqmk
-srPbQq61XFtn81FAUvrAIZ6ExxqjR0wf47n9DCi+djaVuQaVEx/I8wMsdfONdEABYZVS2zTAqO8/
-VrOoAuAc8Kn+gZtgkBlj6xXiSgYZrFENFu+cPGO6/rS1dJcG6AThcAsiFP8s0yPw6Tpqb71meFwY
-B+AQCytwUVuncR/2PFaGnERp6oc3q9Poh/wmdP0vMk0mkxtRfh8+fZ5B/ZoNQZdpyoCkxii7sWrk
-7zj4ofkuXJ5pqHW6IyTZh8AzngOydQNBXKNSOLN+RKwSeD0L36anyUA9MVQLdvp8oSRUW98mekHJ
-4FL3K+eSIMyWNRil5cJdw/TifrGcv/2yeDtbrL59WTx8Wc6/vblfrJb3Hz/Ol9+W84f56tvDHEdv
-H24EcO83JQ1oAXlEPgI+w5Vx4Hw3/BEyeAKfPvjbJ5huC0yVAAoS/5xN3WTOVDoXHrvhPzjC6cZ6
-NHe/SM6bCi/b1slo3VGsDTwakoWtJdsc7RZzSfOKSRcQKQu5w2Ts52QciA3fOL3mu8spiycOeei0
-Y5LnvXDDTBo3WbEntWzy6ceIGOKpsOCHL5MJVpYt5OT52m6k4gUXCdkrtEaozzveZBZNdC15nArM
-ko1BewYvXQWT2iqJdqrGXmWVtoFLM9lOCAYjZjgOI3BNhGU4uaHHwtK1Ed3Xg4bwT2WaXLAYKTIw
-Q5a1ERp+9BN8df/2Xojnf9S/ASltkbpjZV3epSvfFUPVkE1FhejZpIycToAkxcNAEBIDpUEA3rZl
-tcNysUuhyJcilM1bFm6RV8ABsjxWywzuFzXeo2Ebgs6jrbgHFS5Y6kIj9zFNkCa7B4KswObPKnSQ
-rjXpddmRt3Ru4g5ZNhFTL7QJDcLte3WBwLcjy69ObYt+3Q8DaQzwpipQcb4pAIKeG4jv5WCpxM1L
-4nQ1Dc5RhPMPzkKrgI7cA9ujl7VV/ayqwXVwmgpKVxdqfTUUzxujE/FENKxUumYifgNQSwMEFAMA
-AAgA6XBZRiBYN8tbAwAAcwcAABoAAABzbWFydGN0bC10aW1lb3V0c19kZWZhdWx0c61VS4/TMBC+
-91eMygGQ0iCeAiQO0FZQUVrUtAdOlRNPGquOHfzYEH49Y8eFwoIEEnvYRo3H33PUyR1YYM28dBa8
-RQ7lALZlxlVOzpxoUXt6YysjOmdfTiab7Wa3XBw2i9eb/fGwKQ675XG+3ex32/V6uTvulsVyfyyW
-9NWieDV9+PzxlBCKRnvJgcmeDRZKBIsuh3uYn3KgI/fpyCFg19oAF/ZsoReOZhwU8/1yNwfru04b
-l4HT0Bm8QeXoUQMyIweaNkg32hz2jbAgtTpBpZUzWko0kFTADZOeoCOXQIKV+gZp2DVI0j2TgMYQ
-A4MVvTBDHARdxwMNM5wbcYPfudHkz+xyOKiaPr1iDuWQhTmLI6wFrtVdR8KxDZA6EDDIOCslQm10
-G1ESgiIWnS+lsA3y/LemJ6dfr9fHxap4T14Ho1c1TJ3xOM2AiAUBQfiJvAm+ElYyWWk1M8i94ky5
-0XKaZiqQSD6J1Adm45e3/cxpYs5UipMkJejw5Mg9ic4JdfodFtRextwq3XZ0DgOEML/6z5zDtiMg
-+qPD+5FGLU7eMCe0At2Fj9AoqXtoGVXX0b9SMnUGbcL1bYvKIadxopwKYtDGvgsFvTZnIhkzHXV6
-Y2gi5t0zgxmc0SiUGd0wttMZUfoIzy+LY0epNiMLOSUdbtRKDqCwQmuZCVop60S3b1ARuHCCSfGV
-Dgcr3+keSXV2qdd3qeEy22ElalGlMmVg6VTVhFcluh5RpR5fjK4GaDVHG01R2kWh0KOU+WjmdaVi
-g663eL/6sNwervb4WVzjD2y4SpvJYDoLAV7Khmmnnz2+n8c2piiujU3tIZlSRmZ0Y9UwdUKegaih
-09YKKmoeSOpYDebiDS37kl/XmpJ88YLYkFE8WKJDgfFLhcjJGBq/3VnowxamAoT8pSbgS/EqTRSr
-kBENp/LZHD6OjIawD/AXqxhUDNobuiS0fVTK9Z+wviNF+a6JbtLshbL4sbt5SO7jtihWb9afjv+Q
-35Pnf8rP6pDa7KmF+wH3gprBgG6MR+rqPPp5a4tJh9OjsD/mnXbjL/KmG/5B0qMXtyV99qI6yyHk
-iz+Yj2z/B8HJhGisNm+P8w+LV9MH3poHthTqweUHE2YSbOXQVNNJYDDTdKFX6REJ74twk29QSwME
-FAMAAAgAoVRWRjGALgOVBAAAMA8AACcAAABzbWFydGN0bC10aW1lb3V0c19ub24tcmVkdW5kYW50
-LWRpc2suc2i9V2tv0zAU/Z5fcSkValHTlg+AGBrSWCuYKB1qOiQEqLix0xoSu9hOR4H+d66dZ9kE
-i3hs0xrH93Hsc499e/vWYMnFQK+926ATokxoYt/whMnU6IWQwleMpoISYXzK9ac+WnrB6ezs1Xwx
-Opsdt9odypUgCQN8VIzQmItP4Ec4HLa6+Ov1oV05DK4moSwiaWy05z0fjRaj8WsMeq/leSxcS2id
-0I+pNlysoJ1PQ+F5hEY8grfQ/jY9n87Go4vp6GQ6X1xMg4vZeDEbB+P54mQywbzBi+DIj0is2R6O
-oWVUylrwHh6DWTPhAdyGu4DLI8uYARE7GM9OizRuFsCHkziWl9p6AFV8y8BIoNKZXnKzRlPgyUZq
-i5UU3n0PEN787OXZ9Nni9OVo3xv2hjCgbDtof8sXtIcn2RuRxrGXowmYcalCKYySccxUEdLmXboJ
-zSlTiHkHsXQ/YtUv4c4lEIv4EPDKfqYb4EY75MQYlmxwsNzZdyyOqggTZmrOiplUCSCwUXKDaCzX
-wJSSqgdaoiHJrIt6CXd5ILAeWwsVOgntQbxNerA0KtI96Pf7XQiJQC//UnHDXIglRl7GMvxUYRlh
-7dVSWhpSjS80Vg5wATGuHfhAZn6WAsTIJdWOmxKJkJk/JExrsmI6w52QHU4Zu62XxIRrRu1+SLvI
-jVQGh0Y6ZKlmqleCWqYG7bmtTpzlOkOhsRRiiotmWyYMpIKFNpna1blE5MxokJENW8JDe66KDSeC
-5hWg0HojBbV5YqmdW7XNA0oMsTuVCeYGUgCEaiXQAwTh0F/ndHo+nc/OJ5PxLPcPxvhqFEAH9dbA
-fq+7rQJdQ094MtA7PXCc1vRixcJDNigU6nkMlW2VwyO4dai3K1r7DitkFfzPMMoET+EdegLcudPA
-VzMkk2oPihMEKayfGsC1qyidbvIK6tghLVIiudk8M130/mPNF+yPbOmU51EFqETyXzn/t6wDFLRb
-4ptSl7MO8P37lSvEyaQOECOPzy9KiEc+ao9FXDC6h1t4oZRDvFUwbF4VeYLbmdqvobVncRM7EfFV
-ipKGLYlTewhpd35wmWpkGp3zUO66+xASAzfZog9w3HDvj3z/3h7eu70pdqd5xlfnQXD2dPJm8bsN
-/ct5m6ZzyWoKrmSkWK6SOmmRkgkQIdFeXeWsc3OwugtGNi65B8O9bh3ibB7ihuJyaXJ9ARRlbIv4
-oCUs6tj2TJdk58q52pjSk0d/V2FV33bIWslZxU2TnNBpgLE65P6AkWZsAETcKx6qw+VE/HTxOJ5k
-vUSPSuO7EK6JWLHCJbtbrrtx/Pu1Sw6gbAoleqMVRsk7opTE8FBD3saDjPCRchQDo6AIp1k7o3tg
-io6UaEjScF2LC+US7ORGas3xmux7UMwt5uPp/Hlw3O6wLxvV5GB4dxfuDRH4/WG33LOyOWNfQsZc
-X5WQL33QoWEqzATt1Wu3QgD+ysCjR4/qVXgFZQsNWjWq6kWKiXjCv2LOirYbkIDni1t5HcoAV/ah
-KsLD7xk1w/rzr797FKI/aGaqtuVgIZFETV5r9p97jH/aZeQUun/49wNQSwMEFAMAAAgAz2xZRjhC
-h5CRAQAADwMAACwAAABzbWFydGN0bC10aW1lb3V0c19ub24tcmVkdW5kYW50LXBhcnRpdGlvbi5z
-aIWSXW/TMBSG7/0rXtJofEhp2PWUCyCVmJA61I3dAOqc+IRadY9H7BRFg//OcdW1MIYm3/jjfR+f
-r8mzsrFchpWaIGx0H9voimg35IcYluy56MkMbDTH4laebbSepyIX/Vtq9RAIcUU9YaNHaBc8GsLB
-g4MnwLMobYCxYY0fYhhCBPsopIFbz2an084lTqQ+cXEfylSpy3eL849Xy/p8UWX5C2N71huCbHvS
-xlleo+jk+Dp7KUtNkR8N5b+pGer04GJQ6n1dL+vZtUBPM6UWs/rTvH4zT77LD1XWrqhdW/6WpYyv
-LuoLNel8D0NbWMZNa1CGMZSN8+26zO/2sF84gwsoDI5Xr27k0njBwHag78NWO+KI6DEI7nnAbH59
-d/w/eaoqGyn8vPUh2MaN2VkqCicEkD8M9aBK751VE+OZ1EQ++4z8v3nhK47Uh6pOOkrCE5p6jIMK
-e41gvuwrBJycQPr4Z/NXektoiBiGIrWRDJpxl7coUwNHtYsBf7XtqYlMoyTDiPxUkQTxpPu+Qo8j
-JMnfUEsDBBQDAAAIAA99WUb19lGqpQQAAIwNAAAsAAAAc21hcnRjdGwtdGltZW91dHNfcG9zc2li
-bHktcmVkdW5kYW50LWRpc2suc2i1Vm1v0zAQ/p5fcZQKtagvQwghhoY0lsIquha1GQgBCm7stIbE
-LrbTUbb+d855hw6xDtimtYnv5bm75853905/zkVfL527oGOiTGCiruExk4nR/kpqzefRpqsYTQQl
-wnQp1196KO7MTqbD157vDqdHjWaLciVIzAC/KkZoxMUX6Ib4eNBo46/Tg2al0N/1RFlIkshoxzl1
-Xd8dvEGjDxqOw4KlhMYx/Zxow8UCmvkxFJqHKMRDuAPNS294Nhy/9E/O3C30KVv3m5e59BauYKHY
-CrpfweWazCNG4YMDcO/eHpqaBVJQ7ZglE6h7FwbTkwIHcA1CGtDJaiWVQfMt+0gLZ0TQ7JyZ9mGq
-fB9mzADaArRqlIwipkprRsI8PdCcMkWwBBDJ9Ecseqk6QBc8CSSK5EVqhSq+ZlZxYT+TFXCjU4TE
-GBav8GG+se9YFFYWRszUlBUziRJAYKXkCtHYSgJTSqoOaImCJJMu2BBsckNgNdYWKrRi2oFoHXdg
-blSoO9Dr9doQEIFa3QvFDUtNzNHyPJLBlwqLi8yqudQol2h8oZEXwAVEGDvwvsz0LBkQI5dUwwU3
-yxKJkJk+xExrsmA6wx2TjS2ATesFMcGSUZsPaYPMC2ZkiizRTHVKUPPEoDy33MNTrjMUeimTiGLQ
-bM2EgUSwwDpTm3otETkzGmRozZbwUJ6rIuHIipwBCqVXyC7rJ5LaqtXS3KfEEJuprB1cq5xGjVyp
-sbCkX8fyLMU8noynA/d87B6PPf98PDufDvyTydibTkajwdSfDmYDz58N8JU7g1bzch/5rW43Ckx7
-asKzvt7oflrJWrPZ3uMB6+fhOCzSNnOzt0Pv5NR/MZ2c+RPvFK2hlRfDl+jC9Wdnx1PvxBv52MSD
-ybl31AgJqjUcm/KsCNd0WAd4CMQehHyRYKZhTaLEckOnZeUy0dh0qOyAFX0PnwJi4CaoP8HRnuk4
-7HYfbOFjOpEArq7+0ps7nL2q+coT8w+97esKHeUzc+9aGpUwS7KC+orlzK7XNFQyBiIkOlG7JW3d
-PDrdBmO5/Hoymw2fj975e0T68GCrS6S3N3LT1gDIm8Oy3HJ8964upwIRmwuysZSvZQdVM2bfEir6
-YCEXjG7hzhE0yscGUutpUe+qcPWy7V52+wOA1t6wq5H1V1W6eYUAQu6k/9IhcqsVpezR5l6dg32a
-9Q58rKz8j1pXvb27EVXrj6z35WEufD/lLbcEuI4W3UflxgVQ3MfHdt/Rtaux2jyMzLYHe1f+PBLs
-zooP9DcrSGkeYM5CqbLj3Zsc315/fSvCqd3PNNO/XtpoJl5FzLBo06uFMZJiYSEviciXjoRE8FhD
-vgeDDPEr5QExjKb2M5e6A6ZY+oiGOAmWFfoy+3hUjAMGrYWUFLi1t1CE5rsohglCitqwWBFluOFS
-aJACNInzKNs9J7fte4Oxdzo7arbYt5Xa59L4cB8eHGDYjw7aGdxydWLfAsbSrScm33qgA8NUkA3u
-2oCqnEN3YeDJkyf1IfMLvAYeN4ruqwYQ2ucx/46uaiz9M/fw+kijrWPoYzSf8knyc1N3amL17zvN
-/ix7I5IoyiYE/v0AUEsDBBQDAAAIAHGdVUbGPF2KsQEAAEwDAAAxAAAAc21hcnRjdGwtdGltZW91
-dHNfcG9zc2libHktcmVkdW5kYW50LXBhcnRpdGlvbi5zaI1TzW7bMAy+5ym4JMBaID/bA+wwdDv0
-NmQFdiwUi7aJyFQm0sny9iNt2AHaS+GLBfH7lbT6BPsj8V7axQqkC0UrTVulDnOv8nrOInRMt23B
-2HMMrNuzzZBS5p1hDPTSkoBUhc4KgiqgLcJEAHUusOzoH0aIhS4oS9sPClVmDcQw8xpT4Aic+a4F
-s5bsXOo7CHGTcAN3X+9ngQSQc9+0oNktDY6QlQqOJj6LkU0Wfeg9nePUxAQerqQtBIioWDpiS/Lz
-8DTBQRI1raabMR4x5esgFrEOfVLIxYPW1PRGPGQuOSUsjjbwBqietPFxt1hNdYZLpjg4KyQn6PnE
-+coQfVGwyhcst8GBjKUhRvNqJoeNlLkxprvcnHUHf1osOJtykPSVxZsyeSSS2dTGi3JHHQYWz/bG
-RBdulhvGaoJayr89VSfXbAM7YKzceK65TxG8TRPxnUlP0Jo4urACslhX4uhhpqAhUnINziZrs354
-CYMn9oZi0GCRZaxiOsDKaxC/Nr+fDs+/Xl5/PB++LdcPkQqHDsF+i3Ek4hNsa1t+WT7at1jfx/cf
-eg5eh70EWH9d/AdQSwMEFAMAAAgAoVRWRo2/Q7gBBQAAZg4AACMAAABzbWFydGN0bC10aW1lb3V0
-c19yZWR1bmRhbnQtZGlzay5zaK1Xf2/TMBD9v5/iKBXqUH8MIYQEGhKsBSqgRW0HQoCCG19aU8cu
-trNRYN+ds5MsgYK0CLZqXRzf3fO7d5fLzRvDlVBDu2ndBJsy42In+06kqDNnI4M8U5wp1+fCbge0
-i7bNy0WgfX4bMIMwHb8Zz8FpWCE4I9ZrNBxWe8g4noPJJNobZPsEY5ZZBK3kHtwGoYwQ72Fn9Lng
-Qq1hi0ahhFRzsoOt0hc2bGaxy5gkbypAJH81c+uYy2wPYqaA8c+ZdSAcMMVpRUqyFxZsbMTOAd8r
-lgq/vB+Qk7MriME4YOPo0KRCIbR32lqxorUrNtpAFiJGO2i1FqfzyetlNJrMT9qdLheGXCPQvwYZ
-l0JtoZ/Q5XH7iH5bA+hUBsNDwjkmLJPOtlrPR6NoNH5DTu+0Wy2MNxraj8OxPEOd4jaUlg9ok0jg
-BnS+LyevJtNn0emr0SUMCeiw873YfQk/YG1wB/0vMBKWrSRy+NACuHWrgaXFWCtuW5QRRbYAN2E8
-Py2RANGstAOb7XbaOArQ9Ze8DEcJye+jO3pQmN+GBbqQYfLsjJYSTekvSCrcsIKjYT4RUocftR4U
-DgD6sNRACdUXwQ834hy96dp/ZzsQzgaUzDlMd86SNP0ayqTu4yW6mrlBlxkFzCtzR4h8RgGN0aYH
-VtNG5n7T8JUrKNRMVt2U90Cepz1YOZOQQAeDwVEQmsH+hREOg5MV+V5JHW/reChJ21pYXwWZpQVL
-GgGhQBIHIIY6t/TCIJxCcwsXwm1qaJTOPUCK1rI12hx9yvYhGUTwBXPxBkPJan/UInlOB3SZRdOr
-AVtljixE0GKorIDEbnQmOR0dz1E5yBTGPpzZ1/NK6JH414l3XINIFsKU1JNKCj0Y2r/TKvQFqW0w
-rAgfcuZYzlheIiNvHk5P2qnrshRkzysv4J7OpvPx6Gw6ejxdRmfTxdl8HJ3Opsv57OXL8Tyajxfj
-ZbQY09JoAd3O9yb7L+1Ru0LV0BYeDe3eDkNOayU4zJvOsDhQC6X1/C3eTpanz6On89mraLZ8Tt7I
-y9PJMwoxihavHs+Xp8uXEZX2eHa2PGknjMyoWRDteSoOa444EgkwfyMR64zYhnMmM68RG5IrdGbl
-3hPZAr/1PXyKmYProP4EJw3peNDv37mEj6FPAfz48Y/RRpPFi1qsgpj/GO31bLGYPHn5LmoakyIW
-LbVxUp3JsKa3tsFC5PXkJkanwJSmIOYwt93rH9MegfOibnDAu8eXtgLY1Pa6FQGA0pY9xUu7fHT3
-rx7dpcSJiP0F2welV1yQaS7oZgjJNSZCIb+EGyfQvrpsk5AelkmtslPPzeHD7tpxoXt9kFVDap6B
-67Nf4795X+ivHdw9/p2xStE8iw9Jyzkju3Iqadft/I0G4AES0Sq+wp/Q3RpPVPXe0WlUyHACeSnX
-GtD/1OIHGnaXs9HsQem4i193pkmSPtyGO8fQh3vHR3CSTyaaCigzBtWvj9vQVUJT+/ucWA6FPbqo
-qpAutYENs7BCVNBO2VeRim/+CE7/bUrs3ysVUA2VFilK0Mf98mZ9XgxjTcYkfMlEvIX7Forp2x+J
-IxdEC3IwTPB8KrH10eyxnzXt4fuLx6Rzl3KfM+RnlF+7r3+bogv+lxGwNhWtMNEm3D6cofzqn8em
-gFlqbdH+PiyRm3Qn0aF/9znsSVWGKuKquvqlFHr3j+lzUBCP8hWVSZlXEX1+AlBLAwQUAwAACAAM
-bVlGZKwQhuQBAACcAwAAKAAAAHNtYXJ0Y3RsLXRpbWVvdXRzX3JlZHVuZGFudC1wYXJ0aXRpb24u
-c2iFU8tu2zAQvPMrJrKRPlDbzbWBD21loEEBp3ASX9rCocSVzYomXZJyIaT99y6FWA6SAIEu4nJm
-9jHLwcmk0HYSNmKAsJU+ltGMot6Sa2JYeVKNVdLG0Y6vdNTOjhnK2MXhBgxOWEhPmM+WswWiQ0GI
-Xq/X5BWKFo2iPXxjKJww9xOVsgkEZ02LuCEc0pQtdt7ttdJ2jZq8JYOtU8xDbd2f0IFlGRtpWM12
-dYrBQ3qIMjbhHUppIdWvJkToCGkVR4xhvg4Ipde7CNVaudUp3I5Z5KYvsSN3tSmK5LfaErKdC0EX
-HOtHkoEZuqQwFuLq8+Li2/Uqv1hMs+FrpT1LE/jXk1RG2xqjio/vszf8iTGGR8Lk6dQVVbIxMQjx
-Jc9X+WzJomeZEItZfjPPP84T7+rrNCs3VNY8qiwZcn2ZX4pB5TxSI9ritlSYhDZMCuPKejK8uxf7
-h3OYgJHCMfT2loPKsQx0Bfrd7KWh5K3rrHsVMJsv7/r8HWc6zSppAv3NzpMvNpGB4eMiO0yWList
-BspZdoxzfO+RT9vBTxwlH6Oib5Ici4nnZDBFB0kiP+7H8gE4PUXyv9/igI3cEwoi27lcRuoXlZHJ
-tlZ0JeAFs45PROlQ8+vA8EwQ9/wi87BSo2cluMH/UEsDBBQDAAAIAKJuWUbX+LTdvQMAAHMJAAAp
-AAAAdWRldi1tZC1yYWlkLWFzc2VtYmx5LnJ1bGVzLXdpdGgtdGltZW91dHO1VE1z0zAQvedXLIaZ
-tkASOHDgkAGDXfCQDyZ2YRiGySjWuhG1JY8kB0zJf2el1C2EFOgAt0Tye/v27T7dBq5AKgvIhQW7
-EgYKUeJ9oH+fRFnCEkGtUX/SwlqUoCQ0NWcWe73bECl5YKHWKkdjgMkWcI3SGhAF/WO5kpwBMepG
-SiFPgZmr46WmE0NkxKOZ4MBxLYgHKiYbVpZtL56+OQ+n4fPZNAo3o1Hw5G5wH17MstkoqPhCyHyB
-kgcEZ8ZgtSwRKg5Ma9aaXi89eZa+S7N4cmsULEuVn+3FEnjFJCdorSwpF6yEXFW1kr4NVVzwwaFd
-IdCpAdPUtdIWOSxbKnjkZSbR4jhdZO9ex05oKWTzeeGaWlQkDPVObV83kEqYTxUPnKVnqCX60hXJ
-ASJAMFbVhiowXkGhVbVVSqYRGALCBnDIzhgkk3QCfUikJYZ5mERHgy09r0jCX/ErDQHnRTDoJZPX
-s3l2nlfcYTejS/V7brrCPW9N9/f6Ce5xkIr+0j9P7BXcjJcQv+TdsyHj8Fk8/mFyQgq3KOILgkbe
-SM5k3kKtjBFLUQrbkrXMNoY+PVSybClV2E2gUrwpkQbRlBwMWmC5pW13CelbUaGHUvrclCrWUi2P
-LhrbaCRCDwHeSlaJHI7DNDsOk3HHvo2QC2SN2jq0sci42+OcIuUiaCqmbW5LX001FkyuRW3NUa+b
-JKFPNatoks+SaZTMh9sV6ffxMxWV6H+5CMAdi1VN88Wt1ZNoMY7fxGNntDP5/cP+4w9uMu5yHkcn
-lONptojiN8S9tats90MfXIMqWGnQD0HjdoTQqoaak1CKyj1ZK2bhFK0B1lg1pJG5D6V1D0r3Tvjo
-EoXva5ArWRw+OjowcBCeZLMDb73BEnMr1li2RCkoWcJYaAw5SJ/N5+G7g174PEtmUxLMOP+aU3hO
-kVT/zsTvFO0xko5UQWFUdHZOLY+T6at0E1xT68K5NAvnWRw57+420rAC715dHs/mcfJi6i6lujj2
-DyPdvSVj0829UeDF9UtmbF+jIUVP76BcOzhpSJ7Hm4HbFv2dDupBrTsNlLHXYfbyMonzk+m93caT
-Au7Q0roOa2ZX4At0wN8R3/oD4i6qO/GlObvV70ILL6MIUGulKYNauyErCRdZMMD4x8ZYNx6/ltR9
-93LUFBvhPt6/mVcLTfdZnGZ0MmyMHpqlkMMudLst7IbRLDqWfvey2P5l5YEh2+gfqQtuLM8n5+vf
-iZNK3lQXF+bsvzu2Y5ir6TVxXLtQ3UiU9+lf2vSzmm9QSwECPwMUAwAACACVbllGb0YKeXcCAADE
-BgAAJQAAAAAAAAAAACCAtIEAAAAAOTktdGVzdF9tZGFkbV9zbWFydGN0bC10aW1lb3V0cy5ydWxl
-c1BLAQI/AxQDAAAIAFhqW0YehznofwUAADAMAAAYAAAAAAAAAAAAIIC0gboCAABzbWFydGN0bC10
-aW1lb3V0c19SRUFETUVQSwECPwMUAwAACADpcFlGIFg3y1sDAABzBwAAGgAAAAAAAAAAACCAtIFv
-CAAAc21hcnRjdGwtdGltZW91dHNfZGVmYXVsdHNQSwECPwMUAwAACAChVFZGMYAuA5UEAAAwDwAA
-JwAAAAAAAAAAACCA/YECDAAAc21hcnRjdGwtdGltZW91dHNfbm9uLXJlZHVuZGFudC1kaXNrLnNo
-UEsBAj8DFAMAAAgAz2xZRjhCh5CRAQAADwMAACwAAAAAAAAAAAAggP2B3BAAAHNtYXJ0Y3RsLXRp
-bWVvdXRzX25vbi1yZWR1bmRhbnQtcGFydGl0aW9uLnNoUEsBAj8DFAMAAAgAD31ZRvX2UaqlBAAA
-jA0AACwAAAAAAAAAAAAggP2BtxIAAHNtYXJ0Y3RsLXRpbWVvdXRzX3Bvc3NpYmx5LXJlZHVuZGFu
-dC1kaXNrLnNoUEsBAj8DFAMAAAgAcZ1VRsY8XYqxAQAATAMAADEAAAAAAAAAAAAggP2BphcAAHNt
-YXJ0Y3RsLXRpbWVvdXRzX3Bvc3NpYmx5LXJlZHVuZGFudC1wYXJ0aXRpb24uc2hQSwECPwMUAwAA
-CAChVFZGjb9DuAEFAABmDgAAIwAAAAAAAAAAACCA/YGmGQAAc21hcnRjdGwtdGltZW91dHNfcmVk
-dW5kYW50LWRpc2suc2hQSwECPwMUAwAACAAMbVlGZKwQhuQBAACcAwAAKAAAAAAAAAAAACCA/YHo
-HgAAc21hcnRjdGwtdGltZW91dHNfcmVkdW5kYW50LXBhcnRpdGlvbi5zaFBLAQI/AxQDAAAIAKJu
-WUbX+LTdvQMAAHMJAAApAAAAAAAAAAAAIIC0gRIhAAB1ZGV2LW1kLXJhaWQtYXNzZW1ibHkucnVs
-ZXMtd2l0aC10aW1lb3V0c1BLBQYAAAAACgAKAEcDAAAWJQAAAAA=
-
---MP_/shKYAi2Z_dZjlqU0I=75+l5--
