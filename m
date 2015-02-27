@@ -1,7 +1,7 @@
 From: Pawel Baldysiak <pawel.baldysiak@intel.com>
-Subject: [PATCH] IMSM-orom: make sure, that device list is supported
-Date: Fri, 27 Feb 2015 15:45:50 +0100
-Message-ID: <20150227144550.9215.35006.stgit@gklab-154-222.intel.com>
+Subject: [PATCH] IncRemove: Set "auto-read" only after successful excl open.
+Date: Fri, 27 Feb 2015 15:47:54 +0100
+Message-ID: <20150227144754.9507.71855.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -11,35 +11,44 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
-Devices list in PCI Data Structure is supported only in
-3 and above revision. Make sure that this is checked.
+"mdadm -If" - triggered from udev rules when disk is removed from OS -
+tries to set array in auto-read-only mode. This can interrupt rebuild
+process which is started automatically, e.g. if array is mounted and
+spare disk is available (I/O error is detected faster than removing
+failed disk by mdadm).
+This patch prevents "mdadm -If" from setting array into "auto-read-only",
+by requiring exclusive open to succeed.
 
 Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 ---
- platform-intel.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ Incremental.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 37274da..c6a28e8 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -227,6 +227,8 @@ struct pciExpDataStructFormat {
- 	__u16 vendorID;
- 	__u16 deviceID;
- 	__u16 devListOffset;
-+	__u16 pciDataStructLen;
-+	__u8 pciDataStructRev;
- } __attribute__ ((packed));
- 
- static struct orom_entry oroms[SYS_DEV_MAX];
-@@ -323,7 +325,8 @@ static int scan(const void *start, const void *end, const void *data)
- 
- 	const struct imsm_orom *orom = add_orom(imsm_mem);
- 
--	if (ptr->devListOffset) {
-+	/* only PciDataStructure with revision 3 and above supports devices list. */
-+	if (ptr->pciDataStructRev >= 3 && ptr->devListOffset) {
- 		const __u16 *dev_list = (void *)ptr + ptr->devListOffset;
- 		int i;
- 
+diff --git a/Incremental.c b/Incremental.c
+index 87d9114..b12f144 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -1712,12 +1712,16 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+ 		return 1;
+ 	}
+ 	sysfs_init(&mdi, -1, ent->devnm);
+-	if (sysfs_get_str(&mdi, NULL, "array_state",
+-			  buf, sizeof(buf)) > 0) {
+-		if (strncmp(buf, "active", 6) == 0 ||
+-		    strncmp(buf, "clean", 5) == 0)
+-			sysfs_set_str(&mdi, NULL,
+-				      "array_state", "read-auto");
++	mdfd = open_dev_excl(ent->devnm);
++	if (mdfd > 0) {
++		close(mdfd);
++		if (sysfs_get_str(&mdi, NULL, "array_state",
++				  buf, sizeof(buf)) > 0) {
++			if (strncmp(buf, "active", 6) == 0 ||
++			    strncmp(buf, "clean", 5) == 0)
++				sysfs_set_str(&mdi, NULL,
++					      "array_state", "read-auto");
++		}
+ 	}
+ 	mdfd = open_dev(ent->devnm);
+ 	if (mdfd < 0) {
 
