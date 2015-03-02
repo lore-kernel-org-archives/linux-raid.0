@@ -1,110 +1,119 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 0/1] RFC: Use /dev/md/X as default name
-Date: Mon, 02 Mar 2015 11:32:16 -0500
-Message-ID: <wrfjoaobz7fz.fsf@redhat.com>
-References: <1423684389-10977-1-git-send-email-Jes.Sorensen@redhat.com>
-	<wrfjsie36qdi.fsf@redhat.com> <20150219083708.2ab46006@notabene.brown>
-	<wrfj61ay6fai.fsf@redhat.com> <20150219093236.25660678@notabene.brown>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH] Fix stray --cluster-confrim crash
+Date: Mon, 2 Mar 2015 10:55:49 -0600
+Message-ID: <20150302165549.GA27519@shrek.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150219093236.25660678@notabene.brown> (NeilBrown's message of
-	"Thu, 19 Feb 2015 09:32:36 +1100")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Wed, 18 Feb 2015 17:11:33 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
-> wrote:
->
->> NeilBrown <neilb@suse.de> writes:
->> > On Wed, 18 Feb 2015 13:12:09 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
->> > wrote:
->> >
->> >> Jes.Sorensen@redhat.com writes:
->> >> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> >> >
->> >> > I have received some issues for when creating an array using a
->> >> > /dev/mdX name, the matching symlink in /dev/md/X isn't
->> >> > created. Whereas if you create /dev/md/X, /dev/mdX is created
->> >> > automatically.
->> >> >
->> >> > I was trying to see if there was a better way of dealing with this,
->> >> > but I couldn't find one. If you have suggestions for a better solution
->> >> > I am all ears.
->> >> >
->> >> > Thoughts?
->> >> 
->> >> Hi Neil,
->> >> 
->> >> Any thoughts on this one?
->> >
->> > Thanks for the reminder....
->> >
->> > I'm not sure that I really see the problem.
->> >
->> >   "I ask it to create /dev/mdX and it doesn't create /dev/md/X".
->> >
->> > Well ... no.  You didn't ask it to.  If you want it to create /dev/md/X,
->> > then ... ask it to.
->> >
->> > /dev/mdX is the canonical name.  It always gets created.
->> > /dev/md/X is a convenient alias.  It gets created if requested.
->> >
->> > Is there really a problem here worth solving?
->> >
->> > Maybe I missed something.
->> 
->> I have had complaints in Fedora from the installer people that they rely
->> on the /dev/md/ name being created when they create a new device. It is
->> also inconsistent because /dev/md/<X> will be created if you run
->> 'mdadm -As' later on.
->
-> If they rely on the /dev/md/ name being created, then surely they should ask
-> for it to be created.
-> Is it really harder to run "mdadm -C /dev/md/0" than "mdadm -C /dev/md0" ??
->
-> If you create an array as "/dev/md0", then after subsequent "mdadm
-> -As" /dev/md0 will exist.
-> If you create an array as "/dev/md/0", then after subsequent mdadm
-> -As", /dev/md/0 will exist.
->
-> The fact that something unasked for also exists is a bonus.
->
->> 
->> I don't see it as a major issue, but I can see why it is frustrating for
->> some and I think there is something to be said for being consistent in
->> behavior.
->
-> I think the behaviour is perfectly consistent.  It just follows rules that
-> are slightly less trivial that some people appear to want.
->
-> However....
-> If you changed
->
-> 			mp = map_by_uuid(&map, info->uuid);
-> 			if (mp && mp->path &&
-> 			    strncmp(mp->path, "/dev/md/", 8) == 0) {
-> 				printf("MD_DEVNAME=");
-> 				print_escape(mp->path+8);
-> 				putchar('\n');
-> 			}
->
->
-> in Detail.c so that when mp->path were "/dev/md0", MD_DEVNAME became "0",
-> then you should get the result that you are after, and I probably wouldn't
-> object to the patch.
+Hi Neil,
 
-Neil,
+This fix is againt the md/for-next.
 
-Finally had time to go back and look at this - I don't quite understand
-your request here.
+A --cluster-confirm without an --add (by another node) can
+crash the kernel.
 
-As far as I can see, the above code isn't run at all during device
-creation, so I don't get how modifying it as you suggest will make
-/dev/md/111 appear if I create /dev/md111?
+Fix it by guarding it using a state.
 
-Cheers,
-Jes
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+--- 
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index 03e521a..96679b2 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -42,6 +42,10 @@ struct resync_info {
+ 	__le64 hi;
+ };
+ 
++/* md_cluster_info flags */
++#define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
++
++
+ struct md_cluster_info {
+ 	/* dlm lock space and resources for clustered raid. */
+ 	dlm_lockspace_t *lockspace;
+@@ -61,6 +65,7 @@ struct md_cluster_info {
+ 	struct dlm_lock_resource *no_new_dev_lockres;
+ 	struct md_thread *recv_thread;
+ 	struct completion newdisk_completion;
++	unsigned long state;
+ };
+ 
+ enum msg_type {
+@@ -380,9 +385,11 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
+ 	snprintf(raid_slot, 16, "RAID_DISK=%d", cmsg->raid_slot);
+ 	pr_info("%s:%d Sending kobject change with %s and %s\n", __func__, __LINE__, disk_uuid, raid_slot);
+ 	init_completion(&cinfo->newdisk_completion);
++	set_bit(MD_CLUSTER_WAITING_FOR_NEWDISK, &cinfo->state);
+ 	kobject_uevent_env(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE, envp);
+ 	wait_for_completion_timeout(&cinfo->newdisk_completion,
+ 			NEW_DEV_TIMEOUT);
++	clear_bit(MD_CLUSTER_WAITING_FOR_NEWDISK, &cinfo->state);
+ }
+ 
+ 
+@@ -832,13 +839,19 @@ static int add_new_disk_finish(struct mddev *mddev)
+ 	return ret;
+ }
+ 
+-static void new_disk_ack(struct mddev *mddev, bool ack)
++static int new_disk_ack(struct mddev *mddev, bool ack)
+ {
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+ 
++	if (!test_bit(MD_CLUSTER_WAITING_FOR_NEWDISK, &cinfo->state)) {
++		pr_warn("md-cluster(%s): Spurious cluster confirmation\n", mdname(mddev));
++		return -EINVAL;
++	}
++
+ 	if (ack)
+ 		dlm_unlock_sync(cinfo->no_new_dev_lockres);
+ 	complete(&cinfo->newdisk_completion);
++	return 0;
+ }
+ 
+ static struct md_cluster_operations cluster_ops = {
+diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+index 60d7e58..7417133 100644
+--- a/drivers/md/md-cluster.h
++++ b/drivers/md/md-cluster.h
+@@ -21,7 +21,7 @@ struct md_cluster_operations {
+ 	int (*area_resyncing)(struct mddev *mddev, sector_t lo, sector_t hi);
+ 	int (*add_new_disk_start)(struct mddev *mddev, struct md_rdev *rdev);
+ 	int (*add_new_disk_finish)(struct mddev *mddev);
+-	void (*new_disk_ack)(struct mddev *mddev, bool ack);
++	int (*new_disk_ack)(struct mddev *mddev, bool ack);
+ };
+ 
+ #endif /* _MD_CLUSTER_H */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 23784988..461024d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5757,7 +5755,7 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+ 
+ 	if (mddev_is_clustered(mddev) &&
+ 		!(info->state & ((1 << MD_DISK_CLUSTER_ADD) | (1 << MD_DISK_CANDIDATE)))) {
+-		pr_err("%s: Cannot add to clustered mddev. Try --cluster-add\n",
++		pr_err("%s: Cannot add to clustered mddev.\n",
+ 			       mdname(mddev));
+ 		return -EINVAL;
+ 	}
+@@ -5855,7 +5853,11 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+ 			if (info->state & (1 << MD_DISK_CANDIDATE)) {
+ 				/* Through --cluster-confirm */
+ 				set_bit(Candidate, &rdev->flags);
+-				md_cluster_ops->new_disk_ack(mddev, true);
++				err = md_cluster_ops->new_disk_ack(mddev, true);
++				if (err) {
++					export_rdev(rdev);
++					return err;
++				}
+ 			} else if (info->state & (1 << MD_DISK_CLUSTER_ADD)) {
+ 				/* --add initiated by this node */
+ 				err = md_cluster_ops->add_new_disk_start(mddev, rdev);
