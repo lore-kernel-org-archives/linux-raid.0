@@ -1,87 +1,56 @@
-From: "Wilson, Jonathan" <piercing_male@hotmail.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Riad scrub generated errors, should I worry?
-Date: Mon, 2 Mar 2015 19:45:36 +0000
-Message-ID: <BLU436-SMTP202531F6FEBD121B8D09E7498100@phx.gbl>
-References: <BLU436-SMTP203777F3704141DF5C096B898100@phx.gbl>
-	 <CAJCQCtR1th-V67c7dwZxNBFqKZ=96sAVLzyp4zscO-wPv9jA9g@mail.gmail.com>
+Date: Mon, 02 Mar 2015 16:09:02 -0500
+Message-ID: <54F4D16E.8070909@turmel.org>
+References: <BLU436-SMTP203777F3704141DF5C096B898100@phx.gbl> <alpine.DEB.2.02.1503021618580.20507@uplift.swm.pp.se> <1786620.4mivBfObx3@balsa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJCQCtR1th-V67c7dwZxNBFqKZ=96sAVLzyp4zscO-wPv9jA9g@mail.gmail.com>
+In-Reply-To: <1786620.4mivBfObx3@balsa>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-raid@vger.kernel.org
+To: thomas@fjellstrom.ca, Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: "Wilson, Jonathan" <piercing_male@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2015-03-02 at 11:32 -0700, Chris Murphy wrote:
-> [253981.512570] sd 5:0:0:0: [sdf]
-> [253970.368375] Add. Sense: Unrecovered read error - auto reallocate failed
-> [253970.368380] end_request: I/O error, dev sdf, sector 5680577752
+On 03/02/2015 12:43 PM, Thomas Fjellstrom wrote:
+> On Mon 02 Mar 2015 04:22:00 PM Mikael Abrahamsson wrote:
+>> On Mon, 2 Mar 2015, Wilson, Jonathan wrote:
+>>> While the monthly scrub was running the following errors (at the bottom
+>>> of the post, copied from syslog) were issued.
+>>
+>> As soon as you get UNC, it's the drive reporting that it can't
+>> successfully read a sector. Usually this sector is then reported as
+>> "pending" in your SMART output.
+>>
+>> Since the log you provided shows a lot of sectors being corrected and you
+>> after that have 0 pending sectors on the drive, I'd say you are now fine.
+>> I would run a new scrub manually in a few days just to check, but you
+>> might be fine going forward. There is no really good way to know, but
+>> generally, a drive that throws a bunch of UNC should be monitored so this
+>> isn't becoming a common problem. I tend to replace drives that have thrown
+>> these kinds of errors if it happens on any kind of regular basis.
 > 
-> I'm confused. The above happens twice. So it seems clear the problem is
-> with /dev/sdf and sector 5680577752. Since it's an AF drive, technically
-> sectors 5680577752 - 5680577760 are affected, since those are the LBA's for
-> a single physical sector.
-> 
-> However, all of the "read error corrected" that follow have completely
-> different values, 5478837464 through 547883753.
-> 
-> And then 3 seconds later another read error at the same LBA:
-> 
-> [253977.980604] sd 5:0:0:0: [sdf]
-> 253977.980605] Add. Sense: Unrecovered read error - auto reallocate failed
-> [253977.980612] end_request: I/O error, dev sdf, sector 5680579352
-> 
-> and 4 seconds later
-> 
-> [253981.512576] sd 5:0:0:0: [sdf]
-> [253981.512577] Add. Sense: Unrecovered read error - auto reallocate failed
-> [253981.512582] end_request: I/O error, dev sdf, sector 5680579352
-> 
-> 
-> And then "read error corrected" 5478839064 through 5478839136 which are
-> different than the first batch.
-> 
-> So there's a single LBA reported by libata as URE multiple times, each with
-> identical address. But then two corrected events, each with a different
-> range of sectors, neither of which match the URE address.
-> 
-> ??
+> Dumb question, but after pending, I assume they go into the reallocated 
+> column? I think after a certain number of those, you should start thinking 
+> about a replacement. Like with my recent issues, I had two drives with a few 
+> too many reallocated sectors. One was over 16k and the other was over 32k. 
+> They still "work", but I replaced them with WD Reds anyhow. Another drive 
+> seemed to max out the start-stop count field at 65536. Hah. No more cheap 
+> desktop seagates in raid for this fellow.
 
-I have no idea about the differing sector locations, way beyond my
-knowledge... however one thought did occur to me.
+If the URE was simply due to magnetic decay without actual damage, you
+can expect MD to rewrite the sector and fix it.  No more pending, no
+relocation.  If the spot on the media is truly failing, the rewrite and
+recheck the drive does for pending sectors will expose the problem, and
+the firmware will relocate.
 
-As the drives are WD reds with TLER enabled, as the drive realised that
-an error occurred, instead of performing a few read tests and then
-possibly a relocate or re write or what ever a drive may try... would
-its first imperative be to "chuck the error out, let the OS/raid card
-deal with it" which is why no pending or relocates or other errors
-showed in the smartctl except the increase in the RRER to 4 prior to
-running a smartctl scan. After the smartctl scan no values changed,
-except for the addition of 
+Read errors like this are normal and expected.  The drive data shows
+10k+ hours of operation, so the honeymoon (no errors at all) is over.
+Scrub weekly or monthly so these UREs don't accumulate and carry on.
+When actual *relocations* climb into double digits, replace the drive.
 
-> # 1  Extended offline    Completed without error       00%     10949
-> -
+HTH,
 
-The messages about "read error corrected" were generated by mdadm (I'm
-assuming given the text), and as you say the initial errors were
-generated by libata (which I assume is the disk subsystem?) so perhaps
-it has a different idea about sectors (logical v physical?) or sectors
-within the raid device (the raid data location within the logical
-partition within the raid member device?)
-
-The numbers seem well off, 5680577752 (disk) v 5478837464-5478837536
-(mdadm) so perhaps the mdadm figure is the sector within the raid member
-within partition 5 within the disk sdf?
-
-> 
-> 
-> Chris Murphy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Phil
 
