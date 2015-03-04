@@ -1,39 +1,54 @@
-From: Help Desk <aubrey.tours@telkomsa.net>
-Subject: Web Notifications.
-Date: Wed, 4 Mar 2015 17:01:55 +0200 (SAST)
-Message-ID: <1824262944.3588462.1425481315565.JavaMail.root@telkomsa.net>
-Reply-To: Help Desk <armstrongonewir@outlook.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 0/1] RFC: Use /dev/md/X as default name
+Date: Wed, 04 Mar 2015 10:57:07 -0500
+Message-ID: <wrfjoao84uy4.fsf@ultrasam.lan.trained-monkey.org>
+References: <1423684389-10977-1-git-send-email-Jes.Sorensen@redhat.com>
+	<wrfjsie36qdi.fsf@redhat.com> <20150219083708.2ab46006@notabene.brown>
+	<wrfj61ay6fai.fsf@redhat.com> <20150219093236.25660678@notabene.brown>
+	<wrfjoaobz7fz.fsf@redhat.com> <20150303084327.21ddb086@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150303084327.21ddb086@notabene.brown> (NeilBrown's message of
+	"Tue, 3 Mar 2015 08:43:27 +1100")
 Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Web Notifications.
+NeilBrown <neilb@suse.de> writes:
+> On Mon, 02 Mar 2015 11:32:16 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
+>> Neil,
+>> 
+>> Finally had time to go back and look at this - I don't quite understand
+>> your request here.
+>> 
+>> As far as I can see, the above code isn't run at all during device
+>> creation, so I don't get how modifying it as you suggest will make
+>> /dev/md/111 appear if I create /dev/md111?
+>> 
+>> Cheers,
+>> Jes
+>
+> Wheels within wheels of deception and indirection....
+>
+> mdadm doesn't create the devices directly, udev does that.
+>
+> IMPORT{program}="BINDIR/mdadm --detail --export $devnode"
+> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
+>
+>
+> So the symlink from /dev/md gets created iff "mdadm --detail --export"
+> reports an MD_DEVNAME.
+>
+> Hence the change suggested.
+>
+> mdadm *can* create the devices itself, but only if udev isn't running, or
+> mdamd has been explicitly told to ignore udev.  Normally that doesn't happen.
 
-This mail is to inform all our valued customers that we are currently u=
-pgrading our Admin database Security Server, e-mail Center and expandin=
-g e-mail quota limit to 10 GB. All incoming mails are currently delayed=
-=2E In order to ensure you do not experience service interruption, your=
- account must be upgrade and expand your e-mail quota limit to 10 GB. T=
-his information would be required to verify and upgrade your e-mail acc=
-ount to avoid being closed during this exercise. Click your reply tab, =
-=46ill the rows below;
+Ahhh, I didn't see anything happening on my system, but it may be the
+RHEL/Fedora udev rules file is missing something. I'll have to take a
+closer look there!
 
-Name:
-E-mail:
-Username:
-Password:
-Confirm-Password:
-
-Your account will remain active after you have successfully confirmed y=
-our account to the monitoring Center.
-
-Thanks for using our Email Services.
-=C2=A9 2015 Database Security Server.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
+Jes
