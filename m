@@ -1,54 +1,49 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 0/1] RFC: Use /dev/md/X as default name
-Date: Wed, 04 Mar 2015 10:57:07 -0500
-Message-ID: <wrfjoao84uy4.fsf@ultrasam.lan.trained-monkey.org>
-References: <1423684389-10977-1-git-send-email-Jes.Sorensen@redhat.com>
-	<wrfjsie36qdi.fsf@redhat.com> <20150219083708.2ab46006@notabene.brown>
-	<wrfj61ay6fai.fsf@redhat.com> <20150219093236.25660678@notabene.brown>
-	<wrfjoaobz7fz.fsf@redhat.com> <20150303084327.21ddb086@notabene.brown>
+From: Eric Mei <meijia@gmail.com>
+Subject: Last working drive in RAID1
+Date: Wed, 04 Mar 2015 12:55:43 -0700
+Message-ID: <54F7633F.3020503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150303084327.21ddb086@notabene.brown> (NeilBrown's message of
-	"Tue, 3 Mar 2015 08:43:27 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Mon, 02 Mar 2015 11:32:16 -0500 Jes Sorensen <Jes.Sorensen@redhat.com>
->> Neil,
->> 
->> Finally had time to go back and look at this - I don't quite understand
->> your request here.
->> 
->> As far as I can see, the above code isn't run at all during device
->> creation, so I don't get how modifying it as you suggest will make
->> /dev/md/111 appear if I create /dev/md111?
->> 
->> Cheers,
->> Jes
->
-> Wheels within wheels of deception and indirection....
->
-> mdadm doesn't create the devices directly, udev does that.
->
-> IMPORT{program}="BINDIR/mdadm --detail --export $devnode"
-> ENV{DEVTYPE}=="disk", ENV{MD_DEVNAME}=="?*", SYMLINK+="md/$env{MD_DEVNAME}"
->
->
-> So the symlink from /dev/md gets created iff "mdadm --detail --export"
-> reports an MD_DEVNAME.
->
-> Hence the change suggested.
->
-> mdadm *can* create the devices itself, but only if udev isn't running, or
-> mdamd has been explicitly told to ignore udev.  Normally that doesn't happen.
+Hi,
 
-Ahhh, I didn't see anything happening on my system, but it may be the
-RHEL/Fedora udev rules file is missing something. I'll have to take a
-closer look there!
+It is interesting to notice that RAID1 won't mark the last working drive 
+as Faulty no matter what. The responsible code seems here:
 
-Thanks!
-Jes
+static void error(struct mddev *mddev, struct md_rdev *rdev)
+{
+         ...
+         /*
+          * If it is not operational, then we have already marked it as dead
+          * else if it is the last working disks, ignore the error, let the
+          * next level up know.
+          * else mark the drive as failed
+          */
+         if (test_bit(In_sync, &rdev->flags)
+             && (conf->raid_disks - mddev->degraded) == 1) {
+                 /*
+                  * Don't fail the drive, act as though we were just a
+                  * normal single drive.
+                  * However don't try a recovery from this drive as
+                  * it is very likely to fail.
+                  */
+                 conf->recovery_disabled = mddev->recovery_disabled;
+                 return;
+         }
+         ...
+}
+
+The end result is that even if all the drives are physically gone, there 
+still one drive remains in array forever, and mdadm continues to report 
+the array is degraded instead of failed. RAID10 also has similar behavior.
+
+Is there any reason we absolutely don't want to fail the last drive of 
+RAID1?
+
+Thanks
+Eric
