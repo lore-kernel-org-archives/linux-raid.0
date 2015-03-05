@@ -1,60 +1,113 @@
-From: Eric Mei <meijia@gmail.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Last working drive in RAID1
-Date: Thu, 05 Mar 2015 13:23:11 -0700
-Message-ID: <54F8BB2F.9060306@gmail.com>
-References: <54F7633F.3020503@gmail.com>	<20150305084634.2d590fe4@notabene.brown>	<54F78BD9.403@gmail.com> <20150305102622.016ec792@notabene.brown>
+Date: Fri, 6 Mar 2015 08:52:22 +1100
+Message-ID: <20150306085222.19dd30ce@notabene.brown>
+References: <54F7633F.3020503@gmail.com>
+	<20150305084634.2d590fe4@notabene.brown>
+	<54F78BD9.403@gmail.com>
+	<20150305102622.016ec792@notabene.brown>
+	<54F87C7C.8020501@youngman.org.uk>
+	<54F8B5D2.8070304@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/+Ip9EcS_sO+p14cK2IhXQHg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150305102622.016ec792@notabene.brown>
+In-Reply-To: <54F8B5D2.8070304@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Wols Lists <antlists@youngman.org.uk>, Eric Mei <meijia@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2015-03-04 4:26 PM, NeilBrown wrote:
-> On Wed, 04 Mar 2015 15:48:57 -0700 Eric Mei <meijia@gmail.com> wrote:
->
->> Hi Neil,
->>
->> I see, that does make sense. Thank you.
->>
->> But it impose a problem for HA. We have 2 nodes as active-standby pair,
->> if HW on node 1 have problem (e.g. SAS cable get pulled, thus all access
->> to physical drives are gone), we hope the array failover to node 2. But
->> with lingering drive reference, mdadm will report array is still alive
->> thus failover won't happen.
->>
->> I guess it depends on what kind of error on the drive. If it's just a
->> media error we should keep it online as much as possible. But if the
->> drive is really bad or physically gone, keeping the stale reference
->> won't help anything. Back to your comparison with single drive /dev/sda,
->> I think MD as an array should do the same as /dev/sda, not the
->> individual drive inside MD, for them we should just let it go. How do
->> you think?
-> If there were some what that md could be told that the device really was gone
-> and just just returning errors, then I would be OK with it being marked as
-> faulty and being removed from the array.
->
-> I don't think there is any mechanism in the kernel to allow that.  It would
-> be easiest to capture a "REMOVE" event via udev, and have udev run "mdadm" to
-> tell the md array that the device was gone.
->
-> Currently there is no way to do that ... I guess we could change raid1 so
-> that a 'fail' event that came from user-space  would always cause the device
-> to be marked failed, even when an IO error would not...
-> To preserve current behaviour, it should require something like "faulty-force"
-> to be written to the "state" file.   We would need to check that raid1 copes
-> with having zero working drives - currently it might always assume there is
-> at least one device.
-I guess we don't need to know exactly what happened physically, it 
-should be good enough to know "drive stopped working". If a drive 
-stopped working, keeping it doesn't add much value anyway. And I think 
-serious error detected in MD (e.g. superblock write error, bad block 
-table write error) might be a good criteria to make that judgement.
+--Sig_/+Ip9EcS_sO+p14cK2IhXQHg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-But as you said current code may assume at least one drive present, need 
-a more careful review.
+On Thu, 05 Mar 2015 15:00:18 -0500 Phil Turmel <philip@turmel.org> wrote:
 
-Eric
+> On 03/05/2015 10:55 AM, Wols Lists wrote:
+> > Sorry to butt in, but I'm finding this conversation a bit surreal ...
+> > take everything I say with a pinch of salt. But the really weird bit
+> > was "what does linux do if /dev/sda disappears?"
+> >=20
+> > In the old days, with /dev/hd*, the * had a hard mapping to the
+> > hardware. hda was the ide0 primary, hdd was the ide1 secondary, etc
+> > etc. I think I ran several systems with just hdb and hdd. Not a good
+> > idea, but.
+> >=20
+> > Nowadays, with sd*, the letter is assigned in order of finding the
+> > drive. So if sda is removed, linux moves all the other drives and what
+> > was sdb becomes sda.
+>=20
+> On reboot, yes.  Not live.  If /dev/sda has anything using it when
+> unplugged, it stays there and gives errors.  Existing devices retain
+> their names, and new devices are added to the end.  Only if all users
+> are completely unhooked will a kernel name get re-used live.
+>=20
+> > Which is why you're advised now to always refer
+> > to drives by their BLKDEV or whatever, as linux provides no guarantees
+> > whatsoever about sd*. The blockdev may only be a symlink to whatever
+> > the sd*n code of the disk is, but it makes sure you get the disk you
+> > want when the sd*n changes under you.
+>=20
+> Correct, but once assembled or mounted, the kernel names are locked.
+>=20
+> > Equally surreal is the comment about "what does raid1 do with no
+> > working devices?". Surely it will do nothing, if there's no spinning
+> > rust or whatever underneath it? You can't corrupt it if there's
+> > nothing there to corrupt?
+>=20
+> It has to stay there to give errors to the upper layers that are still
+> hooked to it.  When they are administratively "unhooked", aka unmounted
+> or disassociated with mdadm --remove.
+>=20
+> Or, quite possibly, the device is plugged back in, at which point the
+> device name is there for it (as long as you use the same port, of
+> course).  In which case the filesystem may very well resume successfully.
+
+I was with you right up to this last point.
+When a device is unplugged and then plugged back in, it will always get a n=
+ew
+name.  Detecting "is the same device" is far from fool-proof, particularly =
+as
+the device could have been plugged into some other machine and has 'fsck' e=
+tc
+run.
+Once a mounted device is unplugged, that mount is permanently unusable.
+
+NeilBrown
+
+
+>=20
+> > Sorry again if this is inappropriate, but you're coming over as so
+> > buried in the trees that you can't see the wood.
+>=20
+> Sometimes the expanded view is appropriate :-)
+>=20
+> Regards,
+>=20
+> Phil Turmel
+
+
+--Sig_/+Ip9EcS_sO+p14cK2IhXQHg
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVPjQFjnsnt1WYoG5AQKHeg/+LgmLq2Mo0TX8qkUVj0pMQjQtPjucp/eW
+ESejLJh5BZ2cuHI53csLyiVIK0/r++HdOin21+KyIr/a6F5whSvccyJHNErzJSJ5
+olHmY/3d2XolMSw3SG/Pk1GZ5899cnNu/QonHHhNbseos3xCzQPvhu1Q+06HjHU3
+THEVvY2lFc92u+4D01Gx9STHKpIELcDFHs5cxolJKu5QMI8mWFC80Xofk71VJ/J5
+w+a1bubAYWJrvx+mR/R1ZJnWD24l3dFsgOa3TAjzc1McnKq2o6BBJK0BXPe5CRmt
+qm3xtOtF6AErDQUOfYzYR9/MiFggphCjKLfQh3HOO9Gxk+xAhe+zrUvEEeIFsgxf
+mCjIHlCGV/QKvffRudjVGasiI+3SElpZ97D76AHsXsTd2SakKQHiBKsFW88c9oNW
+pOXk9igRqYqfasSLLIY1FIC1AwyCrmkZDdQp4J66g1MEanXxhfbChyK+uwDulfcj
+R9QcXR0IQ5LHyrnSGNPViibsZAKf3cO1Aw7DxKPdU2Wn80w33uZKUzZC/lhHKzvd
+7l+9ip16FP4ohfFf5ky7vSPDpPeB+U+Nuyq/3EZA3dNfHL9TNSJZxCb2NjdOfyO5
+Kr6cLsnl9Iz5/osUrf2K8A+FxizJq2Vn7I2pIBMK17cq5NNuCJ5Pd95VS3mPGdsp
+09qW2+c8jnw=
+=gOqW
+-----END PGP SIGNATURE-----
+
+--Sig_/+Ip9EcS_sO+p14cK2IhXQHg--
