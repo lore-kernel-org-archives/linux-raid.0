@@ -1,250 +1,76 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: two raid issues
-Date: Sun, 08 Mar 2015 09:52:04 -0400
-Message-ID: <54FC5404.4040405@turmel.org>
-References: <20150307144256.17321vlciup2v4kw@webmail.uniserve.com>
+From: "Wilson, Jonathan" <piercing_male@hotmail.com>
+Subject: Re: Raid 10 Issue
+Date: Sun, 8 Mar 2015 14:59:07 +0000
+Message-ID: <BLU436-SMTP14223DDFE1692D64CB12C24981A0@phx.gbl>
+References: <1888475554.226351.1425578160090.JavaMail.open-xchange@app09.ox.hosteurope.de>
+	 <54F8B792.9060206@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150307144256.17321vlciup2v4kw@webmail.uniserve.com>
+In-Reply-To: <54F8B792.9060206@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Stevens <geek@uniserve.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Stefan Lamby <webmaster@peter-speer.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good morning Dave,
-
-On 03/07/2015 05:42 PM, Dave Stevens wrote:
-> Hello the raid list,
+On Thu, 2015-03-05 at 15:07 -0500, Phil Turmel wrote:
+> On 03/05/2015 12:56 PM, Stefan Lamby wrote:
+> > Hello List.
+> > 
+> > I was setting up a new machine using ubuntu 14.04.02 lts using its installer,
+> > configuring a raid 10 with 2 disks and lvm on top of it. I was using 2 disks and
+> > now I like to add 2 more disks to the array so i want to end up with 4 disks, no
+> > spare.
+> > 
+> > Searching the internet I found that I am not able to --grow the array with the
+> > mdadm version this ubuntu is using (v3.2.5).
+> > Is that right?
+> > 
+> > So I decided to build a new array that way and try to move my data afterwards,
+> > which failed:
+> > (Is it OK to do it that way or do you recommend another?)
 > 
-> I have inherited a server set up by people who are no longer around. It
-> worked fine until recently and then after a routine update refused to
-> boot. I've got the machine in my office and have been examining the
-> problem, or rather problems, I think there are two.
-
-Three, at least.
-
-> First, the bootable partition on /dev/sda1 won't successfully boot to a
-> xen kernel, kernel version is 2.6.18.something-xen. The intent is to
-> boot to a raid-10 array of four 750GB drives, each partitioned into a
-> small and a large partition as detailed below.
+> No, you should be able to do this.  Probably without any shutdown.
+> Please show the full layout of your drives, partitions, and lvm.
 > 
-> Boot proceeds normally according to on-screen messages until this:
+> I suggest lsdrv[1] for working layouts.  If your email is set to use
+> utf8, just paste the result in a reply.
 > 
-> md: md0: raid array is not clean  -- starting background reconstruction
-> raid10: not enough operational mirrors for md0
-> md: pers -> () failed
-
-Yup.  Degraded to the point of not running.
-
-> Immediately after these messages is another stating that an attempt has
-> been made to kill init, kernel panic and reboot.
-
-No way to pivot to your root filesystem, so your initramfs gives up.
-Depending on the distro, it may be possible to pass a kernel command
-line option to drop into a repair shell at that point.
-
-> I've tried to give these messages verbatim but have no way (I think) to
-> reproduce them other than manually.
-
-Repair shell, if available.
-
-> So at first I looked around, read through the wiki and found advice to
-> NOT write anything to the array, which seems reasonable. I looked at a
-> live microknoppix distro called runtime live that gave me a command
-> shell to run the examine command with the output below:
-
-LiveCD boot is good, and the following report is very detailed, thanks:
-
-> /dev/sda2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
->   Creation Time : Sun Nov 29 15:33:50 2009
->      Raid Level : raid10
->   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
->      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
+> Regards,
 > 
->     Update Time : Wed Feb 18 19:28:22 2015
->           State : active
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 2
->   Spare Devices : 0
->        Checksum : 7c76593b - correct
->          Events : 32945477
-
-This is important:  ^^^^^^^^
-
->          Layout : near=2
->      Chunk Size : 256K
+> Phil Turmel
 > 
->       Number   Major   Minor   RaidDevice State
-> this     0       8        2        0      active sync   /dev/sda2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       0        0        1      active sync
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
-> /dev/sdb2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
->   Creation Time : Sun Nov 29 15:33:50 2009
->      Raid Level : raid10
->   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
->      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
-> 
->     Update Time : Sat Nov 22 13:18:12 2014
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 1
->   Spare Devices : 0
->        Checksum : 7d850ca4 - correct
->          Events : 32945477
+> [1] https://github.com/pturmel/lsdrv
 
-With this:          ^^^^^^^^
+OT: What a fantastic little script, a couple of my biggest annoyances
+with my set up was that it was a pain to track "os disk designation" to
+"serial no." making identifying the physical device a chore. 
 
->          Layout : near=2
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     1       8       18        1      active sync   /dev/sdb2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
-> /dev/sdc2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
->   Creation Time : Sun Nov 29 15:33:50 2009
->      Raid Level : raid10
->   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
->      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
->    Raid Devices : 4
->   Total Devices : 3
-> Preferred Minor : 0
-> 
->     Update Time : Wed Feb 18 19:30:13 2015
->           State : active
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 2
->   Spare Devices : 0
->        Checksum : 7c7659de - correct
->          Events : 32945479
+Also one of my cheap "4 port sata" cards doesn't identify port number on
+the device and while it was possible to work it out by tracing device
+serial-sata cable-socket then mentally comparing sd*-device serial=port
+it was something I was putting off as "a pain" but also being bugged by
+my md member devices numbers being out of whack with my sd designations:
+sda[4] sdb[2] sdc[1] sdd[3] and with 12 devices the last thing you want
+when something is failing is to have to hunt around to work out which
+device physically relates to which os identified device. 
 
-And this:           ^^^^^^^^
+With this I can now easily mark my disks with a simple set of
+identification, likewise the cable on both ends, and make a sketch of
+ports and their sequences and which disk in which slot relates.
 
->          Layout : near=2
->      Chunk Size : 256K
+Obviously if I was starting my system from scratch I would have done all
+this from the get go... but after 4 cases, various upgrades and
+additions, differing numbers of MB sata ports, and various sata cards
+and multiple variations of md's/partition layouts it all became a huge
+muddle and one elegant script has made it simple to finally do what I
+have put of for far to long.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
->       Number   Major   Minor   RaidDevice State
-> this     2       8       34        2      active sync   /dev/sdc2
-> 
->    0     0       0        0        0      removed
->    1     1       0        0        1      faulty removed
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       0        0        3      faulty removed
-> /dev/sdd2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
->   Creation Time : Sun Nov 29 15:33:50 2009
->      Raid Level : raid10
->   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
->      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
->    Raid Devices : 4
->   Total Devices : 5
-> Preferred Minor : 0
-> 
->     Update Time : Wed Sep  4 07:51:50 2013
->           State : active
->  Active Devices : 4
-> Working Devices : 5
->  Failed Devices : 0
->   Spare Devices : 1
->        Checksum : 77c1a3a7 - correct
->          Events : 53
 
-Whoa!              ^^^^
 
->          Layout : near=2
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     3       8       50        3      active sync   /dev/sdd2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       50        3      active sync   /dev/sdd2
->    4     4       8       66        4      spare   /dev/sde2
-> /dev/sde2:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
->   Creation Time : Sun Nov 29 15:33:50 2009
->      Raid Level : raid10
->   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
->      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
->    Raid Devices : 4
->   Total Devices : 5
-> Preferred Minor : 0
-> 
->     Update Time : Sun Sep  8 13:25:42 2013
->           State : clean
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 77c775be - correct
->          Events : 7934
-
-And Whoa again!    ^^^^^^
-
->          Layout : near=2
->      Chunk Size : 256K
-> 
->       Number   Major   Minor   RaidDevice State
-> this     3       8       66        3      active sync   /dev/sde2
-> 
->    0     0       8        2        0      active sync   /dev/sda2
->    1     1       8       18        1      active sync   /dev/sdb2
->    2     2       8       34        2      active sync   /dev/sdc2
->    3     3       8       66        3      active sync   /dev/sde2
-> 
-> This makes sense to me as far as it goes but I don't see what to do
-> next. As I understand it the four partitions from sda2 to sdd2 would
-> form the array with sde as hot spare. It has been my assumption that if
-> a drive failed that sde would sync and take over. I don't know if this
-> is in fact the case and don't see a path forward. Of course the backups
-> are inadequate.
-
-Based on the events and update timestamps, sdd died sometime around Wed
-Sep 4 07:51:50 2013, at which point sde stepped in.  It too failed
-shortly after ~ Sun Sep 8 13:25:42 2013.  You then ran degraded for over
-a year until sdb also failed ~ Sat Nov 22 13:18:12 2014.  You were then
-running doubly-degraded (luckily on non-adjacent members) until this Feb
-14 when sda was booted out.  Leaving only one running drive.
-
-{ I wouldn't keep such people around, either. }
-
-Your best bet is to force assembly of the last two working drives to get
-the system running, then take an immediate backup of all critical files.
- Do the forced assembly with the livecd, then do a clean shutdown.  You
-should then be able to boot the original OS and take your backup.
-
-Then you need to completely rebuild your system with proper log
-monitoring, array monitoring, and verification of your drives.
-
-Phil
