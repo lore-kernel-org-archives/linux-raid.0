@@ -1,27 +1,45 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: Inject I/O latency for RAID5/6 read and writes
-Date: Thu, 12 Mar 2015 16:31:36 -0500
-Message-ID: <CAB-428=f7eL3iD=0g9MsYV78KUng_dysEs+=70taPP9wh_UkbQ@mail.gmail.com>
-References: <CAB-428=gcsgxa1k83h0QWmijhe_kXaLMQZqs+m=Zb0OWX06geA@mail.gmail.com>
+From: Ankur Bose <ankur.bose@oracle.com>
+Subject: Bad block management in raid1
+Date: Fri, 13 Mar 2015 15:36:52 +0530
+Message-ID: <5502B6BC.50809@oracle.com>
+References: <550184D4.8060104@jive.nl> <55019940.4030104@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB-428=gcsgxa1k83h0QWmijhe_kXaLMQZqs+m=Zb0OWX06geA@mail.gmail.com>
+In-Reply-To: <55019940.4030104@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
+Cc: Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>
 List-Id: linux-raid.ids
 
-On Mon, Feb 23, 2015 at 12:32 PM, Alireza Haghdoost <alireza@cs.umn.edu> wrote:
-> I needed to inject I/O completion latency in the RAID5/6 codes for
-> test purpose. I was wondering where would be the good place in
-> md/raid5.c code to add delay ?
->
-> So far I have tried adding mdelay/udelay in raid5_end_write_request()
-> and it seems it works to increase I/O completion of writes. However,
-> adding delay in raid5_end_read_request() does not really change the
-> read I/O latency. Any idea ?
->
-> --Alireza
+Hi There,
 
-Can Some one help me on this issue ?
+   Can you conform the below scenario in which blocks are consider to b=
+e=20
+a "bad" block.
+
+         1. A read error on a degraded array ( a state of raid when=20
+array experiences the failure of one or more disks)for which the data=20
+cannot be found from other legs is a "bad" block and gets recorded.
+         2. When recovering, from source to target leg, for any reason=20
+if unable to read from source, the target leg's block gets recorded as=20
+=E2=80=9Cbad=E2=80=9D (thought the target block is writable and can be =
+used in future).
+         3. Write to a block fails (Though it leads to degraded mode).
+
+Are they all implemented and is there any other scenario?
+
+  When exactly the raid1 decides to make the device "Faulty"? Does that=
+=20
+depends on the number of bad blocks in the list ie: 512?
+  What is the size in the metadata for storing the bad block info.
+
+Thanks,
+Ankur
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
