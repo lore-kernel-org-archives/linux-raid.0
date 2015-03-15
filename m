@@ -1,40 +1,53 @@
-From: Andrei Borzenkov <arvidjaar@gmail.com>
-Subject: /dev/md/xxx sporadically unavailable after mdadm --assemble
- /dev/md/xxx
-Date: Sun, 15 Mar 2015 10:42:55 +0300
-Message-ID: <20150315104255.6c9f7af5@opensuse.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] dm log userspace: transfer: match wait_for_completion_timeout return type
+Date: Sun, 15 Mar 2015 13:09:10 -0400
+Message-ID: <1426439350-26318-1-git-send-email-hofrat@osadl.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 List-Id: linux-raid.ids
 
-I hit this when running test suite that is using Linux MD over loop
-devices. Sporadically it fails to mount raid after mdadm --assembly
-with 
+Return type of wait_for_completion_timeout is unsigned long not int. An
+appropriately named unsigned long is added and the assignments fixed up.
 
-mdadm: array /dev/md/mdraid10_raid1_6 started.
-mdadm: stopped /dev/md/mdraid10_raid1_6
-mdadm: /dev/md/mdraid10_raid1_6 has been started with 6 drives.
-mount: special device /dev/md/mdraid10_raid1_6 does not exist
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-How naive is the assumption that when "mdadm --assemble" returns
-devices are available? Should every use of mdadm be now followed by
-waiting for device?
+Patch was only compile tested with x86_64_defconfig + CONFIG_DM_LOG_USERSPACE
 
-Code is simply
+Patch is against 4.0-rc3 (localversion-next is -next-20150313)
 
-                xmdraid*)
-                    mdadm --assemble /dev/md/"${fs}_$NDEVICES" "${LODEVICES[@]}"
-                    sleep 1
-                    mount -t "$MOUNTFS" "${MOUNTDEVICE}" "$MNTPOINTRO" -o ${MOUNTOPTS}${SELINUXOPTS}ro ;;
+ drivers/md/dm-log-userspace-transfer.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/dm-log-userspace-transfer.c b/drivers/md/dm-log-userspace-transfer.c
+index 39ad966..c2050a1 100644
+--- a/drivers/md/dm-log-userspace-transfer.c
++++ b/drivers/md/dm-log-userspace-transfer.c
+@@ -172,6 +172,7 @@ int dm_consult_userspace(const char *uuid, uint64_t luid, int request_type,
+ 			 char *rdata, size_t *rdata_size)
+ {
+ 	int r = 0;
++	unsigned long time_left;
+ 	size_t dummy = 0;
+ 	int overhead_size = sizeof(struct dm_ulog_request) + sizeof(struct cn_msg);
+ 	struct dm_ulog_request *tfr = prealloced_ulog_tfr;
+@@ -236,11 +237,12 @@ resend:
+ 		goto out;
+ 	}
+ 
+-	r = wait_for_completion_timeout(&(pkg.complete), DM_ULOG_RETRY_TIMEOUT);
++	time_left = wait_for_completion_timeout(&(pkg.complete),
++						DM_ULOG_RETRY_TIMEOUT);
+ 	spin_lock(&receiving_list_lock);
+ 	list_del_init(&(pkg.list));
+ 	spin_unlock(&receiving_list_lock);
+-	if (!r) {
++	if (!time_left) {
+ 		DMWARN("[%s] Request timed out: [%u/%u] - retrying",
+ 		       (strlen(uuid) > 8) ?
+ 		       (uuid + (strlen(uuid) - 8)) : (uuid),
+-- 
+1.7.10.4
 
-but apparently even one second wait is not enough. But where is the
-limit?
-
-Of course when you look after test failure all devices are there.
-
-Using mdadm 3.3.1 on openSUSE 13.2.
