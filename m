@@ -1,61 +1,72 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] dm log userspace: base: fix compile warning
-Date: Sun, 15 Mar 2015 13:09:38 -0400
-Message-ID: <1426439378-26353-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH] kernfs: handle poll correctly on 'direct_read' files.
+Date: Mon, 16 Mar 2015 10:44:52 +1100
+Message-ID: <20150316104452.366bffc0@notabene.brown>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/Dyc_uFBn2Om3ig_zrj+SipM"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Prakash Punnoor <prakash@punnoor.de>, Torsten Kaiser <just.for.lkml@googlemail.com>, linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This fixes up a compile warning [-Wunused-but-set-variable] - given the
-comments in userspace_set_region_sync() the non-reporting of errors seems
-intentional so the return value can be dropped to make gcc happy.
+--Sig_/Dyc_uFBn2Om3ig_zrj+SipM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
 
-  CC [M]  drivers/md/dm-log-userspace-base.o
-drivers/md/dm-log-userspace-base.c: In function 'userspace_set_region_sync':
-drivers/md/dm-log-userspace-base.c:744:6: warning: variable 'r' set but not used [-Wunused-but-set-variable]
 
-The comment here states:
-/*
- * It would be nice to be able to report failures.
- * However, it is easy emough to detect and resolve.
- */
-note though that userspace_do_request() calls dm_consult_userspace()
-which can also return -EINVAL (which is though reported in
-dm_consult_userspace via DMINFO if I got it right)
+Kernfs supports two styles of read: direct_read and seqfile_read.
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_DM_LOG_USERSPACE
+The latter supports 'poll' correctly thanks to the update of
+'->event' in kernfs_seq_show.
+The former does not as '->event' is never updated on a read.
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+So add an appropriate update in kernfs_file_direct_read().
 
- drivers/md/dm-log-userspace-base.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+This was noticed because some 'md' sysfs attributes were
+recently changed to use direct reads.
 
-diff --git a/drivers/md/dm-log-userspace-base.c b/drivers/md/dm-log-userspace-base.c
-index 39fa007..1e3038e 100644
---- a/drivers/md/dm-log-userspace-base.c
-+++ b/drivers/md/dm-log-userspace-base.c
-@@ -741,7 +741,6 @@ static int userspace_get_resync_work(struct dm_dirty_log *log, region_t *region)
- static void userspace_set_region_sync(struct dm_dirty_log *log,
- 				      region_t region, int in_sync)
- {
--	int r;
- 	struct log_c *lc = log->context;
- 	struct {
- 		region_t r;
-@@ -751,7 +750,7 @@ static void userspace_set_region_sync(struct dm_dirty_log *log,
- 	pkg.r = region;
- 	pkg.i = (int64_t)in_sync;
- 
--	r = userspace_do_request(lc, lc->uuid, DM_ULOG_SET_REGION_SYNC,
-+	userspace_do_request(lc, lc->uuid, DM_ULOG_SET_REGION_SYNC,
- 				 (char *)&pkg, sizeof(pkg), NULL, NULL);
- 
- 	/*
--- 
-1.7.10.4
+Reported-by: Prakash Punnoor <prakash@punnoor.de>
+Reported-by: Torsten Kaiser <just.for.lkml@googlemail.com>
+Fixes: 750f199ee8b578062341e6ddfe36c59ac8ff2dcb
+Signed-off-by: NeilBrown <neilb@suse.de>
 
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index b684e8a132e6..2bacb9988566 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -207,6 +207,7 @@ static ssize_t kernfs_file_direct_read(struct kernfs_op=
+en_file *of,
+ 		goto out_free;
+ 	}
+=20
++	of->event =3D atomic_read(&of->kn->attr.open->event);
+ 	ops =3D kernfs_ops(of->kn);
+ 	if (ops->read)
+ 		len =3D ops->read(of, buf, len, *ppos);
+
+--Sig_/Dyc_uFBn2Om3ig_zrj+SipM
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVQYZdDnsnt1WYoG5AQKd3hAAiDZXpMs4abX2hp+Ip19UG99XXCEGEuuL
+BNp8h7OK4/n5SDsQ8a7YJKwHy4O1WbcytcvRKdd8jyiVO5Bq9DkuVKEwKIIV8B+4
+j41sw/hxON63t2+zsXdweagcO0XnpT5fl3u5hiiXe4eomUaPD0/qcoOofT1WmTpy
+qcBxrecdDzQt+8OHAyD8kLILoFlFU0M5zlDWS0pztIKqP2UjixBPFrDb4x18UPSt
+/d2gnHf6ZCB/O4Pwmy9bNL6AMb3VoNn4+FJoQrX/J1AYGuPsTl7oITc/fOZ4TYLk
+bNRjsEJRV2JS4cie1d9OuMK23pZFDHKEeUhQXu8MPuMNsEt94MalOe8FtX65eZyf
+P8UZEu2jGeXjQiClOqO/HmRtDNwc7a8QgDuLe3M9egB1ZKtoPGN/A2ELzs9/IY8X
+Ei/kplKPLx769loXErOoBRJFndd3Hjln3NS0KEIuKfWpUF6p8pLOYzQn0y0YEp+k
+15Tj4jKtX1wJ6xgyTNBUT2/jYWpI7R4tNje8tK+4ZYAxjHayg/Ch/JdicVVvKlI0
+HhlIBSfpBNlkBVLkOV44H5/98yGFsNHeemxLgaF0voJLCp7gcKifZPKemWHlQT89
+Ps+uecTzE7G3Db9/4oLULku0E1aLUpCVqk5CbiUNaJo3uT2CeqNRkJfmb0q+hZOC
+mTEcShJl93M=
+=DAtK
+-----END PGP SIGNATURE-----
+
+--Sig_/Dyc_uFBn2Om3ig_zrj+SipM--
