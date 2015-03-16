@@ -1,188 +1,46 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 3/7] dma-mapping: allow archs to optionally specify a
- ->map_pfn() operation
-Date: Mon, 16 Mar 2015 16:25:43 -0400
-Message-ID: <20150316202543.33102.12409.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC PATCH 2/7] block: convert bio_vec.bv_page to bv_pfn
+Date: Mon, 16 Mar 2015 23:05:33 +0000
+Message-ID: <20150316230533.GH29656@ZenIV.linux.org.uk>
 References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20150316202537.33102.12944.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, hch@infradead.org, riel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150316202537.33102.12944.stgit@dwillia2-desk3.amr.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, riel@redhat.com, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-raid.ids
 
-This is in support of enabling block device drivers to perform DMA
-to/from persistent memory which may not have a backing struct page
-entry.
+> diff --git a/mm/iov_iter.c b/mm/iov_iter.c
+> index 827732047da1..be9a7c5b8703 100644
+> --- a/mm/iov_iter.c
+> +++ b/mm/iov_iter.c
+> @@ -61,7 +61,7 @@
+>  	__p = i->bvec;					\
+>  	__v.bv_len = min_t(size_t, n, __p->bv_len - skip);	\
+>  	if (likely(__v.bv_len)) {			\
+> -		__v.bv_page = __p->bv_page;		\
+> +		__v.bv_pfn = __p->bv_pfn;		\
+>  		__v.bv_offset = __p->bv_offset + skip; 	\
+>  		(void)(STEP);				\
+>  		skip += __v.bv_len;			\
+> @@ -72,7 +72,7 @@
+>  		__v.bv_len = min_t(size_t, n, __p->bv_len);	\
+>  		if (unlikely(!__v.bv_len))		\
+>  			continue;			\
+> -		__v.bv_page = __p->bv_page;		\
+> +		__v.bv_pfn = __p->bv_pfn;		\
+>  		__v.bv_offset = __p->bv_offset;		\
+>  		(void)(STEP);				\
+>  		skip = __v.bv_len;			\
+> @@ -369,7 +369,7 @@ size_t copy_to_iter(void *addr, size_t bytes, struct iov_iter *i)
+>  	iterate_and_advance(i, bytes, v,
+>  		__copy_to_user(v.iov_base, (from += v.iov_len) - v.iov_len,
+>  			       v.iov_len),
+> -		memcpy_to_page(v.bv_page, v.bv_offset,
+> +		memcpy_to_page(bvec_page(&v), v.bv_offset,
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- arch/Kconfig                             |    3 +++
- include/asm-generic/dma-mapping-common.h |   30 ++++++++++++++++++++++++++++++
- include/linux/dma-debug.h                |   23 +++++++++++++++++++----
- include/linux/dma-mapping.h              |    8 +++++++-
- lib/dma-debug.c                          |    4 ++--
- 5 files changed, 61 insertions(+), 7 deletions(-)
-
-diff --git a/arch/Kconfig b/arch/Kconfig
-index 05d7a8a458d5..80ea3e124494 100644
---- a/arch/Kconfig
-+++ b/arch/Kconfig
-@@ -203,6 +203,9 @@ config HAVE_DMA_ATTRS
- config HAVE_DMA_CONTIGUOUS
- 	bool
- 
-+config HAVE_DMA_PFN
-+	bool
-+
- config GENERIC_SMP_IDLE_THREAD
-        bool
- 
-diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
-index 3378dcf4c31e..58fad817e51a 100644
---- a/include/asm-generic/dma-mapping-common.h
-+++ b/include/asm-generic/dma-mapping-common.h
-@@ -17,9 +17,15 @@ static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
- 
- 	kmemcheck_mark_initialized(ptr, size);
- 	BUG_ON(!valid_dma_direction(dir));
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	addr = ops->map_pfn(dev, page_to_pfn_typed(virt_to_page(ptr)),
-+			     (unsigned long)ptr & ~PAGE_MASK, size,
-+			     dir, attrs);
-+#else
- 	addr = ops->map_page(dev, virt_to_page(ptr),
- 			     (unsigned long)ptr & ~PAGE_MASK, size,
- 			     dir, attrs);
-+#endif
- 	debug_dma_map_page(dev, virt_to_page(ptr),
- 			   (unsigned long)ptr & ~PAGE_MASK, size,
- 			   dir, addr, true);
-@@ -68,6 +74,29 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
- 		ops->unmap_sg(dev, sg, nents, dir, attrs);
- }
- 
-+#ifdef CONFIG_HAVE_DMA_PFN
-+static inline dma_addr_t dma_map_pfn(struct device *dev, __pfn_t pfn,
-+				      size_t offset, size_t size,
-+				      enum dma_data_direction dir)
-+{
-+	struct dma_map_ops *ops = get_dma_ops(dev);
-+	dma_addr_t addr;
-+
-+	BUG_ON(!valid_dma_direction(dir));
-+	addr = ops->map_pfn(dev, pfn, offset, size, dir, NULL);
-+	debug_dma_map_pfn(dev, pfn, offset, size, dir, addr, false);
-+
-+	return addr;
-+}
-+
-+static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
-+				      size_t offset, size_t size,
-+				      enum dma_data_direction dir)
-+{
-+	kmemcheck_mark_initialized(page_address(page) + offset, size);
-+	return dma_map_pfn(dev, page_to_pfn_typed(page), offset, size, dir);
-+}
-+#else
- static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
- 				      size_t offset, size_t size,
- 				      enum dma_data_direction dir)
-@@ -82,6 +111,7 @@ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
- 
- 	return addr;
- }
-+#endif /* CONFIG_HAVE_DMA_PFN */
- 
- static inline void dma_unmap_page(struct device *dev, dma_addr_t addr,
- 				  size_t size, enum dma_data_direction dir)
-diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
-index fe8cb610deac..eb3e69c61e5e 100644
---- a/include/linux/dma-debug.h
-+++ b/include/linux/dma-debug.h
-@@ -34,10 +34,18 @@ extern void dma_debug_init(u32 num_entries);
- 
- extern int dma_debug_resize_entries(u32 num_entries);
- 
--extern void debug_dma_map_page(struct device *dev, struct page *page,
--			       size_t offset, size_t size,
--			       int direction, dma_addr_t dma_addr,
--			       bool map_single);
-+extern void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
-+			      size_t size, int direction, dma_addr_t dma_addr,
-+			      bool map_single);
-+
-+static inline void debug_dma_map_page(struct device *dev, struct page *page,
-+				      size_t offset, size_t size,
-+				      int direction, dma_addr_t dma_addr,
-+				      bool map_single)
-+{
-+	return debug_dma_map_pfn(dev, page_to_pfn_typed(page), offset, size,
-+			direction, dma_addr, map_single);
-+}
- 
- extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
- 
-@@ -109,6 +117,13 @@ static inline void debug_dma_map_page(struct device *dev, struct page *page,
- {
- }
- 
-+static inline void debug_dma_map_pfn(struct device *dev, __pfn_t pfn,
-+				     size_t offset, size_t size,
-+				     int direction, dma_addr_t dma_addr,
-+				     bool map_single)
-+{
-+}
-+
- static inline void debug_dma_mapping_error(struct device *dev,
- 					  dma_addr_t dma_addr)
- {
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index c3007cb4bfa6..6411621e4179 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -26,11 +26,17 @@ struct dma_map_ops {
- 
- 	int (*get_sgtable)(struct device *dev, struct sg_table *sgt, void *,
- 			   dma_addr_t, size_t, struct dma_attrs *attrs);
--
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	dma_addr_t (*map_pfn)(struct device *dev, __pfn_t pfn,
-+			      unsigned long offset, size_t size,
-+			      enum dma_data_direction dir,
-+			      struct dma_attrs *attrs);
-+#else
- 	dma_addr_t (*map_page)(struct device *dev, struct page *page,
- 			       unsigned long offset, size_t size,
- 			       enum dma_data_direction dir,
- 			       struct dma_attrs *attrs);
-+#endif
- 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
- 			   size_t size, enum dma_data_direction dir,
- 			   struct dma_attrs *attrs);
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index 9722bd2dbc9b..a447730fff97 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -1250,7 +1250,7 @@ out:
- 	put_hash_bucket(bucket, &flags);
- }
- 
--void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
-+void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
- 			size_t size, int direction, dma_addr_t dma_addr,
- 			bool map_single)
- {
-@@ -1268,7 +1268,7 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
- 
- 	entry->dev       = dev;
- 	entry->type      = dma_debug_page;
--	entry->pfn	 = page_to_pfn(page);
-+	entry->pfn	 = pfn.pfn;
- 	entry->offset	 = offset,
- 	entry->dev_addr  = dma_addr;
- 	entry->size      = size;
-
+How had memcpy_to_page(NULL, ...) worked for you?
