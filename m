@@ -1,411 +1,321 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 2/7] block: convert bio_vec.bv_page to bv_pfn
-Date: Mon, 16 Mar 2015 16:25:37 -0400
-Message-ID: <20150316202537.33102.12944.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: [RFC PATCH 5/7] scatterlist: support "page-less" (__pfn_t only)
+ entries
+Date: Mon, 16 Mar 2015 16:25:54 -0400
+Message-ID: <20150316202554.33102.66745.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, axboe@kernel.dk, riel@redhat.com, linux-nvdimm@lists.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+Cc: axboe@kernel.dk, hch@infradead.org, riel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-raid.ids
 
-Carry a pfn in a bio_vec rather than a page in support of allowing
-bio(s) to reference unmapped (not struct page backed) persistent memory.
+From: Matthew Wilcox <willy@linux.intel.com>
 
-As Dave Hansen points out, it would be unfortunate if we ended up with
-less type safety after this conversion, so introduce __pfn_t.
+Given that an offset will never be more than PAGE_SIZE, steal the unused
+bits of the offset to implement a flags field.  Move the existing "this
+is a sg_chain() entry" flag to the new flags field, and add a new flag
+(SG_FLAGS_PAGE) to indicate that there is a struct page backing for the
+entry.
 
-Cc: Matthew Wilcox <willy@linux.intel.com>
-[willy: use pfn_t]
-[kvm: "no, use __pfn_t, we already stole pfn_t"]
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: <linux-arch@vger.kernel.org>
+[djbw: convert to pfn_to_phys() / HAVE_DMA_PFN]
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- block/bio.c                        |    1 +
- block/blk-integrity.c              |    4 ++--
- block/blk-merge.c                  |    6 +++---
- block/bounce.c                     |    2 +-
- drivers/md/bcache/btree.c          |    2 +-
- include/asm-generic/memory_model.h |    4 ++++
- include/linux/bio.h                |   20 +++++++++++---------
- include/linux/blk_types.h          |   14 +++++++++++---
- include/linux/scatterlist.h        |   16 ++++++++++++++++
- include/linux/swiotlb.h            |    1 +
- mm/iov_iter.c                      |   22 +++++++++++-----------
- mm/page_io.c                       |    2 +-
- 12 files changed, 63 insertions(+), 31 deletions(-)
+ block/blk-merge.c                 |    2 -
+ drivers/dma/ste_dma40.c           |    5 --
+ drivers/mmc/card/queue.c          |    4 +-
+ include/asm-generic/scatterlist.h |    6 +++
+ include/crypto/scatterwalk.h      |   10 ++++
+ include/linux/scatterlist.h       |   85 ++++++++++++++++++++++++++++++++++---
+ 6 files changed, 97 insertions(+), 15 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 7100fd6d5898..3d494e85e16d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -28,6 +28,7 @@
- #include <linux/mempool.h>
- #include <linux/workqueue.h>
- #include <linux/cgroup.h>
-+#include <linux/scatterlist.h>
- 
- #include <trace/events/block.h>
- 
-diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index 6c8b1d63e90b..34e53951a0d1 100644
---- a/block/blk-integrity.c
-+++ b/block/blk-integrity.c
-@@ -43,7 +43,7 @@ static const char *bi_unsupported_name = "unsupported";
-  */
- int blk_rq_count_integrity_sg(struct request_queue *q, struct bio *bio)
- {
--	struct bio_vec iv, ivprv = { NULL };
-+	struct bio_vec iv, ivprv = BIO_VEC_INIT(ivprv);
- 	unsigned int segments = 0;
- 	unsigned int seg_size = 0;
- 	struct bvec_iter iter;
-@@ -89,7 +89,7 @@ EXPORT_SYMBOL(blk_rq_count_integrity_sg);
- int blk_rq_map_integrity_sg(struct request_queue *q, struct bio *bio,
- 			    struct scatterlist *sglist)
- {
--	struct bio_vec iv, ivprv = { NULL };
-+	struct bio_vec iv, ivprv = BIO_VEC_INIT(ivprv);
- 	struct scatterlist *sg = NULL;
- 	unsigned int segments = 0;
- 	struct bvec_iter iter;
 diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 39bd9925c057..8420d553b8ef 100644
+index 8420d553b8ef..727a30aa5990 100644
 --- a/block/blk-merge.c
 +++ b/block/blk-merge.c
-@@ -13,7 +13,7 @@ static unsigned int __blk_recalc_rq_segments(struct request_queue *q,
- 					     struct bio *bio,
- 					     bool no_sg_merge)
- {
--	struct bio_vec bv, bvprv = { NULL };
-+	struct bio_vec bv, bvprv = BIO_VEC_INIT(bvprv);
- 	int cluster, high, highprv = 1;
- 	unsigned int seg_size, nr_phys_segs;
- 	struct bio *fbio, *bbio;
-@@ -123,7 +123,7 @@ EXPORT_SYMBOL(blk_recount_segments);
- static int blk_phys_contig_segment(struct request_queue *q, struct bio *bio,
- 				   struct bio *nxt)
- {
--	struct bio_vec end_bv = { NULL }, nxt_bv;
-+	struct bio_vec end_bv = BIO_VEC_INIT(end_bv), nxt_bv;
- 	struct bvec_iter iter;
+@@ -267,7 +267,7 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
+ 		if (rq->cmd_flags & REQ_WRITE)
+ 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
  
- 	if (!blk_queue_cluster(q))
-@@ -202,7 +202,7 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
- 			     struct scatterlist *sglist,
- 			     struct scatterlist **sg)
- {
--	struct bio_vec bvec, bvprv = { NULL };
-+	struct bio_vec bvec, bvprv = BIO_VEC_INIT(bvprv);
- 	struct bvec_iter iter;
- 	int nsegs, cluster;
+-		sg->page_link &= ~0x02;
++		sg_unmark_end(sg);
+ 		sg = sg_next(sg);
+ 		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
+ 			    q->dma_drain_size,
+diff --git a/drivers/dma/ste_dma40.c b/drivers/dma/ste_dma40.c
+index 68aca3334a17..7c28467eb366 100644
+--- a/drivers/dma/ste_dma40.c
++++ b/drivers/dma/ste_dma40.c
+@@ -2560,10 +2560,7 @@ dma40_prep_dma_cyclic(struct dma_chan *chan, dma_addr_t dma_addr,
+ 		dma_addr += period_len;
+ 	}
  
-diff --git a/block/bounce.c b/block/bounce.c
-index 0390e44d6e1b..4a3098067c81 100644
---- a/block/bounce.c
-+++ b/block/bounce.c
-@@ -64,7 +64,7 @@ static void bounce_copy_vec(struct bio_vec *to, unsigned char *vfrom)
- #else /* CONFIG_HIGHMEM */
+-	sg[periods].offset = 0;
+-	sg_dma_len(&sg[periods]) = 0;
+-	sg[periods].page_link =
+-		((unsigned long)sg | 0x01) & ~0x02;
++	sg_chain(sg, periods + 1, sg);
  
- #define bounce_copy_vec(to, vfrom)	\
--	memcpy(page_address((to)->bv_page) + (to)->bv_offset, vfrom, (to)->bv_len)
-+	memcpy(page_address(bvec_page(to)) + (to)->bv_offset, vfrom, (to)->bv_len)
- 
- #endif /* CONFIG_HIGHMEM */
- 
-diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
-index 2e76e8b62902..36bbe29a806b 100644
---- a/drivers/md/bcache/btree.c
-+++ b/drivers/md/bcache/btree.c
-@@ -426,7 +426,7 @@ static void do_btree_node_write(struct btree *b)
- 		void *base = (void *) ((unsigned long) i & ~(PAGE_SIZE - 1));
- 
- 		bio_for_each_segment_all(bv, b->bio, j)
--			memcpy(page_address(bv->bv_page),
-+			memcpy(page_address(bvec_page(bv)),
- 			       base + j * PAGE_SIZE, PAGE_SIZE);
- 
- 		bch_submit_bbio(b->bio, b->c, &k.key, 0);
-diff --git a/include/asm-generic/memory_model.h b/include/asm-generic/memory_model.h
-index 14909b0b9cae..e6c2fda25820 100644
---- a/include/asm-generic/memory_model.h
-+++ b/include/asm-generic/memory_model.h
-@@ -72,6 +72,10 @@
- #define page_to_pfn __page_to_pfn
- #define pfn_to_page __pfn_to_page
- 
-+typedef struct {
-+	unsigned long pfn;
-+} __pfn_t;
-+
- #endif /* __ASSEMBLY__ */
- 
+ 	txd = d40_prep_sg(chan, sg, sg, periods, direction,
+ 			  DMA_PREP_INTERRUPT);
+diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
+index 236d194c2883..127f76294e71 100644
+--- a/drivers/mmc/card/queue.c
++++ b/drivers/mmc/card/queue.c
+@@ -469,7 +469,7 @@ static unsigned int mmc_queue_packed_map_sg(struct mmc_queue *mq,
+ 			sg_set_buf(__sg, buf + offset, len);
+ 			offset += len;
+ 			remain -= len;
+-			(__sg++)->page_link &= ~0x02;
++			sg_unmark_end(__sg++);
+ 			sg_len++;
+ 		} while (remain);
+ 	}
+@@ -477,7 +477,7 @@ static unsigned int mmc_queue_packed_map_sg(struct mmc_queue *mq,
+ 	list_for_each_entry(req, &packed->list, queuelist) {
+ 		sg_len += blk_rq_map_sg(mq->queue, req, __sg);
+ 		__sg = sg + (sg_len - 1);
+-		(__sg++)->page_link &= ~0x02;
++		sg_unmark_end(__sg++);
+ 	}
+ 	sg_mark_end(sg + (sg_len - 1));
+ 	return sg_len;
+diff --git a/include/asm-generic/scatterlist.h b/include/asm-generic/scatterlist.h
+index 5de07355fad4..51174ad11664 100644
+--- a/include/asm-generic/scatterlist.h
++++ b/include/asm-generic/scatterlist.h
+@@ -7,8 +7,14 @@ struct scatterlist {
+ #ifdef CONFIG_DEBUG_SG
+ 	unsigned long	sg_magic;
  #endif
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index f6a2427980f3..f35c90d5fd4d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -63,8 +63,8 @@
-  */
- #define __bvec_iter_bvec(bvec, iter)	(&(bvec)[(iter).bi_idx])
++#ifdef CONFIG_HAVE_DMA_PFN
++	__pfn_t		pfn;
++	unsigned short	offset;
++	unsigned short	sg_flags;
++#else
+ 	unsigned long	page_link;
+ 	unsigned int	offset;
++#endif
+ 	unsigned int	length;
+ 	dma_addr_t	dma_address;
+ #ifdef CONFIG_NEED_SG_DMA_LENGTH
+diff --git a/include/crypto/scatterwalk.h b/include/crypto/scatterwalk.h
+index 20e4226a2e14..7296d89a50b2 100644
+--- a/include/crypto/scatterwalk.h
++++ b/include/crypto/scatterwalk.h
+@@ -25,6 +25,15 @@
+ #include <linux/scatterlist.h>
+ #include <linux/sched.h>
  
--#define bvec_iter_page(bvec, iter)				\
--	(__bvec_iter_bvec((bvec), (iter))->bv_page)
-+#define bvec_iter_pfn(bvec, iter)				\
-+	(__bvec_iter_bvec((bvec), (iter))->bv_pfn)
- 
- #define bvec_iter_len(bvec, iter)				\
- 	min((iter).bi_size,					\
-@@ -75,7 +75,7 @@
- 
- #define bvec_iter_bvec(bvec, iter)				\
- ((struct bio_vec) {						\
--	.bv_page	= bvec_iter_page((bvec), (iter)),	\
-+	.bv_pfn		= bvec_iter_pfn((bvec), (iter)),	\
- 	.bv_len		= bvec_iter_len((bvec), (iter)),	\
- 	.bv_offset	= bvec_iter_offset((bvec), (iter)),	\
- })
-@@ -83,14 +83,16 @@
- #define bio_iter_iovec(bio, iter)				\
- 	bvec_iter_bvec((bio)->bi_io_vec, (iter))
- 
--#define bio_iter_page(bio, iter)				\
--	bvec_iter_page((bio)->bi_io_vec, (iter))
-+#define bio_iter_pfn(bio, iter)				\
-+	bvec_iter_pfn((bio)->bi_io_vec, (iter))
- #define bio_iter_len(bio, iter)					\
- 	bvec_iter_len((bio)->bi_io_vec, (iter))
- #define bio_iter_offset(bio, iter)				\
- 	bvec_iter_offset((bio)->bi_io_vec, (iter))
- 
--#define bio_page(bio)		bio_iter_page((bio), (bio)->bi_iter)
-+#define bio_page(bio)	\
-+		pfn_to_page((bio_iter_pfn((bio), (bio)->bi_iter)).pfn)
-+#define bio_pfn(bio)		bio_iter_pfn((bio), (bio)->bi_iter)
- #define bio_offset(bio)		bio_iter_offset((bio), (bio)->bi_iter)
- #define bio_iovec(bio)		bio_iter_iovec((bio), (bio)->bi_iter)
- 
-@@ -150,8 +152,8 @@ static inline void *bio_data(struct bio *bio)
- /*
-  * will die
-  */
--#define bio_to_phys(bio)	(page_to_phys(bio_page((bio))) + (unsigned long) bio_offset((bio)))
--#define bvec_to_phys(bv)	(page_to_phys((bv)->bv_page) + (unsigned long) (bv)->bv_offset)
-+#define bio_to_phys(bio)	(pfn_to_phys(bio_pfn((bio))) + (unsigned long) bio_offset((bio)))
-+#define bvec_to_phys(bv)	(pfn_to_phys((bv)->bv_pfn) + (unsigned long) (bv)->bv_offset)
- 
- /*
-  * queues that have highmem support enabled may still need to revert to
-@@ -160,7 +162,7 @@ static inline void *bio_data(struct bio *bio)
-  * I/O completely on that queue (see ide-dma for example)
-  */
- #define __bio_kmap_atomic(bio, iter)				\
--	(kmap_atomic(bio_iter_iovec((bio), (iter)).bv_page) +	\
-+	(kmap_atomic(bio_iter_iovec((bio), bvec_page(iter)) +	\
- 		bio_iter_iovec((bio), (iter)).bv_offset)
- 
- #define __bio_kunmap_atomic(addr)	kunmap_atomic(addr)
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 3193a0b7051f..7f63fa3e4fda 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -5,7 +5,9 @@
- #ifndef __LINUX_BLK_TYPES_H
- #define __LINUX_BLK_TYPES_H
- 
-+#include <linux/scatterlist.h>
- #include <linux/types.h>
-+#include <asm/pgtable.h>
- 
- struct bio_set;
- struct bio;
-@@ -21,19 +23,25 @@ typedef void (bio_destructor_t) (struct bio *);
-  * was unsigned short, but we might as well be ready for > 64kB I/O pages
-  */
- struct bio_vec {
--	struct page	*bv_page;
-+	__pfn_t		bv_pfn;
- 	unsigned int	bv_len;
- 	unsigned int	bv_offset;
- };
- 
-+#define BIO_VEC_INIT(name) { .bv_pfn = { .pfn = 0 }, .bv_len = 0, \
-+	.bv_offset = 0 }
-+
-+#define BIO_VEC(name) \
-+	struct bio_vec name = BIO_VEC_INIT(name)
-+
- static inline struct page *bvec_page(const struct bio_vec *bvec)
++#ifdef CONFIG_HAVE_DMA_PFN
++/*
++ * If we're using PFNs, the architecture must also have been converted to
++ * support SG_CHAIN.  So we can use the generic code instead of custom
++ * code.
++ */
++#define scatterwalk_sg_chain(prv, num, sgl)	sg_chain(prv, num, sgl)
++#define scatterwalk_sg_next(sgl)		sg_next(sgl)
++#else
+ static inline void scatterwalk_sg_chain(struct scatterlist *sg1, int num,
+ 					struct scatterlist *sg2)
  {
--	return bvec->bv_page;
-+	return pfn_to_page(bvec->bv_pfn.pfn);
+@@ -32,6 +41,7 @@ static inline void scatterwalk_sg_chain(struct scatterlist *sg1, int num,
+ 	sg1[num - 1].page_link &= ~0x02;
+ 	sg1[num - 1].page_link |= 0x01;
  }
++#endif
  
- static inline void bvec_set_page(struct bio_vec *bvec, struct page *page)
- {
--	bvec->bv_page = page;
-+	bvec->bv_pfn = page_to_pfn_typed(page);
- }
- 
- #ifdef CONFIG_BLOCK
+ static inline void scatterwalk_crypto_chain(struct scatterlist *head,
+ 					    struct scatterlist *sg,
 diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index ed8f9e70df9b..5a15b1ce3c9e 100644
+index 5a15b1ce3c9e..891542c7dda0 100644
 --- a/include/linux/scatterlist.h
 +++ b/include/linux/scatterlist.h
-@@ -9,6 +9,22 @@
+@@ -5,6 +5,7 @@
+ #include <linux/bug.h>
+ #include <linux/mm.h>
+ 
++#include <asm/page.h>
+ #include <asm/types.h>
  #include <asm/scatterlist.h>
  #include <asm/io.h>
+@@ -34,8 +35,14 @@ struct sg_table {
+ /*
+  * Notes on SG table design.
+  *
+- * Architectures must provide an unsigned long page_link field in the
+- * scatterlist struct. We use that to place the page pointer AND encode
++ * Architectures may define CONFIG_HAVE_DMA_PFN to indicate that they wish
++ * to support SGLs that point to pages which do not have a struct page to
++ * describe them.  If so, they should provide an sg_flags field in their
++ * scatterlist struct (see asm-generic for an example) as well as a pfn
++ * field.
++ *
++ * Otherwise, architectures must provide an unsigned long page_link field in
++ * the scatterlist struct. We use that to place the page pointer AND encode
+  * information about the sg table as well. The two lower bits are reserved
+  * for this information.
+  *
+@@ -49,16 +56,25 @@ struct sg_table {
+  */
  
-+#ifndef __pfn_to_phys
-+#define __pfn_to_phys(pfn)      ((dma_addr_t)(pfn) << PAGE_SHIFT)
+ #define SG_MAGIC	0x87654321
+-
++#define SG_FLAGS_CHAIN	0x0001
++#define SG_FLAGS_LAST	0x0002
++#define SG_FLAGS_PAGE	0x0004
++
++#ifdef CONFIG_HAVE_DMA_PFN
++#define sg_is_chain(sg)		((sg)->sg_flags & SG_FLAGS_CHAIN)
++#define sg_is_last(sg)		((sg)->sg_flags & SG_FLAGS_LAST)
++#define sg_chain_ptr(sg)	((struct scatterlist *)((sg)->pfn.pfn))
++#else /* !CONFIG_HAVE_DMA_PFN */
+ /*
+  * We overload the LSB of the page pointer to indicate whether it's
+  * a valid sg entry, or whether it points to the start of a new scatterlist.
+  * Those low bits are there for everyone! (thanks mason :-)
+  */
+-#define sg_is_chain(sg)		((sg)->page_link & 0x01)
+-#define sg_is_last(sg)		((sg)->page_link & 0x02)
++#define sg_is_chain(sg)		((sg)->page_link & SG_FLAGS_CHAIN)
++#define sg_is_last(sg)		((sg)->page_link & SG_FLAGS_LAST)
+ #define sg_chain_ptr(sg)	\
+ 	((struct scatterlist *) ((sg)->page_link & ~0x03))
++#endif /* !CONFIG_HAVE_DMA_PFN */
+ 
+ /**
+  * sg_assign_page - Assign a given page to an SG entry
+@@ -72,6 +88,14 @@ struct sg_table {
+  **/
+ static inline void sg_assign_page(struct scatterlist *sg, struct page *page)
+ {
++#ifdef CONFIG_HAVE_DMA_PFN
++#ifdef CONFIG_DEBUG_SG
++	BUG_ON(sg->sg_magic != SG_MAGIC);
++	BUG_ON(sg_is_chain(sg));
 +#endif
-+
-+static inline dma_addr_t pfn_to_phys(__pfn_t pfn)
-+{
-+	return __pfn_to_phys(pfn.pfn);
++	sg->pfn = page_to_pfn_typed(page);
++	sg->sg_flags |= SG_FLAGS_PAGE;
++#else /* !CONFIG_HAVE_DMA_PFN */
+ 	unsigned long page_link = sg->page_link & 0x3;
+ 
+ 	/*
+@@ -84,6 +108,7 @@ static inline void sg_assign_page(struct scatterlist *sg, struct page *page)
+ 	BUG_ON(sg_is_chain(sg));
+ #endif
+ 	sg->page_link = page_link | (unsigned long) page;
++#endif /* !CONFIG_HAVE_DMA_PFN */
+ }
+ 
+ /**
+@@ -104,9 +129,26 @@ static inline void sg_set_page(struct scatterlist *sg, struct page *page,
+ 			       unsigned int len, unsigned int offset)
+ {
+ 	sg_assign_page(sg, page);
++	BUG_ON(offset > 65535);
++	sg->offset = offset;
++	sg->length = len;
 +}
 +
-+static inline __pfn_t page_to_pfn_typed(struct page *page)
++#ifdef CONFIG_HAVE_DMA_PFN
++static inline void sg_set_pfn(struct scatterlist *sg, __pfn_t pfn,
++			      unsigned int len, unsigned int offset)
 +{
-+	__pfn_t pfn = { .pfn = page_to_pfn(page) };
-+
-+	return pfn;
-+}
-+
- struct sg_table {
- 	struct scatterlist *sgl;	/* the list */
- 	unsigned int nents;		/* number of mapped entries */
-diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-index e7a018eaf3a2..dc3a94ce3b45 100644
---- a/include/linux/swiotlb.h
-+++ b/include/linux/swiotlb.h
-@@ -1,6 +1,7 @@
- #ifndef __LINUX_SWIOTLB_H
- #define __LINUX_SWIOTLB_H
++#ifdef CONFIG_DEBUG_SG
++	BUG_ON(sg->sg_magic != SG_MAGIC);
++	BUG_ON(sg_is_chain(sg));
++#endif
++	sg->pfn = pfn;
++	BUG_ON(offset > 65535);
+ 	sg->offset = offset;
++	sg->sg_flags = 0;
+ 	sg->length = len;
+ }
++#endif
  
-+#include <linux/dma-direction.h>
- #include <linux/types.h>
+ static inline struct page *sg_page(struct scatterlist *sg)
+ {
+@@ -114,7 +156,12 @@ static inline struct page *sg_page(struct scatterlist *sg)
+ 	BUG_ON(sg->sg_magic != SG_MAGIC);
+ 	BUG_ON(sg_is_chain(sg));
+ #endif
++#ifdef CONFIG_HAVE_DMA_PFN
++	BUG_ON(!(sg->sg_flags & SG_FLAGS_PAGE));
++	return pfn_to_page(sg->pfn.pfn);
++#else
+ 	return (struct page *)((sg)->page_link & ~0x3);
++#endif
+ }
  
- struct device;
-diff --git a/mm/iov_iter.c b/mm/iov_iter.c
-index 827732047da1..be9a7c5b8703 100644
---- a/mm/iov_iter.c
-+++ b/mm/iov_iter.c
-@@ -61,7 +61,7 @@
- 	__p = i->bvec;					\
- 	__v.bv_len = min_t(size_t, n, __p->bv_len - skip);	\
- 	if (likely(__v.bv_len)) {			\
--		__v.bv_page = __p->bv_page;		\
-+		__v.bv_pfn = __p->bv_pfn;		\
- 		__v.bv_offset = __p->bv_offset + skip; 	\
- 		(void)(STEP);				\
- 		skip += __v.bv_len;			\
-@@ -72,7 +72,7 @@
- 		__v.bv_len = min_t(size_t, n, __p->bv_len);	\
- 		if (unlikely(!__v.bv_len))		\
- 			continue;			\
--		__v.bv_page = __p->bv_page;		\
-+		__v.bv_pfn = __p->bv_pfn;		\
- 		__v.bv_offset = __p->bv_offset;		\
- 		(void)(STEP);				\
- 		skip = __v.bv_len;			\
-@@ -369,7 +369,7 @@ size_t copy_to_iter(void *addr, size_t bytes, struct iov_iter *i)
- 	iterate_and_advance(i, bytes, v,
- 		__copy_to_user(v.iov_base, (from += v.iov_len) - v.iov_len,
- 			       v.iov_len),
--		memcpy_to_page(v.bv_page, v.bv_offset,
-+		memcpy_to_page(bvec_page(&v), v.bv_offset,
- 			       (from += v.bv_len) - v.bv_len, v.bv_len),
- 		memcpy(v.iov_base, (from += v.iov_len) - v.iov_len, v.iov_len)
- 	)
-@@ -390,7 +390,7 @@ size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
- 	iterate_and_advance(i, bytes, v,
- 		__copy_from_user((to += v.iov_len) - v.iov_len, v.iov_base,
- 				 v.iov_len),
--		memcpy_from_page((to += v.bv_len) - v.bv_len, v.bv_page,
-+		memcpy_from_page((to += v.bv_len) - v.bv_len, bvec_page(&v),
- 				 v.bv_offset, v.bv_len),
- 		memcpy((to += v.iov_len) - v.iov_len, v.iov_base, v.iov_len)
- 	)
-@@ -411,7 +411,7 @@ size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
- 	iterate_and_advance(i, bytes, v,
- 		__copy_from_user_nocache((to += v.iov_len) - v.iov_len,
- 					 v.iov_base, v.iov_len),
--		memcpy_from_page((to += v.bv_len) - v.bv_len, v.bv_page,
-+		memcpy_from_page((to += v.bv_len) - v.bv_len, bvec_page(&v),
- 				 v.bv_offset, v.bv_len),
- 		memcpy((to += v.iov_len) - v.iov_len, v.iov_base, v.iov_len)
- 	)
-@@ -456,7 +456,7 @@ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
+ /**
+@@ -166,7 +213,12 @@ static inline void sg_chain(struct scatterlist *prv, unsigned int prv_nents,
+ 	 * Set lowest bit to indicate a link pointer, and make sure to clear
+ 	 * the termination bit if it happens to be set.
+ 	 */
++#ifdef CONFIG_HAVE_DMA_PFN
++	prv[prv_nents - 1].pfn.pfn = (unsigned long) sgl;
++	prv[prv_nents - 1].sg_flags = SG_FLAGS_CHAIN;
++#else
+ 	prv[prv_nents - 1].page_link = ((unsigned long) sgl | 0x01) & ~0x02;
++#endif
+ }
  
- 	iterate_and_advance(i, bytes, v,
- 		__clear_user(v.iov_base, v.iov_len),
--		memzero_page(v.bv_page, v.bv_offset, v.bv_len),
-+		memzero_page(bvec_page(&v), v.bv_offset, v.bv_len),
- 		memset(v.iov_base, 0, v.iov_len)
- 	)
+ /**
+@@ -186,8 +238,13 @@ static inline void sg_mark_end(struct scatterlist *sg)
+ 	/*
+ 	 * Set termination bit, clear potential chain bit
+ 	 */
+-	sg->page_link |= 0x02;
+-	sg->page_link &= ~0x01;
++#ifdef CONFIG_HAVE_DMA_PFN
++	sg->sg_flags |= SG_FLAGS_LAST;
++	sg->sg_flags &= ~SG_FLAGS_CHAIN;
++#else
++	sg->page_link |= SG_FLAGS_LAST;
++	sg->page_link &= ~SG_FLAGS_CHAIN;
++#endif
+ }
  
-@@ -471,7 +471,7 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
- 	iterate_all_kinds(i, bytes, v,
- 		__copy_from_user_inatomic((p += v.iov_len) - v.iov_len,
- 					  v.iov_base, v.iov_len),
--		memcpy_from_page((p += v.bv_len) - v.bv_len, v.bv_page,
-+		memcpy_from_page((p += v.bv_len) - v.bv_len, bvec_page(&v),
- 				 v.bv_offset, v.bv_len),
- 		memcpy((p += v.iov_len) - v.iov_len, v.iov_base, v.iov_len)
- 	)
-@@ -570,7 +570,7 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
- 	0;}),({
- 		/* can't be more than PAGE_SIZE */
- 		*start = v.bv_offset;
--		get_page(*pages = v.bv_page);
-+		get_page(*pages = bvec_page(&v));
- 		return v.bv_len;
- 	}),({
- 		return -EFAULT;
-@@ -624,7 +624,7 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
- 		*pages = p = get_pages_array(1);
- 		if (!p)
- 			return -ENOMEM;
--		get_page(*p = v.bv_page);
-+		get_page(*p = bvec_page(&v));
- 		return v.bv_len;
- 	}),({
- 		return -EFAULT;
-@@ -658,7 +658,7 @@ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
- 		}
- 		err ? v.iov_len : 0;
- 	}), ({
--		char *p = kmap_atomic(v.bv_page);
-+		char *p = kmap_atomic(bvec_page(&v));
- 		next = csum_partial_copy_nocheck(p + v.bv_offset,
- 						 (to += v.bv_len) - v.bv_len,
- 						 v.bv_len, 0);
-@@ -702,7 +702,7 @@ size_t csum_and_copy_to_iter(void *addr, size_t bytes, __wsum *csum,
- 		}
- 		err ? v.iov_len : 0;
- 	}), ({
--		char *p = kmap_atomic(v.bv_page);
-+		char *p = kmap_atomic(bvec_page(&v));
- 		next = csum_partial_copy_nocheck((from += v.bv_len) - v.bv_len,
- 						 p + v.bv_offset,
- 						 v.bv_len, 0);
-diff --git a/mm/page_io.c b/mm/page_io.c
-index c540dbc6a9e5..b7c8d2c3f8f9 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -265,7 +265,7 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
- 		struct file *swap_file = sis->swap_file;
- 		struct address_space *mapping = swap_file->f_mapping;
- 		struct bio_vec bv = {
--			.bv_page = page,
-+			.bv_pfn = page_to_pfn_typed(page),
- 			.bv_len  = PAGE_SIZE,
- 			.bv_offset = 0
- 		};
-
+ /**
+@@ -203,7 +260,11 @@ static inline void sg_unmark_end(struct scatterlist *sg)
+ #ifdef CONFIG_DEBUG_SG
+ 	BUG_ON(sg->sg_magic != SG_MAGIC);
+ #endif
+-	sg->page_link &= ~0x02;
++#ifdef CONFIG_HAVE_DMA_PFN
++	sg->sg_flags &= ~SG_FLAGS_LAST;
++#else
++	sg->page_link &= ~SG_FLAGS_LAST;
++#endif
+ }
+ 
+ /**
+@@ -218,7 +279,11 @@ static inline void sg_unmark_end(struct scatterlist *sg)
+  **/
+ static inline dma_addr_t sg_phys(struct scatterlist *sg)
+ {
++#ifdef CONFIG_HAVE_DMA_PFN
++	return pfn_to_phys(sg->pfn) + sg->offset;
++#else
+ 	return page_to_phys(sg_page(sg)) + sg->offset;
++#endif
+ }
+ 
+ /**
+@@ -233,7 +298,11 @@ static inline dma_addr_t sg_phys(struct scatterlist *sg)
+  **/
+ static inline void *sg_virt(struct scatterlist *sg)
+ {
++#ifdef CONFIG_HAVE_DMA_PFN
++	return __va(pfn_to_phys(sg->pfn)) + sg->offset;
++#else
+ 	return page_address(sg_page(sg)) + sg->offset;
++#endif
+ }
+ 
+ int sg_nents(struct scatterlist *sg);
