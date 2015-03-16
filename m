@@ -1,321 +1,193 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 5/7] scatterlist: support "page-less" (__pfn_t only)
- entries
-Date: Mon, 16 Mar 2015 16:25:54 -0400
-Message-ID: <20150316202554.33102.66745.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: [RFC PATCH 7/7] block: base support for pfn i/o
+Date: Mon, 16 Mar 2015 16:26:04 -0400
+Message-ID: <20150316202604.33102.12999.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, hch@infradead.org, riel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+Cc: axboe@kernel.dk, hch@infradead.org, riel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Matthew Wilcox <willy@linux.intel.com>
+Allow block device drivers to opt-in to receiving bio(s) where the
+bio_vec(s) point to memory that is not backed by struct page entries.
+When a driver opts in it asserts that it will use the pfn version of the
+dma mapping routines and does not use pfn_to_page() in its submission
+path.
 
-Given that an offset will never be more than PAGE_SIZE, steal the unused
-bits of the offset to implement a flags field.  Move the existing "this
-is a sg_chain() entry" flag to the new flags field, and add a new flag
-(SG_FLAGS_PAGE) to indicate that there is a struct page backing for the
-entry.
+TODO: add kmap_pfn() and kmap_atomic_pfn() for drivers that want to
+touch bio_vec buffers with the cpu prior to submission to a
+low-level-device-driver.
 
-[djbw: convert to pfn_to_phys() / HAVE_DMA_PFN]
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- block/blk-merge.c                 |    2 -
- drivers/dma/ste_dma40.c           |    5 --
- drivers/mmc/card/queue.c          |    4 +-
- include/asm-generic/scatterlist.h |    6 +++
- include/crypto/scatterwalk.h      |   10 ++++
- include/linux/scatterlist.h       |   85 ++++++++++++++++++++++++++++++++++---
- 6 files changed, 97 insertions(+), 15 deletions(-)
+ block/bio.c               |   48 ++++++++++++++++++++++++++++++++++++++-------
+ block/blk-core.c          |    5 +++++
+ include/linux/blk_types.h |    1 +
+ include/linux/blkdev.h    |    2 ++
+ 4 files changed, 48 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 8420d553b8ef..727a30aa5990 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -267,7 +267,7 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
- 		if (rq->cmd_flags & REQ_WRITE)
- 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
- 
--		sg->page_link &= ~0x02;
-+		sg_unmark_end(sg);
- 		sg = sg_next(sg);
- 		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
- 			    q->dma_drain_size,
-diff --git a/drivers/dma/ste_dma40.c b/drivers/dma/ste_dma40.c
-index 68aca3334a17..7c28467eb366 100644
---- a/drivers/dma/ste_dma40.c
-+++ b/drivers/dma/ste_dma40.c
-@@ -2560,10 +2560,7 @@ dma40_prep_dma_cyclic(struct dma_chan *chan, dma_addr_t dma_addr,
- 		dma_addr += period_len;
- 	}
- 
--	sg[periods].offset = 0;
--	sg_dma_len(&sg[periods]) = 0;
--	sg[periods].page_link =
--		((unsigned long)sg | 0x01) & ~0x02;
-+	sg_chain(sg, periods + 1, sg);
- 
- 	txd = d40_prep_sg(chan, sg, sg, periods, direction,
- 			  DMA_PREP_INTERRUPT);
-diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
-index 236d194c2883..127f76294e71 100644
---- a/drivers/mmc/card/queue.c
-+++ b/drivers/mmc/card/queue.c
-@@ -469,7 +469,7 @@ static unsigned int mmc_queue_packed_map_sg(struct mmc_queue *mq,
- 			sg_set_buf(__sg, buf + offset, len);
- 			offset += len;
- 			remain -= len;
--			(__sg++)->page_link &= ~0x02;
-+			sg_unmark_end(__sg++);
- 			sg_len++;
- 		} while (remain);
- 	}
-@@ -477,7 +477,7 @@ static unsigned int mmc_queue_packed_map_sg(struct mmc_queue *mq,
- 	list_for_each_entry(req, &packed->list, queuelist) {
- 		sg_len += blk_rq_map_sg(mq->queue, req, __sg);
- 		__sg = sg + (sg_len - 1);
--		(__sg++)->page_link &= ~0x02;
-+		sg_unmark_end(__sg++);
- 	}
- 	sg_mark_end(sg + (sg_len - 1));
- 	return sg_len;
-diff --git a/include/asm-generic/scatterlist.h b/include/asm-generic/scatterlist.h
-index 5de07355fad4..51174ad11664 100644
---- a/include/asm-generic/scatterlist.h
-+++ b/include/asm-generic/scatterlist.h
-@@ -7,8 +7,14 @@ struct scatterlist {
- #ifdef CONFIG_DEBUG_SG
- 	unsigned long	sg_magic;
- #endif
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	__pfn_t		pfn;
-+	unsigned short	offset;
-+	unsigned short	sg_flags;
-+#else
- 	unsigned long	page_link;
- 	unsigned int	offset;
-+#endif
- 	unsigned int	length;
- 	dma_addr_t	dma_address;
- #ifdef CONFIG_NEED_SG_DMA_LENGTH
-diff --git a/include/crypto/scatterwalk.h b/include/crypto/scatterwalk.h
-index 20e4226a2e14..7296d89a50b2 100644
---- a/include/crypto/scatterwalk.h
-+++ b/include/crypto/scatterwalk.h
-@@ -25,6 +25,15 @@
- #include <linux/scatterlist.h>
- #include <linux/sched.h>
- 
-+#ifdef CONFIG_HAVE_DMA_PFN
-+/*
-+ * If we're using PFNs, the architecture must also have been converted to
-+ * support SG_CHAIN.  So we can use the generic code instead of custom
-+ * code.
-+ */
-+#define scatterwalk_sg_chain(prv, num, sgl)	sg_chain(prv, num, sgl)
-+#define scatterwalk_sg_next(sgl)		sg_next(sgl)
-+#else
- static inline void scatterwalk_sg_chain(struct scatterlist *sg1, int num,
- 					struct scatterlist *sg2)
- {
-@@ -32,6 +41,7 @@ static inline void scatterwalk_sg_chain(struct scatterlist *sg1, int num,
- 	sg1[num - 1].page_link &= ~0x02;
- 	sg1[num - 1].page_link |= 0x01;
+diff --git a/block/bio.c b/block/bio.c
+index 3d494e85e16d..091c0071e360 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -568,6 +568,7 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
+ 	bio->bi_rw = bio_src->bi_rw;
+ 	bio->bi_iter = bio_src->bi_iter;
+ 	bio->bi_io_vec = bio_src->bi_io_vec;
++	bio->bi_flags |= bio_src->bi_flags & (1 << BIO_PFN);
  }
-+#endif
+ EXPORT_SYMBOL(__bio_clone_fast);
  
- static inline void scatterwalk_crypto_chain(struct scatterlist *head,
- 					    struct scatterlist *sg,
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 5a15b1ce3c9e..891542c7dda0 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -5,6 +5,7 @@
- #include <linux/bug.h>
- #include <linux/mm.h>
+@@ -659,6 +660,8 @@ struct bio *bio_clone_bioset(struct bio *bio_src, gfp_t gfp_mask,
+ 		goto integrity_clone;
+ 	}
  
-+#include <asm/page.h>
- #include <asm/types.h>
- #include <asm/scatterlist.h>
- #include <asm/io.h>
-@@ -34,8 +35,14 @@ struct sg_table {
- /*
-  * Notes on SG table design.
-  *
-- * Architectures must provide an unsigned long page_link field in the
-- * scatterlist struct. We use that to place the page pointer AND encode
-+ * Architectures may define CONFIG_HAVE_DMA_PFN to indicate that they wish
-+ * to support SGLs that point to pages which do not have a struct page to
-+ * describe them.  If so, they should provide an sg_flags field in their
-+ * scatterlist struct (see asm-generic for an example) as well as a pfn
-+ * field.
-+ *
-+ * Otherwise, architectures must provide an unsigned long page_link field in
-+ * the scatterlist struct. We use that to place the page pointer AND encode
-  * information about the sg table as well. The two lower bits are reserved
-  * for this information.
-  *
-@@ -49,16 +56,25 @@ struct sg_table {
-  */
- 
- #define SG_MAGIC	0x87654321
--
-+#define SG_FLAGS_CHAIN	0x0001
-+#define SG_FLAGS_LAST	0x0002
-+#define SG_FLAGS_PAGE	0x0004
++	bio->bi_flags |= bio_src->bi_flags & (1 << BIO_PFN);
 +
-+#ifdef CONFIG_HAVE_DMA_PFN
-+#define sg_is_chain(sg)		((sg)->sg_flags & SG_FLAGS_CHAIN)
-+#define sg_is_last(sg)		((sg)->sg_flags & SG_FLAGS_LAST)
-+#define sg_chain_ptr(sg)	((struct scatterlist *)((sg)->pfn.pfn))
-+#else /* !CONFIG_HAVE_DMA_PFN */
- /*
-  * We overload the LSB of the page pointer to indicate whether it's
-  * a valid sg entry, or whether it points to the start of a new scatterlist.
-  * Those low bits are there for everyone! (thanks mason :-)
-  */
--#define sg_is_chain(sg)		((sg)->page_link & 0x01)
--#define sg_is_last(sg)		((sg)->page_link & 0x02)
-+#define sg_is_chain(sg)		((sg)->page_link & SG_FLAGS_CHAIN)
-+#define sg_is_last(sg)		((sg)->page_link & SG_FLAGS_LAST)
- #define sg_chain_ptr(sg)	\
- 	((struct scatterlist *) ((sg)->page_link & ~0x03))
-+#endif /* !CONFIG_HAVE_DMA_PFN */
+ 	bio_for_each_segment(bv, bio_src, iter)
+ 		bio->bi_io_vec[bio->bi_vcnt++] = bv;
  
- /**
-  * sg_assign_page - Assign a given page to an SG entry
-@@ -72,6 +88,14 @@ struct sg_table {
-  **/
- static inline void sg_assign_page(struct scatterlist *sg, struct page *page)
- {
-+#ifdef CONFIG_HAVE_DMA_PFN
-+#ifdef CONFIG_DEBUG_SG
-+	BUG_ON(sg->sg_magic != SG_MAGIC);
-+	BUG_ON(sg_is_chain(sg));
-+#endif
-+	sg->pfn = page_to_pfn_typed(page);
-+	sg->sg_flags |= SG_FLAGS_PAGE;
-+#else /* !CONFIG_HAVE_DMA_PFN */
- 	unsigned long page_link = sg->page_link & 0x3;
- 
- 	/*
-@@ -84,6 +108,7 @@ static inline void sg_assign_page(struct scatterlist *sg, struct page *page)
- 	BUG_ON(sg_is_chain(sg));
- #endif
- 	sg->page_link = page_link | (unsigned long) page;
-+#endif /* !CONFIG_HAVE_DMA_PFN */
+@@ -700,9 +703,9 @@ int bio_get_nr_vecs(struct block_device *bdev)
  }
+ EXPORT_SYMBOL(bio_get_nr_vecs);
  
- /**
-@@ -104,9 +129,26 @@ static inline void sg_set_page(struct scatterlist *sg, struct page *page,
- 			       unsigned int len, unsigned int offset)
+-static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+-			  *page, unsigned int len, unsigned int offset,
+-			  unsigned int max_sectors)
++static int __bio_add_pfn(struct request_queue *q, struct bio *bio,
++		__pfn_t pfn, unsigned int len, unsigned int offset,
++		unsigned int max_sectors)
  {
- 	sg_assign_page(sg, page);
-+	BUG_ON(offset > 65535);
-+	sg->offset = offset;
-+	sg->length = len;
+ 	int retried_segments = 0;
+ 	struct bio_vec *bvec;
+@@ -724,7 +727,7 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ 	if (bio->bi_vcnt > 0) {
+ 		struct bio_vec *prev = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 
+-		if (page == bvec_page(prev) &&
++		if (pfn.pfn == prev->bv_pfn.pfn &&
+ 		    offset == prev->bv_offset + prev->bv_len) {
+ 			unsigned int prev_bv_len = prev->bv_len;
+ 			prev->bv_len += len;
+@@ -769,7 +772,7 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ 	 * cannot add the page
+ 	 */
+ 	bvec = &bio->bi_io_vec[bio->bi_vcnt];
+-	bvec_set_page(bvec, page);
++	bvec->bv_pfn = pfn;
+ 	bvec->bv_len = len;
+ 	bvec->bv_offset = offset;
+ 	bio->bi_vcnt++;
+@@ -819,7 +822,7 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ 	return len;
+ 
+  failed:
+-	bvec_set_page(bvec, NULL);
++	bvec->bv_pfn.pfn = 0;
+ 	bvec->bv_len = 0;
+ 	bvec->bv_offset = 0;
+ 	bio->bi_vcnt--;
+@@ -846,7 +849,7 @@ static int __bio_add_page(struct request_queue *q, struct bio *bio, struct page
+ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page *page,
+ 		    unsigned int len, unsigned int offset)
+ {
+-	return __bio_add_page(q, bio, page, len, offset,
++	return __bio_add_pfn(q, bio, page_to_pfn_typed(page), len, offset,
+ 			      queue_max_hw_sectors(q));
+ }
+ EXPORT_SYMBOL(bio_add_pc_page);
+@@ -873,10 +876,39 @@ int bio_add_page(struct bio *bio, struct page *page, unsigned int len,
+ 	if ((max_sectors < (len >> 9)) && !bio->bi_iter.bi_size)
+ 		max_sectors = len >> 9;
+ 
+-	return __bio_add_page(q, bio, page, len, offset, max_sectors);
++	return __bio_add_pfn(q, bio, page_to_pfn_typed(page), len, offset,
++			max_sectors);
+ }
+ EXPORT_SYMBOL(bio_add_page);
+ 
++/**
++ *	bio_add_pfn -	attempt to add pfn to bio
++ *	@bio: destination bio
++ *	@pfn: pfn to add
++ *	@len: vec entry length
++ *	@offset: vec entry offset
++ *
++ *	Identical to bio_add_page() except this variant flags the bio as
++ *	not have struct page backing.  A given request_queue must assert
++ *	that it is prepared to handle this constraint before bio(s)
++ *	flagged in the manner can be passed.
++ */
++int bio_add_pfn(struct bio *bio, __pfn_t pfn, unsigned int len,
++		unsigned int offset)
++{
++	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
++	unsigned int max_sectors;
++
++	if (!blk_queue_pfn(q))
++		return 0;
++	set_bit(BIO_PFN, &bio->bi_flags);
++	max_sectors = blk_max_size_offset(q, bio->bi_iter.bi_sector);
++	if ((max_sectors < (len >> 9)) && !bio->bi_iter.bi_size)
++		max_sectors = len >> 9;
++
++	return __bio_add_pfn(q, bio, pfn, len, offset, max_sectors);
 +}
 +
-+#ifdef CONFIG_HAVE_DMA_PFN
-+static inline void sg_set_pfn(struct scatterlist *sg, __pfn_t pfn,
-+			      unsigned int len, unsigned int offset)
-+{
-+#ifdef CONFIG_DEBUG_SG
-+	BUG_ON(sg->sg_magic != SG_MAGIC);
-+	BUG_ON(sg_is_chain(sg));
-+#endif
-+	sg->pfn = pfn;
-+	BUG_ON(offset > 65535);
- 	sg->offset = offset;
-+	sg->sg_flags = 0;
- 	sg->length = len;
- }
-+#endif
+ struct submit_bio_ret {
+ 	struct completion event;
+ 	int error;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 7830ce00cbf5..8bafb4c87c96 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1843,6 +1843,11 @@ generic_make_request_checks(struct bio *bio)
+ 		goto end_io;
+ 	}
  
- static inline struct page *sg_page(struct scatterlist *sg)
- {
-@@ -114,7 +156,12 @@ static inline struct page *sg_page(struct scatterlist *sg)
- 	BUG_ON(sg->sg_magic != SG_MAGIC);
- 	BUG_ON(sg_is_chain(sg));
- #endif
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	BUG_ON(!(sg->sg_flags & SG_FLAGS_PAGE));
-+	return pfn_to_page(sg->pfn.pfn);
-+#else
- 	return (struct page *)((sg)->page_link & ~0x3);
-+#endif
- }
- 
- /**
-@@ -166,7 +213,12 @@ static inline void sg_chain(struct scatterlist *prv, unsigned int prv_nents,
- 	 * Set lowest bit to indicate a link pointer, and make sure to clear
- 	 * the termination bit if it happens to be set.
- 	 */
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	prv[prv_nents - 1].pfn.pfn = (unsigned long) sgl;
-+	prv[prv_nents - 1].sg_flags = SG_FLAGS_CHAIN;
-+#else
- 	prv[prv_nents - 1].page_link = ((unsigned long) sgl | 0x01) & ~0x02;
-+#endif
- }
- 
- /**
-@@ -186,8 +238,13 @@ static inline void sg_mark_end(struct scatterlist *sg)
++	if (bio_flagged(bio, BIO_PFN) && !blk_queue_pfn(q)) {
++		err = -EOPNOTSUPP;
++		goto end_io;
++	}
++
  	/*
- 	 * Set termination bit, clear potential chain bit
- 	 */
--	sg->page_link |= 0x02;
--	sg->page_link &= ~0x01;
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	sg->sg_flags |= SG_FLAGS_LAST;
-+	sg->sg_flags &= ~SG_FLAGS_CHAIN;
-+#else
-+	sg->page_link |= SG_FLAGS_LAST;
-+	sg->page_link &= ~SG_FLAGS_CHAIN;
-+#endif
- }
+ 	 * Various block parts want %current->io_context and lazy ioc
+ 	 * allocation ends up trading a lot of pain for a small amount of
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 7f63fa3e4fda..653bb4fd0706 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -140,6 +140,7 @@ struct bio {
+ #define BIO_NULL_MAPPED 8	/* contains invalid user pages */
+ #define BIO_QUIET	9	/* Make BIO Quiet */
+ #define BIO_SNAP_STABLE	10	/* bio data must be snapshotted during write */
++#define BIO_PFN		11	/* bio_vec references memory without struct page */
  
- /**
-@@ -203,7 +260,11 @@ static inline void sg_unmark_end(struct scatterlist *sg)
- #ifdef CONFIG_DEBUG_SG
- 	BUG_ON(sg->sg_magic != SG_MAGIC);
- #endif
--	sg->page_link &= ~0x02;
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	sg->sg_flags &= ~SG_FLAGS_LAST;
-+#else
-+	sg->page_link &= ~SG_FLAGS_LAST;
-+#endif
- }
+ /*
+  * Flags starting here get preserved by bio_reset() - this includes
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 7f9a516f24de..e17ecefba80a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -513,6 +513,7 @@ struct request_queue {
+ #define QUEUE_FLAG_INIT_DONE   20	/* queue is initialized */
+ #define QUEUE_FLAG_NO_SG_MERGE 21	/* don't attempt to merge SG segments*/
+ #define QUEUE_FLAG_SG_GAPS     22	/* queue doesn't support SG gaps */
++#define QUEUE_FLAG_PFN         23	/* queue supports pfn-only bio_vec(s) */
  
- /**
-@@ -218,7 +279,11 @@ static inline void sg_unmark_end(struct scatterlist *sg)
-  **/
- static inline dma_addr_t sg_phys(struct scatterlist *sg)
- {
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	return pfn_to_phys(sg->pfn) + sg->offset;
-+#else
- 	return page_to_phys(sg_page(sg)) + sg->offset;
-+#endif
- }
- 
- /**
-@@ -233,7 +298,11 @@ static inline dma_addr_t sg_phys(struct scatterlist *sg)
-  **/
- static inline void *sg_virt(struct scatterlist *sg)
- {
-+#ifdef CONFIG_HAVE_DMA_PFN
-+	return __va(pfn_to_phys(sg->pfn)) + sg->offset;
-+#else
- 	return page_address(sg_page(sg)) + sg->offset;
-+#endif
- }
- 
- int sg_nents(struct scatterlist *sg);
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
+@@ -594,6 +595,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ #define blk_queue_noxmerges(q)	\
+ 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
+ #define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, &(q)->queue_flags)
++#define blk_queue_pfn(q)	test_bit(QUEUE_FLAG_PFN, &(q)->queue_flags)
+ #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
+ #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
+ #define blk_queue_stackable(q)	\
+
