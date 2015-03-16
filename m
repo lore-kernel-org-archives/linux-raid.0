@@ -1,132 +1,188 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 4/7] scatterlist: use sg_phys()
-Date: Mon, 16 Mar 2015 16:25:48 -0400
-Message-ID: <20150316202548.33102.57882.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: [RFC PATCH 3/7] dma-mapping: allow archs to optionally specify a
+ ->map_pfn() operation
+Date: Mon, 16 Mar 2015 16:25:43 -0400
+Message-ID: <20150316202543.33102.12409.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, hch@infradead.org, riel@redhat.com, linux-nvdimm@lists.01.org, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Coccinelle cleanup to replace open coded sg to physical address
-translations.  This is in preparation for introducing scatterlists that
-reference pfn(s) without a backing struct page.
-
-// sg_phys.cocci: convert usage page_to_phys(sg_page(sg)) to sg_phys(sg)
-// usage: make coccicheck COCCI=sg_phys.cocci MODE=patch
-
-virtual patch
-virtual report
-virtual org
-
-@@
-struct scatterlist *sg;
-@@
-
-- page_to_phys(sg_page(sg)) + sg->offset
-+ sg_phys(sg)
-
-@@
-struct scatterlist *sg;
-@@
-
-- page_to_phys(sg_page(sg))
-+ sg_phys(sg) - sg->offset
+This is in support of enabling block device drivers to perform DMA
+to/from persistent memory which may not have a backing struct page
+entry.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/arm/mm/dma-mapping.c                    |    2 +-
- arch/microblaze/kernel/dma.c                 |    2 +-
- drivers/iommu/intel-iommu.c                  |    4 ++--
- drivers/iommu/iommu.c                        |    2 +-
- drivers/staging/android/ion/ion_chunk_heap.c |    4 ++--
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ arch/Kconfig                             |    3 +++
+ include/asm-generic/dma-mapping-common.h |   30 ++++++++++++++++++++++++++++++
+ include/linux/dma-debug.h                |   23 +++++++++++++++++++----
+ include/linux/dma-mapping.h              |    8 +++++++-
+ lib/dma-debug.c                          |    4 ++--
+ 5 files changed, 61 insertions(+), 7 deletions(-)
 
-diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-index 170a116d1b29..ba7eeacfa8b1 100644
---- a/arch/arm/mm/dma-mapping.c
-+++ b/arch/arm/mm/dma-mapping.c
-@@ -1472,7 +1472,7 @@ static int __map_sg_chunk(struct device *dev, struct scatterlist *sg,
- 		return -ENOMEM;
+diff --git a/arch/Kconfig b/arch/Kconfig
+index 05d7a8a458d5..80ea3e124494 100644
+--- a/arch/Kconfig
++++ b/arch/Kconfig
+@@ -203,6 +203,9 @@ config HAVE_DMA_ATTRS
+ config HAVE_DMA_CONTIGUOUS
+ 	bool
  
- 	for (count = 0, s = sg; count < (size >> PAGE_SHIFT); s = sg_next(s)) {
--		phys_addr_t phys = page_to_phys(sg_page(s));
-+		phys_addr_t phys = sg_phys(s) - s->offset;
- 		unsigned int len = PAGE_ALIGN(s->offset + s->length);
++config HAVE_DMA_PFN
++	bool
++
+ config GENERIC_SMP_IDLE_THREAD
+        bool
  
- 		if (!is_coherent &&
-diff --git a/arch/microblaze/kernel/dma.c b/arch/microblaze/kernel/dma.c
-index ed7ba8a11822..dcb3c594d626 100644
---- a/arch/microblaze/kernel/dma.c
-+++ b/arch/microblaze/kernel/dma.c
-@@ -61,7 +61,7 @@ static int dma_direct_map_sg(struct device *dev, struct scatterlist *sgl,
- 	/* FIXME this part of code is untested */
- 	for_each_sg(sgl, sg, nents, i) {
- 		sg->dma_address = sg_phys(sg);
--		__dma_sync(page_to_phys(sg_page(sg)) + sg->offset,
-+		__dma_sync(sg_phys(sg),
- 							sg->length, direction);
- 	}
+diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
+index 3378dcf4c31e..58fad817e51a 100644
+--- a/include/asm-generic/dma-mapping-common.h
++++ b/include/asm-generic/dma-mapping-common.h
+@@ -17,9 +17,15 @@ static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
  
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index ae4c1a854e57..e10d62f2e61f 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -2003,7 +2003,7 @@ static int __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
- 			sg_res = aligned_nrpages(sg->offset, sg->length);
- 			sg->dma_address = ((dma_addr_t)iov_pfn << VTD_PAGE_SHIFT) + sg->offset;
- 			sg->dma_length = sg->length;
--			pteval = page_to_phys(sg_page(sg)) | prot;
-+			pteval = (sg_phys(sg) - sg->offset) | prot;
- 			phys_pfn = pteval >> VTD_PAGE_SHIFT;
- 		}
+ 	kmemcheck_mark_initialized(ptr, size);
+ 	BUG_ON(!valid_dma_direction(dir));
++#ifdef CONFIG_HAVE_DMA_PFN
++	addr = ops->map_pfn(dev, page_to_pfn_typed(virt_to_page(ptr)),
++			     (unsigned long)ptr & ~PAGE_MASK, size,
++			     dir, attrs);
++#else
+ 	addr = ops->map_page(dev, virt_to_page(ptr),
+ 			     (unsigned long)ptr & ~PAGE_MASK, size,
+ 			     dir, attrs);
++#endif
+ 	debug_dma_map_page(dev, virt_to_page(ptr),
+ 			   (unsigned long)ptr & ~PAGE_MASK, size,
+ 			   dir, addr, true);
+@@ -68,6 +74,29 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
+ 		ops->unmap_sg(dev, sg, nents, dir, attrs);
+ }
  
-@@ -3303,7 +3303,7 @@ static int intel_nontranslate_map_sg(struct device *hddev,
++#ifdef CONFIG_HAVE_DMA_PFN
++static inline dma_addr_t dma_map_pfn(struct device *dev, __pfn_t pfn,
++				      size_t offset, size_t size,
++				      enum dma_data_direction dir)
++{
++	struct dma_map_ops *ops = get_dma_ops(dev);
++	dma_addr_t addr;
++
++	BUG_ON(!valid_dma_direction(dir));
++	addr = ops->map_pfn(dev, pfn, offset, size, dir, NULL);
++	debug_dma_map_pfn(dev, pfn, offset, size, dir, addr, false);
++
++	return addr;
++}
++
++static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
++				      size_t offset, size_t size,
++				      enum dma_data_direction dir)
++{
++	kmemcheck_mark_initialized(page_address(page) + offset, size);
++	return dma_map_pfn(dev, page_to_pfn_typed(page), offset, size, dir);
++}
++#else
+ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+ 				      size_t offset, size_t size,
+ 				      enum dma_data_direction dir)
+@@ -82,6 +111,7 @@ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
  
- 	for_each_sg(sglist, sg, nelems, i) {
- 		BUG_ON(!sg_page(sg));
--		sg->dma_address = page_to_phys(sg_page(sg)) + sg->offset;
-+		sg->dma_address = sg_phys(sg);
- 		sg->dma_length = sg->length;
- 	}
- 	return nelems;
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 72e683df0731..d5e746370bbb 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1153,7 +1153,7 @@ size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
- 	min_pagesz = 1 << __ffs(domain->ops->pgsize_bitmap);
+ 	return addr;
+ }
++#endif /* CONFIG_HAVE_DMA_PFN */
  
- 	for_each_sg(sg, s, nents, i) {
--		phys_addr_t phys = page_to_phys(sg_page(s)) + s->offset;
-+		phys_addr_t phys = sg_phys(s);
+ static inline void dma_unmap_page(struct device *dev, dma_addr_t addr,
+ 				  size_t size, enum dma_data_direction dir)
+diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
+index fe8cb610deac..eb3e69c61e5e 100644
+--- a/include/linux/dma-debug.h
++++ b/include/linux/dma-debug.h
+@@ -34,10 +34,18 @@ extern void dma_debug_init(u32 num_entries);
  
- 		/*
- 		 * We are mapping on IOMMU page boundaries, so offset within
-diff --git a/drivers/staging/android/ion/ion_chunk_heap.c b/drivers/staging/android/ion/ion_chunk_heap.c
-index 3e6ec2ee6802..b7da5d142aa9 100644
---- a/drivers/staging/android/ion/ion_chunk_heap.c
-+++ b/drivers/staging/android/ion/ion_chunk_heap.c
-@@ -81,7 +81,7 @@ static int ion_chunk_heap_allocate(struct ion_heap *heap,
- err:
- 	sg = table->sgl;
- 	for (i -= 1; i >= 0; i--) {
--		gen_pool_free(chunk_heap->pool, page_to_phys(sg_page(sg)),
-+		gen_pool_free(chunk_heap->pool, sg_phys(sg) - sg->offset,
- 			      sg->length);
- 		sg = sg_next(sg);
- 	}
-@@ -109,7 +109,7 @@ static void ion_chunk_heap_free(struct ion_buffer *buffer)
- 							DMA_BIDIRECTIONAL);
+ extern int dma_debug_resize_entries(u32 num_entries);
  
- 	for_each_sg(table->sgl, sg, table->nents, i) {
--		gen_pool_free(chunk_heap->pool, page_to_phys(sg_page(sg)),
-+		gen_pool_free(chunk_heap->pool, sg_phys(sg) - sg->offset,
- 			      sg->length);
- 	}
- 	chunk_heap->allocated -= allocated_size;
+-extern void debug_dma_map_page(struct device *dev, struct page *page,
+-			       size_t offset, size_t size,
+-			       int direction, dma_addr_t dma_addr,
+-			       bool map_single);
++extern void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
++			      size_t size, int direction, dma_addr_t dma_addr,
++			      bool map_single);
++
++static inline void debug_dma_map_page(struct device *dev, struct page *page,
++				      size_t offset, size_t size,
++				      int direction, dma_addr_t dma_addr,
++				      bool map_single)
++{
++	return debug_dma_map_pfn(dev, page_to_pfn_typed(page), offset, size,
++			direction, dma_addr, map_single);
++}
+ 
+ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
+ 
+@@ -109,6 +117,13 @@ static inline void debug_dma_map_page(struct device *dev, struct page *page,
+ {
+ }
+ 
++static inline void debug_dma_map_pfn(struct device *dev, __pfn_t pfn,
++				     size_t offset, size_t size,
++				     int direction, dma_addr_t dma_addr,
++				     bool map_single)
++{
++}
++
+ static inline void debug_dma_mapping_error(struct device *dev,
+ 					  dma_addr_t dma_addr)
+ {
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index c3007cb4bfa6..6411621e4179 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -26,11 +26,17 @@ struct dma_map_ops {
+ 
+ 	int (*get_sgtable)(struct device *dev, struct sg_table *sgt, void *,
+ 			   dma_addr_t, size_t, struct dma_attrs *attrs);
+-
++#ifdef CONFIG_HAVE_DMA_PFN
++	dma_addr_t (*map_pfn)(struct device *dev, __pfn_t pfn,
++			      unsigned long offset, size_t size,
++			      enum dma_data_direction dir,
++			      struct dma_attrs *attrs);
++#else
+ 	dma_addr_t (*map_page)(struct device *dev, struct page *page,
+ 			       unsigned long offset, size_t size,
+ 			       enum dma_data_direction dir,
+ 			       struct dma_attrs *attrs);
++#endif
+ 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
+ 			   size_t size, enum dma_data_direction dir,
+ 			   struct dma_attrs *attrs);
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index 9722bd2dbc9b..a447730fff97 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -1250,7 +1250,7 @@ out:
+ 	put_hash_bucket(bucket, &flags);
+ }
+ 
+-void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
++void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
+ 			size_t size, int direction, dma_addr_t dma_addr,
+ 			bool map_single)
+ {
+@@ -1268,7 +1268,7 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+ 
+ 	entry->dev       = dev;
+ 	entry->type      = dma_debug_page;
+-	entry->pfn	 = page_to_pfn(page);
++	entry->pfn	 = pfn.pfn;
+ 	entry->offset	 = offset,
+ 	entry->dev_addr  = dma_addr;
+ 	entry->size      = size;
+
