@@ -1,33 +1,42 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Wed, 18 Mar 2015 13:26:50 -0700
-Message-ID: <20150318132650.3336261c58829f49a9af8675@linux-foundation.org>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm log userspace: use mempool_create_kmalloc_pool()
+Date: Wed, 18 Mar 2015 18:30:46 -0400
+Message-ID: <20150318223045.GA17765@redhat.com>
+References: <alpine.DEB.2.10.1503071642540.2772@chino.kir.corp.google.com>
+ <20150311125852.GA28768@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, riel@redhat.com, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150311125852.GA28768@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Mon, 16 Mar 2015 16:25:25 -0400 Dan Williams <dan.j.williams@intel.com> wrote:
+On Wed, Mar 11 2015 at  8:58am -0400,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-> Avoid the impending disaster of requiring struct page coverage for what
-> is expected to be ever increasing capacities of persistent memory.  In
-> conversations with Rik van Riel, Mel Gorman, and Jens Axboe at the
-> recently concluded Linux Storage Summit it became clear that struct page
-> is not required in many places, it was simply convenient to re-use.
+> On Sat, Mar 07 2015 at  7:43pm -0500,
+> David Rientjes <rientjes@google.com> wrote:
 > 
-> Introduce helpers and infrastructure to remove struct page usage where
-> it is not necessary.  One use case for these changes is to implement a
-> write-back-cache in persistent memory for software-RAID.  Another use
-> case for the scatterlist changes is RDMA to a pfn-range.
+> > Mempools created for kmalloc caches should use
+> > mempool_create_kmalloc_pool().
+> > 
+> > Cc: Alasdair Kergon <agk@redhat.com>
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> > Cc: Neil Brown <neilb@suse.de>
+> > Signed-off-by: David Rientjes <rientjes@google.com>
+> 
+> Thanks David, I'll get this queued up.
 
-Those use-cases sound very thin.  If that's all we have then I'd say
-"find another way of implementing those things without creating
-pageframes for persistent memory".
+Turns out I already fixed this a different way about a month ago and
+staged it for 4.1, see:
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-next&id=db57216e710ea5c517f1030fafe7eb21ac938dc5
 
-IOW, please tell us much much much more about the value of this change.
+You'll be interested to note this portion of that commit's header:
+"This _should_ eliminate DM's need for io_schedule_timeout() in
+mempool_alloc(); so io_schedule() should be sufficient now."
+
+I'll defer to you on whether you'd like to pursue switching to
+io_schedule() in mempool_alloc().
