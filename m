@@ -1,205 +1,208 @@
-From: Boaz Harrosh <openosd@gmail.com>
-Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Wed, 18 Mar 2015 12:47:21 +0200
-Message-ID: <550957B9.5050803@gmail.com>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Boaz Harrosh <boaz@plexistor.com>
+Subject: Re: [Linux-nvdimm] [RFC PATCH 3/7] dma-mapping: allow archs to optionally
+ specify a ->map_pfn() operation
+Date: Wed, 18 Mar 2015 13:21:45 +0200
+Message-ID: <55095FC9.8060906@plexistor.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com> <20150316202543.33102.12409.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20150316202543.33102.12409.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-arch@vger.kernel.org, riel@redhat.com, linux-nvdimm@lists.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org
+Cc: axboe@kernel.dk, linux-raid@vger.kernel.org, riel@redhat.com, linux-nvdimm@lists.01.org, hch@infradead.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
 On 03/16/2015 10:25 PM, Dan Williams wrote:
-> Avoid the impending disaster of requiring struct page coverage for what
-> is expected to be ever increasing capacities of persistent memory.  
-
-If you are saying "disaster", than we need to believe you. Or is there
-a scientific proof for this.
-
-Actually what you are proposing below, is the "real disaster".
-(I do hope it is not impending)
-
-> In conversations with Rik van Riel, Mel Gorman, and Jens Axboe at the
-> recently concluded Linux Storage Summit it became clear that struct page
-> is not required in many places, it was simply convenient to re-use.
+> This is in support of enabling block device drivers to perform DMA
+> to/from persistent memory which may not have a backing struct page
+> entry.
 > 
-> Introduce helpers and infrastructure to remove struct page usage where
-> it is not necessary.  One use case for these changes is to implement a
-> write-back-cache in persistent memory for software-RAID.  Another use
-> case for the scatterlist changes is RDMA to a pfn-range.
-> 
-> This compiles and boots, but 0day-kbuild-robot coverage is needed before
-> this set exits "RFC".  Obviously, the coccinelle script needs to be
-> re-run on the block updates for kernel.next.  As is, this only includes
-> the resulting auto-generated-patch against 4.0-rc3.
-> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
+>  arch/Kconfig                             |    3 +++
+>  include/asm-generic/dma-mapping-common.h |   30 ++++++++++++++++++++++++++++++
+>  include/linux/dma-debug.h                |   23 +++++++++++++++++++----
+>  include/linux/dma-mapping.h              |    8 +++++++-
+>  lib/dma-debug.c                          |    4 ++--
+>  5 files changed, 61 insertions(+), 7 deletions(-)
 > 
-> Dan Williams (6):
->       block: add helpers for accessing a bio_vec page
->       block: convert bio_vec.bv_page to bv_pfn
->       dma-mapping: allow archs to optionally specify a ->map_pfn() operation
->       scatterlist: use sg_phys()
->       x86: support dma_map_pfn()
->       block: base support for pfn i/o
+> diff --git a/arch/Kconfig b/arch/Kconfig
+> index 05d7a8a458d5..80ea3e124494 100644
+> --- a/arch/Kconfig
+> +++ b/arch/Kconfig
+> @@ -203,6 +203,9 @@ config HAVE_DMA_ATTRS
+>  config HAVE_DMA_CONTIGUOUS
+>  	bool
+>  
+> +config HAVE_DMA_PFN
+> +	bool
+> +
+>  config GENERIC_SMP_IDLE_THREAD
+>         bool
+>  
+> diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
+> index 3378dcf4c31e..58fad817e51a 100644
+> --- a/include/asm-generic/dma-mapping-common.h
+> +++ b/include/asm-generic/dma-mapping-common.h
+> @@ -17,9 +17,15 @@ static inline dma_addr_t dma_map_single_attrs(struct device *dev, void *ptr,
+>  
+>  	kmemcheck_mark_initialized(ptr, size);
+>  	BUG_ON(!valid_dma_direction(dir));
+> +#ifdef CONFIG_HAVE_DMA_PFN
+> +	addr = ops->map_pfn(dev, page_to_pfn_typed(virt_to_page(ptr)),
+> +			     (unsigned long)ptr & ~PAGE_MASK, size,
+> +			     dir, attrs);
+> +#else
+
+Yes our beloved Kernel is full of #ifdef(s) in the middle of the code
+
+Very beautiful
+
+>  	addr = ops->map_page(dev, virt_to_page(ptr),
+>  			     (unsigned long)ptr & ~PAGE_MASK, size,
+>  			     dir, attrs);
+> +#endif
+>  	debug_dma_map_page(dev, virt_to_page(ptr),
+>  			   (unsigned long)ptr & ~PAGE_MASK, size,
+>  			   dir, addr, true);
+> @@ -68,6 +74,29 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
+>  		ops->unmap_sg(dev, sg, nents, dir, attrs);
+>  }
+>  
+> +#ifdef CONFIG_HAVE_DMA_PFN
+> +static inline dma_addr_t dma_map_pfn(struct device *dev, __pfn_t pfn,
+> +				      size_t offset, size_t size,
+> +				      enum dma_data_direction dir)
+> +{
+> +	struct dma_map_ops *ops = get_dma_ops(dev);
+> +	dma_addr_t addr;
+> +
+> +	BUG_ON(!valid_dma_direction(dir));
+> +	addr = ops->map_pfn(dev, pfn, offset, size, dir, NULL);
+> +	debug_dma_map_pfn(dev, pfn, offset, size, dir, addr, false);
+> +
+> +	return addr;
+> +}
+> +
+> +static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+> +				      size_t offset, size_t size,
+> +				      enum dma_data_direction dir)
+> +{
+> +	kmemcheck_mark_initialized(page_address(page) + offset, size);
+> +	return dma_map_pfn(dev, page_to_pfn_typed(page), offset, size, dir);
+> +}
+> +#else
+
+And in the middle of source code files
+
+>  static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+>  				      size_t offset, size_t size,
+>  				      enum dma_data_direction dir)
+> @@ -82,6 +111,7 @@ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+>  
+>  	return addr;
+>  }
+> +#endif /* CONFIG_HAVE_DMA_PFN */
+>  
+>  static inline void dma_unmap_page(struct device *dev, dma_addr_t addr,
+>  				  size_t size, enum dma_data_direction dir)
+> diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
+> index fe8cb610deac..eb3e69c61e5e 100644
+> --- a/include/linux/dma-debug.h
+> +++ b/include/linux/dma-debug.h
+> @@ -34,10 +34,18 @@ extern void dma_debug_init(u32 num_entries);
+>  
+>  extern int dma_debug_resize_entries(u32 num_entries);
+>  
+> -extern void debug_dma_map_page(struct device *dev, struct page *page,
+> -			       size_t offset, size_t size,
+> -			       int direction, dma_addr_t dma_addr,
+> -			       bool map_single);
+> +extern void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
+> +			      size_t size, int direction, dma_addr_t dma_addr,
+> +			      bool map_single);
+> +
+> +static inline void debug_dma_map_page(struct device *dev, struct page *page,
+> +				      size_t offset, size_t size,
+> +				      int direction, dma_addr_t dma_addr,
+> +				      bool map_single)
+> +{
+> +	return debug_dma_map_pfn(dev, page_to_pfn_typed(page), offset, size,
+> +			direction, dma_addr, map_single);
+> +}
+>  
+>  extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
+>  
+> @@ -109,6 +117,13 @@ static inline void debug_dma_map_page(struct device *dev, struct page *page,
+>  {
+>  }
+>  
+> +static inline void debug_dma_map_pfn(struct device *dev, __pfn_t pfn,
+> +				     size_t offset, size_t size,
+> +				     int direction, dma_addr_t dma_addr,
+> +				     bool map_single)
+> +{
+> +}
+> +
+>  static inline void debug_dma_mapping_error(struct device *dev,
+>  					  dma_addr_t dma_addr)
+>  {
+> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+> index c3007cb4bfa6..6411621e4179 100644
+> --- a/include/linux/dma-mapping.h
+> +++ b/include/linux/dma-mapping.h
+> @@ -26,11 +26,17 @@ struct dma_map_ops {
+>  
+>  	int (*get_sgtable)(struct device *dev, struct sg_table *sgt, void *,
+>  			   dma_addr_t, size_t, struct dma_attrs *attrs);
+> -
+> +#ifdef CONFIG_HAVE_DMA_PFN
+> +	dma_addr_t (*map_pfn)(struct device *dev, __pfn_t pfn,
+> +			      unsigned long offset, size_t size,
+> +			      enum dma_data_direction dir,
+> +			      struct dma_attrs *attrs);
+> +#else
+
+And in the middle of structures
+
+>  	dma_addr_t (*map_page)(struct device *dev, struct page *page,
+>  			       unsigned long offset, size_t size,
+>  			       enum dma_data_direction dir,
+>  			       struct dma_attrs *attrs);
+> +#endif
+>  	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
+>  			   size_t size, enum dma_data_direction dir,
+>  			   struct dma_attrs *attrs);
+> diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+> index 9722bd2dbc9b..a447730fff97 100644
+> --- a/lib/dma-debug.c
+> +++ b/lib/dma-debug.c
+> @@ -1250,7 +1250,7 @@ out:
+>  	put_hash_bucket(bucket, &flags);
+>  }
+>  
+> -void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+> +void debug_dma_map_pfn(struct device *dev, __pfn_t pfn, size_t offset,
+>  			size_t size, int direction, dma_addr_t dma_addr,
+>  			bool map_single)
+>  {
+> @@ -1268,7 +1268,7 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+>  
+>  	entry->dev       = dev;
+>  	entry->type      = dma_debug_page;
+> -	entry->pfn	 = page_to_pfn(page);
+> +	entry->pfn	 = pfn.pfn;
+>  	entry->offset	 = offset,
+>  	entry->dev_addr  = dma_addr;
+>  	entry->size      = size;
 > 
-> Matthew Wilcox (1):
->       scatterlist: support "page-less" (__pfn_t only) entries
-> 
-> 
->  arch/Kconfig                                 |    3 +
->  arch/arm/mm/dma-mapping.c                    |    2 -
->  arch/microblaze/kernel/dma.c                 |    2 -
->  arch/powerpc/sysdev/axonram.c                |    2 -
->  arch/x86/Kconfig                             |   12 +++
->  arch/x86/kernel/amd_gart_64.c                |   22 ++++--
->  arch/x86/kernel/pci-nommu.c                  |   22 ++++--
->  arch/x86/kernel/pci-swiotlb.c                |    4 +
->  arch/x86/pci/sta2x11-fixup.c                 |    4 +
->  arch/x86/xen/pci-swiotlb-xen.c               |    4 +
->  block/bio-integrity.c                        |    8 +-
->  block/bio.c                                  |   83 +++++++++++++++------
->  block/blk-core.c                             |    9 ++
->  block/blk-integrity.c                        |    7 +-
->  block/blk-lib.c                              |    2 -
->  block/blk-merge.c                            |   15 ++--
->  block/bounce.c                               |   26 +++----
->  drivers/block/aoe/aoecmd.c                   |    8 +-
->  drivers/block/brd.c                          |    2 -
->  drivers/block/drbd/drbd_bitmap.c             |    5 +
->  drivers/block/drbd/drbd_main.c               |    4 +
->  drivers/block/drbd/drbd_receiver.c           |    4 +
->  drivers/block/drbd/drbd_worker.c             |    3 +
->  drivers/block/floppy.c                       |    6 +-
->  drivers/block/loop.c                         |    8 +-
->  drivers/block/nbd.c                          |    8 +-
->  drivers/block/nvme-core.c                    |    2 -
->  drivers/block/pktcdvd.c                      |   11 ++-
->  drivers/block/ps3disk.c                      |    2 -
->  drivers/block/ps3vram.c                      |    2 -
->  drivers/block/rbd.c                          |    2 -
->  drivers/block/rsxx/dma.c                     |    3 +
->  drivers/block/umem.c                         |    2 -
->  drivers/block/zram/zram_drv.c                |   10 +--
->  drivers/dma/ste_dma40.c                      |    5 -
->  drivers/iommu/amd_iommu.c                    |   21 ++++-
->  drivers/iommu/intel-iommu.c                  |   26 +++++--
->  drivers/iommu/iommu.c                        |    2 -
->  drivers/md/bcache/btree.c                    |    4 +
->  drivers/md/bcache/debug.c                    |    6 +-
->  drivers/md/bcache/movinggc.c                 |    2 -
->  drivers/md/bcache/request.c                  |    6 +-
->  drivers/md/bcache/super.c                    |   10 +--
->  drivers/md/bcache/util.c                     |    5 +
->  drivers/md/bcache/writeback.c                |    2 -
->  drivers/md/dm-crypt.c                        |   12 ++-
->  drivers/md/dm-io.c                           |    2 -
->  drivers/md/dm-verity.c                       |    2 -
->  drivers/md/raid1.c                           |   50 +++++++------
->  drivers/md/raid10.c                          |   38 +++++-----
->  drivers/md/raid5.c                           |    6 +-
->  drivers/mmc/card/queue.c                     |    4 +
->  drivers/s390/block/dasd_diag.c               |    2 -
->  drivers/s390/block/dasd_eckd.c               |   14 ++--
->  drivers/s390/block/dasd_fba.c                |    6 +-
->  drivers/s390/block/dcssblk.c                 |    2 -
->  drivers/s390/block/scm_blk.c                 |    2 -
->  drivers/s390/block/scm_blk_cluster.c         |    2 -
->  drivers/s390/block/xpram.c                   |    2 -
->  drivers/scsi/mpt2sas/mpt2sas_transport.c     |    6 +-
->  drivers/scsi/mpt3sas/mpt3sas_transport.c     |    6 +-
->  drivers/scsi/sd_dif.c                        |    4 +
->  drivers/staging/android/ion/ion_chunk_heap.c |    4 +
->  drivers/staging/lustre/lustre/llite/lloop.c  |    2 -
->  drivers/xen/biomerge.c                       |    4 +
->  drivers/xen/swiotlb-xen.c                    |   29 +++++--
->  fs/btrfs/check-integrity.c                   |    6 +-
->  fs/btrfs/compression.c                       |   12 ++-
->  fs/btrfs/disk-io.c                           |    4 +
->  fs/btrfs/extent_io.c                         |    8 +-
->  fs/btrfs/file-item.c                         |    8 +-
->  fs/btrfs/inode.c                             |   18 +++--
->  fs/btrfs/raid56.c                            |    4 +
->  fs/btrfs/volumes.c                           |    2 -
->  fs/buffer.c                                  |    4 +
->  fs/direct-io.c                               |    2 -
->  fs/exofs/ore.c                               |    4 +
->  fs/exofs/ore_raid.c                          |    2 -
->  fs/ext4/page-io.c                            |    2 -
->  fs/f2fs/data.c                               |    4 +
->  fs/f2fs/segment.c                            |    2 -
->  fs/gfs2/lops.c                               |    4 +
->  fs/jfs/jfs_logmgr.c                          |    4 +
->  fs/logfs/dev_bdev.c                          |   10 +--
->  fs/mpage.c                                   |    2 -
->  fs/splice.c                                  |    2 -
->  include/asm-generic/dma-mapping-common.h     |   30 ++++++++
->  include/asm-generic/memory_model.h           |    4 +
->  include/asm-generic/scatterlist.h            |    6 ++
->  include/crypto/scatterwalk.h                 |   10 +++
->  include/linux/bio.h                          |   24 +++---
->  include/linux/blk_types.h                    |   21 +++++
->  include/linux/blkdev.h                       |    2 +
->  include/linux/dma-debug.h                    |   23 +++++-
->  include/linux/dma-mapping.h                  |    8 ++
->  include/linux/scatterlist.h                  |  101 ++++++++++++++++++++++++--
->  include/linux/swiotlb.h                      |    5 +
->  kernel/power/block_io.c                      |    2 -
->  lib/dma-debug.c                              |    4 +
->  lib/swiotlb.c                                |   20 ++++-
->  mm/iov_iter.c                                |   22 +++---
->  mm/page_io.c                                 |    8 +-
->  net/ceph/messenger.c                         |    2 -
 
-God! Look at this endless list of files and it is only the very beginning.
-It does not even work and touches only 10% of what will need to be touched
-for this to work, and very very marginally at that. There will always be
-"another subsystem" that will not work. For example NUMA how will you do
-NUMA aware pmem? and this is just a simple example. (I'm saying NUMA
-because our tests show a huge drop in performance if you do not do
-NUMA aware allocation)
+This is exactly what I meant. It is not only two different code paths it is
+two different compilation paths. This is a maintenance nightmare. And a sure
+bit rot.
 
-Al, Jens, Christoph Andrew. Think of the immediate stability nightmare and
-the long term torture to maintain two code paths. Two set of tests, and
-the combinatorial explosions of tests.
-
-I'm not the one afraid of hard work, if it was for a good cause, but for what?
-really for what? The block layer, and RDMA, and networking, and spline, and what
-ever the heck any one wants to imagine to do with pmem, already works perfectly
-stable. right now!
-
-We have set up RDMA pmem target without a single line of extra code,
-and the RDMA client was trivial to write. We are sending down block layer
-BIOs from pmem from day one, and even iscsi NFS and any kind of networking
-directly from pmem, for almost a year now.
-
-All it takes is two simple patches to mm that creates a pages-section
-for pmem. The Kernel DOCs do says that a page is a construct that keeps track
-of the sate of a physical page in memory. A memory mapped pmem is perfectly
-that, and it has state that needs tracking just the same, Say that converted
-block layers of yours now happens to be an iscsi and goes through the network
-stack, it starts to need ref-counting, flags ... It has state.
-
-Matthew Dan. I don't get it. Don't you guys at Intel have nothing to do? why
-change half the Kernel? for what? to achieve what? all your wildest dreams
-about pmem are right here already. What is it that you guys want to do with
-this code that we cannot already do? And I can show you two tons of things
-you cannot do with this code that we can already do. With two simple patches.
-
-If it is stability that you are concerned with, "what if a pmem-page gets
-to the wrong mm subsystem?" There are a couple small hardening patches and
-and extra page-flag allocated, that can make the all thing foolproof. Though
-up until now I have not encountered any problem.
-
->  103 files changed, 658 insertions(+), 335 deletions(-)
-
-Please look, this is only the beginning. And does not even work. Let us come
-back to our senses. As true hackers lets do the minimum effort to achieve new
-heights. All it really takes to do all this is 2 little patches.
-
-Cheers
+Real nice for nothing
+Thanks, but no thanks
 Boaz
