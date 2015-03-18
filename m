@@ -1,194 +1,205 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Converting a .90 raid superblock to version 1.0 and
- whether--size parameter is needed
-Date: Wed, 18 Mar 2015 12:10:54 +1100
-Message-ID: <20150318121054.066b963b@notabene.brown>
-References: <21CFD7CC-7A05-4298-BD77-E1287B9F78D5@backblaze.com>
-	<149825A6-89BC-4804-915B-5241EEB15300@backblaze.com>
+From: Boaz Harrosh <openosd@gmail.com>
+Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
+Date: Wed, 18 Mar 2015 12:47:21 +0200
+Message-ID: <550957B9.5050803@gmail.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/=COWGxbxocvhl_GxoLSNIyl"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <149825A6-89BC-4804-915B-5241EEB15300@backblaze.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Sean Harris <sean@backblaze.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-arch@vger.kernel.org, riel@redhat.com, linux-nvdimm@lists.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 List-Id: linux-raid.ids
 
---Sig_/=COWGxbxocvhl_GxoLSNIyl
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 03/16/2015 10:25 PM, Dan Williams wrote:
+> Avoid the impending disaster of requiring struct page coverage for what
+> is expected to be ever increasing capacities of persistent memory.  
 
-On Tue, 17 Mar 2015 15:49:36 -0700 Sean Harris <sean@backblaze.com> wrote:
+If you are saying "disaster", than we need to believe you. Or is there
+a scientific proof for this.
 
-> Hi Neil and company,
->=20
-> I have roughly a hundred machines that are still on Debian 5 that are sla=
-ted for OS upgrades, and a great many of those are running software raid wi=
-th the 00.90 version superblock. I even have a few machines on debian 7 wit=
-h the .90 superblock because the boot drive for the machine had been replac=
-ed at some point.
->=20
-> I would like to explore the idea of upgrading/converting the raid superbl=
-ock on many of those machines to version 1.0, mostly to keep the environmen=
-t as uniform as possible, and standardize training for my SysAdmins on re-a=
-ssembling failed raid arrays.
-> But I am not sure if it is a safe and necessary, or even a worthwhile end=
-eavor.
+Actually what you are proposing below, is the "real disaster".
+(I do hope it is not impending)
 
-Safe:  there is no intrinsic reason for it not to be safe.  Obviously any
-   change brings risks, but they can be managed with care.
-Necessary: It is only necessary from the technical perspective of md if you
-   want to use some features that are only available with 1.x metadata.
-   This included bad-block-logs and improved flexibility for reshaping
-   RAID5/6/10 arrays.
-Worthwhile: That is up to you.  As you say, consistency can be good and
-   better familiarity for sysadmins is not a bad thing.
+> In conversations with Rik van Riel, Mel Gorman, and Jens Axboe at the
+> recently concluded Linux Storage Summit it became clear that struct page
+> is not required in many places, it was simply convenient to re-use.
+> 
+> Introduce helpers and infrastructure to remove struct page usage where
+> it is not necessary.  One use case for these changes is to implement a
+> write-back-cache in persistent memory for software-RAID.  Another use
+> case for the scatterlist changes is RDMA to a pfn-range.
+> 
+> This compiles and boots, but 0day-kbuild-robot coverage is needed before
+> this set exits "RFC".  Obviously, the coccinelle script needs to be
+> re-run on the block updates for kernel.next.  As is, this only includes
+> the resulting auto-generated-patch against 4.0-rc3.
+> 
+> ---
+> 
+> Dan Williams (6):
+>       block: add helpers for accessing a bio_vec page
+>       block: convert bio_vec.bv_page to bv_pfn
+>       dma-mapping: allow archs to optionally specify a ->map_pfn() operation
+>       scatterlist: use sg_phys()
+>       x86: support dma_map_pfn()
+>       block: base support for pfn i/o
+> 
+> Matthew Wilcox (1):
+>       scatterlist: support "page-less" (__pfn_t only) entries
+> 
+> 
+>  arch/Kconfig                                 |    3 +
+>  arch/arm/mm/dma-mapping.c                    |    2 -
+>  arch/microblaze/kernel/dma.c                 |    2 -
+>  arch/powerpc/sysdev/axonram.c                |    2 -
+>  arch/x86/Kconfig                             |   12 +++
+>  arch/x86/kernel/amd_gart_64.c                |   22 ++++--
+>  arch/x86/kernel/pci-nommu.c                  |   22 ++++--
+>  arch/x86/kernel/pci-swiotlb.c                |    4 +
+>  arch/x86/pci/sta2x11-fixup.c                 |    4 +
+>  arch/x86/xen/pci-swiotlb-xen.c               |    4 +
+>  block/bio-integrity.c                        |    8 +-
+>  block/bio.c                                  |   83 +++++++++++++++------
+>  block/blk-core.c                             |    9 ++
+>  block/blk-integrity.c                        |    7 +-
+>  block/blk-lib.c                              |    2 -
+>  block/blk-merge.c                            |   15 ++--
+>  block/bounce.c                               |   26 +++----
+>  drivers/block/aoe/aoecmd.c                   |    8 +-
+>  drivers/block/brd.c                          |    2 -
+>  drivers/block/drbd/drbd_bitmap.c             |    5 +
+>  drivers/block/drbd/drbd_main.c               |    4 +
+>  drivers/block/drbd/drbd_receiver.c           |    4 +
+>  drivers/block/drbd/drbd_worker.c             |    3 +
+>  drivers/block/floppy.c                       |    6 +-
+>  drivers/block/loop.c                         |    8 +-
+>  drivers/block/nbd.c                          |    8 +-
+>  drivers/block/nvme-core.c                    |    2 -
+>  drivers/block/pktcdvd.c                      |   11 ++-
+>  drivers/block/ps3disk.c                      |    2 -
+>  drivers/block/ps3vram.c                      |    2 -
+>  drivers/block/rbd.c                          |    2 -
+>  drivers/block/rsxx/dma.c                     |    3 +
+>  drivers/block/umem.c                         |    2 -
+>  drivers/block/zram/zram_drv.c                |   10 +--
+>  drivers/dma/ste_dma40.c                      |    5 -
+>  drivers/iommu/amd_iommu.c                    |   21 ++++-
+>  drivers/iommu/intel-iommu.c                  |   26 +++++--
+>  drivers/iommu/iommu.c                        |    2 -
+>  drivers/md/bcache/btree.c                    |    4 +
+>  drivers/md/bcache/debug.c                    |    6 +-
+>  drivers/md/bcache/movinggc.c                 |    2 -
+>  drivers/md/bcache/request.c                  |    6 +-
+>  drivers/md/bcache/super.c                    |   10 +--
+>  drivers/md/bcache/util.c                     |    5 +
+>  drivers/md/bcache/writeback.c                |    2 -
+>  drivers/md/dm-crypt.c                        |   12 ++-
+>  drivers/md/dm-io.c                           |    2 -
+>  drivers/md/dm-verity.c                       |    2 -
+>  drivers/md/raid1.c                           |   50 +++++++------
+>  drivers/md/raid10.c                          |   38 +++++-----
+>  drivers/md/raid5.c                           |    6 +-
+>  drivers/mmc/card/queue.c                     |    4 +
+>  drivers/s390/block/dasd_diag.c               |    2 -
+>  drivers/s390/block/dasd_eckd.c               |   14 ++--
+>  drivers/s390/block/dasd_fba.c                |    6 +-
+>  drivers/s390/block/dcssblk.c                 |    2 -
+>  drivers/s390/block/scm_blk.c                 |    2 -
+>  drivers/s390/block/scm_blk_cluster.c         |    2 -
+>  drivers/s390/block/xpram.c                   |    2 -
+>  drivers/scsi/mpt2sas/mpt2sas_transport.c     |    6 +-
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c     |    6 +-
+>  drivers/scsi/sd_dif.c                        |    4 +
+>  drivers/staging/android/ion/ion_chunk_heap.c |    4 +
+>  drivers/staging/lustre/lustre/llite/lloop.c  |    2 -
+>  drivers/xen/biomerge.c                       |    4 +
+>  drivers/xen/swiotlb-xen.c                    |   29 +++++--
+>  fs/btrfs/check-integrity.c                   |    6 +-
+>  fs/btrfs/compression.c                       |   12 ++-
+>  fs/btrfs/disk-io.c                           |    4 +
+>  fs/btrfs/extent_io.c                         |    8 +-
+>  fs/btrfs/file-item.c                         |    8 +-
+>  fs/btrfs/inode.c                             |   18 +++--
+>  fs/btrfs/raid56.c                            |    4 +
+>  fs/btrfs/volumes.c                           |    2 -
+>  fs/buffer.c                                  |    4 +
+>  fs/direct-io.c                               |    2 -
+>  fs/exofs/ore.c                               |    4 +
+>  fs/exofs/ore_raid.c                          |    2 -
+>  fs/ext4/page-io.c                            |    2 -
+>  fs/f2fs/data.c                               |    4 +
+>  fs/f2fs/segment.c                            |    2 -
+>  fs/gfs2/lops.c                               |    4 +
+>  fs/jfs/jfs_logmgr.c                          |    4 +
+>  fs/logfs/dev_bdev.c                          |   10 +--
+>  fs/mpage.c                                   |    2 -
+>  fs/splice.c                                  |    2 -
+>  include/asm-generic/dma-mapping-common.h     |   30 ++++++++
+>  include/asm-generic/memory_model.h           |    4 +
+>  include/asm-generic/scatterlist.h            |    6 ++
+>  include/crypto/scatterwalk.h                 |   10 +++
+>  include/linux/bio.h                          |   24 +++---
+>  include/linux/blk_types.h                    |   21 +++++
+>  include/linux/blkdev.h                       |    2 +
+>  include/linux/dma-debug.h                    |   23 +++++-
+>  include/linux/dma-mapping.h                  |    8 ++
+>  include/linux/scatterlist.h                  |  101 ++++++++++++++++++++++++--
+>  include/linux/swiotlb.h                      |    5 +
+>  kernel/power/block_io.c                      |    2 -
+>  lib/dma-debug.c                              |    4 +
+>  lib/swiotlb.c                                |   20 ++++-
+>  mm/iov_iter.c                                |   22 +++---
+>  mm/page_io.c                                 |    8 +-
+>  net/ceph/messenger.c                         |    2 -
 
->=20
-> I wanted to test this on a few non-production machines, but I am not quit=
-e sure if I need to specify the --size parameter in the create statement in=
- the attempt.
->=20
-> I have a bit of a mixed environment, but very early on, the machines init=
-ialized with the .90 superblock were all created in the same way ie:
->=20
-> /sbin/mdadm --create /dev/md10 --bitmap=3Dinternal --auto=3Dyes -l 6 -n 1=
-5 /dev/sd{b,e,h,k,n,q,t,w,z,ac,af,ai,al,ao,ar}1
->=20
+God! Look at this endless list of files and it is only the very beginning.
+It does not even work and touches only 10% of what will need to be touched
+for this to work, and very very marginally at that. There will always be
+"another subsystem" that will not work. For example NUMA how will you do
+NUMA aware pmem? and this is just a simple example. (I'm saying NUMA
+because our tests show a huge drop in performance if you do not do
+NUMA aware allocation)
 
-I recommend not doing it this way.  If you use mdadm-3.3 or later you can
-  mdadm --assemble /dev/md10 --update=3Dmetadata ...list.of.devices..
+Al, Jens, Christoph Andrew. Think of the immediate stability nightmare and
+the long term torture to maintain two code paths. Two set of tests, and
+the combinatorial explosions of tests.
 
-and it will update the metadata from 0.90 to 1.0 and start the array for yo=
-u.
+I'm not the one afraid of hard work, if it was for a good cause, but for what?
+really for what? The block layer, and RDMA, and networking, and spline, and what
+ever the heck any one wants to imagine to do with pmem, already works perfectly
+stable. right now!
 
+We have set up RDMA pmem target without a single line of extra code,
+and the RDMA client was trivial to write. We are sending down block layer
+BIOs from pmem from day one, and even iscsi NFS and any kind of networking
+directly from pmem, for almost a year now.
 
->=20
-> Most of the machines I am interested in upgrading are running Debian 5, w=
-ith LVM and ext4 volumes.
-> Some machines use drive partitions, but we stopped using them some time a=
-go and went with the simple notion that if a drive brand was marketed as 1T=
-B, we assumed a size of 1,000,000,000,000 bytes and created the array with =
-that size. That way, any drive manufacturer could be used as a replacement =
-spare without worrying about the variation of their respective drive sizes.
->=20
-> I think it is safe to upgrade the superblock from .90 to 1.0 because from=
- what I have read, it is the same size, and in the same place as the .90 su=
-perblock.
+All it takes is two simple patches to mm that creates a pages-section
+for pmem. The Kernel DOCs do says that a page is a construct that keeps track
+of the sate of a physical page in memory. A memory mapped pmem is perfectly
+that, and it has state that needs tracking just the same, Say that converted
+block layers of yours now happens to be an iscsi and goes through the network
+stack, it starts to need ref-counting, flags ... It has state.
 
-Not correct.  The 0.90 superblock is 4K in size and between 64K and 128K fr=
-om
-the end of the devices.  The 1.0 superblock is 512 bytes and between 4K and
-8K from the end of the device.
-So the 1.0 superblock uses less space than the 0.90.  But it does reside
-entirely with space that is reserved when the 0.90 metadata is in use.
+Matthew Dan. I don't get it. Don't you guys at Intel have nothing to do? why
+change half the Kernel? for what? to achieve what? all your wildest dreams
+about pmem are right here already. What is it that you guys want to do with
+this code that we cannot already do? And I can show you two tons of things
+you cannot do with this code that we can already do. With two simple patches.
 
+If it is stability that you are concerned with, "what if a pmem-page gets
+to the wrong mm subsystem?" There are a couple small hardening patches and
+and extra page-flag allocated, that can make the all thing foolproof. Though
+up until now I have not encountered any problem.
 
-> But I don't know if having drives with or without partitions would make a=
- difference, or if the conversion would need a specific version of mdadm ut=
-ilized.
-> (My hunch is that any layers on top of the raid array are irrelevant to t=
-he superblock conversion).
+>  103 files changed, 658 insertions(+), 335 deletions(-)
 
-That's correct.
+Please look, this is only the beginning. And does not even work. Let us come
+back to our senses. As true hackers lets do the minimum effort to achieve new
+heights. All it really takes to do all this is 2 little patches.
 
-
->=20
-> All arrays are raid 6 with the same number of devices.
-> I think what I need to run is something akin to
->=20
-> /sbin/mdadm --create /dev/md10 -l6  -c64 --metadata=3D1.0 --assume-clean =
--n 15 /dev/sd{b,e,h,k,n,q,t,w,z,ac,af,ai,al,ao,ar}1
-
-That would probably work, but again, "--assemble --update=3Dmetadata" is yo=
-ur
-friend.
-
-
->=20
-> Where md10 is the array, the raid level is 6, 64k chunk size, assume-clea=
-n (for a known good pre-existing array), 15 devices (all specified in order=
-), and a metadata of 1.0.
->=20
-> But I am not sure if I need to insure that --size is calculated and inclu=
-ded in the conversion, or if the re-creation of the superblock simply takes=
- care of it.
-
-It probably doesn't matter, certainly not with a chunk size of 64K or large=
-r.
-
-
->=20
-> The reason I am unsure on this point is that with version 1.0 superblock =
-arrays, I always include the --size parameter when re-creating the array wi=
-th a specified list of devices, which is normally the Used_Dev_Size of the =
-array, divided by 2, (since the value reported by mdadm is 512 byte sectors=
-).
->=20
-> I am including some information from my test pod. In the case below, ther=
-e are only 9 devices per array. (But all of my production conversions will =
-be with 15 devices).
->=20
-> So here are my questions:
-> Am I correct in presuming the conversion will work and simply put-in-plac=
-e an upgraded superblock?
-> Also, that it is unnecessary to specify --size for the create command (in=
- this case).
-> And also, that I need not worry about the version of mdadm used for the c=
-onversion? (in my case it will almost exclusively be version v2.6.7.2 on De=
-bian 5 , or mdadm - v3.2.5 - 18th May 2012 on Debian 7.)
-> Other than reading the superblock version after the conversion, is there =
-any other way of verifying the conversion was successful without causing ha=
-rm?
-> (my thoughts were to run FULL raid checks and filesystem checks, and some=
- crc checks to some files).
->=20
-> Also, assuming I am on the right track and nothing can go wrong, are ther=
-e any specific recommendations you have for going ahead with the conversion=
-s? Or even a recommendation to avoid this endeavor?
->=20
-> Thanks for your feedback,
->=20
-> Sean Harris=20
->=20
->=20
-> Example from my test machine:
->=20
-> debian_version
-> 5.0.10
-> proc/version=20
-> Linux version 2.6.32-bpo.5-amd64 (Debian 2.6.32-35~bpo50+1) (norbert@tret=
-kowski.de) (gcc version 4.3.2 (Debian 4.3.2-1.1) ) #1 SMP Wed Jul 20 09:10:=
-04 UTC 2011
-> mdadm -V
-> mdadm - v2.6.7.2 - 14th November 2008
-
-Grab and compile the latest mdadm, and use that  to update the metadata.
-
-NeilBrown
-
-
---Sig_/=COWGxbxocvhl_GxoLSNIyl
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVQjQnjnsnt1WYoG5AQJ/vA//QlH0tfpo2wi49Lu95yAU6r1pXDOOtF6o
-VQ5VOsBANlTv/b+pS4JWSJB4yqg42TiicaBsqN4mQgIR5IsPABpE4rwzXRHMdUlg
-SZkUj9f75ChIkCbAucrzdqNiOeQZ+w8tZrDrS65PpQMNAqFLMYjIlEbYGO/pxWKs
-nW0euRLQ5vThinAB1yzM4FoXfSdBRFx6p0s5Zcg2B/3LGuPPRrombnOFApOtLksL
-AtHY2Sku6TuQp97ad4axDoBB1nrxpp+0smofGSlUrdCf/PgjEzxEnNR+EUevNoRY
-8TZLafAGGhTVLDPBNJOsdLyyrNaYjvshiiCxzVe9+h2je6G/hZEmYDZzgooid+BZ
-ynClLz/hcC3zKZ9/3PWErE1KMsXpgGUXukIYoM2Q7+JsQovluCuYRs5aKXfClrvH
-lVSzMAUVWYEs7UqcbbGFLtr5JQ+GY2lC96UfgQjndhJO1iyGmKsOhj4Gk6x6IdUq
-UxuQ31FDIUZgGa88z//MAwqb5n4TtG2Q+9N8BPz9qz+b2oRYtz35VCKJhs/ybgwC
-N/5Slc6hO6RP0OwAtFh1iGru3IisF+o0/ZOJDQpKgna9HrkqD+Gt2DUw3ihWjfZ1
-ruzBN+/Tc677dVK8KlL3tchd5y/n9iXNH0lBvfibJekt+KuzbaZGbkow/HtkqtCD
-UmCTPcgNXf8=
-=pa2Z
------END PGP SIGNATURE-----
-
---Sig_/=COWGxbxocvhl_GxoLSNIyl--
+Cheers
+Boaz
