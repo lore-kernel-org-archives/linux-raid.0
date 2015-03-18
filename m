@@ -1,124 +1,194 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] Make bm_blocks to match previous semantic
-Date: Wed, 18 Mar 2015 09:57:12 +1100
-Message-ID: <20150318095712.1954b958@notabene.brown>
-References: <1426560030-16152-1-git-send-email-jgq516@gmail.com>
+Subject: Re: Converting a .90 raid superblock to version 1.0 and
+ whether--size parameter is needed
+Date: Wed, 18 Mar 2015 12:10:54 +1100
+Message-ID: <20150318121054.066b963b@notabene.brown>
+References: <21CFD7CC-7A05-4298-BD77-E1287B9F78D5@backblaze.com>
+	<149825A6-89BC-4804-915B-5241EEB15300@backblaze.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/T19rusBSDZDie55z1Szw5HJ"; protocol="application/pgp-signature"
+ boundary="Sig_/=COWGxbxocvhl_GxoLSNIyl"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1426560030-16152-1-git-send-email-jgq516@gmail.com>
+In-Reply-To: <149825A6-89BC-4804-915B-5241EEB15300@backblaze.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jgq516@gmail.com
-Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+To: Sean Harris <sean@backblaze.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/T19rusBSDZDie55z1Szw5HJ
+--Sig_/=COWGxbxocvhl_GxoLSNIyl
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 17 Mar 2015 10:40:30 +0800 jgq516@gmail.com wrote:
+On Tue, 17 Mar 2015 15:49:36 -0700 Sean Harris <sean@backblaze.com> wrote:
 
-> From: Guoqing Jiang <gqjiang@suse.com>
+> Hi Neil and company,
 >=20
-> The bm_blocks is modified by commit fe60ce (md/bitmap: use
-> sector_div for sector_t divisions), but it makes bm_blocks
-> has different value which is changed from like "a/b" to "a%b",
-> need to correct this to make sure cluster-md still works.
+> I have roughly a hundred machines that are still on Debian 5 that are sla=
+ted for OS upgrades, and a great many of those are running software raid wi=
+th the 00.90 version superblock. I even have a few machines on debian 7 wit=
+h the .90 superblock because the boot drive for the machine had been replac=
+ed at some point.
+>=20
+> I would like to explore the idea of upgrading/converting the raid superbl=
+ock on many of those machines to version 1.0, mostly to keep the environmen=
+t as uniform as possible, and standardize training for my SysAdmins on re-a=
+ssembling failed raid arrays.
+> But I am not sure if it is a safe and necessary, or even a worthwhile end=
+eavor.
 
-One of us is confused here.
+Safe:  there is no intrinsic reason for it not to be safe.  Obviously any
+   change brings risks, but they can be managed with care.
+Necessary: It is only necessary from the technical perspective of md if you
+   want to use some features that are only available with 1.x metadata.
+   This included bad-block-logs and improved flexibility for reshaping
+   RAID5/6/10 arrays.
+Worthwhile: That is up to you.  As you say, consistency can be good and
+   better familiarity for sysadmins is not a bad thing.
 
-This code is trying to find the start of the bitmap relevant to this host in
-a table of multiple bitmaps.  So it first needs to find out the size of each
-bitmap.  It then multiples the size by the index number of this host to get
-an offset.
+>=20
+> I wanted to test this on a few non-production machines, but I am not quit=
+e sure if I need to specify the --size parameter in the create statement in=
+ the attempt.
+>=20
+> I have a bit of a mixed environment, but very early on, the machines init=
+ialized with the .90 superblock were all created in the same way ie:
+>=20
+> /sbin/mdadm --create /dev/md10 --bitmap=3Dinternal --auto=3Dyes -l 6 -n 1=
+5 /dev/sd{b,e,h,k,n,q,t,w,z,ac,af,ai,al,ao,ar}1
+>=20
 
-So it take the total number of sectors (resync_max_sectors), divides by the
-chunksize (in sectors) to get a number of chunks.  This is the number of bi=
-ts.
+I recommend not doing it this way.  If you use mdadm-3.3 or later you can
+  mdadm --assemble /dev/md10 --update=3Dmetadata ...list.of.devices..
 
-Then it should div-round-up by 8 to get a number of bytes.
-Then div-round-up by 4096 to get number of 4-K blocks, because the bitmaps
-are always 4K aligned.
+and it will update the metadata from 0.90 to 1.0 and start the array for yo=
+u.
 
-Then this number is multiplied by 8 (or shifted by 3) to get a number of
-sectors to add to the start of the table.
 
-So the original code in commit b97e92574c0bf335db1cd2ec491d8ff5cd5d0b49
-is wrong because it uses sector_div in a way which destroys
-resync_max_sectors.
-And is wrong because it multiplies by 8 (<<3) instead of divides by 8 to
-convert from bits to bytes.
+>=20
+> Most of the machines I am interested in upgrading are running Debian 5, w=
+ith LVM and ext4 volumes.
+> Some machines use drive partitions, but we stopped using them some time a=
+go and went with the simple notion that if a drive brand was marketed as 1T=
+B, we assumed a size of 1,000,000,000,000 bytes and created the array with =
+that size. That way, any drive manufacturer could be used as a replacement =
+spare without worrying about the variation of their respective drive sizes.
+>=20
+> I think it is safe to upgrade the superblock from .90 to 1.0 because from=
+ what I have read, it is the same size, and in the same place as the .90 su=
+perblock.
 
-commit f9209a323547f054c7439a3bf67c45e64a054bd
-removes the abuse of sector_div, which is good, but uses a simple "a/b"
-division, which isn't allowed in the kernel.
+Not correct.  The 0.90 superblock is 4K in size and between 64K and 128K fr=
+om
+the end of the devices.  The 1.0 superblock is 512 bytes and between 4K and
+8K from the end of the device.
+So the 1.0 superblock uses less space than the 0.90.  But it does reside
+entirely with space that is reserved when the 0.90 metadata is in use.
 
-commit fe60ce80488a2a481ac175c4ff98f90df22e1e46
-then does the right thing with sector_div, but the "<< 3" is still the wrong
-way around.
 
-If you still think your code is correct, please explain in detail why.
+> But I don't know if having drives with or without partitions would make a=
+ difference, or if the conversion would need a specific version of mdadm ut=
+ilized.
+> (My hunch is that any layers on top of the raid array are irrelevant to t=
+he superblock conversion).
 
-Goldwyn: if you agree that "<< 3" should be ">> 3" or even
-DIV_ROUND_UP_SECTOR_T( , 8);
-please send a patch.  If you don't think so, please explain why.
+That's correct.
 
-Thanks,
+
+>=20
+> All arrays are raid 6 with the same number of devices.
+> I think what I need to run is something akin to
+>=20
+> /sbin/mdadm --create /dev/md10 -l6  -c64 --metadata=3D1.0 --assume-clean =
+-n 15 /dev/sd{b,e,h,k,n,q,t,w,z,ac,af,ai,al,ao,ar}1
+
+That would probably work, but again, "--assemble --update=3Dmetadata" is yo=
+ur
+friend.
+
+
+>=20
+> Where md10 is the array, the raid level is 6, 64k chunk size, assume-clea=
+n (for a known good pre-existing array), 15 devices (all specified in order=
+), and a metadata of 1.0.
+>=20
+> But I am not sure if I need to insure that --size is calculated and inclu=
+ded in the conversion, or if the re-creation of the superblock simply takes=
+ care of it.
+
+It probably doesn't matter, certainly not with a chunk size of 64K or large=
+r.
+
+
+>=20
+> The reason I am unsure on this point is that with version 1.0 superblock =
+arrays, I always include the --size parameter when re-creating the array wi=
+th a specified list of devices, which is normally the Used_Dev_Size of the =
+array, divided by 2, (since the value reported by mdadm is 512 byte sectors=
+).
+>=20
+> I am including some information from my test pod. In the case below, ther=
+e are only 9 devices per array. (But all of my production conversions will =
+be with 15 devices).
+>=20
+> So here are my questions:
+> Am I correct in presuming the conversion will work and simply put-in-plac=
+e an upgraded superblock?
+> Also, that it is unnecessary to specify --size for the create command (in=
+ this case).
+> And also, that I need not worry about the version of mdadm used for the c=
+onversion? (in my case it will almost exclusively be version v2.6.7.2 on De=
+bian 5 , or mdadm - v3.2.5 - 18th May 2012 on Debian 7.)
+> Other than reading the superblock version after the conversion, is there =
+any other way of verifying the conversion was successful without causing ha=
+rm?
+> (my thoughts were to run FULL raid checks and filesystem checks, and some=
+ crc checks to some files).
+>=20
+> Also, assuming I am on the right track and nothing can go wrong, are ther=
+e any specific recommendations you have for going ahead with the conversion=
+s? Or even a recommendation to avoid this endeavor?
+>=20
+> Thanks for your feedback,
+>=20
+> Sean Harris=20
+>=20
+>=20
+> Example from my test machine:
+>=20
+> debian_version
+> 5.0.10
+> proc/version=20
+> Linux version 2.6.32-bpo.5-amd64 (Debian 2.6.32-35~bpo50+1) (norbert@tret=
+kowski.de) (gcc version 4.3.2 (Debian 4.3.2-1.1) ) #1 SMP Wed Jul 20 09:10:=
+04 UTC 2011
+> mdadm -V
+> mdadm - v2.6.7.2 - 14th November 2008
+
+Grab and compile the latest mdadm, and use that  to update the metadata.
+
 NeilBrown
 
 
-
->=20
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
-> This is against for-next branch.
->=20
->  drivers/md/bitmap.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 501f83f..ea9c685 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -571,11 +571,10 @@ static int bitmap_read_sb(struct bitmap *bitmap)
->  re_read:
->  	/* If cluster_slot is set, the cluster is setup */
->  	if (bitmap->cluster_slot >=3D 0) {
-> -		sector_t bm_blocks;
-> -		sector_t resync_sectors =3D bitmap->mddev->resync_max_sectors;
-> +		sector_t bm_blocks =3D bitmap->mddev->resync_max_sectors;
-> =20
-> -		bm_blocks =3D sector_div(resync_sectors,
-> -				       bitmap->mddev->bitmap_info.chunksize >> 9);
-> +		sector_div(bm_blocks,
-> +				bitmap->mddev->bitmap_info.chunksize >> 9);
->  		bm_blocks =3D bm_blocks << 3;
->  		bm_blocks =3D DIV_ROUND_UP_SECTOR_T(bm_blocks, 4096);
->  		bitmap->mddev->bitmap_info.offset +=3D bitmap->cluster_slot * (bm_bloc=
-ks << 3);
-
-
---Sig_/T19rusBSDZDie55z1Szw5HJ
+--Sig_/=COWGxbxocvhl_GxoLSNIyl
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVQixSDnsnt1WYoG5AQJ6pA/+OChsZETmIxZqFbQnRUDaxjHJ/aN6t1iO
-Ms0+85IHOKhVjQgKij7kgiQqLbOFgzqYlP8kEe2Fz/bsAb7zzbvIqAsbJceCimlB
-VuZ1wEPQ4QUYvqTt3Mqm7y28T3sehFOrqWHl+78Epq3CRTpnnRwYbOM97U/e2BwH
-faGAkCP48L5YkQP0/CwTCsnziZAzaMgwqVi6ZQf0NYNWHaI83AdgQk3ZlqWTnX+R
-ngb/fU4dBneE4DWAl4Mu4mR20WBNOYUI05Cqq6gmWcB4RdPo58IKDiNCWXPsuw7K
-NjvZKkSTKP95vwErxVM5bkCGn2xeEYyvB3s402WAz5W21IDlbjNimIY5slcPBxhk
-RxBN+92nBRQATPCM3RRuGK8aqUMiyypSfMBzxKW44RhQoZLBbdVapuMAVeWMEwid
-EPQA9yFZjNai+uM3VNxWzs+6+Udg2jxrMfPpGjmzRcS53cvRrFrOPt2ezX5VkjXN
-Um1R1fhcGXx8AQf9yrLKM4HxjuQqFFP4Gn7UC0RAPWNTB278uxaGQICK+52DeReI
-GD5PqUaRFBvx74/5pLetzo4FWPdpan/eDzZGGf1jSft1CNz4ojoVi0VngxhjqI2r
-SxJXmQ7mAplug2+xMYAgltVHE2QTcrTE1+0MfprQSIrlSrUYicid/i52B7GUuhWL
-j7bmVcOkjcQ=
-=eRlK
+iQIVAwUBVQjQnjnsnt1WYoG5AQJ/vA//QlH0tfpo2wi49Lu95yAU6r1pXDOOtF6o
+VQ5VOsBANlTv/b+pS4JWSJB4yqg42TiicaBsqN4mQgIR5IsPABpE4rwzXRHMdUlg
+SZkUj9f75ChIkCbAucrzdqNiOeQZ+w8tZrDrS65PpQMNAqFLMYjIlEbYGO/pxWKs
+nW0euRLQ5vThinAB1yzM4FoXfSdBRFx6p0s5Zcg2B/3LGuPPRrombnOFApOtLksL
+AtHY2Sku6TuQp97ad4axDoBB1nrxpp+0smofGSlUrdCf/PgjEzxEnNR+EUevNoRY
+8TZLafAGGhTVLDPBNJOsdLyyrNaYjvshiiCxzVe9+h2je6G/hZEmYDZzgooid+BZ
+ynClLz/hcC3zKZ9/3PWErE1KMsXpgGUXukIYoM2Q7+JsQovluCuYRs5aKXfClrvH
+lVSzMAUVWYEs7UqcbbGFLtr5JQ+GY2lC96UfgQjndhJO1iyGmKsOhj4Gk6x6IdUq
+UxuQ31FDIUZgGa88z//MAwqb5n4TtG2Q+9N8BPz9qz+b2oRYtz35VCKJhs/ybgwC
+N/5Slc6hO6RP0OwAtFh1iGru3IisF+o0/ZOJDQpKgna9HrkqD+Gt2DUw3ihWjfZ1
+ruzBN+/Tc677dVK8KlL3tchd5y/n9iXNH0lBvfibJekt+KuzbaZGbkow/HtkqtCD
+UmCTPcgNXf8=
+=pa2Z
 -----END PGP SIGNATURE-----
 
---Sig_/T19rusBSDZDie55z1Szw5HJ--
+--Sig_/=COWGxbxocvhl_GxoLSNIyl--
