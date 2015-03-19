@@ -1,111 +1,60 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid5: don't do chunk aligned read on degraded
- array.
-Date: Thu, 19 Mar 2015 17:02:15 +1100
-Message-ID: <20150319170215.7d6dfd60@notabene.brown>
-References: <550A60FF.3050902@gmail.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
+Date: Thu, 19 Mar 2015 09:43:13 -0400
+Message-ID: <20150319134313.GF4003@linux.intel.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20150318132650.3336261c58829f49a9af8675@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+iDSD/J5i/GJLrq71Fw/lEu"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <550A60FF.3050902@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eric Mei <meijia@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150318132650.3336261c58829f49a9af8675@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, riel@redhat.com, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/+iDSD/J5i/GJLrq71Fw/lEu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 18, 2015 at 01:26:50PM -0700, Andrew Morton wrote:
+> On Mon, 16 Mar 2015 16:25:25 -0400 Dan Williams <dan.j.williams@intel.com> wrote:
+> 
+> > Avoid the impending disaster of requiring struct page coverage for what
+> > is expected to be ever increasing capacities of persistent memory.  In
+> > conversations with Rik van Riel, Mel Gorman, and Jens Axboe at the
+> > recently concluded Linux Storage Summit it became clear that struct page
+> > is not required in many places, it was simply convenient to re-use.
+> > 
+> > Introduce helpers and infrastructure to remove struct page usage where
+> > it is not necessary.  One use case for these changes is to implement a
+> > write-back-cache in persistent memory for software-RAID.  Another use
+> > case for the scatterlist changes is RDMA to a pfn-range.
+> 
+> Those use-cases sound very thin.  If that's all we have then I'd say
+> "find another way of implementing those things without creating
+> pageframes for persistent memory".
+> 
+> IOW, please tell us much much much more about the value of this change.
 
-On Wed, 18 Mar 2015 23:39:11 -0600 Eric Mei <meijia@gmail.com> wrote:
+Dan missed "Support O_DIRECT to a mapped DAX file".  More generally, if we
+want to be able to do any kind of I/O directly to persistent memory,
+and I think we do, we need to do one of:
 
-> From: Eric Mei <eric.mei@seagate.com>
->=20
-> When array is degraded, read data landed on failed drives will result in=
-=20
-> reading rest of data in a stripe. So a single sequential read would=20
-> result in same data being read twice.
->=20
-> This patch is to avoid chunk aligned read for degraded array. The=20
-> downside is to involve stripe cache which means associated CPU overhead=20
-> and extra memory copy.
->=20
-> Signed-off-by: Eric Mei <eric.mei@seagate.com>
-> ---
->   drivers/md/raid5.c |   15 ++++++++++++---
->   1 files changed, 12 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index cd2f96b..763c64a 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4180,8 +4180,12 @@ static int raid5_mergeable_bvec(struct mddev *mdde=
-v,
->          unsigned int chunk_sectors =3D mddev->chunk_sectors;
->          unsigned int bio_sectors =3D bvm->bi_size >> 9;
->=20
-> -       if ((bvm->bi_rw & 1) =3D=3D WRITE)
-> -               return biovec->bv_len; /* always allow writes to be=20
-> mergeable */
-> +       /*
-> +        * always allow writes to be mergeable, read as well if array
-> +        * is degraded as we'll go through stripe cache anyway.
-> +        */
-> +       if ((bvm->bi_rw & 1) =3D=3D WRITE || mddev->degraded)
-> +               return biovec->bv_len;
->=20
->          if (mddev->new_chunk_sectors < mddev->chunk_sectors)
->                  chunk_sectors =3D mddev->new_chunk_sectors;
-> @@ -4656,7 +4660,12 @@ static void make_request(struct mddev *mddev,=20
-> struct bio * bi)
->=20
->          md_write_start(mddev, bi);
->=20
-> -       if (rw =3D=3D READ &&
-> +       /*
-> +        * If array is degraded, better not do chunk aligned read because
-> +        * later we might have to read it again in order to reconstruct
-> +        * data on failed drives.
-> +        */
-> +       if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
->               mddev->reshape_position =3D=3D MaxSector &&
->               chunk_aligned_read(mddev,bi))
->                  return;
+1. Construct struct pages for persistent memory
+1a. Permanently
+1b. While the pages are under I/O
+2. Teach the I/O layers to deal in PFNs instead of struct pages
+3. Replace struct page with some other structure that can represent both
+   DRAM and PMEM
 
-Thanks for the patch.
+I'm personally a fan of #3, and I was looking at the scatterlist as
+my preferred data structure.  I now believe the scatterlist as it is
+currently defined isn't sufficient, so we probably end up needing a new
+data structure.  I think Dan's preferred method of replacing struct
+pages with PFNs is actually less instrusive, but doesn't give us as
+much advantage (an entirely new data structure would let us move to an
+extent based system at the same time, instead of sticking with an array
+of pages).  Clearly Boaz prefers 1a, which works well enough for the
+8GB NV-DIMMs, but not well enough for the 400GB NV-DIMMs.
 
-However this sort of patch really needs to come with some concrete
-performance numbers.  Preferably both sequential reads and random reads.
-
-I agree that sequential reads are likely to be faster, but how much faster
-are they?
-I imagine that this might make random reads a little slower.   Does it?  By
-how much?
-
-Thanks,
-NeilBrown
-
---Sig_/+iDSD/J5i/GJLrq71Fw/lEu
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVQpmaDnsnt1WYoG5AQKk5w//U4QEL75yRJKWdLoa9wBzsI5XoOKpSGeW
-vFas29tlcPw+LoqzX8aauK/RLuNBlitlyEo8Rp2QeABCN6ClsIFEUmWulSZ9wAe1
-uMYIw70v1MIwvL4oN8PRCsYScJ0j7uUbSKKHxIA2PMaOAfzzSIoru5TEuZVPNNn1
-ZBVpIS2nUYEsQ4tlFShwPDBcIvY2T3AjOpuW5F1DimziFkyV/6mi/bJCUcKhxItD
-pAUESMIKTeyEknvUZuJyWD9NzKcZgLww7Ts+3dezpKmj6gPUC3px9UAMJ4pUX+NO
-OFD8bKL0P3XeSPWsNqafVigYUD9EAoaY+P4fBREtZXgl1g5rq44RxEZ3agXBQz+H
-7/ejJcmwUEDXzL28IZ5E1S85bU3PoA85lpDJp3nsfPuxTh4pD16WC3w3ARBh4KBi
-8sPvTZyoBDLDMnAS22AzXlaT4l67f18BXbJmackGfM1FYjnBjlfsOTEDBGrOiJp3
-/4w3NV0ThLJZ+hy3Z1nuEqI7wZNvYSRTdDTXiJ/MabLboJ7XoVSL7BQqvh9sM/dc
-pthCGXM1yoSgS53GG2jGsAVhjyDo5fmVT7hSB7fLaTFOjFdMe1UDrIOnJRDAIJYK
-tWykvln2oFtaqMw3WVyg85QbeiselHXn5fGmIPZ9UmksMpR1DeOxCvqGz0hBPAAR
-yiIeWFbIvco=
-=U8Zl
------END PGP SIGNATURE-----
-
---Sig_/+iDSD/J5i/GJLrq71Fw/lEu--
+What's your preference?  I guess option 0 is "force all I/O to go
+through the page cache and then get copied", but that feels like a nasty
+performance hit.
