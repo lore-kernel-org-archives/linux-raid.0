@@ -1,64 +1,143 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Thu, 19 Mar 2015 15:31:16 -0400
-Message-ID: <20150319193116.GH4003@linux.intel.com>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20150318132650.3336261c58829f49a9af8675@linux-foundation.org>
- <20150319134313.GF4003@linux.intel.com>
- <20150319181725.GA17411@infradead.org>
+From: Eric Mei <meijia@gmail.com>
+Subject: Re: [PATCH] md/raid5: don't do chunk aligned read on degraded array.
+Date: Thu, 19 Mar 2015 13:41:16 -0600
+Message-ID: <550B265C.7070907@gmail.com>
+References: <550A60FF.3050902@gmail.com> <20150319170215.7d6dfd60@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150319181725.GA17411@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, riel@redhat.com, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150319170215.7d6dfd60@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 19, 2015 at 11:17:25AM -0700, Christoph Hellwig wrote:
-> On Thu, Mar 19, 2015 at 09:43:13AM -0400, Matthew Wilcox wrote:
-> > 1. Construct struct pages for persistent memory
-> > 1a. Permanently
-> > 1b. While the pages are under I/O
-> > 2. Teach the I/O layers to deal in PFNs instead of struct pages
-> > 3. Replace struct page with some other structure that can represent both
-> >    DRAM and PMEM
-> 
-> In addition to the options there's also a time line.  At least for the
-> short term where we want to get something going 1a seems like the
-> absolutely be option.  It works perfectly fine for the lots of small
-(assuming "best option")
-> capacity dram-like nvdimms, and it works funtionally fine for the
-> special huge ones, although the resource use for it is highly annoying.
-> If it turns out to be too annoying we can also offer a no I/O possible
-> option for them in the short run.
-> 
-> In the long run option 2) sounds like a good plan to me, but not as a
-> parallel I/O path, but as the main one.  Doing so will in fact give us
-> options to experiment with 3).  Given that we're moving towards an
-> increasinly huge page using world replacing the good old struct page
-> with something extent-like and/or temporary might be needed for dram
-> as well in the future.
+On 2015-03-19 12:02 AM, NeilBrown wrote:
+> On Wed, 18 Mar 2015 23:39:11 -0600 Eric Mei <meijia@gmail.com> wrote:
+>
+>> From: Eric Mei <eric.mei@seagate.com>
+>>
+>> When array is degraded, read data landed on failed drives will result in
+>> reading rest of data in a stripe. So a single sequential read would
+>> result in same data being read twice.
+>>
+>> This patch is to avoid chunk aligned read for degraded array. The
+>> downside is to involve stripe cache which means associated CPU overhead
+>> and extra memory copy.
+>>
+>> Signed-off-by: Eric Mei <eric.mei@seagate.com>
+>> ---
+>>    drivers/md/raid5.c |   15 ++++++++++++---
+>>    1 files changed, 12 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> index cd2f96b..763c64a 100644
+>> --- a/drivers/md/raid5.c
+>> +++ b/drivers/md/raid5.c
+>> @@ -4180,8 +4180,12 @@ static int raid5_mergeable_bvec(struct mddev *mddev,
+>>           unsigned int chunk_sectors = mddev->chunk_sectors;
+>>           unsigned int bio_sectors = bvm->bi_size >> 9;
+>>
+>> -       if ((bvm->bi_rw & 1) == WRITE)
+>> -               return biovec->bv_len; /* always allow writes to be
+>> mergeable */
+>> +       /*
+>> +        * always allow writes to be mergeable, read as well if array
+>> +        * is degraded as we'll go through stripe cache anyway.
+>> +        */
+>> +       if ((bvm->bi_rw & 1) == WRITE || mddev->degraded)
+>> +               return biovec->bv_len;
+>>
+>>           if (mddev->new_chunk_sectors < mddev->chunk_sectors)
+>>                   chunk_sectors = mddev->new_chunk_sectors;
+>> @@ -4656,7 +4660,12 @@ static void make_request(struct mddev *mddev,
+>> struct bio * bi)
+>>
+>>           md_write_start(mddev, bi);
+>>
+>> -       if (rw == READ &&
+>> +       /*
+>> +        * If array is degraded, better not do chunk aligned read because
+>> +        * later we might have to read it again in order to reconstruct
+>> +        * data on failed drives.
+>> +        */
+>> +       if (rw == READ && mddev->degraded == 0 &&
+>>                mddev->reshape_position == MaxSector &&
+>>                chunk_aligned_read(mddev,bi))
+>>                   return;
+>
+> Thanks for the patch.
+>
+> However this sort of patch really needs to come with some concrete
+> performance numbers.  Preferably both sequential reads and random reads.
+>
+> I agree that sequential reads are likely to be faster, but how much faster
+> are they?
+> I imagine that this might make random reads a little slower.   Does it?  By
+> how much?
+>
+> Thanks,
+> NeilBrown
+>
 
-Dan's patches don't actually make it a "parallel I/O path", that was
-Boaz's mischaracterisation.  They move all scatterlists and bios over
-to using PFNs, at least on architectures which have been converted.
-Speaking of architectures not being converted, it is really past time for
-architectures to be switched to supporting SG chaining.  It was introduced
-in 2007, and not having it generically available causes problems for
-the crypto layer, as well as making further enhancements more tricky.
+Hi Neil,
 
-Assuming 'select ARCH_HAS_SG_CHAIN' is sufficient to tell, the following
-architectures do support it:
+Sorry I should have done the test in first place.
 
-arm arm64 ia64 powerpc s390 sparc x86
+Following test are done on a enterprise storage node with Seagate 6T SAS 
+drives and Xeon E5-2648L CPU (10 cores, 1.9Ghz), 10 disks MD RAID6 8+2, 
+chunk size 128 KiB.
 
-which means the following architectures are 8 years delinquent in
-adding support:
+I use FIO, using direct-io with various bs size, enough queue depth, 
+tested sequential and 100% random read against 3 array config: 1) 
+optimal, as baseline; 2) degraded; 3) degraded with this patch. Kernel 
+version is 4.0-rc3.
 
-alpha arc avr32 blackfin c6x cris frv hexagon m32r m68k metag microblaze
-mips mn10300 nios2 openrisc parisc score sh tile um unicore32 xtensa
+Each individual test I only did once so there might be some variations, 
+but we just focus on big trend.
 
-Perhaps we could deliberately make asm-generic/scatterlist.h not build
-for architectures that don't select it in order to make them convert ...
+Sequential Read:
+  bs=(KiB)  optimal(MiB/s)  degraded(MiB/s)  degraded-with-patch (MiB/s)
+   1024       1608            656              995
+    512       1624            710              956
+    256       1635            728              980
+    128       1636            771              983
+     64       1612           1119             1000
+     32       1580           1420             1004
+     16       1368            688              986
+      8        768            647              953
+      4        411            413              850
+
+Random Read:
+  bs=(KiB)  optimal(IOPS)  degraded(IOPS)  degraded-with-patch (IOPS)
+   1024        163            160              156
+    512        274            273              272
+    256        426            428              424
+    128        576            592              591
+     64        726            724              726
+     32        849            848              837
+     16        900            970              971
+      8        927            940              929
+      4        948            940              955
+
+Some notes:
+  * In sequential + optimal, as bs size getting smaller, the FIO thread 
+become CPU bound.
+  * In sequential + degraded, there's big increase when bs is 64K and 
+32K, I don't have explanation.
+  * In sequential + degraded-with-patch, the MD thread mostly become CPU 
+bound.
+
+If you want to we can discuss specific data point in those data. But in 
+general it seems with this patch, we have more predictable and in most 
+cases significant better sequential read performance when array is 
+degraded, and almost no noticeable impact on random read.
+
+Performance is a complicated thing, the patch works well for this 
+particular configuration, but may not be universal. For example I 
+imagine testing on all SSD array may have very different result. But I 
+personally think in most cases IO bandwidth is more scarce resource than 
+CPU.
+
+Eric
