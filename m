@@ -1,50 +1,66 @@
-From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Sun, 22 Mar 2015 19:39:52 +0200
-Message-ID: <550EFE68.6040007@plexistor.com>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>	<20150318132650.3336261c58829f49a9af8675@linux-foundation.org>	<20150319134313.GF4003@linux.intel.com>	<550C490E.1080708@redhat.com>	<20150320203136.GM4003@linux.intel.com>	<550C8C47.5090002@redhat.com>	<550EF6B2.70506@plexistor.com> <CAPcyv4ieZjj6senh26BANA4KT54AdrU+O=o8zCAk7W=vA+SjnQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST] one bugfix for md in 4.0-rc
+Date: Mon, 23 Mar 2015 08:17:37 +1100
+Message-ID: <20150323081737.5dfb8bf3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/c0yT5Nv/3c5aV8Z.REh9YQ/"; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4ieZjj6senh26BANA4KT54AdrU+O=o8zCAk7W=vA+SjnQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Rik van Riel <riel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-arch@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-nvdimm <linux-nvdimm@ml01.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid <linux-raid@vger.kernel.org>, Mel Gorman <mgorman@suse.de>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, "Richard W.M. Jones" <rjones@redhat.com>
 List-Id: linux-raid.ids
 
-On 03/22/2015 07:22 PM, Dan Williams wrote:
-> On Sun, Mar 22, 2015 at 10:06 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
-<>
->>
->> Moving to pfn's only means that all this unnamed code above that
->> "relies on struct page being PAGE_SIZE" is now not allowed to
->> interfaced with bio and sg list. Which in current code and in Dan's patches
->> means two tons of BUG_ONS and return -ENOTSUPP . For all these
->> subsystems below the bio and sglist that operate on page_structs
-> 
-> I'm not convinced it will be that bad.  In hyperbolic terms,
-> continuing to overload struct page means we get to let floppy.c do i/o
-> from pmem, who needs that level of compatibility?
-> 
+--Sig_/c0yT5Nv/3c5aV8Z.REh9YQ/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-But you do need to make sure it does not crash. right?
+The following changes since commit 06e5801b8cb3fc057d88cb4dc03c0b64b2744cda:
 
-> Similar to sg_chain support I think it's fine to let sub-systems /
-> archs add pmem i/o support over time.  It's a scaling problem our
-> development model is good at.
-> 
+  Linux 4.0-rc4 (2015-03-15 17:38:20 -0700)
 
-You are so eager to do all this massive change, and willing to do it
-over a decade (Judging by your own example of sg-chain)
+are available in the git repository at:
 
-But you completely ignore the fact that what I'm saying is that
-nothing needs to fundamentally change at all. No support over time
-and no "scaling problem" at all. All we want to fix is that page-struct
-means NOT PAGE_SIZE but some other size.
+  git://neil.brown.name/md/ tags/md/4.0-rc4-fix
 
-The much smaller change and full cross Kernel compatibility. What's
-not to like ?
+for you to fetch changes up to 0c35bd4723e4a39ba2da4c13a22cb97986ee10c8:
 
-Cheers
-Boaz
+  md: fix problems with freeing private data after ->run failure. (2015-03-=
+21 09:40:36 +1100)
+
+----------------------------------------------------------------
+One fix for md in 4.0-rc4
+
+Regression in recent patch causes crash on error path.
+
+----------------------------------------------------------------
+NeilBrown (1):
+      md: fix problems with freeing private data after ->run failure.
+
+ drivers/md/md.c    | 3 ++-
+ drivers/md/raid0.c | 2 --
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+--Sig_/c0yT5Nv/3c5aV8Z.REh9YQ/
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVQ8xcjnsnt1WYoG5AQIQsRAAllYlpJ5UDZE1rEfmWW6MCWolxbpQQcG+
+36rQgKKM6itADwISl2ZjHybUElWuwZcA5EhKPBSahoCn2d4FIAzNC+rsxQx6AB0H
+G2YuHIVEVmi6kIrR16c1/NtDtRWLDaCww0Iyip0M2KvcOJWmyl14zWDpoYFyNusn
+vPgWRmDEaJayh61akDc5bwQMRTrTuN9o8XPKJwdcRgw46gDMZfSow1sYxQgSabaE
+/nQLgIZBstJFQcENeWqfEDNNXmh26evzEi3vI808oW+u2BaTBaMGDFJZV6yJ8Qib
+zxqp9jnXvd4Y2tUknHKQNUgOJm4ZypiGSxcz8dkgF14BZXIGujSDXN/jHDVZmiyL
+CAyOeqqOLYbpbbX4/aaWCtJ3J/WKRkm4DjzsV807ZYSyiNpb1ytMg8q/nbvQu/Vy
+4I00eMkO+BUsrKffPjui0yN9EQOu/CYGoKv8qYq+8LmFYbC7yoy4Ni2WWQy0q1I8
+EUvn1nJpZ+TZNRjD6vIF26o5Rg5H6diqnmT3ERNsDO3Hxx28Hi2XWAqDs7iBgGjz
+acJGaXHnGbYRtcO+K09Gn5Yf3uFtqIAELGyU0sibuRaz+qvufZIWdUUjac/eHtfu
+SaI1DKVS4VeNOYOptkLgUw/JdAZU2GUMn95Mh0CQtK2aVlZFeYRAPOMbPEuIZQiM
+KccfGIW2b/0=
+=rD7C
+-----END PGP SIGNATURE-----
+
+--Sig_/c0yT5Nv/3c5aV8Z.REh9YQ/--
