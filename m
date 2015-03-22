@@ -1,48 +1,44 @@
 From: Boaz Harrosh <boaz@plexistor.com>
-Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Sun, 22 Mar 2015 19:06:58 +0200
-Message-ID: <550EF6B2.70506@plexistor.com>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com> <20150318132650.3336261c58829f49a9af8675@linux-foundation.org> <20150319134313.GF4003@linux.intel.com> <550C490E.1080708@redhat.com> <20150320203136.GM4003@linux.intel.com> <550C8C47.5090002@redhat.com>
+Subject: Re: [Linux-nvdimm] [RFC PATCH 0/7] evacuate struct page from the
+ block layer
+Date: Sun, 22 Mar 2015 19:22:00 +0200
+Message-ID: <550EFA38.8030706@plexistor.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com>	<20150318132650.3336261c58829f49a9af8675@linux-foundation.org>	<20150319134313.GF4003@linux.intel.com>	<550AF127.9010504@plexistor.com>	<20150319125917.6cc2bf02687aab542027d8ac@linux-foundation.org> <CAPcyv4j=M8V_36C-HhiJM7MHzNLFcpP=nec=LHnob5+qZ4xgYw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <550C8C47.5090002@redhat.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Rik van Riel <riel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4j=M8V_36C-HhiJM7MHzNLFcpP=nec=LHnob5+qZ4xgYw@mail.gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Boaz Harrosh <boaz@plexistor.com>, linux-arch@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, riel@redhat.com, linux-raid <linux-raid@vger.kernel.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Mel Gorman <mgorman@suse.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/20/2015 11:08 PM, Rik van Riel wrote:
-> On 03/20/2015 04:31 PM, Matthew Wilcox wrote:
-<>
->> There's a lot of code out there that relies on struct page being PAGE_SIZE
->> bytes.  I'm cool with replacing 'struct page' with 'struct superpage'
->> [1] in the biovec and auditing all of the code which touches it ... but
->> that's going to be a lot of code!  I'm not sure it's less code than
->> going directly to 'just do I/O on PFNs'.
+On 03/19/2015 10:59 PM, Dan Williams wrote:
+
 > 
-> Totally agreed here. I see absolutely no advantage to teaching the
-> IO layer about a "struct superpage" when it could operate on PFNs
-> just as easily.
-> 
+> At least for block-i/o it seems the only place we really need struct
+> page infrastructure is for kmap().  Given we already need a kmap_pfn()
+> solution for option 2 a "dynamic allocation" stop along that
+> development path may just naturally fall out.
 
-Or teaching 'struct page' to be variable length, This is already so at
-bio and sg level so you fixed nothing.
+Really? what about networked block-io, RDMA, FcOE emulated targets,
+mmaped pointers. virtual-machine bdev drivers
 
-Moving to pfn's only means that all this unnamed code above that
-"relies on struct page being PAGE_SIZE" is now not allowed to
-interfaced with bio and sg list. Which in current code and in Dan's patches
-means two tons of BUG_ONS and return -ENOTSUPP . For all these
-subsystems below the bio and sglist that operate on page_structs
+Block layer sits in the middle of the stack not at the low end as you
+make it appear. There are lots of below the bio subsystems that tie into
+a page struct, which will now stop to operate, unless you do:
 
-Say the "relies on struct page being PAGE_SIZE" is such an hard
-work, which is not at all at the bio and sg-list level, will
-it not be worth while fixing this instead of alienating the all
-Kernel from the IO subsystem.
+pfn_to_page() which means a page-less pfn will now crash or will need
+to be rejected so any where you have a
+	if (page_less_pfn())
+		... /* Fail or do some other code like copy */
+	else
+		page = pfn_to_page()
 
-But I believe it is the much much smaller change? Specially considering
-Networking, RDMA shared memory ...
+Is a double code path in the Kernel and is a nightmare to maintain.
+(I'm here for you believe me ;-) )
 
-Cheers
+Thanks
 Boaz
+
