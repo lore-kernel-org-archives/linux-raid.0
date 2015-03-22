@@ -1,91 +1,75 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: is mdadm RAID1 disk full sync
-Date: Sun, 22 Mar 2015 23:51:58 +1100
-Message-ID: <550EBAEE.6070608@websitemanagers.com.au>
-References: <CAN+bsqhy0Bao1hAn3R-KtXWOjYb8O2LDo+E1jNdktWdduUL4vw@mail.gmail.com>	<20150322142033.0af10b1a@notabene.brown>	<CAN+bsqg2wp4VMCA8O0b2rUfbGDGXZY=mFvj1hA=tWaVkdCMXtA@mail.gmail.com>	<550E6F02.3090800@websitemanagers.com.au> <CAN+bsqherPsEAPNrmYJ7o7DWP90gO4vv-sbmxCmthh_QU8qpcw@mail.gmail.com>
+From: Boaz Harrosh <boaz@plexistor.com>
+Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
+Date: Sun, 22 Mar 2015 17:51:26 +0200
+Message-ID: <550EE4FE.1070009@plexistor.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com> <20150318132650.3336261c58829f49a9af8675@linux-foundation.org> <20150319134313.GF4003@linux.intel.com> <550C490E.1080708@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAN+bsqherPsEAPNrmYJ7o7DWP90gO4vv-sbmxCmthh_QU8qpcw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: lingli tang <tanglingli001@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <550C490E.1080708@redhat.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: Rik van Riel <riel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-raid.ids
 
+On 03/20/2015 06:21 PM, Rik van Riel wrote:
+> On 03/19/2015 09:43 AM, Matthew Wilcox wrote:
+> 
+>> 1. Construct struct pages for persistent memory
+>> 1a. Permanently
+>> 1b. While the pages are under I/O
+> 
+> Michael Tsirkin and I have been doing some thinking about what
+> it would take to allocate struct pages per 2MB area permanently,
+> and allocate additional struct pages for 4kB pages on demand,
+> when a 2MB area is broken up into 4kB pages.
+> 
+> This should work for both DRAM and persistent memory.
+> 
 
+My thoughts as well, this need *not* be a huge evasive change. Is however
+a careful surgery in very core code. And lots of sleepless scary nights
+and testing to make sure all the side effects are wrinkled out.
 
-On 22/03/2015 23:29, lingli tang wrote:
-> Thanks very much.
-> I will try DRBD later
-> But I want to figure this out.
->
-> I have export disk using tgtd and load disk on another server using
-> iscsiadm with infiniband  of iser protocol.
-> Does ISCSI/Iser have any cache on it.
-Can you test that by removing the local disk from the MD array, or 
-changing your test so writes are directly to the remote device. Then run 
-the test, shutdown, and check the remote disk to see if it has all the 
-expected data, or still only some of the expected data. This will remove 
-MD as a suspect. Continue to try and get "closer" to the remote until 
-you can find the culprit. You might also use tcpdump or similar to sniff 
-the network, which will tell you if the expected data is being sent to 
-the remote (and when).
+BTW: Basic core block code may very well work with:
+	bv_page, bv_len > PAGE_SIZE bv_offset > PAGE_SIZE.
 
-Sorry, I don't know anywhere near enough to comment on things like 
-infiniband/iser, but these are the steps I would look into. Hope that it 
-is helpful.
+  Meaning bv_page-pfn is contiguous in physical space (and virtual
+  of course). So much so that there are already rumors that this suppose
+  to be supported, and there are already out-of-tree drivers that use
+  this today by kmalloc a page-order and feeding BIOs with bv_len=64K
 
-PS, I do use DRBD, and iSCSI, and it has been working well in my 
-environment for the last year or so, I have no commercial 
-interest/benefit from you using it, just a happy customer.
+  But going out of block-layer and say to networking say via iscsi and
+  this breaks pretty fast. Lets fix that then lets introduce a:
+	page_size(page)
+  page already knows its size (ie belonging to a 2M THP)
 
-Regards,
-Adam
->
-> 2015-03-22 15:28 GMT+08:00 Adam Goryachev <mailinglists@websitemanagers.com.au>:
->>
->> On 22/03/2015 16:00, lingli tang wrote:
->>> Thanks for reply.
->>>
->>> I have create a raid1 with two fusion io PCIe flash disk:
->>> mdadm --create /dev/md/master --name=master --level=1 --raid-devices=2
->>> /dev/fioa2 /dev/mapper/mpathc
->>> /dev/fioa2 is local disk on server A and /dev/mapper/mpathc is a iscsi
->>> load disk export from server B.
->>>
->>> After that we mkfs.ext4 on /dev/md/master and mount with 'sync' option on
->>> /data1
->>> and we will run mysql binlog on it.
->>> In order to avoid data loss  of mysql binlog we have set
->>> sync_binlog=1. so every sql commit will call fsync() to flush to disk.
->>>
->>> according to your description. if we reboot the server A, the two disk
->>> data on different server will be the same.
->>> but after the server A restarted, we assemble the two disk on two
->>> server, data is different on the two server, disk on server B lost
->>> more than one sql commit.
->>>
->>> I have checked it with strace 'mysqld' on Server A.
->>> I found a sql commit and fsync() on binlog file handle on server A but
->>> this sql can not find in assembled disk on server B.
->>>
->>> I also test it with two SAS disk, Server B still has more than one sql
->>> commit lost.
->> Sounds like you might be better using something like DRBD (www.drbd.org)
->> which has different modes, one of which will do what you are asking (not
->> respond until both systems have confirmed the data is written to the local
->> disk).
->>
->> In your current case, even if md is correctly writing to both underlying
->> 'devices' you have multiple layers under one of the devices, so you should
->> confirm that *all* of those layers are properly passing through the data
->> without any caching/etc.
->>
->> Regards,
->> Adam
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I am still not convinced it is worthwhile to have struct pages
+> for persistent memory though, but I am willing to change my mind.
+> 
 
+If we want copy-less, we need a common memory descriptor career. Today this
+is page-struct. So for me your above statement means:
+	"still not convinced I care about copy-less pmem"
+
+Otherwise you either enhance what you have today or devise a new
+system, which means change the all Kernel.
+
+Lastly: Why does pmem need to wait out-of-tree. Even you say above that
+machines with lots of DRAM can enjoy the HUGE-to-4k split. So why
+not let pmem waist 4k pages like everyone else and fix it as above
+down the line, both for pmem and ram. And save both ways.
+Why do we need to first change the all Kernel, then have pmem. Why not
+use current infra structure, for good or for worth, and incrementally
+do better.
+
+May I call you on the phone to try and work things out. I believe the
+huge page thing + 4k on demand is not a very big change, as long as
+	struct page *page is left as is, everywhere.
+
+But may *now* carry a different physical/virtual contiguous payload
+bigger then 4k. Is not the PAGE_SIZE the real bug? lets fix that problem.
+
+Thanks
+Boaz
