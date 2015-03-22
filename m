@@ -1,76 +1,75 @@
-From: NeilBrown <neilb@suse.de>
+From: lingli tang <tanglingli001@gmail.com>
 Subject: Re: is mdadm RAID1 disk full sync
-Date: Sun, 22 Mar 2015 14:20:33 +1100
-Message-ID: <20150322142033.0af10b1a@notabene.brown>
+Date: Sun, 22 Mar 2015 13:00:54 +0800
+Message-ID: <CAN+bsqg2wp4VMCA8O0b2rUfbGDGXZY=mFvj1hA=tWaVkdCMXtA@mail.gmail.com>
 References: <CAN+bsqhy0Bao1hAn3R-KtXWOjYb8O2LDo+E1jNdktWdduUL4vw@mail.gmail.com>
+	<20150322142033.0af10b1a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/dlJ1NEHliw/4FBLasZGXM1N"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAN+bsqhy0Bao1hAn3R-KtXWOjYb8O2LDo+E1jNdktWdduUL4vw@mail.gmail.com>
+In-Reply-To: <20150322142033.0af10b1a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: lingli tang <tanglingli001@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/dlJ1NEHliw/4FBLasZGXM1N
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Thanks for reply.
 
-On Sat, 21 Mar 2015 19:01:54 +0800 lingli tang <tanglingli001@gmail.com>
-wrote:
+I have create a raid1 with two fusion io PCIe flash disk:
+mdadm --create /dev/md/master --name=master --level=1 --raid-devices=2
+/dev/fioa2 /dev/mapper/mpathc
+/dev/fioa2 is local disk on server A and /dev/mapper/mpathc is a iscsi
+load disk export from server B.
 
-> I am a newbie of mdadm. I have a question but find no answer in
-> document or google for last 10 days.
->=20
-> The question is : RAID1 made by mdadm is full sync? for example, I
-> have two disk(sdb and sdc) to make RAID1 disk (/dev/md127), if I
-> commit an IO to the RAID1 disk (md127), it will return back to me when
-> all the two disk commit successfully      or      it will return back
-> to me once just one of the disk successfully commit.
+After that we mkfs.ext4 on /dev/md/master and mount with 'sync' option on /data1
+and we will run mysql binlog on it.
+In order to avoid data loss  of mysql binlog we have set
+sync_binlog=1. so every sql commit will call fsync() to flush to disk.
 
-The write request will not return until it has been submitted to all, and
-returned by, all working devices.
+according to your description. if we reboot the server A, the two disk
+data on different server will be the same.
+but after the server A restarted, we assemble the two disk on two
+server, data is different on the two server, disk on server B lost
+more than one sql commit.
 
->=20
-> I have test with xfs and ext4 with sync option, and it seems that two
-> disk have lots of commit difference after reboot the server. is that
-> means mdadm return success when one of the disk is commit
-> successfully?
+I have checked it with strace 'mysqld' on Server A.
+I found a sql commit and fsync() on binlog file handle on server A but
+this sql can not find in assembled disk on server B.
 
-That certainly shouldn't happen.  I would need more details of the experime=
-nt
-that you performed.
-
-NeilBrown
+I also test it with two SAS disk, Server B still has more than one sql
+commit lost.
 
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/dlJ1NEHliw/4FBLasZGXM1N
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVQ41ATnsnt1WYoG5AQJ3Jw/8Cs/vKfrUMaHgSpVMmbEHcgHCRs92BCM6
-UEcBp6QP03PNUdDmSkfSCCBv7fpVwYOBlVkS73Gs67p8GsNq1HvGdCwBMWdiMVpD
-lyzNacVqggRhYcc8afv21oESfqhPj/AyNMOBUP581ksIr7ye5xIaomjT2uyUHjgZ
-miIlic4LUsS51H/xz10PzeE1EMsN3D6utd9DPJhUlrMNs6u0vzPR4oMzmmh5+Gsy
-QM+tdOPdpKPLWNba7RX4TIWegPhiBEYJygQ90sffsSQZB+vDzNZbJG++hFU1L7II
-A81zhm15oTIGZRjiy3HfpV4YUCkKyCZsaedQ4XNXUxvvqe2RL+cy6PduEVBLe5je
-TnHFjPnsXbdCn/AgHnfJG+lQ+Z2a1+W8qX6ZRrMg/diIkcEwd3Tv70ik1EZSkCeH
-2MW1/typlhHivTYuZhZB6clv9fNgHENBo8+vocuVWa/Oi00nwfPP/P7Vh6Y24vjG
-XCVgeVoyOuJX8XPBe/eRHrAj4Kwo4y5Er8SmD3/ewgNZFcU0cV8BYZb41f6SDZ72
-olrQouCBtWA8xKkB3FeOhIuUoSDGz4pGkDA5LHM0gR3SLFw1I9ZUirIZYVyAlouv
-5qmwwpDytQcbbFU4Vm/UdUqe4P5QCRKVEQwy7zqYuItzSgE3de0Cl7QxASCEXi8D
-IvEo5rD7+n8=
-=ITTU
------END PGP SIGNATURE-----
-
---Sig_/dlJ1NEHliw/4FBLasZGXM1N--
+2015-03-22 11:20 GMT+08:00 NeilBrown <neilb@suse.de>:
+> On Sat, 21 Mar 2015 19:01:54 +0800 lingli tang <tanglingli001@gmail.com>
+> wrote:
+>
+>> I am a newbie of mdadm. I have a question but find no answer in
+>> document or google for last 10 days.
+>>
+>> The question is : RAID1 made by mdadm is full sync? for example, I
+>> have two disk(sdb and sdc) to make RAID1 disk (/dev/md127), if I
+>> commit an IO to the RAID1 disk (md127), it will return back to me when
+>> all the two disk commit successfully      or      it will return back
+>> to me once just one of the disk successfully commit.
+>
+> The write request will not return until it has been submitted to all, and
+> returned by, all working devices.
+>
+>>
+>> I have test with xfs and ext4 with sync option, and it seems that two
+>> disk have lots of commit difference after reboot the server. is that
+>> means mdadm return success when one of the disk is commit
+>> successfully?
+>
+> That certainly shouldn't happen.  I would need more details of the experiment
+> that you performed.
+>
+> NeilBrown
+>
+>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
