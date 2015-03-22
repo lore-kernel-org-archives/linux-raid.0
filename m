@@ -1,75 +1,70 @@
 From: Boaz Harrosh <boaz@plexistor.com>
 Subject: Re: [RFC PATCH 0/7] evacuate struct page from the block layer
-Date: Sun, 22 Mar 2015 17:51:26 +0200
-Message-ID: <550EE4FE.1070009@plexistor.com>
-References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com> <20150318132650.3336261c58829f49a9af8675@linux-foundation.org> <20150319134313.GF4003@linux.intel.com> <550C490E.1080708@redhat.com>
+Date: Sun, 22 Mar 2015 18:24:50 +0200
+Message-ID: <550EECD2.4000604@plexistor.com>
+References: <20150316201640.33102.33761.stgit@dwillia2-desk3.amr.corp.intel.com> <20150318132650.3336261c58829f49a9af8675@linux-foundation.org> <20150319134313.GF4003@linux.intel.com> <550C490E.1080708@redhat.com> <20150320203136.GM4003@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <550C490E.1080708@redhat.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Rik van Riel <riel@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150320203136.GM4003@linux.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>, Rik van Riel <riel@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, axboe@kernel.dk, linux-nvdimm@ml01.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-raid@vger.kernel.org, mgorman@suse.de, hch@infradead.org, linux-fsdevel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-raid.ids
 
-On 03/20/2015 06:21 PM, Rik van Riel wrote:
-> On 03/19/2015 09:43 AM, Matthew Wilcox wrote:
+On 03/20/2015 10:31 PM, Matthew Wilcox wrote:
+<>
 > 
->> 1. Construct struct pages for persistent memory
->> 1a. Permanently
->> 1b. While the pages are under I/O
-> 
-> Michael Tsirkin and I have been doing some thinking about what
-> it would take to allocate struct pages per 2MB area permanently,
-> and allocate additional struct pages for 4kB pages on demand,
-> when a 2MB area is broken up into 4kB pages.
-> 
-> This should work for both DRAM and persistent memory.
-> 
+> There's a lot of code out there that relies on struct page being PAGE_SIZE
+> bytes.  
 
-My thoughts as well, this need *not* be a huge evasive change. Is however
-a careful surgery in very core code. And lots of sleepless scary nights
-and testing to make sure all the side effects are wrinkled out.
+Not so much really. Not at the lower end of the stack. You can actually feed
+a 
+	vp = kmalloc(64K);
+	bv_page = virt_to_page(vp)
+	bv_len = 64k
 
-BTW: Basic core block code may very well work with:
-	bv_page, bv_len > PAGE_SIZE bv_offset > PAGE_SIZE.
+And feed that to an hard drive. It works.
 
-  Meaning bv_page-pfn is contiguous in physical space (and virtual
-  of course). So much so that there are already rumors that this suppose
-  to be supported, and there are already out-of-tree drivers that use
-  this today by kmalloc a page-order and feeding BIOs with bv_len=64K
-
-  But going out of block-layer and say to networking say via iscsi and
-  this breaks pretty fast. Lets fix that then lets introduce a:
+The only last stronghold of PAGE_SIZE is at the page-cache and page-fault
+granularity where the minimum is the better. But it should not be hard
+to clean up the lower end of the stack. Even introduce a:
 	page_size(page)
-  page already knows its size (ie belonging to a 2M THP)
 
-> I am still not convinced it is worthwhile to have struct pages
-> for persistent memory though, but I am willing to change my mind.
+You will find that every subsystem that can work with a sub-page size
+similar to above bv_len. Will also work well with bigger than PAGE_SIZE
+bv_len equivalent.
+
+Only the BUG_ONs need to convert to page_size(page) instead of PAGE_SIZE
+
+> I'm cool with replacing 'struct page' with 'struct superpage'
+> [1] in the biovec and auditing all of the code which touches it ... but
+> that's going to be a lot of code!  I'm not sure it's less code than
+> going directly to 'just do I/O on PFNs'.
 > 
 
-If we want copy-less, we need a common memory descriptor career. Today this
-is page-struct. So for me your above statement means:
-	"still not convinced I care about copy-less pmem"
+struct page already knows how to be a super-page. with the THP mechanics.
+All a page_size(page) needs is a call to its section, we do not need any
+added storage at page-struct. (And we can cache this as a flag we actually
+already have a flag)
 
-Otherwise you either enhance what you have today or devise a new
-system, which means change the all Kernel.
+It looks like you are very trigger happy to change
+	"biovec and auditing all of the code which touches it"
 
-Lastly: Why does pmem need to wait out-of-tree. Even you say above that
-machines with lots of DRAM can enjoy the HUGE-to-4k split. So why
-not let pmem waist 4k pages like everyone else and fix it as above
-down the line, both for pmem and ram. And save both ways.
-Why do we need to first change the all Kernel, then have pmem. Why not
-use current infra structure, for good or for worth, and incrementally
-do better.
+I believe long long term your #1b is the correct "full audit" path:
 
-May I call you on the phone to try and work things out. I believe the
-huge page thing + 4k on demand is not a very big change, as long as
-	struct page *page is left as is, everywhere.
+	Page Is the virtual-2-page-2-physical descriptor + state.
+	It is variable size
+ 
+> [1] Please, somebody come up with a better name!
 
-But may *now* carry a different physical/virtual contiguous payload
-bigger then 4k. Is not the PAGE_SIZE the real bug? lets fix that problem.
+sure struct page *page.
+
+The one to kill is PAGE_SIZE. In most current code it can just be MIN_PAGE_SIZE
+and CACHE_PAGE_SIZE == MIN_PAGE_SIZE. Only novelty is enhance of the split_huge_page
+in the case of "page-fault-granularity".
 
 Thanks
 Boaz
+
