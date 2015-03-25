@@ -1,36 +1,44 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: missing arrays after OS upgrade
-Date: Tue, 24 Mar 2015 20:03:07 -0400
-Message-ID: <5511FB3B.8030607@turmel.org>
-References: <CAHscji03jWu3EF0KUG45Hv4Y2t5beJmEoe9uWMfR=wGz_dkBbw@mail.gmail.com>
+From: Simon Kirby <sim@hostway.ca>
+Subject: MD request counter broken on 4.0-rc5 RAID1
+Date: Tue, 24 Mar 2015 17:04:03 -0700
+Message-ID: <20150325000403.GA27368@hostway.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHscji03jWu3EF0KUG45Hv4Y2t5beJmEoe9uWMfR=wGz_dkBbw@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Sanabria <sanabria.d@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/24/2015 06:48 PM, Daniel Sanabria wrote:
-> Hi,
-> 
-> One of our servers went trough an OS upgrade (from fedora20 to
-> fedora21) and althou some of the arrays seem to be auto-detected one
-> of them seem to be missing.
+Hello :)
 
-You may have had some device names reordered.  Building a config that
-relies on the names is common but unwise.
+I'm seeing "iostat -x -k 1" print this after a RAID1 rebuild on 4.0-rc5.
+It's not abnormal other than it's 3-disk, with one being SSD (sdc) and
+the other two being write-mostly:
 
-With such a thin report, there's not much to go on.  Please run lsdrv
-[1] and paste its output in a reply.
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdb               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdc               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00     0.00     0.00   345.00    0.00    0.00    0.00   0.00 100.00
+md2               0.00     0.00    0.00    0.00     0.00     0.00     0.00 58779.00    0.00    0.00    0.00   0.00 100.00
+md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00    12.00    0.00    0.00    0.00   0.00 100.00
 
-Then add the contents of /proc/mdstat, the relevant-looking parts of
-dmesg, and your mdadm.conf file.
+This was working on 3.18. Shall I bisect, or is it obvious?
 
-We may need more later, but this will permit intelligent follow-up
-questions.
+It seems to just be leaking as the counters were going up gradually while
+it was rebuilding.
 
-Phil
+Personalities : [linear] [raid0] [raid1] [raid10]
+md1 : active raid1 sdb2[1](W) sda2[0](W) sdc2[2]
+      530048 blocks [3/3] [UUU]
 
-[1] https://github.com/pturmel/lsdrv
+md2 : active raid1 sdb3[0](W) sdc3[2] sda3[1](W)
+      153613440 blocks [3/3] [UUU]
+
+md0 : active raid1 sdb1[0](W) sdc1[2] sda1[1](W)
+      2104384 blocks [3/3] [UUU]
+
+unused devices: <none>
+
+Simo-
