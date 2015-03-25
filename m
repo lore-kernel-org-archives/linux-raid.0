@@ -1,29 +1,108 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Scott Sinno <sinno@sinno.net>
 Subject: Re: RAID6 won't reassemble after disk controller failure
-Date: Wed, 25 Mar 2015 16:22:46 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1503251621390.20507@uplift.swm.pp.se>
-References: <5512D21E.1010506@sinno.net>
+Date: Wed, 25 Mar 2015 11:26:34 -0400
+Message-ID: <5512D3AA.5000003@sinno.net>
+References: <5512D21E.1010506@sinno.net> <alpine.DEB.2.02.1503251621390.20507@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5512D21E.1010506@sinno.net>
+In-Reply-To: <alpine.DEB.2.02.1503251621390.20507@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Scott Sinno <sinno@sinno.net>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org, "Vaughan, Garrison (GSFC-606.2)[INTERNATIONAL TECHNOLOGY COALITION, INC]" <garrison.r.vaughan@nasa.gov>
 List-Id: linux-raid.ids
 
-On Wed, 25 Mar 2015, Scott Sinno wrote:
+Mikael Abrahamsson wrote:
+> I would recommend you to not do that unless there is no other way out.
 
->     JBOD controller failed this morning - we've replaced it, and all
-> drives are being presented to the system again, however 'mdadm' refuses
-> to assemble the ARRAY.  I've tried assembling with '--force' flags but
-> it still won't...any help most appreciated.  I'm guessing I'll need to
-> recreate with '--assemble-clean'
+Wholeheartedly agreed, thus looking to this list for guidance first :-)
 
-I would recommend you to not do that unless there is no other way out.
+> 
+> Please post dmesg output from the --assemble --force attempt, it might
+> contain reason why the assembly was unsuccessful.
+> 
 
-Please post dmesg output from the --assemble --force attempt, it might 
-contain reason why the assembly was unsuccessful.
+It doesn't appear to be very telling.  Note that per the provided
+'-E'(examine) output, event count is off a bit on some of the drives,
+and several report 'missing'
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+#dmesg output
+
+md: bind<sdbk>
+md: bind<sdbl>
+md: bind<sdbm>
+md: bind<sdbn>
+md: bind<sdbo>
+md: bind<sdbp>
+md: bind<sdbq>
+md: bind<sdbi>
+md: bind<sdbr>
+md: bind<sdbs>
+md: bind<sdbt>
+md: bind<sdbj>
+md: md10 stopped.
+md: unbind<sdbj>
+md: export_rdev(sdbj)
+md: unbind<sdbt>
+md: export_rdev(sdbt)
+md: unbind<sdbs>
+md: export_rdev(sdbs)
+md: unbind<sdbr>
+md: export_rdev(sdbr)
+md: unbind<sdbi>
+md: export_rdev(sdbi)
+md: unbind<sdbq>
+md: export_rdev(sdbq)
+md: unbind<sdbp>
+md: export_rdev(sdbp)
+md: unbind<sdbo>
+md: export_rdev(sdbo)
+md: unbind<sdbn>
+md: export_rdev(sdbn)
+md: unbind<sdbm>
+md: export_rdev(sdbm)
+md: unbind<sdbl>
+md: export_rdev(sdbl)
+md: unbind<sdbk>
+md: export_rdev(sdbk)
+md: md10 stopped.
+md: bind<sdbk>
+md: bind<sdbl>
+md: bind<sdbm>
+md: bind<sdbn>
+md: bind<sdbo>
+md: bind<sdbp>
+md: bind<sdbq>
+md: bind<sdbi>
+md: bind<sdbr>
+md: bind<sdbs>
+md: bind<sdbt>
+md: bind<sdbj>
+md: md10 stopped.
+md: unbind<sdbj>
+md: export_rdev(sdbj)
+md: unbind<sdbt>
+md: export_rdev(sdbt)
+md: unbind<sdbs>
+md: export_rdev(sdbs)
+md: unbind<sdbr>
+md: export_rdev(sdbr)
+md: unbind<sdbi>
+md: export_rdev(sdbi)
+md: unbind<sdbq>
+md: export_rdev(sdbq)
+md: unbind<sdbp>
+md: export_rdev(sdbp)
+md: unbind<sdbo>
+md: export_rdev(sdbo)
+md: unbind<sdbn>
+md: export_rdev(sdbn)
+md: unbind<sdbm>
+md: export_rdev(sdbm)
+md: unbind<sdbl>
+md: export_rdev(sdbl)
+md: unbind<sdbk>
+md: export_rdev(sdbk)
+
+
