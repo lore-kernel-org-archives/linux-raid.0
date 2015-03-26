@@ -1,82 +1,94 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Badblocks and degraded array.
-Date: Thu, 26 Mar 2015 10:50:35 +1100
-Message-ID: <20150326105035.5051a60d@notabene.brown>
-References: <20150325231400.GA9242@animx.eu.org>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: /dev/md0 can't be created
+Date: Thu, 26 Mar 2015 03:36:35 -0400 (EDT)
+Message-ID: <200110393.3671122.1427355395924.JavaMail.zimbra@redhat.com>
+References: <1215809785.2787621.1427263359309.JavaMail.zimbra@redhat.com> <12135556.2792023.1427264134774.JavaMail.zimbra@redhat.com> <20150325173529.13a6efd7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/e4YHnCeFh8BD/xn7duwkM4o"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150325231400.GA9242@animx.eu.org>
+In-Reply-To: <20150325173529.13a6efd7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/e4YHnCeFh8BD/xn7duwkM4o
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil
 
-On Wed, 25 Mar 2015 19:14:00 -0400 Wakko Warner <wakko@animx.eu.org> wrote:
+   I can reproduce it now. Do you want me to run udevadm monitor before the test?
+And I checked the /var/log/messages, it show the information:
 
-> Firstly, I'm not in need of assistance, just looking for information.
->=20
-> I had a system with 4x 500gb disks in raid 5.  One drive (slot 2) was
-> kicked.  I removed and reseated the drive (which is OK).  During rebuild,=
- it
-> hit a bad block on another drive (slot 1) which it kicked.  Is it possible
-> that if there's no redundancy to not kick a drive if it has a bad block?
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-2>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-3>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-4>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-5>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-6>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-7>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-9>
+Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-8>
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-7 operational as raid disk 5
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-6 operational as raid disk 4
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-5 operational as raid disk 3
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-4 operational as raid disk 2
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-3 operational as raid disk 1
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-2 operational as raid disk 0
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: allocated 0kB
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: raid level 5 active with 6 out of 7 devices, algorithm 2
+Oct 20 19:59:59 ibm-z10-25 kernel: md/raid456: discard support disabled due to uncertainty.
+Oct 20 19:59:59 ibm-z10-25 kernel: Set raid456.devices_handle_discard_safely=Y to override.
+Oct 20 19:59:59 ibm-z10-25 kernel: md0: detected capacity change from 0 to 1881145344
+Oct 20 19:59:59 ibm-z10-25 kernel: md: recovery of RAID array md0
+Oct 20 19:59:59 ibm-z10-25 kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Oct 20 19:59:59 ibm-z10-25 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Oct 20 19:59:59 ibm-z10-25 kernel: md: using 128k window, over a total of 306176k.
+Oct 20 19:59:59 ibm-z10-25 systemd-udevd: inotify_add_watch(7, /dev/md0, 10) failed: No such file or directory
+  
+Xiao
 
-Only if you have bad-block-logs enabled.  This is a relatively new feature.
-
->=20
-> In the end, my solution was to create a dm target using linear and zero as
-> needed (zero where the bad block was) then a snapshot target ontop of that
-> since there was no possibility to write to that section that was a zero
-> target.  I had LVM on top of the raid and my /usr was the one in the bad
-> block.  Fortunately, no files were in that bad block.  I dumped the usr
-> volume elsewhere, removed all the mappings (md, dm, and lvm), assembled t=
-he
-> array again and dumped the volume back which corrected the bad sector.  A=
-ll
-> this was done using another installation.
->=20
-> This system will be retired anyway so the data isn't really useful.  But
-> having the experience is.
->=20
-> On a side note, it seems that everytime I encounter a bad sector on a dri=
-ve,
-> it's always 8 sectors.  Does anyone know if hard drives have been 4k
-> sectored longer than AF drives?  This disk is 512 physical according to
-> fdisk.  I've even noticed this on IDE drives.
->=20
-Linux tends to do IO in multiples of 4k so it is unlikely to report a small=
-er
-block.  That may or may not be relevant for your particular experiences.
-
-NeilBrown
-
-
---Sig_/e4YHnCeFh8BD/xn7duwkM4o
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVRNJyznsnt1WYoG5AQJNig/9ETQ1Mm8wJeGlQDLb1rYXBgB2tWABFW+T
-FcnPHGWqnuWi6AOUfxWcSk4F0F8mZWobRiXlJhSeDb7SechqM4CVtSHHZeRXeZqu
-GUqMgPSUO3ecBd6hjl289+23CxAl7ZCmvk4oWBCj/fGMgEGDI5aYqGmf7H3rt9dJ
-iGSC2nNuRCdZmtVkLi6koaYfwFMZhKtKgUZKVx2234MDNvCPgxGtWc5dpWp5aflL
-2S1tVEY9yxbpbB6VxqU9/HgcHnalD2SIu2XeNZZtFTU85Wxn8ziFMDOjNqViMpjY
-z0taIZzTsSn7dOt1WmzhF0w9g4hi5mPA2ccXAE1Oib6BFEeyCB5yXJShyO4LhPqa
-Z6Qs3LT6is26x0yyS4J3Vs53mfvQk2eAZRSr5uW4IhSk+0l0YolMZlFHV7nEDaVy
-IT2UlyNKDr5dt7yS5dZFe3KbilNK/SESWjSkLvxsFudja3/6BuhJjLpG6nYM3+aB
-CBgHD0JK7gzFgpEF3s3GNWmeb3H0fIm8vwGgvkCYeQN+VtFKQhZY9ZhCTV/BS0C1
-GlPfu3Wi0bPRLpiQ3Pe2JJ4IcdlPiPeYvufEPGz+HFiyDUhjjcAB2QybvD3MabGZ
-V8HRbbwRO7BY/dUhpj5LRF426oC3jNcKRgNZrVXpDG6wyv9majlbE1T/rcW848Zh
-ctQyzaCNfLs=
-=d6CE
------END PGP SIGNATURE-----
-
---Sig_/e4YHnCeFh8BD/xn7duwkM4o--
+----- Original Message -----
+> From: "NeilBrown" <neilb@suse.de>
+> To: "Xiao Ni" <xni@redhat.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Wednesday, March 25, 2015 2:35:29 PM
+> Subject: Re: /dev/md0 can't be created
+> 
+> On Wed, 25 Mar 2015 02:15:34 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
+> 
+> > Hi all
+> > 
+> >    I have encountered so many times, the raid device is created
+> >    successfully, but the directory
+> > /dev/md0 can't be created. It can't reproduce 100%.
+> > 
+> > [root@intel-sugarbay-do-01 create_assemble]# cat /proc/mdstat
+> > Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> > md0 : active raid10 loop7[7](S) loop6[6] loop5[5] loop4[4] loop3[3]
+> > loop2[2] loop1[1] loop0[0]
+> >       1788416 blocks super 1.2 512K chunks 2 near-copies [7/7] [UUUUUUU]
+> >       bitmap: 0/1 pages [0KB], 65536KB chunk
+> > 
+> > unused devices: <none>
+> > [root@intel-sugarbay-do-01 create_assemble]# ls /dev/md0
+> > ls: cannot access /dev/md0: No such file or directory
+> > 
+> >     The underline devices are loop devices which are created with big file.
+> > 
+> >     The kernel I used is RHEL7 (3.10.0-234.el7.x86_64.debug, mdadm - v3.3.2
+> >     - 21st August 2014)
+> > I'll try to reproduce this with upstream kernel and mdadm. But I think it
+> > shouldn't be the problem about kernel.
+> > 
+> >     What do you think I should check for this? And which tool is
+> >     responsible for creating the directory? Maybe
+> > I can add some log to it to find the reason.
+> > 
+> 
+> /dev/md0 is created by udev.
+> Run
+>   udevadm monitor
+> 
+> to see the events that udev is processing.  When and ADD event for "md0" is
+> processed, /dev/md0 should get created.
+> 
+> NeilBrown
+> 
