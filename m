@@ -1,94 +1,295 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: /dev/md0 can't be created
-Date: Thu, 26 Mar 2015 03:36:35 -0400 (EDT)
-Message-ID: <200110393.3671122.1427355395924.JavaMail.zimbra@redhat.com>
-References: <1215809785.2787621.1427263359309.JavaMail.zimbra@redhat.com> <12135556.2792023.1427264134774.JavaMail.zimbra@redhat.com> <20150325173529.13a6efd7@notabene.brown>
+From: Dave Stevens <geek@uniserve.com>
+Subject: no good deed goes unpunished...
+Date: Thu, 26 Mar 2015 16:52:10 -0700
+Message-ID: <20150326165210.160752yq9xdwbd7u@webmail.uniserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150325173529.13a6efd7@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil
+Hello list, Phil,
 
-   I can reproduce it now. Do you want me to run udevadm monitor before the test?
-And I checked the /var/log/messages, it show the information:
+I read your advice in the text below and it seems very reasonable. I  
+want to do a test to see if the data is readable and this is what I  
+did with the live distro:
 
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-2>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-3>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-4>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-5>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-6>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-7>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-9>
-Oct 20 19:59:59 ibm-z10-25 kernel: md: bind<dm-8>
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-7 operational as raid disk 5
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-6 operational as raid disk 4
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-5 operational as raid disk 3
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-4 operational as raid disk 2
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-3 operational as raid disk 1
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: device dm-2 operational as raid disk 0
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: allocated 0kB
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid:md0: raid level 5 active with 6 out of 7 devices, algorithm 2
-Oct 20 19:59:59 ibm-z10-25 kernel: md/raid456: discard support disabled due to uncertainty.
-Oct 20 19:59:59 ibm-z10-25 kernel: Set raid456.devices_handle_discard_safely=Y to override.
-Oct 20 19:59:59 ibm-z10-25 kernel: md0: detected capacity change from 0 to 1881145344
-Oct 20 19:59:59 ibm-z10-25 kernel: md: recovery of RAID array md0
-Oct 20 19:59:59 ibm-z10-25 kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-Oct 20 19:59:59 ibm-z10-25 kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-Oct 20 19:59:59 ibm-z10-25 kernel: md: using 128k window, over a total of 306176k.
-Oct 20 19:59:59 ibm-z10-25 systemd-udevd: inotify_add_watch(7, /dev/md0, 10) failed: No such file or directory
-  
-Xiao
+mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
 
------ Original Message -----
-> From: "NeilBrown" <neilb@suse.de>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Wednesday, March 25, 2015 2:35:29 PM
-> Subject: Re: /dev/md0 can't be created
-> 
-> On Wed, 25 Mar 2015 02:15:34 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
-> 
-> > Hi all
-> > 
-> >    I have encountered so many times, the raid device is created
-> >    successfully, but the directory
-> > /dev/md0 can't be created. It can't reproduce 100%.
-> > 
-> > [root@intel-sugarbay-do-01 create_assemble]# cat /proc/mdstat
-> > Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> > md0 : active raid10 loop7[7](S) loop6[6] loop5[5] loop4[4] loop3[3]
-> > loop2[2] loop1[1] loop0[0]
-> >       1788416 blocks super 1.2 512K chunks 2 near-copies [7/7] [UUUUUUU]
-> >       bitmap: 0/1 pages [0KB], 65536KB chunk
-> > 
-> > unused devices: <none>
-> > [root@intel-sugarbay-do-01 create_assemble]# ls /dev/md0
-> > ls: cannot access /dev/md0: No such file or directory
-> > 
-> >     The underline devices are loop devices which are created with big file.
-> > 
-> >     The kernel I used is RHEL7 (3.10.0-234.el7.x86_64.debug, mdadm - v3.3.2
-> >     - 21st August 2014)
-> > I'll try to reproduce this with upstream kernel and mdadm. But I think it
-> > shouldn't be the problem about kernel.
-> > 
-> >     What do you think I should check for this? And which tool is
-> >     responsible for creating the directory? Maybe
-> > I can add some log to it to find the reason.
-> > 
-> 
-> /dev/md0 is created by udev.
-> Run
->   udevadm monitor
-> 
-> to see the events that udev is processing.  When and ADD event for "md0" is
-> processed, /dev/md0 should get created.
-> 
-> NeilBrown
-> 
+and then mdadm said:
+
+mdadm: can not open device /dev/sdb2: device or resource busy
+mdadm: /dev/sdb2 has no superblock - assembly aborted
+
+I don't know if these errors are related - i.e., if there is no  
+superblock is that the busy resource in the first message? And if the  
+superblock is absent can I put it back or somehow recreate it?
+
+Dave
+
+
+
+
+
+
+From: Phil Turmel <philip@turmel.org>
+To: Dave Stevens <geek@uniserve.com>, linux-raid@vger.kernel.org
+Subject: Re: two raid issues
+Date: Sun, 08 Mar 2015 09:52:04 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101  
+Thunderbird/31.5.0
+
+Good morning Dave,
+
+On 03/07/2015 05:42 PM, Dave Stevens wrote:
+> Hello the raid list,
+>
+> I have inherited a server set up by people who are no longer around. It
+> worked fine until recently and then after a routine update refused to
+> boot. I've got the machine in my office and have been examining the
+> problem, or rather problems, I think there are two.
+
+Three, at least.
+
+> First, the bootable partition on /dev/sda1 won't successfully boot to a
+> xen kernel, kernel version is 2.6.18.something-xen. The intent is to
+> boot to a raid-10 array of four 750GB drives, each partitioned into a
+> small and a large partition as detailed below.
+>
+> Boot proceeds normally according to on-screen messages until this:
+>
+> md: md0: raid array is not clean  -- starting background reconstruction
+> raid10: not enough operational mirrors for md0
+> md: pers -> () failed
+
+Yup.  Degraded to the point of not running.
+
+> Immediately after these messages is another stating that an attempt has
+> been made to kill init, kernel panic and reboot.
+
+No way to pivot to your root filesystem, so your initramfs gives up.
+Depending on the distro, it may be possible to pass a kernel command
+line option to drop into a repair shell at that point.
+
+> I've tried to give these messages verbatim but have no way (I think) to
+> reproduce them other than manually.
+
+Repair shell, if available.
+
+> So at first I looked around, read through the wiki and found advice to
+> NOT write anything to the array, which seems reasonable. I looked at a
+> live microknoppix distro called runtime live that gave me a command
+> shell to run the examine command with the output below:
+
+LiveCD boot is good, and the following report is very detailed, thanks:
+
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
+>   Creation Time : Sun Nov 29 15:33:50 2009
+>      Raid Level : raid10
+>   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
+>      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Wed Feb 18 19:28:22 2015
+>           State : active
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 2
+>   Spare Devices : 0
+>        Checksum : 7c76593b - correct
+>          Events : 32945477
+
+This is important:  ^^^^^^^^
+
+>          Layout : near=2
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        2        0      active sync   /dev/sda2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       0        0        1      active sync
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sdb2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
+>   Creation Time : Sun Nov 29 15:33:50 2009
+>      Raid Level : raid10
+>   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
+>      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Sat Nov 22 13:18:12 2014
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 7d850ca4 - correct
+>          Events : 32945477
+
+With this:          ^^^^^^^^
+
+>          Layout : near=2
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       18        1      active sync   /dev/sdb2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sdc2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
+>   Creation Time : Sun Nov 29 15:33:50 2009
+>      Raid Level : raid10
+>   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
+>      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 0
+>
+>     Update Time : Wed Feb 18 19:30:13 2015
+>           State : active
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 2
+>   Spare Devices : 0
+>        Checksum : 7c7659de - correct
+>          Events : 32945479
+
+And this:           ^^^^^^^^
+
+>          Layout : near=2
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       34        2      active sync   /dev/sdc2
+>
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sdd2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
+>   Creation Time : Sun Nov 29 15:33:50 2009
+>      Raid Level : raid10
+>   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
+>      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 5
+> Preferred Minor : 0
+>
+>     Update Time : Wed Sep  4 07:51:50 2013
+>           State : active
+>  Active Devices : 4
+> Working Devices : 5
+>  Failed Devices : 0
+>   Spare Devices : 1
+>        Checksum : 77c1a3a7 - correct
+>          Events : 53
+
+Whoa!              ^^^^
+
+>          Layout : near=2
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       50        3      active sync   /dev/sdd2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       50        3      active sync   /dev/sdd2
+>    4     4       8       66        4      spare   /dev/sde2
+> /dev/sde2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : a9bde90a:77abaef6:6c6fe013:77d6cdaf
+>   Creation Time : Sun Nov 29 15:33:50 2009
+>      Raid Level : raid10
+>   Used Dev Size : 732467456 (698.54 GiB 750.05 GB)
+>      Array Size : 1464934912 (1397.07 GiB 1500.09 GB)
+>    Raid Devices : 4
+>   Total Devices : 5
+> Preferred Minor : 0
+>
+>     Update Time : Sun Sep  8 13:25:42 2013
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 77c775be - correct
+>          Events : 7934
+
+And Whoa again!    ^^^^^^
+
+>          Layout : near=2
+>      Chunk Size : 256K
+>
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       66        3      active sync   /dev/sde2
+>
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       8       66        3      active sync   /dev/sde2
+>
+> This makes sense to me as far as it goes but I don't see what to do
+> next. As I understand it the four partitions from sda2 to sdd2 would
+> form the array with sde as hot spare. It has been my assumption that if
+> a drive failed that sde would sync and take over. I don't know if this
+> is in fact the case and don't see a path forward. Of course the backups
+> are inadequate.
+
+Based on the events and update timestamps, sdd died sometime around Wed
+Sep 4 07:51:50 2013, at which point sde stepped in.  It too failed
+shortly after ~ Sun Sep 8 13:25:42 2013.  You then ran degraded for over
+a year until sdb also failed ~ Sat Nov 22 13:18:12 2014.  You were then
+running doubly-degraded (luckily on non-adjacent members) until this Feb
+14 when sda was booted out.  Leaving only one running drive.
+
+{ I wouldn't keep such people around, either. }
+
+Your best bet is to force assembly of the last two working drives to get
+the system running, then take an immediate backup of all critical files.
+  Do the forced assembly with the livecd, then do a clean shutdown.  You
+should then be able to boot the original OS and take your backup.
+
+Then you need to completely rebuild your system with proper log
+monitoring, array monitoring, and verification of your drives.
+
+Phil
+
+
+-- 
+"As long as politics is the shadow cast on society by big business,
+the attenuation of the shadow will not change the substance."
+
+-- John Dewey
+
+
+
+
+
