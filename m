@@ -1,24 +1,87 @@
-From: Daniel Sanabria <sanabria.d@gmail.com>
-Subject: Re: missing arrays after OS upgrade
-Date: Fri, 27 Mar 2015 09:40:31 +0000
-Message-ID: <CAHscji2hEY+8nm-qL0mJRhSoD6hWHyc1OoJbb+=mKSPfjeBgdQ@mail.gmail.com>
-References: <CAHscji03jWu3EF0KUG45Hv4Y2t5beJmEoe9uWMfR=wGz_dkBbw@mail.gmail.com>
-	<5511FB3B.8030607@turmel.org>
-	<CAHscji1spYx8vvUQ2=PsU4VRCb4+kOqAstJqyK0SbYJ6=OSYiQ@mail.gmail.com>
-	<5512A6EB.10104@turmel.org>
+From: Dave Stevens <geek@uniserve.com>
+Subject: re: no good deed goes unpunished...
+Date: Fri, 27 Mar 2015 10:33:01 -0700
+Message-ID: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5512A6EB.10104@turmel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks Phil,
+From:	Roger Heflin <rogerheflin@gmail.com>
+To:	Dave Stevens <geek@uniserve.com>
+Cc:	Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: no good deed goes unpunished...
+Date:	Thu, 26 Mar 2015 19:04:45 -0500
+Sender:	linux-raid-owner@vger.kernel.org
 
-The array is now up and running following your advice.
+you should probably do cat /proc/mdstat
 
-Thanks again,
+It is likely that the livecd may have already tried to assemble it,
+and that the busy is because it is already in use.
 
-Daniel
+If it is already assembled and you want to redo it first you will need
+to stop the assembled array to be able to redo it.
+
+so this is what I did while running the live distro:
+
+# cat /proc/mdstat
+
+Personalities :
+
+md12 : inactive   sda2[0](S)
+	732467520 blocks
+
+md10 : inactive sdc2[2](S) sdb2[1](S)
+	1464935040 blocks
+
+unused devices: <none>
+
+
+It seemed to me that matters were needlessly complicated by possible  
+residual issues from my earlier unsuccessful attempts so I rebooted.
+
+
+------------------------------ reboot ----------------------
+
+# mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
+
+mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
+
+# cat /proc/mdstat
+
+Personalities :
+
+md13 : inactive sdc2[2](S) sdb2[1](S)
+
+	1464935040 blocks
+
+unused devices : <none>
+
+# mkdir aa
+
+# mount /dev/md13 aa
+
+mount: /dev/md13: can't read superblock
+
+So I still don't see what to do. Advice welcome.
+
+Dave
+
+
+-- 
+"As long as politics is the shadow cast on society by big business,
+the attenuation of the shadow will not change the substance."
+
+-- John Dewey
+
+
+
+
+
