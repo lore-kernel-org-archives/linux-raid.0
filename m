@@ -1,167 +1,74 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: no good deed goes unpunished...
-Date: Sat, 28 Mar 2015 08:57:42 +0800
-Message-ID: <5515FC86.7030402@fnarfbargle.com>
-References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com> <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com> <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
+Date: Fri, 27 Mar 2015 21:59:38 -0400
+Message-ID: <55160B0A.1090405@turmel.org>
+References: <54ABEE54.6020707@sympatico.ca> <BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl> <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl> <54B305B2.6000702@lentijn.sess.ink> <54B3F7ED.1000809@youngman.org.uk> <BLU436-SMTP1430CA88C11B0E46F15BB3F81480@phx.gbl> <54C0C73A.4080409@lentijn.sess.ink> <BLU437-SMTP28725520E940DA3707A62F81090@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
+In-Reply-To: <BLU437-SMTP28725520E940DA3707A62F81090@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Stevens <geek@uniserve.com>, Roger Heflin <rogerheflin@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Matt Callaghan <matt_callaghan@sympatico.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-md12 has claimed sda2 and md10 has sdb&c. Try this
+Hi Matt,
 
-mdadm --stop /dev/md12
-mdadm --stop /dev/md10
-mdadm --assemble --force /dev/md13 /dev/sd[abc]2
+On 03/27/2015 07:48 PM, Matt Callaghan wrote:
+> Back at it with fresh brain and fresh hardware. (several months ago I
+> got part-way through Valentine's ideas but not all the way -- decided to
+> get a clean setup before progressing further)
+> 
+> I have built a new (fresh/clean) server, and compiled+installed the
+> latest mdadm v3.3.2.
+> The 8x drives from this RAID6 array have also been moved to the new
+> temporary server.
+> 
+> Now of course, in the new server, the device labels are different.
+> I need to map the previous "known labels" in the old server (/dev/sdX)
+> to the "new labels" in order to get the drive ordering for re-assembly
+> right.
+> http://www.linuxquestions.org/questions/linux-server-73/mdadm-raid6-active-with-spares-and-failed-disks%3B-need-help-4175530127/
 
+I read through this.  Given all of the destructive actions you took, I
+am doubtful you will ever get your data.  Like mounting "readonly".
+That gives you a readonly filesystem, but it writes to the device.
+Possibly a great deal if there's a journal to replay.  You also trimmed
+much useful data with "grep" that probably would help us save you now.
 
+However, in the hope you might have useful data that can be correlated
+with current status, start with lsdrv [1].  Paste the output in your
+reply with word wrap turned off.  That'll at least give us a correlation
+between device name and serial number.
 
-On 28/03/15 08:37, Dave Stevens wrote:
-> Quoting Roger Heflin <rogerheflin@gmail.com>:
->
->> I don't know what to make of it.
->>
->> Everyone will ask you for this info:
->> mdadm --examine /dev/sdc2              and the same output against
->> /dev/sdb2
->
-> ok, like this:
->
-> # cat /proc/mdstat
->
-> Personalities :
->
-> md12 : inactive   sda2[0](S)
->      732467520 blocks
->
-> md10 : inactive sdc2[2](S) sdb2[1](S)
->      1464935040 blocks
->
-> unused devices: <none>
->
->
-> ------------------------------ reboot ----------------------
->
-> # mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
->
-> mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
->
-> # cat /proc/mdstat
->
-> Personalities :
->
-> md13 : inactive sdc2[2](S) sdb2[1](S)
->
->      1464935040 blocks
->
-> unused devices : <none>
->
-> # mkdir aa
->
-> # mount /dev/md13 aa
->
-> mount: /dev/md13: can't read superblock
->
->
-> Dave
->
->
->
->
->>
->> On Fri, Mar 27, 2015 at 12:33 PM, Dave Stevens <geek@uniserve.com> wrote:
->>> From:   Roger Heflin <rogerheflin@gmail.com>
->>> To:     Dave Stevens <geek@uniserve.com>
->>> Cc:     Linux RAID <linux-raid@vger.kernel.org>
->>> Subject: Re: no good deed goes unpunished...
->>> Date:   Thu, 26 Mar 2015 19:04:45 -0500
->>> Sender: linux-raid-owner@vger.kernel.org
->>>
->>> you should probably do cat /proc/mdstat
->>>
->>> It is likely that the livecd may have already tried to assemble it,
->>> and that the busy is because it is already in use.
->>>
->>> If it is already assembled and you want to redo it first you will need
->>> to stop the assembled array to be able to redo it.
->>>
->>> so this is what I did while running the live distro:
->>>
->>> # cat /proc/mdstat
->>>
->>> Personalities :
->>>
->>> md12 : inactive   sda2[0](S)
->>>         732467520 blocks
->>>
->>> md10 : inactive sdc2[2](S) sdb2[1](S)
->>>         1464935040 blocks
->>>
->>> unused devices: <none>
->>>
->>>
->>> It seemed to me that matters were needlessly complicated by possible
->>> residual issues from my earlier unsuccessful attempts so I rebooted.
->>>
->>>
->>> ------------------------------ reboot ----------------------
->>>
->>> # mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
->>>
->>> mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
->>>
->>> # cat /proc/mdstat
->>>
->>> Personalities :
->>>
->>> md13 : inactive sdc2[2](S) sdb2[1](S)
->>>
->>>         1464935040 blocks
->>>
->>> unused devices : <none>
->>>
->>> # mkdir aa
->>>
->>> # mount /dev/md13 aa
->>>
->>> mount: /dev/md13: can't read superblock
->>>
->>> So I still don't see what to do. Advice welcome.
->>>
->>> Dave
->>>
->>>
->>>
->>> --
->>> "As long as politics is the shadow cast on society by big business,
->>> the attenuation of the shadow will not change the substance."
->>>
->>> -- John Dewey
->>>
->>>
->>>
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
+> e.g. before I had:
+> {{{
+> /dev/sd[nmlpiokj]1
+> }}}
 
+FWIW, it is not safe to use square bracket notation when order matters.
 
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+> , and now I have:
+> {{{
+> /dev/sd[abcdefghi]1
+> }}}
+
+The linux 'sd' driver has never guaranteed consistent device names.
+It's merely an artifact of boot timing that makes it look that way.
+Which is why array members have superblocks that record the roles.  You
+absolutely *must* have accurate role numbers to get your data back.
+
+Show complete 'mdadm -E' output for all of your member partitions as
+they stand now.
+
+> Unfortunately I don't have any smartctl output saved from the previous
+> server and I can't find a way to map device drive label to serial numbers.
+> Any thoughts how I could do this based on the data I have saved in that
+> forum post?
+
+Please show current 'smartctl -x' output for all of these devices, too.
+ Just paste it all in your reply (with word wrap turned off).
+
+Phil
+
+[1] https://github.com/pturmel/lsdrv
