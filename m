@@ -1,90 +1,56 @@
-From: Dave Stevens <geek@uniserve.com>
-Subject: Re: no good deed goes unpunished...
-Date: Fri, 27 Mar 2015 19:14:46 -0700
-Message-ID: <20150327191446.1139462n2xnea4d2@webmail.uniserve.com>
-References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
- <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
- <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
- <551603A2.4080808@turmel.org>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
+Date: Sat, 28 Mar 2015 15:11:42 +0500
+Message-ID: <20150328151142.11db8c9a@natsu>
+References: <54ABEE54.6020707@sympatico.ca>
+	<BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl>
+	<BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl>
+	<54B305B2.6000702@lentijn.sess.ink>
+	<54B3F7ED.1000809@youngman.org.uk>
+	<BLU436-SMTP1430CA88C11B0E46F15BB3F81480@phx.gbl>
+	<54C0C73A.4080409@lentijn.sess.ink>
+	<BLU437-SMTP28725520E940DA3707A62F81090@phx.gbl>
+	<55160B0A.1090405@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/==FRAZAWW+=gYGdH0cXCU+r"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <551603A2.4080808@turmel.org>
-Content-Disposition: inline
+In-Reply-To: <55160B0A.1090405@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
-Cc: Roger Heflin <rogerheflin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Matt Callaghan <matt_callaghan@sympatico.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Phil Turmel <philip@turmel.org>:
+--Sig_/==FRAZAWW+=gYGdH0cXCU+r
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Hi Dave,
->
-> {Convention on kernel.org is reply-to-all, trim quotes, and avoid
-> top-posting.  Please trim.}
+On Fri, 27 Mar 2015 21:59:38 -0400
+Phil Turmel <philip@turmel.org> wrote:
 
-ok, thanks
+> I read through this.  Given all of the destructive actions you took, I
+> am doubtful you will ever get your data.  Like mounting "readonly".
+> That gives you a readonly filesystem, but it writes to the device.
+> Possibly a great deal if there's a journal to replay.
 
->
-> On 03/27/2015 08:37 PM, Dave Stevens wrote:
->> # cat /proc/mdstat
->>
->> Personalities :
->>
->> md12 : inactive   sda2[0](S)
->>     732467520 blocks
->>
->> md10 : inactive sdc2[2](S) sdb2[1](S)
->>     1464935040 blocks
->
-> If your livecd tried to be helpful by assembling arrays, but couldn't
-> complete, you end up with partially-assembled inactive arrays like shown
-> above.  The member devices shown are *busy*, under the expectation that
-> the remaining device(s) will show up soon. :-)
->
-> As Roger tried to suggest, you need to run:
->
-> mdadm --stop /dev/md10
-> mdadm --stop /dev/md12
->
-> That'll release the member devices you need.  However, the device
-> assembly pairs above look suspicious.  I suggest you show mdadm -E for
-> those devices again to make sure you work with the correct two disks.
-> (sda and sdc from the original report.)
->
-> Then you can do:
->
-> mdadm --assemble --force --verbose /dev/mdX /dev/sdY2 /dev/sdZ2
->
-> with the correct substitutions for X, Y, and Z.
->
-> If that doesn't work, show the output.
->
-> Phil
+Are you sure, which FS does that? I remember some discussion on FS lists
+(Btrfs?), and IIRC the consensus and the implemented behavior was that the
+device shouldn't ever be touched with writes on RO mounts, no matter what.
 
-will do, thanks
+--=20
+With respect,
+Roman
 
-D
+--Sig_/==FRAZAWW+=gYGdH0cXCU+r
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
+iEYEARECAAYFAlUWfl4ACgkQTLKSvz+PZwgmlgCfVPlCv2mrREqb/lN81EsjCd3U
+5hYAninqyEWX2RpP9m2Du6dMZNl0C/JY
+=5EVy
+-----END PGP SIGNATURE-----
 
-
--- 
-"As long as politics is the shadow cast on society by big business,
-the attenuation of the shadow will not change the substance."
-
--- John Dewey
-
-
-
-
-
+--Sig_/==FRAZAWW+=gYGdH0cXCU+r--
