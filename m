@@ -1,74 +1,90 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdadm RAID6 "active" with spares and failed disks; need help
-Date: Fri, 27 Mar 2015 21:59:38 -0400
-Message-ID: <55160B0A.1090405@turmel.org>
-References: <54ABEE54.6020707@sympatico.ca> <BLU436-SMTP156F9ECC68035EAC3DFB5F181460@phx.gbl> <BLU437-SMTP96782B2C74C634FDED13D681420@phx.gbl> <54B305B2.6000702@lentijn.sess.ink> <54B3F7ED.1000809@youngman.org.uk> <BLU436-SMTP1430CA88C11B0E46F15BB3F81480@phx.gbl> <54C0C73A.4080409@lentijn.sess.ink> <BLU437-SMTP28725520E940DA3707A62F81090@phx.gbl>
+From: Dave Stevens <geek@uniserve.com>
+Subject: Re: no good deed goes unpunished...
+Date: Fri, 27 Mar 2015 19:14:46 -0700
+Message-ID: <20150327191446.1139462n2xnea4d2@webmail.uniserve.com>
+References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
+ <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
+ <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
+ <551603A2.4080808@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU437-SMTP28725520E940DA3707A62F81090@phx.gbl>
+In-Reply-To: <551603A2.4080808@turmel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Callaghan <matt_callaghan@sympatico.ca>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Roger Heflin <rogerheflin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Matt,
+Quoting Phil Turmel <philip@turmel.org>:
 
-On 03/27/2015 07:48 PM, Matt Callaghan wrote:
-> Back at it with fresh brain and fresh hardware. (several months ago I
-> got part-way through Valentine's ideas but not all the way -- decided to
-> get a clean setup before progressing further)
-> 
-> I have built a new (fresh/clean) server, and compiled+installed the
-> latest mdadm v3.3.2.
-> The 8x drives from this RAID6 array have also been moved to the new
-> temporary server.
-> 
-> Now of course, in the new server, the device labels are different.
-> I need to map the previous "known labels" in the old server (/dev/sdX)
-> to the "new labels" in order to get the drive ordering for re-assembly
-> right.
-> http://www.linuxquestions.org/questions/linux-server-73/mdadm-raid6-active-with-spares-and-failed-disks%3B-need-help-4175530127/
+> Hi Dave,
+>
+> {Convention on kernel.org is reply-to-all, trim quotes, and avoid
+> top-posting.  Please trim.}
 
-I read through this.  Given all of the destructive actions you took, I
-am doubtful you will ever get your data.  Like mounting "readonly".
-That gives you a readonly filesystem, but it writes to the device.
-Possibly a great deal if there's a journal to replay.  You also trimmed
-much useful data with "grep" that probably would help us save you now.
+ok, thanks
 
-However, in the hope you might have useful data that can be correlated
-with current status, start with lsdrv [1].  Paste the output in your
-reply with word wrap turned off.  That'll at least give us a correlation
-between device name and serial number.
+>
+> On 03/27/2015 08:37 PM, Dave Stevens wrote:
+>> # cat /proc/mdstat
+>>
+>> Personalities :
+>>
+>> md12 : inactive   sda2[0](S)
+>>     732467520 blocks
+>>
+>> md10 : inactive sdc2[2](S) sdb2[1](S)
+>>     1464935040 blocks
+>
+> If your livecd tried to be helpful by assembling arrays, but couldn't
+> complete, you end up with partially-assembled inactive arrays like shown
+> above.  The member devices shown are *busy*, under the expectation that
+> the remaining device(s) will show up soon. :-)
+>
+> As Roger tried to suggest, you need to run:
+>
+> mdadm --stop /dev/md10
+> mdadm --stop /dev/md12
+>
+> That'll release the member devices you need.  However, the device
+> assembly pairs above look suspicious.  I suggest you show mdadm -E for
+> those devices again to make sure you work with the correct two disks.
+> (sda and sdc from the original report.)
+>
+> Then you can do:
+>
+> mdadm --assemble --force --verbose /dev/mdX /dev/sdY2 /dev/sdZ2
+>
+> with the correct substitutions for X, Y, and Z.
+>
+> If that doesn't work, show the output.
+>
+> Phil
 
-> e.g. before I had:
-> {{{
-> /dev/sd[nmlpiokj]1
-> }}}
+will do, thanks
 
-FWIW, it is not safe to use square bracket notation when order matters.
+D
 
-> , and now I have:
-> {{{
-> /dev/sd[abcdefghi]1
-> }}}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The linux 'sd' driver has never guaranteed consistent device names.
-It's merely an artifact of boot timing that makes it look that way.
-Which is why array members have superblocks that record the roles.  You
-absolutely *must* have accurate role numbers to get your data back.
 
-Show complete 'mdadm -E' output for all of your member partitions as
-they stand now.
 
-> Unfortunately I don't have any smartctl output saved from the previous
-> server and I can't find a way to map device drive label to serial numbers.
-> Any thoughts how I could do this based on the data I have saved in that
-> forum post?
+-- 
+"As long as politics is the shadow cast on society by big business,
+the attenuation of the shadow will not change the substance."
 
-Please show current 'smartctl -x' output for all of these devices, too.
- Just paste it all in your reply (with word wrap turned off).
+-- John Dewey
 
-Phil
 
-[1] https://github.com/pturmel/lsdrv
+
+
+
