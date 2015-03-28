@@ -1,166 +1,55 @@
-From: Dave Stevens <geek@uniserve.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: no good deed goes unpunished...
-Date: Fri, 27 Mar 2015 17:37:09 -0700
-Message-ID: <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
-References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
- <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
+Date: Fri, 27 Mar 2015 21:28:02 -0400
+Message-ID: <551603A2.4080808@turmel.org>
+References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com> <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com> <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
+To: Dave Stevens <geek@uniserve.com>, Roger Heflin <rogerheflin@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Quoting Roger Heflin <rogerheflin@gmail.com>:
+Hi Dave,
 
-> I don't know what to make of it.
->
-> Everyone will ask you for this info:
-> mdadm --examine /dev/sdc2              and the same output against /dev/sdb2
+{Convention on kernel.org is reply-to-all, trim quotes, and avoid
+top-posting.  Please trim.}
 
-ok, like this:
+On 03/27/2015 08:37 PM, Dave Stevens wrote:
+> # cat /proc/mdstat
+> 
+> Personalities :
+> 
+> md12 : inactive   sda2[0](S)
+>     732467520 blocks
+> 
+> md10 : inactive sdc2[2](S) sdb2[1](S)
+>     1464935040 blocks
 
-# cat /proc/mdstat
+If your livecd tried to be helpful by assembling arrays, but couldn't
+complete, you end up with partially-assembled inactive arrays like shown
+above.  The member devices shown are *busy*, under the expectation that
+the remaining device(s) will show up soon. :-)
 
-Personalities :
+As Roger tried to suggest, you need to run:
 
-md12 : inactive   sda2[0](S)
-	732467520 blocks
+mdadm --stop /dev/md10
+mdadm --stop /dev/md12
 
-md10 : inactive sdc2[2](S) sdb2[1](S)
-	1464935040 blocks
+That'll release the member devices you need.  However, the device
+assembly pairs above look suspicious.  I suggest you show mdadm -E for
+those devices again to make sure you work with the correct two disks.
+(sda and sdc from the original report.)
 
-unused devices: <none>
+Then you can do:
 
+mdadm --assemble --force --verbose /dev/mdX /dev/sdY2 /dev/sdZ2
 
------------------------------- reboot ----------------------
+with the correct substitutions for X, Y, and Z.
 
-# mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
+If that doesn't work, show the output.
 
-mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
-
-# cat /proc/mdstat
-
-Personalities :
-
-md13 : inactive sdc2[2](S) sdb2[1](S)
-
-	1464935040 blocks
-
-unused devices : <none>
-
-# mkdir aa
-
-# mount /dev/md13 aa
-
-mount: /dev/md13: can't read superblock
-
-
-Dave
-
-
-
-
->
-> On Fri, Mar 27, 2015 at 12:33 PM, Dave Stevens <geek@uniserve.com> wrote:
->> From:   Roger Heflin <rogerheflin@gmail.com>
->> To:     Dave Stevens <geek@uniserve.com>
->> Cc:     Linux RAID <linux-raid@vger.kernel.org>
->> Subject: Re: no good deed goes unpunished...
->> Date:   Thu, 26 Mar 2015 19:04:45 -0500
->> Sender: linux-raid-owner@vger.kernel.org
->>
->> you should probably do cat /proc/mdstat
->>
->> It is likely that the livecd may have already tried to assemble it,
->> and that the busy is because it is already in use.
->>
->> If it is already assembled and you want to redo it first you will need
->> to stop the assembled array to be able to redo it.
->>
->> so this is what I did while running the live distro:
->>
->> # cat /proc/mdstat
->>
->> Personalities :
->>
->> md12 : inactive   sda2[0](S)
->>         732467520 blocks
->>
->> md10 : inactive sdc2[2](S) sdb2[1](S)
->>         1464935040 blocks
->>
->> unused devices: <none>
->>
->>
->> It seemed to me that matters were needlessly complicated by possible
->> residual issues from my earlier unsuccessful attempts so I rebooted.
->>
->>
->> ------------------------------ reboot ----------------------
->>
->> # mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
->>
->> mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
->>
->> # cat /proc/mdstat
->>
->> Personalities :
->>
->> md13 : inactive sdc2[2](S) sdb2[1](S)
->>
->>         1464935040 blocks
->>
->> unused devices : <none>
->>
->> # mkdir aa
->>
->> # mount /dev/md13 aa
->>
->> mount: /dev/md13: can't read superblock
->>
->> So I still don't see what to do. Advice welcome.
->>
->> Dave
->>
->>
->>
->> --
->> "As long as politics is the shadow cast on society by big business,
->> the attenuation of the shadow will not change the substance."
->>
->> -- John Dewey
->>
->>
->>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-"As long as politics is the shadow cast on society by big business,
-the attenuation of the shadow will not change the substance."
-
--- John Dewey
-
-
-
-
-
+Phil
