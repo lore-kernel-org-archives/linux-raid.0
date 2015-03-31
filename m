@@ -1,50 +1,203 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Two system lockups, Magic SysKeys works, RAID6 resyncs on
- reboot
-Date: Wed, 1 Apr 2015 01:30:32 +0500
-Message-ID: <20150401013032.5c908e85@natsu>
-References: <CAK2H+efDuxdjmWZiOiJw+EK3wohY6FxRWgsm8rJc1j1+fniWig@mail.gmail.com>
+From: Dave Stevens <geek@uniserve.com>
+Subject: Re: no good deed goes unpunished...
+Date: Tue, 31 Mar 2015 14:41:55 -0700
+Message-ID: <20150331144155.14405dy3bqxotw9v@webmail.uniserve.com>
+References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
+ <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
+ <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
+ <5515FC86.7030402@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/s0iNtCkd3O9Do5MAvlnTk71"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+ charset=UTF-8;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+efDuxdjmWZiOiJw+EK3wohY6FxRWgsm8rJc1j1+fniWig@mail.gmail.com>
+In-Reply-To: <5515FC86.7030402@fnarfbargle.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Brad Campbell <brad@fnarfbargle.com>
+Cc: Roger Heflin <rogerheflin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/s0iNtCkd3O9Do5MAvlnTk71
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Quoting Brad Campbell <brad@fnarfbargle.com>:
 
-On Tue, 31 Mar 2015 08:00:27 -0700
-Mark Knecht <markknecht@gmail.com> wrote:
+> md12 has claimed sda2 and md10 has sdb&c. Try this
+>
+> mdadm --stop /dev/md12
+> mdadm --stop /dev/md10
+> mdadm --assemble --force /dev/md13 /dev/sd[abc]2
 
-> md3 : active raid6 sdc3[9] sdg3[5] sdf3[6] sde3[7] sdd3[8]
->       1452264480 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [=
-UUUUU]
->       [=3D=3D=3D=3D>................]  resync =3D 22.8% (110608304/484088=
-160)
-> finish=3D78.5min speed=3D79206K/sec
+I owe you a beer, Brad! Now I only have to mount the LVM partition,  
+retrieve the Xen domains and rejig the management tools so I can do a  
+meaningful backup and restore but this is the bit I couldn't get my  
+head around.
 
-Looks like you are running this without a write intent bitmap, why? It would
-at least save you from a full resync each time.
+Thanks to all who helped. Does anyone care to provide a reference to a  
+good intro to software RAID? This experience was educational all  
+right, but I would on the whole prefer to be more orderly and have a  
+good reference.
 
---=20
-With respect,
-Roman
+Dave
 
---Sig_/s0iNtCkd3O9Do5MAvlnTk71
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+>
+>
+>
+> On 28/03/15 08:37, Dave Stevens wrote:
+>> Quoting Roger Heflin <rogerheflin@gmail.com>:
+>>
+>>> I don't know what to make of it.
+>>>
+>>> Everyone will ask you for this info:
+>>> mdadm --examine /dev/sdc2              and the same output against
+>>> /dev/sdb2
+>>
+>> ok, like this:
+>>
+>> # cat /proc/mdstat
+>>
+>> Personalities :
+>>
+>> md12 : inactive   sda2[0](S)
+>>     732467520 blocks
+>>
+>> md10 : inactive sdc2[2](S) sdb2[1](S)
+>>     1464935040 blocks
+>>
+>> unused devices: <none>
+>>
+>>
+>> ------------------------------ reboot ----------------------
+>>
+>> # mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
+>>
+>> mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
+>>
+>> # cat /proc/mdstat
+>>
+>> Personalities :
+>>
+>> md13 : inactive sdc2[2](S) sdb2[1](S)
+>>
+>>     1464935040 blocks
+>>
+>> unused devices : <none>
+>>
+>> # mkdir aa
+>>
+>> # mount /dev/md13 aa
+>>
+>> mount: /dev/md13: can't read superblock
+>>
+>>
+>> Dave
+>>
+>>
+>>
+>>
+>>>
+>>> On Fri, Mar 27, 2015 at 12:33 PM, Dave Stevens <geek@uniserve.com> wrote:
+>>>> From:   Roger Heflin <rogerheflin@gmail.com>
+>>>> To:     Dave Stevens <geek@uniserve.com>
+>>>> Cc:     Linux RAID <linux-raid@vger.kernel.org>
+>>>> Subject: Re: no good deed goes unpunished...
+>>>> Date:   Thu, 26 Mar 2015 19:04:45 -0500
+>>>> Sender: linux-raid-owner@vger.kernel.org
+>>>>
+>>>> you should probably do cat /proc/mdstat
+>>>>
+>>>> It is likely that the livecd may have already tried to assemble it,
+>>>> and that the busy is because it is already in use.
+>>>>
+>>>> If it is already assembled and you want to redo it first you will need
+>>>> to stop the assembled array to be able to redo it.
+>>>>
+>>>> so this is what I did while running the live distro:
+>>>>
+>>>> # cat /proc/mdstat
+>>>>
+>>>> Personalities :
+>>>>
+>>>> md12 : inactive   sda2[0](S)
+>>>>        732467520 blocks
+>>>>
+>>>> md10 : inactive sdc2[2](S) sdb2[1](S)
+>>>>        1464935040 blocks
+>>>>
+>>>> unused devices: <none>
+>>>>
+>>>>
+>>>> It seemed to me that matters were needlessly complicated by possible
+>>>> residual issues from my earlier unsuccessful attempts so I rebooted.
+>>>>
+>>>>
+>>>> ------------------------------ reboot ----------------------
+>>>>
+>>>> # mdadm -A /dev/md13 /dev/sdb2 /dev/sdc2
+>>>>
+>>>> mdadm : /dev/md13 assembles from 1 drive - not enough to start the array
+>>>>
+>>>> # cat /proc/mdstat
+>>>>
+>>>> Personalities :
+>>>>
+>>>> md13 : inactive sdc2[2](S) sdb2[1](S)
+>>>>
+>>>>        1464935040 blocks
+>>>>
+>>>> unused devices : <none>
+>>>>
+>>>> # mkdir aa
+>>>>
+>>>> # mount /dev/md13 aa
+>>>>
+>>>> mount: /dev/md13: can't read superblock
+>>>>
+>>>> So I still don't see what to do. Advice welcome.
+>>>>
+>>>> Dave
+>>>>
+>>>>
+>>>>
+>>>> --
+>>>> "As long as politics is the shadow cast on society by big business,
+>>>> the attenuation of the shadow will not change the substance."
+>>>>
+>>>> -- John Dewey
+>>>>
+>>>>
+>>>>
+>>>>
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>>
+>>
+>
+>
+> -- 
+> Dolphins are so intelligent that within a few weeks they can
+> train Americans to stand at the edge of the pool and throw them
+> fish.
+>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEARECAAYFAlUbA+gACgkQTLKSvz+PZwiu5ACggNDsXWFn2043w+cu/e44kb2s
-eZMAnjjKBOVQOPneEEas1uK2irwQKxtf
-=ufbN
------END PGP SIGNATURE-----
 
---Sig_/s0iNtCkd3O9Do5MAvlnTk71--
+-- 
+"As long as politics is the shadow cast on society by big business,
+the attenuation of the shadow will not change the substance."
+
+-- John Dewey
+
+
+
+
+
