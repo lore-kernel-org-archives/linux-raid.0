@@ -1,63 +1,61 @@
-From: Dave Stevens <geek@uniserve.com>
-Subject: Re: no good deed goes unpunished...
-Date: Tue, 31 Mar 2015 16:31:49 -0700
-Message-ID: <20150331163149.17561l98u50rh1t1@webmail.uniserve.com>
-References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
- <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
- <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
- <5515FC86.7030402@fnarfbargle.com>
- <20150331144155.14405dy3bqxotw9v@webmail.uniserve.com>
- <551B1717.2090809@turmel.org> <551B179A.6020008@turmel.org>
+From: =?UTF-8?Q?Dieter_N=C3=BCtzel?= <Dieter@nuetzel-hh.de>
+Subject: openSUSE 13.2: md - Need advice which raid1 super format (1.0/1.2) is
+ preferred
+Date: Wed, 01 Apr 2015 01:55:18 +0200
+Message-ID: <309b2c5704621339acbe84a19d84f766@mail.ud03.udmedia.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <551B179A.6020008@turmel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Brad Campbell <brad@fnarfbargle.com>, Roger Heflin <rogerheflin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quoting Phil Turmel <philip@turmel.org>:
+Hello List,
 
-snip!
-> On 03/31/2015 05:52 PM, Phil Turmel wrote:
-> If you did this with those three disks, you are likely to have random
->> data corruption from the older mirror.  If so, stop and re-assemble with
->> just the last good disks.
->
-> Let me clarify: you only had *two* working disks for a month or so
-> before the array finally died.  Only assemble those two.
+I need advice from the 'gurus' which raid1 md super format (1.0 or 1.2)=
+=20
+is preferred for SSD/'old' SATA disks.
 
-yes that's clear. I've done that, found the LVM volgroup and can now  
-see the Xen domains, working on getting data off.
+Currently I have this on my gfx devel machine (Xeon X3430):
 
-many thanks!
+cat /=E2=81=A0proc/=E2=81=A0mdstat
+Personalities : [raid1]
+md2 : active raid1 sdc1[0] sdd1[1]
+       156288896 blocks super 1.0 [2/=E2=81=A02] [UU]
+       bitmap: 0/=E2=81=A02 pages [0KB], 65536KB chunk
 
-D
+md1 : active raid1 sdb2[1] sda2[0]
+       60391744 blocks super 1.2 [2/=E2=81=A02] [UU]
 
->
-> Phil
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+md0 : active raid1 sdb1[1] sda1[0]
+       2095104 blocks super 1.2 [2/=E2=81=A02] [UU]
 
+unused devices: <none>
 
+md0 and md1
+are on my SSD's which I've created by 'hand' (with mdadm) under openSUS=
+E=20
+13.2.
 
--- 
-"As long as politics is the shadow cast on society by big business,
-the attenuation of the shadow will not change the substance."
+md2
+is on my SATAs which I've created 'automatically' under yast2.
 
--- John Dewey
+My question to you is:
+Looks this sane (chunk only for super 1.0 on real SATAs and super 1.2 o=
+n=20
+SSDs) or should I change anything, here.
 
+I'll nuke md0 (swap) and merge it with md1 (root) 'cause I've upgraded=20
+my RAM from 4 GB to 16 GB (soon to 24/32 GB max) and do not need swap=20
+anylonger.
 
+Any hints?
 
-
-
+-=E2=81=A0Dieter
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
