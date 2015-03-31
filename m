@@ -1,63 +1,39 @@
-From: Dave Stevens <geek@uniserve.com>
-Subject: Re: no good deed goes unpunished...
-Date: Tue, 31 Mar 2015 14:55:01 -0700
-Message-ID: <20150331145501.56431gsduqtwb645@webmail.uniserve.com>
-References: <20150327103301.16746hhb6t1sroel@webmail.uniserve.com>
- <CAAMCDef5ejTu4aoYxMRxaRPvV9kKO4qwzbo9jAuPnFDYDoHo0A@mail.gmail.com>
- <20150327173709.19022q59t5hxh4tx@webmail.uniserve.com>
- <5515FC86.7030402@fnarfbargle.com>
- <20150331144155.14405dy3bqxotw9v@webmail.uniserve.com>
- <551B1717.2090809@turmel.org>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Two system lockups, Magic SysKeys works, RAID6 resyncs on reboot
+Date: Tue, 31 Mar 2015 15:08:49 -0700
+Message-ID: <CAK2H+ec5Lo0=QaEXa=RrbXCzG5m6nRc7BynSPYEqvCc5Lb4z3g@mail.gmail.com>
+References: <CAK2H+efDuxdjmWZiOiJw+EK3wohY6FxRWgsm8rJc1j1+fniWig@mail.gmail.com>
+	<20150401013032.5c908e85@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <551B1717.2090809@turmel.org>
-Content-Disposition: inline
+In-Reply-To: <20150401013032.5c908e85@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Brad Campbell <brad@fnarfbargle.com>, Roger Heflin <rogerheflin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Roman Mamedov <rm@romanrm.net>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Quoting Phil Turmel <philip@turmel.org>:
-
-> On 03/31/2015 05:41 PM, Dave Stevens wrote:
->> Quoting Brad Campbell <brad@fnarfbargle.com>:
->>
->>> md12 has claimed sda2 and md10 has sdb&c. Try this
->>>
->>> mdadm --stop /dev/md12
->>> mdadm --stop /dev/md10
->>> mdadm --assemble --force /dev/md13 /dev/sd[abc]2
->>
->> I owe you a beer, Brad! Now I only have to mount the LVM partition,
->> retrieve the Xen domains and rejig the management tools so I can do a
->> meaningful backup and restore but this is the bit I couldn't get my head
->> around.
+On Tue, Mar 31, 2015 at 1:30 PM, Roman Mamedov <rm@romanrm.net> wrote:
+> On Tue, 31 Mar 2015 08:00:27 -0700
+> Mark Knecht <markknecht@gmail.com> wrote:
 >
-> If you did this with those three disks, you are likely to have random
-> data corruption from the older mirror.  If so, stop and re-assemble with
-> just the last good disks.
+>> md3 : active raid6 sdc3[9] sdg3[5] sdf3[6] sde3[7] sdd3[8]
+>>       1452264480 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [UUUUU]
+>>       [====>................]  resync = 22.8% (110608304/484088160)
+>> finish=78.5min speed=79206K/sec
 >
-> Phil
+> Looks like you are running this without a write intent bitmap, why? It would
+> at least save you from a full resync each time.
 >
+> --
+> With respect,
+> Roman
 
-OK, thanks!
+Honestly, I don't know. The machine was the first I ever built using
+RAID for the system drive and I probably didn't find out about it, or
+was just trying to keep it simple? Not at all sure.
 
-Dave
+I'll check it out.
 
-
-
--- 
-"As long as politics is the shadow cast on society by big business,
-the attenuation of the shadow will not change the substance."
-
--- John Dewey
-
-
-
-
-
+Thanks,
+Mark
