@@ -1,71 +1,67 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
-Date: Wed, 1 Apr 2015 13:46:40 -0500
-Message-ID: <CAB-428nVCN=5au0jONamXORNZ656UZ1Ecgrk-paArruX9tpHJQ@mail.gmail.com>
-References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
- <CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com> <20150401183630.GA3103@lazy.lzy>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Two system lockups, Magic SysKeys works, RAID6 resyncs on reboot
+Date: Wed, 1 Apr 2015 12:07:20 -0700
+Message-ID: <CAK2H+edy-eMGPOraOakbV1gZK2K50aKAxm6cDd8eWrjZoL6sug@mail.gmail.com>
+References: <CAK2H+efDuxdjmWZiOiJw+EK3wohY6FxRWgsm8rJc1j1+fniWig@mail.gmail.com>
+	<20150401013032.5c908e85@natsu>
+	<CAK2H+ec5Lo0=QaEXa=RrbXCzG5m6nRc7BynSPYEqvCc5Lb4z3g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150401183630.GA3103@lazy.lzy>
+In-Reply-To: <CAK2H+ec5Lo0=QaEXa=RrbXCzG5m6nRc7BynSPYEqvCc5Lb4z3g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>, Kernel-team@fb.com
+To: Roman Mamedov <rm@romanrm.net>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 1, 2015 at 1:36 PM, Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
-> On Tue, Mar 31, 2015 at 08:47:04PM -0700, Dan Williams wrote:
->> On Mon, Mar 30, 2015 at 3:25 PM, Shaohua Li <shli@fb.com> wrote:
->> > This is my attempt to fix raid5/6 write hole issue, it's not for merge
->> > yet, I post it out for comments. Any comments and suggestions are
->> > welcome!
->> >
->> > Thanks,
->> > Shaohua
->> >
->> > We expect a completed raid5/6 stack with reliability and high
->> > performance. Currently raid5/6 has 2 issues:
->> >
->> > 1. read-modify-write for small size IO. To fix this issue, a cache layer
->> > above raid5/6 can be used to aggregate write to full stripe write.
->> > 2. write hole issue. A write log below raid5/6 can fix the issue.
->> >
->> > We plan to use a SSD to fix the two issues. Here we just fix the write
->> > hole issue.
->> >
->> > 1. We don't try to fix the issues together. A cache layer will do write
->> > acceleration. A log layer will fix write hole. The seperation will
->> > simplify things a lot.
->> >
->> > 2. Current assumption is flashcache/bcache will be used as the cache
->> > layer. If they don't work well, we can fix them or add a simple cache
->> > layer for raid write aggregation later. We also assume cache layer will
->> > absorb write, so log doesn't worry about write latency.
+On Tue, Mar 31, 2015 at 3:08 PM, Mark Knecht <markknecht@gmail.com> wrote:
+> On Tue, Mar 31, 2015 at 1:30 PM, Roman Mamedov <rm@romanrm.net> wrote:
+>> On Tue, 31 Mar 2015 08:00:27 -0700
+>> Mark Knecht <markknecht@gmail.com> wrote:
 >>
->> It seems neither bcache nor dm-cache are tackling the write-buffering
->> problem head on... they still seem to be concerned with some amount of
->> read caching which I can see as useful for file servers and
->> workstations, but not necessarily scale out storage.
+>>> md3 : active raid6 sdc3[9] sdg3[5] sdf3[6] sde3[7] sdd3[8]
+>>>       1452264480 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [UUUUU]
+>>>       [====>................]  resync = 22.8% (110608304/484088160)
+>>> finish=78.5min speed=79206K/sec
 >>
->> I'll try to set aside time to take a look at the patch this week.
+>> Looks like you are running this without a write intent bitmap, why? It would
+>> at least save you from a full resync each time.
+>>
+>> --
+>> With respect,
+>> Roman
 >
-> There is one thing I do not really get.
+> Honestly, I don't know. The machine was the first I ever built using
+> RAID for the system drive and I probably didn't find out about it, or
+> was just trying to keep it simple? Not at all sure.
 >
-> The target is to avoid the "write hole", which happens,
-> for example, when there is a sudden power failure.
+> I'll check it out.
 >
-> Now, how can be assured, in that case, that the "cache"
-> device is safe after the power is restored?
+> Thanks,
+> Mark
 
-You do sync write-ahead logging on the Flash cache. If it return
-successful, you do fire the writes to the RAID. If system crash/fails
-during the RAID writes (Write-hole), you just recover data by scanning
-write-ahead log in the flash cache and replay the logs into the RAID
-drives.
+At this point, having put everything back together, I cannot find any
+specific clues about what caused the problem. Possibly the system
+might be showing its age. Maybe it's a corner condition in the 3.18
+series kernel vs the 3.14 I was running before. No idea. The mdadm
+RAID seems to have done it's job wonderfully. At least at the Linux
+level there's no evidence at this time that anything was lost. Within
+my Windows VMs that were running on the mdadm RAID6 at the time of the
+Magic Sys Key reboot there seem to be minimal issues. One Windows
+program (Schwab's StreetSmart Edge) lost some of my trading
+environment configuration and I needed to recall only that file off
+the web server to get the platform configured correctly again.
+TradeStation was running in a second VM and showed no issues. Both
+trading platforms were live at the time of the lockup so I came out of
+this really well, and as I have good backups nothing would have been
+lost anyway.
 
-> Doesn't this solution just shifts the problem from
-> the array to a different device (SSD, for example)?
+As per Roman's question/suggestion I've added the write intent bitmaps
+to all three RAIDs. Nominally only md3 is mounted most of the time
+anyway, but it's there to help if this problem continues.
 
-I don't see such a shift. Enterprise hardware RAIDs also used similar
-technique to fix the write-hole issue.
+If anyone sees anything else in the data I posted yesterday let me
+know but everything mdadm specific seems good at this point.
+
+Cheers,
+Mark
