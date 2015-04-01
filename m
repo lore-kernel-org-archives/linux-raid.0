@@ -1,20 +1,19 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Alireza Haghdoost <alireza@cs.umn.edu>
 Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
-Date: Wed, 1 Apr 2015 11:46:27 -0700
-Message-ID: <CAPcyv4jQZ6jeQpFU+cZ-AXzfQVXQCdK1muxNO35pCdavrggh4Q@mail.gmail.com>
+Date: Wed, 1 Apr 2015 13:46:40 -0500
+Message-ID: <CAB-428nVCN=5au0jONamXORNZ656UZ1Ecgrk-paArruX9tpHJQ@mail.gmail.com>
 References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
-	<CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com>
-	<20150401183630.GA3103@lazy.lzy>
+ <CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com> <20150401183630.GA3103@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20150401183630.GA3103@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
 To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>, Kernel-team@fb.com
+Cc: Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On Wed, Apr 1, 2015 at 11:36 AM, Piergiorgio Sartor
+On Wed, Apr 1, 2015 at 1:36 PM, Piergiorgio Sartor
 <piergiorgio.sartor@nexgo.de> wrote:
 > On Tue, Mar 31, 2015 at 08:47:04PM -0700, Dan Williams wrote:
 >> On Mon, Mar 30, 2015 at 3:25 PM, Shaohua Li <shli@fb.com> wrote:
@@ -59,14 +58,14 @@ On Wed, Apr 1, 2015 at 11:36 AM, Piergiorgio Sartor
 > Now, how can be assured, in that case, that the "cache"
 > device is safe after the power is restored?
 
-If you lose the cache the data-loss damage is greater, but this has
-always been the case with hardware-raid adapters.
+You do sync write-ahead logging on the Flash cache. If it return
+successful, you do fire the writes to the RAID. If system crash/fails
+during the RAID writes (Write-hole), you just recover data by scanning
+write-ahead log in the flash cache and replay the logs into the RAID
+drives.
 
 > Doesn't this solution just shifts the problem from
 > the array to a different device (SSD, for example)?
->
-> Speaking of SSD, these are quite "power failure"
-> sensitive, it seems...
 
-Simple, if a cache-device is not itself power-failure safe then it
-should not be used for power-failure protection.
+I don't see such a shift. Enterprise hardware RAIDs also used similar
+technique to fix the write-hole issue.
