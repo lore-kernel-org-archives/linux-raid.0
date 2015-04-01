@@ -1,68 +1,43 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
+From: Jens Axboe <axboe@fb.com>
 Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
-Date: Wed, 1 Apr 2015 20:07:01 +0000
-Message-ID: <1427918821.125860.139.camel@intel.com>
-References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
-	 <CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com>
-	 <20150401183630.GA3103@lazy.lzy>
-	 <CAPcyv4jQZ6jeQpFU+cZ-AXzfQVXQCdK1muxNO35pCdavrggh4Q@mail.gmail.com>
+Date: Wed, 1 Apr 2015 14:17:37 -0600
+Message-ID: <551C5261.6020109@fb.com>
+References: <20150330222459.GA575371@devbig257.prn2.facebook.com> <CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com> <20150401183630.GA3103@lazy.lzy> <CAB-428nVCN=5au0jONamXORNZ656UZ1Ecgrk-paArruX9tpHJQ@mail.gmail.com> <551C4DAA.4010701@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4jQZ6jeQpFU+cZ-AXzfQVXQCdK1muxNO35pCdavrggh4Q@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <5A3FA96CCD9B3E4A8839A4364EF11F81@intel.com>
+In-Reply-To: <551C4DAA.4010701@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "Kernel-team@fb.com" <Kernel-team@fb.com>, "piergiorgio.sartor@nexgo.de" <piergiorgio.sartor@nexgo.de>, "shli@fb.com" <shli@fb.com>, "songliubraving@fb.com" <songliubraving@fb.com>
+To: Wols Lists <antlists@youngman.org.uk>, Alireza Haghdoost <alireza@cs.umn.edu>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-DQpPbiBXZWQsIDIwMTUtMDQtMDEgYXQgMTg6NDYgKzAwMDAsIFdpbGxpYW1zLCBEYW4gSiB3cm90
-ZToNCj4gT24gV2VkLCBBcHIgMSwgMjAxNSBhdCAxMTozNiBBTSwgUGllcmdpb3JnaW8gU2FydG9y
-DQo+IDxwaWVyZ2lvcmdpby5zYXJ0b3JAbmV4Z28uZGU+IHdyb3RlOg0KPiA+IE9uIFR1ZSwgTWFy
-IDMxLCAyMDE1IGF0IDA4OjQ3OjA0UE0gLTA3MDAsIERhbiBXaWxsaWFtcyB3cm90ZToNCj4gPj4g
-T24gTW9uLCBNYXIgMzAsIDIwMTUgYXQgMzoyNSBQTSwgU2hhb2h1YSBMaSA8c2hsaUBmYi5jb20+
-IHdyb3RlOg0KPiA+PiA+IFRoaXMgaXMgbXkgYXR0ZW1wdCB0byBmaXggcmFpZDUvNiB3cml0ZSBo
-b2xlIGlzc3VlLCBpdCdzIG5vdCBmb3IgbWVyZ2UNCj4gPj4gPiB5ZXQsIEkgcG9zdCBpdCBvdXQg
-Zm9yIGNvbW1lbnRzLiBBbnkgY29tbWVudHMgYW5kIHN1Z2dlc3Rpb25zIGFyZQ0KPiA+PiA+IHdl
-bGNvbWUhDQo+ID4+ID4NCj4gPj4gPiBUaGFua3MsDQo+ID4+ID4gU2hhb2h1YQ0KPiA+PiA+DQo+
-ID4+ID4gV2UgZXhwZWN0IGEgY29tcGxldGVkIHJhaWQ1LzYgc3RhY2sgd2l0aCByZWxpYWJpbGl0
-eSBhbmQgaGlnaA0KPiA+PiA+IHBlcmZvcm1hbmNlLiBDdXJyZW50bHkgcmFpZDUvNiBoYXMgMiBp
-c3N1ZXM6DQo+ID4+ID4NCj4gPj4gPiAxLiByZWFkLW1vZGlmeS13cml0ZSBmb3Igc21hbGwgc2l6
-ZSBJTy4gVG8gZml4IHRoaXMgaXNzdWUsIGEgY2FjaGUgbGF5ZXINCj4gPj4gPiBhYm92ZSByYWlk
-NS82IGNhbiBiZSB1c2VkIHRvIGFnZ3JlZ2F0ZSB3cml0ZSB0byBmdWxsIHN0cmlwZSB3cml0ZS4N
-Cj4gPj4gPiAyLiB3cml0ZSBob2xlIGlzc3VlLiBBIHdyaXRlIGxvZyBiZWxvdyByYWlkNS82IGNh
-biBmaXggdGhlIGlzc3VlLg0KPiA+PiA+DQo+ID4+ID4gV2UgcGxhbiB0byB1c2UgYSBTU0QgdG8g
-Zml4IHRoZSB0d28gaXNzdWVzLiBIZXJlIHdlIGp1c3QgZml4IHRoZSB3cml0ZQ0KPiA+PiA+IGhv
-bGUgaXNzdWUuDQo+ID4+ID4NCj4gPj4gPiAxLiBXZSBkb24ndCB0cnkgdG8gZml4IHRoZSBpc3N1
-ZXMgdG9nZXRoZXIuIEEgY2FjaGUgbGF5ZXIgd2lsbCBkbyB3cml0ZQ0KPiA+PiA+IGFjY2VsZXJh
-dGlvbi4gQSBsb2cgbGF5ZXIgd2lsbCBmaXggd3JpdGUgaG9sZS4gVGhlIHNlcGVyYXRpb24gd2ls
-bA0KPiA+PiA+IHNpbXBsaWZ5IHRoaW5ncyBhIGxvdC4NCj4gPj4gPg0KPiA+PiA+IDIuIEN1cnJl
-bnQgYXNzdW1wdGlvbiBpcyBmbGFzaGNhY2hlL2JjYWNoZSB3aWxsIGJlIHVzZWQgYXMgdGhlIGNh
-Y2hlDQo+ID4+ID4gbGF5ZXIuIElmIHRoZXkgZG9uJ3Qgd29yayB3ZWxsLCB3ZSBjYW4gZml4IHRo
-ZW0gb3IgYWRkIGEgc2ltcGxlIGNhY2hlDQo+ID4+ID4gbGF5ZXIgZm9yIHJhaWQgd3JpdGUgYWdn
-cmVnYXRpb24gbGF0ZXIuIFdlIGFsc28gYXNzdW1lIGNhY2hlIGxheWVyIHdpbGwNCj4gPj4gPiBh
-YnNvcmIgd3JpdGUsIHNvIGxvZyBkb2Vzbid0IHdvcnJ5IGFib3V0IHdyaXRlIGxhdGVuY3kuDQo+
-ID4+DQo+ID4+IEl0IHNlZW1zIG5laXRoZXIgYmNhY2hlIG5vciBkbS1jYWNoZSBhcmUgdGFja2xp
-bmcgdGhlIHdyaXRlLWJ1ZmZlcmluZw0KPiA+PiBwcm9ibGVtIGhlYWQgb24uLi4gdGhleSBzdGls
-bCBzZWVtIHRvIGJlIGNvbmNlcm5lZCB3aXRoIHNvbWUgYW1vdW50IG9mDQo+ID4+IHJlYWQgY2Fj
-aGluZyB3aGljaCBJIGNhbiBzZWUgYXMgdXNlZnVsIGZvciBmaWxlIHNlcnZlcnMgYW5kDQo+ID4+
-IHdvcmtzdGF0aW9ucywgYnV0IG5vdCBuZWNlc3NhcmlseSBzY2FsZSBvdXQgc3RvcmFnZS4NCj4g
-Pj4NCj4gPj4gSSdsbCB0cnkgdG8gc2V0IGFzaWRlIHRpbWUgdG8gdGFrZSBhIGxvb2sgYXQgdGhl
-IHBhdGNoIHRoaXMgd2Vlay4NCj4gPg0KPiA+IFRoZXJlIGlzIG9uZSB0aGluZyBJIGRvIG5vdCBy
-ZWFsbHkgZ2V0Lg0KPiA+DQo+ID4gVGhlIHRhcmdldCBpcyB0byBhdm9pZCB0aGUgIndyaXRlIGhv
-bGUiLCB3aGljaCBoYXBwZW5zLA0KPiA+IGZvciBleGFtcGxlLCB3aGVuIHRoZXJlIGlzIGEgc3Vk
-ZGVuIHBvd2VyIGZhaWx1cmUuDQo+ID4NCj4gPiBOb3csIGhvdyBjYW4gYmUgYXNzdXJlZCwgaW4g
-dGhhdCBjYXNlLCB0aGF0IHRoZSAiY2FjaGUiDQo+ID4gZGV2aWNlIGlzIHNhZmUgYWZ0ZXIgdGhl
-IHBvd2VyIGlzIHJlc3RvcmVkPw0KPiANCj4gSWYgeW91IGxvc2UgdGhlIGNhY2hlIHRoZSBkYXRh
-LWxvc3MgZGFtYWdlIGlzIGdyZWF0ZXIsIGJ1dCB0aGlzIGhhcw0KPiBhbHdheXMgYmVlbiB0aGUg
-Y2FzZSB3aXRoIGhhcmR3YXJlLXJhaWQgYWRhcHRlcnMuDQo+IA0KPiA+IERvZXNuJ3QgdGhpcyBz
-b2x1dGlvbiBqdXN0IHNoaWZ0cyB0aGUgcHJvYmxlbSBmcm9tDQo+ID4gdGhlIGFycmF5IHRvIGEg
-ZGlmZmVyZW50IGRldmljZSAoU1NELCBmb3IgZXhhbXBsZSk/DQo+ID4NCj4gPiBTcGVha2luZyBv
-ZiBTU0QsIHRoZXNlIGFyZSBxdWl0ZSAicG93ZXIgZmFpbHVyZSINCj4gPiBzZW5zaXRpdmUsIGl0
-IHNlZW1zLi4uDQo+IA0KPiBTaW1wbGUsIGlmIGEgY2FjaGUtZGV2aWNlIGlzIG5vdCBpdHNlbGYg
-cG93ZXItZmFpbHVyZSBzYWZlIHRoZW4gaXQNCj4gc2hvdWxkIG5vdCBiZSB1c2VkIGZvciBwb3dl
-ci1mYWlsdXJlIHByb3RlY3Rpb24uDQoNCkkgdGhpbmsgdGhpcyB3b3VsZCBiZSBhIGdvb2QgYXBw
-bGljYXRpb24gZm9yIHNvbWUgb2YgdGhlIG5ld2VyDQp0ZWNobm9sb2d5IGNvbWluZyBvdXQgc3Vj
-aCBhcyBOVkRJTU0gYW5kIHBlcnNpc3RlbnQgbWVtb3J5Lg0K
+On 04/01/2015 01:57 PM, Wols Lists wrote:
+> On 01/04/15 19:46, Alireza Haghdoost wrote:
+>>> Now, how can be assured, in that case, that the "cache"
+>>>> device is safe after the power is restored?
+>> You do sync write-ahead logging on the Flash cache. If it return
+>> successful, you do fire the writes to the RAID. If system crash/fails
+>> during the RAID writes (Write-hole), you just recover data by scanning
+>> write-ahead log in the flash cache and replay the logs into the RAID
+>> drives.
+>>
+> Just to throw something nasty into the mix, I'm not sure whether it's
+> SSDs or SD-cards, but there certainly *was* a spate of corrupted
+> *controllers*.
+>
+> In other words, a power failure would RELIABLY TRASH the device, if it
+> happened at the wrong moment. Hopefully that's been fixed ...
+
+You can't protect against shitty devices. If you care about power fail 
+events, then you use hw that is specifically tested and vetted for that. 
+And they do exist. They might just not be the cheapest you can find on 
+newegg or similar places.
+
+This potential problem isn't specific to what Shaohua is proposing, nor 
+is it a show stopper for that.
+
+-- 
+Jens Axboe
+
