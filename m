@@ -1,83 +1,73 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] Fix bitmap offset calculations
-Date: Wed, 01 Apr 2015 09:14:36 -0500
-Message-ID: <551BFD4C.2080505@suse.de>
-References: <20150324162905.GA16104@shrek.lan> <20150325131502.1a947967@notabene.brown> <CAB-428mbVFcEmT_OryyGxEAhr56Uy0CODrEVEoPUPk34C45_Uw@mail.gmail.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
+Date: Wed, 1 Apr 2015 10:14:14 -0700
+Message-ID: <20150401171413.GA2616460@devbig257.prn2.facebook.com>
+References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
+ <CAPcyv4jqb+OphP-1sy0dqMYG-uNK-CwtNDmOM4YeQU=MXH72Hw@mail.gmail.com>
+ <20150401055309.GA726662@devbig257.prn2.facebook.com>
+ <20150401170256.5efebaae@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB-428mbVFcEmT_OryyGxEAhr56Uy0CODrEVEoPUPk34C45_Uw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20150401170256.5efebaae@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alireza Haghdoost <alireza@cs.umn.edu>, NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>, Song Liu <songliubraving@fb.com>, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-Hi Alireza,
+On Wed, Apr 01, 2015 at 05:02:56PM +1100, NeilBrown wrote:
+> On Tue, 31 Mar 2015 22:53:21 -0700 Shaohua Li <shli@fb.com> wrote:
+> 
+> > On Tue, Mar 31, 2015 at 08:47:04PM -0700, Dan Williams wrote:
+> > > On Mon, Mar 30, 2015 at 3:25 PM, Shaohua Li <shli@fb.com> wrote:
+> > > > This is my attempt to fix raid5/6 write hole issue, it's not for merge
+> > > > yet, I post it out for comments. Any comments and suggestions are
+> > > > welcome!
+> > > >
+> > > > Thanks,
+> > > > Shaohua
+> > > >
+> > > > We expect a completed raid5/6 stack with reliability and high
+> > > > performance. Currently raid5/6 has 2 issues:
+> > > >
+> > > > 1. read-modify-write for small size IO. To fix this issue, a cache layer
+> > > > above raid5/6 can be used to aggregate write to full stripe write.
+> > > > 2. write hole issue. A write log below raid5/6 can fix the issue.
+> > > >
+> > > > We plan to use a SSD to fix the two issues. Here we just fix the write
+> > > > hole issue.
+> > > >
+> > > > 1. We don't try to fix the issues together. A cache layer will do write
+> > > > acceleration. A log layer will fix write hole. The seperation will
+> > > > simplify things a lot.
+> > > >
+> > > > 2. Current assumption is flashcache/bcache will be used as the cache
+> > > > layer. If they don't work well, we can fix them or add a simple cache
+> > > > layer for raid write aggregation later. We also assume cache layer will
+> > > > absorb write, so log doesn't worry about write latency.
+> > > 
+> > > It seems neither bcache nor dm-cache are tackling the write-buffering
+> > > problem head on... they still seem to be concerned with some amount of
+> > > read caching which I can see as useful for file servers and
+> > > workstations, but not necessarily scale out storage.
+> > > 
+> > > I'll try to set aside time to take a look at the patch this week.
+> > 
+> > Thanks! The cache layer is definitely what I'll focus on next. bcache
+> > supports writeback, I guess we can add an option to skip read data from
+> > backing disks for read caching if it's possible. Another option is
+> > writting a simple caching just for raid 5/6 write aggregation. We can
+> > append all data to a log, and maintain an index in memory. At raid
+> > shutdown, we can flush all data to raid disks, the index doesn't need
+> > presistent in disk, which makes the caching fairly simple.
+> 
+> Surely if the index doesn't need to persist in disk, then the data doesn't
+> either, as without the index you cannot find the data...
 
-On 04/01/2015 08:58 AM, Alireza Haghdoost wrote:
-> Does it means if some one use write-intent bitmap without this patch,
-> he may end-up with some unsync stripes after system crash or power
-> failure and RAID resynchronization ? It seems the bitmaps does not
-> record correct address of unsynced blocks due to this bug.
->
-> Would you please verify this.
+I mean not just pure data. We can store tuple (disk offset, length,
+data) to disk. index will be used to speed up search. If there is a
+crash, we can rebuild the index using the tuple.
 
-This is for clustered md effort only (which is in Neil's md/for-next 
-tree). The regular md is unaffected.
-
-In a clustered environment, different nodes use different bitmaps. While 
-it worked for bitmaps smaller than a page (which is again a 
-co-incidence), it did not work well for bitmaps which spanned multiple 
-pages. Each node in the cluster has different start offsets, and the 
-earlier calculation was incorrect because of conversion from bits to 
-bytes was inverted.
-
-If you were able to assemble on different nodes, you should be fine with 
-respect to synchronization of unsynced blocks after a failure.
-
-HTH,
-
->
-> On Tue, Mar 24, 2015 at 9:15 PM, NeilBrown <neilb@suse.de> wrote:
->> On Tue, 24 Mar 2015 11:29:05 -0500 Goldwyn Rodrigues <rgoldwyn@suse.de> wrote:
->>
->>> The calculations of bitmap offset is incorrect with respect to bits to bytes
->>> conversion.
->>>
->>> Also, remove an irrelevant duplicate message.
->>>
->>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>> ---
->>> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
->>> index ac79fef..e98db04 100644
->>> --- a/drivers/md/bitmap.c
->>> +++ b/drivers/md/bitmap.c
->>> @@ -575,7 +575,9 @@ re_read:
->>>
->>>                sector_div(bm_blocks,
->>>                           bitmap->mddev->bitmap_info.chunksize >> 9);
->>> -             bm_blocks = bm_blocks << 3;
->>> +             /* bits to bytes */
->>> +             bm_blocks = ((bm_blocks+7) >> 3) + sizeof(bitmap_super_t);
->>> +             /* to 4k blocks */
->>>                bm_blocks = DIV_ROUND_UP_SECTOR_T(bm_blocks, 4096);
->>>                bitmap->mddev->bitmap_info.offset += bitmap->cluster_slot * (bm_blocks << 3);
->>>                pr_info("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
->>> @@ -672,9 +674,6 @@ out:
->>>                        goto out_no_sb;
->>>                }
->>>                bitmap->cluster_slot = md_cluster_ops->slot_number(bitmap->mddev);
->>> -             pr_info("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
->>> -                     bitmap->cluster_slot,
->>> -                     (unsigned long long)bitmap->mddev->bitmap_info.offset);
->>>                goto re_read;
->>>        }
->>>
->>
->> Applied, thanks.
->>
->> NeilBrown
-
--- 
-Goldwyn
+Thanks,
+Shaohua
