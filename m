@@ -1,166 +1,140 @@
-From: Shaohua Li <shli@fb.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
-Date: Wed, 1 Apr 2015 16:40:57 -0700
-Message-ID: <20150401234055.GA3375744@devbig257.prn2.facebook.com>
+Date: Thu, 2 Apr 2015 11:19:41 +1100
+Message-ID: <20150402111941.104d0633@notabene.brown>
 References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
- <20150402085312.5ea3d518@notabene.brown>
+	<20150402085312.5ea3d518@notabene.brown>
+	<20150401234055.GA3375744@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/gZr4cF4bdWeyhIBDCfUBISX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150402085312.5ea3d518@notabene.brown>
+In-Reply-To: <20150401234055.GA3375744@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Shaohua Li <shli@fb.com>
 Cc: dan.j.williams@intel.com, linux-raid@vger.kernel.org, songliubraving@fb.com, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On Thu, Apr 02, 2015 at 08:53:12AM +1100, NeilBrown wrote:
-> On Mon, 30 Mar 2015 15:25:17 -0700 Shaohua Li <shli@fb.com> wrote:
-> 
-> > This is my attempt to fix raid5/6 write hole issue, it's not for merge
-> > yet, I post it out for comments. Any comments and suggestions are
-> > welcome!
-> > 
-> > Thanks,
-> > Shaohua
-> > 
-> > We expect a completed raid5/6 stack with reliability and high
-> > performance. Currently raid5/6 has 2 issues:
-> > 
-> > 1. read-modify-write for small size IO. To fix this issue, a cache layer
-> > above raid5/6 can be used to aggregate write to full stripe write.
-> > 2. write hole issue. A write log below raid5/6 can fix the issue.
-> > 
-> > We plan to use a SSD to fix the two issues. Here we just fix the write
-> > hole issue.
-> > 
-> > 1. We don't try to fix the issues together. A cache layer will do write
-> > acceleration. A log layer will fix write hole. The seperation will
-> > simplify things a lot.
-> > 
-> > 2. Current assumption is flashcache/bcache will be used as the cache
-> > layer. If they don't work well, we can fix them or add a simple cache
-> > layer for raid write aggregation later. We also assume cache layer will
-> > absorb write, so log doesn't worry about write latency.
-> > 
-> > 3. For log, write will hit to log disk first, then raid disks, and
-> > finally IO completion is reported. An optimal way is to report IO
-> > completion just after IO hits to log disk to cut write latency. But in
-> > that way, read path need query log disk and increase complexity. And
-> > since we don't worry about write latency, we choose a simple soltuion.
-> > This will be revisited if there is performance issue.
-> > 
-> > This design isn't intrusive for raid5/6. Actully only very few changes
-> > of existing code is required.
-> > 
-> > Log looks like jbd. Stripe IO to raid disks will be written to log disk
-> > first in atomic way. Several stripe IO will consist a transaction. If
-> > all stripes of a transaction are finished, the tranaction can be
-> > checkpoint.
-> > 
-> > Basic logic of raid 5/6 write will be:
-> > 1. normal raid5/6 steps for a stripe (fetch data, calculate checksum,
-> > and etc). log hooks to ops_run_io.
-> > 2. stripe is added to a transaction. Write stripe data to log disk (metadata
-> > block, stripe data)
-> > 3. write commit block to log disk
-> > 4. flush log disk cache.
-> > 5. stripe is logged now and normal stripe handling continues
-> > 
-> > Transaction checkpoint process:
-> > 1. all stripes of a transaction are finished
-> > 2. flush disk cache of all raid disks
-> > 3. change log super to reflect new log checkpoint position
-> > 4. WRITE_FUA log super
-> > 
-> > metadata, data and commit block IO can run in the meaning time, as
-> > checksum will be used to make sure their data is correct (like jbd2).
-> > Log IO doesn't wait 5s to start like jbd, instead the IO will start
-> > every time a metadata block is full. This can cut some latency.
-> > 
-> > Disk layout:
-> > 
-> > |super|metadata|data|metadata| data ... |commitdata|metadata|data| ... |commitdata|
-> > super, metadata, commit will use one block
-> > 
-> > This is an initial version, which works but a lot of stuffes are
-> > missing:
-> > 1. error handling
-> > 2. log recovery and impact to raid resync (don't need resync anymore)
-> > 3. utility changes
-> > 
-> > The big question is how we report log disk. In this patch, I simply use
-> > a spare disk for testing. We need a new raid disk role for log disk.
-> > 
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> 
-> 
-> Hi,
->  thanks for the proposal and the patch which makes it nice and concrete...
-> 
->  I should start out by saying that I'm not really sold on the importance of
->  the issues you are addressing here.
->  The "write hole" is certainly of theoretical significance, but I do wonder
->  how much practical significance it has.  It can only be a problem if you
->  have a system failure and a degraded array at the same time, and both of
->  those should be very rare event individually...  
->  I wonder if anyone has *ever* lost data to the "write hole".
+--Sig_/gZr4cF4bdWeyhIBDCfUBISX
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-We have tens of thousands of machines. Rare event in terms of huge amount
-of machines become a normal event :). It's not a significant issue, but
-we don't want to take the risk.
+On Wed, 1 Apr 2015 16:40:57 -0700 Shaohua Li <shli@fb.com> wrote:
 
->  As for write-ahead caching to reduce latency, most writes from Linux are
->  async and so would not benefit from that.  If you do have a heavily
->  synchronous write load, then that can be fixed in the filesystem.
->  e.g. with ext3 and an external log to a low-latency device you can get
->  low-latency writes which largely mask the latency issues introduced by
->  RAID5.
 
-Maybe I should write more about the caching, I didn't because the patch
-is about the write hole issue. Any way, the side effect of caching is
-write-hole-protection log doesn't need worry about latency. The main
-purpose of caching is to produce full stripe write or reduce
-read-modify-write if full stripe write is not possible. The caching can
-also reduce hard disk spindle seek, because we can sort when flush data
-from caching to raid.
+> >  Your code does avoid write-hole-protection for fill-stripe-writes, and=
+ this
+> >  would greatly reduce the  number of block that were written multiple t=
+imes.
+> >  However I'm not convinced that is correct.
+> >  A reasonable  goal is that if the system crashes while writing to a st=
+orage
+> >  device, then reads should return the old data or not new data, not any=
+thing
+> >  else.  A crash in the middle of a full-stripe-write to a degraded array
+> >  could result in some block in the stripe appearing to contain data tha=
+t is
+> >  different to both the old and the new.  If you are going to close the =
+whole,
+> >  I think it should be done properly.
+>=20
+> I can do it simpley. But don't think this assumption is true. If you
+> write to a disk range and there is failure, there is nothing guarantee
+> you can either read old data or new data.
 
->  The fact that I'm "not really sold" doesn't mean I am against them ... maybe
->  it is just an encouragement for someone to sell them more :-)
-> 
->  While I understand that keeping the two separate might simplify the
->  problem, I'm not at all sure it is a good idea.  It would mean that every
->  data block were written three times - once to the write-ahead log, once to
->  the write-hole-protection log, and once to the RAID5.
+If you write a range of blocks to a normal disk and crash during the write,
+each block will contain either the old data or the new data.
+If you write a range to a degraded RAID5 and crash during the write, you
+cannot make that same guarantee.
+I don't know how important this is, but then I don't really know how
+important any of this is.
 
-yes, it the write-ahead log and write-hole-protection log are combined,
-one write can be avoid.
+>=20
+> >=20
+> >  A combined log would "simply" involve writing every data block and  ev=
+ery
+> >  compute parity block (with index information) to the log device.
+> >  Replaying the log would collect data blocks and flush out those in a s=
+tripe
+> >  once the parity block(s) for that stripe became available.
+> >=20
+> >  I think this would actually turn into a fairly simple logging mechanis=
+m.
+>=20
+> It's not simple at all. It's unlikely we write data and parity
+> continuously in disk and in the same time. This will make log checkpoint
+> fairly complex.
 
->  Your code does avoid write-hole-protection for fill-stripe-writes, and this
->  would greatly reduce the  number of block that were written multiple times.
->  However I'm not convinced that is correct.
->  A reasonable  goal is that if the system crashes while writing to a storage
->  device, then reads should return the old data or not new data, not anything
->  else.  A crash in the middle of a full-stripe-write to a degraded array
->  could result in some block in the stripe appearing to contain data that is
->  different to both the old and the new.  If you are going to close the whole,
->  I think it should be done properly.
+I don't see any cause for complexity.  Let me be more explicit.
 
-I can do it simpley. But don't think this assumption is true. If you
-write to a disk range and there is failure, there is nothing guarantee
-you can either read old data or new data.
+I imagine that all data remains in the stripe cache, in memory, until it is
+finally written to the RAID5.  So the stripe cache will need to be quite a
+bit bigger.
 
-> 
->  A combined log would "simply" involve writing every data block and  every
->  compute parity block (with index information) to the log device.
->  Replaying the log would collect data blocks and flush out those in a stripe
->  once the parity block(s) for that stripe became available.
-> 
->  I think this would actually turn into a fairly simple logging mechanism.
+Every time we get a block that we want to write, either a new data block or=
+ a
+a computed parity block, we queue it to the log.
 
-It's not simple at all. It's unlikely we write data and parity
-continuously in disk and in the same time. This will make log checkpoint
-fairly complex.
+The log works like this:
+ - take the first (e.g.) 256 blocks in the queue, create a header to descri=
+be
+   them, write the header with FUA, then write all the data blocks.  If the=
+re
+   are fewer than 256, just write what we have.
+ - when the header write completes, all blocks written *previously* are now
+   safe and we can call bio_end_io on data or unlock the stripe for parity.
+ - loop back and write some more blocks.  If there are no blocks to write,
+   write a header which describes an empty set of blocks, and wait for more
+   blocks to appear.
 
-Thanks,
-Shaohua
+
+Each stripe_head needs to track (roughly) where the relevant blocks were
+written so it can release them when the stripe is written.
+I would conceptually divide the log into 32 regions and keep a 32bit number
+with each stripe.  When a block is assigned to a region in the log, the
+relevant bit is set for the stripe, and a per-region counter is incremented.
+When a stripe completes its write, the region counters for all the bits are=
+=20
+cleared.  The log cannot progress into a region which has a non-zero counte=
+r.
+
+We choose the size of transactions so that the first block of each region is
+a header block.  These contain a magic number, a sequence number, and a
+checksum together with the addresses of the data/parity blocks.  On restart
+we read all 32 of these to find out where the log starts and ends.  Then we
+replay all the blocks into the stripe cache - discarding any that don't come
+with the required parity blocks.
+
+So it is a very simple log which is never read exact on crash recovery.  It
+commits everything ASAP so that the writeout to the array can be lazy and c=
+an
+gather related blocks and sort address etc with not impact on filesystem
+latency.
+
+Does that make sense?
+
+NeilBrown
+
+--Sig_/gZr4cF4bdWeyhIBDCfUBISX
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVRyLHjnsnt1WYoG5AQKxCg/+PoyxxKTjTCVmNiXn14v1kUriRdrxHj9R
+6Sn4QqxYPdFgV8bb6orPKPQQUULamlylhTQAHu0xmxzK9KJrrDwB5o4TP8Ik82/M
+2ZW1prA7goKJ/sEfjtf/g5BsDT6mMBMYGUSCVKuvYFyqg4G4+EQJ66ZTB8UGeoS7
+p3QliW4mHvQZF1uQEJWK0PRu5zF3Y6CWAnVnhKuzWejLPdO0ChCPaSWKrTfL/tnn
+cruvCSbnAuCpXCKwrBZwFpX2Ibm8A/N6MF/ZPOAnsabN8xwKaJg9mq/Das/OSjB1
+V0W0Vlq1LhUdQAjaz51iKXOkpWAvtEbyWTDtlc2wMDm57tPy21GomeM3U7VVglxT
+VF7qht/EF9BDzTm6tzwctkrijkiAduwhkRAAiyZ1DVcVad6Qx/d5z4LrC60LlT1E
+94BXYPUQQRhlvsWgzGQ9D4aIuVqX1SOxhKQ1uYYW27kJKKUKQT76DG0hXAnLJUVF
+CieZaI14I1R5twPT4BKOnRIKdy6yPO0rBuD7R09EhLXGHCnOnxoFojQulpY4CU19
+TkGmx4xW8lh8CDDKZoE6UZULMLR9+18vagtIR9SJhLBn6QG7PYv6MJE75nD8poia
+xvRpLYcESOlz/csfwiOBKPzm15i6p0zj2ZnOYFtI0ZpJ+XlSXWabSM2oGI3bcc3+
+R43UWJ5nGN4=
+=1FAk
+-----END PGP SIGNATURE-----
+
+--Sig_/gZr4cF4bdWeyhIBDCfUBISX--
