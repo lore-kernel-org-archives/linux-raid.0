@@ -1,33 +1,64 @@
-From: Simon Kirby <sim@hostway.ca>
-Subject: Re: [neilb@suse.de: Re: MD request counter broken on 4.0-rc5 RAID1]
-Date: Thu, 2 Apr 2015 12:54:29 -0700
-Message-ID: <20150402195429.GA24657@hostway.ca>
-References: <20150325173346.GF8519@hostway.ca>
- <551BA0C3.7090004@cn.fujitsu.com>
- <20150401220725.53ee8f99@notabene.brown>
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Subject: [PATCH] md: fix md io stats accounting broken
+Date: Fri, 3 Apr 2015 08:44:47 +0800
+Message-ID: <1428021887-18128-1-git-send-email-guz.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150401220725.53ee8f99@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: sim@hostway.ca, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 01, 2015 at 10:07:25PM +1100, NeilBrown wrote:
+Simon reported the md io stats accounting issue:
+"
+I'm seeing "iostat -x -k 1" print this after a RAID1 rebuild on 4.0-rc5.
+It's not abnormal other than it's 3-disk, with one being SSD (sdc) and
+the other two being write-mostly:
 
-> On Wed, 1 Apr 2015 15:39:47 +0800 Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
-> 
-> > Hi Neil,
-> > One question about md io stats account:
-> > I find that we just accounting disk_stats.sectors[rw] and disk_stats.ios[rw] at
-> > md_make_request, but I did not find accounting disk_stats.ticks[rw], do not we
-> > need it? or I missed something?
-> 
-> No, I don't think you are missing anything.  md doesn't track 'ticks' - and
-> no-one has ever complained.
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+sda               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdb               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+sdc               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
+md0               0.00     0.00    0.00    0.00     0.00     0.00     0.00   345.00    0.00    0.00    0.00   0.00 100.00
+md2               0.00     0.00    0.00    0.00     0.00     0.00     0.00 58779.00    0.00    0.00    0.00   0.00 100.00
+md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00    12.00    0.00    0.00    0.00   0.00 100.00
+"
+The cause is commit "18c0b223cf9901727ef3b02da6711ac930b4e5d4" uses the
+generic_start_io_acct to account the disk stats rather than the open code,
+but it also introduced the increase to .in_flight[rw] which is needless to
+md. So we re-use the open code here to fix it.
 
-Hmm, yes, I guess "working" before was "0% utilization". :)
+Reported-by: Simon Kirby <sim@hostway.ca>
+Cc: <stable@vger.kernel.org> 3.19
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ drivers/md/md.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-Simon-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 717daad..e617878 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -249,6 +249,7 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
+ 	const int rw = bio_data_dir(bio);
+ 	struct mddev *mddev = q->queuedata;
+ 	unsigned int sectors;
++	int cpu;
+ 
+ 	if (mddev == NULL || mddev->pers == NULL
+ 	    || !mddev->ready) {
+@@ -284,7 +285,10 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
+ 	sectors = bio_sectors(bio);
+ 	mddev->pers->make_request(mddev, bio);
+ 
+-	generic_start_io_acct(rw, sectors, &mddev->gendisk->part0);
++	cpu = part_stat_lock();
++	part_stat_inc(cpu, &mddev->gendisk->part0, ios[rw]);
++	part_stat_add(cpu, &mddev->gendisk->part0, sectors[rw], sectors);
++	part_stat_unlock();
+ 
+ 	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
+ 		wake_up(&mddev->sb_wait);
+-- 
+1.7.7
