@@ -1,64 +1,26 @@
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Subject: [PATCH] md: fix md io stats accounting broken
-Date: Fri, 3 Apr 2015 08:44:47 +0800
-Message-ID: <1428021887-18128-1-git-send-email-guz.fnst@cn.fujitsu.com>
+From: "David F." <df7729@gmail.com>
+Subject: Breaks LSI RAID on C600 chipset
+Date: Fri, 3 Apr 2015 17:25:02 -0700
+Message-ID: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: sim@hostway.ca, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Simon reported the md io stats accounting issue:
-"
-I'm seeing "iostat -x -k 1" print this after a RAID1 rebuild on 4.0-rc5.
-It's not abnormal other than it's 3-disk, with one being SSD (sdc) and
-the other two being write-mostly:
+Loading V3.3.2 Aug 2014 on an asus z9pa-u8 mobo, with the controller
+in LSI RAID mode and configured using  RAID 1 via the BIOS, will break
+the RAID.  (no longer configured as RAID).  All it takes is starting
+mdadm which seems to work for that session but on reboot the RAID is
+gone.  The z9pa-u8 uses the C602 intel chipset.
 
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
-sda               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
-sdb               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
-sdc               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00    0.00    0.00   0.00   0.00
-md0               0.00     0.00    0.00    0.00     0.00     0.00     0.00   345.00    0.00    0.00    0.00   0.00 100.00
-md2               0.00     0.00    0.00    0.00     0.00     0.00     0.00 58779.00    0.00    0.00    0.00   0.00 100.00
-md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00    12.00    0.00    0.00    0.00   0.00 100.00
-"
-The cause is commit "18c0b223cf9901727ef3b02da6711ac930b4e5d4" uses the
-generic_start_io_acct to account the disk stats rather than the open code,
-but it also introduced the increase to .in_flight[rw] which is needless to
-md. So we re-use the open code here to fix it.
+Customer reported same on what they called an Intel ESRT2 which
+appears to use the same line C600 based chipset.  Not sure if in LSI
+mode, but presume so.  That controller allows you to pick LSI mode,
+Intel RAID mode, or just non RAID normal controller mode.
 
-Reported-by: Simon Kirby <sim@hostway.ca>
-Cc: <stable@vger.kernel.org> 3.19
-Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
----
- drivers/md/md.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 717daad..e617878 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -249,6 +249,7 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
- 	const int rw = bio_data_dir(bio);
- 	struct mddev *mddev = q->queuedata;
- 	unsigned int sectors;
-+	int cpu;
- 
- 	if (mddev == NULL || mddev->pers == NULL
- 	    || !mddev->ready) {
-@@ -284,7 +285,10 @@ static void md_make_request(struct request_queue *q, struct bio *bio)
- 	sectors = bio_sectors(bio);
- 	mddev->pers->make_request(mddev, bio);
- 
--	generic_start_io_acct(rw, sectors, &mddev->gendisk->part0);
-+	cpu = part_stat_lock();
-+	part_stat_inc(cpu, &mddev->gendisk->part0, ios[rw]);
-+	part_stat_add(cpu, &mddev->gendisk->part0, sectors[rw], sectors);
-+	part_stat_unlock();
- 
- 	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
- 		wake_up(&mddev->sb_wait);
--- 
-1.7.7
+Unfortunately, mine is a production server so I can't do much testing
+(even trying to load it will probably break it).  Not sure if you can
+get your hands on one to test.   Loading using DMRAID worked okay
+which is how I got around it.
