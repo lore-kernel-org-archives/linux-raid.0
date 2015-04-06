@@ -1,116 +1,484 @@
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: Re: [PATCH 0/3] dm-crypt: Adds support for wiping key when doing suspend/hibernation
-Date: Mon, 6 Apr 2015 23:27:35 +0200
-Message-ID: <201504062327.35325@pali>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com> <201504061529.57299@pali> <20150406181738.GC9978@amd>
+From: Mike <mboulter@gmail.com>
+Subject: Recovery of RAID 6 after three rapid disk events (disks are still
+ working)
+Date: Mon, 06 Apr 2015 18:28:55 -0500
+Message-ID: <104310d53affd63c6e13088daa8dd5f2@zeus.bigmiketrading.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4075191.yf6hhQT2n7";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20150406181738.GC9978@amd>
-Sender: linux-pm-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Mike Snitzer <snitzer@redhat.com>, Alasdair Kergon <agk@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart4075191.yf6hhQT2n7
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Hi guys,
 
-On Monday 06 April 2015 20:17:38 Pavel Machek wrote:
-> On Mon 2015-04-06 15:29:57, Pali Roh=C3=A1r wrote:
-> > On Monday 06 April 2015 15:00:46 Mike Snitzer wrote:
-> > > On Sun, Apr 05 2015 at  1:20pm -0400,
-> > >=20
-> > > Pali Roh=C3=A1r <pali.rohar@gmail.com> wrote:
-> > > > This patch series increase security of suspend and
-> > > > hibernate actions. It allows user to safely wipe crypto
-> > > > keys before suspend and hibernate actions starts
-> > > > without race conditions on userspace process with heavy
-> > > > I/O.
-> > > >=20
-> > > > To automatically wipe cryto key for <device> before
-> > > > hibernate action call: $ dmsetup message <device> 0 key
-> > > > wipe_on_hibernation 1
-> > > >=20
-> > > > To automatically wipe cryto key for <device> before
-> > > > suspend action call: $ dmsetup message <device> 0 key
-> > > > wipe_on_suspend 1
-> > > >=20
-> > > > (Value 0 after wipe_* string reverts original behaviour
-> > > > - to not wipe key)
-> > >=20
-> > > Can you elaborate on the attack vector your changes are
-> > > meant to protect against?  The user already authorized
-> > > access, why is it inherently dangerous to _not_ wipe the
-> > > associated key across these events?
-> >=20
-> > Hi,
-> >=20
-> > yes, I will try to explain current problems with cryptsetup
-> > luksSuspend command and hibernation.
-> >=20
-> > First, sometimes it is needed to put machine into other
-> > hands. You can still watch other person what is doing with
-> > machine, but once if you let machine unlocked (e.g opened
-> > luks disk), she/he can access encrypted data.
-> >=20
-> > If you turn off machine, it could be safe, because luks disk
-> > devices are locked. But if you enter machine into suspend or
-> > hibernate state luks devices are still open. And my patches
-> > try to achieve similar security as when machine is off (=3D
-> > no crypto keys in RAM or on swap).
-> >=20
-> > When doing hibernate on unencrypted swap it is to prevent
-> > leaking crypto keys to hibernate image (which is stored in
-> > swap).
-> >=20
-> > When doing suspend action it is again to prevent leaking
-> > crypto keys. E.g when you suspend laptop and put it off
-> > (somebody can remove RAMs and do some cold boot attack).
-> >=20
-> > The most common situation is:
-> > You have mounted partition from dm-crypt device (e.g.
-> > /home/), some userspace processes access it (e.g opened
-> > firefox which still reads/writes to cache ~/.firefox/) and
-> > you want to drop crypto keys from kernel for some time.
-> >=20
-> > For that operation there is command cryptsetup luksSuspend,
-> > which suspend dm device and then tell kernel to wipe crypto
-> > keys. All I/O operations are then stopped and userspace
-> > processes which want to do some those I/O operations are
-> > stopped too (until you call cryptsetup luksResume and enter
-> > correct key).
->=20
-> Actually... is the list of sites where the process wait small
-> enough? Could we modify them to be freezeable? Suspend should
-> work even if user stopped the his crypto partitions...
->=20
-> 								Pavel
+mdadm 3.2.5, 14 disk RAID 6
 
-If you suspend dm device and then you want to read file from fs=20
-which is on that device, then process freeze and you even cannot=20
-kill it with SIGKILL. Before entering suspend kernel tries to do=20
-sync and that operation also fails...
+Had a drive failure Friday.  Two more today in rapid succession.  All 
+drives seem fully operational.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+This is roughly 40TB array, I could use your help please to rescue the 
+array.
 
---nextPart4075191.yf6hhQT2n7
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+All members are on partition 2 of each physical disk.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+# mdadm --assemble --scan
+mdadm: /dev/md/media:0 assembled from 11 drives - not enough to start 
+the array.
+mdadm: No arrays found in config file or automatically
 
-iEYEABECAAYFAlUi+kcACgkQi/DJPQPkQ1LtpQCfYAKMN41fzSvwf3/7NSbH3OAh
-WbAAoLH3VSH0KYKZbwGtlm7vORo18BuH
-=TmEZ
------END PGP SIGNATURE-----
+# mdadm --assemble --scan --verbose
+mdadm: looking for devices for further assembly
+mdadm: no recogniseable superblock on /dev/loop0
+mdadm: Cannot assemble mbr metadata on /dev/sdo1
+mdadm: Cannot assemble mbr metadata on /dev/sdo
+mdadm: no RAID superblock on /dev/sdm1
+mdadm: no RAID superblock on /dev/sdm
+mdadm: no RAID superblock on /dev/sdn1
+mdadm: no RAID superblock on /dev/sdn
+mdadm: no RAID superblock on /dev/sdj1
+mdadm: no RAID superblock on /dev/sdj
+mdadm: no RAID superblock on /dev/sdk1
+mdadm: no RAID superblock on /dev/sdk
+mdadm: no RAID superblock on /dev/sdl1
+mdadm: no RAID superblock on /dev/sdl
+mdadm: no RAID superblock on /dev/sdi1
+mdadm: no RAID superblock on /dev/sdi
+mdadm: no RAID superblock on /dev/sdh1
+mdadm: no RAID superblock on /dev/sdh
+mdadm: no RAID superblock on /dev/sdb1
+mdadm: no RAID superblock on /dev/sdb
+mdadm: no RAID superblock on /dev/sda1
+mdadm: no RAID superblock on /dev/sda
+mdadm: no RAID superblock on /dev/sdf1
+mdadm: no RAID superblock on /dev/sdf
+mdadm: no RAID superblock on /dev/sdd1
+mdadm: no RAID superblock on /dev/sdd
+mdadm: no RAID superblock on /dev/sdc1
+mdadm: no RAID superblock on /dev/sdc
+mdadm: no RAID superblock on /dev/sdg1
+mdadm: no RAID superblock on /dev/sdg
+mdadm: no RAID superblock on /dev/sde1
+mdadm: no RAID superblock on /dev/sde
+mdadm: /dev/sdm2 is identified as a member of /dev/md/media:0, slot 3.
+mdadm: /dev/sdn2 is identified as a member of /dev/md/media:0, slot 8.
+mdadm: /dev/sdj2 is identified as a member of /dev/md/media:0, slot 5.
+mdadm: /dev/sdk2 is identified as a member of /dev/md/media:0, slot 11.
+mdadm: /dev/sdl2 is identified as a member of /dev/md/media:0, slot 4.
+mdadm: /dev/sdi2 is identified as a member of /dev/md/media:0, slot 7.
+mdadm: /dev/sdh2 is identified as a member of /dev/md/media:0, slot 1.
+mdadm: /dev/sdb2 is identified as a member of /dev/md/media:0, slot 6.
+mdadm: /dev/sda2 is identified as a member of /dev/md/media:0, slot 13.
+mdadm: /dev/sdf2 is identified as a member of /dev/md/media:0, slot 2.
+mdadm: /dev/sdd2 is identified as a member of /dev/md/media:0, slot 9.
+mdadm: /dev/sdc2 is identified as a member of /dev/md/media:0, slot 6.
+mdadm: /dev/sdg2 is identified as a member of /dev/md/media:0, slot 12.
+mdadm: /dev/sde2 is identified as a member of /dev/md/media:0, slot 0.
+mdadm: added /dev/sdh2 to /dev/md/media:0 as 1
+mdadm: added /dev/sdf2 to /dev/md/media:0 as 2
+mdadm: added /dev/sdm2 to /dev/md/media:0 as 3
+mdadm: added /dev/sdl2 to /dev/md/media:0 as 4
+mdadm: added /dev/sdj2 to /dev/md/media:0 as 5
+mdadm: added /dev/sdc2 to /dev/md/media:0 as 6 (possibly out of date)
+mdadm: added /dev/sdi2 to /dev/md/media:0 as 7
+mdadm: added /dev/sdn2 to /dev/md/media:0 as 8
+mdadm: added /dev/sdd2 to /dev/md/media:0 as 9 (possibly out of date)
+mdadm: no uptodate device for slot 10 of /dev/md/media:0
+mdadm: added /dev/sdk2 to /dev/md/media:0 as 11
+mdadm: added /dev/sdg2 to /dev/md/media:0 as 12
+mdadm: added /dev/sda2 to /dev/md/media:0 as 13
+mdadm: added /dev/sde2 to /dev/md/media:0 as 0
+mdadm: /dev/md/media:0 assembled from 11 drives - not enough to start 
+the array.
+mdadm: looking for devices for further assembly
+mdadm: No arrays found in config file or automatically
 
---nextPart4075191.yf6hhQT2n7--
+
+# mdadm --examine /dev/sd?2 --verbose
+/dev/sda2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 822fd02b:454da94c:57f68535:964996b1
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 8e7a48ab - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 13
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdb2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x2
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+Recovery Offset : 0 sectors
+           State : clean
+     Device UUID : 5c4a1046:c232402c:45f1c604:569f6896
+
+     Update Time : Mon Apr  6 16:12:05 2015
+        Checksum : 3c7663c2 - correct
+          Events : 2382358
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 6
+    Array State : AAAAAAAAAA.AAA ('A' == active, '.' == missing)
+/dev/sdc2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x2
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+Recovery Offset : 0 sectors
+           State : clean
+     Device UUID : e211f88d:5c355522:fbeb7134:16b17684
+
+     Update Time : Mon Apr  6 16:28:09 2015
+        Checksum : 982c3e96 - correct
+          Events : 2382480
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 6
+    Array State : AAAAAAAAAA.AAA ('A' == active, '.' == missing)
+/dev/sdd2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : active
+     Device UUID : de3f41b8:3016870c:344f2a92:c08e1085
+
+     Update Time : Mon Apr  6 19:19:34 2015
+        Checksum : af2bfdb - correct
+          Events : 2384965
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 9
+    Array State : AAAAAA.AAA.AAA ('A' == active, '.' == missing)
+/dev/sde2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 071afb12:f78f4f15:f65aa629:8eadcfa7
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 28a53e70 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 0
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdf2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : e319bdaa:22bc1153:c43b4878:8a9c1832
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : d7143a42 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 2
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdg2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : f5477580:94357948:6e97fe82:c8805bcd
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 482d21b8 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 12
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdh2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 3dd1df1b:203c6453:0964ebad:245b1670
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : bc2a587a - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 1
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdi2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4a013330:37c565f9:cb761d35:7ce4ddb4
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 4278adbb - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 7
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdj2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : d5521994:6c4f04f9:f7ca0dd9:dff3c6cd
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 62d6ed06 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 5
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdk2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : c1514b9f:24616fed:324a50fb:9469043a
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : f0f3f2a5 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 11
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdl2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 6c33c472:af1ffd8f:22d10ea3:9edc75bb
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 902a8ccd - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 4
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdm2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : b750b4e4:2b1bac5f:cbd3bde5:eab657e7
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 405a828f - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 3
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+/dev/sdn2:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+      Array UUID : b1c40379:914e5d18:dddb893b:4dc5a28f
+            Name : media:0
+   Creation Time : Wed Nov  7 22:06:02 2012
+      Raid Level : raid6
+    Raid Devices : 14
+
+  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
+      Array Size : 35160446976 (33531.62 GiB 36004.30 GB)
+   Used Dev Size : 5860074496 (2794.30 GiB 3000.36 GB)
+     Data Offset : 262144 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4670b36c:07cbe661:20e3d314:f7c3fd42
+
+     Update Time : Mon Apr  6 19:19:53 2015
+        Checksum : 55506e59 - correct
+          Events : 2384973
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+    Device Role : Active device 8
+    Array State : AAAAAA.AA..AAA ('A' == active, '.' == missing)
+
+
+
+-- 
+Mike
