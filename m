@@ -1,46 +1,66 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: multi-threaded raid5
-Date: Mon, 06 Apr 2015 22:34:15 -0600
-Message-ID: <1659926.GihAnxuuSt@balsa>
-References: <551AD6AE.4030607@cra.cz> <20150407111157.2200fb0b@notabene.brown>
-Reply-To: thomas@fjellstrom.ca
+From: "Jonathan Harker (Jesusaurus)" <jesusaurus@gentlydownthe.net>
+Subject: Re: Help recovering an interrupted raid0 reshape
+Date: Mon, 6 Apr 2015 22:14:56 -0700
+Message-ID: <CAC_83AFo47Zfe7rMqro7_k8dR-xpMcfiwQA7a9DTKpKPuHr=fA@mail.gmail.com>
+References: <CAC_83AFDEijn-7gNmnWNNabzcuPRMabNwr8xfRFt0xacsvZfog@mail.gmail.com>
+	<20150407094608.4a9dd142@notabene.brown>
+	<20150407115033.1d63b65c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150407111157.2200fb0b@notabene.brown>
+In-Reply-To: <20150407115033.1d63b65c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue 07 Apr 2015 11:11:57 AM NeilBrown wrote:
-> On Tue, 31 Mar 2015 19:17:34 +0200 stkoupr <p.kouril@cra.cz> wrote:
-> > Hi,
-> > 
-> > We are testing write performance of md raid5 with SSD array and we are
-> > hitting limit which I understand is caused by writes being handled in
-> > single thread (md0_raid5 process is eating 100% of 1 CPU core when the
-> > test is running). I understood that there is some work in progress which
-> > should make write handling multi-threaded. I'd like to ask about the
-> > status of this work, is it still in progress or planned?
-> > 
-> > Regards,
-> > Prema
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> See /sys/block/mdXXX/md/group_thread_cnt
-> 
-> Set it to a bigger number, get more threads.
-> 
-> Requires 3.12 or later.
+On Mon, Apr 6, 2015 at 6:50 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 7 Apr 2015 09:46:08 +1000 NeilBrown <neilb@suse.de> wrote:
+>
+>> On Fri, 3 Apr 2015 19:22:15 -0700 "Jonathan Harker (Jesusaurus)"
+>> <jesusaurus@gentlydownthe.net> wrote:
+>>
+>> >
+>> > Third, is it possible to resume the reshape? If not, can it be reverted?
+>> >
+>>
+>> I'll have to get back to you on that.  Hopefully you can be patient a little
+>> longer.
+>>
+>> NeilBrown
+>>
 
-What does it mean when that property is set to 0?
+Thanks for taking the time to look into this. I've managed to be
+patient with the problem for about a week now (I was cautiously poking
+and prodding the array for a few days before reaching out to this
+list) so I think I can manage a little more patience.
 
+>>
+>
+> Hi again Jonathan,
+>  please report what version of mdadm and of Linux that you are running.
+
+My mdadm version is "mdadm - v3.3.1 - 5th June 2014" and my linux
+version (according to `uname -r`) is 3.16.2-3.
+
+>
+> Also is there any chance that you tried
+>    mdadm --assemble .... --update=revert-reshape
+> ??
+> And if you did, why didn't you say so :-)
+
+During those first couple days I tried a couple assemble and
+incremental commands to try to get the reshape to restart, though I
+don't remember exactly what they were. It's possible I tried something
+as scary and irreversible as --update=revert-reshape in some desperate
+haze, so let's assume I did, but I was trying hard to avoid any advice
+that included --force in the command.
+
+>
 > NeilBrown
 
+Thanks again for looking into this, and let me know if there is any
+other useful information I can provide.
+
 -- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+Jonathan
