@@ -1,43 +1,48 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [dm-devel] [PATCH 3/3] dm-crypt: Adds support for wiping key
-	when doing suspend/hibernation
-Date: Tue, 7 Apr 2015 14:55:52 +0100
-Message-ID: <20150407135552.GA32694@agk-dp.fab.redhat.com>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com> <1428254419-7334-4-git-send-email-pali.rohar@gmail.com>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Creating volume in IMSM container
+Date: Tue, 07 Apr 2015 10:29:02 -0500
+Message-ID: <mg0t3u$ol$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1428254419-7334-4-git-send-email-pali.rohar@gmail.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 05, 2015 at 07:20:19PM +0200, Pali Roh=E1r wrote:
-> This patch adds dm message commands and option strings to optionally =
-wipe key
-> from dm-crypt device before entering suspend or hibernate state.
-=20
-Try to avoid 0/1 - use descriptive options instead.=20
-E.g. key wipe_on_hibernation / key retain_on_hibernation  (message)
-     wipe_key_on_hiberation ('dmsetup table' - don't forget the reporti=
-ng interface!)
+I am trying to create an IMSM container and volume in a KVM virtual
+machine (so that I can create a reproducer for a Fedora problem that
+seems to only/mostly affect IMSM RAID).  I've  managed to create a
+container with the following command:
 
-Have you tested against every state the driver might be in at the time =
-of
-suspend/hibernation?
+   IMSM_NO_PLATFORM=1 mdadm --create --verbose /dev/md/imsm \
+       /dev/vd{a,b} --raid-devices 2 --metadata=imsm
 
-> +static void crypt_suspend_and_wipe_key(struct crypt_config *cc)
-> +{
-> +	dm_suspend_md(dm_table_get_md(cc->ti->table));
+/proc/mdstat now contains:
 
-I'm not particularly keen on this - silently ignoring expected error st=
-ates
-like -EINVAL rather than checking first and not calling the function at=
- all
-when it's known not to be needed.
+   Personalities: [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] ...
+   md127 : inactive vdb[1](S) vda[0](S)
+         2210 blocks super external:imsm
 
-Alasdair
+I haven't, however, been able to create a volume within the container:
+
+   # IMSM_NO_PLATFORM=1 mdadm --create --verbose /dev/md/vol0 \
+        /dev/md/imsm --raid-devices 2 --level 1 --metadata=imsm
+   mdmon: not enough devices with space to create array.
+
+   # IMSM_NO_PLATFORM=1 mdadm --create --verbose /dev/md/vol0 \
+        /dev/vd{a,b} --raid-devices 2 --level 1 --metadata=imsm
+   mdadm: /dev/vda appears to be part of a raid array:
+          level=container devices=0 ctime=Thu Jan  1 00:00:00 1970
+   mdmon: /dev/vdb is not in the same imsm set
+   mdadm: /dev/vdb is not suitable for this array.
+   mdadm: create aborted
+
+Am I doing something wrong, or is this simply not possible?
+
+-- 
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+-------- "I grew up before Mark Zuckerberg invented friendship" --------
+========================================================================
 
