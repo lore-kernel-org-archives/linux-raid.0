@@ -1,291 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Help recovering an interrupted raid0 reshape
-Date: Wed, 8 Apr 2015 07:13:39 +1000
-Message-ID: <20150408071339.3295567b@notabene.brown>
-References: <CAC_83AFDEijn-7gNmnWNNabzcuPRMabNwr8xfRFt0xacsvZfog@mail.gmail.com>
-	<20150407094608.4a9dd142@notabene.brown>
-	<20150407115033.1d63b65c@notabene.brown>
-	<CAC_83AFo47Zfe7rMqro7_k8dR-xpMcfiwQA7a9DTKpKPuHr=fA@mail.gmail.com>
-	<20150407163004.7550da77@notabene.brown>
-	<CAC_83AEtgtiN-WD-U8OG_nzsoRWQmrn6mxKMhKk6cxK4ZD5yaQ@mail.gmail.com>
+Subject: Re: Creating volume in IMSM container
+Date: Wed, 8 Apr 2015 07:28:53 +1000
+Message-ID: <20150408072853.44d0890e@notabene.brown>
+References: <mg0t3u$ol$1@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/O9YYo7ZsHZv.HIDYdAo0CvI"; protocol="application/pgp-signature"
+ boundary="Sig_/0LwBl0ZqoB0JVHlG7jrm6OA"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC_83AEtgtiN-WD-U8OG_nzsoRWQmrn6mxKMhKk6cxK4ZD5yaQ@mail.gmail.com>
+In-Reply-To: <mg0t3u$ol$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Jonathan Harker (Jesusaurus)" <jesusaurus@gentlydownthe.net>
+To: Ian Pilcher <arequipeno@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/O9YYo7ZsHZv.HIDYdAo0CvI
+--Sig_/0LwBl0ZqoB0JVHlG7jrm6OA
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 7 Apr 2015 10:02:13 -0700 "Jonathan Harker (Jesusaurus)"
-<jesusaurus@gentlydownthe.net> wrote:
+On Tue, 07 Apr 2015 10:29:02 -0500 Ian Pilcher <arequipeno@gmail.com> wrote:
 
-> On Mon, Apr 6, 2015 at 11:30 PM, NeilBrown <neilb@suse.de> wrote:
-> >
-> > Try:
-> >   mdadm -S /dev/md124
-> >   mdadm -A /dev/md124 --update=3Drevert-reshape /dev/md/alpha /dev/md/b=
-eta
-> >   mdadm -S /dev/md124
-> >   mdadm -A /dev/md124 -vvv /dev/md/alpha /dev/md/beta /dev/md/gamma
-> >
-> > What does that report?
-> >
-> > NeilBrown
-> >
+> I am trying to create an IMSM container and volume in a KVM virtual
+> machine (so that I can create a reproducer for a Fedora problem that
+> seems to only/mostly affect IMSM RAID).  I've  managed to create a
+> container with the following command:
 >=20
-> # mdadm --stop /dev/md124
-> mdadm: stopped /dev/md124
-> # mdadm -A /dev/md124 --update=3Drevert-reshape /dev/md/alpha /dev/md/beta
-> mdadm: /dev/md124 assembled from 2 drives - not enough to start the array.
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid1] [raid10] [raid0]
-> [linear] [multipath]
-> md124 : inactive md126[0](S) md127[1](S)
->       3907022200 blocks super 1.2
+>    IMSM_NO_PLATFORM=3D1 mdadm --create --verbose /dev/md/imsm \
+>        /dev/vd{a,b} --raid-devices 2 --metadata=3Dimsm
 >=20
-> md0 : active raid1 sda5[0] sdb2[1]
->       107652416 blocks [2/2] [UU]
->       bitmap: 1/1 pages [4KB], 65536KB chunk
+> /proc/mdstat now contains:
 >=20
-> md125 : active raid1 sdh1[0] sdg1[1]
->       2930134016 blocks super 1.2 [2/2] [UU]
->       bitmap: 0/22 pages [0KB], 65536KB chunk
+>    Personalities: [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] ...
+>    md127 : inactive vdb[1](S) vda[0](S)
+>          2210 blocks super external:imsm
+
+2210 blocks is tiny.
+I think each device needs at least 6306 sectors for IMSM.
+I suggest going for at least 20,000.
+
 >=20
-> md126 : active raid1 sdc1[0] sdd1[1]
->       1953512312 blocks super 1.2 [2/2] [UU]
+> I haven't, however, been able to create a volume within the container:
 >=20
-> md127 : active raid1 sde1[2] sdf1[1]
->       1953512312 blocks super 1.2 [2/2] [UU]
+>    # IMSM_NO_PLATFORM=3D1 mdadm --create --verbose /dev/md/vol0 \
+>         /dev/md/imsm --raid-devices 2 --level 1 --metadata=3Dimsm
+>    mdmon: not enough devices with space to create array.
+
+This should  work once you have devices with enough space.
+
 >=20
-> unused devices: <none>
-> # mdadm --stop /dev/md124
-> mdadm: stopped /dev/md124
-> # mdadm -A /dev/md124 -vvv /dev/md/alpha /dev/md/beta /dev/md/gamma
-> mdadm: looking for devices for /dev/md124
-> mdadm: UUID differs from /dev/md0.
-> mdadm: UUID differs from /dev/md/alpha.
-> mdadm: UUID differs from /dev/md/beta.
-> mdadm: UUID differs from /dev/md/gamma.
-> mdadm: UUID differs from /dev/md0.
-> mdadm: UUID differs from /dev/md/alpha.
-> mdadm: UUID differs from /dev/md/beta.
-> mdadm: UUID differs from /dev/md/gamma.
-> mdadm: UUID differs from /dev/md0.
-> mdadm: UUID differs from /dev/md/alpha.
-> mdadm: UUID differs from /dev/md/beta.
-> mdadm: UUID differs from /dev/md/gamma.
-> mdadm: /dev/md/alpha is identified as a member of /dev/md124, slot 1.
-> mdadm: /dev/md/beta is identified as a member of /dev/md124, slot 0.
-> mdadm: /dev/md/gamma is identified as a member of /dev/md124, slot 2.
-> mdadm: :/dev/md124 has an active reshape - checking if critical
-> section needs to be restored
-> mdadm: added /dev/md/alpha to /dev/md124 as 1
-> mdadm: added /dev/md/gamma to /dev/md124 as 2 (possibly out of date)
-> mdadm: no uptodate device for slot 6 of /dev/md124
-> mdadm: added /dev/md/beta to /dev/md124 as 0
-> mdadm: /dev/md124 assembled from 2 drives - not enough to start the array.
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid1] [raid10] [raid0]
-> [linear] [multipath]
-> md124 : inactive md125[3](S) md127[1](S) md126[0](S)
->       6837155192 blocks super 1.2
->=20
-> md0 : active raid1 sda5[0] sdb2[1]
->       107652416 blocks [2/2] [UU]
->       bitmap: 0/1 pages [0KB], 65536KB chunk
->=20
-> md125 : active raid1 sdh1[0] sdg1[1]
->       2930134016 blocks super 1.2 [2/2] [UU]
->       bitmap: 0/22 pages [0KB], 65536KB chunk
->=20
-> md126 : active raid1 sdc1[0] sdd1[1]
->       1953512312 blocks super 1.2 [2/2] [UU]
->=20
-> md127 : active raid1 sde1[2] sdf1[1]
->       1953512312 blocks super 1.2 [2/2] [UU]
->=20
-> unused devices: <none>
->=20
-> # mdadm --examine /dev/md/alpha
-> /dev/md/alpha:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 1f4979ba:c49a77c0:59e689c2:bcc21c0a
->            Name : hordern:hordern1  (local to host hordern)
->   Creation Time : Fri Jan  2 09:59:40 2009
->      Raid Level : raid4
->    Raid Devices : 4
->=20
->  Avail Dev Size : 3907021824 (1863.01 GiB 2000.40 GB)
->      Array Size : 5860532736 (5589.04 GiB 6001.19 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D1968 sectors, after=3D752 sectors
->           State : active
->     Device UUID : 63aaa2e4:2a09f495:8372c7f9:eb2f2773
->=20
->   Reshape pos'n : 129067008 (123.09 GiB 132.16 GB)
->   Delta Devices : 1 (3->4)
->=20
->     Update Time : Sun Mar 29 15:11:35 2015
->        Checksum : 8be5e0e8 - correct
->          Events : 14013
->=20
->      Chunk Size : 512K
->=20
->    Device Role : Active device 1
->    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
-replacing)
->=20
-> # mdadm --examine /dev/md/beta
-> /dev/md/beta:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 1f4979ba:c49a77c0:59e689c2:bcc21c0a
->            Name : hordern:hordern1  (local to host hordern)
->   Creation Time : Fri Jan  2 09:59:40 2009
->      Raid Level : raid4
->    Raid Devices : 4
->=20
->  Avail Dev Size : 3907022576 (1863.01 GiB 2000.40 GB)
->      Array Size : 5860532736 (5589.04 GiB 6001.19 GB)
->   Used Dev Size : 3907021824 (1863.01 GiB 2000.40 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D1968 sectors, after=3D752 sectors
->           State : clean
->     Device UUID : 6e6dce14:3ebb2bb5:187aa292:403a55f6
->=20
->   Reshape pos'n : 129067008 (123.09 GiB 132.16 GB)
->   Delta Devices : 1 (3->4)
->=20
->     Update Time : Sun Mar 29 15:11:35 2015
->        Checksum : f7526adf - correct
->          Events : 14013
->=20
->      Chunk Size : 512K
->=20
->    Device Role : Active device 0
->    Array State : AA.. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
-replacing)
->=20
-> # mdadm --examine /dev/md/gamma
-> /dev/md/gamma:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x6
->      Array UUID : 1f4979ba:c49a77c0:59e689c2:bcc21c0a
->            Name : hordern:hordern1  (local to host hordern)
->   Creation Time : Fri Jan  2 09:59:40 2009
->      Raid Level : raid4
->    Raid Devices : 4
->=20
->  Avail Dev Size : 5860265984 (2794.39 GiB 3000.46 GB)
->      Array Size : 5860532736 (5589.04 GiB 6001.19 GB)
->   Used Dev Size : 3907021824 (1863.01 GiB 2000.40 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> Recovery Offset : 86403072 sectors
->    Unused Space : before=3D1960 sectors, after=3D1953244160 sectors
->           State : active
->     Device UUID : 782873ea:e265ecd4:5cc80ddf:035ba2b4
->=20
->   Reshape pos'n : 129067008 (123.09 GiB 132.16 GB)
->   Delta Devices : 1 (3->4)
->=20
->     Update Time : Sun Mar 29 00:05:29 2015
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : 710dc078 - correct
->          Events : 673
->=20
->      Chunk Size : 512K
->=20
->    Device Role : Active device 2
->    Array State : AAA. ('A' =3D=3D active, '.' =3D=3D missing, 'R' =3D=3D =
-replacing)
->=20
-> # mdadm --detail /dev/md124
-> /dev/md124:
->         Version : 1.2
->      Raid Level : raid0
->   Total Devices : 3
->     Persistence : Superblock is persistent
->=20
->           State : inactive
->=20
->   Delta Devices : 1, (-1->0)
->       New Level : raid4
->   New Chunksize : 512K
->=20
->            Name : hordern:hordern1  (local to host hordern)
->            UUID : 1f4979ba:c49a77c0:59e689c2:bcc21c0a
->          Events : 673
->=20
->     Number   Major   Minor   RaidDevice
->=20
->        -       9      125        -        /dev/md/gamma
->        -       9      126        -        /dev/md/beta
->        -       9      127        -        /dev/md/alpha
->=20
-> So it looks like all three component devices have consistent
-> superblocks now, awesome! But the raid0 array is still inactive with
-> all three components listed as spares. It looks like /dev/md/gamma has
-> a much lower event count, I'm guessing that is what causes the disk to
-> be marked as possibly out of date.
->=20
-> Is an "uptodate device" a specific thing, or does that simply mean
-> that some component devices are out of date? The lack of spaces makes
-> me think that uptodate is some keyword I'm not recognizing.
+>    # IMSM_NO_PLATFORM=3D1 mdadm --create --verbose /dev/md/vol0 \
+>         /dev/vd{a,b} --raid-devices 2 --level 1 --metadata=3Dimsm
+>    mdadm: /dev/vda appears to be part of a raid array:
+>           level=3Dcontainer devices=3D0 ctime=3DThu Jan  1 00:00:00 1970
+>    mdmon: /dev/vdb is not in the same imsm set
+>    mdadm: /dev/vdb is not suitable for this array.
+>    mdadm: create aborted
 >=20
 
-Looks good.  Nearly there.
-
-The difference in event counts is probably due to you trying lots of things
-out, and them only affecting two devices.
-
-If you
- # mdadm --stop /dev/md124
- # mdadm -A --force /dev/md124 -vvv /dev/md/alpha /dev/md/beta /dev/md/gamma
-
-i.e. just add --force, it should ignored the difference in event count and
-assemble the array.
-For RAID0, the event count isn't really relevant to the data as there is no
-possibility for inconsistency between data and parity on different devices.
-As the reshape position is the same on all devices, I don't think there is
-any risk at all in just using --force.
-Of course, perform an fsck afterwards just to build confidence.
+This looks like a bug.  What version of mdadm.
 
 NeilBrown
 
 
---Sig_/O9YYo7ZsHZv.HIDYdAo0CvI
+> Am I doing something wrong, or is this simply not possible?
+>=20
+
+
+--Sig_/0LwBl0ZqoB0JVHlG7jrm6OA
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVSRIgznsnt1WYoG5AQLp2hAAhh9Mn+gsqBkdxVT0d4Pwpl+fkiBYVu5Y
-dYeellM72Dya+CgVrs0wylbd7PXdPRzMnNaPlg1V9V5FteyRyS2aCaFbH+9zKzgu
-iYr3R0kgnBHnlSwb4J4Sv6gchyBxFwZEOzRDkxiVxOwFhgMGA54YTPyDTtDd9dlC
-KJnTO2iO6Moo2JBmfJBpolQ9igQcdhwKYd+5WLAgn76DRbxMH17sMhxILl83c9bF
-iVOy9dW22Z58Q6dOAvn/ZSIEsnPcgLFXSA19Zfi9wRuAHLBMcpia6c+fgiqTq6qH
-LiXwaXazsOPJ8Ne5DahbDtsZjDMmoX4uhA1zCvJlOtZUixdK03VXr5730yDm7T4h
-uljrZZHMqbnhwwKaf+sclkVxtGAKfmHUur7W8EFVK23IIckvdYclBDpBpJiQMxsI
-FajjHJCLYKExnqxUiiKMvkIzFGu+0CGQRvoTo7ZXl1NoM4SakFDnf8sFwSAzG58A
-rCMFiKJ3wMTAGY9xG2AnsIP4wBOO+su7gbinGnA4T8CjhVKbLWZGccI10fgt1zD0
-Vf799iym9IQ3UVyRXscQ3QDUBzU4qb/AQZ01b7NBEzbj4KdMHD0lwqhlwfZTH35c
-voXK3YeY1oxQGl9dJ/vSrl0l4VDj1EmbnhGjYZ9KO6lIoSk4Z69cZURqM4COxnXH
-iiQ2IeNpBK0=
-=xBnf
+iQIVAwUBVSRMFTnsnt1WYoG5AQJH8hAAlZvilAbEd+7ZGrKzeZRJQgbhoSpZl58G
++BAjBwiU9aFLy6gcjmroCsRHEc3Edi2p52kyU0RkmV5mu3vv0BjBsru2JzoX7MGu
+YXk/gNga9ZhrAehk5noS/YetLsFST+8vLK4Hc1CCesSbPZu4biTqc9NTwFiqN1mg
+qqOJIMzL5coCjckJPizOuv31ZgfSwnZMdztLum6FMxJrRqb4JolqQ0vXPXDuLRRy
+ipLKOu2M7gSdqVgDQOzbtlY4f0dNecNWTFNUaX/yv5Tgnb4NjhiFyt4w9unZ5IWj
+LG1SSqh1MFZXSmukDPkMFG97vfvlGDL4aGuUisVEkUvelRl/XyeenTZ+ap0dYmVX
+f3/dVePo4gAEfEDkWKecilLmhaFZrvRJb6GwUJxe7pNvbSj0g59D/LCoqlYdsj+N
+UCC+IPaw0MZm44HppCzVDt+3Vb8wR55Ikt7P7NYhVDD8w2PBLsODzVKAWf/lb1YP
+l53KNqi1QsrnKaZfQ/MS7MRW3yXoPD/C7OeppGl/bXfUu47ElJ2sc8AeEnhSDoxH
+iX3/BZG9m8LxdfftOqVvmyrjXlBECUEw3nui4Ojuq1wBD6dJ7TtUdkVeBzNjs1Ba
+OiSXfT+D6IGJ8pkXAH1e9+BUm7LFf+rjD9DG1xfX3zcJc2+DRcBcU01iNu991nqv
+ddhPVVjtmbI=
+=qsgQ
 -----END PGP SIGNATURE-----
 
---Sig_/O9YYo7ZsHZv.HIDYdAo0CvI--
+--Sig_/0LwBl0ZqoB0JVHlG7jrm6OA--
