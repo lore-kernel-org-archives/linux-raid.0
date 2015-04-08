@@ -1,83 +1,73 @@
-From: "Jonathan Harker (Jesusaurus)" <jesusaurus@gentlydownthe.net>
-Subject: Re: Help recovering an interrupted raid0 reshape
-Date: Wed, 8 Apr 2015 10:00:32 -0700
-Message-ID: <CAC_83AHf-eV-wb=p+guPKqaLVoedfqVA=EMXMRiTPj5pJuLBAA@mail.gmail.com>
-References: <CAC_83AFDEijn-7gNmnWNNabzcuPRMabNwr8xfRFt0xacsvZfog@mail.gmail.com>
-	<20150407094608.4a9dd142@notabene.brown>
-	<20150407115033.1d63b65c@notabene.brown>
-	<CAC_83AFo47Zfe7rMqro7_k8dR-xpMcfiwQA7a9DTKpKPuHr=fA@mail.gmail.com>
-	<20150407163004.7550da77@notabene.brown>
-	<CAC_83AEtgtiN-WD-U8OG_nzsoRWQmrn6mxKMhKk6cxK4ZD5yaQ@mail.gmail.com>
-	<20150408071339.3295567b@notabene.brown>
-	<CAC_83AGk2MK8=qy2CL-WN-ewfVzgA2D-WRkefpriXrdHSEjU-Q@mail.gmail.com>
-	<20150408085635.64fa7101@notabene.brown>
-	<CAC_83AF0EHVVDF7Gwdfw9WB34v+nHCFmpjLR7AQ5qOz5QATgdQ@mail.gmail.com>
-	<20150408120955.692b2564@notabene.brown>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 1/4] md-cluster: fix bitmap sub-offset in bitmap_read_sb
+Date: Wed, 8 Apr 2015 14:22:25 -0500
+Message-ID: <20150408192225.GA9678@shrek.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150408120955.692b2564@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, GQJiang@suse.com
 List-Id: linux-raid.ids
 
-On Tue, Apr 7, 2015 at 7:09 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 7 Apr 2015 16:24:35 -0700 "Jonathan Harker (Jesusaurus)"
-> <jesusaurus@gentlydownthe.net> wrote:
->
->> On Tue, Apr 7, 2015 at 3:56 PM, NeilBrown <neilb@suse.de> wrote:
->> >
->> >
->> > Hmm... I think I see the bug.  It should be easy enough to fix, but I'd like
->> > to be able to test it.
->> > Could you please:
->> >
->> >  mkdir /tmp/md.metadata
->> >  mdadm --dump /tmp/md.metadata /dev/md/alpha /dev/md/beta /dev/md/gamma
->> >  tar czSf /tmp/md.tgz /tmp/md.metadata
->> >
->> > and then send me /tmp/md.tgz, which should be tiny and contain just the
->> > metadata from the array.
->>
->> I'll send that to you once tar finishes.
->
-> Thanks.  And just as well I tested as there was another problem.
-> I think it is all fixed now.
-> If you:
->
->  cd /tmp
->  git clone git://neil.brown.name/mdadm
->  cd mdadm
->  make
->  ./mdadm -A /dev/md124 --force -vvvv /dev/md/{alpha,beta,gamma}
->
-> it should assemble the array and continue the reshape.
->
-> When it finishes it will leave the array as degraded RAID4.
-> Simply:
->   mdadm /dev/md125 --grow --level=0
->
-> and it will instantly become RAID0.
->
-> NeilBrown
->
->>
->> >
->> > [[the patch which introduced the problem has a description which starts
->> >     "This is a bit of a hack and ..."
->> >   Never accept hacks!
->> > ]]
->>
->> I've reviewed and accepted a few hacks in my day as well. Hopefully
->> the cleanup isn't too ugly.
->> Thanks again for looking into this.
->>
->
+bitmap_read_sb is modifying mddev->bitmap_info.offset. Thi works for
+the first bitmap read. However, when multiple bitmaps need to be opened
+by the same node, it ends up corrupting the offset. Fix it by using a
+local variable.
 
-Awesome, the interrupted reshape has restarted! And in about 900 short
-minutes I should be able to reshape back to a raid0.
-Thanks again for all your help.
+Also, bitmap_read_sb is not required in bitmap_copy_from_slot since
+it is called in bitmap_create. Remove bitmap_read_sb().
 
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ drivers/md/bitmap.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index e495604..eccfa27 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -547,6 +547,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 	unsigned long sectors_reserved = 0;
+ 	int err = -EINVAL;
+ 	struct page *sb_page;
++	loff_t offset = bitmap->mddev->bitmap_info.offset;
+ 
+ 	if (!bitmap->storage.file && !bitmap->mddev->bitmap_info.offset) {
+ 		chunksize = 128 * 1024 * 1024;
+@@ -573,9 +574,9 @@ re_read:
+ 		bm_blocks = ((bm_blocks+7) >> 3) + sizeof(bitmap_super_t);
+ 		/* to 4k blocks */
+ 		bm_blocks = DIV_ROUND_UP_SECTOR_T(bm_blocks, 4096);
+-		bitmap->mddev->bitmap_info.offset += bitmap->cluster_slot * (bm_blocks << 3);
++		offset = bitmap->mddev->bitmap_info.offset + (bitmap->cluster_slot * (bm_blocks << 3));
+ 		pr_info("%s:%d bm slot: %d offset: %llu\n", __func__, __LINE__,
+-			bitmap->cluster_slot, (unsigned long long)bitmap->mddev->bitmap_info.offset);
++			bitmap->cluster_slot, offset);
+ 	}
+ 
+ 	if (bitmap->storage.file) {
+@@ -586,7 +587,7 @@ re_read:
+ 				bitmap, bytes, sb_page);
+ 	} else {
+ 		err = read_sb_page(bitmap->mddev,
+-				   bitmap->mddev->bitmap_info.offset,
++				   offset,
+ 				   sb_page,
+ 				   0, sizeof(bitmap_super_t));
+ 	}
+@@ -1878,10 +1879,6 @@ int bitmap_copy_from_slot(struct mddev *mddev, int slot,
+ 	if (IS_ERR(bitmap))
+ 		return PTR_ERR(bitmap);
+ 
+-	rv = bitmap_read_sb(bitmap);
+-	if (rv)
+-		goto err;
+-
+ 	rv = bitmap_init_from_disk(bitmap, 0);
+ 	if (rv)
+ 		goto err;
 -- 
-Jonathan
+2.1.4
+
