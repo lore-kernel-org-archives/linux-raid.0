@@ -1,110 +1,192 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: fix md io stats accounting broken
-Date: Wed, 8 Apr 2015 13:11:55 +1000
-Message-ID: <20150408131155.7e3aa2d3@notabene.brown>
-References: <1428021887-18128-1-git-send-email-guz.fnst@cn.fujitsu.com>
+From: Pawel Baldysiak <pawel.baldysiak@intel.com>
+Subject: [PATCH] IMSM: Count arrays per orom
+Date: Wed, 08 Apr 2015 11:42:18 +0200
+Message-ID: <20150408094217.10715.28672.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/IxnlsHGz5MRbWm=8u5rW_kQ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1428021887-18128-1-git-send-email-guz.fnst@cn.fujitsu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gu Zheng <guz.fnst@cn.fujitsu.com>
-Cc: sim@hostway.ca, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
---Sig_/IxnlsHGz5MRbWm=8u5rW_kQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Active arrays with IMSM metadata are counted per hba so far.
+This is bad due to new functionality of orom shared between multiple
+controllers i.e. more arrays can be created than is supported by orom.
+This patch changes the way of counting arrays, so the result will be
+sum of arrays under every hba supported by specific orom.
 
-On Fri, 3 Apr 2015 08:44:47 +0800 Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+---
+ platform-intel.c |   14 ++++++++-
+ platform-intel.h |    1 +
+ super-intel.c    |   85 +++++++++++++++++++++++++++++++++++++-----------------
+ 3 files changed, 71 insertions(+), 29 deletions(-)
 
-> Simon reported the md io stats accounting issue:
-> "
-> I'm seeing "iostat -x -k 1" print this after a RAID1 rebuild on 4.0-rc5.
-> It's not abnormal other than it's 3-disk, with one being SSD (sdc) and
-> the other two being write-mostly:
->=20
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-s=
-z avgqu-sz   await r_await w_await  svctm  %util
-> sda               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0     0.00    0.00    0.00    0.00   0.00   0.00
-> sdb               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0     0.00    0.00    0.00    0.00   0.00   0.00
-> sdc               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0     0.00    0.00    0.00    0.00   0.00   0.00
-> md0               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0   345.00    0.00    0.00    0.00   0.00 100.00
-> md2               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0 58779.00    0.00    0.00    0.00   0.00 100.00
-> md1               0.00     0.00    0.00    0.00     0.00     0.00     0.0=
-0    12.00    0.00    0.00    0.00   0.00 100.00
-> "
-> The cause is commit "18c0b223cf9901727ef3b02da6711ac930b4e5d4" uses the
-> generic_start_io_acct to account the disk stats rather than the open code,
-> but it also introduced the increase to .in_flight[rw] which is needless to
-> md. So we re-use the open code here to fix it.
->=20
-> Reported-by: Simon Kirby <sim@hostway.ca>
-> Cc: <stable@vger.kernel.org> 3.19
-> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
-> ---
->  drivers/md/md.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 717daad..e617878 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -249,6 +249,7 @@ static void md_make_request(struct request_queue *q, =
-struct bio *bio)
->  	const int rw =3D bio_data_dir(bio);
->  	struct mddev *mddev =3D q->queuedata;
->  	unsigned int sectors;
-> +	int cpu;
-> =20
->  	if (mddev =3D=3D NULL || mddev->pers =3D=3D NULL
->  	    || !mddev->ready) {
-> @@ -284,7 +285,10 @@ static void md_make_request(struct request_queue *q,=
- struct bio *bio)
->  	sectors =3D bio_sectors(bio);
->  	mddev->pers->make_request(mddev, bio);
-> =20
-> -	generic_start_io_acct(rw, sectors, &mddev->gendisk->part0);
-> +	cpu =3D part_stat_lock();
-> +	part_stat_inc(cpu, &mddev->gendisk->part0, ios[rw]);
-> +	part_stat_add(cpu, &mddev->gendisk->part0, sectors[rw], sectors);
-> +	part_stat_unlock();
-> =20
->  	if (atomic_dec_and_test(&mddev->active_io) && mddev->suspended)
->  		wake_up(&mddev->sb_wait);
+diff --git a/platform-intel.c b/platform-intel.c
+index 1e9ddcd..edb8679 100644
+--- a/platform-intel.c
++++ b/platform-intel.c
+@@ -233,7 +233,7 @@ struct pciExpDataStructFormat {
+ 
+ struct orom_entry *orom_entries;
+ 
+-const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
++const struct orom_entry *get_orom_entry_by_device_id(__u16 dev_id)
+ {
+ 	struct orom_entry *entry;
+ 	struct devid_list *devid;
+@@ -241,13 +241,23 @@ const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
+ 	for (entry = orom_entries; entry; entry = entry->next) {
+ 		for (devid = entry->devid_list; devid; devid = devid->next) {
+ 			if (devid->devid == dev_id)
+-				return &entry->orom;
++				return entry;
+ 		}
+ 	}
+ 
+ 	return NULL;
+ }
+ 
++const struct imsm_orom *get_orom_by_device_id(__u16 dev_id)
++{
++	const struct orom_entry *entry = get_orom_entry_by_device_id(dev_id);
++
++	if (entry)
++		return &entry->orom;
++
++	return NULL;
++}
++
+ static struct orom_entry *add_orom(const struct imsm_orom *orom)
+ {
+ 	struct orom_entry *list;
+diff --git a/platform-intel.h b/platform-intel.h
+index 631fa76..695d6c6 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -238,5 +238,6 @@ int devt_attached_to_hba(dev_t dev, const char *hba_path);
+ char *devt_to_devpath(dev_t dev);
+ int path_attached_to_hba(const char *disk_path, const char *hba_path);
+ const char *get_sys_dev_type(enum sys_dev_type);
++const struct orom_entry *get_orom_entry_by_device_id(__u16 dev_id);
+ const struct imsm_orom *get_orom_by_device_id(__u16 device_id);
+ struct sys_dev *device_by_id(__u16 device_id);
+diff --git a/super-intel.c b/super-intel.c
+index 77df8db..66cc8e5 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5853,37 +5853,68 @@ count_volumes_list(struct md_list *devlist, char *homehost,
+ }
+ 
+ static int
+-count_volumes(char *hba, int dpa, int verbose)
++count_volumes(struct intel_hba *hba, int dpa, int verbose)
+ {
+-	struct md_list *devlist = NULL;
++	struct sys_dev *idev, *intel_devices = find_intel_devices();
+ 	int count = 0;
+-	int found = 0;;
++	const struct orom_entry *entry;
++	struct devid_list *dv, *devid_list;
+ 
+-	devlist = get_devices(hba);
+-	/* if no intel devices return zero volumes */
+-	if (devlist == NULL)
++	if (!hba || !hba->path)
+ 		return 0;
+ 
+-	count = active_arrays_by_format("imsm", hba, &devlist, dpa, verbose);
+-	dprintf("path: %s active arrays: %d\n", hba, count);
+-	if (devlist == NULL)
++	for (idev = intel_devices; idev; idev = idev->next) {
++		if (strstr(idev->path, hba->path))
++				break;
++	}
++
++	if (!idev || !idev->dev_id)
+ 		return 0;
+-	do  {
+-		found = 0;
+-		count += count_volumes_list(devlist,
+-					    NULL,
+-					    verbose,
+-					    &found);
+-		dprintf("found %d count: %d\n", found, count);
+-	} while (found);
+-
+-	dprintf("path: %s total number of volumes: %d\n", hba, count);
+-
+-	while(devlist) {
+-		struct md_list *dv = devlist;
+-		devlist = devlist->next;
+-		free(dv->devname);
+-		free(dv);
++
++	entry = get_orom_entry_by_device_id(idev->dev_id);
++
++	if (!entry || !entry->devid_list)
++		return 0;
++
++	devid_list = entry->devid_list;
++	for (dv = devid_list; dv; dv = dv->next) {
++
++		struct md_list *devlist = NULL;
++		struct sys_dev *device = device_by_id(dv->devid);
++		char *hba_path;
++		int found = 0;
++
++		if (device)
++			hba_path = device->path;
++		else
++			return 0;
++
++		devlist = get_devices(hba_path);
++		/* if no intel devices return zero volumes */
++		if (devlist == NULL)
++			return 0;
++
++		count += active_arrays_by_format("imsm", hba_path, &devlist, dpa, verbose);
++		dprintf("path: %s active arrays: %d\n", hba_path, count);
++		if (devlist == NULL)
++			return 0;
++		do  {
++			found = 0;
++			count += count_volumes_list(devlist,
++							NULL,
++							verbose,
++							&found);
++			dprintf("found %d count: %d\n", found, count);
++		} while (found);
++
++		dprintf("path: %s total number of volumes: %d\n", hba_path, count);
++
++		while (devlist) {
++			struct md_list *dv = devlist;
++			devlist = devlist->next;
++			free(dv->devname);
++			free(dv);
++		}
+ 	}
+ 	return count;
+ }
+@@ -6105,7 +6136,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
+ 	*freesize = maxsize;
+ 
+ 	if (super->orom) {
+-		int count = count_volumes(super->hba->path,
++		int count = count_volumes(super->hba,
+ 				      super->orom->dpa, verbose);
+ 		if (super->orom->vphba <= count) {
+ 			pr_vrb(": platform does not support more than %d raid volumes.\n",
+@@ -6261,7 +6292,7 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 			   created */
+ 			if (super->orom && freesize) {
+ 				int count;
+-				count = count_volumes(super->hba->path,
++				count = count_volumes(super->hba,
+ 						      super->orom->dpa, verbose);
+ 				if (super->orom->vphba <= count) {
+ 					pr_vrb(": platform does not support more than %d raid volumes.\n",
 
-
-Applied, thanks.
-Will push to Linus in a day or 2.
-
-NeilBrown
-
---Sig_/IxnlsHGz5MRbWm=8u5rW_kQ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVSSceznsnt1WYoG5AQIyYBAAkb13zFNumwcpIKdKxMRb5rGZyP1OXYyo
-rJvI/jTWlsOuoH3gNMM4ZtW/ABpIrmyqk1Tf3476rVIcMAUz0rqs6o88fYhCWw/i
-UrNc7543rD25ed4rZaQjNLrONvX/tiNmq9ZpIoqhxtYXGuu+BIUnO8NCm4HqcmEa
-dGlHPsHkQU97OkUAclwW9VHUNcC5UpddEMtdnieGEwR/42RBmhFp5P47eA4Ej2t8
-wz2D/NmlToKvjm8cwJe/DwuK3twdgSq6UqXPvGqVGYTYHAiw1JEG6d3Kgd6wCBrm
-iqKlmEdYEiLAKSt8XVfUxq3NydE7Rd31XtdLwfpe5AYnBegHjQnVtTfT8u+ENLm3
-fv/McFWJDWtx4ZgdrSo3BfHN4JSpxpBWIG0P/Ag+aM5Bb0UGIWEIpIu8Ajcglvbv
-1mY6rA3MOTFsO6J4v5GLBl0Ah1UU7rmjBkbFwqzbK5cU2ntjbm+hIxVyC3GkV43C
-fcc8EhFgD7JlxuGxSaEHDC68EnXbYb4zYcmRrmFPKQEkG4zuVumPHtIcZTrYQ5Jh
-sX0w1PT/+l9NxcoKp3drO9yjhUX0sZ4/xbr0quSpigqKLddDFpLZaRShVrZliGgs
-zG/CUJPnZ+TKgt348CDcgX/JYqXFeELDyRaiULY6DG0qj5Zg9TiPMEKLqkryigCr
-mBOU6GC4Trs=
-=WrvG
------END PGP SIGNATURE-----
-
---Sig_/IxnlsHGz5MRbWm=8u5rW_kQ--
