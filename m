@@ -1,91 +1,130 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH 1/3] PM suspend/hibernate: Call notifier after freezing processes
-Date: Thu, 09 Apr 2015 02:28:41 +0200
-Message-ID: <1530775.n2Kjx1bffW@vostro.rjw.lan>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com> <1428254419-7334-2-git-send-email-pali.rohar@gmail.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [RFC] raid5: add a log device to fix raid5/6 write hole issue
+Date: Wed, 8 Apr 2015 17:43:11 -0700
+Message-ID: <20150409004238.GA186860@devbig257.prn2.facebook.com>
+References: <20150330222459.GA575371@devbig257.prn2.facebook.com>
+ <20150402085312.5ea3d518@notabene.brown>
+ <20150401234055.GA3375744@devbig257.prn2.facebook.com>
+ <20150402111941.104d0633@notabene.brown>
+ <20150402040749.GA4025688@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1428254419-7334-2-git-send-email-pali.rohar@gmail.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150402040749.GA4025688@devbig257.prn2.facebook.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: dan.j.williams@intel.com, linux-raid@vger.kernel.org, songliubraving@fb.com, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On Sunday, April 05, 2015 07:20:17 PM Pali Roh=C3=A1r wrote:
-> To prevent race conditions on userspace processes with I/O some taks =
-must be
-> called after processes are freezed. This patch adds new events which =
-are
-> delivered by pm_notifier_call_chain() after freezing processes when d=
-oing
-> suspend or hibernate action.
->=20
-> Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+Hi,
+This is what I'm working on now, and hopefully had the basic code
+running next week. The new design will do cache and fix the write hole
+issue too. Before I post the code out, I'd like to check if the design
+has obvious issues.
 
-Please don't add more notifiers.  Just call whatever you need directly =
-from
-where you need to call that.
+Thanks,
+Shaohua
 
-If that is device-related, try to use device PM suspend/hibernate callb=
-acks
-instead.
+Main goal is to aggregate write IO to hopefully make full stripe IO and fix the
+write hole issue. This might speed up read too, but it's not optimized for
+read, eg, we don't proactivly cache data for read. The aggregation makes a lot
+of sense for workloads which sequentially write to several files. Such
+workloads are popular in today's datacenter.
 
-> ---
->  include/linux/suspend.h  |    2 ++
->  kernel/power/hibernate.c |    2 ++
->  kernel/power/suspend.c   |    4 +++-
->  3 files changed, 7 insertions(+), 1 deletion(-)
->=20
-> diff --git a/include/linux/suspend.h b/include/linux/suspend.h
-> index 5efe743..bc743c8 100644
-> --- a/include/linux/suspend.h
-> +++ b/include/linux/suspend.h
-> @@ -368,6 +368,8 @@ static inline bool hibernation_available(void) { =
-return false; }
->  #define PM_POST_SUSPEND		0x0004 /* Suspend finished */
->  #define PM_RESTORE_PREPARE	0x0005 /* Going to restore a saved image =
-*/
->  #define PM_POST_RESTORE		0x0006 /* Restore failed */
-> +#define PM_HIBERNATION_AFTER_FREEZE	0x0007 /* After hibernation free=
-ze */
-> +#define PM_SUSPEND_AFTER_FREEZE		0x0008 /* After suspend freeze */
-> =20
->  extern struct mutex pm_mutex;
-> =20
-> diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-> index 2329daa..184f7ee 100644
-> --- a/kernel/power/hibernate.c
-> +++ b/kernel/power/hibernate.c
-> @@ -671,6 +671,8 @@ int hibernate(void)
->  	if (error)
->  		goto Exit;
-> =20
-> +	pm_notifier_call_chain(PM_HIBERNATION_AFTER_FREEZE);
-> +
->  	lock_device_hotplug();
->  	/* Allocate memory management structures */
->  	error =3D create_basic_memory_bitmaps();
-> diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
-> index b7d6b3a..1776938 100644
-> --- a/kernel/power/suspend.c
-> +++ b/kernel/power/suspend.c
-> @@ -268,8 +268,10 @@ static int suspend_prepare(suspend_state_t state=
-)
->  	trace_suspend_resume(TPS("freeze_processes"), 0, true);
->  	error =3D suspend_freeze_processes();
->  	trace_suspend_resume(TPS("freeze_processes"), 0, false);
-> -	if (!error)
-> +	if (!error) {
-> +		pm_notifier_call_chain(PM_SUSPEND_AFTER_FREEZE);
->  		return 0;
-> +	}
-> =20
->  	suspend_stats.failed_freeze++;
->  	dpm_save_failed_step(SUSPEND_FREEZE);
->=20
+Here cache = cache disk, generally SSD. raid = raid array or raid disks
+(excluding cache disk)
+-------------------------
+cache layout will like this:
 
---=20
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+|super|chunk descriptor|chunk data|
+
+We divide cache to equal sized chunks. each chunk will have a descriptor.
+Its size will be raid_chunk_size * raid_disks. That is the cache chunk can
+store a whole raid chunk data and parity.
+
+Write IO will store to cache chunks first and then flush to raid chunks. We use
+fixed size chunk:
+-manage cache space easily. We don't need a complex tree-like index
+
+-flush data from cache to raid easily. data and parity are in the same chunk
+
+-reclaim space is easy. when there is no free chunk in cache, we must try to
+free some chunks, eg, reclaim. We do reclaim in chunk unit. reclaim a chunk
+just means flush the chunk from cache to raid. If we use complex data
+structure, we will need garbage collection and so on.
+
+-The downside is we waste space. Eg, a single 4k data will use a whole chunk in
+cache. But we can reclaim chunks with low utilization quickly to mitgate this
+issue partially.
+
+--------------------
+chunk descriptor looks like this:
+chunk_desc {
+	u64 seq;
+	u64 raid_chunk_index;
+	u32 state;
+	u8 bitmaps[];
+}
+
+seq: seq can be used to implement LRU-like algorithm for chunk reclaim. Every
+time data is written to the chunk, we update the chunk's seq. When we flush a
+chunk from cache to raid, we freeze the chunk (eg, the chunk can't accept new
+IO). If there is new IO, we write the new IO to another chunk. The new chunk
+will have a bigger seq than original chunk. crash and reboot can use the seq to
+detinguish which chunk is newer.
+
+raid_chunk_index: where the chunk should be flushed to raid
+
+state: chunk state. Currently I defined 3 states
+-FREE, the chunk is free
+-RUNNING, the chunk maps to raid chunk and accepts new IO
+-PARITY_INCORE, the chunk has both data and parity stored in cache
+
+bitmaps: each page of data and parity has one bit. 1 means present. Store data
+bits first.
+
+-----IO READ PATH------
+IO READ will check each chunk desc. If data is present in cache, dispatch to
+cache. otherwise to raid.
+
+-----IO WRITE PATH------
+1. find or create a chunk in cache
+2. write to cache
+3. write descriptor
+
+We write descriptor immediately in asynchronous way to reduce data loss, the
+chunk will be RUNNING state.
+
+-For normal write, IO return after 2. This will cut latency too. If there is a
+crash, the chunk state might be FREE or bitmap isn't set. In either case, this
+is the first write to the chunk, IO READ will read raid and get old data. We
+meet the symantics. If data isn't in cache, we will read old data in cache, we
+meet the symantics too.
+
+-For FUA write, 2 will be a FUA write. When 2 finishes, run 3 with FUA. IO
+return after 3. Crash after IO return deosn't impact symantics. We will read
+old or new data if crash happens before IO return, which is the similar like
+the normal write case.
+
+-For FLUSH, wait all previous descriptor write finish and then flush cache disk
+cache. In this way, we guarantee all previous write hit cache.
+
+-----chunk reclaim--------
+1. select a chunk
+2. freeze the chunk
+3. copy chunk data from cache to raid, so stripe state machine runs, eg,
+calculate parity and so on
+4. Hook to raid5 run_io. We write parity to cache
+5. flush cache disk cache
+6. mark descriptor PARITY_INCORE, and WRITE_FUA to cache
+7. raid5 run_io continue run. data and parity write to raid disks
+8. flush all raid disk cache
+9. mark descriptor FREE, WRITE_FUA to cache
+
+We will batch several chunks for reclaim for better performance. FUA write can
+be replaced with FLUSH too.
+
+If there is a crash before 6, descriptor state will be RUNNING. Recovery just
+need discard the parity bitmap. If there is a crash before 9, descriptor state
+will be PARITY_INCORE, recovery must copy both data and parity to raid.
