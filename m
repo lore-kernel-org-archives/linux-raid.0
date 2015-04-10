@@ -1,256 +1,325 @@
-From: Eduard Rozenberg <eduardr@pobox.com>
-Subject: Personal insight - Re: Can't mount partitions after "mdadm --zero-superblock"
-Date: Thu, 9 Apr 2015 19:53:36 -0700
-Message-ID: <6A7078FB-BE9F-49AE-A327-6A049BA970B4@pobox.com>
-References: <F271C907-A2A7-4132-BA11-D33353AE9FFF@pobox.com> <20150407105230.4ff9a97a@notabene.brown> <22789EEC-4F93-4B65-A93F-987DEE075C43@pobox.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: NeilBrown <neilb@suse.de>
+Subject: Re: interesting MD-xfs bug
+Date: Fri, 10 Apr 2015 13:22:53 +1000
+Message-ID: <20150410132253.644e3660@notabene.brown>
+References: <5526E8E9.3030805@gmail.com>
+	<20150409221846.GG13731@dastard>
+	<5526FB2A.8060704@gmail.com>
+	<20150409225322.GH13731@dastard>
+	<20150409231035.GI13731@dastard>
+	<20150410093652.73204748@notabene.brown>
+	<20150410013156.GH15810@dastard>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/02vtdpu3HfV619wvKnY.7Pi"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22789EEC-4F93-4B65-A93F-987DEE075C43@pobox.com>
+In-Reply-To: <20150410013156.GH15810@dastard>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Joe Landman <joe.landman@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, xfs <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-I finally figured out why I panicked and why things eventually worked=20
-thanks to this very helpful post:
+--Sig_/02vtdpu3HfV619wvKnY.7Pi
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-http://unix.stackexchange.com/questions/64889/how-to-mount-recover-data=
--on-a-disk-that-was-part-of-a-mdadm-raid-1-on-another-m
+On Fri, 10 Apr 2015 11:31:57 +1000 Dave Chinner <david@fromorbit.com> wrote:
 
-In particular this paragraph:
+> On Fri, Apr 10, 2015 at 09:36:52AM +1000, NeilBrown wrote:
+> > On Fri, 10 Apr 2015 09:10:35 +1000 Dave Chinner <david@fromorbit.com> w=
+rote:
+> >=20
+> > > On Fri, Apr 10, 2015 at 08:53:22AM +1000, Dave Chinner wrote:
+> > > > On Thu, Apr 09, 2015 at 06:20:26PM -0400, Joe Landman wrote:
+> > > > >=20
+> > > > >=20
+> > > > > On 04/09/2015 06:18 PM, Dave Chinner wrote:
+> > > > > >On Thu, Apr 09, 2015 at 05:02:33PM -0400, Joe Landman wrote:
+> > > > > >>If I build an MD raid0 with a non power of 2 chunk size, it app=
+ears
+> > > > > >>that I can mkfs.xfs a file system, but it doesn't show up in bl=
+kid
+> > > > > >>and is not mountable.  Yet, using a power of 2 chunk size, this=
+ does
+> > > > > >>work correctly.   This is kernel 3.18.9.
+> > > > > >>
+> > > > >=20
+> > > > > [...]
+> > > > >=20
+> > > > > >That looks more like a blkid or udev problem. try using blkid -p=
+ so
+> > > > > >that it doesn't look up the cache but directly probes devices for
+> > > > > >the signatures. strace might tell you a bit more, too. And if the
+> > > > > >filesystem mounts, then it definitely isn't an XFS problem ;)
+> > > > >=20
+> > > > > Thats the thing, it didn't mount, even when I used the device name
+> > > > > directly.
+> > > >=20
+> > > > Ok, that's interesting. Let me see if I can reproduce it locally. If
+> > > > you don't hear otherwise, tracing would still be useful. Thanks for
+> > > > the bug report, Joe.
+> > >=20
+> > > No luck - md doesn't allow the device to be activated on 4.0-rc7:
+> > >=20
+> > > $ sudo mdadm --version
+> > > mdadm - v3.3.2 - 21st August 2014
+> > > $ uname -a
+> > > Linux test4 4.0.0-rc7-dgc+ #882 SMP Fri Apr 10 08:50:52 AEST 2015 x86=
+_64 GNU/Linux
+> > > $ sudo wipefs -a /dev/vd[ab]
+> > > /dev/vda: 4 bytes were erased at offset 0x00001000 (linux_raid_member=
+): fc 4e 2b a9
+> > > /dev/vdb: 4 bytes were erased at offset 0x00001000 (linux_raid_member=
+): fc 4e 2b a9
+> > > $ sudo mdadm --create /dev/md20 --level=3D0 --metadata=3D1.2 --chunk=
+=3D1152 --auto=3Dyes --raid-disks=3D2 /dev/vd[ab]
+> >=20
+> > Weird.  Works for me.
+> > Any messages in 'dmesg' ??
+> > How big are /dev/vd[ab]??
+>=20
+> vda is 5GB, vdb is 20GB
+>=20
+> dmesg:
+>=20
+> [  125.131340] md: bind<vda>
+> [  125.134547] md: bind<vdb>
+> [  125.139669] md: personality for level 0 is not loaded!
+> [  125.141302] md: md20 stopped.
+> [  125.141986] md: unbind<vdb>
+> [  125.160100] md: export_rdev(vdb)
+> [  125.161751] md: unbind<vda>
+> [  125.180126] md: export_rdev(vda)
+>=20
+> Oh, curious. Going from 4.0-rc4 to 4.0-rc7, and make oldconfig
+> has resulted in:
+>=20
+> # CONFIG_MD_RAID0 is not set
+>=20
+> Ok, so with that fixed, it's still horribly broken.
+>=20
+> RAID 0 on different sized devices should result in a device that is
+> twice the size of the smallest devices:
+>=20
+> $ sudo mdadm --create /dev/md20 --level=3Draid0 --metadata=3D1.2 --chunk=
+=3D1024 --auto=3Dyes --raid-disks=3D2 /dev/vd[ab]
+> mdadm: array /dev/md20 started.
+> $ cat /proc/mdstat
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]=
+=20
+> md20 : active raid0 vdb[1] vda[0]
+>       26206208 blocks super 1.2 1024k chunks
+>      =20
+> unused devices: <none>
+> $ grep "md\|vd[ab]" /proc/partitions=20
+>  253        0    5242880 vda
+>  253       16   20971520 vdb
+>    9       20   26206208 md20
+> $
+>=20
+> Oh, "RAID0" is not actually RAID 0 - that's the size I'd expect from
+> a linear mapping. Half way through writing that block device, the IO
+> stats change in an obvious way:
+>=20
+> Device:         r/s     w/s    rMB/s    wMB/s
+> vda            0.00  144.00     0.00    48.00
+> vdb            0.00  145.20     0.00    48.40
+> md20           0.00  290.40     0.00    96.80
+>=20
+> Device:         r/s     w/s    rMB/s    wMB/s
+> vda            0.00   56.40     0.00    18.80
+> vdb            0.00  229.20     0.00    76.40
+> md20           0.00  285.20     0.00    95.10
+>=20
+> Device:         r/s     w/s    rMB/s    wMB/s
+> vda            0.00    0.00     0.00     0.00
+> vdb            0.00  290.40     0.00    96.80
+> md20           0.00  290.80     0.00    96.90
+>=20
+> So it's actually a stripe for the first 10GB, then some kind of
+> concatenated mapping of the remainder of the single device. That's
+> not what I expected, but it's also clearly not the problem.
+>=20
+> Anyway, change the stripe size to 1152:
+>=20
+> sudo mdadm --stop /dev/md20
+> mdadm: stopped /dev/md20
+> $ sudo wipefs -a /dev/vd[ab]
+> /dev/vda: 4 bytes were erased at offset 0x00001000 (linux_raid_member): f=
+c 4e 2b a9
+> /dev/vdb: 4 bytes were erased at offset 0x00001000 (linux_raid_member): f=
+c 4e 2b a9
+> $ sudo mdadm --create /dev/md20 --level=3Draid0 --metadata=3D1.2 --chunk=
+=3D1152 --auto=3Dyes --raid-disks=3D2 /dev/vd[ab]
+> mdadm: array /dev/md20 started.
+> $ sudo xfs_io -fd -c "pwrite -b 4m 0 25g" /dev/md20
+> wrote 26831355904/26843545600 bytes at offset 0
+> 24.989 GiB, 6398 ops; 0:00:16.00 (1.530 GiB/sec and 391.8556 ops/sec)
+> $
+>=20
+> Wait, what? Neil, did you put a flux capacitor in MD? :P=20
+>=20
+> The underlying drive is only capable of 100MB/s - 25GB of sequential
+> direct IO does not complete in 16 seconds on such a drive. But
+> there's also a 1GB BBWC in front of the physical drives (HW RAID1),
+> but even so, this write rate could only occur if every write is
+> hitting the BBWC. And so it is:
+>=20
+> $ sudo xfs_io -fd -c "pwrite -b 4m 0 25g" /dev/md20 & iostat -d -m 1
+> ...
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda            4214.00         0.00      1516.99          0       1516
+> vdb               0.00         0.00         0.00          0          0
+> md20           4223.00         0.00      1520.00          0       1520
+>=20
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda            2986.00         0.00      1075.01          0       1075
+> vdb            1174.00         0.00       422.88          0        422
+> md20           4154.00         0.00      1496.00          0       1496
+>=20
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda               0.00         0.00         0.00          0          0
+> vdb            4376.00         0.00      1575.12          0       1575
+> md20           4378.00         0.00      1576.00          0       1576
+>=20
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda            2682.00         0.00       965.74          0        965
+> vdb            1650.00         0.00       594.00          0        594
+> md20           4334.00         0.00      1560.00          0       1560
+>=20
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda            4518.00         0.00      1626.26          0       1626
+> vdb             138.00         0.00        49.50          0         49
+> md20           4656.00         0.00      1676.00          0       1676
+>=20
+> Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+> vda               0.00         0.00         0.00          0          0
+> vdb            4214.00         0.00      1517.48          0       1517
+> md20           4210.00         0.00      1516.00          0       1516
+> .....
+>=20
+> Note how it is cycling from one drive to the other with about a 2s
+> period?
+>=20
+> Yup, blocktrace on /dev/vda shows it is, indeed, hitting the BBWC
+> because the block mapping is clearly broken:
+>=20
+> 253,0    4        1     0.000000000  6972  Q  WS 8192 + 1008 [xfs_io]
+> 253,0    4        5     0.000068012  6972  Q  WS 8192 + 1008 [xfs_io]
+> 253,0    4        9     0.000093266  6972  Q  WS 8192 + 288 [xfs_io]
+> 253,0    4       13     0.000129722  6972  Q  WS 8193 + 1008 [xfs_io]
+> 253,0    4       17     0.000176872  6972  Q  WS 8193 + 1008 [xfs_io]
+> 253,0    4       21     0.000205566  6972  Q  WS 8193 + 288 [xfs_io]
+> 253,0    4       25     0.000240846  6972  Q  WS 8194 + 1008 [xfs_io]
+> 253,0    4       29     0.000284990  6972  Q  WS 8194 + 1008 [xfs_io]
+> 253,0    4       33     0.000313276  6972  Q  WS 8194 + 288 [xfs_io]
+> 253,0    4       37     0.000352330  6972  Q  WS 8195 + 1008 [xfs_io]
+> 253,0    4       41     0.000374272  6972  Q  WS 8195 + 272 [xfs_io]
+> 253,0    4       56     0.001215857  6972  Q  WS 8195 + 1008 [xfs_io]
+> 253,0    4       60     0.001252697  6972  Q  WS 8195 + 16 [xfs_io]
+> 253,0    4       64     0.001284517  6972  Q  WS 8196 + 1008 [xfs_io]
+> 253,0    4       68     0.001326130  6972  Q  WS 8196 + 1008 [xfs_io]
+> 253,0    4       72     0.001355050  6972  Q  WS 8196 + 288 [xfs_io]
+> 253,0    4       76     0.001393777  6972  Q  WS 8197 + 1008 [xfs_io]
+> 253,0    4       80     0.001439547  6972  Q  WS 8197 + 1008 [xfs_io]
+> 253,0    4       84     0.001466097  6972  Q  WS 8197 + 288 [xfs_io]
+> 253,0    4       88     0.001501267  6972  Q  WS 8198 + 1008 [xfs_io]
+> 253,0    4       92     0.001545863  6972  Q  WS 8198 + 1008 [xfs_io]
+> 253,0    4       96     0.001571500  6972  Q  WS 8198 + 288 [xfs_io]
+> 253,0    4      100     0.001584620  6972  Q  WS 8199 + 256 [xfs_io]
+> 253,0    4      116     0.002730034  6972  Q  WS 8199 + 1008 [xfs_io]
+> 253,0    4      120     0.002792351  6972  Q  WS 8199 + 1008 [xfs_io]
+> 253,0    4      124     0.002810937  6972  Q  WS 8199 + 32 [xfs_io]
+> 253,0    4      128     0.002842047  6972  Q  WS 8200 + 1008 [xfs_io]
+> 253,0    4      132     0.002889087  6972  Q  WS 8200 + 1008 [xfs_io]
+> 253,0    4      136     0.002916894  6972  Q  WS 8200 + 288 [xfs_io]
+> 253,0    4      140     0.002952334  6972  Q  WS 8201 + 1008 [xfs_io]
+> 253,0    4      144     0.002996101  6972  Q  WS 8201 + 1008 [xfs_io]
+> 253,0    4      148     0.003022401  6972  Q  WS 8201 + 288 [xfs_io]
+>=20
+>=20
+> Multiple IOs to teh same sector, then the sector increments by 1 and
+> we get more IOs to the same sector offset. After about a second the
+> mapping shifts IO to the other block device as it slowly increments
+> the sector, and that's why we see that cycling behaviour.
+>=20
+> IOWs, something is going wrong with the MD block mapping when the
+> RAID chunk size is not a power of 2....
+>=20
+> Over to you, Neil....
 
-"Linux mdraid has several metadata formats. Formats 0.9 and 1.0 put the=
- metadata
-at the end of the containing device, and the payload (the filesystem) s=
-tarts at
-the beginning of the device and can be accessed directly without going =
-through
-the raid layer. Formats 1.1 and 1.2 put the metadata at the middle and
-beginning of the containing device respectively, so the payload is at a=
-n offset."
+That's .... not good.  Not good at all.
 
-I knew about the various metadata versions but I=E2=80=99d been working=
- under the false=20
-assumption (based on my 0.9/1.0 metadata format mdadm experience) that
-I would be able to directly mount an ext4 partition that had been previ=
-ously part of
-a RAID1 mdadm device.
+This should help. It seems that non-power-of-2 chunksizes aren't widely use=
+d.
 
-According to the paragraph above this is clearly no longer true with me=
-tadata
-v1.1/1.2, and mounting a previously raid1 partition requires either the=
- decimal
-offset to mount it directly or creating a new md device with the partit=
-ion in question
-(without of course formatting the new md device). Certainly not as conv=
-enient
-as it used to be but I'm sure there were good reasons to change the loc=
-ation of
-the metadata to the front of each partition.
-
-Perhaps the mdadm wiki could include information to this effect, that m=
-ounting
-formerly raid1 mdadm partitions with metadata 1.1/1.2 requires these ex=
-tra
-steps and not to panic :).
-
-Regards,
-=E2=80=94Ed
+Thanks,
+NeilBrown
 
 
-> On Apr 6, 2015, at 20:31, Eduard Rozenberg <eduardr@pobox.com> wrote:
->=20
-> Hello Neil,
->=20
-> Success! This is stronger voodoo magic than I=E2=80=99ve ever=20
-> had to perform so really didn=E2=80=99t have the faith to continue
-> without the extra encouragement :). My initial mistake
-> had been to use the octal value with losetup instead of
-> getting the decimal value.
->=20
-> Documenting my steps below for anybody else who
-> might come here later.
->=20
-> In the examples below, we are using partition "/dev/sdac2"
-> Replace this with the appropriate partition you=E2=80=99re recovering=
-=2E
->=20
-> Step 1: find the decimal value for the start of the partition
-> ---------------------------------------------------------------------=
--------
->=20
-> Note:
-> ext4 partitions have a =E2=80=9Cmagic" octal value of =E2=80=9Cef53"
-> to indicate the start of the partition. Note that "ef53"
-> may show more than once as you read further into
-> the partition. We are interested in the location the=20
-> very first occurrence of "ef53". Other types of
-> partitions (ext2, ext3, etc) probably have other magic
-> values to look for so this =E2=80=9Cef53" may not apply there.
->=20
-> The "od" hex viewer command to search for =E2=80=9Cef53":
->=20
-> 	od -x /dev/sdac2 | awk '$6 =3D=3D "ef53"'
->=20
-> The results will look something like:
->=20
-> 4002060 f3fd 5521 0004 0025 ef53 0001 0001 0000
-> 1004000060 64be 4ec9 0000 0025 ef53 0000 0001 0000
-> 1042630400 17f8 a7dd bb6e ee40 ef53 000d 3cfb 9e22
->=20
-> We are only interested in the first line. So we now have
-> the octal address of the ef53 magic value: it=E2=80=99s the first
-> long number on the line: "4002060" (octal value!)
->=20
-> According to Neil=E2=80=99s instructions then we have to subtract
-> the octal value =E2=80=9C0002060" from this number we found.
-> We then have to convert the octal result into decimal.
->=20
-> Luckily an online calculator makes this easy:
->=20
-> http://www.csgnetwork.com/octaddsubcalc.html
->=20
-> "Enter a octal value" - Enter =E2=80=9C4002060" here
-> "Enter Second Octal Value" - Enter =E2=80=9C0002060" here
->=20
-> Then take the value from the line:
-> "Calculated Decimal Subtraction" - 1048576
->=20
-> This is the decimal value for the start of our partition.
->=20
->=20
-> Step 2: use the decimal start value to mount partition
-> =E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=
-=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=
-=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=
-=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=94=E2=80=
-=94=E2=80=94=E2=80=94=E2=80=94
->=20
-> First create a loop device loop0 as a handle to the
-> partition. We tell losetup where the start of the partition is:
->=20
-> 	losetup -o 1048576 /dev/loop0 /dev/sdac2
->=20
-> Next, try to mount loop0 read-only (hopefully it will work!)
->=20
-> 	mount -o ro /dev/loop0 /mnt
->=20
-> If the partition is unclean and needs to be fscked:
->=20
-> 	fsck.ext4 /dev/loop0
->=20
->=20
-> Thanks again Neil! Maybe a few years from now I=E2=80=99ll
-> understand why this worked when nothing else did
-> ( linux tools still have some ways to go to being
-> intelligent enough to do this kind of recovery).
->=20
-> Regards,
-> =E2=80=94Ed
->=20
->=20
->> On Apr 6, 2015, at 17:52, NeilBrown <neilb@suse.de> wrote:
->>=20
->> On Mon, 6 Apr 2015 16:45:58 -0700 Eduard Rozenberg <eduardr@pobox.co=
-m> wrote:
->>=20
->>> Hello folks,
->>>=20
->>> I previously had the following setup:
->>>=20
->>> sda & sdb partitioned w/ GPT, 7 partitions each (usr, opt, var etc.=
-=2E.)
->>> 7 raid1=E2=80=99s with 2 devices for each pair of partitions (/dev/=
-sda1 & /dev/sdab1, etc)
->>> They=E2=80=99d been created under Slackware 13.37.
->>>=20
->>> I was trying to clean out mdadm from those partitions but keep the =
-data so I ran=20
->>> "mdadm --zero-superblock=E2=80=9D on each of those previously RAID1=
- mdadm 1.2 ext4=20
->>> partitions.
->>=20
->> The "1.2" metadata is stored 4k from the start of the device.  The a=
-ctual
->> data is some megabytes further in.  I don't suppose you still have t=
-he output
->> of "mdadm --examine" from before you destroyed the superblocks??
->>=20
->>>=20
->>> As a result I am now currently unable to mount any partition after =
-the first one on either
->>> disk. The first partition does mount. The partition table is visibl=
-e and looks fine in gdisk.
->>>=20
->>> mount -t ext4 /dev/sdac2 /mnt
->>> mount: wrong fs type, bad option, bad superblock on /dev/sdac2,
->>> missing codepage or helper program, or other error
->>> In some cases useful info is found in syslog - try
->>> dmesg | tail or so
->>>=20
->>> I did try superblock recovery with each backup superblock that ext4=
- normally creates,
->>> but none of the superblock locations worked.
->>>=20
->>> For example:
->>>=20
->>> fsck.ext4 -b 4096000 /dev/sdac2=20
->>> e2fsck 1.42.8 (20-Jun-2013)
->>> /sbin/e2fsck: Invalid argument while trying to open /dev/sdac2
->>>=20
->>> The superblock could not be read or does not describe a correct ext=
-2
->>> filesystem. If the device is valid and it really contains an ext2
->>> filesystem (and not swap or ufs or something else), then the superb=
-lock
->>> is corrupt, and you might try running e2fsck with an alternate supe=
-rblock:
->>> e2fsck -b 8193 <device>
->>>=20
->>>=20
->>> Would be grateful for any advice on anything else I can try.
->>=20
->> You need to find where the filesystem actually starts, then you need=
- to
->> create some way to access it as a block device, then it should "just=
- work".
->>=20
->> An ext4 filesystem superblock has 0xef53 at an offset of 0x38, and t=
-he
->> superblock is typically 1K from the start of the partition.
->>=20
->> So you could:
->>  od -x /dev/sdac2 | awk '$6 =3D=3D "ef53"'
->>=20
->> Then subtrace 0002060 (octal) from the leading number, and that migh=
-t be the
->> start of the partition.
->>=20
->> Then
->> losetup -o "start in decimal" /dev/loop0 /dev/sdac2
->>=20
->> and try 'fsck' on /dev/loop0
->>=20
->> Good luck.
->>=20
->> NeilBrown
->>=20
->>=20
->>=20
->>>=20
->>> Regards,
->>> =E2=80=94Ed--
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>=20
->=20
+From: NeilBrown <neilb@suse.de>
+Date: Fri, 10 Apr 2015 13:19:04 +1000
+Subject: [PATCH] md/raid0: fix bug with chunksize not a power of 2.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Since commit 20d0189b1012a37d2533a87fb451f7852f2418d1
+in v3.14-rc1 RAID0 has performed incorrect calculations
+when the chunksize is not a power of 2.
+
+This happens because "sector_div()" modifies its first argument, but
+this wasn't taken into account in the patch.
+
+So restore that first arg before re-using the variable.
+
+Reported-by: Joe Landman <joe.landman@gmail.com>
+Reported-by: Dave Chinner <david@fromorbit.com>
+Fixes: 20d0189b1012a37d2533a87fb451f7852f2418d1
+Cc: stable@vger.kernel.org (3.14 and later).
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index e074813da6c0..2cb59a641cd2 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -315,7 +315,7 @@ static struct strip_zone *find_zone(struct r0conf *conf,
+=20
+ /*
+  * remaps the bio to the target device. we separate two flows.
+- * power 2 flow and a general flow for the sake of perfromance
++ * power 2 flow and a general flow for the sake of performance
+ */
+ static struct md_rdev *map_sector(struct mddev *mddev, struct strip_zone *=
+zone,
+ 				sector_t sector, sector_t *sector_offset)
+@@ -530,6 +530,7 @@ static void raid0_make_request(struct mddev *mddev, str=
+uct bio *bio)
+ 			split =3D bio;
+ 		}
+=20
++		sector =3D bio->bi_iter.bi_sector;
+ 		zone =3D find_zone(mddev->private, &sector);
+ 		tmp_dev =3D map_sector(mddev, zone, sector, &sector);
+ 		split->bi_bdev =3D tmp_dev->bdev;
+
+--Sig_/02vtdpu3HfV619wvKnY.7Pi
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVSdCEjnsnt1WYoG5AQKT+Q/+PzWsahElSH2BEtSp+Ztqa9S1xzz8R4HO
+9Z9pPCd00+tSwUV/Nhmu1dqzsOZGhg2VZ0g4WgCWJDZSEd2s3gjz2bqURYRK8Sci
+PfitzsoNYt71Ep9eKVG+uLiQKEqVDhXO0qzp9heKThNdCkzNnxCgnEYHtDkAU1H3
+SxON3xJ3vBJGNMYjC0NFTbmxasjGXzop2qDGdNHg0fZSVjlceX/NuqBkdrSpLS2r
+4cSlG9wS2KTuCXDwmfvd3WmOMJu8JulxoYFX2zTCzKgdJwz2bjesI+Ap8xFk0YSQ
+zxqrn1mRxJzudIcD5WV3GLrlRppQoSnFLN0T3AEHDsk4Nxiw604kNMol7juhlD/l
+I2OTMYv5xU3pzODSQ6pyZGegCuinl+mf/jFaiwhEuKS5KNNkV+962/cSj8gaca3e
+XSmQK36ZTJNIIJfwfUu0wTI7H3p/qBb/wGkHO+gf/TrXIzA+hbKrUjsQvqnIECN6
+g/O2+TCXaE3f1NIggmjp63JkL59BHUOwr2PQ9MaD9Il6DhzeH8ssmUWGdLpT5KCU
+YsQLxHQLv2e64keJDA19fBBo8e5UW70NWUN2/kqydB3A6NZeF0qnRFSCpJlxvBVh
+dqnCglD13d8TOzyhn54VAmBaqSFK++aIVl0Ql4vumJBwikplKbKlXhTryvnH4yWt
+ZfqHdKOowp8=
+=S7VJ
+-----END PGP SIGNATURE-----
+
+--Sig_/02vtdpu3HfV619wvKnY.7Pi--
