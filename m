@@ -1,235 +1,82 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: interesting MD-xfs bug
-Date: Fri, 10 Apr 2015 11:31:57 +1000
-Message-ID: <20150410013156.GH15810@dastard>
-References: <5526E8E9.3030805@gmail.com>
- <20150409221846.GG13731@dastard>
- <5526FB2A.8060704@gmail.com>
- <20150409225322.GH13731@dastard>
- <20150409231035.GI13731@dastard>
- <20150410093652.73204748@notabene.brown>
+From: Tejas Rao <raot@bnl.gov>
+Subject: RAID IO stuck under heavy load (writes)
+Date: Thu, 09 Apr 2015 21:54:54 -0400
+Message-ID: <55272D6E.6050505@bnl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150410093652.73204748@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Joe Landman <joe.landman@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Apr 10, 2015 at 09:36:52AM +1000, NeilBrown wrote:
-> On Fri, 10 Apr 2015 09:10:35 +1000 Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Fri, Apr 10, 2015 at 08:53:22AM +1000, Dave Chinner wrote:
-> > > On Thu, Apr 09, 2015 at 06:20:26PM -0400, Joe Landman wrote:
-> > > > 
-> > > > 
-> > > > On 04/09/2015 06:18 PM, Dave Chinner wrote:
-> > > > >On Thu, Apr 09, 2015 at 05:02:33PM -0400, Joe Landman wrote:
-> > > > >>If I build an MD raid0 with a non power of 2 chunk size, it appears
-> > > > >>that I can mkfs.xfs a file system, but it doesn't show up in blkid
-> > > > >>and is not mountable.  Yet, using a power of 2 chunk size, this does
-> > > > >>work correctly.   This is kernel 3.18.9.
-> > > > >>
-> > > > 
-> > > > [...]
-> > > > 
-> > > > >That looks more like a blkid or udev problem. try using blkid -p so
-> > > > >that it doesn't look up the cache but directly probes devices for
-> > > > >the signatures. strace might tell you a bit more, too. And if the
-> > > > >filesystem mounts, then it definitely isn't an XFS problem ;)
-> > > > 
-> > > > Thats the thing, it didn't mount, even when I used the device name
-> > > > directly.
-> > > 
-> > > Ok, that's interesting. Let me see if I can reproduce it locally. If
-> > > you don't hear otherwise, tracing would still be useful. Thanks for
-> > > the bug report, Joe.
-> > 
-> > No luck - md doesn't allow the device to be activated on 4.0-rc7:
-> > 
-> > $ sudo mdadm --version
-> > mdadm - v3.3.2 - 21st August 2014
-> > $ uname -a
-> > Linux test4 4.0.0-rc7-dgc+ #882 SMP Fri Apr 10 08:50:52 AEST 2015 x86_64 GNU/Linux
-> > $ sudo wipefs -a /dev/vd[ab]
-> > /dev/vda: 4 bytes were erased at offset 0x00001000 (linux_raid_member): fc 4e 2b a9
-> > /dev/vdb: 4 bytes were erased at offset 0x00001000 (linux_raid_member): fc 4e 2b a9
-> > $ sudo mdadm --create /dev/md20 --level=0 --metadata=1.2 --chunk=1152 --auto=yes --raid-disks=2 /dev/vd[ab]
-> 
-> Weird.  Works for me.
-> Any messages in 'dmesg' ??
-> How big are /dev/vd[ab]??
+We are running GPFS over md raid devices.
 
-vda is 5GB, vdb is 20GB
+The GPFS storage servers each have 60 4TB jbod drives. This is setup in 
+a 6 RAID6 md devices(8+2), with default chunk size 512K. We are running 
+RHEL 6.5 , kernel 2.6.32-431.23.3.el6.x86_64.
 
-dmesg:
+stripe_cache_size for each md device is set to maximum 32768. If I set 
+the stripe_cache_size to 16384 or lower, I see stuck IO even at lower 
+work loads.
 
-[  125.131340] md: bind<vda>
-[  125.134547] md: bind<vdb>
-[  125.139669] md: personality for level 0 is not loaded!
-[  125.141302] md: md20 stopped.
-[  125.141986] md: unbind<vdb>
-[  125.160100] md: export_rdev(vdb)
-[  125.161751] md: unbind<vda>
-[  125.180126] md: export_rdev(vda)
+Under heavy write load we see IO getting stuck for several minutes (GPFS 
+waiters), sometimes as long as 30 minutes, eventually they all complete. 
+I see stripe_cache_active on the stuck md device close to maximum and 
+not changing(stuck?).
 
-Oh, curious. Going from 4.0-rc4 to 4.0-rc7, and make oldconfig
-has resulted in:
+This happens randomly on different md devices on different servers, so I 
+am sure this is not a hardware problem tied to a failing disk/SAS port etc.
 
-# CONFIG_MD_RAID0 is not set
+How can troubleshoot this further to isolate the cause? I am reproduce 
+this problem 100%.
 
-Ok, so with that fixed, it's still horribly broken.
+This is what I see in the /var/log/messages file. mmfslinux/mmfs26 is 
+the GPFS application.
 
-RAID 0 on different sized devices should result in a device that is
-twice the size of the smallest devices:
-
-$ sudo mdadm --create /dev/md20 --level=raid0 --metadata=1.2 --chunk=1024 --auto=yes --raid-disks=2 /dev/vd[ab]
-mdadm: array /dev/md20 started.
-$ cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] 
-md20 : active raid0 vdb[1] vda[0]
-      26206208 blocks super 1.2 1024k chunks
-      
-unused devices: <none>
-$ grep "md\|vd[ab]" /proc/partitions 
- 253        0    5242880 vda
- 253       16   20971520 vdb
-   9       20   26206208 md20
-$
-
-Oh, "RAID0" is not actually RAID 0 - that's the size I'd expect from
-a linear mapping. Half way through writing that block device, the IO
-stats change in an obvious way:
-
-Device:         r/s     w/s    rMB/s    wMB/s
-vda            0.00  144.00     0.00    48.00
-vdb            0.00  145.20     0.00    48.40
-md20           0.00  290.40     0.00    96.80
-
-Device:         r/s     w/s    rMB/s    wMB/s
-vda            0.00   56.40     0.00    18.80
-vdb            0.00  229.20     0.00    76.40
-md20           0.00  285.20     0.00    95.10
-
-Device:         r/s     w/s    rMB/s    wMB/s
-vda            0.00    0.00     0.00     0.00
-vdb            0.00  290.40     0.00    96.80
-md20           0.00  290.80     0.00    96.90
-
-So it's actually a stripe for the first 10GB, then some kind of
-concatenated mapping of the remainder of the single device. That's
-not what I expected, but it's also clearly not the problem.
-
-Anyway, change the stripe size to 1152:
-
-sudo mdadm --stop /dev/md20
-mdadm: stopped /dev/md20
-$ sudo wipefs -a /dev/vd[ab]
-/dev/vda: 4 bytes were erased at offset 0x00001000 (linux_raid_member): fc 4e 2b a9
-/dev/vdb: 4 bytes were erased at offset 0x00001000 (linux_raid_member): fc 4e 2b a9
-$ sudo mdadm --create /dev/md20 --level=raid0 --metadata=1.2 --chunk=1152 --auto=yes --raid-disks=2 /dev/vd[ab]
-mdadm: array /dev/md20 started.
-$ sudo xfs_io -fd -c "pwrite -b 4m 0 25g" /dev/md20
-wrote 26831355904/26843545600 bytes at offset 0
-24.989 GiB, 6398 ops; 0:00:16.00 (1.530 GiB/sec and 391.8556 ops/sec)
-$
-
-Wait, what? Neil, did you put a flux capacitor in MD? :P 
-
-The underlying drive is only capable of 100MB/s - 25GB of sequential
-direct IO does not complete in 16 seconds on such a drive. But
-there's also a 1GB BBWC in front of the physical drives (HW RAID1),
-but even so, this write rate could only occur if every write is
-hitting the BBWC. And so it is:
-
-$ sudo xfs_io -fd -c "pwrite -b 4m 0 25g" /dev/md20 & iostat -d -m 1
-...
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda            4214.00         0.00      1516.99          0       1516
-vdb               0.00         0.00         0.00          0          0
-md20           4223.00         0.00      1520.00          0       1520
-
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda            2986.00         0.00      1075.01          0       1075
-vdb            1174.00         0.00       422.88          0        422
-md20           4154.00         0.00      1496.00          0       1496
-
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda               0.00         0.00         0.00          0          0
-vdb            4376.00         0.00      1575.12          0       1575
-md20           4378.00         0.00      1576.00          0       1576
-
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda            2682.00         0.00       965.74          0        965
-vdb            1650.00         0.00       594.00          0        594
-md20           4334.00         0.00      1560.00          0       1560
-
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda            4518.00         0.00      1626.26          0       1626
-vdb             138.00         0.00        49.50          0         49
-md20           4656.00         0.00      1676.00          0       1676
-
-Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
-vda               0.00         0.00         0.00          0          0
-vdb            4214.00         0.00      1517.48          0       1517
-md20           4210.00         0.00      1516.00          0       1516
-.....
-
-Note how it is cycling from one drive to the other with about a 2s
-period?
-
-Yup, blocktrace on /dev/vda shows it is, indeed, hitting the BBWC
-because the block mapping is clearly broken:
-
-253,0    4        1     0.000000000  6972  Q  WS 8192 + 1008 [xfs_io]
-253,0    4        5     0.000068012  6972  Q  WS 8192 + 1008 [xfs_io]
-253,0    4        9     0.000093266  6972  Q  WS 8192 + 288 [xfs_io]
-253,0    4       13     0.000129722  6972  Q  WS 8193 + 1008 [xfs_io]
-253,0    4       17     0.000176872  6972  Q  WS 8193 + 1008 [xfs_io]
-253,0    4       21     0.000205566  6972  Q  WS 8193 + 288 [xfs_io]
-253,0    4       25     0.000240846  6972  Q  WS 8194 + 1008 [xfs_io]
-253,0    4       29     0.000284990  6972  Q  WS 8194 + 1008 [xfs_io]
-253,0    4       33     0.000313276  6972  Q  WS 8194 + 288 [xfs_io]
-253,0    4       37     0.000352330  6972  Q  WS 8195 + 1008 [xfs_io]
-253,0    4       41     0.000374272  6972  Q  WS 8195 + 272 [xfs_io]
-253,0    4       56     0.001215857  6972  Q  WS 8195 + 1008 [xfs_io]
-253,0    4       60     0.001252697  6972  Q  WS 8195 + 16 [xfs_io]
-253,0    4       64     0.001284517  6972  Q  WS 8196 + 1008 [xfs_io]
-253,0    4       68     0.001326130  6972  Q  WS 8196 + 1008 [xfs_io]
-253,0    4       72     0.001355050  6972  Q  WS 8196 + 288 [xfs_io]
-253,0    4       76     0.001393777  6972  Q  WS 8197 + 1008 [xfs_io]
-253,0    4       80     0.001439547  6972  Q  WS 8197 + 1008 [xfs_io]
-253,0    4       84     0.001466097  6972  Q  WS 8197 + 288 [xfs_io]
-253,0    4       88     0.001501267  6972  Q  WS 8198 + 1008 [xfs_io]
-253,0    4       92     0.001545863  6972  Q  WS 8198 + 1008 [xfs_io]
-253,0    4       96     0.001571500  6972  Q  WS 8198 + 288 [xfs_io]
-253,0    4      100     0.001584620  6972  Q  WS 8199 + 256 [xfs_io]
-253,0    4      116     0.002730034  6972  Q  WS 8199 + 1008 [xfs_io]
-253,0    4      120     0.002792351  6972  Q  WS 8199 + 1008 [xfs_io]
-253,0    4      124     0.002810937  6972  Q  WS 8199 + 32 [xfs_io]
-253,0    4      128     0.002842047  6972  Q  WS 8200 + 1008 [xfs_io]
-253,0    4      132     0.002889087  6972  Q  WS 8200 + 1008 [xfs_io]
-253,0    4      136     0.002916894  6972  Q  WS 8200 + 288 [xfs_io]
-253,0    4      140     0.002952334  6972  Q  WS 8201 + 1008 [xfs_io]
-253,0    4      144     0.002996101  6972  Q  WS 8201 + 1008 [xfs_io]
-253,0    4      148     0.003022401  6972  Q  WS 8201 + 288 [xfs_io]
-
-
-Multiple IOs to teh same sector, then the sector increments by 1 and
-we get more IOs to the same sector offset. After about a second the
-mapping shifts IO to the other block device as it slowly increments
-the sector, and that's why we see that cycling behaviour.
-
-IOWs, something is going wrong with the MD block mapping when the
-RAID chunk size is not a power of 2....
-
-Over to you, Neil....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Feb 5 12:24:10 host12 kernel: Not tainted 2.6.32-431.23.3.el6.x86_64 #1
+Feb 5 12:24:10 host12 kernel: "echo 0 > 
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Feb 5 12:24:10 host12 kernel: mmfsd D 0000000000000012 0 28987 28418 
+0x00000080
+Feb 5 12:24:10 host12 kernel: ffff880c9f1ffbe8 0000000000000082 
+0000000000000000 ffffffffa02833e8
+Feb 5 12:24:10 host12 kernel: ffff880c9f1ffc48 ffffffffa088c133 
+0000000000016840 ffff880872b07740
+Feb 5 12:24:10 host12 kernel: ffff88007dc3faf8 ffff880c9f1fffd8 
+000000000000fbc8 ffff88007dc3faf8
+Feb 5 12:24:10 host12 kernel: Call Trace:
+Feb 5 12:24:10 host12 kernel: [<ffffffffa02833e8>] ? 
+raid5_unplug_queue+0x18/0x20 [raid456]
+Feb 5 12:24:10 host12 kernel: [<ffffffffa088c133>] ? 
+cxiStartIO+0x2a3/0x6b0 [mmfslinux]
+Feb 5 12:24:10 host12 kernel: [<ffffffffa0888b6c>] cxiWaitIO+0x13c/0x1a0 
+[mmfslinux]
+Feb 5 12:24:10 host12 kernel: [<ffffffff8109afa0>] ? 
+autoremove_wake_function+0x0/0x40
+Feb 5 12:24:10 host12 kernel: [<ffffffffa0913c8d>] 
+_ZN9DiskSched7localIOEPP15MBDoDiskIOParmsiiP15KernelOperation+0x49d/0x6d0 [mmfs26]
+Feb 5 12:24:10 host12 kernel: [<ffffffffa09132d0>] ? 
+_Z22LinuxIODoneIntCallbackPvj+0x0/0x2a0 [mmfs26]
+Feb 5 12:24:10 host12 kernel: [<ffffffffa0913f8d>] ? 
+kxLocalIO+0xcd/0x110 [mmfs26]
+Feb 5 12:24:10 host12 kernel: [<ffffffff810129de>] ? 
+copy_user_generic+0xe/0x20
+Feb 5 12:24:10 host12 kernel: [<ffffffffa09e0755>] ? 
+_Z8ss_ioctljm+0x345/0x1650 [mmfs26]
+Feb 5 12:24:10 host12 kernel: [<ffffffff8100b9ce>] ? 
+common_interrupt+0xe/0x13
+Feb 5 12:24:10 host12 kernel: [<ffffffff8100b9ce>] ? 
+common_interrupt+0xe/0x13
+Feb 5 12:24:10 host12 kernel: [<ffffffffa089a199>] ? 
+ss_fs_unlocked_ioctl+0x89/0x3e0 [mmfslinux]
+Feb 5 12:24:10 host12 kernel: [<ffffffff8100b9ce>] ? 
+common_interrupt+0xe/0x13
+Feb 5 12:24:10 host12 kernel: [<ffffffff8119e532>] ? vfs_ioctl+0x22/0xa0
+Feb 5 12:24:10 host12 kernel: [<ffffffff8119e6e7>] ? do_vfs_ioctl+0x97/0x580
+Feb 5 12:24:10 host12 kernel: [<ffffffff8119e6d4>] ? do_vfs_ioctl+0x84/0x580
+Feb 5 12:24:10 host12 kernel: [<ffffffff8119ec51>] ? sys_ioctl+0x81/0xa0
+Feb 5 12:24:10 host12 kernel: [<ffffffff810e1cde>] ? 
+__audit_syscall_exit+0x25e/0x290
+Feb 5 12:24:10 host12 kernel: [<ffffffff8100b072>] ? 
+system_call_fastpath+0x16/0x1b
