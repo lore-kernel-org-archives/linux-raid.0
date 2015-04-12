@@ -1,140 +1,81 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: RAID 5 "magicaly" become a RAID0
-Date: Sun, 12 Apr 2015 17:28:32 -0500
-Message-ID: <CAAMCDeex88LLR--OTdJ0GxRwZbOkXu=7d+UFJT+GE=mAhf+Ndw@mail.gmail.com>
-References: <D150B36B.8EE37%marchesseau@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST] md fixes for late 4.0-rc
+Date: Mon, 13 Apr 2015 09:20:18 +1000
+Message-ID: <20150413092018.0e153eea@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/UaDzugWaQQxWGz7DpKMCbfi"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D150B36B.8EE37%marchesseau@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas MARCHESSEAU <marchesseau@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Joe Landman <joe.landman@gmail.com>, Dave Chinner <david@fromorbit.com>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Simon Kirby <sim@hostway.ca>, Dave Jones <davej@codemonkey.org.uk>
 List-Id: linux-raid.ids
 
-Add a "--force" to the --assemble command and it should force the
-other 2 online even though they are a bit off on events.
+--Sig_/UaDzugWaQQxWGz7DpKMCbfi
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-=46rom my understanding that may been some of the last data written
-could be lost/corrupted (those last 4 events on those 2 disks).
 
-I would probably also suggest getting another disk and going to raid6,
-raid5 is pretty scary if disks start going bad.
+Hi Linus,
+ two regression fixes for md, one fairly recent and minor (diskstats has=20
+ confusing data) and one older and more serious - RAID0 with non-power-of-2
+ chunksize corrupts data.  I guess (almost) no-one uses non-power-of-2 chun=
+ks.
 
-On Sun, Apr 12, 2015 at 4:42 PM, Thomas MARCHESSEAU
-<marchesseau@gmail.com> wrote:
-> Hi team ,
->
-> Like probably lot of  new subscriber , i mail you, guys,  for help .
->
-> I=C4=85m running a raid5 on 7 HDD for several month now ( and years o=
-n other
-> system) without problem .
-> last week i had a crash disk (sdg)  , i=C4=85ve add a new drive (sdi)=
-  and
-> rebuild ..  Works fine , and i dont think this is the cause of my tod=
-ay
-> problem.
->
-> Yesterday , i=C4=85v upgraded my ubuntu 14.10 , and the system warm m=
-e with a
-> message that i can=C4=85t recall and rewrite exactly , but something =
-like :
-> md127 doesn=C4=85t not match with /etc/mdadm/mdadm.conf ,  blah blah =
-, run
-> /usr/share/mdadm/mkconf , and fix /etc/mdadm/mdadm.conf
->
-> i=C4=85ve done it , and reboot , all looks good .
-> All the drive have been rename after reboot ( orginal sdg was extract=
- form
-> the bay )
->
-> I=C4=85ve setup a rsync of my most important data on a external drive=
- this
-> night, who partially failed  (only 25% ha been backuped , bad luck ) =
- ,
-> (probably) because  this morning  i have re-inserted by mistake the f=
-aulty
-> drive ( for information , i think the drive was in fact ok , the sata
-> connector was a bit disconnect )
->
-> I did not pay attention of the situation at the moment , but few hour
-> later , i ssh my filer and my =C2=AB home =C2=BB  (on the raid partit=
-ion) was not
-> available anymore .
-> I didn=C4=85t try to fschk or any thing else than :
->
-> Mdadm =E2=80=B9stop /dev/md127
-> mdadm --assemble /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/=
-sdf
-> /dev/sdg /dev/sdh
-> mdadm: /dev/md127 assembled from 5 drives - not enough to start the a=
-rray.
->
->
-> So i=C4=85ve read a bunch of usefull link , one of them :) ,
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery  , says , don=C4=
-=85t do
-> stupid thing until drop a mail on linux-raid mailling =C5=A0 so i=C4=85=
-m here  .
->
-> i=C4=85ve collected  this usefull info :
-> mdadm --examine /dev/sd[a-z] | egrep 'Event|/dev/sd'
-> /dev/sda: (system HDD )
-> /dev/sdb:
->          Events : 21958
-> /dev/sdc:
->          Events : 21958
-> /dev/sdd:
->          Events : 21958
-> /dev/sde:
->          Events : 21958
-> /dev/sdf:
->          Events : 21958
-> /dev/sdg:
->          Events : 21954  <=E2=80=B9 here
-> /dev/sdh:
->          Events : 21954  <=E2=80=B9 and here
->
->
->
-> i=C4=85ve also a full copy of mdadm =E2=80=B9examine
->
-> The strange thing is that  my raid array is now seen as a RAID0 in
-> mdadm --detail /dev/md127
-> /dev/md127:
->         Version :
->      Raid Level : raid0
->   Total Devices : 0
->
->           State : inactive
->
->
-> But individually all drive in mdadm =E2=80=B9examine , are RAID 5 mem=
-ber .
->
-> Anyone for help  ?
->
-> i=C4=85 was on the way to perform a
-> mdadm --create --assume-clean =E2=80=B9level=3D5 --raid-devices=3D7 -=
--size=3D11720300544
-> /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev=
-/sdh
->
-> Which looks a bit stupid before ask for help
->
-> Regards thomas
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+NeilBrown
+
+
+The following changes since commit f22e6e847115abc3a0e2ad7bb18d243d42275af1:
+
+  Linux 4.0-rc7 (2015-04-06 15:39:45 -0700)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md/4.0-rc7-fix
+
+for you to fetch changes up to 47d68979cc968535cb87f3e5f2e6a3533ea48fbd:
+
+  md/raid0: fix bug with chunksize not a power of 2. (2015-04-10 15:36:31 +=
+1000)
+
+----------------------------------------------------------------
+md fixes for 4.0-rc7
+
+Revert recent change which broke IO accounting.
+Fix bug with RAID0 arrays with non-power-of-2 chunk size.
+
+----------------------------------------------------------------
+Gu Zheng (1):
+      md: fix md io stats accounting broken
+
+NeilBrown (1):
+      md/raid0: fix bug with chunksize not a power of 2.
+
+ drivers/md/md.c    | 6 +++++-
+ drivers/md/raid0.c | 3 ++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+--Sig_/UaDzugWaQQxWGz7DpKMCbfi
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVSr9tTnsnt1WYoG5AQJtYxAAuq37zOOQ9M7JmQ+bhP5xDOZ5nTtUopRD
+EZ/wadEg2AB7jVjrI7/m1aDOb4dYq5ZrpV5e25SvHm6uweBblp30AOMgaYow7CR2
+84tAI5g8ht5kHf/HeJJ4PF7hZdIWzXLffKGTBQQvz2eRK03zl+tEXc+b7jEhcHeW
+FVoRMMjX2WFOj659QzTPC8j7w6WjQNyFtRzXL+x+yQMscRgmOvS3+cjkC0001qx+
+oZc2StEYv4Ze/XSgISnmZQImuy5Yinm+r/PdjJgeEY70TrPitLH2NRFSCJKA8aBx
+oJ2lz0c5NEi60WuFf5ZNnawrrhRcstTHb9p4GWAf/YNh/2vU+lgXLnUhWhemJik0
+206KzmfQViFSg7zWis1fJfJrpjJb7df8n9+3T+PNwqG8SV5Vck4YX+QfquOvDk7y
+dIAPdXTYkYQtheaNuFVMmehleNUBQJ852sik9i+C7lctoW/61RqniaVPQ5JgLEp5
+uE4mbCo23A9GsY9ttZDjI6I2BeSGRUn/rPQDgB4txsctYEHcT4cYr94uxhKkBzQO
+W0i8UI/duXgQLL/6USWtn17XT/2E0t3x2b9KWgFFRcDvdscS0XT+4OU4EhGzCAA6
+sYGmYBVLLqXjKFbkYSvrcl0+r+iQirePHwENwywUQ5h3Ss74DZLm0WVzPU5WJuNA
+UlhVoKHS5IM=
+=FtKv
+-----END PGP SIGNATURE-----
+
+--Sig_/UaDzugWaQQxWGz7DpKMCbfi--
