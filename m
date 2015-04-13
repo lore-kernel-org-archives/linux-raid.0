@@ -1,156 +1,224 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 5 "magicaly" become a RAID0
-Date: Sun, 12 Apr 2015 20:18:32 -0400
-Message-ID: <552B0B58.8050102@turmel.org>
-References: <D150B36B.8EE37%marchesseau@gmail.com>
+From: Guoqing Jiang <GQJiang@suse.com>
+Subject: Re: [PATCH 2/4] md-cluster: remove capabilities
+Date: Mon, 13 Apr 2015 10:27:04 +0800
+Message-ID: <552B2978.5000305@suse.com>
+References: <20150408192247.GA9682@shrek.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D150B36B.8EE37%marchesseau@gmail.com>
+In-Reply-To: <20150408192247.GA9682@shrek.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas MARCHESSEAU <marchesseau@gmail.com>, linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Thomas,
+Goldwyn Rodrigues wrote:
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  drivers/md/md-cluster.c | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/md/md-cluster.h |  1 +
+>  drivers/md/md.c         | 24 +++++++++++++++---------
+>  drivers/md/md.h         |  1 +
+>  4 files changed, 64 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 96679b2..d036c83 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -72,6 +72,7 @@ enum msg_type {
+>  	METADATA_UPDATED = 0,
+>  	RESYNCING,
+>  	NEWDISK,
+> +	REMOVE,
+>  };
+>  
+>  struct cluster_msg {
+> @@ -186,6 +187,20 @@ static char *pretty_uuid(char *dest, char *src)
+>  	return dest;
+>  }
+>  
+> +static struct md_rdev *find_rdev_uuid(struct mddev *mddev, char *uuid)
+> +{
+> +	struct md_rdev *rdev;
+> +	struct mdp_superblock_1 *sb;
+> +
+> +	rdev_for_each_rcu(rdev, mddev) {
+> +		sb = page_address(rdev->sb_page);
+> +		if (!strncmp(uuid, sb->device_uuid, 16)) {
+> +			return rdev;
+> +		}
+> +	}
+> +	return NULL;
+> +}
+> +
+>  static void add_resync_info(struct mddev *mddev, struct dlm_lock_resource *lockres,
+>  		sector_t lo, sector_t hi)
+>  {
+> @@ -401,6 +416,17 @@ static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg
+>  	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
+>  }
+>  
+> +static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
+> +{
+> +	struct md_rdev *rdev = find_rdev_uuid(mddev, msg->uuid);
+> +	char uuid[32];
+> +
+> +	if (rdev)
+> +		md_kick_rdev_from_array(rdev);
+> +	else
+> +		pr_warn("%s: %d Could not find disk with uuid: %s", __func__, __LINE__, pretty_uuid(uuid, msg->uuid));
+> +}
+> +
+>  static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
+>  {
+>  	switch (msg->type) {
+> @@ -419,6 +445,15 @@ static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
+>  		pr_info("%s: %d Received message: NEWDISK from %d\n",
+>  			__func__, __LINE__, msg->slot);
+>  		process_add_new_disk(mddev, msg);
+> +		break;
+> +	case REMOVE:
+> +		pr_info("%s: %d Received REMOVE from %d\n",
+> +			__func__, __LINE__, msg->slot);
+> +		process_remove_disk(mddev, msg);
+> +		break;
+> +	default:
+> +		pr_warn("%s:%d Received unknown message from %d\n",
+> +			__func__, __LINE__, msg->slot);
+>  	};
+>  }
+>  
+> @@ -854,6 +889,17 @@ static int new_disk_ack(struct mddev *mddev, bool ack)
+>  	return 0;
+>  }
+>  
+> +static int remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+> +{
+> +	struct cluster_msg cmsg;
+> +	struct md_cluster_info *cinfo = mddev->cluster_info;
+> +	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
+> +	char *uuid = sb->device_uuid;
+> +	cmsg.type = REMOVE;
+> +	memcpy(cmsg.uuid, uuid, 16);
+> +	return __sendmsg(cinfo, &cmsg);
+> +}
+> +
+>  static struct md_cluster_operations cluster_ops = {
+>  	.join   = join,
+>  	.leave  = leave,
+> @@ -868,6 +914,7 @@ static struct md_cluster_operations cluster_ops = {
+>  	.add_new_disk_start = add_new_disk_start,
+>  	.add_new_disk_finish = add_new_disk_finish,
+>  	.new_disk_ack = new_disk_ack,
+> +	.remove_disk = remove_disk,
+>  };
+>  
+>  static int __init cluster_init(void)
+> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+> index 7417133..71e5143 100644
+> --- a/drivers/md/md-cluster.h
+> +++ b/drivers/md/md-cluster.h
+> @@ -22,6 +22,7 @@ struct md_cluster_operations {
+>  	int (*add_new_disk_start)(struct mddev *mddev, struct md_rdev *rdev);
+>  	int (*add_new_disk_finish)(struct mddev *mddev);
+>  	int (*new_disk_ack)(struct mddev *mddev, bool ack);
+> +	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
+>  };
+>  
+>  #endif /* _MD_CLUSTER_H */
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index bc11551..0c65e51 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2291,11 +2291,12 @@ static void export_rdev(struct md_rdev * rdev)
+>  	kobject_put(&rdev->kobj);
+>  }
+>  
+> -static void kick_rdev_from_array(struct md_rdev * rdev)
+> +void md_kick_rdev_from_array(struct md_rdev * rdev)
+>  {
+>  	unbind_rdev_from_array(rdev);
+>  	export_rdev(rdev);
+>  }
+> +EXPORT_SYMBOL_GPL(md_kick_rdev_from_array);
+>  
+>  static void export_array(struct mddev *mddev)
+>  {
+> @@ -2306,7 +2307,7 @@ static void export_array(struct mddev *mddev)
+>  			MD_BUG();
+>  			continue;
+>  		}
+> -		kick_rdev_from_array(rdev);
+> +		md_kick_rdev_from_array(rdev);
+>  	}
+>  	if (!list_empty(&mddev->disks))
+>  		MD_BUG();
+> @@ -2750,9 +2751,11 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+>  			err = -EBUSY;
+>  		else {
+>  			struct mddev *mddev = rdev->mddev;
+> -			if (mddev_is_clustered(mddev))
+> +			if (mddev_is_clustered(mddev)) {
+>  				md_cluster_ops->metadata_update_start(mddev);
+> -			kick_rdev_from_array(rdev);
+> +				md_cluster_ops->remove_disk(mddev, rdev);
+> +			}
+> +			md_kick_rdev_from_array(rdev);
+>   
+For md-cluster, seems it is possible that md_kick_rdev_from_array could
+be called twice,
+is this what you want? Thanks.
+>  			if (mddev->pers) {
+>  				set_bit(MD_CHANGE_DEVS, &mddev->flags);
+>  				md_wakeup_thread(mddev->thread);
+> @@ -3424,7 +3427,7 @@ static void analyze_sbs(struct mddev * mddev)
+>  				"md: fatal superblock inconsistency in %s"
+>  				" -- removing from array\n", 
+>  				bdevname(rdev->bdev,b));
+> -			kick_rdev_from_array(rdev);
+> +			md_kick_rdev_from_array(rdev);
+>  		}
+>  
+>  
+> @@ -3440,7 +3443,7 @@ static void analyze_sbs(struct mddev * mddev)
+>  			       "md: %s: %s: only %d devices permitted\n",
+>  			       mdname(mddev), bdevname(rdev->bdev, b),
+>  			       mddev->max_disks);
+> -			kick_rdev_from_array(rdev);
+> +			md_kick_rdev_from_array(rdev);
+>  			continue;
+>  		}
+>  		if (rdev != freshest) {
+> @@ -3449,7 +3452,7 @@ static void analyze_sbs(struct mddev * mddev)
+>  				printk(KERN_WARNING "md: kicking non-fresh %s"
+>  					" from array!\n",
+>  					bdevname(rdev->bdev,b));
+> -				kick_rdev_from_array(rdev);
+> +				md_kick_rdev_from_array(rdev);
+>  				continue;
+>  			}
+>  			/* No device should have a Candidate flag
+> @@ -3458,7 +3461,7 @@ static void analyze_sbs(struct mddev * mddev)
+>  			if (test_bit(Candidate, &rdev->flags)) {
+>  				pr_info("md: kicking Cluster Candidate %s from array!\n",
+>  					bdevname(rdev->bdev, b));
+> -				kick_rdev_from_array(rdev);
+> +				md_kick_rdev_from_array(rdev);
+>  			}
+>  		}
+>  		if (mddev->level == LEVEL_MULTIPATH) {
+> @@ -6083,7 +6086,10 @@ static int hot_remove_disk(struct mddev * mddev, dev_t dev)
+>  	if (rdev->raid_disk >= 0)
+>  		goto busy;
+>  
+> -	kick_rdev_from_array(rdev);
+> +	if (mddev_is_clustered(mddev))
+> +		md_cluster_ops->remove_disk(mddev, rdev);
+> +
+> +	md_kick_rdev_from_array(rdev);
+>   
+Ditto.
 
-On 04/12/2015 05:42 PM, Thomas MARCHESSEAU wrote:
-> Hi team ,
->=20
-> Like probably lot of  new subscriber , i mail you, guys,  for help .
->=20
-> I=B9m running a raid5 on 7 HDD for several month now ( and years on o=
-ther
-> system) without problem .
-> last week i had a crash disk (sdg)  , i=B9ve add a new drive (sdi)  a=
-nd
-> rebuild ..  Works fine , and i dont think this is the cause of my tod=
-ay
-> problem.
-
-Agreed.  Probably not related.
-
-> Yesterday , i=B9v upgraded my ubuntu 14.10 , and the system warm me w=
-ith a
-> message that i can=B9t recall and rewrite exactly , but something lik=
-e :
-> md127 doesn=B9t not match with /etc/mdadm/mdadm.conf ,  blah blah , r=
-un
-> /usr/share/mdadm/mkconf , and fix /etc/mdadm/mdadm.conf
->=20
-> i=B9ve done it , and reboot , all looks good .
-> All the drive have been rename after reboot ( orginal sdg was extract=
- form
-> the bay ) =20
-
-Yes, you cannot trust drives to keep their names through upgrades.  The
-names are pseudo-random during boot.
-
-You should know that md127 is the default name chosen by mdadm when
-assembling an array for which it doesn't know any other name.  Followed
-by md126, then md125 and so on.  You really should give your arrays
-other names.  Most commonly starting with md0 or md1.
-
-> I=B9ve setup a rsync of my most important data on a external drive th=
-is
-> night, who partially failed  (only 25% ha been backuped , bad luck ) =
- ,
-> (probably) because  this morning  i have re-inserted by mistake the f=
-aulty
-> drive ( for information , i think the drive was in fact ok , the sata
-> connector was a bit disconnect )
->=20
-> I did not pay attention of the situation at the moment , but few hour
-> later , i ssh my filer and my =AB home =BB  (on the raid partition) w=
-as not
-> available anymore .
-
-You should collect your 'dmesg' and post it here.  Or cut and paste fro=
-m
-it anything related to your drives or array.
-
-> I didn=B9t try to fschk or any thing else than :
->=20
-> Mdadm =8Bstop /dev/md127
-> mdadm --assemble /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/=
-sdf
-> /dev/sdg /dev/sdh=20
-> mdadm: /dev/md127 assembled from 5 drives - not enough to start the a=
-rray.
->=20
->=20
-> So i=B9ve read a bunch of usefull link , one of them :) ,
-> https://raid.wiki.kernel.org/index.php/RAID_Recovery  , says , don=B9=
-t do
-> stupid thing until drop a mail on linux-raid mailling =8A so i=B9m he=
-re  .
->=20
-> i=B9ve collected  this usefull info :
-> mdadm --examine /dev/sd[a-z] | egrep 'Event|/dev/sd'
-> /dev/sda: (system HDD )
-> /dev/sdb:
->          Events : 21958
-> /dev/sdc:
->          Events : 21958
-> /dev/sdd:
->          Events : 21958
-> /dev/sde:
->          Events : 21958
-> /dev/sdf:
->          Events : 21958
-> /dev/sdg:
->          Events : 21954  <=8B here
-> /dev/sdh:
->          Events : 21954  <=8B and here
-
-In general, people on this list want to see the full --examine reports.
- As do I.
-
-Also, you need to record which drive serial numbers correspond to which
-device roles, just in case.  You can show the smartctl data along with
-the examines like so:
-
-for x in /dev/sd[b-h] ; do mdadm -E $x ; smartctl -iA -l scterc $x ;
-done > report.txt
-
-Then paste report.txt into your next mail.
-
-> The strange thing is that  my raid array is now seen as a RAID0 in
-> mdadm --detail /dev/md127
-> /dev/md127:
->         Version :=20
->      Raid Level : raid0
->   Total Devices : 0
->=20
->           State : inactive
-
-It didn't start, so that info isn't meaningful.
-
-> But individually all drive in mdadm =8Bexamine , are RAID 5 member .
->=20
-> Anyone for help  ?
-
-Your array should be fixable.  The use of "mdadm --assemble --force" as
-recommended by Roger is likely to work.  But it won't be enough if you
-don't also figure out why the array stopped after a few hours.  That
-sounds like a common problem with raid5 rebuilds.
-
-> i=B9 was on the way to perform a
-> mdadm --create --assume-clean =8Blevel=3D5 --raid-devices=3D7 --size=3D=
-11720300544
-> /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev=
-/sdh
->=20
-> Which looks a bit stupid before ask for help
-
-Yes, this is what the wiki means when it refers to doing something
-stupid.  Any form of --create is destructive and should only be
-attempted when all other attempts have failed.
-
-Phil
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Guoqing
