@@ -1,81 +1,156 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [GIT PULL REQUEST] md fixes for late 4.0-rc
-Date: Mon, 13 Apr 2015 09:20:18 +1000
-Message-ID: <20150413092018.0e153eea@notabene.brown>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5 "magicaly" become a RAID0
+Date: Sun, 12 Apr 2015 20:18:32 -0400
+Message-ID: <552B0B58.8050102@turmel.org>
+References: <D150B36B.8EE37%marchesseau@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/UaDzugWaQQxWGz7DpKMCbfi"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <D150B36B.8EE37%marchesseau@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>, Joe Landman <joe.landman@gmail.com>, Dave Chinner <david@fromorbit.com>, Gu Zheng <guz.fnst@cn.fujitsu.com>, Simon Kirby <sim@hostway.ca>, Dave Jones <davej@codemonkey.org.uk>
+To: Thomas MARCHESSEAU <marchesseau@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/UaDzugWaQQxWGz7DpKMCbfi
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Thomas,
 
+On 04/12/2015 05:42 PM, Thomas MARCHESSEAU wrote:
+> Hi team ,
+>=20
+> Like probably lot of  new subscriber , i mail you, guys,  for help .
+>=20
+> I=B9m running a raid5 on 7 HDD for several month now ( and years on o=
+ther
+> system) without problem .
+> last week i had a crash disk (sdg)  , i=B9ve add a new drive (sdi)  a=
+nd
+> rebuild ..  Works fine , and i dont think this is the cause of my tod=
+ay
+> problem.
 
-Hi Linus,
- two regression fixes for md, one fairly recent and minor (diskstats has=20
- confusing data) and one older and more serious - RAID0 with non-power-of-2
- chunksize corrupts data.  I guess (almost) no-one uses non-power-of-2 chun=
-ks.
+Agreed.  Probably not related.
 
-Thanks,
-NeilBrown
+> Yesterday , i=B9v upgraded my ubuntu 14.10 , and the system warm me w=
+ith a
+> message that i can=B9t recall and rewrite exactly , but something lik=
+e :
+> md127 doesn=B9t not match with /etc/mdadm/mdadm.conf ,  blah blah , r=
+un
+> /usr/share/mdadm/mkconf , and fix /etc/mdadm/mdadm.conf
+>=20
+> i=B9ve done it , and reboot , all looks good .
+> All the drive have been rename after reboot ( orginal sdg was extract=
+ form
+> the bay ) =20
 
+Yes, you cannot trust drives to keep their names through upgrades.  The
+names are pseudo-random during boot.
 
-The following changes since commit f22e6e847115abc3a0e2ad7bb18d243d42275af1:
+You should know that md127 is the default name chosen by mdadm when
+assembling an array for which it doesn't know any other name.  Followed
+by md126, then md125 and so on.  You really should give your arrays
+other names.  Most commonly starting with md0 or md1.
 
-  Linux 4.0-rc7 (2015-04-06 15:39:45 -0700)
+> I=B9ve setup a rsync of my most important data on a external drive th=
+is
+> night, who partially failed  (only 25% ha been backuped , bad luck ) =
+ ,
+> (probably) because  this morning  i have re-inserted by mistake the f=
+aulty
+> drive ( for information , i think the drive was in fact ok , the sata
+> connector was a bit disconnect )
+>=20
+> I did not pay attention of the situation at the moment , but few hour
+> later , i ssh my filer and my =AB home =BB  (on the raid partition) w=
+as not
+> available anymore .
 
-are available in the git repository at:
+You should collect your 'dmesg' and post it here.  Or cut and paste fro=
+m
+it anything related to your drives or array.
 
-  git://neil.brown.name/md/ tags/md/4.0-rc7-fix
+> I didn=B9t try to fschk or any thing else than :
+>=20
+> Mdadm =8Bstop /dev/md127
+> mdadm --assemble /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/=
+sdf
+> /dev/sdg /dev/sdh=20
+> mdadm: /dev/md127 assembled from 5 drives - not enough to start the a=
+rray.
+>=20
+>=20
+> So i=B9ve read a bunch of usefull link , one of them :) ,
+> https://raid.wiki.kernel.org/index.php/RAID_Recovery  , says , don=B9=
+t do
+> stupid thing until drop a mail on linux-raid mailling =8A so i=B9m he=
+re  .
+>=20
+> i=B9ve collected  this usefull info :
+> mdadm --examine /dev/sd[a-z] | egrep 'Event|/dev/sd'
+> /dev/sda: (system HDD )
+> /dev/sdb:
+>          Events : 21958
+> /dev/sdc:
+>          Events : 21958
+> /dev/sdd:
+>          Events : 21958
+> /dev/sde:
+>          Events : 21958
+> /dev/sdf:
+>          Events : 21958
+> /dev/sdg:
+>          Events : 21954  <=8B here
+> /dev/sdh:
+>          Events : 21954  <=8B and here
 
-for you to fetch changes up to 47d68979cc968535cb87f3e5f2e6a3533ea48fbd:
+In general, people on this list want to see the full --examine reports.
+ As do I.
 
-  md/raid0: fix bug with chunksize not a power of 2. (2015-04-10 15:36:31 +=
-1000)
+Also, you need to record which drive serial numbers correspond to which
+device roles, just in case.  You can show the smartctl data along with
+the examines like so:
 
-----------------------------------------------------------------
-md fixes for 4.0-rc7
+for x in /dev/sd[b-h] ; do mdadm -E $x ; smartctl -iA -l scterc $x ;
+done > report.txt
 
-Revert recent change which broke IO accounting.
-Fix bug with RAID0 arrays with non-power-of-2 chunk size.
+Then paste report.txt into your next mail.
 
-----------------------------------------------------------------
-Gu Zheng (1):
-      md: fix md io stats accounting broken
+> The strange thing is that  my raid array is now seen as a RAID0 in
+> mdadm --detail /dev/md127
+> /dev/md127:
+>         Version :=20
+>      Raid Level : raid0
+>   Total Devices : 0
+>=20
+>           State : inactive
 
-NeilBrown (1):
-      md/raid0: fix bug with chunksize not a power of 2.
+It didn't start, so that info isn't meaningful.
 
- drivers/md/md.c    | 6 +++++-
- drivers/md/raid0.c | 3 ++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+> But individually all drive in mdadm =8Bexamine , are RAID 5 member .
+>=20
+> Anyone for help  ?
 
---Sig_/UaDzugWaQQxWGz7DpKMCbfi
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Your array should be fixable.  The use of "mdadm --assemble --force" as
+recommended by Roger is likely to work.  But it won't be enough if you
+don't also figure out why the array stopped after a few hours.  That
+sounds like a common problem with raid5 rebuilds.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+> i=B9 was on the way to perform a
+> mdadm --create --assume-clean =8Blevel=3D5 --raid-devices=3D7 --size=3D=
+11720300544
+> /dev/md127 /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev=
+/sdh
+>=20
+> Which looks a bit stupid before ask for help
 
-iQIVAwUBVSr9tTnsnt1WYoG5AQJtYxAAuq37zOOQ9M7JmQ+bhP5xDOZ5nTtUopRD
-EZ/wadEg2AB7jVjrI7/m1aDOb4dYq5ZrpV5e25SvHm6uweBblp30AOMgaYow7CR2
-84tAI5g8ht5kHf/HeJJ4PF7hZdIWzXLffKGTBQQvz2eRK03zl+tEXc+b7jEhcHeW
-FVoRMMjX2WFOj659QzTPC8j7w6WjQNyFtRzXL+x+yQMscRgmOvS3+cjkC0001qx+
-oZc2StEYv4Ze/XSgISnmZQImuy5Yinm+r/PdjJgeEY70TrPitLH2NRFSCJKA8aBx
-oJ2lz0c5NEi60WuFf5ZNnawrrhRcstTHb9p4GWAf/YNh/2vU+lgXLnUhWhemJik0
-206KzmfQViFSg7zWis1fJfJrpjJb7df8n9+3T+PNwqG8SV5Vck4YX+QfquOvDk7y
-dIAPdXTYkYQtheaNuFVMmehleNUBQJ852sik9i+C7lctoW/61RqniaVPQ5JgLEp5
-uE4mbCo23A9GsY9ttZDjI6I2BeSGRUn/rPQDgB4txsctYEHcT4cYr94uxhKkBzQO
-W0i8UI/duXgQLL/6USWtn17XT/2E0t3x2b9KWgFFRcDvdscS0XT+4OU4EhGzCAA6
-sYGmYBVLLqXjKFbkYSvrcl0+r+iQirePHwENwywUQ5h3Ss74DZLm0WVzPU5WJuNA
-UlhVoKHS5IM=
-=FtKv
------END PGP SIGNATURE-----
+Yes, this is what the wiki means when it refers to doing something
+stupid.  Any form of --create is destructive and should only be
+attempted when all other attempts have failed.
 
---Sig_/UaDzugWaQQxWGz7DpKMCbfi--
+Phil
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
