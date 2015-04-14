@@ -1,164 +1,175 @@
-From: Azat Khuzhin <a3at.mail@gmail.com>
-Subject: BUG: unable to handle kernel NULL pointer dereference at
- sysfs_do_create_link_sd (after mdadm)
-Date: Tue, 14 Apr 2015 20:15:37 +0300
-Message-ID: <20150414171537.GH25394@azat>
+From: Emanuel Domingos <emanuelsdrock@gmail.com>
+Subject: Re: Recovery Raid6 Degraded
+Date: Tue, 14 Apr 2015 15:06:06 -0300
+Message-ID: <CACsoFmiCoZGRoUWpxg_PLw6hyhW1mAB0TZFO94MZ6Kix-DxMOA@mail.gmail.com>
+References: <CACsoFmjWW7mqSA8OKZZEPhpFidf-exSMm771ZOp0TssSYydcrw@mail.gmail.com>
+	<alpine.DEB.2.02.1504132234220.16871@uplift.swm.pp.se>
+	<CACsoFmiCXw1dgpqtz33rA5ejMhYsndi68L63OdpRoU_XyCfFFg@mail.gmail.com>
+	<alpine.DEB.2.02.1504141617220.16871@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1504141617220.16871@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, neilb@suse.de
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-$ git describe
-v4.0-2620-gb79013b
+Thanks! worked perfectly
 
-During setting up partitions with mdadm, mdadm hung, after attaching to mdadm with strace I got next:
+=46ollow results
 
-# pgrep mdadm | xargs strace -fp
-Process 27389 attached - interrupt to quit
-unlink("/dev/.tmp.md.27389:9:127")      = 0
-mknod("/tmp/.tmp.md.27389:9:127", S_IFBLK|0600, makedev(9, 127)) = 0
-open("/tmp/.tmp.md.27389:9:127", O_RDWR|O_EXCL|O_DIRECT) <-- *hung*
+#mdadm --stop /dev/md/ubuntu\:md-raid6_primary
 
-After, I looked into dmesg, and found this:
-[ 9627.630018] ------------[ cut here ]------------
-[ 9627.630029] WARNING: CPU: 18 PID: 3330 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x5a/0x70()
-[ 9627.630032] sysfs: cannot create duplicate filename '/devices/virtual/bdi/9:127'
-[ 9627.630033] Modules linked in: xt_tcpudp iptable_filter ip_tables x_tables nfsd nfs lockd grace sunrpc ipmi_devintf netconsole configfs loop hid_generic usbhid hid x86_pkg_temp_thermal coretemp ghash_clmulni_intel aesni_intel ioatdma ehci_pci aes_x86_64 iTCO_wdt iTCO_ve
-[ 9627.630074] CPU: 18 PID: 3330 Comm: mdadm Not tainted 4.0.0bl-azat-v6+ #1
-[ 9627.630076] Hardware name: Supermicro X9DRD-7LN4F(-JBOD)/X9DRD-EF/X9DRD-7LN4F, BIOS 3.0a 12/05/2013
-[ 9627.630077]  0000000000000000 ffffffff814e3fcc ffffffff813e590f ffff885f9bcd3808
-[ 9627.630079]  ffffffff8104575c ffff885f96acb000 ffff885fa4b3e3c0 ffff885fa2fec780
-[ 9627.630081]  ffff885fa4bc4000 0000000000000000 ffffffff810457d5 ffffffff814e5d78
-[ 9627.630083] Call Trace:
-[ 9627.630091]  [<ffffffff813e590f>] ? dump_stack+0x40/0x50
-[ 9627.630096]  [<ffffffff8104575c>] ? warn_slowpath_common+0x7c/0xb0
-[ 9627.630098]  [<ffffffff810457d5>] ? warn_slowpath_fmt+0x45/0x50
-[ 9627.630100]  [<ffffffff81185092>] ? kernfs_path+0x42/0x50
-[ 9627.630102]  [<ffffffff811883da>] ? sysfs_warn_dup+0x5a/0x70
-[ 9627.630104]  [<ffffffff8118846e>] ? sysfs_create_dir_ns+0x7e/0x90
-[ 9627.630108]  [<ffffffff811d94ab>] ? kobject_add_internal+0x9b/0x2f0
-[ 9627.630109]  [<ffffffff811d9af6>] ? kobject_add+0x66/0xb0
-[ 9627.630114]  [<ffffffff812bb2e3>] ? device_add+0x263/0x620
-[ 9627.630116]  [<ffffffff812bb8a8>] ? device_create_groups_vargs+0xe8/0x100
-[ 9627.630118]  [<ffffffff812bb8d3>] ? device_create_vargs+0x13/0x20
-[ 9627.630124]  [<ffffffff810ed128>] ? bdi_register+0x68/0x150
-[ 9627.630129]  [<ffffffff811c535d>] ? add_disk+0x14d/0x4a0
-[ 9627.630132]  [<ffffffff811c585f>] ? alloc_disk_node+0xaf/0x100
-[ 9627.630137]  [<ffffffffa0252269>] ? md_alloc+0x1e9/0x350 [md_mod]
-[ 9627.630141]  [<ffffffffa02523db>] ? md_probe+0xb/0x20 [md_mod]
-[ 9627.630143]  [<ffffffff812c0654>] ? kobj_lookup+0x104/0x170
-[ 9627.630147]  [<ffffffffa02523d0>] ? md_alloc+0x350/0x350 [md_mod]
-[ 9627.630149]  [<ffffffff811c4da8>] ? get_gendisk+0x28/0xf0
-[ 9627.630153]  [<ffffffff8115fb74>] ? __blkdev_get+0x114/0x3c0
-[ 9627.630156]  [<ffffffff8115e590>] ? bdev_direct_access+0xa0/0xa0
-[ 9627.630158]  [<ffffffff8115e5a0>] ? bdev_test+0x10/0x10
-[ 9627.630160]  [<ffffffff8115fe58>] ? blkdev_get+0x38/0x310
-[ 9627.630162]  [<ffffffff81160170>] ? blkdev_get_by_dev+0x40/0x40
-[ 9627.630167]  [<ffffffff8112b3d3>] ? do_dentry_open.isra.16+0x153/0x320
-[ 9627.630170]  [<ffffffff811380f3>] ? do_last.isra.51+0x323/0xd50
-[ 9627.630172]  [<ffffffff8111f5b3>] ? kmem_cache_alloc+0x123/0x130
-[ 9627.630174]  [<ffffffff8113a97f>] ? path_openat+0x7f/0x610
-[ 9627.630177]  [<ffffffff810f7480>] ? tlb_flush_mmu_free+0x30/0x50
-[ 9627.630180]  [<ffffffff810fe800>] ? unmap_region+0xb0/0xf0
-[ 9627.630182]  [<ffffffff8113bb3b>] ? do_filp_open+0x2b/0x90
-[ 9627.630187]  [<ffffffff811472ec>] ? __alloc_fd+0x7c/0x120
-[ 9627.630189]  [<ffffffff8112c531>] ? do_sys_open+0x121/0x210
-[ 9627.630193]  [<ffffffff813ea097>] ? system_call_fastpath+0x12/0x6a
-[ 9627.630195] ---[ end trace b7a3e9c6f05c2666 ]---
-[ 9627.630196] ------------[ cut here ]------------
-[ 9627.630198] WARNING: CPU: 18 PID: 3330 at lib/kobject.c:240 kobject_add_internal+0x274/0x2f0()
-[ 9627.630200] kobject_add_internal failed for 9:127 with -EEXIST, don't try to register things with the same name in the same directory.
-[ 9627.630201] Modules linked in: xt_tcpudp iptable_filter ip_tables x_tables nfsd nfs lockd grace sunrpc ipmi_devintf netconsole configfs loop hid_generic usbhid hid x86_pkg_temp_thermal coretemp ghash_clmulni_intel aesni_intel ioatdma ehci_pci aes_x86_64 iTCO_wdt iTCO_ve
-[ 9627.630223] CPU: 18 PID: 3330 Comm: mdadm Tainted: G        W       4.0.0bl-azat-v6+ #1
-[ 9627.630224] Hardware name: Supermicro X9DRD-7LN4F(-JBOD)/X9DRD-EF/X9DRD-7LN4F, BIOS 3.0a 12/05/2013
-[ 9627.630225]  0000000000000000 ffffffff814f2c88 ffffffff813e590f ffff885f9bcd3858
-[ 9627.630227]  ffffffff8104575c ffff885fa4bc4010 00000000ffffffef ffff885fa473f420
-[ 9627.630229]  ffff885fa4bc4000 0000000000000000 ffffffff810457d5 ffffffff814f2e48
-[ 9627.630230] Call Trace:
-[ 9627.630233]  [<ffffffff813e590f>] ? dump_stack+0x40/0x50
-[ 9627.630235]  [<ffffffff8104575c>] ? warn_slowpath_common+0x7c/0xb0
-[ 9627.630236]  [<ffffffff810457d5>] ? warn_slowpath_fmt+0x45/0x50
-[ 9627.630238]  [<ffffffff8118846e>] ? sysfs_create_dir_ns+0x7e/0x90
-[ 9627.630240]  [<ffffffff811d9684>] ? kobject_add_internal+0x274/0x2f0
-[ 9627.630242]  [<ffffffff811d9af6>] ? kobject_add+0x66/0xb0
-[ 9627.630244]  [<ffffffff812bb2e3>] ? device_add+0x263/0x620
-[ 9627.630245]  [<ffffffff812bb8a8>] ? device_create_groups_vargs+0xe8/0x100
-[ 9627.630247]  [<ffffffff812bb8d3>] ? device_create_vargs+0x13/0x20
-[ 9627.630250]  [<ffffffff810ed128>] ? bdi_register+0x68/0x150
-[ 9627.630252]  [<ffffffff811c535d>] ? add_disk+0x14d/0x4a0
-[ 9627.630255]  [<ffffffff811c585f>] ? alloc_disk_node+0xaf/0x100
-[ 9627.630258]  [<ffffffffa0252269>] ? md_alloc+0x1e9/0x350 [md_mod]
-[ 9627.630261]  [<ffffffffa02523db>] ? md_probe+0xb/0x20 [md_mod]
-[ 9627.630262]  [<ffffffff812c0654>] ? kobj_lookup+0x104/0x170
-[ 9627.630266]  [<ffffffffa02523d0>] ? md_alloc+0x350/0x350 [md_mod]
-[ 9627.630268]  [<ffffffff811c4da8>] ? get_gendisk+0x28/0xf0
-[ 9627.630270]  [<ffffffff8115fb74>] ? __blkdev_get+0x114/0x3c0
-[ 9627.630272]  [<ffffffff8115e590>] ? bdev_direct_access+0xa0/0xa0
-[ 9627.630274]  [<ffffffff8115e5a0>] ? bdev_test+0x10/0x10
-[ 9627.630276]  [<ffffffff8115fe58>] ? blkdev_get+0x38/0x310
-[ 9627.630278]  [<ffffffff81160170>] ? blkdev_get_by_dev+0x40/0x40
-[ 9627.630280]  [<ffffffff8112b3d3>] ? do_dentry_open.isra.16+0x153/0x320
-[ 9627.630282]  [<ffffffff811380f3>] ? do_last.isra.51+0x323/0xd50
-[ 9627.630283]  [<ffffffff8111f5b3>] ? kmem_cache_alloc+0x123/0x130
-[ 9627.630285]  [<ffffffff8113a97f>] ? path_openat+0x7f/0x610
-[ 9627.630287]  [<ffffffff810f7480>] ? tlb_flush_mmu_free+0x30/0x50
-[ 9627.630289]  [<ffffffff810fe800>] ? unmap_region+0xb0/0xf0
-[ 9627.630291]  [<ffffffff8113bb3b>] ? do_filp_open+0x2b/0x90
-[ 9627.630293]  [<ffffffff811472ec>] ? __alloc_fd+0x7c/0x120
-[ 9627.630295]  [<ffffffff8112c531>] ? do_sys_open+0x121/0x210
-[ 9627.630297]  [<ffffffff813ea097>] ? system_call_fastpath+0x12/0x6a
-[ 9627.630298] ---[ end trace b7a3e9c6f05c2667 ]---
-[ 9627.630395] BUG: unable to handle kernel NULL pointer dereference at 0000000000000040
-[ 9627.630430] IP: [<ffffffff8118869a>] sysfs_do_create_link_sd.isra.2+0x2a/0xb0
-[ 9627.630524] PGD 5fa2d03067 PUD 5f9d679067 PMD 0 
-[ 9627.630550] Oops: 0000 [#1] SMP 
-[ 9627.630624] Modules linked in: xt_tcpudp iptable_filter ip_tables x_tables nfsd nfs lockd grace sunrpc ipmi_devintf netconsole configfs loop hid_generic usbhid hid x86_pkg_temp_thermal coretemp ghash_clmulni_intel aesni_intel ioatdma ehci_pci aes_x86_64 iTCO_wdt iTCO_ve
-[ 9627.631073] CPU: 18 PID: 3330 Comm: mdadm Tainted: G        W       4.0.0bl-azat-v6+ #1
-[ 9627.631090] Hardware name: Supermicro X9DRD-7LN4F(-JBOD)/X9DRD-EF/X9DRD-7LN4F, BIOS 3.0a 12/05/2013
-[ 9627.631109] task: ffff885fa4659f00 ti: ffff885f9bcd0000 task.ti: ffff885f9bcd0000
-[ 9627.631124] RIP: 0010:[<ffffffff8118869a>]  [<ffffffff8118869a>] sysfs_do_create_link_sd.isra.2+0x2a/0xb0
-[ 9627.631162] RSP: 0018:ffff885f9bcd3a78  EFLAGS: 00010246
-[ 9627.631189] RAX: 000000000000e6e6 RBX: 0000000000000040 RCX: 00000000000000e6
-[ 9627.631219] RDX: ffffffff814e19d0 RSI: 0000000000000040 RDI: ffffffff81740d88
-[ 9627.631249] RBP: ffffffff814e19d0 R08: 0000000000017d60 R09: ffff88607fcd7d60
-[ 9627.631278] R10: ffff882fbf802400 R11: ffffea017e830e00 R12: 0000000000000001
-[ 9627.631308] R13: ffff885fa5a61ca8 R14: ffff885fa4bc3c70 R15: ffff885fa4bc3c00
-[ 9627.631338] FS:  00007f439e991700(0000) GS:ffff88607fcc0000(0000) knlGS:0000000000000000
-[ 9627.631383] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 9627.631411] CR2: 0000000000000040 CR3: 0000005f9fe22000 CR4: 00000000001407e0
-[ 9627.631440] Stack:
-[ 9627.631460]  ffff885fa4bc3c00 ffff885f9bf41428 ffff885fa4bc3c0c ffff885fa4bc3c80
-[ 9627.631515]  ffff885fa4bc3c70 ffffffff811c53f3 ffff885fa4bc3c00 ffffffff00000018
-[ 9627.631569]  0090007f9bcd3b08 ffff885fa4bc3c00 0000000000000000 0000000000000001
-[ 9627.631680] Call Trace:
-[ 9627.631703]  [<ffffffff811c53f3>] ? add_disk+0x1e3/0x4a0
-[ 9627.631733]  [<ffffffffa0252269>] ? md_alloc+0x1e9/0x350 [md_mod]
-[ 9627.631763]  [<ffffffffa02523db>] ? md_probe+0xb/0x20 [md_mod]
-[ 9627.631791]  [<ffffffff812c0654>] ? kobj_lookup+0x104/0x170
-[ 9627.631820]  [<ffffffffa02523d0>] ? md_alloc+0x350/0x350 [md_mod]
-[ 9627.631849]  [<ffffffff811c4da8>] ? get_gendisk+0x28/0xf0
-[ 9627.631877]  [<ffffffff8115fb74>] ? __blkdev_get+0x114/0x3c0
-[ 9627.631905]  [<ffffffff8115e590>] ? bdev_direct_access+0xa0/0xa0
-[ 9627.631933]  [<ffffffff8115e5a0>] ? bdev_test+0x10/0x10
-[ 9627.631961]  [<ffffffff8115fe58>] ? blkdev_get+0x38/0x310
-[ 9627.631988]  [<ffffffff81160170>] ? blkdev_get_by_dev+0x40/0x40
-[ 9627.632017]  [<ffffffff8112b3d3>] ? do_dentry_open.isra.16+0x153/0x320
-[ 9627.632046]  [<ffffffff811380f3>] ? do_last.isra.51+0x323/0xd50
-[ 9627.632075]  [<ffffffff8111f5b3>] ? kmem_cache_alloc+0x123/0x130
-[ 9627.632103]  [<ffffffff8113a97f>] ? path_openat+0x7f/0x610
-[ 9627.632131]  [<ffffffff810f7480>] ? tlb_flush_mmu_free+0x30/0x50
-[ 9627.632159]  [<ffffffff810fe800>] ? unmap_region+0xb0/0xf0
-[ 9627.632186]  [<ffffffff8113bb3b>] ? do_filp_open+0x2b/0x90
-[ 9627.632215]  [<ffffffff811472ec>] ? __alloc_fd+0x7c/0x120
-[ 9627.632242]  [<ffffffff8112c531>] ? do_sys_open+0x121/0x210
-[ 9627.632270]  [<ffffffff813ea097>] ? system_call_fastpath+0x12/0x6a
-[ 9627.632298] Code: 00 48 85 d2 74 73 48 85 ff 74 6e 41 56 41 55 49 89 fd 41 54 55 48 c7 c7 88 0d 74 81 53 48 89 f3 41 89 cc 48 89 d5 e8 76 15 26 00 <48> 8b 1b 48 85 db 74 08 48 89 df e8 f6 c9 ff ff 80 05 d7 86 5b 
-[ 9627.632557] RIP  [<ffffffff8118869a>] sysfs_do_create_link_sd.isra.2+0x2a/0xb0
-[ 9627.632604]  RSP <ffff885f9bcd3a78>
-[ 9627.632627] CR2: 0000000000000040
-[ 9627.633014] ---[ end trace b7a3e9c6f05c2668 ]---
+#mdadm --assemble --force /dev/md/ubuntu\:md-raid6_primary /dev/sdaa
+/dev/sdac /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdz
 
-Any assumptions?
+
+ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md124 : active raid6 sdf[0] sdz[5] sdj[8] sdi[3] sdh[2] sdg[1]
+      11721077760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+[8/6] [UUUUUU__]
+
+md125 : active (auto-read-only) raid1 sdag[1]
+      97684688 blocks super 1.2 [2/1] [_U]
+
+md126 : active raid6 sdad[1] sdv[2] sdy[5] sdw[3] sdx[4]
+      7814051840 blocks super 1.2 level 6, 512k chunk, algorithm 2
+[6/5] [_UUUUU]
+
+md127 : inactive sdd[13] sdc[15] sde[14] sda[10] sdb[11] sdt[4] sdr[2]
+sdq[1] sdm[7] sdk[5] sdo[9] sdn[8]
+      23442162720 blocks super 1.2
+
+unused devices: <none>
+
+
+Adding two disks that were removed [8/6]
+
+
+mdadm --manage /dev/md124 --add /dev/sdaa
+
+mdadm --manage /dev/md124 --add /dev/sdac
+
+
+cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md124 : active raid6 sdac[10] sdaa[9] sdf[0] sdz[5] sdj[8] sdi[3] sdh[2=
+] sdg[1]
+      11721077760 blocks super 1.2 level 6, 512k chunk, algorithm 2
+[8/6] [UUUUUU__]
+      [>....................]  recovery =3D  0.4% (8112408/1953512960)
+finish=3D6234.6min speed=3D5200K/sec
+
+md125 : active (auto-read-only) raid1 sdag[1]
+      97684688 blocks super 1.2 [2/1] [_U]
+
+md126 : active raid6 sdad[1] sdv[2] sdy[5] sdw[3] sdx[4]
+      7814051840 blocks super 1.2 level 6, 512k chunk, algorithm 2
+[6/5] [_UUUUU]
+
+md127 : inactive sdd[13] sdc[15] sde[14] sda[10] sdb[11] sdt[4] sdr[2]
+sdq[1] sdm[7] sdk[5] sdo[9] sdn[8]
+      23442162720 blocks super 1.2
+
+unused devices: <none>
+
+
+mdadm --detail /dev/md124
+/dev/md124:
+        Version : 1.2
+  Creation Time : Thu Sep 27 11:39:20 2012
+     Raid Level : raid6
+     Array Size : 11721077760 (11178.09 GiB 12002.38 GB)
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Apr 14 14:37:56 2015
+          State : clean, degraded, recovering
+ Active Devices : 6
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+ Rebuild Status : 0% complete
+
+           Name : ubuntu:md-raid6_primary  (local to host ubuntu)
+           UUID : cee8d180:d6275a41:599064c6:8894819e
+         Events : 1093711
+
+    Number   Major   Minor   RaidDevice State
+       0       8       80        0      active sync   /dev/sdf
+       1       8       96        1      active sync   /dev/sdg
+       2       8      112        2      active sync   /dev/sdh
+       3       8      128        3      active sync   /dev/sdi
+       8       8      144        4      active sync   /dev/sdj
+       5      65      144        5      active sync   /dev/sdz
+       9      65      160        6      spare rebuilding   /dev/sdaa
+      10      65      192        7      spare rebuilding   /dev/sdac
+
+Just wait for the complete rebuild! Great work. Thanks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2015-04-14 11:19 GMT-03:00 Mikael Abrahamsson <swmike@swm.pp.se>:
+> On Tue, 14 Apr 2015, Emanuel Domingos wrote:
+>
+>> Hi, Mikael, hi guys!
+>>
+>>
+>> Follow the errors found after building the new version of mdadm:
+>>
+>> #mdadm --stop /dev/md/ubuntu\:md-raid6_primary
+>>
+>> #mdadm --assemble --force /dev/md/ubuntu\:md-raid6_primary /dev/sdaa
+>> /dev/sdac
+>> /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdz
+>>
+>> mdadm: device /dev/md/ubuntu:md-raid6_primary exists but is not an m=
+d
+>> array.
+>
+>
+> Please call it /dev/md124 and not the above ubuntu: name. I have no i=
+dea
+> what it is you're trying to do with that name. Also use --verbose whe=
+n
+> trying to do the assembly and see if you get any further information.
+>
+>
+> --
+> Mikael Abrahamsson    email: swmike@swm.pp.se
+
+
+
+--=20
+Emanuel Domingos
+
+Cursando Bacharelado em Ci=C3=AAncia da Computa=C3=A7=C3=A3o - IFCE Cam=
+pus Maracana=C3=BA
+T=C3=A9cnico em Conectividade - IFCE Campus Maracana=C3=BA
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
