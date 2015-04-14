@@ -1,58 +1,96 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 5 "magicaly" become a RAID0
-Date: Tue, 14 Apr 2015 08:32:00 -0400
-Message-ID: <552D08C0.1010106@turmel.org>
-References: <D150B36B.8EE37%marchesseau@gmail.com> <552B0B58.8050102@turmel.org> <D15148A7.3B83B%marchesseau@gmail.com> <552BA12C.3010506@turmel.org> <D1517793.3D82D%marchesseau@gmail.com> <D151DEA1.8EEA1%marchesseau@gmail.com>
+From: Emanuel Domingos <emanuelsdrock@gmail.com>
+Subject: Re: Recovery Raid6 Degraded
+Date: Tue, 14 Apr 2015 09:47:23 -0300
+Message-ID: <CACsoFmhrhNa+XO_7wcWYbS987K_aEWidZm=VORQA-KzfSFjVQA@mail.gmail.com>
+References: <CACsoFmjWW7mqSA8OKZZEPhpFidf-exSMm771ZOp0TssSYydcrw@mail.gmail.com>
+	<alpine.DEB.2.02.1504132234220.16871@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D151DEA1.8EEA1%marchesseau@gmail.com>
+In-Reply-To: <alpine.DEB.2.02.1504132234220.16871@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas MARCHESSEAU <marchesseau@gmail.com>, linux-raid@vger.kernel.org
-Cc: Roger Heflin <rogerheflin@gmail.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning Thomas,
+Hi, Mikael, hi guys!
 
-On 04/13/2015 03:29 PM, Thomas MARCHESSEAU wrote:
 
-> Mdadm =E2=80=94-assemble =E2=80=94- force /dev/md1 /dev/sdb =E2=80=A6=
-etc=E2=80=A6 /dev/sdh
-> And i=E2=80=99ve got a good feedback from de system :
-> Mdadm : forcing event count in /dev/sdg from 21954 to 21958
-> Mdadm : forcing event count in /dev/sdh from  21954 to 21958
-> Mdadm : clearing FAULTY flag for device 5 in /dev/md1 fo dev/sdg
-> Mdadm : clearing FAULTY flag for device 6 in /dev/md1 fo dev/sdh
-> Mdadm : making array /dev/md1 as =E2=80=98clean=E2=80=99
-> Mdadm :/dev/md1 has bee started  with 7 drives
->=20
-> =E2=80=94> looks pretty good !
->=20
-> Mounting drive , and all seem ok .
-> 1 / i=E2=80=99m now BACKUPING the most important stuff .
-> 2 / i=E2=80=99ll backup all data
->=20
-> -> this will probably require 2 days
+=46ollow the errors found after building the new version of mdadm:
 
-Very good to hear this.
+#mdadm --stop /dev/md/ubuntu\:md-raid6_primary
 
-> what=E2=80=99s your advice for next step ?
-> - remove all md and rewrite a config ?
-> - move to raid6 ( is there a way to convert RAID5 to 6 ) (
-> http://ewams.net/?date=3D2013/05/02&view=3DConverting_RAID5_to_RAID6_=
-in_mdadm
-> )=20
+#mdadm --assemble --force /dev/md/ubuntu\:md-raid6_primary /dev/sdaa
+/dev/sdac /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdz
 
-Yes, just --add a spare device to the array, then --grow --level=3D6 to
-start a live reshape.
+mdadm: device /dev/md/ubuntu:md-raid6_primary exists but is not an md a=
+rray.
 
-> - re install a fresh clean system ?
 
-Not necessary.
+DMESG
 
-Phil
+[661924.167503] md: md123 stopped.
+[661924.167513] md: unbind<sdi>
+[661924.184248] md: export_rdev(sdi)
+[661924.184259] md: unbind<sdj>
+[661924.184324] md: export_rdev(sdj)
+[661924.184335] md: unbind<sdg>
+[661924.188227] md: export_rdev(sdg)
+[661924.188248] md: unbind<sdh>
+[661924.192285] md: export_rdev(sdh)
+[661924.192296] md: unbind<sdf>
+[661924.192364] md: export_rdev(sdf)
+[661924.192375] md: unbind<sdz>
+[661924.264120] md: export_rdev(sdz)
+[661924.264133] md: unbind<sdaa>
+[661924.264456] md: export_rdev(sdaa)
+[661924.264467] md: unbind<sdac>
+[661924.272138] md: export_rdev(sdac)
 
+
+Thanks!
+
+
+
+2015-04-13 17:38 GMT-03:00 Mikael Abrahamsson <swmike@swm.pp.se>:
+> On Mon, 13 Apr 2015, Emanuel Domingos wrote:
+>
+>> guys, following guidelines on wiki, before to try recreate my array
+>> I'm sending this mail to listen the experts.
+>
+>
+> Good choice!
+>
+>> I would like to aid as a problem in my raid arrays after a crash in
+>> which I had to restart the server.
+>
+>
+> What kernel version and mdadm version are you running?
+>
+> My first recommendation would be for you to compile latest mdadm from
+> source:
+>
+> "git clone https://github.com/neilbrown/mdadm"
+>
+> Then compile it and use that to do the --assemble-force operation tha=
+t
+> failed before. This has helped others.
+>
+> If it still doesn't work, please provide dmesg output from when that
+> operation occured.
+>
+> --
+> Mikael Abrahamsson    email: swmike@swm.pp.se
+
+
+
+--=20
+Emanuel Domingos
+
+Cursando Bacharelado em Ci=C3=AAncia da Computa=C3=A7=C3=A3o - IFCE Cam=
+pus Maracana=C3=BA
+T=C3=A9cnico em Conectividade - IFCE Campus Maracana=C3=BA
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
