@@ -1,47 +1,58 @@
-From: Azat Khuzhin <a3at.mail@gmail.com>
-Subject: Re: BUG: unable to handle kernel NULL pointer dereference at
- sysfs_do_create_link_sd (after mdadm)
-Date: Wed, 15 Apr 2015 11:47:19 +0300
-Message-ID: <20150415084719.GM25394@azat>
-References: <20150414171537.GH25394@azat>
- <552DD097.9010504@suse.com>
+From: "John Andre Taule" <post@johnandre.net>
+Subject: SV: mdadm raid 5 one disk overwritten file system failed
+Date: Wed, 15 Apr 2015 13:47:31 +0200
+Message-ID: <00b901d07771$f56c0010$e0440030$@johnandre.net>
+References: <020601d04c17$08c10290$1a4307b0$@johnandre.net> <alpine.DEB.2.02.1502191218140.4007@uplift.swm.pp.se> <021f01d04c4c$5def1740$19cd45c0$@johnandre.net> <alpine.DEB.2.02.1502191521450.4007@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <552DD097.9010504@suse.com>
+In-Reply-To: <alpine.DEB.2.02.1502191521450.4007@uplift.swm.pp.se>
+Content-Language: no
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <GQJiang@suse.com>
-Cc: "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 15, 2015 at 10:44:39AM +0800, Guoqing Jiang wrote:
-> Azat Khuzhin wrote:
-> > $ git describe
-> > v4.0-2620-gb79013b
-> >
-> > During setting up partitions with mdadm, mdadm hung, after attaching to mdadm with strace I got next:
-> >
-> > # pgrep mdadm | xargs strace -fp
-> > Process 27389 attached - interrupt to quit
-> > unlink("/dev/.tmp.md.27389:9:127")      = 0
-> > mknod("/tmp/.tmp.md.27389:9:127", S_IFBLK|0600, makedev(9, 127)) = 0
-> > open("/tmp/.tmp.md.27389:9:127", O_RDWR|O_EXCL|O_DIRECT) <-- *hung*
-> >
-> > After, I looked into dmesg, and found this:
-> > [ 9627.630018] ------------[ cut here ]------------
-> > [ 9627.630029] WARNING: CPU: 18 PID: 3330 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x5a/0x70()
-> > [ 9627.630032] sysfs: cannot create duplicate filename '/devices/virtual/bdi/9:127'
-> >   
-> sysfs complains about duplicate filename, maybe you tried to create the
-> array with same node.
+The guy that did this to us got 3 months jail. 
 
-Yes, my steps was close to this:
-$ mdadm --create /dev/md/foo --raid-devices=2 /dev/sda /dev/sdb
-$ mdadm --stop --scan
-$ mdadm --create /dev/md/foo --raid-devices=2 /dev/sda /dev/sdb
+His argument was that we should have failed the system manually (removed the
+disk that he targeted with "dd"), and the raid should have magically fixed
+itself. Anyone think this would have worked? 
+It was 5 hours of heavy write and deletes to the file system (ext4) and all
+that time the dd command where running.
 
-But it is not always reproduces.
+Later I also found this exact "test" of raid in mdadm documentation marking
+it as not something you should do (will fail data integriy, eg corrupt
+filesystem, period).
 
-Anyway the most important is not WARNING but BUG (also after that BUG
-you can't umount all file systems normally -- i.e. on reboot).
+/regards
+
+-----Opprinnelig melding-----
+Fra: Mikael Abrahamsson [mailto:swmike@swm.pp.se] 
+Sendt: 19. februar 2015 15:24
+Til: John Andre Taule
+Kopi: linux-raid@vger.kernel.org
+Emne: Re: mdadm raid 5 one disk overwritten file system failed
+
+On Thu, 19 Feb 2015, John Andre Taule wrote:
+
+> I'm a bit surprised that overwriting anything on the physical disk 
+> should corrupt the file system on the raid. I would think that would 
+> be similar to a disk crashing or failing in other ways.
+
+Errr, in raid5 you have data blocks and parity blocks. WHen you overwrite
+one of the component drives with zeroes, you're effectively doing the same
+as writing 0:es to a non-raid drive every 3 $stripesize. You're zero:ing a
+lot of the filesystem information.
+
+> What you say that Linux might not have seen the disk as failing is 
+> interesting. This could explain why the file system got corrupted.
+
+Correct. There is no mechanism that periodically checks the contents of the
+superblock and fails the drive if it's not there anymore. So the drive is
+never failed.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+
