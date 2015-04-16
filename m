@@ -1,35 +1,62 @@
-From: weiyj_lk@163.com
-Subject: [PATCH] dm crypt: fix error return code in crypt_ctr()
-Date: Thu, 16 Apr 2015 20:21:25 +0800
-Message-ID: <1429186885-21072-1-git-send-email-weiyj_lk@163.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5 "magicaly" become a RAID0
+Date: Thu, 16 Apr 2015 08:25:57 -0400
+Message-ID: <552FAA55.9010104@turmel.org>
+References: <D150B36B.8EE37%marchesseau@gmail.com> <552B0B58.8050102@turmel.org> <D15148A7.3B83B%marchesseau@gmail.com> <552BA12C.3010506@turmel.org> <D1517793.3D82D%marchesseau@gmail.com> <D151DEA1.8EEA1%marchesseau@gmail.com> <552D08C0.1010106@turmel.org> <D1554172.8F19F%marchesseau@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <D1554172.8F19F%marchesseau@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>
-Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: Thomas MARCHESSEAU <marchesseau@gmail.com>, linux-raid@vger.kernel.org
+Cc: Roger Heflin <rogerheflin@gmail.com>
 List-Id: linux-raid.ids
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Good morning Thomas,
 
-Fix to return a negative error code from the error handling
-case instead of 0, as done elsewhere in this function.
+On 04/16/2015 04:53 AM, Thomas MARCHESSEAU wrote:
+> Hi Team ,
+>=20
+>>
+>> Very good to hear this.
+> It crashed once , but after a reboot and re-assemble ,  i=B9ve backup=
+ed
+> _everything_
+> =20
+> -> Thank you very much for you support !
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/md/dm-crypt.c | 1 +
- 1 file changed, 1 insertion(+)
+You're welcome.
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 713a962..8154f58 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1816,6 +1816,7 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		if (ret)
- 			goto bad;
- 
-+		ret = -EINVAL;
- 		while (opt_params--) {
- 			opt_string = dm_shift_arg(&as);
- 			if (!opt_string) {
+>> Yes, just --add a spare device to the array, then --grow --level=3D6=
+ to
+>> start a live reshape.
+>=20
+> I tryed , but it failed with many buffer I/O error , ( mostly on the =
+ last
+> 4 drives , ( not sure , but seems hosted on the same chipset)
+> And now , i have tons of :
+> Buffer I/O error on device sdf , logical block 12
+> =8A  logical block 11 =8A and so on
+>=20
+> Same on SDH =20
 
+You mentioned a possibly loose sata cable causing the initial problem.
+I'm not so sure.  I think you should check your power supply.
+
+The smartctl reports you supplied eliminate the most common problem,
+timeout mismatch, as you have nice raid-rated drives.  The next most
+common problem I've seen is insufficient power, which is most apparent
+when writing.
+
+Add up all of the power consumption ratings of your hardware to make
+sure a new power supply is suitable.  And if you have/get a multiple
+rail supply, make sure you spread the load across the independent circu=
+its.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
