@@ -1,47 +1,51 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: mdadm raid 5 one disk overwritten file system failed
-Date: Wed, 15 Apr 2015 19:27:13 +0100
-Message-ID: <552EAD81.6090202@youngman.org.uk>
-References: <020601d04c17$08c10290$1a4307b0$@johnandre.net> <alpine.DEB.2.02.1502191218140.4007@uplift.swm.pp.se> <021f01d04c4c$5def1740$19cd45c0$@johnandre.net> <alpine.DEB.2.02.1502191521450.4007@uplift.swm.pp.se> <00b901d07771$f56c0010$e0440030$@johnandre.net> <alpine.DEB.2.02.1504151432250.16871@uplift.swm.pp.se>
+From: Thomas MARCHESSEAU <marchesseau@gmail.com>
+Subject: Re: RAID 5 "magicaly" become a RAID0
+Date: Thu, 16 Apr 2015 10:53:55 +0200
+Message-ID: <D1554172.8F19F%marchesseau@gmail.com>
+References: <D150B36B.8EE37%marchesseau@gmail.com>
+ <552B0B58.8050102@turmel.org>
+ <D15148A7.3B83B%marchesseau@gmail.com>
+ <552BA12C.3010506@turmel.org>
+ <D1517793.3D82D%marchesseau@gmail.com>
+ <D151DEA1.8EEA1%marchesseau@gmail.com>
+ <552D08C0.1010106@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1504151432250.16871@uplift.swm.pp.se>
+In-Reply-To: <552D08C0.1010106@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>, John Andre Taule <post@johnandre.net>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Cc: Roger Heflin <rogerheflin@gmail.com>
 List-Id: linux-raid.ids
 
-On 15/04/15 13:38, Mikael Abrahamsson wrote:
-> On Wed, 15 Apr 2015, John Andre Taule wrote:
-> 
->> The guy that did this to us got 3 months jail.
->>
->> His argument was that we should have failed the system manually
->> (removed the
->> disk that he targeted with "dd"), and the raid should have magically
->> fixed
->> itself. Anyone think this would have worked?
->> It was 5 hours of heavy write and deletes to the file system (ext4)
->> and all
->> that time the dd command where running.
-> 
-> Not a chance, after 5 hours dd basically had overwritten 1/3 of the data
-> spread out across a large portion of the volume. We're talking massive
-> file and filesystem corruption.
+Hi Team ,
 
-Wouldn't failing the drive and then adding it "as new" (triggering a
-rebuild) recover any files that hadn't been modified while the dd was
-running?
+>
+>Very good to hear this.
+It crashed once , but after a reboot and re-assemble ,  i=B9ve backuped
+_everything_
+=20
+-> Thank you very much for you support !
+>
+>Yes, just --add a spare device to the array, then --grow --level=3D6 t=
+o
+>start a live reshape.
 
-Of course, that still means any directories that had been modified would
-likely have also been corrupted, in all probability landing the files in
-them into "lost+found" and necessitating a massive recataloging of all
-the files in there.
+I tryed , but it failed with many buffer I/O error , ( mostly on the  l=
+ast
+4 drives , ( not sure , but seems hosted on the same chipset)
+And now , i have tons of :
+Buffer I/O error on device sdf , logical block 12
+=8A  logical block 11 =8A and so on
 
-The data would have been recovered, but the directory structure ... not
-a nice recovery job.
+Same on SDH =20
 
-Cheers,
-Wol
+>
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
