@@ -1,278 +1,197 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 6/6] md-cluster: re-add capabilities
-Date: Mon, 20 Apr 2015 12:01:21 +1000
-Message-ID: <20150420120121.374b72f3@notabene.brown>
-References: <20150414154541.GA4138@shrek.lan>
+Subject: Re: [PATCH] md/raid5: don't do chunk aligned read on degraded
+ array.
+Date: Mon, 20 Apr 2015 16:20:38 +1000
+Message-ID: <20150420162038.72af8591@notabene.brown>
+References: <550A60FF.3050902@gmail.com>
+	<20150319170215.7d6dfd60@notabene.brown>
+	<550B265C.7070907@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/0yUEb3/+KVcTpsXI9Q/kSva"; protocol="application/pgp-signature"
+ boundary="Sig_/j3/6q=feI9Z3SphPqLSlI6M"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150414154541.GA4138@shrek.lan>
+In-Reply-To: <550B265C.7070907@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: GQJiang@suse.com, linux-raid@vger.kernel.org
+To: Eric Mei <meijia@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/0yUEb3/+KVcTpsXI9Q/kSva
+--Sig_/j3/6q=feI9Z3SphPqLSlI6M
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 14 Apr 2015 10:45:42 -0500 Goldwyn Rodrigues <rgoldwyn@suse.de> wro=
-te:
+On Thu, 19 Mar 2015 13:41:16 -0600 Eric Mei <meijia@gmail.com> wrote:
 
-> When "re-add" is writted to /sys/block/mdXX/md/dev-YYY/state,
-> the clustered md:
+> On 2015-03-19 12:02 AM, NeilBrown wrote:
+> > On Wed, 18 Mar 2015 23:39:11 -0600 Eric Mei <meijia@gmail.com> wrote:
+> >
+> >> From: Eric Mei <eric.mei@seagate.com>
+> >>
+> >> When array is degraded, read data landed on failed drives will result =
+in
+> >> reading rest of data in a stripe. So a single sequential read would
+> >> result in same data being read twice.
+> >>
+> >> This patch is to avoid chunk aligned read for degraded array. The
+> >> downside is to involve stripe cache which means associated CPU overhead
+> >> and extra memory copy.
+> >>
+> >> Signed-off-by: Eric Mei <eric.mei@seagate.com>
+> >> ---
+> >>    drivers/md/raid5.c |   15 ++++++++++++---
+> >>    1 files changed, 12 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> >> index cd2f96b..763c64a 100644
+> >> --- a/drivers/md/raid5.c
+> >> +++ b/drivers/md/raid5.c
+> >> @@ -4180,8 +4180,12 @@ static int raid5_mergeable_bvec(struct mddev *m=
+ddev,
+> >>           unsigned int chunk_sectors =3D mddev->chunk_sectors;
+> >>           unsigned int bio_sectors =3D bvm->bi_size >> 9;
+> >>
+> >> -       if ((bvm->bi_rw & 1) =3D=3D WRITE)
+> >> -               return biovec->bv_len; /* always allow writes to be
+> >> mergeable */
+> >> +       /*
+> >> +        * always allow writes to be mergeable, read as well if array
+> >> +        * is degraded as we'll go through stripe cache anyway.
+> >> +        */
+> >> +       if ((bvm->bi_rw & 1) =3D=3D WRITE || mddev->degraded)
+> >> +               return biovec->bv_len;
+> >>
+> >>           if (mddev->new_chunk_sectors < mddev->chunk_sectors)
+> >>                   chunk_sectors =3D mddev->new_chunk_sectors;
+> >> @@ -4656,7 +4660,12 @@ static void make_request(struct mddev *mddev,
+> >> struct bio * bi)
+> >>
+> >>           md_write_start(mddev, bi);
+> >>
+> >> -       if (rw =3D=3D READ &&
+> >> +       /*
+> >> +        * If array is degraded, better not do chunk aligned read beca=
+use
+> >> +        * later we might have to read it again in order to reconstruct
+> >> +        * data on failed drives.
+> >> +        */
+> >> +       if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
+> >>                mddev->reshape_position =3D=3D MaxSector &&
+> >>                chunk_aligned_read(mddev,bi))
+> >>                   return;
+> >
+> > Thanks for the patch.
+> >
+> > However this sort of patch really needs to come with some concrete
+> > performance numbers.  Preferably both sequential reads and random reads.
+> >
+> > I agree that sequential reads are likely to be faster, but how much fas=
+ter
+> > are they?
+> > I imagine that this might make random reads a little slower.   Does it?=
+  By
+> > how much?
+> >
+> > Thanks,
+> > NeilBrown
+> >
 >=20
-> 1. Sends RE_ADD message with the desc_nr. Nodes receiving the message
->    clear the Faulty bit in their respective rdev->flags.
-> 2. The node initiating re-add, gathers the bitmaps of all nodes
->    and copies them into the local bitmap. It does not clear the bitmap
->    from which it is copying.
-> 3. Initiating node schedules a md recovery to sync the devices.
+> Hi Neil,
 >=20
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> ---
->  drivers/md/bitmap.c     | 20 +++++++++++---------
->  drivers/md/bitmap.h     |  2 +-
->  drivers/md/md-cluster.c | 48 +++++++++++++++++++++++++++++++++++++++++++=
-++++-
->  drivers/md/md-cluster.h |  1 +
->  drivers/md/md.c         | 12 ++++++++++++
->  5 files changed, 72 insertions(+), 11 deletions(-)
+> Sorry I should have done the test in first place.
 >=20
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index 5ff67c3..956cfb9 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -1852,7 +1852,7 @@ EXPORT_SYMBOL_GPL(bitmap_load);
->   * to our bitmap
->   */
->  int bitmap_copy_from_slot(struct mddev *mddev, int slot,
-> -		sector_t *low, sector_t *high)
-> +		sector_t *low, sector_t *high, bool clear_bits)
->  {
->  	int rv =3D 0, i, j;
->  	sector_t block, lo =3D 0, hi =3D 0;
-> @@ -1879,14 +1879,16 @@ int bitmap_copy_from_slot(struct mddev *mddev, in=
-t slot,
->  		}
->  	}
-> =20
-> -	bitmap_update_sb(bitmap);
-> -	/* Setting this for the ev_page should be enough.
-> -	 * And we do not require both write_all and PAGE_DIRT either
-> -	 */
-> -	for (i =3D 0; i < bitmap->storage.file_pages; i++)
-> -		set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
-> -	bitmap_write_all(bitmap);
-> -	bitmap_unplug(bitmap);
-> +	if (clear_bits) {
-> +		bitmap_update_sb(bitmap);
-> +		/* Setting this for the ev_page should be enough.
-> +		 * And we do not require both write_all and PAGE_DIRT either
-> +		 */
-> +		for (i =3D 0; i < bitmap->storage.file_pages; i++)
-> +			set_page_attr(bitmap, i, BITMAP_PAGE_DIRTY);
-> +		bitmap_write_all(bitmap);
-> +		bitmap_unplug(bitmap);
-> +	}
->  	*low =3D lo;
->  	*high =3D hi;
->  err:
-> diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-> index 4aabc74..f1f4dd0 100644
-> --- a/drivers/md/bitmap.h
-> +++ b/drivers/md/bitmap.h
-> @@ -263,7 +263,7 @@ void bitmap_daemon_work(struct mddev *mddev);
->  int bitmap_resize(struct bitmap *bitmap, sector_t blocks,
->  		  int chunksize, int init);
->  int bitmap_copy_from_slot(struct mddev *mddev, int slot,
-> -				sector_t *lo, sector_t *hi);
-> +				sector_t *lo, sector_t *hi, bool clear_bits);
->  #endif
-> =20
->  #endif
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 82f1b7b..ad2b5b7 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -73,6 +73,7 @@ enum msg_type {
->  	RESYNCING,
->  	NEWDISK,
->  	REMOVE,
-> +	RE_ADD,
->  };
-> =20
->  struct cluster_msg {
-> @@ -253,7 +254,7 @@ void recover_bitmaps(struct md_thread *thread)
->  					str, ret);
->  			goto clear_bit;
->  		}
-> -		ret =3D bitmap_copy_from_slot(mddev, slot, &lo, &hi);
-> +		ret =3D bitmap_copy_from_slot(mddev, slot, &lo, &hi, true);
->  		if (ret) {
->  			pr_err("md-cluster: Could not copy data from bitmap %d\n", slot);
->  			goto dlm_unlock;
-> @@ -412,6 +413,16 @@ static void process_remove_disk(struct mddev *mddev,=
- struct cluster_msg *msg)
->  		pr_warn("%s: %d Could not find disk(%d) to REMOVE\n", __func__, __LINE=
-__, msg->raid_slot);
->  }
-> =20
-> +static void process_readd_disk(struct mddev *mddev, struct cluster_msg *=
-msg)
-> +{
-> +	struct md_rdev *rdev =3D md_find_rdev_nr_rcu(mddev, msg->raid_slot);
-> +
-> +	if (rdev && test_bit(Faulty, &rdev->flags))
-> +		clear_bit(Faulty, &rdev->flags);
-> +	else
-> +		pr_warn("%s: %d Could not find disk(%d) which is faulty", __func__, __=
-LINE__, msg->raid_slot);
-> +}
-> +
->  static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *m=
-sg)
->  {
->  	switch (msg->type) {
-> @@ -436,6 +447,11 @@ static void process_recvd_msg(struct mddev *mddev, s=
-truct cluster_msg *msg)
->  			__func__, __LINE__, msg->slot);
->  		process_remove_disk(mddev, msg);
->  		break;
-> +	case RE_ADD:
-> +		pr_info("%s: %d Received RE_ADD from %d\n",
-> +			__func__, __LINE__, msg->slot);
-> +		process_readd_disk(mddev, msg);
-> +		break;
->  	default:
->  		pr_warn("%s:%d Received unknown message from %d\n",
->  			__func__, __LINE__, msg->slot);
-> @@ -883,6 +899,35 @@ static int remove_disk(struct mddev *mddev, struct m=
-d_rdev *rdev)
->  	return __sendmsg(cinfo, &cmsg);
->  }
-> =20
-> +static int gather_bitmaps(struct md_rdev *rdev)
-> +{
-> +	int sn, err;
-> +	sector_t lo, hi;
-> +	struct cluster_msg cmsg;
-> +	struct mddev *mddev =3D rdev->mddev;
-> +	struct md_cluster_info *cinfo =3D mddev->cluster_info;
-> +
-> +	cmsg.type =3D RE_ADD;
-> +	cmsg.raid_slot =3D rdev->desc_nr;
-> +	err =3D sendmsg(cinfo, &cmsg);
-> +	if (err)
-> +		goto out;
-> +
-> +	for (sn =3D 0; sn < mddev->bitmap_info.nodes; sn++) {
-> +		if (sn =3D=3D (cinfo->slot_number - 1))
-> +			continue;
-> +		err =3D bitmap_copy_from_slot(mddev, sn, &lo, &hi, false);
-> +		if (err) {
-> +			pr_warn("md-cluster: Could not gather bitmaps from slot %d", sn);
-> +			goto out;
-> +		}
-> +		if ((hi > 0) && (lo < mddev->recovery_cp))
-> +			mddev->recovery_cp =3D lo;
-> +	}
-> +out:
-> +	return err;
-> +}
-> +
->  static struct md_cluster_operations cluster_ops =3D {
->  	.join   =3D join,
->  	.leave  =3D leave,
-> @@ -898,6 +943,7 @@ static struct md_cluster_operations cluster_ops =3D {
->  	.add_new_disk_finish =3D add_new_disk_finish,
->  	.new_disk_ack =3D new_disk_ack,
->  	.remove_disk =3D remove_disk,
-> +	.gather_bitmaps =3D gather_bitmaps,
->  };
-> =20
->  static int __init cluster_init(void)
-> diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-> index 71e5143..6817ee0 100644
-> --- a/drivers/md/md-cluster.h
-> +++ b/drivers/md/md-cluster.h
-> @@ -23,6 +23,7 @@ struct md_cluster_operations {
->  	int (*add_new_disk_finish)(struct mddev *mddev);
->  	int (*new_disk_ack)(struct mddev *mddev, bool ack);
->  	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
-> +	int (*gather_bitmaps)(struct md_rdev *rdev);
->  };
-> =20
->  #endif /* _MD_CLUSTER_H */
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index ba01605..8c37bbf 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2599,11 +2599,23 @@ state_store(struct md_rdev *rdev, const char *buf=
-, size_t len)
->  			err =3D 0;
->  		}
->  	} else if (cmd_match(buf, "re-add") && (test_bit(Faulty, &rdev->flags) =
-|| (rdev->raid_disk =3D=3D -1))) {
-> +			/* clear_bit is performed _after_ all the devices
-> +			 * have their local Faulty bit cleared. If any writes
-> +			 * happen in the meantime in the local node, they
-> +			 * will land in the local bitmap, which will be synced
-> +			 * by this node eventually
-> +			 */
-> +			if (mddev_is_clustered(rdev->mddev)) {
-> +				err =3D md_cluster_ops->gather_bitmaps(rdev);
-> +				if (err)
-> +					goto out;
-> +			}
->  			clear_bit(Faulty, &rdev->flags);
->  			err =3D add_bound_rdev(rdev);
->  		}
->  	if (!err)
->  		sysfs_notify_dirent_safe(rdev->sysfs_state);
-> +out:
->  	return err ? err : len;
->  }
->  static struct rdev_sysfs_entry rdev_state =3D
+> Following test are done on a enterprise storage node with Seagate 6T SAS=
+=20
+> drives and Xeon E5-2648L CPU (10 cores, 1.9Ghz), 10 disks MD RAID6 8+2,=20
+> chunk size 128 KiB.
+>=20
+> I use FIO, using direct-io with various bs size, enough queue depth,=20
+> tested sequential and 100% random read against 3 array config: 1)=20
+> optimal, as baseline; 2) degraded; 3) degraded with this patch. Kernel=20
+> version is 4.0-rc3.
+>=20
+> Each individual test I only did once so there might be some variations,=20
+> but we just focus on big trend.
+>=20
+> Sequential Read:
+>   bs=3D(KiB)  optimal(MiB/s)  degraded(MiB/s)  degraded-with-patch (MiB/s)
+>    1024       1608            656              995
+>     512       1624            710              956
+>     256       1635            728              980
+>     128       1636            771              983
+>      64       1612           1119             1000
+>      32       1580           1420             1004
+>      16       1368            688              986
+>       8        768            647              953
+>       4        411            413              850
+>=20
+> Random Read:
+>   bs=3D(KiB)  optimal(IOPS)  degraded(IOPS)  degraded-with-patch (IOPS)
+>    1024        163            160              156
+>     512        274            273              272
+>     256        426            428              424
+>     128        576            592              591
+>      64        726            724              726
+>      32        849            848              837
+>      16        900            970              971
+>       8        927            940              929
+>       4        948            940              955
+>=20
+> Some notes:
+>   * In sequential + optimal, as bs size getting smaller, the FIO thread=20
+> become CPU bound.
+>   * In sequential + degraded, there's big increase when bs is 64K and=20
+> 32K, I don't have explanation.
+>   * In sequential + degraded-with-patch, the MD thread mostly become CPU=
+=20
+> bound.
+>=20
+> If you want to we can discuss specific data point in those data. But in=20
+> general it seems with this patch, we have more predictable and in most=20
+> cases significant better sequential read performance when array is=20
+> degraded, and almost no noticeable impact on random read.
+>=20
+> Performance is a complicated thing, the patch works well for this=20
+> particular configuration, but may not be universal. For example I=20
+> imagine testing on all SSD array may have very different result. But I=20
+> personally think in most cases IO bandwidth is more scarce resource than=
+=20
+> CPU.
+>=20
+> Eric
 
-I changed this to:
+Thanks.
+That is reasonably convincing.
 
-			if (!mddev_is_clustered(rdev->mddev) ||
-			    (err =3D md_cluster_ops->gather_bitmaps(rdev)) =3D=3D 0) {
-				clear_bit(Faulty, &rdev->flags);
-				err =3D add_bound_rdev(rdev);
-			}
+I've added that text to the commit message, fixed up all the white-space
+damage in the patch (tabs were converted to spaces etc ... if you are going
+to be sending more patches, please find a way to convince your mailer that
+spaces are important), and applied it.
 
-because I think it makes the code a bit clearer.
+It should be included in my pull request for 4.1
 
-otherwise, applied.
 Thanks,
 NeilBrown
 
-
-
---Sig_/0yUEb3/+KVcTpsXI9Q/kSva
+--Sig_/j3/6q=feI9Z3SphPqLSlI6M
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVTRd8Tnsnt1WYoG5AQJtuxAAm3yFjHCPu4LWnGMsH53gH2xBDS0fzXkS
-5dNyld/emmoWRVfMWnDevq6OKgzpp2U56YZPCjcV6DCalwyzvC5gLExNI0M/JQz9
-2Q8hIDfJZEjIrD186S2rjYeE5wYDfZY+7TCpvQxmZ/4ZzHU/go6X6JHfodlR7PTI
-whhusseNeXhutJrio4a+AM7l3w7PVTRTV/qSmHpo/9yZvEuxzGDBGUKAlAAup9BT
-LoABhwO8hDtLaRrsgmX8QFYOvWfaiB6XBocib5Z3oVdy8VDoISSvH63R/nl+2XSp
-z4sQgGfuFUkBNZs/Kz3HoqvgHdJRxf7vRNVLdmsFQGDnkSXArVIC/j4uPSPhY1BD
-jTmhbSTCsC0BZJNjX12SF1sp3tTJmgoSsAUjSiasZrMlBFXTtRtY/3rpg2mbtUUQ
-wDXsCrnpQpdICjuYYjXo6fG38F1+PwOSg2kQk1fftB1emjnHveMp+nQR/ovlQBda
-i2n0XO7TauYRNQOPb/98GIxMqpdvvUTahAOBy4/f9BH5uUQEXFFy83Di3V3kJjMJ
-a2WprAn09BRCBi+EHTwtiB1Zow4AXTrxakAbDlrxeMivXupt2p95AVCFLehdo34z
-fzZ8rg8yILq8QUqWcCCD5tGb0zNyn1cwHwZTMnmbduMt+uKRhrhbd+ND/EusSMHa
-eVz8HfJVsGM=
-=4TFV
+iQIVAwUBVTSatjnsnt1WYoG5AQJPfA/7BZHP5k9mO3nec4g3e4f6U7fZ4JQxkbQX
+LhNRHyIEDecR1EL2aJR+FV0IbsEaOdDN1m13NqlcCSvd0sBrbeS3xMvrv5H05UKB
++TW4d8e0nRf5sBHwUyv0hIgCNSDh8RJqS7I4tGjHuAp5rv9bfaTnqhmIBP4bUSbT
+UDfJ9e53SBUh7o6G5qr/YT3ialiUOFoq4nLKgv5gdHHtiHt5VetwSJbj+Z5gAwED
+GVBSNtzUaTiGJRN8joqSSnznXCPnvpjOS69q9FzsNUeHRuGjBIdKO0u5234HelAU
+Dc+AB7OfaVWORjf/lne9XCUtATQijP6hY/9mu4+P9/GLcSkKW7t6Q72WnzPzesBu
+HMXlst3LeZtxRi1ry1jR6UGKTG+UPY04UAjDeshz+Gj9k6xiBQ7U3k9fJ7r/rz6W
+Gh3XMknxDUMeo53265x2bc62CP47tmTM0nxWGCtVw8sY0+dR9LjEyMLE4GIG6Kcv
+jCWU778ZuQroKv5MalA1rCE99QQD9hOB6Ncxx+YR9GPyyzh75IEnY05fBIvg2tD2
+h5ceGhhYDwygkCPgjuVLvQeNCwoi4AgxQ9R7YCUBwaYfgk/7T3iko9YhWbP4ksOm
+tWSsLfEdd0oSgEoSnZFMzE2yea9FbvT5pgwAPVFTcn5aOknDpZOQs0IDr4MF6ibU
+8x/0zwi3SZo=
+=4GI2
 -----END PGP SIGNATURE-----
 
---Sig_/0yUEb3/+KVcTpsXI9Q/kSva--
+--Sig_/j3/6q=feI9Z3SphPqLSlI6M--
