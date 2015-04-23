@@ -1,93 +1,78 @@
-From: Robert Steinmetz AIA <rob@steinmetznet.com>
-Subject: Degraded Array event on /dev/md1:thelma
-Date: Thu, 23 Apr 2015 12:38:45 -0500
-Message-ID: <55392E25.7080604@steinmetznet.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ming Lin <mlin@kernel.org>
+Subject: [PATCH v3 2/4] md/raid10: make sync_request_write() call
+ bio_copy_data()
+Date: Thu, 23 Apr 2015 16:04:33 -0700
+Message-ID: <1429830275-6792-3-git-send-email-mlin@kernel.org>
+References: <1429830275-6792-1-git-send-email-mlin@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <1429830275-6792-1-git-send-email-mlin@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dongsu.park@profitbricks.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Ming Lin <mlin@kernel.org>
 List-Id: linux-raid.ids
 
-I have a small Ubuntu 14.04 LTS server with two Type 1 arrays, primarily 
-for redundancy. Recently I started getting email with the above title.
+From: Kent Overstreet <kent.overstreet@gmail.com>
 
-I checked the array and one drive had failed. I replaced the drive, ran 
-fdisk to create a new Linux Raid Array partition (type fd) of exactly 
-the same size as the existing disk.
-Then using gnome-disk-utility added the new drive to the array. 
-Apparently that added the entire disk, not the partition I created 
-however, everything seems to be working properly.
+Refactor sync_request_write() of md/raid10 to use bio_copy_data()
+instead of open coding bio_vec iterations.
 
-BUT I am still regularly getting the email below indicating a problem 
-with /dev/md1, even though I think I fixed the problem.
-> This is an automatically generated mail message from mdadm
-> running on thelma
->
-> A DegradedArray event had been detected on md device /dev/md1.
->
-> Faithfully yours, etc.
->
-> P.S. The /proc/mdstat file currently contains the following:
->
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-> md1 : active raid1 sdc1[0]
->        312567552 blocks [2/1] [U_]
->        
-> md0 : active raid1 sda1[0] sdb1[1]
->        78148096 blocks [2/2] [UU]
->        
-> unused devices: <none>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+[dpark: add more description in commit message]
+Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
+Signed-off-by: Ming Lin <mlin@kernel.org>
+---
+ drivers/md/raid10.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-However mdadm reports:
-> root@thelma:~# mdadm --detail /dev/md1
-> /dev/md1:
->         Version : 0.90
->   Creation Time : Sun Mar 11 19:06:41 2007
->      Raid Level : raid1
->      Array Size : 312567552 (298.09 GiB 320.07 GB)
->   Used Dev Size : 312567552 (298.09 GiB 320.07 GB)
->   Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 1
->     Persistence : Superblock is persistent
->
->     Update Time : Thu Apr 23 12:36:16 2015
->           State : clean
->  Active Devices : 2
->  Working Devices : 2
->  Failed Devices : 0
->  Spare Devices : 0
->
->            UUID : a5865e80:27a899df:bfaac05b:eff3fc62
->          Events : 0.16313034
->
->     Number   Major   Minor   RaidDevice State
->        0       8       33        0      active sync   /dev/sdc1
->        1       8       48        1      active sync   /dev/sdd
-
-mdadm.conf contains the following:
-> root@thelma:/etc/mdadm# cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-> [raid4] [raid10]
-> md1 : active raid1 sdc1[0] sdd[1]
->       312567552 blocks [2/2] [UU]
->
-> md0 : active raid1 sda1[0] sdb1[1]
->       78148096 blocks [2/2] [UU]
-cat /proc/mdstat produces.
-> root@thelma:/etc/mdadm# cat /proc/mdstat
->
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-> [raid4] [raid10]
-> md1 : active raid1 sdc1[0] sdd[1]
->       312567552 blocks [2/2] [UU]
->
-> md0 : active raid1 sda1[0] sdb1[1]
->       78148096 blocks [2/2] [UU]
->
-> unused devices: <none>
-I'm not sure whether there is a real problem or how to fix it. It seems 
-some inaccurate configuration information is stored somewhere.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a7196c4..02e33f1 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2097,18 +2097,11 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 		tbio->bi_vcnt = vcnt;
+ 		tbio->bi_iter.bi_size = r10_bio->sectors << 9;
+ 		tbio->bi_rw = WRITE;
+-		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-
+-		for (j=0; j < vcnt ; j++) {
+-			tbio->bi_io_vec[j].bv_offset = 0;
+-			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
+-
+-			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-			       page_address(fbio->bi_io_vec[j].bv_page),
+-			       PAGE_SIZE);
+-		}
+ 		tbio->bi_end_io = end_sync_write;
++		tbio->bi_private = r10_bio;
++
++		bio_copy_data(tbio, fbio);
+ 
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+@@ -2124,17 +2117,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 * that are active
+ 	 */
+ 	for (i = 0; i < conf->copies; i++) {
+-		int j, d;
++		int d;
+ 
+ 		tbio = r10_bio->devs[i].repl_bio;
+ 		if (!tbio || !tbio->bi_end_io)
+ 			continue;
+ 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
+ 		    && r10_bio->devs[i].bio != fbio)
+-			for (j = 0; j < vcnt; j++)
+-				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-				       page_address(fbio->bi_io_vec[j].bv_page),
+-				       PAGE_SIZE);
++			bio_copy_data(tbio, fbio);
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&r10_bio->remaining);
+ 		md_sync_acct(conf->mirrors[d].replacement->bdev,
+-- 
+1.9.1
 
