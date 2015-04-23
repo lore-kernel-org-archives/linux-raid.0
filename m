@@ -1,82 +1,93 @@
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Subject: Re: [PATCH 0/3] dm-crypt: Adds support for wiping key when doing
- suspend/hibernation
-Date: Thu, 23 Apr 2015 19:02:11 +0200
-Message-ID: <20150423170211.GI7646@pali>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
- <20150406130045.GA18583@redhat.com>
- <201504061529.57299@pali>
- <20150409131208.GA9504@redhat.com>
- <20150409132836.GD12339@atrey.karlin.mff.cuni.cz>
- <20150409140842.GA9779@redhat.com>
- <20150409141633.GJ12339@atrey.karlin.mff.cuni.cz>
- <20150409142658.GA9839@redhat.com>
- <20150409143827.GK12339@atrey.karlin.mff.cuni.cz>
- <20150414065016.GB20597@amd>
+From: Robert Steinmetz AIA <rob@steinmetznet.com>
+Subject: Degraded Array event on /dev/md1:thelma
+Date: Thu, 23 Apr 2015 12:38:45 -0500
+Message-ID: <55392E25.7080604@steinmetznet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150414065016.GB20597@amd>
-Sender: linux-pm-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Mike Snitzer <snitzer@redhat.com>, Alasdair Kergon <agk@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 14 April 2015 08:50:16 Pavel Machek wrote:
-> Hi!
->=20
-> > > > > > So proper way is to wipe luks crypto keys *after* userspace=
- processes
-> > > > > > are freezed.
-> > > > >=20
-> > > > > I know you believe that I'm just not accepting that at face v=
-alue.
-> > > >=20
-> > > > If disks are synced before any DM suspend operation then we hav=
-e higher
-> > > > chance of preventing data corruption.
-> > >=20
-> > > disks are already synced as part of the DM suspend operation!
-> > >=20
-> >=20
-> > Yes, but part of hibernate operation is also sync call.
->=20
-> Yes. Maybe that was a mistake.
->=20
+I have a small Ubuntu 14.04 LTS server with two Type 1 arrays, primarily 
+for redundancy. Recently I started getting email with the above title.
 
-I think not. I do not see any reason why system should not sync disks..=
-=2E
+I checked the array and one drive had failed. I replaced the drive, ran 
+fdisk to create a new Linux Raid Array partition (type fd) of exactly 
+the same size as the existing disk.
+Then using gnome-disk-utility added the new drive to the array. 
+Apparently that added the entire disk, not the partition I created 
+however, everything seems to be working properly.
 
-> > > > I still think that correct order is only:
-> > > >=20
-> > > > * freeze processes (which doing continous I/O)
-> > > > * fs & disk sync
-> > > > * DM suspend
-> > > > * wipe crypto keys
-> > > > * enter hibernate
-> > >=20
-> > > I just don't think that extreme is _required_ to have a hibernate=
-/resume
-> > > that incorporates dm-crypt key wiping.
-> >=20
-> > Ok, and what other developers think?
->=20
-> If someone can fix freezer to work with LUKS stopped, that would be a=
-=20
-> good thing. Can you do it, Mike? Then we can look if it works well
-> enough for Pali.
->=20
+BUT I am still regularly getting the email below indicating a problem 
+with /dev/md1, even though I think I fixed the problem.
+> This is an automatically generated mail message from mdadm
+> running on thelma
+>
+> A DegradedArray event had been detected on md device /dev/md1.
+>
+> Faithfully yours, etc.
+>
+> P.S. The /proc/mdstat file currently contains the following:
+>
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> md1 : active raid1 sdc1[0]
+>        312567552 blocks [2/1] [U_]
+>        
+> md0 : active raid1 sda1[0] sdb1[1]
+>        78148096 blocks [2/2] [UU]
+>        
+> unused devices: <none>
 
-Its not only LUKS devices. Its for all dm devices when are suspended.
+However mdadm reports:
+> root@thelma:~# mdadm --detail /dev/md1
+> /dev/md1:
+>         Version : 0.90
+>   Creation Time : Sun Mar 11 19:06:41 2007
+>      Raid Level : raid1
+>      Array Size : 312567552 (298.09 GiB 320.07 GB)
+>   Used Dev Size : 312567552 (298.09 GiB 320.07 GB)
+>   Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+>
+>     Update Time : Thu Apr 23 12:36:16 2015
+>           State : clean
+>  Active Devices : 2
+>  Working Devices : 2
+>  Failed Devices : 0
+>  Spare Devices : 0
+>
+>            UUID : a5865e80:27a899df:bfaac05b:eff3fc62
+>          Events : 0.16313034
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       33        0      active sync   /dev/sdc1
+>        1       8       48        1      active sync   /dev/sdd
 
-> But that might be too hard / impossible. And at that point, I think
-> Pali's patch is right thing to do.
-> 									Pavel
+mdadm.conf contains the following:
+> root@thelma:/etc/mdadm# cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+> [raid4] [raid10]
+> md1 : active raid1 sdc1[0] sdd[1]
+>       312567552 blocks [2/2] [UU]
+>
+> md0 : active raid1 sda1[0] sdb1[1]
+>       78148096 blocks [2/2] [UU]
+cat /proc/mdstat produces.
+> root@thelma:/etc/mdadm# cat /proc/mdstat
+>
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+> [raid4] [raid10]
+> md1 : active raid1 sdc1[0] sdd[1]
+>       312567552 blocks [2/2] [UU]
+>
+> md0 : active raid1 sda1[0] sdb1[1]
+>       78148096 blocks [2/2] [UU]
+>
+> unused devices: <none>
+I'm not sure whether there is a real problem or how to fix it. It seems 
+some inaccurate configuration information is stored somewhere.
 
-Yes I think it is hard too...
-
---=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
