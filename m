@@ -1,42 +1,73 @@
-From: cau2jeaf1honoq@laposte.net
-Subject: Massive RAID-1 desync
-Date: Fri, 24 Apr 2015 22:47:49 +0200 (CEST)
-Message-ID: <1810942606.18204832.1429908469113.JavaMail.zimbra@laposte.net>
-References: <1919189912.18202330.1429908372364.JavaMail.zimbra@laposte.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Ming Lin <mlin@kernel.org>
+Subject: [PATCH] md/raid10: make sync_request_write() call bio_copy_data()
+Date: Fri, 24 Apr 2015 15:52:10 -0700
+Message-ID: <1429915930-22449-1-git-send-email-mlin@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1919189912.18202330.1429908372364.JavaMail.zimbra@laposte.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>, Ming Lin <mlin@kernel.org>
 List-Id: linux-raid.ids
 
-Something is happening here. I don't know what, but I'm having
-fun trying to guess.
+From: Kent Overstreet <kent.overstreet@gmail.com>
 
-The root file system (ext3) is on a 4 x 30 GB RAID-1 array. A
-couple hours after boot, the kernel detected something wrong in
-the file system and decided to remount it read-only.
+Refactor sync_request_write() of md/raid10 to use bio_copy_data()
+instead of open coding bio_vec iterations.
 
-Comparing the component partitions finds many differences with a
-very uneven distribution :
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+[dpark: add more description in commit message]
+Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
+Signed-off-by: Ming Lin <mlin@kernel.org>
+---
+ drivers/md/raid10.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-- sda1 and sdb1 are identical except for 4 bytes in the last
-  70 kB,
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a7196c4..02e33f1 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2097,18 +2097,11 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 		tbio->bi_vcnt = vcnt;
+ 		tbio->bi_iter.bi_size = r10_bio->sectors << 9;
+ 		tbio->bi_rw = WRITE;
+-		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-
+-		for (j=0; j < vcnt ; j++) {
+-			tbio->bi_io_vec[j].bv_offset = 0;
+-			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
+-
+-			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-			       page_address(fbio->bi_io_vec[j].bv_page),
+-			       PAGE_SIZE);
+-		}
+ 		tbio->bi_end_io = end_sync_write;
++		tbio->bi_private = r10_bio;
++
++		bio_copy_data(tbio, fbio);
+ 
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+@@ -2124,17 +2117,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 * that are active
+ 	 */
+ 	for (i = 0; i < conf->copies; i++) {
+-		int j, d;
++		int d;
+ 
+ 		tbio = r10_bio->devs[i].repl_bio;
+ 		if (!tbio || !tbio->bi_end_io)
+ 			continue;
+ 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
+ 		    && r10_bio->devs[i].bio != fbio)
+-			for (j = 0; j < vcnt; j++)
+-				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-				       page_address(fbio->bi_io_vec[j].bv_page),
+-				       PAGE_SIZE);
++			bio_copy_data(tbio, fbio);
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&r10_bio->remaining);
+ 		md_sync_acct(conf->mirrors[d].replacement->bdev,
+-- 
+1.9.1
 
-- sdd1 is identical to sda1 and sdb1 except for about 67,000
-  differences in the last 70 kB.
-
-- sdc1 is grossly out of sync with about 300 million differences
-  with the others, all of them in the first 450 MB or so.
-
-I'm not sure what to make of this. The knee-jerk thought would
-be "/dev/sdc1 is the odd man out so sdc must be faulty". But
-that disk participates in other arrays without problems, I don't
-see anything obviously bad in its SMART data and the kernel
-messages just before the remount were actually about sda.
-
-To be honest, I don't have a clear idea of how things got where 
-they are. Since writing to a RAID-1 array writes the same data
-to all devices, how can you have so many differences ?
