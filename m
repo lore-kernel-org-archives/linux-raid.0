@@ -1,32 +1,45 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: Re: [PATCH] md/raid10: make sync_request_write() call bio_copy_data()
-Date: Sat, 25 Apr 2015 22:42:46 -0700
-Message-ID: <CAF1ivSYhyDnU-Xzi3utoigk0w9N89hbkampCfmeUqMxd4FMtug@mail.gmail.com>
-References: <1429915930-22449-1-git-send-email-mlin@kernel.org>
-	<20150425094726.GB14363@infradead.org>
+From: Jean-Baptiste Thomas <cau2jeaf1honoq@laposte.net>
+Subject: Re: Massive RAID-1 desync
+Date: Sun, 26 Apr 2015 10:48:37 +0200 (CEST)
+Message-ID: <824955940.20886272.1430038117467.JavaMail.zimbra@laposte.net>
+References: <1919189912.18202330.1429908372364.JavaMail.zimbra@laposte.net> <1810942606.18204832.1429908469113.JavaMail.zimbra@laposte.net> <20150425172527.21a34428@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150425094726.GB14363@infradead.org>
+In-Reply-To: <20150425172527.21a34428@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Neil Brown <neilb@suse.de>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 25, 2015 at 2:47 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Apr 24, 2015 at 03:52:10PM -0700, Ming Lin wrote:
->> From: Kent Overstreet <kent.overstreet@gmail.com>
->>
->> Refactor sync_request_write() of md/raid10 to use bio_copy_data()
->> instead of open coding bio_vec iterations.
->
-> Do you plan to submit an updated version of the immutable biovecs set
-> soon?  In that case it would be good to merge this patch through
-> the block tree, as it's a requirement for it AFAICS.  Might be worth to
-> repost them together.
+On 2015-04-25 17:25 +1000, NeilBrown wrote:
 
-I have put the immutable biovecs set here:
-https://git.kernel.org/cgit/linux/kernel/git/mlin/linux.git/log/?h=block-generic-req
-Will add this patch also.
+> Perfectly normal.  Metadata is at the end, at least 64K from the end
+> and 64K aligned.
 
-I'll submit the patch set soon after running some tests.
+Yes. Format 0.90.
+
+> And what were those messages about sda?
+
+The actual messages have been displaced by lockd's rambling but as I
+remember, it was this sort of thing :
+
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata1.00: BMDMA stat 0x4
+ata1.00: failed command: READ DMA EXT
+ata1.00: cmd 25/00:80:a9:54:70/00:00:74:00:00/e0 tag 0 dma 65536 in
+         res 51/40:00:25:55:70/40:00:74:00:00/e0 Emask 0x9 (media error)
+ata1.00: status: { DRDY ERR }
+ata1.00: error: { UNC }
+ata1.00: configured for UDMA/133
+ata1: EH complete
+
+I ran e2fsck on copies of sda1 and sdc1. They are both heavily damaged,
+not just sdc1.
+
+Looks like I'm going to have to replace a disk and see. I'd like to
+avoid replacing two, though. Or going through more crashes. Does 
+MD have a paranoid mode in which reading a sector from a RAID-1
+device would not return successfully until it got matching data
+from at least two components ?
