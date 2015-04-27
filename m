@@ -1,63 +1,51 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: <DKIM> Re: Paranoid mode for RAID-1 ?
-Date: Mon, 27 Apr 2015 12:54:17 +0200
-Message-ID: <553E1559.2010305@hesbynett.no>
-References: <972437107.22507366.1430116679975.JavaMail.zimbra@laposte.net> <4ADD42F9-407A-4266-A1FC-B92F3D46C36F@insync.za.net> <743316986.23005258.1430129889889.JavaMail.zimbra@laposte.net>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Help needed recovering from raid failure
+Date: Mon, 27 Apr 2015 13:07:51 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1504271256580.16871@uplift.swm.pp.se>
+References: <4D8713B5-39E7-4EE2-898C-35DC0948B4CA@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <743316986.23005258.1430129889889.JavaMail.zimbra@laposte.net>
+In-Reply-To: <4D8713B5-39E7-4EE2-898C-35DC0948B4CA@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jean-Baptiste Thomas <cau2jeaf1honoq@laposte.net>, Pieter De Wit <pieter@insync.za.net>
+To: Peter van Es <vanes.peter@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/04/15 12:18, Jean-Baptiste Thomas wrote:
-> On 2015-04-27 20:45 +1200, Pieter De Wit wrote:
-> 
->> Sorry for jumping in late - but let's say it does "work" and a
->> drive returns an error, is that data lost ? Or which drive is
->> "right"?
-> 
-> (Assuming that by "returns an error", you mean succeeds but the
-> data does not no match what the other(s) returned.)
 
-The alternative interpretation here is that the drive returns an error
-message saying it couldn't read the sector - then it's just standard
-RAID (get the data from the other disks).  So we are looking here at the
-extremely rare situation where there is an error but the drive (or
-controller) does not detect it.
+> I booted Linux from a USB stick (which is on /dev/sdc1 hence changing the numbering),
+> in recovery mode. Below is the output of /proc/mdstat and
+> mdadm --examine. It looks like somehow the /dev/sdd2 and /dev/sde2 drives took on the
+> super block of the /dev/md127 device (my swap file). May that have been done by the boot from
+> the Ubuntu USB stick?
 
-> 
-> Let's say there is a setting for how many components must agree.
-> If they're not unanimous, read all the other components and look
-> for a majority. The components in the minority are flagged
-> faulty and the array is degraded but the read succeeds.
-> 
-> If there is no majority, retry a few times. If a majority is
-> found, all components which ever were in the minority are
-> flagged faulty and the array is degraded but the read succeeds.
-> 
-> If no majority is found, degrade all components, fail the read
-> and stop the array. Or whatever is needed to prevent all further 
-> writes to this array and let the user investigate.
+Your event counters are strange, 2 drives are showing 18014, and two 
+drives are showing event count of 26. Two drives show an update time of 
+the 26:th, two show update time on the 27:th of April. This doesn't make 
+much sense.
 
-The problem with all of these is that they /might/ be right - but they
-/might/ be wrong and make matters worse.  Even if you have 3 copies of
-the sector, and get two matches and one different, there is no way to
-determine that the odd one is wrong.  Perhaps a common bus or connector
-fault caused the other two to be wrong.  Picking the "majority vote" may
-decrease your chances of losing data (but may not - it depends on the
-cause of the fault), but it certainly does not avoid the worst case
-scenario.  Perhaps the best choice during normal usage (as distinct from
-recovery or rebuild, when the drive is not mounted) is to simply report
-a failure to the layers higher up - that way you won't make matters
-worse by giving returning data.
+If I were you, I would try to make really really sure that I had unplugged 
+the drive that first went offline, then I would use "mdadm --assemble 
+--force <md> <component drives>" to get the array up in degraded mode, I 
+would then mount it read-only and try to copy the most important 
+information onto some other disk. After that you can try to add the new 
+drive you bought and let it re-sync. Most likely this will not work as you 
+most likely have read errors on at least one other drive. You can use 
+"smartctl" from "smartmontolls" to verify. Most likely you will have 
+"pending sectors" which are sectors that can't be read on at least one 
+other drive.
 
+Also, I recommend you do this:
 
-Note that the checksum method (used by btrfs and zfs) is different in
-that it lets the system know exactly which copy was bad even if the
-drive (and bus and controller) think it was good.
+for x in /sys/block/sd[a-z] ; do
+         echo 180  > $x/device/timeout
+done
 
+echo 4096 > /sys/block/md0/md/stripe_cache_size
 
+Change md0 above to your md-device. This will increase your kernel 
+timeouts and lessen the risk that drives will be considered dead when they 
+are only having problems reading a block.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
