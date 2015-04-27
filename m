@@ -1,113 +1,45 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: Re: [PATCH] md/raid10: make sync_request_write() call bio_copy_data()
-Date: Mon, 27 Apr 2015 00:29:50 -0700
-Message-ID: <CAF1ivSbivZ=FxRH9sxA1qVoGp-C84bNWrUfrM4qvA7P=Q2+pYQ@mail.gmail.com>
-References: <1429915930-22449-1-git-send-email-mlin@kernel.org>
-	<20150427094911.0f71b986@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Paranoid mode for RAID-1 ?
+Date: Mon, 27 Apr 2015 09:35:43 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1504270925480.16871@uplift.swm.pp.se>
+References: <972437107.22507366.1430116679975.JavaMail.zimbra@laposte.net> <553DDBB3.2010306@websitemanagers.com.au> <553DE20E.2020605@hesbynett.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150427094911.0f71b986@notabene.brown>
+In-Reply-To: <553DE20E.2020605@hesbynett.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>
+To: David Brown <david.brown@hesbynett.no>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 26, 2015 at 4:49 PM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 24 Apr 2015 15:52:10 -0700 Ming Lin <mlin@kernel.org> wrote:
->
->> From: Kent Overstreet <kent.overstreet@gmail.com>
->>
->> Refactor sync_request_write() of md/raid10 to use bio_copy_data()
->> instead of open coding bio_vec iterations.
->>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
->> [dpark: add more description in commit message]
->> Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
->> Signed-off-by: Ming Lin <mlin@kernel.org>
->> ---
->>  drivers/md/raid10.c | 20 +++++---------------
->>  1 file changed, 5 insertions(+), 15 deletions(-)
->>
->> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
->> index a7196c4..02e33f1 100644
->> --- a/drivers/md/raid10.c
->> +++ b/drivers/md/raid10.c
->> @@ -2097,18 +2097,11 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>               tbio->bi_vcnt = vcnt;
->>               tbio->bi_iter.bi_size = r10_bio->sectors << 9;
->>               tbio->bi_rw = WRITE;
->> -             tbio->bi_private = r10_bio;
->>               tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
->> -
->> -             for (j=0; j < vcnt ; j++) {
->> -                     tbio->bi_io_vec[j].bv_offset = 0;
->> -                     tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
->> -
->> -                     memcpy(page_address(tbio->bi_io_vec[j].bv_page),
->> -                            page_address(fbio->bi_io_vec[j].bv_page),
->> -                            PAGE_SIZE);
->> -             }
->
-> You removed the resetting of bv_offset and bv_len.
-> So I assume this is being applied in a context where these things are now
-> immutable - is that correct?
+On Mon, 27 Apr 2015, David Brown wrote:
 
-Correct. The full patchset is here:
-https://git.kernel.org/cgit/linux/kernel/git/mlin/linux.git/log/?h=block-generic-req
+> btrfs has data checksums like that.  Like Neil, I question the necessity 
+> for harddisks, but such checksums are lower cost than reading the data 
+> twice from two disks (as they are stored as part of the metadata that 
+> you already read), and can offer some protection against serious 
+> hardware problems.  (Checksums like this cannot easily be implemented in 
+> a transparent block device such as md raid - it is more practical to 
+> have them as part of the filesystem, as done with btrfs.)
 
-I'll rebase it on top of 4.1-rc1, then post it.
+Only way I can imagine this being done would be for instance to add a 4KiB 
+block for every 128KiB chunk or something like that, and perhaps have a 
+smaller checksum for each 4KiB block within that 128KiB chunk.
 
->
->>               tbio->bi_end_io = end_sync_write;
->> +             tbio->bi_private = r10_bio;
->
-> Any reason you are moving this assignment to bi_private?
-> It doesn't hurt, but it doesn't seem to be necessary.
+I doubt anyone would be interested in putting efforts into creating this 
+though as it would have "interesting" performance drawbacks, and that work 
+is probably better spent by making sure that btrfs and/or zfs gets more 
+development/testing than it is to put that effort into md. I personally 
+prefer md to be fairly "simple" so we have as few bugs as possible in it, 
+I'd say that md generally works and the number of developers working 
+heroically on its current incarnation is barely enough to make sure that 
+the codebase works as well as it must considering the critical function it 
+serves for a lot of us.
 
-I'll update it to where it was.
+This has been discussed before and nobody has shown interest in actually 
+developing code for it, so we're still at the feature request and 
+"brainstorming about design" state, and without actual coder(s) willing to 
+actually implement, it's not going to get further than this stage.
 
->
->
->> +
->> +             bio_copy_data(tbio, fbio);
->>
->>               d = r10_bio->devs[i].devnum;
->>               atomic_inc(&conf->mirrors[d].rdev->nr_pending);
->> @@ -2124,17 +2117,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
->>        * that are active
->>        */
->>       for (i = 0; i < conf->copies; i++) {
->> -             int j, d;
->> +             int d;
->>
->>               tbio = r10_bio->devs[i].repl_bio;
->>               if (!tbio || !tbio->bi_end_io)
->>                       continue;
->>               if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
->>                   && r10_bio->devs[i].bio != fbio)
->> -                     for (j = 0; j < vcnt; j++)
->> -                             memcpy(page_address(tbio->bi_io_vec[j].bv_page),
->> -                                    page_address(fbio->bi_io_vec[j].bv_page),
->> -                                    PAGE_SIZE);
->> +                     bio_copy_data(tbio, fbio);
->>               d = r10_bio->devs[i].devnum;
->>               atomic_inc(&r10_bio->remaining);
->>               md_sync_acct(conf->mirrors[d].replacement->bdev,
->
-> Providing you are confident that bv_offset and bv_len don't need to be
-> updated:
->
->  Acked-by: NeilBrown <neilb@suse.de>
->
-> though I'd prefer the bi_private assignment was left where it was.
-
-Will update it.
-
-Thanks.
-
->
-> Thanks,
-> NeilBrown
->
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
