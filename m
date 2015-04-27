@@ -1,164 +1,134 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: PROBLEM: write to jbod with 3TB and 160GB drives hits BUG/oops
-Date: Mon, 27 Apr 2015 11:11:59 +1000
-Message-ID: <20150427111159.46b9781a@notabene.brown>
-References: <55398462.1000202@cox.net>
-	<KdvS1q00X1hjKLY01dvTMG>
-	<553AA35A.5050300@cox.net>
+Subject: Re: BUG?: RAID6 reshape hung in reshape_request
+Date: Mon, 27 Apr 2015 11:20:56 +1000
+Message-ID: <20150427112056.7195d226@notabene.brown>
+References: <CAGivzjGyifS3r0rypqM7n2P-fcA7NvPjJWa6kV_wfGx2biDrDg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/_=GCmFhDkMSHjzHTrb.2L1u"; protocol="application/pgp-signature"
+ boundary="Sig_/n+b4Jhf+2ZOE3IEVQR/d.Lf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <553AA35A.5050300@cox.net>
+In-Reply-To: <CAGivzjGyifS3r0rypqM7n2P-fcA7NvPjJWa6kV_wfGx2biDrDg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Charles Bertsch <cbertsch@cox.net>
-Cc: linux-raid@vger.kernel.org, "BertschC@acm.org" <BertschC@acm.org>
+To: David Wahler <dwahler@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/_=GCmFhDkMSHjzHTrb.2L1u
+--Sig_/n+b4Jhf+2ZOE3IEVQR/d.Lf
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 24 Apr 2015 13:11:06 -0700 Charles Bertsch <cbertsch@cox.net> wrote:
+On Sat, 25 Apr 2015 16:35:24 -0500 David Wahler <dwahler@gmail.com> wrote:
 
-> On 04/23/2015 06:55 PM, NeilBrown wrote:
-> >
-> > By "jbod" I assume you mean "linear array".
-> >
-> > You say this happens without any filesystem on the array, yet the stack
-> > traces clearly show ext2 in use.
-> > Maybe some weird interaction is happening between the the filesystem an=
-d the
-> > linear array.
-> > But please confirm that the stack trace happened when there was no file=
-system
-> > on the array you were testing, and report what filesystems you do have =
-which
-> > use ext2.
-> >
-> Neil --
-> Yes, I do mean linear array.
+> Hi,
 >=20
-> At the point of the stack trace, there was no file-system on the linear=20
-> 2-drive array.  The test-jbod-2 script would create the array and then=20
-> write directly to /dev/md0.  Any evidence of previous existence of a=20
-> file-system would have been obliterated by earlier runs copying=20
-> /dev/zero everywhere.
+> I'm trying to reshape a 4-disk RAID6 array by adding a fifth "missing"
+> drive. Maybe that's a weird thing to do, so for context: I'm
+> converting from a 3-disk RAID10, by creating a new RAID6 with the
+> three new disks and then moving disks one at a time between the
+> arrays. I did it this way so that I could test for problems with the
+> reshape procedure before irrevocably modifying more than one of the
+> original disks.
 >=20
-> The file-systems in use --
-> -- The rootfs is an initrd file, squashfs, and mounted read-only.
-> -- An ext3 for configuration and logs is mounted RW on /flash
-> -- An ext2 using 8MB of RAM is mounted RW on /var
-> -- The file-server is derived from a much earlier design that required=20
-> some RW directories within the root.  These entries appear in the mount=20
-> command as ext2, but are part of /var (and not separate file systems) --
-> -- mount --bind /var/hd /hd
-> -- mount --bind /var/home /home
+> (I do also have an offsite backup of the most important data, but it's
+> inconvenient to access and I'm hoping not to need it.)
 >=20
-> -- A devtmpfs mounted on /dev, tmpfs on /dev/shm, proc on /proc, sysfs=20
-> on /sys, and another mount --bind from within /flash for nfs.
+> Anyway, the reshape was going fine until about 70% completion, and
+> then it got stuck. I've tried rebooting a few times: the array can be
+> assembled in read-only mode, but as soon as it goes read-write and the
+> reshape process continues, it gets through a few megabytes and hangs.
+> At that point, any other process that tries to access the array also
+> hangs uninterruptibly.
 >=20
-> # mount
-> /dev/root on / type squashfs (ro,relatime)
-> devtmpfs on /dev type devtmpfs=20
-> (rw,relatime,size=3D1002600k,nr_inodes=3D250650,mode=3D755)
-> proc on /proc type proc (rw,relatime)
-> sysfs on /sys type sysfs (rw,relatime)
-> /dev/ram1 on /var type ext2 (rw,relatime,errors=3Dcontinue)
-> /dev/ram1 on /hd type ext2 (rw,relatime,errors=3Dcontinue)
-> /dev/ram1 on /home type ext2 (rw,relatime,errors=3Dcontinue)
-> tmpfs on /dev/shm type tmpfs (rw,relatime)
-> /dev/sdb1 on /flash type ext3=20
-> (rw,noatime,errors=3Dcontinue,commit=3D60,barrier=3D1,data=3Dordered)
-> /dev/sdb1 on /var/lib/nfs type ext3=20
-> (rw,noatime,errors=3Dcontinue,commit=3D60,barrier=3D1,data=3Dordered)
-> nfsd on /proc/fs/nfsd type nfsd (rw,relatime)
-> #
-
-Thanks for the details.
-On the whole, I don't think it is likely that your problem is directly
-related to md - just a coincidence that it happened when you were using md
-things.  But one never knows until that actual cause is found.
-
+> Here's what shows up in dmesg:
 >=20
->  > Is there any chance you could use "git bisect" to find out exactly whi=
-ch
->  > commit introduced the problem?  That is the mostly likely path to a=20
-> solution.
->  >
+> [  721.183225] INFO: task md127_resync:1730 blocked for more than 120 sec=
+onds.
+> [  721.183978]       Not tainted 4.0.0 #1
+> [  721.184751] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [  721.185514] md127_resync    D ffff88042ea94440     0  1730      2 0x00=
+000000
+> [  721.185516]  ffff88041a24ed20 0000000000000400 ffff88041ca82a20
+> 0000000000000246
+> [  721.185518]  ffff8800b8b5ffd8 ffff8800b8b5fbf0 ffff880419035a30
+> 0000000000000004
+> [  721.185519]  ffff8800b8b5fd1c ffff88040e91d000 ffffffff8155c73f
+> ffff880419035800
+> [  721.185520] Call Trace:
+> [  721.185526]  [<ffffffff8155c73f>] ? schedule+0x2f/0x80
+> [  721.185530]  [<ffffffffa0888390>] ? reshape_request+0x1e0/0x8f0 [raid4=
+56]
+> [  721.185533]  [<ffffffff810a86f0>] ? wait_woken+0x90/0x90
+> [  721.185535]  [<ffffffffa0888dae>] ? sync_request+0x30e/0x390 [raid456]
+> [  721.185547]  [<ffffffffa02cbf89>] ? is_mddev_idle+0xc9/0x130 [md_mod]
+> [  721.185550]  [<ffffffffa02cf432>] ? md_do_sync+0x802/0xd30 [md_mod]
+> [  721.185555]  [<ffffffff8101c356>] ? native_sched_clock+0x26/0x90
+> [  721.185558]  [<ffffffffa02cbb30>] ? md_safemode_timeout+0x50/0x50 [md_=
+mod]
+> [  721.185561]  [<ffffffffa02cbc56>] ? md_thread+0x126/0x130 [md_mod]
+> [  721.185563]  [<ffffffff8155c0c0>] ? __schedule+0x2a0/0x8f0
+> [  721.185565]  [<ffffffffa02cbb30>] ? md_safemode_timeout+0x50/0x50 [md_=
+mod]
+> [  721.185568]  [<ffffffff81089403>] ? kthread+0xd3/0xf0
+> [  721.185570]  [<ffffffff81089330>] ? kthread_create_on_node+0x180/0x180
+> [  721.185572]  [<ffffffff81560598>] ? ret_from_fork+0x58/0x90
+> [  721.185574]  [<ffffffff81089330>] ? kthread_create_on_node+0x180/0x180
 >=20
->=20
-> I am not familiar with "git bisect".  Would this be similar to=20
-> downloading a series of kernel releases from linux-3.3.5 up to 3.18.5=20
-> using a binary search to find which release (rather than which commit)=20
-> has the problem ?
+> And the output of mdadm --detail/-E:
+> https://gist.github.com/anonymous/0b090668b56ef54bb2f0
 
-Similar, but (some of) the boring work is all done for you.
+What is wrong with simply including this directly in the email???
 
-It would be best to stick to mainline kernels for testing.  i.e. just '3.x',
-not '3.x.y'.
+Anyway:
 
-So presumably 3.3 works, and 3.18 fails.
-In that case:
+  Bad Block Log : 512 entries available at offset 72 sectors - bad blocks p=
+resent.
 
-   git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux
-   cd linux
-   git bisect start
-   git bisect good v3.3
-   git bisect bad v3.18
-
-That should get you started, except that it seems to take an incredibly long
-time.  So probably do the first few steps by hand.
-e.g
-
-   git checkout v3.10
-
-and test that.  Then try v3.7 or v3.14.
-
-Once you know which of those are good or bad, run e.g.
-  git bisect start
-  git bisect good v3.7
-  git bisect bad v3.10
-
-and that will checkout a kernel somewhere in the middle and tell you there
-are 14 (or so) steps to go.
-
-Then build and test the kernel. If it is good, run "git bisect good".
-If bad, "git bisect bad".
-
-If you can persist through testing over a dozen kernels (takes some
-patience!!) it should lead you to the commit that introduced the problem.
-It is always best to be caution before declaring a kernel 'good' - run the
-test a few times.
-
->=20
-> Thanks
->=20
-> Charles Bertsch
-
+that is the only thing that looks at all interesting.  Particularly the last
+3 words.
+What does
+   mdadm --examine-badblocks /dev/sd[cde]1
+show?
 
 NeilBrown
 
---Sig_/_=GCmFhDkMSHjzHTrb.2L1u
+
+>=20
+> I was originally running a Debian 3.16.0 kernel, and then upgraded to
+> 4.0 to see if it would help, but no such luck.
+>=20
+> Does anyone have any suggestions? Since the data on the array seems to
+> be fine, hopefully there's a solution that doesn't involve re-creating
+> it from scratch and restoring from backups.
+>=20
+> Thanks,
+> -- David
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/n+b4Jhf+2ZOE3IEVQR/d.Lf
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVT2M3znsnt1WYoG5AQIauhAAxJz1jKeqkty81UV4dVs4x8J4QMC6oSVs
-YGfuifC8k0aO7ArppLmPU9BLIcYb85OXK7gjZd5gLizgOICl6USF76FdaOe1w6mW
-mDYWjh6nkkIOJmEl4Jc+MqID7Kqo06lVK3D8QZOZN6uu5+36SWUpAFzXoYI7FwJ9
-aKIHZIWMr4R/tS6VPlxbiOsgpvyCClR1EdoZ8jHc7prHxJr0POzcQ49MauWh1YWN
-QqTXwTHNrOW3ZhhrtQJs/MUwS2udYtBrhKBrX0/RPk1dlewqgFLyjhpYmdKM6Y7B
-uZgzD50G99TDi9J2gNnrFGwhMPTGBx8Dzxp4L5s0K9I+I+GhaO4r7gbxv9yKM5fx
-eAyTO1koEvgalj1NgLOr32J8KExdFAMQpghbVN3MN0SDHhxwSY37nomS1N/X8g1p
-NpJjz4HkvUDd74av7K7X2oIegJ8hPvUGH+BYGNuJIIq5GqJDCQuuKwvaaY1usVFw
-ZbllQ6RmkUpEyERk6DJjBIXX+QVn/EXKNi9RKvsE5dDL4tdIJ7MleEwmTWUfuvi1
-6G9q18ao49R91zVDaJGpCo1uI3hJpFTreRGFPLs7rkp0xuXbOV8BHi/i4rz56as+
-Akv9UKaRkS7Py2EmH+iFIMnMruOGNjT7pSdmGAvsG7ohWZPH4a9VmCOXPxqMTNTK
-EONdEMrZ9Hw=
-=DKD2
+iQIVAwUBVT2O+Dnsnt1WYoG5AQKPbBAAmXjelMWIx37dH0Wa0eMGH9bktvOolksb
+JSb4b0gEPL95l0IqmuYBR4wNkjnALQsJ1+3THgFdB8/nhKSKOz43aepeZCsPYa9C
+WXwhS4D6znE9VDWhbtBqn6h3oKr/+8YW3eEe12+7CxDdio8UcBjRiIThENfLb0eu
+Vvl/mvvwAHqX6wxb20f4mAO7QRh/Ec39lHYZPSlGMqrNgbxPDhvoY61X00YECpDO
+UF0ZBSLQgI1DibydGGkBA9SnbWle+IYO2/cI1q+VleebFG05cPatSdXd3lOLwge5
+rxHwW7IUHFYdPkauzyhO8A9xovYDGqqC+XsFCHBZnzXw6HDj8nTT+T+ciDnJCCcL
+LIo6aABVSeJrPEikLXw8Gpo3lPE1N+aGDGBcTpdTJn6wwP9x2rfH/D/PvUVrv0BH
+cpbymNvHj7wTDe+2muNhkoXCazFJR9WvjpAg2cncOWCw3BZNgh6RDLThFrZkzs+4
+cD3gVUGpQyJOlcrw1hS5BAVp3Kx7es49KpcTU2TeehQhwAqdhWae13NtQRRQ8PnS
+joR4tRSjf3oa0omHhgvidjS2vmsBuCPlRx8nrdHwCh4ahh/ZTGLi+T8KaO2YyKXt
+o08RuKEKRMIlWW5OUSy6ChmFLreWOwpHbtkhowJ/tvGNwroqPOg33JTVyTqVScXR
+kdOJPfEgfBM=
+=R/zE
 -----END PGP SIGNATURE-----
 
---Sig_/_=GCmFhDkMSHjzHTrb.2L1u--
+--Sig_/n+b4Jhf+2ZOE3IEVQR/d.Lf--
