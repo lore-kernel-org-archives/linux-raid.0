@@ -1,198 +1,312 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md/raid5: split wait_for_stripe and introduce
- wait_for_quiesce
-Date: Mon, 27 Apr 2015 10:10:24 +1000
-Message-ID: <20150427101024.2ae8edc1@notabene.brown>
+Subject: Re: [PATCH 2/2] md/raid5: exclusive wait_for_stripe
+Date: Mon, 27 Apr 2015 10:24:05 +1000
+Message-ID: <20150427102405.40dc2ada@notabene.brown>
 References: <1429882744-22655-1-git-send-email-yuanhan.liu@linux.intel.com>
+	<1429882744-22655-2-git-send-email-yuanhan.liu@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/ZYTk5RCo12++fE0WKvVT2/7"; protocol="application/pgp-signature"
+ boundary="Sig_/NDPMbUGQVWMebP=dsXILQkz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1429882744-22655-1-git-send-email-yuanhan.liu@linux.intel.com>
+In-Reply-To: <1429882744-22655-2-git-send-email-yuanhan.liu@linux.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ZYTk5RCo12++fE0WKvVT2/7
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/NDPMbUGQVWMebP=dsXILQkz
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 24 Apr 2015 21:39:03 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
+On Fri, 24 Apr 2015 21:39:04 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
 wrote:
 
-> If I read code correctly, current wait_for_stripe actually has 2 usage:
+> I noticed heavy spin lock contention at get_active_stripe() with fsmark
+> multiple thread write workloads.
 >=20
-> - wait for there is enough free stripe cache, triggered when
->   get_free_stripe() failed. This is what wait_for_stripe intend
->   for literally.
+> Here is how this hot contention comes from. We have limited stripes, and
+> it's a multiple thread write workload. Hence, those stripes will be taken
+> soon, which puts later processes to sleep for waiting free stripes. When
+> enough stripes(> 1/4 total stripes) are released, all process are woken,
+> trying to get the lock. But there is one only being able to get this lock
+> for each hash lock, making other processes spinning out there for acquiri=
+ng
+> the lock.
 >=20
-> - wait for quiesce =3D=3D 0 or
->            active_aligned_reads =3D=3D 0 && active_stripes =3D=3D 0
+> Thus, it's effectiveless to wakeup all processes and let them battle for
+> a lock that permits one to access only each time. Instead, we could make
+> it be a exclusive wake up: wake up one process only. That avoids the heavy
+> spin lock contention naturally.
 >=20
->   It has nothing to do with wait_for_stripe literally, and releasing
->   an active stripe won't actually wake them up. On the contrary, wake_up
->   from under this case won't actually wake up the process waiting for
->   an free stripe being available.
-
-I disagree.  Releasing an active stripe *will* (or *can*) wake up that third
-case, as it decrements "active_stripes" which will eventually reach zero.
-
-I don't think your new code will properly wake up a process which is waiting
-for "active_stripes =3D=3D 0".
-
+> Here are some test results I have got with this patch applied(all test run
+> 3 times):
 >=20
-> Hence, we'd better split wait_for_stripe, and here I introduce
-> wait_for_quiesce for the second usage. The name may not well taken, or
-> even taken wrongly. Feel free to correct me then.
+> `fsmark.files_per_sec'
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 >=20
-> This is also a prepare patch for next patch: make wait_for_stripe
-> exclusive.
+> next-20150317                 this patch
+> -------------------------     -------------------------
+> metric_value     =C2=B1stddev      metric_value     =C2=B1stddev     chan=
+ge      testbox/benchmark/testcase-params
+> -------------------------     -------------------------   --------     --=
+----------------------------
+>       25.600     =C2=B10.0              92.700     =C2=B12.5          262=
+.1%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-btrfs-4M-30G-fsyncBeforeClose
+>       25.600     =C2=B10.0              77.800     =C2=B10.6          203=
+.9%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-btrfs-4M-30G-fsyncBeforeClose
+>       32.000     =C2=B10.0              93.800     =C2=B11.7          193=
+.1%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-ext4-4M-30G-fsyncBeforeClose
+>       32.000     =C2=B10.0              81.233     =C2=B11.7          153=
+.9%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-ext4-4M-30G-fsyncBeforeClose
+>       48.800     =C2=B114.5             99.667     =C2=B12.0          104=
+.2%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-xfs-4M-30G-fsyncBeforeClose
+>        6.400     =C2=B10.0              12.800     =C2=B10.0          100=
+.0%     ivb44/fsmark/1x-64t-3HDD-RAID5-btrfs-4M-40G-fsyncBeforeClose
+>       63.133     =C2=B18.2              82.800     =C2=B10.7           31=
+.2%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-xfs-4M-30G-fsyncBeforeClose
+>      245.067     =C2=B10.7             306.567     =C2=B17.9           25=
+.1%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-f2fs-4M-30G-fsyncBeforeClose
+>       17.533     =C2=B10.3              21.000     =C2=B10.8           19=
+.8%     ivb44/fsmark/1x-1t-3HDD-RAID5-xfs-4M-40G-fsyncBeforeClose
+>      188.167     =C2=B11.9             215.033     =C2=B13.1           14=
+.3%     ivb44/fsmark/1x-1t-4BRD_12G-RAID5-btrfs-4M-30G-NoSync
+>      254.500     =C2=B11.8             290.733     =C2=B12.4           14=
+.2%     ivb44/fsmark/1x-1t-9BRD_6G-RAID5-btrfs-4M-30G-NoSync
+>=20
+> `time.system_time'
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> next-20150317                 this patch
+> -------------------------    -------------------------
+> metric_value     =C2=B1stddev     metric_value     =C2=B1stddev     chang=
+e       testbox/benchmark/testcase-params
+> -------------------------    -------------------------    --------     --=
+----------------------------
+>     7235.603     =C2=B11.2             185.163     =C2=B11.9          -97=
+.4%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-btrfs-4M-30G-fsyncBeforeClose
+>     7666.883     =C2=B12.9             202.750     =C2=B11.0          -97=
+.4%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-btrfs-4M-30G-fsyncBeforeClose
+>    14567.893     =C2=B10.7             421.230     =C2=B10.4          -97=
+.1%     ivb44/fsmark/1x-64t-3HDD-RAID5-btrfs-4M-40G-fsyncBeforeClose
+>     3697.667     =C2=B114.0            148.190     =C2=B11.7          -96=
+.0%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-xfs-4M-30G-fsyncBeforeClose
+>     5572.867     =C2=B13.8             310.717     =C2=B11.4          -94=
+.4%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-ext4-4M-30G-fsyncBeforeClose
+>     5565.050     =C2=B10.5             313.277     =C2=B11.5          -94=
+.4%     ivb44/fsmark/1x-64t-4BRD_12G-RAID5-ext4-4M-30G-fsyncBeforeClose
+>     2420.707     =C2=B117.1            171.043     =C2=B12.7          -92=
+.9%     ivb44/fsmark/1x-64t-9BRD_6G-RAID5-xfs-4M-30G-fsyncBeforeClose
+>     3743.300     =C2=B14.6             379.827     =C2=B13.5          -89=
+.9%     ivb44/fsmark/1x-64t-3HDD-RAID5-ext4-4M-40G-fsyncBeforeClose
+>     3308.687     =C2=B16.3             363.050     =C2=B12.0          -89=
+.0%     ivb44/fsmark/1x-64t-3HDD-RAID5-xfs-4M-40G-fsyncBeforeClose
+>=20
+> Where,
+>=20
+>      1x: where 'x' means iterations or loop, corresponding to the 'L' opt=
+ion of fsmark
+>=20
+>      1t, 64t: where 't' means thread
+>=20
+>      4M: means the single file size, corresponding to the '-s' option of =
+fsmark
+>      40G, 30G, 120G: means the total test size
+>=20
+>      4BRD_12G: BRD is the ramdisk, where '4' means 4 ramdisk, and where '=
+12G' means
+>                the size of one ramdisk. So, it would be 48G in total. And=
+ we made a
+>                raid on those ramdisk
+>=20
+> As you can see, though there are no much performance gain for hard disk
+> workload, the system time is dropped heavily, up to 97%. And as expected,
+> the performance increased a lot, up to 260%, for fast device(ram disk).
+>=20
+> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> ---
+>  drivers/md/raid5.c | 46 +++++++++++++++++++++++++++++++++++-----------
+>  drivers/md/raid5.h |  2 +-
+>  2 files changed, 36 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index b7e385f..2d8fcc1 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -344,7 +344,8 @@ static void release_inactive_stripe_list(struct r5con=
+f *conf,
+>  					 int hash)
+>  {
+>  	int size;
+> -	bool do_wakeup =3D false;
+> +	bool do_wakeup[NR_STRIPE_HASH_LOCKS] =3D { false, };
 
-I think you have this commit description upside down :-)
+I think I'd rather use an 'unsigned long' and set bits.
 
-The real motivation is that you are seeing contention on some spinlock and =
-so
-you want to split 'wait_for_stripe' up in to multiple wait_queues so that y=
-ou
-can use exclusive wakeup.  As this is the main motivation, it should be
-stated first.
+> +	int i =3D 0;
+>  	unsigned long flags;
+> =20
+>  	if (hash =3D=3D NR_STRIPE_HASH_LOCKS) {
+> @@ -365,17 +366,22 @@ static void release_inactive_stripe_list(struct r5c=
+onf *conf,
+>  			    !list_empty(list))
+>  				atomic_dec(&conf->empty_inactive_list_nr);
+>  			list_splice_tail_init(list, conf->inactive_list + hash);
+> -			do_wakeup =3D true;
+> +			do_wakeup[size - 1] =3D true;
 
-Then explain that 'wait_for_stripe' is used to wait for the array to enter =
-or
-leave the quiescent state, and also to wait for an available stripe in each
-of the hash lists.
+... so this becomes
+	do_wakeup |=3D 1 << (size - 1);
 
-So this patch splits the first usage off into a separate wait_queue, and the
-next patch will split the second usage into one waitqueue for each hash val=
-ue.
+>  			spin_unlock_irqrestore(conf->hash_locks + hash, flags);
+>  		}
+>  		size--;
+>  		hash--;
+>  	}
+> =20
+> -	if (do_wakeup) {
+> -		wake_up(&conf->wait_for_stripe);
+> -		if (conf->retry_read_aligned)
+> -			md_wakeup_thread(conf->mddev->thread);
+> +	for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++) {
+> +		bool waked_thread =3D false;
+> +		if (do_wakeup[i]) {
+> +			wake_up(&conf->wait_for_stripe[i]);
+> +			if (!waked_thread) {
+> +				waked_thread =3D true;
+> +				md_wakeup_thread(conf->mddev->thread);
+> +			}
+> +		}
 
-Then explain just is what is needed for that first step.
+I don't think you want waked_thread to be local to this loop.
+As it is, the "if (!waked_thread)" test *always* succeeds.
 
-When you put it that way around, the patch makes lots of sense.
+You can discard it if do_wakeup becomes and unsigned long, and just do
 
-So: could you please resubmit with the description the right way around, and
-with an appropriate wakeup call to ensure raid5_quiesce is woken up when
-active_stripes reaches zero?
+ if (do_wakeup && conf->retry_read_aligned)
+	md_wakeup_thread(conf->mddev->thread);
+
+And why have you removed the test on conf->retry_read_aligned??
+
+>  	}
+>  }
+> =20
+> @@ -655,6 +661,18 @@ static int has_failed(struct r5conf *conf)
+>  	return 0;
+>  }
+> =20
+> +/* XXX: might put it to linux/wait.h to be a public API? */
+
+Yes, definitely put it in linux/wait.h
+
 
 Thanks,
 NeilBrown
 
 
->=20
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> ---
->  drivers/md/raid5.c | 13 +++++++------
->  drivers/md/raid5.h |  1 +
->  2 files changed, 8 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 9716319..b7e385f 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -667,7 +667,7 @@ get_active_stripe(struct r5conf *conf, sector_t secto=
+
+
+> +#define raid_wait_event_exclusive_cmd(wq, condition, cmd1, cmd2)	\
+> +do {									\
+> +	if (condition)							\
+> +		break;							\
+> +	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 1, 0,	\
+> +			    cmd1;					\
+> +			    schedule();					\
+> +			    cmd2);					\
+> +} while (0)
+> +
+> +
+>  static struct stripe_head *
+>  get_active_stripe(struct r5conf *conf, sector_t sector,
+>  		  int previous, int noblock, int noquiesce)
+> @@ -684,14 +702,15 @@ get_active_stripe(struct r5conf *conf, sector_t sec=
+tor,
+>  			if (!sh) {
+>  				set_bit(R5_INACTIVE_BLOCKED,
+>  					&conf->cache_state);
+> -				wait_event_lock_irq(
+> -					conf->wait_for_stripe,
+> +				raid_wait_event_exclusive_cmd(
+> +					conf->wait_for_stripe[hash],
+>  					!list_empty(conf->inactive_list + hash) &&
+>  					(atomic_read(&conf->active_stripes)
+>  					 < (conf->max_nr_stripes * 3 / 4)
+>  					 || !test_bit(R5_INACTIVE_BLOCKED,
+>  						      &conf->cache_state)),
+> -					*(conf->hash_locks + hash));
+> +					spin_unlock_irq(conf->hash_locks + hash),
+> +					spin_lock_irq(conf->hash_locks + hash));
+>  				clear_bit(R5_INACTIVE_BLOCKED,
+>  					  &conf->cache_state);
+>  			} else {
+> @@ -716,6 +735,9 @@ get_active_stripe(struct r5conf *conf, sector_t secto=
 r,
->  	spin_lock_irq(conf->hash_locks + hash);
+>  		}
+>  	} while (sh =3D=3D NULL);
 > =20
->  	do {
-> -		wait_event_lock_irq(conf->wait_for_stripe,
-> +		wait_event_lock_irq(conf->wait_for_quiesce,
->  				    conf->quiesce =3D=3D 0 || noquiesce,
->  				    *(conf->hash_locks + hash));
->  		sh =3D __find_stripe(conf, sector, conf->generation - previous);
-> @@ -4725,7 +4725,7 @@ static void raid5_align_endio(struct bio *bi, int e=
-rror)
->  					 raid_bi, 0);
->  		bio_endio(raid_bi, 0);
->  		if (atomic_dec_and_test(&conf->active_aligned_reads))
-> -			wake_up(&conf->wait_for_stripe);
-> +			wake_up(&conf->wait_for_quiesce);
->  		return;
->  	}
-> =20
-> @@ -4820,7 +4820,7 @@ static int chunk_aligned_read(struct mddev *mddev, =
-struct bio * raid_bio)
->  		align_bi->bi_iter.bi_sector +=3D rdev->data_offset;
-> =20
->  		spin_lock_irq(&conf->device_lock);
-> -		wait_event_lock_irq(conf->wait_for_stripe,
-> +		wait_event_lock_irq(conf->wait_for_quiesce,
->  				    conf->quiesce =3D=3D 0,
->  				    conf->device_lock);
->  		atomic_inc(&conf->active_aligned_reads);
-> @@ -5659,7 +5659,7 @@ static int  retry_aligned_read(struct r5conf *conf,=
- struct bio *raid_bio)
->  		bio_endio(raid_bio, 0);
->  	}
->  	if (atomic_dec_and_test(&conf->active_aligned_reads))
-> -		wake_up(&conf->wait_for_stripe);
-> +		wake_up(&conf->wait_for_quiesce);
->  	return handled;
+> +	if (!list_empty(conf->inactive_list + hash))
+> +		wake_up(&conf->wait_for_stripe[hash]);
+> +
+>  	spin_unlock_irq(conf->hash_locks + hash);
+>  	return sh;
 >  }
-> =20
-> @@ -6390,6 +6390,7 @@ static struct r5conf *setup_conf(struct mddev *mdde=
+> @@ -2136,7 +2158,7 @@ static int resize_stripes(struct r5conf *conf, int =
+newsize)
+>  	cnt =3D 0;
+>  	list_for_each_entry(nsh, &newstripes, lru) {
+>  		lock_device_hash_lock(conf, hash);
+> -		wait_event_cmd(conf->wait_for_stripe,
+> +		raid_wait_event_exclusive_cmd(conf->wait_for_stripe[hash],
+>  				    !list_empty(conf->inactive_list + hash),
+>  				    unlock_device_hash_lock(conf, hash),
+>  				    lock_device_hash_lock(conf, hash));
+> @@ -6391,7 +6413,9 @@ static struct r5conf *setup_conf(struct mddev *mdde=
 v)
->  		goto abort;
 >  	spin_lock_init(&conf->device_lock);
 >  	seqcount_init(&conf->gen_lock);
-> +	init_waitqueue_head(&conf->wait_for_quiesce);
->  	init_waitqueue_head(&conf->wait_for_stripe);
+>  	init_waitqueue_head(&conf->wait_for_quiesce);
+> -	init_waitqueue_head(&conf->wait_for_stripe);
+> +	for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++) {
+> +		init_waitqueue_head(&conf->wait_for_stripe[i]);
+> +	}
 >  	init_waitqueue_head(&conf->wait_for_overlap);
 >  	INIT_LIST_HEAD(&conf->handle_list);
-> @@ -7413,7 +7414,7 @@ static void raid5_quiesce(struct mddev *mddev, int =
-state)
->  		 * active stripes can drain
->  		 */
->  		conf->quiesce =3D 2;
-> -		wait_event_cmd(conf->wait_for_stripe,
-> +		wait_event_cmd(conf->wait_for_quiesce,
->  				    atomic_read(&conf->active_stripes) =3D=3D 0 &&
->  				    atomic_read(&conf->active_aligned_reads) =3D=3D 0,
->  				    unlock_all_device_hash_locks_irq(conf),
-> @@ -7427,7 +7428,7 @@ static void raid5_quiesce(struct mddev *mddev, int =
-state)
->  	case 0: /* re-enable writes */
->  		lock_all_device_hash_locks_irq(conf);
->  		conf->quiesce =3D 0;
-> -		wake_up(&conf->wait_for_stripe);
-> +		wake_up(&conf->wait_for_quiesce);
->  		wake_up(&conf->wait_for_overlap);
->  		unlock_all_device_hash_locks_irq(conf);
->  		break;
+>  	INIT_LIST_HEAD(&conf->hold_list);
 > diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> index 7dc0dd8..fab53a3 100644
+> index fab53a3..cdad2d2 100644
 > --- a/drivers/md/raid5.h
 > +++ b/drivers/md/raid5.h
-> @@ -508,6 +508,7 @@ struct r5conf {
->  	struct list_head	inactive_list[NR_STRIPE_HASH_LOCKS];
+> @@ -509,7 +509,7 @@ struct r5conf {
 >  	atomic_t		empty_inactive_list_nr;
 >  	struct llist_head	released_stripes;
-> +	wait_queue_head_t	wait_for_quiesce;
->  	wait_queue_head_t	wait_for_stripe;
+>  	wait_queue_head_t	wait_for_quiesce;
+> -	wait_queue_head_t	wait_for_stripe;
+> +	wait_queue_head_t	wait_for_stripe[NR_STRIPE_HASH_LOCKS];
 >  	wait_queue_head_t	wait_for_overlap;
 >  	unsigned long		cache_state;
+>  #define R5_INACTIVE_BLOCKED	1	/* release of inactive stripes blocked,
 
 
---Sig_/ZYTk5RCo12++fE0WKvVT2/7
+--Sig_/NDPMbUGQVWMebP=dsXILQkz
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVT1+cDnsnt1WYoG5AQKV8xAAwzjwW4GEqRwrgSyPrh+QFVzwZ8G6/kyG
-hfg+H2pGbhg0oSJ9XIjfr52b+y4H46z0wwF72QGoSdumMIOI2IiCE9MsNfEbozLu
-T973rS/AQ1odkNlvpsim6uM38Zw4G6MfMnmauRiOvD6n3qTtfr3w7FbX5eXD9STf
-PXr7n87G9v9cmhJ72l3Hca2FdNWhb5DhI88HaFSlE5LOB9h2TZOTKDWUbR9Jbk8m
-iI5DtLn64hwdyqBOjvFRtp25cNXE5U3Wx9Xb74LrlQddpcb+O/YuUEeA/R/WymjJ
-Yf4JVGC7QJP4nNLc5GxIYZ2gtb59M51QVAZB/94irleqXj7uI9di2QqxosVzASa2
-4v+aRMM6OqbdYJq91e/FOTwoioWSh7t9YJX0WMRAvesOGuBz5js2KYKx2KfZI2Wl
-iCRBjKyZl4rauTlfWFh8erbdlWH3T+galxDictMPCKnHkPO+4LqDBzmheb1mtPPp
-sbyVCdvCMcAId1XFiJdD0cMzcjwnTgvDkB2IiFMCAWab0X794a4ijzg+Etl5WhDL
-JJkfOD8jwHNgv9z3U/Stk7BpcZEa0RB4k42qBBPpt6NbsV/eG8wM1xe1c5elICmT
-03CIppNspR2XNTWfsRB/Kk99cHbew+IxQU57Rd4+0pcnSRWbzVKhP9Xks3qI7qnb
-RftxmW4QeCI=
-=5TB5
+iQIVAwUBVT2BpTnsnt1WYoG5AQIq/BAAwj97ObsLJvGrnnSvTTu6ueAJ76ytwSuC
+wTiDaDKqXhXnYAcs2+Hg68LHkakZW1bvNCq5KxJGT50KZwRsJ81HoMP89Fla67m2
+M6iayEoCR+FNX408yJYPA49LoQM/eHbHJECmqUg4Yx+FdJUSCZpeY9nxK4kp/B33
+zC5uZcA0Q0JeIZX7g21M9EGeE8XoM0a6PqYiFK53j8p1dTJlsHGZo0Nw04IQk/4s
+ldYhPFlsVUP8N08FNNZtPcCeYsqgEcOhdGMEygKOlT9x0w0xPrpTqavKfw1zzbfU
+jHfTFY8WlskGX2sBHaaJ5fYut0J6RZvfwQ9oyW17N50NL34JqA/QzIHmjy0HejwE
+HP4uYF7poGfBRp++Kg9qSrgEQS0sfpKBNKOC6bfFEC1FPezkiPDPCmlJPkHXlqzB
+sF4A2ZlZ239bjJeuPmHsxjiCNaljuJw6ZIZmv1I0eixnyP9v2wzMhRYtFNQ4Vk8+
+7ykzP/Yc8cg9inJBGM5OlCkH5I/gCEaUnZliBmQ2MTCV4cRg48UzOw2RAKMKKtS1
+NJnBBcpBNyQuLqPBRg3MKsgbCKJufjMeLXDFyc7PesdgAksxd0dQcmuMzdPvzNA2
+OWfF/pETTVCBxFnCXIVMa6CpqKQQdNvKxojpJJpzJI4mXQxERKempps8TnlhB3q7
+MCycfzUtChE=
+=ZK+i
 -----END PGP SIGNATURE-----
 
---Sig_/ZYTk5RCo12++fE0WKvVT2/7--
+--Sig_/NDPMbUGQVWMebP=dsXILQkz--
