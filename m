@@ -1,41 +1,62 @@
-From: Pieter De Wit <pieter@insync.za.net>
+From: Roman Mamedov <rm@romanrm.net>
 Subject: Re: Paranoid mode for RAID-1 ?
-Date: Mon, 27 Apr 2015 20:45:57 +1200
-Message-ID: <4ADD42F9-407A-4266-A1FC-B92F3D46C36F@insync.za.net>
+Date: Mon, 27 Apr 2015 14:15:08 +0500
+Message-ID: <20150427141508.7917846a@natsu>
 References: <972437107.22507366.1430116679975.JavaMail.zimbra@laposte.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+	<553DDBB3.2010306@websitemanagers.com.au>
+	<553DE20E.2020605@hesbynett.no>
+	<alpine.DEB.2.02.1504270925480.16871@uplift.swm.pp.se>
+	<553DF0F1.8060608@websitemanagers.com.au>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/E8u6aucPa6krUo_ZXdqoGfM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <972437107.22507366.1430116679975.JavaMail.zimbra@laposte.net>
+In-Reply-To: <553DF0F1.8060608@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry for jumping in late - but let's say it does "work" and a drive returns an error, is that data lost ? Or which drive is "right"?
+--Sig_/E8u6aucPa6krUo_ZXdqoGfM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Sent from my iPhone
+On Mon, 27 Apr 2015 18:18:57 +1000
+Adam Goryachev <mailinglists@websitemanagers.com.au> wrote:
 
-> On 27/04/2015, at 18:37, Jean-Baptiste Thomas <cau2jeaf1honoq@laposte.net> wrote:
-> 
-> I'm looking for a way to get MD to operate in a mode in which
-> reading a sector from a RAID-1 device would not succeed until it
-> got matching data from at least two components.
-> 
-> Recent experience[1] suggests that a transient problem in one
-> disk can completely hose a four way RAID-1 array, which is
-> otherwise supposed to still be fine after a triple total
-> failure. I'm hoping that a paranoid mode would have prevented
-> that.
-> 
-> If there is such a thing, PLEASE tell me. If not, please tell me 
-> so I don't waste any more time looking for it.
-> 
-> [1] "Massive RAID-1 desync"
-> http://www.spinics.net/lists/raid/msg48681.html
-> http://marc.info/?l=linux-raid&m=143003812706563&w=2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Speaking of which, I'm not convinced that we should spend that developer=
+=20
+> time on each and every FS (eg, duplicated effort for btrfs, zfs, and any=
+=20
+> others that do the same)
+
+There isn't "each and every" FS, depending on whom you ask there's just one=
+ FS
+that you should use. :) The filesystem can also do checksums in a smarter w=
+ay,
+e.g. not checksum the free space. And developers of those filesystems aren't
+going to abandon their checksum support or plans to add that just because t=
+he
+underlying block device MIGHT be an MD RAID array of a new weird type.
+
+However one place where adding corruption resilience to MD can be extremely
+interesting and possible almost "for free" (with no disk format change, for
+example), is a constant full verification and corruption-healing RAID6.
+
+--=20
+With respect,
+Roman
+
+--Sig_/E8u6aucPa6krUo_ZXdqoGfM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlU9/hwACgkQTLKSvz+PZwjnLQCfbuWf51rj7uH/AX2YKoM+v/WF
+zeYAni5yD4Abs8XNSLv+2sGX/TiVoPt3
+=oxcA
+-----END PGP SIGNATURE-----
+
+--Sig_/E8u6aucPa6krUo_ZXdqoGfM--
