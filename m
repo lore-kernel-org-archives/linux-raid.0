@@ -1,74 +1,70 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: [PATCH 06/10] md/raid5: get rid of bio_fits_rdev()
-Date: Mon, 27 Apr 2015 23:48:33 -0700
-Message-ID: <1430203717-13307-7-git-send-email-mlin@kernel.org>
-References: <1430203717-13307-1-git-send-email-mlin@kernel.org>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1430203717-13307-1-git-send-email-mlin@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>, Ming Lin <mlin@kernel.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 1/3] wait: introduce wait_event_cmd_exclusive
+Date: Tue, 28 Apr 2015 16:13:15 +0200
+Message-ID: <20150428141315.GD23123@twins.programming.kicks-ass.net>
+References: <1430110263-23977-1-git-send-email-yuanhan.liu@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1430110263-23977-1-git-send-email-yuanhan.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-raid.ids
 
-From: Kent Overstreet <kent.overstreet@gmail.com>
+On Mon, Apr 27, 2015 at 12:51:01PM +0800, Yuanhan Liu wrote:
+> It's just a variant of wait_event_cmd, with exclusive flag being set.
+> 
+> For cases like RAID5, which puts many processes to sleep until 1/4
+> resources are free, a wake_up wakes up all processes to run, but
+> there is one process being able to get the resource as it's protected
+> by a spin lock. That ends up introducing heavy lock contentions, and
+> hurts performance badly.
+> 
+> Here introduce wait_event_cmd_exclusive to relieve the lock contention
+> naturally by letting wake_up() just wake up one process.
+> 
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: Peter Zijlstra <peterz@infradead.org>
+> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> ---
+>  include/linux/wait.h | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux/wait.h b/include/linux/wait.h
+> index 2db8334..6c3b4de 100644
+> --- a/include/linux/wait.h
+> +++ b/include/linux/wait.h
+> @@ -358,10 +358,18 @@ do {									\
+>  	__ret;								\
+>  })
+>  
+> -#define __wait_event_cmd(wq, condition, cmd1, cmd2)			\
+> -	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 0, 0,	\
+> +#define __wait_event_cmd(wq, condition, cmd1, cmd2, exclusive)		\
+> +	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, exclusive, 0, \
+>  			    cmd1; schedule(); cmd2)
+>  
+> +
+> +#define wait_event_cmd_exclusive(wq, condition, cmd1, cmd2)			\
+> +do {									\
+> +	if (condition)							\
+> +		break;							\
+> +	__wait_event_cmd(wq, condition, cmd1, cmd2, 1);			\
+> +} while (0)
+> +
+>  /**
+>   * wait_event_cmd - sleep until a condition gets true
+>   * @wq: the waitqueue to wait on
+> @@ -380,7 +388,7 @@ do {									\
+>  do {									\
+>  	if (condition)							\
+>  		break;							\
+> -	__wait_event_cmd(wq, condition, cmd1, cmd2);			\
+> +	__wait_event_cmd(wq, condition, cmd1, cmd2, 0);			\
+>  } while (0)
+>  
 
-Remove bio_fits_rdev() completely, because ->merge_bvec_fn() has now
-gone. There's no point in calling bio_fits_rdev() only for ensuring
-aligned read from rdev.
-
-Cc: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
-Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
-[dpark: add more description in commit message]
-Signed-off-by: Dongsu Park <dongsu.park@profitbricks.com>
-Signed-off-by: Ming Lin <mlin@kernel.org>
----
- drivers/md/raid5.c | 23 +----------------------
- 1 file changed, 1 insertion(+), 22 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 77dfd72..7f4a717 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4738,25 +4738,6 @@ static void raid5_align_endio(struct bio *bi, int error)
- 	add_bio_to_retry(raid_bi, conf);
- }
- 
--static int bio_fits_rdev(struct bio *bi)
--{
--	struct request_queue *q = bdev_get_queue(bi->bi_bdev);
--
--	if (bio_sectors(bi) > queue_max_sectors(q))
--		return 0;
--	blk_recount_segments(q, bi);
--	if (bi->bi_phys_segments > queue_max_segments(q))
--		return 0;
--
--	if (q->merge_bvec_fn)
--		/* it's too hard to apply the merge_bvec_fn at this stage,
--		 * just just give up
--		 */
--		return 0;
--
--	return 1;
--}
--
- static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -4810,11 +4791,9 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 		align_bi->bi_bdev =  rdev->bdev;
- 		__clear_bit(BIO_SEG_VALID, &align_bi->bi_flags);
- 
--		if (!bio_fits_rdev(align_bi) ||
--		    is_badblock(rdev, align_bi->bi_iter.bi_sector,
-+		if (is_badblock(rdev, align_bi->bi_iter.bi_sector,
- 				bio_sectors(align_bi),
- 				&first_bad, &bad_sectors)) {
--			/* too big in some way, or has a known bad block */
- 			bio_put(align_bi);
- 			rdev_dec_pending(rdev, mddev);
- 			return 0;
--- 
-1.9.1
-
+No, that's wrong, its assumed that wait*() and __wait*() have the same
+arguments.
