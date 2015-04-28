@@ -1,95 +1,64 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Massive RAID-1 desync
-Date: Wed, 29 Apr 2015 07:39:07 +1000
-Message-ID: <20150429073907.7f15d1b6@notabene.brown>
-References: <1919189912.18202330.1429908372364.JavaMail.zimbra@laposte.net>
-	<1810942606.18204832.1429908469113.JavaMail.zimbra@laposte.net>
-	<20150425172527.21a34428@notabene.brown>
-	<824955940.20886272.1430038117467.JavaMail.zimbra@laposte.net>
+Subject: Re: [PATCH 07/10] block: kill merge_bvec_fn() completely
+Date: Wed, 29 Apr 2015 08:09:19 +1000
+Message-ID: <20150429080919.342fddfd@notabene.brown>
+References: <1430203717-13307-1-git-send-email-mlin@kernel.org>
+	<1430203717-13307-8-git-send-email-mlin@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/F0w4mM8z/FkjjMG+.5MuU0c"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <824955940.20886272.1430038117467.JavaMail.zimbra@laposte.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jean-Baptiste Thomas <cau2jeaf1honoq@laposte.net>
-Cc: linux-raid@vger.kernel.org
+ boundary="Sig_/1hOXNlv0I_n25BYxBJ9Vcng"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1430203717-13307-8-git-send-email-mlin@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>, Lars Ellenberg <drbd-dev@lists.linbit.com>, drbd-user@lists.linbit.com, Jiri Kosina <jkosina@suse.cz>, Yehuda Sadeh <yehuda@inktank.com>, Sage Weil <sage@inktank.com>, Alex Elder <elder@kernel.org>, ceph-devel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-raid.ids
 
---Sig_/F0w4mM8z/FkjjMG+.5MuU0c
+--Sig_/1hOXNlv0I_n25BYxBJ9Vcng
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 26 Apr 2015 10:48:37 +0200 (CEST) Jean-Baptiste Thomas
-<cau2jeaf1honoq@laposte.net> wrote:
+On Mon, 27 Apr 2015 23:48:34 -0700 Ming Lin <mlin@kernel.org> wrote:
 
-> On 2015-04-25 17:25 +1000, NeilBrown wrote:
+> From: Kent Overstreet <kent.overstreet@gmail.com>
 >=20
-> > Perfectly normal.  Metadata is at the end, at least 64K from the end
-> > and 64K aligned.
->=20
-> Yes. Format 0.90.
->=20
-> > And what were those messages about sda?
->=20
-> The actual messages have been displaced by lockd's rambling but as I
-> remember, it was this sort of thing :
->=20
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> ata1.00: BMDMA stat 0x4
-> ata1.00: failed command: READ DMA EXT
-> ata1.00: cmd 25/00:80:a9:54:70/00:00:74:00:00/e0 tag 0 dma 65536 in
->          res 51/40:00:25:55:70/40:00:74:00:00/e0 Emask 0x9 (media error)
-> ata1.00: status: { DRDY ERR }
-> ata1.00: error: { UNC }
-> ata1.00: configured for UDMA/133
-> ata1: EH complete
+> As generic_make_request() is now able to handle arbitrarily sized bios,
+> it's no longer necessary for each individual block driver to define its
+> own ->merge_bvec_fn() callback. Remove every invocation completely.
 
-A clean "media error" on READ should involve the block being written and if
-that fails, the drive ejected.  I wonder if the controller got confused.
+This patch it just a little premature I think.
 
->=20
-> I ran e2fsck on copies of sda1 and sdc1. They are both heavily damaged,
-> not just sdc1.
+md/raid5 still assumes read requests will mostly fit within a single chunk
+(which merge_bvec_fn encourages) so they can be serviced without using the
+stripe-cache.
+You've just broken that assumption.
 
-That is rather sad.  I'm having trouble  imagining any scenario that would
-result in the symptoms you are seeing.  Very odd.
+I think 'chunk_aligned_read' needs to get a loop using bio_split, a bit like
+raid0, first.
 
->=20
-> Looks like I'm going to have to replace a disk and see. I'd like to
-> avoid replacing two, though. Or going through more crashes. Does=20
-> MD have a paranoid mode in which reading a sector from a RAID-1
-> device would not return successfully until it got matching data
-> from at least two components ?
-
-As mentioned separately: no.
-
-If it were me, I'd probably be feeling suspicious of the controller at this
-point.  If it is a cheap one, maybe replace it.
-
+Thanks,
 NeilBrown
 
-
---Sig_/F0w4mM8z/FkjjMG+.5MuU0c
+--Sig_/1hOXNlv0I_n25BYxBJ9Vcng
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVT/9+znsnt1WYoG5AQJXwQ/8DGb/z56uzEouFJU9sJlWKz4xCWY4bmuH
-F1CAaZcxODj8fFIETGxAZScrfgp2HSuaTeCfiGT/Tv28Io6TaTSzngyRZ13uCP+E
-CR89iFu1Q2wfNnLzU7GkUxK8IXdeZJVXbWFHWKAwhJROslQIHhcRFWsmSX3KY3Bu
-B+StXpcyll4jqzu/5sI81JghJ9ybblzMLd9gxnNE4yGEOi4fqLDUCgMCskko7ns8
-Hmvvs0PJ868rSrvMqeIbv2Kdw6i1rQiQIWX8YcP+evuWyLJlM8zPSZI0OVLcQCRl
-gySZJ/+F4aC+1JdskDEZgIWr4XTi7BL3c8LDfEmrOiTOiya9sqs3lgvUUKEbOCR7
-t+b68Krh4pAujwB5Q9CKcgrx9szqWh6sN49phnkMavuVwczeM/ijE4QT9r7LQ/Ny
-dFcQcuJJmfLU0HafuE6rf1+nq3f0Rb6iTrDHOiO2JVTGnBani6qskyUcpf/od/vK
-LxaM/IsrJQwXrCGFYF3Y+JLAZ3BgpmCmNkFx0HsmS088ZXpxnLtRtq6MSHqHoWLJ
-ltIJqctk7LZnMKLle3/u+V7nZVhl+nVnHDeafD80ZgCFIV1BYs6jpkF0kTanj5QX
-1OqhRQakiGZuXFRpZfVRLQNyQt8NuQg5DGaX3GM6T5DELc+yLYupsDZ7KCaPiuf5
-9fW6km05F5g=
-=Hs0h
+iQIVAwUBVUAFDznsnt1WYoG5AQKzlA//RLbb7rnxiJ1OpNg/IHGyCg5GyokjhBK7
+N25OUZnKyz8BbWgstR4i+I3YVBw1kxpHNh1e3nadOt04qmiXtI4K35HXIHkzpMCg
+4DTPGvwi8Q2uYDQa2cHFFRgxnXvrCuNIH8BJQFYp7I+9tgHD7jUYY/roU/HvQlMC
+6AMYwz4Z9JK6rIxPFfq5YsH4AW6W7Ut4EnTPMKVXfFXQDnfLdboRzSxt1EwVRRF0
+dH5/ZChqMabNTYhB6HAnalsxpSauknxsNom3nuMxxEml7JUY9RUq6T8kS+H/c32m
+5ctIZurQO8lXlb+YPoHFxtiTNalQshkW9DJILORDWyqOOiN64X4eLmfaOBKai8nV
+COW/9OaFb5re3yr9cdigMylfrj7hPOS/kuccAs2V0mjyWLIIrJBdIOMH8xrnVW0g
+pextCfa0jwhoJ1/1W8Ovur64T+qFENtDGT+9QJfiIKrCTuIworhr9RCycNVdJM9O
+rY19PaUwnDRBZ0U2i5gQvOg4uKy2+AJp4WFxiZLRNSVhwaZ2S9Kr1o5QADEk9NfR
+2vYBdU69YlhO6vGLAnRgzdqKlA6+NCCva4vkFxQvNm61d8YP8asWdrEGYnqdoXYt
+5H2WB+s7olvMgyGqV8ks79wUU4K4InCkx7J5/AW9JxlJ40rHNPdn7/5FT/zjSedZ
+Nlmw51dDQqg=
+=yECD
 -----END PGP SIGNATURE-----
 
---Sig_/F0w4mM8z/FkjjMG+.5MuU0c--
+--Sig_/1hOXNlv0I_n25BYxBJ9Vcng--
