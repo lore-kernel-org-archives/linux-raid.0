@@ -1,68 +1,38 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 1/3 v2] wait: introduce wait_event_exclusive_cmd
-Date: Wed, 29 Apr 2015 11:31:09 +0200
-Message-ID: <20150429093109.GS5029@twins.programming.kicks-ass.net>
-References: <1430275735-20290-1-git-send-email-yuanhan.liu@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1430275735-20290-1-git-send-email-yuanhan.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
+From: heinzm@redhat.com
+Subject: [PATCH v2 4/4] dm-raid: remove bogus parse_raid_params() comment about devices_handle_discards_safely
+Date: Wed, 29 Apr 2015 14:03:49 +0200
+Message-ID: <1430309029-24851-5-git-send-email-heinzm@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, Apr 29, 2015 at 10:48:53AM +0800, Yuanhan Liu wrote:
-> It's just a variant of wait_event_cmd(), with exclusive flag being set.
-> 
-> For cases like RAID5, which puts many processes to sleep until 1/4
-> resources are free, a wake_up wakes up all processes to run, but
-> there is one process being able to get the resource as it's protected
-> by a spin lock. That ends up introducing heavy lock contentions, and
-> hurts performance badly.
-> 
-> Here introduce wait_event_exclusive_cmd to relieve the lock contention
-> naturally by letting wake_up just wake up one process.
-> 
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+From: Heinz Mauelshagen <heinzm@redhat.com>
 
-Thanks!
+This patch removes a bogus comment on parse_raid_params() claiming
+"devices_handle_discard_safely" being a table line argument when
+it actually is a module parameter.
 
-Assuming you want to route this through Neil's MD tree:
+Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
 
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ drivers/md/dm-raid.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-> ---
->  include/linux/wait.h | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/include/linux/wait.h b/include/linux/wait.h
-> index 2db8334..db78c72 100644
-> --- a/include/linux/wait.h
-> +++ b/include/linux/wait.h
-> @@ -358,6 +358,19 @@ do {									\
->  	__ret;								\
->  })
->  
-> +#define __wait_event_exclusive_cmd(wq, condition, cmd1, cmd2)		\
-> +	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 1, 0,	\
-> +			    cmd1; schedule(); cmd2)
-> +/*
-> + * Just like wait_event_cmd(), except it sets exclusive flag
-> + */
-> +#define wait_event_exclusive_cmd(wq, condition, cmd1, cmd2)		\
-> +do {									\
-> +	if (condition)							\
-> +		break;							\
-> +	__wait_event_exclusive_cmd(wq, condition, cmd1, cmd2);		\
-> +} while (0)
-> +
->  #define __wait_event_cmd(wq, condition, cmd1, cmd2)			\
->  	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 0, 0,	\
->  			    cmd1; schedule(); cmd2)
-> -- 
-> 1.9.0
-> 
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index c541d5a..97e1651 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -479,8 +479,6 @@ too_many:
+  *                                      will form the "stripe"
+  *    [[no]sync]			Force or prevent recovery of the
+  *                                      entire array
+- *    [devices_handle_discard_safely]	Allow discards on RAID4/5/6; useful if RAID
+- *					member device(s) properly support TRIM/UNMAP
+  *    [rebuild <idx>]			Rebuild the drive indicated by the index
+  *    [daemon_sleep <ms>]		Time between bitmap daemon work to
+  *                                      clear bits
+-- 
+2.1.0
+
