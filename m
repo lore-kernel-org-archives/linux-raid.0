@@ -1,205 +1,263 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 01/10] Add nodes option while creating md
-Date: Wed, 29 Apr 2015 11:30:08 +1000
-Message-ID: <20150429113008.253c02f7@notabene.brown>
+Subject: Re: [PATCH 03/10] Create n bitmaps for clustered mode
+Date: Wed, 29 Apr 2015 11:36:32 +1000
+Message-ID: <20150429113632.0a211e3c@notabene.brown>
 References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>
-	<1429860641-5839-2-git-send-email-gqjiang@suse.com>
+	<1429860641-5839-4-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/z4E=2HcJBAKqvxbT68R3s.6"; protocol="application/pgp-signature"
+ boundary="Sig_/=_swt9q2WjN_pSZ2rV04Ymk"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1429860641-5839-2-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1429860641-5839-4-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: gqjiang@suse.com
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
---Sig_/z4E=2HcJBAKqvxbT68R3s.6
+--Sig_/=_swt9q2WjN_pSZ2rV04Ymk
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 24 Apr 2015 15:30:32 +0800 gqjiang@suse.com wrote:
+On Fri, 24 Apr 2015 15:30:34 +0800 gqjiang@suse.com wrote:
 
 > From: Guoqing Jiang <gqjiang@suse.com>
 >=20
-> Specifies the maximum number of nodes in the cluster that may use
-> this device simultaneously. This is equivalent to the number of
-> bitmaps created in the internal superblock (patches to follow).
+> For a clustered MD, create bitmaps equal to number of nodes so
+> each node has an independent bitmap.
+>=20
+> Only the first bitmap is has the bits set so that the first node
+> that assembles the device also performs the sync.
+>=20
+> The bitmaps are aligned to 4k boundaries.
+>=20
+> On-disk format:
+>=20
+> 0                    4k                     8k                    12k
+> -------------------------------------------------------------------
+> | idle                | md super            | bm super [0] + bits |
+> | bm bits[0, contd]   | bm super[1] + bits  | bm bits[1, contd]   |
+> | bm super[2] + bits  | bm bits [2, contd]  | bm super[3] + bits  |
+> | bm bits [3, contd]  |                     |                     |
 >=20
 > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-
-This doesn't really make much sense coming first in the series.  It sets up=
- a
-value that is never used.
-
-I would much rather 03/10 came first - which would just create 4 bitmaps.
-Then have this patch to allow that '4' to be changed.
-
-
 > ---
->  Create.c   |  1 +
->  ReadMe.c   |  1 +
->  mdadm.8.in |  5 +++++
->  mdadm.c    | 20 +++++++++++++++++++-
->  mdadm.h    |  3 +++
->  5 files changed, 29 insertions(+), 1 deletion(-)
+>  Create.c   |  3 ++-
+>  bitmap.h   |  7 +++++--
+>  mdadm.8.in |  7 ++++++-
+>  mdadm.c    | 17 ++++++++++++++++-
+>  super1.c   | 59 +++++++++++++++++++++++++++++++++++++++++---------------=
+---
+>  5 files changed, 70 insertions(+), 23 deletions(-)
 >=20
 > diff --git a/Create.c b/Create.c
-> index ef28da0..b73f6cb 100644
+> index cd5485b..9663dc4 100644
 > --- a/Create.c
 > +++ b/Create.c
-> @@ -531,6 +531,7 @@ int Create(struct supertype *st, char *mddev,
->  				st->ss->name);
->  		warn =3D 1;
+> @@ -752,7 +752,8 @@ int Create(struct supertype *st, char *mddev,
+>  #endif
 >  	}
-> +	st->nodes =3D c->nodes;
 > =20
->  	if (warn) {
->  		if (c->runstop!=3D 1) {
-> diff --git a/ReadMe.c b/ReadMe.c
-> index 87a4916..30c569d 100644
-> --- a/ReadMe.c
-> +++ b/ReadMe.c
-> @@ -140,6 +140,7 @@ struct option long_options[] =3D {
->      {"homehost",  1, 0,  HomeHost},
->      {"symlinks",  1, 0,  Symlinks},
->      {"data-offset",1, 0, DataOffset},
-> +    {"nodes",1, 0, Nodes},
+> -	if (s->bitmap_file && strcmp(s->bitmap_file, "internal")=3D=3D0) {
+> +	if (s->bitmap_file && (strcmp(s->bitmap_file, "internal")=3D=3D0
+> +			|| strcmp(s->bitmap_file, "clustered")=3D=3D0)) {
+>  		if ((vers%100) < 2) {
+>  			pr_err("internal bitmaps not supported by this kernel.\n");
+>  			goto abort_locked;
+> diff --git a/bitmap.h b/bitmap.h
+> index c8725a3..adbf0b4 100644
+> --- a/bitmap.h
+> +++ b/bitmap.h
+> @@ -154,8 +154,11 @@ typedef struct bitmap_super_s {
+>  	__u32 chunksize;    /* 52  the bitmap chunk size in bytes */
+>  	__u32 daemon_sleep; /* 56  seconds between disk flushes */
+>  	__u32 write_behind; /* 60  number of outstanding write-behind writes */
+> -
+> -	__u8  pad[256 - 64]; /* set to zero */
+> +	__u32 sectors_reserved; /* 64 number of 512-byte sectors that are
+> +				 * reserved for the bitmap. */
+> +	__u32 nodes;        /* 68 the maximum number of nodes in cluster. */
+> +	__u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
+> +	__u8  pad[256 - 136]; /* set to zero */
+>  } bitmap_super_t;
 > =20
->      /* For assemble */
->      {"uuid",      1, 0, 'u'},
+>  /* notes:
 > diff --git a/mdadm.8.in b/mdadm.8.in
-> index a630310..bd8d59e 100644
+> index a0e8288..c015cbf 100644
 > --- a/mdadm.8.in
 > +++ b/mdadm.8.in
-> @@ -966,6 +966,11 @@ However for RAID0, it is not possible to add spares.=
-  So to increase
->  the number of devices in a RAID0, it is necessary to set the new
->  number of devices, and to add the new devices, in the same command.
+> @@ -700,7 +700,12 @@ and so is replicated on all devices.  If the word
+>  .B "none"
+>  is given with
+>  .B \-\-grow
+> -mode, then any bitmap that is present is removed.
+> +mode, then any bitmap that is present is removed. If the word
+> +.B "clustered"
+> +is given, the array is created for a clustered environment. One bitmap
+> +is created for each node as defined by the
+> +.B \-\-nodes
+> +parameter and are stored internally.
 > =20
-> +.TP
-> +.BR \-\-nodes
-> +Specify the maximum number of nodes in the cluster that will use this
-> +device simultaneously. If not specified, this defaults to 4.
-> +
-
-I think this should mention that it only makes sense with --bitmap=3Dcluster
-(which of course isn't available at this point....)
-
-
->  .SH For assemble:
-> =20
->  .TP
+>  To help catch typing errors, the filename must contain at least one
+>  slash ('/') if it is a real file (not 'internal' or 'none').
 > diff --git a/mdadm.c b/mdadm.c
-> index 3e8c49b..bce6a76 100644
+> index e4f8568..6963a09 100644
 > --- a/mdadm.c
 > +++ b/mdadm.c
-> @@ -588,7 +588,14 @@ int main(int argc, char *argv[])
+> @@ -1111,6 +1111,15 @@ int main(int argc, char *argv[])
+>  				s.bitmap_file =3D optarg;
+>  				continue;
 >  			}
->  			ident.raid_disks =3D s.raiddisks;
->  			continue;
-> -
-> +		case O(CREATE, Nodes):
-> +			c.nodes =3D parse_num(optarg);
-> +			if (c.nodes <=3D 0) {
-> +				pr_err("invalid number for the number of "
-> +						"cluster nodes: %s\n", optarg);
-> +				exit(2);
+> +			if (strcmp(optarg, "clustered")=3D=3D 0) {
+> +				s.bitmap_file =3D optarg;
+> +				/* Set the default number of cluster nodes
+> +				 * to 4 if not already set by user
+> +				 */
+> +				if (c.nodes < 1)
+> +					c.nodes =3D 4;
+> +				continue;
 > +			}
-> +			continue;
->  		case O(CREATE,'x'): /* number of spare (eXtra) disks */
->  			if (s.sparedisks) {
->  				pr_err("spare-devices set twice: %d and %s\n",
-> @@ -1377,6 +1384,17 @@ int main(int argc, char *argv[])
->  	case CREATE:
+>  			/* probable typo */
+>  			pr_err("bitmap file must contain a '/', or be 'internal', or 'none'\n"
+>  				"       not '%s'\n", optarg);
+> @@ -1404,7 +1413,13 @@ int main(int argc, char *argv[])
 >  		if (c.delay =3D=3D 0)
 >  			c.delay =3D DEFAULT_BITMAP_DELAY;
-> +
-> +		if (!strncmp(s.bitmap_file, "internal", 9) ||
-> +			!strncmp(s.bitmap_file,"none", 4)) {
+> =20
+> -		if (!strncmp(s.bitmap_file, "internal", 9) ||
+> +		if (!strncmp(s.bitmap_file, "clustered", 9)) {
+> +			if (s.level !=3D 1) {
+> +				pr_err("--bitmap=3Dclustered is currently supported with RAID mirror=
+ only\n");
+> +				rv =3D 1;
+> +				break;
+> +			}
+> +		} else if (!strncmp(s.bitmap_file, "internal", 9) ||
+>  			!strncmp(s.bitmap_file,"none", 4)) {
+>  			if (c.nodes) {
+>  				pr_err("--nodes argument is incompatible with --bitmap=3D%s.\n",
+> diff --git a/super1.c b/super1.c
+> index f0508fe..ac1b011 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -2144,6 +2144,10 @@ add_internal_bitmap1(struct supertype *st,
+>  	bms->daemon_sleep =3D __cpu_to_le32(delay);
+>  	bms->sync_size =3D __cpu_to_le64(size);
+>  	bms->write_behind =3D __cpu_to_le32(write_behind);
+> +	bms->nodes =3D __cpu_to_le32(st->nodes);
+> +	if (st->cluster_name)
+> +		strncpy((char *)bms->cluster_name,
+> +				st->cluster_name, strlen(st->cluster_name));
+> =20
+>  	*chunkp =3D chunk;
+>  	return 1;
+> @@ -2177,6 +2181,7 @@ static int write_bitmap1(struct supertype *st, int =
+fd)
+>  	void *buf;
+>  	int towrite, n;
+>  	struct align_fd afd;
+> +	unsigned int i;
+> =20
+>  	init_afd(&afd, fd);
+> =20
+> @@ -2185,27 +2190,45 @@ static int write_bitmap1(struct supertype *st, in=
+t fd)
+>  	if (posix_memalign(&buf, 4096, 4096))
+>  		return -ENOMEM;
+> =20
+> -	memset(buf, 0xff, 4096);
+> -	memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+> -
+> -	towrite =3D __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksi=
+ze)>>9);
+> -	towrite =3D (towrite+7) >> 3; /* bits to bytes */
+> -	towrite +=3D sizeof(bitmap_super_t);
+> -	towrite =3D ROUND_UP(towrite, 512);
+> -	while (towrite > 0) {
+> -		n =3D towrite;
+> -		if (n > 4096)
+> -			n =3D 4096;
+> -		n =3D awrite(&afd, buf, n);
+> -		if (n > 0)
+> -			towrite -=3D n;
+> +	/* We use bms->nodes as opposed to st->nodes to
+> +	 * be compatible with write-after-reads such as
+> +	 * the GROW operation.
+> +	 */
+> +	for (i =3D 0; i < __le32_to_cpu(bms->nodes); i++) {
+> +		/* Only the first bitmap should resync
+> +		 * the whole device
+> +		 */
+> +		if (i)
+> +			memset(buf, 0x00, 4096);
+>  		else
+> +			memset(buf, 0xff, 4096);
 
-I'm sorry but I absolutely *hate* this construct.
-The '!' at the front makes it seem like you are testing that the string does
-*not* have that value, but it is exactly the reverse.
-And why "strncmp" rather than "strcmp" ??
-
-Please use
-
-    if (strcmp(s.bitmap_file, "internal") =3D=3D 0 ||
-        strcmp(s.bitmap_file, "none) =3D=3D 0) {
-
-except.... what about if bitmap_file in /path/to/somewhere.  Presumably you
-want to exclude that case too.
-May be
-   if (strcmp(s.bitmap_file, "cluster") !=3D 0) {
-??
+Why is the first bitmap initialised to 0x00 and the others to 0xff?
+If there is a good reason it should be documented either in a comment in the
+code or in the changelog entry.
 
 Thanks,
 NeilBrown
 
 
-> +			if (c.nodes) {
-> +				pr_err("--nodes argument is incompatible with --bitmap=3D%s.\n",
-> +					s.bitmap_file);
-> +				rv =3D 1;
-> +				break;
-> +			}
-> +		}
+> +		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
 > +
->  		if (s.write_behind && !s.bitmap_file) {
->  			pr_err("write-behind mode requires a bitmap.\n");
->  			rv =3D 1;
-> diff --git a/mdadm.h b/mdadm.h
-> index 141f963..9d55801 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -344,6 +344,7 @@ enum special_options {
->  	Dump,
->  	Restore,
->  	Action,
-> +	Nodes,
->  };
+> +		towrite =3D __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunks=
+ize)>>9);
+> +		towrite =3D (towrite+7) >> 3; /* bits to bytes */
+> +		towrite +=3D sizeof(bitmap_super_t);
+> +		/* we need the bitmaps to be at 4k boundary */
+> +		towrite =3D ROUND_UP(towrite, 4096);
+> +		while (towrite > 0) {
+> +			n =3D towrite;
+> +			if (n > 4096)
+> +				n =3D 4096;
+> +			n =3D awrite(&afd, buf, n);
+> +			if (n > 0)
+> +				towrite -=3D n;
+> +			else
+> +				break;
+> +			if (i)
+> +				memset(buf, 0x00, 4096);
+> +			else
+> +				memset(buf, 0xff, 4096);
+> +		}
+> +		fsync(fd);
+> +		if (towrite) {
+> +			rv =3D -2;
+>  			break;
+> -		memset(buf, 0xff, 4096);
+> +		}
+>  	}
+> -	fsync(fd);
+> -	if (towrite)
+> -		rv =3D -2;
 > =20
->  enum prefix_standard {
-> @@ -418,6 +419,7 @@ struct context {
->  	char	*backup_file;
->  	int	invalid_backup;
->  	char	*action;
-> +	int	nodes;
->  };
-> =20
->  struct shape {
-> @@ -1029,6 +1031,7 @@ struct supertype {
->  			 */
->  	int devcnt;
->  	int retry_soon;
-> +	int nodes;
-> =20
->  	struct mdinfo *devs;
-> =20
+>  	free(buf);
+>  	return rv;
 
 
---Sig_/z4E=2HcJBAKqvxbT68R3s.6
+--Sig_/=_swt9q2WjN_pSZ2rV04Ymk
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVUA0IDnsnt1WYoG5AQJZAQ/+Kku/0+2lBwDyOX9nMCw4BkX3Jg6yMeX9
-OhfoeEMRRGzkQphW8HijK0ewCkqOPa2/kIiJiLfQfTukaWhCqFGyiMxCy7tikMZ7
-58OvAb7qgE90J90OxkG2ig6wITYkENCzI1KL+yECdGiu9s7FPWpVCzJ6xR5n3lIs
-ITAxph/7CQ0RhJau+wW7PymEtCUFPkOBhqVm0rCvCndRHEzE/oZxd5GseufQ7jBA
-yt0ralJzZDdbF5baGcRB5YYQ4hcg7w/u+mgInduiSCOVqVrT/4QlRDcgm5DaR5e8
-U3+HQA6FFquSTzyYhMqWN0cDT5tyX3Nw3tLPttUG8qRN7zpihyCGwn4sUze3OFll
-pzktqeTlXE4BU4S5/ryaaawg3o7cSS5wV6+G7eRtSnMcobIXZzu13JLeMLfpTEio
-3//XBHYAN4Cqpflv0/f0pRXfuffCMjGf17aJT0ExETa4yZRMXsNNNyQYORLbJA3s
-NjWm6yOjw0fXYD8YJkzRtPbBCL/6/8+vyknB4muu8oAFS5M8+GTedPsKz5QLs5PF
-iKJ8/euLY1hgKyyxVEIB45S/tncszY0buXlseWOhDswxFhpGM+hITiZSVE5+KwMW
-eHDAcKwHmzmHvOkQFfnEfl3A78b/ORyR4l53JtueDtiRAbKCW4+eHz7BIlZtWlRP
-bxGhp512gK0=
-=rwme
+iQIVAwUBVUA1oDnsnt1WYoG5AQKq3Q//UTFGdyGvtN18hIYMhVyy3Zv8cn9JitmZ
+3sazktkHpON73rbrzHshRU+vAkQVcGDB1z6X0b4i4is4q5B0WH6vPXzSx8sRi0vN
+t/RRof7ESnbOTgNi2f9Sh7l8ooPa80FkdZHVdorYkQp656NbGw4z2TebHrcCtJhz
+hnvLAFHT992xvGbEvGlmuxiqQCqJWgcRWgLCjm3wzVdYPYHUEXba/CGdbDVl8iKV
+Fu/Z/tjks5pdfRXLkR9kccI1XxsvxKsn+MerDXbCnlrI2bzxC+rkxh+zWBe0szV+
++XWzEJzioT1/s2zL4ewdiWzakYcJm/G95vBwmZqcwvwL5mtNy0MJljGj5+Zb4e+7
+BpAM+a8zk0cMkprCQ8JWVN1q5+LouhR9GtofrzbKB/ownd+AeYROMsoavza18xgk
+cn6s5jOqKmTBESQBtK4KbF/ZW9aPV+w4XcKzOarkPWgg4BcF8TdVq3hnGwXuzmSh
+G7cEkK0FK/KVuEXXHueBh2SG7MbuhjZS7kDjmiqPw3ONcPTwxHdMq772dOhz55hP
+f0/tMDVPCQlgNPTFBzatWbYDVayRHFhECzDa2+sp04MY7Wh5AadwhsLEjYapHh0j
+J50EJuvV+aOI+9QM5LVcLZOJtibhOxJ1zw4KuZe/8xgGXzTRSuSqcoBO3bFVyEVk
+ov4+Trnm1XY=
+=tYZS
 -----END PGP SIGNATURE-----
 
---Sig_/z4E=2HcJBAKqvxbT68R3s.6--
+--Sig_/=_swt9q2WjN_pSZ2rV04Ymk--
