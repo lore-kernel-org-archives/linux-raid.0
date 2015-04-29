@@ -1,133 +1,77 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 04/10] Show all bitmaps while examining bitmap
-Date: Wed, 29 Apr 2015 11:41:40 +1000
-Message-ID: <20150429114140.07b20a08@notabene.brown>
-References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>
-	<1429860641-5839-5-git-send-email-gqjiang@suse.com>
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: Re: [PATCH 1/3] wait: introduce wait_event_cmd_exclusive
+Date: Wed, 29 Apr 2015 09:45:14 +0800
+Message-ID: <20150429014514.GR17176@yliu-dev.sh.intel.com>
+References: <1430110263-23977-1-git-send-email-yuanhan.liu@linux.intel.com>
+ <20150428141315.GD23123@twins.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//1CVe3JN2xocTAaK7bHpZ+6"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1429860641-5839-5-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: gqjiang@suse.com
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150428141315.GD23123@twins.programming.kicks-ass.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_//1CVe3JN2xocTAaK7bHpZ+6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Apr 28, 2015 at 04:13:15PM +0200, Peter Zijlstra wrote:
+> On Mon, Apr 27, 2015 at 12:51:01PM +0800, Yuanhan Liu wrote:
+> > It's just a variant of wait_event_cmd, with exclusive flag being set.
+> > 
+> > For cases like RAID5, which puts many processes to sleep until 1/4
+> > resources are free, a wake_up wakes up all processes to run, but
+> > there is one process being able to get the resource as it's protected
+> > by a spin lock. That ends up introducing heavy lock contentions, and
+> > hurts performance badly.
+> > 
+> > Here introduce wait_event_cmd_exclusive to relieve the lock contention
+> > naturally by letting wake_up() just wake up one process.
+> > 
+> > Cc: Ingo Molnar <mingo@redhat.com>
+> > Cc: Peter Zijlstra <peterz@infradead.org>
+> > Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> > ---
+> >  include/linux/wait.h | 14 +++++++++++---
+> >  1 file changed, 11 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/linux/wait.h b/include/linux/wait.h
+> > index 2db8334..6c3b4de 100644
+> > --- a/include/linux/wait.h
+> > +++ b/include/linux/wait.h
+> > @@ -358,10 +358,18 @@ do {									\
+> >  	__ret;								\
+> >  })
+> >  
+> > -#define __wait_event_cmd(wq, condition, cmd1, cmd2)			\
+> > -	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 0, 0,	\
+> > +#define __wait_event_cmd(wq, condition, cmd1, cmd2, exclusive)		\
+> > +	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, exclusive, 0, \
+> >  			    cmd1; schedule(); cmd2)
+> >  
+> > +
+> > +#define wait_event_cmd_exclusive(wq, condition, cmd1, cmd2)			\
+> > +do {									\
+> > +	if (condition)							\
+> > +		break;							\
+> > +	__wait_event_cmd(wq, condition, cmd1, cmd2, 1);			\
+> > +} while (0)
+> > +
+> >  /**
+> >   * wait_event_cmd - sleep until a condition gets true
+> >   * @wq: the waitqueue to wait on
+> > @@ -380,7 +388,7 @@ do {									\
+> >  do {									\
+> >  	if (condition)							\
+> >  		break;							\
+> > -	__wait_event_cmd(wq, condition, cmd1, cmd2);			\
+> > +	__wait_event_cmd(wq, condition, cmd1, cmd2, 0);			\
+> >  } while (0)
+> >  
+> 
+> No, that's wrong, its assumed that wait*() and __wait*() have the same
+> arguments.
 
-On Fri, 24 Apr 2015 15:30:35 +0800 gqjiang@suse.com wrote:
-
-> From: Guoqing Jiang <gqjiang@suse.com>
->=20
-> This adds capability of exmining bitmaps corresponding to all
-> nodes/slots on the device.
->=20
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  bitmap.c | 35 ++++++++++++++++++++++++++---------
->  1 file changed, 26 insertions(+), 9 deletions(-)
->=20
-> diff --git a/bitmap.c b/bitmap.c
-> index b1d54a6..ab83f4e 100644
-> --- a/bitmap.c
-> +++ b/bitmap.c
-> @@ -258,7 +258,7 @@ int ExamineBitmap(char *filename, int brief, struct s=
-upertype *st)
->  	int rv =3D 1;
->  	char buf[64];
->  	int swap;
-> -	int fd;
-> +	int fd, i;
->  	__u32 uuid32[4];
-> =20
->  	fd =3D bitmap_file_open(filename, &st);
-> @@ -315,9 +315,6 @@ int ExamineBitmap(char *filename, int brief, struct s=
-upertype *st)
->  		       uuid32[2],
->  		       uuid32[3]);
-> =20
-> -	printf("          Events : %llu\n", (unsigned long long)sb->events);
-> -	printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_clea=
-red);
-> -	printf("           State : %s\n", bitmap_state(sb->state));
-
-Can we please leave this where it is in the case where there is only one no=
-de?
-Only move it down if there are multiple nodes to report on.
-
-NeilBrown
-
-
->  	printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
->  	printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
->  	if (sb->write_behind)
-> @@ -327,11 +324,31 @@ int ExamineBitmap(char *filename, int brief, struct=
- supertype *st)
->  	printf("      Write Mode : %s\n", buf);
->  	printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size=
-/2,
->  					human_size(sb->sync_size * 512));
-> -	if (brief)
-> -		goto free_info;
-> -	printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-> -			info->total_bits, info->dirty_bits,
-> -			100.0 * info->dirty_bits / (info->total_bits?:1));
-> +	if (sb->nodes > 0) {
-> +		printf("   Cluster nodes : %d\n", sb->nodes);
-> +		printf("    Cluster name : %s\n", sb->cluster_name);
-> +	}
-> +	i =3D 0;
-> +	do {
-> +		if (i) {
-> +			free(info);
-> +			info =3D bitmap_fd_read(fd, brief);
-> +			sb =3D &info->sb;
-> +		}
-> +		if (sb->magic !=3D BITMAP_MAGIC) {
-> +			pr_err("invalid bitmap magic 0x%x, the bitmap file appears to be corr=
-upted\n", sb->magic);
-> +		}
-> +		printf("       Node Slot : %d\n", i);
-> +		printf("          Events : %llu\n", (unsigned long long)sb->events);
-> +		printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cle=
-ared);
-> +		printf("           State : %s\n", bitmap_state(sb->state));
-> +		if (brief)
-> +			continue;
-> +		printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-> +				info->total_bits, info->dirty_bits,
-> +				100.0 * info->dirty_bits / (info->total_bits?:1));
-> +	} while (++i < (int)sb->nodes);
-> +
->  free_info:
->  	free(info);
->  	return rv;
+Thanks. Will send an updated patch soon.
 
 
---Sig_//1CVe3JN2xocTAaK7bHpZ+6
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVUA21Dnsnt1WYoG5AQLeFA/+NzkGGhMesss+KTVq6jdlVOku5818KUxD
-oYcl+KDrhDn/OM6P6Y/qBg4dZnAJvU394b2VQFlspt+nBHc48i9vzGz/azt6nOqJ
-MwOPQkPDy0HG/6UPtFWTYpvmtLVVvIRcq5Bgqh7BdyYvUHtviUe7OHwm4oJbfcxV
-4DFT42Q8v9l3jN7IrJ5GsXowCaWCWa4AhLvT9aX4w4dy66k9b1K7F1vGKtKXLc8G
-xGplIg3A3p2/mo7gP81orZgeIL1HhDEoH2cfDEVWpBRH4mDkzCBMBPuUtjYgd8a2
-syuKnw9AYUJ5ZVLo37uoVsvoxrDdnaS9eHWX3mkSDWHUQ0OuNUTfyBBZHtcA1vZt
-lNHxASd9uc6S8BZd4Vum8oEUIGVlLGJOSI7kpTkG+Ofq/tzsgK7YcP+3xva8GhTq
-Ms6anV2V8AV0zVD/RS76lv+P6uU2yLxTs/L5I1Y2g4t2/RDo2Xzw+j+b4gMv2rc2
-zLuAQE08IqmEWA/vv1jR0dmLUnZy+I511Y3cxV//N8avWVTl+Ho1Gun0C4DCF6Pl
-5sX+1kHUT44vTgMVFadJVHaD+mExkreEFVQUwLvhCH0+oLUgucg9he2xr8twAtGc
-IUG+vSQnJJNKrfmdDBmrbBp7BC6f9VqNqb43KrRQg1hXyxj/yiukOUU14e4S+K3q
-mYdnSFskt5E=
-=G4+u
------END PGP SIGNATURE-----
-
---Sig_//1CVe3JN2xocTAaK7bHpZ+6--
+	--yliu
