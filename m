@@ -1,180 +1,100 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Help needed recovering from raid failure
-Date: Wed, 29 Apr 2015 08:26:03 +1000
-Message-ID: <20150429082603.56fb9aa9@notabene.brown>
-References: <4D8713B5-39E7-4EE2-898C-35DC0948B4CA@gmail.com>
+Subject: Re: BUG?: RAID6 reshape hung in reshape_request
+Date: Wed, 29 Apr 2015 10:03:39 +1000
+Message-ID: <20150429100339.5b0cf4f3@notabene.brown>
+References: <CAGivzjGyifS3r0rypqM7n2P-fcA7NvPjJWa6kV_wfGx2biDrDg@mail.gmail.com>
+	<20150427112056.7195d226@notabene.brown>
+	<CAGivzjE4zVGpoUdGpgKR_e+EaiBE60R3Ta=o9mW+VFqO8McrrQ@mail.gmail.com>
+	<CAGivzjHvk8pSUyWOMzNioNtgpQ7gRoL=hkTX0=m7Mi8KzgRWAg@mail.gmail.com>
+	<20150427165926.6128d59b@notabene.brown>
+	<CAGivzjF-5VWBzE0M9FB9BGpYeed=0rxNvKPzkZJdVbUAwbqyJA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/W29c53c76tuHp1.Kvh9w42/"; protocol="application/pgp-signature"
+ boundary="Sig_/+CbWrepflzxwplpliglIyi7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D8713B5-39E7-4EE2-898C-35DC0948B4CA@gmail.com>
+In-Reply-To: <CAGivzjF-5VWBzE0M9FB9BGpYeed=0rxNvKPzkZJdVbUAwbqyJA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter van Es <vanes.peter@gmail.com>
+To: David Wahler <dwahler@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/W29c53c76tuHp1.Kvh9w42/
+--Sig_/+CbWrepflzxwplpliglIyi7
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 27 Apr 2015 11:35:09 +0200 Peter van Es <vanes.peter@gmail.com> wro=
-te:
+On Mon, 27 Apr 2015 12:20:50 -0500 David Wahler <dwahler@gmail.com> wrote:
+>=20
+> I don't urgently need this array up and running, so I'm happy to leave
+> it in its current state for the next few days in case there's anything
+> else I can do to help track this down.
 
-> Sorry for the long post...
->=20
-> I am running Ubuntu LTS 14.04.02 Server edition, 64 bits, with 4x 2.0TB d=
-rives in a raid-5 array.
->=20
-> The 4th drive was beginning to show read errors. Because it was weekend, =
-I could not go out
-> and buy a spare 2TB drive to replace the one that was beginning to fail.
->=20
-> I first got a fail event:
->=20
-> This is an automatically generated mail message from mdadm
-> running on bali
->=20
-> A Fail event had been detected on md device /dev/md/1.
->=20
-> It could be related to component device /dev/sdd2.
->=20
-> Faithfully yours, etc.
->=20
-> P.S. The /proc/mdstat file currently contains the following:
->=20
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
-d4] [raid10]=20
-> md1 : active raid5 sdc2[2] sdb2[1] sda2[0] sdd2[3](F)
->     5854290432 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U=
-UU_]
->=20
-> md0 : active raid5 sdc1[2] sdd1[3] sdb1[1] sda1[0]
->     5850624 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
->=20
-> unused devices: <none>
->=20
-> And then subsequently, around 18 hours later:
->=20
-> This is an automatically generated mail message from mdadm
-> running on bali
->=20
-> A DegradedArray event had been detected on md device /dev/md/1.
+Thanks for the various status data.
 
-This isn't really reporting anything new.
-There is probably a daily cron job which reports all degraded arrays.  This
-message is reported by that job.
+I'm fairly easily able to reproduce the problem.  I clearly never thought
+about 'reshape' when I was writing the bad_block handling.
 
->=20
-> Faithfully yours, etc.
->=20
-> P.S. The /proc/mdstat file currently contains the following:
->=20
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
-d4] [raid10]=20
-> md1 : active raid5 sdc2[2] sdb2[1] sda2[0] sdd2[3](F)
->     5854290432 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U=
-UU_]
->=20
-> md0 : active raid5 sdc1[2] sdd1[3] sdb1[1] sda1[0]
->     5850624 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
->=20
-> unused devices: <none>
->=20
-> The server had taken the array off line at that point.
+You can allow the reshape to complete by the following hack:
 
-Why do you think the array is off-line?  The above message doesn't suggest
-that.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 77dfd720aaa0..e6c68a450d4c 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4306,7 +4306,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 	 */
+ 	if (s.failed > conf->max_degraded) {
+ 		sh->check_state =3D 0;
+-		sh->reconstruct_state =3D 0;
++//		sh->reconstruct_state =3D 0;
+ 		if (s.to_read+s.to_write+s.written)
+ 			handle_failed_stripe(conf, sh, &s, disks, &s.return_bi);
+ 		if (s.syncing + s.replacing)
 
+It may not necessarily do exactly the right thing, but it won't be too bad.
 
->=20
-> Needless to say, I can't boot the system anymore as the boot drive is /de=
-v/md0, and GRUB can't
-> get at it. I do need to recover data (I know, but there's stuf on there I=
- have no backup for--yet).
+I'm tempted to simply disable reshapes if there are bad blocks, but that
+might not be necessary.
 
-You boot off a RAID5?  Does grub support that?  I didn't know.
-But md0 hasn't failed, has it?
+The presence of a 'bad block' can mean two things.
 
-Confused.
+1/ The data is missing.  If there are enough bad blocks in a stripe then
+   some data cannot be recovered.  In that case we can only let the 'grow'
+   proceed if we record the destination blocks as 'bad', which isn't too ha=
+rd.
 
+2/ The media is faulty and writes fail.  A 'bad block' doesn't always mean
+   this, but it can and it is hard to know if it does or not.
+   This case only really matters when writing.  I could probably just
+   over-write anyway and handle failure as we normally would.
+   If the 'write' succeeds, I need to clear the 'bad block' record, but I
+   think I do that anyway.
 
+So I should be able to make it work.  I'll probably get mdadm to warn
+strongly against reshaping an array with bad blocks though.
 
->=20
-> I booted Linux from a USB stick (which is on /dev/sdc1 hence changing the=
- numbering),
-> in recovery mode. Below is the output of /proc/mdstat and=20
-> mdadm --examine. It looks like somehow the /dev/sdd2 and /dev/sde2 drives=
- took on the=20
-> super block of the /dev/md127 device (my swap file). May that have been d=
-one by the boot from
-> the Ubuntu USB stick?
-
-There is something VERY sick here.  I suggest that you tread very carefully.
-
-All your '1' partitions should be about 2GB and the '2' parititions about 2=
-TB
-
-But the --examine output suggests sda2 and sdb2 are 2TB, while sdd2 and sde2
-are 2GB.
-
-That really really shouldn't happen.  Maybe check your partition table
-(fdisk).
-I really cannot see how this would happen.
->=20
-> My plan... assemble a degraded array, with /dev/sde2 (the 4th drive, form=
-erly known as /dev/sdd2) not in it.
-> Because the fail event put the file system in RO mode, I expect /dev/sdd2=
- (formerly /dev/sdc2) to be ok.
-> Then insert new 2TB drive in slot 4. Let system resync and recover.
->=20
-> I'm running xfs on the /dev/md1 device.
->=20
-> Questions:
->=20
-> 1. is this the wise course of action ?
-> 2. how exactly do I reassemble the array (/etc/mdadm.conf is inaccessible=
- in recovery mode)
-> 3. what command line options do I use exactly from the --examine output b=
-elow without screwing things up
->=20
-> And help or pointers gratefully accepted
-
-Can you
-  mdadm -Ss
-
-to stop all the arrays, then
-
-  fdisk -l /dev/sd?
-
-then=20
-
-  mdadm -Esvv
-
-and post all of that.  Hopefully some of it will make sense.
+I'm going to have to study the code some more.
 
 NeilBrown
 
-
---Sig_/W29c53c76tuHp1.Kvh9w42/
+--Sig_/+CbWrepflzxwplpliglIyi7
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVUAI+znsnt1WYoG5AQLoRA/6A0ewVGDCJN9FvrPISGvbmv0O9XZQUnHO
-Lw8KSSU/1rFNfGL9FwZw0bxfWZE+ePBJWkAj1xBGjqZOg7OfMoBaUJ0mlPXvwyJh
-mDaxX1zaZcWmLxJRKVUe2zzXN8H4/eERvylM8LcR90DOG7J0zri0QK1PZxBgjdWi
-4pm9D42VxdTESyAvUjY8hBsCodhKc1Lg7IOlcxnQa2OMCUhFuhE2abt8JyYGAa6l
-VzAOc+2gDA3t9LZuw9DP6/9fJDUnVAMnkbOiKGRXJJ1G1g/WYOEGyfcg6dSZFsrZ
-PNpWfGT+9edSIwnDwP92UmiLKcnRPy1aYPjfwRbKld3W4NxJIILD27xpeMc1WGRE
-iS8Zleu+LigMM3YEo4wsqJa4KwUWdPapvJZ3Ay4eLCl3mD7BYZQBp+Y6PEMt2Qb3
-lzLDs+v0x5oD4p2KgPj86VBlzwRR2Kb+XCl/P9WUrxOhvnAqFC/hlBezXX+MwQys
-qgsBUcCdyrV0GBU5t8zbSRPjMWXNqVXRx5vYWOP6H8nFLq+ybfgQTv7SANVn28oE
-NYXyJrVaiIppMakFZiaHLQtM58X2pLQTzClD/z4L30ZY4NdX7qrsDWMMmSLArNju
-HF5hMC5Rh0buQSzuw0FgSKcy8cOWTg257+hciKV0gwq92xNSFQh9N46E6oZ324nN
-O6vXvosIMMQ=
-=WFZ7
+iQIVAwUBVUAf2znsnt1WYoG5AQI7dg/9EqQO0DzCmXHtp1rmB3wZuAcEDO0fG4XL
+FQnyS3jx7zDgw60MRiNq6yBL76/05oEou/g0I6woXM/a3P9Tqnu9sP+uglWQuYwN
+falybtlo9L5r1w9FNSB7BBdH5haEDn7GIdYydLxaHKHqE+W6GsaNIcbeGejTQoSF
+4L0TbiReP36GIcQziM0tEhChV3a+WCnx2NdLsYxOHYNqooQ14eVxvfQX3jvgvT5b
+9IKYl0vNVEVjfq8kVQS35odZ3namhx//TbRY3hyg12GCM03sxNVBTf9z7XlNPDPy
+SVP3fHVNqJh+gmFJsCSYgaHjHO8R+tGfQZwzTVQcjGS0yK6bYx5ybACnXpYhNkrw
+dRRj+zY6q4vtf5y0RL6DgiZGvopQdbgZp9oKsUzxGzBeD+70owFN1Q1dPI3+mCvk
+cX48Ws2QSuGB4S6KodteyVzN/fQbt/3TcnrfIeaYEO3TwOuzwLBNzQcTZv9izvdO
+6g6Ryp4kuxFe/8U1QlJydII6LEduP+vl/gZq8afCJ+X+AFsxxbrjpI+YJghTfMa/
+yKBlRSXs3/QwMxySBWF0YhRyjH9akZULsqQsNMZDVqHmsafuXn7tqZoxruW5Hcyx
+I5+po9s2cMXkFxZxpnB6BTqzriS7lQDEgEFApursMauftC7LkGSwKcL2F+VTiw/7
+vxWGbj3aOXw=
+=C1Ov
 -----END PGP SIGNATURE-----
 
---Sig_/W29c53c76tuHp1.Kvh9w42/--
+--Sig_/+CbWrepflzxwplpliglIyi7--
