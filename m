@@ -1,135 +1,102 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 04/10] Show all bitmaps while examining bitmap
-Date: Thu, 30 Apr 2015 14:45:26 +1000
-Message-ID: <20150430144526.35b5c5ff@notabene.brown>
+Subject: Re: [PATCH 09/10] mdadm: change the num of cluster node
+Date: Thu, 30 Apr 2015 16:47:42 +1000
+Message-ID: <20150430164742.6cf78f6c@notabene.brown>
 References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>
-	<1429860641-5839-5-git-send-email-gqjiang@suse.com>
-	<20150429114140.07b20a08@notabene.brown>
-	<55419EC8.4030407@suse.com>
+	<1429860641-5839-10-git-send-email-gqjiang@suse.com>
+	<20150429115151.0763e980@notabene.brown>
+	<5541A2AD.3030506@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/03Uh5xxhqkHswK9Ghz2NIQX"; protocol="application/pgp-signature"
+ boundary="Sig_/B..ahvl4oOkcR_Cwgo0LeOz"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55419EC8.4030407@suse.com>
+In-Reply-To: <5541A2AD.3030506@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqJiang@suse.com>
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
+To: Guoqing Jiang <jgq516@gmail.com>
+Cc: gqjiang@suse.com, linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
---Sig_/03Uh5xxhqkHswK9Ghz2NIQX
+--Sig_/B..ahvl4oOkcR_Cwgo0LeOz
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 30 Apr 2015 11:17:28 +0800 Guoqing Jiang <gqJiang@suse.com> wrote:
+On Thu, 30 Apr 2015 11:34:05 +0800 Guoqing Jiang <jgq516@gmail.com> wrote:
 
 > NeilBrown wrote:
-> > On Fri, 24 Apr 2015 15:30:35 +0800 gqjiang@suse.com wrote:
+> > On Fri, 24 Apr 2015 15:30:40 +0800 gqjiang@suse.com wrote:
 > >
 > >  =20
 > >> From: Guoqing Jiang <gqjiang@suse.com>
 > >>
-> >> This adds capability of exmining bitmaps corresponding to all
-> >> nodes/slots on the device.
+> >> This extends nodes option for assemble mode, make the num of
+> >> cluster node could be change by user.
 > >>
-> >> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > >> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > >> ---
-> >>  bitmap.c | 35 ++++++++++++++++++++++++++---------
-> >>  1 file changed, 26 insertions(+), 9 deletions(-)
+> >>  Assemble.c | 4 ++++
+> >>  ReadMe.c   | 2 +-
+> >>  mdadm.c    | 3 +++
+> >>  mdadm.h    | 1 +
+> >>  super1.c   | 6 ++++++
+> >>  5 files changed, 15 insertions(+), 1 deletion(-)
 > >>
-> >> diff --git a/bitmap.c b/bitmap.c
-> >> index b1d54a6..ab83f4e 100644
-> >> --- a/bitmap.c
-> >> +++ b/bitmap.c
-> >> @@ -258,7 +258,7 @@ int ExamineBitmap(char *filename, int brief, struc=
-t supertype *st)
-> >>  	int rv =3D 1;
-> >>  	char buf[64];
-> >>  	int swap;
-> >> -	int fd;
-> >> +	int fd, i;
-> >>  	__u32 uuid32[4];
-> >> =20
-> >>  	fd =3D bitmap_file_open(filename, &st);
-> >> @@ -315,9 +315,6 @@ int ExamineBitmap(char *filename, int brief, struc=
-t supertype *st)
-> >>  		       uuid32[2],
-> >>  		       uuid32[3]);
-> >> =20
-> >> -	printf("          Events : %llu\n", (unsigned long long)sb->events);
-> >> -	printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_c=
-leared);
-> >> -	printf("           State : %s\n", bitmap_state(sb->state));
+> >> diff --git a/Assemble.c b/Assemble.c
+> >> index e1b846c..22042a9 100644
+> >> --- a/Assemble.c
+> >> +++ b/Assemble.c
+> >> @@ -649,6 +649,10 @@ static int load_devices(struct devs *devices, cha=
+r *devmap,
+> >>  							    devname, 0, 0, c->homecluster);
+> >>  				tst->ss->write_bitmap(tst, dfd, NameUpdate);
+> >>  			}
+> >> +			if (strcmp(c->update, "nodes") =3D=3D 0) {
+> >> +				tst->nodes =3D c->nodes;
+> >> +				tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
+> >> +			}
 > >>    =20
 > >
-> > Can we please leave this where it is in the case where there is only on=
-e node?
-> > Only move it down if there are multiple nodes to report on.
+> > Doesn't there need to be some test that there is enough free space on a=
+ll
+> > devices to store the extra bitmaps (when nodes is increasing)??
 > >
 > >  =20
-> Yes, it could be possible. Just to make sure understand you correctly,
-> what about the below?
->=20
-> if (sb->nodes =3D=3D 0) {
->     /* code for more than one node */
-> } else {
->    /* original code */
-> }
->=20
+> Agree, could you pls elaborate more about the test? I guess the test
+> need to be run
+> before write_bitmap1call the awrite(&afd, buf, n).
 
-Something a bit like that, though !=3D0 of course.
+Normally we don't increase the size of a bitmap while it is alive.
+When an array is reshaped, bitmap_resize in the kernel actually changes the
+bitmap chunk size if necessary so that the bitmap will fit in the available
+space.=20
+To make the bitmap larger, the only current approach is to delete the bitmap
+and add a new one.  This is handled by add_internal_bitmap1 in mdadm.
+So make the bitmap bigger you will need to perform similar calculations taht
+add_internal_bitmap1 performs, though instead of choosing a size or
+chunksize, you see need to check if the space is sufficient.
 
-The original code put some info at the top.  When there are multiple nodes
-that makes more sense  at the bottom.
-So:
-
- if (sb->nodes =3D=3D 0) {
-    original code that will be moved
- }
- more original code that isn't changing
- if (sb->nodes =3D=3D 0) {
-    other original code
- } else {
-    new code
- }
-
-or something like that.
-
-Thanks,
+Hope that helps,
 NeilBrown
 
-
-> Thanks,
-> Guoqing
->=20
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/03Uh5xxhqkHswK9Ghz2NIQX
+--Sig_/B..ahvl4oOkcR_Cwgo0LeOz
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVUGzZjnsnt1WYoG5AQITBg//QUv9wTt8T3ccGA/1nOcExghJAkzhTOr2
-2f4V241PcOd9dF5xwka+auAkpL+QGaGnJTQ+c7yEPwRuBhOMxLzty7gmPLTXwaUl
-H6XcbPpSS83doM99kzrVEsGFJv5w90lQYsdRh7oCj5o5cBGsuIJsF7O8gzatCchI
-PWDLdmIdpAwOnoMGrrxRLS6IRnf1cnb1HbVbUQFFSTkyRICdBFCTiPndHnaT7+E1
-lUYYXPc0VEK0x34JqCu3VfRRKBWEvU4Aeh2o5IYMA6CwOpT+eM3VgpoUSPvad/iH
-/2bfX7SOpVtSUpWpjtFmsV+L1eWefFjVQgalLqlwqaamJtFsSej9yHcoTNd6bGUW
-b5ayxJD3PuWGlWglJKoTFIQrJb3OGEmj2LZZUapdEKrsafVZeQqM7C01U7j+KbbJ
-h499DaKfuAm0fhsOWDlbv4+rkXq1AlptuMlfwsUS+U1tWve4J8WqVbC52UcLYYtu
-LM58reF8VCgpvXZC5aai0IMdDPZd/+n+pCg8g3/bapQwkYQwG86qyyborfuoFeNK
-IrpcTnF9GnAwRMEx9QHXXauukYKSc/m6mfPYF0HpHwe8dzyHdbBOqKtZgIrd5fMa
-sMQxJ3VPjTHAOsVnhKXnQzByidlf3RFvpYL0on5owO36pKw6LaHoP2tYRsZDR8rI
-ODfj5/2E9WI=
-=J95t
+iQIVAwUBVUHQDznsnt1WYoG5AQLwLQ//Se1K8CCnuKD8qT900T7ydjGIaTaRKrXP
+Ax5WXGKHdKqJgCsHFZsoFbTxwo8pMwAJuqujA+R8vYc1CdB/Z8lTWsXgAbYZeRwA
+PqPr9N1xIFKze3XL+KomU2DsIcKnl7AcykfXlcdfiB1jBsC5kWHQQxtHKvLFP4E7
+cfLYZSRIw/aIOUIBZkl8cuG013Wjn63MmYJPqt64mN6kLxFLLIZdziFg21KdIdrs
+sqUgrEEfz5BWm3l6D3aRWW03iqbsy/oO1AyzSMkyJwglyKacjMHwi4Jxc5OEwFmR
+pgxUisYvxmgnn0vYB1jmWUSIangfF58zOz4huXYehOk3gW1Z/hPfArFLcoBN96Ff
+pq0zEB202p/pcc/jGe1RsWgIVBjuG52BVMr1S4dZ79X9XLmLhonUrmXUFzUEiL+Z
+IBGrUpqFIEphw44VA1jZMRVhZxHWSILO+AojN2jPHNUD0wuQJD+CP/TRcsNeK1Kl
+ns0Z+/XZLBo13jPBr0ZbsjUkHhVw1xDDVLa9n0KIj/D2fvQ0/BCrjSCUIC08NsLH
+RCLkfDLB92u0mCRvgXh+CqwaCvHYb8fQt3s1gWmDfv2HDY5V6FjRr9v8RoxU9ExF
+Q+PNngG8gqQARM2N3LvXwWguOpHAAQjhP55G54G80ungoXtvp9tOMjQ16FQH0b3w
++HCKc/CSBaQ=
+=L+Nb
 -----END PGP SIGNATURE-----
 
---Sig_/03Uh5xxhqkHswK9Ghz2NIQX--
+--Sig_/B..ahvl4oOkcR_Cwgo0LeOz--
