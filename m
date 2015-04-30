@@ -1,70 +1,114 @@
 From: Guoqing Jiang <jgq516@gmail.com>
-Subject: Re: [PATCH 05/10] Add a new clustered disk
-Date: Thu, 30 Apr 2015 11:20:27 +0800
-Message-ID: <55419F7B.3070502@gmail.com>
-References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>	<1429860641-5839-6-git-send-email-gqjiang@suse.com> <20150429114532.568d58bd@notabene.brown>
+Subject: Re: [PATCH 08/10] mdadm: add the ability to change cluster name
+Date: Thu, 30 Apr 2015 11:22:15 +0800
+Message-ID: <55419FE7.1030507@gmail.com>
+References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>	<1429860641-5839-9-git-send-email-gqjiang@suse.com> <20150429115033.1191a357@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150429114532.568d58bd@notabene.brown>
+In-Reply-To: <20150429115033.1191a357@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: gqjiang@suse.com, linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
 NeilBrown wrote:
-> On Fri, 24 Apr 2015 15:30:36 +0800 gqjiang@suse.com wrote:
+> On Fri, 24 Apr 2015 15:30:39 +0800 gqjiang@suse.com wrote:
 >
 >   
->> From: Guoqing Jiang <gqjiang@suse.com>
->>
->> A clustered disk is added by the traditional --add sequence.
->> However, other nodes need to acknowledge that they can "see"
->> the device. This is done by --cluster-confirm:
->>
->> --cluster-confirm Y:/dev/whatever (if disk is found)
->> or
->> --cluster-confirm Y:missing (if disk is not found)
->>
->> The node initiating the --add, has the disk state tagged with
->> MD_DISK_CLUSTER_ADD and the one confirming tag the disk with
->> MD_DISK_CANDIDATE.
->>     
->
-> You haven't explained 'Y' here.  It looks like it means 'Yes', but it doesn't.
->
->
->   
-Right, actually 'Y' stands for the slot, will modify it.
->> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->>
->>     
-[snip]
+>> --- a/super1.c
+>> +++ b/super1.c
+>> @@ -1073,6 +1073,25 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>  		info->name[32] = 0;
+>>  	}
 >>  
->> +int parse_cluster_confirm_arg(char *input, char **devname, int *slot)
->> +{
->> +	char *dev;
->> +	*slot = strtoul(input, &dev, 10);
->> +	if (dev[0] == ':')
->> +		*devname = dev+1;
->> +	else
->> +		return -1;
->> +	return 0;
->> +}
+>> +	if (strcmp(update, "home-cluster") == 0 &&
+>> +	    homehost) {
+>> +		/* Note that 'home-cluster' is to change the name of cluster,
+>> +		 * it is another "name" update.
+>> +		 */
+>> +		char *new_name = xmalloc(sizeof(sb->set_name));
+>> +		if (strrchr(sb->set_name, ':')) {
+>> +			strcpy(new_name, strchr(sb->set_name, ':'));
+>> +		}
+>> +
+>> +		memset(sb->set_name, 0, sizeof(sb->set_name));
+>> +		strcpy(sb->set_name, homehost);
+>> +		if (new_name)
+>> +			strcat(sb->set_name, new_name);
+>> +
+>> +		free(new_name);
+>> +		goto out;
+>> +	}
+>> +
 >>     
 >
-> The logic here hurts my brain :-(
+> Please get rid of the 'goto out' and put an 'else' in here.
 >
->  *slot = strtoul(input, &dev, 10);
->  if (dev == input || dev[0] != ':')
->      return -1;
->  *devname = dev+1;
->  return 0;
+> "homehost" is special because it translates to "name".
+> "home-cluster" is not special.
 >
 >   
-Thanks for above, :)
+Got it.
+>   
+>>  	if (strcmp(update, "force-one")==0) {
+>>  		/* Not enough devices for a working array,
+>>  		 * so bring this one up-to-date
+>> @@ -1313,6 +1332,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>>  	else
+>>  		rv = -1;
+>>  
+>> +out:
+>>  	sb->sb_csum = calc_sb_1_csum(sb);
+>>  	return rv;
+>>  }
+>> @@ -1691,7 +1711,7 @@ static int write_init_super1(struct supertype *st)
+>>  		sb->sb_csum = calc_sb_1_csum(sb);
+>>  		rv = store_super1(st, di->fd);
+>>  		if (rv == 0 && (__le32_to_cpu(sb->feature_map) & 1))
+>> -			rv = st->ss->write_bitmap(st, di->fd);
+>> +			rv = st->ss->write_bitmap(st, di->fd, NoUpdate);
+>>  		close(di->fd);
+>>  		di->fd = -1;
+>>  		if (rv)
+>> @@ -2175,7 +2195,7 @@ static void locate_bitmap1(struct supertype *st, int fd)
+>>  	lseek64(fd, offset<<9, 0);
+>>  }
+>>  
+>> -static int write_bitmap1(struct supertype *st, int fd)
+>> +static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update)
+>>  {
+>>  	struct mdp_superblock_1 *sb = st->sb;
+>>  	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
+>> @@ -2185,6 +2205,28 @@ static int write_bitmap1(struct supertype *st, int fd)
+>>  	struct align_fd afd;
+>>  	unsigned int i;
+>>  
+>> +	switch (update) {
+>> +	case NameUpdate:
+>> +	{
+>> +	    char *new_name = xmalloc(sizeof(sb->set_name));
+>> +
+>> +	    strncpy(new_name, sb->set_name, sizeof(sb->set_name));
+>> +	    memset((char *)bms->cluster_name, 0, sizeof(bms->cluster_name));
+>> +
+>> +	    if (strtok(new_name, ":"))
+>> +		strncpy((char *)bms->cluster_name, new_name, strlen(sb->set_name));
+>> +	    else
+>> +		/* In case the original set_name doesn't like aaa:md* */
+>> +		strncpy((char *)bms->cluster_name, sb->set_name, strlen(sb->set_name));
+>> +
+>> +	    free(new_name);
+>> +	    break;
+>> +	}
+>>     
+>
+> I don't like the braces there - too confusing.
+> Just make 'new_name' a top-level variable and get rid of the {}
+>
+>   
+No problem, will do it.
 
-Regards,
+Thanks,
 Guoqing
