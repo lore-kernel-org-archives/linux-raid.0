@@ -1,55 +1,49 @@
 From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: Re: [PATCH 1/2] md/raid5: fix typo
-Date: Thu, 30 Apr 2015 15:22:40 +0800
-Message-ID: <20150430072240.GA3858@yliu-dev.sh.intel.com>
+Subject: Re: [PATCH 2/2] md/raid5: trivial coding style fix
+Date: Thu, 30 Apr 2015 15:23:15 +0800
+Message-ID: <20150430072315.GB3858@yliu-dev.sh.intel.com>
 References: <1430377277-6167-1-git-send-email-yuanhan.liu@linux.intel.com>
- <20150430171426.46d03aa1@notabene.brown>
+ <1430377277-6167-2-git-send-email-yuanhan.liu@linux.intel.com>
+ <20150430171650.4db1bcca@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150430171426.46d03aa1@notabene.brown>
+In-Reply-To: <20150430171650.4db1bcca@notabene.brown>
 Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 30, 2015 at 05:14:26PM +1000, NeilBrown wrote:
-> On Thu, 30 Apr 2015 15:01:16 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
+On Thu, Apr 30, 2015 at 05:16:50PM +1000, NeilBrown wrote:
+> On Thu, 30 Apr 2015 15:01:17 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
 > wrote:
 > 
-> > bion -> bios
-> > 
 > > Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
 > > ---
-> >  drivers/md/raid5.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >  drivers/md/raid5.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
 > > 
 > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 697d77a..2651bda 100644
+> > index 2651bda..bae3e2c 100644
 > > --- a/drivers/md/raid5.c
 > > +++ b/drivers/md/raid5.c
-> > @@ -2919,7 +2919,7 @@ schedule_reconstruction(struct stripe_head *sh, struct stripe_head_state *s,
-> >  }
+> > @@ -5789,8 +5789,7 @@ static void raid5d(struct md_thread *thread)
+> >  		if (released)
+> >  			clear_bit(R5_DID_ALLOC, &conf->cache_state);
 > >  
-> >  /*
-> > - * Each stripe/dev can have one or more bion attached.
-> > + * Each stripe/dev can have one or more bios attached.
-> >   * toread/towrite point to the first in a chain.
-> >   * The bi_next chain must be in order.
-> >   */
+> > -		if (
+> > -		    !list_empty(&conf->bitmap_list)) {
+> > +		if (!list_empty(&conf->bitmap_list)) {
+> >  			/* Now is a good time to flush some bitmap updates */
+> >  			conf->seq_flush++;
+> >  			spin_unlock_irq(&conf->device_lock);
 > 
-> That was intentional.  "bios" as a plural looks too much like "BIOS" which is
-> in the ROM of computers.
 > 
-> Children and oxen are plurals with an 'n' at the end.  So I used 'bion'.
-> Private joke?
+> I'm happy for these sorts of changes when you are fixing up nearby code, or
+> if the change significantly improves readability.
+> But I'd rather not bother is one-off trivial fixes like this.
 
-Interesting.
-
-> 
-> I'd rather leave it as it is.
-
-Okay, and sorry for the noise.
+Got it.
 
 	--yliu
