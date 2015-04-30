@@ -1,64 +1,105 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH stable] block: discard bdi_unregister() in favour of
- bdi_destroy()
-Date: Thu, 30 Apr 2015 10:35:03 +0200
-Message-ID: <20150430083503.GU5029@twins.programming.kicks-ass.net>
-References: <20150414171537.GH25394@azat>
- <20150423160551.45345f96@notabene.brown>
- <20150427141222.5dac22f1@notabene.brown>
- <CAMM=eLf2aFFH29xeDVrS7beFj6T8kqUQRh=4KB1YO0kWGa7Rog@mail.gmail.com>
- <20150429072530.39d38b00@notabene.brown>
- <20150429133512.GA4436@lst.de>
- <20150429160258.GK17717@twins.programming.kicks-ass.net>
- <20150430103233.75227693@notabene.brown>
+From: Guoqing Jiang <gqJiang@suse.com>
+Subject: Re: [PATCH 09/10] mdadm: change the num of cluster node
+Date: Thu, 30 Apr 2015 18:04:58 +0800
+Message-ID: <5541FE4A.7010504@suse.com>
+References: <1429860641-5839-1-git-send-email-gqjiang@suse.com>	<1429860641-5839-10-git-send-email-gqjiang@suse.com>	<20150429115151.0763e980@notabene.brown>	<5541A2AD.3030506@gmail.com> <20150430164742.6cf78f6c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150430103233.75227693@notabene.brown>
+In-Reply-To: <20150430164742.6cf78f6c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, Azat Khuzhin <a3at.mail@gmail.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Guoqing Jiang <GQJiang@suse.com>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, lkml <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: Guoqing Jiang <jgq516@gmail.com>, linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
-On Thu, Apr 30, 2015 at 10:32:33AM +1000, NeilBrown wrote:
-> 
-> bdi_unregister() now contains very little functionality.
-> 
-> It contains a "WARN_ON" if bdi->dev is NULL.  This warning is of no
-> real consequence as bdi->dev isn't needed by anything else in the function,
-> and it triggers if
->    blk_cleanup_queue() -> bdi_destroy()
-> is called before bdi_unregister, which a subsequent patch will make happen.
-> So this isn't wanted.
-> 
-> It also calls bdi_set_min_ratio().  This needs to be called after
-> writes through the bdi have all been flushed, and before the bdi is destroyed.
-> Calling it early is better than calling it late as it frees up a global
-> resource.
-> 
-> Calling it immediately after bdi_wb_shutdown() in bdi_destroy()
-> perfectly fits these requirements.
-> 
-> So bdi_unregister can be discarded with the important content moved to
-> bdi_destroy, as can the
->   writeback_bdi_unregister
-> event which is already not used.
-> 
-> This is tagged for 'stable' as it is a pre-requisite for a subsequent
-> patch which moves calls to blk_cleanup_queue() before calls to
-> del_gendisk().  The commit identified as 'Fixes' removed a lot of
-> other functionality from bdi_unregister(), and made a change which
-> necessitated moving the blk_cleanup_queue() calls.
-> 
-> Reported-by: Mike Snitzer <snitzer@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Peter Zijlstra <peterz@infradead.org>
-> Cc: stable@vger.kernel.org (v4.0)
-> Fixes: c4db59d31e39ea067c32163ac961e9c80198fd37
+NeilBrown wrote:
+> On Thu, 30 Apr 2015 11:34:05 +0800 Guoqing Jiang <jgq516@gmail.com> wrote:
+>
+>   
+>> NeilBrown wrote:
+>>     
+>>> On Fri, 24 Apr 2015 15:30:40 +0800 gqjiang@suse.com wrote:
+>>>
+>>>   
+>>>       
+>>>> From: Guoqing Jiang <gqjiang@suse.com>
+>>>>
+>>>> This extends nodes option for assemble mode, make the num of
+>>>> cluster node could be change by user.
+>>>>
+>>>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+>>>> ---
+>>>>  Assemble.c | 4 ++++
+>>>>  ReadMe.c   | 2 +-
+>>>>  mdadm.c    | 3 +++
+>>>>  mdadm.h    | 1 +
+>>>>  super1.c   | 6 ++++++
+>>>>  5 files changed, 15 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/Assemble.c b/Assemble.c
+>>>> index e1b846c..22042a9 100644
+>>>> --- a/Assemble.c
+>>>> +++ b/Assemble.c
+>>>> @@ -649,6 +649,10 @@ static int load_devices(struct devs *devices, char *devmap,
+>>>>  							    devname, 0, 0, c->homecluster);
+>>>>  				tst->ss->write_bitmap(tst, dfd, NameUpdate);
+>>>>  			}
+>>>> +			if (strcmp(c->update, "nodes") == 0) {
+>>>> +				tst->nodes = c->nodes;
+>>>> +				tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
+>>>> +			}
+>>>>     
+>>>>         
+>>> Doesn't there need to be some test that there is enough free space on all
+>>> devices to store the extra bitmaps (when nodes is increasing)??
+>>>
+>>>   
+>>>       
+>> Agree, could you pls elaborate more about the test? I guess the test
+>> need to be run
+>> before write_bitmap1call the awrite(&afd, buf, n).
+>>     
+>
+> Normally we don't increase the size of a bitmap while it is alive.
+> When an array is reshaped, bitmap_resize in the kernel actually changes the
+> bitmap chunk size if necessary so that the bitmap will fit in the available
+> space. 
+> To make the bitmap larger, the only current approach is to delete the bitmap
+> and add a new one.  This is handled by add_internal_bitmap1 in mdadm.
+> So make the bitmap bigger you will need to perform similar calculations taht
+> add_internal_bitmap1 performs, though instead of choosing a size or
+> chunksize, you see need to check if the space is sufficient.
+>
+>   
+Thanks a lot for the detailed infos. Seems the size of bitmap is one of
+4k, 64k and
+128k (per choose_bm_space), is it ok to call choose_bm_space to get
+current bitmap
+size? And since the size of each bitmap can be get by bitmap_bits, then
+we can
+know the current size of bitmap is enough or not by something like
 
-Fixes: c4db59d31e39 ("fs: don't reassign dirty inodes to default_backing_dev_info")
+int room = choose_bm_space(__le64_to_cpu(sb->size));
+int total_bm_size_byte = room / 2 * 1024;
+if (total_bm_size_byte > nodenums * bitmap_bits() / 8) {
+/* enough space */
+continue the write_bitmap
+} else {
+/* no enough space*/
+Just warn it.
+}
 
-> Signed-off-by: NeilBrown <neilb@suse.de>
+I think we should not allocate more space for extra nodes if current
+size is not bigger
+than required, otherwise it is possible to violate the meaning of
+choose_bm_space.
+Please correct me if I misunderstood something.
 
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Thanks,
+Guoqing
+
+> Hope that helps,
+> NeilBrown
+>   
+
