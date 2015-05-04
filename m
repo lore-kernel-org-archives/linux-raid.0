@@ -1,106 +1,169 @@
-From: Ming Lin <mlin@kernel.org>
-Subject: Re: [PATCH 07/10] block: kill merge_bvec_fn() completely
-Date: Mon, 04 May 2015 00:47:39 -0700
-Message-ID: <5547241B.1040903@kernel.org>
-References: <1430203717-13307-1-git-send-email-mlin@kernel.org>	<1430203717-13307-8-git-send-email-mlin@kernel.org> <20150429080919.342fddfd@notabene.brown>
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: Re: [PATCH] md/raid5: init batch_xxx for new sh at resize_stripes
+Date: Mon, 4 May 2015 15:51:03 +0800
+Message-ID: <20150504075103.GH3858@yliu-dev.sh.intel.com>
+References: <1430718624-8988-1-git-send-email-yuanhan.liu@linux.intel.com>
+ <20150504172424.283b7727@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150429080919.342fddfd@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20150504172424.283b7727@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>, Lars Ellenberg <drbd-dev@lists.linbit.com>, drbd-user@lists.linbit.com, Jiri Kosina <jkosina@suse.cz>, Yehuda Sadeh <yehuda@inktank.com>, Sage Weil <sage@inktank.com>, Alex Elder <elder@kernel.org>, ceph-devel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
 List-Id: linux-raid.ids
 
-On 04/28/2015 03:09 PM, NeilBrown wrote:
-> On Mon, 27 Apr 2015 23:48:34 -0700 Ming Lin <mlin@kernel.org> wrote:
+On Mon, May 04, 2015 at 05:24:24PM +1000, NeilBrown wrote:
+> On Mon,  4 May 2015 13:50:24 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> wrote:
 > 
->> From: Kent Overstreet <kent.overstreet@gmail.com>
->>
->> As generic_make_request() is now able to handle arbitrarily sized bios,
->> it's no longer necessary for each individual block driver to define its
->> own ->merge_bvec_fn() callback. Remove every invocation completely.
+> > This is to fix a kernel NULL dereference oops introduced by commit
+> > 59fc630b("RAID5: batch adjacent full stripe write"), which introduced
+> > several batch_xxx fields, and did initiation for them at grow_one_stripes(),
+> > but forgot to do same at resize_stripes().
+> > 
+> > This oops can be easily triggered by following steps:
+> > 
+> >     __create RAID5 /dev/md0
+> >     __grow /dev/md0
+> >     mdadm --wait /dev/md0
+> >     dd if=/dev/zero of=/dev/md0
+> > 
+> > Here is the detailed oops log:
+...
+> > 
+> > Cc: Shaohua Li <shli@kernel.org>
+> > Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+> > ---
+> >  drivers/md/raid5.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 697d77a..7b074f7 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -2217,6 +2217,10 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+> >  				if (!p)
+> >  					err = -ENOMEM;
+> >  			}
+> > +
+> > +		spin_lock_init(&nsh->batch_lock);
+> > +		INIT_LIST_HEAD(&nsh->batch_list);
+> > +		nsh->batch_head = NULL;
+> >  		release_stripe(nsh);
+> >  	}
+> >  	/* critical section pass, GFP_NOIO no longer needed */
 > 
-> This patch it just a little premature I think.
+> Thanks!
 > 
-> md/raid5 still assumes read requests will mostly fit within a single chunk
-> (which merge_bvec_fn encourages) so they can be serviced without using the
-> stripe-cache.
-> You've just broken that assumption.
-> 
-> I think 'chunk_aligned_read' needs to get a loop using bio_split, a bit like
-> raid0, first.
+> However I already have the following fix queued - though not pushed  out
 
-How about below?
+Yeah, much cleaner.
 
- drivers/md/raid5.c | 35 ++++++++++++++++++++++++++++++++---
- 1 file changed, 32 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e42b624..2ddfa1e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4709,7 +4709,7 @@ static void raid5_align_endio(struct bio *bi, int error)
- 	add_bio_to_retry(raid_bi, conf);
- }
- 
--static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
-+static int __chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
- {
- 	struct r5conf *conf = mddev->private;
- 	int dd_idx;
-@@ -4718,7 +4718,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 	sector_t end_sector;
- 
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
--		pr_debug("chunk_aligned_read : non aligned\n");
-+		pr_debug("__chunk_aligned_read : non aligned\n");
- 		return 0;
- 	}
- 	/*
-@@ -4793,6 +4793,35 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 	}
- }
- 
-+static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
-+{
-+	struct bio *split;
-+
-+	do {
-+		sector_t sector = raid_bio->bi_iter.bi_sector;
-+		unsigned chunk_sects = mddev->chunk_sectors;
-+
-+		unsigned sectors = chunk_sects -
-+			(likely(is_power_of_2(chunk_sects))
-+			 ? (sector & (chunk_sects-1))
-+			 : sector_div(sector, chunk_sects));
-+
-+		if (sectors < bio_sectors(raid_bio)) {
-+			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
-+			bio_chain(split, raid_bio);
-+		} else
-+			split = raid_bio;
-+
-+		if (!__chunk_aligned_read(mddev, split)) {
-+			if (split != raid_bio)
-+				generic_make_request(raid_bio);
-+			return split;
-+		}
-+	} while (split != raid_bio);
-+
-+	return NULL;
-+}
-+
- /* __get_priority_stripe - get the next stripe to process
-  *
-  * Full stripe writes are allowed to pass preread active stripes up until
-@@ -5071,7 +5100,7 @@ static void make_request(struct mddev *mddev, struct bio * bi)
- 	 */
- 	if (rw == READ && mddev->degraded == 0 &&
- 	     mddev->reshape_position == MaxSector &&
--	     chunk_aligned_read(mddev,bi))
-+	     (!(bi = chunk_aligned_read(mddev, bi))))
- 		return;
- 
- 	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
+> you.  I probably would have got it into -rc2 except that I was chasing
+> another raid5 bug.  The
+> 	BUG_ON(sh->batch_head);
+> 
+> in handle_stripe_fill() fires when I run the mdadm selftests.  I got caught
+> up chasing that and didn't push the other fix.
+
+I am not aware of there is a selftests for raid. I'd like to add it to our 0day
+kernel testing in near future so that we could catch bugs and bisect it down in
+first time ;)
+
+	--yliu
+> 
+> 
+> From 3dd8ba734349e602fe17d647ce3da5f4a13748aa Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Thu, 30 Apr 2015 11:24:28 +1000
+> Subject: [PATCH] md/raid5 new alloc_stripe function.
+> 
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 77dfd720aaa0..91a1e8b26b52 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -1971,17 +1971,30 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
+>  	put_cpu();
+>  }
+>  
+> +static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp)
+> +{
+> +	struct stripe_head *sh;
+> +
+> +	sh = kmem_cache_zalloc(sc, gfp);
+> +	if (sh) {
+> +		spin_lock_init(&sh->stripe_lock);
+> +		spin_lock_init(&sh->batch_lock);
+> +		INIT_LIST_HEAD(&sh->batch_list);
+> +		INIT_LIST_HEAD(&sh->lru);
+> +		atomic_set(&sh->count, 1);
+> +	}
+> +	return sh;
+> +}
+>  static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
+>  {
+>  	struct stripe_head *sh;
+> -	sh = kmem_cache_zalloc(conf->slab_cache, gfp);
+> +
+> +	sh = alloc_stripe(conf->slab_cache, gfp);
+>  	if (!sh)
+>  		return 0;
+>  
+>  	sh->raid_conf = conf;
+>  
+> -	spin_lock_init(&sh->stripe_lock);
+> -
+>  	if (grow_buffers(sh, gfp)) {
+>  		shrink_buffers(sh);
+>  		kmem_cache_free(conf->slab_cache, sh);
+> @@ -1990,13 +2003,8 @@ static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
+>  	sh->hash_lock_index =
+>  		conf->max_nr_stripes % NR_STRIPE_HASH_LOCKS;
+>  	/* we just created an active stripe so... */
+> -	atomic_set(&sh->count, 1);
+>  	atomic_inc(&conf->active_stripes);
+> -	INIT_LIST_HEAD(&sh->lru);
+>  
+> -	spin_lock_init(&sh->batch_lock);
+> -	INIT_LIST_HEAD(&sh->batch_list);
+> -	sh->batch_head = NULL;
+>  	release_stripe(sh);
+>  	conf->max_nr_stripes++;
+>  	return 1;
+> @@ -2109,13 +2117,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+>  		return -ENOMEM;
+>  
+>  	for (i = conf->max_nr_stripes; i; i--) {
+> -		nsh = kmem_cache_zalloc(sc, GFP_KERNEL);
+> +		nsh = alloc_stripe(sc, GFP_KERNEL);
+>  		if (!nsh)
+>  			break;
+>  
+>  		nsh->raid_conf = conf;
+> -		spin_lock_init(&nsh->stripe_lock);
+> -
+>  		list_add(&nsh->lru, &newstripes);
+>  	}
+>  	if (i) {
+> @@ -2142,13 +2148,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
+>  				    lock_device_hash_lock(conf, hash));
+>  		osh = get_free_stripe(conf, hash);
+>  		unlock_device_hash_lock(conf, hash);
+> -		atomic_set(&nsh->count, 1);
+> +
+>  		for(i=0; i<conf->pool_size; i++) {
+>  			nsh->dev[i].page = osh->dev[i].page;
+>  			nsh->dev[i].orig_page = osh->dev[i].page;
+>  		}
+> -		for( ; i<newsize; i++)
+> -			nsh->dev[i].page = NULL;
+>  		nsh->hash_lock_index = hash;
+>  		kmem_cache_free(conf->slab_cache, osh);
+>  		cnt++;
+> 
+
+
