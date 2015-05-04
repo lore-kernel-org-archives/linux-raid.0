@@ -1,110 +1,177 @@
-From: Phil Turmel <philip@turmel.org>
+From: =?UTF-8?Q?J=C3=A9r=C3=B4me_Tytgat?= <jerome.tytgat@sioban.net>
 Subject: Re: upgrade to jessie/newer kernel and mdadm problems
-Date: Mon, 04 May 2015 08:42:07 -0400
-Message-ID: <5547691F.9060908@turmel.org>
-References: <55434A08.3050505@sioban.net>
+Date: Mon, 04 May 2015 15:07:32 +0200
+Message-ID: <12c70e695369533b4e301872282ee045@webmail.sioban.net>
+References: <55434A08.3050505@sioban.net> <5547691F.9060908@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55434A08.3050505@sioban.net>
+In-Reply-To: <5547691F.9060908@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?SsOpcsO0bWUgVHl0Z2F0?= <jerome.tytgat@sioban.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good morning J=C3=A9r=C3=B4me,
+> I was leaving your case for people who know IMSM to pipe up, as I don't
+> have any experience with it.  But the silence is deafening :-(
 
-On 05/01/2015 05:40 AM, J=C3=A9r=C3=B4me Tytgat wrote:
-> Hello list,
->=20
-> Sorry for the long post, but I wanted to be as much informative as I =
-can
-> be.
+That's OK, a good guy (PascalHambourg) in the french debian forum was 
+able to help me a lot.
 
-I was leaving your case for people who know IMSM to pipe up, as I don't
-have any experience with it.  But the silence is deafening :-(
 
-> Forgive my lack of knowlegde in mdadm, I know how to create it using =
-the
-> debian installer and few things to get information but that's all.
-> Forgive also my english, I'm not a native in this language.
+> However, if you've been using the system in this degraded state, you
+> will need to do the manual assembly with only the good partitions, then
+> add the other partitions to rebuild each.
 
-It's ok.  Your report was thorough.
+Yes, it was in use, but this what we done :
 
-> My system has been installed in 2007, and I've upgraded it several ti=
-mes
-> until this week to Debian Jessie (the latest version).
+1. restoring the original mdadm.conf
 
-That explains the use of v0.90 metadata.
+2. modifying the DEVICE lines with this : DEVICE /dev/sdb?* /dev/sdc?*
 
-> So, I've upgraded my system to jessie today (only partially with apt-=
-get
-> upgrade + kernel upgrade) and I faced with a problem with my RAID 1 s=
-oft.
->=20
-> I have two disk (/dev/sdb and /dev/sdc) which are members of the raid=
- array
-> There's 10 partitions on these disks, each one is a array (ie sdb1 an=
-d
-> sdc1).
-> All of these form my raids array : md0 to md9
+3. updating initram: update-initramfs -u (got some errors but we ignored 
+them, however I made two initrd to be failsafe)
 
-Understood.
+4. rebooted, md126 was gone and md9 back. However all arrays had a 
+partition marked as fail
 
-> Today , one of my md partition was missing.
-> Before upgrade I had partitions from md0 to md9, after reboot I'm
-> missing md9.
->=20
-> my mdadm.conf before reboot looked like that:
+5. rebuilded each partiton with mdadm /dev/mdX --add /dev/sdcX or mdadm 
+/dev/mdX --add /dev/sdbX accordingly (sometimes, the failed partition 
+was on sdb and sometimes on sdc, this scarried me as I thought I would 
+loose everything if one drive failed).
 
-[trim /]
+6. rebuild was ok, I needed to remove the superblock on /dev/sdb and 
+/dev/sdc because it looked like this (it contains Intel RAID data but my 
+disk are softraid and we thought that was one origin of the problem):
 
-Very good.  Although the level=3D and num-devices=3D clauses aren't
-necessary, and sometimes troublesome.
 
-> After reboot and after a mdadm -Es, I got this:
+<--------------------------------------------------------------------->
+# mdadm -E /dev/sdb
+mdmon: /dev/sdb is not attached to Intel(R) RAID controller.
+mdmon: /dev/sdb is not attached to Intel(R) RAID controller.
+/dev/sdb:
+           Magic : Intel Raid ISM Cfg Sig.
+         Version : 1.1.00
+     Orig Family : 26b5a9e0
+          Family : 26b5a9e0
+      Generation : 00004db7
+      Attributes : All supported
+            UUID : d9cfa6d9:2a715e4f:1fbc2095:be342429
+        Checksum : 261d2aed correct
+     MPB Sectors : 1
+           Disks : 2
+    RAID Devices : 1
 
-[trim /]
+   Disk01 Serial : VFC100R10BE79D
+           State : active
+              Id : 00010000
+     Usable Size : 488390862 (232.88 GiB 250.06 GB)
 
->    # definitions of existing MD arrays
->    ARRAY metadata=3Dimsm UUID=3Dd9cfa6d9:2a715e4f:1fbc2095:be342429
->    ARRAY /dev/md/raidlin container=3Dd9cfa6d9:2a715e4f:1fbc2095:be342=
-429
->    member=3D0 UUID=3D91449a9d:9242bfe9:d99bceb0:a59f9314
+[raidlin]:
+            UUID : 91449a9d:9242bfe9:d99bceb0:a59f9314
+      RAID Level : 1
+         Members : 2
+           Slots : [UU]
+     Failed disk : none
+       This Slot : 1
+      Array Size : 488390656 (232.88 GiB 250.06 GB)
+    Per Dev Size : 488390656 (232.88 GiB 250.06 GB)
+   Sector Offset : 0
+     Num Stripes : 1907776
+      Chunk Size : 64 KiB
+        Reserved : 0
+   Migrate State : idle
+       Map State : normal
+     Dirty State : dirty
 
-So here your system misidentified your drives as members of an
-Intel-based MD-compatible hardware raid, then found raid members inside=
- it.
+   Disk00 Serial : VFC100R10BRKMD
+           State : active
+              Id : 00000000
+     Usable Size : 488390862 (232.88 GiB 250.06 GB)
+<--------------------------------------------------------------------->
+# mdadm -E /dev/sdc
+mdmon: /dev/sdc is not attached to Intel(R) RAID controller.
+mdmon: /dev/sdc is not attached to Intel(R) RAID controller.
+/dev/sdc:
+           Magic : Intel Raid ISM Cfg Sig.
+         Version : 1.1.00
+     Orig Family : 26b5a9e0
+          Family : 26b5a9e0
+      Generation : 00004dbc
+      Attributes : All supported
+            UUID : d9cfa6d9:2a715e4f:1fbc2095:be342429
+        Checksum : 261c2af2 correct
+     MPB Sectors : 1
+           Disks : 2
+    RAID Devices : 1
 
-This is almost certainly a side effect of using v0.90 metadata.  It has
-always had a design problem distinguishing between a raid partition at
-the end of a disk and a raid occupying an entire device.  It's one of
-the reasons that metadata was deprecated long ago.
+   Disk00 Serial : VFC100R10BRKMD
+           State : active
+              Id : 00000000
+     Usable Size : 488390862 (232.88 GiB 250.06 GB)
 
-If you haven't used the system in this weird state, fixing it should be
-relatively simple:
+[raidlin]:
+            UUID : 91449a9d:9242bfe9:d99bceb0:a59f9314
+      RAID Level : 1
+         Members : 2
+           Slots : [UU]
+     Failed disk : none
+       This Slot : 0
+      Array Size : 488390656 (232.88 GiB 250.06 GB)
+    Per Dev Size : 488390656 (232.88 GiB 250.06 GB)
+   Sector Offset : 0
+     Num Stripes : 1907776
+      Chunk Size : 64 KiB
+        Reserved : 0
+   Migrate State : idle
+       Map State : normal
+     Dirty State : clean
 
-1) use mdadm --stop on all the arrays, in numerical order.  /proc/mdsta=
-t
-should then be empty.
+   Disk01 Serial : VFC100R10BE79D
+           State : active
+              Id : 00010000
+     Usable Size : 488390862 (232.88 GiB 250.06 GB)
+<--------------------------------------------------------------------->
 
-2) manually assemble your arrays, one by one, using the
---update=3Dmetadata clause to converted them to v1.0 metadata.
+7. So I rebooted into initramfs shell by editing GRUB command line to 
+add "break" at the end of kernel line
 
-3) If md9 refuses to assemble (possibly damaged by the usage as IMSM),
-re-create it with metadata v1.0.
+8. stopped the raid (they was mounted accordingly to /proc/mdstat) : 
+mdadm --stop --scan
 
-4) Replace your mdadm.conf with a new scan, then update your initramfs.
+9. removed the superblock on /dev/sdb and /dev/sdc : mdadm 
+--zero-superblock --metadata=imsm /dev/sdb ; mdadm --zero-superblock 
+--metadata=imsm /dev/sdc
 
-However, if you've been using the system in this degraded state, you
-will need to do the manual assembly with only the good partitions, then
-add the other partitions to rebuild each.
+This is what they look now :
+<--------------------------------------------------------------------->
+# mdadm -E /dev/sdb
+/dev/sdb:
+    MBR Magic : aa55
+Partition[0] :       979902 sectors at           63 (type fd)
+Partition[1] :      9767520 sectors at       979965 (type fd)
+Partition[2] :      3903795 sectors at     10747485 (type fd)
+Partition[3] :    473740785 sectors at     14651280 (type 05)
+<--------------------------------------------------------------------->
+# mdadm -E /dev/sdc
+/dev/sdc:
+    MBR Magic : aa55
+Partition[0] :       979902 sectors at           63 (type fd)
+Partition[1] :      9767520 sectors at       979965 (type fd)
+Partition[2] :      3903795 sectors at     10747485 (type fd)
+Partition[3] :    473740785 sectors at     14651280 (type 05)
+<--------------------------------------------------------------------->
 
-Hope this helps.
+10. rebooted, changed back DEVICE line in mdadm.conf to DEVICE 
+partitions
 
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The array looks like OK now.
+
+Anyway, Should I upgrade to superblock 1.0 (or 1.2) ? If so, can I use 
+your method do it in initramfs shell (because my system is live with 
+active raid arrays) ?
+
+
+Full thread there (in french, sorry): 
+https://www.debian-fr.org/mise-a-jour-vers-jessie-et-mdadm-t51945.html
