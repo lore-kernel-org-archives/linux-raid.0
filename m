@@ -1,169 +1,110 @@
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: Re: [PATCH] md/raid5: init batch_xxx for new sh at resize_stripes
-Date: Mon, 4 May 2015 15:51:03 +0800
-Message-ID: <20150504075103.GH3858@yliu-dev.sh.intel.com>
-References: <1430718624-8988-1-git-send-email-yuanhan.liu@linux.intel.com>
- <20150504172424.283b7727@notabene.brown>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: upgrade to jessie/newer kernel and mdadm problems
+Date: Mon, 04 May 2015 08:42:07 -0400
+Message-ID: <5547691F.9060908@turmel.org>
+References: <55434A08.3050505@sioban.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150504172424.283b7727@notabene.brown>
+In-Reply-To: <55434A08.3050505@sioban.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Shaohua Li <shli@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
+To: =?UTF-8?B?SsOpcsO0bWUgVHl0Z2F0?= <jerome.tytgat@sioban.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 04, 2015 at 05:24:24PM +1000, NeilBrown wrote:
-> On Mon,  4 May 2015 13:50:24 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> wrote:
-> 
-> > This is to fix a kernel NULL dereference oops introduced by commit
-> > 59fc630b("RAID5: batch adjacent full stripe write"), which introduced
-> > several batch_xxx fields, and did initiation for them at grow_one_stripes(),
-> > but forgot to do same at resize_stripes().
-> > 
-> > This oops can be easily triggered by following steps:
-> > 
-> >     __create RAID5 /dev/md0
-> >     __grow /dev/md0
-> >     mdadm --wait /dev/md0
-> >     dd if=/dev/zero of=/dev/md0
-> > 
-> > Here is the detailed oops log:
-...
-> > 
-> > Cc: Shaohua Li <shli@kernel.org>
-> > Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> > ---
-> >  drivers/md/raid5.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 697d77a..7b074f7 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -2217,6 +2217,10 @@ static int resize_stripes(struct r5conf *conf, int newsize)
-> >  				if (!p)
-> >  					err = -ENOMEM;
-> >  			}
-> > +
-> > +		spin_lock_init(&nsh->batch_lock);
-> > +		INIT_LIST_HEAD(&nsh->batch_list);
-> > +		nsh->batch_head = NULL;
-> >  		release_stripe(nsh);
-> >  	}
-> >  	/* critical section pass, GFP_NOIO no longer needed */
-> 
-> Thanks!
-> 
-> However I already have the following fix queued - though not pushed  out
+Good morning J=C3=A9r=C3=B4me,
 
-Yeah, much cleaner.
+On 05/01/2015 05:40 AM, J=C3=A9r=C3=B4me Tytgat wrote:
+> Hello list,
+>=20
+> Sorry for the long post, but I wanted to be as much informative as I =
+can
+> be.
 
+I was leaving your case for people who know IMSM to pipe up, as I don't
+have any experience with it.  But the silence is deafening :-(
 
-> you.  I probably would have got it into -rc2 except that I was chasing
-> another raid5 bug.  The
-> 	BUG_ON(sh->batch_head);
-> 
-> in handle_stripe_fill() fires when I run the mdadm selftests.  I got caught
-> up chasing that and didn't push the other fix.
+> Forgive my lack of knowlegde in mdadm, I know how to create it using =
+the
+> debian installer and few things to get information but that's all.
+> Forgive also my english, I'm not a native in this language.
 
-I am not aware of there is a selftests for raid. I'd like to add it to our 0day
-kernel testing in near future so that we could catch bugs and bisect it down in
-first time ;)
+It's ok.  Your report was thorough.
 
-	--yliu
-> 
-> 
-> From 3dd8ba734349e602fe17d647ce3da5f4a13748aa Mon Sep 17 00:00:00 2001
-> From: NeilBrown <neilb@suse.de>
-> Date: Thu, 30 Apr 2015 11:24:28 +1000
-> Subject: [PATCH] md/raid5 new alloc_stripe function.
-> 
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 77dfd720aaa0..91a1e8b26b52 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -1971,17 +1971,30 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
->  	put_cpu();
->  }
->  
-> +static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp)
-> +{
-> +	struct stripe_head *sh;
-> +
-> +	sh = kmem_cache_zalloc(sc, gfp);
-> +	if (sh) {
-> +		spin_lock_init(&sh->stripe_lock);
-> +		spin_lock_init(&sh->batch_lock);
-> +		INIT_LIST_HEAD(&sh->batch_list);
-> +		INIT_LIST_HEAD(&sh->lru);
-> +		atomic_set(&sh->count, 1);
-> +	}
-> +	return sh;
-> +}
->  static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
->  {
->  	struct stripe_head *sh;
-> -	sh = kmem_cache_zalloc(conf->slab_cache, gfp);
-> +
-> +	sh = alloc_stripe(conf->slab_cache, gfp);
->  	if (!sh)
->  		return 0;
->  
->  	sh->raid_conf = conf;
->  
-> -	spin_lock_init(&sh->stripe_lock);
-> -
->  	if (grow_buffers(sh, gfp)) {
->  		shrink_buffers(sh);
->  		kmem_cache_free(conf->slab_cache, sh);
-> @@ -1990,13 +2003,8 @@ static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
->  	sh->hash_lock_index =
->  		conf->max_nr_stripes % NR_STRIPE_HASH_LOCKS;
->  	/* we just created an active stripe so... */
-> -	atomic_set(&sh->count, 1);
->  	atomic_inc(&conf->active_stripes);
-> -	INIT_LIST_HEAD(&sh->lru);
->  
-> -	spin_lock_init(&sh->batch_lock);
-> -	INIT_LIST_HEAD(&sh->batch_list);
-> -	sh->batch_head = NULL;
->  	release_stripe(sh);
->  	conf->max_nr_stripes++;
->  	return 1;
-> @@ -2109,13 +2117,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
->  		return -ENOMEM;
->  
->  	for (i = conf->max_nr_stripes; i; i--) {
-> -		nsh = kmem_cache_zalloc(sc, GFP_KERNEL);
-> +		nsh = alloc_stripe(sc, GFP_KERNEL);
->  		if (!nsh)
->  			break;
->  
->  		nsh->raid_conf = conf;
-> -		spin_lock_init(&nsh->stripe_lock);
-> -
->  		list_add(&nsh->lru, &newstripes);
->  	}
->  	if (i) {
-> @@ -2142,13 +2148,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
->  				    lock_device_hash_lock(conf, hash));
->  		osh = get_free_stripe(conf, hash);
->  		unlock_device_hash_lock(conf, hash);
-> -		atomic_set(&nsh->count, 1);
-> +
->  		for(i=0; i<conf->pool_size; i++) {
->  			nsh->dev[i].page = osh->dev[i].page;
->  			nsh->dev[i].orig_page = osh->dev[i].page;
->  		}
-> -		for( ; i<newsize; i++)
-> -			nsh->dev[i].page = NULL;
->  		nsh->hash_lock_index = hash;
->  		kmem_cache_free(conf->slab_cache, osh);
->  		cnt++;
-> 
+> My system has been installed in 2007, and I've upgraded it several ti=
+mes
+> until this week to Debian Jessie (the latest version).
 
+That explains the use of v0.90 metadata.
 
+> So, I've upgraded my system to jessie today (only partially with apt-=
+get
+> upgrade + kernel upgrade) and I faced with a problem with my RAID 1 s=
+oft.
+>=20
+> I have two disk (/dev/sdb and /dev/sdc) which are members of the raid=
+ array
+> There's 10 partitions on these disks, each one is a array (ie sdb1 an=
+d
+> sdc1).
+> All of these form my raids array : md0 to md9
+
+Understood.
+
+> Today , one of my md partition was missing.
+> Before upgrade I had partitions from md0 to md9, after reboot I'm
+> missing md9.
+>=20
+> my mdadm.conf before reboot looked like that:
+
+[trim /]
+
+Very good.  Although the level=3D and num-devices=3D clauses aren't
+necessary, and sometimes troublesome.
+
+> After reboot and after a mdadm -Es, I got this:
+
+[trim /]
+
+>    # definitions of existing MD arrays
+>    ARRAY metadata=3Dimsm UUID=3Dd9cfa6d9:2a715e4f:1fbc2095:be342429
+>    ARRAY /dev/md/raidlin container=3Dd9cfa6d9:2a715e4f:1fbc2095:be342=
+429
+>    member=3D0 UUID=3D91449a9d:9242bfe9:d99bceb0:a59f9314
+
+So here your system misidentified your drives as members of an
+Intel-based MD-compatible hardware raid, then found raid members inside=
+ it.
+
+This is almost certainly a side effect of using v0.90 metadata.  It has
+always had a design problem distinguishing between a raid partition at
+the end of a disk and a raid occupying an entire device.  It's one of
+the reasons that metadata was deprecated long ago.
+
+If you haven't used the system in this weird state, fixing it should be
+relatively simple:
+
+1) use mdadm --stop on all the arrays, in numerical order.  /proc/mdsta=
+t
+should then be empty.
+
+2) manually assemble your arrays, one by one, using the
+--update=3Dmetadata clause to converted them to v1.0 metadata.
+
+3) If md9 refuses to assemble (possibly damaged by the usage as IMSM),
+re-create it with metadata v1.0.
+
+4) Replace your mdadm.conf with a new scan, then update your initramfs.
+
+However, if you've been using the system in this degraded state, you
+will need to do the manual assembly with only the good partitions, then
+add the other partitions to rebuild each.
+
+Hope this helps.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
