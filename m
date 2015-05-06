@@ -1,86 +1,81 @@
-From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Subject: [PATCH 2/2] md/raid5: remove unnecessary sh->count check
-Date: Wed,  6 May 2015 17:45:50 +0800
-Message-ID: <1430905550-6142-2-git-send-email-yuanhan.liu@linux.intel.com>
-References: <1430905550-6142-1-git-send-email-yuanhan.liu@linux.intel.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1430905550-6142-1-git-send-email-yuanhan.liu@linux.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yuanhan Liu <yuanhan.liu@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [dm-devel] [PATCH stable] block: discard bdi_unregister() in
+ favour of bdi_destroy()
+Date: Wed, 6 May 2015 09:11:19 -0700
+Message-ID: <CAA9_cmcNfpNAuJbVVbNN-cacVg4Dn-=VroUQ0T-PZz-j69S+iQ@mail.gmail.com>
+References: <20150414171537.GH25394@azat>
+	<20150423160551.45345f96@notabene.brown>
+	<20150427141222.5dac22f1@notabene.brown>
+	<CAMM=eLf2aFFH29xeDVrS7beFj6T8kqUQRh=4KB1YO0kWGa7Rog@mail.gmail.com>
+	<20150429072530.39d38b00@notabene.brown>
+	<20150429133512.GA4436@lst.de>
+	<20150429160258.GK17717@twins.programming.kicks-ass.net>
+	<20150430103233.75227693@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150430103233.75227693@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Azat Khuzhin <a3at.mail@gmail.com>, Peter Zijlstra <peterz@infradead.org>, lkml <linux-kernel@vger.kernel.org>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, Guoqing Jiang <GQJiang@suse.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, nicholas.w.moulin@linux.intel.com
 List-Id: linux-raid.ids
 
-Remove the unnecessary "!atomic_read(&sh->count)" check, as the previous
-"atomic_inc_not_zero(&sh->count)" check assures sh->count to be 0.
+On Wed, Apr 29, 2015 at 5:32 PM, NeilBrown <neilb@suse.de> wrote:
+>
+> bdi_unregister() now contains very little functionality.
+>
+> It contains a "WARN_ON" if bdi->dev is NULL.  This warning is of no
+> real consequence as bdi->dev isn't needed by anything else in the function,
+> and it triggers if
+>    blk_cleanup_queue() -> bdi_destroy()
+> is called before bdi_unregister, which a subsequent patch will make happen.
+> So this isn't wanted.
+>
+> It also calls bdi_set_min_ratio().  This needs to be called after
+> writes through the bdi have all been flushed, and before the bdi is destroyed.
+> Calling it early is better than calling it late as it frees up a global
+> resource.
+>
+> Calling it immediately after bdi_wb_shutdown() in bdi_destroy()
+> perfectly fits these requirements.
+>
+> So bdi_unregister can be discarded with the important content moved to
+> bdi_destroy, as can the
+>   writeback_bdi_unregister
+> event which is already not used.
+>
+> This is tagged for 'stable' as it is a pre-requisite for a subsequent
+> patch which moves calls to blk_cleanup_queue() before calls to
+> del_gendisk().  The commit identified as 'Fixes' removed a lot of
+> other functionality from bdi_unregister(), and made a change which
+> necessitated moving the blk_cleanup_queue() calls.
+>
+> Reported-by: Mike Snitzer <snitzer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Peter Zijlstra <peterz@infradead.org>
+> Cc: stable@vger.kernel.org (v4.0)
+> Fixes: c4db59d31e39ea067c32163ac961e9c80198fd37
+> Signed-off-by: NeilBrown <neilb@suse.de>
+>
+> ---
+>
+> Hi again Jens,
+>  would you be able to queue this patch *before* the other one:
+>    block: destroy bdi before blockdev is unregistered.
+>
+>  If it has to come after I'll need to re-write the text a bit.
+>  If you could give me the commit hash to reference I'll do that.
 
-The only reason I can think of that we need such check is to consider
-the lock race issue.
+Seems it is after:
 
-First of all, I doubt there is another process could modify an in-cache
-but zero referenced sh while it's being protected by a hash lock. Hence,
-I would say sh->count will be consistent to 0 in that  "if !atomic_inc_not_zero"
-block.
+http://git.kernel.dk/?p=linux-block.git;a=commit;h=6cd18e71
 
-Secondly, just assume there is a chance that someone outside the lock
-modifies sh->count(by atomic_inc?). It could lead to some problem.
+Also, we gave both patches a try internally after seeing the duplicate
+sysfs warning.  You can add:
 
-To make it clear, here I paste few lines of key code:
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+Tested-by: Nicholas Moulin <nicholas.w.moulin@linux.intel.com>
 
-	if (!atomic_inc_not_zero(&sh->count)) {
-		spin_lock(&conf->device_lock);
-		if (!atomic_read(&sh->count)) {
-			....
-		}
-		...
-	}
+...on the re-send.
 
-At the time we enter the first if block, sh->count is zero. And just assume
-someone increases sh->count from somewhere while acquiring the lock,
-the following if block will not be executed then, leaving some fileds,
-such as conf->active_stripes, not being set properly.
-
-So, we should execute the second if block whenever we entered the first
-if block no matter sh->count stays with 0 or not.
-
-Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
----
-
-Neil, I'm a bit concerned that I missed something in this patch. Please
-kindly correct me if I'm wrong :)
-
----
- drivers/md/raid5.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e7fa818..17ece2a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -570,16 +570,14 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
- 		if (sh->sector == sector && sh->generation == generation) {
- 			if (!atomic_inc_not_zero(&sh->count)) {
- 				spin_lock(&conf->device_lock);
--				if (!atomic_read(&sh->count)) {
--					if (!test_bit(STRIPE_HANDLE, &sh->state))
--						atomic_inc(&conf->active_stripes);
--					BUG_ON(list_empty(&sh->lru) &&
--					       !test_bit(STRIPE_EXPANDING, &sh->state));
--					list_del_init(&sh->lru);
--					if (sh->group) {
--						sh->group->stripes_cnt--;
--						sh->group = NULL;
--					}
-+				if (!test_bit(STRIPE_HANDLE, &sh->state))
-+					atomic_inc(&conf->active_stripes);
-+				BUG_ON(list_empty(&sh->lru) &&
-+				       !test_bit(STRIPE_EXPANDING, &sh->state));
-+				list_del_init(&sh->lru);
-+				if (sh->group) {
-+					sh->group->stripes_cnt--;
-+					sh->group = NULL;
- 				}
- 				atomic_inc(&sh->count);
- 				spin_unlock(&conf->device_lock);
--- 
-1.9.0
-
+Thanks Neil!
