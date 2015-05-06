@@ -1,59 +1,100 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 07/10] block: kill merge_bvec_fn() completely
-Date: Wed, 6 May 2015 09:26:37 +0200
-Message-ID: <20150506072637.GB23083@lst.de>
-References: <1430203717-13307-1-git-send-email-mlin@kernel.org> <1430203717-13307-8-git-send-email-mlin@kernel.org> <20150429080919.342fddfd@notabene.brown> <5547241B.1040903@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: [PATCH 1/2] md/raid5: avoid duplicate code
+Date: Wed,  6 May 2015 17:45:49 +0800
+Message-ID: <1430905550-6142-1-git-send-email-yuanhan.liu@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5547241B.1040903@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>, Lars Ellenberg <drbd-dev@lists.linbit.com>, drbd-user@lists.linbit.com, Jiri Kosina <jkosina@suse.cz>, Yehuda Sadeh <yehuda@inktank.com>, Sage Weil <sage@inktank.com>, Alex Elder <elder@kernel.org>, ceph-devel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Yuanhan Liu <yuanhan.liu@linux.intel.com>
 List-Id: linux-raid.ids
 
-> -static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
-> +static int __chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
+Move the code that put one idle sh(hot in cache, but happens to be
+zero referenced) back to active stage to __find_stripe(). Because
+that's what need to do every time you invoke __find_stripe().
 
-Call it raid5_read_one_chunk or something similar descriptive?
+Moving it there avoids duplicate code, as well as makes a bit more
+sense, IMO, as it tells a whole story now.
 
->  {
->  	struct r5conf *conf = mddev->private;
->  	int dd_idx;
-> @@ -4718,7 +4718,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
->  	sector_t end_sector;
->  
->  	if (!in_chunk_boundary(mddev, raid_bio)) {
-> -		pr_debug("chunk_aligned_read : non aligned\n");
-> +		pr_debug("__chunk_aligned_read : non aligned\n");
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+---
+ drivers/md/raid5.c | 50 ++++++++++++++++++--------------------------------
+ 1 file changed, 18 insertions(+), 32 deletions(-)
 
-Switch to __func__?
-
-> +static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
-> +{
-> +	struct bio *split;
-> +
-> +	do {
-> +		sector_t sector = raid_bio->bi_iter.bi_sector;
-> +		unsigned chunk_sects = mddev->chunk_sectors;
-> +
-> +		unsigned sectors = chunk_sects -
-> +			(likely(is_power_of_2(chunk_sects))
-> +			 ? (sector & (chunk_sects-1))
-> +			 : sector_div(sector, chunk_sects));
-
-This would be a lot more readable with a good old if.
-
->  	if (rw == READ && mddev->degraded == 0 &&
->  	     mddev->reshape_position == MaxSector &&
-> -	     chunk_aligned_read(mddev,bi))
-> +	     (!(bi = chunk_aligned_read(mddev, bi))))
->  		return;
-
-	if (rw == READ && mddev->degraded == 0 &&
-	    mddev->reshape_position == MaxSector) {
-		bi = chunk_aligned_read(mddev, bi);
-		if (!bi)
-			return;
-	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 77dfd72..e7fa818 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -567,8 +567,25 @@ static struct stripe_head *__find_stripe(struct r5conf *conf, sector_t sector,
+ 
+ 	pr_debug("__find_stripe, sector %llu\n", (unsigned long long)sector);
+ 	hlist_for_each_entry(sh, stripe_hash(conf, sector), hash)
+-		if (sh->sector == sector && sh->generation == generation)
++		if (sh->sector == sector && sh->generation == generation) {
++			if (!atomic_inc_not_zero(&sh->count)) {
++				spin_lock(&conf->device_lock);
++				if (!atomic_read(&sh->count)) {
++					if (!test_bit(STRIPE_HANDLE, &sh->state))
++						atomic_inc(&conf->active_stripes);
++					BUG_ON(list_empty(&sh->lru) &&
++					       !test_bit(STRIPE_EXPANDING, &sh->state));
++					list_del_init(&sh->lru);
++					if (sh->group) {
++						sh->group->stripes_cnt--;
++						sh->group = NULL;
++					}
++				}
++				atomic_inc(&sh->count);
++				spin_unlock(&conf->device_lock);
++			}
+ 			return sh;
++		}
+ 	pr_debug("__stripe %llu not in cache\n", (unsigned long long)sector);
+ 	return NULL;
+ }
+@@ -698,21 +715,6 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
+ 				init_stripe(sh, sector, previous);
+ 				atomic_inc(&sh->count);
+ 			}
+-		} else if (!atomic_inc_not_zero(&sh->count)) {
+-			spin_lock(&conf->device_lock);
+-			if (!atomic_read(&sh->count)) {
+-				if (!test_bit(STRIPE_HANDLE, &sh->state))
+-					atomic_inc(&conf->active_stripes);
+-				BUG_ON(list_empty(&sh->lru) &&
+-				       !test_bit(STRIPE_EXPANDING, &sh->state));
+-				list_del_init(&sh->lru);
+-				if (sh->group) {
+-					sh->group->stripes_cnt--;
+-					sh->group = NULL;
+-				}
+-			}
+-			atomic_inc(&sh->count);
+-			spin_unlock(&conf->device_lock);
+ 		}
+ 	} while (sh == NULL);
+ 
+@@ -771,22 +773,6 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 	hash = stripe_hash_locks_hash(head_sector);
+ 	spin_lock_irq(conf->hash_locks + hash);
+ 	head = __find_stripe(conf, head_sector, conf->generation);
+-	if (head && !atomic_inc_not_zero(&head->count)) {
+-		spin_lock(&conf->device_lock);
+-		if (!atomic_read(&head->count)) {
+-			if (!test_bit(STRIPE_HANDLE, &head->state))
+-				atomic_inc(&conf->active_stripes);
+-			BUG_ON(list_empty(&head->lru) &&
+-			       !test_bit(STRIPE_EXPANDING, &head->state));
+-			list_del_init(&head->lru);
+-			if (head->group) {
+-				head->group->stripes_cnt--;
+-				head->group = NULL;
+-			}
+-		}
+-		atomic_inc(&head->count);
+-		spin_unlock(&conf->device_lock);
+-	}
+ 	spin_unlock_irq(conf->hash_locks + hash);
+ 
+ 	if (!head)
+-- 
+1.9.0
