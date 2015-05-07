@@ -1,141 +1,107 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Removed disk vs. failed disk?
-Date: Thu, 7 May 2015 13:07:07 +1000
-Message-ID: <20150507130707.6c79a720@notabene.brown>
-References: <DD68D119-D646-4D8E-8E14-498F996D8CCA@me.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/AnTGPcfw6WpVG_23i3sf3tj"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DD68D119-D646-4D8E-8E14-498F996D8CCA@me.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Hans Malissa <hmalissa@me.com>
-Cc: linux-raid@vger.kernel.org
+From: Ming Lin <mlin@kernel.org>
+Subject: [PATCH v3 07/11] md/raid5: split bio for chunk_aligned_read
+Date: Wed,  6 May 2015 23:34:17 -0700
+Message-ID: <1430980461-5235-8-git-send-email-mlin@kernel.org>
+References: <1430980461-5235-1-git-send-email-mlin@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1430980461-5235-1-git-send-email-mlin@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Ming Lin <mlin@kernel.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/AnTGPcfw6WpVG_23i3sf3tj
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+If a read request fits entirely in a chunk, it will be passed directly to the
+underlying device (providing it hasn't failed of course).  If it doesn't fit,
+the slightly less efficient path that uses the stripe_cache is used.
+Requests that get to the stripe cache are always completely split up as
+necessary.
 
-On Tue, 05 May 2015 10:42:29 -0600 Hans Malissa <hmalissa@me.com> wrote:
+So with RAID5, ripping out the merge_bvec_fn doesn't cause it to stop work,
+but could cause it to take the less efficient path more often.
 
-> I=E2=80=99m somewhat new to using RAID, but I may be looking at a broken =
-hard drive already. I=E2=80=99ve been looking at the documentation of mdadm=
- and Linux software RAID, but I=E2=80=99m not sure if I understand everythi=
-ng correctly. So I apologize if some of the questions have already been ans=
-wered elsewhere, but I need to get this thing running again as soon as poss=
-ible.
-> I cannot mount the RAID (/dev/md0) anymore. /proc/mdstat looks like this:
->=20
-> # cat /proc/mdstat
-> Personalities : [raid1]=20
-> md0 : active raid1 sdb1[0]
->       976760640 blocks super 1.0 [2/1] [U_]
->       bitmap: 3/8 pages [12KB], 65536KB chunk
->=20
-> unused devices: <none>
+All that is needed to manage this is for 'chunk_aligned_read' do some bio
+splitting, much like the RAID0 code does.
 
-This state shouldn't stop the filesystem on the array from being mounted.
-It is a RAID1 with one missing device, so all the data is still present on
-the other device.
+Cc: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+Signed-off-by: Ming Lin <mlin@kernel.org>
+---
+ drivers/md/raid5.c | 42 +++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 37 insertions(+), 5 deletions(-)
 
-What did you expect to be on /dev/md0?
-What does "fsck /dev/md0" show?
-What does "mount /dev/md0 /mnt" show ??
-
-
-
->=20
-> and mdadm =E2=80=94detail looks like this:
->=20
-> # mdadm =E2=80=94detail /dev/md0
-> /dev/md0:
->         Version : 1.0
->   Creation Time : Sun Dec 15 16:03:28 2013
->      Raid Level : raid1
->      Array Size : 976760640 (931.51 GiB 1000.20 GB)
->   Used Dev Size : 976760640 (931.51 GiB 1000.20 GB)
->    Raid Devices : 2
->   Total Devices : 1
->     Persistence : Superblock is persistent
->=20
->   Intent Bitmap : Internal
->=20
->     Update Time : Tue May  5 10:17:03 2015
->           State : active, degraded=20
->  Active Devices : 1
-> Working Devices : 1
->  Failed Devices : 0
->   Spare Devices : 0
->=20
->            Name : eprb21:0  (local to host eprb21)
->            UUID : 34d12cbd:eef71d8d:14dcf224:dfe6c013
->          Events : 3509
->=20
->     Number   Major   Minor   RaidDevice State
->        0       8       17        0      active sync   /dev/sdb1
->        1       0        0        1      removed
->=20
-> So it looks like there is a problem with the second disc in the array has=
- some problem. First, I=E2=80=99m not sure what the difference between =E2=
-=80=98removed=E2=80=99 and =E2=80=98failed=E2=80=99 is, because the disk is=
- physically still present. How does mdadm differentiate between both states?
-
-A "failed" device is not much different from a "removed" device.
-
-When md has a working device and discovers that it isn't working any more,
-typically because a 'write' failed, it marks it as 'FAULTY'.
-
-You can then remove it from the array with "mdadm --remove ...."
-Then it will be "removed".
-
-When you assemble an array, e.g. at boot time, and device that has previous=
-ly
-failed will not be allowed into the array.  So they won't appear as 'faulty'
-in the description of the array, they will just be "removed".
-
-
-> I understand that the next step would be to put in a new hard drive and r=
-ebuild the array. Is there a way to figure out right away if the data on th=
-e intact disk is uncompromised?
-
-Certainly you should check the data you have is good before adding the other
-device back into the array.  'fsck' and 'mount' are what I would suggest, b=
-ut
-it depends on what you think is stored on the array.
-
-NeilBrown
-
-
-
-> Best regards, and thanks for your help,
->=20
-> Hans Malissa--
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/AnTGPcfw6WpVG_23i3sf3tj
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVUrW2znsnt1WYoG5AQLvxw//b2B8u5eObfejQpdCN5SkIuPrfm/054eV
-NVnsD8DeMIhEQxwTBfo9/QTeQACs9ob1G6wsgGHKZAhl/eGMA//885jjU+eefQ2J
-dmsBBAJjzYX0+9tBnUP/ikDeTw6zokAL4Kfp/mNgIGOzvSIC2Xuz5C3/aPdgXOnv
-HCcPDri+kKr/BvPAr8MId1qj2moSy8kEwEPaB0j6ZP3nDqJBafuWlyddovFdhtal
-RCO7Mu2khaDKMtCJrbaQesMELFXx87aAa/GMGWOkosSZjO3sMGQfGnKtw/kg0E7b
-hKtr+RUnb8mB9DcneJQanC1/Fi1TcsRTN9LcrdobUWVGDkmNLJb1u64CoCqOR2ex
-13r4uSLWkLTwH1jgZ3vm/yiuZzA8Q7X7cMES0M4+GJJDI0AH+lKs/8rjdRXdDb/t
-QOBqcDMLd4JKEATLV6HrYEF4mIOYRinJs4V1DoeFvwtRBuFfIPleWoAiyWhEtBfU
-wlrOb9FjyOvVlpwMbTvtbejtSuU4yYBz8rUfVCOhhbzasHmEM40F0m+Cj6qnzY9M
-kJ4FZ5LdAq9lue0K/mGbkVcKgLhsGhCAu7aJ8W/1N5Bqce5k5bisEPUhg3YxaaJQ
-Dm2La2rxj3OeCf+yKmUjeAUPRimocEK4zYOj6V6qOqVILJfk9eGnQjiP4/WPUA0R
-pk5SAS65YoE=
-=pRD0
------END PGP SIGNATURE-----
-
---Sig_/AnTGPcfw6WpVG_23i3sf3tj--
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7f4a717..b18f548 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4738,7 +4738,7 @@ static void raid5_align_endio(struct bio *bi, int error)
+ 	add_bio_to_retry(raid_bi, conf);
+ }
+ 
+-static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
++static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+ {
+ 	struct r5conf *conf = mddev->private;
+ 	int dd_idx;
+@@ -4747,7 +4747,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
+ 	sector_t end_sector;
+ 
+ 	if (!in_chunk_boundary(mddev, raid_bio)) {
+-		pr_debug("chunk_aligned_read : non aligned\n");
++		pr_debug("%s: non aligned\n", __func__);
+ 		return 0;
+ 	}
+ 	/*
+@@ -4822,6 +4822,36 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
+ 	}
+ }
+ 
++static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
++{
++	struct bio *split;
++
++	do {
++		sector_t sector = raid_bio->bi_iter.bi_sector;
++		unsigned chunk_sects = mddev->chunk_sectors;
++		unsigned sectors;
++
++		if (likely(is_power_of_2(chunk_sects)))
++			sectors = chunk_sects - (sector & (chunk_sects-1));
++		else
++			sectors = chunk_sects - sector_div(sector, chunk_sects);
++
++		if (sectors < bio_sectors(raid_bio)) {
++			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
++			bio_chain(split, raid_bio);
++		} else
++			split = raid_bio;
++
++		if (!raid5_read_one_chunk(mddev, split)) {
++			if (split != raid_bio)
++				generic_make_request(raid_bio);
++			return split;
++		}
++	} while (split != raid_bio);
++
++	return NULL;
++}
++
+ /* __get_priority_stripe - get the next stripe to process
+  *
+  * Full stripe writes are allowed to pass preread active stripes up until
+@@ -5099,9 +5129,11 @@ static void make_request(struct mddev *mddev, struct bio * bi)
+ 	 * data on failed drives.
+ 	 */
+ 	if (rw == READ && mddev->degraded == 0 &&
+-	     mddev->reshape_position == MaxSector &&
+-	     chunk_aligned_read(mddev,bi))
+-		return;
++	    mddev->reshape_position == MaxSector) {
++		bi = chunk_aligned_read(mddev, bi);
++		if (!bi)
++			return;
++	}
+ 
+ 	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
+ 		make_discard_request(mddev, bi);
+-- 
+1.9.1
