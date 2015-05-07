@@ -1,7 +1,7 @@
 From: Ming Lin <mlin@kernel.org>
-Subject: [PATCH v3 07/11] md/raid5: split bio for chunk_aligned_read
-Date: Wed,  6 May 2015 23:34:17 -0700
-Message-ID: <1430980461-5235-8-git-send-email-mlin@kernel.org>
+Subject: [PATCH v3 06/11] md/raid5: get rid of bio_fits_rdev()
+Date: Wed,  6 May 2015 23:34:16 -0700
+Message-ID: <1430980461-5235-7-git-send-email-mlin@kernel.org>
 References: <1430980461-5235-1-git-send-email-mlin@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1430980461-5235-1-git-send-email-mlin@kernel.org>
@@ -10,98 +10,64 @@ To: linux-kernel@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Ming Lin <mlin@kernel.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If a read request fits entirely in a chunk, it will be passed directly to the
-underlying device (providing it hasn't failed of course).  If it doesn't fit,
-the slightly less efficient path that uses the stripe_cache is used.
-Requests that get to the stripe cache are always completely split up as
-necessary.
+From: Kent Overstreet <kent.overstreet@gmail.com>
 
-So with RAID5, ripping out the merge_bvec_fn doesn't cause it to stop work,
-but could cause it to take the less efficient path more often.
-
-All that is needed to manage this is for 'chunk_aligned_read' do some bio
-splitting, much like the RAID0 code does.
+Remove bio_fits_rdev() completely, because ->merge_bvec_fn() has now
+gone. There's no point in calling bio_fits_rdev() only for ensuring
+aligned read from rdev.
 
 Cc: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+[dpark: add more description in commit message]
+Signed-off-by: Dongsu Park <dpark@posteo.net>
 Signed-off-by: Ming Lin <mlin@kernel.org>
 ---
- drivers/md/raid5.c | 42 +++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 37 insertions(+), 5 deletions(-)
+ drivers/md/raid5.c | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7f4a717..b18f548 100644
+index 77dfd72..7f4a717 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -4738,7 +4738,7 @@ static void raid5_align_endio(struct bio *bi, int error)
+@@ -4738,25 +4738,6 @@ static void raid5_align_endio(struct bio *bi, int error)
  	add_bio_to_retry(raid_bi, conf);
  }
  
--static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
-+static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+-static int bio_fits_rdev(struct bio *bi)
+-{
+-	struct request_queue *q = bdev_get_queue(bi->bi_bdev);
+-
+-	if (bio_sectors(bi) > queue_max_sectors(q))
+-		return 0;
+-	blk_recount_segments(q, bi);
+-	if (bi->bi_phys_segments > queue_max_segments(q))
+-		return 0;
+-
+-	if (q->merge_bvec_fn)
+-		/* it's too hard to apply the merge_bvec_fn at this stage,
+-		 * just just give up
+-		 */
+-		return 0;
+-
+-	return 1;
+-}
+-
+ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
  {
  	struct r5conf *conf = mddev->private;
- 	int dd_idx;
-@@ -4747,7 +4747,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 	sector_t end_sector;
+@@ -4810,11 +4791,9 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
+ 		align_bi->bi_bdev =  rdev->bdev;
+ 		__clear_bit(BIO_SEG_VALID, &align_bi->bi_flags);
  
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
--		pr_debug("chunk_aligned_read : non aligned\n");
-+		pr_debug("%s: non aligned\n", __func__);
- 		return 0;
- 	}
- 	/*
-@@ -4822,6 +4822,36 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 	}
- }
- 
-+static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
-+{
-+	struct bio *split;
-+
-+	do {
-+		sector_t sector = raid_bio->bi_iter.bi_sector;
-+		unsigned chunk_sects = mddev->chunk_sectors;
-+		unsigned sectors;
-+
-+		if (likely(is_power_of_2(chunk_sects)))
-+			sectors = chunk_sects - (sector & (chunk_sects-1));
-+		else
-+			sectors = chunk_sects - sector_div(sector, chunk_sects);
-+
-+		if (sectors < bio_sectors(raid_bio)) {
-+			split = bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
-+			bio_chain(split, raid_bio);
-+		} else
-+			split = raid_bio;
-+
-+		if (!raid5_read_one_chunk(mddev, split)) {
-+			if (split != raid_bio)
-+				generic_make_request(raid_bio);
-+			return split;
-+		}
-+	} while (split != raid_bio);
-+
-+	return NULL;
-+}
-+
- /* __get_priority_stripe - get the next stripe to process
-  *
-  * Full stripe writes are allowed to pass preread active stripes up until
-@@ -5099,9 +5129,11 @@ static void make_request(struct mddev *mddev, struct bio * bi)
- 	 * data on failed drives.
- 	 */
- 	if (rw == READ && mddev->degraded == 0 &&
--	     mddev->reshape_position == MaxSector &&
--	     chunk_aligned_read(mddev,bi))
--		return;
-+	    mddev->reshape_position == MaxSector) {
-+		bi = chunk_aligned_read(mddev, bi);
-+		if (!bi)
-+			return;
-+	}
- 
- 	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
- 		make_discard_request(mddev, bi);
+-		if (!bio_fits_rdev(align_bi) ||
+-		    is_badblock(rdev, align_bi->bi_iter.bi_sector,
++		if (is_badblock(rdev, align_bi->bi_iter.bi_sector,
+ 				bio_sectors(align_bi),
+ 				&first_bad, &bad_sectors)) {
+-			/* too big in some way, or has a known bad block */
+ 			bio_put(align_bi);
+ 			rdev_dec_pending(rdev, mddev);
+ 			return 0;
 -- 
 1.9.1
