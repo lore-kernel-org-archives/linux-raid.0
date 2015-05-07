@@ -1,73 +1,76 @@
 From: Ming Lin <mlin@kernel.org>
-Subject: [PATCH v3 06/11] md/raid5: get rid of bio_fits_rdev()
-Date: Wed,  6 May 2015 23:34:16 -0700
-Message-ID: <1430980461-5235-7-git-send-email-mlin@kernel.org>
+Subject: [PATCH v3 10/11] md/raid10: make sync_request_write() call bio_copy_data()
+Date: Wed,  6 May 2015 23:34:20 -0700
+Message-ID: <1430980461-5235-11-git-send-email-mlin@kernel.org>
 References: <1430980461-5235-1-git-send-email-mlin@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1430980461-5235-1-git-send-email-mlin@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Ming Lin <mlin@kernel.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Ming Lin <mlin@kernel.org>, Christoph Hellwig <hch@infradead.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 From: Kent Overstreet <kent.overstreet@gmail.com>
 
-Remove bio_fits_rdev() completely, because ->merge_bvec_fn() has now
-gone. There's no point in calling bio_fits_rdev() only for ensuring
-aligned read from rdev.
+Refactor sync_request_write() of md/raid10 to use bio_copy_data()
+instead of open coding bio_vec iterations.
 
+Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: NeilBrown <neilb@suse.de>
 Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
 [dpark: add more description in commit message]
 Signed-off-by: Dongsu Park <dpark@posteo.net>
 Signed-off-by: Ming Lin <mlin@kernel.org>
 ---
- drivers/md/raid5.c | 23 +----------------------
- 1 file changed, 1 insertion(+), 22 deletions(-)
+ drivers/md/raid10.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 77dfd72..7f4a717 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4738,25 +4738,6 @@ static void raid5_align_endio(struct bio *bi, int error)
- 	add_bio_to_retry(raid_bi, conf);
- }
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index a46c402..6ea6f5f 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1989,17 +1989,10 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 		tbio->bi_rw = WRITE;
+ 		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-
+-		for (j=0; j < vcnt ; j++) {
+-			tbio->bi_io_vec[j].bv_offset = 0;
+-			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
+-
+-			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-			       page_address(fbio->bi_io_vec[j].bv_page),
+-			       PAGE_SIZE);
+-		}
+ 		tbio->bi_end_io = end_sync_write;
  
--static int bio_fits_rdev(struct bio *bi)
--{
--	struct request_queue *q = bdev_get_queue(bi->bi_bdev);
--
--	if (bio_sectors(bi) > queue_max_sectors(q))
--		return 0;
--	blk_recount_segments(q, bi);
--	if (bi->bi_phys_segments > queue_max_segments(q))
--		return 0;
--
--	if (q->merge_bvec_fn)
--		/* it's too hard to apply the merge_bvec_fn at this stage,
--		 * just just give up
--		 */
--		return 0;
--
--	return 1;
--}
--
- static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- {
- 	struct r5conf *conf = mddev->private;
-@@ -4810,11 +4791,9 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 		align_bi->bi_bdev =  rdev->bdev;
- 		__clear_bit(BIO_SEG_VALID, &align_bi->bi_flags);
++		bio_copy_data(tbio, fbio);
++
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 		atomic_inc(&r10_bio->remaining);
+@@ -2014,17 +2007,14 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 	 * that are active
+ 	 */
+ 	for (i = 0; i < conf->copies; i++) {
+-		int j, d;
++		int d;
  
--		if (!bio_fits_rdev(align_bi) ||
--		    is_badblock(rdev, align_bi->bi_iter.bi_sector,
-+		if (is_badblock(rdev, align_bi->bi_iter.bi_sector,
- 				bio_sectors(align_bi),
- 				&first_bad, &bad_sectors)) {
--			/* too big in some way, or has a known bad block */
- 			bio_put(align_bi);
- 			rdev_dec_pending(rdev, mddev);
- 			return 0;
+ 		tbio = r10_bio->devs[i].repl_bio;
+ 		if (!tbio || !tbio->bi_end_io)
+ 			continue;
+ 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
+ 		    && r10_bio->devs[i].bio != fbio)
+-			for (j = 0; j < vcnt; j++)
+-				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+-				       page_address(fbio->bi_io_vec[j].bv_page),
+-				       PAGE_SIZE);
++			bio_copy_data(tbio, fbio);
+ 		d = r10_bio->devs[i].devnum;
+ 		atomic_inc(&r10_bio->remaining);
+ 		md_sync_acct(conf->mirrors[d].replacement->bdev,
 -- 
 1.9.1
