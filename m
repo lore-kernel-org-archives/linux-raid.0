@@ -1,124 +1,131 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid6: general protection fault in async_copy_data
-Date: Wed, 6 May 2015 14:21:15 +1000
-Message-ID: <20150506142115.1b30da19@notabene.brown>
-References: <CAGRgLy439G+AtYkxzPh=2jBZ=GRtFggYE1kMyLAfadaeghz0xA@mail.gmail.com>
+From: "Lidong Zhong" <lzhong@suse.com>
+Subject: Re: Potential race in dlm based messaging md-cluster.c
+Date: Wed, 06 May 2015 20:43:10 -0600
+Message-ID: <554B41BE020000E10002348B@relay2.provo.novell.com>
+References: <CAE3Hb8oss1JZ2u7g7OQQgrEtgQ1vbQou04isiS6eEqbS=uzbhw@mail.gmail.com>
+ <CAE3Hb8qNczD30RrcHFYCR90Jf9QFD-XH=x89MAu4Dpmm80se0A@mail.gmail.com>
+ <554251EA.3000807@suse.com>
+ <CAE3Hb8pJ=0MB6EX5jVch28gj-gnf0Mp1wyzxBfWjzLf=SuV4sQ@mail.gmail.com>
+ <5542763C.90202@cisco.com>
+ <5548FC6C020000E100022FA0@relay2.provo.novell.com>
+ <5548911B.1080702@cisco.com> <5548B32B.5070904@cisco.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/qabnIWznuijifdRQijh1EW="; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy439G+AtYkxzPh=2jBZ=GRtFggYE1kMyLAfadaeghz0xA@mail.gmail.com>
+In-Reply-To: <5548B32B.5070904@cisco.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Abhijit Bhopatkar <abhopatk@cisco.com>, Goldwyn Rodrigues <RGoldwyn@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/qabnIWznuijifdRQijh1EW=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+>>> On 5/5/2015 at 08:10 PM, in message <5548B32B.5070904@cisco.com>, Abhijit
+Bhopatkar <abhopatk@cisco.com> wrote: 
+> On 05/05/15 3:14 pm, Abhijit Bhopatkar wrote: 
+> > On 05/05/15 2:52 pm, Lidong Zhong wrote: 
+> >>>>> On 5/1/2015 at 02:36 AM, in message <5542763C.90202@cisco.com>, Abhijit 
+> >> Bhopatkar <abhopatk@cisco.com> wrote: 
+>  
+> <snip> 
+>  
+> >>> 
+> >>> To illustrate the problem consider timeline for two senders and one 
+> >>> receiver (we will ignore receive part for Sender2 node) 
+> >>> 
+> >>> Sender1              Sender2                         Receiver 
+> >>> Get EX on TOKEN       Get EX on TOKEN 
+> >>> <Granted>                    <Wait till granted> 
+> >>> 
+> >>> Get EX on MSG 
+> >>> write LVB 
+> >>> down MSG to CR 
+> >>> Get EX of ACK 
+> >>> <wait till granted> 
+> >>>        BAST for ACK 
+> >>>                                                               Get CR on MSG 
+> >>>                       read LVB 
+> >>>                       process 
+> >>>                       release ACK 
+> >>> AST for ACK 
+> >>> down ACK to CR 
+> >>> release MSG 
+> >>> release TOKEN 
+> >>>                      <granted> 
+> >>>                      Get EX on MSG 
+> >> 
+> >> I am afraid this corner case could not be achieved ever. Sender2 will be  
+> blocked on getting 
+> >> EX lock on MSG resource until the receivers release the lock. The  
+> receivers' request on 
+> >> upconverting CR to EX on MSG should be put into the convert queue before  
+> Sender2's 
+> >> request being put into the wait queue, because sender2 has to wait until  
+> the EX on TOKEN 
+> >> is released. 
+> >> 
+> > Yes my initial though of losing a message is not correct. The EX on message  
+> won't be granted 
+> > immediately to Sender2 However there is still a deadlock. 
+> > 
+> > Perhaps i am missing something, but according to me nothing prevents  
+> Sender2 from acquiring 
+> > EX on TOKEN _and_ MESSAGE __before__ up convert from reciever is queued.   
+> Consider adding 
+> > unusual delay right after ACK is released on receiver. The Sender1 will  
+> immediately release 
+> > MESSAGE and TOKEN. The receiver is still delayed for whatever reason.  
+> Sender2 gets TOKEN grant 
+> > and immediately queues EX for MESSAGE (note this is before EX for MESSAGE  
+> is queued by receiver). 
+> > 
 
-On Tue, 5 May 2015 10:14:18 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+Yes, there is a possibility leading to deadlock here.
+> > DLM will (should?) return error for the up convert saying there is deadlock  
+> (-EDEADLK ??) 
+> > 
+>  
+> On further investigation in dlm code. Since we do not set DLM_LKF_CONVDEADLK  
+> flag on our locks, 
+> in above deadlock case receiver's request to up convert will be simply  
+> canceled. And the code 
+> will proceed as expected since receiver still holds CR on MESSAGE. And then  
+> after the processing 
+> we will release the CR. 
+>  
+> So now my question is changed to; 
+>  
+> Why do we up convert the MESSAGE to EX in the first place? 
+>  
+> Was receiver EX on MESSAGE intended to serialize all receivers before taking  
+> CR on ACK? 
+>  
 
-> Hi Neil,
-> we had the following crash:
->=20
-> [86399.862150] general protection fault: 0000 [#1] SMP
-> [86399.881970] CPU 1
-> [86399.882264] Pid: 17989, comm: md4_raid6 Tainted: GF       W  O
-> 3.8.13-030813-generic #201305111843 Bochs Bochs
-> [86399.883681] RIP: 0010:[<ffffffff8135d446>]  [<ffffffff8135d446>]
-> memcpy+0x6/0x110
-> [86399.884886] RSP: 0018:ffff8800a78e5a80  EFLAGS: 00010286
-> [86399.885629] RAX: 4588966d912cea06 RBX: ffff8800a78e4000 RCX: 000000000=
-0001000
-> [86399.886605] RDX: 0000000000001000 RSI: ffff8800a7ed2000 RDI: 4588966d9=
-12cea06
-> [86399.887586] RBP: ffff8800a78e5ae8 R08: 0000000000001000 R09: ffff8800a=
-78e5b20
-> [86399.888603] R10: 0000000000000000 R11: 0000000000000000 R12: 000000000=
-0000000
-> [86399.889593] R13: ffff8800a78e5b20 R14: 0000000000001000 R15: 000000000=
-0000000
-> [86399.890551] FS:  0000000000000000(0000) GS:ffff88011fd00000(0000)
-> knlGS:0000000000000000
-> [86399.891648] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [86399.892504] CR2: 00007f10cb8ae966 CR3: 0000000113bfc000 CR4: 000000000=
-01406e0
-> [86399.893493] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000=
-0000000
-> [86399.894458] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000000000=
-0000400
-> [86399.895426] Process md4_raid6 (pid: 17989, threadinfo
-> ffff8800a78e4000, task ffff8800a7dc0000)
-> [86399.896629] Stack:
-> [86399.896930]  ffffffffa05061c5 ffff88000ab6fa06 ffffffff816ed725
-> ffffea00029fb480
-> [86399.898005]  51160e39b619d7e4 0000000000000000 000000000ab6fa06
-> ffff8800c696b938
-> [86399.899082]  000000003eca7624 ffff880084dc1ac0 0000000000001000
-> 0000000000000002
-> [86399.900293] Call Trace:
-> [86399.900660]  [<ffffffffa05061c5>] ? async_memcpy+0x1c5/0x1000 [async_m=
-emcpy]
-> [86399.901653]  [<ffffffff816ed725>] ? _raw_spin_lock_irq+0x15/0x20
-> [86399.902655]  [<ffffffffa05a5090>] async_copy_data+0x100/0x140 [raid456]
-> [86399.903557]  [<ffffffffa05abe20>] handle_stripe+0x13e0/0x2380 [raid456]
-> [86399.904531]  [<ffffffff815739de>] ? dm_dispatch_request+0x3e/0x70
-> [86399.905388]  [<ffffffff81097c33>] ? update_curr+0x143/0x1f0
-> [86399.906151]  [<ffffffff816eb03d>] ? mutex_lock+0x1d/0x50
-> [86399.906888]  [<ffffffffa05adea5>] handle_active_stripes+0x165/0x200 [r=
-aid456]
-> [86399.907857]  [<ffffffff8156ab8e>] ? md_check_recovery.part.49+0x3e/0x5=
-30
-> [86399.908811]  [<ffffffffa05ae28a>] raid5d+0x34a/0x570 [raid456]
-> [86399.909614]  [<ffffffff8156344d>] md_thread+0x10d/0x140
-> [86399.910356]  [<ffffffff8107fc10>] ? add_wait_queue+0x60/0x60
-> [86399.911149]  [<ffffffff81563340>] ? md_rdev_init+0x140/0x140
-> [86399.911955]  [<ffffffff8107f050>] kthread+0xc0/0xd0
-> [86399.912668]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
-> [86399.913528]  [<ffffffff816f61ec>] ret_from_fork+0x7c/0xb0
-> [86399.914267]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
-> [86399.915109] Code: 74 13 48 8b 43 58 48 2b 43 50 88 43 4e 48 83 c4
-> 08 5b 5d c3 90 e8 fb fd ff ff eb e6 90 90 90 90 90 90 90 90 90 48 89
-> f8 48 89 d1 <f3> a4 c3 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 20 4c 8b 06
-> 4c 8b
-> [86399.919028] RIP  [<ffffffff8135d446>] memcpy+0x6/0x110
->=20
-> Can you maybe advise what is happening here? Our kernel is 3.8.13.
->=20
+Yes, it is. Otherwise, each receiver may get duplicate messages when they try to
+get CR on ACK while the sender doesn't downconvert EX on ACK in time.
 
-Not really.
-It appears that %RDI is the destination for the memcpy, and it contains a
-garbage address.
-I cannot easily tell if this is a read or a write, but I'd guess a read as =
-it
-is hard to get the address of the page in the stripe_cache wrong.
+What I can think of a way to fix the deadlock now is setting the DLM_LKF_NOQUEUE
+flag when the sender tries to get EX on MESSAGE. It should keep trying until all the 
+receivers release their locks on MESSAGE. Do you have any better idea without adding
+more lock resources? Since we already have three for transmitting messages.
 
-Maybe something has corrupted the bio??
+Regards,
+Lidong
 
-NeilBrown
 
---Sig_/qabnIWznuijifdRQijh1EW=
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+> Since there is a possibility that we might lose out on this up convert in a  
+> race  condition, can 
+> we simply eliminate this up conversion? (since CR is preventing the next  
+> Sender from taking 
+> EX on MESSAGE anyway). 
+>  
+> Regards, 
+> Abhijit 
+>  
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
+> the body of a message to majordomo@vger.kernel.org 
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+>  
+>  
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVUmWuznsnt1WYoG5AQKzFg//W67j7xlhgf5eyIW7kXR5VCHAoyd556K7
-pl5zCNDbvU/O2VWtrgRft+S6r6GqQyk+y2jpv4r6arHXLV6oOsF1bKVt3N7K93yc
-LOg0wjc94Fg8rem/aM4Wd+GKx8AEmFgSZWnmTkzSKmJCSygPgmuEhoFMk6BwcGQ1
-kD/TBtW+VD+SHxTQKbl3fVU1dw+TehAeopO9801rnXcT8UeoaQkA5SNQkuPaxjVv
-ZSG6rAmal4+0A5/3Kdl8BhR4XnXHlrPIgVUXQXEYMx5OWGjhfRtuHHxlsXT0yv49
-h6u+7LJv0lRDBqXaX2+MhofKjYxKER4VrX4oPGmKWuzoUO+krUUL5wJjt1gatsJU
-0DJ8l0CfhKv08Cg1/nJt8rC3zg5cslcujlsyoIJzOckDLoDvvMxIDO9brB97xCFY
-m8eguriTcJB2Lv4m7xYqTthutelhXi7V6IZ5UjbHdJjy7nrBXsN/EZ47XNqyXsC3
-uAZMkg4G0ZKjiJG16uBhE99LxxMfk1+iRfOFUUK9im5NrEfN/IBUYwEjAeMwCkzP
-V9t0lyK4TH14K+87rAR6eYHQ6kzWYxoUkpSz4yysohUBOFULSUdTM5ARHFg2Ac9Q
-aFQWQHdvOqr4S4BxlQA9lCXNEKPdMFKtykdBT9UfaZyU3V5fvpgp1eGwC7H/XuS2
-nOCmqQTQGdc=
-=ZsTI
------END PGP SIGNATURE-----
-
---Sig_/qabnIWznuijifdRQijh1EW=--
