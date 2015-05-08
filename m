@@ -1,161 +1,186 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH v3 07/11] md/raid5: split bio for chunk_aligned_read
-Date: Fri, 8 May 2015 14:14:35 +1000
-Message-ID: <20150508141435.17666f2a@notabene.brown>
-References: <1430980461-5235-1-git-send-email-mlin@kernel.org>
-	<1430980461-5235-8-git-send-email-mlin@kernel.org>
+From: "Lidong Zhong" <lzhong@suse.com>
+Subject: Re: Potential race in dlm based messaging md-cluster.c
+Date: Thu, 07 May 2015 23:06:56 -0600
+Message-ID: <554CB4F0020000E100023738@relay2.provo.novell.com>
+References: <CAE3Hb8oss1JZ2u7g7OQQgrEtgQ1vbQou04isiS6eEqbS=uzbhw@mail.gmail.com>
+ <CAE3Hb8qNczD30RrcHFYCR90Jf9QFD-XH=x89MAu4Dpmm80se0A@mail.gmail.com>
+ <554251EA.3000807@suse.com>
+ <CAE3Hb8pJ=0MB6EX5jVch28gj-gnf0Mp1wyzxBfWjzLf=SuV4sQ@mail.gmail.com>
+ <5542763C.90202@cisco.com>
+ <5548FC6C020000E100022FA0@relay2.provo.novell.com>
+ <5548911B.1080702@cisco.com> <5548B32B.5070904@cisco.com>
+ <554B41BE020000E10002348B@relay2.provo.novell.com>
+ <554B2CED.5050903@cisco.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/ILm4G.1GLKg41JRwN=0.ZlE"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1430980461-5235-8-git-send-email-mlin@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <554B2CED.5050903@cisco.com>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: Abhijit Bhopatkar <abhopatk@cisco.com>, Goldwyn Rodrigues <RGoldwyn@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ILm4G.1GLKg41JRwN=0.ZlE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+>>> On 5/7/2015 at 05:14 PM, in message <554B2CED.5050903@cisco.com>, Abhijit
+Bhopatkar <abhopatk@cisco.com> wrote: 
+> On 07/05/15 8:13 am, Lidong Zhong wrote: 
+>>>>> On 5/5/2015 at 08:10 PM, in message <5548B32B.5070904@cisco.com>, Abhijit 
+> > Bhopatkar <abhopatk@cisco.com> wrote: 
+> >> On 05/05/15 3:14 pm, Abhijit Bhopatkar wrote: 
+> >>> On 05/05/15 2:52 pm, Lidong Zhong wrote: 
+> >>>>>>> On 5/1/2015 at 02:36 AM, in message <5542763C.90202@cisco.com>, Abhijit 
+> >>>> Bhopatkar <abhopatk@cisco.com> wrote: 
+> >> 
+> >> <snip> 
+> >> 
+> >>>>> 
+> >>>>> To illustrate the problem consider timeline for two senders and one 
+> >>>>> receiver (we will ignore receive part for Sender2 node) 
+> >>>>> 
+> >>>>> Sender1              Sender2                         Receiver 
+> >>>>> Get EX on TOKEN       Get EX on TOKEN 
+> >>>>> <Granted>                    <Wait till granted> 
+> >>>>> 
+> >>>>> Get EX on MSG 
+> >>>>> write LVB 
+> >>>>> down MSG to CR 
+> >>>>> Get EX of ACK 
+> >>>>> <wait till granted> 
+> >>>>>         BAST for ACK 
+> >>>>>                                                                Get CR on  
+> MSG 
+> >>>>>                        read LVB 
+> >>>>>                        process 
+> >>>>>                        release ACK 
+> >>>>> AST for ACK 
+> >>>>> down ACK to CR 
+> >>>>> release MSG 
+> >>>>> release TOKEN 
+> >>>>>                       <granted> 
+> >>>>>                       Get EX on MSG 
+> >>>> 
+> >>>> I am afraid this corner case could not be achieved ever. Sender2 will be 
+> >> blocked on getting 
+> >>>> EX lock on MSG resource until the receivers release the lock. The 
+> >> receivers' request on 
+> >>>> upconverting CR to EX on MSG should be put into the convert queue before 
+> >> Sender2's 
+> >>>> request being put into the wait queue, because sender2 has to wait until 
+> >> the EX on TOKEN 
+> >>>> is released. 
+> >>>> 
+> >>> Yes my initial though of losing a message is not correct. The EX on message 
+> >> won't be granted 
+> >>> immediately to Sender2 However there is still a deadlock. 
+> >>> 
+> >>> Perhaps i am missing something, but according to me nothing prevents 
+> >> Sender2 from acquiring 
+> >>> EX on TOKEN _and_ MESSAGE __before__ up convert from reciever is queued. 
+> >> Consider adding 
+> >>> unusual delay right after ACK is released on receiver. The Sender1 will 
+> >> immediately release 
+> >>> MESSAGE and TOKEN. The receiver is still delayed for whatever reason. 
+> >> Sender2 gets TOKEN grant 
+> >>> and immediately queues EX for MESSAGE (note this is before EX for MESSAGE 
+> >> is queued by receiver). 
+> >>> 
+> > 
+> > Yes, there is a possibility leading to deadlock here. 
+> >>> DLM will (should?) return error for the up convert saying there is deadlock 
+> >> (-EDEADLK ??) 
+> >>> 
+> >> 
+> >> On further investigation in dlm code. Since we do not set  
+> DLM_LKF_CONVDEADLK 
+> >> flag on our locks, 
+> >> in above deadlock case receiver's request to up convert will be simply 
+> >> canceled. And the code 
+> >> will proceed as expected since receiver still holds CR on MESSAGE. And then 
+> >> after the processing 
+> >> we will release the CR. 
+> >> 
+> >> So now my question is changed to; 
+> >> 
+> >> Why do we up convert the MESSAGE to EX in the first place? 
+> >> 
+> >> Was receiver EX on MESSAGE intended to serialize all receivers before  
+> taking 
+> >> CR on ACK? 
+> >> 
+> > 
+> > Yes, it is. Otherwise, each receiver may get duplicate messages when they  
+> try to 
+> > get CR on ACK while the sender doesn't downconvert EX on ACK in time. 
+>  
+> If I am reading this right, are we afraid of getting second BAST call on  
+> receiver? 
+> Sender is holding EX on ACK, receiver releases CR of ACK after processing  
+> the message. 
+> But sender is delayed in releasing EX on ACK. Receiver re-queues CR on ACK,  
+> which 
+> might trigger BAST? (Note receiver won't get CR grant until sender released  
+> EX). 
+>  
 
-On Wed,  6 May 2015 23:34:17 -0700 Ming Lin <mlin@kernel.org> wrote:
+Yes and I think the reason you have explained well enough. Actually at first we 
+did as you said, but we found that sometimes the receiver might get duplicate 
+messages. Then we made a change here.
 
-> If a read request fits entirely in a chunk, it will be passed directly to=
- the
-> underlying device (providing it hasn't failed of course).  If it doesn't =
-fit,
-> the slightly less efficient path that uses the stripe_cache is used.
-> Requests that get to the stripe cache are always completely split up as
-> necessary.
->=20
-> So with RAID5, ripping out the merge_bvec_fn doesn't cause it to stop wor=
-k,
-> but could cause it to take the less efficient path more often.
->=20
-> All that is needed to manage this is for 'chunk_aligned_read' do some bio
-> splitting, much like the RAID0 code does.
->=20
-> Cc: Neil Brown <neilb@suse.de>
-> Cc: linux-raid@vger.kernel.org
-> Signed-off-by: Ming Lin <mlin@kernel.org>
-> ---
->  drivers/md/raid5.c | 42 +++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 37 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 7f4a717..b18f548 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4738,7 +4738,7 @@ static void raid5_align_endio(struct bio *bi, int e=
-rror)
->  	add_bio_to_retry(raid_bi, conf);
->  }
-> =20
-> -static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
-> +static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bi=
-o)
->  {
->  	struct r5conf *conf =3D mddev->private;
->  	int dd_idx;
-> @@ -4747,7 +4747,7 @@ static int chunk_aligned_read(struct mddev *mddev, =
-struct bio * raid_bio)
->  	sector_t end_sector;
-> =20
->  	if (!in_chunk_boundary(mddev, raid_bio)) {
-> -		pr_debug("chunk_aligned_read : non aligned\n");
-> +		pr_debug("%s: non aligned\n", __func__);
->  		return 0;
->  	}
->  	/*
-> @@ -4822,6 +4822,36 @@ static int chunk_aligned_read(struct mddev *mddev,=
- struct bio * raid_bio)
->  	}
->  }
-> =20
-> +static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *r=
-aid_bio)
-> +{
-> +	struct bio *split;
-> +
-> +	do {
-> +		sector_t sector =3D raid_bio->bi_iter.bi_sector;
-> +		unsigned chunk_sects =3D mddev->chunk_sectors;
-> +		unsigned sectors;
-> +
-> +		if (likely(is_power_of_2(chunk_sects)))
-> +			sectors =3D chunk_sects - (sector & (chunk_sects-1));
-> +		else
-> +			sectors =3D chunk_sects - sector_div(sector, chunk_sects);
+> A new CR by receiver on ACK will _not_ trigger BAST call. Instead no AST  
+> will be called 
+> until the original EX on ACK by sender is not released. BAST is called only  
+> on locks 
 
-RAID5 doesn't currently allow non-power-of-2 chunks.  So this test is
-pointless, but not really harmful.  Maybe someday we will.
+The description here seems right to me, but I don't get the connection, sorry
 
-I'm equally happy for it to stay or go.
+> that are already granted. Since we trigger message processing only on BAST I  
+> don't 
+> see a possibility of duplicate message here. 
+>  
+> > 
+> > What I can think of a way to fix the deadlock now is setting the  
+> DLM_LKF_NOQUEUE 
+> > flag when the sender tries to get EX on MESSAGE. It should keep trying  
+> until all the 
+> > receivers release their locks on MESSAGE. Do you have any better idea  
+> without adding 
+> > more lock resources? Since we already have three for transmitting messages. 
+> > 
+> Its exactly what I was thinking about and sounds like a good solution.  
+> However 
+> as said  above I don't think receiver EX on ACK is really needed. 
+>  
 
-Acked-by: NeilBrown <neilb@suse.de>
+As already explained. If there's no other problem to you, then here needs
+a patch to fix the potential deadlock.
 
-Thanks,
-NeilBrown
+Regards,
+Lidong
+> Regards, 
+> Abhijit 
+>  
+> > Regards, 
+> > Lidong 
+> > 
+> > 
+> >> Since there is a possibility that we might lose out on this up convert in a 
+> >> race  condition, can 
+> >> we simply eliminate this up conversion? (since CR is preventing the next 
+> >> Sender from taking 
+> >> EX on MESSAGE anyway). 
+> >> 
+> >> Regards, 
+> >> Abhijit 
+> >> 
+> >> -- 
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
+> >> the body of a message to majordomo@vger.kernel.org 
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+> >> 
+> >> 
+> > 
+>  
+>  
+>  
 
-
-> +
-> +		if (sectors < bio_sectors(raid_bio)) {
-> +			split =3D bio_split(raid_bio, sectors, GFP_NOIO, fs_bio_set);
-> +			bio_chain(split, raid_bio);
-> +		} else
-> +			split =3D raid_bio;
-> +
-> +		if (!raid5_read_one_chunk(mddev, split)) {
-> +			if (split !=3D raid_bio)
-> +				generic_make_request(raid_bio);
-> +			return split;
-> +		}
-> +	} while (split !=3D raid_bio);
-> +
-> +	return NULL;
-> +}
-> +
->  /* __get_priority_stripe - get the next stripe to process
->   *
->   * Full stripe writes are allowed to pass preread active stripes up until
-> @@ -5099,9 +5129,11 @@ static void make_request(struct mddev *mddev, stru=
-ct bio * bi)
->  	 * data on failed drives.
->  	 */
->  	if (rw =3D=3D READ && mddev->degraded =3D=3D 0 &&
-> -	     mddev->reshape_position =3D=3D MaxSector &&
-> -	     chunk_aligned_read(mddev,bi))
-> -		return;
-> +	    mddev->reshape_position =3D=3D MaxSector) {
-> +		bi =3D chunk_aligned_read(mddev, bi);
-> +		if (!bi)
-> +			return;
-> +	}
-> =20
->  	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
->  		make_discard_request(mddev, bi);
-
-
---Sig_/ILm4G.1GLKg41JRwN=0.ZlE
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVUw4Kznsnt1WYoG5AQLZ9Q/7Bs5VffbatLrkBSF5xUtvr/VhjGl1Shyi
-enX9gSc0FN59m18H6DsbAhb4BpOF1k9yLKGNcjEc+RfBKFgBYrn7cL4mqsB051cg
-LZ54yj4SPva+1xW8YipxNCTETE2mkx2rqvDcD+pMIJNkdx1wkU9C8EJ/qJ1PpKy6
-dkV+Umbi7FWNJCDu48snHMgZ/tSMyN7ENMtlTBJ2BENvkReHeZo3lm3woH5yIUlq
-RczanuI+nms44OPfDP8BY9/HNf2Ky2KrGj0xZoa0iyziCjT2aJqx3j7w2Q+oQzg5
-82yq8m1wEDgnaYl8E3MXkvHwu8xsGDJEsJ6ALBvmFKwIlMf8Y08UeMSz1hHTUtmS
-DZ2DepluNz3YQk+xCEQP9u3FJJjLwYTHjeH+mXS7ZTNdo5WO0CLM6tJH9DaeC24t
-wneSNuudcD9x0QmaGrty2dCYQ9vhblbq192k/66kqeIeT+olWECoREnVjNZ2/91j
-JY7dkz4juC/Ee38BfPyH01OWM3RKPhi5UTWe8aAelZ69OZsoeGcxSH93BIUk3M2h
-AiMhlvKPWrO+xdFh0Zcetillb6f8igxmwK9eO64u/JW3zc3I3W+zt7P9lDRX+tJY
-XOPAubGapfGmUO2RKxPUUSE3/XkgJT7p4oqqLlnKYZRrJv8yCIAJc/sDcVa174ju
-r58Jc2uocOE=
-=Ssz6
------END PGP SIGNATURE-----
-
---Sig_/ILm4G.1GLKg41JRwN=0.ZlE--
