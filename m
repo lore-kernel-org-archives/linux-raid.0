@@ -1,54 +1,49 @@
-From: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>
-Subject: [PATCH 3/7] md/raid5: more incorrect BUG_ON in handle_stripe_fill.
+From: NeilBrown <neilb@suse.de>
+Subject: [PATCH 5/7] md/raid5: don't record new size if resize_stripes fails.
 Date: Fri, 08 May 2015 18:56:11 +1000
-Message-ID: <20150508085611.19179.1093.stgit@notabene.brown>
+Message-ID: <20150508085611.19179.2391.stgit@notabene.brown>
 References: <20150508085345.19179.8866.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20150508085345.19179.8866.stgit-wvvUuzkyo1EYVZTmpyfIwg@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150508085345.19179.8866.stgit@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
+Cc: linux-nfs@vger.kernel.org, "v2.6.17+" <stable@vger.kernel.org>
 List-Id: linux-raid.ids
 
-It is not incorrect to call handle_stripe_fill() when
-a batch of full-stripe writes is active.
-It is, however, a BUG if fetch_block() then decides
-it needs to actually fetch anything.
+If any memory allocation in resize_stripes fails we will return
+-ENOMEM, but in some cases we update conf->pool_size anyway.
 
-So move the 'BUG_ON' to where it belongs.
+This means that if we try again, the allocations will be assumed
+to be larger than they are, and badness results.
 
-Signed-off-by: NeilBrown  <neilb-l3A5Bk7waGM@public.gmane.org>
-Fixes: 59fc630b8b5f ("RAID5: batch adjacent full stripe write")
+So only update pool_size if there is no error.
+
+This bug was introduced in 2.6.17 and the patch is suitable for
+-stable.
+
+Fixes: ad01c9e3752f ("[PATCH] md: Allow stripes to be expanded in preparation for expanding an array")
+Cc: stable@vger.kernel.org (v2.6.17+)
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid5.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid5.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 91a1e8b26b52..415cac6d89bd 100644
+index 85dc0e67fb88..9748e525e4c0 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3302,6 +3302,7 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
- 		 */
- 		BUG_ON(test_bit(R5_Wantcompute, &dev->flags));
- 		BUG_ON(test_bit(R5_Wantread, &dev->flags));
-+		BUG_ON(sh->batch_head);
- 		if ((s->uptodate == disks - 1) &&
- 		    (s->failed && (disk_idx == s->failed_num[0] ||
- 				   disk_idx == s->failed_num[1]))) {
-@@ -3370,7 +3371,6 @@ static void handle_stripe_fill(struct stripe_head *sh,
- {
- 	int i;
+@@ -2216,7 +2216,8 @@ static int resize_stripes(struct r5conf *conf, int newsize)
  
--	BUG_ON(sh->batch_head);
- 	/* look for blocks to read/compute, skip this if a compute
- 	 * is already in flight, or if the stripe contents are in the
- 	 * midst of changing due to a write
+ 	conf->slab_cache = sc;
+ 	conf->active_name = 1-conf->active_name;
+-	conf->pool_size = newsize;
++	if (!err)
++		conf->pool_size = newsize;
+ 	return err;
+ }
+ 
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
