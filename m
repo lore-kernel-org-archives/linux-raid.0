@@ -1,7 +1,7 @@
 From: gqjiang@suse.com
-Subject: [PATCH V2 04/11] Show all bitmaps while examining bitmap
-Date: Fri,  8 May 2015 16:50:22 +0800
-Message-ID: <1431075029-5484-5-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 02/11] Add nodes option while creating md
+Date: Fri,  8 May 2015 16:50:20 +0800
+Message-ID: <1431075029-5484-3-git-send-email-gqjiang@suse.com>
 References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
@@ -12,105 +12,132 @@ List-Id: linux-raid.ids
 
 From: Guoqing Jiang <gqjiang@suse.com>
 
-This adds capability of exmining bitmaps corresponding to all
-nodes/slots on the device.
+Specifies the maximum number of nodes in the cluster that may use
+this device simultaneously. This is equivalent to the number of
+bitmaps created in the internal superblock (patches to follow).
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- bitmap.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 54 insertions(+), 18 deletions(-)
+ Create.c   |  1 +
+ ReadMe.c   |  1 +
+ mdadm.8.in |  6 ++++++
+ mdadm.c    | 25 ++++++++++++++++++++++++-
+ mdadm.h    |  3 +++
+ 5 files changed, 35 insertions(+), 1 deletion(-)
 
-diff --git a/bitmap.c b/bitmap.c
-index 920033a..bccc67c 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -260,7 +260,7 @@ int ExamineBitmap(char *filename, int brief, struct supertype *st)
- 	int rv = 1;
- 	char buf[64];
- 	int swap;
--	int fd;
-+	int fd, i;
- 	__u32 uuid32[4];
+diff --git a/Create.c b/Create.c
+index 69f5432..e4577af 100644
+--- a/Create.c
++++ b/Create.c
+@@ -531,6 +531,7 @@ int Create(struct supertype *st, char *mddev,
+ 				st->ss->name);
+ 		warn = 1;
+ 	}
++	st->nodes = c->nodes;
  
- 	fd = bitmap_file_open(filename, &st);
-@@ -317,23 +317,59 @@ int ExamineBitmap(char *filename, int brief, struct supertype *st)
- 		       uuid32[2],
- 		       uuid32[3]);
+ 	if (warn) {
+ 		if (c->runstop!= 1) {
+diff --git a/ReadMe.c b/ReadMe.c
+index 87a4916..30c569d 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -140,6 +140,7 @@ struct option long_options[] = {
+     {"homehost",  1, 0,  HomeHost},
+     {"symlinks",  1, 0,  Symlinks},
+     {"data-offset",1, 0, DataOffset},
++    {"nodes",1, 0, Nodes},
  
--	printf("          Events : %llu\n", (unsigned long long)sb->events);
--	printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
--	printf("           State : %s\n", bitmap_state(sb->state));
--	printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
--	printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
--	if (sb->write_behind)
--		sprintf(buf, "Allow write behind, max %d", sb->write_behind);
--	else
--		sprintf(buf, "Normal");
--	printf("      Write Mode : %s\n", buf);
--	printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
--					human_size(sb->sync_size * 512));
--	if (brief)
--		goto free_info;
--	printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
--			info->total_bits, info->dirty_bits,
--			100.0 * info->dirty_bits / (info->total_bits?:1));
-+	if (sb->nodes == 0) {
-+		printf("          Events : %llu\n", (unsigned long long)sb->events);
-+		printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
-+		printf("           State : %s\n", bitmap_state(sb->state));
-+		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
-+		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
-+		if (sb->write_behind)
-+			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
-+		else
-+			sprintf(buf, "Normal");
-+		printf("      Write Mode : %s\n", buf);
-+		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
-+						human_size(sb->sync_size * 512));
-+		if (brief)
-+			goto free_info;
-+		printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-+				info->total_bits, info->dirty_bits,
-+				100.0 * info->dirty_bits / (info->total_bits?:1));
-+	} else {
-+		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
-+		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
-+		if (sb->write_behind)
-+			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
-+		else
-+			sprintf(buf, "Normal");
-+		printf("      Write Mode : %s\n", buf);
-+		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
-+						human_size(sb->sync_size * 512));
-+		printf("   Cluster nodes : %d\n", sb->nodes);
-+		printf("    Cluster name : %s\n", sb->cluster_name);
-+		i = 0;
-+		do {
-+			if (i) {
-+				free(info);
-+				info = bitmap_fd_read(fd, brief);
-+				sb = &info->sb;
+     /* For assemble */
+     {"uuid",      1, 0, 'u'},
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 4aec0db..9c1497e 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -971,6 +971,12 @@ However for RAID0, it is not possible to add spares.  So to increase
+ the number of devices in a RAID0, it is necessary to set the new
+ number of devices, and to add the new devices, in the same command.
+ 
++.TP
++.BR \-\-nodes
++Only works when the array is for clustered environment. It specify the
++maximum number of nodes in the cluster that will use this device
++simultaneously. If not specified, this defaults to 4.
++
+ .SH For assemble:
+ 
+ .TP
+diff --git a/mdadm.c b/mdadm.c
+index bd9382e..031383d 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -588,7 +588,14 @@ int main(int argc, char *argv[])
+ 			}
+ 			ident.raid_disks = s.raiddisks;
+ 			continue;
+-
++		case O(CREATE, Nodes):
++			c.nodes = parse_num(optarg);
++			if (c.nodes <= 0) {
++				pr_err("invalid number for the number of "
++						"cluster nodes: %s\n", optarg);
++				exit(2);
 +			}
-+			if (sb->magic != BITMAP_MAGIC)
-+				pr_err("invalid bitmap magic 0x%x, the bitmap file appears to be corrupted\n", sb->magic);
++			continue;
+ 		case O(CREATE,'x'): /* number of spare (eXtra) disks */
+ 			if (s.sparedisks) {
+ 				pr_err("spare-devices set twice: %d and %s\n",
+@@ -1386,6 +1393,22 @@ int main(int argc, char *argv[])
+ 	case CREATE:
+ 		if (c.delay == 0)
+ 			c.delay = DEFAULT_BITMAP_DELAY;
 +
-+			printf("       Node Slot : %d\n", i);
-+			printf("          Events : %llu\n", (unsigned long long)sb->events);
-+			printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
-+			printf("           State : %s\n", bitmap_state(sb->state));
-+			if (brief)
-+				continue;
-+			printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-+					info->total_bits, info->dirty_bits,
-+					100.0 * info->dirty_bits / (info->total_bits?:1));
++		if (strcmp(s.bitmap_file, "clustered") == 0) {
++			if (s.level != 1) {
++			    pr_err("--bitmap=clustered is currently supported with RAID mirror only\n");
++			    rv = 1;
++			    break;
++			}
++		} else {
++			if (c.nodes) {
++				pr_err("--nodes argument is incompatible with --bitmap=%s.\n",
++					s.bitmap_file);
++				rv = 1;
++				break;
++			}
++		}
 +
-+		} while (++i < (int)sb->nodes);
-+	}
-+
- free_info:
- 	free(info);
- 	return rv;
+ 		if (s.write_behind && !s.bitmap_file) {
+ 			pr_err("write-behind mode requires a bitmap.\n");
+ 			rv = 1;
+diff --git a/mdadm.h b/mdadm.h
+index 141f963..9d55801 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -344,6 +344,7 @@ enum special_options {
+ 	Dump,
+ 	Restore,
+ 	Action,
++	Nodes,
+ };
+ 
+ enum prefix_standard {
+@@ -418,6 +419,7 @@ struct context {
+ 	char	*backup_file;
+ 	int	invalid_backup;
+ 	char	*action;
++	int	nodes;
+ };
+ 
+ struct shape {
+@@ -1029,6 +1031,7 @@ struct supertype {
+ 			 */
+ 	int devcnt;
+ 	int retry_soon;
++	int nodes;
+ 
+ 	struct mdinfo *devs;
+ 
 -- 
 1.7.12.4
 
