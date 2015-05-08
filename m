@@ -1,113 +1,54 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 2/7] md/raid5: new alloc_stripe() to allocate an initialize
- a stripe.
+From: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>
+Subject: [PATCH 3/7] md/raid5: more incorrect BUG_ON in handle_stripe_fill.
 Date: Fri, 08 May 2015 18:56:11 +1000
-Message-ID: <20150508085610.19179.88409.stgit@notabene.brown>
+Message-ID: <20150508085611.19179.1093.stgit@notabene.brown>
 References: <20150508085345.19179.8866.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150508085345.19179.8866.stgit@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Shaohua Li <shli@kernel.org>
-Cc: linux-nfs@vger.kernel.org
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150508085345.19179.8866.stgit-wvvUuzkyo1EYVZTmpyfIwg@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-The new batch_lock and batch_list fields are being initialized in
-grow_one_stripe() but not in resize_stripes().  This causes a crash
-on resize.
+It is not incorrect to call handle_stripe_fill() when
+a batch of full-stripe writes is active.
+It is, however, a BUG if fetch_block() then decides
+it needs to actually fetch anything.
 
-So separate the core initialization into a new function and call it
-from both allocation sites.
+So move the 'BUG_ON' to where it belongs.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
+Signed-off-by: NeilBrown  <neilb-l3A5Bk7waGM@public.gmane.org>
 Fixes: 59fc630b8b5f ("RAID5: batch adjacent full stripe write")
 ---
- drivers/md/raid5.c |   32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
+ drivers/md/raid5.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 77dfd720aaa0..91a1e8b26b52 100644
+index 91a1e8b26b52..415cac6d89bd 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1971,17 +1971,30 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- 	put_cpu();
- }
- 
-+static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp)
-+{
-+	struct stripe_head *sh;
-+
-+	sh = kmem_cache_zalloc(sc, gfp);
-+	if (sh) {
-+		spin_lock_init(&sh->stripe_lock);
-+		spin_lock_init(&sh->batch_lock);
-+		INIT_LIST_HEAD(&sh->batch_list);
-+		INIT_LIST_HEAD(&sh->lru);
-+		atomic_set(&sh->count, 1);
-+	}
-+	return sh;
-+}
- static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
+@@ -3302,6 +3302,7 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
+ 		 */
+ 		BUG_ON(test_bit(R5_Wantcompute, &dev->flags));
+ 		BUG_ON(test_bit(R5_Wantread, &dev->flags));
++		BUG_ON(sh->batch_head);
+ 		if ((s->uptodate == disks - 1) &&
+ 		    (s->failed && (disk_idx == s->failed_num[0] ||
+ 				   disk_idx == s->failed_num[1]))) {
+@@ -3370,7 +3371,6 @@ static void handle_stripe_fill(struct stripe_head *sh,
  {
- 	struct stripe_head *sh;
--	sh = kmem_cache_zalloc(conf->slab_cache, gfp);
-+
-+	sh = alloc_stripe(conf->slab_cache, gfp);
- 	if (!sh)
- 		return 0;
+ 	int i;
  
- 	sh->raid_conf = conf;
- 
--	spin_lock_init(&sh->stripe_lock);
--
- 	if (grow_buffers(sh, gfp)) {
- 		shrink_buffers(sh);
- 		kmem_cache_free(conf->slab_cache, sh);
-@@ -1990,13 +2003,8 @@ static int grow_one_stripe(struct r5conf *conf, gfp_t gfp)
- 	sh->hash_lock_index =
- 		conf->max_nr_stripes % NR_STRIPE_HASH_LOCKS;
- 	/* we just created an active stripe so... */
--	atomic_set(&sh->count, 1);
- 	atomic_inc(&conf->active_stripes);
--	INIT_LIST_HEAD(&sh->lru);
- 
--	spin_lock_init(&sh->batch_lock);
--	INIT_LIST_HEAD(&sh->batch_list);
--	sh->batch_head = NULL;
- 	release_stripe(sh);
- 	conf->max_nr_stripes++;
- 	return 1;
-@@ -2109,13 +2117,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
- 		return -ENOMEM;
- 
- 	for (i = conf->max_nr_stripes; i; i--) {
--		nsh = kmem_cache_zalloc(sc, GFP_KERNEL);
-+		nsh = alloc_stripe(sc, GFP_KERNEL);
- 		if (!nsh)
- 			break;
- 
- 		nsh->raid_conf = conf;
--		spin_lock_init(&nsh->stripe_lock);
--
- 		list_add(&nsh->lru, &newstripes);
- 	}
- 	if (i) {
-@@ -2142,13 +2148,11 @@ static int resize_stripes(struct r5conf *conf, int newsize)
- 				    lock_device_hash_lock(conf, hash));
- 		osh = get_free_stripe(conf, hash);
- 		unlock_device_hash_lock(conf, hash);
--		atomic_set(&nsh->count, 1);
-+
- 		for(i=0; i<conf->pool_size; i++) {
- 			nsh->dev[i].page = osh->dev[i].page;
- 			nsh->dev[i].orig_page = osh->dev[i].page;
- 		}
--		for( ; i<newsize; i++)
--			nsh->dev[i].page = NULL;
- 		nsh->hash_lock_index = hash;
- 		kmem_cache_free(conf->slab_cache, osh);
- 		cnt++;
+-	BUG_ON(sh->batch_head);
+ 	/* look for blocks to read/compute, skip this if a compute
+ 	 * is already in flight, or if the stripe contents are in the
+ 	 * midst of changing due to a write
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
