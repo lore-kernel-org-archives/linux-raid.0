@@ -1,7 +1,7 @@
 From: gqjiang@suse.com
-Subject: [PATCH V2 10/11] Reuse calc_bitmap_size to reduce code size
-Date: Fri,  8 May 2015 16:50:28 +0800
-Message-ID: <1431075029-5484-11-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 11/11] Reuse the write_bitmap for update uuid
+Date: Fri,  8 May 2015 16:50:29 +0800
+Message-ID: <1431075029-5484-12-git-send-email-gqjiang@suse.com>
 References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
@@ -12,45 +12,99 @@ List-Id: linux-raid.ids
 
 From: Guoqing Jiang <gqjiang@suse.com>
 
-We can use the new added calc_bitmap_size func to
-remove some redundant lines.
+Since write_bitmap is extended for handle different sistuations,
+then it also could possible to support change the uuid of bitmap,
+and remove bitmap_update_uuid accordingly.
+
+Q: is the write_bitmap0 also impacted?
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- super1.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ Assemble.c |  5 ++---
+ bitmap.c   | 20 --------------------
+ mdadm.h    |  2 +-
+ super1.c   |  4 ++++
+ 4 files changed, 7 insertions(+), 24 deletions(-)
 
+diff --git a/Assemble.c b/Assemble.c
+index 9ff546b..fabca5c 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -664,9 +664,8 @@ static int load_devices(struct devs *devices, char *devmap,
+ 
+ 			if (strcmp(c->update, "uuid")==0 &&
+ 			    ident->bitmap_fd >= 0 && !bitmap_done) {
+-				if (bitmap_update_uuid(ident->bitmap_fd,
+-						       content->uuid,
+-						       tst->ss->swapuuid) != 0)
++				copy_uuid(tst->devs->uuid, content->uuid, tst->ss->swapuuid);
++				if (tst->ss->write_bitmap(tst, dfd, UUIDUpdate))
+ 					pr_err("Could not update uuid on external bitmap.\n");
+ 				else
+ 					bitmap_done = 1;
+diff --git a/bitmap.c b/bitmap.c
+index bccc67c..7df296e 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -462,23 +462,3 @@ out:
+ 		unlink(filename); /* possibly corrupted, better get rid of it */
+ 	return rv;
+ }
+-
+-int bitmap_update_uuid(int fd, int *uuid, int swap)
+-{
+-	struct bitmap_super_s bm;
+-	if (lseek(fd, 0, 0) != 0)
+-		return 1;
+-	if (read(fd, &bm, sizeof(bm)) != sizeof(bm))
+-		return 1;
+-	if (bm.magic != __cpu_to_le32(BITMAP_MAGIC))
+-		return 1;
+-	copy_uuid(bm.uuid, uuid, swap);
+-	if (lseek(fd, 0, 0) != 0)
+-		return 2;
+-	if (write(fd, &bm, sizeof(bm)) != sizeof(bm)) {
+-		lseek(fd, 0, 0);
+-		return 2;
+-	}
+-	lseek(fd, 0, 0);
+-	return 0;
+-}
+diff --git a/mdadm.h b/mdadm.h
+index 97892e6..7b9bb28 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -358,6 +358,7 @@ enum bitmap_update {
+     NoUpdate,
+     NameUpdate,
+     NodeNumUpdate,
++    UUIDUpdate,
+ };
+ 
+ /* structures read from config file */
+@@ -1273,7 +1274,6 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
+ extern int Write_rules(char *rule_name);
+-extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ extern unsigned long bitmap_sectors(struct bitmap_super_s *bsb);
+ extern int Dump_metadata(char *dev, char *dir, struct context *c,
+ 			 struct supertype *st);
 diff --git a/super1.c b/super1.c
-index 50675be..81e8fca 100644
+index 81e8fca..b2e960d 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -695,12 +695,8 @@ static int copy_metadata1(struct supertype *st, int from, int to)
- 				/* have the header, can calculate
- 				 * correct bitmap bytes */
- 				bitmap_super_t *bms;
--				int bits;
- 				bms = (void*)buf;
--				bits = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
--				bytes = (bits+7) >> 3;
--				bytes += sizeof(bitmap_super_t);
--				bytes = ROUND_UP(bytes, 512);
-+				bytes = calc_bitmap_size(bms, 512);
- 				if (n > bytes)
- 					n =  bytes;
- 			}
-@@ -2280,11 +2276,7 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
- 			memset(buf, 0xff, 4096);
- 		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+@@ -2250,6 +2250,10 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
  
--		towrite = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
--		towrite = (towrite+7) >> 3; /* bits to bytes */
--		towrite += sizeof(bitmap_super_t);
--		/* we need the bitmaps to be at 4k boundary */
--		towrite = ROUND_UP(towrite, 4096);
-+		towrite = calc_bitmap_size(bms, 4096);
- 		while (towrite > 0) {
- 			n = towrite;
- 			if (n > 4096)
+ 	    bms->nodes = __cpu_to_le32(st->nodes);
+ 	    break;
++	case UUIDUpdate:
++	    memset((char *)bms->uuid, 0, sizeof(bms->uuid));
++	    strncpy((char *)bms->uuid, (char *)st->devs->uuid, sizeof(bms->uuid));
++	    break;
+ 	case NoUpdate:
+ 	default:
+ 	    break;
 -- 
 1.7.12.4
 
