@@ -1,71 +1,69 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: mdadm Raid level change from 1 to 5?
-Date: Fri, 8 May 2015 11:47:22 +0100
-Message-ID: <20150508104722.GA21989@cthulhu.home.robinhill.me.uk>
-References: <554C7F74.5010404@hanswkraus.com>
+From: Abhijit Bhopatkar <abhopatk@cisco.com>
+Subject: [PATCH] md-cluster: avoid deadlock on MESSAGE lock resource
+Date: Fri, 08 May 2015 18:40:51 +0530
+Message-ID: <554CB5DB.4020305@cisco.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NzB8fVQJ5HfG6fxh"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <554C7F74.5010404@hanswkraus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hans Kraus <hans@hanswkraus.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, Lidong Zhong <lzhong@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: "Reese Faucette (rfaucett)" <rfaucett@cisco.com>
 List-Id: linux-raid.ids
 
 
---NzB8fVQJ5HfG6fxh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Every receiver has CR lock on MESSAGE while processing the message. When
+every receiver releases ACK lock and for some reason fails to grab EX on
+MESSAGE resource in time, a waiting sender could queue an EX on MESSAGE
+instead. Now when receiver queues its up convert request on MESSAGE it
+will end up in a deadlock situation.
 
-On Fri May 08, 2015 at 11:18:44AM +0200, Hans Kraus wrote:
+Setting NOQUEUE flag on MESSAGE lock resource while grabbing the EX on
+MESSAGE on sender will avoid this deadlock. If sender can not grab
+MESSAGE lock immediately it should retry until the lock is granted.
 
-> Hi,
->=20
-> I have a Raid 1 with 3 drives, the following layout (the internal
-> bitmap is already removed):
-> -----------------------------------------------------------------
-> md20 : active raid1 sdj1[2] sdi1[1] sdn1[0]
->        732442432 blocks super 1.2 [3/3] [UUU]
-> -----------------------------------------------------------------
-> I tried to change it to Raid 5, but I'm getting aways an error.
-> -----------------------------------------------------------------
-> mdadm --grow /dev/md20 --level=3D5 --raid-devices=3D3 -c 32 \
->    --backup-file=3D/home/kraush/work/raidLevelChange
->=20
-> Impossibly level change request for RAID1
-> -----------------------------------------------------------------
-> I tried it with various permutations (+/- raid-devices, c, ...).
->=20
-> Is something in my command wrong or is the level change not
-> possible?
-> This is on Debian 7, mdadm - v3.3-65-g2167de7 - 11th March 2014
->=20
-I think you'll need one of the disks to be spare first. Try reducing the
-RAID1 to a 2-disk plus spare configuration, then rerunning the grow.
-Alternately you'd need to add a new disk as a spare first, then grow to
-a 4 disk RAID5.
+Signed-off-by: Abhijit Bhopatkar <abhopatk@cisco.com>
+---
+This has been minimally tested on a three node cluster. 
 
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+ drivers/md/md-cluster.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
---NzB8fVQJ5HfG6fxh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlVMlDkACgkQShxCyD40xBKHGACgyGDt4pv3FwKpq3/YK7Rim6+4
-AFUAnj1w1y2fOs9yBlzOyNthDf+X5mX5
-=8xGD
------END PGP SIGNATURE-----
-
---NzB8fVQJ5HfG6fxh--
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index fcfc4b9..04ac309 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -512,7 +512,10 @@ static void unlock_comm(struct md_cluster_info *cinfo)
+  * This function performs the actual sending of the message. This function is
+  * usually called after performing the encompassing operation
+  * The function:
+- * 1. Grabs the message lockresource in EX mode
++ * 1. Grabs the message lockresource in EX. Do not queue the request if not granted
++      immediately. This avoids deadlock with receivers when receivers try to
++      upconvert CR to EX of message lockresource. The thread will retry until the
++      request is granted.
+  * 2. Copies the message to the message LVB
+  * 3. Downconverts message lockresource to CR
+  * 4. Upconverts ack lock resource from CR to EX. This forces the BAST on other nodes
+@@ -526,12 +529,19 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
+ 	int slot = cinfo->slot_number - 1;
+ 
+ 	cmsg->slot = cpu_to_le32(slot);
+-	/*get EX on Message*/
++
++	/* get EX on Message with noqueue flag */
++	cinfo->message_lockres->flags |= DLM_LKF_NOQUEUE;
++
++retry:
+ 	error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
+ 	if (error) {
++		if (error == -EAGAIN)
++			goto retry;
+ 		pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
+ 		goto failed_message;
+ 	}
++	cinfo->message_lockres->flags &= ~DLM_LKF_NOQUEUE;
+ 
+ 	memcpy(cinfo->message_lockres->lksb.sb_lvbptr, (void *)cmsg,
+ 			sizeof(struct cluster_msg));
+-- 2.1.0 
