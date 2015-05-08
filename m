@@ -1,7 +1,7 @@
 From: gqjiang@suse.com
-Subject: [PATCH V2 01/11] Create n bitmaps for clustered mode
-Date: Fri,  8 May 2015 16:50:19 +0800
-Message-ID: <1431075029-5484-2-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 09/11] mdadm: change the num of cluster node
+Date: Fri,  8 May 2015 16:50:27 +0800
+Message-ID: <1431075029-5484-10-git-send-email-gqjiang@suse.com>
 References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
@@ -12,204 +12,145 @@ List-Id: linux-raid.ids
 
 From: Guoqing Jiang <gqjiang@suse.com>
 
-For a clustered MD, create bitmaps equal to number of nodes so
-each node has an independent bitmap.
+This extends nodes option for assemble mode, make the num of
+cluster node could be change by user.
 
-Only the first bitmap is has the bits set so that the first node
-that assembles the device also performs the sync.
+Before that, it is necessary to ensure there are enough space
+for those nodes, calc_bitmap_size is introduced to calculate
+the bitmap size of each node.
 
-The bitmaps are aligned to 4k boundaries.
-
-On-disk format:
-
-0                    4k                     8k                    12k
--------------------------------------------------------------------
-| idle                | md super            | bm super [0] + bits |
-| bm bits[0, contd]   | bm super[1] + bits  | bm bits[1, contd]   |
-| bm super[2] + bits  | bm bits [2, contd]  | bm super[3] + bits  |
-| bm bits [3, contd]  |                     |                     |
-
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Create.c   |  3 ++-
- bitmap.c   |  2 ++
- bitmap.h   |  7 +++++--
- mdadm.8.in |  7 ++++++-
- mdadm.c    |  9 +++++++++
- super1.c   | 59 +++++++++++++++++++++++++++++++++++++++++------------------
- 6 files changed, 65 insertions(+), 22 deletions(-)
+ Assemble.c |  4 ++++
+ ReadMe.c   |  2 +-
+ mdadm.c    |  3 +++
+ mdadm.h    |  1 +
+ super1.c   | 37 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 46 insertions(+), 1 deletion(-)
 
-diff --git a/Create.c b/Create.c
-index ef28da0..69f5432 100644
---- a/Create.c
-+++ b/Create.c
-@@ -750,7 +750,8 @@ int Create(struct supertype *st, char *mddev,
- #endif
- 	}
+diff --git a/Assemble.c b/Assemble.c
+index e1b846c..9ff546b 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -626,6 +626,10 @@ static int load_devices(struct devs *devices, char *devmap,
  
--	if (s->bitmap_file && strcmp(s->bitmap_file, "internal")==0) {
-+	if (s->bitmap_file && (strcmp(s->bitmap_file, "internal")==0
-+			|| strcmp(s->bitmap_file, "clustered")==0)) {
- 		if ((vers%100) < 2) {
- 			pr_err("internal bitmaps not supported by this kernel.\n");
- 			goto abort_locked;
-diff --git a/bitmap.c b/bitmap.c
-index b1d54a6..920033a 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -32,6 +32,8 @@ inline void sb_le_to_cpu(bitmap_super_t *sb)
- 	sb->daemon_sleep = __le32_to_cpu(sb->daemon_sleep);
- 	sb->sync_size = __le64_to_cpu(sb->sync_size);
- 	sb->write_behind = __le32_to_cpu(sb->write_behind);
-+	sb->nodes = __le32_to_cpu(sb->nodes);
-+	sb->sectors_reserved = __le32_to_cpu(sb->sectors_reserved);
- }
+ 			if (strcmp(c->update, "byteorder") == 0)
+ 				err = 0;
++			else if (strcmp(c->update, "nodes") == 0) {
++				tst->nodes = c->nodes;
++				err = tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
++			}
+ 			else
+ 				err = tst->ss->update_super(tst, content, c->update,
+ 							    devname, c->verbose,
+diff --git a/ReadMe.c b/ReadMe.c
+index c854cd5..d1830e1 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -140,7 +140,7 @@ struct option long_options[] = {
+     {"homehost",  1, 0,  HomeHost},
+     {"symlinks",  1, 0,  Symlinks},
+     {"data-offset",1, 0, DataOffset},
+-    {"nodes",1, 0, Nodes},
++    {"nodes",1, 0, Nodes}, /* also for --assemble */
+     {"home-cluster",1, 0, ClusterName},
  
- inline void sb_cpu_to_le(bitmap_super_t *sb)
-diff --git a/bitmap.h b/bitmap.h
-index c8725a3..adbf0b4 100644
---- a/bitmap.h
-+++ b/bitmap.h
-@@ -154,8 +154,11 @@ typedef struct bitmap_super_s {
- 	__u32 chunksize;    /* 52  the bitmap chunk size in bytes */
- 	__u32 daemon_sleep; /* 56  seconds between disk flushes */
- 	__u32 write_behind; /* 60  number of outstanding write-behind writes */
--
--	__u8  pad[256 - 64]; /* set to zero */
-+	__u32 sectors_reserved; /* 64 number of 512-byte sectors that are
-+				 * reserved for the bitmap. */
-+	__u32 nodes;        /* 68 the maximum number of nodes in cluster. */
-+	__u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
-+	__u8  pad[256 - 136]; /* set to zero */
- } bitmap_super_t;
- 
- /* notes:
-diff --git a/mdadm.8.in b/mdadm.8.in
-index a630310..4aec0db 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -694,7 +694,12 @@ and so is replicated on all devices.  If the word
- .B "none"
- is given with
- .B \-\-grow
--mode, then any bitmap that is present is removed.
-+mode, then any bitmap that is present is removed. If the word
-+.B "clustered"
-+is given, the array is created for a clustered environment. One bitmap
-+is created for each node as defined by the
-+.B \-\-nodes
-+parameter and are stored internally.
- 
- To help catch typing errors, the filename must contain at least one
- slash ('/') if it is a real file (not 'internal' or 'none').
+     /* For assemble */
 diff --git a/mdadm.c b/mdadm.c
-index 3e8c49b..bd9382e 100644
+index f597960..a423592 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -1097,6 +1097,15 @@ int main(int argc, char *argv[])
- 				s.bitmap_file = optarg;
- 				continue;
+@@ -589,6 +589,7 @@ int main(int argc, char *argv[])
  			}
-+			if (strcmp(optarg, "clustered")== 0) {
-+				s.bitmap_file = optarg;
-+				/* Set the default number of cluster nodes
-+				 * to 4 if not already set by user
-+				 */
-+				if (c.nodes < 1)
-+					c.nodes = 4;
+ 			ident.raid_disks = s.raiddisks;
+ 			continue;
++		case O(ASSEMBLE, Nodes):
+ 		case O(CREATE, Nodes):
+ 			c.nodes = parse_num(optarg);
+ 			if (c.nodes <= 0) {
+@@ -744,6 +745,8 @@ int main(int argc, char *argv[])
+ 				continue;
+ 			if (strcmp(c.update, "home-cluster")==0)
+ 				continue;
++			if (strcmp(c.update, "nodes")==0)
 +				continue;
-+			}
- 			/* probable typo */
- 			pr_err("bitmap file must contain a '/', or be 'internal', or 'none'\n"
- 				"       not '%s'\n", optarg);
+ 			if (strcmp(c.update, "devicesize")==0)
+ 				continue;
+ 			if (strcmp(c.update, "no-bitmap")==0)
+diff --git a/mdadm.h b/mdadm.h
+index d8b0749..97892e6 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -357,6 +357,7 @@ enum prefix_standard {
+ enum bitmap_update {
+     NoUpdate,
+     NameUpdate,
++    NodeNumUpdate,
+ };
+ 
+ /* structures read from config file */
 diff --git a/super1.c b/super1.c
-index f0508fe..57b1526 100644
+index f3a3528..50675be 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -2144,6 +2144,10 @@ add_internal_bitmap1(struct supertype *st,
- 	bms->daemon_sleep = __cpu_to_le32(delay);
- 	bms->sync_size = __cpu_to_le64(size);
- 	bms->write_behind = __cpu_to_le32(write_behind);
-+	bms->nodes = __cpu_to_le32(st->nodes);
-+	if (st->cluster_name)
-+		strncpy((char *)bms->cluster_name,
-+				st->cluster_name, strlen(st->cluster_name));
+@@ -134,6 +134,20 @@ struct misc_dev_info {
+ 					|MD_FEATURE_NEW_OFFSET		\
+ 					)
  
- 	*chunkp = chunk;
- 	return 1;
-@@ -2177,6 +2181,7 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	void *buf;
- 	int towrite, n;
- 	struct align_fd afd;
-+	unsigned int i;
- 
- 	init_afd(&afd, fd);
- 
-@@ -2185,27 +2190,45 @@ static int write_bitmap1(struct supertype *st, int fd)
- 	if (posix_memalign(&buf, 4096, 4096))
- 		return -ENOMEM;
- 
--	memset(buf, 0xff, 4096);
--	memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
--
--	towrite = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
--	towrite = (towrite+7) >> 3; /* bits to bytes */
--	towrite += sizeof(bitmap_super_t);
--	towrite = ROUND_UP(towrite, 512);
--	while (towrite > 0) {
--		n = towrite;
--		if (n > 4096)
--			n = 4096;
--		n = awrite(&afd, buf, n);
--		if (n > 0)
--			towrite -= n;
-+	/* We use bms->nodes as opposed to st->nodes to
-+	 * be compatible with write-after-reads such as
-+	 * the GROW operation.
-+	 */
-+	for (i = 0; i < __le32_to_cpu(bms->nodes); i++) {
-+		/* Only the bitmap[0] should resync
-+		 * whole device on initial assembly
-+		 */
-+		if (i)
-+			memset(buf, 0x00, 4096);
- 		else
-+			memset(buf, 0xff, 4096);
-+		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
++/* return how many bytes are needed for bitmap, for cluster-md each node
++ * should have it's own bitmap */
++static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned int boundary)
++{
++	unsigned long long bits, bytes;
 +
-+		towrite = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
-+		towrite = (towrite+7) >> 3; /* bits to bytes */
-+		towrite += sizeof(bitmap_super_t);
-+		/* we need the bitmaps to be at 4k boundary */
-+		towrite = ROUND_UP(towrite, 4096);
-+		while (towrite > 0) {
-+			n = towrite;
-+			if (n > 4096)
-+				n = 4096;
-+			n = awrite(&afd, buf, n);
-+			if (n > 0)
-+				towrite -= n;
-+			else
-+				break;
-+			if (i)
-+				memset(buf, 0x00, 4096);
-+			else
-+				memset(buf, 0xff, 4096);
-+		}
-+		fsync(fd);
-+		if (towrite) {
-+			rv = -2;
- 			break;
--		memset(buf, 0xff, 4096);
-+		}
- 	}
--	fsync(fd);
--	if (towrite)
--		rv = -2;
++	bits = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
++	bytes = (bits+7) >> 3;
++	bytes += sizeof(bitmap_super_t);
++	bytes = ROUND_UP(bytes, boundary);
++
++	return bytes;
++}
++
+ static unsigned int calc_sb_1_csum(struct mdp_superblock_1 * sb)
+ {
+ 	unsigned int disk_csum, csum;
+@@ -2201,6 +2215,7 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 	struct align_fd afd;
+ 	unsigned int i;
+ 	char *new_name;
++	unsigned long long total_bm_space, bm_space_per_node;
  
- 	free(buf);
- 	return rv;
+ 	switch (update) {
+ 	case NameUpdate:
+@@ -2217,6 +2232,28 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 
+ 	    free(new_name);
+ 	    break;
++	case NodeNumUpdate:
++	    /* cluster md only supports superblock 1.2 now */
++	    if (st->minor_version != 2) {
++		pr_err("Warning: cluster md only works with superblock 1.2\n");
++		return -EINVAL;
++	    }
++
++	    /* Each node has an independent bitmap, it is necessary to calculate the
++	     * space is enough or not, first get how many bytes for the total bitmap */
++	    bm_space_per_node = calc_bitmap_size(bms, 4096);
++
++	    total_bm_space = 512 * (__le64_to_cpu(sb->data_offset) - __le64_to_cpu(sb->super_offset));
++	    total_bm_space = total_bm_space - 4096; /* leave another 4k for superblock */
++
++	    if (bm_space_per_node * st->nodes > total_bm_space) {
++		pr_err("Warning: The max num of nodes can't exceed %llu\n",
++			total_bm_space / bm_space_per_node);
++		return -ENOMEM;
++	    }
++
++	    bms->nodes = __cpu_to_le32(st->nodes);
++	    break;
+ 	case NoUpdate:
+ 	default:
+ 	    break;
 -- 
 1.7.12.4
 
