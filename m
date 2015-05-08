@@ -1,7 +1,7 @@
 From: gqjiang@suse.com
-Subject: [PATCH V2 02/11] Add nodes option while creating md
-Date: Fri,  8 May 2015 16:50:20 +0800
-Message-ID: <1431075029-5484-3-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V2 06/11] Convert a bitmap=none device to clustered
+Date: Fri,  8 May 2015 16:50:24 +0800
+Message-ID: <1431075029-5484-7-git-send-email-gqjiang@suse.com>
 References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
@@ -12,132 +12,71 @@ List-Id: linux-raid.ids
 
 From: Guoqing Jiang <gqjiang@suse.com>
 
-Specifies the maximum number of nodes in the cluster that may use
-this device simultaneously. This is equivalent to the number of
-bitmaps created in the internal superblock (patches to follow).
+This adds the ability to convert a regular md without bitmap
+(--bitmap=none) to a clustered device (--bitmap=clustered).
+
+To convert a device with --bitmap=internal or --bitmap=external,
+you have to convert to --bitmap=none and then re-execute the
+command with --bitmap=clustered.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Create.c   |  1 +
- ReadMe.c   |  1 +
- mdadm.8.in |  6 ++++++
- mdadm.c    | 25 ++++++++++++++++++++++++-
- mdadm.h    |  3 +++
- 5 files changed, 35 insertions(+), 1 deletion(-)
+ Grow.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index 69f5432..e4577af 100644
---- a/Create.c
-+++ b/Create.c
-@@ -531,6 +531,7 @@ int Create(struct supertype *st, char *mddev,
- 				st->ss->name);
- 		warn = 1;
- 	}
-+	st->nodes = c->nodes;
- 
- 	if (warn) {
- 		if (c->runstop!= 1) {
-diff --git a/ReadMe.c b/ReadMe.c
-index 87a4916..30c569d 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -140,6 +140,7 @@ struct option long_options[] = {
-     {"homehost",  1, 0,  HomeHost},
-     {"symlinks",  1, 0,  Symlinks},
-     {"data-offset",1, 0, DataOffset},
-+    {"nodes",1, 0, Nodes},
- 
-     /* For assemble */
-     {"uuid",      1, 0, 'u'},
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 4aec0db..9c1497e 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -971,6 +971,12 @@ However for RAID0, it is not possible to add spares.  So to increase
- the number of devices in a RAID0, it is necessary to set the new
- number of devices, and to add the new devices, in the same command.
- 
-+.TP
-+.BR \-\-nodes
-+Only works when the array is for clustered environment. It specify the
-+maximum number of nodes in the cluster that will use this device
-+simultaneously. If not specified, this defaults to 4.
-+
- .SH For assemble:
- 
- .TP
-diff --git a/mdadm.c b/mdadm.c
-index bd9382e..031383d 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -588,7 +588,14 @@ int main(int argc, char *argv[])
+diff --git a/Grow.c b/Grow.c
+index 9a573fd..1122cec 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -330,9 +330,16 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
  			}
- 			ident.raid_disks = s.raiddisks;
- 			continue;
--
-+		case O(CREATE, Nodes):
-+			c.nodes = parse_num(optarg);
-+			if (c.nodes <= 0) {
-+				pr_err("invalid number for the number of "
-+						"cluster nodes: %s\n", optarg);
-+				exit(2);
-+			}
-+			continue;
- 		case O(CREATE,'x'): /* number of spare (eXtra) disks */
- 			if (s.sparedisks) {
- 				pr_err("spare-devices set twice: %d and %s\n",
-@@ -1386,6 +1393,22 @@ int main(int argc, char *argv[])
- 	case CREATE:
- 		if (c.delay == 0)
- 			c.delay = DEFAULT_BITMAP_DELAY;
-+
-+		if (strcmp(s.bitmap_file, "clustered") == 0) {
-+			if (s.level != 1) {
-+			    pr_err("--bitmap=clustered is currently supported with RAID mirror only\n");
-+			    rv = 1;
-+			    break;
-+			}
-+		} else {
-+			if (c.nodes) {
-+				pr_err("--nodes argument is incompatible with --bitmap=%s.\n",
-+					s.bitmap_file);
-+				rv = 1;
-+				break;
-+			}
+ 			return 0;
+ 		}
+-		pr_err("Internal bitmap already present on %s\n",
+-			devname);
+-		return 1;
++		if ((strcmp(s->bitmap_file, "clustered")==0) && (array.state & (1<<MD_SB_CLUSTERED))) {
++			pr_err("Clustered bitmap already present on %s\n",
++					devname);
++			return 1;
 +		}
-+
- 		if (s.write_behind && !s.bitmap_file) {
- 			pr_err("write-behind mode requires a bitmap.\n");
- 			rv = 1;
-diff --git a/mdadm.h b/mdadm.h
-index 141f963..9d55801 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -344,6 +344,7 @@ enum special_options {
- 	Dump,
- 	Restore,
- 	Action,
-+	Nodes,
- };
++		if ((strcmp(s->bitmap_file, "internal")==0) && (!(array.state & (1<<MD_SB_CLUSTERED)))) {
++			pr_err("Internal bitmap already present on %s\n",
++					devname);
++			return 1;
++		}
+ 	}
  
- enum prefix_standard {
-@@ -418,6 +419,7 @@ struct context {
- 	char	*backup_file;
- 	int	invalid_backup;
- 	char	*action;
-+	int	nodes;
- };
- 
- struct shape {
-@@ -1029,6 +1031,7 @@ struct supertype {
- 			 */
- 	int devcnt;
- 	int retry_soon;
-+	int nodes;
- 
- 	struct mdinfo *devs;
- 
+ 	if (strcmp(s->bitmap_file, "none") == 0) {
+@@ -375,7 +382,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 		free(st);
+ 		return 1;
+ 	}
+-	if (strcmp(s->bitmap_file, "internal") == 0) {
++	if ((strcmp(s->bitmap_file, "internal") == 0) ||
++		(strcmp(s->bitmap_file, "clustered") == 0)) {
+ 		int rv;
+ 		int d;
+ 		int offset_setable = 0;
+@@ -384,6 +392,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 			pr_err("Internal bitmaps not supported with %s metadata\n", st->ss->name);
+ 			return 1;
+ 		}
++		st->nodes = c->nodes;
++		st->cluster_name = c->homecluster;
+ 		mdi = sysfs_read(fd, NULL, GET_BITMAP_LOCATION);
+ 		if (mdi)
+ 			offset_setable = 1;
+@@ -426,6 +436,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
+ 			rv = sysfs_set_num_signed(mdi, NULL, "bitmap/location",
+ 						  mdi->bitmap_offset);
+ 		} else {
++			if (strcmp(s->bitmap_file, "clustered") == 0)
++				array.state |= (1<<MD_SB_CLUSTERED);
+ 			array.state |= (1<<MD_SB_BITMAP_PRESENT);
+ 			rv = ioctl(fd, SET_ARRAY_INFO, &array);
+ 		}
 -- 
 1.7.12.4
 
