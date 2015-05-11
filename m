@@ -1,87 +1,85 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: raid6: general protection fault in async_copy_data
-Date: Sun, 10 May 2015 10:05:30 +0200
-Message-ID: <CAGRgLy5n=W3s0i9-XDqxP7O+xzgBfc-CNdAF6EASGnZpiGh9LA@mail.gmail.com>
-References: <CAGRgLy439G+AtYkxzPh=2jBZ=GRtFggYE1kMyLAfadaeghz0xA@mail.gmail.com>
-	<20150506142115.1b30da19@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: [GIT PULL REQUEST]
+Date: Mon, 11 May 2015 13:27:04 +1000
+Message-ID: <20150511132704.5bc50fa3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/wca_sUaRaN5Q5sK8UwYDmHa"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150506142115.1b30da19@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Heinz Mauelshagen <heinzm@redhat.com>, Shaohua Li <shli@fb.com>
 List-Id: linux-raid.ids
 
-Thanks, Neil.
+--Sig_/wca_sUaRaN5Q5sK8UwYDmHa
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, May 6, 2015 at 6:21 AM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 5 May 2015 10:14:18 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-> wrote:
->
->> Hi Neil,
->> we had the following crash:
->>
->> [86399.862150] general protection fault: 0000 [#1] SMP
->> [86399.881970] CPU 1
->> [86399.882264] Pid: 17989, comm: md4_raid6 Tainted: GF       W  O
->> 3.8.13-030813-generic #201305111843 Bochs Bochs
->> [86399.883681] RIP: 0010:[<ffffffff8135d446>]  [<ffffffff8135d446>]
->> memcpy+0x6/0x110
->> [86399.884886] RSP: 0018:ffff8800a78e5a80  EFLAGS: 00010286
->> [86399.885629] RAX: 4588966d912cea06 RBX: ffff8800a78e4000 RCX: 0000000000001000
->> [86399.886605] RDX: 0000000000001000 RSI: ffff8800a7ed2000 RDI: 4588966d912cea06
->> [86399.887586] RBP: ffff8800a78e5ae8 R08: 0000000000001000 R09: ffff8800a78e5b20
->> [86399.888603] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
->> [86399.889593] R13: ffff8800a78e5b20 R14: 0000000000001000 R15: 0000000000000000
->> [86399.890551] FS:  0000000000000000(0000) GS:ffff88011fd00000(0000)
->> knlGS:0000000000000000
->> [86399.891648] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [86399.892504] CR2: 00007f10cb8ae966 CR3: 0000000113bfc000 CR4: 00000000001406e0
->> [86399.893493] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> [86399.894458] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> [86399.895426] Process md4_raid6 (pid: 17989, threadinfo
->> ffff8800a78e4000, task ffff8800a7dc0000)
->> [86399.896629] Stack:
->> [86399.896930]  ffffffffa05061c5 ffff88000ab6fa06 ffffffff816ed725
->> ffffea00029fb480
->> [86399.898005]  51160e39b619d7e4 0000000000000000 000000000ab6fa06
->> ffff8800c696b938
->> [86399.899082]  000000003eca7624 ffff880084dc1ac0 0000000000001000
->> 0000000000000002
->> [86399.900293] Call Trace:
->> [86399.900660]  [<ffffffffa05061c5>] ? async_memcpy+0x1c5/0x1000 [async_memcpy]
->> [86399.901653]  [<ffffffff816ed725>] ? _raw_spin_lock_irq+0x15/0x20
->> [86399.902655]  [<ffffffffa05a5090>] async_copy_data+0x100/0x140 [raid456]
->> [86399.903557]  [<ffffffffa05abe20>] handle_stripe+0x13e0/0x2380 [raid456]
->> [86399.904531]  [<ffffffff815739de>] ? dm_dispatch_request+0x3e/0x70
->> [86399.905388]  [<ffffffff81097c33>] ? update_curr+0x143/0x1f0
->> [86399.906151]  [<ffffffff816eb03d>] ? mutex_lock+0x1d/0x50
->> [86399.906888]  [<ffffffffa05adea5>] handle_active_stripes+0x165/0x200 [raid456]
->> [86399.907857]  [<ffffffff8156ab8e>] ? md_check_recovery.part.49+0x3e/0x530
->> [86399.908811]  [<ffffffffa05ae28a>] raid5d+0x34a/0x570 [raid456]
->> [86399.909614]  [<ffffffff8156344d>] md_thread+0x10d/0x140
->> [86399.910356]  [<ffffffff8107fc10>] ? add_wait_queue+0x60/0x60
->> [86399.911149]  [<ffffffff81563340>] ? md_rdev_init+0x140/0x140
->> [86399.911955]  [<ffffffff8107f050>] kthread+0xc0/0xd0
->> [86399.912668]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
->> [86399.913528]  [<ffffffff816f61ec>] ret_from_fork+0x7c/0xb0
->> [86399.914267]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
->> [86399.915109] Code: 74 13 48 8b 43 58 48 2b 43 50 88 43 4e 48 83 c4
->> 08 5b 5d c3 90 e8 fb fd ff ff eb e6 90 90 90 90 90 90 90 90 90 48 89
->> f8 48 89 d1 <f3> a4 c3 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 20 4c 8b 06
->> 4c 8b
->> [86399.919028] RIP  [<ffffffff8135d446>] memcpy+0x6/0x110
->>
->> Can you maybe advise what is happening here? Our kernel is 3.8.13.
->>
->
-> Not really.
-> It appears that %RDI is the destination for the memcpy, and it contains a
-> garbage address.
-> I cannot easily tell if this is a read or a write, but I'd guess a read as it
-> is hard to get the address of the page in the stripe_cache wrong.
->
-> Maybe something has corrupted the bio??
->
-> NeilBrown
+
+hi Linus
+ Please pull this collection of bugfixes.
+
+Thanks,
+NeilBrown
+
+
+The following changes since commit 5ebe6afaf0057ac3eaeb98defd5456894b446d22:
+
+  Linux 4.1-rc2 (2015-05-03 19:22:23 -0700)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ tags/md/4.1-rc3-fixes
+
+for you to fetch changes up to bb27051f9fd7643f05d8f0babce3337f0b9b3087:
+
+  md/raid5: fix handling of degraded stripes in batches. (2015-05-08 18:47:=
+57 +1000)
+
+----------------------------------------------------------------
+A few fixes for md.
+
+Most of these are related to the new "batched stripe writeout",
+but there are a few others.
+
+----------------------------------------------------------------
+Heinz Mauelshagen (1):
+      md-raid0: conditional mddev->queue access to suit dm-raid
+
+NeilBrown (6):
+      md/raid5: new alloc_stripe() to allocate an initialize a stripe.
+      md/raid5: more incorrect BUG_ON in handle_stripe_fill.
+      md/raid5: avoid reading parity blocks for full-stripe write to degrad=
+ed array
+      md/raid5: don't record new size if resize_stripes fails.
+      md/raid5: fix allocation of 'scribble' array.
+      md/raid5: fix handling of degraded stripes in batches.
+
+ drivers/md/raid0.c |   5 ++-
+ drivers/md/raid5.c | 123 ++++++++++++++++++++++++++++++-------------------=
+----
+ 2 files changed, 73 insertions(+), 55 deletions(-)
+
+--Sig_/wca_sUaRaN5Q5sK8UwYDmHa
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVVAhiTnsnt1WYoG5AQIpmw/+KPMamQ+kVEFjCuQyhvlKEcDZBS/prc9/
+bfBVPrGLvDGfElXEq3CKt3QKOcJwyo4K+YTxUXv6RqiZH+rNLAd9Aih8nnTw0aGx
+xjiULRFIPMKax1vSMGa49Pw5iDOxONsN62uCsTVgWGeYApZ7nzmgGwq6sGlcjWlw
+DtYHQJzKxEy1eYDCqCN1xbd9/82RWa+hPxckZ/sI28EQmkDM3vurot1GlXaR5oit
+Dlhr7OSe7Cw8p81xKu6iwDUBa/KHK7PEEGQo2QFNV98se3HbHSCypzDYkgW07uML
+bJcOR/14MXMGeJeQ1u6yBxsOqoN8pNFiTbwtYeiK4t6lF7pPcwlb6hW1ipH52v6b
+WezjTuUXmSy5CWhp8ldqbxtzIh3eYiJrCx9JcwAAUcefMDPvU1IZqe2uIN3RwgeQ
+Ud+Mcb3+ezPWFBnXD4yDsZoQWBSsUk8OiX4mO5lNEOQDuoUPoihE+3XHtUzgsuXG
+KWtnk/2MCecQ//GruWfY8ds2zAWji01yh/aENBiDeRBBp5m0Idw0xwMe5z7Xqbeb
+aOOZEiA/TNmsoM4zvhYzueA+xjt3BR3ABeuqAPPbPNVRQm5yg4AbNs3YUPWmh49q
+5hbtH865A9HAgQ3PXyyERHyHWMOOc7fm9cWed92+v4BeMwFyNYkq1zotT/g3R3AQ
+A4JpohtirKE=
+=Z9gB
+-----END PGP SIGNATURE-----
+
+--Sig_/wca_sUaRaN5Q5sK8UwYDmHa--
