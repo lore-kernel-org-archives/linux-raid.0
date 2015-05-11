@@ -1,60 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] a caching layer for raid 5/6
-Date: Mon, 11 May 2015 05:23:47 -0700
-Message-ID: <20150511122347.GA5082@infradead.org>
-References: <cover.1430954848.git.shli@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Martin Wilck <martin.wilck@ts.fujitsu.com>
+Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
+Date: Mon, 11 May 2015 16:09:44 +0200
+Message-ID: <1431353384-8637-1-git-send-email-martin.wilck@ts.fujitsu.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1430954848.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, dan.j.williams@intel.com, neilb@suse.de
+To: neilb@suse.de, linux-raid@vger.kernel.org
+Cc: Martin Wilck <martin.wilck@ts.fujitsu.com>
 List-Id: linux-raid.ids
 
-Hi Shaohua,
+Since commit 30bee0201, the anchor is updated from the active
+DDF header. This requires fixing the header type before the
+anchor is written.
 
-here are a couple of notes from reading through the code in a bit more
-detail:
+The LSI Software RAID code will reject DDF meta data with wrong
+anchor type and will erase all meta data when it encounters
+such a broken anchor. Thus starting Linux md once on a system
+with LSI RAID BIOS may cause the meta data to get destroyed.
+---
+ super-ddf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/super-ddf.c b/super-ddf.c
+index d0b2ac7..faaf0a7 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -3158,6 +3158,7 @@ static int _write_super_to_disk(struct ddf_super *ddf, struct dl *d)
+ 	memcpy(&ddf->primary, &ddf->anchor, 512);
+ 	memcpy(&ddf->secondary, &ddf->anchor, 512);
+ 
++	ddf->anchor.type = DDF_HEADER_ANCHOR;
+ 	ddf->anchor.openflag = 0xFF; /* 'open' means nothing */
+ 	ddf->anchor.seq = cpu_to_be32(0xFFFFFFFF); /* no sequencing in anchor */
+ 	ddf->anchor.crc = calc_crc(&ddf->anchor, 512);
+-- 
+2.1.0
 
-Error retries:
-  - What is the reason for retry_bio_list?  If a driver returns an
-    I/O error to the higher levels it already has retried and came
-    to the conclusion this is a permanent error.
-
-=46lushes:
-  - no need to allocate a task here
-  - no real need to clone the bio either
-
-Tasks:
-  - the completion argument passed to r5l_queue_bio is always the same,
-    the code would be a lot simpler by removing this abstraction.
-  - that would also allow allocating the task embedded in the range
-    and cut down on memory allocations
-  - we're not really manipulating the bio payload, so shouldn't a
-    _fast cone be fine here?
-    In fact why do we clone the bio at all?
-  - r5l_queue_task should probably be split into two helpers
-    for data vs parity
-  - r5l_queue_bio and r5c_copy_bio should probably use bvec iterators
-  - r5l_run_task does very different things for data vs metadata,
-    it's proably better it.
-
-Allocations:
-  - most metadata pages are allocated as highmem leading to
-    constant kmap/kunmap.  Maybe just allocate them as GFP_KERNEL
-    to simplify things?
-
-Misc:
-  - where does the ioctl in r5l_ioctl an=D1=95 associated functions com=
-e
-    from?  There are not ioctls handler here so the naming seems
-    rather confusing.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
