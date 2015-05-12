@@ -1,49 +1,37 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: Breaks LSI RAID on C600 chipset
-Date: Mon, 11 May 2015 09:31:26 -0700
-Message-ID: <CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
-References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
-	<21791.17074.357416.218211@quad.stoffel.home>
-	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
-	<21792.11560.92731.222551@quad.stoffel.home>
-	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
-	<21795.3296.846489.199118@quad.stoffel.home>
-	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
-	<20150410105001.171d6683@notabene.brown>
-	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
-	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/5] a caching layer for raid 5/6
+Date: Tue, 12 May 2015 00:18:54 -0700
+Message-ID: <20150512071854.GA16731@infradead.org>
+References: <cover.1430954848.git.shli@fb.com>
+ <20150511122347.GA5082@infradead.org>
+ <20150511160349.GA545551@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20150511160349.GA545551@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@fb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-any progress or more information needed on this?
+On Mon, May 11, 2015 at 09:03:51AM -0700, Shaohua Li wrote:
+> >   - What is the reason for retry_bio_list?  If a driver returns an
+> >     I/O error to the higher levels it already has retried and came
+> >     to the conclusion this is a permanent error.
+> 
+> The retry_bio_list is to handle io to cache disk. If IO to cache disk
+> has error, it's not a permanent error here. The cache disk is a cache,
+> We can still dispatch the IO to its final destination, the raid disks.
 
-On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
-> If you need access to the system, a network kvm is available - or if
-> you have a C600 based system, you should see the same problem there.
->
-> On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
->> Okay, and to confirm, this is happening on other C600 based systems.
->> Boot to Linux with MDADM raid support and the raid is gone after
->> reboot.
->>
->> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
->>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> wrote:
->>>
->>>> Hello,
->>>>
->>>> I built a new system, installed new drives (no partitioning, just raw
->>>> new drives), configured RAID 1, boot to linux, created reports
->>>> attached.  Rebooted and the system doesn't see any configured raid
->>>> drives (just the two raw drives).
->>>
->>> Thanks.  I might take a look, but I would greatly prefer it if you kept the
->>> linux-raid list on the Cc.....
->>>
->>> NeilBrown
->>>
+How does this work in practice?  We've filled our cache disk with
+dirty data, and it now returns non-correctable write errors.  At this
+point we had claimed to caller that data is on stable disk, but our
+cache disk is toast now.  Is it really a good idea to now start a large
+window where we do not actually have the cache data on stable storage
+we can get back at but pretent business as usual?
+
+IMHO the only sane way is to shut down the array when write to the cache
+disk fail.  Hopefully the disk will still allow reading from it.  Note
+that to be on the safe side you'll need a mirrored cache disk anyway.
+
