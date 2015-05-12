@@ -1,53 +1,67 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Fwd: Installing Linux directly onto RAID6 Array...........
-Date: Tue, 12 May 2015 14:12:10 +0100
-Message-ID: <CAOS+5GE1DTzuARuPPRMvhzB46Ka5snF+MZqyM_tbLH7uY9_VuQ@mail.gmail.com>
+From: "Wilson, Jonathan" <piercing_male@hotmail.com>
+Subject: Re: Installing Linux directly onto RAID6 Array...........
+Date: Tue, 12 May 2015 14:27:32 +0100
+Message-ID: <BLU436-SMTP20942BFA85744B69593179D98DA0@phx.gbl>
 References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
-	<5551D3F2.8020007@grumpydevil.homelinux.org>
-	<5551F01A.4050705@turmel.org>
-	<20150512173147.0d2c3363@natsu>
-	<CAOS+5GHhUoYxTTYOWU7cdN6GSdffSMGrhWHU5ZtWEjc4jEm3eg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GHhUoYxTTYOWU7cdN6GSdffSMGrhWHU5ZtWEjc4jEm3eg@mail.gmail.com>
+In-Reply-To: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Another Sillyname <anothersname@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
----------- Forwarded message ----------
-From: Another Sillyname <anothersname@googlemail.com>
-Date: 12 May 2015 at 14:11
-Subject: Re: Installing Linux directly onto RAID6 Array...........
-To: Roman Mamedov <rm@romanrm.net>
+On Tue, 2015-05-12 at 11:08 +0100, Another Sillyname wrote:
+> I've tried to do some research on this but the information out there
+> seems a bit contradictory (mainly because some is so old).
+> 
+> I want to install Fedora directly onto a RAID array (no separate boot disk).
+> 
+> My plan is to 'pre configure' the 6 drives as a clean RAID6 array,
+> effectively sd[a-f] without partitions and then attempt to install
+> Fedora 21, from sources it looks like Grub2 should recognise the array
+> and then allow the Kernel to boot thereby 'enabling' the array to
+> become visible and active.
+> 
+> However I have not been able to find an actual example of someone
+> trying this......thoughts?
+> 
+> The reason to do this is I'm intending to use a Mini ITX board with 6
+> sata ports and want to use 8TB drives in Raid6 to give me a very high
+> density data resilient small form factor storage box.
 
+Grub2 can handle booting into raid6, but some while ago the support was
+sketchy if the array was degraded; this may have improved.
 
-Guys
+Your problem would be that it would require a biosboot (GPT, type:EF02,
+size:1 MiB) partition to hold part of the loader as it will not fit
+entirely into the "mbr."
 
-Don't want to use USB as the machine may sometimes be in a non secure
-environ, want to boot direct from Raid.
+A second problem might be that while drives larger than 2 GB can be used
+on (most?) older boards they might not be able to be accessed/read
+correctly/bootable by older non-EFI bios's. My old MB was quite happy to
+boot from a 1 TB drive and linux could see and use my 3TB drives but the
+bios only saw the 3TB drives as 700MB (approx, I recall)
 
-Reading more think there may be a way....
-
-https://help.ubuntu.com/community/Grub2/Installing
-
-there's an interesting idea in there of effectively installing the
-bootloader onto every drive in the array......
-
-On 12 May 2015 at 13:31, Roman Mamedov <rm@romanrm.net> wrote:
-> On Tue, 12 May 2015 08:20:42 -0400
-> Phil Turmel <philip@turmel.org> wrote:
->
->> > Doing something like that... and using network boot to solve those issues
->> >
->> > Last i tried grub2 could not handle a raid6 directly (could be changed now)
->>
->> You could also boot from a USB device, possibly one that memory caches
->> its root filesystem (like System Rescue CD).
->
-> Just place GRUB and the /boot partition with kernel and initrd on a USB stick,
-> the rest (root FS) can be on RAID6. That's what I do on one machine.
->
+If you are using an EFI system in EFI mode, you will need an EFI
+partition(s) somewhere. On my new system I have all 5 of my 3TB drives
+contain an EFI-dos partition of about 200-500MB and the the rest as one
+large partition for the raid6 containing everything else (/, /home,
+etc.). The only pain in the neck is remembering to copy everything from
+the "live EFI" (default loaded as "/boot") to the backup EFI's when ever
+I change/update stuff in it.
+> 
+> Ideas/Suggestions?
+> 
+> Thanks
+> 
+> Tony
 > --
-> With respect,
-> Roman
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
