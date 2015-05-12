@@ -1,76 +1,49 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Re: Installing Linux directly onto RAID6 Array...........
-Date: Tue, 12 May 2015 15:05:31 +0100
-Message-ID: <CAOS+5GH7hQtJccqU0pp00wpj_43PpMp=wqVN8gftBWiMMqh8_w@mail.gmail.com>
-References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
-	<BLU436-SMTP20942BFA85744B69593179D98DA0@phx.gbl>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH 0/5] a caching layer for raid 5/6
+Date: Tue, 12 May 2015 08:23:50 -0700
+Message-ID: <20150512152343.GA3840556@devbig257.prn2.facebook.com>
+References: <cover.1430954848.git.shli@fb.com>
+ <20150511122347.GA5082@infradead.org>
+ <20150511160349.GA545551@devbig257.prn2.facebook.com>
+ <20150512071854.GA16731@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU436-SMTP20942BFA85744B69593179D98DA0@phx.gbl>
+Content-Disposition: inline
+In-Reply-To: <20150512071854.GA16731@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wilson, Jonathan" <piercing_male@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-It's a new z97 board so EFI rules apply.
+On Tue, May 12, 2015 at 12:18:54AM -0700, Christoph Hellwig wrote:
+> On Mon, May 11, 2015 at 09:03:51AM -0700, Shaohua Li wrote:
+> > >   - What is the reason for retry_bio_list?  If a driver returns an
+> > >     I/O error to the higher levels it already has retried and came
+> > >     to the conclusion this is a permanent error.
+> > 
+> > The retry_bio_list is to handle io to cache disk. If IO to cache disk
+> > has error, it's not a permanent error here. The cache disk is a cache,
+> > We can still dispatch the IO to its final destination, the raid disks.
+> 
+> How does this work in practice?  We've filled our cache disk with
+> dirty data, and it now returns non-correctable write errors.  At this
+> point we had claimed to caller that data is on stable disk, but our
+> cache disk is toast now.  Is it really a good idea to now start a large
+> window where we do not actually have the cache data on stable storage
+> we can get back at but pretent business as usual?
+> 
+> IMHO the only sane way is to shut down the array when write to the cache
+> disk fail.  Hopefully the disk will still allow reading from it.  Note
+> that to be on the safe side you'll need a mirrored cache disk anyway.
 
-I have some spare 3TB drives sitting around that I may try to practice
-on.......see what will and won't work.
+We have a memory pool here. All data which aren't flushed to raid disks
+are in the pool. So if there is io error in cache disk, we still can
+flush the data from memory pool to raid disks. The pool is a limited
+resource, so can reduce IO aggregation effect though, but we flush full
+stripe data almost immediately to raid disks, which can mitigate a
+little. This will make the caching layer like hardware raid card very
+much.
 
-Still open to all suggestions and especially from anyone who's
-actually done this.
-
-On 12 May 2015 at 14:27, Wilson, Jonathan <piercing_male@hotmail.com> wrote:
-> On Tue, 2015-05-12 at 11:08 +0100, Another Sillyname wrote:
->> I've tried to do some research on this but the information out there
->> seems a bit contradictory (mainly because some is so old).
->>
->> I want to install Fedora directly onto a RAID array (no separate boot disk).
->>
->> My plan is to 'pre configure' the 6 drives as a clean RAID6 array,
->> effectively sd[a-f] without partitions and then attempt to install
->> Fedora 21, from sources it looks like Grub2 should recognise the array
->> and then allow the Kernel to boot thereby 'enabling' the array to
->> become visible and active.
->>
->> However I have not been able to find an actual example of someone
->> trying this......thoughts?
->>
->> The reason to do this is I'm intending to use a Mini ITX board with 6
->> sata ports and want to use 8TB drives in Raid6 to give me a very high
->> density data resilient small form factor storage box.
->
-> Grub2 can handle booting into raid6, but some while ago the support was
-> sketchy if the array was degraded; this may have improved.
->
-> Your problem would be that it would require a biosboot (GPT, type:EF02,
-> size:1 MiB) partition to hold part of the loader as it will not fit
-> entirely into the "mbr."
->
-> A second problem might be that while drives larger than 2 GB can be used
-> on (most?) older boards they might not be able to be accessed/read
-> correctly/bootable by older non-EFI bios's. My old MB was quite happy to
-> boot from a 1 TB drive and linux could see and use my 3TB drives but the
-> bios only saw the 3TB drives as 700MB (approx, I recall)
->
-> If you are using an EFI system in EFI mode, you will need an EFI
-> partition(s) somewhere. On my new system I have all 5 of my 3TB drives
-> contain an EFI-dos partition of about 200-500MB and the the rest as one
-> large partition for the raid6 containing everything else (/, /home,
-> etc.). The only pain in the neck is remembering to copy everything from
-> the "live EFI" (default loaded as "/boot") to the backup EFI's when ever
-> I change/update stuff in it.
->>
->> Ideas/Suggestions?
->>
->> Thanks
->>
->> Tony
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
+Thanks,
+Shaohua
