@@ -1,37 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] a caching layer for raid 5/6
-Date: Tue, 12 May 2015 00:18:54 -0700
-Message-ID: <20150512071854.GA16731@infradead.org>
-References: <cover.1430954848.git.shli@fb.com>
- <20150511122347.GA5082@infradead.org>
- <20150511160349.GA545551@devbig257.prn2.facebook.com>
+From: Another Sillyname <anothersname@googlemail.com>
+Subject: Installing Linux directly onto RAID6 Array...........
+Date: Tue, 12 May 2015 11:08:36 +0100
+Message-ID: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150511160349.GA545551@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, dan.j.williams@intel.com, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 11, 2015 at 09:03:51AM -0700, Shaohua Li wrote:
-> >   - What is the reason for retry_bio_list?  If a driver returns an
-> >     I/O error to the higher levels it already has retried and came
-> >     to the conclusion this is a permanent error.
-> 
-> The retry_bio_list is to handle io to cache disk. If IO to cache disk
-> has error, it's not a permanent error here. The cache disk is a cache,
-> We can still dispatch the IO to its final destination, the raid disks.
+I've tried to do some research on this but the information out there
+seems a bit contradictory (mainly because some is so old).
 
-How does this work in practice?  We've filled our cache disk with
-dirty data, and it now returns non-correctable write errors.  At this
-point we had claimed to caller that data is on stable disk, but our
-cache disk is toast now.  Is it really a good idea to now start a large
-window where we do not actually have the cache data on stable storage
-we can get back at but pretent business as usual?
+I want to install Fedora directly onto a RAID array (no separate boot disk).
 
-IMHO the only sane way is to shut down the array when write to the cache
-disk fail.  Hopefully the disk will still allow reading from it.  Note
-that to be on the safe side you'll need a mirrored cache disk anyway.
+My plan is to 'pre configure' the 6 drives as a clean RAID6 array,
+effectively sd[a-f] without partitions and then attempt to install
+Fedora 21, from sources it looks like Grub2 should recognise the array
+and then allow the Kernel to boot thereby 'enabling' the array to
+become visible and active.
 
+However I have not been able to find an actual example of someone
+trying this......thoughts?
+
+The reason to do this is I'm intending to use a Mini ITX board with 6
+sata ports and want to use 8TB drives in Raid6 to give me a very high
+density data resilient small form factor storage box.
+
+Ideas/Suggestions?
+
+Thanks
+
+Tony
