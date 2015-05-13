@@ -1,41 +1,77 @@
-From: "Gravity IT Solutions" <info@egravity.net>
-Subject: RAID-5: The following arrays have missing required members and cannot be configured
-Date: Wed, 13 May 2015 16:28:41 +0500
-Message-ID: <00c501d08d6f$f8c6aa80$ea53ff80$@egravity.net>
+From: "David F." <df7729@gmail.com>
+Subject: Re: Breaks LSI RAID on C600 chipset
+Date: Wed, 13 May 2015 07:26:30 -0700
+Message-ID: <CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
+References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
+	<21791.17074.357416.218211@quad.stoffel.home>
+	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
+	<21792.11560.92731.222551@quad.stoffel.home>
+	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
+	<21795.3296.846489.199118@quad.stoffel.home>
+	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
+	<20150410105001.171d6683@notabene.brown>
+	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
+	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
+	<CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
+	<20150513103557.1df6036d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-us
+In-Reply-To: <20150513103557.1df6036d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I am developer so my System admin knowledge is basic. 
+Thanks.
 
-I have 3 Arrays in my system 1 for OS and 2 for data both data arrays are
-Raid-5 and each was showing 1 bad drive, so i shutdown the system and
-replaced both drives with a larger drives I checked in Adaptec Bios Array
-and it was showing both arrays rebuilding when i was exiting the bios setup,
-Array -1 was 2% and Array-2 was showing 1%, so i booted the system and after
-few hours i checked the process was complete and i restarted to check the
-status in the bois setup, there i was it was showing only 2 Arrays the 3rd
-was missing, when i tried rebooting the system it gave me this message
+1) The update did fix the broken RAID.  I can reboot and the RAID
+mirror still exists after reboots.
 
-The following arrays have missing required members and cannot be configured
-:Array#2-RAID-5
+2) I do want to report that on the first test, the reboot was clean.
+On the second reboot there was a warning message about the BIOS
+detecting "Inconsistent Timestamps" on one of the drives and something
+about which CONFIG the BIOS would use.  I didn't have time to get it
+all jotted down.  Whatever it used was still okay since the RAID
+mirror was still there after that message.
 
-Press <Enter> to accept the current configuration Press< Ctrl-A> to enter
-Adaptec RAID Configuration Utility Press <Ctrl-H> to Pause Configuration
-Messages (Default is not to accept if no valid key pressed in 30 seconds)
-i selected the default to go on and boot, but system did not boot as it
-could not find the array and ask me to fix it, so just commented the mount
-in the fstab and booted
-i can not see the drives in the /dev folder
-can you please guide me on how to fix it?
 
- 
-
-Thanks
-
+On Tue, May 12, 2015 at 5:35 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 11 May 2015 09:31:26 -0700 "David F." <df7729@gmail.com> wrote:
+>
+>> any progress or more information needed on this?
+>>
+>> On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
+>> > If you need access to the system, a network kvm is available - or if
+>> > you have a C600 based system, you should see the same problem there.
+>> >
+>> > On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
+>> >> Okay, and to confirm, this is happening on other C600 based systems.
+>> >> Boot to Linux with MDADM raid support and the raid is gone after
+>> >> reboot.
+>> >>
+>> >> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
+>> >>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> wrote:
+>> >>>
+>> >>>> Hello,
+>> >>>>
+>> >>>> I built a new system, installed new drives (no partitioning, just raw
+>> >>>> new drives), configured RAID 1, boot to linux, created reports
+>> >>>> attached.  Rebooted and the system doesn't see any configured raid
+>> >>>> drives (just the two raw drives).
+>> >>>
+>> >>> Thanks.  I might take a look, but I would greatly prefer it if you kept the
+>> >>> linux-raid list on the Cc.....
+>> >>>
+>> >>> NeilBrown
+>> >>>
+>
+> I must confess that I haven't even looked at it.
+> But I just saw and email on linux-raid from Martin Wilck:
+>
+>  Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
+>
+> which very likely fixes your problem.  I've applied it and pushed out to
+>    git://neil.brown.name/mdadm/
+>
+> NeilBrown
