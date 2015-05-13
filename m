@@ -1,52 +1,78 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Installing Linux directly onto RAID6 Array...........
-Date: Wed, 13 May 2015 10:02:40 +1000
-Message-ID: <555294A0.6040703@websitemanagers.com.au>
-References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] DDF: _write_super_to_disk: fix anchor header type
+Date: Wed, 13 May 2015 10:34:15 +1000
+Message-ID: <20150513103415.0bf79e71@notabene.brown>
+References: <1431353384-8637-1-git-send-email-martin.wilck@ts.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/QBqYnDsLaZpDO=n_5Tbea8H"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
+In-Reply-To: <1431353384-8637-1-git-send-email-martin.wilck@ts.fujitsu.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>, linux-raid@vger.kernel.org
+To: Martin Wilck <martin.wilck@ts.fujitsu.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/05/15 20:08, Another Sillyname wrote:
-> I've tried to do some research on this but the information out there
-> seems a bit contradictory (mainly because some is so old).
->
-> I want to install Fedora directly onto a RAID array (no separate boot disk).
->
-> My plan is to 'pre configure' the 6 drives as a clean RAID6 array,
-> effectively sd[a-f] without partitions and then attempt to install
-> Fedora 21, from sources it looks like Grub2 should recognise the array
-> and then allow the Kernel to boot thereby 'enabling' the array to
-> become visible and active.
->
-> However I have not been able to find an actual example of someone
-> trying this......thoughts?
->
-> The reason to do this is I'm intending to use a Mini ITX board with 6
-> sata ports and want to use 8TB drives in Raid6 to give me a very high
-> density data resilient small form factor storage box.
->
-> Ideas/Suggestions?
+--Sig_/QBqYnDsLaZpDO=n_5Tbea8H
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Create a small RAID1 partition at the beginning of every disk, use this 
-for /boot and install grub. Use the rest of each disk as your RAID6 array.
+On Mon, 11 May 2015 16:09:44 +0200 Martin Wilck <martin.wilck@ts.fujitsu.co=
+m>
+wrote:
 
-This means as long as the bios can find any one of your disks, then the 
-system will boot. Personally, I'd be inclined to put the complete OS on 
-the RAID1, and then only use the RAID6 for the "data" mountpoint. This 
-would allow the system to come up fully, even without the RAID6 (eg, 4 
-out of 6 drives has died), and allow remote debug/diagnostics/etc 
-without needing to try and boot from a rescue disk/etc.
+> Since commit 30bee0201, the anchor is updated from the active
+> DDF header. This requires fixing the header type before the
+> anchor is written.
+>=20
+> The LSI Software RAID code will reject DDF meta data with wrong
+> anchor type and will erase all meta data when it encounters
+> such a broken anchor. Thus starting Linux md once on a system
+> with LSI RAID BIOS may cause the meta data to get destroyed.
+> ---
+>  super-ddf.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/super-ddf.c b/super-ddf.c
+> index d0b2ac7..faaf0a7 100644
+> --- a/super-ddf.c
+> +++ b/super-ddf.c
+> @@ -3158,6 +3158,7 @@ static int _write_super_to_disk(struct ddf_super *d=
+df, struct dl *d)
+>  	memcpy(&ddf->primary, &ddf->anchor, 512);
+>  	memcpy(&ddf->secondary, &ddf->anchor, 512);
+> =20
+> +	ddf->anchor.type =3D DDF_HEADER_ANCHOR;
+>  	ddf->anchor.openflag =3D 0xFF; /* 'open' means nothing */
+>  	ddf->anchor.seq =3D cpu_to_be32(0xFFFFFFFF); /* no sequencing in anchor=
+ */
+>  	ddf->anchor.crc =3D calc_crc(&ddf->anchor, 512);
 
-This doesn't help you with what you asked, but just an idea/suggestion.
 
-Regards,
-Adam
+Thanks Martin!
+Applied,
+NeilBrown
 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+--Sig_/QBqYnDsLaZpDO=n_5Tbea8H
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVVKcBznsnt1WYoG5AQKRDw//e3uWhduf6FdAz819mJxb/2NRKKeglFOX
+hjUbi2N6kFMvLl799gFAl6wyCKkiez2MYfmEtfjJg6tg2u2fsQtgrRQrjOP2Oea9
+lI9rBkNgXuVcgBSghUITpu7yrV5592EDswReSXmw7DWRTnRNP8R59GNFRdByLfzX
+Z/qjQwYW/wqv5xvVgpVFaE+CebjmzyPbtaKgskdbgq70UFq1PuqI/GrRiAGY2kDt
+SBebhL5GyhlVoHAAoL+qVL+OsXNEbOZjdgyBo8PGoui4tyfXr+n8KwciLIj0RKCU
+yq6xXZlD21r5YJsJAV2pQOAQJSrvhbKVYJJPlV5yEWJY4Ky2JBBszU4WExFjo2vB
+H0E9GfI53TMSD/kJEtPvdKxscmqi5yvjLn2nxHZE2/e6V3Ilgc1OiXs9vuA4oO5d
+/3kkmgG50olrV1GkLvOP8GyTLdhGIlFI8qLvdjtzV/0cwQRmJWNH9DqagKkEhcHC
+YRew1AoQEGwp3mo+NjIpWnaw3Ho5DBsJ0SaiWM2dh/LAZuXEpkMm3jkMFPmHFaXA
+PXnP0L8LU+9puZ1QGPcr8wpSBWaGw66rIWvPh1ISe9H3w8ImpAop1FLZqgDt6uyV
+OzW65ANiXvflGeqr0hHj57FdR0kU5ijI3z40Ze/rydzsGs0roLWf5HJdSg3iy9lX
+50M0V5zCH0w=
+=dCMn
+-----END PGP SIGNATURE-----
+
+--Sig_/QBqYnDsLaZpDO=n_5Tbea8H--
