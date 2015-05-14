@@ -1,61 +1,56 @@
-From: gqjiang@suse.com
-Subject: [PATCH] md-cluster: use %pU to print UUIDs
-Date: Thu, 14 May 2015 09:39:39 +0800
-Message-ID: <1431567579-17553-1-git-send-email-gqjiang@suse.com>
+From: d tbsky <tbskyd@gmail.com>
+Subject: data corruption after rebuid
+Date: Thu, 14 May 2015 12:54:04 +0800
+Message-ID: <CAC6SzHKo8kUOJoC+eaZU1mQCzW+WdB6ACRkrM30yUCA7CodLCQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com, Guoqing Jiang <gqjiang@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Guoqing Jiang <gqjiang@suse.com>
+Hi:
+     I think I did something wrong and cause mdadm data corruption.
+but I am curious which steps brings me down. hope someone can told me
+about it.
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/md-cluster.c | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+       I have two hosts forms a vm HA cluster. each one is a 2TB * 2
+mdadm raid 1. I need to test something but lack of disks, so I pull
+one disk of each hosts.  after testing, I put the disk back and let
+mdadm rebuild. host B took several hours to rebuild and looks fine.
+host A took only 5 min to rebuild. after completing rebuild, the
+virtual machines stand  above the raid crashed one by one. since I
+know I have write many data  bytes during the testing, host A should
+not took only 5 min to recover. I must do something wrong to confuse
+mdadm.  below is what I done:
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index fcfc4b9..86d8316 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -176,18 +176,6 @@ static void lockres_free(struct dlm_lock_resource *res)
- 	kfree(res);
- }
- 
--static char *pretty_uuid(char *dest, char *src)
--{
--	int i, len = 0;
--
--	for (i = 0; i < 16; i++) {
--		if (i == 4 || i == 6 || i == 8 || i == 10)
--			len += sprintf(dest + len, "-");
--		len += sprintf(dest + len, "%02x", (__u8)src[i]);
--	}
--	return dest;
--}
--
- static void add_resync_info(struct mddev *mddev, struct dlm_lock_resource *lockres,
- 		sector_t lo, sector_t hi)
- {
-@@ -383,7 +371,7 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
- 	int len;
- 
- 	len = snprintf(disk_uuid, 64, "DEVICE_UUID=");
--	pretty_uuid(disk_uuid + len, cmsg->uuid);
-+	sprintf(disk_uuid + len, "%pU", cmsg->uuid);
- 	snprintf(raid_slot, 16, "RAID_DISK=%d", cmsg->raid_slot);
- 	pr_info("%s:%d Sending kobject change with %s and %s\n", __func__, __LINE__, disk_uuid, raid_slot);
- 	init_completion(&cinfo->newdisk_completion);
-@@ -641,7 +629,7 @@ static int join(struct mddev *mddev, int nodes)
- 	mddev->cluster_info = cinfo;
- 
- 	memset(str, 0, 64);
--	pretty_uuid(str, mddev->uuid);
-+	sprintf(str, "%pU", mddev->uuid);
- 	ret = dlm_new_lockspace(str, mddev->bitmap_info.cluster_name,
- 				DLM_LSFL_FS, LVB_SIZE,
- 				&md_ls_ops, mddev, &ops_rv, &cinfo->lockspace);
--- 
-1.7.12.4
+1. I test a 3 disk mdadm raid 5: sda (hostA sdb), sdb (hostB sdb), sdc
+(new disk). I wrote about 5G data for system restore testing.
 
+2. then I test a 4 disk mdadm raid10: sda (hostA sdb), sdb(hostB
+sdb),sdc(new disk),sdd (new disk). I wrote about 5G data for system
+restore testing.
+
+3. then I test again a  4 disk mdadm rai10, but wrote about 120G data
+for system restore testing.
+
+then I put back the disk to hostA and hostB (hot plugin, HOST A and B
+are still running). at hostA I issue command blow:
+   mdadm --stop /dev/md126; mdadm --stop /dev/md127 (the plugged disk
+has raid data on it and udev seems found it)
+   dd if=/dev/sda of=/dev/sdb bs=1k count=1000  (to recreate mbr
+partition table).
+   partprobe /dev/sdb
+   mdadm --add /dev/md0 /dev/sdb1 (this is a small 500MB raid for /boot).
+   mdadm --add /dev/md1 /dev/sdb2 (this is about 2TB raid).
+
+   mdadm seems confused it only took 5 min to recover. I did the same
+at host B and it took several hours to recover.
+
+   so I did something wrong to confuse the mdadm superblock? should I
+use "mdadm --zero-superblock /dev/sdb2" before I add it back to mdadm?
+
+  thanks a lot for advice!!
+
+Regards,
+tbskyd
