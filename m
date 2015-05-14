@@ -1,109 +1,95 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] md/raid5: per hash value and exclusive
- wait_for_stripe
-Date: Thu, 14 May 2015 16:09:15 +1000
-Message-ID: <20150514160915.58dcd4e5@notabene.brown>
-References: <1430275735-20290-1-git-send-email-yuanhan.liu@linux.intel.com>
-	<1430275735-20290-3-git-send-email-yuanhan.liu@linux.intel.com>
-	<20150514154511.26b74f5b@notabene.brown>
-	<20150514055508.GJ3124@yliu-dev.sh.intel.com>
+From: d tbsky <tbskyd@gmail.com>
+Subject: Re: data corruption after rebuid
+Date: Thu, 14 May 2015 14:36:43 +0800
+Message-ID: <CAC6SzH+gG3=UXLvq9xgfRVe9zEiQUppw26P2KMutCyADbfhnvw@mail.gmail.com>
+References: <CAC6SzHKo8kUOJoC+eaZU1mQCzW+WdB6ACRkrM30yUCA7CodLCQ@mail.gmail.com>
+	<555439F4.4020200@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/pPbr=yFbxU4=CFC3s7CWoi9"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150514055508.GJ3124@yliu-dev.sh.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <555439F4.4020200@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <adam@websitemanagers.com.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/pPbr=yFbxU4=CFC3s7CWoi9
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+2015-05-14 14:00 GMT+08:00 Adam Goryachev <adam@websitemanagers.com.au>:
+> On 14/05/15 14:54, d tbsky wrote:
+> My guess is this is where you went wrong.
+> Instead use a tool that will do this intelligently, quick google shows this:
+> sgdisk -R=/dev/sdb /dev/sda
+> sgdisk -G /dev/sdb
+> Taken from:
+> http://unix.stackexchange.com/questions/12986/how-to-copy-the-partition-layout-of-a-whole-disk-using-standard-tools
+>
+> My guess is you copied some data as well as the partition table, and
+> that you are using a mdadm label which is stored at the beginning of the
+> disk, and possibly are using bitmap on one server and not the other.
 
-On Thu, 14 May 2015 13:55:08 +0800 Yuanhan Liu <yuanhan.liu@linux.intel.com>
-wrote:
+    this step did look suspicious. but I had use it many times on
+blank hard disks. and it seems works..
 
-> On Thu, May 14, 2015 at 03:45:11PM +1000, NeilBrown wrote:
-> > On Wed, 29 Apr 2015 10:48:55 +0800 Yuanhan Liu <yuanhan.liu@linux.intel=
-.com>
-> > wrote:
-> >=20
-> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > index 64d5bea..697d77a 100644
-> > > --- a/drivers/md/raid5.c
-> > > +++ b/drivers/md/raid5.c
-> > > @@ -344,7 +344,8 @@ static void release_inactive_stripe_list(struct r=
-5conf *conf,
-> > >  					 int hash)
-> > >  {
-> > >  	int size;
-> > > -	bool do_wakeup =3D false;
-> > > +	unsigned long do_wakeup =3D 0;
-> > > +	int i =3D 0;
-> > >  	unsigned long flags;
-> > > =20
-> > >  	if (hash =3D=3D NR_STRIPE_HASH_LOCKS) {
-> > > @@ -365,15 +366,19 @@ static void release_inactive_stripe_list(struct=
- r5conf *conf,
-> > >  			    !list_empty(list))
-> > >  				atomic_dec(&conf->empty_inactive_list_nr);
-> > >  			list_splice_tail_init(list, conf->inactive_list + hash);
-> > > -			do_wakeup =3D true;
-> > > +			do_wakeup |=3D 1 << (size - 1);
-> > >  			spin_unlock_irqrestore(conf->hash_locks + hash, flags);
-> > >  		}
-> > >  		size--;
-> > >  		hash--;
-> > >  	}
-> > > =20
-> > > +	for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++) {
-> > > +		if (do_wakeup & (1 << i))
-> > > +			wake_up(&conf->wait_for_stripe[i]);
-> > > +	}
-> > > +
-> >=20
-> > hi,
-> >  I've been doing some testing and got a lock-up in resize_stripes, wait=
-ing
-> >  on wait_for_stripe[].
-> >=20
-> >  Looking at the above code,  I think
-> >       do_wakeup |=3D 1 << (size - 1);
-> >  should be
-> >       do_wakeup |=3D 1 << hash;
-> >=20
-> >  do you agree?  Or am I missing something?
->=20
-> Right. Sorry for the careless mistake.
+> Maybe if you could show some details from each of the raid arrays then
+> more people can make more informed comments.
 
-Thanks for confirming.
-Mistakes happen - that's why we test :-)
+ sure. below is the raid structure of  hostA & hostB:
+/dev/md1:
+        Version : 1.1
+  Creation Time : Wed Feb 19 09:34:03 2014
+     Raid Level : raid1
+     Array Size : 1953177408 (1862.70 GiB 2000.05 GB)
+  Used Dev Size : 1953177408 (1862.70 GiB 2000.05 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-I've merged that fix into your patch.
+  Intent Bitmap : Internal
 
-NeilBrown
 
---Sig_/pPbr=yFbxU4=CFC3s7CWoi9
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+  and below is the raid structure of my first test:
+/dev/md1:
+        Version : 1.1
+  Creation Time : Mon Oct 20 18:51:47 2014
+     Raid Level : raid5
+     Array Size : 3906354176 (3725.39 GiB 4000.11 GB)
+  Used Dev Size : 1953177088 (1862.69 GiB 2000.05 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+  Intent Bitmap : Internal
 
-iQIVAwUBVVQ8DDnsnt1WYoG5AQKCtBAAqWXiPy7fktwKvU3A6fU94EtAfLpdPG3M
-eJKudzTHNUEm9Fs7pm0Sz3+jM2CRqUCOPuKJKZUY9DPi2iEpCcZnDIN0LkseTPUR
-cos/xMOs1cISPjDVtkgdVXaNgwgj/2YG0X/kRy3FVD4qhAqf0Ocv6JgJDIePRBZm
-elo8KSveBixXkj+HhEZAwsjPRwtkePSWIQcuhEzsG/tsH58+KCPYWInbVS42GD5s
-tKBGu/FEIwXxgq0zvnIMFlHxc6EJc6WkyNGHK7efrRwp6FOlE2aWwKBMMb2ZOqbp
-8qBk4/93dWG4m/89zES+BeISSLlz/nfE4X3fw3yWqsr3mrGj5tll+I6U+PkiYvc3
-tosemY0/SmLjL+EvpNR6ARiGB5+mXb8RGGWYJBaTVPQRhJkSrRqMF+OyV1u86nns
-bK0eZ8A4T8JuPDGCGfleB2LY4hWvwCad/etcjR8R3N6NH4ql9YLgmwhN+L0aRWXZ
-+60KKA4/AQWxTa3d8dViESacMnN07hvbcPbS1EEdwITdC4kUGT7XE5weROhr200G
-z7foa5I53NnvOuVk2nrnWy/uleL/v09uDsUPIxl6b9k8daJozgLgCUzavP9+YQSU
-Fje98tJnCSS5mnOTaCjr/o01EZAdnigud7Js01PNxhQhq/KdUkRTwRRF9W4O/Jnb
-cTSEc71OJPo=
-=AhXu
------END PGP SIGNATURE-----
+    Update Time : Thu May 14 14:32:25 2015
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
 
---Sig_/pPbr=yFbxU4=CFC3s7CWoi9--
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+
+
+    and the raid structure of my second and thrid test:
+/dev/md1:
+        Version : 1.1
+  Creation Time : Sun Sep 28 19:20:59 2014
+     Raid Level : raid10
+     Array Size : 1953033216 (1862.56 GiB 1999.91 GB)
+  Used Dev Size : 976516608 (931.28 GiB 999.95 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Thu May 14 14:33:14 2015
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : near=2
+     Chunk Size : 512K
