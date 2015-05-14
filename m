@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 2/7] Enable create array with write cache (--write-cache DEVICE).
-Date: Wed, 13 May 2015 23:43:51 -0700
-Message-ID: <1431585836-4103033-3-git-send-email-songliubraving@fb.com>
+Subject: [PATCH 4/7] Assemble array with writecache
+Date: Wed, 13 May 2015 23:43:53 -0700
+Message-ID: <1431585836-4103033-5-git-send-email-songliubraving@fb.com>
 References: <1431585836-4103033-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,202 +12,267 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, dan.j.williams@intel.com, neilb@suse.de, hch@infradead.org, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Specify the write cache device with --write-cache DEVICE
+Example output:
 
-./mdadm --create -f /dev/md0 --assume-clean -c 32 --raid-devices=4 --level=5 /dev/sd[c-f] --write-cache /dev/sdb1
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
+./mdadm --assemble /dev/md0 /dev/sd[c-f] /dev/sdb1
+mdadm: /dev/md0 has been started with 4 drives and 1 cache.
 
-Only one cache device is allowed. If multiple --write-cache
-are given, mdadm will use the first and ignore others
+mdadm checks superblock for cache devices. If the
+array appears to have a cache device, but it is not given,
+it will complain as
 
-./mdadm --create -f /dev/md0 --assume-clean -c 32 --raid-devices=4 --level=5 /dev/sd[c-f] --write-cache /dev/sdb1 --write-cache /dev/sdx
-mdadm: Please specify only one cache device for the array.
-mdadm: Ignoring --write-cache /dev/sdx...
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
+./mdadm --assemble /dev/md0 /dev/sd[c-f]
+mdadm: Not safe to assemble with cache device missing, consider --force.
+
+This can be overwritten with --force
+
+./mdadm --assemble /dev/md0 /dev/sd[c-f] --force
+mdadm: Force start with missing cache device...
+mdadm: /dev/md0 has been started with 4 drives.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Create.c | 21 +++++++++++++++------
- ReadMe.c |  1 +
- mdadm.c  | 19 +++++++++++++++++++
- mdadm.h  |  2 ++
- super1.c |  8 ++++++++
- 5 files changed, 45 insertions(+), 6 deletions(-)
+ Assemble.c | 52 ++++++++++++++++++++++++++++++++++++++++++----------
+ mdadm.h    |  2 ++
+ super1.c   | 22 ++++++++++++++++++++++
+ util.c     |  3 ++-
+ 4 files changed, 68 insertions(+), 11 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index ef28da0..0d2a591 100644
---- a/Create.c
-+++ b/Create.c
-@@ -87,7 +87,7 @@ int Create(struct supertype *st, char *mddev,
- 	unsigned long long minsize=0, maxsize=0;
- 	char *mindisc = NULL;
- 	char *maxdisc = NULL;
--	int dnum;
-+	int dnum, raid_disk_num;
- 	struct mddev_dev *dv;
- 	int fail=0, warn=0;
- 	struct stat stb;
-@@ -180,11 +180,11 @@ int Create(struct supertype *st, char *mddev,
- 		pr_err("This metadata type does not support spare disks at create time\n");
- 		return 1;
- 	}
--	if (subdevs > s->raiddisks+s->sparedisks) {
-+	if (subdevs > s->raiddisks+s->sparedisks+s->cachedisks) {
- 		pr_err("You have listed more devices (%d) than are in the array(%d)!\n", subdevs, s->raiddisks+s->sparedisks);
- 		return 1;
- 	}
--	if (!have_container && subdevs < s->raiddisks+s->sparedisks) {
-+	if (!have_container && subdevs < s->raiddisks+s->sparedisks+s->cachedisks) {
- 		pr_err("You haven't given enough devices (real or missing) to create this array\n");
- 		return 1;
- 	}
-@@ -397,6 +397,9 @@ int Create(struct supertype *st, char *mddev,
+diff --git a/Assemble.c b/Assemble.c
+index 25a103d..ccf142e 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -718,7 +718,8 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			i = devcnt;
+ 		else
+ 			i = devices[devcnt].i.disk.raid_disk;
+-		if (i+1 == 0) {
++
++		if (i+1 == 0 || i == 0xfffd) {
+ 			if (nextspare < content->array.raid_disks*2)
+ 				nextspare = content->array.raid_disks*2;
+ 			i = nextspare++;
+@@ -772,8 +773,9 @@ static int load_devices(struct devs *devices, char *devmap,
  			}
- 		}
- 
-+		if (dv->disposition == 'c')
-+			continue;  /* skip write cache for size check */
-+
- 		freesize /= 2; /* convert to K */
- 		if (s->chunk && s->chunk != UnSet) {
- 			/* round to chunk size */
-@@ -834,7 +837,7 @@ int Create(struct supertype *st, char *mddev,
- 	for (pass=1; pass <=2 ; pass++) {
- 		struct mddev_dev *moved_disk = NULL; /* the disk that was moved out of the insert point */
- 
--		for (dnum=0, dv = devlist ; dv ;
-+		for (dnum=0, raid_disk_num=0, dv = devlist ; dv ;
- 		     dv=(dv->next)?(dv->next):moved_disk, dnum++) {
- 			int fd;
- 			struct stat stb;
-@@ -859,8 +862,13 @@ int Create(struct supertype *st, char *mddev,
- 				*inf = info;
- 
- 				inf->disk.number = dnum;
--				inf->disk.raid_disk = dnum;
--				if (inf->disk.raid_disk < s->raiddisks)
-+				inf->disk.raid_disk = raid_disk_num++;
-+
-+				if (dv->disposition == 'c') {
-+					inf->disk.raid_disk = 0xfffd;
-+					inf->disk.state = (1<<MD_DISK_WRITECACHE);
-+					raid_disk_num--;
-+				} else if (inf->disk.raid_disk < s->raiddisks)
- 					inf->disk.state = (1<<MD_DISK_ACTIVE) |
- 						(1<<MD_DISK_SYNC);
- 				else
-@@ -909,6 +917,7 @@ int Create(struct supertype *st, char *mddev,
- 					inf->disk.major = major(stb.st_rdev);
- 					inf->disk.minor = minor(stb.st_rdev);
- 				}
-+
- 				break;
- 			case 2:
- 				inf->errors = 0;
-diff --git a/ReadMe.c b/ReadMe.c
-index 87a4916..74f7162 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -140,6 +140,7 @@ struct option long_options[] = {
-     {"homehost",  1, 0,  HomeHost},
-     {"symlinks",  1, 0,  Symlinks},
-     {"data-offset",1, 0, DataOffset},
-+    {"write-cache",1, 0, WriteCache},
- 
-     /* For assemble */
-     {"uuid",      1, 0, 'u'},
-diff --git a/mdadm.c b/mdadm.c
-index 3e8c49b..9a7048b 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
- 		.require_homehost = 1,
- 	};
- 	struct shape s = {
-+		.cachedisks	= 0,
- 		.level		= UnSet,
- 		.layout		= UnSet,
- 		.bitmap_chunk	= UnSet,
-@@ -1137,6 +1138,24 @@ int main(int argc, char *argv[])
- 		case O(INCREMENTAL, IncrementalPath):
- 			remove_path = optarg;
- 			continue;
-+		case O(CREATE, WriteCache):
-+			if (s.cachedisks) {
-+				pr_err("Please specify only one cache device for the array.\n");
-+				pr_err("Ignoring --write-cache %s...\n", optarg);
-+				continue;
+ 			if (best[i] == -1
+ 			    || (devices[best[i]].i.events
+-				< devices[devcnt].i.events))
++				< devices[devcnt].i.events)) {
+ 				best[i] = devcnt;
 +			}
-+			dv = xmalloc(sizeof(*dv));
-+			dv->devname = optarg;
-+			dv->disposition = 'c';  /* WriteCache */
-+			dv->writemostly = writemostly;
-+			dv->used = 0;
-+			dv->next = NULL;
-+			*devlistend = dv;
-+			devlistend = &dv->next;
-+			devs_found++;
-+
-+			s.cachedisks = 1;
-+			continue;
  		}
- 		/* We have now processed all the valid options. Anything else is
- 		 * an error
+ 		devcnt++;
+ 	}
+@@ -927,6 +929,7 @@ static int start_array(int mdfd,
+ 		       unsigned int okcnt,
+ 		       unsigned int sparecnt,
+ 		       unsigned int rebuilding_cnt,
++		       unsigned int cachecnt,
+ 		       struct context *c,
+ 		       int clean, char *avail,
+ 		       int start_partial_ok,
+@@ -938,6 +941,22 @@ static int start_array(int mdfd,
+ 	int i;
+ 	unsigned int req_cnt;
+ 
++	if (st->ss->require_cache) {
++		rv = st->ss->require_cache(st);
++		if (rv == 2) {
++			pr_err("BUG: Superblock not loaded in Assemble.c:start_array\n");
++			return 1;
++		}
++
++		if (cachecnt == 0 && rv == 1) {
++			if (!(c->force)) {
++				pr_err("Not safe to assemble with cache device missing, consider --force.\n");
++				return 1;
++			} else
++				pr_err("Force start with missing cache device...\n");
++		}
++	}
++
+ 	rv = set_array_info(mdfd, st, content);
+ 	if (rv && !err_ok) {
+ 		pr_err("failed to set array info for %s: %s\n",
+@@ -1015,7 +1034,8 @@ static int start_array(int mdfd,
+ 	if (content->array.level == LEVEL_CONTAINER) {
+ 		if (c->verbose >= 0) {
+ 			pr_err("Container %s has been assembled with %d drive%s",
+-			       mddev, okcnt+sparecnt, okcnt+sparecnt==1?"":"s");
++			       mddev, okcnt+sparecnt+cachecnt,
++			       okcnt+sparecnt+cachecnt==1?"":"s");
+ 			if (okcnt < (unsigned)content->array.raid_disks)
+ 				fprintf(stderr, " (out of %d)",
+ 					content->array.raid_disks);
+@@ -1101,6 +1121,8 @@ static int start_array(int mdfd,
+ 					fprintf(stderr, "%s %d rebuilding", sparecnt?",":" and", rebuilding_cnt);
+ 				if (sparecnt)
+ 					fprintf(stderr, " and %d spare%s", sparecnt, sparecnt==1?"":"s");
++				if (cachecnt == 1)
++					fprintf(stderr, " and 1 cache");
+ 				fprintf(stderr, ".\n");
+ 			}
+ 			if (content->reshape_active &&
+@@ -1268,7 +1290,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 	int *best = NULL; /* indexed by raid_disk */
+ 	int bestcnt = 0;
+ 	int devcnt;
+-	unsigned int okcnt, sparecnt, rebuilding_cnt, replcnt;
++	unsigned int okcnt, sparecnt, rebuilding_cnt, replcnt, cachecnt;
+ 	int i;
+ 	int was_forced = 0;
+ 	int most_recent = 0;
+@@ -1479,6 +1501,7 @@ try_again:
+ 	devcnt = load_devices(devices, devmap, ident, &st, devlist,
+ 			      c, content, mdfd, mddev,
+ 			      &most_recent, &bestcnt, &best, inargv);
++
+ 	if (devcnt < 0)
+ 		return 1;
+ 
+@@ -1506,7 +1529,9 @@ try_again:
+ 	okcnt = 0;
+ 	replcnt = 0;
+ 	sparecnt=0;
++	cachecnt=0;
+ 	rebuilding_cnt=0;
++
+ 	for (i=0; i< bestcnt; i++) {
+ 		int j = best[i];
+ 		int event_margin = 1; /* always allow a difference of '1'
+@@ -1516,8 +1541,10 @@ try_again:
+ 		/* note: we ignore error flags in multipath arrays
+ 		 * as they don't make sense
+ 		 */
+-		if (content->array.level != LEVEL_MULTIPATH)
+-			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
++		if (content->array.level != LEVEL_MULTIPATH) {
++			if (devices[j].i.disk.state & (1<<MD_DISK_WRITECACHE)) {
++				cachecnt++;
++			} else if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
+ 				if (!(devices[j].i.disk.state
+ 				      & (1<<MD_DISK_FAULTY))) {
+ 					devices[j].uptodate = 1;
+@@ -1525,6 +1552,7 @@ try_again:
+ 				}
+ 				continue;
+ 			}
++		}
+ 		/* If this device thinks that 'most_recent' has failed, then
+ 		 * we must reject this device.
+ 		 */
+@@ -1559,10 +1587,11 @@ try_again:
+ 						replcnt++;
+ 				} else
+ 					rebuilding_cnt++;
+-			} else
++			} else if (devices[j].i.disk.raid_disk != 0xfffd)
+ 				sparecnt++;
+ 		}
+ 	}
++
+ 	free(devmap);
+ 	if (c->force) {
+ 		int force_ok = force_array(content, devices, best, bestcnt,
+@@ -1583,8 +1612,9 @@ try_again:
+ 		int j = best[i];
+ 		int fd;
+ 
+-		if (j<0)
++		if (j<0) {
+ 			continue;
++		}
+ 		if (!devices[j].uptodate)
+ 			continue;
+ 		if (devices[j].i.events < devices[most_recent].i.events)
+@@ -1623,7 +1653,9 @@ try_again:
+ 		int j = best[i];
+ 		unsigned int desired_state;
+ 
+-		if (i >= content->array.raid_disks * 2)
++		if (devices[j].i.disk.raid_disk == 0xfffd)
++			desired_state = (1<<MD_DISK_WRITECACHE);
++		else if (i >= content->array.raid_disks * 2)
+ 			desired_state = 0;
+ 		else if (i & 1)
+ 			desired_state = (1<<MD_DISK_ACTIVE) | (1<<MD_DISK_REPLACEMENT);
+@@ -1770,7 +1802,7 @@ try_again:
+ 	rv = start_array(mdfd, mddev, content,
+ 			 st, ident, best, bestcnt,
+ 			 chosen_drive, devices, okcnt, sparecnt,
+-			 rebuilding_cnt,
++			 rebuilding_cnt, cachecnt,
+ 			 c,
+ 			 clean, avail, start_partial_ok,
+ 			 pre_exist != NULL,
 diff --git a/mdadm.h b/mdadm.h
-index 141f963..d28caa0 100644
+index d7a205c..62a0293 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -344,6 +344,7 @@ enum special_options {
- 	Dump,
- 	Restore,
- 	Action,
-+	WriteCache,
- };
+@@ -971,6 +971,8 @@ extern struct superswitch {
  
- enum prefix_standard {
-@@ -423,6 +424,7 @@ struct context {
- struct shape {
- 	int	raiddisks;
- 	int	sparedisks;
-+	int	cachedisks;
- 	int	level;
- 	int	layout;
- 	char	*layout_str;
+ 	/* write super block of raid5-cache*/
+ 	int (*write_r5l_super)(struct supertype *st, int fd);
++	/* whether the array require a cache device */
++	int (*require_cache)(struct supertype *st);
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */
+ 	int external;
+ 	const char *name; /* canonical metadata name */
 diff --git a/super1.c b/super1.c
-index 7af0fd5..f8a55c6 100644
+index f2697a8..c345a40 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -977,6 +977,10 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	case 0xFFFE:
- 		info->disk.state = 1; /* faulty */
- 		break;
-+	case 0xFFFD:
-+		info->disk.state = (1 << MD_DISK_WRITECACHE); /* faulty */
-+		info->disk.raid_disk = role;
-+		break;
- 	default:
- 		info->disk.state = 6; /* active and in sync */
- 		info->disk.raid_disk = role;
-@@ -1096,6 +1100,8 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		int want;
- 		if (info->disk.state & (1<<MD_DISK_ACTIVE))
- 			want = info->disk.raid_disk;
-+		else if (info->disk.state & (1<<MD_DISK_WRITECACHE))
-+			want = 0xFFFD;
- 		else
- 			want = 0xFFFF;
- 		if (sb->dev_roles[d] != __cpu_to_le16(want)) {
-@@ -1422,6 +1428,8 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
- 		*rp = __cpu_to_le16(dk->raid_disk);
- 	else if ((dk->state & ~2) == 0) /* active or idle -> spare */
- 		*rp = 0xffff;
-+	else if (dk->state & (1<<MD_DISK_WRITECACHE))
-+		*rp = 0xfffd;
- 	else
- 		*rp = 0xfffe;
+@@ -135,6 +135,27 @@ struct misc_dev_info {
+ 					)
+ static int write_r5l_super1(struct supertype *st, int fd);
  
++/* return value:
++ *    0, cache not required
++ *    1, cache required
++ *    2, no superblock loated (st->sb == NULL)
++ */
++static int require_cache1(struct supertype *st)
++{
++	struct mdp_superblock_1 *sb = st->sb;
++	int i;
++	if (sb)
++		for (i=0; i<MAX_DEVS; i++) {
++			if (0xFFFD == sb->dev_roles[i])
++				return 1;
++		}
++	else
++		return 2;  /* no sb loaded */
++	return 0;
++}
++
++static int write_r5l_super1(struct supertype *st, int fd);
++
+ static int role_from_sb(struct mdp_superblock_1 *sb)
+ {
+ 	unsigned int d;
+@@ -2556,6 +2577,7 @@ struct superswitch super1 = {
+ 	.write_bitmap = write_bitmap1,
+ 	.free_super = free_super1,
+ 	.write_r5l_super = write_r5l_super1,
++	.require_cache = require_cache1,
+ #if __BYTE_ORDER == BIG_ENDIAN
+ 	.swapuuid = 0,
+ #else
+diff --git a/util.c b/util.c
+index cc98d3b..f314748 100644
+--- a/util.c
++++ b/util.c
+@@ -334,8 +334,9 @@ int enough(int level, int raid_disks, int layout, int clean, char *avail)
+ 	int i;
+ 	int avail_disks = 0;
+ 
+-	for (i = 0; i < raid_disks; i++)
++	for (i = 0; i < raid_disks; i++) {
+ 		avail_disks += !!avail[i];
++	}
+ 
+ 	switch (level) {
+ 	case 10:
 -- 
 1.8.1
 
