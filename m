@@ -1,278 +1,124 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 4/7] Assemble array with writecache
-Date: Wed, 13 May 2015 23:43:53 -0700
-Message-ID: <1431585836-4103033-5-git-send-email-songliubraving@fb.com>
+From: Jason Keltz <jas@cse.yorku.ca>
+Subject: Re: [PATCH 0/7] mdadm support for caching layer in raid 5/6
+Date: Thu, 14 May 2015 07:30:57 -0400
+Message-ID: <14d5230fde0.276a.cf392d89e21755b689a9b33faa59c92f@cse.yorku.ca>
 References: <1431585836-4103033-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1431585836-4103033-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <14d521c83b0.276a.cf392d89e21755b689a9b33faa59c92f@cse.yorku.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: shli@fb.com, dan.j.williams@intel.com, neilb@suse.de, hch@infradead.org, Song Liu <songliubraving@fb.com>
+To: Song Liu <songliubraving@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Example output:
+Hi..
+I'm curious - why not support write cache for other raid levels? If the 
+write cache becomes a fast SSD (with high endurance) for a pool that is all 
+standard HD then wouldn't the write cache benefit there as well? (Eg. 
+Raid10) .  Can the write cache also be an MD device? I would think you 
+could use that to improve performance and redundancy of the cache?
 
-./mdadm --assemble /dev/md0 /dev/sd[c-f] /dev/sdb1
-mdadm: /dev/md0 has been started with 4 drives and 1 cache.
+I'm using RHEL 7.1 on an NFS server for a virtualization back end. Because 
+of sync writes the write performance is poor. Its really no surprise.. I've 
+got a 22 disk raid10. At the moment I could try dm-cache in rhel7 in an 
+effort to improve write performance but its a technology preview and not 
+sure I'd want to rely on that for production.  It's not really just a 
+simple write cache either which is all that I'm really after.  I like 
+simple! I could also enable async writes on my NFS export and not sleep at 
+night (only 3 virtualization nodes.. UPS protection everywhere protected.. 
+But what if the file server crashes? You want eerie? I just got an email 
+that power is off on one node of my test setup....UPS failed... Aie! That 
+could just as easily have been the FS.)  ..I could stop using MD for NFS 
+backend storage altogether and rely on a raid card with battery backed 
+cache as well and then when there's some kind of card firmware issue wait 
+for the hardware vendor to close my support ticket due to inactivity before 
+they even respond.... which has happened several times with a common 3 
+letter storage company that has more than 3 letters in their name now...  I 
+could wait for someone to create a magical hardware device that would do 
+for MD software raid what the battery backed cache does for hardware raid. 
+To this day I really don't  understand why that hasn't been done. It would 
+be a whole lot cheaper than SSD. . it would have higher longevity.... I'd 
+buy it... And I suspect a billion other people as well... But I guess 
+simple write caching will help as well....
 
-mdadm checks superblock for cache devices. If the
-array appears to have a cache device, but it is not given,
-it will complain as
+Since I don't have any of the above goodies I've decided to try a switch 
+from ext4 to xfs.   Then test with HD based external log... Then Ill try 
+SSD based external log ... And finally potentially external log to an MD 
+raid1 SSD log device.... Though I can't find too many details, I've got a 
+hunch that if the log fails I'd be in trouble...
 
-./mdadm --assemble /dev/md0 /dev/sd[c-f]
-mdadm: Not safe to assemble with cache device missing, consider --force.
+J.
 
-This can be overwritten with --force
+Sent with AquaMail for Android
+http://www.aqua-mail.com
 
-./mdadm --assemble /dev/md0 /dev/sd[c-f] --force
-mdadm: Force start with missing cache device...
-mdadm: /dev/md0 has been started with 4 drives.
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
----
- Assemble.c | 52 ++++++++++++++++++++++++++++++++++++++++++----------
- mdadm.h    |  2 ++
- super1.c   | 22 ++++++++++++++++++++++
- util.c     |  3 ++-
- 4 files changed, 68 insertions(+), 11 deletions(-)
+On May 14, 2015 2:44:04 AM Song Liu <songliubraving@fb.com> wrote:
 
-diff --git a/Assemble.c b/Assemble.c
-index 25a103d..ccf142e 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -718,7 +718,8 @@ static int load_devices(struct devs *devices, char *devmap,
- 			i = devcnt;
- 		else
- 			i = devices[devcnt].i.disk.raid_disk;
--		if (i+1 == 0) {
-+
-+		if (i+1 == 0 || i == 0xfffd) {
- 			if (nextspare < content->array.raid_disks*2)
- 				nextspare = content->array.raid_disks*2;
- 			i = nextspare++;
-@@ -772,8 +773,9 @@ static int load_devices(struct devs *devices, char *devmap,
- 			}
- 			if (best[i] == -1
- 			    || (devices[best[i]].i.events
--				< devices[devcnt].i.events))
-+				< devices[devcnt].i.events)) {
- 				best[i] = devcnt;
-+			}
- 		}
- 		devcnt++;
- 	}
-@@ -927,6 +929,7 @@ static int start_array(int mdfd,
- 		       unsigned int okcnt,
- 		       unsigned int sparecnt,
- 		       unsigned int rebuilding_cnt,
-+		       unsigned int cachecnt,
- 		       struct context *c,
- 		       int clean, char *avail,
- 		       int start_partial_ok,
-@@ -938,6 +941,22 @@ static int start_array(int mdfd,
- 	int i;
- 	unsigned int req_cnt;
- 
-+	if (st->ss->require_cache) {
-+		rv = st->ss->require_cache(st);
-+		if (rv == 2) {
-+			pr_err("BUG: Superblock not loaded in Assemble.c:start_array\n");
-+			return 1;
-+		}
-+
-+		if (cachecnt == 0 && rv == 1) {
-+			if (!(c->force)) {
-+				pr_err("Not safe to assemble with cache device missing, consider --force.\n");
-+				return 1;
-+			} else
-+				pr_err("Force start with missing cache device...\n");
-+		}
-+	}
-+
- 	rv = set_array_info(mdfd, st, content);
- 	if (rv && !err_ok) {
- 		pr_err("failed to set array info for %s: %s\n",
-@@ -1015,7 +1034,8 @@ static int start_array(int mdfd,
- 	if (content->array.level == LEVEL_CONTAINER) {
- 		if (c->verbose >= 0) {
- 			pr_err("Container %s has been assembled with %d drive%s",
--			       mddev, okcnt+sparecnt, okcnt+sparecnt==1?"":"s");
-+			       mddev, okcnt+sparecnt+cachecnt,
-+			       okcnt+sparecnt+cachecnt==1?"":"s");
- 			if (okcnt < (unsigned)content->array.raid_disks)
- 				fprintf(stderr, " (out of %d)",
- 					content->array.raid_disks);
-@@ -1101,6 +1121,8 @@ static int start_array(int mdfd,
- 					fprintf(stderr, "%s %d rebuilding", sparecnt?",":" and", rebuilding_cnt);
- 				if (sparecnt)
- 					fprintf(stderr, " and %d spare%s", sparecnt, sparecnt==1?"":"s");
-+				if (cachecnt == 1)
-+					fprintf(stderr, " and 1 cache");
- 				fprintf(stderr, ".\n");
- 			}
- 			if (content->reshape_active &&
-@@ -1268,7 +1290,7 @@ int Assemble(struct supertype *st, char *mddev,
- 	int *best = NULL; /* indexed by raid_disk */
- 	int bestcnt = 0;
- 	int devcnt;
--	unsigned int okcnt, sparecnt, rebuilding_cnt, replcnt;
-+	unsigned int okcnt, sparecnt, rebuilding_cnt, replcnt, cachecnt;
- 	int i;
- 	int was_forced = 0;
- 	int most_recent = 0;
-@@ -1479,6 +1501,7 @@ try_again:
- 	devcnt = load_devices(devices, devmap, ident, &st, devlist,
- 			      c, content, mdfd, mddev,
- 			      &most_recent, &bestcnt, &best, inargv);
-+
- 	if (devcnt < 0)
- 		return 1;
- 
-@@ -1506,7 +1529,9 @@ try_again:
- 	okcnt = 0;
- 	replcnt = 0;
- 	sparecnt=0;
-+	cachecnt=0;
- 	rebuilding_cnt=0;
-+
- 	for (i=0; i< bestcnt; i++) {
- 		int j = best[i];
- 		int event_margin = 1; /* always allow a difference of '1'
-@@ -1516,8 +1541,10 @@ try_again:
- 		/* note: we ignore error flags in multipath arrays
- 		 * as they don't make sense
- 		 */
--		if (content->array.level != LEVEL_MULTIPATH)
--			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
-+		if (content->array.level != LEVEL_MULTIPATH) {
-+			if (devices[j].i.disk.state & (1<<MD_DISK_WRITECACHE)) {
-+				cachecnt++;
-+			} else if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
- 				if (!(devices[j].i.disk.state
- 				      & (1<<MD_DISK_FAULTY))) {
- 					devices[j].uptodate = 1;
-@@ -1525,6 +1552,7 @@ try_again:
- 				}
- 				continue;
- 			}
-+		}
- 		/* If this device thinks that 'most_recent' has failed, then
- 		 * we must reject this device.
- 		 */
-@@ -1559,10 +1587,11 @@ try_again:
- 						replcnt++;
- 				} else
- 					rebuilding_cnt++;
--			} else
-+			} else if (devices[j].i.disk.raid_disk != 0xfffd)
- 				sparecnt++;
- 		}
- 	}
-+
- 	free(devmap);
- 	if (c->force) {
- 		int force_ok = force_array(content, devices, best, bestcnt,
-@@ -1583,8 +1612,9 @@ try_again:
- 		int j = best[i];
- 		int fd;
- 
--		if (j<0)
-+		if (j<0) {
- 			continue;
-+		}
- 		if (!devices[j].uptodate)
- 			continue;
- 		if (devices[j].i.events < devices[most_recent].i.events)
-@@ -1623,7 +1653,9 @@ try_again:
- 		int j = best[i];
- 		unsigned int desired_state;
- 
--		if (i >= content->array.raid_disks * 2)
-+		if (devices[j].i.disk.raid_disk == 0xfffd)
-+			desired_state = (1<<MD_DISK_WRITECACHE);
-+		else if (i >= content->array.raid_disks * 2)
- 			desired_state = 0;
- 		else if (i & 1)
- 			desired_state = (1<<MD_DISK_ACTIVE) | (1<<MD_DISK_REPLACEMENT);
-@@ -1770,7 +1802,7 @@ try_again:
- 	rv = start_array(mdfd, mddev, content,
- 			 st, ident, best, bestcnt,
- 			 chosen_drive, devices, okcnt, sparecnt,
--			 rebuilding_cnt,
-+			 rebuilding_cnt, cachecnt,
- 			 c,
- 			 clean, avail, start_partial_ok,
- 			 pre_exist != NULL,
-diff --git a/mdadm.h b/mdadm.h
-index d7a205c..62a0293 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -971,6 +971,8 @@ extern struct superswitch {
- 
- 	/* write super block of raid5-cache*/
- 	int (*write_r5l_super)(struct supertype *st, int fd);
-+	/* whether the array require a cache device */
-+	int (*require_cache)(struct supertype *st);
- 	int swapuuid; /* true if uuid is bigending rather than hostendian */
- 	int external;
- 	const char *name; /* canonical metadata name */
-diff --git a/super1.c b/super1.c
-index f2697a8..c345a40 100644
---- a/super1.c
-+++ b/super1.c
-@@ -135,6 +135,27 @@ struct misc_dev_info {
- 					)
- static int write_r5l_super1(struct supertype *st, int fd);
- 
-+/* return value:
-+ *    0, cache not required
-+ *    1, cache required
-+ *    2, no superblock loated (st->sb == NULL)
-+ */
-+static int require_cache1(struct supertype *st)
-+{
-+	struct mdp_superblock_1 *sb = st->sb;
-+	int i;
-+	if (sb)
-+		for (i=0; i<MAX_DEVS; i++) {
-+			if (0xFFFD == sb->dev_roles[i])
-+				return 1;
-+		}
-+	else
-+		return 2;  /* no sb loaded */
-+	return 0;
-+}
-+
-+static int write_r5l_super1(struct supertype *st, int fd);
-+
- static int role_from_sb(struct mdp_superblock_1 *sb)
- {
- 	unsigned int d;
-@@ -2556,6 +2577,7 @@ struct superswitch super1 = {
- 	.write_bitmap = write_bitmap1,
- 	.free_super = free_super1,
- 	.write_r5l_super = write_r5l_super1,
-+	.require_cache = require_cache1,
- #if __BYTE_ORDER == BIG_ENDIAN
- 	.swapuuid = 0,
- #else
-diff --git a/util.c b/util.c
-index cc98d3b..f314748 100644
---- a/util.c
-+++ b/util.c
-@@ -334,8 +334,9 @@ int enough(int level, int raid_disks, int layout, int clean, char *avail)
- 	int i;
- 	int avail_disks = 0;
- 
--	for (i = 0; i < raid_disks; i++)
-+	for (i = 0; i < raid_disks; i++) {
- 		avail_disks += !!avail[i];
-+	}
- 
- 	switch (level) {
- 	case 10:
--- 
-1.8.1
+> Hi,
+>
+> These are mdadm patches to support cache layer in raid 5/6. Shaohua
+> has sent the kernel patch earlier with subject "a caching layer
+> for raid 5/6".
+>
+> These patches add write cache support for the following commands:
+>
+>   mdadm --detail
+>   mdadm --create
+>   mdadm --assemble
+>   mdadm --incremental
+>   mdadm --examine
+>   mdadm --zero-super
+>
+> Cache device is assigned with dev_role 0xFFFD (where 0xFFFF is for
+> spare and 0xFFFE is for failed). Note that there is compatibility
+> issue that older mdadm will show cache device as spare in --detail:
+>
+>     Number   Major   Minor   RaidDevice State
+>        0       8       32        0      active sync   /dev/sdc
+>        1       8       48        1      active sync   /dev/sdd
+>        2       8       64        2      active sync   /dev/sde
+>        3       8       80        3      active sync   /dev/sdf
+>
+>        4       8       17        -      spare   /dev/sdb1
+>
+> Also, older mdadm will show cache device as "Active device 65533"
+> in --examine:
+>
+>    Device Role : Active device 65533
+>    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+>
+>
+> Song Liu (7):
+>   Show device as cache in --detail
+>   Enable create array with write cache (--write-cache DEVICE).
+>   Create write-cache superblock in mdadm --create
+>   Assemble array with writecache
+>   Check write cache in incremental
+>   Zero write-cache superblock in --zero-super
+>   Add information about write-cache superblock to --examine
+>
+>  Assemble.c    |  52 +++++++++++++----
+>  Create.c      |  21 +++++--
+>  Detail.c      |   3 +-
+>  Examine.c     |  29 +++++++++-
+>  Incremental.c |  37 ++++++++++--
+>  Kill.c        |  19 ++++++
+>  ReadMe.c      |   1 +
+>  md_p.h        |  74 ++++++++++++++++++++++++
+>  mdadm.c       |  19 ++++++
+>  mdadm.h       |  11 +++-
+>  super1.c      | 182 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  util.c        |   3 +-
+>  12 files changed, 422 insertions(+), 29 deletions(-)
+>
+> --
+> 1.8.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
