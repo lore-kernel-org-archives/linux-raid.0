@@ -1,38 +1,61 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH] raid5: fix broken async operation chain
-Date: Wed, 13 May 2015 09:30:08 -0700
-Message-ID: <abe8bcda859c8d2a11544a273c117c190fe736a4.1431464773.git.shli@kernel.org>
+From: gqjiang@suse.com
+Subject: [PATCH] md-cluster: use %pU to print UUIDs
+Date: Thu, 14 May 2015 09:39:39 +0800
+Message-ID: <1431567579-17553-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, maxime.ripard@free-electrons.com
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-ops_run_reconstruct6() doesn't correctly chain asyn operations. The tx returned
-by async_gen_syndrome should be added as the dependent tx of next stripe.
+From: Guoqing Jiang <gqjiang@suse.com>
 
-The issue is introduced by commit 59fc630b8b5f9f21c8ce3ba153341c107dce1b0c
-    RAID5: batch adjacent full stripe write
-
-Reported-and-tested-by: Maxime Ripard <maxime.ripard@free-electrons.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/raid5.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md-cluster.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 1ba97fd..b9f2b9c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1822,7 +1822,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
- 	} else
- 		init_async_submit(&submit, 0, tx, NULL, NULL,
- 				  to_addr_conv(sh, percpu, j));
--	async_gen_syndrome(blocks, 0, count+2, STRIPE_SIZE,  &submit);
-+	tx = async_gen_syndrome(blocks, 0, count+2, STRIPE_SIZE,  &submit);
- 	if (!last_stripe) {
- 		j++;
- 		sh = list_first_entry(&sh->batch_list, struct stripe_head,
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index fcfc4b9..86d8316 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -176,18 +176,6 @@ static void lockres_free(struct dlm_lock_resource *res)
+ 	kfree(res);
+ }
+ 
+-static char *pretty_uuid(char *dest, char *src)
+-{
+-	int i, len = 0;
+-
+-	for (i = 0; i < 16; i++) {
+-		if (i == 4 || i == 6 || i == 8 || i == 10)
+-			len += sprintf(dest + len, "-");
+-		len += sprintf(dest + len, "%02x", (__u8)src[i]);
+-	}
+-	return dest;
+-}
+-
+ static void add_resync_info(struct mddev *mddev, struct dlm_lock_resource *lockres,
+ 		sector_t lo, sector_t hi)
+ {
+@@ -383,7 +371,7 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
+ 	int len;
+ 
+ 	len = snprintf(disk_uuid, 64, "DEVICE_UUID=");
+-	pretty_uuid(disk_uuid + len, cmsg->uuid);
++	sprintf(disk_uuid + len, "%pU", cmsg->uuid);
+ 	snprintf(raid_slot, 16, "RAID_DISK=%d", cmsg->raid_slot);
+ 	pr_info("%s:%d Sending kobject change with %s and %s\n", __func__, __LINE__, disk_uuid, raid_slot);
+ 	init_completion(&cinfo->newdisk_completion);
+@@ -641,7 +629,7 @@ static int join(struct mddev *mddev, int nodes)
+ 	mddev->cluster_info = cinfo;
+ 
+ 	memset(str, 0, 64);
+-	pretty_uuid(str, mddev->uuid);
++	sprintf(str, "%pU", mddev->uuid);
+ 	ret = dlm_new_lockspace(str, mddev->bitmap_info.cluster_name,
+ 				DLM_LSFL_FS, LVB_SIZE,
+ 				&md_ls_ops, mddev, &ops_rv, &cinfo->lockspace);
 -- 
-2.1.0
+1.7.12.4
 
