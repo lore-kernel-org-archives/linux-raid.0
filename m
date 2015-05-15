@@ -1,66 +1,73 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: raid5 reshape is stuck
-Date: Fri, 15 May 2015 03:00:24 -0400 (EDT)
-Message-ID: <2043891461.15360424.1431673224036.JavaMail.zimbra@redhat.com>
-References: <1612858661.15347659.1431671671467.JavaMail.zimbra@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: heinzm@redhat.com
+Subject: [PATCH v2 5/4] dm-raid: add merge method to target
+Date: Fri, 15 May 2015 16:04:14 +0200
+Message-ID: <1431698654-29887-1-git-send-email-heinzm@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1612858661.15347659.1431671671467.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Heinz Mauelshagen <heinzm@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Neil
+From: Heinz Mauelshagen <heinzm@redhat.com>
 
-   I encounter the problem when I reshape a 4-disks raid5 to raid5. It just can
-appear with loop devices.
+Patch series
+"[PATCH v2 0/4] dm-raid: Add support for the MD RAID0 personality"
+is missing a merge function which can lead to data corruption
+on read ahead.
 
-   The steps are:
+This patch introduces it
+It inquires the MD raid0 personalities mergeable_bvec
+to make sure, that read ahead payload gets limited properly.
 
-[root@dhcp-12-158 mdadm-3.3.2]# mdadm -CR /dev/md0 -l5 -n5 /dev/loop[0-4] --assume-clean
-mdadm: /dev/loop0 appears to be part of a raid array:
-       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-mdadm: /dev/loop1 appears to be part of a raid array:
-       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-mdadm: /dev/loop2 appears to be part of a raid array:
-       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-mdadm: /dev/loop3 appears to be part of a raid array:
-       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-mdadm: /dev/loop4 appears to be part of a raid array:
-       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
-[root@dhcp-12-158 mdadm-3.3.2]# mdadm /dev/md0 -a /dev/loop5
-mdadm: added /dev/loop5
-[root@dhcp-12-158 mdadm-3.3.2]# mdadm --grow /dev/md0 --raid-devices 6
-mdadm: Need to backup 10240K of critical section..
-[root@dhcp-12-158 mdadm-3.3.2]# cat /proc/mdstat 
-Personalities : [raid6] [raid5] [raid4] 
-md0 : active raid5 loop5[5] loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
-      8187904 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6] [UUUUUU]
-      [>....................]  reshape =  0.0% (0/2046976) finish=6396.8min speed=0K/sec
-      
-unused devices: <none>
+The problem did not occur with the other raid levels,
+because it either did not apply without striping or got
+avoided via stripe caching.
 
-   It because the sync_max is set to 0 when run the command --grow
 
-[root@dhcp-12-158 mdadm-3.3.2]# cd /sys/block/md0/md/
-[root@dhcp-12-158 md]# cat sync_max 
-0
+Signed-of-by: Heinz Mauelshagen <heinzm@redhat.com>
+Tested-by: Heinz Mauelshagen <heinzm@redhat.com>
 
-   I tried reproduce with normal sata devices. The progress of reshape is no problem. Then
-I checked the Grow.c. If I use sata devices, in function reshape_array, the return value
-of set_new_data_offset is 0. But if I used loop devices, it return 1. Then it call the function
-start_reshape. 
+---
+ drivers/md/dm-raid.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-   In the function start_reshape it set the sync_max to reshape_progress. But in sysfs_read it
-doesn't read reshape_progress. So it's 0 and the sync_max is set to 0. Why it need to set the
-sync_max at this? I'm not sure about this. 
+diff --git a/drivers/md/dm-raid.c b/drivers/md/dm-raid.c
+index 97e1651..06f9d63 100644
+--- a/drivers/md/dm-raid.c
++++ b/drivers/md/dm-raid.c
+@@ -1717,6 +1717,24 @@ static void raid_resume(struct dm_target *ti)
+ 	mddev_resume(&rs->md);
+ }
+ 
++static int raid_merge(struct dm_target *ti, struct bvec_merge_data *bvm,
++		      struct bio_vec *biovec, int max_size)
++{
++	struct raid_set *rs = ti->private;
++	struct md_personality *pers = rs->md.pers;
++
++	if (pers && pers->mergeable_bvec)
++		return min(max_size, pers->mergeable_bvec(&rs->md, bvm, biovec));
++
++	/*
++	 * In case we can't request the personality because
++	 * the raid set is not running yet
++	 *
++	 * -> return safe minimum
++	 */
++	return rs->md.chunk_sectors;
++}
++
+ static struct target_type raid_target = {
+ 	.name = "raid",
+ 	.version = {1, 7, 0},
+@@ -1731,6 +1749,7 @@ static struct target_type raid_target = {
+ 	.presuspend = raid_presuspend,
+ 	.postsuspend = raid_postsuspend,
+ 	.resume = raid_resume,
++	.merge = raid_merge
+ };
+ 
+ static int __init dm_raid_init(void)
+-- 
+2.1.0
 
-   I tried to fix this but I'm not sure whether it's the right way. I'll send the patches in 
-other mails.
-
-Best Regards
-Xiao
