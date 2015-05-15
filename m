@@ -1,151 +1,260 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH 0/7] mdadm support for caching layer in raid 5/6
-Date: Thu, 14 May 2015 18:01:37 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AAF3345726@PRN-MBX02-4.TheFacebook.com>
-References: <1431585836-4103033-1-git-send-email-songliubraving@fb.com>
- <14d5230fde0.276a.cf392d89e21755b689a9b33faa59c92f@cse.yorku.ca>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH V2 01/11] Create n bitmaps for clustered mode
+Date: Fri, 15 May 2015 15:45:27 +1000
+Message-ID: <20150515154527.7751f765@notabene.brown>
+References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>
+	<1431075029-5484-2-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/ERn2mP0me5/zVBCrqlwascp"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <14d5230fde0.276a.cf392d89e21755b689a9b33faa59c92f@cse.yorku.ca>
-Content-Language: en-US
+In-Reply-To: <1431075029-5484-2-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jason Keltz <jas@cse.yorku.ca>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: gqjiang@suse.com
+Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
-Hi Jason,
+--Sig_/ERn2mP0me5/zVBCrqlwascp
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-As Shaohua discussed earlier in another thread, in this write cache approach, 
-we are trying to solve two problems together:
+On Fri,  8 May 2015 16:50:19 +0800 gqjiang@suse.com wrote:
 
-1. RAID-5/6 write hole;
-2. Slow sync writes to RAID-5/6 (due to read-modify-write). 
+> From: Guoqing Jiang <gqjiang@suse.com>
+>=20
+> For a clustered MD, create bitmaps equal to number of nodes so
+> each node has an independent bitmap.
+>=20
+> Only the first bitmap is has the bits set so that the first node
+> that assembles the device also performs the sync.
+>=20
+> The bitmaps are aligned to 4k boundaries.
+>=20
+> On-disk format:
+>=20
+> 0                    4k                     8k                    12k
+> -------------------------------------------------------------------
+> | idle                | md super            | bm super [0] + bits |
+> | bm bits[0, contd]   | bm super[1] + bits  | bm bits[1, contd]   |
+> | bm super[2] + bits  | bm bits [2, contd]  | bm super[3] + bits  |
+> | bm bits [3, contd]  |                     |                     |
+>=20
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  Create.c   |  3 ++-
+>  bitmap.c   |  2 ++
+>  bitmap.h   |  7 +++++--
+>  mdadm.8.in |  7 ++++++-
+>  mdadm.c    |  9 +++++++++
+>  super1.c   | 59 +++++++++++++++++++++++++++++++++++++++++---------------=
+---
+>  6 files changed, 65 insertions(+), 22 deletions(-)
+>=20
+> diff --git a/Create.c b/Create.c
+> index ef28da0..69f5432 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -750,7 +750,8 @@ int Create(struct supertype *st, char *mddev,
+>  #endif
+>  	}
+> =20
+> -	if (s->bitmap_file && strcmp(s->bitmap_file, "internal")=3D=3D0) {
+> +	if (s->bitmap_file && (strcmp(s->bitmap_file, "internal")=3D=3D0
+> +			|| strcmp(s->bitmap_file, "clustered")=3D=3D0)) {
+>  		if ((vers%100) < 2) {
+>  			pr_err("internal bitmaps not supported by this kernel.\n");
+>  			goto abort_locked;
+> diff --git a/bitmap.c b/bitmap.c
+> index b1d54a6..920033a 100644
+> --- a/bitmap.c
+> +++ b/bitmap.c
+> @@ -32,6 +32,8 @@ inline void sb_le_to_cpu(bitmap_super_t *sb)
+>  	sb->daemon_sleep =3D __le32_to_cpu(sb->daemon_sleep);
+>  	sb->sync_size =3D __le64_to_cpu(sb->sync_size);
+>  	sb->write_behind =3D __le32_to_cpu(sb->write_behind);
+> +	sb->nodes =3D __le32_to_cpu(sb->nodes);
+> +	sb->sectors_reserved =3D __le32_to_cpu(sb->sectors_reserved);
+>  }
+> =20
+>  inline void sb_cpu_to_le(bitmap_super_t *sb)
+> diff --git a/bitmap.h b/bitmap.h
+> index c8725a3..adbf0b4 100644
+> --- a/bitmap.h
+> +++ b/bitmap.h
+> @@ -154,8 +154,11 @@ typedef struct bitmap_super_s {
+>  	__u32 chunksize;    /* 52  the bitmap chunk size in bytes */
+>  	__u32 daemon_sleep; /* 56  seconds between disk flushes */
+>  	__u32 write_behind; /* 60  number of outstanding write-behind writes */
+> -
+> -	__u8  pad[256 - 64]; /* set to zero */
+> +	__u32 sectors_reserved; /* 64 number of 512-byte sectors that are
+> +				 * reserved for the bitmap. */
+> +	__u32 nodes;        /* 68 the maximum number of nodes in cluster. */
+> +	__u8 cluster_name[64]; /* 72 cluster name to which this md belongs */
+> +	__u8  pad[256 - 136]; /* set to zero */
+>  } bitmap_super_t;
+> =20
+>  /* notes:
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index a630310..4aec0db 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -694,7 +694,12 @@ and so is replicated on all devices.  If the word
+>  .B "none"
+>  is given with
+>  .B \-\-grow
+> -mode, then any bitmap that is present is removed.
+> +mode, then any bitmap that is present is removed. If the word
+> +.B "clustered"
+> +is given, the array is created for a clustered environment. One bitmap
+> +is created for each node as defined by the
+> +.B \-\-nodes
+> +parameter and are stored internally.
+> =20
+>  To help catch typing errors, the filename must contain at least one
+>  slash ('/') if it is a real file (not 'internal' or 'none').
+> diff --git a/mdadm.c b/mdadm.c
+> index 3e8c49b..bd9382e 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1097,6 +1097,15 @@ int main(int argc, char *argv[])
+>  				s.bitmap_file =3D optarg;
+>  				continue;
+>  			}
+> +			if (strcmp(optarg, "clustered")=3D=3D 0) {
+> +				s.bitmap_file =3D optarg;
+> +				/* Set the default number of cluster nodes
+> +				 * to 4 if not already set by user
+> +				 */
+> +				if (c.nodes < 1)
+> +					c.nodes =3D 4;
+> +				continue;
+> +			}
 
-For other RAID types, there is no write hole issue. To get better sync write 
-performance on RAID-10, you can use other caching solutions, like bcache 
-or flashcache. 
 
-The write cache can also be a MD device. 
+Please make sure than mdadm compiles after each patch is applied.
+You don't defined that 'nodes' field until a later patch.
 
-Thanks,
-Song
+NeilBrown
 
-> -----Original Message-----
-> From: Jason Keltz [mailto:jas@cse.yorku.ca]
-> Sent: Thursday, May 14, 2015 4:31 AM
-> To: Song Liu; linux-raid@vger.kernel.org
-> Subject: Re: [PATCH 0/7] mdadm support for caching layer in raid 5/6
-> 
-> Hi..
-> I'm curious - why not support write cache for other raid levels? If the write
-> cache becomes a fast SSD (with high endurance) for a pool that is all standard
-> HD then wouldn't the write cache benefit there as well? (Eg.
-> Raid10) .  Can the write cache also be an MD device? I would think you could
-> use that to improve performance and redundancy of the cache?
-> 
-> I'm using RHEL 7.1 on an NFS server for a virtualization back end. Because of
-> sync writes the write performance is poor. Its really no surprise.. I've got a 22
-> disk raid10. At the moment I could try dm-cache in rhel7 in an effort to
-> improve write performance but its a technology preview and not sure I'd want
-> to rely on that for production.  It's not really just a simple write cache either
-> which is all that I'm really after.  I like simple! I could also enable async writes
-> on my NFS export and not sleep at night (only 3 virtualization nodes.. UPS
-> protection everywhere protected..
-> But what if the file server crashes? You want eerie? I just got an email that
-> power is off on one node of my test setup....UPS failed... Aie! That could just as
-> easily have been the FS.)  ..I could stop using MD for NFS backend storage
-> altogether and rely on a raid card with battery backed cache as well and then
-> when there's some kind of card firmware issue wait for the hardware vendor to
-> close my support ticket due to inactivity before they even respond.... which has
-> happened several times with a common 3 letter storage company that has
-> more than 3 letters in their name now...  I could wait for someone to create a
-> magical hardware device that would do for MD software raid what the battery
-> backed cache does for hardware raid.
-> To this day I really don't  understand why that hasn't been done. It would be a
-> whole lot cheaper than SSD. . it would have higher longevity.... I'd buy it... And I
-> suspect a billion other people as well... But I guess simple write caching will
-> help as well....
-> 
-> Since I don't have any of the above goodies I've decided to try a switch
-> from ext4 to xfs.   Then test with HD based external log... Then Ill try
-> SSD based external log ... And finally potentially external log to an MD
-> raid1 SSD log device.... Though I can't find too many details, I've got a hunch
-> that if the log fails I'd be in trouble...
-> 
-> J.
-> 
-> Sent with AquaMail for Android
-> http://www.aqua-mail.com
-> 
-> 
-> On May 14, 2015 2:44:04 AM Song Liu <songliubraving@fb.com> wrote:
-> 
-> > Hi,
-> >
-> > These are mdadm patches to support cache layer in raid 5/6. Shaohua
-> > has sent the kernel patch earlier with subject "a caching layer for
-> > raid 5/6".
-> >
-> > These patches add write cache support for the following commands:
-> >
-> >   mdadm --detail
-> >   mdadm --create
-> >   mdadm --assemble
-> >   mdadm --incremental
-> >   mdadm --examine
-> >   mdadm --zero-super
-> >
-> > Cache device is assigned with dev_role 0xFFFD (where 0xFFFF is for
-> > spare and 0xFFFE is for failed). Note that there is compatibility
-> > issue that older mdadm will show cache device as spare in --detail:
-> >
-> >     Number   Major   Minor   RaidDevice State
-> >        0       8       32        0      active sync   /dev/sdc
-> >        1       8       48        1      active sync   /dev/sdd
-> >        2       8       64        2      active sync   /dev/sde
-> >        3       8       80        3      active sync   /dev/sdf
-> >
-> >        4       8       17        -      spare   /dev/sdb1
-> >
-> > Also, older mdadm will show cache device as "Active device 65533"
-> > in --examine:
-> >
-> >    Device Role : Active device 65533
-> >    Array State : AAAA ('A' == active, '.' == missing, 'R' ==
-> > replacing)
-> >
-> >
-> > Song Liu (7):
-> >   Show device as cache in --detail
-> >   Enable create array with write cache (--write-cache DEVICE).
-> >   Create write-cache superblock in mdadm --create
-> >   Assemble array with writecache
-> >   Check write cache in incremental
-> >   Zero write-cache superblock in --zero-super
-> >   Add information about write-cache superblock to --examine
-> >
-> >  Assemble.c    |  52 +++++++++++++----
-> >  Create.c      |  21 +++++--
-> >  Detail.c      |   3 +-
-> >  Examine.c     |  29 +++++++++-
-> >  Incremental.c |  37 ++++++++++--
-> >  Kill.c        |  19 ++++++
-> >  ReadMe.c      |   1 +
-> >  md_p.h        |  74 ++++++++++++++++++++++++
-> >  mdadm.c       |  19 ++++++
-> >  mdadm.h       |  11 +++-
-> >  super1.c      | 182
-> ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> >  util.c        |   3 +-
-> >  12 files changed, 422 insertions(+), 29 deletions(-)
-> >
-> > --
-> > 1.8.1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
-> 
 
+>  			/* probable typo */
+>  			pr_err("bitmap file must contain a '/', or be 'internal', or 'none'\n"
+>  				"       not '%s'\n", optarg);
+> diff --git a/super1.c b/super1.c
+> index f0508fe..57b1526 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -2144,6 +2144,10 @@ add_internal_bitmap1(struct supertype *st,
+>  	bms->daemon_sleep =3D __cpu_to_le32(delay);
+>  	bms->sync_size =3D __cpu_to_le64(size);
+>  	bms->write_behind =3D __cpu_to_le32(write_behind);
+> +	bms->nodes =3D __cpu_to_le32(st->nodes);
+> +	if (st->cluster_name)
+> +		strncpy((char *)bms->cluster_name,
+> +				st->cluster_name, strlen(st->cluster_name));
+> =20
+>  	*chunkp =3D chunk;
+>  	return 1;
+> @@ -2177,6 +2181,7 @@ static int write_bitmap1(struct supertype *st, int =
+fd)
+>  	void *buf;
+>  	int towrite, n;
+>  	struct align_fd afd;
+> +	unsigned int i;
+> =20
+>  	init_afd(&afd, fd);
+> =20
+> @@ -2185,27 +2190,45 @@ static int write_bitmap1(struct supertype *st, in=
+t fd)
+>  	if (posix_memalign(&buf, 4096, 4096))
+>  		return -ENOMEM;
+> =20
+> -	memset(buf, 0xff, 4096);
+> -	memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+> -
+> -	towrite =3D __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksi=
+ze)>>9);
+> -	towrite =3D (towrite+7) >> 3; /* bits to bytes */
+> -	towrite +=3D sizeof(bitmap_super_t);
+> -	towrite =3D ROUND_UP(towrite, 512);
+> -	while (towrite > 0) {
+> -		n =3D towrite;
+> -		if (n > 4096)
+> -			n =3D 4096;
+> -		n =3D awrite(&afd, buf, n);
+> -		if (n > 0)
+> -			towrite -=3D n;
+> +	/* We use bms->nodes as opposed to st->nodes to
+> +	 * be compatible with write-after-reads such as
+> +	 * the GROW operation.
+> +	 */
+> +	for (i =3D 0; i < __le32_to_cpu(bms->nodes); i++) {
+> +		/* Only the bitmap[0] should resync
+> +		 * whole device on initial assembly
+> +		 */
+> +		if (i)
+> +			memset(buf, 0x00, 4096);
+>  		else
+> +			memset(buf, 0xff, 4096);
+> +		memcpy(buf, (char *)bms, sizeof(bitmap_super_t));
+> +
+> +		towrite =3D __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunks=
+ize)>>9);
+> +		towrite =3D (towrite+7) >> 3; /* bits to bytes */
+> +		towrite +=3D sizeof(bitmap_super_t);
+> +		/* we need the bitmaps to be at 4k boundary */
+> +		towrite =3D ROUND_UP(towrite, 4096);
+> +		while (towrite > 0) {
+> +			n =3D towrite;
+> +			if (n > 4096)
+> +				n =3D 4096;
+> +			n =3D awrite(&afd, buf, n);
+> +			if (n > 0)
+> +				towrite -=3D n;
+> +			else
+> +				break;
+> +			if (i)
+> +				memset(buf, 0x00, 4096);
+> +			else
+> +				memset(buf, 0xff, 4096);
+> +		}
+> +		fsync(fd);
+> +		if (towrite) {
+> +			rv =3D -2;
+>  			break;
+> -		memset(buf, 0xff, 4096);
+> +		}
+>  	}
+> -	fsync(fd);
+> -	if (towrite)
+> -		rv =3D -2;
+> =20
+>  	free(buf);
+>  	return rv;
+
+
+--Sig_/ERn2mP0me5/zVBCrqlwascp
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVVWH9znsnt1WYoG5AQI39A/+JdP4oQEBswQ3iuK2rIvHMiKvTJ1VilgX
+AVs2luJ0vABHGMB950VRLFuyNpwRm/nfXYZH7TsEOiYwu4W9Q7ZpXk42baQNLpFC
+uZuknoYZ5WCfcNej0kKUcxK6k7LIEG6n7um4Qm/kdvV2zlL1fk/Fnuwv7/KBCCNT
+aJd+5pH25UgrST7bgIYjHaBakvHgtgSr7AEhkBS+h2OEfmXqH14bUFwXdGxJWglC
+oqNjN6QCZ4x2fykhCX0iVnZJH2lhQVjqz9fGAP17ntcpiRWor9WDC4+kdfPpU/er
+PXW95rMQ+cw2fzZfejTHSEaTv9OQlpSOwMkLX2rMn1iWuJTyjo/wiEqpfaRhaf1G
+ijEX0prz5nro6eirRh707gcO402LbIzATPOvzys8ykPOC80GqA3xBu6Qkqe50BXu
+IFOj84erT6CSA8y43UTDIGitY7pKSWVrpoF6DBqQPgYNQw0WeF6lHMXA4cIpXGJP
+eTMYYXg0mQuY+d3rjldIpjK/l2/VklMz/lw/zjG/osxWMdan4EPjZsQGZoKtpmDA
+5okTLQ4KP1KdncCImS4qPs6hfcqHcwmra6E3erxK24byiilJXz4U5fOeVpWzLao0
+8mgBFmN5SNkREQx8LP+bBkQMMp6ihfZ30W+VwBXCuVBUYT/4wBQMqA4STyAJe/6a
+8N90IQS1geU=
+=r/qg
+-----END PGP SIGNATURE-----
+
+--Sig_/ERn2mP0me5/zVBCrqlwascp--
