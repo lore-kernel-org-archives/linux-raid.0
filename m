@@ -1,114 +1,104 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] md-cluster: avoid deadlock on MESSAGE lock resource
-Date: Sat, 16 May 2015 15:58:41 -0500
-Message-ID: <5557AF81.30304@suse.de>
-References: <554CB5DB.4020305@cisco.com> <554CB6B1.3030206@cisco.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Problems with bdev_write_page().
+Date: Sun, 17 May 2015 17:02:00 +1000
+Message-ID: <20150517170200.0d966434@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/=9GgOTUQl2ajXohVJw1zYeL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <554CB6B1.3030206@cisco.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Abhijit Bhopatkar <abhopatk@cisco.com>, linux-raid@vger.kernel.org, Lidong Zhong <lzhong@suse.com>
-Cc: "Reese Faucette (rfaucett)" <rfaucett@cisco.com>
+To: Matthew Wilcox <matthew.r.wilcox@intel.com>, Charles Bertsch <cbertsch@cox.net>
+Cc: linux-raid@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--Sig_/=9GgOTUQl2ajXohVJw1zYeL
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
 
-On 05/08/2015 08:14 AM, Abhijit Bhopatkar wrote:
-> On 08/05/15 6:40 pm, Abhijit Bhopatkar wrote:
->>
->> Every receiver has CR lock on MESSAGE while processing the message. When
->> every receiver releases ACK lock and for some reason fails to grab EX on
->> MESSAGE resource in time, a waiting sender could queue an EX on MESSAGE
->> instead. Now when receiver queues its up convert request on MESSAGE it
->> will end up in a deadlock situation.
->>
->> Setting NOQUEUE flag on MESSAGE lock resource while grabbing the EX on
->> MESSAGE on sender will avoid this deadlock. If sender can not grab
->> MESSAGE lock immediately it should retry until the lock is granted.
->>
->> Signed-off-by: Abhijit Bhopatkar <abhopatk@cisco.com>
->> ---
->> This has been minimally tested on a three node cluster.
->>
->
-> I have tested standard mdadm operations (create, assemble etc).
-> What more testing would you want me to do on this before its considered
-> ready?
 
-I am not sure how using LKF_NOQUEUE will help in this situation here. 
-LKF_NOQUEUE primarily means do not queue if you can't grant it right 
-away. Besides, I don't like the idea of goto loop.
+Hi Matthew,
+ I've just been looking at bdev_write_page().
+You can read about why here:
 
-The sender can still creep in between the ack and the message locks. A 
-situation would be where the "disrupting" sender is the lock owner of 
-all the locks and hence will not have to pay communication costs and 
-will manage to attain the locks faster.
+  http://marc.info/?t=3D142984068300001&r=3D1&w=3D2
 
-Perhaps DLM_LKF_HEADQUEUE or DLM_LKF_NOORDER is what you are looking 
-for, but that again is not the complete solution.
+it ends with a "git bisect" which points the finger at you.
 
-Another idea I could think of is for the sender to downconvert TOKEN to 
-a shared lock such as CR  halfway in the communication (say after 
-message CR), and all receivers take the TOKEN in CR mode and release it 
-once the communication is finally over.
+If I look at bdev_write_page() it says:
 
-Regards,
+ * On entry, the page should be locked and not currently under writeback.
+ * On exit, if the write started successfully, the page will be unlocked and
+ * under writeback.  If the write failed already (eg the driver failed to
+ * queue the page to the device), the page will still be locked.  If the
+ * caller is a ->writepage implementation, it will need to unlock the page.
+
+So the page is unlocked on success.
+
+In __mpage_writepage() I find
+
+			if (!bdev_write_page(bdev, blocks[0] << (blkbits - 9),
+								page, wbc)) {
+				clean_buffers(page, first_unmapped);
 
 
->
-> Regards,
-> Abhijit
->
->>   drivers/md/md-cluster.c | 14 ++++++++++++--
->>   1 file changed, 12 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->> index fcfc4b9..04ac309 100644
->> --- a/drivers/md/md-cluster.c
->> +++ b/drivers/md/md-cluster.c
->> @@ -512,7 +512,10 @@ static void unlock_comm(struct md_cluster_info *cinfo)
->>    * This function performs the actual sending of the message. This function is
->>    * usually called after performing the encompassing operation
->>    * The function:
->> - * 1. Grabs the message lockresource in EX mode
->> + * 1. Grabs the message lockresource in EX. Do not queue the request if not granted
->> +      immediately. This avoids deadlock with receivers when receivers try to
->> +      upconvert CR to EX of message lockresource. The thread will retry until the
->> +      request is granted.
->>    * 2. Copies the message to the message LVB
->>    * 3. Downconverts message lockresource to CR
->>    * 4. Upconverts ack lock resource from CR to EX. This forces the BAST on other nodes
->> @@ -526,12 +529,19 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
->>   	int slot = cinfo->slot_number - 1;
->>
->>   	cmsg->slot = cpu_to_le32(slot);
->> -	/*get EX on Message*/
->> +
->> +	/* get EX on Message with noqueue flag */
->> +	cinfo->message_lockres->flags |= DLM_LKF_NOQUEUE;
->> +
->> +retry:
->>   	error = dlm_lock_sync(cinfo->message_lockres, DLM_LOCK_EX);
->>   	if (error) {
->> +		if (error == -EAGAIN)
->> +			goto retry;
->>   		pr_err("md-cluster: failed to get EX on MESSAGE (%d)\n", error);
->>   		goto failed_message;
->>   	}
->> +	cinfo->message_lockres->flags &= ~DLM_LKF_NOQUEUE;
->>
->>   	memcpy(cinfo->message_lockres->lksb.sb_lvbptr, (void *)cmsg,
->>   			sizeof(struct cluster_msg));
->> -- 2.1.0
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
+so if bdev_write_page() succeeds, i.e. if it returns '0', then
+clean_buffers() is called.  At this point the page is unlocked remember.
 
--- 
-Goldwyn
+clean_buffers may call
+
+		try_to_free_buffers(page);
+
+(without first locking the page, so still unlocked)..
+try_to_free_buffers starts:
+
+	BUG_ON(!PageLocked(page));
+
+
+Opps.
+
+Can you propose a fix for Charles, who can trigger this bug and nicely
+bisected it for us - thanks Charles!!!
+
+Also while looking at the code, I notice that brd_rw_page() unconditionally
+calls page_endio() and, in the WRITE case, page_endio unconditionally calls
+end_page_writeback(), which has
+
+	if (!test_clear_page_writeback(page))
+		BUG();
+
+
+and so cannot tolerate being called twice in a row.
+So if brd_rw_page() ever returned an error (which seems possible though not
+likely), end_page_writeback() would be called once by page_endio() and once
+in the error path of bdev_write_page(), and the BUG above would be triggere=
+d.
+
+I'll leave that for you to sort out too :-)
+
+Thanks,
+NeilBrown
+
+--Sig_/=9GgOTUQl2ajXohVJw1zYeL
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVVg86Tnsnt1WYoG5AQJQhBAAlQ1y27P9YGaM/NaOSlDEUwp0FxuomZdv
+TDjBbynnBKo4Chvzk5G0kkSFQOvgfD+1p4XsZ442nQ1hFQsFhKOzO4EvCVsWLluC
+vgJKGt4R7Tl2lcUlWnyhWIX/fMR9a27H7kVRJDq7UngF+HBcvGgSYnNbs0HXdOoe
+fwfY/nDZS7Ta3Ke+2ibcw/zgkSOqUIBE+JuM3mCzljvz09l/oBuWNabe7hZ8S4mC
+7QdZoYuaBM52vCXDufnC9KI8YTItT8fmBuO1PvMqj10qBzqCPTnEBzpId5P9+fCP
+qBrOubtqCjTeGgo7JTV7YLE4ByAGLGfTzy7ZvtpoelLc/6WQhmB8kH3aPF7c6ANT
+PwZzeIttbXTOTlRBBthNL9pT8gpRe1MzxRlnvmZ3Lf3+uoHlsH6X3kuTDlnKbFL+
++A6uMeribSrsW2afA9PWh6zmV/tPNSVEcZAY/Q4vGjYvcSf+v/zk8QHEY1Xm+2yK
+dNAr3dwYg0fOz4AWjLm0nCQh2V25z4khWJxYSOG5WCc/dwIQp+RjpPBXLLhgDKdg
+WW3i7L6lVGT7ooscL+n+oPMHt45WnYd//oPdxVUq80RniS7IRa+KC4g26LGgl55J
+Kj6qoIRzr2Ii0cCMSU6SRoyCmf5iGZGGFNKIWk1uUwbgiyKo3e1sTnhvvcrPwKpJ
+ftSJQfESJaI=
+=sa95
+-----END PGP SIGNATURE-----
+
+--Sig_/=9GgOTUQl2ajXohVJw1zYeL--
