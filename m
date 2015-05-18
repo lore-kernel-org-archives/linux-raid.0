@@ -1,199 +1,341 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 assemble fails after reboot while reshaping
-Date: Mon, 18 May 2015 10:03:42 +1000
-Message-ID: <20150518100342.4fe761a7@notabene.brown>
-References: <5558C551.80203@die-fuckners.de>
+Subject: Re: [PATCH] md: convert to kstrto*()
+Date: Mon, 18 May 2015 12:12:37 +1000
+Message-ID: <20150518121237.0cfa5a9d@notabene.brown>
+References: <20150516110238.GA32480@p183.telecom.by>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/UT4EEDIxCZd1FqQB+fyM7ro"; protocol="application/pgp-signature"
+ boundary="Sig_/4./573M8TBifswT.fhhISco"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5558C551.80203@die-fuckners.de>
+In-Reply-To: <20150516110238.GA32480@p183.telecom.by>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marco Fuckner <marco@die-fuckners.de>
+To: Alexey Dobriyan <adobriyan@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/UT4EEDIxCZd1FqQB+fyM7ro
+--Sig_/4./573M8TBifswT.fhhISco
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 17 May 2015 18:44:01 +0200 Marco Fuckner <marco@die-fuckners.de>
+On Sat, 16 May 2015 14:02:38 +0300 Alexey Dobriyan <adobriyan@gmail.com>
 wrote:
 
-> Hi everybody,
+> Convert away from deprecated simple_strto*() functions.
 >=20
-> first of all, I'm using mdadm 3.3.2 on linux 4.0.1, all of my disks are
-> partitioned with the same geometry.
+> Add "fit into sector_t" checks.
 >=20
-> I wanted to grow my 4 disk RAID5 array to 7 disks. After adding the
-> disks and initiating the grow, the reshape didn't seem to start:
+> Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+> ---
 >=20
->     md0 : active raid5 sdf1[7] sde1[6] sdd1[5] sdg1[3] sdb1[4] sdh1[1]
-> sdc1[0]
->         11720044800 blocks super 1.2 level 5, 256k chunk, algorithm 2
-> [7/7] [UUUUUUU]
->         [>....................]  reshape =3D  0.0% (0/3906681600)
-> finish=3D166847860.0min speed=3D0K/sec
->         bitmap: 0/30 pages [0KB], 65536KB chunk
+>  drivers/md/md.c |  149 ++++++++++++++++++++++++++++++-------------------=
+-------
+>  1 file changed, 81 insertions(+), 68 deletions(-)
 >=20
-> I waited about three hours and checked again:
->=20
->     md0 : active raid5 sdf1[7] sde1[6] sdd1[5] sdg1[3] sdb1[4] sdh1[1]
-> sdc1[0]
->         11720044800 blocks super 1.2 level 5, 256k chunk, algorithm 2
-> [7/7] [UUUUUUU]
->         [>....................]  reshape =3D  0.0% (0/3906681600)
-> finish=3D9599856140.0min speed=3D0K/sec
->         bitmap: 0/30 pages [0KB], 65536KB chunk
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2630,13 +2630,14 @@ errors_show(struct md_rdev *rdev, char *page)
+>  static ssize_t
+>  errors_store(struct md_rdev *rdev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> -	unsigned long n =3D simple_strtoul(buf, &e, 10);
+> -	if (*buf && (*e =3D=3D 0 || *e =3D=3D '\n')) {
+> -		atomic_set(&rdev->corrected_errors, n);
+> -		return len;
+> -	}
+> -	return -EINVAL;
+> +	unsigned int n;
+> +	int rv;
+> +
+> +	rv =3D kstrtouint(buf, 10, &n);
+> +	if (rv < 0)
+> +		return rv;
+> +	atomic_set(&rdev->corrected_errors, n);
+> +	return len;
+>  }
+>  static struct rdev_sysfs_entry rdev_errors =3D
+>  __ATTR(errors, S_IRUGO|S_IWUSR, errors_show, errors_store);
+> @@ -2653,13 +2654,16 @@ slot_show(struct md_rdev *rdev, char *page)
+>  static ssize_t
+>  slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> +	int slot;
+>  	int err;
+> -	int slot =3D simple_strtoul(buf, &e, 10);
+> +
+>  	if (strncmp(buf, "none", 4)=3D=3D0)
+>  		slot =3D -1;
+> -	else if (e=3D=3Dbuf || (*e && *e!=3D '\n'))
+> -		return -EINVAL;
+> +	else {
+> +		err =3D kstrtouint(buf, 10, (unsigned int *)&slot);
+> +		if (err < 0)
+> +			return err;
+> +	}
+>  	if (rdev->mddev->pers && slot =3D=3D -1) {
+>  		/* Setting 'slot' on an active array requires also
+>  		 * updating the 'rd%d' link, and communicating
+> @@ -3544,12 +3548,12 @@ layout_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  layout_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> -	unsigned long n =3D simple_strtoul(buf, &e, 10);
+> +	unsigned int n;
+>  	int err;
+> =20
+> -	if (!*buf || (*e && *e !=3D '\n'))
+> -		return -EINVAL;
+> +	err =3D kstrtouint(buf, 10, &n);
+> +	if (err < 0)
+> +		return err;
+>  	err =3D mddev_lock(mddev);
+>  	if (err)
+>  		return err;
+> @@ -3593,12 +3597,12 @@ static int update_raid_disks(struct mddev *mddev,=
+ int raid_disks);
+>  static ssize_t
+>  raid_disks_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> +	unsigned int n;
+>  	int err;
+> -	unsigned long n =3D simple_strtoul(buf, &e, 10);
+> =20
+> -	if (!*buf || (*e && *e !=3D '\n'))
+> -		return -EINVAL;
+> +	err =3D kstrtouint(buf, 10, &n);
+> +	if (err < 0)
+> +		return err;
+> =20
+>  	err =3D mddev_lock(mddev);
+>  	if (err)
+> @@ -3645,12 +3649,12 @@ chunk_size_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  chunk_size_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> +	unsigned long n;
+>  	int err;
+> -	char *e;
+> -	unsigned long n =3D simple_strtoul(buf, &e, 10);
+> =20
+> -	if (!*buf || (*e && *e !=3D '\n'))
+> -		return -EINVAL;
+> +	err =3D kstrtoul(buf, 10, &n);
+> +	if (err < 0)
+> +		return err;
+> =20
+>  	err =3D mddev_lock(mddev);
+>  	if (err)
+> @@ -3688,19 +3692,24 @@ resync_start_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  resync_start_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> +	unsigned long long n;
+>  	int err;
+> -	char *e;
+> -	unsigned long long n =3D simple_strtoull(buf, &e, 10);
+> +
+> +	if (cmd_match(buf, "none"))
+> +		n =3D MaxSector;
+> +	else {
+> +		err =3D kstrtoull(buf, 10, &n);
+> +		if (err < 0)
+> +			return err;
+> +		if (n !=3D (sector_t)n)
+> +			return -EINVAL;
+> +	}
+> =20
+>  	err =3D mddev_lock(mddev);
+>  	if (err)
+>  		return err;
+>  	if (mddev->pers && !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+>  		err =3D -EBUSY;
+> -	else if (cmd_match(buf, "none"))
+> -		n =3D MaxSector;
+> -	else if (!*buf || (*e && *e !=3D '\n'))
+> -		err =3D -EINVAL;
+> =20
+>  	if (!err) {
+>  		mddev->recovery_cp =3D n;
+> @@ -3936,14 +3945,14 @@ max_corrected_read_errors_show(struct mddev *mdde=
+v, char *page) {
+>  static ssize_t
+>  max_corrected_read_errors_store(struct mddev *mddev, const char *buf, si=
+ze_t len)
+>  {
+> -	char *e;
+> -	unsigned long n =3D simple_strtoul(buf, &e, 10);
+> +	unsigned int n;
+> +	int rv;
+> =20
+> -	if (*buf && (*e =3D=3D 0 || *e =3D=3D '\n')) {
+> -		atomic_set(&mddev->max_corr_read_errors, n);
+> -		return len;
+> -	}
+> -	return -EINVAL;
+> +	rv =3D kstrtouint(buf, 10, &n);
+> +	if (rv < 0)
+> +		return rv;
+> +	atomic_set(&mddev->max_corr_read_errors, n);
+> +	return len;
+>  }
+> =20
+>  static struct md_sysfs_entry max_corr_read_errors =3D
+> @@ -4297,15 +4306,18 @@ sync_min_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  sync_min_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	int min;
+> -	char *e;
+> +	unsigned int min;
+> +	int rv;
+> +
+>  	if (strncmp(buf, "system", 6)=3D=3D0) {
+> -		mddev->sync_speed_min =3D 0;
+> -		return len;
+> +		min =3D 0;
+> +	} else {
+> +		rv =3D kstrtouint(buf, 10, &min);
+> +		if (rv < 0)
+> +			return rv;
+> +		if (min =3D=3D 0)
+> +			return -EINVAL;
+>  	}
+> -	min =3D simple_strtoul(buf, &e, 10);
+> -	if (buf =3D=3D e || (*e && *e !=3D '\n') || min <=3D 0)
+> -		return -EINVAL;
+>  	mddev->sync_speed_min =3D min;
+>  	return len;
+>  }
+> @@ -4323,15 +4335,18 @@ sync_max_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  sync_max_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	int max;
+> -	char *e;
+> +	unsigned int max;
+> +	int rv;
+> +
+>  	if (strncmp(buf, "system", 6)=3D=3D0) {
+> -		mddev->sync_speed_max =3D 0;
+> -		return len;
+> +		max =3D 0;
+> +	} else {
+> +		rv =3D kstrtouint(buf, 10, &max);
+> +		if (rv < 0)
+> +			return rv;
+> +		if (max =3D=3D 0)
+> +			return -EINVAL;
+>  	}
+> -	max =3D simple_strtoul(buf, &e, 10);
+> -	if (buf =3D=3D e || (*e && *e !=3D '\n') || max <=3D 0)
+> -		return -EINVAL;
+>  	mddev->sync_speed_max =3D max;
+>  	return len;
+>  }
+> @@ -4514,12 +4529,13 @@ suspend_lo_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  suspend_lo_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> -	unsigned long long new =3D simple_strtoull(buf, &e, 10);
+> -	unsigned long long old;
+> +	unsigned long long old, new;
+>  	int err;
+> =20
+> -	if (buf =3D=3D e || (*e && *e !=3D '\n'))
+> +	err =3D kstrtoull(buf, 10, &new);
+> +	if (err < 0)
+> +		return err;
+> +	if (new !=3D (sector_t)new)
+>  		return -EINVAL;
+> =20
+>  	err =3D mddev_lock(mddev);
+> @@ -4556,12 +4572,13 @@ suspend_hi_show(struct mddev *mddev, char *page)
+>  static ssize_t
+>  suspend_hi_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+> -	char *e;
+> -	unsigned long long new =3D simple_strtoull(buf, &e, 10);
+> -	unsigned long long old;
+> +	unsigned long long old, new;
+>  	int err;
+> =20
+> -	if (buf =3D=3D e || (*e && *e !=3D '\n'))
+> +	err =3D kstrtoull(buf, 10, &new);
+> +	if (err < 0)
+> +		return err;
+> +	if (new !=3D (sector_t)new)
+>  		return -EINVAL;
+> =20
+>  	err =3D mddev_lock(mddev);
+> @@ -4603,11 +4620,13 @@ static ssize_t
+>  reshape_position_store(struct mddev *mddev, const char *buf, size_t len)
+>  {
+>  	struct md_rdev *rdev;
+> -	char *e;
+> +	unsigned long long new;
+>  	int err;
+> -	unsigned long long new =3D simple_strtoull(buf, &e, 10);
+> =20
+> -	if (buf =3D=3D e || (*e && *e !=3D '\n'))
+> +	err =3D kstrtoull(buf, 10, &new);
+> +	if (err < 0)
+> +		return err;
+> +	if (new !=3D (sector_t)new)
+>  		return -EINVAL;
+>  	err =3D mddev_lock(mddev);
+>  	if (err)
+> @@ -9009,13 +9028,7 @@ static int get_ro(char *buffer, struct kernel_para=
+m *kp)
+>  }
+>  static int set_ro(const char *val, struct kernel_param *kp)
+>  {
+> -	char *e;
+> -	int num =3D simple_strtoul(val, &e, 10);
+> -	if (*val && (*e =3D=3D '\0' || *e =3D=3D '\n')) {
+> -		start_readonly =3D num;
+> -		return 0;
+> -	}
+> -	return -EINVAL;
+> +	return kstrtouint(val, 10, (unsigned int *)&start_readonly);
+>  }
+> =20
+>  module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-This looks very much like  the reshape has not done anything at all.
-i.e. your data is still exactly where you left it, it is just a case of
-getting hold of it.
+Looks good - thanks.
+I'll queue for the next merge window.
 
-It's not impossible that running the --assemble with --update=3Drevert-resh=
-ape
-would work, but I'm far from certain.  If you backed up the first gigabyte =
-of
-each device (sd?1) first then it would probably be safe enough to try.
-
-Another option is to add --invalid-backup to the --assemble command.
-This has a reasonable chance of allowing the reshape to continue, but also
-has a reasonable chance of corrupting the first few megabytes of your array
-(the part that it things should be backed up).
-If you "make test_stripe" in the mdadm source code, you can use that to ext=
-ra
-the first few megabytes of array data so you could restore it if it gets
-corrupted.
-Something like
-   test_stripe save /root/thing 4 262144 5 2 0 \
-   $BIGNUM /dev/sdc1:262144 /dev/sdh1:262144 ......
-
-Check the source to make sure you get the args right.
-Make sure the order of the devices and their data_offsets are correct.  che=
-ck
-the "Device Role:" for each and order them by that number.
-
-Another option is to recreate the array as 4-drive RAID5.  Again you need to
-make sure the device order and data offsets are correct, along with all the
-other data.
-
-I might be able to dig into the code and find out what happened and maybe
-offer an "easier" solution, but that won't be for a day or two at least.
-
-
+Thanks,
 NeilBrown
 
-
-
->=20
-> Unfortunately, I forgot to save the output of the grow command, but it
-> exited with 0.
-> /mdadm --misc --detail /dev/md0/ didn't show anything suspicious to me:
->=20
-> /dev/md0:
->     Version : 1.2
->     Creation Time : Sun Nov  9 02:38:25 2014
->     Raid Level : raid5
->     Array Size : 11720044800 (11177.11 GiB 12001.33 GB)
->     Used Dev Size : 3906681600 (3725.70 GiB 4000.44 GB)
->     Raid Devices : 7
->     Total Devices : 7
->     Persistence : Superblock is persistent
->=20
->     Intent Bitmap : Internal
->=20
->     Update Time : Mon May 11 11:55:07 2015
->     State : clean, reshaping
->     Active Devices : 7
->     Working Devices : 7
->     Failed Devices : 0
->     Spare Devices : 0
->=20
->     Layout : left-symmetric
->     Chunk Size : 256K
->=20
->     Reshape Status : 0% complete
->     Delta Devices : 3, (4->7)
->=20
->     Name : anaNAS:0  (local to host anaNAS)
->     UUID : 33f0604f:46e80f5e:11b1a694:608fd9b3
->     Events : 51839
->=20
->     Number   Major   Minor   RaidDevice   State
->         0           8           33        0              active sync =20
-> /dev/sdc1
->         1           8           113      1              active sync =20
-> /dev/sdh1
->         3           8           97        2              active sync =20
-> /dev/sdg1
->         4           8           17        3              active sync =20
-> /dev/sdb1
->         7           8           81        4              active sync =20
-> /dev/sdf1
->         6           8           65        5              active sync =20
-> /dev/sde1
->         5           8           49        6              active sync =20
-> /dev/sdd1
->=20
-> As it looked like it wouldn't be ready until long after my death and I
-> also wrote a backup file, somehow restarting and continuing afterwards
-> seemed reasonable to me.
-> The source I was reading suggested running /mdadm /dev/md0 --continue
-> --backup-file=3D$FILE/. Apparently this command was wrong, and I couldn't
-> reassamble the array:
->=20
-> # mdadm --assemble /dev/md0 --verbose /dev/sd[b-h]1
-> --backup-file=3D/root/grow7backup.bak
->=20
->     mdadm: looking for devices for /dev/md0
->     mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 4.
->     mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 5.
->     mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 6.
->     mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 2.
->     mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 3.
->     mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 1.
->     mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 0.
->     mdadm: :/dev/md0 has an active reshape - checking if critical
-> section needs to be restored
->     mdadm: No backup metadata on /root/grow7backup.bak
->     mdadm: No backup metadata on device-4
->     mdadm: No backup metadata on device-5
->     mdadm: No backup metadata on device-6
->     mdadm: Failed to find backup of critical section
->     mdadm: Failed to restore critical section for reshape, sorry.
->=20
-> I started searching for answers but didn't find anything helpful except
-> the hint on the raid.wiki.kernel.org page to send an email here. The
-> last sentence from mdadm sounds a bit pessimistic, but I hope someone in
-> here can help me. The output of /mdadm --examine /dev/sd[bh]1 /is in the
-> attachment.
->=20
-> Thanks in advance,
->=20
-> Marco
-
-
---Sig_/UT4EEDIxCZd1FqQB+fyM7ro
+--Sig_/4./573M8TBifswT.fhhISco
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVVksXznsnt1WYoG5AQLoWxAAurc73U9QfQaSHmzZ96UAa8fdOHAWZm27
-toRty+M/gxrypqFxHp6NGFONbpfXcPSZUCwak0wcZeTsINlURdJXlsaHFSbp3Ddt
-9zw1qv45L3GS4bJ/hQz/NBuLxP2ZGyyrXfA7PMbJY0imQg+dUqbPIL2FvCaF+H0W
-l7SBwbx/4jFmRPtEMWXBBvqfUwR47gPJYAy6Fx0UL/hzQ/vA7hXveBzKfoc7J/A/
-osCyfR0qCvkXsSaqWaQwsC5ur556Jd4hw5s2ivm1JKnzyFPQrd9kcBPDSaHVggAW
-dpc7kDPTeTv6UmBSl9MKmQmNnMiNtSTGLytrSb9G7HIwKovz3cod74ehXhP+SK6v
-zNLnUUbjhCUZMytzdZUMrvmd1ZKjsjlP8lkEnryTjw2hXl6VXTh3GrMmqRusLmgF
-AN1m0/TyhWZ1Z9zP/YJ72vEU/ajSxq/m/ASuzP524dQyHX0BmpPNQvtZKpxIJAhk
-r7r0Xi0wdJiNTwO9Rdx2yluHMVPu65oRw4OrTmBe8cCh1DvHrH5QFyTpjnsAxPxA
-TaFfGGQk0V5DRqxsU3zAvcm4sKV0kBEYlzfBoMyMLPwzKMMmXiY24hnJj5V7DZdD
-afO6jYWvrsVeISDJMkgQv6/jwWLO+2K++hWsCneI1zGxYTbcmrDVVfU1MDi7zgpA
-1taZm1V9B/E=
-=i5nr
+iQIVAwUBVVlKlTnsnt1WYoG5AQLZsA//bBU9Pub5IvgAxMdCQ+JOWRU8sxLvhQX7
++hkiuk3CZHsBm4CPpfc5/y1uFgLlXmt8se3O5LlU+Ai8Ixh25J1gpm59u6lXmCH5
+1NdG2xb03XvBJHycjYAX1yTZwlU268tgxpnhH+8ecuA6QG2vZI8zteisS08w7403
+xP+chlpc612+8eRfLkSWwpHEmaL/wBivz0iswHojg1Et5T34negyCxIrQwRQVDLo
+jgGL97LU0dHujgsQqRg8XTl0mvx+zBHafW2sZCNpYQR5HV/XFsWJWSROGlyjjDLJ
+7MzngRq61CJJ4Z+T1Pby64sgQv5rhM9/nUB5TJ9pnNhh7PIDGeYLclS2A1p0Gfyx
+wS/ml1ERkixcvmk2TaNpc8T4JPM00DuUMSzyvdzMkd8sQ5peuBiwc5jLvgPRpa4f
+OEufD4mbd2Wqp8Vy6eqZ6lhIToGb4c9wbIzMnS/JPIcE7Ig27orocMuT5EgINXmp
+ZcWMwPKW796lFr65wZYtiPrVFvM/ax47eldyqTPvQ6N6xaVL+XhNaSld1jAvsnQQ
+/+0mX+9Dq0AkKxUs74Kppnw9W9WcQ81rirBnJpFDI2cq8BtrfxwnYlNGZxEKHRlC
+mQcy2Euy+PYQ9XZu9qa8+Jh0TEKlvX1YVdT3O6pTxn8nZPUFJ19sAjZSbkdVlcLC
+PIeDKSFHeic=
+=EhuH
 -----END PGP SIGNATURE-----
 
---Sig_/UT4EEDIxCZd1FqQB+fyM7ro--
+--Sig_/4./573M8TBifswT.fhhISco--
