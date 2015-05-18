@@ -1,69 +1,66 @@
-From: Hans Malissa <hmalissa@me.com>
-Subject: RAID1 working correctly, error messages during boot
-Date: Mon, 18 May 2015 14:29:23 -0600
-Message-ID: <CE885044-F8E8-4286-9CAC-1D17560F1E79@me.com>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Sergey Vidishev <sergeyv@yandex-team.ru>
+Subject: [PATCH v2] mdadm: monitor: fix nullptr dereference when get_md_name() returns NULL
+Date: Tue, 19 May 2015 02:33:21 +0300
+Message-ID: <1591364.ylu2LGHCpE@sergeyv>
+References: <1531453.K804EMet0W@sergeyv_box>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1531453.K804EMet0W@sergeyv_box>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-I have a software-RAID1 that seems to be working correctly:
+From c1e59424bfabee349aa7b8b903833475a56cf145 Mon Sep 17 00:00:00 2001
+From: Sergey Vidishev <sergeyv@yandex-team.ru>
+Date: Wed, 8 Oct 2014 21:51:03 +0400
+Subject: [PATCH] mdadm: monitor: fix nullptr dereference when get_md_name()
+ returns NULL
 
-# cat /proc/mdstat
-Personalities : [raid1]=20
-md0 : active raid1 sdc1[1] sdb1[0]
-      976629568 blocks super 1.2 [2/2] [UU]
-     =20
-unused devices: <none>
+Function add_new_arrays() expects that function get_md_name() should
+return pointer to devname, but also get_md_name() may return NULL. So
+check the pointer before use it in add_new_arrays().
 
-# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 1.2
-  Creation Time : Sun May 17 15:21:30 2015
-     Raid Level : raid1
-     Array Size : 976629568 (931.39 GiB 1000.07 GB)
-  Used Dev Size : 976629568 (931.39 GiB 1000.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-    Persistence : Superblock is persistent
+Signed-off-by: Sergey Vidishev <sergeyv@yandex-team.ru>
+---
 
-    Update Time : Mon May 18 10:28:36 2015
-          State : clean=20
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+v1 -> v2: more verbose commit message
 
-           Name : eprb21:0  (local to host eprb21)
-           UUID : 0901fe50:444a29b6:d3caff14:e45ef9cc
-         Events : 19
+This patch against fresh git://neil.brown.name/mdadm.
+I'm not subscribed to the list, please CC me in replies.
 
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      active sync   /dev/sdb1
-       1       8       33        1      active sync   /dev/sdc1
+ Monitor.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-But, on the other hand, when the system boots, I briefly see the follow=
-ing messages:
+diff --git a/Monitor.c b/Monitor.c
+index 1cd378b..1bbaf89 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -687,6 +687,7 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ {
+ 	struct mdstat_ent *mse;
+ 	int new_found = 0;
++	char *name;
+ 
+ 	for (mse=mdstat; mse; mse=mse->next)
+ 		if (mse->devnm[0] &&
+@@ -697,7 +698,12 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ 			struct state *st = xcalloc(1, sizeof *st);
+ 			mdu_array_info_t array;
+ 			int fd;
+-			st->devname = xstrdup(get_md_name(mse->devnm));
++
++			name = get_md_name(mse->devnm);
++			if (!name)
++				return 0;
++
++			st->devname = xstrdup(name);
+ 			if ((fd = open(st->devname, O_RDONLY)) < 0 ||
+ 			    ioctl(fd, GET_ARRAY_INFO, &array)< 0) {
+ 				/* no such array */
+-- 
+1.9.1
 
-doing fast boot
-Creating device nodes with udev
-udevd[174]: failed to execute =91/sbin/mdadm=92 =91/sbin/mdadm --increm=
-ental /dev/sdb1
 
-udevd[175]: failed to execute =91/sbin/mdadm=92 =91/sbin/mdadm --increm=
-ental /dev/sdc1 --offroot=92: No such file or directory
-
-But otherwise the system appears to run normally. After booting, /dev/m=
-d0 seems to be working correctly.
-What does it mean, and should I worry about it? What can I do about it?=
- My system is openSUSE 12.2.
-Thanks a lot,
-
-Hans Malissa--
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
