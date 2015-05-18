@@ -1,48 +1,84 @@
-From: Guoqing Jiang <gqJiang@suse.com>
-Subject: Re: [PATCH V2 01/11] Create n bitmaps for clustered mode
-Date: Mon, 18 May 2015 10:21:00 +0800
-Message-ID: <55594C8C.904@suse.com>
-References: <1431075029-5484-1-git-send-email-gqjiang@suse.com>	<1431075029-5484-2-git-send-email-gqjiang@suse.com> <20150515154527.7751f765@notabene.brown>
+From: "David F." <df7729@gmail.com>
+Subject: Re: Breaks LSI RAID on C600 chipset
+Date: Mon, 18 May 2015 10:58:19 -0700
+Message-ID: <CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
+References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
+	<21791.17074.357416.218211@quad.stoffel.home>
+	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
+	<21792.11560.92731.222551@quad.stoffel.home>
+	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
+	<21795.3296.846489.199118@quad.stoffel.home>
+	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
+	<20150410105001.171d6683@notabene.brown>
+	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
+	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
+	<CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
+	<20150513103557.1df6036d@notabene.brown>
+	<CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150515154527.7751f765@notabene.brown>
+In-Reply-To: <CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
+Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
->> diff --git a/mdadm.c b/mdadm.c
->> index 3e8c49b..bd9382e 100644
->> --- a/mdadm.c
->> +++ b/mdadm.c
->> @@ -1097,6 +1097,15 @@ int main(int argc, char *argv[])
->>  				s.bitmap_file = optarg;
->>  				continue;
->>  			}
->> +			if (strcmp(optarg, "clustered")== 0) {
->> +				s.bitmap_file = optarg;
->> +				/* Set the default number of cluster nodes
->> +				 * to 4 if not already set by user
->> +				 */
->> +				if (c.nodes < 1)
->> +					c.nodes = 4;
->> +				continue;
->> +			}
->>     
->
->
-> Please make sure than mdadm compiles after each patch is applied.
-> You don't defined that 'nodes' field until a later patch.
->
->   
-Oops, I will fix it in next version.
+Do you think the latest version at
+http://git.neil.brown.name/?p=mdadm.git;a=summary is stable enough to
+use?   It definitely fixes the major issue (losing the raid config)
+from the prior version.
 
-Thanks,
-Guoqing
-> NeilBrown
+On Wed, May 13, 2015 at 7:26 AM, David F. <df7729@gmail.com> wrote:
+> Thanks.
 >
->   
-
+> 1) The update did fix the broken RAID.  I can reboot and the RAID
+> mirror still exists after reboots.
+>
+> 2) I do want to report that on the first test, the reboot was clean.
+> On the second reboot there was a warning message about the BIOS
+> detecting "Inconsistent Timestamps" on one of the drives and something
+> about which CONFIG the BIOS would use.  I didn't have time to get it
+> all jotted down.  Whatever it used was still okay since the RAID
+> mirror was still there after that message.
+>
+>
+> On Tue, May 12, 2015 at 5:35 PM, NeilBrown <neilb@suse.de> wrote:
+>> On Mon, 11 May 2015 09:31:26 -0700 "David F." <df7729@gmail.com> wrote:
+>>
+>>> any progress or more information needed on this?
+>>>
+>>> On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
+>>> > If you need access to the system, a network kvm is available - or if
+>>> > you have a C600 based system, you should see the same problem there.
+>>> >
+>>> > On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
+>>> >> Okay, and to confirm, this is happening on other C600 based systems.
+>>> >> Boot to Linux with MDADM raid support and the raid is gone after
+>>> >> reboot.
+>>> >>
+>>> >> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
+>>> >>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> wrote:
+>>> >>>
+>>> >>>> Hello,
+>>> >>>>
+>>> >>>> I built a new system, installed new drives (no partitioning, just raw
+>>> >>>> new drives), configured RAID 1, boot to linux, created reports
+>>> >>>> attached.  Rebooted and the system doesn't see any configured raid
+>>> >>>> drives (just the two raw drives).
+>>> >>>
+>>> >>> Thanks.  I might take a look, but I would greatly prefer it if you kept the
+>>> >>> linux-raid list on the Cc.....
+>>> >>>
+>>> >>> NeilBrown
+>>> >>>
+>>
+>> I must confess that I haven't even looked at it.
+>> But I just saw and email on linux-raid from Martin Wilck:
+>>
+>>  Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
+>>
+>> which very likely fixes your problem.  I've applied it and pushed out to
+>>    git://neil.brown.name/mdadm/
+>>
+>> NeilBrown
