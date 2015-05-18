@@ -1,84 +1,69 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: Breaks LSI RAID on C600 chipset
-Date: Mon, 18 May 2015 10:58:19 -0700
-Message-ID: <CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
-References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
-	<21791.17074.357416.218211@quad.stoffel.home>
-	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
-	<21792.11560.92731.222551@quad.stoffel.home>
-	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
-	<21795.3296.846489.199118@quad.stoffel.home>
-	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
-	<20150410105001.171d6683@notabene.brown>
-	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
-	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
-	<CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
-	<20150513103557.1df6036d@notabene.brown>
-	<CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hans Malissa <hmalissa@me.com>
+Subject: RAID1 working correctly, error messages during boot
+Date: Mon, 18 May 2015 14:29:23 -0600
+Message-ID: <CE885044-F8E8-4286-9CAC-1D17560F1E79@me.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Do you think the latest version at
-http://git.neil.brown.name/?p=mdadm.git;a=summary is stable enough to
-use?   It definitely fixes the major issue (losing the raid config)
-from the prior version.
+I have a software-RAID1 that seems to be working correctly:
 
-On Wed, May 13, 2015 at 7:26 AM, David F. <df7729@gmail.com> wrote:
-> Thanks.
->
-> 1) The update did fix the broken RAID.  I can reboot and the RAID
-> mirror still exists after reboots.
->
-> 2) I do want to report that on the first test, the reboot was clean.
-> On the second reboot there was a warning message about the BIOS
-> detecting "Inconsistent Timestamps" on one of the drives and something
-> about which CONFIG the BIOS would use.  I didn't have time to get it
-> all jotted down.  Whatever it used was still okay since the RAID
-> mirror was still there after that message.
->
->
-> On Tue, May 12, 2015 at 5:35 PM, NeilBrown <neilb@suse.de> wrote:
->> On Mon, 11 May 2015 09:31:26 -0700 "David F." <df7729@gmail.com> wrote:
->>
->>> any progress or more information needed on this?
->>>
->>> On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
->>> > If you need access to the system, a network kvm is available - or if
->>> > you have a C600 based system, you should see the same problem there.
->>> >
->>> > On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
->>> >> Okay, and to confirm, this is happening on other C600 based systems.
->>> >> Boot to Linux with MDADM raid support and the raid is gone after
->>> >> reboot.
->>> >>
->>> >> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
->>> >>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> wrote:
->>> >>>
->>> >>>> Hello,
->>> >>>>
->>> >>>> I built a new system, installed new drives (no partitioning, just raw
->>> >>>> new drives), configured RAID 1, boot to linux, created reports
->>> >>>> attached.  Rebooted and the system doesn't see any configured raid
->>> >>>> drives (just the two raw drives).
->>> >>>
->>> >>> Thanks.  I might take a look, but I would greatly prefer it if you kept the
->>> >>> linux-raid list on the Cc.....
->>> >>>
->>> >>> NeilBrown
->>> >>>
->>
->> I must confess that I haven't even looked at it.
->> But I just saw and email on linux-raid from Martin Wilck:
->>
->>  Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
->>
->> which very likely fixes your problem.  I've applied it and pushed out to
->>    git://neil.brown.name/mdadm/
->>
->> NeilBrown
+# cat /proc/mdstat
+Personalities : [raid1]=20
+md0 : active raid1 sdc1[1] sdb1[0]
+      976629568 blocks super 1.2 [2/2] [UU]
+     =20
+unused devices: <none>
+
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Sun May 17 15:21:30 2015
+     Raid Level : raid1
+     Array Size : 976629568 (931.39 GiB 1000.07 GB)
+  Used Dev Size : 976629568 (931.39 GiB 1000.07 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Mon May 18 10:28:36 2015
+          State : clean=20
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : eprb21:0  (local to host eprb21)
+           UUID : 0901fe50:444a29b6:d3caff14:e45ef9cc
+         Events : 19
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+
+But, on the other hand, when the system boots, I briefly see the follow=
+ing messages:
+
+doing fast boot
+Creating device nodes with udev
+udevd[174]: failed to execute =91/sbin/mdadm=92 =91/sbin/mdadm --increm=
+ental /dev/sdb1
+
+udevd[175]: failed to execute =91/sbin/mdadm=92 =91/sbin/mdadm --increm=
+ental /dev/sdc1 --offroot=92: No such file or directory
+
+But otherwise the system appears to run normally. After booting, /dev/m=
+d0 seems to be working correctly.
+What does it mean, and should I worry about it? What can I do about it?=
+ My system is openSUSE 12.2.
+Thanks a lot,
+
+Hans Malissa--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
