@@ -1,127 +1,78 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Recent drive errors
-Date: Tue, 19 May 2015 08:32:21 -0600
-Message-ID: <2278721.7NtVspC26F@balsa>
-References: <3296560.sGbn0HyrQY@balsa> <84264713.v03zHsT0Cj@balsa> <555B3948.1030602@turmel.org>
-Reply-To: thomas@fjellstrom.ca
+Date: Tue, 19 May 2015 10:51:59 -0400
+Message-ID: <555B4E0F.9020306@turmel.org>
+References: <3296560.sGbn0HyrQY@balsa> <84264713.v03zHsT0Cj@balsa> <555B3948.1030602@turmel.org> <2278721.7NtVspC26F@balsa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <555B3948.1030602@turmel.org>
+In-Reply-To: <2278721.7NtVspC26F@balsa>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: thomas@fjellstrom.ca
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue 19 May 2015 09:23:20 AM Phil Turmel wrote:
-> On 05/19/2015 08:50 AM, Thomas Fjellstrom wrote:
-> > On Tue 19 May 2015 08:34:55 AM Phil Turmel wrote:
-> >> Based on the smart report, this drive is perfectly healthy.  A small
-> >> number of uncorrectable read errors is normal in the life of any drive.
-> > 
-> > Is it perfectly normal for the same sector to be reported uncorrectable 5
-> > times in a row like it did?
-> 
-> Yes, if you keep trying to read it.  Unreadable sectors stay unreadable,
-> generally, until they are re-written.  That's the first opportunity the
-> drive has to decide if a relocation is necessary.
-> 
-> > How many UREs are considered "ok"? Tens, hundreds, thousands, tens of
-> > thousands?
-> 
-> Depends.  In a properly functioning array that gets scrubbed
-> occasionally, or sufficiently heavy use to read the entire contents
-> occasionally, the UREs get rewritten by MD right away.  Any UREs then
-> only show up once.
+On 05/19/2015 10:32 AM, Thomas Fjellstrom wrote:
+> On Tue 19 May 2015 09:23:20 AM Phil Turmel wrote:
 
-I have made sure that it's doing regular scrubs, and regular SMART scans. This 
-time...
-
-> In a desktop environment, or non-raid, or improperly configured raid,
-> the UREs will build up, and get reported on every read attempt.
+>> Depends.  In a properly functioning array that gets scrubbed
+>> occasionally, or sufficiently heavy use to read the entire contents
+>> occasionally, the UREs get rewritten by MD right away.  Any UREs then
+>> only show up once.
 > 
-> Most consumer-grade drives claim a URE average below 1 per 1E14 bits
-> read.  So by the end of their warranty period, getting one every 12TB
-> read wouldn't be unusual.  This sort of thing follows a Poisson
-> distribution:
+> I have made sure that it's doing regular scrubs, and regular SMART scans. This 
+> time...
+
+Yes, and this drive was kicked out.  Because it wouldn't be listening
+when MD tried to write over the error it found.
+
+I posted this link earlier, but it is particularly relevant:
+http://marc.info/?l=linux-raid&m=133665797115876&w=2
+
+>> Interesting.  I suspect that if you wipe that disk with noise, read it
+>> all back, and wipe it again, you'll have a handful of relocations.
 > 
-> http://marc.info/?l=linux-raid&m=135863964624202&w=2
+> It looks like each one of the blocks in that display is 128KiB. Which i think 
+> means those red blocks aren't very far apart. Maybe 80MiB apart? Would it 
+> reallocate all of those? That'd be a lot of reallocated sectors.
+
+Drives will only reallocate where a previous read failed (making it
+pending), then write and follow-up verification fails.  In general,
+writes are unverified at the time of write (or your write performance
+would be dramatically slower than read).
+
+>> You have it backwards.  If you have WD Reds, they are correct out of the
+>> box.  It's when you *don't* have ERC support, or you only have desktop
+>> ERC, that you need to take special action.
 > 
-> > These drives have been barely used. Most of their life, they were either
-> > off, or not actually being used. (it took a while to collect enough 3TB
-> > drives, and then find time to build the array, and set it up as a regular
-> > backup of my 11TB nas).
+> I was under the impression you still had to enable ERC on boot. And I 
+> /thought/ I read that you still want to adjust the timeouts, though not the 
+> same as for consumer drives.
+
+Desktop / consumer drives that support ERC typically ship with it
+disabled, so they behave just like drives that don't support it at all.
+ So a boot script would enable ERC on drives where it can (and not
+already OK), and set long driver timeouts on the rest.
+
+Any drive that claims "raid" compatibility will have ERC enabled by
+default.  Typically 7.0 seconds.  WD Reds do.  Enterprise drives do, and
+have better URE specs, too.
+
+>> If you have consumer grade drives in a raid array, and you don't have
+>> boot scripts or udev rules to deal with timeout mismatch, your *ss is
+>> hanging in the wind.  The links in my last msg should help you out.
 > 
-> While being off may lengthen their life somewhat, the magnetic domains
-> on these things are so small that some degradation will happen just
-> sitting there.  Diffusion in the p- and n-doped regions of the
-> semiconductors is also happening while sitting unused, degrading the
-> electronics.
-> 
-> >>  It has no relocations, and no pending sectors.  The latency spikes are
-> >> 
-> >> likely due to slow degradation of some sectors that the drive is having
-> >> to internally retry to read successfully.  Again, normal.
-> > 
-> > The latency spikes are /very/ regular and theres quite a lot of them.
-> > See: http://i.imgur.com/QjTl6o3.png
-> 
-> Interesting.  I suspect that if you wipe that disk with noise, read it
-> all back, and wipe it again, you'll have a handful of relocations.
+> There was some talk of ERC/TLER and md. I'll still have to find or write a 
+> script to properly set up timeouts and enable TLER on drives capable of it 
+> (that don't come with it enabled by default).
 
-It looks like each one of the blocks in that display is 128KiB. Which i think 
-means those red blocks aren't very far apart. Maybe 80MiB apart? Would it 
-reallocate all of those? That'd be a lot of reallocated sectors.
+Before I got everything onto proper drives, I just put what I needed
+into rc.local.
 
-> Your latency test will show different numbers then, as the head will
-> have to seek to the spare sector and back whenever you read through one
-> of those spots.
-> 
-> Or the rewrites will fix them all, and you'll have no further problems.
->  Hard to tell.  Bottom line is that drives can't fix any problems they
-> have unless they are *written* in previously identified problem areas.
-> 
-> >> I own some "DM001" drives -- they are unsuited to raid duty as they
-> >> don't support ERC.  So, out of the box, they are time bombs for any
-> >> array you put them in.  That's almost certainly why they were ejected
-> >> from your array.
-> >> 
-> >> If you absolutely must use them, you *must* set the *driver* timeout to
-> >> 120 seconds or more.
-> > 
-> > I've been planning on looking into the ERC stuff. I now actually have some
-> > drives that do support ERC, so it'll be interesting to make sure
-> > everything is set up properly.
-> 
-> You have it backwards.  If you have WD Reds, they are correct out of the
-> box.  It's when you *don't* have ERC support, or you only have desktop
-> ERC, that you need to take special action.
+Chris Murphy posted some udev rules that will likely work for you.  I
+haven't tried them myself, though.
 
-I was under the impression you still had to enable ERC on boot. And I 
-/thought/ I read that you still want to adjust the timeouts, though not the 
-same as for consumer drives.
+https://www.marc.info/?l=linux-raid&m=142487508806844&w=3
 
-> If you have consumer grade drives in a raid array, and you don't have
-> boot scripts or udev rules to deal with timeout mismatch, your *ss is
-> hanging in the wind.  The links in my last msg should help you out.
-
-There was some talk of ERC/TLER and md. I'll still have to find or write a 
-script to properly set up timeouts and enable TLER on drives capable of it 
-(that don't come with it enabled by default).
-
-> Also, I noticed that you used "smartctl -a" to post a complete report of
-> your drive's status.  It's not complete.  You should get in the habit of
-> using "smartctl -x" instead, so you see the ERC status, too.
-
-Good to know. Thanks.
-
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+Phil
