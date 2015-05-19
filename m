@@ -1,58 +1,70 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Recent drive errors
-Date: Tue, 19 May 2015 08:34:55 -0400
-Message-ID: <555B2DEF.60905@turmel.org>
-References: <3296560.sGbn0HyrQY@balsa>
+From: "Wilson, Jonathan" <piercing_male@hotmail.com>
+Subject: Backup raid, power down questions.
+Date: Tue, 19 May 2015 13:36:43 +0100
+Message-ID: <BLU437-SMTP474BC966B5944E3445207D98C30@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3296560.sGbn0HyrQY@balsa>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Thomas,
+I am looking to create a second raid6 set which will only be used to do
+periodical backups of the main raid6, probably using rsync. (all drives
+will be tler'able WD reds)
 
-On 05/19/2015 07:08 AM, Thomas Fjellstrom wrote:
-> Hi,
-> 
-> I have this one drive that dropped out of one of my arrays once. It shows UNC
-> errors in SMART (log appended), and Reported_Uncorrect is 5. There are no
-> smart test failures or any other SMART values that look spectacularly wrong,
-> other than maybe Load_Cycle_Count which is 10625 (these seagates used to
-> constantly park and unpark before i updated the firmware).
-> 
-> I'm wondering whether or not this drive is still safe to use. I feel like I
-> can't trust it, especially after all the other Seagates I had that failed in
-> the past few years. I'm running a tool called whdd on it right now and it
-> shows very consistent latency spikes above 150ms. Really, I'm wondering if
-> this drive is RMAable as is, or if i have to wait for it to degrade further as
-> i have another drive with like 10k reallocated sectors to send in. I have
-> already replaced both with WD Red's so I can do whatever tests are needed to
-> figure it out.
+Obviously when the system boots all the raids will start up, but I am
+looking to run some kind of script that will force the drives into a
+"hard sleep" for want of a better term.
 
-Based on the smart report, this drive is perfectly healthy.  A small
-number of uncorrectable read errors is normal in the life of any drive.
- It has no relocations, and no pending sectors.  The latency spikes are
-likely due to slow degradation of some sectors that the drive is having
-to internally retry to read successfully.  Again, normal.
+At the moment none of the drives have any sleep or power down timers
+set, in part to fix the idle3 bug increasing the load cycles count and
+this will be applied to the new drives as well.
 
-I own some "DM001" drives -- they are unsuited to raid duty as they
-don't support ERC.  So, out of the box, they are time bombs for any
-array you put them in.  That's almost certainly why they were ejected
-from your array.
+My questions are:
 
-If you absolutely must use them, you *must* set the *driver* timeout to
-120 seconds or more.
+1) I am using EXT4, will I need to "do something" to make sure that it
+flushes all changes to disk (which I assume means "flush to MD layer"),
+if so what?
 
-HTH,
+2) Likewise with the MD layer, is there any command that forces it to
+flush to disk any cached changes?
 
-Phil
+3) I am guessing that I need to issue a hdparm to each disk in the raid
+set to send it either to sleep or spin down or some such state, as the
+backup raid will not be accessed except during backup writes or data
+recovery it can go into the most "asleep" state available. 2 questions,
+what hdparm setting? also is there a smartctl equivalent?
 
-http://marc.info/?l=linux-raid&m=133761065622164&w=2
-http://marc.info/?l=linux-raid&m=135811522817345&w=1
-http://marc.info/?l=linux-raid&m=133761065622164&w=2
-http://marc.info/?l=linux-raid&m=133665797115876&w=2
+4) As the drives might take a length of time to waken, does this need to
+be considered by the /sys/class/scsi_device/*/device/timeout value to
+prevent that layer deciding the disk has gone walkabout if it takes to
+long to wake up?
 
+5) If there isn't any easy way to make sure the raid/file system has
+flushed any changes would a reasonable method be to unmount the file
+system, then stop the raid, then send the drives to sleep? 
+
+6) Obviously if this (5) is the only way or best way I am guessing the
+backup script would just need to assemble the array to start it (--scan
+--assemble --uuid=) which should wake up the drives and then mount the
+file system, then call the script that performs the unmount,stop,sleep?
+
+7) does sending a drive "to sleep" make sure that everything in the
+drive cache is sent to disk?
+
+8) I am using debian jessie, and the smartd checks for changes in smart
+values (temp is the one that is listed most, almost exclusively,
+in /var/log/syslog) will this cause my drives to wake up or is it clever
+enough to see the drive is sleeping so won't wake it?
+
+Finally, does anyone else do something similar or do most users either
+just leave the backup array running, which seems a bit of a waste both
+in power and drive lifespan terms especially if backups are fairly
+infrequent (this won't be daily, probably weekly or monthly at most, so
+not having to sleep/wake drives on a daily basis putting a different
+type of wear on them)?
+
+Jon
 
