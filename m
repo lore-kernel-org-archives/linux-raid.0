@@ -1,19 +1,20 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 RESEND] block: discard bdi_unregister() in favour of
-	bdi_destroy()
-Date: Tue, 19 May 2015 08:21:36 +0200
-Message-ID: <20150519062136.GA29468@lst.de>
-References: <20150519155837.456ad30e@notabene.brown>
+Subject: Re: [PATCH v3 10/11] md/raid10: make sync_request_write() call
+	bio_copy_data()
+Date: Tue, 19 May 2015 10:45:51 +0200
+Message-ID: <20150519084551.GB374@lst.de>
+References: <1430980461-5235-1-git-send-email-mlin@kernel.org> <1430980461-5235-11-git-send-email-mlin@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150519155837.456ad30e@notabene.brown>
-Sender: stable-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, device-mapper development <dm-devel@redhat.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Greg KH <gregkh@linuxfoundation.org>
+In-Reply-To: <1430980461-5235-11-git-send-email-mlin@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Christoph Hellwig <hch@infradead.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looks good,
+This seems fine even without the rest of the series.  Jens or Neil,
+can you pick this one up?
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
