@@ -1,148 +1,74 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: Re: [PATCH v2 RESEND] block: discard bdi_unregister() in favour of
- bdi_destroy()
-Date: Tue, 19 May 2015 18:40:17 +0900
-Message-ID: <20150519094017.GA546@swordfish>
-References: <20150519155837.456ad30e@notabene.brown>
+From: Brian Kroth <bpkroth@gmail.com>
+Subject: Re: 20 disks, fastest possible mostly-sequential read speeds
+Date: Tue, 19 May 2015 05:36:16 -0500
+Message-ID: <61C06E2F-5E09-420E-8D44-DE59EF770038@gmail.com>
+References: <CAKuK5J3CvbhVdyiEO8GrTje9xXq5u1eD96961vF9rA=fzAu6xg@mail.gmail.com> <555ABFEC.40606@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150519155837.456ad30e@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: NeilBrown <neilb@suse.de>, device-mapper development <dm-devel@redhat.com>, "Kernel.org-Linux-RAID" <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>, Greg KH <gregkh@linuxfoundation.org>
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <555ABFEC.40606@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Jon Nelson <jnelson@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On (05/19/15 15:58), NeilBrown wrote:
-> 
-> bdi_unregister() now contains very little functionality.
-> 
-> It contains a "WARN_ON" if bdi->dev is NULL.  This warning is of no
-> real consequence as bdi->dev isn't needed by anything else in the function,
-> and it triggers if
->    blk_cleanup_queue() -> bdi_destroy()
-> is called before bdi_unregister, which happens since
->   Commit: 6cd18e711dd8 ("block: destroy bdi before blockdev is unregistered.")
-> 
-> So this isn't wanted.
-> 
-> It also calls bdi_set_min_ratio().  This needs to be called after
-> writes through the bdi have all been flushed, and before the bdi is destroyed.
-> Calling it early is better than calling it late as it frees up a global
-> resource.
-> 
-> Calling it immediately after bdi_wb_shutdown() in bdi_destroy()
-> perfectly fits these requirements.
-> 
-> So bdi_unregister() can be discarded with the important content moved to
-> bdi_destroy(), as can the
->   writeback_bdi_unregister
-> event which is already not used.
-> 
 
-just to boost/support this patch: fixes del_gendisk() warning (loop, zram, etc.)
 
-[ 6298.249018] WARNING: CPU: 2 PID: 29935 at mm/backing-dev.c:372 bdi_unregister+0x2d/0x3f()
-[ 6298.249065] Call Trace:
-[ 6298.249070]  [<ffffffff814fe3ca>] dump_stack+0x4c/0x6e
-[ 6298.249073]  [<ffffffff810768e7>] ? up+0x39/0x3e
-[ 6298.249076]  [<ffffffff8103b792>] warn_slowpath_common+0x9b/0xb5
-[ 6298.249077]  [<ffffffff811080d8>] ? bdi_unregister+0x2d/0x3f
-[ 6298.249079]  [<ffffffff8103b84f>] warn_slowpath_null+0x1a/0x1c
-[ 6298.249081]  [<ffffffff811080d8>] bdi_unregister+0x2d/0x3f
-[ 6298.249084]  [<ffffffff8122c7ae>] del_gendisk+0xf7/0x1c2
+On May 18, 2015 11:45:32 PM CDT, Adam Goryachev <mailinglists@websitemanagers.com.au> wrote:
+>On 19/05/15 12:37, Jon Nelson wrote:
+>> I'm looking for some advise on tuning.
+>> I have a server with 20 disks behind an LSI 9271-something.
+>> They are currently exposed as 20 individual raid0 with a "strip" size
+>> of 1MB,
+>Ummm, you have 20 disks connected to some raid controller, which 
+>presents them as 20 raid0 arrays? Or are they raid0 arrays consisting
+>of 
+>only one disk? or JBOD? or something else?
+>
+>> and assembled into an mdraid, meta 1.2, layout 10 format f2,
+>> with a 1MB chunk size and formatted using ext4 -T largefile.
+>> To date, this has given me the best numbers when reading some 10,000
+>> files (total size: about 2.5TB) sequentially or in parallel.
+>
+>What other things did you try?
+>How did you measure this?
+>What answers did you get?
+>
+>> I can't seem to get better than about 1,800 MB/s read speeds though.
+>I
+>> *should* be able to get closer to 3,000 based on what the drives are
+>> capable of. 
 
-	-ss
+You also need to be aware of controller and bus limits as well as any 10 bit (eg:sas) vs. 8 bit units between the numbers you're seeing, not to mention other overheads in the software end of your storage stack.
 
-> Reported-by: Mike Snitzer <snitzer@redhat.com>
-> Cc: stable@vger.kernel.org (v4.0)
-> Fixes: c4db59d31e39 ("fs: don't reassign dirty inodes to default_backing_dev_info")
-> Fixes: 6cd18e711dd8 ("block: destroy bdi before blockdev is unregistered.")
-> Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> Tested-by: Nicholas Moulin <nicholas.w.moulin@linux.intel.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> ---
-> 
-> hi Jens,
->  It seems you might have missed this, possibly buried in a long thread.
-> It would be good you it could get to Linux and thence to -stable promptly.
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index e351fc521053..1d4435478e8a 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -657,7 +657,6 @@ void del_gendisk(struct gendisk *disk)
->  	disk->flags &= ~GENHD_FL_UP;
->  
->  	sysfs_remove_link(&disk_to_dev(disk)->kobj, "bdi");
-> -	bdi_unregister(&disk->queue->backing_dev_info);
->  	blk_unregister_queue(disk);
->  	blk_unregister_region(disk_devt(disk), disk->minors);
->  
-> diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-> index aff923ae8c4b..d87d8eced064 100644
-> --- a/include/linux/backing-dev.h
-> +++ b/include/linux/backing-dev.h
-> @@ -116,7 +116,6 @@ __printf(3, 4)
->  int bdi_register(struct backing_dev_info *bdi, struct device *parent,
->  		const char *fmt, ...);
->  int bdi_register_dev(struct backing_dev_info *bdi, dev_t dev);
-> -void bdi_unregister(struct backing_dev_info *bdi);
->  int __must_check bdi_setup_and_register(struct backing_dev_info *, char *);
->  void bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
->  			enum wb_reason reason);
-> diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-> index 880dd7437172..c178d13d6f4c 100644
-> --- a/include/trace/events/writeback.h
-> +++ b/include/trace/events/writeback.h
-> @@ -250,7 +250,6 @@ DEFINE_EVENT(writeback_class, name, \
->  DEFINE_WRITEBACK_EVENT(writeback_nowork);
->  DEFINE_WRITEBACK_EVENT(writeback_wake_background);
->  DEFINE_WRITEBACK_EVENT(writeback_bdi_register);
-> -DEFINE_WRITEBACK_EVENT(writeback_bdi_unregister);
->  
->  DECLARE_EVENT_CLASS(wbc_class,
->  	TP_PROTO(struct writeback_control *wbc, struct backing_dev_info *bdi),
-> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-> index 6dc4580df2af..000e7b3b9896 100644
-> --- a/mm/backing-dev.c
-> +++ b/mm/backing-dev.c
-> @@ -359,23 +359,6 @@ static void bdi_wb_shutdown(struct backing_dev_info *bdi)
->  	flush_delayed_work(&bdi->wb.dwork);
->  }
->  
-> -/*
-> - * Called when the device behind @bdi has been removed or ejected.
-> - *
-> - * We can't really do much here except for reducing the dirty ratio at
-> - * the moment.  In the future we should be able to set a flag so that
-> - * the filesystem can handle errors at mark_inode_dirty time instead
-> - * of only at writeback time.
-> - */
-> -void bdi_unregister(struct backing_dev_info *bdi)
-> -{
-> -	if (WARN_ON_ONCE(!bdi->dev))
-> -		return;
-> -
-> -	bdi_set_min_ratio(bdi, 0);
-> -}
-> -EXPORT_SYMBOL(bdi_unregister);
-> -
->  static void bdi_wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi)
->  {
->  	memset(wb, 0, sizeof(*wb));
-> @@ -443,6 +426,7 @@ void bdi_destroy(struct backing_dev_info *bdi)
->  	int i;
->  
->  	bdi_wb_shutdown(bdi);
-> +	bdi_set_min_ratio(bdi, 0);
->  
->  	WARN_ON(!list_empty(&bdi->work_list));
->  	WARN_ON(delayed_work_pending(&bdi->wb.dwork));
+>> Quite some time ago on this very hardware I saw a
+>> sustained 2,750 MB/s but I don't remember how I got there.
+>Are you looking for sequential or random access? You will get very 
+>different numbers for each of these.
+
+Also, read vs write, cache hit vs buffered write, etc.
+
+>> readahead values have been adjusted, I/O scheduler, etc... all played
+>> with with some benefit but nothing huge. What should I be looking at
+>> here if I want the best possible read performance?
+>>
+>> I don't want to give up some measure of redundancy.
+>
+>The clue here is to test and measure, and keep a record of the results.
+>
+>It can be really frustrating when you can't get the same good result
+>you 
+>had last week. IME, it is a matter of testing something different, and 
+>that is why the result is different.
+>
+>Regards,
+>Adam
+
+/me nods
+
+Cheers,
+Brian
+
+-- 
+Sent from my mobile device
