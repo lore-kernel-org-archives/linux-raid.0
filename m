@@ -1,102 +1,77 @@
-From: Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 7/7] md/raid5: fix handling of degraded stripes in
- batches.
-Date: Tue, 19 May 2015 22:56:24 -0700
-Message-ID: <20150520055624.GA41173@kernel.org>
-References: <20150508085345.19179.8866.stgit@notabene.brown>
- <20150508085612.19179.92120.stgit@notabene.brown>
- <20150508191223.GA116778@kernel.org>
- <20150513105604.55ac700a@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid5: fix broken async operation chain
+Date: Wed, 20 May 2015 16:14:38 +1000
+Message-ID: <20150520161438.7d982d16@notabene.brown>
+References: <abe8bcda859c8d2a11544a273c117c190fe736a4.1431464773.git.shli@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20150513105604.55ac700a-wvvUuzkyo1EYVZTmpyfIwg@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>
-Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/tLJ4ZvBxX/U_1dcP8SmvUDR"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <abe8bcda859c8d2a11544a273c117c190fe736a4.1431464773.git.shli@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org, maxime.ripard@free-electrons.com
 List-Id: linux-raid.ids
 
-On Wed, May 13, 2015 at 10:56:04AM +1000, NeilBrown wrote:
-> On Fri, 8 May 2015 12:12:23 -0700 Shaohua Li <shli-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> 
-> > On Fri, May 08, 2015 at 06:56:12PM +1000, NeilBrown wrote:
-> > > There is no need for special handling of stripe-batches when the array
-> > > is degraded.
-> > > 
-> > > There may be if there is a failure in the batch, but STRIPE_DEGRADED
-> > > does not imply an error.
-> > > 
-> > > So don't set STRIPE_BATCH_ERR in ops_run_io just because the array is
-> > > degraded.
-> > > This actually causes a bug: the STRIPE_DEGRADED flag gets cleared in
-> > > check_break_stripe_batch_list() and so the bitmap bit gets cleared
-> > > when it shouldn't.
-> > > 
-> > > So in check_break_stripe_batch_list(), split the batch up completely -
-> > > again STRIPE_DEGRADED isn't meaningful.
-> > > 
-> > > Also don't set STRIPE_BATCH_ERR when there is a write error to a
-> > > replacement device.  This simply removes the replacement device and
-> > > requires no extra handling.
-> > > 
-> > > Signed-off-by: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>
-> > > ---
-> > >  drivers/md/raid5.c |   17 +++--------------
-> > >  1 file changed, 3 insertions(+), 14 deletions(-)
-> > > 
-> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > index 3873eaa6fa2e..1ba97fdc6df1 100644
-> > > --- a/drivers/md/raid5.c
-> > > +++ b/drivers/md/raid5.c
-> > > @@ -1078,9 +1078,6 @@ again:
-> > >  			pr_debug("skip op %ld on disc %d for sector %llu\n",
-> > >  				bi->bi_rw, i, (unsigned long long)sh->sector);
-> > >  			clear_bit(R5_LOCKED, &sh->dev[i].flags);
-> > > -			if (sh->batch_head)
-> > > -				set_bit(STRIPE_BATCH_ERR,
-> > > -					&sh->batch_head->state);
-> > >  			set_bit(STRIPE_HANDLE, &sh->state);
-> > >  		}
-> > 
-> > Patches look good to me. I had a question here. Is it possible some stripes in
-> > a batch become degraded here but some not? Seems possible, then the batch
-> > should be splitted too.
-> 
-> Why?
-> 
-> I don't really understand the purpose of splitting up the batch.
-> The only possible error handling on a full-stripe write is:
->  - fail a device, or
->  - record a bad-block.
-> 
-> The first case affects all stripes in a batch equally so there is no need to
-> split it up.
-> The second case it is probably best to record the bad blocks while iterating
-> through the batch in handle_stripe_clean_event().
-> 
-> What exactly do you expect to happen after the stripes in a batch after they
-> have been split up?
+--Sig_/tLJ4ZvBxX/U_1dcP8SmvUDR
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-My original concern is a device failure can causes some stripes fail but some
-not, eg, get rdev returns NULL in ops_run_io for some stripes but not all of a
-batch. There is no any locking, so seems possible. But you are right, the
-stripes without error in ops_run_io will get an IO error eventually, the whole
-batch stripes are still in the same state. So my concern is invalid, but I
-forgot to reply the email, sorry.
+On Wed, 13 May 2015 09:30:08 -0700 Shaohua Li <shli@kernel.org> wrote:
 
-The batch split is to handle IO error, eg, record bad-block and so on. I'm not
-confident to change existing code to handle the error case, so I feel spliting
-it and handling the stripe in normal way is the best thing to do. There
-certainly might be better way. Again the device failure case should be ignored,
-which I didn't realize originally.
+> ops_run_reconstruct6() doesn't correctly chain asyn operations. The tx re=
+turned
+> by async_gen_syndrome should be added as the dependent tx of next stripe.
+>=20
+> The issue is introduced by commit 59fc630b8b5f9f21c8ce3ba153341c107dce1b0c
+>     RAID5: batch adjacent full stripe write
+>=20
+> Reported-and-tested-by: Maxime Ripard <maxime.ripard@free-electrons.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid5.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 1ba97fd..b9f2b9c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -1822,7 +1822,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct=
+ raid5_percpu *percpu,
+>  	} else
+>  		init_async_submit(&submit, 0, tx, NULL, NULL,
+>  				  to_addr_conv(sh, percpu, j));
+> -	async_gen_syndrome(blocks, 0, count+2, STRIPE_SIZE,  &submit);
+> +	tx =3D async_gen_syndrome(blocks, 0, count+2, STRIPE_SIZE,  &submit);
+>  	if (!last_stripe) {
+>  		j++;
+>  		sh =3D list_first_entry(&sh->batch_list, struct stripe_head,
 
-BTW, can you apply the fix reported by Maxime, which is introduced by the batch patch.
-http://marc.info/?l=linux-raid&m=143153461415534&w=2
 
-Thanks,
-Shaohua
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+applied, thanks.
+
+NeilBrown
+
+--Sig_/tLJ4ZvBxX/U_1dcP8SmvUDR
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVVwmTznsnt1WYoG5AQI+9xAAhD7E67Ak0N4i+Ux5CTXWGtEwcDrC/IMo
+7VBlyVaPH08FWvfcduh+QJBCs09ne9UnwTk7cFaZYyieu8ko1kIotgeuHt9jM34l
+41IWJpNIYVkApQl2lUzgt5NCxpoIAWaNVS3FauQNGIblFsdYlymL9E/E75+qnyAN
+KESDKwVzf08Sa5zrAc3XKB4UtotxQiFogA4YwoGWsptCNhsZtlPQV+kNv2vbgkse
+WuRXIFEZIYHj6Hq9IuD+JkJajLwOJ/Ju7Ro+0Glgvabt7Q+dnwzxRbq5iD+ZXUf5
+13mNstuv9n7NzMXsBPO/BUa2X2NJJ7JJkXmNVTl9yiqdljDBGeP1sd4oUAcP+5pk
+tdZzrAltp7ZxBVrbx/bf9uvsvE0QBrY4s+XnGzAAEkaKkGeFC7GV4zTxrj5b8BRE
+6u/aSFWciIP2JFi4nUT1SaHP0fIqVuRLbQA6vgNLnwXyHFcL0RJQzlHNKHh8ZZpj
+LW58y6rI5i2XXbzGff4GweCfXgbFty1jH7vVjIpOmGlWNojos/1INfdHQgd1qG7I
+D9hX780mwXJbRy1E4XzrfnMCjMw4R4gvINrkH4GjF+YjYxQ2nZuMYyKvu2dc9tzN
+Rq8NOf3zCv0UJrET+75930addZ0Ip86loTB7HV2OSHgeNSWm837yDoysW2Fp9gA3
+WIWtRIgOZzM=
+=beT3
+-----END PGP SIGNATURE-----
+
+--Sig_/tLJ4ZvBxX/U_1dcP8SmvUDR--
