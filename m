@@ -1,47 +1,58 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Filesystem corruption MD (imsm) Raid0 via 2 SSD's + discard
-Date: Wed, 20 May 2015 20:12:31 +0000 (UTC)
-Message-ID: <alpine.LRH.2.11.1505201918570.4751@praktifix.dwd.de>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Filesystem corruption MD (imsm) Raid0 via 2 SSD's + discard
+Date: Thu, 21 May 2015 01:32:13 +0500
+Message-ID: <20150521013213.536deed0@natsu>
+References: <alpine.LRH.2.11.1505201918570.4751@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/+Bobs340mqqo07L=T7fyIyu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.LRH.2.11.1505201918570.4751@praktifix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+--Sig_/+Bobs340mqqo07L=T7fyIyu
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I had a terrible weekend recovering my home system. Always when files
-where deleted some data got corrupted. At first I did not notice it,
-but when I rebooted the system would not come up again, systemd crashed
-with SIGSEGV and that was it. Booting from an USB stick I saw that
-some glibc lib had a different size from that in the original RPM. So
-all I did reinstalled that lib from USB stick and everything was fine
-after rebooting from Raid 0. But I then wanted to make sure that
-no other files where corrupted so I checked and found more. So again I
-reinstalled those RPM's and rebooted. To my big surprise the system was
-again broken and failed to boot. I again tried to recover my system
-from USB stick, but this time did not manage to recover the system. So
-decided to reinstall the system completely from DVD. Everything looked good
-until that moment when I had activated the discard option in /etc/fstab.
-After doing some more work (adding and removing things) I rebooted and
-again the system failed to boot. Booting from the USB stick I saw that
-the /etc/fstab was all filled with NULL's. This gave me the clue that
-there must be some problem with discard (trim). My system is using
-a software raid 0 IMSM (intel 'fake' raid) on two Samsung SSD 840 pro.
+On Wed, 20 May 2015 20:12:31 +0000 (UTC)
+Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
 
-A window system on the same disks (that is why I am using IMSM raid)
-was not effected by this problem. I have checked the ram with memtest86
-and everything is ok. The kernel I was running when I discovered the
-problem was 4.0.2 from kernel.org. However, after reinstalling from DVD
-I updated to Fedora's lattest kernel, which was 3.19.? (I do not remember
-the last numbers). So that kernel seems also effected, but I assume it
-contains many 'fixes' from 4.0.x. As filesystem I use ext4, distribution
-is Fedora 21 and hardware is: Xeon E3-1275, 16GB ECC Ram.
+> The kernel I was running when I discovered the
+> problem was 4.0.2 from kernel.org. However, after reinstalling from DVD
+> I updated to Fedora's lattest kernel, which was 3.19.? (I do not remember
+> the last numbers). So that kernel seems also effected, but I assume it
+> contains many 'fixes' from 4.0.x. As filesystem I use ext4, distribution
+> is Fedora 21 and hardware is: Xeon E3-1275, 16GB ECC Ram.
+>=20
+> My system seems to be now running stable for some days with kernel.org
+> kernel 4.0.3 and with discard DISABLED. But I am still unsure what could
+> be the real cause.
 
-My system seems to be now running stable for some days with kernel.org
-kernel 4.0.3 and with discard DISABLED. But I am still unsure what could
-be the real cause.
+It is a bug in the 4.0.2 kernel, fixed in 4.0.3.
 
-Regards,
-Holger
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D785672
+https://bbs.archlinux.org/viewtopic.php?id=3D197400
+https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stabl=
+e/+/d2dc317d564a46dfc683978a2e5a4f91434e9711
+
+
+--=20
+With respect,
+Roman
+
+--Sig_/+Bobs340mqqo07L=T7fyIyu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlVc700ACgkQTLKSvz+PZwjEWQCdF2ly+iY8tEPIrdZpj1suSEEC
+OJYAn1xtxPWBqxYdM8/iqNMMtD4CQPL6
+=Fjcw
+-----END PGP SIGNATURE-----
+
+--Sig_/+Bobs340mqqo07L=T7fyIyu--
