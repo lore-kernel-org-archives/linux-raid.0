@@ -1,43 +1,47 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: Re: Replacing a failed disk "in advance"
-Date: Wed, 20 May 2015 17:15:58 +0200
-Message-ID: <20150520151558.GV24672@fi.muni.cz>
-References: <20150520142049.GT24672@fi.muni.cz>
- <20150520144001.GA2826@dev>
- <20150520145126.GU24672@fi.muni.cz>
- <CADvHm=aB2MDFxdR5Q3JBL5_WbD7oc2d99kFe4Jjbun1Lw667MQ@mail.gmail.com>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Filesystem corruption MD (imsm) Raid0 via 2 SSD's + discard
+Date: Wed, 20 May 2015 20:12:31 +0000 (UTC)
+Message-ID: <alpine.LRH.2.11.1505201918570.4751@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CADvHm=aB2MDFxdR5Q3JBL5_WbD7oc2d99kFe4Jjbun1Lw667MQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Caspar Smit <casparsmit@supernas.eu>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Caspar Smit wrote:
-: Op 20 mei 2015 16:51 schreef "Jan Kasprzak" <kas@fi.muni.cz>:
-: >
-: >         OK, this seems to be a way to go.
-: >
-: >         Unfortunately, the system in question is too old,
-: > and its mdadm does not know about the --replace option, according to
-: > mdadm --manage --help. So I will look for a newer mdadm and hope the old
-: > kernel of that system supports the mdadm --replace.
-: >
-: 
-: You'll need kernel version 3.3+ to support advance replacement.
+Hello,
 
-	OK, I have grabbed the Fedora 22 mdadm package, rebuilt it,
-and apparently mdadm --manage /dev/mdXX --replace /dev/sdOLD1 --with /dev/sdNEW1
-works as expected. Thanks!
+I had a terrible weekend recovering my home system. Always when files
+where deleted some data got corrupted. At first I did not notice it,
+but when I rebooted the system would not come up again, systemd crashed
+with SIGSEGV and that was it. Booting from an USB stick I saw that
+some glibc lib had a different size from that in the original RPM. So
+all I did reinstalled that lib from USB stick and everything was fine
+after rebooting from Raid 0. But I then wanted to make sure that
+no other files where corrupted so I checked and found more. So again I
+reinstalled those RPM's and rebooted. To my big surprise the system was
+again broken and failed to boot. I again tried to recover my system
+from USB stick, but this time did not manage to recover the system. So
+decided to reinstall the system completely from DVD. Everything looked good
+until that moment when I had activated the discard option in /etc/fstab.
+After doing some more work (adding and removing things) I rebooted and
+again the system failed to boot. Booting from the USB stick I saw that
+the /etc/fstab was all filled with NULL's. This gave me the clue that
+there must be some problem with discard (trim). My system is using
+a software raid 0 IMSM (intel 'fake' raid) on two Samsung SSD 840 pro.
 
--Yenya.
+A window system on the same disks (that is why I am using IMSM raid)
+was not effected by this problem. I have checked the ram with memtest86
+and everything is ok. The kernel I was running when I discovered the
+problem was 4.0.2 from kernel.org. However, after reinstalling from DVD
+I updated to Fedora's lattest kernel, which was 3.19.? (I do not remember
+the last numbers). So that kernel seems also effected, but I assume it
+contains many 'fixes' from 4.0.x. As filesystem I use ext4, distribution
+is Fedora 21 and hardware is: Xeon E3-1275, 16GB ECC Ram.
 
--- 
-| Jan "Yenya" Kasprzak   <kas at {fi.muni.cz - work | yenya.net - private}> |
-| New GPG 4096R/A45477D5 -- see http://www.fi.muni.cz/~kas/pgp-rollover.txt |
-| http://www.fi.muni.cz/~kas/     Journal: http://www.fi.muni.cz/~kas/blog/ |
-           Smart data structures and dumb code works a lot better
-           than the other way around.           --Eric S. Raymond
+My system seems to be now running stable for some days with kernel.org
+kernel 4.0.3 and with discard DISABLED. But I am still unsure what could
+be the real cause.
+
+Regards,
+Holger
