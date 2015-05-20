@@ -1,66 +1,58 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Fwd: [PATCH] add sysfs reshape_progress for raid5
-Date: Tue, 19 May 2015 22:35:50 -0400 (EDT)
-Message-ID: <744536312.1396489.1432089350377.JavaMail.zimbra@redhat.com>
-References: <1431673707-10895-1-git-send-email-xni@redhat.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH v3 10/11] md/raid10: make sync_request_write() call
+ bio_copy_data()
+Date: Wed, 20 May 2015 13:09:24 +1000
+Message-ID: <20150520130924.14b7dc48@notabene.brown>
+References: <1430980461-5235-1-git-send-email-mlin@kernel.org>
+	<1430980461-5235-11-git-send-email-mlin@kernel.org>
+	<20150519084551.GB374@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1431673707-10895-1-git-send-email-xni@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/Bn7PlL0L14jacyruA2kJKYx"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150519084551.GB374@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lin <mlin@kernel.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Kent Overstreet <kent.overstreet@gmail.com>, Dongsu Park <dpark@posteo.net>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
+--Sig_/Bn7PlL0L14jacyruA2kJKYx
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-   Send the patch again. Because I don't see them at http://www.spinics.net/lists/raid/
+On Tue, 19 May 2015 10:45:51 +0200 Christoph Hellwig <hch@lst.de> wrote:
 
------ Forwarded Message -----
-From: "Xiao Ni" <xni@redhat.com>
-To: linux-raid@vger.kernel.org
-Cc: "Xiao Ni" <xni@redhat.com>
-Sent: Friday, May 15, 2015 3:08:27 PM
-Subject: [PATCH] add sysfs reshape_progress for raid5
+> This seems fine even without the rest of the series.  Jens or Neil,
+> can you pick this one up?
+>=20
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Seems reasonable.  I've queued it.  Should appear in -next in a few days.
+
+Thanks,
+NeilBrown
 
 
-Signed-off-by: Xiao Ni <xni@redhat.com>
----
- drivers/md/raid5.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+--Sig_/Bn7PlL0L14jacyruA2kJKYx
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 77dfd72..0799793 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5893,6 +5893,19 @@ raid5_store_stripe_cache_size(struct mddev *mddev, const char *page, size_t len)
- 	return err ?: len;
- }
- 
-+static ssize_t
-+reshape_progress_show(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	if (conf->reshape_progress == MaxSector)
-+		return sprintf(page, "max\n");
-+	else
-+		return sprintf(page, "%llu\n",
-+					(unsigned long long)conf->reshape_progress);
-+}
-+
-+static struct md_sysfs_entry raid5_reshape_progress = __ATTR_RO(reshape_progress);
-+
- static struct md_sysfs_entry
- raid5_stripecache_size = __ATTR(stripe_cache_size, S_IRUGO | S_IWUSR,
- 				raid5_show_stripe_cache_size,
-@@ -6122,6 +6135,7 @@ raid5_group_thread_cnt = __ATTR(group_thread_cnt, S_IRUGO | S_IWUSR,
- 				raid5_store_group_thread_cnt);
- 
- static struct attribute *raid5_attrs[] =  {
-+	&raid5_reshape_progress.attr,
- 	&raid5_stripecache_size.attr,
- 	&raid5_stripecache_active.attr,
- 	&raid5_preread_bypass_threshold.attr,
--- 
-1.7.1
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iQIVAwUBVVv65Tnsnt1WYoG5AQKEhxAAm0tJKcMly8a4chKUAT4DGO4BQRu4Bg3x
+PBnln/e/Tt4j+ZP72aAEO3wubTLbqPstMz1HfsE3qHcp/NsLIhE0I/jWhbHd1sJ9
+DmgJ81utoRDHPJ2AoDuGSm94zwMx4CxnEYaRLMVGni5JDIBf/9HobZt8X5A8NqGk
+TvrP+LRSBeyuq/umZYm/iEtlYN6Pc8DAAf3SUgswwgF+Q/mzQmhnLleEw3TxmKgT
+TjTZo5csFLNapNVhUpgX5Qw/+AvN24YedCs7N6fROps5n8OhTCiQaEvohxE/pdXh
+liNU6rtWGrYdFeHG2tSAdKeV59qDIVNDNNmP2OxZrylLp4kBMVb45hQZxCpBOyI2
+qtleTNmu9aHXy4IylasP2C/oeUlBPRfvXXXxF/RTou/2AMAD7v5NbX5xXptbc+YZ
+RJZwQZuOsJclWiJXEokUSGXpMJty6lhgd5ruV23fV+C+bBO4SH9w6mg/pzdJ6GH6
+NM5oZiDtmwhzj9726Yox4hE5z051BRZH1ZWsM/BsH32QwT/WctH64QEFjQ+yW0Z8
+AutWWs8uY+HFNmdpSSDAKm/msH2t/UvhIdQIEgNqYEtxZCsbV6HARB/GSKWvkMh6
+eQGkix3mnMI0S8ODIfHlET1K2yocmmdwKyQp6daQEM6V/Ecy5lAD539Qt9X8gEk7
+Thd1p7PXlTg=
+=/1FT
+-----END PGP SIGNATURE-----
+
+--Sig_/Bn7PlL0L14jacyruA2kJKYx--
