@@ -1,84 +1,114 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V3 00/11] mdadm tool: add the support for cluster-md
-Date: Wed, 20 May 2015 11:20:32 +0800
-Message-ID: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V3 04/11] Show all bitmaps while examining bitmap
+Date: Wed, 20 May 2015 11:20:36 +0800
+Message-ID: <1432092043-24220-5-git-send-email-gqjiang@suse.com>
+References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
-V3 changes:
-1. re-orgnize some codes to ensure mdadm compiles after each patch is applied
-2. change the code for super1.c for first patch since it has side effect for
-non-cluster condition
+This adds capability of exmining bitmaps corresponding to all
+nodes/slots on the device.
 
-V2 changes:
-1. re-arrange the squence of patches
-2. add some memembers into sb_le_to_cpu
-3. handle some logic change and comments from Neil
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ bitmap.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 54 insertions(+), 18 deletions(-)
 
-Basic background for Cluster MD: Cluster MD is a shared-device RAID for a
-cluster, currently, the implementation is limited to RAID1 but with further
-work (and some positive feedback), it could be extend to other RAID levels.
-
-The kernel part code of cluster-md has been sent to maillist several month
-ago by Goldywyn, and to make cluster-md works, the mdadm tools also need to
-do some changes accordingly.
-
-This patch set extends mdadm tool to aware cluster MD scenario, and handle
-related cluster-md scenario.
-
-1. the first part (0001-0007) comes from Goldwyn, which add initial
-support for cluster-md, those changes included make mdadm awares nodes,
-home-cluster and n bitmaps for clustered mode, also let mdadm can 
-confirm disk which is added by another node.
-
-
-2. the second part is for support change cluster-name and node nums under
-assemble mode. Which extend write-bitmap to handle above cases, and also
-use the extended write_bitmap for update uuid. [PATCH V2 10/10] is just compiled
-test only.
-
-BTW: this series is based on commit "72a457 IMSM: Count arrays per orom".
-
-Some reltated links:
-[1] http://marc.info/?l=linux-raid&m=141891941330336&w=2
-[2] http://marc.info/?l=linux-raid&m=141935561418770&w=2
-
-Guoqing Jiang (11):
-  Create n bitmaps for clustered mode
-  Add nodes option while creating md
-  home-cluster while creating an array
-  Show all bitmaps while examining bitmap
-  Add a new clustered disk
-  Convert a bitmap=none device to clustered
-  Skip clustered devices in incremental
-  mdadm: add the ability to change cluster name
-  mdadm: change the num of cluster node
-  Reuse calc_bitmap_size to reduce code size
-  Reuse the write_bitmap for update uuid
-
- Assemble.c    |  14 ++++--
- Create.c      |   5 +-
- Grow.c        |  22 +++++++--
- Incremental.c |   5 ++
- Makefile      |   1 +
- Manage.c      |  33 +++++++++++--
- ReadMe.c      |   3 ++
- bitmap.c      |  94 ++++++++++++++++++++++---------------
- bitmap.h      |   7 ++-
- config.c      |  27 ++++++++++-
- md_p.h        |   7 +++
- md_u.h        |   1 +
- mdadm.8.in    |  28 +++++++++++-
- mdadm.c       |  69 +++++++++++++++++++++++++++-
- mdadm.h       |  20 +++++++-
- super0.c      |   4 +-
- super1.c      | 145 +++++++++++++++++++++++++++++++++++++++++++++++-----------
- util.c        |  60 ++++++++++++++++++++++++
- 18 files changed, 458 insertions(+), 87 deletions(-)
-
+diff --git a/bitmap.c b/bitmap.c
+index 920033a..bccc67c 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -260,7 +260,7 @@ int ExamineBitmap(char *filename, int brief, struct supertype *st)
+ 	int rv = 1;
+ 	char buf[64];
+ 	int swap;
+-	int fd;
++	int fd, i;
+ 	__u32 uuid32[4];
+ 
+ 	fd = bitmap_file_open(filename, &st);
+@@ -317,23 +317,59 @@ int ExamineBitmap(char *filename, int brief, struct supertype *st)
+ 		       uuid32[2],
+ 		       uuid32[3]);
+ 
+-	printf("          Events : %llu\n", (unsigned long long)sb->events);
+-	printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
+-	printf("           State : %s\n", bitmap_state(sb->state));
+-	printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
+-	printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
+-	if (sb->write_behind)
+-		sprintf(buf, "Allow write behind, max %d", sb->write_behind);
+-	else
+-		sprintf(buf, "Normal");
+-	printf("      Write Mode : %s\n", buf);
+-	printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
+-					human_size(sb->sync_size * 512));
+-	if (brief)
+-		goto free_info;
+-	printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
+-			info->total_bits, info->dirty_bits,
+-			100.0 * info->dirty_bits / (info->total_bits?:1));
++	if (sb->nodes == 0) {
++		printf("          Events : %llu\n", (unsigned long long)sb->events);
++		printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
++		printf("           State : %s\n", bitmap_state(sb->state));
++		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
++		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
++		if (sb->write_behind)
++			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
++		else
++			sprintf(buf, "Normal");
++		printf("      Write Mode : %s\n", buf);
++		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
++						human_size(sb->sync_size * 512));
++		if (brief)
++			goto free_info;
++		printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
++				info->total_bits, info->dirty_bits,
++				100.0 * info->dirty_bits / (info->total_bits?:1));
++	} else {
++		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
++		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
++		if (sb->write_behind)
++			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
++		else
++			sprintf(buf, "Normal");
++		printf("      Write Mode : %s\n", buf);
++		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size/2,
++						human_size(sb->sync_size * 512));
++		printf("   Cluster nodes : %d\n", sb->nodes);
++		printf("    Cluster name : %s\n", sb->cluster_name);
++		i = 0;
++		do {
++			if (i) {
++				free(info);
++				info = bitmap_fd_read(fd, brief);
++				sb = &info->sb;
++			}
++			if (sb->magic != BITMAP_MAGIC)
++				pr_err("invalid bitmap magic 0x%x, the bitmap file appears to be corrupted\n", sb->magic);
++
++			printf("       Node Slot : %d\n", i);
++			printf("          Events : %llu\n", (unsigned long long)sb->events);
++			printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cleared);
++			printf("           State : %s\n", bitmap_state(sb->state));
++			if (brief)
++				continue;
++			printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
++					info->total_bits, info->dirty_bits,
++					100.0 * info->dirty_bits / (info->total_bits?:1));
++
++		} while (++i < (int)sb->nodes);
++	}
++
+ free_info:
+ 	free(info);
+ 	return rv;
 -- 
 1.7.12.4
 
