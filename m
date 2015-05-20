@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V3 07/11] Skip clustered devices in incremental
-Date: Wed, 20 May 2015 11:20:39 +0800
-Message-ID: <1432092043-24220-8-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V3 11/11] Reuse the write_bitmap for update uuid
+Date: Wed, 20 May 2015 11:20:43 +0800
+Message-ID: <1432092043-24220-12-git-send-email-gqjiang@suse.com>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
@@ -10,47 +10,99 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
-We want the clustered devices to be started exclusively by a cluster
-resource-agent. So, avoid starting using the incremental option.
+Since write_bitmap is extended for handle different sistuations,
+then it also could possible to support change the uuid of bitmap,
+and remove bitmap_update_uuid accordingly.
 
-This also skips a clustered md from starting during boot in inactive mode.
+Q: is the write_bitmap0 also impacted?
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Incremental.c | 5 +++++
- super1.c      | 2 ++
- 2 files changed, 7 insertions(+)
+ Assemble.c |  5 ++---
+ bitmap.c   | 20 --------------------
+ mdadm.h    |  2 +-
+ super1.c   |  4 ++++
+ 4 files changed, 7 insertions(+), 24 deletions(-)
 
-diff --git a/Incremental.c b/Incremental.c
-index 0c9a9a4..5450a5c 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -232,6 +232,11 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
- 				devname);
- 		goto out;
- 	}
-+	/* Skip the clustered ones. This should be started by
-+	 * clustering resource agents
-+	 */
-+	if (info.array.state & (1 << MD_SB_CLUSTERED))
-+		goto out;
+diff --git a/Assemble.c b/Assemble.c
+index 9ff546b..fabca5c 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -664,9 +664,8 @@ static int load_devices(struct devs *devices, char *devmap,
  
- 	/* 3a/ if not, check for homehost match.  If no match, continue
- 	 * but don't trust the 'name' in the array. Thus a 'random' minor
+ 			if (strcmp(c->update, "uuid")==0 &&
+ 			    ident->bitmap_fd >= 0 && !bitmap_done) {
+-				if (bitmap_update_uuid(ident->bitmap_fd,
+-						       content->uuid,
+-						       tst->ss->swapuuid) != 0)
++				copy_uuid(tst->devs->uuid, content->uuid, tst->ss->swapuuid);
++				if (tst->ss->write_bitmap(tst, dfd, UUIDUpdate))
+ 					pr_err("Could not update uuid on external bitmap.\n");
+ 				else
+ 					bitmap_done = 1;
+diff --git a/bitmap.c b/bitmap.c
+index bccc67c..7df296e 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -462,23 +462,3 @@ out:
+ 		unlink(filename); /* possibly corrupted, better get rid of it */
+ 	return rv;
+ }
+-
+-int bitmap_update_uuid(int fd, int *uuid, int swap)
+-{
+-	struct bitmap_super_s bm;
+-	if (lseek(fd, 0, 0) != 0)
+-		return 1;
+-	if (read(fd, &bm, sizeof(bm)) != sizeof(bm))
+-		return 1;
+-	if (bm.magic != __cpu_to_le32(BITMAP_MAGIC))
+-		return 1;
+-	copy_uuid(bm.uuid, uuid, swap);
+-	if (lseek(fd, 0, 0) != 0)
+-		return 2;
+-	if (write(fd, &bm, sizeof(bm)) != sizeof(bm)) {
+-		lseek(fd, 0, 0);
+-		return 2;
+-	}
+-	lseek(fd, 0, 0);
+-	return 0;
+-}
+diff --git a/mdadm.h b/mdadm.h
+index 97892e6..7b9bb28 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -358,6 +358,7 @@ enum bitmap_update {
+     NoUpdate,
+     NameUpdate,
+     NodeNumUpdate,
++    UUIDUpdate,
+ };
+ 
+ /* structures read from config file */
+@@ -1273,7 +1274,6 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
+ extern int Write_rules(char *rule_name);
+-extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ extern unsigned long bitmap_sectors(struct bitmap_super_s *bsb);
+ extern int Dump_metadata(char *dev, char *dir, struct context *c,
+ 			 struct supertype *st);
 diff --git a/super1.c b/super1.c
-index 60f470b..fd728d2 100644
+index b36b702..75e1081 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -891,6 +891,8 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
- 	info->array.state =
- 		(__le64_to_cpu(sb->resync_offset) == MaxSector)
- 		? 1 : 0;
-+	if (__le32_to_cpu(bsb->nodes) > 1)
-+		info->array.state |= (1 << MD_SB_CLUSTERED);
+@@ -2250,6 +2250,10 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
  
- 	info->data_offset = __le64_to_cpu(sb->data_offset);
- 	info->component_size = __le64_to_cpu(sb->size);
+ 	    bms->nodes = __cpu_to_le32(st->nodes);
+ 	    break;
++	case UUIDUpdate:
++	    memset((char *)bms->uuid, 0, sizeof(bms->uuid));
++	    strncpy((char *)bms->uuid, (char *)st->devs->uuid, sizeof(bms->uuid));
++	    break;
+ 	case NoUpdate:
+ 	default:
+ 	    break;
 -- 
 1.7.12.4
 
