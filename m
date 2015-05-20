@@ -1,99 +1,133 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Data corruption after resizing partition, when using bitmaps
-Date: Wed, 20 May 2015 15:31:04 +1000
-Message-ID: <20150520153104.7ac99de1@notabene.brown>
-References: <20150519141239.GA5309@psychosis.jim.sh>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: Recent drive errors
+Date: Tue, 19 May 2015 23:38:16 -0600
+Message-ID: <358052151.1yasTJDDbz@balsa>
+References: <3296560.sGbn0HyrQY@balsa> <555B4E0F.9020306@turmel.org> <34123545.0U2U7Wo4pc@balsa>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/RJ9K6VRRdb.uCOwAXIryxV3"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150519141239.GA5309@psychosis.jim.sh>
+In-Reply-To: <34123545.0U2U7Wo4pc@balsa>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/RJ9K6VRRdb.uCOwAXIryxV3
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue 19 May 2015 10:07:49 AM Thomas Fjellstrom wrote:
+> On Tue 19 May 2015 10:51:59 AM you wrote:
+> > On 05/19/2015 10:32 AM, Thomas Fjellstrom wrote:
+> > > On Tue 19 May 2015 09:23:20 AM Phil Turmel wrote:
+> > >> Depends.  In a properly functioning array that gets scrubbed
+> > >> occasionally, or sufficiently heavy use to read the entire contents
+> > >> occasionally, the UREs get rewritten by MD right away.  Any UREs then
+> > >> only show up once.
+> > > 
+> > > I have made sure that it's doing regular scrubs, and regular SMART
+> > > scans.
+> > > This time...
+> > 
+> > Yes, and this drive was kicked out.  Because it wouldn't be listening
+> > when MD tried to write over the error it found.
+> 
+[snip]
+> 
+> > I posted this link earlier, but it is particularly relevant:
+> > http://marc.info/?l=linux-raid&m=133665797115876&w=2
+> > 
+> > >> Interesting.  I suspect that if you wipe that disk with noise, read it
+> > >> all back, and wipe it again, you'll have a handful of relocations.
+> > > 
+> > > It looks like each one of the blocks in that display is 128KiB. Which i
+> > > think means those red blocks aren't very far apart. Maybe 80MiB apart?
+> > > Would it reallocate all of those? That'd be a lot of reallocated
+> > > sectors.
+> > 
+> > Drives will only reallocate where a previous read failed (making it
+> > pending), then write and follow-up verification fails.  In general,
+> > writes are unverified at the time of write (or your write performance
+> > would be dramatically slower than read).
+> 
+> Right. I was just thinking about how you mentioned that I'd get a handful of
+> reallocations based on the latency shown in the image I posted. It's a lot
+> of sectors that seem to be affected by the latency spikes, so I assumed
+> (probably wrongly) that many of them may be reallocated afterwards.
+> 
+> If this drive ends up not reallocating a single sector, or only a few, I may
+> just keep it around as a hot spare, though i feel that's not the best idea,
+> if it is degrading, then when it actually goes to use that disk it has a
+> higher chance of failing.
 
-On Tue, 19 May 2015 10:12:40 -0400 Jim Paris <jim@jtan.com> wrote:
+Well here's something:
 
-> I had a raid1 mirror consisting of big partitions on two disks.
-> The first disk was 2TB, partitioned like this:
->=20
->   [--sda1(128M)--][-------sda2(~2T)--------------]
->=20
-> The second disk was 3TB, partitioned like this:
->=20
->   [--sdb1(128M)--][-------sdb2(~3T)------------------------------------]
->=20
-> sda2 and sdb2 were part of the array, which was only ~2TB in size due
-> to the smaller disk.
->=20
-> I realized that I needed to add a BIOS boot partition to the 3TB disk,
-> so I removed sdb2 from the array, and repartitioned sdb like this:
->=20
->   [--sdb1(128M)--][--sdb2(1M)--][-------sdb3(~3T)----------------------]
->=20
-> Then I added sdb3 to the array.  And lost all my data. :(
->=20
-> What happened was that the last sector of the big partition did not
-> change location.  So the metadata (0.90) at the end was still present.
+[78447.747221] sd 0:0:15:0: [sdf] FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[78447.749092] sd 0:0:15:0: [sdf] Sense Key : Medium Error [current] 
+[78447.751034] sd 0:0:15:0: [sdf] Add. Sense: Unrecovered read error
+[78447.752925] sd 0:0:15:0: [sdf] CDB: Read(16) 88 00 00 00 00 00 ef 7a 0f b0 00 00 00 08 00 00
+[78447.754746] blk_update_request: critical medium error, dev sdf, sector 4017754032
+[78447.756700] Buffer I/O error on dev sdf, logical block 502219254, async page read
+<many many more of the above>
 
-This is one of the big reasons why 1.x was invented.
+  5 Reallocated_Sector_Ct   PO--CK   087   087   036    -    17232
+187 Reported_Uncorrect      -O--CK   001   001   000    -    8236
+197 Current_Pending_Sector  -O--C-   024   024   000    -    12584
+198 Offline_Uncorrectable   ----C-   024   024   000    -    12584
 
-> Adding sdb3 to the array was considered a "re-add" because the UUID
-> and array sizes still matched the array, even though the partition
-> itself shrank.  And the resync was thus guided by an out-of-date
-> bitmap, which caused very little data to actually be written to sdb3,
-> so half the reads from the array started returning junk.  Once the
-> filesystem got involved, the result was rapid corruption.
->=20
-> If I had not been using write-intent bitmaps, everything would have
-> worked fine.  I only recently started using bitmaps, and never had any
-> problems with adjusting partitions like this before that.
->=20
-> Perhaps mdadm can be more careful here -- for example, maybe checking
-> the actual device size and not just the "used dev size" when
-> determining whether to trust the bitmap.
+Badblocks is showing a bunch of errors now, and the above is what's in dmesg and smartctl.
 
-It is perfectly acceptable to have the various devices in an array of
-different sizes.  Unfortunately I don't think there is anything that mdadm
-can usefully do here.
+So I guess it was dead after all.
 
-Thanks for the report anyway,
-NeilBrown
+> > >> You have it backwards.  If you have WD Reds, they are correct out of
+> > >> the
+> > >> box.  It's when you *don't* have ERC support, or you only have desktop
+> > >> ERC, that you need to take special action.
+> > > 
+> > > I was under the impression you still had to enable ERC on boot. And I
+> > > /thought/ I read that you still want to adjust the timeouts, though not
+> > > the
+> > > same as for consumer drives.
+> > 
+> > Desktop / consumer drives that support ERC typically ship with it
+> > disabled, so they behave just like drives that don't support it at all.
+> > 
+> >  So a boot script would enable ERC on drives where it can (and not
+> > 
+> > already OK), and set long driver timeouts on the rest.
+> > 
+> > Any drive that claims "raid" compatibility will have ERC enabled by
+> > default.  Typically 7.0 seconds.  WD Reds do.  Enterprise drives do, and
+> > have better URE specs, too.
+> 
+> Good to know.
+> 
+> > >> If you have consumer grade drives in a raid array, and you don't have
+> > >> boot scripts or udev rules to deal with timeout mismatch, your *ss is
+> > >> hanging in the wind.  The links in my last msg should help you out.
+> > > 
+> > > There was some talk of ERC/TLER and md. I'll still have to find or write
+> > > a
+> > > script to properly set up timeouts and enable TLER on drives capable of
+> > > it
+> > > (that don't come with it enabled by default).
+> > 
+> > Before I got everything onto proper drives, I just put what I needed
+> > into rc.local.
+> 
+[snip]
+> 
+> > Chris Murphy posted some udev rules that will likely work for you.  I
+> > haven't tried them myself, though.
+> > 
+> > https://www.marc.info/?l=linux-raid&m=142487508806844&w=3
+> 
+> Thanks :)
+> 
+> > Phil
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
->=20
-> I wrote a script (attached) to recreate what happened, using some loop
-> devices.  It works fine if BITMAP=3Dnone, and fails with BITMAP=3Dinterna=
-l.
->=20
-> Jim
-
-
---Sig_/RJ9K6VRRdb.uCOwAXIryxV3
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVVwcGTnsnt1WYoG5AQKfCw//f8un5mFRa9OFwDCL80yI+quQKlQI55pE
-bv0CZK5+M9aHVrL8SklRc1zpWE5i7O66u9aMYfjZrCYpUJJ/11n85Uxrc9/dmQpq
-b0LU0UzS7uzXuR+vGzCpcR84vTklUIP+mxgCuqORQXliCbNQKhpTZTIxJWErY5Pc
-JML/Pq7/wDaRO5R1ILENrfN2U8maMu58AbhQjZcs72RO5PBUG4YOMwsAyDKk7F86
-qcEfggsvAkyeKOCYirw8+vzjSQ0diWU4hnCrxxomrq0S942ccFeS2j10RR4VDke1
-36l6NBrPgi5AB1TyegV6Wf18ortlYpvmzp/2NGnV097TGtOn4YAUUTAxpFeM6dh6
-r4pV0S/SzDczjda6ymJkAqgzr8RPD+nS9arVermsZCEonYHdgFVyiFFNsP2e+WU/
-a6DbdryfELfMxzGuyOMRukBKx8TrXYAzxwr0GSDBZOsX8gxRkOCdWq6bRw3x2oCt
-ZI3sMz7GSthbZxBLIjGsGMVxBaxUwJHtE2DS0UcjZkq75eDLFR+P49Gmm7ZUIcQx
-/OnWTRCiEwXSHK9L5quhkk8gGGKg2VjME5+a+4k6aefgY3daiaF0X4Xke6CIt4Za
-5TOuxSyIH8lki2GeFP8oL3SSXLyFuNzJYV3NMbVAr1sR823g0FsuIRiS78HIKQl/
-aCXeub6tfiE=
-=mc4J
------END PGP SIGNATURE-----
-
---Sig_/RJ9K6VRRdb.uCOwAXIryxV3--
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
