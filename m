@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V3 05/11] Add a new clustered disk
-Date: Wed, 20 May 2015 11:20:37 +0800
-Message-ID: <1432092043-24220-6-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V3 02/11] Add nodes option while creating md
+Date: Wed, 20 May 2015 11:20:34 +0800
+Message-ID: <1432092043-24220-3-git-send-email-gqjiang@suse.com>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
@@ -10,270 +10,161 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
-A clustered disk is added by the traditional --add sequence.
-However, other nodes need to acknowledge that they can "see"
-the device. This is done by --cluster-confirm:
-
---cluster-confirm SLOTNUM:/dev/whatever (if disk is found)
-or
---cluster-confirm SLOTNUM:missing (if disk is not found)
-
-The node initiating the --add, has the disk state tagged with
-MD_DISK_CLUSTER_ADD and the one confirming tag the disk with
-MD_DISK_CANDIDATE.
+Specifies the maximum number of nodes in the cluster that may use
+this device simultaneously. This is equivalent to the number of
+bitmaps created in the internal superblock (patches to follow).
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Manage.c   | 33 +++++++++++++++++++++++++++++----
+ Create.c   |  1 +
  ReadMe.c   |  1 +
- md_p.h     |  7 +++++++
- md_u.h     |  1 +
- mdadm.8.in |  9 +++++++++
- mdadm.c    |  4 ++++
- mdadm.h    |  2 ++
- util.c     | 10 ++++++++++
- 8 files changed, 63 insertions(+), 4 deletions(-)
+ mdadm.8.in |  6 ++++++
+ mdadm.c    | 34 +++++++++++++++++++++++++++++++++-
+ mdadm.h    |  3 +++
+ super1.c   |  1 +
+ 6 files changed, 45 insertions(+), 1 deletion(-)
 
-diff --git a/Manage.c b/Manage.c
-index d3cfb55..4c3d451 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -690,7 +690,8 @@ skip_re_add:
- int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	       struct supertype *tst, mdu_array_info_t *array,
- 	       int force, int verbose, char *devname,
--	       char *update, unsigned long rdev, unsigned long long array_size)
-+	       char *update, unsigned long rdev, unsigned long long array_size,
-+	       int raid_slot)
- {
- 	unsigned long long ldsize;
- 	struct supertype *dev_st = NULL;
-@@ -879,7 +880,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+diff --git a/Create.c b/Create.c
+index 69f5432..e4577af 100644
+--- a/Create.c
++++ b/Create.c
+@@ -531,6 +531,7 @@ int Create(struct supertype *st, char *mddev,
+ 				st->ss->name);
+ 		warn = 1;
  	}
- 	disc.major = major(rdev);
- 	disc.minor = minor(rdev);
--	disc.number =j;
-+	if (raid_slot < 0)
-+		disc.number = j;
-+	else
-+		disc.number = raid_slot;
- 	disc.state = 0;
- 	if (array->not_persistent==0) {
- 		int dfd;
-@@ -920,6 +924,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 			}
- 		free(used);
- 	}
-+
-+	if (array->state & (1 << MD_SB_CLUSTERED)) {
-+		if (dv->disposition == 'c')
-+			disc.state |= (1 << MD_DISK_CANDIDATE);
-+		else
-+			disc.state |= (1 << MD_DISK_CLUSTER_ADD);
-+	}
-+
- 	if (dv->writemostly == 1)
- 		disc.state |= (1 << MD_DISK_WRITEMOSTLY);
- 	if (tst->ss->external) {
-@@ -1239,6 +1251,7 @@ int Manage_subdevs(char *devname, int fd,
- 	 *        variant on 'A'
- 	 *  'F' - Another variant of 'A', where the device was faulty
- 	 *        so must be removed from the array first.
-+	 *  'c' - confirm the device as found (for clustered environments)
- 	 *
- 	 * For 'f' and 'r', the device can also be a kernel-internal
- 	 * name such as 'sdb'.
-@@ -1254,6 +1267,7 @@ int Manage_subdevs(char *devname, int fd,
- 	struct mdinfo info;
- 	int frozen = 0;
- 	int busy = 0;
-+	int raid_slot = -1;
++	st->nodes = c->nodes;
  
- 	if (ioctl(fd, GET_ARRAY_INFO, &array)) {
- 		pr_err("Cannot get array info for %s\n",
-@@ -1282,6 +1296,11 @@ int Manage_subdevs(char *devname, int fd,
- 		int rv;
- 		int mj,mn;
- 
-+		raid_slot = -1;
-+		if (dv->disposition == 'c')
-+			parse_cluster_confirm_arg(dv->devname, &dv->devname,
-+					&raid_slot);
-+
- 		if (strcmp(dv->devname, "failed") == 0 ||
- 		    strcmp(dv->devname, "faulty") == 0) {
- 			if (dv->disposition != 'A'
-@@ -1307,6 +1326,11 @@ int Manage_subdevs(char *devname, int fd,
- 		if (strcmp(dv->devname, "missing") == 0) {
- 			struct mddev_dev *add_devlist = NULL;
- 			struct mddev_dev **dp;
-+			if (dv->disposition == 'c') {
-+				rv = ioctl(fd, CLUSTERED_DISK_NACK, NULL);
-+				break;
-+			}
-+
- 			if (dv->disposition != 'A') {
- 				pr_err("'missing' only meaningful with --re-add\n");
- 				goto abort;
-@@ -1399,7 +1423,7 @@ int Manage_subdevs(char *devname, int fd,
- 			else {
- 				int open_err = errno;
- 				if (stat(dv->devname, &stb) != 0) {
--					pr_err("Cannot find %s: %s\n",
-+					pr_err("%s: %d Cannot find %s: %s\n", __func__, __LINE__,
- 					       dv->devname, strerror(errno));
- 					goto abort;
- 				}
-@@ -1437,6 +1461,7 @@ int Manage_subdevs(char *devname, int fd,
- 		case 'A':
- 		case 'M': /* --re-add missing */
- 		case 'F': /* --re-add faulty  */
-+		case 'c': /* --cluster-confirm */
- 			/* add the device */
- 			if (subarray) {
- 				pr_err("Cannot add disks to a \'member\' array, perform this operation on the parent container\n");
-@@ -1470,7 +1495,7 @@ int Manage_subdevs(char *devname, int fd,
- 			}
- 			rv = Manage_add(fd, tfd, dv, tst, &array,
- 					force, verbose, devname, update,
--					rdev, array_size);
-+					rdev, array_size, raid_slot);
- 			close(tfd);
- 			tfd = -1;
- 			if (rv < 0)
+ 	if (warn) {
+ 		if (c->runstop!= 1) {
 diff --git a/ReadMe.c b/ReadMe.c
-index c6286ae..c854cd5 100644
+index 87a4916..30c569d 100644
 --- a/ReadMe.c
 +++ b/ReadMe.c
-@@ -169,6 +169,7 @@ struct option long_options[] = {
-     {"wait",	  0, 0,  WaitOpt},
-     {"wait-clean", 0, 0, Waitclean },
-     {"action",    1, 0, Action },
-+    {"cluster-confirm", 0, 0, ClusterConfirm},
+@@ -140,6 +140,7 @@ struct option long_options[] = {
+     {"homehost",  1, 0,  HomeHost},
+     {"symlinks",  1, 0,  Symlinks},
+     {"data-offset",1, 0, DataOffset},
++    {"nodes",1, 0, Nodes},
  
-     /* For Detail/Examine */
-     {"brief",	  0, 0, Brief},
-diff --git a/md_p.h b/md_p.h
-index c4846ba..e59504f 100644
---- a/md_p.h
-+++ b/md_p.h
-@@ -78,6 +78,12 @@
- #define MD_DISK_ACTIVE		1 /* disk is running but may not be in sync */
- #define MD_DISK_SYNC		2 /* disk is in sync with the raid set */
- #define MD_DISK_REMOVED		3 /* disk is in sync with the raid set */
-+#define MD_DISK_CLUSTER_ADD     4 /* Initiate a disk add across the cluster
-+				   * For clustered enviroments only.
-+				   */
-+#define MD_DISK_CANDIDATE	5 /* disk is added as spare (local) until confirmed
-+				   * For clustered enviroments only.
-+				   */
- 
- #define	MD_DISK_WRITEMOSTLY	9 /* disk is "write-mostly" is RAID1 config.
- 				   * read requests will only be sent here in
-@@ -106,6 +112,7 @@ typedef struct mdp_device_descriptor_s {
- #define MD_SB_BLOCK_CONTAINER_RESHAPE 3 /* block container wide reshapes */
- #define MD_SB_BLOCK_VOLUME	4 /* block activation of array, other arrays
- 				   * in container can be activated */
-+#define MD_SB_CLUSTERED		5 /* MD is clustered  */
- #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
- 
- typedef struct mdp_superblock_s {
-diff --git a/md_u.h b/md_u.h
-index be9868a..76068d6 100644
---- a/md_u.h
-+++ b/md_u.h
-@@ -44,6 +44,7 @@
- #define STOP_ARRAY		_IO (MD_MAJOR, 0x32)
- #define STOP_ARRAY_RO		_IO (MD_MAJOR, 0x33)
- #define RESTART_ARRAY_RW	_IO (MD_MAJOR, 0x34)
-+#define CLUSTERED_DISK_NACK	_IO (MD_MAJOR, 0x35)
- 
- typedef struct mdu_version_s {
- 	int major;
+     /* For assemble */
+     {"uuid",      1, 0, 'u'},
 diff --git a/mdadm.8.in b/mdadm.8.in
-index 56d9bcc..57873ec 100644
+index 4aec0db..9c1497e 100644
 --- a/mdadm.8.in
 +++ b/mdadm.8.in
-@@ -1406,6 +1406,15 @@ will avoid reading from these devices if possible.
- .BR \-\-readwrite
- Subsequent devices that are added or re\-added will have the 'write-mostly'
- flag cleared.
-+.TP
-+.BR \-\-cluster\-confirm
-+Confirm the existence of the device. This is issued in response to an \-\-add
-+request by a node in a cluster. When a node adds a device it sends a message
-+to all nodes in the cluster to look for a device with a UUID. This translates
-+to a udev notification with the UUID of the device to be added and the slot
-+number. The receiving node must acknowledge this message
-+with \-\-cluster\-confirm. Valid arguments are <slot>:<devicename> in case
-+the device is found or <slot>:missing in case the device is not found.
+@@ -971,6 +971,12 @@ However for RAID0, it is not possible to add spares.  So to increase
+ the number of devices in a RAID0, it is necessary to set the new
+ number of devices, and to add the new devices, in the same command.
  
- .P
- Each of these options requires that the first device listed is the array
++.TP
++.BR \-\-nodes
++Only works when the array is for clustered environment. It specify the
++maximum number of nodes in the cluster that will use this device
++simultaneously. If not specified, this defaults to 4.
++
+ .SH For assemble:
+ 
+ .TP
 diff --git a/mdadm.c b/mdadm.c
-index 8f567d8..56fdeb7 100644
+index 3e8c49b..15a43d2 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -196,6 +196,7 @@ int main(int argc, char *argv[])
- 		case 'f':
- 		case Fail:
- 		case ReAdd: /* re-add */
-+		case ClusterConfirm:
- 			if (!mode) {
- 				newmode = MANAGE;
- 				shortopt = short_bitmap_options;
-@@ -933,6 +934,9 @@ int main(int argc, char *argv[])
- 					   * remove the device */
- 			devmode = 'f';
+@@ -588,7 +588,14 @@ int main(int argc, char *argv[])
+ 			}
+ 			ident.raid_disks = s.raiddisks;
  			continue;
-+		case O(MANAGE, ClusterConfirm):
-+			devmode = 'c';
+-
++		case O(CREATE, Nodes):
++			c.nodes = parse_num(optarg);
++			if (c.nodes <= 0) {
++				pr_err("invalid number for the number of "
++						"cluster nodes: %s\n", optarg);
++				exit(2);
++			}
 +			continue;
- 		case O(MANAGE,Replace):
- 			/* Mark these devices for replacement */
- 			devmode = 'R';
+ 		case O(CREATE,'x'): /* number of spare (eXtra) disks */
+ 			if (s.sparedisks) {
+ 				pr_err("spare-devices set twice: %d and %s\n",
+@@ -1097,6 +1104,15 @@ int main(int argc, char *argv[])
+ 				s.bitmap_file = optarg;
+ 				continue;
+ 			}
++			if (strcmp(optarg, "clustered")== 0) {
++			    s.bitmap_file = optarg;
++			    /* Set the default number of cluster nodes
++			     * to 4 if not already set by user
++			     */
++			    if (c.nodes < 1)
++				    c.nodes = 4;
++			    continue;
++			}
+ 			/* probable typo */
+ 			pr_err("bitmap file must contain a '/', or be 'internal', or 'none'\n"
+ 				"       not '%s'\n", optarg);
+@@ -1377,6 +1393,22 @@ int main(int argc, char *argv[])
+ 	case CREATE:
+ 		if (c.delay == 0)
+ 			c.delay = DEFAULT_BITMAP_DELAY;
++
++		if (strcmp(s.bitmap_file, "clustered") == 0) {
++			if (s.level != 1) {
++			    pr_err("--bitmap=clustered is currently supported with RAID mirror only\n");
++			    rv = 1;
++			    break;
++			}
++		} else {
++			if (c.nodes) {
++				pr_err("--nodes argument is incompatible with --bitmap=%s.\n",
++					s.bitmap_file);
++				rv = 1;
++				break;
++			}
++		}
++
+ 		if (s.write_behind && !s.bitmap_file) {
+ 			pr_err("write-behind mode requires a bitmap.\n");
+ 			rv = 1;
 diff --git a/mdadm.h b/mdadm.h
-index f56d9d6..00c726e 100644
+index 141f963..9d55801 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -346,6 +346,7 @@ enum special_options {
+@@ -344,6 +344,7 @@ enum special_options {
+ 	Dump,
+ 	Restore,
  	Action,
- 	Nodes,
- 	ClusterName,
-+	ClusterConfirm,
++	Nodes,
  };
  
  enum prefix_standard {
-@@ -1281,6 +1282,7 @@ extern int parse_uuid(char *str, int uuid[4]);
- extern int parse_layout_10(char *layout);
- extern int parse_layout_faulty(char *layout);
- extern long parse_num(char *num);
-+extern int parse_cluster_confirm_arg(char *inp, char **devname, int *slot);
- extern int check_ext2(int fd, char *name);
- extern int check_reiser(int fd, char *name);
- extern int check_raid(int fd, char *name);
-diff --git a/util.c b/util.c
-index ed9a745..8d27564 100644
---- a/util.c
-+++ b/util.c
-@@ -273,6 +273,16 @@ long parse_num(char *num)
- }
- #endif
+@@ -418,6 +419,7 @@ struct context {
+ 	char	*backup_file;
+ 	int	invalid_backup;
+ 	char	*action;
++	int	nodes;
+ };
  
-+int parse_cluster_confirm_arg(char *input, char **devname, int *slot)
-+{
-+	char *dev;
-+	*slot = strtoul(input, &dev, 10);
-+	if (dev == input || dev[0] != ':')
-+		return -1;
-+	*devname = dev+1;
-+	return 0;
-+}
-+
- void remove_partitions(int fd)
- {
- 	/* remove partitions from this block devices.
+ struct shape {
+@@ -1029,6 +1031,7 @@ struct supertype {
+ 			 */
+ 	int devcnt;
+ 	int retry_soon;
++	int nodes;
+ 
+ 	struct mdinfo *devs;
+ 
+diff --git a/super1.c b/super1.c
+index 7928a3d..78d98a7 100644
+--- a/super1.c
++++ b/super1.c
+@@ -2144,6 +2144,7 @@ add_internal_bitmap1(struct supertype *st,
+ 	bms->daemon_sleep = __cpu_to_le32(delay);
+ 	bms->sync_size = __cpu_to_le64(size);
+ 	bms->write_behind = __cpu_to_le32(write_behind);
++	bms->nodes = __cpu_to_le32(st->nodes);
+ 
+ 	*chunkp = chunk;
+ 	return 1;
 -- 
 1.7.12.4
 
