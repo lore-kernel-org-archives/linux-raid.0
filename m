@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH V3 06/11] Convert a bitmap=none device to clustered
-Date: Wed, 20 May 2015 11:20:38 +0800
-Message-ID: <1432092043-24220-7-git-send-email-gqjiang@suse.com>
+Subject: [PATCH V3 07/11] Skip clustered devices in incremental
+Date: Wed, 20 May 2015 11:20:39 +0800
+Message-ID: <1432092043-24220-8-git-send-email-gqjiang@suse.com>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
@@ -10,71 +10,47 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
-This adds the ability to convert a regular md without bitmap
-(--bitmap=none) to a clustered device (--bitmap=clustered).
+We want the clustered devices to be started exclusively by a cluster
+resource-agent. So, avoid starting using the incremental option.
 
-To convert a device with --bitmap=internal or --bitmap=external,
-you have to convert to --bitmap=none and then re-execute the
-command with --bitmap=clustered.
+This also skips a clustered md from starting during boot in inactive mode.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Grow.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ Incremental.c | 5 +++++
+ super1.c      | 2 ++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/Grow.c b/Grow.c
-index 9a573fd..1122cec 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -330,9 +330,16 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 			}
- 			return 0;
- 		}
--		pr_err("Internal bitmap already present on %s\n",
--			devname);
--		return 1;
-+		if ((strcmp(s->bitmap_file, "clustered")==0) && (array.state & (1<<MD_SB_CLUSTERED))) {
-+			pr_err("Clustered bitmap already present on %s\n",
-+					devname);
-+			return 1;
-+		}
-+		if ((strcmp(s->bitmap_file, "internal")==0) && (!(array.state & (1<<MD_SB_CLUSTERED)))) {
-+			pr_err("Internal bitmap already present on %s\n",
-+					devname);
-+			return 1;
-+		}
+diff --git a/Incremental.c b/Incremental.c
+index 0c9a9a4..5450a5c 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -232,6 +232,11 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 				devname);
+ 		goto out;
  	}
++	/* Skip the clustered ones. This should be started by
++	 * clustering resource agents
++	 */
++	if (info.array.state & (1 << MD_SB_CLUSTERED))
++		goto out;
  
- 	if (strcmp(s->bitmap_file, "none") == 0) {
-@@ -375,7 +382,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 		free(st);
- 		return 1;
- 	}
--	if (strcmp(s->bitmap_file, "internal") == 0) {
-+	if ((strcmp(s->bitmap_file, "internal") == 0) ||
-+		(strcmp(s->bitmap_file, "clustered") == 0)) {
- 		int rv;
- 		int d;
- 		int offset_setable = 0;
-@@ -384,6 +392,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 			pr_err("Internal bitmaps not supported with %s metadata\n", st->ss->name);
- 			return 1;
- 		}
-+		st->nodes = c->nodes;
-+		st->cluster_name = c->homecluster;
- 		mdi = sysfs_read(fd, NULL, GET_BITMAP_LOCATION);
- 		if (mdi)
- 			offset_setable = 1;
-@@ -426,6 +436,8 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 			rv = sysfs_set_num_signed(mdi, NULL, "bitmap/location",
- 						  mdi->bitmap_offset);
- 		} else {
-+			if (strcmp(s->bitmap_file, "clustered") == 0)
-+				array.state |= (1<<MD_SB_CLUSTERED);
- 			array.state |= (1<<MD_SB_BITMAP_PRESENT);
- 			rv = ioctl(fd, SET_ARRAY_INFO, &array);
- 		}
+ 	/* 3a/ if not, check for homehost match.  If no match, continue
+ 	 * but don't trust the 'name' in the array. Thus a 'random' minor
+diff --git a/super1.c b/super1.c
+index 60f470b..fd728d2 100644
+--- a/super1.c
++++ b/super1.c
+@@ -891,6 +891,8 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+ 	info->array.state =
+ 		(__le64_to_cpu(sb->resync_offset) == MaxSector)
+ 		? 1 : 0;
++	if (__le32_to_cpu(bsb->nodes) > 1)
++		info->array.state |= (1 << MD_SB_CLUSTERED);
+ 
+ 	info->data_offset = __le64_to_cpu(sb->data_offset);
+ 	info->component_size = __le64_to_cpu(sb->size);
 -- 
 1.7.12.4
 
