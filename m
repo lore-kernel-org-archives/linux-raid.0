@@ -1,66 +1,42 @@
-From: Sergey Vidishev <sergeyv@yandex-team.ru>
-Subject: [PATCH v3] mdadm: monitor: fix nullptr dereference when get_md_name() returns NULL
-Date: Tue, 19 May 2015 22:02:46 +0300
-Message-ID: <7486089.5E28xkmWcx@sergeyv_box>
-References: <1531453.K804EMet0W@sergeyv_box> <CAGRSmLuzqwn=7LQZx_CA1VE4SsGTHMEWU-TJkuHUeeaa8XUQ1Q@mail.gmail.com> <1916694.4Z1o92rJfN@sergeyv_box>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1916694.4Z1o92rJfN@sergeyv_box>
-Sender: linux-raid-owner@vger.kernel.org
-To: "David F." <df7729@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/12] treewide: Use DECLARE_BITMAP
+Date: Tue, 19 May 2015 18:37:48 -0700
+Message-ID: <cover.1432085659.git.joe@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, linux-bcache@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, logfs@logfs.org
+Cc: dmaengine@vger.kernel.org, linux-raid@vger.kernel.org, linux-s390@vger.kernel.org, linux-nfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-From fce3be7200e84665cdae58ba44d5c61af094af3b Mon Sep 17 00:00:00 2001
-From: Sergey Vidishev <sergeyv@yandex-team.ru>
-Date: Tue, 19 May 2015 20:34:58 +0300
-Subject: [PATCH] mdadm: monitor: fix nullptr dereference when get_md_name()
- returns NULL
+Use the standard method to declare a bitmap array.
 
-Function add_new_arrays() expects that function get_md_name() should
-return pointer to devname, but also get_md_name() may return NULL. So
-check the pointer before use it in add_new_arrays().
+Joe Perches (12):
+  ARM: mach-imx: iomux-imx31: Use DECLARE_BITMAP
+  dmaengine: rcar-dmac: Use DECLARE_BITMAP
+  drm/amdkfd: Use DECLARE_BITMAP
+  drm/radeon: Use DECLARE_BITMAP
+  IB/ehca: Use DECLARE_BITMAP
+  bcache: Use DECLARE_BITMAP
+  spider_net: Use DECLARE_BITMAP
+  s390/sclp: Use DECLARE_BITMAP
+  [SCSI] qla4xxx: Use DECLARE_BITMAP
+  scsi: Use DECLARE_BITMAP
+  logfs: Use DECLARE_BITMAP
+  sunrpc: Use DECLARE_BITMAP
 
-Signed-off-by: Sergey Vidishev <sergeyv@yandex-team.ru>
----
+ arch/arm/mach-imx/iomux-imx31.c           | 2 +-
+ drivers/dma/sh/rcar-dmac.c                | 2 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_priv.h     | 5 ++---
+ drivers/gpu/drm/radeon/radeon.h           | 2 +-
+ drivers/infiniband/hw/ehca/ipz_pt_fn.h    | 2 +-
+ drivers/md/bcache/journal.c               | 2 +-
+ drivers/net/ethernet/toshiba/spider_net.c | 3 +--
+ drivers/s390/char/sclp_cmd.c              | 2 +-
+ drivers/scsi/qla4xxx/ql4_def.h            | 2 +-
+ drivers/scsi/sr.c                         | 2 +-
+ fs/logfs/logfs.h                          | 2 +-
+ net/sunrpc/auth_gss/svcauth_gss.c         | 2 +-
+ 12 files changed, 13 insertions(+), 15 deletions(-)
 
-v2 -> v3: - continue instead of return
-          - avoid mem leak (thanks to David F.)
-v1 -> v2: more verbose commit message
-
- Monitor.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/Monitor.c b/Monitor.c
-index 1cd378b..a530032 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -687,6 +687,7 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
- {
- 	struct mdstat_ent *mse;
- 	int new_found = 0;
-+	char *name;
- 
- 	for (mse=mdstat; mse; mse=mse->next)
- 		if (mse->devnm[0] &&
-@@ -697,7 +698,14 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
- 			struct state *st = xcalloc(1, sizeof *st);
- 			mdu_array_info_t array;
- 			int fd;
--			st->devname = xstrdup(get_md_name(mse->devnm));
-+
-+			name = get_md_name(mse->devnm);
-+			if (!name) {
-+				free(st);
-+				continue;
-+			}
-+
-+			st->devname = xstrdup(name);
- 			if ((fd = open(st->devname, O_RDONLY)) < 0 ||
- 			    ioctl(fd, GET_ARRAY_INFO, &array)< 0) {
- 				/* no such array */
 -- 
-2.0.4
-
+2.1.2
