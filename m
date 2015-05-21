@@ -1,33 +1,29 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Recent drive errors
-Date: Thu, 21 May 2015 09:58:48 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1505210956210.9487@uplift.swm.pp.se>
-References: <3296560.sGbn0HyrQY@balsa> <555B2DEF.60905@turmel.org> <84264713.v03zHsT0Cj@balsa>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: WARNING: Software Raid 0 on SSD's and discard corrupts data
+Date: Thu, 21 May 2015 08:24:28 +0000 (UTC)
+Message-ID: <alpine.LRH.2.11.1505210822150.9060@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84264713.v03zHsT0Cj@balsa>
-Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Cc: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Tue, 19 May 2015, Thomas Fjellstrom wrote:
+Hello,
 
-> How many UREs are considered "ok"? Tens, hundreds, thousands, tens of 
-> thousands?
+all users using a Software Raid 0 on SSD's with discard should disable
+discard, if they use any recent kernel since mid-April 2015. The bug
+was introduced by commit 47d68979cc968535cb87f3e5f2e6a3533ea48fbd and
+the fix is not yet in Linus tree. The fix can be found here:
 
-I will replace any drive that have developed UNC sectors a few times, so 
-I'd say "less than 10".
+    http://git.neil.brown.name/?p=md.git;a=commitdiff;h=a81157768a00e8cf8a7b43b5ea5cac931262374f
 
-+1 on the "set kernel timeout to more than 120 seconds". I have this in 
-/etc/rc.local:
+Users should immediately remove the discard option from any mounted
+software Raid 0 filesystems. Any delete or modification of files can
+lead to random destruction on the filesystem. Use the remount option
+of the mount command to remove the discard option. Do not do it via
+editing /etc/fstab if your root filesystem is on a software raid 0.
 
-for x in /sys/block/sd[a-z] ; do
-         echo 180  > $x/device/timeout
-done
-
-echo 4096 > /sys/block/md0/md/stripe_cache_size
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Regards,
+Holger
