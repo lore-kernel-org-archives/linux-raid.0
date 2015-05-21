@@ -1,109 +1,104 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: raid5 reshape is stuck
-Date: Wed, 20 May 2015 23:37:57 -0400 (EDT)
-Message-ID: <1552584910.2141570.1432179477679.JavaMail.zimbra@redhat.com>
-References: <1612858661.15347659.1431671671467.JavaMail.zimbra@redhat.com> <2043891461.15360424.1431673224036.JavaMail.zimbra@redhat.com> <20150521094837.6a2d29c4@notabene.brown>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: Data corruption after resizing partition, when using bitmaps
+Date: Thu, 21 May 2015 01:58:11 -0400
+Message-ID: <20150521055810.GA9889@psychosis.jim.sh>
+References: <20150519141239.GA5309@psychosis.jim.sh>
+ <20150520153104.7ac99de1@notabene.brown>
+ <20150520063149.GA8346@psychosis.jim.sh>
+ <20150521102444.6346dc5d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150521094837.6a2d29c4@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20150521102444.6346dc5d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown wrote:
+> On Wed, 20 May 2015 02:31:50 -0400 Jim Paris <jim@jtan.com> wrote:
+> 
+> > NeilBrown wrote:
+> > > On Tue, 19 May 2015 10:12:40 -0400 Jim Paris <jim@jtan.com> wrote:
+> > > 
+> > > > I had a raid1 mirror consisting of big partitions on two disks.
+> > > > The first disk was 2TB, partitioned like this:
+> > > > 
+> > > >   [--sda1(128M)--][-------sda2(~2T)--------------]
+> > > > 
+> > > > The second disk was 3TB, partitioned like this:
+> > > > 
+> > > >   [--sdb1(128M)--][-------sdb2(~3T)------------------------------------]
+> > > > 
+> > > > sda2 and sdb2 were part of the array, which was only ~2TB in size due
+> > > > to the smaller disk.
+> > > > 
+> > > > I realized that I needed to add a BIOS boot partition to the 3TB disk,
+> > > > so I removed sdb2 from the array, and repartitioned sdb like this:
+> > > > 
+> > > >   [--sdb1(128M)--][--sdb2(1M)--][-------sdb3(~3T)----------------------]
+> > > > 
+> > > > Then I added sdb3 to the array.  And lost all my data. :(
+> > > > 
+> > > > What happened was that the last sector of the big partition did not
+> > > > change location.  So the metadata (0.90) at the end was still present.
+> > > 
+> > > This is one of the big reasons why 1.x was invented.
+> > > 
+> > > > Adding sdb3 to the array was considered a "re-add" because the UUID
+> > > > and array sizes still matched the array, even though the partition
+> > > > itself shrank.  And the resync was thus guided by an out-of-date
+> > > > bitmap, which caused very little data to actually be written to sdb3,
+> > > > so half the reads from the array started returning junk.  Once the
+> > > > filesystem got involved, the result was rapid corruption.
+> > > > 
+> > > > If I had not been using write-intent bitmaps, everything would have
+> > > > worked fine.  I only recently started using bitmaps, and never had any
+> > > > problems with adjusting partitions like this before that.
+> > > > 
+> > > > Perhaps mdadm can be more careful here -- for example, maybe checking
+> > > > the actual device size and not just the "used dev size" when
+> > > > determining whether to trust the bitmap.
+> > > 
+> > > It is perfectly acceptable to have the various devices in an array of
+> > > different sizes.  Unfortunately I don't think there is anything that mdadm
+> > > can usefully do here.
+> > > 
+> > > Thanks for the report anyway,
+> > > NeilBrown
+> > 
+> > Hi Neil,
+> > 
+> > Can we add u64 device_size to bitmap_super_t, and ensure that it
+> > matches the actual current device size before trusting the bitmap?
+> 
+> Well .... we could, but the bitmap_super is currently the same on all
+> devices.  This would  make it different.
+> And if we a going to change the metadata, why not just convert from 0.90 to
+> 1.0?
 
+My thinking was that the extra field could be added to bitmap_super
+automatically -- just start writing it now, but only use it to
+determine bitmap validity if the current value is non-zero.  No
+explicit user-visible conversion.
 
------ Original Message -----
-> From: "NeilBrown" <neilb@suse.de>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Thursday, May 21, 2015 7:48:37 AM
-> Subject: Re: raid5 reshape is stuck
+I see your point; it's a bit strange to change outdated stuff.  But I
+also feel that if there's something mdadm could have done to prevent
+my data loss, that's worth putting in there.
+
+>  mdadm --stop /dev/mdXX
+>  mdadm --assemble /dev/mdXX --update=metadata /dev/...list-of-devices....
 > 
-> On Fri, 15 May 2015 03:00:24 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
+> You might need to remove the bitmap first, and add it back afterwards.
+
+Cool.  Much simpler than what's currently listed in the wiki for that
+conversion.
+
+Thanks Neil.
+xJim
+
 > 
-> > Hi Neil
-> > 
-> >    I encounter the problem when I reshape a 4-disks raid5 to raid5. It just
-> >    can
-> > appear with loop devices.
-> > 
-> >    The steps are:
-> > 
-> > [root@dhcp-12-158 mdadm-3.3.2]# mdadm -CR /dev/md0 -l5 -n5 /dev/loop[0-4]
-> > --assume-clean
-> > mdadm: /dev/loop0 appears to be part of a raid array:
-> >        level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-> > mdadm: /dev/loop1 appears to be part of a raid array:
-> >        level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-> > mdadm: /dev/loop2 appears to be part of a raid array:
-> >        level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-> > mdadm: /dev/loop3 appears to be part of a raid array:
-> >        level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-> > mdadm: /dev/loop4 appears to be part of a raid array:
-> >        level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
-> > mdadm: Defaulting to version 1.2 metadata
-> > mdadm: array /dev/md0 started.
-> > [root@dhcp-12-158 mdadm-3.3.2]# mdadm /dev/md0 -a /dev/loop5
-> > mdadm: added /dev/loop5
-> > [root@dhcp-12-158 mdadm-3.3.2]# mdadm --grow /dev/md0 --raid-devices 6
-> > mdadm: Need to backup 10240K of critical section..
-> > [root@dhcp-12-158 mdadm-3.3.2]# cat /proc/mdstat
-> > Personalities : [raid6] [raid5] [raid4]
-> > md0 : active raid5 loop5[5] loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
-> >       8187904 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
-> >       [UUUUUU]
-> >       [>....................]  reshape =  0.0% (0/2046976) finish=6396.8min
-> >       speed=0K/sec
-> >       
-> > unused devices: <none>
-> > 
-> >    It because the sync_max is set to 0 when run the command --grow
-> > 
-> > [root@dhcp-12-158 mdadm-3.3.2]# cd /sys/block/md0/md/
-> > [root@dhcp-12-158 md]# cat sync_max
-> > 0
-> > 
-> >    I tried reproduce with normal sata devices. The progress of reshape is
-> >    no problem. Then
-> > I checked the Grow.c. If I use sata devices, in function reshape_array, the
-> > return value
-> > of set_new_data_offset is 0. But if I used loop devices, it return 1. Then
-> > it call the function
-> > start_reshape.
-> 
-> set_new_data_offset returns '0' if there is room on the devices to reduce the
-> data offset so that the reshape starts writing to unused space on the array.
-> This removes the need for a backup file, or the use of a spare device to
-> store a temporary backup.
-> It returns '1' if there was no room for relocating the data_offset.
-> 
-> So on your sata devices (which are presumably larger than your loop devices)
-> there was room.  On your loop devices there was not.
-> 
-> 
-> > 
-> >    In the function start_reshape it set the sync_max to reshape_progress.
-> >    But in sysfs_read it
-> > doesn't read reshape_progress. So it's 0 and the sync_max is set to 0. Why
-> > it need to set the
-> > sync_max at this? I'm not sure about this.
-> 
-> sync_max is set to 0 so that the reshape does not start until the backup has
-> been taken.
-> Once the backup is taken, child_monitor() should set sync_max to "max".
-> 
-> Can you  check if that is happening?
-> 
-> Thanks,
 > NeilBrown
-> 
-> 
 
-  Thanks very much for the explaining. The problem maybe is fixed. I tried reproduce this with newest
-kernel and newest mdadm. Now the problem don't exist. I'll do more tests and give the answer above later.
 
-Best Regards
-Xiao
