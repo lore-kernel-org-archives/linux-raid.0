@@ -1,131 +1,208 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Breaks LSI RAID on C600 chipset
-Date: Thu, 21 May 2015 10:29:59 +1000
-Message-ID: <20150521102959.3b9760ed@notabene.brown>
-References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
-	<21791.17074.357416.218211@quad.stoffel.home>
-	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
-	<21792.11560.92731.222551@quad.stoffel.home>
-	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
-	<21795.3296.846489.199118@quad.stoffel.home>
-	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
-	<20150410105001.171d6683@notabene.brown>
-	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
-	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
-	<CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
-	<20150513103557.1df6036d@notabene.brown>
-	<CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
-	<CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: [PATCH] need read reshape_groress from sys
+Date: Wed, 20 May 2015 23:35:14 -0400 (EDT)
+Message-ID: <1125480493.2141369.1432179314388.JavaMail.zimbra@redhat.com>
+References: <1431673637-10817-1-git-send-email-xni@redhat.com> <592729481.1396196.1432089335521.JavaMail.zimbra@redhat.com> <20150520152042.407313f9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/D6/dy68UlUD82WKqrC.i0lS"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
+In-Reply-To: <20150520152042.407313f9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David F." <df7729@gmail.com>
-Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/D6/dy68UlUD82WKqrC.i0lS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 18 May 2015 10:58:19 -0700 "David F." <df7729@gmail.com> wrote:
-
-> Do you think the latest version at
-> http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dsummary is stable enough to
-> use?   It definitely fixes the major issue (losing the raid config)
-> from the prior version.
-
-It should be OK.  I'll probably make a 3.3.3 in a little while to make it
-official.
-
-NeilBrown
 
 
+----- Original Message -----
+> From: "NeilBrown" <neilb@suse.de>
+> To: "Xiao Ni" <xni@redhat.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Wednesday, May 20, 2015 1:20:42 PM
+> Subject: Re: [PATCH] need read reshape_groress from sys
+> 
+> On Tue, 19 May 2015 22:35:35 -0400 (EDT) Xiao Ni <xni@redhat.com> wrote:
+> 
+> > Hi all
+> > 
+> >    Send the patch again. Because I don't see them at
+> >    http://www.spinics.net/lists/raid/
+> > 
+> > 
+> > ----- Forwarded Message -----
+> > From: "Xiao Ni" <xni@redhat.com>
+> > To: linux-raid@vger.kernel.org
+> > Cc: "Xiao Ni" <xni@redhat.com>
+> > Sent: Friday, May 15, 2015 3:07:17 PM
+> > Subject: [PATCH] need read reshape_groress from sys
+> > 
+> > 
+> 
+> 
+> Please actually explain the purpose of the patch.
+> Then  re-read it to ensure it makes sense and remove obvious typos.
+> 
+> and don't just remove unrelated blank lines.
+> Only include in the patch things that need to be in the patch.
+> 
+> 
+Hi Neil
 
->=20
-> On Wed, May 13, 2015 at 7:26 AM, David F. <df7729@gmail.com> wrote:
-> > Thanks.
-> >
-> > 1) The update did fix the broken RAID.  I can reboot and the RAID
-> > mirror still exists after reboots.
-> >
-> > 2) I do want to report that on the first test, the reboot was clean.
-> > On the second reboot there was a warning message about the BIOS
-> > detecting "Inconsistent Timestamps" on one of the drives and something
-> > about which CONFIG the BIOS would use.  I didn't have time to get it
-> > all jotted down.  Whatever it used was still okay since the RAID
-> > mirror was still there after that message.
-> >
-> >
-> > On Tue, May 12, 2015 at 5:35 PM, NeilBrown <neilb@suse.de> wrote:
-> >> On Mon, 11 May 2015 09:31:26 -0700 "David F." <df7729@gmail.com> wrote:
-> >>
-> >>> any progress or more information needed on this?
-> >>>
-> >>> On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
-> >>> > If you need access to the system, a network kvm is available - or if
-> >>> > you have a C600 based system, you should see the same problem there.
-> >>> >
-> >>> > On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
-> >>> >> Okay, and to confirm, this is happening on other C600 based system=
-s.
-> >>> >> Boot to Linux with MDADM raid support and the raid is gone after
-> >>> >> reboot.
-> >>> >>
-> >>> >> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
-> >>> >>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> w=
-rote:
-> >>> >>>
-> >>> >>>> Hello,
-> >>> >>>>
-> >>> >>>> I built a new system, installed new drives (no partitioning, jus=
-t raw
-> >>> >>>> new drives), configured RAID 1, boot to linux, created reports
-> >>> >>>> attached.  Rebooted and the system doesn't see any configured ra=
-id
-> >>> >>>> drives (just the two raw drives).
-> >>> >>>
-> >>> >>> Thanks.  I might take a look, but I would greatly prefer it if yo=
-u kept the
-> >>> >>> linux-raid list on the Cc.....
-> >>> >>>
-> >>> >>> NeilBrown
-> >>> >>>
-> >>
-> >> I must confess that I haven't even looked at it.
-> >> But I just saw and email on linux-raid from Martin Wilck:
-> >>
-> >>  Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
-> >>
-> >> which very likely fixes your problem.  I've applied it and pushed out =
-to
-> >>    git://neil.brown.name/mdadm/
-> >>
-> >> NeilBrown
+  I messed the mails, sorry for this. I have sent a mail which subject is "raid5 reshape is stuck" and 
+two patch mails several days before. But I can't find them so I sent them again yesterday. 
+
+  And I try to reproduce this with newest kernel and newest mdadm. The problem is fixed already. But I
+still have a question which is below the steps I did.
+
+  Now I paste the reason here:
+
+  I encounter the problem when I reshape a 4-disks raid5 to 5-disks raid5. It just can
+appear with loop devices.
+
+   The steps are:
+
+[root@dhcp-12-158 mdadm-3.3.2]# mdadm -CR /dev/md0 -l5 -n5 /dev/loop[0-4] --assume-clean
+mdadm: /dev/loop0 appears to be part of a raid array:
+       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
+mdadm: /dev/loop1 appears to be part of a raid array:
+       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
+mdadm: /dev/loop2 appears to be part of a raid array:
+       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
+mdadm: /dev/loop3 appears to be part of a raid array:
+       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
+mdadm: /dev/loop4 appears to be part of a raid array:
+       level=raid5 devices=6 ctime=Fri May 15 13:47:17 2015
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+[root@dhcp-12-158 mdadm-3.3.2]# mdadm /dev/md0 -a /dev/loop5
+mdadm: added /dev/loop5
+[root@dhcp-12-158 mdadm-3.3.2]# mdadm --grow /dev/md0 --raid-devices 6
+mdadm: Need to backup 10240K of critical section..
+[root@dhcp-12-158 mdadm-3.3.2]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 loop5[5] loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
+      8187904 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6] [UUUUUU]
+      [>....................]  reshape =  0.0% (0/2046976) finish=6396.8min speed=0K/sec
+      
+unused devices: <none>
+
+   It because the sync_max is set to 0 when run the command --grow
+
+[root@dhcp-12-158 mdadm-3.3.2]# cd /sys/block/md0/md/
+[root@dhcp-12-158 md]# cat sync_max
+0
+
+   I tried reproduce with normal sata devices. The progress of reshape is no problem. Then
+I checked the Grow.c. If I use sata devices, in function reshape_array, the return value
+of set_new_data_offset is 0. But if I used loop devices, it return 1. Then it call the function
+start_reshape.
+
+   In the function start_reshape it set the sync_max to reshape_progress. But in sysfs_read it
+doesn't read reshape_progress. So it's 0 and the sync_max is set to 0. Why it need to set the
+sync_max at this? I'm not sure about this.
 
 
---Sig_/D6/dy68UlUD82WKqrC.i0lS
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVV0nBznsnt1WYoG5AQK2Pg//e/DEgNAuKggaUuEolC0JS2/MawAgJCbZ
-an4t51F6R7vbTWfOD9lvn2gJUhvpuEJlWk3MqRzwmZUBmXZxdr4pAWQZSLwMnvqK
-SPgc538aUUjBDgKLl7HRo21s+oMraTJMpdf/y7RjrvXEhRvN4sESGqcc034LGJ6n
-5LM7w6W+6uzRz0tfb6gD8D2/D2t0aO91Ayrc40335FDQvvFdxBkur/YWAdr8p18D
-N5cEvYJp/cwil1zMen9eJUwN8dstDd9vbk3Y0Ll+XZGodbCdHoPjtOedNTRdBGNz
-mD0uKLUDKRLciGi2ltFpv7b/qyZmh8HHL4DIe2LcUUuBfXvH/C0gsDuygTZe1drx
-68X7x8bLUGLCFBntAz/yzNd7bppFZLxp8xpsaQc3tFix5PJcLyGjV+nxlQ+/indE
-0opV9LfvbYx6j1DtV0joOMt4v1eKHJJkWxANQsQoO6mvriNhnH86e1FId8wx6bxw
-X6L77+PSTGB6BP5BmerP701UAYXwPz0dd55z0hqr7Mf14zjcFQvDc1l+dRucxJof
-KOZthGUH4ebeE9Zf8Df2BHKn5s/wjGqua5751EIg00z+s1qOvvaoktwOT/KEr6sn
-k3NlPi7aDqCvkrm5z/L4sEjAmRWZx6cgrRBsaVA0T7yBTbs9vusjrkDnfSfqnXc1
-xvthwMdsYdg=
-=Q6c5
------END PGP SIGNATURE-----
-
---Sig_/D6/dy68UlUD82WKqrC.i0lS--
+> 
+> 
+> > Signed-off-by: Xiao Ni <xni@redhat.com>
+> > ---
+> >  Grow.c  |   18 ++++++++++++------
+> >  mdadm.h |    1 +
+> >  sysfs.c |   15 +++++++++++++++
+> >  3 files changed, 28 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/Grow.c b/Grow.c
+> > index 568e399..44ee8a7 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -710,11 +710,17 @@ int start_reshape(struct mdinfo *sra, int
+> > already_running,
+> >  	err = sysfs_set_num(sra, NULL, "suspend_hi", sra->reshape_progress);
+> >  	err = err ?: sysfs_set_num(sra, NULL, "suspend_lo",
+> >  				   sra->reshape_progress);
+> > -	if (before_data_disks <= data_disks)
+> > -		sync_max_to_set = sra->reshape_progress / data_disks;
+> > -	else
+> > -		sync_max_to_set = (sra->component_size * data_disks
+> > -				   - sra->reshape_progress) / data_disks;
+> > +
+> > +	if (sra->reshape_progress == UINT64_MAX) {
+> > +		err = err ?: sysfs_set_str(sra, NULL, "sync_max", "max");
+> > +	} else {
+> > +		if (before_data_disks <= data_disks)
+> > +			sync_max_to_set = sra->reshape_progress / data_disks;
+> > +		else
+> > +			sync_max_to_set = (sra->component_size * 2 * data_disks
+> > +										- sra->reshape_progress) / data_disks;
+> > +	}
+> > +
+> >  	if (!already_running)
+> >  		sysfs_set_num(sra, NULL, "sync_min", sync_max_to_set);
+> >  	err = err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
+> > @@ -3075,7 +3081,7 @@ static int reshape_array(char *container, int fd,
+> > char *devname,
+> >  	}
+> >  	sra = sysfs_read(fd, NULL,
+> >  			 GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE|GET_CHUNK|
+> > -			 GET_CACHE);
+> > +			 GET_CACHE|GET_RESHAPE_PROGRESS);
+> >  	if (!sra) {
+> >  		pr_err("%s: Cannot get array details from sysfs\n",
+> >  			devname);
+> > diff --git a/mdadm.h b/mdadm.h
+> > index 141f963..6fb17e1 100644
+> > --- a/mdadm.h
+> > +++ b/mdadm.h
+> > @@ -526,6 +526,7 @@ enum sysfs_read_flags {
+> >  	GET_DEGRADED	= (1 << 8),
+> >  	GET_SAFEMODE	= (1 << 9),
+> >  	GET_BITMAP_LOCATION = (1 << 10),
+> > +	GET_RESHAPE_PROGRESS = (1 << 11),
+> >  
+> >  	GET_DEVS	= (1 << 20), /* gets role, major, minor */
+> >  	GET_OFFSET	= (1 << 21),
+> > diff --git a/sysfs.c b/sysfs.c
+> > index 18f3df9..09b0c93 100644
+> > --- a/sysfs.c
+> > +++ b/sysfs.c
+> > @@ -26,6 +26,7 @@
+> >  #include	"mdadm.h"
+> >  #include	<dirent.h>
+> >  #include	<ctype.h>
+> > +#include	<stdint.h>
+> >  
+> >  int load_sys(char *path, char *buf)
+> >  {
+> > @@ -210,6 +211,19 @@ struct mdinfo *sysfs_read(int fd, char *devnm,
+> > unsigned long options)
+> >  		msec = (msec * 1000) / scale;
+> >  		sra->safe_mode_delay = msec;
+> >  	}
+> > +
+> > +	if (options & GET_RESHAPE_PROGRESS) {
+> > +
+> > +		strcpy(base, "reshape_progress");
+> > +		if (load_sys(fname, buf))
+> > +			goto abort;
+> > +
+> > +		if (strncmp(buf, "max", 3) == 0)
+> > +			sra->reshape_progress = UINT64_MAX;
+> > +		else
+> > +			sra->reshape_progress = strtol(buf, NULL, 10);
+> > +	}
+> > +
+> >  	if (options & GET_BITMAP_LOCATION) {
+> >  		strcpy(base, "bitmap/location");
+> >  		if (load_sys(fname, buf))
+> > @@ -224,6 +238,7 @@ struct mdinfo *sysfs_read(int fd, char *devnm, unsigned
+> > long options)
+> >  			goto abort;
+> >  	}
+> >  
+> > +
+> >  	if (! (options & GET_DEVS))
+> >  		return sra;
+> >  
+> 
+> 
