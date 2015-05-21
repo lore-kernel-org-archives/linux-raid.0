@@ -1,115 +1,131 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Data corruption after resizing partition, when using bitmaps
-Date: Thu, 21 May 2015 10:24:44 +1000
-Message-ID: <20150521102444.6346dc5d@notabene.brown>
-References: <20150519141239.GA5309@psychosis.jim.sh>
-	<20150520153104.7ac99de1@notabene.brown>
-	<20150520063149.GA8346@psychosis.jim.sh>
+Subject: Re: Breaks LSI RAID on C600 chipset
+Date: Thu, 21 May 2015 10:29:59 +1000
+Message-ID: <20150521102959.3b9760ed@notabene.brown>
+References: <CAGRSmLtoCz+wff+F=xnnusc5_bUYxWYT5V5iTncTnRfgRnTqtg@mail.gmail.com>
+	<21791.17074.357416.218211@quad.stoffel.home>
+	<CAGRSmLu5kEXA34mmHb5Q9+Fjmh5NFtRw2hrOrCDiOS4NR=5fvQ@mail.gmail.com>
+	<21792.11560.92731.222551@quad.stoffel.home>
+	<CAGRSmLt+1KJJHmMgoUHG0Dq0qg+38q5PRWnMNCRFg6qTa9s7gQ@mail.gmail.com>
+	<21795.3296.846489.199118@quad.stoffel.home>
+	<CAGRSmLtrp6Rh3pALL2Rr62jRRZQKFg-3SaV_AxubaHNhkeb0UA@mail.gmail.com>
+	<20150410105001.171d6683@notabene.brown>
+	<CAGRSmLvoj-UhV+8hSESQ+RRyzMHZ68QuBdRZzVU0PWEztZWeOw@mail.gmail.com>
+	<CAGRSmLsxN_oGm9LQmDJSUVcTvVP7DzSAeWG+aaR+Td-OFc=c=A@mail.gmail.com>
+	<CAGRSmLvdP8y1=KzG0j7Q9oc9HDGDgNGkSnhNLRUU1YXmLq3KDg@mail.gmail.com>
+	<20150513103557.1df6036d@notabene.brown>
+	<CAGRSmLvS3kFFGwEWGE8H7smi+uN-EowPGYJxS-dM4+tezFUuVw@mail.gmail.com>
+	<CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/fDQ7tRh2XwA94Wg/qdJVHaD"; protocol="application/pgp-signature"
+ boundary="Sig_/D6/dy68UlUD82WKqrC.i0lS"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150520063149.GA8346@psychosis.jim.sh>
+In-Reply-To: <CAGRSmLsRr6dHKjOuZB5oy+BALKatJ96P3PMGB9r+oVcft75Z4A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: linux-raid@vger.kernel.org
+To: "David F." <df7729@gmail.com>
+Cc: John Stoffel <john@stoffel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/fDQ7tRh2XwA94Wg/qdJVHaD
+--Sig_/D6/dy68UlUD82WKqrC.i0lS
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 May 2015 02:31:50 -0400 Jim Paris <jim@jtan.com> wrote:
+On Mon, 18 May 2015 10:58:19 -0700 "David F." <df7729@gmail.com> wrote:
 
-> NeilBrown wrote:
-> > On Tue, 19 May 2015 10:12:40 -0400 Jim Paris <jim@jtan.com> wrote:
-> >=20
-> > > I had a raid1 mirror consisting of big partitions on two disks.
-> > > The first disk was 2TB, partitioned like this:
-> > >=20
-> > >   [--sda1(128M)--][-------sda2(~2T)--------------]
-> > >=20
-> > > The second disk was 3TB, partitioned like this:
-> > >=20
-> > >   [--sdb1(128M)--][-------sdb2(~3T)----------------------------------=
---]
-> > >=20
-> > > sda2 and sdb2 were part of the array, which was only ~2TB in size due
-> > > to the smaller disk.
-> > >=20
-> > > I realized that I needed to add a BIOS boot partition to the 3TB disk,
-> > > so I removed sdb2 from the array, and repartitioned sdb like this:
-> > >=20
-> > >   [--sdb1(128M)--][--sdb2(1M)--][-------sdb3(~3T)--------------------=
---]
-> > >=20
-> > > Then I added sdb3 to the array.  And lost all my data. :(
-> > >=20
-> > > What happened was that the last sector of the big partition did not
-> > > change location.  So the metadata (0.90) at the end was still present.
-> >=20
-> > This is one of the big reasons why 1.x was invented.
-> >=20
-> > > Adding sdb3 to the array was considered a "re-add" because the UUID
-> > > and array sizes still matched the array, even though the partition
-> > > itself shrank.  And the resync was thus guided by an out-of-date
-> > > bitmap, which caused very little data to actually be written to sdb3,
-> > > so half the reads from the array started returning junk.  Once the
-> > > filesystem got involved, the result was rapid corruption.
-> > >=20
-> > > If I had not been using write-intent bitmaps, everything would have
-> > > worked fine.  I only recently started using bitmaps, and never had any
-> > > problems with adjusting partitions like this before that.
-> > >=20
-> > > Perhaps mdadm can be more careful here -- for example, maybe checking
-> > > the actual device size and not just the "used dev size" when
-> > > determining whether to trust the bitmap.
-> >=20
-> > It is perfectly acceptable to have the various devices in an array of
-> > different sizes.  Unfortunately I don't think there is anything that md=
-adm
-> > can usefully do here.
-> >=20
-> > Thanks for the report anyway,
-> > NeilBrown
->=20
-> Hi Neil,
->=20
-> Can we add u64 device_size to bitmap_super_t, and ensure that it
-> matches the actual current device size before trusting the bitmap?
+> Do you think the latest version at
+> http://git.neil.brown.name/?p=3Dmdadm.git;a=3Dsummary is stable enough to
+> use?   It definitely fixes the major issue (losing the raid config)
+> from the prior version.
 
-Well .... we could, but the bitmap_super is currently the same on all
-devices.  This would  make it different.
-And if we a going to change the metadata, why not just convert from 0.90 to
-1.0?
-
- mdadm --stop /dev/mdXX
- mdadm --assemble /dev/mdXX --update=3Dmetadata /dev/...list-of-devices....
-
-You might need to remove the bitmap first, and add it back afterwards.
+It should be OK.  I'll probably make a 3.3.3 in a little while to make it
+official.
 
 NeilBrown
 
---Sig_/fDQ7tRh2XwA94Wg/qdJVHaD
+
+
+>=20
+> On Wed, May 13, 2015 at 7:26 AM, David F. <df7729@gmail.com> wrote:
+> > Thanks.
+> >
+> > 1) The update did fix the broken RAID.  I can reboot and the RAID
+> > mirror still exists after reboots.
+> >
+> > 2) I do want to report that on the first test, the reboot was clean.
+> > On the second reboot there was a warning message about the BIOS
+> > detecting "Inconsistent Timestamps" on one of the drives and something
+> > about which CONFIG the BIOS would use.  I didn't have time to get it
+> > all jotted down.  Whatever it used was still okay since the RAID
+> > mirror was still there after that message.
+> >
+> >
+> > On Tue, May 12, 2015 at 5:35 PM, NeilBrown <neilb@suse.de> wrote:
+> >> On Mon, 11 May 2015 09:31:26 -0700 "David F." <df7729@gmail.com> wrote:
+> >>
+> >>> any progress or more information needed on this?
+> >>>
+> >>> On Mon, Apr 20, 2015 at 10:39 PM, David F. <df7729@gmail.com> wrote:
+> >>> > If you need access to the system, a network kvm is available - or if
+> >>> > you have a C600 based system, you should see the same problem there.
+> >>> >
+> >>> > On Fri, Apr 10, 2015 at 1:07 PM, David F. <df7729@gmail.com> wrote:
+> >>> >> Okay, and to confirm, this is happening on other C600 based system=
+s.
+> >>> >> Boot to Linux with MDADM raid support and the raid is gone after
+> >>> >> reboot.
+> >>> >>
+> >>> >> On Thu, Apr 9, 2015 at 5:50 PM, NeilBrown <neilb@suse.de> wrote:
+> >>> >>> On Thu, 9 Apr 2015 14:13:05 -0700 "David F." <df7729@gmail.com> w=
+rote:
+> >>> >>>
+> >>> >>>> Hello,
+> >>> >>>>
+> >>> >>>> I built a new system, installed new drives (no partitioning, jus=
+t raw
+> >>> >>>> new drives), configured RAID 1, boot to linux, created reports
+> >>> >>>> attached.  Rebooted and the system doesn't see any configured ra=
+id
+> >>> >>>> drives (just the two raw drives).
+> >>> >>>
+> >>> >>> Thanks.  I might take a look, but I would greatly prefer it if yo=
+u kept the
+> >>> >>> linux-raid list on the Cc.....
+> >>> >>>
+> >>> >>> NeilBrown
+> >>> >>>
+> >>
+> >> I must confess that I haven't even looked at it.
+> >> But I just saw and email on linux-raid from Martin Wilck:
+> >>
+> >>  Subject: [PATCH] DDF: _write_super_to_disk: fix anchor header type
+> >>
+> >> which very likely fixes your problem.  I've applied it and pushed out =
+to
+> >>    git://neil.brown.name/mdadm/
+> >>
+> >> NeilBrown
+
+
+--Sig_/D6/dy68UlUD82WKqrC.i0lS
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVV0lzDnsnt1WYoG5AQI4Mg/+NXbytAm1/7S5geUxAj7rJFl8ALFDNw25
-nFf0xDN9Mpp93e7JjAgmzK6UbsNYjn3VZo1McafU+VkNuD3Z8zvalA7ByfAoSRpF
-Du1J9mmT9TqWb1eRGmnfc/cg9OHVgMDQ6iDSBBoy/ZWz+FjZSw31oByG56IFAqUN
-qZ1GtfCfp2Y6RxjJG/FS05U6IwQGcDP1vAtVIYGD0+YTvysBQDp7RHHy4QIuqRuE
-+hLTvUL4QYOwLUtOXotcTkd9ZUxGb1aMxd93nkVPWbaLySnbEvYfUcXkReqxvNy5
-EOLNfyaSGQbTwf+sYo1WN5i4lAXkW6UIrMYgMParfO+XxwxasTQOQ9r32f4eAs/d
-It8kkTeKj4DHrEC9WVuik2UpGQDxP2ccMXzFpUYD2LdKZaMKcI2hh/ujBRkA/d7Y
-0ygR+cZKgXA0JBe6qRweXCGXkpgS6rF3PV6v9zlvDX2eMOBPnqf2TWZZbskbgBem
-leCta4QqSnRxmIZj2P6BKgc/vlCOGDJwFAcrxYqI0b73kDouwEw8V3se7eFX54vF
-CFGSmOsgO0a1nRwRi6A/Z3Y/dT1OEp2CzvgaiRVBZhhlJ+7Xko1L7hiMUXzvwIQK
-UZcPUhjjsulmMefDegYHxmeI93rDDpJVfMsTBGS305z1E0hh75SbrKbF2YnvNjWB
-oHP3PNhW5f8=
-=WfZ3
+iQIVAwUBVV0nBznsnt1WYoG5AQK2Pg//e/DEgNAuKggaUuEolC0JS2/MawAgJCbZ
+an4t51F6R7vbTWfOD9lvn2gJUhvpuEJlWk3MqRzwmZUBmXZxdr4pAWQZSLwMnvqK
+SPgc538aUUjBDgKLl7HRo21s+oMraTJMpdf/y7RjrvXEhRvN4sESGqcc034LGJ6n
+5LM7w6W+6uzRz0tfb6gD8D2/D2t0aO91Ayrc40335FDQvvFdxBkur/YWAdr8p18D
+N5cEvYJp/cwil1zMen9eJUwN8dstDd9vbk3Y0Ll+XZGodbCdHoPjtOedNTRdBGNz
+mD0uKLUDKRLciGi2ltFpv7b/qyZmh8HHL4DIe2LcUUuBfXvH/C0gsDuygTZe1drx
+68X7x8bLUGLCFBntAz/yzNd7bppFZLxp8xpsaQc3tFix5PJcLyGjV+nxlQ+/indE
+0opV9LfvbYx6j1DtV0joOMt4v1eKHJJkWxANQsQoO6mvriNhnH86e1FId8wx6bxw
+X6L77+PSTGB6BP5BmerP701UAYXwPz0dd55z0hqr7Mf14zjcFQvDc1l+dRucxJof
+KOZthGUH4ebeE9Zf8Df2BHKn5s/wjGqua5751EIg00z+s1qOvvaoktwOT/KEr6sn
+k3NlPi7aDqCvkrm5z/L4sEjAmRWZx6cgrRBsaVA0T7yBTbs9vusjrkDnfSfqnXc1
+xvthwMdsYdg=
+=Q6c5
 -----END PGP SIGNATURE-----
 
---Sig_/fDQ7tRh2XwA94Wg/qdJVHaD--
+--Sig_/D6/dy68UlUD82WKqrC.i0lS--
