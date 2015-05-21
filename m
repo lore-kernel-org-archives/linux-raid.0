@@ -1,104 +1,54 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Data corruption after resizing partition, when using bitmaps
-Date: Thu, 21 May 2015 01:58:11 -0400
-Message-ID: <20150521055810.GA9889@psychosis.jim.sh>
-References: <20150519141239.GA5309@psychosis.jim.sh>
- <20150520153104.7ac99de1@notabene.brown>
- <20150520063149.GA8346@psychosis.jim.sh>
- <20150521102444.6346dc5d@notabene.brown>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: Filesystem corruption MD (imsm) Raid0 via 2 SSD's + discard
+Date: Thu, 21 May 2015 06:44:27 +0000 (UTC)
+Message-ID: <alpine.LRH.2.11.1505210636230.9060@praktifix.dwd.de>
+References: <alpine.LRH.2.11.1505201918570.4751@praktifix.dwd.de> <20150521013213.536deed0@natsu> <20150521090845.7e228e46@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150521102444.6346dc5d@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150521090845.7e228e46@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Roman Mamedov <rm@romanrm.net>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Wed, 20 May 2015 02:31:50 -0400 Jim Paris <jim@jtan.com> wrote:
-> 
-> > NeilBrown wrote:
-> > > On Tue, 19 May 2015 10:12:40 -0400 Jim Paris <jim@jtan.com> wrote:
-> > > 
-> > > > I had a raid1 mirror consisting of big partitions on two disks.
-> > > > The first disk was 2TB, partitioned like this:
-> > > > 
-> > > >   [--sda1(128M)--][-------sda2(~2T)--------------]
-> > > > 
-> > > > The second disk was 3TB, partitioned like this:
-> > > > 
-> > > >   [--sdb1(128M)--][-------sdb2(~3T)------------------------------------]
-> > > > 
-> > > > sda2 and sdb2 were part of the array, which was only ~2TB in size due
-> > > > to the smaller disk.
-> > > > 
-> > > > I realized that I needed to add a BIOS boot partition to the 3TB disk,
-> > > > so I removed sdb2 from the array, and repartitioned sdb like this:
-> > > > 
-> > > >   [--sdb1(128M)--][--sdb2(1M)--][-------sdb3(~3T)----------------------]
-> > > > 
-> > > > Then I added sdb3 to the array.  And lost all my data. :(
-> > > > 
-> > > > What happened was that the last sector of the big partition did not
-> > > > change location.  So the metadata (0.90) at the end was still present.
-> > > 
-> > > This is one of the big reasons why 1.x was invented.
-> > > 
-> > > > Adding sdb3 to the array was considered a "re-add" because the UUID
-> > > > and array sizes still matched the array, even though the partition
-> > > > itself shrank.  And the resync was thus guided by an out-of-date
-> > > > bitmap, which caused very little data to actually be written to sdb3,
-> > > > so half the reads from the array started returning junk.  Once the
-> > > > filesystem got involved, the result was rapid corruption.
-> > > > 
-> > > > If I had not been using write-intent bitmaps, everything would have
-> > > > worked fine.  I only recently started using bitmaps, and never had any
-> > > > problems with adjusting partitions like this before that.
-> > > > 
-> > > > Perhaps mdadm can be more careful here -- for example, maybe checking
-> > > > the actual device size and not just the "used dev size" when
-> > > > determining whether to trust the bitmap.
-> > > 
-> > > It is perfectly acceptable to have the various devices in an array of
-> > > different sizes.  Unfortunately I don't think there is anything that mdadm
-> > > can usefully do here.
-> > > 
-> > > Thanks for the report anyway,
-> > > NeilBrown
-> > 
-> > Hi Neil,
-> > 
-> > Can we add u64 device_size to bitmap_super_t, and ensure that it
-> > matches the actual current device size before trusting the bitmap?
-> 
-> Well .... we could, but the bitmap_super is currently the same on all
-> devices.  This would  make it different.
-> And if we a going to change the metadata, why not just convert from 0.90 to
-> 1.0?
+On Thu, 21 May 2015, NeilBrown wrote:
 
-My thinking was that the extra field could be added to bitmap_super
-automatically -- just start writing it now, but only use it to
-determine bitmap validity if the current value is non-zero.  No
-explicit user-visible conversion.
+> On Thu, 21 May 2015 01:32:13 +0500 Roman Mamedov <rm@romanrm.net> wrote:
+>
+>> On Wed, 20 May 2015 20:12:31 +0000 (UTC)
+>> Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
+>>
+>>> The kernel I was running when I discovered the
+>>> problem was 4.0.2 from kernel.org. However, after reinstalling from DVD
+>>> I updated to Fedora's lattest kernel, which was 3.19.? (I do not remember
+>>> the last numbers). So that kernel seems also effected, but I assume it
+>>> contains many 'fixes' from 4.0.x. As filesystem I use ext4, distribution
+>>> is Fedora 21 and hardware is: Xeon E3-1275, 16GB ECC Ram.
+>>>
+>>> My system seems to be now running stable for some days with kernel.org
+>>> kernel 4.0.3 and with discard DISABLED. But I am still unsure what could
+>>> be the real cause.
+>>
+>> It is a bug in the 4.0.2 kernel, fixed in 4.0.3.
+>>
+>> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=785672
+>> https://bbs.archlinux.org/viewtopic.php?id=197400
+>> https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable/+/d2dc317d564a46dfc683978a2e5a4f91434e9711
+>>
+>>
+>
+> I suspect that is a different bug.
+> I think this one is
+>  https://bugzilla.kernel.org/show_bug.cgi?id=98501
+>
+Should there not be a big fat warning going around telling users to disable
+discard on Raid 0 until this is fixed? This breaks the filesystem completely
+and I believe there is absolutly no way one can get back the data.
 
-I see your point; it's a bit strange to change outdated stuff.  But I
-also feel that if there's something mdadm could have done to prevent
-my data loss, that's worth putting in there.
+Is this fixed in 4.0.4? And which kernels are effected? There could be many
+people running systems that have not noticed this and don't know in what
+dangerous situation they are when they delete data.
 
->  mdadm --stop /dev/mdXX
->  mdadm --assemble /dev/mdXX --update=metadata /dev/...list-of-devices....
-> 
-> You might need to remove the bitmap first, and add it back afterwards.
-
-Cool.  Much simpler than what's currently listed in the wiki for that
-conversion.
-
-Thanks Neil.
-xJim
-
-> 
-> NeilBrown
-
-
+Regards,
+Holger
