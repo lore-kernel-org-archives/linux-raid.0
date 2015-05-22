@@ -1,46 +1,38 @@
-From: Andrew Burgess <andrew.burgess@embecosm.com>
-Subject: Re: [PATCH] Fix minor typo in mdadm manpage.
-Date: Fri, 22 May 2015 13:26:39 +0200
-Message-ID: <20150522112639.GL2880@embecosm.com>
-References: <1427303869-17319-1-git-send-email-andrew.burgess@embecosm.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Recent drive errors
+Date: Fri, 22 May 2015 15:38:06 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1505221535550.9487@uplift.swm.pp.se>
+References: <3296560.sGbn0HyrQY@balsa> <84264713.v03zHsT0Cj@balsa> <alpine.DEB.2.02.1505210956210.9487@uplift.swm.pp.se> <21066296.95yN8USVxi@balsa>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1427303869-17319-1-git-send-email-andrew.burgess@embecosm.com>
+In-Reply-To: <21066296.95yN8USVxi@balsa>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Cc: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-* Andrew Burgess <andrew.burgess@embecosm.com> [2015-03-25 17:17:49 +0000]:
+On Thu, 21 May 2015, Thomas Fjellstrom wrote:
 
-> ---
-> Change 'is and of' to 'is one of' in mdadm manual page.
+>> for x in /sys/block/sd[a-z] ; do
+>>          echo 180  > $x/device/timeout
+>> done
+>
+> I presume it's ok to do that even if the drives do ERC/TLER? Just woke up, but
+> my brain seems to be telling me it shouldn't break anything since the ERC
+> drives should always return after 7s no matter what...
 
-Ping! Any interest?
+Correct, the only downside is that if the drive really dies, it's going to 
+take longer to detect this.
 
-Thanks,
-Andrew
+I'd rather have longer timeouts to make sure drives never kicked out 
+because of lack of ERC or something else, than to have drives kicked for 
+some reason (controller reset, lack of ERC, or something else).
 
+I really really want to avoid drives being kicked for any other reason 
+than them really being dead. I'd rather have reads stalled for a few 
+minutes than this happening. For other use-cases, the requirements may be 
+different.
 
-> Signed-off-by: Andrew Burgess <andrew.burgess@embecosm.com>
-> ---
->  mdadm.8.in | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index a630310..b4a21d9 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -214,7 +214,7 @@ to detect and assemble arrays \(em possibly in an
->  
->  .P
->  If a device is given before any options, or if the first option is
-> -and of
-> +one of
->  .BR \-\-add ,
->  .BR \-\-re\-add ,
->  .BR \-\-add\-spare ,
-> -- 
-> 2.2.2
-> 
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
