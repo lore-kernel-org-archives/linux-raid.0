@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
- prematurely.
+Subject: [PATCH 3/8] md/raid5: remove condition test from
+ check_break_stripe_batch_list.
 Date: Fri, 22 May 2015 15:30:58 +1000
-Message-ID: <20150522053058.2117.29026.stgit@notabene.brown>
+Message-ID: <20150522053058.2117.93202.stgit@notabene.brown>
 References: <20150522052802.2117.40527.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,38 +14,53 @@ To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If a stripe is a member of a batch, but not the head, it must
-not be handled separately from the rest of the batch.
+handle_stripe_clean_event() contains a chunk of code very
+similar to check_break_stripe_batch_list().
+If we make the latter more like the former, we can end up
+with just one copy of this code.
 
-'clear_batch_ready()' handles this requirement to some
-extent but not completely.  If a member is passed to handle_stripe()
-a second time it returns '0' indicating the stripe can be handled,
-which is wrong.
-So add an extra test.
+This  first step removed the condition (and the 'check_') part
+of the name.  This has the added advantage of making it clear
+what check is being performed at the point where the function is
+called.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid5.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/md/raid5.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c3ccefbd4fe7..9a803b735848 100644
+index 9a803b735848..4952205460e5 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+@@ -4226,16 +4226,11 @@ static int clear_batch_ready(struct stripe_head *sh)
+ 	return 0;
+ }
  
- static int clear_batch_ready(struct stripe_head *sh)
+-static void check_break_stripe_batch_list(struct stripe_head *sh)
++static void break_stripe_batch_list(struct stripe_head *head_sh)
  {
-+	/* Return '1' if this is a member of batch, or
-+	 * '0' if it is a lone stripe or a head which can now be
-+	 * handled.
-+	 */
- 	struct stripe_head *tmp;
- 	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
--		return 0;
-+		return (sh->batch_head && sh->batch_head != sh);
- 	spin_lock(&sh->stripe_lock);
- 	if (!sh->batch_head) {
- 		spin_unlock(&sh->stripe_lock);
+-	struct stripe_head *head_sh, *next;
++	struct stripe_head *sh, *next;
+ 	int i;
+ 
+-	if (!test_and_clear_bit(STRIPE_BATCH_ERR, &sh->state))
+-		return;
+-
+-	head_sh = sh;
+-
+ 	list_for_each_entry_safe(sh, next, &head_sh->batch_list, batch_list) {
+ 
+ 		list_del_init(&sh->batch_list);
+@@ -4282,7 +4277,8 @@ static void handle_stripe(struct stripe_head *sh)
+ 		return;
+ 	}
+ 
+-	check_break_stripe_batch_list(sh);
++	if (test_and_clear_bit(STRIPE_BATCH_ERR, &sh->state))
++		break_stripe_batch_list(sh);
+ 
+ 	if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state) && !sh->batch_head) {
+ 		spin_lock(&sh->stripe_lock);
 
 
