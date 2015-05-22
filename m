@@ -1,50 +1,47 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 0/8] Fixes for md/raid5 stripe batching code.
+Subject: [PATCH 1/8] md/raid5: ensure whole batch is delayed for all
+ required bitmap updates.
 Date: Fri, 22 May 2015 15:30:58 +1000
-Message-ID: <20150522052802.2117.40527.stgit@notabene.brown>
+Message-ID: <20150522053058.2117.14782.stgit@notabene.brown>
+References: <20150522052802.2117.40527.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150522052802.2117.40527.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Shaohua,
- thanks for explaining a bit more your thinking about this code.
+When we add a stripe to a batch, we need to be sure that
+head stripe will wait for the bitmap update required for the new
+stripe.
 
- I've been testing and reviewing and found a few bugs and done some
- cleaning up (e.g. share code).  It seems to be working OK and I'm
- starting to feel confident about it.
-
- Could you please review all of these patches and confirm that the
- changes I have made are consistent with your understanding of how it
- should work?  Maybe if you could test (there are all in my for-next
- branch) and make sure the performance improvements are still there,
- that would be great.
-
-Thanks,
-NeilBrown
-
-
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
+ drivers/md/raid5.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-NeilBrown (8):
-      md/raid5: ensure whole batch is delayed for all required bitmap updates.
-      md/raid5: Ensure a batch member is not handled prematurely.
-      md/raid5: remove condition test from check_break_stripe_batch_list.
-      md/raid5: duplicate some more handle_stripe_clean_event code in break_stripe_batch_list
-      md/raid5: add handle_flags arg to break_stripe_batch_list.
-      md/raid5: be more selective about distributing flags across batch.
-      md/raid5: call break_stripe_batch_list from handle_stripe_clean_event
-      md/raid5: break stripe-batches when the array has failed.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 987c67298953..c3ccefbd4fe7 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -848,6 +848,15 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 		    < IO_THRESHOLD)
+ 			md_wakeup_thread(conf->mddev->thread);
+ 
++	if (test_and_clear_bit(STRIPE_BIT_DELAY, &sh->state)) {
++		int seq = sh->bm_seq;
++		if (test_bit(STRIPE_BIT_DELAY, &sh->batch_head->state) &&
++		    sh->batch_head->bm_seq > seq)
++			seq = sh->batch_head->bm_seq;
++		set_bit(STRIPE_BIT_DELAY, &sh->batch_head->state);
++		sh->batch_head->bm_seq = seq;
++	}
++
+ 	atomic_inc(&sh->count);
+ unlock_out:
+ 	unlock_two_stripes(head, sh);
 
-
- drivers/md/raid5.c |  122 ++++++++++++++++++++++++++++------------------------
- drivers/md/raid5.h |    2 -
- 2 files changed, 66 insertions(+), 58 deletions(-)
-
---
-Signature
 
