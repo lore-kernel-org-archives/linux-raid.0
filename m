@@ -1,78 +1,62 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fix minor typo in mdadm manpage.
-Date: Sat, 23 May 2015 09:30:05 +1000
-Message-ID: <20150523093005.25666d64@notabene.brown>
-References: <1427303869-17319-1-git-send-email-andrew.burgess@embecosm.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
+ prematurely.
+Date: Fri, 22 May 2015 16:44:02 -0700
+Message-ID: <20150522234402.GA86128@kernel.org>
+References: <20150522052802.2117.40527.stgit@notabene.brown>
+ <20150522053058.2117.29026.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/kHNvzQ3.LWYAsm2NQ.6Fnco"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1427303869-17319-1-git-send-email-andrew.burgess@embecosm.com>
+Content-Disposition: inline
+In-Reply-To: <20150522053058.2117.29026.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <andrew.burgess@embecosm.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/kHNvzQ3.LWYAsm2NQ.6Fnco
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 25 Mar 2015 17:17:49 +0000 Andrew Burgess
-<andrew.burgess@embecosm.com> wrote:
-
-> Appologies if this is the wrong mailing list for this patch.
->=20
-> This is a very small patch for the manual page for the mdadm utility.
->=20
-> Thanks,
-> Andrew
->=20
+On Fri, May 22, 2015 at 03:30:58PM +1000, NeilBrown wrote:
+> If a stripe is a member of a batch, but not the head, it must
+> not be handled separately from the rest of the batch.
+> 
+> 'clear_batch_ready()' handles this requirement to some
+> extent but not completely.  If a member is passed to handle_stripe()
+> a second time it returns '0' indicating the stripe can be handled,
+> which is wrong.
+> So add an extra test.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.de>
 > ---
-> Change 'is and of' to 'is one of' in mdadm manual page.
->=20
-> Signed-off-by: Andrew Burgess <andrew.burgess@embecosm.com>
-> ---
->  mdadm.8.in | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index a630310..b4a21d9 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -214,7 +214,7 @@ to detect and assemble arrays \(em possibly in an
-> =20
->  .P
->  If a device is given before any options, or if the first option is
-> -and of
-> +one of
->  .BR \-\-add ,
->  .BR \-\-re\-add ,
->  .BR \-\-add\-spare ,
+>  drivers/md/raid5.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index c3ccefbd4fe7..9a803b735848 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+>  
+>  static int clear_batch_ready(struct stripe_head *sh)
+>  {
+> +	/* Return '1' if this is a member of batch, or
+> +	 * '0' if it is a lone stripe or a head which can now be
+> +	 * handled.
+> +	 */
+>  	struct stripe_head *tmp;
+>  	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
+> -		return 0;
+> +		return (sh->batch_head && sh->batch_head != sh);
+>  	spin_lock(&sh->stripe_lock);
+>  	if (!sh->batch_head) {
+>  		spin_unlock(&sh->stripe_lock);
 
-Applied, thanks. (And thanks for the reminder).
+which case can this happen in?
 
-NeilBrown
+Patches look good. But I'm not in Fusionio any more, so can't check the
+performance in big raid array with fast flash cards. I'm doing some tests here.
+I hit a warning in break_stripe_batch_list, STRIPE_BIT_DELAY is set in the
+stripe state. I'm checking the reason, but if you have thoughts I can try
+immediately, please let me know.
 
---Sig_/kHNvzQ3.LWYAsm2NQ.6Fnco
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVV+7/Tnsnt1WYoG5AQIw1A//e6ms/5cy1UIVP1Gtpw58bY+BzxJQL7Js
-RHRzYIQY+08U4ecmrXOElXJZ/Uk6jgQvDCGYLZhGf7Z3ubJjqia8i/vFZKP3Sn6k
-WPxGHEdzJ0o7PStIX1QrhojfB4ZVVFoVq6d3zeU0aZ+k+ov0ffMJysOCMIYMkjzh
-JeG4Abyz24EABiDmMDTyBTP7UlfHHRvGKY+C5UsuXUcBUdf+x3b4SeybQOk9sO8R
-Oav5j/3T/MfY2H2cbBHsvr20cqLzL1ZAYpq0hZc0BmK5u0XrAKUucyAf8eR+ede3
-EEAQS6aWtKINQe5hRms177CNkjOPXPfn+1p3jDevThgp8+DxSG2Oy0kyKKgooZhr
-59ofeAcHJkxLYx3mulZN+D60cIgFtHY8XmJjuA44MOXyPPpanEmXXxVS7PNc9akA
-2cFXD+8hmIpAJlq1NxprZk3sAg+Y520J8f4J8FQ8dfvl5PJiR8BiUDWRF/DwBXu3
-/9Y/FjTDvCvNz5y8XyG3ipwBsrZPUkHDoJ82zvCYrHa1AFhVDYo6uRq84oadUZom
-G1OTSVRkTbJ+9+okJ9nasPqK44mDNiSdiDRvU9qFNWT1HpLoiPN+y9S5trFRZxAA
-H0LFgyDHmExF32t7ssBA88pHhMd2K7AQ9KeBR9oN0DZbwXw73OpCwhafXj17+VVX
-XOojo5dw838=
-=RYUb
------END PGP SIGNATURE-----
-
---Sig_/kHNvzQ3.LWYAsm2NQ.6Fnco--
+Thanks,
+Shaohua
