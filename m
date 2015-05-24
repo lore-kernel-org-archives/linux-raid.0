@@ -1,117 +1,126 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
- prematurely.
-Date: Sat, 23 May 2015 10:26:40 +1000
-Message-ID: <20150523102640.20be3fca@notabene.brown>
-References: <20150522052802.2117.40527.stgit@notabene.brown>
-	<20150522053058.2117.29026.stgit@notabene.brown>
-	<20150522234402.GA86128@kernel.org>
+From: Another Sillyname <anothersname@googlemail.com>
+Subject: Fwd: Installing Linux directly onto RAID6 Array...........
+Date: Sun, 24 May 2015 02:18:45 +0100
+Message-ID: <CAOS+5GHKwQRPfNAw0EpSjjDUt=9PmjjrkUg+dhGxFS+uOWWVug@mail.gmail.com>
+References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
+	<555294A0.6040703@websitemanagers.com.au>
+	<CAOS+5GEP6+7OAHkqQjeyGHAB5u-_-Vq2JWGpcOemYHdCjmR5Lg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/wJR_j14E1X.PVvsLkDpeLPA"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150522234402.GA86128@kernel.org>
+In-Reply-To: <CAOS+5GEP6+7OAHkqQjeyGHAB5u-_-Vq2JWGpcOemYHdCjmR5Lg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wJR_j14E1X.PVvsLkDpeLPA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+OK.
 
-On Fri, 22 May 2015 16:44:02 -0700 Shaohua Li <shli@kernel.org> wrote:
+I've now read a LOT of stuff on this and have a much better
+understanding.....but also probably some misunderstandings as well
+(but I've learnt a lot so that's good).
 
-> On Fri, May 22, 2015 at 03:30:58PM +1000, NeilBrown wrote:
-> > If a stripe is a member of a batch, but not the head, it must
-> > not be handled separately from the rest of the batch.
-> >=20
-> > 'clear_batch_ready()' handles this requirement to some
-> > extent but not completely.  If a member is passed to handle_stripe()
-> > a second time it returns '0' indicating the stripe can be handled,
-> > which is wrong.
-> > So add an extra test.
-> >=20
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> > ---
-> >  drivers/md/raid5.c |    6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index c3ccefbd4fe7..9a803b735848 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *s=
-h, struct stripe_head_state *s)
-> > =20
-> >  static int clear_batch_ready(struct stripe_head *sh)
-> >  {
-> > +	/* Return '1' if this is a member of batch, or
-> > +	 * '0' if it is a lone stripe or a head which can now be
-> > +	 * handled.
-> > +	 */
-> >  	struct stripe_head *tmp;
-> >  	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
-> > -		return 0;
-> > +		return (sh->batch_head && sh->batch_head !=3D sh);
-> >  	spin_lock(&sh->stripe_lock);
-> >  	if (!sh->batch_head) {
-> >  		spin_unlock(&sh->stripe_lock);
->=20
-> which case can this happen in?
+I have now realised that I can actually store the RAID configuration
+within the mdadm.conf file and therefore can incorporate that into the
+initramfs configuration, however I have a few areas of uncertainty
+that perhaps some people on the list could clarify.
 
-It definitely happens as I had reliable problems until I added this fix.
-'retry_aligned_read()' can call handle_stripe() on any stripe at any time,
-but I doubt that would apply.  I might try putting a warn-on there and see =
-if
-it provides any hints.
+1.  Fedora currently has a bug whereby efibootmgr during the install
+won't play nice with efi systems....
 
->=20
-> Patches look good. But I'm not in Fusionio any more, so can't check the
-> performance in big raid array with fast flash cards. I'm doing some tests=
- here.
-> I hit a warning in break_stripe_batch_list, STRIPE_BIT_DELAY is set in the
-> stripe state. I'm checking the reason, but if you have thoughts I can try
-> immediately, please let me know.
+https://fedoraproject.org/wiki/Common_F21_bugs#Cannot_place_bootloader_target_partition_.28e.g._.2Fboot.2Fefi.29_on_a_disk_other_than_the_first_in_custom_partitioning
 
-I got STRIPE_BIT_DELAY a few times.  That was the main reason for
+This causes the install to fail as the bootloader doesn't get installed.
 
-  md/raid5: ensure whole batch is delayed for all required bitmap updates.
+As Fedora installs GRUB2 as standard and based on what I had read
+elsewhere I decided to create a bios_boot partition as the first
+partition on the drives, during the install GRUB2 sees this and
+configures it appropriately thereby bypassing the bug above.
 
-and they went away after I got that patch right.
+So I now have 5 partitions.
 
-Maybe there is a race in there..
+a  -  bios_boot
+b  -  efi
+c  -  boot
+d  -  root
+e  -  swap
 
-If you can reproduce it, maybe WARN whenever STRIPE_BIT_DELAY gets set on a
-stripe with ->batch_head.
+I'll be adding one more when I'm happy this is working.
 
->=20
-> Thanks,
-> Shaohua
+f  -  home
 
-Thanks,
-NeilBrown
+2.  On my Asus mobo that I'm using it insists on treating the
+installed Live USB as sda.....frankly a real pain in the a** as it
+means during the first boot the root partition is mapped incorrectly
+to sdb4, not a major problem but still annoying so if anyone knows a
+way to 'force' a USB stick to not be the first device I'd love to hear
+it.
 
---Sig_/wJR_j14E1X.PVvsLkDpeLPA
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+3.  Using the methods above I have now created a bootable fedora
+system, on a single drive in preparation to now RAID the required
+partitions.  However my concern comes regarding the mdadm metadata,
+simplistically metadata=1.2 apparently writes it's superblock to 4k
+after the start of the device, this is exactly where my efi partition
+(b above) starts, so my concern is will this superblock overwrite or
+mess with my current partition table?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+4.  If the next stage works then I think what I'll actually end up
+doing is......
 
-iQIVAwUBVV/JQTnsnt1WYoG5AQIBZg//W5yOUxIeMQ7uW5YtNceLlqbqDGp6mz5t
-H9E2Y4+WVu+gMmJ4jTZoUvk5RG7M3pTsf6lhr/SQKoDGrnJNtu1b4ZDdYryzVvU6
-jXIrCkVGcHHQCyqBIYs4+TdHSzpUT7XoHpIUICjuJNk0yFP1NsoUwzXoEefqxANI
-d9ZuAs8cOHbGQ/KsbtSxVn4RN6fygBURBb1AclYo5WgEc3eTaEqj4nv5EoxFPqqS
-HxCamNKCluvINSqrB134Jw54WQabi0769STHtZrfInO3a2YHNGXPD2YNbAgetF2c
-CGSHzGVTgcBvqW0dk3sFDTbvn4ySM1dEkyj2xGJXZxco3I2lrttSZmCo8AKKNtoh
-ZZqV5YULJASsc351Ij9eqPnDF3ytr9vHBZrF32KsXCq6ycM2BxUcLTcSBKliWwn8
-3RYjk7CU7kn82Rh0q5FeWTbqCZ175O8htkxvrQ+ure74iDn61wBmw8JGRUvuITZE
-iXUBGWeAut72L3LQ/Ff+eCRRJDxx6CuNBEXQIQ+8Y5OHD33qRuPDgIrfKB2j5RRH
-hqUlM6GvglSZ2wMoC14P26W6ktY+rMKtlyI6HRa/vGhQ/423QJor/lpNcWWh2asR
-xhJJbuLWPoyodaJDjxAEDN+atrQ2YHQ3dwrSUJWclRj/UTpVsYNlCZxNjI8NBiXp
-je6F7jkCMxc=
-=g1XD
------END PGP SIGNATURE-----
+scrub what I have now.
 
---Sig_/wJR_j14E1X.PVvsLkDpeLPA--
+create the arrays before running the Fedora Live installer (this
+assumes the installer will see /md[x] devices and allow them to be
+used to install to). Then incorporate the mdadm.conf data into the
+initramfs and regenerate initramfs.
+
+Ideas/Thoughts/Criticisms?
+
+Tony
+
+
+
+
+
+On 13 May 2015 at 01:02, Adam Goryachev
+<mailinglists@websitemanagers.com.au> wrote:
+> On 12/05/15 20:08, Another Sillyname wrote:
+>>
+>> I've tried to do some research on this but the information out there
+>> seems a bit contradictory (mainly because some is so old).
+>>
+>> I want to install Fedora directly onto a RAID array (no separate boot
+>> disk).
+>>
+>> My plan is to 'pre configure' the 6 drives as a clean RAID6 array,
+>> effectively sd[a-f] without partitions and then attempt to install
+>> Fedora 21, from sources it looks like Grub2 should recognise the array
+>> and then allow the Kernel to boot thereby 'enabling' the array to
+>> become visible and active.
+>>
+>> However I have not been able to find an actual example of someone
+>> trying this......thoughts?
+>>
+>> The reason to do this is I'm intending to use a Mini ITX board with 6
+>> sata ports and want to use 8TB drives in Raid6 to give me a very high
+>> density data resilient small form factor storage box.
+>>
+>> Ideas/Suggestions?
+>
+>
+> Create a small RAID1 partition at the beginning of every disk, use this for
+> /boot and install grub. Use the rest of each disk as your RAID6 array.
+>
+> This means as long as the bios can find any one of your disks, then the
+> system will boot. Personally, I'd be inclined to put the complete OS on the
+> RAID1, and then only use the RAID6 for the "data" mountpoint. This would
+> allow the system to come up fully, even without the RAID6 (eg, 4 out of 6
+> drives has died), and allow remote debug/diagnostics/etc without needing to
+> try and boot from a rescue disk/etc.
+>
+> This doesn't help you with what you asked, but just an idea/suggestion.
+>
+> Regards,
+> Adam
+>
+> --
+> Adam Goryachev Website Managers www.websitemanagers.com.au
