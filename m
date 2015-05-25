@@ -1,185 +1,156 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V3 04/11] Show all bitmaps while examining bitmap
-Date: Mon, 25 May 2015 14:23:40 +1000
-Message-ID: <20150525142340.44811827@notabene.brown>
+Subject: Re: [PATCH V3 05/11] Add a new clustered disk
+Date: Mon, 25 May 2015 14:35:34 +1000
+Message-ID: <20150525143534.3faebbfb@notabene.brown>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
-	<1432092043-24220-5-git-send-email-gqjiang@suse.com>
+	<1432092043-24220-6-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+=dqArkT/V=fU5q.ExRCjQd"; protocol="application/pgp-signature"
+ boundary="Sig_/U/.2HsjZyhURe_43F_O84JK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1432092043-24220-5-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1432092043-24220-6-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
---Sig_/+=dqArkT/V=fU5q.ExRCjQd
+--Sig_/U/.2HsjZyhURe_43F_O84JK
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 May 2015 11:20:36 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
+On Wed, 20 May 2015 11:20:37 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
 
-> This adds capability of exmining bitmaps corresponding to all
-> nodes/slots on the device.
+> A clustered disk is added by the traditional --add sequence.
+> However, other nodes need to acknowledge that they can "see"
+> the device. This is done by --cluster-confirm:
+>=20
+> --cluster-confirm SLOTNUM:/dev/whatever (if disk is found)
+> or
+> --cluster-confirm SLOTNUM:missing (if disk is not found)
+>=20
+> The node initiating the --add, has the disk state tagged with
+> MD_DISK_CLUSTER_ADD and the one confirming tag the disk with
+> MD_DISK_CANDIDATE.
 >=20
 > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  bitmap.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++++----------=
-------
->  1 file changed, 54 insertions(+), 18 deletions(-)
+>  Manage.c   | 33 +++++++++++++++++++++++++++++----
+>  ReadMe.c   |  1 +
+>  md_p.h     |  7 +++++++
+>  md_u.h     |  1 +
+>  mdadm.8.in |  9 +++++++++
+>  mdadm.c    |  4 ++++
+>  mdadm.h    |  2 ++
+>  util.c     | 10 ++++++++++
+>  8 files changed, 63 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/bitmap.c b/bitmap.c
-> index 920033a..bccc67c 100644
-> --- a/bitmap.c
-> +++ b/bitmap.c
-> @@ -260,7 +260,7 @@ int ExamineBitmap(char *filename, int brief, struct s=
-upertype *st)
->  	int rv =3D 1;
->  	char buf[64];
->  	int swap;
-> -	int fd;
-> +	int fd, i;
->  	__u32 uuid32[4];
-> =20
->  	fd =3D bitmap_file_open(filename, &st);
-> @@ -317,23 +317,59 @@ int ExamineBitmap(char *filename, int brief, struct=
- supertype *st)
->  		       uuid32[2],
->  		       uuid32[3]);
-> =20
-> -	printf("          Events : %llu\n", (unsigned long long)sb->events);
-> -	printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_clea=
-red);
-> -	printf("           State : %s\n", bitmap_state(sb->state));
-> -	printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
-> -	printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
-> -	if (sb->write_behind)
-> -		sprintf(buf, "Allow write behind, max %d", sb->write_behind);
-> -	else
-> -		sprintf(buf, "Normal");
-> -	printf("      Write Mode : %s\n", buf);
-> -	printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_size=
-/2,
-> -					human_size(sb->sync_size * 512));
-> -	if (brief)
-> -		goto free_info;
-> -	printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-> -			info->total_bits, info->dirty_bits,
-> -			100.0 * info->dirty_bits / (info->total_bits?:1));
-> +	if (sb->nodes =3D=3D 0) {
-> +		printf("          Events : %llu\n", (unsigned long long)sb->events);
-> +		printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cle=
-ared);
-> +		printf("           State : %s\n", bitmap_state(sb->state));
-> +		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
-> +		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
-> +		if (sb->write_behind)
-> +			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
-> +		else
-> +			sprintf(buf, "Normal");
-> +		printf("      Write Mode : %s\n", buf);
-> +		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_siz=
-e/2,
-> +						human_size(sb->sync_size * 512));
-> +		if (brief)
-> +			goto free_info;
-> +		printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n",
-> +				info->total_bits, info->dirty_bits,
-> +				100.0 * info->dirty_bits / (info->total_bits?:1));
-> +	} else {
-> +		printf("       Chunksize : %s\n", human_chunksize(sb->chunksize));
-> +		printf("          Daemon : %ds flush period\n", sb->daemon_sleep);
-> +		if (sb->write_behind)
-> +			sprintf(buf, "Allow write behind, max %d", sb->write_behind);
-> +		else
-> +			sprintf(buf, "Normal");
-> +		printf("      Write Mode : %s\n", buf);
-> +		printf("       Sync Size : %llu%s\n", (unsigned long long)sb->sync_siz=
-e/2,
-> +						human_size(sb->sync_size * 512));
-
-This is too much duplication.  Duplicate code leads to maintenance errors.
-
-if (sb->nodes =3D=3D 0)
-    print Events/ Events cleared / state
-
-print chunksuze, daemon flush period, write mode sync size
-
-if (sb->nodes > 0) {
-   print Events/ Events cleared etc for each bitmap=20
-}
-
-
-> +		printf("   Cluster nodes : %d\n", sb->nodes);
-> +		printf("    Cluster name : %s\n", sb->cluster_name);
-
-sb->cluster_name is not nul terminated if it is exactly 64 bytes long.
-You need "%64s" ... and you need to test that case.
-
-
-> +		i =3D 0;
-> +		do {
-
-Please make this a regular
-   for(i =3D 0; i < nodes; i++)
-loop.  do/while should  only be used when some non-trivial computation is
-needed before the condition can be tested.
-
-
-> +			if (i) {
-> +				free(info);
-> +				info =3D bitmap_fd_read(fd, brief);
-> +				sb =3D &info->sb;
-> +			}
-> +			if (sb->magic !=3D BITMAP_MAGIC)
-> +				pr_err("invalid bitmap magic 0x%x, the bitmap file appears to be cor=
-rupted\n", sb->magic);
+> diff --git a/Manage.c b/Manage.c
+> index d3cfb55..4c3d451 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -690,7 +690,8 @@ skip_re_add:
+>  int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  	       struct supertype *tst, mdu_array_info_t *array,
+>  	       int force, int verbose, char *devname,
+> -	       char *update, unsigned long rdev, unsigned long long array_size)
+> +	       char *update, unsigned long rdev, unsigned long long array_size,
+> +	       int raid_slot)
+>  {
+>  	unsigned long long ldsize;
+>  	struct supertype *dev_st =3D NULL;
+> @@ -879,7 +880,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  	}
+>  	disc.major =3D major(rdev);
+>  	disc.minor =3D minor(rdev);
+> -	disc.number =3Dj;
+> +	if (raid_slot < 0)
+> +		disc.number =3D j;
+> +	else
+> +		disc.number =3D raid_slot;
+>  	disc.state =3D 0;
+>  	if (array->not_persistent=3D=3D0) {
+>  		int dfd;
+> @@ -920,6 +924,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+>  			}
+>  		free(used);
+>  	}
 > +
-> +			printf("       Node Slot : %d\n", i);
-> +			printf("          Events : %llu\n", (unsigned long long)sb->events);
-> +			printf("  Events Cleared : %llu\n", (unsigned long long)sb->events_cl=
-eared);
-> +			printf("           State : %s\n", bitmap_state(sb->state));
-> +			if (brief)
-> +				continue;
-> +			printf("          Bitmap : %llu bits (chunks), %llu dirty (%2.1f%%)\n=
-",
-> +					info->total_bits, info->dirty_bits,
-> +					100.0 * info->dirty_bits / (info->total_bits?:1));
-> +
-> +		} while (++i < (int)sb->nodes);
+> +	if (array->state & (1 << MD_SB_CLUSTERED)) {
+> +		if (dv->disposition =3D=3D 'c')
+> +			disc.state |=3D (1 << MD_DISK_CANDIDATE);
+> +		else
+> +			disc.state |=3D (1 << MD_DISK_CLUSTER_ADD);
 > +	}
 > +
->  free_info:
->  	free(info);
->  	return rv;
+>  	if (dv->writemostly =3D=3D 1)
+>  		disc.state |=3D (1 << MD_DISK_WRITEMOSTLY);
+>  	if (tst->ss->external) {
+> @@ -1239,6 +1251,7 @@ int Manage_subdevs(char *devname, int fd,
+>  	 *        variant on 'A'
+>  	 *  'F' - Another variant of 'A', where the device was faulty
+>  	 *        so must be removed from the array first.
+> +	 *  'c' - confirm the device as found (for clustered environments)
+>  	 *
+>  	 * For 'f' and 'r', the device can also be a kernel-internal
+>  	 * name such as 'sdb'.
+> @@ -1254,6 +1267,7 @@ int Manage_subdevs(char *devname, int fd,
+>  	struct mdinfo info;
+>  	int frozen =3D 0;
+>  	int busy =3D 0;
+> +	int raid_slot =3D -1;
+> =20
+>  	if (ioctl(fd, GET_ARRAY_INFO, &array)) {
+>  		pr_err("Cannot get array info for %s\n",
+> @@ -1282,6 +1296,11 @@ int Manage_subdevs(char *devname, int fd,
+>  		int rv;
+>  		int mj,mn;
+> =20
+> +		raid_slot =3D -1;
+> +		if (dv->disposition =3D=3D 'c')
+> +			parse_cluster_confirm_arg(dv->devname, &dv->devname,
+> +					&raid_slot);
+> +
 
-Thanks,
+This function returns -1 if it couldn't successfully parse dv->devname, but
+you aren't catching that error and reporting it.
+
+
 NeilBrown
 
 
---Sig_/+=dqArkT/V=fU5q.ExRCjQd
+> =20
+> +int parse_cluster_confirm_arg(char *input, char **devname, int *slot)
+> +{
+> +	char *dev;
+> +	*slot =3D strtoul(input, &dev, 10);
+> +	if (dev =3D=3D input || dev[0] !=3D ':')
+> +		return -1;
+> +	*devname =3D dev+1;
+> +	return 0;
+> +}
+> +
+
+--Sig_/U/.2HsjZyhURe_43F_O84JK
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIUAwUBVWKjzTnsnt1WYoG5AQIPMQ/4q4pvAx3DJN0R7i5+3UYPOi9GN/zLpCJ3
-TFgA9tP/jw43rqSFWt+a6HjDNEMMaGEroRpLkriNr4nSfeW7GQHpYBlBYAxTO5QG
-2odPunkF86PRJdSLLcqctER3ThM5/HwVPS4Ih9tItO1yNTNUc5K5yhgz9o0Jvlio
-NDeZR7YFo6zDIrCs3CnaYCleFN+V0A2jbb76K0arjYfKulswpXdLVwJfqP5yTwk+
-/0LujbaP9ZN/F1ZDpTdo9VodpILNsP5ldadsMn3d+isvR2uEhmh3zsH2vx+qrwFH
-qh4IyNe8YNN96kpHxyEN36RgKi0hygu8aLWZqapSN4Y/FKAC+0f57hRRCIzElPxS
-LhR14YkIq1nMT96FZMeDr4F69d+koTQE7mUOGbw6i+3SEkkdSttnjeVcTXad6bY7
-nFXHUU2NQWVfQ9IJ1rKRpMCZECWfMef5lTGhANIWSO3sSYmH0VZEynkhXm7Gju2U
-PYijZ15TkxQpelZhB01ccJidP7cUfPhR5oshzwBdxrp6f63VMdhU4QPjjFCQT+rG
-1aHfurDVmsshWa7ygK7F0BoIxCqbYWfuiFdTyQeCf5fYOQ2SXjte96I2HNrJd9p3
-UURjxFe4iGi+yw+pk2WuhW6MptTPvqt4PN9Qvi7+FyqyMRNBL8xUkSxLMeKlSumN
-7sdy3niqaA==
-=WdeI
+iQIVAwUBVWKmljnsnt1WYoG5AQLGHQ/+PjSLMJdTThzem1OTCnIg180ztlgao2p+
+5mLpBtsnCD5qBvcWFR5qVXoHo/JWpH5K73S+uG8WSQzs48SuKyFLqvr41WRvmj8j
+DDGi//bjDC3LUyQiYnAvyMyAgWORSQ2tusSkmU2Oir4wK+zUswj2HNJhahtvCDak
+QsgLTXIv5vlIeriRiNqdQYKPQAXl30hUAJ5qwOCYEiCGNo3qwNOKgOn+emJWnKs2
+59U/2WRiEMBhi28CpGM/wDuEaPtUG1qtQ8o8FPgUUeVLfJLQewloFzdTIXYLrjMG
+2xSmQZMPIEeRlbBxw/gRAwtTh0NvSJagfhUKn58sIzq60lZ6PCcikJAy0RCpSIJw
+Zm7r0j/zPg/9avWVHOPYhzqguV+YF53JViF+OT1At2nVK1HiG2fe/A7of8BREc/s
+ElaewMC1OY/Ia55TLakyyibYLnon2vEyyQRI3apXImkmFg1Jg2wa8ITBVcajWnEl
+Bx5074g4j7YqIVLbGERi7KBsOZnl86hcFikm9k8I32DnbstTqOttlLkwayd9ZTzh
+pHrPpnavRG0Fog21sPsMruOOPMQZ9MhCdOwFU6kdjTsAmKYZxNQo0e9F0HNquGa7
+6LN/DJO/wyT2eyH5eJ86/HQMk7vvhpZ4Vo9LXF9dYanOLo04kxrAafqLPT2iUGux
+OFdQMIC+480=
+=kpmN
 -----END PGP SIGNATURE-----
 
---Sig_/+=dqArkT/V=fU5q.ExRCjQd--
+--Sig_/U/.2HsjZyhURe_43F_O84JK--
