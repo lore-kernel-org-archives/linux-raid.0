@@ -1,156 +1,141 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V3 05/11] Add a new clustered disk
-Date: Mon, 25 May 2015 14:35:34 +1000
-Message-ID: <20150525143534.3faebbfb@notabene.brown>
+Subject: Re: [PATCH V3 06/11] Convert a bitmap=none device to clustered
+Date: Mon, 25 May 2015 14:40:59 +1000
+Message-ID: <20150525144059.45b52f48@notabene.brown>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
-	<1432092043-24220-6-git-send-email-gqjiang@suse.com>
+	<1432092043-24220-7-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/U/.2HsjZyhURe_43F_O84JK"; protocol="application/pgp-signature"
+ boundary="Sig_/uacTLK6.QKsn7TZLLjjn348"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1432092043-24220-6-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1432092043-24220-7-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
---Sig_/U/.2HsjZyhURe_43F_O84JK
+--Sig_/uacTLK6.QKsn7TZLLjjn348
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 May 2015 11:20:37 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
+On Wed, 20 May 2015 11:20:38 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
 
-> A clustered disk is added by the traditional --add sequence.
-> However, other nodes need to acknowledge that they can "see"
-> the device. This is done by --cluster-confirm:
+> This adds the ability to convert a regular md without bitmap
+> (--bitmap=3Dnone) to a clustered device (--bitmap=3Dclustered).
 >=20
-> --cluster-confirm SLOTNUM:/dev/whatever (if disk is found)
-> or
-> --cluster-confirm SLOTNUM:missing (if disk is not found)
->=20
-> The node initiating the --add, has the disk state tagged with
-> MD_DISK_CLUSTER_ADD and the one confirming tag the disk with
-> MD_DISK_CANDIDATE.
+> To convert a device with --bitmap=3Dinternal or --bitmap=3Dexternal,
+> you have to convert to --bitmap=3Dnone and then re-execute the
+> command with --bitmap=3Dclustered.
 >=20
 > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  Manage.c   | 33 +++++++++++++++++++++++++++++----
->  ReadMe.c   |  1 +
->  md_p.h     |  7 +++++++
->  md_u.h     |  1 +
->  mdadm.8.in |  9 +++++++++
->  mdadm.c    |  4 ++++
->  mdadm.h    |  2 ++
->  util.c     | 10 ++++++++++
->  8 files changed, 63 insertions(+), 4 deletions(-)
+>  Grow.c | 20 ++++++++++++++++----
+>  1 file changed, 16 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/Manage.c b/Manage.c
-> index d3cfb55..4c3d451 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -690,7 +690,8 @@ skip_re_add:
->  int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  	       struct supertype *tst, mdu_array_info_t *array,
->  	       int force, int verbose, char *devname,
-> -	       char *update, unsigned long rdev, unsigned long long array_size)
-> +	       char *update, unsigned long rdev, unsigned long long array_size,
-> +	       int raid_slot)
->  {
->  	unsigned long long ldsize;
->  	struct supertype *dev_st =3D NULL;
-> @@ -879,7 +880,10 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
->  	}
->  	disc.major =3D major(rdev);
->  	disc.minor =3D minor(rdev);
-> -	disc.number =3Dj;
-> +	if (raid_slot < 0)
-> +		disc.number =3D j;
-> +	else
-> +		disc.number =3D raid_slot;
->  	disc.state =3D 0;
->  	if (array->not_persistent=3D=3D0) {
->  		int dfd;
-> @@ -920,6 +924,14 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
+> diff --git a/Grow.c b/Grow.c
+> index 9a573fd..1122cec 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -330,9 +330,16 @@ int Grow_addbitmap(char *devname, int fd, struct con=
+text *c, struct shape *s)
 >  			}
->  		free(used);
+>  			return 0;
+>  		}
+> -		pr_err("Internal bitmap already present on %s\n",
+> -			devname);
+> -		return 1;
+> +		if ((strcmp(s->bitmap_file, "clustered")=3D=3D0) && (array.state & (1<=
+<MD_SB_CLUSTERED))) {
+> +			pr_err("Clustered bitmap already present on %s\n",
+> +					devname);
+> +			return 1;
+> +		}
+> +		if ((strcmp(s->bitmap_file, "internal")=3D=3D0) && (!(array.state & (1=
+<<MD_SB_CLUSTERED)))) {
+> +			pr_err("Internal bitmap already present on %s\n",
+> +					devname);
+> +			return 1;
+> +		}
+
+You shouldn't be checking the value of s->bitmap_file here.  No matter what
+value it has, there is some sort of bitmap present and you should report wh=
+at
+sort and return.
+
+
 >  	}
-> +
-> +	if (array->state & (1 << MD_SB_CLUSTERED)) {
-> +		if (dv->disposition =3D=3D 'c')
-> +			disc.state |=3D (1 << MD_DISK_CANDIDATE);
-> +		else
-> +			disc.state |=3D (1 << MD_DISK_CLUSTER_ADD);
-> +	}
-> +
->  	if (dv->writemostly =3D=3D 1)
->  		disc.state |=3D (1 << MD_DISK_WRITEMOSTLY);
->  	if (tst->ss->external) {
-> @@ -1239,6 +1251,7 @@ int Manage_subdevs(char *devname, int fd,
->  	 *        variant on 'A'
->  	 *  'F' - Another variant of 'A', where the device was faulty
->  	 *        so must be removed from the array first.
-> +	 *  'c' - confirm the device as found (for clustered environments)
->  	 *
->  	 * For 'f' and 'r', the device can also be a kernel-internal
->  	 * name such as 'sdb'.
-> @@ -1254,6 +1267,7 @@ int Manage_subdevs(char *devname, int fd,
->  	struct mdinfo info;
->  	int frozen =3D 0;
->  	int busy =3D 0;
-> +	int raid_slot =3D -1;
 > =20
->  	if (ioctl(fd, GET_ARRAY_INFO, &array)) {
->  		pr_err("Cannot get array info for %s\n",
-> @@ -1282,6 +1296,11 @@ int Manage_subdevs(char *devname, int fd,
->  		int rv;
->  		int mj,mn;
-> =20
-> +		raid_slot =3D -1;
-> +		if (dv->disposition =3D=3D 'c')
-> +			parse_cluster_confirm_arg(dv->devname, &dv->devname,
-> +					&raid_slot);
-> +
+>  	if (strcmp(s->bitmap_file, "none") =3D=3D 0) {
+> @@ -375,7 +382,8 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
+ext *c, struct shape *s)
+>  		free(st);
+>  		return 1;
+>  	}
+> -	if (strcmp(s->bitmap_file, "internal") =3D=3D 0) {
+> +	if ((strcmp(s->bitmap_file, "internal") =3D=3D 0) ||
+> +		(strcmp(s->bitmap_file, "clustered") =3D=3D 0)) {
 
-This function returns -1 if it couldn't successfully parse dv->devname, but
-you aren't catching that error and reporting it.
+Indentation is wrong.  It should be:
+
+   if ((strcmp(......) =3D=3D 0) ||
+       (strcmp(......) =3D=3D 0)) {
+
+except that the extra parentheses are not needed. so
+
+   if (strcmp(......) =3D=3D 0 ||
+       strcmp(......) =3D=3D 0) {
 
 
+Thanks,
 NeilBrown
 
+>  		int rv;
+>  		int d;
+>  		int offset_setable =3D 0;
+> @@ -384,6 +392,8 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
+ext *c, struct shape *s)
+>  			pr_err("Internal bitmaps not supported with %s metadata\n", st->ss->n=
+ame);
+>  			return 1;
+>  		}
+> +		st->nodes =3D c->nodes;
+> +		st->cluster_name =3D c->homecluster;
+>  		mdi =3D sysfs_read(fd, NULL, GET_BITMAP_LOCATION);
+>  		if (mdi)
+>  			offset_setable =3D 1;
+> @@ -426,6 +436,8 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
+ext *c, struct shape *s)
+>  			rv =3D sysfs_set_num_signed(mdi, NULL, "bitmap/location",
+>  						  mdi->bitmap_offset);
+>  		} else {
+> +			if (strcmp(s->bitmap_file, "clustered") =3D=3D 0)
+> +				array.state |=3D (1<<MD_SB_CLUSTERED);
+>  			array.state |=3D (1<<MD_SB_BITMAP_PRESENT);
+>  			rv =3D ioctl(fd, SET_ARRAY_INFO, &array);
+>  		}
 
-> =20
-> +int parse_cluster_confirm_arg(char *input, char **devname, int *slot)
-> +{
-> +	char *dev;
-> +	*slot =3D strtoul(input, &dev, 10);
-> +	if (dev =3D=3D input || dev[0] !=3D ':')
-> +		return -1;
-> +	*devname =3D dev+1;
-> +	return 0;
-> +}
-> +
 
---Sig_/U/.2HsjZyhURe_43F_O84JK
+--Sig_/uacTLK6.QKsn7TZLLjjn348
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVWKmljnsnt1WYoG5AQLGHQ/+PjSLMJdTThzem1OTCnIg180ztlgao2p+
-5mLpBtsnCD5qBvcWFR5qVXoHo/JWpH5K73S+uG8WSQzs48SuKyFLqvr41WRvmj8j
-DDGi//bjDC3LUyQiYnAvyMyAgWORSQ2tusSkmU2Oir4wK+zUswj2HNJhahtvCDak
-QsgLTXIv5vlIeriRiNqdQYKPQAXl30hUAJ5qwOCYEiCGNo3qwNOKgOn+emJWnKs2
-59U/2WRiEMBhi28CpGM/wDuEaPtUG1qtQ8o8FPgUUeVLfJLQewloFzdTIXYLrjMG
-2xSmQZMPIEeRlbBxw/gRAwtTh0NvSJagfhUKn58sIzq60lZ6PCcikJAy0RCpSIJw
-Zm7r0j/zPg/9avWVHOPYhzqguV+YF53JViF+OT1At2nVK1HiG2fe/A7of8BREc/s
-ElaewMC1OY/Ia55TLakyyibYLnon2vEyyQRI3apXImkmFg1Jg2wa8ITBVcajWnEl
-Bx5074g4j7YqIVLbGERi7KBsOZnl86hcFikm9k8I32DnbstTqOttlLkwayd9ZTzh
-pHrPpnavRG0Fog21sPsMruOOPMQZ9MhCdOwFU6kdjTsAmKYZxNQo0e9F0HNquGa7
-6LN/DJO/wyT2eyH5eJ86/HQMk7vvhpZ4Vo9LXF9dYanOLo04kxrAafqLPT2iUGux
-OFdQMIC+480=
-=kpmN
+iQIVAwUBVWKn3Dnsnt1WYoG5AQIE6w/9Ga7bh52fWV4tVL34FAyq7NhBmaj8nsyJ
+4RDv+kv9yBC6KCsDXkupzioEGFEzLnU4PH9XY8jLsLCF+ycVKyghY8i9pJznb4k0
+NZQcjozxpNdx5hFqG0xCRv860s4jGtRJONm8LVgwHc86n5OJb59XwULxUMf9+C0b
+SZauokzHXBvtNcSZ2kghEvoKdQMx+AckHwoLtmBumpdcAG5pLgmEytnpL89sD6Ev
+PT/TBiNaugNN1OB3umvkHAlj1rW2cmD3zcYTBditmkF/N2NbfHZ5DuApRgi6wFnO
+ciDYX6WLIL/LdLiY7WEkz4BGI7zNVK6LbRU8bO1kjz+c33xFsgelpG1J3EnFw9wX
+jm24gQoEJvm/K77ddE+rv59+yecl8OUoN77QMFcbJt46oZvK4FgeM4MT4dFKUe+2
+8d5fcdKX5CZJCVeQwWWzx50heH/gtXEc2OMv9lF8RBu5fXg685E8H7OJUzR9D72K
+cL01yrf5OhVAs6l9JimfWgOE2y+dwpYfrAP3fCRwpFRy+0acAa0/aU/zC1GfA+Xr
+KAfCxdV0vpKKH33y7VD3EEyVGi59LOs6ZdTUrPSidmiLAVcq5FTTxokQK8dAe2qI
+qB94JEWHNkiwmhCgZa0CV5oDJu9ek7axKMbg1OBWhz6ftV5rGs88R6y3GUhyAbdo
+z0oK5IauGl0=
+=ezDV
 -----END PGP SIGNATURE-----
 
---Sig_/U/.2HsjZyhURe_43F_O84JK--
+--Sig_/uacTLK6.QKsn7TZLLjjn348--
