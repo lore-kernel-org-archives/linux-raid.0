@@ -1,267 +1,202 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH V3 08/11] mdadm: add the ability to change cluster name
-Date: Mon, 25 May 2015 14:53:10 +1000
-Message-ID: <20150525145310.6b6ff7f8@notabene.brown>
+Subject: Re: [PATCH V3 09/11] mdadm: change the num of cluster node
+Date: Mon, 25 May 2015 14:56:22 +1000
+Message-ID: <20150525145622.5e05c1d4@notabene.brown>
 References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>
-	<1432092043-24220-9-git-send-email-gqjiang@suse.com>
+	<1432092043-24220-10-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/0A_WCwwPrOete6EWeKT_PN2"; protocol="application/pgp-signature"
+ boundary="Sig_/NIXtGsg.pnhlA6t7CH+L466"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1432092043-24220-9-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1432092043-24220-10-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
---Sig_/0A_WCwwPrOete6EWeKT_PN2
+--Sig_/NIXtGsg.pnhlA6t7CH+L466
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 20 May 2015 11:20:40 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
+On Wed, 20 May 2015 11:20:41 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
 
-> To support change the cluster name, the commit do the followings:
+> This extends nodes option for assemble mode, make the num of
+> cluster node could be change by user.
 >=20
-> 1. extend original write_bitmap function for new scenario.
-> 2. add the scenarion to handle the modification of cluster's name
->    in write_bitmap1.
-> 3. make update_super1 can change the name in mdp_superblock_1.
-
-You haven't documented --update=3Dhome-cluster in mdadm.8.in, or at
-
-			fprintf(outf, "Valid --update options are:\n"
-
-Also, I just realised that you are storing the cluster name in the array
-name.  I don't think that is a clever idea.
-The cluster name can be 64 chars.  The array name can only be 32.
-
-I think leave homehost and homecluster completely out of the array name when
-the array is clustered.
-
-and
-> +	    new_name =3D xmalloc(sizeof(sb->set_name));
-
-is really unnecessary.  Just do "char new_name[32];".
-But you are probably going to remove that code anyway.
-
-NeilBrown
-
-
-
+> Before that, it is necessary to ensure there are enough space
+> for those nodes, calc_bitmap_size is introduced to calculate
+> the bitmap size of each node.
 >=20
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 > ---
->  Assemble.c |  5 +++++
->  Grow.c     |  2 +-
+>  Assemble.c |  4 ++++
+>  ReadMe.c   |  2 +-
 >  mdadm.c    |  3 +++
->  mdadm.h    |  7 ++++++-
->  super0.c   |  4 ++--
->  super1.c   | 43 ++++++++++++++++++++++++++++++++++++++++---
->  6 files changed, 57 insertions(+), 7 deletions(-)
+>  mdadm.h    |  1 +
+>  super1.c   | 37 +++++++++++++++++++++++++++++++++++++
+>  5 files changed, 46 insertions(+), 1 deletion(-)
 >=20
 > diff --git a/Assemble.c b/Assemble.c
-> index 25a103d..e1b846c 100644
+> index e1b846c..9ff546b 100644
 > --- a/Assemble.c
 > +++ b/Assemble.c
-> @@ -644,6 +644,11 @@ static int load_devices(struct devs *devices, char *=
+> @@ -626,6 +626,10 @@ static int load_devices(struct devs *devices, char *=
 devmap,
->  				*stp =3D st;
->  				return -1;
->  			}
-> +			if (strcmp(c->update, "home-cluster") =3D=3D 0) {
-> +				err =3D tst->ss->update_super(tst, content, c->update,
-> +							    devname, 0, 0, c->homecluster);
-> +				tst->ss->write_bitmap(tst, dfd, NameUpdate);
+> =20
+>  			if (strcmp(c->update, "byteorder") =3D=3D 0)
+>  				err =3D 0;
+> +			else if (strcmp(c->update, "nodes") =3D=3D 0) {
+> +				tst->nodes =3D c->nodes;
+> +				err =3D tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
 > +			}
->  			if (strcmp(c->update, "uuid")=3D=3D0 &&
->  			    !ident->uuid_set) {
->  				ident->uuid_set =3D 1;
-> diff --git a/Grow.c b/Grow.c
-> index 1122cec..bf44e66 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -420,7 +420,7 @@ int Grow_addbitmap(char *devname, int fd, struct cont=
-ext *c, struct shape *s)
->  						    bitmapsize, offset_setable,
->  						    major)
->  						)
-> -						st->ss->write_bitmap(st, fd2);
-> +						st->ss->write_bitmap(st, fd2, NoUpdate);
->  					else {
->  						pr_err("failed to create internal bitmap - chunksize problem.\n");
->  						close(fd2);
+>  			else
+>  				err =3D tst->ss->update_super(tst, content, c->update,
+>  							    devname, c->verbose,
+> diff --git a/ReadMe.c b/ReadMe.c
+> index c854cd5..d1830e1 100644
+> --- a/ReadMe.c
+> +++ b/ReadMe.c
+> @@ -140,7 +140,7 @@ struct option long_options[] =3D {
+>      {"homehost",  1, 0,  HomeHost},
+>      {"symlinks",  1, 0,  Symlinks},
+>      {"data-offset",1, 0, DataOffset},
+> -    {"nodes",1, 0, Nodes},
+> +    {"nodes",1, 0, Nodes}, /* also for --assemble */
+>      {"home-cluster",1, 0, ClusterName},
+> =20
+>      /* For assemble */
 > diff --git a/mdadm.c b/mdadm.c
-> index 56fdeb7..22f4fc7 100644
+> index 22f4fc7..87c572d 100644
 > --- a/mdadm.c
 > +++ b/mdadm.c
-> @@ -598,6 +598,7 @@ int main(int argc, char *argv[])
+> @@ -589,6 +589,7 @@ int main(int argc, char *argv[])
 >  			}
+>  			ident.raid_disks =3D s.raiddisks;
 >  			continue;
->  		case O(CREATE, ClusterName):
-> +		case O(ASSEMBLE, ClusterName):
->  			c.homecluster =3D optarg;
->  			if (strlen(c.homecluster) > 64) {
->  				pr_err("Cluster name too big.\n");
-> @@ -741,6 +742,8 @@ int main(int argc, char *argv[])
+> +		case O(ASSEMBLE, Nodes):
+>  		case O(CREATE, Nodes):
+>  			c.nodes =3D parse_num(optarg);
+>  			if (c.nodes <=3D 0) {
+> @@ -744,6 +745,8 @@ int main(int argc, char *argv[])
 >  				continue;
->  			if (strcmp(c.update, "homehost")=3D=3D0)
+>  			if (strcmp(c.update, "home-cluster")=3D=3D0)
 >  				continue;
-> +			if (strcmp(c.update, "home-cluster")=3D=3D0)
+> +			if (strcmp(c.update, "nodes")=3D=3D0)
 > +				continue;
 >  			if (strcmp(c.update, "devicesize")=3D=3D0)
 >  				continue;
 >  			if (strcmp(c.update, "no-bitmap")=3D=3D0)
 > diff --git a/mdadm.h b/mdadm.h
-> index 00c726e..d8b0749 100644
+> index d8b0749..97892e6 100644
 > --- a/mdadm.h
 > +++ b/mdadm.h
-> @@ -354,6 +354,11 @@ enum prefix_standard {
->  	IEC
+> @@ -357,6 +357,7 @@ enum prefix_standard {
+>  enum bitmap_update {
+>      NoUpdate,
+>      NameUpdate,
+> +    NodeNumUpdate,
 >  };
 > =20
-> +enum bitmap_update {
-> +    NoUpdate,
-> +    NameUpdate,
-> +};
-> +
 >  /* structures read from config file */
->  /* List of mddevice names and identifiers
->   * Identifiers can be:
-> @@ -850,7 +855,7 @@ extern struct superswitch {
->  	/* if add_internal_bitmap succeeded for existing array, this
->  	 * writes it out.
->  	 */
-> -	int (*write_bitmap)(struct supertype *st, int fd);
-> +	int (*write_bitmap)(struct supertype *st, int fd, enum bitmap_update up=
-date);
->  	/* Free the superblock and any other allocated data */
->  	void (*free_super)(struct supertype *st);
-> =20
-> diff --git a/super0.c b/super0.c
-> index deb5999..6ad9d39 100644
-> --- a/super0.c
-> +++ b/super0.c
-> @@ -900,7 +900,7 @@ static int write_init_super0(struct supertype *st)
->  		rv =3D store_super0(st, di->fd);
-> =20
->  		if (rv =3D=3D 0 && (sb->state & (1<<MD_SB_BITMAP_PRESENT)))
-> -			rv =3D st->ss->write_bitmap(st, di->fd);
-> +			rv =3D st->ss->write_bitmap(st, di->fd, NoUpdate);
-> =20
->  		if (rv)
->  			pr_err("failed to write superblock to %s\n",
-> @@ -1175,7 +1175,7 @@ static void locate_bitmap0(struct supertype *st, in=
-t fd)
->  	lseek64(fd, offset, 0);
->  }
-> =20
-> -static int write_bitmap0(struct supertype *st, int fd)
-> +static int write_bitmap0(struct supertype *st, int fd, enum bitmap_updat=
-e update)
->  {
->  	unsigned long long dsize;
->  	unsigned long long offset;
 > diff --git a/super1.c b/super1.c
-> index fd728d2..07944d4 100644
+> index 07944d4..fe12e81 100644
 > --- a/super1.c
 > +++ b/super1.c
-> @@ -1073,7 +1073,23 @@ static int update_super1(struct supertype *st, str=
-uct mdinfo *info,
->  		info->name[32] =3D 0;
->  	}
+> @@ -134,6 +134,20 @@ struct misc_dev_info {
+>  					|MD_FEATURE_NEW_OFFSET		\
+>  					)
 > =20
-> -	if (strcmp(update, "force-one")=3D=3D0) {
-> +	if (strcmp(update, "home-cluster") =3D=3D 0 &&
-> +	    homehost) {
-> +		/* Note that 'home-cluster' is to change the name of cluster,
-> +		 * it is another "name" update.
-> +		 */
-> +		char *new_name =3D xmalloc(sizeof(sb->set_name));
-> +		if (strrchr(sb->set_name, ':')) {
-> +			strcpy(new_name, strchr(sb->set_name, ':'));
-> +		}
+> +/* return how many bytes are needed for bitmap, for cluster-md each node
+> + * should have it's own bitmap */
+> +static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned int b=
+oundary)
+> +{
+> +	unsigned long long bits, bytes;
 > +
-> +		memset(sb->set_name, 0, sizeof(sb->set_name));
-> +		strcpy(sb->set_name, homehost);
-> +		if (new_name)
-> +			strcat(sb->set_name, new_name);
+> +	bits =3D __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)=
+>>9);
+> +	bytes =3D (bits+7) >> 3;
+> +	bytes +=3D sizeof(bitmap_super_t);
+> +	bytes =3D ROUND_UP(bytes, boundary);
 > +
-> +		free(new_name);
-> +	} else if (strcmp(update, "force-one")=3D=3D0) {
->  		/* Not enough devices for a working array,
->  		 * so bring this one up-to-date
->  		 */
-> @@ -1691,7 +1707,7 @@ static int write_init_super1(struct supertype *st)
->  		sb->sb_csum =3D calc_sb_1_csum(sb);
->  		rv =3D store_super1(st, di->fd);
->  		if (rv =3D=3D 0 && (__le32_to_cpu(sb->feature_map) & 1))
-> -			rv =3D st->ss->write_bitmap(st, di->fd);
-> +			rv =3D st->ss->write_bitmap(st, di->fd, NoUpdate);
->  		close(di->fd);
->  		di->fd =3D -1;
->  		if (rv)
-> @@ -2175,7 +2191,7 @@ static void locate_bitmap1(struct supertype *st, in=
-t fd)
->  	lseek64(fd, offset<<9, 0);
->  }
-> =20
-> -static int write_bitmap1(struct supertype *st, int fd)
-> +static int write_bitmap1(struct supertype *st, int fd, enum bitmap_updat=
-e update)
+> +	return bytes;
+> +}
+> +
+>  static unsigned int calc_sb_1_csum(struct mdp_superblock_1 * sb)
 >  {
->  	struct mdp_superblock_1 *sb =3D st->sb;
->  	bitmap_super_t *bms =3D (bitmap_super_t*)(((char*)sb)+MAX_SB_SIZE);
-> @@ -2184,6 +2200,27 @@ static int write_bitmap1(struct supertype *st, int=
- fd)
->  	int towrite, n;
+>  	unsigned int disk_csum, csum;
+> @@ -2201,6 +2215,7 @@ static int write_bitmap1(struct supertype *st, int =
+fd, enum bitmap_update update
 >  	struct align_fd afd;
 >  	unsigned int i =3D 0;
-> +	char *new_name;
-> +
-> +	switch (update) {
-> +	case NameUpdate:
-> +	    new_name =3D xmalloc(sizeof(sb->set_name));
-> +
-> +	    strncpy(new_name, sb->set_name, sizeof(sb->set_name));
-> +	    memset((char *)bms->cluster_name, 0, sizeof(bms->cluster_name));
-> +
-> +	    if (strtok(new_name, ":"))
-> +		strncpy((char *)bms->cluster_name, new_name, strlen(sb->set_name));
-> +	    else
-> +		/* In case the original set_name doesn't like aaa:md* */
-> +		strncpy((char *)bms->cluster_name, sb->set_name, strlen(sb->set_name));
-> +
-> +	    free(new_name);
-> +	    break;
-> +	case NoUpdate:
-> +	default:
-> +	    break;
-> +	}
+>  	char *new_name;
+> +	unsigned long long total_bm_space, bm_space_per_node;
 > =20
->  	init_afd(&afd, fd);
+>  	switch (update) {
+>  	case NameUpdate:
+> @@ -2217,6 +2232,28 @@ static int write_bitmap1(struct supertype *st, int=
+ fd, enum bitmap_update update
 > =20
+>  	    free(new_name);
+>  	    break;
+> +	case NodeNumUpdate:
+> +	    /* cluster md only supports superblock 1.2 now */
+> +	    if (st->minor_version !=3D 2) {
+> +		pr_err("Warning: cluster md only works with superblock 1.2\n");
+> +		return -EINVAL;
+> +	    }
+> +
+> +	    /* Each node has an independent bitmap, it is necessary to calculat=
+e the
+> +	     * space is enough or not, first get how many bytes for the total b=
+itmap */
+> +	    bm_space_per_node =3D calc_bitmap_size(bms, 4096);
+> +
+> +	    total_bm_space =3D 512 * (__le64_to_cpu(sb->data_offset) - __le64_t=
+o_cpu(sb->super_offset));
+> +	    total_bm_space =3D total_bm_space - 4096; /* leave another 4k for s=
+uperblock */
+> +
+> +	    if (bm_space_per_node * st->nodes > total_bm_space) {
+> +		pr_err("Warning: The max num of nodes can't exceed %llu\n",
+> +			total_bm_space / bm_space_per_node);
+> +		return -ENOMEM;
+> +	    }
+> +
+> +	    bms->nodes =3D __cpu_to_le32(st->nodes);
+> +	    break;
+>  	case NoUpdate:
+>  	default:
+>  	    break;
 
 
---Sig_/0A_WCwwPrOete6EWeKT_PN2
+Again, missing documentation for the new --update option.
+And indents should be tabs, not "4 spaces".  That "switch(update)"
+has wrong indents - I didn't notice before.
+
+Thanks,
+NeilBrown.
+
+--Sig_/NIXtGsg.pnhlA6t7CH+L466
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVWKqtjnsnt1WYoG5AQINNhAAsY/HJfw20/PKCLyZB21ZP6Q40GvJXpZa
-aA7cez5Q7B9Z9RhmUiT3Cl5gnAVHdNQlWFmg8b/Fc2jpqhw/dePwSDTDaqaYaU/h
-lJdU6GvJ4MBojb44vroRe2Z6+V5viwCnNQ0XUchB6w38/8tgi13mPjPZvurcJ9J3
-S3zaXsa4vDtTH2dzGWLYv4wLT4I844HLHd57cepOKvA4Sr1GSaPOnirecXJ0KMwd
-AgpvUG46Ea318wnk9nkpr3L8J+PG3StcPhB+Mp/f9AtyeHAPBEQrYD0j23DLwcdR
-Dgy1SSR8sGrl27gcn8Po6bRVCXWWdUJfv0Ie+jBkdisH6psVaAFeFDwKaufDrjui
-5AvxNXkvJxy8NacQm+jacjW4oTXXIgxRUlXw2g71Q/QzLhQ2n32rmTxDVhPuapVN
-cbpjNYFjTpkbhKJekuYaavfFp4cRWLjynOr6NVlNmPY2qFAwIaMj0OoXrbTP5tV1
-hbcWYZxEt1k0M4CBAEsJJxuMGIaTTdDBG4kbAVIe6Evm5K4lKGIxG0NfbAuYRaK5
-0IAGYPIP/3CAXDsh50AmSp/+RU/DLRGVt3iEvdXk+6qP1RodK0TenH9HBInGmzlO
-5b4AMFcTsVu5X/uHvq6Nra0TuE3vNOw2VyDdQVDNmpaOgoCEw3wBzJA02yQWPbfl
-A9LerxwrwiQ=
-=uOeX
+iQIVAwUBVWKrdznsnt1WYoG5AQJP0xAAvyxYwKdVSzozCH2KVPLaCdRYy6PYjSWo
+gnAaRXaW+0fmtO8EZjnUmfGMrSem4O75piyyeL4dEzA18B74HuwceaWMKDTgxGfV
+jUreH49zO6DYQsOYJaNsPa8hiKe/sJVP25aJu0pMALamvGhb7xOQtQrcADc8ICk/
+Cm5jAQaBqo3oTdCnaKPPgm28veJMqGCXS8Ir/YpVPiz6YP8gG87Iuz4VfLx6MFuu
+q2QZ6RiCQ/pPfOm7hs5mvdF7Ij/IAvtyQH/WK4M5FaNxuhDcZnTrfe72ANeVblLD
+r4kBjAvIMRn38HIqV7DZV9hkZ1z9i+8HZiX5QjCEbToFUT9+lXIgiwUTpEHB3as5
+ib0KsxUXu/ptVDb2eUuMmkUvzXPJKI1Uvt/2mxBxfJrkndPHN0XUxv3OppLRoT8w
+qZ/g4QH5jEKQYZJNBxmGCCX5a5svlo0wQcF6mjNx+ZC3qCy1/7YlYmRVD5GyTTLy
+fWR1KS8K74pKDRCMlAkTqxAcwPGxpZBVhbGs8Es5arWHqPJKdDaFzJBp3xwn+G92
+lNYVUoX8detFBE/ti5AnkinaF0xVqr9kwcjaQH9nkwXAkBCjLIYwP5JkNSwdYxjM
+qRFbR0R7QeL4wDRaw0a+dOT4q9BeAz1zZ6kPWPYH03om2dpVRUj1we9Cz/ZLsSPI
+UW/d43kSBXE=
+=tII3
 -----END PGP SIGNATURE-----
 
---Sig_/0A_WCwwPrOete6EWeKT_PN2--
+--Sig_/NIXtGsg.pnhlA6t7CH+L466--
