@@ -1,102 +1,61 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 08/11] block: kill merge_bvec_fn() completely
-Date: Mon, 25 May 2015 16:04:13 +0200
-Message-ID: <20150525140413.GA26065@lst.de>
-References: <1432318723-18829-1-git-send-email-mlin@kernel.org> <1432318723-18829-9-git-send-email-mlin@kernel.org>
+Subject: Re: [PATCH v4 06/11] md/raid5: get rid of bio_fits_rdev()
+Date: Mon, 25 May 2015 16:17:08 +0200
+Message-ID: <20150525141708.GA26249@lst.de>
+References: <1432318723-18829-1-git-send-email-mlin@kernel.org> <1432318723-18829-7-git-send-email-mlin@kernel.org> <20150525154829.4330f149@notabene.brown> <CAF1ivSY+ky5PD=m34KXU4z9gE_v4uztaFT=MuU4g69DtXD9vWA@mail.gmail.com> <20150525175414.6a1fc33d@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1432318723-18829-9-git-send-email-mlin@kernel.org>
+In-Reply-To: <20150525175414.6a1fc33d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dpark@posteo.net>, Lars Ellenberg <drbd-dev@lists.linbit.com>, drbd-user@lists.linbit.com, Jiri Kosina <jkosina@suse.cz>, Yehuda Sadeh <yehuda@inktank.com>, Sage Weil <sage@inktank.com>, Alex Elder <elder@kernel.org>, ceph-devel@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Alex Elder <elder@linaro.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Ming Lin <mlin@kernel.org>, lkml <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dpark@posteo.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2015 at 11:18:40AM -0700, Ming Lin wrote:
-> From: Kent Overstreet <kent.overstreet@gmail.com>
-> 
-> As generic_make_request() is now able to handle arbitrarily sized bios,
-> it's no longer necessary for each individual block driver to define its
-> own ->merge_bvec_fn() callback. Remove every invocation completely.
+On Mon, May 25, 2015 at 05:54:14PM +1000, NeilBrown wrote:
+> Did I write that?  I guess I did :-(
+> I meant *after*.   Don't get rid of bio_fits_rdev until split_bio is in
+> chunk_aligned_read().
 
-It might be good to replace patch 1 and this one by a patch per driver
-to remove the merge_bvec_fn instance and add the blk_queue_split call
-for all those drivers that actually had a ->merge_bvec_fn.  As some
-of them were non-trivial attention from the maintainers would be helpful,
-and a patch per driver might help with that.
+I suspect the whole series could use some reordering.
 
-> -/* This is called by bio_add_page().
-> - *
-> - * q->max_hw_sectors and other global limits are already enforced there.
-> - *
-> - * We need to call down to our lower level device,
-> - * in case it has special restrictions.
-> - *
-> - * We also may need to enforce configured max-bio-bvecs limits.
-> - *
-> - * As long as the BIO is empty we have to allow at least one bvec,
-> - * regardless of size and offset, so no need to ask lower levels.
-> - */
-> -int drbd_merge_bvec(struct request_queue *q, struct bvec_merge_data *bvm, struct bio_vec *bvec)
+patch 1:
 
+ add ->bio_split and blk_queue_split
 
-This just checks the lower device, so it looks obviously fine.
+patch 2..n:
 
-> -static int pkt_merge_bvec(struct request_queue *q, struct bvec_merge_data *bmd,
-> -			  struct bio_vec *bvec)
-> -{
-> -	struct pktcdvd_device *pd = q->queuedata;
-> -	sector_t zone = get_zone(bmd->bi_sector, pd);
-> -	int used = ((bmd->bi_sector - zone) << 9) + bmd->bi_size;
-> -	int remaining = (pd->settings.size << 9) - used;
-> -	int remaining2;
-> -
-> -	/*
-> -	 * A bio <= PAGE_SIZE must be allowed. If it crosses a packet
-> -	 * boundary, pkt_make_request() will split the bio.
-> -	 */
-> -	remaining2 = PAGE_SIZE - bmd->bi_size;
-> -	remaining = max(remaining, remaining2);
-> -
-> -	BUG_ON(remaining < 0);
-> -	return remaining;
-> -}
+ one for each non-trivial driver that implements ->merge_bvec_fn to
+ remove it and instead split bios in ->make_request.  The md patch
+ to do the right thing in chunk_aligned_read goes into the general
+ md patch here.  The bcache patch also goes into this series.
 
-As mentioned in the comment pkt_make_request will split the bio so pkt
-looks fine.
+patch n+1:
 
-> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-> index ec6c5c6..f50edb3 100644
-> --- a/drivers/block/rbd.c
-> +++ b/drivers/block/rbd.c
-> @@ -3440,52 +3440,6 @@ static int rbd_queue_rq(struct blk_mq_hw_ctx *hctx,
->  	return BLK_MQ_RQ_QUEUE_OK;
->  }
->  
-> -/*
-> - * a queue callback. Makes sure that we don't create a bio that spans across
-> - * multiple osd objects. One exception would be with a single page bios,
-> - * which we handle later at bio_chain_clone_range()
-> - */
-> -static int rbd_merge_bvec(struct request_queue *q, struct bvec_merge_data *bmd,
-> -			  struct bio_vec *bvec)
+ - add blk_queue_split calls for remaining trivial drivers
 
-It seems rbd handles requests spanning objects just fine, so I don't
-really understand why rbd_merge_bvec even exists.  Getting some form
-of ACK from the ceph folks would be useful.
+patch n+2:
 
-> -/*
-> - * We assume I/O is going to the origin (which is the volume
-> - * more likely to have restrictions e.g. by being striped).
-> - * (Looking up the exact location of the data would be expensive
-> - * and could always be out of date by the time the bio is submitted.)
-> - */
-> -static int cache_bvec_merge(struct dm_target *ti,
-> -			    struct bvec_merge_data *bvm,
-> -			    struct bio_vec *biovec, int max_size)
-> -{
+ - remove ->merge_bvec_fn and checking of max_sectors a for all
+   drivers, simplify bio_add_page
 
-DM seems to have the most complex merge functions of all drivers, so
-I'd really love to see an ACK from Mike.
+patch n+2:
 
+ - remove splitting in blkdev_issue_discard
+
+patch n+3
+
+ - remove bio_fits_rdev
+
+patch n+4
+
+ - remove bio_get_nr_vecs
+
+patch n+4
+
+ - use bio_add_page
+
+patch n+5
+
+ - update documentation
