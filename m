@@ -1,61 +1,62 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 06/11] md/raid5: get rid of bio_fits_rdev()
-Date: Mon, 25 May 2015 16:17:08 +0200
-Message-ID: <20150525141708.GA26249@lst.de>
-References: <1432318723-18829-1-git-send-email-mlin@kernel.org> <1432318723-18829-7-git-send-email-mlin@kernel.org> <20150525154829.4330f149@notabene.brown> <CAF1ivSY+ky5PD=m34KXU4z9gE_v4uztaFT=MuU4g69DtXD9vWA@mail.gmail.com> <20150525175414.6a1fc33d@notabene.brown>
+From: Abhijit Bhopatkar <abhopatk@cisco.com>
+Subject: Re: [PATCH] md-cluster: avoid deadlock on MESSAGE lock resource
+Date: Mon, 25 May 2015 19:56:02 +0530
+Message-ID: <556330FA.1030200@cisco.com>
+References: <554CB5DB.4020305@cisco.com> <554CB6B1.3030206@cisco.com> <5557AF81.30304@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150525175414.6a1fc33d@notabene.brown>
+In-Reply-To: <5557AF81.30304@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Ming Lin <mlin@kernel.org>, lkml <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dpark@posteo.net>, linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-raid@vger.kernel.org, Lidong Zhong <lzhong@suse.com>
+Cc: "Reese Faucette (rfaucett)" <rfaucett@cisco.com>
 List-Id: linux-raid.ids
 
-On Mon, May 25, 2015 at 05:54:14PM +1000, NeilBrown wrote:
-> Did I write that?  I guess I did :-(
-> I meant *after*.   Don't get rid of bio_fits_rdev until split_bio is in
-> chunk_aligned_read().
+On 17/05/15 2:28 am, Goldwyn Rodrigues wrote:
+> 
+> 
+> On 05/08/2015 08:14 AM, Abhijit Bhopatkar wrote:
+>> On 08/05/15 6:40 pm, Abhijit Bhopatkar wrote:
+>>>
+>>> Every receiver has CR lock on MESSAGE while processing the message. When
+>>> every receiver releases ACK lock and for some reason fails to grab EX on
+>>> MESSAGE resource in time, a waiting sender could queue an EX on MESSAGE
+>>> instead. Now when receiver queues its up convert request on MESSAGE it
+>>> will end up in a deadlock situation.
+>>>
+>>> Setting NOQUEUE flag on MESSAGE lock resource while grabbing the EX on
+>>> MESSAGE on sender will avoid this deadlock. If sender can not grab
+>>> MESSAGE lock immediately it should retry until the lock is granted.
+>>>
+>>> Signed-off-by: Abhijit Bhopatkar <abhopatk@cisco.com>
+>>> ---
+>>> This has been minimally tested on a three node cluster.
+>>>
+>>
+>> I have tested standard mdadm operations (create, assemble etc).
+>> What more testing would you want me to do on this before its considered
+>> ready?
+> 
+> I am not sure how using LKF_NOQUEUE will help in this situation here. LKF_NOQUEUE primarily means do not queue if you can't grant it right away. Besides, I don't like the idea of goto loop.
+> 
+> The sender can still creep in between the ack and the message locks. A situation would be where the "disrupting" sender is the lock owner of all the locks and hence will not have to pay communication costs and will manage to attain the locks faster.
+> 
+> Perhaps DLM_LKF_HEADQUEUE or DLM_LKF_NOORDER is what you are looking for, but that again is not the complete solution.
+> 
+> Another idea I could think of is for the sender to downconvert TOKEN to a shared lock such as CR  halfway in the communication (say after message CR), and all receivers take the TOKEN in CR mode and release it once the communication is finally over.
+> 
+> Regards,
+> 
+> 
+I agree about the goto pollution and yes converting receivers to use DLM_LKF_HEADQUEUE will solve the problem gracefully. Will send the new patch shortly.
 
-I suspect the whole series could use some reordering.
+However I do not understand why this is incomplete solution. The "disruptive sender" as you have called it, is already "TOKEN" owner and otherwise it will compete for TOKEN lock as usual with other senders with equal priority. Not gaining any priority over others. The changes simply make sender stall for all _receivers_ to complete their serialization and wait till all receivers convert MESSAGE lock from CR to EX to NL, nothing else changes.
 
-patch 1:
+Regards,
 
- add ->bio_split and blk_queue_split
+>>
+>> Regards,
+>> Abhijit
 
-patch 2..n:
-
- one for each non-trivial driver that implements ->merge_bvec_fn to
- remove it and instead split bios in ->make_request.  The md patch
- to do the right thing in chunk_aligned_read goes into the general
- md patch here.  The bcache patch also goes into this series.
-
-patch n+1:
-
- - add blk_queue_split calls for remaining trivial drivers
-
-patch n+2:
-
- - remove ->merge_bvec_fn and checking of max_sectors a for all
-   drivers, simplify bio_add_page
-
-patch n+2:
-
- - remove splitting in blkdev_issue_discard
-
-patch n+3
-
- - remove bio_fits_rdev
-
-patch n+4
-
- - remove bio_get_nr_vecs
-
-patch n+4
-
- - use bio_add_page
-
-patch n+5
-
- - update documentation
+<snip>
