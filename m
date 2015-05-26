@@ -1,68 +1,93 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] md-cluster: avoid deadlock on MESSAGE lock resource
-Date: Tue, 26 May 2015 09:44:49 -0500
-Message-ID: <556486E1.4030404@suse.de>
-References: <554CB5DB.4020305@cisco.com> <554CB6B1.3030206@cisco.com> <5557AF81.30304@suse.de> <556330FA.1030200@cisco.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
+ prematurely.
+Date: Tue, 26 May 2015 11:16:47 -0700
+Message-ID: <20150526181647.GA38853@kernel.org>
+References: <20150522052802.2117.40527.stgit@notabene.brown>
+ <20150522053058.2117.29026.stgit@notabene.brown>
+ <20150522234402.GA86128@kernel.org>
+ <20150523102640.20be3fca@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <556330FA.1030200@cisco.com>
+Content-Disposition: inline
+In-Reply-To: <20150523102640.20be3fca@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Abhijit Bhopatkar <abhopatk@cisco.com>, linux-raid@vger.kernel.org, Lidong Zhong <lzhong@suse.com>
-Cc: "Reese Faucette (rfaucett)" <rfaucett@cisco.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, May 23, 2015 at 10:26:40AM +1000, NeilBrown wrote:
+> On Fri, 22 May 2015 16:44:02 -0700 Shaohua Li <shli@kernel.org> wrote:
+> 
+> > On Fri, May 22, 2015 at 03:30:58PM +1000, NeilBrown wrote:
+> > > If a stripe is a member of a batch, but not the head, it must
+> > > not be handled separately from the rest of the batch.
+> > > 
+> > > 'clear_batch_ready()' handles this requirement to some
+> > > extent but not completely.  If a member is passed to handle_stripe()
+> > > a second time it returns '0' indicating the stripe can be handled,
+> > > which is wrong.
+> > > So add an extra test.
+> > > 
+> > > Signed-off-by: NeilBrown <neilb@suse.de>
+> > > ---
+> > >  drivers/md/raid5.c |    6 +++++-
+> > >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > > index c3ccefbd4fe7..9a803b735848 100644
+> > > --- a/drivers/md/raid5.c
+> > > +++ b/drivers/md/raid5.c
+> > > @@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+> > >  
+> > >  static int clear_batch_ready(struct stripe_head *sh)
+> > >  {
+> > > +	/* Return '1' if this is a member of batch, or
+> > > +	 * '0' if it is a lone stripe or a head which can now be
+> > > +	 * handled.
+> > > +	 */
+> > >  	struct stripe_head *tmp;
+> > >  	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
+> > > -		return 0;
+> > > +		return (sh->batch_head && sh->batch_head != sh);
+> > >  	spin_lock(&sh->stripe_lock);
+> > >  	if (!sh->batch_head) {
+> > >  		spin_unlock(&sh->stripe_lock);
+> > 
+> > which case can this happen in?
+> 
+> It definitely happens as I had reliable problems until I added this fix.
+> 'retry_aligned_read()' can call handle_stripe() on any stripe at any time,
+> but I doubt that would apply.  I might try putting a warn-on there and see if
+> it provides any hints.
+> 
+> > 
+> > Patches look good. But I'm not in Fusionio any more, so can't check the
+> > performance in big raid array with fast flash cards. I'm doing some tests here.
+> > I hit a warning in break_stripe_batch_list, STRIPE_BIT_DELAY is set in the
+> > stripe state. I'm checking the reason, but if you have thoughts I can try
+> > immediately, please let me know.
+> 
+> I got STRIPE_BIT_DELAY a few times.  That was the main reason for
+> 
+>   md/raid5: ensure whole batch is delayed for all required bitmap updates.
+> 
+> and they went away after I got that patch right.
+> 
+> Maybe there is a race in there..
+> 
+> If you can reproduce it, maybe WARN whenever STRIPE_BIT_DELAY gets set on a
+> stripe with ->batch_head.
 
+Ok, there is a race in add_stripe_bio(). We unlocked the stripe_lock to set the
+BIT_DELAY. After the unlock, the stripe might be added to a batch,
+stripe_add_to_batch_list didn't clear the bit. Holding the lock in
+add_stripe_bio and checking ->batch_head again when we set the bit should fix
+the issue.
 
-On 05/25/2015 09:26 AM, Abhijit Bhopatkar wrote:
-> On 17/05/15 2:28 am, Goldwyn Rodrigues wrote:
->>
->>
->> On 05/08/2015 08:14 AM, Abhijit Bhopatkar wrote:
->>> On 08/05/15 6:40 pm, Abhijit Bhopatkar wrote:
->>>>
->>>> Every receiver has CR lock on MESSAGE while processing the message. When
->>>> every receiver releases ACK lock and for some reason fails to grab EX on
->>>> MESSAGE resource in time, a waiting sender could queue an EX on MESSAGE
->>>> instead. Now when receiver queues its up convert request on MESSAGE it
->>>> will end up in a deadlock situation.
->>>>
->>>> Setting NOQUEUE flag on MESSAGE lock resource while grabbing the EX on
->>>> MESSAGE on sender will avoid this deadlock. If sender can not grab
->>>> MESSAGE lock immediately it should retry until the lock is granted.
->>>>
->>>> Signed-off-by: Abhijit Bhopatkar <abhopatk@cisco.com>
->>>> ---
->>>> This has been minimally tested on a three node cluster.
->>>>
->>>
->>> I have tested standard mdadm operations (create, assemble etc).
->>> What more testing would you want me to do on this before its considered
->>> ready?
->>
->> I am not sure how using LKF_NOQUEUE will help in this situation here. LKF_NOQUEUE primarily means do not queue if you can't grant it right away. Besides, I don't like the idea of goto loop.
->>
->> The sender can still creep in between the ack and the message locks. A situation would be where the "disrupting" sender is the lock owner of all the locks and hence will not have to pay communication costs and will manage to attain the locks faster.
->>
->> Perhaps DLM_LKF_HEADQUEUE or DLM_LKF_NOORDER is what you are looking for, but that again is not the complete solution.
->>
->> Another idea I could think of is for the sender to downconvert TOKEN to a shared lock such as CR  halfway in the communication (say after message CR), and all receivers take the TOKEN in CR mode and release it once the communication is finally over.
->>
->> Regards,
->>
->>
-> I agree about the goto pollution and yes converting receivers to use DLM_LKF_HEADQUEUE will solve the problem gracefully. Will send the new patch shortly.
->
-> However I do not understand why this is incomplete solution. The "disruptive sender" as you have called it, is already "TOKEN" owner and otherwise it will compete for TOKEN lock as usual with other senders with equal priority. Not gaining any priority over others. The changes simply make sender stall for all _receivers_ to complete their serialization and wait till all receivers convert MESSAGE lock from CR to EX to NL, nothing else changes.
->
-
-
-Yes, you are right. I ignored an operation on the message lock resource. 
-I will perform some tests before I signoff.
+And STRIPE_ON_UNPLUG_LIST and STRIPE_ON_RELEASE_LIST are set is legit in
+break_stripe_batch_list(), they should be removed from the WARN_ON_ONCE().
 
 Thanks,
-
-
--- 
-Goldwyn
+Shaohua
