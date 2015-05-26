@@ -1,148 +1,140 @@
-From: Shaohua Li <shli@kernel.org>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
  prematurely.
-Date: Tue, 26 May 2015 16:21:57 -0700
-Message-ID: <20150526232157.GA77226@kernel.org>
+Date: Wed, 27 May 2015 09:34:51 +1000
+Message-ID: <20150527093451.0c83be44@notabene.brown>
 References: <20150522052802.2117.40527.stgit@notabene.brown>
- <20150522053058.2117.29026.stgit@notabene.brown>
- <20150522234402.GA86128@kernel.org>
- <20150523102640.20be3fca@notabene.brown>
- <20150526181647.GA38853@kernel.org>
- <20150527083532.32486e08@notabene.brown>
+	<20150522053058.2117.29026.stgit@notabene.brown>
+	<20150522234402.GA86128@kernel.org>
+	<20150523102640.20be3fca@notabene.brown>
+	<20150526181647.GA38853@kernel.org>
+	<20150527083532.32486e08@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/.IYhZkJZ4CDe8AtIbA7QHIt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <20150527083532.32486e08@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Shaohua Li <shli@kernel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 27, 2015 at 08:35:32AM +1000, NeilBrown wrote:
-> On Tue, 26 May 2015 11:16:47 -0700 Shaohua Li <shli@kernel.org> wrote:
-> 
-> > On Sat, May 23, 2015 at 10:26:40AM +1000, NeilBrown wrote:
-> > > On Fri, 22 May 2015 16:44:02 -0700 Shaohua Li <shli@kernel.org> wrote:
-> > > 
-> > > > On Fri, May 22, 2015 at 03:30:58PM +1000, NeilBrown wrote:
-> > > > > If a stripe is a member of a batch, but not the head, it must
-> > > > > not be handled separately from the rest of the batch.
-> > > > > 
-> > > > > 'clear_batch_ready()' handles this requirement to some
-> > > > > extent but not completely.  If a member is passed to handle_stripe()
-> > > > > a second time it returns '0' indicating the stripe can be handled,
-> > > > > which is wrong.
-> > > > > So add an extra test.
-> > > > > 
-> > > > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > > > ---
-> > > > >  drivers/md/raid5.c |    6 +++++-
-> > > > >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > > > index c3ccefbd4fe7..9a803b735848 100644
-> > > > > --- a/drivers/md/raid5.c
-> > > > > +++ b/drivers/md/raid5.c
-> > > > > @@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
-> > > > >  
-> > > > >  static int clear_batch_ready(struct stripe_head *sh)
-> > > > >  {
-> > > > > +	/* Return '1' if this is a member of batch, or
-> > > > > +	 * '0' if it is a lone stripe or a head which can now be
-> > > > > +	 * handled.
-> > > > > +	 */
-> > > > >  	struct stripe_head *tmp;
-> > > > >  	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
-> > > > > -		return 0;
-> > > > > +		return (sh->batch_head && sh->batch_head != sh);
-> > > > >  	spin_lock(&sh->stripe_lock);
-> > > > >  	if (!sh->batch_head) {
-> > > > >  		spin_unlock(&sh->stripe_lock);
-> > > > 
-> > > > which case can this happen in?
-> > > 
-> > > It definitely happens as I had reliable problems until I added this fix.
-> > > 'retry_aligned_read()' can call handle_stripe() on any stripe at any time,
-> > > but I doubt that would apply.  I might try putting a warn-on there and see if
-> > > it provides any hints.
-> > > 
-> > > > 
-> > > > Patches look good. But I'm not in Fusionio any more, so can't check the
-> > > > performance in big raid array with fast flash cards. I'm doing some tests here.
-> > > > I hit a warning in break_stripe_batch_list, STRIPE_BIT_DELAY is set in the
-> > > > stripe state. I'm checking the reason, but if you have thoughts I can try
-> > > > immediately, please let me know.
-> > > 
-> > > I got STRIPE_BIT_DELAY a few times.  That was the main reason for
-> > > 
-> > >   md/raid5: ensure whole batch is delayed for all required bitmap updates.
-> > > 
-> > > and they went away after I got that patch right.
-> > > 
-> > > Maybe there is a race in there..
-> > > 
-> > > If you can reproduce it, maybe WARN whenever STRIPE_BIT_DELAY gets set on a
-> > > stripe with ->batch_head.
-> > 
-> > Ok, there is a race in add_stripe_bio(). We unlocked the stripe_lock to set the
-> > BIT_DELAY. After the unlock, the stripe might be added to a batch,
-> > stripe_add_to_batch_list didn't clear the bit. Holding the lock in
-> > add_stripe_bio and checking ->batch_head again when we set the bit should fix
-> > the issue.
-> 
-> We can't hold a spin_lock over bitmap_startwrite(), and we really need to
-> make sure the write doesn't start until bitmap_startwrite has completed.
-> So we need to keep the stripe_head out of any batch during that time.
-> So I've added an extra state bit.
-> 
+--Sig_/.IYhZkJZ4CDe8AtIbA7QHIt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 27 May 2015 08:35:32 +1000 NeilBrown <neilb@suse.de> wrote:
+
 > Could you please review and possibly test the patch below?
-> 
-> > 
-> > And STRIPE_ON_UNPLUG_LIST and STRIPE_ON_RELEASE_LIST are set is legit in
-> > break_stripe_batch_list(), they should be removed from the WARN_ON_ONCE().
-> 
-> Yes, you are right.  Thanks.
-> 
-> > 
-> > Thanks,
-> > Shaohua
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 041341c66ae5..89d6faafffda 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -760,6 +760,7 @@ static void unlock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
->  static bool stripe_can_batch(struct stripe_head *sh)
->  {
->  	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
-> +		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
->  		is_full_stripe_write(sh);
->  }
->  
-> @@ -3007,14 +3008,18 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx,
->  	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
->  		(unsigned long long)(*bip)->bi_iter.bi_sector,
->  		(unsigned long long)sh->sector, dd_idx);
-> -	spin_unlock_irq(&sh->stripe_lock);
->  
->  	if (conf->mddev->bitmap && firstwrite) {
-> +		set_bit(STRIPE_BITMAP_PENDING, &sh->state);
-> +		spin_unlock_irq(&sh->stripe_lock);
->  		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
->  				  STRIPE_SECTORS, 0);
-> +		spin_lock_irq(&sh->stripe_lock);
-> +		clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
->  		sh->bm_seq = conf->seq_flush+1;
->  		set_bit(STRIPE_BIT_DELAY, &sh->state);
->  	}
-> +	spin_lock_irq(&sh->stripe_lock);
+>=20
 
-should be unlock here. I'll report back if anything is wrong.
+well... that patch had a fairly obvious double-lock bug.
+Try this one.
+(oh, just saw your email that you spotted the lock bug :-)
 
-Thanks,
-Shaohua
+
+NeilBrown
+
+From: NeilBrown <neilb@suse.de>
+Date: Wed, 27 May 2015 08:43:45 +1000
+Subject: [PATCH] md/raid5: close race between STRIPE_BIT_DELAY and batching.
+
+The first time a write is added to a stripe, we need to set the
+bitmap bits (if a bitmap is active).
+While doing that the stripe is not locked and other writes could
+be added and then the stripe could be added to a batch.
+Once it has entered the batch it is too large to set STRIPE_BIT_DELAY
+as the batch head has taken over when the stripe will be written.
+
+We cannot hold the spinlock while adding the bitmap bit,
+so introduce a new stripe_head flag 'STRIPE_BITMAP_PENDING' which
+indicates that adding to the bitmap is pending.  This prevents
+the stripe from being added to a batch.
+
+Only the first thread to add a write to a stripe can set this bit,
+so it is safe for it to clear it again when it is done.
+
+Reported-by: Shaohua Li <shli@kernel.org>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 73b5376dad3b..dae587ecdf71 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -760,6 +760,7 @@ static void unlock_two_stripes(struct stripe_head *sh1,=
+ struct stripe_head *sh2)
+ static bool stripe_can_batch(struct stripe_head *sh)
+ {
+ 	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
++		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
+ 		is_full_stripe_write(sh);
+ }
+=20
+@@ -3007,14 +3008,27 @@ static int add_stripe_bio(struct stripe_head *sh, s=
+truct bio *bi, int dd_idx,
+ 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
+ 		(unsigned long long)(*bip)->bi_iter.bi_sector,
+ 		(unsigned long long)sh->sector, dd_idx);
+-	spin_unlock_irq(&sh->stripe_lock);
+=20
+ 	if (conf->mddev->bitmap && firstwrite) {
++		/* Cannot hold spinlock over bitmap_startwrite,
++		 * but must ensure this isn't added to a batch until
++		 * we have added to the bitmap and set bm_seq.
++		 * So set STRIPE_BITMAP_PENDING to prevent
++		 * batching.
++		 * Only the first thread to add a write to a stripe
++		 * can set this bit, so we "own" it.
++		 */
++		WARN_ON(test_bit(STRIPE_BITMAP_PENDING, &sh->state));
++		set_bit(STRIPE_BITMAP_PENDING, &sh->state);
++		spin_unlock_irq(&sh->stripe_lock);
+ 		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
+ 				  STRIPE_SECTORS, 0);
++		spin_lock_irq(&sh->stripe_lock);
++		clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
+ 		sh->bm_seq =3D conf->seq_flush+1;
+ 		set_bit(STRIPE_BIT_DELAY, &sh->state);
+ 	}
++	spin_unlock_irq(&sh->stripe_lock);
+=20
+ 	if (stripe_can_batch(sh))
+ 		stripe_add_to_batch_list(conf, sh);
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index d7b2bc8b756f..02c3bf8fbfe7 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -337,6 +337,9 @@ enum {
+ 	STRIPE_ON_RELEASE_LIST,
+ 	STRIPE_BATCH_READY,
+ 	STRIPE_BATCH_ERR,
++	STRIPE_BITMAP_PENDING,	/* Being added to bitmap, don't add
++				 * to batch yet.
++				 */
+ };
+=20
+ #define STRIPE_EXPAND_SYNC_FLAGS \
+
+--Sig_/.IYhZkJZ4CDe8AtIbA7QHIt
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUBVWUDGznsnt1WYoG5AQL9uhAAwCMLJfdMtvPkjTKEbNXGTbg8U6XmwpSP
+/QTzy3YIdn7r6RUmDwktvX/czbbnK3q18bUDe0xfi83zrb8c29wmapsZkEjvtsfk
+V5RUyYo/eqEcLldc4JhSdSW5eTeB25N+YDfXCvPb8WEtVVSCf7CQZpD9Fq0U18ae
+DBiqcgcVH91gnDpbzFOGvzdd59Fa1L166Jv5NKedj0zBAyEY9sZlnUwJzZ889Bor
+IJmN1rVVwBGQHFAMrgI6lhTvb2N1CXCbvjflf7LoolrRsJxody6eUbDaXrKKDitZ
+lAuj/904P7mVN2SDBHq81a2pKwu/7Yo/Ltrc4A8NGyf8UbQASFoeKFWXrNeczlh0
++DIZQ+FyhQthAZ3LFcJaq1lGtVjS76z893QSB3YrWvtvRQ1vh+NLPey7gMPsnfZf
+U8zhrF2PhYR5M/tJMjHLnVdOgFc5m34FSzIr1ZPcQPEPn3JftXW2eLd72lQ6FKPg
+uQIGDdt+YTd8sxjXsyt6GpBHAXQg9+pEO8XSCdVrbqw8lXcxJDlD8b0Lxexm75d8
+lthVaXvmPDUMsOHufdmK35t1VP+Cklmt5WfrbzPTFNULXRvOKqkE4Cqx2/838+kL
+2+pp2UQYolQtTa2EBOOd8Wcs8H4r6rI2rTWgPCj1dl08HL4GRIiHnrWtQLpbjoSz
+45l6GZbhLVE=
+=Cez+
+-----END PGP SIGNATURE-----
+
+--Sig_/.IYhZkJZ4CDe8AtIbA7QHIt--
