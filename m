@@ -1,93 +1,44 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
- prematurely.
-Date: Tue, 26 May 2015 11:16:47 -0700
-Message-ID: <20150526181647.GA38853@kernel.org>
-References: <20150522052802.2117.40527.stgit@notabene.brown>
- <20150522053058.2117.29026.stgit@notabene.brown>
- <20150522234402.GA86128@kernel.org>
- <20150523102640.20be3fca@notabene.brown>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Fwd: Installing Linux directly onto RAID6 Array...........
+Date: Tue, 26 May 2015 21:11:31 +0100
+Message-ID: <5564D373.30705@youngman.org.uk>
+References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com> <555294A0.6040703@websitemanagers.com.au> <CAOS+5GEP6+7OAHkqQjeyGHAB5u-_-Vq2JWGpcOemYHdCjmR5Lg@mail.gmail.com> <CAOS+5GHKwQRPfNAw0EpSjjDUt=9PmjjrkUg+dhGxFS+uOWWVug@mail.gmail.com> <alpine.DEB.2.02.1505241032210.9487@uplift.swm.pp.se> <5561B237.4040709@youngman.org.uk> <5561BCA4.4060904@fnarfbargle.com> <5561C6E9.3060706@youngman.org.uk> <alpine.DEB.2.02.1505241604370.9487@uplift.swm.pp.se> <5561E5CE.7000304@youngman.org.uk> <alpine.DEB.2.02.1505241654580.9487@uplift.swm.pp.se> <CAOS+5GHz-4J_n7UAU1xVLWp3h7CRTuuSHdmP9rbL6=8=qx30CQ@mail.gmail.com> <5563AE50.4090806@youngman.org.uk> <CAOS+5GEBJ8dxF4s91dGmF7jx36LyNnu40UQZjLAmK2xVhqLAHw@mail.gmail.com> <alpine.DEB.2.02.1505261005260.9487@uplift.swm.pp.se> <CAOS+5GHW
+ ktYuV2Q7NhsqybgFY5-QKRaGih0YcerD08_rKZp4Ng@mail.gmail.com> <alpine.DEB.2.02.1505261605450.9487@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150523102640.20be3fca@notabene.brown>
+In-Reply-To: <alpine.DEB.2.02.1505261605450.9487@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Mikael Abrahamsson <swmike@swm.pp.se>, Another Sillyname <anothersname@googlemail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 23, 2015 at 10:26:40AM +1000, NeilBrown wrote:
-> On Fri, 22 May 2015 16:44:02 -0700 Shaohua Li <shli@kernel.org> wrote:
+On 26/05/15 15:08, Mikael Abrahamsson wrote:
+> On Tue, 26 May 2015, Another Sillyname wrote:
 > 
-> > On Fri, May 22, 2015 at 03:30:58PM +1000, NeilBrown wrote:
-> > > If a stripe is a member of a batch, but not the head, it must
-> > > not be handled separately from the rest of the batch.
-> > > 
-> > > 'clear_batch_ready()' handles this requirement to some
-> > > extent but not completely.  If a member is passed to handle_stripe()
-> > > a second time it returns '0' indicating the stripe can be handled,
-> > > which is wrong.
-> > > So add an extra test.
-> > > 
-> > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > ---
-> > >  drivers/md/raid5.c |    6 +++++-
-> > >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > index c3ccefbd4fe7..9a803b735848 100644
-> > > --- a/drivers/md/raid5.c
-> > > +++ b/drivers/md/raid5.c
-> > > @@ -4192,9 +4192,13 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
-> > >  
-> > >  static int clear_batch_ready(struct stripe_head *sh)
-> > >  {
-> > > +	/* Return '1' if this is a member of batch, or
-> > > +	 * '0' if it is a lone stripe or a head which can now be
-> > > +	 * handled.
-> > > +	 */
-> > >  	struct stripe_head *tmp;
-> > >  	if (!test_and_clear_bit(STRIPE_BATCH_READY, &sh->state))
-> > > -		return 0;
-> > > +		return (sh->batch_head && sh->batch_head != sh);
-> > >  	spin_lock(&sh->stripe_lock);
-> > >  	if (!sh->batch_head) {
-> > >  		spin_unlock(&sh->stripe_lock);
-> > 
-> > which case can this happen in?
+>> Very easy to understand......any way that requires entering the swaps
+>> into /etc/fstab therefore means that if any drive and it's contained
+>> swap fails the reboot can fail (plus the overhead of all those uuid
+>> numbers in fstab).  My way means that as the swaps don't get loaded
+>> unless the drive is alive the reboot has more resilience.
 > 
-> It definitely happens as I had reliable problems until I added this fix.
-> 'retry_aligned_read()' can call handle_stripe() on any stripe at any time,
-> but I doubt that would apply.  I might try putting a warn-on there and see if
-> it provides any hints.
-> 
-> > 
-> > Patches look good. But I'm not in Fusionio any more, so can't check the
-> > performance in big raid array with fast flash cards. I'm doing some tests here.
-> > I hit a warning in break_stripe_batch_list, STRIPE_BIT_DELAY is set in the
-> > stripe state. I'm checking the reason, but if you have thoughts I can try
-> > immediately, please let me know.
-> 
-> I got STRIPE_BIT_DELAY a few times.  That was the main reason for
-> 
->   md/raid5: ensure whole batch is delayed for all required bitmap updates.
-> 
-> and they went away after I got that patch right.
-> 
-> Maybe there is a race in there..
-> 
-> If you can reproduce it, maybe WARN whenever STRIPE_BIT_DELAY gets set on a
-> stripe with ->batch_head.
+> If you have RAID1 for swap, you only need a single component drive to
+> work for the RAID1 to be able to start. It also means any drive can fail
+> and your swap information still works.
 
-Ok, there is a race in add_stripe_bio(). We unlocked the stripe_lock to set the
-BIT_DELAY. After the unlock, the stripe might be added to a batch,
-stripe_add_to_batch_list didn't clear the bit. Holding the lock in
-add_stripe_bio and checking ->batch_head again when we set the bit should fix
-the issue.
+And you're wasting a lot of disk space. What's important to you (that a
+live swap disk shouldn't fail) is not important to me and doesn't seem
+to be important to Another Sillyname.
 
-And STRIPE_ON_UNPLUG_LIST and STRIPE_ON_RELEASE_LIST are set is legit in
-break_stripe_batch_list(), they should be removed from the WARN_ON_ONCE().
+My disk drives have 32Gb swap partitions. Overkill? Dunno. But I'd
+rather linux raid 0's them for 64Gb swap than mdadm raid 1's them for
+32Gb swap. I have a couple of 20Gb tmpfs partitions :-)
 
-Thanks,
-Shaohua
+I don't know why Another Sillyname wants to chain his swap partitions,
+but it's his choice. Maybe like me, his system gets rebooted a couple of
+times a day, and failure to start is a far more real risk than failure
+in use. He's running Fedora - that seems likely then ...
+
+Cheers,
+Wol
