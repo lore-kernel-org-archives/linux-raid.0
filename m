@@ -1,140 +1,142 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/8] md/raid5: Ensure a batch member is not handled
- prematurely.
-Date: Wed, 27 May 2015 09:34:51 +1000
-Message-ID: <20150527093451.0c83be44@notabene.brown>
-References: <20150522052802.2117.40527.stgit@notabene.brown>
-	<20150522053058.2117.29026.stgit@notabene.brown>
-	<20150522234402.GA86128@kernel.org>
-	<20150523102640.20be3fca@notabene.brown>
-	<20150526181647.GA38853@kernel.org>
-	<20150527083532.32486e08@notabene.brown>
+From: Ming Lin <mlin@kernel.org>
+Subject: Re: [PATCH v4 06/11] md/raid5: get rid of bio_fits_rdev()
+Date: Tue, 26 May 2015 16:42:35 -0700
+Message-ID: <CAF1ivSZee_aV4XOtgc9YOR4YG4Lsd0tJkE-F+i9jg-5Ep7_Afg@mail.gmail.com>
+References: <1432318723-18829-1-git-send-email-mlin@kernel.org>
+	<1432318723-18829-7-git-send-email-mlin@kernel.org>
+	<20150525154829.4330f149@notabene.brown>
+	<CAF1ivSY+ky5PD=m34KXU4z9gE_v4uztaFT=MuU4g69DtXD9vWA@mail.gmail.com>
+	<20150525175414.6a1fc33d@notabene.brown>
+	<20150525141708.GA26249@lst.de>
+	<CAF1ivSajEe1ec_dCeUec=ER3keKVfhhNvv5pWiti_M++NRrBDQ@mail.gmail.com>
+	<CAF1ivSYxfE+bZrPD7vpHPsU+XAD+S2Lkz=h84vA9yCy86h40ow@mail.gmail.com>
+	<20150527090309.2cddf33b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/.IYhZkJZ4CDe8AtIbA7QHIt"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150527083532.32486e08@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150527090309.2cddf33b@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Ming Lin <mlin@kernel.org>, Christoph Hellwig <hch@lst.de>, lkml <linux-kernel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dpark@posteo.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.IYhZkJZ4CDe8AtIbA7QHIt
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, May 26, 2015 at 4:03 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 26 May 2015 15:32:38 -0700 Ming Lin <mlin@kernel.org> wrote:
+>
+>> On Tue, May 26, 2015 at 7:33 AM, Ming Lin <mlin@kernel.org> wrote:
+>> > On Mon, May 25, 2015 at 7:17 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> >> On Mon, May 25, 2015 at 05:54:14PM +1000, NeilBrown wrote:
+>> >>> Did I write that?  I guess I did :-(
+>> >>> I meant *after*.   Don't get rid of bio_fits_rdev until split_bio is in
+>> >>> chunk_aligned_read().
+>> >>
+>> >> I suspect the whole series could use some reordering.
+>> >
+>> > Nice reordering.
+>> > I'll do this.
+>>
+>> Here is the reordering.
+>> https://git.kernel.org/cgit/linux/kernel/git/mlin/linux.git/log/?h=block-generic-req
+>>
+>> I'll post it if you are OK.
+>>
+>> [PATCH 01/15] block: add blk_queue_split()
+>> [PATCH 02/15] md: remove ->merge_bvec_fn
+>> [PATCH 03/15] dm: remov merge functions
+>> [PATCH 04/15] drbd: remove ->merge_bvec_fn
+>> [PATCH 05/15] pktcdvd: remove ->merge_bvec_fn
+>> [PATCH 06/15] rbd: remove ->merge_bvec_fn
+>> [PATCH 07/15] bcache: remove driver private bio splitting code
+>> [PATCH 08/15] btrfs: remove bio splitting and merge_bvec_fn() calls
+>> [PATCH 09/15] block: call blk_queue_split() in make_request functions
+>> [PATCH 10/15] block: kill ->merge_bvec_fn and simplify bio_add_page
+>> [PATCH 11/15] block: remove split code in blkdev_issue_discard
+>> [PATCH 12/15] md/raid5: get rid of bio_fits_rdev()
+>> [PATCH 13/15] block: remove bio_get_nr_vecs()
+>> [PATCH 14/15] fs: use helper bio_add_page() instead of open coding on
+>> [PATCH 15/15] Documentation: update notes in biovecs about
+>
+> The changes to dm.c and dm.h should be in the "dm:" patch, not "md:".
 
-On Wed, 27 May 2015 08:35:32 +1000 NeilBrown <neilb@suse.de> wrote:
+Will move it.
 
-> Could you please review and possibly test the patch below?
->=20
+>
+> But I don't think the sequence is right.
+>
+> You cannot remove ->merge_bvec_fn for *any* stacked device until *all* devices
+> make use of blk_queue_split() (or otherwise handle arbitrarily large bios).
+>
+> I think it would be easiest to:
+>  - add blk_queue_split() and call it from common code before ->make_request_fn
+>    is called.  The ensure all devices can accept arbitrarily large bios.
 
-well... that patch had a fairly obvious double-lock bug.
-Try this one.
-(oh, just saw your email that you spotted the lock bug :-)
+For "common code", do you mean "generic_make_request()"
 
+diff --git a/block/blk-core.c b/block/blk-core.c
+index fbbb337..bb6455b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1942,6 +1942,7 @@ void generic_make_request(struct bio *bio)
+        do {
+                struct request_queue *q = bdev_get_queue(bio->bi_bdev);
 
-NeilBrown
++               blk_queue_split(q, &bio, q->bio_split);
+                q->make_request_fn(q, bio);
 
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 27 May 2015 08:43:45 +1000
-Subject: [PATCH] md/raid5: close race between STRIPE_BIT_DELAY and batching.
+                bio = bio_list_pop(current->bio_list);
 
-The first time a write is added to a stripe, we need to set the
-bitmap bits (if a bitmap is active).
-While doing that the stripe is not locked and other writes could
-be added and then the stripe could be added to a batch.
-Once it has entered the batch it is too large to set STRIPE_BIT_DELAY
-as the batch head has taken over when the stripe will be written.
-
-We cannot hold the spinlock while adding the bitmap bit,
-so introduce a new stripe_head flag 'STRIPE_BITMAP_PENDING' which
-indicates that adding to the bitmap is pending.  This prevents
-the stripe from being added to a batch.
-
-Only the first thread to add a write to a stripe can set this bit,
-so it is safe for it to clear it again when it is done.
-
-Reported-by: Shaohua Li <shli@kernel.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 73b5376dad3b..dae587ecdf71 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -760,6 +760,7 @@ static void unlock_two_stripes(struct stripe_head *sh1,=
- struct stripe_head *sh2)
- static bool stripe_can_batch(struct stripe_head *sh)
- {
- 	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
-+		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
- 		is_full_stripe_write(sh);
- }
-=20
-@@ -3007,14 +3008,27 @@ static int add_stripe_bio(struct stripe_head *sh, s=
-truct bio *bi, int dd_idx,
- 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
- 		(unsigned long long)(*bip)->bi_iter.bi_sector,
- 		(unsigned long long)sh->sector, dd_idx);
--	spin_unlock_irq(&sh->stripe_lock);
-=20
- 	if (conf->mddev->bitmap && firstwrite) {
-+		/* Cannot hold spinlock over bitmap_startwrite,
-+		 * but must ensure this isn't added to a batch until
-+		 * we have added to the bitmap and set bm_seq.
-+		 * So set STRIPE_BITMAP_PENDING to prevent
-+		 * batching.
-+		 * Only the first thread to add a write to a stripe
-+		 * can set this bit, so we "own" it.
-+		 */
-+		WARN_ON(test_bit(STRIPE_BITMAP_PENDING, &sh->state));
-+		set_bit(STRIPE_BITMAP_PENDING, &sh->state);
-+		spin_unlock_irq(&sh->stripe_lock);
- 		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
- 				  STRIPE_SECTORS, 0);
-+		spin_lock_irq(&sh->stripe_lock);
-+		clear_bit(STRIPE_BITMAP_PENDING, &sh->state);
- 		sh->bm_seq =3D conf->seq_flush+1;
- 		set_bit(STRIPE_BIT_DELAY, &sh->state);
- 	}
-+	spin_unlock_irq(&sh->stripe_lock);
-=20
- 	if (stripe_can_batch(sh))
- 		stripe_add_to_batch_list(conf, sh);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index d7b2bc8b756f..02c3bf8fbfe7 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -337,6 +337,9 @@ enum {
- 	STRIPE_ON_RELEASE_LIST,
- 	STRIPE_BATCH_READY,
- 	STRIPE_BATCH_ERR,
-+	STRIPE_BITMAP_PENDING,	/* Being added to bitmap, don't add
-+				 * to batch yet.
-+				 */
- };
-=20
- #define STRIPE_EXPAND_SYNC_FLAGS \
-
---Sig_/.IYhZkJZ4CDe8AtIbA7QHIt
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVWUDGznsnt1WYoG5AQL9uhAAwCMLJfdMtvPkjTKEbNXGTbg8U6XmwpSP
-/QTzy3YIdn7r6RUmDwktvX/czbbnK3q18bUDe0xfi83zrb8c29wmapsZkEjvtsfk
-V5RUyYo/eqEcLldc4JhSdSW5eTeB25N+YDfXCvPb8WEtVVSCf7CQZpD9Fq0U18ae
-DBiqcgcVH91gnDpbzFOGvzdd59Fa1L166Jv5NKedj0zBAyEY9sZlnUwJzZ889Bor
-IJmN1rVVwBGQHFAMrgI6lhTvb2N1CXCbvjflf7LoolrRsJxody6eUbDaXrKKDitZ
-lAuj/904P7mVN2SDBHq81a2pKwu/7Yo/Ltrc4A8NGyf8UbQASFoeKFWXrNeczlh0
-+DIZQ+FyhQthAZ3LFcJaq1lGtVjS76z893QSB3YrWvtvRQ1vh+NLPey7gMPsnfZf
-U8zhrF2PhYR5M/tJMjHLnVdOgFc5m34FSzIr1ZPcQPEPn3JftXW2eLd72lQ6FKPg
-uQIGDdt+YTd8sxjXsyt6GpBHAXQg9+pEO8XSCdVrbqw8lXcxJDlD8b0Lxexm75d8
-lthVaXvmPDUMsOHufdmK35t1VP+Cklmt5WfrbzPTFNULXRvOKqkE4Cqx2/838+kL
-2+pp2UQYolQtTa2EBOOd8Wcs8H4r6rI2rTWgPCj1dl08HL4GRIiHnrWtQLpbjoSz
-45l6GZbhLVE=
-=Cez+
------END PGP SIGNATURE-----
-
---Sig_/.IYhZkJZ4CDe8AtIbA7QHIt--
+>  - driver-by-driver remove merge_bvec_fn and make sure the the driver can cope
+>    with arbitrary bios themselve, calling blk_queue_split in the make_request
+>    function only if needed
+>  - finally remove the call to blk_queue_split from the common code.
+>
+> Does that make sense to others?
+>
+> Thanks,
+> NeilBrown
+>
+>>
+>> >
+>> > Thanks.
+>> >
+>> >>
+>> >> patch 1:
+>> >>
+>> >>  add ->bio_split and blk_queue_split
+>> >>
+>> >> patch 2..n:
+>> >>
+>> >>  one for each non-trivial driver that implements ->merge_bvec_fn to
+>> >>  remove it and instead split bios in ->make_request.  The md patch
+>> >>  to do the right thing in chunk_aligned_read goes into the general
+>> >>  md patch here.  The bcache patch also goes into this series.
+>> >>
+>> >> patch n+1:
+>> >>
+>> >>  - add blk_queue_split calls for remaining trivial drivers
+>> >>
+>> >> patch n+2:
+>> >>
+>> >>  - remove ->merge_bvec_fn and checking of max_sectors a for all
+>> >>    drivers, simplify bio_add_page
+>> >>
+>> >> patch n+2:
+>> >>
+>> >>  - remove splitting in blkdev_issue_discard
+>> >>
+>> >> patch n+3
+>> >>
+>> >>  - remove bio_fits_rdev
+>> >>
+>> >> patch n+4
+>> >>
+>> >>  - remove bio_get_nr_vecs
+>> >>
+>> >> patch n+4
+>> >>
+>> >>  - use bio_add_page
+>> >>
+>> >> patch n+5
+>> >>
+>> >>  - update documentation
+>
