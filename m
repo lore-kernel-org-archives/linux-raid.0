@@ -1,73 +1,96 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Re: Fwd: Installing Linux directly onto RAID6 Array...........
-Date: Tue, 26 May 2015 22:02:32 +0100
-Message-ID: <CAOS+5GGEfx7faY7jt+SeDikrO=iV714PPDPoLsB0wt5rOOOg8Q@mail.gmail.com>
-References: <CAOS+5GFwGJouUfZ_RWhtRVXw7wnoP1Ry4doHTJmkruFoccmqRg@mail.gmail.com>
-	<555294A0.6040703@websitemanagers.com.au>
-	<CAOS+5GEP6+7OAHkqQjeyGHAB5u-_-Vq2JWGpcOemYHdCjmR5Lg@mail.gmail.com>
-	<CAOS+5GHKwQRPfNAw0EpSjjDUt=9PmjjrkUg+dhGxFS+uOWWVug@mail.gmail.com>
-	<alpine.DEB.2.02.1505241032210.9487@uplift.swm.pp.se>
-	<5561B237.4040709@youngman.org.uk>
-	<5561BCA4.4060904@fnarfbargle.com>
-	<5561C6E9.3060706@youngman.org.uk>
-	<alpine.DEB.2.02.1505241604370.9487@uplift.swm.pp.se>
-	<5561E5CE.7000304@youngman.org.uk>
-	<alpine.DEB.2.02.1505241654580.9487@uplift.swm.pp.se>
-	<CAOS+5GHz-4J_n7UAU1xVLWp3h7CRTuuSHdmP9rbL6=8=qx30CQ@mail.gmail.com>
-	<5563AE50.4090806@youngman.org.uk>
-	<CAOS+5GEBJ8dxF4s91dGmF7jx36LyNnu40UQZjLAmK2xVhqLAHw@mail.gmail.com>
-	<alpine.DEB.2.02.1505261005260.9487@uplift.swm.pp.se>
-	<CAOS+5GHWktYuV2Q7NhsqybgFY5-QKRaGih0YcerD08_rKZp4Ng@mail.gmail.com>
-	<alpine.DEB.2.02.1505261605450.9487@uplift.swm.pp.se>
-	<5564D373.30705@youngman.org.uk>
+From: Ming Lin <mlin@kernel.org>
+Subject: Re: [PATCH v4 06/11] md/raid5: get rid of bio_fits_rdev()
+Date: Tue, 26 May 2015 15:32:38 -0700
+Message-ID: <CAF1ivSYxfE+bZrPD7vpHPsU+XAD+S2Lkz=h84vA9yCy86h40ow@mail.gmail.com>
+References: <1432318723-18829-1-git-send-email-mlin@kernel.org>
+	<1432318723-18829-7-git-send-email-mlin@kernel.org>
+	<20150525154829.4330f149@notabene.brown>
+	<CAF1ivSY+ky5PD=m34KXU4z9gE_v4uztaFT=MuU4g69DtXD9vWA@mail.gmail.com>
+	<20150525175414.6a1fc33d@notabene.brown>
+	<20150525141708.GA26249@lst.de>
+	<CAF1ivSajEe1ec_dCeUec=ER3keKVfhhNvv5pWiti_M++NRrBDQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5564D373.30705@youngman.org.uk>
+In-Reply-To: <CAF1ivSajEe1ec_dCeUec=ER3keKVfhhNvv5pWiti_M++NRrBDQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, NeilBrown <neilb@suse.de>, lkml <linux-kernel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>, Jens Axboe <axboe@kernel.dk>, Dongsu Park <dpark@posteo.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Guys
-
-Without wishing to sound like the list police (no-one expects the list
-police!!) this has drifted off topic into a fairly unimportant
-area.....I've made my decision and will live with the consequences for
-now.  As I'm currently 10 hours into a circa 40 hour 20TB data copy
-you can all rest assured nothing short of a catastrophic failure is
-going to change the current setup......when I get another test box in
-a couple of weeks I'll revisit.
-
-Until then thanks for all the help but can we let this lie please.
-
-Tony
-
-On 26 May 2015 at 21:11, Wols Lists <antlists@youngman.org.uk> wrote:
-> On 26/05/15 15:08, Mikael Abrahamsson wrote:
->> On Tue, 26 May 2015, Another Sillyname wrote:
+On Tue, May 26, 2015 at 7:33 AM, Ming Lin <mlin@kernel.org> wrote:
+> On Mon, May 25, 2015 at 7:17 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> On Mon, May 25, 2015 at 05:54:14PM +1000, NeilBrown wrote:
+>>> Did I write that?  I guess I did :-(
+>>> I meant *after*.   Don't get rid of bio_fits_rdev until split_bio is in
+>>> chunk_aligned_read().
 >>
->>> Very easy to understand......any way that requires entering the swaps
->>> into /etc/fstab therefore means that if any drive and it's contained
->>> swap fails the reboot can fail (plus the overhead of all those uuid
->>> numbers in fstab).  My way means that as the swaps don't get loaded
->>> unless the drive is alive the reboot has more resilience.
+>> I suspect the whole series could use some reordering.
+>
+> Nice reordering.
+> I'll do this.
+
+Here is the reordering.
+https://git.kernel.org/cgit/linux/kernel/git/mlin/linux.git/log/?h=block-generic-req
+
+I'll post it if you are OK.
+
+[PATCH 01/15] block: add blk_queue_split()
+[PATCH 02/15] md: remove ->merge_bvec_fn
+[PATCH 03/15] dm: remov merge functions
+[PATCH 04/15] drbd: remove ->merge_bvec_fn
+[PATCH 05/15] pktcdvd: remove ->merge_bvec_fn
+[PATCH 06/15] rbd: remove ->merge_bvec_fn
+[PATCH 07/15] bcache: remove driver private bio splitting code
+[PATCH 08/15] btrfs: remove bio splitting and merge_bvec_fn() calls
+[PATCH 09/15] block: call blk_queue_split() in make_request functions
+[PATCH 10/15] block: kill ->merge_bvec_fn and simplify bio_add_page
+[PATCH 11/15] block: remove split code in blkdev_issue_discard
+[PATCH 12/15] md/raid5: get rid of bio_fits_rdev()
+[PATCH 13/15] block: remove bio_get_nr_vecs()
+[PATCH 14/15] fs: use helper bio_add_page() instead of open coding on
+[PATCH 15/15] Documentation: update notes in biovecs about
+
+>
+> Thanks.
+>
 >>
->> If you have RAID1 for swap, you only need a single component drive to
->> work for the RAID1 to be able to start. It also means any drive can fail
->> and your swap information still works.
->
-> And you're wasting a lot of disk space. What's important to you (that a
-> live swap disk shouldn't fail) is not important to me and doesn't seem
-> to be important to Another Sillyname.
->
-> My disk drives have 32Gb swap partitions. Overkill? Dunno. But I'd
-> rather linux raid 0's them for 64Gb swap than mdadm raid 1's them for
-> 32Gb swap. I have a couple of 20Gb tmpfs partitions :-)
->
-> I don't know why Another Sillyname wants to chain his swap partitions,
-> but it's his choice. Maybe like me, his system gets rebooted a couple of
-> times a day, and failure to start is a far more real risk than failure
-> in use. He's running Fedora - that seems likely then ...
->
-> Cheers,
-> Wol
+>> patch 1:
+>>
+>>  add ->bio_split and blk_queue_split
+>>
+>> patch 2..n:
+>>
+>>  one for each non-trivial driver that implements ->merge_bvec_fn to
+>>  remove it and instead split bios in ->make_request.  The md patch
+>>  to do the right thing in chunk_aligned_read goes into the general
+>>  md patch here.  The bcache patch also goes into this series.
+>>
+>> patch n+1:
+>>
+>>  - add blk_queue_split calls for remaining trivial drivers
+>>
+>> patch n+2:
+>>
+>>  - remove ->merge_bvec_fn and checking of max_sectors a for all
+>>    drivers, simplify bio_add_page
+>>
+>> patch n+2:
+>>
+>>  - remove splitting in blkdev_issue_discard
+>>
+>> patch n+3
+>>
+>>  - remove bio_fits_rdev
+>>
+>> patch n+4
+>>
+>>  - remove bio_get_nr_vecs
+>>
+>> patch n+4
+>>
+>>  - use bio_add_page
+>>
+>> patch n+5
+>>
+>>  - update documentation
