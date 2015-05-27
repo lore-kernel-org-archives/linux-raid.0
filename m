@@ -1,62 +1,74 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: "Wilson, Jonathan" <piercing_male@hotmail.com>
 Subject: Re: Which physical device failed?
-Date: Wed, 27 May 2015 23:02:23 +0500
-Message-ID: <20150527230223.4ef48749@natsu>
-References: <5565B2BB.5090701@gmail.com>
-	<5565B41B.8040104@aei.mpg.de>
-	<20150527172701.1090e525@natsu>
-	<55660373.3030700@youngman.org.uk>
+Date: Wed, 27 May 2015 19:16:04 +0100
+Message-ID: <BLU436-SMTP2403ED333F23D8DB23296C398CB0@phx.gbl>
+References: <5565B2BB.5090701@gmail.com>	<5565B41B.8040104@aei.mpg.de>
+	 <20150527172701.1090e525@natsu> <5565C3AA.7020809@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/aqJxNBmYwh4g0Y6hg3evPGC"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55660373.3030700@youngman.org.uk>
+In-Reply-To: <5565C3AA.7020809@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>, Michael Munger <michael.munger@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Roman Mamedov <rm@romanrm.net>, Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>, Michael Munger <michael.munger@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/aqJxNBmYwh4g0Y6hg3evPGC
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2015-05-27 at 09:16 -0400, Phil Turmel wrote:
+> On 05/27/2015 08:27 AM, Roman Mamedov wrote:
+> > On Wed, 27 May 2015 14:10:03 +0200
+> > Carsten Aulbert <Carsten.Aulbert@aei.mpg.de> wrote:
+> > 
+> >> On 05/27/2015 02:04 PM, Michael Munger wrote:
+> >>> Or, does the OS have access to serial numbers, etc...?
+> >>>
+> >>> I have to guide someone through a drive replacement on the phone, and it
+> >>> would be great if I could tell them exactly which drive to swap out...
+> >>
+> >> If you have direct knowledge, which serial number is where, you could
+> >> use hdparm -I /dev/sdX or smartctl -a /dev/sdX against the still
+> >> reachable drives.
+> > 
+> > If /dev/sdc is still present in the system (even if not responding correctly to
+> > hdparm or smartctl anymore), you should be able to find its serial number from
+> > the udev symlink that was registered earlier, by running e.g.:
+> > 
+> >   ls -la /dev/disk/by-id/ | grep sdc$
+> > 
+> > Serial number is typically the last piece of the ID, after the manufacturer
+> > name and model number.
+> > 
+> 
+> This is one of the reasons I wrote lsdrv [1], especially after I noticed
+> that the port sequence it reports is stable for the various ports on
+> every mobo  and sata expansion card I've handled.  Per controller, at least.
 
-On Wed, 27 May 2015 18:48:35 +0100
-Wols Lists <antlists@youngman.org.uk> wrote:
+Interesting that you should say that as on my z97 board if I do a power
+off, power on, the drives do indeed stay numbered to the sata ports...
+however if I do a "restart" sometimes, very rarely, the drives are
+listed with different sdX designations. It may be a quirk of either the
+efi, linux, or the fact the drives are not, I believe, turned off during
+a restart which may impact on designation. I didn't investigate the whys
+as I just noticed that two drives had swapped in two arrays (sdb moved
+from a raid10 into the raid6 and that sdc moved from the raid6 into the
+raid10) which scared the heck out of me until I realised that it was
+just the sdX that had changed not the drives so for one minute I was
+expecting massive problems to ensue.
 
-> Just for info, I've done an ls -al on my by-id directory, and I have
-> no clue whatsoever as to what the serial number is. All my drives
-> appear twice (Seagate Barracudas), there is no manufacturer name that
-> I can see, and while the model number appears in one of the records,
-> there is nothing obvious to indicate whether what follows is the
-> serial number or whether the serial number is part of the other
-> directory entry.
->=20
-> Not helped, of course, by the fact I have no clue what the serial
-> number looks like ... :-)
->=20
-> ata-ST3000DM001-1CH166_W1F4JWRP -> ../../sdb
-> ata-ST3000DM001-1CH166_W1F50K0F -> ../../sda
 
-=46rom a picture of this model's top side
-http://www.nix.ru/autocatalog/hdd_seagate/126689_2245_draft_large.jpg
-the serial number on this model is 8 alphanumeric characters, so in your ca=
-se
-W1F4JWRP and W1F50K0F are the serial numbers.
 
---=20
-With respect,
-Roman
+> 
+> I save of copy of an lsdrv report for each system I commission so that
+> there's no ambiguity later.
+> 
+> Phil
+> 
+> [1] https://github.com/pturmel/lsdrv
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
---Sig_/aqJxNBmYwh4g0Y6hg3evPGC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlVmBq8ACgkQTLKSvz+PZwgPEQCfenb2y872wgmLyyZZujJkfgmZ
-I4AAn3/6FzUke3bSh0j+kOCx+Y2F2J0I
-=ey7Z
------END PGP SIGNATURE-----
-
---Sig_/aqJxNBmYwh4g0Y6hg3evPGC--
