@@ -1,64 +1,79 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 1/4] raid5: wakeup raid5d when R5_ALLOC_MORE is set
-Date: Thu, 28 May 2015 22:33:59 -0700
-Message-ID: <20150529053340.GA2605536@devbig257.prn2.facebook.com>
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: Re: [PATCH 4/4] raid5: fix wakeup condition
+Date: Fri, 29 May 2015 13:42:05 +0800
+Message-ID: <20150529054205.GA10378@yliu-dev.sh.intel.com>
 References: <a92a0c36813c740c5de65a95b75ef161c1f2ede1.1432859513.git.shli@fb.com>
- <20150529150256.6ca4211f@notabene.brown>
+ <de048e4f0889e59ffb452f8b5f704bd888fcc1c1.1432859513.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150529150256.6ca4211f@notabene.brown>
+In-Reply-To: <de048e4f0889e59ffb452f8b5f704bd888fcc1c1.1432859513.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Fri, May 29, 2015 at 03:02:56PM +1000, NeilBrown wrote:
-> On Thu, 28 May 2015 17:33:45 -0700 Shaohua Li <shli@fb.com> wrote:
-> 
-> > The run time stripe allocation is done at raid5d. When we set the
-> > R5_ALLOC_MORE flag, we should notify raid5d to handle it
-> > 
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> > ---
-> >  drivers/md/raid5.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 61e8e04..bfa2042 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -674,9 +674,11 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
-> >  			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
-> >  				sh = get_free_stripe(conf, hash);
-> >  				if (!sh && llist_empty(&conf->released_stripes) &&
-> > -				    !test_bit(R5_DID_ALLOC, &conf->cache_state))
-> > +				    !test_bit(R5_DID_ALLOC, &conf->cache_state)) {
-> >  					set_bit(R5_ALLOC_MORE,
-> >  						&conf->cache_state);
-> > +					md_wakeup_thread(conf->mddev->thread);
-> > +				}
-> >  			}
-> >  			if (noblock && sh == NULL)
-> >  				break;
-> 
-> Thanks for reviewing my code !!!
-> 
-> I'm not exactly against this patch, but I wonder if it is really needed.
-> R5_ALLOC_MORE is really just a hint - "You can allocate another stripe if you
-> like".  If the array is at all busy, raid5d will be called fairly often and
-> the allocation will happen.  If the array is idle, it doesn't matter if
-> memory is allocated for a while.  Does it?
+Hi Shaohua,
 
-So this is related to the usage in my raid5 cache patch. Say I need
-allocate 100 stripes and dispatch them together. If there are only 99
-free stripes, I want to allocate a new one, but the 99 stripes will not
-be handled and freed, we can't steal one from the 99 stripes. In this
-case, I hope the automatically stripe allocation is reliable. Handling
-the stripes together is to reduce disk cache flush. I can workaround the
-issue in other way (by increasing min stripe number), but thought making
-the allocation reliable is better.
+On Thu, May 28, 2015 at 05:33:48PM -0700, Shaohua Li wrote:
+> Since we have several stripe hash list, the conf->active_stripes doesn't
+> determine if there is free stripe in a specific hash list, so delete the
 
-Thanks,
-Shaohua
+I happened to have considered something similar but with slight different
+before. The stuff I came up with is to make active_stripes per stripe hash
+as well, with which your above concerns could be eliminated.
+
+I even wrote the code, and it became a bit uglier than I thought, what's
+more, I see no obvious performance benifit from it. I then gave it up
+and didn't sent it out for bothering you guys.
+
+Well, I wrote that code before I came up with this lock contention fix[0],
+it might be a different story if I wrote such code based on the fix. If you
+are interested, I guess I could cook it up again and do some tests.
+
+[0]: http://git.neil.brown.name/?p=md.git;a=commit;h=970e1a16559e1865b429e0ec408c9a06f2f83795
+
+
+BTW, the reason I want to make active_stripes per stripe hash is to
+keep the semantics of holding on to wake up processes before we get
+1/4 stripes available, which, IMO, is for performance consideration.
+
+And to be honest, I don't have too much clue how the performance will
+behave differently in such two cases. I'm gonna to do some test to
+figure it out, if you think that's necessary.
+
+	--yliu
+
+> check. After this, the R5_INACTIVE_BLOCKED check is inappropriate. There
+> is no point not to wakeup a task if there is free stripe.
+> 
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid5.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 67626f3..4b5a03c 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -687,11 +687,7 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
+>  					&conf->cache_state);
+>  				wait_event_lock_irq(
+>  					conf->wait_for_stripe,
+> -					!list_empty(conf->inactive_list + hash) &&
+> -					(atomic_read(&conf->active_stripes)
+> -					 < (conf->max_nr_stripes * 3 / 4)
+> -					 || !test_bit(R5_INACTIVE_BLOCKED,
+> -						      &conf->cache_state)),
+> +					!list_empty(conf->inactive_list + hash),
+>  					*(conf->hash_locks + hash));
+>  				clear_bit(R5_INACTIVE_BLOCKED,
+>  					  &conf->cache_state);
+> -- 
+> 1.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
