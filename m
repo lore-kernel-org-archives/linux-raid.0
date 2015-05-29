@@ -1,87 +1,83 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/4] raid5: grown at least NR_STRIPE_HASH_LOCKS stripes
-Date: Fri, 29 May 2015 15:07:46 +1000
-Message-ID: <20150529150746.27dc5af3@notabene.brown>
+Subject: Re: [PATCH 3/4] raid5: ignore released_stripes check
+Date: Fri, 29 May 2015 15:16:58 +1000
+Message-ID: <20150529151658.4f5ac5a0@notabene.brown>
 References: <a92a0c36813c740c5de65a95b75ef161c1f2ede1.1432859513.git.shli@fb.com>
-	<08b93a26b679edad7d3065b6c6d5819d3b1f41b9.1432859513.git.shli@fb.com>
+	<a1dc1deca50ae3e6cf45b94e75df3a0271a43ecd.1432859513.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/WM=CmZa+3VE89FNl8p_B7zH"; protocol="application/pgp-signature"
+ boundary="Sig_/6zg20lH0TFKdPGBTh_cXj1p"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <08b93a26b679edad7d3065b6c6d5819d3b1f41b9.1432859513.git.shli@fb.com>
+In-Reply-To: <a1dc1deca50ae3e6cf45b94e75df3a0271a43ecd.1432859513.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@fb.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/WM=CmZa+3VE89FNl8p_B7zH
+--Sig_/6zg20lH0TFKdPGBTh_cXj1p
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 28 May 2015 17:33:46 -0700 Shaohua Li <shli@fb.com> wrote:
+On Thu, 28 May 2015 17:33:47 -0700 Shaohua Li <shli@fb.com> wrote:
 
-> stripes are in hash list. If we are waiting for a free stripe, we must
-> make sure there is free stripe in corresponding hash list. To do this,
-> we simpliy allocate at lease NR_STRIPE_HASH_LOCKS stripes at runtime
-> stripe allocation.
+> conf->released_stripes list ins't always related if there is free
+> stripes pending. active stripes can be in the list too.
 >=20
 > Signed-off-by: Shaohua Li <shli@fb.com>
 > ---
->  drivers/md/raid5.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/md/raid5.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >=20
 > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index bfa2042..0cceb71 100644
+> index 0cceb71..67626f3 100644
 > --- a/drivers/md/raid5.c
 > +++ b/drivers/md/raid5.c
-> @@ -5867,7 +5867,9 @@ static void raid5d(struct md_thread *thread)
-> =20
->  	spin_unlock_irq(&conf->device_lock);
->  	if (test_and_clear_bit(R5_ALLOC_MORE, &conf->cache_state)) {
-> -		grow_one_stripe(conf, __GFP_NOWARN);
-> +		int i;
-> +		for (i =3D 0; i < NR_STRIPE_HASH_LOCKS; i++)
-> +			grow_one_stripe(conf, __GFP_NOWARN);
->  		/* Set flag even if allocation failed.  This helps
->  		 * slow down allocation requests when mem is short
->  		 */
+> @@ -673,8 +673,8 @@ get_active_stripe(struct r5conf *conf, sector_t secto=
+r,
+>  		if (!sh) {
+>  			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
+>  				sh =3D get_free_stripe(conf, hash);
+> -				if (!sh && llist_empty(&conf->released_stripes) &&
+> -				    !test_bit(R5_DID_ALLOC, &conf->cache_state)) {
+> +				if (!sh && !test_bit(R5_DID_ALLOC,
+> +				    &conf->cache_state)) {
+>  					set_bit(R5_ALLOC_MORE,
+>  						&conf->cache_state);
+>  					md_wakeup_thread(conf->mddev->thread);
 
-Again, if R5_ALLOC_MORE is just a hint, it certainly isn't true that we
-"must" make sure there are free stripes.
-It's fairly important that the pool of stripes grows slowly.  I don't think
-it matters a lot how slowly, but on a busy array it should grow steadily
-until it hits an equilibrium, and making that happen a bit faster doesn't
-seem necessary.
+Yes, I think I agree with this.=20
+I don't clearly remember why I put that test in, but it is certainly hard to
+justify it.
+Even if there are free stripes in ->released_stripes, they were in use very
+recently, so counting them as still in use is easily justified.
 
-Think of R5_ALLOC_MORE like a gentle push towards allocating more strips.  =
-It
-doesn't matter if it fails, and if it is really important there will be
-plenty more gentle pushes coming.
+BTW, is an open parenthesis (or bracket or brace) is not the last character
+in the line, then everything from there until the close must be to the right
+of the open.  So I indented the "&conf->cache_state)) {" line some more.
 
 Thanks,
 NeilBrown
 
-
---Sig_/WM=CmZa+3VE89FNl8p_B7zH
+--Sig_/6zg20lH0TFKdPGBTh_cXj1p
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIVAwUBVWf0Ijnsnt1WYoG5AQJQixAAidB/Efmra8ZarazqmnwyCYDXu0s/n/61
-ffyFD7KR/nvzueJ1XHBriZtr8iwlV2d/PzKdUVw38F5TzmC5qOvgITOmeSNguPxf
-XpdAeY5bG09UOPcL3UlKtvGqipS5EbkDDfgqPLt4qQmjD6ygiPHMyPU7QuNBOKG4
-+DQOgkpScQbfZgcbRJFhsCaByFYM2V2DUDTzeY2AGHZ50U2LmXLbwgcjGiFhKGYU
-FmyNhdgyXTUf3wm06SqL1JYF4LrDywSXAgF4l019Ax8Sf37Zw6FXMfw4SrZkPIVi
-ThkwABsWM27t0GzcsdYfJV9bKL/mE8yUUtWaUOWAbbNXE57FOsc8Iji4Z1jlSPf3
-GnxRgsHCa+t+iTRo7GrHuizBGOjbbKy0ebokwu04muxdqMGliNYa4jlN8yFNPf7U
-22KgCPHmKBpJARNnM5CeX0aDDSDrDC2UIu89p+okY7/dujmJz+AJkkM22g1sV3S/
-NW/lTowd+RqAg4huygqQuNyjhT2dAlh7yCbSL5mJ2dpCmDUEa/evH6CMvRLP7J2Y
-jm7MMMbXbidJagjdN6kpyMMRLmzTMy0xO27r6+FW0icSdNW+KOqPQxwEXP2IjFvP
-So0uQa3QLBWeCjRP7xP/J5P3umwCUGcu1AD0arhxUkQGOkieyV+cNR6dlzOTXXlV
-y1WAQB+KXJQ=
-=e4Rg
+iQIVAwUBVWf2Sznsnt1WYoG5AQK2hBAAjT6C9e1xe9IidoQoJlUHIOx8NKh1ocOd
+gl15cDNeFM8q2Vktd0H5+XnVM6ex2zwsSU6J9V1tWNC4wLfjFHnOpBDOEF/YQuVl
+a6PyFVVCvl6Ano9MomU8/chnSXONW6mHeiQrUlIdQRf16eySOOYg27+kz/VDoI4o
+4dlShNi1Vy81PtgTaCRsqicS3IGhutw6WCd1li6IdNTsTb7/OPfo68BtZkwRbdQc
+VqsIVEjIU+4DUgPoZYahr2bVrl9OoMChqVBbE1yVNLadvcLmXZnbEpyzB2DAkH58
+JXRttsc0nPJMMjWRfjpOW6c9WiQrjs6QIfW0FL0XlZNLctMzVuOnbW4iwfEs2oRo
+IXEx0kXJ5rLSp/yss4SAKJfcFo/tDRl5CHpTgbpXIG6KPiQbZ0IgIOmAO7fkhlcS
+PgIp6/1nueuJ2c9wJAXmJbT9bUs183ls7SxX4sYj20VFIA+yfxLKkRlEO/Ngq4Rq
+BVQ4ly8+OsKpYeu8kXtKOdryiLxlixOHuWNM/5dMsIbpnI9QMVvDiEwOnhhzAk0b
+xTfR0zagWcuRuF+LViq8yg/qdb5o/+BWKLnmGyRi1a5fQa1uCG0WQnxJK05P3YPq
+RUdKk5ToZCLjvC3n3KZL+B4TUVRKwfnCoKNu9C1uH1WJbhlqIZqve0Kk3+nXZDsY
+XXftb9+ErgA=
+=PeXb
 -----END PGP SIGNATURE-----
 
---Sig_/WM=CmZa+3VE89FNl8p_B7zH--
+--Sig_/6zg20lH0TFKdPGBTh_cXj1p--
