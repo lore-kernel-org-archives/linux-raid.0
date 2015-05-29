@@ -1,46 +1,34 @@
-From: XiaoNi <xni@redhat.com>
-Subject: Re: raid5 reshape is stuck
-Date: Fri, 29 May 2015 20:19:58 +0800
-Message-ID: <5568596E.1090505@redhat.com>
-References: <1612858661.15347659.1431671671467.JavaMail.zimbra@redhat.com>	<427651758.4121803.1432637303447.JavaMail.zimbra@redhat.com>	<20150527100253.221ab553@notabene.brown>	<20150527111004.5f136f23@notabene.brown>	<2129908770.5092770.1432726084717.JavaMail.zimbra@redhat.com>	<20150527213449.6e017deb@notabene.brown>	<476656362.5105083.1432728264276.JavaMail.zimbra@redhat.com>	<20150528085958.0f95e323@notabene.brown>	<45685228.5717919.1432794771906.JavaMail.zimbra@redhat.com>	<20150528164923.2cd4af02@notabene.brown>	<556849E2.7030405@redhat.com> <20150529211947.3271b204@notabene.brown>
+From: Oleg Samarin <osamarin68@gmail.com>
+Subject: How does linux hide underlying disks partitions?
+Date: Fri, 29 May 2015 22:07:14 +0300
+Message-ID: <1432926434.4733.1.camel@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150529211947.3271b204@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I'm trying to evaluate a complex mdadm-lvm-udev-anaconda issue
+https://bugzilla.redhat.com/show_bug.cgi?id=1226305 and to undestand
+how mdadm works.
 
+I have an intel imsm raid-1 volume /dev/md126 assembled with two
+disks /dev/sda and /dev/sdb.
+This volume has two partitions /dev/md126p1 and /dev/md126p2.
 
-On 05/29/2015 07:19 PM, NeilBrown wrote:
-> On Fri, 29 May 2015 19:13:38 +0800 XiaoNi <xni@redhat.com> wrote:
->
->
->> And it's really the problem about selinux. The patch works after the
->> command "setenforce 0". It need the patch you gave.  Is it right
->> to setenforce 0 every time? I'll read the doc about selinux.
-> I know nothing about selinux, and don't really want to.
-> Presumably selinux needs to be told that mdadm, when run from systemd, can
-> access all block devices.
-> If there is something I can add to the system unit file to make this happen
-> I am happy to, but I would need someone to tell me what.
->
-> Glad you are making progress and learning a lot!!
->
-> NeilBrown
+Because it a simple mirror, both disks have te same information.
 
-But it really need the patch you gave several days before. I already 
-tried without the patch, reshape can be
-stuck even selinux is set to Permissive.
+When the normal system boots up, I can see with journalctl that
 
-And it's a problem with systemd and selinux too. If I run mdadm --grow 
---continue /dev/md0, the reshape can start.
-If I run systemctl start mdadm-grow-continue@md0.service, it can't 
-start. I'll look for the answer.
+1. at first /dev/sda1, /dev/sda2, /dev/sdb1, /dev/sdb2 appear
+2. then mdadm assembles /dev/md126 from /dev/sda and /dev/sdb
+3. /dev/sda1, /dev/sda2, /dev/sdb1, /dev/sdb2 disappear
+4. /dev/md126p1 and /dev/md126p2 coming instead
 
-Best Regards
-Xiao
+Which program component is responsible for
+disappearing /dev/sda1, /dev/sda2, /dev/sdb1 and /dev/sdb2?
+
+Why can they be left after starting anaconda installer?
 
