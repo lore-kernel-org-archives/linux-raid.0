@@ -1,86 +1,64 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/4] raid5: fix wakeup condition
-Date: Fri, 29 May 2015 15:23:16 +1000
-Message-ID: <20150529152316.0cd77069@notabene.brown>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH 1/4] raid5: wakeup raid5d when R5_ALLOC_MORE is set
+Date: Thu, 28 May 2015 22:33:59 -0700
+Message-ID: <20150529053340.GA2605536@devbig257.prn2.facebook.com>
 References: <a92a0c36813c740c5de65a95b75ef161c1f2ede1.1432859513.git.shli@fb.com>
-	<de048e4f0889e59ffb452f8b5f704bd888fcc1c1.1432859513.git.shli@fb.com>
+ <20150529150256.6ca4211f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/j17iFMWJWwCOlmYmh.CKZnV"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <de048e4f0889e59ffb452f8b5f704bd888fcc1c1.1432859513.git.shli@fb.com>
+Content-Disposition: inline
+In-Reply-To: <20150529150256.6ca4211f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/j17iFMWJWwCOlmYmh.CKZnV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, May 29, 2015 at 03:02:56PM +1000, NeilBrown wrote:
+> On Thu, 28 May 2015 17:33:45 -0700 Shaohua Li <shli@fb.com> wrote:
+> 
+> > The run time stripe allocation is done at raid5d. When we set the
+> > R5_ALLOC_MORE flag, we should notify raid5d to handle it
+> > 
+> > Signed-off-by: Shaohua Li <shli@fb.com>
+> > ---
+> >  drivers/md/raid5.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 61e8e04..bfa2042 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -674,9 +674,11 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
+> >  			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
+> >  				sh = get_free_stripe(conf, hash);
+> >  				if (!sh && llist_empty(&conf->released_stripes) &&
+> > -				    !test_bit(R5_DID_ALLOC, &conf->cache_state))
+> > +				    !test_bit(R5_DID_ALLOC, &conf->cache_state)) {
+> >  					set_bit(R5_ALLOC_MORE,
+> >  						&conf->cache_state);
+> > +					md_wakeup_thread(conf->mddev->thread);
+> > +				}
+> >  			}
+> >  			if (noblock && sh == NULL)
+> >  				break;
+> 
+> Thanks for reviewing my code !!!
+> 
+> I'm not exactly against this patch, but I wonder if it is really needed.
+> R5_ALLOC_MORE is really just a hint - "You can allocate another stripe if you
+> like".  If the array is at all busy, raid5d will be called fairly often and
+> the allocation will happen.  If the array is idle, it doesn't matter if
+> memory is allocated for a while.  Does it?
 
-On Thu, 28 May 2015 17:33:48 -0700 Shaohua Li <shli@fb.com> wrote:
+So this is related to the usage in my raid5 cache patch. Say I need
+allocate 100 stripes and dispatch them together. If there are only 99
+free stripes, I want to allocate a new one, but the 99 stripes will not
+be handled and freed, we can't steal one from the 99 stripes. In this
+case, I hope the automatically stripe allocation is reliable. Handling
+the stripes together is to reduce disk cache flush. I can workaround the
+issue in other way (by increasing min stripe number), but thought making
+the allocation reliable is better.
 
-> Since we have several stripe hash list, the conf->active_stripes doesn't
-> determine if there is free stripe in a specific hash list, so delete the
-> check. After this, the R5_INACTIVE_BLOCKED check is inappropriate. There
-> is no point not to wakeup a task if there is free stripe.
->=20
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/raid5.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 67626f3..4b5a03c 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -687,11 +687,7 @@ get_active_stripe(struct r5conf *conf, sector_t sect=
-or,
->  					&conf->cache_state);
->  				wait_event_lock_irq(
->  					conf->wait_for_stripe,
-> -					!list_empty(conf->inactive_list + hash) &&
-> -					(atomic_read(&conf->active_stripes)
-> -					 < (conf->max_nr_stripes * 3 / 4)
-> -					 || !test_bit(R5_INACTIVE_BLOCKED,
-> -						      &conf->cache_state)),
-> +					!list_empty(conf->inactive_list + hash),
->  					*(conf->hash_locks + hash));
->  				clear_bit(R5_INACTIVE_BLOCKED,
->  					  &conf->cache_state);
-
-Have you actually tested this?  Because I do remember why I put that code in
-and it made a very real performance improvement.
-
-The idea is that once we run out of free stripes, we wait until there a lots
-available.  That improves opportunities for batching.
-
-So I would definitely needs some performance numbers with a patch like this.
-
-Thanks for the review anyway !!
-
-NeilBrown
-
---Sig_/j17iFMWJWwCOlmYmh.CKZnV
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUBVWf3xDnsnt1WYoG5AQLsxhAAhxiyQv5SZLB0CM6f7R6aE9HaAuXFeKUb
-dXZNdr7SW1CLGqG9TGeDAAI1gmINn0XLA9rhal40eNUfzSKa0z46iZ4n0GHJbcCb
-X7BQdpfKiWq7w9muqnefZlUMLr5G1m5WhG4SKEOKf3gU8IzhLp3Ln5SbduxczWlz
-lsWcQbIs+dTphOfrFXkBvln/pD/L3ACj08xMTaICbtatH9nU4KRgiAFwb8PT+ar6
-+Aaejb2U5XzuEIYn7CG7ZHUihdKD2VquG+PkkLq0l/VIbK6o8b0m4ld141Ouuo6m
-B6O9s53cqdHPWbr064TP6HSa1RjnPdtyZKLq+jwqCy5g0e9o4lvTxgcZfL3G0BTw
-/nh2s3ft6bW7NvnouUpINfP7KS/hPzgAlMLrf/VYPGXqo6qx1Kuer7l0S4RATa1I
-mnXVw/xOeZDAp/Rod/YbnB/c5u2e5iUVhU+1F/KPGI1OLMDw46ooTVXkop6hb7J6
-H9775RLUGsPkUBd9BP6Dh5cl5Jw3n+WrenYsqyZDKJUHkoNKMb/fwAR1L0BzsYOQ
-2ThKyhCQv9k5Qt4hHVe6cvCcGR0ZFvFATKVXY1xd8YAlPRyNqJ9n/HUik0V01RDT
-gPOeWubFBZQ49KrCH56dQvaxC26OdGItE2BdUHYxN7amVrAQtFDuK0xePfYz6A1F
-fprCmlrPwas=
-=vmv/
------END PGP SIGNATURE-----
-
---Sig_/j17iFMWJWwCOlmYmh.CKZnV--
+Thanks,
+Shaohua
