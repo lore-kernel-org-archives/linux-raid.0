@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 4/4] raid5: fix wakeup condition
-Date: Thu, 28 May 2015 17:33:48 -0700
-Message-ID: <de048e4f0889e59ffb452f8b5f704bd888fcc1c1.1432859513.git.shli@fb.com>
+Subject: [PATCH 2/4] raid5: grown at least NR_STRIPE_HASH_LOCKS stripes
+Date: Thu, 28 May 2015 17:33:46 -0700
+Message-ID: <08b93a26b679edad7d3065b6c6d5819d3b1f41b9.1432859513.git.shli@fb.com>
 References: <a92a0c36813c740c5de65a95b75ef161c1f2ede1.1432859513.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,33 +12,31 @@ To: linux-raid@vger.kernel.org
 Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-Since we have several stripe hash list, the conf->active_stripes doesn't
-determine if there is free stripe in a specific hash list, so delete the
-check. After this, the R5_INACTIVE_BLOCKED check is inappropriate. There
-is no point not to wakeup a task if there is free stripe.
+stripes are in hash list. If we are waiting for a free stripe, we must
+make sure there is free stripe in corresponding hash list. To do this,
+we simpliy allocate at lease NR_STRIPE_HASH_LOCKS stripes at runtime
+stripe allocation.
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid5.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/md/raid5.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 67626f3..4b5a03c 100644
+index bfa2042..0cceb71 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -687,11 +687,7 @@ get_active_stripe(struct r5conf *conf, sector_t sector,
- 					&conf->cache_state);
- 				wait_event_lock_irq(
- 					conf->wait_for_stripe,
--					!list_empty(conf->inactive_list + hash) &&
--					(atomic_read(&conf->active_stripes)
--					 < (conf->max_nr_stripes * 3 / 4)
--					 || !test_bit(R5_INACTIVE_BLOCKED,
--						      &conf->cache_state)),
-+					!list_empty(conf->inactive_list + hash),
- 					*(conf->hash_locks + hash));
- 				clear_bit(R5_INACTIVE_BLOCKED,
- 					  &conf->cache_state);
+@@ -5867,7 +5867,9 @@ static void raid5d(struct md_thread *thread)
+ 
+ 	spin_unlock_irq(&conf->device_lock);
+ 	if (test_and_clear_bit(R5_ALLOC_MORE, &conf->cache_state)) {
+-		grow_one_stripe(conf, __GFP_NOWARN);
++		int i;
++		for (i = 0; i < NR_STRIPE_HASH_LOCKS; i++)
++			grow_one_stripe(conf, __GFP_NOWARN);
+ 		/* Set flag even if allocation failed.  This helps
+ 		 * slow down allocation requests when mem is short
+ 		 */
 -- 
 1.8.1
 
