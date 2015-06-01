@@ -1,83 +1,73 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: How does linux hide underlying disks partitions?
-Date: Sat, 30 May 2015 07:14:26 +1000
-Message-ID: <20150530071426.75a7302e@notabene.brown>
-References: <1432926434.4733.1.camel@gmail.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Subject: Re: [PATCH V3 08/11] mdadm: add the ability to change cluster name
+Date: Mon, 01 Jun 2015 11:26:33 -0500
+Message-ID: <556C87B9.4010902@suse.com>
+References: <1432092043-24220-1-git-send-email-gqjiang@suse.com>	<1432092043-24220-9-git-send-email-gqjiang@suse.com> <20150525145310.6b6ff7f8@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/4IdP68j27S87GH75xEz5B/e"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1432926434.4733.1.camel@gmail.com>
+In-Reply-To: <20150525145310.6b6ff7f8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Oleg Samarin <osamarin68@gmail.com>
+To: NeilBrown <neilb@suse.de>, Guoqing Jiang <gqjiang@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/4IdP68j27S87GH75xEz5B/e
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Fri, 29 May 2015 22:07:14 +0300 Oleg Samarin <osamarin68@gmail.com> wrot=
-e:
+On 05/24/2015 11:53 PM, NeilBrown wrote:
+> On Wed, 20 May 2015 11:20:40 +0800 Guoqing Jiang <gqjiang@suse.com> wrote:
+>
+>> To support change the cluster name, the commit do the followings:
+>>
+>> 1. extend original write_bitmap function for new scenario.
+>> 2. add the scenarion to handle the modification of cluster's name
+>>     in write_bitmap1.
+>> 3. make update_super1 can change the name in mdp_superblock_1.
+>
+> You haven't documented --update=home-cluster in mdadm.8.in, or at
+>
+> 			fprintf(outf, "Valid --update options are:\n"
+>
+> Also, I just realised that you are storing the cluster name in the array
+> name.  I don't think that is a clever idea.
+> The cluster name can be 64 chars.  The array name can only be 32.
+>
+> I think leave homehost and homecluster completely out of the array name when
+> the array is clustered.
+>
+> and
+>> +	    new_name = xmalloc(sizeof(sb->set_name));
+>
+> is really unnecessary.  Just do "char new_name[32];".
+> But you are probably going to remove that code anyway.
+>
 
-> I'm trying to evaluate a complex mdadm-lvm-udev-anaconda issue
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D1226305 and to undestand
-> how mdadm works.
->=20
-> I have an intel imsm raid-1 volume /dev/md126 assembled with two
-> disks /dev/sda and /dev/sdb.
-> This volume has two partitions /dev/md126p1 and /dev/md126p2.
->=20
-> Because it a simple mirror, both disks have te same information.
->=20
-> When the normal system boots up, I can see with journalctl that
->=20
-> 1. at first /dev/sda1, /dev/sda2, /dev/sdb1, /dev/sdb2 appear
-> 2. then mdadm assembles /dev/md126 from /dev/sda and /dev/sdb
-> 3. /dev/sda1, /dev/sda2, /dev/sdb1, /dev/sdb2 disappear
-> 4. /dev/md126p1 and /dev/md126p2 coming instead
->=20
-> Which program component is responsible for
-> disappearing /dev/sda1, /dev/sda2, /dev/sdb1 and /dev/sdb2?
+We had decided to keep the clustername in the array name, instead of the 
+homehost, when we create a new array because the arrayname carries the 
+hostname of the node which creates the device. However, we differentiate 
+the hostname and the clustername by the number of colons.
 
-mdadm has a function "remove_partitions" which uses the BLKPG ioctl to tell
-the kernel to forget about the partitions.
+For non-clustered-
 
->=20
-> Why can they be left after starting anaconda installer?
+arrayname:hostname
 
-I don't know anything about anaconda - maybe someone else can help.
+For clustered-
 
-NeilBrown
+arrayname::clustername
 
+Since, this is a limited size, we can truncate the name instead of 
+erring. Some tricks with strncpy should work fine.
 
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is for information purposes is only and not used for anything 
+(including joining the cluster)
 
+However, leaving the homehost and homecluster out of the arrayname seems 
+a better option than providing half-baked information.
 
---Sig_/4IdP68j27S87GH75xEz5B/e
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Guoqing, you may have to change the "create" patch accordingly.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+<snipped>
 
-iQIVAwUBVWjWsznsnt1WYoG5AQJyjg/+O/BGyKtHItd0NCrdJdCWT8WZO9eS18MB
-Qbbo7p5VoyvOuyYIH1h7L/qfUXnvqDchordo1++TbFJjR7R1uJWcFpFdjn1E92vb
-IlbC6thF5BxVQEitkL8QqzLHu5NIhKW1MhJfq5ERqn9axRaf33sLE2oKJO1eHW3K
-WLYLQ6/SSE9xRQSIm2KYX2yB+K73srJjTQBtCH8dkCB7/tOETqDtJt8/So8qenv2
-jz1n6UzpSGh6uE8mi42bL+2j1RXRWITG3RXcenIoR2V//RKMwHb4zodFlPwkD8Zu
-7AoG7/SOsr9YorzwO/OrlXzZ0FXkU/3Cr+mHBu0PV77QI4pUb0CCh7qa8wnDXIfy
-f5ADlWZA6TgvLOXHUS/+zZQPtFu9HKRh1zRSwShIe3JPgQChVT0a0lcD6IbV7/s1
-5446XLkBhZKcWunDU/6LN0BIbnWd0OX0o4EjNj51jWNZIxi62MbtoB3YnSF5EfB/
-mhhZ30nAU/56I4lNqMNSblxmOF04x3+ObWVAtxhZocbusV8pl7AFW3IRN1RVADze
-mtwpz3uMGSsZAK8XNOjW2QcaxYxy1Aw5DNSIMYYap71t002eeBMTDb8uqwCe5J9l
-s7C1UE5uJdYgQ27/CWVhfNKRz/iLbC9S3oGBlPeZVKi8R5hFKGtOow8MsFWGceb7
-0yocX9sqEaM=
-=5aLl
------END PGP SIGNATURE-----
-
---Sig_/4IdP68j27S87GH75xEz5B/e--
+-- 
+Goldwyn
