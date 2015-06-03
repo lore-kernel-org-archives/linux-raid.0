@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH v3 7/8] raid5: guarantee cache release stripes in correct way
-Date: Wed, 3 Jun 2015 15:48:42 -0700
-Message-ID: <e81e62c1b4e6bdb9e34725a940dd8687e841f267.1433356864.git.shli@fb.com>
+Subject: [PATCH v3 8/8] raid5: multi-thread support for raid5 caching reclaim
+Date: Wed, 3 Jun 2015 15:48:43 -0700
+Message-ID: <12e529dbd3cc58bc37c8febda0a33dfe985c7dd3.1433356864.git.shli@fb.com>
 References: <cover.1433356864.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,315 +12,601 @@ To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-When cache trys to flush data to raid, we must be very careful about
-stripe release. The issue is if we release a stripe and the stripe is
-handling by raid5d and we add a new bio into the stripe later, the
-stripe will enter the raid5 state machine several times, which
-r5cache_write_parity can't handle well. This could happen if
-get_active_stripe() sleeps in adding bio to several stripes. To solve
-this issue, we guarantee stripe release after all bio are added to
-corresponding stripes. This is a performance win too if the bug happens.
+There are several stalled stages in raid5 caching reclaim, which can
+significantly harm reclaim performance. To mitigate the performance
+issue, we introduce multi-thread support for reclaim. Since each thread
+records reclaimed stripes in flush start/end block, it's safe for
+multi-thread.
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid5-cache.c | 28 +++++++++-------
- drivers/md/raid5.c       | 84 +++++++++++++++++++++++++++++++-----------------
- drivers/md/raid5.h       | 11 ++++++-
- 3 files changed, 80 insertions(+), 43 deletions(-)
+ drivers/md/raid5-cache.c | 343 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 288 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 04b1684..86e7b94 100644
+index 86e7b94..329aa38 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -1670,7 +1670,7 @@ static void r5c_write_bio(struct r5c_cache *cache, struct bio *bio)
- 	r5c_enter_error_mode(cache, -ENOMEM);
- 	r5c_check_wait_error_mode(cache);
- error_mode:
--	raid5_make_request(cache->mddev, bio);
-+	raid5_make_request(cache->mddev, bio, NULL);
- }
+@@ -224,6 +224,8 @@ enum {
+ };
  
- static void r5c_read_bio(struct r5c_cache *cache, struct bio *bio)
-@@ -1686,7 +1686,7 @@ static void r5c_read_bio(struct r5c_cache *cache, struct bio *bio)
+ #define STRIPE_LOCK_BITS 8
++
++#define MAX_RECLAIM_WORKERS 16
+ struct r5c_cache {
+ 	struct mddev *mddev;
+ 	struct md_rdev *rdev;
+@@ -258,9 +260,11 @@ struct r5c_cache {
+ 	unsigned long reclaim_reason;
+ 	wait_queue_head_t reclaim_wait;
+ 	struct md_thread *reclaim_thread;
+-	__le64 *stripe_flush_data;
+ 	int quiesce_state;
  
- 	stripe = r5c_get_stripe(cache, stripe_index);
- 	if (!stripe) {
--		raid5_make_request(cache->mddev, bio);
-+		raid5_make_request(cache->mddev, bio, NULL);
- 		return;
- 	}
++	struct md_thread *reclaim_workers[MAX_RECLAIM_WORKERS];
++	int reclaim_worker_cnt;
++
+ 	int in_recovery;
  
-@@ -1725,7 +1725,7 @@ static void r5c_read_bio(struct r5c_cache *cache, struct bio *bio)
- 			} else
- 				split = bio;
+ 	struct work_struct pending_io_work;
+@@ -294,9 +298,8 @@ enum {
+ 	RECLAIM_DISK_BACKGROUND = 9, /* try to reclaim disk */
+ 	RECLAIM_FLUSH_ALL = 16, /* flush all data to raid */
  
--			raid5_make_request(cache->mddev, split);
-+			raid5_make_request(cache->mddev, split, NULL);
+-	QUIESCE_NONE = 0,
++	QUIESCE_END = 0,
+ 	QUIESCE_START = 1,
+-	QUIESCE_END = 2,
  
- 			start = tmp;
- 		}
-@@ -1823,7 +1823,7 @@ void r5c_write_end(struct mddev *mddev, struct bio *bi)
- }
- 
- static void r5c_flush_one(struct r5c_cache *cache, struct r5c_stripe *stripe,
--	int start, int pages)
-+	int start, int pages, struct raid5_plug_context *pc)
+ 	ERROR_NOERROR = 0,
+ 	ERROR_PREPARE = 1, /* Had an error, flushing cache to raid */
+@@ -1958,7 +1961,9 @@ static void r5c_select_stripes(struct r5c_cache *cache, struct list_head *list)
  {
- 	sector_t base;
- 	struct bio *bio;
-@@ -1858,7 +1858,7 @@ static void r5c_flush_one(struct r5c_cache *cache, struct r5c_stripe *stripe,
- 		atomic64_inc(&cache->out_cache_rq);
- 		atomic64_add(bio_sectors(bio), &cache->out_cache_sectors);
+ 	int stripes;
+ 	bool blocking;
++	static DEFINE_MUTEX(lock);
  
--		raid5_make_request(cache->mddev, bio);
-+		raid5_make_request(cache->mddev, bio, pc);
++	mutex_lock(&lock);
+ 	/*
+ 	 * generally select full stripe, if no disk space, select first stripe
+ 	 */
+@@ -1991,6 +1996,7 @@ static void r5c_select_stripes(struct r5c_cache *cache, struct list_head *list)
  	}
+ 
+ 	spin_unlock_irq(&cache->tree_lock);
++	mutex_unlock(&lock);
  }
  
-@@ -1871,7 +1871,8 @@ static void r5c_put_stripe_dirty(struct r5c_cache *cache,
- 	}
+ static void r5c_disks_flush_end(struct bio *bio, int err)
+@@ -2028,11 +2034,44 @@ static int r5c_stripe_list_cmp(void *priv, struct list_head *a,
+ 	return !(stripe_a->raid_index < stripe_b->raid_index);
  }
  
--static void r5c_flush_stripe(struct r5c_cache *cache, struct r5c_stripe *stripe)
-+static void r5c_flush_stripe(struct r5c_cache *cache, struct r5c_stripe *stripe,
-+	struct raid5_plug_context *pc)
+-static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
+-	struct list_head *stripe_list)
++struct r5c_reclaim_context {
++	struct list_head stripe_list;
++	__le64 *stripe_flush_data;
++	u64 seq;
++	sector_t meta;
++	struct completion comp;
++};
++
++static struct r5c_reclaim_context *
++r5c_alloc_reclaim_context(struct r5c_cache *cache)
++{
++	struct r5c_reclaim_context *context;
++
++	context = kzalloc(sizeof(*context), GFP_KERNEL);
++	if (!context)
++		return NULL;
++	INIT_LIST_HEAD(&context->stripe_list);
++	context->stripe_flush_data = kmalloc(PAGE_SIZE, GFP_KERNEL);
++	if (!context->stripe_flush_data) {
++		kfree(context);
++		return NULL;
++	}
++	init_completion(&context->comp);
++	return context;
++}
++
++static void r5c_free_reclaim_context(struct r5c_reclaim_context *context)
++{
++	kfree(context->stripe_flush_data);
++	kfree(context);
++}
++
++static void r5c_do_reclaim(struct r5c_cache *cache,
++	struct r5c_reclaim_context *context)
  {
- 	unsigned long *stripe_bits;
- 	int chunk_stripes;
-@@ -1900,7 +1901,7 @@ static void r5c_flush_stripe(struct r5c_cache *cache, struct r5c_stripe *stripe)
- 		while (end < cache->stripe_data_pages &&
- 		       stripe->data_pages[end])
- 			end++;
--		r5c_flush_one(cache, stripe, start, end - start);
-+		r5c_flush_one(cache, stripe, start, end - start, pc);
- 	}
- 	r5c_put_stripe_dirty(cache, stripe);
- }
-@@ -2034,11 +2035,14 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
- 	struct r5c_io_range *range;
++	struct list_head *stripe_list = &context->stripe_list;
++	__le64 *stripe_flush_data = context->stripe_flush_data;
+ 	struct r5c_stripe *stripe;
+-	struct r5c_io_range *range;
  	u64 seq;
  	sector_t meta;
--	struct blk_plug plug;
  	size_t size = 0;
-+	struct raid5_plug_context pc;
+@@ -2045,7 +2084,7 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
  
- 	if (list_empty(stripe_list))
- 		return;
-+
-+	raid5_context_init(&pc);
-+
  	list_sort(NULL, stripe_list, r5c_stripe_list_cmp);
  	list_for_each_entry(stripe, stripe_list, lru) {
- 		cache->stripe_flush_data[size] =
-@@ -2047,11 +2051,11 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
+-		cache->stripe_flush_data[size] =
++		stripe_flush_data[size] =
+ 				cpu_to_le64(stripe->raid_index);
+ 		size++;
  	}
- 	size *= sizeof(__le64);
+@@ -2063,7 +2102,7 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
  
--	blk_start_plug(&plug);
- 	/* step 1: start write to raid */
- 	list_for_each_entry(stripe, stripe_list, lru)
--		r5c_flush_stripe(cache, stripe);
--	blk_finish_plug(&plug);
-+		r5c_flush_stripe(cache, stripe, &pc);
+ 	/* step 3: make sure data and parity settle down */
+ 	r5l_flush_block(&cache->log, R5LOG_TYPE_FLUSH_START,
+-		cache->stripe_flush_data, size, &seq, &meta);
++		stripe_flush_data, size, &seq, &meta);
+ 
+ 	/* step 4: continue write to raid */
+ 	list_for_each_entry(stripe, stripe_list, lru) {
+@@ -2087,7 +2126,7 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
+ 
+ 	/* step 7: mark data is flushed to raid */
+ 	r5l_flush_block(&cache->log, R5LOG_TYPE_FLUSH_END,
+-		cache->stripe_flush_data, size, &seq, &meta);
++		stripe_flush_data, size, &seq, &meta);
+ 
+ 	/* step 8: mark stripe as dead */
+ 	while (!list_empty(stripe_list)) {
+@@ -2100,6 +2139,23 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
+ 
+ 		r5c_put_stripe(stripe);
+ 	}
++	context->seq = seq;
++	context->meta = meta;
++}
 +
-+	raid5_context_unplug(&pc, cache->mddev, false);
++static void r5c_do_reclaim_and_write_super(struct r5c_cache *cache,
++	struct r5c_reclaim_context *context)
++{
++	struct r5c_io_range *range;
++	u64 seq;
++	sector_t meta;
++
++	if (list_empty(&context->stripe_list))
++		return;
++
++	r5c_do_reclaim(cache, context);
++	seq = context->seq;
++	meta = context->meta;
  
- 	/* step 2: wait parity write to cache */
- 	list_for_each_entry_reverse(stripe, stripe_list, lru)
-@@ -2158,7 +2162,7 @@ static void r5c_reclaim_thread(struct md_thread *thread)
- 		wake_up(&cache->error_wait);
- 
- 		while ((bio = bio_list_pop(&cache->retry_bio_list)) != NULL)
--			raid5_make_request(cache->mddev, bio);
-+			raid5_make_request(cache->mddev, bio, NULL);
- 
- 		if (++cache->retry_cnt < MAX_RETRY) {
- 			cache->next_retry_time = jiffies +
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b1c942c..6cb10af 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4973,26 +4973,26 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
- 	return sh;
+ 	/* step 9: advance superblock checkpoint */
+ 	spin_lock_irq(&cache->tree_lock);
+@@ -2118,14 +2174,67 @@ static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
+ 	r5l_write_super(&cache->log, seq, meta);
  }
  
--struct raid5_plug_cb {
--	struct blk_plug_cb	cb;
--	struct list_head	list;
--	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
--};
-+void raid5_context_init(struct raid5_plug_context *context)
++static void r5c_reclaim_work(struct r5c_cache *cache,
++	struct r5c_reclaim_context *context)
++{
++	/*
++	 * select stripe will freeze stripe, which will guarantee no
++	 * new task pending in error mode
++	 * */
++	r5c_select_stripes(cache, &context->stripe_list);
++
++	r5c_do_reclaim(cache, context);
++}
++
++static void r5c_reclaim_stripe_list(struct r5c_cache *cache,
++	struct list_head *stripe_list)
++{
++	int size;
++	struct r5c_reclaim_context *context;
++
++	context = r5c_alloc_reclaim_context(cache);
++
++	while (!list_empty(stripe_list)) {
++		size = 0;
++		while (!list_empty(stripe_list) && size < RECLAIM_BATCH) {
++			list_move_tail(stripe_list->next,
++				&context->stripe_list);
++			size++;
++		}
++		if (!list_empty(stripe_list))
++			r5c_do_reclaim(cache, context);
++		else
++			r5c_do_reclaim_and_write_super(cache, context);
++	}
++
++	r5c_free_reclaim_context(context);
++}
++
++static void r5c_reclaim_thread_check_quiesce(struct r5c_cache *cache,
++	struct r5c_reclaim_context *context)
++{
++	if (cache->quiesce_state == QUIESCE_START) {
++		complete(&context->comp);
++		wait_event(cache->reclaim_wait, cache->quiesce_state ==
++			QUIESCE_END);
++		reinit_completion(&context->comp);
++	}
++}
++
+ static void r5c_reclaim_thread(struct md_thread *thread)
+ {
+ 	struct mddev *mddev = thread->mddev;
+ 	struct r5conf *conf = mddev->private;
+ 	struct r5c_cache *cache = conf->cache;
+-	LIST_HEAD(stripe_list);
++	struct r5c_reclaim_context *context = thread->private;
+ 	bool retry;
+ 
++	r5c_reclaim_thread_check_quiesce(cache, context);
++
++	if (thread != cache->reclaim_thread) {
++		r5c_reclaim_work(cache, context);
++		return;
++	}
+ do_retry:
+ 	retry = false;
+ 
+@@ -2134,9 +2243,9 @@ static void r5c_reclaim_thread(struct md_thread *thread)
+ 		 * select stripe will freeze stripe, which will guarantee no
+ 		 * new task pending in error mode
+ 		 * */
+-		r5c_select_stripes(cache, &stripe_list);
++		r5c_select_stripes(cache, &context->stripe_list);
+ 
+-		if (list_empty(&stripe_list)) {
++		if (list_empty(&context->stripe_list)) {
+ 			clear_bit(RECLAIM_MEM_FULL, &cache->reclaim_reason);
+ 			clear_bit(RECLAIM_MEM_BACKGROUND,
+ 					&cache->reclaim_reason);
+@@ -2144,7 +2253,7 @@ static void r5c_reclaim_thread(struct md_thread *thread)
+ 					&cache->reclaim_reason);
+ 			clear_bit(RECLAIM_FLUSH_ALL, &cache->reclaim_reason);
+ 		} else
+-			r5c_reclaim_stripe_list(cache, &stripe_list);
++			r5c_do_reclaim_and_write_super(cache, context);
+ 
+ 		wake_up(&cache->reclaim_wait);
+ 	}
+@@ -2179,20 +2288,80 @@ static void r5c_reclaim_thread(struct md_thread *thread)
+ 		cache->error_state = 0;
+ 		mddev_resume(cache->mddev);
+ 	}
+-	if (cache->quiesce_state == QUIESCE_START) {
+-		/* user IO already finished, we just stop reclaim */
+-		cache->reclaim_reason = 0;
+-		cache->quiesce_state = QUIESCE_END;
+-		wake_up(&cache->reclaim_wait);
+-		wait_event(cache->reclaim_wait, cache->quiesce_state ==
+-			QUIESCE_NONE);
++}
++
++static struct md_thread *r5c_init_reclaim_thread(struct r5c_cache *cache)
++{
++	struct r5c_reclaim_context *context;
++	struct md_thread *thread;
++
++	context = r5c_alloc_reclaim_context(cache);
++	if (!context)
++		return NULL;
++
++	thread = md_register_thread(r5c_reclaim_thread,
++			cache->mddev, "reclaim");
++	if (!thread) {
++		r5c_free_reclaim_context(context);
++		return NULL;
++	}
++	thread->private = context;
++
++	return thread;
++}
++
++static void r5c_exit_reclaim_thread(struct r5c_cache *cache,
++	struct md_thread **thread)
++{
++	struct r5c_reclaim_context *context;
++
++	context = (*thread)->private;
++	r5c_free_reclaim_context(context);
++
++	md_unregister_thread(thread);
++}
++
++static int r5c_init_reclaimers(struct r5c_cache *cache)
++{
++	struct md_thread *thread;
++
++	thread = r5c_init_reclaim_thread(cache);
++	if (!thread)
++		return -ENOMEM;
++	cache->reclaim_thread = thread;
++	cache->reclaim_thread->timeout = CHECKPOINT_TIMEOUT;
++	return 0;
++}
++
++static void r5c_exit_reclaimers(struct r5c_cache *cache)
++{
++	int i = cache->reclaim_worker_cnt;
++
++	while (i > 0) {
++		r5c_exit_reclaim_thread(cache, &cache->reclaim_workers[i - 1]);
++		i--;
+ 	}
++
++	r5c_exit_reclaim_thread(cache, &cache->reclaim_thread);
++}
++
++static void r5c_wakeup_reclaimer_threads(struct r5c_cache *cache)
 +{
 +	int i;
-+	INIT_LIST_HEAD(&context->list);
-+	for (i = 0; i < NR_STRIPE_HASH_LOCKS; i++)
-+		INIT_LIST_HEAD(context->temp_inactive_list + i);
-+}
- 
--static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
-+void raid5_context_unplug(struct raid5_plug_context *context,
-+	struct mddev *mddev, bool from_schedule)
- {
--	struct raid5_plug_cb *cb = container_of(
--		blk_cb, struct raid5_plug_cb, cb);
- 	struct stripe_head *sh;
--	struct mddev *mddev = cb->cb.data;
- 	struct r5conf *conf = mddev->private;
- 	int cnt = 0;
- 	int hash;
- 
--	if (cb->list.next && !list_empty(&cb->list)) {
-+	if (context->list.next && !list_empty(&context->list)) {
- 		spin_lock_irq(&conf->device_lock);
--		while (!list_empty(&cb->list)) {
--			sh = list_first_entry(&cb->list, struct stripe_head, lru);
-+		while (!list_empty(&context->list)) {
-+			sh = list_first_entry(&context->list, struct stripe_head, lru);
- 			list_del_init(&sh->lru);
- 			/*
- 			 * avoid race release_stripe_plug() sees
-@@ -5006,15 +5006,38 @@ static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
- 			 * case, the count is always > 1 here
- 			 */
- 			hash = sh->hash_lock_index;
--			__release_stripe(conf, sh, &cb->temp_inactive_list[hash]);
-+			__release_stripe(conf, sh, &context->temp_inactive_list[hash]);
- 			cnt++;
- 		}
- 		spin_unlock_irq(&conf->device_lock);
- 	}
--	release_inactive_stripe_list(conf, cb->temp_inactive_list,
-+	release_inactive_stripe_list(conf, context->temp_inactive_list,
- 				     NR_STRIPE_HASH_LOCKS);
- 	if (mddev->queue)
- 		trace_block_unplug(mddev->queue, cnt, !from_schedule);
-+}
 +
-+static void raid5_context_plug(struct raid5_plug_context *context,
-+			       struct stripe_head *sh)
-+{
-+	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
-+		list_add_tail(&sh->lru, &context->list);
-+	else
-+		release_stripe(sh);
-+}
++	md_wakeup_thread(cache->reclaim_thread);
 +
-+struct raid5_plug_cb {
-+	struct blk_plug_cb	cb;
-+	struct raid5_plug_context context;
-+};
-+
-+static void raid5_unplug(struct blk_plug_cb *blk_cb, bool from_schedule)
-+{
-+	struct raid5_plug_cb *cb = container_of(
-+		blk_cb, struct raid5_plug_cb, cb);
-+	struct mddev *mddev = cb->cb.data;
-+
-+	raid5_context_unplug(&cb->context, mddev, from_schedule);
- 	kfree(cb);
++	preempt_disable();
++	for (i = 0; i < cache->reclaim_worker_cnt; i++)
++		if (cache->reclaim_workers[i])
++			md_wakeup_thread(cache->reclaim_workers[i]);
++	preempt_enable();
  }
  
-@@ -5033,20 +5056,14 @@ static void release_stripe_plug(struct mddev *mddev,
+ static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason)
+ {
+ 	set_bit(reason, &cache->reclaim_reason);
+-	md_wakeup_thread(cache->reclaim_thread);
++	r5c_wakeup_reclaimer_threads(cache);
+ }
  
- 	cb = container_of(blk_cb, struct raid5_plug_cb, cb);
+ static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason)
+@@ -2205,17 +2374,25 @@ static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason)
+ void r5c_quiesce(struct r5conf *conf, int state)
+ {
+ 	struct r5c_cache *cache = conf->cache;
++	struct r5c_reclaim_context *context;
++	int i;
  
--	if (cb->list.next == NULL) {
--		int i;
--		INIT_LIST_HEAD(&cb->list);
--		for (i = 0; i < NR_STRIPE_HASH_LOCKS; i++)
--			INIT_LIST_HEAD(cb->temp_inactive_list + i);
+ 	if (!cache || cache->error_state)
+ 		return;
+ 	if (state == 1) {
+ 		r5c_wake_wait_reclaimer(cache, RECLAIM_FLUSH_ALL);
++
+ 		cache->quiesce_state = QUIESCE_START;
+-		md_wakeup_thread(cache->reclaim_thread);
+-		wait_event(cache->reclaim_wait, cache->quiesce_state ==
+-			QUIESCE_END);
++		r5c_wakeup_reclaimer_threads(cache);
++
++		for (i = 0; i < cache->reclaim_worker_cnt; i++) {
++			context = cache->reclaim_workers[i]->private;
++			wait_for_completion(&context->comp);
++		}
++		context = cache->reclaim_thread->private;
++		wait_for_completion(&context->comp);
+ 	} else if (state == 0) {
+-		cache->quiesce_state = QUIESCE_NONE;
++		cache->quiesce_state = QUIESCE_END;
+ 		wake_up(&cache->reclaim_wait);
+ 	}
+ }
+@@ -2751,7 +2928,6 @@ static int r5c_recover_stripes(struct r5c_load_ctx *ctx)
+ {
+ 	struct r5c_cache *cache = ctx->cache;
+ 	LIST_HEAD(list);
+-	int i;
+ 
+ 	r5l_check_stripes_checksum(ctx);
+ 
+@@ -2762,18 +2938,7 @@ static int r5c_recover_stripes(struct r5c_load_ctx *ctx)
+ 
+ 	cache->in_recovery = 1;
+ 
+-	while (!list_empty(&ctx->stripes_with_parity)) {
+-		i = 0;
+-		/* Can't handle large stripe list */
+-		while (i < RECLAIM_BATCH &&
+-		       !list_empty(&ctx->stripes_with_parity)) {
+-			list_move_tail(ctx->stripes_with_parity.next,
+-				&list);
+-			i++;
+-		}
+-		r5c_reclaim_stripe_list(cache, &list);
+-		BUG_ON(!list_empty(&list));
 -	}
-+	if (cb->context.list.next == NULL)
-+		raid5_context_init(&cb->context);
++	r5c_reclaim_stripe_list(cache, &ctx->stripes_with_parity);
  
--	if (!test_and_set_bit(STRIPE_ON_UNPLUG_LIST, &sh->state))
--		list_add_tail(&sh->lru, &cb->list);
--	else
--		release_stripe(sh);
-+	raid5_context_plug(&cb->context, sh);
- }
- 
--static void make_discard_request(struct mddev *mddev, struct bio *bi)
-+static void make_discard_request(struct mddev *mddev, struct bio *bi,
-+	struct raid5_plug_context *context)
+ 	cache->in_recovery = 0;
+ 	return 0;
+@@ -3181,16 +3346,20 @@ int r5c_min_stripe_cache_size(struct r5c_cache *cache)
  {
- 	struct r5conf *conf = mddev->private;
- 	sector_t logical_sector, last_sector;
-@@ -5128,7 +5145,10 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 		clear_bit(STRIPE_DELAYED, &sh->state);
- 		if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 			atomic_inc(&conf->preread_active_stripes);
--		release_stripe_plug(mddev, sh);
-+		if (context)
-+			raid5_context_plug(context, sh);
-+		else
-+			release_stripe_plug(mddev, sh);
- 	}
- 
- 	remaining = raid5_dec_bi_active_stripes(bi);
-@@ -5138,7 +5158,8 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 	}
+ 	struct r5conf *conf = cache->mddev->private;
+ 	return (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) *
+-		cache->reclaim_batch;
++		cache->reclaim_batch * (1 + cache->reclaim_worker_cnt);
  }
  
--void raid5_make_request(struct mddev *mddev, struct bio * bi)
-+void raid5_make_request(struct mddev *mddev, struct bio * bi,
-+	struct raid5_plug_context *context)
+-static void r5c_set_reclaim_batch(struct r5c_cache *cache, int batch)
++static void r5c_set_reclaim_batch(struct r5c_cache *cache, int batch,
++	int threads)
  {
+ 	struct mddev *mddev = cache->mddev;
  	struct r5conf *conf = mddev->private;
- 	int dd_idx;
-@@ -5168,7 +5189,7 @@ void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 		return;
+ 	int size;
  
- 	if (unlikely(bi->bi_rw & REQ_DISCARD)) {
--		make_discard_request(mddev, bi);
-+		make_discard_request(mddev, bi, context);
- 		return;
- 	}
- 
-@@ -5296,7 +5317,10 @@ void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 			    ((bi->bi_rw & REQ_SYNC) || conf->cache) &&
- 			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
- 				atomic_inc(&conf->preread_active_stripes);
--			release_stripe_plug(mddev, sh);
-+			if (context)
-+				raid5_context_plug(context, sh);
-+			else
-+				release_stripe_plug(mddev, sh);
- 		} else {
- 			/* cannot get stripe for read-ahead, just give-up */
- 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
-@@ -5323,7 +5347,7 @@ static void make_request(struct mddev *mddev, struct bio *bi)
- 	if (conf->cache)
- 		r5c_handle_bio(conf->cache, bi);
- 	else
--		raid5_make_request(mddev, bi);
-+		raid5_make_request(mddev, bi, NULL);
- }
- 
- static sector_t raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f117b68..1adb2b8 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -607,8 +607,17 @@ static inline int algorithm_is_DDF(int layout)
- extern void md_raid5_kick_device(struct r5conf *conf);
- extern int raid5_set_cache_size(struct mddev *mddev, int size);
- 
-+struct raid5_plug_context {
-+	struct list_head	list;
-+	struct list_head	temp_inactive_list[NR_STRIPE_HASH_LOCKS];
-+};
-+void raid5_context_init(struct raid5_plug_context *context);
-+void raid5_context_unplug(struct raid5_plug_context *context,
-+	struct mddev *mddev, bool from_schedule);
+-	size = (cache->stripe_parity_pages << PAGE_SECTOR_SHIFT) * batch;
++	threads++;
 +
- void release_stripe(struct stripe_head *sh);
--void raid5_make_request(struct mddev *mddev, struct bio *bi);
-+void raid5_make_request(struct mddev *mddev, struct bio *bi,
-+	struct raid5_plug_context *context);
- void r5c_handle_bio(struct r5c_cache *cache, struct bio *bi);
- int r5c_write_parity(struct r5c_cache *cache, struct stripe_head *sh);
- void r5c_flush_pending_parity(struct r5c_cache *cache);
++	size = (cache->stripe_parity_pages << PAGE_SECTOR_SHIFT) * batch *
++		threads;
+ 	if (size > cache->reserved_space) {
+ 		cache->reserved_space = size;
+ 		mutex_lock(&cache->log.io_mutex);
+@@ -3207,7 +3376,7 @@ static void r5c_set_reclaim_batch(struct r5c_cache *cache, int batch)
+ 		cache->reserved_space = size;
+ 	}
+ 
+-	size = (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) * batch;
++	size = (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) * batch * threads;
+ 
+ 	mddev_lock(mddev);
+ 	if (size > conf->max_nr_stripes)
+@@ -3241,7 +3410,7 @@ static ssize_t r5c_store_cache_reclaim_batch(struct mddev *mddev,
+ 		new = r5l_max_flush_stripes(&cache->log);
+ 
+ 	if (new != cache->reclaim_batch)
+-		r5c_set_reclaim_batch(cache, new);
++		r5c_set_reclaim_batch(cache, new, cache->reclaim_worker_cnt);
+ 	return len;
+ }
+ 
+@@ -3337,6 +3506,68 @@ static struct md_sysfs_entry r5c_cache_memory_watermark =
+ 	__ATTR(cache_memory_watermark, S_IRUGO | S_IWUSR,
+ 	r5c_show_cache_memory_watermark, r5c_store_cache_memory_watermark);
+ 
++static ssize_t r5c_show_reclaim_threads(struct mddev *mddev, char *page)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5c_cache *cache = conf->cache;
++
++	return sprintf(page, "%d\n", cache->reclaim_worker_cnt);
++}
++
++static void r5c_set_reclaim_thread_count(struct r5c_cache *cache, int cnt)
++{
++	struct md_thread *thread;
++	int old_cnt;
++
++	if (cache->reclaim_worker_cnt == cnt)
++		return;
++	if (cnt > MAX_RECLAIM_WORKERS)
++		cnt = MAX_RECLAIM_WORKERS;
++
++	old_cnt = cache->reclaim_worker_cnt;
++	if (old_cnt > cnt) {
++		cache->reclaim_worker_cnt = cnt;
++		/* make sure r5c_wake_reclaimer() isn't using thread */
++		synchronize_sched();
++	}
++
++	while (old_cnt > cnt) {
++		r5c_exit_reclaim_thread(cache,
++			&cache->reclaim_workers[old_cnt - 1]);
++		old_cnt--;
++	}
++	while (old_cnt < cnt) {
++		thread = r5c_init_reclaim_thread(cache);
++		if (!thread)
++			break;
++		cache->reclaim_workers[old_cnt++] = thread;
++	}
++
++	r5c_set_reclaim_batch(cache, cache->reclaim_batch, old_cnt);
++
++	cache->reclaim_worker_cnt = old_cnt;
++}
++
++static ssize_t r5c_store_reclaim_threads(struct mddev *mddev,
++	const char *page, size_t len)
++{
++	struct r5conf *conf = mddev->private;
++	struct r5c_cache *cache = conf->cache;
++	unsigned int new;
++
++	if (len >= PAGE_SIZE)
++		return -EINVAL;
++	if (kstrtouint(page, 0, &new))
++		return -EINVAL;
++
++	r5c_set_reclaim_thread_count(cache, new);
++	return len;
++}
++
++static struct md_sysfs_entry r5c_cache_reclaim_threads =
++	__ATTR(cache_reclaim_threads, S_IRUGO | S_IWUSR,
++	r5c_show_reclaim_threads, r5c_store_reclaim_threads);
++
+ static int r5c_init_sysfs(struct r5c_cache *cache)
+ {
+ 	struct mddev *mddev = cache->mddev;
+@@ -3363,7 +3594,16 @@ static int r5c_init_sysfs(struct r5c_cache *cache)
+ 				      &r5c_cache_memory_watermark.attr, NULL);
+ 	if (ret)
+ 		goto memory_watermark;
++
++	ret = sysfs_add_file_to_group(&mddev->kobj,
++				      &r5c_cache_reclaim_threads.attr, NULL);
++	if (ret)
++		goto reclaim_threads;
++
+ 	return 0;
++reclaim_threads:
++	sysfs_remove_file_from_group(&mddev->kobj,
++		&r5c_cache_memory_watermark.attr, NULL);
+ memory_watermark:
+ 	sysfs_remove_file_from_group(&mddev->kobj,
+ 		&r5c_cache_stat.attr, NULL);
+@@ -3392,6 +3632,8 @@ static void r5c_exit_sysfs(struct r5c_cache *cache)
+ 		&r5c_cache_stat.attr, NULL);
+ 	sysfs_remove_file_from_group(&mddev->kobj,
+ 		&r5c_cache_memory_watermark.attr, NULL);
++	sysfs_remove_file_from_group(&mddev->kobj,
++		&r5c_cache_reclaim_threads.attr, NULL);
+ }
+ 
+ static void r5c_free_cache_data(struct r5c_cache *cache)
+@@ -3446,10 +3688,6 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
+ 	cache->stripe_parity_pages = (cache->stripe_size -
+ 		cache->stripe_data_size) >> PAGE_SECTOR_SHIFT;
+ 
+-	cache->stripe_flush_data = kmalloc(PAGE_SIZE, GFP_KERNEL);
+-	if (!cache->stripe_flush_data)
+-		goto io_range_kc;
+-
+ 	cache->io_range_kc = KMEM_CACHE(r5c_io_range, 0);
+ 	if (!cache->io_range_kc)
+ 		goto io_range_kc;
+@@ -3497,18 +3735,15 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
+ 
+ 	r5c_calculate_watermark(cache);
+ 
+-	cache->reclaim_thread = md_register_thread(r5c_reclaim_thread,
+-		mddev, "reclaim");
+-	if (!cache->reclaim_thread)
++	if (r5c_init_reclaimers(cache))
+ 		goto err_page;
+-	cache->reclaim_thread->timeout = CHECKPOINT_TIMEOUT;
+ 
+ 	r5c_shrink_cache_memory(cache, cache->max_pages);
+ 	if (r5c_init_sysfs(cache))
+ 		goto err_sysfs;
+ 	return cache;
+ err_sysfs:
+-	md_unregister_thread(&cache->reclaim_thread);
++	r5c_exit_reclaimers(cache);
+ err_page:
+ 	r5c_free_cache_data(cache);
+ 
+@@ -3520,7 +3755,6 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
+ stripe_kc:
+ 	kmem_cache_destroy(cache->io_range_kc);
+ io_range_kc:
+-	kfree(cache->stripe_flush_data);
+ 	kfree(cache);
+ 	return NULL;
+ }
+@@ -3528,7 +3762,7 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
+ void r5c_exit_cache(struct r5c_cache *cache)
+ {
+ 	r5c_exit_sysfs(cache);
+-	md_unregister_thread(&cache->reclaim_thread);
++	r5c_exit_reclaimers(cache);
+ 	r5l_exit_log(&cache->log);
+ 
+ 	r5c_free_cache_data(cache);
+@@ -3537,6 +3771,5 @@ void r5c_exit_cache(struct r5c_cache *cache)
+ 	kmem_cache_destroy(cache->stripe_kc);
+ 	kmem_cache_destroy(cache->io_range_kc);
+ 
+-	kfree(cache->stripe_flush_data);
+ 	kfree(cache);
+ }
 -- 
 1.8.1
 
