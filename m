@@ -1,413 +1,59 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH v3 4/8] raid5: add some sysfs entries
-Date: Wed, 3 Jun 2015 15:48:39 -0700
-Message-ID: <56fdce308839d2b494591c26d1ab35db1a36b78e.1433356864.git.shli@fb.com>
-References: <cover.1433356864.git.shli@fb.com>
+Subject: [PATCH v3 0/8] MD: a caching layer for raid5/6
+Date: Wed, 3 Jun 2015 15:48:35 -0700
+Message-ID: <cover.1433356864.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1433356864.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Add some sysfs entries.
--cache_memory. Control the cache memory size.
--cache_reclaim_batch. Control how many stripes reclaim should run in one
-time.
--cache_memory_watermark. The background reclaim runs if cache memory
-hits the watermark and stops after hit 1.5x of the watermark.
--cache_disk_watermark. The background reclaim runs if cache disk space
-hits the watermark and stops after hit 1.5x of the watermark.
--cache_stat. statistics about cache.
+Hi,
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 294 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/raid5.c       |   3 +
- drivers/md/raid5.h       |   1 +
- 3 files changed, 297 insertions(+), 1 deletion(-)
+This is the third version of the raid5/6 caching layer patches. The patches add
+a caching layer for raid5/6. The caching layer uses a SSD as a cache for a raid
+5/6. It works like the similar way of a hardware raid controller. The purpose
+is to improve raid performance (reduce read-modify-write) and fix write hole
+issue. The main patch is patch 3 and the description has all details about the
+implementation. Please review!
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index c21d2f2..04b1684 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -278,6 +278,12 @@ struct r5c_cache {
- 	struct kmem_cache *io_range_kc;
- 	struct kmem_cache *stripe_kc;
- 	struct bio_set *bio_set;
-+
-+	atomic64_t in_cache_rq;
-+	atomic64_t out_cache_rq;
-+	atomic64_t in_cache_sectors;
-+	atomic64_t out_cache_sectors;
-+	atomic64_t read_cache_sectors;
- };
- 
- enum {
-@@ -314,6 +320,12 @@ static inline int r5l_page_blocks(struct r5l_log *log, int pages)
- 	return pages << log->page_block_shift;
- }
- 
-+static inline int r5l_max_flush_stripes(struct r5l_log *log)
-+{
-+	return (log->block_size - sizeof(struct r5l_flush_block)) /
-+		sizeof(__le64);
-+}
-+
- static u32 r5l_calculate_checksum(struct r5l_log *log, u32 crc,
- 	void *buf, size_t size, bool data)
- {
-@@ -1644,6 +1656,9 @@ static void r5c_write_bio(struct r5c_cache *cache, struct bio *bio)
- 	stripe->existing_pages += new_pages;
- 	r5c_unlock_stripe(cache, stripe, &flags);
- 
-+	atomic64_inc(&cache->in_cache_rq);
-+	atomic64_add(bio_sectors(bio), &cache->in_cache_sectors);
-+
- 	if (r5l_queue_bio(&cache->log, bio, r5c_bio_task_end, io_range,
- 	    reserved_blocks))
- 		goto put_error;
-@@ -1692,6 +1707,8 @@ static void r5c_read_bio(struct r5c_cache *cache, struct bio *bio)
- 				split = bio;
- 
- 			r5c_copy_bio(split, &stripe->data_pages[start], true);
-+			atomic64_add(bio_sectors(split),
-+						&cache->read_cache_sectors);
- 
- 			bio_endio(split, 0);
- 
-@@ -1837,6 +1854,10 @@ static void r5c_flush_one(struct r5c_cache *cache, struct r5c_stripe *stripe,
- 		bio->bi_end_io = r5c_flush_endio;
- 		bio->bi_rw = WRITE;
- 		atomic_inc(&stripe->pending_bios);
-+
-+		atomic64_inc(&cache->out_cache_rq);
-+		atomic64_add(bio_sectors(bio), &cache->out_cache_sectors);
-+
- 		raid5_make_request(cache->mddev, bio);
- 	}
- }
-@@ -3102,6 +3123,273 @@ static int r5c_shrink_cache_memory(struct r5c_cache *cache, unsigned long size)
- 	return 0;
- }
- 
-+static ssize_t r5c_show_cache_memory(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+
-+	return sprintf(page, "%lld\n", cache->max_pages << PAGE_SHIFT);
-+}
-+
-+static ssize_t r5c_store_cache_memory(struct mddev *mddev, const char *page,
-+	size_t len)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+	unsigned long new;
-+	LIST_HEAD(page_list);
-+	u64 i;
-+
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+	if (kstrtoul(page, 0, &new))
-+		return -EINVAL;
-+	new >>= PAGE_SHIFT;
-+
-+	if (new > cache->max_pages) {
-+		i = cache->max_pages;
-+		while (i < new) {
-+			struct page *page = alloc_page(GFP_KERNEL);
-+
-+			if (!page)
-+				break;
-+			list_add(&page->lru, &page_list);
-+			i++;
-+		}
-+
-+		spin_lock_irq(&cache->pool_lock);
-+		list_splice(&page_list, &cache->page_pool);
-+		cache->free_pages += i - cache->max_pages;
-+		cache->max_pages = i;
-+		cache->total_pages = i;
-+		r5c_calculate_watermark(cache);
-+		spin_unlock_irq(&cache->pool_lock);
-+		return len;
-+	}
-+	r5c_shrink_cache_memory(cache, new);
-+	return len;
-+}
-+
-+static struct md_sysfs_entry r5c_cache_memory = __ATTR(cache_memory,
-+	S_IRUGO | S_IWUSR, r5c_show_cache_memory, r5c_store_cache_memory);
-+
-+int r5c_min_stripe_cache_size(struct r5c_cache *cache)
-+{
-+	struct r5conf *conf = cache->mddev->private;
-+	return (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) *
-+		cache->reclaim_batch;
-+}
-+
-+static void r5c_set_reclaim_batch(struct r5c_cache *cache, int batch)
-+{
-+	struct mddev *mddev = cache->mddev;
-+	struct r5conf *conf = mddev->private;
-+	int size;
-+
-+	size = (cache->stripe_parity_pages << PAGE_SECTOR_SHIFT) * batch;
-+	if (size > cache->reserved_space) {
-+		cache->reserved_space = size;
-+		mutex_lock(&cache->log.io_mutex);
-+		cache->log.reserved_blocks = r5l_sector_to_block(&cache->log,
-+			cache->reserved_space) + 1;
-+		mutex_unlock(&cache->log.io_mutex);
-+		r5c_wake_wait_reclaimer(cache,
-+				RECLAIM_DISK_BACKGROUND);
-+	} else {
-+		mutex_lock(&cache->log.io_mutex);
-+		cache->log.reserved_blocks -= r5l_sector_to_block(&cache->log,
-+			cache->reserved_space - size);
-+		mutex_unlock(&cache->log.io_mutex);
-+		cache->reserved_space = size;
-+	}
-+
-+	size = (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) * batch;
-+
-+	mddev_lock(mddev);
-+	if (size > conf->max_nr_stripes)
-+		raid5_set_cache_size(mddev, size);
-+	mddev_unlock(mddev);
-+
-+	cache->reclaim_batch = batch;
-+}
-+
-+static ssize_t r5c_show_cache_reclaim_batch(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+
-+	return sprintf(page, "%d\n", cache->reclaim_batch);
-+}
-+
-+static ssize_t r5c_store_cache_reclaim_batch(struct mddev *mddev,
-+	const char *page, size_t len)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+	unsigned long new;
-+
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+	if (kstrtoul(page, 0, &new))
-+		return -EINVAL;
-+
-+	if (new > r5l_max_flush_stripes(&cache->log))
-+		new = r5l_max_flush_stripes(&cache->log);
-+
-+	if (new != cache->reclaim_batch)
-+		r5c_set_reclaim_batch(cache, new);
-+	return len;
-+}
-+
-+static struct md_sysfs_entry r5c_cache_reclaim_batch =
-+	__ATTR(cache_reclaim_batch, S_IRUGO | S_IWUSR,
-+	r5c_show_cache_reclaim_batch, r5c_store_cache_reclaim_batch);
-+
-+static ssize_t r5c_show_cache_stat(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+
-+	return sprintf(page, "%lld %lld %lld %lld %lld\n",
-+		(u64)atomic64_read(&cache->in_cache_rq),
-+		(u64)atomic64_read(&cache->in_cache_sectors),
-+		(u64)atomic64_read(&cache->out_cache_rq),
-+		(u64)atomic64_read(&cache->out_cache_sectors),
-+		(u64)atomic64_read(&cache->read_cache_sectors));
-+}
-+
-+static struct md_sysfs_entry r5c_cache_stat =
-+	__ATTR(cache_stat, S_IRUGO, r5c_show_cache_stat, NULL);
-+
-+static ssize_t r5c_show_cache_disk_watermark(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+
-+	return sprintf(page, "%lld\n", cache->log.low_watermark *
-+		cache->log.block_size);
-+}
-+
-+static ssize_t r5c_store_cache_disk_watermark(struct mddev *mddev,
-+	const char *page, size_t len)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+	struct r5l_log *log = &cache->log;
-+	unsigned long new;
-+
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+	if (kstrtoul(page, 0, &new))
-+		return -EINVAL;
-+	new /= log->block_size;
-+
-+	if (new * 3 / 2 >= log->total_blocks)
-+		return -EINVAL;
-+
-+	mutex_lock(&log->io_mutex);
-+	log->low_watermark = new;
-+	log->high_watermark = new * 3 / 2;
-+	mutex_unlock(&log->io_mutex);
-+	return len;
-+}
-+
-+static struct md_sysfs_entry r5c_cache_disk_watermark =
-+	__ATTR(cache_disk_watermark, S_IRUGO | S_IWUSR,
-+	r5c_show_cache_disk_watermark, r5c_store_cache_disk_watermark);
-+
-+static ssize_t r5c_show_cache_memory_watermark(struct mddev *mddev, char *page)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+
-+	return sprintf(page, "%lld\n", cache->low_watermark << PAGE_SHIFT);
-+}
-+
-+static ssize_t r5c_store_cache_memory_watermark(struct mddev *mddev,
-+	const char *page, size_t len)
-+{
-+	struct r5conf *conf = mddev->private;
-+	struct r5c_cache *cache = conf->cache;
-+	unsigned long new;
-+
-+	if (len >= PAGE_SIZE)
-+		return -EINVAL;
-+	if (kstrtoul(page, 0, &new))
-+		return -EINVAL;
-+	new >>= PAGE_SHIFT;
-+
-+	if (new * 2 >= cache->max_pages)
-+		return -EINVAL;
-+
-+	spin_lock_irq(&cache->pool_lock);
-+	cache->low_watermark = new;
-+	cache->high_watermark = new << 1;
-+	spin_unlock_irq(&cache->pool_lock);
-+	return len;
-+}
-+
-+static struct md_sysfs_entry r5c_cache_memory_watermark =
-+	__ATTR(cache_memory_watermark, S_IRUGO | S_IWUSR,
-+	r5c_show_cache_memory_watermark, r5c_store_cache_memory_watermark);
-+
-+static int r5c_init_sysfs(struct r5c_cache *cache)
-+{
-+	struct mddev *mddev = cache->mddev;
-+	int ret;
-+
-+	ret = sysfs_add_file_to_group(&mddev->kobj, &r5c_cache_memory.attr,
-+				      NULL);
-+	if (ret)
-+		return ret;
-+	ret = sysfs_add_file_to_group(&mddev->kobj,
-+				      &r5c_cache_reclaim_batch.attr, NULL);
-+	if (ret)
-+		goto err_reclaim;
-+	ret = sysfs_add_file_to_group(&mddev->kobj,
-+				      &r5c_cache_disk_watermark.attr, NULL);
-+	if (ret)
-+		goto disk_watermark;
-+	ret = sysfs_add_file_to_group(&mddev->kobj,
-+				      &r5c_cache_stat.attr, NULL);
-+	if (ret)
-+		goto stat;
-+
-+	ret = sysfs_add_file_to_group(&mddev->kobj,
-+				      &r5c_cache_memory_watermark.attr, NULL);
-+	if (ret)
-+		goto memory_watermark;
-+	return 0;
-+memory_watermark:
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_stat.attr, NULL);
-+stat:
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_disk_watermark.attr, NULL);
-+disk_watermark:
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_reclaim_batch.attr, NULL);
-+err_reclaim:
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_memory.attr, NULL);
-+	return ret;
-+}
-+
-+static void r5c_exit_sysfs(struct r5c_cache *cache)
-+{
-+	struct mddev *mddev = cache->mddev;
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_reclaim_batch.attr, NULL);
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_memory.attr, NULL);
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_disk_watermark.attr, NULL);
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_stat.attr, NULL);
-+	sysfs_remove_file_from_group(&mddev->kobj,
-+		&r5c_cache_memory_watermark.attr, NULL);
-+}
-+
- static void r5c_free_cache_data(struct r5c_cache *cache)
- {
- 	struct r5c_stripe *stripe;
-@@ -3212,8 +3500,11 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
- 	cache->reclaim_thread->timeout = CHECKPOINT_TIMEOUT;
- 
- 	r5c_shrink_cache_memory(cache, cache->max_pages);
--
-+	if (r5c_init_sysfs(cache))
-+		goto err_sysfs;
- 	return cache;
-+err_sysfs:
-+	md_unregister_thread(&cache->reclaim_thread);
- err_page:
- 	r5c_free_cache_data(cache);
- 
-@@ -3232,6 +3523,7 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
- 
- void r5c_exit_cache(struct r5c_cache *cache)
- {
-+	r5c_exit_sysfs(cache);
- 	md_unregister_thread(&cache->reclaim_thread);
- 	r5l_exit_log(&cache->log);
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6cfba8f..26561d8 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5907,6 +5907,9 @@ raid5_set_cache_size(struct mddev *mddev, int size)
- 	if (size <= 16 || size > 32768)
- 		return -EINVAL;
- 
-+	if (conf->cache && size < r5c_min_stripe_cache_size(conf->cache))
-+		size = r5c_min_stripe_cache_size(conf->cache);
-+
- 	conf->min_nr_stripes = size;
- 	while (size < conf->max_nr_stripes &&
- 	       drop_one_stripe(conf))
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 40307ca..f117b68 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -617,4 +617,5 @@ void r5c_exit_cache(struct r5c_cache *cache);
- void r5c_write_start(struct mddev *mddev, struct bio *bi);
- void r5c_write_end(struct mddev *mddev, struct bio *bi);
- void r5c_quiesce(struct r5conf *conf, int state);
-+int r5c_min_stripe_cache_size(struct r5c_cache *cache);
- #endif
+Thanks,
+Shaohua
+
+V3:
+-make reclaim multi-thread
+-add statistics in sysfs
+-bug fixes
+
+V2:
+-metadata write doesn't use FUA
+-discard request is only issued when necessary
+-bug fixes and cleanup
+
+Shaohua Li (7):
+  raid5: directly use mddev->queue
+  raid5: A caching layer for RAID5/6
+  raid5: add some sysfs entries
+  md: don't allow resize/reshape with cache support
+  raid5: skip resync if caching is enabled
+  raid5: guarantee cache release stripes in correct way
+  raid5: multi-thread support for raid5 caching reclaim
+
+Song Liu (1):
+  MD: add a new disk role to present cache device
+
+ drivers/md/Makefile            |    2 +-
+ drivers/md/md.c                |   14 +-
+ drivers/md/md.h                |    4 +
+ drivers/md/raid5-cache.c       | 3775 ++++++++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c             |  177 +-
+ drivers/md/raid5.h             |   25 +-
+ include/uapi/linux/raid/md_p.h |   73 +
+ 7 files changed, 4022 insertions(+), 48 deletions(-)
+ create mode 100644 drivers/md/raid5-cache.c
+
 -- 
 1.8.1
 
