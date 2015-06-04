@@ -1,110 +1,101 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block: add a bi_error field to struct bio
-Date: Thu, 4 Jun 2015 11:31:07 -0400
-Message-ID: <20150604153106.GA31567@redhat.com>
-References: <1433338959-24808-1-git-send-email-hch@lst.de>
- <1433338959-24808-2-git-send-email-hch@lst.de>
+From: Davor Vusir <davortvusir@gmail.com>
+Subject: Fwd: [PATCH v3 0/8] MD: a caching layer for raid5/6
+Date: Thu, 04 Jun 2015 21:29:12 +0200
+Message-ID: <5570A708.9060104@gmail.com>
+References: <cover.1433356864.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1433338959-24808-2-git-send-email-hch@lst.de>
+In-Reply-To: <cover.1433356864.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 03 2015 at  9:42P -0400,
-Christoph Hellwig <hch@lst.de> wrote:
+Sorry for intruding on the patch reviewing process and for the novice=20
+question.
 
-> Currently we have two different ways to signal an I/O error on a BIO:
-> 
->  (1) by clearing the BIO_UPTODATE flag
->  (2) by returning a Linux errno value to the bi_end_io callback
-> 
-> The first one has the drawback of only communicating a single possible
-> error (-EIO), and the second one has the drawback of not beeing persistent
-> when bios are queued up, and are not passed along from child to parent
-> bio in the ever more popular chaining scenario.  Having both mechanisms
-> available has the additional drawback of utterly confusing driver authors
-> and introducing bugs where various I/O submitters only deal with one of
-> them, and the others have to add boilerplate code to deal with both kinds
-> of error returns.
-> 
-> So add a new bi_error field to store an errno value directly in struct
-> bio and remove the existing mechanisms to clean all this up.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Is this caching layer also suitable for a smaller system with only one=20
+raid5 where /boot and / resides? Or is it meant for dedicated data=20
+storage(s) only?
 
-This patch _really_ concerns me because just in DM alone I found you
-took liberties that you shouldn't have and created a regression.  First
-issue is a real bug (your proposed dm-io.c:dmio_complete change missed
-that dm-io uses error_bits and not traditional error code like expected)
-the other issue being you added extra branching that isn't needed and
-made review more tedious (dm.c:clone_endio).
+Regards
+Davor Vusir
 
-I'll defer to others to check their respective areas of expertise but my
-experience with this review should really underscore the need for more
-eyes on this patch.  That said, I do appreciate your effort on cleaning
-this up!
 
-For DM, please add Signed-off-by: Mike Snitzer <snitzer@redhat.com> once
-you've folded in this patch, thanks!
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index 86dbbc7..d2fc49f 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -545,7 +545,8 @@ static void dmio_complete(unsigned long error, void *context)
- {
- 	struct dm_buffer *b = context;
- 
--	b->bio.bi_end_io(&b->bio, error ? -EIO : 0);
-+	b->bio.bi_error = error ? -EIO : 0;
-+	b->bio.bi_end_io(&b->bio);
- }
- 
- static void use_dmio(struct dm_buffer *b, int rw, sector_t block,
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 767bce9..85a7c3d 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -954,25 +954,22 @@ static void disable_write_same(struct mapped_device *md)
- 	limits->max_write_same_sectors = 0;
- }
- 
--static void clone_endio(struct bio *bio, int error)
-+static void clone_endio(struct bio *bio)
- {
--	int r = error;
-+	int r = bio->bi_error;
- 	struct dm_target_io *tio = container_of(bio, struct dm_target_io, clone);
- 	struct dm_io *io = tio->io;
- 	struct mapped_device *md = tio->io->md;
- 	dm_endio_fn endio = tio->ti->type->end_io;
- 
--	if (!bio_flagged(bio, BIO_UPTODATE) && !error)
--		error = -EIO;
--
- 	if (endio) {
--		r = endio(tio->ti, bio, error);
-+		r = endio(tio->ti, bio, bio->bi_error);
- 		if (r < 0 || r == DM_ENDIO_REQUEUE)
- 			/*
- 			 * error and requeue request are handled
- 			 * in dec_pending().
- 			 */
--			error = r;
-+			;
- 		else if (r == DM_ENDIO_INCOMPLETE)
- 			/* The target will handle the io */
- 			return;
-@@ -987,7 +984,7 @@ static void clone_endio(struct bio *bio, int error)
- 		disable_write_same(md);
- 
- 	free_tio(md, tio);
--	dec_pending(io, error);
-+	dec_pending(io, r);
- }
- 
- static struct dm_rq_target_io *tio_from_request(struct request *rq)
+-------- Vidarebefordrat meddelande --------
+=C4mne: [PATCH v3 0/8] MD: a caching layer for raid5/6
+Datum: Wed, 3 Jun 2015 15:48:35 -0700
+=46r=E5n: Shaohua Li <shli@fb.com>
+Till: linux-raid@vger.kernel.org
+Kopia: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org,=20
+dan.j.williams@intel.com, neilb@suse.de
+
+Hi,
+
+This is the third version of the raid5/6 caching layer patches. The=20
+patches add
+a caching layer for raid5/6. The caching layer uses a SSD as a cache fo=
+r=20
+a raid
+5/6. It works like the similar way of a hardware raid controller. The=20
+purpose
+is to improve raid performance (reduce read-modify-write) and fix write=
+ hole
+issue. The main patch is patch 3 and the description has all details=20
+about the
+implementation. Please review!
+
+Thanks,
+Shaohua
+
+V3:
+-make reclaim multi-thread
+-add statistics in sysfs
+-bug fixes
+
+V2:
+-metadata write doesn't use FUA
+-discard request is only issued when necessary
+-bug fixes and cleanup
+
+Shaohua Li (7):
+   raid5: directly use mddev->queue
+   raid5: A caching layer for RAID5/6
+   raid5: add some sysfs entries
+   md: don't allow resize/reshape with cache support
+   raid5: skip resync if caching is enabled
+   raid5: guarantee cache release stripes in correct way
+   raid5: multi-thread support for raid5 caching reclaim
+
+Song Liu (1):
+   MD: add a new disk role to present cache device
+
+  drivers/md/Makefile            |    2 +-
+  drivers/md/md.c                |   14 +-
+  drivers/md/md.h                |    4 +
+  drivers/md/raid5-cache.c       | 3775=20
+++++++++++++++++++++++++++++++++++++++++
+  drivers/md/raid5.c             |  177 +-
+  drivers/md/raid5.h             |   25 +-
+  include/uapi/linux/raid/md_p.h |   73 +
+  7 files changed, 4022 insertions(+), 48 deletions(-)
+  create mode 100644 drivers/md/raid5-cache.c
+
+--=20
+1.8.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
