@@ -1,71 +1,38 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: 4.1-rc6 radi5 OOPS
-Date: Wed, 03 Jun 2015 21:44:06 -0400
-Message-ID: <wrfjmw0gl02h.fsf@jes.lga.redhat.com>
-References: <wrfjlhg0mtmi.fsf@jes.lga.redhat.com>
-	<20150604064048.0cb2d7c9@notabene.brown>
-	<wrfjzj4glajs.fsf@jes.lga.redhat.com>
-	<20150604081557.55435f13@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150604081557.55435f13@notabene.brown> (NeilBrown's message of
-	"Thu, 4 Jun 2015 08:15:57 +1000")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [RFC/PATCH 0/8] Introduce strreplace
+Date: Thu,  4 Jun 2015 11:37:07 +0200
+Message-ID: <1433410636-26812-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-> On Wed, 03 Jun 2015 17:57:43 -0400 Jes Sorensen <Jes.Sorensen@redhat.com>
-> wrote:
->
->> NeilBrown <neilb@suse.de> writes:
->> > On Wed, 03 Jun 2015 16:20:21 -0400 Jes Sorensen <Jes.Sorensen@redhat.com>
->> > wrote:
->> >
->> >> Neil,
->> >> 
->> >> I was running testing on the current 4.1-rc6 tree (Linus' top of trunk
->> >> 8cd9234c64c584432f6992fe944ca9e46ca8ea76) and I am seeing the following
->> >> OOPS which is reproducible.
->> >> 
->> >> It shows up when running the mdadm test suite, 07changelevelintr to be
->> >> specific.
->> >> 
->> >> Is this something you have seen?
->> >> 
->> >> Cheers,
->> >> Jes
->> >> 
->> >> ------------[ cut here ]------------
->> >> kernel BUG at drivers/md/raid5.c:5391!
->> >
->> > No, I haven't seen that.  And I've been running the test suite quite a bit
->> > lately.
->> >
->> > Can you get it to print out the relevant numbers?  Include
->> > readpos/writepos/safepos too.
->> 
->> This enough? Let me know if you need more.
->> 
->> I suspect this started happening with the changes that went in between
->> 4.1-rc5 and 4.1-rc6. I will try to bisect it tomorrow.
->> 
->> Cheers,
->> Jes
->> 
->> mddev->dev_sectors: 0x9800, reshape_sectors: 0x0200 stripe_addr:
->> fffffffffffffdff, sector_nr 0, readpos 511, writepos -513, safepos
->> 512
->
-> Those negative numbers look VERY suspicious.
-> I'm actually on leave this week so I won't be looking at it any more, but
-> I'll see what I can find on Monday.
-> Thanks,
-> NeilBrown
+Doing single-character substitution on an entire string is open-coded
+in a few places, sometimes in a rather suboptimal way. This introduces
+a trivial helper, strreplace, for this task along with a few example
+conversions.
 
-Thanks - I'll try and dig more into this in the mean time.
+Rasmus Villemoes (8):
+  lib: string: Introduce strreplace
+  kernel/trace/trace_events_filter.c: Use strreplace
+  blktrace: use strreplace in do_blk_trace_setup
+  lib/kobject.c: Use strreplace
+  drivers/base/core.c: Use strreplace
+  drivers/md/md.c: Use strreplace
+  fs/jbd2/journal.c: Use strreplace
+  fs/ext4/super.c: Use strreplace in ext4_fill_super
 
-Cheers,
-Jes
+ drivers/base/core.c                |  5 +----
+ drivers/md/md.c                    |  4 +---
+ fs/ext4/super.c                    |  4 +---
+ fs/jbd2/journal.c                  | 10 ++--------
+ include/linux/string.h             |  1 +
+ kernel/trace/blktrace.c            |  6 ++----
+ kernel/trace/trace_events_filter.c |  5 ++---
+ lib/kobject.c                      |  4 +---
+ lib/string.c                       | 17 +++++++++++++++++
+ 9 files changed, 28 insertions(+), 28 deletions(-)
+
+-- 
+2.1.3
