@@ -1,44 +1,39 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [RFC/PATCH 6/8] drivers/md/md.c: Use strreplace
-Date: Thu,  4 Jun 2015 11:37:13 +0200
-Message-ID: <1433410636-26812-7-git-send-email-linux@rasmusvillemoes.dk>
-References: <1433410636-26812-1-git-send-email-linux@rasmusvillemoes.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1433410636-26812-1-git-send-email-linux@rasmusvillemoes.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [dm-devel] [PATCH] block: add a bi_error field to struct bio
+Date: Thu, 04 Jun 2015 05:53:43 -0400
+Message-ID: <yq1vbf3re8o.fsf@sermon.lab.mkp.net>
+References: <1433338959-24808-1-git-send-email-hch@lst.de>
+	<1433338959-24808-2-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1433338959-24808-2-git-send-email-hch@lst.de> (Christoph
+	Hellwig's message of "Wed, 3 Jun 2015 15:42:39 +0200")
+Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-There's no point in starting over when we meet a '/'. This also
-eliminates a stack variable and a little .text.
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- drivers/md/md.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Christoph> The first one has the drawback of only communicating a single
+Christoph> possible error (-EIO), and the second one has the drawback of
+Christoph> not beeing persistent when bios are queued up, and are not
+Christoph> passed along from child to parent bio in the ever more
+Christoph> popular chaining scenario.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 27506302eb7a..2ea2f28551c5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2024,7 +2024,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- {
- 	char b[BDEVNAME_SIZE];
- 	struct kobject *ko;
--	char *s;
- 	int err;
- 
- 	/* prevent duplicates */
-@@ -2070,8 +2069,7 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
- 		return -EBUSY;
- 	}
- 	bdevname(rdev->bdev,b);
--	while ( (s=strchr(b, '/')) != NULL)
--		*s = '!';
-+	strreplace(b, '/', '!');
- 
- 	rdev->mddev = mddev;
- 	printk(KERN_INFO "md: bind<%s>\n", b);
+Christoph> So add a new bi_error field to store an errno value directly
+Christoph> in struct bio and remove the existing mechanisms to clean all
+Christoph> this up.
+
+Having the error status separate from the bio has been a major headache.
+I am entirely in favor of this patch.
+
+It was a big chunk of changes to read through but I did not spot any
+obvious problems or polarity reversals. It would be nice to get the
+respective fs/md/target driver folks to check their portions, though.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
 -- 
-2.1.3
+Martin K. Petersen	Oracle Linux Engineering
