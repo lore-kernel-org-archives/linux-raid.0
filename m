@@ -1,41 +1,47 @@
 From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: [PATCH v2 0/8] Introduce strreplace
-Date: Tue,  9 Jun 2015 01:26:48 +0200
-Message-ID: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>
-Cc: Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: [PATCH v2 6/8] drivers/md/md.c: Use strreplace
+Date: Tue,  9 Jun 2015 01:26:54 +0200
+Message-ID: <1433806017-10823-7-git-send-email-linux@rasmusvillemoes.dk>
+References: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>
+Cc: Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doing single-character substitution on an entire string is open-coded
-in a few places, sometimes in a rather suboptimal way. This introduces
-a trivial helper, strreplace, for this task along with a few example
-conversions.
+There's no point in starting over when we meet a '/'. This also
+eliminates a stack variable and a little .text.
 
-Andrew, can I get you to take 1/8 through the mm tree? I'm not sure
-what the easiest path is for the remaining patches.
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+v2: no changes.
 
-Rasmus Villemoes (8):
-  lib: string: Introduce strreplace
-  kernel/trace/trace_events_filter.c: Use strreplace
-  blktrace: use strreplace in do_blk_trace_setup
-  lib/kobject.c: Use strreplace
-  drivers/base/core.c: Use strreplace
-  drivers/md/md.c: Use strreplace
-  fs/jbd2/journal.c: Use strreplace
-  fs/ext4/super.c: Use strreplace in ext4_fill_super
+ drivers/md/md.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
- drivers/base/core.c                |  9 ++++-----
- drivers/md/md.c                    |  4 +---
- fs/ext4/super.c                    |  4 +---
- fs/jbd2/journal.c                  | 10 ++--------
- include/linux/string.h             |  1 +
- kernel/trace/blktrace.c            |  6 ++----
- kernel/trace/trace_events_filter.c |  5 ++---
- lib/kobject.c                      | 13 +++++--------
- lib/string.c                       | 17 +++++++++++++++++
- 9 files changed, 35 insertions(+), 34 deletions(-)
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 27506302eb7a..2ea2f28551c5 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2024,7 +2024,6 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ {
+ 	char b[BDEVNAME_SIZE];
+ 	struct kobject *ko;
+-	char *s;
+ 	int err;
+ 
+ 	/* prevent duplicates */
+@@ -2070,8 +2069,7 @@ static int bind_rdev_to_array(struct md_rdev *rdev, struct mddev *mddev)
+ 		return -EBUSY;
+ 	}
+ 	bdevname(rdev->bdev,b);
+-	while ( (s=strchr(b, '/')) != NULL)
+-		*s = '!';
++	strreplace(b, '/', '!');
+ 
+ 	rdev->mddev = mddev;
+ 	printk(KERN_INFO "md: bind<%s>\n", b);
 -- 
 2.1.3
+
