@@ -1,52 +1,41 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Migrating a RAID 5 from 4x2TB to 3x6TB ?
-Date: Mon, 08 Jun 2015 21:10:26 +0100
-Message-ID: <5575F6B2.6030802@youngman.org.uk>
-References: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: Pierre Wieser <pwieser@trychlos.org>, linux-raid <linux-raid@vger.kernel.org>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH v2 0/8] Introduce strreplace
+Date: Tue,  9 Jun 2015 01:26:48 +0200
+Message-ID: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>
+Cc: Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/06/15 20:28, Pierre Wieser wrote:
-> Hi all,
-> 
-> I currently have an almost full RAID 5 built with 4 x 2 TB disks.
-> I wonder if it would be possible to migrate it to a bigger RAID 5
-> with 3 x 6TB new disks.
-> 
-Do you have a spare (I presume SATA) disk port?
+Doing single-character substitution on an entire string is open-coded
+in a few places, sometimes in a rather suboptimal way. This introduces
+a trivial helper, strreplace, for this task along with a few example
+conversions.
 
-> I've imagined something like that :
-> - successively fail, remove a 2TB disk, add a 4TB disk, wait for end of recovery on three 2TB disks
+Andrew, can I get you to take 1/8 through the mm tree? I'm not sure
+what the easiest path is for the remaining patches.
 
-If you've got a spare port, the newer mdadm's have, I believe, a "clone
-and replace" option. Much better than failing then rebuilding.
+Rasmus Villemoes (8):
+  lib: string: Introduce strreplace
+  kernel/trace/trace_events_filter.c: Use strreplace
+  blktrace: use strreplace in do_blk_trace_setup
+  lib/kobject.c: Use strreplace
+  drivers/base/core.c: Use strreplace
+  drivers/md/md.c: Use strreplace
+  fs/jbd2/journal.c: Use strreplace
+  fs/ext4/super.c: Use strreplace in ext4_fill_super
 
-If not, is it worth getting a SATA expansion board? If you've not got a
-specialist mobo, surely a board is only going to cost a tenner or so,
-and quality isn't *that* important seeing as it's only a temporary measure.
+ drivers/base/core.c                |  9 ++++-----
+ drivers/md/md.c                    |  4 +---
+ fs/ext4/super.c                    |  4 +---
+ fs/jbd2/journal.c                  | 10 ++--------
+ include/linux/string.h             |  1 +
+ kernel/trace/blktrace.c            |  6 ++----
+ kernel/trace/trace_events_filter.c |  5 ++---
+ lib/kobject.c                      | 13 +++++--------
+ lib/string.c                       | 17 +++++++++++++++++
+ 9 files changed, 35 insertions(+), 34 deletions(-)
 
-> - at the end of this first phase, I have the same ~6TB RAID 5 clean group with 3 x 4TB + 1 x 2TB disks
-> - declare the last 2 TB disk faulty and remove it
-> - the RAID 5 group state goes to clean, degraded
-> - grow the RAID 5 group with --size=max option
-> - grow the RAID 5 group with --array-size=~12TB option
-> - last, grow the RAID 5 group with --raid-devices=3 and --backup-file=... options.
-> 
-> And I have tested it on a small test RAID 5 group.
-> As expected, this last command makes the RAID 5 group begins a reshaping operation.
-> But this one keeps stucked at zero.
-> 
-> So I have several questions :
-> 
-Don't think I've answered any of them, but I might have raised new ones.
-I just hope the tip saves you a bit of time.
-
-Cheers,
-Wol
-
+-- 
+2.1.3
