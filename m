@@ -1,30 +1,27 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH v2 0/8] Introduce strreplace
-Date: Mon, 8 Jun 2015 20:55:54 -0400
-Message-ID: <20150609005554.GP19168@thunk.org>
-References: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
+From: Can Jeuleers <can.jeuleers@gmail.com>
+Subject: Re: Migrating a RAID 5 from 4x2TB to 3x6TB ?
+Date: Tue, 09 Jun 2015 07:23:44 +0200
+Message-ID: <55767860.5000803@gmail.com>
+References: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Pierre Wieser <pwieser@trychlos.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 09, 2015 at 01:26:48AM +0200, Rasmus Villemoes wrote:
-> Doing single-character substitution on an entire string is open-coded
-> in a few places, sometimes in a rather suboptimal way. This introduces
-> a trivial helper, strreplace, for this task along with a few example
-> conversions.
+On 08/06/15 21:28, Pierre Wieser wrote:
+> Hi all,
 > 
-> Andrew, can I get you to take 1/8 through the mm tree? I'm not sure
-> what the easiest path is for the remaining patches.
+> I currently have an almost full RAID 5 built with 4 x 2 TB disks.
+> I wonder if it would be possible to migrate it to a bigger RAID 5
+> with 3 x 6TB new disks.
 
-This is not super urgent, right?  So we could let 1/8 go into
-mainline, and then the rest of the patches could go in the next
-release.  That would be the simplest, although it would drag out how
-long it would take for strreplace to be used everywhere.
+I'd recommend against it:
 
-     	      	       		     	     - Ted
+https://en.wikipedia.org/wiki/RAID#Unrecoverable_read_errors_during_rebuild
+
+Jan
+
