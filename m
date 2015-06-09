@@ -1,33 +1,33 @@
-From: Can Jeuleers <can.jeuleers@gmail.com>
-Subject: Re: Migrating a RAID 5 from 4x2TB to 3x6TB ?
-Date: Tue, 09 Jun 2015 21:18:59 +0200
-Message-ID: <55773C23.1010600@gmail.com>
-References: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr> <55767860.5000803@gmail.com> <55773493.3050605@youngman.org.uk>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 0/8] Introduce strreplace
+Date: Tue, 9 Jun 2015 14:02:43 -0700
+Message-ID: <20150609140243.e2ef7e9f22416c82a334f031@linux-foundation.org>
+References: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55773493.3050605@youngman.org.uk>
+In-Reply-To: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Pierre Wieser <pwieser@trychlos.org>, linux-raid@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/06/15 20:46, Wols Lists wrote:
-> Please expand! Having read the article, it doesn't seem to say anything
-> more than what is repeated time and time on this list - MAKE SURE YOUR
-> DRIVES ARE DECENT RAID DRIVES.
+On Tue,  9 Jun 2015 01:26:48 +0200 Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
 
-Large RAID5 arrays are a bad idea because of the probability of
-unrecoverable read errors occurring during a rebuild, which increases
-with the size of the array.
+> Doing single-character substitution on an entire string is open-coded
+> in a few places, sometimes in a rather suboptimal way. This introduces
+> a trivial helper, strreplace, for this task along with a few example
+> conversions.
+> 
+> Andrew, can I get you to take 1/8 through the mm tree? I'm not sure
+> what the easiest path is for the remaining patches.
 
-Decent RAID drives will have better reliability than indecent-ones
-(haha), but in absolute terms their URE rates are still going to
-increase with array size.
+With this sort of thing I grab everything them feed the dependent
+patches to maintainers after the base patch is upstream.
 
-> If you have ERC, then the odd "soft" read error doesn't matter. If you
-> don't have ERC, then your data is at risk when you replace a drive, and
-> it doesn't matter how big your drives are, it's the array size that matters.
+Or I merge the dependent patches myself if they were acked.
 
-Indeed. Pierre was proposing to further increase the size of his RAID5
-array, and I was advising him against it because of the above.
+Or if the dependent patches are simple I'll just merge them anyway,
+shrug.  I'd say these fall into that category.
+
