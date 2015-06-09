@@ -1,40 +1,19 @@
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: Re: [PATCH v2 0/8] Introduce strreplace
-Date: Tue, 09 Jun 2015 09:25:50 +0200
-Message-ID: <87lhftjqbl.fsf@rasmusvillemoes.dk>
-References: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
-	<20150609005554.GP19168@thunk.org>
+From: aswamina@purdue.edu
+Subject: Re: Thanks for responding
+Date: Tue, 09 Jun 2015 17:17:12 +0200
+Message-ID: <SRV-XCHANGE66hxQA730001a434__38496.3916767903$1433865672$gmane$org@srv-xchange.rupaligroup.com>
+Reply-To: r.gsvaso@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150609005554.GP19168@thunk.org> (Theodore Ts'o's message of
-	"Mon, 8 Jun 2015 20:55:54 -0400")
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Neil Brown <neilb@suse.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "r.gsvaso@yahoo.com.ph" <aswamina@purdue.edu>
 List-Id: linux-raid.ids
 
-On Tue, Jun 09 2015, Theodore Ts'o <tytso@mit.edu> wrote:
+Hi,
 
-> On Tue, Jun 09, 2015 at 01:26:48AM +0200, Rasmus Villemoes wrote:
->> Doing single-character substitution on an entire string is open-coded
->> in a few places, sometimes in a rather suboptimal way. This introduces
->> a trivial helper, strreplace, for this task along with a few example
->> conversions.
->> 
->> Andrew, can I get you to take 1/8 through the mm tree? I'm not sure
->> what the easiest path is for the remaining patches.
->
-> This is not super urgent, right?
+I am diagnosed with laryngeal cancer, I' want to give my money to you & my body to science. Respond with this ref SvaSo so I know you got this.
 
-Right, not urgent at all.
-
-> So we could let 1/8 go into mainline, and then the rest of the patches
-> could go in the next release. That would be the simplest, although it
-> would drag out how long it would take for strreplace to be used
-> everywhere.
-
-Sure, though it would be a little weird to have a helper with no users
-until 4.3 comes out.
-
-Rasmus
+Ruby
