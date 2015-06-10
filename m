@@ -1,78 +1,59 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: 4.1-rc6 radi5 OOPS
-Date: Wed, 10 Jun 2015 10:19:42 +1000
-Message-ID: <20150610101942.0bc26a25@home.neil.brown.name>
+Date: Wed, 10 Jun 2015 11:57:21 +1000
+Message-ID: <20150610115721.64c474fa@home.neil.brown.name>
 References: <wrfjlhg0mtmi.fsf@jes.lga.redhat.com>
 	<20150604064048.0cb2d7c9@notabene.brown>
 	<wrfjzj4glajs.fsf@jes.lga.redhat.com>
+	<20150610101942.0bc26a25@home.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjzj4glajs.fsf@jes.lga.redhat.com>
+In-Reply-To: <20150610101942.0bc26a25@home.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <Jes.Sorensen@redhat.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, 03 Jun 2015 17:57:43 -0400
-Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+On Wed, 10 Jun 2015 10:19:42 +1000 Neil Brown <neilb@suse.de> wrote:
 
-> NeilBrown <neilb@suse.de> writes:
-> > On Wed, 03 Jun 2015 16:20:21 -0400 Jes Sorensen
-> > <Jes.Sorensen@redhat.com> wrote:
-> >
-> >> Neil,
-> >> 
-> >> I was running testing on the current 4.1-rc6 tree (Linus' top of
-> >> trunk 8cd9234c64c584432f6992fe944ca9e46ca8ea76) and I am seeing
-> >> the following OOPS which is reproducible.
-> >> 
-> >> It shows up when running the mdadm test suite, 07changelevelintr
-> >> to be specific.
-> >> 
-> >> Is this something you have seen?
-> >> 
-> >> Cheers,
-> >> Jes
-> >> 
-> >> ------------[ cut here ]------------
-> >> kernel BUG at drivers/md/raid5.c:5391!
-> >
-> > No, I haven't seen that.  And I've been running the test suite
-> > quite a bit lately.
-> >
-> > Can you get it to print out the relevant numbers?  Include
-> > readpos/writepos/safepos too.
-> 
-> This enough? Let me know if you need more.
-> 
-> I suspect this started happening with the changes that went in between
-> 4.1-rc5 and 4.1-rc6. I will try to bisect it tomorrow.
-> 
-> Cheers,
-> Jes
-> 
-> mddev->dev_sectors: 0x9800, reshape_sectors: 0x0200 stripe_addr:
-> fffffffffffffdff, sector_nr 0, readpos 511, writepos -513, safepos
-> 512  
+> So it looks like some sort of race.  I have other evidence of a race
+> with the resync/reshape thread starting/stopping.  If I track that
+> down it'll probably fix this issue too.
 
-These numbers suggest that conf->reshape_progress divided by
-"data_disks" or "new_data_disks" is -1 - or really the unsigned
-equivalent, which is MaxSectors.
-But unless data_disks is 1, ->reshape_progress must really be -2 or -3
-or something.
-So maybe if you could confirm the values of ->reshape_progress,
-data_disks, and new_data_disks, that might help.
+I think I have found just such a race.  If you request a reshape just
+as a recovery completes, you can end up with two reshapes running.
+This causes confusion :-)
 
-
-I don't think ->reshape_progress could get a negative value in any way
-except by being assigned MaxSectors.  And that only happens when the
-reshape has really completely finished.
-
-So it looks like some sort of race.  I have other evidence of a race
-with the resync/reshape thread starting/stopping.  If I track that
-down it'll probably fix this issue too.
+Can you try this patch?  If I can remember how to reproduce my race
+I'll test it on that too.
 
 Thanks,
 NeilBrown
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 83532fe84205..03f460a1de60 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4146,6 +4146,7 @@ static int raid10_start_reshape(struct mddev
+*mddev) 
+ 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
++	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 0e49b2c94bdd..59e44e99eef3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7368,6 +7368,7 @@ static int raid5_start_reshape(struct mddev
+*mddev) 
+ 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+ 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
++	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 	mddev->sync_thread = md_register_thread(md_do_sync, mddev,
+
