@@ -1,52 +1,32 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: 4.1-rc6 radi5 OOPS
-Date: Wed, 10 Jun 2015 12:27:35 -0400
-Message-ID: <wrfjk2vbv894.fsf@carbonite.lan.trained-monkey.org>
-References: <wrfjlhg0mtmi.fsf@jes.lga.redhat.com>
-	<20150604064048.0cb2d7c9@notabene.brown>
-	<wrfjzj4glajs.fsf@jes.lga.redhat.com>
-	<20150610101942.0bc26a25@home.neil.brown.name>
-	<20150610115721.64c474fa@home.neil.brown.name>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: block: add a bi_error field to struct bio
+Date: Wed, 10 Jun 2015 12:50:23 -0400
+Message-ID: <20150610165023.GA31918@redhat.com>
+References: <1433338959-24808-1-git-send-email-hch@lst.de>
+ <1433338959-24808-2-git-send-email-hch@lst.de>
+ <20150604153106.GA31567@redhat.com>
+ <20150610081138.GA3841@lst.de>
+ <20150610152649.GA31140@redhat.com>
+ <20150610160112.GB31140@redhat.com>
+ <20150610160443.GA14268@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150610115721.64c474fa@home.neil.brown.name> (Neil Brown's
-	message of "Wed, 10 Jun 2015 11:57:21 +1000")
+Content-Disposition: inline
+In-Reply-To: <20150610160443.GA14268@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
-> On Wed, 10 Jun 2015 10:19:42 +1000 Neil Brown <neilb@suse.de> wrote:
->
->> So it looks like some sort of race.  I have other evidence of a race
->> with the resync/reshape thread starting/stopping.  If I track that
->> down it'll probably fix this issue too.
->
-> I think I have found just such a race.  If you request a reshape just
-> as a recovery completes, you can end up with two reshapes running.
-> This causes confusion :-)
->
-> Can you try this patch?  If I can remember how to reproduce my race
-> I'll test it on that too.
->
-> Thanks,
-> NeilBrown
+On Wed, Jun 10 2015 at 12:04pm -0400,
+Christoph Hellwig <hch@lst.de> wrote:
 
-Hi Neil,
+> On Wed, Jun 10, 2015 at 12:01:12PM -0400, Mike Snitzer wrote:
+> > > I'll queue a patch to rename 'error' to 'error_bits' where appropriate.
+> > 
+> > See: https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-next&id=f368f463e4cef696ad6b102dbaf5c10dfca7cc63
+> 
+> Can we wait with this until we're done with bi_error?
 
-Thanks for the patch - I tried with this applied, but it still crashed
-for me :( I had to mangle it manually, somehow it got modified in the
-email.
-
-Note this was a mangled RHEL kernel, but it's the same crash I see on
-the upstream kernel.
-
-[  754.303561] md: using 128k window, over a total of 19456k.
-[  754.309706] mddev->dev_sectors: 0x9800, reshape_sectors: 0x0200 stripe_addr: fffffffffffffdff, sector_nr 0, readpos 511, writepos -513, safepos 512
-[  754.324486] ------------[ cut here ]------------
-[  754.329649] kernel BUG at drivers/md/raid5.c:5388!
-
-Cheers,
-Jes
+Sure, I've moved it out to dm-4.3
