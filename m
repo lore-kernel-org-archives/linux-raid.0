@@ -1,101 +1,40 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [PATCH] md: fix a build warning
-Date: Wed, 10 Jun 2015 20:04:18 +0200
-Message-ID: <55787C22.2060809@bfs.de>
-References: <1433949658-8455-1-git-send-email-firogm@gmail.com> <557874B9.9010500@bfs.de> <alpine.DEB.2.10.1506101935390.5463@hadrien>
-Reply-To: wharms@bfs.de
+From: anup modak <amodak2014@gmail.com>
+Subject: Re: block: add a bi_error field to struct bio
+Date: Wed, 10 Jun 2015 13:29:43 -0500
+Message-ID: <CAEcdTAH2fU_WJWeev0DcsGKUA0M27u=i27eaezchFDxpVpzuag@mail.gmail.com>
+References: <1433338959-24808-1-git-send-email-hch@lst.de>
+	<1433338959-24808-2-git-send-email-hch@lst.de>
+	<20150604153106.GA31567@redhat.com>
+	<20150610081138.GA3841@lst.de>
+	<20150610152649.GA31140@redhat.com>
+	<20150610160112.GB31140@redhat.com>
+	<20150610160443.GA14268@lst.de>
+	<20150610165023.GA31918@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.10.1506101935390.5463@hadrien>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Firo Yang <firogm@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150610165023.GA31918@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
+So Is it safe to use raid 6 with btrfs for home storage now? I will
+have backup on ZFS.
 
-
-Am 10.06.2015 19:36, schrieb Julia Lawall:
->=20
->=20
-> On Wed, 10 Jun 2015, walter harms wrote:
->=20
+On Wed, Jun 10, 2015 at 11:50 AM, Mike Snitzer <snitzer@redhat.com> wrote:
+> On Wed, Jun 10 2015 at 12:04pm -0400,
+> Christoph Hellwig <hch@lst.de> wrote:
+>
+>> On Wed, Jun 10, 2015 at 12:01:12PM -0400, Mike Snitzer wrote:
+>> > > I'll queue a patch to rename 'error' to 'error_bits' where appropriate.
+>> >
+>> > See: https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=for-next&id=f368f463e4cef696ad6b102dbaf5c10dfca7cc63
 >>
->>
->> Am 10.06.2015 17:20, schrieb Firo Yang:
->>> Warning like this:
->>>
->>> drivers/md/md.c: In function =E2=80=98update_array_info=E2=80=99:
->>> drivers/md/md.c:6394:26: warning: logical not is only applied
->>> to the left hand side of comparison [-Wlogical-not-parentheses]
->>>       !mddev->persistent  !=3D info->not_persistent||
->>>
->>> I fix it by enclosing !mddev->persistent with parentheses
->>>
->>> By the way, I also fixed a line over 80 characters warning outputed
->>> by ./scripts/checkpatch.pl
->>>
->>> Signed-off-by: Firo Yang <firogm@gmail.com>
->>> ---
->>>  drivers/md/md.c | 5 +++--
->>>  1 file changed, 3 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> index dd85be9..b420d82 100644
->>> --- a/drivers/md/md.c
->>> +++ b/drivers/md/md.c
->>> @@ -6391,9 +6391,10 @@ static int update_array_info(struct mddev *m=
-ddev, mdu_array_info_t *info)
->>>  	    mddev->ctime         !=3D info->ctime         ||
->>>  	    mddev->level         !=3D info->level         ||
->>>  /*	    mddev->layout        !=3D info->layout        || */
->>> -	    !mddev->persistent	 !=3D info->not_persistent||
->>> +	    (!mddev->persistent) !=3D info->not_persistent ||
->>
->>
->> this looks odd,
->> would it be possible the check for =3D=3D instead (and drop the !) ?
->> and it someone care for readability: It would be helpful to
->> make some more ifs here.
->=20
-> The original issue looks like a false positive.  If all of the other =
-cases
-> have no parentheses on the left and use !=3D, isn't it better to leav=
-e the
-> code as is?
->=20
-
-i do not think so, the name indicate persistent/not_persistent devices.
-Maybe both parties can agree what should be stored, ppl are bad
-at those not_not things and that is an unnecessary trouble spot.
-
-re,
- wh
-
-
-> julia
->=20
->>
->> re,
->>  wh
->>
->>>  	    mddev->chunk_sectors !=3D info->chunk_size >> 9 ||
->>> -	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT=
- to change */
->>> +	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
->>> +		to change */
->>>  	    ((state^info->state) & 0xfffffe00)
->>>  		)
->>>  		return -EINVAL;
->> --
->> To unsubscribe from this list: send the line "unsubscribe kernel-jan=
-itors" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
---
-To unsubscribe from this list: send the line "unsubscribe kernel-janito=
-rs" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Can we wait with this until we're done with bi_error?
+>
+> Sure, I've moved it out to dm-4.3
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
