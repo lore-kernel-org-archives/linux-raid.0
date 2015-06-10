@@ -1,58 +1,78 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH v2 6/8] drivers/md/md.c: Use strreplace
-Date: Wed, 10 Jun 2015 07:17:06 +1000
-Message-ID: <20150610071706.58ddc72e@home.neil.brown.name>
-References: <1433806017-10823-1-git-send-email-linux@rasmusvillemoes.dk>
- <1433806017-10823-7-git-send-email-linux@rasmusvillemoes.dk>
+Subject: Re: 4.1-rc6 radi5 OOPS
+Date: Wed, 10 Jun 2015 10:19:42 +1000
+Message-ID: <20150610101942.0bc26a25@home.neil.brown.name>
+References: <wrfjlhg0mtmi.fsf@jes.lga.redhat.com>
+	<20150604064048.0cb2d7c9@notabene.brown>
+	<wrfjzj4glajs.fsf@jes.lga.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1433806017-10823-7-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <wrfjzj4glajs.fsf@jes.lga.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Joe Perches <joe@perches.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue,  9 Jun 2015 01:26:54 +0200
-Rasmus Villemoes <linux@rasmusvillemoes.dk> wrote:
+On Wed, 03 Jun 2015 17:57:43 -0400
+Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
 
-> There's no point in starting over when we meet a '/'. This also
-> eliminates a stack variable and a little .text.
+> NeilBrown <neilb@suse.de> writes:
+> > On Wed, 03 Jun 2015 16:20:21 -0400 Jes Sorensen
+> > <Jes.Sorensen@redhat.com> wrote:
+> >
+> >> Neil,
+> >> 
+> >> I was running testing on the current 4.1-rc6 tree (Linus' top of
+> >> trunk 8cd9234c64c584432f6992fe944ca9e46ca8ea76) and I am seeing
+> >> the following OOPS which is reproducible.
+> >> 
+> >> It shows up when running the mdadm test suite, 07changelevelintr
+> >> to be specific.
+> >> 
+> >> Is this something you have seen?
+> >> 
+> >> Cheers,
+> >> Jes
+> >> 
+> >> ------------[ cut here ]------------
+> >> kernel BUG at drivers/md/raid5.c:5391!
+> >
+> > No, I haven't seen that.  And I've been running the test suite
+> > quite a bit lately.
+> >
+> > Can you get it to print out the relevant numbers?  Include
+> > readpos/writepos/safepos too.
 > 
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
-> v2: no changes.
+> This enough? Let me know if you need more.
 > 
->  drivers/md/md.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> I suspect this started happening with the changes that went in between
+> 4.1-rc5 and 4.1-rc6. I will try to bisect it tomorrow.
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 27506302eb7a..2ea2f28551c5 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2024,7 +2024,6 @@ static int bind_rdev_to_array(struct md_rdev
-> *rdev, struct mddev *mddev) {
->  	char b[BDEVNAME_SIZE];
->  	struct kobject *ko;
-> -	char *s;
->  	int err;
->  
->  	/* prevent duplicates */
-> @@ -2070,8 +2069,7 @@ static int bind_rdev_to_array(struct md_rdev
-> *rdev, struct mddev *mddev) return -EBUSY;
->  	}
->  	bdevname(rdev->bdev,b);
-> -	while ( (s=strchr(b, '/')) != NULL)
-> -		*s = '!';
-> +	strreplace(b, '/', '!');
->  
->  	rdev->mddev = mddev;
->  	printk(KERN_INFO "md: bind<%s>\n", b);
+> Cheers,
+> Jes
+> 
+> mddev->dev_sectors: 0x9800, reshape_sectors: 0x0200 stripe_addr:
+> fffffffffffffdff, sector_nr 0, readpos 511, writepos -513, safepos
+> 512  
+
+These numbers suggest that conf->reshape_progress divided by
+"data_disks" or "new_data_disks" is -1 - or really the unsigned
+equivalent, which is MaxSectors.
+But unless data_disks is 1, ->reshape_progress must really be -2 or -3
+or something.
+So maybe if you could confirm the values of ->reshape_progress,
+data_disks, and new_data_disks, that might help.
 
 
-Acked-by: NeilBrown <neilb@suse.de>
+I don't think ->reshape_progress could get a negative value in any way
+except by being assigned MaxSectors.  And that only happens when the
+reshape has really completely finished.
 
-I'm happy for Andrew to merge this.
+So it looks like some sort of race.  I have other evidence of a race
+with the resync/reshape thread starting/stopping.  If I track that
+down it'll probably fix this issue too.
+
 Thanks,
 NeilBrown
