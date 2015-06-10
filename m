@@ -1,59 +1,75 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: 4.1-rc6 radi5 OOPS
-Date: Wed, 10 Jun 2015 11:57:21 +1000
-Message-ID: <20150610115721.64c474fa@home.neil.brown.name>
-References: <wrfjlhg0mtmi.fsf@jes.lga.redhat.com>
-	<20150604064048.0cb2d7c9@notabene.brown>
-	<wrfjzj4glajs.fsf@jes.lga.redhat.com>
-	<20150610101942.0bc26a25@home.neil.brown.name>
+Subject: Re: [dm-devel] [PATCH] block: add a bi_error field to struct bio
+Date: Wed, 10 Jun 2015 12:50:54 +1000
+Message-ID: <20150610125054.3da2abcc@home.neil.brown.name>
+References: <1433338959-24808-1-git-send-email-hch@lst.de>
+	<1433338959-24808-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150610101942.0bc26a25@home.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Xiao Ni <xni@redhat.com>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-Reply-To: <1433338959-24808-2-git-send-email-hch@lst.de>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 10 Jun 2015 10:19:42 +1000 Neil Brown <neilb@suse.de> wrote:
+On Wed,  3 Jun 2015 15:42:39 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-> So it looks like some sort of race.  I have other evidence of a race
-> with the resync/reshape thread starting/stopping.  If I track that
-> down it'll probably fix this issue too.
+> Currently we have two different ways to signal an I/O error on a BIO:
+> 
+>  (1) by clearing the BIO_UPTODATE flag
+>  (2) by returning a Linux errno value to the bi_end_io callback
+> 
+> The first one has the drawback of only communicating a single possible
+> error (-EIO), and the second one has the drawback of not beeing persistent
+> when bios are queued up, and are not passed along from child to parent
+> bio in the ever more popular chaining scenario.  Having both mechanisms
+> available has the additional drawback of utterly confusing driver authors
+> and introducing bugs where various I/O submitters only deal with one of
+> them, and the others have to add boilerplate code to deal with both kinds
+> of error returns.
+> 
+> So add a new bi_error field to store an errno value directly in struct
+> bio and remove the existing mechanisms to clean all this up.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I think I have found just such a race.  If you request a reshape just
-as a recovery completes, you can end up with two reshapes running.
-This causes confusion :-)
+I really like this clean up.
+It is unfortunate that the patch is so big, but I guess it has to be.
 
-Can you try this patch?  If I can remember how to reproduce my race
-I'll test it on that too.
+It mostly looks good, but review is hard and testing is harder :-(
+
+I found:
+
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index f80f1af..1bad16f 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+....
+> @@ -1800,7 +1799,7 @@ static void end_sync_write(struct bio *bio, int error)
+>  			reschedule_retry(r1_bio);
+>  		else {
+>  			put_buf(r1_bio);
+> -			md_done_sync(mddev, s, uptodate);
+> +			md_done_sync(mddev, s, !bio->bi_error);
+>  		}
+>  	}
+>  }
+
+This introduces a use-after-free.  put_buf(r1_bio) can  result in bio_put on
+'bio'.
+It is safe to move the put_buf call after the md_done_sync(), but it is
+probably best to leave the 'update' variable as it.  i.e. Just change:
+
+-	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
++	int uptodate = !bio->bi_error;
+
+
+I can't see any other problems with the md changes.
+
+Reviewed-by: NeilBrown <neilb@suse.de> (md/raid parts)
 
 Thanks,
 NeilBrown
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 83532fe84205..03f460a1de60 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -4146,6 +4146,7 @@ static int raid10_start_reshape(struct mddev
-*mddev) 
- 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0e49b2c94bdd..59e44e99eef3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7368,6 +7368,7 @@ static int raid5_start_reshape(struct mddev
-*mddev) 
- 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_DONE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
- 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
- 	mddev->sync_thread = md_register_thread(md_do_sync, mddev,
-
