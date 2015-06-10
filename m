@@ -1,75 +1,90 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [dm-devel] [PATCH] block: add a bi_error field to struct bio
-Date: Wed, 10 Jun 2015 12:50:54 +1000
-Message-ID: <20150610125054.3da2abcc@home.neil.brown.name>
-References: <1433338959-24808-1-git-send-email-hch@lst.de>
-	<1433338959-24808-2-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <1433338959-24808-2-git-send-email-hch@lst.de>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 00/11] mdadm tool: add the support for cluster-md
+Date: Wed, 10 Jun 2015 13:42:03 +0800
+Message-ID: <1433914934-21195-1-git-send-email-gqjiang@suse.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
-On Wed,  3 Jun 2015 15:42:39 +0200
-Christoph Hellwig <hch@lst.de> wrote:
+V4 changes:
+1. update documation for syntax correct and add missed infos
+2. code modification for remove duplicated code and coding style etc
+3. make cluster name only appear in bitmap
+4. add UUIDUpdate handling to write_bitmap0
 
-> Currently we have two different ways to signal an I/O error on a BIO:
-> 
->  (1) by clearing the BIO_UPTODATE flag
->  (2) by returning a Linux errno value to the bi_end_io callback
-> 
-> The first one has the drawback of only communicating a single possible
-> error (-EIO), and the second one has the drawback of not beeing persistent
-> when bios are queued up, and are not passed along from child to parent
-> bio in the ever more popular chaining scenario.  Having both mechanisms
-> available has the additional drawback of utterly confusing driver authors
-> and introducing bugs where various I/O submitters only deal with one of
-> them, and the others have to add boilerplate code to deal with both kinds
-> of error returns.
-> 
-> So add a new bi_error field to store an errno value directly in struct
-> bio and remove the existing mechanisms to clean all this up.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+V3 changes:
+1. re-orgnize some codes to ensure mdadm compiles after each patch is applied
+2. change the code for super1.c for first patch since it has side effect for
+non-cluster condition
 
-I really like this clean up.
-It is unfortunate that the patch is so big, but I guess it has to be.
+V2 changes:
+1. re-arrange the squence of patches
+2. add some memembers into sb_le_to_cpu
+3. handle some logic change and comments from Neil
 
-It mostly looks good, but review is hard and testing is harder :-(
+Basic background for Cluster MD: Cluster MD is a shared-device RAID for a
+cluster, currently, the implementation is limited to RAID1 but with further
+work (and some positive feedback), it could be extend to other RAID levels.
 
-I found:
+The kernel part code of cluster-md has been sent to maillist several month
+ago by Goldywyn, and to make cluster-md works, the mdadm tools also need to
+do some changes accordingly.
 
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index f80f1af..1bad16f 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-....
-> @@ -1800,7 +1799,7 @@ static void end_sync_write(struct bio *bio, int error)
->  			reschedule_retry(r1_bio);
->  		else {
->  			put_buf(r1_bio);
-> -			md_done_sync(mddev, s, uptodate);
-> +			md_done_sync(mddev, s, !bio->bi_error);
->  		}
->  	}
->  }
+This patch set extends mdadm tool to aware cluster MD scenario, and handle
+related cluster-md scenario.
 
-This introduces a use-after-free.  put_buf(r1_bio) can  result in bio_put on
-'bio'.
-It is safe to move the put_buf call after the md_done_sync(), but it is
-probably best to leave the 'update' variable as it.  i.e. Just change:
-
--	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
-+	int uptodate = !bio->bi_error;
+1. the first part (0001-0007) comes from Goldwyn, which add initial
+support for cluster-md, those changes included make mdadm awares nodes,
+home-cluster and n bitmaps for clustered mode, also let mdadm can 
+confirm disk which is added by another node.
 
 
-I can't see any other problems with the md changes.
+2. the second part is for support change cluster-name and node nums under
+assemble mode. Which extend write-bitmap to handle above cases, and also
+use the extended write_bitmap for update uuid. [PATCH V2 10/10] is just compiled
+test only.
 
-Reviewed-by: NeilBrown <neilb@suse.de> (md/raid parts)
+BTW: this series could be apply on top of commit "2a6493 Grow: fix a couple of typos".
 
-Thanks,
-NeilBrown
+Some reltated links:
+[1] http://marc.info/?l=linux-raid&m=141891941330336&w=2
+[2] http://marc.info/?l=linux-raid&m=141935561418770&w=2
+
+Guoqing Jiang (11):
+  Create n bitmaps for clustered mode
+  Add nodes option while creating md
+  home-cluster while creating an array
+  Show all bitmaps while examining bitmap
+  Add a new clustered disk
+  Convert a bitmap=none device to clustered
+  Skip clustered devices in incremental
+  mdadm: add the ability to change cluster name
+  mdadm: change the num of cluster node
+  Reuse calc_bitmap_size to reduce code size
+  Reuse the write_bitmap for update uuid
+
+ Assemble.c    |  12 ++++--
+ Create.c      |   5 ++-
+ Grow.c        |  12 ++++--
+ Incremental.c |   5 +++
+ Makefile      |   1 +
+ Manage.c      |  39 ++++++++++++++++--
+ ReadMe.c      |   3 ++
+ bitmap.c      |  71 +++++++++++++++++++--------------
+ bitmap.h      |   7 +++-
+ config.c      |  27 ++++++++++++-
+ md_p.h        |   7 ++++
+ md_u.h        |   1 +
+ mdadm.8.in    |  42 +++++++++++++++++++-
+ mdadm.c       |  64 ++++++++++++++++++++++++++++--
+ mdadm.h       |  20 +++++++++-
+ super0.c      |  15 ++++++-
+ super1.c      | 125 ++++++++++++++++++++++++++++++++++++++++++++++------------
+ util.c        |  60 ++++++++++++++++++++++++++++
+ 18 files changed, 438 insertions(+), 78 deletions(-)
+
+-- 
+1.7.12.4
+
