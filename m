@@ -1,71 +1,83 @@
-From: Pierre Wieser <pierre.wieser@gadz.org>
-Subject: Re: Migrating a RAID 5 from 4x2TB to 3x6TB ?
-Date: Wed, 10 Jun 2015 21:37:41 +0200 (CEST)
-Message-ID: <1056149272.1412.1433965061737.JavaMail.zimbra@wieser.fr>
-References: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: fix a build warning
+Date: Thu, 11 Jun 2015 06:34:28 +1000
+Message-ID: <20150611063428.3ad7953d@home.neil.brown.name>
+References: <1433949658-8455-1-git-send-email-firogm@gmail.com>
+	<557874B9.9010500@bfs.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <167089395.613.1433791723592.JavaMail.zimbra@wieser.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <557874B9.9010500@bfs.de>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: walter harms <wharms@bfs.de>
+Cc: Firo Yang <firogm@gmail.com>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Wed, 10 Jun 2015 19:32:41 +0200
+walter harms <wharms@bfs.de> wrote:
 
-> I currently have an almost full RAID 5 built with 4 x 2 TB disks.
-> I wonder if it would be possible to migrate it to a bigger RAID 5
-> with 3 x 6TB new disks.
+>=20
+>=20
+> Am 10.06.2015 17:20, schrieb Firo Yang:
+> > Warning like this:
+> >=20
+> > drivers/md/md.c: In function =E2=80=98update_array_info=E2=80=99:
+> > drivers/md/md.c:6394:26: warning: logical not is only applied
+> > to the left hand side of comparison [-Wlogical-not-parentheses]
+> >       !mddev->persistent  !=3D info->not_persistent||
+> >=20
+> > I fix it by enclosing !mddev->persistent with parentheses
+> >=20
+> > By the way, I also fixed a line over 80 characters warning outputed
+> > by ./scripts/checkpatch.pl
+> >=20
+> > Signed-off-by: Firo Yang <firogm@gmail.com>
+> > ---
+> >  drivers/md/md.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index dd85be9..b420d82 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -6391,9 +6391,10 @@ static int update_array_info(struct mddev *m=
+ddev, mdu_array_info_t *info)
+> >  	    mddev->ctime         !=3D info->ctime         ||
+> >  	    mddev->level         !=3D info->level         ||
+> >  /*	    mddev->layout        !=3D info->layout        || */
+> > -	    !mddev->persistent	 !=3D info->not_persistent||
+> > +	    (!mddev->persistent) !=3D info->not_persistent ||
+>=20
+>=20
+> this looks odd,
+> would it be possible the check for =3D=3D instead (and drop the !) ?
+> and it someone care for readability: It would be helpful to
+> make some more ifs here.
 
-Due to all suggestions, and I'd wish another time thank all contributions,
-I've spent some hours reading the mailing list archives, surfing the web
-with more appropiate keywords, and so on..
+The first attempt Firo summited did exactly that.  I said no.
+I like the visual consistency of  LHS !=3D RHS.
 
-So, here what I now plan to do:
+More 'if's would just waste more vertical space.
 
-First, I hace cancelled my order for the new 6TB desktop-grade disks, 
-replacing it with 4TB WD RedPro, and one 6TB desktop-grade (see below its use)
+Thanks,
+NeilBrown
 
-As the full RAID5 array I planned to migrate is already my backup system,
-I cannot rely on a restore :(. So the first thing is to rsync the current
-array to the directly attached 6TB disk. I don't thing I have a free SATA 
-port on my motherboard, but at worst I will be able to use the one currently
-used for the DVD drive.
+>=20
+> re,
+>  wh
+>=20
+> >  	    mddev->chunk_sectors !=3D info->chunk_size >> 9 ||
+> > -	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT=
+ to change */
+> > +	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
+> > +		to change */
+> >  	    ((state^info->state) & 0xfffffe00)
+> >  		)
+> >  		return -EINVAL;
 
-I've chosen to build new RAID10 arrays.
-I've moved away the RAID6 suggestion due to its known bad write performance,
-and also because I'm willing/able to put a bit more money to get better perfs.
-
-The 4x4TB new disks will be partitioned as:
-- 512MB to be a RAID1 array mounted as /boot
-- 8GB to be a RAID10 array used as swap
-- two 25 GB parts to be two RAID10 arrays used as root filesystem
-  (plus place for an alternate when upgrading the OS)
-- the rest of the disk will be splitted in four equal parts (about 930 MB 
-I think), each of which being member of a separate data RAID10 array.
-
-I am conscious that this seems as a waste of space, and especially for the
-/boot partition. But this scheme will let me:
-a) have banalized disks: all disks have same rules, are partitioned identically
-b) replace my system disk which is not part of any RAID system as of today,
-thus gaining actually both a SATA port for the RAID systems and more security
-for the boot and root filesystems
-c) also because I use to use LVM on top of RAID to get advantages of its
-flexibility (so several PVs which may or may not be aggregated later)
-
-Other suggestions include the use of smartctl tool. I've checked that the 
-daemon was already running. But I didn't use the '-x' option that I understand
-is hardly an option !
-
-I plan to build these RAID devices out of CentOS 7 standard install process
-(I'm currently downloading a CentOS Live iso), thus presenting to the install
-some predefined partitions.
-
-I expect about 5-10 days to get these orders delivered. So more news at this time :)
-
-Thank you all for your help. I keep reading the list that I discovered for 
-the occasion...
-
-Regards
-Pierre
+--
+To unsubscribe from this list: send the line "unsubscribe kernel-janito=
+rs" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
