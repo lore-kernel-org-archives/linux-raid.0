@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 11/11] Reuse the write_bitmap for update uuid
-Date: Wed, 10 Jun 2015 13:42:14 +0800
-Message-ID: <1433914934-21195-12-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 09/11] mdadm: change the num of cluster node
+Date: Wed, 10 Jun 2015 13:42:12 +0800
+Message-ID: <1433914934-21195-10-git-send-email-gqjiang@suse.com>
 References: <1433914934-21195-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1433914934-21195-1-git-send-email-gqjiang@suse.com>
@@ -10,121 +10,179 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.de
 List-Id: linux-raid.ids
 
-To handle different situations, it can support updating the uuid of
-the bitmap. This patch also removes the redundant bitmap_update_uuid.
+This extends nodes option for assemble mode, make the num of
+cluster node could be change by user.
+
+Before that, it is necessary to ensure there are enough space
+for those nodes, calc_bitmap_size is introduced to calculate
+the bitmap size of each node.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Assemble.c |  5 ++---
- bitmap.c   | 20 --------------------
- mdadm.h    |  2 +-
- super0.c   | 11 +++++++++++
- super1.c   |  4 ++++
- 5 files changed, 18 insertions(+), 24 deletions(-)
+ Assemble.c |  6 +++++-
+ ReadMe.c   |  2 +-
+ mdadm.8.in |  8 ++++++++
+ mdadm.c    |  5 ++++-
+ mdadm.h    |  1 +
+ super1.c   | 37 +++++++++++++++++++++++++++++++++++++
+ 6 files changed, 56 insertions(+), 3 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index d163eaa..2662261 100644
+index 12ac299..d163eaa 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -662,9 +662,8 @@ static int load_devices(struct devs *devices, char *devmap,
+@@ -629,7 +629,11 @@ static int load_devices(struct devs *devices, char *devmap,
+ 			else if (strcmp(c->update, "home-cluster") == 0) {
+ 				tst->cluster_name = c->homecluster;
+ 				tst->ss->write_bitmap(tst, dfd, NameUpdate);
+-			} else
++			} else if (strcmp(c->update, "nodes") == 0) {
++				tst->nodes = c->nodes;
++				err = tst->ss->write_bitmap(tst, dfd, NodeNumUpdate);
++			}
++			else
+ 				err = tst->ss->update_super(tst, content, c->update,
+ 							    devname, c->verbose,
+ 							    ident->uuid_set,
+diff --git a/ReadMe.c b/ReadMe.c
+index c854cd5..d1830e1 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -140,7 +140,7 @@ struct option long_options[] = {
+     {"homehost",  1, 0,  HomeHost},
+     {"symlinks",  1, 0,  Symlinks},
+     {"data-offset",1, 0, DataOffset},
+-    {"nodes",1, 0, Nodes},
++    {"nodes",1, 0, Nodes}, /* also for --assemble */
+     {"home-cluster",1, 0, ClusterName},
  
- 			if (strcmp(c->update, "uuid")==0 &&
- 			    ident->bitmap_fd >= 0 && !bitmap_done) {
--				if (bitmap_update_uuid(ident->bitmap_fd,
--						       content->uuid,
--						       tst->ss->swapuuid) != 0)
-+				copy_uuid(tst->devs->uuid, content->uuid, tst->ss->swapuuid);
-+				if (tst->ss->write_bitmap(tst, dfd, UUIDUpdate))
- 					pr_err("Could not update uuid on external bitmap.\n");
- 				else
- 					bitmap_done = 1;
-diff --git a/bitmap.c b/bitmap.c
-index d21e5cc..575fcb9 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -457,23 +457,3 @@ out:
- 		unlink(filename); /* possibly corrupted, better get rid of it */
- 	return rv;
- }
--
--int bitmap_update_uuid(int fd, int *uuid, int swap)
--{
--	struct bitmap_super_s bm;
--	if (lseek(fd, 0, 0) != 0)
--		return 1;
--	if (read(fd, &bm, sizeof(bm)) != sizeof(bm))
--		return 1;
--	if (bm.magic != __cpu_to_le32(BITMAP_MAGIC))
--		return 1;
--	copy_uuid(bm.uuid, uuid, swap);
--	if (lseek(fd, 0, 0) != 0)
--		return 2;
--	if (write(fd, &bm, sizeof(bm)) != sizeof(bm)) {
--		lseek(fd, 0, 0);
--		return 2;
--	}
--	lseek(fd, 0, 0);
--	return 0;
--}
+     /* For assemble */
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 99b02a3..8b7768d 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1097,6 +1097,7 @@ argument given to this flag can be one of
+ .BR summaries ,
+ .BR uuid ,
+ .BR name ,
++.BR nodes ,
+ .BR homehost ,
+ .BR home-cluster ,
+ .BR resync ,
+@@ -1149,6 +1150,13 @@ The
+ .B name
+ option will change the
+ .I name
++of the array as stored in the superblock and bitmap. This option only
++works for clustered environment.
++
++The
++.B nodes
++option will change the
++.I nodes
+ of the array as stored in the superblock.  This is only supported for
+ version-1 superblocks.
+ 
+diff --git a/mdadm.c b/mdadm.c
+index 5e9b302..7b85570 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -589,6 +589,7 @@ int main(int argc, char *argv[])
+ 			}
+ 			ident.raid_disks = s.raiddisks;
+ 			continue;
++		case O(ASSEMBLE, Nodes):
+ 		case O(CREATE, Nodes):
+ 			c.nodes = parse_num(optarg);
+ 			if (c.nodes <= 0) {
+@@ -744,6 +745,8 @@ int main(int argc, char *argv[])
+ 				continue;
+ 			if (strcmp(c.update, "home-cluster")==0)
+ 				continue;
++			if (strcmp(c.update, "nodes")==0)
++				continue;
+ 			if (strcmp(c.update, "devicesize")==0)
+ 				continue;
+ 			if (strcmp(c.update, "no-bitmap")==0)
+@@ -782,7 +785,7 @@ int main(int argc, char *argv[])
+ 					Name, c.update);
+ 			}
+ 			fprintf(outf, "Valid --update options are:\n"
+-		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'resync',\n"
++		"     'sparc2.2', 'super-minor', 'uuid', 'name', 'nodes', 'resync',\n"
+ 		"     'summaries', 'homehost', 'home-cluster', 'byteorder', 'devicesize',\n"
+ 		"     'no-bitmap', 'metadata', 'revert-reshape'\n"
+ 		"     'bbl', 'no-bbl'\n"
 diff --git a/mdadm.h b/mdadm.h
-index 97892e6..7b9bb28 100644
+index d8b0749..97892e6 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -358,6 +358,7 @@ enum bitmap_update {
+@@ -357,6 +357,7 @@ enum prefix_standard {
+ enum bitmap_update {
      NoUpdate,
      NameUpdate,
-     NodeNumUpdate,
-+    UUIDUpdate,
++    NodeNumUpdate,
  };
  
  /* structures read from config file */
-@@ -1273,7 +1274,6 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
- 			int major);
- extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
- extern int Write_rules(char *rule_name);
--extern int bitmap_update_uuid(int fd, int *uuid, int swap);
- extern unsigned long bitmap_sectors(struct bitmap_super_s *bsb);
- extern int Dump_metadata(char *dev, char *dir, struct context *c,
- 			 struct supertype *st);
-diff --git a/super0.c b/super0.c
-index 6ad9d39..49267d1 100644
---- a/super0.c
-+++ b/super0.c
-@@ -1180,12 +1180,23 @@ static int write_bitmap0(struct supertype *st, int fd, enum bitmap_update update
- 	unsigned long long dsize;
- 	unsigned long long offset;
- 	mdp_super_t *sb = st->sb;
-+	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MD_SB_BYTES);
- 
- 	int rv = 0;
- 
- 	int towrite, n;
- 	void *buf;
- 
-+	switch (update) {
-+	case UUIDUpdate:
-+		memset((char *)bms->uuid, 0, sizeof(bms->uuid));
-+		strncpy((char *)bms->uuid, (char *)st->devs->uuid, sizeof(bms->uuid));
-+		break;
-+	case NoUpdate:
-+	default:
-+		break;
-+	}
-+
- 	if (!get_dev_size(fd, NULL, &dsize))
- 		return 1;
- 
 diff --git a/super1.c b/super1.c
-index 8128750..4ce7773 100644
+index 699f1ec..faccfcd 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -2232,6 +2232,10 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+@@ -134,6 +134,20 @@ struct misc_dev_info {
+ 					|MD_FEATURE_NEW_OFFSET		\
+ 					)
  
- 		bms->nodes = __cpu_to_le32(st->nodes);
++/* return how many bytes are needed for bitmap, for cluster-md each node
++ * should have it's own bitmap */
++static unsigned int calc_bitmap_size(bitmap_super_t *bms, unsigned int boundary)
++{
++	unsigned long long bits, bytes;
++
++	bits = __le64_to_cpu(bms->sync_size) / (__le32_to_cpu(bms->chunksize)>>9);
++	bytes = (bits+7) >> 3;
++	bytes += sizeof(bitmap_super_t);
++	bytes = ROUND_UP(bytes, boundary);
++
++	return bytes;
++}
++
+ static unsigned int calc_sb_1_csum(struct mdp_superblock_1 * sb)
+ {
+ 	unsigned int disk_csum, csum;
+@@ -2190,6 +2204,7 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 	int towrite, n;
+ 	struct align_fd afd;
+ 	unsigned int i = 0;
++	unsigned long long total_bm_space, bm_space_per_node;
+ 
+ 	switch (update) {
+ 	case NameUpdate:
+@@ -2199,6 +2214,28 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+ 			strncpy((char *)bms->cluster_name, st->cluster_name, 64);
+ 		}
  		break;
-+	case UUIDUpdate:
-+		memset((char *)bms->uuid, 0, sizeof(bms->uuid));
-+		strncpy((char *)bms->uuid, (char *)st->devs->uuid, sizeof(bms->uuid));
++	case NodeNumUpdate:
++		/* cluster md only supports superblock 1.2 now */
++		if (st->minor_version != 2) {
++			pr_err("Warning: cluster md only works with superblock 1.2\n");
++			return -EINVAL;
++		}
++
++		/* Each node has an independent bitmap, it is necessary to calculate the
++		 * space is enough or not, first get how many bytes for the total bitmap */
++		bm_space_per_node = calc_bitmap_size(bms, 4096);
++
++		total_bm_space = 512 * (__le64_to_cpu(sb->data_offset) - __le64_to_cpu(sb->super_offset));
++		total_bm_space = total_bm_space - 4096; /* leave another 4k for superblock */
++
++		if (bm_space_per_node * st->nodes > total_bm_space) {
++			pr_err("Warning: The max num of nodes can't exceed %llu\n",
++				total_bm_space / bm_space_per_node);
++			return -ENOMEM;
++		}
++
++		bms->nodes = __cpu_to_le32(st->nodes);
 +		break;
  	case NoUpdate:
  	default:
