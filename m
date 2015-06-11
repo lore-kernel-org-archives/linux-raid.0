@@ -1,51 +1,119 @@
-From: Firo Yang <firogm@gmail.com>
-Subject: [PATCH v2] md: fix a build warning
-Date: Thu, 11 Jun 2015 09:41:10 +0800
-Message-ID: <1433986870-7014-1-git-send-email-firogm@gmail.com>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: AW: write performance of HW RAID VS MD RAID
+Date: Thu, 11 Jun 2015 05:39:36 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735FCBEA69@EXCHANGE.collogia.de>
+References: <CAF1ivSa644NVVd5R=2g8rvbZ-FK5cgXy_U1XJjYwMf+TJdftCw@mail.gmail.com>,<20150611052729.258dddfa@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-fad4ba7d-3eef-4eb3-8706-a85dd9f7763f"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20150611052729.258dddfa@natsu>
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org, Firo Yang <firogm@gmail.com>
+To: Ming Lin <mlin@kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Roman Mamedov <rm@romanrm.net>
 List-Id: linux-raid.ids
 
-Warning like this:
 
-drivers/md/md.c: In function =E2=80=98update_array_info=E2=80=99:
-drivers/md/md.c:6394:26: warning: logical not is only applied
-to the left hand side of comparison [-Wlogical-not-parentheses]
-      !mddev->persistent  !=3D info->not_persistent||
+This is a multi-part message in MIME format.
 
-=46ix it as Neil Brown said:
-mddev->persistent !=3D !info->not_persistent ||
+------=_NextPartTM-000-fad4ba7d-3eef-4eb3-8706-a85dd9f7763f
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Firo Yang <firogm@gmail.com>
----
- drivers/md/md.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Von: linux-raid-owner@vger.kernel.org [linux-raid-owner@vger.kernel.org]&=
+quot; im Auftrag von &quot;Roman Mamedov [rm@romanrm.net]=0A=
+> Gesendet: Donnerstag, 11. Juni 2015 02:27=0A=
+> An: Ming Lin=0A=
+> Cc: linux-raid@vger.kernel.org; Neil Brown=0A=
+> Betreff: Re: write performance of HW RAID VS MD RAID=0A=
+> =0A=
+> On Wed, 10 Jun 2015 15:27:07 -0700=0A=
+> Ming Lin <mlin@kernel.org> wrote:=0A=
+> =0A=
+> > Hi NeilBrown,=0A=
+> >=0A=
+> > As you may already see, I run a lot of tests with 10 HDDs for the patch=
+set=0A=
+> > "simplify block layer based on immutable biovecs"=0A=
+> >=0A=
+> > Here is the summary.=0A=
+> > http://minggr.net/pub/20150608/fio_results/summary.log=0A=
+> >=0A=
+> > MD RAID6 read performance is OK.=0A=
+> > But write performance is much lower than HW RAID6.=0A=
+> >=0A=
+> > Is it a known issue?=0A=
+> =0A=
+> Did you tune the stripe_cache_size for the array? Try 32768.=0A=
+> https://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write=
+-transfer/=0A=
+=0A=
++1 for giving an increased cache size a try. =0A=
+=0A=
+From the numbers I anticipate that you are doing sequential =0A=
+read/write tests. Otherwise I would expect a write penalty for =0A=
+the HW RAID setup too.=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-fad4ba7d-3eef-4eb3-8706-a85dd9f7763f
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index dd85be9..a3528b9 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6391,7 +6391,7 @@ static int update_array_info(struct mddev *mddev,=
- mdu_array_info_t *info)
- 	    mddev->ctime         !=3D info->ctime         ||
- 	    mddev->level         !=3D info->level         ||
- /*	    mddev->layout        !=3D info->layout        || */
--	    !mddev->persistent	 !=3D info->not_persistent||
-+	    mddev->persistent	 !=3D !info->not_persistent ||
- 	    mddev->chunk_sectors !=3D info->chunk_size >> 9 ||
- 	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to =
-change */
- 	    ((state^info->state) & 0xfffffe00)
---=20
-2.4.2
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-fad4ba7d-3eef-4eb3-8706-a85dd9f7763f--
