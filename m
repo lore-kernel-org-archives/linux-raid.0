@@ -1,56 +1,53 @@
-From: Roman Mamedov <rm@romanrm.net>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: write performance of HW RAID VS MD RAID
-Date: Thu, 11 Jun 2015 05:27:29 +0500
-Message-ID: <20150611052729.258dddfa@natsu>
+Date: Thu, 11 Jun 2015 10:28:07 +1000
+Message-ID: <20150611102807.384958aa@home.neil.brown.name>
 References: <CAF1ivSa644NVVd5R=2g8rvbZ-FK5cgXy_U1XJjYwMf+TJdftCw@mail.gmail.com>
+	<20150611090054.18daac07@home.neil.brown.name>
+	<CAF1ivSYYmc6O5=cRFtSCwq=s6sPZaoK9i-nm0qkeq0Y-Hfi_ZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/D_C/Pir6tNMw60Eh9_/YRAy"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSa644NVVd5R=2g8rvbZ-FK5cgXy_U1XJjYwMf+TJdftCw@mail.gmail.com>
+In-Reply-To: <CAF1ivSYYmc6O5=cRFtSCwq=s6sPZaoK9i-nm0qkeq0Y-Hfi_ZA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Ming Lin <mlin@kernel.org>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/D_C/Pir6tNMw60Eh9_/YRAy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 10 Jun 2015 15:27:07 -0700
+On Wed, 10 Jun 2015 16:59:10 -0700
 Ming Lin <mlin@kernel.org> wrote:
 
-> Hi NeilBrown,
->=20
-> As you may already see, I run a lot of tests with 10 HDDs for the patchset
-> "simplify block layer based on immutable biovecs"
->=20
-> Here is the summary.
-> http://minggr.net/pub/20150608/fio_results/summary.log
->=20
-> MD RAID6 read performance is OK.
-> But write performance is much lower than HW RAID6.
->=20
-> Is it a known issue?
+> On Wed, Jun 10, 2015 at 4:00 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Wed, 10 Jun 2015 15:27:07 -0700
+> > Ming Lin <mlin@kernel.org> wrote:
+> >
+> >> Hi NeilBrown,
+> >>
+> >> As you may already see, I run a lot of tests with 10 HDDs for the patchset
+> >> "simplify block layer based on immutable biovecs"
+> >>
+> >> Here is the summary.
+> >> http://minggr.net/pub/20150608/fio_results/summary.log
+> >>
+> >> MD RAID6 read performance is OK.
+> >> But write performance is much lower than HW RAID6.
+> >>
+> >> Is it a known issue?
+> >
+> > It is not unexpected.
+> > There are two likely reasons.
+> > One is that HW RAID cards often have on-board NVRAM which is used as a
+> > write-behind cache.  This allows better throughput by hiding latency and more
+> > often gathering full-stripe writes.  HW RAID cards may also have accelerators
+> > for the parity calculations, but that is not likely to make a big difference.
+> > What sort of RAID6 controller do you have?
+> 
+> PERC H730 Mini
 
-Did you tune the stripe_cache_size for the array? Try 32768.
-https://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-t=
-ransfer/
+http://www.dell.com/learn/us/en/04/campaigns/dell-raid-controllers
+   1GB NV Flash Backed Cache on the H730
 
---=20
-With respect,
-Roman
+That would explain a lot of performance difference for writes.
 
---Sig_/D_C/Pir6tNMw60Eh9_/YRAy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlV41fEACgkQTLKSvz+PZwipsQCfSFQy1ZY8L4fbfuBpAui4sJvA
-urAAn0k7uIeqSa3sQASsOBjQWESGyVrj
-=mUnO
------END PGP SIGNATURE-----
-
---Sig_/D_C/Pir6tNMw60Eh9_/YRAy--
+NeilBrown
