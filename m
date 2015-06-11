@@ -1,53 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: write performance of HW RAID VS MD RAID
-Date: Thu, 11 Jun 2015 10:28:07 +1000
-Message-ID: <20150611102807.384958aa@home.neil.brown.name>
-References: <CAF1ivSa644NVVd5R=2g8rvbZ-FK5cgXy_U1XJjYwMf+TJdftCw@mail.gmail.com>
-	<20150611090054.18daac07@home.neil.brown.name>
-	<CAF1ivSYYmc6O5=cRFtSCwq=s6sPZaoK9i-nm0qkeq0Y-Hfi_ZA@mail.gmail.com>
+From: Firo Yang <firogm@gmail.com>
+Subject: [PATCH v2] md: fix a build warning
+Date: Thu, 11 Jun 2015 09:41:10 +0800
+Message-ID: <1433986870-7014-1-git-send-email-firogm@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSYYmc6O5=cRFtSCwq=s6sPZaoK9i-nm0qkeq0Y-Hfi_ZA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ming Lin <mlin@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org, Firo Yang <firogm@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, 10 Jun 2015 16:59:10 -0700
-Ming Lin <mlin@kernel.org> wrote:
+Warning like this:
 
-> On Wed, Jun 10, 2015 at 4:00 PM, Neil Brown <neilb@suse.de> wrote:
-> > On Wed, 10 Jun 2015 15:27:07 -0700
-> > Ming Lin <mlin@kernel.org> wrote:
-> >
-> >> Hi NeilBrown,
-> >>
-> >> As you may already see, I run a lot of tests with 10 HDDs for the patchset
-> >> "simplify block layer based on immutable biovecs"
-> >>
-> >> Here is the summary.
-> >> http://minggr.net/pub/20150608/fio_results/summary.log
-> >>
-> >> MD RAID6 read performance is OK.
-> >> But write performance is much lower than HW RAID6.
-> >>
-> >> Is it a known issue?
-> >
-> > It is not unexpected.
-> > There are two likely reasons.
-> > One is that HW RAID cards often have on-board NVRAM which is used as a
-> > write-behind cache.  This allows better throughput by hiding latency and more
-> > often gathering full-stripe writes.  HW RAID cards may also have accelerators
-> > for the parity calculations, but that is not likely to make a big difference.
-> > What sort of RAID6 controller do you have?
-> 
-> PERC H730 Mini
+drivers/md/md.c: In function =E2=80=98update_array_info=E2=80=99:
+drivers/md/md.c:6394:26: warning: logical not is only applied
+to the left hand side of comparison [-Wlogical-not-parentheses]
+      !mddev->persistent  !=3D info->not_persistent||
 
-http://www.dell.com/learn/us/en/04/campaigns/dell-raid-controllers
-   1GB NV Flash Backed Cache on the H730
+=46ix it as Neil Brown said:
+mddev->persistent !=3D !info->not_persistent ||
 
-That would explain a lot of performance difference for writes.
+Signed-off-by: Firo Yang <firogm@gmail.com>
+---
+ drivers/md/md.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-NeilBrown
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index dd85be9..a3528b9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6391,7 +6391,7 @@ static int update_array_info(struct mddev *mddev,=
+ mdu_array_info_t *info)
+ 	    mddev->ctime         !=3D info->ctime         ||
+ 	    mddev->level         !=3D info->level         ||
+ /*	    mddev->layout        !=3D info->layout        || */
+-	    !mddev->persistent	 !=3D info->not_persistent||
++	    mddev->persistent	 !=3D !info->not_persistent ||
+ 	    mddev->chunk_sectors !=3D info->chunk_size >> 9 ||
+ 	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT to =
+change */
+ 	    ((state^info->state) & 0xfffffe00)
+--=20
+2.4.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
