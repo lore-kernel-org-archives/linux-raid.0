@@ -1,37 +1,76 @@
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: Re: [RFC] add a bi_error field
-Date: Thu, 11 Jun 2015 17:42:50 +0800
-Message-ID: <20150611094249.GF9634@localhost.localdomain>
-References: <1433338959-24808-1-git-send-email-hch@lst.de>
- <20150611075921.GC9634@localhost.localdomain>
- <20150611080528.GD9634@localhost.localdomain>
- <20150611080835.GA2655@lst.de>
-Reply-To: bo.li.liu@oracle.com
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH] md: fix a build warning
+Date: Thu, 11 Jun 2015 14:48:28 +0300
+Message-ID: <20150611114828.GI28762@mwanda>
+References: <1433949658-8455-1-git-send-email-firogm@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150611080835.GA2655@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, dm-devel@redhat.com
+In-Reply-To: <1433949658-8455-1-git-send-email-firogm@gmail.com>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Firo Yang <firogm@gmail.com>, Joe Perches <joe@perches.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 11, 2015 at 10:08:35AM +0200, Christoph Hellwig wrote:
-> On Thu, Jun 11, 2015 at 04:05:30PM +0800, Liu Bo wrote:
-> > > Reviewed-by: Liu Bo <bo.li.liu@oracle.com> (btrfs part)
-> > 
-> > Also there're some conflicts in btrfs_end_empty_barrier():
-> 
-> Hi Liu,
-> 
-> BIO_EOPNOTSUPP has been removed in the block tree:
-> 
-> http://git.kernel.dk/?p=linux-block.git;a=commitdiff;h=b25de9d6da49b1a8760a89672283128aa8c78345
-> 
+Hey Joe,
 
-OK, we're good now.
+checkpatch.pl in linux-next is now encouraging people to make unrelated
+long line fixes like the below patch.  Reverting 0b4193c79c83
+('checkpatch: categorize some long line length checks') makes the new
+checkpatch.pl warning go away.
 
-Thanks,
+regards,
+dan carpenter
 
--liubo
+On Wed, Jun 10, 2015 at 11:20:58PM +0800, Firo Yang wrote:
+> Warning like this:
+>=20
+> drivers/md/md.c: In function =E2=80=98update_array_info=E2=80=99:
+> drivers/md/md.c:6394:26: warning: logical not is only applied
+> to the left hand side of comparison [-Wlogical-not-parentheses]
+>       !mddev->persistent  !=3D info->not_persistent||
+>=20
+> I fix it by enclosing !mddev->persistent with parentheses
+>=20
+> By the way, I also fixed a line over 80 characters warning outputed
+> by ./scripts/checkpatch.pl
+>=20
+> Signed-off-by: Firo Yang <firogm@gmail.com>
+> ---
+>  drivers/md/md.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index dd85be9..b420d82 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -6391,9 +6391,10 @@ static int update_array_info(struct mddev *mdd=
+ev, mdu_array_info_t *info)
+>  	    mddev->ctime         !=3D info->ctime         ||
+>  	    mddev->level         !=3D info->level         ||
+>  /*	    mddev->layout        !=3D info->layout        || */
+> -	    !mddev->persistent	 !=3D info->not_persistent||
+> +	    (!mddev->persistent) !=3D info->not_persistent ||
+>  	    mddev->chunk_sectors !=3D info->chunk_size >> 9 ||
+> -	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT t=
+o change */
+> +	    /* ignore bottom 8 bits of state, and allow SB_BITMAP_PRESENT
+> +		to change */
+>  	    ((state^info->state) & 0xfffffe00)
+>  		)
+>  		return -EINVAL;
+> --=20
+> 2.4.2
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-jani=
+tors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe kernel-janito=
+rs" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
