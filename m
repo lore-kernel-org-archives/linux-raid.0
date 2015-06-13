@@ -1,41 +1,56 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH] md: remove an unneeded condition in set_array_info.
-Date: Tue, 23 Jun 2015 18:44:46 +0800
-Message-ID: <5589389E.9040800@huawei.com>
+From: "Herr Martins D Weber" <test@fumeilaistone.cn>
+Subject: Lieber Freund!!!
+Date: Sat, 13 Jun 2015 05:14:17 -0700
+Message-ID: <9D68CE35-B679-4AAF-A49F-CE77F9D3D665__20182.7796911404$1435056726$gmane$org@fumeilaistone.cn>
+Reply-To: <martinsdweber@aim.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-if ->major_version is legal, name can't be NULL, so remove it.
+Lieber Freund!!!
 
-Signed-off-by: Wei Fang <fangwei1@huawei.com>
+Ich vermute das diese E-Mail eine ?berraschung f?r Sie sein wird, aber =
+es ist wahr.Ich bin bei einer routinen ?berpr?fung in meiner Bank (Stan=
+dardBank PLC von S?d Afrika) wo ich arbeite, auf einem Konto gesto?en, =
+was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtze=
+hn Million, F?nf Hundert Tausend, US Dollar)  gutgeschrieben sind.Diese=
+s Konto geh?rte Herrn Manfred Becker, der ein Kunde in unsere Bank war,=
+ der leider verstorben ist. Herrn Manfred Becker war ein geb?rtiger Deu=
+tscher.
+
+Damit es mir m?glich ist dieses Geld $18,500,000 inanspruch zunehmen,be=
+n?tige ich die zusammenarbeit eines Ausl?ndischen Partners wie Sie,den =
+ich als Verwandter und Erbe des verstorbenen Herrn Manfred Becker vorst=
+ellen kann,damit wir das Geld inanspruch nehmen k?nnen. F?r diese Unter=
+st?tzung erhalten Sie 30% der Erbschaftsumme und die restlichen 70% tei=
+le ich mirmit meinen zwei Arbeitskollegen, die mich bei dieser Transakt=
+ion ebenfalls unterst?tzen.
+
+
+Wenn Sie interessiert sind, k?nnen Sie mir bitte eine E-Mail schicken, =
+damit ich Ihnen mehr Details zukommen lassen kann. N.B.BITTE SENDEN SIE=
+ MIR Martins D Weber ANTWORT ZU durch mein E-mail: ( martinsdweber@aim.=
+com ) f?R VERTRAULICHEN GRUND. Schicken Sie keine POST ZU MEINEM B?RO-E=
+-MAIL.(martinsdweber@aim.com )
+
+
+If you understand english,please  kindly reply with english ( martinsdw=
+eber@aim.com )
+
+Mit freundlichen Gr=FC=DFen
+
+Herr Martins D Weber
+
 ---
- drivers/md/md.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d4f31e1..1c2f967 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -6193,12 +6193,10 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
-  */
- static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
- {
--
- 	if (info->raid_disks == 0) {
- 		/* just setting version number for superblock loading */
- 		if (info->major_version < 0 ||
--		    info->major_version >= ARRAY_SIZE(super_types) ||
--		    super_types[info->major_version].name == NULL) {
-+		    info->major_version >= ARRAY_SIZE(super_types)) {
- 			/* maybe try to auto-load a module? */
- 			printk(KERN_INFO
- 				"md: superblock version %d not known\n",
--- 
-1.8.3.1
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
