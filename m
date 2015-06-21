@@ -1,49 +1,50 @@
-From: Gareth Evans <donotspam@fastmail.fm>
-Subject: mdadm/Software RAID problems - update
-Date: Sat, 20 Jun 2015 06:56:26 +0100
-Message-ID: <1434779786.1648537.300522273.678785B2@webmail.messagingengine.com>
-References: <1434739736.4161728.300185905.45F829A7@webmail.messagingengine.com>
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 0/3] dm-crypt: Adds support for wiping key when doing suspend/hibernation
+Date: Sun, 21 Jun 2015 13:20:31 +0200
+Message-ID: <1434885634-19895-1-git-send-email-pali.rohar@gmail.com>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1434739736.4161728.300185905.45F829A7@webmail.messagingengine.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
 List-Id: linux-raid.ids
 
-I should clarify re point (2) in  my earlier email below, steps to replicate:
+This patch series increase security of suspend and hibernate actions. I=
+t allows
+user to safely wipe crypto keys before suspend and hibernate actions st=
+arts
+without race conditions on userspace process with heavy I/O.
 
-1. Unencrypted RAID 10, 2 x vdi virtual drives on VirtualBox, OS installed and RAID working.
-2. Shutdown VM and remove vdi disk2 from VirtualBox settings - boots successfully
-3. Shutdown and attach a new blank vdi ("disk2_2") - boot fails as per (2) below
-4. Power off and remove blank vdi disk - boot fails as per (2) below
-5. Power off and re-attach original vdi disk2 (so the 2 originals are now attached) - boot fails as per (2) below
+To automatically wipe cryto key for <device> before hibernate action ca=
+ll:
+$ dmsetup message <device> 0 key wipe_on_hibernation
 
-I wonder if I am perhaps failing to do something correctly at step 2 above, mdadm -D /dev/md1 shows disk2 as missing and mdadm --remove produces a not found error.
+To automatically wipe cryto key for <device> before suspend action call=
+:
+$ dmsetup message <device> 0 key wipe_on_suspend
 
+To disable automatic wipe call retain_on_suspend/retain_on_hibernation.
 
-On Fri, 19 Jun 2015, at 19:48, Gareth Evans wrote:
-> Having failed in my first attempt at setting up encrypted software RAID on Ubuntu 14.04.2, I discovered there seem to be many and various problems with software RAID on Ubuntu and Debian at least.
-> 
-> For example, I have found via testing on KVM and VirtualBox (with and on Ubuntu 14.04.2 and with Debian 8.1) that:
-> 
-> 1. Encrypted RAID doesn't boot after installation (no volume groups found, with unencrypted raided /boot)
-> 2. Degraded unencrypted RAID doesn't boot (loops on "Intermittently starting RAID arrays..." with a few lines of related output)
-> 3. /etc/initramfs-tools/conf.d/mdadm doesn't seem to exist as the Ubuntu Server Guide suggests it should
-> 4. adding bootdegraded=true to grub options at boot seems to have no effect.
-> 
-> The second point above seems particularly concerning because it would seem (unencrypted) software RAID (which works well enough while it's working) fails precisely when it is needed, which rather defeats the point.
-> 
-> I have found lots of bug reports, some still "new" and of "undecided" importance after several years, for various problems, but not many solutions. 
-> 
-> I'm not sure if the issues lie with upstream or distro-related mdadm or other packages, or perhaps kernel issues?
-> 
-> Just FYI, I did consider FreeBSD as an alternative which implements ZFS-on-Root disk pools and GELI encryption.  After limited testing this seems to work (even with only one disk if you just want to use it for encryption) but I understand ZFS can be corrupted by hardware problems (eg. faulty RAM), and FreeBSD doesn't seem to want to open LUKS containers on-the-fly, such as an encrypted external HD.  
-> 
-> I would prefer a Linux solution - any explanations, solutions, tips or advice re linux software RAID would be gratefully received.
-> 
-> With kind regards
-> Gareth
+Pali Roh=C3=A1r (3):
+  PM suspend/hibernate: Call notifier after freezing processes
+  dm: Export function dm_suspend_md()
+  dm-crypt: Adds support for wiping key when doing suspend/hibernation
+
+ drivers/md/dm-crypt.c    |  126 ++++++++++++++++++++++++++++++++++++++=
++++++---
+ drivers/md/dm.c          |    6 +++
+ drivers/md/dm.h          |    5 ++
+ include/linux/suspend.h  |    2 +
+ kernel/power/hibernate.c |    2 +
+ kernel/power/suspend.c   |    4 +-
+ 6 files changed, 136 insertions(+), 9 deletions(-)
+
+--=20
+1.7.9.5
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+To unsubscribe from this list: send the line "unsubscribe linux-pm" in
