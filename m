@@ -1,81 +1,58 @@
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after freezing processes
-Date: Sun, 21 Jun 2015 13:20:32 +0200
-Message-ID: <1434885634-19895-2-git-send-email-pali.rohar@gmail.com>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
- <1434885634-19895-1-git-send-email-pali.rohar@gmail.com>
+From: Gareth Evans <donotspam@fastmail.fm>
+Subject: Re: mdadm/Software RAID problems - another update
+Date: Sun, 21 Jun 2015 15:21:57 +0100
+Message-ID: <1434896517.3660124.303759113.0AE76093@webmail.messagingengine.com>
+References: <1434739736.4161728.300185905.45F829A7@webmail.messagingengine.com>
+ <1434779786.1648537.300522273.678785B2@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1434885634-19895-1-git-send-email-pali.rohar@gmail.com>
+In-Reply-To: <1434779786.1648537.300522273.678785B2@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-To prevent race conditions on userspace processes with I/O some taks mu=
-st be
-called after processes are freezed. This patch adds new events which ar=
-e
-delivered by pm_notifier_call_chain() after freezing processes when doi=
-ng
-suspend or hibernate action.
+After a number of tests with VirtualBox this weekend, it seems things work as they should with Fedora 22 but openSUSE 13.2, Debian 8.1 and Ubuntu 14.04.2 all appear to hang on boot when one vdisk is removed and another is attached, even if formatted with a "Linux RAID autodetect"-type partition.  CentOS 7 doesn't hang but doesn't have mdadm in its emergency console (I gave up with CentOS after that as not sure how to add commands, if that's possible...) and neither Fedora nor CentOS emergency consoles seem to include fdisk, which isn't too helpful.  
 
-Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
----
- include/linux/suspend.h  |    2 ++
- kernel/power/hibernate.c |    2 ++
- kernel/power/suspend.c   |    4 +++-
- 3 files changed, 7 insertions(+), 1 deletion(-)
+I'm not sure if that helps but I thought I'd share the results of my testing - please let me know if there's anything further I can do.  This may not be an upstream bug after all - I'm not very experienced with such things but it seems to me that it is and the Fedora developers have fixed it.
 
-diff --git a/include/linux/suspend.h b/include/linux/suspend.h
-index 5efe743..bc743c8 100644
---- a/include/linux/suspend.h
-+++ b/include/linux/suspend.h
-@@ -368,6 +368,8 @@ static inline bool hibernation_available(void) { re=
-turn false; }
- #define PM_POST_SUSPEND		0x0004 /* Suspend finished */
- #define PM_RESTORE_PREPARE	0x0005 /* Going to restore a saved image */
- #define PM_POST_RESTORE		0x0006 /* Restore failed */
-+#define PM_HIBERNATION_AFTER_FREEZE	0x0007 /* After hibernation freeze=
- */
-+#define PM_SUSPEND_AFTER_FREEZE		0x0008 /* After suspend freeze */
-=20
- extern struct mutex pm_mutex;
-=20
-diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index 2329daa..184f7ee 100644
---- a/kernel/power/hibernate.c
-+++ b/kernel/power/hibernate.c
-@@ -671,6 +671,8 @@ int hibernate(void)
- 	if (error)
- 		goto Exit;
-=20
-+	pm_notifier_call_chain(PM_HIBERNATION_AFTER_FREEZE);
-+
- 	lock_device_hotplug();
- 	/* Allocate memory management structures */
- 	error =3D create_basic_memory_bitmaps();
-diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
-index 8d7a1ef..ba2a945 100644
---- a/kernel/power/suspend.c
-+++ b/kernel/power/suspend.c
-@@ -277,8 +277,10 @@ static int suspend_prepare(suspend_state_t state)
- 	trace_suspend_resume(TPS("freeze_processes"), 0, true);
- 	error =3D suspend_freeze_processes();
- 	trace_suspend_resume(TPS("freeze_processes"), 0, false);
--	if (!error)
-+	if (!error) {
-+		pm_notifier_call_chain(PM_SUSPEND_AFTER_FREEZE);
- 		return 0;
-+	}
-=20
- 	suspend_stats.failed_freeze++;
- 	dpm_save_failed_step(SUSPEND_FREEZE);
---=20
-1.7.9.5
+With thanks
+Gareth
 
+On Sat, 20 Jun 2015, at 06:56, Gareth Evans wrote:
+> I should clarify re point (2) in  my earlier email below, steps to replicate:
+> 
+> 1. Unencrypted RAID 10, 2 x vdi virtual drives on VirtualBox, OS installed and RAID working.
+> 2. Shutdown VM and remove vdi disk2 from VirtualBox settings - boots successfully
+> 3. Shutdown and attach a new blank vdi ("disk2_2") - boot fails as per (2) below
+> 4. Power off and remove blank vdi disk - boot fails as per (2) below
+> 5. Power off and re-attach original vdi disk2 (so the 2 originals are now attached) - boot fails as per (2) below
+> 
+> I wonder if I am perhaps failing to do something correctly at step 2 above, mdadm -D /dev/md1 shows disk2 as missing and mdadm --remove produces a not found error.
+> 
+> 
+> On Fri, 19 Jun 2015, at 19:48, Gareth Evans wrote:
+> > Having failed in my first attempt at setting up encrypted software RAID on Ubuntu 14.04.2, I discovered there seem to be many and various problems with software RAID on Ubuntu and Debian at least.
+> > 
+> > For example, I have found via testing on KVM and VirtualBox (with and on Ubuntu 14.04.2 and with Debian 8.1) that:
+> > 
+> > 1. Encrypted RAID doesn't boot after installation (no volume groups found, with unencrypted raided /boot)
+> > 2. Degraded unencrypted RAID doesn't boot (loops on "Intermittently starting RAID arrays..." with a few lines of related output)
+> > 3. /etc/initramfs-tools/conf.d/mdadm doesn't seem to exist as the Ubuntu Server Guide suggests it should
+> > 4. adding bootdegraded=true to grub options at boot seems to have no effect.
+> > 
+> > The second point above seems particularly concerning because it would seem (unencrypted) software RAID (which works well enough while it's working) fails precisely when it is needed, which rather defeats the point.
+> > 
+> > I have found lots of bug reports, some still "new" and of "undecided" importance after several years, for various problems, but not many solutions. 
+> > 
+> > I'm not sure if the issues lie with upstream or distro-related mdadm or other packages, or perhaps kernel issues?
+> > 
+> > Just FYI, I did consider FreeBSD as an alternative which implements ZFS-on-Root disk pools and GELI encryption.  After limited testing this seems to work (even with only one disk if you just want to use it for encryption) but I understand ZFS can be corrupted by hardware problems (eg. faulty RAM), and FreeBSD doesn't seem to want to open LUKS containers on-the-fly, such as an encrypted external HD.  
+> > 
+> > I would prefer a Linux solution - any explanations, solutions, tips or advice re linux software RAID would be gratefully received.
+> > 
+> > With kind regards
+> > Gareth
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
