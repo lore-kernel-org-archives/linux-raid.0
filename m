@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH V4 04/13] raid5: cache part of raid5 cache
-Date: Tue, 23 Jun 2015 14:37:54 -0700
-Message-ID: <1b6752eb31ee0ee86be798dcc34ba43566fe9cdb.1435094582.git.shli@fb.com>
+Subject: [PATCH V4 03/13] raid5: cache log handling
+Date: Tue, 23 Jun 2015 14:37:53 -0700
+Message-ID: <bb5d31352bc261d313eddf264ef40628030b0309.1435094582.git.shli@fb.com>
 References: <cover.1435094582.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,555 +12,954 @@ To: linux-raid@vger.kernel.org
 Cc: songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-This is the in-memory representation of cache. It includes a memory pool
-to store data which isn't flushed to raid disks yet and index to track
-data stored in cache disk.
+This is the log handling part of raid5 cache. I divided cache into two
+parts. One is log, which handles IO to cache disk and isn't aware how we
+track cache data. The other is cache, which handles data tracking and
+in-memory caching, it delegates IO store to log. The structures and
+functions with r5l_ are for log, and those with r5c_ are for cache, but
+there might be some exceptions we can't restrictly destinguish.
 
-When new request bio comes to the raid array with cache, we copy data of
-the bio to a memory pool and write the bio to cache disk for write
-request; copy data from memory pool to bio or directly dispatch the bio
-to raid disks depending on if the bio has data in memory pool for read
-request. stripe (see below) is the basic track unit, it's aligned to
-stripe boundary and stripe size. we must make sure request has correct
-alignment and size.
+The cache disk will be organized as a simple ring buffer log. Logically
+it looks like this:
+|super|meta data|data|...|meta data|parity data|...|flush_start|...|flush_end|
 
-A stripe (r5c_stripe) tracks stripe data. Note, there is difference
-between the stripe and existing raid5 stripe cache stripe. stripe here
-tracks data of chunk size * raid disks, while stripe cache stripe tracks
-data of a single 4k stripe accross all raid disks disks. There is a
-radix-tree to map raid disk sector to a stripe. If we write a stripe, we
-copy data to the stripe data_pages and write the data to log. To know
-where we put the data to log, we have a r5c_io_range to track it. Each
-stripe has a list of r5c_io_ranges. At some time, data of a stripe can
-be written to raid disks (at reclaim time). After the data is in raid
-disks, the stripe and its data pages will be freed.
+super/meta data/flush_start/flush_end always use a single block. Block
+size could be 512 to 4k.
 
-Each io_range tracks a chunk of data stored in cache disk. io_range are
-in two lists. One is in stripe list, the other a global log list. Both
-are sorted in time order (or sequence order). The ordering in stripe
-list lets us find latest data. The ordering in log list helps track log
-tail, so we don't corrupt data which isn't written to raid disks.
+super records raid array charactics to make sure raid array and cache
+disk match. It also records some other parameters like log tail and
+block size.
 
-We don't have a data structure to track parity of a stripe. We just
-write parity to log in reclaim. After reclaim finishes, disk space of
-the stripe (including data and parity) can be reused, so we don't need
-to track parity in memory.
+For IO data, meta data is a tuple of (raid_sector, io length, checksum),
+which will be appended to the log, data follows; for raid 5/6 parity,
+meta data is a tuple of (stripe_sector, parity length, checksum), which
+will be appended to the log, parity data follows. meta data is stored in
+a meta data block(r5l_meta_block).
 
-The cache part doesn't dispatch IO to cache disk. It's the
-responsibility of log part. Cache part just sends task to log.
+meta data block is essentially a tuple (sequence, metadata length). The
+sequence number is monotonously increased and can be used for integrity
+checking and ordering track. A meta data block can have a mix of data
+meta data tuple and parity meta data tuple. How many tuples will be
+stored in meta data block depends on the inflight data/parity should be
+dispatched. meta data block might only store one tuple.
 
-We don't use existing stripe cache mechanism to track stripe. Partly
-because existing stripe cache state machine is complex enough we don't
-want to make it worse. A new memory pool (and stripe raidx tree) is more
-efficient for the cache layer. A separate memory pool is more flexible
-too. A memory pool isn't a must-have, since all data is stored in cache
-disk, we might remove the memory pool in the future (compared to cache
-disk, memory pool is far smaller. The memory pool causes more reclaim
-activity and can't absorb write latency). We can easily remove the
-separate memory pool if necessary.
+We don't have in-disk index for the data appended to the log. So either
+we can rebuild an in-memory index at startup with scanning the whole
+log, or we can flush all data from cache disk to raid disks at shutdown
+so cache disk has no valid data. Current code chooses the second option,
+but this can be easily changed.
+
+flush_start/flush_end block look like meta data block, but are to track
+reclaim stream. Data stored there is stripe sector which starts/ends
+flush to raid disks. More details are in reclaim and recover patches.
+
+Crash recovery or startup will scan the log to read the metadata and
+rebuild in-memory index. If metadata is broken at the head of the log,
+even metadata afterward is ok, the scanning will not work well. So we
+take some steps to mitigate the issue:
+-A flush request is sent to cache disk every second to relieve the issue
+(this isn't a must-have but a worst case defence, since reclaim will
+always flush disk cache)
+-FLUSH/FUA request is carefully handled. FLUSH/FUA will only be
+dispatched after all previous requests finish.
+
+To maintain the ordering, all IO are added into a list, flush/fua IO can
+only be dispatched when they are the first entry of the list. Other IO
+don't have such limitation. More details can be found in the comments of
+r5l_io_unit.
+
+r5l_task is the bridge between log part and cache part. Cache part
+dispatches a task to log for IO. After task is finished, task returns
+corresponding data/metadata position and sequence number where the task
+data is stored in log.
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/Makefile      |   2 +-
- drivers/md/raid5-cache.c | 870 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid5.c       |  21 +-
- drivers/md/raid5.h       |   6 +
- 4 files changed, 896 insertions(+), 3 deletions(-)
+ drivers/md/raid5-cache.c       | 1317 ++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/raid/md_p.h |   76 +++
+ 2 files changed, 1393 insertions(+)
+ create mode 100644 drivers/md/raid5-cache.c
 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index dba4db5..aeb4330 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -16,7 +16,7 @@ dm-cache-mq-y   += dm-cache-policy-mq.o
- dm-cache-cleaner-y += dm-cache-policy-cleaner.o
- dm-era-y	+= dm-era-target.o
- md-mod-y	+= md.o bitmap.o
--raid456-y	+= raid5.o
-+raid456-y	+= raid5.o raid5-cache.o
- 
- # Note: link order is important.  All raid personalities
- # and must come before md.o, as they each initialise 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index d6b7c64..d0950ae 100644
---- a/drivers/md/raid5-cache.c
+new file mode 100644
+index 0000000..d6b7c64
+--- /dev/null
 +++ b/drivers/md/raid5-cache.c
-@@ -30,6 +30,10 @@
- #define LOG_FLUSH_TIME HZ
- #define LOG_SUPER_WRITE_TIME (5 * HZ)
- 
-+#define MAX_MEM (256 * 1024 * 1024)
-+#define RECLAIM_BATCH 16
-+#define CHECKPOINT_TIMEOUT (5 * HZ)
-+
- typedef u64 r5blk_t; /* log blocks, could be 512B - 4k */
- 
- /*
-@@ -191,6 +195,154 @@ struct r5l_io_unit {
- 	int error;
- };
- 
+@@ -0,0 +1,1317 @@
 +/*
-+ * a stripe can have data stored to several different chunks in log. each chunk
-+ * is a bio (or r5l_task) dispatched to log. When r5l_task is finished,
-+ * r5l_task will return position where the bio and corresponding metadata is
-+ * stored in cache disk and a sequence number of its metadata. we use a data
-+ * structure to index the chunk in memory, which is a r5c_io_range. 
++ * A caching layer for raid 4/5/6
 + *
-+ * io_range will be in two lists. One is the stripe_sibling, which is linked to
-+ * stripe list. The other is the log_sibling, which is linked to
-+ * r5c_cache->log_list. Both lists are sorted, io_range is added to the lists
-+ * in time order (or sequence order, since newer io_range has higher sequence
-+ * order.
++ * Copyright (C) 2015 Shaohua Li <shli@fb.com>
 + *
-+ * In the stripe list, ordering can be used to destinguish if data is newer.
-+ * newer data is at the tail of the list.
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
 + *
-+ * In the log list, io_range is used to track cache disk usage. the first
-+ * entry's meta_start is the log tail. Note, if a stripe is reclaimed, its
-+ * io_ranges are deleted. Since each stripe can have its io_ranges stored
-+ * sparsely in cache disk, the log list might have holes, but the first entry's
-+ * meta_start is always the log tail. The ordering guarantees we can find log
-+ * tail. We use meta_start for log tail tracking, because one r5l_meta_block
-+ * records several chunks (or io_unit), the meta data can be freed only after
-+ * all data pages it tracked are freed.
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
 + *
-+ * When log dispatches IO to cache disk, several io_range (each is a bio) will
-+ * be in one r5l_io_unit, so the io_ranges will have the same meta_start and
-+ * sequence
-+ * */
-+struct r5c_io_range {
-+	struct list_head log_sibling; /*link to cache->log_list */
-+	struct list_head stripe_sibling; /* link to stripe->io_ranges */
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ */
++#include <linux/kernel.h>
++#include <linux/wait.h>
++#include <linux/blkdev.h>
++#include <linux/slab.h>
++#include <linux/raid/md_p.h>
++#include <linux/crc32.h>
++#include <linux/list_sort.h>
++#include "md.h"
++#include "raid5.h"
 +
-+	u64 seq; /* sequence of its metadata */
++/* the log disk cache will be flushed forcely every second */
++#define LOG_FLUSH_TIME HZ
++#define LOG_SUPER_WRITE_TIME (5 * HZ)
 +
-+	/* cache disk position of corresponding r5l_meta_block */
-+	sector_t meta_start;
-+	sector_t data_start; /* cache disk position of data */
-+	sector_t raid_start; /* raid position the data should be stored */
-+	unsigned int data_sectors;
-+
-+	struct r5c_stripe *stripe;
-+	union {
-+		struct bio *bio;
-+		u32 *checksum; /* only for recovery */
-+	};
-+};
++typedef u64 r5blk_t; /* log blocks, could be 512B - 4k */
 +
 +/*
-+ * track a stripe (chunk_size * raid_disks), not a stripe_cache
-+ *
-+ * we must be careful about appending data to a stripe when the stripe is being
-+ * reclaimed. If we append data to a stripe between stripe parity is in cache
-+ * disk and stripe isn't fully reclaimed (reusable), the modified data doesn't
-+ * match with parity, recovery will get confused. So if we are reclaiming a
-+ * stripe, we freeze the stripe and don't allow new data added to it till the
-+ * stripe is fully reclaimed
++ * cache disk is treated as a log. data structures and routinues with r5l_ are
++ * for log. log is just for data storing in cache disk. It's not aware of how
++ * the data is tracked in memory
 + * */
-+struct r5c_stripe {
-+	u64 raid_index;
-+	struct r5c_cache *cache;
-+	atomic_t ref;
-+	int state;
-+	int recovery_state; /* just for recovery */
-+
-+	struct list_head io_ranges; /* ordered list of r5c_io_range */
-+	union {
-+		struct list_head stripes;
-+		struct list_head parity_list; /* just for recovery */
-+	};
-+
-+	struct list_head lru;
-+
-+	int existing_pages;
-+	atomic_t dirty_stripes;
-+	atomic_t pending_bios;
-+	struct page **parity_pages; /* just for recovery */
-+	struct page *data_pages[];
-+};
-+
-+/* stripe state */
-+enum {
-+	STRIPE_RUNNING = 0, /* stripe can accept new data */
-+	STRIPE_FROZEN = 1, /* Doesn't accept new data and is reclaiming */
-+	STRIPE_PARITY_DONE = 2, /* stripe parity is cache disk */
-+	STRIPE_INRAID = 3, /* stripe data/parity are in raid disks */
-+	STRIPE_DEAD = 4, /* stripe can be reused */
-+};
-+
-+#define STRIPE_LOCK_BITS 8
-+struct r5c_cache {
-+	struct mddev *mddev;
++struct r5l_log {
 +	struct md_rdev *rdev;
 +
-+	struct r5l_log log;
++	struct page *super_page;
++	u8 uuid[16];
++	u32 uuid_checksum_data;
++	u32 uuid_checksum_meta;
 +
-+	spinlock_t tree_lock; /* protect stripe_tree, log_list, full_stripes */
-+	struct radix_tree_root stripe_tree;
-+	struct list_head log_list; /* sorted list of io_range */
-+	struct list_head full_stripes; /* stripes have data full */
-+	int full_stripe_cnt;
-+
-+	struct list_head page_pool;
-+	spinlock_t pool_lock;
-+	u64 free_pages;
-+	u64 total_pages;
-+	u64 max_pages;
-+	/* background reclaim starts when free memory hits this watermark */
-+	u64 low_watermark;
-+	/* background reclaim stops when free memory hits this watermark */
-+	u64 high_watermark;
-+
++	unsigned int block_size; /* bytes */
++	unsigned int block_sector_shift;
++	unsigned int page_block_shift; /* page to block */
 +	unsigned int stripe_data_size; /* chunk_size * data_disks, sector */
 +	unsigned int chunk_size; /* sector */
-+	unsigned int stripe_size; /* chunk_size * all disks, sector */
++	unsigned int stripe_size; /* chunk_size * all_disks, sector */
 +	unsigned int parity_disks; /* parity disks of a stripe */
-+	unsigned int stripe_data_pages; /* total data pages of a stripe */
-+	unsigned int stripe_parity_pages; /* total parity pages of a stripe */
 +
-+	unsigned int reclaim_batch;
++	r5blk_t total_blocks;
++	r5blk_t first_block;
++	r5blk_t last_block;
 +
-+	unsigned int reserved_space; /* log reserved size, sector */
++	/* background reclaim starts if free log space hits the watermark */
++	r5blk_t low_watermark;
++	/* background reclaim stops if free log space hits the watermark */
++	r5blk_t high_watermark;
 +
-+	unsigned long reclaim_reason;
-+	wait_queue_head_t reclaim_wait;
-+	struct md_thread *reclaim_thread;
-+	__le64 *stripe_flush_data;
-+	int quiesce_state;
++	r5blk_t last_checkpoint; /* log tail */
++	/* last_checkpoint to last_freepoint is freed but not discard yet */
++	r5blk_t last_freepoint;
++	r5blk_t super_point; /* checkpoint recorded in super block */
++	u64 last_cp_seq; /* log tail sequence */
++	u64 last_freeseq; /* sequence in last_freepoint */
++	unsigned long last_cp_time;
++	struct work_struct discard_work;
 +
-+	int in_recovery; /* in recovery mode */
++	int do_discard; /* if do discard */
 +
-+	struct work_struct pending_io_work;
++	u64 seq; /* current sequence */
++	r5blk_t log_start; /* current log position */
 +
-+	spinlock_t stripe_locks[1 << STRIPE_LOCK_BITS];
-+	wait_queue_head_t stripe_waitq[1 << STRIPE_LOCK_BITS];
++	u8 data_checksum_type;
++	u8 meta_checksum_type;
 +
-+	int error_state;
-+	int error_type;
-+	int retry_cnt;
-+	unsigned long next_retry_time;
-+	struct bio_list retry_bio_list; /* bios should be retried after IO error */
-+	wait_queue_head_t error_wait;
++	unsigned int reserved_blocks;
++	wait_queue_head_t space_waitq;
 +
-+	struct kmem_cache *io_range_kc;
-+	struct kmem_cache *stripe_kc;
++	struct mutex io_mutex;
++	struct r5l_io_unit *current_io;
++
++	spinlock_t io_list_lock;
++	struct list_head running_ios; /* running io_unit list */
++
++	struct list_head task_list; /* pending bio task list */
++	struct list_head parity_task_list; /* pending parity task list */
++	spinlock_t task_lock;
++
++	struct kmem_cache *io_kc;
++	mempool_t *io_pool;
 +	struct bio_set *bio_set;
++
++	unsigned long next_flush_time; /* force disk flush time */
++	struct work_struct flush_work;
 +};
 +
- /* reclaim reason */
- enum {
- 	RECLAIM_MEM = 0, /* work hard to reclaim memory */
-@@ -1139,6 +1291,539 @@ static int r5l_write_super(struct r5l_log *log, u64 seq, sector_t cp)
- 	return 0;
- }
- 
-+static inline void r5c_sector_stripe_index_offset(struct r5c_cache *cache,
-+	sector_t sect, u64 *index, unsigned int *offset)
-+{
-+	*offset = sector_div(sect, cache->stripe_data_size);
-+	*index = sect;
-+}
++/*
++ * r5l_task is an abstract of IO r5c_cache dispatched undearneath. It could be
++ * a bio or several parity pages. In either case, we append the bio or parity
++ * pages into log with appropriate metadata and return where we store it. The
++ * IO handling is transparent to r5c_cache
++ *
++ * If the task is for a bio, the bio is cloned. This is to simplify io error
++ * handling. The bio dispatched to cache disk can fail. IO error handling will
++ * resend it to raid disks for retry
++ * */
++struct r5l_task;
++/* end function must free task */
++typedef void (r5l_task_end_fn)(struct r5l_task *task, int error);
++struct r5l_task {
++	struct list_head list;
++	int type;
++	struct bio *bio;
++	union {
++		struct bio *orig_bio;
++		struct {
++			sector_t stripe_sector;
++			struct page *page_p;
++			struct page *page_q;
++		};
++	};
++	/* tasks in a single r5l_io_unit will have the same seq and meta_start */
++	sector_t meta_start;
++	sector_t data_start;
++	u64 seq;
++	r5l_task_end_fn *fn;
++	void *private;
++	unsigned int reserved_blocks;
++	u32 checksum[];
++};
 +
-+static inline sector_t r5c_stripe_raid_sector(struct r5c_cache *cache,
-+	struct r5c_stripe *stripe)
-+{
-+	return stripe->raid_index * cache->stripe_data_size;
-+}
++/*
++ * r5l_io_unit is a combination of a meta page (r5l_meta_block or
++ * r5l_flush_block) and several r5l_tasks. the meta page will record meta data
++ * of the r5l_tasks. Log can be thought of a set of r5l_io_units. Each
++ * r5l_io_unit is treated as a whole in IO handling. Each io_unit has a sequence
++ * number in ascend order too, tasks in the io_unit will have the same sequence
++ * number. r5c_cache will use the sequence number to sort io ranges and track
++ * log tail. Recovery uses the sequence number to determine log integrity.
++ *
++ * Data and metadata in log is written with normal IO write. A power failure
++ * can cause data loss. To relieve the issue, log disk cache will be flushed
++ * forcely every second.
++ *
++ * Note IO is finished out of order. If metadata corrupts in the middle,
++ * recovery can't work well even metadata/data at the tail is good. IO in log
++ * tail could finish earlier than IO ahead, so we must be very careful to
++ * handle FLUSH/FUA bio.
++ *
++ * FLUSH bio: the bio will be dispatched after all previous IO finish. FLUSH
++ * syntax doesn't require pending IO finish, but pending IO might be a metadata
++ * in the middle of log, we must force this order.
++ *
++ * FUA bio: same like FLUSH bio, previous meta IO must be finished before
++ * dispatching this bio. To simplify implementation, we wait all previous IO.
++ * And we must add a FLUSH to make sure previous IO hit disk media. metadata
++ * of the bio and the bio itself must be written with FUA.
++ *
++ * The r5l_io_unit is added to r5l_log running_ios list in submiting order.
++ * FLUSH/FUA io_unit isn't allowed to be executed ahead of other io_units, so
++ * above ordering is guaranteed.
++ **/
++struct r5l_io_unit {
++	struct r5l_log *log;
++	struct list_head log_sibling; /* link to log->running_ios */
 +
-+static void r5c_lock_stripe(struct r5c_cache *cache, struct r5c_stripe *stripe,
-+	unsigned long *flags)
-+{
-+	spinlock_t *lock;
++	struct page *meta_page;
++	sector_t meta_sector;
++	int meta_offset; /* current offset in meta_page */
++	u64 seq;
++	struct bio *meta_bio;
 +
-+	lock = &cache->stripe_locks[hash_ptr(stripe, STRIPE_LOCK_BITS)];
-+	spin_lock_irqsave(lock, *flags);
-+}
++	struct list_head tasks;
++	struct bio *current_bio; /* current_bio accepting pages */
++	atomic_t refcnt;
 +
-+static void r5c_unlock_stripe(struct r5c_cache *cache,
-+	struct r5c_stripe *stripe, unsigned long *flags)
-+{
-+	spinlock_t *lock;
-+
-+	lock = &cache->stripe_locks[hash_ptr(stripe, STRIPE_LOCK_BITS)];
-+	spin_unlock_irqrestore(lock, *flags);
-+}
-+
-+static wait_queue_head_t *r5c_stripe_waitq(struct r5c_cache *cache,
-+	struct r5c_stripe *stripe)
-+{
-+	return &cache->stripe_waitq[hash_ptr(stripe, STRIPE_LOCK_BITS)];
-+}
-+
-+static void r5c_stripe_wait_state(struct r5c_cache *cache,
-+	struct r5c_stripe *stripe, int state)
-+{
-+	wait_event(*r5c_stripe_waitq(cache, stripe), stripe->state >= state);
-+}
-+
-+static struct page *r5c_get_page(struct r5c_cache *cache)
-+{
-+	struct page *page;
-+again:
-+	spin_lock_irq(&cache->pool_lock);
-+	if (!list_empty(&cache->page_pool)) {
-+		page = list_first_entry(&cache->page_pool,
-+			struct page, lru);
-+		list_del_init(&page->lru);
-+		cache->free_pages--;
-+		if (cache->free_pages < cache->low_watermark)
-+			r5c_wake_reclaimer(cache,
-+				RECLAIM_MEM_BACKGROUND);
-+	}
-+	spin_unlock_irq(&cache->pool_lock);
-+	if (page)
-+		return page;
-+	r5c_wake_wait_reclaimer(cache, RECLAIM_MEM);
-+	goto again;
-+}
-+
-+static void r5c_put_pages(struct r5c_cache *cache,
-+	struct page *pages[], int size)
-+{
-+	unsigned long flags;
-+	int free = 0;
-+	int i;
-+
-+	spin_lock_irqsave(&cache->pool_lock, flags);
-+	for (i = 0; i < size; i++) {
-+		if (!pages[i])
-+			continue;
-+		if (cache->total_pages > cache->max_pages) {
-+			__free_page(pages[i]);
-+			cache->total_pages--;
-+		} else {
-+			list_add(&pages[i]->lru, &cache->page_pool);
-+			free++;
-+		}
-+	}
-+	cache->free_pages += free;
-+	if (cache->free_pages >= cache->high_watermark)
-+		clear_bit(RECLAIM_MEM_BACKGROUND, &cache->reclaim_reason);
-+	clear_bit(RECLAIM_MEM, &cache->reclaim_reason);
-+	spin_unlock_irqrestore(&cache->pool_lock, flags);
-+
-+	wake_up(&cache->reclaim_wait);
-+}
-+
-+static struct r5c_stripe *
-+r5c_search_stripe(struct r5c_cache *cache, u64 stripe_index)
-+{
-+	struct r5c_stripe *stripe;
-+
-+	spin_lock_irq(&cache->tree_lock);
-+	stripe = radix_tree_lookup(&cache->stripe_tree, stripe_index);
-+	spin_unlock_irq(&cache->tree_lock);
-+	return stripe;
-+}
-+
-+static void r5c_put_stripe(struct r5c_stripe *stripe);
-+static struct r5c_stripe *
-+r5c_get_stripe(struct r5c_cache *cache, u64 stripe_index)
-+{
-+	struct r5c_stripe *stripe;
-+
-+again:
-+	spin_lock_irq(&cache->tree_lock);
-+	stripe = radix_tree_lookup(&cache->stripe_tree, stripe_index);
-+	if (stripe)
-+		atomic_inc(&stripe->ref);
-+	spin_unlock_irq(&cache->tree_lock);
-+
-+	if (!stripe)
-+		return NULL;
-+	BUG_ON(stripe->raid_index != stripe_index);
-+
++	unsigned int has_flush:1; /* include flush request */
++	unsigned int has_fua:1; /* include fua request */
++	unsigned int has_null_flush:1; /* include empty flush request */
 +	/*
-+	 * The stripe is being reclaimed, wait reclaim finish, see the comment
-+	 * in r5c_stripe
++	 * io isn't sent yet, flush/fua request can only be submitted till it's
++	 * the first IO in running_ios list
 +	 * */
-+	if (stripe->state >= STRIPE_FROZEN) {
-+		r5c_stripe_wait_state(cache, stripe, STRIPE_DEAD);
-+		r5c_put_stripe(stripe);
-+		goto again;
-+	}
-+	return stripe;
-+}
-+
-+static struct r5c_stripe *
-+r5c_create_get_stripe(struct r5c_cache *cache, u64 stripe_index)
-+{
-+	struct r5c_stripe *stripe, *new;
++	unsigned int io_deferred:1;
 +	int error;
++};
 +
-+again:
-+	spin_lock_irq(&cache->tree_lock);
-+	stripe = radix_tree_lookup(&cache->stripe_tree, stripe_index);
-+	if (stripe)
-+		atomic_inc(&stripe->ref);
-+	spin_unlock_irq(&cache->tree_lock);
++/* reclaim reason */
++enum {
++	RECLAIM_MEM = 0, /* work hard to reclaim memory */
++	RECLAIM_MEM_BACKGROUND = 1, /* try to reclaim memory */
++	RECLAIM_MEM_FULL = 2, /* only reclaim full stripe */
++	RECLAIM_DISK = 8, /* work hard to reclaim disk */
++	RECLAIM_DISK_BACKGROUND = 9, /* try to reclaim disk */
++	RECLAIM_FLUSH_ALL = 16, /* flush all data to raid */
++};
 +
-+	if (stripe)
-+		goto has_stripe;
++#define PAGE_SECTOR_SHIFT (PAGE_SHIFT - 9)
 +
-+	new = kmem_cache_zalloc(cache->stripe_kc, GFP_NOIO);
-+	if (!new)
-+		return NULL;
-+
-+	new->raid_index = stripe_index;
-+	atomic_set(&new->ref, 2);
-+	new->state = STRIPE_RUNNING;
-+	new->cache = cache;
-+	INIT_LIST_HEAD(&new->io_ranges);
-+	INIT_LIST_HEAD(&new->stripes);
-+	INIT_LIST_HEAD(&new->lru);
-+
-+	error = radix_tree_preload(GFP_NOIO);
-+	if (error) {
-+		kmem_cache_free(cache->stripe_kc, new);
-+		return NULL;
-+	}
-+
-+	spin_lock_irq(&cache->tree_lock);
-+	if (radix_tree_insert(&cache->stripe_tree, stripe_index, new)) {
-+		stripe = radix_tree_lookup(&cache->stripe_tree, stripe_index);
-+		atomic_inc(&stripe->ref);
-+		kmem_cache_free(cache->stripe_kc, new);
-+	} else
-+		stripe = new;
-+	spin_unlock_irq(&cache->tree_lock);
-+
-+	radix_tree_preload_end();
-+
-+	BUG_ON(stripe->raid_index != stripe_index);
-+has_stripe:
-+	/*
-+	 * The stripe is being reclaimed, wait reclaim finish, see the comment
-+	 * in r5c_stripe
-+	 * */
-+	if (stripe->state >= STRIPE_FROZEN) {
-+		r5c_stripe_wait_state(cache, stripe, STRIPE_DEAD);
-+		r5c_put_stripe(stripe);
-+		goto again;
-+	}
-+
-+	return stripe;
++static inline struct r5c_cache *r5l_cache(struct r5l_log *log)
++{
++	return container_of(log, struct r5c_cache, log);
 +}
 +
-+static void r5c_put_stripe(struct r5c_stripe *stripe)
++static inline struct block_device *r5l_bdev(struct r5l_log *log)
 +{
-+	struct r5c_cache *cache = stripe->cache;
-+	struct r5c_io_range *range;
-+	unsigned long flags, flags2;
++	return log->rdev->bdev;
++}
 +
-+	local_irq_save(flags);
++static inline sector_t r5l_block_to_sector(struct r5l_log *log, r5blk_t block)
++{
++	return block << log->block_sector_shift;
++}
++
++static inline r5blk_t r5l_sector_to_block(struct r5l_log *log, sector_t s)
++{
++	return s >> log->block_sector_shift;
++}
++
++static inline int r5l_page_blocks(struct r5l_log *log, int pages)
++{
++	return pages << log->page_block_shift;
++}
++
++static u32 r5l_calculate_checksum(struct r5l_log *log, u32 crc,
++	void *buf, size_t size, bool data)
++{
 +
 +	/*
-+	 * must take lock too, since we can't access stripe if its ref is
-+	 * dropped to 0
-+	 **/
-+	if (!atomic_dec_and_lock(&stripe->ref, &cache->tree_lock)) {
-+		local_irq_restore(flags);
-+		/* the stripe is freezing, might wait for ref */
-+		wake_up(r5c_stripe_waitq(cache, stripe));
++	 * We currently only support CRC32, other checksum algorithm might be
++	 * added later
++	 * */
++	if (log->data_checksum_type != R5LOG_CHECKSUM_CRC32)
++		BUG();
++	if (log->meta_checksum_type != R5LOG_CHECKSUM_CRC32)
++		BUG();
++	return crc32_le(crc, buf, size);
++}
 +
++static r5blk_t r5l_ring_add(struct r5l_log *log, r5blk_t block, int inc)
++{
++	block += inc;
++	if (block >= log->last_block)
++		block = block - log->total_blocks;
++	return block;
++}
++
++static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason);
++static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason);
++
++static r5blk_t r5l_free_space(struct r5l_log *log)
++{
++	r5blk_t used_size;
++
++	if (log->log_start >= log->last_checkpoint)
++		used_size = log->log_start - log->last_checkpoint;
++	else
++		used_size = log->log_start + log->total_blocks -
++			log->last_checkpoint;
++
++	if (log->total_blocks > used_size + log->reserved_blocks)
++		return log->total_blocks - used_size - log->reserved_blocks;
++	return 0;
++}
++
++/* Make sure we have enough free space in log device */
++static void r5l_get_reserve(struct r5l_log *log, unsigned int size)
++{
++	r5blk_t free;
++
++	mutex_lock(&log->io_mutex);
++
++	free = r5l_free_space(log);
++	if (free >= size) {
++		log->reserved_blocks += size;
++
++		if (free - size < log->low_watermark)
++			r5c_wake_reclaimer(r5l_cache(log),
++				RECLAIM_DISK_BACKGROUND);
++		mutex_unlock(&log->io_mutex);
 +		return;
 +	}
 +
-+	BUG_ON(radix_tree_delete(&cache->stripe_tree, stripe->raid_index)
-+		!= stripe);
++	log->reserved_blocks += size;
++	mutex_unlock(&log->io_mutex);
 +
-+	r5c_lock_stripe(cache, stripe, &flags2);
-+	while (!list_empty(&stripe->io_ranges)) {
-+		range = list_first_entry(&stripe->io_ranges,
-+			struct r5c_io_range, stripe_sibling);
-+		list_del(&range->stripe_sibling);
++	schedule_work(&log->discard_work);
++	r5c_wake_reclaimer(r5l_cache(log), RECLAIM_DISK);
 +
-+		list_del(&range->log_sibling);
-+
-+		kmem_cache_free(cache->io_range_kc, range);
-+	}
-+	r5c_put_pages(cache, stripe->data_pages, cache->stripe_data_pages);
-+	BUG_ON(stripe->parity_pages);
-+
-+	r5c_unlock_stripe(cache, stripe, &flags2);
-+
-+	spin_unlock_irqrestore(&cache->tree_lock, flags);
-+
-+	kmem_cache_free(cache->stripe_kc, stripe);
++	mutex_lock(&log->io_mutex);
++	wait_event_cmd(log->space_waitq, r5l_free_space(log) > 0,
++		mutex_unlock(&log->io_mutex), mutex_lock(&log->io_mutex));
++	mutex_unlock(&log->io_mutex);
 +}
 +
-+static void r5c_bio_task_end(struct r5l_task *task, int error)
++static void __r5l_put_reserve(struct r5l_log *log, unsigned int reserved_blocks)
 +{
-+	struct r5c_io_range *range = task->private;
-+	struct r5c_stripe *stripe = range->stripe;
-+	struct r5c_cache *cache = stripe->cache;
-+	struct r5c_io_range *tmp;
-+	unsigned long flags, flags2;
-+	struct bio *orig_bio;
++	BUG_ON(!mutex_is_locked(&log->io_mutex));
 +
-+	range->seq = task->seq;
-+	range->meta_start = task->meta_start;
-+	range->data_start = task->data_start;
-+	orig_bio = task->orig_bio;
-+	kfree(task);
++	log->reserved_blocks -= reserved_blocks;
++	if (r5l_free_space(log) > 0)
++		wake_up(&log->space_waitq);
++}
 +
-+	spin_lock_irqsave(&cache->tree_lock, flags);
++static void r5l_put_reserve(struct r5l_log *log, unsigned int reserved_blocks)
++{
++	mutex_lock(&log->io_mutex);
++	__r5l_put_reserve(log, reserved_blocks);
++	mutex_unlock(&log->io_mutex);
++}
 +
-+	if (list_empty(&cache->log_list)) {
-+		list_add_tail(&range->log_sibling, &cache->log_list);
-+		goto out;
++#define LOG_POOL_SIZE 8
++static void *__io_pool_alloc(gfp_t gfp, void *pool_data)
++{
++	struct r5l_log *log = pool_data;
++	struct r5l_io_unit *io;
++
++	io = kmem_cache_alloc(log->io_kc, gfp);
++	if (!io)
++		return NULL;
++	io->meta_page = alloc_page(gfp);
++	if (!io->meta_page) {
++		kmem_cache_free(log->io_kc, io);
++		return NULL;
++	}
++	return io;
++}
++
++static void __io_pool_free(void *e, void *pool_data)
++{
++	struct r5l_log *log = pool_data;
++	struct r5l_io_unit *io = e;
++
++	__free_page(io->meta_page);
++	kmem_cache_free(log->io_kc, io);
++}
++
++static struct r5l_io_unit *r5l_alloc_io_unit(struct r5l_log *log)
++{
++	struct r5l_io_unit *io;
++	struct page *page;
++
++	io = mempool_alloc(log->io_pool, GFP_NOIO);
++	page = io->meta_page;
++	memset(io, 0, sizeof(*io));
++	io->meta_page = page;
++
++	io->log = log;
++	INIT_LIST_HEAD(&io->tasks);
++	atomic_set(&io->refcnt, 1);
++	clear_highpage(io->meta_page);
++	return io;
++}
++
++static void r5l_free_io_unit(struct r5l_log *log, struct r5l_io_unit *io)
++{
++	mempool_free(io, log->io_pool);
++}
++
++static void r5l_submit_bio(struct r5l_log *log, int rw, struct bio *bio)
++{
++	/* all IO must start from rdev->data_offset */
++	struct bio *split;
++
++	if (bio_end_sector(bio) > (r5l_block_to_sector(log,
++				   log->last_block))) {
++		split = bio_split(bio, r5l_block_to_sector(log,
++			log->last_block) - bio->bi_iter.bi_sector,
++			GFP_NOIO, log->bio_set);
++		bio_chain(split, bio);
++		bio->bi_iter.bi_sector = r5l_block_to_sector(log,
++					log->first_block);
++		split->bi_iter.bi_sector += log->rdev->data_offset;
++		submit_bio(rw, split);
 +	}
 +
-+	/*
-+	 * generally tmp will be the last one. The order is important to track
-+	 * log tail, see comments in r5c_io_range
-+	 * */
-+	list_for_each_entry_reverse(tmp, &cache->log_list, log_sibling) {
++	bio->bi_iter.bi_sector += log->rdev->data_offset;
++	submit_bio(rw, bio);
++}
++
++static void r5l_put_io_unit(struct r5l_io_unit *io, int error)
++{
++	struct r5l_log *log = io->log;
++	struct r5l_io_unit *io_deferred;
++	unsigned long flags;
++	struct r5l_task *task;
++
++	if (error)
++		io->error = error;
++
++	if (!atomic_dec_and_test(&io->refcnt))
++		return;
++
++	spin_lock_irqsave(&log->io_list_lock, flags);
++	list_del(&io->log_sibling);
++	if (!list_empty(&log->running_ios)) {
 +		/*
-+		 * later range has bigger seq and meta_start than previous
-+		 * range
-+		 **/
-+		if (range->seq >= tmp->seq)
-+			break;
++		 * FLUSH/FUA io_unit is deferred because of ordering, now we
++		 * can dispatch it
++		 * */
++		io_deferred = list_first_entry(&log->running_ios,
++			struct r5l_io_unit, log_sibling);
++		if (io_deferred->io_deferred)
++			schedule_work(&log->flush_work);
 +	}
-+	list_add_tail(&range->log_sibling, &tmp->log_sibling);
-+out:
-+	r5c_lock_stripe(cache, stripe, &flags2);
-+	/*
-+	 * full stripes aren't reclaimed immediately till we have enough such
-+	 * stripes, this is to improve performance
-+	 * */
-+	if (stripe->existing_pages == cache->stripe_data_pages &&
-+	    list_empty(&stripe->lru)) {
-+		list_add_tail(&stripe->lru, &cache->full_stripes);
-+		cache->full_stripe_cnt++;
-+		if (cache->full_stripe_cnt >= cache->reclaim_batch)
-+			r5c_wake_reclaimer(cache,
-+				RECLAIM_MEM_FULL);
++	spin_unlock_irqrestore(&log->io_list_lock, flags);
++
++	while (!list_empty(&io->tasks)) {
++		task = list_first_entry(&io->tasks, struct r5l_task,
++			list);
++		list_del(&task->list);
++		task->fn(task, io->error);
 +	}
-+	r5c_unlock_stripe(cache, stripe, &flags2);
-+
-+	spin_unlock_irqrestore(&cache->tree_lock, flags);
-+
-+	if (!error) {
-+		bio_endio(orig_bio, 0);
-+		md_write_end(cache->mddev);
-+	}
-+
-+	r5c_put_stripe(stripe);
++	r5l_free_io_unit(log, io);
 +}
 +
-+static void r5c_copy_bio(struct bio *bio, struct page *pages[], bool tobio)
++static void r5l_log_endio(struct bio *bio, int error)
 +{
++	struct r5l_io_unit *io = bio->bi_private;
++
++	bio_put(bio);
++	r5l_put_io_unit(io, error);
++}
++
++static void r5l_do_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
++{
++	struct r5l_task *task;
++	int rw = WRITE;
++
++	if (io->has_null_flush) {
++		log->next_flush_time = jiffies + LOG_FLUSH_TIME;
++		task = list_first_entry(&io->tasks, struct r5l_task, list);
++		submit_bio(WRITE_FLUSH, task->bio);
++		r5l_put_io_unit(io, 0);
++		return;
++	}
++
++	if (io->has_flush)
++		rw |= REQ_FLUSH;
++	if (io->has_fua)
++		rw |= REQ_FUA | REQ_FLUSH;
++	if (time_before(log->next_flush_time, jiffies))
++		rw |= REQ_FLUSH;
++	if (rw & REQ_FLUSH)
++		log->next_flush_time = jiffies + LOG_FLUSH_TIME;
++
++	r5l_submit_bio(log, rw, io->meta_bio);
++
++	list_for_each_entry(task, &io->tasks, list) {
++		if (task->bio)
++			r5l_submit_bio(log, task->bio->bi_rw, task->bio);
++	}
++	r5l_put_io_unit(io, 0);
++}
++
++/*
++ * submit IO for a r5l_io_unit. For flush/fua, ordering is important. We don't
++ * submit such io_unit till all previous io_units finish. If io_unit isn't
++ * dispatched right now, it's marked as deferred
++ **/
++static void r5l_submit_io(struct r5l_log *log, struct r5l_io_unit *io)
++{
++	unsigned long flags;
++	bool do_io = true;
++
++	if (io->has_flush || io->has_fua) {
++		spin_lock_irqsave(&log->io_list_lock, flags);
++		if (io !=  list_first_entry(&log->running_ios,
++		    struct r5l_io_unit, log_sibling)) {
++			io->io_deferred = 1;
++			do_io = false;
++		}
++		spin_unlock_irqrestore(&log->io_list_lock, flags);
++		if (!do_io)
++			return;
++	}
++
++	r5l_do_submit_io(log, io);
++}
++
++static void r5l_submit_current_io(struct r5l_log *log)
++{
++	struct r5l_io_unit *io = log->current_io;
++	struct r5l_meta_header *header;
++	u32 crc;
++
++	if (!io)
++		return;
++
++	header = page_address(io->meta_page);
++	header->meta_size = cpu_to_le32(io->meta_offset);
++	crc = r5l_calculate_checksum(log, log->uuid_checksum_meta,
++		header, log->block_size, false);
++	header->checksum = cpu_to_le32(crc);
++
++	log->current_io = NULL;
++
++	r5l_submit_io(log, io);
++}
++
++/* deferred io_unit will be dispatched here */
++static void r5l_submit_io_async(struct work_struct *work)
++{
++	struct r5l_log *log = container_of(work, struct r5l_log, flush_work);
++	struct r5l_io_unit *io = NULL;
++
++	spin_lock_irq(&log->io_list_lock);
++	if (!list_empty(&log->running_ios)) {
++		io = list_first_entry(&log->running_ios, struct r5l_io_unit,
++				log_sibling);
++		if (!io->io_deferred)
++			io = NULL;
++		else
++			io->io_deferred = 0;
++	}
++	spin_unlock_irq(&log->io_list_lock);
++	if (!io)
++		return;
++	r5l_do_submit_io(log, io);
++}
++
++static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
++{
++	struct r5l_io_unit *io;
++
++	io = r5l_alloc_io_unit(log);
++
++	io->meta_sector = r5l_block_to_sector(log, log->log_start);
++	io->meta_offset = sizeof(struct r5l_meta_header);
++	io->seq = log->seq;
++
++	io->meta_bio = bio_alloc_bioset(GFP_NOIO,
++		bio_get_nr_vecs(r5l_bdev(log)), log->bio_set);
++	io->meta_bio->bi_bdev = r5l_bdev(log);
++	io->meta_bio->bi_iter.bi_sector = io->meta_sector;
++	bio_add_page(io->meta_bio, io->meta_page, log->block_size, 0);
++	io->meta_bio->bi_end_io = r5l_log_endio;
++	io->meta_bio->bi_private = io;
++
++	atomic_inc(&io->refcnt);
++
++	log->seq++;
++	log->log_start = r5l_ring_add(log, log->log_start, 1);
++	io->current_bio = io->meta_bio;
++
++	spin_lock_irq(&log->io_list_lock);
++	list_add_tail(&io->log_sibling, &log->running_ios);
++	spin_unlock_irq(&log->io_list_lock);
++
++	return io;
++}
++
++static int r5l_get_meta(struct r5l_log *log, unsigned int pages, bool is_bio)
++{
++	struct r5l_io_unit *io;
++	struct r5l_meta_header *header;
++	unsigned int meta_size;
++
++	meta_size = sizeof(struct r5l_meta_payload) +
++		sizeof(u32) * pages;
++	io = log->current_io;
++	if (io && io->meta_offset + meta_size > log->block_size)
++		r5l_submit_current_io(log);
++	io = log->current_io;
++	if (io) {
++		/* If task has bio, we can't use previous bio to add data */
++		if (is_bio)
++			io->current_bio = NULL;
++		return 0;
++	}
++
++	io = r5l_new_meta(log);
++	log->current_io = io;
++
++	if (is_bio)
++		io->current_bio = NULL;
++
++	header = page_address(io->meta_page);
++	header->magic = cpu_to_le32(R5LOG_MAGIC);
++	header->type = cpu_to_le32(R5LOG_TYPE_META);
++	header->seq = cpu_to_le64(log->seq - 1);
++	if (log->log_start == log->first_block)
++		header->position = cpu_to_le64(log->last_block - 1);
++	else
++		header->position = cpu_to_le64(log->log_start - 1);
++
++	return 0;
++}
++
++/* must hold io_mutex */
++static int r5l_run_data_task(struct r5l_log *log, struct r5l_task *task)
++{
++	unsigned int pages;
++	struct r5l_io_unit *io;
++	unsigned int reserved_blocks = task->reserved_blocks;
++	struct r5l_meta_payload *payload;
++	struct bio *bio = task->bio;
++	void *meta;
++	int i;
++
++	pages = bio_sectors(bio) >> PAGE_SECTOR_SHIFT;
++
++	r5l_get_meta(log, pages, true);
++
++	io = log->current_io;
++
++	if (bio->bi_rw & REQ_FLUSH)
++		io->has_flush = 1;
++	if (bio->bi_rw & REQ_FUA)
++		io->has_fua = 1;
++
++	meta = page_address(io->meta_page);
++	payload = meta + io->meta_offset;
++	payload->payload_type = cpu_to_le16(task->type);
++	payload->blocks = cpu_to_le32(r5l_page_blocks(log, pages));
++	payload->location = cpu_to_le64(bio->bi_iter.bi_sector);
++	for (i = 0; i < pages; i++)
++		payload->data_checksum[i] = cpu_to_le32(task->checksum[i]);
++
++	io->meta_offset += sizeof(struct r5l_meta_payload) +
++		sizeof(u32) * pages;
++	task->seq = io->seq;
++	task->meta_start = io->meta_sector;
++	task->data_start = r5l_block_to_sector(log, log->log_start);
++
++	/* submiting will split the bio if it hits log end */
++	bio->bi_iter.bi_sector = task->data_start;
++	bio->bi_end_io = r5l_log_endio;
++	bio->bi_private = io;
++	bio->bi_bdev = r5l_bdev(log);
++	atomic_inc(&io->refcnt);
++
++	log->log_start = r5l_ring_add(log, log->log_start,
++		r5l_page_blocks(log, pages));
++
++	list_add_tail(&task->list, &io->tasks);
++
++	__r5l_put_reserve(log, reserved_blocks);
++	return 0;
++}
++
++/*
++ * We probably can directly add the parity pages into previous bio of io_unit
++ * (the meta data bio or bio for previous parity pages. If that isn't possible,
++ * we allocate a new bio
++ * */
++static int r5l_task_add_parity_pages(struct r5l_log *log,
++	struct r5l_task *task)
++{
++	struct r5l_io_unit *io = log->current_io;
++	struct bio *bio;
++	struct page *pages[] = {task->page_p, task->page_q};
++	r5blk_t pos = log->log_start;
++	r5blk_t bio_pos = 0;
++	int i;
++
++	bio = io->current_bio;
++
++alloc_bio:
++	if (!bio) {
++		/* bio can only contain one page ? */
++		BUG_ON(task->bio);
++		bio = bio_alloc_bioset(GFP_NOIO,
++			bio_get_nr_vecs(r5l_bdev(log)), log->bio_set);
++		bio->bi_rw = WRITE;
++		bio->bi_bdev = r5l_bdev(log);
++		/*
++		 * Set sector to 0, so bio_add_page doesn't fail if we are the
++		 * blkdev tail. Later we will set the bi_sector again and split
++		 * bio if required
++		 * */
++		bio->bi_iter.bi_sector = 0;
++		bio_pos = pos;
++		task->bio = bio;
++		io->current_bio = bio;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(pages); i++) {
++		if (!pages[i])
++			continue;
++		if (!bio_add_page(bio, pages[i], PAGE_SIZE, 0)) {
++			bio = NULL;
++			goto alloc_bio;
++		}
++		pages[i] = NULL;
++		pos = r5l_ring_add(log, pos, r5l_page_blocks(log, 1));
++	}
++	if (bio_pos != 0)
++		bio->bi_iter.bi_sector = r5l_block_to_sector(log, bio_pos);
++	return 0;
++}
++
++/* must hold io_mutex. parity task doesn't have a bio */
++static int r5l_run_parity_task(struct r5l_log *log, struct r5l_task *task)
++{
++	unsigned int pages;
++	struct r5l_io_unit *io;
++	struct r5l_meta_payload *payload;
++	struct bio *bio;
++	void *meta;
++	int i;
++
++	pages = !!task->page_p + !!task->page_q;
++
++	r5l_get_meta(log, pages, false);
++
++	io = log->current_io;
++
++	meta = page_address(io->meta_page);
++	payload = meta + io->meta_offset;
++	payload->payload_type = cpu_to_le16(task->type);
++	payload->blocks = cpu_to_le32(r5l_page_blocks(log, pages));
++	payload->location = cpu_to_le64(task->stripe_sector);
++
++	for (i = 0; i < pages; i++)
++		payload->data_checksum[i] = cpu_to_le32(task->checksum[i]);
++
++	io->meta_offset += sizeof(struct r5l_meta_payload) +
++		sizeof(u32) * pages;
++	task->seq = io->seq;
++	task->meta_start = io->meta_sector;
++	task->data_start = r5l_block_to_sector(log, log->log_start);
++
++	r5l_task_add_parity_pages(log, task);
++
++	/* this should only happen r5l_task_add_parity_pages allocates a bio */
++	if (task->bio) {
++		bio = task->bio;
++		bio->bi_end_io = r5l_log_endio;
++		bio->bi_private = io;
++		atomic_inc(&io->refcnt);
++	}
++
++	log->log_start = r5l_ring_add(log, log->log_start,
++		r5l_page_blocks(log, pages));
++
++	list_add_tail(&task->list, &io->tasks);
++
++	return 0;
++}
++
++/*
++ * We reserve space for parity, so reclaim doesn't deadlock because of no space
++ * to write parity. To make this work, reclaim (and conrresponding raid5 threads)
++ * should not run data tasks
++ **/
++static void r5l_run_tasks(struct r5l_log *log, bool parity)
++{
++	struct r5l_task *task;
++	LIST_HEAD(tasks);
++
++	spin_lock(&log->task_lock);
++	list_splice_init(&log->parity_task_list, &tasks);
++	if (!parity)
++		list_splice_tail_init(&log->task_list, &tasks);
++	spin_unlock(&log->task_lock);
++
++	if (list_empty(&tasks))
++		return;
++
++	mutex_lock(&log->io_mutex);
++	while (!list_empty(&tasks)) {
++		task = list_first_entry(&tasks, struct r5l_task, list);
++		list_del_init(&task->list);
++
++		if (task->type == R5LOG_PAYLOAD_PARITY)
++			r5l_run_parity_task(log, task);
++		else
++			r5l_run_data_task(log, task);
++	}
++	r5l_submit_current_io(log);
++	mutex_unlock(&log->io_mutex);
++}
++
++static void r5l_queue_task(struct r5l_log *log, struct r5l_task *task)
++{
++	spin_lock(&log->task_lock);
++	if (task->type == R5LOG_PAYLOAD_DATA)
++		list_add_tail(&task->list, &log->task_list);
++	else
++		list_add_tail(&task->list, &log->parity_task_list);
++	spin_unlock(&log->task_lock);
++}
++
++/*
++ * empty bio hasn't any payload, but our FLUSH bio ordering requirement holds
++ * here too. To simplify implementation, we fake io_unit/task, so such bio can
++ * be handled like normal bios
++ * */
++static int r5l_queue_empty_flush_bio(struct r5l_log *log, struct bio *bio,
++	r5l_task_end_fn fn, void *private)
++{
++	struct r5l_io_unit *io;
++	struct r5l_task *task;
++
++	task = kmalloc(sizeof(*task), GFP_NOIO);
++	if (!task)
++		return -ENOMEM;
++	task->type = R5LOG_PAYLOAD_DATA;
++	task->bio = bio_clone(bio, GFP_NOIO);
++	if (!task->bio) {
++		kfree(task);
++		return -ENOMEM;
++	}
++	task->orig_bio = bio;
++	task->fn = fn;
++	task->private = private;
++	task->reserved_blocks = 0;
++
++	io = r5l_alloc_io_unit(log);
++
++	task->bio->bi_bdev = r5l_bdev(log);
++	task->bio->bi_end_io = r5l_log_endio;
++	task->bio->bi_private = io;
++
++	io->has_flush = 1;
++	io->has_null_flush = 1;
++
++	mutex_lock(&log->io_mutex);
++	r5l_submit_current_io(log);
++
++	atomic_inc(&io->refcnt);
++	list_add_tail(&task->list, &io->tasks);
++
++	spin_lock_irq(&log->io_list_lock);
++	list_add_tail(&io->log_sibling, &log->running_ios);
++	spin_unlock_irq(&log->io_list_lock);
++
++	r5l_submit_io(log, io);
++
++	mutex_unlock(&log->io_mutex);
++	return 0;
++}
++
++static int r5l_queue_bio(struct r5l_log *log, struct bio *bio,
++	r5l_task_end_fn fn, void *private, unsigned int reserved_blocks)
++{
++	struct r5l_task *task;
++	int pages = bio_sectors(bio) >> PAGE_SECTOR_SHIFT;
++	u32 *checksum;
 +	struct bio *src = bio;
 +	struct bvec_iter iter;
 +	struct bio_vec bv;
-+	void *src_p, *dst_p;
-+	unsigned page_index = 0, page_offset = 0;
-+	unsigned bytes;
++	void *src_p;
++	unsigned int page_index = 0, page_offset = 0;
++	unsigned int bytes;
++
++	task = kmalloc(sizeof(*task) + sizeof(u32) * pages, GFP_NOIO);
++	if (!task)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&task->list);
++	task->type = R5LOG_PAYLOAD_DATA;
++	task->bio = bio_clone(bio, GFP_NOIO);
++	if (!task->bio) {
++		kfree(task);
++		return -ENOMEM;
++	}
++	task->orig_bio = bio;
++	task->fn = fn;
++	task->private = private;
++	task->reserved_blocks = reserved_blocks;
++
++	checksum = (u32 *)(task + 1);
 +
 +	iter = src->bi_iter;
 +
++	checksum[0] = log->uuid_checksum_data;
 +	while (1) {
 +		if (!iter.bi_size) {
 +			src = src->bi_next;
@@ -573,6 +972,7 @@ index d6b7c64..d0950ae 100644
 +		if (page_offset == PAGE_SIZE) {
 +			page_index++;
 +			page_offset = 0;
++			checksum[page_index] = log->uuid_checksum_data;
 +		}
 +
 +		bv = bio_iter_iovec(src, iter);
@@ -580,482 +980,513 @@ index d6b7c64..d0950ae 100644
 +		bytes = min_t(unsigned int, bv.bv_len, PAGE_SIZE - page_offset);
 +
 +		src_p = kmap_atomic(bv.bv_page);
-+		dst_p = kmap_atomic(pages[page_index]);
 +
-+		if (tobio) {
-+			memcpy(src_p + bv.bv_offset,
-+			       dst_p + page_offset, bytes);
-+		} else {
-+			memcpy(dst_p + page_offset,
-+			       src_p + bv.bv_offset, bytes);
-+		}
++		checksum[page_index] = r5l_calculate_checksum(log,
++			checksum[page_index], src_p + bv.bv_offset,
++			bytes, true);
 +
-+		kunmap_atomic(dst_p);
 +		kunmap_atomic(src_p);
 +
 +		bio_advance_iter(src, &iter, bytes);
 +		page_offset += bytes;
 +	}
-+}
-+
-+static void r5c_bio_flush_task_end(struct r5l_task *task, int error)
-+{
-+	struct r5c_cache *cache = task->private;
-+	struct bio *orig_bio = task->orig_bio;
-+	unsigned long flags;
-+
-+	kfree(task);
-+
-+	if (!error) {
-+		bio_endio(orig_bio, 0);
-+		md_write_end(cache->mddev);
-+	}
-+}
-+
-+static void r5c_write_bio(struct r5c_cache *cache, struct bio *bio)
-+{
-+	struct r5c_stripe *stripe;
-+	struct r5c_io_range *io_range;
-+	u64 index;
-+	unsigned int offset;
-+	int i, new_pages = 0;
-+	unsigned long flags;
-+	unsigned int reserved_blocks = 0;
-+	unsigned int pages;
-+
-+	/* Doesn't support discard */
-+	if (bio->bi_rw & REQ_DISCARD) {
-+		bio_endio(bio, 0);
-+		md_write_end(cache->mddev);
-+		return;
-+	}
-+
-+	if (bio->bi_iter.bi_size == 0) {
-+		BUG_ON(!(bio->bi_rw & REQ_FLUSH));
-+		if (r5l_queue_empty_flush_bio(&cache->log, bio,
-+		    r5c_bio_flush_task_end, cache))
-+			goto enter_error;
-+		return;
-+	}
-+
-+	pages = bio_sectors(bio) >> PAGE_SECTOR_SHIFT;
-+	reserved_blocks = 1 + r5l_page_blocks(&cache->log, pages);
-+	r5l_get_reserve(&cache->log, reserved_blocks);
-+
-+	r5c_sector_stripe_index_offset(cache, bio->bi_iter.bi_sector,
-+		&index, &offset);
-+
-+	stripe = r5c_create_get_stripe(cache, index);
-+	if (!stripe)
-+		goto enter_error;
-+
-+	io_range = kmem_cache_alloc(cache->io_range_kc, GFP_NOIO);
-+	if (!io_range)
-+		goto put_error;
-+
-+	io_range->bio = bio;
-+	io_range->raid_start = bio->bi_iter.bi_sector;
-+	io_range->data_sectors = bio_sectors(bio);
-+	io_range->stripe = stripe;
-+
-+	/* FIXME: if read comes in here, it might read random data */
-+	offset >>= PAGE_SECTOR_SHIFT;
-+	for (i = offset; i < offset + (bio_sectors(bio) >> PAGE_SECTOR_SHIFT);
-+	     i++) {
-+		if (stripe->data_pages[i])
-+			continue;
-+		stripe->data_pages[i] = r5c_get_page(cache);
-+		new_pages++;
-+	}
-+
-+	r5c_copy_bio(bio, &stripe->data_pages[offset], false);
-+
-+	r5c_lock_stripe(cache, stripe, &flags);
-+	list_add_tail(&io_range->stripe_sibling, &stripe->io_ranges);
-+	stripe->existing_pages += new_pages;
-+	r5c_unlock_stripe(cache, stripe, &flags);
-+
-+	if (r5l_queue_bio(&cache->log, bio, r5c_bio_task_end, io_range,
-+	    reserved_blocks))
-+		goto put_error;
-+	return;
-+put_error:
-+	r5c_put_stripe(stripe);
-+enter_error:
-+	r5l_put_reserve(&cache->log, reserved_blocks);
-+	raid5_make_request(cache->mddev, bio);
-+}
-+
-+static void r5c_read_bio(struct r5c_cache *cache, struct bio *bio)
-+{
-+	struct r5c_stripe *stripe;
-+	u64 stripe_index;
-+	int offset;
-+	u64 start, end, tmp;
-+	struct bio *split;
-+
-+	r5c_sector_stripe_index_offset(cache, bio->bi_iter.bi_sector,
-+		&stripe_index, &offset);
-+
-+	stripe = r5c_get_stripe(cache, stripe_index);
-+	if (!stripe) {
-+		raid5_make_request(cache->mddev, bio);
-+		return;
-+	}
-+
-+	start = offset >> PAGE_SECTOR_SHIFT;
-+	end = start + (bio_sectors(bio) >> PAGE_SECTOR_SHIFT);
-+
-+	while (start < end) {
-+		if (stripe->data_pages[start]) {
-+			tmp = start;
-+			while (tmp < end && stripe->data_pages[tmp])
-+				tmp++;
-+			if (tmp < end) {
-+				split = bio_split(bio,
-+					(tmp - start) << PAGE_SECTOR_SHIFT,
-+					GFP_NOIO, NULL);
-+				bio_chain(split, bio);
-+			} else /* all in cache */
-+				split = bio;
-+
-+			r5c_copy_bio(split, &stripe->data_pages[start], true);
-+
-+			bio_endio(split, 0);
-+
-+			start = tmp;
-+		} else {
-+			tmp = start;
-+			while (tmp < end && !stripe->data_pages[tmp])
-+				tmp++;
-+			if (tmp < end) {
-+				split = bio_split(bio,
-+					(tmp - start) << PAGE_SECTOR_SHIFT,
-+					GFP_NOIO, NULL);
-+				bio_chain(split, bio);
-+			} else
-+				split = bio;
-+
-+			raid5_make_request(cache->mddev, split);
-+
-+			start = tmp;
-+		}
-+	}
-+	r5c_put_stripe(stripe);
-+}
-+
-+static void r5c_flush_pending_io(struct r5c_cache *cache)
-+{
-+	r5l_run_tasks(&cache->log, false);
-+}
-+
-+static void r5c_unplug_work(struct work_struct *work)
-+{
-+	struct r5c_cache *cache = container_of(work, struct r5c_cache,
-+		pending_io_work);
-+	r5c_flush_pending_io(cache);
-+}
-+
-+static void r5c_unplug(struct blk_plug_cb *cb, bool from_schedule)
-+{
-+	struct r5c_cache *cache = cb->data;
-+
-+	kfree(cb);
-+	if (from_schedule) {
-+		schedule_work(&cache->pending_io_work);
-+		return;
-+	}
-+	r5c_flush_pending_io(cache);
-+}
-+
-+/* we aggregate bio to plug list, so each r5l_meta_block can track more data */
-+void r5c_handle_bio(struct r5c_cache *cache, struct bio *bio)
-+{
-+	struct blk_plug_cb *cb;
-+
-+	if (bio_data_dir(bio) == READ) {
-+		r5c_read_bio(cache, bio);
-+		return;
-+	}
-+
-+	md_write_start(cache->mddev, bio);
-+
-+	r5c_write_bio(cache, bio);
-+
-+	cb = blk_check_plugged(r5c_unplug, cache, sizeof(*cb));
-+	if (!cb)
-+		r5c_flush_pending_io(cache);
-+}
-+
- static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason)
- {
- }
-@@ -1315,3 +2000,188 @@ static void r5l_exit_log(struct r5l_log *log)
- 	kmem_cache_destroy(log->io_kc);
- 	__free_page(log->super_page);
- }
-+
-+static void r5c_calculate_watermark(struct r5c_cache *cache)
-+{
-+	u64 pages = cache->max_pages >> 3;
-+
-+	if (pages < 1024)
-+		cache->low_watermark = 1024;
-+	else
-+		cache->low_watermark = pages;
-+	cache->high_watermark = cache->low_watermark << 1;
-+}
-+
-+static int r5c_shrink_cache_memory(struct r5c_cache *cache, unsigned long size)
-+{
-+	LIST_HEAD(page_list);
-+	struct page *page, *tmp;
-+
-+	if (cache->total_pages <= size)
-+		return 0;
-+
-+	spin_lock_irq(&cache->pool_lock);
-+	cache->max_pages = size;
-+	r5c_calculate_watermark(cache);
-+	spin_unlock_irq(&cache->pool_lock);
-+
-+	while (cache->total_pages > size) {
-+		spin_lock_irq(&cache->pool_lock);
-+		if (cache->total_pages - cache->free_pages >= size) {
-+			list_splice_init(&cache->page_pool, &page_list);
-+			cache->total_pages -= cache->free_pages;
-+			cache->free_pages = 0;
-+		} else {
-+			while (cache->total_pages > size) {
-+				list_move(cache->page_pool.next, &page_list);
-+				cache->total_pages--;
-+				cache->free_pages--;
-+			}
-+		}
-+		spin_unlock_irq(&cache->pool_lock);
-+
-+		list_for_each_entry_safe(page, tmp, &page_list, lru) {
-+			list_del_init(&page->lru);
-+			__free_page(page);
-+		}
-+
-+		r5c_wake_wait_reclaimer(cache, RECLAIM_MEM_BACKGROUND);
-+	}
++	r5l_queue_task(log, task);
 +	return 0;
 +}
 +
-+static void r5c_free_cache_data(struct r5c_cache *cache)
++static int r5l_queue_parity(struct r5l_log *log,
++	sector_t stripe_sector, struct page *page_p,
++	struct page *page_q, r5l_task_end_fn fn, void *private)
 +{
-+	struct r5c_stripe *stripe;
-+	struct page *page, *tmp;
-+	struct radix_tree_iter iter;
-+	void **slot;
++	struct r5l_task *task;
++	void *addr;
++	u32 *checksum;
 +
-+	radix_tree_for_each_slot(slot, &cache->stripe_tree, &iter, 0) {
-+		stripe = radix_tree_deref_slot(slot);
-+		r5c_put_stripe(stripe);
-+	}
++	task = kmalloc(sizeof(*task) + sizeof(u32) * 2, GFP_NOIO);
++	if (!task)
++		return -ENOMEM;
 +
-+	BUG_ON(!list_empty(&cache->log_list));
++	INIT_LIST_HEAD(&task->list);
++	task->type = R5LOG_PAYLOAD_PARITY;
++	task->bio = NULL;
++	task->stripe_sector = stripe_sector;
++	task->page_p = page_p;
++	task->page_q = page_q;
++	task->fn = fn;
++	task->private = private;
++	task->reserved_blocks = 0;
 +
-+	list_for_each_entry_safe(page, tmp, &cache->page_pool, lru) {
-+		list_del_init(&page->lru);
-+		__free_page(page);
++	checksum = (u32 *)(task + 1);
++	addr = kmap_atomic(page_p);
++	checksum[0] = r5l_calculate_checksum(log,
++		log->uuid_checksum_data, addr, PAGE_SIZE, true);
++	kunmap_atomic(addr);
++
++	if (page_q) {
++		addr = kmap_atomic(page_q);
++		checksum[1] = r5l_calculate_checksum(log,
++			log->uuid_checksum_data, addr, PAGE_SIZE, true);
++		kunmap_atomic(addr);
++	} else
++		checksum[1] = 0;
++
++	r5l_queue_task(log, task);
++	return 0;
++}
++
++static void r5l_fb_end(struct r5l_task *task, int error)
++{
++	struct completion *comp = task->private;
++	complete(comp);
++}
++
++/*
++ * ordering requirement holds here. To simplify implementation, we fake
++ * io_unit/task, so flush block can be handled like other meta data
++ * */
++static int r5l_flush_block(struct r5l_log *log, int type, __le64 *stripes,
++	size_t size, u64 *next_seq, sector_t *next_sec)
++{
++	struct r5l_io_unit *io;
++	struct r5l_flush_block *fb;
++	struct r5l_task task;
++	DECLARE_COMPLETION_ONSTACK(fb_complete);
++	u32 crc;
++
++	mutex_lock(&log->io_mutex);
++
++	r5l_submit_current_io(log);
++
++	io = r5l_new_meta(log);
++	task.fn = r5l_fb_end;
++	task.private = &fb_complete;
++	task.reserved_blocks = 0;
++	task.type = R5LOG_PAYLOAD_PARITY;
++	task.bio = NULL;
++
++	fb = page_address(io->meta_page);
++	fb->header.magic = cpu_to_le32(R5LOG_MAGIC);
++	fb->header.type = cpu_to_le32(type);
++	fb->header.seq = cpu_to_le64(log->seq - 1);
++	if (log->log_start == log->first_block)
++		fb->header.position = cpu_to_le64(log->last_block - 1);
++	else
++		fb->header.position = cpu_to_le64(log->log_start - 1);
++	fb->header.meta_size = cpu_to_le32(sizeof(struct r5l_flush_block)
++					+ size);
++	memcpy(fb->flush_stripes, stripes, size);
++	crc = r5l_calculate_checksum(log, log->uuid_checksum_meta, fb,
++			log->block_size, false);
++	fb->header.checksum = cpu_to_le32(crc);
++
++	list_add_tail(&task.list, &io->tasks);
++
++	io->has_flush = 1;
++	io->has_fua = 1;
++	r5l_submit_io(log, io);
++
++	*next_seq = log->seq;
++	*next_sec = r5l_block_to_sector(log, log->log_start);
++
++	mutex_unlock(&log->io_mutex);
++
++	wait_for_completion_io(&fb_complete);
++	return 0;
++}
++
++static void r5l_discard_blocks(struct r5l_log *log, r5blk_t start, r5blk_t end)
++{
++	if (!log->do_discard)
++		return;
++	if (start < end) {
++		blkdev_issue_discard(r5l_bdev(log),
++		    r5l_block_to_sector(log, start) + log->rdev->data_offset,
++		    r5l_block_to_sector(log, end - start), GFP_NOIO, 0);
++	} else {
++		blkdev_issue_discard(r5l_bdev(log),
++		    r5l_block_to_sector(log, start) + log->rdev->data_offset,
++		    r5l_block_to_sector(log, log->last_block - start),
++		    GFP_NOIO, 0);
++		blkdev_issue_discard(r5l_bdev(log),
++		    r5l_block_to_sector(log, log->first_block) +
++		    log->rdev->data_offset,
++		    r5l_block_to_sector(log, end - log->first_block),
++		    GFP_NOIO, 0);
 +	}
 +}
 +
-+struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev)
++static int r5l_do_write_super(struct r5l_log *log, u64 seq, r5blk_t cp)
 +{
-+	struct mddev *mddev = rdev->mddev;
-+	struct r5c_cache *cache;
-+	int i;
++	struct r5l_super_block *sb_blk;
++	struct timespec now = current_kernel_time();
++	u32 crc;
 +
-+	cache = kzalloc(sizeof(*cache), GFP_KERNEL);
-+	if (!cache)
-+		return NULL;
-+	cache->mddev = mddev;
-+	cache->rdev = rdev;
++	log->last_cp_time = jiffies + LOG_SUPER_WRITE_TIME;
 +
-+	spin_lock_init(&cache->tree_lock);
-+	INIT_RADIX_TREE(&cache->stripe_tree, GFP_ATOMIC);
-+	INIT_LIST_HEAD(&cache->log_list);
-+	INIT_LIST_HEAD(&cache->full_stripes);
++	if (log->super_point == cp)
++		return 0;
++	sb_blk = page_address(log->super_page);
++	sb_blk->header.seq = cpu_to_le64(seq);
++	sb_blk->last_checkpoint = cpu_to_le64(cp);
++	sb_blk->update_time_sec = cpu_to_le64(now.tv_sec);
++	sb_blk->update_time_nsec = cpu_to_le64(now.tv_nsec);
++	sb_blk->header.checksum = 0;
++	crc = r5l_calculate_checksum(log, log->uuid_checksum_meta,
++		sb_blk, log->block_size, false);
++	sb_blk->header.checksum = cpu_to_le32(crc);
 +
-+	INIT_LIST_HEAD(&cache->page_pool);
-+	spin_lock_init(&cache->pool_lock);
-+	INIT_WORK(&cache->pending_io_work, r5c_unplug_work);
++	if (!sync_page_io(log->rdev, 0, log->block_size, log->super_page,
++	     WRITE_FUA, false))
++		return -EIO;
++	log->super_point = cp;
++	return 0;
++}
 +
-+	cache->max_pages = MAX_MEM >> PAGE_SHIFT;
++static void r5l_discard_work(struct work_struct *work)
++{
++	struct r5l_log *log = container_of(work, struct r5l_log,
++		discard_work);
++	struct r5c_cache *cache = r5l_cache(log);
++	r5blk_t free;
 +
-+	cache->stripe_data_size = conf->chunk_sectors * (conf->raid_disks -
-+		conf->max_degraded);
-+	cache->chunk_size = conf->chunk_sectors;
-+	cache->stripe_size = conf->chunk_sectors * conf->raid_disks;
-+	cache->parity_disks = conf->max_degraded;
-+	cache->stripe_data_pages = cache->stripe_data_size >> PAGE_SECTOR_SHIFT;
-+	cache->stripe_parity_pages = (cache->stripe_size -
-+		cache->stripe_data_size) >> PAGE_SECTOR_SHIFT;
++	mutex_lock(&log->io_mutex);
++	r5l_do_write_super(log, log->last_freeseq, log->last_freepoint);
 +
-+	cache->stripe_flush_data = kmalloc(PAGE_SIZE, GFP_KERNEL);
-+	if (!cache->stripe_flush_data)
-+		goto io_range_kc;
++	if (log->do_discard && log->last_checkpoint !=
++	    log->last_freepoint)
++		r5l_discard_blocks(log, log->last_checkpoint,
++			log->last_freepoint);
 +
-+	cache->io_range_kc = KMEM_CACHE(r5c_io_range, 0);
-+	if (!cache->io_range_kc)
-+		goto io_range_kc;
-+	cache->stripe_kc = kmem_cache_create("r5c_stripe",
-+		sizeof(struct r5c_stripe) + sizeof(struct page *) *
-+		cache->stripe_data_pages, __alignof__(struct r5c_stripe),
-+		0, NULL);
-+	if (!cache->stripe_kc)
-+		goto stripe_kc;
++	log->last_cp_seq = log->last_freeseq;
++	log->last_checkpoint = log->last_freepoint;
 +
-+	cache->bio_set = bioset_create(RECLAIM_BATCH, 0);
-+	if (!cache->bio_set)
++	free = r5l_free_space(log);
++	if (free > 0) {
++		clear_bit(RECLAIM_DISK, &cache->reclaim_reason);
++		wake_up(&log->space_waitq);
++	}
++	if (free > log->high_watermark)
++		clear_bit(RECLAIM_DISK_BACKGROUND, &cache->reclaim_reason);
++
++	mutex_unlock(&log->io_mutex);
++}
++
++static void r5l_schedule_discard(struct r5l_log *log)
++{
++	r5blk_t size;
++
++	if (log->last_freepoint >= log->last_checkpoint)
++		size = log->last_freepoint - log->last_checkpoint;
++	else
++		size = log->last_freepoint + log->total_blocks -
++			log->last_checkpoint;
++
++	if (size * 10 >= log->total_blocks)
++		schedule_work(&log->discard_work);
++}
++
++static int r5l_write_super(struct r5l_log *log, u64 seq, sector_t cp)
++{
++	struct r5c_cache *cache = r5l_cache(log);
++	r5blk_t free;
++
++	r5l_schedule_discard(log);
++
++	mutex_lock(&log->io_mutex);
++	log->last_freepoint = r5l_sector_to_block(log, cp);
++	log->last_freeseq = seq;
++
++	/*
++	 * skiping superblock update doesn't impact the correctness since
++	 * recover can handle it. So we try to defer superblock write for
++	 * performance
++	 * */
++	if (seq == log->last_cp_seq || time_after(log->last_cp_time,
++	    jiffies)) {
++		mutex_unlock(&log->io_mutex);
++		return 0;
++	}
++
++	r5l_do_write_super(log, seq, r5l_sector_to_block(log, cp));
++
++	if (!log->do_discard) {
++		log->last_cp_seq = seq;
++		log->last_checkpoint = log->last_freepoint;
++	}
++
++	free = r5l_free_space(log);
++	if (free > 0) {
++		clear_bit(RECLAIM_DISK, &cache->reclaim_reason);
++		wake_up(&log->space_waitq);
++	}
++	if (free > log->high_watermark)
++		clear_bit(RECLAIM_DISK_BACKGROUND, &cache->reclaim_reason);
++
++	mutex_unlock(&log->io_mutex);
++
++	return 0;
++}
++
++static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason)
++{
++}
++
++static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason)
++{
++}
++
++static int r5l_load_log(struct r5l_log *log)
++{
++	return 0;
++}
++
++static int r5l_read_super(struct r5l_log *log)
++{
++	struct md_rdev *rdev = log->rdev;
++	struct r5l_super_block *sb_blk;
++	struct page *page = log->super_page;
++	u32 crc, stored_crc;
++
++	if (!sync_page_io(rdev, 0, PAGE_SIZE, page, READ, false))
++		return -EIO;
++
++	sb_blk = page_address(page);
++
++	if (le32_to_cpu(sb_blk->version) != R5LOG_VERSION ||
++	    le32_to_cpu(sb_blk->header.magic) != R5LOG_MAGIC ||
++	    le32_to_cpu(sb_blk->header.type) != R5LOG_TYPE_SUPER ||
++	    le64_to_cpu(sb_blk->header.position) != 0 ||
++	    le32_to_cpu(sb_blk->header.meta_size) !=
++	     sizeof(struct r5l_super_block))
++		goto error;
++
++	log->last_cp_seq = le64_to_cpu(sb_blk->header.seq);
++
++	log->block_size = le32_to_cpu(sb_blk->block_size);
++	log->block_sector_shift = ilog2(log->block_size >> 9);
++	log->page_block_shift = PAGE_SHIFT - ilog2(log->block_size);
++
++	/* Only support this stripe size right now */
++	if (le32_to_cpu(sb_blk->stripe_cache_size) != PAGE_SIZE)
++		goto error;
++
++	if (log->block_size > PAGE_SIZE)
++		goto error;
++
++	log->stripe_data_size = le32_to_cpu(sb_blk->stripe_data_size) >> 9;
++	log->chunk_size = le32_to_cpu(sb_blk->chunk_size) >> 9;
++	log->stripe_size = le32_to_cpu(sb_blk->stripe_size) >> 9;
++	log->parity_disks = le32_to_cpu(sb_blk->parity_disks);
++
++	if (sb_blk->meta_checksum_type >= R5LOG_CHECKSUM_NR ||
++	    sb_blk->data_checksum_type >= R5LOG_CHECKSUM_NR)
++		goto error;
++	log->meta_checksum_type = sb_blk->meta_checksum_type;
++	log->data_checksum_type = sb_blk->data_checksum_type;
++
++	stored_crc = le32_to_cpu(sb_blk->header.checksum);
++	sb_blk->header.checksum = 0;
++	crc = r5l_calculate_checksum(log, ~0,
++		sb_blk->uuid, sizeof(sb_blk->uuid), false);
++	crc = r5l_calculate_checksum(log, crc,
++		sb_blk, log->block_size, false);
++	if (crc != stored_crc)
++		goto error;
++
++	if (memcmp(log->uuid, sb_blk->uuid, sizeof(log->uuid)))
++		goto error;
++
++	log->first_block = le64_to_cpu(sb_blk->first_block);
++	if (log->first_block != 1)
++		goto error;
++
++	log->total_blocks = le64_to_cpu(sb_blk->total_blocks);
++	log->last_block = log->first_block + log->total_blocks;
++	log->last_checkpoint = le64_to_cpu(sb_blk->last_checkpoint);
++	log->last_freepoint = log->last_checkpoint;
++	log->super_point = log->last_checkpoint;
++
++	return 0;
++error:
++	return -EINVAL;
++}
++
++static int r5l_init_log(struct r5c_cache *cache)
++{
++	struct r5l_log *log;
++	r5blk_t blocks;
++
++	log = &cache->log;
++
++	log->rdev = cache->rdev;
++
++	log->do_discard = blk_queue_discard(bdev_get_queue(r5l_bdev(log)));
++
++	log->super_page = alloc_page(GFP_KERNEL);
++	if (!log->super_page)
++		return -ENOMEM;
++	memcpy(log->uuid, cache->mddev->uuid, sizeof(log->uuid));
++
++	init_waitqueue_head(&log->space_waitq);
++	mutex_init(&log->io_mutex);
++
++	spin_lock_init(&log->io_list_lock);
++	INIT_LIST_HEAD(&log->running_ios);
++
++	INIT_LIST_HEAD(&log->task_list);
++	INIT_LIST_HEAD(&log->parity_task_list);
++	spin_lock_init(&log->task_lock);
++
++	INIT_WORK(&log->flush_work, r5l_submit_io_async);
++	INIT_WORK(&log->discard_work, r5l_discard_work);
++
++	log->io_kc = KMEM_CACHE(r5l_io_unit, 0);
++	if (!log->io_kc)
++		goto io_kc;
++	log->io_pool = mempool_create(LOG_POOL_SIZE, __io_pool_alloc,
++		__io_pool_free, log);
++	if (!log->io_pool)
++		goto io_pool;
++	log->bio_set = bioset_create(LOG_POOL_SIZE * 2, 0);
++	if (!log->bio_set)
 +		goto bio_set;
 +
-+	cache->reclaim_batch = RECLAIM_BATCH;
-+	i = (conf->chunk_sectors >> PAGE_SECTOR_SHIFT) * cache->reclaim_batch;
-+	if (i > conf->max_nr_stripes)
-+		raid5_set_cache_size(mddev, i);
++	if (r5l_read_super(log))
++		goto error;
 +
-+	/* make sure we can add checkpoint */
-+	cache->reserved_space = (cache->stripe_parity_pages <<
-+		PAGE_SECTOR_SHIFT) * RECLAIM_BATCH;
++	log->uuid_checksum_data = r5l_calculate_checksum(log, ~0, log->uuid,
++		sizeof(log->uuid), true);
++	log->uuid_checksum_meta = r5l_calculate_checksum(log, ~0, log->uuid,
++		sizeof(log->uuid), false);
 +
-+	init_waitqueue_head(&cache->reclaim_wait);
-+	init_waitqueue_head(&cache->error_wait);
-+	bio_list_init(&cache->retry_bio_list);
++	log->reserved_blocks = r5l_sector_to_block(log,
++		cache->reserved_space) + 1;
 +
-+	for (i = 0; i < (1 << STRIPE_LOCK_BITS); i++) {
-+		spin_lock_init(&cache->stripe_locks[i]);
-+		init_waitqueue_head(&cache->stripe_waitq[i]);
-+	}
++	if (log->stripe_data_size != cache->stripe_data_size ||
++	    log->chunk_size != cache->chunk_size ||
++	    log->stripe_size != cache->stripe_size ||
++	    log->parity_disks != cache->parity_disks)
++		goto error;
 +
-+	if (r5l_init_log(cache))
-+		goto init_log;
++	r5l_load_log(log);
 +
-+	while (cache->total_pages < cache->max_pages) {
-+		struct page *page = alloc_page(GFP_KERNEL | __GFP_HIGHMEM);
-+
-+		if (!page)
-+			goto err_page;
-+		list_add(&page->lru, &cache->page_pool);
-+		cache->free_pages++;
-+		cache->total_pages++;
-+	}
-+
-+	r5c_calculate_watermark(cache);
-+
-+	r5c_shrink_cache_memory(cache, cache->max_pages);
-+
-+	return cache;
-+err_page:
-+	r5c_free_cache_data(cache);
-+
-+	r5l_exit_log(&cache->log);
-+init_log:
-+	bioset_free(cache->bio_set);
-+bio_set:
-+	kmem_cache_destroy(cache->stripe_kc);
-+stripe_kc:
-+	kmem_cache_destroy(cache->io_range_kc);
-+io_range_kc:
-+	kfree(cache->stripe_flush_data);
-+	kfree(cache);
-+	return NULL;
-+}
-+
-+void r5c_exit_cache(struct r5c_cache *cache)
-+{
-+	r5l_exit_log(&cache->log);
-+
-+	r5c_free_cache_data(cache);
-+
-+	bioset_free(cache->bio_set);
-+	kmem_cache_destroy(cache->stripe_kc);
-+	kmem_cache_destroy(cache->io_range_kc);
-+
-+	kfree(cache->stripe_flush_data);
-+	kfree(cache);
-+}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 8160a63..ca164ad 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4661,17 +4661,24 @@ static int raid5_mergeable_bvec(struct mddev *mddev,
- 	int max;
- 	unsigned int chunk_sectors = mddev->chunk_sectors;
- 	unsigned int bio_sectors = bvm->bi_size >> 9;
-+	struct r5conf *conf = mddev->private;
- 
- 	/*
- 	 * always allow writes to be mergeable, read as well if array
- 	 * is degraded as we'll go through stripe cache anyway.
-+	 * with cache, write must align within stripe
- 	 */
--	if ((bvm->bi_rw & 1) == WRITE || mddev->degraded)
-+	if (((bvm->bi_rw & 1) == WRITE && !conf->cache) || mddev->degraded)
- 		return biovec->bv_len;
- 
- 	if (mddev->new_chunk_sectors < mddev->chunk_sectors)
- 		chunk_sectors = mddev->new_chunk_sectors;
- 	max =  (chunk_sectors - ((sector & (chunk_sectors - 1)) + bio_sectors)) << 9;
-+	if (((bvm->bi_rw & 1) == WRITE) && conf->cache) {
-+		chunk_sectors *= conf->raid_disks - conf->max_degraded;
-+		max = (chunk_sectors - (sector_div(sector, chunk_sectors) +
-+			bio_sectors)) << 9;
-+	}
- 	if (max < 0) max = 0;
- 	if (max <= biovec->bv_len && bio_sectors == 0)
- 		return biovec->bv_len;
-@@ -5125,7 +5132,7 @@ static void make_discard_request(struct mddev *mddev, struct bio *bi)
- 	}
- }
- 
--static void make_request(struct mddev *mddev, struct bio * bi)
-+void raid5_make_request(struct mddev *mddev, struct bio * bi)
- {
- 	struct r5conf *conf = mddev->private;
- 	int dd_idx;
-@@ -5302,6 +5309,16 @@ static void make_request(struct mddev *mddev, struct bio * bi)
- 	}
- }
- 
-+static void make_request(struct mddev *mddev, struct bio *bi)
-+{
-+	struct r5conf *conf = mddev->private;
-+
-+	if (conf->cache)
-+		r5c_handle_bio(conf->cache, bi);
++	blocks = log->total_blocks;
++	do_div(blocks, 10);
++	if (blocks * log->block_size < 1024 * 1024 * 1024)
++		log->low_watermark = blocks;
 +	else
-+		raid5_make_request(mddev, bi);
++		log->low_watermark = (1024 * 1024 * 1024 / log->block_size);
++	log->high_watermark = (log->low_watermark * 3) >> 1;
++
++	r5l_discard_blocks(log, log->first_block, log->last_block);
++
++	return 0;
++error:
++	bioset_free(log->bio_set);
++bio_set:
++	mempool_destroy(log->io_pool);
++io_pool:
++	kmem_cache_destroy(log->io_kc);
++io_kc:
++	__free_page(log->super_page);
++	return -EINVAL;
 +}
 +
- static sector_t raid5_size(struct mddev *mddev, sector_t sectors, int raid_disks);
- 
- static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr, int *skipped)
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 896d603..14761c9 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -538,6 +538,7 @@ struct r5conf {
- 	struct r5worker_group	*worker_groups;
- 	int			group_cnt;
- 	int			worker_cnt_per_group;
-+	struct r5c_cache	*cache;
- };
- 
- 
-@@ -604,4 +605,9 @@ static inline int algorithm_is_DDF(int layout)
- 
- extern void md_raid5_kick_device(struct r5conf *conf);
- extern int raid5_set_cache_size(struct mddev *mddev, int size);
++static void r5l_exit_log(struct r5l_log *log)
++{
++	blkdev_issue_flush(r5l_bdev(log), GFP_NOIO, NULL);
++	schedule_work(&log->discard_work);
++	flush_work(&log->discard_work);
 +
-+void raid5_make_request(struct mddev *mddev, struct bio *bi);
-+void r5c_handle_bio(struct r5c_cache *cache, struct bio *bi);
-+struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev);
-+void r5c_exit_cache(struct r5c_cache *cache);
++	bioset_free(log->bio_set);
++	mempool_destroy(log->io_pool);
++	kmem_cache_destroy(log->io_kc);
++	__free_page(log->super_page);
++}
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index 8c8e12c..bc0f3c0 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -315,4 +315,80 @@ struct mdp_superblock_1 {
+ 					|MD_FEATURE_WRITE_CACHE		\
+ 					)
+ 
++/* all disk position of below struct start from rdev->start_offset */
++struct r5l_meta_header {
++	__le32 magic;
++	__le32 type;
++	__le32 checksum; /* checksum(metadata block + uuid) */
++	__le32 meta_size;
++	__le64 seq;
++	__le64 position; /* block number the meta is written */
++} __attribute__ ((__packed__));
++
++#define R5LOG_VERSION 0x1
++#define R5LOG_MAGIC 0x6433c509
++
++enum {
++	R5LOG_TYPE_META = 0,
++	R5LOG_TYPE_SUPER = 1,
++	R5LOG_TYPE_FLUSH_START = 2,
++	R5LOG_TYPE_FLUSH_END = 3,
++};
++
++struct r5l_super_block {
++	struct r5l_meta_header header;
++	__le32 version;
++	__le32 stripe_cache_size; /* in kernel stripe unit size, bytes */
++	__le32 block_size; /* log block size, bytes */
++	__le32 stripe_data_size; /* chunk_size * data_disks, bytes */
++	__le32 chunk_size; /* bytes */
++	__le32 stripe_size; /* chunk_size * all_raid_disks, bytes */
++	__le32 parity_disks; /* parity disks in each stripe */
++	__le32 zero_padding;
++	__le64 total_blocks; /* block */
++	__le64 first_block; /* block */
++	__le64 last_checkpoint; /* block */
++	__le64 update_time_sec;
++	__le64 update_time_nsec;
++	__u8 meta_checksum_type;
++	__u8 data_checksum_type;
++	__u8 uuid[16];
++	/* must fill with 0 below */
++} __attribute__ ((__packed__));
++
++enum {
++	R5LOG_CHECKSUM_CRC32 = 0,
++	R5LOG_CHECKSUM_NR = 1,
++};
++
++struct r5l_meta_payload {
++	__le16 payload_type;
++	__le16 payload_flags;
++	__le32 blocks; /* block. For parity, should be 1 or 2 pages */
++	__le64 location; /* sector. For data, it's raid sector.
++			    For parity, it's stripe sector */
++	__le32 data_checksum[]; /* checksum(data + uuid) */
++} __attribute__ ((__packed__));
++
++/* payload type */
++enum {
++	R5LOG_PAYLOAD_DATA = 0,
++	R5LOG_PAYLOAD_PARITY = 1,
++};
++
++/* payload flags */
++enum {
++	R5LOG_PAYLOAD_DISCARD = 1,
++};
++
++struct r5l_meta_block {
++	struct r5l_meta_header header;
++	struct r5l_meta_payload payloads[];
++} __attribute__ ((__packed__));
++
++struct r5l_flush_block {
++	struct r5l_meta_header header;
++	__le64 flush_stripes[]; /* stripe sector */
++} __attribute__ ((__packed__));
++
  #endif
 -- 
 1.8.1
