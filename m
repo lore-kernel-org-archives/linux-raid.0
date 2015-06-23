@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH V4 07/13] raid5: cache device quiesce support
-Date: Tue, 23 Jun 2015 14:37:57 -0700
-Message-ID: <d01f908ea919217daca81b8672a41094281d24d9.1435094582.git.shli@fb.com>
+Subject: [PATCH V4 02/13] raid5: directly use mddev->queue
+Date: Tue, 23 Jun 2015 14:37:52 -0700
+Message-ID: <ba37d77c240f7dfcb7348d2d00cb6e810023eadc.1435094582.git.shli@fb.com>
 References: <cover.1435094582.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,107 +12,67 @@ To: linux-raid@vger.kernel.org
 Cc: songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-In raid array quiesce, we should stop all IO. Existing mechanism stops
-IO from upper layer but not IO from cache reclaim. This makes sure
-reclaim thread will stop.
+When the cache layer flushes data from cache disk to raid disks, it will
+dipsatch IO to raid disks. At that time, we don't have a block device
+attached to the bio, so directly use mddev->queue. That should not
+impact IO dispatched to rdev, which has rdev block device attached.
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid5-cache.c | 35 +++++++++++++++++++++++++++++++++++
- drivers/md/raid5.c       |  2 ++
- drivers/md/raid5.h       |  1 +
- 3 files changed, 38 insertions(+)
+ drivers/md/raid5.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index c5de6dd..35657cd 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -364,6 +364,13 @@ enum {
- 	ERROR_FINISH = 2, /* Had an error, cache has no data */
- };
- 
-+/* device quiescent support */
-+enum {
-+	QUIESCE_NONE = 0,
-+	QUIESCE_START = 1,
-+	QUIESCE_END = 2,
-+};
-+
- #define PAGE_SECTOR_SHIFT (PAGE_SHIFT - 9)
- 
- static inline struct r5c_cache *r5l_cache(struct r5l_log *log)
-@@ -2324,6 +2331,15 @@ static void r5c_reclaim_thread(struct md_thread *thread)
- 		cache->error_state = 0;
- 		mddev_resume(cache->mddev);
- 	}
-+
-+	if (cache->quiesce_state == QUIESCE_START) {
-+		/* user IO already finished, we just stop reclaim */
-+		cache->reclaim_reason = 0;
-+		cache->quiesce_state = QUIESCE_END;
-+		wake_up(&cache->reclaim_wait);
-+		wait_event(cache->reclaim_wait, cache->quiesce_state ==
-+			QUIESCE_NONE);
-+	}
- }
- 
- static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason)
-@@ -2339,6 +2355,25 @@ static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason)
- 		&cache->reclaim_reason));
- }
- 
-+void r5c_quiesce(struct r5conf *conf, int state)
-+{
-+	struct r5c_cache *cache = conf->cache;
-+
-+	if (!cache || cache->error_state)
-+		return;
-+	if (state == 1) {
-+		/* we choose to flush all data to raid disks, this is a policy */
-+		r5c_wake_wait_reclaimer(cache, RECLAIM_FLUSH_ALL);
-+		cache->quiesce_state = QUIESCE_START;
-+		md_wakeup_thread(cache->reclaim_thread);
-+		wait_event(cache->reclaim_wait, cache->quiesce_state ==
-+			QUIESCE_END);
-+	} else if (state == 0) {
-+		cache->quiesce_state = QUIESCE_NONE;
-+		wake_up(&cache->reclaim_wait);
-+	}
-+}
-+
- static void r5c_parity_task_end(struct r5l_task *task, int error)
- {
- 	struct stripe_head *head_sh = task->private;
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a9e10ff..bcd6c1f 100644
+index b6793d2..8160a63 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -7485,6 +7485,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
- 		break;
+@@ -223,7 +223,7 @@ static int raid6_idx_to_slot(int idx, struct stripe_head *sh,
+ 	return slot;
+ }
  
- 	case 1: /* stop all writes */
-+		r5c_quiesce(conf, state);
- 		lock_all_device_hash_locks_irq(conf);
- 		/* '2' tells resync/reshape to pause so that all
- 		 * active stripes can drain
-@@ -7507,6 +7508,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
- 		wake_up(&conf->wait_for_stripe);
- 		wake_up(&conf->wait_for_overlap);
- 		unlock_all_device_hash_locks_irq(conf);
-+		r5c_quiesce(conf, state);
- 		break;
+-static void return_io(struct bio *return_bi)
++static void return_io(struct r5conf *conf, struct bio *return_bi)
+ {
+ 	struct bio *bi = return_bi;
+ 	while (bi) {
+@@ -231,8 +231,7 @@ static void return_io(struct bio *return_bi)
+ 		return_bi = bi->bi_next;
+ 		bi->bi_next = NULL;
+ 		bi->bi_iter.bi_size = 0;
+-		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
+-					 bi, 0);
++		trace_block_bio_complete(conf->mddev->queue, bi, 0);
+ 		bio_endio(bi, 0);
+ 		bi = return_bi;
+ 	}
+@@ -1200,7 +1199,7 @@ static void ops_complete_biofill(void *stripe_head_ref)
+ 	}
+ 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
+ 
+-	return_io(return_bi);
++	return_io(sh->raid_conf, return_bi);
+ 
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	release_stripe(sh);
+@@ -4594,7 +4593,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 			md_wakeup_thread(conf->mddev->thread);
+ 	}
+ 
+-	return_io(s.return_bi);
++	return_io(conf, s.return_bi);
+ 
+ 	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
+ }
+@@ -5298,8 +5297,7 @@ static void make_request(struct mddev *mddev, struct bio * bi)
+ 		if ( rw == WRITE )
+ 			md_write_end(mddev);
+ 
+-		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
+-					 bi, 0);
++		trace_block_bio_complete(mddev->queue, bi, 0);
+ 		bio_endio(bi, 0);
  	}
  }
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 16bd54f..534e5be 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -617,4 +617,5 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev);
- void r5c_exit_cache(struct r5c_cache *cache);
- void r5c_write_start(struct mddev *mddev, struct bio *bi);
- void r5c_write_end(struct mddev *mddev, struct bio *bi);
-+void r5c_quiesce(struct r5conf *conf, int state);
- #endif
 -- 
 1.8.1
 
