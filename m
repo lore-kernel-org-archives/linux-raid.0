@@ -1,56 +1,23 @@
-From: "Herr Martins D Weber" <test@fumeilaistone.cn>
-Subject: Lieber Freund!!!
-Date: Sat, 13 Jun 2015 05:14:17 -0700
-Message-ID: <9D68CE35-B679-4AAF-A49F-CE77F9D3D665__20182.7796911404$1435056726$gmane$org@fumeilaistone.cn>
-Reply-To: <martinsdweber@aim.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: doubt about raid1 and writemostly
+Date: Tue, 23 Jun 2015 12:01:33 -0300
+Message-ID: <CAH3kUhEdDY2DeAQ1FYaEvsRRdia9kn6V+9VQETxVdh9j-R3TTA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Lieber Freund!!!
+hi guys, i'm with a doubt
+when i use witemostly, how the md handle the slower drive
+(writemostly) for example i have 2 ssd that support 500mb/s write
+running raid1, i included a hdd with +- 100mb/s write with writemostly
+flag
+when i execute a dd if=/dev/zero of=./test , i get near to 200mb/s
+with dd, and using iostat -d 1 -k, i get +- 100mb/s
+there's some kind of configuration to writemostly drive? something
+like 'buffer size' or someting like it?
 
-Ich vermute das diese E-Mail eine ?berraschung f?r Sie sein wird, aber =
-es ist wahr.Ich bin bei einer routinen ?berpr?fung in meiner Bank (Stan=
-dardBank PLC von S?d Afrika) wo ich arbeite, auf einem Konto gesto?en, =
-was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtze=
-hn Million, F?nf Hundert Tausend, US Dollar)  gutgeschrieben sind.Diese=
-s Konto geh?rte Herrn Manfred Becker, der ein Kunde in unsere Bank war,=
- der leider verstorben ist. Herrn Manfred Becker war ein geb?rtiger Deu=
-tscher.
-
-Damit es mir m?glich ist dieses Geld $18,500,000 inanspruch zunehmen,be=
-n?tige ich die zusammenarbeit eines Ausl?ndischen Partners wie Sie,den =
-ich als Verwandter und Erbe des verstorbenen Herrn Manfred Becker vorst=
-ellen kann,damit wir das Geld inanspruch nehmen k?nnen. F?r diese Unter=
-st?tzung erhalten Sie 30% der Erbschaftsumme und die restlichen 70% tei=
-le ich mirmit meinen zwei Arbeitskollegen, die mich bei dieser Transakt=
-ion ebenfalls unterst?tzen.
-
-
-Wenn Sie interessiert sind, k?nnen Sie mir bitte eine E-Mail schicken, =
-damit ich Ihnen mehr Details zukommen lassen kann. N.B.BITTE SENDEN SIE=
- MIR Martins D Weber ANTWORT ZU durch mein E-mail: ( martinsdweber@aim.=
-com ) f?R VERTRAULICHEN GRUND. Schicken Sie keine POST ZU MEINEM B?RO-E=
--MAIL.(martinsdweber@aim.com )
-
-
-If you understand english,please  kindly reply with english ( martinsdw=
-eber@aim.com )
-
-Mit freundlichen Gr=FC=DFen
-
-Herr Martins D Weber
-
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Roberto Spadim
