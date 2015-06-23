@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH V4 01/13] MD: add a new disk role to present cache device
-Date: Tue, 23 Jun 2015 14:37:51 -0700
-Message-ID: <5a5ab0755ee640a3e59ce98610e7a346e49052ad.1435094582.git.shli@fb.com>
+Subject: [PATCH V4 07/13] raid5: cache device quiesce support
+Date: Tue, 23 Jun 2015 14:37:57 -0700
+Message-ID: <d01f908ea919217daca81b8672a41094281d24d9.1435094582.git.shli@fb.com>
 References: <cover.1435094582.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,125 +12,106 @@ To: linux-raid@vger.kernel.org
 Cc: songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-From: Song Liu <songliubraving@fb.com>
+In raid array quiesce, we should stop all IO. Existing mechanism stops
+IO from upper layer but not IO from cache reclaim. This makes sure
+reclaim thread will stop.
 
-Next patches will use a disk as raid5/6 caching. We need a new disk role
-to present the cache device and add MD_FEATURE_WRITE_CACHE to
-feature_map for backward compability.
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/md.c                | 24 ++++++++++++++++++++++--
- drivers/md/md.h                |  4 ++++
- include/uapi/linux/raid/md_p.h |  3 +++
- 3 files changed, 29 insertions(+), 2 deletions(-)
+ drivers/md/raid5-cache.c | 35 +++++++++++++++++++++++++++++++++++
+ drivers/md/raid5.c       |  2 ++
+ drivers/md/raid5.h       |  1 +
+ 3 files changed, 38 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4dbed4a..599525c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1656,6 +1656,16 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 		case 0xfffe: /* faulty */
- 			set_bit(Faulty, &rdev->flags);
- 			break;
-+		case 0xfffd: /* cache device */
-+			if (!(sb->feature_map & MD_FEATURE_WRITE_CACHE)) {
-+				/* cache device without cache feature */
-+				printk(KERN_WARNING
-+				  "md: cache device provided without write "
-+				  "cache feature, ignoring the device\n");
-+				return -EINVAL;
-+			}
-+			set_bit(WriteCache, &rdev->flags);
-+			break;
- 		default:
- 			rdev->saved_raid_disk = role;
- 			if ((le32_to_cpu(sb->feature_map) &
-@@ -1811,7 +1821,10 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
- 			sb->dev_roles[i] = cpu_to_le16(0xfffe);
- 		else if (test_bit(In_sync, &rdev2->flags))
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
--		else if (rdev2->raid_disk >= 0)
-+		else if (test_bit(WriteCache, &rdev2->flags)) {
-+			sb->dev_roles[i] = cpu_to_le16(0xfffd);
-+			sb->feature_map |= cpu_to_le32(MD_FEATURE_WRITE_CACHE);
-+		} else if (rdev2->raid_disk >= 0)
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
- 		else
- 			sb->dev_roles[i] = cpu_to_le16(0xffff);
-@@ -5781,7 +5794,8 @@ static int get_disk_info(struct mddev *mddev, void __user * arg)
- 		else if (test_bit(In_sync, &rdev->flags)) {
- 			info.state |= (1<<MD_DISK_ACTIVE);
- 			info.state |= (1<<MD_DISK_SYNC);
--		}
-+		} else if (test_bit(WriteCache, &rdev->flags))
-+			info.state |= (1<<MD_DISK_WRITECACHE);
- 		if (test_bit(WriteMostly, &rdev->flags))
- 			info.state |= (1<<MD_DISK_WRITEMOSTLY);
- 	} else {
-@@ -5896,6 +5910,8 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
- 		else
- 			clear_bit(WriteMostly, &rdev->flags);
- 
-+		if (info->state & (1<<MD_DISK_WRITECACHE))
-+			set_bit(WriteCache, &rdev->flags);
- 		/*
- 		 * check whether the device shows up in other nodes
- 		 */
-@@ -7264,6 +7280,10 @@ static int md_seq_show(struct seq_file *seq, void *v)
- 				seq_printf(seq, "(F)");
- 				continue;
- 			}
-+			if (test_bit(WriteCache, &rdev->flags)) {
-+				seq_printf(seq, "(C)");
-+				continue;
-+			}
- 			if (rdev->raid_disk < 0)
- 				seq_printf(seq, "(S)"); /* spare */
- 			if (test_bit(Replacement, &rdev->flags))
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 4046a6c..6857592 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -175,6 +175,10 @@ enum flag_bits {
- 				 * This device is seen locally but not
- 				 * by the whole cluster
- 				 */
-+	WriteCache,		/* This device is used as write cache.
-+				 * Usually, this device should be faster
-+				 * than other devices in the array
-+				 */
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index c5de6dd..35657cd 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -364,6 +364,13 @@ enum {
+ 	ERROR_FINISH = 2, /* Had an error, cache has no data */
  };
  
- #define BB_LEN_MASK	(0x00000000000001FFULL)
-diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
-index 2ae6131..8c8e12c 100644
---- a/include/uapi/linux/raid/md_p.h
-+++ b/include/uapi/linux/raid/md_p.h
-@@ -89,6 +89,7 @@
- 				   * read requests will only be sent here in
- 				   * dire need
- 				   */
-+#define MD_DISK_WRITECACHE      18 /* disk is used as the write cache in RAID-5/6 */
++/* device quiescent support */
++enum {
++	QUIESCE_NONE = 0,
++	QUIESCE_START = 1,
++	QUIESCE_END = 2,
++};
++
+ #define PAGE_SECTOR_SHIFT (PAGE_SHIFT - 9)
  
- typedef struct mdp_device_descriptor_s {
- 	__u32 number;		/* 0 Device number in the entire set	      */
-@@ -302,6 +303,7 @@ struct mdp_superblock_1 {
- #define	MD_FEATURE_RECOVERY_BITMAP	128 /* recovery that is happening
- 					     * is guided by bitmap.
- 					     */
-+#define	MD_FEATURE_WRITE_CACHE		256 /* support write cache */
- #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
- 					|MD_FEATURE_RECOVERY_OFFSET	\
- 					|MD_FEATURE_RESHAPE_ACTIVE	\
-@@ -310,6 +312,7 @@ struct mdp_superblock_1 {
- 					|MD_FEATURE_RESHAPE_BACKWARDS	\
- 					|MD_FEATURE_NEW_OFFSET		\
- 					|MD_FEATURE_RECOVERY_BITMAP	\
-+					|MD_FEATURE_WRITE_CACHE		\
- 					)
+ static inline struct r5c_cache *r5l_cache(struct r5l_log *log)
+@@ -2324,6 +2331,15 @@ static void r5c_reclaim_thread(struct md_thread *thread)
+ 		cache->error_state = 0;
+ 		mddev_resume(cache->mddev);
+ 	}
++
++	if (cache->quiesce_state == QUIESCE_START) {
++		/* user IO already finished, we just stop reclaim */
++		cache->reclaim_reason = 0;
++		cache->quiesce_state = QUIESCE_END;
++		wake_up(&cache->reclaim_wait);
++		wait_event(cache->reclaim_wait, cache->quiesce_state ==
++			QUIESCE_NONE);
++	}
+ }
  
+ static void r5c_wake_reclaimer(struct r5c_cache *cache, int reason)
+@@ -2339,6 +2355,25 @@ static void r5c_wake_wait_reclaimer(struct r5c_cache *cache, int reason)
+ 		&cache->reclaim_reason));
+ }
+ 
++void r5c_quiesce(struct r5conf *conf, int state)
++{
++	struct r5c_cache *cache = conf->cache;
++
++	if (!cache || cache->error_state)
++		return;
++	if (state == 1) {
++		/* we choose to flush all data to raid disks, this is a policy */
++		r5c_wake_wait_reclaimer(cache, RECLAIM_FLUSH_ALL);
++		cache->quiesce_state = QUIESCE_START;
++		md_wakeup_thread(cache->reclaim_thread);
++		wait_event(cache->reclaim_wait, cache->quiesce_state ==
++			QUIESCE_END);
++	} else if (state == 0) {
++		cache->quiesce_state = QUIESCE_NONE;
++		wake_up(&cache->reclaim_wait);
++	}
++}
++
+ static void r5c_parity_task_end(struct r5l_task *task, int error)
+ {
+ 	struct stripe_head *head_sh = task->private;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a9e10ff..bcd6c1f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7485,6 +7485,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
+ 		break;
+ 
+ 	case 1: /* stop all writes */
++		r5c_quiesce(conf, state);
+ 		lock_all_device_hash_locks_irq(conf);
+ 		/* '2' tells resync/reshape to pause so that all
+ 		 * active stripes can drain
+@@ -7507,6 +7508,7 @@ static void raid5_quiesce(struct mddev *mddev, int state)
+ 		wake_up(&conf->wait_for_stripe);
+ 		wake_up(&conf->wait_for_overlap);
+ 		unlock_all_device_hash_locks_irq(conf);
++		r5c_quiesce(conf, state);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 16bd54f..534e5be 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -617,4 +617,5 @@ struct r5c_cache *r5c_init_cache(struct r5conf *conf, struct md_rdev *rdev);
+ void r5c_exit_cache(struct r5c_cache *cache);
+ void r5c_write_start(struct mddev *mddev, struct bio *bi);
+ void r5c_write_end(struct mddev *mddev, struct bio *bi);
++void r5c_quiesce(struct r5conf *conf, int state);
  #endif
 -- 
 1.8.1
