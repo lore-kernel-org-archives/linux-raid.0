@@ -1,21 +1,41 @@
-From: 'LEUNG CHEUNG' <info@hotmail.com>
-Subject: Hello
-Date: Sun, 21 Jun 2015 22:35:48 +0530
-Message-ID: <20150621170622.B60A25F6B01__28929.137500427$1434907040$gmane$org@zmail.goiania.go.gov.br>
-Reply-To: mr.leungcheng30@foxmail.com
+From: Wei Fang <fangwei1@huawei.com>
+Subject: [PATCH] md: remove an unneeded condition in set_array_info.
+Date: Tue, 23 Jun 2015 18:44:46 +0800
+Message-ID: <5589389E.9040800@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <info@hotmail.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+if ->major_version is legal, name can't be NULL, so remove it.
 
+Signed-off-by: Wei Fang <fangwei1@huawei.com>
+---
+ drivers/md/md.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index d4f31e1..1c2f967 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6193,12 +6193,10 @@ static int set_bitmap_file(struct mddev *mddev, int fd)
+  */
+ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ {
+-
+ 	if (info->raid_disks == 0) {
+ 		/* just setting version number for superblock loading */
+ 		if (info->major_version < 0 ||
+-		    info->major_version >= ARRAY_SIZE(super_types) ||
+-		    super_types[info->major_version].name == NULL) {
++		    info->major_version >= ARRAY_SIZE(super_types)) {
+ 			/* maybe try to auto-load a module? */
+ 			printk(KERN_INFO
+ 				"md: superblock version %d not known\n",
+-- 
+1.8.3.1
 
-
-I need your assistance to transfer $22,500,000.00 Dollars from Hong Kong 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
