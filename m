@@ -1,20 +1,20 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 Subject: Re: [PATCH 0/1] RFC: Unreliable discard performance can cripple RAID1
-Date: Wed, 24 Jun 2015 07:02:36 -0400
-Message-ID: <wrfj616dtlmb.fsf@redhat.com>
+Date: Wed, 24 Jun 2015 07:04:43 -0400
+Message-ID: <wrfj1th1tlis.fsf@redhat.com>
 References: <1435105573-1373-1-git-send-email-Jes.Sorensen@redhat.com>
-	<20150624175556.701b724c@noble>
+	<20150624100014.7d1e9842@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150624175556.701b724c@noble> (NeilBrown's message of "Wed, 24
-	Jun 2015 17:55:56 +1000")
+In-Reply-To: <20150624100014.7d1e9842@natsu> (Roman Mamedov's message of "Wed,
+	24 Jun 2015 10:00:14 +0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.net>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
+Roman Mamedov <rm@romanrm.net> writes:
 > On Tue, 23 Jun 2015 20:26:12 -0400
 > Jes.Sorensen@redhat.com wrote:
 >
@@ -39,27 +39,18 @@ NeilBrown <neilb@suse.com> writes:
 >> are safe.
 >> 
 >> Thoughts?
->> 
->> Cheers,
->> Jes
->> 
->> Jes Sorensen (1):
->>   raid0: Disable discard per default due to performance uncertainty
->> 
->>  drivers/md/raid0.c | 20 ++++++++++++++++++++
->>  1 file changed, 20 insertions(+)
 >
-> RAID1?  RAID0??  I hate it when I do that!
->
-> Doesn't the scheduler merge adjacent discard requests?
->
-> Or is this some non-SATA/SCSI SSD that has a 'make_request_fn' driver?
-> I think I came across one of those before (NVMe).
-> In that case - the driver needs to be fixed.
+> It's very unfortunate if you would cripple all the good SSD models because of
+> a few bad ones. No one will remember to explicitly put the override to enable
+> TRIM, or perhaps even know that it gets disabled in md in the first place. The
+> only thing they will later notice is lowered performance and lifespan of their
+> SSDs.
 
-Nope the block layer doesn't merge the requests at this point. It
-actually triggered an OOM on my test system, which has only 4GB of RAM,
-because discard commands are not handled as normal commands and have no
-control on how many outstanding commands are in flight.
+We already disable discard per default on raid456 in a similar manner
+because some of them unreliably reports discard_zeroes_data when they
+in reality don't.
+
+If there was a way to reliably detect these things it would be fine,
+unfortunately there isn't.
 
 Jes
