@@ -1,125 +1,85 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH] Fix read-balancing during node failure
-Date: Wed, 24 Jun 2015 09:30:32 -0500
-Message-ID: <1435156232-8711-1-git-send-email-rgoldwyn@suse.com>
+From: John Bridges <john.bridges@gmail.com>
+Subject: Crash flood fills syslog
+Date: Wed, 24 Jun 2015 10:52:50 -0400
+Message-ID: <CAJ8DDcPwUqwebvA6yZSJ7igg2pB0VWUOjbcx0xfpb1e8PG_hFA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: teigland@redhat.com, gqJiang@suse.com, linux-raid@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-During a node failure, We need to suspend read balancing so that the
-reads are directed to the first device and stale data is not read.
-Suspending writes is not required because these would be recorded and
-synced eventually.
+Messages like this flooded my syslog ballooning it up to 90GB, and
+causing other failures when the system drive had no free space left
+(bad).
 
-A new flag MD_CLUSTER_SUSPEND_READ_BALANCING is set in recover_prep().
-area_resyncing() will respond true for the entire devices if this
-flag is set and the request type is READ. The flag is cleared
-in recover_done().
+Distributor ID:    Ubuntu
+Description:    Ubuntu 14.04.2 LTS
+Release:    14.04
+Codename:    trusty
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Reported-By: David Teigland <teigland@redhat.com>
----
- drivers/md/md-cluster.c | 12 +++++++++++-
- drivers/md/md-cluster.h |  2 +-
- drivers/md/raid1.c      |  7 ++++---
- 3 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index fcfc4b9..0072190 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -44,6 +44,7 @@ struct resync_info {
- 
- /* md_cluster_info flags */
- #define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
-+#define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
- 
- 
- struct md_cluster_info {
-@@ -275,6 +276,9 @@ clear_bit:
- 
- static void recover_prep(void *arg)
- {
-+	struct mddev *mddev = arg;
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	set_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state);
- }
- 
- static void recover_slot(void *arg, struct dlm_slot *slot)
-@@ -307,6 +311,7 @@ static void recover_done(void *arg, struct dlm_slot *slots,
- 
- 	cinfo->slot_number = our_slot;
- 	complete(&cinfo->completion);
-+	clear_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state);
- }
- 
- static const struct dlm_lockspace_ops md_ls_ops = {
-@@ -816,12 +821,17 @@ static void resync_finish(struct mddev *mddev)
- 	resync_send(mddev, RESYNCING, 0, 0);
- }
- 
--static int area_resyncing(struct mddev *mddev, sector_t lo, sector_t hi)
-+static int area_resyncing(struct mddev *mddev, int direction,
-+		sector_t lo, sector_t hi)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
- 	int ret = 0;
- 	struct suspend_info *s;
- 
-+	if ((direction == READ) &&
-+		test_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state))
-+		return 1;
-+
- 	spin_lock_irq(&cinfo->suspend_lock);
- 	if (list_empty(&cinfo->suspend_list))
- 		goto out;
-diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-index 6817ee0..00defe2 100644
---- a/drivers/md/md-cluster.h
-+++ b/drivers/md/md-cluster.h
-@@ -18,7 +18,7 @@ struct md_cluster_operations {
- 	int (*metadata_update_start)(struct mddev *mddev);
- 	int (*metadata_update_finish)(struct mddev *mddev);
- 	int (*metadata_update_cancel)(struct mddev *mddev);
--	int (*area_resyncing)(struct mddev *mddev, sector_t lo, sector_t hi);
-+	int (*area_resyncing)(struct mddev *mddev, int direction, sector_t lo, sector_t hi);
- 	int (*add_new_disk_start)(struct mddev *mddev, struct md_rdev *rdev);
- 	int (*add_new_disk_finish)(struct mddev *mddev);
- 	int (*new_disk_ack)(struct mddev *mddev, bool ack);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 9157a29..b5626d2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -541,7 +541,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
- 
- 	if ((conf->mddev->recovery_cp < this_sector + sectors) ||
- 	    (mddev_is_clustered(conf->mddev) &&
--	    md_cluster_ops->area_resyncing(conf->mddev, this_sector,
-+	    md_cluster_ops->area_resyncing(conf->mddev, READ, this_sector,
- 		    this_sector + sectors)))
- 		choose_first = 1;
- 	else
-@@ -1111,7 +1111,8 @@ static void make_request(struct mddev *mddev, struct bio * bio)
- 	    ((bio_end_sector(bio) > mddev->suspend_lo &&
- 	    bio->bi_iter.bi_sector < mddev->suspend_hi) ||
- 	    (mddev_is_clustered(mddev) &&
--	     md_cluster_ops->area_resyncing(mddev, bio->bi_iter.bi_sector, bio_end_sector(bio))))) {
-+	     md_cluster_ops->area_resyncing(mddev, WRITE,
-+		     bio->bi_iter.bi_sector, bio_end_sector(bio))))) {
- 		/* As the suspend_* range is controlled by
- 		 * userspace, we want an interruptible
- 		 * wait.
-@@ -1124,7 +1125,7 @@ static void make_request(struct mddev *mddev, struct bio * bio)
- 			if (bio_end_sector(bio) <= mddev->suspend_lo ||
- 			    bio->bi_iter.bi_sector >= mddev->suspend_hi ||
- 			    (mddev_is_clustered(mddev) &&
--			     !md_cluster_ops->area_resyncing(mddev,
-+			     !md_cluster_ops->area_resyncing(mddev, WRITE,
- 				     bio->bi_iter.bi_sector, bio_end_sector(bio))))
- 				break;
- 			schedule();
--- 
-2.1.4
-
+Jun 23 08:25:08 monster kernel: [762785.217575] ------------[ cut here
+]------------
+Jun 23 08:25:08 monster kernel: [762785.217580] WARNING: CPU: 0 PID:
+28173 at /build/buildd/linux-3.13.0/drivers/md/raid5.c:3856
+handle_stripe+0x24e4/0x2500 [raid456]()
+Jun 23 08:25:08 monster kernel: [762785.217581] Modules linked in:
+pci_stub vboxpci(OF) vboxnetadp(OF) vboxnetflt(OF) vboxdrv(OF)
+gpio_ich coretemp kvm_intel kvm serio_raw bnep rfcomm bluetooth
+nvidia(POF) i3000_edac parport_pc drm lpc_ich ppdev lp shpchp mac_hid
+edac_core parport xfs btrfs libcrc32c raid10 raid456 async_raid6_recov
+async_memcpy async_pq async_xor async_tx xor usb_storage pata_acpi
+ahci psmouse libahci e1000e raid6_pq ptp pps_core raid1 raid0
+multipath sata_mv floppy linear
+Jun 23 08:25:08 monster kernel: [762785.217612] CPU: 0 PID: 28173
+Comm: md2_resync Tainted: PF       W  O 3.13.0-29-generic #53-Ubuntu
+Jun 23 08:25:08 monster kernel: [762785.217613] Hardware name:
+Supermicro PDSM4+/PDSM4+, BIOS 6.00 11/04/2008
+Jun 23 08:25:08 monster kernel: [762785.217615]  0000000000000009
+ffff88017e997af0 ffffffff8171a214 0000000000000000
+Jun 23 08:25:08 monster kernel: [762785.217618]  ffff88017e997b28
+ffffffff810676bd ffff88010d90a6b0 0000000000000009
+Jun 23 08:25:08 monster kernel: [762785.217621]  0000000000000009
+ffff8800369e8c00 000000000000000e ffff88017e997b38
+Jun 23 08:25:08 monster kernel: [762785.217624] Call Trace:
+Jun 23 08:25:08 monster kernel: [762785.217627]  [<ffffffff8171a214>]
+dump_stack+0x45/0x56
+Jun 23 08:25:08 monster kernel: [762785.217630]  [<ffffffff810676bd>]
+warn_slowpath_common+0x7d/0xa0
+Jun 23 08:25:08 monster kernel: [762785.217633]  [<ffffffff8106779a>]
+warn_slowpath_null+0x1a/0x20
+Jun 23 08:25:08 monster kernel: [762785.217637]  [<ffffffffa0108cd4>]
+handle_stripe+0x24e4/0x2500 [raid456]
+Jun 23 08:25:08 monster kernel: [762785.217640]  [<ffffffff8109a7b2>]
+? default_wake_function+0x12/0x20
+Jun 23 08:25:08 monster kernel: [762785.217644]  [<ffffffff810aaeb2>]
+? autoremove_wake_function+0x12/0x40
+Jun 23 08:25:08 monster kernel: [762785.217646]  [<ffffffff810aa7b8>]
+? __wake_up_common+0x58/0x90
+Jun 23 08:25:08 monster kernel: [762785.217651]  [<ffffffffa0104c1e>]
+? get_active_stripe+0x58e/0x7c0 [raid456]
+Jun 23 08:25:08 monster kernel: [762785.217656]  [<ffffffffa0109b9c>]
+sync_request+0x17c/0x3e0 [raid456]
+Jun 23 08:25:08 monster kernel: [762785.217658]  [<ffffffff815a40b1>]
+? is_mddev_idle+0xd1/0x140
+Jun 23 08:25:08 monster kernel: [762785.217661]  [<ffffffff815a7393>]
+md_do_sync+0x993/0xdc0
+Jun 23 08:25:08 monster kernel: [762785.217664]  [<ffffffff810aaea0>]
+? prepare_to_wait_event+0x100/0x100
+Jun 23 08:25:08 monster kernel: [762785.217667]  [<ffffffff815a3f48>]
+md_thread+0x118/0x130
+Jun 23 08:25:08 monster kernel: [762785.217670]  [<ffffffff815a3e30>]
+? mddev_unlock+0xe0/0xe0
+Jun 23 08:25:08 monster kernel: [762785.217673]  [<ffffffff8108b322>]
+kthread+0xd2/0xf0
+Jun 23 08:25:08 monster kernel: [762785.217676]  [<ffffffff8108b250>]
+? kthread_create_on_node+0x1d0/0x1d0
+Jun 23 08:25:08 monster kernel: [762785.217678]  [<ffffffff8172ab3c>]
+ret_from_fork+0x7c/0xb0
+Jun 23 08:25:08 monster kernel: [762785.217681]  [<ffffffff8108b250>]
+? kthread_create_on_node+0x1d0/0x1d0
+Jun 23 08:25:08 monster kernel: [762785.217683] ---[ end trace
+518bf06a77e3600a ]---
+Jun 23 08:25:08 monster kernel: [762785.217694] ------------[ cut here
+]------------
