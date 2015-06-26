@@ -1,46 +1,52 @@
-From: Boris T <tlknv@yandex.ru>
-Subject: Re: mismatch_cnt constantly goes up on ssd+hdd raid1
-Date: Thu, 25 Jun 2015 10:24:34 -0700
-Message-ID: <CADkUup9YhMwH6UMrEamT3rfUkOhdMiWLyeu46CTNsjPm-173UQ@mail.gmail.com>
-References: <3700381434301996@web21o.yandex.ru>
-	<20150625113335.7bf72b0b@noble>
-	<20150625101959.23981c72@natsu>
-	<20150625172530.5c5338b6@noble>
-	<2762371435246396@web9o.yandex.ru>
-	<20150625205026.42f41a81@natsu>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: DM_CACHE_SMQ is experimental and enabled by default? (was: Re: dm
+ cache: add stochastic-multi-queue (smq) policy)
+Date: Fri, 26 Jun 2015 09:47:46 +0200
+Message-ID: <CAMuHMdVfK8x8xXqaq=yX41qZA0L3VP-sezKfDureYMa-QqfM6g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150625205026.42f41a81@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.net>
-Cc: tlknv <tlknv@yandex.ru>, NeilBrown <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Joe Thornber <ejt@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+Cc: linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Roman,
-
-Thanks for the suggestion. I would probably consider keeping TRIM if I
-had less free/unpartitioned space on my SSD. Currently all partitioned
-space is just a fraction (about 1/3) of total SSD size. In this
-situation I prefer to make sure that my raid is consistent than to
-prolong the life of SSD a bit.
-
-Thanks,
-Boris
-
-On Thu, Jun 25, 2015 at 8:50 AM, Roman Mamedov <rm@romanrm.net> wrote:
-> On Thu, 25 Jun 2015 18:33:16 +0300
-> tlknv <tlknv@yandex.ru> wrote:
+On Fri, Jun 26, 2015 at 2:13 AM, Linux Kernel Mailing List
+<linux-kernel@vger.kernel.org> wrote:
+> Gitweb:     http://git.kernel.org/linus/;a=commit;h=66a636356647a9be8885c2ce2948de126577698a
+> Commit:     66a636356647a9be8885c2ce2948de126577698a
+> Parent:     40775257b97e27305cf5c2425be7acaa6edee4ea
+> Refname:    refs/heads/master
+> Author:     Joe Thornber <ejt@redhat.com>
+> AuthorDate: Fri May 15 15:33:34 2015 +0100
+> Committer:  Mike Snitzer <snitzer@redhat.com>
+> CommitDate: Thu Jun 11 17:12:59 2015 -0400
 >
->> I have just discovered that I had 'discard' mount option even though I though it wasn't there :-(
->> After removing 'discard' and forcing 'repair' mismatch_cnt stays 0 even after a bunch of writes and deletes (the most importantly) to the partition.
+>     dm cache: add stochastic-multi-queue (smq) policy
+
+> diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+> index edcf4ab..b597273 100644
+> --- a/drivers/md/Kconfig
+> +++ b/drivers/md/Kconfig
+> @@ -304,6 +304,18 @@ config DM_CACHE_MQ
+>           This is meant to be a general purpose policy.  It prioritises
+>           reads over writes.
 >
-> I wouldn't recommend disabling discard 'for good' though, from your experiment
-> we can probably conclude the mismatch_cnt numbers you had previously are indeed
-> harmless. If you had no other issues due to discard being active, then what you
-> did now is disable a working and useful feature to fix what's only a cosmetic
-> problem.
->
-> --
-> With respect,
-> Roman
+> +config DM_CACHE_SMQ
+> +       tristate "Stochastic MQ Cache Policy (EXPERIMENTAL)"
+> +       depends on DM_CACHE
+> +       default y
+
+A feature cannot be "EXPERIMENTAL", and be enabled by default.
+Please drop (at least) one of them.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
