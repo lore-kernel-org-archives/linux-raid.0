@@ -1,63 +1,65 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: DM_CACHE_SMQ is experimental and enabled by default? (was: Re:
- dm cache: add stochastic-multi-queue (smq) policy)
-Date: Fri, 26 Jun 2015 12:05:50 -0400
-Message-ID: <20150626160549.GA15434@redhat.com>
-References: <CAMuHMdVfK8x8xXqaq=yX41qZA0L3VP-sezKfDureYMa-QqfM6g@mail.gmail.com>
+From: Sami Liedes <sami.liedes@iki.fi>
+Subject: Re: [Bug 100491] New: Oops under bitmap_start_sync [md_mod] at boot
+Date: Sun, 28 Jun 2015 23:53:48 +0300
+Message-ID: <20150628205347.GA18403@sli.dy.fi>
+References: <12832_1435266173_558C6C7D_12832_48_1_bug-100491-1606@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdVfK8x8xXqaq=yX41qZA0L3VP-sezKfDureYMa-QqfM6g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Joe Thornber <ejt@redhat.com>, linux-raid@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dm-devel@redhat.com
+In-Reply-To: <12832_1435266173_558C6C7D_12832_48_1_bug-100491-1606@https.bugzilla.kernel.org/>
+Sender: linux-raid-owner@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.com>, Neil Brown <neilb@suse.de>, bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 26 2015 at  3:47am -0400,
-Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-
-> On Fri, Jun 26, 2015 at 2:13 AM, Linux Kernel Mailing List
-> <linux-kernel@vger.kernel.org> wrote:
-> > Gitweb:     http://git.kernel.org/linus/;a=commit;h=66a636356647a9be8885c2ce2948de126577698a
-> > Commit:     66a636356647a9be8885c2ce2948de126577698a
-> > Parent:     40775257b97e27305cf5c2425be7acaa6edee4ea
-> > Refname:    refs/heads/master
-> > Author:     Joe Thornber <ejt@redhat.com>
-> > AuthorDate: Fri May 15 15:33:34 2015 +0100
-> > Committer:  Mike Snitzer <snitzer@redhat.com>
-> > CommitDate: Thu Jun 11 17:12:59 2015 -0400
-> >
-> >     dm cache: add stochastic-multi-queue (smq) policy
+On Thu, Jun 25, 2015 at 09:02:45PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=100491
 > 
-> > diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-> > index edcf4ab..b597273 100644
-> > --- a/drivers/md/Kconfig
-> > +++ b/drivers/md/Kconfig
-> > @@ -304,6 +304,18 @@ config DM_CACHE_MQ
-> >           This is meant to be a general purpose policy.  It prioritises
-> >           reads over writes.
-> >
-> > +config DM_CACHE_SMQ
-> > +       tristate "Stochastic MQ Cache Policy (EXPERIMENTAL)"
-> > +       depends on DM_CACHE
-> > +       default y
-> 
-> A feature cannot be "EXPERIMENTAL", and be enabled by default.
-> Please drop (at least) one of them.
+>             Bug ID: 100491
+>            Summary: Oops under bitmap_start_sync [md_mod] at boot
+[...]
+> Reading all physical valumes.  This may take a while...
+> Found volume group "rootvg" using metadata type lvm2
+> device-mapper: raid: Device 0 specified for rebuild: Clearing superblock
+> md/raid1:mdX: active with 1 out of 2 mirrors
+> mdX: invalid bitmap file superblock: bad magic
+> md-cluster module not found.
+> mdX: Could not setup cluster service (256)
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000100
+> IP: [<ffffffff8159e4a9>] _raw_spin_lock_irq+0x29/0x70
+> PGD 0
+> Oops: 0002 [#1] PREEMPT SMP
+[...]
 
-Thanks for your concern, but: no.
+I'm marking this as a regression in bugzilla, since this seems to
+prevent booting on 4.1.0 at least in certain circumstances (namely
+those which I have; I wonder if any raid1 recovery works?) while 4.0.6
+boots correctly.
 
-If you look closer the entirety of DM cache is marked EXPERIMENTAL:
+I bisected this down to one of four commits. Well, assuming that the
+problem was caused by changes in drivers/md; a fair assumption, I
+think. The commits are:
 
-config DM_CACHE
-       tristate "Cache target (EXPERIMENTAL)"
-...
-config DM_CACHE_MQ
-       tristate "MQ Cache Policy (EXPERIMENTAL)"
-...
-config DM_CACHE_SMQ
-       tristate "Stochastic MQ Cache Policy (EXPERIMENTAL)"
-...
-config DM_CACHE_CLEANER
-       tristate "Cleaner Cache Policy (EXPERIMENTAL)"
+$ git bisect view --oneline
+f9209a3 bitmap_create returns bitmap pointer
+96ae923 Gather on-going resync information of other nodes
+54519c5 Lock bitmap while joining the cluster
+b97e9257 Use separate bitmaps for each nodes in the cluster
+
+The crash happens whether or not CONFIG_MD_CLUSTER is enabled.
+
+Here's the versions I tested:
+
+git bisect start '--' 'drivers/md'
+# bad: [b953c0d234bc72e8489d3bf51a276c5c4ec85345] Linux 4.1
+# good: [39a8804455fb23f09157341d3ba7db6d7ae6ee76] Linux 4.0
+# bad: [9ffc8f7cb9647b13dfe4d1ad0d5e1427bb8b46d6] md/raid5: don't do chunk aligned read on degraded array.
+# bad: [6dc69c9c460b0cf05b5b3f323a8b944a2e52e76d] md: recover_bitmaps() can be static
+# bad: [4b26a08af92c0d9c0bce07612b56ff326112321a] Perform resync for cluster node failure
+# good: [cf921cc19cf7c1e99f730a2faa02d80817d684a2] Add node recovery callbacks
+# skip: [96ae923ab659e37dd5fc1e05ecbf654e2f94bcbe] Gather on-going resync information of other nodes
+# bad: [f9209a323547f054c7439a3bf67c45e64a054bdd] bitmap_create returns bitmap pointer
+# skip: [54519c5f4b398bcfe599f652b4ef4004d5fa63ff] Lock bitmap while joining the cluster
+
+	Sami
