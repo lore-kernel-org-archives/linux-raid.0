@@ -1,114 +1,125 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: doubt about raid1 and writemostly
-Date: Fri, 3 Jul 2015 11:32:41 +1000
-Message-ID: <20150703113241.13e24704@noble>
-References: <CAH3kUhEdDY2DeAQ1FYaEvsRRdia9kn6V+9VQETxVdh9j-R3TTA@mail.gmail.com>
-	<20150625085954.57b485ab@noble>
-	<CAH3kUhHH+uNM92QGEocLJ3HmYYL-28ax1LuC2cvypAHkMYou0Q@mail.gmail.com>
-	<CAH3kUhHV=RC-Q1bGG_OXPk=mUZ_Mc2T6h7KAQAv0GP-DMY-ihg@mail.gmail.com>
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
+Date: Fri, 3 Jul 2015 10:18:45 +0800
+Message-ID: <20150703021845.GC10378@yliu-dev.sh.intel.com>
+References: <cover.1435094582.git.shli@fb.com>
+ <20150702032516.GB10378@yliu-dev.sh.intel.com>
+ <20150702171104.GA683150@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAH3kUhHV=RC-Q1bGG_OXPk=mUZ_Mc2T6h7KAQAv0GP-DMY-ihg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20150702171104.GA683150@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Wed, 1 Jul 2015 11:53:07 -0300 Roberto Spadim
-<roberto@spadim.com.br> wrote:
+On Thu, Jul 02, 2015 at 10:11:18AM -0700, Shaohua Li wrote:
+> On Thu, Jul 02, 2015 at 11:25:16AM +0800, Yuanhan Liu wrote:
+> > Hi Shaohua,
+> > 
+> > I gave it a quick test(dd if=/dev/zero of=/dev/md0) in a KVM, and
+> > here I met a kernel oops.
+> > 
+> >     [   14.768563] BUG: unable to handle kernel NULL pointer dereference at   (null)
+> >     [   14.769153] IP: [<c1383b13>] xor_sse_3_pf64+0x67/0x207
+> >     [   14.769585] *pde = 00000000
+> >     [   14.769822] Oops: 0000 [#1] SMP
+> >     [   14.770092] Modules linked in:
+> >     [   14.770349] CPU: 0 PID: 2234 Comm: md0_raid5 Not tainted 4.1.0+ #18
+> >     [   14.770854] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.7.5-0-ge51488c-20140602_164612-nilsson.home.kraxel.org 04/01/2014
+> >     [   14.771859] task: f62c5e80 ti: f04ec000 task.ti: f04ec000
+> >     [   14.772287] EIP: 0060:[<c1383b13>] EFLAGS: 00010246 CPU: 0
+> >     [   14.772327] EIP is at xor_sse_3_pf64+0x67/0x207
+> >     [   14.772327] EAX: 00000010 EBX: 00000000 ECX: e2a99000 EDX: f48ae000
+> >     [   14.772327] ESI: f48ae000 EDI: 00000010 EBP: f04edcd8 ESP: f04edccc
+> >     [   14.772327]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+> >     [   14.772327] CR0: 80050033 CR2: 00000000 CR3: 22ac5000 CR4: 000006d0
+> >     [   14.772327] Stack:
+> >     [   14.772327]  c1c4d96c 00000000 00000001 f04edcf8 c1382bcf 00000000 00000002 c112d2e5
+> >     [   14.772327]  00000000 f04edd98 00000002 f04edd30 c138554b f6a2e028 00000001 f6f51b30
+> >     [   14.772327]  00000002 00000000 f48ae000 f6a2e028 00001000 f04edd40 00000002 00000000
+> >     [   14.772327] Call Trace:
+> >     [   14.772327]  [<c1382bcf>] xor_blocks+0x3a/0x6d
+> >     [   14.772327]  [<c112d2e5>] ? page_address+0xb8/0xc0
+> >     [   14.772327]  [<c138554b>] async_xor+0xf3/0x113
+> >     [   14.772327]  [<c186d954>] raid_run_ops+0xf73/0x1025
+> >     [   14.772327]  [<c186d954>] ? raid_run_ops+0xf73/0x1025
+> >     [   14.772327]  [<c16ce8b9>] handle_stripe+0x120/0x199b
+> >     [   14.772327]  [<c10c7df4>] ? clockevents_program_event+0xfb/0x118
+> >     [   14.772327]  [<c10c94f7>] ? tick_program_event+0x5f/0x68
+> >     [   14.772327]  [<c10be529>] ? hrtimer_interrupt+0xa3/0x134
+> >     [   14.772327]  [<c16d0366>] handle_active_stripes.isra.37+0x232/0x2b5
+> >     [   14.772327]  [<c16d0701>] raid5d+0x267/0x44c
+> >     [   14.772327]  [<c18717e6>] ? schedule_timeout+0x1c/0x14d
+> >     [   14.772327]  [<c1872011>] ? _raw_spin_lock_irqsave+0x1f/0x3d
+> >     [   14.772327]  [<c16f684a>] md_thread+0x103/0x112
+> >     [   14.772327]  [<c10a3146>] ? wait_woken+0x62/0x62
+> >     [   14.772327]  [<c16f6747>] ? md_wait_for_blocked_rdev+0xda/0xda
+> >     [   14.772327]  [<c108d44e>] kthread+0xa4/0xa9
+> >     [   14.772327]  [<c1872401>] ret_from_kernel_thread+0x21/0x30
+> >     [   14.772327]  [<c108d3aa>] ? kthread_create_on_node+0x104/0x104
+> >     
+> > 
+> > I dug it a while, and came up with following fix. Does it make sense
+> > to you?
+> > 
+> > ----
+> > diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+> > index e1bce26..063ac50 100644
+> > --- a/crypto/async_tx/async_xor.c
+> > +++ b/crypto/async_tx/async_xor.c
+> > @@ -30,6 +30,7 @@
+> >  #include <linux/dma-mapping.h>
+> >  #include <linux/raid/xor.h>
+> >  #include <linux/async_tx.h>
+> > +#include <linux/highmem.h>
+> > 
+> >  /* do_async_xor - dma map the pages and perform the xor with an engine */
+> >  static __async_inline struct dma_async_tx_descriptor *
+> > @@ -127,7 +128,7 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+> >         /* convert to buffer pointers */
+> >         for (i = 0; i < src_cnt; i++)
+> >                 if (src_list[i])
+> > -                       srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
+> > +                       srcs[xor_src_cnt++] = kmap_atomic(src_list[i]) + offset;
+> >         src_cnt = xor_src_cnt;
+> >         /* set destination address */
+> >         dest_buf = page_address(dest) + offset;
+> > @@ -140,6 +141,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+> >                 xor_src_cnt = min(src_cnt, MAX_XOR_BLOCKS);
+> >                 xor_blocks(xor_src_cnt, len, dest_buf, &srcs[src_off]);
+> > 
+> > +               for(i = src_off; i < src_off + xor_src_cnt; i++)
+> > +                       kunmap_atomic(srcs[i]);
+> > +
+> >                 /* drop completed sources */
+> >                 src_cnt -= xor_src_cnt;
+> >                 src_off += xor_src_cnt;
+> 
+> Thanks! This is the side effect of skip_copy, I think.
 
-> i could do write-behind in a already up md device?
-> i'm trying echo writebehind > /sys/block/md0/md/dev-sdc1 and it retur=
-n error
->=20
-> /sys/block/md0/md/dev-sdc1# echo write_behind >state
-> -bash: echo: write error: Invalid argument
+Yes, it is: the issue is gone when skip_copy is disabled.
 
-You really should be using mdadm, not trying to poke directly at sysfs.
+> skip_copy isn't
+> enabled by default, so we don't hit it before, while my previous test
+> was done with x86_64. We should see this with skip_copy enabled even
+> without the cache patches.
 
-The "Write behind" functionality involves two separate configurations.
+I gave it a quick test as well, at least I failed to trigger it. Seems
+that no bio page is allocated with GFP_HIGHMEM flag.
 
-1/ the write-intent bitmap must enable write behind - it records a
-   maximum number of outstanding "behind" requests".  To arrange this
-   you remove any bitmap that you have and add a correctly configured
-   one.
+> 
+> The patch does make sense. There are other async APIs using page_address
+> too: async_raid6_recov.c, async_pq.c, can you please fix them? You can
+> check them with raid6.
 
-2/ individual devices can be marked as "write mostly", in which case th=
-e
-   writes to those devices are "behind" writes.  you can enable this
-   by writing "writemostly" to the 'state' file.
+Sure, and thanks.
 
 
-NeilBrown
-
->=20
-> 2015-06-25 0:28 GMT-03:00 Roberto Spadim <roberto@spadim.com.br>:
-> > nice :)  i read about it some years ago and i was trying to remembe=
-r, i will
-> > test, thanks neil!
-> >
-> > 2015-06-24 19:59 GMT-03:00 NeilBrown <neilb@suse.com>:
-> >>
-> >> On Tue, 23 Jun 2015 12:01:33 -0300 Roberto Spadim
-> >> <roberto@spadim.com.br> wrote:
-> >>
-> >> > hi guys, i'm with a doubt
-> >> > when i use witemostly, how the md handle the slower drive
-> >> > (writemostly) for example i have 2 ssd that support 500mb/s writ=
-e
-> >> > running raid1, i included a hdd with +- 100mb/s write with write=
-mostly
-> >> > flag
-> >> > when i execute a dd if=3D/dev/zero of=3D./test , i get near to 2=
-00mb/s
-> >> > with dd, and using iostat -d 1 -k, i get +- 100mb/s
-> >> > there's some kind of configuration to writemostly drive? somethi=
-ng
-> >> > like 'buffer size' or someting like it?
-> >> >
-> >>
-> >> You need to also enable --write-behind if you want md/raid1 to not=
- be
-> >> slowed down so much by a slower device.
-> >> However this only really helps hide latency.  There is nothing tha=
-t can
-> >> be done to help over-all throughput.
-> >>
-> >> When you set --write-behind you can provide a number which is the
-> >> number of outstanding requests that can be in flight to the
-> >> write-mostly device.
-> >>
-> >> If your writes are "bursty" in nature - so lots of writes together=
-,
-> >> then longer pauses with no writes, then this write-behind buffer c=
-an
-> >> hide the delay caused by the slower device.  If you write continuo=
-usly,
-> >> then there is no way that the slower device can keep up and the
-> >> over-all throughput will be reduced to match the slowest device.
-> >>
-> >> This functionality was originally written for cases where both dev=
-ices
-> >> had the same throughput, but one was higher latency, due to being
-> >> several kilometres away on the other end of an optical fibre.
-> >>
-> >> NeilBrown
-> >
-> >
-> >
-> >
-> > --
-> > Roberto Spadim
-> > SPAEmpresarial - Software ERP
-> > Eng. Automa=C3=A7=C3=A3o e Controle
->=20
->=20
->=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	--yliu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
