@@ -1,55 +1,60 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re[4]: Issue removing failed drive and re adding on raid 6
-Date: Sat, 4 Jul 2015 09:25:39 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1507040924130.11810@uplift.swm.pp.se>
-References: <em077982e3-5c16-48ac-a45a-e87d2249b80c@littlez>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Issue removing failed drive and re adding on raid 6
+Date: Sun, 5 Jul 2015 15:27:09 +0500
+Message-ID: <20150705152709.43d2f9c6@natsu>
+References: <emfb4b5aee-68ba-4089-a763-4e835afefc45@littlez>
+	<5597922A.90402@youngman.org.uk>
+	<alpine.DEB.2.02.1507041009040.11810@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kXqfB=ixe_QmA/FsHS/i.gX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <em077982e3-5c16-48ac-a45a-e87d2249b80c@littlez>
+In-Reply-To: <alpine.DEB.2.02.1507041009040.11810@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Stephenson <justin@evensteveninc.com>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 4 Jul 2015, Justin Stephenson wrote:
+--Sig_/kXqfB=ixe_QmA/FsHS/i.gX
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> [root@BigBlue Desktop]# mdadm --assemble --scan --force
-> [root@BigBlue Desktop]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : inactive sdf1[8](S) sde1[2] sdg1[4] sdd1[1] sdh1[7] sdc1[0] sdb1[6]
->      20510934584 blocks super 1.2
-> [root@BigBlue Desktop]# mdadm --assemble --force /dev/md0 
-> /dev/sd{b,c,d,e,g,h}1
-> mdadm: /dev/sdb1 is busy - skipping
-> mdadm: /dev/sdc1 is busy - skipping
-> mdadm: /dev/sdd1 is busy - skipping
-> mdadm: /dev/sde1 is busy - skipping
-> mdadm: /dev/sdg1 is busy - skipping
-> mdadm: /dev/sdh1 is busy - skipping
+On Sat, 4 Jul 2015 10:10:46 +0200 (CEST)
+Mikael Abrahamsson <swmike@swm.pp.se> wrote:
 
-You can't do assemble on an already running array, so this did nothing.
+> > Are these 3TB Seagate Barracudas? (Same as mine). You DO NOT want to be
+> > running raid 5 or 6 on these things !!!! They're desktop drives not
+> > meant for raid.
+>=20
+> Not only that, but they're known to have en extremely high failure rate:
+>=20
+> https://www.backblaze.com/blog/3tb-hard-drive-failure/
+>=20
+> "As of March 31, 2015, 1,423 of the 4,829 deployed Seagate 3TB drives had=
+=20
+> failed, that=E2=80=99s 29.5% of the drives."
 
-> [root@BigBlue Desktop]# mdadm --stop /dev/md0
-> mdadm: stopped /dev/md0
-> [root@BigBlue Desktop]# mdadm --assemble --force /dev/md0 
-> /dev/sd{b,c,d,e,g,h}1mdadm: Marking array /dev/md0 as 'clean'
-> mdadm: /dev/md0 has been started with 6 drives (out of 7).
+And the cause is... http://habrahabr.ru/post/251941/
+(Use Google Translate if you have to, or just look at the pictures)
 
-So this did the trick because the --assemble --force above failed because 
-you tried to do it on an already assembled array.
+An unfortunate hardware design flaw, leading to dust from the outside
+eventually getting into the drive's platter area, and then starting to chip
+away ferromagnetic particles from the actual platters.
 
-> [root@BigBlue Desktop]# mdadm --manage /dev/md0 --add /dev/sdf1
-> mdadm: added /dev/sdf1
-> [root@BigBlue Desktop]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid6 sdf1[8] sdc1[0] sdb1[6] sdh1[7] sdg1[4] sde1[2] sdd1[1]
->      14650666880 blocks super 1.2 level 6, 128k chunk, algorithm 2 [7/6] 
-> [UUU_UUU]
->      [>....................]  recovery =  0.0% (2017024/2930133376) 
-> finish=725.8min speed=67234K/sec
+--=20
+With respect,
+Roman
 
-Great!
+--Sig_/kXqfB=ixe_QmA/FsHS/i.gX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlWZBn0ACgkQTLKSvz+PZwgiOwCfc4f95mPBUHXYmF+9qsStpi9c
+CwsAn3JxbDfVakAO8Q4HQDQxxp8WbYht
+=fVAv
+-----END PGP SIGNATURE-----
+
+--Sig_/kXqfB=ixe_QmA/FsHS/i.gX--
