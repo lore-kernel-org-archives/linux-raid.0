@@ -1,30 +1,54 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH trivial] dm: Spelling s/consitent/consistent/
-Date: Mon,  6 Jul 2015 15:39:17 +0200
-Message-ID: <1436189957-10930-1-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, Jiri Kosina <trivial@kernel.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+From: Nate Dailey <nate.dailey@stratus.com>
+Subject: raid1 - mismatches after resuming interrupted recovery
+Date: Mon, 6 Jul 2015 12:19:54 -0400
+Message-ID: <559AAAAA.2030904@stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/md/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I've found that if I interrupt a recovery by removing the target device, do IO 
+before the recovery checkpoint, then re-add the device and let the recovery 
+complete, the mismatch_cnt is non-zero after doing a check.
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index b59727309072462f..87338a0aab32f4a4 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -478,7 +478,7 @@ config DM_LOG_WRITES
- 	  This device-mapper target takes two devices, one device to use
- 	  normally, one to log all write operations done to the first device.
- 	  This is for use by file system developers wishing to verify that
--	  their fs is writing a consitent file system at all times by allowing
-+	  their fs is writing a consistent file system at all times by allowing
- 	  them to replay the log in a variety of ways and to check the
- 	  contents.
- 
--- 
-1.9.1
+Here's exactly what I'm doing:
+
+- create a 5 GB raid1 with internal bitmap
+
+- do a check, verify zero mismatch_cnt
+
+- remove one member device
+
+- dd 256MB with 2GB seek
+
+- lower sync_speed_min/max to 500
+
+- re-add removed device
+
+- wait 15 sec
+
+- remove the same member device again
+
+- dd 1MB with 1 GB seek
+
+- restore sync_speed_min/max to system defaults
+
+- re-add removed device
+
+- when recovery competes, do another check
+
+At this point the mismatch_cnt is non-zero.
+
+
+I originally hit this on RHEL 7.1, but tested 4.1.1 from kernel.org and it 
+happens there too.
+
+I'm out of my league in terms of trying to fix this, but would be happy to test 
+a fix. I wonder if it's really necessary to resume a bitmap recovery from the 
+checkpoint? Wouldn't the bitmap always reflect what needs to be copied?
+
+Nate
+
