@@ -1,26 +1,218 @@
-From: adamwitkover56@gmail.com
-Subject: Re: your protracted and stalled funds transfer from the U.K.
-Date: Thu, 09 Jul 2015 11:38:57 +0200
-Message-ID: <20150709093936.4B2B8209DD@mailhost.usc.br>
-Reply-To: adamwitkover56@gmail.com
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
+Date: Fri, 10 Jul 2015 09:21:19 +1000
+Message-ID: <20150710092119.297fd9e1@noble>
+References: <cover.1435094582.git.shli@fb.com>
+	<20150708115636.6c972269@noble>
+	<20150708054344.GA2709238@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <20150708054344.GA2709238@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Recipients <adamwitkover56@gmail.com>
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-Attention Pls,
+On Tue, 7 Jul 2015 22:44:02 -0700 Shaohua Li <shli@fb.com> wrote:
 
-I am writing you with regards to your protracted and stalled funds transfer from the U.K. and would urge you to accord this correspondence your full indulgence and attention, as the authenticity and difference would be evident if you do so.
+> On Wed, Jul 08, 2015 at 11:56:36AM +1000, NeilBrown wrote:
+> > 
+> > Hi,
+> >  I made some time to look at these this morning - sorry for the delay.
+> > 
+> >  Having it all broken down with more complete comments helps a lot -
+> >  thanks.
+> > 
+> >  Unfortunately ... it helps confirm that I really don't like this.  It
+> >  seems much more complex that it should be.  There certainly are a lot
+> >  of details that need to be carefully considered, but the result needs
+> >  to be simpler.
+> > 
+> >  A big part of my concern is that you choose to avoid making proper use
+> >  of the current stripe cache.  Your argument is that it is already
+> >  too complex.  That is probably true but I don't think you decrease
+> >  total complexity by adding extra bits on the side that themselves are
+> >  complex in completely different ways.
+> > 
+> >  I would like to start small and keep it as simple as possible.  I
+> >  think the minimum useful functionality is closing the write-hole.
+> >  Anything else could be done outside raid5 (e.g. bcache), but the
+> >  write-hole needs integration.  Once that is closed, it may make sense
+> >  to add more functionality.
+> > 
+> >  To do that we need a log, and it was quite sensible for you to put
+> >  that first in the list of patches.  So let's start with that.
+> > 
+> >  I would like to propose a single metadata block format.  This block
+> >  includes the general RAID5 parameters (both 'old' and 'new' for when a
+> >  reshape is happening), it includes linkage to find nearby metadata.
+> >  It includes a list of the data written after the metadata.  And it
+> >  includes a list of device-addresses of parity blocks which are now safe
+> >  on the RAID and so any log content is now ignored.
+> > 
+> >  The general mechanism for writing to the log is:
+> >    - collect a list of bios.  As each arrives update the metadata
+> >      block with index information.
+> >    - when ready (there are various triggers) write the metadata block
+> >      with FLUSH/FUA and write all the data blocks normally.  This
+> >      metadata block plus data/parity blocks is a 'transaction'.
+> > 
+> >  We never trigger a log transaction until all writes for the previous
+> >  transaction have completed. This means that once the metadata block is
+> >  safe, all previous data must also be safe.  If this imposes too much
+> >  waiting we could allow a "double-buffer" approach were each metadata
+> >  block completes the previous-but-one transaction.
+> > 
+> >  When all of the previous writes complete we trigger a new log write
+> >  if there is an outstanding SYNC write, or maybe an outstanding
+> >  FLUSH/FUA, but otherwise we wait until the metadata block is full, or
+> >  some amount of time has passed.
+> > 
+> >  This one metadata block serves all of the purposes that you
+> >  identified.  It records where data is, it commits previous writes, and
+> >  records which stripes are being written to RAID and which have been
+> >  fully committed.
+> > 
+> >  With that log in place, we add the code to "hijack ops_run_io" to
+> >  write all dirty blocks from the stripe_head to the cache.  This
+> >  includes the parity of course.  Immediately that data is safe the
+> >  write requests can be returned and the data is written the the RAID
+> >  devices.
+> > 
+> >  "Recovery" at boot time simply involves:
+> >   1. find and load first metadata block
+> >   2. load the "next" metadata block. If it doesn't exist, stop.
+> >   3. For each parity/data block listed in current block, get the
+> >      stripe_head and read the block in.
+> >   4. For each completed stripe listed, find the stripe_head and
+> >      invalidate it.
+> >   5. Make the "next" metadata block the current block and goto 2
+> >   6. Flush out all dirty data in stripe cache.
+> > 
+> > 
+> >  I think that all of this *needs* to use the stripe_cache.
+> >  Intercepting normal processing between party computation and writing
+> >  to the RAID devices must involve the stripe_cache.
+> > 
+> >  So this is a "simple" start.   Once this is written and agreed and
+> >  tested and debugged, then we can look at the latency-hiding side of
+> >  the cache.  I think this should still use the stripe_cache - just
+> >  schedule the writes to the log a bit earlier.
+> >  If a case can be made for a separate cache then I'm not completely
+> >  closed to the idea but I don't really want to think about it until the
+> >  write-hole closing code is done.
+> > 
+> > So:
+> >   [PATCH V4 01/13] MD: add a new disk role to present cache device
+> >     probably OK
+> >   [PATCH V4 02/13] raid5: directly use mddev->queue
+> >     OK
+> >   [PATCH V4 03/13] raid5: cache log handling
+> >     strip this down to a bare minimum.  It needs:
+> >       -on-disk metadata block format
+> >       -two or three active transactions which identify a list of bios
+> >        that are currently in the stripe cache.  As the bio is added,
+> >        its address info is added to the metadata block.
+> >       -interface to "add a bio to a transaction" and "record a
+> >        completed stripe".
+> >       -timer flush the current transaction if previous one was not
+> >        empty.
+> > 
+> >      I don't think there needs to be a separate superblock in the log.
+> >      Each device in the array already has an 'md' superblock.  Use e.g
+> >      the 'recovery_offset' field in there (which is per-device and
+> >      meaningless for a log) to store the address of the most recent
+> >      metadata blocks at the time the superblock was written.  Search
+> >      forward and backward from there to find whole log.  Each metadata
+> >      block holds everything else that might be useful.
+> > 
+> >   [PATCH V4 05/13] raid5: cache reclaim support
+> >     Just want the "hijack ops_run_io" part of this so that when normal
+> >     RAID5 processing wants to write a stripe, blocks get diverted to
+> >     the log first and further processing of the stripe is delayed until
+> >     those writes complete and the transaction is safe.
+> > 
+> >   [PATCH V4 08/13] raid5: cache recovery support
+> >     Just load all the log into the stripe cache.
+> > 
+> > 
+> > That should be much more manageable and would be a good start towards
+> > getting all the functionality that you want.
+> > 
+> > Feel free to ask questions if I haven't explained things, or if you
+> > want me to look over the metadata format or whatever.  I tend to answer
+> > direct questions more quickly than I answer 100kB patchsets :-)
+> Hi,
+> 
+> So we are back to the original point (eg, only fix the write hole issue) after
+> 3 months development, which is really disappointed. I don't object just fixing
+> the write hole issue as a start, it's simple which is my arguement of first
+> post too, and probably a slight change of patch 3 meets the goal. The cache
+> does significantly increase complexity, which is well known when we move from
+> 'just fix write hole' to 'fix write hole and do cache'. But the code is right
+> there, I'm wondering how bad it is. Just because of stripe_cache? I don't see
+> any significant technical merit stripe_cache is a must-have here. You said the
+> code is complex. Yes, it is, but it's not because of the new data cache. It's a
+> simple radix tree and takes less than 20% of the total code. The remaining code
+> does what any log device should do (write to log, reclaim when log is full,
+> recovery when log crash). Similar things must be done even stripe_cache is
+> used. And if we don't use stripe_cache, we don't deeply couple with current
+> state machine, the new data cache actually brings flexibility (for example, we
+> can choose not using cache, or we can easily put the cache to NVRAM).
 
-As a freelance, independent External Audit expert assisting a private financial institution here in Britain in all aspects of their work, your transfer file came to my attention just this morning, and I was compelled to take special interest in it owing to its peculiar history of procedural inconsistencies. Obviously all the persons you assigned to process your transfer have proved to be incompetent. Simply put it that they have given room to some management of the Bank to try and smuggle your fund through a non-existent back door.
+I don't think we are completely back to the start.  The product of
+recent months isn't just code - it is also your understanding and
+expertise.   You've explored the problems and understand them.  You
+could quickly see issues because you have struggled with them already.
 
-My intention is to quickly reactivate and sort out your transfer without any distraction through a simple, transparent and authoritative means where you will not be required to pay any unauthorized fees. You are forbidden to preempt anyone of this contact and I await your response at your earliest convenience.
+I think the principal of "write one to throw away" is a good one - and
+probably one we don't apply often enough.  The first time you implement
+something you don't really know what you are doing, so the result is
+bound to be imperfect.  The second time you have a much better idea of
+the big picture.
 
-Thank you.
+The real big problem that I have with the current proposal is that I
+just don't understand it.  Maybe that is my failing.  But all the
+evidence suggests that I'll end up needing to maintain it, so I *have*
+to understand it.
 
-Sincerely,
-Adam Witkover
+But let's not assume we are throwing everything away (but equally not
+promise that we won't) and start with just the first (non trivial)
+patch.  The log.
+
+I think we do want a log.  I think you have identified the key
+functionality that the log must provide.  But I think the current
+layout is too complex.  This is something that will be persistent on
+storage devices, so we want to get it as "right" as we can, early.
+It is fairly cheap to throw away a log and start a new one, so fixing
+design mistakes isn't too hard.  But we do have to support any format
+we create indefinitely.
+So simple is best.  Simple is most extensible.
+
+As I said: A single metadata block format, with:
+ - forward/backward linkage - and probably a link to the "first" block
+   in the log at the time of writing
+ - array state data - brieifly
+ - list of data/parity block addresses and maybe checksums
+ - list of "completed" stripes
+
+The log is simply these metadata blocks mixed with the data/parity they
+they describe.
+Each metadata block commits all previous transactions (or maybe all but
+the most recent).
+The current md superblock contains the address of one of these metadata
+blocks.
+
+Does that seem reasonable?  Does that seem simpler than what you had?
+Will that meet your perceived need?  It meets mine.
+If we can do that, I'll apply it and we can move on to the next step.
+
+
+(and just BTW, if we wanted to use NVRAM to help with this, I would
+start out by just putting the log in NVRAM, and then see what needs to
+be tweeked to make use of the easier addressing of NVRAM over a block
+device).
+
+NeilBrown
