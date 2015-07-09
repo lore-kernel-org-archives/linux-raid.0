@@ -1,66 +1,77 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH] bcache: Deletion of an unnecessary check before the
- function call "kobject_put"
-Date: Wed, 8 Jul 2015 19:48:13 +0200
-Message-ID: <559D625D.2020408@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <546CFECC.8020309@users.sourceforge.net>
+From: jtroan@jt-sw.com
+Subject: Re: Resurrecting a Dirty RAID-5
+Date: Wed, 8 Jul 2015 22:57:19 -0400
+Message-ID: <OF71F1F6CD.C562AA57-ON85257E7D.000FAD79-85257E7D.0010311B@jt-sw.com>
+References: <OFC233BA12.DDED55A2-ON85257E7C.00420655-85257E7C.0043331F@jt-sw.com> <559D2374.7040208@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <546CFECC.8020309@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <kmo@daterainc.com>, Neil Brown <neilb@suse.de>, linux-bcache@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <559D2374.7040208@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 19 Nov 2014 21:25:39 +0100
-> 
-> The kobject_put() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/md/bcache/super.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-> index d4713d0..1443c55 100644
-> --- a/drivers/md/bcache/super.c
-> +++ b/drivers/md/bcache/super.c
-> @@ -2076,8 +2076,7 @@ static void bcache_exit(void)
->  {
->  	bch_debug_exit();
->  	bch_request_exit();
-> -	if (bcache_kobj)
-> -		kobject_put(bcache_kobj);
-> +	kobject_put(bcache_kobj);
->  	if (bcache_wq)
->  		destroy_workqueue(bcache_wq);
->  	if (bcache_major)
-> 
+Many, many thanks for the solution.  I was able to run to a pair of mdadm
+-A commands to stitch both RAID devices back together and got it to
+completely boot up on the two drives.
 
-Would you like to integrate this update suggestion
-into another source code repository?
+As expected, it did note the degraded md1 since the third drive was still
+missing.  I'll install it when I have a few more spare moments, and have
+left the system powered down for now.
 
-Regards,
-Markus
+I'm also thinking about adding a fourth drive and try to config it as a
+hot-spare, giving me some extra margin for failure.
+
+=======================================================================
+John M. Troan  <jtroan@jt-sw.com>
+Maintainer: Football Site @ JT-SW.com
+  http://www.jt-sw.com/football
+Chief of Computer Operations
+U.S.S. Kitty Hawk / NCC-1659
+=======================================================================
+
+
+Phil Turmel <philip@turmel.org> wrote on 07/08/2015 09:19:48:
+
+>
+> To: jtroan@jt-sw.com, linux-raid@vger.kernel.org,
+> Subject: Re: Resurrecting a Dirty RAID-5
+>
+> Good morning John,
+>
+> On 07/08/2015 08:14 AM, jtroan@jt-sw.com wrote:
+>
+> [trim /]
+>
+> > I booted from the RHEL 6.5 DVD and entered rescue mode.  Using
+information
+> > from the Linux RAID wiki [1], I was able to confirm that my sd0 and sd1
+> > drives are alive and have all three partitions I had originally
+deployed to
+> > them -- /boot, /, and swap space.
+> >
+> > Following the advice on the wiki [1], I'm asking for some help in using
+> > mdadm via rescue mode in trying to get this dirty RAID-5 back on its
+feet
+> > with the surviving two drives.  (I've got a third drive already on hand
+> > that's I'll then use to bring the RAID back to full robustness.)
+>
+> From this report, you should only need to do a forced assembly from the
+> rescue environment with the good devices.  Like so (substituting actual
+> names):
+>
+> mdadm -Afv /dev/md2 /dev/sda2 /dev/sdb2
+>
+> If that fails, paste the verbose output in your reply here.
+>
+> If the above succeeds, you may shut down, plug in your new drive, and
+> boot into your normal environment (still degraded, but should be
+> bootable).  Then add the new drive's partitions to each array.
+>
+> Don't do *anything* else.
+>
+> HTH,
+>
+> Phil
+
