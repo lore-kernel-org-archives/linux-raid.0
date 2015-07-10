@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 11/12] md-cluster: Read the disk bitmap sb and check if it needs recovery
-Date: Fri, 10 Jul 2015 17:01:22 +0800
-Message-ID: <1436518883-12783-8-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 08/12] md-cluster: remove the unused sb_lock
+Date: Fri, 10 Jul 2015 17:01:19 +0800
+Message-ID: <1436518883-12783-5-git-send-email-gqjiang@suse.com>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
  <1436518883-12783-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,48 +11,54 @@ To: neilb@suse.de
 Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In gather_all_resync_info, we need to read the disk bitmap sb and
-check if it needs recovery.
+The sb_lock is not used anywhere, so let's remove it.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/md/md-cluster.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 29f65e2..c35a03a 100644
+index 6f1ea3c..057a973 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -625,6 +625,7 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
- 	struct dlm_lock_resource *bm_lockres;
- 	struct suspend_info *s;
- 	char str[64];
-+	sector_t lo, hi;
- 
- 
- 	for (i = 0; i < total_slots; i++) {
-@@ -659,7 +660,20 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
- 			lockres_free(bm_lockres);
- 			goto out;
- 		}
--		/* TODO: Read the disk bitmap sb and check if it needs recovery */
-+
-+		/* Read the disk bitmap sb and check if it needs recovery */
-+		ret = bitmap_copy_from_slot(mddev, i, &lo, &hi, false);
-+		if (ret) {
-+			pr_warn("md-cluster: Could not gather bitmaps from slot %d", i);
-+			lockres_free(bm_lockres);
-+			continue;
-+		}
-+		if ((hi > 0) && (lo < mddev->recovery_cp)) {
-+			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			mddev->recovery_cp = lo;
-+			md_check_recovery(mddev);
-+		}
-+
- 		dlm_unlock_sync(bm_lockres);
- 		lockres_free(bm_lockres);
+@@ -52,7 +52,6 @@ struct md_cluster_info {
+ 	dlm_lockspace_t *lockspace;
+ 	int slot_number;
+ 	struct completion completion;
+-	struct dlm_lock_resource *sb_lock;
+ 	struct mutex sb_mutex;
+ 	struct dlm_lock_resource *bitmap_lockres;
+ 	struct list_head suspend_list;
+@@ -692,12 +691,6 @@ static int join(struct mddev *mddev, int nodes)
+ 		ret = -ERANGE;
+ 		goto err;
  	}
+-	cinfo->sb_lock = lockres_init(mddev, "cmd-super",
+-					NULL, 0);
+-	if (!cinfo->sb_lock) {
+-		ret = -ENOMEM;
+-		goto err;
+-	}
+ 	/* Initiate the communication resources */
+ 	ret = -ENOMEM;
+ 	cinfo->recv_thread = md_register_thread(recv_daemon, mddev, "cluster_recv");
+@@ -749,7 +742,6 @@ err:
+ 	lockres_free(cinfo->ack_lockres);
+ 	lockres_free(cinfo->no_new_dev_lockres);
+ 	lockres_free(cinfo->bitmap_lockres);
+-	lockres_free(cinfo->sb_lock);
+ 	if (cinfo->lockspace)
+ 		dlm_release_lockspace(cinfo->lockspace, 2);
+ 	mddev->cluster_info = NULL;
+@@ -770,7 +762,6 @@ static int leave(struct mddev *mddev)
+ 	lockres_free(cinfo->token_lockres);
+ 	lockres_free(cinfo->ack_lockres);
+ 	lockres_free(cinfo->no_new_dev_lockres);
+-	lockres_free(cinfo->sb_lock);
+ 	lockres_free(cinfo->bitmap_lockres);
+ 	dlm_release_lockspace(cinfo->lockspace, 2);
+ 	return 0;
 -- 
 1.7.12.4
 
