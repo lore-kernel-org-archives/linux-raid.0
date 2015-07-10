@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 02/12] md-cluster: split recover_slot for future code reuse
-Date: Fri, 10 Jul 2015 16:54:03 +0800
-Message-ID: <1436518453-12660-3-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 03/12] md-cluster: transfer the resync ownership to another node
+Date: Fri, 10 Jul 2015 16:54:04 +0800
+Message-ID: <1436518453-12660-4-git-send-email-gqjiang@suse.com>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
@@ -10,59 +10,85 @@ To: neilb@suse.de
 Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Make recover_slot as a wraper to __recover_slot, since the
-logic of __recover_slot could be reuse for the condition
-when other nodes need to take over the resync job.
+When node A stop an array while the array is doing resync, we need
+let another node B to take over the resync task.
+
+To achieve the goal, we need the A send an explicit BITMAP_NEEDS_SYNC
+message to the cluster. And the node B which received that message will
+invoke __recover_slot to do resync.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ drivers/md/md-cluster.c | 15 +++++++++++++++
+ drivers/md/md.c         |  6 +++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 85ef5c5..24caabe 100644
+index 24caabe..47199ad 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -269,16 +269,11 @@ static void recover_prep(void *arg)
- 	set_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state);
- }
+@@ -75,6 +75,7 @@ enum msg_type {
+ 	NEWDISK,
+ 	REMOVE,
+ 	RE_ADD,
++	BITMAP_NEEDS_SYNC,
+ };
  
--static void recover_slot(void *arg, struct dlm_slot *slot)
-+static void __recover_slot(struct mddev *mddev, int slot)
+ struct cluster_msg {
+@@ -454,6 +455,11 @@ static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
+ 			__func__, __LINE__, msg->slot);
+ 		process_readd_disk(mddev, msg);
+ 		break;
++	case BITMAP_NEEDS_SYNC:
++		pr_info("%s: %d Received BITMAP_NEEDS_SYNC from %d\n",
++			__func__, __LINE__, msg->slot);
++		__recover_slot(mddev, msg->slot);
++		break;
+ 	default:
+ 		pr_warn("%s:%d Received unknown message from %d\n",
+ 			__func__, __LINE__, msg->slot);
+@@ -814,8 +820,17 @@ static int resync_start(struct mddev *mddev, sector_t lo, sector_t hi)
+ 
+ static void resync_finish(struct mddev *mddev)
  {
--	struct mddev *mddev = arg;
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
- 
--	pr_info("md-cluster: %s Node %d/%d down. My slot: %d. Initiating recovery.\n",
--			mddev->bitmap_info.cluster_name,
--			slot->nodeid, slot->slot,
--			cinfo->slot_number);
--	set_bit(slot->slot - 1, &cinfo->recovery_map);
-+	set_bit(slot, &cinfo->recovery_map);
- 	if (!cinfo->recovery_thread) {
- 		cinfo->recovery_thread = md_register_thread(recover_bitmaps,
- 				mddev, "recover");
-@@ -290,6 +285,20 @@ static void recover_slot(void *arg, struct dlm_slot *slot)
- 	md_wakeup_thread(cinfo->recovery_thread);
++	struct md_cluster_info *cinfo = mddev->cluster_info;
++	struct cluster_msg cmsg;
++	int slot = cinfo->slot_number - 1;
++
+ 	pr_info("%s:%d\n", __func__, __LINE__);
+ 	resync_send(mddev, RESYNCING, 0, 0);
++	if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
++		cmsg.type = cpu_to_le32(BITMAP_NEEDS_SYNC);
++		cmsg.slot = cpu_to_le32(slot);
++		sendmsg(cinfo, &cmsg);
++	}
  }
  
-+static void recover_slot(void *arg, struct dlm_slot *slot)
-+{
-+	struct mddev *mddev = arg;
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
+ static int area_resyncing(struct mddev *mddev, int direction,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index df92d30..7d05dff 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7931,9 +7931,6 @@ void md_do_sync(struct md_thread *thread)
+ 	/* tell personality that we are finished */
+ 	mddev->pers->sync_request(mddev, max_sectors, &skipped);
+ 
+-	if (mddev_is_clustered(mddev))
+-		md_cluster_ops->resync_finish(mddev);
+-
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+ 	    mddev->curr_resync > 2) {
+ 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+@@ -7967,6 +7964,9 @@ void md_do_sync(struct md_thread *thread)
+ 		}
+ 	}
+  skip:
++	if (mddev_is_clustered(mddev))
++		md_cluster_ops->resync_finish(mddev);
 +
-+	pr_info("md-cluster: %s Node %d/%d down. My slot: %d. Initiating recovery.\n",
-+			mddev->bitmap_info.cluster_name,
-+			slot->nodeid, slot->slot,
-+			cinfo->slot_number);
-+	/* deduct one since dlm slot starts from one while the num of
-+	 * cluster-md begins with 0 */
-+	__recover_slot(mddev, slot->slot - 1);
-+}
-+
- static void recover_done(void *arg, struct dlm_slot *slots,
- 		int num_slots, int our_slot,
- 		uint32_t generation)
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+ 	spin_lock(&mddev->lock);
 -- 
 1.7.12.4
 
