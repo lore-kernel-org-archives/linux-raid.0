@@ -1,94 +1,60 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 03/12] md-cluster: transfer the resync ownership to another node
-Date: Fri, 10 Jul 2015 16:54:04 +0800
-Message-ID: <1436518453-12660-4-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 07/12] md-cluster: init suspend_list and suspend_lock early in join
+Date: Fri, 10 Jul 2015 17:01:18 +0800
+Message-ID: <1436518883-12783-4-git-send-email-gqjiang@suse.com>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
+ <1436518883-12783-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1436518883-12783-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When node A stop an array while the array is doing resync, we need
-let another node B to take over the resync task.
+If the node just join the cluster, and receive the msg from other nodes
+before init suspend_list, it will cause kernel crash due to NULL pointer
+dereference, so move the initializations early to fix the bug.
 
-To achieve the goal, we need the A send an explicit BITMAP_NEEDS_SYNC
-message to the cluster. And the node B which received that message will
-invoke __recover_slot to do resync.
+md-cluster: Joined cluster 3578507b-e0cb-6d4f-6322-696cd7b1b10c slot 3
+BUG: unable to handle kernel NULL pointer dereference at           (null)
+... ... ...
+Call Trace:
+[<ffffffffa0444924>] process_recvd_msg+0x2e4/0x330 [md_cluster]
+[<ffffffffa0444a06>] recv_daemon+0x96/0x170 [md_cluster]
+[<ffffffffa045189d>] md_thread+0x11d/0x170 [md_mod]
+[<ffffffff810768c4>] kthread+0xb4/0xc0
+[<ffffffff8151927c>] ret_from_fork+0x7c/0xb0
+... ... ...
+RIP  [<ffffffffa0443581>] __remove_suspend_info+0x11/0xa0 [md_cluster]
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 15 +++++++++++++++
- drivers/md/md.c         |  6 +++---
- 2 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/md/md-cluster.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 24caabe..47199ad 100644
+index b80a689..6f1ea3c 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -75,6 +75,7 @@ enum msg_type {
- 	NEWDISK,
- 	REMOVE,
- 	RE_ADD,
-+	BITMAP_NEEDS_SYNC,
- };
+@@ -671,6 +671,8 @@ static int join(struct mddev *mddev, int nodes)
+ 	if (!cinfo)
+ 		return -ENOMEM;
  
- struct cluster_msg {
-@@ -454,6 +455,11 @@ static void process_recvd_msg(struct mddev *mddev, struct cluster_msg *msg)
- 			__func__, __LINE__, msg->slot);
- 		process_readd_disk(mddev, msg);
- 		break;
-+	case BITMAP_NEEDS_SYNC:
-+		pr_info("%s: %d Received BITMAP_NEEDS_SYNC from %d\n",
-+			__func__, __LINE__, msg->slot);
-+		__recover_slot(mddev, msg->slot);
-+		break;
- 	default:
- 		pr_warn("%s:%d Received unknown message from %d\n",
- 			__func__, __LINE__, msg->slot);
-@@ -814,8 +820,17 @@ static int resync_start(struct mddev *mddev, sector_t lo, sector_t hi)
++	INIT_LIST_HEAD(&cinfo->suspend_list);
++	spin_lock_init(&cinfo->suspend_lock);
+ 	init_completion(&cinfo->completion);
  
- static void resync_finish(struct mddev *mddev)
- {
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	struct cluster_msg cmsg;
-+	int slot = cinfo->slot_number - 1;
-+
- 	pr_info("%s:%d\n", __func__, __LINE__);
- 	resync_send(mddev, RESYNCING, 0, 0);
-+	if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-+		cmsg.type = cpu_to_le32(BITMAP_NEEDS_SYNC);
-+		cmsg.slot = cpu_to_le32(slot);
-+		sendmsg(cinfo, &cmsg);
-+	}
- }
- 
- static int area_resyncing(struct mddev *mddev, int direction,
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index df92d30..7d05dff 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7931,9 +7931,6 @@ void md_do_sync(struct md_thread *thread)
- 	/* tell personality that we are finished */
- 	mddev->pers->sync_request(mddev, max_sectors, &skipped);
- 
--	if (mddev_is_clustered(mddev))
--		md_cluster_ops->resync_finish(mddev);
--
- 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
- 	    mddev->curr_resync > 2) {
- 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-@@ -7967,6 +7964,9 @@ void md_do_sync(struct md_thread *thread)
- 		}
+ 	mutex_init(&cinfo->sb_mutex);
+@@ -736,9 +738,6 @@ static int join(struct mddev *mddev, int nodes)
+ 		goto err;
  	}
-  skip:
-+	if (mddev_is_clustered(mddev))
-+		md_cluster_ops->resync_finish(mddev);
-+
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
  
- 	spin_lock(&mddev->lock);
+-	INIT_LIST_HEAD(&cinfo->suspend_list);
+-	spin_lock_init(&cinfo->suspend_lock);
+-
+ 	ret = gather_all_resync_info(mddev, nodes);
+ 	if (ret)
+ 		goto err;
 -- 
 1.7.12.4
 
