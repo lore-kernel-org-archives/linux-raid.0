@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 06/12] md-cluster: add the error check if failed to get dlm lock
-Date: Fri, 10 Jul 2015 17:01:17 +0800
-Message-ID: <1436518883-12783-3-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 10/12] md-cluster: only call complete(&cinfo->completion) when node join cluster
+Date: Fri, 10 Jul 2015 17:01:21 +0800
+Message-ID: <1436518883-12783-7-git-send-email-gqjiang@suse.com>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
  <1436518883-12783-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,98 +11,55 @@ To: neilb@suse.de
 Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In complicated cluster environment, it is possible that the
-dlm lock couldn't be get/convert on purpose, the related err
-info is added for better debug potential issue.
-
-For lockres_free, if the lock is blocking by a lock request or
-conversion request, then dlm_unlock just put it back to grant
-queue, so need to ensure the lock is free finally.
+Introduce MD_CLUSTER_BEGIN_JOIN_CLUSTER flag to make sure
+complete(&cinfo->completion) is only be invoked when node
+join cluster. Otherwise node failure could also call the
+complete, and it doesn't make sense to do it.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 41 +++++++++++++++++++++++++++++++++++------
- 1 file changed, 35 insertions(+), 6 deletions(-)
+ drivers/md/md-cluster.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 2a57f19..b80a689 100644
+index 411b430..29f65e2 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -166,10 +166,24 @@ out_err:
+@@ -45,6 +45,7 @@ struct resync_info {
+ /* md_cluster_info flags */
+ #define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
+ #define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
++#define		MD_CLUSTER_BEGIN_JOIN_CLUSTER		3
  
- static void lockres_free(struct dlm_lock_resource *res)
- {
-+	int ret;
-+
- 	if (!res)
- 		return;
  
--	dlm_unlock(res->ls, res->lksb.sb_lkid, 0, &res->lksb, res);
-+	/* cancel a lock request or a conversion request that is blocked */
-+	res->flags |= DLM_LKF_CANCEL;
-+retry:
-+	ret = dlm_unlock(res->ls, res->lksb.sb_lkid, 0, &res->lksb, res);
-+	if (unlikely(ret != 0)) {
-+		pr_info("%s: failed to unlock %s return %d\n", __func__, res->name, ret);
-+
-+		/* if a lock conversion is cancelled, then the lock is put
-+		 * back to grant queue, need to ensure it is unlocked */
-+		if (ret == -DLM_ECANCEL)
-+			goto retry;
+ struct md_cluster_info {
+@@ -320,10 +321,17 @@ static void recover_done(void *arg, struct dlm_slot *slots,
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+ 
+ 	cinfo->slot_number = our_slot;
+-	complete(&cinfo->completion);
++	/* completion is only need to be complete when node join cluster,
++	 * it doesn't need to run during another node's failure */
++	if (test_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state)) {
++		complete(&cinfo->completion);
++		clear_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
 +	}
-+	res->flags &= ~DLM_LKF_CANCEL;
- 	wait_for_completion(&res->completion);
- 
- 	kfree(res->name);
-@@ -474,6 +488,7 @@ static void recv_daemon(struct md_thread *thread)
- 	struct dlm_lock_resource *ack_lockres = cinfo->ack_lockres;
- 	struct dlm_lock_resource *message_lockres = cinfo->message_lockres;
- 	struct cluster_msg msg;
-+	int ret;
- 
- 	/*get CR on Message*/
- 	if (dlm_lock_sync(message_lockres, DLM_LOCK_CR)) {
-@@ -486,13 +501,21 @@ static void recv_daemon(struct md_thread *thread)
- 	process_recvd_msg(thread->mddev, &msg);
- 
- 	/*release CR on ack_lockres*/
--	dlm_unlock_sync(ack_lockres);
-+	ret = dlm_unlock_sync(ack_lockres);
-+	if (unlikely(ret != 0))
-+		pr_info("unlock ack failed return %d\n", ret);
- 	/*up-convert to PR on message_lockres*/
--	dlm_lock_sync(message_lockres, DLM_LOCK_PR);
-+	ret = dlm_lock_sync(message_lockres, DLM_LOCK_PR);
-+	if (unlikely(ret != 0))
-+		pr_info("lock PR on msg failed return %d\n", ret);
- 	/*get CR on ack_lockres again*/
--	dlm_lock_sync(ack_lockres, DLM_LOCK_CR);
-+	ret = dlm_lock_sync(ack_lockres, DLM_LOCK_CR);
-+	if (unlikely(ret != 0))
-+		pr_info("lock CR on ack failed return %d\n", ret);
- 	/*release CR on message_lockres*/
--	dlm_unlock_sync(message_lockres);
-+	ret = dlm_unlock_sync(message_lockres);
-+	if (unlikely(ret != 0))
-+		pr_info("unlock msg failed return %d\n", ret);
+ 	clear_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state);
  }
  
- /* lock_comm()
-@@ -567,7 +590,13 @@ static int __sendmsg(struct md_cluster_info *cinfo, struct cluster_msg *cmsg)
- 	}
++/* the ops is called when node join the cluster, and do lock recovery
++ * if node failure occurs */
+ static const struct dlm_lockspace_ops md_ls_ops = {
+ 	.recover_prep = recover_prep,
+ 	.recover_slot = recover_slot,
+@@ -675,6 +683,7 @@ static int join(struct mddev *mddev, int nodes)
+ 	INIT_LIST_HEAD(&cinfo->suspend_list);
+ 	spin_lock_init(&cinfo->suspend_lock);
+ 	init_completion(&cinfo->completion);
++	set_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
  
- failed_ack:
--	dlm_unlock_sync(cinfo->message_lockres);
-+	error = dlm_unlock_sync(cinfo->message_lockres);
-+	if (unlikely(error != 0)) {
-+		pr_err("md-cluster: failed convert to NL on MESSAGE(%d)\n",
-+			error);
-+		/* in case the message can't be released due to some reason */
-+		goto failed_ack;
-+	}
- failed_message:
- 	return error;
- }
+ 	mutex_init(&cinfo->sb_mutex);
+ 	mddev->cluster_info = cinfo;
 -- 
 1.7.12.4
 
