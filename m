@@ -1,7 +1,7 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 08/12] md-cluster: remove the unused sb_lock
-Date: Fri, 10 Jul 2015 17:01:19 +0800
-Message-ID: <1436518883-12783-5-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 12/12] md-cluster: handle error situations more precisely in lockres_init
+Date: Fri, 10 Jul 2015 17:01:23 +0800
+Message-ID: <1436518883-12783-9-git-send-email-gqjiang@suse.com>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
  <1436518883-12783-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -11,54 +11,52 @@ To: neilb@suse.de
 Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The sb_lock is not used anywhere, so let's remove it.
+In lockres_init, it's better to distinguish different err conditions.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/md/md-cluster.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 6f1ea3c..057a973 100644
+index c35a03a..54d225c 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -52,7 +52,6 @@ struct md_cluster_info {
- 	dlm_lockspace_t *lockspace;
- 	int slot_number;
- 	struct completion completion;
--	struct dlm_lock_resource *sb_lock;
- 	struct mutex sb_mutex;
- 	struct dlm_lock_resource *bitmap_lockres;
- 	struct list_head suspend_list;
-@@ -692,12 +691,6 @@ static int join(struct mddev *mddev, int nodes)
- 		ret = -ERANGE;
- 		goto err;
+@@ -131,14 +131,14 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
+ 	res->name = kzalloc(namelen + 1, GFP_KERNEL);
+ 	if (!res->name) {
+ 		pr_err("md-cluster: Unable to allocate resource name for resource %s\n", name);
+-		goto out_err;
++		goto out_err_name;
  	}
--	cinfo->sb_lock = lockres_init(mddev, "cmd-super",
--					NULL, 0);
--	if (!cinfo->sb_lock) {
--		ret = -ENOMEM;
--		goto err;
--	}
- 	/* Initiate the communication resources */
- 	ret = -ENOMEM;
- 	cinfo->recv_thread = md_register_thread(recv_daemon, mddev, "cluster_recv");
-@@ -749,7 +742,6 @@ err:
- 	lockres_free(cinfo->ack_lockres);
- 	lockres_free(cinfo->no_new_dev_lockres);
- 	lockres_free(cinfo->bitmap_lockres);
--	lockres_free(cinfo->sb_lock);
- 	if (cinfo->lockspace)
- 		dlm_release_lockspace(cinfo->lockspace, 2);
- 	mddev->cluster_info = NULL;
-@@ -770,7 +762,6 @@ static int leave(struct mddev *mddev)
- 	lockres_free(cinfo->token_lockres);
- 	lockres_free(cinfo->ack_lockres);
- 	lockres_free(cinfo->no_new_dev_lockres);
--	lockres_free(cinfo->sb_lock);
- 	lockres_free(cinfo->bitmap_lockres);
- 	dlm_release_lockspace(cinfo->lockspace, 2);
- 	return 0;
+ 	strlcpy(res->name, name, namelen + 1);
+ 	if (with_lvb) {
+ 		res->lksb.sb_lvbptr = kzalloc(LVB_SIZE, GFP_KERNEL);
+ 		if (!res->lksb.sb_lvbptr) {
+ 			pr_err("md-cluster: Unable to allocate LVB for resource %s\n", name);
+-			goto out_err;
++			goto out_err_lvb;
+ 		}
+ 		res->flags = DLM_LKF_VALBLK;
+ 	}
+@@ -159,7 +159,9 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
+ 	return res;
+ out_err:
+ 	kfree(res->lksb.sb_lvbptr);
++out_err_lvb:
+ 	kfree(res->name);
++out_err_name:
+ 	kfree(res);
+ 	return NULL;
+ }
+@@ -627,7 +629,6 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
+ 	char str[64];
+ 	sector_t lo, hi;
+ 
+-
+ 	for (i = 0; i < total_slots; i++) {
+ 		memset(str, '\0', 64);
+ 		snprintf(str, 64, "bitmap%04d", i);
 -- 
 1.7.12.4
 
