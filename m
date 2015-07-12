@@ -1,86 +1,42 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: mdadm-grow-continue service crashing (similiar to "raid5 reshape
- is stuck" thread from May)
-Date: Sun, 12 Jul 2015 09:45:09 -0400
-Message-ID: <55A26F65.5020703@turmel.org>
-References: <CACsGCySTbrEYddSNfi7+9KnxWeddkBGDbxTsBSJkkvGHOaJwKg@mail.gmail.com>
+From: jtroan@jt-sw.com
+Subject: Re: Resurrecting a Dirty RAID-5
+Date: Sun, 12 Jul 2015 11:01:54 -0400
+Message-ID: <OF4E023A92.1624DC91-ON85257E80.0051B769-85257E80.005287C5@jt-sw.com>
+References: <OFC233BA12.DDED55A2-ON85257E7C.00420655-85257E7C.0043331F@jt-sw.com> <559D2374.7040208@turmel.org> <OF71F1F6CD.C562AA57-ON85257E7D.000FAD79-85257E7D.0010311B@jt-sw.com> <alpine.DEB.2.02.1507120756020.11810@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCySTbrEYddSNfi7+9KnxWeddkBGDbxTsBSJkkvGHOaJwKg@mail.gmail.com>
+In-Reply-To: <alpine.DEB.2.02.1507120756020.11810@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Edward,
+>
+> On Wed, 8 Jul 2015, jtroan@jt-sw.com wrote:
+>
+> > I'm also thinking about adding a fourth drive and try to config it as a
 
-On 07/12/2015 02:02 AM, Edward Kuns wrote:
+> > hot-spare, giving me some extra margin for failure.
+>
+> I would recommend you turn your raid5 into raid6 instead of having a
+> raid5+spare. This can be done with a fairly simple command, without
+> downtime.
+>
 
-[trim /]
+I like the idea of using RAID-6 for / (for all the VMs under /var).  (I
+figure I'll probably still have to do a spare on my RAID-1 device
+for /boot .)
 
-> The short version of the story is that I replaced the dead drive and
-> let the raid5 partition rebuild.  Then I added a new drive and let the
-> partition rebuild.  Then I removed the not-yet-dead drive and here is
-> where I ran into the same problem as the other poster.  Basically, I
-> did this to replace the still-working-but-suspect device, after the
-> partition completed rebuilding when I replaced the actually-dead
-> drive:
-> 
-> mdadm --manage /dev/md125 --add /dev/sdf1
-> mdadm --grow --raid-devices=5 /dev/md125
-> 
->  ... wait for the rebuild to complete
-> 
-> mdadm --fail /dev/md125 /dev/sdd2
-> mdadm --remove /dev/md125 /dev/sdd2
-> mdadm --grow --raid-devices=4 /dev/md125
-> 
-> mdadm: this change will reduce the size of the array.
->        use --grow --array-size first to truncate array.
->        e.g. mdadm --grow /dev/md125 --array-size 118964736
-> 
-> mdadm --grow /dev/md125 --array-size 118964736
-> mdadm --grow --raid-devices=4 /dev/md125
-> 
-> ... this failed with a mysterious complaint about my first partition
-> (Cannot set new_offset).  Research got me to try:
-> 
-> mdadm --grow --raid-devices=4 /dev/md125 --backup-file /root/md125.backup
+What's the (mdadm?) command to convert an MD from RAID-5 to RAID-6?
 
-Why were you using --grow for these operations only to reverse it?  This
-is dangerous if you have a layer or filesystem on your array that
-doesn't support shrinking.  None of the --grow operations were necessary
-in this sequence to achieve the end result of replacing disks.
+Thanks.....
 
-> .... here everything ground to a halt.  The reshape was at 0% and
-> there was no disk activity.
-> 
-> The solution was to edit
-> /lib/systemd/system/mdadm-grow-continue@.service to look like this (it
-> was important that the backup file was placed in /tmp and not in /root
-> or anywhere else.  SELinux allowed mdadm to create a file in /tmp by
-> not anywhere else I tried):
+=======================================================================
+John M. Troan  <jtroan@jt-sw.com>
+Maintainer: Football Site @ JT-SW.com
+  http://www.jt-sw.com/football
+Chief of Computer Operations
+  U.S.S. Kitty Hawk / NCC-1659
+=======================================================================
 
-I'm not an SELinux guy, so I can't help with the rest, but you should
-know that many modern distros delete /tmp on reboot and/or play games
-with namespaces to isolate different users' /tmp spaces.
-
-[trim /]
-
-> I did a fail, remove, and
-> add on /dev/sdd1  and it very quickly synced and came into service.
-> The command "mdadm --detail /dev/md125" now shows a happy raid5 with
-> four partitions in it, all "active sync"
-
-These are the only operations you should have done in the first place.
-Although I would have put the --add first, so the --fail operation would
-have triggered a rebuild onto the spare right away.  At no point should
-you have changed the number of raid devices.
-
-And for the still-running but suspect drive, the --replace operation
-would have been the right choice, again, after --add of a spare.
-
-HTH,
-
-Phil
