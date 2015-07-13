@@ -1,92 +1,78 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Mon, 13 Jul 2015 15:35:45 -0700
-Message-ID: <20150713223534.GA1896419@devbig257.prn2.facebook.com>
-References: <20150708054344.GA2709238@devbig257.prn2.facebook.com>
- <20150710092119.297fd9e1@noble>
- <20150710040847.GA1408097@devbig257.prn2.facebook.com>
- <20150710143656.4ee7e647@noble>
- <20150710045225.GA1746743@devbig257.prn2.facebook.com>
- <20150710151044.396f9645@noble>
- <20150710051815.GA1902680@devbig257.prn2.facebook.com>
- <20150710164209.5928d762@noble>
- <20150710174835.GA1837928@devbig257.prn2.facebook.com>
- <20150714082254.3889ef43@noble>
+From: Adam Goryachev <adam@websitemanagers.com.au>
+Subject: Re: CPU requirements......
+Date: Tue, 14 Jul 2015 09:10:24 +1000
+Message-ID: <55A44560.8050603@websitemanagers.com.au>
+References: <CAOS+5GGAL-8R7ZNd563Z-5oXbRw1QAswOKv7DstT5cLFdyR+Sw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150714082254.3889ef43@noble>
+In-Reply-To: <CAOS+5GGAL-8R7ZNd563Z-5oXbRw1QAswOKv7DstT5cLFdyR+Sw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+To: Another Sillyname <anothersname@googlemail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jul 14, 2015 at 08:22:54AM +1000, NeilBrown wrote:
-> On Fri, 10 Jul 2015 10:48:45 -0700 Shaohua Li <shli@fb.com> wrote:
-> 
-> > On Fri, Jul 10, 2015 at 04:42:09PM +1000, NeilBrown wrote:
-> > > On Thu, 9 Jul 2015 22:18:15 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > 
-> > > > On Fri, Jul 10, 2015 at 03:10:44PM +1000, NeilBrown wrote:
-> > > > > On Thu, 9 Jul 2015 21:52:43 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > > 
-> > > > > > On Fri, Jul 10, 2015 at 02:36:56PM +1000, NeilBrown wrote:
-> > > > > > > On Thu, 9 Jul 2015 21:08:49 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > > > > 
-> > > > > 
-> > > > > > > There is also the issue of what action commits a previous transaction.
-> > > > > > > I'm not sure what you had.  I'm suggesting that each metadata block
-> > > > > > > commits previous transactions.  Is that a close-enough match to what
-> > > > > > > you had?
-> > > > > > 
-> > > > > > What did you mean about a transaction? In my implementation, metadata
-> > > > > > block and followed stripe data/parity consist of an io unit. io units can
-> > > > > > be finished out of order. but if io unit has flush request (the data has
-> > > > > > flush/flush bio or metadata is a flush block), the io unit can only
-> > > > > > start after all previous io units and disk cache flush finish. Such io
-> > > > > > unit is strictly ordered. The log patch describes this behavior. Does it
-> > > > > > match?
-> > > > > 
-> > > > > Yes, a "transaction" is an "io unit".  The flushing is the same.
-> > > > > I just couldn't remember how, when reading the log on restart, you
-> > > > > determined if a given "io unit" was reliably consistent, or whether it
-> > > > > should be ignored (having possibly only partially been written).
-> > > > 
-> > > > The metadata block has a checksum for data of the block. data/parity has
-> > > > checksum stored in metadata block. This way we can know if metadata and
-> > > > data is consistent.
-> > > > 
-> > > 
-> > > OK .. though I'm not totally sold on the value of checksums.  When a
-> > > checksum doesn't match, that means something.  When a checksum does
-> > > match, it could just be a co-incidence.
-> > > I'd rather have a process that made checksums unnecessary, and only use
-> > > the checksums as a double-check.
-> > 
-> > We could do something like: write metadata/data, wait, write another
-> > metadata. the second metadata indicates the first is in disk. But this
-> > can impact performance very much. 
-> 
-> The performance consideration is why I suggested a double-buffered
-> approach.  Write metadata1, data1, metadata2, data2, then don't write
-> metdata3 until metdata1 and data1 has been written.
-> I haven't actually tried that so I don't know for certain it would help.
+On 14/07/15 02:14, Another Sillyname wrote:
+> I've been testing a test RAID6 setup with a 5970 CPU that has worked fine.
+>
+> As this box is almost exclusively going to be a file server I'm
+> thinking of swapping to a G3258 processor, dual core, not overclocked
+> and no hyperthreading or turbo features.
+>
+> The box may also be used to do transcodes of media files from HD mpeg
+> to x264 which is pretty CPU intensive......
+>
+> Are there any likely issues with the RAID running on a substantially
+> slower CPU?   I can't seem to find an recent/decent docs suggesting
+> minimum CPU requirements for MDADM raid configs.
+>
 
-Not sure if double buffer works, but you can't write metadata1 till
-data1 hits to disk, which has big penality. The only possible way is to
-origanize data/metadata as a big transaction so wait doesn't hurt too
-much like jbd does.
+I'm not sure about the specific CPU's you are referencing, however, as I 
+understand it, RAID5 (and RAID6) are still single threaded (only one CPU 
+is used for calculating the parity) which is done during all writes, and 
+when degraded during all reads as well.
 
-> >                                    I think checksum should be fine. It
-> > might be just a coninsidence, but the rate should extremely low. jbd2 is
-> > using checksum too now.
-> 
-> Maybe I'll have a look at jbd2 - do you know what sort of checksum it
-> uses?  I'd be surprised it didn't use something quite a bit stronger
-> than crc32 for a task like this.
+In addition, transcoding media files will also be very CPU intensive.
 
-It uses crc32. 32bits checksum for every 4k as far as I check.
+Some questions to ask:
+1) How many transcodes do you want to do concurrently? Just one at a 
+time means you maybe only need one core for that.
+2) Does transcoding a single file/stream utilise more than one core? 
+Having more cores will mean a faster result.
+3) What is the read throughput you need to keep the transcoding process 
+CPU busy (ie, you want to be able to read the file from disk faster than 
+the CPU can do the work to convert the file)
+4) What is the write throughput you need to save the resulting file from 
+the transcoding process (ie, if the transcode can't write the result, 
+then it will waste CPU time).
+5) Don't forget you now have concurrent read/write on the same set of 
+disks, consider tuning the read ahead (read and cache more of the input 
+file) and potentially write buffers (assuming you can always recode the 
+input file if the system crashes during the process).
 
-Thanks,
-Shaohua
+What is the goal?
+a) Make sure it works (should not be a problem, just performance will be 
+slower)
+b) Make the transcode as fast as possible with the given disks (If the 
+disks are slower than the slow CPU, then no problem, otherwise use the 
+faster CPU)
+c) Make the transcode as fast as possible with the given CPU (either 
+one) (take your pick...)
+
+You would probably need to do a lot of test and measure of the above. 
+The advantage you have is a well defined work load, that can be easily 
+tested. Just remember to record the results clearly showing what you 
+changed in each scenario. Though it might be difficult to "swap" CPU for 
+the various tests...
+
+Hope that helps....
+
+Regards,
+Adam
+
+-- 
+Adam Goryachev
+Website Managers
+P: +61 2 8304 0000                    adam@websitemanagers.com.au
+F: +61 2 8304 0001                     www.websitemanagers.com.au
+
