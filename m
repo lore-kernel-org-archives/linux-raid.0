@@ -1,60 +1,94 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
-Subject: Re: mdadm-grow-continue service crashing (similiar to "raid5 reshape
- is stuck" thread from May)
-Date: Mon, 13 Jul 2015 17:07:07 -0500
-Message-ID: <CACsGCyRkodONCAenhF9gHAShdZPP7uShJC1MHfdbZs81ho7RvA@mail.gmail.com>
-References: <CACsGCySTbrEYddSNfi7+9KnxWeddkBGDbxTsBSJkkvGHOaJwKg@mail.gmail.com>
-	<55A26F65.5020703@turmel.org>
-	<CACsGCyT5vgFkQEc1zgKCGgT_rO5V4cmuFmo9K4vwiqN4JsPLJA@mail.gmail.com>
-	<55A4056C.6050004@youngman.org.uk>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
+Date: Tue, 14 Jul 2015 08:22:54 +1000
+Message-ID: <20150714082254.3889ef43@noble>
+References: <cover.1435094582.git.shli@fb.com>
+	<20150708115636.6c972269@noble>
+	<20150708054344.GA2709238@devbig257.prn2.facebook.com>
+	<20150710092119.297fd9e1@noble>
+	<20150710040847.GA1408097@devbig257.prn2.facebook.com>
+	<20150710143656.4ee7e647@noble>
+	<20150710045225.GA1746743@devbig257.prn2.facebook.com>
+	<20150710151044.396f9645@noble>
+	<20150710051815.GA1902680@devbig257.prn2.facebook.com>
+	<20150710164209.5928d762@noble>
+	<20150710174835.GA1837928@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55A4056C.6050004@youngman.org.uk>
+In-Reply-To: <20150710174835.GA1837928@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
 List-Id: linux-raid.ids
 
-On Mon, Jul 13, 2015 at 1:37 PM, Wols Lists <antlists@youngman.org.uk> wrote:
-> Please note that this is the DEFINED behaviour of /tmp, so it has a very
-> high probability of happening.
->
-> If you want temporary data to survive a reboot, put it in /var/tmp.
+On Fri, 10 Jul 2015 10:48:45 -0700 Shaohua Li <shli@fb.com> wrote:
 
-OK.  Looking more carefully, I see my "/tmp" partition is of type
-tmpfs.  So yes, on reboot it would have been totally clean, exactly as
-you say.  In my case, my /var partition was on the raid5 being
-reshaped, so /var/tmp wasn't an option for me.
+> On Fri, Jul 10, 2015 at 04:42:09PM +1000, NeilBrown wrote:
+> > On Thu, 9 Jul 2015 22:18:15 -0700 Shaohua Li <shli@fb.com> wrote:
+> > 
+> > > On Fri, Jul 10, 2015 at 03:10:44PM +1000, NeilBrown wrote:
+> > > > On Thu, 9 Jul 2015 21:52:43 -0700 Shaohua Li <shli@fb.com> wrote:
+> > > > 
+> > > > > On Fri, Jul 10, 2015 at 02:36:56PM +1000, NeilBrown wrote:
+> > > > > > On Thu, 9 Jul 2015 21:08:49 -0700 Shaohua Li <shli@fb.com> wrote:
+> > > > > > 
+> > > > 
+> > > > > > There is also the issue of what action commits a previous transaction.
+> > > > > > I'm not sure what you had.  I'm suggesting that each metadata block
+> > > > > > commits previous transactions.  Is that a close-enough match to what
+> > > > > > you had?
+> > > > > 
+> > > > > What did you mean about a transaction? In my implementation, metadata
+> > > > > block and followed stripe data/parity consist of an io unit. io units can
+> > > > > be finished out of order. but if io unit has flush request (the data has
+> > > > > flush/flush bio or metadata is a flush block), the io unit can only
+> > > > > start after all previous io units and disk cache flush finish. Such io
+> > > > > unit is strictly ordered. The log patch describes this behavior. Does it
+> > > > > match?
+> > > > 
+> > > > Yes, a "transaction" is an "io unit".  The flushing is the same.
+> > > > I just couldn't remember how, when reading the log on restart, you
+> > > > determined if a given "io unit" was reliably consistent, or whether it
+> > > > should be ignored (having possibly only partially been written).
+> > > 
+> > > The metadata block has a checksum for data of the block. data/parity has
+> > > checksum stored in metadata block. This way we can know if metadata and
+> > > data is consistent.
+> > > 
+> > 
+> > OK .. though I'm not totally sold on the value of checksums.  When a
+> > checksum doesn't match, that means something.  When a checksum does
+> > match, it could just be a co-incidence.
+> > I'd rather have a process that made checksums unnecessary, and only use
+> > the checksums as a double-check.
+> 
+> We could do something like: write metadata/data, wait, write another
+> metadata. the second metadata indicates the first is in disk. But this
+> can impact performance very much. 
 
-> Oh - and if SeLinux only lets you put it in /tmp, what happens if you
-> don't have a separate /tmp partition? You can't put the  backup file on
-> the partition you are rebuilding, and SeLinux won't let you put it
-> anywhere else? That's a big disaster in the making ...
+The performance consideration is why I suggested a double-buffered
+approach.  Write metadata1, data1, metadata2, data2, then don't write
+metdata3 until metdata1 and data1 has been written.
+I haven't actually tried that so I don't know for certain it would help.
 
-Well, SELinux will let you put it anywhere that is labeled to allow
-it.  So if it needs to go on some folder that isn't labelled properly,
-then some labeling needs to be done.  I didn't want to deal with the
-(minor) hassle of creating a label, of having to understand what label
-would be appropriate, so I wanted to find a folder that was already
-allowed by the existing labeling.  So I tried a bunch of folders in
-succession until one worked.
+>                                    I think checksum should be fine. It
+> might be just a coninsidence, but the rate should extremely low. jbd2 is
+> using checksum too now.
 
-What is the interaction between the backup file I had to specify in
-/lib/systemd/system/mdadm-grow-continue@.service and the backup file I
-had to specify on the command line to do the --grow to shrink the
-array?  It kind of looks like the backup file on the "mdadm" command
-line doesn't really matter, except that I had to specify one, because
-"mdadm --grow --raid-devices=4 /dev/md125" wouldn't *try* to start
-without a backup file specified, but then just crashed in the
-mdadm-grow-continue service.  Specifying a (different) backup file
-there and restarting the service got the reshape to complete.
+Maybe I'll have a look at jbd2 - do you know what sort of checksum it
+uses?  I'd be surprised it didn't use something quite a bit stronger
+than crc32 for a task like this.
 
-This raises a big question with SELinux.  When a backup file is truly
-needed, mdadm needs the ability to write the backup file to more than
-one partition (not at a time, but in general), depending on which raid
-device is being modified.  This means that some custom labeling may
-need to be done either in advance to prepare for recovery or
-on-the-fly in a recovery situation.
+NeilBrown
 
-             Eddie
+
+> 
+> Thanks,
+> Shaohua
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
