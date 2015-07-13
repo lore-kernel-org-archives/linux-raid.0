@@ -1,45 +1,35 @@
-From: Jared Mauch <jared@puck.Nether.net>
-Subject: Re: CPU requirements......
-Date: Mon, 13 Jul 2015 12:26:01 -0400
-Message-ID: <20150713162600.GA16878@puck.nether.net>
-References: <CAOS+5GGAL-8R7ZNd563Z-5oXbRw1QAswOKv7DstT5cLFdyR+Sw@mail.gmail.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: mdadm-grow-continue service crashing (similiar to "raid5 reshape
+ is stuck" thread from May)
+Date: Mon, 13 Jul 2015 19:37:32 +0100
+Message-ID: <55A4056C.6050004@youngman.org.uk>
+References: <CACsGCySTbrEYddSNfi7+9KnxWeddkBGDbxTsBSJkkvGHOaJwKg@mail.gmail.com>	<55A26F65.5020703@turmel.org> <CACsGCyT5vgFkQEc1zgKCGgT_rO5V4cmuFmo9K4vwiqN4JsPLJA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOS+5GGAL-8R7ZNd563Z-5oXbRw1QAswOKv7DstT5cLFdyR+Sw@mail.gmail.com>
+In-Reply-To: <CACsGCyT5vgFkQEc1zgKCGgT_rO5V4cmuFmo9K4vwiqN4JsPLJA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Another Sillyname <anothersname@googlemail.com>
+To: Edward Kuns <eddie.kuns@gmail.com>, Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 13, 2015 at 05:14:51PM +0100, Another Sillyname wrote:
-> I've been testing a test RAID6 setup with a 5970 CPU that has worked fine.
-> 
-> As this box is almost exclusively going to be a file server I'm
-> thinking of swapping to a G3258 processor, dual core, not overclocked
-> and no hyperthreading or turbo features.
-> 
-> The box may also be used to do transcodes of media files from HD mpeg
-> to x264 which is pretty CPU intensive......
-> 
-> Are there any likely issues with the RAID running on a substantially
-> slower CPU?   I can't seem to find an recent/decent docs suggesting
-> minimum CPU requirements for MDADM raid configs.
+On 12/07/15 20:24, Edward Kuns wrote:
+>> > many modern distros delete /tmp on reboot and/or play
+>> > games with namespaces to isolate different users' /tmp spaces.
 
-	you are likely to be I/O bound either on the drives
-or on the controller card to the bus/cpu.
+> So if the machine crashes during a rebuild, you may lose that backup
+> file, depending on the distro.  OK. 
 
-	While imperfect, take a look at doing
-hdparm -t -T /dev/device-name
+Please note that this is the DEFINED behaviour of /tmp, so it has a very
+high probability of happening.
 
-	This will give you an idea of what a userland process
-will see as the performance for cached and non-cached reads.
+If you want temporary data to survive a reboot, put it in /var/tmp.
 
-	simply: the more you can keep in memory or on fast media
-the better off you are.
+Oh - and if SeLinux only lets you put it in /tmp, what happens if you
+don't have a separate /tmp partition? You can't put the  backup file on
+the partition you are rebuilding, and SeLinux won't let you put it
+anywhere else? That's a big disaster in the making ...
 
-	- Jared
--- 
-Jared Mauch  | pgp key available via finger from jared@puck.nether.net
-clue++;      | http://puck.nether.net/~jared/  My statements are only mine.
+Cheers,
+Wol
