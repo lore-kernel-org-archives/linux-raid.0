@@ -1,244 +1,103 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Thu, 16 Jul 2015 16:07:11 +1000
-Message-ID: <20150716160711.08c37fc1@noble>
-References: <20150710040847.GA1408097@devbig257.prn2.facebook.com>
-	<20150710143656.4ee7e647@noble>
-	<20150715004455.GA1024035@devbig257.prn2.facebook.com>
-	<20150715121234.22803890@noble>
-	<20150715031615.GA1292235@devbig257.prn2.facebook.com>
-	<20150715140641.3c61cf78@noble>
-	<20150715194927.GA3502691@devbig257.prn2.facebook.com>
-	<20150716091653.7b970b32@noble>
-	<20150716000739.GA4041321@devbig257.prn2.facebook.com>
-	<20150716112217.3e2e685f@noble>
-	<20150716041305.GA283306@devbig257.prn2.facebook.com>
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Subject: Re: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after
+ freezing processes
+Date: Thu, 16 Jul 2015 09:33:02 +0200
+Message-ID: <20150716073302.GA10393@pali>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
+ <1434885634-19895-1-git-send-email-pali.rohar@gmail.com>
+ <1434885634-19895-2-git-send-email-pali.rohar@gmail.com>
+ <3729395.1oJCgMXcLU@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150716041305.GA283306@devbig257.prn2.facebook.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3729395.1oJCgMXcLU@vostro.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 15 Jul 2015 21:13:06 -0700 Shaohua Li <shli@fb.com> wrote:
+On Thursday 16 July 2015 03:02:03 Rafael J. Wysocki wrote:
+> On Sunday, June 21, 2015 01:20:32 PM Pali Roh=C3=A1r wrote:
+> > To prevent race conditions on userspace processes with I/O some tak=
+s must be
+> > called after processes are freezed. This patch adds new events whic=
+h are
+> > delivered by pm_notifier_call_chain() after freezing processes when=
+ doing
+> > suspend or hibernate action.
+> >=20
+> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+> > ---
+> >  include/linux/suspend.h  |    2 ++
+> >  kernel/power/hibernate.c |    2 ++
+> >  kernel/power/suspend.c   |    4 +++-
+> >  3 files changed, 7 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/include/linux/suspend.h b/include/linux/suspend.h
+> > index 5efe743..bc743c8 100644
+> > --- a/include/linux/suspend.h
+> > +++ b/include/linux/suspend.h
+> > @@ -368,6 +368,8 @@ static inline bool hibernation_available(void) =
+{ return false; }
+> >  #define PM_POST_SUSPEND		0x0004 /* Suspend finished */
+> >  #define PM_RESTORE_PREPARE	0x0005 /* Going to restore a saved imag=
+e */
+> >  #define PM_POST_RESTORE		0x0006 /* Restore failed */
+> > +#define PM_HIBERNATION_AFTER_FREEZE	0x0007 /* After hibernation fr=
+eeze */
+> > +#define PM_SUSPEND_AFTER_FREEZE		0x0008 /* After suspend freeze */
+> > =20
+> >  extern struct mutex pm_mutex;
+> > =20
+> > diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
+> > index 2329daa..184f7ee 100644
+> > --- a/kernel/power/hibernate.c
+> > +++ b/kernel/power/hibernate.c
+> > @@ -671,6 +671,8 @@ int hibernate(void)
+> >  	if (error)
+> >  		goto Exit;
+> > =20
+> > +	pm_notifier_call_chain(PM_HIBERNATION_AFTER_FREEZE);
+>=20
+> Don't we need to check errors from these?
+>=20
 
-> On Thu, Jul 16, 2015 at 11:22:17AM +1000, NeilBrown wrote:
-> > On Wed, 15 Jul 2015 17:07:39 -0700 Shaohua Li <shli@fb.com> wrote:
-> > 
-> > > On Thu, Jul 16, 2015 at 09:16:53AM +1000, NeilBrown wrote:
-> > > > On Wed, 15 Jul 2015 12:49:37 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > 
-> > > > > On Wed, Jul 15, 2015 at 02:06:41PM +1000, NeilBrown wrote:
-> > > > > > On Tue, 14 Jul 2015 20:16:17 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > > > 
-> > > > 
-> > > > > > 
-> > > > > > >                                                           I don't
-> > > > > > > understand why you object adding a superblock for cache. The advantage
-> > > > > > > is it's self contained. And there is nothing about
-> > > > > > > complexity/maintaince, as we can store the most necessary fields into
-> > > > > > > the superblock.
-> > > > > > 
-> > > > > > Because there is precisely 1 number that needs to be stored in the
-> > > > > > superblock, and there seems no point having a superblock just to store
-> > > > > > one number.
-> > > > > > It isn't much extra complexity, but any extra thing is still an extra
-> > > > > > thing.
-> > > > > > Having the data section of the log device containing just a log is
-> > > > > > elegant.  Elegant is good.
-> > > > > > If we decided that keeping two copies for superblocks was a good idea
-> > > > > > (which I think it is, I just haven't created a "v1.3" layout yet), then
-> > > > > > re-using the main superblock for the head-of-log pointer would instantly
-> > > > > > give us two copies of that as well.
-> > > > > 
-> > > > > I think I need 2 fields to find log head/tail in recovery. Currently
-> > > > > cache superblock records checkpoint disk position (log tail) and
-> > > > > checkpoint sequence number, which can be used to find log head. Just
-> > > > > recording log tail doesn't work well (it might work, for example,
-> > > > > zeroing sectors before log head, so we can identify log head. But it's
-> > > > > really ugly and not efficient). I only found recovery_offset can be
-> > > > > overloaded. Do you have idea other fileds can be overloaded in MD
-> > > > > superblock?
-> > > > 
-> > > > If each metadata block contains
-> > > >   - a magic number
-> > > >   - a checksum of the block
-> > > >   - a sequence number
-> > > >   - a pointer to the "next" metadata block (which is equivalent to
-> > > >     the size of all described data)
-> > > >   - a pointer to the tail (oldest active metadata block).
-> > > > 
-> > > > Then given the address of any block in the log you can easily find the
-> > > > head:  walk the "next" pointers forward until you find a block
-> > > > that has the wrong magic or checksum or sequence or previous pointer.
-> > > > The last block that was consistent is the head.
-> > > > 
-> > > > You can then find the tail directly, and walk forward processing the
-> > > > log.
-> > > > 
-> > > > Efficiency is not really an issue.  On a clean shutdown (which should
-> > > > be the norm), the md superblock will contain a pointer to the head, and
-> > > > the "next" block after that can quickly be determined to be invalid.
-> > > > On an unclean shutdown it is expected that we need to do a bit more
-> > > > work, and skipping forward along the chain to find the head of the log
-> > > > is the least of our worries.
-> > > 
-> > > if superblock records 2 fileds (the log tail and the seq of log tail), metadata
-> > > block doesn't need 'a pointer to the tail (oldest active metadata block)'. The
-> > > log tail/seq pair can help us find log head easily. Adding a pointer to the
-> > > tail in every metadata block is definitionly worse than adding a filed in the
-> > > superblock.
-> > 
-> > I don't really follow... maybe we are confusing terms.
-> > In my mind, the "head" is where new data gets written and the "tail" is
-> > where the oldest data is - though I can see that the reverse could also
-> > make sense.
-> 
-> we are in the same page about the terms. 
-> > Previously you said you wanted to record "checkpoint disk position and
-> > checkpoint sequence number" which you also referred to as the "tail".
-> > So maybe you mean the "tail" to be the most recent checkpoint?
-> 
-> yes
-> > In any case, wouldn't the checkpoint metadata records its own sequence
-> > number?  So why do you need to start the sequence number in the
-> > superblock as well.
-> 
-> The problem is you don't know if the metadata is valid/invalid (or
-> checkpointed) according to the sequence number stored in the metadata
-> itself. But if we store a sequence number in superblock, comparing the
-> sequence numebr in superblock and sequence in metadata let us know if
-> the metadata is valid.
+If yes, what to do in this case? Fail hibernation and goto Exit?
 
-So it basically comes down to:
-  You think we should store extra information in the superblock to 
-     validate the thing that the superblock points to.
-  I think we should always have the superblock pointing to something
-    that is valid.
+> Also, if you're adding AFTER_FREEZE, it would be good to add BEFORE_T=
+HAW too
+> for symmetry.
+>=20
 
-> 
-> > If you record a specific end of the log in the superblock,
-> > then you need to update the superblock any time that end moves (don't
-> > you?).
-> 
-> we record the tail. recovery will search from the tail
-> > If you just record some starting point for a search, then you
-> > only need to update the superblock when that location might get
-> > over-written soon.
-> 
-> that's what I'm doing. we only update the superblock when the location
-> can be reused.
-> 
-> > I think it makes perfect sense for all the metadata blocks in the log
-> > to be linked together.  Whether they link to the previous or to the
-> > first doesn't make a lot of difference.
-> > By "first" here, I mean the block that has been in the log for the
-> > longest, but still refers to "live" data. 
-> 
-> I just don't find how it's useful at all.
+But there is no use case for BEFORE_THAW. At least it is not needed for=
+ now.
 
-It's not a show-stopper.
-However if you keep the backwards links, then the superblock is free to
-point to any metadata block anywhere in the log.  That means we can let
-the pointer in the superblock be updated lazily.  The cache module only
-needs to force a superblock update if there hasn't been one for any
-other reason.
+> > +
+> >  	lock_device_hotplug();
+> >  	/* Allocate memory management structures */
+> >  	error =3D create_basic_memory_bitmaps();
+> > diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
+> > index 8d7a1ef..ba2a945 100644
+> > --- a/kernel/power/suspend.c
+> > +++ b/kernel/power/suspend.c
+> > @@ -277,8 +277,10 @@ static int suspend_prepare(suspend_state_t sta=
+te)
+> >  	trace_suspend_resume(TPS("freeze_processes"), 0, true);
+> >  	error =3D suspend_freeze_processes();
+> >  	trace_suspend_resume(TPS("freeze_processes"), 0, false);
+> > -	if (!error)
+> > +	if (!error) {
+> > +		pm_notifier_call_chain(PM_SUSPEND_AFTER_FREEZE);
+> >  		return 0;
+> > +	}
+> > =20
+> >  	suspend_stats.failed_freeze++;
+> >  	dpm_save_failed_step(SUSPEND_FREEZE);
+> >=20
+>=20
 
-
-> > > 
-> > > Further, how can you handle the case when log winds. For example, initially the log is
-> > > ................................
-> > >                 ^ superblock points to here
-> > > then we add meta and wind
-> > > |meta n-1|meta n|meta 0|meta 1|....
-> > >                 ^ superblock points to here
-> > > 
-> > > Next time we reload log, superblock points to a valid meta. recovery will think
-> > > this is an unclean shutdown, so we rescan the whole log disk (because all metas
-> > > are valid) and apply all the changes to raid array. this is terrible. But if
-> > > superblock stores both log tail and seq. we will find the meta 0 sequence
-> > > number doesn't match with superblock, recovery stops instantly.
-> > 
-> > There should always be at least one valid metadata block in the log,
-> > and the superblock should point to one of those.
-> > On restart, it is loaded and the 'next' pointers are followed until you
-> > get to the end (most recently written) of the log.  You confirm you are
-> > still in the log as sequence numbers will be increasing.
-> > After a clean shutdown, the 'next' pointer won't lead any where useful.
-> 
-> This is exactly the problem. Just storing tail in superblock can't
-> handle the log wind issue efficiently, because we can't know if the
-> metadata superblock pointed to is checkpointed or not. So we need
-> workaround. Here your workaround is always keeping one valid metadata
-> block in the log. If we store both checkpoint and sequence number in
-> superblock, we don't need the workaround.
-
-I don't see that as a work-around.  But then I don't really trust
-checksums and so would rather that we always write a metadata block
-(with FUA or FLUSH) after writing data, and using that to know that the
-data is safe.  If we did that, it would be natural to always have a
-valid metadata block.
-
-> 
-> The log will look like:
-> initially:
-> ............
-> ^super point here, super seq = 0
-> 
-> we add meta:
-> |meta 0|meta 1|...
-> ^super point here, super seq = 0
-> 
-> We do a checkpoint, so space of meta 0 can be reused:
-> |meta 0|meta 1|...
->        ^super point here, super seq = 1
-> 
-> if log rewind, we already checkpoint meta x:
-> |meta x|meta 1|...
->        ^super point here, super seq = x + 1
-> 
-> it's easy to know meta 1 should be ignored since 1 != x + 1
-> This is the classic log structure implementation.
-> 
-> > From the last metadata block, you work backwards to find the first.
-> > Maybe you walk all the way following backwards links.  Maybe each
-> > metadata block has a link to the earliest block worth looking at.
-> > 
-> > Then you follow the log forward recording every block that is found,
-> > and discarding blocks when you find a metadata block which says
-> > something can be discarded.  Once you have walked all the way from the
-> > start to the end (from the earliest block to the most recently written
-> > block) you have a complete list of all the live blocks that are in the
-> > log.  Then they can be written to the RAID.
-> > 
-> > I think you are suggesting that the thing stored in the superblock is
-> > the address of the oldest valid block.  I don't exactly object to that,
-> > though I feel it would require updating the superblock more often
-> > than needed.
-> No, we only updating superblock in checkpoint.
-
-hm... what exactly do you mean by "checkpoint" here?
-
-I imagine there would be more checkpoints than times when the
-superblock really needs updating.
-
-> 
-> > I don't think you need the seq number though.
-> > On a clean shutdown you would write out a metadata with a new seq
-> > number and store a pointer to that.
-> > On restart, that metadata block is loaded and its sequence number
-> > examined. Any other blocks in the log will have a lower sequence number
-> > and so will be ignored.
-> 
-> As I said, you can workaround the issue without recording seq number in
-> superblock, writing an extra metadata as you proposed for example. But
-> recording seq number makes things much easier and cleaner.
-
-Clearly "cleaner" is in the eye of the beholder.  I think it is much
-clean for the superblock to point to something that is definitely valid.
-
-NeilBrown
-
+--=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
