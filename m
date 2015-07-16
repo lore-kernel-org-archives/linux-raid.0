@@ -1,257 +1,168 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Thu, 16 Jul 2015 10:40:17 -0700
-Message-ID: <20150716174015.GA1992137@devbig257.prn2.facebook.com>
-References: <20150715004455.GA1024035@devbig257.prn2.facebook.com>
- <20150715121234.22803890@noble>
- <20150715031615.GA1292235@devbig257.prn2.facebook.com>
- <20150715140641.3c61cf78@noble>
- <20150715194927.GA3502691@devbig257.prn2.facebook.com>
- <20150716091653.7b970b32@noble>
- <20150716000739.GA4041321@devbig257.prn2.facebook.com>
- <20150716112217.3e2e685f@noble>
- <20150716041305.GA283306@devbig257.prn2.facebook.com>
- <20150716160711.08c37fc1@noble>
+From: Fabian Fischer <raid@fabianfischer.org>
+Subject: degraded raid array with bad blocks
+Date: Thu, 16 Jul 2015 20:14:21 +0200
+Message-ID: <55A7F47D.1020004@fabianfischer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed;
+ boundary="------------090600070906040309030608"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150716160711.08c37fc1@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jul 16, 2015 at 04:07:11PM +1000, NeilBrown wrote:
-> On Wed, 15 Jul 2015 21:13:06 -0700 Shaohua Li <shli@fb.com> wrote:
-> 
-> > On Thu, Jul 16, 2015 at 11:22:17AM +1000, NeilBrown wrote:
-> > > On Wed, 15 Jul 2015 17:07:39 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > 
-> > > > On Thu, Jul 16, 2015 at 09:16:53AM +1000, NeilBrown wrote:
-> > > > > On Wed, 15 Jul 2015 12:49:37 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > > 
-> > > > > > On Wed, Jul 15, 2015 at 02:06:41PM +1000, NeilBrown wrote:
-> > > > > > > On Tue, 14 Jul 2015 20:16:17 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > > > > > 
-> > > > > 
-> > > > > > > 
-> > > > > > > >                                                           I don't
-> > > > > > > > understand why you object adding a superblock for cache. The advantage
-> > > > > > > > is it's self contained. And there is nothing about
-> > > > > > > > complexity/maintaince, as we can store the most necessary fields into
-> > > > > > > > the superblock.
-> > > > > > > 
-> > > > > > > Because there is precisely 1 number that needs to be stored in the
-> > > > > > > superblock, and there seems no point having a superblock just to store
-> > > > > > > one number.
-> > > > > > > It isn't much extra complexity, but any extra thing is still an extra
-> > > > > > > thing.
-> > > > > > > Having the data section of the log device containing just a log is
-> > > > > > > elegant.  Elegant is good.
-> > > > > > > If we decided that keeping two copies for superblocks was a good idea
-> > > > > > > (which I think it is, I just haven't created a "v1.3" layout yet), then
-> > > > > > > re-using the main superblock for the head-of-log pointer would instantly
-> > > > > > > give us two copies of that as well.
-> > > > > > 
-> > > > > > I think I need 2 fields to find log head/tail in recovery. Currently
-> > > > > > cache superblock records checkpoint disk position (log tail) and
-> > > > > > checkpoint sequence number, which can be used to find log head. Just
-> > > > > > recording log tail doesn't work well (it might work, for example,
-> > > > > > zeroing sectors before log head, so we can identify log head. But it's
-> > > > > > really ugly and not efficient). I only found recovery_offset can be
-> > > > > > overloaded. Do you have idea other fileds can be overloaded in MD
-> > > > > > superblock?
-> > > > > 
-> > > > > If each metadata block contains
-> > > > >   - a magic number
-> > > > >   - a checksum of the block
-> > > > >   - a sequence number
-> > > > >   - a pointer to the "next" metadata block (which is equivalent to
-> > > > >     the size of all described data)
-> > > > >   - a pointer to the tail (oldest active metadata block).
-> > > > > 
-> > > > > Then given the address of any block in the log you can easily find the
-> > > > > head:  walk the "next" pointers forward until you find a block
-> > > > > that has the wrong magic or checksum or sequence or previous pointer.
-> > > > > The last block that was consistent is the head.
-> > > > > 
-> > > > > You can then find the tail directly, and walk forward processing the
-> > > > > log.
-> > > > > 
-> > > > > Efficiency is not really an issue.  On a clean shutdown (which should
-> > > > > be the norm), the md superblock will contain a pointer to the head, and
-> > > > > the "next" block after that can quickly be determined to be invalid.
-> > > > > On an unclean shutdown it is expected that we need to do a bit more
-> > > > > work, and skipping forward along the chain to find the head of the log
-> > > > > is the least of our worries.
-> > > > 
-> > > > if superblock records 2 fileds (the log tail and the seq of log tail), metadata
-> > > > block doesn't need 'a pointer to the tail (oldest active metadata block)'. The
-> > > > log tail/seq pair can help us find log head easily. Adding a pointer to the
-> > > > tail in every metadata block is definitionly worse than adding a filed in the
-> > > > superblock.
-> > > 
-> > > I don't really follow... maybe we are confusing terms.
-> > > In my mind, the "head" is where new data gets written and the "tail" is
-> > > where the oldest data is - though I can see that the reverse could also
-> > > make sense.
-> > 
-> > we are in the same page about the terms. 
-> > > Previously you said you wanted to record "checkpoint disk position and
-> > > checkpoint sequence number" which you also referred to as the "tail".
-> > > So maybe you mean the "tail" to be the most recent checkpoint?
-> > 
-> > yes
-> > > In any case, wouldn't the checkpoint metadata records its own sequence
-> > > number?  So why do you need to start the sequence number in the
-> > > superblock as well.
-> > 
-> > The problem is you don't know if the metadata is valid/invalid (or
-> > checkpointed) according to the sequence number stored in the metadata
-> > itself. But if we store a sequence number in superblock, comparing the
-> > sequence numebr in superblock and sequence in metadata let us know if
-> > the metadata is valid.
-> 
-> So it basically comes down to:
->   You think we should store extra information in the superblock to 
->      validate the thing that the superblock points to.
->   I think we should always have the superblock pointing to something
->     that is valid.
-> 
-> > 
-> > > If you record a specific end of the log in the superblock,
-> > > then you need to update the superblock any time that end moves (don't
-> > > you?).
-> > 
-> > we record the tail. recovery will search from the tail
-> > > If you just record some starting point for a search, then you
-> > > only need to update the superblock when that location might get
-> > > over-written soon.
-> > 
-> > that's what I'm doing. we only update the superblock when the location
-> > can be reused.
-> > 
-> > > I think it makes perfect sense for all the metadata blocks in the log
-> > > to be linked together.  Whether they link to the previous or to the
-> > > first doesn't make a lot of difference.
-> > > By "first" here, I mean the block that has been in the log for the
-> > > longest, but still refers to "live" data. 
-> > 
-> > I just don't find how it's useful at all.
-> 
-> It's not a show-stopper.
-> However if you keep the backwards links, then the superblock is free to
-> point to any metadata block anywhere in the log.  That means we can let
-> the pointer in the superblock be updated lazily.  The cache module only
-> needs to force a superblock update if there hasn't been one for any
-> other reason.
+This is a multi-part message in MIME format.
+--------------090600070906040309030608
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-superblock never need to be updated frequently. It's only updated when
-some space will be reused or to make recovery scan less. We don't need
-the backward link to achieve this. If you check my patch, superblock is
-updated very rarely.
+Hi,
+today I had some problems with my mdadm raid5 (4disks). Firstly I try to
+explaine what happened and what the result is:
 
-> > > > 
-> > > > Further, how can you handle the case when log winds. For example, initially the log is
-> > > > ................................
-> > > >                 ^ superblock points to here
-> > > > then we add meta and wind
-> > > > |meta n-1|meta n|meta 0|meta 1|....
-> > > >                 ^ superblock points to here
-> > > > 
-> > > > Next time we reload log, superblock points to a valid meta. recovery will think
-> > > > this is an unclean shutdown, so we rescan the whole log disk (because all metas
-> > > > are valid) and apply all the changes to raid array. this is terrible. But if
-> > > > superblock stores both log tail and seq. we will find the meta 0 sequence
-> > > > number doesn't match with superblock, recovery stops instantly.
-> > > 
-> > > There should always be at least one valid metadata block in the log,
-> > > and the superblock should point to one of those.
-> > > On restart, it is loaded and the 'next' pointers are followed until you
-> > > get to the end (most recently written) of the log.  You confirm you are
-> > > still in the log as sequence numbers will be increasing.
-> > > After a clean shutdown, the 'next' pointer won't lead any where useful.
-> > 
-> > This is exactly the problem. Just storing tail in superblock can't
-> > handle the log wind issue efficiently, because we can't know if the
-> > metadata superblock pointed to is checkpointed or not. So we need
-> > workaround. Here your workaround is always keeping one valid metadata
-> > block in the log. If we store both checkpoint and sequence number in
-> > superblock, we don't need the workaround.
-> 
-> I don't see that as a work-around.  But then I don't really trust
-> checksums and so would rather that we always write a metadata block
-> (with FUA or FLUSH) after writing data, and using that to know that the
-> data is safe.  If we did that, it would be natural to always have a
-> valid metadata block.
+One disk in my array has some bad blocks. After some hardware-changes
+one of the intact disks was thrown out of the array due to a faulty
+sata-cable.
+I shut down the server and replaced the cable.
+After booting, the removed disk wasn't re added to the array (maybe
+because of different event count). --re-add doesn't work.
+So I used --add.
 
-if you don't trust checksum, how can you make sure the metadata block is
-valid?
-> > 
-> > The log will look like:
-> > initially:
-> > ............
-> > ^super point here, super seq = 0
-> > 
-> > we add meta:
-> > |meta 0|meta 1|...
-> > ^super point here, super seq = 0
-> > 
-> > We do a checkpoint, so space of meta 0 can be reused:
-> > |meta 0|meta 1|...
-> >        ^super point here, super seq = 1
-> > 
-> > if log rewind, we already checkpoint meta x:
-> > |meta x|meta 1|...
-> >        ^super point here, super seq = x + 1
-> > 
-> > it's easy to know meta 1 should be ignored since 1 != x + 1
-> > This is the classic log structure implementation.
-> > 
-> > > From the last metadata block, you work backwards to find the first.
-> > > Maybe you walk all the way following backwards links.  Maybe each
-> > > metadata block has a link to the earliest block worth looking at.
-> > > 
-> > > Then you follow the log forward recording every block that is found,
-> > > and discarding blocks when you find a metadata block which says
-> > > something can be discarded.  Once you have walked all the way from the
-> > > start to the end (from the earliest block to the most recently written
-> > > block) you have a complete list of all the live blocks that are in the
-> > > log.  Then they can be written to the RAID.
-> > > 
-> > > I think you are suggesting that the thing stored in the superblock is
-> > > the address of the oldest valid block.  I don't exactly object to that,
-> > > though I feel it would require updating the superblock more often
-> > > than needed.
-> > No, we only updating superblock in checkpoint.
-> 
-> hm... what exactly do you mean by "checkpoint" here?
-> 
-> I imagine there would be more checkpoints than times when the
-> superblock really needs updating.
-> 
-> > 
-> > > I don't think you need the seq number though.
-> > > On a clean shutdown you would write out a metadata with a new seq
-> > > number and store a pointer to that.
-> > > On restart, that metadata block is loaded and its sequence number
-> > > examined. Any other blocks in the log will have a lower sequence number
-> > > and so will be ignored.
-> > 
-> > As I said, you can workaround the issue without recording seq number in
-> > superblock, writing an extra metadata as you proposed for example. But
-> > recording seq number makes things much easier and cleaner.
-> 
-> Clearly "cleaner" is in the eye of the beholder.  I think it is much
-> clean for the superblock to point to something that is definitely valid.
+Because of the bad blocks on one of the remaining disks, the rebuild
+stops when reaching the first bad block. The re added disk is declared
+as spare, 2 disks active and the disk with bad blocks as faulty.
 
-You object to add a superblock. Actually there is one with your
-proposal, the 'always valid metadata block' is acting as the role of
-superblock, since we must read metadata block to find log head. Creating
-a raid array will need create such block too. In other words, we need do
-everything a real superblock need to do with your proposal. So why don't
-we have an explict superblock instead of an implicit superblock?
+/dev/md127:
+        Version : 1.2
+  Creation Time : Tue Apr 19 08:51:32 2011
+     Raid Level : raid5
+     Array Size : 5860538880 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-Thanks,
-Shaohua
+    Update Time : Thu Jul 16 19:02:09 2015
+          State : clean, FAILED
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : FiFa-Server:0
+           UUID : 839fb405:d0b1f13a:5a55ee42:fc8a2061
+         Events : 107223
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       80        1      active sync   /dev/sdf
+       5       8       32        2      active sync   /dev/sdc
+       6       0        0        6      removed
+
+       4       8       96        -      faulty   /dev/sdg
+       6       8       64        -      spare   /dev/sde
+
+
+In my opinion there a 3 possibilities to get the array back working. I
+am not sure whether both possibilities really exist and which one is the
+most promising.
+	- Using the 'spare'-disk as active disk. The data on the disk
+	  should be still there.
+	- Ignoring the bad blocks and loose information stored in this
+	  blocks
+	- force start the array without the 'spare' disk and copy the
+	  data to backup-storage, or does the bad block will cause the
+	  array to fail when reaching a bad block?
+
+In the attachment you can find the output of --examine.
+In can not explain why 3 disk have a Bad Block Log. According to
+smart-values only sdg has Reallocated_Sector_Ct >0
+Another thing I can't explain is why sdg (which is the disk with known
+bad blocks) has a lower event count.
+
+
+I hope I can get some great ideas how to fix my array.
+
+Fabian
+
+
+--------------090600070906040309030608
+Content-Type: text/plain; charset=UTF-8;
+ name="examine.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="examine.txt"
+
+L2Rldi9zZGM6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6
+IDEuMgogICAgRmVhdHVyZSBNYXAgOiAweDAKICAgICBBcnJheSBVVUlEIDogODM5ZmI0MDU6
+ZDBiMWYxM2E6NWE1NWVlNDI6ZmM4YTIwNjEKICAgICAgICAgICBOYW1lIDogRmlGYS1TZXJ2
+ZXI6MAogIENyZWF0aW9uIFRpbWUgOiBUdWUgQXByIDE5IDA4OjUxOjMyIDIwMTEKICAgICBS
+YWlkIExldmVsIDogcmFpZDUKICAgUmFpZCBEZXZpY2VzIDogNAoKIEF2YWlsIERldiBTaXpl
+IDogMzkwNzAyNzEyMCAoMTg2My4wMiBHaUIgMjAwMC40MCBHQikKICAgICBBcnJheSBTaXpl
+IDogNTg2MDUzODg4MCAoNTU4OS4wNSBHaUIgNjAwMS4xOSBHQikKICBVc2VkIERldiBTaXpl
+IDogMzkwNzAyNTkyMCAoMTg2My4wMiBHaUIgMjAwMC40MCBHQikKICAgIERhdGEgT2Zmc2V0
+IDogMjA0OCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycwogICBVbnVzZWQg
+U3BhY2UgOiBiZWZvcmU9MTk2MCBzZWN0b3JzLCBhZnRlcj0xMjAwIHNlY3RvcnMKICAgICAg
+ICAgIFN0YXRlIDogY2xlYW4KICAgIERldmljZSBVVUlEIDogOTdjY2Q1NTE6ODgyMGMwZTM6
+NGFiM2Q2N2Q6OTA4YTJmZDkKCiAgICBVcGRhdGUgVGltZSA6IFRodSBKdWwgMTYgMTk6MDI6
+MDkgMjAxNQogIEJhZCBCbG9jayBMb2cgOiA1MTIgZW50cmllcyBhdmFpbGFibGUgYXQgb2Zm
+c2V0IDcyIHNlY3RvcnMKICAgICAgIENoZWNrc3VtIDogOWQwMThlZWEgLSBjb3JyZWN0CiAg
+ICAgICAgIEV2ZW50cyA6IDEwNzIyMwoKICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRy
+aWMKICAgICBDaHVuayBTaXplIDogNTEySwoKICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2
+aWNlIDIKICAgQXJyYXkgU3RhdGUgOiAuQUEuICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlz
+c2luZywgJ1InID09IHJlcGxhY2luZykKL2Rldi9zZGU6CiAgICAgICAgICBNYWdpYyA6IGE5
+MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDEuMgogICAgRmVhdHVyZSBNYXAgOiAweDgKICAg
+ICBBcnJheSBVVUlEIDogODM5ZmI0MDU6ZDBiMWYxM2E6NWE1NWVlNDI6ZmM4YTIwNjEKICAg
+ICAgICAgICBOYW1lIDogRmlGYS1TZXJ2ZXI6MAogIENyZWF0aW9uIFRpbWUgOiBUdWUgQXBy
+IDE5IDA4OjUxOjMyIDIwMTEKICAgICBSYWlkIExldmVsIDogcmFpZDUKICAgUmFpZCBEZXZp
+Y2VzIDogNAoKIEF2YWlsIERldiBTaXplIDogMzkwNzAyNzEyMCAoMTg2My4wMiBHaUIgMjAw
+MC40MCBHQikKICAgICBBcnJheSBTaXplIDogNTg2MDUzODg4MCAoNTU4OS4wNSBHaUIgNjAw
+MS4xOSBHQikKICBVc2VkIERldiBTaXplIDogMzkwNzAyNTkyMCAoMTg2My4wMiBHaUIgMjAw
+MC40MCBHQikKICAgIERhdGEgT2Zmc2V0IDogMjA0OCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNl
+dCA6IDggc2VjdG9ycwogICBVbnVzZWQgU3BhY2UgOiBiZWZvcmU9MTk2MCBzZWN0b3JzLCBh
+ZnRlcj0xMjAwIHNlY3RvcnMKICAgICAgICAgIFN0YXRlIDogY2xlYW4KICAgIERldmljZSBV
+VUlEIDogNmRiNzU2NmQ6M2M3MDkzNzA6MTI2MzRmNjY6ZjZiZmQ0ZjYKCiAgICBVcGRhdGUg
+VGltZSA6IFRodSBKdWwgMTYgMTk6MDI6MDkgMjAxNQogIEJhZCBCbG9jayBMb2cgOiA1MTIg
+ZW50cmllcyBhdmFpbGFibGUgYXQgb2Zmc2V0IDcyIHNlY3RvcnMgLSBiYWQgYmxvY2tzIHBy
+ZXNlbnQuCiAgICAgICBDaGVja3N1bSA6IDRiNzNhZWFiIC0gY29ycmVjdAogICAgICAgICBF
+dmVudHMgOiAxMDcyMjMKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCiAgICAg
+Q2h1bmsgU2l6ZSA6IDUxMksKCiAgIERldmljZSBSb2xlIDogc3BhcmUKICAgQXJyYXkgU3Rh
+dGUgOiAuQUEuICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1InID09IHJlcGxh
+Y2luZykKL2Rldi9zZGY6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVy
+c2lvbiA6IDEuMgogICAgRmVhdHVyZSBNYXAgOiAweDAKICAgICBBcnJheSBVVUlEIDogODM5
+ZmI0MDU6ZDBiMWYxM2E6NWE1NWVlNDI6ZmM4YTIwNjEKICAgICAgICAgICBOYW1lIDogRmlG
+YS1TZXJ2ZXI6MAogIENyZWF0aW9uIFRpbWUgOiBUdWUgQXByIDE5IDA4OjUxOjMyIDIwMTEK
+ICAgICBSYWlkIExldmVsIDogcmFpZDUKICAgUmFpZCBEZXZpY2VzIDogNAoKIEF2YWlsIERl
+diBTaXplIDogMzkwNzAyNzEyMCAoMTg2My4wMiBHaUIgMjAwMC40MCBHQikKICAgICBBcnJh
+eSBTaXplIDogNTg2MDUzODg4MCAoNTU4OS4wNSBHaUIgNjAwMS4xOSBHQikKICBVc2VkIERl
+diBTaXplIDogMzkwNzAyNTkyMCAoMTg2My4wMiBHaUIgMjAwMC40MCBHQikKICAgIERhdGEg
+T2Zmc2V0IDogMjA0OCBzZWN0b3JzCiAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycwogICBV
+bnVzZWQgU3BhY2UgOiBiZWZvcmU9MTk2OCBzZWN0b3JzLCBhZnRlcj0xMjAwIHNlY3RvcnMK
+ICAgICAgICAgIFN0YXRlIDogY2xlYW4KICAgIERldmljZSBVVUlEIDogMjdkZjQyOWY6Yzk2
+NjE4Mzg6M2E4MDI0ZTQ6ZDU1MDU1ZTgKCiAgICBVcGRhdGUgVGltZSA6IFRodSBKdWwgMTYg
+MTk6MDI6MDkgMjAxNQogICAgICAgQ2hlY2tzdW0gOiBiNDMyN2FhNCAtIGNvcnJlY3QKICAg
+ICAgICAgRXZlbnRzIDogMTA3MjIzCgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5bW1ldHJp
+YwogICAgIENodW5rIFNpemUgOiA1MTJLCgogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZp
+Y2UgMQogICBBcnJheSBTdGF0ZSA6IC5BQS4gKCdBJyA9PSBhY3RpdmUsICcuJyA9PSBtaXNz
+aW5nLCAnUicgPT0gcmVwbGFjaW5nKQovZGV2L3NkZzoKICAgICAgICAgIE1hZ2ljIDogYTky
+YjRlZmMKICAgICAgICBWZXJzaW9uIDogMS4yCiAgICBGZWF0dXJlIE1hcCA6IDB4OAogICAg
+IEFycmF5IFVVSUQgOiA4MzlmYjQwNTpkMGIxZjEzYTo1YTU1ZWU0MjpmYzhhMjA2MQogICAg
+ICAgICAgIE5hbWUgOiBGaUZhLVNlcnZlcjowCiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBBcHIg
+MTkgMDg6NTE6MzIgMjAxMQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogICBSYWlkIERldmlj
+ZXMgOiA0CgogQXZhaWwgRGV2IFNpemUgOiAzOTA3MDI3MTIwICgxODYzLjAyIEdpQiAyMDAw
+LjQwIEdCKQogICAgIEFycmF5IFNpemUgOiA1ODYwNTM4ODgwICg1NTg5LjA1IEdpQiA2MDAx
+LjE5IEdCKQogIFVzZWQgRGV2IFNpemUgOiAzOTA3MDI1OTIwICgxODYzLjAyIEdpQiAyMDAw
+LjQwIEdCKQogICAgRGF0YSBPZmZzZXQgOiAyMDQ4IHNlY3RvcnMKICAgU3VwZXIgT2Zmc2V0
+IDogOCBzZWN0b3JzCiAgIFVudXNlZCBTcGFjZSA6IGJlZm9yZT0xOTYwIHNlY3RvcnMsIGFm
+dGVyPTEyMDAgc2VjdG9ycwogICAgICAgICAgU3RhdGUgOiBjbGVhbgogICAgRGV2aWNlIFVV
+SUQgOiBiNjc4NmRmZjpjNmJlMDIzNjoxMGQ4Zjk1Zjo2M2FmYWQ5MwoKICAgIFVwZGF0ZSBU
+aW1lIDogVGh1IEp1bCAxNiAxOTowMjowMyAyMDE1CiAgQmFkIEJsb2NrIExvZyA6IDUxMiBl
+bnRyaWVzIGF2YWlsYWJsZSBhdCBvZmZzZXQgNzIgc2VjdG9ycyAtIGJhZCBibG9ja3MgcHJl
+c2VudC4KICAgICAgIENoZWNrc3VtIDogMzk3YjIyYzggLSBjb3JyZWN0CiAgICAgICAgIEV2
+ZW50cyA6IDEwNzE5MgoKICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBD
+aHVuayBTaXplIDogNTEySwoKICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDMKICAg
+QXJyYXkgU3RhdGUgOiBBQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZywgJ1In
+ID09IHJlcGxhY2luZykK
+--------------090600070906040309030608--
