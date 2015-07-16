@@ -1,103 +1,89 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Wed, 15 Jul 2015 17:07:39 -0700
-Message-ID: <20150716000739.GA4041321@devbig257.prn2.facebook.com>
-References: <20150708054344.GA2709238@devbig257.prn2.facebook.com>
- <20150710092119.297fd9e1@noble>
- <20150710040847.GA1408097@devbig257.prn2.facebook.com>
- <20150710143656.4ee7e647@noble>
- <20150715004455.GA1024035@devbig257.prn2.facebook.com>
- <20150715121234.22803890@noble>
- <20150715031615.GA1292235@devbig257.prn2.facebook.com>
- <20150715140641.3c61cf78@noble>
- <20150715194927.GA3502691@devbig257.prn2.facebook.com>
- <20150716091653.7b970b32@noble>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after freezing processes
+Date: Thu, 16 Jul 2015 03:02:03 +0200
+Message-ID: <3729395.1oJCgMXcLU@vostro.rjw.lan>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com> <1434885634-19895-1-git-send-email-pali.rohar@gmail.com> <1434885634-19895-2-git-send-email-pali.rohar@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150716091653.7b970b32@noble>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1434885634-19895-2-git-send-email-pali.rohar@gmail.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jul 16, 2015 at 09:16:53AM +1000, NeilBrown wrote:
-> On Wed, 15 Jul 2015 12:49:37 -0700 Shaohua Li <shli@fb.com> wrote:
-> 
-> > On Wed, Jul 15, 2015 at 02:06:41PM +1000, NeilBrown wrote:
-> > > On Tue, 14 Jul 2015 20:16:17 -0700 Shaohua Li <shli@fb.com> wrote:
-> > > 
-> 
-> > > 
-> > > >                                                           I don't
-> > > > understand why you object adding a superblock for cache. The advantage
-> > > > is it's self contained. And there is nothing about
-> > > > complexity/maintaince, as we can store the most necessary fields into
-> > > > the superblock.
-> > > 
-> > > Because there is precisely 1 number that needs to be stored in the
-> > > superblock, and there seems no point having a superblock just to store
-> > > one number.
-> > > It isn't much extra complexity, but any extra thing is still an extra
-> > > thing.
-> > > Having the data section of the log device containing just a log is
-> > > elegant.  Elegant is good.
-> > > If we decided that keeping two copies for superblocks was a good idea
-> > > (which I think it is, I just haven't created a "v1.3" layout yet), then
-> > > re-using the main superblock for the head-of-log pointer would instantly
-> > > give us two copies of that as well.
-> > 
-> > I think I need 2 fields to find log head/tail in recovery. Currently
-> > cache superblock records checkpoint disk position (log tail) and
-> > checkpoint sequence number, which can be used to find log head. Just
-> > recording log tail doesn't work well (it might work, for example,
-> > zeroing sectors before log head, so we can identify log head. But it's
-> > really ugly and not efficient). I only found recovery_offset can be
-> > overloaded. Do you have idea other fileds can be overloaded in MD
-> > superblock?
-> 
-> If each metadata block contains
->   - a magic number
->   - a checksum of the block
->   - a sequence number
->   - a pointer to the "next" metadata block (which is equivalent to
->     the size of all described data)
->   - a pointer to the tail (oldest active metadata block).
-> 
-> Then given the address of any block in the log you can easily find the
-> head:  walk the "next" pointers forward until you find a block
-> that has the wrong magic or checksum or sequence or previous pointer.
-> The last block that was consistent is the head.
-> 
-> You can then find the tail directly, and walk forward processing the
-> log.
-> 
-> Efficiency is not really an issue.  On a clean shutdown (which should
-> be the norm), the md superblock will contain a pointer to the head, and
-> the "next" block after that can quickly be determined to be invalid.
-> On an unclean shutdown it is expected that we need to do a bit more
-> work, and skipping forward along the chain to find the head of the log
-> is the least of our worries.
+On Sunday, June 21, 2015 01:20:32 PM Pali Roh=C3=A1r wrote:
+> To prevent race conditions on userspace processes with I/O some taks =
+must be
+> called after processes are freezed. This patch adds new events which =
+are
+> delivered by pm_notifier_call_chain() after freezing processes when d=
+oing
+> suspend or hibernate action.
+>=20
+> Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+> ---
+>  include/linux/suspend.h  |    2 ++
+>  kernel/power/hibernate.c |    2 ++
+>  kernel/power/suspend.c   |    4 +++-
+>  3 files changed, 7 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/include/linux/suspend.h b/include/linux/suspend.h
+> index 5efe743..bc743c8 100644
+> --- a/include/linux/suspend.h
+> +++ b/include/linux/suspend.h
+> @@ -368,6 +368,8 @@ static inline bool hibernation_available(void) { =
+return false; }
+>  #define PM_POST_SUSPEND		0x0004 /* Suspend finished */
+>  #define PM_RESTORE_PREPARE	0x0005 /* Going to restore a saved image =
+*/
+>  #define PM_POST_RESTORE		0x0006 /* Restore failed */
+> +#define PM_HIBERNATION_AFTER_FREEZE	0x0007 /* After hibernation free=
+ze */
+> +#define PM_SUSPEND_AFTER_FREEZE		0x0008 /* After suspend freeze */
+> =20
+>  extern struct mutex pm_mutex;
+> =20
+> diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
+> index 2329daa..184f7ee 100644
+> --- a/kernel/power/hibernate.c
+> +++ b/kernel/power/hibernate.c
+> @@ -671,6 +671,8 @@ int hibernate(void)
+>  	if (error)
+>  		goto Exit;
+> =20
+> +	pm_notifier_call_chain(PM_HIBERNATION_AFTER_FREEZE);
 
-if superblock records 2 fileds (the log tail and the seq of log tail), metadata
-block doesn't need 'a pointer to the tail (oldest active metadata block)'. The
-log tail/seq pair can help us find log head easily. Adding a pointer to the
-tail in every metadata block is definitionly worse than adding a filed in the
-superblock.
+Don't we need to check errors from these?
 
-Further, how can you handle the case when log winds. For example, initially the log is
-................................
-                ^ superblock points to here
-then we add meta and wind
-|meta n-1|meta n|meta 0|meta 1|....
-                ^ superblock points to here
+Also, if you're adding AFTER_FREEZE, it would be good to add BEFORE_THA=
+W too
+for symmetry.
 
-Next time we reload log, superblock points to a valid meta. recovery will think
-this is an unclean shutdown, so we rescan the whole log disk (because all metas
-are valid) and apply all the changes to raid array. this is terrible. But if
-superblock stores both log tail and seq. we will find the meta 0 sequence
-number doesn't match with superblock, recovery stops instantly.
+> +
+>  	lock_device_hotplug();
+>  	/* Allocate memory management structures */
+>  	error =3D create_basic_memory_bitmaps();
+> diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
+> index 8d7a1ef..ba2a945 100644
+> --- a/kernel/power/suspend.c
+> +++ b/kernel/power/suspend.c
+> @@ -277,8 +277,10 @@ static int suspend_prepare(suspend_state_t state=
+)
+>  	trace_suspend_resume(TPS("freeze_processes"), 0, true);
+>  	error =3D suspend_freeze_processes();
+>  	trace_suspend_resume(TPS("freeze_processes"), 0, false);
+> -	if (!error)
+> +	if (!error) {
+> +		pm_notifier_call_chain(PM_SUSPEND_AFTER_FREEZE);
+>  		return 0;
+> +	}
+> =20
+>  	suspend_stats.failed_freeze++;
+>  	dpm_save_failed_step(SUSPEND_FREEZE);
+>=20
 
-Thanks,
-Shaohua
+--=20
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
