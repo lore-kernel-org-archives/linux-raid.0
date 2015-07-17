@@ -1,137 +1,108 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 2/3] dm: Export function dm_suspend_md()
-Date: Fri, 17 Jul 2015 13:31:47 -0400
-Message-ID: <20150717173147.GA5060@redhat.com>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
- <20150717152253.GA1021@redhat.com>
- <20150717153045.GB1021@redhat.com>
- <201507171913.57104@pali>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after freezing processes
+Date: Sat, 18 Jul 2015 01:27:15 +0200
+Message-ID: <3179448.TScsKEAuyR@vostro.rjw.lan>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com> <3729395.1oJCgMXcLU@vostro.rjw.lan> <20150716073302.GA10393@pali>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201507171913.57104@pali>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Len Brown <len.brown@intel.com>, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Pavel Machek <pavel@ucw.cz>, Alasdair Kergon <agk@redhat.com>
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20150716073302.GA10393@pali>
+Sender: linux-pm-owner@vger.kernel.org
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jul 17 2015 at  1:13pm -0400,
-Pali Roh=E1r <pali.rohar@gmail.com> wrote:
-
-> On Friday 17 July 2015 17:30:45 Mike Snitzer wrote:
-> > On Fri, Jul 17 2015 at 11:22am -0400,
+On Thursday, July 16, 2015 09:33:02 AM Pali Roh=C3=A1r wrote:
+> On Thursday 16 July 2015 03:02:03 Rafael J. Wysocki wrote:
+> > On Sunday, June 21, 2015 01:20:32 PM Pali Roh=C3=A1r wrote:
+> > > To prevent race conditions on userspace processes with I/O some t=
+aks must be
+> > > called after processes are freezed. This patch adds new events wh=
+ich are
+> > > delivered by pm_notifier_call_chain() after freezing processes wh=
+en doing
+> > > suspend or hibernate action.
+> > >=20
+> > > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+> > > ---
+> > >  include/linux/suspend.h  |    2 ++
+> > >  kernel/power/hibernate.c |    2 ++
+> > >  kernel/power/suspend.c   |    4 +++-
+> > >  3 files changed, 7 insertions(+), 1 deletion(-)
+> > >=20
+> > > diff --git a/include/linux/suspend.h b/include/linux/suspend.h
+> > > index 5efe743..bc743c8 100644
+> > > --- a/include/linux/suspend.h
+> > > +++ b/include/linux/suspend.h
+> > > @@ -368,6 +368,8 @@ static inline bool hibernation_available(void=
+) { return false; }
+> > >  #define PM_POST_SUSPEND		0x0004 /* Suspend finished */
+> > >  #define PM_RESTORE_PREPARE	0x0005 /* Going to restore a saved im=
+age */
+> > >  #define PM_POST_RESTORE		0x0006 /* Restore failed */
+> > > +#define PM_HIBERNATION_AFTER_FREEZE	0x0007 /* After hibernation =
+freeze */
+> > > +#define PM_SUSPEND_AFTER_FREEZE		0x0008 /* After suspend freeze =
+*/
+> > > =20
+> > >  extern struct mutex pm_mutex;
+> > > =20
+> > > diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
+> > > index 2329daa..184f7ee 100644
+> > > --- a/kernel/power/hibernate.c
+> > > +++ b/kernel/power/hibernate.c
+> > > @@ -671,6 +671,8 @@ int hibernate(void)
+> > >  	if (error)
+> > >  		goto Exit;
+> > > =20
+> > > +	pm_notifier_call_chain(PM_HIBERNATION_AFTER_FREEZE);
 > >=20
-> > Mike Snitzer <snitzer@redhat.com> wrote:
-> > > On Fri, Jul 17 2015 at 10:22am -0400,
-> > >=20
-> > > Pali Roh=E1r <pali.rohar@gmail.com> wrote:
-> > > > On Friday 17 July 2015 10:04:39 Mike Snitzer wrote:
-> > > > > On Sun, Jun 21 2015 at  7:20am -0400,
-> > > > >=20
-> > > > > Pali Roh=E1r <pali.rohar@gmail.com> wrote:
-> > > > > > This patch exports function dm_suspend_md() which suspend
-> > > > > > mapped device so other kernel drivers can use it and could
-> > > > > > suspend mapped device when needed.
-> > > > > >=20
-> > > > > > Signed-off-by: Pali Roh=E1r <pali.rohar@gmail.com>
-> > > > > > ---
-> > > > > >=20
-> > > > > >  drivers/md/dm.c |    6 ++++++
-> > > > > >  drivers/md/dm.h |    5 +++++
-> > > > > >  2 files changed, 11 insertions(+)
-> > > > > >=20
-> > > > > > diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> > > > > > index 2caf492..03298ff 100644
-> > > > > > --- a/drivers/md/dm.c
-> > > > > > +++ b/drivers/md/dm.c
-> > > > > >=20
-> > > > > > @@ -3343,6 +3343,12 @@ out:
-> > > > > >  	return r;
-> > > > > > =20
-> > > > > >  }
-> > > > > >=20
-> > > > > > +int dm_suspend_md(struct mapped_device *md)
-> > > > > > +{
-> > > > > > +	return dm_suspend(md, DM_SUSPEND_LOCKFS_FLAG);
-> > > > > > +}
-> > > > > > +EXPORT_SYMBOL_GPL(dm_suspend_md);
-> > > > > > +
-> > > > > >=20
-> > > > > >  /*
-> > > > > > =20
-> > > > > >   * Internal suspend/resume works like userspace-driven
-> > > > > >   suspend. It waits * until all bios finish and prevents
-> > > > > >   issuing new bios to the target drivers.
-> > > > >=20
-> > > > > To do this properly you should be introducing a variant of
-> > > > > dm_internal_suspend.  We currently have two variants:
-> > > > > dm_internal_suspend_fast
-> > > > > dm_internal_suspend_noflush
-> > > > >=20
-> > > > > The reason to use a dm_internal_suspend variant is this suspe=
-nd
-> > > > > was _not_ initiated by an upper level ioctl (from userspace).=
-=20
-> > > > > It was done internally from within the target.
-> > > > >=20
-> > > > > You're explicitly using DM_SUSPEND_LOCKFS_FLAG above.. meanin=
-g
-> > > > > you're interested in flushing all pending IO (in the FS
-> > > > > layered on dm-crupt, if one exists).
-> > > > >=20
-> > > > > But see the comment in __dm_internal_suspend() about
-> > > > > TASK_UNINTERRUPTIBLE. If you're OK with the dm-crypt initiate=
-d
-> > > > > suspend being TASK_UNINTERRUPTIBLE then you could just
-> > > > > introduce:
-> > > > >=20
-> > > > > void dm_internal_suspend_uninterruptible_flush(struct
-> > > > > mapped_device *md) {
-> > > > >=20
-> > > > >         mutex_lock(&md->suspend_lock);
-> > > > >         __dm_internal_suspend(md, DM_SUSPEND_LOCKFS_FLAG);
-> > > > >         mutex_unlock(&md->suspend_lock);
-> > > > >=20
-> > > > > }
-> > > > > EXPORT_SYMBOL_GPL(dm_internal_suspend_uninterruptible_flush);
-> > > > >=20
-> > > > > Otherwise, there is much more extensive DM core changes neede=
-d
-> > > > > to __dm_internal_suspend() and .presuspend to properly suppor=
-t
-> > > > > TASK_INTERRUPTIBLE.
-> > > >=20
-> > > > Hi! I will look at dm_internal_suspend. Anyway use case for
-> > > > suspend is from dm-crypt to do both operations: suspend + key
-> > > > wipe. It means that without entering key again from userspace,
-> > > > resume is not possible. So my question is: It is possible to do
-> > > > internal suspend and then using resume from userspace via ioctl=
-?
-> > >=20
-> > > Good question: no, userspace resume would block waiting for
-> > > internal resume.
-> > >=20
-> > > Soooo... I'll have to look at your patch 3 to understand why
-> > > dm-crypt is needing to initiate the suspend internally but then
-> > > userspace is initiating the resume... this imbalance is
-> > > concerning.
+> > Don't we need to check errors from these?
 > >=20
-> > Why not introduce a new message that allows you to wipe the key aft=
-er
-> > suspend?  Both initiated from userspace.
 >=20
-> There is already message for wiping key and it will success only if d=
-m=20
-> is suspended.
+> If yes, what to do in this case? Fail hibernation and goto Exit?
+
+Yes, fail the transition in progress.
+
+
+> > Also, if you're adding AFTER_FREEZE, it would be good to add BEFORE=
+_THAW too
+> > for symmetry.
+> >=20
 >=20
-> But this patch series is fixing another problem: wipe key before=20
-> suspend/hibernation action happend and to have it race free it must b=
-e=20
-> done after userspace is freezed!
+> But there is no use case for BEFORE_THAW. At least it is not needed f=
+or now.
 
-Yes, I remember now.  So it isn't even userspace initiating the
-suspend_and_wipe, it is the PM chain notifier code you're adding.
+=46or your use case, a single function pointer would be sufficient too.
 
-I'll think more about your use of dm_suspend()
+
+> > > +
+> > >  	lock_device_hotplug();
+> > >  	/* Allocate memory management structures */
+> > >  	error =3D create_basic_memory_bitmaps();
+> > > diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
+> > > index 8d7a1ef..ba2a945 100644
+> > > --- a/kernel/power/suspend.c
+> > > +++ b/kernel/power/suspend.c
+> > > @@ -277,8 +277,10 @@ static int suspend_prepare(suspend_state_t s=
+tate)
+> > >  	trace_suspend_resume(TPS("freeze_processes"), 0, true);
+> > >  	error =3D suspend_freeze_processes();
+> > >  	trace_suspend_resume(TPS("freeze_processes"), 0, false);
+> > > -	if (!error)
+> > > +	if (!error) {
+> > > +		pm_notifier_call_chain(PM_SUSPEND_AFTER_FREEZE);
+> > >  		return 0;
+> > > +	}
+> > > =20
+> > >  	suspend_stats.failed_freeze++;
+> > >  	dpm_save_failed_step(SUSPEND_FREEZE);
+> > >=20
+> >=20
+>=20
+>=20
+
+--=20
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
