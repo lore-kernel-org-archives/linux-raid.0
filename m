@@ -1,35 +1,30 @@
-From: Steven Reddie <steven.reddie@gmail.com>
-Subject: Reversing parity recalculation on out-of-order RAID 6 array
-Date: Sat, 18 Jul 2015 13:16:24 +1000
-Message-ID: <CAFcup8FgJqu6q2BoUc7OSEL=iCFf_43wzj7dBuFXYp2R0t2kdg@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Reversing parity recalculation on out-of-order RAID 6 array
+Date: Sat, 18 Jul 2015 07:33:08 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1507180731040.11810@uplift.swm.pp.se>
+References: <CAFcup8FgJqu6q2BoUc7OSEL=iCFf_43wzj7dBuFXYp2R0t2kdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFcup8FgJqu6q2BoUc7OSEL=iCFf_43wzj7dBuFXYp2R0t2kdg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steven Reddie <steven.reddie@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Sat, 18 Jul 2015, Steven Reddie wrote:
 
-Continuing from the "mdadm --create parameter ordering" thread, I now
-want to reverse the effects of recreating the array with the disks
-specified in the incorrect order.
+> I'm kind of hoping that all of this might have already been done, so
+> any pointers would be appreciated.
 
-Are there existing tools that will help with this?
+https://raid.wiki.kernel.org/index.php/RAID_Recovery
+https://raid.wiki.kernel.org/index.php/Permute_array.pl
 
-I've had a quick play around with nbd and I'm confident that I can
-write an nbd client that will effectively reorder the underlying disks
-and recalculate the parity blocks to present 5 pseudo devices that
-look like the original disks. I could then attempt to start an array
-via those nbd devices and mount/check the filesystem. This approach
-would also allow me to ensure that access to the physical disks is
-readonly, and implement copy-on-write if necessary to support this.
-I'm kind of hoping that all of this might have already been done, so
-any pointers would be appreciated.
+There have historically been lots of threads here with people having the 
+same problems, so if you search the archives for things like 
+"assume-clean", "order", "mdadm", "create", "superblock", you'll find 
+multiple examples of people actually successfully getting out of the 
+problem you're also having.
 
-[BTW, I also expect that I'll have to mess with metadata and
-superblocks, but first need to solve the problem above.]
-
-Thanks,
-
-Steven
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
