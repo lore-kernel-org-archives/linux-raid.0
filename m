@@ -1,62 +1,193 @@
-From: Steven Reddie <steven.reddie@gmail.com>
-Subject: Re: Reversing parity recalculation on out-of-order RAID 6 array
-Date: Sun, 19 Jul 2015 12:26:43 +1000
-Message-ID: <CAFcup8EbE04Z=60LFLLAF6L+9Kd08aUMkC+8deqwR9Sap5oo-A@mail.gmail.com>
-References: <CAFcup8FgJqu6q2BoUc7OSEL=iCFf_43wzj7dBuFXYp2R0t2kdg@mail.gmail.com>
-	<alpine.DEB.2.02.1507180731040.11810@uplift.swm.pp.se>
-	<CAFcup8G230TBec=FzM45GqUkb218yWcYiJJiHDNOkv9MQHkF0g@mail.gmail.com>
-	<alpine.DEB.2.02.1507181342220.11810@uplift.swm.pp.se>
+From: Seunguk Shin <seunguk.shin@samsung.com>
+Subject: [PATCH] raid0: data corruption when using trim
+Date: Sun, 19 Jul 2015 12:28:16 +0900
+Message-ID: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1507181342220.11810@uplift.swm.pp.se>
+Content-language: ko
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It's the same as if I had lost two disks from the array, which RAID 6
-can recover. The difference is that for each stripe (right
-terminology?) of the array, the overwrites didn't occur on the same
-two disks due to the "Q A B C P" layout rotating from stripe to stripe
-(each 64KB * 5 in my case). Therefore, for any given stripe, which
-disks were overwritten is a function of the current incorrect ordering
-of the disks in the array and the offset of the stripe (which tells
-which rotation of "Q A B C P" is used). Including knowledge of the
-original correct ordering of the disks then allows mapping to which
-two components of the original data have been lost (ie. two of Q, A,
-B, C, or P). Then it is a simple matter of recalculating the missing
-components from the survived components.
+Hi,
 
-I'm now almost done with an nbd-based translator that does this
-reversal on the fly (ie. takes /dev/sdg[a-e]5 as input and presents
-the translated versions as /dev/nbd[0-4]). Since I wanted to do the
-remapping only once per stripe, I haven't used the nbd server and
-client code as I'd have to run an instance of each for each of the 5
-disks in my array. I've got my own server and client code that
-interfaces with the nbd kernel module in the same way, but provides
-access to all disks through the one instance.
+There was report at Algolia's blog website regarding some problems usin=
+g
+software raid and trim in SSD.
+https://blog.algolia.com/when-solid-state-drives-are-not-that-solid/
 
-I don't want to risk messing with any of the MD or LVM metadata on the
-Synology, so once the translator is finished I will try assembling an
-array from these devices across the network on another machine and
-check/mount the filesystem.
+It turns out that there is misunderstanding between raid driver and scs=
+i/ata
+driver.
+The raid driver lets split bios share bio vector of source bio.
+Usually, there is no problem, because the raid layer ensures
+that the source bio is not freed before the split bios.
 
-I was hoping that there might be a tried and tested tool already
-available for this, but if not I'll continue with mine.
+But, in case of trim, there are some problems.
+The scsi/ata needs some payloads that include start address and size of
+device to trim.
+So, the scsi/ata driver allocates a page and stores that pointer on
+bio->bi_io_vec->bv_page.
+(sd_setup_discard_cmnd)
 
-Steven
+Because split bios share the source bio's bi_io_vec,
+the pointer to the allocated page in scsi/ata driver is overwritten.
+It leads to memory leakage and data corruption
+because the overwritten pointer has wrong address and size to trim on
+device.
 
-On Sat, Jul 18, 2015 at 9:43 PM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> On Sat, 18 Jul 2015, Steven Reddie wrote:
->
->> I need to reverse these disk writes across then entire length of the
->> array, after which I can reassemble the array in the correct order.
->
->
-> If you did not use --assume-clean, and had the wrong parity order and the
-> array was "resynced", I don't see how you did not irrevocably overwrote
-> important information and you now can't reverse this.
->
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
+So, we add some codes that make sure not to share bio vector if the sou=
+rce
+bio is discard.
+The linear and raid10 also have same problem
+because they're using similar scheme to split the source bio.
+
+This problem exists at the very first time when the trim is enabled on
+raid0.
+Before the new bio_split() (20d0189b), we can patch more easily
+by modifying the condition to split bio vector in bio_split function
+from (bi->bi_vec !=3D 0) to ((bi->bi_vec !=3D 0) || (bi->bi_rw & REQ_DI=
+SCARD)).
+
+Thank you.
+Seunguk Shin.
+
+
+
+[=930001-PATCH-raid0-data-corruption-when-using-trim.patch=94]
+
+=46rom ca7dbe01fcd2ef2f8cea1a38de5aca5c866c585d Mon Sep 17 00:00:00 200=
+1
+=46rom: Seunguk Shin <seunguk.shin@samsung.com>
+Date: Sat, 18 Jul 2015 20:13:44 +0900
+Subject: [PATCH] [PATCH] raid0: data corruption when using trim
+
+When we are using software raid and tirm, there is data corruption.
+
+The raid driver lets split bios share bio vector of source bio.
+The scsi/ata driver allocates a page and stores that pointer on
+bio->bi_io_vec->bv_page
+(sd_setup_discard_cmnd) because the scsi/ata needs some payloads
+that include start address and size of device to trim.
+Because split bios share the source bio's bi_io_vec,
+the pointer to the allocated page in scsi/ata driver is overwritten.
+
+This patch splits bio vector if bio is discard.
+---
+block/bio.c=A0=A0=A0=A0=A0=A0=A0=A0 |=A0 6 ------
+drivers/md/raid0.c=A0 | 13 +++++++++++++
+include/linux/bio.h |=A0 6 ++++++
+3 files changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/block/bio.c b/block/bio.c
+index 2a00d34..df7589d 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -32,12 +32,6 @@
+#include <trace/events/block.h>
+
+=A0/*
+- * Test patch to inline a certain number of bi_io_vec's inside the bio
+- * itself, to shrink a bio data allocation from two mempool calls to o=
+ne
+- */
+-#define BIO_INLINE_VECS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 4
+-
+-/*
+=A0 * if you change this list, also change bvec_alloc or things will
+=A0 * break badly! cannot be bigger than what you can fit into an
+=A0 * unsigned short
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index efb654e..fd1318b 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -529,6 +529,19 @@ static void raid0_make_request(struct mddev *mddev=
+,
+struct bio *bio)
+
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (sector=
+s < bio_sectors(bio)) {
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0 split =3D bio_split(bio, sectors, GFP_NOIO,
+fs_bio_set);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0 if (unlikely(split->bi_rw & REQ_DISCARD)) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 struct bio_vec *bvl =3D=
+ NULL;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 unsigned long idx =3D =
+BIO_POOL_NONE;
++
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 bvl =3D bvec_alloc(GFP=
+_NOIO,
+BIO_INLINE_VECS + 1,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 &idx,
+fs_bio_set->bvec_pool);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags |=3D 1=
+ <<
+BIO_OWNS_VEC;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags &=3D ~=
+(BIO_POOL_NONE
+<<
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
+BIO_POOL_OFFSET);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags |=3D i=
+dx <<
+BIO_POOL_OFFSET;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_max_vecs =3D
+BIO_INLINE_VECS + 1;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_io_vec =3D b=
+vl;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0 bio_chain(split, bio);
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 } else {
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0 split =3D bio;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 5e963a6..8344bb5 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -40,6 +40,12 @@
+#define BIO_BUG_ON
+#endif
+
++/*
++ * Test patch to inline a certain number of bi_io_vec's inside the bio
++ * itself, to shrink a bio data allocation from two mempool calls to o=
+ne
++ */
++#define BIO_INLINE_VECS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0 4
++
+#define BIO_MAX_PAGES=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 256
+#define BIO_MAX_SIZE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (BIO_MAX_PAGES=
+ << PAGE_CACHE_SHIFT)
+#define BIO_MAX_SECTORS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0 (BIO_MAX_SIZE >> 9)
+--=20
+1.9.1
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
