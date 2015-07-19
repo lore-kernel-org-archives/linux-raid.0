@@ -1,193 +1,173 @@
-From: Seunguk Shin <seunguk.shin@samsung.com>
-Subject: [PATCH] raid0: data corruption when using trim
-Date: Sun, 19 Jul 2015 12:28:16 +0900
-Message-ID: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
+From: Marc Desharnais <marcdesharnais@hotmail.com>
+Subject: Raid5 fails to assemble automatically
+Date: Sun, 19 Jul 2015 10:26:35 -0400
+Message-ID: <BLU437-SMTP68684C478276C82E113DE6CE860@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-language: ko
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi,
 
-There was report at Algolia's blog website regarding some problems usin=
-g
-software raid and trim in SSD.
-https://blog.algolia.com/when-solid-state-drives-are-not-that-solid/
+I'm new to this mailing list but I subscribed because of this problem 
+with my raid5.
+I really don't want to mess this up and it was clearly suggested to not 
+rush things on the wiki. So I'm looking for help :)
+My raid has been running great for a long time now but I think it needs 
+so serious maintenance.
+I have a 4 disks raid 5 on ArchLinux, mdadm version 3.3.1.
 
-It turns out that there is misunderstanding between raid driver and scs=
-i/ata
-driver.
-The raid driver lets split bios share bio vector of source bio.
-Usually, there is no problem, because the raid layer ensures
-that the source bio is not freed before the split bios.
+First, the raid status :
 
-But, in case of trim, there are some problems.
-The scsi/ata needs some payloads that include start address and size of
-device to trim.
-So, the scsi/ata driver allocates a page and stores that pointer on
-bio->bi_io_vec->bv_page.
-(sd_setup_discard_cmnd)
+/dev/sda:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 63fa3bf5:e14f2233:61302635:9841f005
+   Creation Time : Sat Dec 26 11:20:04 2009
+      Raid Level : raid5
+   Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+      Array Size : 1465159296 (1397.28 GiB 1500.32 GB)
+    Raid Devices : 4
+   Total Devices : 3
+Preferred Minor : 0
 
-Because split bios share the source bio's bi_io_vec,
-the pointer to the allocated page in scsi/ata driver is overwritten.
-It leads to memory leakage and data corruption
-because the overwritten pointer has wrong address and size to trim on
-device.
+     Update Time : Fri May 22 03:08:43 2015
+           State : clean
+  Active Devices : 3
+Working Devices : 3
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : a59a8ad1 - correct
+          Events : 17559
 
-So, we add some codes that make sure not to share bio vector if the sou=
-rce
-bio is discard.
-The linear and raid10 also have same problem
-because they're using similar scheme to split the source bio.
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-This problem exists at the very first time when the trim is enabled on
-raid0.
-Before the new bio_split() (20d0189b), we can patch more easily
-by modifying the condition to split bio vector in bio_split function
-from (bi->bi_vec !=3D 0) to ((bi->bi_vec !=3D 0) || (bi->bi_rw & REQ_DI=
-SCARD)).
+       Number   Major   Minor   RaidDevice State
+this     3       8        0        3      active sync   /dev/sda
 
-Thank you.
-Seunguk Shin.
+    0     0       8       64        0      active sync   /dev/sde
+    1     1       0        0        1      faulty removed
+    2     2       8       16        2      active sync   /dev/sdb
+    3     3       8        0        3      active sync   /dev/sda
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 63fa3bf5:e14f2233:61302635:9841f005
+   Creation Time : Sat Dec 26 11:20:04 2009
+      Raid Level : raid5
+   Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+      Array Size : 1465159296 (1397.28 GiB 1500.32 GB)
+    Raid Devices : 4
+   Total Devices : 2
+Preferred Minor : 0
 
+     Update Time : Sat May 23 07:02:59 2015
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : a59c1346 - correct
+          Events : 17562
 
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-[=930001-PATCH-raid0-data-corruption-when-using-trim.patch=94]
+       Number   Major   Minor   RaidDevice State
+this     2       8       16        2      active sync   /dev/sdb
 
-=46rom ca7dbe01fcd2ef2f8cea1a38de5aca5c866c585d Mon Sep 17 00:00:00 200=
-1
-=46rom: Seunguk Shin <seunguk.shin@samsung.com>
-Date: Sat, 18 Jul 2015 20:13:44 +0900
-Subject: [PATCH] [PATCH] raid0: data corruption when using trim
+    0     0       8       64        0      active sync   /dev/sde
+    1     1       0        0        1      faulty removed
+    2     2       8       16        2      active sync   /dev/sdb
+    3     3       0        0        3      faulty removed
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 63fa3bf5:e14f2233:61302635:9841f005
+   Creation Time : Sat Dec 26 11:20:04 2009
+      Raid Level : raid5
+   Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+      Array Size : 1465159296 (1397.28 GiB 1500.32 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 0
 
-When we are using software raid and tirm, there is data corruption.
+     Update Time : Mon Dec 24 01:09:51 2012
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : a113755e - correct
+          Events : 11218
 
-The raid driver lets split bios share bio vector of source bio.
-The scsi/ata driver allocates a page and stores that pointer on
-bio->bi_io_vec->bv_page
-(sd_setup_discard_cmnd) because the scsi/ata needs some payloads
-that include start address and size of device to trim.
-Because split bios share the source bio's bi_io_vec,
-the pointer to the allocated page in scsi/ata driver is overwritten.
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-This patch splits bio vector if bio is discard.
----
-block/bio.c=A0=A0=A0=A0=A0=A0=A0=A0 |=A0 6 ------
-drivers/md/raid0.c=A0 | 13 +++++++++++++
-include/linux/bio.h |=A0 6 ++++++
-3 files changed, 19 insertions(+), 6 deletions(-)
+       Number   Major   Minor   RaidDevice State
+this     1       8       16        1      active sync   /dev/sdb
 
-diff --git a/block/bio.c b/block/bio.c
-index 2a00d34..df7589d 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -32,12 +32,6 @@
-#include <trace/events/block.h>
+    0     0       8       32        0      active sync   /dev/sdc
+    1     1       8       16        1      active sync   /dev/sdb
+    2     2       8       48        2      active sync   /dev/sdd
+    3     3       8       64        3      active sync   /dev/sde
+/dev/sde:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 63fa3bf5:e14f2233:61302635:9841f005
+   Creation Time : Sat Dec 26 11:20:04 2009
+      Raid Level : raid5
+   Used Dev Size : 488386432 (465.76 GiB 500.11 GB)
+      Array Size : 1465159296 (1397.28 GiB 1500.32 GB)
+    Raid Devices : 4
+   Total Devices : 2
+Preferred Minor : 0
 
-=A0/*
-- * Test patch to inline a certain number of bi_io_vec's inside the bio
-- * itself, to shrink a bio data allocation from two mempool calls to o=
-ne
-- */
--#define BIO_INLINE_VECS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0 4
--
--/*
-=A0 * if you change this list, also change bvec_alloc or things will
-=A0 * break badly! cannot be bigger than what you can fit into an
-=A0 * unsigned short
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index efb654e..fd1318b 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -529,6 +529,19 @@ static void raid0_make_request(struct mddev *mddev=
-,
-struct bio *bio)
+     Update Time : Sat May 23 07:02:59 2015
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 2
+   Spare Devices : 0
+        Checksum : a59c1372 - correct
+          Events : 17562
 
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (sector=
-s < bio_sectors(bio)) {
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 split =3D bio_split(bio, sectors, GFP_NOIO,
-fs_bio_set);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0 if (unlikely(split->bi_rw & REQ_DISCARD)) {
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 struct bio_vec *bvl =3D=
- NULL;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 unsigned long idx =3D =
-BIO_POOL_NONE;
-+
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 bvl =3D bvec_alloc(GFP=
-_NOIO,
-BIO_INLINE_VECS + 1,
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 &idx,
-fs_bio_set->bvec_pool);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags |=3D 1=
- <<
-BIO_OWNS_VEC;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags &=3D ~=
-(BIO_POOL_NONE
-<<
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0
-BIO_POOL_OFFSET);
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_flags |=3D i=
-dx <<
-BIO_POOL_OFFSET;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_max_vecs =3D
-BIO_INLINE_VECS + 1;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 split->bi_io_vec =3D b=
-vl;
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0 }
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 bio_chain(split, bio);
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 } else {
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 split =3D bio;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 5e963a6..8344bb5 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -40,6 +40,12 @@
-#define BIO_BUG_ON
-#endif
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-+/*
-+ * Test patch to inline a certain number of bi_io_vec's inside the bio
-+ * itself, to shrink a bio data allocation from two mempool calls to o=
-ne
-+ */
-+#define BIO_INLINE_VECS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0 4
-+
-#define BIO_MAX_PAGES=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 256
-#define BIO_MAX_SIZE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (BIO_MAX_PAGES=
- << PAGE_CACHE_SHIFT)
-#define BIO_MAX_SECTORS=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0 (BIO_MAX_SIZE >> 9)
---=20
-1.9.1
+       Number   Major   Minor   RaidDevice State
+this     0       8       64        0      active sync   /dev/sde
+
+    0     0       8       64        0      active sync   /dev/sde
+    1     1       0        0        1      faulty removed
+    2     2       8       16        2      active sync   /dev/sdb
+    3     3       0        0        3      faulty removed
 
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Obvisously the event count is wrong on 2 disks. One disk has been gone 
+for a long time now...
+
+1 - First question : how can I safely assemble the raid to the latest 
+sync state? I don't want to mess this up.
+2 - Does this mean my hard drives are dead, or simply desync?
+
+
+Also I tried to force assemble :
+  mdadm --assemble --force /dev/md0 /dev/sda /dev/sdb /dev/sde
+mdadm: /dev/sda is busy - skipping
+mdadm: /dev/sdb is busy - skipping
+mdadm: /dev/sde is busy - skipping
+
+
+What should I do now?
+
+Thank you!
+
+
+Marc
+
