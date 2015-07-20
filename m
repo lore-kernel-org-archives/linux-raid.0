@@ -1,34 +1,34 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] raid0: data corruption when using trim
-Date: Mon, 20 Jul 2015 19:38:30 +0200
-Message-ID: <20150720173830.GA3274@lazy.lzy>
+Date: Mon, 20 Jul 2015 14:26:10 -0400
+Message-ID: <yq1a8uq3cu5.fsf@sermon.lab.mkp.net>
 References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
- <yq1y4ibknz4.fsf@sermon.lab.mkp.net>
+	<yq1y4ibknz4.fsf@sermon.lab.mkp.net> <20150720173830.GA3274@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1y4ibknz4.fsf@sermon.lab.mkp.net>
+In-Reply-To: <20150720173830.GA3274@lazy.lzy> (Piergiorgio Sartor's message of
+	"Mon, 20 Jul 2015 19:38:30 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Seunguk Shin <seunguk.shin@samsung.com>, neilb@suse.de, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Seunguk Shin <seunguk.shin@samsung.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 20, 2015 at 08:33:35AM -0400, Martin K. Petersen wrote:
-> >>>>> "Seunguk" == Seunguk Shin <seunguk.shin@samsung.com> writes:
-> 
-> Seunguk,
-> 
-> Thanks for tracking this down. Instead of explicitly coding around the
-> issue in raid0/raid10/linear I would prefer to fix bio_split(). It seems
+>>>>> "Piergiorgio" == Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> writes:
 
-Does this mean we should disable any trimming
-on RAID-10 until further notice?
+Piergiorgio> Does this mean we should disable any trimming on RAID-10
+Piergiorgio> until further notice?
 
-Thanks,
+If you are using SATA SSDs, absolutely.
 
-bye,
+This bug has been around for a long time and I'm surprised we haven't
+heard of it until now. But it's very specific to the way linear, raid0
+and raid10 interface with the block layer. I'm guessing that most SSD
+users deploy raid1 which is not affected.
+
+The problem is also there if you have a storage array that prefers the
+UNMAP command. But it's even less likely that you'd be using software
+RAID in that case.
 
 -- 
-
-piergiorgio
+Martin K. Petersen	Oracle Linux Engineering
