@@ -1,48 +1,40 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Mon, 20 Jul 2015 10:03:45 +1000
-Message-ID: <20150720100345.63302007@noble>
-References: <20150710040847.GA1408097@devbig257.prn2.facebook.com>
-	<20150710143656.4ee7e647@noble>
-	<20150715004455.GA1024035@devbig257.prn2.facebook.com>
-	<20150715121234.22803890@noble>
-	<20150715031615.GA1292235@devbig257.prn2.facebook.com>
-	<20150715140641.3c61cf78@noble>
-	<20150715194927.GA3502691@devbig257.prn2.facebook.com>
-	<20150716091653.7b970b32@noble>
-	<20150716000739.GA4041321@devbig257.prn2.facebook.com>
-	<20150716112217.3e2e685f@noble>
-	<20150716041305.GA283306@devbig257.prn2.facebook.com>
-	<20150716160711.08c37fc1@noble>
-	<21927.51382.8600.700720@quad.stoffel.home>
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Subject: Re: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after
+ freezing processes
+Date: Mon, 20 Jul 2015 09:32:26 +0200
+Message-ID: <20150720073226.GB25910@pali>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
+ <3729395.1oJCgMXcLU@vostro.rjw.lan>
+ <20150716073302.GA10393@pali>
+ <3179448.TScsKEAuyR@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21927.51382.8600.700720@quad.stoffel.home>
-Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <3179448.TScsKEAuyR@vostro.rjw.lan>
+Sender: linux-pm-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 16 Jul 2015 11:07:34 -0400 "John Stoffel" <john@stoffel.org>
-wrote:
+On Saturday 18 July 2015 01:27:15 Rafael J. Wysocki wrote:
+> On Thursday, July 16, 2015 09:33:02 AM Pali Roh=C3=A1r wrote:
+> > On Thursday 16 July 2015 03:02:03 Rafael J. Wysocki wrote:
+> > > Also, if you're adding AFTER_FREEZE, it would be good to add BEFO=
+RE_THAW too
+> > > for symmetry.
+> > >=20
+> >=20
+> > But there is no use case for BEFORE_THAW. At least it is not needed=
+ for now.
+>=20
+> For your use case, a single function pointer would be sufficient too.
+>=20
 
-> 
-> So.... how will wrapping of sequence numbers be handled in the cache
-> metadata on disk?  They can't grow for ever...
+What do you mean by single function pointer? kernel/power is part of
+kernel image and dm-crypt is external kernel module.
 
-Can't they?
-
-A 64bit number incremented every millisecond can grow for half a
-billion years.  As far as I'm concerned, that is forever.
-
-But even if we used 32bit numbers, it is very easy to handle looping
-providing you have few than half of the numbers in use at any time.
-So as long as we don't have more than 2 billion active transactions in
-the log at once, there is no problem.
-The kernel does some internal time keeping using "jiffies" which, on
-32bit systems, cycle about every fortnight.  A small amount of care is
-enough that this doesn't cause problem.
-
-NeilBrown
+--=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
