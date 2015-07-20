@@ -1,36 +1,52 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] raid0: data corruption when using trim
-Date: Mon, 20 Jul 2015 20:34:02 +0200
-Message-ID: <20150720183402.GA4439@lazy.lzy>
-References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
- <yq1y4ibknz4.fsf@sermon.lab.mkp.net>
- <20150720173830.GA3274@lazy.lzy>
- <yq1a8uq3cu5.fsf@sermon.lab.mkp.net>
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH] md:Check if call to thaw_bdev fails in unlock_fs
+Date: Mon, 20 Jul 2015 15:35:48 -0400
+Message-ID: <1437420948-26201-1-git-send-email-xerofoify@gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1a8uq3cu5.fsf@sermon.lab.mkp.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Seunguk Shin <seunguk.shin@samsung.com>, neilb@suse.de, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: agk@redhat.com
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, neilb@suse.com, snitzer@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 20, 2015 at 02:26:10PM -0400, Martin K. Petersen wrote:
-> >>>>> "Piergiorgio" == Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> writes:
-> 
-> Piergiorgio> Does this mean we should disable any trimming on RAID-10
-> Piergiorgio> until further notice?
-> 
-> If you are using SATA SSDs, absolutely.
+This adds a check to the function unlock_fs to check if the call
+to thaw_bdev failed by returning a return code and if so print
+on the log level of KERN_CRIT that the thaw has failed on the
+passed device structure pointer's name before returnin immediately
+to this function's caller.
 
-There is LVM on top, I wonder if this
-makes a difference.
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+---
+ drivers/md/dm.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Anyway thanks,
-
-bye,
-
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index ab37ae1..20ccc36 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -3152,7 +3152,11 @@ static void unlock_fs(struct mapped_device *md)
+ 	if (!test_bit(DMF_FROZEN, &md->flags))
+ 		return;
+ 
+-	thaw_bdev(md->bdev, md->frozen_sb);
++	if (!thaw_bdev(md->bdev, md->frozen_sb)) {
++		pr_crit("Thaw failed on the file device %s\n", md->name);
++		return;
++	}
++
+ 	md->frozen_sb = NULL;
+ 	clear_bit(DMF_FROZEN, &md->flags);
+ }
 -- 
-
-piergiorgio
+2.1.4
