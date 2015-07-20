@@ -1,60 +1,96 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: [PATCH V4 00/13] MD: a caching layer for raid5/6
-Date: Mon, 20 Jul 2015 10:11:01 -0400
-Message-ID: <21933.373.338911.954794@quad.stoffel.home>
-References: <20150710040847.GA1408097@devbig257.prn2.facebook.com>
-	<20150710143656.4ee7e647@noble>
-	<20150715004455.GA1024035@devbig257.prn2.facebook.com>
-	<20150715121234.22803890@noble>
-	<20150715031615.GA1292235@devbig257.prn2.facebook.com>
-	<20150715140641.3c61cf78@noble>
-	<20150715194927.GA3502691@devbig257.prn2.facebook.com>
-	<20150716091653.7b970b32@noble>
-	<20150716000739.GA4041321@devbig257.prn2.facebook.com>
-	<20150716112217.3e2e685f@noble>
-	<20150716041305.GA283306@devbig257.prn2.facebook.com>
-	<20150716160711.08c37fc1@noble>
-	<21927.51382.8600.700720@quad.stoffel.home>
-	<20150720100345.63302007@noble>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH] Enable loading of bitmaps for dm-md-raid1.
+Date: Mon, 20 Jul 2015 12:06:28 -0500
+Message-ID: <20150720170628.GA7380@shrek.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150720100345.63302007@noble>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: John Stoffel <john@stoffel.org>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, Kernel-team@fb.com
+To: neilb@suse.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "NeilBrown" == NeilBrown  <neilb@suse.com> writes:
+This is also a hack for systems with junk in the rest
+of the bitmap super (instead of zeroes) to boot. This is done by
+checking mddev->sync_super (which is exclusively set by dm-raid)
+is null.
 
-NeilBrown> On Thu, 16 Jul 2015 11:07:34 -0400 "John Stoffel" <john@stoffel.org>
-NeilBrown> wrote:
+These changes also include zeroing of most bitmap pages while
+allocating so we are sure that the junk is not coming from memory.
 
->> 
->> So.... how will wrapping of sequence numbers be handled in the cache
->> metadata on disk?  They can't grow for ever...
+References: https://bugzilla.kernel.org/show_bug.cgi?id=100491
 
-NeilBrown> Can't they?
-
-NeilBrown> A 64bit number incremented every millisecond can grow for half a
-NeilBrown> billion years.  As far as I'm concerned, that is forever.
-
-LOL... that is true.  But I'm trying to just think about edge cases
-and point out some possible pitfalls in case of corruption or errors.  
-
-NeilBrown> But even if we used 32bit numbers, it is very easy to
-NeilBrown> handle looping providing you have few than half of the
-NeilBrown> numbers in use at any time.  So as long as we don't have
-NeilBrown> more than 2 billion active transactions in the log at once,
-NeilBrown> there is no problem.  The kernel does some internal time
-NeilBrown> keeping using "jiffies" which, on 32bit systems, cycle
-NeilBrown> about every fortnight.  A small amount of care is enough
-NeilBrown> that this doesn't cause problem.
-
-All I wanted to make sure, was that this was thought of and handled.
-I like the idea of randomly picking a STARTING number, so that we
-hopefully exercise all the corner cases properly early on in the process.
-
-John
-
+Signed-off-by: Neil Brown <neilb@suse.de>
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 135a090..dfa5ef3 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -494,7 +494,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	bitmap_super_t *sb;
+ 	unsigned long chunksize, daemon_sleep, write_behind;
+ 
+-	bitmap->storage.sb_page = alloc_page(GFP_KERNEL);
++	bitmap->storage.sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+ 	if (bitmap->storage.sb_page == NULL)
+ 		return -ENOMEM;
+ 	bitmap->storage.sb_page->index = 0;
+@@ -541,6 +541,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+ 	sb->state = cpu_to_le32(bitmap->flags);
+ 	bitmap->events_cleared = bitmap->mddev->events;
+ 	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
++	bitmap->mddev->bitmap_info.nodes = 0;
+ 
+ 	kunmap_atomic(sb);
+ 
+@@ -568,7 +569,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+ 		goto out_no_sb;
+ 	}
+ 	/* page 0 is the superblock, read it... */
+-	sb_page = alloc_page(GFP_KERNEL);
++	sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+ 	if (!sb_page)
+ 		return -ENOMEM;
+ 	bitmap->storage.sb_page = sb_page;
+@@ -611,8 +612,15 @@ re_read:
+ 	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
+ 	write_behind = le32_to_cpu(sb->write_behind);
+ 	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
+-	nodes = le32_to_cpu(sb->nodes);
+-	strlcpy(bitmap->mddev->bitmap_info.cluster_name, sb->cluster_name, 64);
++	/* XXX: This is an ugly hack to ensure that we don't use clustering
++	   in case dm-raid is in use and the nodes written in bitmap_sb
++	   is erroneous.
++	*/
++	if (!bitmap->mddev->sync_super) {
++		nodes = le32_to_cpu(sb->nodes);
++		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
++				sb->cluster_name, 64);
++	}
+ 
+ 	/* verify that the bitmap-specific fields are valid */
+ 	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
+@@ -649,7 +657,7 @@ re_read:
+ 			goto out;
+ 		}
+ 		events = le64_to_cpu(sb->events);
+-		if (!nodes && (events < bitmap->mddev->events)) {
++		if (err == 0 && !nodes && (events < bitmap->mddev->events)) {
+ 			printk(KERN_INFO
+ 			       "%s: bitmap file is out of date (%llu < %llu) "
+ 			       "-- forcing full recovery\n",
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4dbed4a..6bd8bc3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7415,7 +7415,7 @@ int md_setup_cluster(struct mddev *mddev, int nodes)
+ 	err = request_module("md-cluster");
+ 	if (err) {
+ 		pr_err("md-cluster module not found.\n");
+-		return err;
++		return -ENOENT;
+ 	}
+ 
+ 	spin_lock(&pers_lock);
