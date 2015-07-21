@@ -1,86 +1,71 @@
-From: Jimmie Mayfield <jimmie@sackheads.org>
-Subject: MDADM RAID5 mismatch_cnt > 0.  Any way to identify which blocks disagree?
-Date: Tue, 21 Jul 2015 13:28:00 -0400
-Message-ID: <55AE8120.3090505@sackheads.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v2 1/3] PM suspend/hibernate: Call notifier after
+ freezing processes
+Date: Wed, 22 Jul 2015 08:08:27 +1000
+Message-ID: <20150722080827.5adcf5f1@noble>
+References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
+	<3179448.TScsKEAuyR@vostro.rjw.lan>
+	<20150720073226.GB25910@pali>
+	<1715416.hWBvT0iLvO@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1715416.hWBvT0iLvO@vostro.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Pali =?UTF-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi.  After a routine weekly scrub of my 4-drive RAID5 array, MDADM is 
-reporting mismatch_cnt = 16.  As I understand, this means that while no 
-device reported a read error, there are 16 blocks for which the data and 
-parity do not agree.
+On Mon, 20 Jul 2015 23:46:32 +0200 "Rafael J. Wysocki"
+<rjw@rjwysocki.net> wrote:
 
-(I should mention that I've only run the scrub with the 'check' option 
-since 'repair' seems dangerous in cases like this where MDADM doesn't 
-know whether the data or the parity is lying)
+> On Monday, July 20, 2015 09:32:26 AM Pali Roh=C3=A1r wrote:
+> > On Saturday 18 July 2015 01:27:15 Rafael J. Wysocki wrote:
+> > > On Thursday, July 16, 2015 09:33:02 AM Pali Roh=C3=A1r wrote:
+> > > > On Thursday 16 July 2015 03:02:03 Rafael J. Wysocki wrote:
+> > > > > Also, if you're adding AFTER_FREEZE, it would be good to add =
+BEFORE_THAW too
+> > > > > for symmetry.
+> > > > >=20
+> > > >=20
+> > > > But there is no use case for BEFORE_THAW. At least it is not ne=
+eded for now.
+> > >=20
+> > > For your use case, a single function pointer would be sufficient =
+too.
+> > >=20
+> >=20
+> > What do you mean by single function pointer? kernel/power is part o=
+f
+> > kernel image and dm-crypt is external kernel module.
+>=20
+> Well, if there is a function pointer in the core suspend code initial=
+ly set to
+> NULL and exported to modules such that the dm-crypt code can set it t=
+o
+> something else, that should be sufficient, shouldn't it?
 
-Question #1: Near as I can tell, the only log output from the scrub 
-operation occurs when it begins and completes.  Can one obtain the list 
-of blocks that disagree?  If this were RAID1, I suppose I could take the 
-array offline and cmp drive #1 against drive #2.  Is there an analog for 
-RAID5?
+As long as the dm-crypt module is never unloaded.  And as long as no
+other module could very possible want functionality like this. Ever.
 
-Question #2: (I realize this is probably the wrong mailing list for this 
-question) Assuming #1 is possible and given that the filesystem sitting 
-on top of the array is EXT4, is it possible to identify the files 
-associated with these blocks?  I do have nearline backups and, in an 
-ideal world, I could just cmp the live array against the backup data to 
-identify corrupted files but the reality is recalling several TB of 
-backups would be both slow and expensive.  Knowing where to look and 
-what might need to be recovered would help immensely.
+If a module wants to be notified - the providing a notifier chain
+really seems like the right thing to do...
 
-Question #3: Let's say I tell MDADM to repair these blocks.  Since MDADM 
-doesn't know whether data or parity is correct, I figure at least some 
-of these repaired blocks will be wrong.  Let's say at that point I fsck 
-the filesystem and use the answer to question #2 to identify and restore 
-any files that are still corrupt.  Should I be concerned about 
-incorrectly-repaired blocks that don't correspond to files?  Presumably, 
-a successful fsck will ensure that the filesystem itself is consistent 
-but are there any other lurking time bombs?  I assume that an 
-incorrectly-repaired block corresponding to unused space within the 
-filesystem is of no concern since the block will be rewritten once it's 
-allocated for a file?
-
-Relevant info:
-OS: CentOS 6.6 (kernel 2.6.32-504.23.4.el6.centos.plus.x86_64)
-
-/dev/md0:
-         Version : 1.1
-   Creation Time : Tue Jun  7 17:12:55 2011
-      Raid Level : raid5
-      Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-    Raid Devices : 4
-   Total Devices : 4
-     Persistence : Superblock is persistent
-
-   Intent Bitmap : Internal
-
-     Update Time : Tue Jul 21 13:24:14 2015
-           State : active
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 512K
-
-            Name : raiden:0
-            UUID : d40a8260:a62151d3:4949844a:2a0cfc53
-          Events : 141606
-
-     Number   Major   Minor   RaidDevice State
-        0       8       65        0      active sync   /dev/sde1
-        1       8       33        1      active sync   /dev/sdc1
-        2       8       49        2      active sync   /dev/sdd1
-        4       8       17        3      active sync   /dev/sdb1
-
-Apologies if my questions seem naive.
+NeilBrown
 
 
+>=20
+> So if you're adding new PM notifier events, that's already more than =
+*you* need.
+>=20
+> Anyway, I guess the "post freeze" new one should be enough for now, b=
+ut please
+> change the name to POST_FREEZE.
+>=20
+> Also I think we don't need separate "post freeze" events for suspend =
+and
+> hibernation.
+>=20
+> Thanks,
+> Rafael
