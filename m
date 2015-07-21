@@ -1,55 +1,86 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [dm-devel] [PATCH] block: add a bi_error field to struct bio
-Date: Tue, 21 Jul 2015 10:19:08 +0200
-Message-ID: <55AE007C.9030807@suse.de>
-References: <1437398977-8492-1-git-send-email-hch@lst.de> <1437398977-8492-2-git-send-email-hch@lst.de>
+From: Jimmie Mayfield <jimmie@sackheads.org>
+Subject: MDADM RAID5 mismatch_cnt > 0.  Any way to identify which blocks disagree?
+Date: Tue, 21 Jul 2015 13:28:00 -0400
+Message-ID: <55AE8120.3090505@sackheads.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437398977-8492-2-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Liu Bo <bo.li.liu@oracle.com>, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/20/2015 03:29 PM, Christoph Hellwig wrote:
-> Currently we have two different ways to signal an I/O error on a BIO:
->=20
->  (1) by clearing the BIO_UPTODATE flag
->  (2) by returning a Linux errno value to the bi_end_io callback
->=20
-> The first one has the drawback of only communicating a single possibl=
-e
-> error (-EIO), and the second one has the drawback of not beeing persi=
-stent
-> when bios are queued up, and are not passed along from child to paren=
-t
-> bio in the ever more popular chaining scenario.  Having both mechanis=
-ms
-> available has the additional drawback of utterly confusing driver aut=
-hors
-> and introducing bugs where various I/O submitters only deal with one =
-of
-> them, and the others have to add boilerplate code to deal with both k=
-inds
-> of error returns.
->=20
-> So add a new bi_error field to store an errno value directly in struc=
-t
-> bio and remove the existing mechanisms to clean all this up.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-Very good improvement.
+Hi.  After a routine weekly scrub of my 4-drive RAID5 array, MDADM is 
+reporting mismatch_cnt = 16.  As I understand, this means that while no 
+device reported a read error, there are 16 blocks for which the data and 
+parity do not agree.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+(I should mention that I've only run the scrub with the 'check' option 
+since 'repair' seems dangerous in cases like this where MDADM doesn't 
+know whether the data or the parity is lying)
 
-Cheers,
+Question #1: Near as I can tell, the only log output from the scrub 
+operation occurs when it begins and completes.  Can one obtain the list 
+of blocks that disagree?  If this were RAID1, I suppose I could take the 
+array offline and cmp drive #1 against drive #2.  Is there an analog for 
+RAID5?
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Question #2: (I realize this is probably the wrong mailing list for this 
+question) Assuming #1 is possible and given that the filesystem sitting 
+on top of the array is EXT4, is it possible to identify the files 
+associated with these blocks?  I do have nearline backups and, in an 
+ideal world, I could just cmp the live array against the backup data to 
+identify corrupted files but the reality is recalling several TB of 
+backups would be both slow and expensive.  Knowing where to look and 
+what might need to be recovered would help immensely.
+
+Question #3: Let's say I tell MDADM to repair these blocks.  Since MDADM 
+doesn't know whether data or parity is correct, I figure at least some 
+of these repaired blocks will be wrong.  Let's say at that point I fsck 
+the filesystem and use the answer to question #2 to identify and restore 
+any files that are still corrupt.  Should I be concerned about 
+incorrectly-repaired blocks that don't correspond to files?  Presumably, 
+a successful fsck will ensure that the filesystem itself is consistent 
+but are there any other lurking time bombs?  I assume that an 
+incorrectly-repaired block corresponding to unused space within the 
+filesystem is of no concern since the block will be rewritten once it's 
+allocated for a file?
+
+Relevant info:
+OS: CentOS 6.6 (kernel 2.6.32-504.23.4.el6.centos.plus.x86_64)
+
+/dev/md0:
+         Version : 1.1
+   Creation Time : Tue Jun  7 17:12:55 2011
+      Raid Level : raid5
+      Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
+   Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+    Raid Devices : 4
+   Total Devices : 4
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Tue Jul 21 13:24:14 2015
+           State : active
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+            Name : raiden:0
+            UUID : d40a8260:a62151d3:4949844a:2a0cfc53
+          Events : 141606
+
+     Number   Major   Minor   RaidDevice State
+        0       8       65        0      active sync   /dev/sde1
+        1       8       33        1      active sync   /dev/sdc1
+        2       8       49        2      active sync   /dev/sdd1
+        4       8       17        3      active sync   /dev/sdb1
+
+Apologies if my questions seem naive.
+
+
