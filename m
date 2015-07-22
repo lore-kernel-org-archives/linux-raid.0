@@ -1,147 +1,246 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] Enable loading of bitmaps for dm-md-raid1.
-Date: Wed, 22 Jul 2015 07:52:19 -0500
-Message-ID: <55AF9203.2000803@suse.de>
-References: <20150720170628.GA7380@shrek.lan> <20150722104105.5caf47f4@noble>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: raid1_end_read_request does not retry failed READ from a
+ recovering drive
+Date: Wed, 22 Jul 2015 18:10:31 +0200
+Message-ID: <CAGRgLy5DsbiPsjJ2ZK_aOZ_UOqxa-zwbdDREv7hdpt7vLXCwOw@mail.gmail.com>
+References: <CAGRgLy6B0ZWtr1xv7_-qAzww+UNcfausrxRnMzDBP3n5348e7A@mail.gmail.com>
+	<20140908171702.5b2853fc@notabene.brown>
+	<CAGRgLy54ByqUG8bTyPr_rDrNMbyFYRU+rx4LEWVqMHOw2=k=Dg@mail.gmail.com>
+	<20140918110523.3ee5c064@notabene.brown>
+	<CAGRgLy7+bN8ztaaN+oh6uATE7=Z=8LnU=R0m2CnVff4ZqgJFKg@mail.gmail.com>
+	<20140922101704.53be2056@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150722104105.5caf47f4@noble>
+In-Reply-To: <20140922101704.53be2056@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
+In continuation of our discussion, I see that you have added a
+commit[1], which has a diff[2].
+But this is only the second part of the fix. We also need the first
+part, I believe, where in raid1_end_read_request we need to replace
+"!test_bit(Faulty)" with "test_bit(In_sync)". Otherwise, we will never
+retry the READ, and thus will never reach the fix_read_error code.
+And we also need to "put all of raid1_spare_active inside the
+spinlock", like you advised.
+Do you agree?
+
+We tested both parts of the fix, not the second part alone. Quoting myself:
+"With this addition, the problem appears to be fixed", i.e., I meant
+we applied both parts.
+
+I am sorry for catching this so late. I never looked at what you
+applied until now, because we are moving to kernel 3.18 long term, and
+I am checking the raid1 changes. I just assumed you applied both
+parts.
+
+If you agree, it would be good if you tag the first part of the fix as
+"cc stable" too.
+
+Thanks,
+Alex.
 
 
-On 07/21/2015 07:41 PM, NeilBrown wrote:
-> On Mon, 20 Jul 2015 12:06:28 -0500 Goldwyn Rodrigues <rgoldwyn@suse.de>
+
+[1]
+commit b8cb6b4c121e1bf1963c16ed69e7adcb1bc301cd
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Sep 18 11:09:04 2014 +1000
+
+    md/raid1: fix_read_error should act on all non-faulty devices.
+
+    If a devices is being recovered it is not InSync and is not Faulty.
+
+    If a read error is experienced on that device, fix_read_error()
+    will be called, but it ignores non-InSync devices.  So it will
+    neither fix the error nor fail the device.
+
+    It is incorrect that fix_read_error() ignores non-InSync devices.
+    It should only ignore Faulty devices.  So fix it.
+
+    This became a bug when we allowed reading from a device that was being
+    recovered.  It is suitable for any subsequent -stable kernel.
+
+    Fixes: da8840a747c0dbf49506ec906757a6b87b9741e9
+    Cc: stable@vger.kernel.org (v3.5+)
+    Reported-by: Alexander Lyakas <alex.bolshoy@gmail.com>
+    Tested-by: Alexander Lyakas <alex.bolshoy@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+[2]
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 35649dd..55de4f6 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2155,7 +2155,7 @@ static void fix_read_error(struct r1conf *conf,
+int read_disk,
+                        d--;
+                        rdev = conf->mirrors[d].rdev;
+                        if (rdev &&
+-                           test_bit(In_sync, &rdev->flags))
++                           !test_bit(Faulty, &rdev->flags))
+                                r1_sync_page_io(rdev, sect, s,
+                                                conf->tmppage, WRITE);
+                }
+@@ -2167,7 +2167,7 @@ static void fix_read_error(struct r1conf *conf,
+int read_disk,
+                        d--;
+                        rdev = conf->mirrors[d].rdev;
+                        if (rdev &&
+-                           test_bit(In_sync, &rdev->flags)) {
++                           !test_bit(Faulty, &rdev->flags)) {
+                                if (r1_sync_page_io(rdev, sect, s,
+                                                    conf->tmppage, READ)) {
+                                        atomic_add(s, &rdev->corrected_errors);
+
+On Mon, Sep 22, 2014 at 2:17 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sun, 21 Sep 2014 19:47:14 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 > wrote:
 >
->> This is also a hack for systems with junk in the rest
->> of the bitmap super (instead of zeroes) to boot. This is done by
->> checking mddev->sync_super (which is exclusively set by dm-raid)
->> is null.
+>> Thanks, Neil,
 >>
->> These changes also include zeroing of most bitmap pages while
->> allocating so we are sure that the junk is not coming from memory.
+>> On Thu, Sep 18, 2014 at 4:05 AM, NeilBrown <neilb@suse.de> wrote:
+>> > On Wed, 17 Sep 2014 20:57:13 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+>> > wrote:
+>> >
+>> >> Hi Neil,
+>> >>
+>> >> On Mon, Sep 8, 2014 at 10:17 AM, NeilBrown <neilb@suse.de> wrote:
+>> >> > On Sun, 7 Sep 2014 17:18:16 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+>> >> > wrote:
+>> >> >
+>> >> >> Hi Neil,
+>> >> >> we see the following issue:
+>> >> >>
+>> >> >> # RAID1 has 2 drives A and B, drive B is recovering
+>> >> >> # READ request arrives
+>> >> >> # read_balanace selects drive B to read from, because READ sector
+>> >> >> comes before B->recovery_offset
+>> >> >> # READ is issued to drive B, but fails (drive B fails again)
+>> >> >>
+>> >> >> Now raid1_end_read_request() has the following code:
+>> >> >>
+>> >> >>     if (uptodate)
+>> >> >>         set_bit(R1BIO_Uptodate, &r1_bio->state);
+>> >> >>     else {
+>> >> >>         /* If all other devices have failed, we want to return
+>> >> >>          * the error upwards rather than fail the last device.
+>> >> >>          * Here we redefine "uptodate" to mean "Don't want to retry"
+>> >> >>          */
+>> >> >>         unsigned long flags;
+>> >> >>         spin_lock_irqsave(&conf->device_lock, flags);
+>> >> >>         if (r1_bio->mddev->degraded == conf->raid_disks ||
+>> >> >>             (r1_bio->mddev->degraded == conf->raid_disks-1 &&
+>> >> >>              !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
+>> >> >>             uptodate = 1;
+>> >> >>         spin_unlock_irqrestore(&conf->device_lock, flags);
+>> >> >>     }
+>> >> >>
+>> >> >> According to this code uptodate wrongly becomes 1, because:
+>> >> >> r1_bio->mddev->degraded == conf->raid_disks-1 is TRUE
+>> >> >> and
+>> >> >> !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags) is also TRUE
+>> >> >>
+>> >> >> Indeed, drive B is not marked as Faulty, but also not marked as In_sync.
+>> >> >> However, this function treats !Faulty being equal to In_Sync, so it
+>> >> >> decides that the last good drive failed, so it does not retry the
+>> >> >> READ.
+>> >> >>
+>> >> >> As a result, there is IO error, while we should have retried the READ
+>> >> >> from the healthy drive.
+>> >> >>
+>> >> >> This is happening in 3.8.13, but your master branch seems to have the
+>> >> >> same issue.
+>> >> >>
+>> >> >> What is a reasonable fix?
+>> >> >> 1) Do not read from drives which are !In_sync (a bit scary to read
+>> >> >> from such drive)
+>> >> >
+>> >> > It is perfectly safe to read from a !In_sync device providing you are before
+>> >> > ->recovery_offset.
+>> >> >
+>> >> >
+>> >> >> 2) replace !Faulty to In_sync check
+>> >> >
+>> >> > That probably makes sense... though that could race with raid1_spare_active().
+>> >> > If a read-error returned just after raid1_spare_active() set In_sync, and
+>> >> > before 'count' was subtracted from ->degraded, we would still set uptodate
+>> >> > when we shouldn't.
+>> >> > It probably make sense to put all of raid1_spare_active inside the spinlock -
+>> >> > it doesn't get call often enough that performance is an issue (I hope).
+>> >> >
+>> >> > So:
+>> >> >  1/ change !Faulty to In_sync
+>> >> >  2/ extend the spinlock in raid1_spare_active to cover the whole function.
+>> >>
+>> >>
+>> >> I made these fixes and reproduced the issue. However, the result is
+>> >> not what we expect:
+>> >>
+>> >> # raid1_end_read_request() now indeed adds the r1_bio into retry_list,
+>> >> as we wanted
+>> >> # raid1d calls fix_read_error()
+>> >> # fix_read_error() searches for an In_sync drive to read the data
+>> >> from. It finds such drive (this is our good drive A)
+>> >> # now fix_read_error() wants to rewrite the bad area. But it rewrites
+>> >> only on those drives that are In_sync (except the drive it got the
+>> >> data from). In our case, it never tries to rewrite the data on drive B
+>> >> (drive B is not marked Faulty and not marked In_sync). As a result,
+>> >> md_error() is not called, so drive B is still not marked as Failed
+>> >> when fix_read_error() completes
+>> >> # so handle_read_error() retries the original READ by calling
+>> >> read_balance(), which again in my case selects the recovering drive
+>> >> B...
+>> >>
+>> >> And then the whole flow repeats itself again and again...and READ
+>> >> never completes.
+>> >>
+>> >> Maybe we should not allow selecting recovering drives for READ? Or
+>> >> some other approach?
+>> >>
+>> >
+>> > Thanks for the testing and analysis.
+>> > Presumably we just want handle_read_error() to write to all non-faulty
+>> > devices, not just the InSync ones.
+>> > i.e. the following patch.
+>> >
+>> > Thanks,
+>> > NeilBrown
+>> >
+>> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+>> > index 6a9c73435eb8..a95f9e179e6f 100644
+>> > --- a/drivers/md/raid1.c
+>> > +++ b/drivers/md/raid1.c
+>> > @@ -2153,7 +2153,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+>> >                         d--;
+>> >                         rdev = conf->mirrors[d].rdev;
+>> >                         if (rdev &&
+>> > -                           test_bit(In_sync, &rdev->flags))
+>> > +                           !test_bit(Faulty, &rdev->flags))
+>> >                                 r1_sync_page_io(rdev, sect, s,
+>> >                                                 conf->tmppage, WRITE);
+>> >                 }
+>> > @@ -2165,7 +2165,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
+>> >                         d--;
+>> >                         rdev = conf->mirrors[d].rdev;
+>> >                         if (rdev &&
+>> > -                           test_bit(In_sync, &rdev->flags)) {
+>> > +                           !test_bit(Faulty, &rdev->flags)) {
+>> >                                 if (r1_sync_page_io(rdev, sect, s,
+>> >                                                     conf->tmppage, READ)) {
+>> >                                         atomic_add(s, &rdev->corrected_errors);
 >>
->> References: https://bugzilla.kernel.org/show_bug.cgi?id=100491
+>> With this addition, the problem appears to be fixed. We will give it
+>> some regression testing & will let you know if we see any issues.
 >>
->> Signed-off-by: Neil Brown <neilb@suse.de>
->> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->> ---
->> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
->> index 135a090..dfa5ef3 100644
->> --- a/drivers/md/bitmap.c
->> +++ b/drivers/md/bitmap.c
->> @@ -494,7 +494,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
->>   	bitmap_super_t *sb;
->>   	unsigned long chunksize, daemon_sleep, write_behind;
->>
->> -	bitmap->storage.sb_page = alloc_page(GFP_KERNEL);
->> +	bitmap->storage.sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
->>   	if (bitmap->storage.sb_page == NULL)
->>   		return -ENOMEM;
->>   	bitmap->storage.sb_page->index = 0;
->> @@ -541,6 +541,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
->>   	sb->state = cpu_to_le32(bitmap->flags);
->>   	bitmap->events_cleared = bitmap->mddev->events;
->>   	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
->> +	bitmap->mddev->bitmap_info.nodes = 0;
->>
->>   	kunmap_atomic(sb);
->>
->> @@ -568,7 +569,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
->>   		goto out_no_sb;
->>   	}
->>   	/* page 0 is the superblock, read it... */
->> -	sb_page = alloc_page(GFP_KERNEL);
->> +	sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
->>   	if (!sb_page)
->>   		return -ENOMEM;
->>   	bitmap->storage.sb_page = sb_page;
->> @@ -611,8 +612,15 @@ re_read:
->>   	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
->>   	write_behind = le32_to_cpu(sb->write_behind);
->>   	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
->> -	nodes = le32_to_cpu(sb->nodes);
->> -	strlcpy(bitmap->mddev->bitmap_info.cluster_name, sb->cluster_name, 64);
->> +	/* XXX: This is an ugly hack to ensure that we don't use clustering
->> +	   in case dm-raid is in use and the nodes written in bitmap_sb
->> +	   is erroneous.
->> +	*/
->> +	if (!bitmap->mddev->sync_super) {
->> +		nodes = le32_to_cpu(sb->nodes);
->> +		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
->> +				sb->cluster_name, 64);
->> +	}
->>
->>   	/* verify that the bitmap-specific fields are valid */
->>   	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
->> @@ -649,7 +657,7 @@ re_read:
->>   			goto out;
->>   		}
->>   		events = le64_to_cpu(sb->events);
->> -		if (!nodes && (events < bitmap->mddev->events)) {
->> +		if (err == 0 && !nodes && (events < bitmap->mddev->events)) {
->>   			printk(KERN_INFO
->>   			       "%s: bitmap file is out of date (%llu < %llu) "
->>   			       "-- forcing full recovery\n",
->> diff --git a/drivers/md/md.c b/drivers/md/md.c
->> index 4dbed4a..6bd8bc3 100644
->> --- a/drivers/md/md.c
->> +++ b/drivers/md/md.c
->> @@ -7415,7 +7415,7 @@ int md_setup_cluster(struct mddev *mddev, int nodes)
->>   	err = request_module("md-cluster");
->>   	if (err) {
->>   		pr_err("md-cluster module not found.\n");
->> -		return err;
->> +		return -ENOENT;
->>   	}
->>
->>   	spin_lock(&pers_lock);
+>> I presume you will be applying this fix upstream as well.
 >
+> Yes, it is already in my for-next branch.
+> I've just added your tested-by.
 >
-> Thanks... but I think this is about 3 patches.
->
-> The patch to md.c is because request_module() returns a status
-> different from what the documentation says.  And
-> Fixes: edb39c9deda8 ("Introduce md_cluster_operations to handle cluster functions")
-> (though it doesn't need to go to stable.
->
-> Adding "err == 0 &&' test is ... why is that?  It looks to me like
-> err == -EINVAL at that point, always.  Can you explain/
-
-Oh no! This is placed at the incorrect location. It should have been 
-placed before setting up the cluster.
-
->
-> Using __GFP_ZERO in read_sb_page seems wrong and so misleading.
->
-> The rest are for the main bug you are trying to fix .. though I think
-> it could be described better.
->
-> -------------------
-> There is a bug that the bitmap superblock isn't initialised properly for
-> dm-raid, so a new field can have garbage in new fields.
-> (dm-raid does initialisation in the kernel - md initialised the
-> superblock in mdadm).
-> This means that for dm-raid we cannot currently trust the new ->nodes
-> field.
-> So:
->   - use __GFP_ZERO to initialise the superblock properly for all new
->     arrays
->   - initialise all field in bitmap_info in bitmap_new_disk_sb
->   - ignore ->nodes for dm arrays (yes, this is a hack)
-> -----------------
->
-> Could you make it 3 patches for me please?
->
-
-
-Sure, I will post the 3 patches.
-
--- 
-Goldwyn
+> Thanks,
+> NeilBrown
