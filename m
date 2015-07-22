@@ -1,68 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] block: Do a full clone when splitting discard bios
-Date: Wed, 22 Jul 2015 07:57:12 -0400
-Message-ID: <1437566232-25422-1-git-send-email-martin.petersen@oracle.com>
-References: <005601d0c470ea860samsung.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <005601d0c470ea860samsung.com>
-Sender: stable-owner@vger.kernel.org
-To: axboe@fb.com
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, "Martin K. Petersen" <martin.petersen@oracle.com>, Seunguk Shin <seunguk.shin@samsung.com>, Kent Overstreet <kent.overstreet@gmail.com>, stable@vger.kernel.org
+Subject: Re: [PATCH] raid0: data corruption when using trim
+Date: Wed, 22 Jul 2015 07:59:15 -0400
+Message-ID: <yq1pp3k1jzg.fsf@sermon.lab.mkp.net>
+References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
+	<yq1y4ibknz4.fsf@sermon.lab.mkp.net>
+	<005601d0c36c$59d28ec0$0d77ac40$@samsung.com>
+	<yq1wpxu154v.fsf@sermon.lab.mkp.net>
+	<005601d0c470$951ea860$bf5bf920$@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <005601d0c470$951ea860$bf5bf920$@samsung.com> (Seunguk Shin's
+	message of "Wed, 22 Jul 2015 20:21:37 +0900")
+Sender: linux-raid-owner@vger.kernel.org
+To: Seunguk Shin <seunguk.shin@samsung.com>
+Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This fixes a data corruption bug when using discard on top of MD linear,
-raid0 and raid10 personalities.
+>>>>> "Seunguk" == Seunguk Shin <seunguk.shin@samsung.com> writes:
 
-Commit 20d0189b1012 "block: Introduce new bio_split()" permits sharing
-the bio_vec between the two resulting bios. That is fine for read/write
-requests where the bio_vec is immutable. For discards, however, we need
-to be able to attach a payload and update the bio_vec so the page can
-get mapped to a scatterlist entry. Therefore the bio_vec can not be
-shared when splitting discards and we must do a full clone.
+Seunguk,
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reported-by: Seunguk Shin <seunguk.shin@samsung.com>
-Tested-by: Seunguk Shin <seunguk.shin@samsung.com>
-Cc: Seunguk Shin <seunguk.shin@samsung.com>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: <stable@vger.kernel.org> # v3.14+
----
- block/bio.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+Seunguk> I have tested the script from Algolia with your patch, I cannot
+Seunguk> see the same symptoms I saw with original kernel. I think the
+Seunguk> patch works and there is no problem.
 
-diff --git a/block/bio.c b/block/bio.c
-index 2a00d349cd68..d18de96919f3 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1831,8 +1831,9 @@ EXPORT_SYMBOL(bio_endio);
-  * Allocates and returns a new bio which represents @sectors from the start of
-  * @bio, and updates @bio to represent the remaining sectors.
-  *
-- * The newly allocated bio will point to @bio's bi_io_vec; it is the caller's
-- * responsibility to ensure that @bio is not freed before the split.
-+ * Unless this is a discard request the newly allocated bio will point
-+ * to @bio's bi_io_vec; it is the caller's responsibility to ensure that
-+ * @bio is not freed before the split.
-  */
- struct bio *bio_split(struct bio *bio, int sectors,
- 		      gfp_t gfp, struct bio_set *bs)
-@@ -1842,7 +1843,15 @@ struct bio *bio_split(struct bio *bio, int sectors,
- 	BUG_ON(sectors <= 0);
- 	BUG_ON(sectors >= bio_sectors(bio));
- 
--	split = bio_clone_fast(bio, gfp, bs);
-+	/*
-+	 * Discards need a mutable bio_vec to accommodate the payload
-+	 * required by the DSM TRIM and UNMAP commands.
-+	 */
-+	if (bio->bi_rw & REQ_DISCARD)
-+		split = bio_clone_bioset(bio, gfp, bs);
-+	else
-+		split = bio_clone_fast(bio, gfp, bs);
-+
- 	if (!split)
- 		return NULL;
- 
+Thank you for your diligent work on this issue! I just submitted the
+patch.
+
 -- 
-2.4.3
+Martin K. Petersen	Oracle Linux Engineering
