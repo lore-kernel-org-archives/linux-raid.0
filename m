@@ -1,74 +1,33 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH 3/3] Skip cluster setup for dm-raid
-Date: Wed, 22 Jul 2015 12:09:17 -0500
-Message-ID: <1437584957-23879-3-git-send-email-rgoldwyn@suse.com>
-References: <1437584957-23879-1-git-send-email-rgoldwyn@suse.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] block: Do a full clone when splitting discard bios
+Date: Wed, 22 Jul 2015 10:17:41 -0700
+Message-ID: <20150722171741.GA6415@infradead.org>
+References: <005601d0c470ea860samsung.com>
+ <1437566232-25422-1-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1437584957-23879-1-git-send-email-rgoldwyn@suse.com>
+Content-Disposition: inline
+In-Reply-To: <1437566232-25422-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: axboe@fb.com, linux-raid@vger.kernel.org, neilb@suse.de, Seunguk Shin <seunguk.shin@samsung.com>, Kent Overstreet <kent.overstreet@gmail.com>, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is a bug that the bitmap superblock isn't initialised properly for
-dm-raid, so a new field can have garbage in new fields.
-(dm-raid does initialisation in the kernel - md initialised the
- superblock in mdadm).
+On Wed, Jul 22, 2015 at 07:57:12AM -0400, Martin K. Petersen wrote:
+> This fixes a data corruption bug when using discard on top of MD linear,
+> raid0 and raid10 personalities.
+> 
+> Commit 20d0189b1012 "block: Introduce new bio_split()" permits sharing
+> the bio_vec between the two resulting bios. That is fine for read/write
+> requests where the bio_vec is immutable. For discards, however, we need
+> to be able to attach a payload and update the bio_vec so the page can
+> get mapped to a scatterlist entry. Therefore the bio_vec can not be
+> shared when splitting discards and we must do a full clone.
 
-This means that for dm-raid we cannot currently trust the new ->nodes
-field. So:
- - use __GFP_ZERO to initialise the superblock properly for all new
-    arrays
- - initialise all field in bitmap_info in bitmap_new_disk_sb
- - ignore ->nodes for dm arrays (yes, this is a hack)
+Eww.  The magic discard payload comes bac to bite us again.  I wish
+someone smarter than me could come up with a scheme to avoid this issue.
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=100491
+Looks good,
 
-Signed-off-By: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- drivers/md/bitmap.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index f23b8e4..7ff37e0 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -494,7 +494,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
- 	bitmap_super_t *sb;
- 	unsigned long chunksize, daemon_sleep, write_behind;
- 
--	bitmap->storage.sb_page = alloc_page(GFP_KERNEL);
-+	bitmap->storage.sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
- 	if (bitmap->storage.sb_page == NULL)
- 		return -ENOMEM;
- 	bitmap->storage.sb_page->index = 0;
-@@ -541,6 +541,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
- 	sb->state = cpu_to_le32(bitmap->flags);
- 	bitmap->events_cleared = bitmap->mddev->events;
- 	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
-+	bitmap->mddev->bitmap_info.nodes = 0;
- 
- 	kunmap_atomic(sb);
- 
-@@ -611,8 +612,16 @@ re_read:
- 	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
- 	write_behind = le32_to_cpu(sb->write_behind);
- 	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
--	nodes = le32_to_cpu(sb->nodes);
--	strlcpy(bitmap->mddev->bitmap_info.cluster_name, sb->cluster_name, 64);
-+	/* XXX: This is a hack to ensure that we don't use clustering
-+	 *  in case:
-+	 *	- dm-raid is in use and
-+	 *	- the nodes written in bitmap_sb is erroneous.
-+	 */
-+	if (!bitmap->mddev->sync_super) {
-+		nodes = le32_to_cpu(sb->nodes);
-+		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
-+				sb->cluster_name, 64);
-+	}
- 
- 	/* verify that the bitmap-specific fields are valid */
- 	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
--- 
-2.1.4
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
