@@ -1,32 +1,147 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] raid0: data corruption when using trim
-Date: Wed, 22 Jul 2015 07:59:15 -0400
-Message-ID: <yq1pp3k1jzg.fsf@sermon.lab.mkp.net>
-References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
-	<yq1y4ibknz4.fsf@sermon.lab.mkp.net>
-	<005601d0c36c$59d28ec0$0d77ac40$@samsung.com>
-	<yq1wpxu154v.fsf@sermon.lab.mkp.net>
-	<005601d0c470$951ea860$bf5bf920$@samsung.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: Re: [PATCH] Enable loading of bitmaps for dm-md-raid1.
+Date: Wed, 22 Jul 2015 07:52:19 -0500
+Message-ID: <55AF9203.2000803@suse.de>
+References: <20150720170628.GA7380@shrek.lan> <20150722104105.5caf47f4@noble>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <005601d0c470$951ea860$bf5bf920$@samsung.com> (Seunguk Shin's
-	message of "Wed, 22 Jul 2015 20:21:37 +0900")
+In-Reply-To: <20150722104105.5caf47f4@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Seunguk Shin <seunguk.shin@samsung.com>
-Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, neilb@suse.de, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Seunguk" == Seunguk Shin <seunguk.shin@samsung.com> writes:
 
-Seunguk,
 
-Seunguk> I have tested the script from Algolia with your patch, I cannot
-Seunguk> see the same symptoms I saw with original kernel. I think the
-Seunguk> patch works and there is no problem.
+On 07/21/2015 07:41 PM, NeilBrown wrote:
+> On Mon, 20 Jul 2015 12:06:28 -0500 Goldwyn Rodrigues <rgoldwyn@suse.de>
+> wrote:
+>
+>> This is also a hack for systems with junk in the rest
+>> of the bitmap super (instead of zeroes) to boot. This is done by
+>> checking mddev->sync_super (which is exclusively set by dm-raid)
+>> is null.
+>>
+>> These changes also include zeroing of most bitmap pages while
+>> allocating so we are sure that the junk is not coming from memory.
+>>
+>> References: https://bugzilla.kernel.org/show_bug.cgi?id=100491
+>>
+>> Signed-off-by: Neil Brown <neilb@suse.de>
+>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>> ---
+>> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+>> index 135a090..dfa5ef3 100644
+>> --- a/drivers/md/bitmap.c
+>> +++ b/drivers/md/bitmap.c
+>> @@ -494,7 +494,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+>>   	bitmap_super_t *sb;
+>>   	unsigned long chunksize, daemon_sleep, write_behind;
+>>
+>> -	bitmap->storage.sb_page = alloc_page(GFP_KERNEL);
+>> +	bitmap->storage.sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>>   	if (bitmap->storage.sb_page == NULL)
+>>   		return -ENOMEM;
+>>   	bitmap->storage.sb_page->index = 0;
+>> @@ -541,6 +541,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+>>   	sb->state = cpu_to_le32(bitmap->flags);
+>>   	bitmap->events_cleared = bitmap->mddev->events;
+>>   	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
+>> +	bitmap->mddev->bitmap_info.nodes = 0;
+>>
+>>   	kunmap_atomic(sb);
+>>
+>> @@ -568,7 +569,7 @@ static int bitmap_read_sb(struct bitmap *bitmap)
+>>   		goto out_no_sb;
+>>   	}
+>>   	/* page 0 is the superblock, read it... */
+>> -	sb_page = alloc_page(GFP_KERNEL);
+>> +	sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>>   	if (!sb_page)
+>>   		return -ENOMEM;
+>>   	bitmap->storage.sb_page = sb_page;
+>> @@ -611,8 +612,15 @@ re_read:
+>>   	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
+>>   	write_behind = le32_to_cpu(sb->write_behind);
+>>   	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
+>> -	nodes = le32_to_cpu(sb->nodes);
+>> -	strlcpy(bitmap->mddev->bitmap_info.cluster_name, sb->cluster_name, 64);
+>> +	/* XXX: This is an ugly hack to ensure that we don't use clustering
+>> +	   in case dm-raid is in use and the nodes written in bitmap_sb
+>> +	   is erroneous.
+>> +	*/
+>> +	if (!bitmap->mddev->sync_super) {
+>> +		nodes = le32_to_cpu(sb->nodes);
+>> +		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
+>> +				sb->cluster_name, 64);
+>> +	}
+>>
+>>   	/* verify that the bitmap-specific fields are valid */
+>>   	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
+>> @@ -649,7 +657,7 @@ re_read:
+>>   			goto out;
+>>   		}
+>>   		events = le64_to_cpu(sb->events);
+>> -		if (!nodes && (events < bitmap->mddev->events)) {
+>> +		if (err == 0 && !nodes && (events < bitmap->mddev->events)) {
+>>   			printk(KERN_INFO
+>>   			       "%s: bitmap file is out of date (%llu < %llu) "
+>>   			       "-- forcing full recovery\n",
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 4dbed4a..6bd8bc3 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -7415,7 +7415,7 @@ int md_setup_cluster(struct mddev *mddev, int nodes)
+>>   	err = request_module("md-cluster");
+>>   	if (err) {
+>>   		pr_err("md-cluster module not found.\n");
+>> -		return err;
+>> +		return -ENOENT;
+>>   	}
+>>
+>>   	spin_lock(&pers_lock);
+>
+>
+> Thanks... but I think this is about 3 patches.
+>
+> The patch to md.c is because request_module() returns a status
+> different from what the documentation says.  And
+> Fixes: edb39c9deda8 ("Introduce md_cluster_operations to handle cluster functions")
+> (though it doesn't need to go to stable.
+>
+> Adding "err == 0 &&' test is ... why is that?  It looks to me like
+> err == -EINVAL at that point, always.  Can you explain/
 
-Thank you for your diligent work on this issue! I just submitted the
-patch.
+Oh no! This is placed at the incorrect location. It should have been 
+placed before setting up the cluster.
+
+>
+> Using __GFP_ZERO in read_sb_page seems wrong and so misleading.
+>
+> The rest are for the main bug you are trying to fix .. though I think
+> it could be described better.
+>
+> -------------------
+> There is a bug that the bitmap superblock isn't initialised properly for
+> dm-raid, so a new field can have garbage in new fields.
+> (dm-raid does initialisation in the kernel - md initialised the
+> superblock in mdadm).
+> This means that for dm-raid we cannot currently trust the new ->nodes
+> field.
+> So:
+>   - use __GFP_ZERO to initialise the superblock properly for all new
+>     arrays
+>   - initialise all field in bitmap_info in bitmap_new_disk_sb
+>   - ignore ->nodes for dm arrays (yes, this is a hack)
+> -----------------
+>
+> Could you make it 3 patches for me please?
+>
+
+
+Sure, I will post the 3 patches.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Goldwyn
