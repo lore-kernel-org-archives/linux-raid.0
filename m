@@ -1,45 +1,85 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] block: add a bi_error field to struct bio
-Date: Wed, 22 Jul 2015 15:59:46 -0600
-Message-ID: <55B01252.90004@kernel.dk>
-References: <1437398977-8492-1-git-send-email-hch@lst.de> <1437398977-8492-2-git-send-email-hch@lst.de> <55AFE643.5000704@kernel.dk>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 3/3] Skip cluster setup for dm-raid
+Date: Thu, 23 Jul 2015 09:21:40 +1000
+Message-ID: <20150723092140.15d88f70@noble>
+References: <1437584957-23879-1-git-send-email-rgoldwyn@suse.com>
+	<1437584957-23879-3-git-send-email-rgoldwyn@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55AFE643.5000704@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Neil Brown <neilb@suse.de>, Liu Bo <bo.li.liu@oracle.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1437584957-23879-3-git-send-email-rgoldwyn@suse.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/22/2015 12:51 PM, Jens Axboe wrote:
-> On 07/20/2015 07:29 AM, Christoph Hellwig wrote:
->> Currently we have two different ways to signal an I/O error on a BIO:
->>
->>   (1) by clearing the BIO_UPTODATE flag
->>   (2) by returning a Linux errno value to the bi_end_io callback
->>
->> The first one has the drawback of only communicating a single possible
->> error (-EIO), and the second one has the drawback of not beeing
->> persistent
->> when bios are queued up, and are not passed along from child to parent
->> bio in the ever more popular chaining scenario.  Having both mechanisms
->> available has the additional drawback of utterly confusing driver authors
->> and introducing bugs where various I/O submitters only deal with one of
->> them, and the others have to add boilerplate code to deal with both kinds
->> of error returns.
->>
->> So add a new bi_error field to store an errno value directly in struct
->> bio and remove the existing mechanisms to clean all this up.
->
-> I think this is a good change, the only part I _really_ dislike is that
-> this now bumps a struct bio from 2 cache lines to 3. Have you done any
-> perf testing?
+On Wed, 22 Jul 2015 12:09:17 -0500 Goldwyn Rodrigues
+<rgoldwyn@suse.com> wrote:
 
-One possible solution would be to shrink bi_flags to an unsigned int, no 
-problems fitting that in. Then we could stuff bi_error in that (new) 
-hole, and we would end up having the same size again.
+> There is a bug that the bitmap superblock isn't initialised properly for
+> dm-raid, so a new field can have garbage in new fields.
+> (dm-raid does initialisation in the kernel - md initialised the
+>  superblock in mdadm).
+> 
+> This means that for dm-raid we cannot currently trust the new ->nodes
+> field. So:
+>  - use __GFP_ZERO to initialise the superblock properly for all new
+>     arrays
+>  - initialise all field in bitmap_info in bitmap_new_disk_sb
+>  - ignore ->nodes for dm arrays (yes, this is a hack)
+> 
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=100491
+> 
+> Signed-off-By: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  drivers/md/bitmap.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+> index f23b8e4..7ff37e0 100644
+> --- a/drivers/md/bitmap.c
+> +++ b/drivers/md/bitmap.c
+> @@ -494,7 +494,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+>  	bitmap_super_t *sb;
+>  	unsigned long chunksize, daemon_sleep, write_behind;
+>  
+> -	bitmap->storage.sb_page = alloc_page(GFP_KERNEL);
+> +	bitmap->storage.sb_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+>  	if (bitmap->storage.sb_page == NULL)
+>  		return -ENOMEM;
+>  	bitmap->storage.sb_page->index = 0;
+> @@ -541,6 +541,7 @@ static int bitmap_new_disk_sb(struct bitmap *bitmap)
+>  	sb->state = cpu_to_le32(bitmap->flags);
+>  	bitmap->events_cleared = bitmap->mddev->events;
+>  	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
+> +	bitmap->mddev->bitmap_info.nodes = 0;
+>  
+>  	kunmap_atomic(sb);
+>  
+> @@ -611,8 +612,16 @@ re_read:
+>  	daemon_sleep = le32_to_cpu(sb->daemon_sleep) * HZ;
+>  	write_behind = le32_to_cpu(sb->write_behind);
+>  	sectors_reserved = le32_to_cpu(sb->sectors_reserved);
+> -	nodes = le32_to_cpu(sb->nodes);
+> -	strlcpy(bitmap->mddev->bitmap_info.cluster_name, sb->cluster_name, 64);
+> +	/* XXX: This is a hack to ensure that we don't use clustering
+> +	 *  in case:
+> +	 *	- dm-raid is in use and
+> +	 *	- the nodes written in bitmap_sb is erroneous.
+> +	 */
+> +	if (!bitmap->mddev->sync_super) {
+> +		nodes = le32_to_cpu(sb->nodes);
+> +		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
+> +				sb->cluster_name, 64);
+> +	}
+>  
+>  	/* verify that the bitmap-specific fields are valid */
+>  	if (sb->magic != cpu_to_le32(BITMAP_MAGIC))
 
--- 
-Jens Axboe
+
+Thanks for these.
+I've applied them all and marked this one for -stable ... it should stop
+the cluster code from being touched by mistake.
+
+NeilBrown
