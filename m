@@ -1,33 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] block: Do a full clone when splitting discard bios
-Date: Wed, 22 Jul 2015 10:17:41 -0700
-Message-ID: <20150722171741.GA6415@infradead.org>
-References: <005601d0c470ea860samsung.com>
- <1437566232-25422-1-git-send-email-martin.petersen@oracle.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] block: add a bi_error field to struct bio
+Date: Wed, 22 Jul 2015 12:51:47 -0600
+Message-ID: <55AFE643.5000704@kernel.dk>
+References: <1437398977-8492-1-git-send-email-hch@lst.de> <1437398977-8492-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1437566232-25422-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: axboe@fb.com, linux-raid@vger.kernel.org, neilb@suse.de, Seunguk Shin <seunguk.shin@samsung.com>, Kent Overstreet <kent.overstreet@gmail.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1437398977-8492-2-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Neil Brown <neilb@suse.de>, Liu Bo <bo.li.liu@oracle.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 22, 2015 at 07:57:12AM -0400, Martin K. Petersen wrote:
-> This fixes a data corruption bug when using discard on top of MD linear,
-> raid0 and raid10 personalities.
-> 
-> Commit 20d0189b1012 "block: Introduce new bio_split()" permits sharing
-> the bio_vec between the two resulting bios. That is fine for read/write
-> requests where the bio_vec is immutable. For discards, however, we need
-> to be able to attach a payload and update the bio_vec so the page can
-> get mapped to a scatterlist entry. Therefore the bio_vec can not be
-> shared when splitting discards and we must do a full clone.
+On 07/20/2015 07:29 AM, Christoph Hellwig wrote:
+> Currently we have two different ways to signal an I/O error on a BIO:
+>
+>   (1) by clearing the BIO_UPTODATE flag
+>   (2) by returning a Linux errno value to the bi_end_io callback
+>
+> The first one has the drawback of only communicating a single possible
+> error (-EIO), and the second one has the drawback of not beeing persistent
+> when bios are queued up, and are not passed along from child to parent
+> bio in the ever more popular chaining scenario.  Having both mechanisms
+> available has the additional drawback of utterly confusing driver authors
+> and introducing bugs where various I/O submitters only deal with one of
+> them, and the others have to add boilerplate code to deal with both kinds
+> of error returns.
+>
+> So add a new bi_error field to store an errno value directly in struct
+> bio and remove the existing mechanisms to clean all this up.
 
-Eww.  The magic discard payload comes bac to bite us again.  I wish
-someone smarter than me could come up with a scheme to avoid this issue.
+I think this is a good change, the only part I _really_ dislike is that 
+this now bumps a struct bio from 2 cache lines to 3. Have you done any 
+perf testing?
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- 
+Jens Axboe
