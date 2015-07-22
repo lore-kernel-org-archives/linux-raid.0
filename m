@@ -1,54 +1,29 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] block: add a bi_error field to struct bio
-Date: Wed, 22 Jul 2015 15:00:47 +1000
-Message-ID: <20150722150047.5c5d59df@noble>
-References: <1437398977-8492-1-git-send-email-hch@lst.de>
-	<1437398977-8492-2-git-send-email-hch@lst.de>
+From: Seunguk Shin <seunguk.shin@samsung.com>
+Subject: RE: [PATCH] raid0: data corruption when using trim
+Date: Wed, 22 Jul 2015 20:21:37 +0900
+Message-ID: <005601d0c470$951ea860$bf5bf920$@samsung.com>
+References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
+ <yq1y4ibknz4.fsf@sermon.lab.mkp.net>
+ <005601d0c36c$59d28ec0$0d77ac40$@samsung.com>
+ <yq1wpxu154v.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437398977-8492-2-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Neil Brown <neilb@suse.de>, Liu Bo <bo.li.liu@oracle.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <yq1wpxu154v.fsf@sermon.lab.mkp.net>
+Content-language: ko
+Sender: linux-raid-owner@vger.kernel.org
+To: "'Martin K. Petersen'" <martin.petersen@oracle.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 20 Jul 2015 15:29:37 +0200 Christoph Hellwig <hch@lst.de> wrote:
+Martine,
 
-> Currently we have two different ways to signal an I/O error on a BIO:
-> 
->  (1) by clearing the BIO_UPTODATE flag
->  (2) by returning a Linux errno value to the bi_end_io callback
-> 
-> The first one has the drawback of only communicating a single possible
-> error (-EIO), and the second one has the drawback of not beeing persistent
-> when bios are queued up, and are not passed along from child to parent
-> bio in the ever more popular chaining scenario.  Having both mechanisms
-> available has the additional drawback of utterly confusing driver authors
-> and introducing bugs where various I/O submitters only deal with one of
-> them, and the others have to add boilerplate code to deal with both kinds
-> of error returns.
-> 
-> So add a new bi_error field to store an errno value directly in struct
-> bio and remove the existing mechanisms to clean all this up.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+I have tested the script from Algolia with your patch, I cannot see the same
+symptoms I saw with original kernel. I think the patch works and there is no
+problem.
 
-Reviewed-by: NeilBrown <neilb@suse.com> (umem and md/raid).
-
-i.e. these files.
->  drivers/block/umem.c                |  4 +--
->  drivers/md/faulty.c                 |  4 +--
->  drivers/md/linear.c                 |  2 +-
->  drivers/md/md.c                     | 18 +++++------
->  drivers/md/multipath.c              | 12 +++----
->  drivers/md/raid0.c                  |  2 +-
->  drivers/md/raid1.c                  | 53 ++++++++++++++++---------------
->  drivers/md/raid10.c                 | 55 +++++++++++++++-----------------
->  drivers/md/raid5.c                  | 52 +++++++++++++++----------------
+Thank you,
+Seunguk Shin
 
 
-Thanks,
-NeilBrown
