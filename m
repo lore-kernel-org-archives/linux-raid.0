@@ -1,41 +1,43 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] dm cache: fix alloc_bitset check that always evaluates as false
-Date: Thu, 23 Jul 2015 16:47:59 +0100
-Message-ID: <1437666479-24633-1-git-send-email-colin.king@canonical.com>
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Re: [PATCH] raid0: data corruption when using trim
+Date: Thu, 23 Jul 2015 18:46:32 +0200
+Message-ID: <55B11A68.4080706@assyoma.it>
+References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>	<yq1y4ibknz4.fsf@sermon.lab.mkp.net> <20150720173830.GA3274@lazy.lzy>	<yq1a8uq3cu5.fsf@sermon.lab.mkp.net> <20150720183402.GA4439@lazy.lzy> <yq11tg22kyz.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq11tg22kyz.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: Seunguk Shin <seunguk.shin@samsung.com>, neilb@suse.de, linux-raid@vger.kernel.org, g.danti@assyoma.it
 List-Id: linux-raid.ids
 
-From: Colin Ian King <colin.king@canonical.com>
+>
+> Piergiorgio> There is LVM on top, I wonder if this makes a difference.
+>
+> It does not.
+>
 
-static analysis by cppcheck has found a check on alloc_bitset that
-always evaluates as false and hence never finds an allocation failure:
+Hi all,
+it is my understanding that, when backed by SSDs (and configured for 
+passing down TRIM requests), ThinLVM are prime condidate for trigger the 
+bug.
 
-[drivers/md/dm-cache-policy-smq.c:1689]: (warning) Logical conjunction
-  always evaluates to false: !EXPR && EXPR.
+But what about ThinLVM + MDRAID10 on top of normal (spinning HDD)? 
+Generally SATA HDDs do not support TRIM/UNMAP, but when using ThinLVM, 
+the thin-provision mapper advertise TRIM support, and indeed an "fstrim 
+-v /" succeeds.
 
-Fix this by removing the incorrect mq->cache_hit_bits check
+I *think* that, as this TRIM command is processed way above the ATA 
+layer (it is processed inside the device-mapper code), the bug should 
+not happen here. Is it correct? Are we safe with ThinLVM + MDRAID10 + HDDs?
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/md/dm-cache-policy-smq.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-diff --git a/drivers/md/dm-cache-policy-smq.c b/drivers/md/dm-cache-policy-smq.c
-index b6f2265..48a4a82 100644
---- a/drivers/md/dm-cache-policy-smq.c
-+++ b/drivers/md/dm-cache-policy-smq.c
-@@ -1686,7 +1686,7 @@ static struct dm_cache_policy *smq_create(dm_cblock_t cache_size,
- 
- 	if (from_cblock(cache_size)) {
- 		mq->cache_hit_bits = alloc_bitset(from_cblock(cache_size));
--		if (!mq->cache_hit_bits && mq->cache_hit_bits) {
-+		if (!mq->cache_hit_bits) {
- 			DMERR("couldn't allocate cache hit bitset");
- 			goto bad_cache_hit_bits;
- 		}
 -- 
-2.1.4
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
