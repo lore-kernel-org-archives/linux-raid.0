@@ -1,74 +1,32 @@
-From: John Bridges <john.bridges@gmail.com>
-Subject: Does sync_action repair raid6 zero mismatch_cnt?
-Date: Thu, 23 Jul 2015 18:07:34 -0400
-Message-ID: <CAJ8DDcPoUayq2ucykkPVEYXyGpTVM-Cq3rzZ5mxitiP1tjH=DA@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] raid0: data corruption when using trim
+Date: Thu, 23 Jul 2015 18:17:18 -0400
+Message-ID: <yq1lhe6zfgx.fsf@sermon.lab.mkp.net>
+References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
+	<yq1y4ibknz4.fsf@sermon.lab.mkp.net> <20150720173830.GA3274@lazy.lzy>
+	<yq1a8uq3cu5.fsf@sermon.lab.mkp.net> <20150720183402.GA4439@lazy.lzy>
+	<yq11tg22kyz.fsf@sermon.lab.mkp.net> <55B11A68.4080706@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <55B11A68.4080706@assyoma.it> (Gionatan Danti's message of "Thu,
+	23 Jul 2015 18:46:32 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Seunguk Shin <seunguk.shin@samsung.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have had a problem with mismatch_cnt being huge (well over 500000) on a raid6
+>>>>> "Gionatan" == Gionatan Danti <g.danti@assyoma.it> writes:
 
-/dev/md2:
-        Version : 1.0
-  Creation Time : Mon Oct 15 20:55:58 2012
-     Raid Level : raid6
-     Array Size : 35163174912 (33534.22 GiB 36007.09 GB)
-  Used Dev Size : 2930264576 (2794.52 GiB 3000.59 GB)
-   Raid Devices : 14
-  Total Devices : 15
-    Persistence : Superblock is persistent
+Gionatan> I *think* that, as this TRIM command is processed way above
+Gionatan> the ATA layer (it is processed inside the device-mapper code),
+Gionatan> the bug should not happen here. Is it correct? Are we safe
+Gionatan> with ThinLVM + MDRAID10 + HDDs?
 
-  Intent Bitmap : Internal
+The problem only occurs if you are using MD linear/raid0/raid10 on top
+of a device that implements either DSM TRIM (SATA) or UNMAP (SCSI). If
+the device prefers WRITE SAME w/ UNMAP or if it does not support
+discards at all there is no problem.
 
-    Update Time : Wed Jul 22 13:04:39 2015
-          State : active
- Active Devices : 14
-Working Devices : 15
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : monster:2  (local to host monster)
-           UUID : c9f7456d:39b575fd:5d8e3791:54bffeae
-         Events : 459283
-
-    Number   Major   Minor   RaidDevice State
-      19      65      129        0      active sync   /dev/sdy1
-       1      65      145        1      active sync   /dev/sdz1
-      17      65       17        2      active sync   /dev/sdr1
-      12       8      193        3      active sync   /dev/sdm1
-       8      65        1        4      active sync   /dev/sdq1
-       5      65       65        5      active sync   /dev/sdu1
-       6      65       81        6      active sync   /dev/sdv1
-       7      65       97        7      active sync   /dev/sdw1
-      16       8      225        8      active sync   /dev/sdo1
-      18       8      209        9      active sync   /dev/sdn1
-      15       8      241       10      active sync   /dev/sdp1
-      14      65      113       11      active sync   /dev/sdx1
-      13      65      177       12      active sync   /dev/sdab1
-      20      65      161       13      active sync   /dev/sdaa1
-
-      21       8      177        -      spare   /dev/sdl1
-
-
-mdadm - v3.2.5 - 18th May 2012
-
-
-sync_action check did not fix it.
-I tried sync_action repair, still a huge number.
-Then I ran raid6check (built from latest mdadm source), took over a week to run.
-Found no errors, I was expecting a flaky drive since mismatch_cnt was so huge.
-raid6check does not update mismatch_cnt, so I did a sync_action check
-which finally zeroed the mismatch_cnt.
-I don't know if the newer raid6check fixed it or the repair?
-
-If mismatch_cnt is non zero on a raid6, do I need to do a repair and
-then a check? I thought repair would update mismatch_cnt.
-
-
-Does not inspire confidence.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
