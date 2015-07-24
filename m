@@ -1,29 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] raid0: data corruption when using trim
-Date: Fri, 24 Jul 2015 11:03:13 -0400
-Message-ID: <yq1zj2ly4we.fsf@sermon.lab.mkp.net>
-References: <013e01d0c1d2$f3af4fb0$db0def10$@samsung.com>
-	<yq1y4ibknz4.fsf@sermon.lab.mkp.net>
-	<005601d0c36c$59d28ec0$0d77ac40$@samsung.com>
-	<yq1wpxu154v.fsf@sermon.lab.mkp.net>
-	<005601d0c470$951ea860$bf5bf920$@samsung.com>
-	<55B1DF90.7090904@assyoma.it>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] block: add a bi_error field to struct bio
+Date: Fri, 24 Jul 2015 10:36:45 -0600
+Message-ID: <55B2699D.6010400@kernel.dk>
+References: <1437398977-8492-1-git-send-email-hch@lst.de> <1437398977-8492-2-git-send-email-hch@lst.de> <55AFE643.5000704@kernel.dk> <55B01252.90004@kernel.dk> <20150724104946.GA25145@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55B1DF90.7090904@assyoma.it> (Gionatan Danti's message of "Fri,
-	24 Jul 2015 08:47:44 +0200")
+In-Reply-To: <20150724104946.GA25145@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Seunguk Shin <seunguk.shin@samsung.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, neilb@suse.de, linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Neil Brown <neilb@suse.de>, Liu Bo <bo.li.liu@oracle.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Gionatan" == Gionatan Danti <g.danti@assyoma.it> writes:
+On 07/24/2015 04:49 AM, Christoph Hellwig wrote:
+> On Wed, Jul 22, 2015 at 03:59:46PM -0600, Jens Axboe wrote:
+>> One possible solution would be to shrink bi_flags to an unsigned int, no
+>> problems fitting that in. Then we could stuff bi_error in that (new) hole,
+>> and we would end up having the same size again.
+>
+> As long as we use set/test/clear_bt on bi_flags that won't work unfortunately.
 
-Gionatan> Hi, any idea on why the bug affects/manifests only on specific
-Gionatan> SATA SSDs?
-
-Timing and a very heavy discard load.
+Right, I don't think we need to do that though. If you look at the flags 
+usage, it's all over the map. Some use test/set_bit, some set it just by 
+OR'ing the mask. There's no reason we can't make this work without 
+relying on set/test_bit, and then shrink it to an unsigned int.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
+
