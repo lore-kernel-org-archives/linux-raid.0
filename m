@@ -1,15 +1,16 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH 09/12] md-cluster: add missed lockres_free
-Date: Mon, 27 Jul 2015 11:30:26 -0500
-Message-ID: <55B65CA2.3050302@suse.de>
+Subject: Re: [PATCH 11/12] md-cluster: Read the disk bitmap sb and check if it
+ needs recovery
+Date: Mon, 27 Jul 2015 11:31:43 -0500
+Message-ID: <55B65CEF.3070607@suse.de>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
  <1436518883-12783-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-6-git-send-email-gqjiang@suse.com>
+ <1436518883-12783-8-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1436518883-12783-6-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1436518883-12783-8-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>, neilb@suse.de
 Cc: linux-raid@vger.kernel.org
@@ -18,32 +19,52 @@ List-Id: linux-raid.ids
 
 
 On 07/10/2015 04:01 AM, Guoqing Jiang wrote:
-> We also need to free the lock resource before goto out.
+> In gather_all_resync_info, we need to read the disk bitmap sb and
+> check if it needs recovery.
 >
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+
 
 Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
 > ---
->   drivers/md/md-cluster.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+>   drivers/md/md-cluster.c | 16 +++++++++++++++-
+>   1 file changed, 15 insertions(+), 1 deletion(-)
 >
 > diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 057a973..411b430 100644
+> index 29f65e2..c35a03a 100644
 > --- a/drivers/md/md-cluster.c
 > +++ b/drivers/md/md-cluster.c
-> @@ -647,8 +647,10 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
+> @@ -625,6 +625,7 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
+>   	struct dlm_lock_resource *bm_lockres;
+>   	struct suspend_info *s;
+>   	char str[64];
+> +	sector_t lo, hi;
+>
+>
+>   	for (i = 0; i < total_slots; i++) {
+> @@ -659,7 +660,20 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
 >   			lockres_free(bm_lockres);
->   			continue;
->   		}
-> -		if (ret)
-> +		if (ret) {
-> +			lockres_free(bm_lockres);
 >   			goto out;
+>   		}
+> -		/* TODO: Read the disk bitmap sb and check if it needs recovery */
+> +
+> +		/* Read the disk bitmap sb and check if it needs recovery */
+> +		ret = bitmap_copy_from_slot(mddev, i, &lo, &hi, false);
+> +		if (ret) {
+> +			pr_warn("md-cluster: Could not gather bitmaps from slot %d", i);
+> +			lockres_free(bm_lockres);
+> +			continue;
 > +		}
->   		/* TODO: Read the disk bitmap sb and check if it needs recovery */
+> +		if ((hi > 0) && (lo < mddev->recovery_cp)) {
+> +			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> +			mddev->recovery_cp = lo;
+> +			md_check_recovery(mddev);
+> +		}
+> +
 >   		dlm_unlock_sync(bm_lockres);
 >   		lockres_free(bm_lockres);
+>   	}
 >
 
 -- 
