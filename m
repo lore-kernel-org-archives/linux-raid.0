@@ -1,76 +1,90 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH] md: setup safemode_timer before it's being used
-Date: Mon, 27 Jul 2015 11:30:35 +1000
-Message-ID: <20150727113035.40029611@noble>
-References: <1437776398-31079-1-git-send-email-sasha.levin@oracle.com>
+Subject: Re: [PATCH] drivers/md/md.c: use kzalloc() when bitmap is disabled
+Date: Mon, 27 Jul 2015 11:36:21 +1000
+Message-ID: <20150727113621.7eef4eec@noble>
+References: <1437835010-11430-1-git-send-email-benjamin@randazzo.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437776398-31079-1-git-send-email-sasha.levin@oracle.com>
+In-Reply-To: <1437835010-11430-1-git-send-email-benjamin@randazzo.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sasha Levin <sasha.levin@oracle.com>
+To: Benjamin Randazzo <benjamin@randazzo.fr>
 Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 24 Jul 2015 18:19:58 -0400 Sasha Levin <sasha.levin@oracle.com>
-wrote:
+On Sat, 25 Jul 2015 16:36:50 +0200 Benjamin Randazzo
+<benjamin@randazzo.fr> wrote:
 
-> We used to set up the safemode_timer timer in md_run. If md_run
-> would fail before the timer was set up we'd end up trying to modify
-> a timer that doesn't have a callback function when we access safe_delay_store,
-> which would trigger a BUG.
+> In drivers/md/md.c get_bitmap_file() uses kmalloc() for creating a
+> mdu_bitmap_file_t called "file".
 > 
-> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+> 5769         file = kmalloc(sizeof(*file), GFP_NOIO);
+> 5770         if (!file)
+> 5771                 return -ENOMEM;
+> 
+> This structure is copied to user space at the end of the function.
+> 
+> 5786         if (err == 0 &&
+> 5787             copy_to_user(arg, file, sizeof(*file)))
+> 5788                 err = -EFAULT
+> 
+> But if bitmap is disabled only the first byte of "file" is initialized
+> with zero, so it's possible to read some bytes (up to 4095) of kernel
+> space memory from user space. This is an information leak.
+> 
+> 5775         /* bitmap disabled, zero the first byte and copy out */
+> 5776         if (!mddev->bitmap_info.file)
+> 5777                 file->pathname[0] = '\0';
+> 
+> Signed-off-by: Benjamin Randazzo <benjamin@randazzo.fr>
 > ---
->  drivers/md/md.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/md/md.c | 21 ++++++++++-----------
+>  1 file changed, 10 insertions(+), 11 deletions(-)
 > 
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 80879dc..60fb47e 100644
+> index 80879dc..382bdbc 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -502,6 +502,8 @@ static void mddev_put(struct mddev *mddev)
->  		bioset_free(bs);
->  }
+> @@ -5766,22 +5766,21 @@ static int get_bitmap_file(struct mddev *mddev, void __user * arg)
+>  	char *ptr;
+>  	int err;
 >  
-> +static void md_safemode_timeout(unsigned long data);
-> +
->  void mddev_init(struct mddev *mddev)
->  {
->  	mutex_init(&mddev->open_mutex);
-> @@ -510,6 +512,8 @@ void mddev_init(struct mddev *mddev)
->  	INIT_LIST_HEAD(&mddev->disks);
->  	INIT_LIST_HEAD(&mddev->all_mddevs);
->  	init_timer(&mddev->safemode_timer);
-> +	setup_timer(&mddev->safemode_timer, md_safemode_timeout,
-> +			(unsigned long) mddev);
->  	atomic_set(&mddev->active, 1);
->  	atomic_set(&mddev->openers, 0);
->  	atomic_set(&mddev->active_io, 0);
-> @@ -3276,8 +3280,6 @@ int strict_strtoul_scaled(const char *cp, unsigned long *res, int scale)
->  	return 0;
->  }
+> -	file = kmalloc(sizeof(*file), GFP_NOIO);
+> +	file = kzalloc(sizeof(*file), GFP_NOIO);
+>  	if (!file)
+>  		return -ENOMEM;
 >  
-> -static void md_safemode_timeout(unsigned long data);
-> -
->  static ssize_t
->  safe_delay_show(struct mddev *mddev, char *page)
->  {
-> @@ -5204,8 +5206,6 @@ int md_run(struct mddev *mddev)
->  	atomic_set(&mddev->max_corr_read_errors,
->  		   MD_DEFAULT_MAX_CORRECTED_READ_ERRORS);
->  	mddev->safemode = 0;
-> -	mddev->safemode_timer.function = md_safemode_timeout;
-> -	mddev->safemode_timer.data = (unsigned long) mddev;
->  	mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
->  	mddev->in_sync = 1;
->  	smp_wmb();
+>  	err = 0;
+>  	spin_lock(&mddev->lock);
+> -	/* bitmap disabled, zero the first byte and copy out */
+> -	if (!mddev->bitmap_info.file)
+> -		file->pathname[0] = '\0';
+> -	else if ((ptr = file_path(mddev->bitmap_info.file,
+> -			       file->pathname, sizeof(file->pathname))),
+> -		 IS_ERR(ptr))
+> -		err = PTR_ERR(ptr);
+> -	else
+> -		memmove(file->pathname, ptr,
+> -			sizeof(file->pathname)-(ptr-file->pathname));
+> +	/* bitmap enabled */
+> +	if (mddev->bitmap_info.file) {
+> +		if ((ptr = file_path(mddev->bitmap_info.file, file->pathname,
+> +					sizeof(file->pathname))), IS_ERR(ptr))
+> +			err = PTR_ERR(ptr);
+> +		else
+> +			memmove(file->pathname, ptr,
+> +				sizeof(file->pathname)-(ptr-file->pathname));
+> +	}
+>  	spin_unlock(&mddev->lock);
+>  
+>  	if (err == 0 &&
 
 
 Thanks.
-I've applied that patch, and also removed the 'init_timer' call which
-is now not needed as setup_timer does that.
+I re-arranged the code a little bit more as there is no longer any
+excuse for having the "ptr = file_path()" assignment inside the
+condition of the 'if'.
 
-Thanks,
+Applied.  Thanks,
 NeilBrown
