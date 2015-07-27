@@ -1,16 +1,15 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH 12/12] md-cluster: handle error situations more precisely
- in lockres_init
-Date: Mon, 27 Jul 2015 11:34:39 -0500
-Message-ID: <55B65D9F.7010009@suse.de>
+Subject: Re: [PATCH 05/12] md-cluster: init completion within lockres_init
+Date: Mon, 27 Jul 2015 11:44:53 -0500
+Message-ID: <55B66005.3010605@suse.de>
 References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
  <1436518883-12783-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-9-git-send-email-gqjiang@suse.com>
+ <1436518883-12783-2-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1436518883-12783-9-git-send-email-gqjiang@suse.com>
+In-Reply-To: <1436518883-12783-2-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>, neilb@suse.de
 Cc: linux-raid@vger.kernel.org
@@ -19,56 +18,47 @@ List-Id: linux-raid.ids
 
 
 On 07/10/2015 04:01 AM, Guoqing Jiang wrote:
-> In lockres_init, it's better to distinguish different err conditions.
+> We should init completion within lockres_init, otherwise
+> completion could be initialized more than one time during
+> it's life cycle.
 >
 > Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-This is not required. kfree() is capable of ignoring null pointers.
 
+Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
 > ---
->   drivers/md/md-cluster.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
+>   drivers/md/md-cluster.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 >
 > diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index c35a03a..54d225c 100644
+> index 85b7836..2a57f19 100644
 > --- a/drivers/md/md-cluster.c
 > +++ b/drivers/md/md-cluster.c
-> @@ -131,14 +131,14 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
->   	res->name = kzalloc(namelen + 1, GFP_KERNEL);
->   	if (!res->name) {
->   		pr_err("md-cluster: Unable to allocate resource name for resource %s\n", name);
-> -		goto out_err;
-> +		goto out_err_name;
->   	}
->   	strlcpy(res->name, name, namelen + 1);
->   	if (with_lvb) {
->   		res->lksb.sb_lvbptr = kzalloc(LVB_SIZE, GFP_KERNEL);
->   		if (!res->lksb.sb_lvbptr) {
->   			pr_err("md-cluster: Unable to allocate LVB for resource %s\n", name);
-> -			goto out_err;
-> +			goto out_err_lvb;
->   		}
->   		res->flags = DLM_LKF_VALBLK;
->   	}
-> @@ -159,7 +159,9 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
->   	return res;
->   out_err:
->   	kfree(res->lksb.sb_lvbptr);
-> +out_err_lvb:
->   	kfree(res->name);
-> +out_err_name:
->   	kfree(res);
->   	return NULL;
->   }
-> @@ -627,7 +629,6 @@ static int gather_all_resync_info(struct mddev *mddev, int total_slots)
->   	char str[64];
->   	sector_t lo, hi;
+> @@ -100,7 +100,6 @@ static int dlm_lock_sync(struct dlm_lock_resource *res, int mode)
+>   {
+>   	int ret = 0;
 >
-> -
->   	for (i = 0; i < total_slots; i++) {
->   		memset(str, '\0', 64);
->   		snprintf(str, 64, "bitmap%04d", i);
+> -	init_completion(&res->completion);
+>   	ret = dlm_lock(res->ls, mode, &res->lksb,
+>   			res->flags, res->name, strlen(res->name),
+>   			0, sync_ast, res, res->bast);
+> @@ -125,6 +124,7 @@ static struct dlm_lock_resource *lockres_init(struct mddev *mddev,
+>   	res = kzalloc(sizeof(struct dlm_lock_resource), GFP_KERNEL);
+>   	if (!res)
+>   		return NULL;
+> +	init_completion(&res->completion);
+>   	res->ls = cinfo->lockspace;
+>   	res->mddev = mddev;
+>   	namelen = strlen(name);
+> @@ -169,7 +169,6 @@ static void lockres_free(struct dlm_lock_resource *res)
+>   	if (!res)
+>   		return;
+>
+> -	init_completion(&res->completion);
+>   	dlm_unlock(res->ls, res->lksb.sb_lkid, 0, &res->lksb, res);
+>   	wait_for_completion(&res->completion);
+>
 >
 
 -- 
