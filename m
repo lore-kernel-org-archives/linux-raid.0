@@ -1,49 +1,35 @@
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Subject: Re: [PATCH v2 3/3] dm-crypt: Adds support for wiping key when doing
- suspend/hibernation
-Date: Tue, 28 Jul 2015 16:48:12 +0200
-Message-ID: <20150728144812.GS13765@pali>
-References: <1428254419-7334-1-git-send-email-pali.rohar@gmail.com>
- <1434885634-19895-1-git-send-email-pali.rohar@gmail.com>
- <1434885634-19895-4-git-send-email-pali.rohar@gmail.com>
- <20150728144419.GA19760@amd>
+From: Brice Adams <abbala202@gmail.com>
+Subject: Please can I trust you?
+Date: Tue, 28 Jul 2015 16:57:36 +0000
+Message-ID: <CAOCEB2PdRF_mFVdE1tYaWUwdsXoNoGYCj9mavir0o+Cpw_x8AA__31761.1771672548$1438102675$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150728144419.GA19760@amd>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 28 July 2015 16:44:19 Pavel Machek wrote:
-> On Sun 2015-06-21 13:20:34, Pali Roh=C3=A1r wrote:
-> > This patch adds dm message commands and option strings to optionall=
-y wipe key
-> > from dm-crypt device before entering suspend or hibernate state.
-> >=20
-> > Before key is wiped dm device must be suspended. To prevent race co=
-nditions with
-> > I/O and userspace processes, wiping action must be called after pro=
-cesses are
-> > freezed. Otherwise userspace processes could start reading/writing =
-to disk after
-> > dm device is suspened and freezing processes before suspend/hiberna=
-te action
-> > will fail.
->=20
-> Are you sure this is enough?
->=20
-> We still may need to allocate memory after userspace is frozen, and
-> that could mean writing dirty buffers out to make some memory free...
->=20
-> 								Pavel
-> 							=09
+My Dear Friend,
 
-Hm... good question. Maybe it is needed to also flush all buffers?
+I am Mr. Brice Adams, staff and auditor of a Bank in Lome, Togo
+Republic. I am the Account Officer to (Late Mr. Daniel I. Glade) whose
+account is presently dormant, I advise you to keep this as a "top
+secret" as I am still in service and intend to retire from service
+after I conclude this deal with you. I have an important
+Message/discussion with you about his death and his funds, the sum of
+(6.5 Million Euros) left without a heir. If you can be of an
+assistance to me, I will be pleased to offer to you 25% of the total
+fund. Please I got your email contact through internet email directory
+when I was searching for a trust worthy partner. If you are willing to
+help me, I need the following information below from you;
 
---=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+Your full name.............
+Nationality................
+Telephone number..............
+Profession.................
+Age.........
+
+I will be humbly waiting your soonest response. Please contact direct
+to my email address (brice2adams@yahoo.fr) for more information.
+
+With Respect,
+Mr. Brice Adams.
