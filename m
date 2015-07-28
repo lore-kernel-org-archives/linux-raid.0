@@ -1,78 +1,43 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH 10/12] md-cluster: only call complete(&cinfo->completion)
- when node join cluster
-Date: Mon, 27 Jul 2015 11:49:12 -0500
-Message-ID: <55B66108.5070504@suse.de>
-References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-7-git-send-email-gqjiang@suse.com>
+From: Guoqing Jiang <gqJiang@suse.com>
+Subject: Re: [PATCH 06/12] md-cluster: add the error check if failed to get
+ dlm lock
+Date: Tue, 28 Jul 2015 11:04:31 +0800
+Message-ID: <55B6F13F.7070100@suse.com>
+References: <1436518453-12660-1-git-send-email-gqjiang@suse.com> <1436518883-12783-1-git-send-email-gqjiang@suse.com> <1436518883-12783-3-git-send-email-gqjiang@suse.com> <55B660CD.2030600@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1436518883-12783-7-git-send-email-gqjiang@suse.com>
+In-Reply-To: <55B660CD.2030600@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqjiang@suse.com>, neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Goldwyn,
 
+Goldwyn Rodrigues wrote:
+> Hi Guoqing,
+>
+> On 07/10/2015 04:01 AM, Guoqing Jiang wrote:
+>> In complicated cluster environment, it is possible that the
+>> dlm lock couldn't be get/convert on purpose, the related err
+>> info is added for better debug potential issue.
+>>
+>> For lockres_free, if the lock is blocking by a lock request or
+>> conversion request, then dlm_unlock just put it back to grant
+>> queue, so need to ensure the lock is free finally.
+>
+>
+> I cannot think of a scenario where a DLM_CANCEL will be returned.
+> Could you explain the situation a bit more?
+>
+Thanks for the review. When the node is receiving message where it needs
+to convert message
+lock, and lockres_free is invoked if user stop array meanwhile, then the
+message lock is put back
+to grant queue at the CR mode and message lock is not released, am I
+misunderstood the case?
 
-On 07/10/2015 04:01 AM, Guoqing Jiang wrote:
-> Introduce MD_CLUSTER_BEGIN_JOIN_CLUSTER flag to make sure
-> complete(&cinfo->completion) is only be invoked when node
-> join cluster. Otherwise node failure could also call the
-> complete, and it doesn't make sense to do it.
->
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-
-
-Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-
-> ---
->   drivers/md/md-cluster.c | 11 ++++++++++-
->   1 file changed, 10 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-> index 411b430..29f65e2 100644
-> --- a/drivers/md/md-cluster.c
-> +++ b/drivers/md/md-cluster.c
-> @@ -45,6 +45,7 @@ struct resync_info {
->   /* md_cluster_info flags */
->   #define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
->   #define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
-> +#define		MD_CLUSTER_BEGIN_JOIN_CLUSTER		3
->
->
->   struct md_cluster_info {
-> @@ -320,10 +321,17 @@ static void recover_done(void *arg, struct dlm_slot *slots,
->   	struct md_cluster_info *cinfo = mddev->cluster_info;
->
->   	cinfo->slot_number = our_slot;
-> -	complete(&cinfo->completion);
-> +	/* completion is only need to be complete when node join cluster,
-> +	 * it doesn't need to run during another node's failure */
-> +	if (test_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state)) {
-> +		complete(&cinfo->completion);
-> +		clear_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
-> +	}
->   	clear_bit(MD_CLUSTER_SUSPEND_READ_BALANCING, &cinfo->state);
->   }
->
-> +/* the ops is called when node join the cluster, and do lock recovery
-> + * if node failure occurs */
->   static const struct dlm_lockspace_ops md_ls_ops = {
->   	.recover_prep = recover_prep,
->   	.recover_slot = recover_slot,
-> @@ -675,6 +683,7 @@ static int join(struct mddev *mddev, int nodes)
->   	INIT_LIST_HEAD(&cinfo->suspend_list);
->   	spin_lock_init(&cinfo->suspend_lock);
->   	init_completion(&cinfo->completion);
-> +	set_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
->
->   	mutex_init(&cinfo->sb_mutex);
->   	mddev->cluster_info = cinfo;
->
-
--- 
-Goldwyn
+Thanks,
+Guoqing
