@@ -1,54 +1,241 @@
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH 06/12] md-cluster: add the error check if failed to get
- dlm lock
-Date: Wed, 29 Jul 2015 18:39:19 -0500
-Message-ID: <55B96427.5040308@suse.de>
-References: <1436518453-12660-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-1-git-send-email-gqjiang@suse.com>
- <1436518883-12783-3-git-send-email-gqjiang@suse.com>
- <55B660CD.2030600@suse.de> <55B6F13F.7070100@suse.com>
+Subject: Re: [PATCH 3/3] Safeguard against writing to an active device of
+ another node
+Date: Wed, 29 Jul 2015 18:40:36 -0500
+Message-ID: <55B96474.6080604@suse.de>
+References: <1436172732-21021-1-git-send-email-gqjiang@suse.com>
+ <1436172732-21021-3-git-send-email-gqjiang@suse.com>
+ <20150729172853.33d44808@noble> <55B8ADE1.1060708@suse.com>
+ <20150730080247.20f03d23@noble>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55B6F13F.7070100@suse.com>
+In-Reply-To: <20150730080247.20f03d23@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guoqing Jiang <gqJiang@suse.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Guoqing Jiang <gqJiang@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
 
-On 07/27/2015 10:04 PM, Guoqing Jiang wrote:
-> Hi Goldwyn,
+On 07/29/2015 05:02 PM, NeilBrown wrote:
+> On Wed, 29 Jul 2015 18:41:37 +0800 Guoqing Jiang <gqJiang@suse.com>
+> wrote:
 >
-> Goldwyn Rodrigues wrote:
->> Hi Guoqing,
+>> Hi Neil,
 >>
->> On 07/10/2015 04:01 AM, Guoqing Jiang wrote:
->>> In complicated cluster environment, it is possible that the
->>> dlm lock couldn't be get/convert on purpose, the related err
->>> info is added for better debug potential issue.
+>> NeilBrown wrote:
+>>> On Mon,  6 Jul 2015 16:52:12 +0800 Guoqing Jiang <gqjiang@suse.com>
+>>> wrote:
 >>>
->>> For lockres_free, if the lock is blocking by a lock request or
->>> conversion request, then dlm_unlock just put it back to grant
->>> queue, so need to ensure the lock is free finally.
+>>>
+>>>> Modifying an exiting device's superblock or creating a new superblock
+>>>> on an existing device needs to be checked because the device could be
+>>>> in use by another node in another array. So, we check this by taking
+>>>> all superblock locks in userspace so that we don't  step onto an active
+>>>> device used by another node and safeguard against accidental edits.
+>>>> After the edit is complete, we release all locks and the lockspace so
+>>>> that it can be used by the kernel space.
+>>>>
+>>>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>>> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+>>>>
+>>>
+>>> Hi,
+>>>   thanks for these.
+>>>   I've applied 1 and 2.
+>>>
+>>>   Could you re-do this on to follow the kernel style of #ifdefs,
+>>>   so that the #ifdefs only appear in header files.
+>>>   i.e. when NO_DLM is defined, is_clustered() always evaluates to zero
+>>>   and clustered_get_dlmlock() always succeeds etc.
+>>>
+>> Thanks, I guess you mean the following incremental modification. Please
+>> let me know if I misunderstood.
 >>
+>> diff --git a/mdadm.h b/mdadm.h
+>> index 59f851e..4d9e8c8 100644
+>> --- a/mdadm.h
+>> +++ b/mdadm.h
+>> @@ -1429,9 +1429,26 @@ extern char *fd2devnm(int fd);
 >>
->> I cannot think of a scenario where a DLM_CANCEL will be returned.
->> Could you explain the situation a bit more?
+>> extern int in_initrd(void);
+>> extern int get_cluster_name(char **name);
+>> +#ifndef NO_DLM
+>> extern int is_clustered(struct supertype *st);
+>> extern int cluster_get_dlmlock(struct supertype *st, int *lockid);
+>> extern int cluster_release_dlmlock(struct supertype *st, int lockid);
+>> +#else
+>> +static inline int is_clustered(struct supertype *st)
+>> +{
+>> + return 0;
+>> +}
+>> +
+>> +static inline int cluster_get_dlmlock(struct supertype *st, int *lockid)
+>> +{
+>> + return 0;
+>> +}
+>> +
+>> +static inline int cluster_release_dlmlock(struct supertype *st, int lockid)
+>> +{
+>> + return 0;
+>> +}
+>> +#endif
 >>
-> Thanks for the review. When the node is receiving message where it needs
-> to convert message
-> lock, and lockres_free is invoked if user stop array meanwhile, then the
-> message lock is put back
-> to grant queue at the CR mode and message lock is not released, am I
-> misunderstood the case?
+>> #define _ROUND_UP(val, base) (((val) + (base) - 1) & ~(base - 1))
+>> #define ROUND_UP(val, base) _ROUND_UP(val, (typeof(val))(base))
+>> diff --git a/super1.c b/super1.c
+>> index c49a3b3..bd88c36 100644
+>> --- a/super1.c
+>> +++ b/super1.c
+>> @@ -1072,10 +1072,9 @@ static int update_super1(struct supertype *st,
+>> struct mdinfo *info,
+>> * ignored.
+>> */
+>> int rv = 0;
+>> + int lockid;
+>> struct mdp_superblock_1 *sb = st->sb;
+>>
+>> -#ifndef NO_DLM
+>> - int lockid;
+>> if (is_clustered(st)) {
+>> rv = cluster_get_dlmlock(st, &lockid);
+>> if (rv) {
+>> @@ -1084,7 +1083,6 @@ static int update_super1(struct supertype *st,
+>> struct mdinfo *info,
+>> return rv;
+>> }
+>> }
+>> -#endif
+>>
+>> if (strcmp(update, "homehost") == 0 &&
+>> homehost) {
+>> @@ -1342,10 +1340,9 @@ static int update_super1(struct supertype *st,
+>> struct mdinfo *info,
+>> rv = -1;
+>>
+>> sb->sb_csum = calc_sb_1_csum(sb);
+>> -#ifndef NO_DLM
+>> if (is_clustered(st))
+>> cluster_release_dlmlock(st, lockid);
+>> -#endif
+>> +
+>> return rv;
+>> }
+>>
+>> @@ -1449,9 +1446,8 @@ static int add_to_super1(struct supertype *st,
+>> mdu_disk_info_t *dk,
+>> struct mdp_superblock_1 *sb = st->sb;
+>> __u16 *rp = sb->dev_roles + dk->number;
+>> struct devinfo *di, **dip;
+>> -
+>> -#ifndef NO_DLM
+>> int rv, lockid;
+>> +
+>> if (is_clustered(st)) {
+>> rv = cluster_get_dlmlock(st, &lockid);
+>> if (rv) {
+>> @@ -1460,7 +1456,7 @@ static int add_to_super1(struct supertype *st,
+>> mdu_disk_info_t *dk,
+>> return rv;
+>> }
+>> }
+>> -#endif
+>> +
+>> if ((dk->state & 6) == 6) /* active, sync */
+>> *rp = __cpu_to_le16(dk->raid_disk);
+>> else if ((dk->state & ~2) == 0) /* active or idle -> spare */
+>> @@ -1487,10 +1483,9 @@ static int add_to_super1(struct supertype *st,
+>> mdu_disk_info_t *dk,
+>> di->next = NULL;
+>> *dip = di;
+>>
+>> -#ifndef NO_DLM
+>> if (is_clustered(st))
+>> cluster_release_dlmlock(st, lockid);
+>> -#endif
+>> +
+>> return 0;
+>> }
+>> #endif
+>> @@ -1504,9 +1499,8 @@ static int store_super1(struct supertype *st, int fd)
+>> struct align_fd afd;
+>> int sbsize;
+>> unsigned long long dsize;
+>> -
+>> -#ifndef NO_DLM
+>> int rv, lockid;
+>> +
+>> if (is_clustered(st)) {
+>> rv = cluster_get_dlmlock(st, &lockid);
+>> if (rv) {
+>> @@ -1515,7 +1509,6 @@ static int store_super1(struct supertype *st, int fd)
+>> return rv;
+>> }
+>> }
+>> -#endif
+>>
+>> if (!get_dev_size(fd, NULL, &dsize))
+>> return 1;
+>> @@ -1576,10 +1569,9 @@ static int store_super1(struct supertype *st, int fd)
+>> }
+>> }
+>> fsync(fd);
+>> -#ifndef NO_DLM
+>> if (is_clustered(st))
+>> cluster_release_dlmlock(st, lockid);
+>> -#endif
+>> +
+>> return 0;
+>> }
+>>
+>> @@ -2329,7 +2321,6 @@ static int write_bitmap1(struct supertype *st, int
+>> fd, enum bitmap_update update
+>>
+>> static void free_super1(struct supertype *st)
+>> {
+>> -#ifndef NO_DLM
+>> int rv, lockid;
+>> if (is_clustered(st)) {
+>> rv = cluster_get_dlmlock(st, &lockid);
+>> @@ -2339,7 +2330,7 @@ static void free_super1(struct supertype *st)
+>> return;
+>> }
+>> }
+>> -#endif
+>> +
+>> if (st->sb)
+>> free(st->sb);
+>> while (st->info) {
+>> @@ -2350,10 +2341,8 @@ static void free_super1(struct supertype *st)
+>> free(di);
+>> }
+>> st->sb = NULL;
+>> -#ifndef NO_DLM
+>> if (is_clustered(st))
+>> cluster_release_dlmlock(st, lockid);
+>> -#endif
+>> }
+>>
+>> #ifndef MDASSEMBLE
+>>
+>> Thanks,
+>> Guoqing
+>
+> Probably something like that - yes.  Unfortunately your mailer messed
+> that up more that usual make it rather difficult to apply.
+>
+> I was wondering if we could make it a run-time dependency though .. a
+> bit like get_cluster_name.  We can still do that later I guess.  I'm
+> not really sure what is best at the moment.
 >
 
-In that case, this looks correct.
 
-Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Yes, I would second that: Making these functions a run-time dependency. 
+We should have the ability for it to work by just installing libdlm 
+(with the proper flags set), rather than recompiling the package for 
+cluster features.
 
 -- 
 Goldwyn
