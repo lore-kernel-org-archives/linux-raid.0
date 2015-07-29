@@ -1,79 +1,231 @@
-From: Joe Lawrence <joe.lawrence@stratus.com>
-Subject: Re: [PATCH] drivers/md/md.c: ignore recovery_offset if bitmap exists
-Date: Wed, 29 Jul 2015 16:46:21 -0400
-Message-ID: <55B93B9D.5000103@stratus.com>
-References: <1438111733-17778-1-git-send-email-nate.dailey@stratus.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 3/3] Safeguard against writing to an active device of
+ another node
+Date: Thu, 30 Jul 2015 08:02:47 +1000
+Message-ID: <20150730080247.20f03d23@noble>
+References: <1436172732-21021-1-git-send-email-gqjiang@suse.com>
+	<1436172732-21021-3-git-send-email-gqjiang@suse.com>
+	<20150729172853.33d44808@noble>
+	<55B8ADE1.1060708@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1438111733-17778-1-git-send-email-nate.dailey@stratus.com>
+In-Reply-To: <55B8ADE1.1060708@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Ben Hutchings <ben@decadent.org.uk>, Cyril Vechera <cv@io.ru>
+To: Guoqing Jiang <gqJiang@suse.com>
+Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/28/2015 03:28 PM, Nate Dailey wrote:
-> If a bitmap recovery is interrupted and later restarted, then
-> sectors below the recovery offset, written between interruption
-> and resumption, will not be copied. This results in corruption.
+On Wed, 29 Jul 2015 18:41:37 +0800 Guoqing Jiang <gqJiang@suse.com>
+wrote:
+
+> Hi Neil,
 > 
-> See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=777511
-> for a script that can be used to repro this.
+> NeilBrown wrote:
+> > On Mon,  6 Jul 2015 16:52:12 +0800 Guoqing Jiang <gqjiang@suse.com>
+> > wrote:
+> >
+> >   
+> >> Modifying an exiting device's superblock or creating a new superblock
+> >> on an existing device needs to be checked because the device could be
+> >> in use by another node in another array. So, we check this by taking
+> >> all superblock locks in userspace so that we don't  step onto an active
+> >> device used by another node and safeguard against accidental edits.
+> >> After the edit is complete, we release all locks and the lockspace so
+> >> that it can be used by the kernel space.
+> >>
+> >> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> >> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> >>     
+> >
+> > Hi,
+> >  thanks for these.
+> >  I've applied 1 and 2.
+> >
+> >  Could you re-do this on to follow the kernel style of #ifdefs,
+> >  so that the #ifdefs only appear in header files.
+> >  i.e. when NO_DLM is defined, is_clustered() always evaluates to zero
+> >  and clustered_get_dlmlock() always succeeds etc.
+> >   
+> Thanks, I guess you mean the following incremental modification. Please
+> let me know if I misunderstood.
 > 
-> Seems like ignoring the recovery_offset if a bitmap exists is
-> the way to go.
+> diff --git a/mdadm.h b/mdadm.h
+> index 59f851e..4d9e8c8 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1429,9 +1429,26 @@ extern char *fd2devnm(int fd);
 > 
-> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-> ---
->  drivers/md/md.c | 24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
+> extern int in_initrd(void);
+> extern int get_cluster_name(char **name);
+> +#ifndef NO_DLM
+> extern int is_clustered(struct supertype *st);
+> extern int cluster_get_dlmlock(struct supertype *st, int *lockid);
+> extern int cluster_release_dlmlock(struct supertype *st, int lockid);
+> +#else
+> +static inline int is_clustered(struct supertype *st)
+> +{
+> + return 0;
+> +}
+> +
+> +static inline int cluster_get_dlmlock(struct supertype *st, int *lockid)
+> +{
+> + return 0;
+> +}
+> +
+> +static inline int cluster_release_dlmlock(struct supertype *st, int lockid)
+> +{
+> + return 0;
+> +}
+> +#endif
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 0c2a4e8..79c6285 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7738,16 +7738,18 @@ void md_do_sync(struct md_thread *thread)
->  	else {
->  		/* recovery follows the physical size of devices */
->  		max_sectors = mddev->dev_sectors;
-> -		j = MaxSector;
-> -		rcu_read_lock();
-> -		rdev_for_each_rcu(rdev, mddev)
-> -			if (rdev->raid_disk >= 0 &&
-> -			    !test_bit(Faulty, &rdev->flags) &&
-> -			    !test_bit(In_sync, &rdev->flags) &&
-> -			    rdev->recovery_offset < j)
-> -				j = rdev->recovery_offset;
-> -		rcu_read_unlock();
+> #define _ROUND_UP(val, base) (((val) + (base) - 1) & ~(base - 1))
+> #define ROUND_UP(val, base) _ROUND_UP(val, (typeof(val))(base))
+> diff --git a/super1.c b/super1.c
+> index c49a3b3..bd88c36 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1072,10 +1072,9 @@ static int update_super1(struct supertype *st,
+> struct mdinfo *info,
+> * ignored.
+> */
+> int rv = 0;
+> + int lockid;
+> struct mdp_superblock_1 *sb = st->sb;
+> 
+> -#ifndef NO_DLM
+> - int lockid;
+> if (is_clustered(st)) {
+> rv = cluster_get_dlmlock(st, &lockid);
+> if (rv) {
+> @@ -1084,7 +1083,6 @@ static int update_super1(struct supertype *st,
+> struct mdinfo *info,
+> return rv;
+> }
+> }
+> -#endif
+> 
+> if (strcmp(update, "homehost") == 0 &&
+> homehost) {
+> @@ -1342,10 +1340,9 @@ static int update_super1(struct supertype *st,
+> struct mdinfo *info,
+> rv = -1;
+> 
+> sb->sb_csum = calc_sb_1_csum(sb);
+> -#ifndef NO_DLM
+> if (is_clustered(st))
+> cluster_release_dlmlock(st, lockid);
+> -#endif
+> +
+> return rv;
+> }
+> 
+> @@ -1449,9 +1446,8 @@ static int add_to_super1(struct supertype *st,
+> mdu_disk_info_t *dk,
+> struct mdp_superblock_1 *sb = st->sb;
+> __u16 *rp = sb->dev_roles + dk->number;
+> struct devinfo *di, **dip;
 > -
-> +		/* we don't use the offset if there's a bitmap */
-> +		if (!mddev->bitmap) {
-> +			j = MaxSector;
-> +			rcu_read_lock();
-> +			rdev_for_each_rcu(rdev, mddev)
-> +				if (rdev->raid_disk >= 0 &&
-> +				    !test_bit(Faulty, &rdev->flags) &&
-> +				    !test_bit(In_sync, &rdev->flags) &&
-> +				    rdev->recovery_offset < j)
-> +					j = rdev->recovery_offset;
-> +			rcu_read_unlock();
-> +		}
->  		/* If there is a bitmap, we need to make sure all
->  		 * writes that started before we added a spare
->  		 * complete before we start doing a recovery.
-> @@ -7756,7 +7758,7 @@ void md_do_sync(struct md_thread *thread)
->  		 * recovery has checked that bit and skipped that
->  		 * region.
->  		 */
-> -		if (mddev->bitmap) {
-> +		else {
->  			mddev->pers->quiesce(mddev, 1);
->  			mddev->pers->quiesce(mddev, 0);
->  		}
+> -#ifndef NO_DLM
+> int rv, lockid;
+> +
+> if (is_clustered(st)) {
+> rv = cluster_get_dlmlock(st, &lockid);
+> if (rv) {
+> @@ -1460,7 +1456,7 @@ static int add_to_super1(struct supertype *st,
+> mdu_disk_info_t *dk,
+> return rv;
+> }
+> }
+> -#endif
+> +
+> if ((dk->state & 6) == 6) /* active, sync */
+> *rp = __cpu_to_le16(dk->raid_disk);
+> else if ((dk->state & ~2) == 0) /* active or idle -> spare */
+> @@ -1487,10 +1483,9 @@ static int add_to_super1(struct supertype *st,
+> mdu_disk_info_t *dk,
+> di->next = NULL;
+> *dip = di;
 > 
+> -#ifndef NO_DLM
+> if (is_clustered(st))
+> cluster_release_dlmlock(st, lockid);
+> -#endif
+> +
+> return 0;
+> }
+> #endif
+> @@ -1504,9 +1499,8 @@ static int store_super1(struct supertype *st, int fd)
+> struct align_fd afd;
+> int sbsize;
+> unsigned long long dsize;
+> -
+> -#ifndef NO_DLM
+> int rv, lockid;
+> +
+> if (is_clustered(st)) {
+> rv = cluster_get_dlmlock(st, &lockid);
+> if (rv) {
+> @@ -1515,7 +1509,6 @@ static int store_super1(struct supertype *st, int fd)
+> return rv;
+> }
+> }
+> -#endif
+> 
+> if (!get_dev_size(fd, NULL, &dsize))
+> return 1;
+> @@ -1576,10 +1569,9 @@ static int store_super1(struct supertype *st, int fd)
+> }
+> }
+> fsync(fd);
+> -#ifndef NO_DLM
+> if (is_clustered(st))
+> cluster_release_dlmlock(st, lockid);
+> -#endif
+> +
+> return 0;
+> }
+> 
+> @@ -2329,7 +2321,6 @@ static int write_bitmap1(struct supertype *st, int
+> fd, enum bitmap_update update
+> 
+> static void free_super1(struct supertype *st)
+> {
+> -#ifndef NO_DLM
+> int rv, lockid;
+> if (is_clustered(st)) {
+> rv = cluster_get_dlmlock(st, &lockid);
+> @@ -2339,7 +2330,7 @@ static void free_super1(struct supertype *st)
+> return;
+> }
+> }
+> -#endif
+> +
+> if (st->sb)
+> free(st->sb);
+> while (st->info) {
+> @@ -2350,10 +2341,8 @@ static void free_super1(struct supertype *st)
+> free(di);
+> }
+> st->sb = NULL;
+> -#ifndef NO_DLM
+> if (is_clustered(st))
+> cluster_release_dlmlock(st, lockid);
+> -#endif
+> }
+> 
+> #ifndef MDASSEMBLE
+> 
+> Thanks,
+> Guoqing
 
-[+cc Ben & Cyril from the Debian bug report]
+Probably something like that - yes.  Unfortunately your mailer messed
+that up more that usual make it rather difficult to apply.
 
--- Joe
+I was wondering if we could make it a run-time dependency though .. a
+bit like get_cluster_name.  We can still do that later I guess.  I'm
+not really sure what is best at the moment.
 
+Thanks,
+NeilBrown
