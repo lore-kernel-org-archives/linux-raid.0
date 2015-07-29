@@ -1,141 +1,371 @@
-From: Tomas Papan <tomas.papan@gmail.com>
-Subject: raid5 regression in 4.1.x
-Date: Wed, 29 Jul 2015 09:21:22 +0200
-Message-ID: <CAMGsXDSySVJA3PFo=v+_hWS+4K9VmuHMUEb3hSNtxqRG0P4=8A@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 3/3] Safeguard against writing to an active device of
+ another node
+Date: Wed, 29 Jul 2015 17:28:53 +1000
+Message-ID: <20150729172853.33d44808@noble>
+References: <1436172732-21021-1-git-send-email-gqjiang@suse.com>
+	<1436172732-21021-3-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=047d7b3a8a640d931b051bfe6ffa
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1436172732-21021-3-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: linux-raid@vger.kernel.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---047d7b3a8a640d931b051bfe6ffa
-Content-Type: text/plain; charset=UTF-8
+On Mon,  6 Jul 2015 16:52:12 +0800 Guoqing Jiang <gqjiang@suse.com>
+wrote:
 
-Hello there,
+> Modifying an exiting device's superblock or creating a new superblock
+> on an existing device needs to be checked because the device could be
+> in use by another node in another array. So, we check this by taking
+> all superblock locks in userspace so that we don't  step onto an active
+> device used by another node and safeguard against accidental edits.
+> After the edit is complete, we release all locks and the lockspace so
+> that it can be used by the kernel space.
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-I found a bug on my system. I do not know if this was already
-reported. I can't find it anywhere.
-Would you please have a look at this trace (attached)
+Hi,
+ thanks for these.
+ I've applied 1 and 2.
+
+ Could you re-do this on to follow the kernel style of #ifdefs,
+ so that the #ifdefs only appear in header files.
+ i.e. when NO_DLM is defined, is_clustered() always evaluates to zero
+ and clustered_get_dlmlock() always succeeds etc.
+
+Thanks,
+NeilBrown
 
 
 
-Unfortunately it happens completely random (after few days in this
-case, with 4.1.0 it was in matter of hours) and I'm not able to bisect
-this.
+> ---
+> Against cluster branch.
+> 
+>  Makefile |   6 ++-
+>  mdadm.h  |   3 ++
+>  super1.c |  62 +++++++++++++++++++++++++++++++
+>  util.c   | 127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 197 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index c189279..a76ae13 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -81,11 +81,12 @@ FAILED_SLOTS_DIR = $(RUN_DIR)/failed-slots
+>  SYSTEMD_DIR=/lib/systemd/system
+>  
+>  COROSYNC:=$(shell [ -d /usr/include/corosync ] || echo -DNO_COROSYNC)
+> +DLM:=$(shell [ -f /usr/include/libdlm.h ] || echo -DNO_DLM)
+>  
+>  DIRFLAGS = -DMAP_DIR=\"$(MAP_DIR)\" -DMAP_FILE=\"$(MAP_FILE)\"
+>  DIRFLAGS += -DMDMON_DIR=\"$(MDMON_DIR)\"
+>  DIRFLAGS += -DFAILED_SLOTS_DIR=\"$(FAILED_SLOTS_DIR)\"
+> -CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS) $(COROSYNC)
+> +CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(DIRFLAGS) $(COROSYNC) $(DLM)
+>  
+>  VERSION = $(shell [ -d .git ] && git describe HEAD | sed 's/mdadm-//')
+>  VERS_DATE = $(shell [ -d .git ] && date --date="`git log -n1 --format=format:%cd --date=short`" '+%0dth %B %Y' | sed -e 's/1th/1st/' -e 's/2th/2nd/' -e 's/11st/11th/' -e 's/12nd/12th/')
+> @@ -105,6 +106,9 @@ endif
+>  # LDFLAGS = -static
+>  # STRIP = -s
+>  LDLIBS=-ldl
+> +ifneq ($(DLM), -DNO_DLM)
+> +LDLIBS += -ldlm_lt
+> +endif
+>  
+>  INSTALL = /usr/bin/install
+>  DESTDIR =
+> diff --git a/mdadm.h b/mdadm.h
+> index 97892e6..59f851e 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1429,6 +1429,9 @@ extern char *fd2devnm(int fd);
+>  
+>  extern int in_initrd(void);
+>  extern int get_cluster_name(char **name);
+> +extern int is_clustered(struct supertype *st);
+> +extern int cluster_get_dlmlock(struct supertype *st, int *lockid);
+> +extern int cluster_release_dlmlock(struct supertype *st, int lockid);
+>  
+>  #define _ROUND_UP(val, base)	(((val) + (base) - 1) & ~(base - 1))
+>  #define ROUND_UP(val, base)	_ROUND_UP(val, (typeof(val))(base))
+> diff --git a/super1.c b/super1.c
+> index 9b991e6..f4d6345 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -1074,6 +1074,18 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>  	int rv = 0;
+>  	struct mdp_superblock_1 *sb = st->sb;
+>  
+> +#ifndef NO_DLM
+> +	int lockid;
+> +	if (is_clustered(st)) {
+> +		rv = cluster_get_dlmlock(st, &lockid);
+> +		if (rv) {
+> +			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
+> +			cluster_release_dlmlock(st, lockid);
+> +			return rv;
+> +		}
+> +	}
+> +#endif
+> +
+>  	if (strcmp(update, "homehost") == 0 &&
+>  	    homehost) {
+>  		/* Note that 'homehost' is special as it is really
+> @@ -1330,6 +1342,10 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+>  		rv = -1;
+>  
+>  	sb->sb_csum = calc_sb_1_csum(sb);
+> +#ifndef NO_DLM
+> +	if (is_clustered(st))
+> +		cluster_release_dlmlock(st, lockid);
+> +#endif
+>  	return rv;
+>  }
+>  
+> @@ -1434,6 +1450,17 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+>  	__u16 *rp = sb->dev_roles + dk->number;
+>  	struct devinfo *di, **dip;
+>  
+> +#ifndef NO_DLM
+> +	int rv, lockid;
+> +	if (is_clustered(st)) {
+> +		rv = cluster_get_dlmlock(st, &lockid);
+> +		if (rv) {
+> +			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
+> +			cluster_release_dlmlock(st, lockid);
+> +			return rv;
+> +		}
+> +	}
+> +#endif
+>  	if ((dk->state & 6) == 6) /* active, sync */
+>  		*rp = __cpu_to_le16(dk->raid_disk);
+>  	else if ((dk->state & ~2) == 0) /* active or idle -> spare */
+> @@ -1460,6 +1487,10 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+>  	di->next = NULL;
+>  	*dip = di;
+>  
+> +#ifndef NO_DLM
+> +	if (is_clustered(st))
+> +		cluster_release_dlmlock(st, lockid);
+> +#endif
+>  	return 0;
+>  }
+>  #endif
+> @@ -1474,6 +1505,18 @@ static int store_super1(struct supertype *st, int fd)
+>  	int sbsize;
+>  	unsigned long long dsize;
+>  
+> +#ifndef NO_DLM
+> +	int rv, lockid;
+> +	if (is_clustered(st)) {
+> +		rv = cluster_get_dlmlock(st, &lockid);
+> +		if (rv) {
+> +			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
+> +			cluster_release_dlmlock(st, lockid);
+> +			return rv;
+> +		}
+> +	}
+> +#endif
+> +
+>  	if (!get_dev_size(fd, NULL, &dsize))
+>  		return 1;
+>  
+> @@ -1533,6 +1576,10 @@ static int store_super1(struct supertype *st, int fd)
+>  		}
+>  	}
+>  	fsync(fd);
+> +#ifndef NO_DLM
+> +	if (is_clustered(st))
+> +		cluster_release_dlmlock(st, lockid);
+> +#endif
+>  	return 0;
+>  }
+>  
+> @@ -2282,6 +2329,17 @@ static int write_bitmap1(struct supertype *st, int fd, enum bitmap_update update
+>  
+>  static void free_super1(struct supertype *st)
+>  {
+> +#ifndef NO_DLM
+> +	int rv, lockid;
+> +	if (is_clustered(st)) {
+> +		rv = cluster_get_dlmlock(st, &lockid);
+> +		if (rv) {
+> +			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
+> +			cluster_release_dlmlock(st, lockid);
+> +			return;
+> +		}
+> +	}
+> +#endif
+>  	if (st->sb)
+>  		free(st->sb);
+>  	while (st->info) {
+> @@ -2292,6 +2350,10 @@ static void free_super1(struct supertype *st)
+>  		free(di);
+>  	}
+>  	st->sb = NULL;
+> +#ifndef NO_DLM
+> +	if (is_clustered(st))
+> +		cluster_release_dlmlock(st, lockid);
+> +#endif
+>  }
+>  
+>  #ifndef MDASSEMBLE
+> diff --git a/util.c b/util.c
+> index ea6e688..3357957 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -24,6 +24,7 @@
+>  
+>  #include	"mdadm.h"
+>  #include	"md_p.h"
+> +#include	<sys/poll.h>
+>  #include	<sys/socket.h>
+>  #include	<sys/utsname.h>
+>  #include	<sys/wait.h>
+> @@ -42,6 +43,10 @@
+>  #else
+>   #include	<corosync/cmap.h>
+>  #endif
+> +#ifndef NO_DLM
+> +#include	<libdlm.h>
+> +#include	<errno.h>
+> +#endif
+>  
+>  
+>  /*
+> @@ -88,6 +93,128 @@ struct blkpg_partition {
+>     aren't permitted). */
+>  #define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
+>  
+> +#ifndef NO_DLM
+> +struct dlm_lock_resource {
+> +	dlm_lshandle_t *ls;
+> +	struct dlm_lksb lksb;
+> +};
+> +
+> +struct dlm_lock_resource *dlm_lock_res = NULL;
+> +static int ast_called = 0;
+> +
+> +int is_clustered(struct supertype *st)
+> +{
+> +	/* is it a cluster md or not */
+> +	return st->cluster_name ? 1 :0;
+> +}
+> +
+> +/* Using poll(2) to wait for and dispatch ASTs */
+> +static int poll_for_ast(dlm_lshandle_t ls)
+> +{
+> +	struct pollfd pfd;
+> +
+> +	pfd.fd = dlm_ls_get_fd(ls);
+> +	pfd.events = POLLIN;
+> +
+> +	while (!ast_called)
+> +	{
+> +		if (poll(&pfd, 1, 0) < 0)
+> +		{
+> +			perror("poll");
+> +			return -1;
+> +		}
+> +		dlm_dispatch(dlm_ls_get_fd(ls));
+> +	}
+> +	ast_called = 0;
+> +
+> +	return 0;
+> +}
+> +
+> +static void dlm_ast(void *arg)
+> +{
+> +	ast_called = 1;
+> +}
+> +
+> +/* Create the lockspace, take bitmapXXX locks on all the bitmaps. */
+> +int cluster_get_dlmlock(struct supertype *st, int *lockid)
+> +{
+> +	int ret;
+> +	char str[64];
+> +	int flags = LKF_NOQUEUE;
+> +
+> +	dlm_lock_res = xmalloc(sizeof(struct dlm_lock_resource));
+> +	if (!dlm_lock_res)
+> +		return -ENOMEM;
+> +
+> +	dlm_lock_res->ls = dlm_create_lockspace(st->cluster_name, O_RDWR);
+> +	if (!dlm_lock_res->ls) {
+> +		pr_err("%s failed to create lockspace\n", st->cluster_name);
+> +		return -1;
+> +	}
+> +
+> +	/* Conversions need the lockid in the LKSB */
+> +	if (flags & LKF_CONVERT)
+> +		dlm_lock_res->lksb.sb_lkid = *lockid;
+> +
+> +	snprintf(str, 64, "bitmap%04d", st->nodes);
+> +	/* if flags with LKF_CONVERT causes below return ENOENT which means
+> +	 * "No such file or directory" */
+> +	ret = dlm_ls_lock(dlm_lock_res->ls, LKM_PWMODE, &dlm_lock_res->lksb,
+> +			  flags, str, strlen(str), 0, dlm_ast,
+> +			  dlm_lock_res, NULL, NULL);
+> +	if (ret) {
+> +		pr_err("error %d when get PW mode on lock %s\n", errno, str);
+> +		return ret;
+> +	}
+> +
+> +	/* Wait for it to complete */
+> +	poll_for_ast(dlm_lock_res->ls);
+> +	*lockid = dlm_lock_res->lksb.sb_lkid;
+> +
+> +	errno =	dlm_lock_res->lksb.sb_status;
+> +	if (errno) {
+> +	    pr_err("error %d happened in ast with lock %s\n", errno, str);
+> +	    return -1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +int cluster_release_dlmlock(struct supertype *st, int lockid)
+> +{
+> +	int ret;
+> +
+> +	/* if flags with LKF_CONVERT causes below return EINVAL which means
+> +	 * "Invalid argument" */
+> +	ret = dlm_ls_unlock(dlm_lock_res->ls, lockid, 0, &dlm_lock_res->lksb, dlm_lock_res);
+> +	if (ret) {
+> +		pr_err("error %d happened when unlock\n", errno);
+> +		/* XXX make sure the lock is unlocked eventually */
+> +		return ret;
+> +	}
+> +
+> +	/* Wait for it to complete */
+> +	poll_for_ast(dlm_lock_res->ls);
+> +
+> +	errno =	dlm_lock_res->lksb.sb_status;
+> +	if (errno != EUNLOCK) {
+> +		pr_err("error %d happened in ast when unlock lockspace\n", errno);
+> +		/* XXX make sure the lockspace is unlocked eventually */
+> +		return -1;
+> +	}
+> +
+> +	ret = dlm_release_lockspace(st->cluster_name, dlm_lock_res->ls, 1);
+> +	if (ret) {
+> +		pr_err("error %d happened when release lockspace\n", errno);
+> +		/* XXX make sure the lockspace is released eventually */
+> +		return ret;
+> +	}
+> +	free(dlm_lock_res);
+> +
+> +	return 0;
+> +}
+> +#endif
+> +
+>  /*
+>   * Parse a 128 bit uuid in 4 integers
+>   * format is 32 hexx nibbles with options :.<space> separator
 
-Regards
-Tomas
-
---047d7b3a8a640d931b051bfe6ffa
-Content-Type: text/plain; charset=US-ASCII; name="kernel-bug.txt"
-Content-Disposition: attachment; filename="kernel-bug.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_icog0xb80
-
-SnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJu
-ZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0ICAgICAgICAgICAobnVsbCkNCkp1bCAyOSAw
-ODo0Nzo1MyBhbmFraW4ga2VybmVsOiBJUDogWzxmZmZmZmZmZjgxMmQyMjI2Pl0gZ2V0X2ZyZWVf
-c3RyaXBlKzB4MWIvMHg3ZQ0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IFBHRCAzMmZh
-YTcwNjcgUFVEIDE3Mjg2MzA2NyBQTUQgMCANCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVs
-OiBPb3BzOiAwMDAwIFsjMV0gUFJFRU1QVCBTTVAgDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtl
-cm5lbDogTW9kdWxlcyBsaW5rZWQgaW46IHZldGggeHRfQ0hFQ0tTVU0gaXB0YWJsZV9tYW5nbGUg
-eHRfYWRkcnR5cGUgZG1fdGhpbl9wb29sIGRtX3BlcnNpc3RlbnRfZGF0YSBsaWJjcmMzMmMgZG1f
-YmlvX3ByaXNvbiBkbV9idWZpbyBlYnRhYmxlcyBhbGdpZl9za2NpcGhlciBhZl9hbGcgaXQ4NyBo
-d21vbl92aWQgY2xzX3JvdXRlIGNsc191MzIgY2xzX2Z3IHNjaF9zZnEgc2NoX2h0YiBjdHIgY2Nt
-IHh0X1JFRElSRUNUIG5mX25hdF9yZWRpcmVjdCB4dF9uYXQgaXB0X01BU1FVRVJBREUgbmZfbmF0
-X21hc3F1ZXJhZGVfaXB2NCB4dF9saW1pdCBpcHRfUkVKRUNUIG5mX3JlamVjdF9pcHY0IHh0X3Rj
-cHVkcCBuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiB4dF9jb25udHJhY2sgaXB0YWJs
-ZV9uYXQgbmZfY29ubnRyYWNrX2lwdjQgbmZfZGVmcmFnX2lwdjQgbmZfbmF0X2lwdjQgbmZfbmF0
-IG5mX2Nvbm50cmFjayBpcDZ0YWJsZV9maWx0ZXIgaXA2X3RhYmxlcyBpcHRhYmxlX2ZpbHRlciBp
-cF90YWJsZXMgeF90YWJsZXMgc2l0IHR1bm5lbDQgaXBfdHVubmVsIGxvb3AgcjgxNjkgbWlpIGZ1
-c2UgaXdsZHZtIGxlZF9jbGFzcyBtYWM4MDIxMSBrdm1faW50ZWwga3ZtIGkyY19pODAxIGl3bHdp
-ZmkgaTJjX2NvcmUgYWx4IGNmZzgwMjExIG1kaW8gZTEwMDBlDQpKdWwgMjkgMDg6NDc6NTMgYW5h
-a2luIGtlcm5lbDogQ1BVOiAwIFBJRDogMTUxMjIgQ29tbTogZ2l0IE5vdCB0YWludGVkIDQuMS4z
-ICMxDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogSGFyZHdhcmUgbmFtZTogR2lnYWJ5
-dGUgVGVjaG5vbG9neSBDby4sIEx0ZC4gWjg3Ti1XSUZJL1o4N04tV0lGSSwgQklPUyBGM2QgMDYv
-MTkvMjAxMw0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IHRhc2s6IGZmZmY4ODA0MjZh
-MTkwODAgdGk6IGZmZmY4ODAwNDc4NjQwMDAgdGFzay50aTogZmZmZjg4MDA0Nzg2NDAwMA0KSnVs
-IDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IFJJUDogMDAxMDpbPGZmZmZmZmZmODEyZDIyMjY+
-XSAgWzxmZmZmZmZmZjgxMmQyMjI2Pl0gZ2V0X2ZyZWVfc3RyaXBlKzB4MWIvMHg3ZQ0KSnVsIDI5
-IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IFJTUDogMDAxODpmZmZmODgwMDQ3ODY3NmMwICBFRkxB
-R1M6IDAwMDEwMDEzDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogUkFYOiBmZmZmODgw
-NDJiMmQ0ZDYwIFJCWDogZmZmZjg4MDQyYjJkNGMwMCBSQ1g6IGZmZmY4ODA0MmIyZDRkNjgNCkp1
-bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAw
-MDAwMDAwMGZmZmZmZmZmIFJESTogZmZmZjg4MDQyYjJkNGMwMA0KSnVsIDI5IDA4OjQ3OjUzIGFu
-YWtpbiBrZXJuZWw6IFJCUDogMDAwMDAwMDBmZmZmZmZmZiBSMDg6IDAwMDAwMDAwMDAwMDAwMDcg
-UjA5OiBmZmZmODgwNDJiMmRhMDAwDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogUjEw
-OiBmZmZmODgwNDM0YTJkZTAwIFIxMTogZmZmZjg4MDQzMmY1Y2Y4MCBSMTI6IGZmZmY4ODA0MmIy
-ZDRjMDYNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiBSMTM6IGZmZmY4ODA0MmIyZDRl
-NDAgUjE0OiAwMDAwMDAwMDAwMDAwMDAwIFIxNTogMDAwMDAwMDAwMDAwMGQ2Ng0KSnVsIDI5IDA4
-OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IEZTOiAgMDAwMDdmMDU0ZDdmYTcwMCgwMDAwKSBHUzpmZmZm
-ODgwNDNmMjAwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCkp1bCAyOSAwODo0Nzo1
-MyBhbmFraW4ga2VybmVsOiBDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAw
-MDgwMDUwMDMzDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogQ1IyOiAwMDAwMDAwMDAw
-MDAwMDAwIENSMzogMDAwMDAwMDM3OGQ1MDAwMCBDUjQ6IDAwMDAwMDAwMDAxNDI3ZjANCkp1bCAy
-OSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiBEUjA6IDAwMDAwMDAwMDAwMDAwMDAgRFIxOiAwMDAw
-MDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAwMA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtp
-biBrZXJuZWw6IERSMzogMDAwMDAwMDAwMDAwMDAwMCBEUjY6IDAwMDAwMDAwZmZmZTBmZjAgRFI3
-OiAwMDAwMDAwMDAwMDAwNDAwDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogU3RhY2s6
-DQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogIGZmZmZmZmZmODEyZDVhYzEgMDAwMDAw
-MDAwMDAwMDA3MyBmZmZmODgwNDJiMmQ0YzAwIGZmZmY4ODAwNDc4Njc3MzgNCkp1bCAyOSAwODo0
-Nzo1MyBhbmFraW4ga2VybmVsOiAgZmZmZmZmZmY4MTJkNWIyYiAwMDAwMDAwMDAwMDAwZGYzIDAw
-MDAwMDAwMDAwMDAwODAgMDAwMDAwMDAwMDAwMDAwMA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBr
-ZXJuZWw6ICBmZmZmZmZmZjgxMGQ1NWY2IDAwMDAwMDAwMDAwMDFmYjggMDAwMDAwMDAwMDAwMGU4
-MCAwMDAwMDAwMDAwMDAwMDgwDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDogQ2FsbCBU
-cmFjZToNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMmQ1YWMx
-Pl0gPyBkcm9wX29uZV9zdHJpcGUrMHgzMC8weDc4DQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtl
-cm5lbDogIFs8ZmZmZmZmZmY4MTJkNWIyYj5dID8gcmFpZDVfY2FjaGVfc2NhbisweDIyLzB4MzMN
-Ckp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMGQ1NWY2Pl0gPyBz
-aHJpbmtfc2xhYisweDFiOC8weDIyZQ0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBb
-PGZmZmZmZmZmODEwZDdkM2Q+XSA/IHNocmlua196b25lKzB4MTYwLzB4MjRjDQpKdWwgMjkgMDg6
-NDc6NTMgYW5ha2luIGtlcm5lbDogIFs8ZmZmZmZmZmY4MTBkN2ZjMj5dID8gZG9fdHJ5X3RvX2Zy
-ZWVfcGFnZXMrMHgxOTkvMHgzMmUNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxm
-ZmZmZmZmZjgxMGQ4MWU1Pl0gPyB0cnlfdG9fZnJlZV9wYWdlcysweDhlLzB4OTQNCkp1bCAyOSAw
-ODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMGQwNTIzPl0gPyBfX2FsbG9jX3Bh
-Z2VzX25vZGVtYXNrKzB4NTNjLzB4NzlmDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5lbDog
-IFs8ZmZmZmZmZmY4MTBmYWY2Mj5dID8gbmV3X3NsYWIrMHhhMi8weDMzOA0KSnVsIDI5IDA4OjQ3
-OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEzZGMyMTQ+XSA/IF9fc2xhYl9hbGxvYy5p
-c3JhLjY3LmNvbnN0cHJvcC42OSsweDIwYS8weDMwNA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBr
-ZXJuZWw6ICBbPGZmZmZmZmZmODExNzA1ZDA+XSA/IGV4dDRfYWxsb2NfaW5vZGUrMHgxMi8weDE3
-Ng0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExNjM0ZGI+XSA/
-IGV4dDRfbWFwX2Jsb2NrcysweDFkMi8weDNiNA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJu
-ZWw6ICBbPGZmZmZmZmZmODExOTJmMTg+XSA/IGV4dDRfZm5hbWVfY3J5cHRvX2ZyZWVfYnVmZmVy
-KzB4MTEvMHgxYQ0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEx
-NzA1ZDA+XSA/IGV4dDRfYWxsb2NfaW5vZGUrMHgxMi8weDE3Ng0KSnVsIDI5IDA4OjQ3OjUzIGFu
-YWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEwZmMwNDk+XSA/IGttZW1fY2FjaGVfYWxsb2MrMHg3
-YS8weDEyYQ0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExNzA1
-ZDA+XSA/IGV4dDRfYWxsb2NfaW5vZGUrMHgxMi8weDE3Ng0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtp
-biBrZXJuZWw6ICBbPGZmZmZmZmZmODExMWUwMWI+XSA/IGFsbG9jX2lub2RlKzB4MTQvMHg2ZQ0K
-SnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExMWVkOWY+XSA/IGln
-ZXRfbG9ja2VkKzB4NWYvMHgxM2ENCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxm
-ZmZmZmZmZjgxMTYzYjY2Pl0gPyBleHQ0X2lnZXQrMHgyNy8weDhiOQ0KSnVsIDI5IDA4OjQ3OjUz
-IGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExMWNjNjA+XSA/IF9fZF9sb29rdXArMHgxMjUv
-MHgxMzcNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMTZiY2Y4
-Pl0gPyBleHQ0X2xvb2t1cCsweGU3LzB4MWFlDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5l
-bDogIFs8ZmZmZmZmZmY4MTExMWJlYz5dID8gbG9va3VwX3JlYWwrMHgyMy8weDNkDQpKdWwgMjkg
-MDg6NDc6NTMgYW5ha2luIGtlcm5lbDogIFs8ZmZmZmZmZmY4MTExMjRiYz5dID8gX19sb29rdXBf
-aGFzaCsweDJhLzB4MzENCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZm
-ZjgxMTEzYmExPl0gPyBsb29rdXBfc2xvdysweDM5LzB4OWMNCkp1bCAyOSAwODo0Nzo1MyBhbmFr
-aW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMTE1NGYzPl0gPyBwYXRoX2xvb2t1cGF0KzB4ZTEvMHg2
-NjUNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMTE1YTkyPl0g
-PyBmaWxlbmFtZV9sb29rdXArMHgxYi8weDU4DQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtlcm5l
-bDogIFs8ZmZmZmZmZmY4MTExNmQ1Mz5dID8gdXNlcl9wYXRoX2F0X2VtcHR5KzB4NDgvMHg3ZA0K
-SnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEwZTMxMDI+XSA/IGxp
-c3RfbHJ1X2FkZCsweDY2LzB4ODYNCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiAgWzxm
-ZmZmZmZmZjgxMTBlNTdlPl0gPyBjcF9uZXdfc3RhdCsweDExMS8weDEyNA0KSnVsIDI5IDA4OjQ3
-OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExMGUzZjc+XSA/IHZmc19mc3RhdGF0KzB4
-M2UvMHg4ZA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6ICBbPGZmZmZmZmZmODExMGU3
-ZmQ+XSA/IFN5U19uZXdsc3RhdCsweDEyLzB4MmINCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2Vy
-bmVsOiAgWzxmZmZmZmZmZjgxM2UxYTE3Pl0gPyBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDEyLzB4
-NmENCkp1bCAyOSAwODo0Nzo1MyBhbmFraW4ga2VybmVsOiBDb2RlOiA3NCAwZCBmZiBjYSAzOSBk
-NyAwZiA5NCBjMCAwZiBiNiBjMCBjMyAzMSBjMCBjMyA0OCA2MyBjNiA0OCA4MyBjMCAxNyA0OCBj
-MSBlMCAwNCA0OCAwMSBmOCA0OCA4ZCA0OCAwOCA0OCAzOSAwOSA3NCA2NCA0OCA4YiA1MCAwOCA8
-NGM+IDhiIDBhIDQ4IDhkIDQyIGYwIDRjIDhiIDQyIDA4IDRkIDg5IDQxIDA4IDRkIDg5IDA4IDRj
-IDhiIDRhIA0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtpbiBrZXJuZWw6IFJJUCAgWzxmZmZmZmZmZjgx
-MmQyMjI2Pl0gZ2V0X2ZyZWVfc3RyaXBlKzB4MWIvMHg3ZQ0KSnVsIDI5IDA4OjQ3OjUzIGFuYWtp
-biBrZXJuZWw6ICBSU1AgPGZmZmY4ODAwNDc4Njc2YzA+DQpKdWwgMjkgMDg6NDc6NTMgYW5ha2lu
-IGtlcm5lbDogQ1IyOiAwMDAwMDAwMDAwMDAwMDAwDQpKdWwgMjkgMDg6NDc6NTMgYW5ha2luIGtl
-cm5lbDogLS0tWyBlbmQgdHJhY2UgOGI4ZTQ2MzZiMDY4OTU5MSBdLS0t
---047d7b3a8a640d931b051bfe6ffa--
