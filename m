@@ -1,52 +1,42 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 0/9]raid5: fix write hole
-Date: Wed, 29 Jul 2015 17:38:40 -0700
-Message-ID: <cover.1438215986.git.shli@fb.com>
+Subject: [PATCH 6/9] raid5: disable batch with log enabled
+Date: Wed, 29 Jul 2015 17:38:46 -0700
+Message-ID: <ff2e6d2e0a3d8b8715dba7bdc4c654164ab20355.1438215986.git.shli@fb.com>
+References: <cover.1438215986.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <cover.1438215986.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Neil,
+With log enabled, r5l_write_stripe will add the stripe to log. With
+batch, several stripes are linked together. The stripes must be in the
+same state. While with log, the log/reclaim unit is stripe, we can't
+guarantee the several stripes are in the same state. Disabling batch for
+log now.
 
-These are the patches to fix write hole issue. It did everything you requested.
-- one meta data type format
-- no super block
-- format suitable for future extention of caching.
-- just fix write hole issue, no caching support
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid5.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-The recovery doesn't use stripe cache yet, need further tweak of the stripe
-cache code. I hope it's easy enough. Please let me know how you think.
-
-Thanks,
-Shaohua
-
-Shaohua Li (8):
-  md: override md superblock recovery_offset for cache device
-  raid5: add basic stripe log
-  raid5: log reclaim support
-  raid5: log recovery
-  raid5: disable batch with log enabled
-  raid5: don't allow resize/reshape with cache(log) support
-  raid5: enable log for raid array with cache disk
-  raid5: skip resync if cache(log) is enabled
-
-Song Liu (1):
-  MD: add a new disk role to present cache device
-
- drivers/md/Makefile            |    2 +-
- drivers/md/md.c                |   28 +-
- drivers/md/md.h                |    4 +
- drivers/md/raid5-cache.c       | 1242 ++++++++++++++++++++++++++++++++++++++++
- drivers/md/raid5.c             |   51 +-
- drivers/md/raid5.h             |   19 +
- include/uapi/linux/raid/md_p.h |   51 ++
- 7 files changed, 1388 insertions(+), 9 deletions(-)
- create mode 100644 drivers/md/raid5-cache.c
-
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 77af7f0..59f9312 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -759,6 +759,9 @@ static void unlock_two_stripes(struct stripe_head *sh1, struct stripe_head *sh2)
+ /* Only freshly new full stripe normal write stripe can be added to a batch list */
+ static bool stripe_can_batch(struct stripe_head *sh)
+ {
++	struct r5conf *conf = sh->raid_conf;
++	if (conf->log)
++		return false;
+ 	return test_bit(STRIPE_BATCH_READY, &sh->state) &&
+ 		!test_bit(STRIPE_BITMAP_PENDING, &sh->state) &&
+ 		is_full_stripe_write(sh);
 -- 
 1.8.5.6
 
