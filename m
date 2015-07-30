@@ -1,66 +1,74 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: raid5 regression in 4.1.x
-Date: Fri, 31 Jul 2015 08:57:24 +1000
-Message-ID: <20150731085724.025f3b2b@noble>
-References: <CAMGsXDSySVJA3PFo=v+_hWS+4K9VmuHMUEb3hSNtxqRG0P4=8A@mail.gmail.com>
+Subject: Re: Subject: ANNOUNCE: mdadm 3.3.3 - A tool for managing md Soft
+ RAID under Linux
+Date: Fri, 31 Jul 2015 09:34:04 +1000
+Message-ID: <20150731093404.28e7df7e@noble>
+References: <20150724163530.768da131@noble>
+	<20150727162906.GA3051@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMGsXDSySVJA3PFo=v+_hWS+4K9VmuHMUEb3hSNtxqRG0P4=8A@mail.gmail.com>
+In-Reply-To: <20150727162906.GA3051@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tomas Papan <tomas.papan@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 29 Jul 2015 09:21:22 +0200 Tomas Papan <tomas.papan@gmail.com>
-wrote:
+On Mon, 27 Jul 2015 18:29:06 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-> Hello there,
+> On Fri, Jul 24, 2015 at 04:35:30PM +1000, NeilBrown wrote:
+> > 
+> > 
+> > I am pleased to announce the availability of
+> >    mdadm version 3.3.3
+> > 
+> > It is available at the usual places:
+> >    http://www.kernel.org/pub/linux/utils/raid/mdadm/
+> > and via git at
+> >    git://github.com/neilbrown/mdadm
+> >    git://neil.brown.name/mdadm
+> >    http://git.neil.brown.name/git/mdadm.git
+> > 
+> > The 100 changes since 3.3.3 are mostly little bugfixes and some improvements
+> > to the selftests.
+> > raid6check now handle all RAID6 layouts including DDF correctly.
+> > See git log for the rest.
+> > 
+> > NeilBrown 24th July 2015
 > 
-> I found a bug on my system. I do not know if this was already
-> reported. I can't find it anywhere.
-> Would you please have a look at this trace (attached)
+> Hi Neil,
 > 
+> I would like to thank you for clean up and improving
+> "raid6check.c".
+> I personally appreciate your contribution very much,
+> and I think it is good to have your expert eye
+> looking at the code.
 > 
+> Thanks again for your time,
 > 
-> Unfortunately it happens completely random (after few days in this
-> case, with 4.1.0 it was in matter of hours) and I'm not able to bisect
-> this.
+> bye,
 > 
-> Regards
-> Tomas
 
-Thanks for the report.
+Happy to help, but I should confess that the motivation was purely
+selfish.
+I was doing some testing and the 01raid6integ test (which fails
+different devices in a RAID6 and checks the data is still correct) was
+occasionally reporting errors - a bit of a worry.
 
-The crash is happening in get_free_stripe() and the 'hash' argument is
-stored in register RSI and has (32bit) value 0xFFFFFFFF.  i.e. -1.
-That shouldn't happen - it should be from 0 to 7.
+It eventually turned out to be a hardware issue - I was running in VMs
+and after power-cycling my workstation the problem doesn't appear any
+more.
+But before I got to the stage I wanted to get a clearer idea of what
+sort of corruption was happening, so I added a call to raid6check to
+the test and it reported really strange results for some layouts.
+So in order to get the data I needed, I fixed the code to work properly
+for all layout.  i.e. write a test script to test all layouts, then fix
+things until the script stopped complaining :-)
 
-get_free_stripe was called from drop_one_stripe():
-
-	int hash = (conf->max_nr_stripes - 1) % NR_STRIPE_HASH_LOCKS;
-
-	spin_lock_irq(conf->hash_locks + hash);
-	sh = get_free_stripe(conf, hash);
-
-so it seems that conf->max-nr_stripes was 0, which it really should
-never be.
-
-There is a patch submitted for 4.2 which should get into -stable a
-couple of weeks later which might help.
-
-If you would like to try just applying that patch and see if the
-problem goes away, it is
-
-http://git.neil.brown.name/?p=md.git;a=commitdiff;h=2d5b569b665ea6d0b15c52529ff06300de81a7ce
-
-or
-
-http://git.neil.brown.name/?p=md.git;a=commitdiff_plain;h=2d5b569b665ea6d0b15c52529ff06300de81a7ce
-
-I'll have another look at the code a bit later and see if I can
-convince myself what happened.
+So despite that fact that it didn't actually lead me to the cause:
+thank you for providing the program in the first place :-)
 
 Thanks,
 NeilBrown
