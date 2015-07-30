@@ -1,50 +1,33 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 7/9] raid5: don't allow resize/reshape with cache(log) support
-Date: Wed, 29 Jul 2015 17:38:47 -0700
-Message-ID: <7986246dabd1722b2ea9461da91651509049c2a6.1438215986.git.shli@fb.com>
-References: <cover.1438215986.git.shli@fb.com>
+From: Guoqing Jiang <gqJiang@suse.com>
+Subject: Re: [PATCH 3/3] Safeguard against writing to an active device of
+ another node
+Date: Thu, 30 Jul 2015 11:16:25 +0800
+Message-ID: <55B99709.2050609@suse.com>
+References: <1436172732-21021-1-git-send-email-gqjiang@suse.com>	<1436172732-21021-3-git-send-email-gqjiang@suse.com>	<20150729172853.33d44808@noble>	<55B8ADE1.1060708@suse.com> <20150730080247.20f03d23@noble>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1438215986.git.shli@fb.com>
+In-Reply-To: <20150730080247.20f03d23@noble>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
+To: NeilBrown <neilb@suse.com>
+Cc: rgoldwyn@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If cache(log) support is enabled, don't allow resize/reshape in current
-stage. In the future, we can flush all data from cache(log) to raid
-before resize/reshape and then allow resize/reshape.
+Hi Neil,
+>
+> Probably something like that - yes.  Unfortunately your mailer messed
+> that up more that usual make it rather difficult to apply.
+>
+>   
+Sorry, it is just for review.
+> I was wondering if we could make it a run-time dependency though .. a
+> bit like get_cluster_name.  We can still do that later I guess.  I'm
+> not really sure what is best at the moment.
+>
+>   
+It could be, I am changing it and run some test, then the new version patch
+will be send.
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 59f9312..b694d06 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7184,6 +7184,10 @@ static int raid5_resize(struct mddev *mddev, sector_t sectors)
- 	 * worth it.
- 	 */
- 	sector_t newsize;
-+	struct r5conf *conf = mddev->private;
-+
-+	if (conf->log)
-+		return -EINVAL;
- 	sectors &= ~((sector_t)mddev->chunk_sectors - 1);
- 	newsize = raid5_size(mddev, sectors, mddev->raid_disks);
- 	if (mddev->external_size &&
-@@ -7235,6 +7239,8 @@ static int check_reshape(struct mddev *mddev)
- {
- 	struct r5conf *conf = mddev->private;
- 
-+	if (conf->log)
-+		return -EINVAL;
- 	if (mddev->delta_disks == 0 &&
- 	    mddev->new_layout == mddev->layout &&
- 	    mddev->new_chunk_sectors == mddev->chunk_sectors)
--- 
-1.8.5.6
-
+Thanks,
+Guoqing
