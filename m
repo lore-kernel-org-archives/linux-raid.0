@@ -1,41 +1,73 @@
-From: Guoqing Jiang <gqJiang@suse.com>
-Subject: Re: [V2 PATCH] Safeguard against writing to an active device of another
- node
-Date: Fri, 31 Jul 2015 17:04:43 +0800
-Message-ID: <55BB3A2B.8090407@suse.com>
-References: <1438246190-24079-1-git-send-email-gqjiang@suse.com> <55BA097A.3090400@suse.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Thoughts on big SSD arrays?
+Date: Fri, 31 Jul 2015 10:23:26 -0500
+Message-ID: <CAJvUf-AW08pcRkADn4Fgh46_vVAxgofiuB93+pzQYk99hx1nbw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55BA097A.3090400@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Cc: neilb@suse.com, rgoldwyn@suse.de, linux-raid@vger.kernel.org
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Goldwyn Rodrigues wrote:
->
->
-> On 07/30/2015 03:49 AM, Guoqing Jiang wrote:
->> Modifying an exiting device's superblock or creating a new superblock
->> on an existing device needs to be checked because the device could be
->> in use by another node in another array. So, we check this by taking
->> all superblock locks in userspace so that we don't  step onto an active
->> device used by another node and safeguard against accidental edits.
->> After the edit is complete, we release all locks and the lockspace so
->> that it can be used by the kernel space.
->>
->> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
->> ---
->> V2 Changes: use run-time check for dlm library
->
-> This may be better done using a structure of function pointers which
-> is setup and resolved one-time as opposed to performing symbol
-> resolution every time the function is called. You could include
-> get_cluster_name as well in it.
-Good point, I will send another incremental patch for this.
+Every few years I reprise this topic on this mailing list[1], [2].
+Basically I'm just brainstorming what is possible on the DIY front
+versus purchased solutions from a traditional "big iron" storage
+vendor.  Our particular use case is "ultra-high parallel sequential
+read throughput".  Our workload is effectively WORM: we do a small
+daily incremental write, and then the rest of the time it's constant
+re-reading of the data.  Literally 99:1 read:write
+
+I continue to be inspired by the "Dirt Cheap Data Warehouse (DCDW)"
+[3].  SSD are getting bigger and prices are dropping rapidly (2 TB
+SSDs available now for $800).  With our WORM-like workload, I believe
+we can safely get away with consumer drives, as durability shouldn't
+be an issue.
+
+So at this point I'm just putting out a feeler---has anyone out there
+actually built a massive SSD array, using either Linux software raid
+or hardware raid (technically off-topic for this list, though I hope
+the discussion is interesting enough to let it slide).  If so, how big
+of an array (i.e. drives/capacity)?  What was the target versus actual
+performance?  Any particularly challenging issues that came up?
+
+FWIW, I'm thinking of something along the lines of a 24-disk chassis,
+with 2 disks for OS (raid1), 2 disks as hot spares, and the remaining
+20 in raid-6.  The 22 data disks (raid + hot spares) would be 2 TB
+SSDs.
+
+The "problem" with SSDs is that they're just so seductive:
+back-of-the-envelope numbers are wonderful, so it's easy to get
+overly-optimistic about builds that use them.  But as with most
+things, the devil's in the details.
+
+Off the top of my head, potential issues I can think of:
+
+    - Subtle PCIe latency/timing issues of the motherboard
+    - High variation in SSD latency
+    - Software stacks still making assumptions based on spinning
+drives (i.e. not adequately tuned for SSDs)
+    - Non-parallel RAID implementation (i.e. single CPU bottleneck potential)
+    - Potential bandwidth bottlenecks at various stages: SATA/SAS
+interface, SAS expander/backplane, SATA/SAS controller (or HBA), PCIe
+bus, CPU memory bus, network card, etc
+    - I forget the exact number, but the DCDW guy told me with Linux
+he was only able to get about 30% of the predicted throughput in his
+SSD array
+    - Wacky TRIM related issues (seem to be drive dependent)
+
+Not asking any particular question here, just hoping to start an
+open-ended discussion.  Of course I'd love to hear from anyone with
+actual SSD RAID experience!
 
 Thanks,
-Guoqing
+Matt
+
+
+[1] "high throughput storage server?", Feb 14, 2011
+    http://marc.info/?l=linux-raid&m=129772818924753&w=2
+
+[2] "high read throughput storage server, take 2"
+    http://marc.info/?l=linux-raid&m=138359009013781&w=2
+
+[3] "The Dirt Cheap Data Warehouse"
+    http://www.openida.com/the-dirt-cheap-data-warehouse-an-introduction/
