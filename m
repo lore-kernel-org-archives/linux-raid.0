@@ -1,34 +1,47 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: RAID1 degraded
-Date: Tue, 04 Aug 2015 08:56:08 -0700
-Message-ID: <55C0E098.7000404@tigertech.com>
-References: <AA2DC53A-A663-45CE-A8FE-DF6C8C285F37@me.com> <55BFFDD3.5000005@websitemanagers.com.au> <478DB4ED-9FAB-4035-A482-0BC11046B6C2@me.com> <55C0409E.5010004@websitemanagers.com.au> <14A646FC-54F8-4A2E-978D-49800FB534CF@me.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: RE: [PATCH 1/9] MD: add a new disk role to present cache device
+Date: Tue, 4 Aug 2015 18:17:25 +0000
+Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104B1CF0D@PRN-MBX02-4.TheFacebook.com>
+References: <cover.1438215986.git.shli@fb.com>
+ <e871cc4fc266c76f1d4b55225f2c0a6aacb18680.1438215986.git.shli@fb.com>
+ <20150804142824.GA8204@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <14A646FC-54F8-4A2E-978D-49800FB534CF@me.com>
+In-Reply-To: <20150804142824.GA8204@infradead.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@fb.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "neilb@suse.de" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 8/3/15 10:55 PM, Hans Malissa wrote:
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Tuesday, August 4, 2015 7:28 AM
+> To: Shaohua Li
+> Cc: linux-raid@vger.kernel.org; Kernel Team; Song Liu; hch@infradead.org;
+> dan.j.williams@intel.com; neilb@suse.de
+> Subject: Re: [PATCH 1/9] MD: add a new disk role to present cache device
+> 
+> >  		case 0xfffe: /* faulty */
+> >  			set_bit(Faulty, &rdev->flags);
+> >  			break;
+> > +		case 0xfffd: /* cache device */
+> 
+> Any chance to get constants for these magic numbers as an additional prep
+> patch?
+I will add patch for special roles (spare, faulty, cache, etc.). 
 
-> Rebooting the system didn=E2=80=99t solve the problem, /dev/sdc is st=
-ill nowhere to be found.=20
 
-Possible tip: I've seen several cases where rebooting was not enough to
-make a failed drive visible. In some cases, power actually needs to be
-removed from the server for a few seconds (or the drive needs to be
-removed and reinserted if it's hot-swap capable).
+> 
+> Also I don't really think that adding the role without the actual implementation
+> is that useful.
 
-That's because the drive software itself may be hung in a way that only
-gets fixed when power is removed from, then restored to, the drive.
+Currently, we are planning to use 0xfffd for both "cache device" and 
+"journal device" (fix write hole only). Would you prefer to separate these
+two scenarios with two different roles (0xfffd and 0xfffc)?
 
---=20
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Song
+
