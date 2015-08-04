@@ -1,54 +1,50 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: raid5: handle_stripe_dirtying
-Date: Wed, 5 Aug 2015 07:31:43 +1000
-Message-ID: <20150805073143.6e30ad76@noble>
-References: <12EF8D94C6F8734FB2FF37B9FBEDD1735FCD417B@EXCHANGE.collogia.de>
+Subject: ANNOUNCE: mdadm 3.3.4 - A tool for managing md Soft RAID under
+ Linux
+Date: Wed, 5 Aug 2015 08:04:34 +1000
+Message-ID: <20150805080434.0b78fb74@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <12EF8D94C6F8734FB2FF37B9FBEDD1735FCD417B@EXCHANGE.collogia.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Stockhausen <stockhausen@collogia.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 4 Aug 2015 18:32:37 +0000 Markus Stockhausen
-<stockhausen@collogia.de> wrote:
 
-> Hi Neil,
-> 
-> before sending a wrong patch. Could you help me to understand the reason 
-> for an unconditional singular 
 
-Sending a wrong patch is not such a bad thing - it would help me know
-what you are thinking, and so reduce guess-work :-)
+I am somewhat disappointed to have to announce the availability of
+   mdadm version 3.3.4
 
-> 
-> set_bit(STRIPE_HANDLE, &sh->state); 
-> 
-> in function handle_stripe_dirtying of raid5.c? It seems to be there since
-> its introduction somewhere 8 years ago - patch "raid5: refactor handle_stripe5 
-> and handle_stripe6 (v3)". 
-> 
-> If I understand the idea behind the flag right it is required to ensure 
-> handling of the stripe in the next handle_stripe() run. That would only make
-> sense if we set it unconditionally OR depending on some changes to the
-> stripe. The above function does both. See a few lines below in the deep
-> if-blocks.
+It is available at the usual places:
+   http://www.kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://github.com/neilbrown/mdadm
+   git://neil.brown.name/mdadm
+   http://git.neil.brown.name/git/mdadm.git
 
-So I'm guessing that you want to remove one of those?  Probably
-justified.
+In mdadm-3.3 a change was made to how IMSM (Intel Matrix Storage
+Manager) metadata was handled.  Previously an IMSM array would only
+be assembled if it was attached to an IMSM controller.
 
-That duplication goes back to
- Commit: 396a6123577d ("v2.4.5.4 -> v2.4.5.5")
+In 3.3 this was relaxed as there are circumstances where the
+controller is not properly detected.  Unfortunately this has negative
+consequences which have only just come to light.
 
-I think your understanding of STRIPE_HANDLE is pretty spot-on.
+If you have an IMSM RAID1 configured and then disable RAID in the
+BIOS, the metadata will remain on the devices.  If you then install
+some other OS on one device and then install Linux on the other, Linux
+might eventually start noticing the IMSM metadata (depending a bit on whether
+mdadm is included in the initramfs) and might start up the RAID1.  This could
+copy one device over the other, thus trashing one of the installations.
 
-NeilBrown
+Not good.
 
-> 
-> Thanks in advance.
-> 
-> Markus
+So with this release IMSM arrays will only be assembled if attached to
+an IMSM controller, or if "--force" is given to --assemble, or if the
+environment variable IMSM_NO_PLATFORM is set (used primarily for
+testing).
 
+I strongly recommend upgrading to 3.3.4 if you are using 3.3 or later.
+
+NeilBrown 3rd August 2015.
