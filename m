@@ -1,47 +1,106 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH 1/9] MD: add a new disk role to present cache device
-Date: Tue, 4 Aug 2015 18:17:25 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104B1CF0D@PRN-MBX02-4.TheFacebook.com>
-References: <cover.1438215986.git.shli@fb.com>
- <e871cc4fc266c76f1d4b55225f2c0a6aacb18680.1438215986.git.shli@fb.com>
- <20150804142824.GA8204@infradead.org>
+From: Markus Stockhausen <stockhausen@collogia.de>
+Subject: raid5: handle_stripe_dirtying
+Date: Tue, 4 Aug 2015 18:32:37 +0000
+Message-ID: <12EF8D94C6F8734FB2FF37B9FBEDD1735FCD417B@EXCHANGE.collogia.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----=_NextPartTM-000-305810a9-9b8b-4ae9-803d-e2c9cc2170be"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150804142824.GA8204@infradead.org>
-Content-Language: en-US
+Content-Language: de-DE
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@fb.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "neilb@suse.de" <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Tuesday, August 4, 2015 7:28 AM
-> To: Shaohua Li
-> Cc: linux-raid@vger.kernel.org; Kernel Team; Song Liu; hch@infradead.org;
-> dan.j.williams@intel.com; neilb@suse.de
-> Subject: Re: [PATCH 1/9] MD: add a new disk role to present cache device
-> 
-> >  		case 0xfffe: /* faulty */
-> >  			set_bit(Faulty, &rdev->flags);
-> >  			break;
-> > +		case 0xfffd: /* cache device */
-> 
-> Any chance to get constants for these magic numbers as an additional prep
-> patch?
-I will add patch for special roles (spare, faulty, cache, etc.). 
 
+This is a multi-part message in MIME format.
 
-> 
-> Also I don't really think that adding the role without the actual implementation
-> is that useful.
+------=_NextPartTM-000-305810a9-9b8b-4ae9-803d-e2c9cc2170be
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Currently, we are planning to use 0xfffd for both "cache device" and 
-"journal device" (fix write hole only). Would you prefer to separate these
-two scenarios with two different roles (0xfffd and 0xfffc)?
+Hi Neil,=0A=
+=0A=
+before sending a wrong patch. Could you help me to understand the reason =
+=0A=
+for an unconditional singular =0A=
+=0A=
+set_bit(STRIPE_HANDLE, &sh->state); =0A=
+=0A=
+in function handle_stripe_dirtying of raid5.c? It seems to be there since=
+=0A=
+its introduction somewhere 8 years ago - patch "raid5: refactor handle_stri=
+pe5 =0A=
+and handle_stripe6 (v3)". =0A=
+=0A=
+If I understand the idea behind the flag right it is required to ensure =0A=
+handling of the stripe in the next handle_stripe() run. That would only mak=
+e=0A=
+sense if we set it unconditionally OR depending on some changes to the=0A=
+stripe. The above function does both. See a few lines below in the deep=0A=
+if-blocks.=0A=
+=0A=
+Thanks in advance.=0A=
+=0A=
+Markus=0A=
+------=_NextPartTM-000-305810a9-9b8b-4ae9-803d-e2c9cc2170be
+Content-Type: text/plain;
+	name="InterScan_Disclaimer.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="InterScan_Disclaimer.txt"
 
-Thanks,
-Song
+****************************************************************************
+Diese E-Mail enthält vertrauliche und/oder rechtlich geschützte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese E-Mail
+irrtümlich erhalten haben, informieren Sie bitte sofort den Absender und
+vernichten Sie diese Mail. Das unerlaubte Kopieren sowie die unbefugte
+Weitergabe dieser Mail ist nicht gestattet.
 
+Über das Internet versandte E-Mails können unter fremden Namen erstellt oder
+manipuliert werden. Deshalb ist diese als E-Mail verschickte Nachricht keine
+rechtsverbindliche Willenserklärung.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+Vorstand:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+Vorsitzender des Aufsichtsrates:
+Hans Kristian Langva
+
+Registergericht: Amtsgericht Köln
+Registernummer: HRB 52 497
+
+This e-mail may contain confidential and/or privileged information. If you
+are not the intended recipient (or have received this e-mail in error)
+please notify the sender immediately and destroy this e-mail. Any
+unauthorized copying, disclosure or distribution of the material in this
+e-mail is strictly forbidden.
+
+e-mails sent over the internet may have been written under a wrong name or
+been manipulated. That is why this message sent as an e-mail is not a
+legally binding declaration of intention.
+
+Collogia
+Unternehmensberatung AG
+Ubierring 11
+D-50678 Köln
+
+executive board:
+Kadir Akin
+Dr. Michael Höhnerbach
+
+President of the supervisory board:
+Hans Kristian Langva
+
+Registry office: district court Cologne
+Register number: HRB 52 497
+
+****************************************************************************
+
+------=_NextPartTM-000-305810a9-9b8b-4ae9-803d-e2c9cc2170be--
