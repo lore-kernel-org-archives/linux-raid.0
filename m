@@ -1,48 +1,27 @@
-From: Guoqing Jiang <gqJiang@suse.com>
-Subject: Re: [PATCH 1/2] Safeguard against writing to an active device of
- another node
-Date: Tue, 04 Aug 2015 18:23:34 +0800
-Message-ID: <55C092A6.5040202@suse.com>
-References: <1438601519-17919-1-git-send-email-gqjiang@suse.com> <55BF570A.6050403@suse.com> <55C08E5C.5090604@suse.com> <55C0918A.7010808@websitemanagers.com.au>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/9] MD: add a new disk role to present cache device
+Date: Tue, 4 Aug 2015 07:28:24 -0700
+Message-ID: <20150804142824.GA8204@infradead.org>
+References: <cover.1438215986.git.shli@fb.com>
+ <e871cc4fc266c76f1d4b55225f2c0a6aacb18680.1438215986.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55C0918A.7010808@websitemanagers.com.au>
+Content-Disposition: inline
+In-Reply-To: <e871cc4fc266c76f1d4b55225f2c0a6aacb18680.1438215986.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>, neilb@suse.com, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Adam Goryachev wrote:
-> On 04/08/15 20:05, Guoqing Jiang wrote:
->   
->> Hi Goldwyn,
->>
->> Thanks for review.
->>
->> Goldwyn Rodrigues wrote:
->>     
->>>> +    set_dlm_hookers(); /* get dlm funcs from libdlm_lt.so.3 */
->>>> +
->>>>         
->>> Universal Comment: Let call it set_dlm_hooks as opposed to hookers.
->>>
->>>       
->> Not sure I understood correctly, the second patch used set_hookers to
->> call set_dlm_hookers.
->>     
->
-> I think Neil meant to ask you to please do a global s/hookers/hooks/
-> because hooker has a particular meaning in english which is different to
-> what you intended.
-> http://www.urbandictionary.com/define.php?term=hooker
->
-> Hope that helps.
->   
-Got it, thanks for the website, will change it.
+>  		case 0xfffe: /* faulty */
+>  			set_bit(Faulty, &rdev->flags);
+>  			break;
+> +		case 0xfffd: /* cache device */
 
-Thanks,
-Guoqing
+Any chance to get constants for these magic numbers as an additional
+prep patch?
 
+Also I don't really think that adding the role without the actual
+implementation is that useful.
 
