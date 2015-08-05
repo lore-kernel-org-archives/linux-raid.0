@@ -1,108 +1,80 @@
-From: George Rapp <george.rapp@gmail.com>
-Subject: Re: RAID 6 reshape/grow interrupted
-Date: Wed, 5 Aug 2015 11:59:16 -0400
-Message-ID: <CAF-KpgZKHG15y+4xPtd4rO3PwAgd8mBySGQTKFUQgAkuGxRgfg@mail.gmail.com>
-References: <CAF-Kpga0g_y_n_wJFWX84j0Aci_FjXXwNt1VRfMQ1wpcFpBZfg@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: read errors aren't corrected
+Date: Wed, 5 Aug 2015 19:43:46 +0200 (CEST)
+Message-ID: <alpine.DEB.2.02.1508032020560.11810@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-Kpga0g_y_n_wJFWX84j0Aci_FjXXwNt1VRfMQ1wpcFpBZfg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Aug 5, 2015 at 12:17 AM, George Rapp <george.rapp@gmail.com> wrote:
-> Hello -
->
-> Fedora 22 user (kernel 4.0.4-303.fc22.i686+PAE) using mdadm - v3.3.2 -
-> 21st August 2014. (Of course, I don't have a backup ... 8^)
->
-> I had a healthy RAID 6 array, and was trying to grow it from 5
-> partitions of size 1.8 TB to 6 partitions.
->
-> # mdadm --add /dev/md6 /dev/sdi1
->
-> # mdadm --grow --raid-devices=6 --backup-file=/home/gwr/c/grow_md6.bak /dev/md6
->
-> The second command threw a bunch of SELinux errors (ah, thank you,
-> SELinux, for always being there to bite me in the ass when I don't
-> expect it ... 8^) about access to /home/gwr/c/grow_md6.bak. The
-> reshape operation sat for many minutes at 0% progress, according to
-> /proc/mdstat. However, the file /home/gwr/c/grow_md6.bak *was*
-> created; it's about 6MB.
 
-Additional data point: the backup file is all zeros, according to an
-examination with 'od -v'.
+Hi,
 
-> In an attempt to kick off the reshape operation, I issued:
->
-> # setenforce 0
->
-> to turn off SELinux enforcement. That didn't help - the reshape sat
-> still, showing no progress.
->
-> Then I issued:
->
-> # mdadm --stop /dev/md6
->
-> which of course interrupted the reshape operation. It also threw up a
-> bunch of error messages, which you can find in the dmesg.txt file
-> found at https://app.box.com/s/3pksam3c7n79anpnzvsrwekzqwtsvlf6 --
-> look for the words "cut here". It looks like a segfault or other
-> runtime error:
->
-> [   796.84193] WARNING: CPU: 0 PID: 1444 at mm/backing-dev.c:372
-> bdi_unregister+0x38/0x50()
->
-> I then tried to restart the grow operation, without SELinux' help, and
-> got the error message in the subject.
->
-> First, I goofed, and tried the assemble without the backup file:
->
-> # mdadm --assemble /dev/md6 /dev/sdc4 /dev/sdd4 /dev/sdg4 /dev/sdh1 /dev/sdj1
->
-> [ 1966.030411] md: md6 stopped.
->
-> mdadm: Failed to restore critical section for reshape, sorry.
->
-> # mdadm --assemble /dev/md6 /dev/sdc4 /dev/sdd4 /dev/sdg4 /dev/sdh1
-> /dev/sdj1 --backup-file=/home/gwr/c/grow_md6.bak
->
-> [ 2242.492370] md: md6 stopped.
->
-> mdadm: Failed to restore critical section for reshape, sorry.
->
-> # mdadm --assemble /dev/md6 /dev/sdc4 /dev/sdd4 /dev/sdg4 /dev/sdh1
-> /dev/sdj1 /dev/sdi1 --backup-file=/home/gwr/c/grow_md6.bak
->
-> [ 2403.741995] md: md6 stopped.
->
-> mdadm: Failed to restore critical section for reshape, sorry.
->
-> I ran an mdadm --examine on all my RAID partitions; the file is at
-> https://app.box.com/s/9x2n2wc42i1wqzd1ayrt8ta6cyldrr6i. Of note in
-> that file: the "Reshape pos'n" is 0 on all six drives. I take that to
-> mean that the reshape operation never really got started.
->
-> Is my next step to add the --invalid-backup switch? If not, what
-> recommendations might you have to fix this?
+again, I have encountered drive with pending sectors, where a echo "check" 
+would complete, errors were reported, but sectors were not corrected:
 
-I tried the --invalid-backup switch this morning without success:
+Linux 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1 (2015-05-24) x86_64 GNU/Linux
 
-md: md6 stopped.
-md: bind<sdc4>
-md: bind<sdg4>
-md: bind<sdh1>
-md: bind<sdj1>
-md: bind<sdi1>
-md: bind<sdd4>
-md/raid:md6: reshape_position too early for auto-recovery - aborting.
-md: pers->run() failed ...
-mdadm: failed to RUN_ARRAY /dev/md6: Invalid argument
-md: md6 stopped.
+mdadm - v3.3.2 - 21st August 2014
 
-Any suggestions?
+[4915870.008999] md: data-check of RAID array md0
+[4915870.009006] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[4915870.009010] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+[4915870.009021] md: using 128k window, over a total of 1953512960k.
+[4944694.439086] mpt2sas0: log_info(0x31080000): originator(PL), code(0x08), sub_code(0x0000)
+(repeat of above line approx 20 times)
+[4944694.439167] sd 0:0:11:0: [sdl] Unhandled sense code
+[4944694.439173] sd 0:0:11:0: [sdl]
+[4944694.439178] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[4944694.439183] sd 0:0:11:0: [sdl]
+[4944694.439188] Sense Key : Medium Error [current]
+[4944694.439195] Info fld=0xddc6ccf0
+[4944694.439202] sd 0:0:11:0: [sdl]
+[4944694.439207] Add. Sense: Unrecovered read error
+[4944694.439212] sd 0:0:11:0: [sdl] CDB:
+[4944694.439216] Read(10): 28 00 dd c6 cb 28 00 04 00 00
+[4944694.439231] end_request: critical medium error, dev sdl, sector 3720792872
+[4946407.483424] md: md0: data-check done.
+
+I ran the check 3 times, but still the pending sectors wouldn't go away.
+
+Some of the times it would say it corrected errors:
+
+[4828415.776842] sd 0:0:11:0: [sdl] Unhandled sense code
+[4828415.776848] sd 0:0:11:0: [sdl]
+[4828415.776852] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[4828415.776860] sd 0:0:11:0: [sdl]
+[4828415.776864] Sense Key : Medium Error [current]
+[4828415.776871] Info fld=0xddc44018
+[4828415.776876] sd 0:0:11:0: [sdl]
+[4828415.776881] Add. Sense: Unrecovered read error
+[4828415.776886] sd 0:0:11:0: [sdl] CDB:
+[4828415.776890] Read(10): 28 00 dd c4 40 00 00 00 80 00
+[4828415.776905] end_request: critical medium error, dev sdl, sector 3720626176
+[4828416.853170] raid5_end_read_request: 22 callbacks suppressed
+[4828416.853189] md/raid:md0: read error corrected (8 sectors at 3720626176 on sdl)
+[4828416.853198] md/raid:md0: read error corrected (8 sectors at 3720626184 on sdl)
+[4828416.853203] md/raid:md0: read error corrected (8 sectors at 3720626192 on sdl)
+[4828416.853208] md/raid:md0: read error corrected (8 sectors at 3720626200 on sdl)
+[4828416.853213] md/raid:md0: read error corrected (8 sectors at 3720626208 on sdl)
+[4828416.853217] md/raid:md0: read error corrected (8 sectors at 3720626216 on sdl)
+[4828416.853223] md/raid:md0: read error corrected (8 sectors at 3720626224 on sdl)
+[4828416.853228] md/raid:md0: read error corrected (8 sectors at 3720626232 on sdl)
+[4828416.853236] md/raid:md0: read error corrected (8 sectors at 3720626240 on sdl)
+[4828416.853242] md/raid:md0: read error corrected (8 sectors at 3720626248 on sdl)
+
+I then gave up, proceeded to --replace the drive, take it out of the 
+md-array completely, do a destructive badblocks write test to it, it wrote 
+to the entire drive, and that made pending sectors go to 0.
+
+What's weird is that there aren't any mentions of UNC in "smartctl -a" 
+error log. The drive is a Samsung HD204UI with 1AQ10001 firmware if that 
+makes any difference.
+
+At no time was the drive kicked out of the array during any of these 
+tests. I run with 180 seconds timeouts in the kernel.
+
 -- 
-George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
-LinkedIn profile: https://www.linkedin.com/in/georgerapp
-Phone: +1 740 936 RAPP (740 936 7277)
+Mikael Abrahamsson    email: swmike@swm.pp.se
