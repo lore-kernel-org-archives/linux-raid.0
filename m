@@ -1,54 +1,55 @@
 From: NeilBrown <neilb@suse.com>
-Subject: [GIT PULL REQUEST] md updates for 4.2-rc
-Date: Wed, 5 Aug 2015 08:10:22 +1000
-Message-ID: <20150805081022.0ee9dac5@noble>
+Subject: Re: [PATCH 1/9] MD: add a new disk role to present cache device
+Date: Wed, 5 Aug 2015 10:25:20 +1000
+Message-ID: <20150805102520.78222c47@noble>
+References: <cover.1438215986.git.shli@fb.com>
+	<e871cc4fc266c76f1d4b55225f2c0a6aacb18680.1438215986.git.shli@fb.com>
+	<20150804142824.GA8204@infradead.org>
+	<C709E4D363AAB64590BFAC54D4C478AA0104B1CF0D@PRN-MBX02-4.TheFacebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <C709E4D363AAB64590BFAC54D4C478AA0104B1CF0D@PRN-MBX02-4.TheFacebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Tomas Papan <tomas.papan@gmail.com>, Benjamin Randazzo <benjamin@randazzo.fr>, Josh Boyer <jwboyer@fedoraproject.org>, Alexander Lyakas <alex.bolshoy@gmail.com>
+To: Song Liu <songliubraving@fb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Shaohua Li <shli@fb.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
+On Tue, 4 Aug 2015 18:17:25 +0000 Song Liu <songliubraving@fb.com>
+wrote:
 
-One of these patches is for a CVE:  CVE-2015-5697
+> > -----Original Message-----
+> > From: Christoph Hellwig [mailto:hch@infradead.org]
+> > Sent: Tuesday, August 4, 2015 7:28 AM
+> > To: Shaohua Li
+> > Cc: linux-raid@vger.kernel.org; Kernel Team; Song Liu; hch@infradead.org;
+> > dan.j.williams@intel.com; neilb@suse.de
+> > Subject: Re: [PATCH 1/9] MD: add a new disk role to present cache device
+> > 
+> > >  		case 0xfffe: /* faulty */
+> > >  			set_bit(Faulty, &rdev->flags);
+> > >  			break;
+> > > +		case 0xfffd: /* cache device */
+> > 
+> > Any chance to get constants for these magic numbers as an additional prep
+> > patch?
+> I will add patch for special roles (spare, faulty, cache, etc.). 
+> 
+> 
+> > 
+> > Also I don't really think that adding the role without the actual implementation
+> > is that useful.
+> 
+> Currently, we are planning to use 0xfffd for both "cache device" and 
+> "journal device" (fix write hole only). Would you prefer to separate these
+> two scenarios with two different roles (0xfffd and 0xfffc)?
 
-I'm not convinced it is serious (data leak from CAP_SYS_ADMIN ioctl)
-but as people seem to want to back-port it, I've included a minimal
-version here.  The remainder of that patch from Benjamin is
-code-cleanup and will arrive in the 4.3 merge window.
+No, definitely not.  It is a log device.  whether it is being used just
+to close the write hole or more aggressively as a write-ahead cache to
+reduce latency doesn't change the nature of the data on the device.
+So just one new device type: "log" or "journal" or something describing
+what is on the device.
 
+Thanks,
 NeilBrown
-
-The following changes since commit 74d33293e467df61de1b1d8b2fbe29e550dec33b:
-
-  Linux 4.2-rc5 (2015-08-02 18:34:55 -0700)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ tags/md/4.2-rc5-fixes
-
-for you to fetch changes up to 49895bcc7e566ba455eb2996607d6fbd3447ce16:
-
-  md/raid5: don't let shrink_slab shrink too far. (2015-08-03 17:10:56
-  +1000)
-
-----------------------------------------------------------------
-Three more fixes for md in 4.2
-
-Mostly corner-case stuff.
-
-----------------------------------------------------------------
-Benjamin Randazzo (1):
-      md: use kzalloc() when bitmap is disabled
-
-NeilBrown (2):
-      md/raid1: extend spinlock to protect raid1_end_read_request
-                against inconsistencies
-      md/raid5: don't let shrink_slab shrink too far.
-
- drivers/md/md.c    |  2 +-
- drivers/md/raid1.c | 10 ++++++----
- drivers/md/raid5.c |  5 +++--
- 3 files changed, 10 insertions(+), 7 deletions(-)
