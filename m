@@ -1,213 +1,199 @@
 From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 3/9] raid5: add basic stripe log
-Date: Wed, 5 Aug 2015 14:19:20 -0700
-Message-ID: <20150805211919.GA3102271@devbig257.prn2.facebook.com>
+Subject: Re: [PATCH 4/9] raid5: log reclaim support
+Date: Wed, 5 Aug 2015 14:34:21 -0700
+Message-ID: <20150805213412.GA3167799@devbig257.prn2.facebook.com>
 References: <cover.1438215986.git.shli@fb.com>
- <29c5d697b86094fb7141b23875eb4da6abc6022c.1438215986.git.shli@fb.com>
- <20150805130736.7ba8a6d5@noble>
+ <41a6d2e74494506fcd6ffd68a5884d38dc0bfa8e.1438215986.git.shli@fb.com>
+ <20150805134330.3f4269e4@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150805130736.7ba8a6d5@noble>
+In-Reply-To: <20150805134330.3f4269e4@noble>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-On Wed, Aug 05, 2015 at 01:07:36PM +1000, NeilBrown wrote:
-> On Wed, 29 Jul 2015 17:38:43 -0700 Shaohua Li <shli@fb.com> wrote:
+On Wed, Aug 05, 2015 at 01:43:30PM +1000, NeilBrown wrote:
+> On Wed, 29 Jul 2015 17:38:44 -0700 Shaohua Li <shli@fb.com> wrote:
 > 
-> > This introduces a simple log for raid5. Data/parity writting to raid
-> > array first writes to the log, then write to raid array disks. If crash
-> > happens, we can recovery data from the log. This can speed up raid
-> > resync and fix write hole issue.
+> > This is the reclaim support for raid5 log. A stripe write will have
+> > following steps:
 > > 
-> > The log structure is pretty simple. Data/meta data is stored in block
-> > unit, which is 4k generally. It has only one type of meta data block.
-> > The meta data block can track 3 types of data, stripe data, stripe
-> > parity and flush block. MD superblock will point to the last valid meta
-> > data block. Each meta data block has checksum/seq number, so recovery
-> > can scan the log correctly. We store a checksum of stripe data/parity to
-> > the metadata block, so meta data and stripe data/parity can be written
-> > to log disk together. otherwise, meta data write must wait till stripe
-> > data/parity is finished.
+> > 1. reconstruct the stripe, read data/calculate parity. ops_run_io
+> > prepares to write data/parity to raid disks
+> > 2. hijack ops_run_io. stripe data/parity is appending to log disk
+> > 3. flush log disk cache
+> > 4. ops_run_io run again and do normal operation. stripe data/parity is
+> > written in raid array disks. raid core can return io to upper layer.
+> > 5. flush cache of all raid array disks
+> > 6. update super block
+> > 7. log disk space used by the stripe can be reused
 > > 
-> > For stripe data, meta data block will record stripe data sector and
-> > size. Currently the size is always 4k. This meta data record can be made
-> > simpler if we just fix write hole (eg, we can record data of a stripe's
-> > different disks together), but this format can be extended to support
-> > caching in the future, which must record data address/size.
+> > In practice, several stripes consist of an io_unit and we will batch
+> > several io_unit in different steps, but the whole process doesn't
+> > change.
 > > 
-> > For stripe parity, meta data block will record stripe sector. It's size
-> > should be 4k (for raid5) or 8k (for raid6). We always store p parity
-> > first. This format should work for caching too.
-> 
-> It feels a bit odd have a 8K parity block for RAID6 as it is really two
-> blocks: a parity block and a Q-syndrome block.  What would you think of
-> introducing another block type for Q?  So there are Data blocks, Parity
-> blocks, and Q blocks ???
-> 
-> Not a big issue, but I thought I would mention it.
-
-I'd prefer not adding the complexity, it's just a naming.
-
+> > It's possible io return just after data/parity hit log disk, but then
+> > read IO will need read from log disk. For simplicity, IO return happens
+> > at step 4, where read IO can directly read from raid disks.
 > > 
-> > flush block indicates a stripe is in raid array disks. Fixing write hole
-> > doesn't need this type of meta data, it's for caching extention.
-> > 
-> > We should be careful about deadlock. Appending stripe data/parity to log
-> > is done in raid5d. The append need log space, which can trigger log
-> > reclaim, which might wait for raid5d to run (to flush data from log to
-> > raid array disks). Here we always do the log write in a separate thread.
+> > Currently reclaim run every minute or out of space. Reclaim is just to
+> > free log disk spaces, it doesn't impact data consistency.
 > 
-> I'm not convinced about the need for a separate thread.  As
-> raid5d/handle_stripe works as a state machine, and as all IO is async,
-> we should at most need an extra state, not an extra thread.
+> Having arbitrary times lines "every minute" is a warning sign.
+> "As soon as possible" and "Just it time" can both make sense easily.
+> "every minute" needs more justification.
 > 
-> I think a key issue is that you don't call r5l_get_reserve() until you
-> are about to submit writes to the log.
-> If instead you reserved the space in r5l_write_stripe and delay the
-> stripe if space is not available, there there would be no deadlock.
-> Then when available space crosses some threshold, re-activate those
-> delayed stripes.
+> I'll probably say more when I find the code.
 
-ok, that way works too. As I said before, I really hate making the
-log/cache stuff tie tightly together with stripe cache state machine if
-possible (eg, adding new state/list/stripe analysis etc). I'd rather to
-keep current logic if you don't strongly object.
+The idea is if we reclaim periodically, recovery could scan less log
+space. It's insane recovery scans a 1T disk. As I said this is just to
+free disk spaces. It's not a signal we will lose data in minute
+interval. I can change the relaim to run every 1G reclaimable space for
+example.
 
-> > +#include <linux/kernel.h>
-> > +#include <linux/wait.h>
-> > +#include <linux/blkdev.h>
-> > +#include <linux/slab.h>
-> > +#include <linux/raid/md_p.h>
-> > +#include <linux/crc32.h>
-> > +#include <linux/random.h>
-> > +#include "md.h"
-> > +#include "raid5.h"
+> > +	r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
+> > +			IO_UNIT_IO_END);
+> > +	r5l_move_io_unit_list(&log->io_end_ios, &log->stripe_end_ios,
+> > +			IO_UNIT_STRIPE_END);
+> > +	r5l_compress_stripe_end_list(log);
+> > +	run_stripe = !list_empty(&log->io_end_ios);
+> > +	spin_unlock(&log->io_list_lock);
 > > +
-> > +typedef u64 r5blk_t; /* log blocks, 512B - 4k */
-> 
-> I would much rather use sector_t throughout and keep all addresses as
-> sector addresses.  Much less room for confusion that way.
-> 
-> If we wanted to pack lots of addresses into limited space then using
-> block addresses might be justified (filesystems do that), but I don't
-> think it is called for here at all.
-
-The original idea is metadata block size could be changed between 512B
-to 4k. Sometimes the metadata block can't have enough data if we don't
-want to delay IO. When the block size isn't a sector, the type helps me
-avoid coding error (eg, remind it's a block instead of a sector). Do you
-prefer metadata block size one sector?
-
-> > +static void r5l_put_reserve(struct r5l_log *log, unsigned int reserved_blocks)
-> > +{
-> > +	BUG_ON(!mutex_is_locked(&log->io_mutex));
-> > +
-> > +	log->reserved_blocks -= reserved_blocks;
-> > +	if (r5l_free_space(log) > 0)
-> > +		wake_up(&log->space_waitq);
-> > +}
-> > +
-> > +static struct r5l_io_unit *r5l_alloc_io_unit(struct r5l_log *log)
-> > +{
-> > +	struct r5l_io_unit *io;
-> > +	gfp_t gfp = GFP_NOIO | __GFP_NOFAIL;
-> > +
-> > +	io = kmem_cache_zalloc(log->io_kc, gfp);
-> > +	if (!io)
-> > +		return NULL;
-> > +	io->log = log;
-> > +	io->meta_page = alloc_page(gfp | __GFP_ZERO);
-> > +	if (!io->meta_page) {
-> > +		kmem_cache_free(log->io_kc, io);
-> > +		return NULL;
-> > +	}
-> 
-> This can return NULL, but the one place where you call it you do not
-> check for NULL.
-> Maybe a mempool would be appropriate, maybe something else - I haven't
-> examine the issue closely.
-
-I use mempool for the cache patch, but eventually choose to use NOFAIL
-allocation here, because don't know what the minimal mempool element
-size should be. incorrect mempool element size could introduce trouble,
-eg, the allocation expects we free an element, which might not possible
-without increasing complexity in reclaim. Maybe I should just ignore the
-NULL, it's a NOFAIL allocation. The log code isn't ready with allocation
-failure.
- 
-> > +static int r5l_recovery_log(struct r5l_log *log)
-> > +{
-> > +	/* fake recovery */
-> > +	log->seq = log->last_cp_seq + 1;
-> > +	log->log_start = r5l_ring_add(log, log->last_checkpoint, 1);
-> > +	return 0;
-> > +}
-> > +
-> > +static void r5l_write_super(struct r5l_log *log, sector_t cp)
-> > +{
-> > +	log->rdev->recovery_offset = cp;
-> > +	md_update_sb(log->mddev, 1);
-> > +}
-> 
-> This is only called from run() when the log is first initialised.  At
-> this point there is nothing useful in the log, so recording it's
-> location is pointless.  At most you  could set the MD_SB_DIRTY flag (or
-> whatever it is).
-> So it really doesn't need to be a separate function.
-
-We must write super here. If we start append data to the log and super
-doesn't point to correct postion (reclaim might not run once yet),
-recovery doesn't know where to find the log.
-
-> > +void r5l_exit_log(struct r5l_log *log)
-> > +{
-> > +	md_unregister_thread(&log->log_thread);
-> > +
-> > +	kmem_cache_destroy(log->io_kc);
-> > +	kfree(log);
-> > +}
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 59e44e9..9608a44 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -899,6 +899,8 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
-> >  
-> >  	might_sleep();
-> >  
-> > +	if (!r5l_write_stripe(conf->log, sh))
+> > +	if (!run_stripe)
 > > +		return;
-> 
-> If no log is configured, r5l_write_stripe will return -EAGAIN, and so
-> ops_run_io will never submit any IO....
-
-I think you read it wrong, we don't return in that case.
-
-> > diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-> > index 02c3bf8..a8daf39 100644
-> > --- a/drivers/md/raid5.h
-> > +++ b/drivers/md/raid5.h
-> > @@ -223,6 +223,9 @@ struct stripe_head {
-> >  	struct stripe_head	*batch_head; /* protected by stripe lock */
-> >  	spinlock_t		batch_lock; /* only header's lock is useful */
-> >  	struct list_head	batch_list; /* protected by head's batch lock*/
 > > +
-> > +	struct r5l_io_unit	*log_io;
-> > +	struct list_head	log_list;
-> >  	/**
-> >  	 * struct stripe_operations
-> >  	 * @target - STRIPE_OP_COMPUTE_BLK target
+> > +	blkdev_issue_flush(r5l_bdev(log), GFP_NOIO, NULL);
+> > +
+> > +	spin_lock(&log->io_list_lock);
+> > +	list_for_each_entry(io, &log->io_end_ios, log_sibling) {
+> > +		if (io->state >= IO_UNIT_STRIPE_START)
+> > +			continue;
+> > +		r5l_set_io_unit_state(io, IO_UNIT_STRIPE_START);
+> > +
+> > +		while (!list_empty(&io->stripe_list)) {
+> > +			sh = list_first_entry(&io->stripe_list,
+> > +				struct stripe_head, log_list);
+> > +			list_del_init(&sh->log_list);
+> > +			set_bit(STRIPE_HANDLE, &sh->state);
+> > +			release_stripe(sh);
 > 
-> I wonder if we really need yet another 'list_head' in 'stripe_head'.
-> I guess one more is no great cost.
+> This code makes me a bit nervous.  handle_stripe() can potentially be
+> called on any stripe at any time.
+> Here you are scheduling a call the handle_stripe() without obviously
+> changing the state of the stripe.  So whatever is going to happen now
+> could potentially have happened before... is that safe?
 
-I'm pretty sure using the lru list of stripe_head is broken, that's why
-I added the new list. 
+I'm not fully sure, but it's ok in my test.
+ 
+> > +	 * move proper io_unit to reclaim list. We should not change the order.
+> > +	 * reclaimable/unreclaimable io_unit can be mixed in the list, we
+> > +	 * shouldn't reuse space of an unreclaimable io_unit
+> > +	 * */
+> > +	while (1) {
+> > +		r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
+> > +			IO_UNIT_IO_END);
+> > +		r5l_move_io_unit_list(&log->io_end_ios, &log->stripe_end_ios,
+> > +				IO_UNIT_STRIPE_END);
+> > +		while (!list_empty(&log->stripe_end_ios)) {
+> > +			io = list_first_entry(&log->stripe_end_ios,
+> > +				struct r5l_io_unit, log_sibling);
+> > +			list_move_tail(&io->log_sibling, &list);
+> > +			free += (io->log_end - io->log_start +
+> > +				log->total_blocks) % log->total_blocks;
+> > +		}
+> > +
+> > +		if (free >= reclaim_target || (list_empty(&log->running_ios) &&
+> > +		    list_empty(&log->io_end_ios) &&
+> > +		    list_empty(&log->stripe_end_ios)))
+> > +			break;
+> > +
+> > +		if (!list_empty(&log->io_end_ios)) {
+> > +			io = list_first_entry(&log->io_end_ios,
+> > +				struct r5l_io_unit, log_sibling);
+> > +			spin_unlock(&log->io_list_lock);
+> > +			/* nobody else can delete the io, we are safe */
+> > +			r5l_kick_io_unit(log, io);
+> > +			spin_lock(&log->io_list_lock);
+> > +			continue;
+> > +		}
+> > +
+> > +		if (!list_empty(&log->running_ios)) {
+> > +			io = list_first_entry(&log->running_ios,
+> > +				struct r5l_io_unit, log_sibling);
+> > +			spin_unlock(&log->io_list_lock);
+> > +			/* nobody else can delete the io, we are safe */
+> > +			r5l_kick_io_unit(log, io);
+> > +			spin_lock(&log->io_list_lock);
+> > +			continue;
+> > +		}
+> > +	}
+> > +	spin_unlock(&log->io_list_lock);
+> 
+> Well, here we are with the important parts of the reclaim code...
+> 
+> The main result of the above section is to possibly call
+> r5l_flush_stripe_to_raid() a few times, and to wait until 'list'
+> contains enough io_units to satisfy the requirement.
+> 
+> As raid5d already calls r5l_flush_stripe_to_raid - which it really must
+> to make sure that writes complete quickly - this really comes down to
+> some book keeping and some waiting.
+> Book keeping can be done as changes happen, and waiting is best not
+> done at all.
+> 
+> To be more specific: when an io_unit transitions to IO_UNIT_STRIPE_END
+> it can immediately be removed from the list and if it was the first
+> io_unit on the list, then the log_start can immediately be updated.
 
-I'll fix other issues or add more comments.
+Ok, the original idea is to avoid holding the io_list_lock for every IO
+end/stripe end. Maybe over-designed, I'll fix this.
+
+> > +
+> > +	if (list_empty(&list))
+> > +		return;
+> > +
+> > +	r5l_flush_all_disks(log);
+> > +
+> > +	/* super always point to last valid meta */
+> > +	last = list_last_entry(&list, struct r5l_io_unit, log_sibling);
+> > +	r5l_write_super(log, r5l_block_to_sector(log, last->log_start));
+> 
+> This bit flushes all the disks and then updates the metadata and writes
+> it.
+> As md_super_write already uses WRITE_FLUSH_FUA I don't think the extra
+> flush is needed.
+great.
+
+> I really think you should just update ->recovery_offset and set
+> MD_CHANGE_DEVS (or similar) and let the update happen.
+
+I think we should write super here. The reclaimed space might be reused
+immediately, we don't want to confuse recovery.
+
+> > +
+> > +	mutex_lock(&log->io_mutex);
+> > +	log->last_checkpoint = last->log_start;
+> > +	log->last_cp_seq = last->seq;
+> > +	mutex_unlock(&log->io_mutex);
+> > +	wake_up(&log->space_waitq);
+> > +
+> > +	while (!list_empty(&list)) {
+> > +		io = list_first_entry(&list, struct r5l_io_unit, log_sibling);
+> > +		list_del(&io->log_sibling);
+> > +		r5l_free_io_unit(log, io);
+> > +	}
+> > +}
+> 
+> So I really think all of this can be done as-it-happens (the
+> book-keeping) or asynchronously.  There is no need to push something
+> every minute.
+
+Because we need flush raid disks cache, to avoid the overhead, we do
+batch operation. Once I changed the reclaim to run every specific
+reclaimable space, this should be ok.
 
 Thanks,
 Shaohua
