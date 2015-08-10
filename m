@@ -1,68 +1,192 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: Re-add not selecting drive for correct slot?
-Date: Mon, 10 Aug 2015 12:42:35 -0600
-Message-ID: <65422527.2R17mF7xfV@balsa>
-References: <1817382.9YhZ7ff5Yl@balsa> <2248170.b8F2naoiGF@balsa> <55C8E92F.5020700@youngman.org.uk>
-Reply-To: thomas@fjellstrom.ca
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55C8E92F.5020700@youngman.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-raid@vger.kernel.org
+From: Sasha Levin <sasha.levin@oracle.com>
+Subject: [PATCH] block: don't access bio->bi_error after bio_put()
+Date: Mon, 10 Aug 2015 19:05:18 -0400
+Message-ID: <1439247918-12599-1-git-send-email-sasha.levin@oracle.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hch@lst.de, axboe@kernel.dk
+Cc: martin.petersen@oracle.com, neilb@suse.de, bo.li.liu@oracle.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Sasha Levin <sasha.levin@oracle.com>
 List-Id: linux-raid.ids
 
-On Mon 10 Aug 2015 07:10:55 PM Wols Lists wrote:
-> On 10/08/15 18:44, Thomas Fjellstrom wrote:
-> > On Mon 10 Aug 2015 11:35:13 AM Mikael Abrahamsson wrote:
-> >> On Sat, 8 Aug 2015, Thomas Fjellstrom wrote:
-> >>> I did try that :( It fails to assemble because it only sees sdc as a
-> >>> spare.
-> >>> Maybe because I did things with the old mdadm first, and did a --remove?
-> >>> That seems to have wiped out the "slot" information (it's -1) so the
-> >>> assemble force magic can't figure things out? Just a guess on my part.
-> >> 
-> >> Unless someone else has a better idea, I'd say you're right. If you would
-> >> have unplugged the failed drive (so it disappeared completely), it could
-> >> probably have been re-added. So unless you have a copy of the old
-> >> superblock, your only way to proceed now is to use --create
-> >> --assume-clean
-> >> and get all the parameters right (order, offsets etc). There are lots of
-> >> examples in the mailing list archives of people trying this and some
-> >> actually suceeding.
-> > 
-> > I think the only thing that would stop that from working is that there is
-> > data in the bitmap. So if a assume clean is done, it might ignore that
-> > and cause some extra corruption?
-> 
-> Which is why you use loopback devices. You'll need to look back at
-> previous posts to see how to do it, but you put a pseudo-layer over the
-> real disks (which never actually get written to), and you can then fsck
-> your array. If that comes up clean, you know you got the assemble
-> parameters right, and you can shut down the pseudo-array and assemble
-> the real array.
-> 
-> > It'd be interesting to figure out if i can set that slot number manually
-> > or
-> > with a tool. That might be a smarter/safer way of doing it.
-> 
-> Better the pseudo way (which will definitely allow you to recover IF the
-> disk isn't corrupted) than trying your own stuff which might write to
-> the disk and make life harder/impossible to recover.
+Commit 4246a0b6 ("block: add a bi_error field to struct bio") has added a few
+dereferences of 'bio' after a call to bio_put(). This causes use-after-frees
+such as:
 
-Yeah, I did that once previously for a recovery. It was quite handy. I backed 
-everything up to a different machine. And re-created the array.
+[521120.719695] BUG: KASan: use after free in dio_bio_complete+0x2b3/0x320 at addr ffff880f36b38714
+[521120.720638] Read of size 4 by task mount.ocfs2/9644
+[521120.721212] =============================================================================
+[521120.722056] BUG kmalloc-256 (Not tainted): kasan: bad access detected
+[521120.722968] -----------------------------------------------------------------------------
+[521120.722968]
+[521120.723915] Disabling lock debugging due to kernel taint
+[521120.724539] INFO: Slab 0xffffea003cdace00 objects=32 used=25 fp=0xffff880f36b38600 flags=0x46fffff80004080
+[521120.726037] INFO: Object 0xffff880f36b38700 @offset=1792 fp=0xffff880f36b38800
+[521120.726037]
+[521120.726974] Bytes b4 ffff880f36b386f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.727898] Object ffff880f36b38700: 00 88 b3 36 0f 88 ff ff 00 00 d8 de 0b 88 ff ff  ...6............
+[521120.728822] Object ffff880f36b38710: 02 00 00 f0 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.729705] Object ffff880f36b38720: 01 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00  ................
+[521120.730623] Object ffff880f36b38730: 00 00 00 00 00 00 00 00 01 00 00 00 00 02 00 00  ................
+[521120.731621] Object ffff880f36b38740: 00 02 00 00 01 00 00 00 d0 f7 87 ad ff ff ff ff  ................
+[521120.732776] Object ffff880f36b38750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.733640] Object ffff880f36b38760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.734508] Object ffff880f36b38770: 01 00 03 00 01 00 00 00 88 87 b3 36 0f 88 ff ff  ...........6....
+[521120.735385] Object ffff880f36b38780: 00 73 22 ad 02 88 ff ff 40 13 e0 3c 00 ea ff ff  .s".....@..<....
+[521120.736667] Object ffff880f36b38790: 00 02 00 00 00 04 00 00 00 00 00 00 00 00 00 00  ................
+[521120.737596] Object ffff880f36b387a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.738524] Object ffff880f36b387b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.739388] Object ffff880f36b387c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.740277] Object ffff880f36b387d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.741187] Object ffff880f36b387e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.742233] Object ffff880f36b387f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[521120.743229] CPU: 41 PID: 9644 Comm: mount.ocfs2 Tainted: G    B           4.2.0-rc6-next-20150810-sasha-00039-gf909086 #2420
+[521120.744274]  ffff880f36b38000 ffff880d89c8f638 ffffffffb6e9ba8a ffff880101c0e5c0
+[521120.745025]  ffff880d89c8f668 ffffffffad76a313 ffff880101c0e5c0 ffffea003cdace00
+[521120.745908]  ffff880f36b38700 ffff880f36b38798 ffff880d89c8f690 ffffffffad772854
+[521120.747063] Call Trace:
+[521120.747520] dump_stack (lib/dump_stack.c:52)
+[521120.748053] print_trailer (mm/slub.c:653)
+[521120.748582] object_err (mm/slub.c:660)
+[521120.749079] kasan_report_error (include/linux/kasan.h:20 mm/kasan/report.c:152 mm/kasan/report.c:194)
+[521120.750834] __asan_report_load4_noabort (mm/kasan/report.c:250)
+[521120.753580] dio_bio_complete (fs/direct-io.c:478)
+[521120.755752] do_blockdev_direct_IO (fs/direct-io.c:494 fs/direct-io.c:1291)
+[521120.759765] __blockdev_direct_IO (fs/direct-io.c:1322)
+[521120.761658] blkdev_direct_IO (fs/block_dev.c:162)
+[521120.762993] generic_file_read_iter (mm/filemap.c:1738)
+[521120.767405] blkdev_read_iter (fs/block_dev.c:1649)
+[521120.768556] __vfs_read (fs/read_write.c:423 fs/read_write.c:434)
+[521120.772126] vfs_read (fs/read_write.c:454)
+[521120.773118] SyS_pread64 (fs/read_write.c:607 fs/read_write.c:594)
+[521120.776062] entry_SYSCALL_64_fastpath (arch/x86/entry/entry_64.S:186)
+[521120.777375] Memory state around the buggy address:
+[521120.778118]  ffff880f36b38600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[521120.779211]  ffff880f36b38680: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[521120.780315] >ffff880f36b38700: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[521120.781465]                          ^
+[521120.782083]  ffff880f36b38780: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[521120.783717]  ffff880f36b38800: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[521120.784818] ==================================================================
 
-I may do that again. But then I actually have a mostly full backup, about the 
-only things i care about is some pictures I added to the array before it went 
-down, that I still have a copy of, but would have to copy them all back off of 
-various devices.
+This patch fixes a few of those places that I caught while auditing the patch, but the
+original patch should be audited further for more occurences of this issue since I'm
+not too familiar with the code.
 
-> Cheers,
-> Wol
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/md/dm-crypt.c |    8 +++++---
+ drivers/md/dm-io.c    |    4 +++-
+ drivers/md/raid5.c    |    3 ++-
+ fs/direct-io.c        |    5 ++++-
+ 4 files changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index 744b80c..59da573 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -1102,6 +1102,7 @@ static void crypt_endio(struct bio *clone)
+ 	struct dm_crypt_io *io = clone->bi_private;
+ 	struct crypt_config *cc = io->cc;
+ 	unsigned rw = bio_data_dir(clone);
++	int error;
+ 
+ 	/*
+ 	 * free the processed pages
+@@ -1109,15 +1110,16 @@ static void crypt_endio(struct bio *clone)
+ 	if (rw == WRITE)
+ 		crypt_free_buffer_pages(cc, clone);
+ 
++	error = clone->bi_error;
+ 	bio_put(clone);
+ 
+-	if (rw == READ && !clone->bi_error) {
++	if (rw == READ && !error) {
+ 		kcryptd_queue_crypt(io);
+ 		return;
+ 	}
+ 
+-	if (unlikely(clone->bi_error))
+-		io->error = clone->bi_error;
++	if (unlikely(error))
++		io->error = error;
+ 
+ 	crypt_dec_pending(io);
+ }
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index efc6659..c84714f7 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -138,6 +138,7 @@ static void endio(struct bio *bio)
+ {
+ 	struct io *io;
+ 	unsigned region;
++	int error;
+ 
+ 	if (bio->bi_error && bio_data_dir(bio) == READ)
+ 		zero_fill_bio(bio);
+@@ -147,9 +148,10 @@ static void endio(struct bio *bio)
+ 	 */
+ 	retrieve_io_and_region_from_bio(bio, &io, &region);
+ 
++	error = bio->bi_error;
+ 	bio_put(bio);
+ 
+-	dec_count(io, region, bio->bi_error);
++	dec_count(io, region, error);
+ }
+ 
+ /*-----------------------------------------------------------------
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 358deaf..394f5fc 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4763,6 +4763,7 @@ static void raid5_align_endio(struct bio *bi)
+ 	struct mddev *mddev;
+ 	struct r5conf *conf;
+ 	struct md_rdev *rdev;
++	int error = bi->bi_error;
+ 
+ 	bio_put(bi);
+ 
+@@ -4773,7 +4774,7 @@ static void raid5_align_endio(struct bio *bi)
+ 
+ 	rdev_dec_pending(rdev, conf->mddev);
+ 
+-	if (!bi->bi_error) {
++	if (!error) {
+ 		trace_block_bio_complete(bdev_get_queue(raid_bi->bi_bdev),
+ 					 raid_bi, 0);
+ 		bio_endio(raid_bi);
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index e1639c8..818c647 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -459,12 +459,14 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ {
+ 	struct bio_vec *bvec;
+ 	unsigned i;
++	int err;
+ 
+ 	if (bio->bi_error)
+ 		dio->io_error = -EIO;
+ 
+ 	if (dio->is_async && dio->rw == READ) {
+ 		bio_check_pages_dirty(bio);	/* transfers ownership */
++		err = bio->bi_error;
+ 	} else {
+ 		bio_for_each_segment_all(bvec, bio, i) {
+ 			struct page *page = bvec->bv_page;
+@@ -473,9 +475,10 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 				set_page_dirty_lock(page);
+ 			page_cache_release(page);
+ 		}
++		err = bio->bi_error;
+ 		bio_put(bio);
+ 	}
+-	return bio->bi_error;
++	return err;
+ }
+ 
+ /*
 -- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+1.7.10.4
