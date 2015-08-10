@@ -1,71 +1,93 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: Re-add not selecting drive for correct slot?
-Date: Sat, 08 Aug 2015 11:29:57 -0600
-Message-ID: <1526790.RuPxcltSBQ@nell>
-References: <1817382.9YhZ7ff5Yl@balsa> <14110213.gd3e4izigE@nell> <alpine.DEB.2.02.1508080809570.11810@uplift.swm.pp.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1508080809570.11810@uplift.swm.pp.se>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH V1 Resend 04/11] drivers: md: Drop unlikely before IS_ERR(_OR_NULL)
+Date: Mon, 10 Aug 2015 11:42:26 +0530
+Message-ID: <f5979681afc5c1f30a2b5a0b61507580133bad04.1439187003.git.viresh.kumar@linaro.org>
+References: <cover.1439187003.git.viresh.kumar@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1439187003.git.viresh.kumar@linaro.org>
+In-Reply-To: <cover.1439187003.git.viresh.kumar@linaro.org>
+References: <cover.1439187003.git.viresh.kumar@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linaro-kernel@lists.linaro.org, linux-kernel@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>, Alasdair Kergon <agk@redhat.com>, "maintainer:DEVICE-MAPPER LVM" <dm-devel@redhat.com>, "open list:SOFTWARE RAID Multiple Disks
+	SUPPORT" <linux-raid@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On Sat Aug 8 2015 08:11:09 AM Mikael Abrahamsson wrote:
-> On Sat, 8 Aug 2015, Thomas Fjellstrom wrote:
-> > On August 7, 2015 02:38:22 PM Mikael Abrahamsson wrote:
-> >> On Thu, 6 Aug 2015, Thomas Fjellstrom wrote:
-> >>> Also, sdc has a much lower event count than the other drives, is that
-> >>> normal?
-> >>> 
-> >>> /dev/sdc is the first drive that failed
-> >>> /dev/sdb is the one that was kicked after
-> >> 
-> >> Can you please post dmesg output from when you unplugged the drive and
-> >> what happened to the array then? I guess you do not have "cat
-> >> /proc/mdstat" from then? It's weird that sdb was busy. Please post mdadm
-> >> version and kernel version.
-> > 
-> > I posted both after the logs in the previous message, but I'll repeat
-> > here:
-> > 
-> > Distro: OpenMediaVault / Debian wheezy
-> > Kernel: 3.16.7-ckt4-3~bpo70+1
-> > Mdadm: v3.2.5 (from debian) and v3.3.4-22-gccc93b3 - 05th August 2015
-> 
-> Ah, my bad.
-> 
-> First, I would recommend you to get the latest mdadm from Neils git
-> repository, compile it and try to use --assemble--force using that mdadm
-> instead, using the drives with the closest event count.
-> 
-> Hopefully it will work and not treat the drive as a spare.
+IS_ERR(_OR_NULL) already contain an 'unlikely' compiler flag and there
+is no need to do that again from its callers. Drop it.
 
-I did try that :( It fails to assemble because it only sees sdc as a spare.
-Maybe because I did things with the old mdadm first, and did a --remove? That
-seems to have wiped out the "slot" information (it's -1) so the assemble force
-magic can't figure things out? Just a guess on my part.
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+---
+ drivers/md/dm-snap-persistent.c               | 2 +-
+ drivers/md/dm-verity.c                        | 2 +-
+ drivers/md/persistent-data/dm-block-manager.c | 8 ++++----
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-root@mrbig:~/build/mdadm# ./mdadm -v --assemble --force /dev/md0 /dev/sd[bdefgh]
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdb is identified as a member of /dev/md0, slot -1.
-mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sde is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdf is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdg is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sdh is identified as a member of /dev/md0, slot 6.
-mdadm: no uptodate device for slot 0 of /dev/md0
-mdadm: no uptodate device for slot 1 of /dev/md0
-mdadm: added /dev/sde to /dev/md0 as 3
-mdadm: added /dev/sdf to /dev/md0 as 4
-mdadm: added /dev/sdg to /dev/md0 as 5
-mdadm: added /dev/sdh to /dev/md0 as 6
-mdadm: added /dev/sdb to /dev/md0 as -1
-mdadm: added /dev/sdd to /dev/md0 as 2
-mdadm: /dev/md0 assembled from 5 drives and 1 spare - not enough to start the array.
-
+diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
+index 808b8419bc48..bf71583296f7 100644
+--- a/drivers/md/dm-snap-persistent.c
++++ b/drivers/md/dm-snap-persistent.c
+@@ -533,7 +533,7 @@ static int read_exceptions(struct pstore *ps,
+ 		chunk = area_location(ps, ps->current_area);
+ 
+ 		area = dm_bufio_read(client, chunk, &bp);
+-		if (unlikely(IS_ERR(area))) {
++		if (IS_ERR(area)) {
+ 			r = PTR_ERR(area);
+ 			goto ret_destroy_bufio;
+ 		}
+diff --git a/drivers/md/dm-verity.c b/drivers/md/dm-verity.c
+index 4b34df8fdb58..d224979f9633 100644
+--- a/drivers/md/dm-verity.c
++++ b/drivers/md/dm-verity.c
+@@ -271,7 +271,7 @@ static int verity_verify_level(struct dm_verity_io *io, sector_t block,
+ 	verity_hash_at_level(v, block, level, &hash_block, &offset);
+ 
+ 	data = dm_bufio_read(v->bufio, hash_block, &buf);
+-	if (unlikely(IS_ERR(data)))
++	if (IS_ERR(data))
+ 		return PTR_ERR(data);
+ 
+ 	aux = dm_bufio_get_aux_data(buf);
+diff --git a/drivers/md/persistent-data/dm-block-manager.c b/drivers/md/persistent-data/dm-block-manager.c
+index 4d6c9b689eaa..88dbe7b97c2c 100644
+--- a/drivers/md/persistent-data/dm-block-manager.c
++++ b/drivers/md/persistent-data/dm-block-manager.c
+@@ -454,7 +454,7 @@ int dm_bm_read_lock(struct dm_block_manager *bm, dm_block_t b,
+ 	int r;
+ 
+ 	p = dm_bufio_read(bm->bufio, b, (struct dm_buffer **) result);
+-	if (unlikely(IS_ERR(p)))
++	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+ 	aux = dm_bufio_get_aux_data(to_buffer(*result));
+@@ -490,7 +490,7 @@ int dm_bm_write_lock(struct dm_block_manager *bm,
+ 		return -EPERM;
+ 
+ 	p = dm_bufio_read(bm->bufio, b, (struct dm_buffer **) result);
+-	if (unlikely(IS_ERR(p)))
++	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+ 	aux = dm_bufio_get_aux_data(to_buffer(*result));
+@@ -523,7 +523,7 @@ int dm_bm_read_try_lock(struct dm_block_manager *bm,
+ 	int r;
+ 
+ 	p = dm_bufio_get(bm->bufio, b, (struct dm_buffer **) result);
+-	if (unlikely(IS_ERR(p)))
++	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 	if (unlikely(!p))
+ 		return -EWOULDBLOCK;
+@@ -559,7 +559,7 @@ int dm_bm_write_lock_zero(struct dm_block_manager *bm,
+ 		return -EPERM;
+ 
+ 	p = dm_bufio_new(bm->bufio, b, (struct dm_buffer **) result);
+-	if (unlikely(IS_ERR(p)))
++	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+ 	memset(p, 0, dm_bm_block_size(bm));
 -- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+2.4.0
