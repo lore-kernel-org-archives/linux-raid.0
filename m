@@ -1,8 +1,7 @@
 From: Tarak Anumolu <tarak.a@samsung.com>
-Subject: Re: Need some information about mdadm 3.2.5
-Date: Tue, 11 Aug 2015 05:51:29 +0000 (UTC)
-Message-ID: <loom.20150811T075020-468@post.gmane.org>
-References: <29343933.117831364361439771.JavaMail.weblogic@epml26>
+Subject: Problem with XOR Engine
+Date: Tue, 11 Aug 2015 06:16:57 +0000 (UTC)
+Message-ID: <loom.20150811T081553-897@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -12,7 +11,7 @@ To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Hi
- 
+
 My name is Tarak.
 
 I got some problem with the XOR engine while creating the RAID array.
@@ -22,7 +21,6 @@ it and some how we are getting the hard disk error.
 
 I found the above issue is happening when I  enable  
 CONFIG_RAID_ZERO_COPY=y in my Linux configuration.
-
 
 Without this option everything is working fine.
 
@@ -39,7 +37,12 @@ I want to know the way to fix the RAID parity error.
 Please help me on this.
 
 
+
 Thanks & Regards
+
+ 
+
+
 
 Tarak Ramgopal Anumolu 
 
