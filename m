@@ -1,89 +1,76 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 4/9] raid5: log reclaim support
-Date: Wed, 12 Aug 2015 13:50:08 +1000
-Message-ID: <20150812135008.7ee44eef@noble>
+Subject: Re: [PATCH 5/9] raid5: log recovery
+Date: Wed, 12 Aug 2015 13:51:18 +1000
+Message-ID: <20150812135118.542939c4@noble>
 References: <cover.1438215986.git.shli@fb.com>
-	<41a6d2e74494506fcd6ffd68a5884d38dc0bfa8e.1438215986.git.shli@fb.com>
-	<20150805134330.3f4269e4@noble>
-	<20150805213412.GA3167799@devbig257.prn2.facebook.com>
+	<5683d4e81fe802c46350732560bbdd0a70212413.1438215986.git.shli@fb.com>
+	<20150805140525.0e0774ae@noble>
+	<20150805213909.GA3197719@devbig257.prn2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150805213412.GA3167799@devbig257.prn2.facebook.com>
+In-Reply-To: <20150805213909.GA3197719@devbig257.prn2.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@fb.com>
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 5 Aug 2015 14:34:21 -0700 Shaohua Li <shli@fb.com> wrote:
+On Wed, 5 Aug 2015 14:39:09 -0700 Shaohua Li <shli@fb.com> wrote:
 
-> On Wed, Aug 05, 2015 at 01:43:30PM +1000, NeilBrown wrote:
-> > On Wed, 29 Jul 2015 17:38:44 -0700 Shaohua Li <shli@fb.com> wrote:
+> On Wed, Aug 05, 2015 at 02:05:25PM +1000, NeilBrown wrote:
+> > On Wed, 29 Jul 2015 17:38:45 -0700 Shaohua Li <shli@fb.com> wrote:
 > > 
-> > > This is the reclaim support for raid5 log. A stripe write will have
-> > > following steps:
+> > > This is the log recovery support. The process is quite straightforward.
+> > > We scan the log and read all valid meta/data/parity into memory. If a
+> > > stripe's data/parity checksum is correct, the stripe will be recoveried.
+> > > Otherwise, it's discarded and we don't scan the log further. The reclaim
+> > > process guarantees stripe which starts to be flushed raid disks has
+> > > completed data/parity and has correct checksum. To recovery a stripe, we
+> > > just copy its data/parity to corresponding raid disks.
 > > > 
-> > > 1. reconstruct the stripe, read data/calculate parity. ops_run_io
-> > > prepares to write data/parity to raid disks
-> > > 2. hijack ops_run_io. stripe data/parity is appending to log disk
-> > > 3. flush log disk cache
-> > > 4. ops_run_io run again and do normal operation. stripe data/parity is
-> > > written in raid array disks. raid core can return io to upper layer.
-> > > 5. flush cache of all raid array disks
-> > > 6. update super block
-> > > 7. log disk space used by the stripe can be reused
-> > > 
-> > > In practice, several stripes consist of an io_unit and we will batch
-> > > several io_unit in different steps, but the whole process doesn't
-> > > change.
-> > > 
-> > > It's possible io return just after data/parity hit log disk, but then
-> > > read IO will need read from log disk. For simplicity, IO return happens
-> > > at step 4, where read IO can directly read from raid disks.
-> > > 
-> > > Currently reclaim run every minute or out of space. Reclaim is just to
-> > > free log disk spaces, it doesn't impact data consistency.
+> > > The trick thing is superblock update after recovery. we can't let
+> > > superblock point to last valid meta block. The log might look like:
+> > > | meta 1| meta 2| meta 3|
+> > > meta 1 is valid, meta 2 is invalid. meta 3 could be valid. If superblock
+> > > points to meta 1, we write a new valid meta 2n.  If crash happens again,
+> > > new recovery will start from meta 1. Since meta 2n is valid, recovery
+> > > will think meta 3 is valid, which is wrong.  The solution is we create a
+> > > new meta in meta2 with its seq == meta 1's seq + 2 and let superblock
+> > > points to meta2.  recovery will not think meta 3 is a valid meta,
+> > > because its seq is wrong
 > > 
-> > Having arbitrary times lines "every minute" is a warning sign.
-> > "As soon as possible" and "Just it time" can both make sense easily.
-> > "every minute" needs more justification.
-> > 
-> > I'll probably say more when I find the code.
+> > I like the idea of using a slightly larger 'seq' to avoid collisions -
+> > except that I would probably feel safer with a much larger seq. May add
+> > 1024 or something (at least 10).
 > 
-> The idea is if we reclaim periodically, recovery could scan less log
-> space. It's insane recovery scans a 1T disk. As I said this is just to
-> free disk spaces. It's not a signal we will lose data in minute
-> interval. I can change the relaim to run every 1G reclaimable space for
-> example.
+> ok 
+> > > 
+> > > TODO:
+> > > -recovery should run the stripe cache state machine in case of disk
+> > > breakage.
+> > 
+> > Why?
+> > 
+> > when you write to the log, you write all of the blocks that need
+> > updating, whether they are destined for a failed device or not.
+> > 
+> > When you recover, you then have all the blocks that you might want to
+> > write.  So write all the ones for which you have working devices, and
+> > ignore the rest.
+> > 
+> > Did I miss something?
+> > 
+> > Not that I object, but if it works....
+> 
+> I mean the case of disk is broken. For example, log has a stripe with
+> data for disk 1, 2, 4. In recovery, disk 2 is broken. Just write 1, 4
+> isn't good. If we run the state machine, we can read disk 3 and have an
+> eventually consistent stripe.
 
-There seem to be two issues here and I might be confusing them.
+But the log will have date for disk 1, 2, 4, and P and Q.
+So if disk 2 is broken, we just write 1, 4, P, and Q and the data is
+safe.
 
-Firstly there is the question of when a stripe gets written back to the
-array.  Once the data is safe in the log this doesn't have to happen in
-any great hurry, but I suspect it should still happen sooner rather
-than later.
-
-Presumably as soon as data/parity of a stripe is safe in the log,
-that stripe will be scheduled to be written to the array - is that
-correct?
-
-As these writes-to-the-array complete the counter in the io_unit will
-decrease.  when it reaches zero the io_unit can be freed and the
-recovery_offset in the superblock can, potentially be updated.
-
-Secondly there is the question of how often the superblock is updated.
-As you say; delaying the updates indefinitely could lead to a recovery
-having to examine a very large part of the log - maybe more than
-necessary (though if that might be a problem, the simple solution is to
-use a smaller log).
-
-I would probably feel most comfortable scheduling a superblock update
-whenever the amount of log space that it would reclaim exceeds 1/4 of
-the log size.  That should be often enough without imposing a
-completely arbitrary number.
-
-Make sense?
-
-thanks,
 NeilBrown
+
