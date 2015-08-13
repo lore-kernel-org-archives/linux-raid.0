@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [patch v2 05/11] raid5: add a new state for stripe log handling
-Date: Thu, 13 Aug 2015 14:31:58 -0700
-Message-ID: <930e6ef57a2256464855cbf1bfd4b5cc2830e59e.1439500639.git.shli@fb.com>
+Subject: [patch v2 11/11] raid5: enable log for raid array with cache disk
+Date: Thu, 13 Aug 2015 14:32:04 -0700
+Message-ID: <277d6d42c96535c4aa2f0c8970c1551f2a27a8ca.1439500639.git.shli@fb.com>
 References: <cover.1439500639.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,48 +12,56 @@ To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-When a stripe finishes construction, we write the stripe to raid in
-ops_run_io normally. With log, we do a bunch of other operations before
-the stripe is written to raid. Mainly write the stripe to log disk,
-flush disk cache and so on. The operations are still driven by raid5d
-and run in the stripe state machine. We introduce a new state for such
-stripe (trapped into log). The stripe is in this state from the time it
-first enters ops_run_io (finish construction) to the time it is written
-to raid. Since we know the state is only for log, we bypass other
-check/operation in handle_stripe.
+Now log is safe to enable for raid array with cache disk
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid5.c | 3 +++
- drivers/md/raid5.h | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/md/raid5.c             | 10 ++++++++++
+ include/uapi/linux/raid/md_p.h |  1 +
+ 2 files changed, 11 insertions(+)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 786f811..bbdadee 100644
+index 343536d..28cccfa 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -4322,6 +4322,9 @@ static void handle_stripe(struct stripe_head *sh)
+@@ -6325,8 +6325,11 @@ static void raid5_free_percpu(struct r5conf *conf)
  
- 	analyse_stripe(sh, &s);
- 
-+	if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
-+		goto finish;
+ static void free_conf(struct r5conf *conf)
+ {
++	if (conf->log)
++		r5l_exit_log(conf->log);
+ 	if (conf->shrinker.seeks)
+ 		unregister_shrinker(&conf->shrinker);
 +
- 	if (s.handle_bad_blocks) {
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 		goto finish;
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index d8785df..6e85b82 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -340,6 +340,7 @@ enum {
- 	STRIPE_BITMAP_PENDING,	/* Being added to bitmap, don't add
- 				 * to batch yet.
- 				 */
-+	STRIPE_LOG_TRAPPED, /* trapped into log */
- };
+ 	free_thread_groups(conf);
+ 	shrink_stripes(conf);
+ 	raid5_free_percpu(conf);
+@@ -6990,6 +6993,13 @@ static int run(struct mddev *mddev)
+ 						mddev->queue);
+ 	}
  
- #define STRIPE_EXPAND_SYNC_FLAGS \
++	if (journal_dev) {
++		char b[BDEVNAME_SIZE];
++		printk(KERN_INFO"md/raid:%s: using device %s as journal\n",
++			mdname(mddev), bdevname(journal_dev->bdev, b));
++		r5l_init_log(conf, journal_dev);
++	}
++
+ 	return 0;
+ abort:
+ 	md_unregister_thread(&mddev->thread);
+diff --git a/include/uapi/linux/raid/md_p.h b/include/uapi/linux/raid/md_p.h
+index 3553a72..1de9e17 100644
+--- a/include/uapi/linux/raid/md_p.h
++++ b/include/uapi/linux/raid/md_p.h
+@@ -320,6 +320,7 @@ struct mdp_superblock_1 {
+ 					|MD_FEATURE_RESHAPE_BACKWARDS	\
+ 					|MD_FEATURE_NEW_OFFSET		\
+ 					|MD_FEATURE_RECOVERY_BITMAP	\
++					|MD_FEATURE_JOURNAL		\
+ 					)
+ 
+ struct r5l_payload_header {
 -- 
 1.8.1
 
