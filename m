@@ -1,459 +1,695 @@
-From: Tejas Rao <raot@bnl.gov>
-Subject: Re: Problems with Seagate 8TB SMR archive drives
-Date: Fri, 14 Aug 2015 14:27:00 -0400
-Message-ID: <55CE32F4.2070706@bnl.gov>
-References: <55CE2ACA.50203@bnl.gov> <55CE31CE.8080100@aeoncomputing.com>
+From: Daniel Koch <koch@triple6.org>
+Subject: Re: Failed to grow
+Date: Fri, 14 Aug 2015 22:09:55 +0200
+Message-ID: <c2bcdf30a27b0ddb4c84eb4bc9444f8d@mail.triple6.org>
+References: <621f0ebc8080e4ab56eaacde5f9416cf@mail.triple6.org>
+ <3161f36377c85c092f4f3a461295e76a@mail.triple6.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55CE31CE.8080100@aeoncomputing.com>
+In-Reply-To: <3161f36377c85c092f4f3a461295e76a@mail.triple6.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Johnson <jeff.johnson@aeoncomputing.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The drives are running AR15.
+=46ixed.
 
-The md device (md8) has XFS on it and I am transferring 33TB of data 
-using 'cp' command, so I doubt the drives are spinning down as they are 
-continuously being written to. We plan to use them for archive/backup 
-purposes only. After the initial ingest (filling up the drives), the 
-drives will be accessed occasionally for very small reads/writes. It 
-would be nice though to ingest in a more stable way.
+=46irst make sure to use an overlay for testing:
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAI=
+D#Making_the_harddisks_read-only_using_an_overlay_file
 
-On 8/14/2015 14:22, Jeff Johnson wrote:
-> Tejas,
->
-> You are probably running firmware AR13 or older. The drives are 
-> designed for very power efficient archive use and they have a very 
-> aggressive spin down timer. Once they drop to a slower speed or 
-> stopped it will take a significant time to get back up to ready. I 
-> would highly suggest updating to code AR14 or AR15.
->
-> The drives aren't really intended for your use model. Perhaps a cron 
-> job that does a dd read (direct mode) of a hundred MBs or so from the 
-> md device to dev/null every couple minutes might be enough to keep 
-> them warm and not spun down.
->
-> --Jeff
->
->
-> On 8/14/15 10:52 AM, Tejas Rao wrote:
->> I am aware that the Seagate SMR 8tb archive drives are not meant to 
->> be used in a RAID environment as they lack TLER/ERC support.
->>
->> We are trying to use these drives with mdraid and are seeing 
->> problems. It seems that after writing to these drives for few hours, 
->> occasionally some drives stop responding for few minutes and recover 
->> on its own later. (This was expected).
->>
->> I have increased the device timeouts to 480 seconds now 
->> (sys/block/<device>/device/timeout). The md device is assembled on 
->> top of dm-multipath devices and dm-multipath is configured to retry 
->> 50 times (no_path_retry=50). I have also changed queue_depth for each 
->> device to 1 (NCQ disabled).
->>
->> Usually when I see retries and a drive stops responding, it recovers 
->> on its own after few minutes and the md layer does not fail the disk. 
->> Occasionally though, the md layer fails the disk after ~15 seconds or 
->> so of the drive becoming non-responsive. See below.
->>
->> sdlm and sdfb are the same disk (mpathaw, dm-231,dm-226). Why does 
->> the md layer not wait for 480 seconds before failing the disk. As you 
->> can see the drive recovered after ~ 8 minutes but the md layer failed 
->> it after ~15 seconds.
->>
->> What other tunables can I tune to avoid kicking a drive out early.
->>
->> Aug 14 13:01:12 dc045 kernel: mpt2sas3: log_info(0x31120303): 
->> originator(PL), code(0x12), sub_code(0x0303)
->> Aug 14 13:01:12 dc045 kernel: mpt2sas3: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:01:12 dc045 kernel: mpt2sas1: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:05:24 dc045 kernel: mpt2sas3: log_info(0x31120303): 
->> originator(PL), code(0x12), sub_code(0x0303)
->> Aug 14 13:05:24 dc045 kernel: mpt2sas3: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:05:24 dc045 kernel: mpt2sas1: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:12:19 dc045 kernel: mpt2sas3: log_info(0x31120303): 
->> originator(PL), code(0x12), sub_code(0x0303)
->> Aug 14 13:12:19 dc045 kernel: mpt2sas3: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:12:19 dc045 kernel: mpt2sas1: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:12:35 dc045 kernel: __ratelimit: 2 callbacks suppressed
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Write(10): 2a 
->> 00 55 6a 5e c8 00 00 b8 00
->> Aug 14 13:12:35 dc045 kernel: __ratelimit: 14 callbacks suppressed
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] CDB: Write(10): 2a 
->> 00 55 6a 5f 80 00 00 10 00
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Write(10): 2a 
->> 00 55 6a 5f 90 00 03 38 00
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] CDB: Read(16): 88 
->> 00 00 00 00 01 d5 59 50 a8 00 00 00 08 00 00
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Read(16): 88 
->> 00 00 00 00 01 d5 59 50 b0 00 00 00 80 00 00
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] CDB: Read(10): 28 
->> 00 55 6a 78 00 00 00 50 00
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 7874367664
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 1433040896
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 25:0:42:0: [sdfb] CDB: Write(10): 2a 
->> 00 00 00 08 08 00 00 01 00
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdfb, sector 2056
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Read(10): 28 
->> 00 55 6a 7b e0 00 00 20 00
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdlm, sector 1433041888
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 1433041888
->> Aug 14 13:12:35 dc045 kernel: mpt2sas1: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Read(10): 28 
->> 00 00 00 00 00 00 00 08 00
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdlm, sector 0
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 2056
->> Aug 14 13:12:35 dc045 kernel: md: super_written gets error=-121, 
->> uptodate=0
->> Aug 14 13:12:35 dc045 kernel: md/raid:md8: Disk failure on dm-231, 
->> disabling device.
->> Aug 14 13:12:35 dc045 kernel: md/raid:md8: Operation continuing on 13 
->> devices.
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Unhandled sense code
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] Sense Key : 
->> Hardware Error [current]
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] <<vendor>> 
->> ASC=0x81 ASCQ=0x0ASC=0x81 ASCQ=0x0
->> Aug 14 13:12:35 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Write(10): 2a 
->> 00 55 6a 62 c8 00 04 00 00
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdlm, sector 1433035464
->> Aug 14 13:12:35 dc045 kernel: mpt2sas3: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 1433035464
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdfb, sector 1433036488
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 1433036488
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdlm, sector 1433037512
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 1433037512
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> sdfb, sector 2128
->> Aug 14 13:12:35 dc045 kernel: end_request: critical target error, dev 
->> dm-226, sector 2128
->> Aug 14 13:12:35 dc045 kernel: md: super_written gets error=-121, 
->> uptodate=0
->> Aug 14 13:12:36 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:12:36 dc045 multipathd: checker failed path 68:320 in map 
->> mpathaw
->> Aug 14 13:12:36 dc045 multipathd: mpathaw: remaining active paths: 1
->> Aug 14 13:12:36 dc045 kernel: device-mapper: multipath: Failing path 
->> 68:320.
->> Aug 14 13:13:17 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:13:25 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:13:25 dc045 multipathd: checker failed path 129:208 in map 
->> mpathaw
->> Aug 14 13:13:25 dc045 multipathd: mpathaw: Entering recovery mode: 
->> max_retries=50
->> Aug 14 13:13:25 dc045 multipathd: mpathaw: remaining active paths: 0
->> Aug 14 13:13:25 dc045 kernel: device-mapper: multipath: Failing path 
->> 129:208.
->> Aug 14 13:13:25 dc045 multipathd: mpathaw: Entering recovery mode: 
->> max_retries=50
->> Aug 14 13:13:27 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:13:35 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:13:37 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:13:45 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:13:47 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:13:55 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:13:57 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:05 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:07 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:15 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:17 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:25 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:27 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:35 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:37 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:46 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:48 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:14:56 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:14:58 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:06 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:08 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:16 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:18 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:26 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:28 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:36 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:38 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:46 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:48 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:15:56 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:15:58 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:06 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:08 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:16 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:18 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:26 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:28 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:37 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:39 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:47 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:49 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:16:57 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:16:59 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:07 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:09 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:17 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:19 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:27 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:29 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:37 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:39 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:47 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:49 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:17:57 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:17:59 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:07 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:18:09 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:17 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:18:19 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:28 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:18:30 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:38 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:18:40 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:48 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:18:50 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:18:58 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:00 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:08 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:10 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:18 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:20 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:28 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:30 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:38 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:40 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:48 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:19:50 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:19:58 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:20:00 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:20:08 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:20:11 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:20:19 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:20:21 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:20:29 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is down
->> Aug 14 13:20:31 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is down
->> Aug 14 13:20:37 dc045 kernel: sd 25:0:42:0: attempting task abort! 
->> scmd(ffff881c6e49aec0)
->> Aug 14 13:20:37 dc045 kernel: sd 25:0:42:0: [sdfb] CDB: Write(10): 2a 
->> 00 55 6a 72 c8 00 01 68 00
->> Aug 14 13:20:37 dc045 kernel: scsi target25:0:42: handle(0x0037), 
->> sas_address(0x5000c5007b2ee20d), phy(18)
->> Aug 14 13:20:37 dc045 kernel: scsi target25:0:42: 
->> enclosure_logical_id(0x500093d00104c000), slot(39)
->> Aug 14 13:20:37 dc045 kernel: sd 27:0:42:0: attempting task abort! 
->> scmd(ffff880c35fba7c0)
->> Aug 14 13:20:37 dc045 kernel: sd 27:0:42:0: [sdlm] CDB: Write(10): 2a 
->> 00 55 6a 6e c8 00 04 00 00
->> Aug 14 13:20:37 dc045 kernel: scsi target27:0:42: handle(0x0037), 
->> sas_address(0x5000c5007b2ee20e), phy(18)
->> Aug 14 13:20:37 dc045 kernel: scsi target27:0:42: 
->> enclosure_logical_id(0x500093d00104c000), slot(39)
->> Aug 14 13:20:37 dc045 kernel: sd 25:0:42:0: task abort: SUCCESS 
->> scmd(ffff881c6e49aec0)
->> Aug 14 13:20:37 dc045 kernel: sd 27:0:42:0: task abort: SUCCESS 
->> scmd(ffff880c35fba7c0)
->> Aug 14 13:20:37 dc045 kernel: mpt2sas3: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(7), width(8)
->> Aug 14 13:20:37 dc045 kernel: mpt2sas1: 
->> _scsih_sas_broadcast_primitive_event: enter: phy number(5), width(8)
->> Aug 14 13:20:39 dc045 multipathd: mpathaw: sdfb - directio checker 
->> reports path is up
->> Aug 14 13:20:39 dc045 multipathd: 129:208: reinstated
->> Aug 14 13:20:39 dc045 multipathd: mpathaw: queue_if_no_path enabled
->> Aug 14 13:20:39 dc045 multipathd: mpathaw: Recovered to normal mode
->> Aug 14 13:20:39 dc045 multipathd: mpathaw: remaining active paths: 1
->> Aug 14 13:20:41 dc045 multipathd: mpathaw: sdlm - directio checker 
->> reports path is up
->> Aug 14 13:20:41 dc045 multipathd: 68:320: reinstated
->> Aug 14 13:20:41 dc045 multipathd: mpathaw: remaining active paths: 2
->> Aug 14 13:21:12 dc045 kernel: md: unbind<dm-231>
->> Aug 14 13:21:12 dc045 kernel: md: export_rdev(dm-231)
->>
->>
->>
->>
->>
->>
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
->
+Try this
+https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_r=
+ecreating_.28after_multiple_device_failure.29
 
+It worked so did on the real disks without overlay.
+
+Thanks to frostschutz, SwedeMike and djselbeck from irc ( #linux-raid o=
+n=20
+freenode ) for saving me.
+---
+Viele Gr=C3=BC=C3=9Fe,
+
+Daniel Koch
+
+Am 2015-08-14 11:22, schrieb Daniel Koch:
+> I crawled the archive of the list and found that --invalid-backup wit=
+h
+> a faked and empty backup might help. Here is the result:
+>=20
+> mdadm --assemble --force --run --verbose /dev/md0
+> --backup-file=3Dempty.bak --invalid-backup
+> mdadm: looking for devices for /dev/md0
+> mdadm: no RAID superblock on /dev/sda5
+> mdadm: no RAID superblock on /dev/sda2
+> mdadm: no RAID superblock on /dev/sda1
+> mdadm: no RAID superblock on /dev/sda
+> mdadm: /dev/sdn is identified as a member of /dev/md0, slot 9.
+> mdadm: /dev/sdj is identified as a member of /dev/md0, slot 5.
+> mdadm: /dev/sdh is identified as a member of /dev/md0, slot 3.
+> mdadm: /dev/sdm is identified as a member of /dev/md0, slot 8.
+> mdadm: /dev/sdl is identified as a member of /dev/md0, slot 7.
+> mdadm: /dev/sdk is identified as a member of /dev/md0, slot 6.
+> mdadm: /dev/sdi is identified as a member of /dev/md0, slot 4.
+> mdadm: /dev/sdg is identified as a member of /dev/md0, slot 2.
+> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 10.
+> mdadm: /dev/sde is identified as a member of /dev/md0, slot 12.
+> mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
+> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 11.
+> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
+> mdadm: :/dev/md0 has an active reshape - checking if critical section
+> needs to be restored
+> mdadm: Cannot read from empty.bak
+> mdadm: No backup metadata on device-12
+> mdadm: Failed to find backup of critical section
+> mdadm: continuing without restoring backup
+> mdadm: added /dev/sdc to /dev/md0 as 1
+> mdadm: added /dev/sdg to /dev/md0 as 2
+> mdadm: added /dev/sdh to /dev/md0 as 3
+> mdadm: added /dev/sdi to /dev/md0 as 4
+> mdadm: added /dev/sdj to /dev/md0 as 5
+> mdadm: added /dev/sdk to /dev/md0 as 6
+> mdadm: added /dev/sdl to /dev/md0 as 7
+> mdadm: added /dev/sdm to /dev/md0 as 8
+> mdadm: added /dev/sdn to /dev/md0 as 9
+> mdadm: added /dev/sdd to /dev/md0 as 10
+> mdadm: added /dev/sdf to /dev/md0 as 11
+> mdadm: added /dev/sde to /dev/md0 as 12
+> mdadm: added /dev/sdb to /dev/md0 as 0
+> mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+>=20
+>=20
+> kern.log:
+> Aug 14 11:18:20 claw-storage kernel: [  599.182677] md: md0 stopped.
+> Aug 14 11:18:20 claw-storage kernel: [  599.184459]  sdn: unknown
+> partition table
+> Aug 14 11:18:20 claw-storage kernel: [  599.185604]  sdj: unknown
+> partition table
+> Aug 14 11:18:20 claw-storage kernel: [  599.186424]  sdm: unknown
+> partition table
+> Aug 14 11:18:20 claw-storage kernel: [  599.187869]  sdl: unknown
+> partition table
+> Aug 14 11:18:20 claw-storage kernel: [  599.189108]  sdi: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.213722]  sde: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.214073] md: bind<sdc>
+> Aug 14 11:18:21 claw-storage kernel: [  599.214248] md: bind<sdg>
+> Aug 14 11:18:21 claw-storage kernel: [  599.214427] md: bind<sdh>
+> Aug 14 11:18:21 claw-storage kernel: [  599.214438]  sdb: sdb1
+> Aug 14 11:18:21 claw-storage kernel: [  599.214620] md: bind<sdi>
+> Aug 14 11:18:21 claw-storage kernel: [  599.214845] md: bind<sdj>
+> Aug 14 11:18:21 claw-storage kernel: [  599.215000] md: bind<sdk>
+> Aug 14 11:18:21 claw-storage kernel: [  599.215140] md: bind<sdl>
+> Aug 14 11:18:21 claw-storage kernel: [  599.215278]  sdf: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.215337] md: bind<sdm>
+> Aug 14 11:18:21 claw-storage kernel: [  599.215477] md: bind<sdn>
+> Aug 14 11:18:21 claw-storage kernel: [  599.215588] md: bind<sdd>
+> Aug 14 11:18:21 claw-storage kernel: [  599.216165] md: bind<sdf>
+> Aug 14 11:18:21 claw-storage kernel: [  599.216400]  sde: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.216923] md: bind<sde>
+> Aug 14 11:18:21 claw-storage kernel: [  599.217159]  sdf: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.217513] md: bind<sdb>
+> Aug 14 11:18:21 claw-storage kernel: [  599.218292]  sdl: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.218743] md/raid:md0:
+> reshape_position too early for auto-recovery - aborting.
+> Aug 14 11:18:21 claw-storage kernel: [  599.220772] md: pers->run()=20
+> failed ...
+> Aug 14 11:18:21 claw-storage kernel: [  599.222047]  sdi: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.222135] md: md0 stopped.
+> Aug 14 11:18:21 claw-storage kernel: [  599.222142] md: unbind<sdb>
+> Aug 14 11:18:21 claw-storage kernel: [  599.222616]  sdb: sdb1
+> Aug 14 11:18:21 claw-storage kernel: [  599.223612]  sdi: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.224397]  sdl: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.225077]  sdf: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.225907]  sde: unknown
+> partition table
+> Aug 14 11:18:21 claw-storage kernel: [  599.226498]  sdb: sdb1
+> Aug 14 11:18:21 claw-storage kernel: [  599.232193] md:=20
+> export_rdev(sdb)
+> Aug 14 11:18:21 claw-storage kernel: [  599.232205] md: unbind<sde>
+> Aug 14 11:18:21 claw-storage kernel: [  599.247747] md:=20
+> export_rdev(sde)
+> Aug 14 11:18:21 claw-storage kernel: [  599.247766] md: unbind<sdf>
+> Aug 14 11:18:21 claw-storage kernel: [  599.271766] md:=20
+> export_rdev(sdf)
+> Aug 14 11:18:21 claw-storage kernel: [  599.271774] md: unbind<sdd>
+> Aug 14 11:18:21 claw-storage kernel: [  599.287796] md:=20
+> export_rdev(sdd)
+> Aug 14 11:18:21 claw-storage kernel: [  599.287818] md: unbind<sdn>
+> Aug 14 11:18:21 claw-storage kernel: [  599.319830] md:=20
+> export_rdev(sdn)
+> Aug 14 11:18:21 claw-storage kernel: [  599.319841] md: unbind<sdm>
+> Aug 14 11:18:21 claw-storage kernel: [  599.331804] md:=20
+> export_rdev(sdm)
+> Aug 14 11:18:21 claw-storage kernel: [  599.331816] md: unbind<sdl>
+> Aug 14 11:18:21 claw-storage kernel: [  599.346199] md:=20
+> export_rdev(sdl)
+> Aug 14 11:18:21 claw-storage kernel: [  599.346221] md: unbind<sdk>
+> Aug 14 11:18:21 claw-storage kernel: [  599.355791] md:=20
+> export_rdev(sdk)
+> Aug 14 11:18:21 claw-storage kernel: [  599.355805] md: unbind<sdj>
+> Aug 14 11:18:21 claw-storage kernel: [  599.371779] md:=20
+> export_rdev(sdj)
+> Aug 14 11:18:21 claw-storage kernel: [  599.371794] md: unbind<sdi>
+> Aug 14 11:18:21 claw-storage kernel: [  599.387838] md:=20
+> export_rdev(sdi)
+> Aug 14 11:18:21 claw-storage kernel: [  599.387850] md: unbind<sdh>
+> Aug 14 11:18:21 claw-storage kernel: [  599.403814] md:=20
+> export_rdev(sdh)
+> Aug 14 11:18:21 claw-storage kernel: [  599.403839] md: unbind<sdg>
+> Aug 14 11:18:21 claw-storage kernel: [  599.431842] md:=20
+> export_rdev(sdg)
+> Aug 14 11:18:21 claw-storage kernel: [  599.431852] md: unbind<sdc>
+> Aug 14 11:18:21 claw-storage kernel: [  599.463878] md:=20
+> export_rdev(sdc)
+> Aug 14 11:18:21 claw-storage kernel: [  599.465322] md: bind<sdn>
+> Aug 14 11:18:21 claw-storage kernel: [  599.467200] md: bind<sdj>
+> Aug 14 11:18:21 claw-storage kernel: [  599.469274] md: bind<sde>
+> Aug 14 11:18:21 claw-storage kernel: [  599.471375] md: bind<sdi>
+> Aug 14 11:18:21 claw-storage kernel: [  599.473784] md: bind<sdf>
+> Aug 14 11:18:21 claw-storage kernel: [  599.476780] md: bind<sdl>
+> Aug 14 11:18:21 claw-storage kernel: [  599.480103] md: bind<sdm>
+> Aug 14 11:18:21 claw-storage kernel: [  599.488333] md: bind<sdb>
+>=20
+> #cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : inactive sdm[8](S) sdn[9](S) sdj[5](S) sdb[0](S) sdf[11](S)
+> sdi[4](S) sde[13](S) sdl[12](S)
+>       14161940096 blocks super 1.2
+>=20
+> unused devices: <none>
+>=20
+> So no luck at all. All disks are accessable using smart which makes m=
+e
+> think they are operational.
+> ---
+> Viele Gr=C3=BC=C3=9Fe,
+>=20
+> Daniel Koch
+>=20
+> Am 2015-08-13 17:53, schrieb Daniel Koch:
+>> Hello every one,
+>>=20
+>> I have a huge problem. I started to grow a array with ( the added
+>> device is /dev/sde )
+>> # mdadm --grow --raid-devices=3D13 /dev/md0 --backup-file=3Dmd0.bak
+>>=20
+>> after that there way 0 disk activity so i checked it with
+>> # cat /proc/mdstat
+>>=20
+>> everything looked fine but speed was 0K/sec for about 1-2 hours. I
+>> decided to reboot the system as grow should continue after that. Aft=
+er
+>> that the array wasn't assembled at all. So i wanted to do it myself:
+>>=20
+>> # mdadm --assemble /dev/md0 /dev/sd[b-n] --backup-file=3Dmd0.bak=20
+>> --verbose
+>> mdadm: looking for devices for /dev/md0
+>> mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
+>> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
+>> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 10.
+>> mdadm: /dev/sde is identified as a member of /dev/md0, slot 12.
+>> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 11.
+>> mdadm: /dev/sdg is identified as a member of /dev/md0, slot 2.
+>> mdadm: /dev/sdh is identified as a member of /dev/md0, slot 3.
+>> mdadm: /dev/sdi is identified as a member of /dev/md0, slot 4.
+>> mdadm: /dev/sdj is identified as a member of /dev/md0, slot 5.
+>> mdadm: /dev/sdk is identified as a member of /dev/md0, slot 6.
+>> mdadm: /dev/sdl is identified as a member of /dev/md0, slot 7.
+>> mdadm: /dev/sdm is identified as a member of /dev/md0, slot 8.
+>> mdadm: /dev/sdn is identified as a member of /dev/md0, slot 9.
+>> mdadm: :/dev/md0 has an active reshape - checking if critical sectio=
+n
+>> needs to be restored
+>> mdadm: No backup metadata on md0.bak
+>> mdadm: No backup metadata on device-12
+>> mdadm: Failed to find backup of critical section
+>> mdadm: Failed to restore critical section for reshape, sorry.
+>>=20
+>> Backup looks broken. What can i do ?
+>>=20
+>> # mdadm --version
+>> mdadm - v3.3.2 - 21st August 2014
+>>=20
+>> # uname -a
+>> Linux claw-storage 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1+deb8u=
+3
+>> (2015-08-04) x86_64 GNU/Linux
+>>=20
+>> # du -sch md0.bak
+>> 56M     md0.bak
+>>=20
+>> # mdadm --examine /dev/sd[b-n]
+>> /dev/sdb:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : f3d9392c:a9290f8e:4ded7efc:284b4ecf
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 11cb12c0 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 0
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdc:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : a5b4533d:d5a4cdc5:e6dcd3aa:4a845044
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 7dfa9159 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 1
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdd:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : d39aede2:af92f321:8b6fbd9f:45c73ddf
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : f913b0b - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 10
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sde:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262056 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : 13fcdab1:69ce4358:5f1ee2b2:c809b990
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>   Bad Block Log : 512 entries available at offset 72 sectors
+>>        Checksum : d976c9a6 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 12
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdf:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : 487f70bd:b63c29d6:185aa418:208dc16d
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : a5b479ef - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 11
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdg:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : b798e990:6b50f1a0:3cde1ced:3a20dfaf
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 2053b0c9 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 2
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdh:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : bfe03a04:fda138cc:ef11727c:ff1b58d2
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 70ba79db - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 3
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdi:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : 4fdb8a05:3157bd26:f93ee8d7:fdd42f9f
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 2f151d28 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 4
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdj:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : 6010b774:e02b08ed:29484f97:b03e8a48
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 93158c4c - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 5
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdk:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : afab65ff:a79ed9e7:30ccd918:e2e1c21a
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 6c58c19c - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 6
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdl:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262056 sectors, after=3D976752816 sectors
+>>           State : clean
+>>     Device UUID : 8a9031cf:f9b5a888:70363d53:b269047d
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>   Bad Block Log : 512 entries available at offset 72 sectors
+>>        Checksum : b3d8bda7 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 7
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdm:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : 1eefdd8c:75b58c0c:f0c555bd:e704e89e
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : 472538a0 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 8
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+>> /dev/sdn:
+>>           Magic : a92b4efc
+>>         Version : 1.2
+>>     Feature Map : 0x4
+>>      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
+>>            Name : claw-storage:0  (local to host claw-storage)
+>>   Creation Time : Tue Jan 14 12:48:49 2014
+>>      Raid Level : raid6
+>>    Raid Devices : 13
+>>=20
+>>  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
+>>      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
+>>   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
+>>     Data Offset : 262144 sectors
+>>    Super Offset : 8 sectors
+>>    Unused Space : before=3D262064 sectors, after=3D816 sectors
+>>           State : clean
+>>     Device UUID : b8f9a259:c4522982:88538283:497eed43
+>>=20
+>>   Reshape pos'n : 0
+>>   Delta Devices : 1 (12->13)
+>>=20
+>>     Update Time : Thu Aug 13 17:11:05 2015
+>>        Checksum : f4b8e783 - correct
+>>          Events : 72402
+>>=20
+>>          Layout : left-symmetric
+>>      Chunk Size : 512K
+>>=20
+>>    Device Role : Active device 9
+>>    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missin=
+g, 'R' =3D=3D=20
+>> replacing)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+=20
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
