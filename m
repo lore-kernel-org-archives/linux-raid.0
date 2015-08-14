@@ -1,41 +1,20 @@
-From: <gregkh@linuxfoundation.org>
-Subject: Patch "md/bitmap: return an error when bitmap superblock is corrupt." has been added to the 3.14-stable tree
-Date: Fri, 14 Aug 2015 10:25:28 -0700
-Message-ID: <1439573128240167@kroah.com>
-References: <20150814170421.60d40eb0@noble>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 3.14 43/44] md/bitmap: return an error when bitmap superblock is corrupt.
+Date: Fri, 14 Aug 2015 10:45:20 -0700
+Message-ID: <20150814174402.942801621@linuxfoundation.org>
+References: <20150814174401.628233291@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150814170421.60d40eb0@noble>
+In-Reply-To: <20150814174401.628233291@linuxfoundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.com, gqjiang@suse.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rgoldwyn@suse.com
-Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
+To: linux-kernel@vger.kernel.org, "stable@vger.kernel.org, linux-raid" <linux-raid@vger.kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, NeilBrown <neilb@suse.com>, GuoQing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
+3.14-stable review patch.  If anyone has any objections, please let me know.
 
-This is a note to let you know that I've just added the patch titled
-
-    md/bitmap: return an error when bitmap superblock is corrupt.
-
-to the 3.14-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     md-bitmap-return-an-error-when-bitmap-superblock-is-corrupt.patch
-and it can be found in the queue-3.14 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
-From neilb@suse.com  Fri Aug 14 10:23:56 2015
-From: NeilBrown <neilb@suse.com>
-Date: Fri, 14 Aug 2015 17:04:21 +1000
-Subject: md/bitmap: return an error when bitmap superblock is corrupt.
-To: stable@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>
-Cc: GuoQing Jiang <gqjiang@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>, lkml <linux-kernel@vger.kernel.org>
-Message-ID: <20150814170421.60d40eb0@noble>
+------------------
 
 From: NeilBrown <neilb@suse.com>
 
@@ -72,10 +51,3 @@ Reported-by: GuoQing Jiang <gqjiang@suse.com>
  	sb = kmap_atomic(sb_page);
  
  	chunksize = le32_to_cpu(sb->chunksize);
-
-
-Patches currently in stable-queue which might be from neilb@suse.com are
-
-queue-3.14/md-raid1-extend-spinlock-to-protect-raid1_end_read_request-against-inconsistencies.patch
-queue-3.14/md-bitmap-return-an-error-when-bitmap-superblock-is-corrupt.patch
-queue-3.14/md-use-kzalloc-when-bitmap-is-disabled.patch
