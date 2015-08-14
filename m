@@ -1,14 +1,14 @@
 From: <gregkh@linuxfoundation.org>
-Subject: Patch "md/bitmap: return an error when bitmap superblock is corrupt." has been added to the 3.10-stable tree
-Date: Fri, 14 Aug 2015 10:25:23 -0700
-Message-ID: <143957312364176@kroah.com>
+Subject: Patch "md/bitmap: return an error when bitmap superblock is corrupt." has been added to the 3.14-stable tree
+Date: Fri, 14 Aug 2015 10:25:28 -0700
+Message-ID: <1439573128240167@kroah.com>
 References: <20150814170421.60d40eb0@noble>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20150814170421.60d40eb0@noble>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: neilb@suse.com, gqjiang@suse.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rgoldwyn@suse.com
 Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
 List-Id: linux-raid.ids
@@ -18,12 +18,12 @@ This is a note to let you know that I've just added the patch titled
 
     md/bitmap: return an error when bitmap superblock is corrupt.
 
-to the 3.10-stable tree which can be found at:
+to the 3.14-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
      md-bitmap-return-an-error-when-bitmap-superblock-is-corrupt.patch
-and it can be found in the queue-3.10 subdirectory.
+and it can be found in the queue-3.14 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
@@ -76,6 +76,6 @@ Reported-by: GuoQing Jiang <gqjiang@suse.com>
 
 Patches currently in stable-queue which might be from neilb@suse.com are
 
-queue-3.10/md-raid1-extend-spinlock-to-protect-raid1_end_read_request-against-inconsistencies.patch
-queue-3.10/md-bitmap-return-an-error-when-bitmap-superblock-is-corrupt.patch
-queue-3.10/md-use-kzalloc-when-bitmap-is-disabled.patch
+queue-3.14/md-raid1-extend-spinlock-to-protect-raid1_end_read_request-against-inconsistencies.patch
+queue-3.14/md-bitmap-return-an-error-when-bitmap-superblock-is-corrupt.patch
+queue-3.14/md-use-kzalloc-when-bitmap-is-disabled.patch
