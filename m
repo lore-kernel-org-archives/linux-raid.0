@@ -1,7 +1,7 @@
-From: Tejas Rao <raot@bnl.gov>
+From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
 Subject: Re: Problems with Seagate 8TB SMR archive drives
-Date: Fri, 14 Aug 2015 14:19:58 -0400
-Message-ID: <55CE314E.2090407@bnl.gov>
+Date: Fri, 14 Aug 2015 11:22:06 -0700
+Message-ID: <55CE31CE.8080100@aeoncomputing.com>
 References: <55CE2ACA.50203@bnl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
@@ -9,19 +9,26 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <55CE2ACA.50203@bnl.gov>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Tejas Rao <raot@bnl.gov>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-What does "md: super_written gets error=-121, uptodate=0" mean? Looking 
-at the md man page, I see the below. Does the error mean a write failed? 
-Can we make it so that md waits for the write to complete for 480 seconds?
+Tejas,
 
-If the md driver detects a write error on a device in a RAID1, RAID4, 
-RAID5, RAID6, or RAID10 array, it immediately disables that device 
-(marking it as faulty)  and  continues  operation  on  the remaining 
-devices.
+You are probably running firmware AR13 or older. The drives are designed 
+for very power efficient archive use and they have a very aggressive 
+spin down timer. Once they drop to a slower speed or stopped it will 
+take a significant time to get back up to ready. I would highly suggest 
+updating to code AR14 or AR15.
 
-On 8/14/2015 13:52, Tejas Rao wrote:
+The drives aren't really intended for your use model. Perhaps a cron job 
+that does a dd read (direct mode) of a hundred MBs or so from the md 
+device to dev/null every couple minutes might be enough to keep them 
+warm and not spun down.
+
+--Jeff
+
+
+On 8/14/15 10:52 AM, Tejas Rao wrote:
 > I am aware that the Seagate SMR 8tb archive drives are not meant to be 
 > used in a RAID environment as they lack TLER/ERC support.
 >
@@ -433,4 +440,24 @@ On 8/14/2015 13:52, Tejas Rao wrote:
 >
 >
 >
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+------------------------------
+Jeff Johnson
+Co-Founder
+Aeon Computing
+
+jeff.johnson@aeoncomputing.com
+www.aeoncomputing.com
+t: 858-412-3810 x1001   f: 858-412-3845
+m: 619-204-9061
+
+4170 Morena Boulevard, Suite D - San Diego, CA 92117
+
+High-performance Computing / Lustre Filesystems / Scale-out Storage
 
