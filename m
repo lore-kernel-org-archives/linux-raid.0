@@ -1,664 +1,93 @@
-From: Daniel Koch <koch@triple6.org>
-Subject: Re: Failed to grow
-Date: Fri, 14 Aug 2015 11:22:20 +0200
-Message-ID: <3161f36377c85c092f4f3a461295e76a@mail.triple6.org>
-References: <621f0ebc8080e4ab56eaacde5f9416cf@mail.triple6.org>
+From: Nate Dailey <nate.dailey@stratus.com>
+Subject: Re: [PATCH] drivers/md/md.c: ignore recovery_offset if bitmap exists
+Date: Fri, 14 Aug 2015 10:58:15 -0400
+Message-ID: <55CE0207.1020707@stratus.com>
+References: <1438111733-17778-1-git-send-email-nate.dailey@stratus.com> <55B93B9D.5000103@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <621f0ebc8080e4ab56eaacde5f9416cf@mail.triple6.org>
+In-Reply-To: <55B93B9D.5000103@stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, Jes.Sorensen@redhat.com
 List-Id: linux-raid.ids
 
-I crawled the archive of the list and found that --invalid-backup with =
-a=20
-faked and empty backup might help. Here is the result:
+I hate to nag... but looking for feedback on this change, which addresses what 
+seems to me to be a serious bug.
 
-mdadm --assemble --force --run --verbose /dev/md0=20
---backup-file=3Dempty.bak --invalid-backup
-mdadm: looking for devices for /dev/md0
-mdadm: no RAID superblock on /dev/sda5
-mdadm: no RAID superblock on /dev/sda2
-mdadm: no RAID superblock on /dev/sda1
-mdadm: no RAID superblock on /dev/sda
-mdadm: /dev/sdn is identified as a member of /dev/md0, slot 9.
-mdadm: /dev/sdj is identified as a member of /dev/md0, slot 5.
-mdadm: /dev/sdh is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdm is identified as a member of /dev/md0, slot 8.
-mdadm: /dev/sdl is identified as a member of /dev/md0, slot 7.
-mdadm: /dev/sdk is identified as a member of /dev/md0, slot 6.
-mdadm: /dev/sdi is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdg is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdd is identified as a member of /dev/md0, slot 10.
-mdadm: /dev/sde is identified as a member of /dev/md0, slot 12.
-mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdf is identified as a member of /dev/md0, slot 11.
-mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
-mdadm: :/dev/md0 has an active reshape - checking if critical section=20
-needs to be restored
-mdadm: Cannot read from empty.bak
-mdadm: No backup metadata on device-12
-mdadm: Failed to find backup of critical section
-mdadm: continuing without restoring backup
-mdadm: added /dev/sdc to /dev/md0 as 1
-mdadm: added /dev/sdg to /dev/md0 as 2
-mdadm: added /dev/sdh to /dev/md0 as 3
-mdadm: added /dev/sdi to /dev/md0 as 4
-mdadm: added /dev/sdj to /dev/md0 as 5
-mdadm: added /dev/sdk to /dev/md0 as 6
-mdadm: added /dev/sdl to /dev/md0 as 7
-mdadm: added /dev/sdm to /dev/md0 as 8
-mdadm: added /dev/sdn to /dev/md0 as 9
-mdadm: added /dev/sdd to /dev/md0 as 10
-mdadm: added /dev/sdf to /dev/md0 as 11
-mdadm: added /dev/sde to /dev/md0 as 12
-mdadm: added /dev/sdb to /dev/md0 as 0
-mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+Thanks,
+Nate
 
 
-kern.log:
-Aug 14 11:18:20 claw-storage kernel: [  599.182677] md: md0 stopped.
-Aug 14 11:18:20 claw-storage kernel: [  599.184459]  sdn: unknown=20
-partition table
-Aug 14 11:18:20 claw-storage kernel: [  599.185604]  sdj: unknown=20
-partition table
-Aug 14 11:18:20 claw-storage kernel: [  599.186424]  sdm: unknown=20
-partition table
-Aug 14 11:18:20 claw-storage kernel: [  599.187869]  sdl: unknown=20
-partition table
-Aug 14 11:18:20 claw-storage kernel: [  599.189108]  sdi: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.213722]  sde: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.214073] md: bind<sdc>
-Aug 14 11:18:21 claw-storage kernel: [  599.214248] md: bind<sdg>
-Aug 14 11:18:21 claw-storage kernel: [  599.214427] md: bind<sdh>
-Aug 14 11:18:21 claw-storage kernel: [  599.214438]  sdb: sdb1
-Aug 14 11:18:21 claw-storage kernel: [  599.214620] md: bind<sdi>
-Aug 14 11:18:21 claw-storage kernel: [  599.214845] md: bind<sdj>
-Aug 14 11:18:21 claw-storage kernel: [  599.215000] md: bind<sdk>
-Aug 14 11:18:21 claw-storage kernel: [  599.215140] md: bind<sdl>
-Aug 14 11:18:21 claw-storage kernel: [  599.215278]  sdf: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.215337] md: bind<sdm>
-Aug 14 11:18:21 claw-storage kernel: [  599.215477] md: bind<sdn>
-Aug 14 11:18:21 claw-storage kernel: [  599.215588] md: bind<sdd>
-Aug 14 11:18:21 claw-storage kernel: [  599.216165] md: bind<sdf>
-Aug 14 11:18:21 claw-storage kernel: [  599.216400]  sde: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.216923] md: bind<sde>
-Aug 14 11:18:21 claw-storage kernel: [  599.217159]  sdf: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.217513] md: bind<sdb>
-Aug 14 11:18:21 claw-storage kernel: [  599.218292]  sdl: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.218743] md/raid:md0:=20
-reshape_position too early for auto-recovery - aborting.
-Aug 14 11:18:21 claw-storage kernel: [  599.220772] md: pers->run()=20
-failed ...
-Aug 14 11:18:21 claw-storage kernel: [  599.222047]  sdi: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.222135] md: md0 stopped.
-Aug 14 11:18:21 claw-storage kernel: [  599.222142] md: unbind<sdb>
-Aug 14 11:18:21 claw-storage kernel: [  599.222616]  sdb: sdb1
-Aug 14 11:18:21 claw-storage kernel: [  599.223612]  sdi: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.224397]  sdl: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.225077]  sdf: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.225907]  sde: unknown=20
-partition table
-Aug 14 11:18:21 claw-storage kernel: [  599.226498]  sdb: sdb1
-Aug 14 11:18:21 claw-storage kernel: [  599.232193] md: export_rdev(sdb=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.232205] md: unbind<sde>
-Aug 14 11:18:21 claw-storage kernel: [  599.247747] md: export_rdev(sde=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.247766] md: unbind<sdf>
-Aug 14 11:18:21 claw-storage kernel: [  599.271766] md: export_rdev(sdf=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.271774] md: unbind<sdd>
-Aug 14 11:18:21 claw-storage kernel: [  599.287796] md: export_rdev(sdd=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.287818] md: unbind<sdn>
-Aug 14 11:18:21 claw-storage kernel: [  599.319830] md: export_rdev(sdn=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.319841] md: unbind<sdm>
-Aug 14 11:18:21 claw-storage kernel: [  599.331804] md: export_rdev(sdm=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.331816] md: unbind<sdl>
-Aug 14 11:18:21 claw-storage kernel: [  599.346199] md: export_rdev(sdl=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.346221] md: unbind<sdk>
-Aug 14 11:18:21 claw-storage kernel: [  599.355791] md: export_rdev(sdk=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.355805] md: unbind<sdj>
-Aug 14 11:18:21 claw-storage kernel: [  599.371779] md: export_rdev(sdj=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.371794] md: unbind<sdi>
-Aug 14 11:18:21 claw-storage kernel: [  599.387838] md: export_rdev(sdi=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.387850] md: unbind<sdh>
-Aug 14 11:18:21 claw-storage kernel: [  599.403814] md: export_rdev(sdh=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.403839] md: unbind<sdg>
-Aug 14 11:18:21 claw-storage kernel: [  599.431842] md: export_rdev(sdg=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.431852] md: unbind<sdc>
-Aug 14 11:18:21 claw-storage kernel: [  599.463878] md: export_rdev(sdc=
-)
-Aug 14 11:18:21 claw-storage kernel: [  599.465322] md: bind<sdn>
-Aug 14 11:18:21 claw-storage kernel: [  599.467200] md: bind<sdj>
-Aug 14 11:18:21 claw-storage kernel: [  599.469274] md: bind<sde>
-Aug 14 11:18:21 claw-storage kernel: [  599.471375] md: bind<sdi>
-Aug 14 11:18:21 claw-storage kernel: [  599.473784] md: bind<sdf>
-Aug 14 11:18:21 claw-storage kernel: [  599.476780] md: bind<sdl>
-Aug 14 11:18:21 claw-storage kernel: [  599.480103] md: bind<sdm>
-Aug 14 11:18:21 claw-storage kernel: [  599.488333] md: bind<sdb>
 
-#cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : inactive sdm[8](S) sdn[9](S) sdj[5](S) sdb[0](S) sdf[11](S)=20
-sdi[4](S) sde[13](S) sdl[12](S)
-       14161940096 blocks super 1.2
 
-unused devices: <none>
+On 07/29/2015 04:46 PM, Joe Lawrence wrote:
+> On 07/28/2015 03:28 PM, Nate Dailey wrote:
+>> If a bitmap recovery is interrupted and later restarted, then
+>> sectors below the recovery offset, written between interruption
+>> and resumption, will not be copied. This results in corruption.
+>>
+>> See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=777511
+>> for a script that can be used to repro this.
+>>
+>> Seems like ignoring the recovery_offset if a bitmap exists is
+>> the way to go.
+>>
+>> Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+>> ---
+>>   drivers/md/md.c | 24 +++++++++++++-----------
+>>   1 file changed, 13 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> index 0c2a4e8..79c6285 100644
+>> --- a/drivers/md/md.c
+>> +++ b/drivers/md/md.c
+>> @@ -7738,16 +7738,18 @@ void md_do_sync(struct md_thread *thread)
+>>   	else {
+>>   		/* recovery follows the physical size of devices */
+>>   		max_sectors = mddev->dev_sectors;
+>> -		j = MaxSector;
+>> -		rcu_read_lock();
+>> -		rdev_for_each_rcu(rdev, mddev)
+>> -			if (rdev->raid_disk >= 0 &&
+>> -			    !test_bit(Faulty, &rdev->flags) &&
+>> -			    !test_bit(In_sync, &rdev->flags) &&
+>> -			    rdev->recovery_offset < j)
+>> -				j = rdev->recovery_offset;
+>> -		rcu_read_unlock();
+>> -
+>> +		/* we don't use the offset if there's a bitmap */
+>> +		if (!mddev->bitmap) {
+>> +			j = MaxSector;
+>> +			rcu_read_lock();
+>> +			rdev_for_each_rcu(rdev, mddev)
+>> +				if (rdev->raid_disk >= 0 &&
+>> +				    !test_bit(Faulty, &rdev->flags) &&
+>> +				    !test_bit(In_sync, &rdev->flags) &&
+>> +				    rdev->recovery_offset < j)
+>> +					j = rdev->recovery_offset;
+>> +			rcu_read_unlock();
+>> +		}
+>>   		/* If there is a bitmap, we need to make sure all
+>>   		 * writes that started before we added a spare
+>>   		 * complete before we start doing a recovery.
+>> @@ -7756,7 +7758,7 @@ void md_do_sync(struct md_thread *thread)
+>>   		 * recovery has checked that bit and skipped that
+>>   		 * region.
+>>   		 */
+>> -		if (mddev->bitmap) {
+>> +		else {
+>>   			mddev->pers->quiesce(mddev, 1);
+>>   			mddev->pers->quiesce(mddev, 0);
+>>   		}
+>>
+> [+cc Ben & Cyril from the Debian bug report]
+>
+> -- Joe
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-So no luck at all. All disks are accessable using smart which makes me=20
-think they are operational.
----
-Viele Gr=C3=BC=C3=9Fe,
-
-Daniel Koch
-
-Am 2015-08-13 17:53, schrieb Daniel Koch:
-> Hello every one,
->=20
-> I have a huge problem. I started to grow a array with ( the added
-> device is /dev/sde )
-> # mdadm --grow --raid-devices=3D13 /dev/md0 --backup-file=3Dmd0.bak
->=20
-> after that there way 0 disk activity so i checked it with
-> # cat /proc/mdstat
->=20
-> everything looked fine but speed was 0K/sec for about 1-2 hours. I
-> decided to reboot the system as grow should continue after that. Afte=
-r
-> that the array wasn't assembled at all. So i wanted to do it myself:
->=20
-> # mdadm --assemble /dev/md0 /dev/sd[b-n] --backup-file=3Dmd0.bak=20
-> --verbose
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
-> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
-> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 10.
-> mdadm: /dev/sde is identified as a member of /dev/md0, slot 12.
-> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 11.
-> mdadm: /dev/sdg is identified as a member of /dev/md0, slot 2.
-> mdadm: /dev/sdh is identified as a member of /dev/md0, slot 3.
-> mdadm: /dev/sdi is identified as a member of /dev/md0, slot 4.
-> mdadm: /dev/sdj is identified as a member of /dev/md0, slot 5.
-> mdadm: /dev/sdk is identified as a member of /dev/md0, slot 6.
-> mdadm: /dev/sdl is identified as a member of /dev/md0, slot 7.
-> mdadm: /dev/sdm is identified as a member of /dev/md0, slot 8.
-> mdadm: /dev/sdn is identified as a member of /dev/md0, slot 9.
-> mdadm: :/dev/md0 has an active reshape - checking if critical section
-> needs to be restored
-> mdadm: No backup metadata on md0.bak
-> mdadm: No backup metadata on device-12
-> mdadm: Failed to find backup of critical section
-> mdadm: Failed to restore critical section for reshape, sorry.
->=20
-> Backup looks broken. What can i do ?
->=20
-> # mdadm --version
-> mdadm - v3.3.2 - 21st August 2014
->=20
-> # uname -a
-> Linux claw-storage 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt11-1+deb8u3
-> (2015-08-04) x86_64 GNU/Linux
->=20
-> # du -sch md0.bak
-> 56M     md0.bak
->=20
-> # mdadm --examine /dev/sd[b-n]
-> /dev/sdb:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : f3d9392c:a9290f8e:4ded7efc:284b4ecf
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 11cb12c0 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 0
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdc:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : a5b4533d:d5a4cdc5:e6dcd3aa:4a845044
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 7dfa9159 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 1
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdd:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : d39aede2:af92f321:8b6fbd9f:45c73ddf
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : f913b0b - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 10
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sde:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262056 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : 13fcdab1:69ce4358:5f1ee2b2:c809b990
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : d976c9a6 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 12
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdf:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : 487f70bd:b63c29d6:185aa418:208dc16d
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : a5b479ef - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 11
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdg:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : b798e990:6b50f1a0:3cde1ced:3a20dfaf
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 2053b0c9 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 2
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdh:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : bfe03a04:fda138cc:ef11727c:ff1b58d2
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 70ba79db - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 3
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdi:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : 4fdb8a05:3157bd26:f93ee8d7:fdd42f9f
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 2f151d28 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 4
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdj:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : 6010b774:e02b08ed:29484f97:b03e8a48
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 93158c4c - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 5
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdk:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : afab65ff:a79ed9e7:30ccd918:e2e1c21a
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 6c58c19c - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 6
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdl:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262056 sectors, after=3D976752816 sectors
->           State : clean
->     Device UUID : 8a9031cf:f9b5a888:70363d53:b269047d
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : b3d8bda7 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 7
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdm:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : 1eefdd8c:75b58c0c:f0c555bd:e704e89e
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : 472538a0 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 8
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
-> /dev/sdn:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 633c1520:61c07f69:26a83b45:b9756587
->            Name : claw-storage:0  (local to host claw-storage)
->   Creation Time : Tue Jan 14 12:48:49 2014
->      Raid Level : raid6
->    Raid Devices : 13
->=20
->  Avail Dev Size : 2930015024 (1397.14 GiB 1500.17 GB)
->      Array Size : 16115078144 (15368.54 GiB 16501.84 GB)
->   Used Dev Size : 2930014208 (1397.14 GiB 1500.17 GB)
->     Data Offset : 262144 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=3D262064 sectors, after=3D816 sectors
->           State : clean
->     Device UUID : b8f9a259:c4522982:88538283:497eed43
->=20
->   Reshape pos'n : 0
->   Delta Devices : 1 (12->13)
->=20
->     Update Time : Thu Aug 13 17:11:05 2015
->        Checksum : f4b8e783 - correct
->          Events : 72402
->=20
->          Layout : left-symmetric
->      Chunk Size : 512K
->=20
->    Device Role : Active device 9
->    Array State : AAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing=
-, 'R' =3D=3D=20
-> replacing)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
