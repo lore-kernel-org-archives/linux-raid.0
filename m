@@ -1,90 +1,46 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: moving arrays from MBR part table install to GPT? Possible?
-Date: Sun, 16 Aug 2015 13:27:47 +0100
-Message-ID: <55D081C3.4090604@youngman.org.uk>
-References: <55D02E2E.1080909@suddenlinkmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH stable] md/bitmap: return an error when bitmap
+ superblock is corrupt.
+Date: Mon, 17 Aug 2015 10:33:41 +1000
+Message-ID: <20150817103341.1b444214@noble>
+References: <20150814170421.60d40eb0@noble>
+	<20150814172351.GB17745@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55D02E2E.1080909@suddenlinkmail.com>
+In-Reply-To: <20150814172351.GB17745@kroah.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>, mdraid <linux-raid@vger.kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: stable@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, GuoQing Jiang <gqjiang@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 16/08/15 07:31, David C. Rankin wrote:
-> All,
+On Fri, 14 Aug 2015 10:23:51 -0700 Greg KH <greg@kroah.com> wrote:
+
+> On Fri, Aug 14, 2015 at 05:04:21PM +1000, NeilBrown wrote:
+> > 
+> > commit b97e92574c0bf335db1cd2ec491d8ff5cd5d0b49 upstream
+> >     Use separate bitmaps for each nodes in the cluster
+> > 
+> > bitmap_read_sb() validates the bitmap superblock that it reads in.
+> > If it finds an inconsistency like a bad magic number or out-of-range
+> > version number, it prints an error and returns, but it incorrectly
+> > returns zero, so the array is still assembled with the (invalid) bitmap.
+> > 
+> > This means it could try to use a bitmap with a new version number which
+> > it therefore does not understand.
+> > 
+> > This bug was introduced in 3.5 and fix as part of a larger patch in 4.1.
+> > So the patch is suitable for any -stable kernel in that range.
+> > 
+> > Fixes: 27581e5ae01f ("md/bitmap: centralise allocation of bitmap file pages.")
+> > Cc: stable@vger.kernel.org (v3.5..v4.1)
 > 
->   I suffered a controller failure on my server housing a
-> 2-disk/4-partition raid1 mdraid array under Archlinux with MBR partition
-> table. The original motherboard was non-UEFI, of course everything now
-> is. I am getting conflicting information whether my existing arrays are
-> usable with the new UEFI board. I don't know if this is the best place
-> to ask, but heck, there is a lot of collective wisdom regarding mdadm here.
-
-I run gentoo ... and migrated my system from mbr to gpt ...
+> b97e92574c0 is in 4.1, so do you mean (v3.5..v4.0) here?
 > 
->   I am planning to set the BIOS on the new board to Legacy and attempt
-> to use my existing arrays by booting the Arch install media, assembling
-> the arrays, then chrooting and rebuilding initramfs to preserve the
-> existing setup. Is there any reason that can't work?. (I haven't dealt
-> with the UEFI fun before)
 
-If your Arch will work on the new hardware, I suspect, actually, that
-just transferring the drives across and booting will work (although I
-haven't played with UEFI before either).
+Yes,  I did.  Thanks!
 
-Your biggest problem is going to be Grub2, I expect.
-> 
->   If that will not work, I'm left with installing to new drives. If I do
-> end up with a full install, I'm left with the MBR or GPT partition table
-> choice. I will install to 2 new drives that I want to again be setup as
-> raid1 arrays with mdadmin. Does mdadmin/mdraid require a MBR partition
-> type? Or, can I create a GPT partition table and use mdadm to manage the
-> array?
+v3.5..v4.0.
 
-Drives over ?2TB require GPT. It's nothing to do with the software - the
-mbr (allegedly) cannot partition larger drives. gfdisk will quite
-happily write both a GPT and an MBR to the disk, for the software to use
-either. It does warn you, however that "mixing and matching" is
-dangerous if they get out of sync.
-> 
->   If GPT is fine, then is there anyway to migrate my existing array to a
-> GPT partition table in the new box without having to install to new
-> drives with a GPT table and then mount one of the existing drives to
-> copy the data to the new array?
-
-Use gfdisk, tell it to write a GPT. Just be careful it doesn't mess up
-Grub2 for you ...
-
-If you want to use new drives, once the system is up and running just
-use mdadm --add or --replace.
-> 
->   If these questions are already answered in a link somewhere, I
-> apologize, I haven't found it. Thanks for any help/advise you can provide.
-> 
-Personally, I think your biggest problem is going to be grub. What I'd
-do (and I'm going to have to do it sometime soon) is ...
-
-Put the old drives on the new mobo. Boot using recovery media and make
-sure the arrays are okay (shouldn't be a problem).
-
-READ UP ON GRUB! Did I say that was going to be your biggest problem?
-
-Fix grub to boot into your old Arch setup. It might be a good idea to
-fit a new (old :-) disk solely for installing grub on until you're happy
-everything is okay.
-
-Your old system will now be up and running on the new mobo. Don't bother
-switching your old drives to gpt, although you can, as I say, just use
-gfdisk to write a GPT. Just be careful it doesn't mess up grub though ...
-
-If you want to add new drives, you can use GPT on them, as I say, if
-they're large disks, you'll need to use GPT.
-
-Sounds like it's a small system, a home system? If you get new drives,
-make sure they're proper raid drives, like WD Red. I've got Seagate
-Barracudas, which was a mistake ...
-
-Cheers,
-Wol
+NeilBrown
