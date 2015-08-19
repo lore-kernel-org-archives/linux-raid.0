@@ -1,60 +1,87 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [md:devel 47/50] drivers/md/raid5-cache.c:828:24: sparse:
- incompatible types in comparison expression (different address spaces)
-Date: Wed, 19 Aug 2015 14:57:16 +0800
-Message-ID: <201508191414.RqHCNHaZ%fengguang.wu@intel.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [md:devel 46/50] drivers/md/raid5-cache.c:710:1371: error: call
+ to '__cmpxchg_wrong_size' declared with attribute error: Bad argument size
+ for cmpxchg
+Date: Wed, 19 Aug 2015 14:45:28 -0700
+Message-ID: <20150819214526.GA2455428@devbig257.prn2.facebook.com>
+References: <201508191412.vxUg51nb%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <201508191412.vxUg51nb%fengguang.wu@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
+To: kbuild test robot <fengguang.wu@intel.com>
 Cc: kbuild-all@01.org, NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-tree:   git://neil.brown.name/md devel
-head:   da63d1b483fa5a9604d65974eb442a110ee41e89
-commit: b8c1c83f96ea61fe7fc9aa960edfc6e75b0c56a3 [47/50] raid5: log recovery
-reproduce:
-  # apt-get install sparse
-  git checkout b8c1c83f96ea61fe7fc9aa960edfc6e75b0c56a3
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
+On Wed, Aug 19, 2015 at 02:44:13PM +0800, kbuild test robot wrote:
+> tree:   git://neil.brown.name/md devel
+> head:   da63d1b483fa5a9604d65974eb442a110ee41e89
+> commit: ae7d339ebdd2b176a49442a8315cfe30173b5854 [46/50] raid5: log reclaim support
+> config: i386-allyesconfig (attached as .config)
+> reproduce:
+>   git checkout ae7d339ebdd2b176a49442a8315cfe30173b5854
+>   # save the attached .config to linux build tree
+>   make ARCH=i386 
+> 
+> All error/warnings (new ones prefixed by >>):
+> 
+>    drivers/md/raid5-cache.c: In function 'r5l_wake_reclaim':
+> >> drivers/md/raid5-cache.c:710:1371: error: call to '__cmpxchg_wrong_size' declared with attribute error: Bad argument size for cmpxchg
+>      } while (cmpxchg(&log->reclaim_target, target, space) != target);
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+>    drivers/md/raid5-cache.c: In function 'r5l_do_reclaim':
+> >> drivers/md/raid5-cache.c:620:631: error: call to '__xchg_wrong_size' declared with attribute error: Bad argument size for xchg
+>      sector_t reclaim_target = xchg(&log->reclaim_target, 0);
+
+Thanks for the reporting. Here is the fix for the issues.
 
 
-sparse warnings: (new ones prefixed by >>)
+From d5c0fdd525b5ea95d4b7ef178ff6010aaa9b0e81 Mon Sep 17 00:00:00 2001
+Message-Id: <d5c0fdd525b5ea95d4b7ef178ff6010aaa9b0e81.1440020586.git.shli@fb.com>
+From: Shaohua Li <shli@fb.com>
+Date: Wed, 19 Aug 2015 14:38:20 -0700
+Subject: [PATCH] raid5: fix some build issues
 
->> drivers/md/raid5-cache.c:828:24: sparse: incompatible types in comparison expression (different address spaces)
-   drivers/md/raid5-cache.c:832:25: sparse: incompatible types in comparison expression (different address spaces)
+Fix some build issues. I change the reclaim_target to 'unsigned long' so
+we can use xchg. It can overflow in 32bit in theory, but don't think
+it's a real issue.
 
-vim +828 drivers/md/raid5-cache.c
-
-   812			if (!test_bit(R5_Wantwrite, &sh->dev[disk_index].flags))
-   813				continue;
-   814			addr = kmap_atomic(sh->dev[disk_index].page);
-   815			checksum = crc32_le(log->uuid_checksum, addr, PAGE_SIZE);
-   816			kunmap_atomic(addr);
-   817			if (checksum != sh->dev[disk_index].log_checksum)
-   818				goto error;
-   819		}
-   820	
-   821		for (disk_index = 0; disk_index < sh->disks; disk_index++) {
-   822			struct md_rdev *rdev, *rrdev;
-   823			if (!test_and_clear_bit(R5_Wantwrite,
-   824					&sh->dev[disk_index].flags))
-   825				continue;
-   826	
-   827			/* in case device is broken */
- > 828			rdev = rcu_dereference(conf->disks[disk_index].rdev);
-   829			if (rdev)
-   830				sync_page_io(rdev, stripe_sect, PAGE_SIZE,
-   831					sh->dev[disk_index].page, WRITE, false);
-   832			rrdev = rcu_dereference(conf->disks[disk_index].replacement);
-   833			if (rrdev)
-   834				sync_page_io(rrdev, stripe_sect, PAGE_SIZE,
-   835					sh->dev[disk_index].page, WRITE, false);
-   836		}
-
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/md/md.c          | 2 +-
+ drivers/md/raid5-cache.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4775029..9843ba3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1657,7 +1657,7 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 			set_bit(Faulty, &rdev->flags);
+ 			break;
+ 		case MD_DISK_ROLE_JOURNAL: /* journal device */
+-			if (!(sb->feature_map & MD_FEATURE_JOURNAL)) {
++			if (!(le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)) {
+ 				/* journal device without journal feature */
+ 				printk(KERN_WARNING
+ 				  "md: journal device provided without "
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 52feb90..681621d 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -69,7 +69,7 @@ struct r5l_log {
+ 	struct kmem_cache *io_kc;
+ 
+ 	struct md_thread *reclaim_thread;
+-	sector_t reclaim_target; /* number of space that need to be reclaimed.
++	unsigned long reclaim_target; /* number of space that need to be reclaimed.
+ 				  * if it's 0, reclaim spaces used by io_units
+ 				  * which are in IO_UNIT_STRIPE_END state (eg,
+ 				  * reclaim dones't wait for specific io_unit
+-- 
+1.8.1
+
