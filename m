@@ -1,39 +1,67 @@
-From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
-Subject: [PATCH 0/2] mdadm: Fix udev rule interaction with systemd
-Date: Tue, 18 Aug 2015 13:51:31 +0200
-Message-ID: <1439898693-936-1-git-send-email-thomas@archlinux.org>
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [md:devel 41/50] drivers/md/md.c:1663:33: sparse: restricted __le32
+ degrades to integer
+Date: Wed, 19 Aug 2015 14:51:59 +0800
+Message-ID: <201508191457.WvmoxqAc%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: kbuild-all@01.org, NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+tree:   git://neil.brown.name/md devel
+head:   da63d1b483fa5a9604d65974eb442a110ee41e89
+commit: 1a8a1e097abc6d2787ef6f2e915d5f18d42a1e6c [41/50] MD: add a new disk role to present write journal device
+reproduce:
+  # apt-get install sparse
+  git checkout 1a8a1e097abc6d2787ef6f2e915d5f18d42a1e6c
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Good morning,
 
-I discovered a problem with the interaction between systemd, mdadm and lvm: Every 5th boot or so, my lvm physical volume
-on top of a raid1 array would not activate. This turned out to be a race condition with mdadm.
+sparse warnings: (new ones prefixed by >>)
 
-When activating the raid array, two uevents happen: an "ADD" event and a "CHANGE" event. In both cases, the mdadm udev
-rules look at the md/array_state file in sysfs. However, I observed that an array with md/array_state == clean may still
-be inaccessible. So, in order to analyze the issue, I looked at the contents of the "md/array_state" and the "size" sysfs
-files. I discovered that during activation, my raid1 was in the following three states:
+   drivers/md/md.c:1501:34: sparse: cast to restricted __le64
+>> drivers/md/md.c:1663:33: sparse: restricted __le32 degrades to integer
+   drivers/md/md.c:1794:40: sparse: incorrect type in assignment (different base types)
+   drivers/md/md.c:1794:40:    expected unsigned long long [unsigned] [long] [long long] [usertype] <noident>
+   drivers/md/md.c:1794:40:    got restricted __le64 [usertype] <noident>
+   drivers/md/md.c:1872:26: sparse: incorrect type in assignment (different base types)
+   drivers/md/md.c:1872:26:    expected restricted __le64 [usertype] super_offset
+   drivers/md/md.c:1872:26:    got unsigned long [unsigned] [usertype] sb_start
+   drivers/md/md.c:8980:39: sparse: restricted __le64 degrades to integer
 
-1) md/array_state: inactive, size: 0
-2) md/array_state: clean, size: 0
-3) md/array_state: clean, size: (the real array size)
+vim +1663 drivers/md/md.c
 
-So, if the ADD event happens in state 1) and the CHANGE event happens in state 3), everything is fine. However, sometimes the
-ADD event happens in state 2) and the CHANGE event in state 3). In the latter case, the device is activated in systemd during
-the ADD event, but udev internal settings like ID_FS_TYPE are not set (since the device is inaccessible). This causes the
-problem described above.
+  1647		}
+  1648		if (mddev->level != LEVEL_MULTIPATH) {
+  1649			int role;
+  1650			if (rdev->desc_nr < 0 ||
+  1651			    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
+  1652				role = MD_DISK_ROLE_SPARE;
+  1653				rdev->desc_nr = -1;
+  1654			} else
+  1655				role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
+  1656			switch(role) {
+  1657			case MD_DISK_ROLE_SPARE: /* spare */
+  1658				break;
+  1659			case MD_DISK_ROLE_FAULTY: /* faulty */
+  1660				set_bit(Faulty, &rdev->flags);
+  1661				break;
+  1662			case MD_DISK_ROLE_JOURNAL: /* journal device */
+> 1663				if (!(sb->feature_map & MD_FEATURE_JOURNAL)) {
+  1664					/* journal device without journal feature */
+  1665					printk(KERN_WARNING
+  1666					  "md: journal device provided without "
+  1667					  "journal feature, ignoring the device\n");
+  1668					return -EINVAL;
+  1669				}
+  1670				set_bit(Journal, &rdev->flags);
+  1671				break;
 
-What I don't know is if
-a) the transition from state 1) to 3) should be atomic in the kernel.
-b) state 2) is legal and this needs to be worked around in udev.
-
-The first patch fixes a problem where ENV{SYSTEMD_READY} is never set to 1 after being set to 0.
-The second patch checks whether the array has non-zero size before activating the systemd device unit (in case this is
-not a kernel bug).
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
