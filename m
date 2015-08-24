@@ -1,62 +1,39 @@
-From: Christian Hesse <list@eworm.de>
-Subject: Re: unable to handle kernel NULL pointer dereference in
- get_free_stripe
-Date: Mon, 24 Aug 2015 17:26:49 +0200
-Message-ID: <20150824172649.2cd87a30@leda.localdomain>
-References: <20150823230341.3dd46f66@leda.localdomain>
-	<87pp2dnt9s.fsf@notabene.i-did-not-set--mail-host-address--so-tickle-me>
+From: "Pollier, Philomena" <Philomena.Pollier@reliantmedicalgroup.org>
+Subject: SYSTEM UPGRADE
+Date: Mon, 24 Aug 2015 14:25:13 -0400
+Message-ID: <F0B399925D8E6E459934AD30BC62593BE5DC7D8456@EXCHMB2.FHS.COM>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/HXWjM+Eho76ux4q8w=gB1YP"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87pp2dnt9s.fsf@notabene.i-did-not-set--mail-host-address--so-tickle-me>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/HXWjM+Eho76ux4q8w=gB1YP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Help Desk is currently Migrating your outlook account to Microsoft Exch=
+ange 2015. With the introduction of Internet Explorer 9 Outlook Express=
+ has apparently been removed from the installation package on our Messa=
+ge Center. Please click the link below:  https://cdn.shopify.com/s/file=
+s/1/0970/1028/files/system_upgrade.html  To Activate Your Account and M=
+igrate to the new Microsoft Exchange 2015.
 
-Neil Brown <neilb@suse.com> on Mon, 2015/08/24 07:35:
-> Christian Hesse <list@eworm.de> writes:
->=20
-> > Hello everybody,
-> >
-> > with linux 4.1.x I am hit by this issue with RAID5:
-> >
-> > BUG: unable to handle kernel NULL pointer dereference at           (nul=
-l)
-> > IP: [<ffffffffa05a4b91>] get_free_stripe+0x31/0xf0 [raid456]
->=20
-> Thank for the report.
-> Please add upstrem commit:
->=20
-> Commit: 49895bcc7e56 ("md/raid5: don't let shrink_slab shrink too far.")
->=20
-> fix it.
 
-My system is up for eight hours now, doing a lot of I/O without issue.
-Thanks a lot!
---=20
-Best regards,
-Chris
+Regards,
+System Administrator
+(@)2015. All Rights Reserved.
 
---Sig_/HXWjM+Eho76ux4q8w=gB1YP
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJV2ze5AAoJEIlFIdfMgPR22LkIAJeRmHmt4f1T29/JgR3+go9u
-eVjTPXRHmqnXnxiqVZhiryd1xeJw6YZ4E+K7cACIwsV9euePNqFN28sdVHd3fKOP
-GyRL0Qxsr8+MRoLeGyvgrAEnxMFJ8G1YnTdp5aSo57mfRk/W+Dm3nXY5JV7rjCkI
-kk65GCWymHMcKzpwuNEuobeDSsX3TaQYIzc3n34nkFJttsJ6EWRNdHKauEOA1IQ/
-iyuDAi43+3xw0fY59g35m2qBKYXolg2O+5qyYgU2Io7RyXn0kAfXrfjd3zzs794x
-Dd6oveimUJV1ErUkuZb4SMFz47n11w/l5g1/35beky4Hy7UxeOEcgzRv7GWAtcU=
-=ayKK
------END PGP SIGNATURE-----
-
---Sig_/HXWjM+Eho76ux4q8w=gB1YP--
+Note: The information contained in this message is intended only for us=
+e by the individual or entity to which it is addressed. This message ma=
+y contain information that is privileged, confidential and exempt from =
+disclosure under applicable law. If you are not the intended recipient,=
+ you are hereby notified that any dissemination, distribution or copyin=
+g of this information is strictly prohibited. If you received this comm=
+unication in error, please notify us immediately and delete the origina=
+l message.
+=A0
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
