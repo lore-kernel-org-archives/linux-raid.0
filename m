@@ -1,7 +1,7 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 3/6] Enable create array with write journal (--write-journal DEVICE).
-Date: Fri, 28 Aug 2015 16:27:03 -0700
-Message-ID: <1440804426-1461372-4-git-send-email-songliubraving@fb.com>
+Subject: [PATCH 2/6] Show device as journal in --detail --examine
+Date: Fri, 28 Aug 2015 16:27:02 -0700
+Message-ID: <1440804426-1461372-3-git-send-email-songliubraving@fb.com>
 References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,330 +12,186 @@ To: linux-raid@vger.kernel.org
 Cc: shli@fb.com, dan.j.williams@intel.com, neilb@suse.de, hch@infradead.org, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-Specify the write journal device with --write-journal DEVICE
+Example output:
 
-./mdadm --create -f /dev/md0 --assume-clean -c 32 --raid-devices=4 --level=5 /dev/sd[c-f] --write-journal /dev/sdb1
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
+./mdadm --detail /dev/md127
+/dev/md127:
+        Version : 1.2
+  Creation Time : Wed May 13 17:01:12 2015
+     Raid Level : raid5
+     Array Size : 11720662464 (11177.69 GiB 12001.96 GB)
+  Used Dev Size : 3906887488 (3725.90 GiB 4000.65 GB)
+   Raid Devices : 4
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-Only one journal device is allowed. If multiple --write-journal
-are given, mdadm will use the first and ignore others
+  Intent Bitmap : Internal
 
-./mdadm --create -f /dev/md0 --assume-clean -c 32 --raid-devices=4 --level=5 /dev/sd[c-f] --write-journal /dev/sdb1 --write-journal /dev/sdx
-mdadm: Please specify only one journal device for the array.
-mdadm: Ignoring --write-journal /dev/sdx...
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md0 started.
+    Update Time : Wed May 13 17:01:12 2015
+          State : clean
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 32K
+
+           Name : 0
+           UUID : 8fb9ee05:3831d52f:e5c23825:28cd6881
+         Events : 0
+
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
+       2       8       64        2      active sync   /dev/sde
+       3       8       80        3      active sync   /dev/sdf
+
+       4       8       17        -      journal   /dev/sdb1
+
+./mdadm -E /dev/sdb2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x201
+     Array UUID : 562b2334:35b9bcc1:add50892:1f30c4bd
+           Name : 0
+  Creation Time : Thu Aug 27 12:55:26 2015
+     Raid Level : raid5
+   Raid Devices : 15
+
+ Avail Dev Size : 249796608 (119.11 GiB 127.90 GB)
+     Array Size : 54696423936 (52162.57 GiB 56009.14 GB)
+  Used Dev Size : 7813774848 (3725.90 GiB 4000.65 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=262056 sectors, after=0 sectors
+          State : active
+    Device UUID : 5015e522:d39ba566:5909cf3c:9c51f2ff
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Thu Aug 27 13:16:55 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 4e6fd76d - correct
+         Events : 262
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Journal
+   Array State : AAAAAAAAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- Create.c | 20 ++++++++++++++------
- ReadMe.c |  1 +
- md_p.h   | 58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.c  | 24 ++++++++++++++++++++++++
- mdadm.h  |  2 ++
- super1.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 6 files changed, 161 insertions(+), 7 deletions(-)
+ Detail.c |  3 ++-
+ md_p.h   |  2 ++
+ super1.c | 18 ++++++++++++++++++
+ 3 files changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/Create.c b/Create.c
-index b62d8d4..6a2b307 100644
---- a/Create.c
-+++ b/Create.c
-@@ -87,7 +87,7 @@ int Create(struct supertype *st, char *mddev,
- 	unsigned long long minsize=0, maxsize=0;
- 	char *mindisc = NULL;
- 	char *maxdisc = NULL;
--	int dnum;
-+	int dnum, raid_disk_num;
- 	struct mddev_dev *dv;
- 	int fail=0, warn=0;
- 	struct stat stb;
-@@ -180,11 +180,11 @@ int Create(struct supertype *st, char *mddev,
- 		pr_err("This metadata type does not support spare disks at create time\n");
- 		return 1;
- 	}
--	if (subdevs > s->raiddisks+s->sparedisks) {
-+	if (subdevs > s->raiddisks+s->sparedisks+s->journaldisks) {
- 		pr_err("You have listed more devices (%d) than are in the array(%d)!\n", subdevs, s->raiddisks+s->sparedisks);
- 		return 1;
- 	}
--	if (!have_container && subdevs < s->raiddisks+s->sparedisks) {
-+	if (!have_container && subdevs < s->raiddisks+s->sparedisks+s->journaldisks) {
- 		pr_err("You haven't given enough devices (real or missing) to create this array\n");
- 		return 1;
- 	}
-@@ -397,6 +397,9 @@ int Create(struct supertype *st, char *mddev,
+diff --git a/Detail.c b/Detail.c
+index dd72ede..200f65f 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -650,9 +650,10 @@ This is pretty boring
  			}
- 		}
- 
-+		if (dv->disposition == 'j')
-+			continue;  /* skip write journal for size check */
-+
- 		freesize /= 2; /* convert to K */
- 		if (s->chunk && s->chunk != UnSet) {
- 			/* round to chunk size */
-@@ -837,7 +840,7 @@ int Create(struct supertype *st, char *mddev,
- 	for (pass=1; pass <=2 ; pass++) {
- 		struct mddev_dev *moved_disk = NULL; /* the disk that was moved out of the insert point */
- 
--		for (dnum=0, dv = devlist ; dv ;
-+		for (dnum=0, raid_disk_num=0, dv = devlist ; dv ;
- 		     dv=(dv->next)?(dv->next):moved_disk, dnum++) {
- 			int fd;
- 			struct stat stb;
-@@ -862,8 +865,13 @@ int Create(struct supertype *st, char *mddev,
- 				*inf = info;
- 
- 				inf->disk.number = dnum;
--				inf->disk.raid_disk = dnum;
--				if (inf->disk.raid_disk < s->raiddisks)
-+				inf->disk.raid_disk = raid_disk_num++;
-+
-+				if (dv->disposition == 'j') {
-+					inf->disk.raid_disk = MD_DISK_ROLE_JOURNAL;
-+					inf->disk.state = (1<<MD_DISK_JOURNAL);
-+					raid_disk_num--;
-+				} else if (inf->disk.raid_disk < s->raiddisks)
- 					inf->disk.state = (1<<MD_DISK_ACTIVE) |
- 						(1<<MD_DISK_SYNC);
- 				else
-diff --git a/ReadMe.c b/ReadMe.c
-index c242319..10921e3 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -142,6 +142,7 @@ struct option long_options[] = {
-     {"data-offset",1, 0, DataOffset},
-     {"nodes",1, 0, Nodes}, /* also for --assemble */
-     {"home-cluster",1, 0, ClusterName},
-+    {"write-journal",1, 0, WriteJournal},
- 
-     /* For assemble */
-     {"uuid",      1, 0, 'u'},
+ 			if (disk.state & (1<<MD_DISK_REMOVED)) printf(" removed");
+ 			if (disk.state & (1<<MD_DISK_WRITEMOSTLY)) printf(" writemostly");
++			if (disk.state & (1<<MD_DISK_JOURNAL)) printf(" journal");
+ 			if ((disk.state &
+ 			     ((1<<MD_DISK_ACTIVE)|(1<<MD_DISK_SYNC)
+-			      |(1<<MD_DISK_REMOVED)|(1<<MD_DISK_FAULTY)))
++			      |(1<<MD_DISK_REMOVED)|(1<<MD_DISK_FAULTY)|(1<<MD_DISK_JOURNAL)))
+ 			    == 0) {
+ 				printf(" spare");
+ 				if (is_26) {
 diff --git a/md_p.h b/md_p.h
-index fae73ba..0d691fb 100644
+index 3a3b8af..fae73ba 100644
 --- a/md_p.h
 +++ b/md_p.h
-@@ -208,4 +208,62 @@ static inline __u64 md_event(mdp_super_t *sb) {
- 	return (ev<<32)| sb->events_lo;
- }
+@@ -91,9 +91,11 @@
+ 				   */
  
-+struct r5l_payload_header {
-+	__u16 type;
-+	__u16 flags;
-+} __attribute__ ((__packed__));
-+
-+enum r5l_payload_type {
-+	R5LOG_PAYLOAD_DATA = 0,
-+	R5LOG_PAYLOAD_PARITY = 1,
-+	R5LOG_PAYLOAD_FLUSH = 2,
-+};
-+
-+struct r5l_payload_data_parity {
-+	struct r5l_payload_header header;
-+	__u32 size; /* sector. data/parity size. each 4k has a checksum */
-+	__u64 location; /* sector. For data, it's raid sector. For
-+				parity, it's stripe sector */
-+	__u32 checksum[];
-+} __attribute__ ((__packed__));
-+
-+enum r5l_payload_data_parity_flag {
-+	R5LOG_PAYLOAD_FLAG_DISCARD = 1, /* payload is discard */
-+	/*
-+	 * RESHAPED/RESHAPING is only set when there is reshape activity. Note,
-+	 * both data/parity of a stripe should have the same flag set
-+	 *
-+	 * RESHAPED: reshape is running, and this stripe finished reshape
-+	 * RESHAPING: reshape is running, and this stripe isn't reshaped
-+	 * */
-+	R5LOG_PAYLOAD_FLAG_RESHAPED = 2,
-+	R5LOG_PAYLOAD_FLAG_RESHAPING = 3,
-+};
-+
-+struct r5l_payload_flush {
-+	struct r5l_payload_header header;
-+	__u32 size; /* flush_stripes size, bytes */
-+	__u64 flush_stripes[];
-+} __attribute__ ((__packed__));
-+
-+enum r5l_payload_flush_flag {
-+	R5LOG_PAYLOAD_FLAG_FLUSH_STRIPE = 1, /* data represents whole stripe */
-+};
-+
-+struct r5l_meta_block {
-+	__u32 magic;
-+	__u32 checksum;
-+	__u8 version;
-+	__u8 __zero_pading_1;
-+	__u16 __zero_pading_2;
-+	__u32 meta_size; /* whole size of the block */
-+
-+	__u64 seq;
-+	__u64 position; /* sector, start from rdev->data_offset, current position */
-+	struct r5l_payload_header payloads[];
-+} __attribute__ ((__packed__));
-+
-+#define R5LOG_VERSION 0x1
-+#define R5LOG_MAGIC 0x6433c509
-+
- #endif
-diff --git a/mdadm.c b/mdadm.c
-index 5d5a1b8..412c03c 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
- 		.require_homehost = 1,
- 	};
- 	struct shape s = {
-+		.journaldisks	= 0,
- 		.level		= UnSet,
- 		.layout		= UnSet,
- 		.bitmap_chunk	= UnSet,
-@@ -1170,6 +1171,24 @@ int main(int argc, char *argv[])
- 		case O(INCREMENTAL, IncrementalPath):
- 			remove_path = optarg;
- 			continue;
-+		case O(CREATE, WriteJournal):
-+			if (s.journaldisks) {
-+				pr_err("Please specify only one journal device for the array.\n");
-+				pr_err("Ignoring --write-journal %s...\n", optarg);
-+				continue;
-+			}
-+			dv = xmalloc(sizeof(*dv));
-+			dv->devname = optarg;
-+			dv->disposition = 'j';  /* WriteJournal */
-+			dv->writemostly = writemostly;
-+			dv->used = 0;
-+			dv->next = NULL;
-+			*devlistend = dv;
-+			devlistend = &dv->next;
-+			devs_found++;
-+
-+			s.journaldisks = 1;
-+			continue;
- 		}
- 		/* We have now processed all the valid options. Anything else is
- 		 * an error
-@@ -1197,6 +1216,11 @@ int main(int argc, char *argv[])
- 		exit(0);
- 	}
+ #define MD_DISK_REPLACEMENT	17
++#define MD_DISK_JOURNAL		18 /* disk is used as the write journal in RAID-5/6 */
  
-+	if (s.journaldisks && (s.level < 4 || s.level > 6)) {
-+		pr_err("--write-journal is only supported for RAID level 4/5/6.\n");
-+		exit(2);
-+	}
-+
- 	if (!mode && devs_found) {
- 		mode = MISC;
- 		devmode = 'Q';
-diff --git a/mdadm.h b/mdadm.h
-index 6bdaa37..3cc1532 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -347,6 +347,7 @@ enum special_options {
- 	Nodes,
- 	ClusterName,
- 	ClusterConfirm,
-+	WriteJournal,
- };
+ #define MD_DISK_ROLE_SPARE	0xffff
+ #define MD_DISK_ROLE_FAULTY	0xfffe
++#define MD_DISK_ROLE_JOURNAL	0xfffd
+ #define MD_DISK_ROLE_MAX	0xff00 /* max value of regular disk role */
  
- enum prefix_standard {
-@@ -434,6 +435,7 @@ struct context {
- struct shape {
- 	int	raiddisks;
- 	int	sparedisks;
-+	int	journaldisks;
- 	int	level;
- 	int	layout;
- 	char	*layout_str;
+ typedef struct mdp_device_descriptor_s {
 diff --git a/super1.c b/super1.c
-index 4558783..799c86c 100644
+index 981b308..4558783 100644
 --- a/super1.c
 +++ b/super1.c
-@@ -68,7 +68,10 @@ struct mdp_superblock_1 {
- 	__u64	data_offset;	/* sector start of data, often 0 */
- 	__u64	data_size;	/* sectors in this device that can be used for data */
- 	__u64	super_offset;	/* sector start of this superblock */
--	__u64	recovery_offset;/* sectors before this offset (from data_offset) have been recovered */
-+	union {
-+		__u64	recovery_offset;/* sectors before this offset (from data_offset) have been recovered */
-+		__u64	journal_tail;/* journal tail of journal device (from data_offset) */
-+	};
- 	__u32	dev_number;	/* permanent identifier of this  device - not role in raid */
- 	__u32	cnt_corrected_read; /* number of read errors that were corrected by re-writing */
- 	__u8	device_uuid[16]; /* user-space setable, ignored by kernel */
-@@ -1568,6 +1571,57 @@ static unsigned long choose_bm_space(unsigned long devsize)
+@@ -125,6 +125,7 @@ struct misc_dev_info {
+ 					    * backwards anyway.
+ 					    */
+ #define	MD_FEATURE_NEW_OFFSET		64 /* new_offset must be honoured */
++#define	MD_FEATURE_JOURNAL		512 /* support write journal */
+ #define	MD_FEATURE_ALL			(MD_FEATURE_BITMAP_OFFSET	\
+ 					|MD_FEATURE_RECOVERY_OFFSET	\
+ 					|MD_FEATURE_RESHAPE_ACTIVE	\
+@@ -132,6 +133,7 @@ struct misc_dev_info {
+ 					|MD_FEATURE_REPLACEMENT		\
+ 					|MD_FEATURE_RESHAPE_BACKWARDS	\
+ 					|MD_FEATURE_NEW_OFFSET		\
++					|MD_FEATURE_JOURNAL		\
+ 					)
  
- static void free_super1(struct supertype *st);
+ /* return how many bytes are needed for bitmap, for cluster-md each node
+@@ -482,6 +484,8 @@ static void examine_super1(struct supertype *st, char *homehost)
+ 		role = MD_DISK_ROLE_SPARE;
+ 	if (role >= MD_DISK_ROLE_FAULTY)
+ 		printf("spare\n");
++	else if (role == MD_DISK_ROLE_JOURNAL)
++		printf("Journal\n");
+ 	else if (sb->feature_map & __cpu_to_le32(MD_FEATURE_REPLACEMENT))
+ 		printf("Replacement device %d\n", role);
+ 	else
+@@ -993,6 +997,11 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+ 	case MD_DISK_ROLE_FAULTY:
+ 		info->disk.state = 1; /* faulty */
+ 		break;
++	case MD_DISK_ROLE_JOURNAL:
++		info->disk.state = (1 << MD_DISK_JOURNAL);
++		info->disk.raid_disk = role;
++		info->space_after = (misc->device_size - info->data_offset) % 8; /* journal uses all 4kB blocks*/
++		break;
+ 	default:
+ 		info->disk.state = 6; /* active and in sync */
+ 		info->disk.raid_disk = role;
+@@ -1112,6 +1121,8 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		int want;
+ 		if (info->disk.state & (1<<MD_DISK_ACTIVE))
+ 			want = info->disk.raid_disk;
++		else if (info->disk.state & (1<<MD_DISK_JOURNAL))
++			want = MD_DISK_ROLE_JOURNAL;
+ 		else
+ 			want = MD_DISK_ROLE_SPARE;
+ 		if (sb->dev_roles[d] != __cpu_to_le16(want)) {
+@@ -1438,6 +1449,8 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
+ 		*rp = __cpu_to_le16(dk->raid_disk);
+ 	else if ((dk->state & ~2) == 0) /* active or idle -> spare */
+ 		*rp = MD_DISK_ROLE_SPARE;
++	else if (dk->state & (1<<MD_DISK_JOURNAL))
++		*rp = MD_DISK_ROLE_JOURNAL;
+ 	else
+ 		*rp = MD_DISK_ROLE_FAULTY;
  
-+#define META_BLOCK_SIZE 4096
-+unsigned long crc32(
-+	unsigned long crc,
-+	const unsigned char *buf,
-+	unsigned len);
-+
-+static int write_empty_r5l_meta_block(struct supertype *st, int fd)
-+{
-+	struct r5l_meta_block *mb;
-+	struct mdp_superblock_1 *sb = st->sb;
-+	struct align_fd afd;
-+	__u32 crc;
-+
-+	init_afd(&afd, fd);
-+
-+	if (posix_memalign((void**)&mb, 4096, META_BLOCK_SIZE) != 0) {
-+		pr_err("Could not allocate memory for the meta block.\n");
-+		return 1;
+@@ -1569,6 +1582,11 @@ static int write_init_super1(struct supertype *st)
+ 	unsigned long long data_offset;
+ 
+ 	for (di = st->info; di; di = di->next) {
++		if (di->disk.state & (1 << MD_DISK_JOURNAL))
++			sb->feature_map |= MD_FEATURE_JOURNAL;
 +	}
 +
-+	memset(mb, 0, META_BLOCK_SIZE);
-+
-+	mb->magic = __cpu_to_le32(R5LOG_MAGIC);
-+	mb->version = R5LOG_VERSION;
-+	mb->meta_size = __cpu_to_le32(sizeof(struct r5l_meta_block));
-+	mb->seq = __cpu_to_le64(random32());
-+	mb->position = __cpu_to_le64(0);
-+
-+	crc = crc32(0xffffffff, sb->set_uuid, sizeof(sb->set_uuid));
-+	crc = crc32(crc, (void *)mb, META_BLOCK_SIZE);
-+	mb->checksum = __cpu_to_le32(crc);
-+
-+	if (lseek64(fd, (sb->data_offset) * 512, 0) < 0LL) {
-+		pr_err("cannot seek to offset of the meta block\n");
-+		goto fail_to_write;
-+	}
-+
-+	if (awrite(&afd, mb, META_BLOCK_SIZE) != META_BLOCK_SIZE) {
-+		pr_err("failed to store write the meta block \n");
-+		goto fail_to_write;
-+	}
-+	fsync(fd);
-+
-+	free(mb);
-+	return 0;
-+
-+fail_to_write:
-+	free(mb);
-+	return 1;
-+}
-+
- #ifndef MDASSEMBLE
- static int write_init_super1(struct supertype *st)
- {
-@@ -1724,6 +1778,13 @@ static int write_init_super1(struct supertype *st)
- 
- 		sb->sb_csum = calc_sb_1_csum(sb);
- 		rv = store_super1(st, di->fd);
-+
-+		if (rv == 0 && (di->disk.state & (1 << MD_DISK_JOURNAL))) {
-+			rv = write_empty_r5l_meta_block(st, di->fd);
-+			if (rv)
-+				goto error_out;
-+		}
-+
- 		if (rv == 0 && (__le32_to_cpu(sb->feature_map) & 1))
- 			rv = st->ss->write_bitmap(st, di->fd, NoUpdate);
- 		close(di->fd);
++	for (di = st->info; di; di = di->next) {
+ 		if (di->disk.state & (1 << MD_DISK_FAULTY))
+ 			continue;
+ 		if (di->fd < 0)
 -- 
 1.8.1
 
