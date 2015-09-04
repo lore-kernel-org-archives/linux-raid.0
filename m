@@ -1,36 +1,44 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH] dm: ioctl: prevent double freeing
-Date: Fri,  4 Sep 2015 16:52:39 +0530
-Message-ID: <1441365759-7247-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH] raid5-cache: check stripe finish out of order
+Date: Fri, 4 Sep 2015 14:14:05 -0700
+Message-ID: <3a9623e22383f0fb2c22d71298ad7c6b5aff07a0.1441390514.git.shli@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-DM_PARAMS_KMALLOC and DM_PARAMS_VMALLOC should never be set together in
-param_flags. We are setting these flags while allocating so we know that
-there is almost no chance of having these two set together but still we
-can have some additional safety.
+stripes could finish out of order. Hence r5l_move_io_unit_list() of
+__r5l_stripe_write_finished might not move any entry and leave
+stripe_end_ios list empty.
 
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+This applies on top of http://marc.info/?l=linux-raid&m=144122700510667
+
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/dm-ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/raid5-cache.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
-index 80a4395..aaad74e 100644
---- a/drivers/md/dm-ioctl.c
-+++ b/drivers/md/dm-ioctl.c
-@@ -1680,7 +1680,7 @@ static void free_params(struct dm_ioctl *param, size_t param_size, int param_fla
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 410b85b..2dea05f 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -545,8 +545,13 @@ static void __r5l_stripe_write_finished(struct r5l_io_unit *io)
  
- 	if (param_flags & DM_PARAMS_KMALLOC)
- 		kfree(param);
--	if (param_flags & DM_PARAMS_VMALLOC)
-+	else if (param_flags & DM_PARAMS_VMALLOC)
- 		vfree(param);
- }
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+ 	__r5l_set_io_unit_state(io, IO_UNIT_STRIPE_END);
++	/* might move 0 entry */
+ 	r5l_move_io_unit_list(&log->flushed_ios, &log->stripe_end_ios,
+ 		IO_UNIT_STRIPE_END);
++	if (list_empty(&log->stripe_end_ios)) {
++		spin_unlock_irqrestore(&log->io_list_lock, flags);
++		return;
++	}
  
+ 	last = list_last_entry(&log->stripe_end_ios,
+ 			struct r5l_io_unit, log_sibling);
 -- 
-1.9.1
+1.8.1
 
