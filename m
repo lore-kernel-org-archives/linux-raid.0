@@ -1,46 +1,75 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL REQUEST] md updates for 4.3
-Date: Sat, 5 Sep 2015 18:03:48 -0700
-Message-ID: <CA+55aFwM2e9sTVtYjrnPjh5RsZafBXbJ5FFYkYi730ojOn+8-w@mail.gmail.com>
-References: <87si6t6wc9.fsf@notabene.neil.brown.name>
+From: Yi Zhang <yizhan@redhat.com>
+Subject: Change "mv $targetdir/log $logdir/$log" to "cp $targetdir/log
+ $logdir/$log"
+Date: Sun, 6 Sep 2015 23:28:27 -0400 (EDT)
+Message-ID: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
+References: <2004794274.22089532.1441594962520.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87si6t6wc9.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neil@brown.name>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>, Guoqing Jiang <gqjiang@suse.com>, Lidong Zhong <ldzhong@suse.com>, Sasha Levin <sasha.levin@oracle.com>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Markus Stockhausen <stockhausen@collogia.de>, Yi Zhang <yizhan@redhat.com>, Benjamin Randazzo <benjamin@randazzo.fr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2004794274.22089532.1441594962520.JavaMail.zimbra@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: neil@brown.name
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Sep 5, 2015 at 2:37 AM, Neil Brown <neil@brown.name> wrote:
->
-> Please pull these updates.  I've already merged with the 'block' tree
-> to resolve a few simple conflicts.
+Hi Neil
+When I execute mdadm test with --save-logs set, found below error, coul=
+d you help check it?
 
-So for the future, I actually prefer to see and handle the conflicts myself.
+Error log:
+tests/10ddf-fail-readd... FAILED - see /var/tmp/log-10ddf-fail-readd fo=
+r details
+cp: cannot stat =E2=80=98/var/tmp/log=E2=80=99: No such file or directo=
+ry
 
-I really just prefer knowing what's going on, and merge conflicts are
-an indication of cross-maintainer issues which are *exactly* the kinds
-of things I want to be aware of.
+Code:
+    if ( set -ex ; . $_script ) &> $targetdir/log
+    then
+      echo "succeeded"
+      _fail=3D0
+    else
+      log=3Dlog
+      cat $targetdir/stderr >> $targetdir/log
+      echo "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3Ddmesg=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D" >> $=
+targetdir/log
+      dmesg | tail -n 200 >> $targetdir/log
+      if [ $exitonerror =3D=3D 0 ]; then
+          log=3Dlog-`basename $_script`
+          mv $targetdir/log $logdir/$log                           // T=
+his step will move $targetdir/log to $logdir/$log,
+      fi
+      echo "FAILED - see $logdir/$log for details"
+      _fail=3D1
+    fi
+    if [ "$savelogs" =3D=3D "1" ]; then
+      cp $targetdir/log $logdir/$_basename.log                     // I=
+f I set $savelogs here, the $targetdir/log doesn't exist now
+    fi
 
-However, in this case I was "ok, I've already done several other merge
-resolutions with the wbole damn bio_endio error handling changes", so
-I felt I was aware enough about how that ended up being a
-cross-subsystem conflict, and just took your pre-merged version.
+So could we change the mv to cp?
+diff --git a/test b/test
+index d0a6cb8..118fa96 100755
+--- a/test
++++ b/test
+@@ -318,7 +318,7 @@ do_test() {
+       dmesg | tail -n 200 >> $targetdir/log
+       if [ $exitonerror =3D=3D 0 ]; then
+          log=3Dlog-`basename $_script`
+-         mv $targetdir/log $logdir/$log
++         cp $targetdir/log $logdir/$log
+       fi
+       echo "FAILED - see $logdir/$log for details"
+       _fail=3D1
 
-If you feel that the conflicts are particularly subtle, or just
-generally worry about the merge, or just because you want to do some
-merge-testing, what some people end up doing is to send me their
-unmerged branch, and then send me a separate ".. and here's the merge
-I did". I'll then do the merge myself anyway, but then after doing the
-merge I'll switch to a temporary testing branch and re-do the  merge
-with the pre-merged state just to verify. Generally the end result is
-identical, but when it isn't, that's actually usually interesting
-(sometimes it's just a ordering difference, but sometimes it's a merge
-error - and so far I think most merge errors have come from
-sub-maintainers, for the simple reason that they generally aren't as
-used to merging as I am - so even if they know the code better, I
-sometimes catch merge gotcha's better).
+Best Regards,
+  Yi Zhang
 
-Thanks,
-                          Linus
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
