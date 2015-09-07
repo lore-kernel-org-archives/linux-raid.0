@@ -1,149 +1,77 @@
-From: =?UTF-8?B?0K7RgNC40Lkg0JHRg9C60LjQvQ==?= <yury@smsio.ru>
-Subject: Disk failed on grow process and missing backup-file
-Date: Mon, 7 Sep 2015 15:15:40 +0500
-Message-ID: <CAMsNsNO-gWsHmO=dVYg2g=TA11BbrjdiMUC833oT4uRC6dUQ_A@mail.gmail.com>
+From: Yi Zhang <yizhan@redhat.com>
+Subject: RAID4/5/6 reshape grow stuck
+Date: Mon, 7 Sep 2015 08:19:53 -0400 (EDT)
+Message-ID: <1025553941.22272591.1441628393915.JavaMail.zimbra@redhat.com>
+References: <1007334923.22262755.1441626807144.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1007334923.22262755.1441626807144.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+Hi Neil
 
-I run grow raid5 from 4 to 5 devices:
+When testing 07revert-grow, found the RAID4/5/6 grow stuck issue, pls check below info:
 
-# mdadm --grow /dev/md5 -n5 --backup-file /root/md5-grow.backup
+Steps:
+mdadm --quiet -CR --assume-clean /dev/md0 -l6 -n4 -x1 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4
+sleep 3
+mdadm --wait /dev/md0
+mdadm -G /dev/md0 -n 5
 
-All OK. Process started. After sometime I receive message about problem:
+[root@dhcp-12-171 bug]# cat /proc/mdstat 
+Personalities : [raid6] [raid5] [raid4] 
+md0 : active raid6 loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
+      38912 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5] [UUUUU]
+      [>....................]  reshape =  0.0% (0/19456) finish=3344.0min speed=0K/sec
+      
+unused devices: <none>
+kernel: 4.2.0
+dmesg:
+[  563.248753] md: bind<loop0>
+[  563.248825] md: bind<loop1>
+[  563.248892] md: bind<loop2>
+[  563.248954] md: bind<loop3>
+[  563.251515] md: bind<loop4>
+[  563.257778] md/raid:md0: device loop3 operational as raid disk 3
+[  563.257784] md/raid:md0: device loop2 operational as raid disk 2
+[  563.257787] md/raid:md0: device loop1 operational as raid disk 1
+[  563.257789] md/raid:md0: device loop0 operational as raid disk 0
+[  563.258543] md/raid:md0: allocated 4366kB
+[  563.258613] md/raid:md0: raid level 6 active with 4 out of 4 devices, algorithm 2
+[  563.258617] RAID conf printout:
+[  563.258621]  --- level:6 rd:4 wd:4
+[  563.258624]  disk 0, o:1, dev:loop0
+[  563.258628]  disk 1, o:1, dev:loop1
+[  563.258632]  disk 2, o:1, dev:loop2
+[  563.258634]  disk 3, o:1, dev:loop3
+[  563.258651] md/raid456: discard support disabled due to uncertainty.
+[  563.258653] Set raid456.devices_handle_discard_safely=Y to override.
+[  563.258694] md0: detected capacity change from 0 to 39845888
+[  563.258814] RAID conf printout:
+[  563.258821]  --- level:6 rd:4 wd:4
+[  563.258825]  disk 0, o:1, dev:loop0
+[  563.258829]  disk 1, o:1, dev:loop1
+[  563.258833]  disk 2, o:1, dev:loop2
+[  563.258838]  disk 3, o:1, dev:loop3
+[  566.566752] RAID conf printout:
+[  566.566758]  --- level:6 rd:5 wd:5
+[  566.566762]  disk 0, o:1, dev:loop0
+[  566.566765]  disk 1, o:1, dev:loop1
+[  566.566767]  disk 2, o:1, dev:loop2
+[  566.566770]  disk 3, o:1, dev:loop3
+[  566.566772]  disk 4, o:1, dev:loop4
+[  566.567770] md: reshape of RAID array md0
+[  566.567776] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[  566.567779] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
+[  566.567785] md: using 128k window, over a total of 19456k
 
------------
-TEMA:Fail event on /dev/md5
-TEKCT:This is an automatically generated mail message from mdadm
 
-A Fail event had been detected on md device /dev/md5.
+Best Regards,
+  Yi Zhang
 
-Faithfully yours, etc.
 
-P.S. The /proc/mdstat file currently contains the following:
-
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md5 : active raid5 sda3[7] sdc3[5] sde3[3] sdb3[4] sdf3[6](F)
-      5847406080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [U_UUU]
-      [===================>.]  reshape = 98.0% (1911492608/1949135360)
-finish=522.1min speed=1201K/sec
-
-md6 : active raid6 sda2[3] sdb2[0] sdf2[4](F) sde2[1]
-      7486080 blocks level 6, 64k chunk, algorithm 2 [4/3] [UU_U]
-
-md2 : active raid1 sda1[3](S) sde1[0] sdb1[2] sdf1[1]
-      160512 blocks [3/3] [UUU]
-  --------
-and server become offline.
-
-Today I reboot server after crash but md5 can not started.
-Then I run command:
-
-# mdadm -A /dev/md5 --force
-mdadm: /dev/md5 has been started with 4 drives (out of 5)
-
-# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md5 : active (auto-read-only) raid5 sdc3[5] sda3[7] sde3[3] sdb3[4]
-      5847406080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] [U_UUU]
-
-# mdadm --detail /dev/md5
-/dev/md5:
-        Version : 1.2
-  Creation Time : Tue Apr 10 11:46:42 2012
-     Raid Level : raid5
-     Array Size : 5847406080 (5576.52 GiB 5987.74 GB)
-  Used Dev Size : 1949135360 (1858.84 GiB 1995.91 GB)
-   Raid Devices : 5
-  Total Devices : 4
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Sep  5 01:54:48 2015
-          State : clean, degraded
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-  Delta Devices : 1, (4->5)
-
-           Name : tmn-rec1.tmn.teleartel.ru:5  (local to host
-tmn-rec1.tmn.teleartel.ru)
-           UUID : f77e074e:5b74a964:073b9c49:8dcbe5cd
-         Events : 936072
-
-    Number   Major   Minor   RaidDevice State
-       5       8       35        0      active sync   /dev/sdc3
-       1       0        0        1      removed
-       4       8       19        2      active sync   /dev/sdb3
-       3       8       67        3      active sync   /dev/sde3
-       7       8        3        4      active sync   /dev/sda3
-
-# mdadm --examine /dev/sdc3
-/dev/sdc3:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x4
-     Array UUID : f77e074e:5b74a964:073b9c49:8dcbe5cd
-           Name : tmn-rec1.tmn.teleartel.ru:5  (local to host
-tmn-rec1.tmn.teleartel.ru)
-  Creation Time : Tue Apr 10 11:46:42 2012
-     Raid Level : raid5
-   Raid Devices : 5
-
- Avail Dev Size : 3898271744 (1858.84 GiB 1995.92 GB)
-     Array Size : 7796541440 (7435.36 GiB 7983.66 GB)
-  Used Dev Size : 3898270720 (1858.84 GiB 1995.91 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 9020ef29:6c9ee6b1:76a80389:c3d1a1e8
-
-  Reshape pos'n : 7645890560 (7291.69 GiB 7829.39 GB)
-  Delta Devices : 1 (4->5)
-
-    Update Time : Sat Sep  5 01:54:48 2015
-       Checksum : e648496d - correct
-         Events : 936072
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : A.AAA ('A' == active, '.' == missing)
-
-I try check fs on raid in read-only mode:
-
-# fsck -C0 -fn /dev/vg_r5/archive
-fsck from util-linux 2.20.1
-e2fsck 1.42.5 (29-Jul-2012)
-Warning: skipping journal recovery because doing a read-only filesystem check.
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-Free blocks count wrong (72425382, counted=72416375).
-Fix? no
-
-Free inodes count wrong (330815912, counted=330815899).
-Fix? no
-
-/dev/mapper/vg_r5-archive: 443992/331259904 files (49.0%
-non-contiguous), 1252586586/1325011968 blocks
-
-Probably all right. But:
-
-# mount /dev/vg_r5/archive /mnt/tmp -o ro
-
-stale and i get messages infinity:
-
-INFO: task mount:9872 blocked for more than 120 seconds.
