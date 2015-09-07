@@ -1,13 +1,14 @@
 From: Yi Zhang <yizhan@redhat.com>
-Subject: RAID4/5/6 reshape grow stuck
-Date: Mon, 7 Sep 2015 08:19:53 -0400 (EDT)
-Message-ID: <1025553941.22272591.1441628393915.JavaMail.zimbra@redhat.com>
-References: <1007334923.22262755.1441626807144.JavaMail.zimbra@redhat.com>
+Subject: md127 auto created when use "-B" to build a legacy array without
+ superblocks
+Date: Mon, 7 Sep 2015 08:27:49 -0400 (EDT)
+Message-ID: <597548646.22274436.1441628869039.JavaMail.zimbra@redhat.com>
+References: <795255819.22273230.1441628546245.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1007334923.22262755.1441626807144.JavaMail.zimbra@redhat.com>
+In-Reply-To: <795255819.22273230.1441628546245.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
@@ -15,61 +16,79 @@ List-Id: linux-raid.ids
 
 Hi Neil
 
-When testing 07revert-grow, found the RAID4/5/6 grow stuck issue, pls check below info:
+When testing 00raid1, found the md127 auto created when use "-B" to build a legacy array without superblocks, is it reasonable?
+pls check below detailed info:
 
-Steps:
-mdadm --quiet -CR --assume-clean /dev/md0 -l6 -n4 -x1 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3 /dev/loop4
-sleep 3
-mdadm --wait /dev/md0
-mdadm -G /dev/md0 -n 5
-
-[root@dhcp-12-171 bug]# cat /proc/mdstat 
-Personalities : [raid6] [raid5] [raid4] 
-md0 : active raid6 loop4[4] loop3[3] loop2[2] loop1[1] loop0[0]
-      38912 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5] [UUUUU]
-      [>....................]  reshape =  0.0% (0/19456) finish=3344.0min speed=0K/sec
++ mdadm -CR /dev/md0 --level=raid1 -n3 /dev/loop0 /dev/loop1 /dev/loop2
+mdadm: /dev/loop0 appears to contain an ext2fs file system
+       size=58368K  mtime=Thu Jan  1 08:00:00 1970
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=0.90
+mdadm: /dev/loop1 appears to contain an ext2fs file system
+       size=38912K  mtime=Thu Jan  1 08:00:00 1970
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
++ mdadm --wait /dev/md0
++ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid1] 
+md0 : active raid1 loop2[2] loop1[1] loop0[0]
+      19968 blocks super 1.2 [3/3] [UUU]
       
 unused devices: <none>
-kernel: 4.2.0
-dmesg:
-[  563.248753] md: bind<loop0>
-[  563.248825] md: bind<loop1>
-[  563.248892] md: bind<loop2>
-[  563.248954] md: bind<loop3>
-[  563.251515] md: bind<loop4>
-[  563.257778] md/raid:md0: device loop3 operational as raid disk 3
-[  563.257784] md/raid:md0: device loop2 operational as raid disk 2
-[  563.257787] md/raid:md0: device loop1 operational as raid disk 1
-[  563.257789] md/raid:md0: device loop0 operational as raid disk 0
-[  563.258543] md/raid:md0: allocated 4366kB
-[  563.258613] md/raid:md0: raid level 6 active with 4 out of 4 devices, algorithm 2
-[  563.258617] RAID conf printout:
-[  563.258621]  --- level:6 rd:4 wd:4
-[  563.258624]  disk 0, o:1, dev:loop0
-[  563.258628]  disk 1, o:1, dev:loop1
-[  563.258632]  disk 2, o:1, dev:loop2
-[  563.258634]  disk 3, o:1, dev:loop3
-[  563.258651] md/raid456: discard support disabled due to uncertainty.
-[  563.258653] Set raid456.devices_handle_discard_safely=Y to override.
-[  563.258694] md0: detected capacity change from 0 to 39845888
-[  563.258814] RAID conf printout:
-[  563.258821]  --- level:6 rd:4 wd:4
-[  563.258825]  disk 0, o:1, dev:loop0
-[  563.258829]  disk 1, o:1, dev:loop1
-[  563.258833]  disk 2, o:1, dev:loop2
-[  563.258838]  disk 3, o:1, dev:loop3
-[  566.566752] RAID conf printout:
-[  566.566758]  --- level:6 rd:5 wd:5
-[  566.566762]  disk 0, o:1, dev:loop0
-[  566.566765]  disk 1, o:1, dev:loop1
-[  566.566767]  disk 2, o:1, dev:loop2
-[  566.566770]  disk 3, o:1, dev:loop3
-[  566.566772]  disk 4, o:1, dev:loop4
-[  566.567770] md: reshape of RAID array md0
-[  566.567776] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  566.567779] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-[  566.567785] md: using 128k window, over a total of 19456k
++ mdadm -S /dev/md0
+mdadm: stopped /dev/md0
++ mdadm -B /dev/md0 -l raid1 -n2 /dev/loop0 /dev/loop1
+mdadm: array /dev/md0 built and started.
++ sleep 2
++ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid1] 
+md127 : inactive md0[0](S)
+      19968 blocks super 1.2
+       
+md0 : active raid1 loop1[1] loop0[0]
+      20000 blocks super non-persistent [2/2] [UU]
+      
+unused devices: <none>
+[root@dhcp-12-171 bug]# uname -r
+4.2.0
+[root@dhcp-12-171 bug]# mdadm -D /dev/md0 
+/dev/md0:
+        Version : 
+  Creation Time : Mon Sep  7 20:21:20 2015
+     Raid Level : raid1
+     Array Size : 20000 (19.53 MiB 20.48 MB)
+  Used Dev Size : 20000 (19.53 MiB 20.48 MB)
+   Raid Devices : 2
+  Total Devices : 2
 
+          State : clean 
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+    Number   Major   Minor   RaidDevice State
+       0       7        0        0      active sync   /dev/loop0
+       1       7        1        1      active sync   /dev/loop1
+[root@dhcp-12-171 bug]# mdadm -D /dev/md127 
+/dev/md127:
+        Version : 1.2
+     Raid Level : raid0
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+          State : inactive
+
+           Name : dhcp-12-171.nay.redhat.com:0  (local to host dhcp-12-171.nay.redhat.com)
+           UUID : 40ace956:a9dd0793:f4984d2b:8431b92b
+         Events : 17
+
+    Number   Major   Minor   RaidDevice
+
+       -       9        0        -        /dev/md0 
 
 Best Regards,
   Yi Zhang
