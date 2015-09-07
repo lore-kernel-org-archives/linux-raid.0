@@ -1,75 +1,75 @@
-From: Yi Zhang <yizhan@redhat.com>
-Subject: Change "mv $targetdir/log $logdir/$log" to "cp $targetdir/log
- $logdir/$log"
-Date: Sun, 6 Sep 2015 23:28:27 -0400 (EDT)
-Message-ID: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
-References: <2004794274.22089532.1441594962520.JavaMail.zimbra@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/10] raid5-cache: port to 4.3-rc
+Date: Mon,  7 Sep 2015 07:20:41 +0200
+Message-ID: <1441603250-5119-2-git-send-email-hch@lst.de>
+References: <1441603250-5119-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2004794274.22089532.1441594962520.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1441603250-5119-1-git-send-email-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neil@brown.name
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, neilb@suse.de
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil
-When I execute mdadm test with --save-logs set, found below error, coul=
-d you help check it?
+Port for changes in the block layer:  bio endio callers don't get passed
+a separate error, and bio_get_nr_vecs is gone.
 
-Error log:
-tests/10ddf-fail-readd... FAILED - see /var/tmp/log-10ddf-fail-readd fo=
-r details
-cp: cannot stat =E2=80=98/var/tmp/log=E2=80=99: No such file or directo=
-ry
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/md/raid5-cache.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-Code:
-    if ( set -ex ; . $_script ) &> $targetdir/log
-    then
-      echo "succeeded"
-      _fail=3D0
-    else
-      log=3Dlog
-      cat $targetdir/stderr >> $targetdir/log
-      echo "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3Ddmesg=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D" >> $=
-targetdir/log
-      dmesg | tail -n 200 >> $targetdir/log
-      if [ $exitonerror =3D=3D 0 ]; then
-          log=3Dlog-`basename $_script`
-          mv $targetdir/log $logdir/$log                           // T=
-his step will move $targetdir/log to $logdir/$log,
-      fi
-      echo "FAILED - see $logdir/$log for details"
-      _fail=3D1
-    fi
-    if [ "$savelogs" =3D=3D "1" ]; then
-      cp $targetdir/log $logdir/$_basename.log                     // I=
-f I set $savelogs here, the $targetdir/log doesn't exist now
-    fi
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 785749b1..c345479 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -222,7 +222,8 @@ static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
+ 	io->state = state;
+ }
+ 
+-static inline void r5l_log_endio(struct bio *bio, int error)
++/* XXX: totally ignores I/O errors */
++static void r5l_log_endio(struct bio *bio)
+ {
+ 	struct r5l_io_unit *io = bio->bi_private;
+ 	struct r5l_log *log = io->log;
+@@ -288,8 +289,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	io->meta_offset = sizeof(struct r5l_meta_block);
+ 	io->seq = log->seq;
+ 
+-	bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL,
+-		bio_get_nr_vecs(log->rdev->bdev));
++	bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
+ 	io->current_bio = bio;
+ 	bio->bi_rw = WRITE;
+ 	bio->bi_bdev = log->rdev->bdev;
+@@ -358,8 +358,7 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
+ alloc_bio:
+ 	if (!io->current_bio) {
+ 		struct bio *bio;
+-		bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL,
+-			bio_get_nr_vecs(log->rdev->bdev));
++		bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
+ 		bio->bi_rw = WRITE;
+ 		bio->bi_bdev = log->rdev->bdev;
+ 		bio->bi_iter.bi_sector = log->log_start;
+@@ -518,7 +517,7 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
+ 	 * don't need to flush again
+ 	 * */
+ 	if (bio->bi_iter.bi_size == 0) {
+-		bio_endio(bio, 0);
++		bio_endio(bio);
+ 		return 0;
+ 	}
+ 	bio->bi_rw &= ~REQ_FLUSH;
+@@ -581,7 +580,7 @@ void r5l_stripe_write_finished(struct stripe_head *sh)
+ 		__r5l_stripe_write_finished(io);
+ }
+ 
+-static void r5l_log_flush_endio(struct bio *bio, int error)
++static void r5l_log_flush_endio(struct bio *bio)
+ {
+ 	struct r5l_log *log = container_of(bio, struct r5l_log,
+ 		flush_bio);
+-- 
+1.9.1
 
-So could we change the mv to cp?
-diff --git a/test b/test
-index d0a6cb8..118fa96 100755
---- a/test
-+++ b/test
-@@ -318,7 +318,7 @@ do_test() {
-       dmesg | tail -n 200 >> $targetdir/log
-       if [ $exitonerror =3D=3D 0 ]; then
-          log=3Dlog-`basename $_script`
--         mv $targetdir/log $logdir/$log
-+         cp $targetdir/log $logdir/$log
-       fi
-       echo "FAILED - see $logdir/$log for details"
-       _fail=3D1
-
-Best Regards,
-  Yi Zhang
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
