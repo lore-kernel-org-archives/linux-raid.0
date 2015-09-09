@@ -1,28 +1,67 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: raid5-cache I/O path improvements
-Date: Wed, 9 Sep 2015 17:59:41 +0200
-Message-ID: <20150909155941.GA28608@lst.de>
-References: <1441603250-5119-1-git-send-email-hch@lst.de> <20150908002840.GA3196542@devbig257.prn2.facebook.com> <20150908061215.GA23833@lst.de> <20150908165611.GA371379@devbig257.prn2.facebook.com> <20150908170226.GI13749@mtj.duckdns.org> <20150908170736.GA423191@devbig257.prn2.facebook.com> <20150908173420.GJ13749@mtj.duckdns.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: raid1 resync stuck
+Date: Wed, 09 Sep 2015 15:17:37 -0400
+Message-ID: <wrfjmvwvz9ke.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150908173420.GJ13749@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>, neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: majianpeng@gmail.com, linux-raid <linux-raid@vger.kernel.org>, nate.dailey@stratus.com
 List-Id: linux-raid.ids
 
-On Tue, Sep 08, 2015 at 01:34:20PM -0400, Tejun Heo wrote:
-> Hmmm... grep tells me that dm and md actually are branching on whether
-> the underlying device supports FUA.  This is tricky.  I didn't even
-> mean flush_flags to be used directly by upper layers.  For rotational
-> devices, doing multiple FUAs compared multiple writes followed by
-> REQ_FLUSH is probably a lot worse - the head gets moved multiple times
-> likely skipping over data which can be written out while traversing
-> and it's not like stalling write pipeline and draining write queue has
-> much impact on hard drives.
+Neil,
 
-Well, that's what we'd need to do for the raid cache as well, given
-the resulst that Shaohua sees.  Unless you have a good idea for another
-way to handle the issue we'll need to support both behaviors there.
+We're chasing a case where the raid1 code gets stuck during resync. Nate
+is able to reproduce it much more reliably than me - so attaching his
+reproducing script. Basically run it on an existing raid1 with internal
+bitmap on rotating disk.
+
+Nate was able to bisect it to 79ef3a8aa1cb1523cc231c9a90a278333c21f761,
+the original iobarrier rewrite patch, and it can be reproduced in
+current Linus' top of trunk a794b4f3292160bb3fd0f1f90ec8df454e3b17b3.
+
+In Nate's analysis it hangs in raise_barrier():
+
+static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
+{
+	spin_lock_irq(&conf->resync_lock);
+
+	/* Wait until no block IO is waiting */
+	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting,
+			    conf->resync_lock);
+
+	/* block any new IO from starting */
+	conf->barrier++;
+	conf->next_resync = sector_nr;
+
+	/* For these conditions we must wait:
+	 * A: while the array is in frozen state
+	 * B: while barrier >= RESYNC_DEPTH, meaning resync reach
+	 *    the max count which allowed.
+	 * C: next_resync + RESYNC_SECTORS > start_next_window, meaning
+	 *    next resync will reach to the window which normal bios are
+	 *    handling.
+	 * D: while there are any active requests in the current window.
+	 */
+	wait_event_lock_irq(conf->wait_barrier,
+			    !conf->array_frozen &&
+			    conf->barrier < RESYNC_DEPTH &&
+			    conf->current_window_requests == 0 &&
+			    (conf->start_next_window >=
+			     conf->next_resync + RESYNC_SECTORS),
+			    conf->resync_lock);
+
+crash> r1conf 0xffff882028f3e600 | grep -e array_frozen -e barrier -e start_next_window -e next_resync
+  barrier = 0x1,                      (conf->barrier < RESYNC_DEPTH)
+  array_frozen = 0x0,                 (!conf->array_frozen)
+  next_resync = 0x3000,
+  start_next_window = 0x3000,
+
+ie. next_resync == start_next_window, which will never wake up since
+start_next_window is smaller than next_resync + RESYNC_SECTORS.
+
+Have you seen anything like this?
+
+Cheers,
+Jes
