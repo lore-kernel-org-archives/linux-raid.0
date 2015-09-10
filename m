@@ -1,150 +1,215 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid1 resync stuck
-Date: Wed, 09 Sep 2015 15:48:45 -0400
-Message-ID: <wrfj8u8fxtk2.fsf@redhat.com>
-References: <wrfjmvwvz9ke.fsf@redhat.com>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH] Remove unused argument in md_new_event()
+Date: Thu, 10 Sep 2015 07:41:59 -0500
+Message-ID: <20150910124159.GA14214@shrek.lan>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjmvwvz9ke.fsf@redhat.com> (Jes Sorensen's message of "Wed, 09
-	Sep 2015 15:17:37 -0400")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: majianpeng@gmail.com, linux-raid <linux-raid@vger.kernel.org>, nate.dailey@stratus.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Code cleanup:
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Neil,
->
-> We're chasing a case where the raid1 code gets stuck during resync. Nate
-> is able to reproduce it much more reliably than me - so attaching his
-> reproducing script. Basically run it on an existing raid1 with internal
-> bitmap on rotating disk.
->
-> Nate was able to bisect it to 79ef3a8aa1cb1523cc231c9a90a278333c21f761,
-> the original iobarrier rewrite patch, and it can be reproduced in
-> current Linus' top of trunk a794b4f3292160bb3fd0f1f90ec8df454e3b17b3.
->
-> In Nate's analysis it hangs in raise_barrier():
->
-> static void raise_barrier(struct r1conf *conf, sector_t sector_nr)
-> {
-> 	spin_lock_irq(&conf->resync_lock);
->
-> 	/* Wait until no block IO is waiting */
-> 	wait_event_lock_irq(conf->wait_barrier, !conf->nr_waiting,
-> 			    conf->resync_lock);
->
-> 	/* block any new IO from starting */
-> 	conf->barrier++;
-> 	conf->next_resync = sector_nr;
->
-> 	/* For these conditions we must wait:
-> 	 * A: while the array is in frozen state
-> 	 * B: while barrier >= RESYNC_DEPTH, meaning resync reach
-> 	 *    the max count which allowed.
-> 	 * C: next_resync + RESYNC_SECTORS > start_next_window, meaning
-> 	 *    next resync will reach to the window which normal bios are
-> 	 *    handling.
-> 	 * D: while there are any active requests in the current window.
-> 	 */
-> 	wait_event_lock_irq(conf->wait_barrier,
-> 			    !conf->array_frozen &&
-> 			    conf->barrier < RESYNC_DEPTH &&
-> 			    conf->current_window_requests == 0 &&
-> 			    (conf->start_next_window >=
-> 			     conf->next_resync + RESYNC_SECTORS),
-> 			    conf->resync_lock);
->
-> crash> r1conf 0xffff882028f3e600 | grep -e array_frozen -e barrier -e start_next_window -e next_resync
->   barrier = 0x1,                      (conf->barrier < RESYNC_DEPTH)
->   array_frozen = 0x0,                 (!conf->array_frozen)
->   next_resync = 0x3000,
->   start_next_window = 0x3000,
->
-> ie. next_resync == start_next_window, which will never wake up since
-> start_next_window is smaller than next_resync + RESYNC_SECTORS.
->
-> Have you seen anything like this?
->
-> Cheers,
-> Jes
+  - Removed md_new_event_inintr() because md_new_event() and
+    md_new_event_inintr() are the same.
 
-Grrr - doing too many things in parallel :( I knew I forgot something -
-here is Nate's script.
+  - Removed mddev argument passed to md_new_event() because it is
+    not used.
 
-Jes
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+---
+ drivers/md/md.c     | 37 ++++++++++++++-----------------------
+ drivers/md/md.h     |  2 +-
+ drivers/md/raid10.c |  2 +-
+ drivers/md/raid5.c  |  2 +-
+ 4 files changed, 17 insertions(+), 26 deletions(-)
 
---=-=-=
-Content-Type: text/plain
-Content-Disposition: inline; filename=md_stuck_resync.sh
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4f5ecbe..c4b2c1e 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -198,22 +198,13 @@ EXPORT_SYMBOL_GPL(bio_clone_mddev);
+  */
+ static DECLARE_WAIT_QUEUE_HEAD(md_event_waiters);
+ static atomic_t md_event_count;
+-void md_new_event(struct mddev *mddev)
++void md_new_event()
+ {
+ 	atomic_inc(&md_event_count);
+ 	wake_up(&md_event_waiters);
+ }
+ EXPORT_SYMBOL_GPL(md_new_event);
+ 
+-/* Alternate version that can be called from interrupts
+- * when calling sysfs_notify isn't needed.
+- */
+-static void md_new_event_inintr(struct mddev *mddev)
+-{
+-	atomic_inc(&md_event_count);
+-	wake_up(&md_event_waiters);
+-}
+-
+ /*
+  * Enables to iterate over all existing md arrays
+  * all_mddevs_lock protects this list.
+@@ -2384,7 +2375,7 @@ static int add_bound_rdev(struct md_rdev *rdev)
+ 	if (mddev->degraded)
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+-	md_new_event(mddev);
++	md_new_event();
+ 	md_wakeup_thread(mddev->thread);
+ 	return 0;
+ }
+@@ -2497,7 +2488,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 				md_cluster_ops->metadata_update_start(mddev);
+ 			if (mddev->pers)
+ 				md_update_sb(mddev, 1);
+-			md_new_event(mddev);
++			md_new_event();
+ 			if (mddev_is_clustered(mddev))
+ 				md_cluster_ops->metadata_update_finish(mddev);
+ 			err = 0;
+@@ -3502,7 +3493,7 @@ level_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (!mddev->thread)
+ 		md_update_sb(mddev, 1);
+ 	sysfs_notify(&mddev->kobj, NULL, "level");
+-	md_new_event(mddev);
++	md_new_event();
+ 	rv = len;
+ out_unlock:
+ 	mddev_unlock(mddev);
+@@ -5205,7 +5196,7 @@ int md_run(struct mddev *mddev)
+ 	if (mddev->flags & MD_UPDATE_SB_FLAGS)
+ 		md_update_sb(mddev, 0);
+ 
+-	md_new_event(mddev);
++	md_new_event();
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	sysfs_notify(&mddev->kobj, NULL, "degraded");
+@@ -5539,7 +5530,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 			mddev->hold_active = 0;
+ 	}
+ 	blk_integrity_unregister(disk);
+-	md_new_event(mddev);
++	md_new_event();
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	return 0;
+ }
+@@ -6008,7 +5999,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+ 
+ 	md_kick_rdev_from_array(rdev);
+ 	md_update_sb(mddev, 1);
+-	md_new_event(mddev);
++	md_new_event();
+ 
+ 	if (mddev_is_clustered(mddev))
+ 		md_cluster_ops->metadata_update_finish(mddev);
+@@ -6093,7 +6084,7 @@ static int hot_add_disk(struct mddev *mddev, dev_t dev)
+ 	 */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+-	md_new_event(mddev);
++	md_new_event();
+ 	return 0;
+ 
+ abort_clustered:
+@@ -7050,7 +7041,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	md_wakeup_thread(mddev->thread);
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+-	md_new_event_inintr(mddev);
++	md_new_event();
+ }
+ EXPORT_SYMBOL(md_error);
+ 
+@@ -7795,7 +7786,7 @@ void md_do_sync(struct md_thread *thread)
+ 		mddev->curr_resync = 3; /* no longer delayed */
+ 	mddev->curr_resync_completed = j;
+ 	sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+-	md_new_event(mddev);
++	md_new_event();
+ 	update_time = jiffies;
+ 
+ 	if (mddev_is_clustered(mddev))
+@@ -7871,7 +7862,7 @@ void md_do_sync(struct md_thread *thread)
+ 			/* this is the earliest that rebuild will be
+ 			 * visible in /proc/mdstat
+ 			 */
+-			md_new_event(mddev);
++			md_new_event();
+ 
+ 		if (last_check + window > io_sectors || j == max_sectors)
+ 			continue;
+@@ -8043,7 +8034,7 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 			if (sysfs_link_rdev(mddev, rdev))
+ 				/* failure here is OK */;
+ 			spares++;
+-			md_new_event(mddev);
++			md_new_event();
+ 			set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		}
+ 	}
+@@ -8078,7 +8069,7 @@ static void md_start_sync(struct work_struct *ws)
+ 	} else
+ 		md_wakeup_thread(mddev->sync_thread);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event(mddev);
++	md_new_event();
+ }
+ 
+ /*
+@@ -8311,7 +8302,7 @@ void md_reap_sync_thread(struct mddev *mddev)
+ 	/* flag recovery needed just to double check */
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+-	md_new_event(mddev);
++	md_new_event();
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+ }
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ab33957..c8f2519c 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -634,7 +634,7 @@ extern void md_super_wait(struct mddev *mddev);
+ extern int sync_page_io(struct md_rdev *rdev, sector_t sector, int size,
+ 			struct page *page, int rw, bool metadata_op);
+ extern void md_do_sync(struct md_thread *thread);
+-extern void md_new_event(struct mddev *mddev);
++extern void md_new_event(void);
+ extern int md_allow_write(struct mddev *mddev);
+ extern void md_wait_for_blocked_rdev(struct md_rdev *rdev, struct mddev *mddev);
+ extern void md_set_array_sectors(struct mddev *mddev, sector_t array_sectors);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0fc33eb..c24fc98 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -4068,7 +4068,7 @@ static int raid10_start_reshape(struct mddev *mddev)
+ 	}
+ 	conf->reshape_checkpoint = jiffies;
+ 	md_wakeup_thread(mddev->sync_thread);
+-	md_new_event(mddev);
++	md_new_event();
+ 	return 0;
+ 
+ abort:
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 15ef2c6..ea4052a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7420,7 +7420,7 @@ static int raid5_start_reshape(struct mddev *mddev)
+ 	}
+ 	conf->reshape_checkpoint = jiffies;
+ 	md_wakeup_thread(mddev->sync_thread);
+-	md_new_event(mddev);
++	md_new_event();
+ 	return 0;
+ }
+ 
+-- 
+2.1.4
 
-#!/bin/bash
-
-wait_idle() {
-    while [ "$(cat /sys/block/$sysmd/md/sync_action)" != "idle" ] ; do
-	sleep 10s
-    done
-}
-
-[ $# -ne 1 ] && echo "usage: $0 <md>" && exit 1
-sysmd=$1
-devmd="/dev/$(udevadm info -q name --path=/sys/block/$sysmd)"
-[ ! -b "$devmd" ] && echo "failed to find md devnode" && exit 1
-
-devsd=
-for m in /sys/block/$sysmd/md/dev-*
-{
-    realpath=$(cd $m/block && pwd -P)
-    devsd="/dev/$(udevadm info -q name --path=$realpath)"
-    break
-}
-[ ! -b "$devsd" ] && echo "failed to find member disk devnode" && exit 1
-
-iter() {
-    echo
-    echo "Remove $devsd"
-    mdadm -f $devmd $devsd
-    sleep 1s
-    mdadm -r $devmd $devsd
-
-    echo "Start 1GB IO"
-    dd if=/dev/urandom of=$devmd bs=1M count=1024 &
-
-    for j in 1 2 3 4 5
-    {
-	sleep 15s
-
-	echo
-	echo "$j: Add $devsd"
-	mdadm -a $devmd $devsd
-	sleep 1s
-
-	echo
-	echo "$j: Remove $devsd"
-	mdadm -f $devmd $devsd
-	echo "idle" > /sys/block/$sysmd/md/sync_action
-	sleep 1s
-	mdadm -r $devmd $devsd
-    }
-
-    echo
-    echo "Add $devsd"
-    mdadm -a $devmd $devsd
-
-    echo
-    echo "Wait for $sysmd recovery..."
-    wait_idle
-}
-
-i=1
-while [ 1 ] ; do
-    echo "$(date) ********** Iteration $i **********"
-    iter
-    i=$(($i + 1))
-done
-
---=-=-=--
