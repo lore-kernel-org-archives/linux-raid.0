@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/12] raid5-cache: refactor bio allocation
-Date: Sat, 12 Sep 2015 08:17:13 +0200
-Message-ID: <1442038638-6947-8-git-send-email-hch@lst.de>
+Subject: [PATCH 08/12] raid5-cache: take rdev->data_offset into account early on
+Date: Sat, 12 Sep 2015 08:17:14 +0200
+Message-ID: <1442038638-6947-9-git-send-email-hch@lst.de>
 References: <1442038638-6947-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1442038638-6947-1-git-send-email-hch@lst.de>
@@ -10,86 +10,40 @@ To: Shaohua Li <shli@fb.com>, neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Split out a helper to allocate a bio for log writes.
+Set up bi_sector properly when we allocate an bio instead of updating it
+at submission time.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 44 ++++++++++++++++++++------------------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+ drivers/md/raid5-cache.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index f9aaf2b..fb1ac4c 100644
+index fb1ac4c..df24e9c 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -274,11 +274,25 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 	}
+@@ -267,11 +267,8 @@ static void r5l_submit_current_io(struct r5l_log *log)
+ 	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
+ 	spin_unlock_irqrestore(&log->io_list_lock, flags);
+ 
+-	while ((bio = bio_list_pop(&io->bios))) {
+-		/* all IO must start from rdev->data_offset */
+-		bio->bi_iter.bi_sector += log->rdev->data_offset;
++	while ((bio = bio_list_pop(&io->bios)))
+ 		submit_bio(WRITE | (log->use_fua ? REQ_FUA : 0), bio);
+-	}
  }
  
-+static struct bio *r5l_bio_alloc(struct r5l_log *log, struct r5l_io_unit *io)
-+{
-+	struct bio *bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
-+
-+	bio->bi_rw = WRITE;
-+	bio->bi_bdev = log->rdev->bdev;
-+	bio->bi_iter.bi_sector = log->log_start;
-+	bio->bi_end_io = r5l_log_endio;
-+	bio->bi_private = io;
-+
-+	bio_list_add(&io->bios, bio);
-+	atomic_inc(&io->pending_io);
-+	return bio;
-+}
-+
- static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io;
- 	struct r5l_meta_block *block;
--	struct bio *bio;
+ static struct bio *r5l_bio_alloc(struct r5l_log *log, struct r5l_io_unit *io)
+@@ -280,7 +277,7 @@ static struct bio *r5l_bio_alloc(struct r5l_log *log, struct r5l_io_unit *io)
  
- 	io = r5l_alloc_io_unit(log);
- 
-@@ -292,17 +306,8 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	io->meta_offset = sizeof(struct r5l_meta_block);
- 	io->seq = log->seq;
- 
--	bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
--	io->current_bio = bio;
--	bio->bi_rw = WRITE;
--	bio->bi_bdev = log->rdev->bdev;
+ 	bio->bi_rw = WRITE;
+ 	bio->bi_bdev = log->rdev->bdev;
 -	bio->bi_iter.bi_sector = log->log_start;
--	bio_add_page(bio, io->meta_page, PAGE_SIZE, 0);
--	bio->bi_end_io = r5l_log_endio;
--	bio->bi_private = io;
--
--	bio_list_add(&io->bios, bio);
--	atomic_inc(&io->pending_io);
-+	io->current_bio = r5l_bio_alloc(log, io);
-+	bio_add_page(io->current_bio, io->meta_page, PAGE_SIZE, 0);
++	bio->bi_iter.bi_sector = log->rdev->data_offset + log->log_start;
+ 	bio->bi_end_io = r5l_log_endio;
+ 	bio->bi_private = io;
  
- 	log->seq++;
- 	log->log_start = r5l_ring_add(log, log->log_start, BLOCK_SECTORS);
-@@ -355,18 +360,9 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	struct r5l_io_unit *io = log->current_io;
- 
- alloc_bio:
--	if (!io->current_bio) {
--		struct bio *bio;
--		bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
--		bio->bi_rw = WRITE;
--		bio->bi_bdev = log->rdev->bdev;
--		bio->bi_iter.bi_sector = log->log_start;
--		bio->bi_end_io = r5l_log_endio;
--		bio->bi_private = io;
--		bio_list_add(&io->bios, bio);
--		atomic_inc(&io->pending_io);
--		io->current_bio = bio;
--	}
-+	if (!io->current_bio) 
-+		io->current_bio = r5l_bio_alloc(log, io);
-+
- 	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0)) {
- 		io->current_bio = NULL;
- 		goto alloc_bio;
 -- 
 1.9.1
 
