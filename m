@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/12] raid5-cache: rename flushed_ios to finished_ios
-Date: Sat, 12 Sep 2015 08:17:09 +0200
-Message-ID: <1442038638-6947-4-git-send-email-hch@lst.de>
+Subject: [PATCH 05/12] raid5-cache: use FUA writes for the log
+Date: Sat, 12 Sep 2015 08:17:11 +0200
+Message-ID: <1442038638-6947-6-git-send-email-hch@lst.de>
 References: <1442038638-6947-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1442038638-6947-1-git-send-email-hch@lst.de>
@@ -10,80 +10,100 @@ To: Shaohua Li <shli@fb.com>, neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-After adding FUA support we won't nessecarily have called flushed for the
-bios on this list, so give it a more neutral name.
+If we submit writes with the FUA bit for the log they are guaranteed to
+be on stable storage once the endio callback is called.  This allows
+to simplify the IO unit state machine, and decrease latencies a lot
+when the device supports FUA.  Use this to improve performance on devices
+that support FUA, or keep the old code if the device doesn't support it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/md/raid5-cache.c | 35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 803bcc6..4442dd3 100644
+index c288c43..d813c89 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -66,7 +66,7 @@ struct r5l_log {
- 				      * to the RAID */
- 	struct list_head flushing_ios; /* io_units which are waiting for log
- 					* cache flush */
--	struct list_head flushed_ios; /* io_units which settle down in log disk */
-+	struct list_head finished_ios; /* io_units which settle down in log disk */
- 	struct bio flush_bio;
+@@ -81,6 +81,8 @@ struct r5l_log {
  
- 	struct kmem_cache *io_kc;
-@@ -516,14 +516,14 @@ static sector_t r5l_reclaimable_space(struct r5l_log *log)
- 				 log->next_checkpoint);
+ 	struct list_head no_space_stripes; /* pending stripes, log has no space */
+ 	spinlock_t no_space_stripes_lock;
++
++	bool use_fua;
+ };
+ 
+ /*
+@@ -203,6 +205,22 @@ static void r5l_io_run_stripes(struct r5l_io_unit *io)
+ 	}
  }
  
--static bool r5l_complete_flushed_ios(struct r5l_log *log)
-+static bool r5l_complete_finished_ios(struct r5l_log *log)
++static void r5l_log_run_stripes(struct r5l_log *log)
++{
++	struct r5l_io_unit *io, *next;
++
++	assert_spin_locked(&log->io_list_lock);
++
++	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
++		/* don't change list order */
++		if (io->state < IO_UNIT_IO_END)
++			break;
++
++		list_move_tail(&io->log_sibling, &log->finished_ios);
++		r5l_io_run_stripes(io);
++	}
++}
++
+ /* XXX: totally ignores I/O errors */
+ static void r5l_log_endio(struct bio *bio)
  {
- 	struct r5l_io_unit *io, *next;
- 	bool found = false;
+@@ -217,11 +235,15 @@ static void r5l_log_endio(struct bio *bio)
  
- 	assert_spin_locked(&log->io_list_lock);
- 
--	list_for_each_entry_safe(io, next, &log->flushed_ios, log_sibling) {
-+	list_for_each_entry_safe(io, next, &log->finished_ios, log_sibling) {
- 		/* don't change list order */
- 		if (io->state < IO_UNIT_STRIPE_END)
- 			break;
-@@ -549,7 +549,7 @@ static void __r5l_stripe_write_finished(struct r5l_io_unit *io)
  	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_STRIPE_END);
- 
--	if (!r5l_complete_flushed_ios(log)) {
-+	if (!r5l_complete_finished_ios(log)) {
- 		spin_unlock_irqrestore(&log->io_list_lock, flags);
- 		return;
- 	}
-@@ -590,7 +590,7 @@ static void r5l_log_flush_endio(struct bio *bio)
- 			raid5_release_stripe(sh);
- 		}
- 	}
--	list_splice_tail_init(&log->flushing_ios, &log->flushed_ios);
-+	list_splice_tail_init(&log->flushing_ios, &log->finished_ios);
+ 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
+-	r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
+-			IO_UNIT_IO_END);
++	if (log->use_fua)
++		r5l_log_run_stripes(log);
++	else
++		r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
++				      IO_UNIT_IO_END);
  	spin_unlock_irqrestore(&log->io_list_lock, flags);
+ 
+-	md_wakeup_thread(log->rdev->mddev->thread);
++	if (!log->use_fua)
++		md_wakeup_thread(log->rdev->mddev->thread);
  }
  
-@@ -680,7 +680,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
- 		    (list_empty(&log->running_ios) &&
- 		     list_empty(&log->io_end_ios) &&
- 		     list_empty(&log->flushing_ios) &&
--		     list_empty(&log->flushed_ios)))
-+		     list_empty(&log->finished_ios)))
- 			break;
+ static void r5l_submit_current_io(struct r5l_log *log)
+@@ -248,7 +270,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
+ 	while ((bio = bio_list_pop(&io->bios))) {
+ 		/* all IO must start from rdev->data_offset */
+ 		bio->bi_iter.bi_sector += log->rdev->data_offset;
+-		submit_bio(WRITE, bio);
++		submit_bio(WRITE | (log->use_fua ? REQ_FUA : 0), bio);
+ 	}
+ }
  
- 		md_wakeup_thread(log->rdev->mddev->thread);
-@@ -1072,7 +1072,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	INIT_LIST_HEAD(&log->running_ios);
- 	INIT_LIST_HEAD(&log->io_end_ios);
- 	INIT_LIST_HEAD(&log->flushing_ios);
--	INIT_LIST_HEAD(&log->flushed_ios);
-+	INIT_LIST_HEAD(&log->finished_ios);
- 	bio_init(&log->flush_bio);
+@@ -614,7 +636,8 @@ static void r5l_log_flush_endio(struct bio *bio)
+ void r5l_flush_stripe_to_raid(struct r5l_log *log)
+ {
+ 	bool do_flush;
+-	if (!log)
++
++	if (!log || log->use_fua)
+ 		return;
  
- 	log->io_kc = KMEM_CACHE(r5l_io_unit, 0);
+ 	spin_lock_irq(&log->io_list_lock);
+@@ -1066,6 +1089,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 		return -ENOMEM;
+ 	log->rdev = rdev;
+ 
++	log->use_fua = (rdev->bdev->bd_disk->queue->flush_flags & REQ_FUA);
++
+ 	log->uuid_checksum = crc32_le(~0, (void *)rdev->mddev->uuid,
+ 			sizeof(rdev->mddev->uuid));
+ 
 -- 
 1.9.1
 
