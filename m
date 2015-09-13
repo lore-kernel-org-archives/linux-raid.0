@@ -1,13 +1,13 @@
 From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 15/39] bcache: drop null test before destroy functions
-Date: Sun, 13 Sep 2015 14:15:08 +0200
-Message-ID: <1442146532-9100-16-git-send-email-Julia.Lawall@lip6.fr>
+Subject: [PATCH 12/39] dm: drop null test before destroy functions
+Date: Sun, 13 Sep 2015 14:15:05 +0200
+Message-ID: <1442146532-9100-13-git-send-email-Julia.Lawall@lip6.fr>
 References: <1442146532-9100-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1442146532-9100-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: sergey.senozhatsky@gmail.com, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>
+Cc: sergey.senozhatsky@gmail.com, kernel-janitors@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 Remove unneeded NULL test.
@@ -24,56 +24,131 @@ The semantic patch that makes this change is as follows:
 Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
 ---
- drivers/md/bcache/bset.c    |    3 +--
- drivers/md/bcache/request.c |    3 +--
- drivers/md/bcache/super.c   |    9 +++------
- 3 files changed, 5 insertions(+), 10 deletions(-)
+ drivers/md/dm-bufio.c              |    3 +--
+ drivers/md/dm-cache-target.c       |    3 +--
+ drivers/md/dm-crypt.c              |    6 ++----
+ drivers/md/dm-io.c                 |    3 +--
+ drivers/md/dm-log-userspace-base.c |    3 +--
+ drivers/md/dm-region-hash.c        |    4 +---
+ drivers/md/dm.c                    |   13 ++++---------
+ 7 files changed, 11 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 8e9877b..bd4678c 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -1145,8 +1145,7 @@ void bch_flash_dev_request_init(struct bcache_device *d)
+diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+index 83cc52e..8ad39b6 100644
+--- a/drivers/md/dm-bufio.c
++++ b/drivers/md/dm-bufio.c
+@@ -1864,8 +1864,7 @@ static void __exit dm_bufio_exit(void)
+ 	for (i = 0; i < ARRAY_SIZE(dm_bufio_caches); i++) {
+ 		struct kmem_cache *kc = dm_bufio_caches[i];
  
- void bch_request_exit(void)
- {
--	if (bch_search_cache)
--		kmem_cache_destroy(bch_search_cache);
-+	kmem_cache_destroy(bch_search_cache);
+-		if (kc)
+-			kmem_cache_destroy(kc);
++		kmem_cache_destroy(kc);
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(dm_bufio_cache_names); i++)
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 6264781..163de31 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2220,10 +2220,8 @@ static void cleanup_mapped_device(struct mapped_device *md)
+ 		destroy_workqueue(md->wq);
+ 	if (md->kworker_task)
+ 		kthread_stop(md->kworker_task);
+-	if (md->io_pool)
+-		mempool_destroy(md->io_pool);
+-	if (md->rq_pool)
+-		mempool_destroy(md->rq_pool);
++	mempool_destroy(md->io_pool);
++	mempool_destroy(md->rq_pool);
+ 	if (md->bs)
+ 		bioset_free(md->bs);
+ 
+@@ -3508,11 +3506,8 @@ void dm_free_md_mempools(struct dm_md_mempools *pools)
+ 	if (!pools)
+ 		return;
+ 
+-	if (pools->io_pool)
+-		mempool_destroy(pools->io_pool);
+-
+-	if (pools->rq_pool)
+-		mempool_destroy(pools->rq_pool);
++	mempool_destroy(pools->io_pool);
++	mempool_destroy(pools->rq_pool);
+ 
+ 	if (pools->bs)
+ 		bioset_free(pools->bs);
+diff --git a/drivers/md/dm-log-userspace-base.c b/drivers/md/dm-log-userspace-base.c
+index 058256d..53b7b06 100644
+--- a/drivers/md/dm-log-userspace-base.c
++++ b/drivers/md/dm-log-userspace-base.c
+@@ -313,8 +313,7 @@ static int userspace_ctr(struct dm_dirty_log *log, struct dm_target *ti,
+ out:
+ 	kfree(devices_rdata);
+ 	if (r) {
+-		if (lc->flush_entry_pool)
+-			mempool_destroy(lc->flush_entry_pool);
++		mempool_destroy(lc->flush_entry_pool);
+ 		kfree(lc);
+ 		kfree(ctr_str);
+ 	} else {
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index 6f8e83b..81c5e1a 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -65,8 +65,7 @@ struct dm_io_client *dm_io_client_create(void)
+ 	return client;
+ 
+    bad:
+-	if (client->pool)
+-		mempool_destroy(client->pool);
++	mempool_destroy(client->pool);
+ 	kfree(client);
+ 	return ERR_PTR(-ENOMEM);
  }
- 
- int __init bch_request_init(void)
-diff --git a/drivers/md/bcache/bset.c b/drivers/md/bcache/bset.c
-index 646fe85..479117c 100644
---- a/drivers/md/bcache/bset.c
-+++ b/drivers/md/bcache/bset.c
-@@ -1116,8 +1116,7 @@ struct bkey *bch_btree_iter_next_filter(struct btree_iter *iter,
- 
- void bch_bset_sort_state_free(struct bset_sort_state *state)
+diff --git a/drivers/md/dm-cache-target.c b/drivers/md/dm-cache-target.c
+index dd90d12..2fd4c82 100644
+--- a/drivers/md/dm-cache-target.c
++++ b/drivers/md/dm-cache-target.c
+@@ -2309,8 +2309,7 @@ static void destroy(struct cache *cache)
  {
--	if (state->pool)
--		mempool_destroy(state->pool);
-+	mempool_destroy(state->pool);
+ 	unsigned i;
+ 
+-	if (cache->migration_pool)
+-		mempool_destroy(cache->migration_pool);
++	mempool_destroy(cache->migration_pool);
+ 
+ 	if (cache->all_io_ds)
+ 		dm_deferred_set_destroy(cache->all_io_ds);
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index d60c88d..cf91a96 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -1543,10 +1543,8 @@ static void crypt_dtr(struct dm_target *ti)
+ 	if (cc->bs)
+ 		bioset_free(cc->bs);
+ 
+-	if (cc->page_pool)
+-		mempool_destroy(cc->page_pool);
+-	if (cc->req_pool)
+-		mempool_destroy(cc->req_pool);
++	mempool_destroy(cc->page_pool);
++	mempool_destroy(cc->req_pool);
+ 
+ 	if (cc->iv_gen_ops && cc->iv_gen_ops->dtr)
+ 		cc->iv_gen_ops->dtr(cc);
+diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+index b929fd5..f3d608b 100644
+--- a/drivers/md/dm-region-hash.c
++++ b/drivers/md/dm-region-hash.c
+@@ -249,9 +249,7 @@ void dm_region_hash_destroy(struct dm_region_hash *rh)
+ 	if (rh->log)
+ 		dm_dirty_log_destroy(rh->log);
+ 
+-	if (rh->region_pool)
+-		mempool_destroy(rh->region_pool);
+-
++	mempool_destroy(rh->region_pool);
+ 	vfree(rh->buckets);
+ 	kfree(rh);
  }
- 
- int bch_bset_sort_state_init(struct bset_sort_state *state, unsigned page_order)
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 679a093..c27a0ff 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1335,12 +1335,9 @@ static void cache_set_free(struct closure *cl)
- 		destroy_workqueue(c->moving_gc_wq);
- 	if (c->bio_split)
- 		bioset_free(c->bio_split);
--	if (c->fill_iter)
--		mempool_destroy(c->fill_iter);
--	if (c->bio_meta)
--		mempool_destroy(c->bio_meta);
--	if (c->search)
--		mempool_destroy(c->search);
-+	mempool_destroy(c->fill_iter);
-+	mempool_destroy(c->bio_meta);
-+	mempool_destroy(c->search);
- 	kfree(c->devices);
- 
- 	mutex_lock(&bch_register_lock);
