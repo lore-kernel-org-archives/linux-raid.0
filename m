@@ -1,90 +1,107 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: mdstat reporting (superblock & status side-by-side). Can it be
- changed ?
-Date: Sun, 13 Sep 2015 23:09:27 +0500
-Message-ID: <20150913230927.15cfa36a@natsu>
-References: <55F5B941.8050107@suddenlinkmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 15/39] bcache: drop null test before destroy functions
+Date: Mon, 14 Sep 2015 11:08:18 +0200
+Message-ID: <mqdfv2hnzb1.fsf@c203.arch.suse.de>
+References: <1442146532-9100-1-git-send-email-Julia.Lawall@lip6.fr>
+	<1442146532-9100-16-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/oAfowAUxWOj8zSrpByyZr3P"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55F5B941.8050107@suddenlinkmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "David C. Rankin" <drankinatty@suddenlinkmail.com>
-Cc: mdraid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1442146532-9100-16-git-send-email-Julia.Lawall@lip6.fr> (Julia
+	Lawall's message of "Sun, 13 Sep 2015 14:15:08 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, sergey.senozhatsky@gmail.com, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/oAfowAUxWOj8zSrpByyZr3P
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Julia Lawall <Julia.Lawall@lip6.fr> writes:
 
-On Sun, 13 Sep 2015 12:58:25 -0500
-"David C. Rankin" <drankinatty@suddenlinkmail.com> wrote:
+> Remove unneeded NULL test.
+>
+> The semantic patch that makes this change is as follows:
+> (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@ expression x; @@
+> -if (x !=3D NULL)
+>   \(kmem_cache_destroy\|mempool_destroy\|dma_pool_destroy\)(x);
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
->    After looking at the output of /proc/mdstat many times, there is one '=
-human=20
-> factors' (human nature) bit of difficulty with the order of the output=20
-> (especially with a standard 2-disk raid1 array and 1.2 superblock:
->=20
-> md1 : active raid1 sda7[2] sdb7[1]
->        52396032 blocks super 1.2 [2/2] [UU]
->                              ^^^^^^^^^
->=20
->    When scanning the information quickly to insure you do NOT have 1/2 di=
-sks=20
-> active in the array, you run into the version and disk information side-b=
-y-side.
->=20
->    "1.2 [2/2]"
->=20
->    Which naturally causes a short "huh?..., OK" double-take.
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-For me it does not. 1.2 is clearly different from 1/2, and the actual 2/2
-that you have is even enclosed in brackets to stand out more prominently.
-
->    Is there any way from a user standpoint (short of "read a b c d e f"; =
-echo=20
-> "$c $d $a $b $e $f"), to rearrange the order the information is reported =
-as:
->=20
-> md1 : active raid1 sda7[2] sdb7[1]
->        super 1.2 52396032 blocks [2/2] [UU]
->=20
->    That simple change makes glancing down the right-side of the informati=
-on much=20
-> easier on the brain....
-
-If you want to simplify the mental processing, just look for any "_"s in the
-string of "U"s which is also conveniently placed at the end of the line. In=
- a
-partially down RAID1 you'd have [U_] or [_U] there, which is very noticeable
-compared to the usual [UU].
-
->    I don't think this was ever a concern prior to the 1.2 superbock and I=
-'m not=20
-> sure it warrants any brainpower now. However, it was something that stood=
- out to=20
-> me, so I thought I would pass it along.
-
-I don't think it's justified to randomly change things around which many sh=
-ell
-scripts and the like are quite likely to depend on, just out of a personal
-preference.
+>
+> ---
+>  drivers/md/bcache/bset.c    |    3 +--
+>  drivers/md/bcache/request.c |    3 +--
+>  drivers/md/bcache/super.c   |    9 +++------
+>  3 files changed, 5 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.=
+c
+> index 8e9877b..bd4678c 100644
+> --- a/drivers/md/bcache/request.c
+> +++ b/drivers/md/bcache/request.c
+> @@ -1145,8 +1145,7 @@ void bch_flash_dev_request_init(struct bcache_d=
+evice *d)
+> =20
+>  void bch_request_exit(void)
+>  {
+> -	if (bch_search_cache)
+> -		kmem_cache_destroy(bch_search_cache);
+> +	kmem_cache_destroy(bch_search_cache);
+>  }
+> =20
+>  int __init bch_request_init(void)
+> diff --git a/drivers/md/bcache/bset.c b/drivers/md/bcache/bset.c
+> index 646fe85..479117c 100644
+> --- a/drivers/md/bcache/bset.c
+> +++ b/drivers/md/bcache/bset.c
+> @@ -1116,8 +1116,7 @@ struct bkey *bch_btree_iter_next_filter(struct =
+btree_iter *iter,
+> =20
+>  void bch_bset_sort_state_free(struct bset_sort_state *state)
+>  {
+> -	if (state->pool)
+> -		mempool_destroy(state->pool);
+> +	mempool_destroy(state->pool);
+>  }
+> =20
+>  int bch_bset_sort_state_init(struct bset_sort_state *state, unsigned=
+ page_order)
+> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+> index 679a093..c27a0ff 100644
+> --- a/drivers/md/bcache/super.c
+> +++ b/drivers/md/bcache/super.c
+> @@ -1335,12 +1335,9 @@ static void cache_set_free(struct closure *cl)
+>  		destroy_workqueue(c->moving_gc_wq);
+>  	if (c->bio_split)
+>  		bioset_free(c->bio_split);
+> -	if (c->fill_iter)
+> -		mempool_destroy(c->fill_iter);
+> -	if (c->bio_meta)
+> -		mempool_destroy(c->bio_meta);
+> -	if (c->search)
+> -		mempool_destroy(c->search);
+> +	mempool_destroy(c->fill_iter);
+> +	mempool_destroy(c->bio_meta);
+> +	mempool_destroy(c->search);
+>  	kfree(c->devices);
+> =20
+>  	mutex_lock(&bch_register_lock);
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-bcach=
+e" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=20
-With respect,
-Roman
-
---Sig_/oAfowAUxWOj8zSrpByyZr3P
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlX1u9cACgkQTLKSvz+PZwiEdQCeJnDtXKmbH9bb3mlt/3x+SHv/
-AV8AoISTl/36Y/lnAtgn/3ZLFaLnkhn2
-=ufYA
------END PGP SIGNATURE-----
-
---Sig_/oAfowAUxWOj8zSrpByyZr3P--
+Johannes Thumshirn                                           Storage
+jthumshirn@suse.de                                 +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=C3=BCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600  D0D0 0393 969D 2D76 0850
