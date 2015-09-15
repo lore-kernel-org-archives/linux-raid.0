@@ -1,140 +1,67 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: [PATCH 17/39] md: drop null test before destroy functions
-Date: Tue, 15 Sep 2015 09:29:10 +0200
-Message-ID: <87613c6szd.fsf@notabene.neil.brown.name>
-References: <1442146532-9100-1-git-send-email-Julia.Lawall@lip6.fr> <1442146532-9100-18-git-send-email-Julia.Lawall@lip6.fr>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5-cache I/O path improvements V2
+Date: Tue, 15 Sep 2015 09:23:44 +0200
+Message-ID: <87a8so6t8f.fsf@notabene.neil.brown.name>
+References: <1442038638-6947-1-git-send-email-hch@lst.de> <D21C6812.74CB%shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha1; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1442146532-9100-18-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: sergey.senozhatsky@gmail.com, kernel-janitors@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <D21C6812.74CB%shli@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Julia Lawall <Julia.Lawall@lip6.fr> writes:
+Shaohua Li <shli@fb.com> writes:
 
-> Remove unneeded NULL test.
+> On 9/11/15, 11:17 PM, "Christoph Hellwig" <hch@lst.de> wrote:
 >
-> The semantic patch that makes this change is as follows:
-> (http://coccinelle.lip6.fr/)
+>>Hi Shaohua, hi Neil,
+>>
+>>this series contains a few updates to the raid5-cache feature.
+>>
+>>The first patch just ports it to the post-4.2 block layer.  As part of
+>>that
+>>I noticed that it currently doesn't handle I/O errors - fixes for that
+>>will
+>>follow.
+>>
+>>The second and third patch simplify the I/O unit state machine and reduce
+>>latency and memory usage for the I/O units.  The remainder are just a
+>>couple
+>>of cleanups in this area that I stumbled upon.
+>>
+>>Changes since V1:
+>> - only use REQ_FUA if supported natively by the log device
 >
-> // <smpl>
-> @@ expression x; @@
-> -if (x !=3D NULL)
->   \(kmem_cache_destroy\|mempool_destroy\|dma_pool_destroy\)(x);
-> // </smpl>
+> Hi Christoph,
 >
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> I finally got some data with a Samsung SSD, which supports fua. Controller
+> is ahci.
+> Test is a simple fio with all full stripe write.
 >
-> ---
->  drivers/md/multipath.c |    3 +--
->  drivers/md/raid1.c     |    6 ++----
->  drivers/md/raid10.c    |    9 +++------
->  drivers/md/raid5.c     |    3 +--
->  4 files changed, 7 insertions(+), 14 deletions(-)
+> libata.fua=0, throughput 247m/s
+> libata.fua=1, throughput 74m/s
 
-Applied, thanks.
+Eek!  That's a big price to pay!
+
+>
+> fua is significantly slower. I think we need a sysfs config to enable fua.
+
+I don't want a sysfs config if we can possibly avoid it.
+
+Christoph's code sets FUA on every block written to the log, both data
+and metadata.  Is that really what we want?
+
+I don't know much of the hardware details, but wouldn't setting FUA and
+FLUSH on the last block written be just as effective and possibly faster
+(by giving more flexibility to lower layers)??
 
 NeilBrown
-
-
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 15ef2c6..09a12d7 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2271,8 +2271,7 @@ static void shrink_stripes(struct r5conf *conf)
->  	       drop_one_stripe(conf))
->  		;
->=20=20
-> -	if (conf->slab_cache)
-> -		kmem_cache_destroy(conf->slab_cache);
-> +	kmem_cache_destroy(conf->slab_cache);
->  	conf->slab_cache =3D NULL;
->  }
->=20=20
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 4517f06..5f4f553 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -2843,8 +2843,7 @@ static struct r1conf *setup_conf(struct mddev *mdde=
-v)
->=20=20
->   abort:
->  	if (conf) {
-> -		if (conf->r1bio_pool)
-> -			mempool_destroy(conf->r1bio_pool);
-> +		mempool_destroy(conf->r1bio_pool);
->  		kfree(conf->mirrors);
->  		safe_put_page(conf->tmppage);
->  		kfree(conf->poolinfo);
-> @@ -2946,8 +2945,7 @@ static void raid1_free(struct mddev *mddev, void *p=
-riv)
->  {
->  	struct r1conf *conf =3D priv;
->=20=20
-> -	if (conf->r1bio_pool)
-> -		mempool_destroy(conf->r1bio_pool);
-> +	mempool_destroy(conf->r1bio_pool);
->  	kfree(conf->mirrors);
->  	safe_put_page(conf->tmppage);
->  	kfree(conf->poolinfo);
-> diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-> index d222522..d132f06 100644
-> --- a/drivers/md/multipath.c
-> +++ b/drivers/md/multipath.c
-> @@ -470,8 +470,7 @@ static int multipath_run (struct mddev *mddev)
->  	return 0;
->=20=20
->  out_free_conf:
-> -	if (conf->pool)
-> -		mempool_destroy(conf->pool);
-> +	mempool_destroy(conf->pool);
->  	kfree(conf->multipaths);
->  	kfree(conf);
->  	mddev->private =3D NULL;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0fc33eb..7c99a40 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -3486,8 +3486,7 @@ static struct r10conf *setup_conf(struct mddev *mdd=
-ev)
->  		printk(KERN_ERR "md/raid10:%s: couldn't allocate memory.\n",
->  		       mdname(mddev));
->  	if (conf) {
-> -		if (conf->r10bio_pool)
-> -			mempool_destroy(conf->r10bio_pool);
-> +		mempool_destroy(conf->r10bio_pool);
->  		kfree(conf->mirrors);
->  		safe_put_page(conf->tmppage);
->  		kfree(conf);
-> @@ -3682,8 +3681,7 @@ static int run(struct mddev *mddev)
->=20=20
->  out_free_conf:
->  	md_unregister_thread(&mddev->thread);
-> -	if (conf->r10bio_pool)
-> -		mempool_destroy(conf->r10bio_pool);
-> +	mempool_destroy(conf->r10bio_pool);
->  	safe_put_page(conf->tmppage);
->  	kfree(conf->mirrors);
->  	kfree(conf);
-> @@ -3696,8 +3694,7 @@ static void raid10_free(struct mddev *mddev, void *=
-priv)
->  {
->  	struct r10conf *conf =3D priv;
->=20=20
-> -	if (conf->r10bio_pool)
-> -		mempool_destroy(conf->r10bio_pool);
-> +	mempool_destroy(conf->r10bio_pool);
->  	safe_put_page(conf->tmppage);
->  	kfree(conf->mirrors);
->  	kfree(conf->mirrors_old);
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -142,18 +69,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iQIcBAEBAgAGBQJV98jGAAoJEDnsnt1WYoG5VK4P/2mIFc+DTSvH4vi6SO65G0ON
-gBUrCh8TmvjgSncNfr77R5xevhivH4sclBNc+ZmfB0JaFzt9Qi7UfaCEJAu6qRVu
-4HD3MVS7v7aUxzT6eKt47/RlCp7bF9nYyazXzP8FniCuEop8ukcp/vMFrlYOKp2p
-rf/f+J0aXPdPntSe5/j/p/8pXXGogupe0fh4Q4sLyj17ZmSUEfEZyXcf50lQXPh+
-Z73Sf8NEeVYVesrgPHTCbFPeGkocGih7QmW1wwK+zbzPALEnj1JnVeMnw2o5oZ1n
-XJF5sS5Ins515Ogt4TwALxoCKnqVig0qrYhrYGY+qq+1k6InaDTP4bEDiHV7MeYK
-arpoHzOHF0lDRaJYh9Zpz6Llu5/bVp9svqJNcihTGkqSHzLuNKx8Uqq+QV2iZEeU
-fF2NKysjZ37CicAS+Si0Xyk9DDotDoirdnbjCKg+7wU1gFephNDrNTxovci2tRNc
-rbqu3LmTd7rBe8R0kA8h/Qm8LRXl7nSvjRhUUCkDBSvCELRnCe8GxFQLKHYPIFKn
-DMH5zfHdAjgzR1xXOyIuY7vtKcsK3mV3aG41pjaMmrJCrnBcJF8mfvu4PXCVfyuf
-81AQSSAgWE7J1mYK0nhbMJUhCz3sSBQTC/SgbW9/uPzjMTYX+YfqOBfMSEn9JtRP
-k2pD3LJwOdlcRHglNjpj
-=P64Z
+iQIcBAEBAgAGBQJV98eAAAoJEDnsnt1WYoG5qSsP/1lz5gsAcu6uDq9QQ5PIvRxO
+zsMrV1W+WSXkx0JPhyfkSPXPWNS+HcS8w0Q4i7NtNUdDb2YCi0FkQxiGVERKwJsm
+7l84sl6whClhG1vOnq3sUyyJ44aIozLE4BEx3+DUx2oiDk09s7nrveVa6G/nGT7K
+3mpkZlasO+q7MQhifdu9rxzlSDhSnVjtnjpR+Ga2jiKITBYCnBFM7jw7oyGFZ5bk
+RUgJS7uBhvGlgcwYzvFZOtP4toM7mYvMb0AgV0f0QvxHs8BNaY98EUCYilzjY3ej
+nVmcBAjXS5akR/yh/5mJj7Po9jVnfQ39D+f/pmJchpSP0qxhCjPpVP1k3yLBPXey
+SAtErWIyhQvnJnW5qyr0edEeI+j+bXY29542yyLYDPrGBhA0hy/9OHCtiZF5nWD0
+rdMSI6IFE4sZxsUwTuZlycdL65xSMW+CPNdFUKwCpSX55POTi7WThqbGrpZdJCDN
+dHTHJcm/NMBWf4tVdKUVlrql9x1qwsc3QqqnelJ9i8gBGso0gTCjWr1Qa5fisjGY
+s4bWN8EEPt/JmbUsI5hkclB7unMOZLb7QL51xqRFaVYEqKdBwYi5/NaRNdxxdQKf
+G9Cnkm0pHOjbbHhxzr8TfqR/wks2uBcexN4aZYB3He4T3+6Z1LGsOaWhcNWYMoD3
+/A2r4TogHrVYqxlndtln
+=KO/g
 -----END PGP SIGNATURE-----
 --=-=-=--
