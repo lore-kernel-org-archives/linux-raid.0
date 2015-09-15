@@ -1,52 +1,55 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Recommendations for RAID setup needed
-Date: Tue, 15 Sep 2015 19:08:31 +0100
-Message-ID: <55F85E9F.1070100@youngman.org.uk>
-References: <CAB1R3sjKb-aXJV+4E5t6OsWid4QB+r6aCteZt+F+57=cWLhHWw@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm: ioctl: prevent double freeing
+Date: Tue, 15 Sep 2015 14:13:33 -0400
+Message-ID: <20150915181333.GB18972@redhat.com>
+References: <1441365759-7247-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <20150915161855.GE10399@birch.djwong.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sjKb-aXJV+4E5t6OsWid4QB+r6aCteZt+F+57=cWLhHWw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20150915161855.GE10399@birch.djwong.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>, Alasdair Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On 15/09/15 18:39, Alex wrote:
-> Hi,
-> I have a fedora22 system and would like to build a backup server. I
-> have four 3TB SATA disks and would like to build a RAID5 array. I
-> understand rebuild times can be extensive, possibility creating a
-> scenario where another disk fails during that rebuild time, but I'm
-> not sure I want to lose the extra space with creating a RAID6 array. I
-> believe RAID5 also has faster write speeds?
+On Tue, Sep 15 2015 at 12:18pm -0400,
+Darrick J. Wong <darrick.wong@oracle.com> wrote:
 
-What disks are you using? Are they proper raid disks? A 12TB array can
-have a soft read error every complete pass, and still be within the
-disk-manufacturer's specs. If your disks are not raid-compliant, this
-will stop your array from rebuilding, ever!
-
-(Chances are, your disks are above spec and won't give a problem. Do you
-want to take the risk?)
+> On Fri, Sep 04, 2015 at 04:52:39PM +0530, Sudip Mukherjee wrote:
+> > DM_PARAMS_KMALLOC and DM_PARAMS_VMALLOC should never be set together in
+> > param_flags. We are setting these flags while allocating so we know that
+> > there is almost no chance of having these two set together but still we
+> > can have some additional safety.
+> > 
+> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> > ---
+> >  drivers/md/dm-ioctl.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+> > index 80a4395..aaad74e 100644
+> > --- a/drivers/md/dm-ioctl.c
+> > +++ b/drivers/md/dm-ioctl.c
+> > @@ -1680,7 +1680,7 @@ static void free_params(struct dm_ioctl *param, size_t param_size, int param_fla
+> >  
+> >  	if (param_flags & DM_PARAMS_KMALLOC)
+> >  		kfree(param);
+> > -	if (param_flags & DM_PARAMS_VMALLOC)
+> > +	else if (param_flags & DM_PARAMS_VMALLOC)
 > 
-> Is a 9TB RAID5 partition too risky in terms of rebuild time?
-> 
-> What's the preferred filesystem for a backup server these days? Should
-> I use XFS or ext4?
+> Wouldn't you also want a WARN_ON to complain about both flags being set?
 
-Throwing something completely different into the mix, how about
-considering btrfs? It's not 100% solid yet, so you need to be careful
-with it, but if you back up with rsync and the "in place" option, it'll
-give you full backups for the cost of incremental.
+No, this is getting rediculous now.  Please stop the insanity.
 
-What you MUST do is KEEP AN EYE ON DISK SPACE! The main failure mode for
-btrfs I'm aware of, is that a disk full can cause a fatal error. As in
-"I've just trashed the disk - it's 'format c:' time". So if you hit 80%
-or so, alarm bells should be ringing. Very loud.
-> 
-> Thanks,
-> Alex
+DM_PARAMS_KMALLOC and DM_PARAMS_VMALLOC are mutually exclussive --
+always will be.  Sprinkling defensive code around isn't high on my list
+of changes I'm interested in.
 
-Cheers,
-Wol
+At some point I'll stage the original change from Sudip for 4.4 but I'm
+re-writing the subject and header to not be so alarmist (this is more to
+do with eliminating a conditional than anything else).  There is _zero_
+potential for a double-free with the current code.
 
+Mike
