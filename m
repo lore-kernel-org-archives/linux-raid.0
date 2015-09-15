@@ -1,89 +1,51 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid1 resync stuck
-Date: Tue, 15 Sep 2015 11:25:59 -0400
-Message-ID: <wrfj1tdzvh4o.fsf@redhat.com>
-References: <wrfjmvwvz9ke.fsf@redhat.com> <wrfjsi6k4zqy.fsf@redhat.com>
-	<8737yg6rbl.fsf@notabene.neil.brown.name>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [dm-devel] [PATCH] dm: ioctl: prevent double freeing
+Date: Tue, 15 Sep 2015 09:18:55 -0700
+Message-ID: <20150915161855.GE10399@birch.djwong.org>
+References: <1441365759-7247-1-git-send-email-sudipm.mukherjee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8737yg6rbl.fsf@notabene.neil.brown.name> (Neil Brown's message
-	of "Tue, 15 Sep 2015 10:05:02 +0200")
+Content-Disposition: inline
+In-Reply-To: <1441365759-7247-1-git-send-email-sudipm.mukherjee@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: majianpeng@gmail.com, linux-raid <linux-raid@vger.kernel.org>, nate.dailey@stratus.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->
->>> crash> r1conf 0xffff882028f3e600 | grep -e array_frozen -e barrier -e start_next_window -e next_resync
->>>   barrier = 0x1,                      (conf->barrier < RESYNC_DEPTH)
->>>   array_frozen = 0x0,                 (!conf->array_frozen)
->>>   next_resync = 0x3000,
->>>   start_next_window = 0x3000,
->>>
->>> ie. next_resync == start_next_window, which will never wake up since
->>> start_next_window is smaller than next_resync + RESYNC_SECTORS.
->>>
->>> Have you seen anything like this?
->>
->> Looking further at this together with Nate. It looks like you had a
->> patch resolving something similar:
->
-> I hope you realize that this a confirming-instance of my hypothesis that
-> if I just ignore questions, the asker will eventually solve it
-> themselves?  Maybe I should just wait a bit longer...
+On Fri, Sep 04, 2015 at 04:52:39PM +0530, Sudip Mukherjee wrote:
+> DM_PARAMS_KMALLOC and DM_PARAMS_VMALLOC should never be set together in
+> param_flags. We are setting these flags while allocating so we know that
+> there is almost no chance of having these two set together but still we
+> can have some additional safety.
+> 
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> ---
+>  drivers/md/dm-ioctl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+> index 80a4395..aaad74e 100644
+> --- a/drivers/md/dm-ioctl.c
+> +++ b/drivers/md/dm-ioctl.c
+> @@ -1680,7 +1680,7 @@ static void free_params(struct dm_ioctl *param, size_t param_size, int param_fla
+>  
+>  	if (param_flags & DM_PARAMS_KMALLOC)
+>  		kfree(param);
+> -	if (param_flags & DM_PARAMS_VMALLOC)
+> +	else if (param_flags & DM_PARAMS_VMALLOC)
 
-Argh I screwed up again! :)
+Wouldn't you also want a WARN_ON to complain about both flags being set?
 
->> It looks to us like close_sync()'s conf->start_next_window = MaxSector
->> results in wait_barrier() triggering this when the outstanding IO
->> completes:
->>
->> 	if (bio && bio_data_dir(bio) == WRITE) {
->> 		if (bio->bi_sector >=
->> 		    conf->mddev->curr_resync_completed) {
->> 			if (conf->start_next_window == MaxSector)
->> 				conf->start_next_window =
->> 					conf->next_resync +
->> 					NEXT_NORMALIO_DISTANCE;
->>
->> putting us into the situation where raise_barrier()'s condition never
->> completes:
->>
->> 	wait_event_lock_irq(conf->wait_barrier,
->> 			    !conf->array_frozen &&
->> 			    conf->barrier < RESYNC_DEPTH &&
->> 			    conf->current_window_requests == 0 &&
->> 			    (conf->start_next_window >=
->> 			     conf->next_resync + RESYNC_SECTORS),
->> 			    conf->resync_lock);
->>
->> So the question is, is it wrong for close_sync() to be setting
->> conf->start_next_window = MaxSector in the first place, or should it
->> only be doing this once all outstanding I/O has completed?
->
-> I think it is right to set start_next_window = MaxSector, but I think it
-> is wrong to set ->next_resync = 0;
->
-> I think:
->  close_sync() should set next_sync to some impossibly big number,
->    but not quite MaxSector as we sometimes add RESYNC_SECTORS or
->    NEXT_NORMALIO_DISTANCE.
->    May mddev->resync_max_sectors would be sensible.  Then raid1_resize
->    would need to update it though.
->    Or maybe we should make MaxSector a bit smaller so it is safe to
->    add to it. ((~(sector_t)0)>>1) ??
->
->  wait_barrier() should include ->next_resync in its decision about
->    setting start_next_window.  May just replace
->    "mddev->curr_resync_completed" with "next_resync".
->
-> Can you try that?  Does it make sense to you too?
+--D
 
-I think this makes sense - I'll spin a patch for it and see how it
-works out.
-
-Cheers,
-Jes
+>  		vfree(param);
+>  }
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
