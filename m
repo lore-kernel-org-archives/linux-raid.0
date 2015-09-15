@@ -1,59 +1,67 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Recommendations for RAID setup needed
-Date: Tue, 15 Sep 2015 23:57:31 +0500
-Message-ID: <20150915235731.5fcc5f79@natsu>
-References: <CAB1R3sjKb-aXJV+4E5t6OsWid4QB+r6aCteZt+F+57=cWLhHWw@mail.gmail.com>
-	<55F85E9F.1070100@youngman.org.uk>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: raid5-cache I/O path improvements V2
+Date: Tue, 15 Sep 2015 14:54:59 -0700
+Message-ID: <20150915215458.GA1943628@devbig084.prn1.facebook.com>
+References: <1442038638-6947-1-git-send-email-hch@lst.de>
+ <D21C6812.74CB%shli@fb.com>
+ <87a8so6t8f.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AOpGwkPk=acgfUDkNeRVPrA"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55F85E9F.1070100@youngman.org.uk>
+Content-Disposition: inline
+In-Reply-To: <87a8so6t8f.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Alex <mysqlstudent@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/AOpGwkPk=acgfUDkNeRVPrA
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Sep 15, 2015 at 09:23:44AM +0200, Neil Brown wrote:
+> Shaohua Li <shli@fb.com> writes:
+> 
+> > On 9/11/15, 11:17 PM, "Christoph Hellwig" <hch@lst.de> wrote:
+> >
+> >>Hi Shaohua, hi Neil,
+> >>
+> >>this series contains a few updates to the raid5-cache feature.
+> >>
+> >>The first patch just ports it to the post-4.2 block layer.  As part of
+> >>that
+> >>I noticed that it currently doesn't handle I/O errors - fixes for that
+> >>will
+> >>follow.
+> >>
+> >>The second and third patch simplify the I/O unit state machine and reduce
+> >>latency and memory usage for the I/O units.  The remainder are just a
+> >>couple
+> >>of cleanups in this area that I stumbled upon.
+> >>
+> >>Changes since V1:
+> >> - only use REQ_FUA if supported natively by the log device
+> >
+> > Hi Christoph,
+> >
+> > I finally got some data with a Samsung SSD, which supports fua. Controller
+> > is ahci.
+> > Test is a simple fio with all full stripe write.
+> >
+> > libata.fua=0, throughput 247m/s
+> > libata.fua=1, throughput 74m/s
+> 
+> Eek!  That's a big price to pay!
+> 
+> >
+> > fua is significantly slower. I think we need a sysfs config to enable fua.
+> 
+> I don't want a sysfs config if we can possibly avoid it.
+> 
+> Christoph's code sets FUA on every block written to the log, both data
+> and metadata.  Is that really what we want?
+> 
+> I don't know much of the hardware details, but wouldn't setting FUA and
+> FLUSH on the last block written be just as effective and possibly faster
+> (by giving more flexibility to lower layers)??
 
-On Tue, 15 Sep 2015 19:08:31 +0100
-Wols Lists <antlists@youngman.org.uk> wrote:
+How is it different against without FUA, eg, doing a flush after several bios?
 
-> Throwing something completely different into the mix, how about
-> considering btrfs? It's not 100% solid yet, so you need to be careful
-> with it, but if you back up with rsync and the "in place" option, it'll
-> give you full backups for the cost of incremental.
-
-However its RAID5/6 is not ready yet and even RAID1/10 lack some important
-features compared to mdadm, not to mention performance optimizations.
-
-On the other hand I have a great success running Btrfs without utilizing its
-own RAID features, but as a regular filesystem on top of MD RAID5/6.
-
-> What you MUST do is KEEP AN EYE ON DISK SPACE! The main failure mode for
-> btrfs I'm aware of, is that a disk full can cause a fatal error. As in
-> "I've just trashed the disk - it's 'format c:' time". So if you hit 80%
-> or so, alarm bells should be ringing. Very loud.
-
-And this is just an absolute deranged baseless FUD today, or maybe something
-that might have been true about 5 years ago -- eons in Btrfs development.
-
---=20
-With respect,
-Roman
-
---Sig_/AOpGwkPk=acgfUDkNeRVPrA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlX4ahsACgkQTLKSvz+PZwiXPgCfflC3QOM84+oC8Pz3CnQXFiko
-0/4AniNaEjRNDKuD2vekDciS2jZY3JOK
-=hW5j
------END PGP SIGNATURE-----
-
---Sig_/AOpGwkPk=acgfUDkNeRVPrA--
+Thanks,
+Shaohua
