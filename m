@@ -1,28 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: raid5-cache I/O path improvements V2
-Date: Thu, 17 Sep 2015 03:53:26 +0200
-Message-ID: <20150917015326.GA22865@lst.de>
-References: <1442038638-6947-1-git-send-email-hch@lst.de> <D21C6812.74CB%shli@fb.com> <87a8so6t8f.fsf@notabene.neil.brown.name> <20150915215458.GA1943628@devbig084.prn1.facebook.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: Fwd: mdadm: not rebuilding IMSM array without OROM
+Date: Thu, 17 Sep 2015 10:43:29 +0200
+Message-ID: <55FA7D31.5030006@intel.com>
+References: <CAMrEMU_LmmB-fmLkW1g6ptYnM-qbXNBJL58NR0Ok8Ecx_16KRA@mail.gmail.com>
+ <CAMrEMU_du7HKa5x9dNpiBkp103-9NtF0fXD+Bv-Y6o41tEM85A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150915215458.GA1943628@devbig084.prn1.facebook.com>
+In-Reply-To: <CAMrEMU_du7HKa5x9dNpiBkp103-9NtF0fXD+Bv-Y6o41tEM85A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
+To: Justin Capella <justincapella@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 15, 2015 at 02:54:59PM -0700, Shaohua Li wrote:
-> > I don't want a sysfs config if we can possibly avoid it.
-> > 
-> > Christoph's code sets FUA on every block written to the log, both data
-> > and metadata.  Is that really what we want?
-> > 
-> > I don't know much of the hardware details, but wouldn't setting FUA and
-> > FLUSH on the last block written be just as effective and possibly faster
-> > (by giving more flexibility to lower layers)??
+On 09/16/2015 07:54 PM, Justin Capella wrote:
+> In reference to the following commit:
+> http://git.neil.brown.name/?p=mdadm.git;a=commit;h=7eee461e91df702d8f588955b03e5bbb07e1f88d
 > 
-> How is it different against without FUA, eg, doing a flush after several bios?
+> I am unclear how to proceed given my unfortunate environment, where I
+> have replaced the motherboard. I am fearful of reconfiguring the raid
+> in OROM in case it causes data loss. Is anyone aware of a tool to
+> rebuild/configure the OROM settings from the autodetected ones?
+> 
+> Should I just modify my startup scripts in my initrd by hand to include --force?
 
-It's just a more complicated version of doing the same..
+You can use IMSM_NO_PLATFORM environment variable (see man mdadm), but if
+your new motherboard also supports IMSM, then you can just enable it.
+The raid will be detected normally and this should not cause data loss.
+
+Artur
