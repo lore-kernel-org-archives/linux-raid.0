@@ -1,22 +1,27 @@
-From: Justin Capella <justincapella@gmail.com>
-Subject: Fwd: mdadm: not rebuilding IMSM array without OROM
-Date: Wed, 16 Sep 2015 10:54:44 -0700
-Message-ID: <CAMrEMU_du7HKa5x9dNpiBkp103-9NtF0fXD+Bv-Y6o41tEM85A@mail.gmail.com>
-References: <CAMrEMU_LmmB-fmLkW1g6ptYnM-qbXNBJL58NR0Ok8Ecx_16KRA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 02/12] raid5-cache: free I/O units earlier
+Date: Thu, 17 Sep 2015 03:48:06 +0200
+Message-ID: <20150917014806.GA22809@lst.de>
+References: <1442038638-6947-1-git-send-email-hch@lst.de> <1442038638-6947-3-git-send-email-hch@lst.de> <87zj0o5cnj.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMrEMU_LmmB-fmLkW1g6ptYnM-qbXNBJL58NR0Ok8Ecx_16KRA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87zj0o5cnj.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-In reference to the following commit:
-http://git.neil.brown.name/?p=mdadm.git;a=commit;h=7eee461e91df702d8f588955b03e5bbb07e1f88d
+On Tue, Sep 15, 2015 at 10:07:12AM +0200, Neil Brown wrote:
+> Christoph Hellwig <hch@lst.de> writes:
+> 
+> > +	sector_t reclaimable;
+> 
+> sector_t is unsigned (u64 or "unsigned long"), so
+> 
+> > +	BUG_ON(reclaimable < 0);
+> 
+> This could only be a compiler bug.
 
-I am unclear how to proceed given my unfortunate environment, where I
-have replaced the motherboard. I am fearful of reconfiguring the raid
-in OROM in case it causes data loss. Is anyone aware of a tool to
-rebuild/configure the OROM settings from the autodetected ones?
-
-Should I just modify my startup scripts in my initrd by hand to include --force?
+Indeed, I'll fix this up.
