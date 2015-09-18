@@ -1,57 +1,41 @@
-From: "Jens-U. Mozdzen" <jmozdzen@nde.ag>
-Subject: strange syslog message on daily mdadm cron job
-Date: Fri, 18 Sep 2015 15:57:50 +0200
-Message-ID: <20150918155750.Horde.pf92hY6SXyDte5eXjR1cG6R@www3.nde.ag>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/2] md: clear CHANGE_PENDING in readonly array
+Date: Fri, 18 Sep 2015 10:20:12 -0700
+Message-ID: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi *,
+If faulty disks of an array are more than allowed degraded number, the
+array enters error handling. It will be marked as read-only with
+MD_CHANGE_PENDING/RECOVERY_NEEDED set. But currently recovery doesn't
+clear CHANGE_PENDING bit for read-only array.  If MD_CHANGE_PENDING is
+set for a raid5 array, all returned IO will be hold on a list till the
+bit is clear. But recovery nevery clears this bit, the IO is always in
+pending state and nevery finish. This has bad effects like upper layer
+can't get an IO error and the array can't be stopped.
 
-checking syslog I noticed the following messages, created on openSUSE  
-13.1 during each daily "mdadm" cron job:
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/md.c | 1 +
+ 1 file changed, 1 insertion(+)
 
---- cut here ---
-mdadm[15265]: DeviceDisappeared event detected on md device  
-/dev/md/host01-data
-mdadm[15265]: DeviceDisappeared event detected on md device  
-/dev/md/host01-cache
-mdadm[15265]: NewArray event detected on md device /dev/md127
-mdadm[15265]: NewArray event detected on md device /dev/md126
---- cut here ---
-
-The command issued by the cron job is
-
-eval /sbin/mdadm -F --oneshot --syslog -m "user@company.com" -s -c  
-"/etc/mdadm.conf"
-
-The contents of /etc/mdadm.conf are
-
---- cut here ---
-DEVICE containers partitions
-ARRAY /dev/md/host01-cache UUID=3884ea75:28c82f09:05d0026d:1c95b268
-ARRAY /dev/md/host01-data UUID=92a1b47d:6c889735:6d60a23f:f8d8067c
-
-HOMEHOST host01
-MAILADDR user@company.com
-MAILFROM host01@company.com
---- cut here ---
-
-Searching the net didn't pop up any obvious hints, but shows several  
-responses to problem reports that advice to leave mdadm.conf empty.
-
-We do not experience any noticeable problems, nor does mdadm send any  
-error report emails. The latter is tested, we had reports of faulty  
-disks some time ago (related to controller problems, not actual disk  
-errors). "mdadm --detail" reports look perfectly fine for both arrays.
-
-Are the syslog messages the result of a local configuration error, or  
-may there be some other cause?
-
-Regards,
-Jens
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 95824fb..c596b73 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8209,6 +8209,7 @@ void md_check_recovery(struct mddev *mddev)
+ 			md_reap_sync_thread(mddev);
+ 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
++			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
+ 			goto unlock;
+ 		}
+ 
+-- 
+1.8.1
 
