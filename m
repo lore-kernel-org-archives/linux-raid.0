@@ -1,41 +1,52 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 1/2] md: clear CHANGE_PENDING in readonly array
-Date: Fri, 18 Sep 2015 10:20:12 -0700
-Message-ID: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
+Subject: [PATCH 2/2] raid5: update analysis state for failed stripe
+Date: Fri, 18 Sep 2015 10:20:13 -0700
+Message-ID: <0fc9dd19baf6f214a112b040401a4cf3d6313942.1442596586.git.shli@fb.com>
+References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-If faulty disks of an array are more than allowed degraded number, the
-array enters error handling. It will be marked as read-only with
-MD_CHANGE_PENDING/RECOVERY_NEEDED set. But currently recovery doesn't
-clear CHANGE_PENDING bit for read-only array.  If MD_CHANGE_PENDING is
-set for a raid5 array, all returned IO will be hold on a list till the
-bit is clear. But recovery nevery clears this bit, the IO is always in
-pending state and nevery finish. This has bad effects like upper layer
-can't get an IO error and the array can't be stopped.
+handle_failed_stripe() makes the stripe fail, eg, all IO will return
+with a failure, but it doesn't update stripe_head_state. Later
+handle_stripe() has special handling for raid6 for handle_stripe_fill().
+That check before handle_stripe_fill() doesn't skip the failed stripe
+and we get a kernel crash in need_this_block.  This patch clear the
+analysis state to make sure no functions wrongly called after
+handle_failed_stripe()
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/md.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/md/raid5.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 95824fb..c596b73 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8209,6 +8209,7 @@ void md_check_recovery(struct mddev *mddev)
- 			md_reap_sync_thread(mddev);
- 			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
- 			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
- 			goto unlock;
- 		}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 394cdf8..8e4fb89a 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3155,6 +3155,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			spin_unlock_irq(&sh->stripe_lock);
+ 			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+ 				wake_up(&conf->wait_for_overlap);
++			if (bi)
++				s->to_read--;
+ 			while (bi && bi->bi_iter.bi_sector <
+ 			       sh->dev[i].sector + STRIPE_SECTORS) {
+ 				struct bio *nextbi =
+@@ -3173,6 +3175,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 		 */
+ 		clear_bit(R5_LOCKED, &sh->dev[i].flags);
+ 	}
++	s->to_write = 0;
++	s->written = 0;
  
+ 	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
+ 		if (atomic_dec_and_test(&conf->pending_full_writes))
 -- 
 1.8.1
 
