@@ -1,40 +1,30 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Guidance on reshape stuck at 0% after --grow
-Date: Tue, 22 Sep 2015 12:29:42 +0200 (CEST)
-Message-ID: <alpine.DEB.2.02.1509221224470.8750@uplift.swm.pp.se>
-References: <CAKWBTuFk4Tz20B4aZHgPF3FoEYXDqwQeKeAwN3Nt-cSAopUQ0Q@mail.gmail.com>
+From: Loan@vger.kernel.org
+Subject: Apply for loan at 3.9% interest rate
+Date: Tue, 22 Sep 2015 13:27:56 +0000
+Message-ID: <DB3PR08MB0044C195FD6F1AEF85101E8CB8450@DB3PR08MB0044.eurprd08.prod.outlook.com>
+Reply-To: <loanuk1@aol.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKWBTuFk4Tz20B4aZHgPF3FoEYXDqwQeKeAwN3Nt-cSAopUQ0Q@mail.gmail.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Guillaume Paumier <guillaume.paumier@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Loan@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 21 Sep 2015, Guillaume Paumier wrote:
+Greetings to You
 
-> I'm looking for guidance regarding what to do next. I'm not sure
-> whether I should wait longer (how long?), or try to re-assemble the
-> seemingly-intact original array (how do I stop/restart the reshape
-> cleanly?), or something else. Any advice would be greatly appreciated.
+Are you a business man or woman? Are you in any financial mess or do you
+need loan to start up your own business? Do you need loan to
+settle your debt, pay off your bills or start a nice business?
 
-You're not the first one here with this problem.
+Do you have a low credit score and you are finding it hard to obtain
+capital loan from local banks/other financial institutes 
 
-I can't find it right now, but I believe someone issued --grow --continue 
-on the array to get it out of the state that you have right now.
+We are offer all types of loan at a low interest rate of 3.9% percent
+without any collateral.
 
-I don't know if it's this:
+If you are interested please contact us today for
+the loan application form and more details
 
-http://www.spinics.net/lists/raid/msg49077.html
-
-I do not recommend a reboot or anything else, others have had problems 
-with this. Also make sure you collect as much information as possible, 
-mdadm --examine, copy the superblocks in binary form using dd to somewhere 
-etc, so you can get back to the state where you are now.
-
-Look through the mailing list archives from the past 6 months, you're not 
-alone in having this problem.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Regards
