@@ -1,183 +1,158 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Re: Fwd: Failed Raid6 Array.....want some guidance before attempting restart
-Date: Mon, 21 Sep 2015 09:09:31 +0100
-Message-ID: <CAOS+5GHYvupo4OC3o0f0R-Nrc49=2EUJ4X7AioaMr3bf=zwUww@mail.gmail.com>
-References: <CAOS+5GGkLcN5RM7yq=D5NQ-DOBRf_+EwVsucoptfaiJPdU_nDQ@mail.gmail.com>
-	<alpine.DEB.2.02.1509200731460.8750@uplift.swm.pp.se>
-	<CAOS+5GEcpOV6dkkGYHjkA3ah88MXqyJ0AFS7T--qaCc-Z1-=uw@mail.gmail.com>
-	<CAOS+5GHLFcbN=ROQ_YBLFYzw6iu+TZ4RcZvHdDbE+V3pqS_rCw@mail.gmail.com>
-	<alpine.DEB.2.02.1509201153490.8750@uplift.swm.pp.se>
-	<CAOS+5GHf1N6s9bsrveesuhm6cnxRVnb6XSjXoHoLVU7Np-i-Bw@mail.gmail.com>
-	<CAOS+5GHtJAYdHEHnvb+Akfc+jkh5es8cb8z50YQwB23rnk+_Sw@mail.gmail.com>
-	<CAETWcfuFzUO0aCX-YX_JYKH+iUDOAS6LJUrxu_TYT0g9x2Jqmg@mail.gmail.com>
-	<CAOS+5GHK7_26qXWv-Xo_bnZ5yCtDTKsUn67Nb8K8sw2rBOJ0AQ@mail.gmail.com>
+From: Guillaume Paumier <guillaume.paumier@gmail.com>
+Subject: Guidance on reshape stuck at 0% after --grow
+Date: Mon, 21 Sep 2015 19:15:11 -0700
+Message-ID: <CAKWBTuFk4Tz20B4aZHgPF3FoEYXDqwQeKeAwN3Nt-cSAopUQ0Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GHK7_26qXWv-Xo_bnZ5yCtDTKsUn67Nb8K8sw2rBOJ0AQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Afonyashin <a.afonyashin@madnet-team.ru>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Current watch status
+Hello,
 
-Every 30.0s: cat /proc/mdstat
-                          Mon Sep 21 09:07:03 2015
+First of all, my apologies if this is explained somewhere; I haven't
+been able to find existing documentation about this exact situation.
+
+Yesterday, I added a new (identical) disk to an existing, clean,
+8-disk RAID6 array (with XFS), and attempted to grow the array:
+
+# mdadm --add /dev/md0 /dev/sdb1
+# mdadm --grow --raid-devices=9 /dev/md0
+
+Over 24 hours later, the reshape is still in the same state as when it
+started, i.e. at 0%. Looking at cat /proc/mdstat , no data seems to
+have been moved, and the speed is shown as 0K/sec. The "finish"
+estimate just keeps increasing. I don't see any process related to
+mdadm in top. Unfortunately, I omitted the backup file in the --grow
+command.
+
+I'm looking for guidance regarding what to do next. I'm not sure
+whether I should wait longer (how long?), or try to re-assemble the
+seemingly-intact original array (how do I stop/restart the reshape
+cleanly?), or something else. Any advice would be greatly appreciated.
+
+Here's some additional information about the array after the --grow command:
+
+______________________________________________
+# mdadm -D /dev/md0
+______________________________________________
+
+/dev/md0:
+        Version : 1.0
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+     Array Size : 23442098688 (22356.13 GiB 24004.71 GB)
+  Used Dev Size : 3907016448 (3726.02 GiB 4000.78 GB)
+   Raid Devices : 9
+  Total Devices : 9
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sun Sep 20 16:48:15 2015
+          State : clean, reshaping
+ Active Devices : 9
+Working Devices : 9
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+ Reshape Status : 0% complete
+  Delta Devices : 1, (8->9)
+
+           Name : (redacted):0
+           UUID : eea59047:120a0365:353da182:6787e030
+         Events : 35499
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       97        2      active sync   /dev/sdg1
+       3       8      113        3      active sync   /dev/sdh1
+       4       8      129        4      active sync   /dev/sdi1
+       5       8      145        5      active sync   /dev/sdj1
+       7       8       81        6      active sync   /dev/sdf1
+       6       8       65        7      active sync   /dev/sde1
+       8       8       17        8      active sync   /dev/sdb1
+
+
+
+
+______________________________________________
+cat /proc/mdstat
+______________________________________________
 
 Personalities : [raid6] [raid5] [raid4]
-mdxxx : active raid6 sdh1[8] sdc1[7] sdg1[0] sdi1[6] sdf1[3] sde1[2] sdd1[1]
-      29301952000 blocks super 1.2 level 6, 512k chunk, algorithm 2
-[7/5] [UUUU__U]
-      [==========>..........]  recovery = 53.4%
-(3133878924/5860390400) finish=358.2min speed=126856K/sec
-      bitmap: 6/44 pages [24KB], 65536KB chunk
+md0 : active raid6 sdb1[8] sdg1[2] sdj1[5] sdc1[0] sdf1[7] sde1[6]
+sdh1[3] sdi1[4] sdd1[1]
+      23442098688 blocks super 1.0 level 6, 128k chunk, algorithm 2
+[9/9] [UUUUUUUUU]
+      [>....................]  reshape =  0.0% (0/3907016448)
+finish=377198019201.6min speed=0K/sec
+      bitmap: 0/30 pages [0KB], 65536KB chunk
 
 unused devices: <none>
 
-On 21 September 2015 at 09:05, Another Sillyname
-<anothersname@googlemail.com> wrote:
-> I think at the moment I'm in leave it alone and let it run
-> mode.....it'll be done in about 6 hours anyway and I'm adverse to
-> 'tampering' with anything while I'm this exposed without any
-> resilience.
->
-> I meant to state in the earlier message when the rebuild happens next
-> month I'll be installing Fedora 22 (and all the latest updates).  This
-> is a high demand server (not high load but requiring high
-> availability) so once rebuilt and running stable for a month it'll get
-> 'locked down' without any changes for another couple of years.
->
->
->
->
->
-> On 21 September 2015 at 08:57, Alexander Afonyashin
-> <a.afonyashin@madnet-team.ru> wrote:
->> Hi,
->>
->> You may also try to increase rebuild rate by echo-ing min speed value:
->>
->> echo 100000 > /sys/block/mdX/md/sync_speed_min
->>
->> or via sysctl:
->>
->> sysctl -w dev.raid.speed_limit_min=100000
->>
->> Regards,
->> Alexander
->>
->> On Mon, Sep 21, 2015 at 4:59 AM, Another Sillyname
->> <anothersname@googlemail.com> wrote:
->>> Ignore last...having thought about it for 10 minutes the obvious thing
->>> to do is to add the drives back and allow the array to rebuild
->>> offline......
->>>
->>> For the following reasons....
->>>
->>> 1.  e2fsck -f -n /dev/mdxx reports all the data appears intact and
->>> that was what I believed anyway based on the information available to
->>> me.
->>>
->>> 2.  To finish the backup will take 30+ hours, that's 30+ hours of risk
->>> time where a single drive failure will compromise the data set.
->>>
->>> 3.  To 'add' the missing drives back into the array and allow the
->>> rebuild will take about 10 hours (based on my previous experience
->>> building this array), therefore the lower 'risk' course of action is
->>> to rebuild the array, then and only then, to restart the backup.
->>> There's over 20 hours less risk doing it this way.
->>>
->>> I realise I could do the two concurrently but I'd rather keep the
->>> array 'destressed' as much as possible until I've got at least one
->>> level of resilience restored.
->>>
->>> Having now added the drives back in as 'spares' mdstat is telling me a
->>> little over 12 hours to do the rebuild so it's now finger crossing
->>> time time then.
->>>
->>> Thanks for the help and advice....and most of all the confirmation my
->>> approach was the correct one.
->>>
->>>
->>>
->>> On 21 September 2015 at 02:32, Another Sillyname
->>> <anothersname@googlemail.com> wrote:
->>>> OK
->>>>
->>>> The array has come back up...but showing two drives as missing.
->>>>
->>>> mdadm --query --detail /dev/md127/dev/md127:
->>>>         Version : 1.2
->>>>   Creation Time : Sun May 10 14:47:51 2015
->>>>      Raid Level : raid6
->>>>      Array Size : 29301952000 (27944.52 GiB 30005.20 GB)
->>>>   Used Dev Size : 5860390400 (5588.90 GiB 6001.04 GB)
->>>>    Raid Devices : 7
->>>>   Total Devices : 5
->>>>     Persistence : Superblock is persistent
->>>>
->>>>   Intent Bitmap : Internal
->>>>
->>>>     Update Time : Mon Sep 21 02:21:48 2015
->>>>           State : active, degraded
->>>>  Active Devices : 5
->>>> Working Devices : 5
->>>>  Failed Devices : 0
->>>>   Spare Devices : 0
->>>>
->>>>          Layout : left-symmetric
->>>>      Chunk Size : 512K
->>>>
->>>>            Name : arandomserver.arandomlan.com:1
->>>>            UUID : da29a06f:f8cf1409:bc52afb2:6945ba08
->>>>          Events : 285469
->>>>
->>>>     Number   Major   Minor   RaidDevice State
->>>>        0       8       97        0      active sync   /dev/sdg1
->>>>        1       8       49        1      active sync   /dev/sdd1
->>>>        2       8       65        2      active sync   /dev/sde1
->>>>        3       8       81        3      active sync   /dev/sdf1
->>>>        8       0        0        8      removed
->>>>       10       0        0       10      removed
->>>>        6       8      129        6      active sync   /dev/sdi1
->>>>
->>>> Data appears to be intact (haven't done a full analysis yet).
->>>>
->>>> Does this mean I should add the 'missing' drives back into the array
->>>> (one at a time obviously)!.
->>>>
->>>> Also doesn't this mean I'm horribly exposed to any writes now as this
->>>> would move the current 5+2 further out of 'sync' with each other thus
->>>> meaning any further short term fail could smash the data set totally.
->>>>
->>>> I'm minded to stop any writes to the array in the short term and
->>>> continue just doing the backup (this in itself will take about 30+
->>>> hours).
->>>>
->>>> Ideas and observations?
->>>>
->>>>
->>>>
->>>> On 20 September 2015 at 10:54, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
->>>>> On Sun, 20 Sep 2015, Another Sillyname wrote:
->>>>>
->>>>>> Thanks
->>>>>>
->>>>>> Would you.....
->>>>>>
->>>>>> mdadm --assemble --force --scan
->>>>>>
->>>>>> or
->>>>>>
->>>>>> mdadm --assemble --force /dev/mdxx /dev/sd[c-i]1
->>>>>
->>>>>
->>>>> This last one is what I use myself.
->>>>>
->>>>>
->>>>> --
->>>>> Mikael Abrahamsson    email: swmike@swm.pp.se
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+______________________________________________
+
+# dmesg | grep md
+______________________________________________
+
+<pre>
+[    4.468239] md: bind<sdd1>
+[    4.477539] md: bind<sdi1>
+[    4.489898] md: bind<sdh1>
+[    4.499959] md: bind<sde1>
+[    4.507908] md: bind<sdf1>
+[    4.534961] md: bind<sdc1>
+[    4.544582] md: bind<sdj1>
+[    4.550060] md: bind<sdg1>
+[    4.642375] md: raid6 personality registered for level 6
+[    4.642378] md: raid5 personality registered for level 5
+[    4.642407] md: raid4 personality registered for level 4
+[    4.644839] md/raid:md0: device sdg1 operational as raid disk 2
+[    4.644843] md/raid:md0: device sdj1 operational as raid disk 5
+[    4.644844] md/raid:md0: device sdc1 operational as raid disk 0
+[    4.644845] md/raid:md0: device sdf1 operational as raid disk 6
+[    4.644846] md/raid:md0: device sde1 operational as raid disk 7
+[    4.644847] md/raid:md0: device sdh1 operational as raid disk 3
+[    4.644848] md/raid:md0: device sdi1 operational as raid disk 4
+[    4.644850] md/raid:md0: device sdd1 operational as raid disk 1
+[    4.645566] md/raid:md0: allocated 0kB
+[    4.646409] md/raid:md0: raid level 6 active with 8 out of 8
+devices, algorithm 2
+[    4.646575] created bitmap (30 pages) for device md0
+[    4.647292] md0: bitmap initialized from disk: read 2 pages, set 0
+of 59617 bits
+[    4.699645] md0: detected capacity change from 0 to 24004709056512
+[    4.700805]  md0: unknown partition table
+[    4.909274] XFS (md0): Mounting V4 Filesystem
+[    5.335425] XFS (md0): Ending clean mount
+[ 1642.872936]  md0: unknown partition table
+[ 1665.183589] md: bind<sdb1>
+[ 1665.217944]  md0: unknown partition table
+[ 1868.222033] md: reshape of RAID array md0
+[ 1868.222037] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 1868.222038] md: using maximum available idle IO bandwidth (but not
+more than 200000 KB/sec) for reshape.
+[ 1868.222047] md: using 128k window, over a total of 3907016448k.
+[ 1868.276409]  md0: unknown partition table
+[ 2001.573583]  md0: unknown partition table
+
+
+
+______________________________________________
+# mdadm --version
+______________________________________________
+mdadm - v3.3.1 - 5th June 2014
+
+
+
+
+-- 
+Guillaume Paumier
