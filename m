@@ -1,70 +1,86 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 2/2] raid5: update analysis state for failed stripe
-Date: Tue, 22 Sep 2015 23:34:25 -0700
-Message-ID: <20150923063425.GA2813864@devbig084.prn1.facebook.com>
-References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
- <0fc9dd19baf6f214a112b040401a4cf3d6313942.1442596586.git.shli@fb.com>
- <87bncty7sp.fsf@notabene.neil.brown.name>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 1/1] md/raid1: Avoid raid1 resync getting stuck
+Date: Wed, 23 Sep 2015 16:49:57 +1000
+Message-ID: <871tdpy6i2.fsf@notabene.neil.brown.name>
+References: <1442413205-9593-1-git-send-email-Jes.Sorensen@redhat.com> <1442413205-9593-2-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87bncty7sp.fsf@notabene.neil.brown.name>
+In-Reply-To: <1442413205-9593-2-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, nate.dailey@stratus.com
 List-Id: linux-raid.ids
 
-On Wed, Sep 23, 2015 at 04:21:58PM +1000, Neil Brown wrote:
-> Shaohua Li <shli@fb.com> writes:
-> 
-> > handle_failed_stripe() makes the stripe fail, eg, all IO will return
-> > with a failure, but it doesn't update stripe_head_state. Later
-> > handle_stripe() has special handling for raid6 for handle_stripe_fill().
-> > That check before handle_stripe_fill() doesn't skip the failed stripe
-> > and we get a kernel crash in need_this_block.  This patch clear the
-> > analysis state to make sure no functions wrongly called after
-> > handle_failed_stripe()
-> >
-> > Signed-off-by: Shaohua Li <shli@fb.com>
-> > ---
-> >  drivers/md/raid5.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > index 394cdf8..8e4fb89a 100644
-> > --- a/drivers/md/raid5.c
-> > +++ b/drivers/md/raid5.c
-> > @@ -3155,6 +3155,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
-> >  			spin_unlock_irq(&sh->stripe_lock);
-> >  			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
-> >  				wake_up(&conf->wait_for_overlap);
-> > +			if (bi)
-> > +				s->to_read--;
-> >  			while (bi && bi->bi_iter.bi_sector <
-> >  			       sh->dev[i].sector + STRIPE_SECTORS) {
-> >  				struct bio *nextbi =
-> > @@ -3173,6 +3175,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
-> >  		 */
-> >  		clear_bit(R5_LOCKED, &sh->dev[i].flags);
-> >  	}
-> > +	s->to_write = 0;
-> > +	s->written = 0;
-> >  
-> >  	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
-> >  		if (atomic_dec_and_test(&conf->pending_full_writes))
-> > -- 
-> > 1.8.1
-> 
-> Again, this probably is a sensible fix, but I would like to be certain.
-> Where exactly in need_this_block does the kernel crash?  I cannot see
-> anything that could cause an invalid address....
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Jes.Sorensen@redhat.com writes:
 
->>for (i = 0; i < s->failed; i++) {
->>                if (fdev[i]->towrite &&
-the fdev[i]->towrite. because s->failed >=2 (it's 3 in my case), while
-the array size is 2.
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> close_sync() needs to set conf->next_resync to a large, but safe value
+> below MaxSector and use it to determine whether or not to set
+> start_next_window in wait_barrier()
+>
+> Solution suggested by Neil Brown.
+>
+> Reported-by: Nate Dailey <nate.dailey@stratus.com>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  drivers/md/raid1.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index 4517f06..763a0a8 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -881,8 +881,7 @@ static sector_t wait_barrier(struct r1conf *conf, str=
+uct bio *bio)
+>  	}
+>=20=20
+>  	if (bio && bio_data_dir(bio) =3D=3D WRITE) {
+> -		if (bio->bi_iter.bi_sector >=3D
+> -		    conf->mddev->curr_resync_completed) {
+> +		if (bio->bi_iter.bi_sector >=3D conf->next_resync) {
+>  			if (conf->start_next_window =3D=3D MaxSector)
+>  				conf->start_next_window =3D
+>  					conf->next_resync +
+> @@ -1516,7 +1515,7 @@ static void close_sync(struct r1conf *conf)
+>  	conf->r1buf_pool =3D NULL;
+>=20=20
+>  	spin_lock_irq(&conf->resync_lock);
+> -	conf->next_resync =3D 0;
+> +	conf->next_resync =3D MaxSector - 2 * NEXT_NORMALIO_DISTANCE;
+>  	conf->start_next_window =3D MaxSector;
+>  	conf->current_window_requests +=3D
+>  		conf->next_window_requests;
+> --=20
+> 2.4.3
+Applied, thanks.
 
-Thanks,
-Shaohua
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWAkuVAAoJEDnsnt1WYoG53ogP/1O+IrlBGjSjmjVfLtOyUr+S
+bxmspyIbRuolxXE2QCaptpptrZcvHSh/H+6e99yUqGL240v/FlJGzdq3FuTssDsP
+S7KLq7MQ0Tzs6aaSAECcGQ8rmtrj+cai+VfhT1z0mc6wj/4DaZuIEXCTZAt7vfsH
+FAE/+cLejQNYm2/veoazmvEM+qAtvQGO7is4yO/z0eSDB5y00bIkzmt0iw1IbLi5
+Z5NdfZKDsJraIoHvhePc3TMAgPn9N9QHj771Qkkavke+m+IEnATYYzbRjiGkA/BM
+yCvDjx7+3VxxbzucyoZTRvCuNHm7saLVxtVUvSgiRLfRA2RCiIx+6IYo99bIVDYR
+0cpNORKRt5FlYT4CpFX9nIO215JXy/3ZM48OWJZQXHLxAsLJsJ8TkXEalGRMYdNK
+zPUoz/kvB8ZI8r1wOESn7fUCQKB1eidaLg9dbCinp06GEmP8DWSGBGQh/xHS+4tP
+cvo41esNgbFSiaZWkHKBHxrKq1H8P98OPi6qOJKLkIO8PFEbqBew85W+rXvJz5Dm
+WSAevoQS8DPjT1aEUAJvzfHliRW3H2iku5b6agb6+W9KeIasBIVSLnEvP4mabFuW
+q5DXWHSeAcDTXM2jhGEGy2Zwhch9WfnYYYw8yKfZEwbte5L2qxuFhP0QxQBaPI4Q
+9fISp6/qQli1CEYUIMXZ
+=RWLF
+-----END PGP SIGNATURE-----
+--=-=-=--
