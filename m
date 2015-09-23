@@ -1,96 +1,34 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Bad raid0 bio too large problem
-Date: Wed, 23 Sep 2015 07:42:27 -0400
-Message-ID: <wrfjeghp2wgs.fsf@redhat.com>
-References: <wrfjoagucvyq.fsf@redhat.com>
-	<87k2rhyiqe.fsf@notabene.neil.brown.name>
-	<wrfjvbb12xl8.fsf@redhat.com> <wrfjmvwd2xgo.fsf@redhat.com>
+From: Wols Lists <antlists@youngman.org.uk>
+Subject: Re: Guidance on reshape stuck at 0% after --grow
+Date: Wed, 23 Sep 2015 19:11:42 +0100
+Message-ID: <5602EB5E.6010703@youngman.org.uk>
+References: <CAKWBTuFk4Tz20B4aZHgPF3FoEYXDqwQeKeAwN3Nt-cSAopUQ0Q@mail.gmail.com>
+ <alpine.DEB.2.02.1509221224470.8750@uplift.swm.pp.se>
+ <CAKWBTuG2AngM6joiODt15Qe+HAXfF6OnJVD-HNuNKikfyv-6MQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjmvwd2xgo.fsf@redhat.com> (Jes Sorensen's message of "Wed, 23
-	Sep 2015 07:20:55 -0400")
+In-Reply-To: <CAKWBTuG2AngM6joiODt15Qe+HAXfF6OnJVD-HNuNKikfyv-6MQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
+To: Guillaume Paumier <guillaume.paumier@gmail.com>, Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->> Neil Brown <neilb@suse.de> writes:
->>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>>
->>>> Hi Neil,
->>>>
->>>> I think we have some bad side effects with this patch:
->>>>
->>>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
->>>> Author: NeilBrown <neilb@suse.com>
->>>> Date:   Mon Aug 3 13:11:47 2015 +1000
->>>>
->>>>     md/raid0: update queue parameter in a safer location.
->>>>     
->>>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
->>>>     of queue parameters (e.g. max number of sectors per bio) is
->>>>     done in the wrong place.
->>>>     It should be part of ->run, but it is actually part of ->takeover.
->>>>     This means it happens before level_store() calls:
->>>>     
->>>>         blk_set_stacking_limits(&mddev->queue->limits);
->>>>     
->>>> Running the '03r0assem' test suite fills my kernel log with output like
->>>> below. Yi Zhang also had issues where writes failed too.
->>>>
->>>> robably something we need to resolve for 4.2-final or revert the
->>>> offending patch.
->>>>
->>>> Cheers,
->>>> Jes
->>>>
->>>> md: bind<loop0>
->>>> md: bind<loop1>
->>>> md: bind<loop2>
->>>> md/raid0:md2: md_size is 116736 sectors.
->>>> md: RAID0 configuration for md2 - 1 zone
->>>> md: zone0=[loop0/loop1/loop2]
->>>>       zone-offset=         0KB, device-offset=         0KB, size=     58368KB
->>>>
->>>> md2: detected capacity change from 0 to 59768832
->>>> bio too big device loop0 (296 > 255)
->>>> bio too big device loop0 (272 > 255)
->>>
->>> 1/ Why do you blame that particular patch?
->>>
->>> 2/ Where is that error message coming from?  I cannot find "bio too big"
->>>   in the kernel (except in a comment).
->>>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
->>> arbitrarily sized bios")
->>>   removed the only instance of the error message that I know of.
->>>
->>> Which kernel exactly are you testing?
->>
->> I blame it because of bisect - I revert that patch and the issue goes
->> away.
->>
->> I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
->> see the bio too large. I revert it and it goes away.
->
-> Hmmm Xiao tells me that the warning message is not in upstream, but I
-> was sure I reproduced it in the upstream kernel as well. If I screwed
-> up, my apologies, I am going back to my cave and will investigate
-> further.
+On 23/09/15 04:20, Guillaume Paumier wrote:
+> I figure I have a 50% chance of restoring the array, and 50% chance of
+> making it completely unusable. I'm not very comfortable with those
+> odds, so I would appreciate if anyone had any advice regarding what to
+> do now, and alternatives to manually re-creating the array, if there
+> are any.
 
-Digging a bit further, I was testing on a 4.2.0-rc5+ where I saw the
-issue. That does raise the question of what this patch does to older
-kernels, since it was submitted it for 2.6.35+.
+Read up on loopback devices. Sorry, never done it, can't help
+personally, but it sticks a ram-disk layer between mdadm and the actual
+disk.
 
-"bio too big" message went away with this commit:
-
-commit 54efd50bfd873e2dbf784e0b21a8027ba4299a3e
-Author: Kent Overstreet <kent.overstreet@gmail.com>
-Date:   Thu Apr 23 22:37:18 2015 -0700
-
-    block: make generic_make_request handle arbitrarily sized bios
+So the disks themselves are read-only, and you can try things out to see
+what works. If it fails, you throw the loopback layer away, if it works
+you can run it on the disk itself.
 
 Cheers,
-Jes
+Wol
