@@ -1,86 +1,76 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/1] md/raid1: Avoid raid1 resync getting stuck
-Date: Wed, 23 Sep 2015 16:49:57 +1000
-Message-ID: <871tdpy6i2.fsf@notabene.neil.brown.name>
-References: <1442413205-9593-1-git-send-email-Jes.Sorensen@redhat.com> <1442413205-9593-2-git-send-email-Jes.Sorensen@redhat.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: Bad raid0 bio too large problem
+Date: Wed, 23 Sep 2015 07:18:11 -0400
+Message-ID: <wrfjvbb12xl8.fsf@redhat.com>
+References: <wrfjoagucvyq.fsf@redhat.com>
+	<87k2rhyiqe.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1442413205-9593-2-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <87k2rhyiqe.fsf@notabene.neil.brown.name> (Neil Brown's message
+	of "Wed, 23 Sep 2015 12:25:45 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org, nate.dailey@stratus.com
+To: Neil Brown <neilb@suse.de>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Jes.Sorensen@redhat.com writes:
-
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Neil Brown <neilb@suse.de> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 >
-> close_sync() needs to set conf->next_resync to a large, but safe value
-> below MaxSector and use it to determine whether or not to set
-> start_next_window in wait_barrier()
+>> Hi Neil,
+>>
+>> I think we have some bad side effects with this patch:
+>>
+>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
+>> Author: NeilBrown <neilb@suse.com>
+>> Date:   Mon Aug 3 13:11:47 2015 +1000
+>>
+>>     md/raid0: update queue parameter in a safer location.
+>>     
+>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
+>>     of queue parameters (e.g. max number of sectors per bio) is
+>>     done in the wrong place.
+>>     It should be part of ->run, but it is actually part of ->takeover.
+>>     This means it happens before level_store() calls:
+>>     
+>>         blk_set_stacking_limits(&mddev->queue->limits);
+>>     
+>> Running the '03r0assem' test suite fills my kernel log with output like
+>> below. Yi Zhang also had issues where writes failed too.
+>>
+>> robably something we need to resolve for 4.2-final or revert the
+>> offending patch.
+>>
+>> Cheers,
+>> Jes
+>>
+>> md: bind<loop0>
+>> md: bind<loop1>
+>> md: bind<loop2>
+>> md/raid0:md2: md_size is 116736 sectors.
+>> md: RAID0 configuration for md2 - 1 zone
+>> md: zone0=[loop0/loop1/loop2]
+>>       zone-offset=         0KB, device-offset=         0KB, size=     58368KB
+>>
+>> md2: detected capacity change from 0 to 59768832
+>> bio too big device loop0 (296 > 255)
+>> bio too big device loop0 (272 > 255)
 >
-> Solution suggested by Neil Brown.
+> 1/ Why do you blame that particular patch?
 >
-> Reported-by: Nate Dailey <nate.dailey@stratus.com>
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  drivers/md/raid1.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+> 2/ Where is that error message coming from?  I cannot find "bio too big"
+>   in the kernel (except in a comment).
+>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
+> arbitrarily sized bios")
+>   removed the only instance of the error message that I know of.
 >
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index 4517f06..763a0a8 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -881,8 +881,7 @@ static sector_t wait_barrier(struct r1conf *conf, str=
-uct bio *bio)
->  	}
->=20=20
->  	if (bio && bio_data_dir(bio) =3D=3D WRITE) {
-> -		if (bio->bi_iter.bi_sector >=3D
-> -		    conf->mddev->curr_resync_completed) {
-> +		if (bio->bi_iter.bi_sector >=3D conf->next_resync) {
->  			if (conf->start_next_window =3D=3D MaxSector)
->  				conf->start_next_window =3D
->  					conf->next_resync +
-> @@ -1516,7 +1515,7 @@ static void close_sync(struct r1conf *conf)
->  	conf->r1buf_pool =3D NULL;
->=20=20
->  	spin_lock_irq(&conf->resync_lock);
-> -	conf->next_resync =3D 0;
-> +	conf->next_resync =3D MaxSector - 2 * NEXT_NORMALIO_DISTANCE;
->  	conf->start_next_window =3D MaxSector;
->  	conf->current_window_requests +=3D
->  		conf->next_window_requests;
-> --=20
-> 2.4.3
-Applied, thanks.
+> Which kernel exactly are you testing?
 
-NeilBrown
+I blame it because of bisect - I revert that patch and the issue goes
+away.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
+see the bio too large. I revert it and it goes away.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWAkuVAAoJEDnsnt1WYoG53ogP/1O+IrlBGjSjmjVfLtOyUr+S
-bxmspyIbRuolxXE2QCaptpptrZcvHSh/H+6e99yUqGL240v/FlJGzdq3FuTssDsP
-S7KLq7MQ0Tzs6aaSAECcGQ8rmtrj+cai+VfhT1z0mc6wj/4DaZuIEXCTZAt7vfsH
-FAE/+cLejQNYm2/veoazmvEM+qAtvQGO7is4yO/z0eSDB5y00bIkzmt0iw1IbLi5
-Z5NdfZKDsJraIoHvhePc3TMAgPn9N9QHj771Qkkavke+m+IEnATYYzbRjiGkA/BM
-yCvDjx7+3VxxbzucyoZTRvCuNHm7saLVxtVUvSgiRLfRA2RCiIx+6IYo99bIVDYR
-0cpNORKRt5FlYT4CpFX9nIO215JXy/3ZM48OWJZQXHLxAsLJsJ8TkXEalGRMYdNK
-zPUoz/kvB8ZI8r1wOESn7fUCQKB1eidaLg9dbCinp06GEmP8DWSGBGQh/xHS+4tP
-cvo41esNgbFSiaZWkHKBHxrKq1H8P98OPi6qOJKLkIO8PFEbqBew85W+rXvJz5Dm
-WSAevoQS8DPjT1aEUAJvzfHliRW3H2iku5b6agb6+W9KeIasBIVSLnEvP4mabFuW
-q5DXWHSeAcDTXM2jhGEGy2Zwhch9WfnYYYw8yKfZEwbte5L2qxuFhP0QxQBaPI4Q
-9fISp6/qQli1CEYUIMXZ
-=RWLF
------END PGP SIGNATURE-----
---=-=-=--
+Cheers,
+Jes
