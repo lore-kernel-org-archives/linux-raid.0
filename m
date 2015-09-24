@@ -1,13 +1,13 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md: clear CHANGE_PENDING in readonly array
-Date: Thu, 24 Sep 2015 14:03:53 +1000
-Message-ID: <87fv24wjiu.fsf@notabene.neil.brown.name>
-References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com> <87eghpy8k2.fsf@notabene.neil.brown.name> <20150923062302.GA2780132@devbig084.prn1.facebook.com>
+Subject: Re: [PATCH 2/2] raid5: update analysis state for failed stripe
+Date: Thu, 24 Sep 2015 15:26:57 +1000
+Message-ID: <87d1x8wfoe.fsf@notabene.neil.brown.name>
+References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com> <0fc9dd19baf6f214a112b040401a4cf3d6313942.1442596586.git.shli@fb.com> <87bncty7sp.fsf@notabene.neil.brown.name> <20150923063425.GA2813864@devbig084.prn1.facebook.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150923062302.GA2780132@devbig084.prn1.facebook.com>
+In-Reply-To: <20150923063425.GA2813864@devbig084.prn1.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@fb.com>
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
@@ -19,106 +19,109 @@ Content-Transfer-Encoding: quoted-printable
 
 Shaohua Li <shli@fb.com> writes:
 
-> On Wed, Sep 23, 2015 at 04:05:33PM +1000, Neil Brown wrote:
+> On Wed, Sep 23, 2015 at 04:21:58PM +1000, Neil Brown wrote:
 >> Shaohua Li <shli@fb.com> writes:
 >>=20
->> > If faulty disks of an array are more than allowed degraded number, the
->> > array enters error handling. It will be marked as read-only with
->> > MD_CHANGE_PENDING/RECOVERY_NEEDED set. But currently recovery doesn't
->> > clear CHANGE_PENDING bit for read-only array.  If MD_CHANGE_PENDING is
->> > set for a raid5 array, all returned IO will be hold on a list till the
->> > bit is clear. But recovery nevery clears this bit, the IO is always in
->> > pending state and nevery finish. This has bad effects like upper layer
->> > can't get an IO error and the array can't be stopped.
+>> > handle_failed_stripe() makes the stripe fail, eg, all IO will return
+>> > with a failure, but it doesn't update stripe_head_state. Later
+>> > handle_stripe() has special handling for raid6 for handle_stripe_fill(=
+).
+>> > That check before handle_stripe_fill() doesn't skip the failed stripe
+>> > and we get a kernel crash in need_this_block.  This patch clear the
+>> > analysis state to make sure no functions wrongly called after
+>> > handle_failed_stripe()
 >> >
 >> > Signed-off-by: Shaohua Li <shli@fb.com>
 >> > ---
->> >  drivers/md/md.c | 1 +
->> >  1 file changed, 1 insertion(+)
+>> >  drivers/md/raid5.c | 4 ++++
+>> >  1 file changed, 4 insertions(+)
 >> >
->> > diff --git a/drivers/md/md.c b/drivers/md/md.c
->> > index 95824fb..c596b73 100644
->> > --- a/drivers/md/md.c
->> > +++ b/drivers/md/md.c
->> > @@ -8209,6 +8209,7 @@ void md_check_recovery(struct mddev *mddev)
->> >  			md_reap_sync_thread(mddev);
->> >  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->> >  			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
->> > +			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
->> >  			goto unlock;
->> >  		}
+>> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> > index 394cdf8..8e4fb89a 100644
+>> > --- a/drivers/md/raid5.c
+>> > +++ b/drivers/md/raid5.c
+>> > @@ -3155,6 +3155,8 @@ handle_failed_stripe(struct r5conf *conf, struct=
+ stripe_head *sh,
+>> >  			spin_unlock_irq(&sh->stripe_lock);
+>> >  			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
+>> >  				wake_up(&conf->wait_for_overlap);
+>> > +			if (bi)
+>> > +				s->to_read--;
+>> >  			while (bi && bi->bi_iter.bi_sector <
+>> >  			       sh->dev[i].sector + STRIPE_SECTORS) {
+>> >  				struct bio *nextbi =3D
+>> > @@ -3173,6 +3175,8 @@ handle_failed_stripe(struct r5conf *conf, struct=
+ stripe_head *sh,
+>> >  		 */
+>> >  		clear_bit(R5_LOCKED, &sh->dev[i].flags);
+>> >  	}
+>> > +	s->to_write =3D 0;
+>> > +	s->written =3D 0;
 >> >=20=20
+>> >  	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
+>> >  		if (atomic_dec_and_test(&conf->pending_full_writes))
 >> > --=20
 >> > 1.8.1
 >>=20
->> Hi,
->>  I can see that clearing MD_CHANGE_PENDING there is probably correct -
->>  bug introduced by
->>    Commit: c3cce6cda162 ("md/raid5: ensure device failure recorded befor=
-e write request returns.")
->>=20
->>  However I don't understand your reasoning.  You say that the array is
->>  marked as read-only, but I don't see how that would happen.  What
->>  causes the array to be marked "read-only"?
+>> Again, this probably is a sensible fix, but I would like to be certain.
+>> Where exactly in need_this_block does the kernel crash?  I cannot see
+>> anything that could cause an invalid address....
 >
-> It's set read-only by mdadm. I didn't look carefully, but looks there is
-> disk failure event, mdadm is invoked automatically by some background
-> daemon. It's a ubuntu distribution.
+>
+>>>for (i =3D 0; i < s->failed; i++) {
+>>>                if (fdev[i]->towrite &&
+> the fdev[i]->towrite. because s->failed >=3D2 (it's 3 in my case), while
+> the array size is 2.
+>
+> Thanks,
+> Shaohua
 
-Thanks.
-This raises a couple of questions.
+Ahh, of course.
+In that case I think I'd like to limit the for loop as well.
+So I've applied your patch and this one as well.
 
-1/ What should md_set_readonly do if it finds that MD_CHANGE_PENDING is
-   set?
-  Maybe it should wait for md_check_recovery to get run which should
-  clear the bit, after probably writing out the metadata.
-
-2/ Why didn't md_check_recovery already do that before mdadm had a
-   chance to set the array read-only?
-  I guess that is just a timing thing.  md_check_recovery could be
-  delayed, and mdadm could get called by udev rather quickly.
-
-I think I'll get md_set_readonly to
-	wait_event(mddev->sb_wait,
-		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-
-because I think that is the right thing to do.  But if the array is
-already read-only that won't help, so I'll still need you patch.
-
-Would you be able to test that the following patch (without your patch)
-also fixes the symptom?
-
-Thanks.
+Thanks,
 NeilBrown
 
-From=20a0a21b57523c41e87e0a50333b15f6c7ca02d714 Mon Sep 17 00:00:00 2001
+From=2076e308d70b204ff0af0028458caabfeacac4541a Mon Sep 17 00:00:00 2001
 From: NeilBrown <neilb@suse.com>
-Date: Thu, 24 Sep 2015 14:00:51 +1000
-Subject: [PATCH] md: wait for pending superblock updates before switching to
- read-only
+Date: Thu, 24 Sep 2015 15:25:36 +1000
+Subject: [PATCH] md/raid5: don't index beyond end of array in
+ need_this_block().
 
-If a superblock update is pending, wait for it to complete before
-letting md_set_readonly() switch to readonly.
-Otherwise we might lose important information about a device having
-failed.
+When need_this_block probably shouldn't be called when there
+are more than 2 failed devices, we really don't want it to try
+indexing beyond the end of the failed_num[] of fdev[] arrays.
+
+So limit the loops to at most 2 iterations.
 
 Reported-by: Shaohua Li <shli@fb.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 23651bf8dd80..9882f70f45e1 100644
-=2D-- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5432,6 +5432,8 @@ static int md_set_readonly(struct mddev *mddev, struc=
-t block_device *bdev)
- 	mddev_unlock(mddev);
- 	wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
- 					  &mddev->recovery));
-+	wait_event(mddev->sb_wait,
-+		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
- 	mddev_lock_nointr(mddev);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 903d8a2b7b07..0f49ce411c9a 100644
+=2D-- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3304,7 +3304,7 @@ static int need_this_block(struct stripe_head *sh, st=
+ruct stripe_head_state *s,
+ 		 */
+ 		return 0;
 =20
- 	mutex_lock(&mddev->open_mutex);
+=2D	for (i =3D 0; i < s->failed; i++) {
++	for (i =3D 0; i < s->failed && i < 2; i++) {
+ 		if (fdev[i]->towrite &&
+ 		    !test_bit(R5_UPTODATE, &fdev[i]->flags) &&
+ 		    !test_bit(R5_OVERWRITE, &fdev[i]->flags))
+@@ -3328,7 +3328,7 @@ static int need_this_block(struct stripe_head *sh, st=
+ruct stripe_head_state *s,
+ 	    sh->sector < sh->raid_conf->mddev->recovery_cp)
+ 		/* reconstruct-write isn't being forced */
+ 		return 0;
+=2D	for (i =3D 0; i < s->failed; i++) {
++	for (i =3D 0; i < s->failed && i < 2; i++) {
+ 		if (s->failed_num[i] !=3D sh->pd_idx &&
+ 		    s->failed_num[i] !=3D sh->qd_idx &&
+ 		    !test_bit(R5_UPTODATE, &fdev[i]->flags) &&
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -126,18 +129,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWA3YpAAoJEDnsnt1WYoG5zUsQAJs6MkAsYVJwVmLPv1k3CqmX
-eEc0Z7+YlZH0DHUUSZ9be55ZqJ3uvmP4/WUtaAEAy0mMckyFrMu989WIlbQcFjFz
-5y4LEKBDqUWT3w3kUOIH+4jztrtgqCpbdMoiODybfKp9ZOgB1Ffr056t7pnSoOLV
-JuTGfjO+uYrnfrey3E/A0hQkAHxLEJvll4C8E63B6Aas3oPQZtyWiCigdJDz5FE5
-IVhI7QHr0+r9d/rB7LO/xP1PvxJV+WYD4eODmUvmHGR0K0aU5TOvi4moGelP7Zqi
-B/YmHpe/Dtv9OQ/UG5rqBfIbUuaM1Gp1CShwA9J2/9kj8HU3OLFb8XVmIrU2ED36
-wsrdG8I0HuqFUVcUeR3/KoUb4quLMekE2GG5FhBwhFPuuHb+ENIdn8GIyb7ykApk
-3liYqe5uQ+DXmhssld/daRcZ6qge8kYuX6paJhRXo+rooBRvkRE5QLdzhClqpQ0m
-SdcZXADj2tHcFLRRBrGF0U+Dtft8lOWIsSKY7a9tdgAmshyvzuRBTYHHju8GPMqr
-mRMkBqo76/Nzduj+Edbx3uuHJL5FBZc9I78dzLgJH0wvNvj0raDBrXYzpdAuAFn8
-MdEyaBtKv+ryrWZ+0xZtJz/VcPx9aDMNCMrlRhlZ1CnUZcTIahS9Jchp2RWwR0NV
-/iVY0pMNxXn1Hg0LsMpj
-=z3H4
+iQIcBAEBCAAGBQJWA4mhAAoJEDnsnt1WYoG5/eoP/Al7E4Qv/OfkQaUkla7VZDxf
+7JOSXkvTXOEsYQT+fhHaoGDc4UvU0WSCWcPvaNSt/OZa4haWjujjq5Qmd5C704r0
+Fpk6c0DDB/2DwDFeskSCA+g6T9wXMBJYzdSOWiWp8yUHz1EtmeFHT3TkHMmkmplc
+BDTZErgPTOT4WyhMW6+1NxzrLEFuxcbrVzEDrm6ciSBogTJUGSoK+/6SpQXUPByz
+6L+BMq4pQ5vFTnpJIr89fUEW9OzuWajL45d0R8KEtAXv8doQgxcg8ktS73HQS9d/
+jQpwlWt42j6FebJcKATcFQCXikVTaS4xFnmzdwEyvSC74btlFcTYv2mN0QTED7GA
+2EUT4SwB9MAaajjdAYF4VpeOj/JKjsc3UJ1/ASe2gVZBOwgmw0EIGr8wSaY7pPmn
+oztKr+I1OUwQmmzOBBq01lTb4uE72kNydtxoi6Tct9qpLkR79MLCDMaq8QP3THQZ
+81e3XRkJR0+6zeSjLjR0gTppI/mNiQxIdarTi3JcqqajIAbrKio44PQfdlcS/wk3
+ZvoBW33z5qe0mgfW/YTR1Vbel9ZsFto7NqGHPJO/PXI6fsArRFHdGjjsgQAjQbxh
+14QGV/R6d20qDrUKgYGw0lcuZcwtiPLHQ2J8dBnCFQUmUPWUI1AVyuG9ws/jK7EZ
+FObKMvN8RjJs7V7dqxZE
+=ZAF0
 -----END PGP SIGNATURE-----
 --=-=-=--
