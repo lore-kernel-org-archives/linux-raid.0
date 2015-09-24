@@ -1,103 +1,93 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: Bad raid0 bio too large problem
-Date: Thu, 24 Sep 2015 08:59:56 -0400
-Message-ID: <wrfjwpvgvupf.fsf@redhat.com>
-References: <wrfjoagucvyq.fsf@redhat.com>
-	<87k2rhyiqe.fsf@notabene.neil.brown.name>
-	<wrfjvbb12xl8.fsf@redhat.com>
-	<87io70wmst.fsf@notabene.neil.brown.name>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH 1/2] md: clear CHANGE_PENDING in readonly array
+Date: Thu, 24 Sep 2015 09:47:20 -0700
+Message-ID: <20150924164720.GA3706482@devbig084.prn1.facebook.com>
+References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com>
+ <87eghpy8k2.fsf@notabene.neil.brown.name>
+ <20150923062302.GA2780132@devbig084.prn1.facebook.com>
+ <87fv24wjiu.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87io70wmst.fsf@notabene.neil.brown.name> (Neil Brown's message
-	of "Thu, 24 Sep 2015 12:53:06 +1000")
+Content-Disposition: inline
+In-Reply-To: <87fv24wjiu.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->
->> Neil Brown <neilb@suse.de> writes:
->>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>>
->>>> Hi Neil,
->>>>
->>>> I think we have some bad side effects with this patch:
->>>>
->>>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
->>>> Author: NeilBrown <neilb@suse.com>
->>>> Date:   Mon Aug 3 13:11:47 2015 +1000
->>>>
->>>>     md/raid0: update queue parameter in a safer location.
->>>>     
->>>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
->>>>     of queue parameters (e.g. max number of sectors per bio) is
->>>>     done in the wrong place.
->>>>     It should be part of ->run, but it is actually part of ->takeover.
->>>>     This means it happens before level_store() calls:
->>>>     
->>>>         blk_set_stacking_limits(&mddev->queue->limits);
->>>>     
->>>> Running the '03r0assem' test suite fills my kernel log with output like
->>>> below. Yi Zhang also had issues where writes failed too.
->>>>
->>>> robably something we need to resolve for 4.2-final or revert the
->>>> offending patch.
->>>>
->>>> Cheers,
->>>> Jes
->>>>
->>>> md: bind<loop0>
->>>> md: bind<loop1>
->>>> md: bind<loop2>
->>>> md/raid0:md2: md_size is 116736 sectors.
->>>> md: RAID0 configuration for md2 - 1 zone
->>>> md: zone0=[loop0/loop1/loop2]
->>>>       zone-offset=         0KB, device-offset=         0KB, size=     58368KB
->>>>
->>>> md2: detected capacity change from 0 to 59768832
->>>> bio too big device loop0 (296 > 255)
->>>> bio too big device loop0 (272 > 255)
->>>
->>> 1/ Why do you blame that particular patch?
->>>
->>> 2/ Where is that error message coming from?  I cannot find "bio too big"
->>>   in the kernel (except in a comment).
->>>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
->>> arbitrarily sized bios")
->>>   removed the only instance of the error message that I know of.
->>>
->>> Which kernel exactly are you testing?
->>
->> I blame it because of bisect - I revert that patch and the issue goes
->> away.
->>
->> I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
->> see the bio too large. I revert it and it goes away.
->
-> Well that's pretty convincing - thanks.
-> And as you say - it is tagged for -stable so really needs to be fixed.
->
-> Stares at the code again.  And again.
->
-> Ahhh.  that patch moved the
->   blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
-> to after
->  disk_stack_limits(...);
->
-> That is wrong.
->
-> Could you confirm that this fixes your test?
+On Thu, Sep 24, 2015 at 02:03:53PM +1000, Neil Brown wrote:
+> Shaohua Li <shli@fb.com> writes:
+> 
+> > On Wed, Sep 23, 2015 at 04:05:33PM +1000, Neil Brown wrote:
+> >> Shaohua Li <shli@fb.com> writes:
+> >> 
+> >> > If faulty disks of an array are more than allowed degraded number, the
+> >> > array enters error handling. It will be marked as read-only with
+> >> > MD_CHANGE_PENDING/RECOVERY_NEEDED set. But currently recovery doesn't
+> >> > clear CHANGE_PENDING bit for read-only array.  If MD_CHANGE_PENDING is
+> >> > set for a raid5 array, all returned IO will be hold on a list till the
+> >> > bit is clear. But recovery nevery clears this bit, the IO is always in
+> >> > pending state and nevery finish. This has bad effects like upper layer
+> >> > can't get an IO error and the array can't be stopped.
+> >> >
+> >> > Signed-off-by: Shaohua Li <shli@fb.com>
+> >> > ---
+> >> >  drivers/md/md.c | 1 +
+> >> >  1 file changed, 1 insertion(+)
+> >> >
+> >> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> >> > index 95824fb..c596b73 100644
+> >> > --- a/drivers/md/md.c
+> >> > +++ b/drivers/md/md.c
+> >> > @@ -8209,6 +8209,7 @@ void md_check_recovery(struct mddev *mddev)
+> >> >  			md_reap_sync_thread(mddev);
+> >> >  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+> >> >  			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+> >> > +			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
+> >> >  			goto unlock;
+> >> >  		}
+> >> >  
+> >> > -- 
+> >> > 1.8.1
+> >> 
+> >> Hi,
+> >>  I can see that clearing MD_CHANGE_PENDING there is probably correct -
+> >>  bug introduced by
+> >>    Commit: c3cce6cda162 ("md/raid5: ensure device failure recorded before write request returns.")
+> >> 
+> >>  However I don't understand your reasoning.  You say that the array is
+> >>  marked as read-only, but I don't see how that would happen.  What
+> >>  causes the array to be marked "read-only"?
+> >
+> > It's set read-only by mdadm. I didn't look carefully, but looks there is
+> > disk failure event, mdadm is invoked automatically by some background
+> > daemon. It's a ubuntu distribution.
+> 
+> Thanks.
+> This raises a couple of questions.
+> 
+> 1/ What should md_set_readonly do if it finds that MD_CHANGE_PENDING is
+>    set?
+>   Maybe it should wait for md_check_recovery to get run which should
+>   clear the bit, after probably writing out the metadata.
+> 
+> 2/ Why didn't md_check_recovery already do that before mdadm had a
+>    chance to set the array read-only?
+>   I guess that is just a timing thing.  md_check_recovery could be
+>   delayed, and mdadm could get called by udev rather quickly.
+> 
+> I think I'll get md_set_readonly to
+> 	wait_event(mddev->sb_wait,
+> 		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+> 
+> because I think that is the right thing to do.  But if the array is
+> already read-only that won't help, so I'll still need you patch.
+> 
+> Would you be able to test that the following patch (without your patch)
+> also fixes the symptom?
 
-I refuse to do that! .... since Xiao beat me to it! Thanks!
+Yes, the wait_event patch fixes the issue (without my patch).
 
-I was half way bisecting my way through it last night. For some reason
-the problem was reproducible in 4.2 if I applied the offending patch,
-but not in 4.3-rc2.
-
-Any chance you'll push these to your git tree in the near future?
-
-Thanks!
-Jes
+Thanks,
+Shaohua
