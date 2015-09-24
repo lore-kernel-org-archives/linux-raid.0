@@ -1,146 +1,140 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] raid5: update analysis state for failed stripe
-Date: Thu, 24 Sep 2015 15:26:57 +1000
-Message-ID: <87d1x8wfoe.fsf@notabene.neil.brown.name>
-References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com> <0fc9dd19baf6f214a112b040401a4cf3d6313942.1442596586.git.shli@fb.com> <87bncty7sp.fsf@notabene.neil.brown.name> <20150923063425.GA2813864@devbig084.prn1.facebook.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Re: Bad raid0 bio too large problem
+Date: Thu, 24 Sep 2015 04:48:14 -0400 (EDT)
+Message-ID: <2052819084.27720659.1443084494906.JavaMail.zimbra@redhat.com>
+References: <wrfjoagucvyq.fsf@redhat.com> <87k2rhyiqe.fsf@notabene.neil.brown.name> <wrfjvbb12xl8.fsf@redhat.com> <87io70wmst.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20150923063425.GA2813864@devbig084.prn1.facebook.com>
+In-Reply-To: <87io70wmst.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+To: Neil Brown <neilb@suse.de>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Shaohua Li <shli@fb.com> writes:
 
-> On Wed, Sep 23, 2015 at 04:21:58PM +1000, Neil Brown wrote:
->> Shaohua Li <shli@fb.com> writes:
->>=20
->> > handle_failed_stripe() makes the stripe fail, eg, all IO will return
->> > with a failure, but it doesn't update stripe_head_state. Later
->> > handle_stripe() has special handling for raid6 for handle_stripe_fill(=
-).
->> > That check before handle_stripe_fill() doesn't skip the failed stripe
->> > and we get a kernel crash in need_this_block.  This patch clear the
->> > analysis state to make sure no functions wrongly called after
->> > handle_failed_stripe()
->> >
->> > Signed-off-by: Shaohua Li <shli@fb.com>
->> > ---
->> >  drivers/md/raid5.c | 4 ++++
->> >  1 file changed, 4 insertions(+)
->> >
->> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> > index 394cdf8..8e4fb89a 100644
->> > --- a/drivers/md/raid5.c
->> > +++ b/drivers/md/raid5.c
->> > @@ -3155,6 +3155,8 @@ handle_failed_stripe(struct r5conf *conf, struct=
- stripe_head *sh,
->> >  			spin_unlock_irq(&sh->stripe_lock);
->> >  			if (test_and_clear_bit(R5_Overlap, &sh->dev[i].flags))
->> >  				wake_up(&conf->wait_for_overlap);
->> > +			if (bi)
->> > +				s->to_read--;
->> >  			while (bi && bi->bi_iter.bi_sector <
->> >  			       sh->dev[i].sector + STRIPE_SECTORS) {
->> >  				struct bio *nextbi =3D
->> > @@ -3173,6 +3175,8 @@ handle_failed_stripe(struct r5conf *conf, struct=
- stripe_head *sh,
->> >  		 */
->> >  		clear_bit(R5_LOCKED, &sh->dev[i].flags);
->> >  	}
->> > +	s->to_write =3D 0;
->> > +	s->written =3D 0;
->> >=20=20
->> >  	if (test_and_clear_bit(STRIPE_FULL_WRITE, &sh->state))
->> >  		if (atomic_dec_and_test(&conf->pending_full_writes))
->> > --=20
->> > 1.8.1
->>=20
->> Again, this probably is a sensible fix, but I would like to be certain.
->> Where exactly in need_this_block does the kernel crash?  I cannot see
->> anything that could cause an invalid address....
->
->
->>>for (i =3D 0; i < s->failed; i++) {
->>>                if (fdev[i]->towrite &&
-> the fdev[i]->towrite. because s->failed >=3D2 (it's 3 in my case), while
-> the array size is 2.
->
+----- Original Message -----
+> From: "Neil Brown" <neilb@suse.de>
+> To: "Jes Sorensen" <Jes.Sorensen@redhat.com>
+> Cc: "Xiao Ni" <xni@redhat.com>, "linux-raid" <linux-raid@vger.kernel.org>, yizhan@redhat.com
+> Sent: Thursday, September 24, 2015 10:53:06 AM
+> Subject: Re: Bad raid0 bio too large problem
+> 
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> 
+> > Neil Brown <neilb@suse.de> writes:
+> >> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> >>
+> >>> Hi Neil,
+> >>>
+> >>> I think we have some bad side effects with this patch:
+> >>>
+> >>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
+> >>> Author: NeilBrown <neilb@suse.com>
+> >>> Date:   Mon Aug 3 13:11:47 2015 +1000
+> >>>
+> >>>     md/raid0: update queue parameter in a safer location.
+> >>>     
+> >>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
+> >>>     of queue parameters (e.g. max number of sectors per bio) is
+> >>>     done in the wrong place.
+> >>>     It should be part of ->run, but it is actually part of ->takeover.
+> >>>     This means it happens before level_store() calls:
+> >>>     
+> >>>         blk_set_stacking_limits(&mddev->queue->limits);
+> >>>     
+> >>> Running the '03r0assem' test suite fills my kernel log with output like
+> >>> below. Yi Zhang also had issues where writes failed too.
+> >>>
+> >>> robably something we need to resolve for 4.2-final or revert the
+> >>> offending patch.
+> >>>
+> >>> Cheers,
+> >>> Jes
+> >>>
+> >>> md: bind<loop0>
+> >>> md: bind<loop1>
+> >>> md: bind<loop2>
+> >>> md/raid0:md2: md_size is 116736 sectors.
+> >>> md: RAID0 configuration for md2 - 1 zone
+> >>> md: zone0=[loop0/loop1/loop2]
+> >>>       zone-offset=         0KB, device-offset=         0KB, size=
+> >>>       58368KB
+> >>>
+> >>> md2: detected capacity change from 0 to 59768832
+> >>> bio too big device loop0 (296 > 255)
+> >>> bio too big device loop0 (272 > 255)
+> >>
+> >> 1/ Why do you blame that particular patch?
+> >>
+> >> 2/ Where is that error message coming from?  I cannot find "bio too big"
+> >>   in the kernel (except in a comment).
+> >>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
+> >> arbitrarily sized bios")
+> >>   removed the only instance of the error message that I know of.
+> >>
+> >> Which kernel exactly are you testing?
+> >
+> > I blame it because of bisect - I revert that patch and the issue goes
+> > away.
+> >
+> > I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
+> > see the bio too large. I revert it and it goes away.
+> 
+> Well that's pretty convincing - thanks.
+> And as you say - it is tagged for -stable so really needs to be fixed.
+> 
+> Stares at the code again.  And again.
+> 
+> Ahhh.  that patch moved the
+>   blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+> to after
+>  disk_stack_limits(...);
+> 
+> That is wrong.
+> 
+> Could you confirm that this fixes your test?
+> 
 > Thanks,
-> Shaohua
+> NeilBrown
+> 
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 4a13c3cb940b..0875e5e7e09a 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -431,12 +431,6 @@ static int raid0_run(struct mddev *mddev)
+>  		struct md_rdev *rdev;
+>  		bool discard_supported = false;
+>  
+> -		rdev_for_each(rdev, mddev) {
+> -			disk_stack_limits(mddev->gendisk, rdev->bdev,
+> -					  rdev->data_offset << 9);
+> -			if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
+> -				discard_supported = true;
+> -		}
+>  		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+>  		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
+>  		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
+> @@ -445,6 +439,12 @@ static int raid0_run(struct mddev *mddev)
+>  		blk_queue_io_opt(mddev->queue,
+>  				 (mddev->chunk_sectors << 9) * mddev->raid_disks);
+>  
+> +		rdev_for_each(rdev, mddev) {
+> +			disk_stack_limits(mddev->gendisk, rdev->bdev,
+> +					  rdev->data_offset << 9);
+> +			if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
+> +				discard_supported = true;
+> +		}
+>  		if (!discard_supported)
+>  			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
+>  		else
+> 
 
-Ahh, of course.
-In that case I think I'd like to limit the for loop as well.
-So I've applied your patch and this one as well.
+Hi Neil, Jes
 
-Thanks,
-NeilBrown
+The problem is fixed with this patch.
 
-From=2076e308d70b204ff0af0028458caabfeacac4541a Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.com>
-Date: Thu, 24 Sep 2015 15:25:36 +1000
-Subject: [PATCH] md/raid5: don't index beyond end of array in
- need_this_block().
-
-When need_this_block probably shouldn't be called when there
-are more than 2 failed devices, we really don't want it to try
-indexing beyond the end of the failed_num[] of fdev[] arrays.
-
-So limit the loops to at most 2 iterations.
-
-Reported-by: Shaohua Li <shli@fb.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 903d8a2b7b07..0f49ce411c9a 100644
-=2D-- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3304,7 +3304,7 @@ static int need_this_block(struct stripe_head *sh, st=
-ruct stripe_head_state *s,
- 		 */
- 		return 0;
-=20
-=2D	for (i =3D 0; i < s->failed; i++) {
-+	for (i =3D 0; i < s->failed && i < 2; i++) {
- 		if (fdev[i]->towrite &&
- 		    !test_bit(R5_UPTODATE, &fdev[i]->flags) &&
- 		    !test_bit(R5_OVERWRITE, &fdev[i]->flags))
-@@ -3328,7 +3328,7 @@ static int need_this_block(struct stripe_head *sh, st=
-ruct stripe_head_state *s,
- 	    sh->sector < sh->raid_conf->mddev->recovery_cp)
- 		/* reconstruct-write isn't being forced */
- 		return 0;
-=2D	for (i =3D 0; i < s->failed; i++) {
-+	for (i =3D 0; i < s->failed && i < 2; i++) {
- 		if (s->failed_num[i] !=3D sh->pd_idx &&
- 		    s->failed_num[i] !=3D sh->qd_idx &&
- 		    !test_bit(R5_UPTODATE, &fdev[i]->flags) &&
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWA4mhAAoJEDnsnt1WYoG5/eoP/Al7E4Qv/OfkQaUkla7VZDxf
-7JOSXkvTXOEsYQT+fhHaoGDc4UvU0WSCWcPvaNSt/OZa4haWjujjq5Qmd5C704r0
-Fpk6c0DDB/2DwDFeskSCA+g6T9wXMBJYzdSOWiWp8yUHz1EtmeFHT3TkHMmkmplc
-BDTZErgPTOT4WyhMW6+1NxzrLEFuxcbrVzEDrm6ciSBogTJUGSoK+/6SpQXUPByz
-6L+BMq4pQ5vFTnpJIr89fUEW9OzuWajL45d0R8KEtAXv8doQgxcg8ktS73HQS9d/
-jQpwlWt42j6FebJcKATcFQCXikVTaS4xFnmzdwEyvSC74btlFcTYv2mN0QTED7GA
-2EUT4SwB9MAaajjdAYF4VpeOj/JKjsc3UJ1/ASe2gVZBOwgmw0EIGr8wSaY7pPmn
-oztKr+I1OUwQmmzOBBq01lTb4uE72kNydtxoi6Tct9qpLkR79MLCDMaq8QP3THQZ
-81e3XRkJR0+6zeSjLjR0gTppI/mNiQxIdarTi3JcqqajIAbrKio44PQfdlcS/wk3
-ZvoBW33z5qe0mgfW/YTR1Vbel9ZsFto7NqGHPJO/PXI6fsArRFHdGjjsgQAjQbxh
-14QGV/R6d20qDrUKgYGw0lcuZcwtiPLHQ2J8dBnCFQUmUPWUI1AVyuG9ws/jK7EZ
-FObKMvN8RjJs7V7dqxZE
-=ZAF0
------END PGP SIGNATURE-----
---=-=-=--
+Best Regards
+Xiao
