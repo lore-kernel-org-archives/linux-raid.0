@@ -1,578 +1,158 @@
-From: Alexander Afonyashin <a.afonyashin@madnet-team.ru>
-Subject: Re: Unable to assemble RAID6 after Ubuntu>Arch switch
-Date: Thu, 24 Sep 2015 12:17:53 +0300
-Message-ID: <CAETWcfvF1o8mNVw1t-=7WNZZTz774eTnj1tG6UckrXbDvWxdXg@mail.gmail.com>
-References: <CADNH=7Hr6HXVPQP6-V8Jkr9aSwqHojoWApjA7ZKnQOPL0inUYw@mail.gmail.com>
- <CAETWcfsw2M3JkNmE3M3nsr0_M4N86ta+kaRo62OgK+Ft0J5iiw@mail.gmail.com> <CADNH=7E796sv+A4PDb2n=EJomAR8KPRoGt-=+52BYfrELBFZDg@mail.gmail.com>
+From: mike@nerdcore.net
+Subject: RAID5 Recovery From NAS With 4x3TB SATA Disks
+Date: Thu, 24 Sep 2015 08:41:59 -0400
+Message-ID: <bc6f920d307275a8dc69fbcd8870c672.squirrel@nerdcore.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7E796sv+A4PDb2n=EJomAR8KPRoGt-=+52BYfrELBFZDg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Matias,
+I am attempting to recover some data from a RAID-5 NAS enclosure on my PC.
+A number of things were already done wrong, but I am hopeful to recover at
+least some of the data from the array.
 
-I wonder why Ubuntu detects raid6 parts as /dev/sdX1 (and counts only
-5 disks) while Arch detects /dev/sdX (and counts 6 disks)? Try to
-assemble raid6 on Arch manually again by issuing:
+The array was created on a Synology NAS enclosure consisting of 4 x 3TB
+drives in a RAID-5 configuration. I gather everything was working well
+until a power surge or brownout which caused one drive to die completely
+(disk #0) and was likely the cause of some read errors on the other disks.
 
-mdadm -S /dev/md0
-mdadm -A /dev/md0 /dev/sdb /dev/sda /dev/sde /dev/sdd /dev/sdc -
-exactly as shown in mdadm's output on Ubuntu
+When the owner of the array noticed the disk failure, the wrong disk was
+replaced to cause a rebuild! Disk #2 was replaced instead of disk #0, so
+the NAS would never have succeeded at a rebuild operation. At this point
+my friend came to me for assistance and I began pulling the drives from
+the NAS into my PC running Ubuntu 14.04 (amd64) to attempt to restore at
+least some of the files.
 
-P.S. Still confused why Arch doesn't recognize /dev/sda1 etc.
+I cannot get disk #0 to spin at all. Disk #1 and disk #3 appear to
+automatically assemble into the array in the correct slots.
 
-Regards,
-Alexander
+Disk #2 appears to mdadm as "disk #32770".
 
-On Wed, Sep 23, 2015 at 9:35 PM, Mathias Bur=C3=A9n <mathias.buren@gmai=
-l.com> wrote:
-> Hi Alexander,
->
-> I didn't try to grow the array or anything, just swapped out the OS.
-> When I boot back into Ubuntu it assembles fine.
->
-> This is from within Ubuntu (I did a mdadm --assemble --scan using
-> mdadm - v3.3.2-7-g21dc471 - 03th November 2014)
->
-> mdadm -D on RAID6
-> /dev/md0:
->         Version : 1.2
->   Creation Time : Thu Nov 20 23:52:58 2014
->      Raid Level : raid6
->      Array Size : 5856046080 (5584.76 GiB 5996.59 GB)
->   Used Dev Size : 1952015360 (1861.59 GiB 1998.86 GB)
->    Raid Devices : 5
->   Total Devices : 5
->     Persistence : Superblock is persistent
->
->   Intent Bitmap : Internal
->
->     Update Time : Sun Sep 20 19:47:50 2015
->           State : clean
->  Active Devices : 5
-> Working Devices : 5
->  Failed Devices : 0
->   Spare Devices : 0
->
->          Layout : left-symmetric
->      Chunk Size : 512K
->
->            Name : ion:0  (local to host ion)
->            UUID : 4cae433f:a40afcf5:f9aba91d:d8217b69
->          Events : 59736
->
->     Number   Major   Minor   RaidDevice State
->        0       8       17        0      active sync   /dev/sdb1
->        1       8       33        1      active sync   /dev/sdc1
->        2       8       49        2      active sync   /dev/sdd1
->        3       8       65        3      active sync   /dev/sde1
->        4       8        1        4      active sync   /dev/sda1
->
->
-> mdadm -D on RAID0
-> /dev/md1:
->         Version : 1.2
->   Creation Time : Thu Nov 20 23:53:48 2014
->      Raid Level : raid0
->      Array Size : 4098048 (3.91 GiB 4.20 GB)
->    Raid Devices : 3
->   Total Devices : 3
->     Persistence : Superblock is persistent
->
->     Update Time : Thu Nov 20 23:53:48 2014
->           State : clean
->  Active Devices : 3
-> Working Devices : 3
->  Failed Devices : 0
->   Spare Devices : 0
->
->      Chunk Size : 512K
->
->            Name : ion:1  (local to host ion)
->            UUID : a20b70d4:7ee17e3f:abab74f8:dadb8cd8
->          Events : 0
->
->     Number   Major   Minor   RaidDevice State
->        0       8       34        0      active sync   /dev/sdc2
->        1       8       50        1      active sync   /dev/sdd2
->        2       8       66        2      active sync   /dev/sde2
->
->
->
-> lsdrv from within Ubuntu
-> PCI [megaraid_sas] 02:0e.0 RAID bus controller: LSI Logic / Symbios
-> Logic MegaRAID SAS 1068
-> =E2=94=9Cscsi 0:2:0:0 LSI      MegaRAID 84016E  {00ede206d4a731011c50=
-ff5e02b00506}
-> =E2=94=82=E2=94=94sda 1.82t [8:0] MD raid6 (6) inactive 'ion:md0'
-> {0ad2603e-e432-83ee-0218-077398e716ef}
-> =E2=94=82 =E2=94=94sda1 1.82t [8:1] MD raid6 (4/5) (w/ sdb1,sdc1,sdd1=
-,sde1) in_sync
-> 'ion:0' {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
-> =E2=94=82  =E2=94=94md0 5.45t [9:0] MD v1.2 raid6 (5) clean, 512k Chu=
-nk
-> {4cae433f:a40afcf5:f9aba91d:d8217b69}
-> =E2=94=82                   ext4 '6TB_RAID6' {9e3c1fbe-8228-4b38-9047=
--66a5e2429e5f}
-> =E2=94=94scsi 0:2:1:0 LSI      MegaRAID 84016E  {0036936cc4270000ff50=
-ff5e02b00506}
->  =E2=94=94sdb 1.82t [8:16] MD raid6 (6) inactive 'ion:md0'
-> {0ad2603e-e432-83ee-0218-077398e716ef}
->   =E2=94=94sdb1 1.82t [8:17] MD raid6 (0/5) (w/ sda1,sdc1,sdd1,sde1) =
-in_sync
-> 'ion:0' {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
->    =E2=94=94md0 5.45t [9:0] MD v1.2 raid6 (5) clean, 512k Chunk
-> {4cae433f:a40afcf5:f9aba91d:d8217b69}
->                     ext4 '6TB_RAID6' {9e3c1fbe-8228-4b38-9047-66a5e24=
-29e5f}
-> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 8 Series/C220
-> Series Chipset Family 6-port SATA Controller 1 [AHCI mode] (rev 05)
-> =E2=94=9Cscsi 1:0:0:0 ATA      Corsair CSSD-F60 {10326505580009990027=
-}
-> =E2=94=82=E2=94=94sdf 55.90g [8:80] Partitioned (dos)
-> =E2=94=82 =E2=94=9Csdf1 243.00m [8:81] ext2 {b45c13c8-4246-43ee-ac2c-=
-f9bb5de099f8}
-> =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sdf1 @ /boot
-> =E2=94=82 =E2=94=9Csdf2 1.00k [8:82] Partitioned (dos)
-> =E2=94=82 =E2=94=94sdf5 55.66g [8:85] PV LVM2_member 55.66g used, 0 f=
-ree
-> {zZ5Dgy-E7v8-Y1Mi-EuqG-uXUb-DseW-s7goxG}
-> =E2=94=82  =E2=94=94VG ion 55.66g 0 free {XSaCyP-phLN-m4IH-2cJ7-1XXw-=
-b3uh-qWBl8N}
-> =E2=94=82   =E2=94=9Cdm-0 52.41g [252:0] LV root ext4 {63342e0d-1b4f-=
-4475-9835-d3a2a6610e8f}
-> =E2=94=82   =E2=94=82=E2=94=94Mounted as /dev/mapper/ion-root @ /
-> =E2=94=82   =E2=94=94dm-1 3.25g [252:1] LV swap_1 Empty/Unknown
-> =E2=94=82    =E2=94=94dm-2 3.25g [252:2] swap {0c81625d-ee9e-4a7a-961=
-3-410c1cf53e72}
-> =E2=94=9Cscsi 2:0:0:0 ATA      SAMSUNG HD204UI  {S2H7JR0B501861}
-> =E2=94=82=E2=94=94sdc 1.82t [8:32] MD raid6 (6) inactive 'ion:md0'
-> {0ad2603e-e432-83ee-0218-077398e716ef}
-> =E2=94=82 =E2=94=9Csdc1 1.82t [8:33] MD raid6 (1/5) (w/ sda1,sdb1,sdd=
-1,sde1) in_sync
-> 'ion:0' {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
-> =E2=94=82 =E2=94=82=E2=94=94md0 5.45t [9:0] MD v1.2 raid6 (5) clean, =
-512k Chunk
-> {4cae433f:a40afcf5:f9aba91d:d8217b69}
-> =E2=94=82 =E2=94=82                 ext4 '6TB_RAID6' {9e3c1fbe-8228-4=
-b38-9047-66a5e2429e5f}
-> =E2=94=82 =E2=94=94sdc2 1.30g [8:34] MD raid0 (0/3) (w/ sdd2,sde2) in=
-_sync 'ion:1'
-> {a20b70d4-7ee1-7e3f-abab-74f8dadb8cd8}
-> =E2=94=82  =E2=94=94md1 3.91g [9:1] MD v1.2 raid0 (3) clean, 512k Chu=
-nk, None (None)
-> None {a20b70d4:7ee17e3f:abab74f8:dadb8cd8}
-> =E2=94=82                   ext4 '4GB_RAID0' {c8327dd0-9d3f-4457-a73a=
--c9c7d5a0ee3f}
-> =E2=94=9Cscsi 3:x:x:x [Empty]
-> =E2=94=9Cscsi 4:x:x:x [Empty]
-> =E2=94=9Cscsi 5:0:0:0 ATA      WDC WD20EARS-00J {WD-WCAWZ2036074}
-> =E2=94=82=E2=94=94sdd 1.82t [8:48] MD raid6 (6) inactive 'ion:md0'
-> {0ad2603e-e432-83ee-0218-077398e716ef}
-> =E2=94=82 =E2=94=9Csdd1 1.82t [8:49] MD raid6 (2/5) (w/ sda1,sdb1,sdc=
-1,sde1) in_sync
-> 'ion:0' {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
-> =E2=94=82 =E2=94=82=E2=94=94md0 5.45t [9:0] MD v1.2 raid6 (5) clean, =
-512k Chunk
-> {4cae433f:a40afcf5:f9aba91d:d8217b69}
-> =E2=94=82 =E2=94=82                 ext4 '6TB_RAID6' {9e3c1fbe-8228-4=
-b38-9047-66a5e2429e5f}
-> =E2=94=82 =E2=94=94sdd2 1.30g [8:50] MD raid0 (1/3) (w/ sdc2,sde2) in=
-_sync 'ion:1'
-> {a20b70d4-7ee1-7e3f-abab-74f8dadb8cd8}
-> =E2=94=82  =E2=94=94md1 3.91g [9:1] MD v1.2 raid0 (3) clean, 512k Chu=
-nk, None (None)
-> None {a20b70d4:7ee17e3f:abab74f8:dadb8cd8}
-> =E2=94=82                   ext4 '4GB_RAID0' {c8327dd0-9d3f-4457-a73a=
--c9c7d5a0ee3f}
-> =E2=94=94scsi 6:0:0:0 ATA      ST3000DM001-1CH1 {W1F2PZGH}
->  =E2=94=94sde 2.73t [8:64] Partitioned (dos)
->   =E2=94=9Csde1 1.82t [8:65] MD raid6 (3/5) (w/ sda1,sdb1,sdc1,sdd1) =
-in_sync
-> 'ion:0' {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
->   =E2=94=82=E2=94=94md0 5.45t [9:0] MD v1.2 raid6 (5) clean, 512k Chu=
-nk
-> {4cae433f:a40afcf5:f9aba91d:d8217b69}
->   =E2=94=82                 ext4 '6TB_RAID6' {9e3c1fbe-8228-4b38-9047=
--66a5e2429e5f}
->   =E2=94=9Csde2 1.30g [8:66] MD raid0 (2/3) (w/ sdc2,sdd2) in_sync 'i=
-on:1'
-> {a20b70d4-7ee1-7e3f-abab-74f8dadb8cd8}
->   =E2=94=82=E2=94=94md1 3.91g [9:1] MD v1.2 raid0 (3) clean, 512k Chu=
-nk, None (None)
-> None {a20b70d4:7ee17e3f:abab74f8:dadb8cd8}
->   =E2=94=82                 ext4 '4GB_RAID0' {c8327dd0-9d3f-4457-a73a=
--c9c7d5a0ee3f}
->   =E2=94=94sde3 184.98g [8:67] ext4 '198GB' {e4fc427a-4ec1-48dc-8d9b-=
-bfcffe06d42f}
->    =E2=94=94Mounted as /dev/sde3 @ /media/198GB
-> Other Block Devices
-> =E2=94=9Cloop0 0.00k [7:0] Empty/Unknown
-> =E2=94=9Cloop1 0.00k [7:1] Empty/Unknown
-> =E2=94=9Cloop2 0.00k [7:2] Empty/Unknown
-> =E2=94=9Cloop3 0.00k [7:3] Empty/Unknown
-> =E2=94=9Cloop4 0.00k [7:4] Empty/Unknown
-> =E2=94=9Cloop5 0.00k [7:5] Empty/Unknown
-> =E2=94=9Cloop6 0.00k [7:6] Empty/Unknown
-> =E2=94=9Cloop7 0.00k [7:7] Empty/Unknown
-> =E2=94=9Cmd127 0.00k [9:127] MD vnone  () clear, None (None) None {No=
-ne}
-> =E2=94=82                    Empty/Unknown
-> =E2=94=9Cram0 64.00m [1:0] Empty/Unknown
-> =E2=94=9Cram1 64.00m [1:1] Empty/Unknown
-> =E2=94=9Cram2 64.00m [1:2] Empty/Unknown
-> =E2=94=9Cram3 64.00m [1:3] Empty/Unknown
-> =E2=94=9Cram4 64.00m [1:4] Empty/Unknown
-> =E2=94=9Cram5 64.00m [1:5] Empty/Unknown
-> =E2=94=9Cram6 64.00m [1:6] Empty/Unknown
-> =E2=94=9Cram7 64.00m [1:7] Empty/Unknown
-> =E2=94=9Cram8 64.00m [1:8] Empty/Unknown
-> =E2=94=9Cram9 64.00m [1:9] Empty/Unknown
-> =E2=94=9Cram10 64.00m [1:10] Empty/Unknown
-> =E2=94=9Cram11 64.00m [1:11] Empty/Unknown
-> =E2=94=9Cram12 64.00m [1:12] Empty/Unknown
-> =E2=94=9Cram13 64.00m [1:13] Empty/Unknown
-> =E2=94=9Cram14 64.00m [1:14] Empty/Unknown
-> =E2=94=94ram15 64.00m [1:15] Empty/Unknown
->
->
-> /proc/mdstat on Ubuntu
-> Personalities : [raid6] [raid5] [raid4] [raid0]
-> md0 : active raid6 sdb1[0] sda1[4] sde1[3] sdd1[2] sdc1[1]
->       5856046080 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5=
-/5] [UUUUU]
->       bitmap: 0/15 pages [0KB], 65536KB chunk
->
-> md1 : active raid0 sdc2[0] sde2[2] sdd2[1]
->       4098048 blocks super 1.2 512k chunks
->
-> Regards,
-> Mathias
->
-> On 23 September 2015 at 07:24, Alexander Afonyashin
-> <a.afonyashin@madnet-team.ru> wrote:
->> Hi,
->>
->> I wonder why metainfo from /dev/sdf1 thinks that there're only 5
->> devices in raid6. Did you try to grow your array recently?
->> Show the output of mdadm -D /dev/mdX when array is assembled on Ubun=
-tu.
->> Can you assemble the array with 4 disks: /dev/sd[a-d]?
->>
->> P.S. According to mdadm output metainfo on /dev/sdf1 claims that it'=
-s
->> from another md-array (check Array UUID field). You may need to zero
->> metadata on /dev/sdf1 and re-add in to existing raid6 array.
->>
->> Regards,
->> Alexander
->>
->> On Wed, Sep 23, 2015 at 12:30 AM, Mathias Bur=C3=A9n <mathias.buren@=
-gmail.com> wrote:
->>> Hi (please reply-all)
->>>
->>> I've a RAID6 array (sda sdb sdd sde sdf1) that I can't assemble und=
-er
->>> Arch, but it worked fine under Ubuntu. mdadm - v3.3.4 - 3rd August
->>> 2015, kernel 4.1.6
->>>
->>> Here is the mdadm --examine for each drive:
->>>
->>>
->>>
->>> [root@ion ~]# mdadm --examine /dev/sda
->>> /dev/sda:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
->>>            Name : ion:md0  (local to host ion)
->>>   Creation Time : Tue Feb  5 17:33:27 2013
->>>      Raid Level : raid6
->>>    Raid Devices : 6
->>>
->>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->>>      Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
->>>   Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
->>>     Data Offset : 262144 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=3D262064 sectors, after=3D1844674407370681=
-8560 sectors
->>>           State : clean
->>>     Device UUID : a09fc60d:5c4a27a5:4b89bc33:29b01582
->>>
->>>     Update Time : Tue Nov  4 21:43:49 2014
->>>        Checksum : 528563ee - correct
->>>          Events : 97557
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 3
->>>    Array State : AA.AAA ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
->>>
->>> [root@ion ~]# mdadm --examine /dev/sdb
->>> /dev/sdb:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
->>>            Name : ion:md0  (local to host ion)
->>>   Creation Time : Tue Feb  5 17:33:27 2013
->>>      Raid Level : raid6
->>>    Raid Devices : 6
->>>
->>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->>>      Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
->>>   Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
->>>     Data Offset : 262144 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=3D262064 sectors, after=3D1844674407370681=
-8560 sectors
->>>           State : clean
->>>     Device UUID : 93568b01:632395bf:7d0082a5:db9b6ff9
->>>
->>>     Update Time : Tue Nov  4 21:43:49 2014
->>>        Checksum : 49d756ca - correct
->>>          Events : 97557
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 0
->>>    Array State : AA.AAA ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
->>>
->>>
->>> [root@ion ~]# mdadm --examine /dev/sdd
->>> /dev/sdd:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
->>>            Name : ion:md0  (local to host ion)
->>>   Creation Time : Tue Feb  5 17:33:27 2013
->>>      Raid Level : raid6
->>>    Raid Devices : 6
->>>
->>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->>>      Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
->>>   Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
->>>     Data Offset : 262144 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=3D262064 sectors, after=3D1200 sectors
->>>           State : clean
->>>     Device UUID : 78df2586:cb5649aa:e0b6d211:d92dc224
->>>
->>>     Update Time : Tue Nov  4 21:43:49 2014
->>>        Checksum : 50c95b7c - correct
->>>          Events : 97557
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 5
->>>    Array State : AA.AAA ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
->>>
->>> [root@ion ~]# mdadm --examine /dev/sde
->>> /dev/sde:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x0
->>>      Array UUID : 0ad2603e:e43283ee:02180773:98e716ef
->>>            Name : ion:md0  (local to host ion)
->>>   Creation Time : Tue Feb  5 17:33:27 2013
->>>      Raid Level : raid6
->>>    Raid Devices : 6
->>>
->>>  Avail Dev Size : 3906767024 (1862.89 GiB 2000.26 GB)
->>>      Array Size : 7813531648 (7451.56 GiB 8001.06 GB)
->>>   Used Dev Size : 3906765824 (1862.89 GiB 2000.26 GB)
->>>     Data Offset : 262144 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=3D262064 sectors, after=3D1200 sectors
->>>           State : clean
->>>     Device UUID : 41712f8c:255b0f3e:0e345f7b:e1504e42
->>>
->>>     Update Time : Tue Nov  4 21:43:49 2014
->>>        Checksum : 71b191d6 - correct
->>>          Events : 97557
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 1
->>>    Array State : AA.AAA ('A' =3D=3D active, '.' =3D=3D missing, 'R'=
- =3D=3D replacing)
->>>
->>> [root@ion ~]# mdadm --examine /dev/sdf1
->>> /dev/sdf1:
->>>           Magic : a92b4efc
->>>         Version : 1.2
->>>     Feature Map : 0x1
->>>      Array UUID : 4cae433f:a40afcf5:f9aba91d:d8217b69
->>>            Name : ion:0  (local to host ion)
->>>   Creation Time : Thu Nov 20 23:52:58 2014
->>>      Raid Level : raid6
->>>    Raid Devices : 5
->>>
->>>  Avail Dev Size : 3904030720 (1861.59 GiB 1998.86 GB)
->>>      Array Size : 5856046080 (5584.76 GiB 5996.59 GB)
->>>     Data Offset : 262144 sectors
->>>    Super Offset : 8 sectors
->>>    Unused Space : before=3D262056 sectors, after=3D0 sectors
->>>           State : clean
->>>     Device UUID : eaa0dcba:d04a7c16:6c256916:67a491ae
->>>
->>> Internal Bitmap : 8 sectors from superblock
->>>     Update Time : Sun Sep 20 19:47:50 2015
->>>   Bad Block Log : 512 entries available at offset 72 sectors
->>>        Checksum : b1f6f725 - correct
->>>          Events : 59736
->>>
->>>          Layout : left-symmetric
->>>      Chunk Size : 512K
->>>
->>>    Device Role : Active device 3
->>>    Array State : AAAAA ('A' =3D=3D active, '.' =3D=3D missing, 'R' =
-=3D=3D replacing)
->>>
->>>
->>>
->>>
->>>
->>> Here is ldrv:
->>>
->>> [root@ion ~]# python2 lsdrv
->>> PCI [megaraid_sas] 02:0e.0 RAID bus controller: LSI Logic / Symbios
->>> Logic MegaRAID SAS 1068
->>> =E2=94=9Cscsi 0:2:0:0 LSI      MegaRAID 84016E  {00ede206d4a731011c=
-50ff5e02b00506}
->>> =E2=94=82=E2=94=94sda 1.82t [8:0] MD raid6 (6) inactive 'ion:md0'
->>> {0ad2603e-e432-83ee-0218-077398e716ef}
->>> =E2=94=94scsi 0:2:1:0 LSI      MegaRAID 84016E  {0036936cc4270000ff=
-50ff5e02b00506}
->>>  =E2=94=94sdb 1.82t [8:16] MD raid6 (6) inactive 'ion:md0'
->>> {0ad2603e-e432-83ee-0218-077398e716ef}
->>> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 8 Series/C220
->>> Series Chipset Family 6-port SATA Controller 1 [AHCI mode] (rev 05)
->>> =E2=94=9Cscsi 1:0:0:0 ATA      INTEL SSDSA2BW16 {BTPR2062006T160DGN=
-}
->>> =E2=94=82=E2=94=94sdc 149.05g [8:32] Partitioned (dos)
->>> =E2=94=82 =E2=94=9Csdc1 256.00m [8:33] ext4 'boot' {f7727d21-646d-4=
-2f9-844b-50591b7f8358}
->>> =E2=94=82 =E2=94=82=E2=94=94Mounted as /dev/sdc1 @ /boot
->>> =E2=94=82 =E2=94=94sdc2 140.00g [8:34] PV LVM2_member 40.00g used, =
-100.00g free
->>> {KGQ5TJ-mVvL-1Ccd-CKae-1QvS-6AFn-8jFQAw}
->>> =E2=94=82  =E2=94=94VG ArchVG 140.00g 100.00g free {F2vaKY-XO4m-UEi=
-h-f9Fh-sHgX-cRsN-SLi3Oo}
->>> =E2=94=82   =E2=94=9Cdm-1 32.00g [254:1] LV root ext4 'root'
->>> {82fa2951-25c8-4e36-bf36-9f4f7747ac46}
->>> =E2=94=82   =E2=94=82=E2=94=94Mounted as /dev/mapper/ArchVG-root @ =
-/
->>> =E2=94=82   =E2=94=94dm-0 8.00g [254:0] LV swap swap {0e3f4596-fa50=
--4fed-875f-f8427084d9b5}
->>> =E2=94=9Cscsi 2:0:0:0 ATA      SAMSUNG HD204UI  {S2H7JR0B501861}
->>> =E2=94=82=E2=94=94sdd 1.82t [8:48] MD raid6 (6) inactive 'ion:md0'
->>> {0ad2603e-e432-83ee-0218-077398e716ef}
->>> =E2=94=9Cscsi 3:x:x:x [Empty]
->>> =E2=94=9Cscsi 4:x:x:x [Empty]
->>> =E2=94=9Cscsi 5:0:0:0 ATA      WDC WD20EARS-00J {WD-WCAWZ2036074}
->>> =E2=94=82=E2=94=94sde 1.82t [8:64] MD raid6 (6) inactive 'ion:md0'
->>> {0ad2603e-e432-83ee-0218-077398e716ef}
->>> =E2=94=94scsi 6:0:0:0 ATA      ST3000DM001-1CH1 {W1F2PZGH}
->>>  =E2=94=94sdf 2.73t [8:80] Partitioned (dos)
->>>   =E2=94=9Csdf1 1.82t [8:81] MD raid6 (5) inactive 'ion:0'
->>> {4cae433f-a40a-fcf5-f9ab-a91dd8217b69}
->>>   =E2=94=9Csdf2 1.30g [8:82] MD raid0 (3) inactive 'ion:1'
->>> {a20b70d4-7ee1-7e3f-abab-74f8dadb8cd8}
->>>   =E2=94=94sdf3 184.98g [8:83] ext4 '198GB' {e4fc427a-4ec1-48dc-8d9=
-b-bfcffe06d42f}
->>>
->>>
->>> If I try:
->>>
->>> [root@ion ~]# mdadm --assemble --scan
->>> mdadm: /dev/md/0 assembled from 1 drive - not enough to start the a=
-rray.
->>> mdadm: /dev/md/1 assembled from 1 drive - not enough to start the a=
-rray.
->>>
->>> From dmesg:
->>>
->>> [ 1227.671344]  sda: sda1
->>> [ 1227.680392] md: sda does not have a valid v1.2 superblock, not i=
-mporting!
->>> [ 1227.680414] md: md_import_device returned -22
->>> [ 1227.680462] md: md0 stopped.
->>> [ 1227.707969]  sdb: sdb1
->>> [ 1227.718598] md: sdb does not have a valid v1.2 superblock, not i=
-mporting!
->>> [ 1227.718611] md: md_import_device returned -22
->>> [ 1227.718631] md: md0 stopped.
->>> [ 1286.334542] md: md0 stopped.
->>> [ 1286.338250] md: bind<sdf1>
->>> [ 1286.338390] md: md0 stopped.
->>> [ 1286.338400] md: unbind<sdf1>
->>> [ 1286.348350] md: export_rdev(sdf1)
->>> [ 1286.372268] md: bind<sdf1>
->>> [ 1286.373390] md: md1 stopped.
->>> [ 1286.373936] md: bind<sdf2>
->>> [ 1286.373977] md: md1 stopped.
->>> [ 1286.373983] md: unbind<sdf2>
->>> [ 1286.388061] md: export_rdev(sdf2)
->>> [ 1286.405140] md: bind<sdf2>
->>>
->>> [root@ion ~]# cat /proc/mdstat
->>> Personalities :
->>> md1 : inactive sdf2[2](S)
->>>       1366104 blocks super 1.2
->>>
->>> md0 : inactive sdf1[3](S)
->>>       1952015360 blocks super 1.2
->>>
->>> unused devices: <none>
->>>
->>>
->>> If I try manually (I'm not sure of the order though):
->>>
->>> [root@ion ~]# mdadm --assemble --readonly --verbose /dev/md0 /dev/s=
-da
->>> /dev/sdb /dev/sdd /dev/sde
->>> mdadm: looking for devices for /dev/md0
->>> mdadm: /dev/sda is identified as a member of /dev/md0, slot 3.
->>> mdadm: /dev/sdb is identified as a member of /dev/md0, slot 0.
->>> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 5.
->>> mdadm: /dev/sde is identified as a member of /dev/md0, slot 1.
->>> mdadm: added /dev/sde to /dev/md0 as 1
->>> mdadm: no uptodate device for slot 2 of /dev/md0
->>> mdadm: failed to add /dev/sda to /dev/md0: Invalid argument
->>> mdadm: no uptodate device for slot 4 of /dev/md0
->>> mdadm: added /dev/sdd to /dev/md0 as 5
->>> mdadm: failed to add /dev/sdb to /dev/md0: Invalid argument
->>> mdadm: /dev/md0 assembled from 2 drives - need 5 to start (use --ru=
-n to insist).
->>>
->>>
->>> Any idea where I should start?
->>>
->>> Thanks
->>> Mathias
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here is the output of `mdadm --examine` on each of the RAID partitions,
+and the contents of /proc/mdstat when the drives are spun up inside my PC:
+
+
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
+           Name : DiskStation:2
+  Creation Time : Thu Apr  3 13:41:58 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
+     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
+  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 46277a0d:f75e3612:911d4e5f:50b46678
+
+    Update Time : Fri May 29 08:20:37 2015
+       Checksum : cd5c1a5f - correct
+         Events : 1908912
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 32770
+   Array State : .A.A ('A' == active, '.' == missing)
+
+/dev/sdc5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
+           Name : DiskStation:2
+  Creation Time : Thu Apr  3 13:41:58 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
+     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
+  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : fa5bf9cd:629d2a75:7e3d9ab3:6189e4f9
+
+    Update Time : Sun May 31 11:05:20 2015
+       Checksum : c69bcc20 - correct
+         Events : 1908922
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AA.A ('A' == active, '.' == missing)
+
+/dev/sdd5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
+           Name : DiskStation:2
+  Creation Time : Thu Apr  3 13:41:58 2014
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
+     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
+  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 0da09e5b:b3557017:dec76908:02543203
+
+    Update Time : Sun May 31 11:05:20 2015
+       Checksum : 54a41d85 - correct
+         Events : 1908922
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 3
+   Array State : AA.A ('A' == active, '.' == missing)
+
+/proc/mdstat:
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md2 : inactive sdb5[2](S) sdc5[1](S) sdd5[3](S)
+      8776595520 blocks super 1.2
+
+
+I've read a bunch of forum posts and articles detailing a number of
+techniques to try and recover some of the data. I gather from these
+Synology instructions that once the array is assembled I must use
+`vgchange` to register a Volume Group:
+https://www.synology.com/en-us/knowledgebase/faq/579
+
+This wiki page gave me the idea of using `mdadm --create --assume-clean
+...` to bring the array to a state where I might be able to see some of
+its contents: https://raid.wiki.kernel.org/index.php/RAID_Recovery
+
+I'm also familiar with concerns over using large disks in a RAID-5
+configuration and would like to be clear that this was not my idea and I
+am simply trying to help a friend retrieve at least some of the files from
+the array - I do not expect complete recovery will be possible:
+http://www.zdnet.com/article/why-raid-5-stops-working-in-2009/
+
+I attempted to bring this array up with this command:
+
+  mdadm --create --assume-clean --level=5 --raid-devices=4 --chunk=64
+/dev/md2 missing /dev/sdc5 /dev/sdb5 /dev/sdd5
+
+This appeared to bring up a new array with 0 Events. I've restored my
+backups and can try again from the best state I have to work with.
+
+All disks experienced some read errors while creating the backups, and I
+realize complete recovery will be impossible, but if I could retrieve any
+data we would be pleased with that.
+
+Any help greatly appreciated.
+
