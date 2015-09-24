@@ -1,130 +1,124 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Bad raid0 bio too large problem
-Date: Thu, 24 Sep 2015 12:53:06 +1000
-Message-ID: <87io70wmst.fsf@notabene.neil.brown.name>
-References: <wrfjoagucvyq.fsf@redhat.com> <87k2rhyiqe.fsf@notabene.neil.brown.name> <wrfjvbb12xl8.fsf@redhat.com>
+Subject: Re: [PATCH 1/2] md: clear CHANGE_PENDING in readonly array
+Date: Thu, 24 Sep 2015 14:03:53 +1000
+Message-ID: <87fv24wjiu.fsf@notabene.neil.brown.name>
+References: <bda150068cfdb69bf8b632c32dc2a7db17c919f4.1442596586.git.shli@fb.com> <87eghpy8k2.fsf@notabene.neil.brown.name> <20150923062302.GA2780132@devbig084.prn1.facebook.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjvbb12xl8.fsf@redhat.com>
+In-Reply-To: <20150923062302.GA2780132@devbig084.prn1.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+Shaohua Li <shli@fb.com> writes:
 
-> Neil Brown <neilb@suse.de> writes:
->> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>
->>> Hi Neil,
->>>
->>> I think we have some bad side effects with this patch:
->>>
->>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
->>> Author: NeilBrown <neilb@suse.com>
->>> Date:   Mon Aug 3 13:11:47 2015 +1000
->>>
->>>     md/raid0: update queue parameter in a safer location.
->>>=20=20=20=20=20
->>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
->>>     of queue parameters (e.g. max number of sectors per bio) is
->>>     done in the wrong place.
->>>     It should be part of ->run, but it is actually part of ->takeover.
->>>     This means it happens before level_store() calls:
->>>=20=20=20=20=20
->>>         blk_set_stacking_limits(&mddev->queue->limits);
->>>=20=20=20=20=20
->>> Running the '03r0assem' test suite fills my kernel log with output like
->>> below. Yi Zhang also had issues where writes failed too.
->>>
->>> robably something we need to resolve for 4.2-final or revert the
->>> offending patch.
->>>
->>> Cheers,
->>> Jes
->>>
->>> md: bind<loop0>
->>> md: bind<loop1>
->>> md: bind<loop2>
->>> md/raid0:md2: md_size is 116736 sectors.
->>> md: RAID0 configuration for md2 - 1 zone
->>> md: zone0=3D[loop0/loop1/loop2]
->>>       zone-offset=3D         0KB, device-offset=3D         0KB, size=3D=
-     58368KB
->>>
->>> md2: detected capacity change from 0 to 59768832
->>> bio too big device loop0 (296 > 255)
->>> bio too big device loop0 (272 > 255)
->>
->> 1/ Why do you blame that particular patch?
->>
->> 2/ Where is that error message coming from?  I cannot find "bio too big"
->>   in the kernel (except in a comment).
->>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
->> arbitrarily sized bios")
->>   removed the only instance of the error message that I know of.
->>
->> Which kernel exactly are you testing?
+> On Wed, Sep 23, 2015 at 04:05:33PM +1000, Neil Brown wrote:
+>> Shaohua Li <shli@fb.com> writes:
+>>=20
+>> > If faulty disks of an array are more than allowed degraded number, the
+>> > array enters error handling. It will be marked as read-only with
+>> > MD_CHANGE_PENDING/RECOVERY_NEEDED set. But currently recovery doesn't
+>> > clear CHANGE_PENDING bit for read-only array.  If MD_CHANGE_PENDING is
+>> > set for a raid5 array, all returned IO will be hold on a list till the
+>> > bit is clear. But recovery nevery clears this bit, the IO is always in
+>> > pending state and nevery finish. This has bad effects like upper layer
+>> > can't get an IO error and the array can't be stopped.
+>> >
+>> > Signed-off-by: Shaohua Li <shli@fb.com>
+>> > ---
+>> >  drivers/md/md.c | 1 +
+>> >  1 file changed, 1 insertion(+)
+>> >
+>> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+>> > index 95824fb..c596b73 100644
+>> > --- a/drivers/md/md.c
+>> > +++ b/drivers/md/md.c
+>> > @@ -8209,6 +8209,7 @@ void md_check_recovery(struct mddev *mddev)
+>> >  			md_reap_sync_thread(mddev);
+>> >  			clear_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>> >  			clear_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+>> > +			clear_bit(MD_CHANGE_PENDING, &mddev->flags);
+>> >  			goto unlock;
+>> >  		}
+>> >=20=20
+>> > --=20
+>> > 1.8.1
+>>=20
+>> Hi,
+>>  I can see that clearing MD_CHANGE_PENDING there is probably correct -
+>>  bug introduced by
+>>    Commit: c3cce6cda162 ("md/raid5: ensure device failure recorded befor=
+e write request returns.")
+>>=20
+>>  However I don't understand your reasoning.  You say that the array is
+>>  marked as read-only, but I don't see how that would happen.  What
+>>  causes the array to be marked "read-only"?
 >
-> I blame it because of bisect - I revert that patch and the issue goes
-> away.
->
-> I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
-> see the bio too large. I revert it and it goes away.
+> It's set read-only by mdadm. I didn't look carefully, but looks there is
+> disk failure event, mdadm is invoked automatically by some background
+> daemon. It's a ubuntu distribution.
 
-Well that's pretty convincing - thanks.
-And as you say - it is tagged for -stable so really needs to be fixed.
+Thanks.
+This raises a couple of questions.
 
-Stares at the code again.  And again.
+1/ What should md_set_readonly do if it finds that MD_CHANGE_PENDING is
+   set?
+  Maybe it should wait for md_check_recovery to get run which should
+  clear the bit, after probably writing out the metadata.
 
-Ahhh.  that patch moved the
-  blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
-to after
- disk_stack_limits(...);
+2/ Why didn't md_check_recovery already do that before mdadm had a
+   chance to set the array read-only?
+  I guess that is just a timing thing.  md_check_recovery could be
+  delayed, and mdadm could get called by udev rather quickly.
 
-That is wrong.
+I think I'll get md_set_readonly to
+	wait_event(mddev->sb_wait,
+		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
 
-Could you confirm that this fixes your test?
+because I think that is the right thing to do.  But if the array is
+already read-only that won't help, so I'll still need you patch.
 
-Thanks,
+Would you be able to test that the following patch (without your patch)
+also fixes the symptom?
+
+Thanks.
 NeilBrown
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 4a13c3cb940b..0875e5e7e09a 100644
-=2D-- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -431,12 +431,6 @@ static int raid0_run(struct mddev *mddev)
- 		struct md_rdev *rdev;
- 		bool discard_supported =3D false;
+From=20a0a21b57523c41e87e0a50333b15f6c7ca02d714 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.com>
+Date: Thu, 24 Sep 2015 14:00:51 +1000
+Subject: [PATCH] md: wait for pending superblock updates before switching to
+ read-only
+
+If a superblock update is pending, wait for it to complete before
+letting md_set_readonly() switch to readonly.
+Otherwise we might lose important information about a device having
+failed.
+
+Reported-by: Shaohua Li <shli@fb.com>
+Signed-off-by: NeilBrown <neilb@suse.com>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 23651bf8dd80..9882f70f45e1 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5432,6 +5432,8 @@ static int md_set_readonly(struct mddev *mddev, struc=
+t block_device *bdev)
+ 	mddev_unlock(mddev);
+ 	wait_event(resync_wait, !test_bit(MD_RECOVERY_RUNNING,
+ 					  &mddev->recovery));
++	wait_event(mddev->sb_wait,
++		   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+ 	mddev_lock_nointr(mddev);
 =20
-=2D		rdev_for_each(rdev, mddev) {
-=2D			disk_stack_limits(mddev->gendisk, rdev->bdev,
-=2D					  rdev->data_offset << 9);
-=2D			if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
-=2D				discard_supported =3D true;
-=2D		}
- 		blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_write_same_sectors(mddev->queue, mddev->chunk_sectors);
- 		blk_queue_max_discard_sectors(mddev->queue, mddev->chunk_sectors);
-@@ -445,6 +439,12 @@ static int raid0_run(struct mddev *mddev)
- 		blk_queue_io_opt(mddev->queue,
- 				 (mddev->chunk_sectors << 9) * mddev->raid_disks);
-=20
-+		rdev_for_each(rdev, mddev) {
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset << 9);
-+			if (blk_queue_discard(bdev_get_queue(rdev->bdev)))
-+				discard_supported =3D true;
-+		}
- 		if (!discard_supported)
- 			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
- 		else
+ 	mutex_lock(&mddev->open_mutex);
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -132,18 +126,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWA2WSAAoJEDnsnt1WYoG5HJwP/jsaMwZ13BvGvOjGTKOahCCw
-9kkVPBWlit/7EjixxT5DdSU9KzbHTI/4FB92r5hShFBNFfFwMCo+HaGemuaOkD/X
-g+aMRUa9FTvpj9uozi4qBrXQ99WGMwTUlpWJXzl37myLXEXC3ixXhAJmm/dPHsCM
-1wKkS5hw4ow3ahnFq8SsvFTrWIKZvQERPAa5/e6jzMHErA0sysf5YA2dKxtdKsAs
-uyil7+Ftp6twXPYmLm1P+o+ObNze5dBAnB452f3Z0jv/xKUif4r45ES/a5dHX5pE
-eeuR+ne8bhOV/VEtxp1/2tst8XMY89/cRrsGNd1LJ6xr6jipjqkgNCw6TrpFFYtT
-OD3zCCOx04UgcIuzrzAyfBhR6CemnFllb7cQvdydUS1uoc+39AquTs2EEGS68UOu
-nYvAPkVVgcqO016023+u7S8/iXml9+JwJ/acFp3QwpLe1/Y1ZSJDgB6UXNqDtb3o
-Z/+Ry4KUg+aD61Q3foizUmFv5JttDMsCDlfE34pk4ZbzzNQoJbIIDUrkqKgnICRy
-qM0eQeerS8f5jS3EXt12emP3+3+wBlJ1Ong8wTXoAQ5TgXg841/lYv/Nca4T0oMX
-34tiw2TfHllAMas0VhWRnxeamY2EzWS1B8e3BM0ZZYvC3efUJyKGaBUqlF1lAVVb
-H+I3Sjxduj6jnkcFwtWI
-=+SKa
+iQIcBAEBCAAGBQJWA3YpAAoJEDnsnt1WYoG5zUsQAJs6MkAsYVJwVmLPv1k3CqmX
+eEc0Z7+YlZH0DHUUSZ9be55ZqJ3uvmP4/WUtaAEAy0mMckyFrMu989WIlbQcFjFz
+5y4LEKBDqUWT3w3kUOIH+4jztrtgqCpbdMoiODybfKp9ZOgB1Ffr056t7pnSoOLV
+JuTGfjO+uYrnfrey3E/A0hQkAHxLEJvll4C8E63B6Aas3oPQZtyWiCigdJDz5FE5
+IVhI7QHr0+r9d/rB7LO/xP1PvxJV+WYD4eODmUvmHGR0K0aU5TOvi4moGelP7Zqi
+B/YmHpe/Dtv9OQ/UG5rqBfIbUuaM1Gp1CShwA9J2/9kj8HU3OLFb8XVmIrU2ED36
+wsrdG8I0HuqFUVcUeR3/KoUb4quLMekE2GG5FhBwhFPuuHb+ENIdn8GIyb7ykApk
+3liYqe5uQ+DXmhssld/daRcZ6qge8kYuX6paJhRXo+rooBRvkRE5QLdzhClqpQ0m
+SdcZXADj2tHcFLRRBrGF0U+Dtft8lOWIsSKY7a9tdgAmshyvzuRBTYHHju8GPMqr
+mRMkBqo76/Nzduj+Edbx3uuHJL5FBZc9I78dzLgJH0wvNvj0raDBrXYzpdAuAFn8
+MdEyaBtKv+ryrWZ+0xZtJz/VcPx9aDMNCMrlRhlZ1CnUZcTIahS9Jchp2RWwR0NV
+/iVY0pMNxXn1Hg0LsMpj
+=z3H4
 -----END PGP SIGNATURE-----
 --=-=-=--
