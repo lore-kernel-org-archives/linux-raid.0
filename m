@@ -1,158 +1,103 @@
-From: mike@nerdcore.net
-Subject: RAID5 Recovery From NAS With 4x3TB SATA Disks
-Date: Thu, 24 Sep 2015 08:41:59 -0400
-Message-ID: <bc6f920d307275a8dc69fbcd8870c672.squirrel@nerdcore.net>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: Bad raid0 bio too large problem
+Date: Thu, 24 Sep 2015 08:59:56 -0400
+Message-ID: <wrfjwpvgvupf.fsf@redhat.com>
+References: <wrfjoagucvyq.fsf@redhat.com>
+	<87k2rhyiqe.fsf@notabene.neil.brown.name>
+	<wrfjvbb12xl8.fsf@redhat.com>
+	<87io70wmst.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87io70wmst.fsf@notabene.neil.brown.name> (Neil Brown's message
+	of "Thu, 24 Sep 2015 12:53:06 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, yizhan@redhat.com
 List-Id: linux-raid.ids
 
-I am attempting to recover some data from a RAID-5 NAS enclosure on my PC.
-A number of things were already done wrong, but I am hopeful to recover at
-least some of the data from the array.
+Neil Brown <neilb@suse.de> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>
+>> Neil Brown <neilb@suse.de> writes:
+>>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>>>
+>>>> Hi Neil,
+>>>>
+>>>> I think we have some bad side effects with this patch:
+>>>>
+>>>> commit 199dc6ed5179251fa6158a461499c24bdd99c836
+>>>> Author: NeilBrown <neilb@suse.com>
+>>>> Date:   Mon Aug 3 13:11:47 2015 +1000
+>>>>
+>>>>     md/raid0: update queue parameter in a safer location.
+>>>>     
+>>>>     When a (e.g.) RAID5 array is reshaped to RAID0, the updating
+>>>>     of queue parameters (e.g. max number of sectors per bio) is
+>>>>     done in the wrong place.
+>>>>     It should be part of ->run, but it is actually part of ->takeover.
+>>>>     This means it happens before level_store() calls:
+>>>>     
+>>>>         blk_set_stacking_limits(&mddev->queue->limits);
+>>>>     
+>>>> Running the '03r0assem' test suite fills my kernel log with output like
+>>>> below. Yi Zhang also had issues where writes failed too.
+>>>>
+>>>> robably something we need to resolve for 4.2-final or revert the
+>>>> offending patch.
+>>>>
+>>>> Cheers,
+>>>> Jes
+>>>>
+>>>> md: bind<loop0>
+>>>> md: bind<loop1>
+>>>> md: bind<loop2>
+>>>> md/raid0:md2: md_size is 116736 sectors.
+>>>> md: RAID0 configuration for md2 - 1 zone
+>>>> md: zone0=[loop0/loop1/loop2]
+>>>>       zone-offset=         0KB, device-offset=         0KB, size=     58368KB
+>>>>
+>>>> md2: detected capacity change from 0 to 59768832
+>>>> bio too big device loop0 (296 > 255)
+>>>> bio too big device loop0 (272 > 255)
+>>>
+>>> 1/ Why do you blame that particular patch?
+>>>
+>>> 2/ Where is that error message coming from?  I cannot find "bio too big"
+>>>   in the kernel (except in a comment).
+>>>   Commit: 54efd50bfd87 ("block: make generic_make_request handle
+>>> arbitrarily sized bios")
+>>>   removed the only instance of the error message that I know of.
+>>>
+>>> Which kernel exactly are you testing?
+>>
+>> I blame it because of bisect - I revert that patch and the issue goes
+>> away.
+>>
+>> I checked out 199dc6ed5179251fa6158a461499c24bdd99c836 in Linus' tree,
+>> see the bio too large. I revert it and it goes away.
+>
+> Well that's pretty convincing - thanks.
+> And as you say - it is tagged for -stable so really needs to be fixed.
+>
+> Stares at the code again.  And again.
+>
+> Ahhh.  that patch moved the
+>   blk_queue_max_hw_sectors(mddev->queue, mddev->chunk_sectors);
+> to after
+>  disk_stack_limits(...);
+>
+> That is wrong.
+>
+> Could you confirm that this fixes your test?
 
-The array was created on a Synology NAS enclosure consisting of 4 x 3TB
-drives in a RAID-5 configuration. I gather everything was working well
-until a power surge or brownout which caused one drive to die completely
-(disk #0) and was likely the cause of some read errors on the other disks.
+I refuse to do that! .... since Xiao beat me to it! Thanks!
 
-When the owner of the array noticed the disk failure, the wrong disk was
-replaced to cause a rebuild! Disk #2 was replaced instead of disk #0, so
-the NAS would never have succeeded at a rebuild operation. At this point
-my friend came to me for assistance and I began pulling the drives from
-the NAS into my PC running Ubuntu 14.04 (amd64) to attempt to restore at
-least some of the files.
+I was half way bisecting my way through it last night. For some reason
+the problem was reproducible in 4.2 if I applied the offending patch,
+but not in 4.3-rc2.
 
-I cannot get disk #0 to spin at all. Disk #1 and disk #3 appear to
-automatically assemble into the array in the correct slots.
+Any chance you'll push these to your git tree in the near future?
 
-Disk #2 appears to mdadm as "disk #32770".
-
-Here is the output of `mdadm --examine` on each of the RAID partitions,
-and the contents of /proc/mdstat when the drives are spun up inside my PC:
-
-
-/dev/sdb5:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
-           Name : DiskStation:2
-  Creation Time : Thu Apr  3 13:41:58 2014
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
-     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
-  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 46277a0d:f75e3612:911d4e5f:50b46678
-
-    Update Time : Fri May 29 08:20:37 2015
-       Checksum : cd5c1a5f - correct
-         Events : 1908912
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 32770
-   Array State : .A.A ('A' == active, '.' == missing)
-
-/dev/sdc5:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
-           Name : DiskStation:2
-  Creation Time : Thu Apr  3 13:41:58 2014
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
-     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
-  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : fa5bf9cd:629d2a75:7e3d9ab3:6189e4f9
-
-    Update Time : Sun May 31 11:05:20 2015
-       Checksum : c69bcc20 - correct
-         Events : 1908922
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 1
-   Array State : AA.A ('A' == active, '.' == missing)
-
-/dev/sdd5:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : d06e7cf6:05704b33:ea53fc30:0c087b55
-           Name : DiskStation:2
-  Creation Time : Thu Apr  3 13:41:58 2014
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 5851063680 (2790.00 GiB 2995.74 GB)
-     Array Size : 8776594944 (8370.01 GiB 8987.23 GB)
-  Used Dev Size : 5851063296 (2790.00 GiB 2995.74 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 0da09e5b:b3557017:dec76908:02543203
-
-    Update Time : Sun May 31 11:05:20 2015
-       Checksum : 54a41d85 - correct
-         Events : 1908922
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 3
-   Array State : AA.A ('A' == active, '.' == missing)
-
-/proc/mdstat:
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md2 : inactive sdb5[2](S) sdc5[1](S) sdd5[3](S)
-      8776595520 blocks super 1.2
-
-
-I've read a bunch of forum posts and articles detailing a number of
-techniques to try and recover some of the data. I gather from these
-Synology instructions that once the array is assembled I must use
-`vgchange` to register a Volume Group:
-https://www.synology.com/en-us/knowledgebase/faq/579
-
-This wiki page gave me the idea of using `mdadm --create --assume-clean
-...` to bring the array to a state where I might be able to see some of
-its contents: https://raid.wiki.kernel.org/index.php/RAID_Recovery
-
-I'm also familiar with concerns over using large disks in a RAID-5
-configuration and would like to be clear that this was not my idea and I
-am simply trying to help a friend retrieve at least some of the files from
-the array - I do not expect complete recovery will be possible:
-http://www.zdnet.com/article/why-raid-5-stops-working-in-2009/
-
-I attempted to bring this array up with this command:
-
-  mdadm --create --assume-clean --level=5 --raid-devices=4 --chunk=64
-/dev/md2 missing /dev/sdc5 /dev/sdb5 /dev/sdd5
-
-This appeared to bring up a new array with 0 Events. I've restored my
-backups and can try again from the best state I have to work with.
-
-All disks experienced some read errors while creating the backups, and I
-realize complete recovery will be impossible, but if I could retrieve any
-data we would be pleased with that.
-
-Any help greatly appreciated.
-
+Thanks!
+Jes
