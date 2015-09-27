@@ -1,48 +1,59 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Unable to assemble RAID6 after Ubuntu>Arch switch
-Date: Sat, 26 Sep 2015 19:01:04 +0100
-Message-ID: <CADNH=7H9DcEFEEOmcMjn1fS-2efPB_eXVN8zxCoVCHRaCpLR3Q@mail.gmail.com>
-References: <CADNH=7Hr6HXVPQP6-V8Jkr9aSwqHojoWApjA7ZKnQOPL0inUYw@mail.gmail.com>
- <CAETWcfsw2M3JkNmE3M3nsr0_M4N86ta+kaRo62OgK+Ft0J5iiw@mail.gmail.com>
- <CADNH=7E796sv+A4PDb2n=EJomAR8KPRoGt-=+52BYfrELBFZDg@mail.gmail.com>
- <CAETWcfvF1o8mNVw1t-=7WNZZTz774eTnj1tG6UckrXbDvWxdXg@mail.gmail.com>
- <CADNH=7Eyy-K3ivHAt_oYtTWdkeSDA7itZ+1Y+-EHdz8Y9_U0ww@mail.gmail.com>
- <CAETWcftkkJr_MjP5ReBsOCW5ioCu81KQcdwr_1-=qUD25e1ssw@mail.gmail.com>
- <CADNH=7HEpag54Z7+aey+skWiThL93H2sgPpxVS77pqp4R_1NAQ@mail.gmail.com> <56068280.2090009@turmel.org>
+From: Guillaume Paumier <guillaume.paumier@gmail.com>
+Subject: Re: Guidance on reshape stuck at 0% after --grow
+Date: Sat, 26 Sep 2015 17:59:36 -0700
+Message-ID: <CAKWBTuFTANRTWP692hf9Et_8GPvx=uLvYowKRCLdhQPMqhCKKg@mail.gmail.com>
+References: <CAKWBTuFk4Tz20B4aZHgPF3FoEYXDqwQeKeAwN3Nt-cSAopUQ0Q@mail.gmail.com>
+	<alpine.DEB.2.02.1509221224470.8750@uplift.swm.pp.se>
+	<CAKWBTuG2AngM6joiODt15Qe+HAXfF6OnJVD-HNuNKikfyv-6MQ@mail.gmail.com>
+	<5602EB5E.6010703@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56068280.2090009@turmel.org>
+In-Reply-To: <5602EB5E.6010703@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Alexander Afonyashin <a.afonyashin@madnet-team.ru>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26 September 2015 at 12:33, Phil Turmel <philip@turmel.org> wrote:
-> On 09/26/2015 08:16 AM, Mathias Bur=C3=A9n wrote:
->> Hi,
->>
->> Would it be possible to somehow manually assemble array under Arch?
->> Since the Arch kernel doesn't see /dev/sda1 and /dev/sdb1 (fdisk see=
-s
->> them but they do not appear in /dev) I can't assemble arrays.
->> partprobe doesn't help. Any ideas why the partitions wouldn't popula=
-te in /dev ?
->
-> Is there any chance you've managed to get a GPT label onto those disk=
-s?
->  And your arch kernel has omitted GPT support?
->
-> Phil
->
+Hello,
 
-Good idea Phil, but it's enabled by default:
+On 23 September 2015 at 11:11, Wols Lists <antlists@youngman.org.uk> wrote:
+>
+> Read up on loopback devices. Sorry, never done it, can't help
+> personally, but it sticks a ram-disk layer between mdadm and the actual
+> disk.
+>
+> So the disks themselves are read-only, and you can try things out to see
+> what works. If it fails, you throw the loopback layer away, if it works
+> you can run it on the disk itself.
 
-$ zgrep CONFIG_EFI_PARTITION /proc/config.gz
-CONFIG_EFI_PARTITION=3Dy
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you; that seems similar to what is described at
+https://raid.wiki.kernel.org/index.php/Recovering_a_failed_software_RAID#Making_the_harddisks_read-only_using_an_overlay_file
+, and was also suggested in
+http://www.spinics.net/lists/raid/msg49669.html
+
+It seems I'm running into another issue, described at the bottom of
+https://raid.wiki.kernel.org/index.php/RAID_Recovery#Restore_array_by_recreating_.28after_multiple_device_failure.29
+:
+
+"If upon running the above with the --size parameter you get, as one
+of the authors of this page did, an error such as: "mdadm: /dev/sdb1
+is smaller than given size. xxxK < yyyK + metadata", you may have
+stumbled upon a problem where the array was initially created with an
+earlier version of mdadm that reserved less device space. The solution
+seems to be to find an earlier version of mdadm to run with the
+creation command above"
+
+This seems consistent with the errors I'm getting, in the form:
+mdadm: /dev/sdc1 is smaller than given size. 3906885632K < 3907016448K
++ metadata
+
+I found the list of previous versions of mdadm at
+https://www.kernel.org/pub/linux/utils/raid/mdadm/ , but I'm not sure
+which one to pick, and how easy it is to use those earlier versions.
+According to my logs, I originally created the array in late July
+2013. I'm not afraid of compiling it from source, but any additional
+information would be helpful.
+
+-- 
+Guillaume Paumier
