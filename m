@@ -1,63 +1,38 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/8] raid5-cache fixes
-Date: Wed, 30 Sep 2015 15:36:43 +1000
-Message-ID: <87y4folb84.fsf@notabene.neil.brown.name>
-References: <cover.1441221530.git.shli@fb.com>
+Subject: Re: raid5-cache I/O path improvements V2
+Date: Wed, 30 Sep 2015 15:39:52 +1000
+Message-ID: <87vbaslb2v.fsf@notabene.neil.brown.name>
+References: <1442038638-6947-1-git-send-email-hch@lst.de> <D21C6812.74CB%shli@fb.com> <87a8so6t8f.fsf@notabene.neil.brown.name> <20150915215458.GA1943628@devbig084.prn1.facebook.com> <20150928140127.GA30927@lst.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1441221530.git.shli@fb.com>
+In-Reply-To: <20150928140127.GA30927@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+To: Shaohua Li <shli@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Shaohua Li <shli@fb.com> writes:
+Christoph Hellwig <hch@lst.de> writes:
 
-> Fix some bugs, improve performance and add trim/resync support.
->
-> Thanks,
-> Shaohua
->
-> Christoph Hellwig (1):
->   raid5-cache: move functionality out of __r5l_set_io_unit_state
->
-> Shaohua Li (7):
->   md: fix feature map check
->   raid5: fix build error
->   raid5-cache: switching to state machine for log disk cache flush
->   raid5-cache: fix a user-after-free bug
->   raid5-cache: optimize FLUSH IO with log enabled
->   md: skip resync for raid array with journal
->   raid5-cache: add trim support for log
->
->  drivers/md/md.c          |   6 +-
->  drivers/md/md.h          |   1 +
->  drivers/md/raid5-cache.c | 254 ++++++++++++++++++++++++++++-------------=
-------
->  drivers/md/raid5.c       |  17 +++-
->  drivers/md/raid5.h       |   1 +
->  5 files changed, 175 insertions(+), 104 deletions(-)
->
-> --=20
-> 1.8.1
+> So the summary is that for now you want me to resend with a patch
+> to opt into using FUA?
 
-Thanks.
-I have applied all except
->   raid5-cache: add trim support for log
-which I have replied to separately.
-I have also applied the other two patches you sent separately.
+I'd like to avoid "opt in" if at all possible.
+Shoahua measured that using "FUA" for all writes to the journal
+hurt performance on at least one device.  Do you have a different device
+where it demonstrably helps?
+If there any chance of automatically detecting which is which?
 
-I've made a number of white-space fixes throughout the series,
-and I've merged Christoph's "port to 4.3-rc" patch into various places
-in the series.
+>
+> Also do you have a git tree as a baseline somewhere?  I've been collecting
+> the patches you've sent, but with increasing time I fear I might have
+> missed something.
 
-This is all in the 'devel' branch of git://neil.brown.name/md/
+(almost) all at git://neil.brown.name/md in 'devel' branch.
 
 Thanks,
 NeilBrown
@@ -68,18 +43,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWC3TrAAoJEDnsnt1WYoG523wP/38DSkLhLpy6iO4Jc/uwM/1a
-sevvqcn3TZjgukMQy4pr2D7UR556upFFwESurKXWGB1uo4iGWxmCBJ4rEnii8amj
-FEX+cW4DoWy8iw4aPuiSNeR0ptf4v2Urm/duiLEp8pYxhvFAmaIoziJMBZaW9/g8
-37f9ZTgmfOtDlNiADg60Icc+TdfaS5YMfZwPfkAExDD/lYte+uSP5+hZnqlADQRB
-kJPbLQOGh2vcLRTJayxZ9+WSPdReXQZiPNEYxgkyWE8D7UCnO2KA7h4W+aEgVrnQ
-W68299Lk4yjUuYEj2kJOwzDu1K2UaKSW0QsAph7/zz36ckc0hTy1gg/PqIescTZc
-y092qPQh6Lwi/vejG5YwsqFeXYuRhsJpUYcZeHImvhlueXigr2URwmbjPl8axSEm
-CqOxCBzm16UPI40N/oOtcKCfuO/AVhfHt7OW9gI8lxCW6P9kbfQN9/owsc/zRJrH
-+aHMmsmeV4UlROqT5EznANfcoAqBN/JCFGXPNbzdsaJkFtjyvtpBDetLbyagZkEo
-eZjAAkIPoVkOTivIVCI/CGRTuN7vLjItgyP+AlU48jEcYb104flTSirbslqNvXQB
-trVrGBG7GILF383ma/7lKej0J906YoZw/CkjJgcCpXLtDXEoDPVWbDjcEoXiQrf/
-zZVUWrMc+uUg2vrUv8Ov
-=Kpt3
+iQIcBAEBCAAGBQJWC3WoAAoJEDnsnt1WYoG5JIkQAJ5+amQTLkjZf1GdLSJC5HNF
+CZEJpdenojzm9OGEu4zxT0JhQ5CFJ8Uk5TNdOxEbxIzjs9+N+I2XPYGgtjos6TqE
+vmLthhyNzxBDWF3ubwJoSm1BYUn7Po/YOLw8BZZXksCRoI+VCEJ6vpDSv2lykU5a
+u8W9bQhWYtFTYg5pP9dEYQoL10teY2OlarfaEeKcmRw6HF3RGSSsGKvZsq0EYhnZ
+em2K/iLmN1DUp1TwDqWQIHlEOu9ARrIj4lg/xut7cayNgTt1FvhYHswc02ACcz5u
+mRaj9Np6CCsRbNLYQljwY/FMYpAQRHA32yrGzgJNGP15NhPmaCfU5fajftAdolb8
+ihh1K8qvnmZYDWj88eA6oX7MKBLQ427WcACA1n/33Icp4buGn/OTD6rYhVMsc4+G
+miV9QkP3vULMHFZtlq5SdXBH+p+DNcjpD7R/1G3o/oCnIfHH4LVXky8mOykLS4Ui
+oYcX+hLhvb/T+gTUdGDtl9WdS+M6fdQKNBuBz9ehhGeqSJ6MpkFdzXA8fJ7hxknl
+kDo+IV8oK7h3OGfogHsSpCInlul5sYbM0eqU0Hth92AnUM2O2PuvpzXlBXaTjrTb
+eHAN/xwTcvPYeJD3pxtXK3WfxeXZrbHjTVX0VIcPBYGG0e6J3+HX8If7T73lXhxG
+CyAM0YYa91wzszOEkOQ1
+=Ey3n
 -----END PGP SIGNATURE-----
 --=-=-=--
