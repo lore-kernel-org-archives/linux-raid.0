@@ -1,79 +1,86 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 3/3] raid5-cache: IO error handling
-Date: Wed, 30 Sep 2015 16:15:40 -0700
-Message-ID: <e9c915cf18d81f76e122a2533baeb68c56186d8f.1443653794.git.shli@fb.com>
-References: <cover.1443653794.git.shli@fb.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/5] fs: Verify access of user towards block device file
+ when mounting
+Date: Wed, 30 Sep 2015 19:42:15 -0400
+Message-ID: <20150930234215.GA24127@redhat.com>
+References: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
+ <1443644116-41366-2-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1443653794.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1443644116-41366-2-git-send-email-seth.forshee@canonical.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are 3 places the raid5-cache dispatches IO. The discard IO error
-doesn't matter, so we ignore it. The superblock write IO error can be
-handled in MD core. The remaining are log write and flush. When the IO
-error happens, we simply fail all raid disks and continue the stripe
-state machine. The MD/raid5 core can handle it (for example, mark all
-disks faulty, report bio error and so on).
+On Wed, Sep 30 2015 at  4:15pm -0400,
+Seth Forshee <seth.forshee@canonical.com> wrote:
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+> When mounting a filesystem on a block device there is currently
+> no verification that the user has appropriate access to the
+> device file passed to mount. This has not been an issue so far
+> since the user in question has always been root, but this must
+> be changed before allowing unprivileged users to mount in user
+> namespaces.
+> 
+> To fix this, add an argument to lookup_bdev() to specify the
+> required permissions. If the mask of permissions is zero, or
+> if the user has CAP_SYS_ADMIN, the permission check is skipped,
+> otherwise the lookup fails if the user does not have the
+> specified access rights for the inode at the supplied path.
+> 
+> Callers associated with mounting are updated to pass permission
+> masks to lookup_bdev() so that these mounts will fail for an
+> unprivileged user who lacks permissions for the block device
+> inode. All other callers pass 0 to maintain their current
+> behaviors.
+> 
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>  drivers/md/bcache/super.c |  2 +-
+>  drivers/md/dm-table.c     |  2 +-
+>  drivers/mtd/mtdsuper.c    |  6 +++++-
+>  fs/block_dev.c            | 18 +++++++++++++++---
+>  fs/quota/quota.c          |  2 +-
+>  include/linux/fs.h        |  2 +-
+>  6 files changed, 24 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index e76ed003769e..35bb3ea4cbe2 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -380,7 +380,7 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
+>  	BUG_ON(!t);
+>  
+>  	/* convert the path to a device */
+> -	bdev = lookup_bdev(path);
+> +	bdev = lookup_bdev(path, 0);
+>  	if (IS_ERR(bdev)) {
+>  		dev = name_to_dev_t(path);
+>  		if (!dev)
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index afc3b6b..430ce5c 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -223,7 +223,16 @@ static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
- 	io->state = state;
- }
- 
--/* XXX: totally ignores I/O errors */
-+static void r5l_log_io_error(struct r5l_log *log)
-+{
-+	struct md_rdev *rdev;
-+
-+	rcu_read_lock();
-+	rdev_for_each_rcu(rdev, log->rdev->mddev)
-+		md_error(log->rdev->mddev, rdev);
-+	rcu_read_unlock();
-+}
-+
- static void r5l_log_endio(struct bio *bio)
- {
- 	struct r5l_io_unit *io = bio->bi_private;
-@@ -232,6 +241,9 @@ static void r5l_log_endio(struct bio *bio)
- 
- 	bio_put(bio);
- 
-+	if (bio->bi_error)
-+		r5l_log_io_error(log);
-+
- 	if (!atomic_dec_and_test(&io->pending_io))
- 		return;
- 
-@@ -594,6 +606,9 @@ static void r5l_log_flush_endio(struct bio *bio)
- 	struct r5l_io_unit *io;
- 	struct stripe_head *sh;
- 
-+	if (bio->bi_error)
-+		r5l_log_io_error(log);
-+
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	list_for_each_entry(io, &log->flushing_ios, log_sibling) {
- 		while (!list_empty(&io->stripe_list)) {
-@@ -681,6 +696,7 @@ static void r5l_write_super_and_discard_space(struct r5l_log *log,
- 			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
- 	}
- 
-+	/* discard IO error really doesn't matter, ignore it */
- 	if (log->last_checkpoint < end) {
- 		blkdev_issue_discard(bdev,
- 				log->last_checkpoint + log->rdev->data_offset,
--- 
-2.4.6
+Given dm_get_device() is passed @mode why not have it do something like
+you did in blkdev_get_by_path()? e.g.:
 
+> diff --git a/fs/block_dev.c b/fs/block_dev.c
+> index 26cee058dc02..54d94cd64577 100644
+> --- a/fs/block_dev.c
+> +++ b/fs/block_dev.c
+> @@ -1394,9 +1394,14 @@ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
+>  					void *holder)
+>  {
+>  	struct block_device *bdev;
+> +	int perm = 0;
+>  	int err;
+>  
+> -	bdev = lookup_bdev(path);
+> +	if (mode & FMODE_READ)
+> +		perm |= MAY_READ;
+> +	if (mode & FMODE_WRITE)
+> +		perm |= MAY_WRITE;
+> +	bdev = lookup_bdev(path, perm);
+>  	if (IS_ERR(bdev))
+>  		return bdev;
+>  
