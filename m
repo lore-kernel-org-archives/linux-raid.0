@@ -1,97 +1,87 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 5/5] Smack: Handle labels consistently in untrusted mounts
-Date: Wed, 30 Sep 2015 15:15:14 -0500
-Message-ID: <1443644116-41366-6-git-send-email-seth.forshee@canonical.com>
-References: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/3] raid5-cache: add trim support for log
+Date: Wed, 30 Sep 2015 16:15:38 -0700
+Message-ID: <9ee5464d20a78732ba4dda9c0601ea10d47f0e03.1443653794.git.shli@fb.com>
+References: <cover.1443653794.git.shli@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <cover.1443653794.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Casey Schaufler <casey@schaufler-ca.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-The SMACK64, SMACK64EXEC, and SMACK64MMAP labels are all handled
-differently in untrusted mounts. This is confusing and
-potentically problematic. Change this to handle them all the same
-way that SMACK64 is currently handled; that is, read the label
-from disk and check it at use time. For SMACK64 and SMACK64MMAP
-access is denied if the label does not match smk_root. To be
-consistent with suid, a SMACK64EXEC label which does not match
-smk_root will still allow execution of the file but will not run
-with the label supplied in the xattr.
+Since superblock is updated infrequently, we do a simple trim of log
+disk (a synchronous trim)
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- security/smack/smack_lsm.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ drivers/md/raid5-cache.c | 44 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 43 insertions(+), 1 deletion(-)
 
-diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
-index 621200f86b56..bee0b2652bf4 100644
---- a/security/smack/smack_lsm.c
-+++ b/security/smack/smack_lsm.c
-@@ -891,6 +891,7 @@ static int smack_bprm_set_creds(struct linux_binprm *bprm)
- 	struct inode *inode = file_inode(bprm->file);
- 	struct task_smack *bsp = bprm->cred->security;
- 	struct inode_smack *isp;
-+	struct superblock_smack *sbsp;
- 	int rc;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index a02f9ce..afc3b6b 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -654,6 +654,48 @@ static void r5l_kick_io_unit(struct r5l_log *log)
+ }
  
- 	if (bprm->cred_prepared)
-@@ -900,6 +901,10 @@ static int smack_bprm_set_creds(struct linux_binprm *bprm)
- 	if (isp->smk_task == NULL || isp->smk_task == bsp->smk_task)
- 		return 0;
- 
-+	sbsp = inode->i_sb->s_security;
-+	if (sbsp->smk_flags & SMK_SB_UNTRUSTED && isp->smk_task != sbsp->smk_root)
-+		return 0;
+ static void r5l_write_super(struct r5l_log *log, sector_t cp);
++static void r5l_write_super_and_discard_space(struct r5l_log *log,
++	sector_t end)
++{
++	struct block_device *bdev = log->rdev->bdev;
++	struct mddev *mddev;
 +
- 	if (bprm->unsafe & (LSM_UNSAFE_PTRACE | LSM_UNSAFE_PTRACE_CAP)) {
- 		struct task_struct *tracer;
- 		rc = 0;
-@@ -1703,6 +1708,7 @@ static int smack_mmap_file(struct file *file,
- 	struct task_smack *tsp;
- 	struct smack_known *okp;
- 	struct inode_smack *isp;
-+	struct superblock_smack *sbsp;
- 	int may;
- 	int mmay;
- 	int tmay;
-@@ -1714,6 +1720,10 @@ static int smack_mmap_file(struct file *file,
- 	isp = file_inode(file)->i_security;
- 	if (isp->smk_mmap == NULL)
- 		return 0;
-+	sbsp = file_inode(file)->i_sb->s_security;
-+	if (sbsp->smk_flags & SMK_SB_UNTRUSTED &&
-+	    isp->smk_mmap != sbsp->smk_root)
-+		return -EACCES;
- 	mkp = isp->smk_mmap;
++	r5l_write_super(log, end);
++
++	if (!blk_queue_discard(bdev_get_queue(bdev)))
++		return;
++
++	/* discard destroy old data in log, so force a super update */
++	mddev = log->rdev->mddev;
++	/*
++	 * mddev->thread could be shut down already in raid array stop. At that
++	 * time, we should already lock reconfig_mutex
++	 * */
++	if (!mddev->thread) {
++		WARN_ON(!mddev_is_locked(mddev));
++		md_update_sb(mddev, 1);
++	} else {
++		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		md_wakeup_thread(mddev->thread);
++		wait_event(mddev->sb_wait,
++			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
++	}
++
++	if (log->last_checkpoint < end) {
++		blkdev_issue_discard(bdev,
++				log->last_checkpoint + log->rdev->data_offset,
++				end - log->last_checkpoint, GFP_NOIO, 0);
++	} else {
++		blkdev_issue_discard(bdev,
++				log->last_checkpoint + log->rdev->data_offset,
++				log->device_size - log->last_checkpoint,
++				GFP_NOIO, 0);
++		blkdev_issue_discard(bdev, log->rdev->data_offset, end,
++				GFP_NOIO, 0);
++	}
++}
++
++
+ static void r5l_do_reclaim(struct r5l_log *log)
+ {
+ 	struct r5l_io_unit *io, *last;
+@@ -709,7 +751,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+ 	 * here, because the log area might be reused soon and we don't want to
+ 	 * confuse recovery
+ 	 */
+-	r5l_write_super(log, last->log_start);
++	r5l_write_super_and_discard_space(log, last->log_start);
  
- 	tsp = current_security();
-@@ -3492,16 +3502,14 @@ static void smack_d_instantiate(struct dentry *opt_dentry, struct inode *inode)
- 			if (rc >= 0)
- 				transflag = SMK_INODE_TRANSMUTE;
- 		}
--		if (!(sbsp->smk_flags & SMK_SB_UNTRUSTED)) {
--			/*
--			 * Don't let the exec or mmap label be "*" or "@".
--			 */
--			skp = smk_fetch(XATTR_NAME_SMACKEXEC, inode, dp);
--			if (IS_ERR(skp) || skp == &smack_known_star ||
--			    skp == &smack_known_web)
--				skp = NULL;
--			isp->smk_task = skp;
--		}
-+		/*
-+		 * Don't let the exec or mmap label be "*" or "@".
-+		 */
-+		skp = smk_fetch(XATTR_NAME_SMACKEXEC, inode, dp);
-+		if (IS_ERR(skp) || skp == &smack_known_star ||
-+		    skp == &smack_known_web)
-+			skp = NULL;
-+		isp->smk_task = skp;
- 
- 		skp = smk_fetch(XATTR_NAME_SMACKMMAP, inode, dp);
- 		if (IS_ERR(skp) || skp == &smack_known_star ||
+ 	mutex_lock(&log->io_mutex);
+ 	log->last_checkpoint = last->log_start;
 -- 
-1.9.1
+2.4.6
 
