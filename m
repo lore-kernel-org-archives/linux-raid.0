@@ -1,13 +1,13 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] raid5-cache: add trim support for log
-Date: Thu, 01 Oct 2015 14:41:09 +1000
-Message-ID: <87pp0zjj4q.fsf@notabene.neil.brown.name>
-References: <cover.1443653794.git.shli@fb.com> <9ee5464d20a78732ba4dda9c0601ea10d47f0e03.1443653794.git.shli@fb.com>
+Subject: Re: [PATCH 2/3] md: don't export log device
+Date: Thu, 01 Oct 2015 14:45:32 +1000
+Message-ID: <87mvw3jixf.fsf@notabene.neil.brown.name>
+References: <cover.1443653794.git.shli@fb.com> <78d0cd55e9c1476869933454e06b3f74ad88ce9c.1443653794.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9ee5464d20a78732ba4dda9c0601ea10d47f0e03.1443653794.git.shli@fb.com>
+In-Reply-To: <78d0cd55e9c1476869933454e06b3f74ad88ce9c.1443653794.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
@@ -19,78 +19,46 @@ Content-Transfer-Encoding: quoted-printable
 
 Shaohua Li <shli@fb.com> writes:
 
-> Since superblock is updated infrequently, we do a simple trim of log
-> disk (a synchronous trim)
+> If there is IO error in log device, don't export it like other raid
+> disks. Otherwise we get kernel crash in different places since
+> rdev->bdev, rdev->mddev becomes NULL
 >
 > Signed-off-by: Shaohua Li <shli@fb.com>
 > ---
->  drivers/md/raid5-cache.c | 44 ++++++++++++++++++++++++++++++++++++++++++=
-+-
->  1 file changed, 43 insertions(+), 1 deletion(-)
+>  drivers/md/md.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index a02f9ce..afc3b6b 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -654,6 +654,48 @@ static void r5l_kick_io_unit(struct r5l_log *log)
->  }
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index f1cbb08..0b1d7ef 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2519,7 +2519,7 @@ state_store(struct md_rdev *rdev, const char *buf, =
+size_t len)
+>  		else
+>  			err =3D -EBUSY;
+>  	} else if (cmd_match(buf, "remove")) {
+> -		if (rdev->raid_disk >=3D 0)
+> +		if (rdev->raid_disk >=3D 0 || test_bit(Journal, &rdev->flags))
+>  			err =3D -EBUSY;
+>  		else {
+>  			struct mddev *mddev =3D rdev->mddev;
+> @@ -6040,7 +6040,7 @@ static int hot_remove_disk(struct mddev *mddev, dev=
+_t dev)
+>  	clear_bit(Blocked, &rdev->flags);
+>  	remove_and_add_spares(mddev, rdev);
 >=20=20
->  static void r5l_write_super(struct r5l_log *log, sector_t cp);
-> +static void r5l_write_super_and_discard_space(struct r5l_log *log,
-> +	sector_t end)
-> +{
-> +	struct block_device *bdev =3D log->rdev->bdev;
-> +	struct mddev *mddev;
-> +
-> +	r5l_write_super(log, end);
-> +
-> +	if (!blk_queue_discard(bdev_get_queue(bdev)))
-> +		return;
-> +
-> +	/* discard destroy old data in log, so force a super update */
-> +	mddev =3D log->rdev->mddev;
-> +	/*
-> +	 * mddev->thread could be shut down already in raid array stop. At that
-> +	 * time, we should already lock reconfig_mutex
-> +	 * */
-> +	if (!mddev->thread) {
-> +		WARN_ON(!mddev_is_locked(mddev));
-> +		md_update_sb(mddev, 1);
-> +	} else {
-> +		set_bit(MD_CHANGE_PENDING, &mddev->flags);
-> +		md_wakeup_thread(mddev->thread);
-> +		wait_event(mddev->sb_wait,
-> +			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-> +	}
+> -	if (rdev->raid_disk >=3D 0)
+> +	if (rdev->raid_disk >=3D 0 || test_bit(Journal, &rdev->flags))
+>  		goto busy;
+>=20=20
+>  	if (mddev_is_clustered(mddev))
+> --=20
+> 2.4.6
 
-I didn't like this.  It looks clumsy to me.
+I'd rather keep these details local to the RAID5 code...
 
-So I went to have a look at the code to understand why it was needed.
-I found that r5l_exit_log() was being called from free_conf().
-I didn't notice that before.
-
-=2D>free() is only supposed to free, not write anything.  It could be too
-late to write anything.
-
-You need to get the raid5_quiesce(1) call to stablise the array.  It can
-do the final r5l_do_reclaim().
-
-So it is OK for free_conf to call r5l_exit_log as long as it only
-deregisters the thread and frees the data structures.
-The "r5l_do_reclaim" needs to be moved out.
-
-I wonder where the md_update_sb() should go...
-
-We currently calls "stop_writes" and then "mddev_detach".
-So we shouldn't be writing anything by the time we get to mddev_detach,
-but in there we wait for writes to complete.  That looks wrong.
-
-I might move some of that stuff from mddev_detach to __md_stop_writes.
-Then md_stop_writes can call ->quiesce and then md_update_sb().  That is
-enough for raid5-cache to just call r5l_do_reclaim in raid5_quiesce, and
-have the md_update_sb() called at the right time.
-
-I'll see if i can make that work.
+Can we just have raid5_remove_disk return -EBUSY when an attempt is made
+to remove the Journal device?
 
 Thanks,
 NeilBrown
@@ -101,18 +69,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWDLlmAAoJEDnsnt1WYoG5icIP/RwtV4P38A6+zQim9ZoKd0Dn
-lMMUwQJi0e21mlRlMG8mGrde3hFTe7Zbe+ViuQUB7r0eVqsaDRzwpOuSnFZgLgwt
-vDDSh09+PrSxRms9v94XUr/IgrsTkhNrs60/6VvaXUZ8ThX6hH5qZR030/dQGHQK
-8cxosFgGmbhepdMZYvbBLMPEmix0r6SLCtvCCP3El2iZEJlZ+K5zBf/g2sFEbVhQ
-uyDsbA8LvCmLEJYDB18juIUYB2k7jPK7p20a+29OndG6AzBHczcPqok/Ov3++VzX
-PYsext9VMGLZ4fagIHSGnE1o0OyhDtk7kQYHgjxjFo4XnxcCc6rwxVwPZaEosQO+
-AO8Kx60e6G+vr3X/ZuBWCn6rgUXR37z/AJ8P6XdWQ7IgvIvbBYJ+vF/nqodRL34L
-pgxjAicKFfNzThgdTi4umfz5f1jNLEavImf8kV5ENILhkHrCO6O0hQonJngxWUjp
-07vILj7ZBsApQ/wMIT2mC+zuEkqchqZKeIHp8H99V60dTlzeq0Se8nfqLUwqL3b0
-t5BeqRjjAU1yXwUiBrdSAEshrLexEWDglISbqb1wTHHolmcuYzR4XUJY2xDIOwos
-P7kaqhiLafNduaL3lDJQJBEXw65m3HJe06Nkf5r4feIpfce6uUaHJc6nqMylxW/K
-IFFGhNn8BD3/w7CnIXWH
-=3x/X
+iQIcBAEBCAAGBQJWDLpsAAoJEDnsnt1WYoG5zYYP/1Kgr4jCyeOSBjaGA5CpxECD
+n7NN2zt9xc7oqs6NAFZrScGEUUgCdv5XVoY/66bYsyXt8Pmob+ZK6bFBz50EDO5Z
+TbCxKLvGQCdkkARefliSz3AShgY3tXye8mfHJ/OkHE35D7ikAIldnscVEm8+igNe
+d905wcvxJIBKu2D7DCDI1GN4DHV/zjv15qpqZphm2EhQWL2lNQCTx6IhlYd75hEN
+YLxhOTb10ey9m3ZOjTymnEHUe1y4oeJPjg9qe8qLp5h8kphsWQvaeBV9gyzGC2Mk
+3OtZRWyFi2EoQuH1BhrXRJjNSfZ5GJaz66hMFNdXZ0nEnC57WGancZ8ulEluTEW7
+Dy/9T0LaZZp6e5Xzejfq2DoINFTNwGv/es7cpJ9tTQVfTCxfsBWlDjNMIwlLHC6X
+LsFY16L6pCsf1MonrC6tTMl4V3I15Q9cpNEsTTcxRCVhGRKpTzNVR2/sqdzy1EMT
+U1vHhujDq+9I2MZsN3+c66Q3F6ylVDsT1V/HFwyFKjU/C5oArqS/bmiO8xYDv+VI
+oPiV3DLk1gK9p7OnHNRkONraiY4r7Ebj4VX9JctrY8gj3ooIXeM+estYTryYrT4z
+keoh/gHtiBInnk13H321/Ar5MPYCKFptfGwIX0iBC0EFir8FCZXjPtRnBuazqrx4
+NP6/wob6BCLuTaPeWYK/
+=qCO4
 -----END PGP SIGNATURE-----
 --=-=-=--
