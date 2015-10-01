@@ -1,123 +1,76 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] raid5-cache: IO error handling
-Date: Thu, 01 Oct 2015 14:50:20 +1000
-Message-ID: <87k2r7jipf.fsf@notabene.neil.brown.name>
-References: <cover.1443653794.git.shli@fb.com> <e9c915cf18d81f76e122a2533baeb68c56186d8f.1443653794.git.shli@fb.com>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH 1/5] fs: Verify access of user towards block device file
+ when mounting
+Date: Thu, 1 Oct 2015 07:55:08 -0500
+Message-ID: <20151001125508.GA101875@ubuntu-hedt>
+References: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
+ <1443644116-41366-2-git-send-email-seth.forshee@canonical.com>
+ <20150930234215.GA24127@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c915cf18d81f76e122a2533baeb68c56186d8f.1443653794.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150930234215.GA24127@redhat.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Wed, Sep 30, 2015 at 07:42:15PM -0400, Mike Snitzer wrote:
+> On Wed, Sep 30 2015 at  4:15pm -0400,
+> Seth Forshee <seth.forshee@canonical.com> wrote:
+> 
+> > When mounting a filesystem on a block device there is currently
+> > no verification that the user has appropriate access to the
+> > device file passed to mount. This has not been an issue so far
+> > since the user in question has always been root, but this must
+> > be changed before allowing unprivileged users to mount in user
+> > namespaces.
+> > 
+> > To fix this, add an argument to lookup_bdev() to specify the
+> > required permissions. If the mask of permissions is zero, or
+> > if the user has CAP_SYS_ADMIN, the permission check is skipped,
+> > otherwise the lookup fails if the user does not have the
+> > specified access rights for the inode at the supplied path.
+> > 
+> > Callers associated with mounting are updated to pass permission
+> > masks to lookup_bdev() so that these mounts will fail for an
+> > unprivileged user who lacks permissions for the block device
+> > inode. All other callers pass 0 to maintain their current
+> > behaviors.
+> > 
+> > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> > ---
+> >  drivers/md/bcache/super.c |  2 +-
+> >  drivers/md/dm-table.c     |  2 +-
+> >  drivers/mtd/mtdsuper.c    |  6 +++++-
+> >  fs/block_dev.c            | 18 +++++++++++++++---
+> >  fs/quota/quota.c          |  2 +-
+> >  include/linux/fs.h        |  2 +-
+> >  6 files changed, 24 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> > index e76ed003769e..35bb3ea4cbe2 100644
+> > --- a/drivers/md/dm-table.c
+> > +++ b/drivers/md/dm-table.c
+> > @@ -380,7 +380,7 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
+> >  	BUG_ON(!t);
+> >  
+> >  	/* convert the path to a device */
+> > -	bdev = lookup_bdev(path);
+> > +	bdev = lookup_bdev(path, 0);
+> >  	if (IS_ERR(bdev)) {
+> >  		dev = name_to_dev_t(path);
+> >  		if (!dev)
+> 
+> Given dm_get_device() is passed @mode why not have it do something like
+> you did in blkdev_get_by_path()? e.g.:
 
-Shaohua Li <shli@fb.com> writes:
-
-> There are 3 places the raid5-cache dispatches IO. The discard IO error
-> doesn't matter, so we ignore it. The superblock write IO error can be
-> handled in MD core. The remaining are log write and flush. When the IO
-> error happens, we simply fail all raid disks and continue the stripe
-> state machine. The MD/raid5 core can handle it (for example, mark all
-> disks faulty, report bio error and so on).
->
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/raid5-cache.c | 18 +++++++++++++++++-
->  1 file changed, 17 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index afc3b6b..430ce5c 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -223,7 +223,16 @@ static void __r5l_set_io_unit_state(struct r5l_io_un=
-it *io,
->  	io->state =3D state;
->  }
->=20=20
-> -/* XXX: totally ignores I/O errors */
-> +static void r5l_log_io_error(struct r5l_log *log)
-> +{
-> +	struct md_rdev *rdev;
-> +
-> +	rcu_read_lock();
-> +	rdev_for_each_rcu(rdev, log->rdev->mddev)
-> +		md_error(log->rdev->mddev, rdev);
-> +	rcu_read_unlock();
-> +}
-
-This fails spare devices too... seems a bit heavy handed.
-
-If the journal device fails we should still be able to read from the
-array, just not write.
-
-So can we just enhance the
-	if (s.failed > conf->max_degraded) {
-test in handle_stripe(), and probably improve has_failed() too??
+I only dealt with code related to mounting in this patch since that's
+what I'm working on. I have it on my TODO list to consider converting
+other callers of lookup_bdev. But if you're sure doing so makes sense
+for dm_get_device and that it won't cause regressions then I could add a
+patch for it.
 
 Thanks,
-NeilBrown
-
-
-> +
->  static void r5l_log_endio(struct bio *bio)
->  {
->  	struct r5l_io_unit *io =3D bio->bi_private;
-> @@ -232,6 +241,9 @@ static void r5l_log_endio(struct bio *bio)
->=20=20
->  	bio_put(bio);
->=20=20
-> +	if (bio->bi_error)
-> +		r5l_log_io_error(log);
-> +
->  	if (!atomic_dec_and_test(&io->pending_io))
->  		return;
->=20=20
-> @@ -594,6 +606,9 @@ static void r5l_log_flush_endio(struct bio *bio)
->  	struct r5l_io_unit *io;
->  	struct stripe_head *sh;
->=20=20
-> +	if (bio->bi_error)
-> +		r5l_log_io_error(log);
-> +
->  	spin_lock_irqsave(&log->io_list_lock, flags);
->  	list_for_each_entry(io, &log->flushing_ios, log_sibling) {
->  		while (!list_empty(&io->stripe_list)) {
-> @@ -681,6 +696,7 @@ static void r5l_write_super_and_discard_space(struct =
-r5l_log *log,
->  			   !test_bit(MD_CHANGE_PENDING, &mddev->flags));
->  	}
->=20=20
-> +	/* discard IO error really doesn't matter, ignore it */
->  	if (log->last_checkpoint < end) {
->  		blkdev_issue_discard(bdev,
->  				log->last_checkpoint + log->rdev->data_offset,
-> --=20
-> 2.4.6
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWDLuMAAoJEDnsnt1WYoG5NBgQAJ9GeVUzVsp0bS8rZKKXSOCz
-wdylzteQmrInk8SKU+rdaPYe6ntjOAbtNgALsV560+NI4hqBDP7RaFPjEu7RmgcX
-bcBm0m2LJokkfMWKUgPHkKmJnyEZlFo0pDNuQbAF8RLWLMmWEEHZKNR9vkf2B0O4
-1VgLsgrUTMlmEivsj3Lb/VmwXWwKWv7cMG9XCJXl11H+knGTbTkHohWJuFoNggbd
-JE3YUKPEW61/LnuOecwSA0GVmmaNa4sM4MFGG0VTGXvxeJ7rMFrABtmBW15ZZrP3
-cJGPSa8tgCMc1Mfc/VkVWv0zRDROz3p8fP5+xQPsNQJJe+P/7ETDJq12rX1+CZor
-DRxsBGb9CAM/56qVHiXlAvEkdO8muOOeX/RDqWMyKQCJ5/TFYmZljcNiWZVVz4cb
-fb5df5XEeUUWHeHdbNhohst4nzneFvIMPPBoRrXssNzIzsMZg/OAZID1mmAOAgSe
-gDWdufbf+U1rsJikys4+KHDPMFzeOMWsVgMEo01E0YKMwQ/+dqNEWaLW0/lFyYv6
-JrztWlPuKUOnaDln688ICFlXc/z23dyUU1XRewRWXpu9nyqaRgb0hBVfyV75ZepX
-AtQ/bL8KNbDY9chNpvTTk947OgdBorsm6+ps80mUXJbkBB/0BEEAIt/Xd/q+DrV1
-YeNoxhZtchfZA8m9JU8D
-=4dDu
------END PGP SIGNATURE-----
---=-=-=--
+Seth
