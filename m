@@ -1,134 +1,63 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: md127 auto created when use "-B" to build a legacy array without superblocks
-Date: Fri, 02 Oct 2015 17:55:46 +1000
-Message-ID: <87k2r5iu0t.fsf@notabene.neil.brown.name>
-References: <597548646.22274436.1441628869039.JavaMail.zimbra@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <597548646.22274436.1441628869039.JavaMail.zimbra@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Yi Zhang <yizhan@redhat.com>
-Cc: linux-raid@vger.kernel.org
+From: Geliang Tang <geliangtang@163.com>
+Subject: [PATCH] dm ioctl: use kvfree() in free_params()
+Date: Fri,  2 Oct 2015 21:32:19 +0800
+Message-ID: <598a723c600e93d40744113d302d902c03d8fd5e.1443792260.git.geliangtang@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no need to make a flag to tell that this memory is allocated by
+kmalloc or vmalloc. Just use kvfree to free the memory.
 
-Yi Zhang <yizhan@redhat.com> writes:
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/md/dm-ioctl.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-> Hi Neil
->
-> When testing 00raid1, found the md127 auto created when use "-B" to build=
- a legacy array without superblocks, is it reasonable?
-
-This happens because udev notices a new device has appeared, looks
-inside it, sees that it could be part of an md array, and so runs
-"mdadm --incremental" on it.
-
-Sometimes we want udev to do that.  Sometimes we don't.
-There is no easy way for udev to know what we want.
-
-NeilBrown
-
-
-> pls check below detailed info:
->
-> + mdadm -CR /dev/md0 --level=3Draid1 -n3 /dev/loop0 /dev/loop1 /dev/loop2
-> mdadm: /dev/loop0 appears to contain an ext2fs file system
->        size=3D58368K  mtime=3DThu Jan  1 08:00:00 1970
-> mdadm: Note: this array has metadata at the start and
->     may not be suitable as a boot device.  If you plan to
->     store '/boot' on this device please ensure that
->     your boot-loader understands md/v1.x metadata, or use
->     --metadata=3D0.90
-> mdadm: /dev/loop1 appears to contain an ext2fs file system
->        size=3D38912K  mtime=3DThu Jan  1 08:00:00 1970
-> mdadm: Defaulting to version 1.2 metadata
-> mdadm: array /dev/md0 started.
-> + mdadm --wait /dev/md0
-> + cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid1]=20
-> md0 : active raid1 loop2[2] loop1[1] loop0[0]
->       19968 blocks super 1.2 [3/3] [UUU]
->=20=20=20=20=20=20=20
-> unused devices: <none>
-> + mdadm -S /dev/md0
-> mdadm: stopped /dev/md0
-> + mdadm -B /dev/md0 -l raid1 -n2 /dev/loop0 /dev/loop1
-> mdadm: array /dev/md0 built and started.
-> + sleep 2
-> + cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4] [raid1]=20
-> md127 : inactive md0[0](S)
->       19968 blocks super 1.2
->=20=20=20=20=20=20=20=20
-> md0 : active raid1 loop1[1] loop0[0]
->       20000 blocks super non-persistent [2/2] [UU]
->=20=20=20=20=20=20=20
-> unused devices: <none>
-> [root@dhcp-12-171 bug]# uname -r
-> 4.2.0
-> [root@dhcp-12-171 bug]# mdadm -D /dev/md0=20
-> /dev/md0:
->         Version :=20
->   Creation Time : Mon Sep  7 20:21:20 2015
->      Raid Level : raid1
->      Array Size : 20000 (19.53 MiB 20.48 MB)
->   Used Dev Size : 20000 (19.53 MiB 20.48 MB)
->    Raid Devices : 2
->   Total Devices : 2
->
->           State : clean=20
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->     Number   Major   Minor   RaidDevice State
->        0       7        0        0      active sync   /dev/loop0
->        1       7        1        1      active sync   /dev/loop1
-> [root@dhcp-12-171 bug]# mdadm -D /dev/md127=20
-> /dev/md127:
->         Version : 1.2
->      Raid Level : raid0
->   Total Devices : 1
->     Persistence : Superblock is persistent
->
->           State : inactive
->
->            Name : dhcp-12-171.nay.redhat.com:0  (local to host dhcp-12-17=
-1.nay.redhat.com)
->            UUID : 40ace956:a9dd0793:f4984d2b:8431b92b
->          Events : 17
->
->     Number   Major   Minor   RaidDevice
->
->        -       9        0        -        /dev/md0=20
->
-> Best Regards,
->   Yi Zhang
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWDjiCAAoJEDnsnt1WYoG5xrEQAJDBkjlOnzWIJNtyHFjoaySa
-aUbZopwSBGJCAg+MhfBVZtvnJjGzdPjiyUHRnBfS9mBnzFg2IxXDu1NUotscjl3j
-Rewhbl7bKT39HckKle18KYkij5aE2JpCfWJcL4HnZbAVJNH2ha7MEkXWCfOjSLVr
-DBKdfmn8laNzU9CwvHTwQSCCwJ4/LnPQvO+1Y1dSaEie+koH3uilOf0qjufU0CV7
-PiENroVXYSCXLhvtR84FQmNWjGJQsWrIxbIQuShgosKI72G2Rdb/BIR88zabzKrf
-L7WAskoNrpBSVDH9gy/dFtH/fT1KsnBAFw9tJwHVaE6beulS6TqpOSwToFQMHmfB
-6M44WHkI48miZf08+GWpsPBeKmxOrmmDaDvqv/RDjZF32IdUA0MSiuR/5/UJuxXB
-BBVY1U+w4scRyRdBcWuuJ1HkNrpcLLpNVBEfqPhhh5+VlCMONBHGe1aXjTr7OeEm
-fVHN+N6o6tZb8btrlBvkEz+2Tq9JpZNfe9gyHXi/SrIOAkP5TnlTCXKHXN2Rt06L
-0+S90bKs4HCJkD1+I5riF2p3JoehXEKvXhAQ8SCwli6XutfdG0w+2a7PSkKGjDuX
-CpEbVICDKUd4okyagr4VccTwUqEkY5oiSkyJvam0YCfi26+kZjj/bGtDMvi6b6vz
-K8x0+Y7uAtzTRmCm+ngZ
-=enPU
------END PGP SIGNATURE-----
---=-=-=--
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index 80a4395..dbb5588 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -1669,8 +1669,6 @@ static int check_version(unsigned int cmd, struct dm_ioctl __user *user)
+ 	return r;
+ }
+ 
+-#define DM_PARAMS_KMALLOC	0x0001	/* Params alloced with kmalloc */
+-#define DM_PARAMS_VMALLOC	0x0002	/* Params alloced with vmalloc */
+ #define DM_WIPE_BUFFER		0x0010	/* Wipe input buffer before returning from ioctl */
+ 
+ static void free_params(struct dm_ioctl *param, size_t param_size, int param_flags)
+@@ -1678,10 +1676,7 @@ static void free_params(struct dm_ioctl *param, size_t param_size, int param_fla
+ 	if (param_flags & DM_WIPE_BUFFER)
+ 		memset(param, 0, param_size);
+ 
+-	if (param_flags & DM_PARAMS_KMALLOC)
+-		kfree(param);
+-	if (param_flags & DM_PARAMS_VMALLOC)
+-		vfree(param);
++	kvfree(param);
+ }
+ 
+ static int copy_params(struct dm_ioctl __user *user, struct dm_ioctl *param_kernel,
+@@ -1715,8 +1710,6 @@ static int copy_params(struct dm_ioctl __user *user, struct dm_ioctl *param_kern
+ 	dmi = NULL;
+ 	if (param_kernel->data_size <= KMALLOC_MAX_SIZE) {
+ 		dmi = kmalloc(param_kernel->data_size, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
+-		if (dmi)
+-			*param_flags |= DM_PARAMS_KMALLOC;
+ 	}
+ 
+ 	if (!dmi) {
+@@ -1724,8 +1717,6 @@ static int copy_params(struct dm_ioctl __user *user, struct dm_ioctl *param_kern
+ 		noio_flag = memalloc_noio_save();
+ 		dmi = __vmalloc(param_kernel->data_size, GFP_NOIO | __GFP_REPEAT | __GFP_HIGH | __GFP_HIGHMEM, PAGE_KERNEL);
+ 		memalloc_noio_restore(noio_flag);
+-		if (dmi)
+-			*param_flags |= DM_PARAMS_VMALLOC;
+ 	}
+ 
+ 	if (!dmi) {
+-- 
+2.5.0
