@@ -1,7 +1,7 @@
 From: rgoldwyn@suse.de
-Subject: [PATCH 4/5] Perform resync/recovery under a DLM lock
-Date: Mon,  5 Oct 2015 10:09:53 -0500
-Message-ID: <1444057794-17256-5-git-send-email-rgoldwyn@suse.de>
+Subject: [PATCH 5/5] Fix adding of new disk with new reload code
+Date: Mon,  5 Oct 2015 10:09:54 -0500
+Message-ID: <1444057794-17256-6-git-send-email-rgoldwyn@suse.de>
 References: <1444057794-17256-1-git-send-email-rgoldwyn@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1444057794-17256-1-git-send-email-rgoldwyn@suse.de>
@@ -12,151 +12,91 @@ List-Id: linux-raid.ids
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Resync or recovery must be performed by only one node at a time.
-A DLM lock resource, resync_lockres provides the mutual exclusion
-so that only one node performs the recovery/resync at a time.
+Adding the disk worked incorrectly with the new reload code. Fix it:
+
+ - No operation should be performed on rdev marked as Candidate
+ - After a metadata update operation, kick disk if role is 0xfffe
+   else clear Candidate bit and continue with the regular change check.
+ - On the initiating node, cancel the metadata_update (unlock token),
+   in case of an error while adding
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/md-cluster.c | 29 +++++++++++++++++++++++++++++
- drivers/md/md-cluster.h |  1 +
- drivers/md/md.c         | 17 ++++++++++++++---
- 3 files changed, 44 insertions(+), 3 deletions(-)
+ drivers/md/md.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 4645a93..17f24bf 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -46,6 +46,7 @@ struct resync_info {
- #define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
- #define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
- #define		MD_CLUSTER_BEGIN_JOIN_CLUSTER		3
-+#define		MD_CLUSTER_RECOVERY_NEEDED		4
- 
- 
- struct md_cluster_info {
-@@ -55,6 +56,7 @@ struct md_cluster_info {
- 	struct completion completion;
- 	struct mutex sb_mutex;
- 	struct dlm_lock_resource *bitmap_lockres;
-+	struct dlm_lock_resource *resync_lockres;
- 	struct list_head suspend_list;
- 	spinlock_t suspend_lock;
- 	struct md_thread *recovery_thread;
-@@ -382,6 +384,8 @@ static void process_suspend_info(struct mddev *mddev,
- 
- 	if (!hi) {
- 		remove_suspend_info(cinfo, slot);
-+		if (test_and_clear_bit(MD_CLUSTER_RECOVERY_NEEDED, &cinfo->state))
-+			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
- 		return;
- 	}
- 	s = kzalloc(sizeof(struct suspend_info), GFP_KERNEL);
-@@ -755,6 +759,10 @@ static int join(struct mddev *mddev, int nodes)
- 		goto err;
- 	}
- 
-+	cinfo->resync_lockres = lockres_init(mddev, "resync", NULL, 0);
-+	if (!cinfo->resync_lockres)
-+		goto err;
-+
- 	ret = gather_all_resync_info(mddev, nodes);
- 	if (ret)
- 		goto err;
-@@ -765,6 +773,7 @@ err:
- 	lockres_free(cinfo->token_lockres);
- 	lockres_free(cinfo->ack_lockres);
- 	lockres_free(cinfo->no_new_dev_lockres);
-+	lockres_free(cinfo->resync_lockres);
- 	lockres_free(cinfo->bitmap_lockres);
- 	if (cinfo->lockspace)
- 		dlm_release_lockspace(cinfo->lockspace, 2);
-@@ -838,6 +847,21 @@ static int metadata_update_cancel(struct mddev *mddev)
- 	return dlm_unlock_sync(cinfo->token_lockres);
- }
- 
-+static int resync_start(struct mddev *mddev)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	int ret = 0;
-+	cinfo->resync_lockres->flags |= DLM_LKF_NOQUEUE;
-+	ret = dlm_lock_sync(cinfo->resync_lockres, DLM_LOCK_EX);
-+	if (ret) {
-+		if (!test_bit(MD_CLUSTER_RECOVERY_NEEDED, &cinfo->state))
-+			pr_info("md-cluster: Postponing recovery until other nodes finish recovery\n");
-+		set_bit(MD_CLUSTER_RECOVERY_NEEDED, &cinfo->state);
-+	} else
-+		clear_bit(MD_CLUSTER_RECOVERY_NEEDED, &cinfo->state);
-+	return ret;
-+}
-+
- static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-@@ -854,6 +878,10 @@ static int resync_info_update(struct mddev *mddev, sector_t lo, sector_t hi)
- 	cmsg.slot = cpu_to_le32(slot);
- 	cmsg.low = cpu_to_le64(lo);
- 	cmsg.high = cpu_to_le64(hi);
-+
-+	/* Resync is finished */
-+	if (hi == 0)
-+		dlm_unlock_sync(cinfo->resync_lockres);
- 	return sendmsg(cinfo, &cmsg);
- }
- 
-@@ -972,6 +1000,7 @@ static struct md_cluster_operations cluster_ops = {
- 	.join   = join,
- 	.leave  = leave,
- 	.slot_number = slot_number,
-+	.resync_start = resync_start,
- 	.resync_info_update = resync_info_update,
- 	.metadata_update_start = metadata_update_start,
- 	.metadata_update_finish = metadata_update_finish,
-diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-index f5bdc0c..7061020 100644
---- a/drivers/md/md-cluster.h
-+++ b/drivers/md/md-cluster.h
-@@ -16,6 +16,7 @@ struct md_cluster_operations {
- 	int (*metadata_update_start)(struct mddev *mddev);
- 	int (*metadata_update_finish)(struct mddev *mddev);
- 	int (*metadata_update_cancel)(struct mddev *mddev);
-+	int (*resync_start)(struct mddev *mddev);
- 	int (*area_resyncing)(struct mddev *mddev, int direction, sector_t lo, sector_t hi);
- 	int (*add_new_disk_start)(struct mddev *mddev, struct md_rdev *rdev);
- 	int (*add_new_disk_finish)(struct mddev *mddev);
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9abd070..75d14e3 100644
+index 75d14e3..e324544 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -8071,14 +8071,25 @@ no_add:
- static void md_start_sync(struct work_struct *ws)
- {
- 	struct mddev *mddev = container_of(ws, struct mddev, del_work);
-+	int ret = 0;
-+
-+	if (mddev_is_clustered(mddev)) {
-+		ret = md_cluster_ops->resync_start(mddev);
-+		if (ret) {
-+			mddev->sync_thread = NULL;
-+			goto out;
-+		}
-+	}
+@@ -3246,14 +3246,6 @@ static void analyze_sbs(struct mddev *mddev)
+ 				md_kick_rdev_from_array(rdev);
+ 				continue;
+ 			}
+-			/* No device should have a Candidate flag
+-			 * when reading devices
+-			 */
+-			if (test_bit(Candidate, &rdev->flags)) {
+-				pr_info("md: kicking Cluster Candidate %s from array!\n",
+-					bdevname(rdev->bdev, b));
+-				md_kick_rdev_from_array(rdev);
+-			}
+ 		}
+ 		if (mddev->level == LEVEL_MULTIPATH) {
+ 			rdev->desc_nr = i++;
+@@ -5962,7 +5954,7 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+ 				/* --add initiated by this node */
+ 				err = md_cluster_ops->add_new_disk_start(mddev, rdev);
+ 				if (err) {
+-					md_cluster_ops->add_new_disk_finish(mddev);
++					md_cluster_ops->metadata_update_cancel(mddev);
+ 					export_rdev(rdev);
+ 					return err;
+ 				}
+@@ -5973,11 +5965,11 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
+ 		err = bind_rdev_to_array(rdev, mddev);
+ 		if (err)
+ 			export_rdev(rdev);
+-		else
++		else if (!(info->state & (1 << MD_DISK_CANDIDATE)))
+ 			err = add_bound_rdev(rdev);
+-		if (mddev_is_clustered(mddev) &&
++		if (err && mddev_is_clustered(mddev) &&
+ 				(info->state & (1 << MD_DISK_CLUSTER_ADD)))
+-			md_cluster_ops->add_new_disk_finish(mddev);
++			md_cluster_ops->metadata_update_cancel(mddev);
+ 		return err;
+ 	}
  
- 	mddev->sync_thread = md_register_thread(md_do_sync,
- 						mddev,
- 						"resync");
-+out:
- 	if (!mddev->sync_thread) {
--		printk(KERN_ERR "%s: could not start resync"
--		       " thread...\n",
--		       mdname(mddev));
-+		if (!mddev_is_clustered(mddev))
-+			printk(KERN_ERR "%s: could not start resync"
-+			       " thread...\n",
-+			       mdname(mddev));
- 		/* leave the spares where they are, it shouldn't hurt */
- 		clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 		clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+@@ -8038,6 +8030,8 @@ static int remove_and_add_spares(struct mddev *mddev,
+ 	rdev_for_each(rdev, mddev) {
+ 		if (this && this != rdev)
+ 			continue;
++		if (test_bit(Candidate, &rdev->flags))
++			continue;
+ 		if (rdev->raid_disk >= 0 &&
+ 		    !test_bit(In_sync, &rdev->flags) &&
+ 		    !test_bit(Faulty, &rdev->flags))
+@@ -8955,6 +8949,19 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ 
+ 		/* Check if the roles changed */
+ 		role = le16_to_cpu(sb->dev_roles[rdev2->desc_nr]);
++
++		if (test_bit(Candidate, &rdev2->flags)) {
++			if (role == 0xfffe) {
++				pr_info("md: Removing Candidate device %s because add failed\n", bdevname(rdev2->bdev,b));
++				md_kick_rdev_from_array(rdev2);
++				continue;
++			}
++			else {
++				clear_bit(Candidate, &rdev2->flags);
++				rdev2->raid_disk = -1;
++			}
++		}
++
+ 		if (role != rdev2->raid_disk) {
+ 			/* got activated */
+ 			if (rdev2->raid_disk == -1 && role != 0xffff) {
 -- 
 1.8.5.6
 
