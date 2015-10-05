@@ -1,140 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/11] raid5-cache: use bio chaining
-Date: Mon,  5 Oct 2015 09:31:16 +0200
-Message-ID: <1444030276-30850-12-git-send-email-hch@lst.de>
-References: <1444030276-30850-1-git-send-email-hch@lst.de>
+From: Joshua Kinard <kumba@gentoo.org>
+Subject: Problem w/ commit ac8fa4196d20 on older, slower hardware
+Date: Mon, 5 Oct 2015 03:41:39 -0400
+Message-ID: <561229B3.4050101@gentoo.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1444030276-30850-1-git-send-email-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, neilb@suse.de
-Cc: dan.j.williams@intel.com, Kernel-team@fb.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Simplify the bio completion handler by using bio chaining and submitting
-bios as soon as they are full.
+Per commit ac8fa4196d20:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/raid5-cache.c | 38 ++++++++++++++++----------------------
- 1 file changed, 16 insertions(+), 22 deletions(-)
+> md: allow resync to go faster when there is competing IO.
+> 
+> When md notices non-sync IO happening while it is trying to resync (or
+> reshape or recover) it slows down to the set minimum.
+> 
+> The default minimum might have made sense many years ago but the drives have
+> become faster. Changing the default to match the times isn't really a long
+> term solution.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e64f94e..040405e 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -100,8 +100,6 @@ struct r5l_io_unit {
- 	struct page *meta_page;	/* store meta block */
- 	int meta_offset;	/* current offset in meta_page */
- 
--	struct bio_list bios;
--	atomic_t pending_io;	/* pending bios not written to log yet */
- 	struct bio *current_bio;/* current_bio accepting new data */
- 
- 	atomic_t pending_stripe;/* how many stripes not flushed to raid */
-@@ -112,6 +110,7 @@ struct r5l_io_unit {
- 	struct list_head stripe_list; /* stripes added to the io_unit */
- 
- 	int state;
-+	bool need_split_bio;
- };
- 
- /* r5l_io_unit state */
-@@ -217,9 +216,6 @@ static void r5l_log_endio(struct bio *bio)
- 
- 	bio_put(bio);
- 
--	if (!atomic_dec_and_test(&io->pending_io))
--		return;
--
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
- 	if (log->need_cache_flush)
-@@ -237,7 +233,6 @@ static void r5l_submit_current_io(struct r5l_log *log)
- {
- 	struct r5l_io_unit *io = log->current_io;
- 	struct r5l_meta_block *block;
--	struct bio *bio;
- 	unsigned long flags;
- 	u32 crc;
- 
-@@ -254,22 +249,17 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_START);
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
- 
--	while ((bio = bio_list_pop(&io->bios)))
--		submit_bio(WRITE, bio);
-+	submit_bio(WRITE, io->current_bio);
- }
- 
--static struct bio *r5l_bio_alloc(struct r5l_log *log, struct r5l_io_unit *io)
-+static struct bio *r5l_bio_alloc(struct r5l_log *log)
- {
- 	struct bio *bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
- 
- 	bio->bi_rw = WRITE;
- 	bio->bi_bdev = log->rdev->bdev;
- 	bio->bi_iter.bi_sector = log->rdev->data_offset + log->log_start;
--	bio->bi_end_io = r5l_log_endio;
--	bio->bi_private = io;
- 
--	bio_list_add(&io->bios, bio);
--	atomic_inc(&io->pending_io);
- 	return bio;
- }
- 
-@@ -285,7 +275,7 @@ static void r5_reserve_log_entry(struct r5l_log *log, struct r5l_io_unit *io)
- 	 * of BLOCK_SECTORS.
- 	 */
- 	if (log->log_start == 0)
--		io->current_bio = NULL;
-+		io->need_split_bio = true;
- 
- 	io->log_end = log->log_start;
- }
-@@ -298,7 +288,6 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	/* We can't handle memory allocate failure so far */
- 	io = kmem_cache_zalloc(log->io_kc, GFP_NOIO | __GFP_NOFAIL);
- 	io->log = log;
--	bio_list_init(&io->bios);
- 	INIT_LIST_HEAD(&io->log_sibling);
- 	INIT_LIST_HEAD(&io->stripe_list);
- 	io->state = IO_UNIT_RUNNING;
-@@ -314,7 +303,9 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	io->meta_offset = sizeof(struct r5l_meta_block);
- 	io->seq = log->seq++;
- 
--	io->current_bio = r5l_bio_alloc(log, io);
-+	io->current_bio = r5l_bio_alloc(log);
-+	io->current_bio->bi_end_io = r5l_log_endio;
-+	io->current_bio->bi_private = io;
- 	bio_add_page(io->current_bio, io->meta_page, PAGE_SIZE, 0);
- 
- 	r5_reserve_log_entry(log, io);
-@@ -363,15 +354,18 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- {
- 	struct r5l_io_unit *io = log->current_io;
- 
--alloc_bio:
--	if (!io->current_bio) 
--		io->current_bio = r5l_bio_alloc(log, io);
-+	if (io->need_split_bio) {
-+		struct bio *prev = io->current_bio;
- 
--	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0)) {
--		io->current_bio = NULL;
--		goto alloc_bio;
-+		io->current_bio = r5l_bio_alloc(log);
-+		bio_chain(io->current_bio, prev);
-+
-+		submit_bio(WRITE, prev);
- 	}
- 
-+	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0))
-+		BUG();
-+
- 	r5_reserve_log_entry(log, io);
- }
- 
--- 
-1.9.1
+This holds true for modern hardware, but this commit is causing problems on
+older hardware, like SGI MIPS platforms, that use mdraid.  Namely, while trying
+to chase down an unrelated hardlock bug on an Onyx2, one of the arrays got out
+of sync, so on the next reboot, mdraid's attempt to resync at full speed
+absolutely murdered interactivity.  It took close to 30mins for the system to
+finally reach the login prompt.
 
+Revert this patch was working to mitigate the problem at first, but it appears
+that in recent kernels, this is no longer the case, and reverting this commit
+has no noticeable effect anymore.  I assume I'd have to hunt down newer commits
+to revert, but it's probably saner to just highlight the problem and test any
+proposed solutions.
+
+Is there some way to resolve this in such a way that old hardware maintains
+some level of interactivity during a resync, but that won't inconvenience the
+more modern systems?
+
+http://git.linux-mips.org/cgit/ralf/linux.git/commit/?id=ac8fa4196d20
+
+Thanks!,
+
+--J
