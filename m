@@ -1,7 +1,7 @@
 From: rgoldwyn@suse.de
-Subject: [PATCH 1/5] remove_and_add_spares() to activate specific rdev
-Date: Mon,  5 Oct 2015 10:09:50 -0500
-Message-ID: <1444057794-17256-2-git-send-email-rgoldwyn@suse.de>
+Subject: [PATCH 2/5] md-cluster: Improve md_reload_sb to be less error prone
+Date: Mon,  5 Oct 2015 10:09:51 -0500
+Message-ID: <1444057794-17256-3-git-send-email-rgoldwyn@suse.de>
 References: <1444057794-17256-1-git-send-email-rgoldwyn@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1444057794-17256-1-git-send-email-rgoldwyn@suse.de>
@@ -12,86 +12,267 @@ List-Id: linux-raid.ids
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-remove_and_add_spares() checks for all devices to activate spare.
-Change it to activate a specific device if a non-null rdev
-argument is passed.
+md_reload_sb is too simplistic and it explicitly needs to determine
+the changes made by the writing node. However, there are multiple areas
+where a simple reload could fail.
 
-remove_and_add_spares() can be used to activate spares in
-slot_store() as well.
+Instead, read the superblock of one of the "good" rdevs and update
+the necessary information:
 
-For hot_remove_disk(), check if rdev->raid_disk == -1 before
-calling remove_and_add_spares()
+- read the superblock into a newly allocated page, by temporarily
+  swapping out rdev->sb_page and calling ->load_super.
+- if that fails return
+- if it succeeds, call check_sb_changes
+  1. iterates over list of active devices and checks the matching
+   dev_roles[] value.
+   	If that is 'faulty', the device must be  marked as faulty
+	 - call md_error to mark the device as faulty. Make sure
+	   not to set CHANGE_DEVS and wakeup mddev->thread or else
+	   it would initiate a resync process, which is the responsibility
+	   of the "primary" node.
+	 - clear the Blocked bit
+	 - Call remove_and_add_spares() to hot remove the device.
+	If the device is 'spare':
+	 - call remove_and_add_spares() to get the number of spares
+	   added in this operation.
+	 - Reduce mddev->degraded to mark the array as not degraded.
+  2. reset recovery_cp
+- read the rest of the rdevs to update recovery_offset
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/md.c | 24 +++++++++---------------
- 1 file changed, 9 insertions(+), 15 deletions(-)
+ drivers/md/md-cluster.c |  27 ++++++-----
+ drivers/md/md.c         | 120 ++++++++++++++++++++++++++++++++++++++++++------
+ drivers/md/md.h         |   2 +-
+ drivers/md/raid1.c      |   2 +
+ 4 files changed, 124 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index b94a2e6..4645a93 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -424,8 +424,7 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
+ static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg)
+ {
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+-
+-	md_reload_sb(mddev);
++	md_reload_sb(mddev, le32_to_cpu(msg->raid_slot));
+ 	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
+ }
+ 
+@@ -811,11 +810,23 @@ static int metadata_update_finish(struct mddev *mddev)
+ {
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+ 	struct cluster_msg cmsg;
+-	int ret;
++	struct md_rdev *rdev;
++	int ret = 0;
+ 
+ 	memset(&cmsg, 0, sizeof(cmsg));
+ 	cmsg.type = cpu_to_le32(METADATA_UPDATED);
+-	ret = __sendmsg(cinfo, &cmsg);
++	cmsg.raid_slot = -1;
++	/* Pick up a good active device number to send.
++	 */
++	rdev_for_each(rdev, mddev)
++		if (rdev->raid_disk > -1 && !test_bit(Faulty, &rdev->flags)) {
++			cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
++			break;
++		}
++	if (cmsg.raid_slot >= 0)
++		ret = __sendmsg(cinfo, &cmsg);
++	else
++		pr_warn("md-cluster: No good device id found to send\n");
+ 	unlock_comm(cinfo);
+ 	return ret;
+ }
+@@ -899,15 +910,9 @@ static int add_new_disk_start(struct mddev *mddev, struct md_rdev *rdev)
+ 
+ static int add_new_disk_finish(struct mddev *mddev)
+ {
+-	struct cluster_msg cmsg;
+-	struct md_cluster_info *cinfo = mddev->cluster_info;
+-	int ret;
+ 	/* Write sb and inform others */
+ 	md_update_sb(mddev, 1);
+-	cmsg.type = METADATA_UPDATED;
+-	ret = __sendmsg(cinfo, &cmsg);
+-	unlock_comm(cinfo);
+-	return ret;
++	return metadata_update_finish(mddev);
+ }
+ 
+ static int new_disk_ack(struct mddev *mddev, bool ack)
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 9798a99..fcdf47b 100644
+index fcdf47b..36e751e 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2691,15 +2691,9 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
- 			rdev->saved_raid_disk = -1;
- 		clear_bit(In_sync, &rdev->flags);
- 		clear_bit(Bitmap_sync, &rdev->flags);
--		err = rdev->mddev->pers->
--			hot_add_disk(rdev->mddev, rdev);
--		if (err) {
--			rdev->raid_disk = -1;
--			return err;
--		} else
--			sysfs_notify_dirent_safe(rdev->sysfs_state);
--		if (sysfs_link_rdev(rdev->mddev, rdev))
--			/* failure here is OK */;
-+		remove_and_add_spares(rdev->mddev, rdev);
-+		if (rdev->raid_disk == -1)
-+			return -EBUSY;
- 		/* don't wakeup anyone, leave that to userspace. */
- 	} else {
- 		if (slot >= rdev->mddev->raid_disks &&
-@@ -6001,15 +5995,15 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 	if (!rdev)
- 		return -ENXIO;
+@@ -7987,7 +7987,7 @@ void md_do_sync(struct md_thread *thread)
+ EXPORT_SYMBOL_GPL(md_do_sync);
  
-+	if (rdev->raid_disk >= 0)
-+		goto busy;
-+
- 	if (mddev_is_clustered(mddev))
- 		md_cluster_ops->metadata_update_start(mddev);
+ static int remove_and_add_spares(struct mddev *mddev,
+-				 struct md_rdev *this)
++				struct md_rdev *this)
+ {
+ 	struct md_rdev *rdev;
+ 	int spares = 0;
+@@ -8917,25 +8917,115 @@ err_wq:
+ 	return ret;
+ }
  
- 	clear_bit(Blocked, &rdev->flags);
- 	remove_and_add_spares(mddev, rdev);
+-void md_reload_sb(struct mddev *mddev)
++static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ {
+-	struct md_rdev *rdev, *tmp;
++	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
++	struct md_rdev *rdev2;
++	int role, ret;
++	char b[BDEVNAME_SIZE];
  
--	if (rdev->raid_disk >= 0)
--		goto busy;
--
- 	if (mddev_is_clustered(mddev))
- 		md_cluster_ops->remove_disk(mddev, rdev);
- 
-@@ -6022,8 +6016,6 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 
- 	return 0;
- busy:
--	if (mddev_is_clustered(mddev))
--		md_cluster_ops->metadata_update_cancel(mddev);
- 	printk(KERN_WARNING "md: cannot remove active disk %s from %s ...\n",
- 		bdevname(rdev->bdev,b), mdname(mddev));
- 	return -EBUSY;
-@@ -8018,10 +8010,12 @@ static int remove_and_add_spares(struct mddev *mddev,
- 	if (removed && mddev->kobj.sd)
- 		sysfs_notify(&mddev->kobj, NULL, "degraded");
- 
--	if (this)
-+	if (this && removed)
- 		goto no_add;
- 
- 	rdev_for_each(rdev, mddev) {
-+		if (this && this != rdev)
+-	rdev_for_each_safe(rdev, tmp, mddev) {
+-		rdev->sb_loaded = 0;
+-		ClearPageUptodate(rdev->sb_page);
++	/* Check for change of roles in the active devices */
++	rdev_for_each(rdev2, mddev) {
++		if (test_bit(Faulty, &rdev2->flags))
 +			continue;
- 		if (rdev->raid_disk >= 0 &&
- 		    !test_bit(In_sync, &rdev->flags) &&
- 		    !test_bit(Faulty, &rdev->flags))
++
++		/* Check if the roles changed */
++		role = le16_to_cpu(sb->dev_roles[rdev2->desc_nr]);
++		if (role != rdev2->raid_disk) {
++			/* got activated */
++			if (rdev2->raid_disk == -1 && role != 0xffff) {
++				rdev2->saved_raid_disk = role;
++				ret = remove_and_add_spares(mddev, rdev2);
++				pr_info("Activated spare: %s\n",
++						bdevname(rdev2->bdev,b));
++				continue;
++			}
++			/* device faulty
++			 * We just want to do the minimum to mark the disk
++			 * as faulty. The recovery is performed by the
++			 * one who initiated the error.
++			 */
++			if ((role == 0xfffe) || (role == 0xfffd)) {
++				md_error(mddev, rdev2);
++				clear_bit(Blocked, &rdev2->flags);
++				remove_and_add_spares(mddev, rdev2);
++			}
++		}
+ 	}
+-	mddev->raid_disks = 0;
+-	analyze_sbs(mddev);
+-	rdev_for_each_safe(rdev, tmp, mddev) {
+-		struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
+-		/* since we don't write to faulty devices, we figure out if the
+-		 *  disk is faulty by comparing events
+-		 */
+-		if (mddev->events > sb->events)
+-			set_bit(Faulty, &rdev->flags);
++
++	/* recovery_cp changed */
++	if (le64_to_cpu(sb->resync_offset) != mddev->recovery_cp) {
++		pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
++				__LINE__, mddev->recovery_cp,
++				(unsigned long) le64_to_cpu(sb->resync_offset));
++		mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
+ 	}
+ 
++	/* Finally set the event to be up to date */
++	mddev->events = le64_to_cpu(sb->events);
++}
++
++static int read_rdev(struct mddev *mddev, struct md_rdev *rdev)
++{
++	int err;
++	struct page *swapout = rdev->sb_page;
++	struct mdp_superblock_1 *sb;
++
++	/* Store the sb page of the rdev in the swapout temporary
++	 * variable in case we err in the future
++	 */
++	rdev->sb_page = NULL;
++	alloc_disk_sb(rdev);
++	ClearPageUptodate(rdev->sb_page);
++	rdev->sb_loaded = 0;
++	err = super_types[mddev->major_version].load_super(rdev, NULL, mddev->minor_version);
++
++	if (err < 0) {
++		pr_warn("%s: %d Could not reload rdev(%d) err: %d. Restoring old values\n",
++				__func__, __LINE__, rdev->desc_nr, err);
++		put_page(rdev->sb_page);
++		rdev->sb_page = swapout;
++		rdev->sb_loaded = 1;
++		return err;
++	}
++
++	sb = page_address(rdev->sb_page);
++	rdev->recovery_offset = le64_to_cpu(sb->recovery_offset);
++
++	put_page(swapout);
++	return 0;
++}
++
++void md_reload_sb(struct mddev *mddev, int nr)
++{
++	struct md_rdev *rdev;
++	int err;
++
++	/* Find the rdev */
++	rdev_for_each_rcu(rdev, mddev) {
++		if (rdev->desc_nr == nr)
++			break;
++	}
++
++	if (!rdev || rdev->desc_nr != nr) {
++		pr_warn("%s: %d Could not find rdev with nr %d\n", __func__, __LINE__, nr);
++		return;
++	}
++
++	err = read_rdev(mddev, rdev);
++	if (err < 0)
++		return;
++
++	check_sb_changes(mddev, rdev);
++
++	/* Read the rest of the rdev's to update recovery_offset */
++	rdev_for_each_rcu(rdev, mddev) {
++		/* We have already read this one */
++		if (rdev->desc_nr == nr)
++			continue;
++
++		read_rdev(mddev, rdev);
++	}
+ }
+ EXPORT_SYMBOL(md_reload_sb);
+ 
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index ab33957..2ea0035 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -658,7 +658,7 @@ extern struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
+ 				   struct mddev *mddev);
+ 
+ extern void md_unplug(struct blk_plug_cb *cb, bool from_schedule);
+-extern void md_reload_sb(struct mddev *mddev);
++extern void md_reload_sb(struct mddev *mddev, int raid_disk);
+ extern void md_update_sb(struct mddev *mddev, int force);
+ extern void md_kick_rdev_from_array(struct md_rdev * rdev);
+ struct md_rdev *md_find_rdev_nr_rcu(struct mddev *mddev, int nr);
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 1dd13bb..03752bd 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1608,6 +1608,8 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 			 */
+ 			if (rdev->saved_raid_disk < 0)
+ 				conf->fullsync = 1;
++			else if (mddev_is_clustered(mddev))
++				rdev->raid_disk = rdev->saved_raid_disk;
+ 			rcu_assign_pointer(p->rdev, rdev);
+ 			break;
+ 		}
 -- 
 1.8.5.6
 
