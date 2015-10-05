@@ -1,44 +1,38 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH RESEND] imsm: don't call abort_reshape() in
- imsm_manage_reshape()
-Date: Mon, 5 Oct 2015 15:18:11 +0200
-Message-ID: <56127893.6070606@intel.com>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH 1/5] fs: Verify access of user towards block device file
+ when mounting
+Date: Mon, 5 Oct 2015 09:26:21 -0500
+Message-ID: <20151005142621.GB21639@ubuntu-hedt>
+References: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
+ <1443644116-41366-2-git-send-email-seth.forshee@canonical.com>
+ <20150930234215.GA24127@redhat.com>
+ <20151001125508.GA101875@ubuntu-hedt>
+ <20151001134052.GB27818@redhat.com>
+ <87wpv6a8hl.fsf@x220.int.ebiederm.org>
+ <20151001230700.GA10087@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Konrad Dabrowski <konrad.dabrowski@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151001230700.GA10087@quack.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Mike Snitzer <snitzer@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Calling abort_reshape() in imsm_manage_reshape() is unnecessary in case
-of an error because it is handled by reshape_array(). Calling it when
-reshape completes successfully is also unnecessary and leads to a race
-condition:
-- reshape ends
-- mdadm calls abort_reshape() -> sets sync_action to idle
-- MD_RECOVERY_INTR is set and md_reap_sync_thread() does not finish the
-  reshape
+On Fri, Oct 02, 2015 at 01:07:00AM +0200, Jan Kara wrote:
+> On Thu 01-10-15 10:55:50, Eric W. Biederman wrote:
+> > The goal if possible is to run things like docker without needed to be
+> > root or even more fun to run docker in a container, and in general
+> > enable nested containers.
+> 
+> Frankly at the filesystem side we are rather far from being able to safely
+> mount untrusted device and I don't think we'll ever be robust enough to
+> tolerate e.g. user changing the disk while fs is using it. So would this be
+> FUSE-only thing or is someone still hoping that general purpose filesystems
+> will be robust enough in future?
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: Konrad Dabrowski <konrad.dabrowski@intel.com>
----
- super-intel.c | 1 -
- 1 file changed, 1 deletion(-)
+FUSE will almost certainly be first. I've also been working with ext4,
+and I would like to see that eventually supported to some degree.
 
-diff --git a/super-intel.c b/super-intel.c
-index 95a72b6..e609e0c 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -10601,7 +10601,6 @@ static int imsm_manage_reshape(
- 	ret_val = 1;
- abort:
- 	free(buf);
--	abort_reshape(sra);
- 
- 	return ret_val;
- }
--- 
-2.1.4
-
+Seth
