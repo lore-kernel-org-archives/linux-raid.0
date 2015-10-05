@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/11] raid5-cache: simplify state machine when caches flushes are not needed
-Date: Mon,  5 Oct 2015 09:31:09 +0200
-Message-ID: <1444030276-30850-5-git-send-email-hch@lst.de>
+Subject: [PATCH 06/11] raid5-cache: refactor bio allocation
+Date: Mon,  5 Oct 2015 09:31:11 +0200
+Message-ID: <1444030276-30850-7-git-send-email-hch@lst.de>
 References: <1444030276-30850-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1444030276-30850-1-git-send-email-hch@lst.de>
@@ -10,89 +10,87 @@ To: Shaohua Li <shli@fb.com>, neilb@suse.de
 Cc: dan.j.williams@intel.com, Kernel-team@fb.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For devices without a volatile write cache we don't need to send a FLUSH
-command to ensure writes are stable on disk, and thus can avoid the whole
-step of batching up bios for processing by the MD thread.
+Split out a helper to allocate a bio for log writes.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 33 +++++++++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 4 deletions(-)
+ drivers/md/raid5-cache.c | 45 ++++++++++++++++++++-------------------------
+ 1 file changed, 20 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index b04e908..0d18ed7 100644
+index 05126151..4d4dc4d 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -83,6 +83,8 @@ struct r5l_log {
- 
- 	struct list_head no_space_stripes; /* pending stripes, log has no space */
- 	spinlock_t no_space_stripes_lock;
-+
-+	bool need_cache_flush;
- };
- 
- /*
-@@ -205,6 +207,22 @@ static void r5l_io_run_stripes(struct r5l_io_unit *io)
+@@ -278,11 +278,25 @@ static void r5l_submit_current_io(struct r5l_log *log)
  	}
  }
  
-+static void r5l_log_run_stripes(struct r5l_log *log)
++static struct bio *r5l_bio_alloc(struct r5l_log *log, struct r5l_io_unit *io)
 +{
-+	struct r5l_io_unit *io, *next;
++	struct bio *bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
 +
-+	assert_spin_locked(&log->io_list_lock);
++	bio->bi_rw = WRITE;
++	bio->bi_bdev = log->rdev->bdev;
++	bio->bi_iter.bi_sector = log->log_start;
++	bio->bi_end_io = r5l_log_endio;
++	bio->bi_private = io;
 +
-+	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
-+		/* don't change list order */
-+		if (io->state < IO_UNIT_IO_END)
-+			break;
-+
-+		list_move_tail(&io->log_sibling, &log->finished_ios);
-+		r5l_io_run_stripes(io);
-+	}
++	bio_list_add(&io->bios, bio);
++	atomic_inc(&io->pending_io);
++	return bio;
 +}
 +
- static void r5l_log_endio(struct bio *bio)
+ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
  {
- 	struct r5l_io_unit *io = bio->bi_private;
-@@ -221,11 +239,15 @@ static void r5l_log_endio(struct bio *bio)
+ 	struct r5l_io_unit *io;
+ 	struct r5l_meta_block *block;
+-	struct bio *bio;
  
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
--	r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
--			IO_UNIT_IO_END);
-+	if (log->need_cache_flush)
-+		r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
-+				      IO_UNIT_IO_END);
-+	else
-+		r5l_log_run_stripes(log);
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
+ 	io = r5l_alloc_io_unit(log);
  
--	md_wakeup_thread(log->rdev->mddev->thread);
-+	if (log->need_cache_flush)
-+		md_wakeup_thread(log->rdev->mddev->thread);
- }
+@@ -296,17 +310,8 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	io->meta_offset = sizeof(struct r5l_meta_block);
+ 	io->seq = log->seq;
  
- static void r5l_submit_current_io(struct r5l_log *log)
-@@ -626,7 +648,8 @@ static void r5l_log_flush_endio(struct bio *bio)
- void r5l_flush_stripe_to_raid(struct r5l_log *log)
- {
- 	bool do_flush;
--	if (!log)
+-	bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
+-	io->current_bio = bio;
+-	bio->bi_rw = WRITE;
+-	bio->bi_bdev = log->rdev->bdev;
+-	bio->bi_iter.bi_sector = log->log_start;
+-	bio_add_page(bio, io->meta_page, PAGE_SIZE, 0);
+-	bio->bi_end_io = r5l_log_endio;
+-	bio->bi_private = io;
+-
+-	bio_list_add(&io->bios, bio);
+-	atomic_inc(&io->pending_io);
++	io->current_bio = r5l_bio_alloc(log, io);
++	bio_add_page(io->current_bio, io->meta_page, PAGE_SIZE, 0);
+ 
+ 	log->seq++;
+ 	log->log_start = r5l_ring_add(log, log->log_start, BLOCK_SECTORS);
+@@ -360,19 +365,9 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
+ 	struct r5l_io_unit *io = log->current_io;
+ 
+ alloc_bio:
+-	if (!io->current_bio) {
+-		struct bio *bio;
+-
+-		bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
+-		bio->bi_rw = WRITE;
+-		bio->bi_bdev = log->rdev->bdev;
+-		bio->bi_iter.bi_sector = log->log_start;
+-		bio->bi_end_io = r5l_log_endio;
+-		bio->bi_private = io;
+-		bio_list_add(&io->bios, bio);
+-		atomic_inc(&io->pending_io);
+-		io->current_bio = bio;
+-	}
++	if (!io->current_bio) 
++		io->current_bio = r5l_bio_alloc(log, io);
 +
-+	if (!log || !log->need_cache_flush)
- 		return;
- 
- 	spin_lock_irq(&log->io_list_lock);
-@@ -1115,6 +1138,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 		return -ENOMEM;
- 	log->rdev = rdev;
- 
-+	log->need_cache_flush = (rdev->bdev->bd_disk->queue->flush_flags != 0);
-+
- 	log->uuid_checksum = crc32_le(~0, (void *)rdev->mddev->uuid,
- 				      sizeof(rdev->mddev->uuid));
- 
+ 	if (!bio_add_page(io->current_bio, page, PAGE_SIZE, 0)) {
+ 		io->current_bio = NULL;
+ 		goto alloc_bio;
 -- 
 1.9.1
 
