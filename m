@@ -1,49 +1,44 @@
-From: Petr Mladek <pmladek@suse.com>
-Subject: [PATCH] bcache: Really show state of work pending bit
-Date: Mon,  5 Oct 2015 14:39:52 +0200
-Message-ID: <1444048792-22847-1-git-send-email-pmladek@suse.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Neil Brown <neilb@suse.com>, Jiri Kosina <jkosina@suse.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Petr Mladek <pmladek@suse.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH RESEND] imsm: don't call abort_reshape() in
+ imsm_manage_reshape()
+Date: Mon, 5 Oct 2015 15:18:11 +0200
+Message-ID: <56127893.6070606@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Konrad Dabrowski <konrad.dabrowski@intel.com>
 List-Id: linux-raid.ids
 
-WORK_STRUCT_PENDING is a mask for testing the pending bit.
-test_bit() expects the number of the bit and we need to
-use WORK_STRUCT_PENDING_BIT there.
+Calling abort_reshape() in imsm_manage_reshape() is unnecessary in case
+of an error because it is handled by reshape_array(). Calling it when
+reshape completes successfully is also unnecessary and leads to a race
+condition:
+- reshape ends
+- mdadm calls abort_reshape() -> sets sync_action to idle
+- MD_RECOVERY_INTR is set and md_reap_sync_thread() does not finish the
+  reshape
 
-Also work_data_bits() is defined in workqueues.h now.
-
-I have noticed this just by chance when looking how
-WORK_STRUCT_PENDING_BIT is used. The change is compile
-tested.
-
-Signed-off-by: Petr Mladek <pmladek@suse.com>
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Signed-off-by: Konrad Dabrowski <konrad.dabrowski@intel.com>
 ---
- drivers/md/bcache/closure.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ super-intel.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
-index 7a228de95fd7..9eaf1d6e8302 100644
---- a/drivers/md/bcache/closure.c
-+++ b/drivers/md/bcache/closure.c
-@@ -167,8 +167,6 @@ EXPORT_SYMBOL(closure_debug_destroy);
+diff --git a/super-intel.c b/super-intel.c
+index 95a72b6..e609e0c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -10601,7 +10601,6 @@ static int imsm_manage_reshape(
+ 	ret_val = 1;
+ abort:
+ 	free(buf);
+-	abort_reshape(sra);
  
- static struct dentry *debug;
- 
--#define work_data_bits(work) ((unsigned long *)(&(work)->data))
--
- static int debug_seq_show(struct seq_file *f, void *data)
- {
- 	struct closure *cl;
-@@ -182,7 +180,7 @@ static int debug_seq_show(struct seq_file *f, void *data)
- 			   r & CLOSURE_REMAINING_MASK);
- 
- 		seq_printf(f, "%s%s%s%s\n",
--			   test_bit(WORK_STRUCT_PENDING,
-+			   test_bit(WORK_STRUCT_PENDING_BIT,
- 				    work_data_bits(&cl->work)) ? "Q" : "",
- 			   r & CLOSURE_RUNNING	? "R" : "",
- 			   r & CLOSURE_STACK	? "S" : "",
+ 	return ret_val;
+ }
 -- 
-1.8.5.6
+2.1.4
+
