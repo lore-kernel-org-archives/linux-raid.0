@@ -1,77 +1,60 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 5/6] Check write journal in incremental
-Date: Tue, 6 Oct 2015 13:17:20 -0700
-Message-ID: <CAPcyv4iYxLm1uoHM1Rrz7jyecrf+8Luby8CjmQwdK0Pvs6Ya+w@mail.gmail.com>
-References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com>
-	<1440804426-1461372-6-git-send-email-songliubraving@fb.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: Unable to assemble RAID6 after Ubuntu>Arch switch
+Date: Tue, 6 Oct 2015 23:10:43 +0100
+Message-ID: <CADNH=7EhFzaXQVNB+b=LHMaMzqqAODnBP9c2vg0htKL5VOpsdg@mail.gmail.com>
+References: <CADNH=7Hr6HXVPQP6-V8Jkr9aSwqHojoWApjA7ZKnQOPL0inUYw@mail.gmail.com>
+ <CAETWcfsw2M3JkNmE3M3nsr0_M4N86ta+kaRo62OgK+Ft0J5iiw@mail.gmail.com>
+ <CADNH=7E796sv+A4PDb2n=EJomAR8KPRoGt-=+52BYfrELBFZDg@mail.gmail.com>
+ <CAETWcfvF1o8mNVw1t-=7WNZZTz774eTnj1tG6UckrXbDvWxdXg@mail.gmail.com>
+ <CADNH=7Eyy-K3ivHAt_oYtTWdkeSDA7itZ+1Y+-EHdz8Y9_U0ww@mail.gmail.com>
+ <CAETWcftkkJr_MjP5ReBsOCW5ioCu81KQcdwr_1-=qUD25e1ssw@mail.gmail.com>
+ <CADNH=7HEpag54Z7+aey+skWiThL93H2sgPpxVS77pqp4R_1NAQ@mail.gmail.com>
+ <56068280.2090009@turmel.org> <CADNH=7H9DcEFEEOmcMjn1fS-2efPB_eXVN8zxCoVCHRaCpLR3Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1440804426-1461372-6-git-send-email-songliubraving@fb.com>
+In-Reply-To: <CADNH=7H9DcEFEEOmcMjn1fS-2efPB_eXVN8zxCoVCHRaCpLR3Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Alexander Afonyashin <a.afonyashin@madnet-team.ru>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Aug 28, 2015 at 4:27 PM, Song Liu <songliubraving@fb.com> wrote:
-> If journal device is missing, do not start the array, and shows:
->
-> ./mdadm -I /dev/sdf
-> mdadm: journal device is missing, not safe to start yet.
->
-> The array will be started when the journal device is attached with -I
->
-> ./mdadm -I /dev/sdb1
-> mdadm: /dev/sdb1 attached to /dev/md/0_0, which has been started.
->
-> To force start without journal device:
->
-> ./mdadm -I /dev/sdf --run
-> mdadm: Trying to run with missing journal device
-> mdadm: /dev/sdf attached to /dev/md/0_0, which has been started.
->
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> ---
->  Incremental.c | 31 +++++++++++++++++++++++++++----
->  1 file changed, 27 insertions(+), 4 deletions(-)
->
-> diff --git a/Incremental.c b/Incremental.c
-> index 304cc6d..74905e3 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -35,7 +35,7 @@
->
->  static int count_active(struct supertype *st, struct mdinfo *sra,
->                         int mdfd, char **availp,
-> -                       struct mdinfo *info);
-> +                       struct mdinfo *info, int *journal_device_missing);
->  static void find_reject(int mdfd, struct supertype *st, struct mdinfo *sra,
->                         int number, __u64 events, int verbose,
->                         char *array_name);
-> @@ -104,6 +104,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->         struct map_ent target_array;
->         int have_target;
->         char *devname = devlist->devname;
-> +       int journal_device_missing = 0;
->
->         struct createinfo *ci = conf_get_create_info();
->
-> @@ -518,7 +519,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->         sysfs_free(sra);
->         sra = sysfs_read(mdfd, NULL, (GET_DEVS | GET_STATE |
->                                     GET_OFFSET | GET_SIZE));
-> -       active_disks = count_active(st, sra, mdfd, &avail, &info);
-> +       active_disks = count_active(st, sra, mdfd, &avail, &info, &journal_device_missing);
->         if (enough(info.array.level, info.array.raid_disks,
->                    info.array.layout, info.array.state & 1,
->                    avail) == 0) {
-> @@ -548,10 +549,12 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->         }
->
->         map_unlock(&map);
-> -       if (c->runstop > 0 || active_disks >= info.array.working_disks) {
-> +       if (c->runstop > 0 || (!journal_device_missing && active_disks >= info.array.working_disks)) {
+I got it working by following Alexander's suggestion (boot back into
+Ubuntu, fail a device, remove it, clear all superblocks on it, re-add
+it, repeat for every device with traces of the old array). Archlinux
+now detects everything automatically on boot.
 
-A minor comment, and I'd defer to Neil's opinion, but I think this is
-asking for mdu_array_info_t to grow a "journal_disks" attribute.
+Thank you!
+
+Mathias
+
+On 26 September 2015 at 19:01, Mathias Bur=C3=A9n <mathias.buren@gmail.=
+com> wrote:
+> On 26 September 2015 at 12:33, Phil Turmel <philip@turmel.org> wrote:
+>> On 09/26/2015 08:16 AM, Mathias Bur=C3=A9n wrote:
+>>> Hi,
+>>>
+>>> Would it be possible to somehow manually assemble array under Arch?
+>>> Since the Arch kernel doesn't see /dev/sda1 and /dev/sdb1 (fdisk se=
+es
+>>> them but they do not appear in /dev) I can't assemble arrays.
+>>> partprobe doesn't help. Any ideas why the partitions wouldn't popul=
+ate in /dev ?
+>>
+>> Is there any chance you've managed to get a GPT label onto those dis=
+ks?
+>>  And your arch kernel has omitted GPT support?
+>>
+>> Phil
+>>
+>
+> Good idea Phil, but it's enabled by default:
+>
+> $ zgrep CONFIG_EFI_PARTITION /proc/config.gz
+> CONFIG_EFI_PARTITION=3Dy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
