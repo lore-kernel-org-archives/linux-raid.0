@@ -1,60 +1,62 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Unable to assemble RAID6 after Ubuntu>Arch switch
-Date: Tue, 6 Oct 2015 23:10:43 +0100
-Message-ID: <CADNH=7EhFzaXQVNB+b=LHMaMzqqAODnBP9c2vg0htKL5VOpsdg@mail.gmail.com>
-References: <CADNH=7Hr6HXVPQP6-V8Jkr9aSwqHojoWApjA7ZKnQOPL0inUYw@mail.gmail.com>
- <CAETWcfsw2M3JkNmE3M3nsr0_M4N86ta+kaRo62OgK+Ft0J5iiw@mail.gmail.com>
- <CADNH=7E796sv+A4PDb2n=EJomAR8KPRoGt-=+52BYfrELBFZDg@mail.gmail.com>
- <CAETWcfvF1o8mNVw1t-=7WNZZTz774eTnj1tG6UckrXbDvWxdXg@mail.gmail.com>
- <CADNH=7Eyy-K3ivHAt_oYtTWdkeSDA7itZ+1Y+-EHdz8Y9_U0ww@mail.gmail.com>
- <CAETWcftkkJr_MjP5ReBsOCW5ioCu81KQcdwr_1-=qUD25e1ssw@mail.gmail.com>
- <CADNH=7HEpag54Z7+aey+skWiThL93H2sgPpxVS77pqp4R_1NAQ@mail.gmail.com>
- <56068280.2090009@turmel.org> <CADNH=7H9DcEFEEOmcMjn1fS-2efPB_eXVN8zxCoVCHRaCpLR3Q@mail.gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: RE: [PATCH 3/6] Enable create array with write journal
+ (--write-journal DEVICE).
+Date: Wed, 7 Oct 2015 06:06:55 +0000
+Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104B88525@PRN-MBX02-4.TheFacebook.com>
+References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com>
+	<1440804426-1461372-4-git-send-email-songliubraving@fb.com>
+ <CAPcyv4g8b=RS7um6KzpmfrEtF1WaC2DF050gDNdA7MxP6mh-nw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7H9DcEFEEOmcMjn1fS-2efPB_eXVN8zxCoVCHRaCpLR3Q@mail.gmail.com>
+In-Reply-To: <CAPcyv4g8b=RS7um6KzpmfrEtF1WaC2DF050gDNdA7MxP6mh-nw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Alexander Afonyashin <a.afonyashin@madnet-team.ru>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-I got it working by following Alexander's suggestion (boot back into
-Ubuntu, fail a device, remove it, clear all superblocks on it, re-add
-it, repeat for every device with traces of the old array). Archlinux
-now detects everything automatically on boot.
-
-Thank you!
-
-Mathias
-
-On 26 September 2015 at 19:01, Mathias Bur=C3=A9n <mathias.buren@gmail.=
-com> wrote:
-> On 26 September 2015 at 12:33, Phil Turmel <philip@turmel.org> wrote:
->> On 09/26/2015 08:16 AM, Mathias Bur=C3=A9n wrote:
->>> Hi,
->>>
->>> Would it be possible to somehow manually assemble array under Arch?
->>> Since the Arch kernel doesn't see /dev/sda1 and /dev/sdb1 (fdisk se=
-es
->>> them but they do not appear in /dev) I can't assemble arrays.
->>> partprobe doesn't help. Any ideas why the partitions wouldn't popul=
-ate in /dev ?
->>
->> Is there any chance you've managed to get a GPT label onto those dis=
-ks?
->>  And your arch kernel has omitted GPT support?
->>
->> Phil
->>
->
-> Good idea Phil, but it's enabled by default:
->
-> $ zgrep CONFIG_EFI_PARTITION /proc/config.gz
-> CONFIG_EFI_PARTITION=3Dy
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gV2lsbGlhbXMgW21haWx0
+bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgNiwg
+MjAxNSAxMTozMiBBTQ0KPiBUbzogU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZiLmNvbT4NCj4g
+Q2M6IGxpbnV4LXJhaWQgPGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnPjsgU2hhb2h1YSBMaSA8
+c2hsaUBmYi5jb20+OyBOZWlsDQo+IEJyb3duIDxuZWlsYkBzdXNlLmRlPjsgQ2hyaXN0b3BoIEhl
+bGx3aWcgPGhjaEBpbmZyYWRlYWQub3JnPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDMvNl0gRW5h
+YmxlIGNyZWF0ZSBhcnJheSB3aXRoIHdyaXRlIGpvdXJuYWwgKC0td3JpdGUtDQo+IGpvdXJuYWwg
+REVWSUNFKS4NCj4gDQo+IE9uIEZyaSwgQXVnIDI4LCAyMDE1IGF0IDQ6MjcgUE0sIFNvbmcgTGl1
+IDxzb25nbGl1YnJhdmluZ0BmYi5jb20+IHdyb3RlOg0KPiA+IFNwZWNpZnkgdGhlIHdyaXRlIGpv
+dXJuYWwgZGV2aWNlIHdpdGggLS13cml0ZS1qb3VybmFsIERFVklDRQ0KPiA+DQo+ID4gLi9tZGFk
+bSAtLWNyZWF0ZSAtZiAvZGV2L21kMCAtLWFzc3VtZS1jbGVhbiAtYyAzMiAtLXJhaWQtZGV2aWNl
+cz00DQo+ID4gLS1sZXZlbD01IC9kZXYvc2RbYy1mXSAtLXdyaXRlLWpvdXJuYWwgL2Rldi9zZGIx
+DQo+ID4gbWRhZG06IERlZmF1bHRpbmcgdG8gdmVyc2lvbiAxLjIgbWV0YWRhdGENCj4gPiBtZGFk
+bTogYXJyYXkgL2Rldi9tZDAgc3RhcnRlZC4NCj4gPg0KPiA+IE9ubHkgb25lIGpvdXJuYWwgZGV2
+aWNlIGlzIGFsbG93ZWQuIElmIG11bHRpcGxlIC0td3JpdGUtam91cm5hbCBhcmUNCj4gPiBnaXZl
+biwgbWRhZG0gd2lsbCB1c2UgdGhlIGZpcnN0IGFuZCBpZ25vcmUgb3RoZXJzDQo+ID4NCj4gPiAu
+L21kYWRtIC0tY3JlYXRlIC1mIC9kZXYvbWQwIC0tYXNzdW1lLWNsZWFuIC1jIDMyIC0tcmFpZC1k
+ZXZpY2VzPTQNCj4gPiAtLWxldmVsPTUgL2Rldi9zZFtjLWZdIC0td3JpdGUtam91cm5hbCAvZGV2
+L3NkYjEgLS13cml0ZS1qb3VybmFsDQo+ID4gL2Rldi9zZHgNCj4gPiBtZGFkbTogUGxlYXNlIHNw
+ZWNpZnkgb25seSBvbmUgam91cm5hbCBkZXZpY2UgZm9yIHRoZSBhcnJheS4NCj4gPiBtZGFkbTog
+SWdub3JpbmcgLS13cml0ZS1qb3VybmFsIC9kZXYvc2R4Li4uDQo+ID4gbWRhZG06IERlZmF1bHRp
+bmcgdG8gdmVyc2lvbiAxLjIgbWV0YWRhdGENCj4gPiBtZGFkbTogYXJyYXkgL2Rldi9tZDAgc3Rh
+cnRlZC4NCj4gDQo+IEhtbSwgcGVyaGFwcyB0aGlzIHNob3VsZCBpbnN0ZWFkIGZvbGxvdyB0aGUg
+c2FtZSBjb21tYW5kIGxpbmUgbWVjaGFuaWNzDQo+IGFzICItLXdyaXRlLW1vc3RseSIgd2hlcmVi
+eSBhbGwgdGhlIGRldmljZXMgbGlzdGVkIGFmdGVyIHRoYXQgZmxhZyB0YWtlIG9uIHRoYXQNCj4g
+cm9sZS4gIEFsc28sIGlmIHdlIGFudGljaXBhdGUgbW9yZSByb2xlcyBJIHdvbmRlciBpZiB0aGUg
+b3B0aW9uIHNob3VsZCBiZSAiLS0NCj4gcm9sZT0iIHRoYXQgYXNzaWducyB0aGUgZ2l2ZW4gcm9s
+ZSB0byB0aGUgZGV2aWNlKHMpIHRoYXQgZm9sbG93Lg0KPiANCj4gVGhvdWdodHM/DQo+IA0KPiBJ
+J20gbG9va2luZyBhdCB0aGlzIGZyb20gdGhlIHBlcnNwZWN0aXZlIG9mIHJldml2aW5nIHRoZSBT
+UlQgcGF0Y2hlcyBbMV0gd2hlcmUNCj4gYSByb2xlIGZvciBhIHJlYWQvd3JpdGUgY2FjaGUgZGV2
+aWNlIGlzIG5lZWRlZC4gIFdoZXJlIGEgcmVhZC93cml0ZS1jYWNoZSBpcw0KPiBkaWZmZXJlbnQg
+dGhhbiBhIGpvdXJuYWwuDQo+IA0KPiBbMV06DQo+IGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBv
+aW50LmNvbS92MS91cmw/dT1odHRwczovL2x3bi5uZXQvQXJ0aWNsZXMvNTk2NjENCj4gNC8maz1a
+Vk5qbERNRjBGRWxtNGRRdHJ5TzRBJTNEJTNEJTBBJnI9SjNqR2U1NmRJUGZTNVRONkRNODJVDQo+
+IFliYmVSMWoydmlhaVNKSTQwdHY2bEUlM0QlMEEmbT1kdjV6bkZkJTJCVFpkSFphU0tqekJWcUpi
+ZHROQkFMUjANCj4gUmd6aFpzT21zV0FVJTNEJTBBJnM9ODBjODEyOTgxZmY5ODI2NGNmMWJiMmI3
+OTAzMjg2M2Q0ZTMzYmExMDANCj4gMDkzZDQxOTU2ZWFiM2ZiZDMzYjU2MzUNCg0KSSB0aGluayAt
+LXdyaXRlLW1vc3RseSBpcyB1c2VkIGFzIF9oaW50XyB0byBSQUlEIDEgdGhhdCBkaWZmZXJlbnRp
+YXRlcyBTU0QgZnJvbSANCkhERC4gV2hpbGUgLS13cml0ZS1qb3VybmFsIHR1cm5zIG9uICJNRF9G
+RUFUVVJFX0pPVVJOQUwiIGFuZCBzcGVjaWZpZXMgDQpqb3VybmFsIGRldmljZS4gV2Ugc2hvdWxk
+IG5vdCBuZWVkIG1vcmUgdGhhbiAxIGpvdXJuYWwgZGV2aWNlLiBJbiB0aGlzIHNlbnNlLCANCkkg
+dGhpbmsgY3VycmVudCAtLXdyaXRlLWpvdXJuYWwgd29ya3Mgd2VsbC4uLg0KDQpUaGFua3MsDQpT
+b25nDQoNCg0K
