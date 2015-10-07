@@ -1,58 +1,27 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH 4/6] Assemble array with write journal
-Date: Wed, 7 Oct 2015 06:13:49 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104B8854B@PRN-MBX02-4.TheFacebook.com>
-References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com>
-	<1440804426-1461372-5-git-send-email-songliubraving@fb.com>
- <CAPcyv4j=8SS0Hfwu3AG3iQ+pCrXZMheMU1HM2L_LZXkNJY48wg@mail.gmail.com>
+From: =?ISO-8859-2?Q?Giedrius_Statkevi=E8ius?=
+	<giedrius.statkevicius@gmail.com>
+Subject: 30c2a1faaeb3db94fc92f79553cc72634aa3b218 broke cryptsetup on my
+ machine
+Date: Wed, 7 Oct 2015 22:27:27 +0300 (EEST)
+Message-ID: <alpine.LNX.2.20.1510072226180.1350@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4j=8SS0Hfwu3AG3iQ+pCrXZMheMU1HM2L_LZXkNJY48wg@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: geliangtang@163.com, snitzer@redhat.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gV2lsbGlhbXMgW21haWx0
-bzpkYW4uai53aWxsaWFtc0BpbnRlbC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIE9jdG9iZXIgNiwg
-MjAxNSAxOjEyIFBNDQo+IFRvOiBTb25nIExpdSA8c29uZ2xpdWJyYXZpbmdAZmIuY29tPg0KPiBD
-YzogbGludXgtcmFpZCA8bGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmc+OyBTaGFvaHVhIExpIDxz
-aGxpQGZiLmNvbT47IE5laWwNCj4gQnJvd24gPG5laWxiQHN1c2UuZGU+OyBDaHJpc3RvcGggSGVs
-bHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggNC82XSBBc3Nl
-bWJsZSBhcnJheSB3aXRoIHdyaXRlIGpvdXJuYWwNCj4gDQo+IE9uIEZyaSwgQXVnIDI4LCAyMDE1
-IGF0IDQ6MjcgUE0sIFNvbmcgTGl1IDxzb25nbGl1YnJhdmluZ0BmYi5jb20+IHdyb3RlOg0KPiA+
-IEV4YW1wbGUgb3V0cHV0Og0KPiA+DQo+ID4gLi9tZGFkbSAtLWFzc2VtYmxlIC9kZXYvbWQwIC9k
-ZXYvc2RbYy1mXSAvZGV2L3NkYjENCj4gPiBtZGFkbTogL2Rldi9tZDAgaGFzIGJlZW4gc3RhcnRl
-ZCB3aXRoIDQgZHJpdmVzIGFuZCAxIGpvdXJuYWwuDQo+ID4NCj4gPiBtZGFkbSBjaGVja3Mgc3Vw
-ZXJibG9jayBmb3Igam91cm5hbCBkZXZpY2VzLiBJZiB0aGUgYXJyYXkgYXBwZWFycyB0bw0KPiA+
-IGhhdmUgYSBqb3VybmFsIGRldmljZSwgYnV0IGl0IGlzIG5vdCBnaXZlbiwgaXQgd2lsbCBjb21w
-bGFpbiBhcw0KPiA+DQo+ID4gLi9tZGFkbSAtLWFzc2VtYmxlIC9kZXYvbWQwIC9kZXYvc2RbYy1m
-XQ0KPiA+IG1kYWRtOiBOb3Qgc2FmZSB0byBhc3NlbWJsZSB3aXRoIGpvdXJuYWwgZGV2aWNlIG1p
-c3NpbmcsIGNvbnNpZGVyIC0tZm9yY2UuDQo+ID4NCj4gPiBUaGlzIGNhbiBiZSBvdmVyd3JpdHRl
-biB3aXRoIC0tZm9yY2UNCj4gPg0KPiA+IC4vbWRhZG0gLS1hc3NlbWJsZSAvZGV2L21kMCAvZGV2
-L3NkW2MtZl0gLS1mb3JjZQ0KPiA+IG1kYWRtOiBGb3JjZSBzdGFydCB3aXRoIG1pc3Npbmcgam91
-cm5hbCBkZXZpY2UuLi4NCj4gPiBtZGFkbTogL2Rldi9tZDAgaGFzIGJlZW4gc3RhcnRlZCB3aXRo
-IDQgZHJpdmVzLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogU2hhb2h1YSBMaSA8c2hsaUBmYi5j
-b20+DQo+ID4gU2lnbmVkLW9mZi1ieTogU29uZyBMaXUgPHNvbmdsaXVicmF2aW5nQGZiLmNvbT4N
-Cj4gWy4uXQ0KPiA+IGRpZmYgLS1naXQgYS9tZGFkbS5oIGIvbWRhZG0uaA0KPiA+IGluZGV4IDNj
-YzE1MzIuLmJjNjY4MGYgMTAwNjQ0DQo+ID4gLS0tIGEvbWRhZG0uaA0KPiA+ICsrKyBiL21kYWRt
-LmgNCj4gPiBAQCAtOTY5LDYgKzk2OSw5IEBAIGV4dGVybiBzdHJ1Y3Qgc3VwZXJzd2l0Y2ggew0K
-PiA+ICAgICAgICAgLyogdmFsaWRhdGUgY29udGFpbmVyIGFmdGVyIGFzc2VtYmxlICovDQo+ID4g
-ICAgICAgICBpbnQgKCp2YWxpZGF0ZV9jb250YWluZXIpKHN0cnVjdCBtZGluZm8gKmluZm8pOw0K
-PiA+DQo+ID4gKyAgICAgICAvKiB3aGV0aGVyIHRoZSBhcnJheSByZXF1aXJlIGEgam91cm5hbCBk
-ZXZpY2UgKi8NCj4gPiArICAgICAgIGludCAoKnJlcXVpcmVfam91cm5hbCkoc3RydWN0IHN1cGVy
-dHlwZSAqc3QpOw0KPiA+ICsNCj4gPiAgICAgICAgIGludCBzd2FwdXVpZDsgLyogdHJ1ZSBpZiB1
-dWlkIGlzIGJpZ2VuZGluZyByYXRoZXIgdGhhbiBob3N0ZW5kaWFuICovDQo+ID4gICAgICAgICBp
-bnQgZXh0ZXJuYWw7DQo+ID4gICAgICAgICBjb25zdCBjaGFyICpuYW1lOyAvKiBjYW5vbmljYWwg
-bWV0YWRhdGEgbmFtZSAqLw0KPiANCj4gSSdtIHdvbmRlcmluZyB3aHkgaXMgdGhpcyBhIGZ1bmN0
-aW9uIHBvaW50ZXIgcmF0aGVyIHRoYW4gYSBmbGFnPyAgSXMgaXQgYmVjYXVzZQ0KPiAicm9sZXMi
-IGFyZSBvbmx5IGFuIGludGVybmFsIGRldGFpbCBvZiB2MSBzdXBlcmJsb2Nrcz8NCj4gTWlnaHQg
-YmUgdGltZSB0byBtYWtlIHRoZW0gYSBmaXJzdCBjbGFzcyBjaXRpemVuLiAgQWdhaW4sIEkgd291
-bGQgdXNlIHRoYXQNCj4gZ2VuZXJpYyAicm9sZXMiIGVuYWJsaW5nIGZvciBhIG5ldyByZXYgb2Yg
-dGhlIFNSVCBwYXRjaGVzLg0KDQpBY3R1YWxseSwgSSBhbSBwbGFubmluZyB0byBoYXZlIHJlcXVp
-cmVfam91cm5hbDEganVzdCByZWFkIA0KTURfRkVBVFVSRV9KT1VSTkFMIGJpdC4gQnV0IHRoZSBm
-ZWF0dXJlX21hcCBpcyBzdXBlciAxIG9ubHkuIE5vdCBzdXJlDQp3aGV0aGVyIHRoZXJlIGlzIGFu
-b3RoZXIgZmxhZyBmb3IgdGhpcy4NCg0KVGhhbmtzLA0KU29uZw0K
+Hello,
+I have a LUKS on LVM setup: /boot is unencrypted and everything is "hidden" in
+/dev/sda2. After booting on linux-next and just after entering my password
+cryptsetup segfaults and a stack trace is printed from the kernel. Since writing
+down all those numbers is hard I've made a picture where it is shown:
+https://i.imgur.com/6PHNUdv.jpg
+
+I figured it had something to do with changes to memory management and thus find
+out that commit 30c2a1faaeb3db94fc92f79553cc72634aa3b218 broke my system.
+Reverting it there is no such error anymore and system boots fine past that
+point. 
+
+Could someone look into this? Thanks, Giedrius
