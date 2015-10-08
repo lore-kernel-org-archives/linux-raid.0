@@ -1,71 +1,85 @@
 From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 0/6] raid5-cache fixes
-Date: Wed, 7 Oct 2015 19:56:12 -0700
-Message-ID: <20151008025603.GA3007253@devbig084.prn1.facebook.com>
+Subject: Re: [PATCH 4/6] md: don't export log device
+Date: Wed, 7 Oct 2015 20:16:55 -0700
+Message-ID: <20151008031644.GA3063621@devbig084.prn1.facebook.com>
 References: <cover.1443973492.git.shli@fb.com>
- <87mvvu6rfr.fsf@notabene.neil.brown.name>
+ <7aecea0895b46e28c2b8a876a83da10d7f30d7f1.1443973492.git.shli@fb.com>
+ <87pp0q6s1i.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87mvvu6rfr.fsf@notabene.neil.brown.name>
+In-Reply-To: <87pp0q6s1i.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-On Thu, Oct 08, 2015 at 01:10:32PM +1100, Neil Brown wrote:
+On Thu, Oct 08, 2015 at 12:57:29PM +1100, Neil Brown wrote:
 > Shaohua Li <shli@fb.com> writes:
 > 
-> > Hi,
+> > If there is IO error in log device, don't export it like other raid
+> > disks. Otherwise we get kernel crash in different places since
+> > rdev->bdev, rdev->mddev becomes NULL
 > >
-> > some fixes for raid5-cache.
-> > patch 1, a small fix
-> > patch 2-3, move reclaim teardown to quiesce handling and add trim support. I
-> > still need md_update_sb there and play the mddev_is_locked trick as the
-> > reconfig_mutex is already hold at md stop. The md_update_sb probably can move
-> > to md core later.
-> > patch 4-6, add error handling. For patch 4, I still need the journal bit check
-> > in in md core, otherwise there is no way to prevent 'echo remove > rdev/state'
-> > to delete journal disk. For patch 6, I didn't change has_failed() yet. Handling
-> > assemble with miss/failed log disk is still on going.
+> > Signed-off-by: Shaohua Li <shli@fb.com>
+> > ---
+> >  drivers/md/md.c    | 4 ++--
+> >  drivers/md/raid5.c | 2 ++
+> >  2 files changed, 4 insertions(+), 2 deletions(-)
 > >
-> > Next step is to make assemble correct with miss/failed log disk. This will need
-> > kernel/utilities cooperation. Song and I are working on it.
-> >
-> > Thanks,
-> > Shaohua
-> >
-> > Shaohua Li (6):
-> >   md: show journal for journal disk in disk state sysfs
-> >   raid5-cache: move reclaim stop to quiesce
-> >   raid5-cache: add trim support for log
-> >   md: don't export log device
-> >   md: set In_Sync for log disk
-> >   raid5-cache: IO error handling
-> >
-> >  drivers/md/md.c          |  9 ++++--
-> >  drivers/md/raid5-cache.c | 83 ++++++++++++++++++++++++++++++++++++++++--------
-> >  drivers/md/raid5.c       |  7 +++-
-> >  drivers/md/raid5.h       |  3 ++
-> >  4 files changed, 85 insertions(+), 17 deletions(-)
-> >
-> > -- 
-> > 2.4.6
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index c643c9a..ec6574d 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -2523,7 +2523,7 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
+> >  		else
+> >  			err = -EBUSY;
+> >  	} else if (cmd_match(buf, "remove")) {
+> > -		if (rdev->raid_disk >= 0)
+> > +		if (rdev->raid_disk >= 0 || test_bit(Journal, &rdev->flags))
+> >  			err = -EBUSY;
+> >  		else {
+> >  			struct mddev *mddev = rdev->mddev;
+> > @@ -6044,7 +6044,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
+> >  	clear_bit(Blocked, &rdev->flags);
+> >  	remove_and_add_spares(mddev, rdev);
+> >  
+> > -	if (rdev->raid_disk >= 0)
+> > +	if (rdev->raid_disk >= 0 || test_bit(Journal, &rdev->flags))
+> >  		goto busy;
+> >  
+> >  	if (mddev_is_clustered(mddev))
 > 
-> Thanks.
-> 
-> I've applied 1, 2, and 5. Should appear in 'devel' shortly.
-> 3 and 4 I've replies to separately, 6 depends on 3.
+> Neither of these chunks should be needed.
+> ->raid_disk of an active devices is only set to -1 if ->hot_remove_disk
+> succeeds.
+> You have make ->hot_remove_disk fail for Journal devices, so ->raid_disk
+> will be >= 0.
 
-please hold 5 currently. I'm a little confused about the In_sync bit.
-It's quite tricky to handle this bit. For example, if both In_sync and
-Journal bits are set, I'll need move checking the 'Journal' bit ahead of
-checking the 'In_sync' in super_1_sync (current patch haven't done it
-yet, it's a bug). There are similar cases in mdadm too. This makes me
-thinking about What's the exact role for the In_sync bit for journal
-disk. The comments in the bit definition doesn't give an answer. We can
-use the Faulty bit for error handling. Any thoughts?
+I agree the raid5_remove_disk part is superficial, I fixed in an updated
+patch. I still didn't get the point what can prevent a journal disk is
+removed. Currently the raid_disk is always -1 for journal disk. If it
+should be >=0, what value it should be? We give journal disk a special
+role '0xfffd' currently.
 
 Thanks,
-Shaohua
+shaohua
+> 
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > index 216fa3c..c164501 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -7128,6 +7128,8 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+> >  	struct disk_info *p = conf->disks + number;
+> >  
+> >  	print_raid5_conf(conf);
+> > +	if (test_bit(Journal, &rdev->flags))
+> > +		return -EBUSY;
+> >  	if (rdev == p->rdev)
+> >  		rdevp = &p->rdev;
+> >  	else if (rdev == p->replacement)
+> > -- 
+> > 2.4.6
+
+
