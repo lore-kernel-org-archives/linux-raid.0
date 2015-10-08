@@ -1,155 +1,154 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH 1/5] fs: Verify access of user towards block device file
- when mounting
-Date: Thu, 8 Oct 2015 10:41:15 -0500
-Message-ID: <20151008154115.GA88001@ubuntu-hedt>
-References: <1443644116-41366-1-git-send-email-seth.forshee@canonical.com>
- <1443644116-41366-2-git-send-email-seth.forshee@canonical.com>
- <20150930234215.GA24127@redhat.com>
- <20151001125508.GA101875@ubuntu-hedt>
- <20151001134052.GB27818@redhat.com>
- <20151001144137.GC101875@ubuntu-hedt>
+From: Neil Brown <neilb@suse.com>
+Subject: Re: [PATCH] crash in md-raid1 and md-raid10 due to incorrect list manipulation
+Date: Fri, 09 Oct 2015 08:35:20 +1100
+Message-ID: <87lhbd59if.fsf@notabene.neil.brown.name>
+References: <alpine.LRH.2.02.1510011442260.16076@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151001144137.GC101875@ubuntu-hedt>
+In-Reply-To: <alpine.LRH.2.02.1510011442260.16076@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Mike Snitzer <snitzer@redhat.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, Oct 01, 2015 at 09:41:37AM -0500, Seth Forshee wrote:
-> On Thu, Oct 01, 2015 at 09:40:52AM -0400, Mike Snitzer wrote:
-> > On Thu, Oct 01 2015 at  8:55am -0400,
-> > Seth Forshee <seth.forshee@canonical.com> wrote:
-> > 
-> > > On Wed, Sep 30, 2015 at 07:42:15PM -0400, Mike Snitzer wrote:
-> > > > On Wed, Sep 30 2015 at  4:15pm -0400,
-> > > > Seth Forshee <seth.forshee@canonical.com> wrote:
-> > > > 
-> > > > > When mounting a filesystem on a block device there is currently
-> > > > > no verification that the user has appropriate access to the
-> > > > > device file passed to mount. This has not been an issue so far
-> > > > > since the user in question has always been root, but this must
-> > > > > be changed before allowing unprivileged users to mount in user
-> > > > > namespaces.
-> > > > > 
-> > > > > To fix this, add an argument to lookup_bdev() to specify the
-> > > > > required permissions. If the mask of permissions is zero, or
-> > > > > if the user has CAP_SYS_ADMIN, the permission check is skipped,
-> > > > > otherwise the lookup fails if the user does not have the
-> > > > > specified access rights for the inode at the supplied path.
-> > > > > 
-> > > > > Callers associated with mounting are updated to pass permission
-> > > > > masks to lookup_bdev() so that these mounts will fail for an
-> > > > > unprivileged user who lacks permissions for the block device
-> > > > > inode. All other callers pass 0 to maintain their current
-> > > > > behaviors.
-> > > > > 
-> > > > > Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> > > > > ---
-> > > > >  drivers/md/bcache/super.c |  2 +-
-> > > > >  drivers/md/dm-table.c     |  2 +-
-> > > > >  drivers/mtd/mtdsuper.c    |  6 +++++-
-> > > > >  fs/block_dev.c            | 18 +++++++++++++++---
-> > > > >  fs/quota/quota.c          |  2 +-
-> > > > >  include/linux/fs.h        |  2 +-
-> > > > >  6 files changed, 24 insertions(+), 8 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> > > > > index e76ed003769e..35bb3ea4cbe2 100644
-> > > > > --- a/drivers/md/dm-table.c
-> > > > > +++ b/drivers/md/dm-table.c
-> > > > > @@ -380,7 +380,7 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
-> > > > >  	BUG_ON(!t);
-> > > > >  
-> > > > >  	/* convert the path to a device */
-> > > > > -	bdev = lookup_bdev(path);
-> > > > > +	bdev = lookup_bdev(path, 0);
-> > > > >  	if (IS_ERR(bdev)) {
-> > > > >  		dev = name_to_dev_t(path);
-> > > > >  		if (!dev)
-> > > > 
-> > > > Given dm_get_device() is passed @mode why not have it do something like
-> > > > you did in blkdev_get_by_path()? e.g.:
-> > > 
-> > > I only dealt with code related to mounting in this patch since that's
-> > > what I'm working on. I have it on my TODO list to consider converting
-> > > other callers of lookup_bdev. But if you're sure doing so makes sense
-> > > for dm_get_device and that it won't cause regressions then I could add a
-> > > patch for it.
-> > 
-> > OK, dm_get_device() is called in DM device activation path (by tools
-> > like lvm2).
-> > 
-> > After lookup_bdev() it goes on to call blkdev_get_by_dev() with this
-> > call chain: 
-> >   dm_get_device -> dm_get_table_device -> open_table_device -> blkdev_get_by_dev
-> > 
-> > Not immediately clear to me why we'd need to augment blkdev_get_by_dev()
-> > to do this checking also.
-> > 
-> > However, thinking further: In a device stack (e.g. dm/lvm2, md, etc)
-> > new virtual block devices are created that layer ontop of the
-> > traditional block devices.  This level of indirection may cause your
-> > lookup_bdev() check to go on to succeed (if access constraints were not
-> > established on the upper level dm or md device?).  I'm just thinking
-> > outloud here: but have you verified your changes work as intended on
-> > devices created with either lvm2 or mdadm?
-> > 
-> > What layer establishes access rights to historically root-only
-> > priviledged block devices?  Is it user namespaces?
-> 
-> I'm going to start with this last question and work my way backwards.
-> 
-> Who determines access rights to the block devices varies to some degree.
-> Any normal user could unshare the user/mount namespaces and still see
-> all the block devices in /dev. If we're going to allow that user to then
-> mount block devices in their private namespaces, the kernel must verify
-> that the user has appropriate permissions for the block device inode.
-> That's the point of this patch. In a container context the host process
-> which sets up the container might share some block devices into the
-> container via bind mounts, in which case it would be responsible for
-> setting up access rights (both via inode permissions and potentially via
-> devcgroups). I also have some patches I'm working on for a loop psuedo
-> filesystem which would allow a container to allocate loop devices for
-> its own use (via the loop-control device), in which case the kernel
-> creates a device node in the loopfs filesystem from which the new loop
-> device was allocated, owned by the root user in the user namespace
-> associated with the loopfs superblock.
-> 
-> Obviously a DM block device is more complicated than a traditional block
-> device. This patch should ensure that if an unprivileged user tries to
-> mount a DM blkdev that it fails if the user lacks permissions for the DM
-> blkdev inode. There's also the blkdevs behind the DM blkdev, and I'm not
-> sure whether we need to additionally verify that the user has access to
-> those devices. Maybe it's enough that someone with access to them set up
-> the DM device, and someone with sufficient privileges gave that user
-> access to the DM device. Do you have any thoughts?
-> 
-> As for activating a DM device, I assume only root is permitted to do
-> this. In that case lookup_bdev will skip the inode permission check
-> even if a non-zero permission mask is passed.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I've been looking into this more and doing some testing.
+Mikulas Patocka <mpatocka@redhat.com> writes:
 
-As far as mounting goes, it ends up behaving as I expected. As long as
-the user has permission to access the inode for the DM block device, the
-device can be mounted. Access to the block devices behind the DM block
-device is not required. I think this makes sense - it's consistent with
-how read/write access to the DM block device works already independent
-of user namespaces.
+> The commit 55ce74d4bfe1b9444436264c637f39a152d1e5ac (md/raid1: ensure=20
+> device failure recorded before write request returns) is causing crash in=
+=20
+> the LVM2 testsuite test shell/lvchange-raid.sh. For me the crash is 100%=
+=20
+> reproducible.
+>
+> The reason for the crash is that the newly added code in raid1d moves the=
+=20
+> list from conf->bio_end_io_list to tmp, then tests if tmp is non-empty an=
+d=20
+> then incorrectly pops the bio from conf->bio_end_io_list (which is empty=
+=20
+> because the list was alrady moved).
+>
+> Raid-10 has a similar bug.
 
-One thing I noticed that might be a concern (I'm not sure) are ioctls on
-DM block devices. It looks to me like often these will be passed through
-to the underlying block device.
+Ouch.  I can't have been thinking when I wrote that code!
 
-It appears that all code paths which call dm_get_device originate with
-ioctls on /dev/mapper/control. Doing this requires CAP_SYS_ADMIN, in
-which case the permission check in lookup_bdev is skipped. So there's no
-benefit to having dm_get_device pass a permission mask to
-blkdev_get_by_path, nor is there any harm. It will only matter if at
-some point userns-root is allowed to set up DM devices.
+Thanks for finding and fixing this.  Patch will be sent to Linus in time
+for next -rc.
 
-Seth
+Thanks,
+NeilBrown
+
+>
+> Kernel Fault: Code=3D15 regs=3D000000006ccb8640 (Addr=3D0000000100000000)
+> CPU: 3 PID: 1930 Comm: mdX_raid1 Not tainted 4.2.0-rc5-bisect+ #35
+> task: 000000006cc1f258 ti: 000000006ccb8000 task.ti: 000000006ccb8000
+>
+>      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
+> PSW: 00001000000001001111111000001111 Not tainted
+> r00-03  000000ff0804fe0f 000000001059d000 000000001059f818 000000007f16be=
+38
+> r04-07  000000001059d000 000000007f16be08 0000000000200200 00000000000000=
+01
+> r08-11  000000006ccb8260 000000007b7934d0 0000000000000001 00000000000000=
+00
+> r12-15  000000004056f320 0000000000000000 0000000000013dd0 00000000000000=
+00
+> r16-19  00000000f0d00ae0 0000000000000000 0000000000000000 00000000000000=
+01
+> r20-23  000000000800000f 0000000042200390 0000000000000000 00000000000000=
+00
+> r24-27  0000000000000001 000000000800000f 000000007f16be08 000000001059d0=
+00
+> r28-31  0000000100000000 000000006ccb8560 000000006ccb8640 00000000000000=
+00
+> sr00-03  0000000000249800 0000000000000000 0000000000000000 0000000000249=
+800
+> sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000=
+000
+>
+> IASQ: 0000000000000000 0000000000000000 IAOQ: 000000001059f61c 0000000010=
+59f620
+>  IIR: 0f8010c6    ISR: 0000000000000000  IOR: 0000000100000000
+>  CPU:        3   CR30: 000000006ccb8000 CR31: 0000000000000000
+>  ORIG_R28: 000000001059d000
+>  IAOQ[0]: call_bio_endio+0x34/0x1a8 [raid1]
+>  IAOQ[1]: call_bio_endio+0x38/0x1a8 [raid1]
+>  RP(r2): raid_end_bio_io+0x88/0x168 [raid1]
+> Backtrace:
+>  [<000000001059f818>] raid_end_bio_io+0x88/0x168 [raid1]
+>  [<00000000105a4f64>] raid1d+0x144/0x1640 [raid1]
+>  [<000000004017fd5c>] kthread+0x144/0x160
+>
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+> Fixes: 55ce74d4bfe1 ("md/raid1: ensure device failure recorded before wri=
+te request returns.")
+> Fixes: 95af587e95aa ("md/raid10: ensure device failure recorded before wr=
+ite request returns.")
+>
+> ---
+>  drivers/md/raid1.c  |    4 ++--
+>  drivers/md/raid10.c |    4 ++--
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+>
+> Index: linux-2.6/drivers/md/raid1.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/drivers/md/raid1.c	2015-10-01 21:10:05.000000000 +0200
+> +++ linux-2.6/drivers/md/raid1.c	2015-10-01 21:10:58.000000000 +0200
+> @@ -2437,8 +2437,8 @@ static void raid1d(struct md_thread *thr
+>  		}
+>  		spin_unlock_irqrestore(&conf->device_lock, flags);
+>  		while (!list_empty(&tmp)) {
+> -			r1_bio =3D list_first_entry(&conf->bio_end_io_list,
+> -						  struct r1bio, retry_list);
+> +			r1_bio =3D list_first_entry(&tmp, struct r1bio,
+> +						  retry_list);
+>  			list_del(&r1_bio->retry_list);
+>  			raid_end_bio_io(r1_bio);
+>  		}
+> Index: linux-2.6/drivers/md/raid10.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/drivers/md/raid10.c	2015-10-01 21:11:02.000000000 +0200
+> +++ linux-2.6/drivers/md/raid10.c	2015-10-01 21:11:19.000000000 +0200
+> @@ -2804,8 +2804,8 @@ static void raid10d(struct md_thread *th
+>  		}
+>  		spin_unlock_irqrestore(&conf->device_lock, flags);
+>  		while (!list_empty(&tmp)) {
+> -			r10_bio =3D list_first_entry(&conf->bio_end_io_list,
+> -						  struct r10bio, retry_list);
+> +			r10_bio =3D list_first_entry(&tmp, struct r10bio,
+> +						   retry_list);
+>  			list_del(&r10_bio->retry_list);
+>  			raid_end_bio_io(r10_bio);
+>  		}
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWFuGZAAoJEDnsnt1WYoG5ducQAKPuZ3DMLGd9IX8njkuu6n2g
+qryfZe2THrJGjAJ+SB7nlPHdvDZ1BozmKF66EtYAj7wy4gwSoNeKcVtOCVJxTlwK
+qxUOiJfYAGs6cA762UBUWo28PyshYwBgEyOlBIiViMUTvpbLskMTKGjy0ctJ4UGY
+yygHiE1nSpmkoUbEEz1pnSm2Tf++6nMZ+Y/cBFoItLVw3tZivpQdDmsiF96h6zqN
+X3lAdU1nzpYPNqFFFqIM9ZyRfLszbWRiTfPmOQ0i2Znf0QzAm/+N7HWCBPsP5P/1
+z4S+Qsry3OqnwDigR54MjTqF0/RGUishM9IvgtSy6+BWSGrmZ9T0yW+3QD/eOq8/
+4JK+x3rE3IX0tkbxGlqhtgZGLm3eSjUclTVZDi+f2n+cPgiSZZ0gAInR39PDYHD2
+n43XezGwslwaureUuLDcV/fMnqWsPdM0bJ/RfzELdNRT+tdkiJluqxl5rhDqkkl2
+6R35ACwmorHU1Y0YVPSsFvsYeZDbgABCEXpfulrW22PWUSKn3HN4xs3QC4n166+7
+L9kQTLJ/MFKuLTMTasEu/mt7VH0CO1nTgE6mhLPkJwc545kboGhYDZKH0Kn2q706
+t3Ya13ACT161rVVgq90gHfY84Z8TlHKfZvQ2LjMRSEmqQ7gz+jTJ8uZd7z15rA7j
+ASd8WfPHqtK5QSIXKFmJ
+=CEM5
+-----END PGP SIGNATURE-----
+--=-=-=--
