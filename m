@@ -1,63 +1,71 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5-cache I/O path improvements V3
-Date: Thu, 08 Oct 2015 13:45:02 +1100
-Message-ID: <87k2qy6pu9.fsf@notabene.neil.brown.name>
-References: <1444030276-30850-1-git-send-email-hch@lst.de> <20151006181335.GA3367313@devbig084.prn1.facebook.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH 0/6] raid5-cache fixes
+Date: Wed, 7 Oct 2015 19:56:12 -0700
+Message-ID: <20151008025603.GA3007253@devbig084.prn1.facebook.com>
+References: <cover.1443973492.git.shli@fb.com>
+ <87mvvu6rfr.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151006181335.GA3367313@devbig084.prn1.facebook.com>
+Content-Disposition: inline
+In-Reply-To: <87mvvu6rfr.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>
-Cc: dan.j.williams@intel.com, Kernel-team@fb.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Thu, Oct 08, 2015 at 01:10:32PM +1100, Neil Brown wrote:
+> Shaohua Li <shli@fb.com> writes:
+> 
+> > Hi,
+> >
+> > some fixes for raid5-cache.
+> > patch 1, a small fix
+> > patch 2-3, move reclaim teardown to quiesce handling and add trim support. I
+> > still need md_update_sb there and play the mddev_is_locked trick as the
+> > reconfig_mutex is already hold at md stop. The md_update_sb probably can move
+> > to md core later.
+> > patch 4-6, add error handling. For patch 4, I still need the journal bit check
+> > in in md core, otherwise there is no way to prevent 'echo remove > rdev/state'
+> > to delete journal disk. For patch 6, I didn't change has_failed() yet. Handling
+> > assemble with miss/failed log disk is still on going.
+> >
+> > Next step is to make assemble correct with miss/failed log disk. This will need
+> > kernel/utilities cooperation. Song and I are working on it.
+> >
+> > Thanks,
+> > Shaohua
+> >
+> > Shaohua Li (6):
+> >   md: show journal for journal disk in disk state sysfs
+> >   raid5-cache: move reclaim stop to quiesce
+> >   raid5-cache: add trim support for log
+> >   md: don't export log device
+> >   md: set In_Sync for log disk
+> >   raid5-cache: IO error handling
+> >
+> >  drivers/md/md.c          |  9 ++++--
+> >  drivers/md/raid5-cache.c | 83 ++++++++++++++++++++++++++++++++++++++++--------
+> >  drivers/md/raid5.c       |  7 +++-
+> >  drivers/md/raid5.h       |  3 ++
+> >  4 files changed, 85 insertions(+), 17 deletions(-)
+> >
+> > -- 
+> > 2.4.6
+> 
+> Thanks.
+> 
+> I've applied 1, 2, and 5. Should appear in 'devel' shortly.
+> 3 and 4 I've replies to separately, 6 depends on 3.
 
-Shaohua Li <shli@fb.com> writes:
-
-> On Mon, Oct 05, 2015 at 09:31:05AM +0200, Christoph Hellwig wrote:
->> Hi Shaohua, hi Neil,
->>=20
->> this series contains a few updates to the raid5-cache feature, and goes
->> on top of dm/devel + the series Shaohua sent yesterday.
->>=20
->> Besides the rebase the only changes compared to the previous version
->> is that we only bypasss the batch and flush state for devices that
->> do not have a volatile cache at all like persistent memory or high
->> performance flash devices.
->
-> Thanks Christoph, patches look great.
->
-> Reviewed-by: Shaohua Li <shli@fb.com>
-
-Thanks.  I've applied all these (fixing up minor conflict due to an
-earlier patch I didn't accept yet).  They are all in my 'devel' branch.
+please hold 5 currently. I'm a little confused about the In_sync bit.
+It's quite tricky to handle this bit. For example, if both In_sync and
+Journal bits are set, I'll need move checking the 'Journal' bit ahead of
+checking the 'In_sync' in super_1_sync (current patch haven't done it
+yet, it's a bug). There are similar cases in mdadm too. This makes me
+thinking about What's the exact role for the In_sync bit for journal
+disk. The comments in the bit definition doesn't give an answer. We can
+use the Faulty bit for error handling. Any thoughts?
 
 Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWFdiuAAoJEDnsnt1WYoG5PJsP/ipCltphc8G0F1g/9KDBlvvR
-jyz7g6G6aHenSwxuhQ2CyLLQPNPqow0k85CdFIfD0wNR03cQAO3FgltrG4pz0PVu
-RIx4HD19N5FwPFZLkrGK0/JhcNolYHmLQHR7Qg6oG1JbYTdeA1dMpV72a5vrhVP6
-EXpwKMOBj6LNqan/E1X8/zPvuUf95smKrwFYFBrLgvxR0T+LFYwtF1ziJQFeI7cp
-7faYitmDLfZ90pznmmMl8/U4/7JB1NYpiHiR3BXgqfz88inKklWEvaRLHPMWrnrI
-n/O3a9GDQKPOYcnhSlBCkDOhbxRmAXKaMt3E7k18btQzo7wVQHz3iAV+d1agXbHz
-33UnvkLdTm652q6bKxuQSvIVOrS+QyOonGsXqGM/nHZtSFNVD8EOrPNj7d+yQ49C
-09dGc1kfvDKRLTaQXCEwQUclBw1SjJRCpQChI5SClk86gF+4ybD8YAIMM79GzWan
-cq9CneQ0KH+aE7Tkwl0p51n/5/sqXS8AXoP6uA66jH+BX7ol3fMBH9x4TO3ofV4b
-LLeVKU1jnR7BGMZKD5yGxZca/LhawiWPO+xaf34A572OKv2NWEHlw+n6RQlpD/HJ
-sCn5VsqY8X5T6SgW5CB7bFtCZuT/4mu+g4BAibZAMjH1hdCEcJIL0rcUMZfVF7pv
-Gpi9r+otwOe14VzC5FQ9
-=8319
------END PGP SIGNATURE-----
---=-=-=--
+Shaohua
