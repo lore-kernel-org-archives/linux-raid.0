@@ -1,135 +1,83 @@
 From: Neil Brown <neilb@suse.com>
-Subject: Re: [PATCH] crash in md-raid1 and md-raid10 due to incorrect list manipulation
-Date: Fri, 09 Oct 2015 08:35:20 +1100
-Message-ID: <87lhbd59if.fsf@notabene.neil.brown.name>
-References: <alpine.LRH.2.02.1510011442260.16076@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: Re: Problem w/ commit ac8fa4196d20 on older, slower hardware
+Date: Fri, 09 Oct 2015 11:13:03 +1100
+Message-ID: <87twq0527k.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.02.1510011442260.16076@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Mike Snitzer <msnitzer@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Joshua Kinard <kumba@gentoo.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Mikulas Patocka <mpatocka@redhat.com> writes:
 
-> The commit 55ce74d4bfe1b9444436264c637f39a152d1e5ac (md/raid1: ensure=20
-> device failure recorded before write request returns) is causing crash in=
-=20
-> the LVM2 testsuite test shell/lvchange-raid.sh. For me the crash is 100%=
-=20
-> reproducible.
+> Per commit ac8fa4196d20:
+>=20
+> > md: allow resync to go faster when there is competing IO.
+> >=20
+> > When md notices non-sync IO happening while it is trying to resync (or
+> > reshape or recover) it slows down to the set minimum.
+> >=20
+> > The default minimum might have made sense many years ago but the drives=
+ have
+> > become faster. Changing the default to match the times isn't really a l=
+ong
+> > term solution.
+>=20
+> This holds true for modern hardware, but this commit is causing problems =
+on
+> older hardware, like SGI MIPS platforms, that use mdraid.  Namely, while =
+trying
+> to chase down an unrelated hardlock bug on an Onyx2, one of the arrays go=
+t out
+> of sync, so on the next reboot, mdraid's attempt to resync at full speed
+> absolutely murdered interactivity.  It took close to 30mins for the syste=
+m to
+> finally reach the login prompt.
+>=20
+> Revert this patch was working to mitigate the problem at first, but it ap=
+pears
+> that in recent kernels, this is no longer the case, and reverting this co=
+mmit
+> has no noticeable effect anymore.  I assume I'd have to hunt down newer c=
+ommits
+> to revert, but it's probably saner to just highlight the problem and test=
+ any
+> proposed solutions.
+>=20
+> Is there some way to resolve this in such a way that old hardware maintai=
+ns
+> some level of interactivity during a resync, but that won't inconvenience=
+ the
+> more modern systems?
+>=20
+> http://git.linux-mips.org/cgit/ralf/linux.git/commit/?id=3Dac8fa4196d20
+>=20
+> Thanks!,
 >
-> The reason for the crash is that the newly added code in raid1d moves the=
-=20
-> list from conf->bio_end_io_list to tmp, then tests if tmp is non-empty an=
-d=20
-> then incorrectly pops the bio from conf->bio_end_io_list (which is empty=
-=20
-> because the list was alrady moved).
->
-> Raid-10 has a similar bug.
 
-Ouch.  I can't have been thinking when I wrote that code!
+Hmmm... this change shouldn't have that effect.
+It should allow resync to soak up a bit more of the idle time, but when
+there is any other IO, resync should still back off.
 
-Thanks for finding and fixing this.  Patch will be sent to Linus in time
-for next -rc.
+I wonder if there is some other change which has confused the event
+counting for the particular hardware you are using.
 
-Thanks,
+How did you identify this commit as a possible cause?
+
+The fact that reverting it no longer helps strongly suggests that some
+other change is implicated.  I don't think there have been other changes
+in md which could affect this.
+
+Have you tried adjusting /proc/sys/dev/raid/speed_limit_m{ax,in} ??
+Did that have any noticeable effect?
+
 NeilBrown
-
->
-> Kernel Fault: Code=3D15 regs=3D000000006ccb8640 (Addr=3D0000000100000000)
-> CPU: 3 PID: 1930 Comm: mdX_raid1 Not tainted 4.2.0-rc5-bisect+ #35
-> task: 000000006cc1f258 ti: 000000006ccb8000 task.ti: 000000006ccb8000
->
->      YZrvWESTHLNXBCVMcbcbcbcbOGFRQPDI
-> PSW: 00001000000001001111111000001111 Not tainted
-> r00-03  000000ff0804fe0f 000000001059d000 000000001059f818 000000007f16be=
-38
-> r04-07  000000001059d000 000000007f16be08 0000000000200200 00000000000000=
-01
-> r08-11  000000006ccb8260 000000007b7934d0 0000000000000001 00000000000000=
-00
-> r12-15  000000004056f320 0000000000000000 0000000000013dd0 00000000000000=
-00
-> r16-19  00000000f0d00ae0 0000000000000000 0000000000000000 00000000000000=
-01
-> r20-23  000000000800000f 0000000042200390 0000000000000000 00000000000000=
-00
-> r24-27  0000000000000001 000000000800000f 000000007f16be08 000000001059d0=
-00
-> r28-31  0000000100000000 000000006ccb8560 000000006ccb8640 00000000000000=
-00
-> sr00-03  0000000000249800 0000000000000000 0000000000000000 0000000000249=
-800
-> sr04-07  0000000000000000 0000000000000000 0000000000000000 0000000000000=
-000
->
-> IASQ: 0000000000000000 0000000000000000 IAOQ: 000000001059f61c 0000000010=
-59f620
->  IIR: 0f8010c6    ISR: 0000000000000000  IOR: 0000000100000000
->  CPU:        3   CR30: 000000006ccb8000 CR31: 0000000000000000
->  ORIG_R28: 000000001059d000
->  IAOQ[0]: call_bio_endio+0x34/0x1a8 [raid1]
->  IAOQ[1]: call_bio_endio+0x38/0x1a8 [raid1]
->  RP(r2): raid_end_bio_io+0x88/0x168 [raid1]
-> Backtrace:
->  [<000000001059f818>] raid_end_bio_io+0x88/0x168 [raid1]
->  [<00000000105a4f64>] raid1d+0x144/0x1640 [raid1]
->  [<000000004017fd5c>] kthread+0x144/0x160
->
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Fixes: 55ce74d4bfe1 ("md/raid1: ensure device failure recorded before wri=
-te request returns.")
-> Fixes: 95af587e95aa ("md/raid10: ensure device failure recorded before wr=
-ite request returns.")
->
-> ---
->  drivers/md/raid1.c  |    4 ++--
->  drivers/md/raid10.c |    4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
->
-> Index: linux-2.6/drivers/md/raid1.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/drivers/md/raid1.c	2015-10-01 21:10:05.000000000 +0200
-> +++ linux-2.6/drivers/md/raid1.c	2015-10-01 21:10:58.000000000 +0200
-> @@ -2437,8 +2437,8 @@ static void raid1d(struct md_thread *thr
->  		}
->  		spin_unlock_irqrestore(&conf->device_lock, flags);
->  		while (!list_empty(&tmp)) {
-> -			r1_bio =3D list_first_entry(&conf->bio_end_io_list,
-> -						  struct r1bio, retry_list);
-> +			r1_bio =3D list_first_entry(&tmp, struct r1bio,
-> +						  retry_list);
->  			list_del(&r1_bio->retry_list);
->  			raid_end_bio_io(r1_bio);
->  		}
-> Index: linux-2.6/drivers/md/raid10.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.orig/drivers/md/raid10.c	2015-10-01 21:11:02.000000000 +0200
-> +++ linux-2.6/drivers/md/raid10.c	2015-10-01 21:11:19.000000000 +0200
-> @@ -2804,8 +2804,8 @@ static void raid10d(struct md_thread *th
->  		}
->  		spin_unlock_irqrestore(&conf->device_lock, flags);
->  		while (!list_empty(&tmp)) {
-> -			r10_bio =3D list_first_entry(&conf->bio_end_io_list,
-> -						  struct r10bio, retry_list);
-> +			r10_bio =3D list_first_entry(&tmp, struct r10bio,
-> +						   retry_list);
->  			list_del(&r10_bio->retry_list);
->  			raid_end_bio_io(r10_bio);
->  		}
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -137,18 +85,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWFuGZAAoJEDnsnt1WYoG5ducQAKPuZ3DMLGd9IX8njkuu6n2g
-qryfZe2THrJGjAJ+SB7nlPHdvDZ1BozmKF66EtYAj7wy4gwSoNeKcVtOCVJxTlwK
-qxUOiJfYAGs6cA762UBUWo28PyshYwBgEyOlBIiViMUTvpbLskMTKGjy0ctJ4UGY
-yygHiE1nSpmkoUbEEz1pnSm2Tf++6nMZ+Y/cBFoItLVw3tZivpQdDmsiF96h6zqN
-X3lAdU1nzpYPNqFFFqIM9ZyRfLszbWRiTfPmOQ0i2Znf0QzAm/+N7HWCBPsP5P/1
-z4S+Qsry3OqnwDigR54MjTqF0/RGUishM9IvgtSy6+BWSGrmZ9T0yW+3QD/eOq8/
-4JK+x3rE3IX0tkbxGlqhtgZGLm3eSjUclTVZDi+f2n+cPgiSZZ0gAInR39PDYHD2
-n43XezGwslwaureUuLDcV/fMnqWsPdM0bJ/RfzELdNRT+tdkiJluqxl5rhDqkkl2
-6R35ACwmorHU1Y0YVPSsFvsYeZDbgABCEXpfulrW22PWUSKn3HN4xs3QC4n166+7
-L9kQTLJ/MFKuLTMTasEu/mt7VH0CO1nTgE6mhLPkJwc545kboGhYDZKH0Kn2q706
-t3Ya13ACT161rVVgq90gHfY84Z8TlHKfZvQ2LjMRSEmqQ7gz+jTJ8uZd7z15rA7j
-ASd8WfPHqtK5QSIXKFmJ
-=CEM5
+iQIcBAEBCAAGBQJWFwaPAAoJEDnsnt1WYoG5g/EQAK4+0wA6D2NS+GAncTEUDaz5
+ZVpR0STkK8Ap2hx1jKTeFJaV6SAIgoTfrQlQvo2eLswFedgmqT4YigZXLB+C5MWq
+2KOj6OIZYsjyt89RdFiJrfSinyUFpG4PulinC1YNx5hBcd3+DXNutRx4Zo2W7FR+
+tE5V/iBtcsPe10ZU+aMUDoiNbDlf6iCsJO7uJLbMKOhUFQ5aU7y0wfWJwCnmkD3m
+UlEWvcvkWZnfLsjuP88/LEbZMeN/Yo3T6sfn9LBDY38NdqJBC+nYp6dVugpJ6wAj
+CTTWRgL+OWYb5dv51vQUaabD7L/QOXh59VsxYn4p+alfesN9s13DXYTFdLi8n3Aq
+gpmt9kwKHM8/Qm1OurU4N8hpdEbOOmRYABTxB8e/PCNMDEey2ZO0UtVBCa++y+K+
+ux6gDL8sqYvNXUnPQiG1q9j3HAbMSNatHl/gzNkM45hOTunPiLQXg/+KZex1OlGu
+hx9ZD6f8vR6JTAE8jkQ87hS8Z3qpKk02cq6+yk7XnjGmUuAmej10NCG9IUGkG25h
+fZD0reGlAIi2UCS2XMhNh/SuxJ/H+3FLVQt+xYgqXyBMqEFIILH6TQ7orvmsIN0F
+Ys09I8VSmvs+vjUSg67yb4eGR8N9aa49raGKsVUn6dKHRo6pYCJUI/R2aJF4hG0h
+fRWRxEEymXsi3F5EfFMe
+=vXnR
 -----END PGP SIGNATURE-----
 --=-=-=--
