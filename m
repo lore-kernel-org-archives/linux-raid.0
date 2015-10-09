@@ -1,7 +1,7 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 3/9] raid5: journal disk can't be removed
-Date: Thu, 8 Oct 2015 21:54:07 -0700
-Message-ID: <7bdb9467130e7ce818053123e9f1e65058670a2b.1444360850.git.shli@fb.com>
+Subject: [PATCH 2/9] raid5-cache: add trim support for log
+Date: Thu, 8 Oct 2015 21:54:06 -0700
+Message-ID: <effe8247d5013e4951fd7efa06cc45efe66a94c4.1444360850.git.shli@fb.com>
 References: <cover.1444360850.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,45 +12,119 @@ To: linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-raid5-cache uses journal disk rdev->bdev, rdev->mddev in several places.
-Don't allow journal disk disappear magically. On the other hand, we do
-need to update superblock for other disks to bump up ->events, so next
-time journal disk will be identified as stale.
+Since superblock is updated infrequently, we do a simple trim of log
+disk (a synchronous trim)
 
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- drivers/md/raid5.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/md/raid5-cache.c | 63 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 62 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 216fa3c..6430098 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7128,6 +7128,15 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct disk_info *p = conf->disks + number;
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index caeec10..5dbe084 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -85,6 +85,7 @@ struct r5l_log {
+ 	spinlock_t no_space_stripes_lock;
  
- 	print_raid5_conf(conf);
-+	if (test_bit(Journal, &rdev->flags)) {
-+		/*
-+		 * journal disk is not removable, but we need give a chance to
-+		 * update superblock of other disks. Otherwise journal disk
-+		 * will be considered as 'fresh'
-+		 * */
+ 	bool need_cache_flush;
++	bool in_teardown;
+ };
+ 
+ /*
+@@ -644,6 +645,60 @@ void r5l_flush_stripe_to_raid(struct r5l_log *log)
+ }
+ 
+ static void r5l_write_super(struct r5l_log *log, sector_t cp);
++static void r5l_write_super_and_discard_space(struct r5l_log *log,
++	sector_t end)
++{
++	struct block_device *bdev = log->rdev->bdev;
++	struct mddev *mddev;
++
++	r5l_write_super(log, end);
++
++	if (!blk_queue_discard(bdev_get_queue(bdev)))
++		return;
++
++	mddev = log->rdev->mddev;
++	/*
++	 * This is to avoid a deadlock. r5l_quiesce holds reconfig_mutex and
++	 * wait for this thread to finish. This thread waits for
++	 * MD_CHANGE_PENDING clear, which is supposed to be done in
++	 * md_check_recovery(). md_check_recovery() tries to get
++	 * reconfig_mutex. Since r5l_quiesce already holds the mutex,
++	 * md_check_recovery() fails, so the PENDING never get cleared. The
++	 * in_teardown check workaround this issue.
++	 * */
++	if (!log->in_teardown) {
 +		set_bit(MD_CHANGE_DEVS, &mddev->flags);
-+		return -EINVAL;
++		set_bit(MD_CHANGE_PENDING, &mddev->flags);
++		md_wakeup_thread(mddev->thread);
++		wait_event(mddev->sb_wait,
++			!test_bit(MD_CHANGE_PENDING, &mddev->flags) ||
++			log->in_teardown);
++		/*
++		 * r5l_quiesce could run after in_teardown check and hold
++		 * mutex first. Superblock might get updated twice.
++		 * */
++		if (log->in_teardown)
++			md_update_sb(mddev, 1);
++	} else {
++		BUG_ON(!mddev_is_locked(mddev));
++		md_update_sb(mddev, 1);
 +	}
- 	if (rdev == p->rdev)
- 		rdevp = &p->rdev;
- 	else if (rdev == p->replacement)
-@@ -7190,6 +7199,8 @@ static int raid5_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	int first = 0;
- 	int last = conf->raid_disks - 1;
++
++	if (log->last_checkpoint < end) {
++		blkdev_issue_discard(bdev,
++				log->last_checkpoint + log->rdev->data_offset,
++				end - log->last_checkpoint, GFP_NOIO, 0);
++	} else {
++		blkdev_issue_discard(bdev,
++				log->last_checkpoint + log->rdev->data_offset,
++				log->device_size - log->last_checkpoint,
++				GFP_NOIO, 0);
++		blkdev_issue_discard(bdev, log->rdev->data_offset, end,
++				GFP_NOIO, 0);
++	}
++}
++
++
+ static void r5l_do_reclaim(struct r5l_log *log)
+ {
+ 	sector_t reclaim_target = xchg(&log->reclaim_target, 0);
+@@ -685,7 +740,7 @@ static void r5l_do_reclaim(struct r5l_log *log)
+ 	 * here, because the log area might be reused soon and we don't want to
+ 	 * confuse recovery
+ 	 */
+-	r5l_write_super(log, next_checkpoint);
++	r5l_write_super_and_discard_space(log, next_checkpoint);
  
-+	if (test_bit(Journal, &rdev->flags))
-+		return -EINVAL;
- 	if (mddev->recovery_disabled == conf->recovery_disabled)
- 		return -EBUSY;
+ 	mutex_lock(&log->io_mutex);
+ 	log->last_checkpoint = next_checkpoint;
+@@ -721,9 +776,11 @@ static void r5l_wake_reclaim(struct r5l_log *log, sector_t space)
  
+ void r5l_quiesce(struct r5l_log *log, int state)
+ {
++	struct mddev *mddev;
+ 	if (!log || state == 2)
+ 		return;
+ 	if (state == 0) {
++		log->in_teardown = 0;
+ 		log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
+ 					log->rdev->mddev, "reclaim");
+ 	} else if (state == 1) {
+@@ -731,6 +788,10 @@ void r5l_quiesce(struct r5l_log *log, int state)
+ 		 * at this point all stripes are finished, so io_unit is at
+ 		 * least in STRIPE_END state
+ 		 */
++		log->in_teardown = 1;
++		/* make sure r5l_write_super_and_discard_space exits */
++		mddev = log->rdev->mddev;
++		wake_up(&mddev->sb_wait);
+ 		r5l_wake_reclaim(log, -1L);
+ 		md_unregister_thread(&log->reclaim_thread);
+ 		r5l_do_reclaim(log);
 -- 
 2.4.6
 
