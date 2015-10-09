@@ -1,106 +1,72 @@
-From: Neil Brown <neil@brown.name>
-Subject: Re: Change "mv $targetdir/log $logdir/$log" to "cp $targetdir/log $logdir/$log"
-Date: Fri, 09 Oct 2015 16:02:11 +1100
-Message-ID: <87mvvs4oto.fsf@notabene.neil.brown.name>
-References: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2 0/6] mdadm support for journal device of RAID-4/5/6
+Date: Thu, 8 Oct 2015 22:51:40 -0700
+Message-ID: <1444369906-1804157-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yi Zhang <yizhan@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, shli@fb.com, hch@infradead.org, dan.j.williams@intel.com, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Yi Zhang <yizhan@redhat.com> writes:
+These are v2 of mdadm patches to support journal device in RAID-4/5/6.
+Shaohua has sent latest kernel patches earlier today
 
-> Hi Neil
-> When I execute mdadm test with --save-logs set, found below error, could =
-you help check it?
->
-> Error log:
-> tests/10ddf-fail-readd... FAILED - see /var/tmp/log-10ddf-fail-readd for =
-details
-> cp: cannot stat =E2=80=98/var/tmp/log=E2=80=99: No such file or directory
->
+http://marc.info/?l=linux-raid&m=144436646730381
 
-Thanks for the report.
-I've applied the following which should fix this (and other issues).
+Most of these patches are very close to v1, except --assemble, where
+we improved checks for journal devices.
 
-Thanks,
-NeilBrown
+The following are copied from v1 pathes.
 
-From=20c54f485288b50c90fa289e79fa66ae01e9162a2d Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.com>
-Date: Fri, 9 Oct 2015 16:00:59 +1100
-Subject: [PATCH] test: don't move $target/log
+These patches add write journal support for the following commands:
 
-Recent change to rename $target/log to a more stable name on
-error broke --save-logs as $targetdir/log no longer existed to be
-copied.
+  mdadm --detail
+  mdadm --examine
+  mdadm --create  --write-journal DEVICE
+  mdadm --assemble
+  mdadm --incremental
 
-So change it to a 'cp', not a 'mv'.
-While we are fixing things, use $_basename instead of calling
-`basename` again, and only use "$logdir" if logs were requested.
+Journal device is assigned with dev_role 0xFFFD (where 0xFFFF is for
+spare and 0xFFFE is for failed). Note that there is compatibility
+issue that older mdadm will show journal device as spare in --detail:
 
-And make use "see .. for details" has correct file name.
+    Number   Major   Minor   RaidDevice State
+       0       8       32        0      active sync   /dev/sdc
+       1       8       48        1      active sync   /dev/sdd
+       2       8       64        2      active sync   /dev/sde
+       3       8       80        3      active sync   /dev/sdf
 
-Reported-by: Yi Zhang <yizhan@redhat.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
+       4       8       17        -      spare   /dev/sdb1
 
-diff --git a/test b/test
-index d0a6cb858212..5315ab97dde0 100755
-=2D-- a/test
-+++ b/test
-@@ -17,7 +17,6 @@ then
- fi
-=20
- testdir=3D"tests"
-=2Dlogdir=3D"$testdir/logs"
- logsave=3D0
- exitonerror=3D1
-=20
-@@ -317,10 +316,11 @@ do_test() {
-       echo "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3Ddmesg=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D" >> $targ=
-etdir/log
-       dmesg | tail -n 200 >> $targetdir/log
-       if [ $exitonerror =3D=3D 0 ]; then
-=2D	  log=3Dlog-`basename $_script`
-=2D	  mv $targetdir/log $logdir/$log
-+	  cp $targetdir/log $targetdir/log-$_basename
-+	  echo "FAILED - see $targetdir/log-$_basename for details"
-+      else
-+	  echo "FAILED - see $targetdir/log for details"
-       fi
-=2D      echo "FAILED - see $logdir/$log for details"
-       _fail=3D1
-     fi
-     if [ "$savelogs" =3D=3D "1" ]; then
+Also, older mdadm will show journal device as "Active device 65533"
+in --examine:
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+   Device Role : Active device 65533
+   Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Song Liu (6):
+  add macros for MD_DISK_ROLE_(SPARE/FAULTY)
+  Show device as journal in --detail --examine
+  Enable create array with write journal (--write-journal DEVICE).
+  Assemble array with write journal
+  Check write journal in incremental
+  Add help message and man entry for --write-journal
 
-iQIcBAEBCAAGBQJWF0pTAAoJEDnsnt1WYoG50/wQAKmB6pI6jNhxqPl3rbJheao+
-PU74zse5R5WNFQ3dnegzeoQETi72C9Z1ALMTc6UWoYvWy2CDKr5k6fMebudKe+1n
-7fqI1yCfSvsJFNBI2MLcSLcgWI/4lZ0Ji1wKfjW+Y5eMBMR60N2HLIdumFpPOXf3
-+iJQsjbYwmjVZFRnb9jBdxMBsfUI5fsE3VV9irLlCrt1oM2F6uvts+z9UoL6nDrg
-hEvO1nUXbgcEpAWjYZkj0OlunJv6hoF22NsFzyidT+3mG2BGD1/zjhrB6+jVN8x3
-QgX2cTzNfBge7UqmOtLR3gOPDW6W+RrflnQ1Sf8o/ugW7vSrVwkLCcuc9UZoBVHk
-MRsJ2upMkLnDN/bMeSrnuJEuxyGbCaovl8T5sBxyHd9ty0hUjVq+pvRlobOCGxI5
-YS8hG2P+4mF/a/13GQLuYGmVew37T/hCghTTMRFMP0qx+iYcgxkKGGhr0dpYywiA
-fpalfeog47qPSresx023eXlmdu2vQiHMnYDFCAoJh7Yxb5dYbtmDJzGSND5M4LoU
-d0GldIivr47AFcuTZxmyow5hGiwZsodo0CWIpTp6FDliUDnAx7m8DN9+CnPW3vv0
-LAOTcfVrgypYL4KEE2nxhvNOBTX+J9lglr3uF25xJrt1V/hvFj9wOaXcnTfYwBcf
-22H+DmwDvExABz00P5xA
-=1vSe
------END PGP SIGNATURE-----
---=-=-=--
+ Assemble.c    |  57 ++++++++++++++++++-----
+ Create.c      |  20 +++++---
+ Detail.c      |   3 +-
+ Incremental.c |  31 +++++++++++--
+ ReadMe.c      |   2 +
+ md_p.h        |  64 ++++++++++++++++++++++++++
+ mdadm.8.in    |   6 +++
+ mdadm.c       |  23 ++++++++++
+ mdadm.h       |   5 ++
+ super1.c      | 144 ++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 10 files changed, 313 insertions(+), 42 deletions(-)
+
+--
+2.4.6
