@@ -1,51 +1,36 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] md: fix 32-bit build warning
-Date: Fri, 09 Oct 2015 14:12:36 +0200
-Message-ID: <5304496.D8N6u074t0@wuerfel>
+From: Phil Susi <psusi@ubuntu.com>
+Subject: Re: [parted-devel] [PATCH 1/2] Add nonfs partition type 0xda
+ (#1263835)
+Date: Fri, 9 Oct 2015 11:02:25 -0400
+Message-ID: <5617D701.1010109@ubuntu.com>
+References: <1443654419-3714-1-git-send-email-bcl@redhat.com>
+ <560EB887.6060302@ubuntu.com> <20151008214916.GK2984@lister.brianlane.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20151008214916.GK2984@lister.brianlane.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-arm-kernel@lists.infradead.org
+To: "Brian C. Lane" <bcl@redhat.com>
+Cc: parted-devel@lists.alioth.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 32-bit architectures, the md code produces this warning when CONFIG_LDAF
-is set:
+On 10/8/2015 5:49 PM, Brian C. Lane wrote:
+> https://bugzilla.redhat.com/show_bug.cgi?id=1118065 has a pile of
+> discussion on it.
+> 
+> What it amounts to is that on msdos partitioned disks mdadm only wants
+> 0xfd to be used for version 0.90 arrays which the kernel can
+> autoassemble, for 1.x arrays some other type needs to be used.
 
-drivers/md/md.c: In function 'check_sb_changes':
-drivers/md/md.c:8990:10: warning: format '%lu' expects argument of type 'long unsigned int', but argument 4 has type 'sector_t {aka long long unsigned int}' [-Wformat=]
-   pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
+So use 0x80?  That's what I always have done and it has never been a
+problem.  Likewise, 0xfd won't cause a problem either: it will trigger
+kernel auto activation *if* you boot with no initramfs, *and* the
+partition does contain 0.90 metadata.  If it has 1.x, then it won't
+trigger auto activation, but has no other negative consequence.
 
-The code was only recently introduced, and uses the wrong format string
-for sector_t. As a workaround, this patch adds an explicit cast to 'u64'
-so we can use the %llu format string on all architectures.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: e0212320066e ("md-cluster: Improve md_reload_sb to be less error prone")
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
-
-I also noticed that some commmits in md/for-next including the one causing
-the problem lack a Signed-off-by line. It might make sense to just fold this
-patch and add the lines at the same time.
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7fff1e6884d6..e13f72a3b561 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8987,9 +8987,9 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 
- 	/* recovery_cp changed */
- 	if (le64_to_cpu(sb->resync_offset) != mddev->recovery_cp) {
--		pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
--				__LINE__, mddev->recovery_cp,
--				(unsigned long) le64_to_cpu(sb->resync_offset));
-+		pr_info("%s:%d recovery_cp changed from %llu to %llu\n", __func__,
-+				__LINE__, (u64)mddev->recovery_cp,
-+				(u64) le64_to_cpu(sb->resync_offset));
- 		mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
- 	}
- 
+I see from the discussion in that bug report that the mdadm man page
+recommends this type code.  Is there any reason for that recommendation?
+ Are there any consequences to not following it?  Cc'ing mdadm list to
+see if they can answer this.
 
