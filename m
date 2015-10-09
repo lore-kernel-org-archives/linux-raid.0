@@ -1,77 +1,106 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 5/9] MD: add new bit to indicate raid array with journal
-Date: Thu, 8 Oct 2015 21:54:09 -0700
-Message-ID: <70565ff884e0b85f0bcfaa7c731973377f07bf75.1444360850.git.shli@fb.com>
-References: <cover.1444360850.git.shli@fb.com>
+From: Neil Brown <neil@brown.name>
+Subject: Re: Change "mv $targetdir/log $logdir/$log" to "cp $targetdir/log $logdir/$log"
+Date: Fri, 09 Oct 2015 16:02:11 +1100
+Message-ID: <87mvvs4oto.fsf@notabene.neil.brown.name>
+References: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1444360850.git.shli@fb.com>
+In-Reply-To: <1023141143.22094768.1441596507637.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com, neilb@suse.de
+To: Yi Zhang <yizhan@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Song Liu <songliubraving@fb.com>
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-If a raid array has journal feature bit set, add a new bit to indicate
-this. If the array is started without journal disk existing, we know
-there is something wrong.
+Yi Zhang <yizhan@redhat.com> writes:
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/md.c | 10 +++++++---
- drivers/md/md.h |  1 +
- 2 files changed, 8 insertions(+), 3 deletions(-)
+> Hi Neil
+> When I execute mdadm test with --save-logs set, found below error, could =
+you help check it?
+>
+> Error log:
+> tests/10ddf-fail-readd... FAILED - see /var/tmp/log-10ddf-fail-readd for =
+details
+> cp: cannot stat =E2=80=98/var/tmp/log=E2=80=99: No such file or directory
+>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index daf42bb..a5b0bbd 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1667,6 +1667,8 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 			set_bit(WriteMostly, &rdev->flags);
- 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_REPLACEMENT)
- 			set_bit(Replacement, &rdev->flags);
-+		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
-+			set_bit(MD_HAS_JOURNAL, &mddev->flags);
- 	} else /* MULTIPATH are always insync */
- 		set_bit(In_sync, &rdev->flags);
- 
-@@ -1807,16 +1809,18 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
- 	for (i=0; i<max_dev;i++)
- 		sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
- 
-+	if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-+		sb->feature_map |= MD_FEATURE_JOURNAL;
-+
- 	rdev_for_each(rdev2, mddev) {
- 		i = rdev2->desc_nr;
- 		if (test_bit(Faulty, &rdev2->flags))
- 			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
- 		else if (test_bit(In_sync, &rdev2->flags))
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
--		else if (test_bit(Journal, &rdev2->flags)) {
-+		else if (test_bit(Journal, &rdev2->flags))
- 			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_JOURNAL);
--			sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
--		} else if (rdev2->raid_disk >= 0)
-+		else if (rdev2->raid_disk >= 0)
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
- 		else
- 			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_SPARE);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e14e667..2bea51e 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -233,6 +233,7 @@ struct mddev {
- 				 * md_ioctl checked on it.
- 				 */
- #define MD_JOURNAL_CLEAN 5	/* A raid with journal is already clean */
-+#define MD_HAS_JOURNAL	6	/* The raid array has journal feature set */
- 
- 	int				suspended;
- 	atomic_t			active_io;
--- 
-2.4.6
+Thanks for the report.
+I've applied the following which should fix this (and other issues).
 
+Thanks,
+NeilBrown
+
+From=20c54f485288b50c90fa289e79fa66ae01e9162a2d Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.com>
+Date: Fri, 9 Oct 2015 16:00:59 +1100
+Subject: [PATCH] test: don't move $target/log
+
+Recent change to rename $target/log to a more stable name on
+error broke --save-logs as $targetdir/log no longer existed to be
+copied.
+
+So change it to a 'cp', not a 'mv'.
+While we are fixing things, use $_basename instead of calling
+`basename` again, and only use "$logdir" if logs were requested.
+
+And make use "see .. for details" has correct file name.
+
+Reported-by: Yi Zhang <yizhan@redhat.com>
+Signed-off-by: NeilBrown <neilb@suse.com>
+
+diff --git a/test b/test
+index d0a6cb858212..5315ab97dde0 100755
+=2D-- a/test
++++ b/test
+@@ -17,7 +17,6 @@ then
+ fi
+=20
+ testdir=3D"tests"
+=2Dlogdir=3D"$testdir/logs"
+ logsave=3D0
+ exitonerror=3D1
+=20
+@@ -317,10 +316,11 @@ do_test() {
+       echo "=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3Ddmesg=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D" >> $targ=
+etdir/log
+       dmesg | tail -n 200 >> $targetdir/log
+       if [ $exitonerror =3D=3D 0 ]; then
+=2D	  log=3Dlog-`basename $_script`
+=2D	  mv $targetdir/log $logdir/$log
++	  cp $targetdir/log $targetdir/log-$_basename
++	  echo "FAILED - see $targetdir/log-$_basename for details"
++      else
++	  echo "FAILED - see $targetdir/log for details"
+       fi
+=2D      echo "FAILED - see $logdir/$log for details"
+       _fail=3D1
+     fi
+     if [ "$savelogs" =3D=3D "1" ]; then
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWF0pTAAoJEDnsnt1WYoG50/wQAKmB6pI6jNhxqPl3rbJheao+
+PU74zse5R5WNFQ3dnegzeoQETi72C9Z1ALMTc6UWoYvWy2CDKr5k6fMebudKe+1n
+7fqI1yCfSvsJFNBI2MLcSLcgWI/4lZ0Ji1wKfjW+Y5eMBMR60N2HLIdumFpPOXf3
++iJQsjbYwmjVZFRnb9jBdxMBsfUI5fsE3VV9irLlCrt1oM2F6uvts+z9UoL6nDrg
+hEvO1nUXbgcEpAWjYZkj0OlunJv6hoF22NsFzyidT+3mG2BGD1/zjhrB6+jVN8x3
+QgX2cTzNfBge7UqmOtLR3gOPDW6W+RrflnQ1Sf8o/ugW7vSrVwkLCcuc9UZoBVHk
+MRsJ2upMkLnDN/bMeSrnuJEuxyGbCaovl8T5sBxyHd9ty0hUjVq+pvRlobOCGxI5
+YS8hG2P+4mF/a/13GQLuYGmVew37T/hCghTTMRFMP0qx+iYcgxkKGGhr0dpYywiA
+fpalfeog47qPSresx023eXlmdu2vQiHMnYDFCAoJh7Yxb5dYbtmDJzGSND5M4LoU
+d0GldIivr47AFcuTZxmyow5hGiwZsodo0CWIpTp6FDliUDnAx7m8DN9+CnPW3vv0
+LAOTcfVrgypYL4KEE2nxhvNOBTX+J9lglr3uF25xJrt1V/hvFj9wOaXcnTfYwBcf
+22H+DmwDvExABz00P5xA
+=1vSe
+-----END PGP SIGNATURE-----
+--=-=-=--
