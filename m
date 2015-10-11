@@ -1,64 +1,65 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: 30c2a1faaeb3db94fc92f79553cc72634aa3b218 broke cryptsetup on my
- machine
-Date: Sat, 10 Oct 2015 09:00:01 -0400
-Message-ID: <20151010130000.GA1079@redhat.com>
-References: <alpine.LNX.2.20.1510072226180.1350@localhost.localdomain>
- <20151008123849.GA4279@ubuntu>
- <alpine.LNX.2.20.1510101543410.1998@localhost.localdomain>
+From: Neil Brown <neil@brown.name>
+Subject: [GIT PULL REQUEST] md bugfix
+Date: Sun, 11 Oct 2015 16:30:59 +1100
+Message-ID: <87lhba2cq4.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.20.1510101543410.1998@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Giedrius =?utf-8?Q?Statkevi=C4=8Dius?= <giedrius.statkevicius@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-raid.ids
 
-On Sat, Oct 10 2015 at  8:44P -0400,
-Giedrius Statkevi=C4=8Dius <giedrius.statkevicius@gmail.com> wrote:
+--=-=-=
+Content-Type: text/plain
 
-> On Thu, 8 Oct 2015, Geliang Tang wrote:
->=20
-> > On Wed, Oct 07, 2015 at 10:27:27PM +0300, Giedrius Statkevi=C4=8Diu=
-s wrote:
-> > > Hello,
-> > > I have a LUKS on LVM setup: /boot is unencrypted and everything i=
-s "hidden" in
-> > > /dev/sda2. After booting on linux-next and just after entering my=
- password
-> > > cryptsetup segfaults and a stack trace is printed from the kernel=
-=2E Since writing
-> > > down all those numbers is hard I've made a picture where it is sh=
-own:
-> > > https://i.imgur.com/6PHNUdv.jpg
-> > >=20
-> > > I figured it had something to do with changes to memory managemen=
-t and thus find
-> > > out that commit 30c2a1faaeb3db94fc92f79553cc72634aa3b218 broke my=
- system.
-> > > Reverting it there is no such error anymore and system boots fine=
- past that
-> > > point.=20
-> > >=20
-> > > Could someone look into this? Thanks, Giedrius
-> >=20
-> > Bugfix for this has been sended out.
-> > https://lkml.org/lkml/2015/10/8/342.
-> >=20
-> > Thanks.
-> I've tested and that fixed this issue for me. I would've replied on t=
-hat thread
-> but I can't find its Message-Id. Anyway, you can add:
-> Tested-By: Giedrius Statkevi=C4=8Dius <giedrius.statkevicius@gmail.co=
-m>
 
-I dropped the original commit because I'm really not seeing the value o=
-f
-using kvfree (but it was motivated by reports of crashes from ktest,
-etc).  I don't have any intention of picking it back up at this point
-(so Geliang's fix will go unused at this point).
+The following changes since commit da6fb7a9e5bd6f04f7e15070f630bdf1ea502841:
 
-Mike
+  md/bitmap: don't pass -1 to bitmap_storage_alloc. (2015-10-02 17:24:13 +1000)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md tags/md/4.3-rc4-fix
+
+for you to fetch changes up to a452744bcbf706eac65abb4c98496a366820c60a:
+
+  crash in md-raid1 and md-raid10 due to incorrect list manipulation (2015-10-09 08:33:46 +1100)
+
+----------------------------------------------------------------
+One bug fix for raid1/raid10.
+
+Very careless bug earler in 4.3-rc, now fixed :-)
+
+----------------------------------------------------------------
+Mikulas Patocka (1):
+      crash in md-raid1 and md-raid10 due to incorrect list manipulation
+
+ drivers/md/raid1.c  | 4 ++--
+ drivers/md/raid10.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWGfQUAAoJEDnsnt1WYoG5kcEP/inqieUmObgexTzPsecpy/Wh
+xoCtnw+tM71bZMMbn8BOwGryDfw+6P4gI4SbeVj3n4IsF4pztRObdB0mTSkrzLBG
+T1Ca0Gz26qi5LrxE1zQHlw0TCbyJdFo8y0HnUj11Y6oMhuENF5pNFC9uS0rockWR
+Rd13trXJSlSKKVw1MGFbuj58EqPZ9B8OkguEmgsrW53yFJpPj0XBN+auo9TBPBT6
+6tbo1YQpuAAYAy3Unmx+dheMGj89EktLhEPA5ybsjfMymk5Q9znsoMeRlV7y8436
+bLrRkjs/2Ce46aHwk6ovM5PwNLxNzeQgkj24gpK7emcGPs/cR2sNg/ZP/80o1qcR
+/Xbymm8nT51ovxe392PTjCXQWw4sxF1xvG0zXtUhHr8u5Tasqc3I77qGPNLkHUTl
+6G+ARwNBmk/jNkrRZenYz8yY6/xf/GjUoyp0BSU12pYsEI5mAXq5nG1JKSCepmHM
+5tnnK1iZoMnqXDP4M/Nz3GvVvO1iFL2RCubDQDrD9hPmzLOLlgdxf6rmWyoAjmy0
+L3DHufLj2JSOolFT+U9Xh9Lx/aM/qLdRx9Jw0IWOR0TH8mnojTWX76QoJ8lHAIS4
+F/lRIY9SiDLn0sQyxZyRfL+fw04M5kqEpCHU1mo5mytfOMkd4cA9TLLl7jpgkdgT
+ueeQy5vFgBAU7wPTv8r/
+=Lg/F
+-----END PGP SIGNATURE-----
+--=-=-=--
