@@ -1,61 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/9] raid5-cache fixes
-Date: Mon, 12 Oct 2015 17:17:19 +1100
-Message-ID: <874mhw1uhc.fsf@notabene.neil.brown.name>
-References: <cover.1444360850.git.shli@fb.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] md: fix 32-bit build warning
+Date: Mon, 12 Oct 2015 11:30:11 +0200
+Message-ID: <11281560.gJ28rX782P@wuerfel>
+References: <5304496.D8N6u074t0@wuerfel>
+ <87fv1g1y34.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1444360850.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <87fv1g1y34.fsf@notabene.neil.brown.name>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Neil Brown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On Monday 12 October 2015 15:59:27 Neil Brown wrote:
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 7fff1e6884d6..e13f72a3b561 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -8987,9 +8987,9 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+> >  
+> >       /* recovery_cp changed */
+> >       if (le64_to_cpu(sb->resync_offset) != mddev->recovery_cp) {
+> > -             pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
+> > -                             __LINE__, mddev->recovery_cp,
+> > -                             (unsigned long) le64_to_cpu(sb->resync_offset));
+> > +             pr_info("%s:%d recovery_cp changed from %llu to %llu\n", __func__,
+> > +                             __LINE__, (u64)mddev->recovery_cp,
+> > +                             (u64) le64_to_cpu(sb->resync_offset));
+> >               mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
+> >       }
+> >  
+> 
+> Thanks, but is this really right?
+> I think u64 is "unsigned long" on 64bit.
+> I have always used (unsigned long long) when I want to use %llu on
+> sector_t.
+> 
+> How confident are you of using "u64" ?
 
-Shaohua Li <shli@fb.com> writes:
+Very confident ;-)
 
-> Hi,
->
-> some fixes for raid5-cache/md. Mainly supports trim, handle IO error and
-> handling array assemble with missing/faulty disks.
-> patch 1: fix a bug
-> patch 2: support trim
+This used to not work until some linux-2.6 version when we changed all
+architectures to use asm-generic/int-ll64.h in the kernel, because
+a lot of code relied on printing u64 variables using %lld.
 
-These two I've replied to separately.
+I tend to use u64 for things like this because it's shorter than
+'unsigned long long'.
 
-> patch 3-4, IO error handling
-> patch 5-9, handle assemble issue when journal disk is missing/faulty
-
-These I am happy with (I think, it is getting late, my brain slows
-down...)
-I was going to apply them but they depend on the trim support to apply
-cleanly.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWG1BvAAoJEDnsnt1WYoG5tycP/ReQwOn2xnpZ9fVlqL6yB22W
-MyIIQewtd+4c/M7J+MpDy3Y6nLPGHYA2/VC95LYakcQxrgOsPfo5yzx3P0vMqRfy
-2yN3WnS8cGKrVC1X2zlOqJtZ7wfjIza1rZF30ARRxJERhbX7PmmXwjfOUASv8/oX
-27jk2VzxwvkkkYTE4swlza/Bjgr1Y2rZZYBZAWRR4z2h2KKsMNzJ8/uBdJWuRv+h
-DQV57ripbA4/Kj5/IL2e/fe742w8FAeamjvYksY3yMBpIfElHLA6KAX8+4bDqIUt
-3TCRUTwGs4tHxoa3a1rVCrBTu9C9DYC8dSjwPH77nw9eb5/PbUGN5QRDGTyYFnlX
-XAiXOY6Wl0CFVLqZTFVxz7eSk7DpKZVIkDqwfquJ41KeAnRs8lzbf2NqlTeVb40Q
-OVRpLq1wwXnlO7xNtUdAm5m6UVH2/fxn7doG/8Ke1zO6tDcPZ93KHjybX23Z+Xc3
-usPtjEGhcqnCN+QapG7QPKdzcEOg6rXEaKOOqKWht2SyPT/H+LVXXDBFmrZOD0fm
-RGg9RkuScCEzfoZfclo4dreREOXejU7QalgtvbpjY6KWrxZwR4fnxVLw15wvCMaX
-wTiX14MSHtvFcyYp2YO5usZSg+gcIMyWM/p8fX+hWGgyE0meabDvKUBqicoiXmZh
-+xXkssWyhc3YUsgU/69D
-=O7rF
------END PGP SIGNATURE-----
---=-=-=--
+	Arnd
