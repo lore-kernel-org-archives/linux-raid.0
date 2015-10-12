@@ -1,77 +1,90 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: [PATCH] md: fix 32-bit build warning
-Date: Mon, 12 Oct 2015 15:59:27 +1100
-Message-ID: <87fv1g1y34.fsf@notabene.neil.brown.name>
-References: <5304496.D8N6u074t0@wuerfel>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 1/9] MD: fix info output for journal disk
+Date: Mon, 12 Oct 2015 16:37:55 +1100
+Message-ID: <87a8ro1wb0.fsf@notabene.neil.brown.name>
+References: <cover.1444360850.git.shli@fb.com> <2537e2bcb31eaf918df28f25d096b31c2b9daa70.1444360850.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5304496.D8N6u074t0@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2537e2bcb31eaf918df28f25d096b31c2b9daa70.1444360850.git.shli@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Shaohua Li <shli@fb.com> writes:
 
-> On 32-bit architectures, the md code produces this warning when CONFIG_LD=
-AF
-> is set:
+> journal disk can be faulty. The Journal and Faulty aren't exclusive with
+> each other.
 >
-> drivers/md/md.c: In function 'check_sb_changes':
-> drivers/md/md.c:8990:10: warning: format '%lu' expects argument of type '=
-long unsigned int', but argument 4 has type 'sector_t {aka long long unsign=
-ed int}' [-Wformat=3D]
->    pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
->
-> The code was only recently introduced, and uses the wrong format string
-> for sector_t. As a workaround, this patch adds an explicit cast to 'u64'
-> so we can use the %llu format string on all architectures.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: e0212320066e ("md-cluster: Improve md_reload_sb to be less error p=
-rone")
-> Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
 > ---
->
-> I also noticed that some commmits in md/for-next including the one causing
-> the problem lack a Signed-off-by line. It might make sense to just fold t=
-his
-> patch and add the lines at the same time.
+>  drivers/md/md.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
 >
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 7fff1e6884d6..e13f72a3b561 100644
+> index 0729cc7..daf42bb 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -8987,9 +8987,9 @@ static void check_sb_changes(struct mddev *mddev, s=
-truct md_rdev *rdev)
->=20=20
->  	/* recovery_cp changed */
->  	if (le64_to_cpu(sb->resync_offset) !=3D mddev->recovery_cp) {
-> -		pr_info("%s:%d recovery_cp changed from %lu to %lu\n", __func__,
-> -				__LINE__, mddev->recovery_cp,
-> -				(unsigned long) le64_to_cpu(sb->resync_offset));
-> +		pr_info("%s:%d recovery_cp changed from %llu to %llu\n", __func__,
-> +				__LINE__, (u64)mddev->recovery_cp,
-> +				(u64) le64_to_cpu(sb->resync_offset));
->  		mddev->recovery_cp =3D le64_to_cpu(sb->resync_offset);
->  	}
->=20=20
+> @@ -5857,7 +5857,8 @@ static int get_disk_info(struct mddev *mddev, void =
+__user * arg)
+>  		else if (test_bit(In_sync, &rdev->flags)) {
+>  			info.state |=3D (1<<MD_DISK_ACTIVE);
+>  			info.state |=3D (1<<MD_DISK_SYNC);
+> -		} else if (test_bit(Journal, &rdev->flags))
+> +		}
+> +		if (test_bit(Journal, &rdev->flags))
+>  			info.state |=3D (1<<MD_DISK_JOURNAL);
+>  		if (test_bit(WriteMostly, &rdev->flags))
+>  			info.state |=3D (1<<MD_DISK_WRITEMOSTLY);
+> @@ -7335,18 +7336,21 @@ static int md_seq_show(struct seq_file *seq, void=
+ *v)
+>  		rcu_read_lock();
+>  		rdev_for_each_rcu(rdev, mddev) {
+>  			char b[BDEVNAME_SIZE];
+> +			bool skip =3D false;
+>  			seq_printf(seq, " %s[%d]",
+>  				bdevname(rdev->bdev,b), rdev->desc_nr);
+>  			if (test_bit(WriteMostly, &rdev->flags))
+>  				seq_printf(seq, "(W)");
+>  			if (test_bit(Faulty, &rdev->flags)) {
+>  				seq_printf(seq, "(F)");
+> -				continue;
+> +				skip =3D true;
+>  			}
+>  			if (test_bit(Journal, &rdev->flags)) {
+>  				seq_printf(seq, "(J)");
+> -				continue;
+> +				skip =3D true;
+>  			}
+> +			if (skip)
+> +				continue;
 
-Thanks, but is this really right?
-I think u64 is "unsigned long" on 64bit.
-I have always used (unsigned long long) when I want to use %llu on
-sector_t.
+Is this 'skip' stuff really needed?  What would go wrong if we just left
+it out?  An active journal will have raid_disk>=3D0 now won't it?  And
+if we don't support replacement of journals (which I suspect we
+shouldn't) then (R) will never get reported.
 
-How confident are you of using "u64" ?
+So can we just drop the 'skip'??
 
 Thanks,
 NeilBrown
+
+>  			if (rdev->raid_disk < 0)
+>  				seq_printf(seq, "(S)"); /* spare */
+>  			if (test_bit(Replacement, &rdev->flags))
+> --=20
+> 2.4.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -79,18 +92,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWGz4vAAoJEDnsnt1WYoG5af8P/1h/uRYWnNQGJV+2iuWATREN
-1lAm0b9wetEQ/bj4n0Tjl+Qe7TQ02D5Aqhy90hj6XyD8ovTDlRFwHSmqGKu6P7Bx
-zsxMHfmebqU6+TFR4r7V+99zcCo+hfcP+bhbMgBPkPwYSjWI0Fuott4puW96pjo5
-iLJ+4vIMijJE14DPHQf0GhkPHvVDHlY3+14PwH9FcRik/h55+e4kxw6By5evJ+bo
-GRAxHsFmvcdOtOCfaj/+G/VYXrzffZVBop99yr9bZ0wGw00Z0TW0fJpOyMrIoqmE
-Agwmx3OzJwpZCWJBB6zo8Civ7iI23ZqpHgwuXvGjr5DuWFitJqe+liHBzcXmwRLC
-WD1bzOW2Yx6VXXmJZpikGI+cnFpTFgAkdHpiYh0o8rUq4Zzldcp1lfDvwMx8eGro
-Brd4e9fZ6NUNbjPZ6YWNxrXEcEF7TfYFMCBFhaMqBA+4KB9/0U0KdIwhaE4/sTa0
-NpZ7NF17S/Mpzru7QKk0bc3KnQpQHAC6jFU8aHZL/dkPBgtnbADUPch2aaQbQk6t
-1lSDMc6xLQ7S1Soqe1nvVXgCqqD+L9Ru+jeSsw89p/5UCLSo3I+2Su0ZUbJph17C
-8BbLHsTDOPj723VNJKF8mrDj0IMZ2Y+jNq0c32Z98B16Y8JX9T12FIyOnf8LdyJx
-Kk//IxPxT19Tb9m0vPdB
-=fIpw
+iQIcBAEBCAAGBQJWG0czAAoJEDnsnt1WYoG5A7UP/ipBuj7Gf/GFgwpCREpYjsva
+kbaALyn6mDhJxYOZEQvHezGaWJkE27LprdwToL81fApfk3Rf/m3k5n58m4Ln5VsZ
+qtOmWZGtJ9SAi0bIA8XLr43vN2acgdd5UHqHviG5Nfi17M9x33gbiPbnsgNTZZHV
+R3r7dQsz1l7/DcUen3gx5he2d54LgLKwnApG+K/Rrgw/Yq6pHlupZ71ZJfZR1mGc
+yLxY3cF88T+RpBjMY4yMxar2WmAzXNMLFtgSbse5ztmOuIMPSD/3FhBm30MtI0UJ
+z5yz1laNgV3hhXfSmt8WQhTJHreuadZrIWXoRxN846wld8XAvgMV+NDrWNXdOTPK
+5e4nGBip3osqo5jyST8xzDI4FXyf6IYUWQLd8rSaDqH5FrqvccVFSN497Fv7GWyr
+ygG6OISv4DFMuk3wJABxrO4sulnONh6EeXYhLK7Eja5/sQK2mrLC6UPyjzwNswc4
+mha98qk7PfulTdoGkYPi2YsC22QroQASZXFYRVVZU4axS1ZhN/IDDE6HSAev+dEP
+iWZe5fa/DxW+jev2xkqMXbZSkb+9y1uSWSrN4KT59JF9WQVUsSuJTY/MaaMP3yIg
+f5Dkw45NyY7HBOn/jBi9b/uXzLuspNXe0K33bqHgxORZX+ocK1//IoR3C/jf4kNM
+SW8L+ainbpWd8c2dbiQs
+=Pfci
 -----END PGP SIGNATURE-----
 --=-=-=--
