@@ -1,164 +1,60 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v2 1/7] block_dev: Support checking inode permissions in
- lookup_bdev()
-Date: Tue, 13 Oct 2015 12:04:14 -0500
-Message-ID: <1444755861-54997-2-git-send-email-seth.forshee@canonical.com>
-References: <1444755861-54997-1-git-send-email-seth.forshee@canonical.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Block integrity registration update
+Date: Tue, 13 Oct 2015 10:38:13 -0700
+Message-ID: <CAPcyv4jS718028xnW2wLMUH8xRgaJ6jRbTB0UHdz4heqDr5NVQ@mail.gmail.com>
+References: <B58D82457FDA0744A320A2FC5AC253B93CBE5758@fmsmsx104.amr.corp.intel.com>
+	<1444683912-7140-1-git-send-email-martin.petersen@oracle.com>
+	<1444696266.9780.13.camel@intel.com>
+	<1444701214.9780.23.camel@intel.com>
+	<20151013122608.GA18816@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-In-Reply-To: <1444755861-54997-1-git-send-email-seth.forshee@canonical.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-mtd" <linux-mtd-bounces@lists.infradead.org>
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-bcache@vger.kernel.org, Serge Hallyn <serge.hallyn@canonical.com>, linux-kernel@vger.kernel.org, Andy Lutomirski <luto@amacapital.net>, linux-raid@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>, linux-security-module@vger.kernel.org, linux-mtd@lists.infradead.org, selinux@tycho.nsa.gov, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20151013122608.GA18816@infradead.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Busch, Keith" <keith.busch@intel.com>, "willy@linux.intel.com" <willy@linux.intel.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@fb.com" <axboe@fb.com>, "snitzer@redhat.com" <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When looking up a block device by path no permission check is
-done to verify that the user has access to the block device inode
-at the specified path. In some cases it may be necessary to
-check permissions towards the inode, such as allowing
-unprivileged users to mount block devices in user namespaces.
+[ adding Neil, linux-raid ]
 
-Add an argument to lookup_bdev() to optionally perform this
-permission check. A value of 0 skips the permission check and
-behaves the same as before. A non-zero value specifies the mask
-of access rights required towards the inode at the specified
-path. The check is always skipped if the user has CAP_SYS_ADMIN.
+On Tue, Oct 13, 2015 at 5:26 AM, hch@infradead.org <hch@infradead.org> wrote:
+> On Tue, Oct 13, 2015 at 01:53:34AM +0000, Williams, Dan J wrote:
+>> ...i.e. that we're destroying the integrity profile while i/o is still
+>> in flight.  As far as I can see any driver that calls
+>> blk_integrity_unregister() before blk_cleanup_queue() can hit this.
+>>
+>> However, with the change to static allocation I'm not sure why a driver
+>> would ever need to call blk_integrity_unregister() in its shutdown path.
+>
+> It shouldn't.
+>
+>> It seems this would only be necessary for disabling integrity at run
+>> time, but it can only do it safely when the queue is known to be idle.
+>
+> Yes.  And even for that case we should a) only clear ->flags not the
+> whole integrity profile (and fix blk_integrity_revalidate to check the
+> right thing) and b) clear flags before calling blk_integrity_revalidate.
+>
+>> Is there a way to solve this without the generic blk_freeze_queue()
+>> implementation? [1].  The immediate fix for libnvdimm is to just stop
+>> calling blk_integrity_unregister().
+>
+> Seems like only nvme ever updates the profile, and nvme is blk-mq
+> only.
 
-All callers of lookup_bdev() currently pass a mask of 0, so this
-patch results in no functional change. Subsequent patches will
-add permission checks where appropriate.
+Looks like both dm and md are calling blk_integrity_unregister() at
+run-time as well when adding new disks to the configuration.  Even if
+we fix blk_integrity_unregister() to not trigger a crash it seems we
+still need to stop all I/O during the unregistration so we don't throw
+spurious integrity miscompares for in-flight i/o.
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/md/bcache/super.c |  2 +-
- drivers/md/dm-table.c     |  2 +-
- drivers/mtd/mtdsuper.c    |  2 +-
- fs/block_dev.c            | 13 ++++++++++---
- fs/quota/quota.c          |  2 +-
- include/linux/fs.h        |  2 +-
- 6 files changed, 15 insertions(+), 8 deletions(-)
+For dm I'm wondering what's the difference between a mapped_device
+being suspended vs having completed a stop_queue()?  Mike?
 
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 679a093a3bf6..e8287b0d1dac 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -1926,7 +1926,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
- 				  sb);
- 	if (IS_ERR(bdev)) {
- 		if (bdev == ERR_PTR(-EBUSY)) {
--			bdev = lookup_bdev(strim(path));
-+			bdev = lookup_bdev(strim(path), 0);
- 			mutex_lock(&bch_register_lock);
- 			if (!IS_ERR(bdev) && bch_is_open(bdev))
- 				err = "device already registered";
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index e76ed003769e..35bb3ea4cbe2 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -380,7 +380,7 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
- 	BUG_ON(!t);
- 
- 	/* convert the path to a device */
--	bdev = lookup_bdev(path);
-+	bdev = lookup_bdev(path, 0);
- 	if (IS_ERR(bdev)) {
- 		dev = name_to_dev_t(path);
- 		if (!dev)
-diff --git a/drivers/mtd/mtdsuper.c b/drivers/mtd/mtdsuper.c
-index 20c02a3b7417..b5b60e1af31c 100644
---- a/drivers/mtd/mtdsuper.c
-+++ b/drivers/mtd/mtdsuper.c
-@@ -176,7 +176,7 @@ struct dentry *mount_mtd(struct file_system_type *fs_type, int flags,
- 	/* try the old way - the hack where we allowed users to mount
- 	 * /dev/mtdblock$(n) but didn't actually _use_ the blockdev
- 	 */
--	bdev = lookup_bdev(dev_name);
-+	bdev = lookup_bdev(dev_name, 0);
- 	if (IS_ERR(bdev)) {
- 		ret = PTR_ERR(bdev);
- 		pr_debug("MTDSB: lookup_bdev() returned %d\n", ret);
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 26cee058dc02..f1f0aa7214a3 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1396,7 +1396,7 @@ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
- 	struct block_device *bdev;
- 	int err;
- 
--	bdev = lookup_bdev(path);
-+	bdev = lookup_bdev(path, 0);
- 	if (IS_ERR(bdev))
- 		return bdev;
- 
-@@ -1706,12 +1706,14 @@ EXPORT_SYMBOL(ioctl_by_bdev);
- /**
-  * lookup_bdev  - lookup a struct block_device by name
-  * @pathname:	special file representing the block device
-+ * @mask:	rights to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC)
-  *
-  * Get a reference to the blockdevice at @pathname in the current
-  * namespace if possible and return it.  Return ERR_PTR(error)
-- * otherwise.
-+ * otherwise.  If @mask is non-zero, check for access rights to the
-+ * inode at @pathname.
-  */
--struct block_device *lookup_bdev(const char *pathname)
-+struct block_device *lookup_bdev(const char *pathname, int mask)
- {
- 	struct block_device *bdev;
- 	struct inode *inode;
-@@ -1726,6 +1728,11 @@ struct block_device *lookup_bdev(const char *pathname)
- 		return ERR_PTR(error);
- 
- 	inode = d_backing_inode(path.dentry);
-+	if (mask != 0 && !capable(CAP_SYS_ADMIN)) {
-+		error = __inode_permission(inode, mask);
-+		if (error)
-+			goto fail;
-+	}
- 	error = -ENOTBLK;
- 	if (!S_ISBLK(inode->i_mode))
- 		goto fail;
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 3746367098fd..a40eaecbd5cc 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -733,7 +733,7 @@ static struct super_block *quotactl_block(const char __user *special, int cmd)
- 
- 	if (IS_ERR(tmp))
- 		return ERR_CAST(tmp);
--	bdev = lookup_bdev(tmp->name);
-+	bdev = lookup_bdev(tmp->name, 0);
- 	putname(tmp);
- 	if (IS_ERR(bdev))
- 		return ERR_CAST(bdev);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 458ee7b213be..cc18dfb0b98e 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2388,7 +2388,7 @@ static inline void unregister_chrdev(unsigned int major, const char *name)
- #define BLKDEV_MAJOR_HASH_SIZE	255
- extern const char *__bdevname(dev_t, char *buffer);
- extern const char *bdevname(struct block_device *bdev, char *buffer);
--extern struct block_device *lookup_bdev(const char *);
-+extern struct block_device *lookup_bdev(const char *, int mask);
- extern void blkdev_show(struct seq_file *,off_t);
- 
- #else
--- 
-1.9.1
+For md looks like a simple mddev_suspend()/resume() in
+md_integrity_add_rdev() is sufficient.
 
+...and then blk_mq_freeze_queue() for nvme in nvme_revalidate_disk().
 
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
+I'll throw together a patch...
