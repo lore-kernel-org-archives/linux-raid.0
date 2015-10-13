@@ -1,78 +1,79 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 00/14] md-cluster: A better way for METADATA_UPDATED processing
-Date: Wed, 14 Oct 2015 07:12:15 +1100
-Message-ID: <87h9luzfxc.fsf@notabene.neil.brown.name>
-References: <1444746335-22624-1-git-send-email-rgoldwyn@suse.de>
+From: Stephen Smalley <sds@tycho.nsa.gov>
+Subject: Re: [PATCH v2 5/7] selinux: Add support for unprivileged mounts from
+ user namespaces
+Date: Tue, 13 Oct 2015 16:27:09 -0400
+Message-ID: <561D691D.9080209@tycho.nsa.gov>
+References: <1444755861-54997-1-git-send-email-seth.forshee@canonical.com>
+ <1444755861-54997-6-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1444746335-22624-1-git-send-email-rgoldwyn@suse.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: rgoldwyn@suse.de, linux-raid@vger.kernel.org
-Cc: gqjiang@suse.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1444755861-54997-6-git-send-email-seth.forshee@canonical.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Paul Moore <paul@paul-moore.com>, Eric Paris <eparis@parisplace.org>
+Cc: linux-bcache@vger.kernel.org, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, dm-devel@redhat.com, linux-kernel@vger.kernel.org, Andy Lutomirski <luto@amacapital.net>, linux-raid@vger.kernel.org, linux-security-module@vger.kernel.org, linux-mtd@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, selinux@tycho.nsa.gov, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-rgoldwyn@suse.de writes:
-
-> The processing of METADATA_UPDATED message is too simple and prone to
-> errors. Besides, it would not update the internal data structures as
-> required.
+On 10/13/2015 01:04 PM, Seth Forshee wrote:
+> Security labels from unprivileged mounts in user namespaces must
+> be ignored. Force superblocks from user namespaces whose labeling
+> behavior is to use xattrs to use mountpoint labeling instead.
+> For the mountpoint label, default to converting the current task
+> context into a form suitable for file objects, but also allow the
+> policy writer to specify a different label through policy
+> transition rules.
 >
-> This set of patches reads the superblock from one of the device of the MD
-> and checks for changes in the in-memory data structures. If there is a change,
-> it performs the necessary actions to keep the internal data structures
-> as it would be in the primary node.
+> Pieced together from code snippets provided by Stephen Smalley.
 >
-> An example is if a devices turns faulty. The algorithm is:
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+
+Acked-by: Stephen Smalley <sds@tycho.nsa.gov>
+
+> ---
+>   security/selinux/hooks.c | 23 +++++++++++++++++++++++
+>   1 file changed, 23 insertions(+)
 >
-> 1. The initiator node marks the device as faulty and updates the superblock
-> 2. The initiator node sends METADATA_UPDATED with an advisory  device number to the rest of the nodes.
-> 3. The receiving node on receiving the METADATA_UPDATED message
->   3.1 Reads the superblock
->   3.2 Detects a device has failed by comparing with memory structure
->   3.3 Calls the necessary functions to record the failure and get the device out of the active array.
->   3.4 Acknowledges the message.
+> diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+> index de05207eb665..09be1dc21e58 100644
+> --- a/security/selinux/hooks.c
+> +++ b/security/selinux/hooks.c
+> @@ -756,6 +756,28 @@ static int selinux_set_mnt_opts(struct super_block *sb,
+>   			goto out;
+>   		}
+>   	}
+> +
+> +	/*
+> +	 * If this is a user namespace mount, no contexts are allowed
+> +	 * on the command line and security labels must be ignored.
+> +	 */
+> +	if (sb->s_user_ns != &init_user_ns) {
+> +		if (context_sid || fscontext_sid || rootcontext_sid ||
+> +		    defcontext_sid) {
+> +			rc = -EACCES;
+> +			goto out;
+> +		}
+> +		if (sbsec->behavior == SECURITY_FS_USE_XATTR) {
+> +			sbsec->behavior = SECURITY_FS_USE_MNTPOINT;
+> +			rc = security_transition_sid(current_sid(), current_sid(),
+> +						     SECCLASS_FILE, NULL,
+> +						     &sbsec->mntpoint_sid);
+> +			if (rc)
+> +				goto out;
+> +		}
+> +		goto out_set_opts;
+> +	}
+> +
+>   	/* sets the context of the superblock for the fs being mounted. */
+>   	if (fscontext_sid) {
+>   		rc = may_context_mount_sb_relabel(fscontext_sid, sbsec, cred);
+> @@ -824,6 +846,7 @@ static int selinux_set_mnt_opts(struct super_block *sb,
+>   		sbsec->def_sid = defcontext_sid;
+>   	}
 >
-> The patch series also fixes adding the disk which was impacted because of
-> the changes.
+> +out_set_opts:
+>   	rc = sb_finish_set_opts(sb);
+>   out:
+>   	mutex_unlock(&sbsec->lock);
 >
-> Patches can also be found at
-> https://github.com/goldwynr/linux branch md-next
->
-> Changes since V2:
->  - Fix status synchrnoization after --add and --re-add operations
->  - Included Guoqing's patches on endian correctness, zeroing cmsg etc
->  - Restructure add_new_disk() and cancel()
 
-Thanks a lots.  Looks good.
-
-I have pull all this in and will push it out shortly.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWHWWfAAoJEDnsnt1WYoG59pQQALmLamm68APBg4W9BisrzOjF
-tFGzdgm8TTlDOFnrcekEdMGQHqyFhLeA8eMm3E0lhrB20N4tFCyCEGMpaWiRULX9
-PDzvdWKS6beUgcdWnS5a8hPhp35sPS2G8npH/0vA51ZWZa0NHdqQndWgUdwxbcQd
-ALWCq2RhjUEIbSF7SN1IIq0WGiHhBjOqho/fz+uG+PEHaSm1gYZbVlWBFb0rQkLR
-Q6DIqOTJdwIVqzzwVs5EE3pwAJTpFB2Men8BYbt/vh+U8GH/xV42CBVcRoc7S7ya
-DYf+s3IVWM6bE8JE0Bq6Vi+/JfNt2rV6Yqu/3Om9SJaN6ZMRTYddLgXzqDouXmGz
-MNhPlr5sVQDSUIgB/DPVPAIkww8qj0qQvNqqXc3OOQhH+tH3Rnpu9tiolBdzO5DG
-PZPSX4MZhp5hcY+bgZLStd7prUza9PdSVtDIbpetwLjBUqFrDj25V7pEZ/ZuAUtw
-yhKwoxf03QDgz00y4MCfPwUCBzAcrnz1+DKQkr3dpPAURImCJrPFAhyrVnGF6iYC
-IgfC/GekY4h71dbLxgFKzpO6Z/Hf6c8vrqYe/Nfk2bDUIxDQ9le4VX26bQN02TlL
-+175Dd/b8jENlEfwbex2O0JtR2B+wjVsf+QtsRp0RfWtxaHXzSkwDxCNruEuKbIm
-CaKIxecwBdS4laT7aBb3
-=Yx0H
------END PGP SIGNATURE-----
---=-=-=--
