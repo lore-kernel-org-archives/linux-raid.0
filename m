@@ -1,59 +1,40 @@
-From: Marek <mlf.conv@gmail.com>
-Subject: Re: First 12Mb of data missing after accidental deletion of first
- drive (4 2TB raid5)
-Date: Tue, 13 Oct 2015 16:08:47 +0200
-Message-ID: <CA+sqOsZEQQviQfiMNBGQzAbWrv-fT1mkewPcU_+D+f1EJyg4bw@mail.gmail.com>
-References: <CA+sqOsZSmYUDvwWu2MY-EpQyePGmT6wBjCCR5kKPEygKByD=Xw@mail.gmail.com>
-	<CAETWcfvePZiUBiCY-cWMktQ=F7rckKt-7YDGa6PsiNt6j1ONGg@mail.gmail.com>
-	<CA+sqOsaBm4jXrEpNyRMBoSMjE7f8MdAnq9Na3WcrLvVdAB7vSw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: rgoldwyn@suse.de
+Subject: [PATCH 00/14] md-cluster: A better way for METADATA_UPDATED processing
+Date: Tue, 13 Oct 2015 09:25:21 -0500
+Message-ID: <1444746335-22624-1-git-send-email-rgoldwyn@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sqOsaBm4jXrEpNyRMBoSMjE7f8MdAnq9Na3WcrLvVdAB7vSw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Afonyashin <a.afonyashin@madnet-team.ru>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, neilb@suse.de
+Cc: gqjiang@suse.com
 List-Id: linux-raid.ids
 
-sorry i pasted the wrong email:
-Hi,
+The processing of METADATA_UPDATED message is too simple and prone to
+errors. Besides, it would not update the internal data structures as
+required.
 
-I have a problem with my 4 2TB disk Raid5 (most likely btrfs) after I
-accidentally deleted first drive by installing Ubuntu on it (/dev/sda
-automatic choice) then I discovered the raid isn't working and by
-closer inspecting it hexdump I discovered first ~12Mb of data are
-missing. Is it possible to recover it somehow? What I did was to zero
-superblock then add the first drive - everything seems fine according
-to /proc/mdstat.
+This set of patches reads the superblock from one of the device of the MD
+and checks for changes in the in-memory data structures. If there is a change,
+it performs the necessary actions to keep the internal data structures
+as it would be in the primary node.
 
-On Tue, Oct 13, 2015 at 4:04 PM, Marek <mlf.conv@gmail.com> wrote:
-> no, i had a working raid consisting of 4 2TB drives (raid5)
-> sda,sdb,sdc,sdb ( no partitions were created on drives) - then i
-> accidentally deleted /dev/sda by installing ubuntu. when inspecting
-> dev/md127 with a hex editor i discovered first 12mb are missing.
->
-> On Tue, Oct 13, 2015 at 3:53 PM, Alexander Afonyashin
-> <a.afonyashin@madnet-team.ru> wrote:
->> Hi Marek,
->>
->> Do you mean you have files (on raid) that were used as loop devices?
->>
->> Regards,
->> Alexander
->>
->> On Tue, Oct 13, 2015 at 4:44 PM, Marek <mlf.conv@gmail.com> wrote:
->>> Hi,
->>>
->>> I'd like to ask about recovering partitions saved as images on eg a raid.
->>> How do I recover such image - I tried to run test disk and it found
->>> lots of images which I wasn't able to view via P (NFTS) and ext3
->>> partitions but I'd like to save them to another harddrive, I tried
->>> photo tree with only ext3 superblock and image file enabled but it
->>> wouldn't find the partition in was looki for and found via testdisk.
->>> What would you recommend me to do?
->>>
->>> Marek
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+An example is if a devices turns faulty. The algorithm is:
+
+1. The initiator node marks the device as faulty and updates the superblock
+2. The initiator node sends METADATA_UPDATED with an advisory  device number to the rest of the nodes.
+3. The receiving node on receiving the METADATA_UPDATED message
+  3.1 Reads the superblock
+  3.2 Detects a device has failed by comparing with memory structure
+  3.3 Calls the necessary functions to record the failure and get the device out of the active array.
+  3.4 Acknowledges the message.
+
+The patch series also fixes adding the disk which was impacted because of
+the changes.
+
+Patches can also be found at
+https://github.com/goldwynr/linux branch md-next
+
+Changes since V2:
+ - Fix status synchrnoization after --add and --re-add operations
+ - Included Guoqing's patches on endian correctness, zeroing cmsg etc
+ - Restructure add_new_disk() and cancel()
+
