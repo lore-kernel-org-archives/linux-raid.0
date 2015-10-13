@@ -1,37 +1,48 @@
-From: Marek <mlf.conv@gmail.com>
-Subject: Re: First 12Mb of data missing after accidental deletion of first
- drive (4 2TB raid5)
-Date: Tue, 13 Oct 2015 17:04:40 +0200
-Message-ID: <CA+sqOsZ2E-VyPikjX8mNFjgE3UkuHQ_84y58myHj4JN9UvQo-g@mail.gmail.com>
-References: <CA+sqOsZSmYUDvwWu2MY-EpQyePGmT6wBjCCR5kKPEygKByD=Xw@mail.gmail.com>
-	<CAETWcfvePZiUBiCY-cWMktQ=F7rckKt-7YDGa6PsiNt6j1ONGg@mail.gmail.com>
-	<CA+sqOsaBm4jXrEpNyRMBoSMjE7f8MdAnq9Na3WcrLvVdAB7vSw@mail.gmail.com>
-	<CAFE24U28NQBoKaTwNfXb5-3jK8PDggfZMUnc7KJLUGbrCFS-Xw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFE24U28NQBoKaTwNfXb5-3jK8PDggfZMUnc7KJLUGbrCFS-Xw@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Weedy <weedy2887@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Alexander Afonyashin <a.afonyashin@madnet-team.ru>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 0/7] User namespace mount updates
+Date: Tue, 13 Oct 2015 12:04:13 -0500
+Message-ID: <1444755861-54997-1-git-send-email-seth.forshee@canonical.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-kernel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 List-Id: linux-raid.ids
 
-Could it be that the raid wasnt synced at the time i overwrote
-/dev/sda ? i have run the command you suggested and will report after
-its done. would it still be possible to recover the raid?
+Hi Eric,
 
-On Tue, Oct 13, 2015 at 4:36 PM, Weedy <weedy2887@gmail.com> wrote:
->
-> On 13 Oct 2015 10:06 am, "Marek" <mlf.conv@gmail.com> wrote:
->>
->> no, i had a working raid consisting of 4 2TB drives (raid5)
->> sda,sdb,sdc,sdb ( no partitions were created on drives) - then i
->> accidentally deleted /dev/sda by installing ubuntu. when inspecting
->> dev/md127 with a hex editor i discovered first 12mb are missing.
->
-> Wait, if it's a raid5 can't you just resync it?
->
-> Also I believe 1.2 metadata is at the end of a partition. If your saying the
-> raids hasn't noticed you can run a check and it should fix itself.
->
-> echo check > /sys/block/mdX/md/sync_action
+Here's an update to the last round of patches for mounts in user
+namespaces. The only change since last time is to split up the patch to
+verify access towards block devices when mounting into several patches,
+one to update lookup_bdev and one patch each for the call sites which
+require updates.
+
+Thanks,
+Seth
+
+Andy Lutomirski (1):
+  fs: Treat foreign mounts as nosuid
+
+Seth Forshee (6):
+  block_dev: Support checking inode permissions in lookup_bdev()
+  block_dev: Check permissions towards block device inode when mounting
+  mtd: Check permissions towards mtd block device inode when mounting
+  selinux: Add support for unprivileged mounts from user namespaces
+  userns: Replace in_userns with current_in_userns
+  Smack: Handle labels consistently in untrusted mounts
+
+ drivers/md/bcache/super.c      |  2 +-
+ drivers/md/dm-table.c          |  2 +-
+ drivers/mtd/mtdsuper.c         |  6 +++++-
+ fs/block_dev.c                 | 18 +++++++++++++++---
+ fs/exec.c                      |  2 +-
+ fs/namespace.c                 | 13 +++++++++++++
+ fs/quota/quota.c               |  2 +-
+ include/linux/fs.h             |  2 +-
+ include/linux/mount.h          |  1 +
+ include/linux/user_namespace.h |  6 ++----
+ kernel/user_namespace.c        |  6 +++---
+ security/commoncap.c           |  4 ++--
+ security/selinux/hooks.c       | 25 ++++++++++++++++++++++++-
+ security/smack/smack_lsm.c     | 28 ++++++++++++++++++----------
+ 14 files changed, 88 insertions(+), 29 deletions(-)
+
