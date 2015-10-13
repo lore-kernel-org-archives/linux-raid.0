@@ -1,60 +1,59 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Block integrity registration update
-Date: Tue, 13 Oct 2015 10:38:13 -0700
-Message-ID: <CAPcyv4jS718028xnW2wLMUH8xRgaJ6jRbTB0UHdz4heqDr5NVQ@mail.gmail.com>
-References: <B58D82457FDA0744A320A2FC5AC253B93CBE5758@fmsmsx104.amr.corp.intel.com>
-	<1444683912-7140-1-git-send-email-martin.petersen@oracle.com>
-	<1444696266.9780.13.camel@intel.com>
-	<1444701214.9780.23.camel@intel.com>
-	<20151013122608.GA18816@infradead.org>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: First 12Mb of data missing after accidental deletion of first
+ drive (4 2TB raid5)
+Date: Tue, 13 Oct 2015 19:09:58 +0100
+Message-ID: <561D48F6.6010106@mpstor.com>
+References: <CA+sqOsZSmYUDvwWu2MY-EpQyePGmT6wBjCCR5kKPEygKByD=Xw@mail.gmail.com>	<CAETWcfvePZiUBiCY-cWMktQ=F7rckKt-7YDGa6PsiNt6j1ONGg@mail.gmail.com>	<CA+sqOsaBm4jXrEpNyRMBoSMjE7f8MdAnq9Na3WcrLvVdAB7vSw@mail.gmail.com>	<CAFE24U28NQBoKaTwNfXb5-3jK8PDggfZMUnc7KJLUGbrCFS-Xw@mail.gmail.com> <CA+sqOsZ2E-VyPikjX8mNFjgE3UkuHQ_84y58myHj4JN9UvQo-g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151013122608.GA18816@infradead.org>
+In-Reply-To: <CA+sqOsZ2E-VyPikjX8mNFjgE3UkuHQ_84y58myHj4JN9UvQo-g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "Busch, Keith" <keith.busch@intel.com>, "willy@linux.intel.com" <willy@linux.intel.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "axboe@fb.com" <axboe@fb.com>, "snitzer@redhat.com" <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Marek <mlf.conv@gmail.com>, Weedy <weedy2887@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Alexander Afonyashin <a.afonyashin@madnet-team.ru>
 List-Id: linux-raid.ids
 
-[ adding Neil, linux-raid ]
+Hi Marek,
 
-On Tue, Oct 13, 2015 at 5:26 AM, hch@infradead.org <hch@infradead.org> wrote:
-> On Tue, Oct 13, 2015 at 01:53:34AM +0000, Williams, Dan J wrote:
->> ...i.e. that we're destroying the integrity profile while i/o is still
->> in flight.  As far as I can see any driver that calls
->> blk_integrity_unregister() before blk_cleanup_queue() can hit this.
+On 13/10/15 16:04, Marek wrote:
+> Could it be that the raid wasnt synced at the time i overwrote
+> /dev/sda ? i have run the command you suggested and will report after
+> its done. would it still be possible to recover the raid?
+>
+So what likely happened is that you wrote ontop of a RAID member drive 
+while the RAID was likely not assembled (during your install).
+
+If you do a resync it won't unfortunately *recover* the previously 
+written data, it will go over each stripe and recalculate the parity. It 
+is true that it *might* have been possible to do the opposite operation 
+by not touching anything and figuring out the previous data with the 
+data and parity blocks from the remaining RAID members (assuming they 
+weren't overwritten), but it would have been a tricky operation. 
+However, since you've done the resync now, the previous parity blocks 
+have been overwritten leaving you with a consistent RAID, but with part 
+of the data on a disk that you want to revert.
+
+At this stage you should recover the old data from a backup.
+
+> On Tue, Oct 13, 2015 at 4:36 PM, Weedy <weedy2887@gmail.com> wrote:
 >>
->> However, with the change to static allocation I'm not sure why a driver
->> would ever need to call blk_integrity_unregister() in its shutdown path.
+>> On 13 Oct 2015 10:06 am, "Marek" <mlf.conv@gmail.com> wrote:
+>>>
+>>> no, i had a working raid consisting of 4 2TB drives (raid5)
+>>> sda,sdb,sdc,sdb ( no partitions were created on drives) - then i
+>>> accidentally deleted /dev/sda by installing ubuntu. when inspecting
+>>> dev/md127 with a hex editor i discovered first 12mb are missing.
+>>
+>> Wait, if it's a raid5 can't you just resync it?
+>>
+>> Also I believe 1.2 metadata is at the end of a partition. If your saying the
+>> raids hasn't noticed you can run a check and it should fix itself.
+>>
+>> echo check > /sys/block/mdX/md/sync_action
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> It shouldn't.
->
->> It seems this would only be necessary for disabling integrity at run
->> time, but it can only do it safely when the queue is known to be idle.
->
-> Yes.  And even for that case we should a) only clear ->flags not the
-> whole integrity profile (and fix blk_integrity_revalidate to check the
-> right thing) and b) clear flags before calling blk_integrity_revalidate.
->
->> Is there a way to solve this without the generic blk_freeze_queue()
->> implementation? [1].  The immediate fix for libnvdimm is to just stop
->> calling blk_integrity_unregister().
->
-> Seems like only nvme ever updates the profile, and nvme is blk-mq
-> only.
 
-Looks like both dm and md are calling blk_integrity_unregister() at
-run-time as well when adding new disks to the configuration.  Even if
-we fix blk_integrity_unregister() to not trigger a crash it seems we
-still need to stop all I/O during the unregistration so we don't throw
-spurious integrity miscompares for in-flight i/o.
-
-For dm I'm wondering what's the difference between a mapped_device
-being suspended vs having completed a stop_queue()?  Mike?
-
-For md looks like a simple mddev_suspend()/resume() in
-md_integrity_add_rdev() is sufficient.
-
-...and then blk_mq_freeze_queue() for nvme in nvme_revalidate_disk().
-
-I'll throw together a patch...
