@@ -1,7 +1,7 @@
 From: rgoldwyn@suse.de
-Subject: [PATCH 13/14] md-cluster: only call kick_rdev_from_array after remove disk successfully
-Date: Tue, 13 Oct 2015 09:25:34 -0500
-Message-ID: <1444746335-22624-14-git-send-email-rgoldwyn@suse.de>
+Subject: [PATCH 12/14] md-cluster: Add 'SUSE' as author for md-cluster.c
+Date: Tue, 13 Oct 2015 09:25:33 -0500
+Message-ID: <1444746335-22624-13-git-send-email-rgoldwyn@suse.de>
 References: <1444746335-22624-1-git-send-email-rgoldwyn@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1444746335-22624-1-git-send-email-rgoldwyn@suse.de>
@@ -12,42 +12,23 @@ List-Id: linux-raid.ids
 
 From: Guoqing Jiang <gqjiang@suse.com>
 
-For cluster raid, we should not kick it from array if the disk can't be
-remove from array successfully.
-
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- drivers/md/md.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/md/md-cluster.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8a6f67f..d39a72a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2548,13 +2548,16 @@ state_store(struct md_rdev *rdev, const char *buf, size_t len)
- 			err = -EBUSY;
- 		else {
- 			struct mddev *mddev = rdev->mddev;
--			if (mddev_is_clustered(mddev))
--				md_cluster_ops->remove_disk(mddev, rdev);
--			md_kick_rdev_from_array(rdev);
--			if (mddev->pers)
--				md_update_sb(mddev, 1);
--			md_new_event(mddev);
- 			err = 0;
-+			if (mddev_is_clustered(mddev))
-+				err = md_cluster_ops->remove_disk(mddev, rdev);
-+
-+			if (err == 0) {
-+				md_kick_rdev_from_array(rdev);
-+				if (mddev->pers)
-+					md_update_sb(mddev, 1);
-+				md_new_event(mddev);
-+			}
- 		}
- 	} else if (cmd_match(buf, "writemostly")) {
- 		set_bit(WriteMostly, &rdev->flags);
+diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+index c7b8027..35ac2e8 100644
+--- a/drivers/md/md-cluster.c
++++ b/drivers/md/md-cluster.c
+@@ -1051,5 +1051,6 @@ static void cluster_exit(void)
+ 
+ module_init(cluster_init);
+ module_exit(cluster_exit);
++MODULE_AUTHOR("SUSE");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Clustering support for MD");
 -- 
 1.8.5.6
 
