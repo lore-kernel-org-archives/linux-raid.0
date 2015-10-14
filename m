@@ -1,76 +1,85 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/9] raid5-cache fixes
-Date: Wed, 14 Oct 2015 08:03:10 +1100
-Message-ID: <878u76zdkh.fsf@notabene.neil.brown.name>
-References: <cover.1444360850.git.shli@fb.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: First 12Mb of data missing after accidental deletion of first
+ drive (4 2TB raid5)
+Date: Wed, 14 Oct 2015 11:42:04 +1100
+Message-ID: <561DA4DC.1080804@websitemanagers.com.au>
+References: <CA+sqOsZSmYUDvwWu2MY-EpQyePGmT6wBjCCR5kKPEygKByD=Xw@mail.gmail.com>
+ <CAETWcfvePZiUBiCY-cWMktQ=F7rckKt-7YDGa6PsiNt6j1ONGg@mail.gmail.com>
+ <CA+sqOsaBm4jXrEpNyRMBoSMjE7f8MdAnq9Na3WcrLvVdAB7vSw@mail.gmail.com>
+ <CAFE24U28NQBoKaTwNfXb5-3jK8PDggfZMUnc7KJLUGbrCFS-Xw@mail.gmail.com>
+ <CA+sqOsZ2E-VyPikjX8mNFjgE3UkuHQ_84y58myHj4JN9UvQo-g@mail.gmail.com>
+ <561D48F6.6010106@mpstor.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cover.1444360850.git.shli@fb.com>
+In-Reply-To: <561D48F6.6010106@mpstor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, dan.j.williams@intel.com
+To: Benjamin ESTRABAUD <be@mpstor.com>, Marek <mlf.conv@gmail.com>, Weedy <weedy2887@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Alexander Afonyashin <a.afonyashin@madnet-team.ru>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-Shaohua Li <shli@fb.com> writes:
-
-> Hi,
+On 14/10/15 05:09, Benjamin ESTRABAUD wrote:
+> Hi Marek,
 >
-> some fixes for raid5-cache/md. Mainly supports trim, handle IO error and
-> handling array assemble with missing/faulty disks.
-> patch 1: fix a bug
-> patch 2: support trim
-> patch 3-4, IO error handling
-> patch 5-9, handle assemble issue when journal disk is missing/faulty
+> On 13/10/15 16:04, Marek wrote:
+>> Could it be that the raid wasnt synced at the time i overwrote
+>> /dev/sda ? i have run the command you suggested and will report after
+>> its done. would it still be possible to recover the raid?
+>>
+> So what likely happened is that you wrote ontop of a RAID member drive 
+> while the RAID was likely not assembled (during your install).
 >
-> If there is IO error to journal disk, write IO will fail immediately. If we
-> assemble an array with journal feature enabled but with journal disk
-> missing/faulty, the raid array will start readonly.
+> If you do a resync it won't unfortunately *recover* the previously 
+> written data, it will go over each stripe and recalculate the parity. 
+> It is true that it *might* have been possible to do the opposite 
+> operation by not touching anything and figuring out the previous data 
+> with the data and parity blocks from the remaining RAID members 
+> (assuming they weren't overwritten), but it would have been a tricky 
+> operation. However, since you've done the resync now, the previous 
+> parity blocks have been overwritten leaving you with a consistent 
+> RAID, but with part of the data on a disk that you want to revert.
 >
-> Thanks,
-> Shaohua
+Or better action would be to stop the array, start the array excluding 
+sda (not sure best way to manually mark it failed, or maybe physically 
+remove it, or zero superblock should work too). Then you should have 
+clean degraded array with all data. Now you could add sda back, and it 
+will re-write correct data. (Assuming no writes were done to sdb/sdc/sdd).
+
+Depending on what you actually did, and what order, it might still work....
+
+Regards,
+Adam
+
+> At this stage you should recover the old data from a backup.
 >
-> Shaohua Li (6):
->   MD: fix info output for journal disk
->   raid5-cache: add trim support for log
->   raid5: journal disk can't be removed
->   raid5-cache: IO error handling
->   raid5-cache: start raid5 readonly if journal is missing
->   MD: set journal disk ->raid_disk
+>> On Tue, Oct 13, 2015 at 4:36 PM, Weedy <weedy2887@gmail.com> wrote:
+>>>
+>>> On 13 Oct 2015 10:06 am, "Marek" <mlf.conv@gmail.com> wrote:
+>>>>
+>>>> no, i had a working raid consisting of 4 2TB drives (raid5)
+>>>> sda,sdb,sdc,sdb ( no partitions were created on drives) - then i
+>>>> accidentally deleted /dev/sda by installing ubuntu. when inspecting
+>>>> dev/md127 with a hex editor i discovered first 12mb are missing.
+>>>
+>>> Wait, if it's a raid5 can't you just resync it?
+>>>
+>>> Also I believe 1.2 metadata is at the end of a partition. If your 
+>>> saying the
+>>> raids hasn't noticed you can run a check and it should fix itself.
+>>>
+>>> echo check > /sys/block/mdX/md/sync_action
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
 >
-> Song Liu (3):
->   MD: add new bit to indicate raid array with journal
->   MD: kick out journal disk if it's not fresh
->   MD: when RAID journal is missing/faulty, block RESTART_ARRAY_RW
->
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks,
-I've applied all of these.
 
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWHXGOAAoJEDnsnt1WYoG5vRUP+gJ36VDySofqbxSrh8HkJupE
-osM4Gtce+B8ES/Z4aZJkENglCLU6Kcu3xcVDAJzEZC+P8VWpAC8QEmROC9UMdeJ3
-trvEUVc9Xz5sM3oaOJNZZLQI9FtD0n+C/ZiWWMSA9rDnWllEXIfFDLgF8UBgv8EF
-xNnvZJiguh34Gi1PofNiPPnHl6pjQC0tJjrRDWjPMmgPIMB1EXrEE0FRoEbRxh2h
-sK41+kPxWYoE0GnM1BFbxVqtH577dEX7tbBbpQNl5gCBjB9oCSGgyM6jwLcNjBcY
-Snjwcy1YN6CNqZ3UBEDfNXDiClLC2SLqfZ48qjGvLbrLqCIOUalaCXGo/+LCxMKc
-Pxh+8KWNSZFeh0RRird0SAspRn0SEk55J1YLRbfm2E0d/X+TGOyjYD89XdwCxOWX
-n5OhFQ6pMKa0GwdjfyUUcgGAcCshq/PO9AA9TJPVKVbuCLEd9xN/bumCy+JxdXyQ
-jvtHc27yo8wvBn60KoxD9Jqjb8IkO3y+A7TnGis/4OiejbVPVlUDJ9Wr04apQMZK
-ORWmnePajqNBzJjs28Pdhylt6eIvYlDzyEFIcxDCQopeORTpsJkmVEGvfYcuCgLF
-ihavsezUKoeIJLSBoDd/A8dmRTVwS/PCDlt+CIZEw8yfshw7wbVK/EN3SBLdNmb1
-005bgXLn1uYKMpEw7qoU
-=tMgO
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Adam Goryachev Website Managers www.websitemanagers.com.au
