@@ -1,151 +1,110 @@
-From: Phil Reynolds <phil@tinsleyviaduct.com>
-Subject: Debian jessie - RAID 6 reshape - making no progress after >48 hours
-Date: Wed, 14 Oct 2015 18:10:19 +0100
-Message-ID: <20151014181019.6f7f9d0a@topdeck.tinsleyviaduct.com>
+From: "Daniel J. R. May" <daniel.may@kada-media.com>
+Subject: mdadm RAID 5 reshape not working
+Date: Wed, 14 Oct 2015 20:21:03 +0100
+Message-ID: <1444850463.3967.19.camel@kada-media.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have recently tried to add 4 additional devices to a RAID 6 array,
-with this command:
+I attempted to add a disk to an mdadm RAID 5 array with the following:
 
-mdadm -G /dev/md1 -n 8 -a /dev/sdb2 /dev/sdf2 /dev/sdg2 /dev/sdh2
+mdadm --manage /dev/md1 --add /dev/sdf1
+mdadm --grow --raid-devices=5 --backup-file=/root/md1-grow.bak /dev/md1
 
-Output from the command, I do not have, but it is what I would take as
-normal - it confirmed what I had asked with no error.
+These command gave no errors, but although mdadm reports that the array
+is reshaping it does not seem to have done anything after a couple of
+hours:
 
-dmesg | grep -w md shows this:
-
-[    2.339195] md: bind<sde2>
-[    2.339957] md: bind<sdc1>
-[    2.341128] md: bind<sdd2>
-[    2.342079] md: bind<sdc3>
-[    2.342735] md: bind<sdd3>
-[    2.343667] md: bind<sdc2>
-[    2.344923] md: bind<sdd1>
-[    2.345939] md: bind<sde1>
-[    2.347212] md: bind<sde3>
-[    3.413622] md: bind<sda2>
-[    3.660395] md: raid6 personality registered for level 6
-[    3.660396] md: raid5 personality registered for level 5
-[    3.660397] md: raid4 personality registered for level 4
-[    3.660548] md/raid:md1: device sda2 operational as raid disk 0
-[    3.660550] md/raid:md1: device sdc2 operational as raid disk 1
-[    3.660551] md/raid:md1: device sdd2 operational as raid disk 2
-[    3.660552] md/raid:md1: device sde2 operational as raid disk 3
-[    3.660844] md/raid:md1: allocated 0kB
-[    3.660862] md/raid:md1: raid level 6 active with 4 out of 4
-devices, algorithm 2 [    3.731726] md: bind<sda3>
-[    3.733039] md: raid0 personality registered for level 0
-[    3.733168] md/raid0:md2: md_size is 234129408 sectors.
-[    3.733170] md: RAID0 configuration for md2 - 1 zone
-[    3.733171] md: zone0=[sda3/sdd3/sde3]
-[    3.739588] md: bind<sda1>
-[    3.759253] md: raid1 personality registered for level 1
-[    3.759429] md/raid1:md0: active with 4 out of 4 mirrors
-[    3.918565] md: array md3 already has disks!
-[    3.918697] md: bind<md2>
-[    3.919332] md: linear personality registered for level -1
-[ 2733.499792] md: bind<sdb1>
-[ 2735.135587] md: bind<sdf1>
-[ 2735.256588] md: bind<sdg1>
-[ 2735.402403] md: could not open unknown-block(8,81).
-[ 2735.402412] md: md_import_device returned -16
-[ 2735.402428] md: could not open unknown-block(8,81).
-[ 2735.402432] md: md_import_device returned -16
-[ 2735.447468] md: bind<sdh1>
-[ 2735.741173] md: recovery of RAID array md0
-[ 2735.741174] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[ 2735.741175] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-[ 2735.741183] md: using 128k
-window, over a total of 96256k.
-[ 2745.098791] md: md0: recovery done.
-[ 2779.774452] md: bind<sdb2>
-[ 2779.887067] md: bind<sdf2>
-[ 2780.051949] md: bind<sdg2>
-[ 2780.162323] md: bind<sdh2>
-[ 2780.559396] md: reshape of RAID array md1
-[ 2780.559399] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[ 2780.559400] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for reshape.
-[ 2780.559408] md: using 128k window, over a total of 205077632k.
-
-(note: I have already tried adjusting the minimum speed)
-
-/proc/mdstat is looking like this:
-
-Personalities : [raid6] [raid5] [raid4] [raid0] [raid1] [linear]
-md2 : active raid0 sda3[0] sde3[2] sdd3[1]
-      117064704 blocks super 1.2 512k chunks
-
-md3 : active linear md2[0] sdc3[1]
-      400277156 blocks super 1.2 0k rounding
-
-md0 : active raid1 sdh1[4] sdg1[5] sdf1[6] sdb1[7] sda1[0] sde1[3]
-sdd1[1] sdc1[ 2]
-      96256 blocks [8/8] [UUUUUUUU]
-      bitmap: 0/12 pages [0KB], 4KB chunk
-
-md1 : active raid6 sdh2[4] sdg2[5] sdf2[6] sdb2[7] sda2[0] sdc2[1]
-sdd2[2] sde2[ 3]
-      410155264 blocks super 0.91 level 6, 64k chunk, algorithm 2 [8/8]
-[UUUUUUU U]
-      [>....................]  reshape =  0.0% (0/205077632)
-finish=39282834032. 1min speed=0K/sec
-      bitmap: 10/196 pages [40KB], 512KB chunk
-
-unused devices: <none>
-
-mdadm --detail /dev/md1 gives:
-
+[root@sulphur ~]# mdadm -D /dev/md1 
 /dev/md1:
-        Version : 0.91
-  Creation Time : Sat Oct  4 15:01:57 2008
-     Raid Level : raid6
-     Array Size : 410155264 (391.15 GiB 420.00 GB)
-  Used Dev Size : 205077632 (195.58 GiB 210.00 GB)
-   Raid Devices : 8
-  Total Devices : 8
-Preferred Minor : 1
+        Version : 1.2
+  Creation Time : Thu May 14 18:19:10 2015
+     Raid Level : raid5
+     Array Size : 11720656896 (11177.69 GiB 12001.95 GB)
+  Used Dev Size : 3906885632 (3725.90 GiB 4000.65 GB)
+   Raid Devices : 5
+  Total Devices : 5
     Persistence : Superblock is persistent
 
   Intent Bitmap : Internal
 
-    Update Time : Wed Oct 14 18:09:32 2015
+    Update Time : Wed Oct 14 18:48:37 2015
           State : clean, reshaping 
- Active Devices : 8
-Working Devices : 8
+ Active Devices : 5
+Working Devices : 5
  Failed Devices : 0
   Spare Devices : 0
 
          Layout : left-symmetric
-     Chunk Size : 64K
+     Chunk Size : 512K
 
  Reshape Status : 0% complete
-  Delta Devices : 4, (4->8)
+  Delta Devices : 1, (4->5)
 
-           UUID : 7b4ddd0f:d04e8dbf:93c13954:ca72c56a
-         Events : 0.5558446
+           Name : sulphur.kada-media.red:1  (local to host sulphur.kada
+-media.red)
+           UUID : dbadf568:66ef2f61:ba13ddd6:176fb4f5
+         Events : 14870
 
     Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       34        1      active sync   /dev/sdc2
-       2       8       50        2      active sync   /dev/sdd2
-       3       8       66        3      active sync   /dev/sde2
-       4       8      114        4      active sync   /dev/sdh2
-       5       8       98        5      active sync   /dev/sdg2
-       6       8       82        6      active sync   /dev/sdf2
-       7       8       18        7      active sync   /dev/sdb2
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       4       8       65        3      active sync   /dev/sde1
+       5       8       81        4      active sync   /dev/sdf1
 
-What can I safely do to move this along?
 
--- 
-Phil Reynolds
-mail: phil@tinsleyviaduct.com
-Web: http://phil.tinsleyviaduct.com/
+[root@sulphur ~]# cat /proc/mdstat 
+Personalities : [raid6] [raid5] [raid4] 
+md1 : active raid5 sdf1[5] sde1[4] sdb1[0] sdd1[2] sdc1[1]
+      11720656896 blocks super 1.2 level 5, 512k chunk, algorithm 2
+[5/5] [UUUUU]
+      [>....................]  reshape =  0.0% (0/3906885632)
+finish=19225133047.4min speed=0K/sec
+      bitmap: 0/30 pages [0KB], 65536KB chunk
+
+md0 : active raid5 sdk1[5] sdh1[1] sdi1[3] sdm1[7] sdg1[0] sdl1[4]
+sdj1[2]
+      17580804096 blocks super 1.2 level 5, 512k chunk, algorithm 2
+[7/7] [UUUUUUU]
+      bitmap: 0/22 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+Output of dmesg:
+[ 7351.071351] md: bind<sdf1>
+[ 7351.398116] RAID conf printout:
+[ 7351.398123]  --- level:5 rd:4 wd:4
+[ 7351.398127]  disk 0, o:1, dev:sdb1
+[ 7351.398131]  disk 1, o:1, dev:sdc1
+[ 7351.398134]  disk 2, o:1, dev:sdd1
+[ 7351.398136]  disk 3, o:1, dev:sde1
+[ 7420.751226] RAID conf printout:
+[ 7420.751234]  --- level:5 rd:5 wd:5
+[ 7420.751239]  disk 0, o:1, dev:sdb1
+[ 7420.751242]  disk 1, o:1, dev:sdc1
+[ 7420.751245]  disk 2, o:1, dev:sdd1
+[ 7420.751248]  disk 3, o:1, dev:sde1
+[ 7420.751251]  disk 4, o:1, dev:sdf1
+[ 7420.751524] md: reshape of RAID array md1
+[ 7420.751530] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 7420.751534] md: using maximum available idle IO bandwidth (but not
+more than 200000 KB/sec) for reshape.
+[ 7420.751542] md: using 128k window, over a total of 3906885632k.
+
+
+The array is used as the physical volume for a single volume group
+which I deactivated before performing the mdadm grow.
+
+Can you tell me what I should do to get the reshape to start (and
+complete) or rescue the array?
+
+Thank you in advance for any help! 
+
+Dan
+
 
