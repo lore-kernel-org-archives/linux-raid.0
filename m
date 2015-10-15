@@ -1,70 +1,111 @@
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [md:devel 40/44] drivers/md/md.c:1813:33: sparse: invalid
- assignment: |=
-Date: Thu, 15 Oct 2015 11:53:37 +0800
-Message-ID: <201510151134.UPkvBLUi%fengguang.wu@intel.com>
+From: Casey Schaufler <casey@schaufler-ca.com>
+Subject: Re: [PATCH v2 7/7] Smack: Handle labels consistently in untrusted
+ mounts
+Date: Wed, 14 Oct 2015 22:46:47 -0700
+Message-ID: <561F3DC7.4070901@schaufler-ca.com>
+References: <1444755861-54997-1-git-send-email-seth.forshee@canonical.com>
+ <1444755861-54997-8-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: kbuild-all@01.org, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1444755861-54997-8-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>, "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>
 List-Id: linux-raid.ids
 
-tree:   git://neil.brown.name/md devel
-head:   3ad01dcc5180761bf7686dd6e6fb8083ca22b913
-commit: 768e16727c9b1f35a809a8068b218743fd8fb557 [40/44] MD: add new bit to indicate raid array with journal
-reproduce:
-        # apt-get install sparse
-        git checkout 768e16727c9b1f35a809a8068b218743fd8fb557
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+On 10/13/2015 10:04 AM, Seth Forshee wrote:
+> The SMACK64, SMACK64EXEC, and SMACK64MMAP labels are all handled
+> differently in untrusted mounts. This is confusing and
+> potentically problematic. Change this to handle them all the same
+> way that SMACK64 is currently handled; that is, read the label
+> from disk and check it at use time. For SMACK64 and SMACK64MMAP
+> access is denied if the label does not match smk_root. To be
+> consistent with suid, a SMACK64EXEC label which does not match
+> smk_root will still allow execution of the file but will not run
+> with the label supplied in the xattr.
+>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
+Aside from the one comment below (which I can be talked out of)
+this looks fine.
 
-sparse warnings: (new ones prefixed by >>)
+> ---
+>  security/smack/smack_lsm.c | 28 ++++++++++++++++++----------
+>  1 file changed, 18 insertions(+), 10 deletions(-)
+>
+> diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
+> index 621200f86b56..bee0b2652bf4 100644
+> --- a/security/smack/smack_lsm.c
+> +++ b/security/smack/smack_lsm.c
+> @@ -891,6 +891,7 @@ static int smack_bprm_set_creds(struct linux_binprm *bprm)
+>  	struct inode *inode = file_inode(bprm->file);
+>  	struct task_smack *bsp = bprm->cred->security;
+>  	struct inode_smack *isp;
+> +	struct superblock_smack *sbsp;
+>  	int rc;
+>  
+>  	if (bprm->cred_prepared)
+> @@ -900,6 +901,10 @@ static int smack_bprm_set_creds(struct linux_binprm *bprm)
+>  	if (isp->smk_task == NULL || isp->smk_task == bsp->smk_task)
+>  		return 0;
+>  
+> +	sbsp = inode->i_sb->s_security;
+> +	if (sbsp->smk_flags & SMK_SB_UNTRUSTED && isp->smk_task != sbsp->smk_root)
 
-   drivers/md/md.c:1480:34: sparse: cast to restricted __le64
-   drivers/md/md.c:1782:40: sparse: incorrect type in assignment (different base types)
-   drivers/md/md.c:1782:40:    expected unsigned long long [unsigned] [long] [long long] [usertype] <noident>
-   drivers/md/md.c:1782:40:    got restricted __le64 [usertype] <noident>
->> drivers/md/md.c:1813:33: sparse: invalid assignment: |=
-   drivers/md/md.c:1813:33:    left side has type restricted __le32
-   drivers/md/md.c:1813:33:    right side has type int
-   drivers/md/md.c:1862:26: sparse: incorrect type in assignment (different base types)
-   drivers/md/md.c:1862:26:    expected restricted __le64 [usertype] super_offset
-   drivers/md/md.c:1862:26:    got unsigned long [unsigned] [usertype] sb_start
-   drivers/md/md.c:2268:31: sparse: cast to restricted __le64
-   drivers/md/md.c:2268:31: sparse: cast from restricted __le32
+Call me old fashioned, but how about
 
-vim +1813 drivers/md/md.c
+	if ((sbsp->smk_flags & SMK_SB_UNTRUSTED) && isp->smk_task != sbsp->smk_root)
 
-  1797				max_dev = rdev2->desc_nr+1;
-  1798	
-  1799		if (max_dev > le32_to_cpu(sb->max_dev)) {
-  1800			int bmask;
-  1801			sb->max_dev = cpu_to_le32(max_dev);
-  1802			rdev->sb_size = max_dev * 2 + 256;
-  1803			bmask = queue_logical_block_size(rdev->bdev->bd_disk->queue)-1;
-  1804			if (rdev->sb_size & bmask)
-  1805				rdev->sb_size = (rdev->sb_size | bmask) + 1;
-  1806		} else
-  1807			max_dev = le32_to_cpu(sb->max_dev);
-  1808	
-  1809		for (i=0; i<max_dev;i++)
-  1810			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
-  1811	
-  1812		if (test_bit(MD_HAS_JOURNAL, &mddev->flags))
-> 1813			sb->feature_map |= MD_FEATURE_JOURNAL;
-  1814	
-  1815		rdev_for_each(rdev2, mddev) {
-  1816			i = rdev2->desc_nr;
-  1817			if (test_bit(Faulty, &rdev2->flags))
-  1818				sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
-  1819			else if (test_bit(In_sync, &rdev2->flags))
-  1820				sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
-  1821			else if (test_bit(Journal, &rdev2->flags))
+naked '&'s give me the willies. 
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> +		return 0;
+> +
+>  	if (bprm->unsafe & (LSM_UNSAFE_PTRACE | LSM_UNSAFE_PTRACE_CAP)) {
+>  		struct task_struct *tracer;
+>  		rc = 0;
+> @@ -1703,6 +1708,7 @@ static int smack_mmap_file(struct file *file,
+>  	struct task_smack *tsp;
+>  	struct smack_known *okp;
+>  	struct inode_smack *isp;
+> +	struct superblock_smack *sbsp;
+>  	int may;
+>  	int mmay;
+>  	int tmay;
+> @@ -1714,6 +1720,10 @@ static int smack_mmap_file(struct file *file,
+>  	isp = file_inode(file)->i_security;
+>  	if (isp->smk_mmap == NULL)
+>  		return 0;
+> +	sbsp = file_inode(file)->i_sb->s_security;
+> +	if (sbsp->smk_flags & SMK_SB_UNTRUSTED &&
+> +	    isp->smk_mmap != sbsp->smk_root)
+> +		return -EACCES;
+>  	mkp = isp->smk_mmap;
+>  
+>  	tsp = current_security();
+> @@ -3492,16 +3502,14 @@ static void smack_d_instantiate(struct dentry *opt_dentry, struct inode *inode)
+>  			if (rc >= 0)
+>  				transflag = SMK_INODE_TRANSMUTE;
+>  		}
+> -		if (!(sbsp->smk_flags & SMK_SB_UNTRUSTED)) {
+> -			/*
+> -			 * Don't let the exec or mmap label be "*" or "@".
+> -			 */
+> -			skp = smk_fetch(XATTR_NAME_SMACKEXEC, inode, dp);
+> -			if (IS_ERR(skp) || skp == &smack_known_star ||
+> -			    skp == &smack_known_web)
+> -				skp = NULL;
+> -			isp->smk_task = skp;
+> -		}
+> +		/*
+> +		 * Don't let the exec or mmap label be "*" or "@".
+> +		 */
+> +		skp = smk_fetch(XATTR_NAME_SMACKEXEC, inode, dp);
+> +		if (IS_ERR(skp) || skp == &smack_known_star ||
+> +		    skp == &smack_known_web)
+> +			skp = NULL;
+> +		isp->smk_task = skp;
+>  
+>  		skp = smk_fetch(XATTR_NAME_SMACKMMAP, inode, dp);
+>  		if (IS_ERR(skp) || skp == &smack_known_star ||
