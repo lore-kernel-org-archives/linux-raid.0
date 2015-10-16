@@ -1,98 +1,88 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: Scalability of MD raid 1  mirror devices
-Date: Fri, 16 Oct 2015 12:11:35 +1100
-Message-ID: <87vba7vcqg.fsf@notabene.neil.brown.name>
-References: <98ad0e44-1ac1-4451-a3d3-0a48f3a1d9e7@default> <a8179bae-f8e8-4239-b760-cd85252e48bc@default> <9b3ee99a-b29d-4e3f-8fba-a8346c3196ea@default>
+From: Neil Brown <nfbrown@novell.com>
+Subject: Re: kernel: BUG: soft lockup - CPU#1 stuck for 60s! [md0_raid5:1614]
+Date: Fri, 16 Oct 2015 12:15:59 +1100
+Message-ID: <87si5bvcj4.fsf@notabene.neil.brown.name>
+References: <1092031595.20151015153830@oudeis.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9b3ee99a-b29d-4e3f-8fba-a8346c3196ea@default>
+In-Reply-To: <1092031595.20151015153830@oudeis.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ankur Bose <ankur.bose@oracle.com>, linux-raid@vger.kernel.org
-Cc: Suresh Babu Kandukuru <suresh.babu.kandukuru@oracle.com>
+To: Rainer =?utf-8?Q?F=C3=BCgenstein?= <rfu@oudeis.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 
-QW5rdXIgQm9zZSA8YW5rdXIuYm9zZUBvcmFjbGUuY29tPiB3cml0ZXM6DQoNCj4gSGksIGl0IHNl
-ZW1zIGxpa2UgdGhpcyBpcyB2ZXJ5IGFjdGl2ZSBncm91cCAsIEkgZG9uJ3Qgc2VlIGFueSByZWFz
-b24gd2h5IGFueW9uZSBpcyBub3QgcmVwbHlpbmcgdG8gdGhlIGJlbG93IG1haWwuDQo+ICANCj4N
-Cj4gS2luZGx5IHJlcGx5IHdlIGFyZSBpbiBtaWRkbGUgb2Ygc29tZXRoaW5nLg0KDQpXZSBhcmUg
-YWxsIGluIHRoZSBtaWRkbGUgb2Ygc29tZXRoaW5nLg0KDQoNCj4NCj4gVGhhbmtzLA0KPiBhbmt1
-ci4NCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU3VyZXNoIEJhYnUgS2Fu
-ZHVrdXJ1IA0KPiBTZW50OiAxMiBPY3RvYmVyIDIwMTUgMTc6MzQNCj4gVG86IGxpbnV4LXJhaWRA
-dmdlci5rZXJuZWwub3JnOyBuZWlsYkBzdXNlLmRlDQo+IFN1YmplY3Q6IFNjYWxhYmlsaXR5IG9m
-IE1EIHJhaWQgMSBtaXJyb3IgZGV2aWNlcw0KPg0KPg0KPiBEZWFyIEdyb3VwLA0KPg0KPiBXZSBh
-cmUgZG9pbmcgc2NhbGFiaWxpdHkgb2YgTUQgcmFpZCAxwqAgbWlycm9yIGRldmljZXMgb24gdGhl
-IExpbnV4IGhvc3QgcnVubmluZyB0aGUgMy4xNy4yIC4gwqDCoHdlIHNlZSB0aGUgbnVtYmVyIG9m
-IFJBSUQgMSBkZXZpY2VzIGxpbWl0ZWQgdG8gMTI4IGluIG9uZSBjYXNlIGFuZCA1MTEgaW4gYW5v
-dGhlciBjYXNlIC4gwqB3ZSB3b3VsZCBsaWtlIHRvIGtub3cgd2h5IHRoaXMgbGltaXRhdGlvbiA/
-LiBBcHByZWNpYXRlIGFueSBraW5kIG9mIGlucHV0cyBhbmQgcG9pbnRlcnMgDQo+DQo+IFdlIGNh
-biBjcmVhdGUgdGhlIFJBSUQgMSBkZXZpY2UgaW4gMyB3YXlzLg0KPg0KPiAxLiDCoC9kZXYvbWRY
-wqDCoCAtPiBoZXJlIFggaXMgdGhlIG51bWJlciwgd2UgY2FuIHNwZWNpZnkgZnJvbSAwIHRvIDUx
-MS4NCj4gMi4gL2Rldi9tZC9YwqAgLT4gaGVyZSBhbHNvIFggaXMgYSBudW1iZXIgZnJvbSAwIHRv
-IDUxMS4gSXQgY3JlYXRlcyBpdCBhcyBhIGxpbmsgdG8gdGhlIGFjdHVhbCBkZXZpY2UgL2Rldi9t
-ZFguICggc2ltaWxhciB0byBhYm92ZSBidXQgY3JlYXRlcyBhIGxpbmsgYWxzbykuDQo+IDMuIC9k
-ZXYvbWQv4oCdbmFtZeKAncKgIC0+IFRoaXMgY3JlYXRlcyBhIGxpbmsgdG8gYWN0dWFsIGRldmlj
-ZSwgd2hpY2hldmVyIGlzIGZyZWUgc3RhcnRpbmcgZnJvbSAxMjcgdG8gMC4gQmVsb3cgaXMgdGhl
-IGZ1bmN0aW9uIHdoaWNoIGlzIHJlc3BvbnNpYmxlIGZvciBpdC4NCj4NCj4gY2hhciAqZmluZF9m
-cmVlX2Rldm5tKGludCB1c2VfcGFydGl0aW9ucykgew0KPiDCoMKgwqDCoMKgwqDCoCBzdGF0aWMg
-Y2hhciBkZXZubVszMl07DQo+IMKgwqDCoMKgwqDCoMKgIGludCBkZXZudW07DQo+IMKgwqDCoMKg
-wqDCoMKgIGZvciAoZGV2bnVtID0gMTI3OyBkZXZudW0gIT0gMTI4O8KgIGRldm51bSA9IGRldm51
-bSA/IGRldm51bS0xIDogKDE8PDIwKS0xKSB7DQo+DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoCBpZiAodXNlX3BhcnRpdGlvbnMpDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqAgc3ByaW50ZihkZXZubSwgIm1kX2QlZCIsIGRldm51bSk7DQo+
-IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBlbHNlDQo+IMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgc3ByaW50ZihkZXZubSwgIm1kJWQiLCBkZXZu
-dW0pOw0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKG1kZGV2X2J1c3koZGV2
-bm0pKQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGNv
-bnRpbnVlOw0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKCFjb25mX25hbWVf
-aXNfZnJlZShkZXZubSkpDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqAgY29udGludWU7DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAo
-IXVzZV91ZGV2KCkpIHsNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoCAvKiBtYWtlIHN1cmUgaXQgaXMgbmV3IHRvIC9kZXYgdG9vLCBhdCBsZWFzdCBhcyBh
-DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqIG5v
-bi1zdGFuZGFyZCAqLw0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIGludCBkZXZpZCA9IGRldm5tMmRldmlkKGRldm5tKTsNCj4gwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoZGV2aWQpIHsNCj4gwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgY2hh
-ciAqZG4gPSBtYXBfZGV2KG1ham9yKGRldmlkKSwNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoCBtaW5vcihkZXZpZCksIDApOw0KPiDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAoZG4gJiYg
-ISBpc19zdGFuZGFyZChkbiwgTlVMTCkpDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBjb250aW51
-ZTsNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB9DQo+
-IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgwqB9DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCBicmVhazsNCj4gwqDCoMKgwqDCoMKgwqAgfQ0KPiDCoMKgwqDCoMKgwqDCoCBp
-ZiAoZGV2bnVtID09IDEyOCkNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJldHVy
-biBOVUxMOw0KPiDCoMKgwqDCoMKgwqDCoCByZXR1cm4gZGV2bm07DQo+IH0NCj4NCj4gU28gaWRl
-YWxseSB3ZSBzaG91bGQgbm90IGNyZWF0ZSBhIGRldmljZSB3aGljaCBpcyBtb3JlIHRoYW4gMTI4
-IHsgVGhlDQo+IHByb2dyYW0gbWF5IGNyYXNoIH0uDQoNClBsZWFzZSBleHBsYWluIHdoeSB5b3Ug
-dGhpbmsgdGhlIHByb2dyYW0gd291bGQgY3Jhc2g/DQoNCg0KPg0KPiBUaGVuIHdlIMKgdHJpZWQg
-dG8gZmluZCBob3cgd2UgYXJlIGFibGUgdG8gY3JlYXRlIHVwIHRvIDUxMSBhbmQgd2h5IGl0IGlz
-IGZhaWxpbmcgYWZ0ZXIgdGhhdC4NCj4NCj4gaW50IGRldl9vcGVuKGNoYXIgKmRldiwgaW50IGZs
-YWdzKQ0KPg0KPiBpbnNpZGUgdGhpcyBmdW5jdGlvbiANCj4NCj4gZmQgPSBvcGVuKGRldiwgZmxh
-Z3MpO8KgIC8gdGhpcyBsaW5lIGlzIGFzc2lnbmluZyBmZCB0byAtMSAsIHdoaWNoIGlzIGNhdXNp
-bmcgdGhlIHByb2dyYW0gdG8gZmFpbC4gU28gSSB3cm90ZSBhIHNpbXBsZSBwcm9ncmFtIHRvIGNy
-b3NzY2hlY2sgaXQuDQo+DQo+IGludCBtYWluKCl7DQo+DQo+IMKgwqDCoMKgwqDCoMKgIGNoYXIg
-ZGV2bmFtZVszMl0gPSAiL2Rldi9oZWxsbzEiOw0KPg0KPiAvLyBUaGUgZmxhZ3MgSSBoYXZlIHNl
-dCBhY2NvcmRpbmcgdG8gdGhlIGNvZGUuDQo+DQo+IMKgwqDCoMKgwqDCoMKgIGludCBmbGFncyA9
-IE9fUkRXUjsNCj4gwqDCoMKgwqDCoMKgwqAgZmxhZ3MgfD0gT19ESVJFQ1Q7DQo+IMKgwqDCoMKg
-wqDCoMKgIGlmIChta25vZChkZXZuYW1lLCBTX0lGQkxLfDA2MDAsIG1ha2VkZXYoOSw1MTEpKSA9
-PSAwKSB7DQo+DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBpbnTCoCBmZCA9IG9w
-ZW4oZGV2bmFtZSwgZmxhZ3MpOw0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgY291
-dDw8ZmQ8PGVuZGw7DQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1bmxpbmsoZGV2
-bmFtZSk7DQo+DQo+IMKgwqDCoMKgwqDCoMKgIH0NCj4gfQ0KPg0KPiBTbyBpZiB0aGUgbWlub3Ig
-bnVtYmVyIGlzIG1vcmUgdGhhbiA1MTEsIHRoZSDigJxmZOKAnSBpcyBhc3NpZ25lZCB0byAtMSwN
-Cj4gaWYgaXQgaXMgaW4gdGhlIHJhbmdlIG9mIDAgdG8gNTExIEl0IGlzIHdvcmtpbmcgZmluZS4N
-Cg0KSG1tbS4uLiB5b3UgYXJlIHJpZ2h0Lg0KUHJvYmFibHkgZHVlIHRvIHRoaXM6DQoNCglibGtf
-cmVnaXN0ZXJfcmVnaW9uKE1LREVWKE1EX01BSk9SLCAwKSwgNTEyLCBUSElTX01PRFVMRSwNCgkJ
-CSAgICBtZF9wcm9iZSwgTlVMTCwgTlVMTCk7DQoNClRyeSBjaGFuZ2luZyB0aGUgIjUxMiIgdG8g
-IjE8PE1JTk9SQklUUyIuDQoNCg0KTmVpbEJyb3duDQo=
+Rainer F=C3=BCgenstein <rfu@oudeis.org> writes:
+
+> Hi,
+>
+> my  NAS-like  server with 5*3TB SATA drives in RAID5 configuration was
+> running  without  problems  for  what seems an eternity; since about 3
+> weeks it keeps freezing every other day with the following error:
+>
+> # grep soft /var/log/messages
+> Oct 15 11:26:49 alfred kernel: BUG: soft lockup - CPU#1 stuck for 60s! [m=
+d0_raid5:1614]
+> Oct 15 11:26:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:26:49 alfred kernel:  [<ffffffff80012583>] __do_softirq+0x51/0x=
+133
+> Oct 15 11:26:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:26:49 alfred kernel:  [<ffffffff8006d63a>] do_softirq+0x2c/0x7d
+> Oct 15 11:27:49 alfred kernel: BUG: soft lockup - CPU#1 stuck for 60s! [m=
+d0_raid5:1614]
+> Oct 15 11:27:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:27:49 alfred kernel:  [<ffffffff80012583>] __do_softirq+0x51/0x=
+133
+> Oct 15 11:27:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:27:49 alfred kernel:  [<ffffffff8006d63a>] do_softirq+0x2c/0x7d
+> Oct 15 11:28:49 alfred kernel: BUG: soft lockup - CPU#1 stuck for 60s! [m=
+d0_raid5:1614]
+> Oct 15 11:28:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:28:49 alfred kernel:  [<ffffffff80012583>] __do_softirq+0x51/0x=
+133
+> Oct 15 11:28:49 alfred kernel:  [<ffffffff8005e298>] call_softirq+0x1c/0x=
+28
+> Oct 15 11:28:49 alfred kernel:  [<ffffffff8006d63a>] do_softirq+0x2c/0x7d
+> [...]
+> this  is  only  part  of  the story, check the end of this message for
+> a detailed log.
+>
+> sometimes the server recovers after 60+ seconds, sometimes it requires
+> a hard reset (causing mdraid to re-sync the whole array).
+
+I strongly recommend adding a write-intend bitmap
+  mdadm --grow /dev/md0 --bitmap=3Dinternal
+
+that will speed up the resync enormously.
+
+>
+> IIRC,  it  started  when  a  drive  in  the  array  failed  with "SATA
+> connection  timeouts" (kind of). this drive has been replaced by a new
+> one, but yet the  CPU lockups keep coming.
+>
+> I  suspect  that  aging  hardware  slowly starts to fail, but not sure
+> which part (drives? SATA controller? cables? NIC? CPU? ...)
+>
+> here's some info that might be useful:
+> # uname -a
+> Linux alfred 2.6.18-406.el5 #1 SMP Tue Jun 2 17:25:57 EDT 2015 x86_64 x86=
+_64 x86_64 GNU/Linux
+
+This is a rather ancient kernel.
+The "el" suffix probably suggests Redhat?  If you have a Redhat support
+contract you should ask them.  If you don't, you should probably try a
+newer kernel (or buy a support contract).
+
+NeilBrown
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -100,18 +90,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWIE7HAAoJEDnsnt1WYoG5ghoP/2efjgEZBypDzxZXNqtj48rd
-z6P0emn06Po6W1UtesK9WOFmqPggLFC6PyDvoUrFB8ysMkkfNSD/WlbOEdBYAKCT
-kAe+NtLdYF3FBzjtnQygQWsAaiykvVz619z09XnJwGcNb6qwk1gV10CycgRz35oF
-EOdsijnhuLKvY4w68e0OIJ+l+3DBm4GBK1cuzfDEbj/9nuTkya1FZkdLK5nn+B4i
-wQW5fDX5vzQHEEYbMpdDuLcb5E1o9CdKxlfcze1RHXin30W72WA4HrZ4pSKHoZH4
-NoGcw3Zs/whInGDtv2urZpJLWWyAz4AIVsQtK+AkOIYHoOn4ZtmtLXHKvMnexq5R
-jJYYWFZ30wdYe1dsyMOwUgFXjb0dSmx4ezxIN66jI/Wu+rS/edwmxABIKgb3Qnfn
-UDxnyKn91YgixnphyZ7PDLCxrGJb7TlF3i0r2q0JcB3ZfypFMtRU20IAmZ+x/SOd
-F1nvTFRND0njqaq4k+Zh1tmD1IwaeQLcsPlekbau+KMeQ44xIAEQ0KBVhc3VnK64
-d5beuyiZUqGPlFZVPNDfP1Forjn/UNnEUu4Pjn6K8CNKSQD1bH4uotbsV0KwQ1ib
-u6AqQzdjPDT/ywTmGP6qdt6ipfd/CRyMPBqBb4g8Xcl7MopPjUqCldZ9NM0s39yj
-M53BOyX5+EhHcNy1voAx
-=6AHZ
+iQIcBAEBCAAGBQJWIE/PAAoJEDnsnt1WYoG5nkcQAJzdbd0MbVvw0YSgImqxgGtf
+oda1cah4ytUWGYo+x6ux7PQipnpl8KTQEwy3uj1pTOJhesuWn2JxnyXfK6HOvR+O
+IaXdQKMw5XTxcmeF934jqaxt/5BhHakZz1HvpiV7vgQzEWLDjdHYsA8ja7b16C4X
+LC4Xr7nyGUUktnlAS1fWFhs/tolrC+W7Aax3JPCXkpxViKU2onHlSrXJF6rpliwY
+d9b+JUMn8qCBmBPtzzx2OouYxHekxl7xfs5O0c/MCtufvARBuPNywt0ulcZduYBW
+CioyCVXUFP2Enq8pIInOULD6GyPjyTaw/BG1oz5yhcy9ZRZsklwL+ApkQMpL8kw1
+X0zqrenjrRlOIv6ddSErvxe0t1urHgRi6+91aWvJG6l5qMUYTQfMI9tt5tCEm5Gm
+hjKgjwHIarBlJkx4Cvq3j992CEH0wwG5ySm+C2l0RxcJm1h2sDibuEhO9kvz3wZF
+MK7fsFOIjRjO94gbGvk4R6XhKCSEDrM0L4Lstdk/Sa8iM8PNZ0ju4KHQg7dbsux/
+zTd3UYvrq1HS4kOcLkhnL4xcIaYAUIUBrzzYuyQDkUedpJ2CADULGCtl231QeVWp
+1uFntX9F4IibM8pGdlXjGeUZsDsxjDpRV+efXS+ZP2nY09P6rF50l21QdjV/8WUM
+4hJs2hwWZrs/wp4vn27P
+=PVR8
 -----END PGP SIGNATURE-----
 --=-=-=--
