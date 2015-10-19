@@ -1,38 +1,70 @@
-From: Web-Admin <webmail@ivss.gob.ve>
-Subject: Stimate utilizator
-Date: Sun, 18 Oct 2015 15:02:24 -0430
-Message-ID: <62a3ad32a2f1c934a527d6f7667ecbf7@ivss.gob.ve>
-Reply-To: weblinksss@qq.com
+From: Neil Brown <neilb@suse.de>
+Subject: RE: [PATCH v2 0/6] mdadm support for journal device of RAID-4/5/6
+Date: Mon, 19 Oct 2015 13:11:40 +1100
+Message-ID: <87lhazli8z.fsf@notabene.neil.brown.name>
+References: <1444369906-1804157-1-git-send-email-songliubraving@fb.com> <C709E4D363AAB64590BFAC54D4C478AA0104B94E0A@PRN-MBX02-4.TheFacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <C709E4D363AAB64590BFAC54D4C478AA0104B94E0A@PRN-MBX02-4.TheFacebook.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+Song Liu <songliubraving@fb.com> writes:
 
---=20
-Stimate utilizator
+> Hi Neil,=20
+>
+> Could you please share some insights about kernel and mdadm patches for=20
+> journal device in RAID-4/5/6? What shall we do next to move this approach=
+=20
+> ahead?=20
 
-Adresa ta de email a dep=C4=83=C8=99it 2 GB create de webmaster , care =
-sunt =C3=AEn curs
-de desf=C4=83=C8=99urare la 2,30 GB , nu pute=C8=9Bi trimite sau primi =
-un mesaj nou =C3=AEn
-termen de 24 de ore , v=C4=83 rug=C4=83m s=C4=83 introduce=C8=9Bi datel=
-e dvs. mai jos pentru a
-verifica =C8=99i actualiza
-contul :
+I hadn't been looking at the mdadm patches until I was fairly
+comfortable with the kernel code.  I think we have reached that state
+now and I have just looked at your mdadm patches.
+These seem quite sensible and thorough - thanks.  I have applied them to
+by 'master' branch.
 
-( 1 ) E - mail:
-( 2 ) Nume:
-( 3 ) Parola :
-( 4 ) Confirma=C8=9Bi parola :
+Would you be able to write a few test scripts to go in the 'tests'
+directory?
+Some of your changelog comment demonstrated how some commands would work
+and others would give useful error messages.  If there were test scripts
+which confirmed the code continues to do that (and maybe more) that
+would be great.
 
-Mul=C8=9Bumesc
-administrator de sistem
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also a section of the md.4 man page (similar to "BITMAP WRITE-INTENT
+LOGGING" and "BAD BLOCK LIST") which gave a general outline of the
+purpose, value, and possible costs, of using a journal would be really
+helpful.
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWJFFcAAoJEDnsnt1WYoG5vj0P/iVhLFAW6O3XbosekUmoBVhz
+unyYWcsBmJ0SwAo17GYnDJovKLVDJ2GXqwRk1laOTHXSG39OJB0t9BgPxzEQEPuq
+8eUqEhJSyGimgQhmv+Q7y3qWJpQ4GR38/dPxGivZJC6EiQLonFdfAXTHZMZEpQ6N
+RyrbIcg+GFK70VzpHS39aeHB6eyNM7yDCGaY6d0Vhic94C4L/t15pvrBgzo5/09m
+3XAbIwqh7uKSbhSrveizk+MnLkqWkn5/KDBzuaPHT4nLSXsIZ3Fd0JwpRvm6tAeu
+p/Y4DCMCGt9LR9mntnVtjR9TFHcBrzQ4w4cu2VIi0u60DbEATe7BB4vr1MLIfNuS
+5Hn9OieMWnukFCvEsFbKtr/7MqN+Kt0qFpkshT2elOiVN4Fvbs+icdOuLD2dwTUE
+WJXy2mI+9g6FT4ae+hpR2SHlI442r3bzY4Dt+/7gfUuUvA9gnPzhf1XRnDjE+wdm
+uZ2ZSIqYC5EP4wTzQvkotxvaqJmn2vOKhs2TmimwkoDY4KXAsSO2uaOqjynC1GB3
+MdJMLtEH2bb6frT1jljGFBeFa9x6yPCHCNCFTMukV7KHJhjOBn0UxRE+SP60IJn4
+E9UhWQuTPSwGmeyU9l60Z36AIIbTZLLdUCvklwj7hCgO74F7cCHb5AFNkPbsGENm
+8teOQMzlQMErfevjvrsq
+=Zsah
+-----END PGP SIGNATURE-----
+--=-=-=--
