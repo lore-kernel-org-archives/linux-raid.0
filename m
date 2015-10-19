@@ -1,106 +1,70 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 5/6] Check write journal in incremental
-Date: Mon, 19 Oct 2015 13:32:34 +1100
-Message-ID: <87io63lha5.fsf@notabene.neil.brown.name>
-References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com> <1440804426-1461372-6-git-send-email-songliubraving@fb.com> <CAPcyv4iYxLm1uoHM1Rrz7jyecrf+8Luby8CjmQwdK0Pvs6Ya+w@mail.gmail.com>
+Subject: RE: [PATCH 3/6] Enable create array with write journal (--write-journal DEVICE).
+Date: Mon, 19 Oct 2015 13:42:08 +1100
+Message-ID: <87fv17lgu7.fsf@notabene.neil.brown.name>
+References: <1440804426-1461372-1-git-send-email-songliubraving@fb.com> <1440804426-1461372-4-git-send-email-songliubraving@fb.com> <CAPcyv4g8b=RS7um6KzpmfrEtF1WaC2DF050gDNdA7MxP6mh-nw@mail.gmail.com> <C709E4D363AAB64590BFAC54D4C478AA0104B88525@PRN-MBX02-4.TheFacebook.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4iYxLm1uoHM1Rrz7jyecrf+8Luby8CjmQwdK0Pvs6Ya+w@mail.gmail.com>
+In-Reply-To: <C709E4D363AAB64590BFAC54D4C478AA0104B88525@PRN-MBX02-4.TheFacebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Song Liu <songliubraving@fb.com>
+To: Song Liu <songliubraving@fb.com>, Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan Williams <dan.j.williams@intel.com> writes:
-
-> On Fri, Aug 28, 2015 at 4:27 PM, Song Liu <songliubraving@fb.com> wrote:
->> If journal device is missing, do not start the array, and shows:
->>
->> ./mdadm -I /dev/sdf
->> mdadm: journal device is missing, not safe to start yet.
->>
->> The array will be started when the journal device is attached with -I
->>
->> ./mdadm -I /dev/sdb1
->> mdadm: /dev/sdb1 attached to /dev/md/0_0, which has been started.
->>
->> To force start without journal device:
->>
->> ./mdadm -I /dev/sdf --run
->> mdadm: Trying to run with missing journal device
->> mdadm: /dev/sdf attached to /dev/md/0_0, which has been started.
->>
->> Signed-off-by: Shaohua Li <shli@fb.com>
->> Signed-off-by: Song Liu <songliubraving@fb.com>
->> ---
->>  Incremental.c | 31 +++++++++++++++++++++++++++----
->>  1 file changed, 27 insertions(+), 4 deletions(-)
->>
->> diff --git a/Incremental.c b/Incremental.c
->> index 304cc6d..74905e3 100644
->> --- a/Incremental.c
->> +++ b/Incremental.c
->> @@ -35,7 +35,7 @@
->>
->>  static int count_active(struct supertype *st, struct mdinfo *sra,
->>                         int mdfd, char **availp,
->> -                       struct mdinfo *info);
->> +                       struct mdinfo *info, int *journal_device_missing);
->>  static void find_reject(int mdfd, struct supertype *st, struct mdinfo *sra,
->>                         int number, __u64 events, int verbose,
->>                         char *array_name);
->> @@ -104,6 +104,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->>         struct map_ent target_array;
->>         int have_target;
->>         char *devname = devlist->devname;
->> +       int journal_device_missing = 0;
->>
->>         struct createinfo *ci = conf_get_create_info();
->>
->> @@ -518,7 +519,7 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->>         sysfs_free(sra);
->>         sra = sysfs_read(mdfd, NULL, (GET_DEVS | GET_STATE |
->>                                     GET_OFFSET | GET_SIZE));
->> -       active_disks = count_active(st, sra, mdfd, &avail, &info);
->> +       active_disks = count_active(st, sra, mdfd, &avail, &info, &journal_device_missing);
->>         if (enough(info.array.level, info.array.raid_disks,
->>                    info.array.layout, info.array.state & 1,
->>                    avail) == 0) {
->> @@ -548,10 +549,12 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
->>         }
->>
->>         map_unlock(&map);
->> -       if (c->runstop > 0 || active_disks >= info.array.working_disks) {
->> +       if (c->runstop > 0 || (!journal_device_missing && active_disks >= info.array.working_disks)) {
+Song Liu <songliubraving@fb.com> writes:
+>>=20
+>> Hmm, perhaps this should instead follow the same command line mechanics
+>> as "--write-mostly" whereby all the devices listed after that flag take =
+on that
+>> role.  Also, if we anticipate more roles I wonder if the option should b=
+e "--
+>> role=3D" that assigns the given role to the device(s) that follow.
+>>=20
+>> Thoughts?
+>>=20
+>> I'm looking at this from the perspective of reviving the SRT patches [1]=
+ where
+>> a role for a read/write cache device is needed.  Where a read/write-cach=
+e is
+>> different than a journal.
+>>=20
+>> [1]:
+>> https://urldefense.proofpoint.com/v1/url?u=3Dhttps://lwn.net/Articles/59=
+661
+>> 4/&k=3DZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=3DJ3jGe56dIPfS5TN6DM82U
+>> YbbeR1j2viaiSJI40tv6lE%3D%0A&m=3Ddv5znFd%2BTZdHZaSKjzBVqJbdtNBALR0
+>> RgzhZsOmsWAU%3D%0A&s=3D80c812981ff98264cf1bb2b79032863d4e33ba100
+>> 093d41956eab3fbd33b5635
 >
-> A minor comment, and I'd defer to Neil's opinion, but I think this is
-> asking for mdu_array_info_t to grow a "journal_disks" attribute.
+> I think --write-mostly is used as _hint_ to RAID 1 that differentiates SS=
+D from=20
+> HDD. While --write-journal turns on "MD_FEATURE_JOURNAL" and specifies=20
+> journal device. We should not need more than 1 journal device. In this se=
+nse,=20
+> I think current --write-journal works well...
 
-We definitely don't want to change mdu_array_info_t - that is part of
-the kernel api.
-But adding a 'journal_disks' field to 'struct mdinfo' might make sense.
+=2D-write-mostly isn't a hint.  It is a clear statement that these devices
+should only be read from if there is no other option (the original
+justification had nothing to do with SSDs).
 
-Similarly, now that I look at it, the 'require_journal' method doesn't
-look like such a good idea.
-->getinfo_super should set some flag in 'struct mdinfo' if a journal is
-required.
+However a write journal is a very different thing to the other devices.
+For example it is not counted in the --raid-disks and --spare-disks
+where as all other devices (whether --write-mostly or not) are.
 
-The Incremental() function might still have a local var called
-journal_device_missing, but it wouldn't pass it to count_active().
-count_active would just set ->journal_disks and then Incrmental would do
-something like:
+If anything --write-journal is more like a --bitmap=3D/some/file than
+=2D-write-mostly.
 
-journal_device_missing = info.journal_needed && info.journal_disks == 0;
-
-Song: can you see if making some changes like that works out?
+So, I'm happy for --write-journal to stay as it is.
 
 Thanks,
 NeilBrown
+
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -108,18 +72,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWJFZCAAoJEDnsnt1WYoG5KPoQAI1RsP/5M9EAmcs7DQAzqNAw
-V2+1FGmdoopYoMPbEXtgSnhHqch4f9Ji5F6Ck2W1cMNbmOzjDuioiVuUVC6CxOmQ
-BBhFDT68zxxPRfDH7kT1uRJait8nIL504zP3s4Wrlodq7m3ZjME1WDSBcuwSp/T5
-pHnAvZ/pbudFx8tqoWz8oMc5TF01kBhD4tvvjs7o82nyGJW1T+y1CXObX30HMuiF
-iG95KLEPhLOeIURi+98Mi5xWXDx3aoqFO2GQfqoCK1aN8Gs9YdZ/XdcUx9QgxTUE
-eysFvNOseq2kskEjU+6hv1K11ODaAZMsp1PnbwrQ7xg4Pfh/681GzjHaupq2RU4O
-Wyr19TX7OYgO7AH+t+pw47nWsVBhlot4hCTFKzuDX02BJziDYBx2xRtsD1P4Phbf
-bQ31c6JqaFcnP0EtJ3RV8XB9sDCov/wSlWBP71JkT4khUE1E6fpPZo7dJhBIwfoW
-fkSPUpkTL4SCHRcuzZR8fAro0YqpxLcSgrjHKGeNEEx39ai0wnwgUdfU88shZEmn
-Nxk74ZM92aB1aZIcfMlcXC1Ult3pijdidN1GgtCpDqy2mI5D3QBNBT0/P7CnYVqF
-BMmav0huCAVToDqHuVKVTWD59KqzDOJ6MJGascOAYvyxdJo7je5EeXoTdsbWpoM4
-yLVBapTE/FlR4PlhgvIE
-=rSQj
+iQIcBAEBCAAGBQJWJFiAAAoJEDnsnt1WYoG59HcQAKdNs6dpvgpjY7ZLrAXYprjq
+VoEMzzpOUL/eD9q4qZbD5QGpHPXEBZsSKLBv9CdL5zsJ3RYJwhhRo5TMLxsTk9Td
+09oVIaV+x0ST4CTq8xPHjpbf18WlgwMRDi+IYyneKjBGQBbpALvrUlRxtn1g1KbN
+exvQJQhmnBjjEva1AQoCZ7aGharO1nOlEI7DMTqPFVxd59cPc7J3xCuzFGM0NBBW
+qXxYdECLhW9sUjBzkSG7SMkQJoQIrjNljQ0rUfHRktDuC9mfaOz3EPRZJFXT6ULE
+ZC2ZuG9Lkw4wXxTYrNLRallfTLVsmk9gIwpUqxyIYfPcwkWVkp3SROZLr8oCYi09
+ONYSkVfXTd8yG/q1zQprc5VteMpdA3jxtBZcCBVxOfdMpxeQn98FPgqAgGqXn36Y
+aVIaBt0Ymr96++MYOSi3MRehsSqA3ws9fwpVDoXRm5bajFHZtaWIAC5XUsRACufh
+I+618fsqw2pW5OHg/JJKwUaSD2UL2uRceStx6mtmQjfeO4vg4VzhUHZe4+XpZuTZ
+gGlIpfd26KV8D3I6zXihZIKz0BTbvW8MYRFeMc+1AepQemhgXuVy/S6WbKbABvcB
+YTEpxI5MvzlkdNpczTaBCdr6NdLLLq70xtpWkTPWLMFpVLk9HJcmO5yoKtYvzwCE
+JM3QMLvSdJ725ZVma4vL
+=A3gT
 -----END PGP SIGNATURE-----
 --=-=-=--
