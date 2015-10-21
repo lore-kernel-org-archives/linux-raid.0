@@ -1,72 +1,37 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: How to recover after md crash during reshape?
-Date: Wed, 21 Oct 2015 08:01:38 -0400
-Message-ID: <56277EA2.2010509@turmel.org>
-References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
- <5626464D.9000502@turmel.org>
- <3baf849321d819483c5d20c005a31844@tantosonline.com>
- <562660EE.9020504@turmel.org>
- <87f5f235fc9d29f9e146d5431d3642cb@tantosonline.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: looking for good reference on storage configuration
+Date: Wed, 21 Oct 2015 08:00:07 -0400
+Message-ID: <56277E47.9070003@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f5f235fc9d29f9e146d5431d3642cb@tantosonline.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: andras@tantosonline.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good morning Andras,
+Hi Folks,
 
-On 10/20/2015 11:52 PM, andras@tantosonline.com wrote:
-> Phil,
-> 
-> Thank you so much for the detailed explanation and your patience with
-> me! Sorry for not being more responsive - I don't have access to this
-> mail account from work.
+Perhaps someone here might be able to point me at a reference or two on 
+alternatives and best practices for configuring storage for a server - 
+using a mix of SSDs and conventional drives.
 
-No worries.
+I'm in the process of upgrading a small cluster of 4 machines - each 
+containing RAID arrays, with DRBD across clusters to support failover.  
+Easy enough with a uniform collection of HDDs.  But I can't get my head 
+around how to add SSDs into the mix - what with the mismatch in access 
+speeds and all, it would seem like one needs a more complex 
+configuration with a level of caching between the faster and slower media.
 
->> for x in /sys/block/*/device/timeout ; do echo 180 > $x ; done
->>
->> (Arrange for this to happen on every boot, and keep doing it manually
->> until your boot scripts are fixed.)
-> 
-> Yes, will do. In your links below it seems that you're half advocating
-> for using desktop drives in RAID arrays, half advocating against. From
-> what I can tell, it seems the recommendation might depend on the
-> use-case. If one doesn't care too much about instant performance in case
-> of errors, one might want to use desktop drivers (with the above fix).
-> If one wants reliable performance, one probably wants NAS drives. Did I
-> understand the basic trade-off correctly?
+Seems like someone would have written a book, or tutorial, or case 
+study, or conference presentation - but damned if I can find anything.  
+Any pointers, or guidance, would be much appreciated.
 
-Times change.  At the time some of those were written, desktop drives
-with scterc support were still available, but default off.  Those are ok
-in a raid if you have the appropriate smartctl command in your boot scripts.
+Thanks,
 
-Long timeouts with non-scterc drives, in my opinion, create a user
-impression that things are broken, even if the drive is fine (UREs are
-natural and unavoidable in the life of a drive).  Users are prone to
-drastic measures when they think something is broken.  Also,
-*applications* might not wait that long for their read, either.  So, I
-only recommend the long timeout solution when an array is already in
-trouble with such drives.
+Miles Fidelman
 
-> It seems that people also think that green drives are a bad idea in
-> RAIDs in general - mostly because the frequent parking of heads reduces
-> life-time. Is that a correct statement?
+-- 
+In theory, there is no difference between theory and practice.
+In practice, there is.   .... Yogi Berra
 
-I don't have enough experience with green drives to say.  The few that I
-have (bought before I discovered the dropped scterc support) became part
-of my offsite backup rotation.
-
-> Yes sir! I will go through the steps and report back. One question: the
-> reason I shouldn't attempt to re-create the new 10-disk array is that it
-> would wipe out the 7->10 grow progress, so MD would think that it's a
-> fully grown 10-disk array, right?
-
-Right.  Your three extra drives never really were incorporated into the
-array, so the data layout is still a 7-drive pattern.
-
-Phil
