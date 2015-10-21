@@ -1,148 +1,85 @@
 From: Neil Brown <nfbrown@novell.com>
-Subject: Re: How to recover after md crash during reshape?
-Date: Wed, 21 Oct 2015 12:35:04 +1100
-Message-ID: <874mhl2ed3.fsf@notabene.neil.brown.name>
-References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
+Subject: Re: Possible bug in DM-RAID.
+Date: Wed, 21 Oct 2015 12:39:32 +1100
+Message-ID: <87y4ex0zl7.fsf@notabene.neil.brown.name>
+References: <562659DD.1000505@gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
+In-Reply-To: <562659DD.1000505@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: andras@tantosonline.com, linux-raid@vger.kernel.org
+To: Austin S Hemmelgarn <ahferroin7@gmail.com>, Linux-Kernel mailing list <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-andras@tantosonline.com writes:
-
-Phil has provided lots of useful advice, I'll just add a couple of
-clarifications;
-
->
->      mdadm --grow --raid-devices=3D10 /dev/md1
->
-> Yes, I was dumb enough to start the process without a backup option -=20
-> (copy-paste error from https://raid.wiki.kernel.org/index.php/Growing).
-
-Nothing dumb about that - you don't need a --backup option.
-If you did, mdadm would have complained.
-
-You only need --backup when the size of the array is unchanged or
-decreasing.
-(or when growing to a degraded array.  e.g. you can reshape a 4-drive
- raid5 to a degraded 5-drive raid5 without adding a spare.  This will
- required a --backup.  I'm fairly sure it also requires --force because
- it is a very strange thing to do).
-
-When reshaping it a larger array, mdadm only requires a backup while
-reshaping the first few stripes, and it uses some space in one of the
-new (previously spare) devices to store that backup.
 
 
->
-> This immediately (well, after 2 seconds) crashed the MD driver:
->
->      Oct 17 17:30:27 bazsalikom kernel: [7869821.514718] sd 0:0:0:0:=20
-> [sdj] Attached SCSI disk
->      Oct 17 18:39:21 bazsalikom kernel: [7873955.418679]  sdh: sdh1
->      Oct 17 18:39:37 bazsalikom kernel: [7873972.155084]  sdi: sdi1
->      Oct 17 18:39:49 bazsalikom kernel: [7873983.916038]  sdj: sdj1
->      Oct 17 18:40:33 bazsalikom kernel: [7874027.963430] md: bind<sdh1>
->      Oct 17 18:40:34 bazsalikom kernel: [7874028.263656] md: bind<sdi1>
->      Oct 17 18:40:34 bazsalikom kernel: [7874028.361112] md: bind<sdj1>
->      Oct 17 18:59:48 bazsalikom kernel: [7875182.667815] md: reshape of=20
-> RAID array md1
->      Oct 17 18:59:48 bazsalikom kernel: [7875182.667818] md: minimum=20
-> _guaranteed_  speed: 1000 KB/sec/disk.
->      Oct 17 18:59:48 bazsalikom kernel: [7875182.667821] md: using=20
-> maximum available idle IO bandwidth (but not more than 200000 KB/sec)=20
-> for reshape.
->      Oct 17 18:59:48 bazsalikom kernel: [7875182.667831] md: using 128k=20
-> window, over a total of 1465135936k.
-> --> Oct 17 18:59:50 bazsalikom kernel: [7875184.326245] md: md_do_sync()=
-=20
-> got signal ... exiting
-
-This is very strange ... maybe some messages missing?
-Probably an IO error while writing to a new device.
-
->
->  From here on, things went downhill pretty damn fast. I was not able to=20
-> unmount the file-system, stop or re-start the array (/proc/mdstat went=20
-> away), any process trying to touch /dev/md1 hung, so eventually, I run=20
-> out of options and hit the reset button on the machine.
->
-> Upon reboot, the array wouldn't assemble, it was complaining that SDA=20
-> and SDA1 had the same superblock info on it.
->
-> mdadm: WARNING /dev/sda and /dev/sda1 appear to have very similar=20
-> superblocks.
->        If they are really different, please --zero the superblock on one
->        If they are the same or overlap, please remove one from the
->        DEVICE list in mdadm.conf.
-
-It's very hard to make messages like this clear without being incredibly
-verbose...
-
-In this case /dev/sda and /dev/sda1 obviously overlap (that is obvious,
-isn't it?).
-So in that case you need to remove one of them from the DEVICE list.
-You probably don't have a DEVICE list so it defaults to everything listed in
-/proc/partitions.
-The "correct" thing to do at this point would have been to add a DEVICE
-list to mdadm.conf which only listed the devices that might be part of
-an array. e.g.
-
-  DEVICE /dev/sd[a-z][1-9]
-
-> So, if I read this right, the superblock here states that the array is=20
-> in the middle of a reshape from 7 to 10 devices, but it just started=20
-> (4096 is the position).
-> What's interesting is the device names listed here don't match the ones=20
-> reported by /proc/mdstat, and are actually incorrect. The right=20
-> partition numbers are in /proc/mdstat.
->
-> The superblocks on the 6 other original disks match, except for of=20
-> course which one they mark as 'this' and the checksum.
->
-> I've read in here (http://ubuntuforums.org/showthread.php?t=3D2133576)=20
-> among many other places that it might be possible to recover the data on=
-=20
-> the array by trying to re-create it to the state before the re-shape.
->
-> I've also read that if I want to re-create an array in read-only mode, I=
-=20
-> should re-create it degraded.
->
-> So, what I thought I would do is this:
->
->      mdadm --create /dev/md1 --level=3D6 --raid-devices=3D7 /dev/sdh2=20
-> /dev/sdf2 /dev/sdi1 /dev/sdg1 /dev/sde1 missing missing
-
-Phil has given good advice on this point which is worth following.
-It is quite possible that there will still be corruption.
-
-mdadm reads the first few stripes and stores them somewhere in each of
-the spares.  md (in the kernel) then reads those stripes again and
-writes them out in the new configuration.  It appears that one of the
-writes failed, others might have succeeded.  This may not have corrupted
-anything (the first few blocks are in the same position for both the old
-and new layout) but it might have done.
-
-So if the filesystem seems corrupt after the array is re-created, that
-is likely the reason.
-The data still exists in the backup on those new devices (if you haven't
-done anything to them) and could be restored.
-
-If you do want to look for the backup, it is around about the middle of
-the device and has some metadata which contains the string
-"md_backup_data-1".  If you find that, you are close to getting the
-backup data back.
+Added dm-devel, which is probably the more appropriate list for dm
+things.
 
 NeilBrown
+
+Austin S Hemmelgarn <ahferroin7@gmail.com> writes:
+
+> I think I've stumbled upon a bug in DM-RAID.  The primary symptom is that when
+> creating a new DM-RAID based device (using either LVM or dmsetup) in a RAID1
+> configuration, it very quickly claims one by one that all of the disks failed
+> except the first, and goes degraded.  When this happens on a given system, the
+> disks always 'fail' in the reverse of the order of the mirror numbers.  All of
+> the other RAID profiles work just fine.  Curiously, it also only seems to
+> happen for 'big' devices (I haven't been able to determine exactly what the
+> minimum size is, but I see it 100% of the time with 32G devices, never with 16G
+> ones, and only intermittently with 24G).
+>
+> Here's what I got from dmesg when creating a 32G LVM volume that exhibited
+> this issue:
+> [66318.401295] device-mapper: raid: Superblocks created for new array
+> [66318.450452] md/raid1:mdX: active with 2 out of 2 mirrors
+> [66318.450467] Choosing daemon_sleep default (5 sec)
+> [66318.450482] created bitmap (32 pages) for device mdX
+> [66318.450495] attempt to access beyond end of device
+> [66318.450501] dm-91: rw=13329, want=0, limit=8192
+> [66318.450506] md: super_written gets error=-5, uptodate=0
+> [66318.450513] md/raid1:mdX: Disk failure on dm-92, disabling device.
+>                md/raid1:mdX: Operation continuing on 1 devices.
+> [66318.459815] attempt to access beyond end of device
+> [66318.459819] dm-89: rw=13329, want=0, limit=8192
+> [66318.459822] md: super_written gets error=-5, uptodate=0
+> [66318.492852] attempt to access beyond end of device
+> [66318.492862] dm-89: rw=13329, want=0, limit=8192
+> [66318.492868] md: super_written gets error=-5, uptodate=0
+> [66318.627183] mdX: bitmap file is out of date, doing full recovery
+> [66318.714107] mdX: bitmap initialized from disk: read 3 pages, set 65536 of 65536 bits
+> [66318.782045] RAID1 conf printout:
+> [66318.782054]  --- wd:1 rd:2
+> [66318.782061]  disk 0, wo:0, o:1, dev:dm-90
+> [66318.782068]  disk 1, wo:1, o:0, dev:dm-92
+> [66318.836598] RAID1 conf printout:
+> [66318.836607]  --- wd:1 rd:2
+> [66318.836614]  disk 0, wo:0, o:1, dev:dm-90
+>
+> And here's output for a 24G LVM volume that didn't display the issue.
+> [66343.407954] device-mapper: raid: Superblocks created for new array
+> [66343.479065] md/raid1:mdX: active with 2 out of 2 mirrors
+> [66343.479078] Choosing daemon_sleep default (5 sec)
+> [66343.479101] created bitmap (24 pages) for device mdX
+> [66343.629329] mdX: bitmap file is out of date, doing full recovery
+> [66343.677374] mdX: bitmap initialized from disk: read 2 pages, set 49152 of 49152 bits
+>
+> I'm using a lightly patched version of 4.2.3
+> (the source can be found at https://github.com/ferroin/linux)
+> but none of the patches I'm using come anywhere near anything in the block layer,
+> let alone the DM/MD code.
+>
+> I've attempted to bisect this, although it got kind of complicated.  So far I've
+> determined that the first commit that I see this issue on is d3b178a: md: Skip cluster setup for dm-raid
+> Prior to that commit, I can't initialize any dm-raid devices due to the bug it fixes.
+> I have not tested anything prior to d51e4fe (the merge commit that pulled in the md-cluster code),
+> but I do distinctly remember that I did not see this issue in 3.19.
+>
+> I'll be happy to provide more info if needed.
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -150,18 +87,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWJuvIAAoJEDnsnt1WYoG51zMP/35f8LPpGh+1k1FuOJRX25+l
-ILwliYqgbMp+x7frpgMlVT7W1CXJJXEI5xxe0Zn/TJf6xr2I9aiwylGI7GBO7hJU
-V6KuljXq6cRoJwdWzvYTqPsh4yaoKcNkg4SOgaTCEpDPLKTYQVn7nw6g6y0aY0m7
-sk6Qnf7OitFJqEnMTox9VpW15EFfFfWuBOswFCHrzs2vZntm4NX57iVnG3kctp6O
-pBR7oz5M9/m+FNtUFPTw2jmaGoJCqYZRHixQMt+8HtGLJJPr9MAbK70oTSYIEp7U
-S/v08+QMYkbJccFCdctTyTDd94Ok6RHQD4xf2jxKeh2G/s/8Q4/+tGSf1WRXJxLB
-9w21/xSaC9p/4meZjLl5YY2Vi7sU3TU/zvvRty8i6ySRTL+X0Yn+blapzvAbwFdF
-N4I0noqiBiVczmj8QcPZKv21qVRgFu/SS1tyDWI4ntrO7EMCvHRuh6qu5edQfi0h
-PdiV6A7Uqi9vHf6lCZad1jYHFWTFDuU0majVYyCghOXZ4j2GifM83+8zcIgbEhx8
-SK1DzEHDgLmI3NhqS0tN2kxIPhDS/32Vm6SdZYm/lW35zeLDCehw0v/b6TmCUoGO
-4U7VdRNNHuj+It+r9noKcqabhLsxwL/exxWUrp7Qn/NJKhHDEPSyLFB2V7crxjPw
-Qhq9D5WyxpcALVMz5uv9
-=n0sY
+iQIcBAEBCAAGBQJWJuzUAAoJEDnsnt1WYoG5uhYQAIYqGQjxEhvpieEfN++B2mpn
+lDc5dnrH8RKkp7HcBCEJK29XIekNEHtLeosN38FtAH+AZYU51ou1OTg4gZ5Ne1aK
+XQBSsiOrhSocQNvWm3XVO5n72BiFuvv+K76gQG/xQm5wnY5IDKdRdIbIN/deu6GB
+gZSp9KdYDvd9g6SnwGKeEvo0/ZFVXT9TwSJEs5axTwQQp8P19CzKucwpJO8XkyFr
+RsSoOhmDrqF5v6M3TUQJRmI3TI4hBFyMpRLKurnOx6OBE8uH5E5QDvnmigwTGbUR
+XYQqjpStIX5iGRDH0qnBeV7/m5Y2z7n3fPgMVDn78RwEnxjzhoa7cRl6iNtzviIh
+WnePylk8joB5Qf7O6rSGarRnYocV3mWqEh959raTRn1FfFkTa4xmp6MkqYDJIkjU
+4jPJHboZQ5QRJF7aIVaUdDAoIC7bREx81AXvp/7ExR/sO2SJmUvAIMBC1HHLV8wz
+jb3rcOHXO+zb+NVO6kRNf8GozK7okQkrlCZe8Mn2Y1LAq6TYD7ycDVLWzVbab1KD
+kPuimaUNzpFLj4d5qWHKWq27/U28qyVeJE4FFr5D8YuXFzcWTDZzy0Td35qFT0IP
+TzKievJ3k5mak4aP6tcOXUtXs/z9dbBF986B7+y9mllzfOeuI42IyeN7aTTjiozf
+nr94gAtL7LlwJouC3Ty+
+=A6M1
 -----END PGP SIGNATURE-----
 --=-=-=--
