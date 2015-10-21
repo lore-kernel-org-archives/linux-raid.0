@@ -1,44 +1,59 @@
-From: Phil Turmel <philip@turmel.org>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: How to recover after md crash during reshape?
-Date: Wed, 21 Oct 2015 08:18:12 -0400
-Message-ID: <56278284.5020306@turmel.org>
+Date: Wed, 21 Oct 2015 17:17:56 +0100
+Message-ID: <5627BAB4.7010402@youngman.org.uk>
 References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
- <874mhl2ed3.fsf@notabene.neil.brown.name>
+ <5626464D.9000502@turmel.org>
+ <3baf849321d819483c5d20c005a31844@tantosonline.com>
+ <562660EE.9020504@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874mhl2ed3.fsf@notabene.neil.brown.name>
+In-Reply-To: <562660EE.9020504@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <nfbrown@novell.com>, andras@tantosonline.com, linux-raid@vger.kernel.org
+To: andras@tantosonline.com, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good morning Neil,
-
-On 10/20/2015 09:35 PM, Neil Brown wrote:
-
-> Nothing dumb about that - you don't need a --backup option.
-> If you did, mdadm would have complained.
+On 20/10/15 16:42, Phil Turmel wrote:
+> Don't.  You have another problem: green & desktop drives in a raid
+> array.  They aren't built for it and will give you grief of one form or
+> another.  Anyways, their problem with timeout mismatch can be worked
+> around with long driver timeouts.  Before you do anything else, you
+> *MUST* run this command:
 > 
-> You only need --backup when the size of the array is unchanged or
-> decreasing.
+> for x in /sys/block/*/device/timeout ; do echo 180 > $x ; done
+> 
+> (Arrange for this to happen on every boot, and keep doing it manually
+> until your boot scripts are fixed.)
 
-> mdadm reads the first few stripes and stores them somewhere in each of
-> the spares.  md (in the kernel) then reads those stripes again and
-> writes them out in the new configuration.  It appears that one of the
-> writes failed, others might have succeeded.  This may not have corrupted
-> anything (the first few blocks are in the same position for both the old
-> and new layout) but it might have done.
+tl;dr summary ...
 
-> If you do want to look for the backup, it is around about the middle of
-> the device and has some metadata which contains the string
-> "md_backup_data-1".  If you find that, you are close to getting the
-> backup data back.
+Desktop drives are spec'd as being okay with one soft error per 10TB
+read - that's where a read fails, you try again, and everything's okay.
 
-Hmmm.  This feature has advanced beyond my last look at the code.  I was
-under the impression the backup option was only optional when mdadm
-could move the data offset.  Does this new algorithm apply to v0.90
-metadata, a v3.2 kernel, and v3.2.5 mdadm?
+A resync will scan the array from start to finish - if you have 10TB's
+worth of disk, you MUST be prepared to handle these errors.
 
-Phil
+By default, mdadm will assume a disk is faulty and kick it after about
+10secs, but a desktop drive will hang for maybe several minutes before
+reporting a problem.
+
+In other words, your drives can meet manufacturer's specs, but, with
+default settings, your array will never be able to rebuild after a
+problem! (Note that many people will say "I've never had a problem", but
+most drives are better than spec. You just don't want to be the unlucky
+one ...)
+
+
+Not that I have any (yet), but I'd second the recommendation for WD
+Reds. I've got Seagate Barracudas (not raid-compliant), and the Reds are
+not much more expensive, and are also the only drives I've found that
+support the raid features - mostly that by default they will fail and
+report a problem very quickly. (Plus they're spec'd at reading about
+40TB per soft error :-)
+
+Cheers,
+Wol
+
 
