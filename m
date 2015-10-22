@@ -1,130 +1,83 @@
-From: rgoldwyn@suse.de
-Subject: [PATCH] md-cluster: Call update_raid_disks() if another node --grow's raid_disks
-Date: Thu, 22 Oct 2015 08:31:09 -0500
-Message-ID: <1445520669-4406-2-git-send-email-rgoldwyn@suse.de>
-References: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
+Date: Thu, 22 Oct 2015 11:59:05 -0400
+Message-ID: <wrfjpp06lws6.fsf@redhat.com>
+References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com>
+	<87pp092sid.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de>
+In-Reply-To: <87pp092sid.fsf@notabene.neil.brown.name> (Neil Brown's message
+	of "Wed, 21 Oct 2015 07:29:30 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
-Cc: gqjiang@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com, nate.dailey@stratus.com
 List-Id: linux-raid.ids
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Neil Brown <neilb@suse.de> writes:
+> Jes.Sorensen@redhat.com writes:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> Hi,
+>>
+>> Bill Kuzeja reported a problem to me about data corruption when
+>> repeatedly removing and re-adding devices in raid1 arrays. It showed
+>> up to be caused by the return value of submit_bio_wait() being handled
+>> incorrectly. Tracking this down is credit of Bill!
+>>
+>> Looks like commit 9e882242c6193ae6f416f2d8d8db0d9126bd996b changed the
+>> return of submit_bio_wait() to return != 0 on error, whereas before it
+>> returned 0 on error.
+>>
+>> This fix should be suitable for -stable as far back as 3.9
+>
+> 3.10?
+>
+> Thanks to both of you!
+>
+> I took the liberty of changing the patches a little so they are now:
+>
+> -               if (submit_bio_wait(WRITE, wbio) == 0)
+> +               if (submit_bio_wait(WRITE, wbio) < 0)
+>
+> because when there is no explicit test I tend to expect a Bool but these
+> values are not Bool.
+>
+> Patches are in my for-linus branch and will be forwarded sometime this
+> week.
+>
+> This bug only causes a problem when bad-block logs are active, so
+> hopefully it won't have caused too much corruption yet -- you would need
+> to be using a newish mdadm.
 
-To incorporate --grow feature executed on one node, other nodes need to
-acknowledge the change in number of disks. Call update_raid_disks()
-to update internal data structures.
+Neil,
 
-This leads to call check_reshape() -> md_allow_write() -> md_update_sb(),
-this results in a deadlock. This is done so it can safely allocate memory
-(which might trigger writeback which might write to raid1). This is
-not required for md with a bitmap.
+An additional twist on this one - Nate ran more tests on this, but was
+still able to hit data corruption. He suggests the it is a mistake to
+set 'ok = rdev_set_badblocks()' and it should instead be set to 0 if
+submit_bio_wait() fails. Like this:
 
-In the clustered case, we don't perform md_update_sb() in md_allow_write(),
-but in do_md_run(). Also we disable safemode for clustered mode.
+--- raid1.c
++++ raid1.c
+@@ -2234,11 +2234,12 @@
+ 		bio_trim(wbio, sector - r1_bio->sector, sectors);
+ 		wbio->bi_sector += rdev->data_offset;
+ 		wbio->bi_bdev = rdev->bdev;
+ 		if (submit_bio_wait(WRITE, wbio) < 0) {
+ 			/* failure! */
+-			ok = rdev_set_badblocks(rdev, sector,
+-						sectors, 0)
+-				&& ok;
++			ok = 0;
++			rdev_set_badblocks(rdev, sector,
++					   sectors, 0);
++		}
 
-mddev->recovery_cp need not be set in check_sb_changes() because this
-is required only when a node reads another node's bitmap. mddev->recovery_cp
-(which is read from sb->resync_offset), is set only if mddev is in_sync.
-Since we disabled safemode, in_sync is set to zero.
-In a clustered environment, the MD may not be in sync because another
-node could be writing to it. So make sure that in_sync is not set in
-case of clustered node in __md_stop_writes().
+Question is whether this change has any negative impact in case of a
+real write failure?
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- drivers/md/md.c    | 22 ++++++++++++++++------
- drivers/md/raid1.c |  8 +++++---
- 2 files changed, 21 insertions(+), 9 deletions(-)
+I have actual patches, I'll send as a reply to this one.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a71b36f..0c70856 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2230,7 +2230,6 @@ static bool does_sb_need_changing(struct mddev *mddev)
- 	/* Check if any mddev parameters have changed */
- 	if ((mddev->dev_sectors != le64_to_cpu(sb->size)) ||
- 	    (mddev->reshape_position != le64_to_cpu(sb->reshape_position)) ||
--	    (mddev->recovery_cp != le64_to_cpu(sb->resync_offset)) ||
- 	    (mddev->layout != le64_to_cpu(sb->layout)) ||
- 	    (mddev->raid_disks != le32_to_cpu(sb->raid_disks)) ||
- 	    (mddev->chunk_sectors != le32_to_cpu(sb->chunksize)))
-@@ -3314,6 +3313,11 @@ safe_delay_store(struct mddev *mddev, const char *cbuf, size_t len)
- {
- 	unsigned long msec;
- 
-+	if (mddev_is_clustered(mddev)) {
-+		pr_info("md: Safemode is disabled for clustered mode\n");
-+		return -EINVAL;
-+	}
-+
- 	if (strict_strtoul_scaled(cbuf, &msec, 3) < 0)
- 		return -EINVAL;
- 	if (msec == 0)
-@@ -5224,7 +5228,10 @@ int md_run(struct mddev *mddev)
- 	atomic_set(&mddev->max_corr_read_errors,
- 		   MD_DEFAULT_MAX_CORRECTED_READ_ERRORS);
- 	mddev->safemode = 0;
--	mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
-+	if (mddev_is_clustered(mddev))
-+		mddev->safemode_delay = 0;
-+	else
-+		mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
- 	mddev->in_sync = 1;
- 	smp_wmb();
- 	spin_lock(&mddev->lock);
-@@ -5267,6 +5274,9 @@ static int do_md_run(struct mddev *mddev)
- 		goto out;
- 	}
- 
-+	if (mddev_is_clustered(mddev))
-+		md_allow_write(mddev);
-+
- 	md_wakeup_thread(mddev->thread);
- 	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
- 
-@@ -5363,7 +5373,8 @@ static void __md_stop_writes(struct mddev *mddev)
- 	md_super_wait(mddev);
- 
- 	if (mddev->ro == 0 &&
--	    (!mddev->in_sync || (mddev->flags & MD_UPDATE_SB_FLAGS))) {
-+	    ((!mddev->in_sync && !mddev_is_clustered(mddev)) ||
-+	     (mddev->flags & MD_UPDATE_SB_FLAGS))) {
- 		/* mark array as shutdown cleanly */
- 		mddev->in_sync = 1;
- 		md_update_sb(mddev, 1);
-@@ -9007,9 +9018,8 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 		}
- 	}
- 
--	/* recovery_cp changed */
--	if (le64_to_cpu(sb->resync_offset) != mddev->recovery_cp)
--		mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
-+	if (mddev->raid_disks != le32_to_cpu(sb->raid_disks))
-+		update_raid_disks(mddev, le32_to_cpu(sb->raid_disks));
- 
- 	/* Finally set the event to be up to date */
- 	mddev->events = le64_to_cpu(sb->events);
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a2d813c..5f38430 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -3044,9 +3044,11 @@ static int raid1_reshape(struct mddev *mddev)
- 		return -EINVAL;
- 	}
- 
--	err = md_allow_write(mddev);
--	if (err)
--		return err;
-+	if (!mddev_is_clustered(mddev)) {
-+		err = md_allow_write(mddev);
-+		if (err)
-+			return err;
-+	}
- 
- 	raid_disks = mddev->raid_disks + mddev->delta_disks;
- 
--- 
-1.8.5.6
-
+Cheers,
+Jes
