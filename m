@@ -1,103 +1,69 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
-Date: Fri, 23 Oct 2015 08:36:06 +1100
-Message-ID: <87r3kmziux.fsf@notabene.neil.brown.name>
-References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com> <87pp092sid.fsf@notabene.neil.brown.name> <wrfjpp06lws6.fsf@redhat.com>
+From: Neil Brown <nfbrown@novell.com>
+Subject: Re: RAID6 grow unexpected results
+Date: Fri, 23 Oct 2015 09:37:05 +1100
+Message-ID: <87io5yzg1a.fsf@notabene.neil.brown.name>
+References: <CAPE0SYz97qwHaQjgguZbQ3rdxKZjDdS9sg5F5dy10W3GP=U3+w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjpp06lws6.fsf@redhat.com>
+In-Reply-To: <CAPE0SYz97qwHaQjgguZbQ3rdxKZjDdS9sg5F5dy10W3GP=U3+w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com, nate.dailey@stratus.com
+To: Liwei <xieliwei@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+Liwei <xieliwei@gmail.com> writes:
 
-> Neil Brown <neilb@suse.de> writes:
->> Jes.Sorensen@redhat.com writes:
->>
->>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>>
->>> Hi,
->>>
->>> Bill Kuzeja reported a problem to me about data corruption when
->>> repeatedly removing and re-adding devices in raid1 arrays. It showed
->>> up to be caused by the return value of submit_bio_wait() being handled
->>> incorrectly. Tracking this down is credit of Bill!
->>>
->>> Looks like commit 9e882242c6193ae6f416f2d8d8db0d9126bd996b changed the
->>> return of submit_bio_wait() to return != 0 on error, whereas before it
->>> returned 0 on error.
->>>
->>> This fix should be suitable for -stable as far back as 3.9
->>
->> 3.10?
->>
->> Thanks to both of you!
->>
->> I took the liberty of changing the patches a little so they are now:
->>
->> -               if (submit_bio_wait(WRITE, wbio) == 0)
->> +               if (submit_bio_wait(WRITE, wbio) < 0)
->>
->> because when there is no explicit test I tend to expect a Bool but these
->> values are not Bool.
->>
->> Patches are in my for-linus branch and will be forwarded sometime this
->> week.
->>
->> This bug only causes a problem when bad-block logs are active, so
->> hopefully it won't have caused too much corruption yet -- you would need
->> to be using a newish mdadm.
->
-> Neil,
->
-> An additional twist on this one - Nate ran more tests on this, but was
-> still able to hit data corruption. He suggests the it is a mistake to
-> set 'ok = rdev_set_badblocks()' and it should instead be set to 0 if
-> submit_bio_wait() fails. Like this:
->
-> --- raid1.c
-> +++ raid1.c
-> @@ -2234,11 +2234,12 @@
->  		bio_trim(wbio, sector - r1_bio->sector, sectors);
->  		wbio->bi_sector += rdev->data_offset;
->  		wbio->bi_bdev = rdev->bdev;
->  		if (submit_bio_wait(WRITE, wbio) < 0) {
->  			/* failure! */
-> -			ok = rdev_set_badblocks(rdev, sector,
-> -						sectors, 0)
-> -				&& ok;
-> +			ok = 0;
-> +			rdev_set_badblocks(rdev, sector,
-> +					   sectors, 0);
-> +		}
->
-> Question is whether this change has any negative impact in case of a
-> real write failure?
->
-> I have actual patches, I'll send as a reply to this one.
->
+> Hi list,
+>     I tried growing a RAID6 array by executing the mdadm --add and
+> mdadm --grow --raid-devices commands. Usually that should run fine and
+> I can continue with pvresize.
 
-If we unconditionally set ok to 0 on a write error, then
-narrow_write_error() will return 0 and handle_write finished() will call
-md_error() to kick the device out of the array.
+That is incorrect.  You cannot run "pvresize" until the reshape
+completes.
 
-And given that we only call narrow_write_error()  when we got a write
-error, we strongly expect at least one sector to give an error.
+>
+>     This time however, the actual usable raid array size did not
+> change even though reshape begins. In my confusion, I decided to
+> reboot. That didn't solve the problem (and apparently the reshape was
+> interrupted, but mdadm shows the grown array as clean?)
 
-So it seems to me that the net result of this patch is to make
-bad-block-lists completely ineffective.
+Clean is expected.  It will be in an intermediate state, part has
+reshaped to extra devices, part is still the original.
 
-What sort of tests are you running, and what sort of corruption do you
-see?
+>
+>     I then executed mdadm --grow --size=max, which seemed to have
+> increased the array size, but apparently by too much. Now I'm getting
+> "attempt to access beyond end of device" errors for each of the
+> component drives. A new reshape operation has also begun, which I
+> expect would fail as the array size is now too big.
+
+"--size" isn't the same as "--array-size".
+"--size" is the size of the component devices to use.
+
+The "attempt to access beyond end of device" errors are unexpected but
+presumably related o the "--size=max".  Maybe the 'max' chosen was too
+large.  That suggests a bug somewhere.
+You probably want to reduce that size back to where it was.
+
+>
+>     What did I do wrong and how can I remedy this?
+
+Could we start with "mdadm --examine" status of all devices, "mdadm
+--detail" of the array, and all kernel messages that could possibly
+relate to the array since you first started this exercise?
 
 NeilBrown
+
+>
+> Liwei
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -105,18 +71,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWKVbGAAoJEDnsnt1WYoG5EkYQAJ6pVEkFIj2TTEzGRlSvd6HN
-3O9NT7DnLjLXVOVp2ScHfHtXohkqsYKR73LHVI2tiEwILJ8Dls1YD6f9R3Ta7zHE
-m9TOUFbwXOjwICDlJwEiBBW2nbjT6meZlKVtHww6XTu7MD503OGnxSWPgTM9nsfJ
-DEiDQ+yo2IevxH+xRWO6YdX7kauKM2uz4LulqMQP585gV+vX/gT4nHvSLYeDoF4J
-OfIVp9sriawmFGAtTQYPbVP7KVzuWLdM3R26NhG6v4s8Gg4zs17w5mW5NUB6P514
-UrRIKAePeojZW7qZmCUk77liWhclLwgP/0KTZCKVFnlKmId0V5N7NffFtzb7vyF4
-Fo7luUCrB6LO/9gNkU6aIltRRBpzoEmnSZb33jKLGdZdkLZPzfWrKV+H4avFBQsZ
-E19daS2Zd18qt/4mr79HcMqtd+7KxncrBkQzS77XzuHfitzpwyoIy357168NuF8k
-sL5EmVmECijXCgDEvoDUa/DNQ2tytTrl/m3WNMp2jq/0vpsUMzpwA+m8B7ONChJa
-CkW2xJVk33i3WpOwjcsa52k3Myrlu53rmUAw/Z7FEnBrH2aob+F4ksHtxeQ4TJ8J
-HBw2h9r+uvCEm7GMK9JCNim2nX5QoRret7khpdY9GiyNkVhZZrTmLCxnxcZR7xJG
-gcG9Tkyo+vF+0Os6NxIi
-=Cioe
+iQIcBAEBCAAGBQJWKWUSAAoJEDnsnt1WYoG5ncIQALdIgdPSf3qsyLbPQ7dk0QY3
+hDDZFyIJLdizNKVDV2L64nU8WdCeO5WPsZhIpz9liheFdm2eDkFwtROyqXcXgqpS
+W9Ts7mvnExBJfdtxwIwZ/MWCXUbxuRPCjYJR9p8FuCqQuhtymLs+0WdVKkuGiwK0
+Vo/jXAx76kpPu3awlR8YnL+6KGpOxzb9k8YY5wPAspcHxjqxOobpgjEU3BmESBvA
+eA0qMJrO+oFGk9XwFqW20n2x+4b4WsAe4WGvXcE5tSH542iAbBwJ2h9k/Z1KDJM/
+UcJiUtjk7Vgx30FsLL/xjJyMgSEAd4oZ/UxO+n09A9Hcarzz6E6IHDrsMKpakH7W
+t7S9h/ND7F3l0jKSsUW9z2ISbA+eSs0EteioNskCbRu7XvJA5b7gAkrJ0XA2nN0g
+eaHl/MWXuihcdFGOvoA+9B8XgjdDcum+2agsBS7e/F1EHPJkmfYP/AJpowZS+GMX
+bpsaMEKneS5vZOAm+YdI7Nc2kRO3mYDnnf2o9+ubqzjciA9pG3BoDvnLgvfujXkR
+FDDNGz8HSP4bT3bw/AwJg88crx0mJr6N0Y8gx/ev3d2mWP2j5mnL0ki5SqWRNaR1
+JQZ1strvhrg4otVBo84jCS/wsFA+PFhxZ/P+P+o15xogyk0xGoBuB1+Z8coxmKKa
+tZj2meK90bm06E1SRPQO
+=Yhqy
 -----END PGP SIGNATURE-----
 --=-=-=--
