@@ -1,95 +1,101 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: Remove inactive array created by open
-Date: Fri, 23 Oct 2015 08:23:38 +1100
-Message-ID: <87vb9yzjfp.fsf@notabene.neil.brown.name>
-References: <20151022162445.GA11904@kw.sim.vm.gnt>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
+Date: Fri, 23 Oct 2015 08:36:06 +1100
+Message-ID: <87r3kmziux.fsf@notabene.neil.brown.name>
+References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com> <87pp092sid.fsf@notabene.neil.brown.name> <wrfjpp06lws6.fsf@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151022162445.GA11904@kw.sim.vm.gnt>
+In-Reply-To: <wrfjpp06lws6.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: linux-raid@vger.kernel.org, Remi Reroller <remi.rerolle@seagate.com>, Vincent Donnefort <vdonnefort@gmail.com>, Yoann Sculo <yoann@printk.fr>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com, nate.dailey@stratus.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-Simon Guinot <simon.guinot@sequanux.org> writes:
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 
-> Hi Neil,
+> Neil Brown <neilb@suse.de> writes:
+>> Jes.Sorensen@redhat.com writes:
+>>
+>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>
+>>> Hi,
+>>>
+>>> Bill Kuzeja reported a problem to me about data corruption when
+>>> repeatedly removing and re-adding devices in raid1 arrays. It showed
+>>> up to be caused by the return value of submit_bio_wait() being handled
+>>> incorrectly. Tracking this down is credit of Bill!
+>>>
+>>> Looks like commit 9e882242c6193ae6f416f2d8d8db0d9126bd996b changed the
+>>> return of submit_bio_wait() to return != 0 on error, whereas before it
+>>> returned 0 on error.
+>>>
+>>> This fix should be suitable for -stable as far back as 3.9
+>>
+>> 3.10?
+>>
+>> Thanks to both of you!
+>>
+>> I took the liberty of changing the patches a little so they are now:
+>>
+>> -               if (submit_bio_wait(WRITE, wbio) == 0)
+>> +               if (submit_bio_wait(WRITE, wbio) < 0)
+>>
+>> because when there is no explicit test I tend to expect a Bool but these
+>> values are not Bool.
+>>
+>> Patches are in my for-linus branch and will be forwarded sometime this
+>> week.
+>>
+>> This bug only causes a problem when bad-block logs are active, so
+>> hopefully it won't have caused too much corruption yet -- you would need
+>> to be using a newish mdadm.
 >
-> I'd like to have your advice about destroying an array created by open
-> at close time if not configured, rather than waiting for a ioctl or a
-> sysfs configuration. This would allow to get rid of the inactive md
-> devices created by an "accidental" open.
+> Neil,
 >
-> On the Linux distribution embedded in LaCie NAS, we are able to
-> observe the following scenario:
+> An additional twist on this one - Nate ran more tests on this, but was
+> still able to hit data corruption. He suggests the it is a mistake to
+> set 'ok = rdev_set_badblocks()' and it should instead be set to 0 if
+> submit_bio_wait() fails. Like this:
 >
-> 1. A RAID array is stopped with a command such as mdadm --stop /dev/mdx.
-> 2. The node /dev/mdx is still available because not removed by mdadm at
->    stop.
-> 3. /dev/mdx is opened by a process such as udev or mdadm --monitor.
-> 4. An inactive RAID array mdx is created and a "add" uevent is
->    broadcasted to userland. It is let to userland to understand that
->    this event must be discarded.
+> --- raid1.c
+> +++ raid1.c
+> @@ -2234,11 +2234,12 @@
+>  		bio_trim(wbio, sector - r1_bio->sector, sectors);
+>  		wbio->bi_sector += rdev->data_offset;
+>  		wbio->bi_bdev = rdev->bdev;
+>  		if (submit_bio_wait(WRITE, wbio) < 0) {
+>  			/* failure! */
+> -			ok = rdev_set_badblocks(rdev, sector,
+> -						sectors, 0)
+> -				&& ok;
+> +			ok = 0;
+> +			rdev_set_badblocks(rdev, sector,
+> +					   sectors, 0);
+> +		}
 >
-> You have to admit that this behaviour is at best awkward :)
-
-No argument there.
-
-
+> Question is whether this change has any negative impact in case of a
+> real write failure?
 >
-> I read the commit d3374825ce57
-> "md: make devices disappear when they are no longer needed" in which
-> you express some concerns about an infinite loop due to udev always
-> opening newly created devices. Is that still actual ?
+> I have actual patches, I'll send as a reply to this one.
 >
-> In your opinion, how could we get rid of an inactive RAID array created
-> by open ? Maybe we could switch the hold_active flag from UNTIL_IOCTL to
-> 0 after some delay (enough to prevent udev from looping) ? In addition,
-> maybe we could remove the device node from mdadm --stop ? Or maybe
-> something else :)
->
-> If you are interested by any of this solutions or one of yours, I'll
-> be happy to work on it.
 
-By far the best solution here is to used named md devices.  These are
-relatively recent and I wouldn't be surprised if you weren't aware of
-them.
+If we unconditionally set ok to 0 on a write error, then
+narrow_write_error() will return 0 and handle_write finished() will call
+md_error() to kick the device out of the array.
 
-md devices 9,0 to 9,511 (those are major,minor numbers) are "numeric" md
-devices.  They have in-kernel names md%d which appear in /proc/mdstat
-and /sys/block/
+And given that we only call narrow_write_error()  when we got a write
+error, we strongly expect at least one sector to give an error.
 
-If you create a block-special-device node with these numbers, that will
-create the md device if it doesn't already exist.
+So it seems to me that the net result of this patch is to make
+bad-block-lists completely ineffective.
 
-md devices 9,512 to 9,$BIGNUM are "named" md devices.  These have
-in-kernel names like md_whatever-you-like.
-If you create a block-special-device with device number 9,512 and try to
-open it you will get -ENODEV.
-To create these you
-   echo whatever-you-like >  /sys/module/md_mod/parameters/new_array
-
-A number 512 or greater will be allocated as the minor number.
-
-These arrays behave as you would want them to.  They are only created
-when explicitly requested and they disappear when stopped.
-
-mdadm will create this sort of array if you add
- CREATE names=yes
-to mdadm.conf and don't use numeric device names.
-i.e. if you ask for /dev/md0, you will still get 9,0.
-But if you ask for /dev/md/home, you will get 9,512 where as
-with names=no (the default) you would probably get 9,127.
-
-A timeout for dropping idle numeric md devices might make sense but it
-would need to be several seconds at least as udev can sometimes get very
-backlogged and would wouldn't want to add to that.  Would 5 minutes be
-soon enough to meet your need?
+What sort of tests are you running, and what sort of corruption do you
+see?
 
 NeilBrown
 
@@ -99,18 +105,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWKVPaAAoJEDnsnt1WYoG5rZ4P/jn+CI0h+aiiPzk20eRolPd5
-qn6dfNI+s7o7tXFiTxtCURxDCoW3dTyw86JeO6SEy0q1InBbCm2xFf5oji6VgbMQ
-6pMAmXH6YOCTml1nbLgaKU851+yL2fQKcAMMIw0i7D6G0GldEPe7vy4yxQeFExf3
-auSL2ljqevYHglf5nDQmoys0wNSxgZ69yPPyCpcySLoYylquX/UfWim0YPZsxjjq
-B1v5hfeNduYHBFTExFmANOl1OL/+mkMTAHfHDl/+qEwRAkIcQy8r4lmv7D9Jqf9e
-8/gY/376OjvgDgOG+PSTGppyRO3bwGYXB07TWzdfd6JSFA9cmnAXjhw9C6QHzUcg
-7AmQ7F5jTyQoPd0ldStuiqJfjXIECZWTER4bIcl1719nqbZZKFq+PwJx2+EmWsJs
-iDulSvTyJI4OvF80LurhYaij0JSLcaLnyVbwWSdn9BheKBxcHS+2FL6Lnmbc3aT4
-xD1EHjzyHTRf9phWbeUrCQzc5uDv8bq2g9GLrayo6ygSU1x35UTzccwL6gwRf3R+
-ic2yiOx0F5d/RT2ZgUDOqvww3VZGigL/TqU+jhtbGggUJSxCqHwcAL0ua0jvyd/5
-jhtwEIr06dedsU9z/hZNiKESXqmaf/e3WVrlqCrVkvK4nkD0U/JkahqbmcBOB/SL
-NSFn2EfAJrz5VQPS6oyX
-=Jzqk
+iQIcBAEBCAAGBQJWKVbGAAoJEDnsnt1WYoG5EkYQAJ6pVEkFIj2TTEzGRlSvd6HN
+3O9NT7DnLjLXVOVp2ScHfHtXohkqsYKR73LHVI2tiEwILJ8Dls1YD6f9R3Ta7zHE
+m9TOUFbwXOjwICDlJwEiBBW2nbjT6meZlKVtHww6XTu7MD503OGnxSWPgTM9nsfJ
+DEiDQ+yo2IevxH+xRWO6YdX7kauKM2uz4LulqMQP585gV+vX/gT4nHvSLYeDoF4J
+OfIVp9sriawmFGAtTQYPbVP7KVzuWLdM3R26NhG6v4s8Gg4zs17w5mW5NUB6P514
+UrRIKAePeojZW7qZmCUk77liWhclLwgP/0KTZCKVFnlKmId0V5N7NffFtzb7vyF4
+Fo7luUCrB6LO/9gNkU6aIltRRBpzoEmnSZb33jKLGdZdkLZPzfWrKV+H4avFBQsZ
+E19daS2Zd18qt/4mr79HcMqtd+7KxncrBkQzS77XzuHfitzpwyoIy357168NuF8k
+sL5EmVmECijXCgDEvoDUa/DNQ2tytTrl/m3WNMp2jq/0vpsUMzpwA+m8B7ONChJa
+CkW2xJVk33i3WpOwjcsa52k3Myrlu53rmUAw/Z7FEnBrH2aob+F4ksHtxeQ4TJ8J
+HBw2h9r+uvCEm7GMK9JCNim2nX5QoRret7khpdY9GiyNkVhZZrTmLCxnxcZR7xJG
+gcG9Tkyo+vF+0Os6NxIi
+=Cioe
 -----END PGP SIGNATURE-----
 --=-=-=--
