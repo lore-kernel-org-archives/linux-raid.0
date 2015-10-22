@@ -1,88 +1,111 @@
-From: Neil Brown <nfbrown@novell.com>
-Subject: Re: RAID6 grow unexpected results
-Date: Fri, 23 Oct 2015 09:37:05 +1100
-Message-ID: <87io5yzg1a.fsf@notabene.neil.brown.name>
-References: <CAPE0SYz97qwHaQjgguZbQ3rdxKZjDdS9sg5F5dy10W3GP=U3+w@mail.gmail.com>
+From: Nate Dailey <nate.dailey@stratus.com>
+Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in
+ narrow_write_error()
+Date: Thu, 22 Oct 2015 18:37:04 -0400
+Message-ID: <56296510.4030702@stratus.com>
+References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com>
+ <87pp092sid.fsf@notabene.neil.brown.name> <wrfjpp06lws6.fsf@redhat.com>
+ <87r3kmziux.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPE0SYz97qwHaQjgguZbQ3rdxKZjDdS9sg5F5dy10W3GP=U3+w@mail.gmail.com>
+In-Reply-To: <87r3kmziux.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Liwei <xieliwei@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+The problem is that we aren't getting true write (medium) errors.
 
-Liwei <xieliwei@gmail.com> writes:
+In this case we're testing device removals. The write errors happen because the 
+disk goes away. Narrow_write_error returns 1, the bitmap bit is cleared, and 
+then when the device is re-added the resync might not include the sectors in 
+that chunk (there's some luck involved; if other writes to that chunk happen 
+while the disk is removed, we're okay--bug is easier to hit with smaller bitmap 
+chunks because of this).
 
-> Hi list,
->     I tried growing a RAID6 array by executing the mdadm --add and
-> mdadm --grow --raid-devices commands. Usually that should run fine and
-> I can continue with pvresize.
 
-That is incorrect.  You cannot run "pvresize" until the reshape
-completes.
 
+
+On 10/22/2015 05:36 PM, Neil Brown wrote:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 >
->     This time however, the actual usable raid array size did not
-> change even though reshape begins. In my confusion, I decided to
-> reboot. That didn't solve the problem (and apparently the reshape was
-> interrupted, but mdadm shows the grown array as clean?)
-
-Clean is expected.  It will be in an intermediate state, part has
-reshaped to extra devices, part is still the original.
-
+>> Neil Brown <neilb@suse.de> writes:
+>>> Jes.Sorensen@redhat.com writes:
+>>>
+>>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>
+>>>> Hi,
+>>>>
+>>>> Bill Kuzeja reported a problem to me about data corruption when
+>>>> repeatedly removing and re-adding devices in raid1 arrays. It showed
+>>>> up to be caused by the return value of submit_bio_wait() being handled
+>>>> incorrectly. Tracking this down is credit of Bill!
+>>>>
+>>>> Looks like commit 9e882242c6193ae6f416f2d8d8db0d9126bd996b changed the
+>>>> return of submit_bio_wait() to return != 0 on error, whereas before it
+>>>> returned 0 on error.
+>>>>
+>>>> This fix should be suitable for -stable as far back as 3.9
+>>> 3.10?
+>>>
+>>> Thanks to both of you!
+>>>
+>>> I took the liberty of changing the patches a little so they are now:
+>>>
+>>> -               if (submit_bio_wait(WRITE, wbio) == 0)
+>>> +               if (submit_bio_wait(WRITE, wbio) < 0)
+>>>
+>>> because when there is no explicit test I tend to expect a Bool but these
+>>> values are not Bool.
+>>>
+>>> Patches are in my for-linus branch and will be forwarded sometime this
+>>> week.
+>>>
+>>> This bug only causes a problem when bad-block logs are active, so
+>>> hopefully it won't have caused too much corruption yet -- you would need
+>>> to be using a newish mdadm.
+>> Neil,
+>>
+>> An additional twist on this one - Nate ran more tests on this, but was
+>> still able to hit data corruption. He suggests the it is a mistake to
+>> set 'ok = rdev_set_badblocks()' and it should instead be set to 0 if
+>> submit_bio_wait() fails. Like this:
+>>
+>> --- raid1.c
+>> +++ raid1.c
+>> @@ -2234,11 +2234,12 @@
+>>   		bio_trim(wbio, sector - r1_bio->sector, sectors);
+>>   		wbio->bi_sector += rdev->data_offset;
+>>   		wbio->bi_bdev = rdev->bdev;
+>>   		if (submit_bio_wait(WRITE, wbio) < 0) {
+>>   			/* failure! */
+>> -			ok = rdev_set_badblocks(rdev, sector,
+>> -						sectors, 0)
+>> -				&& ok;
+>> +			ok = 0;
+>> +			rdev_set_badblocks(rdev, sector,
+>> +					   sectors, 0);
+>> +		}
+>>
+>> Question is whether this change has any negative impact in case of a
+>> real write failure?
+>>
+>> I have actual patches, I'll send as a reply to this one.
+>>
+> If we unconditionally set ok to 0 on a write error, then
+> narrow_write_error() will return 0 and handle_write finished() will call
+> md_error() to kick the device out of the array.
 >
->     I then executed mdadm --grow --size=max, which seemed to have
-> increased the array size, but apparently by too much. Now I'm getting
-> "attempt to access beyond end of device" errors for each of the
-> component drives. A new reshape operation has also begun, which I
-> expect would fail as the array size is now too big.
-
-"--size" isn't the same as "--array-size".
-"--size" is the size of the component devices to use.
-
-The "attempt to access beyond end of device" errors are unexpected but
-presumably related o the "--size=max".  Maybe the 'max' chosen was too
-large.  That suggests a bug somewhere.
-You probably want to reduce that size back to where it was.
-
+> And given that we only call narrow_write_error()  when we got a write
+> error, we strongly expect at least one sector to give an error.
 >
->     What did I do wrong and how can I remedy this?
-
-Could we start with "mdadm --examine" status of all devices, "mdadm
---detail" of the array, and all kernel messages that could possibly
-relate to the array since you first started this exercise?
-
-NeilBrown
-
+> So it seems to me that the net result of this patch is to make
+> bad-block-lists completely ineffective.
 >
-> Liwei
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> What sort of tests are you running, and what sort of corruption do you
+> see?
+>
+> NeilBrown
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWKWUSAAoJEDnsnt1WYoG5ncIQALdIgdPSf3qsyLbPQ7dk0QY3
-hDDZFyIJLdizNKVDV2L64nU8WdCeO5WPsZhIpz9liheFdm2eDkFwtROyqXcXgqpS
-W9Ts7mvnExBJfdtxwIwZ/MWCXUbxuRPCjYJR9p8FuCqQuhtymLs+0WdVKkuGiwK0
-Vo/jXAx76kpPu3awlR8YnL+6KGpOxzb9k8YY5wPAspcHxjqxOobpgjEU3BmESBvA
-eA0qMJrO+oFGk9XwFqW20n2x+4b4WsAe4WGvXcE5tSH542iAbBwJ2h9k/Z1KDJM/
-UcJiUtjk7Vgx30FsLL/xjJyMgSEAd4oZ/UxO+n09A9Hcarzz6E6IHDrsMKpakH7W
-t7S9h/ND7F3l0jKSsUW9z2ISbA+eSs0EteioNskCbRu7XvJA5b7gAkrJ0XA2nN0g
-eaHl/MWXuihcdFGOvoA+9B8XgjdDcum+2agsBS7e/F1EHPJkmfYP/AJpowZS+GMX
-bpsaMEKneS5vZOAm+YdI7Nc2kRO3mYDnnf2o9+ubqzjciA9pG3BoDvnLgvfujXkR
-FDDNGz8HSP4bT3bw/AwJg88crx0mJr6N0Y8gx/ev3d2mWP2j5mnL0ki5SqWRNaR1
-JQZ1strvhrg4otVBo84jCS/wsFA+PFhxZ/P+P+o15xogyk0xGoBuB1+Z8coxmKKa
-tZj2meK90bm06E1SRPQO
-=Yhqy
------END PGP SIGNATURE-----
---=-=-=--
