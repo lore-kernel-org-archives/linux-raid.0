@@ -1,77 +1,86 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Hung RAID5 array with discard
-Date: Fri, 23 Oct 2015 16:51:59 +1100
-Message-ID: <87vb9yxhc0.fsf@notabene.neil.brown.name>
-References: <CANHB05vDxWqfST41hXgfApthHuxdSuyJYCKqS4jkOa7OZ0kpsA@mail.gmail.com> <CANHB05sb44ZD-31ceEWWSY0XdhWaU-Pq+NFRQSm-1qafHx1G2g@mail.gmail.com> <20150323135754.02afa72e@notabene.brown> <562909AC.7040003@kieser.ca> <87y4euxkj2.fsf@notabene.neil.brown.name> <5629BE44.8070205@kieser.ca>
+From: Liwei <xieliwei@gmail.com>
+Subject: Re: RAID6 grow unexpected results
+Date: Fri, 23 Oct 2015 14:14:10 +0800
+Message-ID: <CAPE0SYwiCn7L4iDKXS92pLz6JSLaXVdxggj-kE_bDDFM8w-ppg@mail.gmail.com>
+References: <CAPE0SYz97qwHaQjgguZbQ3rdxKZjDdS9sg5F5dy10W3GP=U3+w@mail.gmail.com>
+ <87io5yzg1a.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5629BE44.8070205@kieser.ca>
+In-Reply-To: <87io5yzg1a.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>, Terry Hardie <thardie@instartlogic.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Peter Kieser <peter@kieser.ca> writes:
-
-> On 2015-10-22 9:42 PM, Neil Brown wrote:
->> Peter Kieser <peter@kieser.ca> writes:
->>
->>> FYI I ran into this problem in 3.18.22 when forcing RAID5 TRIM support
->>> w/ raid456.devices_handle_discard_safely on Intel DC S3500 SSDs.
->> Can you please be precise about the problem you experienced.
->> Complete kernel messages are a minimum.
->> Anything interesting that might have been happening at the time might
->> help.
->>
->> Thanks,
->> NeilBrown
+On Fri, 23 Oct 2015 at 06:37 Neil Brown <nfbrown@novell.com> wrote:
 >
-> Same behaviour as the original poster. Enabled the module knob, then ran=
-=20
-> mkfs.ext4, which starts to do "Discarding device blocks" and then the=20
-> machine hard locked. No kernel messages.
+> Liwei <xieliwei@gmail.com> writes:
 >
-Thanks.
-The original poster reported a hung-task dump...
-When you say "hard locked" - can you still access from another
-window/login, or is it totally forzen?
-If former, are then any processes in D start?  maybe mdXX-raid5?
-Can you get /proc/$PID/stack of that process?
-
-If totally frozen - do you have a console?  Can you alt-sysrq-W ??
-
-Or have you since rebooted and the problem isn't repeatable?
-
-Thanks,
-NeilBrown
+> > Hi list,
+> >     I tried growing a RAID6 array by executing the mdadm --add and
+> > mdadm --grow --raid-devices commands. Usually that should run fine and
+> > I can continue with pvresize.
+>
+> That is incorrect.  You cannot run "pvresize" until the reshape
+> completes.
 
 
+Ah, my bad. It's been a while since I did that. So if I had been
+patient, all would have been well?
+
+>
+>
+> >
+> >     This time however, the actual usable raid array size did not
+> > change even though reshape begins. In my confusion, I decided to
+> > reboot. That didn't solve the problem (and apparently the reshape was
+> > interrupted, but mdadm shows the grown array as clean?)
+>
+> Clean is expected.  It will be in an intermediate state, part has
+> reshaped to extra devices, part is still the original.
+>
+> >
+> >     I then executed mdadm --grow --size=max, which seemed to have
+> > increased the array size, but apparently by too much. Now I'm getting
+> > "attempt to access beyond end of device" errors for each of the
+> > component drives. A new reshape operation has also begun, which I
+> > expect would fail as the array size is now too big.
+>
+> "--size" isn't the same as "--array-size".
+> "--size" is the size of the component devices to use.
+>
+> The "attempt to access beyond end of device" errors are unexpected but
+> presumably related o the "--size=max".  Maybe the 'max' chosen was too
+> large.  That suggests a bug somewhere.
+> You probably want to reduce that size back to where it was.
 
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+I just realised I got the wrong command. I used --array-size=max
+instead. A reboot seemed to have reverted the change.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+>
+>
+> >
+> >     What did I do wrong and how can I remedy this?
+>
+> Could we start with "mdadm --examine" status of all devices, "mdadm
+> --detail" of the array, and all kernel messages that could possibly
+> relate to the array since you first started this exercise?
 
-iQIcBAEBCAAGBQJWKcr/AAoJEDnsnt1WYoG5fcQQAKKYyuNSpsm2UnGvEshos6r9
-7Ni5VlaUBlmdB7QqySNW/+Oqi+17mt72hkR2oO41oRqw6mnA/tvhg5XI8PKryC1Q
-BkDhGhP8INUqHNWoAzgKc21lwBpHJZiaJdx3g1b2UozHcS48CCjjBQ1Ok30NoxT3
-q4wSukPzzIrbOcz8gTW8y+McgU5YQmxVflS7x11If2jqHiDl5ysrTW3ipVS6SHNH
-D4VM2lGrYLj2icB8JpzyVw6xWt4HH7EuAr4i58g4OH9p3+OwRUBmGsAXiot9En4w
-/TSgAw7TPRGZhwEhHkFyk5oVJtETZe7WPTHwqmNtqZRT7YsJ0eZQsY552mE6yzcV
-sM1fQT+3Y3RTWt27GEbYhZnPAExLcz8zlU/SVpldo9dmmb+30u6NMI7jKlgSwx+Y
-SaJsmNr/L5/j7C+vTsib1bEbgHB16slngGoruLkGEcjpyzvxCwNOqK4lJ70D0RcG
-i/rYSMs7qy6r5ZCy0Qt02HCXGp/SFLcWRzdQXwRUeAUSST/rI1qxL6SF/LGjPdiZ
-b+KO68oCMYAH41smE05OwGWTShEIhbHkepIGU379pkCVxtcS+vIMKoU10+nla7jC
-lF4+SqhhkWIWtJErNxh5utCSYUbbev6Y6BfKBuIgteuVgYNo5E4JWEccJKCtO/6b
-qtb1cJwtnYJIwNfA7lNT
-=42ol
------END PGP SIGNATURE-----
---=-=-=--
+
+Eventually it was a foul up on my part. Things seem to be back to
+normal after a reboot, and the reshape is in progress. Apologies for
+the confusion!
+
+Liwei
+
+>
+>
+> NeilBrown
+>
+> >
+> > Liwei
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
