@@ -1,68 +1,53 @@
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH] md-cluster: Only one thread should request DLM lock
-Date: Fri, 23 Oct 2015 05:19:10 -0500
-Message-ID: <562A099E.2060709@suse.de>
-References: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de>
- <874mhiz643.fsf@notabene.neil.brown.name>
+From: Alexander Afonyashin <a.afonyashin@madnet-team.ru>
+Subject: Re: manually destriping a 4 drive raid5 with one missing drive
+Date: Fri, 23 Oct 2015 14:50:33 +0300
+Message-ID: <CAETWcfsdhGqbbp7sAKDK_rMzji_hUupQYcTs6kF+1q5KBxoZKA@mail.gmail.com>
+References: <CA+sqOsbjE4MLa7NXG6hxpzE1m-ZNbcJVNjK51WKCQMhwNgimhg@mail.gmail.com>
+ <87fv19m7he.fsf@notabene.neil.brown.name> <CA+sqOsZJbvyAW6=CSG5EikhmDPt+Onjpm+VvBNPMKFmVi-ZQ8g@mail.gmail.com>
+ <CA+sqOsZfjz0wTei+6qiv+zxXt7TA_GMO8EQ=v0EeDGFpqLrWRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874mhiz643.fsf@notabene.neil.brown.name>
+In-Reply-To: <CA+sqOsZfjz0wTei+6qiv+zxXt7TA_GMO8EQ=v0EeDGFpqLrWRg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
-Cc: gqjiang@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Marek <mlf.conv@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Marek,
 
+First, check status of disk you would like to remove via:
+- cat /proc/mdstat
+- mdadm -D /dev/md0 (replace md0 with you md-raid identifier)
 
-On 10/22/2015 09:11 PM, Neil Brown wrote:
-> rgoldwyn@suse.de writes:
+Regards,
+Alexader
+
+On Fri, Oct 23, 2015 at 12:26 PM, Marek <mlf.conv@gmail.com> wrote:
+> I have a 4 2TB disk  raid5 512k 1.2.
+> one of the drives was accidentally wiped by ubuntu installation
+> (/dev/sda, first drive). The system has been rebooted forcefully
+> several times before this happened. Raid wouldn't come up after that.
+> The first drive has been -add ed back and a resync has been enforced.
+> What i'd like to do is to manually destrip the raid.
 >
->> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> On Sun, Oct 18, 2015 at 12:54 AM, Neil Brown <nfbrown@novell.com> wrote:
+>> Marek <mlf.conv@gmail.com> writes:
 >>
->> If a DLM lock is in progress, requesting the same DLM lock will
->> result in -EBUSY. Use a mutex to make sure only one thread requests
->> for dlm_lock() function at a time.
+>>> hi,
+>>>
+>>> i'd like to ask whether manual  destriping of a 4 drive raid5 is
+>>> possible even though the parity information is lost due to forced
+>>> resync of all four drives.
+>>>
 >>
->> This will fix the error -EBUSY returned from DLM's
->> validate_lock_args().
->
-> I can see that we only want one thread calling dlm_lock() with a given
-> 'struct dlm_lock_resource' at a time, otherwise nasty things could
-> happen.
->
-> However if such a race is possible, then aren't there other possibly
-> complications.
-
-This is specific to the duration of dlm_lock() function only and not the 
-entire lifetime of the resource. If one thread has requested dlm_lock() 
-and another thread comes in and calls dlm_lock() on the same resource, 
-we will get -EBUSY on the second one because the lock is already requested.
-
-Our dlm_unlock_sync() call is also a dlm_lock_sync(), and eventually 
-dlm_lock() call, with a NULL lock.
-
->
-> Suppose two threads try to lock the same resource.
-> Presumably one will try to lock the resource, then the next one (when it
-> gets the mutex) will discover that it already has the resource, but will
-> think it has exclusive access - maybe?
-
-I am not sure if I understand this. DLM locks are supposed to be at the 
-node level as opposed to thread level.
-
->
-> Then both threads will eventually try to unlock, and the second one will
-> unlock something that doesn't have locked.
->
-> I'm not certain, but that doesn't sound entirely safe.
->
-> Which resources to we actually see races with?
->
-
-This could happen with any resource, I have seen with ack, message, and 
-token.
-
--- 
-Goldwyn
+>> I'm sorry but I have no idea what you are asking.
+>> Maybe if you provided more details about your current circumstances, how
+>> you got into that situation, and what outcome you are hoping for, then I
+>> might be able to help.
+>>
+>> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
