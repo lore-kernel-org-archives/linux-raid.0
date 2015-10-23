@@ -1,93 +1,136 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
-Date: Fri, 23 Oct 2015 14:02:47 -0400
-Message-ID: <wrfjoafpcvjs.fsf@redhat.com>
-References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com>
-	<87pp092sid.fsf@notabene.neil.brown.name>
-	<wrfjpp06lws6.fsf@redhat.com>
-	<87r3kmziux.fsf@notabene.neil.brown.name>
-	<56296510.4030702@stratus.com>
-	<87d1w6zbrv.fsf@notabene.neil.brown.name>
-	<562A4475.1000904@stratus.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2 01/12] block: Move integrity kobject to struct gendisk
+Date: Fri, 23 Oct 2015 16:21:16 -0400
+Message-ID: <x49vb9xcp4z.fsf@segfault.boston.devel.redhat.com>
+References: <20151015195939.20721.23101.stgit@dwillia2-desk3.jf.intel.com>
+	<20151015195945.20721.41097.stgit@dwillia2-desk3.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562A4475.1000904@stratus.com> (Nate Dailey's message of "Fri, 23
-	Oct 2015 10:30:13 -0400")
+In-Reply-To: <20151015195945.20721.41097.stgit@dwillia2-desk3.jf.intel.com>
+	(Dan Williams's message of "Thu, 15 Oct 2015 15:59:45 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: martin.petersen@oracle.com, linux-raid@vger.kernel.org, linux-nvdimm@ml01.01.org, Sagi Grimberg <sagig@mellanox.com>, axboe@fb.com, dm-devel@redhat.com, linux-nvme@lists.infradead.org, hch@lst.de
 List-Id: linux-raid.ids
 
-Nate Dailey <nate.dailey@stratus.com> writes:
-> Thank you!
->
-> I confirmed that this patch prevents the bug.
->
-> Nate
+Dan Williams <dan.j.williams@intel.com> writes:
 
-Awesome, thanks Nate!
-
-Neil once you commit the final version of this patch, please let me
-know.
-
-Cheers,
-Jes
-
+> From: Martin K. Petersen <martin.petersen@oracle.com>
 >
+> The integrity kobject purely exists to support the integrity
+> subdirectory in sysfs and doesn't really have anything to do with the
+> blk_integrity data structure. Move the kobject to struct gendisk where
+> it belongs.
 >
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Sagi Grimberg <sagig@mellanox.com>
+> Tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+
+> ---
+>  block/blk-integrity.c  |   22 +++++++++++-----------
+>  include/linux/blkdev.h |    2 --
+>  include/linux/genhd.h  |    1 +
+>  3 files changed, 12 insertions(+), 13 deletions(-)
 >
-> On 10/22/2015 08:09 PM, Neil Brown wrote:
->> Nate Dailey <nate.dailey@stratus.com> writes:
->>
->>> The problem is that we aren't getting true write (medium) errors.
->>>
->>> In this case we're testing device removals. The write errors happen
->>> because the
->>> disk goes away. Narrow_write_error returns 1, the bitmap bit is cleared, and
->>> then when the device is re-added the resync might not include the sectors in
->>> that chunk (there's some luck involved; if other writes to that chunk happen
->>> while the disk is removed, we're okay--bug is easier to hit with
->>> smaller bitmap
->>> chunks because of this).
->>>
->>>
->> OK, that makes sense.
->>
->> The device removal will be noticed when the bad block log is written
->> out.
->> When a bad-block is recorded we make sure to write that out promptly
->> before bio_endio() gets called.  But not before close_write() has called
->> bitmap_end_write().
->>
->> So I guess we need to delay the close_write() call until the
->> bad-block-log has been written.
->>
->> I think this patch should do it.  Can you test?
->>
->> Thanks,
->> NeilBrown
->>
->> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
->> index c1ad0b075807..1a1c5160c930 100644
->> --- a/drivers/md/raid1.c
->> +++ b/drivers/md/raid1.c
->> @@ -2269,8 +2269,6 @@ static void handle_write_finished(struct r1conf *conf, struct r1bio *r1_bio)
->>   			rdev_dec_pending(conf->mirrors[m].rdev,
->>   					 conf->mddev);
->>   		}
->> -	if (test_bit(R1BIO_WriteError, &r1_bio->state))
->> -		close_write(r1_bio);
->>   	if (fail) {
->>   		spin_lock_irq(&conf->device_lock);
->>   		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
->> @@ -2396,6 +2394,9 @@ static void raid1d(struct md_thread *thread)
->>   			r1_bio = list_first_entry(&tmp, struct r1bio,
->>   						  retry_list);
->>   			list_del(&r1_bio->retry_list);
->> +			if (mddev->degraded)
->> +				set_bit(R1BIO_Degraded, &r1_bio->state);
->> +			close_write(r1_bio);
->>   			raid_end_bio_io(r1_bio);
->>   		}
->>   	}
+> diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+> index 75f29cf70188..182bfd2383ea 100644
+> --- a/block/blk-integrity.c
+> +++ b/block/blk-integrity.c
+> @@ -249,8 +249,8 @@ struct integrity_sysfs_entry {
+>  static ssize_t integrity_attr_show(struct kobject *kobj, struct attribute *attr,
+>  				   char *page)
+>  {
+> -	struct blk_integrity *bi =
+> -		container_of(kobj, struct blk_integrity, kobj);
+> +	struct gendisk *disk = container_of(kobj, struct gendisk, integrity_kobj);
+> +	struct blk_integrity *bi = blk_get_integrity(disk);
+>  	struct integrity_sysfs_entry *entry =
+>  		container_of(attr, struct integrity_sysfs_entry, attr);
+>  
+> @@ -261,8 +261,8 @@ static ssize_t integrity_attr_store(struct kobject *kobj,
+>  				    struct attribute *attr, const char *page,
+>  				    size_t count)
+>  {
+> -	struct blk_integrity *bi =
+> -		container_of(kobj, struct blk_integrity, kobj);
+> +	struct gendisk *disk = container_of(kobj, struct gendisk, integrity_kobj);
+> +	struct blk_integrity *bi = blk_get_integrity(disk);
+>  	struct integrity_sysfs_entry *entry =
+>  		container_of(attr, struct integrity_sysfs_entry, attr);
+>  	ssize_t ret = 0;
+> @@ -385,8 +385,8 @@ subsys_initcall(blk_dev_integrity_init);
+>  
+>  static void blk_integrity_release(struct kobject *kobj)
+>  {
+> -	struct blk_integrity *bi =
+> -		container_of(kobj, struct blk_integrity, kobj);
+> +	struct gendisk *disk = container_of(kobj, struct gendisk, integrity_kobj);
+> +	struct blk_integrity *bi = blk_get_integrity(disk);
+>  
+>  	kmem_cache_free(integrity_cachep, bi);
+>  }
+> @@ -429,14 +429,14 @@ int blk_integrity_register(struct gendisk *disk, struct blk_integrity *template)
+>  		if (!bi)
+>  			return -1;
+>  
+> -		if (kobject_init_and_add(&bi->kobj, &integrity_ktype,
+> +		if (kobject_init_and_add(&disk->integrity_kobj, &integrity_ktype,
+>  					 &disk_to_dev(disk)->kobj,
+>  					 "%s", "integrity")) {
+>  			kmem_cache_free(integrity_cachep, bi);
+>  			return -1;
+>  		}
+>  
+> -		kobject_uevent(&bi->kobj, KOBJ_ADD);
+> +		kobject_uevent(&disk->integrity_kobj, KOBJ_ADD);
+>  
+>  		bi->flags |= BLK_INTEGRITY_VERIFY | BLK_INTEGRITY_GENERATE;
+>  		bi->interval = queue_logical_block_size(disk->queue);
+> @@ -479,9 +479,9 @@ void blk_integrity_unregister(struct gendisk *disk)
+>  
+>  	bi = disk->integrity;
+>  
+> -	kobject_uevent(&bi->kobj, KOBJ_REMOVE);
+> -	kobject_del(&bi->kobj);
+> -	kobject_put(&bi->kobj);
+> +	kobject_uevent(&disk->integrity_kobj, KOBJ_REMOVE);
+> +	kobject_del(&disk->integrity_kobj);
+> +	kobject_put(&disk->integrity_kobj);
+>  	disk->integrity = NULL;
+>  }
+>  EXPORT_SYMBOL(blk_integrity_unregister);
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 19c2e947d4d1..830f9c07d4bb 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1472,8 +1472,6 @@ struct blk_integrity {
+>  	unsigned short		tag_size;
+>  
+>  	const char		*name;
+> -
+> -	struct kobject		kobj;
+>  };
+>  
+>  extern bool blk_integrity_is_initialized(struct gendisk *);
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 2adbfa6d02bc..9e6e0dfa97ad 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -199,6 +199,7 @@ struct gendisk {
+>  	struct disk_events *ev;
+>  #ifdef  CONFIG_BLK_DEV_INTEGRITY
+>  	struct blk_integrity *integrity;
+> +	struct kobject integrity_kobj;
+>  #endif
+>  	int node_id;
+>  };
+>
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
