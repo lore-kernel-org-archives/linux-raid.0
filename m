@@ -1,53 +1,133 @@
-From: Neil Brown <neilb@suse.de>
+From: Peter Kieser <peter@kieser.ca>
 Subject: Re: Hung RAID5 array with discard
-Date: Fri, 23 Oct 2015 15:42:57 +1100
-Message-ID: <87y4euxkj2.fsf@notabene.neil.brown.name>
-References: <CANHB05vDxWqfST41hXgfApthHuxdSuyJYCKqS4jkOa7OZ0kpsA@mail.gmail.com> <CANHB05sb44ZD-31ceEWWSY0XdhWaU-Pq+NFRQSm-1qafHx1G2g@mail.gmail.com> <20150323135754.02afa72e@notabene.brown> <562909AC.7040003@kieser.ca>
+Date: Thu, 22 Oct 2015 21:57:40 -0700
+Message-ID: <5629BE44.8070205@kieser.ca>
+References: <CANHB05vDxWqfST41hXgfApthHuxdSuyJYCKqS4jkOa7OZ0kpsA@mail.gmail.com>
+ <CANHB05sb44ZD-31ceEWWSY0XdhWaU-Pq+NFRQSm-1qafHx1G2g@mail.gmail.com>
+ <20150323135754.02afa72e@notabene.brown> <562909AC.7040003@kieser.ca>
+ <87y4euxkj2.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms040107020305000307070401"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562909AC.7040003@kieser.ca>
+In-Reply-To: <87y4euxkj2.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>, Terry Hardie <thardie@instartlogic.com>
+To: Neil Brown <neilb@suse.de>, Terry Hardie <thardie@instartlogic.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+This is a cryptographically signed message in MIME format.
+
+--------------ms040107020305000307070401
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-Peter Kieser <peter@kieser.ca> writes:
 
-> FYI I ran into this problem in 3.18.22 when forcing RAID5 TRIM support=20
-> w/ raid456.devices_handle_discard_safely on Intel DC S3500 SSDs.
+On 2015-10-22 9:42 PM, Neil Brown wrote:
+> Peter Kieser <peter@kieser.ca> writes:
+>
+>> FYI I ran into this problem in 3.18.22 when forcing RAID5 TRIM support=
 
-Can you please be precise about the problem you experienced.
-Complete kernel messages are a minimum.
-Anything interesting that might have been happening at the time might
-help.
+>> w/ raid456.devices_handle_discard_safely on Intel DC S3500 SSDs.
+> Can you please be precise about the problem you experienced.
+> Complete kernel messages are a minimum.
+> Anything interesting that might have been happening at the time might
+> help.
+>
+> Thanks,
+> NeilBrown
 
-Thanks,
-NeilBrown
+Same behaviour as the original poster. Enabled the module knob, then ran =
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+mkfs.ext4, which starts to do "Discarding device blocks" and then the=20
+machine hard locked. No kernel messages.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+-Peter
 
-iQIcBAEBCAAGBQJWKbrRAAoJEDnsnt1WYoG51I4QAML9Z6FcEzreNbvR+SZYsxw6
-10AyYTAtNmbo+v7416FytFQYbdj5ye5xDeJ2nmq9OZBwVQOnAz4vN2kZpHB1nYnq
-/m8B+MGnJEn+4ZMrC34WieHx3Jxj/11Z/hethMV0QX7MTHQKFAsQzE/EpXp5UDXs
-BO6S0C+XpM4c+3f+gWMkxIu0szK/4cjyNokS6cmcHhbHSxMS3su0H1HvXnjKMJsi
-t+yq6K3hqyhIkbnIoz15Ghk76dTOO1QsOOALXVHxXSsD4FzMVUO3b+2cyVuWKNP8
-JNtEIipG9V46xXJ56SWoI/m3ZtsdNlu5SIce1qb484CiY7MRKxLdrRn9SpBEitw/
-scNa21ieGprgwqXlzgVrlbKtpfp3NSReCldmHZjmv13xAYwOAuI/PvfTXGzRqawG
-oPq4now6eT084fnObqPdIHpyl2MGG1xrR2W9aHiDU/uz4ZfhjbCMHTkiwsx0defM
-eZsvtaYK0Beb/bPEDPv3EV8VMHamUm3VpKW2DJDOWTwdvkkDJdDcecY8HmC92Aqc
-hEcuyNxzcqqQfo6ossAZ9DQzENs7sggg6GTapdR/4YhhBM6cdYDMEco1d+8A00lE
-tMEkl3kb7/oHhtVa0OhHabI9ZBFA70YLw18WD4Samui0PCroB/1HhE+7SXUnOiHW
-HEe1lRmUwJt3W+MpA0y5
-=Aimp
------END PGP SIGNATURE-----
---=-=-=--
+
+--------------ms040107020305000307070401
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+DKswggY0MIIEHKADAgECAgEgMA0GCSqGSIb3DQEBBQUAMH0xCzAJBgNVBAYTAklMMRYwFAYD
+VQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0
+ZSBTaWduaW5nMSkwJwYDVQQDEyBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTAe
+Fw0wNzEwMjQyMTAyNTVaFw0xNzEwMjQyMTAyNTVaMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UE
+ChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUg
+U2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0
+ZSBDbGllbnQgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLKIVFnAEs+xny
+q6UzjCqgDcvQVe1dIoFnRsQPCFO+y92k8RK0Pn3MbQ2Gd+mehh9GBZ+36uUQA7Xj9AGM6wgP
+hEE34vKtfpAN5tJ8LcFxveDObCKrL7O5UT9WsnAZHv7OYPYSR68mdmnEnJ83M4wQgKO19b+R
+t8sPDAz9ptkQsntCn4GeJzg3q2SVc4QJTg/WHo7wF2ah5LMOeh8xJVSKGEmd6uPkSbj113yK
+Mm8vmNptRPmM1+YgmVwcdOYJOjCgFtb2sOP79jji8uhWR91xx7TpM1K3hv/wrBZwffrmmEpU
+euXHRs07JqCCvFh9coKF4UQZvfEg+x3/69xRCzb1AgMBAAGjggGtMIIBqTAPBgNVHRMBAf8E
+BTADAQH/MA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUrlWDb+wxyrn3HfqvazHzyB3jrLsw
+HwYDVR0jBBgwFoAUTgvvGqRAW6UXaYcwyjRoQ9BBrvIwZgYIKwYBBQUHAQEEWjBYMCcGCCsG
+AQUFBzABhhtodHRwOi8vb2NzcC5zdGFydHNzbC5jb20vY2EwLQYIKwYBBQUHMAKGIWh0dHA6
+Ly93d3cuc3RhcnRzc2wuY29tL3Nmc2NhLmNydDBbBgNVHR8EVDBSMCegJaAjhiFodHRwOi8v
+d3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwJ6AloCOGIWh0dHA6Ly9jcmwuc3RhcnRzc2wu
+Y29tL3Nmc2NhLmNybDCBgAYDVR0gBHkwdzB1BgsrBgEEAYG1NwECATBmMC4GCCsGAQUFBwIB
+FiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMDQGCCsGAQUFBwIBFihodHRw
+Oi8vd3d3LnN0YXJ0c3NsLmNvbS9pbnRlcm1lZGlhdGUucGRmMA0GCSqGSIb3DQEBBQUAA4IC
+AQA6qScNyNO0FpHvaZTQacVMXH33O51KyEKSRw3IvdQxRu31YR0ZDGdSfgSoOVDVMSBSdmfQ
+fdDInHPzV3LO5DwUXZ+lxjv7z3PO2OkfnFkvTXPfn6dxJ5rJveDsTsCPcJ/Kp6/+qN5g+J6D
+/SaYcFD018B6L42r0Z4VEBy36P4tjRtF14Ex10tl5tJFVKM16qWKQHbpjIgf73s49UB0CQ5l
+HT2DHKfq3oPfdNc5Mk93w1v4ryVb+qVrZIej8NsrWU+5r4O2IV91edDb/OtHFddZqHFFXKgS
+79IHE/hwQ2LW7r3sTX7cDUCg+dfdwO8zeLxuwk2JF8crUoyrl66RGrRIhT8VoG/OJ1Y9uUlO
+av69V4cG8upi4ZG2l7JZFbcBFk91Wp+Payo5SuF61CmGFrZ386umkmpObtFacXda2O/bVoQ9
+xHQrzoTc/0KZTWvlZCLK3Ke/vGYT9ZdW9lOjGsSFbXrlTA919L84iMK+48WGnvRWY28ZaVHp
+ql43AtEGhXze6iNCbEDACy+4hkQYOytAqDgcxAnQ937mYpeZFPyz/XK9QSt9VNFMuudWxZwD
+DDJKoQAoSG59Hou9lZ26UrK60nRdAQBmEPL8h2nuWgoPh++XVQld9yuhbsWa39Pck8/lcfz5
+HUVGJF5mc/zk38iV7FDlF68puiryNq2KXHEpOTCCBm8wggVXoAMCAQICAlHLMA0GCSqGSIb3
+DQEBBQUAMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UE
+CxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRD
+b20gQ2xhc3MgMiBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0EwHhcNMTQwODE3MTAz
+OTA5WhcNMTYwODE3MTM1NTMxWjCBjjEZMBcGA1UEDRMQSkhyOElnZDY4ZW1FMHlRejELMAkG
+A1UEBhMCQ0ExGTAXBgNVBAgTEEJyaXRpc2ggQ29sdW1iaWExEjAQBgNVBAcTCVZhbmNvdXZl
+cjEVMBMGA1UEAxMMUGV0ZXIgS2llc2VyMR4wHAYJKoZIhvcNAQkBFg9wZXRlckBraWVzZXIu
+Y2EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/zZi0sMysoRWvMFWODp+A9mrV
+vozuJKsxo7d9hiE8RIcHnkdgHkBYZgV08MABxpwBFlPpUEl6CKFfR3YvBoU3hc9wOSz0y5f8
+GunZr/FQn2GkRL6EsYxDeJ7ArXVPD+jS1BOJqgXu2Yj/ZQ5KloJndHwxGI4jpyVN3HaC4ebw
+xzsrvvZpjw1RARCxYG23ULMoiDSkDeX8BJUP+YcIqf+ZRQq0/EmGFUu7NicBD7bz5qZficjs
+ESWpIVUb+FnfC8r/63ISuK4sHzMh4bisG2ykcbNx80h47bIxmdrUtVMwxGpS+2UbBwuBL2Zo
+ARoORNJdQc+3AuCXDyMvvBteDo2ZAgMBAAGjggLVMIIC0TAJBgNVHRMEAjAAMAsGA1UdDwQE
+AwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLw3DlkKqBhh
+Cvig3OqKZ1dYrqSJMB8GA1UdIwQYMBaAFK5Vg2/sMcq59x36r2sx88gd46y7MBoGA1UdEQQT
+MBGBD3BldGVyQGtpZXNlci5jYTCCAUwGA1UdIASCAUMwggE/MIIBOwYLKwYBBAGBtTcBAgMw
+ggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9wb2xpY3kucGRmMIH3
+BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTADAgEB
+GoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0aGUgQ2xhc3Mg
+MiBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9saWN5LCBy
+ZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNlIG9m
+IHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
+Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1Mi1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkG
+CCsGAQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMi9jbGllbnQv
+Y2EwQgYIKwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFz
+czIuY2xpZW50LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8w
+DQYJKoZIhvcNAQEFBQADggEBAMnGxCRup78n279l+J6YKtXHlPstamJl3MwgTbzUSdsr1V3P
+JY40LCkQ86a/CYUwoOEjGYdwtwCDgRsa2ArMmsUS90rH4f+j7YNxMSH1TY+gqGwdaYk67rDk
+WlQ2EoxLWWUUeImLfZg0aP5mUYYeEETGp2WMAlzxuJq4LqkODS2FXYE7B2IAk0cpjG8q0NPn
+iBnQDv7M3Iq0aLwA8sa6DHJcPk05Qe50K6LyLE1bXhqntK3pykdG83VrHsUBJ7SqQcSS8vx0
+0iB3kB1Oa+4cI5P79WqCpYprmim3RkyZddAWJPPqW1PCRhJdbJtXDZ+DCmMIZ1hUUwRDxIlz
++lcjXD0xggPqMIID5gIBATCBkzCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29t
+IEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2
+BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+AgJRyzANBglghkgBZQMEAgEFAKCCAicwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkq
+hkiG9w0BCQUxDxcNMTUxMDIzMDQ1NzQwWjAvBgkqhkiG9w0BCQQxIgQgeGEA7ciy6ysYcME1
+jX6olIAVSCJG2BLp48QqfBcgSVkwbAYJKoZIhvcNAQkPMV8wXTALBglghkgBZQMEASowCwYJ
+YIZIAWUDBAECMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAH
+BgUrDgMCBzANBggqhkiG9w0DAgIBKDCBpAYJKwYBBAGCNxAEMYGWMIGTMIGMMQswCQYDVQQG
+EwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
+Q2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3MgMiBQcmltYXJ5
+IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAlHLMIGmBgsqhkiG9w0BCRACCzGBlqCBkzCBjDEL
+MAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBE
+aWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIg
+UHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgJRyzANBgkqhkiG9w0BAQEFAASCAQCi
+WaUHrbaNatTLkXYIdYbWYNocdQIDf+awHgvEleHi4UDlYYnwQ3eU1+FbXzzcC0l+da6WZKoN
+b/TEkT0LVXU13FJ6vniWv41/Lpu50MTr/QZZIdaN/On3CNemAUxYg/93baCMFrOEDsYKaZNL
+9KaOb/cH/dkRYDTV1nmwNI3kW+t4iGS2z/pgmMc/9lRvsAjyvE/JSrGnZjbOhUU6iaaSbgkv
+fjK58tK3eGJTYOyLd45sqLQifdwVSC0GiyK9+PTQcRWx2nCSkF7lCnea7RdYINNUO1tbR02d
+Df0H9PzgN1OdWpwjS06iobDFZPh5dA26rsy7kVp9iJBTzKXwdHvhAAAAAAAA
+--------------ms040107020305000307070401--
