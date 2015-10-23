@@ -1,32 +1,79 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: Remove inactive array created by open
-Date: Fri, 23 Oct 2015 10:38:37 +1100
-Message-ID: <87fv12zd6q.fsf@notabene.neil.brown.name>
-References: <20151022162445.GA11904@kw.sim.vm.gnt> <87vb9yzjfp.fsf@notabene.neil.brown.name>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
+Date: Fri, 23 Oct 2015 11:09:08 +1100
+Message-ID: <87d1w6zbrv.fsf@notabene.neil.brown.name>
+References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com> <87pp092sid.fsf@notabene.neil.brown.name> <wrfjpp06lws6.fsf@redhat.com> <87r3kmziux.fsf@notabene.neil.brown.name> <56296510.4030702@stratus.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87vb9yzjfp.fsf@notabene.neil.brown.name>
+In-Reply-To: <56296510.4030702@stratus.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: linux-raid@vger.kernel.org, Remi Reroller <remi.rerolle@seagate.com>, Vincent Donnefort <vdonnefort@gmail.com>, Yoann Sculo <yoann@printk.fr>
+To: Nate Dailey <nate.dailey@stratus.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Neil Brown <neilb@suse.com> writes:
-> To create these you
->    echo whatever-you-like >  /sys/module/md_mod/parameters/new_array
+Nate Dailey <nate.dailey@stratus.com> writes:
 
-correction.  It should be
+> The problem is that we aren't getting true write (medium) errors.
+>
+> In this case we're testing device removals. The write errors happen becau=
+se the=20
+> disk goes away. Narrow_write_error returns 1, the bitmap bit is cleared, =
+and=20
+> then when the device is re-added the resync might not include the sectors=
+ in=20
+> that chunk (there's some luck involved; if other writes to that chunk hap=
+pen=20
+> while the disk is removed, we're okay--bug is easier to hit with smaller =
+bitmap=20
+> chunks because of this).
+>
+>
+OK, that makes sense.
 
-    echo md_whatever-you-like >  /sys/module/md_mod/parameters/new_array
+The device removal will be noticed when the bad block log is written
+out.
+When a bad-block is recorded we make sure to write that out promptly
+before bio_endio() gets called.  But not before close_write() has called
+bitmap_end_write().
 
-strings must start with "md_" and length must not exceed 31.
+So I guess we need to delay the close_write() call until the
+bad-block-log has been written.
 
+I think this patch should do it.  Can you test?
+
+Thanks,
 NeilBrown
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index c1ad0b075807..1a1c5160c930 100644
+=2D-- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2269,8 +2269,6 @@ static void handle_write_finished(struct r1conf *conf=
+, struct r1bio *r1_bio)
+ 			rdev_dec_pending(conf->mirrors[m].rdev,
+ 					 conf->mddev);
+ 		}
+=2D	if (test_bit(R1BIO_WriteError, &r1_bio->state))
+=2D		close_write(r1_bio);
+ 	if (fail) {
+ 		spin_lock_irq(&conf->device_lock);
+ 		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
+@@ -2396,6 +2394,9 @@ static void raid1d(struct md_thread *thread)
+ 			r1_bio =3D list_first_entry(&tmp, struct r1bio,
+ 						  retry_list);
+ 			list_del(&r1_bio->retry_list);
++			if (mddev->degraded)
++				set_bit(R1BIO_Degraded, &r1_bio->state);
++			close_write(r1_bio);
+ 			raid_end_bio_io(r1_bio);
+ 		}
+ 	}
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -34,18 +81,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWKXN9AAoJEDnsnt1WYoG5wGQQAItsqWCuhMEuHty3OP3PL9WY
-k4wggmMeopgVk2GDqzSUiMepRYYHjP2w1k8RdRbS8NuGvlwB+9WD9oaNAowouAY4
-uAs1gb2Du3AOWlo0s7LIGpdEnEy6eg3bzNva8VsDI6wP/ZXaF+ZFmaCfb0jkv0ok
-/cO/5XALcdn05Uh+635r0DAMTx72HcQzwU3wRw+FPMISVUpdShGFcKeREu0PLQz0
-Qs4vf2iQFGx1UAL/QrwKxh9QLOvADMfEBmuIKE8J0w0MTfQNn2oCPqzKDs6qDeW/
-Gds6/dX4aGTnoB/S4WVkmd7SXhVSqS4AYmHURk/4XZTfGPJSRw6QV1mG70xSGsQR
-hxHGQMdIi1ZQK2cOTeCOjY3uh0K5JOPzTJ8niVPSWD3fJJrejWux266vI7gPLLFm
-sHg/usfeAj8NBJrEeA9knuHaJ0GD/zf4bEzclKACK4g5k9cNs62noZtw9xUXXYXO
-eadFA8Pkrq3BoyTROUUpJTokx13wZyWe1OCbLFLSzQctShFdNMq6lA/Uwf3yt1+D
-7VN6GyWUkS3nAgW47OU3fq4dsfq4/x060k21igdyMl/ekX/FGsYDuduVnMMPk57r
-oLthirQAH4sWaJBiSPWEhQLjkHJI3BM3rxxhPdN4Bqle8P/aDkt6EfvlveYQacFo
-LxXg1vAjI4fh4r4nyiL5
-=3/Tw
+iQIcBAEBCAAGBQJWKXqkAAoJEDnsnt1WYoG55voQALrpd9bFBVN4upz3vf+liEpa
+pMB0YL51cjMOA+N9WxxnTYfKiWQao3AnhhkrGTNCNwaBDLLwpsyenTnqq1JL8PFG
+px+wzENaTslTQ6DbzcZu3xS1Z1uga4FiLZgVs1c9aU1zv25wAWZNqYryn8tEYRPn
+Cs6GGeVODhTIBh0txyZgNddFT/ZYoABcWCaHRARSatv3w9qYZ/HEOJmmAvoQE6lt
+wSFY0tkgZjVxRe5AGqOLCxGARoBSa9e9y0vzN5IErSlOVHwfjn5xwY6KkRmkocPb
+lzbwO60QYPCVXO2gIBCrqHKksylnkzTWlkIhnfQ5Us2/QfPfqF/WLEQWExRVwT35
+Q5hGRC7jo1Cz5zjQ4sOHRarybHetGlgXU0WWb1Kz/UONVnlSOeWxouEJl6ziJsRk
+oAdKNlWyRQ8mex8aJOkG32lgnvEFrWVHUErMhoA1DGle2ZlroZkipoH4oR16RCNY
+z0XjMjkXpT1hPA9GCpt7GxY61aVF24m/29yqHfqGnVwG49jepcGQy8+yb1fCIuTy
++5Q3GrEvz2WNJL7kWuNb2jt8Jsqom8+9nwKyMxzXP03LQeJvnzaJo81hMxQk97Wl
+gaGB9QFMK91f2eMUK431OOGkrYe/Ec8oJT2/KvkvHRmWUnvOQLj4ZMailxvPhpB8
+S+9GjeoxM0nB6vKChUiN
+=plKD
 -----END PGP SIGNATURE-----
 --=-=-=--
