@@ -1,58 +1,42 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
-Date: Fri, 23 Oct 2015 16:35:00 -0400
-Message-ID: <wrfjwpud9vd7.fsf@redhat.com>
-References: <1445589144-12157-1-git-send-email-xni@redhat.com>
+From: Marek <mlf.conv@gmail.com>
+Subject: Re: Fwd: manually destriping a 4 drive raid5 with one missing drive
+Date: Fri, 23 Oct 2015 22:46:48 +0200
+Message-ID: <CA+sqOsYVGyCVKoRYAvgsL57tHhZn6+RaLK_7bzrUHvVK2XUNPA@mail.gmail.com>
+References: <CA+sqOsbjE4MLa7NXG6hxpzE1m-ZNbcJVNjK51WKCQMhwNgimhg@mail.gmail.com>
+	<87fv19m7he.fsf@notabene.neil.brown.name>
+	<CA+sqOsZJbvyAW6=CSG5EikhmDPt+Onjpm+VvBNPMKFmVi-ZQ8g@mail.gmail.com>
+	<CA+sqOsZfjz0wTei+6qiv+zxXt7TA_GMO8EQ=v0EeDGFpqLrWRg@mail.gmail.com>
+	<20151023155324.GA2555@lazy.lzy>
+	<CA+sqOsYBbOwn5tJfygAR0MDCQPpd4w61XPGBLv8Mme8cT_HL8A@mail.gmail.com>
+	<CA+sqOsY1Q4e3vNy4rmqjndsOStSGOg4JpqWBm4TTEvRdOmTkbQ@mail.gmail.com>
+	<562A7333.9010702@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1445589144-12157-1-git-send-email-xni@redhat.com> (Xiao Ni's
-	message of "Fri, 23 Oct 2015 16:32:24 +0800")
+In-Reply-To: <562A7333.9010702@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Xiao Ni <xni@redhat.com> writes:
-> One raid1 with bitmap is composed by 4 disks. It'll fail when rashape to raid0
-> and lose 3 disks. It should check bitmap first when reshape raid1 to raid0.
-> ---
->  Grow.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+dd from mdX doesn't work i tried it even with testdisk, what you get
+is mixed up data, incomplete files.
 
-Xiao,
+{ Google mail on iPad doesn't support plain text, who knew :/ }
 
-I believe you are also required to apply a Signed-off-by: line when
-posting patches against mdadm.
-
-Cheers,
-Jes
-
+On Fri, Oct 23, 2015 at 7:49 PM, Phil Turmel <philip@turmel.org> wrote:
+> On 10/23/2015 12:20 PM, Marek wrote:
+>> Not sure if it's destrip or destripe but it's basically like puzzle
+>> you take a block from each drive according to the layout you are using
+>> e.g. Left symmetric and then write it down in that order computing
+>> missing blocks from parity blocks - this way you would write an image
+>> which you can mount without using mdadm. Data restoration companies
+>> are using this technique.
 >
-> diff --git a/Grow.c b/Grow.c
-> index 80d7b22..5e9b0bb 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1898,6 +1898,12 @@ size_change_error:
->  	     array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) ||
->  	    (s->level == 0 && array.level == 1 && sra)) {
->  		int err;
-> +
-> +		if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
-> +			cont_err("Bitmap must be removed before level can be changed\n");
-> +			rv = 1;
-> +			goto release;
-> +		}
->  		err = remove_disks_for_takeover(st, sra, array.layout);
->  		if (err) {
->  			dprintf("Array cannot be reshaped\n");
-> @@ -2706,9 +2712,6 @@ static int impose_level(int fd, int level, char *devname, int verbose)
->  			err = errno;
->  			pr_err("%s: could not set level to %s\n",
->  				devname, c);
-> -			if (err == EBUSY &&
-> -			    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
-> -				cont_err("Bitmap must be removed before level can be changed\n");
->  			return err;
->  		}
->  		if (verbose >= 0)
+> No special tool required.  Obtain a new drive big enough to hold your
+> entire array and 'dd' from /dev/mdX to your new drive.
+>
+> { BTW: convention on kernel.org is to reply-to-all, trim unnecessary
+> context, and either bottom post or interleave your reply. }
+>
+> Phil
