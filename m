@@ -1,79 +1,113 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/2] raid1/10: Handle write errors correctly in narrow_write_error()
-Date: Fri, 23 Oct 2015 11:09:08 +1100
-Message-ID: <87d1w6zbrv.fsf@notabene.neil.brown.name>
-References: <1445357353-19906-1-git-send-email-Jes.Sorensen@redhat.com> <87pp092sid.fsf@notabene.neil.brown.name> <wrfjpp06lws6.fsf@redhat.com> <87r3kmziux.fsf@notabene.neil.brown.name> <56296510.4030702@stratus.com>
+Subject: Re: [PATCH] md-cluster: Only one thread should request DLM lock
+Date: Fri, 23 Oct 2015 13:11:24 +1100
+Message-ID: <874mhiz643.fsf@notabene.neil.brown.name>
+References: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56296510.4030702@stratus.com>
+In-Reply-To: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org, William.Kuzeja@stratus.com, xni@redhat.com
+To: rgoldwyn@suse.de, linux-raid@vger.kernel.org
+Cc: gqjiang@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Nate Dailey <nate.dailey@stratus.com> writes:
+rgoldwyn@suse.de writes:
 
-> The problem is that we aren't getting true write (medium) errors.
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 >
-> In this case we're testing device removals. The write errors happen becau=
-se the=20
-> disk goes away. Narrow_write_error returns 1, the bitmap bit is cleared, =
-and=20
-> then when the device is re-added the resync might not include the sectors=
- in=20
-> that chunk (there's some luck involved; if other writes to that chunk hap=
-pen=20
-> while the disk is removed, we're okay--bug is easier to hit with smaller =
-bitmap=20
-> chunks because of this).
+> If a DLM lock is in progress, requesting the same DLM lock will
+> result in -EBUSY. Use a mutex to make sure only one thread requests
+> for dlm_lock() function at a time.
 >
->
-OK, that makes sense.
+> This will fix the error -EBUSY returned from DLM's
+> validate_lock_args().
 
-The device removal will be noticed when the bad block log is written
-out.
-When a bad-block is recorded we make sure to write that out promptly
-before bio_endio() gets called.  But not before close_write() has called
-bitmap_end_write().
+I can see that we only want one thread calling dlm_lock() with a given
+'struct dlm_lock_resource' at a time, otherwise nasty things could
+happen.
 
-So I guess we need to delay the close_write() call until the
-bad-block-log has been written.
+However if such a race is possible, then aren't there other possibly
+complications.
 
-I think this patch should do it.  Can you test?
+Suppose two threads try to lock the same resource.
+Presumably one will try to lock the resource, then the next one (when it
+gets the mutex) will discover that it already has the resource, but will
+think it has exclusive access - maybe?
+
+Then both threads will eventually try to unlock, and the second one will
+unlock something that doesn't have locked.
+
+I'm not certain, but that doesn't sound entirely safe.
+
+Which resources to we actually see races with?
 
 Thanks,
 NeilBrown
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index c1ad0b075807..1a1c5160c930 100644
-=2D-- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -2269,8 +2269,6 @@ static void handle_write_finished(struct r1conf *conf=
-, struct r1bio *r1_bio)
- 			rdev_dec_pending(conf->mirrors[m].rdev,
- 					 conf->mddev);
- 		}
-=2D	if (test_bit(R1BIO_WriteError, &r1_bio->state))
-=2D		close_write(r1_bio);
- 	if (fail) {
- 		spin_lock_irq(&conf->device_lock);
- 		list_add(&r1_bio->retry_list, &conf->bio_end_io_list);
-@@ -2396,6 +2394,9 @@ static void raid1d(struct md_thread *thread)
- 			r1_bio =3D list_first_entry(&tmp, struct r1bio,
- 						  retry_list);
- 			list_del(&r1_bio->retry_list);
-+			if (mddev->degraded)
-+				set_bit(R1BIO_Degraded, &r1_bio->state);
-+			close_write(r1_bio);
- 			raid_end_bio_io(r1_bio);
- 		}
- 	}
+
+>
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  drivers/md/md-cluster.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
+> index 35ac2e8..9b977a2 100644
+> --- a/drivers/md/md-cluster.c
+> +++ b/drivers/md/md-cluster.c
+> @@ -29,6 +29,7 @@ struct dlm_lock_resource {
+>  	void (*bast)(void *arg, int mode); /* blocking AST function pointer*/
+>  	struct mddev *mddev; /* pointing back to mddev. */
+>  	int mode;
+> +	struct mutex res_lock;
+>  };
+>=20=20
+>  struct suspend_info {
+> @@ -102,14 +103,19 @@ static int dlm_lock_sync(struct dlm_lock_resource *=
+res, int mode)
+>  {
+>  	int ret =3D 0;
+>=20=20
+> +	mutex_lock(&res->res_lock);
+> +
+>  	ret =3D dlm_lock(res->ls, mode, &res->lksb,
+>  			res->flags, res->name, strlen(res->name),
+>  			0, sync_ast, res, res->bast);
+> -	if (ret)
+> +	if (ret) {
+> +		mutex_unlock(&res->res_lock);
+>  		return ret;
+> +	}
+>  	wait_for_completion(&res->completion);
+>  	if (res->lksb.sb_status =3D=3D 0)
+>  		res->mode =3D mode;
+> +	mutex_unlock(&res->res_lock);
+>  	return res->lksb.sb_status;
+>  }
+>=20=20
+> @@ -134,6 +140,7 @@ static struct dlm_lock_resource *lockres_init(struct =
+mddev *mddev,
+>  	res->mode =3D DLM_LOCK_IV;
+>  	namelen =3D strlen(name);
+>  	res->name =3D kzalloc(namelen + 1, GFP_KERNEL);
+> +	mutex_init(&res->res_lock);
+>  	if (!res->name) {
+>  		pr_err("md-cluster: Unable to allocate resource name for resource %s\n=
+", name);
+>  		goto out_err;
+> --=20
+> 1.8.5.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -81,18 +115,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWKXqkAAoJEDnsnt1WYoG55voQALrpd9bFBVN4upz3vf+liEpa
-pMB0YL51cjMOA+N9WxxnTYfKiWQao3AnhhkrGTNCNwaBDLLwpsyenTnqq1JL8PFG
-px+wzENaTslTQ6DbzcZu3xS1Z1uga4FiLZgVs1c9aU1zv25wAWZNqYryn8tEYRPn
-Cs6GGeVODhTIBh0txyZgNddFT/ZYoABcWCaHRARSatv3w9qYZ/HEOJmmAvoQE6lt
-wSFY0tkgZjVxRe5AGqOLCxGARoBSa9e9y0vzN5IErSlOVHwfjn5xwY6KkRmkocPb
-lzbwO60QYPCVXO2gIBCrqHKksylnkzTWlkIhnfQ5Us2/QfPfqF/WLEQWExRVwT35
-Q5hGRC7jo1Cz5zjQ4sOHRarybHetGlgXU0WWb1Kz/UONVnlSOeWxouEJl6ziJsRk
-oAdKNlWyRQ8mex8aJOkG32lgnvEFrWVHUErMhoA1DGle2ZlroZkipoH4oR16RCNY
-z0XjMjkXpT1hPA9GCpt7GxY61aVF24m/29yqHfqGnVwG49jepcGQy8+yb1fCIuTy
-+5Q3GrEvz2WNJL7kWuNb2jt8Jsqom8+9nwKyMxzXP03LQeJvnzaJo81hMxQk97Wl
-gaGB9QFMK91f2eMUK431OOGkrYe/Ec8oJT2/KvkvHRmWUnvOQLj4ZMailxvPhpB8
-S+9GjeoxM0nB6vKChUiN
-=plKD
+iQIcBAEBCAAGBQJWKZdMAAoJEDnsnt1WYoG57FUQAK959zYJu/y/hBID5+8BW30G
+GpeR6qIkTIddmyIOvL4ApEDGHnBsB3081SqE/GIICUuSsFzkNoP5b3cp2NKfls09
+QTeacsk1XnwYxV4m/4epQRqVE0osy4WLTEIY6DOeJReJjysbPpkq7ZjN2tb6m8L4
+/JNgIgw8nKNvoydDLcCdHXo5IH1Z5OY6vKt0rcP1fGg+ecoUyDN/0Hf5yvxaai9Y
+wiKSpfiD7Y5GZc4up7cJBGp6e90sgXG8xiE48LxmSjdBIoraa2K3+QNDHI3K49xI
+WILA8RBj0Ko+4CUyZNdLFGjkZR57q2xTYiNup5KEePxy17UXPnZMSbZqSpE6toQ5
+K46y9qBEwJWMzj9JXDkBlS8kHr26GFErUkqQQzTFhZZoC+eDxNhIXU/oVWysGeOE
+grLLEbQuVw3C+tM5WpE82AF4kPxC6dGo0pY+JOA7aGP8O9fkcaJqCZqJOGuNQbtp
+QsIxqnv2RoFfrpENy3gZetStZTCQTkCoisRMlhuWS7wYKtC5tUZc2IfzZhwg05OZ
+PtrJwQ+dqhXaaJixbWVDDIfTApXokqdnezVztLfn5VBdfB8deiW6BFjNix3tRUQA
+LRQzDHMXhqaY1rAumVRnqU/av/qMtKebNr7Lc7OUdCGvDpiRryXBgXec2aMXEAgU
+14HoeNZDG/cDO6hWD3XH
+=PR/3
 -----END PGP SIGNATURE-----
 --=-=-=--
