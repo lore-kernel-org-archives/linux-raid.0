@@ -1,90 +1,70 @@
-From: Guillaume ALLEE <guillaume.allee@gmail.com>
-Subject: 2nd Faulty drive while rebuilding array on RAID5
-Date: Sun, 25 Oct 2015 00:27:52 +0200
-Message-ID: <CABEdK7w7zjjEXXenWRK0BSziekBGhkni50y0j3t=rW2AxNkkqQ@mail.gmail.com>
+From: Xiao Ni <xni@redhat.com>
+Subject: Fwd: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
+Date: Sun, 25 Oct 2015 01:38:51 -0400 (EDT)
+Message-ID: <284284227.42321345.1445751531086.JavaMail.zimbra@redhat.com>
+References: <1445751362-15677-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1445751362-15677-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Jes Sorensen <jes.sorensen@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi Neil
 
+I encountered one problem. When reshape one raid1 with bitmap to raid0, it'll
+lose legs.
 
-Context:
-On my RAID5 sdc was faulty. I bought a new HD, format it and add it to
-my raid array. However during the rebuilding sda was detected as
-faulty. Now I am not sure what to do...
+I sent the patch by git-send-email, but I can't see the mail in linux-raid. So
+I forward it again. And add signed-off-by line.
 
-I followed the steps from the wiki. See at the end my question ;-)
+Best Regards
+Xiao
 
-Thanks for your help.
+----- Forwarded Message -----
+From: "Xiao Ni" <xni@redhat.com>
+To: xni@redhat.com
+Sent: Sunday, October 25, 2015 1:36:02 PM
+Subject: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
 
-$ uname -a
-Linux htpc 3.8.0-35-generic #52~precise1-Ubuntu SMP Thu Jan 30
-17:27:28 UTC 2014 i686 i686 i386 GNU/Linux
+One raid1 with bitmap is composed by 4 disks. It'll fail when rashape to raid0
+and lose 3 disks. It should check bitmap first when reshape raid1 to raid0.
 
-$ mdadm --version
-mdadm - v3.2.5 - 18th May 2012
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ Grow.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-$ sudo mdadm --detail /dev/md1
-/dev/md1:
-        Version : 0.90
-  Creation Time : Sun Jan  2 08:47:01 2011
-     Raid Level : raid5
-     Array Size : 5842101312 (5571.46 GiB 5982.31 GB)
-  Used Dev Size : 1947367104 (1857.15 GiB 1994.10 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 1
-    Persistence : Superblock is persistent
+diff --git a/Grow.c b/Grow.c
+index 80d7b22..5e9b0bb 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1898,6 +1898,12 @@ size_change_error:
+ 	     array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) ||
+ 	    (s->level == 0 && array.level == 1 && sra)) {
+ 		int err;
++
++		if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
++			cont_err("Bitmap must be removed before level can be changed\n");
++			rv = 1;
++			goto release;
++		}
+ 		err = remove_disks_for_takeover(st, sra, array.layout);
+ 		if (err) {
+ 			dprintf("Array cannot be reshaped\n");
+@@ -2706,9 +2712,6 @@ static int impose_level(int fd, int level, char *devname, int verbose)
+ 			err = errno;
+ 			pr_err("%s: could not set level to %s\n",
+ 				devname, c);
+-			if (err == EBUSY &&
+-			    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
+-				cont_err("Bitmap must be removed before level can be changed\n");
+ 			return err;
+ 		}
+ 		if (verbose >= 0)
+-- 
+1.8.3.1
 
-    Update Time : Sat Oct 24 23:36:30 2015
-          State : clean, FAILED
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 426d71a2:5b25a168:a4e2eff2:d305f1c1
-         Events : 0.20213
-
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       8       19        1      active sync   /dev/sdb3
-       2       0        0        2      removed
-       3       8       51        3      active sync   /dev/sdd3
-
-       4       8       35        -      spare   /dev/sdc3
-       5       8        3        -      faulty spare   /dev/sda3
-
-
-
-$ mdadm --examine /dev/sd[abcdefghijklmn]3 >> raid.status
-http://pastebin.com/qaP8bvna
-
-$ sudo mdadm --examine /dev/sd[a-z] | egrep 'Event|/dev/sd'
-/dev/sda:
-/dev/sdb:
-/dev/sdc:
-/dev/sdd:
-/dev/sde:
-
-I seems that some blocks of sda are not readable.Cf from dmesg
-"[17852.126321] end_request: I/O error, dev sda, sector 1958539264"
-Full dmesg available at:
-http://pastebin.com/bBfcYjkg
-
-Is there some way to re-add this disk (sda) in the array without mdadm
-thinging it is a new one ?
-
-I have seen from the wiki that I could try to recreate the array with
---assume-clean but I want to do that only in last resort.
-
-Thanks,
-
-Guillaume
