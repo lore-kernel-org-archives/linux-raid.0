@@ -1,141 +1,216 @@
-From: Neil Brown <neilb@suse.com>
-Subject: Re: Remove inactive array created by open
-Date: Tue, 27 Oct 2015 07:10:47 +0900
-Message-ID: <87a8r5e0wo.fsf@notabene.neil.brown.name>
-References: <20151022162445.GA11904@kw.sim.vm.gnt> <87vb9yzjfp.fsf@notabene.neil.brown.name> <20151026211252.GC4665@kw.sim.vm.gnt>
+From: Doug Herr <gmane@wombatz.com>
+Subject: Replacing a RAID1 drive that has not failed.
+Date: Mon, 26 Oct 2015 23:00:38 +0000 (UTC)
+Message-ID: <n0mbam$gmk$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151026211252.GC4665@kw.sim.vm.gnt>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: linux-raid@vger.kernel.org, Remi Reroller <remi.rerolle@seagate.com>, Vincent Donnefort <vdonnefort@gmail.com>, Yoann Sculo <yoann@printk.fr>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think it might be time to replace one or both of my RAID 1 drives.  
+They have been giving good service for six years.  Both still have good 
+smartctl reports but I am ready to move one out to be used as a member of 
+my backup solution using old drives to hold rsync backups.  I would thus 
+give my RAID a fresh disk before there is an actual failure.
 
-On Tue, Oct 27 2015, Simon Guinot wrote:
+I recently experimented with adding a third partition to my swap raid 
+partition and that went very well, so I was thinking that this would 
+provide a safer method to replace one drive compared to failing it and 
+then replacing it.
 
-> On Fri, Oct 23, 2015 at 08:23:38AM +1100, Neil Brown wrote:
->> Simon Guinot <simon.guinot@sequanux.org> writes:
->>=20
->> > Hi Neil,
->> >
->> > I'd like to have your advice about destroying an array created by open
->> > at close time if not configured, rather than waiting for a ioctl or a
->> > sysfs configuration. This would allow to get rid of the inactive md
->> > devices created by an "accidental" open.
->> >
->> > On the Linux distribution embedded in LaCie NAS, we are able to
->> > observe the following scenario:
->> >
->> > 1. A RAID array is stopped with a command such as mdadm --stop /dev/md=
-x.
->> > 2. The node /dev/mdx is still available because not removed by mdadm at
->> >    stop.
->> > 3. /dev/mdx is opened by a process such as udev or mdadm --monitor.
->> > 4. An inactive RAID array mdx is created and a "add" uevent is
->> >    broadcasted to userland. It is let to userland to understand that
->> >    this event must be discarded.
->> >
->> > You have to admit that this behaviour is at best awkward :)
->>=20
->> No argument there.
->>=20
->>=20
->> >
->> > I read the commit d3374825ce57
->> > "md: make devices disappear when they are no longer needed" in which
->> > you express some concerns about an infinite loop due to udev always
->> > opening newly created devices. Is that still actual ?
->> >
->> > In your opinion, how could we get rid of an inactive RAID array created
->> > by open ? Maybe we could switch the hold_active flag from UNTIL_IOCTL =
-to
->> > 0 after some delay (enough to prevent udev from looping) ? In addition,
->> > maybe we could remove the device node from mdadm --stop ? Or maybe
->> > something else :)
->> >
->> > If you are interested by any of this solutions or one of yours, I'll
->> > be happy to work on it.
->>=20
->> By far the best solution here is to used named md devices.  These are
->> relatively recent and I wouldn't be surprised if you weren't aware of
->> them.
->>=20
->> md devices 9,0 to 9,511 (those are major,minor numbers) are "numeric" md
->> devices.  They have in-kernel names md%d which appear in /proc/mdstat
->> and /sys/block/
->>=20
->> If you create a block-special-device node with these numbers, that will
->> create the md device if it doesn't already exist.
->>=20
->> md devices 9,512 to 9,$BIGNUM are "named" md devices.  These have
->> in-kernel names like md_whatever-you-like.
->> If you create a block-special-device with device number 9,512 and try to
->> open it you will get -ENODEV.
->> To create these you
->>    echo whatever-you-like >  /sys/module/md_mod/parameters/new_array
->>=20
->> A number 512 or greater will be allocated as the minor number.
->>=20
->> These arrays behave as you would want them to.  They are only created
->> when explicitly requested and they disappear when stopped.
->>=20
->> mdadm will create this sort of array if you add
->>  CREATE names=3Dyes
->> to mdadm.conf and don't use numeric device names.
->> i.e. if you ask for /dev/md0, you will still get 9,0.
->> But if you ask for /dev/md/home, you will get 9,512 where as
->> with names=3Dno (the default) you would probably get 9,127.
->
-> Thanks for describing the usage of the named md devices. We will look
-> to convert our userland from numeric to named md devices.
+My test makes me think it might be as easy as:
 
-I think that is the best approach if you can make it work=20
->
->>=20
->> A timeout for dropping idle numeric md devices might make sense but it
->> would need to be several seconds at least as udev can sometimes get very
->> backlogged and would wouldn't want to add to that.  Would 5 minutes be
->> soon enough to meet your need?
->
-> No unfortunately, this will not. In our case, I think we need to
-> remove the inactive numeric md device at close or quickly after.
->
-> Considering that for a numeric md device we need to add the gendisk at
-> probe and that we can't destroy it at close if inactive (due to the udev
-> issue), then I don't think there is a solution to our problem. But I was
-> kind of hoping you had an idea :)
+ 1. Partition new drive (plugged in via external SATA dock)
+Use: fdisk /dev/sdc
 
-The only thing I can think of is suppressing the ADD uevent until
-something happens which would make the device more permanent.  However I
-suspect that would require and ugly hack so I have serious doubts about
-it being accepted upstream (I'm not sure I would accept it :-)
+ 2. Add 3rd partition to each RAID.
+Use: mdadm /dev/md4 --grow --raid-devices=3 --add /dev/sdc2
 
-NeilBrown
+ 3. Wait for all the resyncs.
+Use: watch cat /proc/mdstat
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+ 4. Fail out sda for each RAID.
+Use: mdadm /dev/md4 --fail /dev/sda2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+ 5. Drop back down to two disk.
+Use: mdadm /dev/md4 --grow --raid-devices=2
 
-iQIcBAEBAgAGBQJWLqToAAoJEDnsnt1WYoG5e5oQAK4Cw2vXFIja3wOb9uz5jh+W
-5ARUfMHUEULX3KOvMR7me3zLrgvmjIB+FthNxNAorQaJxFWQcDChDrpj58olG4n/
-aDxePEPd9ZmD3KsmC/CE8mWj5m4csf3PW5k8V3kzIlt803I93bn5JAAXN6JGB6ln
-2XZ7B5QBFfut+Wl/Ph+yWkHQy3/oNJrGRzM1hhjrYHQeuT5hZdrsNqKCt3+FijwI
-A8lxy+jbNpSI0LHsIbnf5lbu4l5cFgm2tHcLlLWSJCwDbYU8chzAp4AcEPpNetdl
-1MfgIEhtvWU8u4NdE1MkrT8ROkl32WCtuas0y3j0fgn28Wic0ZGIOmGmwXMevK8h
-s6BUm4SrODkyU3Goa/ux+TJMSGScYHGOK+c6L2BUjr0XcJZphHYZLvjL8xtfRx2z
-OVtfM7pNEm0np7uLgUvRy99TMvUqsccfZViXFzGpw2voR+zaA13WfBT1O6Jtd7+t
-cjtRKvuuzaRmnYih2q2787mA6SG7D2GSN8gpefjdij1H46YM1+P5lDa9rLNFBzTY
-PoSVILMGjHoDtH51Gsw1WeNEMI310itFeysreDQClIlT99dKzMUuz6XTNc8MvK5/
-a7KbLpwqxuaOgov6zFCvkdLMAa2P/aZ1IKv55VhDZ5ghfo6C/cwSGj73OIpU7lqf
-VBcSgAKcU6oZ2aE4iPya
-=rCtS
------END PGP SIGNATURE-----
---=-=-=--
+ 6. Make the old partitions "safe".
+Use: mdadm --zero-superblock /dev/sdc2
+
+ 7. Power down and swap sdc into sda slot.
+
+I only tested that with version 1.2 metadata, so I would be interested if 
+there is anything above that would not work with version 0.90.  Also note 
+that I did my test using my swap partition but it seems like the 
+procedure should not care what sort of partitioning is used.
+
+
+Below is info about my setup and how I tested to come up with the above 
+steps...
+
+I am:
+15:40-doug@wombat-~>uname -a
+Linux wombat.wombatz.com 4.2.3-200.fc22.x86_64 #1 SMP Thu Oct 8 03:23:55 
+UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+
+15:40-doug@wombat-~>cat /etc/fedora-release 
+Fedora release 22 (Twenty Two)
+
+15:40-doug@wombat-~>mdadm -V
+mdadm - v3.3.2 - 21st August 2014
+
+My RAID setup:
+
+(I am not using RAID for /boot, instead I rsync /boot to /bootalt each 
+night.  Otherwise everything is on RAID 1, including swap.)
+
+15:23-doug@wombat-~/wombat-4/raid/current-2015-10-26>df -hT |grep -v 
+^tmpfs
+Filesystem     Type      Size  Used Avail Use% Mounted on
+devtmpfs       devtmpfs  4.4G     0  4.4G   0% /dev
+/dev/md126     ext4       30G   11G   18G  39% /
+/dev/sdb1      ext4      579M  126M  411M  24% /bootalt
+/dev/md1       ext4       40G   18G   23G  44% /home
+/dev/md123     ext4      422G  209G  192G  53% /data2
+/dev/md125     ext4      422G   74G  327G  19% /data1
+/dev/sda1      ext4      579M  126M  411M  24% /boot
+
+15:09-doug@wombat-~>swapon -s
+Filename				Type		Size	Used	
+Priority
+/dev/md4                               	partition	4946980	0	-1
+
+(I am using UUID for /etc/mdadm.conf and in /etc/fstab so I did not 
+bother to "fix" the names when they got changed to md12x during Fedora 
+upgrades.)
+
+
+15:19-doug@wombat-~>cat /proc/mdstat 
+Personalities : [raid1] 
+md123 : active raid1 sdb7[1] sda7[0]
+      448888128 blocks [2/2] [UU]
+      bitmap: 0/4 pages [0KB], 65536KB chunk
+
+md125 : active raid1 sdb6[1] sda6[0]
+      448888128 blocks [2/2] [UU]
+      bitmap: 1/4 pages [4KB], 65536KB chunk
+
+md1 : active raid1 sdb5[0] sda5[2]
+      41952620 blocks super 1.2 [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md126 : active raid1 sdb3[0] sda3[1]
+      31463232 blocks [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md4 : active raid1 sdb2[2] sda2[3]
+      4946984 blocks super 1.2 [2/2] [UU]
+      
+unused devices: <none>
+
+
+
+Notes from the test I did using a partion on a older and smaller drive...
+
+[root@wombat Documents]# mdadm --detail /dev/md4
+/dev/md4:
+        Version : 1.2
+  Creation Time : Sat Mar 24 16:53:28 2012
+     Raid Level : raid1
+     Array Size : 4946984 (4.72 GiB 5.07 GB)
+  Used Dev Size : 4946984 (4.72 GiB 5.07 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Oct 23 10:55:06 2015
+          State : clean 
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : wombat.wombatz.com:4  (local to host wombat.wombatz.com)
+           UUID : 2382da1b:c77c04c7:9e4f955c:9450c809
+         Events : 541
+
+    Number   Major   Minor   RaidDevice State
+       3       8        2        0      active sync   /dev/sda2
+       2       8       18        1      active sync   /dev/sdb2
+
+
+[root@wombat Documents]# fdisk /dev/sdc
+[snip]
+
+
+[root@wombat doug]# mdadm /dev/md4 --grow --raid-devices=3 --add /dev/sdc2
+mdadm: added /dev/sdc2
+unfreeze
+
+
+[root@wombat Documents]# cat /proc/mdstat 
+[snip]
+md4 : active raid1 sdc2[4] sdb2[2] sda2[3]
+      4946984 blocks super 1.2 [3/2] [UU_]
+      [=======>.............]  recovery = 39.2% (1941056/4946984) 
+finish=0.6min speed=71890K/sec
+
+Soon it showed:
+
+md4 : active raid1 sdc2[4] sdb2[2] sda2[3]
+      4946984 blocks super 1.2 [3/3] [UUU]
+
+
+And now:
+
+[root@wombat Documents]# mdadm --detail /dev/md4
+/dev/md4:
+        Version : 1.2
+  Creation Time : Sat Mar 24 16:53:28 2012
+     Raid Level : raid1
+     Array Size : 4946984 (4.72 GiB 5.07 GB)
+  Used Dev Size : 4946984 (4.72 GiB 5.07 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Oct 24 12:57:39 2015
+          State : clean 
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : wombat.wombatz.com:4  (local to host wombat.wombatz.com)
+           UUID : 2382da1b:c77c04c7:9e4f955c:9450c809
+         Events : 562
+
+    Number   Major   Minor   RaidDevice State
+       3       8        2        0      active sync   /dev/sda2
+       2       8       18        1      active sync   /dev/sdb2
+       4       8       33        2      active sync   /dev/sdc2
+
+
+Now try to remove it:
+[root@wombat doug]# mdadm /dev/md4 --fail /dev/sdc2
+mdadm: set /dev/sdc2 faulty in /dev/md4
+
+[root@wombat doug]# mdadm /dev/md4 --grow --raid-devices=2 
+raid_disks for /dev/md4 set to 2
+unfreeze
+
+Seems good:
+md4 : active raid1 sdc2[4](F) sdb2[2] sda2[3]
+      4946984 blocks super 1.2 [2/2] [UU]
+
+Just to be safe:
+mdadm --zero-superblock /dev/sdc2
+
+
+-- 
+Doug Herr 
+
