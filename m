@@ -1,39 +1,41 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Converting 4 disk RAID10 to RAID5
-Date: Mon, 26 Oct 2015 10:10:37 -0400
-Message-ID: <562E345D.5030206@turmel.org>
-References: <562D8142.80507@websitemanagers.com.au>
+From: Marek <mlf.conv@gmail.com>
+Subject: Fwd: mdadm format for manual destriping
+Date: Mon, 26 Oct 2015 19:09:47 +0100
+Message-ID: <CA+sqOsZzk3kTPK-rkvyDyhZCwBot_bOaVT8XbW5-h8c2YVn1Mw@mail.gmail.com>
+References: <CA+sqOsZoJn5arXKBCW6OdLkqRc4sWf_tTRv9MouBOpJEqA9uig@mail.gmail.com>
+	<CA+sqOsY5UwwGbnHVQ+ctBGKo1FEOWWbAqWBmYCqo4Z6tVTL4Kw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562D8142.80507@websitemanagers.com.au>
+In-Reply-To: <CA+sqOsY5UwwGbnHVQ+ctBGKo1FEOWWbAqWBmYCqo4Z6tVTL4Kw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good morning Adam,
+I have found the following link which answers question 1.
+But there's more stuff that's seems undocumented
+https://raid.wiki.kernel.org/index.php/RAID_superblock_formats
+Question 2
+Does the superblock of size 256+2 start at 0?
+Does the first block start immediately after 258 bytes?
+Also question 3,4,5
 
-On 10/25/2015 09:26 PM, Adam Goryachev wrote:
-> Hi all,
-> 
-> I'm trying to convert a 4 disk RAID10 to a RAID5. Currently I have:
-> cat /proc/mdstat
-> Personalities : [raid10]
-> md0 : active raid10 sdd1[2] sdc1[1] sdb1[0] sde1[3]
->       7813772288 blocks super 1.2 512K chunks 2 near-copies [4/4] [UUUU]
->       bitmap: 0/59 pages [0KB], 65536KB chunk
+Marek
 
-[trim /]
-
-Your plan looks reasonable, if a bit long.  I've done similar before.
-Usually I add the new array to the LVM volume group of the original,
-then pvmove the contents to the new physical volume.  Let's me stay
-online through the entire operation.
-
-Anyways, it seems you are missing an opportunity to convert in place,
-though.  Consider setting up four small loop devices and test
-conversions from r10,n2 -n4 => r0 -n3 => r4 -n4 => r5 -n4 .  I suspect
-you can get to your new raid5 without moving a bunch of data around.
-
-Phil
+On Saturday, October 24, 2015, Marek <mlf.conv@gmail.com> wrote:
+>
+> Hi,
+>
+> is there a documentation available on how mdadm stores data? E.g.
+> 1.  super-block
+> 2.  offset of first block on each drive
+> 3. whether mdadm stores blocks as raw data or stores some kind of
+> metadata associated with each block e.g. disk 1 -> data_block1
+> immidiatelly followed by data_block 5 or
+> metadata_for_block_1 | data_block 1 |  metadata_for_block_5 | data_block 5 |
+> 4. how and where mdadm stores its backup superblock
+> 5. what klind of XOR algorithm is used by mdadm
+>
+> thanks,
+>
+> Marek
