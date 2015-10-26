@@ -1,130 +1,68 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
-Date: Mon, 26 Oct 2015 08:25:10 -0400 (EDT)
-Message-ID: <1424506067.42737315.1445862310535.JavaMail.zimbra@redhat.com>
-References: <1445751362-15677-1-git-send-email-xni@redhat.com> <284284227.42321345.1445751531086.JavaMail.zimbra@redhat.com> <877fmag0mn.fsf@notabene.neil.brown.name>
+From: Anugraha Sinha <asinha.mailinglist@gmail.com>
+Subject: Re: Converting 4 disk RAID10 to RAID5
+Date: Mon, 26 Oct 2015 23:09:20 +0900
+Message-ID: <562E3410.3080701@gmail.com>
+References: <562D8142.80507@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <877fmag0mn.fsf@notabene.neil.brown.name>
+In-Reply-To: <562D8142.80507@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jes Sorensen <jes.sorensen@redhat.com>, linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Dear Adam
 
+On 10/26/2015 10:26 AM, Adam Goryachev wrote:
+> 1) fail two drives from the array:
+> mdadm --manage /dev/md0 --fail /dev/sdb1
+> mdadm --manage /dev/md0 --remove /dev/sdb1
+> mdadm --manage /dev/md0 --fail /dev/sdd1
+> mdadm --manage /dev/md0 --remove /dev/sdd1
+> mdadm --misc --zero-superblock /dev/sdb1
+> mdadm --misc --zero-superblock /dev/sdd1
+>
+> It seems that RAID10 device number is in order:
+> sdb1 device0
+> sdc1 device1
+> sdd1 device2
+> sde1 device3
+> Therefore, I can fail device 0 (sdb1) and device 2 (sdd1) without losing
+> any data.
+>
+> 2) create a 3 disk RAID5 with one disk missing.
+> mdadm --create /dev/md1 --level=5 --raid-devices=3 /dev/sdb1 /dev/sdd1
+> missing
+>
+> 3) Then copy all of the existing data across
+> unmount partitions, stop LVM/etc
+> dd bs=16M if=/dev/md0 of=/dev/md1
 
------ Original Message -----
-> From: "Neil Brown" <neilb@suse.de>
-> To: "Xiao Ni" <xni@redhat.com>
-> Cc: "Jes Sorensen" <jes.sorensen@redhat.com>, linux-raid@vger.kernel.org
-> Sent: Monday, October 26, 2015 4:21:36 AM
-> Subject: Re: Fwd: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
-> 
-> Xiao Ni <xni@redhat.com> writes:
-> 
-> > Hi Neil
-> >
-> > I encountered one problem. When reshape one raid1 with bitmap to raid0,
-> > it'll
-> > lose legs.
-> >
-> > I sent the patch by git-send-email, but I can't see the mail in linux-raid.
-> > So
-> > I forward it again. And add signed-off-by line.
-> >
-> > Best Regards
-> > Xiao
-> >
-> > ----- Forwarded Message -----
-> > From: "Xiao Ni" <xni@redhat.com>
-> > To: xni@redhat.com
-> > Sent: Sunday, October 25, 2015 1:36:02 PM
-> > Subject: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
-> >
-> > One raid1 with bitmap is composed by 4 disks. It'll fail when rashape to
-> > raid0
-> > and lose 3 disks. It should check bitmap first when reshape raid1 to raid0.
-> >
-> > Signed-off-by: Xiao Ni <xni@redhat.com>
-> > ---
-> >  Grow.c | 9 ++++++---
-> >  1 file changed, 6 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/Grow.c b/Grow.c
-> > index 80d7b22..5e9b0bb 100644
-> > --- a/Grow.c
-> > +++ b/Grow.c
-> > @@ -1898,6 +1898,12 @@ size_change_error:
-> >  	     array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) ||
-> >  	    (s->level == 0 && array.level == 1 && sra)) {
-> >  		int err;
-> > +
-> > +		if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
-> > +			cont_err("Bitmap must be removed before level can be changed\n");
-> > +			rv = 1;
-> > +			goto release;
-> > +		}
-> >  		err = remove_disks_for_takeover(st, sra, array.layout);
-> >  		if (err) {
-> >  			dprintf("Array cannot be reshaped\n");
-> > @@ -2706,9 +2712,6 @@ static int impose_level(int fd, int level, char
-> > *devname, int verbose)
-> >  			err = errno;
-> >  			pr_err("%s: could not set level to %s\n",
-> >  				devname, c);
-> > -			if (err == EBUSY &&
-> > -			    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
-> > -				cont_err("Bitmap must be removed before level can be changed\n");
-> >  			return err;
-> >  		}
-> >  		if (verbose >= 0)
-> > --
-> 
-> You appear to have identified a problem that needs fixing, but the
-> patch is fairly obviously wrong.
-> 
-> You've removed a test and error message that could apply to any level
-> change, and added a test and error message that only applies to some
-> specific level changes.
-> Why does that error message no longer apply to all the other possible
-> level changes?
-> 
-> The test that you have added is mostly OK ... but you missed something.
-> Look around and similar nearby code.
-> The test you removed certainly should stay.
-> 
-> NeilBrown
-> 
+I dont know why this would be necessary.
 
-Thanks for printing out the mistake. I checked the nearby code and found 
-I missed close the cfd. Is this I missed? But I'm wondering that it doesn't 
-close it in the following code. Now it's just closed when it's failed to
-reshape raid1/raid10 to raid0.
+>
+> 4) Finally, stop the md0, and add the two devices to the new raid5, and
+> then grow the array to use the space on the 4th drive.
+> mdadm --manage --stop /dev/md0
+> mdadm --misc --zero-superblock /dev/sdc1
+> mdadm --manage /dev/md1 --add /dev/sdc1
+> mdadm --misc --zero-superblock /dev/sde1
+> mdadm --manage /dev/md1 --add /dev/sde1
+> mdadm --grow /dev/md1 --raid-devices=4
+>
+> 5) Add the space to my LVM
+> pvresize /dev/md1
+>
+> 6) Start up LVM, mount LV's, etc
 
- Grow.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+I tried your method on a local system, and it seemed to worked.
 
-diff --git a/Grow.c b/Grow.c
-index 80d7b22..d711884 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1898,6 +1898,15 @@ size_change_error:
-             array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) ||
-            (s->level == 0 && array.level == 1 && sra)) {
-                int err;
-+               
-+               if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
-+                       dprintf("Bitmap must be removed before level can be changed\n");
-+                       if (cfd > -1)
-+                               close(cfd);
-+                       rv = 1;
-+                       goto release;
-+               }
-+
-                err = remove_disks_for_takeover(st, sra, array.layout);
+The reason why I said that dd would'nt be necessary, as it is raid 
+syncing would work. You just need to be careful that you should not 
+start doing remove/add and other changing aspects of raid till the time 
+syncing is going on.
+Finally when you grow your raid in RAID5 also syncing would happen.
 
-Best Regards
-Xiao
-
+Regards
+Anugraha Sinha
