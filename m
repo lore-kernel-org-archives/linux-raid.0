@@ -1,216 +1,112 @@
-From: Doug Herr <gmane@wombatz.com>
-Subject: Replacing a RAID1 drive that has not failed.
-Date: Mon, 26 Oct 2015 23:00:38 +0000 (UTC)
-Message-ID: <n0mbam$gmk$1@ger.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] mdadm: Check bitmap first when reshape raid1 to raid0
+Date: Tue, 27 Oct 2015 08:10:17 +0900
+Message-ID: <877fm9dy5i.fsf@notabene.neil.brown.name>
+References: <1445751362-15677-1-git-send-email-xni@redhat.com> <284284227.42321345.1445751531086.JavaMail.zimbra@redhat.com> <877fmag0mn.fsf@notabene.neil.brown.name> <1424506067.42737315.1445862310535.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1424506067.42737315.1445862310535.JavaMail.zimbra@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: Jes Sorensen <jes.sorensen@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think it might be time to replace one or both of my RAID 1 drives.  
-They have been giving good service for six years.  Both still have good 
-smartctl reports but I am ready to move one out to be used as a member of 
-my backup solution using old drives to hold rsync backups.  I would thus 
-give my RAID a fresh disk before there is an actual failure.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I recently experimented with adding a third partition to my swap raid 
-partition and that went very well, so I was thinking that this would 
-provide a safer method to replace one drive compared to failing it and 
-then replacing it.
+On Mon, Oct 26 2015, Xiao Ni wrote:
 
-My test makes me think it might be as easy as:
+>>=20
+>
+> Thanks for printing out the mistake. I checked the nearby code and found=
+=20
+> I missed close the cfd. Is this I missed? But I'm wondering that it doesn=
+'t=20
+> close it in the following code. Now it's just closed when it's failed to
+> reshape raid1/raid10 to raid0.
 
- 1. Partition new drive (plugged in via external SATA dock)
-Use: fdisk /dev/sdc
+That is a very sensible question to ask - thanks.
+After a quick look - it does seem very strange.  That handling of 'cfd'
+and 'fd' seems quite odd.
 
- 2. Add 3rd partition to each RAID.
-Use: mdadm /dev/md4 --grow --raid-devices=3 --add /dev/sdc2
+If you would like to work out what should happen and find a simple way
+to fix the code, that would be great.  But I don't insist.
 
- 3. Wait for all the resyncs.
-Use: watch cat /proc/mdstat
+The patch below is quite acceptable as it is a simple solution to a
+simple problem and appear consistent with nearby code.  So if you gave
+it a proper description, formatted it properly and posted it in a way
+that didn't mess up all the white space, I would very likely accept it.
 
- 4. Fail out sda for each RAID.
-Use: mdadm /dev/md4 --fail /dev/sda2
+However:
+ - maybe we should just remove the bitmap rather than complain if we
+   find one.  After all, we are removing other things (extra devices).
+   A raid0 can never had a bitmap, so when converting to a raid0, it
+   does make sense to remove the bitmap.
 
- 5. Drop back down to two disk.
-Use: mdadm /dev/md4 --grow --raid-devices=2
+ - The test you used only checks for an internal bitmap, not an external
+   one.  External bitmaps are hardly ever used except by people who know
+   exactly what they are doing, so I'm not too fussed about handling
+   them perfectly, but testing for and removing an external bitmap
+   might make sense.
 
- 6. Make the old partitions "safe".
-Use: mdadm --zero-superblock /dev/sdc2
-
- 7. Power down and swap sdc into sda slot.
-
-I only tested that with version 1.2 metadata, so I would be interested if 
-there is anything above that would not work with version 0.90.  Also note 
-that I did my test using my swap partition but it seems like the 
-procedure should not care what sort of partitioning is used.
-
-
-Below is info about my setup and how I tested to come up with the above 
-steps...
-
-I am:
-15:40-doug@wombat-~>uname -a
-Linux wombat.wombatz.com 4.2.3-200.fc22.x86_64 #1 SMP Thu Oct 8 03:23:55 
-UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
-
-15:40-doug@wombat-~>cat /etc/fedora-release 
-Fedora release 22 (Twenty Two)
-
-15:40-doug@wombat-~>mdadm -V
-mdadm - v3.3.2 - 21st August 2014
-
-My RAID setup:
-
-(I am not using RAID for /boot, instead I rsync /boot to /bootalt each 
-night.  Otherwise everything is on RAID 1, including swap.)
-
-15:23-doug@wombat-~/wombat-4/raid/current-2015-10-26>df -hT |grep -v 
-^tmpfs
-Filesystem     Type      Size  Used Avail Use% Mounted on
-devtmpfs       devtmpfs  4.4G     0  4.4G   0% /dev
-/dev/md126     ext4       30G   11G   18G  39% /
-/dev/sdb1      ext4      579M  126M  411M  24% /bootalt
-/dev/md1       ext4       40G   18G   23G  44% /home
-/dev/md123     ext4      422G  209G  192G  53% /data2
-/dev/md125     ext4      422G   74G  327G  19% /data1
-/dev/sda1      ext4      579M  126M  411M  24% /boot
-
-15:09-doug@wombat-~>swapon -s
-Filename				Type		Size	Used	
-Priority
-/dev/md4                               	partition	4946980	0	-1
-
-(I am using UUID for /etc/mdadm.conf and in /etc/fstab so I did not 
-bother to "fix" the names when they got changed to md12x during Fedora 
-upgrades.)
+Thanks,
+NeilBrown
 
 
-15:19-doug@wombat-~>cat /proc/mdstat 
-Personalities : [raid1] 
-md123 : active raid1 sdb7[1] sda7[0]
-      448888128 blocks [2/2] [UU]
-      bitmap: 0/4 pages [0KB], 65536KB chunk
+>
+>  Grow.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+>
+> diff --git a/Grow.c b/Grow.c
+> index 80d7b22..d711884 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1898,6 +1898,15 @@ size_change_error:
+>              array.layout =3D=3D ((1 << 8) + 2) && !(array.raid_disks & 1=
+)) ||
+>             (s->level =3D=3D 0 && array.level =3D=3D 1 && sra)) {
+>                 int err;
+> +=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20
+> +               if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
+> +                       dprintf("Bitmap must be removed before level can =
+be changed\n");
+> +                       if (cfd > -1)
+> +                               close(cfd);
+> +                       rv =3D 1;
+> +                       goto release;
+> +               }
+> +
+>                 err =3D remove_disks_for_takeover(st, sra, array.layout);
+>
+> Best Regards
+> Xiao
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-md125 : active raid1 sdb6[1] sda6[0]
-      448888128 blocks [2/2] [UU]
-      bitmap: 1/4 pages [4KB], 65536KB chunk
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-md1 : active raid1 sdb5[0] sda5[2]
-      41952620 blocks super 1.2 [2/2] [UU]
-      bitmap: 1/1 pages [4KB], 65536KB chunk
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-md126 : active raid1 sdb3[0] sda3[1]
-      31463232 blocks [2/2] [UU]
-      bitmap: 1/1 pages [4KB], 65536KB chunk
-
-md4 : active raid1 sdb2[2] sda2[3]
-      4946984 blocks super 1.2 [2/2] [UU]
-      
-unused devices: <none>
-
-
-
-Notes from the test I did using a partion on a older and smaller drive...
-
-[root@wombat Documents]# mdadm --detail /dev/md4
-/dev/md4:
-        Version : 1.2
-  Creation Time : Sat Mar 24 16:53:28 2012
-     Raid Level : raid1
-     Array Size : 4946984 (4.72 GiB 5.07 GB)
-  Used Dev Size : 4946984 (4.72 GiB 5.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Oct 23 10:55:06 2015
-          State : clean 
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           Name : wombat.wombatz.com:4  (local to host wombat.wombatz.com)
-           UUID : 2382da1b:c77c04c7:9e4f955c:9450c809
-         Events : 541
-
-    Number   Major   Minor   RaidDevice State
-       3       8        2        0      active sync   /dev/sda2
-       2       8       18        1      active sync   /dev/sdb2
-
-
-[root@wombat Documents]# fdisk /dev/sdc
-[snip]
-
-
-[root@wombat doug]# mdadm /dev/md4 --grow --raid-devices=3 --add /dev/sdc2
-mdadm: added /dev/sdc2
-unfreeze
-
-
-[root@wombat Documents]# cat /proc/mdstat 
-[snip]
-md4 : active raid1 sdc2[4] sdb2[2] sda2[3]
-      4946984 blocks super 1.2 [3/2] [UU_]
-      [=======>.............]  recovery = 39.2% (1941056/4946984) 
-finish=0.6min speed=71890K/sec
-
-Soon it showed:
-
-md4 : active raid1 sdc2[4] sdb2[2] sda2[3]
-      4946984 blocks super 1.2 [3/3] [UUU]
-
-
-And now:
-
-[root@wombat Documents]# mdadm --detail /dev/md4
-/dev/md4:
-        Version : 1.2
-  Creation Time : Sat Mar 24 16:53:28 2012
-     Raid Level : raid1
-     Array Size : 4946984 (4.72 GiB 5.07 GB)
-  Used Dev Size : 4946984 (4.72 GiB 5.07 GB)
-   Raid Devices : 3
-  Total Devices : 3
-    Persistence : Superblock is persistent
-
-    Update Time : Sat Oct 24 12:57:39 2015
-          State : clean 
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-
-           Name : wombat.wombatz.com:4  (local to host wombat.wombatz.com)
-           UUID : 2382da1b:c77c04c7:9e4f955c:9450c809
-         Events : 562
-
-    Number   Major   Minor   RaidDevice State
-       3       8        2        0      active sync   /dev/sda2
-       2       8       18        1      active sync   /dev/sdb2
-       4       8       33        2      active sync   /dev/sdc2
-
-
-Now try to remove it:
-[root@wombat doug]# mdadm /dev/md4 --fail /dev/sdc2
-mdadm: set /dev/sdc2 faulty in /dev/md4
-
-[root@wombat doug]# mdadm /dev/md4 --grow --raid-devices=2 
-raid_disks for /dev/md4 set to 2
-unfreeze
-
-Seems good:
-md4 : active raid1 sdc2[4](F) sdb2[2] sda2[3]
-      4946984 blocks super 1.2 [2/2] [UU]
-
-Just to be safe:
-mdadm --zero-superblock /dev/sdc2
-
-
--- 
-Doug Herr 
-
+iQIcBAEBAgAGBQJWLrLZAAoJEDnsnt1WYoG5Cm0QAJ/e0pNl6GzLV9XQIAtBfsk8
+okm4PVD4VDIU4ThUAyo1IIZKW4QQSm6hc4GsSFdMG+78MNGc98Zr/g6V5PI8EGFg
+n5lmK5jIkMCnKuzB3Ud1TpBZPmX+XZu7IAHOZVoA/Viku6wYwqJ/AB4OSKW7sNoZ
+CWXIzynhCF56+Gu2avKy49UR9hKhJ2tejK0NL+S1SRrjYZyoG7f45KbEA2JaWFjO
+AETjMzwC7jzNVb0O6UZ5w3CtJoV6BW71szf6NZ4XgZ3lj+Yl6Wwaf4dpFt1Umtzp
+hpfjB+tDtLNJx4fNaQzu9i/Y89jZtwZ4XqhvjB4RK+6QC5IFRhUNT+SgGesj9NYr
+fO+BmNPja49XPWx0SGq6w9f9V/JRe4wO3JdlgrD+3ninPMuqByyRbKskmNzVLrtT
+aeGmCqeQ7nD4nAfxXgHrb0WYjngdbmYvunBRm8bPuwas1mLY9w54ivkQD7XjF91l
+MsprEGmOW7/v37dLw4l9tyI9Z8cV5GCO+cRvaELfsjAMHqOA/asCdG8fmNWxwutA
+JEE3ncxBz7V6uvWIJVPGIgE18+wzH527oGM5LHJ8+ompTgxEdDSgnTVemyYLj/1Q
+Eiv4804aMsyN2mJGCHr5vcYkAKVlMrNnPB+nObD+ZVwxxlUmDE6hSSRBUeTsK+jm
+sy45xGZtYkdIYdqoHw4F
+=8hic
+-----END PGP SIGNATURE-----
+--=-=-=--
