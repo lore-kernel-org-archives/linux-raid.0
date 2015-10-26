@@ -1,71 +1,128 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Fwd: mdadm format for manual destriping
-Date: Mon, 26 Oct 2015 15:13:15 -0400
-Message-ID: <562E7B4B.2090800@turmel.org>
-References: <CA+sqOsZoJn5arXKBCW6OdLkqRc4sWf_tTRv9MouBOpJEqA9uig@mail.gmail.com>
- <CA+sqOsY5UwwGbnHVQ+ctBGKo1FEOWWbAqWBmYCqo4Z6tVTL4Kw@mail.gmail.com>
- <CA+sqOsZzk3kTPK-rkvyDyhZCwBot_bOaVT8XbW5-h8c2YVn1Mw@mail.gmail.com>
+From: Simon Guinot <simon.guinot@sequanux.org>
+Subject: Re: Remove inactive array created by open
+Date: Mon, 26 Oct 2015 22:12:52 +0100
+Message-ID: <20151026211252.GC4665@kw.sim.vm.gnt>
+References: <20151022162445.GA11904@kw.sim.vm.gnt>
+ <87vb9yzjfp.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vEao7xgI/oilGqZ+"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CA+sqOsZzk3kTPK-rkvyDyhZCwBot_bOaVT8XbW5-h8c2YVn1Mw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87vb9yzjfp.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marek <mlf.conv@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Remi Reroller <remi.rerolle@seagate.com>, Vincent Donnefort <vdonnefort@gmail.com>, Yoann Sculo <yoann@printk.fr>
 List-Id: linux-raid.ids
 
-Hi Marek,
 
-{ Top-posting fixed.  Please don't do that. }
+--vEao7xgI/oilGqZ+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 10/26/2015 02:09 PM, Marek wrote:
-> On Saturday, October 24, 2015, Marek <mlf.conv@gmail.com> wrote:
+On Fri, Oct 23, 2015 at 08:23:38AM +1100, Neil Brown wrote:
+> Simon Guinot <simon.guinot@sequanux.org> writes:
+>=20
+> > Hi Neil,
+> >
+> > I'd like to have your advice about destroying an array created by open
+> > at close time if not configured, rather than waiting for a ioctl or a
+> > sysfs configuration. This would allow to get rid of the inactive md
+> > devices created by an "accidental" open.
+> >
+> > On the Linux distribution embedded in LaCie NAS, we are able to
+> > observe the following scenario:
+> >
+> > 1. A RAID array is stopped with a command such as mdadm --stop /dev/mdx.
+> > 2. The node /dev/mdx is still available because not removed by mdadm at
+> >    stop.
+> > 3. /dev/mdx is opened by a process such as udev or mdadm --monitor.
+> > 4. An inactive RAID array mdx is created and a "add" uevent is
+> >    broadcasted to userland. It is let to userland to understand that
+> >    this event must be discarded.
+> >
+> > You have to admit that this behaviour is at best awkward :)
+>=20
+> No argument there.
+>=20
+>=20
+> >
+> > I read the commit d3374825ce57
+> > "md: make devices disappear when they are no longer needed" in which
+> > you express some concerns about an infinite loop due to udev always
+> > opening newly created devices. Is that still actual ?
+> >
+> > In your opinion, how could we get rid of an inactive RAID array created
+> > by open ? Maybe we could switch the hold_active flag from UNTIL_IOCTL to
+> > 0 after some delay (enough to prevent udev from looping) ? In addition,
+> > maybe we could remove the device node from mdadm --stop ? Or maybe
+> > something else :)
+> >
+> > If you are interested by any of this solutions or one of yours, I'll
+> > be happy to work on it.
+>=20
+> By far the best solution here is to used named md devices.  These are
+> relatively recent and I wouldn't be surprised if you weren't aware of
+> them.
+>=20
+> md devices 9,0 to 9,511 (those are major,minor numbers) are "numeric" md
+> devices.  They have in-kernel names md%d which appear in /proc/mdstat
+> and /sys/block/
+>=20
+> If you create a block-special-device node with these numbers, that will
+> create the md device if it doesn't already exist.
+>=20
+> md devices 9,512 to 9,$BIGNUM are "named" md devices.  These have
+> in-kernel names like md_whatever-you-like.
+> If you create a block-special-device with device number 9,512 and try to
+> open it you will get -ENODEV.
+> To create these you
+>    echo whatever-you-like >  /sys/module/md_mod/parameters/new_array
+>=20
+> A number 512 or greater will be allocated as the minor number.
+>=20
+> These arrays behave as you would want them to.  They are only created
+> when explicitly requested and they disappear when stopped.
+>=20
+> mdadm will create this sort of array if you add
+>  CREATE names=3Dyes
+> to mdadm.conf and don't use numeric device names.
+> i.e. if you ask for /dev/md0, you will still get 9,0.
+> But if you ask for /dev/md/home, you will get 9,512 where as
+> with names=3Dno (the default) you would probably get 9,127.
 
->> is there a documentation available on how mdadm stores data? E.g.
+Thanks for describing the usage of the named md devices. We will look
+to convert our userland from numeric to named md devices.
 
-Yes, the man pages.  Try "man md" and "man mdadm" in a console.  This
-documentation is provide by the kernel team and, other than the source
-code itself, is expected to be definitive.
+>=20
+> A timeout for dropping idle numeric md devices might make sense but it
+> would need to be several seconds at least as udev can sometimes get very
+> backlogged and would wouldn't want to add to that.  Would 5 minutes be
+> soon enough to meet your need?
 
->> 1.  super-block
+No unfortunately, this will not. In our case, I think we need to
+remove the inactive numeric md device at close or quickly after.
 
-The location of the superblock is described in "man md".  The precise
-content of the superblock is only detailed in the source code.
+Considering that for a numeric md device we need to add the gendisk at
+probe and that we can't destroy it at close if inactive (due to the udev
+issue), then I don't think there is a solution to our problem. But I was
+kind of hoping you had an idea :)
 
->> 2.  offset of first block on each drive
+Thanks.
 
-Zero for metadata versions 0.90 and 1.0.  Configurable for metadata
-versions 1.1 and 1.2.  See the --data-offset option in "man mdadm".
+Simon
 
->> 3. whether mdadm stores blocks as raw data or stores some kind of
->> metadata associated with each block e.g. disk 1 -> data_block1
->> immidiatelly followed by data_block 5 or
->> metadata_for_block_1 | data_block 1 |  metadata_for_block_5 | data_block 5 |
+--vEao7xgI/oilGqZ+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-No metadata per block.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
->> 4. how and where mdadm stores its backup superblock
+iEYEARECAAYFAlYul1QACgkQgtp0PDeOcDqkqQCgnrb2kzmRusdEq7FdaF/3+Dnd
+QyMAn1B0r5yjbxXzn1z1WRCLrTTgYn5V
+=XbUY
+-----END PGP SIGNATURE-----
 
-None, although each device has one.
-
->> 5. what klind of XOR algorithm is used by mdadm
-
-Straight parity for raid4, raid5, and the 'P' blocks of raid6.  Galois
-field arithmetic for the 'Q' blocks of raid6.
-
-https://www.kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
-
-[trim /]
-
-> Does the first block start immediately after 258 bytes?
-
-No.
-
-> Also question 3,4,5
-
-See above and in the man pages.
-
-HTH,
-
-Phil
-
+--vEao7xgI/oilGqZ+--
