@@ -1,85 +1,53 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: [UU_] Won't go away
-Date: Tue, 27 Oct 2015 12:24:46 +0000
-Message-ID: <20151027122446.GA32239@cthulhu.home.robinhill.me.uk>
+Date: Tue, 27 Oct 2015 08:34:10 -0400
+Message-ID: <562F6F42.4070302@turmel.org>
 References: <562F6B56.9040901@highpoweredhelp.com>
+ <562F6CBE.5020504@turmel.org> <562F6DEA.3010409@highpoweredhelp.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k1lZvvs/B4yU6o8G"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <562F6B56.9040901@highpoweredhelp.com>
+In-Reply-To: <562F6DEA.3010409@highpoweredhelp.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Michael Munger <michael@highpoweredhelp.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Michael,
 
---k1lZvvs/B4yU6o8G
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+{Added the list back and fixed the top-posting.  Convention on
+kernel.org is to reply-to-all, trim replies, and bottom post or interleave.}
 
-On Tue Oct 27, 2015 at 08:17:26AM -0400, Michael Munger wrote:
+On 10/27/2015 08:28 AM, Michael Munger wrote:
+> On 10/27/2015 08:23 AM, Phil Turmel wrote:
+>> On 10/27/2015 08:17 AM, Michael Munger wrote:
 
-> It's my understanding, that an array running with [UU_] is degraded and
-> there is a disk problem.
->=20
-> I have been trying to create a RAID array using this command:
->=20
-> mdadm --create --verbose /dev/md0 --level=3D5 --raid-devices=3D3 /dev/sdb1
-> /dev/sdc1 /dev/sdd1
->=20
-> However, once it create it, it get this in /proc/mdstat:
->=20
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sdd1[3] sdc1[1] sdb1[0]
->       3906764800 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2]
-> [UU_]
->       [>....................]  recovery =3D  0.1% (2611780/1953382400)
-> finish=3D1737.7min speed=3D18709K/sec
->       bitmap: 0/15 pages [0KB], 65536KB chunk
->=20
-> I have done the following to "fix" the drive:
->=20
-> 1. Smartmontools smartctl long and short tests. All passed.
-> 2. Zeroed the first 1GB of the drive (overkill, I know I could just do
-> the first 512) with dd if=3D/dev/zero of=3D/dev/sdb count=3D250000 bs=3D4k
-> 3. Re-partitioned the drive.
-> 4. Re-create.
->=20
-> No joy.
->=20
-> Then, I swapped this hard drive out for another drive.
->=20
-> I am still getting [UU_].
->=20
-> Thoughts?
+>>> Personalities : [raid6] [raid5] [raid4]
+>>> md0 : active raid5 sdd1[3] sdc1[1] sdb1[0]
+>>>       3906764800 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2]
+>>> [UU_]
+>>>       [>....................]  recovery =  0.1% (2611780/1953382400)
+>>> finish=1737.7min speed=18709K/sec
+>>>       bitmap: 0/15 pages [0KB], 65536KB chunk
 
-This is perfectly normal. A RAID-5 array is created in degraded mode,
-then the final disk is synchronised. This makes the array available
-immediately, with the synchonisation happening in the background.
+>> What's to fix?  Did you try waiting for the recovery to finish?
+>> Creating an array generally isn't instant -- the redundancy has to be
+>> computed over the entire array.
+>>
+>> Now, you might have speed limits that are making it slower than possible
+>> (see man md), but multiple hours on big devices is perfectly normal.
 
-Just leave it to complete the recovery process.
+> I thought [UU_] indicated a physical drive problem, not logical array
+> issue. I'll wait until 2pm when this is supposed to finish and re-check.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+I mentioned the speed limits because 20MB/sec is kinda low for modern
+drives.  You can probably speed that up.
 
---k1lZvvs/B4yU6o8G
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> It will be GREAT if that's all it was... my being impatient!
+>
+> PS... lsdrv is a great utility. thanks for making it available on Github.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+You're welcome :-)
 
-iEYEARECAAYFAlYvbQ0ACgkQShxCyD40xBJ5gQCeJ4KiwhTZr8IMc8wfJ6uLU8G8
-B3UAoLzNNK9jqarsT0Nb4QfVb98Y/HFn
-=+cDH
------END PGP SIGNATURE-----
-
---k1lZvvs/B4yU6o8G--
+Phil
