@@ -1,39 +1,73 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
-Subject: Fwd: Replacing a RAID1 drive that has not failed.
-Date: Mon, 26 Oct 2015 19:41:25 -0500
-Message-ID: <CACsGCyT1=HW=hofbLs-Zb_=sdVL-higdSOJbDmAmpVTd1=iiZA@mail.gmail.com>
-References: <n0mbam$gmk$1@ger.gmane.org>
-	<CACsGCyTM_J2+_oJm0rUsZvuF0AXXu6xX572F4HP+OGsjP_AvfQ@mail.gmail.com>
+From: Anugraha Sinha <asinha.mailinglist@gmail.com>
+Subject: Re: Converting 4 disk RAID10 to RAID5
+Date: Tue, 27 Oct 2015 15:19:53 +0900
+Message-ID: <562F1789.9080000@gmail.com>
+References: <562D8142.80507@websitemanagers.com.au>
+ <562E345D.5030206@turmel.org> <562EBD58.2040306@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyTM_J2+_oJm0rUsZvuF0AXXu6xX572F4HP+OGsjP_AvfQ@mail.gmail.com>
+In-Reply-To: <562EBD58.2040306@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 26, 2015 at 6:00 PM, Doug Herr <gmane@wombatz.com> wrote:
-> I think it might be time to replace one or both of my RAID 1 drives. [snip]
-> I recently experimented with adding a third partition to my swap raid
-> partition and that went very well, so I was thinking that this would
-> provide a safer method to replace one drive compared to failing it and
-> then replacing it.
-> [snip]
+Dear Adam,
 
-I tried basically the procedure you described, based on Internet
-research, to replace a working but suspect drive in a RAID.  I ran
-into problems.  FWIW, my metadata format is 1.2.  You can see the
-thread at  http://marc.info/?l=linux-raid&m=143668094907891&w=2
-although the most pertinent EMail is the first response
-http://marc.info/?l=linux-raid&m=143670871711935&w=2
+On 10/27/2015 8:55 AM, Adam Goryachev wrote:
+>
+> mdadm --grow --bitmap=none /dev/md0
+> root@testraid:~# cat /proc/mdstat
+> Personalities : [raid10] [raid0] [raid6] [raid5] [raid4]
+> md0 : active raid5 vdf1[4] vdd1[3](S) vde1[2] vdc1[0]
+>        2093056 blocks super 1.2 level 5, 512k chunk, algorithm 5 [3/3]
+> [UUU]
+>
+> unused devices: <none>
+>
+> So, still 3 disk raid5 with one spare, but seems to be insync, so either
+> it was really quick (possible since they are small drives) or it didn't
+> need to do a sync??
+>
+> mdadm --grow --level=5 --raid-devices=4 /dev/md0
+> mdadm: Need to backup 3072K of critical section..
+>
+> cat /proc/mdstat
+> Personalities : [raid10] [raid0] [raid6] [raid5] [raid4]
+> md0 : active raid5 vdf1[4] vdd1[3] vde1[2] vdc1[0]
+>        2093056 blocks super 1.2 level 5, 512k chunk, algorithm 5 [4/4]
+> [UUUU]
+>            resync=DELAYED
+>
+> unused devices: <none>
+>
+> OK, so now how to make it resync?
+>
+> Here I'm stuck...
+> I've tried:
+> mdadm --misc /dev/md0 --action=check
+> mdadm --misc /dev/md0 --action=repair
+>
+> Nothing seems to be happening.
+>
+> BTW, I had the array mounted during my testing, as ideally that is what
+> I will do with the live machine. Worst case scenario (on the live
+> machine) I can afford to lose all the data, as it is only an extra
+> backup of the other backup machine, but it would mean a few TB's of data
+> across a slow WAN....
+>
+> Any suggestions on getting this to progress? Did I do something wrong?
+>
+> Thanks for the suggestion, it certainly looks promising so far.
 
-I suppose it's possible that you might get different advice since
-you're doing RAID 1 and I was doing RAID 5.  I'm not an expert.  I
-just wanted to warn you that I ran into trouble basically doing what
-you propose.  The advice I got was that I shouldn't grow and shrink to
-replace a disk.  There's a --replace option for that.  That'll remove
-a few of your steps, simplify and speed up the process, and remove
-risk.  Hope this helps.  Hopefully someone who knows a lot more than I
-do will also speak up.  Good luck.
+Why dont you stop your array once and do something like this?
+mdadm --stop /dev/md0
+mdadm --assemble /dev/md0 --run --force --update=resync /dev/vdf1 
+/dev/vdd1 /dev/vde1 vdc1
 
-              Eddie
+This will restart your array with the required raid-level and also start 
+the resyncing process.
+
+Regards
+Anugraha
