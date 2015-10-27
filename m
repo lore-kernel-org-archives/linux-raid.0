@@ -1,89 +1,110 @@
-From: Doug Herr <gmane@wombatz.com>
-Subject: Re: Replacing a RAID1 drive that has not failed.
-Date: Tue, 27 Oct 2015 16:45:23 +0000 (UTC)
-Message-ID: <n0o9n3$gmk$2@ger.gmane.org>
-References: <n0mbam$gmk$1@ger.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md-cluster: Only one thread should request DLM lock
+Date: Wed, 28 Oct 2015 05:48:27 +0900
+Message-ID: <87twpcca1w.fsf@notabene.neil.brown.name>
+References: <1445520669-4406-1-git-send-email-rgoldwyn@suse.de> <874mhiz643.fsf@notabene.neil.brown.name> <562A099E.2060709@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <562A099E.2060709@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-raid@vger.kernel.org
+Cc: gqjiang@suse.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
-Thanks to both Wol and Eddie for pointing me to the --replace option and 
-for not simply telling me to RTFM.  Part of my confusion was based on my 
-last attempt (years back) to find out if three drive RAID 1 was even an 
-option.  Just as before I found stuff that laughed at the mere idea of a 
-three drive mirror.  Seems people were getting too tied up on the word 
-"mirror", which is not really a proper name for it in my view.  The 
-mirror copy of myself when looking into a mirror is *not* the same in me 
-in so many ways.  Oh, and now I think I understand that hardware RAID 
-rarely or never allows it but Linux md RAID has it now and maybe had it 
-the whole time.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That said, I really should have slogged thru the man page better.  It 
-does seem that --replace includes the key feature that I want:
+On Fri, Oct 23 2015, Goldwyn Rodrigues wrote:
 
-"the  device remains  in  service  during the recovery process to 
-increase resilience against multiple failures."
+> On 10/22/2015 09:11 PM, Neil Brown wrote:
+>> rgoldwyn@suse.de writes:
+>>
+>>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>>
+>>> If a DLM lock is in progress, requesting the same DLM lock will
+>>> result in -EBUSY. Use a mutex to make sure only one thread requests
+>>> for dlm_lock() function at a time.
+>>>
+>>> This will fix the error -EBUSY returned from DLM's
+>>> validate_lock_args().
+>>
+>> I can see that we only want one thread calling dlm_lock() with a given
+>> 'struct dlm_lock_resource' at a time, otherwise nasty things could
+>> happen.
+>>
+>> However if such a race is possible, then aren't there other possibly
+>> complications.
+>
+> This is specific to the duration of dlm_lock() function only and not the=
+=20
+> entire lifetime of the resource. If one thread has requested dlm_lock()=20
+> and another thread comes in and calls dlm_lock() on the same resource,=20
+> we will get -EBUSY on the second one because the lock is already requeste=
+d.
+>
+> Our dlm_unlock_sync() call is also a dlm_lock_sync(), and eventually=20
+> dlm_lock() call, with a NULL lock.
+>
+>>
+>> Suppose two threads try to lock the same resource.
+>> Presumably one will try to lock the resource, then the next one (when it
+>> gets the mutex) will discover that it already has the resource, but will
+>> think it has exclusive access - maybe?
+>
+> I am not sure if I understand this. DLM locks are supposed to be at the=20
+> node level as opposed to thread level.
 
+I think this is exactly my point.  I think we need some extra
+thread-level locking.
+For example suppose some thread calls sendmsg() which takes the token
+lock, and then while that is happening metadata_update_start() gets
+called.
+It will try to take the token lock, but as the node already has the
+lock, it will succeed trivially.  Then two threads on the one node both
+think they have the lock which will almost certainly lead to confusion.
 
-So, just in case somebody wants to see if they can find anything I 
-missed, here is my current plan...
+So we need to hold some mutex the entire time that sendmsg() is running,
+and need to hold that same mutex when calling metadata_update_start().
+Once we have that, there is not need for the mutex you introduced which
+is just held while claiming the lock.
 
+It could be that we can use ->reconfig_mutex for a lot of this.
+Certainly we always hold ->reconfig_mutex while performing a metadata
+update.
+We probably don't want to take it just for ->resync_info_update().
 
- 1. Partition new drive (plugged in via external SATA dock)
-#fdisk /dev/sdc
-(make it an exact match of sda/sdb unless it turns out to be smaller,
- in which case I can shrink /boot to make room.)
+I'm not sure if it would be best to have a per-resource mutex which we
+take in dlm_lock_sync() and drop in dlm_unlock_sync(), or if we want the
+locking at a higher level.
+Probably ->reconfig_mutex is already used where we need higher-level
+locking.
+So if you change you patch to unlock in dlm_unlock_sync() rather than
+at the end of dlm_lock_sync(), then I think it will make sense.
 
- 2. Replace sda partition with sdc partition for each RAID.
-(Could do all at once but feels safer to do one at a time.)
-#mdadm /dev/md123 --replace /dev/sda7 --with /dev/sdc7
-#watch /proc/mdstat
-#mdadm /dev/md125 --replace /dev/sda6 --with /dev/sdc6
-#watch /proc/mdstat
-#mdadm /dev/md126 --replace /dev/sda3 --with /dev/sdc3
-#watch /proc/mdstat
-#mdadm /dev/md1 --replace /dev/sda5 --with /dev/sdc5
-#watch /proc/mdstat
-#mdadm /dev/md4 --replace /dev/sda2 --with /dev/sdc2
-#watch /proc/mdstat
+Thanks,
+NeilBrown
 
- 3. All RAIDs should be "active" and in "[UU]" status, with no sda partitions.
-#cat /proc/mdstat
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-(Consider if this should only be done later/never so that sda can 
- be a form of backup in case of issues during the post replace reboot.)
- 4. Prevent the old partitions from ever being pulled into the RAIDs.
-#mdadm --zero-superblock /dev/sda7
-#mdadm --zero-superblock /dev/sda6
-#mdadm --zero-superblock /dev/sda3
-#mdadm --zero-superblock /dev/sda5
-#mdadm --zero-superblock /dev/sda2
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
- 5. Make a new /boot on sdc.
-(using rsync since the language is taken from my daily cron and this is a 
- tad quicker if I end up running it more than once.)
-(fstab line needing update: UUID=52b14d98-b284-41a0-a36f-459ae3ae12a7 /boot ext4 defaults 1 2)
-#mkfs.ext4 /dev/sdc1
-#mkdir /bootnew
-#mount /dev/sdc1 /bootnew
-#rsync -a --delete /boot/ /bootnew
-#grub-install /dev/sdc
-#blkid /dev/sdc1
-#vim /etc/fstab
-#umount /bootnew ; rmdir /bootnew
-
- 6. Power down and swap sdc into sda "slot".
-
- 7. Make sure that all RAIDs are "active" and in "[UU]" status:
-#cat /proc/mdstat
-
-
-
-
--- 
-Doug Herr 
-
+iQIcBAEBAgAGBQJWL+MbAAoJEDnsnt1WYoG5dp8QAKSJ24hzTVBLG8Kl4U4hsZAS
+ET+h3Scx9DWpYJya5zHDl0espvHtykUaPKfjOkK0KkZIP7s7on/VDWjJW+nPUrM+
+4g3TcDCvR2M+wylHzy0Bezl3XrQQ6KEkoUt+In7O1RC1UpALbpTsU7hdfQ+qi2XH
+Kdeww23BNc6Swk6QPerMD3fRRYTBjVHMUY8YRFcv6kZiQAr+mq8I7Me6Et5tlR7R
+hME33wetaORbM2G7V2mQccG3UqU/p3J6lSBpXUwCSl4zgnWg8Moqw/gCPbUayuhL
+yYqRw4OsHirctfwFOPV/82RVovJ2u3cnp4Fk/1Zh39YkiBhadEt3KW8YTbnB2z7a
+bGT0teGGeyKhs3WKznXcqLALglS7ldx1FVnQ7s6LzkbWwWlssYRsC0Cw2csDODAl
+rHmfw2tH4uuXmQdZNPiniJVkeN78kvXPx1r0kXVmRSaYPPFYzWK9BVj/bR9BIgVj
+hdVsJlNmbFEQx74BWau09HPVoJ6MJ0uZ/EIOnnv7gItI7OrfYhQoRzcweCbOj9ko
+auhegZ+u52b22GHmL/bCDX8dLb1wbSXaTZDpg8HLzSMeH6/R6Xe/pP9PUWRADTmk
+8le1jDQ+C4DIf5AMoPz7qIjMbQidiVcirH8axajsWkCbXDYNNOJAYsZ1SbhQW8oh
+35wLsVZqJ9S8Pa+k1txo
+=EPuX
+-----END PGP SIGNATURE-----
+--=-=-=--
