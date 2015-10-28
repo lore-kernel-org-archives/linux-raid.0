@@ -1,41 +1,54 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: How to recover after md crash during reshape?
-Date: Wed, 28 Oct 2015 13:38:50 -0400
-Message-ID: <5631082A.4060100@turmel.org>
-References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
- <5626464D.9000502@turmel.org>
- <3baf849321d819483c5d20c005a31844@tantosonline.com>
- <562660EE.9020504@turmel.org>
- <72dc24dd30c19517d19887d794fd341b@tantosonline.com>
- <562D5F91.5040300@turmel.org> <5630F862.5040308@tantosonline.com>
- <5630FB05.5070902@turmel.org> <56310197.1010708@tantosonline.com>
+From: Sheng Yang <sheng@yasker.org>
+Subject: Raid array name by mdadm
+Date: Wed, 28 Oct 2015 11:43:46 -0700
+Message-ID: <CA+2rt40JQcxv8CTw-+bpXDGFNorgS53B+thrkNeGN6B2JRQmBw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56310197.1010708@tantosonline.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andras Tantos <andras@tantosonline.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/28/2015 01:10 PM, Andras Tantos wrote:
-> Phil,
-> 
->>> To be able to re-assemble the array, I *have* to specify metadata
->>> version 0.9:
->>>
->>> Is this a problem? Can I upgrade my array to 1.0 metadata? Should I?
->>
->> Hmm. Interesting.  Your version of mdadm is insisting on reserving much
->> more space between end of content and the v1.0 metadata than when using
->> v0.90 metadata.
->>
->> I'm curious how much.  Please show the output of "cat /proc/partitions".
+Hi guys,
 
-Ok.  I think your version of mdadm is trying to put a bitmap on the v1.0
-array, which can be suppressed with --bitmap=none.  Or just do the
---assemble --update.
+I am trying to find a way to make mdadm create /dev/md/<devicename>
+instead of /dev/mdnn only. I found it seems possible from the manual
+of mdadm(http://linux.die.net/man/8/mdadm). It said:
 
-Phil
+If the md device name is in a 'standard' format as described in DEVICE
+NAMES, then it will be created, if necessary, with the appropriate
+device number based on that name. If the device name is not in one of
+these formats, then a unused device number will be allocated. The
+device number will be considered unused if there is no active array
+for that number, and there is no entry in /dev for that number and
+with a non-standard name. Names that are not in 'standard' format are
+only allowed in "/dev/md/".
 
+I tried to create a raid using:
+
+# mdadm --create device-123 --verbose --level=mirror --raid-devices=2
+--name=device-123 /dev/sda /dev/sdb
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md/device-123 started.
+
+But what I got in the end is only /dev/md127. The directory of
+/dev/md/ doesn't exist.
+
+Though the detail showed the correct name
+
+# mdadm --detail --scan
+ARRAY /dev/md127 metadata=1.2 name=98abb2346b83:device-123
+UUID=6a31df29:adec4bff:e8867610:c0e10723
+
+It's much more convenient if I could use the name of
+/dev/md/device-123 instead of /dev/md127. I've tried google for hours
+without success.
+
+# mdadm --version
+mdadm - v3.3 - 3rd September 2013
+
+If anyone can shed some light on it, I would be appreciate!
+
+Thanks!
+
+--Sheng
