@@ -1,62 +1,64 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: Replacing a RAID1 drive that has not failed.
-Date: Wed, 28 Oct 2015 10:28:17 +0500
-Message-ID: <20151028102817.4ec30b5c@natsu>
-References: <n0mbam$gmk$1@ger.gmane.org>
-	<n0o9n3$gmk$2@ger.gmane.org>
-	<562FED15.5040804@youngman.org.uk>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lo7w5hcx1MRwb9A/8Pvv978"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562FED15.5040804@youngman.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: Doug Herr <gmane@wombatz.com>, linux-raid@vger.kernel.org
+From: Roman Gushchin <klamm@yandex-team.ru>
+Subject: [PATCH] md/raid5: fix locking in handle_stripe_clean_event()
+Date: Wed, 28 Oct 2015 11:52:20 +0300
+Message-ID: <1446022340-1453-1-git-send-email-klamm@yandex-team.ru>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Roman Gushchin <klamm@yandex-team.ru>, Neil Brown <neilb@suse.de>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lo7w5hcx1MRwb9A/8Pvv978
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+After commit 566c09c53455 ("raid5: relieve lock contention in get_active_stripe()")
+__find_stripe() is called under conf->hash_locks + hash.
+But handle_stripe_clean_event() calls remove_hash() under
+conf->device_lock.
 
-On Tue, 27 Oct 2015 21:31:01 +0000
-Wols Lists <antlists@youngman.org.uk> wrote:
+Under some cirscumstances the hash chain can be circuited,
+and we get an infinite loop with disabled interrupts and locked hash
+lock in __find_stripe(). This leads to hard lockup on multiple CPUs
+and following system crash.
 
-> On 27/10/15 16:45, Doug Herr wrote:
-> >  1. Partition new drive (plugged in via external SATA dock)
-> > #fdisk /dev/sdc
-> > (make it an exact match of sda/sdb unless it turns out to be smaller,
-> >  in which case I can shrink /boot to make room.)
->=20
-> man gdisk.
->=20
-> Look at the "u" option in the "expert" menu - it'll probably save you
-> some work :-)
+I was able to reproduce this behavior on raid6 over 6 ssd disks.
+The devices_handle_discard_safely option should be set to enable trim
+support. The following script was used:
 
-Unfamiliar with 'gdisk', but when I need the exact same set of partitions on
-another drive, I use sfdisk:
+for i in `seq 1 32`; do
+    dd if=/dev/zero of=large$i bs=10M count=100 &
+done
 
-# sfdisk -d /dev/sda > sda.sf
-# sfdisk /dev/sdb < sda.sf
+Signed-off-by: Roman Gushchin <klamm@yandex-team.ru>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
+Cc: <stable@vger.kernel.org> # 3.10 - 3.19
+---
+ drivers/md/raid5.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-You could even do it in one step:
-
-# sfdisk -d /dev/sda | sfdisk /dev/sdb
-
---=20
-With respect,
-Roman
-
---Sig_/lo7w5hcx1MRwb9A/8Pvv978
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlYwXPEACgkQTLKSvz+PZwhVPACdEDfe4HWnN013AZfcZR72jlak
-vOEAnRPOZDoI+19VimNB9UzgKE5xszA6
-=uXLz
------END PGP SIGNATURE-----
-
---Sig_/lo7w5hcx1MRwb9A/8Pvv978--
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e421016..5fa7549 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3060,6 +3060,8 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 		}
+ 	if (!discard_pending &&
+ 	    test_bit(R5_Discard, &sh->dev[sh->pd_idx].flags)) {
++		int hash = sh->hash_lock_index;
++
+ 		clear_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
+ 		clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
+ 		if (sh->qd_idx >= 0) {
+@@ -3073,9 +3075,9 @@ static void handle_stripe_clean_event(struct r5conf *conf,
+ 		 * no updated data, so remove it from hash list and the stripe
+ 		 * will be reinitialized
+ 		 */
+-		spin_lock_irq(&conf->device_lock);
++		spin_lock_irq(conf->hash_locks + hash);
+ 		remove_hash(sh);
+-		spin_unlock_irq(&conf->device_lock);
++		spin_unlock_irq(conf->hash_locks + hash);
+ 		if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state))
+ 			set_bit(STRIPE_HANDLE, &sh->state);
+ 
+-- 
+2.4.3
