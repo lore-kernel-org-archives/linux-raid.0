@@ -1,113 +1,61 @@
-From: Guillaume ALLEE <guillaume.allee@gmail.com>
-Subject: Re: 2nd Faulty drive while rebuilding array on RAID5
-Date: Wed, 28 Oct 2015 21:35:49 +0100
-Message-ID: <CABEdK7wDU42phn2RTqUQWVTCet5v+WqtRYoD0ezvHXpGioapmQ@mail.gmail.com>
-References: <CABEdK7w7zjjEXXenWRK0BSziekBGhkni50y0j3t=rW2AxNkkqQ@mail.gmail.com>
-	<562D67E3.6050708@turmel.org>
+From: Sheng Yang <sheng@yasker.org>
+Subject: Re: Raid array name by mdadm
+Date: Wed, 28 Oct 2015 14:40:13 -0700
+Message-ID: <CA+2rt40zrLoUuGhVcq2DxLiX39PRryeygFN=AZEu_5g0TwR=pQ@mail.gmail.com>
+References: <CA+2rt40JQcxv8CTw-+bpXDGFNorgS53B+thrkNeGN6B2JRQmBw@mail.gmail.com>
+	<CALtW_agEVF9x83WP6GO0mJ9zjggS_7_9TJ5dJEdijmR8wHf49A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562D67E3.6050708@turmel.org>
+In-Reply-To: <CALtW_agEVF9x83WP6GO0mJ9zjggS_7_9TJ5dJEdijmR8wHf49A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <galileo@pkm-inc.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Phil,
-
-
-Thanks for your answer. I have tested my sda3 with badblocks and it
-seems really bad like 6 digits unreadable blocks...
-
-> Something's missing.  I see only sd[abcd]3.  Where's the report for
-> /dev/sde* ?
-Yep because /dev/sde is not part of my /dec/md1 array.
-
-"ARRAY /dev/md1 level=raid5 num-devices=4 metadata=00.90
-UUID=426d71a2:5b25a168:a4e2eff2:d305f1c1
-   devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3"
->
-> Yes, you have WD20EARS and ST3000DM001 drive models.  These are not safe
-> to use in raid arrays due to lack of error recovery control.
-Okay I will look at that for my next HDs.
-
-
-> You need to stop the array and perform an '--assemble --force' with the
-> last four devices (exclude /dev/sdc).  The ones that have "Raid Device"
-> 0, 1, 2, & 3.
-Here is the assemble output.
-
-#mdadm --assemble --force /dev/md1 /dev/sda3 /dev/sdb3 /dev/sdd3
-mdadm: no recogniseable superblock on /dev/sda3
-mdadm: /dev/sda3 has no superblock - assembly aborted
->
-> If that fails, show mdadm's responses in your next reply.
-
-> Phil
-
-Thanks I will read  those links
-
-2015-10-26 0:38 GMT+01:00 Phil Turmel <philip@turmel.org>:
-> Hi Guillaume,
->
-> On 10/24/2015 06:27 PM, Guillaume ALLEE wrote:
->> Hi all,
+On Wed, Oct 28, 2015 at 12:56 PM, Dragan Milivojevi=C4=87
+<galileo@pkm-inc.com> wrote:
+>> I tried to create a raid using:
 >>
->> Context:
->> On my RAID5 sdc was faulty. I bought a new HD, format it and add it to
->> my raid array. However during the rebuilding sda was detected as
->> faulty. Now I am not sure what to do...
+>> # mdadm --create device-123 --verbose --level=3Dmirror --raid-device=
+s=3D2
+>> --name=3Ddevice-123 /dev/sda /dev/sdb
+>> mdadm: Defaulting to version 1.2 metadata
+>> mdadm: array /dev/md/device-123 started.
+>>
+>> But what I got in the end is only /dev/md127. The directory of
+>> /dev/md/ doesn't exist.
 >
-> Unfortunately, you are suffering from classic timeout mismatch.  I've
-> put some links in the postscript for you to read.  Most likely, your
-> original sdc wasn't really bad.
 >
-> [trim /]
+> try mdadm --create /dev/md/device-123,
 >
->> $ mdadm --examine /dev/sd[abcdefghijklmn]3 >> raid.status
->> http://pastebin.com/qaP8bvna
+> for example:
 >
-> Something's missing.  I see only sd[abcd]3.  Where's the report for
-> /dev/sde* ?
+> truncate -s 512M disk0
+> truncate -s 512M disk1
 >
-> [trim /]
+> losetup /dev/loop0 disk0
+> losetup /dev/loop1 disk1
 >
->> Full dmesg available at:
->> http://pastebin.com/bBfcYjkg
+> mdadm --create /dev/md/device-123 --verbose --level=3Dmirror
+> --raid-devices=3D2 /dev/loop0 /dev/loop1
 >
-> Yes, you have WD20EARS and ST3000DM001 drive models.  These are not safe
-> to use in raid arrays due to lack of error recovery control.
+> [root@eos ~]# ll /dev/md/device-123
+> lrwxrwxrwx 1 root root 8 Oct 28 20:53 /dev/md/device-123 -> ../md127
 >
->> Is there some way to re-add this disk (sda) in the array without mdadm
->> thinging it is a new one ?
->
-> You need to stop the array and perform an '--assemble --force' with the
-> last four devices (exclude /dev/sdc).  The ones that have "Raid Device"
-> 0, 1, 2, & 3.
->
-> If that fails, show mdadm's responses in your next reply.  If it works,
-> your array will be available to mount, but degraded.  You will not be
-> able to add your new sdc to the array while there are unresolved UREs,
-> so you will need to backup your important data from the degraded array.
->  UREs can only be fixed by writing over them -- normally done
-> automatically by MD with proper drives.  You will have to overwrite
-> those spots with zeroes or use dd_rescue to move the data to fresh
-> drives (with zeroes in place of the unreadable spots).
->
->> I have seen from the wiki that I could try to recreate the array with
->> --assume-clean but I want to do that only in last resort.
->
-> Do *NOT* recreate the array.  (Unless you're starting over after backing
-> up the files from the degraded array.)
->
-> Phil
->
-> [1] http://marc.info/?l=linux-raid&m=139050322510249&w=2
-> [2] http://marc.info/?l=linux-raid&m=135863964624202&w=2
-> [3] http://marc.info/?l=linux-raid&m=135811522817345&w=1
-> [4] http://marc.info/?l=linux-raid&m=133761065622164&w=2
-> [5] http://marc.info/?l=linux-raid&m=132477199207506
-> [6] http://marc.info/?l=linux-raid&m=133665797115876&w=2
-> [7] http://marc.info/?l=linux-raid&m=142487508806844&w=3
-> [8] http://marc.info/?l=linux-raid&m=144535576302583&w=2
->
+> [root@eos ~]# mdadm --detail --scan
+> ARRAY /dev/md/device-123 metadata=3D1.2 name=3Ddevice-123
+> UUID=3D03ba5df7:7c5cc933:367e19ef:384665c5
+
+Thank Dragan! It works!
+
+Seems it's mdadm itself create the link rather than do through kernel,
+which gave me a little trouble. :D
+
+--Sheng
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
