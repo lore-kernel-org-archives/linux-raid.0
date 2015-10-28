@@ -1,100 +1,94 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] raid5-cache: use crc32c checksum
-Date: Tue, 27 Oct 2015 16:48:20 -0700
-Message-ID: <05c660271fe0d5f42bc053ef89c5e20ff57cf955.1445989535.git.shli@fb.com>
+From: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Subject: Re: Converting 4 disk RAID10 to RAID5
+Date: Wed, 28 Oct 2015 12:57:41 +1100
+Message-ID: <56302B95.3000006@websitemanagers.com.au>
+References: <562D8142.80507@websitemanagers.com.au>
+ <562E345D.5030206@turmel.org> <562EBD58.2040306@websitemanagers.com.au>
+ <562F1789.9080000@gmail.com> <562F1A61.6010709@websitemanagers.com.au>
+ <562F6A77.20502@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <562F6A77.20502@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, bart.vanassche@sandisk.com, neilb@suse.de
+To: Phil Turmel <philip@turmel.org>, Anugraha Sinha <asinha.mailinglist@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-crc32c has lower overhead with cpu acceleration. It's a shame I didn't
-use it in first post, sorry. This changes disk format, but we are still
-ok in current stage.
+On 27/10/15 23:13, Phil Turmel wrote:
+> On 10/27/2015 02:32 AM, Adam Goryachev wrote:
+>> On 27/10/15 17:19, Anugraha Sinha wrote:
+> \
+>>> This will restart your array with the required raid-level and also
+>>> start the resyncing process.
+> You shouldn't have needed to stop it.
+>
+>> I got:
+>> mdadm: Failed to restore critical section for reshape, sorry.
+>> Possibly you needed to specify the --backup-file
+> Probably just need "mdadm /dev/md0 --grow --continue --backup-file=...."
+>
+> where .... is a file location outside the array.  You may also need
+> --invalid-backup
+>
+> Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Thank you, that did it (if I don't do the stop):
+mdadm --grow --continue --backup-file=/tmp/nofile /dev/md0
+mdadm: Need to backup 3072K of critical section..
+mdadm: Reshape is delayed, but cannot wait carefully with this kernel.
+        You might experience problems until other reshapes complete.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 0c398ad..e61f4de 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -16,7 +16,7 @@
- #include <linux/blkdev.h>
- #include <linux/slab.h>
- #include <linux/raid/md_p.h>
--#include <linux/crc32.h>
-+#include <linux/crc32c.h>
- #include <linux/random.h>
- #include "md.h"
- #include "raid5.h"
-@@ -242,7 +242,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 
- 	block = page_address(io->meta_page);
- 	block->meta_size = cpu_to_le32(io->meta_offset);
--	crc = crc32_le(log->uuid_checksum, (void *)block, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, (void *)block, PAGE_SIZE);
- 	block->checksum = cpu_to_le32(crc);
- 
- 	log->current_io = NULL;
-@@ -448,7 +448,7 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 		if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
- 			continue;
- 		addr = kmap_atomic(sh->dev[i].page);
--		sh->dev[i].log_checksum = crc32_le(log->uuid_checksum,
-+		sh->dev[i].log_checksum = crc32c_le(log->uuid_checksum,
- 						   addr, PAGE_SIZE);
- 		kunmap_atomic(addr);
- 	}
-@@ -839,7 +839,7 @@ static int r5l_read_meta_block(struct r5l_log *log,
- 	    le64_to_cpu(mb->position) != ctx->pos)
- 		return -EINVAL;
- 
--	crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
- 	if (stored_crc != crc)
- 		return -EINVAL;
- 
-@@ -914,7 +914,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 		if (!test_bit(R5_Wantwrite, &sh->dev[disk_index].flags))
- 			continue;
- 		addr = kmap_atomic(sh->dev[disk_index].page);
--		checksum = crc32_le(log->uuid_checksum, addr, PAGE_SIZE);
-+		checksum = crc32c_le(log->uuid_checksum, addr, PAGE_SIZE);
- 		kunmap_atomic(addr);
- 		if (checksum != sh->dev[disk_index].log_checksum)
- 			goto error;
-@@ -1004,7 +1004,7 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
- 	mb->meta_size = cpu_to_le32(sizeof(struct r5l_meta_block));
- 	mb->seq = cpu_to_le64(seq);
- 	mb->position = cpu_to_le64(pos);
--	crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
- 	mb->checksum = cpu_to_le32(crc);
- 
- 	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, WRITE_FUA, false)) {
-@@ -1095,7 +1095,7 @@ static int r5l_load_log(struct r5l_log *log)
- 	}
- 	stored_crc = le32_to_cpu(mb->checksum);
- 	mb->checksum = 0;
--	expected_crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	expected_crc = crc32c_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
- 	if (stored_crc != expected_crc) {
- 		create_super = true;
- 		goto create;
-@@ -1144,7 +1144,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 
- 	log->need_cache_flush = (rdev->bdev->bd_disk->queue->flush_flags != 0);
- 
--	log->uuid_checksum = crc32_le(~0, (void *)rdev->mddev->uuid,
-+	log->uuid_checksum = crc32c_le(~0, (void *)rdev->mddev->uuid,
- 				      sizeof(rdev->mddev->uuid));
- 
- 	mutex_init(&log->io_mutex);
+Just in case someone else is looking later, this is how to convert from 
+4 disk RAID10 to 4 disk RAID5.
+
+Starting again from scratch, I followed this process:
+mdadm --create --level=10 --raid-devices=4 /dev/md0 /dev/vd[cdef]1
+mdadm --grow --bitmap=internal /dev/md0
+
+#This gets me to my current live config....
+
+# Remove the bitmap since it causes problems later
+mdadm --grow --bitmap=none /dev/md0
+
+# Grow to RAID0 which basically just drops two devices, it finishes 
+immediately.
+mdadm --grow --level=0 --raid-devices=2 /dev/md0
+
+# Grow to RAID5, only add one device
+mdadm --grow --level=5 --raid-devices=3 /dev/md0 -a /dev/vdd1
+
+# A resync is completed, looks good/normal
+
+# Grow to add the 4th device
+mdadm --grow --raid-devices=4 /dev/md0 -a /dev/vdf1
+
+# Problems, stuck with resync=DELAYED, we were not asked to supply a 
+backup file for this...
+# Just ask mdadm to continue, and now supply a backup file
+mdadm --grow --continue --backup-file=/tmp/nofile /dev/md0
+
+# All good. Add the bitmap again
+mdadm --grow /dev/md0 --bitmap=internal
+
+It would seem to me that this is generally a relatively "dangerous" 
+exercise, you are very vulnerable to failed disks due to using RAID0, 
+and then migrating to RAID5, any read/write failure during that process 
+could cause significant data loss. Finally, the grow to add the 4th disk 
+should be fine, unless you have a problem with the same block on two 
+devices.
+
+Any final comments/suggestions before I start the process "for real"?
+
+Thanks,
+Adam
+
+
 -- 
-2.4.6
+Adam Goryachev Website Managers www.websitemanagers.com.au
+
 
