@@ -1,127 +1,75 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH] raid5-cache: use crc32c checksum
-Date: Wed, 28 Oct 2015 08:41:25 -0700
-Message-ID: <20151028154124.GA439358@devbig084.prn1.facebook.com>
-References: <05c660271fe0d5f42bc053ef89c5e20ff57cf955.1445989535.git.shli@fb.com>
- <5630E942.90501@sandisk.com>
+From: Doug Herr <gmane@wombatz.com>
+Subject: Re: Replacing a RAID1 drive that has not failed.
+Date: Wed, 28 Oct 2015 15:54:00 +0000 (UTC)
+Message-ID: <n0qr2n$9t7$1@ger.gmane.org>
+References: <n0mbam$gmk$1@ger.gmane.org> <n0o9n3$gmk$2@ger.gmane.org>
+	<562FED15.5040804@youngman.org.uk> <20151028102817.4ec30b5c@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5630E942.90501@sandisk.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Oct 28, 2015 at 08:26:58AM -0700, Bart Van Assche wrote:
-> On 10/27/2015 04:48 PM, Shaohua Li wrote:
-> >crc32c has lower overhead with cpu acceleration. It's a shame I didn't
-> >use it in first post, sorry. This changes disk format, but we are still
-> >ok in current stage.
+On Wed, 28 Oct 2015 10:28:17 +0500, Roman Mamedov wrote:
+
+> On Tue, 27 Oct 2015 21:31:01 +0000
+> Wols Lists <antlists@youngman.org.uk> wrote:
 > 
-> Hello Shaohua,
+>> On 27/10/15 16:45, Doug Herr wrote:
+>> >  1. Partition new drive (plugged in via external SATA dock)
+>> > #fdisk /dev/sdc
+>> > (make it an exact match of sda/sdb unless it turns out to be smaller,
+>> >  in which case I can shrink /boot to make room.)
+>> 
+>> man gdisk.
+>> 
+>> Look at the "u" option in the "expert" menu - it'll probably save you
+>> some work :-)
 > 
-> Although this patch looks fine to me I think the (void *) casts in
-> the crc32c_le() calls can be left out. Had you considered to include
-> that change in this patch ?
+> Unfamiliar with 'gdisk', but when I need the exact same set of 
+partitions on
+> another drive, I use sfdisk:
+> 
+> # sfdisk -d /dev/sda > sda.sf
+> # sfdisk /dev/sdb < sda.sf
+> 
+> You could even do it in one step:
+> 
+> # sfdisk -d /dev/sda | sfdisk /dev/sdb
 
-Sure, thanks!
 
+Thanks much to all who have replied and all who post here.
 
-From 558985bc46db90762447e0bc9515e2a84272e636 Mon Sep 17 00:00:00 2001
-Message-Id: <558985bc46db90762447e0bc9515e2a84272e636.1446046795.git.shli@fb.com>
-From: Shaohua Li <shli@fb.com>
-Date: Wed, 28 Oct 2015 08:37:27 -0700
-Subject: [PATCH] raid5-cache: use crc32c checksum
+Yup, the sfdisk copy is one that I am ready to use if needed but your 
+replies have triggered better googling and I am now planning to use fdisk 
+(I am in Fedora 22) to manually partition the new disk.  I don't think I 
+have any need for GPT yet but what I realized is that my current set of 
+disks was created when fdisk was still starting at sector 63 where now it 
+uses 2048.  I don't think it matters much for my current set of Hitachi 
+HDT721010SLA360 drives.  It might not even matter for the slightly newer 
+"E7K1000" that is on the way to me, but I do want to stick with the 
+current standards as best I can.  I have room to tweak it since I have a 
+non-RAID /boot partition that is easily large enough to lend space as 
+needed.
 
-crc32c has lower overhead with cpu acceleration. It's a shame I didn't
-use it in first post, sorry. This changes disk format, but we are still
-ok in current stage.
+I do plan to play with GPT to learn about it and to be more ready for the 
+next computer if it is the default at that point.
 
-V2: delete unnecessary type conversion as pointed out by Bart
+Oh, I also added a step in my plan.  Adding my new partitions as spares 
+first will alert me of size errors (if smaller) *before* any of the 
+replacement jobs kick off:
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+For each:
+# mdadm /dev/md4 --add-spare /dev/sdc2
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 0c398ad..e9227e8 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -16,7 +16,7 @@
- #include <linux/blkdev.h>
- #include <linux/slab.h>
- #include <linux/raid/md_p.h>
--#include <linux/crc32.h>
-+#include <linux/crc32c.h>
- #include <linux/random.h>
- #include "md.h"
- #include "raid5.h"
-@@ -242,7 +242,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 
- 	block = page_address(io->meta_page);
- 	block->meta_size = cpu_to_le32(io->meta_offset);
--	crc = crc32_le(log->uuid_checksum, (void *)block, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, block, PAGE_SIZE);
- 	block->checksum = cpu_to_le32(crc);
- 
- 	log->current_io = NULL;
-@@ -448,7 +448,7 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 		if (test_bit(STRIPE_LOG_TRAPPED, &sh->state))
- 			continue;
- 		addr = kmap_atomic(sh->dev[i].page);
--		sh->dev[i].log_checksum = crc32_le(log->uuid_checksum,
-+		sh->dev[i].log_checksum = crc32c_le(log->uuid_checksum,
- 						   addr, PAGE_SIZE);
- 		kunmap_atomic(addr);
- 	}
-@@ -839,7 +839,7 @@ static int r5l_read_meta_block(struct r5l_log *log,
- 	    le64_to_cpu(mb->position) != ctx->pos)
- 		return -EINVAL;
- 
--	crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
- 	if (stored_crc != crc)
- 		return -EINVAL;
- 
-@@ -914,7 +914,7 @@ static int r5l_recovery_flush_one_stripe(struct r5l_log *log,
- 		if (!test_bit(R5_Wantwrite, &sh->dev[disk_index].flags))
- 			continue;
- 		addr = kmap_atomic(sh->dev[disk_index].page);
--		checksum = crc32_le(log->uuid_checksum, addr, PAGE_SIZE);
-+		checksum = crc32c_le(log->uuid_checksum, addr, PAGE_SIZE);
- 		kunmap_atomic(addr);
- 		if (checksum != sh->dev[disk_index].log_checksum)
- 			goto error;
-@@ -1004,7 +1004,7 @@ static int r5l_log_write_empty_meta_block(struct r5l_log *log, sector_t pos,
- 	mb->meta_size = cpu_to_le32(sizeof(struct r5l_meta_block));
- 	mb->seq = cpu_to_le64(seq);
- 	mb->position = cpu_to_le64(pos);
--	crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
- 	mb->checksum = cpu_to_le32(crc);
- 
- 	if (!sync_page_io(log->rdev, pos, PAGE_SIZE, page, WRITE_FUA, false)) {
-@@ -1095,7 +1095,7 @@ static int r5l_load_log(struct r5l_log *log)
- 	}
- 	stored_crc = le32_to_cpu(mb->checksum);
- 	mb->checksum = 0;
--	expected_crc = crc32_le(log->uuid_checksum, (void *)mb, PAGE_SIZE);
-+	expected_crc = crc32c_le(log->uuid_checksum, mb, PAGE_SIZE);
- 	if (stored_crc != expected_crc) {
- 		create_super = true;
- 		goto create;
-@@ -1144,7 +1144,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 
- 	log->need_cache_flush = (rdev->bdev->bd_disk->queue->flush_flags != 0);
- 
--	log->uuid_checksum = crc32_le(~0, (void *)rdev->mddev->uuid,
-+	log->uuid_checksum = crc32c_le(~0, rdev->mddev->uuid,
- 				      sizeof(rdev->mddev->uuid));
- 
- 	mutex_init(&log->io_mutex);
+If the above does not complain then move forward for each:
+# mdadm /dev/md3 --replace /dev/sda2 --with /dev/sdc2
+
+And fear not, I will be updating my backups before moving forward with 
+this.
+
 -- 
-2.4.6
+Doug Herr 
 
