@@ -1,94 +1,62 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Converting 4 disk RAID10 to RAID5
-Date: Wed, 28 Oct 2015 12:57:41 +1100
-Message-ID: <56302B95.3000006@websitemanagers.com.au>
-References: <562D8142.80507@websitemanagers.com.au>
- <562E345D.5030206@turmel.org> <562EBD58.2040306@websitemanagers.com.au>
- <562F1789.9080000@gmail.com> <562F1A61.6010709@websitemanagers.com.au>
- <562F6A77.20502@turmel.org>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: Replacing a RAID1 drive that has not failed.
+Date: Wed, 28 Oct 2015 10:28:17 +0500
+Message-ID: <20151028102817.4ec30b5c@natsu>
+References: <n0mbam$gmk$1@ger.gmane.org>
+	<n0o9n3$gmk$2@ger.gmane.org>
+	<562FED15.5040804@youngman.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/lo7w5hcx1MRwb9A/8Pvv978"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <562F6A77.20502@turmel.org>
+In-Reply-To: <562FED15.5040804@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Anugraha Sinha <asinha.mailinglist@gmail.com>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Doug Herr <gmane@wombatz.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/10/15 23:13, Phil Turmel wrote:
-> On 10/27/2015 02:32 AM, Adam Goryachev wrote:
->> On 27/10/15 17:19, Anugraha Sinha wrote:
-> \
->>> This will restart your array with the required raid-level and also
->>> start the resyncing process.
-> You shouldn't have needed to stop it.
->
->> I got:
->> mdadm: Failed to restore critical section for reshape, sorry.
->> Possibly you needed to specify the --backup-file
-> Probably just need "mdadm /dev/md0 --grow --continue --backup-file=...."
->
-> where .... is a file location outside the array.  You may also need
-> --invalid-backup
->
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/lo7w5hcx1MRwb9A/8Pvv978
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thank you, that did it (if I don't do the stop):
-mdadm --grow --continue --backup-file=/tmp/nofile /dev/md0
-mdadm: Need to backup 3072K of critical section..
-mdadm: Reshape is delayed, but cannot wait carefully with this kernel.
-        You might experience problems until other reshapes complete.
+On Tue, 27 Oct 2015 21:31:01 +0000
+Wols Lists <antlists@youngman.org.uk> wrote:
 
-Just in case someone else is looking later, this is how to convert from 
-4 disk RAID10 to 4 disk RAID5.
+> On 27/10/15 16:45, Doug Herr wrote:
+> >  1. Partition new drive (plugged in via external SATA dock)
+> > #fdisk /dev/sdc
+> > (make it an exact match of sda/sdb unless it turns out to be smaller,
+> >  in which case I can shrink /boot to make room.)
+>=20
+> man gdisk.
+>=20
+> Look at the "u" option in the "expert" menu - it'll probably save you
+> some work :-)
 
-Starting again from scratch, I followed this process:
-mdadm --create --level=10 --raid-devices=4 /dev/md0 /dev/vd[cdef]1
-mdadm --grow --bitmap=internal /dev/md0
+Unfamiliar with 'gdisk', but when I need the exact same set of partitions on
+another drive, I use sfdisk:
 
-#This gets me to my current live config....
+# sfdisk -d /dev/sda > sda.sf
+# sfdisk /dev/sdb < sda.sf
 
-# Remove the bitmap since it causes problems later
-mdadm --grow --bitmap=none /dev/md0
+You could even do it in one step:
 
-# Grow to RAID0 which basically just drops two devices, it finishes 
-immediately.
-mdadm --grow --level=0 --raid-devices=2 /dev/md0
+# sfdisk -d /dev/sda | sfdisk /dev/sdb
 
-# Grow to RAID5, only add one device
-mdadm --grow --level=5 --raid-devices=3 /dev/md0 -a /dev/vdd1
+--=20
+With respect,
+Roman
 
-# A resync is completed, looks good/normal
+--Sig_/lo7w5hcx1MRwb9A/8Pvv978
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-# Grow to add the 4th device
-mdadm --grow --raid-devices=4 /dev/md0 -a /dev/vdf1
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-# Problems, stuck with resync=DELAYED, we were not asked to supply a 
-backup file for this...
-# Just ask mdadm to continue, and now supply a backup file
-mdadm --grow --continue --backup-file=/tmp/nofile /dev/md0
+iEYEARECAAYFAlYwXPEACgkQTLKSvz+PZwhVPACdEDfe4HWnN013AZfcZR72jlak
+vOEAnRPOZDoI+19VimNB9UzgKE5xszA6
+=uXLz
+-----END PGP SIGNATURE-----
 
-# All good. Add the bitmap again
-mdadm --grow /dev/md0 --bitmap=internal
-
-It would seem to me that this is generally a relatively "dangerous" 
-exercise, you are very vulnerable to failed disks due to using RAID0, 
-and then migrating to RAID5, any read/write failure during that process 
-could cause significant data loss. Finally, the grow to add the 4th disk 
-should be fine, unless you have a problem with the same block on two 
-devices.
-
-Any final comments/suggestions before I start the process "for real"?
-
-Thanks,
-Adam
-
-
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
-
-
+--Sig_/lo7w5hcx1MRwb9A/8Pvv978--
