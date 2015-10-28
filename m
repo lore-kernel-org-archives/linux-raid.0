@@ -1,64 +1,27 @@
-From: Roman Gushchin <klamm@yandex-team.ru>
-Subject: [PATCH] md/raid5: fix locking in handle_stripe_clean_event()
-Date: Wed, 28 Oct 2015 11:52:20 +0300
-Message-ID: <1446022340-1453-1-git-send-email-klamm@yandex-team.ru>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Roman Gushchin <klamm@yandex-team.ru>, Neil Brown <neilb@suse.de>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, stable@vger.kernel.org
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Converting 4 disk RAID10 to RAID5
+Date: Wed, 28 Oct 2015 09:56:10 -0400
+Message-ID: <5630D3FA.70305@turmel.org>
+References: <562D8142.80507@websitemanagers.com.au>
+ <562E345D.5030206@turmel.org> <562EBD58.2040306@websitemanagers.com.au>
+ <562F1789.9080000@gmail.com> <562F1A61.6010709@websitemanagers.com.au>
+ <562F6A77.20502@turmel.org> <56302B95.3000006@websitemanagers.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56302B95.3000006@websitemanagers.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>, Anugraha Sinha <asinha.mailinglist@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After commit 566c09c53455 ("raid5: relieve lock contention in get_active_stripe()")
-__find_stripe() is called under conf->hash_locks + hash.
-But handle_stripe_clean_event() calls remove_hash() under
-conf->device_lock.
+On 10/27/2015 09:57 PM, Adam Goryachev wrote:
+> 
+> Any final comments/suggestions before I start the process "for real"?
 
-Under some cirscumstances the hash chain can be circuited,
-and we get an infinite loop with disabled interrupts and locked hash
-lock in __find_stripe(). This leads to hard lockup on multiple CPUs
-and following system crash.
+Do a 'check' scrub before the raid10 to raid0 conversion.
 
-I was able to reproduce this behavior on raid6 over 6 ssd disks.
-The devices_handle_discard_safely option should be set to enable trim
-support. The following script was used:
+Great report!
 
-for i in `seq 1 32`; do
-    dd if=/dev/zero of=large$i bs=10M count=100 &
-done
+Phil
 
-Signed-off-by: Roman Gushchin <klamm@yandex-team.ru>
-Cc: Neil Brown <neilb@suse.de>
-Cc: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
-Cc: <stable@vger.kernel.org> # 3.10 - 3.19
----
- drivers/md/raid5.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e421016..5fa7549 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3060,6 +3060,8 @@ static void handle_stripe_clean_event(struct r5conf *conf,
- 		}
- 	if (!discard_pending &&
- 	    test_bit(R5_Discard, &sh->dev[sh->pd_idx].flags)) {
-+		int hash = sh->hash_lock_index;
-+
- 		clear_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
- 		clear_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags);
- 		if (sh->qd_idx >= 0) {
-@@ -3073,9 +3075,9 @@ static void handle_stripe_clean_event(struct r5conf *conf,
- 		 * no updated data, so remove it from hash list and the stripe
- 		 * will be reinitialized
- 		 */
--		spin_lock_irq(&conf->device_lock);
-+		spin_lock_irq(conf->hash_locks + hash);
- 		remove_hash(sh);
--		spin_unlock_irq(&conf->device_lock);
-+		spin_unlock_irq(conf->hash_locks + hash);
- 		if (test_bit(STRIPE_SYNC_REQUESTED, &sh->state))
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 
--- 
-2.4.3
