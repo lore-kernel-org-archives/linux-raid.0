@@ -1,64 +1,61 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: How to recover after md crash during reshape?
-Date: Fri, 30 Oct 2015 14:12:00 -0400
-Message-ID: <5633B2F0.9010902@turmel.org>
-References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
- <5626464D.9000502@turmel.org>
- <3baf849321d819483c5d20c005a31844@tantosonline.com>
- <562660EE.9020504@turmel.org>
- <72dc24dd30c19517d19887d794fd341b@tantosonline.com>
- <562D5F91.5040300@turmel.org> <5630F862.5040308@tantosonline.com>
- <5630FB05.5070902@turmel.org> <56325086.4060104@tantosonline.com>
+Subject: Re: Reconstruct a RAID 6 that has failed in a non typical manner
+Date: Fri, 30 Oct 2015 14:31:57 -0400
+Message-ID: <5633B79D.4000009@turmel.org>
+References: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56325086.4060104@tantosonline.com>
+In-Reply-To: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andras Tantos <andras@tantosonline.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Clement Parisot <clement.parisot@inria.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/29/2015 12:59 PM, Andras Tantos wrote:
-> Phil,
-> 
-> On 10/28/2015 9:42 AM, Phil Turmel wrote:
->> If you stop the array cleanly and then manually re-assemble with
->> --update=metadata, you might get around it. (Specify all of the
->> devices explicitly to ensure you don't get burned by v0.90's problems
->> with last partitions.) You definitely don't want to stay on v0.90, but
->> you may need to for now to get out of trouble. Phil 
-> 
-> It seems that my mdadm doesn't have an --update=metadata option, which
-> if I understand it right means I have to re-create the array with the
-> no-bitmap option. How dangerous is that? Is it possible that things get
-> overwritten during the re-create process in the data portion of the array?
+Good afternoon, Clement, Marc,
 
-Just clone and compile a local copy of the latest mdadm, then run it as
-./mdadm for the --update operation.
+On 10/29/2015 11:59 AM, Clement Parisot wrote:
+> we've got a problem with our old RAID 6.
 
-git clone git://github.com/neilbrown/mdadm
+> After an electrical maintenance, 2 of our HDD came in fail state. An alert was sent that said everything was reconstructing.
 
-> I've read that GRUB (which is my bootloader) didn't support v1.0
-> superblocks for a while. It seems that 0.99 version of GRUB (which is
-> what I have) has it, but how to make certain? I don't want to render my
-> system un-bootable...
+> md1 reconstruction works but md2 failed as a 3rd HDD seems to be broked. A new disk has been successfully added to replace a failed one.
+> All of the disks of md2 changed to Spare state. We rebooted the server but it was worse.
 
-Old grub doesn't understand MD at all, which is why you needed a mirror
-that has the content starting at the beginning of the partition.  To
-grub, it doesn't look like a mirror.  This is true for v1.0 as well.
+> As you can see, RAID is in "active, FAILED, Not Started" State. We tried to add the new disk, re-add the previously removed disks as they appears to have no errors.
+> 2/3 of the disks should still contains the datas. We want to recover it.
 
-> Can you expand a little bit on the problems of v0.90 superblocks and why
-> upgrading is advantageous? What I've read about the differences (lifted
-> limit of number of devices/array and 2TB per device limit) don't really
-> apply to my case.
+Your subject is inaccurate.  You've described a situation that is
+extraordinarily common when using green drives.  Or any modern desktop
+drive -- they aren't rated for use in raid arrays.  Please read the
+references in the post-script.
 
-v0.90 will screw up if you have it on the last partition of a device,
-and that partition runs very close to the end of the device.  v0.90
-doesn't include size info in the metadata itself, so it is ambiguous in
-that case whether the superblock belongs to the device as a whole or the
-partition.  That'll really scramble an array.
+> I tried procedure on RAID_Recovery wiki
+>   mdadm --assemble --force /dev/md2 /dev/sda /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn /dev/sdo /dev/sdp
+> but it failed.
+> mdadm: failed to add /dev/sdg to /dev/md2: Device or resource busy
+> mdadm: failed to RUN_ARRAY /dev/md2: Input/output error
+> mdadm: Not enough devices to start the array.
 
-Just say no to v0.90.
+Did you run "mdadm --stop /dev/md2" first?  That would explain the
+"busy" reports.
+
+Before proceeding, please supply more information:
+
+for x in /dev/sd[a-p] ; mdadm -E $x ; smartctl -i -A -l scterc $x ; done
+
+Paste the output inline in your response.
 
 Phil
+
+[1] http://marc.info/?l=linux-raid&m=139050322510249&w=2
+[2] http://marc.info/?l=linux-raid&m=135863964624202&w=2
+[3] http://marc.info/?l=linux-raid&m=135811522817345&w=1
+[4] http://marc.info/?l=linux-raid&m=133761065622164&w=2
+[5] http://marc.info/?l=linux-raid&m=132477199207506
+[6] http://marc.info/?l=linux-raid&m=133665797115876&w=2
+[7] http://marc.info/?l=linux-raid&m=142487508806844&w=3
+[8] http://marc.info/?l=linux-raid&m=144535576302583&w=2
+
+
+
