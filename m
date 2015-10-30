@@ -1,79 +1,70 @@
-From: Roman Gushchin <klamm@yandex-team.ru>
-Subject: Re: [PATCH] md/raid5: fix locking in handle_stripe_clean_event()
-Date: Fri, 30 Oct 2015 17:02:47 +0300
-Message-ID: <47541446213767@webcorp02e.yandex-team.ru>
-References: <1446022340-1453-1-git-send-email-klamm@yandex-team.ru> <87r3kebjgx.fsf@notabene.neil.brown.name> <30651446128148@webcorp02d.yandex-team.ru> <87ziz1w33r.fsf@notabene.neil.brown.name>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: raid1 - mismatches after resuming interrupted recovery
+Date: Fri, 30 Oct 2015 11:58:51 -0400
+Message-ID: <wrfj1tccpcuc.fsf@carbonite.lan.trained-monkey.org>
+References: <559AAAAA.2030904@stratus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87ziz1w33r.fsf@notabene.neil.brown.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Shaohua Li <shli@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <559AAAAA.2030904@stratus.com> (Nate Dailey's message of "Mon, 6
+	Jul 2015 12:19:54 -0400")
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Nate Dailey <nate.dailey@stratus.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Isn't the 4.1 fix just:
+Nate Dailey <nate.dailey@stratus.com> writes:
+> I've found that if I interrupt a recovery by removing the target
+> device, do IO before the recovery checkpoint, then re-add the device
+> and let the recovery complete, the mismatch_cnt is non-zero after
+> doing a check.
+
+Neil,
+
+While I am on the nagging path, here is another one.
+
+Jes
+
+> Here's exactly what I'm doing:
 >
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e5befa356dbe..6e4350a78257 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3522,16 +3522,16 @@ returnbi:
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A* no updated da=
-ta, so remove it from hash list and the stripe
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A* will be reini=
-tialized
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A*/
-> - spin_lock_irq(&conf->device_lock);
-> =9Aunhash:
-> + spin_lock_irq(conf->hash_locks + sh->hash_lock_index);
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aremove_hash(sh);
-> + spin_unlock_irq(conf->hash_locks + sh->hash_lock_index);
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (head_sh->batch=
-_head) {
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9Ash =3D list_first_entry(&sh->batch_list,
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-struct stripe_head, batch_list);
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9Aif (sh !=3D head_sh)
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Agoto unhash;
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A}
-> - spin_unlock_irq(&conf->device_lock);
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Ash =3D head_sh;
+> - create a 5 GB raid1 with internal bitmap
 >
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (test_bit(STRIP=
-E_SYNC_REQUESTED, &sh->state))
+> - do a check, verify zero mismatch_cnt
 >
-> ??
-
-In my opion, this patch looks correct, although it seems to me, that th=
-ere is an another issue here.
-
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (head_sh->batch=
-_head) {
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9Ash =3D list_first_entry(&sh->batch_list,
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-struct stripe_head, batch_list);
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9Aif (sh !=3D head_sh)
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
-=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Agoto unhash;
-> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A}
-=20
-With a patch above this code will be executed without taking any locks.=
- It it correct?
-In my opinion, we need to take at least sh->stripe_lock, which protects=
- sh->batch_head.
-Or do I miss something?
-
-If you want, we can handle this issue separately.
-
-
-Thanks,
-Roman
+> - remove one member device
+>
+> - dd 256MB with 2GB seek
+>
+> - lower sync_speed_min/max to 500
+>
+> - re-add removed device
+>
+> - wait 15 sec
+>
+> - remove the same member device again
+>
+> - dd 1MB with 1 GB seek
+>
+> - restore sync_speed_min/max to system defaults
+>
+> - re-add removed device
+>
+> - when recovery competes, do another check
+>
+> At this point the mismatch_cnt is non-zero.
+>
+>
+> I originally hit this on RHEL 7.1, but tested 4.1.1 from kernel.org
+> and it happens there too.
+>
+> I'm out of my league in terms of trying to fix this, but would be
+> happy to test a fix. I wonder if it's really necessary to resume a
+> bitmap recovery from the checkpoint? Wouldn't the bitmap always
+> reflect what needs to be copied?
+>
+> Nate
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
