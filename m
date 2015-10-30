@@ -1,38 +1,91 @@
-From: Carlos@vger.kernel.org
-Subject: GOOD NEWS
-Date: Sat, 31 Oct 2015 02:39:22 +0530
-Message-ID: <AM3PR02MB1310FC2F9A9D3DDC12A116AB82F0@AM3PR02MB131.eurprd02.prod.outlook.com>
-Reply-To: <carlos.s.helu1@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md/raid5: fix locking in handle_stripe_clean_event()
+Date: Sat, 31 Oct 2015 09:16:52 +1100
+Message-ID: <877fm4vw6j.fsf@notabene.neil.brown.name>
+References: <1446022340-1453-1-git-send-email-klamm@yandex-team.ru> <87r3kebjgx.fsf@notabene.neil.brown.name> <30651446128148@webcorp02d.yandex-team.ru> <87ziz1w33r.fsf@notabene.neil.brown.name> <47541446213767@webcorp02e.yandex-team.ru> <20151030162443.GA31413@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
-Sender: linux-raid-owner@vger.kernel.org
-To: Recipients@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151030162443.GA31413@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>, Roman Gushchin <klamm@yandex-team.ru>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-GREETINGS,
- My name is Carlos Slim Helu, A philanthropist the CEO and Chairman of =
-the Carlos Slim Helu Foundation Charitable Foundation, one of the large=
-st private foundations in the world. I believe strongly in =E2=80=98giv=
-ing while living=E2=80=99 I had one idea that never changed in my mind =
-=E2=80=94 that you should use your wealth to help people and i have dec=
-ided to secretly give {$2,500,000.00} Two Million Five Hundred Thousand=
- United Dollars, to randomly selected individuals worldwide. On receipt=
- of this email, you should count yourself as the lucky individual. Your=
- email address was chosen online while searching at random. Kindly get =
-back to me with your full address at your earliest convenience, so I kn=
-ow your email address is valid.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
 
-Visit the web page to know more about me: http://www.bornrich.com/carlo=
-s-slim-helu.html  or you can Google me ( Carlos Slim Helu ) contact me =
-at this email id (carlos.s.helu1@gmail.com) .
+T24gU2F0LCBPY3QgMzEgMjAxNSwgU2hhb2h1YSBMaSB3cm90ZToNCg0KPiBPbiBGcmksIE9jdCAz
+MCwgMjAxNSBhdCAwNTowMjo0N1BNICswMzAwLCBSb21hbiBHdXNoY2hpbiB3cm90ZToNCj4+ID4g
+SXNuJ3QgdGhlIDQuMSBmaXgganVzdDoNCj4+ID4NCj4+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bWQvcmFpZDUuYyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gPiBpbmRleCBlNWJlZmEzNTZkYmUu
+LjZlNDM1MGE3ODI1NyAxMDA2NDQNCj4+ID4gLS0tIGEvZHJpdmVycy9tZC9yYWlkNS5jDQo+PiA+
+ICsrKyBiL2RyaXZlcnMvbWQvcmFpZDUuYw0KPj4gPiBAQCAtMzUyMiwxNiArMzUyMiwxNiBAQCBy
+ZXR1cm5iaToNCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKiBubyB1
+cGRhdGVkIGRhdGEsIHNvIHJlbW92ZSBpdCBmcm9tIGhhc2ggbGlzdCBhbmQgdGhlIHN0cmlwZQ0K
+Pj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAqIHdpbGwgYmUgcmVpbml0
+aWFsaXplZA0KPj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAqLw0KPj4g
+PiAtIHNwaW5fbG9ja19pcnEoJmNvbmYtPmRldmljZV9sb2NrKTsNCj4+ID4gwqB1bmhhc2g6DQo+
+PiA+ICsgc3Bpbl9sb2NrX2lycShjb25mLT5oYXNoX2xvY2tzICsgc2gtPmhhc2hfbG9ja19pbmRl
+eCk7DQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZW1vdmVfaGFzaChz
+aCk7DQo+PiA+ICsgc3Bpbl91bmxvY2tfaXJxKGNvbmYtPmhhc2hfbG9ja3MgKyBzaC0+aGFzaF9s
+b2NrX2luZGV4KTsNCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmICho
+ZWFkX3NoLT5iYXRjaF9oZWFkKSB7DQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgc2ggPSBsaXN0X2ZpcnN0X2VudHJ5KCZzaC0+YmF0Y2hfbGlz
+dCwNCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBzdHJp
+cGVfaGVhZCwgYmF0Y2hfbGlzdCk7DQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYgKHNoICE9IGhlYWRfc2gpDQo+PiA+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqBnb3RvIHVuaGFzaDsNCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoH0NCj4+ID4gLSBzcGluX3VubG9ja19pcnEoJmNvbmYtPmRldmljZV9sb2NrKTsN
+Cj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHNoID0gaGVhZF9zaDsNCj4+
+ID4NCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmICh0ZXN0X2JpdChT
+VFJJUEVfU1lOQ19SRVFVRVNURUQsICZzaC0+c3RhdGUpKQ0KPj4gPg0KPj4gPiA/Pw0KPj4gDQo+
+PiBJbiBteSBvcGlvbiwgdGhpcyBwYXRjaCBsb29rcyBjb3JyZWN0LCBhbHRob3VnaCBpdCBzZWVt
+cyB0byBtZSwgdGhhdCB0aGVyZSBpcyBhbiBhbm90aGVyIGlzc3VlIGhlcmUuDQo+PiANCj4+ID4g
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmIChoZWFkX3NoLT5iYXRjaF9oZWFk
+KSB7DQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgc2ggPSBsaXN0X2ZpcnN0X2VudHJ5KCZzaC0+YmF0Y2hfbGlzdCwNCj4+ID4gwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBzdHJpcGVfaGVhZCwgYmF0Y2hfbGlz
+dCk7DQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgaWYgKHNoICE9IGhlYWRfc2gpDQo+PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBnb3Rv
+IHVuaGFzaDsNCj4+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoH0NCj4+ICAN
+Cj4+IFdpdGggYSBwYXRjaCBhYm92ZSB0aGlzIGNvZGUgd2lsbCBiZSBleGVjdXRlZCB3aXRob3V0
+IHRha2luZyBhbnkgbG9ja3MuIEl0IGl0IGNvcnJlY3Q/DQo+PiBJbiBteSBvcGluaW9uLCB3ZSBu
+ZWVkIHRvIHRha2UgYXQgbGVhc3Qgc2gtPnN0cmlwZV9sb2NrLCB3aGljaCBwcm90ZWN0cyBzaC0+
+YmF0Y2hfaGVhZC4NCj4+IE9yIGRvIEkgbWlzcyBzb21ldGhpbmc/DQo+PiANCj4+IElmIHlvdSB3
+YW50LCB3ZSBjYW4gaGFuZGxlIHRoaXMgaXNzdWUgc2VwYXJhdGVseS4NCj4NCj4gVGhlIGJhdGNo
+X2xpc3QgbGlzdCBkb2Vzbid0IG5lZWQgdGhlIHByb3RlY3Rpb24uIE9ubHkgdGhlIHJlbW92ZV9o
+YXNoKCkgbmVlZCBpdC4NCg0KWWVzLCB0aGF0J3MgbXkgdW5kZXJzdGFuZGluZyB0b28uICBUaGUg
+a2V5IHRvIHVuZGVyc3RhbmRpbmcgaXMgdGhhdA0KY29tbWVudCB5b3UgKGhlbHBmdWxseSEpIHB1
+dCBpbiBjbGVhcl9iYXRjaF9yZWFkeSgpOg0KDQoJLyoNCgkgKiBCQVRDSF9SRUFEWSBpcyBjbGVh
+cmVkLCBubyBuZXcgc3RyaXBlcyBjYW4gYmUgYWRkZWQuDQoJICogYmF0Y2hfbGlzdCBjYW4gYmUg
+YWNjZXNzZWQgd2l0aG91dCBsb2NrDQoJICovDQoNCkknbGwgd3JhbmdsZSBzb21lIHBhdGNoZXMu
+Li4NCg0KVGhhbmtzLA0KTmVpbEJyb3duDQo=
 
-Regards,
-Carlos Slim Helu.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWM+xUAAoJEDnsnt1WYoG50KAP/2QfLrNbY+VaLiua0ooIjIWy
+gi4pk1DcUw8H0dY5A00RX8hzD0PCSCmrX6UvuCVo15iwm1h35SMLr0h8dMxk6zZM
+3LwUzzcjP7H40G+skFr6SaAfYfEb3PFp+ZpLLRdcpg1SRtPA9ROlrC4hpb/04+M7
+x+kGefVurYwk/xgCvKSR1WmcV87s0RTypqMrk2BUXsFdbM76LW3YZ7TILbCUZg3E
+N/g4+zYZIP/e3vrnkB2g1XUNGRCe9le8SMll3DoVzWj8mOL4Gj1SimAIgIDWDgX/
+w/gs+LoeMKkjdQaHg9iUL0SGK5DPZV4P6EH2WEIHw1bFDiJv4/JCU9n2Ro/sE31Z
+U2/6E7N8w6iDHRim6BTvRj74njFjRA7CDBUtgZ7qic2YiyRiN9uF81rQuolcXPzl
+d6bLkaaCd4lVzzFTQFKjx8yg1t7ThgJ0Lr8GeTzEbapObdHP8ZZVQhK22FOHViqb
+dRMgCAuL8DSawooP6BjUu4if1m5hia3vTNvRh5otTVoUJNiQbOuqLpjPjwj3uIAA
+3BdhdMj0DO4CCcWWrsVEUMxZoZlqhTlY7Gw5GCEdaj63bI7N7YrK1rLMq14qyp0l
+6GWsy/xf3cfsXVVot845WtsGUw31BOmE5bqdpyQomyAiYsBuMXttYon2GYgUOp4C
+r3mrmVEDnLki1gcahKJr
+=pYPk
+-----END PGP SIGNATURE-----
+--=-=-=--
