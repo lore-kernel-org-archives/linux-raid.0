@@ -1,61 +1,97 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Reconstruct a RAID 6 that has failed in a non typical manner
-Date: Fri, 30 Oct 2015 14:31:57 -0400
-Message-ID: <5633B79D.4000009@turmel.org>
-References: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
+From: Ian Radford <ian.c.radford@gmail.com>
+Subject: Accidentally added as spare
+Date: Fri, 30 Oct 2015 19:07:23 +0000
+Message-ID: <CA+H5Tn=Mzys64CK2r4HBZQe-rUc8nM8hpsWTQUX_mDMTF9-d_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Clement Parisot <clement.parisot@inria.fr>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Good afternoon, Clement, Marc,
+I recently had a drive fail in a 3 drive RAID 5 array that had been up
+for nearly 3 years. I've handled this several time before but this
+time, whilst swapping out the failed drive, a 2nd drive dropped out of
+the array for some reason and when I tried to add it back, became
+marked as a spare. I haven't done anything with the new drive yet so
+whenever I try to start the array, I get one active drive and one
+spare and hence the array can't start. I can't work out how to prevent
+the 2nd drive being detected as a spare and allow the array to start
+with 2 of 3 drives. As far as I can tell from using --examine, the
+event counts are identical so I'm hoping recovery is feasible.
+Unfortunately I don't know what order the disks were originally in
+(all of the original disks have failed and been replaced during the
+array's life so far).
 
-On 10/29/2015 11:59 AM, Clement Parisot wrote:
-> we've got a problem with our old RAID 6.
+So, 2 questions: Is there a simple way to stop the 2nd drive thinking
+that it's a spare so I can just assemble the array. If not, I believe
+I should be able to recreate the array with --assume-clean: How do I
+determine the correct order for the drives? (If it's a matter of trial
+and error, how do I know when I get it right?)
 
-> After an electrical maintenance, 2 of our HDD came in fail state. An alert was sent that said everything was reconstructing.
+The output from --examine on the two drives is:
 
-> md1 reconstruction works but md2 failed as a 3rd HDD seems to be broked. A new disk has been successfully added to replace a failed one.
-> All of the disks of md2 changed to Spare state. We rebooted the server but it was worse.
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : cd57d356:c19317bf:a7df5645:f34ebdb2
+  Creation Time : Fri Mar 20 17:53:13 2009
+     Raid Level : raid5
+  Used Dev Size : 1454894336 (1387.50 GiB 1489.81 GB)
+     Array Size : 2909788672 (2774.99 GiB 2979.62 GB)
+   Raid Devices : 3
+  Total Devices : 4
+Preferred Minor : 1
 
-> As you can see, RAID is in "active, FAILED, Not Started" State. We tried to add the new disk, re-add the previously removed disks as they appears to have no errors.
-> 2/3 of the disks should still contains the datas. We want to recover it.
+    Update Time : Thu Oct 29 18:37:53 2015
+          State : clean
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : ca5c1582 - correct
+         Events : 3329174
 
-Your subject is inaccurate.  You've described a situation that is
-extraordinarily common when using green drives.  Or any modern desktop
-drive -- they aren't rated for use in raid arrays.  Please read the
-references in the post-script.
+         Layout : left-symmetric
+     Chunk Size : 256K
 
-> I tried procedure on RAID_Recovery wiki
->   mdadm --assemble --force /dev/md2 /dev/sda /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdk /dev/sdl /dev/sdm /dev/sdn /dev/sdo /dev/sdp
-> but it failed.
-> mdadm: failed to add /dev/sdg to /dev/md2: Device or resource busy
-> mdadm: failed to RUN_ARRAY /dev/md2: Input/output error
-> mdadm: Not enough devices to start the array.
+      Number   Major   Minor   RaidDevice State
+this     0       8       66        0      active sync
 
-Did you run "mdadm --stop /dev/md2" first?  That would explain the
-"busy" reports.
-
-Before proceeding, please supply more information:
-
-for x in /dev/sd[a-p] ; mdadm -E $x ; smartctl -i -A -l scterc $x ; done
-
-Paste the output inline in your response.
-
-Phil
-
-[1] http://marc.info/?l=linux-raid&m=139050322510249&w=2
-[2] http://marc.info/?l=linux-raid&m=135863964624202&w=2
-[3] http://marc.info/?l=linux-raid&m=135811522817345&w=1
-[4] http://marc.info/?l=linux-raid&m=133761065622164&w=2
-[5] http://marc.info/?l=linux-raid&m=132477199207506
-[6] http://marc.info/?l=linux-raid&m=133665797115876&w=2
-[7] http://marc.info/?l=linux-raid&m=142487508806844&w=3
-[8] http://marc.info/?l=linux-raid&m=144535576302583&w=2
+   0     0       8       66        0      active sync
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8       50        3      spare   /dev/sdd2
 
 
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : cd57d356:c19317bf:a7df5645:f34ebdb2
+  Creation Time : Fri Mar 20 17:53:13 2009
+     Raid Level : raid5
+  Used Dev Size : 1454894336 (1387.50 GiB 1489.81 GB)
+     Array Size : 2909788672 (2774.99 GiB 2979.62 GB)
+   Raid Devices : 3
+  Total Devices : 4
+Preferred Minor : 1
 
+    Update Time : Thu Oct 29 18:37:53 2015
+          State : clean
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : ca5c1572 - correct
+         Events : 3329174
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       50        3      spare   /dev/sdd2
+
+   0     0       8       66        0      active sync
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8       50        3      spare   /dev/sdd2
