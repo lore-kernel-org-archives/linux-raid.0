@@ -1,85 +1,64 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: raid1 - mismatches after resuming interrupted recovery
-Date: Fri, 30 Oct 2015 14:07:23 -0400
-Message-ID: <wrfjmvv0mdr8.fsf@carbonite.lan.trained-monkey.org>
-References: <559AAAAA.2030904@stratus.com>
-	<wrfj1tccpcuc.fsf@carbonite.lan.trained-monkey.org>
-	<5633A172.3020804@stratus.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: How to recover after md crash during reshape?
+Date: Fri, 30 Oct 2015 14:12:00 -0400
+Message-ID: <5633B2F0.9010902@turmel.org>
+References: <04cdcd6bd69b3aa1f8f24465f8485c90@tantosonline.com>
+ <5626464D.9000502@turmel.org>
+ <3baf849321d819483c5d20c005a31844@tantosonline.com>
+ <562660EE.9020504@turmel.org>
+ <72dc24dd30c19517d19887d794fd341b@tantosonline.com>
+ <562D5F91.5040300@turmel.org> <5630F862.5040308@tantosonline.com>
+ <5630FB05.5070902@turmel.org> <56325086.4060104@tantosonline.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5633A172.3020804@stratus.com> (Nate Dailey's message of "Fri, 30
-	Oct 2015 12:57:22 -0400")
+In-Reply-To: <56325086.4060104@tantosonline.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Andras Tantos <andras@tantosonline.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Nate Dailey <nate.dailey@stratus.com> writes:
-> This is the the same as "ignore recovery_offset if bitmap exists",
-> describing how I hit the problem (before attempting to put a patch
-> together to fix it).
+On 10/29/2015 12:59 PM, Andras Tantos wrote:
+> Phil,
+> 
+> On 10/28/2015 9:42 AM, Phil Turmel wrote:
+>> If you stop the array cleanly and then manually re-assemble with
+>> --update=metadata, you might get around it. (Specify all of the
+>> devices explicitly to ensure you don't get burned by v0.90's problems
+>> with last partitions.) You definitely don't want to stay on v0.90, but
+>> you may need to for now to get out of trouble. Phil 
+> 
+> It seems that my mdadm doesn't have an --update=metadata option, which
+> if I understand it right means I have to re-create the array with the
+> no-bitmap option. How dangerous is that? Is it possible that things get
+> overwritten during the re-create process in the data portion of the array?
 
-Thanks for the clarification Nate, I thought it was two different
-issues.
+Just clone and compile a local copy of the latest mdadm, then run it as
+./mdadm for the --update operation.
 
-Clearly my grey hair is eating away at my brain. Neil please do your
-best to ignore me :)
+git clone git://github.com/neilbrown/mdadm
 
-Jes
+> I've read that GRUB (which is my bootloader) didn't support v1.0
+> superblocks for a while. It seems that 0.99 version of GRUB (which is
+> what I have) has it, but how to make certain? I don't want to render my
+> system un-bootable...
 
-> On 10/30/2015 11:58 AM, Jes Sorensen wrote:
->> Nate Dailey <nate.dailey@stratus.com> writes:
->>> I've found that if I interrupt a recovery by removing the target
->>> device, do IO before the recovery checkpoint, then re-add the device
->>> and let the recovery complete, the mismatch_cnt is non-zero after
->>> doing a check.
->> Neil,
->>
->> While I am on the nagging path, here is another one.
->>
->> Jes
->>
->>> Here's exactly what I'm doing:
->>>
->>> - create a 5 GB raid1 with internal bitmap
->>>
->>> - do a check, verify zero mismatch_cnt
->>>
->>> - remove one member device
->>>
->>> - dd 256MB with 2GB seek
->>>
->>> - lower sync_speed_min/max to 500
->>>
->>> - re-add removed device
->>>
->>> - wait 15 sec
->>>
->>> - remove the same member device again
->>>
->>> - dd 1MB with 1 GB seek
->>>
->>> - restore sync_speed_min/max to system defaults
->>>
->>> - re-add removed device
->>>
->>> - when recovery competes, do another check
->>>
->>> At this point the mismatch_cnt is non-zero.
->>>
->>>
->>> I originally hit this on RHEL 7.1, but tested 4.1.1 from kernel.org
->>> and it happens there too.
->>>
->>> I'm out of my league in terms of trying to fix this, but would be
->>> happy to test a fix. I wonder if it's really necessary to resume a
->>> bitmap recovery from the checkpoint? Wouldn't the bitmap always
->>> reflect what needs to be copied?
->>>
->>> Nate
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Old grub doesn't understand MD at all, which is why you needed a mirror
+that has the content starting at the beginning of the partition.  To
+grub, it doesn't look like a mirror.  This is true for v1.0 as well.
+
+> Can you expand a little bit on the problems of v0.90 superblocks and why
+> upgrading is advantageous? What I've read about the differences (lifted
+> limit of number of devices/array and 2TB per device limit) don't really
+> apply to my case.
+
+v0.90 will screw up if you have it on the last partition of a device,
+and that partition runs very close to the end of the device.  v0.90
+doesn't include size info in the metadata itself, so it is ambiguous in
+that case whether the superblock belongs to the device as a whole or the
+partition.  That'll really scramble an array.
+
+Just say no to v0.90.
+
+Phil
