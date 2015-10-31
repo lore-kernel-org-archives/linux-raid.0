@@ -1,149 +1,111 @@
-From: o1bigtenor <o1bigtenor@gmail.com>
-Subject: Advice requested
-Date: Sat, 31 Oct 2015 06:55:25 -0500
-Message-ID: <CAPpdf58rFk95KYGc3WkOQGg+ytJ3rcmWtu23ZU3-ss=vx_GfhQ@mail.gmail.com>
+From: Roman Gushchin <klamm@yandex-team.ru>
+Subject: Re: [PATCH] md/raid5: fix locking in handle_stripe_clean_event()
+Date: Sat, 31 Oct 2015 15:25:42 +0300
+Message-ID: <102381446294342@webcorp02e.yandex-team.ru>
+References: <1446022340-1453-1-git-send-email-klamm@yandex-team.ru> <87r3kebjgx.fsf@notabene.neil.brown.name> <30651446128148@webcorp02d.yandex-team.ru> <87ziz1w33r.fsf@notabene.neil.brown.name> <47541446213767@webcorp02e.yandex-team.ru> <20151030162443.GA31413@kernel.org> <877fm4vw6j.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=koi8-r
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <877fm4vw6j.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Shaohua Li <shli@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Greetings
+Ok, thank you for clarifications!
 
-I had a raid 10 array where one drive threw an error (seemingly in a
-superblock) and since I have not been able to get the array readable.
-It was suggested to me that I remove 2 of the drives leaving the two
-that were striped together.
-
-So what I have is really a raid 0 array at present.
-
-Info following from queries to system for system information.
-
-mdadm --detail /dev/md0
-/dev/md0:
-       Version : 1.2
-    Raid Level : raid0
- Total Devices : 2
-   Persistence : Superblock is persistent
-
-         State : inactive
-
-          Name : debianbase:0  (local to host debianbase)
-          UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
-        Events : 47341
-
-   Number   Major   Minor   RaidDevice
-
-      -       8       17        -        /dev/sdb1
-      -       8       49        -        /dev/sdd1
-root@debianbase:/media/darald# echo $UUID
-
-root@debianbase:/media/xxxxxx# cd /
-root@debianbase:/# mdadm --examine /dev/sdb1
-/dev/sdb1:
-         Magic : a92b4efc
-       Version : 1.2
-   Feature Map : 0x0
-    Array UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
-          Name : debianbase:0  (local to host debianbase)
- Creation Time : Mon Mar  5 08:26:28 2012
-    Raid Level : raid10
-  Raid Devices : 4
-
-Avail Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
-    Array Size : 1953518592 (1863.02 GiB 2000.40 GB)
- Used Dev Size : 1953518592 (931.51 GiB 1000.20 GB)
-   Data Offset : 2048 sectors
-  Super Offset : 8 sectors
-  Unused Space : before=1968 sectors, after=1024 sectors
-         State : clean
-   Device UUID : a80c76db:eaea61af:bcb9cbbb:ac99e467
-
-   Update Time : Fri Aug 28 10:38:32 2015
-      Checksum : 29a4fa98 - correct
-        Events : 47341
-
-        Layout : near=2
-    Chunk Size : 512K
-
-  Device Role : Active device 3
-  Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-root@debianbase:/# mdadm --examine /dev/sdd1
-/dev/sdd1:
-         Magic : a92b4efc
-       Version : 1.2
-   Feature Map : 0x0
-    Array UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
-          Name : debianbase:0  (local to host debianbase)
- Creation Time : Mon Mar  5 08:26:28 2012
-    Raid Level : raid10
-  Raid Devices : 4
-
-Avail Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
-    Array Size : 1953518592 (1863.02 GiB 2000.40 GB)
- Used Dev Size : 1953518592 (931.51 GiB 1000.20 GB)
-   Data Offset : 2048 sectors
-  Super Offset : 8 sectors
-  Unused Space : before=1968 sectors, after=1024 sectors
-         State : clean
-   Device UUID : 9e749fa9:a0efe791:ea09d2e2:72b99f6c
-
-   Update Time : Fri Aug 28 10:38:32 2015
-      Checksum : 615d736 - correct
-        Events : 47341
-
-        Layout : near=2
-    Chunk Size : 512K
-
-  Device Role : Active device 1
-  Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-root@debianbase:/#
-
-Tried the following:
-
-fsck.ext4 -N -b /dev/md0
-e2fsck 1.42.13 (17-May-2015)
-fsck.ext4: Invalid argument while trying to open /dev/md0
-
-The superblock could not be read or does not describe a valid ext2/ext3/ext4
-filesystem.  If the device is valid and it really contains an ext2/ext3/ext4
-filesystem (and not swap or ufs or something else), then the superblock
-is corrupt, and you might try running e2fsck with an alternate superblock:
-   e2fsck -b 8193 <device>
-or
-   e2fsck -b 32768 <device>
-
-root@debianbase:/# dump2fs /dev/md0 | grep superblock
-bash: dump2fs: command not found
-root@debianbase:/# dumpe2fs /dev/md0 | grep superblock
-dumpe2fs 1.42.13 (17-May-2015)
-dumpe2fs: Invalid argument while trying to open /dev/md0
-Couldn't find valid filesystem superblock.
-root@debianbase:/# mdadm -A --force /dev/md0 /dev/sd[b1d1]2
-mdadm: cannot open device /dev/sd[b1d1]2: No such file or directory
-mdadm: /dev/sd[b1d1]2 has no superblock - assembly aborted
-root@debianbase:/# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdd1
-mdadm: /dev/sdb1 is busy - skipping
-mdadm: /dev/sdd1 is busy - skipping
-root@debianbase:/# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-root@debianbase:/# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdd1
-mdadm: /dev/md0 assembled from 2 drives - need all 4 to start it (use
---run to insist).
-root@debianbase:/# mdadm --assemble --run /dev/md0 /dev/sdb1 /dev/sdd1
-mdadm: /dev/sdb1 is busy - skipping
-mdadm: /dev/sdd1 is busy - skipping
+--
+Roman
 
 
-drives were all ext4 when the array was setup.
-
-
-Is there some way to take the 2 drives and convince mdadm that they
-are a raid 0?
-
-How do I get the superblock issue to go away?
-
-TIA
-
-Dee
+31.10.2015, 01:17, "Neil Brown" <neilb@suse.de>:
+> On Sat, Oct 31 2015, Shaohua Li wrote:
+>
+>> =9AOn Fri, Oct 30, 2015 at 05:02:47PM +0300, Roman Gushchin wrote:
+>>> =9A> Isn't the 4.1 fix just:
+>>> =9A>
+>>> =9A> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>>> =9A> index e5befa356dbe..6e4350a78257 100644
+>>> =9A> --- a/drivers/md/raid5.c
+>>> =9A> +++ b/drivers/md/raid5.c
+>>> =9A> @@ -3522,16 +3522,16 @@ returnbi:
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A* no upd=
+ated data, so remove it from hash list and the stripe
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A* will b=
+e reinitialized
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A*/
+>>> =9A> - spin_lock_irq(&conf->device_lock);
+>>> =9A> =9Aunhash:
+>>> =9A> + spin_lock_irq(conf->hash_locks + sh->hash_lock_index);
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aremove_hash=
+(sh);
+>>> =9A> + spin_unlock_irq(conf->hash_locks + sh->hash_lock_index);
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (head_sh=
+->batch_head) {
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9Ash =3D list_first_entry(&sh->batch_list,
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9Astruct stripe_head, batch_list);
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9Aif (sh !=3D head_sh)
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Agoto unhash=
+;
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A}
+>>> =9A> - spin_unlock_irq(&conf->device_lock);
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Ash =3D head=
+_sh;
+>>> =9A>
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (test_bi=
+t(STRIPE_SYNC_REQUESTED, &sh->state))
+>>> =9A>
+>>> =9A> ??
+>>>
+>>> =9AIn my opion, this patch looks correct, although it seems to me, =
+that there is an another issue here.
+>>>
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Aif (head_sh=
+->batch_head) {
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9Ash =3D list_first_entry(&sh->batch_list,
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9Astruct stripe_head, batch_list);
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9Aif (sh !=3D head_sh)
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=
+=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9Agoto unhash=
+;
+>>> =9A> =9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A=9A}
+>>>
+>>> =9AWith a patch above this code will be executed without taking any=
+ locks. It it correct?
+>>> =9AIn my opinion, we need to take at least sh->stripe_lock, which p=
+rotects sh->batch_head.
+>>> =9AOr do I miss something?
+>>>
+>>> =9AIf you want, we can handle this issue separately.
+>>
+>> =9AThe batch_list list doesn't need the protection. Only the remove_=
+hash() need it.
+>
+> Yes, that's my understanding too. The key to understanding is that
+> comment you (helpfully!) put in clear_batch_ready():
+>
+> =9A=9A=9A=9A=9A=9A=9A=9A/*
+> =9A=9A=9A=9A=9A=9A=9A=9A=9A* BATCH_READY is cleared, no new stripes c=
+an be added.
+> =9A=9A=9A=9A=9A=9A=9A=9A=9A* batch_list can be accessed without lock
+> =9A=9A=9A=9A=9A=9A=9A=9A=9A*/
+>
+> I'll wrangle some patches...
+>
+> Thanks,
+> NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
