@@ -1,74 +1,149 @@
-From: Neil Brown <neilb@suse.com>
-Subject: [GIT PULL REQUEST] last minute bug fixes for md.
-Date: Sat, 31 Oct 2015 12:26:14 +1100
-Message-ID: <87pozvvnex.fsf@notabene.neil.brown.name>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Advice requested
+Date: Sat, 31 Oct 2015 06:55:25 -0500
+Message-ID: <CAPpdf58rFk95KYGc3WkOQGg+ytJ3rcmWtu23ZU3-ss=vx_GfhQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Nate Dailey <nate.dailey@stratus.com>, Roman Gushchin <klamm@yandex-team.ru>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jes.Sorensen@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Greetings
+
+I had a raid 10 array where one drive threw an error (seemingly in a
+superblock) and since I have not been able to get the array readable.
+It was suggested to me that I remove 2 of the drives leaving the two
+that were striped together.
+
+So what I have is really a raid 0 array at present.
+
+Info following from queries to system for system information.
+
+mdadm --detail /dev/md0
+/dev/md0:
+       Version : 1.2
+    Raid Level : raid0
+ Total Devices : 2
+   Persistence : Superblock is persistent
+
+         State : inactive
+
+          Name : debianbase:0  (local to host debianbase)
+          UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
+        Events : 47341
+
+   Number   Major   Minor   RaidDevice
+
+      -       8       17        -        /dev/sdb1
+      -       8       49        -        /dev/sdd1
+root@debianbase:/media/darald# echo $UUID
+
+root@debianbase:/media/xxxxxx# cd /
+root@debianbase:/# mdadm --examine /dev/sdb1
+/dev/sdb1:
+         Magic : a92b4efc
+       Version : 1.2
+   Feature Map : 0x0
+    Array UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
+          Name : debianbase:0  (local to host debianbase)
+ Creation Time : Mon Mar  5 08:26:28 2012
+    Raid Level : raid10
+  Raid Devices : 4
+
+Avail Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
+    Array Size : 1953518592 (1863.02 GiB 2000.40 GB)
+ Used Dev Size : 1953518592 (931.51 GiB 1000.20 GB)
+   Data Offset : 2048 sectors
+  Super Offset : 8 sectors
+  Unused Space : before=1968 sectors, after=1024 sectors
+         State : clean
+   Device UUID : a80c76db:eaea61af:bcb9cbbb:ac99e467
+
+   Update Time : Fri Aug 28 10:38:32 2015
+      Checksum : 29a4fa98 - correct
+        Events : 47341
+
+        Layout : near=2
+    Chunk Size : 512K
+
+  Device Role : Active device 3
+  Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+root@debianbase:/# mdadm --examine /dev/sdd1
+/dev/sdd1:
+         Magic : a92b4efc
+       Version : 1.2
+   Feature Map : 0x0
+    Array UUID : 79baaa2f:0aa2b9fa:18e2ea6b:6e2846b3
+          Name : debianbase:0  (local to host debianbase)
+ Creation Time : Mon Mar  5 08:26:28 2012
+    Raid Level : raid10
+  Raid Devices : 4
+
+Avail Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
+    Array Size : 1953518592 (1863.02 GiB 2000.40 GB)
+ Used Dev Size : 1953518592 (931.51 GiB 1000.20 GB)
+   Data Offset : 2048 sectors
+  Super Offset : 8 sectors
+  Unused Space : before=1968 sectors, after=1024 sectors
+         State : clean
+   Device UUID : 9e749fa9:a0efe791:ea09d2e2:72b99f6c
+
+   Update Time : Fri Aug 28 10:38:32 2015
+      Checksum : 615d736 - correct
+        Events : 47341
+
+        Layout : near=2
+    Chunk Size : 512K
+
+  Device Role : Active device 1
+  Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
+root@debianbase:/#
+
+Tried the following:
+
+fsck.ext4 -N -b /dev/md0
+e2fsck 1.42.13 (17-May-2015)
+fsck.ext4: Invalid argument while trying to open /dev/md0
+
+The superblock could not be read or does not describe a valid ext2/ext3/ext4
+filesystem.  If the device is valid and it really contains an ext2/ext3/ext4
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblock:
+   e2fsck -b 8193 <device>
+or
+   e2fsck -b 32768 <device>
+
+root@debianbase:/# dump2fs /dev/md0 | grep superblock
+bash: dump2fs: command not found
+root@debianbase:/# dumpe2fs /dev/md0 | grep superblock
+dumpe2fs 1.42.13 (17-May-2015)
+dumpe2fs: Invalid argument while trying to open /dev/md0
+Couldn't find valid filesystem superblock.
+root@debianbase:/# mdadm -A --force /dev/md0 /dev/sd[b1d1]2
+mdadm: cannot open device /dev/sd[b1d1]2: No such file or directory
+mdadm: /dev/sd[b1d1]2 has no superblock - assembly aborted
+root@debianbase:/# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdd1
+mdadm: /dev/sdb1 is busy - skipping
+mdadm: /dev/sdd1 is busy - skipping
+root@debianbase:/# mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+root@debianbase:/# mdadm --assemble /dev/md0 /dev/sdb1 /dev/sdd1
+mdadm: /dev/md0 assembled from 2 drives - need all 4 to start it (use
+--run to insist).
+root@debianbase:/# mdadm --assemble --run /dev/md0 /dev/sdb1 /dev/sdd1
+mdadm: /dev/sdb1 is busy - skipping
+mdadm: /dev/sdd1 is busy - skipping
 
 
-they just keep coming in :-(
+drives were all ext4 when the array was setup.
 
-The following changes since commit 8bce6d35b308d73cdb2ee273c95d711a55be688c:
 
-  md/raid10: fix the 'new' raid10 layout to work correctly. (2015-10-24 16:24:25 +1100)
+Is there some way to take the 2 drives and convince mdadm that they
+are a raid 0?
 
-are available in the git repository at:
+How do I get the superblock issue to go away?
 
-  git://neil.brown.name/md tags/md/4.3-rc7-fixes
+TIA
 
-for you to fetch changes up to d01552a76d71f9879af448e9142389ee9be6e95b:
-
-  Revert "md: allow a partially recovered device to be hot-added to an array." (2015-10-31 11:00:56 +1100)
-
-----------------------------------------------------------------
-two more bug fixes for md.
-
-One bugfix for a list corruption in raid5 because of incorrect
-locking.
-
-Other for possible data corruption when a recovering device is failed,
-removed, and re-added.
-
-Both tagged for -stable.
-
-----------------------------------------------------------------
-NeilBrown (1):
-      Revert "md: allow a partially recovered device to be hot-added to an array."
-
-Roman Gushchin (1):
-      md/raid5: fix locking in handle_stripe_clean_event()
-
- drivers/md/md.c    | 3 +--
- drivers/md/raid5.c | 6 ++++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWNBi2AAoJEDnsnt1WYoG5ANsP/2VsTNW6zlYl8i0TxSzeRxAC
-FxVCZP4vwUK1emg+rFQ/AODPFVs45j3XrmICHGgffm7F7m2R/cBpWSooy/L7g9c8
-7HsOePcvdFtT31oemYAU1uEO53zj4MGombMuFueGCA3DtoMUstjj0LzEQD0y1FUn
-ml9uUJo+vF6/NnPfYULHCjddIIvfJ6hGCc5LY1jrSNnn7QQXBbLjReZrw5TVSRWo
-qJsqfYyuGtQ1d+M8LC5bYdA6UtbDI2R5XuWaESPZzlXnDTl3Zbl/xGEgIpFD1pWr
-xi8cG9wA3iBBkwkcjQsMDjyx0fgBskub0jpfaemS6W/+dhVLaDFV5DDAS5p1MkEC
-cGW/muE0WQnJdB93Bl1BXxx5q3W+03Cv53mpnL1ebHYMMthFVKKgQTM5BbZExhBQ
-ksEXgTVSZF4Y6DYgSMrG7aQdj5JERk6463vWxyTBUM7liUthDg41Sk40eJU6sw5e
-wV52sVIgPUqIJuprQp5dm0yOjPYZB9N+Mgem9mY4vBNudObwQ1FkWmBUDRGevmHC
-5rvTYzMeNM3ARSLtMX609Ip64ZrlZO3/7saKY0O1YdTbelA0YIZS4fRo2U0EJUqD
-TuMrVLKwXzp+XbcZZioepkY2dCduFtBsIBPWOdcP8A3GkGHih2ao5cAau+lVqM+8
-jlSQ1MFqAjOT94w0kINk
-=cnar
------END PGP SIGNATURE-----
---=-=-=--
+Dee
