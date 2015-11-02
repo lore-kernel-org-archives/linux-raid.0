@@ -1,213 +1,226 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH] mdadm: check bitmap first when reshape raid1 to raid0
-Date: Mon, 2 Nov 2015 11:04:24 -0500 (EST)
-Message-ID: <872817933.1316265.1446480264325.JavaMail.zimbra@redhat.com>
-References: <1446477507-26755-1-git-send-email-xni@redhat.com>
+From: Nicolas Tellier <telliern@gmail.com>
+Subject: Failed Raid 5 due to OS mbr written on one of the array drives
+Date: Mon, 2 Nov 2015 18:02:50 +0100
+Message-ID: <CAArDwD-7=Vmo16K3GH0dxZie=RAiSavZNfMNvabf4X6G4fK34w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1446477507-26755-1-git-send-email-xni@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I'm looking for advices regarding a failed (2 disc down) Raid 5 array
+with 4 disks. It was running in a NAS for quite some time but after I
+came back from a trip, I found out that the system disk was dead.
+After replacing the drive, I reinstalled the OS (OpenMediaVault for
+the curious). Sadly the mbr was written to one of the raid disk
+instead of the OS one. This would not have been too critical if, after
+booting the system, I didn't realized that the array was already
+running in degraded mode prior to the OS disk problem. Luckily I have
+a backup for most of the critical data on that array. There is nothing
+that I cannot replace, but it would still be quite inconvenient. I
+guess it's a good opportunity to learn more about raid :)
+
+ mdadm --stop /dev/md0 and removing the boot flag from the wrongly
+written raid disk are the only stuff that I did so far.
+
+Here are the informations I gathered :
 
 
-Sorry, the patch is wrong. Please ignore this and I'll send another.
+root@NAStradamus:~# uname -a
+Linux NAStradamus 3.2.0-4-amd64 #1 SMP Debian 3.2.68-1+deb7u5 x86_64 GN=
+U/Linux
 
------ Original Message -----
-> From: "Xiao Ni" <xni@redhat.com>
-> To: linux-raid@vger.kernel.org
-> Sent: Monday, November 2, 2015 11:18:27 PM
-> Subject: [PATCH] mdadm: check bitmap first when reshape raid1 to raid0
-> 
-> One raid1 with bitmap is composed by 4 disks. It'll fail when rashape to
-> raid0
-> and lose 3 disks. It should check bitmap first when reshape raid1 to raid0.
-> 
-> And need to free subarray, close cfd in Grow_reshape.
-> 
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  Grow.c  | 38 ++++++++++++++++++++------------------
->  mdadm.c | 16 ++++++++++++----
->  2 files changed, 32 insertions(+), 22 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index d711884..51ed0c0 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1600,15 +1600,14 @@ int Grow_reshape(char *devname, int fd,
->  			cfd = open_dev_excl(st->container_devnm);
->  		} else {
->  			container = st->devnm;
-> -			close(fd);
->  			cfd = open_dev_excl(st->devnm);
->  			fd = cfd;
->  		}
->  		if (cfd < 0) {
->  			pr_err("Unable to open container for %s\n",
->  				devname);
-> -			free(subarray);
-> -			return 1;
-> +			rv = 1;
-> +			goto release;
->  		}
->  
->  		rv = st->ss->load_container(st, cfd, NULL);
-> @@ -1616,8 +1615,8 @@ int Grow_reshape(char *devname, int fd,
->  		if (rv) {
->  			pr_err("Cannot read superblock for %s\n",
->  				devname);
-> -			free(subarray);
-> -			return 1;
-> +			rv = 1;
-> +			goto release;
->  		}
->  
->  		/* check if operation is supported for metadata handler */
-> @@ -1641,8 +1640,8 @@ int Grow_reshape(char *devname, int fd,
->  					pr_err("cannot reshape arrays in container with unsupported metadata:
->  					%s(%s)\n",
->  					       devname, container);
->  					sysfs_free(cc);
-> -					free(subarray);
-> -					return 1;
-> +					rv = 1;
-> +					goto release;
->  				}
->  			}
->  			sysfs_free(cc);
-> @@ -1662,7 +1661,8 @@ int Grow_reshape(char *devname, int fd,
->  		       s->raiddisks - array.raid_disks,
->  		       s->raiddisks - array.raid_disks == 1 ? "" : "s",
->  		       array.spare_disks + added_disks);
-> -		return 1;
-> +		rv = 1;
-> +		goto release;
->  	}
->  
->  	sra = sysfs_read(fd, NULL, GET_LEVEL | GET_DISKS | GET_DEVS
-> @@ -1675,17 +1675,18 @@ int Grow_reshape(char *devname, int fd,
->  	} else {
->  		pr_err("failed to read sysfs parameters for %s\n",
->  			devname);
-> -		return 1;
-> +		rv = 1;
-> +		goto release;
->  	}
->  	frozen = freeze(st);
->  	if (frozen < -1) {
->  		/* freeze() already spewed the reason */
-> -		sysfs_free(sra);
-> -		return 1;
-> +		rv = 1;
-> +		goto release;
->  	} else if (frozen < 0) {
->  		pr_err("%s is performing resync/recovery and cannot be reshaped\n",
->  		devname);
-> -		sysfs_free(sra);
-> -		return 1;
-> +		rv = 1;
-> +		goto release;
->  	}
->  
->  	/* ========= set size =============== */
-> @@ -1901,8 +1902,6 @@ size_change_error:
->  		
->  		if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
->  		        dprintf("Bitmap must be removed before level can be changed\n");
-> -		        if (cfd > -1)
-> -		                close(cfd);
->  		        rv = 1;
->  		        goto release;
->  		}
-> @@ -1910,8 +1909,6 @@ size_change_error:
->  		err = remove_disks_for_takeover(st, sra, array.layout);
->  		if (err) {
->  			dprintf("Array cannot be reshaped\n");
-> -			if (cfd > -1)
-> -				close(cfd);
->  			rv = 1;
->  			goto release;
->  		}
-> @@ -2087,9 +2084,14 @@ size_change_error:
->  		frozen = 0;
->  	}
->  release:
-> -	sysfs_free(sra);
->  	if (frozen > 0)
->  		unfreeze(st);
-> +	if (sra)
-> +		sysfs_free(sra);
-> +	if (cfd > -1)
-> +		close(cfd);
-> +	if (subarray)
-> +		free(subarray);
->  	return rv;
->  }
->  
-> diff --git a/mdadm.c b/mdadm.c
-> index f56a8cf..95db2a0 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1299,7 +1299,8 @@ int main(int argc, char *argv[])
->  			pr_err("'1' is an unusual number of drives for an array, so it is
->  			probably\n"
->  				"     a mistake.  If you really mean it you will need to specify --force
->  				before\n"
->  				"     setting the number of drives.\n");
-> -			exit(2);
-> +			rv = 2;
-> +			goto release;
->  		}
->  	}
->  
-> @@ -1326,13 +1327,15 @@ int main(int argc, char *argv[])
->  			rv = get_cluster_name(&c.homecluster);
->  		if (rv) {
->  			pr_err("The md can't get cluster name\n");
-> -			exit(1);
-> +			rv = 1;
-> +			goto release;
->  		}
->  	}
->  
->  	if (c.backup_file && data_offset != INVALID_SECTORS) {
->  		pr_err("--backup-file and --data-offset are incompatible\n");
-> -		exit(2);
-> +		rv = 2;
-> +		goto release;
->  	}
->  
->  	if ((mode == MISC && devmode == 'E')
-> @@ -1340,7 +1343,8 @@ int main(int argc, char *argv[])
->  		/* Anyone may try this */;
->  	else if (geteuid() != 0) {
->  		pr_err("must be super-user to perform this action\n");
-> -		exit(1);
-> +		rv = 1;
-> +		goto release;
->  	}
->  
->  	ident.autof = c.autof;
-> @@ -1640,6 +1644,10 @@ int main(int argc, char *argv[])
->  		autodetect();
->  		break;
->  	}
-> +
-> +release:
-> +	if (mdfd > -1)
-> +		close(mdfd);
->  	exit(rv);
->  }
->  
-> --
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+root@NAStradamus:~# mdadm --examine /dev/sd[a-z]1
+
+mdadm: No md superblock detected on /dev/sda1.
+
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : a08bcee5:9fb42352:319ecab9:53d6277b
+           Name : ArchliNAS:0
+  Creation Time : Sun Jul  8 17:59:49 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953005569 (931.27 GiB 999.94 GB)
+     Array Size : 2929507584 (2793.80 GiB 2999.82 GB)
+  Used Dev Size : 1953005056 (931.27 GiB 999.94 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 9b28a04c:f2c3d6c9:6f76859d:624927f0
+
+    Update Time : Wed Sep 16 19:32:12 2015
+       Checksum : 4fb98985 - correct
+         Events : 108016
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AAA. ('A' =3D=3D active, '.' =3D=3D missing)
+
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : a08bcee5:9fb42352:319ecab9:53d6277b
+           Name : ArchliNAS:0
+  Creation Time : Sun Jul  8 17:59:49 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953005569 (931.27 GiB 999.94 GB)
+     Array Size : 2929507584 (2793.80 GiB 2999.82 GB)
+  Used Dev Size : 1953005056 (931.27 GiB 999.94 GB)
+    Data Offset : 262144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 1952e898:50043e66:8247a64d:72ffb6c0
+
+    Update Time : Wed Sep 16 19:32:12 2015
+       Checksum : b9197a85 - correct
+         Events : 108016
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAA. ('A' =3D=3D active, '.' =3D=3D missing)
+
+
+root@NAStradamus:~# mdadm --examine /dev/sdd
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : a08bcee5:9fb42352:319ecab9:53d6277b
+           Name : ArchliNAS:0
+  Creation Time : Sun Jul  8 17:59:49 2012
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953523120 (931.51 GiB 1000.20 GB)
+     Array Size : 2929507584 (2793.80 GiB 2999.82 GB)
+  Used Dev Size : 1953005056 (931.27 GiB 999.94 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 425c85ec:0c038b4b:cd59b4b5:280bf233
+
+    Update Time : Mon May  4 08:18:04 2015
+       Checksum : cca22997 - correct
+         Events : 55532
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+
+
+root@NAStradamus:~# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : inactive sdb1[1] sdc1[3]
+      1953005569 blocks super 1.2
+
+unused devices: <none>
+
+
+root@NAStradamus:~# mdadm --examine --scan
+ARRAY /dev/md/0 metadata=3D1.2 UUID=3Da08bcee5:9fb42352:319ecab9:53d627=
+7b
+name=3DArchliNAS:0
+
+
+root@NAStradamus:~# fdisk -l
+
+Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+107 heads, 58 sectors/track, 314780 cylinders, total 1953525168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00048269
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048  1953269760   976633856+  da  Non-FS data
+
+Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048  1953269760   976633856+  da  Non-FS data
+
+Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 4096 bytes
+I/O size (minimum/optimal): 4096 bytes / 4096 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1            2048  1953269760   976633856+  da  Non-FS data
+
+Disk /dev/sdd: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sdd doesn't contain a valid partition table
+
+
+
+
+
+=46irst off we can see that /dev/sdd is in a weird state. You need to
+know that it was added later in order to grow the array. It seems that
+I was drunk when I did that as I didn't put any partition on that
+disk=E2=80=A6
+Besides the event count is way off. My understanding is that there is
+nothing to be done here, apart from re-adding it to the array once it
+is up and running again (hopefully) and once the disk has been checked
+for error and reinitialized (with a proper partition this time !).
+
+Now, /dev/sda is more interesting. The partition is still present and
+looks intact, it seems like it's just missing the superblock because
+of the mbr shenanigan. Also the two healthy drives still see it as
+active.
+
+After looking around on the internet, I found people suggesting to
+re-create the raid. It seems a bit extreme to me, but I cannot find
+any other solution=E2=80=A6
+Luckily I saved the original command used to create this array. Here
+is the one I think would be relevant in this case :
+
+mdadm --create --verbose --assume-clean /dev/md0 --level=3D5
+--metadata=3D1.2 --chunk=3D128 --raid-devices=3D4 /dev/sda1 /dev/sdb1
+/dev/sdc1 missing /dev/sdd
+
+This would be followed by a backup, the re-addition of /dev/sdd and a
+migration to raid 6 with 2 more disks.
+The wiki advise to get an experienced person review the measures
+you're about to take, I don't know anybody experienced in RAID, hence
+this e-mail :) What do you think ?
+
+Please, CC me on the answers/comments posted to the list in response
+to this; I'm not subscribed to the mailing list.
+
+Thanks in advance for your time !
+
+Nico
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
