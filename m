@@ -1,82 +1,77 @@
-From: mchristi@redhat.com
-Subject: [PATCH 04/32] block: prepare blkdev_issue_discard for
-	bi_rw split
-Date: Wed,  4 Nov 2015 10:32:59 -0600
-Message-ID: <1446654807-6935-5-git-send-email-mchristi@redhat.com>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Advice requested re: hard drive setup for RAID arrays
+Date: Wed, 4 Nov 2015 11:43:08 -0500
+Message-ID: <563A359C.80504@turmel.org>
+References: <CAPpdf595q7qsU-3e4rm_9qKKdoOzZi6mVTtrr=Hczqk=UsNf5Q@mail.gmail.com>
+ <563A0462.9000200@turmel.org>
+ <CAPpdf59BqCABOw=gHw=y8zO-xVzFDn30FLbgqFDjmiBzrgAaHA@mail.gmail.com>
+ <563A1E9C.4060003@turmel.org>
+ <CAPpdf5_-3TOiCKq_dDTYGPcJMeEDMRD+xTAjkm-enmCnZPdtzg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
-Cc: Mike Christie <mchristi@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAPpdf5_-3TOiCKq_dDTYGPcJMeEDMRD+xTAjkm-enmCnZPdtzg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: o1bigtenor <o1bigtenor@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Mike Christie <mchristi@redhat.com>
+On 11/04/2015 10:43 AM, o1bigtenor wrote:
+> Greetings
+> 
+> I'd like to make this response a to all but your comments are directed to me
+> in particular and therefore don't really apply to 'all'.
 
-The next patches will prepare the submit_bio users
-for the split. There were a lot more users than
-there were for submit_bio_wait, so if the conversion
-was not a one liner, I broke it out into its own
-patch.
+You didn't reply-to-all -- I've added the list back.  It is important
+that these conversations occur in public.
 
-This patch prepares blkdev_issue_discard.
+[trim /]
 
-There is some compat code left which will be dropped
-in later patches in the series.
-1. REQ_WRITE is still being set. This is because a lot
-of code assumes it will be set for discard, flushes and
-write sames.
-2. submit_bio is still taking a bitmap. This is to make
-the series git bisectable.
+> I'm sorry - - - my computer is a tool, my computers are tools (I have more
+> than one and am looking at setting up quite a few more to organize and
+> manage any one of my 4 businesses.
+> 
+> Reading does not inconvenience me but I fail to see why I need to become
+> an expert in every tool used by my business to use that tool. That is not
+> normally part of the system nor my goal. Most of the businessmen that
+> I have met know far less about their systems than even I do yet you are
+> suggesting that I'm 'whining'.
+> 
+> Your phrasing  is suggesting that I am 'less than responsible' - - - rather
+> I think that you have made computers to be a major item in your day and
+> I would prefer that computers are tools. If tools do not work then I change them
+> as there just aren't enough hours in the day as it is with what I have to do.
+> 
+> I do appreciate your assistance but if you have a hard time agreeing to disagree
+> about the extent of knowledge needed to use the computers I have collected
+> to run my business then I would rather not ask any more questions here.
+> 
+> Trusting that that will be acceptable to you - - -
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
----
- block/blk-lib.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+No, it's not acceptable.
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 9ebf653..0861c7a 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -42,7 +42,8 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- {
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request_queue *q = bdev_get_queue(bdev);
--	int type = REQ_WRITE | REQ_DISCARD;
-+	int op = REQ_OP_DISCARD;
-+	int op_flags = REQ_WRITE;
- 	unsigned int granularity;
- 	int alignment;
- 	struct bio_batch bb;
-@@ -63,7 +64,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	if (flags & BLKDEV_DISCARD_SECURE) {
- 		if (!blk_queue_secdiscard(q))
- 			return -EOPNOTSUPP;
--		type |= REQ_SECURE;
-+		op_flags |= REQ_SECURE;
- 	}
- 
- 	atomic_set(&bb.done, 1);
-@@ -108,7 +109,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector = end_sect;
- 
- 		atomic_inc(&bb.done);
--		submit_bio(type, bio);
-+		submit_bio(op | op_flags, bio);
- 
- 		/*
- 		 * We can loop for a long time in here, if someone does
--- 
-1.8.3.1
+I too am a business owner -- over a decade now.  As an engineer and
+consultant, I have and use many tools, both physical and virtual.  The
+ones I use myself, I learn enough to use to the professional standards
+needed.  Where I cannot, I pay for others to do the necessary work, or I
+pay to switch tools.
+
+I've benefited from the fact that linux is free, and provides many free
+tools, and benefited from the many ways to get free advice and
+assistance for it.  I take time away from my own business to offer free
+advice and assistance on this list as a volunteer, as partial payback
+for what I've received.
+
+I tolerate a certain amount of neediness in newcomers, as skill varies
+greatly.  But when my advice is repeatedly rejected and denigrated while
+I'm trying to save someone's digital life, I have to draw a line.  I'm
+no longer surprised your off-list assistance faded away.  Linux
+distributors like Canonical and Red Hat offer paid tech support for
+people with your requirements.
+
+You've implied that your business has been hostage to this crisis for
+the past two months.  If that's not irresponsible, I don't know what is.
+
+Good Day,
+
+Phil Turmel
