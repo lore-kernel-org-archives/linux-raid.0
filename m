@@ -1,54 +1,93 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: Advice requested
-Date: Wed, 04 Nov 2015 12:31:46 +0800
-Message-ID: <56398A32.1040503@fnarfbargle.com>
-References: <CAPpdf58rFk95KYGc3WkOQGg+ytJ3rcmWtu23ZU3-ss=vx_GfhQ@mail.gmail.com>	<5637BCE4.8000006@turmel.org>	<CAPpdf58En1ARr9YiFSgvPN5Ke_t7=EfxiaN9cZtGVtvR4NUdmA@mail.gmail.com>	<5637FBAC.8000900@turmel.org>	<CAPpdf59mkRiyNYF1dT6Xp9tcofTU8hOdih+tz+i=wPJfRQrTnQ@mail.gmail.com>	<56380690.5030600@turmel.org>	<CAPpdf5-HbrFESY_zhfkZ4=2CtYjgO4bA4LmA+1AHkT+Gv9iY2w@mail.gmail.com>	<56381406.7070608@turmel.org>	<CAPpdf59EV2TfpHUiZghAfWW6qy5je686Hg_qAs4xLchrUa=G7w@mail.gmail.com>	<5638336E.4030400@turmel.org>	<CAPpdf5-DMFrKRiBXjstJkvqQU1KzqJoL=hfNVqTGjy2HfMcALQ@mail.gmail.com>	<56383C64.2070807@turmel.org>	<CAPpdf58=f7YVej5MEFgaw6KvCgn+WBcm=JSrTNbM8AixWdpa1g@mail.gmail.com>	<5638B208.1050502@turmel.org>	<CAPpdf58x1eKXTKbvisQGV9KUsMRzEacSifaLLzQkX53YM5c6jg@mail.gmail.com>	<5638DBEB.1000904@turmel.o
- rg>	<CAPpdf59o0kf1-mgB29AcgH2cpdwBrhazf3NeQUYNa6m9+c6C+A@mail.gmail.com> <CAPpdf5_0A0r9s5aCQOn3M9etUnw_2SLMVig3pH+4vfKZDh=8kQ@mail.gmail.com>
+From: =?UTF-8?B?0JjQstCw0L0g0JjRgdCw0LXQsg==?= <1@crownet.ru>
+Subject: raid6 stuck at reshape
+Date: Wed, 4 Nov 2015 12:53:17 +0700
+Message-ID: <CAD1MkcxpYFx061bSzhTq_43tTPe_3Wz1unPP9LYRGrJJHXPnPw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf5_0A0r9s5aCQOn3M9etUnw_2SLMVig3pH+4vfKZDh=8kQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>, Phil Turmel <philip@turmel.org>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/11/15 12:05, o1bigtenor wrote:
-> On Tue, Nov 3, 2015 at 10:01 PM, o1bigtenor <o1bigtenor@gmail.com> wrote:
->>
->>
->>
->> On Tue, Nov 3, 2015 at 10:08 AM, Phil Turmel <philip@turmel.org> wrote:
->>> One caveat -- don't do this part until you've corrected your timeout mismatch
->>> problem, or any latent UREs will break your array again.
->>
->>
->>
->> Read through the references.
->>
->> How do I do what you suggest?
+1. init state:
+md3 : active raid6 sdm[10] sdl[9] sdj[8] sdg[7] sdh[6] sdi[5] sdk[4]
+sdf[3] sde[2] sdd[1] sdc[0]
+      26328453120 blocks super 1.2 level 6, 4096k chunk, algorithm 2
+[11/11] [UUUUUUUUUUU]
+      bitmap: 0/22 pages [0KB], 65536KB chunk
 
-Here's how I do it. This script is run on every bootup.
+2. mdadm /dev/md3 -a /dev/sdn
+mdadm --grow /dev/md3 --raid-devices=12 --backup-file=/home/raid/md3.backup
 
-It iterates through all the drives and uses smartctl to try and set erc 
-timeouts. If that fails it assumes the drive does not support it and it 
-sets the timeout value to 180 seconds.
+md3 : active raid6 sdn[11] sdm[10] sdl[9] sdj[8] sdg[7] sdh[6] sdi[5]
+sdk[4] sdf[3] sde[2] sdd[1] sdc[0]
+      26328453120 blocks super 1.2 level 6, 4096k chunk, algorithm 2
+[12/12] [UUUUUUUUUUUU]
+      [>....................]  reshape =  0.0% (0/2925383680)
+finish=3047274.6min speed=0K/sec
+      bitmap: 0/22 pages [0KB], 65536KB chunk
 
-#!/bin/bash
-for i in /dev/sd? ; do
-	if smartctl -l scterc,70,70 $i > /dev/null ; then
-		echo -n $i " is good "
-	else
-		echo 180 > /sys/block/${i/\/dev\/}/device/timeout
-		echo -n $i " is  bad "
-	fi;
-	smartctl -i $i | egrep "(Device Model|Product:)"
-	blockdev --setra 1024 $i
-done
+# ps aux|grep md3
+root      5232 _54.8_  0.0      0     0 ?        R    10:55  56:43 [md3_raid6]
+root      6956 _98.4_  0.4  53904 49896 ?        RL   11:01  96:29
+mdadm --grow /dev/md3 --raid-devices=12
+--backup-file=/home/raid/md3.backup
 
-I have a mix of 15k SAS drives, WD green & red and some left over bits 
-and pieces. This ensures the timeouts all match the drives capability.
+# cat /sys/block/md3/md/reshape_position
+81920
 
-Regards,
-Brad
+what can I do about it?
+
+P.S. If I stop the array, it can no longer be assembled:
+# mdadm -S /dev/md3
+# mdadm -A /dev/md3
+mdadm: :/dev/md3 has an active reshape - checking if critical section
+needs to be restored
+mdadm: Failed to restore critical section for reshape, sorry.
+
+mdadm --assemble /dev/md3 -vv --backup-file /home/raid/md3.backup -f
+mdadm: looking for devices for /dev/md3
+...
+mdadm: /dev/sdn is identified as a member of /dev/md3, slot 11.
+mdadm: /dev/sdl is identified as a member of /dev/md3, slot 9.
+mdadm: /dev/sdg is identified as a member of /dev/md3, slot 7.
+mdadm: /dev/sdm is identified as a member of /dev/md3, slot 10.
+mdadm: /dev/sdj is identified as a member of /dev/md3, slot 8.
+mdadm: /dev/sdk is identified as a member of /dev/md3, slot 4.
+mdadm: /dev/sdf is identified as a member of /dev/md3, slot 3.
+mdadm: /dev/sdd is identified as a member of /dev/md3, slot 1.
+mdadm: /dev/sdi is identified as a member of /dev/md3, slot 5.
+mdadm: /dev/sdh is identified as a member of /dev/md3, slot 6.
+mdadm: /dev/sde is identified as a member of /dev/md3, slot 2.
+mdadm: /dev/sdc is identified as a member of /dev/md3, slot 0.
+mdadm: :/dev/md3 has an active reshape - checking if critical section
+needs to be restored
+mdadm: restoring critical section
+mdadm: Error restoring backup from md3.backup
+mdadm: Failed to restore critical section for reshape, sorry.
+
+# mdadm --assemble /dev/md3 -vv --invalid-backup -f
+...
+mdadm: :/dev/md3 has an active reshape - checking if critical section
+needs to be restored
+mdadm: No backup metadata on device-11
+mdadm: Failed to find backup of critical section
+mdadm: continuing without restoring backup
+mdadm: added /dev/sdd to /dev/md3 as 1
+mdadm: added /dev/sde to /dev/md3 as 2
+mdadm: added /dev/sdf to /dev/md3 as 3
+mdadm: added /dev/sdk to /dev/md3 as 4
+mdadm: added /dev/sdi to /dev/md3 as 5
+mdadm: added /dev/sdh to /dev/md3 as 6
+mdadm: added /dev/sdg to /dev/md3 as 7
+mdadm: added /dev/sdj to /dev/md3 as 8
+mdadm: added /dev/sdl to /dev/md3 as 9
+mdadm: added /dev/sdm to /dev/md3 as 10
+mdadm: added /dev/sdn to /dev/md3 as 11
+mdadm: added /dev/sdc to /dev/md3 as 0
+mdadm: failed to RUN_ARRAY /dev/md3: Invalid argument
+
+I had to create array again.
+After that the array is operating normally, but I still can't grow it.
+
+P.S.S. kernel: 3.14.56
