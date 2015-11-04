@@ -1,53 +1,82 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Advice requested re: hard drive setup for RAID arrays
-Date: Wed, 4 Nov 2015 10:05:00 -0500
-Message-ID: <563A1E9C.4060003@turmel.org>
-References: <CAPpdf595q7qsU-3e4rm_9qKKdoOzZi6mVTtrr=Hczqk=UsNf5Q@mail.gmail.com>
- <563A0462.9000200@turmel.org>
- <CAPpdf59BqCABOw=gHw=y8zO-xVzFDn30FLbgqFDjmiBzrgAaHA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: [PATCH] md/raid10: fix data corruption and crash during resync
+Date: Wed,  4 Nov 2015 17:30:30 +0100
+Message-ID: <1446654630-24067-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf59BqCABOw=gHw=y8zO-xVzFDn30FLbgqFDjmiBzrgAaHA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>
-Cc: Brad Campbell <lists2009@fnarfbargle.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-On 11/04/2015 09:30 AM, o1bigtenor wrote:
+The commit c31df25f20e3 ("md/raid10: make sync_request_write() call
+bio_copy_data()") replaced manual data copying with bio_copy_data() but
+it doesn't work as intended. The source bio (fbio) is already processed,
+so its bvec_iter has bi_size == 0 and bi_idx == bi_vcnt.  Because of
+this, bio_copy_data() either does not copy anything, or worse, copies
+data from the ->bi_next bio if it is set.  This causes wrong data to be
+written to drives during resync and sometimes lockups/crashes in
+bio_copy_data():
 
-> I used to have to mount my raid array on every reboot so I can handle running
-> the script every reboot. They happen at most weekly and for sure biweekly
-> because Firefox doesn't know how to use AND release RAM.
+[  517.338478] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [md126_raid10:3319]
+[  517.347324] Modules linked in: raid10 xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4 tun ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw iptable_filter ip_tables x86_pkg_temp_thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul cryptd shpchp pcspkr ipmi_si ipmi_msghandler tpm_crb acpi_power_meter acpi_cpufreq ext4 mbcache jbd2 sr_mod cdrom sd_mod e1000e ax88179_178a usbnet mii ahci ata_generic crc32c_intel libahci ptp pata_acpi lib
+ ata pps_core wmi sunrpc dm_mirror dm_region_hash dm_log dm_mod
+[  517.440555] CPU: 0 PID: 3319 Comm: md126_raid10 Not tainted 4.3.0-rc6+ #1
+[  517.448384] Hardware name: Intel Corporation PURLEY/PURLEY, BIOS PLYDCRB1.86B.0055.D14.1509221924 09/22/2015
+[  517.459768] task: ffff880153773980 ti: ffff880150df8000 task.ti: ffff880150df8000
+[  517.468529] RIP: 0010:[<ffffffff812e1888>]  [<ffffffff812e1888>] bio_copy_data+0xc8/0x3c0
+[  517.478164] RSP: 0018:ffff880150dfbc98  EFLAGS: 00000246
+[  517.484341] RAX: ffff880169356688 RBX: 0000000000001000 RCX: 0000000000000000
+[  517.492558] RDX: 0000000000000000 RSI: ffffea0001ac2980 RDI: ffffea0000d835c0
+[  517.500773] RBP: ffff880150dfbd08 R08: 0000000000000001 R09: ffff880153773980
+[  517.508987] R10: ffff880169356600 R11: 0000000000001000 R12: 0000000000010000
+[  517.517199] R13: 000000000000e000 R14: 0000000000000000 R15: 0000000000001000
+[  517.525412] FS:  0000000000000000(0000) GS:ffff880174a00000(0000) knlGS:0000000000000000
+[  517.534844] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  517.541507] CR2: 00007f8a044d5fed CR3: 0000000169504000 CR4: 00000000001406f0
+[  517.549722] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  517.557929] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[  517.566144] Stack:
+[  517.568626]  ffff880174a16bc0 ffff880153773980 ffff880169356600 0000000000000000
+[  517.577659]  0000000000000001 0000000000000001 ffff880153773980 ffff88016a61a800
+[  517.586715]  ffff880150dfbcf8 0000000000000001 ffff88016dd209e0 0000000000001000
+[  517.595773] Call Trace:
+[  517.598747]  [<ffffffffa043ef95>] raid10d+0xfc5/0x1690 [raid10]
+[  517.605610]  [<ffffffff816697ae>] ? __schedule+0x29e/0x8e2
+[  517.611987]  [<ffffffff814ff206>] md_thread+0x106/0x140
+[  517.618072]  [<ffffffff810c1d80>] ? wait_woken+0x80/0x80
+[  517.624252]  [<ffffffff814ff100>] ? super_1_load+0x520/0x520
+[  517.630817]  [<ffffffff8109ef89>] kthread+0xc9/0xe0
+[  517.636506]  [<ffffffff8109eec0>] ? flush_kthread_worker+0x70/0x70
+[  517.643653]  [<ffffffff8166d99f>] ret_from_fork+0x3f/0x70
+[  517.649929]  [<ffffffff8109eec0>] ? flush_kthread_worker+0x70/0x70
 
-Put an entry in fstab to mount your array at boot.  Put Brad's script in
-/etc/rc.local.  Try "man fstab".
+Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+---
+ drivers/md/raid10.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-You don't need to reboot to clean up after Firefox.  At most, logout and
-re-login will do.  Or just "killall firefox".
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 96f3659..23bbe61 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1944,6 +1944,8 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 
+ 	first = i;
+ 	fbio = r10_bio->devs[i].bio;
++	fbio->bi_iter.bi_size = r10_bio->sectors << 9;
++	fbio->bi_iter.bi_idx = 0;
+ 
+ 	vcnt = (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
+ 	/* now find blocks with errors */
+@@ -1987,7 +1989,7 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
+ 		bio_reset(tbio);
+ 
+ 		tbio->bi_vcnt = vcnt;
+-		tbio->bi_iter.bi_size = r10_bio->sectors << 9;
++		tbio->bi_iter.bi_size = fbio->bi_iter.bi_size;
+ 		tbio->bi_rw = WRITE;
+ 		tbio->bi_private = r10_bio;
+ 		tbio->bi_iter.bi_sector = r10_bio->devs[i].addr;
+-- 
+2.1.4
 
-> Those are the drives Brad uses.
-
-No. The script is generic.  It attempts to fix anyone's drives.  Clearly
-falls down on your USB drives.  Oh, well.  Specify the drives you want
-instead of using a wildcard.
-
-> I read the files listed.
-> There wasn't anything specific as to what to look for.
-
-The following was in your reading list.  The options A-D at the end
-couldn't be more clear.
-
-http://marc.info/?l=linux-raid&m=135811522817345&w=1
-
-> There is a lot of traffic which isn't really of interest as I hope that I don't
-> have to develop kernel skills. Was hoping to just occasionally browse
-> something that would be of interest.
-
-This list is mostly administration skills.  You need those if you are
-going to be running raid arrays.  I'm sorry if *reading* inconveniences
-you, but the whining won't change anything.  Except to make me less
-enthusiastic about helping you.
-
-Phil
