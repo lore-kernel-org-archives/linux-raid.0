@@ -1,79 +1,38 @@
 From: rgoldwyn@suse.de
-Subject: [PATCH 5/6] md-cluster: Fix the remove sequence with the new MD reload code
-Date: Thu,  5 Nov 2015 21:50:18 -0600
-Message-ID: <1446781819-25571-5-git-send-email-rgoldwyn@suse.de>
+Subject: [PATCH 6/6] md-cluster: Allow spare devices to be marked as faulty
+Date: Thu,  5 Nov 2015 21:50:19 -0600
+Message-ID: <1446781819-25571-6-git-send-email-rgoldwyn@suse.de>
 References: <1446781819-25571-1-git-send-email-rgoldwyn@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1446781819-25571-1-git-send-email-rgoldwyn@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.com, linux-raid@vger.kernel.org
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>, Guoqing Jiang <gqjiang@suse.com>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
 List-Id: linux-raid.ids
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-The remove disk message does not need metadata_update_start(), but
-can be an independent message.
+If a spare device was marked faulty, it would not be reflected
+in receiving nodes because it would mark it as activated and continue.
+Continue the operation, so it may be set as faulty.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 2 +-
- drivers/md/md.c         | 9 +--------
- 2 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/md/md.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 9a36ad6..33f5d7a 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -1018,7 +1018,7 @@ static int remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
- 	cmsg.type = cpu_to_le32(REMOVE);
- 	cmsg.raid_slot = cpu_to_le32(rdev->desc_nr);
--	return __sendmsg(cinfo, &cmsg);
-+	return sendmsg(cinfo, &cmsg);
- }
- 
- static int gather_bitmaps(struct md_rdev *rdev)
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 65b6326..4222285 100644
+index 4222285..b98cf04 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6045,15 +6045,11 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- {
- 	char b[BDEVNAME_SIZE];
- 	struct md_rdev *rdev;
--	int ret = -1;
- 
- 	rdev = find_rdev(mddev, dev);
- 	if (!rdev)
- 		return -ENXIO;
- 
--	if (mddev_is_clustered(mddev))
--		ret = md_cluster_ops->metadata_update_start(mddev);
--
- 	if (rdev->raid_disk < 0)
- 		goto kick_rdev;
- 
-@@ -6064,7 +6060,7 @@ static int hot_remove_disk(struct mddev *mddev, dev_t dev)
- 		goto busy;
- 
- kick_rdev:
--	if (mddev_is_clustered(mddev) && ret == 0)
-+	if (mddev_is_clustered(mddev))
- 		md_cluster_ops->remove_disk(mddev, rdev);
- 
- 	md_kick_rdev_from_array(rdev);
-@@ -6073,9 +6069,6 @@ kick_rdev:
- 
- 	return 0;
- busy:
--	if (mddev_is_clustered(mddev) && ret == 0)
--		md_cluster_ops->metadata_update_cancel(mddev);
--
- 	printk(KERN_WARNING "md: cannot remove active disk %s from %s ...\n",
- 		bdevname(rdev->bdev,b), mdname(mddev));
- 	return -EBUSY;
+@@ -9013,7 +9013,6 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
+ 				ret = remove_and_add_spares(mddev, rdev2);
+ 				pr_info("Activated spare: %s\n",
+ 						bdevname(rdev2->bdev,b));
+-				continue;
+ 			}
+ 			/* device faulty
+ 			 * We just want to do the minimum to mark the disk
 -- 
 1.8.5.6
 
