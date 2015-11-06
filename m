@@ -1,38 +1,24 @@
-From: rgoldwyn@suse.de
-Subject: [PATCH 6/6] md-cluster: Allow spare devices to be marked as faulty
-Date: Thu,  5 Nov 2015 21:50:19 -0600
-Message-ID: <1446781819-25571-6-git-send-email-rgoldwyn@suse.de>
-References: <1446781819-25571-1-git-send-email-rgoldwyn@suse.de>
+From: d4lamar <d4lamar@gmail.com>
+Subject: Stop resync operation
+Date: Fri, 6 Nov 2015 07:44:16 +0100
+Message-ID: <CAF8SPVLYv4fq1Wf80RGHuiO0bLwCK7EU+yp3M3bBXk2_23Nf4Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1446781819-25571-1-git-send-email-rgoldwyn@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com, linux-raid@vger.kernel.org
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Dear Developers,
 
-If a spare device was marked faulty, it would not be reflected
-in receiving nodes because it would mark it as activated and continue.
-Continue the operation, so it may be set as faulty.
+I have a question for you.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- drivers/md/md.c | 1 -
- 1 file changed, 1 deletion(-)
+I have a raid10 md array:
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4222285..b98cf04 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -9013,7 +9013,6 @@ static void check_sb_changes(struct mddev *mddev, struct md_rdev *rdev)
- 				ret = remove_and_add_spares(mddev, rdev2);
- 				pr_info("Activated spare: %s\n",
- 						bdevname(rdev2->bdev,b));
--				continue;
- 			}
- 			/* device faulty
- 			 * We just want to do the minimum to mark the disk
--- 
-1.8.5.6
+Is it theoretically possible to stop a running resync operation and
+mark the array as clean without stopping the array ?
 
+I do not want the resync to be respawned automatically.
+
+Thanks and Best Regards,
+d4lamar
