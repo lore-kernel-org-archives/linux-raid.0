@@ -1,8 +1,8 @@
 From: Vishnu Pratap Singh <vishnu.ps@samsung.com>
-Subject: [PATCH 4/8] block/loop.c: handle add_disk() & blk_register_region()
- return value
-Date: Fri, 06 Nov 2015 17:52:11 +0530
-Message-ID: <1446812535-10567-4-git-send-email-vishnu.ps@samsung.com>
+Subject: [PATCH 5/8] zram: handle add_disk() & blk_register_region() return
+ value
+Date: Fri, 06 Nov 2015 17:52:12 +0530
+Message-ID: <1446812535-10567-5-git-send-email-vishnu.ps@samsung.com>
 References: <437969438-9181-1-git-send-email-vishnu.ps@samsung.com>
  <1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
@@ -21,50 +21,71 @@ This patch depends on [PATCH 1/8] block/genhd.c: Add error handling
 
 Signed-off-by: Vishnu Pratap Singh <vishnu.ps@samsung.com>
 ---
- drivers/block/loop.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/block/z2ram.c         | 12 ++++++++++--
+ drivers/block/zram/zram_drv.c |  9 ++++++---
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 423f4ca..22e6fd0 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -1794,10 +1794,14 @@ static int loop_add(struct loop_device **l, int i)
- 	disk->private_data	= lo;
- 	disk->queue		= lo->lo_queue;
- 	sprintf(disk->disk_name, "loop%d", i);
--	add_disk(disk);
-+	err = add_disk(disk);
-+	if (err)
+diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
+index 968f9e5..85e841f 100644
+--- a/drivers/block/z2ram.c
++++ b/drivers/block/z2ram.c
+@@ -364,12 +364,20 @@ z2_init(void)
+     sprintf(z2ram_gendisk->disk_name, "z2ram");
+ 
+     z2ram_gendisk->queue = z2_queue;
+-    add_disk(z2ram_gendisk);
+-    blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
++    ret = add_disk(z2ram_gendisk);
++    if (ret)
++	goto out_add_disk;
++
++    ret = blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
+ 				z2_find, NULL, NULL);
++    if (ret)
++	goto out_blk_reg;
+ 
+     return 0;
+ 
++out_blk_reg:
++	del_gendisk(z2ram_gendisk);
++out_add_disk:
+ out_queue:
+     put_disk(z2ram_gendisk);
+ out_disk:
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index 81a557c..f3d7a49 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -1261,14 +1261,16 @@ static int zram_add(void)
+ 		zram->disk->queue->limits.discard_zeroes_data = 0;
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
+ 
+-	add_disk(zram->disk);
++	ret = add_disk(zram->disk);
++	if (ret)
 +		goto out_free_disk;
- 	*l = lo;
- 	return lo->lo_number;
  
-+out_free_disk:
-+	put_disk(disk);
- out_free_queue:
- 	blk_cleanup_queue(lo->lo_queue);
- out_cleanup_tags:
-@@ -1998,8 +2002,10 @@ static int __init loop_init(void)
- 		goto misc_out;
+ 	ret = sysfs_create_group(&disk_to_dev(zram->disk)->kobj,
+ 				&zram_disk_attr_group);
+ 	if (ret < 0) {
+ 		pr_err("Error creating sysfs group for device %d\n",
+ 				device_id);
+-		goto out_free_disk;
++		goto out_del_disk;
  	}
+ 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
+ 	zram->meta = NULL;
+@@ -1277,8 +1279,9 @@ static int zram_add(void)
+ 	pr_info("Added device: %s\n", zram->disk->disk_name);
+ 	return device_id;
  
--	blk_register_region(MKDEV(LOOP_MAJOR, 0), range,
-+	err = blk_register_region(MKDEV(LOOP_MAJOR, 0), range,
- 				  THIS_MODULE, loop_probe, NULL, NULL);
-+	if (err)
-+		goto out_blkdev;
- 
- 	/* pre-create number of devices given by config or max_loop */
- 	mutex_lock(&loop_index_mutex);
-@@ -2010,6 +2016,8 @@ static int __init loop_init(void)
- 	printk(KERN_INFO "loop: module loaded\n");
- 	return 0;
- 
-+out_blkdev:
-+	unregister_blkdev(LOOP_MAJOR, "loop");
- misc_out:
- 	misc_deregister(&loop_misc);
- 	return err;
+-out_free_disk:
++out_del_disk:
+ 	del_gendisk(zram->disk);
++out_free_disk:
+ 	put_disk(zram->disk);
+ out_free_queue:
+ 	blk_cleanup_queue(queue);
 -- 
 1.9.1
 
