@@ -1,56 +1,27 @@
-From: Jiri Kosina <jikos@kernel.org>
-Subject: Re: [PATCH] bcache: Really show state of work pending bit
-Date: Fri, 6 Nov 2015 20:55:17 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1511061507140.23146@pobox.suse.cz>
-References: <1444048792-22847-1-git-send-email-pmladek@suse.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RESEND RFC PATCH 00/32] separate operations from flags in the
+ bio/request structs
+Date: Sat, 7 Nov 2015 02:10:23 -0800
+Message-ID: <20151107101023.GA12117@infradead.org>
+References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1444048792-22847-1-git-send-email-pmladek@suse.com>
+Content-Disposition: inline
+In-Reply-To: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Petr Mladek <pmladek@suse.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Tejun Heo <tj@kernel.org>, Neil Brown <neilb@suse.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: mchristi@redhat.com
+Cc: linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, drbd-dev@lists.linbit.com
 List-Id: linux-raid.ids
 
-On Mon, 5 Oct 2015, Petr Mladek wrote:
+On Wed, Nov 04, 2015 at 04:07:57PM -0600, mchristi@redhat.com wrote:
+> Known issues:
+> - REQ_FLUSH is still a flag, but should probably be a operation.
+>  For lower level drivers like SCSI where we only get a flush, it makes
+> more sense to be a operation. However, upper layers like filesystems
+> can send down flushes with writes, so it is more of a flag for them.
+> I am still working on this.
 
-> WORK_STRUCT_PENDING is a mask for testing the pending bit.
-> test_bit() expects the number of the bit and we need to
-> use WORK_STRUCT_PENDING_BIT there.
-> 
-> Also work_data_bits() is defined in workqueues.h now.
-> 
-> I have noticed this just by chance when looking how
-> WORK_STRUCT_PENDING_BIT is used. The change is compile
-> tested.
-> 
-> Signed-off-by: Petr Mladek <pmladek@suse.com>
-> ---
->  drivers/md/bcache/closure.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/bcache/closure.c b/drivers/md/bcache/closure.c
-> index 7a228de95fd7..9eaf1d6e8302 100644
-> --- a/drivers/md/bcache/closure.c
-> +++ b/drivers/md/bcache/closure.c
-> @@ -167,8 +167,6 @@ EXPORT_SYMBOL(closure_debug_destroy);
->  
->  static struct dentry *debug;
->  
-> -#define work_data_bits(work) ((unsigned long *)(&(work)->data))
-> -
->  static int debug_seq_show(struct seq_file *f, void *data)
->  {
->  	struct closure *cl;
-> @@ -182,7 +180,7 @@ static int debug_seq_show(struct seq_file *f, void *data)
->  			   r & CLOSURE_REMAINING_MASK);
->  
->  		seq_printf(f, "%s%s%s%s\n",
-> -			   test_bit(WORK_STRUCT_PENDING,
-> +			   test_bit(WORK_STRUCT_PENDING_BIT,
-
-I don't see this in linux-next as of today, so I am picking it up for 4.4.
-
--- 
-Jiri Kosina 
-SUSE Labs
+Actually it should be both.  REQ_OP_FLUSH for a real flush operation,
+and a REQ_PREFLUSH bio flag that the request layer will sequence into
+an actual write an a flush operation.
