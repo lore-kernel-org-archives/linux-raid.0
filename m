@@ -1,147 +1,572 @@
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Subject: Re: [PATCH 5/8] zram: handle add_disk() & blk_register_region()
- return value
-Date: Mon, 9 Nov 2015 10:07:05 +0900
-Message-ID: <20151109010705.GC471@swordfish>
-References: <437969438-9181-1-git-send-email-vishnu.ps@samsung.com>
- <1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
- <1446812535-10567-5-git-send-email-vishnu.ps@samsung.com>
+From: Guillaume Paumier <guillaume.paumier@gmail.com>
+Subject: Offline array, events count mismatch
+Date: Sun, 08 Nov 2015 18:49:29 -0800
+Message-ID: <1903758.3ih4aa4jR2@carbon.lepommierdujardin.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1446812535-10567-5-git-send-email-vishnu.ps@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Vishnu Pratap Singh <vishnu.ps@samsung.com>
-Cc: axboe@kernel.dk, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, jmoyer@redhat.com, minchan@kernel.org, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, davem@davemloft.net, neilb@suse.com, ulf.hansson@linaro.org, tiwai@suse.de, hare@suse.de, ming.lei@canonical.com, jarod@redhat.com, viro@zeniv.linux.org.uk, tj@kernel.org, adrian.hunter@intel.com, jonathanh@nvidia.com, grundler@chromium.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, cpgs@samsung.com, vishu13285@gmail.com, pintu.k@samsung.com, rohit.kr@samsung.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On (11/06/15 17:52), Vishnu Pratap Singh wrote:
-> This patch adds error handling for blk_register_region(),
-> register_disk(), add_disk(), disk_alloc_events() & disk_add_events().
-> add_disk() & register_disk() functions  error handling is very much
-> needed as this is used mainly by many modules like mmc, zram, mtd, scsi etc.
-> But there is no error handling and it may cause stability issues also.
+Hello folks,
 
-hm... I came across "FIXME: error handling" comment in add_disk() some
-time ago and after a quick google search I found this:
-https://lkml.org/lkml/2007/7/24/207
+I reached out to you a few months ago when a --grow went awry. In the end I 
+managed to restore my array thanks to this mailing list and the invaluable 
+help of IRC user frostschutz.
 
->> The attached patch fixes the problem by changing the prototype of
->> add_disk() and register_disk() to return errors.
+I'm now facing another issue and I'm hoping you can help me again.
 
-Al Viro wrote:
+Today I found out that my RAID6, 9-disk array was offline. When looking at the 
+machine, two disks seemed to have disappeared; they didn't show in fdisk or 
+anything. And a third one was marked as "faulty" in mdadm.
 
-> This is bogus.  Just what would callers do with these error values?
-> Ignore them silently?  Bail out?  Can't do - at that point disk just
-> might have been opened already.  add_disk() is the point of no return;
-> we are already past the last point where we could bail out.
+At first, I was puzzled because it seemed improbable that three disks had 
+failed at the same time. I removed the array from fstab and rebooted. The two 
+vanished disks re-appeared (in fdisk too), and when examining the partitions, 
+I noticed the following events count:
 
+/dev/sdb1:
+         Events : 198477
+/dev/sdc1:
+         Events : 198477
+/dev/sdd1:
+         Events : 198477
+/dev/sde1:
+         Events : 54264
+/dev/sdf1:
+         Events : 54264
+/dev/sdg1:
+         Events : 198477
+/dev/sdh1:
+         Events : 198477
+/dev/sdi1:
+         Events : 198477
+/dev/sdj1:
+         Events : 198473
 
+Looking at those event counts, my understanding is this:
+* Two of the disks (sde, sdf) were dropped from the array for some reason.
+* I didn't notice this immediately (an issue I'm addressing separately).
+* A third disk (sdj) encountered a small issue today.
+* The array went offline because it didn't have enough disks to function 
+cleanly any more.
 
+If I understand the documentation [1] correctly, since the event count for sdj 
+is very close to the event count of sd[b,c,d,g,h,i], I should be able to re-
+assemble the array with these 7 disks using --force, leaving sde and sdf 
+aside. Once the array is assembled, I should be able to re-add sde and sdf, 
+and they will be re-sync'd.
 
->  drivers/block/z2ram.c         | 12 ++++++++++--
->  drivers/block/zram/zram_drv.c |  9 ++++++---
+[1] 
+https://raid.wiki.kernel.org/index.php/RAID_Recovery#Trying_to_assemble_using_--force
 
-those are different drivers, split the patches (well, if add_disk()
-change actually makes sense).
+I prefer to be cautious and ask here before doing anything that could make 
+things worse. It would be great if you could confirm that my understanding is 
+correct, and tell me if this plan is sound.
 
+I'm including some more detailed information below. Let me know if there's any 
+other information that would be useful.
 
->  2 files changed, 16 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/block/z2ram.c b/drivers/block/z2ram.c
-> index 968f9e5..85e841f 100644
-> --- a/drivers/block/z2ram.c
-> +++ b/drivers/block/z2ram.c
-> @@ -364,12 +364,20 @@ z2_init(void)
->      sprintf(z2ram_gendisk->disk_name, "z2ram");
->  
->      z2ram_gendisk->queue = z2_queue;
-> -    add_disk(z2ram_gendisk);
-> -    blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
-> +    ret = add_disk(z2ram_gendisk);
-> +    if (ret)
-> +	goto out_add_disk;
-> +
-> +    ret = blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT, THIS_MODULE,
->  				z2_find, NULL, NULL);
-> +    if (ret)
-> +	goto out_blk_reg;
-
-A separate nitpick. z2_init() coding styles need to be 'fixed'. So the
-patch will not violate the kernel coding styles.
-
- ./scripts/checkpatch.pl
- WARNING: please, no spaces at the start of a line
- #113: FILE: drivers/block/z2ram.c:367:
- +    ret = add_disk(z2ram_gendisk);$
-
- WARNING: please, no spaces at the start of a line
- #114: FILE: drivers/block/z2ram.c:368:
- +    if (ret)$
-
- WARNING: please, no spaces at the start of a line
- #117: FILE: drivers/block/z2ram.c:371:
- +    ret = blk_register_region(MKDEV(Z2RAM_MAJOR, 0), Z2MINOR_COUNT,
- THIS_MODULE,$
-
- WARNING: please, no spaces at the start of a line
- #119: FILE: drivers/block/z2ram.c:373:
- +    if (ret)$
-
- total: 0 errors, 4 warnings, 50 lines checked
+Many thanks,
 
 
->  
->      return 0;
->  
-> +out_blk_reg:
-> +	del_gendisk(z2ram_gendisk);
-> +out_add_disk:
->  out_queue:
+===========================================================
+Before the reboot: mdadm -D
+-----------------------------------------------------------
 
-Hm... a fall-through empty `out_add_disk' label?
+# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.0
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 3907016448 (3726.02 GiB 4000.78 GB)
+   Raid Devices : 9
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sun Nov  8 06:36:50 2015
+          State : clean, FAILED
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 2
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+           UUID : eea59047:120a0365:353da182:6787e030
+         Events : 198477
+
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8       49        1      active sync   /dev/sdd1
+       2       8       97        2      active sync   /dev/sdg1
+       3       8      113        3      active sync   /dev/sdh1
+       4       8      129        4      active sync   /dev/sdi1
+      10       0        0       10      removed
+      12       0        0       12      removed
+      14       0        0       14      removed
+       8       8       17        8      active sync   /dev/sdb1
+
+       5       8      145        -      faulty   /dev/sdj1
+       6       8       65        -      faulty   /dev/sde1
 
 
-	-ss
+===========================================================
+Before the reboot: mdadm --examine
+-----------------------------------------------------------
 
->      put_disk(z2ram_gendisk);
->  out_disk:
-> diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-> index 81a557c..f3d7a49 100644
-> --- a/drivers/block/zram/zram_drv.c
-> +++ b/drivers/block/zram/zram_drv.c
-> @@ -1261,14 +1261,16 @@ static int zram_add(void)
->  		zram->disk->queue->limits.discard_zeroes_data = 0;
->  	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
->  
-> -	add_disk(zram->disk);
-> +	ret = add_disk(zram->disk);
-> +	if (ret)
-> +		goto out_free_disk;
->  
->  	ret = sysfs_create_group(&disk_to_dev(zram->disk)->kobj,
->  				&zram_disk_attr_group);
->  	if (ret < 0) {
->  		pr_err("Error creating sysfs group for device %d\n",
->  				device_id);
-> -		goto out_free_disk;
-> +		goto out_del_disk;
->  	}
->  	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
->  	zram->meta = NULL;
-> @@ -1277,8 +1279,9 @@ static int zram_add(void)
->  	pr_info("Added device: %s\n", zram->disk->disk_name);
->  	return device_id;
->  
-> -out_free_disk:
-> +out_del_disk:
->  	del_gendisk(zram->disk);
-> +out_free_disk:
->  	put_disk(zram->disk);
+# mdadm --examine /dev/sd[b-j]1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
 
->  out_free_queue:
->  	blk_cleanup_queue(queue);
-> -- 
-> 1.9.1
-> 
+ Avail Dev Size : 7814033128 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 91b187fd:f416880a:f5e81e49:92615e07
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+  Bad Block Log : 512 entries available at offset -8 sectors
+       Checksum : 30050dee - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 8
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : e1b689b5:b4a2c5a7:56057b69:a9101af0
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 8e546a7e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 0
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 1d8e74d3:9abd37f8:f2cf0ab8:02fdcfd6
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 31f71397 - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+mdadm: No md superblock detected on /dev/sde1.
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : b24758e6:042412c5:9b5a3c06:f167aedf
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 68c5292e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 00e47d82:b49c3905:3ed961fe:40a5f259
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : b77bfa1e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 3
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdi1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : a7e34040:fa12382f:c2ef3d85:9c95b1d0
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 9cd876ec - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 4
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 9d89c55d:9f4a2181:6b87922f:0681d580
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:38 2015
+       Checksum : 66c5dfd2 - correct
+         Events : 198473
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 5
+   Array State : AAAAAA..A ('A' == active, '.' == missing, 'R' == replacing)
+
+
+===========================================================
+After the reboot: mdadm --examine
+-----------------------------------------------------------
+
+# mdadm --examine /dev/sd[b-j]1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033128 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 91b187fd:f416880a:f5e81e49:92615e07
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+  Bad Block Log : 512 entries available at offset -8 sectors
+       Checksum : 30050dee - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 8
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : e1b689b5:b4a2c5a7:56057b69:a9101af0
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 8e546a7e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 0
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 1d8e74d3:9abd37f8:f2cf0ab8:02fdcfd6
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 31f71397 - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : ddf17d3d:ea944bfb:6886cc91:3366f55f
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Wed Oct  7 10:17:35 2015
+       Checksum : 1dd30b1 - correct
+         Events : 54264
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 7
+   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 38675f59:ea412b1f:67d6ed9a:a33fc5dd
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Wed Oct  7 10:17:35 2015
+       Checksum : c88f7c7b - correct
+         Events : 54264
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 6
+   Array State : AAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : b24758e6:042412c5:9b5a3c06:f167aedf
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 68c5292e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 00e47d82:b49c3905:3ed961fe:40a5f259
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : b77bfa1e - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 3
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdi1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : a7e34040:fa12382f:c2ef3d85:9c95b1d0
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:50 2015
+       Checksum : 9cd876ec - correct
+         Events : 198477
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 4
+   Array State : AAAAA...A ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : eea59047:120a0365:353da182:6787e030
+  Creation Time : Thu Aug  1 12:23:07 2013
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 7814033136 (3726.02 GiB 4000.78 GB)
+     Array Size : 27349115136 (26082.15 GiB 28005.49 GB)
+  Used Dev Size : 7814032896 (3726.02 GiB 4000.78 GB)
+   Super Offset : 7814033392 sectors
+   Unused Space : before=0 sectors, after=480 sectors
+          State : clean
+    Device UUID : 9d89c55d:9f4a2181:6b87922f:0681d580
+
+Internal Bitmap : -16 sectors from superblock
+    Update Time : Sun Nov  8 06:36:38 2015
+       Checksum : 66c5dfd2 - correct
+         Events : 198473
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 5
+   Array State : AAAAAA..A ('A' == active, '.' == missing, 'R' == replacing)
+
+===========================================================
+
+
+-- 
+Guillaume Paumier
