@@ -1,45 +1,40 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Offline array, events count mismatch
-Date: Sun, 8 Nov 2015 22:35:13 -0500
-Message-ID: <56401471.2040605@turmel.org>
-References: <1903758.3ih4aa4jR2@carbon.lepommierdujardin.fr>
+From: Bob Liu <bob.liu@oracle.com>
+Subject: Re: [PATCH 06/32] xen blkback: prepare for bi_rw split
+Date: Mon, 09 Nov 2015 12:00:48 +0800
+Message-ID: <56401A70.7090504@oracle.com>
+References: <1446674909-5371-1-git-send-email-mchristi@redhat.com>
+	<1446674909-5371-7-git-send-email-mchristi@redhat.com>
+	<20151107101713.GB12117@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1903758.3ih4aa4jR2@carbon.lepommierdujardin.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: Guillaume Paumier <guillaume.paumier@gmail.com>, linux-raid@vger.kernel.org
+Return-path: <xen-devel-bounces@lists.xen.org>
+In-Reply-To: <20151107101713.GB12117@infradead.org>
+List-Unsubscribe: <http://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <http://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Sender: xen-devel-bounces@lists.xen.org
+Errors-To: xen-devel-bounces@lists.xen.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, mchristi@redhat.com, linux-fsdevel@vger.kernel.org, xen-devel@lists.xenproject.org, drbd-dev@lists.linbit.com
 List-Id: linux-raid.ids
 
-Hi Guillaume,
 
-On 11/08/2015 09:49 PM, Guillaume Paumier wrote:
-
-[trim /]
-
-> Looking at those event counts, my understanding is this:
-> * Two of the disks (sde, sdf) were dropped from the array for some reason.
-> * I didn't notice this immediately (an issue I'm addressing separately).
-> * A third disk (sdj) encountered a small issue today.
-> * The array went offline because it didn't have enough disks to function 
-> cleanly any more.
+On 11/07/2015 06:17 PM, Christoph Hellwig wrote:
+> A little offtopic for this patch, but can some explain this whole
+> mess about bios in Xen blkfront?  We can happily do partial completions
+> at the request later.
 > 
-> If I understand the documentation [1] correctly, since the event count for sdj 
-> is very close to the event count of sd[b,c,d,g,h,i], I should be able to re-
-> assemble the array with these 7 disks using --force, leaving sde and sdf 
-> aside. Once the array is assembled, I should be able to re-add sde and sdf, 
-> and they will be re-sync'd.
+> Also since the blk-mq conversion the call to blk_end_request_all is
 
-Yes, that is the correct response.
+This will be fixed after my next blk-mq patch series which also modified the recover path.
 
-Your situation is common.  Please see the thread this weekend started by
-Franscisco Parada.
+> completely broken, so it doesn't look like this code path is exactly
+> well tested.
+>
 
-https://marc.info/?t=144691643300001&r=1&w=2&n=12
-
-You should provide "smartctl -i -A -l scterc /dev/sdX" reports for your
-drives.  If you can find an old syslog for when your two worst drives
-fell out, it might help.
-
-Phil
+Thanks,
+-Bob
