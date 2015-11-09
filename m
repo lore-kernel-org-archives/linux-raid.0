@@ -1,36 +1,17 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6 reshape stalls immediately
-Date: Mon, 9 Nov 2015 17:26:31 -0500
-Message-ID: <56411D97.7020705@turmel.org>
-References: <84a8qtgwqk.wl-peter.chubb@nicta.com.au>
- <563CAFC1.2080708@gmail.com> <84611dw2cw.wl-peter.chubb@nicta.com.au>
- <56409F4E.5000508@gmail.com> <5640A1ED.3010205@turmel.org>
- <84lha6u90k.wl-peter.chubb@nicta.com.au>
+From: Dragon <Sunghost@gmx.de>
+Subject: raid6 didnt syncing - Bug?
+Date: Mon, 9 Nov 2015 23:36:31 +0100
+Message-ID: <trinity-a74c22f8-82cd-405f-8b77-1525a79c8ae8-1447108590600@3capp-gmx-bs60>
+References: <trinity-0d27a99a-dc46-4d38-9b35-65b422d41f15-1447106962768@3capp-gmx-bs60>,
+ <trinity-850e4e87-8977-46fa-9382-c97a137130a8-1447108068694@3capp-gmx-bs60>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <84lha6u90k.wl-peter.chubb@nicta.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Chubb <peter.chubb@nicta.com.au>
-Cc: Anugraha Sinha <asinha.mailinglist@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/09/2015 05:02 PM, Peter Chubb wrote:
-
-> I just did
->   mdadm --grow --continue /dev/md0
-> 
-> and the reshape started up again.  I didn't realise that mdadm had to
-> keep going to do the reshape -- it must have died when I logged off
-> last time.  So many other operations are handled entirely in the
-> kernel...
-
-mdadm spawns a copy of mdmon to perform these tasks.  If the process
-hierarchy is strictly enforced, and kills off spawned processes when
-the highest parent dies, that's a problem for mdadm.  I recall some
-discussions about this with systemd and/or cgroups.  You might want
-to make sure all of your utilities have the latest fixes.
-
-Phil
-
+Hi,
+i have debian with kernel 4.2 and wanted to add a new disk to my raid6. i have md0=system in raid1, md1=swap n raid6 and md2=files also in raid6. here are the mdadm -E output: http://pastebin.com/MveRQ2Lv.
+i stop md1 and run assamble, but without success. i stop md1 and wait for md2 but no success. at boot i see message "md/raid:md2: reshape: not enough stripes. Needed 512" and run echo and rise from 256 to 600 for stripes, but without success. any idea?
+thx
