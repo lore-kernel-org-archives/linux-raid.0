@@ -1,44 +1,58 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/8] block/genhd.c: Add error handling
-Date: Mon, 9 Nov 2015 20:40:58 -0700
-Message-ID: <5641674A.6080707@kernel.dk>
-References: <437969438-9181-1-git-send-email-vishnu.ps@samsung.com>
- <1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
- <20151110033322.GB22011@ZenIV.linux.org.uk>
+From: d4lamar <d4lamar@gmail.com>
+Subject: RESYNC Bug ? [was Re: Stop resync operation]
+Date: Tue, 10 Nov 2015 05:13:02 +0100
+Message-ID: <CAF8SPVJigc-NjeEZVinzx1YFLE6CjMBBMNpxjSzpsi_bi2kovg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <20151110033322.GB22011@ZenIV.linux.org.uk>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>, Vishnu Pratap Singh <vishnu.ps@samsung.com>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, jmoyer@redhat.com, minchan@kernel.org, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, davem@davemloft.net, neilb@suse.com, ulf.hansson@linaro.org, tiwai@suse.de, hare@suse.de, ming.lei@canonical.com, jarod@redhat.com, tj@kernel.org, adrian.hunter@intel.com, jonathanh@nvidia.com, grundler@chromium.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org, cpgs@samsung.com, vishu13285@gmail.com, pintu.k@samsung.com, rohit.kr@samsung.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/09/2015 08:33 PM, Al Viro wrote:
-> On Fri, Nov 06, 2015 at 05:52:08PM +0530, Vishnu Pratap Singh wrote:
+Dear Developers,
+
+I am here again to ask you support about RESYNC operation.
+In my first mail I asked if there were any method to stop a running RESYNC.
+
+Now I am experiencing a very strange behaviour... RESYNC operation
+exceeded 100% completion percentage...
+
+# cat /proc/mdstat
+Tue Nov 10 05:02:41 CET 2015
+Personalities : [raid1] [raid10] [linear]
+md66 : active linear md0[0]
+2939452080 blocks super 1.2 4k rounding
+
+md0 : active raid10 sdab[17](S) sdt[16](S) sdaj[0] sdx[12] sdai[11]
+sdah[9] sdam[15] sdae[7] sdas[6] sdaa[5] sdap[4] sdao[3] sdaf[14]
+sdz[1]
+2939453104 blocks super 1.2 4K chunks 2 near-copies [14/12] [UUUUUUUUUU_UU_]
+[=========================>] resync =129.9% (545894292/419921872)
+finish=20192933978332.0min speed=7612K/sec
+bitmap: 22/22 pages [88KB], 65536KB chunk
+
+md65 : active raid1 sdal[0] sdar[1]
+419921875 blocks super 1.2 [2/2] [UU]
+bitmap: 0/4 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+
+Are you aware of such possible behaviour ? Do you think I have just hit a BUG ?
+
+Thanks and Best Regards,
+d4lamar
+
+2015-11-06 7:44 GMT+01:00 d4lamar <d4lamar@gmail.com>:
+> Dear Developers,
 >
-> Have you even tried to trigger the failure exits you've added?  The
-> more you've successfully set up, the _less_ your cleanup code ends
-> up undoing; that simply can't be right.
+> I have a question for you.
 >
-> That aside, as soon as we'd done register_disk(), the damn thing is
-> available for open(), so bailing out is _really_ not something for
-> faint-hearted - it's essentially equivalent to removal of device under
-> somebody who'd opened it and might've started IO, etc.  Going there
-> simply because some sysfs shite didn't get created doesn't look sane
-> as far as I'm concerned...
+> I have a raid10 md array:
 >
-> Especially since these failure exits are not going to be tested on
-> a regular basis, so the amount of bitrot will be pretty high ;-/
-
-I'd greatly prefer it we just leave it alone. Much better to have a disk 
-that does actually work and with some sysfs spew in the logs, than bail 
-out for fairly vague reasons.
-
-The road to hell is paved with good intentions. It's a noble thought to 
-want to clean this up, but I think it does more harm than good.
-
--- 
-Jens Axboe
-
+> Is it theoretically possible to stop a running resync operation and
+> mark the array as clean without stopping the array ?
+>
+> I do not want the resync to be respawned automatically.
+>
+> Thanks and Best Regards,
+> d4lamar
