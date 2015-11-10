@@ -1,61 +1,68 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Offline array, events count mismatch
-Date: Tue, 10 Nov 2015 10:50:27 -0500
-Message-ID: <56421243.9030000@turmel.org>
-References: <1903758.3ih4aa4jR2@carbon.lepommierdujardin.fr>
- <56401471.2040605@turmel.org>
- <1970874.nKIz6W3yCk@carbon.lepommierdujardin.fr>
+From: Mathias Mueller <raidfail@gmx.de>
+Subject: Re: broken raid level 5 array caused by user error
+Date: Tue, 10 Nov 2015 22:02:00 +0100
+Message-ID: <1fbbbaa43fd856c740de67179a078b8a@pingofdeath.de>
+References: <15194c2e14b9a7c3431853dea9dc8b5e@pingofdeath.de>
+ <alpine.DEB.2.02.1511091254290.24520@uplift.swm.pp.se>
+ <5640A4B1.4050207@turmel.org>
+ <07de4cd96f39ecb6154794d072ca12e7@pingofdeath.de>
+ <5640B8AD.3030800@turmel.org>
+ <ed5f0f3cde3f017eae97bab65c792983@pingofdeath.de>
+ <d764bf541381927fa4183c9266fb3f5a@pingofdeath.de>
+ <5640C38B.4060503@turmel.org>
+ <a3a91665c4b7cdd70dacc7d8815cc365@pingofdeath.de>
+ <56410C67.2090202@turmel.org>
+ <420c63e0400e6d3f50b794e64f6a8d96@pingofdeath.de>
+ <5641F749.2070804@turmel.org>
+ <63e6dd8089ebeabf27e3419255e29958@pingofdeath.de>
+ <56420D34.5070204@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1970874.nKIz6W3yCk@carbon.lepommierdujardin.fr>
+In-Reply-To: <56420D34.5070204@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guillaume Paumier <guillaume.paumier@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/09/2015 10:05 PM, Guillaume Paumier wrote:
-> Hello Phil and the list,
+Hi Phil
 
-> Thank you for confirming, Phil, and for the additional pointer.
-> 
-> I've re-assembled the array with --force, which cleaned sdj, and then I was 
-> able to re-add the two other disks. The array started rebuilding and recovery 
-> was past 10% when the array failed again.
-> 
-> It seems there was an "unrecoverable read error" on sdj, and now I'm back with 
-> an array where 2 of the disks are marked as spare (sde and sdf, because their 
-> rebuild didn't complete), and sdj is faulty with an event count mismatch of 4, 
-> like before:
+> Whoa!  Don't do that.  Upgrade to CentOS 7, or go back to the other
+> machine.  You didn't mention switching machines, btw.  That would
+> explain the different drive names vs. roles.  You need to document the
+> device names vs. drive serial numbers on the current setup before 
+> moving
+> or upgrading.  Then adjust the names worked out above based on the
+> serial numbers in the new environment.
 
-Yes, you're going to lose some data.
+oh I'm sorry, I should have make more clear, that I went back to the old 
+system after the raid reshape failed. All outputs I posted were from the 
+same (old one) machine.
 
-Your only path forward at this point is to --assemble --force without
-the spares, and leave them out.  The array will be running degraded.
+Now I booted the latest centos 7 rescue, but fsck still tells the same:
 
-Apply the timeout mismatch work-arounds suited to your drives.
+/dev/md0 has unsupported feature(s): FEATURE_C16 FEATURE_C17 FEATURE_C18 
+FEATURE_C19 FEATURE_C21 FEATURE_C22 FEATURE_C23 FEATURE_C25 FEATURE_C27 
+FEATURE_C28 FEATURE_I29 FEATURE_R29
+e2fsck: Get a newer version of e2fsck!
 
-Start copying out your files to a new backup destination.  Keep track
-which ones succeed.
+I created the array with this command:
 
-/dev/sdj has 48 pending bad sectors.  You are likely to have files that
-cannot be read thanks to those sectors.  Just skip them and keep going
-(for now).  Note the sector addresses that fail.
+mdadm --create --assume-clean -l5 -n4 --chunk 64 --data-offset 1024 
+--metadata 1.2 /dev/md0 ......
 
-You may have to do forced assembly multiple times to get through the
-entire backup.
+This both combinations
 
-Write zeroes over the bad sectors to clear the UREs.  If the files are
-worthless with those zeroes in them, just delete them.  Do this for all
-drives that have UREs.  Then you can add the spares back in to rebuild.
+The devices names are now different, but I adjusted the names by serial 
+numbers as you told.
 
-Going forward, you need to apply work-arounds for non-raid drives at
-every power cycle, buy raid-rated drives for future replacements, and
-use cron to run regular scrubs to keep the UREs under control.
+Also mdadm --examine on on of the drives tells "Data offset: 2048 
+Sectors" when mdadm --create --data-offset 1024 is used. Is this normal? 
+It's confusing me (using --data-offset 2048 on creation gives "Data 
+offset: 2048 Sectors").
 
-Show the smartctl reports for all of your drives if you'd like more
-specfic advice.  And turn off word wrapping when you paste, please.
+Thanks,
 
-Phil
-
+Mathias
