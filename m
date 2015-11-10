@@ -1,7 +1,7 @@
-From: Mathias Mueller <raidfail@gmx.de>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: broken raid level 5 array caused by user error
-Date: Tue, 10 Nov 2015 22:02:00 +0100
-Message-ID: <1fbbbaa43fd856c740de67179a078b8a@pingofdeath.de>
+Date: Tue, 10 Nov 2015 16:11:58 -0500
+Message-ID: <56425D9E.5090204@turmel.org>
 References: <15194c2e14b9a7c3431853dea9dc8b5e@pingofdeath.de>
  <alpine.DEB.2.02.1511091254290.24520@uplift.swm.pp.se>
  <5640A4B1.4050207@turmel.org>
@@ -16,53 +16,47 @@ References: <15194c2e14b9a7c3431853dea9dc8b5e@pingofdeath.de>
  <5641F749.2070804@turmel.org>
  <63e6dd8089ebeabf27e3419255e29958@pingofdeath.de>
  <56420D34.5070204@turmel.org>
+ <1fbbbaa43fd856c740de67179a078b8a@pingofdeath.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56420D34.5070204@turmel.org>
+In-Reply-To: <1fbbbaa43fd856c740de67179a078b8a@pingofdeath.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: Mathias Mueller <raidfail@gmx.de>
 Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Phil
+On 11/10/2015 04:02 PM, Mathias Mueller wrote:
+> /dev/md0 has unsupported feature(s): FEATURE_C16 FEATURE_C17 FEATURE_C18
+> FEATURE_C19 FEATURE_C21 FEATURE_C22 FEATURE_C23 FEATURE_C25 FEATURE_C27
+> FEATURE_C28 FEATURE_I29 FEATURE_R29
+> e2fsck: Get a newer version of e2fsck!
 
-> Whoa!  Don't do that.  Upgrade to CentOS 7, or go back to the other
-> machine.  You didn't mention switching machines, btw.  That would
-> explain the different drive names vs. roles.  You need to document the
-> device names vs. drive serial numbers on the current setup before 
-> moving
-> or upgrading.  Then adjust the names worked out above based on the
-> serial numbers in the new environment.
+None of the feature bits are documented to exist.  The choice of first
+drive must be wrong.
 
-oh I'm sorry, I should have make more clear, that I went back to the old 
-system after the raid reshape failed. All outputs I posted were from the 
-same (old one) machine.
+> I created the array with this command:
+> 
+> mdadm --create --assume-clean -l5 -n4 --chunk 64 --data-offset 1024
+> --metadata 1.2 /dev/md0 ......
+> 
+> This both combinations
 
-Now I booted the latest centos 7 rescue, but fsck still tells the same:
+Well, I gave you *four* combinations for order, and two suggestions for
+chunk size.  Eight combinations to try.
 
-/dev/md0 has unsupported feature(s): FEATURE_C16 FEATURE_C17 FEATURE_C18 
-FEATURE_C19 FEATURE_C21 FEATURE_C22 FEATURE_C23 FEATURE_C25 FEATURE_C27 
-FEATURE_C28 FEATURE_I29 FEATURE_R29
-e2fsck: Get a newer version of e2fsck!
+> The devices names are now different, but I adjusted the names by serial
+> numbers as you told.
 
-I created the array with this command:
+Ok.
 
-mdadm --create --assume-clean -l5 -n4 --chunk 64 --data-offset 1024 
---metadata 1.2 /dev/md0 ......
+> Also mdadm --examine on on of the drives tells "Data offset: 2048
+> Sectors" when mdadm --create --data-offset 1024 is used. Is this normal?
+> It's confusing me (using --data-offset 2048 on creation gives "Data
+> offset: 2048 Sectors").
 
-This both combinations
+mdadm must be enforcing a minimum offset.
 
-The devices names are now different, but I adjusted the names by serial 
-numbers as you told.
+Phil
 
-Also mdadm --examine on on of the drives tells "Data offset: 2048 
-Sectors" when mdadm --create --data-offset 1024 is used. Is this normal? 
-It's confusing me (using --data-offset 2048 on creation gives "Data 
-offset: 2048 Sectors").
-
-Thanks,
-
-Mathias
