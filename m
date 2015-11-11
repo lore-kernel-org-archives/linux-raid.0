@@ -1,50 +1,35 @@
-From: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 00/32] separate operations from flags in
- the bio/request structs
-Date: Wed, 11 Nov 2015 12:37:20 -0500
-Message-ID: <20151111173719.GB12236@redhat.com>
-References: <1446654807-6935-1-git-send-email-mchristi@redhat.com>
-	<563A36FC.6010001@sandisk.com> <563A3813.5010604@cs.wisc.edu>
-	<20151107102309.GE12117@infradead.org>
-	<5642F3F4.2060007@cs.wisc.edu> <20151111112846.GA358@infradead.org>
+From: Mathias Mueller <raidfail@gmx.de>
+Subject: Re: broken raid level 5 array caused by user error
+Date: Wed, 11 Nov 2015 18:53:08 +0100
+Message-ID: <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
+References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
+ <56426499.8000205@turmel.org>
+ <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
+ <564284F5.9080409@turmel.org>
+ <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
+ <56429326.5030405@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20151111112846.GA358-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56429326.5030405@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Nov 11 2015 at  6:28am -0500,
-Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+Hi Phil,
 
-> On Wed, Nov 11, 2015 at 01:53:24AM -0600, Mike Christie wrote:
-> > We no longer have the bvec merge functions so the original reason given
-> > in the thread/patch Bart referenced is no longer valid.
-> > 
-> > Offlist it was suggested that dropping the argument from submit_bio
-> > might still improve performance, but I modified xfs and dm and did some
-> > testing and did not see anything.
-> > 
-> > So the change is not needed, and it would only be done because people
-> > feel it would improve the interface.
+> So, I fully expected one of those first four combinations to work.  I
+> don't know why they didn't.
 > 
-> I would defintively prefer the changed interface, and to me it also
-> looks like it would make your overall patch simpler.  If you disagree
-> feel free to keep it as-is for now and I'll do another pass later.
+> The fsck version dates to 2013, so it might be something related to
+> that.  My next step would be to try all of this after booting into a
+> modern environment, like the rescue cd from sysrescuecd.org.  Recheck
+> serial numbers and device names again, if you do that.
 
-The less churn the better.  But honestly, not quite following the logic
-on why all this flag-day churn is needed.  BUT if it needs to happen,
-because we'll soon hit a wall on supported operations via REQ_*, now is
-as good a time as any -- but best to limit the change to the flags IMHO.
+I tried the first four combinations with latest sysrescuecd, but the 
+results are the same.
+
+Mathias
