@@ -1,35 +1,52 @@
-From: Mathias Mueller <raidfail@gmx.de>
-Subject: Re: broken raid level 5 array caused by user error
-Date: Wed, 11 Nov 2015 18:53:08 +0100
-Message-ID: <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
-References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
- <56426499.8000205@turmel.org>
- <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
- <564284F5.9080409@turmel.org>
- <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
- <56429326.5030405@turmel.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/2] block: Introduce BIO_ENDIO_FREE for bio flags
+Date: Wed, 11 Nov 2015 12:54:11 -0500
+Message-ID: <20151111175411.GC12236@redhat.com>
+References: <cover.1447233227.git.baolin.wang@linaro.org>
+ <2bd3cc769530061501af545c7949dcc832263930.1447233227.git.baolin.wang@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56429326.5030405@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Linux raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2bd3cc769530061501af545c7949dcc832263930.1447233227.git.baolin.wang@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: axboe@kernel.dk, agk@redhat.com, dm-devel@redhat.com, neilb@suse.com, linux-raid@vger.kernel.org, jack@suse.cz, arnd@arndb.de, linux-kernel@vger.kernel.org, keith.busch@intel.com, jmoyer@redhat.com, broonie@kernel.org, tj@kernel.org, bart.vanassche@sandisk.com, dineshg@quicinc.com
 List-Id: linux-raid.ids
 
-Hi Phil,
+On Wed, Nov 11 2015 at  4:31am -0500,
+Baolin Wang <baolin.wang@linaro.org> wrote:
 
-> So, I fully expected one of those first four combinations to work.  I
-> don't know why they didn't.
+> When we use dm-crypt to decrypt block data, it will decrypt the block data
+> in endio() when one IO is completed. In this situation we don't want the
+> cloned bios is freed before calling the endio().
 > 
-> The fsck version dates to 2013, so it might be something related to
-> that.  My next step would be to try all of this after booting into a
-> modern environment, like the rescue cd from sysrescuecd.org.  Recheck
-> serial numbers and device names again, if you do that.
+> Thus introduce 'BIO_ENDIO_FREE' flag to support the request handling for dm-crypt,
+> this flag will ensure that blk layer does not complete the cloned bios before
+> completing the request. When the crypt endio is called, post-processsing is
+> done and then the dm layer will complete the bios (clones) and free them.
 
-I tried the first four combinations with latest sysrescuecd, but the 
-results are the same.
+Not following why request-based DM's partial completion handling
+(drivers/md/dm.c:end_clone_bio) isn't a sufficient hook -- no need to
+add block complexity.
 
-Mathias
+But that aside, I'm not liking the idea of a request-based dm-crypt.
+
+> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+> index 76d23fa..f636c50 100644
+> --- a/include/linux/device-mapper.h
+> +++ b/include/linux/device-mapper.h
+> @@ -407,6 +407,11 @@ union map_info *dm_get_rq_mapinfo(struct request *rq);
+>  
+>  struct queue_limits *dm_get_queue_limits(struct mapped_device *md);
+>  
+> +void dm_end_request(struct request *clone, int error);
+> +void dm_kill_unmapped_request(struct request *rq, int error);
+> +void dm_dispatch_clone_request(struct request *clone, struct request *rq);
+> +struct request *dm_get_orig_rq(struct request *clone);
+> +
+>  /*
+>   * Geometry functions.
+>   */
+
+I have no interest in seeing any request-based DM interfaces exported.
