@@ -1,35 +1,24 @@
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: Re: Raid server Motherboard recommendation.
-Date: Thu, 12 Nov 2015 16:11:05 +0100
-Message-ID: <20151112151105.GA32385@EIS>
+From: Michael Munger <michael@highpoweredhelp.com>
+Subject: RE: Raid server Motherboard recommendation.
+Date: Thu, 12 Nov 2015 16:04:47 +0000
+Message-ID: <46FCA36BC7E1D546AC28870158F9C25B03037AB9EC@ABRAHAM.highpoweredhelp.local>
 References: <5643FD4A.4070709@gmail.com>
- <20151112122908.0406d170@natsu>
- <56449EE5.3010002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56449EE5.3010002@gmail.com>
+In-Reply-To: <5643FD4A.4070709@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Ram Ramesh <rramesh2400@gmail.com>
-Cc: Roman Mamedov <rm@romanrm.net>, Linux Raid <linux-raid@vger.kernel.org>
+To: 'Ram Ramesh' <rramesh2400@gmail.com>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Nov 12, 2015 at 08:15:01AM -0600, Ram Ramesh wrote:
->    Thanks. I did see that. But, in newegg, there are reviews dated much 
-> later than above complaining about ubuntu 14.04 installs failing with 
-> ASMedia enabled. So, I concluded that it is iffy. I could not see any 
-> consistent message of positive result.
-
-I use ASMedia controllers myself, onboard and as standalone card. 
-They were cheap (much cheaper than getting a board with additional 
-ports using the same chipset really) and I don't need the PCIe slots 
-for anything else.
-
-They work fine in AHCI mode for HDD, with mdadm software raid.
-
-If you have a CD drive hooked to it the kernel will crash.
-Until you add libata.atapi_passthru16=0 to your cmdline.
-
-Regards
-Andreas
+Pj5BbGwgb3RoZXJzIHNlZW0gdG8gYmUgWDk5IG9yIG90aGVyIHNlcnZlciBjaGlwc2V0cyB3aGlj
+aCBJIGFtIG5vdCBmb25kIG9mLiBJIGxpa2UgZGVza3RvcCBib2FyZHMgYXMgdGhlIHNlcnZlciBh
+bHNvIGRvdWJsZXMgYXMgbXl0aHR2IGJhY2tlbmQvZnJvbnRlbmQuDQoNCkkgaGF2ZSB0aHJlZSBv
+ZiB0aGVzZSAoMSBYNzkgU2FiZXJ0b29oIFR1ZmYgYW5kIDIgWDk5IFNhYmVydG9vdGggVHVmZiBi
+b2FyZHMpIGFsbCBydW5uaW5nIGxpa2UgYSBjaGFtcCB3aXRoIERlYmlhbi4gSSBoaWdobHkgcmVj
+b21tZW5kIHRoZW0uDQoNCklmIHlvdSB3YW50IHNvbWV0aGluZyBjaGVhcGVyLCBJIGhhdmUgb25l
+IGJveCAocmF0aGVyIG9sZCkgdGhhdCBpcyBhbiBJbnRlbCBINjFNLURTMi4gU28sIHdoYXRldmVy
+IHRoZSBjdXJyZW50IHZlcnNpb24gb2YgdGhhdCBmYW1pbHkgb2YgYm9hcmRzIGlzLiBBbmQgSSBo
+YXZlIGFub3RoZXIgdGhhdCBpcyBhIEJpb3N0YXIgVDQxIEhELg0K
