@@ -1,304 +1,137 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/6] md-cluster: Protect communication with mutexes
-Date: Fri, 13 Nov 2015 08:59:08 +1100
-Message-ID: <87fv0ariab.fsf@notabene.neil.brown.name>
-References: <1446781819-25571-1-git-send-email-rgoldwyn@suse.de> <87mvumsqbp.fsf@notabene.neil.brown.name> <5641631F.2080000@suse.de>
+From: Joshua Kinard <kumba@gentoo.org>
+Subject: Re: Problem w/ commit ac8fa4196d20 on older, slower hardware
+Date: Thu, 12 Nov 2015 17:28:41 -0500
+Message-ID: <56451299.6090107@gentoo.org>
+References: <87twq0527k.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5641631F.2080000@suse.de>
+In-Reply-To: <87twq0527k.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-raid@vger.kernel.org
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Neil Brown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Nov 10 2015, Goldwyn Rodrigues wrote:
-
-> On 11/09/2015 05:31 PM, NeilBrown wrote:
->> On Fri, Nov 06 2015, rgoldwyn@suse.de wrote:
+On 10/08/2015 20:13, Neil Brown wrote:
+> 
+>> Per commit ac8fa4196d20:
 >>
->>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>> md: allow resync to go faster when there is competing IO.
 >>>
->>> Communication can happen through multiple threads. It is possible that
->>> one thread steps over another threads sequence. So, we use mutexes to
->>> protect both the send and receive sequences.
+>>> When md notices non-sync IO happening while it is trying to resync (or
+>>> reshape or recover) it slows down to the set minimum.
 >>>
->>> We use a new flag CLUSTER_MD_COMM_LOCKED which is used to detect
->>> if communication is already locked. This is useful for cases where we n=
-eed to
->>> take and hold the token DLM lock for a while. This bit is set only
->>> after locking communication.
+>>> The default minimum might have made sense many years ago but the drives have
+>>> become faster. Changing the default to match the times isn't really a long
+>>> term solution.
 >>
->> I don't understand what this flag is trying to achieve, but I'm fairly
->> sure it doesn't achieve it.
->
-> Lets consider three specific cases of locking communication channels to=20
-> show the conflict:
->
-> 1. resync_info_update(): communication is locked and release for sending=
-=20
-> a message.
-> 2. A regular md_update_sb(): communication is locked in=20
-> metadata_update_start() and unlocked in metadata_update_finish() after=20
-> writing to disk. In metadata_update_finish(), the sendmsg is called to=20
-> send METADATA_UPDATED.
-> 3. An add operation which culminates in a md_update_sb(): Here the=20
-> communication is locked before initiating add. If the add is successful,=
-=20
-> it results in md_update_sb(). In md_update_sb(), metadata_update_start()=
-=20
-> has to check if the communication is already locked. If locked, it=20
-> should not lock again.
-
-Oh, I get it now - thanks.
-
-Going back and looking at the original commit I can now see that it does
-say that, but I didn't understand the implication at the time.
-
-I might be wrong again, but I think this approach is broken.
-The 'add disk' sequence does:
-  1/ ->add_new_disk which takes the lock
-  2/ other stuff, protected by the lock
-  3/ schedule a metadata update
-  4/ metadata update is initiated, which doesn't take the lock
-        because the flag is set
-  5/ metadata update completes, lock is dropped.
-
-What if some other event causes the metadata update to happen during
-'2'?
-
-Maybe if you delayed setting MD_CLUSTER_COMM_LOCKED until after '2'.
-i.e. set it when scheduling the update.  So the flag means:
-  "lock has been taken for metadata update"
-
-One tricky bit there would be if metadata_update_start() found the bit
-wasn't set, and then entered mutex_lock() in lock_comm().
-When MD_CLUSTER_COMM_LOCKED gets set we want that code to stop waiting
-and start doing useful things.  But it won't.
-
-
-It might be easiest to make our own 'mutex' with a flag bit and a wait
-queue.
-
-Then calls to mutex_lock become
- wait_event(mddev->wait, !test_and_set_bit(bit, &cinfo->state));
-mutex_unlock becoems
- clear_bit(bit, &cinfo->state);
-
-and the mutex_lock used from metadata_update_start is
-  wait_event(mddev->wait, !test_and_set_bit(bit, &cinfo->state) ||
-                          test_and_clear_bit(MD_CLUSTER_COMM_LOCKED,
-  ....));
-
-That might work.... providing it is well documented.
-
-(and you are right - mutex_trylock wouldn't have helped, I was
-completely misunderstanding).
-
-Thanks,
-NeilBrown
-
-
-
->
-> The flag is used only for case 3. If the communication is already=20
-> locked, it should not lock again. This flag is set only after=20
-> lock_comm() has executed, but is checked for in metadata_update_start().=
-=20
-> This should insure that any of the operations 1, 2 or 3 do not interfere=
-=20
-> with each other.
->
-> I am not sure if I have made the best effort to explain this. I had a=20
-> tough time getting it right (which may or may not be complete).
->
+>> This holds true for modern hardware, but this commit is causing problems on
+>> older hardware, like SGI MIPS platforms, that use mdraid.  Namely, while trying
+>> to chase down an unrelated hardlock bug on an Onyx2, one of the arrays got out
+>> of sync, so on the next reboot, mdraid's attempt to resync at full speed
+>> absolutely murdered interactivity.  It took close to 30mins for the system to
+>> finally reach the login prompt.
 >>
->> Maybe if it was test_and_set_bit in metadata_update_start, it might make
->> sense.  But then I would suggest that clearing the bit be moved to
->> unlock_comm()
+>> Revert this patch was working to mitigate the problem at first, but it appears
+>> that in recent kernels, this is no longer the case, and reverting this commit
+>> has no noticeable effect anymore.  I assume I'd have to hunt down newer commits
+>> to revert, but it's probably saner to just highlight the problem and test any
+>> proposed solutions.
 >>
->> Do you just want to use mutex_try_lock() to detect if communication is
->> already locked?
->
-> Consider a race between md_update_sb() and sendmsg() [Case 1. and 2]
->
-> mutex_try_lock() may not work in this situation because lock_comm()=20
-> could have been called by sendmsg(), which will release it as soon as=20
-> the message is sent. In the meantime (while the lock is locked), if a=20
-> metadata_update_sb() operation executes. It will not relock the=20
-> communication. This will result in the WARN_ON in unlock_comm() since=20
-> sendmsg() sequence had already unlocked it.
->
->
+>> Is there some way to resolve this in such a way that old hardware maintains
+>> some level of interactivity during a resync, but that won't inconvenience the
+>> more modern systems?
 >>
->>>
->>> Also, Remove stray/ununsed sb_mutex.
+>> http://git.linux-mips.org/cgit/ralf/linux.git/commit/?id=ac8fa4196d20
 >>
->> I already removed that it mainline - I should have mentioned.
+>> Thanks!,
 >>
->> Thanks,
->> NeilBrown
->>
->>
->>>
->>> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>> ---
->>>   drivers/md/md-cluster.c | 26 +++++++++++++++++++++-----
->>>   1 file changed, 21 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
->>> index b73729b..a93734e 100644
->>> --- a/drivers/md/md-cluster.c
->>> +++ b/drivers/md/md-cluster.c
->>> @@ -47,6 +47,7 @@ struct resync_info {
->>>   #define		MD_CLUSTER_WAITING_FOR_NEWDISK		1
->>>   #define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
->>>   #define		MD_CLUSTER_BEGIN_JOIN_CLUSTER		3
->>> +#define		MD_CLUSTER_COMM_LOCKED			4
->>>
->>>
->>>   struct md_cluster_info {
->>> @@ -54,7 +55,8 @@ struct md_cluster_info {
->>>   	dlm_lockspace_t *lockspace;
->>>   	int slot_number;
->>>   	struct completion completion;
->>> -	struct mutex sb_mutex;
->>> +	struct mutex recv_mutex;
->>> +	struct mutex send_mutex;
->>>   	struct dlm_lock_resource *bitmap_lockres;
->>>   	struct dlm_lock_resource *resync_lockres;
->>>   	struct list_head suspend_list;
->>> @@ -503,6 +505,7 @@ static void recv_daemon(struct md_thread *thread)
->>>   	struct cluster_msg msg;
->>>   	int ret;
->>>
->>> +	mutex_lock(&cinfo->recv_mutex);
->>>   	/*get CR on Message*/
->>>   	if (dlm_lock_sync(message_lockres, DLM_LOCK_CR)) {
->>>   		pr_err("md/raid1:failed to get CR on MESSAGE\n");
->>> @@ -529,6 +532,7 @@ static void recv_daemon(struct md_thread *thread)
->>>   	ret =3D dlm_unlock_sync(message_lockres);
->>>   	if (unlikely(ret !=3D 0))
->>>   		pr_info("unlock msg failed return %d\n", ret);
->>> +	mutex_unlock(&cinfo->recv_mutex);
->>>   }
->>>
->>>   /* lock_comm()
->>> @@ -542,20 +546,22 @@ static int lock_comm(struct md_cluster_info *cinf=
-o)
->>>   {
->>>   	int error;
->>>
->>> -	if (cinfo->token_lockres->mode =3D=3D DLM_LOCK_EX)
->>> -		return 0;
->>> +	mutex_lock(&cinfo->send_mutex);
->>>
->>>   	error =3D dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX);
->>>   	if (error)
->>>   		pr_err("md-cluster(%s:%d): failed to get EX on TOKEN (%d)\n",
->>>   				__func__, __LINE__, error);
->>> +	mutex_lock(&cinfo->recv_mutex);
->>>   	return error;
->>>   }
->>>
->>>   static void unlock_comm(struct md_cluster_info *cinfo)
->>>   {
->>>   	WARN_ON(cinfo->token_lockres->mode !=3D DLM_LOCK_EX);
->>> +	mutex_unlock(&cinfo->recv_mutex);
->>>   	dlm_unlock_sync(cinfo->token_lockres);
->>> +	mutex_unlock(&cinfo->send_mutex);
->>>   }
->>>
->>>   /* __sendmsg()
->>> @@ -709,7 +715,8 @@ static int join(struct mddev *mddev, int nodes)
->>>   	init_completion(&cinfo->completion);
->>>   	set_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
->>>
->>> -	mutex_init(&cinfo->sb_mutex);
->>> +	mutex_init(&cinfo->send_mutex);
->>> +	mutex_init(&cinfo->recv_mutex);
->>>   	mddev->cluster_info =3D cinfo;
->>>
->>>   	memset(str, 0, 64);
->>> @@ -839,7 +846,12 @@ static int slot_number(struct mddev *mddev)
->>>
->>>   static int metadata_update_start(struct mddev *mddev)
->>>   {
->>> -	return lock_comm(mddev->cluster_info);
->>> +	struct md_cluster_info *cinfo =3D mddev->cluster_info;
->>> +	int ret;
->>> +	if (test_and_clear_bit(MD_CLUSTER_COMM_LOCKED, &cinfo->state))
->>> +		return 0;
->>> +	ret =3D lock_comm(cinfo);
->>> +	return ret;
->>>   }
->>>
->>>   static int metadata_update_finish(struct mddev *mddev)
->>> @@ -864,6 +876,7 @@ static int metadata_update_finish(struct mddev *mdd=
-ev)
->>>   		ret =3D __sendmsg(cinfo, &cmsg);
->>>   	} else
->>>   		pr_warn("md-cluster: No good device id found to send\n");
->>> +	clear_bit(MD_CLUSTER_COMM_LOCKED, &cinfo->state);
->>>   	unlock_comm(cinfo);
->>>   	return ret;
->>>   }
->>> @@ -871,6 +884,7 @@ static int metadata_update_finish(struct mddev *mdd=
-ev)
->>>   static void metadata_update_cancel(struct mddev *mddev)
->>>   {
->>>   	struct md_cluster_info *cinfo =3D mddev->cluster_info;
->>> +	clear_bit(MD_CLUSTER_COMM_LOCKED, &cinfo->state);
->>>   	unlock_comm(cinfo);
->>>   }
->>>
->>> @@ -945,6 +959,7 @@ static int add_new_disk(struct mddev *mddev, struct=
- md_rdev *rdev)
->>>   	memcpy(cmsg.uuid, uuid, 16);
->>>   	cmsg.raid_slot =3D cpu_to_le32(rdev->desc_nr);
->>>   	lock_comm(cinfo);
->>> +	set_bit(MD_CLUSTER_COMM_LOCKED, &cinfo->state);
->>>   	ret =3D __sendmsg(cinfo, &cmsg);
->>>   	if (ret)
->>>   		return ret;
->>> @@ -964,6 +979,7 @@ static int add_new_disk(struct mddev *mddev, struct=
- md_rdev *rdev)
->>>   static void add_new_disk_cancel(struct mddev *mddev)
->>>   {
->>>   	struct md_cluster_info *cinfo =3D mddev->cluster_info;
->>> +	clear_bit(MD_CLUSTER_COMM_LOCKED, &cinfo->state);
->>>   	unlock_comm(cinfo);
->>>   }
->>>
->>> --
->>> 1.8.5.6
->
-> --=20
-> Goldwyn
+> 
+> Hmmm... this change shouldn't have that effect.
+> It should allow resync to soak up a bit more of the idle time, but when
+> there is any other IO, resync should still back off.
+> 
+> I wonder if there is some other change which has confused the event
+> counting for the particular hardware you are using.
+> 
+> How did you identify this commit as a possible cause?
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Sorry for the late response.  I pinned down this particular commit as the cause
+on an SGI Onyx2 (IP27), which is a MIPS big-endian platform that supports
+ccNUMA.  The SCSI chip is a QLogic ISP1040B.  It's been supported in the
+mainline kernel for a long time, but has suffered from bit-rot over the years.
+ There's an unidentified bug somewhere in the architecture code that, under
+heavy disk I/O or memory operations (I am not sure which, yet), the machine
+will completely lock up hard.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I have three ~50GB SCA SCSI drives plugged into it, running MD RAID5 and the
+XFS filesystem.  I have /, /home, /usr, /var, and /tmp on separate partitions,
+each a RAID5 setup.  After one of these hard lockups, on the next reboot, the
+kernel detected that my largest partition, /usr, needed to be rebuilt, so it
+launched a background resync.  The other partitions were fine.
 
-iQIcBAEBCAAGBQJWRQusAAoJEDnsnt1WYoG56z0P/RmFT75gDDncpuumDoj9kZAw
-0qlRzXB/HdlmtmsicmORyfVzdMoPWRfoYWvuyainnLMwYC2uuZIecyXvEgmlSjl3
-5Htnr4InJQUmiWzJse31EayIRM9IprcqnRD/2QenbiI6q2z6YCstcGmC3jGeup9f
-vGlOKN0YD/D7TsK419F74RvhnHjlsril/uEI4OODHeCyi+7/3qPfr2TaEDriHNfl
-lqMoM374Gef6q+wfwrSQ1mtEMn1it1ZBXh8MfuO+JphxePIWEBXT8r+tjjRWtnzQ
-U9jGDv67LNAZquBu9e6pHsJHep5vQCgtrPC7pxPG4/+L5tiBYLABkXX3EDyL+M7/
-vtJBb0sMadnSPKtUbb813Mde5Gpy55tRPXHSakuY/XDoajxQ9Nird3cs136GJhXs
-RT3G+xl9gd+9eds3kiuUWwhWTkA24Mp2nJzrpHP8YYB6WyksN3YMDOzC+IiVOGK+
-1MWllYC7EJoFScAbPs6CGd8Wah7UujbljZCS/t/SiFjkZ0O3ex0UtqtVO/vDRXOZ
-ApMaLRhPiANzOgkrsnb9a5B5ijMIJKOMl1b4wXgG85mmxU/bg+SqVavjwfojAXJq
-gsUAlb9bF3nmMIYAiiGxR0Fr3uQQ/y+NKNTN81TuGWRAtQ9XgTtox14Gi2RfCa3l
-nYQ/R5OIt7S50YveHEvO
-=p9mU
------END PGP SIGNATURE-----
---=-=-=--
+I noticed after several minutes that the kernel had still not proceeded to
+execute /init, and that XFS hadn't even mounted the rootfs yet.  I thought the
+machine had hardlocked again.  The lockup bug normally does not happen with a
+resync (which takes place entirely within the kernel), but more so when running
+commands from userspace.  Physically checking the machine, the disk lights were
+showing drive activity, so I let it sit for a good half-hour, and when I later
+checked the serial console out, it had gotten most of the way through the
+bootup process and was still bringing up runlevel 3 services.
+
+Logging into the root console several minutes later showed the resync was
+almost complete, but interactivity remained very sluggish until the resync
+finished.  So I dug into gitweb on linux-mips.org and looked for any recent
+commits to md.c that might have something to do with resync operations, and
+this one stood out the most.  Reverting it, then forcing the lockup bug to
+happen several times until another background resync took place showed
+drastically-improved bootup speed.  The machine was able to boot to userland
+within ~4-6 mins with the background resync happening on /usr.
+
+I think this was on 3.19 or 4.0 (I forget).  It was on the next version up that
+I noticed the revert was no longer having an effect, and a resync slowed I/O
+down enough that booting to userland was back into the ~30min range.  I have
+also noticed that the lockup bug is also happening, randomly, during a resync
+now too.  I suspect whatever issue is causing the lockup is getting worse.
+
+The last kernel I booted on this platform was a 4.2-rcX release.  I have not
+had time to test 4.3.x out.
+
+I have also reproduced the same issue on an SGI Octane (IP30), which needs
+out-of-tree patches to work.  It's basically the smaller cousin of an
+Origin/Onyx2, using the same CPU, SCSI chip, same partition layout, same
+filesystem.  Only the disks, 3x 73GB SCA SCSI disks, and some internal hardware
+architecture, are different between the two.  It does not suffer from any
+lockup bugs whatsoever, and I only triggered a background resync when I got
+frustrated at an unrelated issue and powered the machine off out of annoyance.
+
+Per hdparm -tT, the average I/O speed is ~160MB/sec reading from cache, and
+~18.3MB/sec reading from the /dev/mdX devices.  Reading from the individual
+/dev/sdX drives is slightly faster at ~18.5MB/sec.  This is true for both machines.
+
+
+> The fact that reverting it no longer helps strongly suggests that some
+> other change is implicated.  I don't think there have been other changes
+> in md which could affect this.
+
+The changes to the code that this commit affected seems to play some role in
+the issue, but I agree that it does not appear to be the sole participant anymore.
+
+
+> Have you tried adjusting /proc/sys/dev/raid/speed_limit_m{ax,in} ??
+> Did that have any noticeable effect?
+
+Hard to do when your kernel takes 30+ minutes to boot up :)  Once I got to
+userland in one instance, though, I did touch one of the /proc parameters (I
+for get which one, but it had something to do w/ the minimum background I/O
+speed) and dropped it down to 1,000K/sec, the machine's responsiveness improved
+dramatically.
+
+The real issue of what's causing the lockups in the first place ultimately
+needs to be chased down, but I lack the debugging skills necessary to do that.
+ I tend to stop for the night when the resync needs to take place and power the
+machine down, as it drinks ~700W+, and I save the long resync for a day when
+utility rates are low.
+
+--J
