@@ -1,131 +1,97 @@
-From: matt@digitallyhosted.com
-Subject: badblocks seem to be causing problems with raid6 - badblocks list
- replicating all all drives
-Date: Thu, 12 Nov 2015 11:34:09 +0000
-Message-ID: <3fafa3e9267b4ba0b5f9d61d3a416cf5@digitallyhosted.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH 0/2] Introduce the request handling for dm-crypt
+Date: Thu, 12 Nov 2015 19:46:26 +0800
+Message-ID: <CAMz4kuKmU8E3O6pvE0VXGzJ53uobFzGkNYien0_OXXBssafo3Q@mail.gmail.com>
+References: <cover.1447233227.git.baolin.wang@linaro.org>
+	<20151111094811.GA3641@infradead.org>
+	<CAMz4ku+VF7-kLyE1fK45_MZ=-Tw3PqpySq3Cu86q+rZX4wRemw@mail.gmail.com>
+	<20151112091732.GA23780@quack.suse.cz>
+	<CAMz4kuKBhWcednSauyVhGsSQoNPoLnr4-1RkvJkQvvUR3UpQKg@mail.gmail.com>
+	<20151112110617.GA26662@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151112110617.GA26662@quack.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, neilb@suse.com, tj@kernel.org, jmoyer@redhat.com, keith.busch@intel.com, bart.vanassche@sandisk.com, linux-raid@vger.kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, "Garg, Dinesh" <dineshg@quicinc.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 12 November 2015 at 19:06, Jan Kara <jack@suse.cz> wrote:
+> On Thu 12-11-15 17:40:59, Baolin Wang wrote:
+>> On 12 November 2015 at 17:17, Jan Kara <jack@suse.cz> wrote:
+>> > On Thu 12-11-15 10:15:32, Baolin Wang wrote:
+>> >> On 11 November 2015 at 17:48, Christoph Hellwig <hch@infradead.org> wrote:
+>> >> > On Wed, Nov 11, 2015 at 05:31:43PM +0800, Baolin Wang wrote:
+>> >> >> Now the dm-crypt code only implemented the 'based-bio' method to encrypt/
+>> >> >> decrypt block data, which can only hanle one bio at one time. As we know,
+>> >> >> one bio must use the sequential physical address and it also has a limitation
+>> >> >> of length. Thus it may limit the big block encyrtion/decryption when some
+>> >> >> hardware support the big block data encryption.
+>> >> >>
+>> >> >> This patch series introduc the 'based-request' method to handle the data
+>> >> >> encryption/decryption. One request can contain multiple bios, so it can
+>> >> >> handle big block data to improve the efficiency.
+>> >> >
+>> >> > NAK for more request based stacking or DM drivers.  They are a major
+>> >> > pain to deal with, and adding more with different requirements then
+>> >> > dm-multipath is not helping in actually making that one work properly.
+>> >>
+>> >> But now many vendors supply the hardware engine to handle the
+>> >> encyrtion/decryption. The hardware really need a big block to indicate
+>> >> its performance with request based things. Another thing is now the
+>> >> request based things is used by many vendors (Qualcomm, Spreadtrum and
+>> >> so on) to improve their performance and there's a real performance
+>> >> requirement here (I can show the performance result later).
+>> >
+>> > So you've mentioned several times that hardware needs big blocks. How big
+>> > those blocks need to be? Ideally, can you give some numbers on how the
+>> > throughput of the encryption hw grows with the block size?
+>>
+>> It depends on the hardware design. My beaglebone black board's AES
+>> engine can handle 1M at one time which is not big. As I know some
+>> other AES engine can handle 16M data at one time or more.
+>
+> Well, one question is "can handle" and other question is how big gain in
+> throughput it will bring compared to say 1M chunks. I suppose there's some
+> constant overhead to issue a request to the crypto hw and by the time it is
+> encrypting 1M it may be that this overhead is well amortized by the cost of
+> the encryption itself which is in principle linear in the size of the
+> block. That's why I'd like to get idea of the real numbers...
 
-I posted a while back about getting buffer i/o errors in my dmesg logs 
-to my raid array, something along the lines of this:
+Please correct me if I misunderstood your point. Let's suppose the AES
+engine can handle 16M at one time. If we give the size of data is less
+than 16M, the engine can handle it at one time. But if the data size
+is 20M (more than 16M), the engine driver will split the data with 16M
+and 4M to deal with. I can not say how many numbers, but I think the
+engine is like to big chunks than small chunks which is the hardware
+engine's advantage.
 
-[158219.456484] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955235712)
-[158219.456487] Buffer I/O error on device md4, logical block 4955235584
-[158219.456490] Buffer I/O error on device md4, logical block 4955235585
-[158219.456491] Buffer I/O error on device md4, logical block 4955235586
-[158219.456491] Buffer I/O error on device md4, logical block 4955235587
-[158219.456492] Buffer I/O error on device md4, logical block 4955235588
-[158219.456493] Buffer I/O error on device md4, logical block 4955235589
-[158219.456494] Buffer I/O error on device md4, logical block 4955235590
-[158219.456495] Buffer I/O error on device md4, logical block 4955235591
-[158219.456496] Buffer I/O error on device md4, logical block 4955235592
-[158219.456497] Buffer I/O error on device md4, logical block 4955235593
-[158219.456580] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955235456)
-[158219.456663] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955235200)
-[158219.456747] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955234944)
-[158219.456829] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955234688)
-[158219.456912] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 125274714 (offset 176160768 size 8388608 
-starting block 4955234432)
-[158469.158278] EXT4-fs warning (device md4): ext4_end_bio:329: I/O 
-error -5 writing to inode 123995503 (offset 0 size 8388608 starting 
-block 4970080384)
-[158469.158281] buffer_io_error: 1526 callbacks suppressed
+>
+>> > You mentioned that you use requests because of size limitations on bios - I
+>> > had a look and current struct bio can easily describe 1MB requests (that's
+>> > assuming 64-bit architecture, 4KB pages) when we have 1 page worth of
+>> > struct bio_vec. Is that not enough?
+>>
+>> Usually one bio does not always use the full 1M, maybe some 1k/2k/8k
+>> or some other small chunks. But request can combine some sequential
+>> small bios to be a big block and it is better than bio at least.
+>
+> As Christoph mentions 4.3 should be better in submitting larger bios. Did
+> you check it?
 
-I am now using the latest mainline kernel, 4.3.0 and I believe something 
-is going wrong with the badblocks implementation.
+I'm sorry I didn't check it. What's the limitation of one bio on 4.3?
+But I think it is better to choose a bigger one ( one request ) for
+crypto which is suitable for hardware engine.
 
-I originally had 3 drives, all with the same badblocks list.  This array 
-has been running a while so I have no idea how these 3 discs all ended 
-up with the same list of badblocks.
-
-Now, if I remove any drive, which has no badblock entries, and re-add 
-it.  Once the sync is complete I end up with another drive with the same 
-badblocks list.
-
-At the moment 5 of the drives in the array all have the following 
-entries (exactly the same):
-
-Bad-blocks on /dev/sdi1:
-           1938038928 for 512 sectors
-           1938039440 for 512 sectors
-           1938977144 for 512 sectors
-           1938977656 for 512 sectors
-           3303750816 for 512 sectors
-           3303751328 for 512 sectors
-           3313648904 for 512 sectors
-           3313649416 for 512 sectors
-           3313651976 for 512 sectors
-           3313652488 for 512 sectors
-           3418023432 for 512 sectors
-           3418023944 for 512 sectors
-           3418024456 for 512 sectors
-           3418024968 for 512 sectors
-           3418037768 for 512 sectors
-           3418038280 for 512 sectors
-           3418038792 for 512 sectors
-           3418039304 for 512 sectors
-           3418112520 for 512 sectors
-           3418113032 for 512 sectors
-           3418113544 for 512 sectors
-           3418114056 for 512 sectors
-           3418114568 for 512 sectors
-           3418115080 for 512 sectors
-           3418124808 for 512 sectors
-           3418125320 for 512 sectors
-           3418165768 for 512 sectors
-           3418166280 for 512 sectors
-           3418187272 for 512 sectors
-           3418187784 for 512 sectors
-           3418213224 for 512 sectors
-           3418213736 for 512 sectors
-           3418214248 for 512 sectors
-           3418214760 for 512 sectors
-           3418215272 for 512 sectors
-           3418215784 for 512 sectors
-           3420607528 for 512 sectors
-           3420608040 for 512 sectors
-           3420626984 for 512 sectors
-           3420627496 for 512 sectors
-           3448897824 for 512 sectors
-           3448898336 for 512 sectors
-           3458897888 for 512 sectors
-           3458898400 for 512 sectors
-           3519403992 for 512 sectors
-           3519404504 for 512 sectors
-           3617207456 for 512 sectors
-           3617207968 for 512 sectors
+>
+>                                                                 Honza
+> --
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
 
-How can I clear the badblocks list on all the drives? Something seems 
-very wrong and I believe I only actually have 1 faulty disc (I have run 
-smartctl long tests on all drives, only 1 failed).
 
-If I can't clear them, how can I get ext4 to recognise the badblocks 
-within the array so that it no longer attempts to write to those blocks?
-
-Do the blocks in the list above map to blocks on a the physical 
-harddrive, or to blocks on the md device - IE: If that block list was 
-passed to ext4 filesystem as bad sectors, would that be the correct 
-location on the array or are those the badblocks on one of the 
-harddrives in the array.
-
-Thanks
+-- 
+Baolin.wang
+Best Regards
