@@ -1,162 +1,90 @@
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Subject: [PATCH] drivers: md: use ktime_get_real_seconds()
-Date: Thu, 12 Nov 2015 19:16:17 -0800
-Message-ID: <1447384577-30866-1-git-send-email-deepa.kernel@gmail.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH 0/2] Introduce the request handling for dm-crypt
+Date: Fri, 13 Nov 2015 11:25:37 +0800
+Message-ID: <CAMz4kuJ6x=Ygmr2JBL=PAxoQCCFggFFLa57Aw3Q3EDkKCu5Bvg@mail.gmail.com>
+References: <cover.1447233227.git.baolin.wang@linaro.org>
+	<20151112122400.GB27454@quack.suse.cz>
+	<CAMz4kuLmGfyae=PXb8keuCpkEFDdXZzvuBtUiJHRAz0P55mxXg@mail.gmail.com>
+	<4436790.rotQ3a7v5c@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4436790.rotQ3a7v5c@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.com>, Arnd Bergmann <arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, neilb@suse.com, tj@kernel.org, jmoyer@redhat.com, keith.busch@intel.com, bart.vanassche@sandisk.com, linux-raid@vger.kernel.org, Mark Brown <broonie@kernel.org>, "Garg, Dinesh" <dineshg@quicinc.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-get_seconds() API is not y2038 safe on 32 bit systems and the API
-is deprecated. Replace it with calls to ktime_get_real_seconds()
-API instead. Change mddev structure types to time64_t accordingly.
+On 12 November 2015 at 20:57, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Thursday 12 November 2015 20:51:10 Baolin Wang wrote:
+>> On 12 November 2015 at 20:24, Jan Kara <jack@suse.cz> wrote:
+>> > On Thu 12-11-15 19:46:26, Baolin Wang wrote:
+>> >> On 12 November 2015 at 19:06, Jan Kara <jack@suse.cz> wrote:
+>> >> > Well, one question is "can handle" and other question is how big gain in
+>> >> > throughput it will bring compared to say 1M chunks. I suppose there's some
+>> >> > constant overhead to issue a request to the crypto hw and by the time it is
+>> >> > encrypting 1M it may be that this overhead is well amortized by the cost of
+>> >> > the encryption itself which is in principle linear in the size of the
+>> >> > block. That's why I'd like to get idea of the real numbers...
+>> >>
+>> >> Please correct me if I misunderstood your point. Let's suppose the AES
+>> >> engine can handle 16M at one time. If we give the size of data is less
+>> >> than 16M, the engine can handle it at one time. But if the data size
+>> >> is 20M (more than 16M), the engine driver will split the data with 16M
+>> >> and 4M to deal with. I can not say how many numbers, but I think the
+>> >> engine is like to big chunks than small chunks which is the hardware
+>> >> engine's advantage.
+>> >
+>> > No, I meant something different. I meant that if HW can encrypt 1M in say
+>> > 1.05 ms and it can encrypt 16M in 16.05 ms, then although using 16 M blocks
+>> > gives you some advantage it becomes diminishingly small.
+>> >
+>>
+>> But if it encrypts 16M with 1M one by one, it will be much more than
+>> 16.05ms (should be consider the SW submits bio one by one).
+>
+> The example that Jan gave was meant to illustrate the case where it's not
+> much more than 16.05ms, just slightly more.
+>
+> The point is that we need real numbers to show at what size we stop
+> getting significant returns from increased block sizes.
+>
 
-32 bit signed timestamps will overflow in the year 2038.
+Got it. Thanks.
 
-Change the user interface mdu_array_info_s structure timestamps:
-ctime and utime values used in ioctls GET_ARRAY_INFO and
-SET_ARRAY_INFO to unsigned int. This will extend the field to last
-until the year 2106.
-The long term plan is to get rid of ctime and utime values in
-this structure as this information can be read from the on-disk
-meta data directly.
+>> >> >> > You mentioned that you use requests because of size limitations on bios - I
+>> >> >> > had a look and current struct bio can easily describe 1MB requests (that's
+>> >> >> > assuming 64-bit architecture, 4KB pages) when we have 1 page worth of
+>> >> >> > struct bio_vec. Is that not enough?
+>> >> >>
+>> >> >> Usually one bio does not always use the full 1M, maybe some 1k/2k/8k
+>> >> >> or some other small chunks. But request can combine some sequential
+>> >> >> small bios to be a big block and it is better than bio at least.
+>> >> >
+>> >> > As Christoph mentions 4.3 should be better in submitting larger bios. Did
+>> >> > you check it?
+>> >>
+>> >> I'm sorry I didn't check it. What's the limitation of one bio on 4.3?
+>> >
+>> > On 4.3 it is 1 MB (which should be enough because requests are limited to
+>> > 512 KB by default anyway). Previously the maximum bio size depended on the
+>> > queue parameters such as max number of segments etc.
+>>
+>> But it maybe not enough for HW engine which can handle maybe 10M/20M
+>> at one time.
+>
+> Given that you have already done measurements, can you find out how much
+> you lose in overall performance with your existing patch if you artificially
+> limit the maximum size to sizes like 256kb, 1MB, 4MB, ...?
+>
 
-Clamp the tim64_t timestamps to positive values with a max of U32_MAX
-when returning from GET_ARRAY_INFO ioctl to accommodate above changes
-in the data type of timestamps to unsigned int.
+Cause my board AES engine throughput is 1M, I just did a simple dd
+test with small chunks. Results are in last email.
 
-v0.90 on disk meta data uses u32 for maintaining time stamps.
-So this will also last until year 2106.
-Assumption is that the usage of v0.90 will be deprecated by
-year 2106.
+>         Arnd
 
-Timestamp fields in the on disk meta data for v1.0 version already
-use 64 bit data types. Remove the truncation of the bits while
-writing to or reading from these from the disk.
 
-Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
 
-Adding the maintainer lists for md.
-
-Notes:
-    A separate patch will update mdadm to obtain times from the metadata,
-    and to give a deprecation warning for use of v0.90 arrays
-
- drivers/md/md.c                | 18 +++++++++---------
- drivers/md/md.h                |  2 +-
- include/uapi/linux/raid/md_u.h |  4 ++--
- 3 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7ab9ed9..20763ea 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1196,13 +1196,13 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
- 	memcpy(&sb->set_uuid2, mddev->uuid+8, 4);
- 	memcpy(&sb->set_uuid3, mddev->uuid+12,4);
- 
--	sb->ctime = mddev->ctime;
-+	sb->ctime = clamp_t(time64_t, mddev->ctime, 0, U32_MAX);
- 	sb->level = mddev->level;
- 	sb->size = mddev->dev_sectors / 2;
- 	sb->raid_disks = mddev->raid_disks;
- 	sb->md_minor = mddev->md_minor;
- 	sb->not_persistent = 0;
--	sb->utime = mddev->utime;
-+	sb->utime = clamp_t(time64_t, mddev->utime, 0, U32_MAX);
- 	sb->state = 0;
- 	sb->events_hi = (mddev->events>>32);
- 	sb->events_lo = (u32)mddev->events;
-@@ -1542,8 +1542,8 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
- 		mddev->patch_version = 0;
- 		mddev->external = 0;
- 		mddev->chunk_sectors = le32_to_cpu(sb->chunksize);
--		mddev->ctime = le64_to_cpu(sb->ctime) & ((1ULL << 32)-1);
--		mddev->utime = le64_to_cpu(sb->utime) & ((1ULL << 32)-1);
-+		mddev->ctime = le64_to_cpu(sb->ctime);
-+		mddev->utime = le64_to_cpu(sb->utime);
- 		mddev->level = le32_to_cpu(sb->level);
- 		mddev->clevel[0] = 0;
- 		mddev->layout = le32_to_cpu(sb->layout);
-@@ -2331,7 +2331,7 @@ repeat:
- 
- 	spin_lock(&mddev->lock);
- 
--	mddev->utime = get_seconds();
-+	mddev->utime = ktime_get_real_seconds();
- 
- 	if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
- 		force_change = 1;
-@@ -5828,7 +5828,7 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
- 	info.major_version = mddev->major_version;
- 	info.minor_version = mddev->minor_version;
- 	info.patch_version = MD_PATCHLEVEL_VERSION;
--	info.ctime         = mddev->ctime;
-+	info.ctime         = clamp_t(time64_t, mddev->ctime, 0, U32_MAX);
- 	info.level         = mddev->level;
- 	info.size          = mddev->dev_sectors / 2;
- 	if (info.size != mddev->dev_sectors / 2) /* overflow */
-@@ -5838,7 +5838,7 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
- 	info.md_minor      = mddev->md_minor;
- 	info.not_persistent= !mddev->persistent;
- 
--	info.utime         = mddev->utime;
-+	info.utime         = clamp_t(time64_t, mddev->utime, 0, U32_MAX);
- 	info.state         = 0;
- 	if (mddev->in_sync)
- 		info.state = (1<<MD_SB_CLEAN);
-@@ -6338,13 +6338,13 @@ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 		/* ensure mddev_put doesn't delete this now that there
- 		 * is some minimal configuration.
- 		 */
--		mddev->ctime         = get_seconds();
-+		mddev->ctime         = ktime_get_real_seconds();
- 		return 0;
- 	}
- 	mddev->major_version = MD_MAJOR_VERSION;
- 	mddev->minor_version = MD_MINOR_VERSION;
- 	mddev->patch_version = MD_PATCHLEVEL_VERSION;
--	mddev->ctime         = get_seconds();
-+	mddev->ctime         = ktime_get_real_seconds();
- 
- 	mddev->level         = info->level;
- 	mddev->clevel[0]     = 0;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index f5b9aad..237b507 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -261,7 +261,7 @@ struct mddev {
- 							 * managed externally */
- 	char				metadata_type[17]; /* externally set*/
- 	int				chunk_sectors;
--	time_t				ctime, utime;
-+	time64_t			ctime, utime;
- 	int				level, layout;
- 	char				clevel[16];
- 	int				raid_disks;
-diff --git a/include/uapi/linux/raid/md_u.h b/include/uapi/linux/raid/md_u.h
-index 1cb8aa6..36cd821 100644
---- a/include/uapi/linux/raid/md_u.h
-+++ b/include/uapi/linux/raid/md_u.h
-@@ -80,7 +80,7 @@ typedef struct mdu_array_info_s {
- 	int major_version;
- 	int minor_version;
- 	int patch_version;
--	int ctime;
-+	unsigned int ctime;
- 	int level;
- 	int size;
- 	int nr_disks;
-@@ -91,7 +91,7 @@ typedef struct mdu_array_info_s {
- 	/*
- 	 * Generic state information
- 	 */
--	int utime;		/*  0 Superblock update time		      */
-+	unsigned int utime;	/*  0 Superblock update time		      */
- 	int state;		/*  1 State bits (clean, ...)		      */
- 	int active_disks;	/*  2 Number of currently active disks	      */
- 	int working_disks;	/*  3 Number of working disks		      */
 -- 
-1.9.1
+Baolin.wang
+Best Regards
