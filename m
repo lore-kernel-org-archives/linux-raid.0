@@ -1,56 +1,80 @@
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Subject: Re: [PATCH] drivers: md: use ktime_get_real_seconds()
-Date: Thu, 12 Nov 2015 15:14:06 -0800
-Message-ID: <CABeXuvpi0CiYUsGYf6xpTv60y5h-E+R036Ja6_Z95ROKy9jsjg@mail.gmail.com>
-References: <1447298613-26157-1-git-send-email-deepa.kernel@gmail.com>
- <4073088.alOdrNRecE@wuerfel>
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: Re: Problem w/ commit ac8fa4196d20 on older, slower hardware
+Date: Fri, 13 Nov 2015 01:03:06 +0100
+Message-ID: <20151113000306.GA3563@EIS>
+References: <87twq0527k.fsf@notabene.neil.brown.name>
+ <56451299.6090107@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <4073088.alOdrNRecE@wuerfel>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.com>
-Cc: y2038@lists.linaro.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <56451299.6090107@gentoo.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Joshua Kinard <kumba@gentoo.org>
+Cc: Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gVGh1LCBOb3YgMTIsIDIwMTUgYXQgMTo1NiBQTSwgQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5k
-Yi5kZT4gd3JvdGU6Cgo+IE9uIFdlZG5lc2RheSAxMSBOb3ZlbWJlciAyMDE1IDE5OjIzOjMzIERl
-ZXBhIERpbmFtYW5pIHdyb3RlOgo+ID4gZ2V0X3NlY29uZHMoKSBBUEkgaXMgbm90IHkyMDM4IHNh
-ZmUgb24gMzIgYml0IHN5c3RlbXMgYW5kIHRoZSBBUEkKPiA+IGlzIGRlcHJlY2F0ZWQuIFJlcGxh
-Y2UgaXQgd2l0aCBjYWxscyB0byBrdGltZV9nZXRfcmVhbF9zZWNvbmRzKCkKPiA+IEFQSSBpbnN0
-ZWFkLiBDaGFuZ2UgbWRkZXYgc3RydWN0dXJlIHR5cGVzIHRvIHRpbWU2NF90IGFjY29yZGluZ2x5
-Lgo+ID4KPiA+IDMyIGJpdCBzaWduZWQgdGltZXN0YW1wcyB3aWxsIG92ZXJmbG93IGluIHRoZSB5
-ZWFyIDIwMzguCj4gPgo+ID4gQ2hhbmdlIHRoZSB1c2VyIGludGVyZmFjZSBtZHVfYXJyYXlfaW5m
-b19zIHN0cnVjdHVyZSB0aW1lc3RhbXBzOgo+ID4gY3RpbWUgYW5kIHV0aW1lIHZhbHVlcyB1c2Vk
-IGluIGlvY3RscyBHRVRfQVJSQVlfSU5GTyBhbmQKPiA+IFNFVF9BUlJBWV9JTkZPIHRvIHVuc2ln
-bmVkIGludC4gVGhpcyB3aWxsIGV4dGVuZCB0aGUgZmllbGQgdG8gbGFzdAo+ID4gdW50aWwgdGhl
-IHllYXIgMjEwNi4KPiA+IFRoZSBsb25nIHRlcm0gcGxhbiBpcyB0byBnZXQgcmlkIG9mIGN0aW1l
-IGFuZCB1dGltZSB2YWx1ZXMgaW4KPiA+IHRoaXMgc3RydWN0dXJlIGFzIHRoaXMgaW5mb3JtYXRp
-b24gY2FuIGJlIHJlYWQgZnJvbSB0aGUgb24tZGlzawo+ID4gbWV0YSBkYXRhIGRpcmVjdGx5Lgo+
-ID4KPiA+IENsYW1wIHRoZSB0aW02NF90IHRpbWVzdGFtcHMgdG8gcG9zaXRpdmUgdmFsdWVzIHdp
-dGggYSBtYXggb2YgVTMyX01BWAo+ID4gd2hlbiByZXR1cm5pbmcgZnJvbSBHRVRfQVJSQVlfSU5G
-TyBpb2N0bCB0byBhY2NvbW1vZGF0ZSBhYm92ZSBjaGFuZ2VzCj4gPiBpbiB0aGUgZGF0YSB0eXBl
-IG9mIHRpbWVzdGFtcHMgdG8gdW5zaWduZWQgaW50Lgo+ID4KPiA+IHYwLjkwIG9uIGRpc2sgbWV0
-YSBkYXRhIHVzZXMgdTMyIGZvciBtYWludGFpbmluZyB0aW1lIHN0YW1wcy4KPiA+IFNvIHRoaXMg
-d2lsbCBhbHNvIGxhc3QgdW50aWwgeWVhciAyMTA2Lgo+ID4gQXNzdW1wdGlvbiBpcyB0aGF0IHRo
-ZSB1c2FnZSBvZiB2MC45MCB3aWxsIGJlIGRlcHJlY2F0ZWQgYnkKPiA+IHllYXIgMjEwNi4KPiA+
-Cj4gPiBUaW1lc3RhbXAgZmllbGRzIGluIHRoZSBvbiBkaXNrIG1ldGEgZGF0YSBmb3IgdjEuMCB2
-ZXJzaW9uIGFscmVhZHkKPiA+IHVzZSA2NCBiaXQgZGF0YSB0eXBlcy4gUmVtb3ZlIHRoZSB0cnVu
-Y2F0aW9uIG9mIHRoZSBiaXRzIHdoaWxlCj4gPiB3cml0aW5nIHRvIG9yIHJlYWRpbmcgZnJvbSB0
-aGVzZSBmcm9tIHRoZSBkaXNrLgo+ID4KPiA+IFNpZ25lZC1vZmYtYnk6IERlZXBhIERpbmFtYW5p
-IDxkZWVwYS5rZXJuZWxAZ21haWwuY29tPgo+Cj4gUmV2aWV3ZWQtYnk6IEFybmQgQmVyZ21hbm4g
-PGFybmRAYXJuZGIuZGU+Cj4KPiBUaGUgcGF0Y2ggbG9va3MgZ3JlYXQsIGFuZCB0aGUgY2hhbmdl
-bG9nIGlzIHBlcmZlY3QuCj4KPiBJIGRpZG4ndCBldmVuIGtub3cgd2UgaGFkIGEgY2xhbXBfdCgp
-IG1hY3JvIGZvciB0aGlzLgo+Cj4KCkFkZGluZyB0aGUgbWFpbnRhaW5lciBsaXN0cyBmb3IgbWQu
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClkyMDM4IG1h
-aWxpbmcgbGlzdApZMjAzOEBsaXN0cy5saW5hcm8ub3JnCmh0dHBzOi8vbGlzdHMubGluYXJvLm9y
-Zy9tYWlsbWFuL2xpc3RpbmZvL3kyMDM4Cg==
+On Thu, Nov 12, 2015 at 05:28:41PM -0500, Joshua Kinard wrote:
+> running MD RAID5 and the XFS filesystem.  I have /, /home, /usr, /var,
+> and /tmp on separate partitions, each a RAID5 setup.
+
+Hi, sorry for butting in,
+
+I have the same issue, on a regular consumer Haswell i5 box, 
+with a setup very very similar to yours:
+
+7x2TB disks, multiple partitions, for each: RAID-5, LUKS, LVM, XFS.
+
+The issue occurs during regular RAID check which I run daily 
+(different partition/RAID each day, so it's more like a 
+evenly distributed weekly check).
+
+I have an application that uses `find -size +100M` on a directory 
+tree with ~3k subdirs and ~6k files in total. It doesn't do anything 
+with the find result, it's purely informal. So no big data involved, 
+even though the files themselves aren't small.
+
+Yet, it's slooow. The following tests were on a completely idle box, 
+apart from a running RAID check on the same /dev/mdX device.
+
+Kernel 4.2.3, unpatched:
+
+real	0m53.555s
+user	0m0.013s
+sys	0m0.037s
+
+real	1m3.777s
+user	0m0.013s
+sys	0m0.037s
+
+real	1m3.453s
+user	0m0.014s
+sys	0m0.036s
+
+Kernel 4.2.3, reverted ac8fa4196d20:
+
+real	0m3.206s
+user	0m0.010s
+sys	0m0.030s
+
+real	0m0.450s
+user	0m0.003s
+sys	0m0.014s
+
+real	0m0.375s
+user	0m0.003s
+sys	0m0.012s
+
+I did echo 3 > /proc/sys/vm/drop_caches between each find. 
+For some reason, subsequent calls in the reverted kernel are 
+considerably faster regardless. In the original kernel it 
+stays slow... if I don't drop_caches, the time is 0.006s.
+
+I don't normally reboot (while a RAID sync or check is 
+running) but while switching between kernels I noticed 
+the shutdown was very slow also in the original kernel.
+
+Are small requests getting delayed a lot or something?
+
+Regards
+Andreas Klauer
