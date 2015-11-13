@@ -1,70 +1,162 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [PATCH 0/2] Introduce the request handling for dm-crypt
-Date: Fri, 13 Nov 2015 10:07:25 +0800
-Message-ID: <CAMz4kuL0r=wJuxyQvftuY_p=5k3_bYaksfgha6O2idNgqiBNZw@mail.gmail.com>
-References: <cover.1447233227.git.baolin.wang@linaro.org>
-	<20151111181813.GD12236@redhat.com>
-	<CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com>
-	<20151112100422.GM12392@sirena.org.uk>
-	<5644AFA2.6040201@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Deepa Dinamani <deepa.kernel@gmail.com>
+Subject: [PATCH] drivers: md: use ktime_get_real_seconds()
+Date: Thu, 12 Nov 2015 19:16:17 -0800
+Message-ID: <1447384577-30866-1-git-send-email-deepa.kernel@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5644AFA2.6040201@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Mark Brown <broonie@kernel.org>, Mike Snitzer <snitzer@redhat.com>, Alasdair G Kergon <agk@redhat.com>, dm-devel@redhat.com, neilb@suse.com, linux-raid@vger.kernel.org, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, LKML <linux-kernel@vger.kernel.org>, keith.busch@intel.com, jmoyer@redhat.com, tj@kernel.org, bart.vanassche@sandisk.com, "Garg, Dinesh" <dineshg@quicinc.com>
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.com>, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-raid.ids
 
-On 12 November 2015 at 23:26, Jens Axboe <axboe@kernel.dk> wrote:
-> On 11/12/2015 03:04 AM, Mark Brown wrote:
->>
->> On Thu, Nov 12, 2015 at 04:20:41PM +0800, Baolin Wang wrote:
->>
->>> 3. perforamence data
->>> It is just a simple dd test result, and will provide the formal report
->>> in future. But from the simple test, we can see the improvement.
->>
->>
->> It's probably also worth pointing out that Qualcomm have been shipping
->> an out of tree implementation of this as a separate module in their BSP
->> (originally written by Danesh Garg who's on this thread):
->>
->>
->> https://android.googlesource.com/kernel/msm/+/android-msm-dory-3.10-kitkat-wear/drivers/md/dm-req-crypt.c
->>
->> Android now wants to encrypt phones and tablets by default and have been
->> seeing substantial performance hits as a result, we can try to get
->> people to share performance data from productionish systems but it might
->> be difficult.
->
->
-> Well, shame on them for developing out-of-tree, looks like they are reaping
-> all the benefits of that.
->
-> Guys, we need some numbers, enough with the hand waving. There's no point
-> discussing this further until we know how much of a difference it makes to
-> handle X MB chunks instead of Y MB chunks. As was previously stated, unless
-> there's a _substantial_ performance benefit, this patchset isn't going
-> anywhere.
+get_seconds() API is not y2038 safe on 32 bit systems and the API
+is deprecated. Replace it with calls to ktime_get_real_seconds()
+API instead. Change mddev structure types to time64_t accordingly.
 
-That's fair enough and we will provide the performance data to measure
-the patchset.
+32 bit signed timestamps will overflow in the year 2038.
 
->
-> If there is a huge benefit, we can look into ways of making it actually
-> work. That may not even be a request interface, it could just be proper
-> utilization of plugging for in-dm bio merging.
+Change the user interface mdu_array_info_s structure timestamps:
+ctime and utime values used in ioctls GET_ARRAY_INFO and
+SET_ARRAY_INFO to unsigned int. This will extend the field to last
+until the year 2106.
+The long term plan is to get rid of ctime and utime values in
+this structure as this information can be read from the on-disk
+meta data directly.
 
-Make sense. Thanks.
+Clamp the tim64_t timestamps to positive values with a max of U32_MAX
+when returning from GET_ARRAY_INFO ioctl to accommodate above changes
+in the data type of timestamps to unsigned int.
 
->
-> --
-> Jens Axboe
->
+v0.90 on disk meta data uses u32 for maintaining time stamps.
+So this will also last until year 2106.
+Assumption is that the usage of v0.90 will be deprecated by
+year 2106.
 
+Timestamp fields in the on disk meta data for v1.0 version already
+use 64 bit data types. Remove the truncation of the bits while
+writing to or reading from these from the disk.
 
+Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
 
+Adding the maintainer lists for md.
+
+Notes:
+    A separate patch will update mdadm to obtain times from the metadata,
+    and to give a deprecation warning for use of v0.90 arrays
+
+ drivers/md/md.c                | 18 +++++++++---------
+ drivers/md/md.h                |  2 +-
+ include/uapi/linux/raid/md_u.h |  4 ++--
+ 3 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7ab9ed9..20763ea 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1196,13 +1196,13 @@ static void super_90_sync(struct mddev *mddev, struct md_rdev *rdev)
+ 	memcpy(&sb->set_uuid2, mddev->uuid+8, 4);
+ 	memcpy(&sb->set_uuid3, mddev->uuid+12,4);
+ 
+-	sb->ctime = mddev->ctime;
++	sb->ctime = clamp_t(time64_t, mddev->ctime, 0, U32_MAX);
+ 	sb->level = mddev->level;
+ 	sb->size = mddev->dev_sectors / 2;
+ 	sb->raid_disks = mddev->raid_disks;
+ 	sb->md_minor = mddev->md_minor;
+ 	sb->not_persistent = 0;
+-	sb->utime = mddev->utime;
++	sb->utime = clamp_t(time64_t, mddev->utime, 0, U32_MAX);
+ 	sb->state = 0;
+ 	sb->events_hi = (mddev->events>>32);
+ 	sb->events_lo = (u32)mddev->events;
+@@ -1542,8 +1542,8 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 		mddev->patch_version = 0;
+ 		mddev->external = 0;
+ 		mddev->chunk_sectors = le32_to_cpu(sb->chunksize);
+-		mddev->ctime = le64_to_cpu(sb->ctime) & ((1ULL << 32)-1);
+-		mddev->utime = le64_to_cpu(sb->utime) & ((1ULL << 32)-1);
++		mddev->ctime = le64_to_cpu(sb->ctime);
++		mddev->utime = le64_to_cpu(sb->utime);
+ 		mddev->level = le32_to_cpu(sb->level);
+ 		mddev->clevel[0] = 0;
+ 		mddev->layout = le32_to_cpu(sb->layout);
+@@ -2331,7 +2331,7 @@ repeat:
+ 
+ 	spin_lock(&mddev->lock);
+ 
+-	mddev->utime = get_seconds();
++	mddev->utime = ktime_get_real_seconds();
+ 
+ 	if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
+ 		force_change = 1;
+@@ -5828,7 +5828,7 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
+ 	info.major_version = mddev->major_version;
+ 	info.minor_version = mddev->minor_version;
+ 	info.patch_version = MD_PATCHLEVEL_VERSION;
+-	info.ctime         = mddev->ctime;
++	info.ctime         = clamp_t(time64_t, mddev->ctime, 0, U32_MAX);
+ 	info.level         = mddev->level;
+ 	info.size          = mddev->dev_sectors / 2;
+ 	if (info.size != mddev->dev_sectors / 2) /* overflow */
+@@ -5838,7 +5838,7 @@ static int get_array_info(struct mddev *mddev, void __user *arg)
+ 	info.md_minor      = mddev->md_minor;
+ 	info.not_persistent= !mddev->persistent;
+ 
+-	info.utime         = mddev->utime;
++	info.utime         = clamp_t(time64_t, mddev->utime, 0, U32_MAX);
+ 	info.state         = 0;
+ 	if (mddev->in_sync)
+ 		info.state = (1<<MD_SB_CLEAN);
+@@ -6338,13 +6338,13 @@ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 		/* ensure mddev_put doesn't delete this now that there
+ 		 * is some minimal configuration.
+ 		 */
+-		mddev->ctime         = get_seconds();
++		mddev->ctime         = ktime_get_real_seconds();
+ 		return 0;
+ 	}
+ 	mddev->major_version = MD_MAJOR_VERSION;
+ 	mddev->minor_version = MD_MINOR_VERSION;
+ 	mddev->patch_version = MD_PATCHLEVEL_VERSION;
+-	mddev->ctime         = get_seconds();
++	mddev->ctime         = ktime_get_real_seconds();
+ 
+ 	mddev->level         = info->level;
+ 	mddev->clevel[0]     = 0;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index f5b9aad..237b507 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -261,7 +261,7 @@ struct mddev {
+ 							 * managed externally */
+ 	char				metadata_type[17]; /* externally set*/
+ 	int				chunk_sectors;
+-	time_t				ctime, utime;
++	time64_t			ctime, utime;
+ 	int				level, layout;
+ 	char				clevel[16];
+ 	int				raid_disks;
+diff --git a/include/uapi/linux/raid/md_u.h b/include/uapi/linux/raid/md_u.h
+index 1cb8aa6..36cd821 100644
+--- a/include/uapi/linux/raid/md_u.h
++++ b/include/uapi/linux/raid/md_u.h
+@@ -80,7 +80,7 @@ typedef struct mdu_array_info_s {
+ 	int major_version;
+ 	int minor_version;
+ 	int patch_version;
+-	int ctime;
++	unsigned int ctime;
+ 	int level;
+ 	int size;
+ 	int nr_disks;
+@@ -91,7 +91,7 @@ typedef struct mdu_array_info_s {
+ 	/*
+ 	 * Generic state information
+ 	 */
+-	int utime;		/*  0 Superblock update time		      */
++	unsigned int utime;	/*  0 Superblock update time		      */
+ 	int state;		/*  1 State bits (clean, ...)		      */
+ 	int active_disks;	/*  2 Number of currently active disks	      */
+ 	int working_disks;	/*  3 Number of working disks		      */
 -- 
-Baolin.wang
-Best Regards
+1.9.1
