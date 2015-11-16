@@ -1,70 +1,81 @@
-From: "Interfax" <incoming@interfax.net>
-Subject: You have received fax, document 00000961727
-Date: Sat, 14 Nov 2015 10:26:15 +0000
-Message-ID: <4ed62c3f9e3a6af2fe09e31b210c9607@hihi.com.vn>
-Reply-To: "Interfax" <incoming@interfax.net>
+From: Martin Svec <martin.svec@zoner.cz>
+Subject: RAID5 hangs in break_stripe_batch_list
+Date: Mon, 16 Nov 2015 12:41:29 +0100
+Message-ID: <5649C0E9.2030204@zoner.cz>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="b1_c1d70e25f94ae3684a46c8b8f53aa552"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---b1_c1d70e25f94ae3684a46c8b8f53aa552
-Content-Type: text/plain; charset=us-ascii
+Hello,
 
-You have a new fax!
+yesterday we had an issue with RAID5 in kernel 4.1.13. The device became unresponsive and RAID
+module reported the following error:
 
-Please, download fax document attached to this email.
+Nov 15 03:44:20 lio-203 kernel: [385878.345689] ------------[ cut here ]------------
+Nov 15 03:44:20 lio-203 kernel: [385878.345704] WARNING: CPU: 2 PID: 601 at drivers/md/raid5.c:4233
+break_stripe_batch_list+0x1f4/0x2f0 [raid456]()
+Nov 15 03:44:20 lio-203 kernel: [385878.345706] Modules linked in: target_core_pscsi
+target_core_file cpufreq_stats cpufreq_userspace cpufreq_powersave cpufreq_conservative
+x86_pkg_temp_thermal intel_powerclamp intel_rapl iosf_mbi coretemp kvm_intel raid0 kvm
+crct10dif_pclmul crc32_pclmul sr_mod iTCO_wdt mgag200 cdrom iTCO_vendor_support ttm dcdbas
+drm_kms_helper aesni_intel snd_pcm ipmi_devintf drm aes_x86_64 snd_timer lrw gf128mul snd
+glue_helper joydev evdev soundcore sb_edac i2c_algo_bit ipmi_si ablk_helper 8250_fintek wmi
+ipmi_msghandler cryptd acpi_power_meter edac_core pcspkr ioatdma mei_me mei lpc_ich dca shpchp
+mfd_core processor thermal_sys raid456 async_raid6_recov async_memcpy button async_pq async_xor xor
+async_tx raid6_pq md_mod target_core_iblock iscsi_target_mod target_core_mod configfs autofs4 ext4
+crc16 mbcache jbd2 dm_mod hid_generic uas usbhid usb_storage hid sg sd_mod bnx2x xhci_pci ehci_pci
+ptp xhci_hcd ehci_hcd pps_core mdio usbcore megaraid_sas crc32c_generic usb_common crc32c_intel
+scsi_mod libcrc32c
+Nov 15 03:44:20 lio-203 kernel: [385878.345748] CPU: 2 PID: 601 Comm: md31_raid5 Not tainted
+4.1.13-zoner+ #9
+Nov 15 03:44:20 lio-203 kernel: [385878.345749] Hardware name: Dell Inc. PowerEdge R730xd/0H21J3,
+BIOS 1.3.6 06/03/2015
+Nov 15 03:44:20 lio-203 kernel: [385878.345751]  0000000000000000 ffffffffa03ee3c4 ffffffff81574205
+0000000000000000
+Nov 15 03:44:20 lio-203 kernel: [385878.345753]  ffffffff81072e51 ffff88007501ca50 ffff88007501cad8
+ffff88006d55d618
+Nov 15 03:44:20 lio-203 kernel: [385878.345755]  0000000000000000 ffff8802707f83c8 ffffffffa03e4964
+0000000000000001
+Nov 15 03:44:20 lio-203 kernel: [385878.345756] Call Trace:
+Nov 15 03:44:20 lio-203 kernel: [385878.345764]  [<ffffffff81574205>] ? dump_stack+0x40/0x50
+Nov 15 03:44:20 lio-203 kernel: [385878.345768]  [<ffffffff81072e51>] ? warn_slowpath_common+0x81/0xb0
+Nov 15 03:44:20 lio-203 kernel: [385878.345772]  [<ffffffffa03e4964>] ?
+break_stripe_batch_list+0x1f4/0x2f0 [raid456]
+Nov 15 03:44:20 lio-203 kernel: [385878.345776]  [<ffffffffa03e86cc>] ? handle_stripe+0x80c/0x2650
+[raid456]
+Nov 15 03:44:20 lio-203 kernel: [385878.345781]  [<ffffffff8101d756>] ? native_sched_clock+0x26/0x90
+Nov 15 03:44:20 lio-203 kernel: [385878.345784]  [<ffffffffa03ea696>] ?
+handle_active_stripes.isra.46+0x186/0x4e0 [raid456]
+Nov 15 03:44:20 lio-203 kernel: [385878.345787]  [<ffffffffa03ddab6>] ?
+raid5_wakeup_stripe_thread+0x96/0x1b0 [raid456]
+Nov 15 03:44:20 lio-203 kernel: [385878.345790]  [<ffffffffa03eb75d>] ? raid5d+0x49d/0x700 [raid456]
+Nov 15 03:44:20 lio-203 kernel: [385878.345795]  [<ffffffffa014f166>] ? md_thread+0x126/0x130 [md_mod]
+Nov 15 03:44:20 lio-203 kernel: [385878.345798]  [<ffffffff810b1e80>] ? wait_woken+0x90/0x90
+Nov 15 03:44:20 lio-203 kernel: [385878.345801]  [<ffffffffa014f040>] ? find_pers+0x70/0x70 [md_mod]
+Nov 15 03:44:20 lio-203 kernel: [385878.345805]  [<ffffffff810913d3>] ? kthread+0xd3/0xf0
+Nov 15 03:44:20 lio-203 kernel: [385878.345807]  [<ffffffff81091300>] ?
+kthread_create_on_node+0x180/0x180
+Nov 15 03:44:20 lio-203 kernel: [385878.345811]  [<ffffffff8157a622>] ? ret_from_fork+0x42/0x70
+Nov 15 03:44:20 lio-203 kernel: [385878.345813]  [<ffffffff81091300>] ?
+kthread_create_on_node+0x180/0x180
+Nov 15 03:44:20 lio-203 kernel: [385878.345814] ---[ end trace 298194e8d69e6c62 ]---
 
-Fax name:          scanned-00000961727.doc
-Sender:            Victor Bryant
-Scanned:           Sat, 14 Nov 2015 11:20:16 +0300
-Scan duration:     5 seconds
-Filesize:          228 Kb
-Pages:             12
-Resolution:        100 DPI
+Unfortunately I'm not able to reproduce the bug, but it seems to be related to high write load. Note
+that the same issue is also reported here: https://bugzilla.redhat.com/show_bug.cgi?id=1258153 .
 
-Thank you for using Interfax!
+The setup consists of RAID0 over two RAID5 arrays. Each RAID5 has 6x 960 GB SSD and chunk size 32k.
+RAID0 has chunk size 160k. Only one of the two RAIDs was affected. After machine reboot, I manually
+triggered check of both RAID5 arrays and no parity errors were found. Kernel is vanilla stable 4.1.13.
 
+Probably there's something wrong with the stripe batching added in 4.1 series? Is there any way to
+turn the stripe batching off until the bug will be fixed?
 
---b1_c1d70e25f94ae3684a46c8b8f53aa552
-Content-Type: application/zip; name="scanned-00000961727.zip"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=scanned-00000961727.zip
+Best regards,
 
-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
-
-
---b1_c1d70e25f94ae3684a46c8b8f53aa552--
+Martin Svec
 
