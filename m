@@ -1,56 +1,49 @@
-From: Robert L Mathews <lists@tigertech.com>
+From: Wols Lists <antlists@youngman.org.uk>
 Subject: Re: WD Red vs Black drives for RAID1
-Date: Mon, 16 Nov 2015 09:45:12 -0800
-Message-ID: <564A1628.3080802@tigertech.com>
+Date: Mon, 16 Nov 2015 18:07:28 +0000
+Message-ID: <564A1B60.8050708@youngman.org.uk>
 References: <22090.1097.258820.65463@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <22090.1097.258820.65463@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 11/16/15 8:28 AM, John Stoffel wrote:
-
+On 16/11/15 16:28, John Stoffel wrote:
+> 
+> Guys,
+> 
 > I'm starting to get tons of errors on my various mixed 1 and 2Tb
 > drives I have in a bunch of RAID 1 mirrors, generally triple mirrors.
 > It's time to start replacing them and I think I want to either go with
 > the WD Black 4Tb or the WD Red 4Tb drives.  And with a pair of 500Gb
 > SSDs to use with lvmcache for speedup.
+> 
+> Any comments?
+> 
+I'm running Seagate Barracudas in a mirror (probably similar to the
+Blacks). I haven't come across reports of problems IN A MIRROR
+CONFIGURATION.
 
-I have no comment on the Red vs Black, but I do have experience with a
-caching setup that's similar to this, but simpler.
+However, I want to go Raid 5 (or 6) at some point, and all the advice is
+DON'T BUY DESKTOP DRIVES (ie Barracudas, Blacks, Greens) if that's the
+route you're planning on going down. So I've got to replace my
+Barracudas :-(
 
-Replacing one disk of a triple RAID1 array with an SSD, and marking the
-other two spinning disks "write-mostly", vastly improves the performance
-of the entire array in a read-heavy environment, with no extra caching
-layer required.
+If you want to go 5 or 6 (which might get you better response speeds too
+- I don't know), then Reds are your only choice. (Or Seagate NAS,
+because I'm a Seagate guy that's the route I might go.)
 
-It drops the read latency to almost zero in all cases, as you would
-expect. But it also improves the write latency significantly, because
-when a write occurs, it will never be queued behind a spinning disk
-read: the spinning disks are more likely to be idle when they receive
-the writes.
+Because desktop drives don't support proper error recovery, it's all too
+easy for what should be a little problem to trash the array - if you
+follow the list I'd say well over half the "help my array is trashed"
+threads here are caused because the person used desktop drives.
 
-In our case, where the problem was mostly high latencies from disk seeks
-in a read-heavy environment (not slow throughput reading/writing large
-files), adding a single SSD reduced the overall average combined
-read/write "await" latency by more than 50%.
+The price difference isn't *that* much - I suspect a lot of people here
+will say if reliability trumps performance, pay extra for Red or NAS drives.
 
-I considered this preferable to an extra-layer caching solution because:
-1) Reads of *all* files are from the SSD, not just some files; 2) It's
-conceptually simpler than an extra caching layer so there's less to go
-wrong; 3) It didn't even require a reboot to implement with hot-swap
-disks; 4) Our eventual goal was to replace all spinning disks in the
-arrays with SSDs as they reach their lifetime anyway, and it would be
-extra work to remove the caching layer when that was done.
-(Interestingly, when we did later replace the other two spinning disks
-with SSDs, it made less difference than adding the first SSD.)
-
-If your environment is write-heavy, a cache layer to intercept all
-writes may make more sense, of course.
-
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Cheers,
+Wol
