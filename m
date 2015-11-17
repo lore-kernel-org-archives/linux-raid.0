@@ -1,100 +1,99 @@
-From: Martin Svec <martin.svec@zoner.cz>
-Subject: Re: RAID5 hangs in break_stripe_batch_list
-Date: Tue, 17 Nov 2015 14:08:23 +0100
-Message-ID: <564B26C7.5060409@zoner.cz>
-References: <5649C0E9.2030204@zoner.cz> <20151117000409.GA92153@kernel.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Reconstruct a RAID 6 that has failed in a non typical manner
+Date: Tue, 17 Nov 2015 08:25:04 -0500
+Message-ID: <564B2AB0.5030707@turmel.org>
+References: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
+ <5633B79D.4000009@turmel.org>
+ <1861199271.16131793.1446719750662.JavaMail.zimbra@inria.fr>
+ <563B5AEB.5020006@turmel.org>
+ <402863738.19875205.1447763445794.JavaMail.zimbra@inria.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151117000409.GA92153@kernel.org>
+In-Reply-To: <402863738.19875205.1447763445794.JavaMail.zimbra@inria.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+To: Marc Pinhede <marc.pinhede@inria.fr>
+Cc: Clement Parisot <clement.parisot@inria.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dne 17.11.2015 v 1:04 Shaohua Li napsal(a):
-> On Mon, Nov 16, 2015 at 12:41:29PM +0100, Martin Svec wrote:
->> Hello,
->>
->> yesterday we had an issue with RAID5 in kernel 4.1.13. The device became unresponsive and RAID
->> module reported the following error:
->>
->> Nov 15 03:44:20 lio-203 kernel: [385878.345689] ------------[ cut here ]------------
->> Nov 15 03:44:20 lio-203 kernel: [385878.345704] WARNING: CPU: 2 PID: 601 at drivers/md/raid5.c:4233
->> break_stripe_batch_list+0x1f4/0x2f0 [raid456]()
->> Nov 15 03:44:20 lio-203 kernel: [385878.345706] Modules linked in: target_core_pscsi
->> target_core_file cpufreq_stats cpufreq_userspace cpufreq_powersave cpufreq_conservative
->> x86_pkg_temp_thermal intel_powerclamp intel_rapl iosf_mbi coretemp kvm_intel raid0 kvm
->> crct10dif_pclmul crc32_pclmul sr_mod iTCO_wdt mgag200 cdrom iTCO_vendor_support ttm dcdbas
->> drm_kms_helper aesni_intel snd_pcm ipmi_devintf drm aes_x86_64 snd_timer lrw gf128mul snd
->> glue_helper joydev evdev soundcore sb_edac i2c_algo_bit ipmi_si ablk_helper 8250_fintek wmi
->> ipmi_msghandler cryptd acpi_power_meter edac_core pcspkr ioatdma mei_me mei lpc_ich dca shpchp
->> mfd_core processor thermal_sys raid456 async_raid6_recov async_memcpy button async_pq async_xor xor
->> async_tx raid6_pq md_mod target_core_iblock iscsi_target_mod target_core_mod configfs autofs4 ext4
->> crc16 mbcache jbd2 dm_mod hid_generic uas usbhid usb_storage hid sg sd_mod bnx2x xhci_pci ehci_pci
->> ptp xhci_hcd ehci_hcd pps_core mdio usbcore megaraid_sas crc32c_generic usb_common crc32c_intel
->> scsi_mod libcrc32c
->> Nov 15 03:44:20 lio-203 kernel: [385878.345748] CPU: 2 PID: 601 Comm: md31_raid5 Not tainted
->> 4.1.13-zoner+ #9
->> Nov 15 03:44:20 lio-203 kernel: [385878.345749] Hardware name: Dell Inc. PowerEdge R730xd/0H21J3,
->> BIOS 1.3.6 06/03/2015
->> Nov 15 03:44:20 lio-203 kernel: [385878.345751]  0000000000000000 ffffffffa03ee3c4 ffffffff81574205
->> 0000000000000000
->> Nov 15 03:44:20 lio-203 kernel: [385878.345753]  ffffffff81072e51 ffff88007501ca50 ffff88007501cad8
->> ffff88006d55d618
->> Nov 15 03:44:20 lio-203 kernel: [385878.345755]  0000000000000000 ffff8802707f83c8 ffffffffa03e4964
->> 0000000000000001
->> Nov 15 03:44:20 lio-203 kernel: [385878.345756] Call Trace:
->> Nov 15 03:44:20 lio-203 kernel: [385878.345764]  [<ffffffff81574205>] ? dump_stack+0x40/0x50
->> Nov 15 03:44:20 lio-203 kernel: [385878.345768]  [<ffffffff81072e51>] ? warn_slowpath_common+0x81/0xb0
->> Nov 15 03:44:20 lio-203 kernel: [385878.345772]  [<ffffffffa03e4964>] ?
->> break_stripe_batch_list+0x1f4/0x2f0 [raid456]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345776]  [<ffffffffa03e86cc>] ? handle_stripe+0x80c/0x2650
->> [raid456]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345781]  [<ffffffff8101d756>] ? native_sched_clock+0x26/0x90
->> Nov 15 03:44:20 lio-203 kernel: [385878.345784]  [<ffffffffa03ea696>] ?
->> handle_active_stripes.isra.46+0x186/0x4e0 [raid456]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345787]  [<ffffffffa03ddab6>] ?
->> raid5_wakeup_stripe_thread+0x96/0x1b0 [raid456]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345790]  [<ffffffffa03eb75d>] ? raid5d+0x49d/0x700 [raid456]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345795]  [<ffffffffa014f166>] ? md_thread+0x126/0x130 [md_mod]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345798]  [<ffffffff810b1e80>] ? wait_woken+0x90/0x90
->> Nov 15 03:44:20 lio-203 kernel: [385878.345801]  [<ffffffffa014f040>] ? find_pers+0x70/0x70 [md_mod]
->> Nov 15 03:44:20 lio-203 kernel: [385878.345805]  [<ffffffff810913d3>] ? kthread+0xd3/0xf0
->> Nov 15 03:44:20 lio-203 kernel: [385878.345807]  [<ffffffff81091300>] ?
->> kthread_create_on_node+0x180/0x180
->> Nov 15 03:44:20 lio-203 kernel: [385878.345811]  [<ffffffff8157a622>] ? ret_from_fork+0x42/0x70
->> Nov 15 03:44:20 lio-203 kernel: [385878.345813]  [<ffffffff81091300>] ?
->> kthread_create_on_node+0x180/0x180
->> Nov 15 03:44:20 lio-203 kernel: [385878.345814] ---[ end trace 298194e8d69e6c62 ]---
->>
->> Unfortunately I'm not able to reproduce the bug, but it seems to be related to high write load. Note
->> that the same issue is also reported here: https://bugzilla.redhat.com/show_bug.cgi?id=1258153 .
->>
->> The setup consists of RAID0 over two RAID5 arrays. Each RAID5 has 6x 960 GB SSD and chunk size 32k.
->> RAID0 has chunk size 160k. Only one of the two RAIDs was affected. After machine reboot, I manually
->> triggered check of both RAID5 arrays and no parity errors were found. Kernel is vanilla stable 4.1.13.
->>
->> Probably there's something wrong with the stripe batching added in 4.1 series? Is there any way to
->> turn the stripe batching off until the bug will be fixed?
-> do you have the full dmesg? I'd like to check what triggers the batch break,
-> which would be helpful for debugging.
+Good morning Marc, Cl=C3=A9ment,
 
-Yes, but I see nothing suspicious before the break_stripe_batch_list warning:
+On 11/17/2015 07:30 AM, Marc Pinhede wrote:
+> Hello,
+>=20
+> Thanks for your answer. Update since our last mail: We saved many
+> data thanks to long and boring rsyncs, with countless reboots: during
+> rsync, sometime a drive was suddenly considered in 'failed' state by
+> the array. The array was still active (with 13 or 12 / 16 disks) but
+> 100% of files failed with I/O after that. We were then forced to
+> reboot, reassemble the array and restart rsync.
 
-http://pastebin.ca/3258125 ... tail of full dmesg.
-http://pastebin.ca/3258121 ... all log entries since last reboot, without the iSCSI
-connection/session stuff.
+Yes, a miserable task on a large array.  Good to know you saved most (?=
+)
+of your data.
 
-Top-level array is an iblock backend of LIO iSCSI storage with some iSCSI session debug messages
-enabled. That's why the log is full of them. However, everything before the RAID5 warning is common
-harmless activity of MSFT/ESXi initiators. Subsequent target errors are probably caused by the
-unresponsive RAID array and iSCSI session cleanup attempts (Cc'ing target-devel).
+> During those long operation, we have been advised to re-tighten our
+> storage bay's screws (carri bay). And this is were the magic
+> happened. After screwing them back on, no more problem with drive
+> considered failed. We only had 4 file copy failures with I/O, but it
+> didn't correspond to a drive failing in the array (still working with
+> 14/16 drives).
 
-The only non-default settings of RAID5 arrays are chunk_size=32k and group_thread_cnt=2.
+> We can't guarantee than the problem is fixed, but we moved from about
+> 10 reboot a day to 5 days of work without problems.
 
-Thank you,
+Very good news.  Finding a root cause for a problem greatly raises the
+odds future efforts will succeed.
 
-Martin Svec
+> We now plan to reset and re-introduce one by one the two drive that
+> were not recognize by the array, and let the array synchronize,
+> rewriting data on those drive. Does it sounds like a good idea to
+> you, or do you think it may fails due to some errors?
 
+Since you've identified a real hardware issue that impacted the entire
+array, I wouldn't trust it until every drive is thoroughly wiped and
+retested.  Use "badblocks -w -p 2" or similar.  Then construct a new
+array and restore your saved data.
+
+[trim /]
+
+>> It's very important that we get a map of drive serial numbers to
+>> current device names and the "Device Role" from "mdadm --examine".
+>> As an alternative, post the output of "ls -l /dev/disk/by-id/".
+>> This is critical information for any future re-create attempts.
+
+If you look close at the lsdrv output, you'll see it successfully
+acquired drive serial numbers for all drives.  However, they are
+reported as Adaptec Logical drives -- these might be generated by the
+adaptec firmware, not the real serial numbers.
+
+> It seems that the mapping changes at each reboot (two drives that
+> host the operating system had different name across reboots). Since
+> we re-tighten screws, we didn't reboot though.
+
+Device names are dependent on device discovery order, which can change
+somewhat randomly.  What I've seen with lsdrv is that order doesn't
+change within a single controller -- the scsi addresses
+{host:bus:target:lun} have consistent bus:target:lun for a given port o=
+n
+a controller.  I don't have much experience with adaptec devices, so I'=
+d
+be curious if it holds true for them.
+
+>> The rest of the information from smartctl is important, and you
+>> should upgrade your system to a level that supports it, but it can
+>> wait for later.
+
+Consider compiling a local copy of the latest smartctl instead of using
+a chroot.  Supply the scsi address shown in lsdrv to the -d aacraid, op=
+tion.
+
+Regards,
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
