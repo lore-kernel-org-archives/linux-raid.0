@@ -1,99 +1,147 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Reconstruct a RAID 6 that has failed in a non typical manner
-Date: Tue, 17 Nov 2015 08:25:04 -0500
-Message-ID: <564B2AB0.5030707@turmel.org>
-References: <1874721715.14008052.1446134381481.JavaMail.zimbra@inria.fr>
- <5633B79D.4000009@turmel.org>
- <1861199271.16131793.1446719750662.JavaMail.zimbra@inria.fr>
- <563B5AEB.5020006@turmel.org>
- <402863738.19875205.1447763445794.JavaMail.zimbra@inria.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <402863738.19875205.1447763445794.JavaMail.zimbra@inria.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: Marc Pinhede <marc.pinhede@inria.fr>
-Cc: Clement Parisot <clement.parisot@inria.fr>, linux-raid@vger.kernel.org
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v3 1/7] block_dev: Support checking inode permissions in lookup_bdev()
+Date: Tue, 17 Nov 2015 10:39:04 -0600
+Message-ID: <1447778351-118699-2-git-send-email-seth.forshee@canonical.com>
+References: <1447778351-118699-1-git-send-email-seth.forshee@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447778351-118699-1-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, Seth Forshee <seth.forshee@canonical.com>
 List-Id: linux-raid.ids
 
-Good morning Marc, Cl=C3=A9ment,
+When looking up a block device by path no permission check is
+done to verify that the user has access to the block device inode
+at the specified path. In some cases it may be necessary to
+check permissions towards the inode, such as allowing
+unprivileged users to mount block devices in user namespaces.
 
-On 11/17/2015 07:30 AM, Marc Pinhede wrote:
-> Hello,
->=20
-> Thanks for your answer. Update since our last mail: We saved many
-> data thanks to long and boring rsyncs, with countless reboots: during
-> rsync, sometime a drive was suddenly considered in 'failed' state by
-> the array. The array was still active (with 13 or 12 / 16 disks) but
-> 100% of files failed with I/O after that. We were then forced to
-> reboot, reassemble the array and restart rsync.
+Add an argument to lookup_bdev() to optionally perform this
+permission check. A value of 0 skips the permission check and
+behaves the same as before. A non-zero value specifies the mask
+of access rights required towards the inode at the specified
+path. The check is always skipped if the user has CAP_SYS_ADMIN.
 
-Yes, a miserable task on a large array.  Good to know you saved most (?=
-)
-of your data.
+All callers of lookup_bdev() currently pass a mask of 0, so this
+patch results in no functional change. Subsequent patches will
+add permission checks where appropriate.
 
-> During those long operation, we have been advised to re-tighten our
-> storage bay's screws (carri bay). And this is were the magic
-> happened. After screwing them back on, no more problem with drive
-> considered failed. We only had 4 file copy failures with I/O, but it
-> didn't correspond to a drive failing in the array (still working with
-> 14/16 drives).
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ drivers/md/bcache/super.c |  2 +-
+ drivers/md/dm-table.c     |  2 +-
+ drivers/mtd/mtdsuper.c    |  2 +-
+ fs/block_dev.c            | 13 ++++++++++---
+ fs/quota/quota.c          |  2 +-
+ include/linux/fs.h        |  2 +-
+ 6 files changed, 15 insertions(+), 8 deletions(-)
 
-> We can't guarantee than the problem is fixed, but we moved from about
-> 10 reboot a day to 5 days of work without problems.
-
-Very good news.  Finding a root cause for a problem greatly raises the
-odds future efforts will succeed.
-
-> We now plan to reset and re-introduce one by one the two drive that
-> were not recognize by the array, and let the array synchronize,
-> rewriting data on those drive. Does it sounds like a good idea to
-> you, or do you think it may fails due to some errors?
-
-Since you've identified a real hardware issue that impacted the entire
-array, I wouldn't trust it until every drive is thoroughly wiped and
-retested.  Use "badblocks -w -p 2" or similar.  Then construct a new
-array and restore your saved data.
-
-[trim /]
-
->> It's very important that we get a map of drive serial numbers to
->> current device names and the "Device Role" from "mdadm --examine".
->> As an alternative, post the output of "ls -l /dev/disk/by-id/".
->> This is critical information for any future re-create attempts.
-
-If you look close at the lsdrv output, you'll see it successfully
-acquired drive serial numbers for all drives.  However, they are
-reported as Adaptec Logical drives -- these might be generated by the
-adaptec firmware, not the real serial numbers.
-
-> It seems that the mapping changes at each reboot (two drives that
-> host the operating system had different name across reboots). Since
-> we re-tighten screws, we didn't reboot though.
-
-Device names are dependent on device discovery order, which can change
-somewhat randomly.  What I've seen with lsdrv is that order doesn't
-change within a single controller -- the scsi addresses
-{host:bus:target:lun} have consistent bus:target:lun for a given port o=
-n
-a controller.  I don't have much experience with adaptec devices, so I'=
-d
-be curious if it holds true for them.
-
->> The rest of the information from smartctl is important, and you
->> should upgrade your system to a level that supports it, but it can
->> wait for later.
-
-Consider compiling a local copy of the latest smartctl instead of using
-a chroot.  Supply the scsi address shown in lsdrv to the -d aacraid, op=
-tion.
-
-Regards,
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 679a093a3bf6..e8287b0d1dac 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1926,7 +1926,7 @@ static ssize_t register_bcache(struct kobject *k, struct kobj_attribute *attr,
+ 				  sb);
+ 	if (IS_ERR(bdev)) {
+ 		if (bdev == ERR_PTR(-EBUSY)) {
+-			bdev = lookup_bdev(strim(path));
++			bdev = lookup_bdev(strim(path), 0);
+ 			mutex_lock(&bch_register_lock);
+ 			if (!IS_ERR(bdev) && bch_is_open(bdev))
+ 				err = "device already registered";
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index e76ed003769e..35bb3ea4cbe2 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -380,7 +380,7 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
+ 	BUG_ON(!t);
+ 
+ 	/* convert the path to a device */
+-	bdev = lookup_bdev(path);
++	bdev = lookup_bdev(path, 0);
+ 	if (IS_ERR(bdev)) {
+ 		dev = name_to_dev_t(path);
+ 		if (!dev)
+diff --git a/drivers/mtd/mtdsuper.c b/drivers/mtd/mtdsuper.c
+index 20c02a3b7417..b5b60e1af31c 100644
+--- a/drivers/mtd/mtdsuper.c
++++ b/drivers/mtd/mtdsuper.c
+@@ -176,7 +176,7 @@ struct dentry *mount_mtd(struct file_system_type *fs_type, int flags,
+ 	/* try the old way - the hack where we allowed users to mount
+ 	 * /dev/mtdblock$(n) but didn't actually _use_ the blockdev
+ 	 */
+-	bdev = lookup_bdev(dev_name);
++	bdev = lookup_bdev(dev_name, 0);
+ 	if (IS_ERR(bdev)) {
+ 		ret = PTR_ERR(bdev);
+ 		pr_debug("MTDSB: lookup_bdev() returned %d\n", ret);
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 26cee058dc02..f1f0aa7214a3 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1396,7 +1396,7 @@ struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
+ 	struct block_device *bdev;
+ 	int err;
+ 
+-	bdev = lookup_bdev(path);
++	bdev = lookup_bdev(path, 0);
+ 	if (IS_ERR(bdev))
+ 		return bdev;
+ 
+@@ -1706,12 +1706,14 @@ EXPORT_SYMBOL(ioctl_by_bdev);
+ /**
+  * lookup_bdev  - lookup a struct block_device by name
+  * @pathname:	special file representing the block device
++ * @mask:	rights to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC)
+  *
+  * Get a reference to the blockdevice at @pathname in the current
+  * namespace if possible and return it.  Return ERR_PTR(error)
+- * otherwise.
++ * otherwise.  If @mask is non-zero, check for access rights to the
++ * inode at @pathname.
+  */
+-struct block_device *lookup_bdev(const char *pathname)
++struct block_device *lookup_bdev(const char *pathname, int mask)
+ {
+ 	struct block_device *bdev;
+ 	struct inode *inode;
+@@ -1726,6 +1728,11 @@ struct block_device *lookup_bdev(const char *pathname)
+ 		return ERR_PTR(error);
+ 
+ 	inode = d_backing_inode(path.dentry);
++	if (mask != 0 && !capable(CAP_SYS_ADMIN)) {
++		error = __inode_permission(inode, mask);
++		if (error)
++			goto fail;
++	}
+ 	error = -ENOTBLK;
+ 	if (!S_ISBLK(inode->i_mode))
+ 		goto fail;
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 3746367098fd..a40eaecbd5cc 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -733,7 +733,7 @@ static struct super_block *quotactl_block(const char __user *special, int cmd)
+ 
+ 	if (IS_ERR(tmp))
+ 		return ERR_CAST(tmp);
+-	bdev = lookup_bdev(tmp->name);
++	bdev = lookup_bdev(tmp->name, 0);
+ 	putname(tmp);
+ 	if (IS_ERR(bdev))
+ 		return ERR_CAST(bdev);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 458ee7b213be..cc18dfb0b98e 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2388,7 +2388,7 @@ static inline void unregister_chrdev(unsigned int major, const char *name)
+ #define BLKDEV_MAJOR_HASH_SIZE	255
+ extern const char *__bdevname(dev_t, char *buffer);
+ extern const char *bdevname(struct block_device *bdev, char *buffer);
+-extern struct block_device *lookup_bdev(const char *);
++extern struct block_device *lookup_bdev(const char *, int mask);
+ extern void blkdev_show(struct seq_file *,off_t);
+ 
+ #else
+-- 
+1.9.1
