@@ -1,61 +1,58 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH v3 0/7] User namespace mount updates
-Date: Tue, 17 Nov 2015 16:01:25 -0600
-Message-ID: <20151117220125.GF108807@ubuntu-hedt>
-References: <1447778351-118699-1-git-send-email-seth.forshee@canonical.com>
- <20151117170556.GV22011@ZenIV.linux.org.uk>
- <20151117172551.GA108807@ubuntu-hedt>
- <20151117175506.GW22011@ZenIV.linux.org.uk>
- <564B79B1.3040207@gmail.com>
- <20151117193012.GX22011@ZenIV.linux.org.uk>
- <564B9074.5030305@gmail.com>
- <20151117210542.GY22011@ZenIV.linux.org.uk>
+From: James Morris <jmorris@namei.org>
+Subject: Re: [PATCH v3 4/7] fs: Treat foreign mounts as nosuid
+Date: Wed, 18 Nov 2015 11:00:53 +1100 (AEDT)
+Message-ID: <alpine.LRH.2.20.1511181100380.1460@namei.org>
+References: <1447778351-118699-1-git-send-email-seth.forshee@canonical.com> <1447778351-118699-5-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151117210542.GY22011@ZenIV.linux.org.uk>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Austin S Hemmelgarn <ahferroin7@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1447778351-118699-5-git-send-email-seth.forshee@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, James Morris <james.l.morris@oracle.com>, "Serge E. Hallyn" <serge@hallyn.com>, Paul Moore <paul@paul-moore.com>, Stephen Smalley <sds@tycho.nsa.gov>, Eric Paris <eparis@parisplace.org>, Andy Lutomirski <luto@amacapital.net>, linux-kernel@vger.kernel.org, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-On Tue, Nov 17, 2015 at 09:05:42PM +0000, Al Viro wrote:
-> On Tue, Nov 17, 2015 at 03:39:16PM -0500, Austin S Hemmelgarn wrote:
+On Tue, 17 Nov 2015, Seth Forshee wrote:
+
+> From: Andy Lutomirski <luto@amacapital.net>
 > 
-> > >This is absolutely insane, no matter how much LSM snake oil you slatter on
-> > >the whole thing.  All of a sudden you are exposing a huge attack surface
-> > >in the place where it would hurt most and as the consolation we are offered
-> > >basically "Ted is willing to fix holes when they are found".
-
-None of the LSM changes are intended to protect against attacks from
-these sorts of attacks at all, so that's irrelevant.
-
-As I said before, I'm also working to find holes up front. That plus a
-commitment from the maintainer seems like a good start at least. What
-bar would you set for a given filesystem to be considered "safe enough"?
-
-> > For the context of static image attacks, anything that's found
-> > _needs_ to be fixed regardless, and unless you can find some way to
-> > actually prevent attacks on mounted filesystems that doesn't involve
-> > a complete re-write of the filesystem drivers, then there's not much
-> > we can do about it.  Yes, unprivileged mounts expose an attack
-> > surface, but so does userspace access to the network stack, and so
-> > do a lot of other features that are considered essential in a modern
-> > general purpose operating system.
+> If a process gets access to a mount from a different user
+> namespace, that process should not be able to take advantage of
+> setuid files or selinux entrypoints from that filesystem.  Prevent
+> this by treating mounts from other mount namespaces and those not
+> owned by current_user_ns() or an ancestor as nosuid.
 > 
-> "X is exposes an attack surface.  Y exposes a diferent attack surface.
-> Y is considered important.  Therefore X is important enough to implement it"
+> This will make it safer to allow more complex filesystems to be
+> mounted in non-root user namespaces.
 > 
-> Right...
+> This does not remove the need for MNT_LOCK_NOSUID.  The setuid,
+> setgid, and file capability bits can no longer be abused if code in
+> a user namespace were to clear nosuid on an untrusted filesystem,
+> but this patch, by itself, is insufficient to protect the system
+> from abuse of files that, when execed, would increase MAC privilege.
+> 
+> As a more concrete explanation, any task that can manipulate a
+> vfsmount associated with a given user namespace already has
+> capabilities in that namespace and all of its descendents.  If they
+> can cause a malicious setuid, setgid, or file-caps executable to
+> appear in that mount, then that executable will only allow them to
+> elevate privileges in exactly the set of namespaces in which they
+> are already privileges.
+> 
+> On the other hand, if they can cause a malicious executable to
+> appear with a dangerous MAC label, running it could change the
+> caller's security context in a way that should not have been
+> possible, even inside the namespace in which the task is confined.
+> 
+> As a hardening measure, this would have made CVE-2014-5207 much
+> more difficult to exploit.
+> 
+> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
-That isn't the argument he made. I would summarize the argument as,
-"Saying that X exposes an attack surface isn't by itself enough to
-reject X, otherwise we wouldn't expose anything (such as example Y)."
 
-You believe that the attack surface is too large, and that's
-understandable. Is it your opinion that this is a fundamental problem
-for an in-kernel filesystem driver, i.e. that we can never be confident
-enough in an in-kernel filesystem parser to allow untrusted data? If
-not, what would it take to establish a level of confidence that you
-would be comfortable with?
+Acked-by: James Morris <james.l.morris@oracle.com>
+
+-- 
+James Morris
+<jmorris@namei.org>
