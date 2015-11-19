@@ -1,388 +1,210 @@
-From: Daniel J Walsh <dwalsh-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 0/7] User namespace mount updates
-Date: Wed, 18 Nov 2015 13:33:26 -0500
-Message-ID: <564CC476.6090400@redhat.com>
-References: <1447778351-118699-1-git-send-email-seth.forshee@canonical.com>
- <20151117170556.GV22011@ZenIV.linux.org.uk>
- <20151117172551.GA108807@ubuntu-hedt>
- <20151117175506.GW22011@ZenIV.linux.org.uk> <564B79B1.3040207@gmail.com>
- <20151117193012.GX22011@ZenIV.linux.org.uk> <564B9074.5030305@gmail.com>
- <20151117210542.GY22011@ZenIV.linux.org.uk>
- <20151117220125.GF108807@ubuntu-hedt> <564C733D.7010601@gmail.com>
- <20151118143022.GC134139@ubuntu-hedt> <564C9B92.5080107@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 6 Reshape Woes
+Date: Wed, 18 Nov 2015 20:23:40 -0500
+Message-ID: <564D249C.308@turmel.org>
+References: <41BC47FD-C02B-4DDA-BF1C-75032831AA29@abitofthisabitofthat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1877272612690908313=="
-Return-path: <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-In-Reply-To: <564C9B92.5080107-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Post: <mailto:selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-List-Help: <mailto:selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org?subject=help>
-Errors-To: selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-Sender: "Selinux" <selinux-bounces-+05T5uksL2qpZYMLLGbcSA@public.gmane.org>
-To: Austin S Hemmelgarn <ahferroin7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Seth Forshee <seth.forshee-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <41BC47FD-C02B-4DDA-BF1C-75032831AA29@abitofthisabitofthat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Francisco Parada <cisco@abitofthisabitofthat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On 11/18/2015 08:07 PM, Francisco Parada wrote:
+> Resending, previous message got rejected due to =E2=80=9CHTML=E2=80=9D=
+=2E  Damn Apple Mail ;-)
 
---===============1877272612690908313==
-Content-Type: multipart/alternative; boundary="=_Boundary-11444-1447871684-0001-2"
+Heh, but let me fix that typo:  Damn Apple ;-)
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+> Hi all,
+>=20
+> I thought I had corrected all the flaws in my setup, but I was mistak=
+en.  I took care of my hard drive timeout mismatch encountered via a th=
+read a little over a week ago, subjected =E2=80=9CRAID 6 Not Mounting (=
+Block device is empty), by adding =E2=80=9Csmartctl -l scterc,70,70 /de=
+v/sdX=E2=80=9D and =E2=80=9Cfor x in /sys/block/*/device/timeout ; do e=
+cho 180 > $x ; done=E2=80=9D to my boot scripts.  I took care of my PSU=
+ issue, by replacing my enclosure=E2=80=99s defective PSU, with a new P=
+SU which tested out OK with a multimeter.  Today, however, I report som=
+e bad news once again. =20
 
---=_Boundary-11444-1447871684-0001-2
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Ugly.
 
+> After having stressed my rebuilt array for a few days, by adding larg=
+e sums of data and noting no further syslog errors, I decided that I co=
+uld not live with 18GB of disk space remaining.  Since my last post, I=E2=
+=80=99ve accumulated an additional Terrabyte, and so I ran out of space=
+=2E  At the ready, I had a spare drive, so I decided to run "mdadm --gr=
+ow --raid-devices=3D7 --backup-file=3D/root/grow_md126.bak /dev/md126=E2=
+=80=9D, to go from a 6 drive RAID 6 array to my 7 drive array.  All was=
+ good for about a minute, and then my nightmare began.  Luckily, I have=
+ a backup of prior to my Terrabyte, which is alright if I lose, just ra=
+ther not.
 
+Time to toss some enclosures and/or cables.
 
-On 11/18/2015 10:38 AM, Austin S Hemmelgarn wrote:
-> On 2015-11-18 09:30, Seth Forshee wrote:
->> On Wed, Nov 18, 2015 at 07:46:53AM -0500, Austin S Hemmelgarn wrote:
->>> On 2015-11-17 17:01, Seth Forshee wrote:
->>>> On Tue, Nov 17, 2015 at 09:05:42PM +0000, Al Viro wrote:
->>>>> On Tue, Nov 17, 2015 at 03:39:16PM -0500, Austin S Hemmelgarn wrote:
->>>>>
->>>>>>> This is absolutely insane, no matter how much LSM snake oil you
->>>>>>> slatter on
->>>>>>> the whole thing.  All of a sudden you are exposing a huge attack
->>>>>>> surface
->>>>>>> in the place where it would hurt most and as the consolation we
->>>>>>> are offered
->>>>>>> basically "Ted is willing to fix holes when they are found".
->>>>
->>>> None of the LSM changes are intended to protect against attacks from
->>>> these sorts of attacks at all, so that's irrelevant.
->>>>
->>>> As I said before, I'm also working to find holes up front. That plus a
->>>> commitment from the maintainer seems like a good start at least. What
->>>> bar would you set for a given filesystem to be considered "safe
->>>> enough"?
->>>>
->>>>>> For the context of static image attacks, anything that's foun
->>>>>> _needs_ to be fixed regardless, and unless you can find some way to
->>>>>> actually prevent attacks on mounted filesystems that doesn't involve
->>>>>> a complete re-write of the filesystem drivers, then there's not much
->>>>>> we can do about it.  Yes, unprivileged mounts expose an attack
->>>>>> surface, but so does userspace access to the network stack, and so
->>>>>> do a lot of other features that are considered essential in a modern
->>>>>> general purpose operating system.
->>>>>
->>>>> "X is exposes an attack surface.  Y exposes a diferent attack
->>>>> surface.
->>>>> Y is considered important.  Therefore X is important enough to
->>>>> implement it"
->>>>>
->>>>> Right...
->>>>
->>>> That isn't the argument he made. I would summarize the argument as,
->>>> "Saying that X exposes an attack surface isn't by itself enough to
->>>> reject X, otherwise we wouldn't expose anything (such as example Y)."
->>> It's good to see someone understood my meaning...
->>>>
->>>> You believe that the attack surface is too large, and that's
->>>> understandable. Is it your opinion that this is a fundamental problem
->>>> for an in-kernel filesystem driver, i.e. that we can never be
->>>> confident
->>>> enough in an in-kernel filesystem parser to allow untrusted data? If
->>>> not, what would it take to establish a level of confidence that you
->>>> would be comfortable with?
->>> While I can't speak for Al's opinion on this, I would like to point
->>> out my earlier comment:
->>>> It's unfeasible from a practical standpoint to expect filesystems
->>> to > assume that stuff they write might change under them due to
->>> malicious > intent of a third party.
->>
->> So maybe the first requirement is that the user cannot modify the
->> backing store directly while the device is mounted.
->>
->>> We can't protect against everything, not without making the system
->>> completely unusable for general purpose computing.  There is always
->>> some degree of trust involved in usage of a computer, the OS has to
->>> trust that the hardware works correctly, the administrator has to
->>> trust the OS to behave correctly, and the users have to trust the
->>> administrator.  The administrator also needs to have at least some
->>> trust in the users, otherwise he shouldn't be allowing them to use
->>> the system.
->>>
->>> Perhaps we should have an option that can only be enabled on
->>> creation of the userns that would allow it to use regular kernel
->>> mounts, and without that option we default to only allowing FUSE and
->>> a couple of virtual filesystems (like /proc and devtmpfs).
->>
->> I've considered the idea of something more global like a sysctl, or a
->> per-filesystem knob in sysfs. I guess a per-container knob is another
->> option, I'm not sure what interface we use to expose it though.
->>
-> The most useful way I can see of implementing this would be to have an
-> option on container creation that controls whether kernel mounts are
-> allowed or not (possibly have it allow any of {no mounts, only FUSE
-> mounts, all mounts}), and then have a sysctl to set the default for
-> containers created without this option (and possibly one to force all
-> containers to ignore the option, and just use the default).
->
->
->
-> _______________________________________________
-> Selinux mailing list
-> Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-> To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
-> To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
-From a safely/security point of view. I think you should focus on the
-clear linux containers model for allowing containers on hosting
-providers.  If we need "guaranteed" separation you really need to take
-advantage of kvm and each container using its own kernel.  In standard
-containers if a process can talk directly to the host kernel, any kernel
-bug could potentially allow a break out.
+> mdstat output:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> Every 1.0s: cat /proc/mdstat                                         =
+                                               Wed Nov 18 19:25:02 2015
+>=20
+> Personalities : [raid0] [linear] [multipath] [raid1] [raid6] [raid5] =
+[raid4] [raid10]
+> md126 : active raid6 sdh[0](F) sdk[6] sdg[5](F) sdf[4](F) sde[3](F) s=
+dj[2] sdi[1]
+>       11720540160 blocks super 1.2 level 6, 512k chunk, algorithm 2 [=
+7/3] [_UU___U]
+>       [>....................]  reshape =3D  0.0% (2726560/2930135040)=
+ finish=3D193325.8min speed=3D252K/sec
+>       bitmap: 1/22 pages [4KB], 65536KB chunk
 
---=_Boundary-11444-1447871684-0001-2
-Content-Type: text/html; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
-X-Mime-Autoconverted: from 8bit to quoted-printable by mime827
+Hmmm.  Slow as molasses.
 
-<html>
-  <head>
-    <meta content=3D"text/html; charset=3Dwindows-1252"
-      http-equiv=3D"Content-Type">
-  </head>
-  <body text=3D"#000000" bgcolor=3D"#FFFFFF">
-    <br>
-    <br>
-    <div class=3D"moz-cite-prefix">On 11/18/2015 10:38 AM, Austin S
-      Hemmelgarn wrote:<br>
-    </div>
-    <blockquote cite=3D"mid:564C9B92.5080107-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" type=3D"cite">On
-      2015-11-18 09:30, Seth Forshee wrote:
-      <br>
-      <blockquote type=3D"cite">On Wed, Nov 18, 2015 at 07:46:53AM -0500=
-,
-        Austin S Hemmelgarn wrote:
-        <br>
-        <blockquote type=3D"cite">On 2015-11-17 17:01, Seth Forshee wrot=
-e:
-          <br>
-          <blockquote type=3D"cite">On Tue, Nov 17, 2015 at 09:05:42PM
-            +0000, Al Viro wrote:
-            <br>
-            <blockquote type=3D"cite">On Tue, Nov 17, 2015 at 03:39:16PM
-              -0500, Austin S Hemmelgarn wrote:
-              <br>
-              <br>
-              <blockquote type=3D"cite">
-                <blockquote type=3D"cite">This is absolutely insane, no
-                  matter how much LSM snake oil you slatter on
-                  <br>
-                  the whole thing.=A0 All of a sudden you are exposing a
-                  huge attack surface
-                  <br>
-                  in the place where it would hurt most and as the
-                  consolation we are offered
-                  <br>
-                  basically "Ted is willing to fix holes when they are
-                  found".
-                  <br>
-                </blockquote>
-              </blockquote>
-            </blockquote>
-            <br>
-            None of the LSM changes are intended to protect against
-            attacks from
-            <br>
-            these sorts of attacks at all, so that's irrelevant.
-            <br>
-            <br>
-            As I said before, I'm also working to find holes up front.
-            That plus a
-            <br>
-            commitment from the maintainer seems like a good start at
-            least. What
-            <br>
-            bar would you set for a given filesystem to be considered
-            "safe enough"?
-            <br>
-            <br>
-            <blockquote type=3D"cite">
-              <blockquote type=3D"cite">For the context of static image
-                attacks, anything that's foun
-                <br>
-                _needs_ to be fixed regardless, and unless you can find
-                some way to
-                <br>
-                actually prevent attacks on mounted filesystems that
-                doesn't involve
-                <br>
-                a complete re-write of the filesystem drivers, then
-                there's not much
-                <br>
-                we can do about it.=A0 Yes, unprivileged mounts expose a=
+> The device is still mounted and I can access all the data in it.
+
+Probably not.  You are just seeing kernel block cache effects, I suspec=
+t.
+
+> At 18:55:24, I started my rebuild:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> Nov 18 18:55:24 DoctorBanner mdadm[1127]: RebuildStarted event detect=
+ed on md device /dev/md126
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+
+Uhm, what?  What command or action did you take?  Or are you simply
+doing a "flashback" to the start of this process?
+
+> Then 3 seconds later (18:55:27), the first =E2=80=9Creshape interrupt=
+ed=E2=80=9D message appeared, but I didn=E2=80=99t notice, because the =
+array was chugging along at 9KB/s according to /proc/mdstat:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> Nov 18 18:55:27 DoctorBanner kernel: [77563.553030] md: md126: reshap=
+e interrupted.
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>=20
+> At some point before the following entries and after starting the res=
+hape, I ran =E2=80=9Cecho 50000 > /proc/sys/dev/raid/speed_limit_min=E2=
+=80=9D to help speed up the reshape, and so I think this is what starte=
+d causing the issue.
+>=20
+> It continued to reshape for about 5 minutes, and then things got real=
+ly ugly:
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163377] ata7.00: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163382] ata7.01: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163384] ata7.02: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163385] ata7.03: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163386] ata7.04: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163388] ata7.05: failed t=
+o read SCR 1 (Emask=3D0x40)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163392] ata7.15: exceptio=
+n Emask 0x10 SAct 0x0 SErr 0x400000 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163394] ata7.15: irq_stat=
+ 0x08000000, interface fatal error
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163397] ata7.15: SError: =
+{ Handshk }
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163399] ata7.00: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163402] ata7.00: failed c=
+ommand: WRITE DMA EXT
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163406] ata7.00: cmd 35/0=
+0:40:40:fd:56/00:05:00:00:00/e0 tag 23 dma 688128 out
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163406]          res 50/0=
+0:00:7f:6b:6c/00:00:00:00:00/e0 Emask 0x100 (unknown error)
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163408] ata7.00: status: =
+{ DRDY }
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163410] ata7.01: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163412] ata7.02: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163414] ata7.03: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163416] ata7.04: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163418] ata7.05: exceptio=
+n Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+> Nov 18 19:00:31 DoctorBanner kernel: [77868.163422] ata7.15: hard res=
+etting link
+> Nov 18 19:00:41 DoctorBanner kernel: [77878.160885] ata7.15: softrese=
+t failed (1st FIS failed)
+> Nov 18 19:00:41 DoctorBanner kernel: [77878.160893] ata7.15: hard res=
+etting link
+> Nov 18 19:00:51 DoctorBanner kernel: [77888.162415] ata7.15: softrese=
+t failed (1st FIS failed)
+> Nov 18 19:00:51 DoctorBanner kernel: [77888.162423] ata7.15: hard res=
+etting link
+> Nov 18 19:01:26 DoctorBanner kernel: [77923.153671] ata7.15: softrese=
+t failed (1st FIS failed)
+> Nov 18 19:01:26 DoctorBanner kernel: [77923.153679] ata7.15: limiting=
+ SATA link speed to 1.5 Gbps
+> Nov 18 19:01:26 DoctorBanner kernel: [77923.153683] ata7.15: hard res=
+etting link
+> Nov 18 19:01:31 DoctorBanner kernel: [77928.160337] ata7.15: softrese=
+t failed (1st FIS failed)
+> Nov 18 19:01:31 DoctorBanner kernel: [77928.160344] ata7.15: failed t=
+o reset PMP, giving up
+> Nov 18 19:01:31 DoctorBanner kernel: [77928.160347] ata7.15: Port Mul=
+tiplier detaching
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>=20
+>=20
+> Which then proceeded to rejecting I/O and offlining devices (full sys=
+log attached).
+>=20
+> I=E2=80=99m kind of alright with losing this one, since now I have a =
+decent backup.  But is it even possible to recover from something like =
+a failure this while it=E2=80=99s reshaping?
+
+Stop the array completely.  Use --assemble --force with all of the
+drives, including the new one.  Include the same --backup-file.
+
+> I=E2=80=99m going to start chalking it up to the PCIe Port Multiplier=
+ being the root of the problem.
+
+Likely.  Are the port multipliers capable of the same speeds as the
+drives and controllers?
+
+> What do you guys think?
+
+New enclosures & controllers so you can ditch the port multipliers?
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
-                attack
-                <br>
-                surface, but so does userspace access to the network
-                stack, and so
-                <br>
-                do a lot of other features that are considered essential
-                in a modern
-                <br>
-                general purpose operating system.
-                <br>
-              </blockquote>
-              <br>
-              "X is exposes an attack surface.=A0 Y exposes a diferent
-              attack surface.
-              <br>
-              Y is considered important.=A0 Therefore X is important
-              enough to implement it"
-              <br>
-              <br>
-              Right...
-              <br>
-            </blockquote>
-            <br>
-            That isn't the argument he made. I would summarize the
-            argument as,
-            <br>
-            "Saying that X exposes an attack surface isn't by itself
-            enough to
-            <br>
-            reject X, otherwise we wouldn't expose anything (such as
-            example Y)."
-            <br>
-          </blockquote>
-          It's good to see someone understood my meaning...
-          <br>
-          <blockquote type=3D"cite">
-            <br>
-            You believe that the attack surface is too large, and that's
-            <br>
-            understandable. Is it your opinion that this is a
-            fundamental problem
-            <br>
-            for an in-kernel filesystem driver, i.e. that we can never
-            be confident
-            <br>
-            enough in an in-kernel filesystem parser to allow untrusted
-            data? If
-            <br>
-            not, what would it take to establish a level of confidence
-            that you
-            <br>
-            would be comfortable with?
-            <br>
-          </blockquote>
-          While I can't speak for Al's opinion on this, I would like to
-          point
-          <br>
-          out my earlier comment:
-          <br>
-          <blockquote type=3D"cite">It's unfeasible from a practical
-            standpoint to expect filesystems
-            <br>
-          </blockquote>
-          to &gt; assume that stuff they write might change under them
-          due to
-          <br>
-          malicious &gt; intent of a third party.
-          <br>
-        </blockquote>
-        <br>
-        So maybe the first requirement is that the user cannot modify
-        the
-        <br>
-        backing store directly while the device is mounted.
-        <br>
-        <br>
-        <blockquote type=3D"cite">We can't protect against everything, n=
-ot
-          without making the system
-          <br>
-          completely unusable for general purpose computing.=A0 There is
-          always
-          <br>
-          some degree of trust involved in usage of a computer, the OS
-          has to
-          <br>
-          trust that the hardware works correctly, the administrator has
-          to
-          <br>
-          trust the OS to behave correctly, and the users have to trust
-          the
-          <br>
-          administrator.=A0 The administrator also needs to have at leas=
-t
-          some
-          <br>
-          trust in the users, otherwise he shouldn't be allowing them to
-          use
-          <br>
-          the system.
-          <br>
-          <br>
-          Perhaps we should have an option that can only be enabled on
-          <br>
-          creation of the userns that would allow it to use regular
-          kernel
-          <br>
-          mounts, and without that option we default to only allowing
-          FUSE and
-          <br>
-          a couple of virtual filesystems (like /proc and devtmpfs).
-          <br>
-        </blockquote>
-        <br>
-        I've considered the idea of something more global like a sysctl,
-        or a
-        <br>
-        per-filesystem knob in sysfs. I guess a per-container knob is
-        another
-        <br>
-        option, I'm not sure what interface we use to expose it though.
-        <br>
-        <br>
-      </blockquote>
-      The most useful way I can see of implementing this would be to
-      have an option on container creation that controls whether kernel
-      mounts are allowed or not (possibly have it allow any of {no
-      mounts, only FUSE mounts, all mounts}), and then have a sysctl to
-      set the default for containers created without this option (and
-      possibly one to force all containers to ignore the option, and
-      just use the default).
-      <br>
-      <br>
-      <br>
-      <fieldset class=3D"mimeAttachmentHeader"></fieldset>
-      <br>
-      <pre wrap=3D"">_______________________________________________
-Selinux mailing list
-<a class=3D"moz-txt-link-abbreviated" href=3D"mailto:Selinux-+05T5uksL2pUKDJzkOSz4g@public.gmane.org=
-ov">Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org</a>
-To unsubscribe, send email to <a class=3D"moz-txt-link-abbreviated" href=
-=3D"mailto:Selinux-leave-+05T5uksL2qpZYMLLGbcSA@public.gmane.org">Selinux-leave-+05T5uksL2qpZYMLLGbcSA@public.gmane.org</a>.
-To get help, send an email containing "help" to <a class=3D"moz-txt-link=
--abbreviated" href=3D"mailto:Selinux-request-+05T5uksL2qpZYMLLGbcSA@public.gmane.org">Selinux-requ=
-est-+05T5uksL2qpZYMLLGbcSA@public.gmane.org</a>.</pre>
-    </blockquote>
-    From a safely/security point of view. I think you should focus on
-    the clear linux containers model for allowing containers on hosting
-    providers.=A0 If we need "guaranteed" separation you really need to
-    take advantage of kvm and each container using its own kernel.=A0 In
-    standard containers if a process can talk directly to the host
-    kernel, any kernel bug could potentially allow a break out.<br>
-  </body>
-</html>
-
---=_Boundary-11444-1447871684-0001-2--
-
---===============1877272612690908313==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Selinux mailing list
-Selinux-+05T5uksL2qpZYMLLGbcSA@public.gmane.org
-To unsubscribe, send email to Selinux-leave-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
-To get help, send an email containing "help" to Selinux-request-+05T5uksL2pAGbPMOrvdOA@public.gmane.org
---===============1877272612690908313==--
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
