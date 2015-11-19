@@ -1,49 +1,37 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 2/2] mdadm: output info more precisely when change bitmap
-Date: Thu, 19 Nov 2015 13:59:19 +0800
-Message-ID: <1447912759-6239-2-git-send-email-gqjiang@suse.com>
-References: <1447912759-6239-1-git-send-email-gqjiang@suse.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1447912759-6239-1-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: rgoldwyn@suse.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+From: James Morris <jmorris@namei.org>
+Subject: Re: [PATCH v3 0/7] User namespace mount updates
+Date: Thu, 19 Nov 2015 18:47:00 +1100 (AEDT)
+Message-ID: <alpine.LRH.2.20.1511191845510.10804@namei.org>
+References: <20151117172551.GA108807@ubuntu-hedt> <20151117175506.GW22011@ZenIV.linux.org.uk> <564B79B1.3040207@gmail.com> <20151117191606.GC108807@ubuntu-hedt> <564B941A.2070601@gmail.com> <20151117213255.GE108807@ubuntu-hedt> <564C6DD4.6090308@gmail.com>
+ <20151118142238.GB134139@ubuntu-hedt> <20151118145818.GC22011@ZenIV.linux.org.uk> <20151118150512.GE134139@ubuntu-hedt> <20151118151335.GD22011@ZenIV.linux.org.uk> <CAFLxGvwwhXqVM71m1kEDTZk_YTKGtbJ3gWoXw3wRgcwDiC38Bg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <CAFLxGvwwhXqVM71m1kEDTZk_YTKGtbJ3gWoXw3wRgcwDiC38Bg@mail.gmail.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Richard Weinberger <richard.weinberger@gmail.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Seth Forshee <seth.forshee@canonical.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, linux-bcache@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LSM <linux-security-module@vger.kernel.org>, selinux@tycho.nsa.gov, Serge Hallyn <serge.hallyn@canonical.com>, Andy Lutomirski <luto@amacapital.net>, LKML <linux-kernel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
 List-Id: linux-raid.ids
 
-When change bitmap to none, the infos could be more accurate
-based on existed state type.
+On Wed, 18 Nov 2015, Richard Weinberger wrote:
 
-And s->bitmap_file is passed from cmd "--bitmap=TYPE", so remove
-s->bitmap_file from err info since it should means change the
-bitmap to one type failed rather than the type is already present.
-    
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- Grow.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+> On Wed, Nov 18, 2015 at 4:13 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> > On Wed, Nov 18, 2015 at 09:05:12AM -0600, Seth Forshee wrote:
+> >
+> >> Yes, the host admin. I'm not talking about trusting the admin inside the
+> >> container at all.
+> >
+> > Then why not have the same host admin just plain mount it when setting the
+> > container up and be done with that?  From the host namespace, before spawning
+> > the docker instance or whatever framework you are using.  IDGI...
+> 
+> Because hosting companies sell containers as "full virtual machines"
+> and customers expect to be able mount stuff like disk images they upload.
 
-diff --git a/Grow.c b/Grow.c
-index 80d7b22..30ff7f3 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -328,12 +328,15 @@ int Grow_addbitmap(char *devname, int fd, struct context *c, struct shape *s)
- 		if (strcmp(s->bitmap_file, "none")==0) {
- 			array.state &= ~(1<<MD_SB_BITMAP_PRESENT);
- 			if (ioctl(fd, SET_ARRAY_INFO, &array)!= 0) {
--				pr_err("failed to remove internal bitmap.\n");
-+				if (array.state & (1<<MD_SB_CLUSTERED))
-+					pr_err("failed to remove clustered bitmap.\n");
-+				else
-+					pr_err("failed to remove internal bitmap.\n");
- 				return 1;
- 			}
- 			return 0;
- 		}
--		pr_err("%s bitmap already present on %s\n", s->bitmap_file, devname);
-+		pr_err("bitmap already present on %s\n", devname);
- 		return 1;
- 	}
- 
+I don't think this is a valid reason for merging functionality into the 
+kernel.
+
+
 -- 
-2.1.4
-
+James Morris
+<jmorris@namei.org>
