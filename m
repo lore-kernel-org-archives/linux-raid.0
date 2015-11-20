@@ -1,214 +1,164 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [v2 PATCH 2/5] md-cluster: Protect communication with mutexes
-Date: Fri, 20 Nov 2015 16:27:57 +0800
-Message-ID: <1448008077-13816-1-git-send-email-gqjiang@suse.com>
-References: <87fv0ariab.fsf@notabene.neil.brown.name>
+Subject: [PATCH 1/3] md-cluster: append some actions when change bitmap from clustered to none
+Date: Fri, 20 Nov 2015 16:35:23 +0800
+Message-ID: <1448008525-17095-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fv0ariab.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com, rgoldwyn@suse.de
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: neilb@suse.com
+Cc: rgoldwyn@suse.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Communication can happen through multiple threads. It is possible that
-one thread steps over another threads sequence. So, we use mutexes to
-protect both the send and receive sequences.
+For clustered raid, we need to do extra actions when change
+bitmap to none.
 
-Send communication is locked through state bit, MD_CLUSTER_SEND_LOCK.
-Communication is locked with bit manipulation in order to allow
-"lock and hold" for the add operation. In case of an add operation,
-if the lock is held, MD_CLUSTER_SEND_LOCKED_ALREADY is set.
-When md_update_sb() calls metadata_update_start(), it checks
-(in a single statement to avoid races), if the communication
-is already locked. If yes, it merely returns zero, else it
-locks the token lockresource.
+1. check if all the bitmap lock could be get or not, if yes then
+   we can continue the change since cluster raid is only active
+   in current node. Otherwise return fail and unlock the related
+   bitmap locks
+2. set nodes to 0 and then leave cluster environment.
+3. release other nodes's bitmap lock.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
-v2 changes:
-1. replace send_mutex with wait_queue.
-2. change MD_CLUSTER_COMM_LOCKED to MD_CLUSTER_SEND_LOCKED_ALREADY,
-   and set it later with add_new_disk.
-3. add a new lock_token and change lock_comm to make it better
-   suit for the specific cases of locking communication.
-   
-
- drivers/md/md-cluster.c | 72 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 62 insertions(+), 10 deletions(-)
+ drivers/md/md-cluster.c | 57 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/md/md-cluster.h |  2 ++
+ drivers/md/md.c         | 14 ++++++++++++
+ 3 files changed, 73 insertions(+)
 
 diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 89343c3..430b139 100644
+index 430b139..148cd85 100644
 --- a/drivers/md/md-cluster.c
 +++ b/drivers/md/md-cluster.c
-@@ -48,12 +48,26 @@ struct resync_info {
- #define		MD_CLUSTER_SUSPEND_READ_BALANCING	2
- #define		MD_CLUSTER_BEGIN_JOIN_CLUSTER		3
- 
-+/* Lock the send communication. This is done through
-+ * bit manipulation as opposed to a mutex in order to
-+ * accomodate lock and hold. See next comment.
-+ */
-+#define		MD_CLUSTER_SEND_LOCK			4
-+/* If cluster operations must lock the communication channel,
-+ * so as to perform extra operations (and no other operation
-+ * is allowed on the MD, such as adding a disk. Token needs
-+ * to be locked and held until the operation completes with
-+ * a md_update_sb(), which would eventually release the lock.
-+ */
-+#define		MD_CLUSTER_SEND_LOCKED_ALREADY		5
-+
- 
- struct md_cluster_info {
- 	/* dlm lock space and resources for clustered raid. */
- 	dlm_lockspace_t *lockspace;
- 	int slot_number;
+@@ -69,6 +69,7 @@ struct md_cluster_info {
  	struct completion completion;
-+	struct mutex recv_mutex;
+ 	struct mutex recv_mutex;
  	struct dlm_lock_resource *bitmap_lockres;
++	struct dlm_lock_resource **other_bitmap_lockres;
  	struct dlm_lock_resource *resync_lockres;
  	struct list_head suspend_list;
-@@ -67,6 +81,7 @@ struct md_cluster_info {
- 	struct dlm_lock_resource *no_new_dev_lockres;
- 	struct md_thread *recv_thread;
- 	struct completion newdisk_completion;
-+	wait_queue_head_t wait;
- 	unsigned long state;
- };
- 
-@@ -507,6 +522,7 @@ static void recv_daemon(struct md_thread *thread)
- 	struct cluster_msg msg;
- 	int ret;
- 
-+	mutex_lock(&cinfo->recv_mutex);
- 	/*get CR on Message*/
- 	if (dlm_lock_sync(message_lockres, DLM_LOCK_CR)) {
- 		pr_err("md/raid1:failed to get CR on MESSAGE\n");
-@@ -533,33 +549,45 @@ static void recv_daemon(struct md_thread *thread)
- 	ret = dlm_unlock_sync(message_lockres);
- 	if (unlikely(ret != 0))
- 		pr_info("unlock msg failed return %d\n", ret);
-+	mutex_unlock(&cinfo->recv_mutex);
+ 	spinlock_t suspend_lock;
+@@ -835,6 +836,7 @@ static void resync_bitmap(struct mddev *mddev)
+ 			__func__, __LINE__, err);
  }
  
--/* lock_comm()
-+/* lock_token()
-  * Takes the lock on the TOKEN lock resource so no other
-  * node can communicate while the operation is underway.
-- * If called again, and the TOKEN lock is alread in EX mode
-- * return success. However, care must be taken that unlock_comm()
-- * is called only once.
-  */
--static int lock_comm(struct md_cluster_info *cinfo)
-+static int lock_token(struct md_cluster_info *cinfo)
++static void unlock_all_bitmaps(struct mddev *mddev);
+ static int leave(struct mddev *mddev)
  {
- 	int error;
- 
--	if (cinfo->token_lockres->mode == DLM_LOCK_EX)
--		return 0;
--
- 	error = dlm_lock_sync(cinfo->token_lockres, DLM_LOCK_EX);
- 	if (error)
- 		pr_err("md-cluster(%s:%d): failed to get EX on TOKEN (%d)\n",
- 				__func__, __LINE__, error);
-+
-+	/* Lock the receive sequence */
-+	mutex_lock(&cinfo->recv_mutex);
- 	return error;
+ 	struct md_cluster_info *cinfo = mddev->cluster_info;
+@@ -855,6 +857,7 @@ static int leave(struct mddev *mddev)
+ 	lockres_free(cinfo->ack_lockres);
+ 	lockres_free(cinfo->no_new_dev_lockres);
+ 	lockres_free(cinfo->bitmap_lockres);
++	unlock_all_bitmaps(mddev);
+ 	dlm_release_lockspace(cinfo->lockspace, 2);
+ 	return 0;
+ }
+@@ -1054,6 +1057,58 @@ static int remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	return sendmsg(cinfo, &cmsg);
  }
  
-+/* lock_comm()
-+ * Sets the MD_CLUSTER_SEND_LOCK bit to lock the send channel.
-+ */
-+static int lock_comm(struct md_cluster_info *cinfo)
++static int lock_all_bitmaps(struct mddev *mddev)
 +{
-+	wait_event(cinfo->wait,
-+		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state));
-+
-+	return lock_token(cinfo);
-+}
-+
- static void unlock_comm(struct md_cluster_info *cinfo)
- {
- 	WARN_ON(cinfo->token_lockres->mode != DLM_LOCK_EX);
-+	mutex_unlock(&cinfo->recv_mutex);
- 	dlm_unlock_sync(cinfo->token_lockres);
-+	clear_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state);
-+	wake_up(&cinfo->wait);
- }
- 
- /* __sendmsg()
-@@ -712,6 +740,8 @@ static int join(struct mddev *mddev, int nodes)
- 	spin_lock_init(&cinfo->suspend_lock);
- 	init_completion(&cinfo->completion);
- 	set_bit(MD_CLUSTER_BEGIN_JOIN_CLUSTER, &cinfo->state);
-+	init_waitqueue_head(&cinfo->wait);
-+	mutex_init(&cinfo->recv_mutex);
- 
- 	mddev->cluster_info = cinfo;
- 
-@@ -840,9 +870,25 @@ static int slot_number(struct mddev *mddev)
- 	return cinfo->slot_number - 1;
- }
- 
-+/*
-+ * Check if the communication is already locked, else lock the communication
-+ * channel.
-+ * If it is already locked, token is in EX mode, and hence lock_token()
-+ * should not be called.
-+ */
- static int metadata_update_start(struct mddev *mddev)
- {
--	return lock_comm(mddev->cluster_info);
++	int slot, my_slot, ret, held = 1, i = 0;
++	char str[64];
 +	struct md_cluster_info *cinfo = mddev->cluster_info;
 +
-+	wait_event(cinfo->wait,
-+		   !test_and_set_bit(MD_CLUSTER_SEND_LOCK, &cinfo->state) ||
-+		   test_and_clear_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state));
-+
-+	/* If token is already locked, return 0 */
-+	if (cinfo->token_lockres->mode == DLM_LOCK_EX)
++	cinfo->other_bitmap_lockres = kzalloc((mddev->bitmap_info.nodes - 1) *
++					     sizeof(struct dlm_lock_resource *),
++					     GFP_KERNEL);
++	if (!cinfo->other_bitmap_lockres) {
++		pr_err("%s:%d: can't alloc mem for other bitmap locks\n", __func__, __LINE__);
 +		return 0;
-+
-+	return lock_token(cinfo);
- }
- 
- static int metadata_update_finish(struct mddev *mddev)
-@@ -867,6 +913,7 @@ static int metadata_update_finish(struct mddev *mddev)
- 		ret = __sendmsg(cinfo, &cmsg);
- 	} else
- 		pr_warn("md-cluster: No good device id found to send\n");
-+	clear_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
- 	unlock_comm(cinfo);
- 	return ret;
- }
-@@ -874,6 +921,7 @@ static int metadata_update_finish(struct mddev *mddev)
- static void metadata_update_cancel(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	clear_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
- 	unlock_comm(cinfo);
- }
- 
-@@ -967,14 +1015,18 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		ret = -ENOENT;
- 	if (ret)
- 		unlock_comm(cinfo);
--	else
-+	else {
- 		dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
-+		set_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
-+		wake_up(&cinfo->wait);
 +	}
- 	return ret;
- }
- 
- static void add_new_disk_cancel(struct mddev *mddev)
++
++	my_slot = slot_number(mddev);
++	for (slot = 0; slot < mddev->bitmap_info.nodes; slot++) {
++		if (slot == my_slot)
++			continue;
++
++		memset(str, '\0', 64);
++		snprintf(str, 64, "bitmap%04d", slot);
++		cinfo->other_bitmap_lockres[i] = lockres_init(mddev, str, NULL, 1);
++		if (!cinfo->other_bitmap_lockres[i])
++			return -ENOMEM;
++
++		cinfo->other_bitmap_lockres[i]->flags |= DLM_LKF_NOQUEUE;
++		ret = dlm_lock_sync(cinfo->other_bitmap_lockres[i], DLM_LOCK_PW);
++		if (ret)
++			held = -1;
++		i++;
++	}
++
++	return held;
++}
++
++static void unlock_all_bitmaps(struct mddev *mddev)
++{
++	struct md_cluster_info *cinfo = mddev->cluster_info;
++	int i;
++
++	/* release other node's bitmap lock if they are existed */
++	if (cinfo->other_bitmap_lockres) {
++		for (i = 0; i < mddev->bitmap_info.nodes - 1; i++) {
++			if (cinfo->other_bitmap_lockres[i]) {
++				dlm_unlock_sync(cinfo->other_bitmap_lockres[i]);
++				lockres_free(cinfo->other_bitmap_lockres[i]);
++			}
++		}
++		kfree(cinfo->other_bitmap_lockres);
++	}
++}
++
+ static int gather_bitmaps(struct md_rdev *rdev)
  {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	clear_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
- 	unlock_comm(cinfo);
- }
+ 	int sn, err;
+@@ -1099,6 +1154,8 @@ static struct md_cluster_operations cluster_ops = {
+ 	.new_disk_ack = new_disk_ack,
+ 	.remove_disk = remove_disk,
+ 	.gather_bitmaps = gather_bitmaps,
++	.lock_all_bitmaps = lock_all_bitmaps,
++	.unlock_all_bitmaps = unlock_all_bitmaps,
+ };
  
+ static int __init cluster_init(void)
+diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
+index e75ea26..45ce6c9 100644
+--- a/drivers/md/md-cluster.h
++++ b/drivers/md/md-cluster.h
+@@ -24,6 +24,8 @@ struct md_cluster_operations {
+ 	int (*new_disk_ack)(struct mddev *mddev, bool ack);
+ 	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
+ 	int (*gather_bitmaps)(struct md_rdev *rdev);
++	int (*lock_all_bitmaps)(struct mddev *mddev);
++	void (*unlock_all_bitmaps)(struct mddev *mddev);
+ };
+ 
+ #endif /* _MD_CLUSTER_H */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 06066e67..47ee8ae 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6586,6 +6586,20 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				rv = -EINVAL;
+ 				goto err;
+ 			}
++			if (mddev->bitmap_info.nodes) {
++				/* hold PW on all the bitmap lock */
++				if (md_cluster_ops->lock_all_bitmaps(mddev) <= 0) {
++					printk("%s:%d can't change bitmap to none since the"
++						" array is using by more than one node\n",
++						__func__, __LINE__);
++					rv = -EPERM;
++					md_cluster_ops->unlock_all_bitmaps(mddev);
++					goto err;
++				}
++
++				mddev->bitmap_info.nodes = 0;
++				md_cluster_ops->leave(mddev);
++			}
+ 			mddev->pers->quiesce(mddev, 1);
+ 			bitmap_destroy(mddev);
+ 			mddev->pers->quiesce(mddev, 0);
 -- 
 2.1.4
 
