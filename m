@@ -1,164 +1,86 @@
 From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 1/3] md-cluster: append some actions when change bitmap from clustered to none
-Date: Fri, 20 Nov 2015 16:35:23 +0800
-Message-ID: <1448008525-17095-1-git-send-email-gqjiang@suse.com>
+Subject: [PATCH 2/3] md-cluster: introduce clear_clusterinfo_from_sb
+Date: Fri, 20 Nov 2015 16:35:24 +0800
+Message-ID: <1448008525-17095-2-git-send-email-gqjiang@suse.com>
+References: <1448008525-17095-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1448008525-17095-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.com
 Cc: rgoldwyn@suse.com, linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-For clustered raid, we need to do extra actions when change
-bitmap to none.
-
-1. check if all the bitmap lock could be get or not, if yes then
-   we can continue the change since cluster raid is only active
-   in current node. Otherwise return fail and unlock the related
-   bitmap locks
-2. set nodes to 0 and then leave cluster environment.
-3. release other nodes's bitmap lock.
+To change the bitmap from clustered to none, we also
+need to clean related info about cluster from sb, such
+as version, nodes and cluster_name.
 
 Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- drivers/md/md-cluster.c | 57 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/md/md-cluster.h |  2 ++
- drivers/md/md.c         | 14 ++++++++++++
- 3 files changed, 73 insertions(+)
+ drivers/md/bitmap.c | 25 +++++++++++++++++++++++++
+ drivers/md/bitmap.h |  1 +
+ drivers/md/md.c     |  1 +
+ 3 files changed, 27 insertions(+)
 
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index 430b139..148cd85 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -69,6 +69,7 @@ struct md_cluster_info {
- 	struct completion completion;
- 	struct mutex recv_mutex;
- 	struct dlm_lock_resource *bitmap_lockres;
-+	struct dlm_lock_resource **other_bitmap_lockres;
- 	struct dlm_lock_resource *resync_lockres;
- 	struct list_head suspend_list;
- 	spinlock_t suspend_lock;
-@@ -835,6 +836,7 @@ static void resync_bitmap(struct mddev *mddev)
- 			__func__, __LINE__, err);
- }
- 
-+static void unlock_all_bitmaps(struct mddev *mddev);
- static int leave(struct mddev *mddev)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
-@@ -855,6 +857,7 @@ static int leave(struct mddev *mddev)
- 	lockres_free(cinfo->ack_lockres);
- 	lockres_free(cinfo->no_new_dev_lockres);
- 	lockres_free(cinfo->bitmap_lockres);
-+	unlock_all_bitmaps(mddev);
- 	dlm_release_lockspace(cinfo->lockspace, 2);
- 	return 0;
- }
-@@ -1054,6 +1057,58 @@ static int remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 	return sendmsg(cinfo, &cmsg);
- }
- 
-+static int lock_all_bitmaps(struct mddev *mddev)
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 4f22e91..c11390f 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -417,6 +417,31 @@ out:
+ /*
+  * bitmap file superblock operations
+  */
++void clear_clusterinfo_from_sb(struct bitmap *bitmap)
 +{
-+	int slot, my_slot, ret, held = 1, i = 0;
-+	char str[64];
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
++	bitmap_super_t *sb;
 +
-+	cinfo->other_bitmap_lockres = kzalloc((mddev->bitmap_info.nodes - 1) *
-+					     sizeof(struct dlm_lock_resource *),
-+					     GFP_KERNEL);
-+	if (!cinfo->other_bitmap_lockres) {
-+		pr_err("%s:%d: can't alloc mem for other bitmap locks\n", __func__, __LINE__);
-+		return 0;
-+	}
++	if (!bitmap || !bitmap->mddev) /* no bitmap for this array */
++		return;
++	if (bitmap->mddev->bitmap_info.external)
++		return;
++	if (!bitmap->storage.sb_page) /* no superblock */
++		return;
++	sb = kmap_atomic(bitmap->storage.sb_page);
++	sb->nodes = 0;
++	sb->version = cpu_to_le32(BITMAP_MAJOR_HI);
++	memset(sb->cluster_name, NULL, 64);
 +
-+	my_slot = slot_number(mddev);
-+	for (slot = 0; slot < mddev->bitmap_info.nodes; slot++) {
-+		if (slot == my_slot)
-+			continue;
++	kunmap_atomic(sb);
++	/* Don't write until any other writes have completed */
++	if (bitmap->storage.file)
++		wait_event(bitmap->write_wait,
++			   atomic_read(&bitmap->pending_writes)==0);
++	else
++		md_super_wait(bitmap->mddev);
 +
-+		memset(str, '\0', 64);
-+		snprintf(str, 64, "bitmap%04d", slot);
-+		cinfo->other_bitmap_lockres[i] = lockres_init(mddev, str, NULL, 1);
-+		if (!cinfo->other_bitmap_lockres[i])
-+			return -ENOMEM;
-+
-+		cinfo->other_bitmap_lockres[i]->flags |= DLM_LKF_NOQUEUE;
-+		ret = dlm_lock_sync(cinfo->other_bitmap_lockres[i], DLM_LOCK_PW);
-+		if (ret)
-+			held = -1;
-+		i++;
-+	}
-+
-+	return held;
++	write_page(bitmap, bitmap->storage.sb_page, 1);
 +}
-+
-+static void unlock_all_bitmaps(struct mddev *mddev)
-+{
-+	struct md_cluster_info *cinfo = mddev->cluster_info;
-+	int i;
-+
-+	/* release other node's bitmap lock if they are existed */
-+	if (cinfo->other_bitmap_lockres) {
-+		for (i = 0; i < mddev->bitmap_info.nodes - 1; i++) {
-+			if (cinfo->other_bitmap_lockres[i]) {
-+				dlm_unlock_sync(cinfo->other_bitmap_lockres[i]);
-+				lockres_free(cinfo->other_bitmap_lockres[i]);
-+			}
-+		}
-+		kfree(cinfo->other_bitmap_lockres);
-+	}
-+}
-+
- static int gather_bitmaps(struct md_rdev *rdev)
- {
- 	int sn, err;
-@@ -1099,6 +1154,8 @@ static struct md_cluster_operations cluster_ops = {
- 	.new_disk_ack = new_disk_ack,
- 	.remove_disk = remove_disk,
- 	.gather_bitmaps = gather_bitmaps,
-+	.lock_all_bitmaps = lock_all_bitmaps,
-+	.unlock_all_bitmaps = unlock_all_bitmaps,
- };
  
- static int __init cluster_init(void)
-diff --git a/drivers/md/md-cluster.h b/drivers/md/md-cluster.h
-index e75ea26..45ce6c9 100644
---- a/drivers/md/md-cluster.h
-+++ b/drivers/md/md-cluster.h
-@@ -24,6 +24,8 @@ struct md_cluster_operations {
- 	int (*new_disk_ack)(struct mddev *mddev, bool ack);
- 	int (*remove_disk)(struct mddev *mddev, struct md_rdev *rdev);
- 	int (*gather_bitmaps)(struct md_rdev *rdev);
-+	int (*lock_all_bitmaps)(struct mddev *mddev);
-+	void (*unlock_all_bitmaps)(struct mddev *mddev);
- };
+ /* update the event counter and sync the superblock to disk */
+ void bitmap_update_sb(struct bitmap *bitmap)
+diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
+index 7d5c3a6..1d0975b 100644
+--- a/drivers/md/bitmap.h
++++ b/drivers/md/bitmap.h
+@@ -241,6 +241,7 @@ void bitmap_flush(struct mddev *mddev);
+ void bitmap_destroy(struct mddev *mddev);
  
- #endif /* _MD_CLUSTER_H */
+ void bitmap_print_sb(struct bitmap *bitmap);
++void clear_clusterinfo_from_sb(struct bitmap *bitmap);
+ void bitmap_update_sb(struct bitmap *bitmap);
+ void bitmap_status(struct seq_file *seq, struct bitmap *bitmap);
+ 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 06066e67..47ee8ae 100644
+index 47ee8ae..f06dc43 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6586,6 +6586,20 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
- 				rv = -EINVAL;
- 				goto err;
+@@ -6598,6 +6598,7 @@ static int update_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 				}
+ 
+ 				mddev->bitmap_info.nodes = 0;
++				clear_clusterinfo_from_sb(mddev->bitmap);
+ 				md_cluster_ops->leave(mddev);
  			}
-+			if (mddev->bitmap_info.nodes) {
-+				/* hold PW on all the bitmap lock */
-+				if (md_cluster_ops->lock_all_bitmaps(mddev) <= 0) {
-+					printk("%s:%d can't change bitmap to none since the"
-+						" array is using by more than one node\n",
-+						__func__, __LINE__);
-+					rv = -EPERM;
-+					md_cluster_ops->unlock_all_bitmaps(mddev);
-+					goto err;
-+				}
-+
-+				mddev->bitmap_info.nodes = 0;
-+				md_cluster_ops->leave(mddev);
-+			}
  			mddev->pers->quiesce(mddev, 1);
- 			bitmap_destroy(mddev);
- 			mddev->pers->quiesce(mddev, 0);
 -- 
 2.1.4
 
