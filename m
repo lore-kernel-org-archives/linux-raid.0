@@ -1,139 +1,548 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: raid10 resync hangs in 4.2.6, 4.3
-Date: Fri, 20 Nov 2015 15:30:35 -0500
-Message-ID: <22095.33515.989734.113452@quad.stoffel.home>
-References: <564F6304.3040502@tomt.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <564F6304.3040502@tomt.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH 1/3] badblocks: Add core badblock management code
+Date: Fri, 20 Nov 2015 17:49:18 -0700
+Message-ID: <1448066960-20119-2-git-send-email-vishal.l.verma@intel.com>
+References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-raid.ids
 
+Take the core badblocks implementation from md, and make it generally
+available. This follows the same style as kernel implementations of
+linked lists, rb-trees etc, where you can have a structure that can be
+embedded anywhere, and accessor functions to manipulate the data.
 
-Andre,
-I don't have time myself to test this, but since I'm running 4.2.6
-myself with triple mirror RAID1 arrays, I'm slightly worried now.  But
-can you make this failure happen with loop-back mounts by any chance?
-That might help narrow down if it's an MD layer, block layer or
-controller issue.  
+The only changes in this copy of the code are ones to generalize
+function/variable names from md-specific ones. Also add init and free
+functions.
 
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+---
+ include/linux/badblocks.h | 512 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 512 insertions(+)
+ create mode 100644 include/linux/badblocks.h
 
-Andre> [resend with compressed attachments, first may have gotten eaten by a grue]
+diff --git a/include/linux/badblocks.h b/include/linux/badblocks.h
+new file mode 100644
+index 0000000..94fa348
+--- /dev/null
++++ b/include/linux/badblocks.h
+@@ -0,0 +1,512 @@
++#ifndef _LINUX_BADBLOCKS_H
++#define _LINUX_BADBLOCKS_H
++
++#include <linux/types.h>
++#include <linux/stddef.h>
++#include <linux/kernel.h>
++
++#define BB_LEN_MASK	(0x00000000000001FFULL)
++#define BB_OFFSET_MASK	(0x7FFFFFFFFFFFFE00ULL)
++#define BB_ACK_MASK	(0x8000000000000000ULL)
++#define BB_MAX_LEN	512
++#define BB_OFFSET(x)	(((x) & BB_OFFSET_MASK) >> 9)
++#define BB_LEN(x)	(((x) & BB_LEN_MASK) + 1)
++#define BB_ACK(x)	(!!((x) & BB_ACK_MASK))
++#define BB_MAKE(a, l, ack) (((a)<<9) | ((l)-1) | ((u64)(!!(ack)) << 63))
++
++/* Bad block numbers are stored sorted in a single page.
++ * 64bits is used for each block or extent.
++ * 54 bits are sector number, 9 bits are extent size,
++ * 1 bit is an 'acknowledged' flag.
++ */
++#define MAX_BADBLOCKS	(PAGE_SIZE/8)
++
++struct badblocks {
++	int count;		/* count of bad blocks */
++	int unacked_exist;	/* there probably are unacknowledged
++				 * bad blocks.  This is only cleared
++				 * when a read discovers none
++				 */
++	int shift;		/* shift from sectors to block size
++				 * a -ve shift means badblocks are
++				 * disabled.*/
++	u64 *page;		/* badblock list */
++	int changed;
++	seqlock_t lock;
++	sector_t sector;
++	sector_t size;		/* in sectors */
++};
++
++/* Bad block management.
++ * We can record which blocks on each device are 'bad' and so just
++ * fail those blocks, or that stripe, rather than the whole device.
++ * Entries in the bad-block table are 64bits wide.  This comprises:
++ * Length of bad-range, in sectors: 0-511 for lengths 1-512
++ * Start of bad-range, sector offset, 54 bits (allows 8 exbibytes)
++ *  A 'shift' can be set so that larger blocks are tracked and
++ *  consequently larger devices can be covered.
++ * 'Acknowledged' flag - 1 bit. - the most significant bit.
++ *
++ * Locking of the bad-block table uses a seqlock so badblocks_check
++ * might need to retry if it is very unlucky.
++ * We will sometimes want to check for bad blocks in a bi_end_io function,
++ * so we use the write_seqlock_irq variant.
++ *
++ * When looking for a bad block we specify a range and want to
++ * know if any block in the range is bad.  So we binary-search
++ * to the last range that starts at-or-before the given endpoint,
++ * (or "before the sector after the target range")
++ * then see if it ends after the given start.
++ * We return
++ *  0 if there are no known bad blocks in the range
++ *  1 if there are known bad block which are all acknowledged
++ * -1 if there are bad blocks which have not yet been acknowledged in metadata.
++ * plus the start/length of the first bad section we overlap.
++ */
++static inline int badblocks_check(struct badblocks *bb, sector_t s, int sectors,
++		   sector_t *first_bad, int *bad_sectors)
++{
++	int hi;
++	int lo;
++	u64 *p = bb->page;
++	int rv;
++	sector_t target = s + sectors;
++	unsigned seq;
++
++	if (bb->shift > 0) {
++		/* round the start down, and the end up */
++		s >>= bb->shift;
++		target += (1<<bb->shift) - 1;
++		target >>= bb->shift;
++		sectors = target - s;
++	}
++	/* 'target' is now the first block after the bad range */
++
++retry:
++	seq = read_seqbegin(&bb->lock);
++	lo = 0;
++	rv = 0;
++	hi = bb->count;
++
++	/* Binary search between lo and hi for 'target'
++	 * i.e. for the last range that starts before 'target'
++	 */
++	/* INVARIANT: ranges before 'lo' and at-or-after 'hi'
++	 * are known not to be the last range before target.
++	 * VARIANT: hi-lo is the number of possible
++	 * ranges, and decreases until it reaches 1
++	 */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++		if (a < target)
++			/* This could still be the one, earlier ranges
++			 * could not. */
++			lo = mid;
++		else
++			/* This and later ranges are definitely out. */
++			hi = mid;
++	}
++	/* 'lo' might be the last that started before target, but 'hi' isn't */
++	if (hi > lo) {
++		/* need to check all range that end after 's' to see if
++		 * any are unacknowledged.
++		 */
++		while (lo >= 0 &&
++		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
++			if (BB_OFFSET(p[lo]) < target) {
++				/* starts before the end, and finishes after
++				 * the start, so they must overlap
++				 */
++				if (rv != -1 && BB_ACK(p[lo]))
++					rv = 1;
++				else
++					rv = -1;
++				*first_bad = BB_OFFSET(p[lo]);
++				*bad_sectors = BB_LEN(p[lo]);
++			}
++			lo--;
++		}
++	}
++
++	if (read_seqretry(&bb->lock, seq))
++		goto retry;
++
++	return rv;
++}
++
++/*
++ * Add a range of bad blocks to the table.
++ * This might extend the table, or might contract it
++ * if two adjacent ranges can be merged.
++ * We binary-search to find the 'insertion' point, then
++ * decide how best to handle it.
++ */
++static inline int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
++			    int acknowledged)
++{
++	u64 *p;
++	int lo, hi;
++	int rv = 1;
++	unsigned long flags;
++
++	if (bb->shift < 0)
++		/* badblocks are disabled */
++		return 0;
++
++	if (bb->shift) {
++		/* round the start down, and the end up */
++		sector_t next = s + sectors;
++		s >>= bb->shift;
++		next += (1<<bb->shift) - 1;
++		next >>= bb->shift;
++		sectors = next - s;
++	}
++
++	write_seqlock_irqsave(&bb->lock, flags);
++
++	p = bb->page;
++	lo = 0;
++	hi = bb->count;
++	/* Find the last range that starts at-or-before 's' */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++		if (a <= s)
++			lo = mid;
++		else
++			hi = mid;
++	}
++	if (hi > lo && BB_OFFSET(p[lo]) > s)
++		hi = lo;
++
++	if (hi > lo) {
++		/* we found a range that might merge with the start
++		 * of our new range
++		 */
++		sector_t a = BB_OFFSET(p[lo]);
++		sector_t e = a + BB_LEN(p[lo]);
++		int ack = BB_ACK(p[lo]);
++		if (e >= s) {
++			/* Yes, we can merge with a previous range */
++			if (s == a && s + sectors >= e)
++				/* new range covers old */
++				ack = acknowledged;
++			else
++				ack = ack && acknowledged;
++
++			if (e < s + sectors)
++				e = s + sectors;
++			if (e - a <= BB_MAX_LEN) {
++				p[lo] = BB_MAKE(a, e-a, ack);
++				s = e;
++			} else {
++				/* does not all fit in one range,
++				 * make p[lo] maximal
++				 */
++				if (BB_LEN(p[lo]) != BB_MAX_LEN)
++					p[lo] = BB_MAKE(a, BB_MAX_LEN, ack);
++				s = a + BB_MAX_LEN;
++			}
++			sectors = e - s;
++		}
++	}
++	if (sectors && hi < bb->count) {
++		/* 'hi' points to the first range that starts after 's'.
++		 * Maybe we can merge with the start of that range */
++		sector_t a = BB_OFFSET(p[hi]);
++		sector_t e = a + BB_LEN(p[hi]);
++		int ack = BB_ACK(p[hi]);
++		if (a <= s + sectors) {
++			/* merging is possible */
++			if (e <= s + sectors) {
++				/* full overlap */
++				e = s + sectors;
++				ack = acknowledged;
++			} else
++				ack = ack && acknowledged;
++
++			a = s;
++			if (e - a <= BB_MAX_LEN) {
++				p[hi] = BB_MAKE(a, e-a, ack);
++				s = e;
++			} else {
++				p[hi] = BB_MAKE(a, BB_MAX_LEN, ack);
++				s = a + BB_MAX_LEN;
++			}
++			sectors = e - s;
++			lo = hi;
++			hi++;
++		}
++	}
++	if (sectors == 0 && hi < bb->count) {
++		/* we might be able to combine lo and hi */
++		/* Note: 's' is at the end of 'lo' */
++		sector_t a = BB_OFFSET(p[hi]);
++		int lolen = BB_LEN(p[lo]);
++		int hilen = BB_LEN(p[hi]);
++		int newlen = lolen + hilen - (s - a);
++		if (s >= a && newlen < BB_MAX_LEN) {
++			/* yes, we can combine them */
++			int ack = BB_ACK(p[lo]) && BB_ACK(p[hi]);
++			p[lo] = BB_MAKE(BB_OFFSET(p[lo]), newlen, ack);
++			memmove(p + hi, p + hi + 1,
++				(bb->count - hi - 1) * 8);
++			bb->count--;
++		}
++	}
++	while (sectors) {
++		/* didn't merge (it all).
++		 * Need to add a range just before 'hi' */
++		if (bb->count >= MAX_BADBLOCKS) {
++			/* No room for more */
++			rv = 0;
++			break;
++		} else {
++			int this_sectors = sectors;
++			memmove(p + hi + 1, p + hi,
++				(bb->count - hi) * 8);
++			bb->count++;
++
++			if (this_sectors > BB_MAX_LEN)
++				this_sectors = BB_MAX_LEN;
++			p[hi] = BB_MAKE(s, this_sectors, acknowledged);
++			sectors -= this_sectors;
++			s += this_sectors;
++		}
++	}
++
++	bb->changed = 1;
++	if (!acknowledged)
++		bb->unacked_exist = 1;
++	write_sequnlock_irqrestore(&bb->lock, flags);
++
++	return rv;
++}
++
++/*
++ * Remove a range of bad blocks from the table.
++ * This may involve extending the table if we spilt a region,
++ * but it must not fail.  So if the table becomes full, we just
++ * drop the remove request.
++ */
++static inline int badblocks_clear(struct badblocks *bb, sector_t s, int sectors)
++{
++	u64 *p;
++	int lo, hi;
++	sector_t target = s + sectors;
++	int rv = 0;
++
++	if (bb->shift > 0) {
++		/* When clearing we round the start up and the end down.
++		 * This should not matter as the shift should align with
++		 * the block size and no rounding should ever be needed.
++		 * However it is better the think a block is bad when it
++		 * isn't than to think a block is not bad when it is.
++		 */
++		s += (1<<bb->shift) - 1;
++		s >>= bb->shift;
++		target >>= bb->shift;
++		sectors = target - s;
++	}
++
++	write_seqlock_irq(&bb->lock);
++
++	p = bb->page;
++	lo = 0;
++	hi = bb->count;
++	/* Find the last range that starts before 'target' */
++	while (hi - lo > 1) {
++		int mid = (lo + hi) / 2;
++		sector_t a = BB_OFFSET(p[mid]);
++		if (a < target)
++			lo = mid;
++		else
++			hi = mid;
++	}
++	if (hi > lo) {
++		/* p[lo] is the last range that could overlap the
++		 * current range.  Earlier ranges could also overlap,
++		 * but only this one can overlap the end of the range.
++		 */
++		if (BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > target) {
++			/* Partial overlap, leave the tail of this range */
++			int ack = BB_ACK(p[lo]);
++			sector_t a = BB_OFFSET(p[lo]);
++			sector_t end = a + BB_LEN(p[lo]);
++
++			if (a < s) {
++				/* we need to split this range */
++				if (bb->count >= MAX_BADBLOCKS) {
++					rv = -ENOSPC;
++					goto out;
++				}
++				memmove(p+lo+1, p+lo, (bb->count - lo) * 8);
++				bb->count++;
++				p[lo] = BB_MAKE(a, s-a, ack);
++				lo++;
++			}
++			p[lo] = BB_MAKE(target, end - target, ack);
++			/* there is no longer an overlap */
++			hi = lo;
++			lo--;
++		}
++		while (lo >= 0 &&
++		       BB_OFFSET(p[lo]) + BB_LEN(p[lo]) > s) {
++			/* This range does overlap */
++			if (BB_OFFSET(p[lo]) < s) {
++				/* Keep the early parts of this range. */
++				int ack = BB_ACK(p[lo]);
++				sector_t start = BB_OFFSET(p[lo]);
++				p[lo] = BB_MAKE(start, s - start, ack);
++				/* now low doesn't overlap, so.. */
++				break;
++			}
++			lo--;
++		}
++		/* 'lo' is strictly before, 'hi' is strictly after,
++		 * anything between needs to be discarded
++		 */
++		if (hi - lo > 1) {
++			memmove(p+lo+1, p+hi, (bb->count - hi) * 8);
++			bb->count -= (hi - lo - 1);
++		}
++	}
++
++	bb->changed = 1;
++out:
++	write_sequnlock_irq(&bb->lock);
++	return rv;
++}
++
++/*
++ * Acknowledge all bad blocks in a list.
++ * This only succeeds if ->changed is clear.  It is used by
++ * in-kernel metadata updates
++ */
++static inline void ack_all_badblocks(struct badblocks *bb)
++{
++	if (bb->page == NULL || bb->changed)
++		/* no point even trying */
++		return;
++	write_seqlock_irq(&bb->lock);
++
++	if (bb->changed == 0 && bb->unacked_exist) {
++		u64 *p = bb->page;
++		int i;
++		for (i = 0; i < bb->count ; i++) {
++			if (!BB_ACK(p[i])) {
++				sector_t start = BB_OFFSET(p[i]);
++				int len = BB_LEN(p[i]);
++				p[i] = BB_MAKE(start, len, 1);
++			}
++		}
++		bb->unacked_exist = 0;
++	}
++	write_sequnlock_irq(&bb->lock);
++}
++
++/* sysfs access to bad-blocks list. */
++static inline ssize_t badblocks_show(struct badblocks *bb, char *page,
++		int unack)
++{
++	size_t len;
++	int i;
++	u64 *p = bb->page;
++	unsigned seq;
++
++	if (bb->shift < 0)
++		return 0;
++
++retry:
++	seq = read_seqbegin(&bb->lock);
++
++	len = 0;
++	i = 0;
++
++	while (len < PAGE_SIZE && i < bb->count) {
++		sector_t s = BB_OFFSET(p[i]);
++		unsigned int length = BB_LEN(p[i]);
++		int ack = BB_ACK(p[i]);
++		i++;
++
++		if (unack && ack)
++			continue;
++
++		len += snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
++				(unsigned long long)s << bb->shift,
++				length << bb->shift);
++	}
++	if (unack && len == 0)
++		bb->unacked_exist = 0;
++
++	if (read_seqretry(&bb->lock, seq))
++		goto retry;
++
++	return len;
++}
++
++#define DO_DEBUG 1
++
++static inline ssize_t badblocks_store(struct badblocks *bb, const char *page,
++		size_t len, int unack)
++{
++	unsigned long long sector;
++	int length;
++	char newline;
++#ifdef DO_DEBUG
++	/* Allow clearing via sysfs *only* for testing/debugging.
++	 * Normally only a successful write may clear a badblock
++	 */
++	int clear = 0;
++	if (page[0] == '-') {
++		clear = 1;
++		page++;
++	}
++#endif /* DO_DEBUG */
++
++	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) {
++	case 3:
++		if (newline != '\n')
++			return -EINVAL;
++	case 2:
++		if (length <= 0)
++			return -EINVAL;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++#ifdef DO_DEBUG
++	if (clear) {
++		badblocks_clear(bb, sector, length);
++		return len;
++	}
++#endif /* DO_DEBUG */
++	if (badblocks_set(bb, sector, length, !unack))
++		return len;
++	else
++		return -ENOSPC;
++}
++
++static inline int badblocks_init(struct badblocks *bb, int enable)
++{
++	bb->count = 0;
++	if (enable)
++		bb->shift = 0;
++	else
++		bb->shift = -1;
++	bb->page = kmalloc(PAGE_SIZE, GFP_KERNEL);
++	if (bb->page == NULL)
++		return -ENOMEM;
++	seqlock_init(&bb->lock);
++
++	return 0;
++}
++
++static inline void badblocks_free(struct badblocks *bb)
++{
++	kfree(bb->page);
++}
++
++#endif
+-- 
+2.5.0
 
-Andre> Hi
-
-Andre> I'm seeing hangs with RAID10 resyncs on my system. RAID5/6 recovery on 
-Andre> the same drive set works without any problems. BTRFS RAID6 is problem 
-Andre> free on a different set of (very busy) drives on the same controllers as 
-Andre> well.
-
-Andre> It happens shortly after array creation, from seconds to a couple 
-Andre> minutes in.
-
-Andre> wchan for md0_resync kernel thread shows it sitting in raise_barrier() 
-Andre> forever, while md0_raid10 keeps a CPU core 100% busy (but shows no 
-Andre> wchan), and no resyncing or I/O to the array is getting done anymore.
-
-Andre> After a short while kernel starts spitting out rcu_sched self-detected 
-Andre> stall on CPU warnings, and other rcu use starts getting iffy (I think).
-
-Andre> I/O directly to the RAID member disk (below md layer, eg /dev/sdX 
-Andre> directly) continues to work after the hang, and there are no I/O errors 
-Andre> in the kernel log.
-
-Andre> The array is a 8 drive array spread over 3 HBAs, created with:
-Andre> mdadm --create /dev/md0 --level=10 --chunk=128 --bitmap=none 
-Andre> --raid-devices=8 /dev/sda1 /dev/sdg1 /dev/sdl1 /dev/sdm1 /dev/sdi1 
-Andre> /dev/sdj1 /dev/sdp1 /dev/sds1
-
-Andre> The HBAs are LSI SAS2008 in IT mode (mpt2sas driver), oldish 2TB SATA 
-Andre> drives. Dual socket Xeon E5 v3 system with both sockets populated.
-
-Andre> This happens on at least 4.2.6 and 4.3
-Andre> I'm going to test some earlier kernels.
-
-Andre> attached some more info.
-
-Andre> md0_resync stack:
->> root@mental:~# cat /proc/1663/stack
->> [<ffffffffc042dd02>] raise_barrier+0x11b/0x14d [raid10]
->> [<ffffffffc0432830>] sync_request+0x193/0x14fc [raid10]
->> [<ffffffffc0559ac6>] md_do_sync+0x7d2/0xd78 [md_mod]
->> [<ffffffffc0556df9>] md_thread+0x12f/0x145 [md_mod]
->> [<ffffffff9d061db2>] kthread+0xcd/0xd5
->> [<ffffffff9d3b7a8f>] ret_from_fork+0x3f/0x70
->> [<ffffffffffffffff>] 0xffffffffffffffff
-
-Andre> md0_raid10 stack:
->> root@mental:~# cat /proc/1662/stack
->> [<ffffffffffffffff>] 0xffffffffffffffff
-
-Andre> cat stack trying to read /dev/md0 after hang:
->> root@mental:~# cat /proc/1737/stack
->> [<ffffffffc042de2b>] wait_barrier+0xd8/0x118 [raid10]
->> [<ffffffffc042f83c>] __make_request+0x3e/0xb17 [raid10]
->> [<ffffffffc0430399>] make_request+0x84/0xdc [raid10]
->> [<ffffffffc0557aab>] md_make_request+0xf6/0x1cc [md_mod]
->> [<ffffffff9d1a369a>] generic_make_request+0x97/0xd6
->> [<ffffffff9d1a37d1>] submit_bio+0xf8/0x140
->> [<ffffffff9d140e71>] mpage_bio_submit+0x25/0x2c
->> [<ffffffff9d141499>] mpage_readpages+0x10e/0x11f
->> [<ffffffff9d13c76c>] blkdev_readpages+0x18/0x1a
->> [<ffffffff9d0d09e4>] __do_page_cache_readahead+0x13c/0x1e0
->> [<ffffffff9d0d0c67>] ondemand_readahead+0x1df/0x1f2
->> [<ffffffff9d0d0da0>] page_cache_sync_readahead+0x38/0x3a
->> [<ffffffff9d0c70b3>] generic_file_read_iter+0x184/0x50b
->> [<ffffffff9d13c8f7>] blkdev_read_iter+0x33/0x38
->> [<ffffffff9d1132fd>] __vfs_read+0x8d/0xb1
->> [<ffffffff9d113820>] vfs_read+0x95/0x120
->> [<ffffffff9d11402d>] SyS_read+0x49/0x84
->> [<ffffffff9d3b772e>] entry_SYSCALL_64_fastpath+0x12/0x71
->> [<ffffffffffffffff>] 0xffffffffffffffff
-
-
-Andre> First OOPS (more in dmesg.txt)
->> [  150.183473] md0: detected capacity change from 0 to 8001054310400
->> [  150.183647] md: resync of RAID array md0
->> [  150.183652] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
->> [  150.183654] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
->> [  150.183678] md: using 128k window, over a total of 7813529600k.
->> [  233.068271] INFO: rcu_sched self-detected stall on CPU
->> [  233.068308] 	5: (17999 ticks this GP) idle=695/140000000000001/0 softirq=1235/1235 fqs=8999
->> [  233.068335] 	 (t=18000 jiffies g=935 c=934 q=37)
->> [  233.068354] Task dump for CPU 5:
->> [  233.068356] md0_raid10      R  running task        0  1662      2 0x00000008
->> [  233.068358]  0000000000000000 ffff88103fca3de0 ffffffff9d069f07 0000000000000005
->> [  233.068360]  ffffffff9d63d0c0 ffff88103fca3df8 ffffffff9d06beb9 ffffffff9d63d0c0
->> [  233.068361]  ffff88103fca3e28 ffffffff9d08c836 ffffffff9d63d0c0 ffff88103fcb4e80
->> [  233.068363] Call Trace:
->> [  233.068364]  <IRQ>  [<ffffffff9d069f07>] sched_show_task+0xb9/0xbe
->> [  233.068372]  [<ffffffff9d06beb9>] dump_cpu_task+0x32/0x35
->> [  233.068375]  [<ffffffff9d08c836>] rcu_dump_cpu_stacks+0x71/0x8c
->> [  233.068378]  [<ffffffff9d08f32c>] rcu_check_callbacks+0x20f/0x5a3
->> [  233.068382]  [<ffffffff9d0b72da>] ? acct_account_cputime+0x17/0x19
->> [  233.068384]  [<ffffffff9d0911a2>] update_process_times+0x2a/0x4f
->> [  233.068387]  [<ffffffff9d09cd55>] tick_sched_handle.isra.5+0x31/0x33
->> [  233.068388]  [<ffffffff9d09cd8f>] tick_sched_timer+0x38/0x60
->> [  233.068390]  [<ffffffff9d0917e1>] __hrtimer_run_queues+0xa1/0x10c
->> [  233.068392]  [<ffffffff9d091c52>] hrtimer_interrupt+0xa0/0x172
->> [  233.068395]  [<ffffffff9d0367a4>] smp_trace_apic_timer_interrupt+0x76/0x88
->> [  233.068397]  [<ffffffff9d0367bf>] smp_apic_timer_interrupt+0x9/0xb
->> [  233.068400]  [<ffffffff9d3b8402>] apic_timer_interrupt+0x82/0x90
->> [  233.068401]  <EOI>  [<ffffffff9d19e9aa>] ? bio_copy_data+0xce/0x2af
->> [  233.068410]  [<ffffffffc04320e5>] raid10d+0x974/0xf2c [raid10]
->> [  233.068417]  [<ffffffffc0556df9>] md_thread+0x12f/0x145 [md_mod]
->> [  233.068421]  [<ffffffffc0556df9>] ? md_thread+0x12f/0x145 [md_mod]
->> [  233.068424]  [<ffffffff9d07ad2e>] ? wait_woken+0x6d/0x6d
->> [  233.068428]  [<ffffffffc0556cca>] ? md_wait_for_blocked_rdev+0x102/0x102 [md_mod]
->> [  233.068431]  [<ffffffff9d061db2>] kthread+0xcd/0xd5
->> [  233.068434]  [<ffffffff9d061ce5>] ? kthread_worker_fn+0x13f/0x13f
->> [  233.068436]  [<ffffffff9d3b7a8f>] ret_from_fork+0x3f/0x70
->> [  233.068438]  [<ffffffff9d061ce5>] ? kthread_worker_fn+0x13f/0x13f
-
-Andre> [DELETED ATTACHMENT config.txt.gz, application/gzip]
-Andre> [DELETED ATTACHMENT dmesg.txt.gz, application/gzip]
-Andre> [DELETED ATTACHMENT wchan.txt.gz, application/gzip]
