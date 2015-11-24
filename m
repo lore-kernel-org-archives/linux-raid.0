@@ -1,38 +1,49 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+From: Jeff Moyer <jmoyer@redhat.com>
 Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
-Date: Tue, 24 Nov 2015 19:03:57 +0000
-Message-ID: <1448391837.27481.16.camel@intel.com>
+Date: Tue, 24 Nov 2015 14:14:26 -0500
+Message-ID: <x498u5n1a7h.fsf@segfault.boston.devel.redhat.com>
 References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
-	 <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+	<x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+	<1448391837.27481.16.camel@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
-Content-Language: en-US
-Content-ID: <444DD778B5AABC4F953B4DD77661D08F@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "jmoyer@redhat.com" <jmoyer@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1448391837.27481.16.camel@intel.com> (Vishal L. Verma's message
+	of "Tue, 24 Nov 2015 19:03:57 +0000")
+Sender: linux-raid-owner@vger.kernel.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>
 List-Id: linux-raid.ids
 
-T24gVHVlLCAyMDE1LTExLTI0IGF0IDEwOjM0IC0wNTAwLCBKZWZmIE1veWVyIHdyb3RlOg0KPiBW
-aXNoYWwgVmVybWEgPHZpc2hhbC5sLnZlcm1hQGludGVsLmNvbT4gd3JpdGVzOg0KPiANCj4gPiBO
-VkRJTU0gZGV2aWNlcywgd2hpY2ggY2FuIGJlaGF2ZSBtb3JlIGxpa2UgRFJBTSByYXRoZXIgdGhh
-biBibG9jaw0KPiA+IGRldmljZXMsIG1heSBkZXZlbG9wIGJhZCBjYWNoZSBsaW5lcywgb3IgJ3Bv
-aXNvbicuIEEgYmxvY2sgZGV2aWNlDQo+ID4gZXhwb3NlZCBieSB0aGUgcG1lbSBkcml2ZXIgY2Fu
-IHRoZW4gY29uc3VtZSBwb2lzb24gdmlhIGEgcmVhZCAob3INCj4gPiB3cml0ZSksIGFuZCBjYXVz
-ZSBhIG1hY2hpbmUgY2hlY2suIE9uIHBsYXRmb3JtcyB3aXRob3V0IG1hY2hpbmUNCj4gPiBjaGVj
-ayByZWNvdmVyeSBmZWF0dXJlcywgdGhpcyB3b3VsZCBtZWFuIGEgY3Jhc2guDQo+ID4gDQo+ID4g
-VGhlIGJsb2NrIGRldmljZSBtYWludGFpbmluZyBhIHJ1bnRpbWUgbGlzdCBvZiBhbGwga25vd24g
-c2VjdG9ycw0KPiA+IHRoYXQNCj4gPiBoYXZlIHBvaXNvbiBjYW4gZGlyZWN0bHkgYXZvaWQgdGhp
-cywgYW5kIGFsc28gcHJvdmlkZSBhIHBhdGggZm9yd2FyZA0KPiA+IHRvIGVuYWJsZSBwcm9wZXIg
-aGFuZGxpbmcvcmVjb3ZlcnkgZm9yIERBWCBmYXVsdHMgb24gc3VjaCBhIGRldmljZS4NCj4gPiAN
-Cj4gPiBVc2UgdGhlIG5ldyBiYWRibG9jayBtYW5hZ2VtZW50IGludGVyZmFjZXMgdG8gYWRkIGEg
-YmFkYmxvY2tzIGxpc3QNCj4gPiB0bw0KPiA+IGdlbmRpc2tzLg0KPiANCj4gQmVjYXVzZSBkaXNr
-X2FsbG9jX2JhZGJsb2NrcyBjYW4gZmFpbCwgeW91IG5lZWQgdG8gY2hlY2sgZm9yIGEgTlVMTA0K
-PiBkaXNrLT5iYiBpbiBhbGwgb2YgdGhlIHV0aWxpdHkgZnVuY3Rpb25zIHlvdSd2ZSBkZWZpbmVk
-Lg0KPiANCg0KVGhhbmtzLCBKZWZmIC0gSSdsbCBmaXggdGhpcy4gSSBoYXZlIGEgaGFuZGZ1bCBv
-ZiBvdGhlciBmaXhlcyBxdWV1ZWQgdXANCnRvbywgd2lsbCBzZW5kIG91dCBhIHYyIHNvb24uDQoN
-CgktVmlzaGFs
+"Verma, Vishal L" <vishal.l.verma@intel.com> writes:
+
+> On Tue, 2015-11-24 at 10:34 -0500, Jeff Moyer wrote:
+>> Vishal Verma <vishal.l.verma@intel.com> writes:
+>> 
+>> > NVDIMM devices, which can behave more like DRAM rather than block
+>> > devices, may develop bad cache lines, or 'poison'. A block device
+>> > exposed by the pmem driver can then consume poison via a read (or
+>> > write), and cause a machine check. On platforms without machine
+>> > check recovery features, this would mean a crash.
+>> > 
+>> > The block device maintaining a runtime list of all known sectors
+>> > that
+>> > have poison can directly avoid this, and also provide a path forward
+>> > to enable proper handling/recovery for DAX faults on such a device.
+>> > 
+>> > Use the new badblock management interfaces to add a badblocks list
+>> > to
+>> > gendisks.
+>> 
+>> Because disk_alloc_badblocks can fail, you need to check for a NULL
+>> disk->bb in all of the utility functions you've defined.
+>> 
+>
+> Thanks, Jeff - I'll fix this. I have a handful of other fixes queued up
+> too, will send out a v2 soon.
+
+I'm not sure whether it makes sense to continue without badblock
+management for the RAID code.  I was hoping Neil would comment on that.
+
+-Jeff
