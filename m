@@ -1,65 +1,26 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
-Date: Wed, 25 Nov 2015 10:37:58 -0500
-Message-ID: <x49h9kanl7t.fsf@segfault.boston.devel.redhat.com>
-References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
-	<1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
-	<x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
-	<1448391837.27481.16.camel@intel.com>
-	<x498u5n1a7h.fsf@segfault.boston.devel.redhat.com>
-	<1448395840.14996.8.camel@intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Recovering RAID5 with 2, actually 1, faulty disks.
+Date: Wed, 25 Nov 2015 10:44:27 -0500
+Message-ID: <5655D75B.9020901@turmel.org>
+References: <189791448292518@web28m.yandex.ru> <565359F6.3020201@turmel.org>
+ <3822301448453563@web17m.yandex.ru> <5655B62F.2070806@turmel.org>
+ <240681448462882@web25o.yandex.ru> <939171448463324@web17m.yandex.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1448395840.14996.8.camel@intel.com> (Vishal L. Verma's message
-	of "Tue, 24 Nov 2015 20:10:39 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <939171448463324@web17m.yandex.ru>
+Sender: linux-raid-owner@vger.kernel.org
+To: Semyon Enskiy <semyon.enskiy@yandex.ru>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"Verma, Vishal L" <vishal.l.verma@intel.com> writes:
+On 11/25/2015 09:55 AM, Semyon Enskiy wrote:
+> Maybe assemble command should include sdj3 device too?
+> Like
+> # mdadm -v --assemble --update=revert-reshape /dev/md3 /dev/sd[a-j]3
+> not
+> # mdadm -v --assemble --update=revert-reshape /dev/md3 /dev/sd[a-i]3
 
-> On Tue, 2015-11-24 at 14:14 -0500, Jeff Moyer wrote:
->>=20
->> I'm not sure whether it makes sense to continue without badblock
->> management for the RAID code.=C2=A0=C2=A0I was hoping Neil would com=
-ment on
->> that.
->>=20
->> -Jeff
->
-> Not sure I follow? I believe I've kept all the badblocks functionalit=
-y
-> RAID already had..
+Yes, my mistake.  :-(  Try again, including 'sdj3'.
 
-What I mean to say is that the RAID code had previously embedded the
-badblocks structure in one of its other data structures.  As a result,
-you would never get an allocation failure for it.
-
-> On a related note, something I observed when testing with md:
->
-> md's badblock list is per-device, and can be seen at:
-> 	/sys/block/md0/md/dev-pmem0/bad_blocks
->
-> Now if we have badblocks in the gendisks too, there is also:
-> 	/sys/block/pmem0/bad_blocks
->
-> The two are separate 'accounts' maintained by separate drivers (md fo=
-r
-> the former, and pmem for the latter). This can potentially be
-> confusing..
->
-> Should we consolidate the two, i.e. make md (re)use the gendisk
-> badblocks for its purposes too?
-
-I agree with what Dan said.
-
-Cheers,
-Jeff
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Phil
