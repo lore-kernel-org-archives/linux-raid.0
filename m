@@ -1,50 +1,41 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Recovering RAID5 with 2, actually 1, faulty disks.
-Date: Wed, 25 Nov 2015 12:49:37 -0500
-Message-ID: <5655F4B1.4030403@turmel.org>
-References: <189791448292518@web28m.yandex.ru> <565359F6.3020201@turmel.org>
- <3822301448453563@web17m.yandex.ru> <5655B62F.2070806@turmel.org>
- <240681448462882@web25o.yandex.ru> <939171448463324@web17m.yandex.ru>
- <5655D75B.9020901@turmel.org> <166511448468944@web24o.yandex.ru>
- <5655E8D1.2050906@turmel.org> <398591448472730@web17m.yandex.ru>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH 2/3] block: Add badblock management for gendisks
+Date: Wed, 25 Nov 2015 17:55:42 +0000
+Message-ID: <1448474142.5911.4.camel@intel.com>
+References: <1448066960-20119-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448066960-20119-3-git-send-email-vishal.l.verma@intel.com>
+	 <x49a8q32yxy.fsf@segfault.boston.devel.redhat.com>
+	 <1448391837.27481.16.camel@intel.com>
+	 <x498u5n1a7h.fsf@segfault.boston.devel.redhat.com>
+	 <1448395840.14996.8.camel@intel.com>
+	 <x49h9kanl7t.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <398591448472730@web17m.yandex.ru>
-Sender: linux-raid-owner@vger.kernel.org
-To: Semyon Enskiy <semyon.enskiy@yandex.ru>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <x49h9kanl7t.fsf@segfault.boston.devel.redhat.com>
+Content-Language: en-US
+Content-ID: <BDF92552422772439882C4AA6EE4EC61@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "jmoyer@redhat.com" <jmoyer@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>
 List-Id: linux-raid.ids
 
-On 11/25/2015 12:32 PM, Semyon Enskiy wrote:
-
-> Does you think, that problem is that "Raid Devices : 10", but
-> "Array State : AAAAAAAA.A.", where the extra, 11th, device is sdj3, which
-> was rejected from system in past, but record about it leave in superblock?
-
-No.  It just can't get past the fact that your array is double-degraded,
-even though it isn't really, once the revert succeeds.
-
-At this point, I don't see a way out without --create.  Fortunately, we
-have complete details on your array, so we can supply the correct paramters:
-
-mdadm --stop /dev/md3
-
-mdadm --create --assume-clean --chunk=512 --data-offset=262144 \
-  --level=5 --raid-devices=10 --metadata=1.2 /dev/md3 \
-  /dev/sd{f,i,h,g,d,e,b,c}3 missing /dev/sdj3
-
-Note that you cannot use [] notation -- it doesn't maintain the order of
-the letters.  The keyword 'missing' takes the place of /dev/sda3.  It's
-possible it would be fine, but I'd rather not risk it.
-
-You should be able to access the content at this point.  Copy out any
-super-critical files.  Then add sda3:
-
-mdadm --add /dev/md3 /dev/sda3
-
-This should initiate the rebuild.
-
-Update your mdadm.conf file to use the new UUID, and update your initramfs.
-
-Phil
+T24gV2VkLCAyMDE1LTExLTI1IGF0IDEwOjM3IC0wNTAwLCBKZWZmIE1veWVyIHdyb3RlOg0KPiAi
+VmVybWEsIFZpc2hhbCBMIiA8dmlzaGFsLmwudmVybWFAaW50ZWwuY29tPiB3cml0ZXM6DQo+IA0K
+PiA+IE9uIFR1ZSwgMjAxNS0xMS0yNCBhdCAxNDoxNCAtMDUwMCwgSmVmZiBNb3llciB3cm90ZToN
+Cj4gPiA+IA0KPiA+ID4gSSdtIG5vdCBzdXJlIHdoZXRoZXIgaXQgbWFrZXMgc2Vuc2UgdG8gY29u
+dGludWUgd2l0aG91dCBiYWRibG9jaw0KPiA+ID4gbWFuYWdlbWVudCBmb3IgdGhlIFJBSUQgY29k
+ZS7CoMKgSSB3YXMgaG9waW5nIE5laWwgd291bGQgY29tbWVudCBvbg0KPiA+ID4gdGhhdC4NCj4g
+PiA+IA0KPiA+ID4gLUplZmYNCj4gPiANCj4gPiBOb3Qgc3VyZSBJIGZvbGxvdz8gSSBiZWxpZXZl
+IEkndmUga2VwdCBhbGwgdGhlIGJhZGJsb2Nrcw0KPiA+IGZ1bmN0aW9uYWxpdHkNCj4gPiBSQUlE
+IGFscmVhZHkgaGFkLi4NCj4gDQo+IFdoYXQgSSBtZWFuIHRvIHNheSBpcyB0aGF0IHRoZSBSQUlE
+IGNvZGUgaGFkIHByZXZpb3VzbHkgZW1iZWRkZWQgdGhlDQo+IGJhZGJsb2NrcyBzdHJ1Y3R1cmUg
+aW4gb25lIG9mIGl0cyBvdGhlciBkYXRhIHN0cnVjdHVyZXMuwqDCoEFzIGEgcmVzdWx0LA0KPiB5
+b3Ugd291bGQgbmV2ZXIgZ2V0IGFuIGFsbG9jYXRpb24gZmFpbHVyZSBmb3IgaXQuDQo+IA0KQWgg
+SSBzZWUgLSBJIGRvbid0IHRoaW5rIHRoYXQgaGFzIGVmZmVjdGl2ZWx5IGNoYW5nZWQuICdyZGV2
+JyBzdGlsbA0KY29udGFpbnMgYSBzdGF0aWNhbGx5IGFsbG9jYXRlZCBiYWRibG9ja3Mgc3RydWN0
+dXJlIChhcyBvcHBvc2VkIHRvDQpnZW5kaXNrLCB3aGljaCBqdXN0IHN0b3JlcyBhIHBvaW50ZXIp
+LiBtZCB1c2VkIHRvIGR5bmFtaWNhbGx5IGFsbG9jYXRlDQp0aGUgc3RvcmFnZSBzcGFjZSBpbnNp
+ZGUgYmFkYmxvY2tzIChiYi0+cGFnZSksIGFuZCB0aGF0IGlzIHN0aWxsIHRoZQ0KY2FzZSB1c2lu
+ZyBiYWRibG9ja3NfaW5pdC4NCg0KCS1WaXNoYWw=
