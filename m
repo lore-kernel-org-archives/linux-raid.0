@@ -1,92 +1,73 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH Resend V2 1/2] md-cluster: Defer MD reloading to mddev->thread
-Date: Sun, 29 Nov 2015 16:57:11 +0800
-Message-ID: <1448787432-4138-1-git-send-email-gqjiang@suse.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH Resend V2 2/2] md-cluster: Protect communication with
+ mutexes (fwd)
+Date: Sun, 29 Nov 2015 07:39:43 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1511290738570.2065@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: neilb@suse.com, linux-raid@vger.kernel.org, rgoldwyn@suse.com, kbuild-all@01.org
 List-Id: linux-raid.ids
 
-Reloading of superblock must be performed under reconfig_mutex. However,
-this cannot be done with md_reload_sb because it would deadlock with
-the message DLM lock. So, we defer it in md_check_recovery() which is
-executed by mddev->thread.
+Looks suspicious.  Please check.
 
-This introduces a new flag, MD_RELOAD_SB, which if set, will reload the
-superblock. And good_device_nr is also added to 'struct mddev' which is
-used to get the num of the good device within cluster raid.
+julia
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---------- Forwarded message ----------
+Date: Sun, 29 Nov 2015 09:17:12 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: kbuild@01.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH Resend V2 2/2] md-cluster: Protect communication with
+    mutexes
+
+CC: kbuild-all@01.org
+In-Reply-To: <1448787432-4138-2-git-send-email-gqjiang@suse.com>
+TO: Guoqing Jiang <gqjiang@suse.com>
+CC: neilb@suse.com
+CC: linux-raid@vger.kernel.org, rgoldwyn@suse.com
+
+Hi Guoqing,
+
+[auto build test WARNING on: md/for-next]
+[also build test WARNING on: next-20151127]
+[cannot apply to: v4.4-rc2]
+
+url:    https://github.com/0day-ci/linux/commits/Guoqing-Jiang/md-cluster-Defer-MD-reloading-to-mddev-thread/20151129-085944
+base:   git://neil.brown.name/md for-next
+:::::: branch date: 17 minutes ago
+:::::: commit date: 17 minutes ago
+
+>> drivers/md/md-cluster.c:530:2-8: preceding lock on line 526
+
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout 7cd1e0cb4a84f8dd6ab7bfdb4a2e1d4eda66ad6d
+vim +530 drivers/md/md-cluster.c
+
+4664680c Goldwyn Rodrigues 2014-06-07  520  	struct md_cluster_info *cinfo = thread->mddev->cluster_info;
+4664680c Goldwyn Rodrigues 2014-06-07  521  	struct dlm_lock_resource *ack_lockres = cinfo->ack_lockres;
+4664680c Goldwyn Rodrigues 2014-06-07  522  	struct dlm_lock_resource *message_lockres = cinfo->message_lockres;
+4664680c Goldwyn Rodrigues 2014-06-07  523  	struct cluster_msg msg;
+b5ef5678 Guoqing Jiang     2015-07-10  524  	int ret;
+4664680c Goldwyn Rodrigues 2014-06-07  525  
+7cd1e0cb Guoqing Jiang     2015-11-29 @526  	mutex_lock(&cinfo->recv_mutex);
+4664680c Goldwyn Rodrigues 2014-06-07  527  	/*get CR on Message*/
+4664680c Goldwyn Rodrigues 2014-06-07  528  	if (dlm_lock_sync(message_lockres, DLM_LOCK_CR)) {
+4664680c Goldwyn Rodrigues 2014-06-07  529  		pr_err("md/raid1:failed to get CR on MESSAGE\n");
+4664680c Goldwyn Rodrigues 2014-06-07 @530  		return;
+4664680c Goldwyn Rodrigues 2014-06-07  531  	}
+4664680c Goldwyn Rodrigues 2014-06-07  532  
+4664680c Goldwyn Rodrigues 2014-06-07  533  	/* read lvb and wake up thread to process this message_lockres */
+
+:::::: The code at line 530 was first introduced by commit
+:::::: 4664680c389828928efc61ce3d2cf2c65ad35c97 Communication Framework: Receiving
+
+:::::: TO: Goldwyn Rodrigues <rgoldwyn@suse.com>
+:::::: CC: Goldwyn Rodrigues <rgoldwyn@suse.com>
+
 ---
-v2 changes: remove atomic and add good_device_nr to struct mddev
-
- drivers/md/md-cluster.c | 4 +++-
- drivers/md/md.c         | 4 ++++
- drivers/md/md.h         | 4 ++++
- 3 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index db9375f..b659ef7 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -432,8 +432,10 @@ static void process_add_new_disk(struct mddev *mddev, struct cluster_msg *cmsg)
- static void process_metadata_update(struct mddev *mddev, struct cluster_msg *msg)
- {
- 	struct md_cluster_info *cinfo = mddev->cluster_info;
--	md_reload_sb(mddev, le32_to_cpu(msg->raid_slot));
-+	mddev->good_device_nr = le32_to_cpu(msg->raid_slot);
-+	set_bit(MD_RELOAD_SB, &mddev->flags);
- 	dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
-+	md_wakeup_thread(mddev->thread);
- }
- 
- static void process_remove_disk(struct mddev *mddev, struct cluster_msg *msg)
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 642c87c..5ee18a0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -8273,6 +8273,7 @@ void md_check_recovery(struct mddev *mddev)
- 		(mddev->flags & MD_UPDATE_SB_FLAGS & ~ (1<<MD_CHANGE_PENDING)) ||
- 		test_bit(MD_RECOVERY_NEEDED, &mddev->recovery) ||
- 		test_bit(MD_RECOVERY_DONE, &mddev->recovery) ||
-+		test_bit(MD_RELOAD_SB, &mddev->flags) ||
- 		(mddev->external == 0 && mddev->safemode == 1) ||
- 		(mddev->safemode == 2 && ! atomic_read(&mddev->writes_pending)
- 		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
-@@ -8321,6 +8322,9 @@ void md_check_recovery(struct mddev *mddev)
- 						rdev->raid_disk < 0)
- 					md_kick_rdev_from_array(rdev);
- 			}
-+
-+			if (test_and_clear_bit(MD_RELOAD_SB, &mddev->flags))
-+				md_reload_sb(mddev, mddev->good_device_nr);
- 		}
- 
- 		if (!mddev->external) {
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index f5b9aad..7a6da5c 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -235,6 +235,9 @@ struct mddev {
- 				 */
- #define MD_JOURNAL_CLEAN 5	/* A raid with journal is already clean */
- #define MD_HAS_JOURNAL	6	/* The raid array has journal feature set */
-+#define MD_RELOAD_SB	7	/* Reload the superblock because another node
-+				 * updated it.
-+				 */
- 
- 	int				suspended;
- 	atomic_t			active_io;
-@@ -465,6 +468,7 @@ struct mddev {
- 	struct work_struct event_work;	/* used by dm to report failure event */
- 	void (*sync_super)(struct mddev *mddev, struct md_rdev *rdev);
- 	struct md_cluster_info		*cluster_info;
-+	unsigned int			good_device_nr;	/* good device num within cluster raid */
- };
- 
- static inline int __must_check mddev_lock(struct mddev *mddev)
--- 
-2.1.4
-
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
