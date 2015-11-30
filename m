@@ -1,65 +1,50 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH V3 2/2] md-cluster: Protect communication with mutexes
-Date: Mon, 30 Nov 2015 11:58:41 +1100
-Message-ID: <87mvtw5mm6.fsf@notabene.neil.brown.name>
-References: <1448787432-4138-2-git-send-email-gqjiang@suse.com> <1448818989-8280-1-git-send-email-gqjiang@suse.com>
+Subject: Re: [PATCH 2/3] md-cluster: introduce clear_clusterinfo_from_sb
+Date: Mon, 30 Nov 2015 12:08:00 +1100
+Message-ID: <87h9k45m6n.fsf@notabene.neil.brown.name>
+References: <1448008525-17095-1-git-send-email-gqjiang@suse.com> <1448008525-17095-2-git-send-email-gqjiang@suse.com> <87y4dk577c.fsf@notabene.neil.brown.name> <5657F227.3030202@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448818989-8280-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <5657F227.3030202@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Guoqing Jiang <gqjiang@suse.com>
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
+Cc: rgoldwyn@suse.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 30 2015, Guoqing Jiang wrote:
+On Fri, Nov 27 2015, Guoqing Jiang wrote:
 
-> +#define		MD_CLUSTER_SEND_LOCK			4
-> +/* If cluster operations must lock the communication channel,
-> + * so as to perform extra operations (and no other operation
-> + * is allowed on the MD, such as adding a disk. Token needs
-> + * to be locked and held until the operation completes with
-> + * a md_update_sb(), which would eventually release the lock.
-> + */
+> Hi Neil,
+>
+> On 11/27/2015 01:42 PM, NeilBrown wrote:
+>> On Fri, Nov 20 2015, Guoqing Jiang <gqjiang@suse.com> wrote:
+>>
+>>> To change the bitmap from clustered to none, we also
+>>> need to clean related info about cluster from sb, such
+>>> as version, nodes and cluster_name.
+>> I've applied the other two (though I removed the __func__ and __LINE__
+>>  From error messages - they are just noise: the source of the message can
+>> easily be found with out them - I should remove all the others).
+>>
+>> However I haven't applied this because there doesn't seem to be any
+>> point.
+>> Once your told that main md superblock that there is no bitmap, it
+>> doesn't really matter what data is in the superblock of that
+>> non-existent bitmap - it will never be looked at.  Will it?
+> mdadm could still get nodes and cluster_name after change
+> bitmap to none, so some cmds like "mdadm -X /dev/sda" could
+> still see clustered info, it seems a little confused for user.
 
-This comment has unbalanced parentheses.  How did it even compile :-)
+In that case we should fix mdadm to not report a bitmap if
+MD_FEATURE_BITMAP_OFFSET isn't set (though maybe still report it if
+--force is given).
 
-But there is something else that isn't as clear as it could be....
+i.e. if this is an issue, it is not specific to clustered-bitmaps.
 
->=20=20
-> @@ -970,14 +1019,18 @@ static int add_new_disk(struct mddev *mddev, struc=
-t md_rdev *rdev)
->  		ret =3D -ENOENT;
->  	if (ret)
->  		unlock_comm(cinfo);
-> -	else
-> +	else {
->  		dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
-> +		set_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
-> +		wake_up(&cinfo->wait);
-> +	}
-
-This code suggests that something has caused a metadata update to be
-triggered.  i.e. something set MD_CHANGE_DEVS or similar.
-That is presumably add_bound_rdev() - which hasn't yet been called, but
-while soon after in add_new_disk().
-
-This feels a little bit fragile.  The new code in md-cluster is only
-correct if code in add_new_disk does a particular thing.  I guess I'd at
-least like to see a comment in add_new_disk() in md-cluster explaining
-what will cause MD_CLUSTE_SEND_LOCKED_ALREADY to eventually be cleared.
-Maybe it could also schedule the MD_CHANGE_DEVS to be completely certain
-that will happen, but that probably isn't necessary.
-
-So I've applied these for now, but if you could fix one comment and add
-another that would help.
-
-Thanks,
 NeilBrown
 
 --=-=-=
@@ -68,18 +53,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWW59BAAoJEDnsnt1WYoG5z7kQAIwksTTH4zedsNZOj0M1d40O
-KqP2gzz7xpZa3epW9Ve4IitxNI2oCxKwzpurqE/tFnDfRTgNridxrUis6oFaZFtj
-8gem3L/6ZLHfI2qIJC7otk+4QGfa8Jari/60fGUIrBOZc+tyrVdWcgFIlOunqsiY
-4RLvmKeRe6Kk+t1xdF8iZ5LZGqRpdquENw2GXrD7H+YCDbmQA0taRYA/QlqbjmtH
-RUCgf9buP7E32W53HRd2tlYexYe5m10JpkzJxXdPaOZqHX9BYUYeHpeHk7y2VdCS
-WDgovKBKB3CUaAmbLzkSwD0iEG6sLZsNzrefNf3cpS0Fpp63o1+C8w2dhl1yxwdd
-vOujMTS0rxrppBzlvIlDJS21mhddNmBvk8eVgdUnUtX1sZKGXMpVZjNBl/rSXxHy
-Q33gVeiSeKmh2QsjDXiNu6rz8ZNTC7EZMkNglkCuSWaX+owKOk83PuP7pE5NsE9p
-J2NeoKjtvJQO/Omq6pFmqzjYQ0+lsVKQpzRyznL+Wmiqx36giGkXmdXKNApipIGn
-t3HMeenZc95eJ4qEIiseyIkQBNv7KP1b0XcSienDQGMIpuEuiTaV40OJqoC03tlB
-qHS9tE+DkiovzcMtNmau/B/yMSmw5cuagiH+dbcauIwebjJoFDAGSCzBzs9OXz/+
-3embGQdqHVg7znkaJvK2
-=O4j0
+iQIcBAEBCAAGBQJWW6FwAAoJEDnsnt1WYoG5K2AQAJKUXKWX+k3O6vsYr5VdU4bW
+MubOMUeY/s4lxtlnJ09VDOSQlBmfjL234yiwrXLkboNb6lBIPkLwDq4b2Si9d+JZ
+xGKM86snvvHxXrRFcSRfQuXWd7TTZPXVPceZ7b26xXGsXozbWCaxqDphha3Uvxcs
+Mo0UgcZTT7NqlnGB8tdC1E2QPCD0uOVFZq3AV6FN5Cc1Z7CifjPYJZykDE8G/lm/
+Yea3QBkq84MP1d4HOxPPPVIgwPAhoVhH1nH4/opieItQR+fPr43VlcOaWn9DWPYJ
+J9tkIefDqGczr4jhR6YmInlYmQUtPP+fN7qi9EYhEJsPWMma2ttHKpkKr/HZXVX1
+3I+q1ha9T2vfQT51Hk18ndYXdJDpOjIr//FtLWRijQNUkXdEClVvne+TXnLKv6tD
+Hv+kEE2+tlC/LM1IPYa/iMBuHQK1X+EBk2M6AUiBnJdRtRsaW8uhb8+OXwPVv4s8
+PjWmH8/WFYy3/iJf0WhlzEnROVbZkE6mUj4SfpOjuoUaebxZKHpYQYYkdFQe0+Mt
+uxr52fIBs4dJl85CQFDjma1f2XoTWVa90TWnextGj/93M3ijgPGOq6eTvKhVN79p
+mN6clkjWDjiMrPjQxq0ujLTztvaNtm7FKHEMQdzaRK/96eyV7ru6czLumAyFnsdf
+K3oyvGyBSoJbYIBh5gCP
+=yFGg
 -----END PGP SIGNATURE-----
 --=-=-=--
