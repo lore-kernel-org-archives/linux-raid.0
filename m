@@ -1,52 +1,37 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: [mdadm PATCH] Grow raid disks without backup file fail
-Date: Tue,  1 Dec 2015 15:42:22 +0800
-Message-ID: <1448955742-8317-1-git-send-email-xni@redhat.com>
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH 1/4] mdadm: let cluster raid could also add disk within incremental mode
+Date: Wed,  2 Dec 2015 00:30:09 +0800
+Message-ID: <1448987412-3932-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.com, linux-raid@vger.kernel.org
+Cc: rgoldwyn@suse.com, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Hi Neil
+For cluster raid, the disc.state need to be changed accordingly under
+incremental mode.
 
-When add one new disk to a raid5 and try to grow the number members,
-it's failed to start reshape.
-
-Because before echo "reshape" to sync_action, raid5d will miss the 
-chance to clear MD_RECOVERY_NEEDED. The method is as same as
-start_reshape.
-
-Signed-off-by : Xiao Ni (xni@redhat.com)
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 ---
- Grow.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ Incremental.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Grow.c b/Grow.c
-index 80d7b22..a5bed3c 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2796,6 +2796,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	int done;
- 	struct mdinfo *sra = NULL;
- 	char buf[20];
-+	int cnt = 5;
- 
- 	/* when reshaping a RAID0, the component_size might be zero.
- 	 * So try to fix that up.
-@@ -3114,7 +3115,12 @@ static int reshape_array(char *container, int fd, char *devname,
- 		if (impose_reshape(sra, info, st, fd, restart,
- 				   devname, container, &reshape) < 0)
- 			goto release;
--		if (sysfs_set_str(sra, NULL, "sync_action", "reshape") < 0) {
-+		do {
-+			err = sysfs_set_str(sra, NULL, "sync_action", "reshape");
-+			if (err)
-+				sleep(1);
-+		} while (err && errno == EBUSY && cnt-- > 0);
-+		if (err < 0) {
- 			struct mdinfo *sd;
- 			if (errno != EINVAL) {
- 				pr_err("Failed to initiate reshape!\n");
+diff --git a/Incremental.c b/Incremental.c
+index 781d27d..7afa7d7 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -444,6 +444,10 @@ int Incremental(struct mddev_dev *devlist, struct context *c,
+ 		/* add disk needs to know about containers */
+ 		if (st->ss->external)
+ 			sra->array.level = LEVEL_CONTAINER;
++
++		if (info.array.state & (1 << MD_SB_CLUSTERED))
++			info.disk.state |= (1 << MD_DISK_CLUSTER_ADD);
++
+ 		err = add_disk(mdfd, st, sra, &info);
+ 		if (err < 0 && errno == EBUSY) {
+ 			/* could be another device present with the same
 -- 
-2.4.3
+2.1.4
 
