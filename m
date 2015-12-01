@@ -1,44 +1,48 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 3/4] mdadm: don't show cluster name once the bitmap is cleared
-Date: Wed,  2 Dec 2015 00:30:11 +0800
-Message-ID: <1448987412-3932-3-git-send-email-gqjiang@suse.com>
-References: <1448987412-3932-1-git-send-email-gqjiang@suse.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH v2 3/3] md: convert to use the generic badblocks code
+Date: Tue, 1 Dec 2015 10:55:18 -0800
+Message-ID: <20151201185518.GA13926@kernel.org>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+ <1448477013-9174-4-git-send-email-vishal.l.verma@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448987412-3932-1-git-send-email-gqjiang@suse.com>
+Content-Disposition: inline
+In-Reply-To: <1448477013-9174-4-git-send-email-vishal.l.verma@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com, linux-raid@vger.kernel.org
-Cc: rgoldwyn@suse.com, Guoqing Jiang <gqjiang@suse.com>
+To: Vishal Verma <vishal.l.verma@intel.com>
+Cc: linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>
 List-Id: linux-raid.ids
 
-Don't show cluster name if bitmap is cleared.
+On Wed, Nov 25, 2015 at 11:43:33AM -0700, Vishal Verma wrote:
+> Retain badblocks as part of rdev, but use the accessor functions from
+> include/linux/badblocks for all manipulation.
+> 
+> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+> ---
+>  drivers/md/md.c | 507 +++-----------------------------------------------------
+>  drivers/md/md.h |  40 +----
+>  2 files changed, 23 insertions(+), 524 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c702de1..63eab20 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -34,6 +34,7 @@
+>  
+>  #include <linux/kthread.h>
+>  #include <linux/blkdev.h>
+> +#include <linux/badblocks.h>
+>  #include <linux/sysctl.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/fs.h>
+> @@ -707,8 +708,7 @@ void md_rdev_clear(struct md_rdev *rdev)
+>  		put_page(rdev->bb_page);
+>  		rdev->bb_page = NULL;
+>  	}
+> -	kfree(rdev->badblocks.page);
+> -	rdev->badblocks.page = NULL;
+> +	badblocks_free(&rdev->badblocks);
+>  }
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- super1.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/super1.c b/super1.c
-index 1735c2d..062d9e7 100644
---- a/super1.c
-+++ b/super1.c
-@@ -324,7 +324,7 @@ static void examine_super1(struct supertype *st, char *homehost)
- 	    strncmp(sb->set_name, homehost, l) == 0)
- 		printf("  (local to host %s)", homehost);
- 	printf("\n");
--	if (bms->nodes > 0)
-+	if (bms->nodes > 0 && (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET))
- 		printf("   Cluster Name : %-64s\n", bms->cluster_name);
- 	atime = __le64_to_cpu(sb->ctime) & 0xFFFFFFFFFFULL;
- 	printf("  Creation Time : %.24s\n", ctime(&atime));
-@@ -780,7 +780,7 @@ static void detail_super1(struct supertype *st, char *homehost)
- 	    sb->set_name[l] == ':' &&
- 	    strncmp(sb->set_name, homehost, l) == 0)
- 		printf("  (local to host %s)", homehost);
--	if (bms->nodes > 0)
-+	if (bms->nodes > 0 && (__le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET))
- 	    printf("\n   Cluster Name : %-64s", bms->cluster_name);
- 	printf("\n           UUID : ");
- 	for (i=0; i<16; i++) {
--- 
-2.1.4
-
+why does rdev have extra badblocks? the gendisk already had one.
