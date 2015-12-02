@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] raid5-cache: simplify r5l_move_io_unit_list
-Date: Wed,  2 Dec 2015 17:06:38 +0100
-Message-ID: <1449072399-15360-2-git-send-email-hch@lst.de>
+Subject: [PATCH 2/2] raid5-cache: free meta_page earlier
+Date: Wed,  2 Dec 2015 17:06:39 +0100
+Message-ID: <1449072399-15360-3-git-send-email-hch@lst.de>
 References: <1449072399-15360-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1449072399-15360-1-git-send-email-hch@lst.de>
@@ -10,71 +10,48 @@ To: shli@fb.com, neilb@suse.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It's only used for one kind of move, so make that explicit.  Also clean
-up the code a bit by using list_for_each_safe.
+Once the I/O completed we don't need the meta page anymore.  As the iounits
+can live on for a long time this reduces memory pressure a bit.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 32 +++++++++++++++-----------------
- 1 file changed, 15 insertions(+), 17 deletions(-)
+ drivers/md/raid5-cache.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index b887e04..3699c47 100644
+index 3699c47..668e973 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -156,21 +156,6 @@ static void r5l_free_io_unit(struct r5l_log *log, struct r5l_io_unit *io)
- 	kmem_cache_free(log->io_kc, io);
+@@ -150,12 +150,6 @@ static bool r5l_has_free_space(struct r5l_log *log, sector_t size)
+ 	return log->device_size > used_size + size;
  }
  
--static void r5l_move_io_unit_list(struct list_head *from, struct list_head *to,
--				  enum r5l_io_unit_state state)
+-static void r5l_free_io_unit(struct r5l_log *log, struct r5l_io_unit *io)
 -{
--	struct r5l_io_unit *io;
--
--	while (!list_empty(from)) {
--		io = list_first_entry(from, struct r5l_io_unit, log_sibling);
--		/* don't change list order */
--		if (io->state >= state)
--			list_move_tail(&io->log_sibling, to);
--		else
--			break;
--	}
+-	__free_page(io->meta_page);
+-	kmem_cache_free(log->io_kc, io);
 -}
 -
  static void __r5l_set_io_unit_state(struct r5l_io_unit *io,
  				    enum r5l_io_unit_state state)
  {
-@@ -206,6 +191,20 @@ static void r5l_log_run_stripes(struct r5l_log *log)
- 	}
- }
+@@ -215,6 +209,7 @@ static void r5l_log_endio(struct bio *bio)
+ 		md_error(log->rdev->mddev, log->rdev);
  
-+static void r5l_move_to_end_ios(struct r5l_log *log)
-+{
-+	struct r5l_io_unit *io, *next;
-+
-+	assert_spin_locked(&log->io_list_lock);
-+
-+	list_for_each_entry_safe(io, next, &log->running_ios, log_sibling) {
-+		/* don't change list order */
-+		if (io->state < IO_UNIT_IO_END)
-+			break;
-+		list_move_tail(&io->log_sibling, &log->io_end_ios);
-+	}
-+}
-+
- static void r5l_log_endio(struct bio *bio)
- {
- 	struct r5l_io_unit *io = bio->bi_private;
-@@ -220,8 +219,7 @@ static void r5l_log_endio(struct bio *bio)
+ 	bio_put(bio);
++	__free_page(io->meta_page);
+ 
  	spin_lock_irqsave(&log->io_list_lock, flags);
  	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
- 	if (log->need_cache_flush)
--		r5l_move_io_unit_list(&log->running_ios, &log->io_end_ios,
--				      IO_UNIT_IO_END);
-+		r5l_move_to_end_ios(log);
- 	else
- 		r5l_log_run_stripes(log);
- 	spin_unlock_irqrestore(&log->io_list_lock, flags);
+@@ -552,7 +547,7 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ 		log->next_cp_seq = io->seq;
+ 
+ 		list_del(&io->log_sibling);
+-		r5l_free_io_unit(log, io);
++		kmem_cache_free(log->io_kc, io);
+ 
+ 		found = true;
+ 	}
 -- 
 1.9.1
 
