@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] raid5-cache: use a mempool for the metadata block
-Date: Wed,  2 Dec 2015 17:10:38 +0100
-Message-ID: <1449072638-15409-3-git-send-email-hch@lst.de>
+Subject: [PATCH 1/2] raid5-cache: use a bio_set
+Date: Wed,  2 Dec 2015 17:10:37 +0100
+Message-ID: <1449072638-15409-2-git-send-email-hch@lst.de>
 References: <1449072638-15409-1-git-send-email-hch@lst.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1449072638-15409-1-git-send-email-hch@lst.de>
@@ -10,77 +10,75 @@ To: shli@fb.com, neilb@suse.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We only have a limited number in flight, so use a page based mempool.
+This allows us to make guaranteed forward progress.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5-cache.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/md/raid5-cache.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index ef59564..2e3f22a 100644
+index 668e973..ef59564 100644
 --- a/drivers/md/raid5-cache.c
 +++ b/drivers/md/raid5-cache.c
-@@ -77,6 +77,7 @@ struct r5l_log {
+@@ -34,6 +34,12 @@
+ #define RECLAIM_MAX_FREE_SPACE (10 * 1024 * 1024 * 2) /* sector */
+ #define RECLAIM_MAX_FREE_SPACE_SHIFT (2)
+ 
++/*
++ * We only need 2 bios per I/O unit to make progress, but ensure we
++ * have a few more available to not get too tight.
++ */
++#define R5L_POOL_SIZE	1024
++
+ struct r5l_log {
+ 	struct md_rdev *rdev;
+ 
+@@ -70,6 +76,7 @@ struct r5l_log {
+ 	struct bio flush_bio;
  
  	struct kmem_cache *io_kc;
- 	struct bio_set *bs;
-+	mempool_t *meta_pool;
++	struct bio_set *bs;
  
  	struct md_thread *reclaim_thread;
  	unsigned long reclaim_target;	/* number of space that need to be
-@@ -216,7 +217,7 @@ static void r5l_log_endio(struct bio *bio)
- 		md_error(log->rdev->mddev, log->rdev);
+@@ -248,7 +255,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
  
- 	bio_put(bio);
--	__free_page(io->meta_page);
-+	mempool_free(io->meta_page, log->meta_pool);
+ static struct bio *r5l_bio_alloc(struct r5l_log *log)
+ {
+-	struct bio *bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
++	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, log->bs);
  
- 	spin_lock_irqsave(&log->io_list_lock, flags);
- 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
-@@ -293,8 +294,9 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	INIT_LIST_HEAD(&io->stripe_list);
- 	io->state = IO_UNIT_RUNNING;
+ 	bio->bi_rw = WRITE;
+ 	bio->bi_bdev = log->rdev->bdev;
+@@ -1153,6 +1160,10 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->io_kc)
+ 		goto io_kc;
  
--	io->meta_page = alloc_page(GFP_NOIO | __GFP_NOFAIL | __GFP_ZERO);
-+	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
- 	block = page_address(io->meta_page);
-+	clear_page(block);
- 	block->magic = cpu_to_le32(R5LOG_MAGIC);
- 	block->version = R5LOG_VERSION;
- 	block->seq = cpu_to_le64(log->seq);
-@@ -1164,6 +1166,10 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	if (!log->bs)
- 		goto io_bs;
- 
-+	log->meta_pool = mempool_create_page_pool(R5L_POOL_SIZE, 0);
-+	if (!log->meta_pool)
-+		goto out_mempool;
++	log->bs = bioset_create(R5L_POOL_SIZE, 0);
++	if (!log->bs)
++		goto io_bs;
 +
  	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
  						 log->rdev->mddev, "reclaim");
  	if (!log->reclaim_thread)
-@@ -1178,9 +1184,12 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 
- 	conf->log = log;
- 	return 0;
-+
+@@ -1170,6 +1181,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
  error:
  	md_unregister_thread(&log->reclaim_thread);
  reclaim_thread:
-+	mempool_destroy(log->meta_pool);
-+out_mempool:
- 	bioset_free(log->bs);
- io_bs:
++	bioset_free(log->bs);
++io_bs:
  	kmem_cache_destroy(log->io_kc);
-@@ -1192,6 +1201,7 @@ io_kc:
+ io_kc:
+ 	kfree(log);
+@@ -1179,6 +1192,7 @@ io_kc:
  void r5l_exit_log(struct r5l_log *log)
  {
  	md_unregister_thread(&log->reclaim_thread);
-+	mempool_destroy(log->meta_pool);
- 	bioset_free(log->bs);
++	bioset_free(log->bs);
  	kmem_cache_destroy(log->io_kc);
  	kfree(log);
+ }
 -- 
 1.9.1
 
