@@ -1,48 +1,40 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Wed, 2 Dec 2015 10:37:25 -0500
-Message-ID: <565F1035.10800@turmel.org>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Wed, 2 Dec 2015 15:37:17 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FDDBDA@CFWEX01.americas.cray.com>
 References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
  <20151202010745.GC9812@www5.open-std.org>
  <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
  <565F03F2.3070803@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+In-Reply-To: <565F03F2.3070803@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>, Dallas Clement <dallas.a.clement@gmail.com>
+To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/02/2015 10:28 AM, Robert Kierski wrote:
-> Thanks for the response.
->=20
-> Nice try... But, the reason I=E2=80=99m using the 3.18.4 kernel is th=
-at it has the parallelization.  I've got group_thread_cnt set to 32.  I=
-'m watching the CPU's with mpstat, and they're pretty much idle.  I'm a=
-lso watching the system traces with perf.  It claims that only 11.9% of=
- my time is spent doing the xor.
-
-Hmm. Ok.
-
-> I've got my CS set at 128k.  I have noticed that if I set the CS to 3=
-2k, the TP is about 2x.  I'm pretty sure the problem is that the 1M wri=
-tes I'm doing are being broken into 4K pages, and then reassembled befo=
-re going to disk.
-
-I think you're right.  What is your stripe cache size?
-
-> Also, this is independent of the IO Scheduler.  I've tried all 3 and =
-got the same results.
-
-If your stripe cache is too small, sequential writes with large chunks
-can exhaust the cache before complete stripes are written, turning all
-of those partial stripe writes into read-modify-write cycles.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SnVzdCBmb3IgY29tcGxldGVuZXNzLi4uIEkgc2hvdWxkIGFsc28gbWVudGlvbiB0aGF0Li4uIA0K
+DQpUaGUgMzIgY29yZSBzeXN0ZW0gaGFzIHRoZSBBVlgyIGV4dGVuc2lvbi4gIEkndmUgdHJpZWQg
+dGhpcyBvbiBhIDEyIENvcmUgc3lzdGVtIHdpdGhvdXQgdGhlIEFWWDIgZXh0ZW5zaW9uLiAgSW4g
+dGhhdCBjYXNlLCBpdCdzIHVzaW5nIFNTRTI0IHRvIGRvIHRoZSB4b3IuDQoNCkkgZ2V0IHByZXR0
+eSBtdWNoIHRoZSBzYW1lIHJlc3VsdHMgb24gZWl0aGVyIHN5c3RlbS4NCg0KQm9iIEtpZXJza2kN
+ClNlbmlvciBTdG9yYWdlIFBlcmZvcm1hbmNlIEVuZ2luZWVyDQpDcmF5IEluYy4NCjM4MCBKYWNr
+c29uIFN0cmVldA0KU3VpdGUgMjEwDQpTdC4gUGF1bCwgTU4gNTUxMDENClRlbGU6IDY1MS05Njct
+OTU5MA0KRmF4OiAgNjUxLTYwNS05MDAxDQpDZWxsOiA2NTEtODkwLTc0NjENCg0KDQotLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUGhpbCBUdXJtZWwgW21haWx0bzpwaGlsaXBAdHVy
+bWVsLm9yZ10gDQpTZW50OiBXZWRuZXNkYXksIERlY2VtYmVyIDAyLCAyMDE1IDg6NDUgQU0NClRv
+OiBSb2JlcnQgS2llcnNraTsgRGFsbGFzIENsZW1lbnQNCkNjOiBsaW51eC1yYWlkQHZnZXIua2Vy
+bmVsLm9yZw0KU3ViamVjdDogUmU6IFJBSUQgNSw2IHNlcXVlbnRpYWwgd3JpdGluZyBzZWVtcyBz
+bG93ZXIgaW4gbmV3ZXIga2VybmVscw0KDQpPbiAxMi8wMi8yMDE1IDA5OjE4IEFNLCBSb2JlcnQg
+S2llcnNraSB3cm90ZToNCj4gU29ycnkuLi4gSSBzaG91bGQgaGF2ZSBtZW50aW9uZWQgdGhhdCBJ
+J20gcnVubmluZyB0aGUgMy4xOC40IGtlcm5lbCANCj4gd2l0aCBhIDMyIGNvcmUgeGVvbiBhbmQg
+MTI4RyBvZiBtZW1vcnkuICBJJ20gbm90IHVzaW5nIGEgRlMsIEknbSBnb2luZyANCj4gZGlyZWN0
+bHkgdG8gdGhlIHJhaWQgYmxvY2sgZGV2aWNlLg0KDQpJJ20gbm90IHN1cmUgaWYgdGhlIHBhcmFs
+bGVsaXphdGlvbiBvZiByYWlkIHBhcml0eSBoYXMgYmVlbiBtZXJnZWQgeWV0LCBidXQgSSdtIHBy
+ZXR0eSBzdXJlIGl0IGlzbid0IGluIDMuMTguICBXaXRoIG9uZSBjb3JlIHRpZWQgdXAgY29tcHV0
+aW5nIHBhcml0eSBhbmQgdGhlIHJlc3QgaWRsZSwgdGhhdCdkIGJlIDk2Ljg3NSUgaWRsZS4NCg0K
+UGhpbA0K
