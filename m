@@ -1,40 +1,102 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Wed, 2 Dec 2015 15:37:17 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FDDBDA@CFWEX01.americas.cray.com>
-References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
- <20151202010745.GC9812@www5.open-std.org>
- <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
- <565F03F2.3070803@turmel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <565F03F2.3070803@turmel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH 00/19] Support fuse mounts in user namespaces
+Date: Wed,  2 Dec 2015 09:40:00 -0600
+Message-ID: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 List-Id: linux-raid.ids
 
-SnVzdCBmb3IgY29tcGxldGVuZXNzLi4uIEkgc2hvdWxkIGFsc28gbWVudGlvbiB0aGF0Li4uIA0K
-DQpUaGUgMzIgY29yZSBzeXN0ZW0gaGFzIHRoZSBBVlgyIGV4dGVuc2lvbi4gIEkndmUgdHJpZWQg
-dGhpcyBvbiBhIDEyIENvcmUgc3lzdGVtIHdpdGhvdXQgdGhlIEFWWDIgZXh0ZW5zaW9uLiAgSW4g
-dGhhdCBjYXNlLCBpdCdzIHVzaW5nIFNTRTI0IHRvIGRvIHRoZSB4b3IuDQoNCkkgZ2V0IHByZXR0
-eSBtdWNoIHRoZSBzYW1lIHJlc3VsdHMgb24gZWl0aGVyIHN5c3RlbS4NCg0KQm9iIEtpZXJza2kN
-ClNlbmlvciBTdG9yYWdlIFBlcmZvcm1hbmNlIEVuZ2luZWVyDQpDcmF5IEluYy4NCjM4MCBKYWNr
-c29uIFN0cmVldA0KU3VpdGUgMjEwDQpTdC4gUGF1bCwgTU4gNTUxMDENClRlbGU6IDY1MS05Njct
-OTU5MA0KRmF4OiAgNjUxLTYwNS05MDAxDQpDZWxsOiA2NTEtODkwLTc0NjENCg0KDQotLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUGhpbCBUdXJtZWwgW21haWx0bzpwaGlsaXBAdHVy
-bWVsLm9yZ10gDQpTZW50OiBXZWRuZXNkYXksIERlY2VtYmVyIDAyLCAyMDE1IDg6NDUgQU0NClRv
-OiBSb2JlcnQgS2llcnNraTsgRGFsbGFzIENsZW1lbnQNCkNjOiBsaW51eC1yYWlkQHZnZXIua2Vy
-bmVsLm9yZw0KU3ViamVjdDogUmU6IFJBSUQgNSw2IHNlcXVlbnRpYWwgd3JpdGluZyBzZWVtcyBz
-bG93ZXIgaW4gbmV3ZXIga2VybmVscw0KDQpPbiAxMi8wMi8yMDE1IDA5OjE4IEFNLCBSb2JlcnQg
-S2llcnNraSB3cm90ZToNCj4gU29ycnkuLi4gSSBzaG91bGQgaGF2ZSBtZW50aW9uZWQgdGhhdCBJ
-J20gcnVubmluZyB0aGUgMy4xOC40IGtlcm5lbCANCj4gd2l0aCBhIDMyIGNvcmUgeGVvbiBhbmQg
-MTI4RyBvZiBtZW1vcnkuICBJJ20gbm90IHVzaW5nIGEgRlMsIEknbSBnb2luZyANCj4gZGlyZWN0
-bHkgdG8gdGhlIHJhaWQgYmxvY2sgZGV2aWNlLg0KDQpJJ20gbm90IHN1cmUgaWYgdGhlIHBhcmFs
-bGVsaXphdGlvbiBvZiByYWlkIHBhcml0eSBoYXMgYmVlbiBtZXJnZWQgeWV0LCBidXQgSSdtIHBy
-ZXR0eSBzdXJlIGl0IGlzbid0IGluIDMuMTguICBXaXRoIG9uZSBjb3JlIHRpZWQgdXAgY29tcHV0
-aW5nIHBhcml0eSBhbmQgdGhlIHJlc3QgaWRsZSwgdGhhdCdkIGJlIDk2Ljg3NSUgaWRsZS4NCg0K
-UGhpbA0K
+These patches implement support for mounting filesystems in user
+namespaces using fuse. I've sent the full set of patches this time
+because I feel that previous discussions could have benefited from more
+context. I've also dropped any patches from my previous postings not
+specifically required for fuse mounts.
+
+These are based on the patches in the for-testing branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/ebiederm/user-namespace.git,
+but I've rebased them onto 4.4-rc3. I've pushed all of this to:
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/linux.git fuse-userns
+
+The patches are organized into three high-level groups.
+
+Patches 1-6 are related to security, adding restrictions for
+unprivileged mounts and updating the LSMs as needed. Patches 1-2
+(checking inode permissions for block device mounts) may not be strictly
+necessary for fuseblk mounts since fuse doesn't do any IO on the block
+device in the kernel, but it still seems like a good idea to fail the
+mount if the user doesn't have the required permissions for the inode
+(though this is a bit misleading with fuse since the mounts are done via
+a suid-root helper).
+
+Patches 7-15 update most of the vfs to translate ids correctly and deal
+with inodes which may have invalid user/group ids. I've omitted patches
+for anything not used by fuse - quota, fs freezing, some helper
+functions, etc. - but if these are wanted for the sake of completeness I
+can include them.
+
+Patches 16-19 update fuse to deal with mounts from non-init pid and user
+namespaces and enable mounting from user namespaces.
+
+Thanks,
+Seth
+
+Andy Lutomirski (1):
+  fs: Treat foreign mounts as nosuid
+
+Seth Forshee (18):
+  block_dev: Support checking inode permissions in lookup_bdev()
+  block_dev: Check permissions towards block device inode when mounting
+  selinux: Add support for unprivileged mounts from user namespaces
+  userns: Replace in_userns with current_in_userns
+  Smack: Handle labels consistently in untrusted mounts
+  fs: Check for invalid i_uid in may_follow_link()
+  cred: Reject inodes with invalid ids in set_create_file_as()
+  fs: Refuse uid/gid changes which don't map into s_user_ns
+  fs: Update posix_acl support to handle user namespace mounts
+  fs: Ensure the mounter of a filesystem is privileged towards its
+    inodes
+  fs: Don't remove suid for CAP_FSETID in s_user_ns
+  fs: Allow superblock owner to access do_remount_sb()
+  fs: Permit FIBMAP for users with CAP_SYS_RAWIO in s_user_ns
+  capabilities: Allow privileged user in s_user_ns to set file caps
+  fuse: Add support for pid namespaces
+  fuse: Support fuse filesystems outside of init_user_ns
+  fuse: Restrict allow_other to the superblock's namespace or a
+    descendant
+  fuse: Allow user namespace mounts
+
+ drivers/md/bcache/super.c       |  2 +-
+ drivers/md/dm-table.c           |  2 +-
+ drivers/mtd/mtdsuper.c          |  2 +-
+ fs/attr.c                       | 11 +++++
+ fs/block_dev.c                  | 18 ++++++--
+ fs/exec.c                       |  2 +-
+ fs/fuse/cuse.c                  |  3 +-
+ fs/fuse/dev.c                   | 26 +++++++++---
+ fs/fuse/dir.c                   | 91 ++++++++++++++++++++++++++--------------
+ fs/fuse/file.c                  | 22 +++++++---
+ fs/fuse/fuse_i.h                | 18 +++++---
+ fs/fuse/inode.c                 | 92 ++++++++++++++++++++++++++++++-----------
+ fs/inode.c                      |  6 ++-
+ fs/ioctl.c                      |  2 +-
+ fs/namei.c                      |  2 +-
+ fs/namespace.c                  | 17 +++++++-
+ fs/posix_acl.c                  | 67 +++++++++++++++++++-----------
+ fs/quota/quota.c                |  2 +-
+ fs/xattr.c                      | 19 ++++++---
+ include/linux/fs.h              |  2 +-
+ include/linux/mount.h           |  1 +
+ include/linux/posix_acl_xattr.h | 17 ++++++--
+ include/linux/uidgid.h          | 10 +++++
+ include/linux/user_namespace.h  |  6 +--
+ kernel/capability.c             | 13 ++++--
+ kernel/cred.c                   |  2 +
+ kernel/user_namespace.c         |  6 +--
+ security/commoncap.c            | 16 ++++---
+ security/selinux/hooks.c        | 25 ++++++++++-
+ security/smack/smack_lsm.c      | 29 ++++++++-----
+ 30 files changed, 386 insertions(+), 145 deletions(-)
+
