@@ -1,84 +1,249 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] raid5-cache: use a bio_set
-Date: Wed,  2 Dec 2015 17:10:37 +0100
-Message-ID: <1449072638-15409-2-git-send-email-hch@lst.de>
-References: <1449072638-15409-1-git-send-email-hch@lst.de>
+From: Tobias Geiger <tobias.geiger@vido.info>
+Subject: RAID6 - "Invalid Argument" / "does not have a valid v1.2 superblock" ?!
+Date: Wed, 02 Dec 2015 18:04:26 +0100
+Message-ID: <207014396.bPZ85pNCfm@t400>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449072638-15409-1-git-send-email-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: shli@fb.com, neilb@suse.com
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This allows us to make guaranteed forward progress.
+Hello,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/raid5-cache.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+i need help assembling my raid6 again:
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 668e973..ef59564 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -34,6 +34,12 @@
- #define RECLAIM_MAX_FREE_SPACE (10 * 1024 * 1024 * 2) /* sector */
- #define RECLAIM_MAX_FREE_SPACE_SHIFT (2)
- 
-+/*
-+ * We only need 2 bios per I/O unit to make progress, but ensure we
-+ * have a few more available to not get too tight.
-+ */
-+#define R5L_POOL_SIZE	1024
-+
- struct r5l_log {
- 	struct md_rdev *rdev;
- 
-@@ -70,6 +76,7 @@ struct r5l_log {
- 	struct bio flush_bio;
- 
- 	struct kmem_cache *io_kc;
-+	struct bio_set *bs;
- 
- 	struct md_thread *reclaim_thread;
- 	unsigned long reclaim_target;	/* number of space that need to be
-@@ -248,7 +255,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
- 
- static struct bio *r5l_bio_alloc(struct r5l_log *log)
- {
--	struct bio *bio = bio_kmalloc(GFP_NOIO | __GFP_NOFAIL, BIO_MAX_PAGES);
-+	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, log->bs);
- 
- 	bio->bi_rw = WRITE;
- 	bio->bi_bdev = log->rdev->bdev;
-@@ -1153,6 +1160,10 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	if (!log->io_kc)
- 		goto io_kc;
- 
-+	log->bs = bioset_create(R5L_POOL_SIZE, 0);
-+	if (!log->bs)
-+		goto io_bs;
-+
- 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
- 						 log->rdev->mddev, "reclaim");
- 	if (!log->reclaim_thread)
-@@ -1170,6 +1181,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- error:
- 	md_unregister_thread(&log->reclaim_thread);
- reclaim_thread:
-+	bioset_free(log->bs);
-+io_bs:
- 	kmem_cache_destroy(log->io_kc);
- io_kc:
- 	kfree(log);
-@@ -1179,6 +1192,7 @@ io_kc:
- void r5l_exit_log(struct r5l_log *log)
- {
- 	md_unregister_thread(&log->reclaim_thread);
-+	bioset_free(log->bs);
- 	kmem_cache_destroy(log->io_kc);
- 	kfree(log);
- }
--- 
-1.9.1
+root@pc:~# mdadm -A /dev/md0 -v  --force /dev/sdd2 /dev/sde2 /dev/sdg2 
+/dev/sdc2 /dev/sdb2 /dev/sdf2 
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdd2 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sde2 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdg2 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdc2 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdb2 is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/sdf2 is identified as a member of /dev/md0, slot 5.
+mdadm: failed to add /dev/sde2 to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdg2 to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdc2 to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdb2 to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdf2 to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdd2 to /dev/md0: Invalid argument
+mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+
+
+dmesg says to this:
+
+[25717.423008] md: md0 stopped.
+[25717.424958] md: sde2 does not have a valid v1.2 superblock, not importing!
+[25717.424989] md: md_import_device returned -22
+[25717.425266] md: sdg2 does not have a valid v1.2 superblock, not importing!
+[25717.425963] md: md_import_device returned -22
+[25717.426847] md: sdc2 does not have a valid v1.2 superblock, not importing!
+[25717.426880] md: md_import_device returned -22
+[25717.427908] md: sdb2 does not have a valid v1.2 superblock, not importing!
+[25717.427952] md: md_import_device returned -22
+[25717.428890] md: sdf2 does not have a valid v1.2 superblock, not importing!
+[25717.428938] md: md_import_device returned -22
+[25717.429668] md: sdd2 does not have a valid v1.2 superblock, not importing!
+[25717.429716] md: md_import_device returned -22
+[25717.430104] md: md0 stopped.
+
+
+but i cant find any problems examining the devices:
+
+
+
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : 02dab3ff:6e36ebf3:2012e2a0:e8b29f3f
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : b75c2285 - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 4
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : c9aaa3e3:00589ba5:be8fe774:362d477a
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 5ba906b9 - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 3
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : 2b4e613e:1a7f062c:f8ba29a9:e5dcfaf8
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : efc7b1df - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 0
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sde2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : e80ba505:cc0b9904:9288c64a:5c289e62
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 9ade0f9a - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 1
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdf2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : f769eefd:bd202fca:50966083:39a25647
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 76100a3c - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 5
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+/dev/sdg2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
+           Name : pc:0  (local to host pc)
+  Creation Time : Fri Sep  5 01:06:21 2014
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
+     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
+  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
+    Data Offset : 198656 sectors
+   Super Offset : 8 sectors
+   Unused Space : before=198568 sectors, after=69263 sectors
+          State : clean
+    Device UUID : 7fad3e2f:85dd6849:127d7d47:58c166dd
+
+    Update Time : Wed Dec  2 10:13:53 2015
+  Bad Block Log : 512 entries available at offset 72 sectors
+       Checksum : 80c71068 - correct
+         Events : 1903827
+
+         Layout : left-symmetric
+     Chunk Size : 4096K
+
+   Device Role : Active device 2
+   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+
+
+except for the Checksum and the Device UUID the output is exactly the same for 
+each device...
+
+
+i really hesitate to "recreate" the array with "--assume-clean", because of 
+the Unused-Space/ArraySize, which i wouldnt know how to reassemble in a  
+"mdadm --create ..." line ...
+
+
+do you have any thoughts on that?
+Thanks very much for your help!
+
+Greetings
+Tobias
+
 
