@@ -1,37 +1,50 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH 12/19] fs: Don't remove suid for CAP_FSETID in s_user_ns
-Date: Wed,  2 Dec 2015 09:40:12 -0600
-Message-ID: <1449070821-73820-13-git-send-email-seth.forshee@canonical.com>
-References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, Seth Forshee <seth.forshee@canonical.com>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Wed, 2 Dec 2015 15:44:40 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+ <20151202010745.GC9812@www5.open-std.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+ <565F03F2.3070803@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+ <565F1035.10800@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <565F1035.10800@turmel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Expand the check in should_remove_suid() to keep privileges for
-CAP_FSETID in s_user_ns rather than init_user_ns.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- fs/inode.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/inode.c b/fs/inode.c
-index 01c036fe1950..3e7c74da9304 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1684,7 +1684,8 @@ int should_remove_suid(struct dentry *dentry)
- 	if (unlikely((mode & S_ISGID) && (mode & S_IXGRP)))
- 		kill |= ATTR_KILL_SGID;
- 
--	if (unlikely(kill && !capable(CAP_FSETID) && S_ISREG(mode)))
-+	if (unlikely(kill && !ns_capable(dentry->d_sb->s_user_ns, CAP_FSETID) &&
-+		     S_ISREG(mode)))
- 		return kill;
- 
- 	return 0;
--- 
-1.9.1
-
+SSd2ZSB0cmllZCBhIHZhcmlldHkgb2Ygc2V0dGluZ3MuLi4gcmFuZ2luZyBmcm9tIDE3IHRvIDMy
+NzY4Lg0KDQpZZXMuLiB3aXRoIHN0cmlwZV9jYWNoZV9zaXplIHNldCB0byAxNywgSSBzZWUgYSBD
+L1Qgb2Ygcm13J3MuICBBbmQgbXkgVFAgZ29lcyBpbiB0aGUgdG9pbGV0IC0tIGV2ZW4gd2l0aCB0
+aGUgUkFNIGRpc2tzLCBJIGdldCBvbmx5IGFib3V0IDMwTS9zLg0KDQpCb2IgS2llcnNraQ0KU2Vu
+aW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2UgRW5naW5lZXINCkNyYXkgSW5jLg0KMzgwIEphY2tzb24g
+U3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQYXVsLCBNTiA1NTEwMQ0KVGVsZTogNjUxLTk2Ny05NTkw
+DQpGYXg6ICA2NTEtNjA1LTkwMDENCkNlbGw6IDY1MS04OTAtNzQ2MQ0KDQoNCi0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBQaGlsIFR1cm1lbCBbbWFpbHRvOnBoaWxpcEB0dXJtZWwu
+b3JnXSANClNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMDIsIDIwMTUgOTozNyBBTQ0KVG86IFJv
+YmVydCBLaWVyc2tpOyBEYWxsYXMgQ2xlbWVudA0KQ2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwu
+b3JnDQpTdWJqZWN0OiBSZTogUkFJRCA1LDYgc2VxdWVudGlhbCB3cml0aW5nIHNlZW1zIHNsb3dl
+ciBpbiBuZXdlciBrZXJuZWxzDQoNCk9uIDEyLzAyLzIwMTUgMTA6MjggQU0sIFJvYmVydCBLaWVy
+c2tpIHdyb3RlOg0KPiBUaGFua3MgZm9yIHRoZSByZXNwb25zZS4NCj4gDQo+IE5pY2UgdHJ5Li4u
+IEJ1dCwgdGhlIHJlYXNvbiBJ4oCZbSB1c2luZyB0aGUgMy4xOC40IGtlcm5lbCBpcyB0aGF0IGl0
+IGhhcyB0aGUgcGFyYWxsZWxpemF0aW9uLiAgSSd2ZSBnb3QgZ3JvdXBfdGhyZWFkX2NudCBzZXQg
+dG8gMzIuICBJJ20gd2F0Y2hpbmcgdGhlIENQVSdzIHdpdGggbXBzdGF0LCBhbmQgdGhleSdyZSBw
+cmV0dHkgbXVjaCBpZGxlLiAgSSdtIGFsc28gd2F0Y2hpbmcgdGhlIHN5c3RlbSB0cmFjZXMgd2l0
+aCBwZXJmLiAgSXQgY2xhaW1zIHRoYXQgb25seSAxMS45JSBvZiBteSB0aW1lIGlzIHNwZW50IGRv
+aW5nIHRoZSB4b3IuDQoNCkhtbS4gT2suDQoNCj4gSSd2ZSBnb3QgbXkgQ1Mgc2V0IGF0IDEyOGsu
+ICBJIGhhdmUgbm90aWNlZCB0aGF0IGlmIEkgc2V0IHRoZSBDUyB0byAzMmssIHRoZSBUUCBpcyBh
+Ym91dCAyeC4gIEknbSBwcmV0dHkgc3VyZSB0aGUgcHJvYmxlbSBpcyB0aGF0IHRoZSAxTSB3cml0
+ZXMgSSdtIGRvaW5nIGFyZSBiZWluZyBicm9rZW4gaW50byA0SyBwYWdlcywgYW5kIHRoZW4gcmVh
+c3NlbWJsZWQgYmVmb3JlIGdvaW5nIHRvIGRpc2suDQoNCkkgdGhpbmsgeW91J3JlIHJpZ2h0LiAg
+V2hhdCBpcyB5b3VyIHN0cmlwZSBjYWNoZSBzaXplPw0KDQo+IEFsc28sIHRoaXMgaXMgaW5kZXBl
+bmRlbnQgb2YgdGhlIElPIFNjaGVkdWxlci4gIEkndmUgdHJpZWQgYWxsIDMgYW5kIGdvdCB0aGUg
+c2FtZSByZXN1bHRzLg0KDQpJZiB5b3VyIHN0cmlwZSBjYWNoZSBpcyB0b28gc21hbGwsIHNlcXVl
+bnRpYWwgd3JpdGVzIHdpdGggbGFyZ2UgY2h1bmtzIGNhbiBleGhhdXN0IHRoZSBjYWNoZSBiZWZv
+cmUgY29tcGxldGUgc3RyaXBlcyBhcmUgd3JpdHRlbiwgdHVybmluZyBhbGwgb2YgdGhvc2UgcGFy
+dGlhbCBzdHJpcGUgd3JpdGVzIGludG8gcmVhZC1tb2RpZnktd3JpdGUgY3ljbGVzLg0K
