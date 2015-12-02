@@ -1,46 +1,48 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Wed, 2 Dec 2015 15:28:28 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Wed, 2 Dec 2015 10:37:25 -0500
+Message-ID: <565F1035.10800@turmel.org>
 References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
  <20151202010745.GC9812@www5.open-std.org>
  <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
  <565F03F2.3070803@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <565F03F2.3070803@turmel.org>
-Content-Language: en-US
+In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>
+To: Robert Kierski <rkierski@cray.com>, Dallas Clement <dallas.a.clement@gmail.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-VGhhbmtzIGZvciB0aGUgcmVzcG9uc2UuDQoNCk5pY2UgdHJ5Li4uIEJ1dCwgdGhlIHJlYXNvbiBJ
-4oCZbSB1c2luZyB0aGUgMy4xOC40IGtlcm5lbCBpcyB0aGF0IGl0IGhhcyB0aGUgcGFyYWxsZWxp
-emF0aW9uLiAgSSd2ZSBnb3QgZ3JvdXBfdGhyZWFkX2NudCBzZXQgdG8gMzIuICBJJ20gd2F0Y2hp
-bmcgdGhlIENQVSdzIHdpdGggbXBzdGF0LCBhbmQgdGhleSdyZSBwcmV0dHkgbXVjaCBpZGxlLiAg
-SSdtIGFsc28gd2F0Y2hpbmcgdGhlIHN5c3RlbSB0cmFjZXMgd2l0aCBwZXJmLiAgSXQgY2xhaW1z
-IHRoYXQgb25seSAxMS45JSBvZiBteSB0aW1lIGlzIHNwZW50IGRvaW5nIHRoZSB4b3IuDQoNCkkn
-dmUgZ290IG15IENTIHNldCBhdCAxMjhrLiAgSSBoYXZlIG5vdGljZWQgdGhhdCBpZiBJIHNldCB0
-aGUgQ1MgdG8gMzJrLCB0aGUgVFAgaXMgYWJvdXQgMnguICBJJ20gcHJldHR5IHN1cmUgdGhlIHBy
-b2JsZW0gaXMgdGhhdCB0aGUgMU0gd3JpdGVzIEknbSBkb2luZyBhcmUgYmVpbmcgYnJva2VuIGlu
-dG8gNEsgcGFnZXMsIGFuZCB0aGVuIHJlYXNzZW1ibGVkIGJlZm9yZSBnb2luZyB0byBkaXNrLg0K
-DQpBbHNvLCB0aGlzIGlzIGluZGVwZW5kZW50IG9mIHRoZSBJTyBTY2hlZHVsZXIuICBJJ3ZlIHRy
-aWVkIGFsbCAzIGFuZCBnb3QgdGhlIHNhbWUgcmVzdWx0cy4NCg0KQm9iIEtpZXJza2kNClNlbmlv
-ciBTdG9yYWdlIFBlcmZvcm1hbmNlIEVuZ2luZWVyDQpDcmF5IEluYy4NCjM4MCBKYWNrc29uIFN0
-cmVldA0KU3VpdGUgMjEwDQpTdC4gUGF1bCwgTU4gNTUxMDENClRlbGU6IDY1MS05NjctOTU5MA0K
-RmF4OiAgNjUxLTYwNS05MDAxDQpDZWxsOiA2NTEtODkwLTc0NjENCg0KDQotLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KRnJvbTogUGhpbCBUdXJtZWwgW21haWx0bzpwaGlsaXBAdHVybWVsLm9y
-Z10gDQpTZW50OiBXZWRuZXNkYXksIERlY2VtYmVyIDAyLCAyMDE1IDg6NDUgQU0NClRvOiBSb2Jl
-cnQgS2llcnNraTsgRGFsbGFzIENsZW1lbnQNCkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9y
-Zw0KU3ViamVjdDogUmU6IFJBSUQgNSw2IHNlcXVlbnRpYWwgd3JpdGluZyBzZWVtcyBzbG93ZXIg
-aW4gbmV3ZXIga2VybmVscw0KDQpPbiAxMi8wMi8yMDE1IDA5OjE4IEFNLCBSb2JlcnQgS2llcnNr
-aSB3cm90ZToNCj4gU29ycnkuLi4gSSBzaG91bGQgaGF2ZSBtZW50aW9uZWQgdGhhdCBJJ20gcnVu
-bmluZyB0aGUgMy4xOC40IGtlcm5lbCANCj4gd2l0aCBhIDMyIGNvcmUgeGVvbiBhbmQgMTI4RyBv
-ZiBtZW1vcnkuICBJJ20gbm90IHVzaW5nIGEgRlMsIEknbSBnb2luZyANCj4gZGlyZWN0bHkgdG8g
-dGhlIHJhaWQgYmxvY2sgZGV2aWNlLg0KDQpJJ20gbm90IHN1cmUgaWYgdGhlIHBhcmFsbGVsaXph
-dGlvbiBvZiByYWlkIHBhcml0eSBoYXMgYmVlbiBtZXJnZWQgeWV0LCBidXQgSSdtIHByZXR0eSBz
-dXJlIGl0IGlzbid0IGluIDMuMTguICBXaXRoIG9uZSBjb3JlIHRpZWQgdXAgY29tcHV0aW5nIHBh
-cml0eSBhbmQgdGhlIHJlc3QgaWRsZSwgdGhhdCdkIGJlIDk2Ljg3NSUgaWRsZS4NCg0KUGhpbA0K
+On 12/02/2015 10:28 AM, Robert Kierski wrote:
+> Thanks for the response.
+>=20
+> Nice try... But, the reason I=E2=80=99m using the 3.18.4 kernel is th=
+at it has the parallelization.  I've got group_thread_cnt set to 32.  I=
+'m watching the CPU's with mpstat, and they're pretty much idle.  I'm a=
+lso watching the system traces with perf.  It claims that only 11.9% of=
+ my time is spent doing the xor.
+
+Hmm. Ok.
+
+> I've got my CS set at 128k.  I have noticed that if I set the CS to 3=
+2k, the TP is about 2x.  I'm pretty sure the problem is that the 1M wri=
+tes I'm doing are being broken into 4K pages, and then reassembled befo=
+re going to disk.
+
+I think you're right.  What is your stripe cache size?
+
+> Also, this is independent of the IO Scheduler.  I've tried all 3 and =
+got the same results.
+
+If your stripe cache is too small, sequential writes with large chunks
+can exhaust the cache before complete stripes are written, turning all
+of those partial stripe writes into read-modify-write cycles.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
