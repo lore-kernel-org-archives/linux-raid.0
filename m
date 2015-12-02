@@ -1,249 +1,70 @@
-From: Tobias Geiger <tobias.geiger@vido.info>
-Subject: RAID6 - "Invalid Argument" / "does not have a valid v1.2 superblock" ?!
-Date: Wed, 02 Dec 2015 18:04:26 +0100
-Message-ID: <207014396.bPZ85pNCfm@t400>
+From: Dallas Clement <dallas.a.clement@gmail.com>
+Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Wed, 2 Dec 2015 13:50:19 -0600
+Message-ID: <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+	<20151202010745.GC9812@www5.open-std.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+	<565F03F2.3070803@turmel.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+	<565F1035.10800@turmel.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+	<565F136F.2090709@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <565F136F.2090709@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On Wed, Dec 2, 2015 at 9:51 AM, Phil Turmel <philip@turmel.org> wrote:
+> On 12/02/2015 10:44 AM, Robert Kierski wrote:
+>> I've tried a variety of settings... ranging from 17 to 32768.
+>>
+>> Yes.. with stripe_cache_size set to 17, I see a C/T of rmw's.  And my TP goes in the toilet -- even with the RAM disks, I get only about 30M/s.
+>
+> Ok.
+>
+> You mentioned you aren't using a filesystem.  How are you testing?
+>
+> Phil
+>
+> ps. convention on kernel.org is to trim replies and bottom-post, or
+> interleave.  Please do.
 
-i need help assembling my raid6 again:
+Thank you all for your responses.
 
-root@pc:~# mdadm -A /dev/md0 -v  --force /dev/sdd2 /dev/sde2 /dev/sdg2 
-/dev/sdc2 /dev/sdb2 /dev/sdf2 
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdd2 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sde2 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdg2 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdc2 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdb2 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdf2 is identified as a member of /dev/md0, slot 5.
-mdadm: failed to add /dev/sde2 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdg2 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdc2 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdb2 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdf2 to /dev/md0: Invalid argument
-mdadm: failed to add /dev/sdd2 to /dev/md0: Invalid argument
-mdadm: failed to RUN_ARRAY /dev/md0: Invalid argument
+Keld,
 
+> Did you test the performance of other raid types, such as RAID1 and the various layouts of RAID10 for the newer kernels?
 
-dmesg says to this:
+I did try RAID 1 but not RAID 10.  With RAID 1 I am seeing much higher
+average and peak wMB/s and disk utilization than with RAID 5 and 6.
+Though I need to run some more tests to compare the performance of
+newer kernels with the 2.6.39.4 kernel.  Will report on that a bit
+later.
 
-[25717.423008] md: md0 stopped.
-[25717.424958] md: sde2 does not have a valid v1.2 superblock, not importing!
-[25717.424989] md: md_import_device returned -22
-[25717.425266] md: sdg2 does not have a valid v1.2 superblock, not importing!
-[25717.425963] md: md_import_device returned -22
-[25717.426847] md: sdc2 does not have a valid v1.2 superblock, not importing!
-[25717.426880] md: md_import_device returned -22
-[25717.427908] md: sdb2 does not have a valid v1.2 superblock, not importing!
-[25717.427952] md: md_import_device returned -22
-[25717.428890] md: sdf2 does not have a valid v1.2 superblock, not importing!
-[25717.428938] md: md_import_device returned -22
-[25717.429668] md: sdd2 does not have a valid v1.2 superblock, not importing!
-[25717.429716] md: md_import_device returned -22
-[25717.430104] md: md0 stopped.
+Roman,
 
+> Do you use a write intent bitmap (internal?), what is your bitmap chunk size?
 
-but i cant find any problems examining the devices:
+Yes, I do.  After reading up on this, I see that it can negatively
+affect write performance.  The bitmap chunk size is 67108864.
 
+> What is your stripe_cache_size set to?
 
+strip_cache_size is 8192
 
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
+Robert, like you I am observing that my CPU is mostly idle during RAID
+5 or 6 write testing.  Something else is throttling the traffic.  Not
+sure if there is some threshold crossing i.e. queue size, await time
+etc that is causing this or if it is implementation problem.
 
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : 02dab3ff:6e36ebf3:2012e2a0:e8b29f3f
+I understand that the stripe cache grows dynamically in >= 4.1
+kernels.   Fwiw, adjusting the stripe cache made no difference in my
+results.
 
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : b75c2285 - correct
-         Events : 1903827
+Regards,
 
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 4
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : c9aaa3e3:00589ba5:be8fe774:362d477a
-
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 5ba906b9 - correct
-         Events : 1903827
-
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 3
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : 2b4e613e:1a7f062c:f8ba29a9:e5dcfaf8
-
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : efc7b1df - correct
-         Events : 1903827
-
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 0
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sde2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : e80ba505:cc0b9904:9288c64a:5c289e62
-
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 9ade0f9a - correct
-         Events : 1903827
-
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 1
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdf2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : f769eefd:bd202fca:50966083:39a25647
-
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 76100a3c - correct
-         Events : 1903827
-
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 5
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdg2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 078883e8:30c2ebe6:87576034:e85737b8
-           Name : pc:0  (local to host pc)
-  Creation Time : Fri Sep  5 01:06:21 2014
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 7813699215 (3725.86 GiB 4000.61 GB)
-     Array Size : 15627124736 (14903.19 GiB 16002.18 GB)
-  Used Dev Size : 7813562368 (3725.80 GiB 4000.54 GB)
-    Data Offset : 198656 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=198568 sectors, after=69263 sectors
-          State : clean
-    Device UUID : 7fad3e2f:85dd6849:127d7d47:58c166dd
-
-    Update Time : Wed Dec  2 10:13:53 2015
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : 80c71068 - correct
-         Events : 1903827
-
-         Layout : left-symmetric
-     Chunk Size : 4096K
-
-   Device Role : Active device 2
-   Array State : AAAAAA ('A' == active, '.' == missing, 'R' == replacing)
-
-
-
-except for the Checksum and the Device UUID the output is exactly the same for 
-each device...
-
-
-i really hesitate to "recreate" the array with "--assume-clean", because of 
-the Unused-Space/ArraySize, which i wouldnt know how to reassemble in a  
-"mdadm --create ..." line ...
-
-
-do you have any thoughts on that?
-Thanks very much for your help!
-
-Greetings
-Tobias
-
-
+Dallas
