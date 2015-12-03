@@ -1,65 +1,72 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Thu, 3 Dec 2015 10:04:08 -0500
-Message-ID: <566059E8.60804@turmel.org>
-References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
- <20151202010745.GC9812@www5.open-std.org>
- <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
- <565F03F2.3070803@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
- <565F1035.10800@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
- <565F136F.2090709@turmel.org>
- <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
- <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] [PATCH 0/2] Introduce the request handling for
+ dm-crypt
+Date: Thu, 3 Dec 2015 10:47:14 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1512031039001.15134@file01.intranet.prod.int.rdu2.redhat.com>
+References: <cover.1447233227.git.baolin.wang@linaro.org> <20151111181813.GD12236@redhat.com> <CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com> <20151112100422.GM12392@sirena.org.uk> <5644AFA2.6040201@kernel.dk> <20151113115144.GR12392@sirena.org.uk>
+ <CAMz4kuLTuY5CpTfW4Gijesy1Pp9PxbWj076XeoV24Hj3EydifQ@mail.gmail.com> <20151202195657.GB11127@agk-dp.fab.redhat.com> <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
+In-Reply-To: <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Baolin Wang <baolin.wang@linaro.org>
+Cc: Mark Brown <broonie@kernel.org>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, "Garg, Dinesh" <dineshg@quicinc.com>, tj@kernel.org, bart.vanassche@sandisk.com, jmoyer@redhat.com, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On 12/03/2015 09:19 AM, Robert Kierski wrote:
-> Phil,
+
+
+On Thu, 3 Dec 2015, Baolin Wang wrote:
+
+> On 3 December 2015 at 03:56, Alasdair G Kergon <agk@redhat.com> wrote:
+> > On Wed, Dec 02, 2015 at 08:46:54PM +0800, Baolin Wang wrote:
+> >> These are the benchmarks for request based dm-crypt. Please check it.
+> >
+> > Now please put request-based dm-crypt completely to one side and focus
+> > just on the existing bio-based code.  Why is it slower and what can be
+> > adjusted to improve this?
+> >
 > 
-> I have a variety of testing tools that I use to corroborate the results of the others.  So... IOR, XDD, fio, iozone, (and dd when I need something simple).  Each of those can be run with a variety of options that simulate what an FS will submit to the block layer without adding the complexity, overhead, and uncertainty that an FS brings to the table.  I've run the same tools through an FS, and found that at the bottom end of things, I can configure those tools to do exactly what the FS does... only when I'm looking at the traces, I don't have to scan past 100K lines while the FS is dealing with inodes, privileges, and other meta data.
+> OK. I think I find something need to be point out.
+> 1. From the IO block size test in the performance report, for the
+> request based, we can find it can not get the corresponding
+> performance if we just expand the IO size. Because In dm crypt, it
+> will map the data buffer of one request with scatterlists, and send
+> all scatterlists of one request to the encryption engine to encrypt or
+> decrypt.  I found if the scatterlist list number is small and each
+> scatterlist length is bigger, it will improve the encryption speed,
 
-Ok.  Please cite the tool when you give a performance number, please.
+This optimization is only applicable to XTS mode. XTS has its weaknesses 
+and it is not recommended for encryption of more than 1TB of data 
+( http://grouper.ieee.org/groups/1619/email/msg02357.html )
 
-> But to more precisely answer your question... as an example, if I'm using dd, I give this command:
+You can optimize bio-based dm-crypt as well (use larger encryption chunk 
+than 512 bytes when the mode is XTS).
+
+The most commonly used mode aes-cbc-essiv:sha256 can't be optimized that 
+way. You have to do encryption and decryption sector by sector because 
+every sector has different IV.
+
+Mikulas
+
+
+> that helps the engine palys best performance. But a big IO size does
+> not mean bigger scatterlists (maybe many scatterlists with small
+> length), that's why we can not get the corresponding performance if we
+> just expand the IO size I think.
 > 
-> dd if=/dev/zero of=/dev/md0 bs=1M oflag=direct
-
-Why oflag=direct ?  And what do you get without it?
-
-> Where /dev/md0 is the raid device I've configured.
+> 2. Why bio based is slower?
+> If you understand 1, you can obviously understand the crypto engine
+> likes bigger scatterlists to improve the performance. But for bio
+> based, it only send one scatterlist (the scatterlist's length is
+> always '1 << SECTOR_SHIFT' = 512) to the crypto engine at one time. It
+> means if the bio size is 1M, the bio based will send 2048 times (evey
+> time the only one scatterlist length is 512 bytes) to crypto engine to
+> handle, which is more time-consuming and ineffective for the crypto
+> engine. But for request based, it can map the whole request with many
+> scatterlists (not just one scatterlist), and send all the scatterlists
+> to the crypto engine which can improve the performance, is it right?
 > 
-> I don't use bitmaps, I've configured my raid using "--bitmap=none" and confirmed that mdadmin sees that there is no bitmap.  I don't have alignment issues as my ramdisk has 512byte sectors.  If something is somehow aligning things off 512byte boundaries when doing 1m writes.... I would be surprised.  Also... I verified that the data written to disk falls at the boundaries I'm expecting.
+> Another optimization solution I think is we can expand the scatterlist
+> entry number for bio based.
 
-Ok.  I wasn't concerned about sector size.  I was concerned about writes
-not filling complete stripes in a single IO.  Writes to parity raid are
-broken up into 4k blocks in the stripe cache for parity calculation.
-Each block in that stripe is separated from its mates by the chunk size.
- If you don't write to all of them before the state machine decides to
-compute, the parity devices will be read to perform RMW cycles (or the
-other data members will be read to recompute from scratch).  Either way,
-when the 4k blocks are then written from the stripe, they have to have a
-chance to get merged again.
-
-> I tried RAID0 and got performance that is similar to what I was expecting -- 38G/s doing the writes.
-
-Yep, those 1M writes are broken into chunk-sized writes for each member
-and submitted as is.  Raid456 breaks those down further for parity
-calculation.
-
-So, you probably have found a bug in post-stripe merging.  Possibly due
-to the extreme low latency of a ramdisk.  Possibly an O_DIRECT side
-effect.  There's been a lot of work on parity raid in the past couple
-years, both fixing bugs and adding features.
-
-Sounds like time to bisect to locate the patches that make step changes
-in performance on your specific hardware.
-
-Phil
