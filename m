@@ -1,80 +1,51 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [dm-devel] [PATCH 0/2] Introduce the request handling for dm-crypt
-Date: Thu, 3 Dec 2015 10:56:21 +0800
-Message-ID: <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
-References: <cover.1447233227.git.baolin.wang@linaro.org>
-	<20151111181813.GD12236@redhat.com>
-	<CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com>
-	<20151112100422.GM12392@sirena.org.uk>
-	<5644AFA2.6040201@kernel.dk>
-	<20151113115144.GR12392@sirena.org.uk>
-	<CAMz4kuLTuY5CpTfW4Gijesy1Pp9PxbWj076XeoV24Hj3EydifQ@mail.gmail.com>
-	<20151202195657.GB11127@agk-dp.fab.redhat.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Wed, 2 Dec 2015 23:30:00 -0500
+Message-ID: <565FC548.1060302@turmel.org>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+ <20151202010745.GC9812@www5.open-std.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+ <565F03F2.3070803@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+ <565F1035.10800@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+ <565F136F.2090709@turmel.org>
+ <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+ <CAE9DZUR=w9gbyqm0NzqrKk-G-mT3vd9Py54uEps7fpxC4LMBhg@mail.gmail.com>
+ <565FA66C.8060907@turmel.org>
+ <CAE9DZUSRZ=bsga0G1UvfL3Dj-4W0ihXgOF=Ppqv=5-vz2+kAoQ@mail.gmail.com>
+ <CAE9DZURYwqnMtbhRXVvdqoL5watEyiT8Ct9w1D_Fkr4kzyvPKw@mail.gmail.com>
+ <565FAB29.9060405@turmel.org>
+ <CAE9DZUQhwXYOA1mMOQX4UjPCBiRJuVKRf1woVmuW1RWO4WzL5Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151202195657.GB11127@agk-dp.fab.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>, Mark Brown <broonie@kernel.org>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, "Garg, Dinesh" <dineshg@quicinc.com>, tj@kernel.org, bart.vanassche@sandisk.com, jmoyer@redhat.com, Alasdair G Kergon <agk@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAE9DZUQhwXYOA1mMOQX4UjPCBiRJuVKRf1woVmuW1RWO4WzL5Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dallas Clement <dallas.a.clement@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 3 December 2015 at 03:56, Alasdair G Kergon <agk@redhat.com> wrote:
-> On Wed, Dec 02, 2015 at 08:46:54PM +0800, Baolin Wang wrote:
->> These are the benchmarks for request based dm-crypt. Please check it.
->
-> Now please put request-based dm-crypt completely to one side and focus
-> just on the existing bio-based code.  Why is it slower and what can be
-> adjusted to improve this?
->
+On 12/02/2015 09:51 PM, Dallas Clement wrote:
+> On Wed, Dec 2, 2015 at 8:38 PM, Phil Turmel <philip@turmel.org> wrote:
+>> On 12/02/2015 09:33 PM, Dallas Clement wrote:
+>>
+>>> I'm not sure that the sync=1 has any effect in this case where I've
+>>> got direct=1 set (for non buffered I/O).  I think the sync=1 flag only
+>>> matters for buffered I/O.  I really shouldn't be setting that flag at
+>>> all.
+>>
+>> It's substantially different from direct=1.  O_DIRECT just bypasses the
+>> kernel's caches.  O_SYNC flushes the file data and filesystem metadata,
+>> and kills the device caches and queues.
+> 
+> Isn't O_SYNC only applicable for buffered I/O or going through the
+> kernel caches?  If I'm using O_DIRECT, seems like it should just
+> ignore this flag.
 
-OK. I think I find something need to be point out.
-1. From the IO block size test in the performance report, for the
-request based, we can find it can not get the corresponding
-performance if we just expand the IO size. Because In dm crypt, it
-will map the data buffer of one request with scatterlists, and send
-all scatterlists of one request to the encryption engine to encrypt or
-decrypt.  I found if the scatterlist list number is small and each
-scatterlist length is bigger, it will improve the encryption speed,
-that helps the engine palys best performance. But a big IO size does
-not mean bigger scatterlists (maybe many scatterlists with small
-length), that's why we can not get the corresponding performance if we
-just expand the IO size I think.
+O_SYNC is orthogonal to whether the kernel caches are involved.  It is
+about ensuring that data *and* metadata are safely written all the way
+to permanent media.
 
-2. Why bio based is slower?
-If you understand 1, you can obviously understand the crypto engine
-likes bigger scatterlists to improve the performance. But for bio
-based, it only send one scatterlist (the scatterlist's length is
-always '1 << SECTOR_SHIFT' = 512) to the crypto engine at one time. It
-means if the bio size is 1M, the bio based will send 2048 times (evey
-time the only one scatterlist length is 512 bytes) to crypto engine to
-handle, which is more time-consuming and ineffective for the crypto
-engine. But for request based, it can map the whole request with many
-scatterlists (not just one scatterlist), and send all the scatterlists
-to the crypto engine which can improve the performance, is it right?
-
-Another optimization solution I think is we can expand the scatterlist
-entry number for bio based.
-
-> People aren't going to take a request-based solution seriously until
-> you can explain in full detail *why* bio-based is slower AND why it's
-> impossible to improve its performance.
->
->> For request based things, some sequential bios/requests can merged
->> into one request to expand the IO size to be a big block handled by
->> hardware engine at one time.
->
-> Bio-based also merges I/O so that does not provide justification.
-> Investigate in much more detail the actual merging and scheduling
-> involved in the cases you need to optimise.  See if blktrace gives you
-> any clues, or add your own instrumentation.  You could even look at some
-> of the patches we've had in the list archives for optimising bio-based
-> crypt in different situations.
->
-> Alasdair
->
-
-
-
--- 
-Baolin.wang
-Best Regards
+Phil
