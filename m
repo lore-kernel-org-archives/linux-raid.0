@@ -1,46 +1,99 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 1/2] raid5-cache: use a bio_set
-Date: Wed, 2 Dec 2015 21:01:05 -0800
-Message-ID: <20151203050056.GC3111265@devbig084.prn1.facebook.com>
-References: <1449072638-15409-1-git-send-email-hch@lst.de>
- <1449072638-15409-2-git-send-email-hch@lst.de>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [dm-devel] [PATCH 0/2] Introduce the request handling for dm-crypt
+Date: Thu, 3 Dec 2015 18:36:41 +0800
+Message-ID: <CAMz4ku+5HpOJfqTd0C0i0_SMODFZw38dKqwK15Db4U37VNDVeg@mail.gmail.com>
+References: <cover.1447233227.git.baolin.wang@linaro.org>
+	<20151111181813.GD12236@redhat.com>
+	<CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com>
+	<20151112100422.GM12392@sirena.org.uk>
+	<5644AFA2.6040201@kernel.dk>
+	<20151113115144.GR12392@sirena.org.uk>
+	<CAMz4kuLTuY5CpTfW4Gijesy1Pp9PxbWj076XeoV24Hj3EydifQ@mail.gmail.com>
+	<20151202195657.GB11127@agk-dp.fab.redhat.com>
+	<CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1449072638-15409-2-git-send-email-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: neilb@suse.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baolin Wang <baolin.wang@linaro.org>, Mark Brown <broonie@kernel.org>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, "Garg, Dinesh" <dineshg@quicinc.com>, tj@kernel.org, bart.vanassche@sandisk.com, jmoyer@redhat.com, Alasdair G Kergon <agk@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, Dec 02, 2015 at 05:10:37PM +0100, Christoph Hellwig wrote:
-> This allows us to make guaranteed forward progress.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/raid5-cache.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 668e973..ef59564 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
-> @@ -34,6 +34,12 @@
->  #define RECLAIM_MAX_FREE_SPACE (10 * 1024 * 1024 * 2) /* sector */
->  #define RECLAIM_MAX_FREE_SPACE_SHIFT (2)
->  
-> +/*
-> + * We only need 2 bios per I/O unit to make progress, but ensure we
-> + * have a few more available to not get too tight.
-> + */
-> +#define R5L_POOL_SIZE	1024
+On 3 December 2015 at 10:56, Baolin Wang <baolin.wang@linaro.org> wrote:
+> On 3 December 2015 at 03:56, Alasdair G Kergon <agk@redhat.com> wrote:
+>> On Wed, Dec 02, 2015 at 08:46:54PM +0800, Baolin Wang wrote:
+>>> These are the benchmarks for request based dm-crypt. Please check it.
+>>
+>> Now please put request-based dm-crypt completely to one side and focus
+>> just on the existing bio-based code.  Why is it slower and what can be
+>> adjusted to improve this?
+>>
+>
+> OK. I think I find something need to be point out.
+> 1. From the IO block size test in the performance report, for the
+> request based, we can find it can not get the corresponding
+> performance if we just expand the IO size. Because In dm crypt, it
+> will map the data buffer of one request with scatterlists, and send
+> all scatterlists of one request to the encryption engine to encrypt or
+> decrypt.  I found if the scatterlist list number is small and each
+> scatterlist length is bigger, it will improve the encryption speed,
+> that helps the engine palys best performance. But a big IO size does
+> not mean bigger scatterlists (maybe many scatterlists with small
+> length), that's why we can not get the corresponding performance if we
+> just expand the IO size I think.
+>
+> 2. Why bio based is slower?
+> If you understand 1, you can obviously understand the crypto engine
+> likes bigger scatterlists to improve the performance. But for bio
+> based, it only send one scatterlist (the scatterlist's length is
+> always '1 << SECTOR_SHIFT' = 512) to the crypto engine at one time. It
+> means if the bio size is 1M, the bio based will send 2048 times (evey
+> time the only one scatterlist length is 512 bytes) to crypto engine to
+> handle, which is more time-consuming and ineffective for the crypto
+> engine. But for request based, it can map the whole request with many
+> scatterlists (not just one scatterlist), and send all the scatterlists
+> to the crypto engine which can improve the performance, is it right?
+>
+> Another optimization solution I think is we can expand the scatterlist
+> entry number for bio based.
+>
 
-Looks reasonable, the recent arbitrary size bio makes things simpler. I
-think we don't need to be that conservative. One metadata page can hold
-at most
-(PAGE_SIZE - sizeof(struct r5l_meta_block)) / sizeof(struct r5l_payload_data_parity)
-pages.
+I did some testing about my assumption of expanding the scatterlist
+entry number for bio based. I did some modification for the bio based
+to support multiple scatterlists, then it will get the same
+performance as the request based things.
 
-Thanks,
-Shaohua
+1. bio based with expanding the scatterlist entry
+time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
+1073741824 bytes (1.1 GB) copied, 94.5458 s, 11.4 MB/s
+real    1m34.562s
+user    0m0.030s
+sys     0m3.850s
+
+2. Sequential read 1G with requset based:
+time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
+1073741824 bytes (1.1 GB) copied, 94.8922 s, 11.3 MB/s
+real    1m34.908s
+user    0m0.030s
+sys     0m4.000s
+
+From the data, we can find the bio based also can get the same
+performance as the request based. So if someone still don't like the
+request based things, I think we can optimize the bio based by
+expanding the scatterlists number. Thanks.
+
+>>
+>> Alasdair
+>>
+>
+>
+>
+> --
+> Baolin.wang
+> Best Regards
+
+
+
+-- 
+Baolin.wang
+Best Regards
