@@ -1,82 +1,26 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [PATCH 0/2] Introduce the request handling for
- dm-crypt
-Date: Thu, 3 Dec 2015 10:49:30 -0500 (EST)
-Message-ID: <alpine.LRH.2.02.1512031047340.15134@file01.intranet.prod.int.rdu2.redhat.com>
-References: <cover.1447233227.git.baolin.wang@linaro.org> <20151111181813.GD12236@redhat.com> <CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com> <20151112100422.GM12392@sirena.org.uk> <5644AFA2.6040201@kernel.dk> <20151113115144.GR12392@sirena.org.uk>
- <CAMz4kuLTuY5CpTfW4Gijesy1Pp9PxbWj076XeoV24Hj3EydifQ@mail.gmail.com> <20151202195657.GB11127@agk-dp.fab.redhat.com> <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com> <CAMz4ku+5HpOJfqTd0C0i0_SMODFZw38dKqwK15Db4U37VNDVeg@mail.gmail.com>
+From: Weedy <weedy2887@gmail.com>
+Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Thu, 3 Dec 2015 17:21:14 -0500
+Message-ID: <CAFE24U2hVOxhUga6c4zbx2+w-Q=VO8A83iv7eeERWwcam+MGyA@mail.gmail.com>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+ <20151202010745.GC9812@www5.open-std.org> <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+ <565F03F2.3070803@turmel.org> <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+ <565F1035.10800@turmel.org> <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+ <565F136F.2090709@turmel.org> <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+ <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com> <566059E8.60804@turmel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMz4ku+5HpOJfqTd0C0i0_SMODFZw38dKqwK15Db4U37VNDVeg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>
-Cc: Mark Brown <broonie@kernel.org>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, "Garg, Dinesh" <dineshg@quicinc.com>, tj@kernel.org, bart.vanassche@sandisk.com, jmoyer@redhat.com, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <566059E8.60804@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Robert Kierski <rkierski@cray.com>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This is a bit off topic for this thread but is this tuning info on one
+of the wiki's.
+I mean tuning all the caches and whether you should have bitmaps on or off.
 
-
-On Thu, 3 Dec 2015, Baolin Wang wrote:
-
-> On 3 December 2015 at 10:56, Baolin Wang <baolin.wang@linaro.org> wrote:
-> > On 3 December 2015 at 03:56, Alasdair G Kergon <agk@redhat.com> wrote:
-> >> On Wed, Dec 02, 2015 at 08:46:54PM +0800, Baolin Wang wrote:
-> >>> These are the benchmarks for request based dm-crypt. Please check it.
-> >>
-> >> Now please put request-based dm-crypt completely to one side and focus
-> >> just on the existing bio-based code.  Why is it slower and what can be
-> >> adjusted to improve this?
-> >>
-> >
-> > OK. I think I find something need to be point out.
-> > 1. From the IO block size test in the performance report, for the
-> > request based, we can find it can not get the corresponding
-> > performance if we just expand the IO size. Because In dm crypt, it
-> > will map the data buffer of one request with scatterlists, and send
-> > all scatterlists of one request to the encryption engine to encrypt or
-> > decrypt.  I found if the scatterlist list number is small and each
-> > scatterlist length is bigger, it will improve the encryption speed,
-> > that helps the engine palys best performance. But a big IO size does
-> > not mean bigger scatterlists (maybe many scatterlists with small
-> > length), that's why we can not get the corresponding performance if we
-> > just expand the IO size I think.
-> >
-> > 2. Why bio based is slower?
-> > If you understand 1, you can obviously understand the crypto engine
-> > likes bigger scatterlists to improve the performance. But for bio
-> > based, it only send one scatterlist (the scatterlist's length is
-> > always '1 << SECTOR_SHIFT' = 512) to the crypto engine at one time. It
-> > means if the bio size is 1M, the bio based will send 2048 times (evey
-> > time the only one scatterlist length is 512 bytes) to crypto engine to
-> > handle, which is more time-consuming and ineffective for the crypto
-> > engine. But for request based, it can map the whole request with many
-> > scatterlists (not just one scatterlist), and send all the scatterlists
-> > to the crypto engine which can improve the performance, is it right?
-> >
-> > Another optimization solution I think is we can expand the scatterlist
-> > entry number for bio based.
-> >
-> 
-> I did some testing about my assumption of expanding the scatterlist
-> entry number for bio based. I did some modification for the bio based
-> to support multiple scatterlists, then it will get the same
-> performance as the request based things.
-> 
-> 1. bio based with expanding the scatterlist entry
-> time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
-> 1073741824 bytes (1.1 GB) copied, 94.5458 s, 11.4 MB/s
-> real    1m34.562s
-> user    0m0.030s
-> sys     0m3.850s
-> 
-> 2. Sequential read 1G with requset based:
-> time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
-> 1073741824 bytes (1.1 GB) copied, 94.8922 s, 11.3 MB/s
-> real    1m34.908s
-> user    0m0.030s
-> sys     0m4.000s
-
-Measuring the system time this way is completely wrong because it doesn't 
-account for the time spent in kernel threads.
-
-Mikulas
+I'm going to build a new raid 5 (possibly raid 6) soon and would like
+to saturate gigabit line.
+I'd like to get my caches and stripes setup right for a 4 or 6 disk array.
