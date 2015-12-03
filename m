@@ -1,54 +1,41 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Thu, 3 Dec 2015 14:19:07 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Thu, 3 Dec 2015 09:37:52 -0500
+Message-ID: <566053C0.4060706@turmel.org>
 References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
-	<20151202010745.GC9812@www5.open-std.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
-	<565F03F2.3070803@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
-	<565F1035.10800@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
-	<565F136F.2090709@turmel.org>
+ <20151202010745.GC9812@www5.open-std.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+ <565F03F2.3070803@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+ <565F1035.10800@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+ <565F136F.2090709@turmel.org>
  <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+ <CAE9DZUR=w9gbyqm0NzqrKk-G-mT3vd9Py54uEps7fpxC4LMBhg@mail.gmail.com>
+ <565FA66C.8060907@turmel.org>
+ <CAE9DZUSRZ=bsga0G1UvfL3Dj-4W0ihXgOF=Ppqv=5-vz2+kAoQ@mail.gmail.com>
+ <CAE9DZURYwqnMtbhRXVvdqoL5watEyiT8Ct9w1D_Fkr4kzyvPKw@mail.gmail.com>
+ <565FAB29.9060405@turmel.org>
+ <CAE9DZUQhwXYOA1mMOQX4UjPCBiRJuVKRf1woVmuW1RWO4WzL5Q@mail.gmail.com>
+ <565FC548.1060302@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDF2F@CFWEX01.americas.cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FDDF2F@CFWEX01.americas.cray.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Robert Kierski <rkierski@cray.com>, Dallas Clement <dallas.a.clement@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-UGhpbCwNCg0KSSBoYXZlIGEgdmFyaWV0eSBvZiB0ZXN0aW5nIHRvb2xzIHRoYXQgSSB1c2UgdG8g
-Y29ycm9ib3JhdGUgdGhlIHJlc3VsdHMgb2YgdGhlIG90aGVycy4gIFNvLi4uIElPUiwgWERELCBm
-aW8sIGlvem9uZSwgKGFuZCBkZCB3aGVuIEkgbmVlZCBzb21ldGhpbmcgc2ltcGxlKS4gIEVhY2gg
-b2YgdGhvc2UgY2FuIGJlIHJ1biB3aXRoIGEgdmFyaWV0eSBvZiBvcHRpb25zIHRoYXQgc2ltdWxh
-dGUgd2hhdCBhbiBGUyB3aWxsIHN1Ym1pdCB0byB0aGUgYmxvY2sgbGF5ZXIgd2l0aG91dCBhZGRp
-bmcgdGhlIGNvbXBsZXhpdHksIG92ZXJoZWFkLCBhbmQgdW5jZXJ0YWludHkgdGhhdCBhbiBGUyBi
-cmluZ3MgdG8gdGhlIHRhYmxlLiAgSSd2ZSBydW4gdGhlIHNhbWUgdG9vbHMgdGhyb3VnaCBhbiBG
-UywgYW5kIGZvdW5kIHRoYXQgYXQgdGhlIGJvdHRvbSBlbmQgb2YgdGhpbmdzLCBJIGNhbiBjb25m
-aWd1cmUgdGhvc2UgdG9vbHMgdG8gZG8gZXhhY3RseSB3aGF0IHRoZSBGUyBkb2VzLi4uIG9ubHkg
-d2hlbiBJJ20gbG9va2luZyBhdCB0aGUgdHJhY2VzLCBJIGRvbid0IGhhdmUgdG8gc2NhbiBwYXN0
-IDEwMEsgbGluZXMgd2hpbGUgdGhlIEZTIGlzIGRlYWxpbmcgd2l0aCBpbm9kZXMsIHByaXZpbGVn
-ZXMsIGFuZCBvdGhlciBtZXRhIGRhdGEuDQoNCkJ1dCB0byBtb3JlIHByZWNpc2VseSBhbnN3ZXIg
-eW91ciBxdWVzdGlvbi4uLiBhcyBhbiBleGFtcGxlLCBpZiBJJ20gdXNpbmcgZGQsIEkgZ2l2ZSB0
-aGlzIGNvbW1hbmQ6DQoNCmRkIGlmPS9kZXYvemVybyBvZj0vZGV2L21kMCBicz0xTSBvZmxhZz1k
-aXJlY3QNCg0KV2hlcmUgL2Rldi9tZDAgaXMgdGhlIHJhaWQgZGV2aWNlIEkndmUgY29uZmlndXJl
-ZC4NCg0KSSBkb24ndCB1c2UgYml0bWFwcywgSSd2ZSBjb25maWd1cmVkIG15IHJhaWQgdXNpbmcg
-Ii0tYml0bWFwPW5vbmUiIGFuZCBjb25maXJtZWQgdGhhdCBtZGFkbWluIHNlZXMgdGhhdCB0aGVy
-ZSBpcyBubyBiaXRtYXAuICBJIGRvbid0IGhhdmUgYWxpZ25tZW50IGlzc3VlcyBhcyBteSByYW1k
-aXNrIGhhcyA1MTJieXRlIHNlY3RvcnMuICBJZiBzb21ldGhpbmcgaXMgc29tZWhvdyBhbGlnbmlu
-ZyB0aGluZ3Mgb2ZmIDUxMmJ5dGUgYm91bmRhcmllcyB3aGVuIGRvaW5nIDFtIHdyaXRlcy4uLi4g
-SSB3b3VsZCBiZSBzdXJwcmlzZWQuICBBbHNvLi4uIEkgdmVyaWZpZWQgdGhhdCB0aGUgZGF0YSB3
-cml0dGVuIHRvIGRpc2sgZmFsbHMgYXQgdGhlIGJvdW5kYXJpZXMgSSdtIGV4cGVjdGluZy4NCg0K
-SSB0cmllZCBSQUlEMCBhbmQgZ290IHBlcmZvcm1hbmNlIHRoYXQgaXMgc2ltaWxhciB0byB3aGF0
-IEkgd2FzIGV4cGVjdGluZyAtLSAzOEcvcyBkb2luZyB0aGUgd3JpdGVzLg0KDQpJIHRyaWVkIHRo
-ZSA0LjEga2VybmVsLCBhbmQgd2FzIGFibGUgdG8gZ2V0IGJldHRlciBwZXJmb3JtYW5jZS4gIEl0
-IHdhcyBhY3R1YWxseSAyeCB0aGUgMy4xOCBwZXJmb3JtYW5jZS4uLiBidXQgdGhlIDMuMTggcGVy
-Zm9ybWFuY2UgaXMgc28gYmFkIHRoYXQgdHdpY2UgaG9ycmlibGUgaXMgc3RpbGwgaG9ycmlibGUu
-DQoNCkJvYiBLaWVyc2tpDQpTZW5pb3IgU3RvcmFnZSBQZXJmb3JtYW5jZSBFbmdpbmVlcg0KQ3Jh
-eSBJbmMuDQozODAgSmFja3NvbiBTdHJlZXQNClN1aXRlIDIxMA0KU3QuIFBhdWwsIE1OIDU1MTAx
-DQpUZWxlOiA2NTEtOTY3LTk1OTANCkZheDogIDY1MS02MDUtOTAwMQ0KQ2VsbDogNjUxLTg5MC03
-NDYxDQoNCg==
+On 12/03/2015 08:43 AM, Robert Kierski wrote:
+> This is why I use Direct-IO to the bare metal block device instead of going through the FS.  Rather than discussing the real problem, we're off in the weed talking about whether the tests should be using O_SYNC and whether there is a problem introduced in the latest version of the FS.
+
+It's not off in the weeds for Dallas, the OP.
+
+> FS's and cache are very good at hiding the problems of those things below them and prevent you from exercising the code you're interested in debugging.
+
+Yep, you seem to have a real problem.
+
+Phil
