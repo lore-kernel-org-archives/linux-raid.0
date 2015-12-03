@@ -1,99 +1,111 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: Re: [dm-devel] [PATCH 0/2] Introduce the request handling for dm-crypt
-Date: Thu, 3 Dec 2015 18:36:41 +0800
-Message-ID: <CAMz4ku+5HpOJfqTd0C0i0_SMODFZw38dKqwK15Db4U37VNDVeg@mail.gmail.com>
-References: <cover.1447233227.git.baolin.wang@linaro.org>
-	<20151111181813.GD12236@redhat.com>
-	<CAMz4kuKNAkFG4-f6TU1HRxgkAn+YX-D_tTQAWio-A_np3brr+A@mail.gmail.com>
-	<20151112100422.GM12392@sirena.org.uk>
-	<5644AFA2.6040201@kernel.dk>
-	<20151113115144.GR12392@sirena.org.uk>
-	<CAMz4kuLTuY5CpTfW4Gijesy1Pp9PxbWj076XeoV24Hj3EydifQ@mail.gmail.com>
-	<20151202195657.GB11127@agk-dp.fab.redhat.com>
-	<CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
+From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
+Subject: Reshape stalls and fails when SELinux is enabled
+Date: Thu, 3 Dec 2015 12:04:25 +0100
+Message-ID: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAMz4kuL3qE-jE14F6ovAMRv6D-UFCdtiyUyi4ZDo+Lkr7_nA0Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baolin Wang <baolin.wang@linaro.org>, Mark Brown <broonie@kernel.org>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, Jan Kara <jack@suse.cz>, Arnd Bergmann <arnd@arndb.de>, Mike Snitzer <snitzer@redhat.com>, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, "Garg, Dinesh" <dineshg@quicinc.com>, tj@kernel.org, bart.vanassche@sandisk.com, jmoyer@redhat.com, Alasdair G Kergon <agk@redhat.com>, Mikulas Patocka <mpatocka@redhat.com>
+Content-Type: multipart/mixed; boundary=001a113b39ea94c03e0525fc5a2e
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3 December 2015 at 10:56, Baolin Wang <baolin.wang@linaro.org> wrote:
-> On 3 December 2015 at 03:56, Alasdair G Kergon <agk@redhat.com> wrote:
->> On Wed, Dec 02, 2015 at 08:46:54PM +0800, Baolin Wang wrote:
->>> These are the benchmarks for request based dm-crypt. Please check it.
->>
->> Now please put request-based dm-crypt completely to one side and focus
->> just on the existing bio-based code.  Why is it slower and what can be
->> adjusted to improve this?
->>
->
-> OK. I think I find something need to be point out.
-> 1. From the IO block size test in the performance report, for the
-> request based, we can find it can not get the corresponding
-> performance if we just expand the IO size. Because In dm crypt, it
-> will map the data buffer of one request with scatterlists, and send
-> all scatterlists of one request to the encryption engine to encrypt or
-> decrypt.  I found if the scatterlist list number is small and each
-> scatterlist length is bigger, it will improve the encryption speed,
-> that helps the engine palys best performance. But a big IO size does
-> not mean bigger scatterlists (maybe many scatterlists with small
-> length), that's why we can not get the corresponding performance if we
-> just expand the IO size I think.
->
-> 2. Why bio based is slower?
-> If you understand 1, you can obviously understand the crypto engine
-> likes bigger scatterlists to improve the performance. But for bio
-> based, it only send one scatterlist (the scatterlist's length is
-> always '1 << SECTOR_SHIFT' = 512) to the crypto engine at one time. It
-> means if the bio size is 1M, the bio based will send 2048 times (evey
-> time the only one scatterlist length is 512 bytes) to crypto engine to
-> handle, which is more time-consuming and ineffective for the crypto
-> engine. But for request based, it can map the whole request with many
-> scatterlists (not just one scatterlist), and send all the scatterlists
-> to the crypto engine which can improve the performance, is it right?
->
-> Another optimization solution I think is we can expand the scatterlist
-> entry number for bio based.
->
+--001a113b39ea94c03e0525fc5a2e
+Content-Type: text/plain; charset=UTF-8
 
-I did some testing about my assumption of expanding the scatterlist
-entry number for bio based. I did some modification for the bio based
-to support multiple scatterlists, then it will get the same
-performance as the request based things.
+Hi everybody,
 
-1. bio based with expanding the scatterlist entry
-time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
-1073741824 bytes (1.1 GB) copied, 94.5458 s, 11.4 MB/s
-real    1m34.562s
-user    0m0.030s
-sys     0m3.850s
+yesterday I tested a conversion of a 2 disk raid1 to a 4 disk raid5.
+The reshape never completed, I rebooted the VM and the raid device was
+unrecoverable. Backup-file was not useful unfortunately. Take a
+comfortable seat, this is a bit long story, sorry :).
 
-2. Sequential read 1G with requset based:
-time dd if=/dev/dm-0 of=/dev/null bs=64K count=16384 iflag=direct
-1073741824 bytes (1.1 GB) copied, 94.8922 s, 11.3 MB/s
-real    1m34.908s
-user    0m0.030s
-sys     0m4.000s
+Environment:
+ - VM running on my laptop (Fedora 22), created with virt-manager,
+qemu based. All disk images are qcow2 virtio devices.
+ - VM OS: centos 7 64 bit, fully updated as of today.
+ - mdadm version: 3.3.2-2.el7_1.1
+ - kernel version: 3.10.0-229.20.1.el7
+ - selinux policy targeted: 3.13.1-23.el7_1.21
 
-From the data, we can find the bio based also can get the same
-performance as the request based. So if someone still don't like the
-request based things, I think we can optimize the bio based by
-expanding the scatterlists number. Thanks.
+How to reproduce:
 
->>
->> Alasdair
->>
->
->
->
-> --
-> Baolin.wang
-> Best Regards
+ * Attach four 1 GB disks to the VM, in the following example they are
+vd[b,c,d,e].
+ * create a raid1 device with two disks: mdadm --create /dev/md0 -e
+1.2 -n 2 -l raid1 -N raidtest /dev/vdb /dev/vdc
+ * [optional?]: I created a FS on it: mkfs.xfs -L test /dev/md0
+ * [optional?]: I created three files on it and noted the checksum, to
+check for eventual corruptions
+     - mount /dev/md0 /mnt/raidtest/ && cd /mnt/raidtest/
+     - echo uno > first.txt ; echo due > second.txt ; touch third.txt
+; shred -s 512M -f third.txt
+     - for file in *; do sha1sum $file >> sha1sum.txt; done
+ * check /proc/mdstat to make sure the raid1 sync operation is
+complete (should really be fast but better safe than sorry)
+ * unmount /mnt/raidtest/
+ * add the two additional disks as spares:
+     - mdadm --manage /dev/md0 --add-spare /dev/vdd
+     - mdadm --manage /dev/md0 --add-spare /dev/vde
+ * grow and reshape: mdadm --grow /dev/md0 -n 4 --level=5
+--backup-file /root/backup-md0 # (I also tried with
+/var/local/backup-md0)
 
+At this point an AVC will happen. Even if I'm in an interactive
+session and, as such SELinux should not limit it normally, mdadm
+process switches to mdadm_t type (maybe a forked process with its own
+session group?) and is not allowed to write a file in the /root/ or
+/var/ folders. This is ok, however mdadm keeps going instead of
+aborting the reshape. It's running without a backup file, that's not
+what the admin asked for since the --backup-file option is specified.
+But even worst than this is that my reshape got stuck and never
+completed. I waited a couple of hours but it remained at 0%. Something
+was actually written to the backup file (which is weird given the AVC,
+but it can be the original mdadm process not running under mdadm_t).
 
+At this point I was kind of curious to test what would happen if a
+distracted admin like me wont notice the problem and, days later,
+would reboot the server due to security updates or anything else. The
+result is an unrecoverable md array. I tried to assemble it back with
+the backup file
 
--- 
-Baolin.wang
-Best Regards
+mdadm --assemble /dev/md0  -u 6f53ec3e:d9868fef:12d3e243:8489561b
+--backup-file /root/backup-md
+
+But no way
+
+mdadm: [sorry I copied wrong and the device name was lost] has an
+active reshape - checking if critical section needs to be restored
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+
+I retried the entire procedure from scratch, but this time with before
+mdadm --grow I set SELinux in permissive mode with setenforce 0.
+Everything was butter smooth this time. Reshape was almost instant for
+such a small array, data was checksumming correctly and my array was
+level 5.
+
+Now there might be a problem with the SELinux policy here, but
+honestly I think mdadm should just abort, whatever the reason of the
+problem was. There might be other scenarios not involving SELinux
+causing the same problem.
+
+It would also be nice to suggest the user, if SELinux is active, to
+change the context of the backup file to something SELinux will permit
+(mdadm_map_t, mdadm_var_run_t?).
+
+Attached you can also find the AVC denial for my entire day of testing.
+
+Thank you for your help.
+Best regards.
+
+Enrico Tagliavini
+
+--001a113b39ea94c03e0525fc5a2e
+Content-Type: text/plain; charset=US-ASCII; name="changeraid1_to_raid5.txt"
+Content-Disposition: attachment; filename="changeraid1_to_raid5.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ihq4vitm0
+
+bWRhZG0gLS1ncm93IC9kZXYvbWQwIC1uIDQgLS1sZXZlbD01IC0tYmFja3VwLWZpbGU9L3Jvb3Qv
+YmFja3VwLW1kMAo=
+--001a113b39ea94c03e0525fc5a2e--
