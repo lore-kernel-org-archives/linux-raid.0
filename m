@@ -1,88 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 2/3] block: Add badblock management for gendisks
-Date: Fri, 04 Dec 2015 15:33:38 -0800
-Message-ID: <1449272018.27077.29.camel@HansenPartnership.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-	 <1448477013-9174-3-git-send-email-vishal.l.verma@intel.com>
+From: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
+Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in
+ s_user_ns
+Date: Fri, 4 Dec 2015 17:43:49 -0600
+Message-ID: <20151204234348.GA6908@mail.hallyn.com>
+References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+ <1449070821-73820-15-git-send-email-seth.forshee@canonical.com>
+ <20151204191143.GE3624@mail.hallyn.com>
+ <20151204200528.GC18359@thunk.org>
+ <20151204200736.GJ3624@mail.hallyn.com>
+ <20151204204532.GG147214@ubuntu-hedt>
+ <20151204231152.GE18359@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448477013-9174-3-git-send-email-vishal.l.verma@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151204231152.GE18359@thunk.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, Seth Forshee <seth.forshee@canonical.com>, "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-On Wed, 2015-11-25 at 11:43 -0700, Vishal Verma wrote:
-> NVDIMM devices, which can behave more like DRAM rather than block
-> devices, may develop bad cache lines, or 'poison'. A block device
-> exposed by the pmem driver can then consume poison via a read (or
-> write), and cause a machine check. On platforms without machine
-> check recovery features, this would mean a crash.
+On Fri, Dec 04, 2015 at 06:11:52PM -0500, Theodore Ts'o wrote:
+> On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
+> > On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
+> > > Heh, I was looking over http://www.gossamer-threads.com/lists/linux/kernel/103611
+> > > a little while ago :)  The same question was asked 16 years ago.  Apparently
+> > > the answer then was that it was easier than fixing the code.
+> > 
+> > So it seems then that either it still isn't safe and so unprivileged
+> > users shouldn't be allowed to do it at all, or else it's safe and we
+> > should drop the requirement completely. I can't say which is right,
+> > unfortunately.
 > 
-> The block device maintaining a runtime list of all known sectors that
-> have poison can directly avoid this, and also provide a path forward
-> to enable proper handling/recovery for DAX faults on such a device.
-> 
-> Use the new badblock management interfaces to add a badblocks list to
-> gendisks.
-> 
-> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> ---
->  block/genhd.c         | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/genhd.h |  6 ++++
->  2 files changed, 87 insertions(+)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 0c706f3..84fd65c 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -20,6 +20,7 @@
->  #include <linux/idr.h>
->  #include <linux/log2.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/badblocks.h>
->  
->  #include "blk.h"
->  
-> @@ -505,6 +506,20 @@ static int exact_lock(dev_t devt, void *data)
->  	return 0;
->  }
->  
-> +static void disk_alloc_badblocks(struct gendisk *disk)
-> +{
-> +	disk->bb = kzalloc(sizeof(*(disk->bb)), GFP_KERNEL);
-> +	if (!disk->bb) {
-> +		pr_warn("%s: failed to allocate space for badblocks\n",
-> +			disk->disk_name);
-> +		return;
-> +	}
-> +
-> +	if (badblocks_init(disk->bb, 1))
-> +		pr_warn("%s: failed to initialize badblocks\n",
-> +			disk->disk_name);
-> +}
-> +
->  static void register_disk(struct gendisk *disk)
->  {
->  	struct device *ddev = disk_to_dev(disk);
-> @@ -609,6 +624,7 @@ void add_disk(struct gendisk *disk)
->  	disk->first_minor = MINOR(devt);
->  
->  	disk_alloc_events(disk);
-> +	disk_alloc_badblocks(disk);
+> It may not have been safe 16 years agoo, but giving invalid arguments
+> to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
+> tools like trinity should and does test for, so I think it should be
+> fine to remove the root check for FIBMAP.
 
-Why unconditionally do this?  No-one currently uses the interface, but
-every disk will now pay the price of an additional structure plus a page
-for no benefit.  You should probably either export the initializer for
-those who want to use it or, perhaps even better, make it lazily
-allocated the first time anyone tries to set a bad block.
+Seth, can I tempt you into sending a standalone patch to remove that? :)
 
-If you come up with a really good reason for allocating it
-unconditionally, then it should probably be an embedded structure in the
-gendisk.
-
-James
-
-
+-serge
