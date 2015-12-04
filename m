@@ -1,47 +1,38 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 0/3] Badblock tracking for gendisks
-Date: Fri, 4 Dec 2015 22:53:19 +0000
-Message-ID: <1449269599.16905.93.camel@intel.com>
-References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in
+ s_user_ns
+Date: Fri, 4 Dec 2015 18:11:52 -0500
+Message-ID: <20151204231152.GE18359@thunk.org>
+References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+ <1449070821-73820-15-git-send-email-seth.forshee@canonical.com>
+ <20151204191143.GE3624@mail.hallyn.com>
+ <20151204200528.GC18359@thunk.org>
+ <20151204200736.GJ3624@mail.hallyn.com>
+ <20151204204532.GG147214@ubuntu-hedt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
-Content-Language: en-US
-Content-ID: <B6174A3E89726C41BD9A0BF437CAA862@intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "jmoyer@redhat.com" <jmoyer@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151204204532.GG147214@ubuntu-hedt>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-T24gV2VkLCAyMDE1LTExLTI1IGF0IDExOjQzIC0wNzAwLCBWaXNoYWwgVmVybWEgd3JvdGU6DQo+
-IHYyOg0KPiDCoCAtIEluIGJhZGJsb2Nrc19mcmVlLCBtYWtlICdwYWdlJyBOVUxMIChwYXRjaCAx
-KQ0KPiDCoCAtIE1vdmUgdGhlIGNvcmUgYmFkYmxvY2tzIGNvZGUgdG8gYSBuZXcgLmMgZmlsZSAo
-cGF0Y2ggMSkgKEplbnMpDQo+IMKgIC0gRml4IGEgc2l6ZW9mIHVzYWdlIGluIGRpc2tfYWxsb2Nf
-YmFkYmxvY2tzIChwYXRjaCAyKSAoRGFuKQ0KPiDCoCAtIFNpbmNlIGRpc2tfYWxsb2NfYmFkYmxv
-Y2tzIGNhbiBmYWlsLCBjaGVjayBkaXNrLT5iYiBmb3IgTlVMTCBpbg0KPiB0aGUNCj4gwqDCoMKg
-wqBnZW5oZCB3cmFwcGVycyAocGF0Y2ggMikgKEplZmYpDQo+IMKgIC0gVXBkYXRlIHRoZSBtZCBj
-b252ZXJzaW9uIHRvIGFsc28gaXNlIHRoZSBiYWRibG9ja3MgaW5pdCBhbmQgZnJlZQ0KPiDCoMKg
-wqDCoGZ1bmN0aW9ucyAocGF0Y2ggMykNCj4gwqAgLSBSZW1vdmUgdGhlIEJCXyogbWFjcm9zIGZy
-b20gbWQuaCBhcyB0aGV5IGFyZSBub3cgaW4gYmFkYmxvY2tzLmgNCj4gKHBhdGNoIDMpDQo+IA0K
-PiBQYXRjaCAxIGNvcGllcyBiYWRibG9jayBtYW5hZ2VtZW50IGNvZGUgaW50byBhIGhlYWRlciBv
-ZiBpdHMgb3duLA0KPiBtYWtpbmcgaXQgZ2VuZXJhbGx5IGF2YWlsYWJsZS4gSXQgZm9sbG93cyBj
-b21tb24gbGlicmFyaWVzIG9mIGNvZGUNCj4gc3VjaCBhcyBsaW5rZWQgbGlzdHMsIHdoZXJlIGFu
-eW9uZSBtYXkgZW1iZWQgYSBjb3JlIGRhdGEgc3RydWN0dXJlDQo+IGluIGFub3RoZXIgcGxhY2Us
-IGFuZCB1c2UgdGhlIHByb3ZpZGVkIGFjY2Vzc29yIGZ1bmN0aW9ucyB0bw0KPiBtYW5pcHVsYXRl
-IHRoZSBkYXRhLg0KPiANCj4gUGF0Y2ggMiBhZGRzIGJhZGJsb2NrIHRyYWNraW5nIHRvIGdlbmRp
-c2tzIChpbiBwcmVwYXJhdGlvbiBmb3IgdXNlDQo+IGJ5IE5WRElNTSBkZXZpY2VzKS4gUmlnaHQg
-bm93LCBpdCBpcyB0dXJuZWQgb24gdW5jb25kaXRpb25hbGx5IC0gSSdkDQo+IGFwcHJlY2lhdGUg
-Y29tbWVudHMgb24gaWYgdGhhdCBpcyB0aGUgcmlnaHQgcGF0aC4NCj4gDQo+IFBhdGNoIDMgY29u
-dmVydHMgbWQgb3ZlciB0byB1c2UgdGhlIG5ldyBiYWRibG9ja3MgJ2xpYnJhcnknLiBJIGhhdmUN
-Cj4gZG9uZSBzb21lIHByZXR0eSBzaW1wbGUgdGVzdGluZyBvbiB0aGlzIC0gY3JlYXRlZCBhIHJh
-aWQgMSBkZXZpY2UsDQo+IG1hZGUgc3VyZSB0aGUgc3lzZnMgZW50cmllcyBzaG93IHVwLCBhbmQg
-Y2FuIGJlIHVzZWQgdG8gYWRkIGFuZCB2aWV3DQo+IGJhZGJsb2Nrcy4gQSBjbG9zZXIgbG9vayBi
-eSB0aGUgbWQgZm9sa3Mgd291bGQgYmUgbmljZSBoZXJlLg0KPiANCj4gDQo+IFZpc2hhbCBWZXJt
-YSAoMyk6DQo+IMKgIGJhZGJsb2NrczogQWRkIGNvcmUgYmFkYmxvY2sgbWFuYWdlbWVudCBjb2Rl
-DQo+IMKgIGJsb2NrOiBBZGQgYmFkYmxvY2sgbWFuYWdlbWVudCBmb3IgZ2VuZGlza3MNCj4gwqAg
-bWQ6IGNvbnZlcnQgdG8gdXNlIHRoZSBnZW5lcmljIGJhZGJsb2NrcyBjb2RlDQo+IA0KDQpQaW5n
-Lg0KDQpKZW5zLCBhcmUgeW91IG9rIHRha2luZyB0aGlzIHRocm91Z2ggdGhlIGJsb2NrIHRyZWU/
-DQpBbnkgb3RoZXIgY29tbWVudHMgZnJvbSBhbnlvbmUgZWxzZT8NCg0KVGhhbmtzLA0KCS1WaXNo
-YWw=
+On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
+> On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
+> > Heh, I was looking over http://www.gossamer-threads.com/lists/linux/kernel/103611
+> > a little while ago :)  The same question was asked 16 years ago.  Apparently
+> > the answer then was that it was easier than fixing the code.
+> 
+> So it seems then that either it still isn't safe and so unprivileged
+> users shouldn't be allowed to do it at all, or else it's safe and we
+> should drop the requirement completely. I can't say which is right,
+> unfortunately.
+
+It may not have been safe 16 years agoo, but giving invalid arguments
+to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
+tools like trinity should and does test for, so I think it should be
+fine to remove the root check for FIBMAP.
+
+							- Ted
