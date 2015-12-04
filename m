@@ -1,65 +1,82 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Fri, 4 Dec 2015 10:51:55 -0800
-Message-ID: <20151204185155.GA3590@kernel.org>
-References: <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
- <565F03F2.3070803@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
- <565F1035.10800@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
- <565F136F.2090709@turmel.org>
- <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
- <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
- <566059E8.60804@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH 11/19] fs: Ensure the mounter of a filesystem is
+ privileged towards its inodes
+Date: Fri, 4 Dec 2015 13:00:17 -0600
+Message-ID: <20151204190017.GB3624@mail.hallyn.com>
+References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+ <1449070821-73820-12-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-bcache-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>
-Cc: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+In-Reply-To: <1449070821-73820-12-git-send-email-seth.forshee@canonical.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-On Fri, Dec 04, 2015 at 01:40:02PM +0000, Robert Kierski wrote:
-> It turns out the problem I'm experiencing is related to thread count.  When I run XDD with a reasonable queuedepth parameter (32), I get horrible performance.  When I run it with a small queuedepth (1-4), I get expected performance.
+Quoting Seth Forshee (seth.forshee@canonical.com):
+> The mounter of a filesystem should be privileged towards the
+> inodes of that filesystem. Extend the checks in
+> inode_owner_or_capable() and capable_wrt_inode_uidgid() to
+> permit access by users priviliged in the user namespace of the
+> inode's superblock.
 > 
-> Here are the command lines:
-> 
-> Horrible Performance:
-> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 32  -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
-> 
-> GOOD Performance:
-> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 1 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
-> 
-> BEST Performance:
-> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 3 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
-> 
-> BAD Performance
-> xdd -id commandline -dio -maxall -targets 1 /dev/md1 -queuedepth 5 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 
-the performance issue only happens for directIO write, right? did you check
-buffered write? The directIO case doesn't delay write, so will create more
-read-modify-write. you can check with below debug code.
+Acked-by: Serge Hallyn <serge.hallyn@canonical.com>
 
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 45933c1..d480cc3 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5278,10 +5278,10 @@ static void make_request(struct mddev *mddev, struct bio * bi)
- 			}
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 			clear_bit(STRIPE_DELAYED, &sh->state);
--			if ((!sh->batch_head || sh == sh->batch_head) &&
--			    (bi->bi_rw & REQ_SYNC) &&
--			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
--				atomic_inc(&conf->preread_active_stripes);
-+//			if ((!sh->batch_head || sh == sh->batch_head) &&
-+//			    (bi->bi_rw & REQ_SYNC) &&
-+//			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-+//				atomic_inc(&conf->preread_active_stripes);
- 			release_stripe_plug(mddev, sh);
- 		} else {
- 			/* cannot get stripe for read-ahead, just give-up */
+> ---
+>  fs/inode.c          |  3 +++
+>  kernel/capability.c | 13 +++++++++----
+>  2 files changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 1be5f9003eb3..01c036fe1950 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -1962,6 +1962,9 @@ bool inode_owner_or_capable(const struct inode *inode)
+>  	ns = current_user_ns();
+>  	if (ns_capable(ns, CAP_FOWNER) && kuid_has_mapping(ns, inode->i_uid))
+>  		return true;
+> +
+> +	if (ns_capable(inode->i_sb->s_user_ns, CAP_FOWNER))
+> +		return true;
+>  	return false;
+>  }
+>  EXPORT_SYMBOL(inode_owner_or_capable);
+> diff --git a/kernel/capability.c b/kernel/capability.c
+> index 45432b54d5c6..5137a38a5670 100644
+> --- a/kernel/capability.c
+> +++ b/kernel/capability.c
+> @@ -437,13 +437,18 @@ EXPORT_SYMBOL(file_ns_capable);
+>   *
+>   * Return true if the current task has the given capability targeted at
+>   * its own user namespace and that the given inode's uid and gid are
+> - * mapped into the current user namespace.
+> + * mapped into the current user namespace, or if the current task has
+> + * the capability towards the user namespace of the inode's superblock.
+>   */
+>  bool capable_wrt_inode_uidgid(const struct inode *inode, int cap)
+>  {
+> -	struct user_namespace *ns = current_user_ns();
+> +	struct user_namespace *ns;
+>  
+> -	return ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid) &&
+> -		kgid_has_mapping(ns, inode->i_gid);
+> +	ns = current_user_ns();
+> +	if (ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid) &&
+> +	    kgid_has_mapping(ns, inode->i_gid))
+> +		return true;
+> +
+> +	return ns_capable(inode->i_sb->s_user_ns, cap);
+>  }
+>  EXPORT_SYMBOL(capable_wrt_inode_uidgid);
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
