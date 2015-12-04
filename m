@@ -1,41 +1,73 @@
-From: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
-Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in
- s_user_ns
-Date: Fri, 4 Dec 2015 17:43:49 -0600
-Message-ID: <20151204234348.GA6908@mail.hallyn.com>
-References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
- <1449070821-73820-15-git-send-email-seth.forshee@canonical.com>
- <20151204191143.GE3624@mail.hallyn.com>
- <20151204200528.GC18359@thunk.org>
- <20151204200736.GJ3624@mail.hallyn.com>
- <20151204204532.GG147214@ubuntu-hedt>
- <20151204231152.GE18359@thunk.org>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Fri, 4 Dec 2015 23:58:44 +0000
+Message-ID: <1449273524.16905.103.camel@intel.com>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
+	 <1449271801.27077.25.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151204231152.GE18359@thunk.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>, Seth Forshee <seth.forshee@canonical.com>, "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1449271801.27077.25.camel@HansenPartnership.com>
+Content-Language: en-US
+Content-ID: <F74FD3224A10AE4D8C0C0A2FA453AF93@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "neilb@suse.com" <neilb@suse.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 List-Id: linux-raid.ids
 
-On Fri, Dec 04, 2015 at 06:11:52PM -0500, Theodore Ts'o wrote:
-> On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
-> > On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
-> > > Heh, I was looking over http://www.gossamer-threads.com/lists/linux/kernel/103611
-> > > a little while ago :)  The same question was asked 16 years ago.  Apparently
-> > > the answer then was that it was easier than fixing the code.
-> > 
-> > So it seems then that either it still isn't safe and so unprivileged
-> > users shouldn't be allowed to do it at all, or else it's safe and we
-> > should drop the requirement completely. I can't say which is right,
-> > unfortunately.
-> 
-> It may not have been safe 16 years agoo, but giving invalid arguments
-> to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
-> tools like trinity should and does test for, so I think it should be
-> fine to remove the root check for FIBMAP.
-
-Seth, can I tempt you into sending a standalone patch to remove that? :)
-
--serge
+T24gRnJpLCAyMDE1LTEyLTA0IGF0IDE1OjMwIC0wODAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
+DQpbLi4uXQ0KPiA+ICsgKiBXZSByZXR1cm4NCj4gPiArICrCoMKgMCBpZiB0aGVyZSBhcmUgbm8g
+a25vd24gYmFkIGJsb2NrcyBpbiB0aGUgcmFuZ2UNCj4gPiArICrCoMKgMSBpZiB0aGVyZSBhcmUg
+a25vd24gYmFkIGJsb2NrIHdoaWNoIGFyZSBhbGwgYWNrbm93bGVkZ2VkDQo+ID4gKyAqIC0xIGlm
+IHRoZXJlIGFyZSBiYWQgYmxvY2tzIHdoaWNoIGhhdmUgbm90IHlldCBiZWVuIGFja25vd2xlZGdl
+ZA0KPiA+IGluIG1ldGFkYXRhLg0KPiA+ICsgKiBwbHVzIHRoZSBzdGFydC9sZW5ndGggb2YgdGhl
+IGZpcnN0IGJhZCBzZWN0aW9uIHdlIG92ZXJsYXAuDQo+ID4gKyAqLw0KPiANCj4gVGhpcyBjb21t
+ZW50IHNob3VsZCBiZSBkb2Nib29rLg0KDQpBcHBsaWNhYmxlIHRvIGFsbCB5b3VyIGNvbW1lbnRz
+IC0gKGFuZCB0aGV5IGFyZSBhbGwgdmFsaWQpLCBJIHNpbXBseQ0KY29waWVkIG92ZXIgYWxsIHRo
+aXMgZnJvbSBtZC4gSSdtIGhhcHB5IHRvIG1ha2UgdGhlIGNoYW5nZXMgdG8gY29tbWVudHMsDQph
+bmQgdGhlIG90aGVyIHR3byB0aGluZ3MgKHNlZSBiZWxvdykgaWYgdGhhdCdzIHRoZSByaWdodCB0
+aGluZyB0byBkbyAtLQ0KSSBqdXN0IHRyaWVkIHRvIGtlZXAgbXkgb3duIGNoYW5nZXMgdG8gdGhl
+IG9yaWdpbmFsIG1kIGJhZGJsb2NrcyBjb2RlDQptaW5pbWFsLg0KV291bGQgaXQgYmUgYmV0dGVy
+IChmb3IgcmV2aWV3LWFiaWxpdHkpIGlmIEkgbWFkZSB0aGVzZSBjaGFuZ2VzIGluIGEgbmV3DQpw
+YXRjaCBvbiB0b3Agb2YgdGhpcywgb3Igc2hvdWxkIEkganVzdCBzcXVhc2ggdGhlbSBpbnRvIHRo
+aXMgb25lPw0KDQo+IA0KPiA+ICtpbnQgYmFkYmxvY2tzX2NoZWNrKHN0cnVjdCBiYWRibG9ja3Mg
+KmJiLCBzZWN0b3JfdCBzLCBpbnQgc2VjdG9ycywNCj4gPiArCQkJc2VjdG9yX3QgKmZpcnN0X2Jh
+ZCwgaW50ICpiYWRfc2VjdG9ycykNCj4gWy4uLl0NCj4gPiArDQo+ID4gKy8qDQo+ID4gKyAqIEFk
+ZCBhIHJhbmdlIG9mIGJhZCBibG9ja3MgdG8gdGhlIHRhYmxlLg0KPiA+ICsgKiBUaGlzIG1pZ2h0
+IGV4dGVuZCB0aGUgdGFibGUsIG9yIG1pZ2h0IGNvbnRyYWN0IGl0DQo+ID4gKyAqIGlmIHR3byBh
+ZGphY2VudCByYW5nZXMgY2FuIGJlIG1lcmdlZC4NCj4gPiArICogV2UgYmluYXJ5LXNlYXJjaCB0
+byBmaW5kIHRoZSAnaW5zZXJ0aW9uJyBwb2ludCwgdGhlbg0KPiA+ICsgKiBkZWNpZGUgaG93IGJl
+c3QgdG8gaGFuZGxlIGl0Lg0KPiA+ICsgKi8NCj4gDQo+IEFuZCB0aGlzIG9uZSwgcGx1cyB5b3Ug
+ZG9uJ3QgZG9jdW1lbnQgcmV0dXJucy7CoMKgSXQgbG9va3MgbGlrZSB0aGlzDQo+IGZ1bmN0aW9u
+IHJldHVybnMgMSBvbiBzdWNjZXNzIGFuZCB6ZXJvIG9uIGZhaWx1cmUsIHdoaWNoIGlzIHJlYWxs
+eQ0KPiBjb3VudGVyLWludHVpdGl2ZSBmb3IgdGhlIGtlcm5lbDogemVybyBpcyB1c3VhbGx5IHJl
+dHVybmVkIG9uIHN1Y2Nlc3MNCj4gYW5kIG5lZ2F0aXZlIGVycm9yIG9uIGZhaWx1cmUuDQo+IA0K
+PiA+ICtpbnQgYmFkYmxvY2tzX3NldChzdHJ1Y3QgYmFkYmxvY2tzICpiYiwgc2VjdG9yX3Qgcywg
+aW50IHNlY3RvcnMsDQo+ID4gKwkJCWludCBhY2tub3dsZWRnZWQpDQo+IFsuLi5dDQo+ID4gKw0K
+PiA+ICsvKg0KPiA+ICsgKiBSZW1vdmUgYSByYW5nZSBvZiBiYWQgYmxvY2tzIGZyb20gdGhlIHRh
+YmxlLg0KPiA+ICsgKiBUaGlzIG1heSBpbnZvbHZlIGV4dGVuZGluZyB0aGUgdGFibGUgaWYgd2Ug
+c3BpbHQgYSByZWdpb24sDQo+ID4gKyAqIGJ1dCBpdCBtdXN0IG5vdCBmYWlsLsKgwqBTbyBpZiB0
+aGUgdGFibGUgYmVjb21lcyBmdWxsLCB3ZSBqdXN0DQo+ID4gKyAqIGRyb3AgdGhlIHJlbW92ZSBy
+ZXF1ZXN0Lg0KPiA+ICsgKi8NCj4gDQo+IERvY2Jvb2sgYW5kIGRvY3VtZW50IHJldHVybnMuwqDC
+oFRoaXMgdGltZSB0aGV5J3JlIHRoZSBrZXJuZWwgc3RhbmRhcmQNCj4gb2YNCj4gMCBvbiBzdWNj
+ZXNzIGFuZCBuZWdhdGl2ZSBlcnJvciBvbiBmYWlsdXJlIG1ha2luZyB0aGUgY29udmVudGlvbiBm
+b3INCj4gYmFkYmxvY2tzX3NldCBldmVuIG1vcmUgY291bnRlcmludHVpdGl2ZS4NCj4gDQo+ID4g
+K2ludCBiYWRibG9ja3NfY2xlYXIoc3RydWN0IGJhZGJsb2NrcyAqYmIsIHNlY3Rvcl90IHMsIGlu
+dCBzZWN0b3JzKQ0KPiA+ICt7DQo+IFsuLi5dDQo+ID4gKyNkZWZpbmUgRE9fREVCVUcgMQ0KPiAN
+Cj4gV2h5IGhhdmUgdGhpcyBhdCBhbGwgaWYgaXQncyB1bmNvbmRpdGlvbmFsbHkgZGVmaW5lZCBh
+bmQgYWx3YXlzIHNldC4NCg0KTmVpbCAtIGFueSByZWFzb24gb3IgYW55dGhpbmcgeW91IGhhZCBp
+biBtaW5kIGZvciB0aGlzPyBPciBpcyBpdCBqdXN0IGFuDQphcnRpZmFjdCBhbmQgY2FuIGJlIHJl
+bW92ZWQuDQoNCj4gDQo+ID4gK3NzaXplX3QgYmFkYmxvY2tzX3N0b3JlKHN0cnVjdCBiYWRibG9j
+a3MgKmJiLCBjb25zdCBjaGFyICpwYWdlLA0KPiA+IHNpemVfdCBsZW4sDQo+ID4gKwkJCWludCB1
+bmFjaykNCj4gWy4uLl0NCj4gPiAraW50IGJhZGJsb2Nrc19pbml0KHN0cnVjdCBiYWRibG9ja3Mg
+KmJiLCBpbnQgZW5hYmxlKQ0KPiA+ICt7DQo+ID4gKwliYi0+Y291bnQgPSAwOw0KPiA+ICsJaWYg
+KGVuYWJsZSkNCj4gPiArCQliYi0+c2hpZnQgPSAwOw0KPiA+ICsJZWxzZQ0KPiA+ICsJCWJiLT5z
+aGlmdCA9IC0xOw0KPiA+ICsJYmItPnBhZ2UgPSBrbWFsbG9jKFBBR0VfU0laRSwgR0ZQX0tFUk5F
+TCk7DQo+IA0KPiBXaHkgbm90IF9fZ2V0X2ZyZWVfcGFnZShHRlBfS0VSTkVMKT/CoMKgVGhlIHBy
+b2JsZW0gd2l0aCBrbWFsbG9jIG9mIGFuDQo+IGV4YWN0bHkga25vd24gcGFnZSBzaXplZCBxdWFu
+dGl0eSBpcyB0aGF0IHRoZSBzbGFiIHRyYWNrZXIgZm9yIHRoaXMNCj4gcmVxdWlyZXMgdHdvIGNv
+bnRpZ3VvdXMgcGFnZXMgZm9yIGVhY2ggcGFnZSBiZWNhdXNlIG9mIHRoZSBvdmVyaGVhZC4NCg0K
+Q29vbCwgSSBkaWRuJ3Qga25vdyBhYm91dCBfX2dldF9mcmVlX3BhZ2UgLSBJIGNhbiBmaXggdGhp
+cyB1cCB0b28uDQoNCj4gDQo+IEphbWVzDQo+IA0KPiA=
