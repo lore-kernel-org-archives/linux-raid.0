@@ -1,63 +1,47 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 1/2] md-cluster: update comments for MD_CLUSTER_SEND_LOCKED_ALREADY
-Date: Sat,  5 Dec 2015 02:32:51 +0800
-Message-ID: <1449253972-26997-1-git-send-email-gqjiang@suse.com>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Fri, 4 Dec 2015 13:40:02 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+ <20151202010745.GC9812@www5.open-std.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+ <565F03F2.3070803@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+ <565F1035.10800@turmel.org>
+ <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+ <565F136F.2090709@turmel.org>
+ <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+ <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
+ <566059E8.60804@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <566059E8.60804@turmel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: gqjiang@suse.com, neilb@suse.com
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
+To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-1. fix unbalanced parentheses.
-2. add more description about that MD_CLUSTER_SEND_LOCKED_ALREADY
-   will be cleared after set it in add_new_disk.
-
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- drivers/md/md-cluster.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/md/md-cluster.c b/drivers/md/md-cluster.c
-index ad3ec7d..0ded8e9 100644
---- a/drivers/md/md-cluster.c
-+++ b/drivers/md/md-cluster.c
-@@ -53,11 +53,12 @@ struct resync_info {
-  * accomodate lock and hold. See next comment.
-  */
- #define		MD_CLUSTER_SEND_LOCK			4
--/* If cluster operations must lock the communication channel,
-- * so as to perform extra operations (and no other operation
-- * is allowed on the MD, such as adding a disk. Token needs
-- * to be locked and held until the operation completes with
-- * a md_update_sb(), which would eventually release the lock.
-+/* If cluster operations (such as adding a disk) must lock the
-+ * communication channel, so as to perform extra operations
-+ * (update metadata) and no other operation is allowed on the
-+ * MD. Token needs to be locked and held until the operation
-+ * completes witha md_update_sb(), which would eventually release
-+ * the lock.
-  */
- #define		MD_CLUSTER_SEND_LOCKED_ALREADY		5
- 
-@@ -1021,6 +1022,18 @@ static int add_new_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		unlock_comm(cinfo);
- 	else {
- 		dlm_lock_sync(cinfo->no_new_dev_lockres, DLM_LOCK_CR);
-+		/* Since MD_CHANGE_DEVS will be set in add_bound_rdev which
-+		 * will run soon after add_new_disk, the below path will be
-+		 * invoked:
-+		 *   md_wakeup_thread(mddev->thread)
-+		 *	-> conf->thread (raid1d)
-+		 *	-> md_check_recovery -> md_update_sb
-+		 *	-> metadata_update_start/finish
-+		 * MD_CLUSTER_SEND_LOCKED_ALREADY will be cleared eventually.
-+		 *
-+		 * For other failure cases, metadata_update_cancel and
-+		 * add_new_disk_cancel also clear below bit as well.
-+		 * */
- 		set_bit(MD_CLUSTER_SEND_LOCKED_ALREADY, &cinfo->state);
- 		wake_up(&cinfo->wait);
- 	}
--- 
-2.1.4
-
+SXQgdHVybnMgb3V0IHRoZSBwcm9ibGVtIEknbSBleHBlcmllbmNpbmcgaXMgcmVsYXRlZCB0byB0
+aHJlYWQgY291bnQuICBXaGVuIEkgcnVuIFhERCB3aXRoIGEgcmVhc29uYWJsZSBxdWV1ZWRlcHRo
+IHBhcmFtZXRlciAoMzIpLCBJIGdldCBob3JyaWJsZSBwZXJmb3JtYW5jZS4gIFdoZW4gSSBydW4g
+aXQgd2l0aCBhIHNtYWxsIHF1ZXVlZGVwdGggKDEtNCksIEkgZ2V0IGV4cGVjdGVkIHBlcmZvcm1h
+bmNlLg0KDQpIZXJlIGFyZSB0aGUgY29tbWFuZCBsaW5lczoNCg0KSG9ycmlibGUgUGVyZm9ybWFu
+Y2U6DQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1heGFsbCAtdGFyZ2V0cyAxIC9kZXYvbWQw
+IC1xdWV1ZWRlcHRoIDMyICAtYmxvY2tzaXplIDEwNDg1NzYgLXRpbWVsaW1pdCAxMCAtcmVxc2l6
+ZSAxIC1tYnl0ZXMgNTAwMCAtcGFzc2VzIDIwIC12ZXJib3NlIC1vcCB3cml0ZSAtc2VlayBzZXF1
+ZW50aWFsDQoNCkdPT0QgUGVyZm9ybWFuY2U6DQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1h
+eGFsbCAtdGFyZ2V0cyAxIC9kZXYvbWQwIC1xdWV1ZWRlcHRoIDEgLWJsb2Nrc2l6ZSAxMDQ4NTc2
+IC10aW1lbGltaXQgMTAgLXJlcXNpemUgMSAtbWJ5dGVzIDUwMDAgLXBhc3NlcyAyMCAtdmVyYm9z
+ZSAtb3Agd3JpdGUgLXNlZWsgc2VxdWVudGlhbA0KDQpCRVNUIFBlcmZvcm1hbmNlOg0KeGRkIC1p
+ZCBjb21tYW5kbGluZSAtZGlvIC1tYXhhbGwgLXRhcmdldHMgMSAvZGV2L21kMCAtcXVldWVkZXB0
+aCAzIC1ibG9ja3NpemUgMTA0ODU3NiAtdGltZWxpbWl0IDEwIC1yZXFzaXplIDEgLW1ieXRlcyA1
+MDAwIC1wYXNzZXMgMjAgLXZlcmJvc2UgLW9wIHdyaXRlIC1zZWVrIHNlcXVlbnRpYWwNCg0KQkFE
+IFBlcmZvcm1hbmNlDQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1heGFsbCAtdGFyZ2V0cyAx
+IC9kZXYvbWQxIC1xdWV1ZWRlcHRoIDUgLWJsb2Nrc2l6ZSAxMDQ4NTc2IC10aW1lbGltaXQgMTAg
+LXJlcXNpemUgMSAtbWJ5dGVzIDUwMDAgLXBhc3NlcyAyMCAtdmVyYm9zZSAtb3Agd3JpdGUgLXNl
+ZWsgc2VxdWVudGlhbA0KDQpCb2IgS2llcnNraQ0KU2VuaW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2Ug
+RW5naW5lZXINCkNyYXkgSW5jLg0KMzgwIEphY2tzb24gU3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQ
+YXVsLCBNTiA1NTEwMQ0KVGVsZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2NTEtNjA1LTkwMDENCkNl
+bGw6IDY1MS04OTAtNzQ2MQ0KDQo=
