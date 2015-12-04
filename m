@@ -1,47 +1,51 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Fri, 4 Dec 2015 13:40:02 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
-References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
- <20151202010745.GC9812@www5.open-std.org>
- <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
- <565F03F2.3070803@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
- <565F1035.10800@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
- <565F136F.2090709@turmel.org>
- <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
- <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
- <566059E8.60804@turmel.org>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH 17/19] fuse: Support fuse filesystems outside of
+ init_user_ns
+Date: Fri, 4 Dec 2015 09:38:55 -0600
+Message-ID: <20151204153855.GB147214@ubuntu-hedt>
+References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+ <1449070821-73820-18-git-send-email-seth.forshee@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <566059E8.60804@turmel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1449070821-73820-18-git-send-email-seth.forshee@canonical.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Miklos Szeredi <miklos@szeredi.hu>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-SXQgdHVybnMgb3V0IHRoZSBwcm9ibGVtIEknbSBleHBlcmllbmNpbmcgaXMgcmVsYXRlZCB0byB0
-aHJlYWQgY291bnQuICBXaGVuIEkgcnVuIFhERCB3aXRoIGEgcmVhc29uYWJsZSBxdWV1ZWRlcHRo
-IHBhcmFtZXRlciAoMzIpLCBJIGdldCBob3JyaWJsZSBwZXJmb3JtYW5jZS4gIFdoZW4gSSBydW4g
-aXQgd2l0aCBhIHNtYWxsIHF1ZXVlZGVwdGggKDEtNCksIEkgZ2V0IGV4cGVjdGVkIHBlcmZvcm1h
-bmNlLg0KDQpIZXJlIGFyZSB0aGUgY29tbWFuZCBsaW5lczoNCg0KSG9ycmlibGUgUGVyZm9ybWFu
-Y2U6DQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1heGFsbCAtdGFyZ2V0cyAxIC9kZXYvbWQw
-IC1xdWV1ZWRlcHRoIDMyICAtYmxvY2tzaXplIDEwNDg1NzYgLXRpbWVsaW1pdCAxMCAtcmVxc2l6
-ZSAxIC1tYnl0ZXMgNTAwMCAtcGFzc2VzIDIwIC12ZXJib3NlIC1vcCB3cml0ZSAtc2VlayBzZXF1
-ZW50aWFsDQoNCkdPT0QgUGVyZm9ybWFuY2U6DQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1h
-eGFsbCAtdGFyZ2V0cyAxIC9kZXYvbWQwIC1xdWV1ZWRlcHRoIDEgLWJsb2Nrc2l6ZSAxMDQ4NTc2
-IC10aW1lbGltaXQgMTAgLXJlcXNpemUgMSAtbWJ5dGVzIDUwMDAgLXBhc3NlcyAyMCAtdmVyYm9z
-ZSAtb3Agd3JpdGUgLXNlZWsgc2VxdWVudGlhbA0KDQpCRVNUIFBlcmZvcm1hbmNlOg0KeGRkIC1p
-ZCBjb21tYW5kbGluZSAtZGlvIC1tYXhhbGwgLXRhcmdldHMgMSAvZGV2L21kMCAtcXVldWVkZXB0
-aCAzIC1ibG9ja3NpemUgMTA0ODU3NiAtdGltZWxpbWl0IDEwIC1yZXFzaXplIDEgLW1ieXRlcyA1
-MDAwIC1wYXNzZXMgMjAgLXZlcmJvc2UgLW9wIHdyaXRlIC1zZWVrIHNlcXVlbnRpYWwNCg0KQkFE
-IFBlcmZvcm1hbmNlDQp4ZGQgLWlkIGNvbW1hbmRsaW5lIC1kaW8gLW1heGFsbCAtdGFyZ2V0cyAx
-IC9kZXYvbWQxIC1xdWV1ZWRlcHRoIDUgLWJsb2Nrc2l6ZSAxMDQ4NTc2IC10aW1lbGltaXQgMTAg
-LXJlcXNpemUgMSAtbWJ5dGVzIDUwMDAgLXBhc3NlcyAyMCAtdmVyYm9zZSAtb3Agd3JpdGUgLXNl
-ZWsgc2VxdWVudGlhbA0KDQpCb2IgS2llcnNraQ0KU2VuaW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2Ug
-RW5naW5lZXINCkNyYXkgSW5jLg0KMzgwIEphY2tzb24gU3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQ
-YXVsLCBNTiA1NTEwMQ0KVGVsZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2NTEtNjA1LTkwMDENCkNl
-bGw6IDY1MS04OTAtNzQ2MQ0KDQo=
+On Wed, Dec 02, 2015 at 09:40:17AM -0600, Seth Forshee wrote:
+> @@ -155,11 +155,22 @@ static ino_t fuse_squash_ino(u64 ino64)
+>  	return ino;
+>  }
+>  
+> -void fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
+> -				   u64 attr_valid)
+> +int fuse_change_attributes_common(struct inode *inode, struct fuse_attr *attr,
+> +				  u64 attr_valid)
+>  {
+>  	struct fuse_conn *fc = get_fuse_conn(inode);
+>  	struct fuse_inode *fi = get_fuse_inode(inode);
+> +	kuid_t uid;
+> +	kgid_t gid;
+> +
+> +	uid = make_kuid(fc->user_ns, attr->uid);
+> +	gid = make_kgid(fc->user_ns, attr->gid);
+> +	if (!uid_valid(uid) || !gid_valid(gid)) {
+> +		make_bad_inode(inode);
+> +		return -EIO;
+> +	}
+
+Eric - I had kind of forgotten about this part until just now, but
+previously with these patches we had discussed how to handle ids from
+the filesystem that aren't valid in s_user_ns. My intention is to set
+the kuids in the inode to invalid, and in these patches I've updated the
+vfs so that it should be safe to do that. But at some point I think you
+had suggested marking the inodes bad, and I must have added this as a
+result. I guess we need to decide which way to go. I favor using invalid
+ids so that a user privileged in s_user_ns can still access the inode,
+change ownership, etc., but I'm interested to hear your opinion.
+
+Thanks,
+Seth
