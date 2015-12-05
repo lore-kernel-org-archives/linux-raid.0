@@ -1,84 +1,44 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Fri, 4 Dec 2015 19:38:35 -0600
-Message-ID: <CAE9DZUTp_YZX2mx5DEjvkcncs9KQzw_+xP1EtqD0we6LQ5eVUg@mail.gmail.com>
-References: <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
-	<565F03F2.3070803@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
-	<565F1035.10800@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
-	<565F136F.2090709@turmel.org>
-	<CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
-	<F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
-	<566059E8.60804@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
-	<20151204185155.GA3590@kernel.org>
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in
+ s_user_ns
+Date: Sat, 5 Dec 2015 00:15:58 -0600
+Message-ID: <20151205061558.GA14580@ubuntu-hedt>
+References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
+ <1449070821-73820-15-git-send-email-seth.forshee@canonical.com>
+ <20151204191143.GE3624@mail.hallyn.com>
+ <20151204200528.GC18359@thunk.org>
+ <20151204200736.GJ3624@mail.hallyn.com>
+ <20151204204532.GG147214@ubuntu-hedt>
+ <20151204231152.GE18359@thunk.org>
+ <20151204234348.GA6908@mail.hallyn.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151204185155.GA3590@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151204234348.GA6908@mail.hallyn.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Robert Kierski <rkierski@cray.com>, Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
 List-Id: linux-raid.ids
 
-On Fri, Dec 4, 2015 at 12:51 PM, Shaohua Li <shli@kernel.org> wrote:
-> On Fri, Dec 04, 2015 at 01:40:02PM +0000, Robert Kierski wrote:
->> It turns out the problem I'm experiencing is related to thread count.  When I run XDD with a reasonable queuedepth parameter (32), I get horrible performance.  When I run it with a small queuedepth (1-4), I get expected performance.
->>
->> Here are the command lines:
->>
->> Horrible Performance:
->> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 32  -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
->>
->> GOOD Performance:
->> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 1 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
->>
->> BEST Performance:
->> xdd -id commandline -dio -maxall -targets 1 /dev/md0 -queuedepth 3 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
->>
->> BAD Performance
->> xdd -id commandline -dio -maxall -targets 1 /dev/md1 -queuedepth 5 -blocksize 1048576 -timelimit 10 -reqsize 1 -mbytes 5000 -passes 20 -verbose -op write -seek sequential
->
-> the performance issue only happens for directIO write, right? did you check
-> buffered write? The directIO case doesn't delay write, so will create more
-> read-modify-write. you can check with below debug code.
->
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 45933c1..d480cc3 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5278,10 +5278,10 @@ static void make_request(struct mddev *mddev, struct bio * bi)
->                         }
->                         set_bit(STRIPE_HANDLE, &sh->state);
->                         clear_bit(STRIPE_DELAYED, &sh->state);
-> -                       if ((!sh->batch_head || sh == sh->batch_head) &&
-> -                           (bi->bi_rw & REQ_SYNC) &&
-> -                           !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-> -                               atomic_inc(&conf->preread_active_stripes);
-> +//                     if ((!sh->batch_head || sh == sh->batch_head) &&
-> +//                         (bi->bi_rw & REQ_SYNC) &&
-> +//                         !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-> +//                             atomic_inc(&conf->preread_active_stripes);
->                         release_stripe_plug(mddev, sh);
->                 } else {
->                         /* cannot get stripe for read-ahead, just give-up */
+On Fri, Dec 04, 2015 at 05:43:49PM -0600, Serge E. Hallyn wrote:
+> On Fri, Dec 04, 2015 at 06:11:52PM -0500, Theodore Ts'o wrote:
+> > On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
+> > > On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
+> > > > Heh, I was looking over http://www.gossamer-threads.com/lists/linux/kernel/103611
+> > > > a little while ago :)  The same question was asked 16 years ago.  Apparently
+> > > > the answer then was that it was easier than fixing the code.
+> > > 
+> > > So it seems then that either it still isn't safe and so unprivileged
+> > > users shouldn't be allowed to do it at all, or else it's safe and we
+> > > should drop the requirement completely. I can't say which is right,
+> > > unfortunately.
+> > 
+> > It may not have been safe 16 years agoo, but giving invalid arguments
+> > to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
+> > tools like trinity should and does test for, so I think it should be
+> > fine to remove the root check for FIBMAP.
+> 
+> Seth, can I tempt you into sending a standalone patch to remove that? :)
 
-Hi all.  My original test involved fio sequential writing to XFS
-formatted RAID devices with block size = 2M and queue depth = 256.
-Today I spent some time focused on testing raw RAID sequential write
-tests with dd similar to Robert's tests.  I am happy to report that I
-see the exact opposite results that I reported earlier with fio / XFS.
-When comparing performance between the 2.6.39.4 kernel and the 3.10.69
-kernel, I am seeing that RAID 0 and and RAID 1 write speeds are about
-the same.  However, RAID 5 is about 60% faster in the 3.10.69 kernel
-and RAID 6 is 40% faster.  I am not sure how to control queue depth
-with plain old dd.
-
-Next I am going to get a second opinion from fio, this time writing
-directly to the RAID devices instead of going through XFS with varying
-queue depth.  If I see the same behavior as with DD, then there is no
-problem with RAID in the new kernels - it is something else, perhaps
-XFS.  Will report my fio findings as soon as I have a chance to
-capture them.
+Patch sent. I'll drop this patch in v2.
