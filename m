@@ -1,93 +1,139 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in s_user_ns
-Date: Fri, 4 Dec 2015 17:00:58 -0700
-Message-ID: <DB9A6172-D1AF-4704-9D0D-936365A44AD0@dilger.ca>
-References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com> <1449070821-73820-15-git-send-email-seth.forshee@canonical.com> <20151204191143.GE3624@mail.hallyn.com> <20151204200528.GC18359@thunk.org> <20151204200736.GJ3624@mail.hallyn.com> <20151204204532.GG147214@ubuntu-hedt> <20151204231152.GE18359@thunk.org>
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Content-Type: multipart/signed; boundary="Apple-Mail=_EE500999-1F4A-473D-9466-533245EFCD34"; protocol="application/pgp-signature"; micalg=pgp-sha256
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20151204231152.GE18359@thunk.org>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Seth Forshee <seth.forshee@canonical.com>, "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-mtd@lists.infradead.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Fri, 04 Dec 2015 16:06:35 -0800
+Message-ID: <1449273995.27077.32.camel@HansenPartnership.com>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
+	 <1449271801.27077.25.camel@HansenPartnership.com>
+	 <1449273524.16905.103.camel@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1449273524.16905.103.camel@intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "neilb@suse.com" <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 List-Id: linux-raid.ids
 
-
---Apple-Mail=_EE500999-1F4A-473D-9466-533245EFCD34
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-
-> On Dec 4, 2015, at 4:11 PM, Theodore Ts'o <tytso@mit.edu> wrote:
+On Fri, 2015-12-04 at 23:58 +0000, Verma, Vishal L wrote:
+> On Fri, 2015-12-04 at 15:30 -0800, James Bottomley wrote:
+> [...]
+> > > + * We return
+> > > + *  0 if there are no known bad blocks in the range
+> > > + *  1 if there are known bad block which are all acknowledged
+> > > + * -1 if there are bad blocks which have not yet been acknowledg=
+ed
+> > > in metadata.
+> > > + * plus the start/length of the first bad section we overlap.
+> > > + */
+> >=20
+> > This comment should be docbook.
 >=20
-> On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
->> On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
->>> Heh, I was looking over =
-http://www.gossamer-threads.com/lists/linux/kernel/103611
->>> a little while ago :)  The same question was asked 16 years ago.  =
-Apparently
->>> the answer then was that it was easier than fixing the code.
->>=20
->> So it seems then that either it still isn't safe and so unprivileged
->> users shouldn't be allowed to do it at all, or else it's safe and we
->> should drop the requirement completely. I can't say which is right,
->> unfortunately.
+> Applicable to all your comments - (and they are all valid), I simply
+> copied over all this from md. I'm happy to make the changes to commen=
+ts,
+> and the other two things (see below) if that's the right thing to do =
+--
+> I just tried to keep my own changes to the original md badblocks code
+> minimal.
+> Would it be better (for review-ability) if I made these changes in a =
+new
+> patch on top of this, or should I just squash them into this one?
+
+If you were moving it, that might be appropriate.  However, this is
+effectively new code because you're not removing the original, so we
+should begin at least with a coherent API. (i.e. corrections to the
+original patch rather than incremental).
+
+Thanks,
+
+James
+
+
+> >=20
+> > > +int badblocks_check(struct badblocks *bb, sector_t s, int sector=
+s,
+> > > +			sector_t *first_bad, int *bad_sectors)
+> > [...]
+> > > +
+> > > +/*
+> > > + * Add a range of bad blocks to the table.
+> > > + * This might extend the table, or might contract it
+> > > + * if two adjacent ranges can be merged.
+> > > + * We binary-search to find the 'insertion' point, then
+> > > + * decide how best to handle it.
+> > > + */
+> >=20
+> > And this one, plus you don't document returns.  It looks like this
+> > function returns 1 on success and zero on failure, which is really
+> > counter-intuitive for the kernel: zero is usually returned on succe=
+ss
+> > and negative error on failure.
+> >=20
+> > > +int badblocks_set(struct badblocks *bb, sector_t s, int sectors,
+> > > +			int acknowledged)
+> > [...]
+> > > +
+> > > +/*
+> > > + * Remove a range of bad blocks from the table.
+> > > + * This may involve extending the table if we spilt a region,
+> > > + * but it must not fail.  So if the table becomes full, we just
+> > > + * drop the remove request.
+> > > + */
+> >=20
+> > Docbook and document returns.  This time they're the kernel standar=
+d
+> > of
+> > 0 on success and negative error on failure making the convention fo=
+r
+> > badblocks_set even more counterintuitive.
+> >=20
+> > > +int badblocks_clear(struct badblocks *bb, sector_t s, int sector=
+s)
+> > > +{
+> > [...]
+> > > +#define DO_DEBUG 1
+> >=20
+> > Why have this at all if it's unconditionally defined and always set=
+=2E
 >=20
-> It may not have been safe 16 years agoo, but giving invalid arguments
-> to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
-> tools like trinity should and does test for, so I think it should be
-> fine to remove the root check for FIBMAP.
+> Neil - any reason or anything you had in mind for this? Or is it just=
+ an
+> artifact and can be removed.
+>=20
+> >=20
+> > > +ssize_t badblocks_store(struct badblocks *bb, const char *page,
+> > > size_t len,
+> > > +			int unack)
+> > [...]
+> > > +int badblocks_init(struct badblocks *bb, int enable)
+> > > +{
+> > > +	bb->count =3D 0;
+> > > +	if (enable)
+> > > +		bb->shift =3D 0;
+> > > +	else
+> > > +		bb->shift =3D -1;
+> > > +	bb->page =3D kmalloc(PAGE_SIZE, GFP_KERNEL);
+> >=20
+> > Why not __get_free_page(GFP_KERNEL)?  The problem with kmalloc of a=
+n
+> > exactly known page sized quantity is that the slab tracker for this
+> > requires two contiguous pages for each page because of the overhead=
+=2E
+>=20
+> Cool, I didn't know about __get_free_page - I can fix this up too.
+>=20
+> >=20
+> > James
+> >=20
+> > NrybX=C7=A7v^)=DE=BA{.n+{"{ay=1D=CA=87=DA=99,j=07fhz=1Ew=0Cj:+vwjm=07=
+zZ+=DD=A2j"!
 
-You can use FIEMAP on regular files and directories without special =
-permission:
-
-$ filefrag -v /etc
-Filesystem type is: ef53
-File size of /etc is 12288 (3 blocks of 4096 bytes)
- ext:     logical_offset:        physical_offset: length:   expected: =
-flags:
-   0:        0..       0:    8396832..   8396832:      1:
-   1:        1..       2:    8397051..   8397052:      2:    8396833: =
-last,eof
-/etc: 2 extents found
 
 
-FIEMAP also has the benefit that you don't need to call it millions of =
-times
-for large files, like is needed for FIBMAP.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_EE500999-1F4A-473D-9466-533245EFCD34
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIVAwUBVmIpOnKl2rkXzB/gAQiv8xAAps7t3Ska0yZZLMZZpbom7CuzBl76wRN6
-d44HirTWGiHhS+29eoruiXIrBnxz8pcnBM7E4ilM/EiTJehIMH9v/aoLuCxZQ4cv
-IlZzZBgcf5Sl3CJ7xXA7eMhJLgglNz+dS+3biT2ovXnktVU7vXvBXBpXuJp+lGGg
-mYrdjjrBDoYsUge/wbqeOY7+UrBdam2zxfwCn3Mb7nHXZ0a5haYAsQHasOuzcS2G
-4a3Vhz9rOgbA+MismKFVbSCwAphGtp9r1ixhPxCLNKw+0Pt7zBXzL/ldznw065RV
-oI0ahJk5z9qiGvo53S5+NAcf8PSfpjcBSV+dwrqOGfcLBFcxdJD9SDu2iVMmLYWY
-QF4h3CwN4ld1ka041UNXwFuSRmor6ToiA5yoRbwo5q9+YQVbNl4f7iR+lfXNVJco
-O5zYqt1tuverbhsJU6yb7gmQjNQROiHQuCyi9CWe8n1kMHbqLW4X1uEsUnvybVOW
-WpbPyKu+gNS9QQ4tEvWPoWZ6/g2LUIN7HoGZyxDNrAJgvNsiESFym/HsQSk/Dq63
-0VFOjUk3DVtdeSAlmp0fa/HbCFng2yHsNxmrSv3kt0WhVt6DZSC+8AOrH9MsBIqe
-hAeeISULRfEuWnT/Fxo3uDlERwogEYMN6OHflfaeInWZAo+ezeymUoldpoaqBopD
-AvY4m5kZRjM=
-=lPI3
------END PGP SIGNATURE-----
-
---Apple-Mail=_EE500999-1F4A-473D-9466-533245EFCD34--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
