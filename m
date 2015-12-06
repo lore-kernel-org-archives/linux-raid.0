@@ -1,44 +1,74 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH 14/19] fs: Permit FIBMAP for users with CAP_SYS_RAWIO in
- s_user_ns
-Date: Sat, 5 Dec 2015 00:15:58 -0600
-Message-ID: <20151205061558.GA14580@ubuntu-hedt>
-References: <1449070821-73820-1-git-send-email-seth.forshee@canonical.com>
- <1449070821-73820-15-git-send-email-seth.forshee@canonical.com>
- <20151204191143.GE3624@mail.hallyn.com>
- <20151204200528.GC18359@thunk.org>
- <20151204200736.GJ3624@mail.hallyn.com>
- <20151204204532.GG147214@ubuntu-hedt>
- <20151204231152.GE18359@thunk.org>
- <20151204234348.GA6908@mail.hallyn.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: David Waite <david@alkaline-solutions.com>
+Subject: Re: Unable to (un)-grow raid6
+Date: Sat, 5 Dec 2015 20:04:19 -0700
+Message-ID: <465BF0F5-B5C7-4C02-8EB5-552B959B8D29@alkaline-solutions.com>
+References: <4E26C335-DEDB-489E-B54E-A285273569A1@alkaline-solutions.com>
+Mime-Version: 1.0 (Mac OS X Mail 9.1 \(3096.5\))
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151204234348.GA6908@mail.hallyn.com>
+In-Reply-To: <4E26C335-DEDB-489E-B54E-A285273569A1@alkaline-solutions.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Serge E. Hallyn" <serge.hallyn@ubuntu.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 04, 2015 at 05:43:49PM -0600, Serge E. Hallyn wrote:
-> On Fri, Dec 04, 2015 at 06:11:52PM -0500, Theodore Ts'o wrote:
-> > On Fri, Dec 04, 2015 at 02:45:32PM -0600, Seth Forshee wrote:
-> > > On Fri, Dec 04, 2015 at 02:07:36PM -0600, Serge E. Hallyn wrote:
-> > > > Heh, I was looking over http://www.gossamer-threads.com/lists/linux/kernel/103611
-> > > > a little while ago :)  The same question was asked 16 years ago.  Apparently
-> > > > the answer then was that it was easier than fixing the code.
-> > > 
-> > > So it seems then that either it still isn't safe and so unprivileged
-> > > users shouldn't be allowed to do it at all, or else it's safe and we
-> > > should drop the requirement completely. I can't say which is right,
-> > > unfortunately.
-> > 
-> > It may not have been safe 16 years agoo, but giving invalid arguments
-> > to FIBMAP is safe for ext4 and ext2.  This is the sort of thing that
-> > tools like trinity should and does test for, so I think it should be
-> > fine to remove the root check for FIBMAP.
-> 
-> Seth, can I tempt you into sending a standalone patch to remove that? :)
+I=E2=80=99m having difficulty shrinking down a RAID6 array (md2) on a S=
+inology NAS. I wish to go from 13 drives to 11, and believe I need to g=
+o to 12 first to maintain operation and redundancy through the resizing=
+ process.
 
-Patch sent. I'll drop this patch in v2.
+The -array-size has already been shrunk to account for the two drives I=
+ wish to remove, and one of the devices has been removed and the machin=
+e restarted before the command output below was generated.
+
+---
+# cat /proc/mdstat=20
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid=
+4]=20
+md2 : active raid6 sda3[0] sdia3[14] sdib3[9] sdic3[10] sdid3[11] sdie3=
+[12] sdg3[17] sdf3[5] sde3[16] sdd3[3] sdc3[13] sdb3[15]
+      26329895935 blocks super 1.2 level 6, 64k chunk, algorithm 2 [13/=
+12] [UUUUUUU_UUUUU]
+     =20
+md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2=
+[6]
+      2097088 blocks [8/7] [UUUUUUU_]
+     =20
+md0 : active raid1 sda1[0] sdb1[1] sdc1[2] sdd1[3] sde1[4] sdf1[5] sdg1=
+[6]
+      2490176 blocks [8/7] [UUUUUUU_]
+     =20
+unused devices: <none>
+
+---
+
+When running=20
+# mdadm --grow -n 12 /dev/md2 --backup-file=3D/mnt/backup-file3
+mdadm: max_devs [384] of [/dev/md2]
+mdadm: Need to backup 7040K of critical section..
+mdadm: Cannot set device shape for /dev/md2: Invalid argument
+
+---
+
+dmesg just reports:
+[87908.606245] md: couldn't update array info. -22
+
+---
+
+# uname -a
+Linux diskstation 3.10.77 #7135 SMP Thu Oct 15 13:36:56 CST 2015 x86_64=
+ GNU/Linux synology_avoton_1815+
+
+---
+
+Anyone have advice on how to proceed? I thought shrinking of a RAID6 ar=
+ray is supported as long as you use a backup file to allow recovery of =
+the initial blocks
+
+-DW
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
