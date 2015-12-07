@@ -1,65 +1,78 @@
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: I/O errors without erros from underlying device
-Date: Mon, 7 Dec 2015 17:05:26 +0100
-Message-ID: <201512071705.27177.a.miskiewicz@gmail.com>
-Reply-To: arekm@maven.pl
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: I/O errors without erros from underlying device
+Date: Mon, 7 Dec 2015 11:37:15 -0500
+Message-ID: <22117.46523.245486.830064@quad.stoffel.home>
+References: <201512071705.27177.a.miskiewicz@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201512071705.27177.a.miskiewicz@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: arekm@maven.pl
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi.
+Arkadiusz> 4.3.0 kernel, raid6 array:
 
-4.3.0 kernel, raid6 array:
+I think there's a bug in the 4.3.x and 4.4-rc3 and lower with block
+merges.  I ran into these over the weekend, where v4.2.6 was stable,
+but anything higher would lock up and crash on me.
 
-md7 : active raid6 sdg[10] sdad1[9] sdac1[8] sdag1[7] sdaf1[6] sdae1[5]=
- sdaj1[4] sdai1[3] sdah1[2] sdn1[1]
-      31255089152 blocks super 1.2 level 6, 512k chunk, algorithm 2 [10=
-/10] [UUUUUUUUUU]
-      bitmap: 1/30 pages [4KB], 65536KB chunk
+So first step would be to make sure you get and test v4.4-rc4.
 
-array had weird failure where many disks went into failed state but
-remove && adding these disks "fixed" it (turns out not really fixed it)=
-=2E
+Arkadiusz> md7 : active raid6 sdg[10] sdad1[9] sdac1[8] sdag1[7] sdaf1[=
+6] sdae1[5] sdaj1[4] sdai1[3] sdah1[2] sdn1[1]
+Arkadiusz>       31255089152 blocks super 1.2 level 6, 512k chunk, algo=
+rithm 2 [10/10] [UUUUUUUUUU]
+Arkadiusz>       bitmap: 1/30 pages [4KB], 65536KB chunk
 
-Unfortunately now some reads fail:
+Arkadiusz> array had weird failure where many disks went into failed st=
+ate but
+Arkadiusz> remove && adding these disks "fixed" it (turns out not reall=
+y fixed it).
 
-pread(4, 0x1483a00, 4096, 16003680464896) =3D -1 EIO (Input/output erro=
-r)
+Arkadiusz> Unfortunately now some reads fail:
 
-To reproduce used xfs_io
- xfs_io -d -c "pread 16003680464896 4096" /dev/md7
-pread64: Input/output error
-which does pread exactly as shown above.
+Arkadiusz> pread(4, 0x1483a00, 4096, 16003680464896) =3D -1 EIO (Input/=
+output error)
 
-write also fails for that area:
-xfs_io -d -c "pwrite 16003680464896 4096" /dev/md7
-pwrite64: Input/output error
+Arkadiusz> To reproduce used xfs_io
+Arkadiusz>  xfs_io -d -c "pread 16003680464896 4096" /dev/md7
+Arkadiusz> pread64: Input/output error
+Arkadiusz> which does pread exactly as shown above.
 
-Note that nothing is written in dmesg when that happens.
+Arkadiusz> write also fails for that area:
+Arkadiusz> xfs_io -d -c "pwrite 16003680464896 4096" /dev/md7
+Arkadiusz> pwrite64: Input/output error
 
-I've tried various offsets and sizes of pread and at some point that wa=
-s logged:
-[  848.988518] Buffer I/O error on dev md7, logical block 3907148544, a=
-sync page read
+Arkadiusz> Note that nothing is written in dmesg when that happens.
 
-but no error from underlying devices.
+Arkadiusz> I've tried various offsets and sizes of pread and at some po=
+int that was logged:
+Arkadiusz> [  848.988518] Buffer I/O error on dev md7, logical block 39=
+07148544, async page read
 
-List of bad blocks:
-http://sprunge.us/XSWI
+Arkadiusz> but no error from underlying devices.
 
-What can I do now?
+Arkadiusz> List of bad blocks:
+Arkadiusz> http://sprunge.us/XSWI
 
-(loosing data from that few sectors is acceptable if the rest will be r=
-eadable)
+Arkadiusz> What can I do now?
 
-Thanks,
---=20
-Arkadiusz Mi=C5=9Bkiewicz, arekm / ( maven.pl | pld-linux.org )
+Arkadiusz> (loosing data from that few sectors is acceptable if the res=
+t will be readable)
+
+Arkadiusz> Thanks,
+Arkadiusz> --=20
+Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
+Arkadiusz> --
+Arkadiusz> To unsubscribe from this list: send the line "unsubscribe li=
+nux-raid" in
+Arkadiusz> the body of a message to majordomo@vger.kernel.org
+Arkadiusz> More majordomo info at  http://vger.kernel.org/majordomo-inf=
+o.html
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
