@@ -1,59 +1,50 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Unable to (un)-grow raid6
-Date: Sun, 6 Dec 2015 16:21:38 -0500
-Message-ID: <5664A6E2.4070900@turmel.org>
-References: <4E26C335-DEDB-489E-B54E-A285273569A1@alkaline-solutions.com>
- <465BF0F5-B5C7-4C02-8EB5-552B959B8D29@alkaline-solutions.com>
- <56649C04.9000601@turmel.org>
- <9F08EE4D-B926-4F8F-9F9D-F9C7234959B4@alkaline-solutions.com>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
+Date: Mon, 7 Dec 2015 14:29:31 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FE0BC3@CFWEX01.americas.cray.com>
+References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
+	<20151202010745.GC9812@www5.open-std.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
+	<565F03F2.3070803@turmel.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
+	<565F1035.10800@turmel.org>
+	<F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
+	<565F136F.2090709@turmel.org>
+	<CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
+	<F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
+	<566059E8.60804@turmel.org>
+	<F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
+ <CAE9DZUTF3KBGoKVOX4u3+mii5imaVUfEj8kbNjfYMP=8=pHLQA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9F08EE4D-B926-4F8F-9F9D-F9C7234959B4@alkaline-solutions.com>
+In-Reply-To: <CAE9DZUTF3KBGoKVOX4u3+mii5imaVUfEj8kbNjfYMP=8=pHLQA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: David Waite <david@alkaline-solutions.com>
-Cc: linux-raid@vger.kernel.org
+To: Dallas Clement <dallas.a.clement@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/06/2015 04:13 PM, David Waite wrote:
->=20
->> On Dec 6, 2015, at 1:35 PM, Phil Turmel <philip@turmel.org> wrote:
->>
->> On 12/05/2015 10:04 PM, David Waite wrote:
->>> I=E2=80=99m having difficulty shrinking down a RAID6 array (md2) on=
- a Sinology NAS. I wish to go from 13 drives to 11, and believe I need =
-to go to 12 first to maintain operation and redundancy through the resi=
-zing process.
->>
->> No, you can go straight to 11 if you've set array-size properly.  --=
-grow
->> operations maintain redundancy throughout.
->=20
-> I thought =E2=80=94grow maintains redundancy for power loss but not d=
-isk failure.
->=20
-> Would I do this by simply marking the other drive I want to remove as=
- failed?
-
-No!  Is that what you did with the other one?
-
---grow with a reduction in number leaves the unneeded drive(s) as hot
-spares when it is complete.  That's when you remove them.  Or, if it
-didn't pick the drives you wanted to remove, you can then do a --replac=
-e
-operation, which also maintains redundancy throughout.
-
-> I=E2=80=99ll try =E2=80=94array-size again. How is the array-size sug=
-gestion by mdadm calculated - the drives are not of uniform size.
-
-You didn't post your --detail and --examine output as requested, so I
-can't be specific.  For parity arrays, the size of the smallest member
-controls the size of the array.
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SSBuZWVkIHNvbWUgY2xhcmlmaWNhdGlvbiBvbiB3aGF0IGRhdGEgeW91IHdhbnQgY29sbGVjdGVk
+Li4uLiBkbyB5b3Ugd2FudCBpb3N0YXQgLXhtIGNvbGxlY3RlZCBiZWZvcmUgYW5kIGFmdGVyPyAg
+T3IgYXQgYSBwZXJpb2RpYyBpbnRlcnZhbCAoMSBzZWMpPw0KDQpJJ20gbWVhc3VyaW5nIHN1c3Rh
+aW5lZCBwZXJmb3JtYW5jZS4gIFRoaXMgbWVhbnMgSeKAmW0gcnVubmlnIGZvciBhIHBlcmlvZCBv
+ZiB0aW1lIC0tIDEgbWludXRlLiAgSWYgeW91IHdhbnQgaW9zdGF0IGNvbGxlY3RlZCBvbiBhbiBp
+bnRlcnZhbCwgdGhhdCB3b3VsZCBwcm9iYWJseSBiZSBtb3JlIGRhdGEgdGhhbiBvbmUgd291bGQg
+d2FudCBwb3N0ZWQgdG8gdGhpcyBtYWlsaW5nIGxpc3QuDQoNCkJ1dC4uLiB5ZXMsIHRoaXMgaXMg
+YSBSQUlENi4NCg0KSSd2ZSBzd2l0Y2hlZCB0byBIREQncyBhcyBzdG9yYWdlIGFzIHRoZXJlIGlz
+IGNvbmNlcm4gb24gdGhlIGxpc3QgdGhhdCB0aGUgRERSIGRpc2sgZGV2aWNlcyBjb3VsZCBiZSBj
+YXVzaW5nIHVuaW50ZW5kZWQgYmVoYXZpb3IgaW4gUkFJRDYuICBXaXRoIDYgSEREJ3MsIGVhY2gg
+YWJsZSB0byBkbyAyNzAgTUIvcyBvbiB0aGVpciBvdXRlciBlZGdlLCBJJ20gZ2V0dGluZyBSQUlE
+NiB0aHJvdWdocHV0IG9mIGFib3V0IDEwODAgTUIvcyB3aGVuIEkgdXNlIGEgdGhyZWFkIGNvdW50
+IG9mIDQsIHVzaW5nIEZJTy4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IERh
+bGxhcyBDbGVtZW50IFttYWlsdG86ZGFsbGFzLmEuY2xlbWVudEBnbWFpbC5jb21dIA0KU2VudDog
+RnJpZGF5LCBEZWNlbWJlciAwNCwgMjAxNSAxMDowOCBBTQ0KVG86IFJvYmVydCBLaWVyc2tpDQpD
+YzogUGhpbCBUdXJtZWw7IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTog
+UkFJRCA1LDYgc2VxdWVudGlhbCB3cml0aW5nIHNlZW1zIHNsb3dlciBpbiBuZXdlciBrZXJuZWxz
+DQoNClJvYmVydCwgaXMgdGhpcyB3aXRoIGEgUkFJRCA2IGFycmF5PyAgQWxzbywgd2hhdCBhcmUg
+dGhlIGFjdHVhbCB0aHJvdWdocHV0IG51bWJlcnMgeW91IGFyZSBnZXR0aW5nPyAgV291bGQgaXQg
+YmUgcG9zc2libGUgZm9yIHlvdSB0byBjYXB0dXJlIHRoZSBpb3N0YXQgLXhtIG91dHB1dCBhbmQg
+cmVwb3J0IHRoZSBpbmRpdmlkdWFsIGRpc2sgd01CL3MgYW5kIGFsc28gdGhlIGRpc2sgdXRpbGl6
+YXRpb24gZm9yIFJBSUQgNj8NCg==
