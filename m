@@ -1,145 +1,109 @@
-From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
-Subject: Re: I/O errors without erros from underlying device
-Date: Mon, 7 Dec 2015 21:46:28 +0100
-Message-ID: <201512072146.28378.a.miskiewicz@gmail.com>
-References: <201512071705.27177.a.miskiewicz@gmail.com> <201512071803.26434.arekm@maven.pl> <22117.49283.546268.719858@quad.stoffel.home>
-Reply-To: arekm@maven.pl
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22117.49283.546268.719858@quad.stoffel.home>
-Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: linux-raid@vger.kernel.org
+From: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2 00/19] Support fuse mounts in user namespaces
+Date: Mon,  7 Dec 2015 15:21:09 -0600
+Message-ID: <1449523289-144238-1-git-send-email-seth.forshee@canonical.com>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 List-Id: linux-raid.ids
 
-On Monday 07 of December 2015, John Stoffel wrote:
-> >>>>> "Arkadiusz" =3D=3D Arkadiusz Mi=B6kiewicz <arekm@maven.pl> writ=
-es:
-> Arkadiusz> On Monday 07 of December 2015, John Stoffel wrote:
->=20
-> Arkadiusz> 4.3.0 kernel, raid6 array:
-> >> I think there's a bug in the 4.3.x and 4.4-rc3 and lower with bloc=
-k
-> >> merges.  I ran into these over the weekend, where v4.2.6 was stabl=
-e,
-> >> but anything higher would lock up and crash on me.
->=20
-> Arkadiusz> Well, no crashes here.
->=20
-> That's good.  It was hard(er) to hit when I wasn't running KVM VMs at
-> the same time on the server, and I was running strictly RAID1 disks,
-> so it's hard to know.
->=20
-> >> So first step would be to make sure you get and test v4.4-rc4.
->=20
-> Arkadiusz> Do you know which commit there?
->=20
-> Try this, from the master lkml git repository:
->=20
->     2873d32ff493ecbfb7d2c7f56812ab941dda42f4
+These patches implement support for mounting filesystems in user
+namespaces using fuse. They are based on the patches in the for-testing
+branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/ebiederm/user-namespace.git,
+but I've rebased them onto 4.4-rc3. I've pushed all of this to:
 
-It's merge commit. Don't see any obvious patch in that merge that would=
- help=20
-my case.
+ git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/linux.git fuse-userns
 
+The patches are organized into three high-level groups.
 
-Anyway I would expect my problem to be related to badblock lists which =
-numbers=20
-are close to dmesg error message: [  848.988518] Buffer I/O error on de=
-v md7,=20
-logical block 3907148544, async page read
+Patches 1-6 are related to security, adding restrictions for
+unprivileged mounts and updating the LSMs as needed. Patches 1-2
+(checking inode permissions for block device mounts) may not be strictly
+necessary for fuseblk mounts since fuse doesn't do any IO on the block
+device in the kernel, but it still seems like a good idea to fail the
+mount if the user doesn't have the required permissions for the inode
+(though this is a bit misleading with fuse since the mounts are done via
+a suid-root helper).
 
-> >> http://sprunge.us/XSWI
+Patches 7-14 update most of the vfs to translate ids correctly and deal
+with inodes which may have invalid user/group ids. I've omitted patches
+for anything not used by fuse - quota, fs freezing, some helper
+functions, etc. - but if these are wanted for the sake of completeness I
+can include them.
 
-But how to repair these if write() also fails and=20
-http://www.spinics.net/lists/raid/msg49325.html suggests that write sho=
-uld=20
-"fix" these (by using replacement blocks I guess) ?
+Patches 15-18 update fuse to deal with mounts from non-init pid and user
+namespaces and enable mounting from user namespaces.
 
+Changes since v1:
+ - Drop patch for FIBMAP.
+ - Use current_in_userns in fuse_allow_current_process.
+ - Remove checks for uid/gid validity in fuse. Intead, ids from the
+   backing store which do not map into s_user_ns will result in invalid
+   ids in the vfs inode. Checks in the vfs will prevent unmappable ids
+   from being passed in from above.
+ - Update a couple of commit messages to provide more detail about
+   changes.
 
-=20
-> Arkadiusz> md7 : active raid6 sdg[10] sdad1[9] sdac1[8] sdag1[7] sdaf=
-1[6]
->=20
-> >> sdae1[5] sdaj1[4] sdai1[3] sdah1[2] sdn1[1] Arkadiusz>       31255=
-089152
-> >> blocks super 1.2 level 6, 512k chunk, algorithm 2 [10/10] [UUUUUUU=
-UUU]
->=20
-> Arkadiusz> bitmap: 1/30 pages [4KB], 65536KB chunk
->=20
-> Arkadiusz> array had weird failure where many disks went into failed =
-state
->=20
-> >> but Arkadiusz> remove && adding these disks "fixed" it (turns out =
-not
-> >> really fixed it).
->=20
-> Arkadiusz> Unfortunately now some reads fail:
->=20
-> Arkadiusz> pread(4, 0x1483a00, 4096, 16003680464896) =3D -1 EIO (Inpu=
-t/output
->=20
-> >> error)
->=20
-> Arkadiusz> To reproduce used xfs_io
-> Arkadiusz> xfs_io -d -c "pread 16003680464896 4096" /dev/md7
-> Arkadiusz> pread64: Input/output error
-> Arkadiusz> which does pread exactly as shown above.
->=20
-> Arkadiusz> write also fails for that area:
-> Arkadiusz> xfs_io -d -c "pwrite 16003680464896 4096" /dev/md7
-> Arkadiusz> pwrite64: Input/output error
->=20
-> Arkadiusz> Note that nothing is written in dmesg when that happens.
->=20
-> Arkadiusz> I've tried various offsets and sizes of pread and at some =
-point
->=20
-> >> that was logged: Arkadiusz> [  848.988518] Buffer I/O error on dev=
- md7,
-> >> logical block 3907148544, async page read
->=20
-> Arkadiusz> but no error from underlying devices.
->=20
-> Arkadiusz> List of bad blocks:
-> Arkadiusz> http://sprunge.us/XSWI
->=20
-> Arkadiusz> What can I do now?
->=20
-> Arkadiusz> (loosing data from that few sectors is acceptable if the r=
-est
->=20
-> >> will be readable)
->=20
-> Arkadiusz> Thanks,
-> Arkadiusz> --
-> Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org=
- )
-> Arkadiusz> --
-> Arkadiusz> To unsubscribe from this list: send the line "unsubscribe
->=20
-> >> linux-raid" in Arkadiusz> the body of a message to
-> >> majordomo@vger.kernel.org
->=20
-> Arkadiusz> More majordomo info at
->=20
-> >> http://vger.kernel.org/majordomo-info.html
->=20
-> Arkadiusz> --
-> Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org=
- )
+Thanks,
+Seth
 
+Andy Lutomirski (1):
+  fs: Treat foreign mounts as nosuid
 
---=20
-Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
+Seth Forshee (17):
+  block_dev: Support checking inode permissions in lookup_bdev()
+  block_dev: Check permissions towards block device inode when mounting
+  selinux: Add support for unprivileged mounts from user namespaces
+  userns: Replace in_userns with current_in_userns
+  Smack: Handle labels consistently in untrusted mounts
+  fs: Check for invalid i_uid in may_follow_link()
+  cred: Reject inodes with invalid ids in set_create_file_as()
+  fs: Refuse uid/gid changes which don't map into s_user_ns
+  fs: Update posix_acl support to handle user namespace mounts
+  fs: Ensure the mounter of a filesystem is privileged towards its
+    inodes
+  fs: Don't remove suid for CAP_FSETID in s_user_ns
+  fs: Allow superblock owner to access do_remount_sb()
+  capabilities: Allow privileged user in s_user_ns to set security.*
+    xattrs
+  fuse: Add support for pid namespaces
+  fuse: Support fuse filesystems outside of init_user_ns
+  fuse: Restrict allow_other to the superblock's namespace or a
+    descendant
+  fuse: Allow user namespace mounts
 
---=20
-Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/md/bcache/super.c       |  2 +-
+ drivers/md/dm-table.c           |  2 +-
+ drivers/mtd/mtdsuper.c          |  2 +-
+ fs/attr.c                       | 11 +++++++
+ fs/block_dev.c                  | 18 +++++++++--
+ fs/exec.c                       |  2 +-
+ fs/fuse/cuse.c                  |  3 +-
+ fs/fuse/dev.c                   | 26 ++++++++++++----
+ fs/fuse/dir.c                   | 16 +++++-----
+ fs/fuse/file.c                  | 22 +++++++++++---
+ fs/fuse/fuse_i.h                | 10 +++++-
+ fs/fuse/inode.c                 | 42 +++++++++++++++++---------
+ fs/inode.c                      |  6 +++-
+ fs/namei.c                      |  2 +-
+ fs/namespace.c                  | 17 +++++++++--
+ fs/posix_acl.c                  | 67 ++++++++++++++++++++++++++---------------
+ fs/quota/quota.c                |  2 +-
+ fs/xattr.c                      | 19 +++++++++---
+ include/linux/fs.h              |  2 +-
+ include/linux/mount.h           |  1 +
+ include/linux/posix_acl_xattr.h | 17 ++++++++---
+ include/linux/uidgid.h          | 10 ++++++
+ include/linux/user_namespace.h  |  6 ++--
+ kernel/capability.c             | 13 +++++---
+ kernel/cred.c                   |  2 ++
+ kernel/user_namespace.c         |  6 ++--
+ security/commoncap.c            | 16 ++++++----
+ security/selinux/hooks.c        | 25 ++++++++++++++-
+ security/smack/smack_lsm.c      | 29 ++++++++++++------
+ 29 files changed, 287 insertions(+), 109 deletions(-)
+
+-- 
+1.9.1
