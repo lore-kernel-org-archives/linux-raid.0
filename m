@@ -1,50 +1,67 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Mon, 7 Dec 2015 14:18:53 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FE0BAA@CFWEX01.americas.cray.com>
-References: <F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
- <565F03F2.3070803@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
- <565F1035.10800@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
- <565F136F.2090709@turmel.org>
- <CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
- <F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
- <566059E8.60804@turmel.org>
- <F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
- <20151204185155.GA3590@kernel.org>
+From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: I/O errors without erros from underlying device
+Date: Mon, 7 Dec 2015 17:05:26 +0100
+Message-ID: <201512071705.27177.a.miskiewicz@gmail.com>
+Reply-To: arekm@maven.pl
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151204185155.GA3590@kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: Phil Turmel <philip@turmel.org>, Dallas Clement <dallas.a.clement@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I re-ran the test using buffered IO, with both XDD and FIO.  Except that I was using XDD and FIO, the tests were essentially the same -- TC=4, QD=1, BS=1M, DIR=Write, Order=SEQ.
 
-I've switched to using spinning disks, since several people on this list indicated that using DDR Disk devices with it's ultra low latency could cause unintended behavior in RAID6.  My theoretical MAX TP is 1080 - 1620 MB/s for 6 HDD's that each have a TP of about 270 MB/s on the outer edge.  My SAS infrastructure is such that I shouldn't have a problem achieving the Theoretical MAX, when testing on the outer edge.
+Hi.
 
-With Buffered IO...
+4.3.0 kernel, raid6 array:
 
-FIO reported a sustained TP of 2200 MB/s.  As this is well above the theoretical MAX, I didn't trust it.  I ran the same test with XDD.  It reported a TP of 570 MB/s.  When I watched the system via vmstat and iostat while running both of these tests, both tools indicated that I was doing about 570 MB/s while running both XDD and FIO.  So there must be something wrong in the way FIO is calculating TP when using buffered IO.
+md7 : active raid6 sdg[10] sdad1[9] sdac1[8] sdag1[7] sdaf1[6] sdae1[5]=
+ sdaj1[4] sdai1[3] sdah1[2] sdn1[1]
+      31255089152 blocks super 1.2 level 6, 512k chunk, algorithm 2 [10=
+/10] [UUUUUUUUUU]
+      bitmap: 1/30 pages [4KB], 65536KB chunk
 
-When running both FIO and XDD using direct IO, I was able to get much better performance (about 1040 MB/s) with the above paramaters (TC=4, QD=1, BS=1M, DIR=Write, Order=SEQ).  I am able to confirm that TP using vmstat and iostat.
+array had weird failure where many disks went into failed state but
+remove && adding these disks "fixed" it (turns out not really fixed it)=
+=2E
 
-While running with both Buffered-IO and Direct-IO, I watched the IO's in both iostat and vmstat and can confirm that there weren't any reads, which means there wasn't any Read-Modify-Write going on in either case.
+Unfortunately now some reads fail:
 
-As I am getting nearly the theoretical MAX, one might think there isn't a problem.  However, when I increase TC to 5, my TP is only 750 MB/s.  When I increase TC to 32, my TP is about 250 MB/s.  While you may conclude that 32 threads is overwhelming the system, 5 threads shouldn't be overwhelming a system that has 12 core.  When you consider that I get MAX TP with 4 threads, the fact that I get  a 25% reduction by adding one thread is a problem.
+pread(4, 0x1483a00, 4096, 16003680464896) =3D -1 EIO (Input/output erro=
+r)
 
-Bob Kierski
-Senior Storage Performance Engineer
-Cray Inc.
-380 Jackson Street
-Suite 210
-St. Paul, MN 55101
-Tele: 651-967-9590
-Fax:  651-605-9001
-Cell: 651-890-7461
+To reproduce used xfs_io
+ xfs_io -d -c "pread 16003680464896 4096" /dev/md7
+pread64: Input/output error
+which does pread exactly as shown above.
 
+write also fails for that area:
+xfs_io -d -c "pwrite 16003680464896 4096" /dev/md7
+pwrite64: Input/output error
+
+Note that nothing is written in dmesg when that happens.
+
+I've tried various offsets and sizes of pread and at some point that wa=
+s logged:
+[  848.988518] Buffer I/O error on dev md7, logical block 3907148544, a=
+sync page read
+
+but no error from underlying devices.
+
+List of bad blocks:
+http://sprunge.us/XSWI
+
+What can I do now?
+
+(loosing data from that few sectors is acceptable if the rest will be r=
+eadable)
+
+Thanks,
+--=20
+Arkadiusz Mi=C5=9Bkiewicz, arekm / ( maven.pl | pld-linux.org )
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
