@@ -1,71 +1,57 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Help Reassembling a raid5 array
-Date: Tue, 8 Dec 2015 14:48:14 -0500
-Message-ID: <566733FE.9000906@turmel.org>
-References: <CAJGWEk93QAmCdik4_rxGPcq7dm=2tXX1U19Zkn5OwcAog0Z-RA@mail.gmail.com>
- <56665129.6050404@turmel.org>
- <CAJGWEk-UovYPJcyCOhUNO4XahraB_9E5QriObJe+S6uVT_Rs1g@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
+Date: Wed, 09 Dec 2015 07:30:38 +1100
+Message-ID: <87poygsmxd.fsf@notabene.neil.brown.name>
+References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJGWEk-UovYPJcyCOhUNO4XahraB_9E5QriObJe+S6uVT_Rs1g@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Wilkins <andrew.m.wilkins@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, Jeff Moyer <jmoyer@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-raid.ids
 
-Hi Andrew,
+--=-=-=
+Content-Type: text/plain
 
-{Added the list back.  Convention on kernel.org is reply-to-all, trim
-replies, and either interleave your reply or bottom post.  I've left
-some context untrimmed for the list to see.}
+On Wed, Dec 09 2015, Vishal Verma <vishal.l.verma@intel.com> wrote:
 
-On 12/08/2015 01:03 PM, Andrew Wilkins wrote:
-> Hi Again
-> Thanks for your help
-> 
-> I had tried exactly what you suggested several times and it did not
-> work which is why i thought i was out of options. It had been loaded
-> had loaded from an ubuntu 15.10 disk for recovery
-> A colleague loaded a purpose build rescue disk from here
-> http://www.sysresccd.org/SystemRescueCd_Homepage
-> and the same thing worked, unfortunately i don't have any more details
-> on what version it was, but i assume the latest
+>
+> Patch 3 converts md over to use the new badblocks 'library'. I have
+> done some pretty simple testing on this - created a raid 1 device,
+> made sure the sysfs entries show up, and can be used to add and view
+> badblocks. A closer look by the md folks would be nice here.
 
-Does this mean you did or did not use system rescue CD for this incident?
+Hi,
+ this all looks reasonably sensible.  I haven't gone over it with a
+ fine toothed comb (I wonder where that analogy comes from....) but
+ nothing is obviously wrong.
 
-> the only difference between our commands was i used /dev/md/0 and my
-> colleague used /dev/md0
-> but the difference i assume is just to do with where the different
-> distros mount arrays, the extra / was something ubuntu was able to put
-> in all by it's self when running --scan
+ Acked-by: NeilBrown <neilb@suse.com>
 
-Correct. The difference between /dev/md0 and /dev/md/0 is not relevant.
+Thanks,
+NeilBrown
 
-> this is what i was trying in ubuntu and the output
-> 
-> root@ubuntu:/home/ubuntu# mdadm --assemble --force /dev/md/0 /dev/sdb1
-> /dev/sdd1 /dev/sde1 /dev/sdf1 -v
-> mdadm: looking for devices for /dev/md/0
-> mdadm: /dev/sdb1 is identified as a member of /dev/md/0, slot 0.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md/0, slot 2.
-> mdadm: /dev/sde1 is identified as a member of /dev/md/0, slot 3.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md/0, slot 4.
-> mdadm: no uptodate device for slot 2 of /dev/md/0
-> mdadm: added /dev/sdd1 to /dev/md/0 as 2
-> mdadm: added /dev/sde1 to /dev/md/0 as 3
-> mdadm: added /dev/sdf1 to /dev/md/0 as 4 (possibly out of date)
-> mdadm: added /dev/sdb1 to /dev/md/0 as 0
-> mdadm: /dev/md/0 assembled from 3 drives - not enough to start the array.
-> 
-> 
-> It's like --force made no difference, does this seem like a bug for it
-> to work on this array on one distro but not the other ? or will it be
-> down to differences in versions and/or how they are setup
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-There are differences.  There have been bugs with --force in the past.
-That's why I requested you use a recent liveCD.  New kernel and new
-mdadm.  Also, try putting --force twice.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Phil
+iQIcBAEBCAAGBQJWZz3vAAoJEDnsnt1WYoG5S84P+wVCYzirtIkAFpLxJ7XrXc2w
+lsKy2lcS/fVkcNWtaVch9D6y8rdi7RQ2Y/vGcW1wYahJLPd9eDsYVfl2L0IZqijL
+Ug78ll9yFT/tRYXvr3Lx83+vMqKXtyjSaZ9OirNhzs+w3OOb8oDDeH4cdUJDYXUs
+IfwK64WNc3Ng8YrR31VbPT/BbQLyLp1FZjmwR0JFeKz+wtQkz2gbRE1IZlOy8s7j
+OTFvVo4DtR40glra/cZH/geCRpsueCfp+R0vw1+p5Y/aedoPXvGFxubWHMXjzyVk
+V+OgI3Ie2fiF0lxRNPZa6aDtJ1V9o98bw8BOO2JJqQu42ZOJr6kKfDi0M14+fcpy
+L5ngGW3O2wKSvRQ+PrLS4+oWCg3emyKhJ7mcjwmdH/b6EH5BSPocMOJHaNPezMuk
+kUDYHjcQrlB6cDf0ZHufyx8Sq9eUI/mPa70nYCiSi3TeI7/Ot28aZxmT104ilcyT
+ncwY+o9It+B3u2OmpxJYKkEij8pYHLoZfPhIYEUt+4GDcgfHE5zaWsXs/VtwuTPW
+LdfkEcSerlAlOUBz0tSmPsgGHTuUgTGJ3dPNv7jyNx+E9JemIFX/vgpDwlCIHVyK
+/zXZ6qZL4ZfVH1s0ScLrUCSjeuw7wNGwH40ETv3xsI8yMN8H/8kaQMfBrqigcHdy
+4fbxCtceYP7poSy2jniL
+=kkub
+-----END PGP SIGNATURE-----
+--=-=-=--
