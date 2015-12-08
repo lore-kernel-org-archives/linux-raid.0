@@ -1,76 +1,71 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Re: RAID 5,6 sequential writing seems slower in newer kernels
-Date: Tue, 8 Dec 2015 13:38:54 -0600
-Message-ID: <CAE9DZUSPPkbPTkkYJE7iHwK2Y95qTmeW87O5EHKBTR45_tsQrA@mail.gmail.com>
-References: <CAE9DZURyZKmnUmnn5ELAhLUq8nhXD1eBx4g8hDmCzS-MYLrT+Q@mail.gmail.com>
-	<20151202010745.GC9812@www5.open-std.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDB18@CFWEX01.americas.cray.com>
-	<565F03F2.3070803@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDBB9@CFWEX01.americas.cray.com>
-	<565F1035.10800@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDDC2A@CFWEX01.americas.cray.com>
-	<565F136F.2090709@turmel.org>
-	<CAE9DZUQGeGFxWigXJr4+HoWCn7+TYj4QBECLce75_zugV14wZQ@mail.gmail.com>
-	<F7761B9B1D11B64BBB666019E9378117FDDF77@CFWEX01.americas.cray.com>
-	<566059E8.60804@turmel.org>
-	<F7761B9B1D11B64BBB666019E9378117FDE157@CFWEX01.americas.cray.com>
-	<CAE9DZUTF3KBGoKVOX4u3+mii5imaVUfEj8kbNjfYMP=8=pHLQA@mail.gmail.com>
-	<F7761B9B1D11B64BBB666019E9378117FE0BC3@CFWEX01.americas.cray.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Help Reassembling a raid5 array
+Date: Tue, 8 Dec 2015 14:48:14 -0500
+Message-ID: <566733FE.9000906@turmel.org>
+References: <CAJGWEk93QAmCdik4_rxGPcq7dm=2tXX1U19Zkn5OwcAog0Z-RA@mail.gmail.com>
+ <56665129.6050404@turmel.org>
+ <CAJGWEk-UovYPJcyCOhUNO4XahraB_9E5QriObJe+S6uVT_Rs1g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FE0BC3@CFWEX01.americas.cray.com>
+In-Reply-To: <CAJGWEk-UovYPJcyCOhUNO4XahraB_9E5QriObJe+S6uVT_Rs1g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>
-Cc: Phil Turmel <philip@turmel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Andrew Wilkins <andrew.m.wilkins@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Dec 7, 2015 at 8:29 AM, Robert Kierski <rkierski@cray.com> wrot=
-e:
-> I need some clarification on what data you want collected.... do you =
-want iostat -xm collected before and after?  Or at a periodic interval =
-(1 sec)?
->
-> I'm measuring sustained performance.  This means I=E2=80=99m runnig f=
-or a period of time -- 1 minute.  If you want iostat collected on an in=
-terval, that would probably be more data than one would want posted to =
-this mailing list.
->
-> But... yes, this is a RAID6.
->
-> I've switched to HDD's as storage as there is concern on the list tha=
-t the DDR disk devices could be causing unintended behavior in RAID6.  =
-With 6 HDD's, each able to do 270 MB/s on their outer edge, I'm getting=
- RAID6 throughput of about 1080 MB/s when I use a thread count of 4, us=
-ing FIO.
->
-> -----Original Message-----
-> From: Dallas Clement [mailto:dallas.a.clement@gmail.com]
-> Sent: Friday, December 04, 2015 10:08 AM
-> To: Robert Kierski
-> Cc: Phil Turmel; linux-raid@vger.kernel.org
-> Subject: Re: RAID 5,6 sequential writing seems slower in newer kernel=
-s
->
-> Robert, is this with a RAID 6 array?  Also, what are the actual throu=
-ghput numbers you are getting?  Would it be possible for you to capture=
- the iostat -xm output and report the individual disk wMB/s and also th=
-e disk utilization for RAID 6?
+Hi Andrew,
 
-Hi Robert.  Thanks for posting these results.  Your fio direct I/O
-results look pretty darn good.  Were you able to confirm with hdparm
--t that you really can get 270 MB/s on your disks in reality?  Also,
-what formula are you using to calculate best and worst case RAID 6
-read and write speeds?
+{Added the list back.  Convention on kernel.org is reply-to-all, trim
+replies, and either interleave your reply or bottom post.  I've left
+some context untrimmed for the list to see.}
 
-> However, when I increase TC to 5, my TP is only 750 MB/s.  When I inc=
-rease TC to 32, my TP is about 250 MB/s.
+On 12/08/2015 01:03 PM, Andrew Wilkins wrote:
+> Hi Again
+> Thanks for your help
+> 
+> I had tried exactly what you suggested several times and it did not
+> work which is why i thought i was out of options. It had been loaded
+> had loaded from an ubuntu 15.10 disk for recovery
+> A colleague loaded a purpose build rescue disk from here
+> http://www.sysresccd.org/SystemRescueCd_Homepage
+> and the same thing worked, unfortunately i don't have any more details
+> on what version it was, but i assume the latest
 
-Now this is pretty disappointing.  I agree, 12 cores should be able to
-easily handle this number of threads.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Does this mean you did or did not use system rescue CD for this incident?
+
+> the only difference between our commands was i used /dev/md/0 and my
+> colleague used /dev/md0
+> but the difference i assume is just to do with where the different
+> distros mount arrays, the extra / was something ubuntu was able to put
+> in all by it's self when running --scan
+
+Correct. The difference between /dev/md0 and /dev/md/0 is not relevant.
+
+> this is what i was trying in ubuntu and the output
+> 
+> root@ubuntu:/home/ubuntu# mdadm --assemble --force /dev/md/0 /dev/sdb1
+> /dev/sdd1 /dev/sde1 /dev/sdf1 -v
+> mdadm: looking for devices for /dev/md/0
+> mdadm: /dev/sdb1 is identified as a member of /dev/md/0, slot 0.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md/0, slot 2.
+> mdadm: /dev/sde1 is identified as a member of /dev/md/0, slot 3.
+> mdadm: /dev/sdf1 is identified as a member of /dev/md/0, slot 4.
+> mdadm: no uptodate device for slot 2 of /dev/md/0
+> mdadm: added /dev/sdd1 to /dev/md/0 as 2
+> mdadm: added /dev/sde1 to /dev/md/0 as 3
+> mdadm: added /dev/sdf1 to /dev/md/0 as 4 (possibly out of date)
+> mdadm: added /dev/sdb1 to /dev/md/0 as 0
+> mdadm: /dev/md/0 assembled from 3 drives - not enough to start the array.
+> 
+> 
+> It's like --force made no difference, does this seem like a bug for it
+> to work on this array on one distro but not the other ? or will it be
+> down to differences in versions and/or how they are setup
+
+There are differences.  There have been bugs with --force in the past.
+That's why I requested you use a recent liveCD.  New kernel and new
+mdadm.  Also, try putting --force twice.
+
+Phil
