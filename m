@@ -1,65 +1,86 @@
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 0/3] Badblock tracking for gendisks
-Date: Tue, 8 Dec 2015 02:54:58 +0000
-Message-ID: <1449543298.16905.117.camel@intel.com>
-References: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Help Reassembling a raid5 array
+Date: Mon, 7 Dec 2015 22:40:25 -0500
+Message-ID: <56665129.6050404@turmel.org>
+References: <CAJGWEk93QAmCdik4_rxGPcq7dm=2tXX1U19Zkn5OwcAog0Z-RA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449543157-5905-1-git-send-email-vishal.l.verma@intel.com>
-Content-Language: en-US
-Content-ID: <B1A538054FDBC5439D1137E8E299E883@intel.com>
+In-Reply-To: <CAJGWEk93QAmCdik4_rxGPcq7dm=2tXX1U19Zkn5OwcAog0Z-RA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "neilb@suse.com" <neilb@suse.com>, "axboe@fb.com" <axboe@fb.com>, "jmoyer@redhat.com" <jmoyer@redhat.com>
+To: Andrew Wilkins <andrew.m.wilkins@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T29wcywgc29ycnksIHNob3VsZCd2ZSBiZWVuIFBBVENIIHYzLi4NClRoZSBjb250ZW50cyBhcmUg
-cmlnaHQsIGp1c3QgdGhlIHN1YmplY3QgbGluZSBpcyBvZmYuDQoNCgktVmlzaGFsDQoNCg0KT24g
-TW9uLCAyMDE1LTEyLTA3IGF0IDE5OjUyIC0wNzAwLCBWaXNoYWwgVmVybWEgd3JvdGU6DQo+IHYz
-Og0KPiDCoCAtIEFkZCBrZXJuZWwtZG9jIHN0eWxlIGNvbW1lbnRzIHRvIGFsbCBleHBvcnRlZCBm
-dW5jdGlvbnMgaW4NCj4gYmFkYmxvY2tzLmMgKEphbWVzKQ0KPiDCoCAtIE1ha2UgcmV0dXJuIHZh
-bHVlcyBmcm9tIGJhZGJsb2NrcyBmdW5jdGlvbnMgY29uc2lzdGVudCB3aXRoDQo+IHRoZW1zZWx2
-ZXMNCj4gwqDCoMKgwqBhbmQgdGhlIGtlcm5lbCBzdHlsZS4gQ2hhbmdlIHRoZSBwb2xhcml0eSBv
-ZiBiYWRibG9ja3Nfc2V0LCBhbmQNCj4gdXBkYXRlDQo+IMKgwqDCoMKgYWxsIGNhbGxlcnMgYWNj
-b3JkaW5nbHkgKEphbWVzKQ0KPiDCoCAtIEluIGdlbmRpc2ssIGRvbid0IHVuY29uZGl0aW9uYWxs
-eSBhbGxvY2F0ZSBiYWRibG9ja3MsIGV4cG9ydCB0aGUNCj4gaW5pdGlhbGl6ZXIuDQo+IMKgwqDC
-oMKgVGhpcyBhbHNvIGFsbG93cyB0aGUgaW5pdGlhbGl6ZXIgdG8gYmUgYSBub24tdm9pZCByZXR1
-cm4gdHlwZSwgc28NCj4gdGhhdCB0aGUNCj4gwqDCoMKgwqBiYWRibG9ja3MgdXNlciBjYW4gYWN0
-IHVwb24gZmFpbHVyZXMgYmV0dGVyIChKYW1lcykNCj4gDQo+IA0KPiB2MjoNCj4gwqAgLSBJbiBi
-YWRibG9ja3NfZnJlZSwgbWFrZSAncGFnZScgTlVMTCAocGF0Y2ggMSkNCj4gwqAgLSBNb3ZlIHRo
-ZSBjb3JlIGJhZGJsb2NrcyBjb2RlIHRvIGEgbmV3IC5jIGZpbGUgKHBhdGNoIDEpIChKZW5zKQ0K
-PiDCoCAtIEZpeCBhIHNpemVvZiB1c2FnZSBpbiBkaXNrX2FsbG9jX2JhZGJsb2NrcyAocGF0Y2gg
-MikgKERhbikNCj4gwqAgLSBTaW5jZSBkaXNrX2FsbG9jX2JhZGJsb2NrcyBjYW4gZmFpbCwgY2hl
-Y2sgZGlzay0+YmIgZm9yIE5VTEwgaW4NCj4gdGhlDQo+IMKgwqDCoMKgZ2VuaGQgd3JhcHBlcnMg
-KHBhdGNoIDIpIChKZWZmKQ0KPiDCoCAtIFVwZGF0ZSB0aGUgbWQgY29udmVyc2lvbiB0byBhbHNv
-IGlzZSB0aGUgYmFkYmxvY2tzIGluaXQgYW5kIGZyZWUNCj4gwqDCoMKgwqBmdW5jdGlvbnMgKHBh
-dGNoIDMpDQo+IMKgIC0gUmVtb3ZlIHRoZSBCQl8qIG1hY3JvcyBmcm9tIG1kLmggYXMgdGhleSBh
-cmUgbm93IGluIGJhZGJsb2Nrcy5oDQo+IChwYXRjaCAzKQ0KPiANCj4gUGF0Y2ggMSBjb3BpZXMg
-YmFkYmxvY2sgbWFuYWdlbWVudCBjb2RlIGludG8gYSBoZWFkZXIgb2YgaXRzIG93biwNCj4gbWFr
-aW5nIGl0IGdlbmVyYWxseSBhdmFpbGFibGUuIEl0IGZvbGxvd3MgY29tbW9uIGxpYnJhcmllcyBv
-ZiBjb2RlDQo+IHN1Y2ggYXMgbGlua2VkIGxpc3RzLCB3aGVyZSBhbnlvbmUgbWF5IGVtYmVkIGEg
-Y29yZSBkYXRhIHN0cnVjdHVyZQ0KPiBpbiBhbm90aGVyIHBsYWNlLCBhbmQgdXNlIHRoZSBwcm92
-aWRlZCBhY2Nlc3NvciBmdW5jdGlvbnMgdG8NCj4gbWFuaXB1bGF0ZSB0aGUgZGF0YS4NCj4gDQo+
-IFBhdGNoIDIgYWRkcyBiYWRibG9jayB0cmFja2luZyB0byBnZW5kaXNrcyAoaW4gcHJlcGFyYXRp
-b24gZm9yIHVzZQ0KPiBieSBOVkRJTU0gZGV2aWNlcykuDQo+IA0KPiBQYXRjaCAzIGNvbnZlcnRz
-IG1kIG92ZXIgdG8gdXNlIHRoZSBuZXcgYmFkYmxvY2tzICdsaWJyYXJ5Jy4gSSBoYXZlDQo+IGRv
-bmUgc29tZSBwcmV0dHkgc2ltcGxlIHRlc3Rpbmcgb24gdGhpcyAtIGNyZWF0ZWQgYSByYWlkIDEg
-ZGV2aWNlLA0KPiBtYWRlIHN1cmUgdGhlIHN5c2ZzIGVudHJpZXMgc2hvdyB1cCwgYW5kIGNhbiBi
-ZSB1c2VkIHRvIGFkZCBhbmQgdmlldw0KPiBiYWRibG9ja3MuIEEgY2xvc2VyIGxvb2sgYnkgdGhl
-IG1kIGZvbGtzIHdvdWxkIGJlIG5pY2UgaGVyZS4NCj4gDQo+IFZpc2hhbCBWZXJtYSAoMyk6DQo+
-IMKgIGJhZGJsb2NrczogQWRkIGNvcmUgYmFkYmxvY2sgbWFuYWdlbWVudCBjb2RlDQo+IMKgIGJs
-b2NrOiBBZGQgYmFkYmxvY2sgbWFuYWdlbWVudCBmb3IgZ2VuZGlza3MNCj4gwqAgbWQ6IGNvbnZl
-cnQgdG8gdXNlIHRoZSBnZW5lcmljIGJhZGJsb2NrcyBjb2RlDQo+IA0KPiDCoGJsb2NrL01ha2Vm
-aWxlwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqDCoDIgKy0NCj4gwqBibG9jay9iYWRibG9j
-a3MuY8KgwqDCoMKgwqDCoMKgwqDCoHwgNTc2DQo+ICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysNCj4gwqBibG9jay9nZW5oZC5jwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqB8wqDCoDc2ICsrKysrKw0KPiDCoGRyaXZlcnMvbWQvbWQuY8KgwqDCoMKgwqDCoMKg
-wqDCoMKgwqB8IDUxNiArKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+IC0t
-LS0NCj4gwqBkcml2ZXJzL21kL21kLmjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqA0MCArLS0t
-DQo+IMKgaW5jbHVkZS9saW51eC9iYWRibG9ja3MuaCB8wqDCoDUzICsrKysrDQo+IMKgaW5jbHVk
-ZS9saW51eC9nZW5oZC5owqDCoMKgwqDCoHzCoMKgwqA3ICsNCj4gwqA3IGZpbGVzIGNoYW5nZWQs
-IDc0MSBpbnNlcnRpb25zKCspLCA1MjkgZGVsZXRpb25zKC0pDQo+IMKgY3JlYXRlIG1vZGUgMTAw
-NjQ0IGJsb2NrL2JhZGJsb2Nrcy5jDQo+IMKgY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvbGlu
-dXgvYmFkYmxvY2tzLmgNCj4g
+Hi Andrew,
+
+On 12/07/2015 08:26 PM, Andrew Wilkins wrote:
+> Hi, please can someone help me with a raid array which as gone wrong
+> On Friday a backup server was rebooted, but failed to boot, possibly
+> with an unrelated issue
+> 
+> 
+> On Monday someone booted from a usb disk to try and recover it
+> they were originally able to assemble the array but now they are not,
+> 2 out of the 5 drives are showing out of date.
+> Device 1 is showing
+>   Bad Block Log : 512 entries available at offset 72 sectors
+>   Array State : AAAAA
+> and is showing 256 less a events
+> last updated 2 hours before the others
+> 
+> Device 4 is showing
+>  Array State : A.AAA
+> and 2 less events
+> last update 1 hour before the others
+> 
+> The rest all show
+>  Array State : A.AA.
+> 
+> I've tried manually assembling without device 1, but even with --force
+> it refused to assemble, force seems to do nothing at all, i am
+> assuming this maybe because the array state has been updated to say
+> missing for 2 devices.
+
+> The example here
+> https://raid.wiki.kernel.org/index.php/RAID_Recovery
+> seems to suggest that in my situation recreating might be my only option
+
+Possibly. Let's try all other options first.
+
+> Are there any better options before i go ahead and do this?
+
+At least one anomaly below.
+
+> /dev/sdb1:
+
+>      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+
+> /dev/sdc1:
+
+>      Array UUID : xxxxxxxx:xxxxxxxx:xxxxxxxx:abb20cf1
+
+How did this happen ? ^^^^^^^^^^^^^^^^^^^^^^
+
+> /dev/sdd1:
+
+>      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+
+> /dev/sde1:
+
+>      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+
+> /dev/sdf1:
+
+>      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+
+Try forcing re-assembly with sdb1, sdd1, sde1, and sdf1.
+
+If that doesn't work with your current environment, try again with new
+kernel and mdadm from booting a rescue environment.  I usually recommend
+the LiveCD from sysrescuecd.org.
+
+If that succeeds (in either case), add sdc1 and let it rebuild before
+doing anything else.
+
+Phil
