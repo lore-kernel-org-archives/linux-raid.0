@@ -1,157 +1,92 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: I/O errors without erros from underlying device
-Date: Mon, 7 Dec 2015 23:02:13 -0500
-Message-ID: <22118.22085.942396.994401@quad.stoffel.home>
-References: <201512071705.27177.a.miskiewicz@gmail.com>
-	<201512071803.26434.arekm@maven.pl>
-	<22117.49283.546268.719858@quad.stoffel.home>
-	<201512072146.28378.a.miskiewicz@gmail.com>
+From: Andrew Wilkins <andrew.m.wilkins@gmail.com>
+Subject: Re: Help Reassembling a raid5 array
+Date: Tue, 8 Dec 2015 05:02:24 +0000
+Message-ID: <CAJGWEk9ue1M_16fiwyu6eAkrURnx+i7K80M0+TyH=yKc9fSTDw@mail.gmail.com>
+References: <CAJGWEk93QAmCdik4_rxGPcq7dm=2tXX1U19Zkn5OwcAog0Z-RA@mail.gmail.com>
+	<56665129.6050404@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201512072146.28378.a.miskiewicz@gmail.com>
+In-Reply-To: <56665129.6050404@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: arekm@maven.pl
-Cc: John Stoffel <john@stoffel.org>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Arkadiusz" =3D=3D Arkadiusz Miskiewicz <a.miskiewicz@gmail.com> =
-writes:
+That was my bad I was gonna blank out all the uuids then figured it
+was pointless
 
-Arkadiusz> On Monday 07 of December 2015, John Stoffel wrote:
->> >>>>> "Arkadiusz" =3D=3D Arkadiusz Mi=B6kiewicz <arekm@maven.pl> wri=
-tes:
-Arkadiusz> On Monday 07 of December 2015, John Stoffel wrote:
->>=20
-Arkadiusz> 4.3.0 kernel, raid6 array:
->> >> I think there's a bug in the 4.3.x and 4.4-rc3 and lower with blo=
-ck
->> >> merges.  I ran into these over the weekend, where v4.2.6 was stab=
-le,
->> >> but anything higher would lock up and crash on me.
->>=20
-Arkadiusz> Well, no crashes here.
->>=20
->> That's good.  It was hard(er) to hit when I wasn't running KVM VMs a=
-t
->> the same time on the server, and I was running strictly RAID1 disks,
->> so it's hard to know.
->>=20
->> >> So first step would be to make sure you get and test v4.4-rc4.
->>=20
-Arkadiusz> Do you know which commit there?
->>=20
->> Try this, from the master lkml git repository:
->>=20
->> 2873d32ff493ecbfb7d2c7f56812ab941dda42f4
-
-Arkadiusz> It's merge commit. Don't see any obvious patch in that merge=
- that would help=20
-Arkadiusz> my case.
-
-The merge from Jens Axboe talking about blk something or other.  In my
-case, it lead to instant lockups.  In your case... hard to know.
-Sorry.=20
-
-Arkadiusz> Anyway I would expect my problem to be related to badblock
-Arkadiusz> lists which numbers are close to dmesg error message: [
-Arkadiusz> 848.988518] Buffer I/O error on dev md7, logical block
-Arkadiusz> 3907148544, async page read
-
->> >> http://sprunge.us/XSWI
-
-Arkadiusz> But how to repair these if write() also fails and=20
-Arkadiusz> http://www.spinics.net/lists/raid/msg49325.html suggests tha=
-t write should=20
-Arkadiusz> "fix" these (by using replacement blocks I guess) ?
-
-
-=20
-Arkadiusz> md7 : active raid6 sdg[10] sdad1[9] sdac1[8] sdag1[7] sdaf1[=
-6]
->>=20
->> >> sdae1[5] sdaj1[4] sdai1[3] sdah1[2] sdn1[1] Arkadiusz>       3125=
-5089152
->> >> blocks super 1.2 level 6, 512k chunk, algorithm 2 [10/10] [UUUUUU=
-UUUU]
->>=20
-Arkadiusz> bitmap: 1/30 pages [4KB], 65536KB chunk
->>=20
-Arkadiusz> array had weird failure where many disks went into failed st=
-ate
->>=20
->> >> but Arkadiusz> remove && adding these disks "fixed" it (turns out=
- not
->> >> really fixed it).
->>=20
-Arkadiusz> Unfortunately now some reads fail:
->>=20
-Arkadiusz> pread(4, 0x1483a00, 4096, 16003680464896) =3D -1 EIO (Input/=
-output
->>=20
->> >> error)
->>=20
-Arkadiusz> To reproduce used xfs_io
-Arkadiusz> xfs_io -d -c "pread 16003680464896 4096" /dev/md7
-Arkadiusz> pread64: Input/output error
-Arkadiusz> which does pread exactly as shown above.
->>=20
-Arkadiusz> write also fails for that area:
-Arkadiusz> xfs_io -d -c "pwrite 16003680464896 4096" /dev/md7
-Arkadiusz> pwrite64: Input/output error
->>=20
-Arkadiusz> Note that nothing is written in dmesg when that happens.
->>=20
-Arkadiusz> I've tried various offsets and sizes of pread and at some po=
-int
->>=20
->> >> that was logged: Arkadiusz> [  848.988518] Buffer I/O error on de=
-v md7,
->> >> logical block 3907148544, async page read
->>=20
-Arkadiusz> but no error from underlying devices.
->>=20
-Arkadiusz> List of bad blocks:
-Arkadiusz> http://sprunge.us/XSWI
->>=20
-Arkadiusz> What can I do now?
->>=20
-Arkadiusz> (loosing data from that few sectors is acceptable if the res=
-t
->>=20
->> >> will be readable)
->>=20
-Arkadiusz> Thanks,
-Arkadiusz> --
-Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
-Arkadiusz> --
-Arkadiusz> To unsubscribe from this list: send the line "unsubscribe
->>=20
->> >> linux-raid" in Arkadiusz> the body of a message to
->> >> majordomo@vger.kernel.org
->>=20
-Arkadiusz> More majordomo info at
->>=20
->> >> http://vger.kernel.org/majordomo-info.html
->>=20
-Arkadiusz> --
-Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
-
-
-Arkadiusz> --=20
-Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
-
-Arkadiusz> --=20
-Arkadiusz> Arkadiusz Mi=B6kiewicz, arekm / ( maven.pl | pld-linux.org )
-Arkadiusz> --
-Arkadiusz> To unsubscribe from this list: send the line "unsubscribe li=
-nux-raid" in
-Arkadiusz> the body of a message to majordomo@vger.kernel.org
-Arkadiusz> More majordomo info at  http://vger.kernel.org/majordomo-inf=
-o.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 8 Dec 2015 03:40, "Phil Turmel" <philip@turmel.org> wrote:
+>
+> Hi Andrew,
+>
+> On 12/07/2015 08:26 PM, Andrew Wilkins wrote:
+> > Hi, please can someone help me with a raid array which as gone wrong
+> > On Friday a backup server was rebooted, but failed to boot, possibly
+> > with an unrelated issue
+> >
+> >
+> > On Monday someone booted from a usb disk to try and recover it
+> > they were originally able to assemble the array but now they are not,
+> > 2 out of the 5 drives are showing out of date.
+> > Device 1 is showing
+> >   Bad Block Log : 512 entries available at offset 72 sectors
+> >   Array State : AAAAA
+> > and is showing 256 less a events
+> > last updated 2 hours before the others
+> >
+> > Device 4 is showing
+> >  Array State : A.AAA
+> > and 2 less events
+> > last update 1 hour before the others
+> >
+> > The rest all show
+> >  Array State : A.AA.
+> >
+> > I've tried manually assembling without device 1, but even with --force
+> > it refused to assemble, force seems to do nothing at all, i am
+> > assuming this maybe because the array state has been updated to say
+> > missing for 2 devices.
+>
+> > The example here
+> > https://raid.wiki.kernel.org/index.php/RAID_Recovery
+> > seems to suggest that in my situation recreating might be my only option
+>
+> Possibly. Let's try all other options first.
+>
+> > Are there any better options before i go ahead and do this?
+>
+> At least one anomaly below.
+>
+> > /dev/sdb1:
+>
+> >      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+>
+> > /dev/sdc1:
+>
+> >      Array UUID : xxxxxxxx:xxxxxxxx:xxxxxxxx:abb20cf1
+>
+> How did this happen ? ^^^^^^^^^^^^^^^^^^^^^^
+>
+> > /dev/sdd1:
+>
+> >      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+>
+> > /dev/sde1:
+>
+> >      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+>
+> > /dev/sdf1:
+>
+> >      Array UUID : 7847e506:deaf87e5:7c6cd502:abb20cf1
+>
+> Try forcing re-assembly with sdb1, sdd1, sde1, and sdf1.
+>
+> If that doesn't work with your current environment, try again with new
+> kernel and mdadm from booting a rescue environment.  I usually recommend
+> the LiveCD from sysrescuecd.org.
+>
+> If that succeeds (in either case), add sdc1 and let it rebuild before
+> doing anything else.
+>
+> Phil
