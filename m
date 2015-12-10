@@ -1,119 +1,64 @@
-From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
-Subject: Re: Reshape stalls and fails when SELinux is enabled
-Date: Thu, 10 Dec 2015 10:00:46 +0100
-Message-ID: <CAMQd7mYscUDroop=4eLz4UwTEiibbF0OqDN1b28yiqJyfW7gGw@mail.gmail.com>
-References: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
+From: Dallas Clement <dallas.a.clement@gmail.com>
+Subject: Re: best base / worst case RAID 5,6 write speeds
+Date: Thu, 10 Dec 2015 08:38:19 -0600
+Message-ID: <CAE9DZUQ=BFtaFxw-scDPpXEW8X5BEb=scWR4OGD-TNcv0Rh1-w@mail.gmail.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+	<CAETWcfs_UmRKi+x3Wf+z2aaG6+x-qyCgBHk+OUdjE7r0XpCYEw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
+In-Reply-To: <CAETWcfs_UmRKi+x3Wf+z2aaG6+x-qyCgBHk+OUdjE7r0XpCYEw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alexander Afonyashin <a.afonyashin@madnet-team.ru>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Looks like I'm not the only one and it happens in real world cases,
-not just a test on a VM:
-https://marc.info/?l=linux-raid&m=144973573922461&w=2
+On Thu, Dec 10, 2015 at 12:36 AM, Alexander Afonyashin
+<a.afonyashin@madnet-team.ru> wrote:
+> Hi,
+>
+> Did you set stride/stripe configuration to filesystem that is aligned
+> with raid configuration?
+>
+> Regards,
+> Alexander
+>
+> On Thu, Dec 10, 2015 at 4:34 AM, Dallas Clement
+> <dallas.a.clement@gmail.com> wrote:
+>> Hi all.  I'm trying to determine best and worst case expected
+>> sequential write speeds for Linux software RAID with spinning disks.
+>>
+>> I have been assuming on the following:
+>>
+>> Best case RAID 6 sequential write speed is (N-2) * X, where is is
+>> number of drives and X is write speed of a single drive.
+>>
+>> Worst case RAID 6 sequential write speed is (N-2) * X / 2.
+>>
+>> Best case RAID 5 sequential write speed is (N-1) * X.
+>>
+>> Worst case RAID 5 sequential write speed is (N-1) * X / 2.
+>>
+>> Could someone please confirm whether these formulas are accurate or not?
+>>
+>>
+>> I am not even getting worst case write performance with an array of 12
+>> spinning 7200 RPM SATA disks.  Thus I  suspect either the formulas I
+>> am using are wrong or I have alignment issues or something.  My chunk
+>> size is 128 KB at the moment.
+>>
+>> Thanks,
+>>
+>> Dallas
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Is there a place where I can open a bug to keep track of this issue?
-On the wiki it says that "Linux RAID issues are discussed in the
-linux-raid mailing list to be found at
-http://vger.kernel.org/vger-lists.html#linux-raid", but it's easy to
-loose track eventually. Can't find a component "mdadm" at
-https://bugzilla.kernel.org/ maybe one should be created under the
-"Tools" product?
+> Did you set stride/stripe configuration to filesystem that is aligned
+with raid configuration?
 
-Thank you.
-Best regards.
-
-Enrico Tagliavini
-
-On 3 December 2015 at 12:04, Enrico Tagliavini
-<enrico.tagliavini@gmail.com> wrote:
-> Hi everybody,
->
-> yesterday I tested a conversion of a 2 disk raid1 to a 4 disk raid5.
-> The reshape never completed, I rebooted the VM and the raid device was
-> unrecoverable. Backup-file was not useful unfortunately. Take a
-> comfortable seat, this is a bit long story, sorry :).
->
-> Environment:
->  - VM running on my laptop (Fedora 22), created with virt-manager,
-> qemu based. All disk images are qcow2 virtio devices.
->  - VM OS: centos 7 64 bit, fully updated as of today.
->  - mdadm version: 3.3.2-2.el7_1.1
->  - kernel version: 3.10.0-229.20.1.el7
->  - selinux policy targeted: 3.13.1-23.el7_1.21
->
-> How to reproduce:
->
->  * Attach four 1 GB disks to the VM, in the following example they are
-> vd[b,c,d,e].
->  * create a raid1 device with two disks: mdadm --create /dev/md0 -e
-> 1.2 -n 2 -l raid1 -N raidtest /dev/vdb /dev/vdc
->  * [optional?]: I created a FS on it: mkfs.xfs -L test /dev/md0
->  * [optional?]: I created three files on it and noted the checksum, to
-> check for eventual corruptions
->      - mount /dev/md0 /mnt/raidtest/ && cd /mnt/raidtest/
->      - echo uno > first.txt ; echo due > second.txt ; touch third.txt
-> ; shred -s 512M -f third.txt
->      - for file in *; do sha1sum $file >> sha1sum.txt; done
->  * check /proc/mdstat to make sure the raid1 sync operation is
-> complete (should really be fast but better safe than sorry)
->  * unmount /mnt/raidtest/
->  * add the two additional disks as spares:
->      - mdadm --manage /dev/md0 --add-spare /dev/vdd
->      - mdadm --manage /dev/md0 --add-spare /dev/vde
->  * grow and reshape: mdadm --grow /dev/md0 -n 4 --level=5
-> --backup-file /root/backup-md0 # (I also tried with
-> /var/local/backup-md0)
->
-> At this point an AVC will happen. Even if I'm in an interactive
-> session and, as such SELinux should not limit it normally, mdadm
-> process switches to mdadm_t type (maybe a forked process with its own
-> session group?) and is not allowed to write a file in the /root/ or
-> /var/ folders. This is ok, however mdadm keeps going instead of
-> aborting the reshape. It's running without a backup file, that's not
-> what the admin asked for since the --backup-file option is specified.
-> But even worst than this is that my reshape got stuck and never
-> completed. I waited a couple of hours but it remained at 0%. Something
-> was actually written to the backup file (which is weird given the AVC,
-> but it can be the original mdadm process not running under mdadm_t).
->
-> At this point I was kind of curious to test what would happen if a
-> distracted admin like me wont notice the problem and, days later,
-> would reboot the server due to security updates or anything else. The
-> result is an unrecoverable md array. I tried to assemble it back with
-> the backup file
->
-> mdadm --assemble /dev/md0  -u 6f53ec3e:d9868fef:12d3e243:8489561b
-> --backup-file /root/backup-md
->
-> But no way
->
-> mdadm: [sorry I copied wrong and the device name was lost] has an
-> active reshape - checking if critical section needs to be restored
-> mdadm: Failed to find backup of critical section
-> mdadm: Failed to restore critical section for reshape, sorry.
->
-> I retried the entire procedure from scratch, but this time with before
-> mdadm --grow I set SELinux in permissive mode with setenforce 0.
-> Everything was butter smooth this time. Reshape was almost instant for
-> such a small array, data was checksumming correctly and my array was
-> level 5.
->
-> Now there might be a problem with the SELinux policy here, but
-> honestly I think mdadm should just abort, whatever the reason of the
-> problem was. There might be other scenarios not involving SELinux
-> causing the same problem.
->
-> It would also be nice to suggest the user, if SELinux is active, to
-> change the context of the backup file to something SELinux will permit
-> (mdadm_map_t, mdadm_var_run_t?).
->
-> Attached you can also find the AVC denial for my entire day of testing.
->
-> Thank you for your help.
-> Best regards.
->
-> Enrico Tagliavini
+Hi Alexander.  I've  just been reading / writing the raw raid device
+with no filesystem at the moment.  Using fio, with direct=1.  I seem
+to get the best results with bs=512k and queue_depth=256.  Even with
+this, I am still short of the worst case write performance.
