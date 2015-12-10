@@ -1,52 +1,38 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH 0/3] mdadm: re-add journal to array with bad journal
-Date: Thu, 10 Dec 2015 22:37:34 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104BCF1B9@PRN-MBX02-4.TheFacebook.com>
-References: <1449018805-320020-1-git-send-email-songliubraving@fb.com>
- <87si3ac62s.fsf@notabene.neil.brown.name>
+From: "P. Remek" <p.remek1@googlemail.com>
+Subject: Re: start dm-multipath before mdadm raid
+Date: Thu, 10 Dec 2015 23:44:01 +0100
+Message-ID: <CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+References: <CABdHLQ6Lo8WvgSf=MAuYdVoJJMHmLuV5gkE+N4MDMfxvAbG5OA@mail.gmail.com>
+	<5669AE9C.7040904@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87si3ac62s.fsf@notabene.neil.brown.name>
-Content-Language: en-US
+In-Reply-To: <5669AE9C.7040904@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, "hch@infradead.org" <hch@infradead.org>, Kernel Team <Kernel-team@fb.com>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.com]
-> Sent: Thursday, December 10, 2015 2:06 PM
-> To: Song Liu <songliubraving@fb.com>; linux-raid@vger.kernel.org
-> Cc: dan.j.williams@intel.com; Shaohua Li <shli@fb.com>; hch@infradead.org;
-> Kernel Team <Kernel-team@fb.com>; Song Liu <songliubraving@fb.com>
-> Subject: Re: [PATCH 0/3] mdadm: re-add journal to array with bad journal
-> 
-> On Wed, Dec 02 2015, Song Liu <songliubraving@fb.com> wrote:
-> 
-> > These patches try to recreate missing/faulty journal in mdadm. Since
-> > the array is readonly with journal missing, it is necessary to restart
-> > the array after recreating journal.
-> >
-> > Song Liu (3):
-> >   add sysfs_array_state to struct mdinfo
-> >   [mdadm] recreate journal in mdadm
-> >   make .spec file work
-> 
-> I didn't get that third patch???
+>
+> Order of device discovery is not guaranteed, but base devices will
+> almost always show up before multipath devices.  You have to filter out
+> the base devices from mdadm consideration:
+>
+> Add a DEVICES statement to your mdadm.conf that only matches your
+> multipath device names, not the base names.  Then update your initramfs
+> so it applies to early boot as well.
+>
 
-That's my local hack to .spec file. Didn't mean to send it. 
 
-> 
-> The patches generally look good, but it bothers me that you have to stop and
-> restart the array for the added journal to work.  Can we just teach the kernel to
-> accept a new journal on an active array, and then use that functionality in
-> mdadm?
-> That is certainly what I want in the longer term and I'm not sure it makes sense
-> to have a half-way "--add-journal" that doesn't do the whole job.
+This is something which I actually already tried. I specified in my
+/etc/mdadm/mdadm.conf following:
 
-We will look into hot_add option.  
+DEVICE /dev/mapper/hgst-ssd*
 
-Thanks,
-Song
+In my /etc/multipath.conf I instruct dm-multipath to create
+/dev/mapper/hgst-ssd1 /dev/mapper/hgst-ssd2 /dev/mapper/hgst-ssd3
+
+
+But the only result is that after this config, the md raid is not
+started at all. My conclusion was that when md raid was starting, the
+multipath devices did not yet exist so it did not start up the array.
