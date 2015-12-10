@@ -1,45 +1,79 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Thu, 10 Dec 2015 16:32:27 -0500
-Message-ID: <5669EF6B.5090707@turmel.org>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
- <5669DB3B.30101@turmel.org>
- <CAE9DZUSNkLxaKH8MtggW+5_uo38CHRTcscvh7Kk-VTb_zWPQ4g@mail.gmail.com>
- <5669E091.1010108@turmel.org>
- <CAE9DZUTHZ0+VkAQ8ixvH9m=6XXXShDwJp6_8SeEXovW+hF6OdQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 0/3] mdadm: re-add journal to array with bad journal
+Date: Fri, 11 Dec 2015 09:05:47 +1100
+Message-ID: <87si3ac62s.fsf@notabene.neil.brown.name>
+References: <1449018805-320020-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE9DZUTHZ0+VkAQ8ixvH9m=6XXXShDwJp6_8SeEXovW+hF6OdQ@mail.gmail.com>
+In-Reply-To: <1449018805-320020-1-git-send-email-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dallas Clement <dallas.a.clement@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: dan.j.williams@intel.com, shli@fb.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
-On 12/10/2015 04:14 PM, Dallas Clement wrote:
+--=-=-=
+Content-Type: text/plain
 
-> Exactly.  I'm not expecting RMWs to be happening for large sequential
-> writes.  But yet my RAID 5, 6 sequential write performance is still
-> very poor.  As mentioned earlier, I'm getting around 95 MB/s on the
-> inner side of these disks.  With 12 of them, my RAID 6 write speed
-> should be (12 - 2) * 95 = 950 MB/s.  I'm getting about 300 MB/s less
-> than that for this scenario.  I have the disks split up among three
-> different controllers.  There should be plenty of bandwidth.  Several
-> days ago I ran fio on each of the 12 disks concurrently.  I was able
-> to see the disks at or near 100% utilization and wMB/s around 160-170
-> MB/s.  That's why I started focusing on RAID as being the potential
-> bottleneck.
-> 
->> That's why I questioned O_SYNC when you were using a filesystem: it
->> prevents merging, and forces seeking to do small metadata writes.
->> Basically turning a sequential workload into a random one.
-> 
-> Yes, that certainly makes sense.  Not using O_SYNC anymore.  Just O_DIRECT.
+On Wed, Dec 02 2015, Song Liu <songliubraving@fb.com> wrote:
 
-Sounds like its time to break out blktrace to see what's really
-happening between your array and its member devices.
+> These patches try to recreate missing/faulty journal in mdadm. Since
+> the array is readonly with journal missing, it is necessary to
+> restart the array after recreating journal.
+>
+> Song Liu (3):
+>   add sysfs_array_state to struct mdinfo
+>   [mdadm] recreate journal in mdadm
+>   make .spec file work
 
-With diffs from old kernels to new.
+I didn't get that third patch???
 
-Phil
+The patches generally look good, but it bothers me that you have to stop
+and restart the array for the added journal to work.  Can we just teach
+the kernel to accept a new journal on an active array, and then use that
+functionality in mdadm?
+That is certainly what I want in the longer term and I'm not sure it
+makes sense to have a half-way "--add-journal" that doesn't do the whole
+job.
+
+Thanks,
+NeilBrown
+
+
+>
+>  Assemble.c                  |  8 +++++++-
+>  Manage.c                    | 32 +++++++++++++++++++++++++++++++-
+>  ReadMe.c                    |  3 ++-
+>  mdadm.c                     |  8 ++++++++
+>  mdadm.h                     |  5 +++++
+>  mdadm.spec                  |  8 ++++----
+>  super1.c                    |  3 ++-
+>  sysfs.c                     |  7 +++++++
+>  udev-md-raid-assembly.rules |  2 +-
+>  9 files changed, 67 insertions(+), 9 deletions(-)
+>
+> --
+> 2.4.6
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWafc7AAoJEDnsnt1WYoG5KroP/jRU2lW/378Z6mQiY4a9JRtC
+LjHC0A3wqeUXc0Ty9j2JVs/8bYWFUsrELYuiIivjCoGXvmTot2QQ148Zcj4gFOMx
+rLImT62Qr67bsLpZsoWO+QwZEp+EbWyXoKuhIHV6TtVb96j0HPFovZJ2B93fMUr4
+ZvKrBXPz3BcDdg8NMWH+d1ZybhFpKXkmWB8zD+8ursoKtwKRwX5kTSAs2wLx0eq+
+njZZWA8vNUrr5gM7JKNZwPElfgDZ+bqW+Mg3I1K4JzaBm7EDbOgg7t/2b2cCg3R3
+va3CxtBCvG3Zfu3tXPdNQOH69M6ZMHHuT77lZQSNmpD+YerihUOc2IMMc9NULyTy
+MciCEFYwGZT77IKkDzY2y8xzJk+CPl6ft814yXOsDkKVV8GJEeZbPCxTyU5Bj6bx
+dCT7N/ZPoFl5au1aWFkJgOzfnaaFGZZ2B9oMQFxLhRKW0phJe3NL1MvJd6qKmTTn
+vLCSzYEcXPWeY8rWkcuOJtZ5MDJp2AXSoHthCD9mM6SUBUotGnPHwTg+oIlDR73N
+knt5tc4KQIE6W96n1mPlhty8H55yUc5JeO1iT9V7VXd66RSDnW7drkGWHHG3V071
+7KWDBZ/s/j9bunHzaVc+bGoVsI9q6u5mNdILpAytJx1wEbLgZ//cE6u6KM8wqVCy
+ntYSR8xkgD/Bmc3PTN5j
+=LJdk
+-----END PGP SIGNATURE-----
+--=-=-=--
