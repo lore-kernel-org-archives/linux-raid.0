@@ -1,69 +1,97 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Reshape stalls and fails when SELinux is enabled
-Date: Thu, 10 Dec 2015 18:24:12 +0000
-Message-ID: <5669C34C.9060606@youngman.org.uk>
-References: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
- <CAMQd7mYscUDroop=4eLz4UwTEiibbF0OqDN1b28yiqJyfW7gGw@mail.gmail.com>
- <CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
+From: Dallas Clement <dallas.a.clement@gmail.com>
+Subject: Re: best base / worst case RAID 5,6 write speeds
+Date: Thu, 10 Dec 2015 12:40:33 -0600
+Message-ID: <CAE9DZUTO-Muvgp+ofAkoKD1KcunnZ821UeSJch4216iWYL61cQ@mail.gmail.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+	<22121.38606.101474.41382@quad.stoffel.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
+In-Reply-To: <22121.38606.101474.41382@quad.stoffel.home>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>, Enrico Tagliavini <enrico.tagliavini@gmail.com>
+To: John Stoffel <john@stoffel.org>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/12/15 17:06, Edward Kuns wrote:
-> I ran into this as well.  I unwisely worked around it by placing the
-> backup file on /tmp.  I don't recommend that choice! 
+On Thu, Dec 10, 2015 at 9:14 AM, John Stoffel <john@stoffel.org> wrote:
+>>>>>> "Dallas" == Dallas Clement <dallas.a.clement@gmail.com> writes:
+>
+> Dallas> Hi all.  I'm trying to determine best and worst case expected
+> Dallas> sequential write speeds for Linux software RAID with spinning disks.
+>
+> Dallas> I have been assuming on the following:
+>
+> Dallas> Best case RAID 6 sequential write speed is (N-2) * X, where is is
+> Dallas> number of drives and X is write speed of a single drive.
+>
+> Dallas> Worst case RAID 6 sequential write speed is (N-2) * X / 2.
+>
+> Dallas> Best case RAID 5 sequential write speed is (N-1) * X.
+>
+> Dallas> Worst case RAID 5 sequential write speed is (N-1) * X / 2.
+>
+> Dallas> Could someone please confirm whether these formulas are accurate or not?
+>
+>
+> Dallas> I am not even getting worst case write performance with an
+> Dallas> array of 12 spinning 7200 RPM SATA disks.  Thus I suspect
+> Dallas> either the formulas I am using are wrong or I have alignment
+> Dallas> issues or something.  My chunk size is 128 KB at the moment.
+>
+> I think you're over-estimating the speed of your disks.  Remember that
+> disk speeds are faster on the outer tracks of the drive, and slower on
+> the inner tracks.
+>
+> I'd setup two partitions, one at the start and one at the outside and
+> do some simple:
+>
+>   dd if=/dev/zero of=/dev/inner,outer bs=8192 count=100000 oflag=direct
+>
+> and look at those numbers.  Then build up a table where you vary the
+> bs= from 512 to N, which could be whatever you want.
+>
+> That will give you a better estimate of individual drive performance.
+>
+> Then when you do your fio tests, vary the queue depth, block size,
+> inner/outer partition, etc, but all on a single disk at first to
+> compare with the first set of results and to see how they correlate.
+>
+> THEN you can start looking at the RAID performance numbers.
+>
+> And of course, the controller you use matters, how it's configured,
+> how it's setup for caching, etc.  Lots and lots and lots of details to
+> be tracked.
+>
+> Change one thing at a time, then re-run your tests.  Automating them
+> is key here.
+>
+>
 
-Most people don't realise there are various tmp directories, with
-different behaviours. /tmp is defined by LSB or somesuch to be real
-temporary storage - no guarantees - stuff may disappear at any time.
-Which is why my /tmp is a tmpfs - stored in ram. So yes, a backup file
-on /tmp is not a good idea ...
+Hi John.  Thanks for the help.  I did what you recommended and created
+two equal size partitions on my Hitachi 4TB 7200RPM SATA disks.
 
-/var/tmp is defined as holding data that must survive a reboot - where
-emacs and vi and that lot are recommended to store their crash dumps,
-recovery files, etc for example.
+Device          Start        End    Sectors  Size Type
+/dev/sda1        2048 3907014656 3907012609  1.8T Linux filesystem
+/dev/sda2  3907016704 7814037134 3907020431  1.8T Linux filesystem
 
- I didn't see
-> your AVC on your EMail, but I recommend you reach out to the SELinux
-> folks for labeling help.  I've reach out to them in the past and have
-> found them very helpful (as are the folks here).  Getting the labeling
-> corrected will not only help you but everyone else in the long term.
-> 
-> I agree that it would be good for mdadm to handle this kind of failure
-> in a more productive fashion as well.  But I'm only a lurker here.  I
-> don't have enough knowledge to suggest what would be better.  One
-> thing that really helped me debug this was commenting out the lines
-> 
-> #StandardOutput=null
-> #StandardError=null
-> 
-> in the systemd file /lib/systemd/system/mdadm-grow-continue@.service
-> -- note you have to run systemctl daemon-reload after changing the
-> file for the change to be noticed.
-> 
-> Once I did that, the system logs had much more useful information.
-> I'm not sure where that file is sourced, whether it's from the
-> linux-raid people or from the distributions or somewhere in between.
-> Does anyone here know if there's a reason why standard out and
-> standard error are sent to /dev/null for this service?
-> 
-I wouldn't know for certain, but given the amount of junk so many
-programs spew to stdout or stderr (which nobody ever sees because
-they're running in a gui), I expect it's because that's what happens by
-default anyway :-) They don't want to clutter the logs with all that
-junk and chatter.
+I ran the dd test with varying block size.  I started to see a
+difference in write speed with larger block size.
 
-I often somehow get stdout and stderr for various programs redirected to
-konsole, because I'll use dbus-launch to start a program. And then when
-the program has exited I'll get loads of rubbish from other programs ...
-the chatter is horrendous.
+[root@localhost ~]# dd if=/dev/zero of=/dev/sda1 bs=2048k count=1000
+oflag=direct
+1000+0 records in
+1000+0 records out
+2097152000 bytes (2.1 GB) copied, 11.5475 s, 182 MB/s
 
-Cheers,
-Wol
+[root@localhost ~]# dd if=/dev/zero of=/dev/sda2 bs=2048k count=1000
+oflag=direct
+1000+0 records in
+1000+0 records out
+2097152000 bytes (2.1 GB) copied, 13.6355 s, 154 MB/s
 
+The difference is not as great as I suspected it might be.  If I plug
+in this lower write speed of 154 MB/s in the RAID 6 worst case write
+speed calculation mentioned earlier, I should be getting at least (12
+- 2) * 154 MB/s / 2 = 770 MB/s.  For this same bs=2048k and
+queue_depth=256 I am getting 678 MB/s which is almost 100 MB/s less
+than worst case.
