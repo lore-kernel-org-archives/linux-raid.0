@@ -1,79 +1,73 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 0/3] mdadm: re-add journal to array with bad journal
-Date: Fri, 11 Dec 2015 09:05:47 +1100
-Message-ID: <87si3ac62s.fsf@notabene.neil.brown.name>
-References: <1449018805-320020-1-git-send-email-songliubraving@fb.com>
+From: George Rapp <george.rapp@gmail.com>
+Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry." -
+ recovery advice?
+Date: Thu, 10 Dec 2015 17:05:49 -0500
+Message-ID: <CAF-KpgaLr-qA_RJiDYstFv-=EoHH-Ea3o1q3G3tXC4nX=Wt2XA@mail.gmail.com>
+References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com>
+ <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1449018805-320020-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: dan.j.williams@intel.com, shli@fb.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Wed, Dec 02 2015, Song Liu <songliubraving@fb.com> wrote:
-
-> These patches try to recreate missing/faulty journal in mdadm. Since
-> the array is readonly with journal missing, it is necessary to
-> restart the array after recreating journal.
+On Thu, Dec 10, 2015 at 3:22 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+> On Wed, 9 Dec 2015, George Rapp wrote:
 >
-> Song Liu (3):
->   add sysfs_array_state to struct mdinfo
->   [mdadm] recreate journal in mdadm
->   make .spec file work
-
-I didn't get that third patch???
-
-The patches generally look good, but it bothers me that you have to stop
-and restart the array for the added journal to work.  Can we just teach
-the kernel to accept a new journal on an active array, and then use that
-functionality in mdadm?
-That is certainly what I want in the longer term and I'm not sure it
-makes sense to have a half-way "--add-journal" that doesn't do the whole
-job.
-
-Thanks,
-NeilBrown
-
-
+>> # mdadm --assemble --verbose --invalid-backup --force
+>> --update=revert-reshape /dev/md4 $OVERLAYS
+>> mdadm: looking for devices for /dev/md4
+>> [snipped remainder of output]
 >
->  Assemble.c                  |  8 +++++++-
->  Manage.c                    | 32 +++++++++++++++++++++++++++++++-
->  ReadMe.c                    |  3 ++-
->  mdadm.c                     |  8 ++++++++
->  mdadm.h                     |  5 +++++
->  mdadm.spec                  |  8 ++++----
->  super1.c                    |  3 ++-
->  sysfs.c                     |  7 +++++++
->  udev-md-raid-assembly.rules |  2 +-
->  9 files changed, 67 insertions(+), 9 deletions(-)
->
-> --
-> 2.4.6
+> Just a shot in the dark, what happens if you add a backup file to the above
+> command, but without revert-reshape? Ie state both --invalid-backup but also
+> supply a backup-file. The text above could indicate that this might help.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+Mikael -
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+First, thanks for the reply.
 
-iQIcBAEBCAAGBQJWafc7AAoJEDnsnt1WYoG5KroP/jRU2lW/378Z6mQiY4a9JRtC
-LjHC0A3wqeUXc0Ty9j2JVs/8bYWFUsrELYuiIivjCoGXvmTot2QQ148Zcj4gFOMx
-rLImT62Qr67bsLpZsoWO+QwZEp+EbWyXoKuhIHV6TtVb96j0HPFovZJ2B93fMUr4
-ZvKrBXPz3BcDdg8NMWH+d1ZybhFpKXkmWB8zD+8ursoKtwKRwX5kTSAs2wLx0eq+
-njZZWA8vNUrr5gM7JKNZwPElfgDZ+bqW+Mg3I1K4JzaBm7EDbOgg7t/2b2cCg3R3
-va3CxtBCvG3Zfu3tXPdNQOH69M6ZMHHuT77lZQSNmpD+YerihUOc2IMMc9NULyTy
-MciCEFYwGZT77IKkDzY2y8xzJk+CPl6ft814yXOsDkKVV8GJEeZbPCxTyU5Bj6bx
-dCT7N/ZPoFl5au1aWFkJgOzfnaaFGZZ2B9oMQFxLhRKW0phJe3NL1MvJd6qKmTTn
-vLCSzYEcXPWeY8rWkcuOJtZ5MDJp2AXSoHthCD9mM6SUBUotGnPHwTg+oIlDR73N
-knt5tc4KQIE6W96n1mPlhty8H55yUc5JeO1iT9V7VXd66RSDnW7drkGWHHG3V071
-7KWDBZ/s/j9bunHzaVc+bGoVsI9q6u5mNdILpAytJx1wEbLgZ//cE6u6KM8wqVCy
-ntYSR8xkgD/Bmc3PTN5j
-=LJdk
------END PGP SIGNATURE-----
---=-=-=--
+I tried that and got a different error message:
+
+# mdadm --assemble --verbose --invalid-backup --force
+--backup-file=/home/gwr/2015/2015-08/grow_md6.bak /dev/md4 $OVERLAYS
+mdadm: looking for devices for /dev/md4
+mdadm: /dev/mapper/sdd4 is identified as a member of /dev/md4, slot 0.
+mdadm: /dev/mapper/sdc4 is identified as a member of /dev/md4, slot 1.
+mdadm: /dev/mapper/sdg4 is identified as a member of /dev/md4, slot 2.
+mdadm: /dev/mapper/sdh1 is identified as a member of /dev/md4, slot 3.
+mdadm: /dev/mapper/sdi1 is identified as a member of /dev/md4, slot 5.
+mdadm: /dev/mapper/sdj1 is identified as a member of /dev/md4, slot 4.
+mdadm: /dev/md4 has an active reshape - checking if critical section
+needs to be restored
+mdadm: No backup metadata on /home/gwr/2015/2015-08/grow_md6.bak
+mdadm: Failed to find backup of critical section
+mdadm: continuing without restoring backup
+mdadm: added /dev/mapper/sdc4 to /dev/md4 as 1
+mdadm: added /dev/mapper/sdg4 to /dev/md4 as 2
+mdadm: added /dev/mapper/sdh1 to /dev/md4 as 3
+mdadm: added /dev/mapper/sdj1 to /dev/md4 as 4
+mdadm: added /dev/mapper/sdi1 to /dev/md4 as 5
+mdadm: added /dev/mapper/sdd4 to /dev/md4 as 0
+mdadm: failed to RUN_ARRAY /dev/md4: Invalid argument
+
+> If you get the array up and running again but it's still reshaping but at
+> position 0, issue a --continue to it (this has worked for others). Also, I
+> would get the latest git version of mdadm and try with that one if you're
+> still using v3.2.2 as per the link to your august original email.
+
+Should have updated that. I'm up to mdadm v3.2.4 now, which is the
+latest version offered by the Fedora 22 update repo (and Fedora 23
+doesn't offer a newer one):
+
+# mdadm --version
+mdadm - v3.3.4 - 3rd August 2015
+
+Thanks again.
+-- 
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
