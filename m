@@ -1,53 +1,57 @@
-From: Alexander Afonyashin <a.afonyashin@madnet-team.ru>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Thu, 10 Dec 2015 09:36:28 +0300
-Message-ID: <CAETWcfs_UmRKi+x3Wf+z2aaG6+x-qyCgBHk+OUdjE7r0XpCYEw@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry."
+ - recovery advice?
+Date: Thu, 10 Dec 2015 09:22:11 +0100 (CET)
+Message-ID: <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se>
+References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+In-Reply-To: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dallas Clement <dallas.a.clement@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: George Rapp <george.rapp@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Wed, 9 Dec 2015, George Rapp wrote:
 
-Did you set stride/stripe configuration to filesystem that is aligned
-with raid configuration?
+> # mdadm --assemble --verbose --invalid-backup --force
+> --update=revert-reshape /dev/md4 $OVERLAYS
+> mdadm: looking for devices for /dev/md4
+> mdadm: /dev/mapper/sdg4 is identified as a member of /dev/md4, slot 2.
+> mdadm: /dev/mapper/sdi1 is identified as a member of /dev/md4, slot 5.
+> mdadm: /dev/mapper/sdc4 is identified as a member of /dev/md4, slot 1.
+> mdadm: /dev/mapper/sdh1 is identified as a member of /dev/md4, slot 3.
+> mdadm: /dev/mapper/sdj1 is identified as a member of /dev/md4, slot 4.
+> mdadm: /dev/mapper/sdd4 is identified as a member of /dev/md4, slot 0.
+> mdadm: /dev/md4 has an active reshape - checking if critical section
+> needs to be restored
+> mdadm: Failed to find backup of critical section
+> mdadm: continuing without restoring backup
+> mdadm: added /dev/mapper/sdc4 to /dev/md4 as 1
+> mdadm: added /dev/mapper/sdg4 to /dev/md4 as 2
+> mdadm: added /dev/mapper/sdh1 to /dev/md4 as 3
+> mdadm: added /dev/mapper/sdj1 to /dev/md4 as 4
+> mdadm: added /dev/mapper/sdi1 to /dev/md4 as 5
+> mdadm: added /dev/mapper/sdd4 to /dev/md4 as 0
+> mdadm: /dev/md4: Need a backup file to complete reshape of this array.
+> mdadm: Please provided one with "--backup-file=..."
+> mdadm: (Don't specify --update=revert-reshape again, that part succeeded.)
+>
+> How can the array have an active reshape if the reshape pos'n is 0 on
+> all devices? Doesn't that mean that the reshape never actually
+> started? If so, can I just revert -- somehow -- to a 5-device RAID 6
+> array to recover my data?
 
-Regards,
-Alexander
+Just a shot in the dark, what happens if you add a backup file to the 
+above command, but without revert-reshape? Ie state both --invalid-backup 
+but also supply a backup-file. The text above could indicate that this 
+might help.
 
-On Thu, Dec 10, 2015 at 4:34 AM, Dallas Clement
-<dallas.a.clement@gmail.com> wrote:
-> Hi all.  I'm trying to determine best and worst case expected
-> sequential write speeds for Linux software RAID with spinning disks.
->
-> I have been assuming on the following:
->
-> Best case RAID 6 sequential write speed is (N-2) * X, where is is
-> number of drives and X is write speed of a single drive.
->
-> Worst case RAID 6 sequential write speed is (N-2) * X / 2.
->
-> Best case RAID 5 sequential write speed is (N-1) * X.
->
-> Worst case RAID 5 sequential write speed is (N-1) * X / 2.
->
-> Could someone please confirm whether these formulas are accurate or not?
->
->
-> I am not even getting worst case write performance with an array of 12
-> spinning 7200 RPM SATA disks.  Thus I  suspect either the formulas I
-> am using are wrong or I have alignment issues or something.  My chunk
-> size is 128 KB at the moment.
->
-> Thanks,
->
-> Dallas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If you get the array up and running again but it's still reshaping but at 
+position 0, issue a --continue to it (this has worked for others). Also, I 
+would get the latest git version of mdadm and try with that one if you're 
+still using v3.2.2 as per the link to your august original email.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
