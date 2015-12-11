@@ -1,46 +1,27 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Fri, 11 Dec 2015 11:32:15 -0500
-Message-ID: <22122.64143.522908.45940@quad.stoffel.home>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
-	<5669DB3B.30101@turmel.org>
-	<CAE9DZUSNkLxaKH8MtggW+5_uo38CHRTcscvh7Kk-VTb_zWPQ4g@mail.gmail.com>
-	<CAK2H+ednN7dCGzcOt8TxgNdhdDA1mN6Xr5P8vQ+Y=-uRoxRksw@mail.gmail.com>
-	<CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
-	<CAK2H+efF2dM1BsM7kzfTxMdQEHvbWRaVe7zJLTGcPZzafn2M6A@mail.gmail.com>
-	<CAE9DZUQ+LOFWNQ2MpKoSx8j8RHVqkL15PO+jVjs7EkCQykG6VA@mail.gmail.com>
-	<CAE9DZUQo4CojhuVkQ6y=gTEWG5qUkeu57wcZsqbXZtGD_V5JCQ@mail.gmail.com>
-	<CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
-	<CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
+From: "P. Remek" <p.remek1@googlemail.com>
+Subject: Re: start dm-multipath before mdadm raid
+Date: Fri, 11 Dec 2015 17:32:40 +0100
+Message-ID: <CABdHLQ4++kTu22YGkdDW3r1UAxf_7E_+fcn9SfFnTSg6MgSm9w@mail.gmail.com>
+References: <CABdHLQ6Lo8WvgSf=MAuYdVoJJMHmLuV5gkE+N4MDMfxvAbG5OA@mail.gmail.com>
+	<5669AE9C.7040904@turmel.org>
+	<CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+	<566AD7EA.4070903@turmel.org>
+	<CABdHLQ7Wdg1sUdC-Ryamdy+et6SNJRJnfdnRXSPOrWJYX9sT_g@mail.gmail.com>
+	<566AF4E8.5030801@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
+In-Reply-To: <566AF4E8.5030801@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dallas Clement <dallas.a.clement@gmail.com>
-Cc: Mark Knecht <markknecht@gmail.com>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Dallas" == Dallas Clement <dallas.a.clement@gmail.com> writes:
+> It's likely that the udev rules that drive incremental assembly don't
+> have the mapper aliases at the moment they run.  Try:
+>
+> DEVICE /dev/dm*
+>
 
-Dallas> Hi Mark.  I have three different controllers on this
-Dallas> motherboard.  A Marvell 9485 controls 8 of the disks.  And an
-Dallas> Intel Cougar Point controls the 4 remaining disks.
-
-What type of PCIe slots are the controllers in?  And how fast are the
-controllers/drives?  Are they SATA1/2/3 drives?  
-
->> If you're spinning in IO loops then it could be a driver issue.
-
-Dallas> It sure is looking like that.  I will try to profile the
-Dallas> kernel threads today and maybe use blktrace as Phil
-Dallas> recommended to see what is going on there.
-
-what kernel aer you running?
-
-Dallas> This is pretty sad that 12 single threaded fio jobs can bring
-Dallas> this system to its knees.
-
-I think it might be better to lower the queue depth, you might be just
-blowing out the controller caches...  hard to know.
+That crossed my mind too, but no, this doesn't help, the array still
+doesn't show up
