@@ -1,70 +1,146 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Thu, 10 Dec 2015 18:02:57 -0600
-Message-ID: <CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
-	<5669DB3B.30101@turmel.org>
-	<CAE9DZUSNkLxaKH8MtggW+5_uo38CHRTcscvh7Kk-VTb_zWPQ4g@mail.gmail.com>
-	<CAK2H+ednN7dCGzcOt8TxgNdhdDA1mN6Xr5P8vQ+Y=-uRoxRksw@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [RFC] using mempools for raid5-cache
+Date: Fri, 11 Dec 2015 11:09:58 +1100
+Message-ID: <87poyddew9.fsf@notabene.neil.brown.name>
+References: <1449072638-15409-1-git-send-email-hch@lst.de> <876108qwz5.fsf@notabene.neil.brown.name> <20151209012812.GA2403138@devbig084.prn1.facebook.com> <87vb88p1tm.fsf@notabene.neil.brown.name> <20151210234047.GA3596673@devbig084.prn1.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAK2H+ednN7dCGzcOt8TxgNdhdDA1mN6Xr5P8vQ+Y=-uRoxRksw@mail.gmail.com>
+In-Reply-To: <20151210234047.GA3596673@devbig084.prn1.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 10, 2015 at 5:04 PM, Mark Knecht <markknecht@gmail.com> wrote:
->
->
-> On Thu, Dec 10, 2015 at 12:09 PM, Dallas Clement
-> <dallas.a.clement@gmail.com> wrote:
->>
->> On Thu, Dec 10, 2015 at 2:06 PM, Phil Turmel <philip@turmel.org> wrote:
->> <SNIP>
->> >>
->> >> Could someone please confirm whether these formulas are accurate or
->> >> not?
->> >
->> > Confirm these?  No.  In fact, I see no theoretical basis for stating a
->> > worst case speed as half the best case speed.  Or any other fraction.
->> > It's dependent on numerous variables -- block size, processor load, I/O
->> > bandwidth at various choke points (Northbridge, southbridge, PCI/PCIe,
->> > SATA/SAS channels, port mux...), I/O latency vs. queue depth vs. drive
->> > buffers, sector positioning at block boundaries, drive firmware
->> > housekeeping, etc.
->> >
->> > Where'd you get the worst case formulas?
->> >
->>
->> > Where'd you get the worst case formulas?
->>
->> Google search I'm afraid.  I think the assumption for RAID 5,6 worst
->> case is having to read and write the parity + data every cycle.
->
-> What sustained throughput do you get in this system if you skip RAID, set
-> up a script and write different data to all 12 drives in parallel? I don't
-> think
-> you've addressed Phil's comment concerning all the other potential choke
-> points in  the system. You'd need to be careful and make sure all the data
-> is really out to disk but it might tell you something about your assumptions
-> vs what the hardware is really doing..
->
-> - Mark
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hi Mark,
+On Fri, Dec 11 2015, Shaohua Li wrote:
 
-> What sustained throughput do you get in this system if you skip RAID, set
-> up a script and write different data to all 12 drives in parallel?
+> On Wed, Dec 09, 2015 at 05:34:45PM +1100, NeilBrown wrote:
+>> On Wed, Dec 09 2015, Shaohua Li wrote:
+>>=20
+>> > On Wed, Dec 09, 2015 at 11:36:30AM +1100, NeilBrown wrote:
+>> >> On Thu, Dec 03 2015, Christoph Hellwig wrote:
+>> >>=20
+>> >> > Currently the raid5-cache code is heavily relying on GFP_NOFAIL all=
+ocations.
+>> >> >
+>> >> > I've looked into replacing these with mempools and biosets, and for=
+ the
+>> >> > bio and the meta_page that's pretty trivial as they have short life=
+ times
+>> >> > and do make guaranteed progress.  I'm massively struggling with the=
+ iounit
+>> >> > allocation, though.  These can live on for a long time over log I/O=
+, cache
+>> >> > flushing and last but not least RAID I/O, and every attempt at some=
+thing
+>> >> > mempool-like results in reproducible deadlocks.  I wonder if we nee=
+d to
+>> >> > figure out some more efficient data structure to communicate the co=
+mpletion
+>> >> > status that doesn't rely on these fairly long living allocations fr=
+om
+>> >> > the I/O path.
+>> >>=20
+>> >> Presumably the root cause of these deadlocks is that the raid5d thread
+>> >> has called
+>> >>    handle_stripe -> ops_run_io ->r5l_write_stripe -> r5l_log_stripe
+>> >>       -> r5l_get_meta -> r5l_new_meta
+>> >>=20
+>> >> and r5l_new_meta is blocked on memory allocation, which won't complete
+>> >> until some raid5 stripes get written out, which requires raid5d to do
+>> >> something more useful than sitting and waiting.
+>> >>=20
+>> >> I suspect a good direction towards a solution would be to allow the
+>> >> memory allocation to fail, to cleanly propagate that failure indicati=
+on
+>> >> up through r5l_log_stripe to r5l_write_stripe which falls back to add=
+ing
+>> >> the stripe_head to ->no_space_stripes.
+>> >>=20
+>> >> Then we only release stripes from no_space_stripes when a memory
+>> >> allocation might succeed.
+>> >>=20
+>> >> There are lots of missing details, and possibly we would need a separ=
+ate
+>> >> list rather than re-using no_space_stripes.
+>> >> But the key idea is that raid5d should never block (except beneath
+>> >> submit_bio on some other device) and when it cannot make progress
+>> >> without blocking, it should queue the stripe_head for later handling.
+>> >>=20
+>> >> Does that make sense?
+>> >
+>> > It does remove the scary __GFP_NOFAIL, but the approach is essentially
+>> > idential to a 'retry after allocation failure'. Why not just let the mm
+>> > (with __GFP_NOFAIL) to do the retry then?
+>> >
+>>=20
+>> Because deadlocks.
+>>=20
+>> If raid5d is waiting for the mm to allocated memory, then it cannot
+>> retire write requests which could free up memory.
+>
+> Ok, I missed the deadlock issue. Looks raid5d can't sleep waitting for
+> memory. That means the mempool for metadata page/bio doesn't work too,
+> as raid5d might block and not dispatch previous IO. Your proposal looks
+> reasonable.
 
-Just tried this again, running fio concurrently on all 12 disks.  This
-time doing sequential writes, bs=2048k, direct=1 to the raw disk
-device - no filesystem.  The results are not encouraging.  I tried to
-watch the disk behavior with iostat.  This 8 core xeon system was
-really getting crushed.  The load average during the 10 minute test
-was 15.16  26.41  21.53.  iostat showed %iowait varying between 40%
-and 80%.  Also iostat showed only about 8 of the 12 disks on average
-getting CPU time.  They had high near 100% utilization and pretty good
-write speed ~160 - 170 MB/s.  Looks like my disks are just too slow
-and the CPU cores are stuck waiting for them.
+raid5d mustn't sleep waiting for something that only raid5d can provide.
+
+A bio allocated from a mempool will be returned to that mempool when the
+IO request completes (if the end_io routine calls bio_put, which it
+does).
+So when waiting on a mempool for a bio, you are only waiting for some
+underlying device to perform IO, you are not waiting for anything that
+raid5d might do.  So that is safe.
+
+Similarly the meta_page is freed in the end_io function, so it is safe
+to wait for that.
+Note that the important feature of a mempool is not so much that it
+pre-allocates some memory.  The important point is that when that
+pre-allocated memory is freed it can *only* be used by the owner of the
+mempool.
+By contrast memory allocated with NOFAIL, when freed might be used by
+any other caller anywhere in the kernel.
+So waiting on a mempool means waiting for certain well defined events.
+Waiting in NOFAIL could end up waiting for almost anything.  So it is
+much harder to reason about deadlocks.
+
+The bio and the meta_page contrast with the r5l_io_unit which isn't
+freed by the first end_io, but remains until raid5d has done some more
+work.  So raid5d cannot wait for a r5l_io_unit to be freed.
+
+NeilBrown
+
+>
+> Would keeping NOFAIL and having a separate thread got r5l_log_stripe
+> work too?
+>
+> Thanks,
+> Shaohua
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWahRWAAoJEDnsnt1WYoG5c+YP/2VbdmApZgTdJH81jlti7weo
+QcKrtxEtAcX2VmOnhs+w9e/xqyybPOf4h5O5AAvhZsnMOmc0vNnBgyEMXvEYrI2X
+yZbGUxo2LkO79EHfusFg0/FWvY87QX+yKZpuqpDl33QXn1yBZ6Zws6jy5z0M0sAH
+d7N+n7l9p1eNz6Nd5uvK5JR8YZ7tP/g/oG0IPX8nBeXPmPYvc7n2B2Rkaj4qIRYq
+6kUNgnOsQF9WDTTBU2VxDQpVs161CGGnCMVbkU+quqGSoxbnyCBsISeuMojZfg5b
+ydQgjbXjHBd7prgAoi9gYIn1Ssehy5MgsMFY4iHNY6boHVIYr4VnVTMixwWLUBC5
+eEzJ+MkzV8GESo2bcDiMyzu+9pf4E315fiemD2WLQcode/ZDZ5NKKbIO8kxCD2pw
+OsEDRqX15gPp0Ck8qkb2qteC71Q3utaJ+YtI7PNuFkMTcv+KiegMmSFkV1o5cafj
+e7CZa3egv9/oWOHN6eI0aoFSiXR1XCdzEZUCw4dlM/bsWwCoaVxNh6xU+rEDHjZ3
+b8p6uC1dvoVy4ladzH1nUzNCN+YlZ1HFZJF2P2YTJu9XGT7dsHR4a/Pm8nShbDe/
+mTXlWJk1aqQHA0XaiArWnc8cCfyG+z7rCwjHKh2MHe3l/Xa0jbRAtZDeiCMZ0RoC
+/6ulBCeFIpagO165n/Dz
+=f32c
+-----END PGP SIGNATURE-----
+--=-=-=--
