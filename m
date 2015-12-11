@@ -1,106 +1,82 @@
-From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
-Subject: Re: Reshape stalls and fails when SELinux is enabled
-Date: Fri, 11 Dec 2015 15:26:05 +0100
-Message-ID: <CAMQd7mZ5oLSWiv7F0aBpkxjCtvFC23q9wOcvUuX8W2PCT4Laww@mail.gmail.com>
-References: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
-	<CAMQd7mYscUDroop=4eLz4UwTEiibbF0OqDN1b28yiqJyfW7gGw@mail.gmail.com>
-	<CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
-	<5669C34C.9060606@youngman.org.uk>
-	<CAF-KpgZXbqVcanWYVMoV9+1vVo5S7DHXPs2PD8jGbO2D6wjriw@mail.gmail.com>
+From: Dallas Clement <dallas.a.clement@gmail.com>
+Subject: Re: best base / worst case RAID 5,6 write speeds
+Date: Fri, 11 Dec 2015 09:44:06 -0600
+Message-ID: <CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+	<5669DB3B.30101@turmel.org>
+	<CAE9DZUSNkLxaKH8MtggW+5_uo38CHRTcscvh7Kk-VTb_zWPQ4g@mail.gmail.com>
+	<CAK2H+ednN7dCGzcOt8TxgNdhdDA1mN6Xr5P8vQ+Y=-uRoxRksw@mail.gmail.com>
+	<CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
+	<CAK2H+efF2dM1BsM7kzfTxMdQEHvbWRaVe7zJLTGcPZzafn2M6A@mail.gmail.com>
+	<CAE9DZUQ+LOFWNQ2MpKoSx8j8RHVqkL15PO+jVjs7EkCQykG6VA@mail.gmail.com>
+	<CAE9DZUQo4CojhuVkQ6y=gTEWG5qUkeu57wcZsqbXZtGD_V5JCQ@mail.gmail.com>
+	<CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-KpgZXbqVcanWYVMoV9+1vVo5S7DHXPs2PD8jGbO2D6wjriw@mail.gmail.com>
+In-Reply-To: <CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Rapp <george.rapp@gmail.com>
-Cc: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-No need to disable SELinux. Just run
-
-setenforce 0
-
-before calling mdadm. When your reshape is done enable SELinux again with
-
-setenforce 1
-
-no reboot needed.
-
-Also if you want a permanent workaround you can whitelist mdadm process type:
-
-semanage permissive -a mdadm_t # but be aware I didn't tested this!
-
-On 11 December 2015 at 02:26, George Rapp <george.rapp@gmail.com> wrote:
-> Indeed, SELinux appears to be very not-helpful in the RAID resize
-> process. I decided to put SELINUX=disabled in /etc/selinux/config,
-> touch /.relabel, and reboot before doing any more RAID 6 work.
->
-> The only other workaround I could see is the ability to do a "dry run"
-> of mdadm operations a la wodim / growisofs - a chance to test out all
-> the parameters before actually pulling the trigger. (Sorry, no patch,
-> though ... 8^)
->
-> On Thu, Dec 10, 2015 at 1:24 PM, Wols Lists <antlists@youngman.org.uk> wrote:
->> On 10/12/15 17:06, Edward Kuns wrote:
->>> I ran into this as well.  I unwisely worked around it by placing the
->>> backup file on /tmp.  I don't recommend that choice!
->>
->> Most people don't realise there are various tmp directories, with
->> different behaviours. /tmp is defined by LSB or somesuch to be real
->> temporary storage - no guarantees - stuff may disappear at any time.
->> Which is why my /tmp is a tmpfs - stored in ram. So yes, a backup file
->> on /tmp is not a good idea ...
->>
->> /var/tmp is defined as holding data that must survive a reboot - where
->> emacs and vi and that lot are recommended to store their crash dumps,
->> recovery files, etc for example.
->>
->>  I didn't see
->>> your AVC on your EMail, but I recommend you reach out to the SELinux
->>> folks for labeling help.  I've reach out to them in the past and have
->>> found them very helpful (as are the folks here).  Getting the labeling
->>> corrected will not only help you but everyone else in the long term.
->>>
->>> I agree that it would be good for mdadm to handle this kind of failure
->>> in a more productive fashion as well.  But I'm only a lurker here.  I
->>> don't have enough knowledge to suggest what would be better.  One
->>> thing that really helped me debug this was commenting out the lines
->>>
->>> #StandardOutput=null
->>> #StandardError=null
->>>
->>> in the systemd file /lib/systemd/system/mdadm-grow-continue@.service
->>> -- note you have to run systemctl daemon-reload after changing the
->>> file for the change to be noticed.
->>>
->>> Once I did that, the system logs had much more useful information.
->>> I'm not sure where that file is sourced, whether it's from the
->>> linux-raid people or from the distributions or somewhere in between.
->>> Does anyone here know if there's a reason why standard out and
->>> standard error are sent to /dev/null for this service?
->>>
->> I wouldn't know for certain, but given the amount of junk so many
->> programs spew to stdout or stderr (which nobody ever sees because
->> they're running in a gui), I expect it's because that's what happens by
->> default anyway :-) They don't want to clutter the logs with all that
->> junk and chatter.
->>
->> I often somehow get stdout and stderr for various programs redirected to
->> konsole, because I'll use dbus-launch to start a program. And then when
->> the program has exited I'll get loads of rubbish from other programs ...
->> the chatter is horrendous.
->>
->> Cheers,
->> Wol
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, Dec 10, 2015 at 8:50 PM, Mark Knecht <markknecht@gmail.com> wrote:
 >
 >
+> On Thu, Dec 10, 2015 at 5:19 PM, Dallas Clement <dallas.a.clement@gmail.com>
+> wrote:
+>>
+>> <SNIP>
+>> >> One thing I didn't see in this thread was a check to make sure your
+>> >> alignment is on the physical sector alignment if you're using 4K
+>> >> sectors
+>> >> which I assume drives this large are using.
+>> >
+>> > Yes, these drives surely use 4K sectors.  But I haven't checked for
+>> > sector alignment issues.  Any tips on how to do that?
+>>
+>> According to parted, my disk partition is aligned.
+>>
+>> (parted) align-check
+>> alignment type(min/opt)  [optimal]/minimal?
+>> Partition number? 6
+>> 6 aligned
+>>
+>> Partition Table: gpt
+>>
+>> Number  Start      End          Size         File system  Name     Flags
+>>  1      2048s      10002431s    10000384s                 primary
+>>  2      10002432s  42002431s    32000000s                 primary
+>>  3      42002432s  42004479s    2048s                     primary
+>> bios_grub
+>>  4      42004480s  42006527s    2048s                     primary
+>>  5      42006528s  50008063s    8001536s                  primary
+>> > 6      50008064s  7796883455s  7746875392s               primary
+>>
+>> 50008064 / 4096 = 12209
 >
-> --
-> George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
-> LinkedIn profile: https://www.linkedin.com/in/georgerapp
-> Phone: +1 740 936 RAPP (740 936 7277)
+> I think you want to divide by 8 as 8*512 = 4096 but you're likely ok
+> on all of them. Partitioning tools are better about that these days.
+>
+> Looking back I didn't see what sort of controller/s you have all these
+> drives attached to. If you're spinning in IO loops then it could be a
+> driver issue.
+>
+> I would suggest googling for causes of iowait cycles and post
+> back additional questions.
+>
+> Good luck,
+> Mark
+
+Hi Mark.  I have three different controllers on this motherboard.  A
+Marvell 9485 controls 8 of the disks.  And an Intel Cougar Point
+controls the 4 remaining disks.
+
+> If you're spinning in IO loops then it could be a driver issue.
+
+It sure is looking like that.  I will try to profile the kernel
+threads today and maybe use blktrace as Phil recommended to see what
+is going on there.
+
+This is pretty sad that 12 single threaded fio jobs can bring this
+system to its knees.
