@@ -1,49 +1,106 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: start dm-multipath before mdadm raid
-Date: Fri, 11 Dec 2015 09:04:26 -0500
-Message-ID: <566AD7EA.4070903@turmel.org>
-References: <CABdHLQ6Lo8WvgSf=MAuYdVoJJMHmLuV5gkE+N4MDMfxvAbG5OA@mail.gmail.com>
- <5669AE9C.7040904@turmel.org>
- <CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+From: Enrico Tagliavini <enrico.tagliavini@gmail.com>
+Subject: Re: Reshape stalls and fails when SELinux is enabled
+Date: Fri, 11 Dec 2015 15:26:05 +0100
+Message-ID: <CAMQd7mZ5oLSWiv7F0aBpkxjCtvFC23q9wOcvUuX8W2PCT4Laww@mail.gmail.com>
+References: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com>
+	<CAMQd7mYscUDroop=4eLz4UwTEiibbF0OqDN1b28yiqJyfW7gGw@mail.gmail.com>
+	<CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
+	<5669C34C.9060606@youngman.org.uk>
+	<CAF-KpgZXbqVcanWYVMoV9+1vVo5S7DHXPs2PD8jGbO2D6wjriw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+In-Reply-To: <CAF-KpgZXbqVcanWYVMoV9+1vVo5S7DHXPs2PD8jGbO2D6wjriw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "P. Remek" <p.remek1@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: George Rapp <george.rapp@gmail.com>
+Cc: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/10/2015 05:44 PM, P. Remek wrote:
+No need to disable SELinux. Just run
+
+setenforce 0
+
+before calling mdadm. When your reshape is done enable SELinux again with
+
+setenforce 1
+
+no reboot needed.
+
+Also if you want a permanent workaround you can whitelist mdadm process type:
+
+semanage permissive -a mdadm_t # but be aware I didn't tested this!
+
+On 11 December 2015 at 02:26, George Rapp <george.rapp@gmail.com> wrote:
+> Indeed, SELinux appears to be very not-helpful in the RAID resize
+> process. I decided to put SELINUX=disabled in /etc/selinux/config,
+> touch /.relabel, and reboot before doing any more RAID 6 work.
+>
+> The only other workaround I could see is the ability to do a "dry run"
+> of mdadm operations a la wodim / growisofs - a chance to test out all
+> the parameters before actually pulling the trigger. (Sorry, no patch,
+> though ... 8^)
+>
+> On Thu, Dec 10, 2015 at 1:24 PM, Wols Lists <antlists@youngman.org.uk> wrote:
+>> On 10/12/15 17:06, Edward Kuns wrote:
+>>> I ran into this as well.  I unwisely worked around it by placing the
+>>> backup file on /tmp.  I don't recommend that choice!
 >>
->> Order of device discovery is not guaranteed, but base devices will
->> almost always show up before multipath devices.  You have to filter out
->> the base devices from mdadm consideration:
+>> Most people don't realise there are various tmp directories, with
+>> different behaviours. /tmp is defined by LSB or somesuch to be real
+>> temporary storage - no guarantees - stuff may disappear at any time.
+>> Which is why my /tmp is a tmpfs - stored in ram. So yes, a backup file
+>> on /tmp is not a good idea ...
 >>
->> Add a DEVICES statement to your mdadm.conf that only matches your
->> multipath device names, not the base names.  Then update your initramfs
->> so it applies to early boot as well.
+>> /var/tmp is defined as holding data that must survive a reboot - where
+>> emacs and vi and that lot are recommended to store their crash dumps,
+>> recovery files, etc for example.
 >>
-> 
-> 
-> This is something which I actually already tried. I specified in my
-> /etc/mdadm/mdadm.conf following:
-> 
-> DEVICE /dev/mapper/hgst-ssd*
-> 
-> In my /etc/multipath.conf I instruct dm-multipath to create
-> /dev/mapper/hgst-ssd1 /dev/mapper/hgst-ssd2 /dev/mapper/hgst-ssd3
-
-You haven't said that you've updated your initramfs with this info.
-
-> But the only result is that after this config, the md raid is not
-> started at all. My conclusion was that when md raid was starting, the
-> multipath devices did not yet exist so it did not start up the array.
-
-That would be an initramfs bug, most likely.  Modern initramfs like
-dracut use incremental assembly to start arrays and subsystems as
-devices are started, regardless what order they show up.
-
-Phil
-
+>>  I didn't see
+>>> your AVC on your EMail, but I recommend you reach out to the SELinux
+>>> folks for labeling help.  I've reach out to them in the past and have
+>>> found them very helpful (as are the folks here).  Getting the labeling
+>>> corrected will not only help you but everyone else in the long term.
+>>>
+>>> I agree that it would be good for mdadm to handle this kind of failure
+>>> in a more productive fashion as well.  But I'm only a lurker here.  I
+>>> don't have enough knowledge to suggest what would be better.  One
+>>> thing that really helped me debug this was commenting out the lines
+>>>
+>>> #StandardOutput=null
+>>> #StandardError=null
+>>>
+>>> in the systemd file /lib/systemd/system/mdadm-grow-continue@.service
+>>> -- note you have to run systemctl daemon-reload after changing the
+>>> file for the change to be noticed.
+>>>
+>>> Once I did that, the system logs had much more useful information.
+>>> I'm not sure where that file is sourced, whether it's from the
+>>> linux-raid people or from the distributions or somewhere in between.
+>>> Does anyone here know if there's a reason why standard out and
+>>> standard error are sent to /dev/null for this service?
+>>>
+>> I wouldn't know for certain, but given the amount of junk so many
+>> programs spew to stdout or stderr (which nobody ever sees because
+>> they're running in a gui), I expect it's because that's what happens by
+>> default anyway :-) They don't want to clutter the logs with all that
+>> junk and chatter.
+>>
+>> I often somehow get stdout and stderr for various programs redirected to
+>> konsole, because I'll use dbus-launch to start a program. And then when
+>> the program has exited I'll get loads of rubbish from other programs ...
+>> the chatter is horrendous.
+>>
+>> Cheers,
+>> Wol
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+> LinkedIn profile: https://www.linkedin.com/in/georgerapp
+> Phone: +1 740 936 RAPP (740 936 7277)
