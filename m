@@ -1,19 +1,49 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v4 0/3] Badblock tracking for gendisks
-Date: Thu, 10 Dec 2015 21:40:57 -0800
-Message-ID: <CAPcyv4jaQN9L3=wUap=XXVAsUkdzUqCb6cOHnqGQH9JpV_sJcw@mail.gmail.com>
-References: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: start dm-multipath before mdadm raid
+Date: Fri, 11 Dec 2015 09:04:26 -0500
+Message-ID: <566AD7EA.4070903@turmel.org>
+References: <CABdHLQ6Lo8WvgSf=MAuYdVoJJMHmLuV5gkE+N4MDMfxvAbG5OA@mail.gmail.com>
+ <5669AE9C.7040904@turmel.org>
+ <CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1449602295-28781-1-git-send-email-vishal.l.verma@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, NeilBrown <neilb@suse.com>, linux-block@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Vishal Verma <vishal.l.verma@intel.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "P. Remek" <p.remek1@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Jens,
+On 12/10/2015 05:44 PM, P. Remek wrote:
+>>
+>> Order of device discovery is not guaranteed, but base devices will
+>> almost always show up before multipath devices.  You have to filter out
+>> the base devices from mdadm consideration:
+>>
+>> Add a DEVICES statement to your mdadm.conf that only matches your
+>> multipath device names, not the base names.  Then update your initramfs
+>> so it applies to early boot as well.
+>>
+> 
+> 
+> This is something which I actually already tried. I specified in my
+> /etc/mdadm/mdadm.conf following:
+> 
+> DEVICE /dev/mapper/hgst-ssd*
+> 
+> In my /etc/multipath.conf I instruct dm-multipath to create
+> /dev/mapper/hgst-ssd1 /dev/mapper/hgst-ssd2 /dev/mapper/hgst-ssd3
 
-Are you on-board with this approach?  Any concerns with me carrying
-this through the nvdimm tree along with our other pending
-error-handling enabling?
+You haven't said that you've updated your initramfs with this info.
+
+> But the only result is that after this config, the md raid is not
+> started at all. My conclusion was that when md raid was starting, the
+> multipath devices did not yet exist so it did not start up the array.
+
+That would be an initramfs bug, most likely.  Modern initramfs like
+dracut use incremental assembly to start arrays and subsystems as
+devices are started, regardless what order they show up.
+
+Phil
+
