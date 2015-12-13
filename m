@@ -1,25 +1,31 @@
-From: "Micheal Blue" <mblue@gmx.us>
-Subject: Seeking advice to convert RAID5 to RAID10 adding a drive in the
- process
-Date: Sun, 13 Dec 2015 15:47:23 +0100
-Message-ID: <trinity-e29048a1-862f-4ae7-a1a2-e4e826b37f95-1450018043035@3capp-mailcom-bs10>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Mdadm with data offsets
+Date: Sun, 13 Dec 2015 18:50:24 -0500
+Message-ID: <566E0440.70801@turmel.org>
+References: <CAH_hVdp4mGE-AZ1ww81u9vS0xri4xR+LrpaRSbaUb6VRohZ_Rg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAH_hVdp4mGE-AZ1ww81u9vS0xri4xR+LrpaRSbaUb6VRohZ_Rg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "TheGerwazy ." <gerardlesiuk@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a 3 disk RAID5 currently that uses LUKS. I would like to add a new disk and covert the array to RAID10 but cannot find any walk-through of this process. I am grateful for any input from the list be it links or a personal summary.
+On 12/13/2015 01:18 AM, TheGerwazy . wrote:
+> Hello
+> I have to recreate mdadm raid 6 made with different data offsets. Some
+> drives have 2048 and others 262144.
+> I am looking for mdadm version with data offsets option for each drive.
+> Could somebody help me. Please ?
+
+version 3.3 and above, I believe.  If in doubt, just compile the latest
+version yourself -- no root privileges are required to compile it.  Then
+run it from the current directory.
+
+git clone git://neil.brown.name/mdadm
+
+make
+[sudo] ./mdadm ......
 
 
-Below is a graphic of how my current 3 drive array is setup:
- ---------------------------------------
-[          ext4 file system             ]
- ---------------------------------------
-[          LUKS cryptdevice             ]
- ---------------------------------------
-[               /dev/dm0                ]
- ---------------------------------------
-[ /dev/sdb1 ] [ /dev/sdc1 ] [ /dev/sdd1 ]
- ---------------------------------------
