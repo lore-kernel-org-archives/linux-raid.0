@@ -1,65 +1,69 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: [PATCH 1/2] block: Export the __blk_bios_map_sg() to map one bio
-Date: Mon, 14 Dec 2015 16:23:39 +0800
-Message-ID: <224caa7e50b4a4e6ed6292e3fd70cc0bf290588b.1450080755.git.baolin.wang@linaro.org>
-References: <cover.1450080755.git.baolin.wang@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1450080755.git.baolin.wang@linaro.org>
-In-Reply-To: <cover.1450080755.git.baolin.wang@linaro.org>
-References: <cover.1450080755.git.baolin.wang@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com
-Cc: neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, broonie@kernel.org, arnd@arndb.de, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, baolin.wang@linaro.org
+From: "TheGerwazy ." <gerardlesiuk@gmail.com>
+Subject: Re: Mdadm with data offsets
+Date: Mon, 14 Dec 2015 13:03:00 +0100
+Message-ID: <CAH_hVdo43dSuaeJT-QGN14LhiRnR1zYVFwqvueV6vxthHYYU9g@mail.gmail.com>
+References: <CAH_hVdp4mGE-AZ1ww81u9vS0xri4xR+LrpaRSbaUb6VRohZ_Rg@mail.gmail.com>
+	<566E0440.70801@turmel.org>
+	<566E05B2.20803@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <566E05B2.20803@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In dm-crypt, it need to map one bio to scatterlist for improving the
-encryption efficiency. Thus this patch exports the __blk_bios_map_sg()
-function to map one bio with scatterlists.
+2015-12-14 0:56 GMT+01:00 Phil Turmel <philip@turmel.org>:
+> On 12/13/2015 06:50 PM, Phil Turmel wrote:
+>> On 12/13/2015 01:18 AM, TheGerwazy . wrote:
+>>> Hello
+>>> I have to recreate mdadm raid 6 made with different data offsets. Some
+>>> drives have 2048 and others 262144.
+>>> I am looking for mdadm version with data offsets option for each drive.
+>>> Could somebody help me. Please ?
+>>
+>> version 3.3 and above, I believe.  If in doubt, just compile the latest
+>> version yourself -- no root privileges are required to compile it.  Then
+>> run it from the current directory.
+>>
+>> git clone git://neil.brown.name/mdadm
+>>
+>> make
+>> [sudo] ./mdadm ......
+>
+> I should add that using --create to reconstruct an array is incredibly
+> dangerous (to your data) and should only be used as a last resort and
+> when you are 100% confident you know how to do it.  Your question
+> suggests that might not be true....  in which case sharing your problem
+> here might be wise.
+>
+> Phil
 
-Signed-off-by: Baolin Wang <baolin.wang@linaro.org>
----
- block/blk-merge.c      |    7 ++++---
- include/linux/blkdev.h |    3 +++
- 2 files changed, 7 insertions(+), 3 deletions(-)
+Hi  Phil
+Thanks for the message .... but,
+In the last version of mdadm I get:
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index de5716d8..09cc7c4 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -331,9 +331,9 @@ new_segment:
- 	*bvprv = *bvec;
- }
- 
--static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
--			     struct scatterlist *sglist,
--			     struct scatterlist **sg)
-+int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
-+		      struct scatterlist *sglist,
-+		      struct scatterlist **sg)
- {
- 	struct bio_vec bvec, bvprv = { NULL };
- 	struct bvec_iter iter;
-@@ -372,6 +372,7 @@ single_segment:
- 
- 	return nsegs;
- }
-+EXPORT_SYMBOL(__blk_bios_map_sg);
- 
- /*
-  * map a request to scatterlist, return number of sg entries setup. Caller
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3fe27f8..dd8d10f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1004,6 +1004,9 @@ extern void blk_queue_flush_queueable(struct request_queue *q, bool queueable);
- extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
- 
- extern int blk_rq_map_sg(struct request_queue *, struct request *, struct scatterlist *);
-+extern int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
-+			     struct scatterlist *sglist,
-+			     struct scatterlist **sg);
- extern void blk_dump_rq_flags(struct request *, char *);
- extern long nr_blockdev_pages(void);
- 
--- 
-1.7.9.5
+./mdadm --create --raid-devices=8 --level=6 --assume-clean /dev/md7
+/dev/mapper/ovsdb1:1024 /dev/mapper/ovsdc1:4096
+/dev/mapper/ovsdd1:1024 /dev/mapper/ovsde1:1024
+/dev/mapper/ovsdf1:1024 /dev/mapper/ovsdg1:1024
+/dev/mapper/ovsdh1:1024 /dev/mapper/ovsdi1:4096
+mdadm: cannot open /dev/mapper/ovsdb1:1024: No such file or directory
+
+but, There is branch data_offset of mdadm 3.2.5:
+
+sudo ./mdadm --create --raid-devices=8 --level=6 --assume-clean
+/dev/md7 /dev/mapper/ovsdb1 /dev/mapper/ovsdc1:4096
+/dev/mapper/ovsdd1:1024 /dev/mapper/ovsde1:1024
+/dev/mapper/ovsdf1:1024 /dev/mapper/ovsdg1:1024
+/dev/mapper/ovsdh1:1024 /dev/mapper/ovsdi1:4096
+
+dadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md7 started.
+
+so it is exactly what I need :)
+
+BTW is it possible to find right data offset without superblock on drive ?
+
+Regards, Gerard
