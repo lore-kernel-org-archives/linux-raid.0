@@ -1,39 +1,29 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Mdadm with data offsets
-Date: Sun, 13 Dec 2015 18:56:34 -0500
-Message-ID: <566E05B2.20803@turmel.org>
-References: <CAH_hVdp4mGE-AZ1ww81u9vS0xri4xR+LrpaRSbaUb6VRohZ_Rg@mail.gmail.com>
- <566E0440.70801@turmel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <566E0440.70801@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: "TheGerwazy ." <gerardlesiuk@gmail.com>, linux-raid@vger.kernel.org
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: [PATCH 0/2] Optimize the dm-crypt for XTS mode
+Date: Mon, 14 Dec 2015 16:23:38 +0800
+Message-ID: <cover.1450080755.git.baolin.wang@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com
+Cc: neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, broonie@kernel.org, arnd@arndb.de, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, baolin.wang@linaro.org
 List-Id: linux-raid.ids
 
-On 12/13/2015 06:50 PM, Phil Turmel wrote:
-> On 12/13/2015 01:18 AM, TheGerwazy . wrote:
->> Hello
->> I have to recreate mdadm raid 6 made with different data offsets. Some
->> drives have 2048 and others 262144.
->> I am looking for mdadm version with data offsets option for each drive.
->> Could somebody help me. Please ?
-> 
-> version 3.3 and above, I believe.  If in doubt, just compile the latest
-> version yourself -- no root privileges are required to compile it.  Then
-> run it from the current directory.
-> 
-> git clone git://neil.brown.name/mdadm
-> 
-> make
-> [sudo] ./mdadm ......
+In now dm-crypt code, we find it only send one scatterlist which maps
+one segment of one bio to the crypto engine at one time. But that will
+be more time-consuming and ineffective for the crypto engine.
 
-I should add that using --create to reconstruct an array is incredibly
-dangerous (to your data) and should only be used as a last resort and
-when you are 100% confident you know how to do it.  Your question
-suggests that might not be true....  in which case sharing your problem
-here might be wise.
+For XTS mode, it can map the whole bio with multiple scatterlists,
+and send all the scatterlists to the crypto engine which can improve
+the performance.
 
-Phil
+Baolin Wang (2):
+  block: Export the __blk_bios_map_sg() to map one bio
+  md: dm-crypt: Optimize the dm-crypt for XTS mode
+
+ block/blk-merge.c      |    7 +-
+ drivers/md/dm-crypt.c  |  315 +++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/blkdev.h |    3 +
+ 3 files changed, 316 insertions(+), 9 deletions(-)
+
+-- 
+1.7.9.5
