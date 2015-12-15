@@ -1,64 +1,64 @@
-From: "TheGerwazy ." <gerardlesiuk@gmail.com>
-Subject: Re: Mdadm with data offsets
-Date: Tue, 15 Dec 2015 15:11:08 +0100
-Message-ID: <CAH_hVdqS__=hNYurAWOvY8Gig-DqHGvbvwEfPffi4GKFxEWyrw@mail.gmail.com>
-References: <CAH_hVdp4mGE-AZ1ww81u9vS0xri4xR+LrpaRSbaUb6VRohZ_Rg@mail.gmail.com>
-	<566E0440.70801@turmel.org>
-	<566E05B2.20803@turmel.org>
-	<CAH_hVdo43dSuaeJT-QGN14LhiRnR1zYVFwqvueV6vxthHYYU9g@mail.gmail.com>
-	<566EBC38.7060205@turmel.org>
-	<CAH_hVdqMdrPTAz1LcDzZNDMdGKFOpwo32mh0E+mFZtcCBEBqJg@mail.gmail.com>
-	<56701944.1040505@turmel.org>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: best base / worst case RAID 5,6 write speeds
+Date: Tue, 15 Dec 2015 14:09:19 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FE517B@CFWEX01.americas.cray.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+	<CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
+	<CAK2H+efF2dM1BsM7kzfTxMdQEHvbWRaVe7zJLTGcPZzafn2M6A@mail.gmail.com>
+	<CAE9DZUQ+LOFWNQ2MpKoSx8j8RHVqkL15PO+jVjs7EkCQykG6VA@mail.gmail.com>
+	<CAE9DZUQo4CojhuVkQ6y=gTEWG5qUkeu57wcZsqbXZtGD_V5JCQ@mail.gmail.com>
+	<CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
+	<CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
+	<22122.64143.522908.45940@quad.stoffel.home>
+	<CAE9DZUQ=QynBKYJvq2JSnMaACKNpm+5yrhz+5x9Tx6_TK78mCg@mail.gmail.com>
+	<22123.9525.433754.283927@quad.stoffel.home>
+	<CAE9DZUTMnwpUX1e95c_i04uWREHd+aR8P2yCE_W-WmEbL6YRkw@mail.gmail.com>
+	<CAE9DZUTTP1VhVgT56dyv6aLaM2V8peWSHaBg4xvXzGGUZcJ_hw@mail.gmail.com>
+	<CAE9DZURuPGEL4bG=44ntbjp+51jktn36LFGfn11xFR-X9O9POw@mail.gmail.com>
+	<566B6C8F.7020201@turmel.org>
+	<CAE9DZURoHBRHq2M0spkTrBGoXmw9QjoARb_Gc6C6OvM9940aMA@mail.gmail.com>
+	<566BA6E5.6030008@turmel.org>
+	<CAE9DZUT42rCgjSacbs170ftzBtC4i83TRvk7CGeELqpYg3hVzw@mail.gmail.com>
+	<CAK2H+edazVORrVovWDeTA8DmqUL+5HRH-AcRwg8KkMas=o+Cog@mail.gmail.com>
+	<CAE9DZURBQxteib=hW6FskuJCJTxZDWhy5kMVy2u1hU5Nkg8Khg@mail.gmail.com>
+	<CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+	<CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+	<CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+	<CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+	<CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+ <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56701944.1040505@turmel.org>
+In-Reply-To: <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: Dallas Clement <dallas.a.clement@gmail.com>, Mark Knecht <markknecht@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2015-12-15 14:44 GMT+01:00 Phil Turmel <philip@turmel.org>:
-> On 12/15/2015 06:30 AM, TheGerwazy . wrote:
->
->> The main problem is the data offsets are not stored elsewhere than in
->> superblock. I have some drives from debian 6.0.5 and some were changed
->> in debian 7.5. In 6.0.5 default data offset was at 2048 sector while
->> int 7.5 it is 262144.
->
-> There have been other defaults, and various adjustments to the
-> algorithms that handle special cases.  The purpose of the superblock is
-> to store the data needed by the features supported.  Where else
-> would/could you store this information?
->
-maybe mdadm.conf, maybe syslog ?
-It the same problem like partitions, ext3 superblocks
-We need only a few parameters to recover whole array - some of them we
-could guess.
-Meybe its a good idea to spare some backups of mdadm superblock like in EXT3 ?
-
-Even though mdadm is, in my opinion, reliable system and I suggest it
-to my clients because of easy recovery.
-
-> This highlights why --create is such a terrible way to recover an array,
-> and highlights the danger posed by well-intentioned bloggers who
-> cavalierly suggest using it.
->
-> Pretty much everyone who comes here for advice *before* trying --create
-> has been successfully helped.  The results after --create are decidedly
-> mixed.
-
-Due to that there are production systems, sometimes there is no time
-to wait even an hour for advice - your boss would ask you "I need my
-data, why you are waitng ?"
-Another problem is when you are asking on the Internet - you sometimes
-receive completly wrong advice what lead you to losing the data...
-
->
->> Thanks for Phil
->
-> You're welcome.
->
-> Phil
->
-Best regards, Gerard
+RGFsbGFzLA0KDQpUaGUgdGhyZXNob2xkIGJldHdlZW4gaW9kZXB0aD0zMiBhbmQgaW9kZXB0aD02
+NCBtaWdodCBiZSBjYXVzZWQgYnkgZXhjZWVkaW5nIHRoZSBzdHJpcGUgY2FjaGUgc2l6ZS4NCg0K
+SW4gbXkgb3BpbmlvbiwgaWYgeW91J3JlIHdyaXRpbmcgY2h1bmsgYWxpZ25lZCBkYXRhLCB5b3Ug
+c2hvdWxkbid0IGJlIGRvaW5nIGFueSBSTVcncy4gIFRoYXQgeW91J3JlIGRvaW5nIHNtYWxsIG51
+bWJlcnMgb2YgUk1XJ3Mgd2l0aCBzbWFsbCBpb2RlcHRoLCBpbmRpY2F0ZXMgdGhhdCB5b3UncmUg
+dXNpbmcgdGhlIHN0cmlwZSBjYWNoZS4NCg0KSSd2ZSB0cmllZCBzaW1pbGFyIHRlc3RzIHdoZXJl
+IEkndmUgc2V0IHRoZSBzdHJpcGUgY2FjaGUgc2l6ZSB0byAxNyAodGhlIHNtYWxsZXN0IHlvdSBj
+YW4gc2V0IGl0IHRvKSwgYW5kIHRoZW4gZGlkIHBlcmZlY3RseSBhbGlnbmVkIElPJ3MuICBUaGUg
+cmVzdWx0cyBzaG93ZWQgdGhhdCBJIHdhcyBkb2luZyBtYXNzaXZlIGFtb3VudHMgb2YgUk1XLCBh
+bmQgbXkgcGVyZm9ybWFuY2Ugd2FzIGhvcnJpYmxlLg0KDQpZb3VyIEZJTyBqb2IgZmlsZSBsb29r
+cyBvcmRpbmFyeSAoYW5kIGJ5IHRoYXQgSSBtZWFuLi4uLiAiZ29vZCIpLiAgIFdoaWxlIEkgd291
+bGRuJ3QgaGF2ZSBwaWNrZWQgYnM9MTQwOGssIGJlY2F1c2UgaXQncyBhbGlnbmVkLCBJIHdvdWxk
+bid0IGV4cGVjdCB0aGF0IHRvIGJlIGEgY2F1c2UgZm9yIHByb2JsZW0uDQoNCllvdSBzaG91bGQg
+YmUgYWJsZSB0byBzZXQgaW9kZXB0aCB0byB3aGF0ZXZlciB5b3Ugd2FudC4gIFlvdSBjb3VsZCBz
+ZXQgaXQgdG8gYSBiaWxsaW9uLiAgVGhlIE9TIHNob3VsZCBibG9jayBhZGRpdGlvbmFsIHJlcXVl
+c3RzIHVudGlsIHRoZSB1bmRlcmx5aW5nIGRldmljZSdzIHF1ZXVlIGhhcyBhdmFpbGFibGUgc3Bh
+Y2UuICBJb2RlcHRoIHNob3VsZG4ndCBhZmZlY3QgUk1XIHdoZW4geW91J3JlIGRvaW5nIGFsaWdu
+ZWQgd3JpdGVzLiAgSW4gbXkgb3BuaW9uLCBpbmNyZWFzaW5nIGlvZGVwdGggc2hvdWxkIG9ubHkg
+aGVscC4uLiBub3QgaHVydC4gIElmIGl0IGNhdXNlcyBsb3cgbWVtb3J5LCB0aGF0IGNvdWxkIGJl
+IGFuIGlzc3VlLCBidXQgaXQgc2hvdWxkbid0IGluY3JlYXNlIHRoZSBhbW91bnQgb2YgUk1XLg0K
+DQpCb2IgS2llcnNraQ0KU2VuaW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2UgRW5naW5lZXINCkNyYXkg
+SW5jLg0KMzgwIEphY2tzb24gU3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQYXVsLCBNTiA1NTEwMQ0K
+VGVsZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2NTEtNjA1LTkwMDENCkNlbGw6IDY1MS04OTAtNzQ2
+MQ0KDQo=
