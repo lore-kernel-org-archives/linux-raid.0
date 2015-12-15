@@ -1,26 +1,37 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry."
- - recovery advice?
-Date: Tue, 15 Dec 2015 15:11:07 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1512151510440.29581@uplift.swm.pp.se>
-References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com> <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se> <CAF-KpgaLr-qA_RJiDYstFv-=EoHH-Ea3o1q3G3tXC4nX=Wt2XA@mail.gmail.com>
- <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com>
+From: "P. Remek" <p.remek1@googlemail.com>
+Subject: Re: start dm-multipath before mdadm raid
+Date: Tue, 15 Dec 2015 16:00:58 +0100
+Message-ID: <CABdHLQ5mHPymE6teRq9mCOGas5ydGZhFwUXoS5-j0NjsmNHp+g@mail.gmail.com>
+References: <CABdHLQ6Lo8WvgSf=MAuYdVoJJMHmLuV5gkE+N4MDMfxvAbG5OA@mail.gmail.com>
+	<5669AE9C.7040904@turmel.org>
+	<CABdHLQ4rh+Rtu6U+ZX6m0CWXu3sW4boEzHaPdxD03UBf82EJcQ@mail.gmail.com>
+	<566AD7EA.4070903@turmel.org>
+	<CABdHLQ7Wdg1sUdC-Ryamdy+et6SNJRJnfdnRXSPOrWJYX9sT_g@mail.gmail.com>
+	<566AF4E8.5030801@turmel.org>
+	<CABdHLQ4++kTu22YGkdDW3r1UAxf_7E_+fcn9SfFnTSg6MgSm9w@mail.gmail.com>
+	<22123.9272.750357.130814@quad.stoffel.home>
+	<CABdHLQ5jy1jNQ5uKF5AqJftHXw6CG3sEsrwguhgqP3mNr10aWA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com>
+In-Reply-To: <CABdHLQ5jy1jNQ5uKF5AqJftHXw6CG3sEsrwguhgqP3mNr10aWA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Rapp <george.rapp@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 10 Dec 2015, George Rapp wrote:
+Hello John, Phil,
 
-> I appear to be too early in the reshape for auto-recovery, but too far 
-> along to just say "never mind on that whole reshape business". Any other 
-> thoughts?
+have you managed to look at the information in the link below? I think
+dm-multihost is as module.
 
-what does "cat /proc/mdstat" say after these commands?
+Regards,
+Remek
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+>
+> Here is all the information I collected: http://pastebin.com/VF4Sfrq5
+>
+>
+> Regarding the testing setup, we can safely consider whole system as a
+> test, we will rebuild the system once we figure final config anyway.
+> So we can play around with the current raid with no risk of data loss.
