@@ -1,42 +1,40 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH v2 0/2] mdadm: re-add journal to array with bad journal
-Date: Wed, 16 Dec 2015 12:45:50 +1100
-Message-ID: <87fuz3b1yp.fsf@notabene.neil.brown.name>
-References: <1450143823-1145846-1-git-send-email-songliubraving@fb.com>
+Subject: Re: [PATCH 00/17] mdadm: SCSI enclosure based array
+Date: Wed, 16 Dec 2015 13:01:43 +1100
+Message-ID: <87d1u7b188.fsf@notabene.neil.brown.name>
+References: <1449015933-255689-1-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450143823-1145846-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <1449015933-255689-1-git-send-email-songliubraving@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: dan.j.williams@intel.com, shli@fb.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+Cc: dan.j.williams@intel.com, shli@fb.com, Song Liu <songliubraving@fb.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Tue, Dec 15 2015, Song Liu wrote:
+On Wed, Dec 02 2015, Song Liu wrote:
 
-> These patches enable recreation of missing/faulty journal. This requires
-> kernel changes as well, which Shaohua will send out later.
->
-> Song Liu (2):
->   add sysfs_array_state to struct mdinfo
->   [mdadm] recreate journal in mdadm
->
->  Manage.c | 42 +++++++++++++++++++++++++++++++++++++++---
->  ReadMe.c |  1 +
->  mdadm.c  |  8 ++++++++
->  mdadm.h  |  5 +++++
->  super1.c |  3 ++-
->  sysfs.c  |  7 +++++++
->  6 files changed, 62 insertions(+), 4 deletions(-)
->
-> --
-> 2.4.6
+> These patches by Dan Williams enable creating RAID array based on
+> SCSI enclosures.
 
-applied, thanks.
+Is there any background reading available so I can have some idea what
+these patches are supposed to do.
+I have a vague idea what an "enclosure" is but I didn't know that Linux
+knew about them.  Is there a link to the LWN article about them or some
+other useful documentation?  "git grep -i enclosur Documentation/"
+didn't show anything likely to be useful.
+
+And what is "/dev/disk/by-slot"?? I've never come across it before
+and google doesn't help much.  Just these patches and
+  http://comments.gmane.org/gmane.linux.scsi/93809
+
+which doesn't seem very conclusive.
+
+So currently I am not able to review these patches.
 
 NeilBrown
 
@@ -46,18 +44,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWcMJOAAoJEDnsnt1WYoG5nZ4P/ie58BI7k/dVUDqXTOF9VPmZ
-UqMTqAHxzbdbLy3CmPxUKG7j3Dw4TsqJNOY3L0V5wW14qrKEhvXBgkmU5v5NcGNQ
-8qZcr+csjQ7ebmysO5v4wxcJfSL/TmB07GliErY3d+ax5lRmbjuKkfde/5kVucDz
-aC+b+00YKUFbbo+CspJ2V8SpwWUCMkgO0Ob+b8Iaq4mXNcWswq1paEjOcG3964z+
-ve+ugFgplxSVsmLu75F0+ARvvS/20QH31xIbIdLAe4bg8/xCbGrNmJeJMk1ceQvB
-XTt9gZTWpzXIUbXzXKRf0W5DsUFKz0sJMbpGtgkviMukQxpWik7UYFcA6qSRK0xD
-zAxp6WHsuessZkAJpqnsL95ti7Yo2WwO/02+ZOmxT0GX6d2NZmKhZeLvvoQNQtsc
-KSqAyWjQEgfLNNDRGEPfRZPGxjp10t1I87Fr389Z+SS0M6VKYpH+hQ7YwsaolI5q
-t40aPyNU0hBUNUzHDyYbhsX2pL/cPtJnNpkzA7zyVd+OD6QWEf2vS53aV+80rmPE
-r+Ql91wUzx+ED+sEgu+3lKHCPuSyJ+qS85tvF/95BT/Ol/pSifswlyY/UC4V4BO0
-4O8FPQxZ0Dp5HZeBn4auIn1DZDLilov67A0mfWgOgMOQiUaNe4D1RFjQxsy98Ieu
-rIDsB4qcv5hha9kh283A
-=jHH5
+iQIcBAEBCAAGBQJWcMYHAAoJEDnsnt1WYoG5xo0P/2bHpktAWFkSSWTPAiCuibfr
+xt5/kmr2rP70Jljk4qJZASM7ZyJC44gwZ8XyJrl8MckdiMM8urfJ+BRXGiURWwPm
+X7RYOynOBKQw3gwXzrVqVS89RVjQ6K2b4XW2Mz5MrvPQ/5NbVF55qrbaf8WMNBiV
+aLhFXFmumeyXmcEJBWp546eagTbSftjmWT2ZB00ZV8EdIiJBsqBMo1EEdkG6+oRZ
+kKAhplcCJPZMTtCyf0qnP9eaD1xjBvWyCPRVNTUC+VcieJF6SF3+jDizem76czAI
+NODWnGgZV+Eg9L0P5anfmhC886Y0PEfxBJs6xZbHNQZxo7qL49jL6isvuVy+rfEE
+oC5OouIXVoWcjxyY04LjiGJfSoLHV3Kok/bVdja3Yj64LiKIuOYqaHqR0qw+faNN
+ciNAkDA32PVghi7w8YdCB+VAnnLGkVTqS/4cXDuqMTeK6GJNCqbEZUDW1qFhXDfg
+LPqv749ucac5ShHpWwi/xitgV35PaxOLQ11ALbE6w5Xg13ZPfEmpcXXXSFeMLAkM
+0gkCcTnwxXJjvpPzhU9mmTi8OUF7J/IrQTc6O3C9vBUQYk8TVOcnXlxj3Ah6QrfB
+bWkyk3lMKcV7Clbw++ot1h9qyoiadoQ+U8qZkTj4F9HuvN00EV8T5nXU4+7kir8m
+QVOMd/k9DlNrsSLy1rvl
+=eZf+
 -----END PGP SIGNATURE-----
 --=-=-=--
