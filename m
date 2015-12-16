@@ -1,38 +1,76 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5-cache: add journal hot add/remove support
-Date: Wed, 16 Dec 2015 14:42:27 +1100
-Message-ID: <87y4cv9hzw.fsf@notabene.neil.brown.name>
-References: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com> <87r3inb3eh.fsf@notabene.neil.brown.name> <20151216013310.GA741432@devbig084.prn1.facebook.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH] md: avoid warning for 32-bit sector_t
+Date: Wed, 16 Dec 2015 15:02:19 +1100
+Message-ID: <87si339h2s.fsf@notabene.neil.brown.name>
+References: <65226011.NWtA6TWNA3@wuerfel>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151216013310.GA741432@devbig084.prn1.facebook.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <65226011.NWtA6TWNA3@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 16 2015, Shaohua Li wrote:
+On Tue, Nov 24 2015, Arnd Bergmann wrote:
 
->> And I'm a bit uncertain about setting rdev->raid_disk to
->> mddev->raid_disks.
->> I thought we decided that "Journal" devices had a different namespace
->> for raid_disk than data disks, so ->raid_disk of 0 was appropriate?
->> Setting the journal raid_disk to mddev->raid_disks might cause problems
->> when we ultimately support reshaping an array with a journal.
+> When CONFIG_LBDAF is not set, sector_t is only 32-bits wide, which
+> means we cannot have devices with more than 2TB, and the code that
+> is trying to handle compatibility support for large devices in
+> md version 0.90 is meaningless but also causes a compile-time warning:
 >
-> 0 will introduce confusion in sysfs entry, eg, which disk should
-> xxx/md/rd0 point to? Create a special sys file? This appears the only
-> reason we don't use 0.
+> drivers/md/md.c: In function 'super_90_load':
+> drivers/md/md.c:1029:19: warning: large integer implicitly truncated to u=
+nsigned type [-Woverflow]
+> drivers/md/md.c: In function 'super_90_rdev_size_change':
+> drivers/md/md.c:1323:17: warning: large integer implicitly truncated to u=
+nsigned type [-Woverflow]
+>
+> This adds a check for CONFIG_LBDAF to avoid even getting into this
+> code path, and also adds an explicit cast to let the compiler know
+> it doesn't have to warn about the truncation.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> Noticed on ARM randconfig builds with recent gcc versions.
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 0b48c5d7c489..ee9a7ab44f32 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1025,8 +1025,9 @@ static int super_90_load(struct md_rdev *rdev, stru=
+ct md_rdev *refdev, int minor
+>  	 * (not needed for Linear and RAID0 as metadata doesn't
+>  	 * record this size)
+>  	 */
+> -	if (rdev->sectors >=3D (2ULL << 32) && sb->level >=3D 1)
+> -		rdev->sectors =3D (2ULL << 32) - 2;
+> +	if (IS_ENABLED(CONFIG_LBDAF) && (u64)rdev->sectors >=3D (2ULL << 32) &&
+> +	    sb->level >=3D 1)
+> +		rdev->sectors =3D (sector_t)(2ULL << 32) - 2;
+>=20=20
+>  	if (rdev->sectors < ((sector_t)sb->size) * 2 && sb->level >=3D 1)
+>  		/* "this cannot possibly happen" ... */
+> @@ -1319,8 +1320,9 @@ super_90_rdev_size_change(struct md_rdev *rdev, sec=
+tor_t num_sectors)
+>  	/* Limit to 4TB as metadata cannot record more than that.
+>  	 * 4TB =3D=3D 2^32 KB, or 2*2^32 sectors.
+>  	 */
+> -	if (num_sectors >=3D (2ULL << 32) && rdev->mddev->level >=3D 1)
+> -		num_sectors =3D (2ULL << 32) - 2;
+> +	if (IS_ENABLED(CONFIG_LBDAF) && (u64)num_sectors >=3D (2ULL << 32) &&
+> +	    rdev->mddev->level >=3D 1)
+> +		num_sectors =3D (sector_t)(2ULL << 32) - 2;
+>  	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
+>  		       rdev->sb_page);
+>  	md_super_wait(rdev->mddev);
 
-sysfs_link_rdev already avoids the "rd%d" link of Replacement devices.
-Change it and sysfs_unlink_rdev to ignore the Journal device too.
-
-Thanks,
+applied, thanks.
 NeilBrown
 
 --=-=-=
@@ -41,18 +79,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWcN2jAAoJEDnsnt1WYoG58o4P/j6zahTvcnMCHnb/P2Upo8os
-7aRA+E9GbRk+3JLgmhtD+pC60S7DXZoU7htTPKuW5c5mwxSNcHwMg6NVwu78/50o
-wcC0tQSbxTst6S6Zxh93xvU1fEZkmG7k8mlqoMSdQMw0j2ucarrkoB9MDnWgGPM2
-Vng8K2cNs4XDQIeGOYV0POXLr5yk++FeI9uIYMyZqNukWGiPXMp2OxpYsmaMsuEZ
-w8rD+QYXokPc3qUleUhFTPOBdn9NGoVwQsWTzQYdIGKE9ZgODLIivOZB7eS6n0vx
-+J7DOGEwS14VjhwMtyLjBYe7iEr8EXEHMZXAv+evQRRecxFz4zTAaiQthCaAQeZt
-EGQJRsgNCfsZwAuMwPqIvY1Av0WCSqg9oec9VJltdhn69e9dU2gZkREJ1JyMP7vG
-qWSHKqE98MW0zHWHUve2DXlLVUDvIhJELxXReVP+acOnWaoFRkWJIAzGO5Ic3aVu
-dUnduo4Z99WzUa/EYtGPqOiLbWAo3Ch7oTk1jAv5AYh0RVkZ0qt/8Er32y74KkSU
-x87gHKkLGtDrEgG3+1F9/8L36XUNGofeg+t0PZ15xULk6ChbfWSny6GrSKn3FqSI
-c3MjEROmYy/76Avk/YUutMVTY5l8yG99NPi+x7HiCojglXMnOptMnme0q8cn6K32
-Cncu3Y9K9Rs+wq/m/tRs
-=VwOE
+iQIcBAEBCAAGBQJWcOJLAAoJEDnsnt1WYoG5vDkP/3RdLR0rx9/R/nyrMlOhIQfS
+Ilry8JcJ72hRLKcUCN5onBhLqXqrl9bDlkZEyVbZ0VfJEqwm0nY/E83pPlSk1PN3
+cxokPCA5LuBjY5pTYn1BtdG2bQreLcCdJPCoSvvMxoPzuogNCAfG5LLmoLdYIXP/
+j3pDu6h1XJGH9fUJl+X+er2txUk+dL+WfkwVC8H/x7ibV8uOUqlY5NkTPyCQwDsJ
+uK1R8p79SL1RhlUJqRgozWE1K5EUbvEFyFKqJWtoGRgXALcwf8b3FeQPxhC1lBt8
+tx+36HLqIX7Obfq4zS3OCHrr8+kfJuS48/daKVfgVPdLat8yPDepPVugEqnmJGR1
+PDn49SDChZZatYKqQCBVgrTrnWSleQ8V775nA0zMikyrqWJ8PIyPhjJYNjv9/yHy
+gOQZkXVsLRfQ10au2QdoZlUsFJ4rfF4XYO1NGYNgN+KQLgxMh9hdMyrS4vkmgqUh
+8yvPZ8eqWpReuuy1YlLtNVF/zUIpFo5/2QuueaJ5M1Kf+LzIGC+TX5g9gxcR6li+
+2GszE+9ak5Lk17/T2Ue2dqgVsyUYtE/2LJceQP6sOghx8xVR1XFPuEQANkOAUyhc
+kXd//lIb2Y2uBYaeJs6oWEpuNHnZjdK0x1flf6TrugGHJX9bDy68kzRfIyZSFAny
+kZyobpT2wcOD3CeiNk0m
+=SNM4
 -----END PGP SIGNATURE-----
 --=-=-=--
