@@ -1,276 +1,147 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] raid5-cache: add journal hot add/remove support
-Date: Wed, 16 Dec 2015 12:14:46 +1100
-Message-ID: <87r3inb3eh.fsf@notabene.neil.brown.name>
-References: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com>
+Subject: Re: [PATCH] md/raid10: fix data corruption and crash during resync
+Date: Wed, 16 Dec 2015 12:29:22 +1100
+Message-ID: <87oadrb2q5.fsf@notabene.neil.brown.name>
+References: <1446654630-24067-1-git-send-email-artur.paszkiewicz@intel.com> <20151104223353.GA99478@kernel.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com>
+In-Reply-To: <20151104223353.GA99478@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
+To: Shaohua Li <shli@kernel.org>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 15 2015, Shaohua Li wrote:
+On Thu, Nov 05 2015, Shaohua Li wrote:
 
-> Add support for journal disk hot add/remove. Mostly trival checks in md
-> part. The raid5 part is a little tricky. For hot-remove, we can't wait
-> pending write as it's called from raid5d. The wait will cause deadlock.
-> We simplily fail the hot-remove. A hot-remove retry can success
-> eventually since if journal disk is faulty all pending write will be
-> failed and finish. For hot-add, since an array supporting journal but
-> without journal disk will be marked read-only, we are safe to hot add
-> journal without stopping IO (should be read IO, while journal only
-> handles write IO).
+> On Wed, Nov 04, 2015 at 05:30:30PM +0100, Artur Paszkiewicz wrote:
+>> The commit c31df25f20e3 ("md/raid10: make sync_request_write() call
+>> bio_copy_data()") replaced manual data copying with bio_copy_data() but
+>> it doesn't work as intended. The source bio (fbio) is already processed,
+>> so its bvec_iter has bi_size =3D=3D 0 and bi_idx =3D=3D bi_vcnt.  Becaus=
+e of
+>> this, bio_copy_data() either does not copy anything, or worse, copies
+>> data from the ->bi_next bio if it is set.  This causes wrong data to be
+>> written to drives during resync and sometimes lockups/crashes in
+>> bio_copy_data():
+>>=20
+>> [  517.338478] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [md=
+126_raid10:3319]
+>> [  517.347324] Modules linked in: raid10 xt_CHECKSUM ipt_MASQUERADE nf_n=
+at_masquerade_ipv4 tun ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT =
+nf_reject_ipv4 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtab=
+le_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv=
+6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables=
+ iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntra=
+ck iptable_mangle iptable_security iptable_raw iptable_filter ip_tables x86=
+_pkg_temp_thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul cryp=
+td shpchp pcspkr ipmi_si ipmi_msghandler tpm_crb acpi_power_meter acpi_cpuf=
+req ext4 mbcache jbd2 sr_mod cdrom sd_mod e1000e ax88179_178a usbnet mii ah=
+ci ata_generic crc32c_intel libahci ptp pata_acpi libata pps_core wmi sunrp=
+c dm_mirror dm_region_hash dm_log dm_mod
+>> [  517.440555] CPU: 0 PID: 3319 Comm: md126_raid10 Not tainted 4.3.0-rc6=
++ #1
+>> [  517.448384] Hardware name: Intel Corporation PURLEY/PURLEY, BIOS PLYD=
+CRB1.86B.0055.D14.1509221924 09/22/2015
+>> [  517.459768] task: ffff880153773980 ti: ffff880150df8000 task.ti: ffff=
+880150df8000
+>> [  517.468529] RIP: 0010:[<ffffffff812e1888>]  [<ffffffff812e1888>] bio_=
+copy_data+0xc8/0x3c0
+>> [  517.478164] RSP: 0018:ffff880150dfbc98  EFLAGS: 00000246
+>> [  517.484341] RAX: ffff880169356688 RBX: 0000000000001000 RCX: 00000000=
+00000000
+>> [  517.492558] RDX: 0000000000000000 RSI: ffffea0001ac2980 RDI: ffffea00=
+00d835c0
+>> [  517.500773] RBP: ffff880150dfbd08 R08: 0000000000000001 R09: ffff8801=
+53773980
+>> [  517.508987] R10: ffff880169356600 R11: 0000000000001000 R12: 00000000=
+00010000
+>> [  517.517199] R13: 000000000000e000 R14: 0000000000000000 R15: 00000000=
+00001000
+>> [  517.525412] FS:  0000000000000000(0000) GS:ffff880174a00000(0000) knl=
+GS:0000000000000000
+>> [  517.534844] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> [  517.541507] CR2: 00007f8a044d5fed CR3: 0000000169504000 CR4: 00000000=
+001406f0
+>> [  517.549722] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000=
+00000000
+>> [  517.557929] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000=
+00000400
+>> [  517.566144] Stack:
+>> [  517.568626]  ffff880174a16bc0 ffff880153773980 ffff880169356600 00000=
+00000000000
+>> [  517.577659]  0000000000000001 0000000000000001 ffff880153773980 ffff8=
+8016a61a800
+>> [  517.586715]  ffff880150dfbcf8 0000000000000001 ffff88016dd209e0 00000=
+00000001000
+>> [  517.595773] Call Trace:
+>> [  517.598747]  [<ffffffffa043ef95>] raid10d+0xfc5/0x1690 [raid10]
+>> [  517.605610]  [<ffffffff816697ae>] ? __schedule+0x29e/0x8e2
+>> [  517.611987]  [<ffffffff814ff206>] md_thread+0x106/0x140
+>> [  517.618072]  [<ffffffff810c1d80>] ? wait_woken+0x80/0x80
+>> [  517.624252]  [<ffffffff814ff100>] ? super_1_load+0x520/0x520
+>> [  517.630817]  [<ffffffff8109ef89>] kthread+0xc9/0xe0
+>> [  517.636506]  [<ffffffff8109eec0>] ? flush_kthread_worker+0x70/0x70
+>> [  517.643653]  [<ffffffff8166d99f>] ret_from_fork+0x3f/0x70
+>> [  517.649929]  [<ffffffff8109eec0>] ? flush_kthread_worker+0x70/0x70
+>>=20
+>> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+>> ---
+>>  drivers/md/raid10.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+>> index 96f3659..23bbe61 100644
+>> --- a/drivers/md/raid10.c
+>> +++ b/drivers/md/raid10.c
+>> @@ -1944,6 +1944,8 @@ static void sync_request_write(struct mddev *mddev=
+, struct r10bio *r10_bio)
+>>=20=20
+>>  	first =3D i;
+>>  	fbio =3D r10_bio->devs[i].bio;
+>> +	fbio->bi_iter.bi_size =3D r10_bio->sectors << 9;
+>> +	fbio->bi_iter.bi_idx =3D 0;
+>>=20=20
+>>  	vcnt =3D (r10_bio->sectors + (PAGE_SIZE >> 9) - 1) >> (PAGE_SHIFT - 9);
+>>  	/* now find blocks with errors */
+>> @@ -1987,7 +1989,7 @@ static void sync_request_write(struct mddev *mddev=
+, struct r10bio *r10_bio)
+>>  		bio_reset(tbio);
+>>=20=20
+>>  		tbio->bi_vcnt =3D vcnt;
+>> -		tbio->bi_iter.bi_size =3D r10_bio->sectors << 9;
+>> +		tbio->bi_iter.bi_size =3D fbio->bi_iter.bi_size;
+>>  		tbio->bi_rw =3D WRITE;
+>>  		tbio->bi_private =3D r10_bio;
+>>  		tbio->bi_iter.bi_sector =3D r10_bio->devs[i].addr;
 >
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/md.c    | 44 +++++++++++++++++++++++++++++++++-----------
->  drivers/md/raid5.c | 31 +++++++++++++++++++++++--------
->  2 files changed, 56 insertions(+), 19 deletions(-)
+> Looks good. Reviewed-by: Shaohua Li <shli@kernel.org>
+
+Thanks for the patch and the review.
+I've added:
+    Cc: stable@vger.kernel.org (v4.2+)
+    Fixes: c31df25f20e3 ("md/raid10: make sync_request_write() call bio_cop=
+y_data()")
+    Signed-off-by: NeilBrown <neilb@suse.com>
+
+and will hopefully submit to Linus in a day or so.
+
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 807095f..de9e3a1 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2053,7 +2053,9 @@ static int bind_rdev_to_array(struct md_rdev *rdev,=
- struct mddev *mddev)
->=20=20
->  	/* make sure rdev->sectors exceeds mddev->dev_sectors */
->  	if (rdev->sectors && (mddev->dev_sectors =3D=3D 0 ||
-> -			rdev->sectors < mddev->dev_sectors)) {
-> +			rdev->sectors < mddev->dev_sectors) &&
-> +	    !(test_bit(MD_HAS_JOURNAL, &mddev->flags) &&
-> +	      test_bit(Journal, &rdev->flags))) {
->  		if (mddev->pers) {
->  			/* Cannot change size, so fail
->  			 * If mddev->level <=3D 0, then we don't care
+> A nitpick, I'm wondering if we should do a full reset like raid1 does to =
+make this more clear.
 
-This is (nearly) right, but it took me far too long to see that it was
-right - and that makes it wrong.
-If the end result was:
-
-    /* make sure rdev->sectors exceeds mddev->dev_sectors for
-     * non-journal devices
-     */
-   if (!test_bit(Journal, &rdev->flags) &&
-       rdev->sectors &&
-       (mddev->dev_sectors =3D=3D 0 || rdev->sectors < mddev->dev_sectors))=
- {
-       .....
-
-it would be a lot more obviously correct.  I removed the test on
-MD_HAS_JOURNAL because it seems irrelevant.  We don't want to perform
-that test on an rdev with Journal set whether MD_HAS_JOURNAL is set or
-not.
-
-=20=20=20=20
-
-> @@ -2084,7 +2086,9 @@ static int bind_rdev_to_array(struct md_rdev *rdev,=
- struct mddev *mddev)
->  		}
->  	}
->  	rcu_read_unlock();
-> -	if (mddev->max_disks && rdev->desc_nr >=3D mddev->max_disks) {
-> +	if (mddev->max_disks && rdev->desc_nr >=3D mddev->max_disks &&
-> +	    !(test_bit(MD_HAS_JOURNAL, &mddev->flags) &&
-> +	     test_bit(Journal, &rdev->flags))) {
->  		printk(KERN_WARNING "md: %s: array is limited to %d devices\n",
->  		       mdname(mddev), mddev->max_disks);
->  		return -EBUSY;
-
-Same here.  Removed the test on MD_HAS_JOURNAL is it is just confusing.
-I wold prefer the test on Journal came first, but would accept having it
-last if you prefer that.
-
-
-> @@ -6031,8 +6035,25 @@ static int add_new_disk(struct mddev *mddev, mdu_d=
-isk_info_t *info)
->  		else
->  			clear_bit(WriteMostly, &rdev->flags);
->=20=20
-> -		if (info->state & (1<<MD_DISK_JOURNAL))
-> +		if (info->state & (1<<MD_DISK_JOURNAL)) {
-> +			struct md_rdev *rdev2;
-> +			bool has_journal =3D false;
-> +
-> +			/* make sure no existing journal disk */
-> +			rcu_read_lock();
-> +			rdev_for_each(rdev2, mddev) {
-> +				if (test_bit(Journal, &rdev2->flags)) {
-> +					has_journal =3D true;
-> +					break;
-> +				}
-> +			}
-> +			rcu_read_unlock();
-> +			if (has_journal) {
-> +				export_rdev(rdev);
-> +				return -EBUSY;
-> +			}
->  			set_bit(Journal, &rdev->flags);
-> +		}
->  		/*
->  		 * check whether the device shows up in other nodes
->  		 */
-
-rcu_read_lock() isn't really needed here as we hold ->reconfig_mutex so
-rdevs cannot disappear.
-Maybe it is OK to leave it there as it costs almost nothing.  But maybe
-it could lead other people to think RCU protection is needed in this
-case, which is wrong....
-
-
-> @@ -8162,19 +8183,20 @@ static int remove_and_add_spares(struct mddev *md=
-dev,
->  			continue;
->  		if (test_bit(Faulty, &rdev->flags))
->  			continue;
-> -		if (test_bit(Journal, &rdev->flags))
-> -			continue;
-> -		if (mddev->ro &&
-> -		    ! (rdev->saved_raid_disk >=3D 0 &&
-> -		       !test_bit(Bitmap_sync, &rdev->flags)))
-> -			continue;
-> +		if (!test_bit(Journal, &rdev->flags)) {
-> +			if (mddev->ro &&
-> +			    ! (rdev->saved_raid_disk >=3D 0 &&
-> +			       !test_bit(Bitmap_sync, &rdev->flags)))
-> +				continue;
->=20=20
-> -		rdev->recovery_offset =3D 0;
-> +			rdev->recovery_offset =3D 0;
-> +		}
->  		if (mddev->pers->
->  		    hot_add_disk(mddev, rdev) =3D=3D 0) {
->  			if (sysfs_link_rdev(mddev, rdev))
->  				/* failure here is OK */;
-> -			spares++;
-> +			if (!test_bit(Journal, &rdev->flags))
-> +				spares++;
->  			md_new_event(mddev);
->  			set_bit(MD_CHANGE_DEVS, &mddev->flags);
->  		}
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 704ef7f..f8f3d52 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -7141,14 +7141,16 @@ static int raid5_remove_disk(struct mddev *mddev,=
- struct md_rdev *rdev)
->  	struct disk_info *p =3D conf->disks + number;
->=20=20
->  	print_raid5_conf(conf);
-> -	if (test_bit(Journal, &rdev->flags)) {
-> +	if (test_bit(Journal, &rdev->flags) && conf->log) {
->  		/*
-> -		 * journal disk is not removable, but we need give a chance to
-> -		 * update superblock of other disks. Otherwise journal disk
-> -		 * will be considered as 'fresh'
-> +		 * we can't wait pending write here, as this is called in
-> +		 * raid5d, wait will deadlock.
->  		 */
-> -		set_bit(MD_CHANGE_DEVS, &mddev->flags);
-> -		return -EINVAL;
-> +		if (atomic_read(&mddev->writes_pending))
-> +			return -EBUSY;
-> +		r5l_exit_log(conf->log);
-> +		conf->log =3D NULL;
-> +		return 0;
-
-Failing with EBUSY if ->writes_pending is correct.
-I wonder if extra care is needed when ->writes_pending is zero.
-Note that for removing data devices, we set *rdevp to NULL,
-call synchronize_rcu(), then check ->nr_pending and possibly restoring
-the pointer.
-This is because there is no other interlock between new writes arriving
-and a device being removed.
-The possible race would be that between the moment when
-raid5_remove_disk tests ->writes_pending and when it sets conf->log to
-NULL, a new write request comes in and gets as far as calling
-r5_log_disk_error().
-If r5l_log_disk_error() finds that ->log is not NULL, then
-rl5_exit_log() in the other thread frees the log, and
-r5l_log_disk_error() tests a bit in conf->log->rdev->flags, then it
-could be accessing freed memory and anything could happen.
-
-I think you need something like:
-
-  log =3D conf->log;
-  conf->log =3D NULL;
-  synchronize_rcu();
-  r5l_exit_log(log);
-
-and then r5l_log_disk_error() should do:
-   rcu_read_lock();
-   log =3D rcu_dereference(conf->log);
-   if (log)
-      err =3D test_bit(Faulty, &log->rdev->flags);
-   else
-      err =3D test_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
-   rcu_read_unlock();
-   return err;
-
-The race is, admittedly, extremely unlikely.  But it is best to be safe,
-especially with virtualised environments which can put unexpected delays
-in strange places.
-
-You could possibly use rcu_free() to free the log and avoid the
-synchonize_rcu().=20
-
->  	}
->  	if (rdev =3D=3D p->rdev)
->  		rdevp =3D &p->rdev;
-> @@ -7212,8 +7214,21 @@ static int raid5_add_disk(struct mddev *mddev, str=
-uct md_rdev *rdev)
->  	int first =3D 0;
->  	int last =3D conf->raid_disks - 1;
->=20=20
-> -	if (test_bit(Journal, &rdev->flags))
-> -		return -EINVAL;
-> +	if (test_bit(Journal, &rdev->flags)) {
-> +		char b[BDEVNAME_SIZE];
-> +		if (conf->log)
-> +			return -EBUSY;
-> +
-> +		rdev->raid_disk =3D mddev->raid_disks;
-> +		/*
-> +		 * The array is in readonly mode if journal is missing, so no
-> +		 * write requests running. We should be safe
-> +		 */
-> +		r5l_init_log(conf, rdev);
-> +		printk(KERN_INFO"md/raid:%s: using device %s as journal\n",
-> +		       mdname(mddev), bdevname(rdev->bdev, b));
-> +		return 0;
-> +	}
-
-you'll need an "rcu_assign_pointer" in r5l_init_log() for the
-   conf->log =3D log
-to ensure proper ordering of memory writes.
-
-And I'm a bit uncertain about setting rdev->raid_disk to
-mddev->raid_disks.
-I thought we decided that "Journal" devices had a different namespace
-for raid_disk than data disks, so ->raid_disk of 0 was appropriate?
-Setting the journal raid_disk to mddev->raid_disks might cause problems
-when we ultimately support reshaping an array with a journal.
-
-
-So: mostly good, but a few little issues to resolve.
+Might make sense.  I'm happy with the code as it is, but if doing a full
+reset makes the code cleared I'd accept that too.
 
 Thanks,
 NeilBrown
 
->  	if (mddev->recovery_disabled =3D=3D conf->recovery_disabled)
->  		return -EBUSY;
->=20=20
-> --=20
-> 2.4.6
->
+
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
@@ -282,18 +153,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWcLsGAAoJEDnsnt1WYoG5DpcP/3cEbFaufTplho9eLQ7s7+1e
-kjLLtLxPxze42dj3Zs2onddSkFn4ttBrXf+L/Jo2Lv3iY09Ex67BdQxJhCxpQqv2
-WLUS5L/P3LPcsAHAHopbGaYsZxwMI/J8E5vMVdrrxtM9B8tkXHw1wyqQEN3Fpr5/
-+0AXuyis1uh/sw2geeeJzC+RBq/eOoUGYY0JY26fhSpz1yx/rYGbjg2O5ESuwPsh
-W5FAKJvaoWggbEV0wX68fARe+eQn6SXKXQcvwSfa+60x26rmRHRffy2ul4mOxNNI
-8JH27wt0Qsno/ivNaZ3AWP0jYHuC+LuekzV36eJSgnqpnWEkwkKtbemn4myClh1S
-SE4eDKjPgu2NXJU+9tnWCLELdQMGGAuuUyLRwhwgfcC0sYkXI1T58EXiQNuJZetG
-PpeyFBK9MnoVQDxBWw7xnb3PjNqnk2caBZSfizNozh/7ZenpQ1jeh+Y/M2cF90lF
-rYq7FXIz589++Ldm77FSVUa2dAVTPpSNkWp9W6TnIgSIm8Gulb8k/v84O1W265V6
-AmW+sRwudO1pML1NeXQjjbk+NqjbQMTWkf//uPaP+U3hmQjN+WzA9Q2dx9ZjDxSP
-UO4YTeMpvJGSwp6Ma2Fvwutp8gP4mjaZOic5280Yfz8kiFN9NeyrEWDN6Tl5vehc
-ia/jYCmCg6sZ6zxaSvSL
-=XFe7
+iQIcBAEBCAAGBQJWcL5yAAoJEDnsnt1WYoG5WjIQAKtSLPvDrrPgsvFDxV4iiBK+
+oeJxDPBpJvy+unp8LKRBon8+YbZAN5PrBV0/d7Eb86ytv1W+JhkMSnukTYcAbTpk
+PixlKcZYoSwnbo7aCg355xjixMC5CXNq+SML+9LYGO+O6xrco20N1bFCfeB/kTFo
+mLTIXQQ9eOfI4FAUuqvZ+tcLw2JtLc2d7L85lDP4rzrNuiluTQnNO+xSEJVwoS7E
+SJAjRMa07god6ox3z28fPBVzS/R/A10HEcwsYM0cpztr4FwQ6L1bo5/S4OExQ0rC
+gxzeaWWcHBFZW8fqK2OyGvyYHd+fGc9/bP8kLhjh2OHQFaxnsml2FkR9bRxrSAcr
+F3NPaysp780VLfGxVWI30/9zMCgp9Ww/H73LnTfFMILaiD6VDzz/XnYhXsi3LrVE
+vivl16XT7Ytr/kLdpwpjhGRNsPAZvK9J7wvisXBkn0ZJfl5WOjOFhvNex/MoPTeH
+z4142/AunQUNxHZ/oxn/eO5+W2tNXmLJwf+YrFGUFWQ6g8rcNFs+CdsxjfHsnGYJ
+Wl+7BQOtMqUDHNQQ/mC8rS8IeRlG35Nd+X9DonatU+zS47jQOBiOYecgaf7QurUN
+2gRqdCNuKZfFruxfZF6tjX7l23yDta5ldZAPmTJ+1m/ZrX0F4+ApzOkVYpeRusG5
+j/gP3WKNT3C96ZeBzy8i
+=iuyD
 -----END PGP SIGNATURE-----
 --=-=-=--
