@@ -1,46 +1,56 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: RE: [PATCH 00/17] mdadm: SCSI enclosure based array
-Date: Wed, 16 Dec 2015 21:49:31 +0000
-Message-ID: <C709E4D363AAB64590BFAC54D4C478AA0104BD5B25@PRN-MBX02-4.TheFacebook.com>
-References: <1449015933-255689-1-git-send-email-songliubraving@fb.com>
- <87d1u7b188.fsf@notabene.neil.brown.name>
- <CAPcyv4g47ZUZfCEeLRtwZkXudArRVRyFLar4RrDg1iM=kjK6iQ@mail.gmail.com>
- <87h9ji9ivl.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/2] raid5-cache: add journal hot add/remove support
+Date: Thu, 17 Dec 2015 09:50:34 +1100
+Message-ID: <87bn9q9fet.fsf@notabene.neil.brown.name>
+References: <2f750625c6c016754fabfab98b84e6f2719bb0e5.1450300354.git.shli@fb.com> <2b10b1d8988431c43f013fecc28008fb4585c888.1450300354.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87h9ji9ivl.fsf@notabene.neil.brown.name>
-Content-Language: en-US
+In-Reply-To: <2b10b1d8988431c43f013fecc28008fb4585c888.1450300354.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@fb.com>
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-> So "by-path" is about the data-path that leads to the device, but "by-slot" is
-> about the physical location of the device (which may correlate with the path,
-> but is conceptually different).  I guess I can accept that.
-> I don't suppose "by-location" was considered?
-> Can a "disk" have other locations that "slots"?
-> I guess 'sd' cards live in slots.
-> But USB sticks plug into sockets (or are sockets just slots?) CDROMs live in trays.
-> 
-> Is there some convention for naming slots?
->   enclosure-rank-row-column ??
-> Is there some convention for naming enclosures?  Bob, Jane, Ahmed?
+--=-=-=
+Content-Type: text/plain
 
-The enclosure:slots name comes from SCSI Enclosure Service (SES) definitions, 
-and it is just enclosure-slot (no rank, row, column). 
+On Thu, Dec 17 2015, Shaohua Li wrote:
 
-Here, we use the SAS address of the SCSI Enclosure Processor (SEP) to identify 
-the enclosure, while the slot is just numbers. For example:
+> Add support for journal disk hot add/remove. Mostly trival checks in md
+> part. The raid5 part is a little tricky. For hot-remove, we can't wait
+> pending write as it's called from raid5d. The wait will cause deadlock.
+> We simplily fail the hot-remove. A hot-remove retry can success
+> eventually since if journal disk is faulty all pending write will be
+> failed and finish. For hot-add, since an array supporting journal but
+> without journal disk will be marked read-only, we are safe to hot add
+> journal without stopping IO (should be read IO, while journal only
+> handles write IO).
 
-enclosure-0x570e2840203080ff-slot0 -> /dev/sdl
-enclosure-0x570e2840203080ff-slot1 -> /dev/sdj
-enclosure-0x570e2840203080ff-slot10 -> /dev/sdk
+This and previous patch both applied - thanks.
+(will push things out to for-next next later today I hope)
 
-At this time, this concept only applies to drives in SCSI enclosure. Other drives
-do not have this symlink. 
+NeilBrown
 
-Thanks,
-Song
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWceq6AAoJEDnsnt1WYoG5+fcP/04fR0lkfWwN0JdYke2oedIO
+NNxCyFN3Mtxkg7ULv+hd3M1eb649sQIbfSXt//M6R5YQKpflMhjHPHCOsZNF4HFF
+bhMS/eu9cKrFswezZp2mEjbTSQ2b1QluEMLawmHU2a/6qJliIpACW6/rOEV5W9JB
+R/5PfASM/FG2snRUKGey3ARHWMOie3KP+KdP0MibpT2Nnq5yNM4rxbkR6WGZGi/A
+Owmq01degpjxju/bMhDe8NqmlY+/ToAsQFaQ9dZ2wZ+pIydZ+LJlA73yiyOgqSSG
+/oo2HBpovNfVnD9dNY+NKpUHKbiR1OsigD1bkznxdre/HIhxwfGtBNLV5izJ55Pz
+ukAvCQben3kj3rfo37jsCt12iHxAoxigJCnP2bJAGEJcH7fuS70/8OKyno42+ryg
+rZ8rk9TNwn6x+paY4fiJg3BXPfesu1p2nalcmfrdY7CRkxpXhlgEAA9H2K6ZdejQ
+k7mhE+WCkeBAAiyfP6MJB7VMNxmWSk3K9pqJprSIOzoq4Qx+WVa8m1+9r/zX6DqC
+e/IRPXKcUMtFAgFdvbL9FUEaZG//gSUhygTtJsAgeBL+lE/bW0RqA43QvUzAl1uG
+kA5WPg74KLLPZQF9WJL5zmd7+ZIpKn/qDYZxkJBCODOv+JYX49g8/VVM+PKPELPc
+wD81LDKjpluwVTbWd1Zr
+=0wrP
+-----END PGP SIGNATURE-----
+--=-=-=--
