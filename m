@@ -1,42 +1,58 @@
-From: Baolin Wang <baolin.wang@linaro.org>
-Subject: [PATCH v2 0/2] Introduce the bulk IV mode for improving the crypto engine efficiency
-Date: Wed, 16 Dec 2015 11:18:34 +0800
-Message-ID: <cover.1450233399.git.baolin.wang@linaro.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid5-cache: add journal hot add/remove support
+Date: Wed, 16 Dec 2015 14:42:27 +1100
+Message-ID: <87y4cv9hzw.fsf@notabene.neil.brown.name>
+References: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com> <87r3inb3eh.fsf@notabene.neil.brown.name> <20151216013310.GA741432@devbig084.prn1.facebook.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20151216013310.GA741432@devbig084.prn1.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com
-Cc: neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, kent.overstreet@gmail.com, keith.busch@intel.com, tj@kernel.org, broonie@kernel.org, arnd@arndb.de, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, baolin.wang@linaro.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-From the dm-crypt performance report, we found it shows low efficiency
-with crypto engine for some mode (like ecb or xts mode). Because in dm
-crypt, it will map the IO data buffer with scatterlist, and send the
-scatterlist of one bio to the encryption engine, if send more scatterlists
-with bigger size at one time, that helps the engine palys best performance,
-which means a high encryption speed. 
+--=-=-=
+Content-Type: text/plain
 
-But now the dm-crypt only map one segment (always one sector) of one bio
-with one scatterlist to the crypto engine at one time. which is more
-time-consuming and ineffective for the crypto engine. Especially for some
-modes which don't need different IV for each sector, we can map the whole
-bio with multiple scatterlists to improve the engine performance.
+On Wed, Dec 16 2015, Shaohua Li wrote:
 
-But this optimization is not support some ciphers and IV modes which should
-do sector by sector and need different IV for each sector.
+>> And I'm a bit uncertain about setting rdev->raid_disk to
+>> mddev->raid_disks.
+>> I thought we decided that "Journal" devices had a different namespace
+>> for raid_disk than data disks, so ->raid_disk of 0 was appropriate?
+>> Setting the journal raid_disk to mddev->raid_disks might cause problems
+>> when we ultimately support reshaping an array with a journal.
+>
+> 0 will introduce confusion in sysfs entry, eg, which disk should
+> xxx/md/rd0 point to? Create a special sys file? This appears the only
+> reason we don't use 0.
 
-Change since v1:
- - Introduce one different IV mode.
- - Change the conditions for bulk mode.
+sysfs_link_rdev already avoids the "rd%d" link of Replacement devices.
+Change it and sysfs_unlink_rdev to ignore the Journal device too.
 
-Baolin Wang (2):
-  block: Export the __blk_bios_map_sg() to map one bio
-  md: dm-crypt: Introduce the bulk IV mode for bulk crypto
+Thanks,
+NeilBrown
 
- block/blk-merge.c      |    7 +-
- drivers/md/dm-crypt.c  |  333 +++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/blkdev.h |    3 +
- 3 files changed, 334 insertions(+), 9 deletions(-)
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
--- 
-1.7.9.5
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
+iQIcBAEBCAAGBQJWcN2jAAoJEDnsnt1WYoG58o4P/j6zahTvcnMCHnb/P2Upo8os
+7aRA+E9GbRk+3JLgmhtD+pC60S7DXZoU7htTPKuW5c5mwxSNcHwMg6NVwu78/50o
+wcC0tQSbxTst6S6Zxh93xvU1fEZkmG7k8mlqoMSdQMw0j2ucarrkoB9MDnWgGPM2
+Vng8K2cNs4XDQIeGOYV0POXLr5yk++FeI9uIYMyZqNukWGiPXMp2OxpYsmaMsuEZ
+w8rD+QYXokPc3qUleUhFTPOBdn9NGoVwQsWTzQYdIGKE9ZgODLIivOZB7eS6n0vx
++J7DOGEwS14VjhwMtyLjBYe7iEr8EXEHMZXAv+evQRRecxFz4zTAaiQthCaAQeZt
+EGQJRsgNCfsZwAuMwPqIvY1Av0WCSqg9oec9VJltdhn69e9dU2gZkREJ1JyMP7vG
+qWSHKqE98MW0zHWHUve2DXlLVUDvIhJELxXReVP+acOnWaoFRkWJIAzGO5Ic3aVu
+dUnduo4Z99WzUa/EYtGPqOiLbWAo3Ch7oTk1jAv5AYh0RVkZ0qt/8Er32y74KkSU
+x87gHKkLGtDrEgG3+1F9/8L36XUNGofeg+t0PZ15xULk6ChbfWSny6GrSKn3FqSI
+c3MjEROmYy/76Avk/YUutMVTY5l8yG99NPi+x7HiCojglXMnOptMnme0q8cn6K32
+Cncu3Y9K9Rs+wq/m/tRs
+=VwOE
+-----END PGP SIGNATURE-----
+--=-=-=--
