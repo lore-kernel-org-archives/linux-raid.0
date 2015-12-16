@@ -1,221 +1,58 @@
-From: Guoqing Jiang <gqjiang@suse.com>
-Subject: [PATCH 2/2] mdadm: improve the safeguard for change cluster raid's sb
-Date: Thu, 17 Dec 2015 01:54:26 +0800
-Message-ID: <1450288466-21168-2-git-send-email-gqjiang@suse.com>
-References: <1450288466-21168-1-git-send-email-gqjiang@suse.com>
+From: Dallas Clement <dallas.a.clement@gmail.com>
+Subject: Re: best base / worst case RAID 5,6 write speeds
+Date: Wed, 16 Dec 2015 09:31:43 -0600
+Message-ID: <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+	<CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
+	<CAK2H+efF2dM1BsM7kzfTxMdQEHvbWRaVe7zJLTGcPZzafn2M6A@mail.gmail.com>
+	<CAE9DZUQ+LOFWNQ2MpKoSx8j8RHVqkL15PO+jVjs7EkCQykG6VA@mail.gmail.com>
+	<CAE9DZUQo4CojhuVkQ6y=gTEWG5qUkeu57wcZsqbXZtGD_V5JCQ@mail.gmail.com>
+	<CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
+	<CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
+	<22122.64143.522908.45940@quad.stoffel.home>
+	<CAE9DZUQ=QynBKYJvq2JSnMaACKNpm+5yrhz+5x9Tx6_TK78mCg@mail.gmail.com>
+	<22123.9525.433754.283927@quad.stoffel.home>
+	<CAE9DZUTMnwpUX1e95c_i04uWREHd+aR8P2yCE_W-WmEbL6YRkw@mail.gmail.com>
+	<CAE9DZUTTP1VhVgT56dyv6aLaM2V8peWSHaBg4xvXzGGUZcJ_hw@mail.gmail.com>
+	<CAE9DZURuPGEL4bG=44ntbjp+51jktn36LFGfn11xFR-X9O9POw@mail.gmail.com>
+	<566B6C8F.7020201@turmel.org>
+	<CAE9DZURoHBRHq2M0spkTrBGoXmw9QjoARb_Gc6C6OvM9940aMA@mail.gmail.com>
+	<566BA6E5.6030008@turmel.org>
+	<CAE9DZUT42rCgjSacbs170ftzBtC4i83TRvk7CGeELqpYg3hVzw@mail.gmail.com>
+	<CAK2H+edazVORrVovWDeTA8DmqUL+5HRH-AcRwg8KkMas=o+Cog@mail.gmail.com>
+	<CAE9DZURBQxteib=hW6FskuJCJTxZDWhy5kMVy2u1hU5Nkg8Khg@mail.gmail.com>
+	<CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+	<CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+	<CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+	<CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+	<CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+	<CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+	<22128.11867.847781.946791@quad.stoffel.home>
+	<CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
+	<22128.35881.182823.556362@quad.stoffel.home>
+	<CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450288466-21168-1-git-send-email-gqjiang@suse.com>
+In-Reply-To: <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com
-Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
+To: John Stoffel <john@stoffel.org>
+Cc: Mark Knecht <markknecht@gmail.com>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This commit does the following jobs:
+Phil, the 16k chunk size has really given a boost to my RAID 5
+sequential write performance measured with fio, bs=1408k.
 
-1. rename is_clustered to dlm_funs_ready since it match the
-   function better.
-2. st->cluster_name can't be use to identify the raid is a
-   clustered or not, we should check the bitmap's version to
-   perform the identification.
-3. for cluster_get_dlmlock/cluster_release_dlmlock funcs, both
-   of them just need the lockid as parameter since the cluster
-   name can get by get_cluster_name().
+This is what I was getting with a 128k chunk size:
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
----
- mdadm.h  |  6 +++---
- super1.c | 33 ++++++++++++++++++---------------
- util.c   | 30 ++++++++++++++++++------------
- 3 files changed, 39 insertions(+), 30 deletions(-)
+iodepth=4 => 605 MB/s
+iodepth=8 => 589 MB/s
+iodepth=16 => 634 MB/s
+iodepth=32 => 635 MB/s
 
-diff --git a/mdadm.h b/mdadm.h
-index aad0fa8..be5dc7f 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1484,9 +1484,9 @@ struct dlm_hooks {
- };
- 
- extern int get_cluster_name(char **name);
--extern int is_clustered(struct supertype *st);
--extern int cluster_get_dlmlock(struct supertype *st, int *lockid);
--extern int cluster_release_dlmlock(struct supertype *st, int lockid);
-+extern int dlm_funs_ready(void);
-+extern int cluster_get_dlmlock(int *lockid);
-+extern int cluster_release_dlmlock(int lockid);
- extern void set_dlm_hooks(void);
- 
- #define _ROUND_UP(val, base)	(((val) + (base) - 1) & ~(base - 1))
-diff --git a/super1.c b/super1.c
-index 38362e4..c7ff634 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1100,12 +1100,13 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 	int rv = 0;
- 	int lockid;
- 	struct mdp_superblock_1 *sb = st->sb;
-+	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
- 
--	if (is_clustered(st)) {
--		rv = cluster_get_dlmlock(st, &lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
-+		rv = cluster_get_dlmlock(&lockid);
- 		if (rv) {
- 			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
--			cluster_release_dlmlock(st, lockid);
-+			cluster_release_dlmlock(lockid);
- 			return rv;
- 		}
- 	}
-@@ -1368,8 +1369,8 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		rv = -1;
- 
- 	sb->sb_csum = calc_sb_1_csum(sb);
--	if (is_clustered(st))
--		cluster_release_dlmlock(st, lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready())
-+		cluster_release_dlmlock(lockid);
- 
- 	return rv;
- }
-@@ -1474,13 +1475,14 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
- 	struct mdp_superblock_1 *sb = st->sb;
- 	__u16 *rp = sb->dev_roles + dk->number;
- 	struct devinfo *di, **dip;
-+	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
- 	int rv, lockid;
- 
--	if (is_clustered(st)) {
--		rv = cluster_get_dlmlock(st, &lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
-+		rv = cluster_get_dlmlock(&lockid);
- 		if (rv) {
- 			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
--			cluster_release_dlmlock(st, lockid);
-+			cluster_release_dlmlock(lockid);
- 			return rv;
- 		}
- 	}
-@@ -1513,8 +1515,8 @@ static int add_to_super1(struct supertype *st, mdu_disk_info_t *dk,
- 	di->next = NULL;
- 	*dip = di;
- 
--	if (is_clustered(st))
--		cluster_release_dlmlock(st, lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready())
-+		cluster_release_dlmlock(lockid);
- 
- 	return 0;
- }
-@@ -1529,13 +1531,14 @@ static int store_super1(struct supertype *st, int fd)
- 	struct align_fd afd;
- 	int sbsize;
- 	unsigned long long dsize;
-+	bitmap_super_t *bms = (bitmap_super_t*)(((char*)sb) + MAX_SB_SIZE);
- 	int rv, lockid;
- 
--	if (is_clustered(st)) {
--		rv = cluster_get_dlmlock(st, &lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready()) {
-+		rv = cluster_get_dlmlock(&lockid);
- 		if (rv) {
- 			pr_err("Cannot get dlmlock in %s return %d\n", __func__, rv);
--			cluster_release_dlmlock(st, lockid);
-+			cluster_release_dlmlock(lockid);
- 			return rv;
- 		}
- 	}
-@@ -1599,8 +1602,8 @@ static int store_super1(struct supertype *st, int fd)
- 		}
- 	}
- 	fsync(fd);
--	if (is_clustered(st))
--		cluster_release_dlmlock(st, lockid);
-+	if (bms->version == BITMAP_MAJOR_CLUSTERED && dlm_funs_ready())
-+		cluster_release_dlmlock(lockid);
- 
- 	return 0;
- }
-diff --git a/util.c b/util.c
-index 8217e11..f1b0b95 100644
---- a/util.c
-+++ b/util.c
-@@ -92,13 +92,9 @@ struct dlm_lock_resource {
- 	struct dlm_lksb lksb;
- };
- 
--int is_clustered(struct supertype *st)
-+int dlm_funs_ready(void)
- {
--	/* is it a cluster md or not */
--	if (is_dlm_hooks_ready && st->cluster_name)
--		return 1;
--	else
--		return 0;
-+	return is_dlm_hooks_ready ? 1 : 0;
- }
- 
- /* Using poll(2) to wait for and dispatch ASTs */
-@@ -128,17 +124,24 @@ static void dlm_ast(void *arg)
- 	ast_called = 1;
- }
- 
-+static char *cluster_name = NULL;
- /* Create the lockspace, take bitmapXXX locks on all the bitmaps. */
--int cluster_get_dlmlock(struct supertype *st, int *lockid)
-+int cluster_get_dlmlock(int *lockid)
- {
- 	int ret = -1;
- 	char str[64];
- 	int flags = LKF_NOQUEUE;
- 
-+	ret = get_cluster_name(&cluster_name);
-+	if (ret) {
-+		pr_err("The md can't get cluster name\n");
-+		return -1;
-+	}
-+
- 	dlm_lock_res = xmalloc(sizeof(struct dlm_lock_resource));
--	dlm_lock_res->ls = dlm_hooks->create_lockspace(st->cluster_name, O_RDWR);
-+	dlm_lock_res->ls = dlm_hooks->create_lockspace(cluster_name, O_RDWR);
- 	if (!dlm_lock_res->ls) {
--		pr_err("%s failed to create lockspace\n", st->cluster_name);
-+		pr_err("%s failed to create lockspace\n", cluster_name);
-                 goto out;
- 	}
- 
-@@ -146,7 +149,7 @@ int cluster_get_dlmlock(struct supertype *st, int *lockid)
- 	if (flags & LKF_CONVERT)
- 		dlm_lock_res->lksb.sb_lkid = *lockid;
- 
--	snprintf(str, 64, "bitmap%04d", st->nodes);
-+	snprintf(str, 64, "bitmap%s", cluster_name);
- 	/* if flags with LKF_CONVERT causes below return ENOENT which means
- 	 * "No such file or directory" */
- 	ret = dlm_hooks->ls_lock(dlm_lock_res->ls, LKM_PWMODE, &dlm_lock_res->lksb,
-@@ -171,10 +174,13 @@ out:
- 	return ret;
- }
- 
--int cluster_release_dlmlock(struct supertype *st, int lockid)
-+int cluster_release_dlmlock(int lockid)
- {
- 	int ret = -1;
- 
-+	if (!cluster_name)
-+		return -1;
-+
- 	/* if flags with LKF_CONVERT causes below return EINVAL which means
- 	 * "Invalid argument" */
- 	ret = dlm_hooks->ls_unlock(dlm_lock_res->ls, lockid, 0,
-@@ -195,7 +201,7 @@ int cluster_release_dlmlock(struct supertype *st, int lockid)
-                 goto out;
- 	}
- 
--	ret = dlm_hooks->release_lockspace(st->cluster_name, dlm_lock_res->ls, 1);
-+	ret = dlm_hooks->release_lockspace(cluster_name, dlm_lock_res->ls, 1);
- 	if (ret) {
- 		pr_err("error %d happened when release lockspace\n", errno);
- 		/* XXX make sure the lockspace is released eventually */
--- 
-2.1.4
+But this is what I'm getting with a 16k chunk size:
 
+iodepth=4 => 825 MB/s
+iodepth=8 => 810 MB/s
+iodepth=16 => 851 MB/s
+iodepth=32 => 866 MB/s
