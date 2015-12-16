@@ -1,35 +1,37 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] raid5-cache: add journal hot add/remove support
-Date: Thu, 17 Dec 2015 09:50:34 +1100
-Message-ID: <87bn9q9fet.fsf@notabene.neil.brown.name>
-References: <2f750625c6c016754fabfab98b84e6f2719bb0e5.1450300354.git.shli@fb.com> <2b10b1d8988431c43f013fecc28008fb4585c888.1450300354.git.shli@fb.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 2/2] mdadm: improve the safeguard for change cluster raid's sb
+Date: Thu, 17 Dec 2015 09:53:56 +1100
+Message-ID: <877fke9f97.fsf@notabene.neil.brown.name>
+References: <1450288466-21168-1-git-send-email-gqjiang@suse.com> <1450288466-21168-2-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2b10b1d8988431c43f013fecc28008fb4585c888.1450300354.git.shli@fb.com>
+In-Reply-To: <1450288466-21168-2-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
+To: Guoqing Jiang <gqjiang@suse.com>
+Cc: linux-raid@vger.kernel.org, rgoldwyn@suse.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Thu, Dec 17 2015, Shaohua Li wrote:
+On Thu, Dec 17 2015, Guoqing Jiang wrote:
 
-> Add support for journal disk hot add/remove. Mostly trival checks in md
-> part. The raid5 part is a little tricky. For hot-remove, we can't wait
-> pending write as it's called from raid5d. The wait will cause deadlock.
-> We simplily fail the hot-remove. A hot-remove retry can success
-> eventually since if journal disk is faulty all pending write will be
-> failed and finish. For hot-add, since an array supporting journal but
-> without journal disk will be marked read-only, we are safe to hot add
-> journal without stopping IO (should be read IO, while journal only
-> handles write IO).
+> This commit does the following jobs:
+>
+> 1. rename is_clustered to dlm_funs_ready since it match the
+>    function better.
+> 2. st->cluster_name can't be use to identify the raid is a
+>    clustered or not, we should check the bitmap's version to
+>    perform the identification.
+> 3. for cluster_get_dlmlock/cluster_release_dlmlock funcs, both
+>    of them just need the lockid as parameter since the cluster
+>    name can get by get_cluster_name().
+>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
 
-This and previous patch both applied - thanks.
-(will push things out to for-next next later today I hope)
+This and other patch applied, thanks.
 
 NeilBrown
 
@@ -39,18 +41,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWceq6AAoJEDnsnt1WYoG5+fcP/04fR0lkfWwN0JdYke2oedIO
-NNxCyFN3Mtxkg7ULv+hd3M1eb649sQIbfSXt//M6R5YQKpflMhjHPHCOsZNF4HFF
-bhMS/eu9cKrFswezZp2mEjbTSQ2b1QluEMLawmHU2a/6qJliIpACW6/rOEV5W9JB
-R/5PfASM/FG2snRUKGey3ARHWMOie3KP+KdP0MibpT2Nnq5yNM4rxbkR6WGZGi/A
-Owmq01degpjxju/bMhDe8NqmlY+/ToAsQFaQ9dZ2wZ+pIydZ+LJlA73yiyOgqSSG
-/oo2HBpovNfVnD9dNY+NKpUHKbiR1OsigD1bkznxdre/HIhxwfGtBNLV5izJ55Pz
-ukAvCQben3kj3rfo37jsCt12iHxAoxigJCnP2bJAGEJcH7fuS70/8OKyno42+ryg
-rZ8rk9TNwn6x+paY4fiJg3BXPfesu1p2nalcmfrdY7CRkxpXhlgEAA9H2K6ZdejQ
-k7mhE+WCkeBAAiyfP6MJB7VMNxmWSk3K9pqJprSIOzoq4Qx+WVa8m1+9r/zX6DqC
-e/IRPXKcUMtFAgFdvbL9FUEaZG//gSUhygTtJsAgeBL+lE/bW0RqA43QvUzAl1uG
-kA5WPg74KLLPZQF9WJL5zmd7+ZIpKn/qDYZxkJBCODOv+JYX49g8/VVM+PKPELPc
-wD81LDKjpluwVTbWd1Zr
-=0wrP
+iQIcBAEBCAAGBQJWceuEAAoJEDnsnt1WYoG50HEQALKFlYHK5TNDabPbhaS9DwUl
+c/s7sg2lO1BO69JIz21yDlLrZK37ifp0fPnMb3V4OFwAh9ASVXvAjju0PYs4zIe5
+7k17EWBYdTsd5iCOQ0pebva7CPWOFzO5i/LsmlBpOM03TAfsA5shxnCFENIACBYL
+x7zcb3Q5m7s0byP/GHTHidIfos7a7HffleqO7cGj302p3y74vFJJvExJme9fDG0V
++sMNHpaCw+dnhLw4GKmiV7rNF0GykrKnoQGhfzo0cJo46RCiBnPscsff2Fc0hAzl
+zbQaJTMxo3UdmMt/dJnkgO/Aaa0KDVEBcuaborxdwfa22KLnYVOUra39Ps4T9Bvz
+5wZxA8ThM6K4Czw/45HYk+ZzAs5t/Y9R7SFpcr7uMvQZWbAoR9nAbNtqYhzsxqGy
+4RRFaDjT/AErHIwIHbcHG5tUZSSZusdJHSa/9AY4wuYq2NBO+dHZqUFZG7eSRVV9
+FfvxGDCssJK9Ag3qV0oMz0NKtIY3DGkzBKlidi21C+UuHRh9m2Q+s8wE5F3EPfs3
+vEO/82/hurzcrK1g1mATKULHS+ziB0SoGPRwKmqSlQ7DuUrriokWOX7UnVpahyUn
+QYCZfHevOlaI3LadmHL8X30FQfvo+N1T85zhhv0do3kFV3nn5fxc8ptCqycY7/4O
+YUHwyj9SYLYZT3QVQIA9
+=DthR
 -----END PGP SIGNATURE-----
 --=-=-=--
