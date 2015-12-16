@@ -1,197 +1,299 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Tue, 15 Dec 2015 17:07:20 -0600
-Message-ID: <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
-	<CAE9DZUR1Nka=5mAB2WQHeFkinO0CzuH_GT1gRiVsuREQfgdGcQ@mail.gmail.com>
-	<CAK2H+efF2dM1BsM7kzfTxMdQEHvbWRaVe7zJLTGcPZzafn2M6A@mail.gmail.com>
-	<CAE9DZUQ+LOFWNQ2MpKoSx8j8RHVqkL15PO+jVjs7EkCQykG6VA@mail.gmail.com>
-	<CAE9DZUQo4CojhuVkQ6y=gTEWG5qUkeu57wcZsqbXZtGD_V5JCQ@mail.gmail.com>
-	<CAK2H+ec-zMbhxoFyHXLkdM-z-9cYYzNbPFhn19XjTHqrOMDZKQ@mail.gmail.com>
-	<CAE9DZURK+bZ=4czbGojzW815Du1ascr5vzAPtQBw4ZDGyq0MAQ@mail.gmail.com>
-	<22122.64143.522908.45940@quad.stoffel.home>
-	<CAE9DZUQ=QynBKYJvq2JSnMaACKNpm+5yrhz+5x9Tx6_TK78mCg@mail.gmail.com>
-	<22123.9525.433754.283927@quad.stoffel.home>
-	<CAE9DZUTMnwpUX1e95c_i04uWREHd+aR8P2yCE_W-WmEbL6YRkw@mail.gmail.com>
-	<CAE9DZUTTP1VhVgT56dyv6aLaM2V8peWSHaBg4xvXzGGUZcJ_hw@mail.gmail.com>
-	<CAE9DZURuPGEL4bG=44ntbjp+51jktn36LFGfn11xFR-X9O9POw@mail.gmail.com>
-	<566B6C8F.7020201@turmel.org>
-	<CAE9DZURoHBRHq2M0spkTrBGoXmw9QjoARb_Gc6C6OvM9940aMA@mail.gmail.com>
-	<566BA6E5.6030008@turmel.org>
-	<CAE9DZUT42rCgjSacbs170ftzBtC4i83TRvk7CGeELqpYg3hVzw@mail.gmail.com>
-	<CAK2H+edazVORrVovWDeTA8DmqUL+5HRH-AcRwg8KkMas=o+Cog@mail.gmail.com>
-	<CAE9DZURBQxteib=hW6FskuJCJTxZDWhy5kMVy2u1hU5Nkg8Khg@mail.gmail.com>
-	<CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
-	<CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
-	<CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
-	<CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
-	<CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
-	<CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
-	<22128.11867.847781.946791@quad.stoffel.home>
-	<CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
-	<22128.35881.182823.556362@quad.stoffel.home>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] raid5-cache: add journal hot add/remove support
+Date: Wed, 16 Dec 2015 12:14:46 +1100
+Message-ID: <87r3inb3eh.fsf@notabene.neil.brown.name>
+References: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <22128.35881.182823.556362@quad.stoffel.home>
+In-Reply-To: <48dfb85817d51f68d8da85368711ed14f945caa4.1450159900.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Mark Knecht <markknecht@gmail.com>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, hch@infradead.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 15, 2015 at 3:54 PM, John Stoffel <john@stoffel.org> wrote:
->>>>>> "Dallas" == Dallas Clement <dallas.a.clement@gmail.com> writes:
->
-> Dallas> Thanks guys for all the ideas and help.
-> Dallas> Phil,
->
->>> Very interesting indeed. I wonder if the extra I/O in flight at high
->>> depths is consuming all available stripe cache space, possibly not
->>> consistently. I'd raise and lower that in various combinations with
->>> various combinations of iodepth.  Running out of stripe cache will cause
->>> premature RMWs.
->
-> Dallas> Okay, I'll play with that today.  I have to confess I'm not
-> Dallas> sure that I completely understand how the stripe cache works.
-> Dallas> I think the idea is to batch I/Os into a complete stripe if
-> Dallas> possible and write out to the disks all in one go to avoid
-> Dallas> RMWs.  Other than alignment issues, I'm unclear on what
-> Dallas> triggers RMWs.  It seems like as Robert mentioned that if the
-> Dallas> I/Os block size is stripe aligned, there should never be RMWs.
->
-> Remember, there's a bounding limit on both how large the stripe cache
-> is, and how long (timewise) it will let the cache sit around waiting
-> for new blocks to come in.  That's probably what you're hitting at
-> times with the high queue depth numbers.
->
-> I assume the blocktrace info would tell you more, but I haven't really
-> a clue how to interpret it.
->
->
-> Dallas> My stripe cache is 8192 btw.
->
-> Dallas> John,
->
->>> I suspect you've hit a known problem-ish area with Linux disk io, which is that big queue depths aren't optimal.
->
-> Dallas> Yes, certainly looks that way.  But maybe as Phil indicated I might be
-> Dallas> exceeding my stripe cache.  I am still surprised that there are so
-> Dallas> many RMWs even if the stripe cache has been exhausted.
->
->>> As you can see, it peaks at a queue depth of 4, and then tends
->>> downward before falling off a cliff.  So now what I'd do is keep the
->>> queue depth at 4, but vary the block size and other parameters and see
->>> how things change there.
->
-> Dallas> Why do you think there is a gradual drop off after queue depth
-> Dallas> of 4 and before it falls off the cliff?
->
-> I think because the in-kernel sizes start getting bigger, and so the
-> kernel spends more time queuing and caching the data and moving it
-> around, instead of just shoveling it down to the disks as quick as it
-> can.
->
-> Dallas> I with this were for fun! ;) Although this has been a fun
-> Dallas> discussion.  I've learned a ton.  This effort is for work
-> Dallas> though.  I'd be all over the SSDs and caching otherwise.  I'm
-> Dallas> trying to characterize and then squeeze all of the performance
-> Dallas> I can out of a legacy NAS product.  I am constrained by the
-> Dallas> existing hardware.  Unfortunately I do not have the option of
-> Dallas> using SSDs or hardware RAID controllers.  I have to rely
-> Dallas> completely on Linux RAID.
->
-> Ah... in that case, you need to do your testing from the NAS side,
-> don't bother going to this level.  I'd honestly now just set your
-> queue depth to 4 and move on to testing the NAS side of things, where
-> you have one, two, four, eight, or more test boxes hitting the NAS
-> box.
->
-> Dallas> I also need to optimize for large sequential writes (streaming
-> Dallas> video, audio, large file transfers), iSCSI (mostly used for
-> Dallas> hosting VMs), and random I/O (small and big files) as you
-> Dallas> would expect with a NAS.
->
-> So you want to do everything at all once.  Fun.  So really I'd move
-> back to the Network side, because unless your NAS box has more than
-> 1GigE interface, and supports Bonding/trunking, you've hit the
-> performance wall.
->
-> Also, even if you get a ton of performance with large streaming
-> writes, when you sprinkle in a small set of random IO/s, you're going
-> to hit the cliff much sooner.  And in that case... it's another set of
-> optimizations.
->
-> Are you going to use NFSv3?  TCP?  UDP?  1500 MTU, 9000 MTU?  How many
-> clients?  How active?
->
-> Can you give up disk space for IOP/s?  So get away from the RAID6 and
-> move to RAID1 mirrors with a strip atop it, so that you maximize how
-> many IOPs you can get.
->
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hi John.
+On Tue, Dec 15 2015, Shaohua Li wrote:
 
-> Remember, there's a bounding limit on both how large the stripe cache
-> is, and how long (timewise) it will let the cache sit around waiting
-> for new blocks to come in.  That's probably what you're hitting at
-> times with the high queue depth numbers.
+> Add support for journal disk hot add/remove. Mostly trival checks in md
+> part. The raid5 part is a little tricky. For hot-remove, we can't wait
+> pending write as it's called from raid5d. The wait will cause deadlock.
+> We simplily fail the hot-remove. A hot-remove retry can success
+> eventually since if journal disk is faulty all pending write will be
+> failed and finish. For hot-add, since an array supporting journal but
+> without journal disk will be marked read-only, we are safe to hot add
+> journal without stopping IO (should be read IO, while journal only
+> handles write IO).
+>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/md.c    | 44 +++++++++++++++++++++++++++++++++-----------
+>  drivers/md/raid5.c | 31 +++++++++++++++++++++++--------
+>  2 files changed, 56 insertions(+), 19 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 807095f..de9e3a1 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2053,7 +2053,9 @@ static int bind_rdev_to_array(struct md_rdev *rdev,=
+ struct mddev *mddev)
+>=20=20
+>  	/* make sure rdev->sectors exceeds mddev->dev_sectors */
+>  	if (rdev->sectors && (mddev->dev_sectors =3D=3D 0 ||
+> -			rdev->sectors < mddev->dev_sectors)) {
+> +			rdev->sectors < mddev->dev_sectors) &&
+> +	    !(test_bit(MD_HAS_JOURNAL, &mddev->flags) &&
+> +	      test_bit(Journal, &rdev->flags))) {
+>  		if (mddev->pers) {
+>  			/* Cannot change size, so fail
+>  			 * If mddev->level <=3D 0, then we don't care
 
-Okay, good to know.  I did try doubling the size of the stripe cache
-just to see if it would reduce the # of RMWs at iodepth>=64.  It did
-not.  So it looks like cache timing out as you mentioned.
+This is (nearly) right, but it took me far too long to see that it was
+right - and that makes it wrong.
+If the end result was:
 
-> So you want to do everything at all once.  Fun.  So really I'd move
-> back to the Network side, because unless your NAS box has more than
-> 1GigE interface, and supports Bonding/trunking, you've hit the
-> performance wall.
+    /* make sure rdev->sectors exceeds mddev->dev_sectors for
+     * non-journal devices
+     */
+   if (!test_bit(Journal, &rdev->flags) &&
+       rdev->sectors &&
+       (mddev->dev_sectors =3D=3D 0 || rdev->sectors < mddev->dev_sectors))=
+ {
+       .....
 
-I'm not sure I necessarily want to tune everything at once.
-Surprisingly this box does have 10GigE interfaces.  I just want to get
-RAID tuned the best I can before I start testing over the network.
-With 10 GigE this box should be able to write 1200 MB/s max.  But as
-reported earlier, I'm not even able to get that with fio running
-locally on the box writing to the RAID device.
+it would be a lot more obviously correct.  I removed the test on
+MD_HAS_JOURNAL because it seems irrelevant.  We don't want to perform
+that test on an rdev with Journal set whether MD_HAS_JOURNAL is set or
+not.
 
-After Phil's explanation I now better understand what triggers the
-RMWs.  Clearly I would like to minimize these to get the best
-performance for both sequential and random patterns.  Messing with the
-stripe cache size doesn't seem to change anything with performance, so
-will probably play with a smaller chunk size next to see if that
-helps.
+=20=20=20=20
 
-> Also, even if you get a ton of performance with large streaming
-> writes, when you sprinkle in a small set of random IO/s, you're going
-> to hit the cliff much sooner.  And in that case... it's another set of
-> optimizations.
+> @@ -2084,7 +2086,9 @@ static int bind_rdev_to_array(struct md_rdev *rdev,=
+ struct mddev *mddev)
+>  		}
+>  	}
+>  	rcu_read_unlock();
+> -	if (mddev->max_disks && rdev->desc_nr >=3D mddev->max_disks) {
+> +	if (mddev->max_disks && rdev->desc_nr >=3D mddev->max_disks &&
+> +	    !(test_bit(MD_HAS_JOURNAL, &mddev->flags) &&
+> +	     test_bit(Journal, &rdev->flags))) {
+>  		printk(KERN_WARNING "md: %s: array is limited to %d devices\n",
+>  		       mdname(mddev), mddev->max_disks);
+>  		return -EBUSY;
 
-Yes, I get that.  There are definitely some customers that do a little
-of everything with these NAS boxes.  But from what I've seen, a lot of
-them also use a NAS for just one thing - host VMs or stream media or
-file server or database / web app.
+Same here.  Removed the test on MD_HAS_JOURNAL is it is just confusing.
+I wold prefer the test on Journal came first, but would accept having it
+last if you prefer that.
 
-> Are you going to use NFSv3?  TCP?  UDP?  1500 MTU, 9000 MTU?
 
-Yes, all of these are supported.
+> @@ -6031,8 +6035,25 @@ static int add_new_disk(struct mddev *mddev, mdu_d=
+isk_info_t *info)
+>  		else
+>  			clear_bit(WriteMostly, &rdev->flags);
+>=20=20
+> -		if (info->state & (1<<MD_DISK_JOURNAL))
+> +		if (info->state & (1<<MD_DISK_JOURNAL)) {
+> +			struct md_rdev *rdev2;
+> +			bool has_journal =3D false;
+> +
+> +			/* make sure no existing journal disk */
+> +			rcu_read_lock();
+> +			rdev_for_each(rdev2, mddev) {
+> +				if (test_bit(Journal, &rdev2->flags)) {
+> +					has_journal =3D true;
+> +					break;
+> +				}
+> +			}
+> +			rcu_read_unlock();
+> +			if (has_journal) {
+> +				export_rdev(rdev);
+> +				return -EBUSY;
+> +			}
+>  			set_bit(Journal, &rdev->flags);
+> +		}
+>  		/*
+>  		 * check whether the device shows up in other nodes
+>  		 */
 
-> How many clients?  How active?
+rcu_read_lock() isn't really needed here as we hold ->reconfig_mutex so
+rdevs cannot disappear.
+Maybe it is OK to leave it there as it costs almost nothing.  But maybe
+it could lead other people to think RCU protection is needed in this
+case, which is wrong....
 
-These boxes tend to get used pretty hard.  Probably the biggest
-application is iSCSI or Samba backups, and then hosting VMs.  For
-backups it's usually small number of clients but heavy volume.  For
-VMs there can be quite a few.
 
-One other consideration is that these kind of products undergo lots of
-bench-mark testing with the usual host of tools.  Probably my main
-goal at this point is for the tests which are primarily focused on
-sequential throughput (small and large blocks) are the best that they
-can be given the hardware limitations.  10 Gbps iSCSI throughput is
-probably the most important benchmark.  If I can somehow get the RAID
-5,6 write speeds up over 1 GB/s I would be very happy. Right now 10
-Gbps iSCSI write performance is limited by the RAID device performance
-sadly.
+> @@ -8162,19 +8183,20 @@ static int remove_and_add_spares(struct mddev *md=
+dev,
+>  			continue;
+>  		if (test_bit(Faulty, &rdev->flags))
+>  			continue;
+> -		if (test_bit(Journal, &rdev->flags))
+> -			continue;
+> -		if (mddev->ro &&
+> -		    ! (rdev->saved_raid_disk >=3D 0 &&
+> -		       !test_bit(Bitmap_sync, &rdev->flags)))
+> -			continue;
+> +		if (!test_bit(Journal, &rdev->flags)) {
+> +			if (mddev->ro &&
+> +			    ! (rdev->saved_raid_disk >=3D 0 &&
+> +			       !test_bit(Bitmap_sync, &rdev->flags)))
+> +				continue;
+>=20=20
+> -		rdev->recovery_offset =3D 0;
+> +			rdev->recovery_offset =3D 0;
+> +		}
+>  		if (mddev->pers->
+>  		    hot_add_disk(mddev, rdev) =3D=3D 0) {
+>  			if (sysfs_link_rdev(mddev, rdev))
+>  				/* failure here is OK */;
+> -			spares++;
+> +			if (!test_bit(Journal, &rdev->flags))
+> +				spares++;
+>  			md_new_event(mddev);
+>  			set_bit(MD_CHANGE_DEVS, &mddev->flags);
+>  		}
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 704ef7f..f8f3d52 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -7141,14 +7141,16 @@ static int raid5_remove_disk(struct mddev *mddev,=
+ struct md_rdev *rdev)
+>  	struct disk_info *p =3D conf->disks + number;
+>=20=20
+>  	print_raid5_conf(conf);
+> -	if (test_bit(Journal, &rdev->flags)) {
+> +	if (test_bit(Journal, &rdev->flags) && conf->log) {
+>  		/*
+> -		 * journal disk is not removable, but we need give a chance to
+> -		 * update superblock of other disks. Otherwise journal disk
+> -		 * will be considered as 'fresh'
+> +		 * we can't wait pending write here, as this is called in
+> +		 * raid5d, wait will deadlock.
+>  		 */
+> -		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+> -		return -EINVAL;
+> +		if (atomic_read(&mddev->writes_pending))
+> +			return -EBUSY;
+> +		r5l_exit_log(conf->log);
+> +		conf->log =3D NULL;
+> +		return 0;
 
-> Can you give up disk space for IOP/s?  So get away from the RAID6 and
-> move to RAID1 mirrors with a strip atop it, so that you maximize how
-> many IOPs you can get.
+Failing with EBUSY if ->writes_pending is correct.
+I wonder if extra care is needed when ->writes_pending is zero.
+Note that for removing data devices, we set *rdevp to NULL,
+call synchronize_rcu(), then check ->nr_pending and possibly restoring
+the pointer.
+This is because there is no other interlock between new writes arriving
+and a device being removed.
+The possible race would be that between the moment when
+raid5_remove_disk tests ->writes_pending and when it sets conf->log to
+NULL, a new write request comes in and gets as far as calling
+r5_log_disk_error().
+If r5l_log_disk_error() finds that ->log is not NULL, then
+rl5_exit_log() in the other thread frees the log, and
+r5l_log_disk_error() tests a bit in conf->log->rdev->flags, then it
+could be accessing freed memory and anything could happen.
 
-Yes, this box already supports RAID 0, 1, 5, 6, 10, 50, 60
+I think you need something like:
+
+  log =3D conf->log;
+  conf->log =3D NULL;
+  synchronize_rcu();
+  r5l_exit_log(log);
+
+and then r5l_log_disk_error() should do:
+   rcu_read_lock();
+   log =3D rcu_dereference(conf->log);
+   if (log)
+      err =3D test_bit(Faulty, &log->rdev->flags);
+   else
+      err =3D test_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
+   rcu_read_unlock();
+   return err;
+
+The race is, admittedly, extremely unlikely.  But it is best to be safe,
+especially with virtualised environments which can put unexpected delays
+in strange places.
+
+You could possibly use rcu_free() to free the log and avoid the
+synchonize_rcu().=20
+
+>  	}
+>  	if (rdev =3D=3D p->rdev)
+>  		rdevp =3D &p->rdev;
+> @@ -7212,8 +7214,21 @@ static int raid5_add_disk(struct mddev *mddev, str=
+uct md_rdev *rdev)
+>  	int first =3D 0;
+>  	int last =3D conf->raid_disks - 1;
+>=20=20
+> -	if (test_bit(Journal, &rdev->flags))
+> -		return -EINVAL;
+> +	if (test_bit(Journal, &rdev->flags)) {
+> +		char b[BDEVNAME_SIZE];
+> +		if (conf->log)
+> +			return -EBUSY;
+> +
+> +		rdev->raid_disk =3D mddev->raid_disks;
+> +		/*
+> +		 * The array is in readonly mode if journal is missing, so no
+> +		 * write requests running. We should be safe
+> +		 */
+> +		r5l_init_log(conf, rdev);
+> +		printk(KERN_INFO"md/raid:%s: using device %s as journal\n",
+> +		       mdname(mddev), bdevname(rdev->bdev, b));
+> +		return 0;
+> +	}
+
+you'll need an "rcu_assign_pointer" in r5l_init_log() for the
+   conf->log =3D log
+to ensure proper ordering of memory writes.
+
+And I'm a bit uncertain about setting rdev->raid_disk to
+mddev->raid_disks.
+I thought we decided that "Journal" devices had a different namespace
+for raid_disk than data disks, so ->raid_disk of 0 was appropriate?
+Setting the journal raid_disk to mddev->raid_disks might cause problems
+when we ultimately support reshaping an array with a journal.
+
+
+So: mostly good, but a few little issues to resolve.
+
+Thanks,
+NeilBrown
+
+>  	if (mddev->recovery_disabled =3D=3D conf->recovery_disabled)
+>  		return -EBUSY;
+>=20=20
+> --=20
+> 2.4.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWcLsGAAoJEDnsnt1WYoG5DpcP/3cEbFaufTplho9eLQ7s7+1e
+kjLLtLxPxze42dj3Zs2onddSkFn4ttBrXf+L/Jo2Lv3iY09Ex67BdQxJhCxpQqv2
+WLUS5L/P3LPcsAHAHopbGaYsZxwMI/J8E5vMVdrrxtM9B8tkXHw1wyqQEN3Fpr5/
++0AXuyis1uh/sw2geeeJzC+RBq/eOoUGYY0JY26fhSpz1yx/rYGbjg2O5ESuwPsh
+W5FAKJvaoWggbEV0wX68fARe+eQn6SXKXQcvwSfa+60x26rmRHRffy2ul4mOxNNI
+8JH27wt0Qsno/ivNaZ3AWP0jYHuC+LuekzV36eJSgnqpnWEkwkKtbemn4myClh1S
+SE4eDKjPgu2NXJU+9tnWCLELdQMGGAuuUyLRwhwgfcC0sYkXI1T58EXiQNuJZetG
+PpeyFBK9MnoVQDxBWw7xnb3PjNqnk2caBZSfizNozh/7ZenpQ1jeh+Y/M2cF90lF
+rYq7FXIz589++Ldm77FSVUa2dAVTPpSNkWp9W6TnIgSIm8Gulb8k/v84O1W265V6
+AmW+sRwudO1pML1NeXQjjbk+NqjbQMTWkf//uPaP+U3hmQjN+WzA9Q2dx9ZjDxSP
+UO4YTeMpvJGSwp6Ma2Fvwutp8gP4mjaZOic5280Yfz8kiFN9NeyrEWDN6Tl5vehc
+ia/jYCmCg6sZ6zxaSvSL
+=XFe7
+-----END PGP SIGNATURE-----
+--=-=-=--
