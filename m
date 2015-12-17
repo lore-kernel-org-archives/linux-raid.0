@@ -1,95 +1,49 @@
-From: Dallas Clement <dallas.a.clement@gmail.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Thu, 17 Dec 2015 17:28:58 -0600
-Message-ID: <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
-	<CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
-	<CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
-	<CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
-	<CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
-	<CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
-	<CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
-	<22128.11867.847781.946791@quad.stoffel.home>
-	<CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
-	<22128.35881.182823.556362@quad.stoffel.home>
-	<CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
-	<CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
-	<CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
-	<5672BB7A.4050808@turmel.org>
-	<CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
-	<567339F0.9000209@turmel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: raid5-cache: avoid GFP_NOFAIL allocation
+Date: Fri, 18 Dec 2015 10:31:46 +1100
+Message-ID: <87d1u48xel.fsf@notabene.neil.brown.name>
+References: <1450390197-19479-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <567339F0.9000209@turmel.org>
+In-Reply-To: <1450390197-19479-1-git-send-email-hch@lst.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Mark Knecht <markknecht@gmail.com>, John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, shli@fb.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 17, 2015 at 4:40 PM, Phil Turmel <philip@turmel.org> wrote:
-> On 12/17/2015 04:08 PM, Dallas Clement wrote:
->> I am still in the process of collecting a bunch of performance data.
->> But so far, it is shocking to see the throughput difference when
->> blocks written are stripe aligned.
->
-> Random writes unaligned has at least a 4x multiplier on raid5 and 6x on
-> raid6 per my earlier explanation.  Why does this surprise you?  It's
-> parity raid.  This is why users with heavy random workloads are pointed
-> at raid1 and raid10.  I like raid10,f3 for VM host images and databases.
->
->> However, in the non-ideal world it
->> is not always possible to ensure that clients are writing blocks of
->> data which are stripe aligned.
->
-> Hardly possible at all, except for bulk writes of large media files, and
-> then only if you are writing one stream at a time to an otherwise idle
-> storage stack.  Not very realistic in a general-purpose storage
-> appliance.  "General purpose" just isn't very sequential.
->
->> If the goal is to reduce the # of RMWs
->> it seems like writing big blocks would also help for sequential
->> workloads where large quantities of data are being written.
->
-> The goal is to be able to read later what you need to write now.  Unless
-> you have unlimited $ to spend, you have to balance speed, redundancy,
-> and capacity.  As they say, pick two.
->
-> Lots of spindles is generally good.  Raid5 is great for capacity, good
-> for redundancy, and marginal for speed.  Raid6 is great for capacity,
-> great for redundancy, and pitiful for speed.  Raid10,f2 is great for
-> speed, poor for capacity, and good for redundancy.  Raid10,f3 is great
-> for speed, pitiful for capacity, and great for redundancy.
->
->> Can any
->> of you think of anything else that can be tuned in the kernel to
->> reduce # of RMWs in the case where blocks are not stripe aligned?  Is
->> it a bad idea to mess with the timing of the stripe cache?
->
-> You can't really hold those writes for long, as any serious application
-> is going to call fdatasync at short intervals, for algorithmic integrity
-> reasons.  On random workloads, you simply have no choice but to do RMWs.
->  Your only out is to make complete chunk stripes smaller than your
-> application's typical write size.  That raises the odds that any
-> particular write will be aligned or mostly aligned.  Have you tried 4k
-> chunks?
->
-> Phil
->
+--=-=-=
+Content-Type: text/plain
 
-Hi Phil.  Thanks for the explanation.
+On Fri, Dec 18 2015, Christoph Hellwig wrote:
 
-> Random writes unaligned has at least a 4x multiplier on raid5 and 6x on
-> raid6 per my earlier explanation.  Why does this surprise you?  It's
-> parity raid.  This is why users with heavy random workloads are pointed
-> at raid1 and raid10.  I like raid10,f3 for VM host images and databases.
+> bio_sets, mempools and high level retries are our friends:
 
-It really shouldn't surprise me.  I should have said I am very HAPPY
-to see such relatively good performance when the writes are stripe
-aligned. :)
+Yes they are!
 
-> Have you tried 4k chunks?
+all applied, Thanks.
 
-No not yet.  I've been taking some measurements with 16k, 32k, 64k,
-128k, 256k.  So far it looks like 64k has the highest speeds for RAID
-5 sequential writes.
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWc0XiAAoJEDnsnt1WYoG5JEAP/iowrEAAm48KPvYHdJJG8ypS
+MEI64QiIQIyuNKvK1e9qubNe5NtYGHR0LVupmo5jIX50SvZfXZiByQ/5ysnm0vyG
++ALM0Np0IUmP3UjuT/9zdXXA0qKz/Pf1bGiWw00CSXiPaPv3Mjb/fvgkpyF+NJff
++o0RjaUTjhIsbgg/ADGckKyAmtDcFZuBD0uSJ0HhOwZq5sTcvXxseOswl3yI1f01
+Lm8+VMMd4Xc2a7Huw8POpdV1Cet1h+eI6FK8bH6GRBJDJAjeULpFqEilnRfigBMw
+99f1u8XsZh1hUTawT2msbOvaqlDWRzqvIAPZMaM5wnwELMZSkO3IYEAMfhXFEjaX
+qTSRWT13XB+ucH/MCMLNETJP/q9JpiZO94amDXo0yw0Jmcw4gUen89td6Yi0JP4s
+JqJM7kEWx882cMUODagEmvHc7+F2BYEQY1opnVIFokIkXPh4akdD8uw0RDpVeY+Y
+16s1k6pzWmMfuBuhZYzzoKTP/CWkseOJxIw+fze5tJGDZ3NJnmF1SelCdtRTmW15
+Sp79LhefM/axIzZjbCodHP8R2EFK9f5FJT+ArCBTM7mikeH/FWr4tlffpNSQw6nu
+SM9adOibRIL1Upuyk/wmMEXWl8EVxJNNAqvuovkVwseQbthX3K4aFtRMtpxDoo9T
+LTQz3nbCgFsifs5Y7Bp4
+=pHkD
+-----END PGP SIGNATURE-----
+--=-=-=--
