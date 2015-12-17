@@ -1,134 +1,77 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] raid5: allow r5l_io_unit allocations to fail
-Date: Thu, 17 Dec 2015 23:09:57 +0100
-Message-ID: <1450390197-19479-4-git-send-email-hch@lst.de>
-References: <1450390197-19479-1-git-send-email-hch@lst.de>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: best base / worst case RAID 5,6 write speeds
+Date: Thu, 17 Dec 2015 17:40:48 -0500
+Message-ID: <567339F0.9000209@turmel.org>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+ <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+ <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+ <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+ <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+ <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+ <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+ <22128.11867.847781.946791@quad.stoffel.home>
+ <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
+ <22128.35881.182823.556362@quad.stoffel.home>
+ <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
+ <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
+ <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
+ <5672BB7A.4050808@turmel.org>
+ <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450390197-19479-1-git-send-email-hch@lst.de>
+In-Reply-To: <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.com, shli@fb.com
-Cc: linux-raid@vger.kernel.org
+To: Dallas Clement <dallas.a.clement@gmail.com>
+Cc: Mark Knecht <markknecht@gmail.com>, John Stoffel <john@stoffel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-And propagate the error up the stack so we can add the stripe
-to no_stripes_list and retry our log operation later.  This avoids
-blocking raid5d due to reclaim, an it allows to get rid of the
-deadlock-prone GFP_NOFAIL allocation.
+On 12/17/2015 04:08 PM, Dallas Clement wrote:
+> I am still in the process of collecting a bunch of performance data.
+> But so far, it is shocking to see the throughput difference when
+> blocks written are stripe aligned.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/md/raid5-cache.c | 49 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 34 insertions(+), 15 deletions(-)
+Random writes unaligned has at least a 4x multiplier on raid5 and 6x on
+raid6 per my earlier explanation.  Why does this surprise you?  It's
+parity raid.  This is why users with heavy random workloads are pointed
+at raid1 and raid10.  I like raid10,f3 for VM host images and databases.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index e0a605f..ddee884 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -287,8 +287,10 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
- 	struct r5l_io_unit *io;
- 	struct r5l_meta_block *block;
- 
--	/* We can't handle memory allocate failure so far */
--	io = kmem_cache_zalloc(log->io_kc, GFP_NOIO | __GFP_NOFAIL);
-+	io = kmem_cache_zalloc(log->io_kc, GFP_ATOMIC);
-+	if (!io)
-+		return NULL;
-+
- 	io->log = log;
- 	INIT_LIST_HEAD(&io->log_sibling);
- 	INIT_LIST_HEAD(&io->stripe_list);
-@@ -326,8 +328,12 @@ static int r5l_get_meta(struct r5l_log *log, unsigned int payload_size)
- 	    log->current_io->meta_offset + payload_size > PAGE_SIZE)
- 		r5l_submit_current_io(log);
- 
--	if (!log->current_io)
-+	if (!log->current_io) {
- 		log->current_io = r5l_new_meta(log);
-+		if (!log->current_io)
-+			return -ENOMEM;
-+	}
-+
- 	return 0;
- }
- 
-@@ -372,11 +378,12 @@ static void r5l_append_payload_page(struct r5l_log *log, struct page *page)
- 	r5_reserve_log_entry(log, io);
- }
- 
--static void r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
-+static int r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 			   int data_pages, int parity_pages)
- {
- 	int i;
- 	int meta_size;
-+	int ret;
- 	struct r5l_io_unit *io;
- 
- 	meta_size =
-@@ -385,7 +392,10 @@ static void r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 		sizeof(struct r5l_payload_data_parity) +
- 		sizeof(__le32) * parity_pages;
- 
--	r5l_get_meta(log, meta_size);
-+	ret = r5l_get_meta(log, meta_size);
-+	if (ret)
-+		return ret;
-+
- 	io = log->current_io;
- 
- 	for (i = 0; i < sh->disks; i++) {
-@@ -415,6 +425,8 @@ static void r5l_log_stripe(struct r5l_log *log, struct stripe_head *sh,
- 	list_add_tail(&sh->log_list, &io->stripe_list);
- 	atomic_inc(&io->pending_stripe);
- 	sh->log_io = io;
-+
-+	return 0;
- }
- 
- static void r5l_wake_reclaim(struct r5l_log *log, sector_t space);
-@@ -429,6 +441,7 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 	int meta_size;
- 	int reserve;
- 	int i;
-+	int ret = 0;
- 
- 	if (!log)
- 		return -EAGAIN;
-@@ -477,18 +490,24 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 	mutex_lock(&log->io_mutex);
- 	/* meta + data */
- 	reserve = (1 + write_disks) << (PAGE_SHIFT - 9);
--	if (r5l_has_free_space(log, reserve))
--		r5l_log_stripe(log, sh, data_pages, parity_pages);
--	else {
--		spin_lock(&log->no_space_stripes_lock);
--		list_add_tail(&sh->log_list, &log->no_space_stripes);
--		spin_unlock(&log->no_space_stripes_lock);
--
--		r5l_wake_reclaim(log, reserve);
--	}
--	mutex_unlock(&log->io_mutex);
-+	if (!r5l_has_free_space(log, reserve))
-+		goto err_retry;
- 
-+	ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
-+	if (ret)
-+		goto err_retry;
-+
-+out_unlock:
-+	mutex_unlock(&log->io_mutex);
- 	return 0;
-+
-+err_retry:
-+	spin_lock(&log->no_space_stripes_lock);
-+	list_add_tail(&sh->log_list, &log->no_space_stripes);
-+	spin_unlock(&log->no_space_stripes_lock);
-+
-+	r5l_wake_reclaim(log, reserve);
-+	goto out_unlock;
- }
- 
- void r5l_write_stripe_run(struct r5l_log *log)
--- 
-1.9.1
+> However, in the non-ideal world it
+> is not always possible to ensure that clients are writing blocks of
+> data which are stripe aligned.
+
+Hardly possible at all, except for bulk writes of large media files, and
+then only if you are writing one stream at a time to an otherwise idle
+storage stack.  Not very realistic in a general-purpose storage
+appliance.  "General purpose" just isn't very sequential.
+
+> If the goal is to reduce the # of RMWs
+> it seems like writing big blocks would also help for sequential
+> workloads where large quantities of data are being written.
+
+The goal is to be able to read later what you need to write now.  Unless
+you have unlimited $ to spend, you have to balance speed, redundancy,
+and capacity.  As they say, pick two.
+
+Lots of spindles is generally good.  Raid5 is great for capacity, good
+for redundancy, and marginal for speed.  Raid6 is great for capacity,
+great for redundancy, and pitiful for speed.  Raid10,f2 is great for
+speed, poor for capacity, and good for redundancy.  Raid10,f3 is great
+for speed, pitiful for capacity, and great for redundancy.
+
+> Can any
+> of you think of anything else that can be tuned in the kernel to
+> reduce # of RMWs in the case where blocks are not stripe aligned?  Is
+> it a bad idea to mess with the timing of the stripe cache?
+
+You can't really hold those writes for long, as any serious application
+is going to call fdatasync at short intervals, for algorithmic integrity
+reasons.  On random workloads, you simply have no choice but to do RMWs.
+ Your only out is to make complete chunk stripes smaller than your
+application's typical write size.  That raises the odds that any
+particular write will be aligned or mostly aligned.  Have you tried 4k
+chunks?
+
+Phil
 
