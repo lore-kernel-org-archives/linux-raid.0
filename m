@@ -1,41 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: RAID6 - whole disk vs partitions
-Date: Sat, 19 Dec 2015 15:36:14 -0500
-Message-ID: <5675BFBE.5060604@turmel.org>
-References: <56756AF1.7050005@crc.id.au>
+From: <gh13@soung.onmicrosoft.com>
+Subject: ATTENTION!!!!!!
+Date: Sat, 19 Dec 2015 15:56:18 -0500
+Message-ID: <VI1PR06MB1023C49B1FCA5370766CD5CB83E20@VI1PR06MB1023.eurprd06.prod.outlook.com>
+Reply-To: <frank.david849@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56756AF1.7050005@crc.id.au>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>, linux-raid@vger.kernel.org
+To: Recipients <gh13@soung.onmicrosoft.com>
 List-Id: linux-raid.ids
 
-Hi Steven,
+Dear Beneficiary,
 
-On 12/19/2015 09:34 AM, Steven Haigh wrote:
+This is to officially inform you that we have written to you before without getting respond from you and we believe that our previous mail did not get to you therefore we write you again. We are contacting you concerning the release of your inheritance fund / Draft/Cheque /ATM Card which have been delayed for transfer by some officials who claim to be in position of your fund thereby extorting money from you in one way or the other.
 
-> I've always used the whole disk for the RAID6 - as from what I
-> understand, this gives the best layout for various drives - no matter if
-> they're 512 or 4096 byte sectors.
-> 
-> Is this still the case?
+Your Fund has finally been approved for transfer by the West Africa Fund Monitoring Unit. Your fund will be transfer to you via MasterCard ATM which is cashable in any ATM machine or Bank anywhere in the world.
 
-There's no real advantage other than an itty bit of space.  If my case
-was too small to have a separate mirror for my OS, I'd make three
-partitions on everything for boot, LVM root & etc (raid10), and bulk
-storage (raid6).  When I have room for the mirrored OS (boot & LVM), I
-use whole disks for the bulk storage.
+We hereby inform you that the ATM card worth US$8.5, 000.000.00 has been credited in your favour as the first part payment of your inheritance fund which has been delayed by these officers who claim to be in position of your fund.
 
-> I've noticed that my resync speeds on this RAID6 hover around 60Mb/sec -
-> which I was expecting to be a bit quicker (although I haven't tested
-> speeds on this array for years).
+ 
+Therefore you are warned to stop any further communication with anybody concerning your inheritance fund.
 
-Consider using small chunk sizes for parity raid if there's even the
-slightest random access usage.  See the list archives for the past
-couple weeks for a long thread on performance.  There's many
-optimization possibilities.
+Your fund to be released via MasterCard ATM in act to uphold the rule of law which we represent.You have to reconfirm the informations below for security reasons. The only money you are obliged to pay is the delivery charges only .
 
-Phil
+Contact the verification officer incharge of the delivery:
 
+Name: Frank David
+E-mail: frank.david849@yahoo.com
+Telephone +2348140092560
+
+Send them the following informations of yours for the conclusion of your ATM Card:
+
+Full Name:__________
+Delivery Address:____
+Country:_______
+Occupation:_____
+Phone Number:____
+Age:______
+sex:______
+
+Regards,
+Frank David
+ 
