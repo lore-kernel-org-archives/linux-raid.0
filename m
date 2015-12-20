@@ -1,85 +1,67 @@
 From: NeilBrown <neilb@suse.com>
 Subject: Re: [PATCH 3/3] raid5: allow r5l_io_unit allocations to fail
-Date: Mon, 21 Dec 2015 09:51:15 +1100
-Message-ID: <87y4co68f0.fsf@notabene.neil.brown.name>
-References: <1450390197-19479-1-git-send-email-hch@lst.de> <1450390197-19479-4-git-send-email-hch@lst.de> <20151217234748.GA1860175@devbig084.prn1.facebook.com> <874mfg8qyc.fsf@notabene.neil.brown.name> <20151218112312.GA28224@lst.de>
+Date: Mon, 21 Dec 2015 09:59:48 +1100
+Message-ID: <87vb7s680r.fsf@notabene.neil.brown.name>
+References: <1450390197-19479-1-git-send-email-hch@lst.de> <1450390197-19479-4-git-send-email-hch@lst.de> <20151217234748.GA1860175@devbig084.prn1.facebook.com> <874mfg8qyc.fsf@notabene.neil.brown.name> <20151218015847.GA2146501@devbig084.prn1.facebook.com> <20151218112535.GB28224@lst.de> <20151218230657.GA342953@devbig084.prn1.facebook.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151218112312.GA28224@lst.de>
+In-Reply-To: <20151218230657.GA342953@devbig084.prn1.facebook.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Dec 18 2015, Christoph Hellwig wrote:
+On Sat, Dec 19 2015, Shaohua Li wrote:
 
-> On Fri, Dec 18, 2015 at 12:51:07PM +1100, NeilBrown wrote:
->> > if the reclaim thread doesn't have anything to reclaim,
->> > r5l_run_no_space_stripes isn't called. we might miss the retry.
+> On Fri, Dec 18, 2015 at 12:25:35PM +0100, Christoph Hellwig wrote:
+>> [can you trim your replies please?  I had to trim almost 150 lines of
+>>  junk before getting to your reply!]
 >>=20
->> so something like this:
->
-> that looks fine to me.  I'll give a spin on my QA setup.
->
->> > I'm a little worrying about the GFP_ATOMIC allocation. In the first tr=
-y,
->> > GFP_NOWAIT is better. And on the other hand, why sleep is bad here? We
->> > could use GFP_NOIO | __GFP_NORETRY, there is no deadlock risk.
->> >
->> > In the retry, GFP_NOIO looks better. No deadlock too, since it's not
->> > called from raid5d (maybe we shouldn't call from reclaim thread if usi=
-ng
->> > GFP_NOIO, a workqueue is better). Otherwise we could keep retring but =
-do
->> > nothing.
+>> > >  	spin_unlock_irqrestore(&log->io_list_lock, flags);
+>> > >=20
+>> > > or is that too simplistic?
+>> >=20
+>> > maybe add a new list and run the list at the begining of r5l_do_reclai=
+m().
 >>=20
->> I did wonder a little bit about that.
->> GFP_ATOMIC is (__GFP_HIGH)
->> GFP_NOIO | __GFP_NORETRY is  (__GFP_WAIT | __GFP_NORETRY)
->>=20
->> It isn't clear that we need 'HIGH', and WAIT with NORETRY should be OK.
->> It allows __alloc_pages_direct_reclaim, but only once and never waits
->> for other IO.
+>> What's the advantage of another list?
 >
-> In general we go for HIGH on non-sleeping allocation to avoid having
-> the stalled.  This is especially important in the I/O path.
->
-> WAIT means we will reclaim and wait for it, which looks a little dangerous
-> to me.  In general I'd prefer not to use obscure gfp flag combination
-> unless there is a real need, and it's clearly documented.
+> I mean simply waking up reclaim thread doesn't work as r5l_do_reclaim()
+> will return if reclaimable =3D=3D 0. There is no guarantee reclaimable sp=
+ace
+> is available in the allocation failure. So we'd better move the retry at
+> the begining of r5l_do_reclaim(). If yes, we can't reuse the
+> no_space_stripes list.
 
-I don't think "will reclaim and wait for it" is accurate.
+They certainly are conceptually different lists.  Whether the same
+linked list can be used for both is an engineering question.
 
-Certainly page_alloc will only try direct reclaim when WAIT is set, but
-I don't think it actually waits for anything particular.
+One list is for updates that cannot be handled yet because the log is
+full.  Once the head of the log is cleared and the start pointer
+updated, those requests can be handled (or some of them can).
 
-There are various waits in the direct reclaim path such as
-throttle_vm_writeout(), but they seem to be throttling delays rather
-than "wait for something particular" delays.
-Also direct reclaim (e.g. in shrinkers) are allows to sleep (as long as
-they don't violate NOFS or NOIO), so waiting can definitely happen for
-non-throttling reasons.
+The other list is for updates that cannot be handled yet because a
+kmalloc failed.  There is no clear trigger for when to handle those
+again so we would need to retry quite frequently.  It would be easy to
+miss retrying in rare circumstances...
 
-I *think* (not 100% sure) that __GFP_WAIT means that the alloc code is
-allowed to schedule().  Without that flag it mustn't.
+I wonder if we should have a mempool for these io units too.
+We would allocate with GFP_ATOMIC (or similar) so the allocation woult
+fail instead of blocking, but we would then know that an allocation
+could only fail if there was another request in flight.  So the place
+where we free an io_unit would be the obviously correct place to trigger
+a retry of the delayed-due-to-mem-allocation-failure stripes.
 
-So it makes sense to use WAIT when it is appropriate for a delay to be
-introduce to throttle allocations.  I don't think that is the case in
-raid5d.  raid5d is too low level - throttling it will not directly
-affect higher level allocations.
+So I think I would prefer two lists, another mempool, and very well
+defined places to retry the two lists.  Is that over-engineering?
 
-So while my reasoning is a bit different, I agree that we don't really
-want WAIT in an allocation in raid5d.
-
-.... oh.  I just noticed that __GFP_WAIT was renamed to __GFP_RECLAIM
-last month.  And there is a new __GFP_DIRECT_RECLAIM.  I think I'm going
-to have to learn how this stuff works again.
-
+Thanks,
 NeilBrown
 
 --=-=-=
@@ -88,18 +70,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWdzDjAAoJEDnsnt1WYoG5FD8P/0ypYxM65SgWLWR94U7HWYY1
-6K9l0xas0rkskf521ZPhs0CtIaXOgwtyccXcu92W7tJoApzpjCI3i1a9jwPSSpNn
-45I/1TtKqPaYbVU4zTf2wL+3MnEiB125FAG/AFF1+l7e/LbjKoqaasHyYUf7QdBb
-2gH4oi0oXo4UUKMFc+JTInDyYs2WvBaxRAnNKk2NHvdpT8tSsxmNumWII/Eph1/L
-DvRP0KjSigNyIemPWPuZlKouMibAufECMDJSL1Av0z/L81y15qYd0eD4oacRpHmA
-EbRY42ud8qmSdSpGhyYIQ1e7NWJ3p9w77pGeYsQt5BkSAEcmyc5Z8e7vTuTyDAPB
-oYOe5LkCJoSvZ6Ql0jshnD3/btnZtqvUH1vEmcQgZPFczntjumlGup6EfCyvejUw
-6AStp4gZnC/U5wuyAHX4cdX17ob9ywFuWApbyJzhUQ2HJ3f1ejaRVWctJk1b5RsE
-tbp0I75q249Bqvlh3sMohev0nFhsHRbRMisSWV+is5MKAb7+MY9TTVP/gEX12c7m
-jB3nwP+lo8ieyP4qYcj28M/Ce/NshyX9wFLvV4tIzys1So3bxGF9FJz/cPaOEXOj
-ArJYGPem1IjAA1aQorA0dGR8+xg0Yeeul9RKzMH7lDTkz+UzPF97lbFJhJVG0CZJ
-P7YXv98ISgWwng0wsMOS
-=KHK9
+iQIcBAEBCAAGBQJWdzLkAAoJEDnsnt1WYoG5jswQAIqZYMc8FErLC0xFPj0eeGCc
+E2g/sFhvUDhKQYJny3IbhX5E4sOT29Y+p/pdt/Il64p1mm+yqvHLZ6izoYq9OO3y
+72bG05tBmeq6HRvMv/vcVplnZv+9euM1LYF8+tma2XcV5klSIfMfn2QunYJiy0b9
+Pq0Q+K2uXZW8bzE3wI16+xS2WZQZ4pn7gHb4d0Hto+EXBvEEwZV5Icg148+/Kf7Q
+Y5n8wt9Pxh9rEEaHcE72Z5EpubiSU4sj3eyMOxz5XT8RSo725PAvsW+v5yhdPict
+94IHMqzkI5X846M50sg+yYIolRve7WFdZP7J4KwaPCWNCtq0aWghp15sXWXEe3OP
+2/DhD5Jzidb54e52oIbAUzx+WCEkMpfpSI1bkLCmiBuS38FxPTPD1fpk//Ml3mE4
+wU5+4u3DS4AzwNhxOUlHeaYnKROhHXFJNf97l5nV/cv8XDYfj3dJbqq04Jqg27xD
+tbSh54X3sIrwwg0jnjd6bkwxUxHN1akBTRTYue1q0WJhdERtb6dWzzXi1hPcbYiB
+Wt/Hus/3yvUc8ylxRO3FwPOFzavcEM0Uoio6d5/is9KR4OISSZSRkMeQPYUq4uFp
+fXFUygBRXlTUGTxZrFA7CDDEwSAeE7DR6rECXZXYE/IOZ4lituuqjuqFO050avDU
+3ZY5R/FC9douzuBjUS8n
+=h7Tg
 -----END PGP SIGNATURE-----
 --=-=-=--
