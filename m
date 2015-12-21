@@ -1,126 +1,127 @@
-From: NeilBrown <neilb@suse.com>
-Subject: WANTED new maintainer for Linux/md (and mdadm)
-Date: Mon, 21 Dec 2015 17:10:06 +1100
-Message-ID: <87k2o849j5.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, Phil Turmel <philip@turmel.org>
+From: Xiao Ni <xni@redhat.com>
+Subject: [MDADM PATCH] Check and remove bitmap first when reshape to raid0
+Date: Mon, 21 Dec 2015 16:23:49 +0800
+Message-ID: <1450686229-6157-1-git-send-email-xni@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.com
+Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If reshape one raid device with bitmap to raid0, the reshape progress will
+start. But it'll fail and lose some components. So it should remove bitmap 
+first. 
 
+And it shouldn't close fd when try to call open_dev_excl. Because it's an
+input argument. It should be closed in the function who open it. 
 
-hi,
- I became maintainer for md (Linux Software RAID) in late 2001 and on
- the whole it has been fun and a valuable experience.  But I have been
- losing interest in recent years (https://lwn.net/Articles/511073/) and
- as was mentioned at the kernel summit, I would like to resign.  Some
- years ago I managed to hand over nfsd to the excellent Bruce Fields,
- but I do not seem to have the gift that Linus has of attracting
- maintainers.  While there are a number of people who know quite a bit
- about md and/or have contributed to development, there is no obvious
- candidate for replacement maintainer - no one who has already been
- doing significant parts of the maintainer role.
+There are some places that return(1) directly but don't free subarray and
+close cfd in Grow_reshape. So add fallback: to do free(subarray) and 
+close(cfd).
 
- So I have decided to fall back on the mechanism by which I ended up
- being maintainer in the first place.  I will create a vacuum and hope
- someone fills it (yes: I was sucked-in....).  So as of 1st February
- 2016 I will be resigning.
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ Grow.c | 37 ++++++++++++++++++++++++++++---------
+ 1 file changed, 28 insertions(+), 9 deletions(-)
 
- At the kernel summit in October Linus talked about the value of
- maintainership teams (https://lwn.net/Articles/662979/).  I think it
- would be great if a (small) team formed to continue to oversee md
- rather than just a single individual (or maybe the dm team could extend
- to include md??).  If I had managed to be part of a team rather than
- "going it alone" for so long, I might feel less tired of the whole
- thing now.
+diff --git a/Grow.c b/Grow.c
+index 6dfb9c9..f892023 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -1591,6 +1591,17 @@ int Grow_reshape(char *devname, int fd,
+ 		return 1;
+ 	}
+ 
++	if (s->level == 0 && array.state & (1<<MD_SB_BITMAP_PRESENT)) {
++                array.state &= ~(1<<MD_SB_BITMAP_PRESENT);
++                if (ioctl(fd, SET_ARRAY_INFO, &array)!= 0) {
++                        if (array.state & (1<<MD_SB_CLUSTERED))
++                                pr_err("failed to remove clustered bitmap.\n");
++                        else
++                                pr_err("failed to remove internal bitmap.\n");
++                        return 1;
++                }
++        }
++
+ 	/* in the external case we need to check that the requested reshape is
+ 	 * supported, and perform an initial check that the container holds the
+ 	 * pre-requisite spare devices (mdmon owns final validation)
+@@ -1603,7 +1614,6 @@ int Grow_reshape(char *devname, int fd,
+ 			cfd = open_dev_excl(st->container_devnm);
+ 		} else {
+ 			container = st->devnm;
+-			close(fd);
+ 			cfd = open_dev_excl(st->devnm);
+ 			fd = cfd;
+ 		}
+@@ -1619,8 +1629,8 @@ int Grow_reshape(char *devname, int fd,
+ 		if (rv) {
+ 			pr_err("Cannot read superblock for %s\n",
+ 				devname);
+-			free(subarray);
+-			return 1;
++			rv = 1;
++			goto fallback;
+ 		}
+ 
+ 		/* check if operation is supported for metadata handler */
+@@ -1644,8 +1654,8 @@ int Grow_reshape(char *devname, int fd,
+ 					pr_err("cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
+ 					       devname, container);
+ 					sysfs_free(cc);
+-					free(subarray);
+-					return 1;
++					rv = 1;
++					goto fallback;
+ 				}
+ 			}
+ 			sysfs_free(cc);
+@@ -1665,7 +1675,8 @@ int Grow_reshape(char *devname, int fd,
+ 		       s->raiddisks - array.raid_disks,
+ 		       s->raiddisks - array.raid_disks == 1 ? "" : "s",
+ 		       array.spare_disks + added_disks);
+-		return 1;
++		rv = 1;
++		goto fallback;
+ 	}
+ 
+ 	sra = sysfs_read(fd, NULL, GET_LEVEL | GET_DISKS | GET_DEVS
+@@ -1678,17 +1689,20 @@ int Grow_reshape(char *devname, int fd,
+ 	} else {
+ 		pr_err("failed to read sysfs parameters for %s\n",
+ 			devname);
+-		return 1;
++		rv = 1;
++		goto fallback;
+ 	}
+ 	frozen = freeze(st);
+ 	if (frozen < -1) {
+ 		/* freeze() already spewed the reason */
+ 		sysfs_free(sra);
+-		return 1;
++		rv = 1;
++		goto fallback;
+ 	} else if (frozen < 0) {
+ 		pr_err("%s is performing resync/recovery and cannot be reshaped\n", devname);
+ 		sysfs_free(sra);
+-		return 1;
++		rv = 1;
++		goto fallback;
+ 	}
+ 
+ 	/* ========= set size =============== */
+@@ -2084,6 +2098,11 @@ release:
+ 	sysfs_free(sra);
+ 	if (frozen > 0)
+ 		unfreeze(st);
++fallback:
++	if (cfd > -1)
++		close(cfd);
++	if (subarray)
++		free(subarray);
+ 	return rv;
+ }
+ 
+-- 
+2.4.3
 
- I don't see it as my place to appoint that team or any individuals, or
- even to nominate any candidates.  A very important attribute of a
- maintainer is that they need to care about the code and the subsystem
- and I cannot tell other people to care (or even know if they do).  It
- is really up to individuals to volunteer.  A few people have been
- mentioned to me in earlier less-public conversations.  Any of them may
- well be suitable, but I would rather they named themselves if
- interested.
-
- So I'm hoping to get one or more volunteers to be maintainer:
-   - to gather and manage patches and outstanding issues,
-   - to review patches or get them reviewed
-   - to follow up bug reports and get them resolved
-   - to feed patches upstream, maybe directly to Linus,
-     maybe through some other maintainer, depending on what
-     relationships already exist or can be formed,
-   - to guide the longer term direction (saying "no" is important
-     sometimes),
-   - to care,
- but also to be aware that maintainership takes real effort and time, as
- does anything that is really worthwhile.
-
- This all applies to mdadm as well as md (except you would ultimately
- *be* upstream for mdadm, not needing to send it anywhere).  Even if a
- clear team doesn't form it would be great if different people
- maintained mdadm and md.
-
- One part of the job that I have put a lot of time in to is following
- the linux-raid@vger.kernel.org list and providing support.  This makes
- people feel good about md and so more adventurous in using it.
- Consequently I tend to hear about bugs and usability issues nice and
- early (well before paying customers hit them in most cases) and that is
- a big win.
- In recent times I've been doing less of this and have been absolutely
- thrilled that the gap has been more than filled by other very competent
- community members.  Not developers particular but a number of md users
- have been providing excellent support.  I'd particularly like to
- high-light Phil Turmel who is very forthcoming with excellent advice,
- but he is certainly not the only one who deserves a lot of thanks.
- So "Thank you" to everyone who answers questions on linux-raid.
-
- This would be a good place for any future maintainer to hang out to
- receive wisdom as well as to provide support.
-
- I will still be around.  I can certainly help out in some sort of
- mentor role, and can probably be convinced to review patches and
- comment on designs.  But I really want to head towards spending less
- time on md (there are so many other interesting things to learn about).
-
- So: if anyone is interested - please announce yourself, ask questions
- and start doing things.  I have no clear idea about how a transition
- will happen.  That is really up to you (plural). Take the bull by the
- horns and start *being* a maintainer(team).  I won't get in your way
- and I'll help where I can.
-
-Thanks,
-NeilBrown
-
-P.S. I'm committed to continue to work with the raid5-journal effort
-From=20Facebook and the raid1-cluster effort from SUSE and the
-line-in-the-sand of 1st February won't affect my support for those.
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWd5e+AAoJEDnsnt1WYoG5rQwQAL8gu5I/PrEXqtHtItSiPaKN
-1d8mZ+4bG22fJVmJXY1Xqb3aB4oGT15AMwaBgfdS2PXfl5o/NyhUb4teEW4KWwga
-k0oFrZ682pQ/RkZd60aGlCojIm1bs6eUgmlh6cbEigKZHoiCivDOaOPtxzELBW2c
-7NrcPD6797KX4f40+NN5qemSa1Tq5YtlWoTlXHrJe9Grd0dpD/JO5Eu+q5OpMHXp
-WvEmDHxZyPis0G+0x1WY1JJxz0R5hERkatmjhvtFfwjs/0aepEXw8f/whSn29/24
-TCF/EVYbUTtcU3NnODcxVKQds0b6ZU+nxfAAPvQAZ4hLPdt613BkbHPwvc0pbBku
-hrQZ301VdWnay2QE45Sj37w1hPyn2oMqu3TvGBbzsvJQeyb8TA/8h9F0SHY7CA7b
-E5kQwet24+9o7Jc7MEdAIN9txnyXGdm6x53TVxg7lZtRZFx7DtYDFQALYejgBPzg
-Trskt+JJJsPsVo5f8BFPQ89zxf5patCN9ZdZ7ku6/U+vPNMc4jFBLP4/axIXasFI
-S+dOedTtc/ENTroWUu7K0xdMrwNA98gVHHFeQPU/nx+IJOskf7UqllX9w9XzCqNN
-+X375AkNhYPbVx0v2343wpMk9lePn+OT1CN89eDNDKJWyVb6uYJ03lmv8gdC5mBo
-w9oCYVxWWx3j9KUB9yqS
-=aePQ
------END PGP SIGNATURE-----
---=-=-=--
