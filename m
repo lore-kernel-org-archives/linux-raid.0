@@ -1,56 +1,125 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: clustered MD - beyond RAID1
-Date: Mon, 21 Dec 2015 10:25:41 +1100
-Message-ID: <87si2w66tm.fsf@notabene.neil.brown.name>
-References: <56742652.5040304@nasa.gov>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: Problem w/ commit ac8fa4196d20 on older, slower hardware
+Date: Mon, 21 Dec 2015 11:43:40 +1100
+Message-ID: <87io3s637n.fsf@notabene.neil.brown.name>
+References: <87twq0527k.fsf@notabene.neil.brown.name> <56451299.6090107@gentoo.org> <20151113000306.GA3563@EIS>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56742652.5040304@nasa.gov>
+In-Reply-To: <20151113000306.GA3563@EIS>
 Sender: linux-raid-owner@vger.kernel.org
-To: Scott Sinno <scott.sinno@nasa.gov>, linux-raid@vger.kernel.org
-Cc: "Knister, Aaron S. (GSFC-606.2)[COMPUTER SCIENCE CORP]" <aaron.s.knister@nasa.gov>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>, Joshua Kinard <kumba@gentoo.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Dec 19 2015, Scott Sinno wrote:
+On Fri, Nov 13 2015, Andreas Klauer wrote:
 
-> Neil(or anyone well informed in mdadm development roadmaps),
-> 	
-> 	Aaron and myself are engineers at NASA Goddard with strong interest in
-> MDADM.  We currently host 6PB(raw) of live JBOD storage leveraging MDADM
-> exclusively for RAID functionality.
+> On Thu, Nov 12, 2015 at 05:28:41PM -0500, Joshua Kinard wrote:
+>> running MD RAID5 and the XFS filesystem.  I have /, /home, /usr, /var,
+>> and /tmp on separate partitions, each a RAID5 setup.
 >
-> 	We're very interested in Clustered MDADM to improve data-availability
-> in the environment, but note that only RAID1 is currently supported.
-> Are there plans in the nearish-term(say over the next year) to expound
-> clustered bitmap functionality to RAID5/6, or anything else you can
-> divulge on that front?  Thanks in advance for any guidance.
+> Hi, sorry for butting in,
+>
+> I have the same issue, on a regular consumer Haswell i5 box,=20
+> with a setup very very similar to yours:
+>
+> 7x2TB disks, multiple partitions, for each: RAID-5, LUKS, LVM, XFS.
+>
+> The issue occurs during regular RAID check which I run daily=20
+> (different partition/RAID each day, so it's more like a=20
+> evenly distributed weekly check).
+>
+> I have an application that uses `find -size +100M` on a directory=20
+> tree with ~3k subdirs and ~6k files in total. It doesn't do anything=20
+> with the find result, it's purely informal. So no big data involved,=20
+> even though the files themselves aren't small.
+>
+> Yet, it's slooow. The following tests were on a completely idle box,=20
+> apart from a running RAID check on the same /dev/mdX device.
+>
+> Kernel 4.2.3, unpatched:
+>
+> real	0m53.555s
+> user	0m0.013s
+> sys	0m0.037s
+>
+> real	1m3.777s
+> user	0m0.013s
+> sys	0m0.037s
+>
+> real	1m3.453s
+> user	0m0.014s
+> sys	0m0.036s
+>
+> Kernel 4.2.3, reverted ac8fa4196d20:
+>
+> real	0m3.206s
+> user	0m0.010s
+> sys	0m0.030s
+>
+> real	0m0.450s
+> user	0m0.003s
+> sys	0m0.014s
+>
+> real	0m0.375s
+> user	0m0.003s
+> sys	0m0.012s
+>
+> I did echo 3 > /proc/sys/vm/drop_caches between each find.=20
+> For some reason, subsequent calls in the reverted kernel are=20
+> considerably faster regardless. In the original kernel it=20
+> stays slow... if I don't drop_caches, the time is 0.006s.
+>
+> I don't normally reboot (while a RAID sync or check is=20
+> running) but while switching between kernels I noticed=20
+> the shutdown was very slow also in the original kernel.
+>
+> Are small requests getting delayed a lot or something?
 
-We don't talk about plans that are not backed by code - you can't trust
-them.
+Thanks for all the details and sorry for the delay.
 
-However I cannot imagine how you could make RAID5 work efficiently in a
-cluster.
-RAID1 works because we assume that the file system will have its own
-locking to ensure that only one node writes to a given block at a given
-time.  So while node-A is writing to a block, RAID1 knows that no other
-node is writing there so it can update all copies and be sure no race
-will result in the copies being inconsistent.
+Are (either of) you able to test with this small incremental patch?
 
-For this to work with RAID5 we would need to assume the filesystem will
-ensure only one node is writing to a given stripe at a time, and that is
-not realistic.
+When the md resync notices there is other IO pending, the old code would
+cause the resync to wait at least 500msec and possibly longer to get the
+overall resync speed below a threshold.
+Having the threshold fixed doesn't make sense when devices have such a
+wide range of speeds.
 
-So to make it work we would need the md layer to lock each stripe during
-an update.  I have trouble imagining that running with much speed.  Hard
-to know without testing of course.
-I know of no-one with plans to do that testing.
+The problem patch changes it to only wait until pending resync requests
+have finished.  These means the wait is proportional to the speed of the
+devices, which makes more sense.  The hope was that this would allow
+quite a few regular IO request to slip in the gap between resync requests
+so that regular IO would proceed reasonably quickly.  Sometimes that
+worked, but obviously not for you.
 
+This patch adds an extra delay, still proportional to the speed of the
+devices, but with (hopefully) a lot more room for regular IO requests to
+get queued and handled.
+
+Thanks,
 NeilBrown
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c0c3e6dec248..8a25cf6087ed 100644
+=2D-- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8070,8 +8070,10 @@ void md_do_sync(struct md_thread *thread)
+ 				 * Give other IO more of a chance.
+ 				 * The faster the devices, the less we wait.
+ 				 */
++				unsigned long start =3D jiffies;
+ 				wait_event(mddev->recovery_wait,
+ 					   !atomic_read(&mddev->recovery_active));
++				msleep(jiffies_to_msecs(jiffies - start));
+ 			}
+ 		}
+ 	}
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -58,18 +127,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWdzj1AAoJEDnsnt1WYoG5mo0QALSIpzZ7/PMvmjY77gwcinBp
-QxqQ8mHCkTUQwObwMqX3PycdBfQ/Zpbi2pBzbRyAo/aKzRPH6H0FGmoNpi48kBHm
-BrKvpGn667o1tfLNgzg0IiKvPl9YTs9qkXfCD15bUU6T+KzeFowYruamkpRA33R0
-H5cd4DGmiVaU0lV1Q2uMWY7niozCevOikhbLaFIMXz+cakVxclCPBU5mot0GmULt
-X7Eu20+G+/NxHbXQC6q/ycaZhLlDiQv7OMpym4nDaMNvoTFoF0VCnrJDy4BSUmzh
-tDozLpku9CVmtGXBnPwmHUa/gSEkhm9UVgapRK3U6mAiX+SkB9wCeOl5h6TBiegq
-xob0HaOkDRt2HrOwWsYNyrn7wtyf8foQ8XCsnoKv8RnbjqIEHPl0mxVMF4n/JSqq
-gqOKI94k6SpOohnxHqn46Z7MPT8PHfbODMQKM6JOa1VrwgjCdOppcLqByim3yaEN
-qpAkAuSyf5X7jKJU6DdyLliZc5jqpMeZ/bxTM+eAqhmtwgrzZk7PU53VrEc6qQ7y
-brEbRbXxFBP6F44vp6owtP15jNHhmoIpoPRmYLYSE76duz1bCCkfmC77ejuTrpnr
-j3oiaUDl2g01tXGsSeX+s4Sig41zJMntnteKI71zOsQ/hsSSuES01JZmjJpF/m1k
-J/fbz+fiTvyT7CU6VziM
-=skgm
+iQIcBAEBCAAGBQJWd0s8AAoJEDnsnt1WYoG5NKsP/2ikqdugeTilnSWZ4iGZNn7g
+dHh4W1v9gRlPMp6syOkNpe74keCWQJciKhGCc52hbxcTrhm/aNpKSkNWTos5agMa
+aSk6SxJoR8QMebRSdAPbfnS7thZ6aE6mkjdBEgNeL7lrarj8YcUtkZJH5TsVfOfc
+fwymzRmPd4twGBKGcdYwo/CpdKkYgAOVUIv2XO09mymU601BBUd1nzFMqohWxLQS
+LbOYmDiG9DMi7BArk+go3RKpnugH4mf/D7iiNxQJt7F3TSn5ATD4SkOP9IQQM++1
+Q1CeDeG0y6Gi0RpNJ/NqZ0eNNCqX/rZYH8PCQCcZU5uqfsENjJh7TloxiuBzCsx3
+o1U1iCtS+2kJlTheCF88gOIYfzfSOHsDE81is/FlsyqeLX8myz+rvuswShJ/vEKb
+5ECdVO17l3NnfZrgAVnVkY+7k/pLpWdzPqOzz1uorz1fHhNRZiQz6bEGYGN6fXe4
+d6tCXdUjynxZ5zHXY0EAcTt5vrEkYd7MasRwW1U+KyM2auXVQru9X8AXHFzi8/S7
+riW8Wy8tiQd9RUE6IoYjd6RCAKhtywgRLbih2mLBImPLAG8Gmrs9dTzhLYkag3B4
+Ehlqw64GznIrmH7R9LUOBEoVzQhVZm5L1RWyivpBV/SfBOQyClYWkHMZPyM3ISgQ
+RX6Kn5j5/yrD4EIES4Xd
+=Wve8
 -----END PGP SIGNATURE-----
 --=-=-=--
