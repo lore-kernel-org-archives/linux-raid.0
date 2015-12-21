@@ -1,59 +1,62 @@
 From: NeilBrown <nfbrown@novell.com>
-Subject: Re: Seeking advice to convert RAID5 to RAID10 adding a drive in the process
-Date: Mon, 21 Dec 2015 12:44:01 +1100
-Message-ID: <87a8p460f2.fsf@notabene.neil.brown.name>
-References: <trinity-e29048a1-862f-4ae7-a1a2-e4e826b37f95-1450018043035@3capp-mailcom-bs10>
+Subject: Re: Reshape stalls and fails when SELinux is enabled
+Date: Mon, 21 Dec 2015 12:50:29 +1100
+Message-ID: <877fk8604a.fsf@notabene.neil.brown.name>
+References: <CAMQd7mbdqsw5BiRSKbgBqwNFrz4V8T-A3hOftWReRk1XgXc=+Q@mail.gmail.com> <CAMQd7mYscUDroop=4eLz4UwTEiibbF0OqDN1b28yiqJyfW7gGw@mail.gmail.com> <CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <trinity-e29048a1-862f-4ae7-a1a2-e4e826b37f95-1450018043035@3capp-mailcom-bs10>
+In-Reply-To: <CACsGCyQX4DKfT-6CYd7pa8P-Rq12HhP2tA79F27rw1PbNHe_QQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Micheal Blue <mblue@gmx.us>, linux-raid@vger.kernel.org
+To: Edward Kuns <eddie.kuns@gmail.com>, Enrico Tagliavini <enrico.tagliavini@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Mon, Dec 14 2015, Micheal Blue wrote:
+On Fri, Dec 11 2015, Edward Kuns wrote:
 
-> I have a 3 disk RAID5 currently that uses LUKS. I would like to add a new disk and covert the array to RAID10 but cannot find any walk-through of this process. I am grateful for any input from the list be it links or a personal summary.
+> I ran into this as well.  I unwisely worked around it by placing the
+> backup file on /tmp.  I don't recommend that choice!  I didn't see
+> your AVC on your EMail, but I recommend you reach out to the SELinux
+> folks for labeling help.  I've reach out to them in the past and have
+> found them very helpful (as are the folks here).  Getting the labeling
+> corrected will not only help you but everyone else in the long term.
 >
+> I agree that it would be good for mdadm to handle this kind of failure
+> in a more productive fashion as well.  But I'm only a lurker here.  I
+> don't have enough knowledge to suggest what would be better.  One
+> thing that really helped me debug this was commenting out the lines
 >
-> Below is a graphic of how my current 3 drive array is setup:
->  ---------------------------------------
-> [          ext4 file system             ]
->  ---------------------------------------
-> [          LUKS cryptdevice             ]
->  ---------------------------------------
-> [               /dev/dm0                ]
->  ---------------------------------------
-> [ /dev/sdb1 ] [ /dev/sdc1 ] [ /dev/sdd1 ]
->  ---------------------------------------
+> #StandardOutput=null
+> #StandardError=null
+>
+> in the systemd file /lib/systemd/system/mdadm-grow-continue@.service
+> -- note you have to run systemctl daemon-reload after changing the
+> file for the change to be noticed.
+>
+> Once I did that, the system logs had much more useful information.
+> I'm not sure where that file is sourced, whether it's from the
+> linux-raid people or from the distributions or somewhere in between.
+> Does anyone here know if there's a reason why standard out and
+> standard error are sent to /dev/null for this service?
 
+That mdadm-grow-continue@.service file is part of mdadm (in the systemd
+directory).
+As for why stdout/err is set to 'null', you could try finding out who
+did that and ask them ....
 
-I assume that is /dev/md0, not /dev/dm0 ....
+http://git.neil.brown.name/?p=mdadm.git;a=commitdiff;h=5e76dce1acd906e8fc8af04973c3a129cdc77fd6
 
-You would need to convert to RAID0 first.
-Something like
-  mdadm --grow /dev/md0 --level=0 --raid-disks=2
-  # wait for that to complete
-  mdadm --grow /dev/md0 --level=10 --raid-disks=4 --add /dev/sdd1 /dev/sde1
+but I'm pretty sure that he has no idea.
 
+You could try sending me a patch which changes those lines and gives some
+sort of explanation why it is a good change to make.
+There is a very good chance that I would apply that patch.
 
-You should experiment first by creating some largish file (100Meg),
-using losetup to make block devices /dev/loop0, /dev/loop1
-... /dev/loop3
-
-then create a raid 5 of some of those devices, creaet a LUKS and ext4 on
-that, and then perform the reshape and make sure it all works as you
-expect.
-
-I just tested and it seemed to work on the kernel and mdadm that I have.
-
-Of course, if you can create a backup - at least of the most important
-files - that is always a good idea.
-
+Thanks,
 NeilBrown
 
 --=-=-=
@@ -62,18 +65,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWd1lhAAoJEDnsnt1WYoG5shgP/iO43KzAiJsnEuoQ1r+bMDwo
-GR0qhZ4paBKB0y1OLvCyAAaeg8QS69lk57/McjPWP39fya7RqVGoyoxbvsCVlfZW
-oy2P2SesE4EvQhuJLHDVzhxOfP0PSJ0e1+eZMfwYIBG/yIu0pfm7/qGRwbYbKjK2
-rHaoP2w78nh/M3Pq5PWcOrtrBbBamlBQAonT4j6dDfb9QryLK0xYv8lZft+IyEv6
-BTFxS5UbNF5gEPaDQXOlog6snqCru8kPl9itrcOIPs4LmjwEnzx06TBkf8MDO6Ar
-FSi+nAcwwI1UXT05rhe40dw57j7BQrb/rT8SCfRSNCARkDB+mjNVw4m+OM4I87tA
-eQuXla1T2AhgyrBCuItcyQzWeKsuHFxdmjWKWPE5ae1ggK+wfd+O85QNNFZYgJEL
-+poCg0w1e+YTHWC25rnG3vE57S3yNffeEzm1QQsUdkhPFicS9nNbaXEjVizfSEVH
-8PLkHvuwLHZsVLTSkK7HQ5K5L0ZqncB1CUCE+amozY7lacQ/P0m3k9tEpIOHvIeP
-bXyo95WrjKt8o+UdWtiwDglhoIt/+aZRP6N698FAX9X5D/A9nOjBch1s0D3sxrY/
-Nbt09dnsrC9ZaqLt5CWD7b19nrysfS8/1FTefdVdnYKsWW2WD24vk1gODoUmhNQm
-gSZqwB8VpU+TugbK59k0
-=c3Bp
+iQIcBAEBCAAGBQJWd1rlAAoJEDnsnt1WYoG5NlwP/ixc0fGflPflWCrfjDjHKl86
+Pqy6V6gGBi+H/9AT6wZvoeAwG1lohNAvGevPVEScYEgPQ03DcJgqGPqAuosUhVgQ
+NCdEjgI8J44TuOImQcOhpXXagegWmn0p3SdbNAsgjME06eOsTIp+Yz33tDLFKHUr
+TKp4AzbvQxgYNLaBo72OcMUpCM8yHDAThtlaGRfdYDJs4x/N0tFo6OFg8REfEueJ
+1UXWbM+J+w1Wk6TsTP5X0sQOlNjXjFaEaqcCrwHhPIN8nk8FZB/Y08mP+TPLlzuL
+YEONBQyRKqvQADSPEhnC2WoqL7JtlimY37bVE26BH+MnwH5jEkcXOXmPwU1K/LFA
+yjlIvuI+V7bJ2Y77dT3y8gInSJnWDIPw+yxgXMuc87/qpMi9RkkytidfGdyW8ED9
+YZNcT4W61d5OUZljr8jFDKMm79TgGDlEgOGp3h1IzA2roX0AxwAP53cmbk6kJjaQ
+a2OGftl3twhQJsq1dh+n2bTYckXEGmSbh30aooB5q8zO7FfLJzT31miJN4TCpNgP
+qSweAtOO6Ll75luPvnb/YzjiPjVto/I/MlnjYeVBk3PQ+f68Tp+7xx6YN0zf2v8n
+ilmSzPPAdVXmK+hVOozBNIqmtv348vDxZJRtdpPngvg5ME1QnFMO1Sh7XpEqoBQC
+7JPCYyBlUh+/BMACLDLO
+=fqg/
 -----END PGP SIGNATURE-----
 --=-=-=--
