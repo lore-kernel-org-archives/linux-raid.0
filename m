@@ -1,125 +1,59 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 3/3] Add new journal to array that does not have journal
-Date: Mon, 21 Dec 2015 11:23:43 -0800
-Message-ID: <1450725823-1832511-4-git-send-email-songliubraving@fb.com>
-References: <1450725823-1832511-1-git-send-email-songliubraving@fb.com>
+From: Tejas Rao <raot@bnl.gov>
+Subject: Re: clustered MD - beyond RAID1
+Date: Mon, 21 Dec 2015 14:19:32 -0500
+Message-ID: <567850C4.30108@bnl.gov>
+References: <56742652.5040304@nasa.gov>
+ <87si2w66tm.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450725823-1832511-1-git-send-email-songliubraving@fb.com>
+In-Reply-To: <87si2w66tm.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.com, dan.j.williams@intel.com, shli@fb.com, hch@infradead.org, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+To: NeilBrown <neilb@suse.de>, Scott Sinno <scott.sinno@nasa.gov>, linux-raid@vger.kernel.org
+Cc: "Knister, Aaron S. (GSFC-606.2)[COMPUTER SCIENCE CORP]" <aaron.s.knister@nasa.gov>
 List-Id: linux-raid.ids
 
-This patch enables adding journal to an array that does not have journal before.
+What if the application is doing the locking and making sure that only 1 
+node writes to a md device at a time? Will this work? How are rebuilds 
+handled? This would be helpful with distributed filesystems like 
+GPFS/lustre etc.
 
-To add the journal, the array should finish resync. Otherwise, mdadm complains:
+Tejas.
 
-[root] mdadm --add-journal /dev/md0 /dev/sdb8 -vvv
-mdadm: /dev/md0 has active resync, please retry after resync is done.
-
-The array need to be restarted for the journal to work:
-
-[root] mdadm --add-journal /dev/md0 /dev/sdb8
-mdadm: Making /dev/md0 readonly before adding journal...
-mdadm: Added new journal to /dev/md0.
-mdadm: Please restart the array to make it live.
-
-[root] mdadm --stop /dev/md*
-mdadm: stopped /dev/md0
-
-[root] mdadm -A /dev/md0 /dev/sdb[12358]
-mdadm: device 8 in /dev/md0 has wrong state in superblock, but /dev/sdb8 seems ok
-mdadm: /dev/md0 has been started with 4 drives and 1 journal.
-
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- Assemble.c |  5 +----
- Manage.c   | 32 ++++++++++++++++++++++++++------
- 2 files changed, 27 insertions(+), 10 deletions(-)
-
-diff --git a/Assemble.c b/Assemble.c
-index a7cd163..4ddd650 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1556,10 +1556,7 @@ try_again:
- 		 */
- 		if (content->array.level != LEVEL_MULTIPATH) {
- 			if (devices[j].i.disk.state & (1<<MD_DISK_JOURNAL)) {
--				if (content->journal_device_required)
--					journalcnt++;
--				else	/* unexpected journal, mark as faulty */
--					devices[j].i.disk.state |= (1<<MD_DISK_FAULTY);
-+				journalcnt++;
- 			} else if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
- 				if (!(devices[j].i.disk.state
- 				      & (1<<MD_DISK_FAULTY))) {
-diff --git a/Manage.c b/Manage.c
-index 7e1b94b..da14b99 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -740,6 +740,7 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	struct supertype *dev_st = NULL;
- 	int j;
- 	mdu_disk_info_t disc;
-+	int new_journal = 0;
- 
- 	if (!get_dev_size(tfd, dv->devname, &ldsize)) {
- 		if (dv->disposition == 'M')
-@@ -935,19 +936,33 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 	if (dv->disposition == 'j') {
- 		struct mdinfo mdi;
- 		struct mdinfo *mdp;
-+		struct mdstat_ent *mds, *m;
-+		int percent = -1;
-+
-+		mds = mdstat_read(0, 0);
-+		for (m = mds; m; m = m->next)
-+			if (strcmp(m->devnm, fd2devnm(fd)) == 0)
-+				percent = m->percent;
-+		free_mdstat(mds);
-+
-+		if (percent > 0) {
-+			pr_err("%s has active resync, please retry after resync is done.\n", devname);
-+			return -1;
-+		}
- 
- 		mdp = sysfs_read(fd, NULL, GET_ARRAY_STATE);
- 
- 		if (strncmp(mdp->sysfs_array_state, "readonly", 8) != 0) {
--			pr_err("%s is not readonly, cannot add journal.\n", devname);
--			return -1;
-+			pr_err("Making %s readonly before adding journal...\n", devname);
-+			if (Manage_ro(devname, fd, 1)) {
-+				pr_err("Please retry.\n");
-+				return -1;
-+			}
- 		}
- 
- 		tst->ss->getinfo_super(tst, &mdi, NULL);
--		if (mdi.journal_device_required == 0) {
--			pr_err("%s does not support journal device.\n", devname);
--			return -1;
--		}
-+		if (mdi.journal_device_required == 0)
-+			new_journal = 1;
- 		disc.raid_disk = 0;
- 	}
- 
-@@ -1064,6 +1079,11 @@ int Manage_add(int fd, int tfd, struct mddev_dev *dv,
- 		close(container_fd);
- 	} else {
- 		tst->ss->free_super(tst);
-+		if (new_journal) {
-+			pr_err("Added new journal to %s. \n", devname);
-+			pr_err("Please restart the array to make it live.\n");
-+			return 1;
-+		}
- 		if (ioctl(fd, ADD_NEW_DISK, &disc)) {
- 			if (dv->disposition == 'j')
- 				pr_err("Failed to hot add %s as journal, "
--- 
-2.4.6
+On 12/20/2015 18:25, NeilBrown wrote:
+> On Sat, Dec 19 2015, Scott Sinno wrote:
+>
+>> Neil(or anyone well informed in mdadm development roadmaps),
+>> 	
+>> 	Aaron and myself are engineers at NASA Goddard with strong interest in
+>> MDADM.  We currently host 6PB(raw) of live JBOD storage leveraging MDADM
+>> exclusively for RAID functionality.
+>>
+>> 	We're very interested in Clustered MDADM to improve data-availability
+>> in the environment, but note that only RAID1 is currently supported.
+>> Are there plans in the nearish-term(say over the next year) to expound
+>> clustered bitmap functionality to RAID5/6, or anything else you can
+>> divulge on that front?  Thanks in advance for any guidance.
+> We don't talk about plans that are not backed by code - you can't trust
+> them.
+>
+> However I cannot imagine how you could make RAID5 work efficiently in a
+> cluster.
+> RAID1 works because we assume that the file system will have its own
+> locking to ensure that only one node writes to a given block at a given
+> time.  So while node-A is writing to a block, RAID1 knows that no other
+> node is writing there so it can update all copies and be sure no race
+> will result in the copies being inconsistent.
+>
+> For this to work with RAID5 we would need to assume the filesystem will
+> ensure only one node is writing to a given stripe at a time, and that is
+> not realistic.
+>
+> So to make it work we would need the md layer to lock each stripe during
+> an update.  I have trouble imagining that running with much speed.  Hard
+> to know without testing of course.
+> I know of no-one with plans to do that testing.
+>
+> NeilBrown
 
