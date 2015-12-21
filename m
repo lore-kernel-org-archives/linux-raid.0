@@ -1,77 +1,120 @@
 From: NeilBrown <nfbrown@novell.com>
-Subject: Re: I/O errors without erros from underlying device
-Date: Mon, 21 Dec 2015 13:25:23 +1100
-Message-ID: <874mfc5yi4.fsf@notabene.neil.brown.name>
-References: <201512071705.27177.a.miskiewicz@gmail.com> <22117.49283.546268.719858@quad.stoffel.home> <201512072146.28378.a.miskiewicz@gmail.com> <201512081205.48777.a.miskiewicz@gmail.com>
+Subject: Re: mdadm and size differences
+Date: Mon, 21 Dec 2015 13:32:40 +1100
+Message-ID: <871tag5y5z.fsf@notabene.neil.brown.name>
+References: <n31ec1$ebi$1@ger.gmane.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201512081205.48777.a.miskiewicz@gmail.com>
+In-Reply-To: <n31ec1$ebi$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: arekm@maven.pl, linux-raid@vger.kernel.org
+To: Marco De Vitis <starless@spin.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 08 2015, Arkadiusz Miskiewicz wrote:
+On Tue, Nov 24 2015, Marco De Vitis wrote:
 
-> On Monday 07 of December 2015, Arkadiusz Miskiewicz wrote:
+> Hi,
+> I cannot understand a difference in size I can see on an old Debian 5.0=20
+> machine, maybe I'm just missing something obvious.
+...
 >
->> Anyway I would expect my problem to be related to badblock lists which
->> numbers are close to dmesg error message: [  848.988518] Buffer I/O error
->> on dev md7, logical block 3907148544, async page read
->>=20
->> > >> http://sprunge.us/XSWI
->>=20
->> But how to repair these if write() also fails and
->> http://www.spinics.net/lists/raid/msg49325.html suggests that write shou=
-ld
->> "fix" these (by using replacement blocks I guess) ?
+> You can see that sdd6 is twice the size of sdd7.
+> cfdisk reports sizes of around 20 GB and 10 GB:
+>      sdd6 -> 19329.41
+>      sdd7 -> 10010.17
 >
-> Tried to get rid of badblock lists (well, corruption in that area is bett=
-er=20
-> than no access at all):
+> All partitions in these two identical drives are configured as RAID 1=20
+> using mdadm, but the md devices associated to sdd6/sdf6 and sdd7/sdf7=20
+> are both reported to be 10 GB in size, as can be seen from the mdadm=20
+> output below.
 >
-> mdadm --assemble /dev/md7 --force --update=3Dno-bbl
-> mdadm: Cannot remove active bbl from /dev/sdae1
-> mdadm: Cannot remove active bbl from /dev/sdag1
-> mdadm: Cannot remove active bbl from /dev/sdai1
-> mdadm: Cannot remove active bbl from /dev/sdn1
-> mdadm: Cannot remove active bbl from /dev/sdg
-> mdadm: Cannot remove active bbl from /dev/sdad1
-> mdadm: /dev/md7 has been started with 10 drives.
->
-> Is there a way to archieve that anyway?
->
+> Why?
 
-You probably have bad blocks in multiple disks in the one stripe
-(look in /sys/block/md7/md/dev-*/badblocks or something like that to
-see).
+Probably because the arrays aren't using the whole partition.
+e.g. if you have a RAID! comprised of 2 1GB partitions,
+then you fail one partition and had a 2GB partition as a spare and let
+it rebuild.  Then fail the other 1GB partition and add a 3GB partition
+as a spare and let it rebuild.
+Then you will have a 1GB RAID made from 2 partitions, a 2GB partition
+and a 3GB partition.
 
-To get rid of these you would need to write to every block in the
-stripe.  I guess I should try to find a way to make that easier.
+If you want to resize the RAID! to use all the available space, then use
+the command
+  mdadm --grow /dev/md2 --size=3Dmax
 
-If you like you could hack mdadm to allow you to remove the bbl even
-though they aren't empty.
-In super1.c look for:
-	} else if (strcmp(update, "no-bbl") =3D=3D 0) {
-		if (sb->feature_map & __cpu_to_le32(MD_FEATURE_BAD_BLOCKS))
-			pr_err("Cannot remove active bbl from %s\n",devname);
-		else {
-			sb->bblog_size =3D 0;
-			sb->bblog_shift =3D 0;
-			sb->bblog_offset =3D 0;
-		}
-
-and change it to be unconditional and also to clear
-MD_FEATURE_BAD_BLOCKS.
-
-No warranty expressed or implied.
+You might then need to resize and filesystem you have in that array.
 
 NeilBrown
+
+
+>
+> Thanks for any info.
+>
+>> #>mdadm -vv --detail /dev/md2
+>> /dev/md2:
+>>         Version : 00.90
+>>   Creation Time : Thu Feb 22 16:18:11 2007
+>>      Raid Level : raid1
+>>      Array Size : 9767424 (9.31 GiB 10.00 GB)
+>>   Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
+>>    Raid Devices : 2
+>>   Total Devices : 2
+>> Preferred Minor : 2
+>>     Persistence : Superblock is persistent
+>>
+>>     Update Time : Mon Nov 23 14:19:23 2015
+>>           State : clean
+>>  Active Devices : 2
+>> Working Devices : 2
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>
+>>            UUID : 5582dad7:7ac89883:0c2b9e1d:5009dd35
+>>          Events : 0.69228
+>>
+>>     Number   Major   Minor   RaidDevice State
+>>        0       8       54        0      active sync   /dev/sdd6
+>>        1       8       86        1      active sync   /dev/sdf6
+>>
+>> #>mdadm -vv --detail /dev/md3
+>> /dev/md3:
+>>         Version : 00.90
+>>   Creation Time : Thu Feb 22 16:18:54 2007
+>>      Raid Level : raid1
+>>      Array Size : 9767424 (9.31 GiB 10.00 GB)
+>>   Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
+>>    Raid Devices : 2
+>>   Total Devices : 2
+>> Preferred Minor : 3
+>>     Persistence : Superblock is persistent
+>>
+>>     Update Time : Mon Nov 23 14:19:27 2015
+>>           State : clean
+>>  Active Devices : 2
+>> Working Devices : 2
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>
+>>            UUID : e44836cf:6340f7fa:52fb3562:a78d4dbb
+>>          Events : 0.187630
+>>
+>>     Number   Major   Minor   RaidDevice State
+>>        0       8       55        0      active sync   /dev/sdd7
+>>        1       8       87        1      active sync   /dev/sdf7
+>
+> --=20
+> Ciao,
+>    Marco.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -79,18 +122,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWd2MTAAoJEDnsnt1WYoG5M24QAJTJC3NTkAhj5McI4r7Z7SRk
-WGLqUt1OWigxlXooATxfv3jnOvFye6eNlQOzDxvkeUKAA1EcPBPVTrgOcskpkjfk
-/B0FPfos3hZTlOAeFpCTt1tTXTvRajSZD/u+HM/foKYgQvSIA2647oKFAFXp+7rv
-bVGn5q0SVFkW6yvkedGRVkA3z1wRgjDyzD42OjLWwkiA5tpGbHcWq9DRZl2WbxkY
-Hl2/k7h20ApmZWeIwpDui15KjdLbiuVdz6Jhi6AUTpu9N6BHUtyhCBWJ2lqhnowo
-WqaKj3TDW/hM16W27sxdZ1Tzbc1gW0EXGzAoAc59IR88gdK4mpNHvjPkjeoE+fTm
-//tbQDlAPELh6UtOZVhvPlT3dBtZzjcDk2kDReiAGaqrTocwmoWVCiiu3waHCmbn
-hTHE7FnyS6uxitbhgNGVLgJfuaYsfVUUJS5w4Zba3dK8uicoec96DIphEIwY1Bjr
-8PE4c6ADJFyPExbnxfVrLQHQuZFWXkmfsZtb/CiU6F3BeX7cP2uVRvvqCIBGNaID
-mCfb47d2mMsic0vPsZe6++ZzD0iCfynuAzX3vFWFIKnBpczwABqUFGFtxQOBeoNt
-YK+xF8P2hndQiP3mqJ2ZGraarh4y0Y6c1p6RvOeUqmc5dAb1FNE5XjLb1v02QwrM
-NgDvh3m9gQ+MzQzVsrBz
-=vcBT
+iQIcBAEBCAAGBQJWd2TIAAoJEDnsnt1WYoG5d/0P/0/3Wz6fqQFZXBRoEIp7MGze
+Tjp4g883bWDkLoEbE4SCzSC/dHaISSaspnQW4Nch0AWRUU9tUjFgIZJibg4u1dce
+XUPEG+fXbkMwuzlf8gf6Ce3BYCGM3SqhwS8wZM2JlktF1LFCoPbHQA5bDuL5Cl9C
+lxlmq5e29FbD0VaNdx68vhayuVOp4zf284dKMYcATHmhuk5C4fI9mgFgNlTfudl+
+9JzAP2uSv9mJGBxCN/Qf4C7XYbpcAIVQwNgGegb5YcgU5KiuVHTVMiXhLKDrYo9a
+Z+VSZ7r7TMdO9TbUUWFkNkWK3ZVlnzfDbyYksWD3phZRYETpX0pqkRLao4zVQk/1
+SiVWCnOB0Js9FmcEvFveV+4E4Jhadf/+JGafsoe/XF9IV1QdQjwl7EkNIQpQDaug
+4i9uwVBhocJT1cQtT0I+JsKh+UW6LWgrQEBiIX+q3BI9duzL4cTsJ3ARFxPa1Zx0
+lcdmP/zigxhRirFhqWZffgdbP707HzDACGgt+8AZbrO1aLYeHWPtbT7NbLmULGdc
+fHF2SUmm1r0xT47gsxnDe9ANichKF+wsjwU9SZ6ecl/p3nOMESu65lYBB2vORk3R
+vbZZ4TnhJPdBJokTSYyPmZwlWJSqvbGCneUCt2/c6VJOBRLi7g2kOyxh1EUPOJDA
+bN2mivTT7iqUUdhG1Ex6
+=uaH1
 -----END PGP SIGNATURE-----
 --=-=-=--
