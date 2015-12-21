@@ -1,60 +1,60 @@
 From: NeilBrown <nfbrown@novell.com>
-Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry." - recovery advice?
-Date: Mon, 21 Dec 2015 12:35:44 +1100
-Message-ID: <87d1u060sv.fsf@notabene.neil.brown.name>
-References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com> <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se> <CAF-KpgaLr-qA_RJiDYstFv-=EoHH-Ea3o1q3G3tXC4nX=Wt2XA@mail.gmail.com> <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com>
+Subject: Re: Seeking advice to convert RAID5 to RAID10 adding a drive in the process
+Date: Mon, 21 Dec 2015 12:44:01 +1100
+Message-ID: <87a8p460f2.fsf@notabene.neil.brown.name>
+References: <trinity-e29048a1-862f-4ae7-a1a2-e4e826b37f95-1450018043035@3capp-mailcom-bs10>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com>
+In-Reply-To: <trinity-e29048a1-862f-4ae7-a1a2-e4e826b37f95-1450018043035@3capp-mailcom-bs10>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Rapp <george.rapp@gmail.com>, Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: Micheal Blue <mblue@gmx.us>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Fri, Dec 11 2015, George Rapp wrote:
+On Mon, Dec 14 2015, Micheal Blue wrote:
+
+> I have a 3 disk RAID5 currently that uses LUKS. I would like to add a new disk and covert the array to RAID10 but cannot find any walk-through of this process. I am grateful for any input from the list be it links or a personal summary.
 >
-> I appear to be too early in the reshape for auto-recovery, but too far
-> along to just say "never mind on that whole reshape business". Any
-> other thoughts?
 >
+> Below is a graphic of how my current 3 drive array is setup:
+>  ---------------------------------------
+> [          ext4 file system             ]
+>  ---------------------------------------
+> [          LUKS cryptdevice             ]
+>  ---------------------------------------
+> [               /dev/dm0                ]
+>  ---------------------------------------
+> [ /dev/sdb1 ] [ /dev/sdc1 ] [ /dev/sdd1 ]
+>  ---------------------------------------
 
-What this means is that you've hit a corner case that was never thought
-through properly and isn't handled correctly.
 
-The current state of the array is (I think) that it looks like a reshape
-to reduce the number of devices in the array has very nearly completed.
-Only the first stripe needs to be completed.  Whether that first stripe
-is still in the old "N+1" device layout or the new "N" device layout is
-unknown to the kernel - this information is only in the backup file
-(which doesn't exist).
-By telling mdadm --invalid-backup, you effectively tell mdadm that there
-is nothing useful in the backup file so it should know that the reshape
-has actually completed.  But it has no way to tell the kernel that.
-What it should do in this case is (I think) rewrite the metadata to
-record that the reshape is complete.  But it doesn't.
+I assume that is /dev/md0, not /dev/dm0 ....
 
-I shouldn't be too hard to fix, but it isn't trivial either and I'm
-unlikely to get anywhere before the Christmas break.
+You would need to convert to RAID0 first.
+Something like
+  mdadm --grow /dev/md0 --level=0 --raid-disks=2
+  # wait for that to complete
+  mdadm --grow /dev/md0 --level=10 --raid-disks=4 --add /dev/sdd1 /dev/sde1
 
-If you can get reshape to work at all (disable selinux?) you could try
---update=revert-reshape and let the reshape to more devices progress for
-a while, and then revert it.
 
-If you cannot get anywhere, then use
-  "mdadm --dump=/tmp/whatever /dev/mdthing"
+You should experiment first by creating some largish file (100Meg),
+using losetup to make block devices /dev/loop0, /dev/loop1
+... /dev/loop3
 
-to create a copy of the metadata in some spares files.
-Then tar those up (a compressed tarchive should be tiny) and email them.
-Then I can try and see if I can make something work on exactly the array
-you have.
+then create a raid 5 of some of those devices, creaet a LUKS and ext4 on
+that, and then perform the reshape and make sure it all works as you
+expect.
+
+I just tested and it seemed to work on the kernel and mdadm that I have.
+
+Of course, if you can create a backup - at least of the most important
+files - that is always a good idea.
 
 NeilBrown
-
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -62,18 +62,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWd1dwAAoJEDnsnt1WYoG5TpoP/iiR2Bnd8TfOkO2Ukhe0aKG5
-/4s7hgaK34b12TAwJGjHtMrgKVrYVhOcts32HOu812uxXQ5xPlLNWjSJuuzYrQ3b
-w5uRpKv21sL5g2LSAGqxkIjloBvSsyMsU63JmtoQN2dQnSnGH9kiK4pQdp2G856G
-LpCvoCjPvgdiSNTkr0adpD8OHPwM6Hum9Ystgm5mzyo7kSdkK4YLeV+Iy7azLm9z
-kihbwh7z+mIgkgzu24d3Qs0cbUDnv57VL2GFdCOxohxfTGag1ZmEWQ8sVK09fYA9
-4vmFAiYq6MclIGxrmJqDeS6uyxmzOZ1L0P5W+FKD9VytJcvNgaxZ2aoUGeafDS+J
-eptRXaqyet1erU1duXLbfw21JWOYiwDXHMial8+N195lePzi7E2YH/SiobDBM+b9
-6aYJ8JQJp1WaoBWePiGrZFGGTCRYsg1ThvtLZhtkQ11aPxksdiDtK6AFn1FMQo21
-nW8jGKILIiCsZ9W8F2m1vWL6VmQ8SyoYWE609cHgv1WgBL2q4UrvqB8m6bzL7RBE
-8PqE7VQTP0mQiTP8C8C/rF9LkHUHxY0fh167ouoo9O1eGioAa3cCV8/Fz4hVXa58
-AJ6e9DK1N1CT3qja2Px6x5+Kvz8Y9uGOQ9sxzbSkVU8Esr7qXirkZHMmMyF2e5pX
-IH5rk6ncfubNygGRtC47
-=ojAA
+iQIcBAEBCAAGBQJWd1lhAAoJEDnsnt1WYoG5shgP/iO43KzAiJsnEuoQ1r+bMDwo
+GR0qhZ4paBKB0y1OLvCyAAaeg8QS69lk57/McjPWP39fya7RqVGoyoxbvsCVlfZW
+oy2P2SesE4EvQhuJLHDVzhxOfP0PSJ0e1+eZMfwYIBG/yIu0pfm7/qGRwbYbKjK2
+rHaoP2w78nh/M3Pq5PWcOrtrBbBamlBQAonT4j6dDfb9QryLK0xYv8lZft+IyEv6
+BTFxS5UbNF5gEPaDQXOlog6snqCru8kPl9itrcOIPs4LmjwEnzx06TBkf8MDO6Ar
+FSi+nAcwwI1UXT05rhe40dw57j7BQrb/rT8SCfRSNCARkDB+mjNVw4m+OM4I87tA
+eQuXla1T2AhgyrBCuItcyQzWeKsuHFxdmjWKWPE5ae1ggK+wfd+O85QNNFZYgJEL
++poCg0w1e+YTHWC25rnG3vE57S3yNffeEzm1QQsUdkhPFicS9nNbaXEjVizfSEVH
+8PLkHvuwLHZsVLTSkK7HQ5K5L0ZqncB1CUCE+amozY7lacQ/P0m3k9tEpIOHvIeP
+bXyo95WrjKt8o+UdWtiwDglhoIt/+aZRP6N698FAX9X5D/A9nOjBch1s0D3sxrY/
+Nbt09dnsrC9ZaqLt5CWD7b19nrysfS8/1FTefdVdnYKsWW2WD24vk1gODoUmhNQm
+gSZqwB8VpU+TugbK59k0
+=c3Bp
 -----END PGP SIGNATURE-----
 --=-=-=--
