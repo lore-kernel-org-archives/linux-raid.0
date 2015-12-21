@@ -1,241 +1,126 @@
-From: Xiao Ni <xni@redhat.com>
-Subject: Re: [PATCH] mdadm: check bitmap first when reshape raid1 to raid0
-Date: Mon, 21 Dec 2015 14:00:58 +0800
-Message-ID: <5677959A.3030107@redhat.com>
-References: <1446510328-22917-1-git-send-email-xni@redhat.com>
- <87y4co4ixe.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: WANTED new maintainer for Linux/md (and mdadm)
+Date: Mon, 21 Dec 2015 17:10:06 +1100
+Message-ID: <87k2o849j5.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87y4co4ixe.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, Phil Turmel <philip@turmel.org>
 List-Id: linux-raid.ids
 
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-On 12/21/2015 10:47 AM, NeilBrown wrote:
-> On Tue, Nov 03 2015, Xiao Ni wrote:
->
->> One raid1 with bitmap is composed by 4 disks. It'll fail when rashape
->> to raid0 and lose 3 disks. It should check bitmap first when reshape
->> raid1 to raid0.
->>
->> And need to free subarray, close cfd in Grow_reshape.
->>
->> It can't remove bitmap in Grow_reshape, because it's already frozen. I
->> think it should not unfreeze in the process of the function. So I just
->> test the bitmap.
-> I don't find this acceptable, sorry.
-> If mdadm it asked the change the level from raid1 to raid0 it should do
-> that, unless it is dangerous or impossible.
-> Removing a bitmap is neither dangerous nor impossible.  To just do it.
->
-> I would probably put a test in before freezing the array.
->   if array has a bitmap and a request was made to change the level to
->   raid0, then remove the bitmap.
->
-> It that so hard?
+hi,
+ I became maintainer for md (Linux Software RAID) in late 2001 and on
+ the whole it has been fun and a valuable experience.  But I have been
+ losing interest in recent years (https://lwn.net/Articles/511073/) and
+ as was mentioned at the kernel summit, I would like to resign.  Some
+ years ago I managed to hand over nfsd to the excellent Bruce Fields,
+ but I do not seem to have the gift that Linus has of attracting
+ maintainers.  While there are a number of people who know quite a bit
+ about md and/or have contributed to development, there is no obvious
+ candidate for replacement maintainer - no one who has already been
+ doing significant parts of the maintainer role.
 
-I focused my attention on the codes nearby the place where I modified.
-It's easy to do this and I'll re-send it.
->
-> Also you patch does multiple different things, some of which weren't
-> explained at all in the comment above.
+ So I have decided to fall back on the mechanism by which I ended up
+ being maintainer in the first place.  I will create a vacuum and hope
+ someone fills it (yes: I was sucked-in....).  So as of 1st February
+ 2016 I will be resigning.
 
-I'll give more comments for them.
->
-> In particlar, the change to mdadm.c is completely pointless.
-> It seems to just be adding a 'close' call before 'exit'.
-> As 'exit' implicitly closes all file descriptors there is nothing to be
-> gained by closing anything immediately before calling exit.
+ At the kernel summit in October Linus talked about the value of
+ maintainership teams (https://lwn.net/Articles/662979/).  I think it
+ would be great if a (small) team formed to continue to oversee md
+ rather than just a single individual (or maybe the dm team could extend
+ to include md??).  If I had managed to be part of a team rather than
+ "going it alone" for so long, I might feel less tired of the whole
+ thing now.
 
-Hmm, I know this. I just thought it maybe better to call close in pairs
-with open. Yes, as you said, it's really pointless.
->
-> Thanks,
-> NeilBrown
->
->
->> Signed-off-by: Xiao Ni <xni@redhat.com>
->> ---
->>   Grow.c  | 45 ++++++++++++++++++++++++++++-----------------
->>   mdadm.c | 16 ++++++++++++----
->>   2 files changed, 40 insertions(+), 21 deletions(-)
->>
->> diff --git a/Grow.c b/Grow.c
->> index 80d7b22..c4ea2a5 100644
->> --- a/Grow.c
->> +++ b/Grow.c
->> @@ -1600,15 +1600,14 @@ int Grow_reshape(char *devname, int fd,
->>   			cfd = open_dev_excl(st->container_devnm);
->>   		} else {
->>   			container = st->devnm;
->> -			close(fd);
->>   			cfd = open_dev_excl(st->devnm);
->>   			fd = cfd;
->>   		}
->>   		if (cfd < 0) {
->>   			pr_err("Unable to open container for %s\n",
->>   				devname);
->> -			free(subarray);
->> -			return 1;
->> +			rv = 1;
->> +			goto release;
->>   		}
->>   
->>   		rv = st->ss->load_container(st, cfd, NULL);
->> @@ -1616,8 +1615,8 @@ int Grow_reshape(char *devname, int fd,
->>   		if (rv) {
->>   			pr_err("Cannot read superblock for %s\n",
->>   				devname);
->> -			free(subarray);
->> -			return 1;
->> +			rv = 1;
->> +			goto release;
->>   		}
->>   
->>   		/* check if operation is supported for metadata handler */
->> @@ -1641,8 +1640,8 @@ int Grow_reshape(char *devname, int fd,
->>   					pr_err("cannot reshape arrays in container with unsupported metadata: %s(%s)\n",
->>   					       devname, container);
->>   					sysfs_free(cc);
->> -					free(subarray);
->> -					return 1;
->> +					rv = 1;
->> +					goto release;
->>   				}
->>   			}
->>   			sysfs_free(cc);
->> @@ -1662,7 +1661,8 @@ int Grow_reshape(char *devname, int fd,
->>   		       s->raiddisks - array.raid_disks,
->>   		       s->raiddisks - array.raid_disks == 1 ? "" : "s",
->>   		       array.spare_disks + added_disks);
->> -		return 1;
->> +		rv = 1;
->> +		goto release;
->>   	}
->>   
->>   	sra = sysfs_read(fd, NULL, GET_LEVEL | GET_DISKS | GET_DEVS
->> @@ -1675,17 +1675,18 @@ int Grow_reshape(char *devname, int fd,
->>   	} else {
->>   		pr_err("failed to read sysfs parameters for %s\n",
->>   			devname);
->> -		return 1;
->> +		rv = 1;
->> +		goto release;
->>   	}
->>   	frozen = freeze(st);
->>   	if (frozen < -1) {
->>   		/* freeze() already spewed the reason */
->> -		sysfs_free(sra);
->> -		return 1;
->> +		rv = 1;
->> +		goto release;
->>   	} else if (frozen < 0) {
->>   		pr_err("%s is performing resync/recovery and cannot be reshaped\n", devname);
->> -		sysfs_free(sra);
->> -		return 1;
->> +		rv = 1;
->> +		goto release;
->>   	}
->>   
->>   	/* ========= set size =============== */
->> @@ -1898,11 +1899,16 @@ size_change_error:
->>   	     array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) ||
->>   	    (s->level == 0 && array.level == 1 && sra)) {
->>   		int err;
->> +		
->> +		if (array.state & (1<<MD_SB_BITMAP_PRESENT)) {
->> +		        pr_err("Bitmap must be removed before level can be changed\n");
->> +		        rv = 1;
->> +		        goto release;
->> +		}
->> +
->>   		err = remove_disks_for_takeover(st, sra, array.layout);
->>   		if (err) {
->> -			dprintf("Array cannot be reshaped\n");
->> -			if (cfd > -1)
->> -				close(cfd);
->> +			pr_err("Array cannot be reshaped\n");
->>   			rv = 1;
->>   			goto release;
->>   		}
->> @@ -2078,9 +2084,14 @@ size_change_error:
->>   		frozen = 0;
->>   	}
->>   release:
->> -	sysfs_free(sra);
->>   	if (frozen > 0)
->>   		unfreeze(st);
->> +	if (sra)
->> +		sysfs_free(sra);
->> +	if (cfd > -1)
->> +		close(cfd);
->> +	if (subarray)
->> +		free(subarray);
->>   	return rv;
->>   }
->>   
->> diff --git a/mdadm.c b/mdadm.c
->> index f56a8cf..95db2a0 100644
->> --- a/mdadm.c
->> +++ b/mdadm.c
->> @@ -1299,7 +1299,8 @@ int main(int argc, char *argv[])
->>   			pr_err("'1' is an unusual number of drives for an array, so it is probably\n"
->>   				"     a mistake.  If you really mean it you will need to specify --force before\n"
->>   				"     setting the number of drives.\n");
->> -			exit(2);
->> +			rv = 2;
->> +			goto release;
->>   		}
->>   	}
->>   
->> @@ -1326,13 +1327,15 @@ int main(int argc, char *argv[])
->>   			rv = get_cluster_name(&c.homecluster);
->>   		if (rv) {
->>   			pr_err("The md can't get cluster name\n");
->> -			exit(1);
->> +			rv = 1;
->> +			goto release;
->>   		}
->>   	}
->>   
->>   	if (c.backup_file && data_offset != INVALID_SECTORS) {
->>   		pr_err("--backup-file and --data-offset are incompatible\n");
->> -		exit(2);
->> +		rv = 2;
->> +		goto release;
->>   	}
->>   
->>   	if ((mode == MISC && devmode == 'E')
->> @@ -1340,7 +1343,8 @@ int main(int argc, char *argv[])
->>   		/* Anyone may try this */;
->>   	else if (geteuid() != 0) {
->>   		pr_err("must be super-user to perform this action\n");
->> -		exit(1);
->> +		rv = 1;
->> +		goto release;
->>   	}
->>   
->>   	ident.autof = c.autof;
->> @@ -1640,6 +1644,10 @@ int main(int argc, char *argv[])
->>   		autodetect();
->>   		break;
->>   	}
->> +
->> +release:
->> +	if (mdfd > -1)
->> +		close(mdfd);
->>   	exit(rv);
->>   }
->>   
->> -- 
->> 1.8.3.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ I don't see it as my place to appoint that team or any individuals, or
+ even to nominate any candidates.  A very important attribute of a
+ maintainer is that they need to care about the code and the subsystem
+ and I cannot tell other people to care (or even know if they do).  It
+ is really up to individuals to volunteer.  A few people have been
+ mentioned to me in earlier less-public conversations.  Any of them may
+ well be suitable, but I would rather they named themselves if
+ interested.
 
+ So I'm hoping to get one or more volunteers to be maintainer:
+   - to gather and manage patches and outstanding issues,
+   - to review patches or get them reviewed
+   - to follow up bug reports and get them resolved
+   - to feed patches upstream, maybe directly to Linus,
+     maybe through some other maintainer, depending on what
+     relationships already exist or can be formed,
+   - to guide the longer term direction (saying "no" is important
+     sometimes),
+   - to care,
+ but also to be aware that maintainership takes real effort and time, as
+ does anything that is really worthwhile.
+
+ This all applies to mdadm as well as md (except you would ultimately
+ *be* upstream for mdadm, not needing to send it anywhere).  Even if a
+ clear team doesn't form it would be great if different people
+ maintained mdadm and md.
+
+ One part of the job that I have put a lot of time in to is following
+ the linux-raid@vger.kernel.org list and providing support.  This makes
+ people feel good about md and so more adventurous in using it.
+ Consequently I tend to hear about bugs and usability issues nice and
+ early (well before paying customers hit them in most cases) and that is
+ a big win.
+ In recent times I've been doing less of this and have been absolutely
+ thrilled that the gap has been more than filled by other very competent
+ community members.  Not developers particular but a number of md users
+ have been providing excellent support.  I'd particularly like to
+ high-light Phil Turmel who is very forthcoming with excellent advice,
+ but he is certainly not the only one who deserves a lot of thanks.
+ So "Thank you" to everyone who answers questions on linux-raid.
+
+ This would be a good place for any future maintainer to hang out to
+ receive wisdom as well as to provide support.
+
+ I will still be around.  I can certainly help out in some sort of
+ mentor role, and can probably be convinced to review patches and
+ comment on designs.  But I really want to head towards spending less
+ time on md (there are so many other interesting things to learn about).
+
+ So: if anyone is interested - please announce yourself, ask questions
+ and start doing things.  I have no clear idea about how a transition
+ will happen.  That is really up to you (plural). Take the bull by the
+ horns and start *being* a maintainer(team).  I won't get in your way
+ and I'll help where I can.
+
+Thanks,
+NeilBrown
+
+P.S. I'm committed to continue to work with the raid5-journal effort
+From=20Facebook and the raid1-cluster effort from SUSE and the
+line-in-the-sand of 1st February won't affect my support for those.
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWd5e+AAoJEDnsnt1WYoG5rQwQAL8gu5I/PrEXqtHtItSiPaKN
+1d8mZ+4bG22fJVmJXY1Xqb3aB4oGT15AMwaBgfdS2PXfl5o/NyhUb4teEW4KWwga
+k0oFrZ682pQ/RkZd60aGlCojIm1bs6eUgmlh6cbEigKZHoiCivDOaOPtxzELBW2c
+7NrcPD6797KX4f40+NN5qemSa1Tq5YtlWoTlXHrJe9Grd0dpD/JO5Eu+q5OpMHXp
+WvEmDHxZyPis0G+0x1WY1JJxz0R5hERkatmjhvtFfwjs/0aepEXw8f/whSn29/24
+TCF/EVYbUTtcU3NnODcxVKQds0b6ZU+nxfAAPvQAZ4hLPdt613BkbHPwvc0pbBku
+hrQZ301VdWnay2QE45Sj37w1hPyn2oMqu3TvGBbzsvJQeyb8TA/8h9F0SHY7CA7b
+E5kQwet24+9o7Jc7MEdAIN9txnyXGdm6x53TVxg7lZtRZFx7DtYDFQALYejgBPzg
+Trskt+JJJsPsVo5f8BFPQ89zxf5patCN9ZdZ7ku6/U+vPNMc4jFBLP4/axIXasFI
+S+dOedTtc/ENTroWUu7K0xdMrwNA98gVHHFeQPU/nx+IJOskf7UqllX9w9XzCqNN
++X375AkNhYPbVx0v2343wpMk9lePn+OT1CN89eDNDKJWyVb6uYJ03lmv8gdC5mBo
+w9oCYVxWWx3j9KUB9yqS
+=aePQ
+-----END PGP SIGNATURE-----
+--=-=-=--
