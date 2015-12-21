@@ -1,59 +1,58 @@
-From: Tejas Rao <raot@bnl.gov>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: clustered MD - beyond RAID1
-Date: Mon, 21 Dec 2015 14:19:32 -0500
-Message-ID: <567850C4.30108@bnl.gov>
-References: <56742652.5040304@nasa.gov>
- <87si2w66tm.fsf@notabene.neil.brown.name>
+Date: Tue, 22 Dec 2015 07:47:12 +1100
+Message-ID: <87bn9j4jhr.fsf@notabene.neil.brown.name>
+References: <56742652.5040304@nasa.gov> <87si2w66tm.fsf@notabene.neil.brown.name> <567850C4.30108@bnl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87si2w66tm.fsf@notabene.neil.brown.name>
+In-Reply-To: <567850C4.30108@bnl.gov>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Scott Sinno <scott.sinno@nasa.gov>, linux-raid@vger.kernel.org
+To: Tejas Rao <raot@bnl.gov>, Scott Sinno <scott.sinno@nasa.gov>, linux-raid@vger.kernel.org
 Cc: "Knister, Aaron S. (GSFC-606.2)[COMPUTER SCIENCE CORP]" <aaron.s.knister@nasa.gov>
 List-Id: linux-raid.ids
 
-What if the application is doing the locking and making sure that only 1 
-node writes to a md device at a time? Will this work? How are rebuilds 
-handled? This would be helpful with distributed filesystems like 
-GPFS/lustre etc.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tejas.
+On Tue, Dec 22 2015, Tejas Rao wrote:
 
-On 12/20/2015 18:25, NeilBrown wrote:
-> On Sat, Dec 19 2015, Scott Sinno wrote:
+> What if the application is doing the locking and making sure that only 1=
+=20
+> node writes to a md device at a time? Will this work? How are rebuilds=20
+> handled? This would be helpful with distributed filesystems like=20
+> GPFS/lustre etc.
 >
->> Neil(or anyone well informed in mdadm development roadmaps),
->> 	
->> 	Aaron and myself are engineers at NASA Goddard with strong interest in
->> MDADM.  We currently host 6PB(raw) of live JBOD storage leveraging MDADM
->> exclusively for RAID functionality.
->>
->> 	We're very interested in Clustered MDADM to improve data-availability
->> in the environment, but note that only RAID1 is currently supported.
->> Are there plans in the nearish-term(say over the next year) to expound
->> clustered bitmap functionality to RAID5/6, or anything else you can
->> divulge on that front?  Thanks in advance for any guidance.
-> We don't talk about plans that are not backed by code - you can't trust
-> them.
->
-> However I cannot imagine how you could make RAID5 work efficiently in a
-> cluster.
-> RAID1 works because we assume that the file system will have its own
-> locking to ensure that only one node writes to a given block at a given
-> time.  So while node-A is writing to a block, RAID1 knows that no other
-> node is writing there so it can update all copies and be sure no race
-> will result in the copies being inconsistent.
->
-> For this to work with RAID5 we would need to assume the filesystem will
-> ensure only one node is writing to a given stripe at a time, and that is
-> not realistic.
->
-> So to make it work we would need the md layer to lock each stripe during
-> an update.  I have trouble imagining that running with much speed.  Hard
-> to know without testing of course.
-> I know of no-one with plans to do that testing.
->
-> NeilBrown
 
+You would also need to make sure that the filesystem only wrote from a
+single node at a time (or access the block device directly).  I doubt
+GPFS/lustre make any promise like that, but I'm happy to be educated.
+
+rebuilds are handled by using a cluster-wide lock to block all writes to
+a range of addresses while those stripes are repaired.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWeGVQAAoJEDnsnt1WYoG5uMAP/3JHF3UyXgF3d/bAcLgY8/IF
+gQLZtZNi2GqP3gPG9YyNZduuR8z5zXTO9qWK4VaUcIFeboaAku/V6A/cvoylugK/
+RJjk5is/K8jpM6EaSGs24zaqoGULcBM/+pyFAYhjvQzIoeF1RBOK7zEZV9QmmjkN
+ddZVKCbDVmUwEEhEqn6b+aG07zMsPzK5WD0onT+vDHd0RFrQxcpxE+JOghPMab9B
+ctIqZhgIdLfEgp8wzHejccquVNbhTGQNpv87yjrg8JPKgiTVegUqfGBJWtIwoFMQ
+v4OQv9EwsuS165urGgeDDfhpLsNKDqBAUCLrY7IdDMFV5hbg3CPVofd03yovIOA7
+jFz0nQJNYwV/IdTyjYhUcMIsNjajZtP8jqCbBttgYI/VEvrwJi6+RuXf+5Wn5B5m
+fpkxLvMjncW8rTgCuhhR+SCZ6whlDqc9kRP5Ci3uD98OEAzEnXRoEzrI4kh0KPF4
+/WBm2MSs1Z2YLnIP0ZxgnQi9O3bw3oRqIhETyACnGTzB5r4UGLDloWZ4ITRTm5JD
+d0fqyOrbjKKlzBWxEm0LDCX6shNIc6zFrHN+3tpo4tptoNcnfbSc9Zyiw467ElpF
+ZDlstsRGHLDzv3nSAburU1VA/4T+8X7eBVCJ6+SkxGDLmQydI49FV5fLb0eNb52C
+nh0Ygwysi47ZufNBcFzy
+=hnt8
+-----END PGP SIGNATURE-----
+--=-=-=--
