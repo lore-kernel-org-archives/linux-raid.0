@@ -1,108 +1,113 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: badblocks seem to be causing problems with raid6 - badblocks list replicating all all drives
-Date: Mon, 21 Dec 2015 15:00:16 +1100
-Message-ID: <87si2w4fjj.fsf@notabene.neil.brown.name>
-References: <3fafa3e9267b4ba0b5f9d61d3a416cf5@digitallyhosted.com>
+From: NeilBrown <nfbrown@novell.com>
+Subject: Re: RESYNC Bug ? [was Re: Stop resync operation]
+Date: Mon, 21 Dec 2015 15:09:22 +1100
+Message-ID: <87poy04f4d.fsf@notabene.neil.brown.name>
+References: <CAF8SPVJigc-NjeEZVinzx1YFLE6CjMBBMNpxjSzpsi_bi2kovg@mail.gmail.com> <564171DE.3020808@gmail.com> <CAF8SPVK_S0QGETNvZacmnN7Y=T0d0MFYWZsEWEke1sHf=YHX-A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3fafa3e9267b4ba0b5f9d61d3a416cf5@digitallyhosted.com>
+In-Reply-To: <CAF8SPVK_S0QGETNvZacmnN7Y=T0d0MFYWZsEWEke1sHf=YHX-A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: matt@digitallyhosted.com, linux-raid@vger.kernel.org
+To: d4lamar <d4lamar@gmail.com>, Anugraha Sinha <asinha.mailinglist@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 12 2015, matt@digitallyhosted.com wrote:
+On Tue, Nov 10 2015, d4lamar wrote:
 
-> Hello,
+> 2015-11-10 5:26 GMT+01:00 Anugraha Sinha <asinha.mailinglist@gmail.com>:
+>> Hi,
+>>
+>> Could you share your kernel version and mdadm package version, please?
 >
-> I posted a while back about getting buffer i/o errors in my dmesg logs=20
-> to my raid array, something along the lines of this:
+> Of course.
 >
-> [158219.456484] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955235712)
-> [158219.456487] Buffer I/O error on device md4, logical block 4955235584
-> [158219.456490] Buffer I/O error on device md4, logical block 4955235585
-> [158219.456491] Buffer I/O error on device md4, logical block 4955235586
-> [158219.456491] Buffer I/O error on device md4, logical block 4955235587
-> [158219.456492] Buffer I/O error on device md4, logical block 4955235588
-> [158219.456493] Buffer I/O error on device md4, logical block 4955235589
-> [158219.456494] Buffer I/O error on device md4, logical block 4955235590
-> [158219.456495] Buffer I/O error on device md4, logical block 4955235591
-> [158219.456496] Buffer I/O error on device md4, logical block 4955235592
-> [158219.456497] Buffer I/O error on device md4, logical block 4955235593
-> [158219.456580] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955235456)
-> [158219.456663] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955235200)
-> [158219.456747] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955234944)
-> [158219.456829] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955234688)
-> [158219.456912] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 125274714 (offset 176160768 size 8388608=20
-> starting block 4955234432)
-> [158469.158278] EXT4-fs warning (device md4): ext4_end_bio:329: I/O=20
-> error -5 writing to inode 123995503 (offset 0 size 8388608 starting=20
-> block 4970080384)
-> [158469.158281] buffer_io_error: 1526 callbacks suppressed
->
-> I am now using the latest mainline kernel, 4.3.0 and I believe something=
-=20
-> is going wrong with the badblocks implementation.
->
-> I originally had 3 drives, all with the same badblocks list.  This array=
-=20
-> has been running a while so I have no idea how these 3 discs all ended=20
-> up with the same list of badblocks.
->
-> Now, if I remove any drive, which has no badblock entries, and re-add=20
-> it.  Once the sync is complete I end up with another drive with the same=
-=20
-> badblocks list.
+> 2.6.32-220.7.1.el6.lustre.4033.x86_64
 
-An entry in the bad-blocks list means that the data at that location is
-not available, possibly because the block is bad.
-
-If you have a degraded RAID6 where any appears in 2 or more bad-blocks
-lists, then it is not possible to recover the data at that address when
-a spare is recovered.  So the same address will be added to the bad
-block log on the spare.
-
-You could remove he bad block from all the device by writing to all of
-the affected blocks at once, but that is admittedly a little difficult
-to manage.
-
-I probably need to make it possible to clear the bad block log by a
-successful write to just a single data block (and the matching parity
-blocks).  I've added that to by to-do list.
-
-I've just push out a modification to mdadm so you can run
-  mdadm --assemble --update=3Dforce-no-bbl /dev/md/whatver list of devices
-
-and it will remove the bad-block lists even though they are not empty.
-So if you
-
- git clone git://neil.brown.name/mdadm
- cd mdadm
- make
- ./mdadm --stop /dev/md4
- ./mdadm --assemble /dev/md4 --update=3Dforce-no-bblk list-of-devices
-
-it should get rid of your problem.
-However, as your mail is 6 weeks old (I was on leave...) maybe you have
-already found another solution.
+This is a Redhat kernel based on a very old mainline kernel.
+You are experiencing a kernel bug (which seems vaguely familiar by I
+don't recall the details).
+To get support for a Redhat kernel, you need to talk to Redhat.
+If you want help here, you need to be running a kernel must closer to
+current mainline.  It doesn't have to be the very latest, but something
+released in the last year would be best.
 
 NeilBrown
+
+
+
+> mdadm-3.2.2-9.xrtx.5.x86_64
+>
+> Thanks,
+> d4lamar
+>
+>> On 11/10/2015 1:13 PM, d4lamar wrote:
+>>>
+>>> Dear Developers,
+>>>
+>>> I am here again to ask you support about RESYNC operation.
+>>> In my first mail I asked if there were any method to stop a running
+>>> RESYNC.
+>>>
+>>> Now I am experiencing a very strange behaviour... RESYNC operation
+>>> exceeded 100% completion percentage...
+>>>
+>>> # cat /proc/mdstat
+>>> Tue Nov 10 05:02:41 CET 2015
+>>> Personalities : [raid1] [raid10] [linear]
+>>> md66 : active linear md0[0]
+>>> 2939452080 blocks super 1.2 4k rounding
+>>>
+>>> md0 : active raid10 sdab[17](S) sdt[16](S) sdaj[0] sdx[12] sdai[11]
+>>> sdah[9] sdam[15] sdae[7] sdas[6] sdaa[5] sdap[4] sdao[3] sdaf[14]
+>>> sdz[1]
+>>> 2939453104 blocks super 1.2 4K chunks 2 near-copies [14/12]
+>>> [UUUUUUUUUU_UU_]
+>>> [=========================>] resync =129.9% (545894292/419921872)
+>>> finish=20192933978332.0min speed=7612K/sec
+>>> bitmap: 22/22 pages [88KB], 65536KB chunk
+>>>
+>>> md65 : active raid1 sdal[0] sdar[1]
+>>> 419921875 blocks super 1.2 [2/2] [UU]
+>>> bitmap: 0/4 pages [0KB], 65536KB chunk
+>>>
+>>> unused devices: <none>
+>>>
+>>> Are you aware of such possible behaviour ? Do you think I have just hit a
+>>> BUG ?
+>>>
+>>> Thanks and Best Regards,
+>>> d4lamar
+>>>
+>>> 2015-11-06 7:44 GMT+01:00 d4lamar <d4lamar@gmail.com>:
+>>>>
+>>>> Dear Developers,
+>>>>
+>>>> I have a question for you.
+>>>>
+>>>> I have a raid10 md array:
+>>>>
+>>>> Is it theoretically possible to stop a running resync operation and
+>>>> mark the array as clean without stopping the array ?
+>>>>
+>>>> I do not want the resync to be respawned automatically.
+>>>>
+>>>> Thanks and Best Regards,
+>>>> d4lamar
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -110,18 +115,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWd3lQAAoJEDnsnt1WYoG5RvcP/iRSy2NTqcJwJ3ZAb2WZ2S1u
-DNQpZvkPrdIQPkGVMyHfK3c30Tm4idI7dY3IwWyTD0lsR3qYcR2oXmAm/U3MPi7l
-e+o72Kn6ODtPyc2yi5CwCXQYvayxfbaCaWChgXf1WYyr4mGs81TOmXR0GsZAKvLN
-PWwWEdjSqGnNQ1iXu8UmdxigXQ9Uiw7Qi8jTEMeCDB6mwgLb8fgS6EQpeGS/bB7d
-sSnu+NKdM9riiXLkXUF0DQivyRRTzonBgARyqiJCuYSlGYeDROQckqoV2t3CEiBp
-IyA48CoFAQmg+RaN1daab71PbGU54kz1bhJ1Gl99tkdAJVY2F9lNBUErQENiSKhN
-7p7zIOwhCtOw/mV2YkOBvc7TaazTvJ/lAhz/U/wDDiYA8Xr7MOJyiJDKaB/l3aS3
-0HuXRhTZmM9WF/6bRvRwPCGPQr3DTVtf8i171x3v9ejRAvRl8oRZ6LgAoOph7UXW
-OAgULNroWu4y+AeP7e6mqekCuwhX9O9djoQCHMsWeCUfQV/nbUPzFAgDf/V2Q3OW
-swC0/j7mM039hIVqFsjpyQjCE3yPFcFcikmFdFN3wPsrztl8wRKlQXE55N6WJGI4
-6EaYZD2hG/0yebEu0H277xGtDJEkh1l8/12L/RYL0KJ1Y7nwhgm2xLrIN/eNZqWO
-EdQ5G/T+FckKPRs/qFhd
-=XCH7
+iQIcBAEBCAAGBQJWd3tyAAoJEDnsnt1WYoG5vCQP/iSpx0vVaOEG9FhCdf6ibIJS
+JJEH2P4nEJCzVxcfeCT0fROJ+CAFuIHt82zgCHclQ+FxLMt+0qrGoJCFx3sjjwch
+nnOpi+uLcyz9R7bSbve9+kWvkeXfkE0pP1G+YIkUsLd2KRfjlwhdPZRksDubZn3a
+gWMrDWmPL2zMEAaOJiBdJlTpYsHHm40lZ0XtH7fVSrkMwhl49rgeK9GTUxNZDude
+uNwQthBVAncBKBonXIDYtnhAnN03sUu9rsBiNkQEtL45svZBP9eERrSsWfOPsOlR
+uMyx+/4UO89XurOaxsjUPIvH+m1rVAl1zndcMmkKDOKc+rrwO12SvPYaEZLZhvNE
+d9MVmrFFabhZxpCUhC8OL2MarA8wzbp5RODDtvAxZfcSY0/eAkvkUzYCJhRGf85p
+qVK9+kCVaJBhhAzQJyICKNqhweBoI+5KKhHLaOHspM4QhRfx8snsxck0yD1xBrMl
+56mKZuzAutcBUrvoyxtC2f8G3df6K2w6R4Fs1FU3zS65le0WxyfNUuIjVIevaStJ
+RrTp4xNsf0Z//U7Mb020EC+oalB/djirw51p3zr8PW3wEvze5ZekB2RRaeh28u72
+ASvz6Os9AUKG0/Hib62/TD3UwzTRBxrw1U/kQg3eX0we0gLo6l3lOXWZmVWfk8hF
+kX7Z793nFAWYH1nQFdhQ
+=lgvs
 -----END PGP SIGNATURE-----
 --=-=-=--
