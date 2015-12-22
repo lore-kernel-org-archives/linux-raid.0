@@ -1,56 +1,49 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Mon, 21 Dec 2015 22:15:34 -0800
-Message-ID: <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
- <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
- <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
- <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
- <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
- <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
- <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
- <22128.11867.847781.946791@quad.stoffel.home> <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
- <22128.35881.182823.556362@quad.stoffel.home> <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
- <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
- <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
- <5672BB7A.4050808@turmel.org> <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
- <567339F0.9000209@turmel.org> <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
- <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com> <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
-Reply-To: doug@easyco.com
+From: Stanislav Samsonov <slava@annapurnalabs.com>
+Subject: raid5 async_xor: sleep in atomic
+Date: Tue, 22 Dec 2015 13:58:33 +0200
+Message-ID: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-My apologies for diving in so late.
+Hi,
 
-I routinely run 24 drive raid-5 sets with SSDs.  Chunk is set at 32K
-and the applications only writes "perfect" 736K "stripes".  The SSDs
-are Samsung 850 pros on dedicated LSI 3008 SAS ports and are at "new"
-preconditioning (ie, they are at full speed) or just over 500 MB/sec.
-CPU is a single E5-1650 v3.
+Kernel 4.1.3 : there is some troubling kernel message that shows up
+after enabling CONFIG_DEBUG_ATOMIC_SLEEP and testing DMA XOR
+acceleration for raid5:
 
-With stock RAID-5 code, I get about 1.8 GB/sec, q=4.
+BUG: sleeping function called from invalid context at mm/mempool.c:320
+in_atomic(): 1, irqs_disabled(): 0, pid: 1048, name: md127_raid5
+INFO: lockdep is turned off.
+CPU: 1 PID: 1048 Comm: md127_raid5 Not tainted 4.1.15.alpine.1-dirty #1
+Hardware name: Annapurna Labs Alpine
+[<c00169d8>] (unwind_backtrace) from [<c0012a78>] (show_stack+0x10/0x14)
+[<c0012a78>] (show_stack) from [<c07462ec>] (dump_stack+0x80/0xb4)
+[<c07462ec>] (dump_stack) from [<c00bf2f0>] (mempool_alloc+0x68/0x13c)
+[<c00bf2f0>] (mempool_alloc) from [<c041c9b4>]
+(dmaengine_get_unmap_data+0x24/0x4c)
+[<c041c9b4>] (dmaengine_get_unmap_data) from [<c03a8084>]
+(async_xor_val+0x60/0x3a0)
+[<c03a8084>] (async_xor_val) from [<c058e4c0>] (raid_run_ops+0xb70/0x1248)
+[<c058e4c0>] (raid_run_ops) from [<c05915d4>] (handle_stripe+0x1068/0x22a8)
+[<c05915d4>] (handle_stripe) from [<c0592ae4>]
+(handle_active_stripes+0x2d0/0x3dc)
+[<c0592ae4>] (handle_active_stripes) from [<c059300c>] (raid5d+0x384/0x5b0)
+[<c059300c>] (raid5d) from [<c059db6c>] (md_thread+0x114/0x138)
+[<c059db6c>] (md_thread) from [<c0042d54>] (kthread+0xe4/0x104)
+[<c0042d54>] (kthread) from [<c000f658>] (ret_from_fork+0x14/0x3c)
 
-Now this application is writing from kernel space
-(generic_make_request w/ q waiting for completion callback).  There
-are a lot of RMW operations happening here.  I think the raid-5
-background thread is waking up asynchronously when only a part of the
-write has been buffered into stripe cache pages.  The bio going into
-the raid layer is a single bio, so nothing is being carved up on the
-request end.  The raid-5 helper thread also saturates a cpu core
-(which is about as fast as you can get with an E5-1650).
+The reason is that async_xor_val() in crypto/async_tx/async_xor.c is
+called in atomic context (preemption disabled) by raid_run_ops(). Then
+it calls dmaengine_get_unmap_data() an then mempool_alloc() with
+GFP_NOIO flag - this allocation type might sleep under some condition.
 
-If I patch raid5.ko with special case code to avoid the stripe cache
-and just compute parity and go, the write throughput goes up above
-11GB/sec.
+Checked latest kernel 4.3 and it has exactly same flow.
 
-This is obviously an impossible IO pattern for most applications, but
-does confirm that the upper limit of (n-1)*bw is "possible", but not
-with the current stripe cache logic in the raid layer.
+Any advice regarding this issue?
 
-Doug Dumitru
-WildFire Storage
+Thanks,
+Slava Samsonov
