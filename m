@@ -1,118 +1,110 @@
-From: Marc Smith <marc.smith@mcc.edu>
-Subject: Re: RAID10 Write Performance
-Date: Tue, 22 Dec 2015 14:36:06 -0500
-Message-ID: <CAHkw+LeVkGo8cOGMzQbq7sGtw5K9bc3CMOvurL0kjDf0ZWTfsA@mail.gmail.com>
-References: <CAHkw+LdtZY=d6kCtaTe5Uu8nNXOgF+yCAjJeHWJ2TrVAuNoDeA@mail.gmail.com>
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Tue, 22 Dec 2015 22:13:30 +0000
+Message-ID: <1450822398.5616.21.camel@intel.com>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com>
+	 <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com>
+	 <1449271801.27077.25.camel@HansenPartnership.com>
+	 <1449273524.16905.103.camel@intel.com>
+	 <87r3if2gij.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHkw+LdtZY=d6kCtaTe5Uu8nNXOgF+yCAjJeHWJ2TrVAuNoDeA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="=-KcJDvNTMkAfK8xxXymt8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <87r3if2gij.fsf@notabene.neil.brown.name>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
+To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "neilb@suse.com" <neilb@suse.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 List-Id: linux-raid.ids
 
-Solved... appears it was the write-intent bitmap that caused the
-performance issues. I discovered if I left the test running longer
-than 60 seconds, the performance would eventually climb to where I'd
-expect it. I ran 'mdadm --grow --bitmap=none /dev/md0' and now random
-write performance is high/good/stable right off the bat.
+--=-KcJDvNTMkAfK8xxXymt8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
---Marc
+On Tue, 2015-12-22 at 16:34 +1100, NeilBrown wrote:
+> On Sat, Dec 05 2015, Verma, Vishal L wrote:
+>=20
+> > On Fri, 2015-12-04 at 15:30 -0800, James Bottomley wrote:
+> > [...]
+> > > > +ssize_t badblocks_store(struct badblocks *bb, const char *page,
+> > > > size_t len,
+> > > > +			int unack)
+> > > [...]
+> > > > +int badblocks_init(struct badblocks *bb, int enable)
+> > > > +{
+> > > > +	bb->count =3D 0;
+> > > > +	if (enable)
+> > > > +		bb->shift =3D 0;
+> > > > +	else
+> > > > +		bb->shift =3D -1;
+> > > > +	bb->page =3D kmalloc(PAGE_SIZE, GFP_KERNEL);
+> > >=20
+> > > Why not __get_free_page(GFP_KERNEL)?=C2=A0=C2=A0The problem with kmal=
+loc of
+> > > an
+> > > exactly known page sized quantity is that the slab tracker for
+> > > this
+> > > requires two contiguous pages for each page because of the
+> > > overhead.
+> >=20
+> > Cool, I didn't know about __get_free_page - I can fix this up too.
+> >=20
+>=20
+> I was reminded of this just recently I thought I should clear up the
+> misunderstanding.
+>=20
+> kmalloc(PAGE_SIZE) does *not* incur significant overhead and certainly
+> does not require two contiguous free pages.
+> If you "grep kmalloc-4096 /proc/slabinfo" you will note that both
+> objperslab and pagesperslab are 1.=C2=A0=C2=A0So one page is used to stor=
+e each
+> 4096 byte allocation.
+>=20
+> To quote the email from Linus which reminded me about this
+>=20
+> > If you
+> > want to allocate a page, and get a pointer, just use "kmalloc()".
+> > Boom, done!
+>=20
+> https://lkml.org/lkml/2015/12/21/605
+>=20
+> There probably is a small CPU overhead from using kmalloc, but no
+> memory
+> overhead.
 
-On Fri, Dec 18, 2015 at 1:43 PM, Marc Smith <marc.smith@mcc.edu> wrote:
-> Hi,
->
-> I'm testing a (24) slot SSD array (Supermicro) with MD RAID. The setup
-> consists of the Supermicro chassis, (24) Pliant LB406M SAS SSD drives,
-> (3) Avago/LSI SAS3008 SAS HBAs, and (2) Intel Xeon E5-2660 2.60GHz
-> processors.
->
-> The (24) SSDs are directly connected (pass-through back-plane) to the
-> (3) SAS HBAs (eight drives per HBA) with no SAS expanders.
->
-> I'm planning to use RAID10 for this system. I started by playing with
-> some performance configurations, I'm specifically looking at random IO
-> performance.
->
-> The test commands I've been using with fio are the following:
-> 4K 100% random, 100% READ: fio --bs=4k --direct=1 --rw=randread
-> --ioengine=libaio --iodepth=16 --numjobs=16 --name=/dev/md0
-> --runtime=60
-> 4K 100% random, 100% WRITE: fio --bs=4k --direct=1 --rw=randwrite
-> --ioengine=libaio --iodepth=16 --numjobs=16 --name=/dev/md0
-> --runtime=60
->
-> As a benchmark, I initially tested all twenty-four drives using RAID0;
-> using a 8K chunk size and here are the numbers I got:
-> 4K random read: 645,233 IOPS
-> 4K random write: 309,879 IOPS
->
-> Not too shabby... obviously these are just for bench-marking, the plan
-> is to use RAID10 for production.
->
-> So, I won't go into the specifics of all the tests, but I've tried
-> quite a few different RAID10 configurations: Nested RAID 10 (1+0) -
-> RAID 0 (stripe) built with RAID 1 (mirror) arrays, Nested RAID 10
-> (0+1) - RAID 1 (mirror) built with RAID 0 (stripe) arrays, and
-> "Complex" RAID 10 - Near Layout / 2.
->
-> All of these yield very similar results using (12) of the disks spread
-> across the (3) HBAs. As an example:
-> Nested RAID 10 (0+1) - RAID 1 (mirror) built with RAID 0 (stripe) arrays
-> For the (2) stripe sets (2 disks per HBA, 6 total per set):
-> mdadm --create --verbose /dev/md0 --level=stripe --raid-devices=6
-> --chunk=64K /dev/sda1 /dev/sdb1 /dev/sdi1 /dev/sdj1 /dev/sdq1
-> /dev/sdr1
-> mdadm --create --verbose /dev/md1 --level=stripe --raid-devices=6
-> --chunk=64K /dev/sdc1 /dev/sdd1 /dev/sdk1 /dev/sdl1 /dev/sds1
-> /dev/sdt1
-> For the (1) mirror set (consisting of the 2 stripe sets):
-> mdadm --create --verbose /dev/md2 --level=mirror --raid-devices=2
-> /dev/md0 /dev/md1
->
-> Running the random 4K performance tests described above yields the
-> following results for the RAID10 array:
-> 4K random read: 276,967 IOPS
-> 4K random write: 643 IOPS
->
->
-> The read numbers seem in-line with what I expected, but the writes are
-> absolutely dismal. I expect them not be where the read numbers are,
-> but this is really, really low! I gotta have something configured
-> incorrectly, right?
->
-> I've experimented with different chunk sizes, and haven't gotten much
-> of a change in the write numbers. Again, I've tried several different
-> variations of a "RAID10" configuration (nested 1+0, nested 0+1,
-> complex using near/2) and all yield very similar results: Good read
-> performance, extremely poor write performance.
->
-> Even the throughput when doing a sequential test with the writes is
-> not where I'd expect it to be, so something definitely seems to be up
-> when mixing RAID levels 0 and 1. I didn't explore all the extremes of
-> the chunk sizes, so perhaps its as simple as that? I haven't tested
-> the "far" and "offset" layouts of RAID10 yet, but I'm not hopeful its
-> going to be any different.
->
->
-> Here is what I'm using:
-> Linux 3.14.57 (vanilla)
-> mdadm - v3.3.2 - 21st August 2014
-> fio-2.0.13
->
->
-> Any ideas or suggestions would be greatly appreciated. Just as a
-> simple test, I created a RAID5 volume using (4) of the SSDs and ran
-> the same random IO performance tests:
-> 4K random read: 169,026 IOPS
-> 4K random write: 12,682 IOPS
->
-> Not sure with the default RAID5 mdadm creation command that we get any
-> write cache, but we're getting ~ 12K IOPS with RAID5. Not great, but
-> when compared to the 643 IOPS with RAID10...
->
->
-> Thanks in advance!
->
->
-> --Marc
+Thanks Neil.
+I just read the rest of that thread - and I'm wondering if we should
+change back to kzalloc here.
+
+The one thing __get_free_page gets us is PAGE_SIZE-aligned memory. Do
+you think that would be better for this use? (I can't think of any). If
+not, I can send out a new version reverting back to kzalloc.
+
+	-Vishal
+
+
+--=-KcJDvNTMkAfK8xxXymt8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABAgAGBQJWecr+AAoJEHr6Yb6juE3/Ys0P/0L2X4i21k0RSPFfd7JyLkGV
+LI0zkfZUmJAyNf2+jCPT0M7a9zzWduy0WS/Rguyc79cAi53D9llMUOQjAgOyxdzv
+Xim9Gikr4b3bA2LrgTBYOrG/cHS5lF02sxPhoLFPuMeJjwCpJ3cPrd6S0wdu9jPV
+RCfRbRoG+62HhYSYEkSmYGTZsKUV93188f7AJeAkKZt5GwAh52SUrqfe5aIUad5z
+QiHttetKh3IMI20hpuQyTFWpuW9vGaKQIhXJ5WXkb5cUJPOmpK5gNqVaYvxrIGYI
+IZdjGztPBpquzF01ssnx/93tUuvkLQ797wK983760WlrCoQiU8dpbTiXbZEJQpWn
+gS6VykBlpe+fz9uBNEUhJW7p97TTRy3tIt+cDW4UmHdHmWJc0+rc5w7rkJD2mOBm
+T1usSXaWQj/UQ16FCu2ePUNFmDzQ7oL/Ijdnfbx7vOkTXEB9FtFvfrdFHOSwOFCA
+Kx2NBwWdXfttFN1YoLJxixbpu+k2x+PZ+cLPyMDOfYnSrCfKkeBzRBBB1dxFJI7C
+hiaXhqpgTLW4iHdoMV6sBHJtuv2wC7M/m2OTcD1DIM6feuvhkNUxklWwoenDQ7W6
+n84xmH+95PGm3xP+gnLA8RXUFawN0xdFueCabt4rpm4CGJy8l+HPUMKRMa00/R0b
+3fH2d8NFU+tCEZSWcyQD
+=SRvM
+-----END PGP SIGNATURE-----
+
+--=-KcJDvNTMkAfK8xxXymt8--
