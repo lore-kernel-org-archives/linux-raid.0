@@ -1,158 +1,118 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Tue, 22 Dec 2015 10:33:24 -0800
-Message-ID: <CAFx4rwQvTrUEskJxdc6CpvGu3uVYOJWEvHmMkqmNbmTgTVT0-Q@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
- <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
- <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
- <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
- <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
- <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
- <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
- <22128.11867.847781.946791@quad.stoffel.home> <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
- <22128.35881.182823.556362@quad.stoffel.home> <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
- <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
- <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
- <5672BB7A.4050808@turmel.org> <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
- <567339F0.9000209@turmel.org> <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
- <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
- <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
- <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com> <CAE9DZUQoNh2uU1h4okY0Fz5wzVv6-ZTnet9tS-dNQRHsLnPvNg@mail.gmail.com>
-Reply-To: doug@easyco.com
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: Re: RAID10 Write Performance
+Date: Tue, 22 Dec 2015 14:36:06 -0500
+Message-ID: <CAHkw+LeVkGo8cOGMzQbq7sGtw5K9bc3CMOvurL0kjDf0ZWTfsA@mail.gmail.com>
+References: <CAHkw+LdtZY=d6kCtaTe5Uu8nNXOgF+yCAjJeHWJ2TrVAuNoDeA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE9DZUQoNh2uU1h4okY0Fz5wzVv6-ZTnet9tS-dNQRHsLnPvNg@mail.gmail.com>
+In-Reply-To: <CAHkw+LdtZY=d6kCtaTe5Uu8nNXOgF+yCAjJeHWJ2TrVAuNoDeA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dallas Clement <dallas.a.clement@gmail.com>, Robert Kierski <rkierski@cray.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robert and Dallas,
+Solved... appears it was the write-intent bitmap that caused the
+performance issues. I discovered if I left the test running longer
+than 60 seconds, the performance would eventually climb to where I'd
+expect it. I ran 'mdadm --grow --bitmap=none /dev/md0' and now random
+write performance is high/good/stable right off the bat.
 
-The patch is an astonishingly single case and has a few usage caveats.
+--Marc
 
-It only works when IO is precisely aligned on stripe boundaries.  If
-anything is off-aligned, or even is an aligned case is encountered and
-the stripe cache is not empty, the patch special case does not happen.
-Second, the patch assumes that your application layer "makes sense"
-and will not try to read a block that is in the middle of being
-written.
-
-The patch is in use on production servers, but with still more
-caveats.  It turns off if the array is not clean or if a rebuild or
-check is in progress.
-
-Here is "raid5.c" from CentOS 7 with the patch applied:
-
-https://drive.google.com/file/d/0B3T4AZzjEGVkbUYzeVZqbkIzN1E/view?usp=sharing
-
-The modified areas are all inside of #ifdef EASYCO conditionals.  I
-did not want to post this as a patch here as this is not appropriate
-code for general use.
-
--- Some comments on stripe cache --
-
-The stripe cache is a lot of overhead for this particular case, but
-still works quite well compared to the alternatives.  Most benchmarks
-I see with high-end raid cards cannot get to 1GB/sec either on raid-5
-or raid-6.
-
-Moving away from the stripe cache, especially dynamically, might open
-up a nasty set of locking semantics.
-
--- Some comments on the raid background thread --
-
-With most "reasonable" disk sets, the single raid thread is fine for
-raid-5 at 1.8GB/sec.  If you want to get raid-6 faster, you need more
-cores.  With my E5-1650 v3 I get just over 8 GB/sec with raid-6, most
-of which is the raid-6 parity compute code.  Multi-socket E5s might do
-a little better, but NUMA throws all sorts of interesting performance
-tuning issues at our proprietary layer that is above raid.
-
--- Some comments on benchmarks --
-
-If you run benchmarks like fio, you will get IO patterns that never
-happen "in live datasets".  For example, a real file system will never
-read a block that is being written.  This is a side effect of the file
-systems use of pages as cache and writes that come from dirty pages.
-Benchmarks just pump random numbers and overlaps are allowed.  This
-means you must write code that survives the benchmarks, but optimizing
-for a benchmark in some areas is dubious.
-
--- Some comments on RMW and SSDs --
-
-One reason I wrote this patch was to keep SSDs happy.  If you write to
-SSDs "perfectly" they never degrade and stay at full performance.  If
-you do any random writing, the SSDs eventually need to do some space
-management (garbage collection).  Even the 2-3% of RMW that I see
-without the patch is enough to cost 3x of SSD wear with some drives.
-
-
-
-Doug Dumitru
-WildFire Storage
-
-
-On Tue, Dec 22, 2015 at 8:48 AM, Dallas Clement
-<dallas.a.clement@gmail.com> wrote:
-> On Tue, Dec 22, 2015 at 12:15 AM, Doug Dumitru <doug@easyco.com> wrote:
->> My apologies for diving in so late.
->>
->> I routinely run 24 drive raid-5 sets with SSDs.  Chunk is set at 32K
->> and the applications only writes "perfect" 736K "stripes".  The SSDs
->> are Samsung 850 pros on dedicated LSI 3008 SAS ports and are at "new"
->> preconditioning (ie, they are at full speed) or just over 500 MB/sec.
->> CPU is a single E5-1650 v3.
->>
->> With stock RAID-5 code, I get about 1.8 GB/sec, q=4.
->>
->> Now this application is writing from kernel space
->> (generic_make_request w/ q waiting for completion callback).  There
->> are a lot of RMW operations happening here.  I think the raid-5
->> background thread is waking up asynchronously when only a part of the
->> write has been buffered into stripe cache pages.  The bio going into
->> the raid layer is a single bio, so nothing is being carved up on the
->> request end.  The raid-5 helper thread also saturates a cpu core
->> (which is about as fast as you can get with an E5-1650).
->>
->> If I patch raid5.ko with special case code to avoid the stripe cache
->> and just compute parity and go, the write throughput goes up above
->> 11GB/sec.
->>
->> This is obviously an impossible IO pattern for most applications, but
->> does confirm that the upper limit of (n-1)*bw is "possible", but not
->> with the current stripe cache logic in the raid layer.
->>
->> Doug Dumitru
->> WildFire Storage
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Dec 18, 2015 at 1:43 PM, Marc Smith <marc.smith@mcc.edu> wrote:
+> Hi,
+>
+> I'm testing a (24) slot SSD array (Supermicro) with MD RAID. The setup
+> consists of the Supermicro chassis, (24) Pliant LB406M SAS SSD drives,
+> (3) Avago/LSI SAS3008 SAS HBAs, and (2) Intel Xeon E5-2660 2.60GHz
+> processors.
+>
+> The (24) SSDs are directly connected (pass-through back-plane) to the
+> (3) SAS HBAs (eight drives per HBA) with no SAS expanders.
+>
+> I'm planning to use RAID10 for this system. I started by playing with
+> some performance configurations, I'm specifically looking at random IO
+> performance.
+>
+> The test commands I've been using with fio are the following:
+> 4K 100% random, 100% READ: fio --bs=4k --direct=1 --rw=randread
+> --ioengine=libaio --iodepth=16 --numjobs=16 --name=/dev/md0
+> --runtime=60
+> 4K 100% random, 100% WRITE: fio --bs=4k --direct=1 --rw=randwrite
+> --ioengine=libaio --iodepth=16 --numjobs=16 --name=/dev/md0
+> --runtime=60
+>
+> As a benchmark, I initially tested all twenty-four drives using RAID0;
+> using a 8K chunk size and here are the numbers I got:
+> 4K random read: 645,233 IOPS
+> 4K random write: 309,879 IOPS
+>
+> Not too shabby... obviously these are just for bench-marking, the plan
+> is to use RAID10 for production.
+>
+> So, I won't go into the specifics of all the tests, but I've tried
+> quite a few different RAID10 configurations: Nested RAID 10 (1+0) -
+> RAID 0 (stripe) built with RAID 1 (mirror) arrays, Nested RAID 10
+> (0+1) - RAID 1 (mirror) built with RAID 0 (stripe) arrays, and
+> "Complex" RAID 10 - Near Layout / 2.
+>
+> All of these yield very similar results using (12) of the disks spread
+> across the (3) HBAs. As an example:
+> Nested RAID 10 (0+1) - RAID 1 (mirror) built with RAID 0 (stripe) arrays
+> For the (2) stripe sets (2 disks per HBA, 6 total per set):
+> mdadm --create --verbose /dev/md0 --level=stripe --raid-devices=6
+> --chunk=64K /dev/sda1 /dev/sdb1 /dev/sdi1 /dev/sdj1 /dev/sdq1
+> /dev/sdr1
+> mdadm --create --verbose /dev/md1 --level=stripe --raid-devices=6
+> --chunk=64K /dev/sdc1 /dev/sdd1 /dev/sdk1 /dev/sdl1 /dev/sds1
+> /dev/sdt1
+> For the (1) mirror set (consisting of the 2 stripe sets):
+> mdadm --create --verbose /dev/md2 --level=mirror --raid-devices=2
+> /dev/md0 /dev/md1
+>
+> Running the random 4K performance tests described above yields the
+> following results for the RAID10 array:
+> 4K random read: 276,967 IOPS
+> 4K random write: 643 IOPS
 >
 >
->> If I patch raid5.ko with special case code to avoid the stripe cache
->> and just compute parity and go, the write throughput goes up above
->> 11GB/sec.
+> The read numbers seem in-line with what I expected, but the writes are
+> absolutely dismal. I expect them not be where the read numbers are,
+> but this is really, really low! I gotta have something configured
+> incorrectly, right?
 >
-> Hi Doug.  This is really quite astounding and encouraging!  Would you
-> be willing to share your patch?  I am eager to give it a try for RAID
-> 5 and 6.
+> I've experimented with different chunk sizes, and haven't gotten much
+> of a change in the write numbers. Again, I've tried several different
+> variations of a "RAID10" configuration (nested 1+0, nested 0+1,
+> complex using near/2) and all yield very similar results: Good read
+> performance, extremely poor write performance.
 >
->> Now this application is writing from kernel space
->> (generic_make_request w/ q waiting for completion callback).  There
->> are a lot of RMW operations happening here.  I think the raid-5
->> background thread is waking up asynchronously when only a part of the
->> write has been buffered into stripe cache pages.
+> Even the throughput when doing a sequential test with the writes is
+> not where I'd expect it to be, so something definitely seems to be up
+> when mixing RAID levels 0 and 1. I didn't explore all the extremes of
+> the chunk sizes, so perhaps its as simple as that? I haven't tested
+> the "far" and "offset" layouts of RAID10 yet, but I'm not hopeful its
+> going to be any different.
 >
-> I am also anxious to hear from anyone who maintains the stripe cache
-> code.  I am seeing similar behavior when I monitor writes of perfectly
-> stripe-aligned blocks.  The # of RMWs are smallish and seem to vary,
-> but still I do not expect to see any of them!
-
-
-
--- 
-Doug Dumitru
-EasyCo LLC
+>
+> Here is what I'm using:
+> Linux 3.14.57 (vanilla)
+> mdadm - v3.3.2 - 21st August 2014
+> fio-2.0.13
+>
+>
+> Any ideas or suggestions would be greatly appreciated. Just as a
+> simple test, I created a RAID5 volume using (4) of the SSDs and ran
+> the same random IO performance tests:
+> 4K random read: 169,026 IOPS
+> 4K random write: 12,682 IOPS
+>
+> Not sure with the default RAID5 mdadm creation command that we get any
+> write cache, but we're getting ~ 12K IOPS with RAID5. Not great, but
+> when compared to the 643 IOPS with RAID10...
+>
+>
+> Thanks in advance!
+>
+>
+> --Marc
