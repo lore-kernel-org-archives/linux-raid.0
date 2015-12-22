@@ -1,49 +1,52 @@
-From: Stanislav Samsonov <slava@annapurnalabs.com>
-Subject: raid5 async_xor: sleep in atomic
-Date: Tue, 22 Dec 2015 13:58:33 +0200
-Message-ID: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Shraddha Barke <shraddha.6596@gmail.com>
+Subject: [PATCH 2/2] md: Replace get_seconds with ktime_get_seconds
+Date: Tue, 22 Dec 2015 18:36:42 +0530
+Message-ID: <1450789602-31162-1-git-send-email-shraddha.6596@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Shraddha Barke <shraddha.6596@gmail.com>
 List-Id: linux-raid.ids
 
-Hi,
+32-bit systems using function get_seconds will break in year 2038,
+in order to avoid that replace the code with more appropriate function
+ktime_get_seconds which is y2038 safe. Function ktime_get_seconds use
+monotonic instead of real time and therefore will not cause overflow
 
-Kernel 4.1.3 : there is some troubling kernel message that shows up
-after enabling CONFIG_DEBUG_ATOMIC_SLEEP and testing DMA XOR
-acceleration for raid5:
+Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
+---
+ drivers/md/md.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-BUG: sleeping function called from invalid context at mm/mempool.c:320
-in_atomic(): 1, irqs_disabled(): 0, pid: 1048, name: md127_raid5
-INFO: lockdep is turned off.
-CPU: 1 PID: 1048 Comm: md127_raid5 Not tainted 4.1.15.alpine.1-dirty #1
-Hardware name: Annapurna Labs Alpine
-[<c00169d8>] (unwind_backtrace) from [<c0012a78>] (show_stack+0x10/0x14)
-[<c0012a78>] (show_stack) from [<c07462ec>] (dump_stack+0x80/0xb4)
-[<c07462ec>] (dump_stack) from [<c00bf2f0>] (mempool_alloc+0x68/0x13c)
-[<c00bf2f0>] (mempool_alloc) from [<c041c9b4>]
-(dmaengine_get_unmap_data+0x24/0x4c)
-[<c041c9b4>] (dmaengine_get_unmap_data) from [<c03a8084>]
-(async_xor_val+0x60/0x3a0)
-[<c03a8084>] (async_xor_val) from [<c058e4c0>] (raid_run_ops+0xb70/0x1248)
-[<c058e4c0>] (raid_run_ops) from [<c05915d4>] (handle_stripe+0x1068/0x22a8)
-[<c05915d4>] (handle_stripe) from [<c0592ae4>]
-(handle_active_stripes+0x2d0/0x3dc)
-[<c0592ae4>] (handle_active_stripes) from [<c059300c>] (raid5d+0x384/0x5b0)
-[<c059300c>] (raid5d) from [<c059db6c>] (md_thread+0x114/0x138)
-[<c059db6c>] (md_thread) from [<c0042d54>] (kthread+0xe4/0x104)
-[<c0042d54>] (kthread) from [<c000f658>] (ret_from_fork+0x14/0x3c)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 807095f..8dd74bb 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2333,7 +2333,7 @@ repeat:
+ 
+ 	spin_lock(&mddev->lock);
+ 
+-	mddev->utime = get_seconds();
++	mddev->utime = ktime_get_seconds();
+ 
+ 	if (test_and_clear_bit(MD_CHANGE_DEVS, &mddev->flags))
+ 		force_change = 1;
+@@ -6347,13 +6347,13 @@ static int set_array_info(struct mddev *mddev, mdu_array_info_t *info)
+ 		/* ensure mddev_put doesn't delete this now that there
+ 		 * is some minimal configuration.
+ 		 */
+-		mddev->ctime         = get_seconds();
++		mddev->ctime         = ktime_get_seconds();
+ 		return 0;
+ 	}
+ 	mddev->major_version = MD_MAJOR_VERSION;
+ 	mddev->minor_version = MD_MINOR_VERSION;
+ 	mddev->patch_version = MD_PATCHLEVEL_VERSION;
+-	mddev->ctime         = get_seconds();
++	mddev->ctime         = ktime_get_seconds();
+ 
+ 	mddev->level         = info->level;
+ 	mddev->clevel[0]     = 0;
+-- 
+2.1.4
 
-The reason is that async_xor_val() in crypto/async_tx/async_xor.c is
-called in atomic context (preemption disabled) by raid_run_ops(). Then
-it calls dmaengine_get_unmap_data() an then mempool_alloc() with
-GFP_NOIO flag - this allocation type might sleep under some condition.
-
-Checked latest kernel 4.3 and it has exactly same flow.
-
-Any advice regarding this issue?
-
-Thanks,
-Slava Samsonov
