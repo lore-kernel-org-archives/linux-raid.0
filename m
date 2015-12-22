@@ -1,105 +1,42 @@
-From: Tejas Rao <raot@bnl.gov>
-Subject: Re: clustered MD - beyond RAID1
-Date: Mon, 21 Dec 2015 21:33:55 -0500
-Message-ID: <5678B693.40907@bnl.gov>
-References: <56742652.5040304@nasa.gov> <87si2w66tm.fsf@notabene.neil.brown.name> <567850C4.30108@bnl.gov> <87bn9j4jhr.fsf@notabene.neil.brown.name> <56786EA4.2020209@bnl.gov> <8737uv4fz6.fsf@notabene.neil.brown.name> <5678A2B9.6070008@bnl.gov> <5678AC55.7070606@nasa.gov>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Xiao Ni <xni@redhat.com>
+Subject: [MDADM PATCH] Check and remove bitmap first when reshape to raid0
+Date: Tue, 22 Dec 2015 11:09:34 +0800
+Message-ID: <1450753774-4358-1-git-send-email-xni@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5678AC55.7070606@nasa.gov>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Knister <aaron.s.knister@nasa.gov>
-Cc: NeilBrown <neilb@suse.de>, Scott Sinno <scott.sinno@nasa.gov>, linux-raid@vger.kernel.org
+To: neilb@suse.com
+Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/21/2015 20:50, Aaron Knister wrote:
-> Hi Tejas et al,
->
-> I'm fairly confident in saying that GPFS can have many servers actively
-> writing to a given NSD (LUN) at any given time. In our production
-> environment the NSDs have 6 servers defined and clients more or less
-> write to whichever one their little hearts desire. Do you think it's
-> possible that the explicit primary/secondary concept is from an older
-> version of GPFS? I'm not sure what the locking granularity is for
-> NSDs/disks, but even if it's a single GPFS FS block and that block size
-> corresponds to the stripe width of the array I'm pretty nervous relying
-> on that assumption for data integrity :)
->
-> The use case here is creating effectively highly available block storage
-> from shared JBODs for use by VMs on the servers as well as to be
-> exported to other nodes. The filesystem we're using for this is actually
-> GPFS. The intent was to use RAID6 in an active/active fashion on two
-> nodes sharing a common set of disks. The active/active was in an effort
-> to simplify the configuration.
+If reshape one raid device with bitmap to raid0, the reshape progress will
+start. But it'll fail and lose some components. So it should remove bitmap 
+first. 
 
-You are probably not defining the NSD parameter "servers=ServerList". If 
-this parameter is not defined, GPFS assumes that the disks are SAN 
-attached to all the NSD nodes, in this case there is no 
-primary/secondary server. Of-course there is no risk of data integrity 
-even if the "servers" parameter is not defined.
->
-> I'm curious now, Redhat doesn't support SW raid failover? I did some
-> googling and found this:
->
-> https://access.redhat.com/solutions/231643
->
-> While I can't read the solution I have to figure that they're now
-> supporting that. I might actually explore that for this project.
-https://access.redhat.com/solutions/410203
-This article states that md raid is not supported in RHEL6/7 under any 
-circumstances, including active/passive modes.
->
-> -Aaron
->
-> On 12/21/15 8:09 PM, Tejas Rao wrote:
->> Each GPFS disk (block device) has a list of servers associated with it.
->> When the first storage server fails (expired disk lease), the storage
->> node is expelled and a different server which also sees the shared
->> storage will do I/O.
->>
->> There is a "leaseRecoveryWait" parameter which tells the filesystem
->> manager to wait for few seconds to allow the expelled node to complete
->> any I/O in flight to the shared storage device to avoid any out of order
->> i/O. After this wait time, the filesystem manager completes recovery on
->> the failed node, replaying journal logs, freeing up shared tokens/locks
->> etc. After the recovery is complete a different storage node will do
->> I/O. There is a concept of primary/secondary servers for a given block
->> device. The secondary server will only do I/O when the primary server
->> has failed and this has been confirmed.
->>
->> See "servers=ServerList" in man page for mmcrnsd. ( I don't think I am
->> allowed to send web links)
->>
->> We currently have 10's of petabytes in production using linux md raid.
->> We are currently not sharing md devices, only hardware raid block
->> devices are shared. In our experience hardware raid controllers are
->> expensive. Linux raid has worked well over the years and performance is
->> very good as GPFS coalesces I/O in large filesystem blocksize blocks
->> (8MB) and if aligned properly eliminate RMW (doing full stripe writes)
->> and the need for NVRAM (unless someone is doing POSIX fsync).
->>
->> In the future ,we would prefer to use linux raid (RAID6) in a shared
->> environment shielding us against server failures. Unfortunately we can
->> only do this after Redhat supports such an environment with linux raid.
->> Currently they do not support this even in an active/passive environment
->> (only one server can have a md device assembled and active regardless).
->>
->> Tejas.
->>
->> On 12/21/2015 17:03, NeilBrown wrote:
->> > On Tue, Dec 22 2015, Tejas Rao wrote:
->> >
->> >> GPFS guarantees that only one node will write to a linux block device
->> >> using disk leases.
->> >
->> > Do you have a reference to documentation explaining that?
->> > A few moments searching the internet suggests that a "disk lease" is
->> > much like a heart-beat. A node uses it to say "I'm still alive, please
->> > don't ignore me". I could find no evidence that only one node could
->> > hold a disk lease at any time.
->> >
->> > NeilBrown
->>
->
+Signed-off-by: Xiao Ni <xni@redhat.com>
+---
+ Grow.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/Grow.c b/Grow.c
+index 6dfb9c9..db4daa8 100755
+--- a/Grow.c
++++ b/Grow.c
+@@ -1590,6 +1590,15 @@ int Grow_reshape(char *devname, int fd,
+ 		pr_err("Cannot increase raid-disks on this array beyond %d\n", st->max_devs);
+ 		return 1;
+ 	}
++	if (s->level == 0 && 
++	    (array.state & (1<<MD_SB_BITMAP_PRESENT)) && 
++	    !(array.state & (1<<MD_SB_CLUSTERED))) {
++                array.state &= ~(1<<MD_SB_BITMAP_PRESENT);
++                if (ioctl(fd, SET_ARRAY_INFO, &array)!= 0) {
++                        pr_err("failed to remove internal bitmap.\n");
++                        return 1;
++                }
++        }
+ 
+ 	/* in the external case we need to check that the requested reshape is
+ 	 * supported, and perform an initial check that the container holds the
+-- 
+2.4.3
 
