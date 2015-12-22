@@ -1,72 +1,154 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: best base / worst case RAID 5,6 write speeds
-Date: Tue, 22 Dec 2015 14:34:27 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FE65A8@CFWEX01.americas.cray.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
- <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
- <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
- <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
- <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
- <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
- <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
- <22128.11867.847781.946791@quad.stoffel.home>
- <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
- <22128.35881.182823.556362@quad.stoffel.home>
- <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
- <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
- <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
- <5672BB7A.4050808@turmel.org>
- <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
- <567339F0.9000209@turmel.org>
- <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
- <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
- <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
- <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/3] raid5: allow r5l_io_unit allocations to fail
+Date: Tue, 22 Dec 2015 16:20:50 +0100
+Message-ID: <20151222152050.GA28310@lst.de>
+References: <1450390197-19479-1-git-send-email-hch@lst.de> <1450390197-19479-4-git-send-email-hch@lst.de> <20151217234748.GA1860175@devbig084.prn1.facebook.com> <874mfg8qyc.fsf@notabene.neil.brown.name> <20151218015847.GA2146501@devbig084.prn1.facebook.com> <20151218112535.GB28224@lst.de> <20151218230657.GA342953@devbig084.prn1.facebook.com> <87vb7s680r.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <87vb7s680r.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: "doug@easyco.com" <doug@easyco.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.com>
+Cc: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGV5IERvdWcsDQoNCkkgd291bGQgYmUgaW50ZXJlc3RlZCBpbiBzZWVpbmcgdGhlIHBhdGNoIHlv
-dSdyZSB0YWxraW5nIGFib3V0LiAgSSB3b25kZXIgaWYgdGhhdCBjb2RlIGNvdWxkbid0IGJlIHR1
-cm5lZCBvbi9vZmYgd2l0aCBhIHR1bmluZyBwYXJhbWV0ZXIgb3IgbW9kdWxlIHBhcmFtLg0KDQpC
-b2IgS2llcnNraQ0KU2VuaW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2UgRW5naW5lZXINCkNyYXkgSW5j
-Lg0KMzgwIEphY2tzb24gU3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQYXVsLCBNTiA1NTEwMQ0KVGVs
-ZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2NTEtNjA1LTkwMDENCkNlbGw6IDY1MS04OTAtNzQ2MQ0K
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnXSBP
-biBCZWhhbGYgT2YgRG91ZyBEdW1pdHJ1DQpTZW50OiBUdWVzZGF5LCBEZWNlbWJlciAyMiwgMjAx
-NSAxMjoxNiBBTQ0KQ2M6IExpbnV4LVJBSUQNClN1YmplY3Q6IFJlOiBiZXN0IGJhc2UgLyB3b3Jz
-dCBjYXNlIFJBSUQgNSw2IHdyaXRlIHNwZWVkcw0KDQpNeSBhcG9sb2dpZXMgZm9yIGRpdmluZyBp
-biBzbyBsYXRlLg0KDQpJIHJvdXRpbmVseSBydW4gMjQgZHJpdmUgcmFpZC01IHNldHMgd2l0aCBT
-U0RzLiAgQ2h1bmsgaXMgc2V0IGF0IDMySyBhbmQgdGhlIGFwcGxpY2F0aW9ucyBvbmx5IHdyaXRl
-cyAicGVyZmVjdCIgNzM2SyAic3RyaXBlcyIuICBUaGUgU1NEcyBhcmUgU2Ftc3VuZyA4NTAgcHJv
-cyBvbiBkZWRpY2F0ZWQgTFNJIDMwMDggU0FTIHBvcnRzIGFuZCBhcmUgYXQgIm5ldyINCnByZWNv
-bmRpdGlvbmluZyAoaWUsIHRoZXkgYXJlIGF0IGZ1bGwgc3BlZWQpIG9yIGp1c3Qgb3ZlciA1MDAg
-TUIvc2VjLg0KQ1BVIGlzIGEgc2luZ2xlIEU1LTE2NTAgdjMuDQoNCldpdGggc3RvY2sgUkFJRC01
-IGNvZGUsIEkgZ2V0IGFib3V0IDEuOCBHQi9zZWMsIHE9NC4NCg0KTm93IHRoaXMgYXBwbGljYXRp
-b24gaXMgd3JpdGluZyBmcm9tIGtlcm5lbCBzcGFjZSAoZ2VuZXJpY19tYWtlX3JlcXVlc3Qgdy8g
-cSB3YWl0aW5nIGZvciBjb21wbGV0aW9uIGNhbGxiYWNrKS4gIFRoZXJlIGFyZSBhIGxvdCBvZiBS
-TVcgb3BlcmF0aW9ucyBoYXBwZW5pbmcgaGVyZS4gIEkgdGhpbmsgdGhlIHJhaWQtNSBiYWNrZ3Jv
-dW5kIHRocmVhZCBpcyB3YWtpbmcgdXAgYXN5bmNocm9ub3VzbHkgd2hlbiBvbmx5IGEgcGFydCBv
-ZiB0aGUgd3JpdGUgaGFzIGJlZW4gYnVmZmVyZWQgaW50byBzdHJpcGUgY2FjaGUgcGFnZXMuICBU
-aGUgYmlvIGdvaW5nIGludG8gdGhlIHJhaWQgbGF5ZXIgaXMgYSBzaW5nbGUgYmlvLCBzbyBub3Ro
-aW5nIGlzIGJlaW5nIGNhcnZlZCB1cCBvbiB0aGUgcmVxdWVzdCBlbmQuICBUaGUgcmFpZC01IGhl
-bHBlciB0aHJlYWQgYWxzbyBzYXR1cmF0ZXMgYSBjcHUgY29yZSAod2hpY2ggaXMgYWJvdXQgYXMg
-ZmFzdCBhcyB5b3UgY2FuIGdldCB3aXRoIGFuIEU1LTE2NTApLg0KDQpJZiBJIHBhdGNoIHJhaWQ1
-LmtvIHdpdGggc3BlY2lhbCBjYXNlIGNvZGUgdG8gYXZvaWQgdGhlIHN0cmlwZSBjYWNoZSBhbmQg
-anVzdCBjb21wdXRlIHBhcml0eSBhbmQgZ28sIHRoZSB3cml0ZSB0aHJvdWdocHV0IGdvZXMgdXAg
-YWJvdmUgMTFHQi9zZWMuDQoNClRoaXMgaXMgb2J2aW91c2x5IGFuIGltcG9zc2libGUgSU8gcGF0
-dGVybiBmb3IgbW9zdCBhcHBsaWNhdGlvbnMsIGJ1dCBkb2VzIGNvbmZpcm0gdGhhdCB0aGUgdXBw
-ZXIgbGltaXQgb2YgKG4tMSkqYncgaXMgInBvc3NpYmxlIiwgYnV0IG5vdCB3aXRoIHRoZSBjdXJy
-ZW50IHN0cmlwZSBjYWNoZSBsb2dpYyBpbiB0aGUgcmFpZCBsYXllci4NCg0KRG91ZyBEdW1pdHJ1
-DQpXaWxkRmlyZSBTdG9yYWdlDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
-bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluIHRoZSBib2R5IG9mIGEgbWVz
-c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+> I wonder if we should have a mempool for these io units too.
+> We would allocate with GFP_ATOMIC (or similar) so the allocation woult
+> fail instead of blocking, but we would then know that an allocation
+> could only fail if there was another request in flight.  So the place
+> where we free an io_unit would be the obviously correct place to trigger
+> a retry of the delayed-due-to-mem-allocation-failure stripes.
+> 
+> So I think I would prefer two lists, another mempool, and very well
+> defined places to retry the two lists.  Is that over-engineering?
+
+How about the variant below (relative to md/for-next)?  This implements
+the above and passes testing fine:
+
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 18de1fc..4fa9457 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -75,7 +75,10 @@ struct r5l_log {
+ 	struct list_head finished_ios;	/* io_units which settle down in log disk */
+ 	struct bio flush_bio;
+ 
++	struct list_head no_mem_stripes;   /* pending stripes, -ENOMEM */
++
+ 	struct kmem_cache *io_kc;
++	mempool_t *io_pool;
+ 	struct bio_set *bs;
+ 	mempool_t *meta_pool;
+ 
+@@ -287,9 +290,10 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	struct r5l_io_unit *io;
+ 	struct r5l_meta_block *block;
+ 
+-	io = kmem_cache_zalloc(log->io_kc, GFP_ATOMIC);
++	io = mempool_alloc(log->io_pool, GFP_ATOMIC);
+ 	if (!io)
+ 		return NULL;
++	memset(io, 0, sizeof(*io));
+ 
+ 	io->log = log;
+ 	INIT_LIST_HEAD(&io->log_sibling);
+@@ -490,24 +494,25 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	mutex_lock(&log->io_mutex);
+ 	/* meta + data */
+ 	reserve = (1 + write_disks) << (PAGE_SHIFT - 9);
+-	if (!r5l_has_free_space(log, reserve))
+-		goto err_retry;
++	if (!r5l_has_free_space(log, reserve)) {
++		spin_lock(&log->no_space_stripes_lock);
++		list_add_tail(&sh->log_list, &log->no_space_stripes);
++		spin_unlock(&log->no_space_stripes_lock);
++
++		r5l_wake_reclaim(log, reserve);
++		goto out_unlock;
++	}
+ 
+ 	ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
+-	if (ret)
+-		goto err_retry;
++	if (ret) {
++		spin_lock_irq(&log->io_list_lock);
++		list_add_tail(&sh->log_list, &log->no_mem_stripes);
++		spin_unlock_irq(&log->io_list_lock);
++	}
+ 
+ out_unlock:
+ 	mutex_unlock(&log->io_mutex);
+ 	return 0;
+-
+-err_retry:
+-	spin_lock(&log->no_space_stripes_lock);
+-	list_add_tail(&sh->log_list, &log->no_space_stripes);
+-	spin_unlock(&log->no_space_stripes_lock);
+-
+-	r5l_wake_reclaim(log, reserve);
+-	goto out_unlock;
+ }
+ 
+ void r5l_write_stripe_run(struct r5l_log *log)
+@@ -559,6 +564,21 @@ static sector_t r5l_reclaimable_space(struct r5l_log *log)
+ 				 log->next_checkpoint);
+ }
+ 
++static void r5l_run_no_mem_stripe(struct r5l_log *log)
++{
++	struct stripe_head *sh;
++
++	assert_spin_locked(&log->io_list_lock);
++
++	if (!list_empty(&log->no_mem_stripes)) {
++		sh = list_first_entry(&log->no_mem_stripes,
++				      struct stripe_head, log_list);
++		list_del_init(&sh->log_list);
++		set_bit(STRIPE_HANDLE, &sh->state);
++		raid5_release_stripe(sh);
++	}
++}
++
+ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ {
+ 	struct r5l_io_unit *io, *next;
+@@ -575,7 +595,8 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ 		log->next_cp_seq = io->seq;
+ 
+ 		list_del(&io->log_sibling);
+-		kmem_cache_free(log->io_kc, io);
++		mempool_free(io, log->io_pool);
++		r5l_run_no_mem_stripe(log);
+ 
+ 		found = true;
+ 	}
+@@ -1189,6 +1210,10 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->io_kc)
+ 		goto io_kc;
+ 
++	log->io_pool = mempool_create_slab_pool(R5L_POOL_SIZE, log->io_kc);
++	if (!log->io_pool)
++		goto io_pool;
++
+ 	log->bs = bioset_create(R5L_POOL_SIZE, 0);
+ 	if (!log->bs)
+ 		goto io_bs;
+@@ -1203,6 +1228,8 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 		goto reclaim_thread;
+ 	init_waitqueue_head(&log->iounit_wait);
+ 
++	INIT_LIST_HEAD(&log->no_mem_stripes);
++
+ 	INIT_LIST_HEAD(&log->no_space_stripes);
+ 	spin_lock_init(&log->no_space_stripes_lock);
+ 
+@@ -1219,6 +1246,8 @@ reclaim_thread:
+ out_mempool:
+ 	bioset_free(log->bs);
+ io_bs:
++	mempool_destroy(log->io_pool);
++io_pool:
+ 	kmem_cache_destroy(log->io_kc);
+ io_kc:
+ 	kfree(log);
