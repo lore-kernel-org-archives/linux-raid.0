@@ -1,57 +1,66 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [MDADM PATCH] Check and remove bitmap first when reshape to raid0
-Date: Tue, 22 Dec 2015 15:20:02 +1100
-Message-ID: <87twnb2jyl.fsf@notabene.neil.brown.name>
-References: <1450753774-4358-1-git-send-email-xni@redhat.com>
+Subject: Re: [PATCH v2 1/3] badblocks: Add core badblock management code
+Date: Tue, 22 Dec 2015 16:34:28 +1100
+Message-ID: <87r3if2gij.fsf@notabene.neil.brown.name>
+References: <1448477013-9174-1-git-send-email-vishal.l.verma@intel.com> <1448477013-9174-2-git-send-email-vishal.l.verma@intel.com> <1449271801.27077.25.camel@HansenPartnership.com> <1449273524.16905.103.camel@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450753774-4358-1-git-send-email-xni@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: Jes.Sorensen@redhat.com, linux-raid@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1449273524.16905.103.camel@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "axboe@fb.com" <axboe@fb.com>
 List-Id: linux-raid.ids
 
 --=-=-=
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Dec 22 2015, Xiao Ni wrote:
+On Sat, Dec 05 2015, Verma, Vishal L wrote:
 
-> If reshape one raid device with bitmap to raid0, the reshape progress will
-> start. But it'll fail and lose some components. So it should remove bitma=
-p=20
-> first.=20
+> On Fri, 2015-12-04 at 15:30 -0800, James Bottomley wrote:
+> [...]
+>> > +ssize_t badblocks_store(struct badblocks *bb, const char *page,
+>> > size_t len,
+>> > +			int unack)
+>> [...]
+>> > +int badblocks_init(struct badblocks *bb, int enable)
+>> > +{
+>> > +	bb->count =3D 0;
+>> > +	if (enable)
+>> > +		bb->shift =3D 0;
+>> > +	else
+>> > +		bb->shift =3D -1;
+>> > +	bb->page =3D kmalloc(PAGE_SIZE, GFP_KERNEL);
+>>=20
+>> Why not __get_free_page(GFP_KERNEL)?=C2=A0=C2=A0The problem with kmalloc=
+ of an
+>> exactly known page sized quantity is that the slab tracker for this
+>> requires two contiguous pages for each page because of the overhead.
 >
-> Signed-off-by: Xiao Ni <xni@redhat.com>
-> ---
->  Grow.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+> Cool, I didn't know about __get_free_page - I can fix this up too.
 >
-> diff --git a/Grow.c b/Grow.c
-> index 6dfb9c9..db4daa8 100755
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1590,6 +1590,15 @@ int Grow_reshape(char *devname, int fd,
->  		pr_err("Cannot increase raid-disks on this array beyond %d\n", st->max=
-_devs);
->  		return 1;
->  	}
-> +	if (s->level =3D=3D 0 &&=20
-> +	    (array.state & (1<<MD_SB_BITMAP_PRESENT)) &&=20
-> +	    !(array.state & (1<<MD_SB_CLUSTERED))) {
-> +                array.state &=3D ~(1<<MD_SB_BITMAP_PRESENT);
-> +                if (ioctl(fd, SET_ARRAY_INFO, &array)!=3D 0) {
-> +                        pr_err("failed to remove internal bitmap.\n");
-> +                        return 1;
-> +                }
-> +        }
->=20=20
->  	/* in the external case we need to check that the requested reshape is
->  	 * supported, and perform an initial check that the container holds the
 
-applied, thanks.
+I was reminded of this just recently I thought I should clear up the
+misunderstanding.
+
+kmalloc(PAGE_SIZE) does *not* incur significant overhead and certainly
+does not require two contiguous free pages.
+If you "grep kmalloc-4096 /proc/slabinfo" you will note that both
+objperslab and pagesperslab are 1.  So one page is used to store each
+4096 byte allocation.
+
+To quote the email from Linus which reminded me about this
+
+> If you
+> want to allocate a page, and get a pointer, just use "kmalloc()".
+> Boom, done!
+
+https://lkml.org/lkml/2015/12/21/605
+
+There probably is a small CPU overhead from using kmalloc, but no memory
+overhead.
 
 NeilBrown
 
@@ -61,18 +70,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWeM9yAAoJEDnsnt1WYoG5K0gP+wes8KM0EwSkOS3C6aV9b4Jq
-JyzBM28Qjlqzr4pmNfPozK/smTXMuL8ijXQg5fy1lEFDqaRj1ER3wLsV9hyP3Iud
-8c64+mC0cxNJg6vh5ENNMKqU19K58+dCEYnvmQwcKsEJ50CQ+dzVqzuFa04mbaMU
-YIeSNHTq6jxbY5VzV9POiGT4W1g06le9QNnVjFT7cpKWIP1U8f7JxmHQsts5WFV/
-ZnIYdCUPSBzYnFkrOcVkZIEA5YTQv29MInZW+rX8/XA8TPX9mAK9OJT+HD8mOlVw
-RtxwKJ1N0L0yuZ+c+FrW9SHsrjazDWV+rhC4i9wsqOIdmGNvwX47EPMpoIPDWKOa
-I1YhSvND0trNQog6CdzVnaHsPQpalha2si55rHUM4kJVu/0VZBij9IRqdvp7VSyk
-V1y7zRLMcNAhbu4bZxidOqxTGgEotBLvF3qYmBismhLig8SwPCdaZsF+gKYFYAS8
-O8tC6So82p2JOr00RXBulubso9qym2+O2o08bxY4j8oh27oFM/M9TD0+zzcufjig
-d5Cf+RLu5+83I1POVvd8E+DjdNdMdhmKxPi35B3xhy8qy8iw8MsPtFf9DNPTxKUI
-t/s/Y9QeWg1axW8/jLbauv6xh4QQsqALdfZuTgP7Zhee1prHKwS2w3mx07HevBhG
-SMdnO+04GtoDzyNXls/z
-=xHQo
+iQIcBAEBCAAGBQJWeODkAAoJEDnsnt1WYoG5qjgP/1NyOzNsfE/AKwAEF30zSDNO
+xhxxYWZv3srRs+nXpmXgX+GBextkuJOf3vSEHTqQtidBV1W85NsCIyM4PmV8aKbx
+R5wMcyWWgySfNDYSpqvow/Xit5DgDLi1tp+XmkdV1NQJzwh28N0aV+RO9DyxfPvu
+xDQRSjLkajxheH+kxz1LCq8mw6y+Da4wUXplJmYZ7j7E+J9THolDREdJ4ETKRkjn
+vlyBhtYZ/BBYK4FZBLvWzCq31JdDNILTPPRtQO6zvMO8he6hCqNjHsRa3pXjA7KW
+RpDlUdMee1Qmey5mkK7EbPWf0+jlciUi1kzzyXFwNJLLPURROFLngDc2nEdPHrhT
+QNnEO/gcmUOdQPaOVnOto1j/V2lAdV+8p/+EIW+oXIJcjp/teDKgAde18l5rUI8l
+E7ovE2x0AmOZkGs+rddq3ZyASCQREzguh9TTUrOlmhcaCneHNbONmbuvah4lg2Ew
+4L0VthKKASoV869sPMef7Vr7EwA8J9rNyAp155cm49D2rmuTEL8AI0VJZjUD3qmG
+oqgXcHO8PRXi6yfEJ3Jy2NvlnMH7hHTX1Zs81eRIAPkr2YpNo9hKNF7qLaIEJ6Q/
+l61j4LHfSF7aE2kN0lJYdXyivJGo/uc1kc9uHPSs5LsE8IlS8VHMbZHx54Qvs4bf
+iSYOkxujUvJ/B0o2HPBv
+=SDZk
 -----END PGP SIGNATURE-----
 --=-=-=--
