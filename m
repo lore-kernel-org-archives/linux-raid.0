@@ -1,67 +1,72 @@
-From: Shraddha Barke <shraddha.6596@gmail.com>
-Subject: [PATCH v2 1/2] md: bcache: Replace get_seconds with ktime_get_seconds
-Date: Tue, 22 Dec 2015 19:23:30 +0530
-Message-ID: <1450792410-32613-1-git-send-email-shraddha.6596@gmail.com>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: best base / worst case RAID 5,6 write speeds
+Date: Tue, 22 Dec 2015 14:34:27 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FE65A8@CFWEX01.americas.cray.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+ <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+ <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+ <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+ <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+ <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+ <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+ <22128.11867.847781.946791@quad.stoffel.home>
+ <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
+ <22128.35881.182823.556362@quad.stoffel.home>
+ <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
+ <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
+ <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
+ <5672BB7A.4050808@turmel.org>
+ <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
+ <567339F0.9000209@turmel.org>
+ <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
+ <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
+ <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
+ <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>, Neil Brown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Shraddha Barke <shraddha.6596@gmail.com>
+To: "doug@easyco.com" <doug@easyco.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-32-bit systems using function get_seconds will break in the year 2038,
-in order to avoid that replace the code with more appropriate
-function ktime_get_seconds which is y2038 safe.
-Function ktime_get_seconds is used since it uses monotonic instead of
-real time and thus will not cause overflow.
-
-Signed-off-by: Shraddha Barke <shraddha.6596@gmail.com>
----
-Changes in v2-
- Drop use of ktime_get_seconds for last_mount since it is not appropriate. 
-
- drivers/md/bcache/super.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
-index 679a093..f7500cd 100644
---- a/drivers/md/bcache/super.c
-+++ b/drivers/md/bcache/super.c
-@@ -696,7 +696,7 @@ static void bcache_device_detach(struct bcache_device *d)
- 
- 		SET_UUID_FLASH_ONLY(u, 0);
- 		memcpy(u->uuid, invalid_uuid, 16);
--		u->invalidated = cpu_to_le32(get_seconds());
-+		u->invalidated = cpu_to_le32(ktime_get_seconds());
- 		bch_uuid_write(d->c);
- 	}
- 
-@@ -927,7 +927,7 @@ void bch_cached_dev_detach(struct cached_dev *dc)
- 
- int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
- {
--	uint32_t rtime = cpu_to_le32(get_seconds());
-+	uint32_t rtime = cpu_to_le32(ktime_get_seconds());
- 	struct uuid_entry *u;
- 	char buf[BDEVNAME_SIZE];
- 
-@@ -959,7 +959,7 @@ int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
- 	    (BDEV_STATE(&dc->sb) == BDEV_STATE_STALE ||
- 	     BDEV_STATE(&dc->sb) == BDEV_STATE_NONE)) {
- 		memcpy(u->uuid, invalid_uuid, 16);
--		u->invalidated = cpu_to_le32(get_seconds());
-+		u->invalidated = cpu_to_le32(ktime_get_seconds());
- 		u = NULL;
- 	}
- 
-@@ -1261,7 +1261,7 @@ int bch_flash_dev_create(struct cache_set *c, uint64_t size)
- 
- 	get_random_bytes(u->uuid, 16);
- 	memset(u->label, 0, 32);
--	u->first_reg = u->last_reg = cpu_to_le32(get_seconds());
-+	u->first_reg = u->last_reg = cpu_to_le32(ktime_get_seconds());
- 
- 	SET_UUID_FLASH_ONLY(u, 1);
- 	u->sectors = size >> 9;
--- 
-2.1.4
-
+SGV5IERvdWcsDQoNCkkgd291bGQgYmUgaW50ZXJlc3RlZCBpbiBzZWVpbmcgdGhlIHBhdGNoIHlv
+dSdyZSB0YWxraW5nIGFib3V0LiAgSSB3b25kZXIgaWYgdGhhdCBjb2RlIGNvdWxkbid0IGJlIHR1
+cm5lZCBvbi9vZmYgd2l0aCBhIHR1bmluZyBwYXJhbWV0ZXIgb3IgbW9kdWxlIHBhcmFtLg0KDQpC
+b2IgS2llcnNraQ0KU2VuaW9yIFN0b3JhZ2UgUGVyZm9ybWFuY2UgRW5naW5lZXINCkNyYXkgSW5j
+Lg0KMzgwIEphY2tzb24gU3RyZWV0DQpTdWl0ZSAyMTANClN0LiBQYXVsLCBNTiA1NTEwMQ0KVGVs
+ZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2NTEtNjA1LTkwMDENCkNlbGw6IDY1MS04OTAtNzQ2MQ0K
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnXSBP
+biBCZWhhbGYgT2YgRG91ZyBEdW1pdHJ1DQpTZW50OiBUdWVzZGF5LCBEZWNlbWJlciAyMiwgMjAx
+NSAxMjoxNiBBTQ0KQ2M6IExpbnV4LVJBSUQNClN1YmplY3Q6IFJlOiBiZXN0IGJhc2UgLyB3b3Jz
+dCBjYXNlIFJBSUQgNSw2IHdyaXRlIHNwZWVkcw0KDQpNeSBhcG9sb2dpZXMgZm9yIGRpdmluZyBp
+biBzbyBsYXRlLg0KDQpJIHJvdXRpbmVseSBydW4gMjQgZHJpdmUgcmFpZC01IHNldHMgd2l0aCBT
+U0RzLiAgQ2h1bmsgaXMgc2V0IGF0IDMySyBhbmQgdGhlIGFwcGxpY2F0aW9ucyBvbmx5IHdyaXRl
+cyAicGVyZmVjdCIgNzM2SyAic3RyaXBlcyIuICBUaGUgU1NEcyBhcmUgU2Ftc3VuZyA4NTAgcHJv
+cyBvbiBkZWRpY2F0ZWQgTFNJIDMwMDggU0FTIHBvcnRzIGFuZCBhcmUgYXQgIm5ldyINCnByZWNv
+bmRpdGlvbmluZyAoaWUsIHRoZXkgYXJlIGF0IGZ1bGwgc3BlZWQpIG9yIGp1c3Qgb3ZlciA1MDAg
+TUIvc2VjLg0KQ1BVIGlzIGEgc2luZ2xlIEU1LTE2NTAgdjMuDQoNCldpdGggc3RvY2sgUkFJRC01
+IGNvZGUsIEkgZ2V0IGFib3V0IDEuOCBHQi9zZWMsIHE9NC4NCg0KTm93IHRoaXMgYXBwbGljYXRp
+b24gaXMgd3JpdGluZyBmcm9tIGtlcm5lbCBzcGFjZSAoZ2VuZXJpY19tYWtlX3JlcXVlc3Qgdy8g
+cSB3YWl0aW5nIGZvciBjb21wbGV0aW9uIGNhbGxiYWNrKS4gIFRoZXJlIGFyZSBhIGxvdCBvZiBS
+TVcgb3BlcmF0aW9ucyBoYXBwZW5pbmcgaGVyZS4gIEkgdGhpbmsgdGhlIHJhaWQtNSBiYWNrZ3Jv
+dW5kIHRocmVhZCBpcyB3YWtpbmcgdXAgYXN5bmNocm9ub3VzbHkgd2hlbiBvbmx5IGEgcGFydCBv
+ZiB0aGUgd3JpdGUgaGFzIGJlZW4gYnVmZmVyZWQgaW50byBzdHJpcGUgY2FjaGUgcGFnZXMuICBU
+aGUgYmlvIGdvaW5nIGludG8gdGhlIHJhaWQgbGF5ZXIgaXMgYSBzaW5nbGUgYmlvLCBzbyBub3Ro
+aW5nIGlzIGJlaW5nIGNhcnZlZCB1cCBvbiB0aGUgcmVxdWVzdCBlbmQuICBUaGUgcmFpZC01IGhl
+bHBlciB0aHJlYWQgYWxzbyBzYXR1cmF0ZXMgYSBjcHUgY29yZSAod2hpY2ggaXMgYWJvdXQgYXMg
+ZmFzdCBhcyB5b3UgY2FuIGdldCB3aXRoIGFuIEU1LTE2NTApLg0KDQpJZiBJIHBhdGNoIHJhaWQ1
+LmtvIHdpdGggc3BlY2lhbCBjYXNlIGNvZGUgdG8gYXZvaWQgdGhlIHN0cmlwZSBjYWNoZSBhbmQg
+anVzdCBjb21wdXRlIHBhcml0eSBhbmQgZ28sIHRoZSB3cml0ZSB0aHJvdWdocHV0IGdvZXMgdXAg
+YWJvdmUgMTFHQi9zZWMuDQoNClRoaXMgaXMgb2J2aW91c2x5IGFuIGltcG9zc2libGUgSU8gcGF0
+dGVybiBmb3IgbW9zdCBhcHBsaWNhdGlvbnMsIGJ1dCBkb2VzIGNvbmZpcm0gdGhhdCB0aGUgdXBw
+ZXIgbGltaXQgb2YgKG4tMSkqYncgaXMgInBvc3NpYmxlIiwgYnV0IG5vdCB3aXRoIHRoZSBjdXJy
+ZW50IHN0cmlwZSBjYWNoZSBsb2dpYyBpbiB0aGUgcmFpZCBsYXllci4NCg0KRG91ZyBEdW1pdHJ1
+DQpXaWxkRmlyZSBTdG9yYWdlDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
+bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluIHRoZSBib2R5IG9mIGEgbWVz
+c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
