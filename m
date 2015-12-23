@@ -1,38 +1,42 @@
 From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 1/2] Grow: close file descriptor earlier to avoid "still in use" when stopping
-Date: Wed, 23 Dec 2015 12:57:10 +0100
-Message-ID: <1450871831-25452-1-git-send-email-artur.paszkiewicz@intel.com>
+Subject: [PATCH 2/2] imsm: abort reshape if sync_action is not "reshape"
+Date: Wed, 23 Dec 2015 12:57:11 +0100
+Message-ID: <1450871831-25452-2-git-send-email-artur.paszkiewicz@intel.com>
+References: <1450871831-25452-1-git-send-email-artur.paszkiewicz@intel.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1450871831-25452-1-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Pawel Baldysiak <pawel.baldysiak@intel.com>
+Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 List-Id: linux-raid.ids
 
-Close fd2 as soon as it is no longer needed, before calling
-Grow_continue(). Otherwise, we won't be able to stop an array with
-external metadata during reshape, because mdadm running in background
-will be keeping it open.
+When reshape was interrupted, an incorrect checkpoint would be saved in
+the migration record. Change wait_for_reshape_imsm() to return -1 when
+sync_action is not "reshape" to abort early in imsm_manage_reshape()
+without writing the migration record.
 
 Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 ---
- Grow.c | 3 +++
- 1 file changed, 3 insertions(+)
+ super-intel.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 80d7b22..f65b36a 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -4873,6 +4873,9 @@ int Grow_continue_command(char *devname, int fd,
- 
- 		sysfs_init(content, fd2, mdstat->devnm);
- 
-+		close(fd2);
-+		fd2 = -1;
-+
- 		/* start mdmon in case it is not running
- 		 */
- 		if (!mdmon_running(container))
+diff --git a/super-intel.c b/super-intel.c
+index e609e0c..c7efa98 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -10300,8 +10300,10 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
+ 		sysfs_wait(fd, NULL);
+ 		if (sysfs_get_str(sra, NULL, "sync_action",
+ 				  action, 20) > 0 &&
+-				strncmp(action, "reshape", 7) != 0)
+-			break;
++				strncmp(action, "reshape", 7) != 0) {
++			close(fd);
++			return -1;
++		}
+ 		if (sysfs_fd_get_ll(fd, &completed) < 0) {
+ 			dprintf("cannot read reshape_position (in loop)\n");
+ 			close(fd);
 -- 
 2.1.4
 
