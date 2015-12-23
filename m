@@ -1,42 +1,44 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: [PATCH 2/2] imsm: abort reshape if sync_action is not "reshape"
-Date: Wed, 23 Dec 2015 12:57:11 +0100
-Message-ID: <1450871831-25452-2-git-send-email-artur.paszkiewicz@intel.com>
-References: <1450871831-25452-1-git-send-email-artur.paszkiewicz@intel.com>
+From: Marc Smith <marc.smith@mcc.edu>
+Subject: Re: RAID10 Write Performance
+Date: Wed, 23 Dec 2015 08:59:21 -0500
+Message-ID: <CAHkw+LcTafoUeXbw8rdUwFi5a1oW=q-6uosa1uzaFjiYDYneaA@mail.gmail.com>
+References: <CAHkw+LdtZY=d6kCtaTe5Uu8nNXOgF+yCAjJeHWJ2TrVAuNoDeA@mail.gmail.com>
+	<CAHkw+LeVkGo8cOGMzQbq7sGtw5K9bc3CMOvurL0kjDf0ZWTfsA@mail.gmail.com>
+	<87wps529dq.fsf@notabene.neil.brown.name>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1450871831-25452-1-git-send-email-artur.paszkiewicz@intel.com>
+In-Reply-To: <87wps529dq.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: NeilBrown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When reshape was interrupted, an incorrect checkpoint would be saved in
-the migration record. Change wait_for_reshape_imsm() to return -1 when
-sync_action is not "reshape" to abort early in imsm_manage_reshape()
-without writing the migration record.
+Okay, thanks, I'll turn it back on and try some different chunk sizes.
 
-Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
----
- super-intel.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+For my own knowledge, why/what is taking place under the covers that
+causes this behavior? When testing with fio, it sometimes takes 1-2
+minutes of "ramp up time" before the performance numbers are
+good/expected (when the write-intent bitmap is enabled).
 
-diff --git a/super-intel.c b/super-intel.c
-index e609e0c..c7efa98 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -10300,8 +10300,10 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int ndata)
- 		sysfs_wait(fd, NULL);
- 		if (sysfs_get_str(sra, NULL, "sync_action",
- 				  action, 20) > 0 &&
--				strncmp(action, "reshape", 7) != 0)
--			break;
-+				strncmp(action, "reshape", 7) != 0) {
-+			close(fd);
-+			return -1;
-+		}
- 		if (sysfs_fd_get_ll(fd, &completed) < 0) {
- 			dprintf("cannot read reshape_position (in loop)\n");
- 			close(fd);
--- 
-2.1.4
 
+Thanks,
+
+Marc
+
+
+On Tue, Dec 22, 2015 at 9:20 PM, NeilBrown <neilb@suse.com> wrote:
+> On Wed, Dec 23 2015, Marc Smith wrote:
+>
+>> Solved... appears it was the write-intent bitmap that caused the
+>> performance issues. I discovered if I left the test running longer
+>> than 60 seconds, the performance would eventually climb to where I'd
+>> expect it. I ran 'mdadm --grow --bitmap=none /dev/md0' and now random
+>> write performance is high/good/stable right off the bat.
+>
+> Keeping a write-intent bitmap really is a good idea.
+> Using a larger bitmap chunk size can reduce the performance penalty and
+> preserve much of the value.  It is easy enough to experiment with
+> different sizes.
+>
+> NeilBrown
