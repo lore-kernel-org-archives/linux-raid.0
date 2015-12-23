@@ -1,69 +1,75 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: raid5 async_xor: sleep in atomic
-Date: Wed, 23 Dec 2015 09:35:20 -0800
-Message-ID: <CAPcyv4im63odabZ_gMF_ESuv=iZ7fyBYqLzXJDPe4cBRwtdG4g@mail.gmail.com>
-References: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com>
-	<87twn928qv.fsf@notabene.neil.brown.name>
+From: Doug Dumitru <doug@easyco.com>
+Subject: Create Lock to Eliminate RMW in RAID/456 when writing perfect stripes
+Date: Wed, 23 Dec 2015 11:20:51 -0800
+Message-ID: <CAFx4rwR1gtLZUF6MUx71QTvw3hT5GKhsEMU2xcBpAz5wZWBUCw@mail.gmail.com>
+Reply-To: doug@easyco.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87twn928qv.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Stanislav Samsonov <slava@annapurnalabs.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 22, 2015 at 6:34 PM, NeilBrown <neilb@suse.com> wrote:
-> On Tue, Dec 22 2015, Stanislav Samsonov wrote:
->
->> Hi,
->>
->> Kernel 4.1.3 : there is some troubling kernel message that shows up
->> after enabling CONFIG_DEBUG_ATOMIC_SLEEP and testing DMA XOR
->> acceleration for raid5:
->>
->> BUG: sleeping function called from invalid context at mm/mempool.c:320
->> in_atomic(): 1, irqs_disabled(): 0, pid: 1048, name: md127_raid5
->> INFO: lockdep is turned off.
->> CPU: 1 PID: 1048 Comm: md127_raid5 Not tainted 4.1.15.alpine.1-dirty #1
->> Hardware name: Annapurna Labs Alpine
->> [<c00169d8>] (unwind_backtrace) from [<c0012a78>] (show_stack+0x10/0x14)
->> [<c0012a78>] (show_stack) from [<c07462ec>] (dump_stack+0x80/0xb4)
->> [<c07462ec>] (dump_stack) from [<c00bf2f0>] (mempool_alloc+0x68/0x13c)
->> [<c00bf2f0>] (mempool_alloc) from [<c041c9b4>]
->> (dmaengine_get_unmap_data+0x24/0x4c)
->> [<c041c9b4>] (dmaengine_get_unmap_data) from [<c03a8084>]
->> (async_xor_val+0x60/0x3a0)
->> [<c03a8084>] (async_xor_val) from [<c058e4c0>] (raid_run_ops+0xb70/0x1248)
->> [<c058e4c0>] (raid_run_ops) from [<c05915d4>] (handle_stripe+0x1068/0x22a8)
->> [<c05915d4>] (handle_stripe) from [<c0592ae4>]
->> (handle_active_stripes+0x2d0/0x3dc)
->> [<c0592ae4>] (handle_active_stripes) from [<c059300c>] (raid5d+0x384/0x5b0)
->> [<c059300c>] (raid5d) from [<c059db6c>] (md_thread+0x114/0x138)
->> [<c059db6c>] (md_thread) from [<c0042d54>] (kthread+0xe4/0x104)
->> [<c0042d54>] (kthread) from [<c000f658>] (ret_from_fork+0x14/0x3c)
->>
->> The reason is that async_xor_val() in crypto/async_tx/async_xor.c is
->> called in atomic context (preemption disabled) by raid_run_ops(). Then
->> it calls dmaengine_get_unmap_data() an then mempool_alloc() with
->> GFP_NOIO flag - this allocation type might sleep under some condition.
->>
->> Checked latest kernel 4.3 and it has exactly same flow.
->>
->> Any advice regarding this issue?
->
-> Changing the GFP_NOIO to GFP_ATOMIC in all the calls to
-> dmaengine_get_unmap_data() in crypto/async_tx/ would probably fix the
-> issue... or make it crash even worse :-)
->
-> Dan: do you have any wisdom here?  The xor is using the percpu data in
-> raid5, so it cannot be sleep, but GFP_NOIO allows sleep.
-> Does the code handle failure to get_unmap_data() safely?  It looks like
-> it probably does.
+The issue:
 
-Those GFP_NOIO should move to GFP_NOWAIT.  We don't want GFP_ATOMIC
-allocations to consume emergency reserves for a performance
-optimization.  Longer term async_tx needs to be merged into md
-directly as we can allocate this unmap data statically per-stripe
-rather than per request. This asyntc_tx re-write has been on the todo
-list for years, but never seems to make it to the top.
+The background thread in RAID-5 can wake up in the middle of a process
+populating stripe cache entries with a long write.  If the long write
+contains a complete stripe, the background thread "should" be able to
+process the require without doing any reads.
+
+Sometimes the background thread is too quick at starting up a write
+and schedules a RMW (Read Modify Write) even though the needed blocks
+will soon be available.
+
+Seeing this happen:
+
+You can see this happen by creating an MD set with a small stripe size
+and then doing DIRECT_IO writes that are exactly aligned on a stripe.
+For example, with 4 disks and 64K stripes, write 192K blocks aligned
+on 192K boundaries.  You can do this from C or with 'dd' or 'fio'.
+
+If you have this running, you can then run iostat and you should see
+absolutely no read activity on the disks.
+
+The probability of this happening goes up when there are more disks.
+It may also go up the faster the disks are.  My use case is 24 SSDs.
+
+The problem with this:
+
+There are really three issues.
+
+1)  The code does not need to work this way.  It is not "broken" but
+just seems wrong.
+2)  There is a performance penalty here.
+3)  There is a Flash wear penalty here.
+
+It is 3) that most interests me.
+
+The fix:
+
+Create a waitq or semaphore based lock so that if a write includes a
+complete stripe, the background thread will wait for the write to
+completely populate the thread.
+
+I would do this with a small array of locks.  When a write includes a
+complete stripe, it sets a lock (stripe_number % sizeof_lock_array).
+This lock is released as soon as the write finishes populating the
+stripe cache.  The background thread checks this lock before it starts
+a write.  If the lock is set, it waits until the stripe cache is
+completely populated which should eliminate the RMW.
+
+If no writes are full stripes, then the lock never gets set, so most
+code runs without any real overhead.
+
+Implementing this:
+
+I am happy to implement this.  I have quite a bit of experience with
+lock structures like this.  I can also test on x86 and x86_64, but
+will need help with other arch's.
+
+Then again, if this is too much of an "edge case", I will just keep my
+patches in-house.
+
+-- 
+Doug Dumitru
+WildFire Storage
