@@ -1,63 +1,72 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [GIT PULL REQUEST] one more md fix for 4.4-rc
-Date: Thu, 24 Dec 2015 14:16:56 +1100
-Message-ID: <87mvt0zgbb.fsf@notabene.neil.brown.name>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Xiao Ni <xni@redhat.com>
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v5 0/3] Badblock tracking for gendisks
+Date: Thu, 24 Dec 2015 19:20:31 -0700
+Message-ID: <1451010034-11236-1-git-send-email-vishal.l.verma@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Vishal Verma <vishal.l.verma@intel.com>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, NeilBrown <neilb@suse.com>, Jeff Moyer <jmoyer@redhat.com>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+v5:
+  - Rebase to v4.4-rc6
+  - Revert back to using kzalloc from __get_free_page based on the discussion at:
+    http://thread.gmane.org/gmane.linux.kernel/2113292
+
+v4:
+  - Rebase to v4.4-rc4
+
+v3:
+  - Add kernel-doc style comments to all exported functions in badblocks.c (James)
+  - Make return values from badblocks functions consistent with themselves
+    and the kernel style. Change the polarity of badblocks_set, and update
+    all callers accordingly (James)
+  - In gendisk, don't unconditionally allocate badblocks, export the initializer.
+    This also allows the initializer to be a non-void return type, so that the
+    badblocks user can act upon failures better (James)
 
 
-The following changes since commit 9f7e43278605a0daf4edf7025c52c25e9ace6875:
+v2:
+  - In badblocks_free, make 'page' NULL (patch 1)
+  - Move the core badblocks code to a new .c file (patch 1) (Jens)
+  - Fix a sizeof usage in disk_alloc_badblocks (patch 2) (Dan)
+  - Since disk_alloc_badblocks can fail, check disk->bb for NULL in the
+    genhd wrappers (patch 2) (Jeff)
+  - Update the md conversion to also ise the badblocks init and free
+    functions (patch 3)
+  - Remove the BB_* macros from md.h as they are now in badblocks.h (patch 3)
 
-  Merge tag 'rtc-4.4-3' of git://git.kernel.org/pub/scm/linux/kernel/git/abelloni/linux (2015-12-20 10:01:11 -0800)
+Patch 1 copies badblock management code into a header of its own,
+making it generally available. It follows common libraries of code
+such as linked lists, where anyone may embed a core data structure
+in another place, and use the provided accessor functions to
+manipulate the data.
 
-are available in the git repository at:
+Patch 2 adds badblock tracking to gendisks (in preparation for use
+by NVDIMM devices).
 
-  git://neil.brown.name/md tags/md/4.4-rc6-fix
+Patch 3 converts md over to use the new badblocks 'library'. I have
+done some pretty simple testing on this - created a raid 1 device,
+made sure the sysfs entries show up, and can be used to add and view
+badblocks. A closer look by the md folks would be nice here.
 
-for you to fetch changes up to 312045eef985b61d74c28047ecd8eca6719d9516:
 
-  md: remove check for MD_RECOVERY_NEEDED in action_store. (2015-12-21 11:10:06 +1100)
+Vishal Verma (3):
+  badblocks: Add core badblock management code
+  block: Add badblock management for gendisks
+  md: convert to use the generic badblocks code
 
-----------------------------------------------------------------
-One for md fix for 4.4-rc
+ block/Makefile            |   2 +-
+ block/badblocks.c         | 561 ++++++++++++++++++++++++++++++++++++++++++++++
+ block/genhd.c             |  76 +++++++
+ drivers/md/md.c           | 516 +++---------------------------------------
+ drivers/md/md.h           |  40 +---
+ include/linux/badblocks.h |  53 +++++
+ include/linux/genhd.h     |   7 +
+ 7 files changed, 726 insertions(+), 529 deletions(-)
+ create mode 100644 block/badblocks.c
+ create mode 100644 include/linux/badblocks.h
 
-Fix a regression which causes reshape to not start properly
-sometimes.
+-- 
+2.5.0
 
-----------------------------------------------------------------
-NeilBrown (1):
-      md: remove check for MD_RECOVERY_NEEDED in action_store.
-
- drivers/md/md.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWe2OoAAoJEDnsnt1WYoG5I5IQAKgR54NhNw8nOp6+EAXwa5X8
-ldF0rpB5v9OEQ6cxV4Vr7gPx45HNuUj1mAvR5qkIfGZDokYdFBykaqqkkkrN9oHt
-IcP3KNc/9cdiqzdjIZXHYNr+lY6hR9QPn8lZFQSCKT30Gbpc6mrkK6CesKZe6gPd
-Bw2yqqj/gDdwt9KisS9vecPuVlhJTF0VbZL/aOpZVMq1+dI56WGah7IjS7n64vGe
-+Pm3PPzgE1qCs8u8djjcrXcyGyhGVkiPC1YPUuD/woSs/VYFRIOZEmr2VN3771xM
-enf/GaC329MgNRNBS78MdMxWVzlJ4X9KI3VjoB2Jwo9C0rnx8fnmluU7NiXtv2UM
-SdhQPdcUnVhR87Og1bC9rXQtuAyimgotcp3BBcqv9+6kclIMG9ga5yfbwAbpuoov
-/qrvhA43g0zO7ZbFCVt0vri1pRh0DPv0081BtyF46Qv8fg0/JnhXPB5rBqonm1Z+
-sclftAhAMXpWJ6kw6SSY9CieRbYO1mRfhYxjAxvQnsHJtOtKItl15NBcyZmCytFh
-laWfLtNNAHOUe2oZu/W/OKTzxZQ3uBljtF2RIYP6E7JSUEd2t8O3AHKnv1UELFBc
-hCJJagumIicv3kBQAQpGQcqWtJkRZxmYxNbFpSDy9iaL+5t6XRotzOhIaILLK5WL
-L2u+fucH98WWem8WjZFc
-=YcTQ
------END PGP SIGNATURE-----
---=-=-=--
