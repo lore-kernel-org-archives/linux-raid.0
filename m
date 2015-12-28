@@ -1,36 +1,51 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Recreating RAID-5 after SATA controller failure and botched
- auto-assemble
-Date: Sun, 27 Dec 2015 18:11:26 -0500
-Message-ID: <5680701E.1050808@turmel.org>
-References: <20151223105827.55498cb1@narfi.yggdrasil.draxit.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Guoqing Jiang <gqjiang@suse.com>
+Subject: [PATCH] md: remove unnecesary md_new_event_inintr
+Date: Mon, 28 Dec 2015 10:46:38 +0800
+Message-ID: <1451270798-25056-1-git-send-email-gqjiang@suse.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20151223105827.55498cb1@narfi.yggdrasil.draxit.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Draxinger <wdraxinger.maillist@draxit.de>, linux-raid@vger.kernel.org
+To: neilb@suse.com
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-On 12/23/2015 04:58 AM, Wolfgang Draxinger wrote:
+md_new_event had removed sysfs_notify since 'commit 72a23c211e45
+("Make sure all changes to md/sync_action are notified.")', so we
+can use md_new_event and delete md_new_event_inintr.
 
-> Anyway, I'd appreciate if anyone knew how I could read-only assemble
-> the disks into an array that resembles the 42e59462... configuration to
-> see if I can pull anything useful from it. There are a few things on
-> it (hopefully left) that I'd like to extract, if possible.
+Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+---
+ drivers/md/md.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-I think it's gone.  You only have two members of the 42e59462 uuid
-array, and you need at least three.  The others all have 2008 timestamps
-so could not have been part of the desired array at any recent date.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c0c3e6d..43a1404 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -205,15 +205,6 @@ void md_new_event(struct mddev *mddev)
+ }
+ EXPORT_SYMBOL_GPL(md_new_event);
+ 
+-/* Alternate version that can be called from interrupts
+- * when calling sysfs_notify isn't needed.
+- */
+-static void md_new_event_inintr(struct mddev *mddev)
+-{
+-	atomic_inc(&md_event_count);
+-	wake_up(&md_event_waiters);
+-}
+-
+ /*
+  * Enables to iterate over all existing md arrays
+  * all_mddevs_lock protects this list.
+@@ -7209,7 +7200,7 @@ void md_error(struct mddev *mddev, struct md_rdev *rdev)
+ 	md_wakeup_thread(mddev->thread);
+ 	if (mddev->event_work.func)
+ 		queue_work(md_misc_wq, &mddev->event_work);
+-	md_new_event_inintr(mddev);
++	md_new_event(mddev);
+ }
+ EXPORT_SYMBOL(md_error);
+ 
+-- 
+2.6.2
 
-Sorry.
-
-You *could* assemble the other array, though, to see what's there:
-
-mdadm -Afv /dev/mdX /dev/sdb1 /dev/sdb4 /dev/sdd
-
-With the failure mode you described, I doubt the series of rebuilds
-would have destroyed much.
-
-Phil
