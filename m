@@ -1,7 +1,7 @@
 From: "Jeff Skoll" <s_w9gc9x@uni-kassel.de>
 Subject: Charity Donation
-Date: Sat, 02 Jan 2016 12:07:42 -0500
-Message-ID: <auto-000000203310@mailadmin.uni-kassel.de>
+Date: Sat, 02 Jan 2016 12:50:22 -0500
+Message-ID: <auto-000000276848@mailadmin.uni-kassel.de>
 Reply-To: jeff.skoll@skollcharity.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
