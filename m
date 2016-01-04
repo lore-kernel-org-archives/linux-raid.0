@@ -1,78 +1,66 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: raid5 async_xor: sleep in atomic
-Date: Mon, 04 Jan 2016 12:33:32 +1100
-Message-ID: <87wprqxh5f.fsf@notabene.neil.brown.name>
-References: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com> <87twn928qv.fsf@notabene.neil.brown.name> <CAPcyv4im63odabZ_gMF_ESuv=iZ7fyBYqLzXJDPe4cBRwtdG4g@mail.gmail.com> <87d1tw23jk.fsf@notabene.neil.brown.name> <CAPcyv4g=HBHn3f75gW9JKNdjYEnjxNCYEp3vjJBa_fGm7e+hJw@mail.gmail.com> <CAFskJNg9_gJ3HRMqD4N6FSue2R2W3CSz+1KwiZw1Bp6==dOp5A@mail.gmail.com>
+Subject: Re: [PATCH] md: remove unnecesary md_new_event_inintr
+Date: Mon, 04 Jan 2016 12:36:25 +1100
+Message-ID: <87twmuxh0m.fsf@notabene.neil.brown.name>
+References: <1451270798-25056-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFskJNg9_gJ3HRMqD4N6FSue2R2W3CSz+1KwiZw1Bp6==dOp5A@mail.gmail.com>
+In-Reply-To: <1451270798-25056-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stanislav Samsonov <slava@annapurnalabs.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Dec 28 2015, Stanislav Samsonov wrote:
+On Mon, Dec 28 2015, Guoqing Jiang wrote:
 
-> On 24 December 2015 at 00:46, Dan Williams <dan.j.williams@intel.com> wrote:
->>
->> On Wed, Dec 23, 2015 at 2:39 PM, NeilBrown <neilb@suse.com> wrote:
->> > On Thu, Dec 24 2015, Dan Williams wrote:
->> >>> Changing the GFP_NOIO to GFP_ATOMIC in all the calls to
->> >>> dmaengine_get_unmap_data() in crypto/async_tx/ would probably fix the
->> >>> issue... or make it crash even worse :-)
->> >>>
->> >>> Dan: do you have any wisdom here?  The xor is using the percpu data in
->> >>> raid5, so it cannot be sleep, but GFP_NOIO allows sleep.
->> >>> Does the code handle failure to get_unmap_data() safely?  It looks like
->> >>> it probably does.
->> >>
->> >> Those GFP_NOIO should move to GFP_NOWAIT.  We don't want GFP_ATOMIC
->> >> allocations to consume emergency reserves for a performance
->> >> optimization.  Longer term async_tx needs to be merged into md
->> >> directly as we can allocate this unmap data statically per-stripe
->> >> rather than per request. This asyntc_tx re-write has been on the todo
->> >> list for years, but never seems to make it to the top.
->> >
->> > So the following maybe?
->> > If I could get an acked-by from you Dan, and a Tested-by: from you
->> > Slava, I'll submit upstream.
->> >
->> > Thanks,
->> > NeilBrown
->> >
->> > From: NeilBrown <neilb@suse.com>
->> > Date: Thu, 24 Dec 2015 09:35:18 +1100
->> > Subject: [PATCH] async_tx: use GFP_NOWAIT rather than GFP_IO
->> >
->> > These async_XX functions are called from md/raid5 in an atomic
->> > section, between get_cpu() and put_cpu(), so they must not sleep.
->> > So use GFP_NOWAIT rather than GFP_IO.
->> >
->> > Dan Williams writes: Longer term async_tx needs to be merged into md
->> > directly as we can allocate this unmap data statically per-stripe
->> > rather than per request.
->> >
->> > Reported-by: Stanislav Samsonov <slava@annapurnalabs.com>
->> > Signed-off-by: NeilBrown <neilb@suse.com>
->>
->> Acked-by: Dan Williams <dan.j.williams@intel.com>
+> md_new_event had removed sysfs_notify since 'commit 72a23c211e45
+> ("Make sure all changes to md/sync_action are notified.")', so we
+> can use md_new_event and delete md_new_event_inintr.
 >
-> Tested-by: Slava Samsonov <slava@annapurnalabs.com>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  drivers/md/md.c | 11 +----------
+>  1 file changed, 1 insertion(+), 10 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c0c3e6d..43a1404 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -205,15 +205,6 @@ void md_new_event(struct mddev *mddev)
+>  }
+>  EXPORT_SYMBOL_GPL(md_new_event);
+>=20=20
+> -/* Alternate version that can be called from interrupts
+> - * when calling sysfs_notify isn't needed.
+> - */
+> -static void md_new_event_inintr(struct mddev *mddev)
+> -{
+> -	atomic_inc(&md_event_count);
+> -	wake_up(&md_event_waiters);
+> -}
+> -
+>  /*
+>   * Enables to iterate over all existing md arrays
+>   * all_mddevs_lock protects this list.
+> @@ -7209,7 +7200,7 @@ void md_error(struct mddev *mddev, struct md_rdev *=
+rdev)
+>  	md_wakeup_thread(mddev->thread);
+>  	if (mddev->event_work.func)
+>  		queue_work(md_misc_wq, &mddev->event_work);
+> -	md_new_event_inintr(mddev);
+> +	md_new_event(mddev);
+>  }
+>  EXPORT_SYMBOL(md_error);
+>=20=20
+> --=20
+> 2.6.2
 
-Thanks.
-
-I guess this was problem was introduced by
-Commit: 7476bd79fc01 ("async_pq: convert to dmaengine_unmap_data")
-in 3.13.  Do we think it deserves to go to -stable?
-
-(I just realised that this is really Dan's code more than mine,
- so why am I submitting it ??? But we are here now so it may as well go
- in through the md tree.)
+Applied, thanks.
 
 NeilBrown
 
@@ -82,18 +70,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWicvsAAoJEDnsnt1WYoG57kEQAI+LxlGJB4/wMs/kmTMHqXRQ
-xPgNNJmn6gs18E3+YZiD2/0bMXBKN45lsvZIhzno2Yj6StqdFCKq14hKTIQMDDHY
-+CQAE2XK/4N9YLbHpMKSzFP7X7xqtsrzg/wh/MOZ0yWn+BRLVULpB9auO42LTmo/
-xmOlQ+Mw4Qv7xhT5oMLtM+sl+OC1EIOCCXRHQv+/+5LLtQX2ft8QHD9v4tJ63xnk
-c3VhI0ukZeXH6+gkiBuhV3G1HqHbob+dv+799qUoXY63v9Hyq0OAPVeamMT+gdqP
-RXtv3l7AzbMaQELX0IJ3erxn6K9q5CMND4nGyeFPY3atQwhCDJ5AaMDRvSOp+JE/
-Lz3TJI8tgZj51rgS2FCIbL97X+M5FGCyOTDt5JGZyH0mWyXeG95bwXXlzi+2UyDK
-11OZZqdCGzn2ZbT8Nc3cVbHVSGxFu8h/M0aVTga4NSNsp8AjsTshKT3J118sTEg8
-qq1d2jbimhEYy1YygfZiArODwKv4GExtThn+09GrqR+EZZJJth04/z+XzIOm9T8C
-jQGPCzdTnvVhKIwSoZJQ4H20rWazD5+HbgwN4XloHWfkp4TcqsiAggafRPLakKYu
-est1ufQRA1CsNEPfq+2b+ENslWd3MSyFcTjjQrrbJo5A7AtBFN1bIKJIoKv0KyLH
-Z/HGUGq8eL+vsLuE/zg7
-=XXK2
+iQIcBAEBCAAGBQJWicyZAAoJEDnsnt1WYoG53zkP/397Io5eobaT5t7tGf+/2zcP
+95LU0JH+voPQoiUjnv/t+mmTODAgIN0pPaZl5Z0LAStY0JWzWOaSXhwUbPUgW7GH
+C9KNF4EJbefupVE0SIVLgZ5FFlYMZgLV+cA8mAGzuRhUZSlonHtgMrpjotAS/AZV
+INZJDfhxSYb5Btm60tbX2BswqFcpnfBC4mmTDURfkGAyqPsWLANOqGRQB03ZDlCq
+vlTq9sUGEoOKdG8YWRTrXcGM9T1KQiwhjShdQQKQ/HuBBAotsGPxJuHpe4PvfGwa
+cKzdzLJUaeoZDKRPcj+4pVa+3ms6EPoBuPogHCOXje4VbnhJ2IzXltAfvltZVf6D
+TS+6S6EuZgp0dQBFRGa8DJyTiE2fyQsAa0XGgaPKvbcTUIwW3PBa4azmSjZoYIGe
+dKJAqe+OjWJjLf5XNSt0ikNhnmaHGXe3Ct9EgCd9vGmOQrd3Zj9A/OBtDUntKDIN
+nizpk9Of/FEyCtHZPSRSj9EMIKPjy4LoVQJp7+ANt2soEZuNpvF9zRB0UHpf/4ir
+WdFq7PIWTZZt/M3UcV4Ak/yK0F4KzQ3/FCMZSQ5ZBxkRoMVnBkWhBZzGe6fLUF9P
+sM0U2xpgDjOQmF7E1T9XLSDy5F+JJXbxWqt4wcxvaLW9Bu4HG63fTfGY3F2fIjs0
+FybYuz8Qoh4jr7vSccyj
+=AdMv
 -----END PGP SIGNATURE-----
 --=-=-=--
