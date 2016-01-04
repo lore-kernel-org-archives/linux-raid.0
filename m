@@ -1,73 +1,78 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: best base / worst case RAID 5,6 write speeds
-Date: Mon, 4 Jan 2016 11:43:47 -0800
-Message-ID: <CAFx4rwSo3MNqJGNQ3wHe49F+xQ6559aZdikPL4M3+HuD6uRz-Q@mail.gmail.com>
-References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
- <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
- <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
- <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
- <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
- <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
- <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
- <22128.11867.847781.946791@quad.stoffel.home> <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
- <22128.35881.182823.556362@quad.stoffel.home> <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
- <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
- <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
- <5672BB7A.4050808@turmel.org> <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
- <567339F0.9000209@turmel.org> <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
- <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
- <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
- <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
- <CAE9DZUQoNh2uU1h4okY0Fz5wzVv6-ZTnet9tS-dNQRHsLnPvNg@mail.gmail.com>
- <CAFx4rwQvTrUEskJxdc6CpvGu3uVYOJWEvHmMkqmNbmTgTVT0-Q@mail.gmail.com>
- <F7761B9B1D11B64BBB666019E9378117FE79E5@CFWEX01.americas.cray.com>
- <CAFx4rwQ+3w3v-QmiYoQu=5aApc4KyiykF+KdtMUG4v6-fBh22g@mail.gmail.com> <F7761B9B1D11B64BBB666019E9378117FE7AB1@CFWEX01.americas.cray.com>
-Reply-To: doug@easyco.com
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH v2 0/2] Introduce the bulk IV mode for improving the
+ crypto engine efficiency
+Date: Mon, 4 Jan 2016 20:13:43 +0000
+Message-ID: <20160104201343.GQ16023@sirena.org.uk>
+References: <cover.1450233399.git.baolin.wang@linaro.org>
+ <56711C0F.8030105@gmail.com>
+ <CAMz4kuL2b5Qad5iD3odNVh9VO6ctu_M=QE=8fbdC_+ea+5wJ5w@mail.gmail.com>
+ <56885330.9080801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FE7AB1@CFWEX01.americas.cray.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="wHwaWyh5/fUA7Dm/"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <56885330.9080801@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Baolin Wang <baolin.wang@linaro.org>, Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, Kent Overstreet <kent.overstreet@gmail.com>, keith.busch@intel.com, tj@kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Robert,
 
-I have a C benchmark program that opens a block device with O_DIRECT
-(040000 on x86 and 0200000 on arm) and reads/writes with 4K aligned
-buffers show up as BIOs as hoped.
+--wHwaWyh5/fUA7Dm/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-One easy way to "test" this is to add debug code to "dm-zero" and use
-it as a way to watch IOs as they get to the block stack.
+On Sat, Jan 02, 2016 at 11:46:08PM +0100, Milan Broz wrote:
 
-Doug
+> Anyway, I think that you should optimize driver, not add strange hw-depen=
+dent
+> crypto modes to dmcrypt. This is not the first crypto accelerator that is=
+ just not
+> suited for this kind of use.
 
+> (If it can process batch of chunks of data each with own IV, then it can =
+work
+> with dmcrypt, but I think such optimized code should be inside crypto API,
+> not in dmcrypt.)
 
-On Mon, Jan 4, 2016 at 11:33 AM, Robert Kierski <rkierski@cray.com> wrote:
-> Hey Doug,
->
-> I tried all sorts of things... even things that seemed rather backwards.  I tried a variety of disk count's, chunk sizes, IO sizes, IO Counts, etc.
->
-> Yes...the changes were adding the bi_iter (mostly).
->
-> I also eliminated the limit of 10 printk's so that I could try various MDRaid configurations and various block size and counts without having to reboot.
->
-> I would have thought that the OS would pass the IO from user space to the driver without modification.  But it appears that's not the case.
->
-> Bob Kierski
-> Senior Storage Performance Engineer
-> Cray Inc.
-> 380 Jackson Street
-> Suite 210
-> St. Paul, MN 55101
-> Tele: 651-967-9590
-> Fax:  651-605-9001
-> Cell: 651-890-7461
->
+The flip side of this is there is an awful lot of hardware out there
+that has basically this pattern and if we can make the difference
+between people being able to encrypt or not encrypt their storage due to
+performance then that seems like a win.  Getting hardware changes isn't
+going to be a fast process.  From a brief look at the crypto layer it
+does look there may be things we can do there, if only in terms of
+factoring out the common patterns for driving the queue of operations
+into the hardware so it's easy for drivers to do the best thing. =20
 
+One thing that occurs to me for the IV programming that has been
+proposed for SPI by Martin Sparl (and seen good results on Raspberry PI)
+is to insert transfers programming the crypto engine into the stream of
+DMA operations so we can keep the hardware busy.  It won't work with
+every SoC out there but it will work with a lot of them, it's what
+hardware that explicitly supports this will be doing internally.  It's
+the sort of thing that would benefit from factoring out, it's a lot of
+hassle to implement per driver.
 
+The main thing the out of tree req-dm-crypt code is doing was using a
+larger block size which does seem like a reasonable thing to allow
+people to tune for performance tradeofffs but I undertand that's a lot
+harder to achieve in a good way than one might hope.
 
--- 
-Doug Dumitru
-EasyCo LLC
+--wHwaWyh5/fUA7Dm/
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWitJ2AAoJECTWi3JdVIfQ33YH/1d/G6DQGa49xEi7UUxjekRW
+GhxVr+EavcII7O0qptSoDjekzvjGKzWwxiS1WHY/1omD8PzHMSfkWCcap1UkRVOk
+AoNPkULpeYOT/VqxQXLHHZzyn8Oki9txan3mESIiyoQyyXYsb6bjc6i9OzcBXcPB
+bJGYKRlzXVkf/NmzLkeJnRrQ5BpgmsfnS1EquQVILV0y3uhnt7wVhnNLuE8+hSZR
+vkzSHhssGrVjX1QhlPbWsT54rcPLcIREVxak+9AtCyOv9RAIQlBbEPk80TX80ST2
+a8vWFNmlffrvvLEPnjqA/iNmiDxu6WvKlQblr/Bs21pHgYcCBZZh6GqyI7mO+1E=
+=zudk
+-----END PGP SIGNATURE-----
+
+--wHwaWyh5/fUA7Dm/--
