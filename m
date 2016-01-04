@@ -1,330 +1,99 @@
-From: "Guido D'Arezzo" <gdarrezzo@gmail.com>
-Subject: Intel IMSM RAID 5 won't start
-Date: Sun, 3 Jan 2016 19:44:22 +0000
-Message-ID: <CAEUPnrygMz5qs=Saw4maWOriS7bb72-+RO_CSGd_+neQPhp49g@mail.gmail.com>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: raid5 async_xor: sleep in atomic
+Date: Mon, 04 Jan 2016 12:33:32 +1100
+Message-ID: <87wprqxh5f.fsf@notabene.neil.brown.name>
+References: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com> <87twn928qv.fsf@notabene.neil.brown.name> <CAPcyv4im63odabZ_gMF_ESuv=iZ7fyBYqLzXJDPe4cBRwtdG4g@mail.gmail.com> <87d1tw23jk.fsf@notabene.neil.brown.name> <CAPcyv4g=HBHn3f75gW9JKNdjYEnjxNCYEp3vjJBa_fGm7e+hJw@mail.gmail.com> <CAFskJNg9_gJ3HRMqD4N6FSue2R2W3CSz+1KwiZw1Bp6==dOp5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFskJNg9_gJ3HRMqD4N6FSue2R2W3CSz+1KwiZw1Bp6==dOp5A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stanislav Samsonov <slava@annapurnalabs.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi
+--=-=-=
+Content-Type: text/plain
 
-After 20 months trouble-free Intel IMSM RAID, I had to do a hard reset
-and the array has failed to start.  I don=E2=80=99t know if the failed =
-RAID
-was the cause of the problems before the reset.  The system won=E2=80=99=
-t boot
-because everything is on the RAID array.  Booting from a live Fedora
-USB shows no sign that the discs are broken and I was able to copy 1
-GB off each disc with dd.  I hope someone can help me to rescue the
-array.
+On Mon, Dec 28 2015, Stanislav Samsonov wrote:
 
-It is a 4 x 1 TB disc RAID 5 array.  The system was running Archlinux
-and I had patched it a day or 2 before for the first time in a few
-months, thought it had been rebooted more than once afterwards without
-incident.
-
-The Intel oROM says disc 2 is =E2=80=9COffline Member=E2=80=9D and 3 is=
- =E2=80=9CFailed Disk=E2=80=9D.
-
------------------------------------------------------------------------
-Intel(R) Rapid Storage Technology - Option ROM - 11.6.0.1702
-
-RAID Volumes:
-ID    Name    Level        Strip    Size    Status     Bootable
-O    md0    RAID5(Parity)    128KB    2.6TB    Failed    No
-1    mdl    RAID5(Parity)    128KB    94.5GB    Failed    No
-
-Physical Devices:
-ID    Device    Model        Serial #    Size    Type/Status(Vol ID)
-O    WDC WD10EZEK-00K    WD-ACC1S5684189    931.5GB    Member Disk(0,1)
-1    SAMSUNG HD103UJ        S13PJDAS608384    931.5GB    Member Disk(O,=
-1)
-2    SAMSUNG HD103SJ        SZ46J9GZC04Z67    931.5GB Offline Member
-3    SAMSUNG HD103UJ        S13PJDAS608386    931.5GB    Unknown Disk
-4    WDC WD10EZEK-08M    WD-ACC3F1681668    931.5GB    Non-RAID Disk
-
------------------------------------------------------------------------
-
-The 2 RAID volumes were both spread across all 4 discs.  This is how
-it looks now:
-
-# mdadm -D /dev/md/imsm0
-/dev/md/imsm0:
-        Version : imsm
-     Raid Level : container
-  Total Devices : 1
-
-Working Devices : 1
-
-
-           UUID : 76cff3f5:1a3a7a83:49fc86a8:84cf6604
-  Member Arrays :
-
-    Number   Major   Minor   RaidDevice
-
-       0       8       48        -        /dev/sdd
-#
-
-# mdadm -D /dev/md/imsm1
-/dev/md/imsm1:
-        Version : imsm
-     Raid Level : container
-  Total Devices : 3
-
-Working Devices : 3
-
-
-           UUID : e8286680:de9642f4:04200a4a:acbdb566
-  Member Arrays :
-
-    Number   Major   Minor   RaidDevice
-
-       0       8       16        -        /dev/sdb
-       1       8       32        -        /dev/sdc
-       2       8        0        -        /dev/sda
-#
-
-# mdadm --detail-platform
- Platform : Intel(R) Matrix Storage Manager
- Version : 11.6.0.1702
- RAID Levels : raid0 raid1 raid10 raid5
- Chunk Sizes : 4k 8k 16k 32k 64k 128k
- 2TB volumes : supported
- 2TB disks : supported
- Max Disks : 6
- Max Volumes : 2 per array, 4 per controller
- I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-#
-
-
-# mdadm --examine /dev/sd[abcd]
-/dev/sda:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.3.00
-    Orig Family : d12e9b21
-         Family : d12e9b21
-     Generation : 00695bbd
-     Attributes : All supported
-           UUID : e8286680:de9642f4:04200a4a:acbdb566
-       Checksum : 8f6fe1cb correct
-    MPB Sectors : 2
-          Disks : 4
-   RAID Devices : 2
-
-  Disk01 Serial : WD-WCC1S5684189
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[md0]:
-           UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
-     RAID Level : 5
-        Members : 4
-          Slots : [_U_U]
-    Failed disk : 2
-      This Slot : 1
-     Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
-   Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
-  Sector Offset : 0
-    Num Stripes : 7372800
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : failed
-    Dirty State : clean
-
-[md1]:
-           UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
-     RAID Level : 5
-        Members : 4
-          Slots : [__UU]
-    Failed disk : 0
-      This Slot : 2
-     Array Size : 198232064 (94.52 GiB 101.49 GB)
-   Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
-  Sector Offset : 1887440896
-    Num Stripes : 258117
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : failed
-    Dirty State : clean
-
-  Disk00 Serial : PJDWS608386:0:0
-          State : active
-             Id : ffffffff
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk02 Serial : 6J9GZC04267:0:0
-          State : active failed
-             Id : ffffffff
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk03 Serial : S13PJDWS608384
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-/dev/sdb:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.3.00
-    Orig Family : d12e9b21
-         Family : d12e9b21
-     Generation : 00695bbd
-     Attributes : All supported
-           UUID : e8286680:de9642f4:04200a4a:acbdb566
-       Checksum : 8f6fe1cb correct
-    MPB Sectors : 2
-          Disks : 4
-   RAID Devices : 2
-
-  Disk03 Serial : S13PJDWS608384
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[md0]:
-           UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
-     RAID Level : 5
-        Members : 4
-          Slots : [_U_U]
-    Failed disk : 2
-      This Slot : 3
-     Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
-   Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
-  Sector Offset : 0
-    Num Stripes : 7372800
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : failed
-    Dirty State : clean
-
-[md1]:
-           UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
-     RAID Level : 5
-        Members : 4
-          Slots : [__UU]
-    Failed disk : 0
-      This Slot : 3
-     Array Size : 198232064 (94.52 GiB 101.49 GB)
-   Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
-  Sector Offset : 1887440896
-    Num Stripes : 258117
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : failed
-    Dirty State : clean
-
-  Disk00 Serial : PJDWS608386:0:0
-          State : active
-             Id : ffffffff
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk01 Serial : WD-WCC1S5684189
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk02 Serial : 6J9GZC04267:0:0
-          State : active failed
-             Id : ffffffff
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-/dev/sdc:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.3.00
-    Orig Family : d12e9b21
-         Family : d12e9b21
-     Generation : 00695b88
-     Attributes : All supported
-           UUID : e8286680:de9642f4:04200a4a:acbdb566
-       Checksum : a72daa29 correct
-    MPB Sectors : 2
-          Disks : 4
-   RAID Devices : 2
-
-  Disk02 Serial : S246J9GZC04267
-          State : active
-             Id : 00000002
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-[md0]:
-           UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
-     RAID Level : 5
-        Members : 4
-          Slots : [UUUU]
-    Failed disk : none
-      This Slot : 2
-     Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
-   Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
-  Sector Offset : 0
-    Num Stripes : 7372800
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : normal
-    Dirty State : dirty
-
-[md1]:
-           UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
-     RAID Level : 5
-        Members : 4
-          Slots : [UUUU]
-    Failed disk : none
-      This Slot : 0
-     Array Size : 198232064 (94.52 GiB 101.49 GB)
-   Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
-  Sector Offset : 1887440896
-    Num Stripes : 258117
-     Chunk Size : 128 KiB
-       Reserved : 0
-  Migrate State : idle
-      Map State : normal
-    Dirty State : clean
-
-  Disk00 Serial : S13PJDWS608386
-          State : active
-             Id : 00000003
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk01 Serial : WD-WCC1S5684189
-          State : active
-             Id : 00000000
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-  Disk03 Serial : S13PJDWS608384
-          State : active
-             Id : 00000001
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-
-/dev/sdd:
-          Magic : Intel Raid ISM Cfg Sig.
-        Version : 1.0.00
-    Orig Family : c7e42747
-         Family : c7e42747
-     Generation : 00000000
-     Attributes : All supported
-           UUID : 76cff3f5:1a3a7a83:49fc86a8:84cf6604
-       Checksum : 4f820c2e correct
-    MPB Sectors : 1
-          Disks : 1
-   RAID Devices : 0
-
-  Disk00 Serial : S13PJDWS608386
-          State :
-             Id : 00000003
-    Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
-#
+> On 24 December 2015 at 00:46, Dan Williams <dan.j.williams@intel.com> wrote:
+>>
+>> On Wed, Dec 23, 2015 at 2:39 PM, NeilBrown <neilb@suse.com> wrote:
+>> > On Thu, Dec 24 2015, Dan Williams wrote:
+>> >>> Changing the GFP_NOIO to GFP_ATOMIC in all the calls to
+>> >>> dmaengine_get_unmap_data() in crypto/async_tx/ would probably fix the
+>> >>> issue... or make it crash even worse :-)
+>> >>>
+>> >>> Dan: do you have any wisdom here?  The xor is using the percpu data in
+>> >>> raid5, so it cannot be sleep, but GFP_NOIO allows sleep.
+>> >>> Does the code handle failure to get_unmap_data() safely?  It looks like
+>> >>> it probably does.
+>> >>
+>> >> Those GFP_NOIO should move to GFP_NOWAIT.  We don't want GFP_ATOMIC
+>> >> allocations to consume emergency reserves for a performance
+>> >> optimization.  Longer term async_tx needs to be merged into md
+>> >> directly as we can allocate this unmap data statically per-stripe
+>> >> rather than per request. This asyntc_tx re-write has been on the todo
+>> >> list for years, but never seems to make it to the top.
+>> >
+>> > So the following maybe?
+>> > If I could get an acked-by from you Dan, and a Tested-by: from you
+>> > Slava, I'll submit upstream.
+>> >
+>> > Thanks,
+>> > NeilBrown
+>> >
+>> > From: NeilBrown <neilb@suse.com>
+>> > Date: Thu, 24 Dec 2015 09:35:18 +1100
+>> > Subject: [PATCH] async_tx: use GFP_NOWAIT rather than GFP_IO
+>> >
+>> > These async_XX functions are called from md/raid5 in an atomic
+>> > section, between get_cpu() and put_cpu(), so they must not sleep.
+>> > So use GFP_NOWAIT rather than GFP_IO.
+>> >
+>> > Dan Williams writes: Longer term async_tx needs to be merged into md
+>> > directly as we can allocate this unmap data statically per-stripe
+>> > rather than per request.
+>> >
+>> > Reported-by: Stanislav Samsonov <slava@annapurnalabs.com>
+>> > Signed-off-by: NeilBrown <neilb@suse.com>
+>>
+>> Acked-by: Dan Williams <dan.j.williams@intel.com>
+>
+> Tested-by: Slava Samsonov <slava@annapurnalabs.com>
 
 Thanks.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I guess this was problem was introduced by
+Commit: 7476bd79fc01 ("async_pq: convert to dmaengine_unmap_data")
+in 3.13.  Do we think it deserves to go to -stable?
+
+(I just realised that this is really Dan's code more than mine,
+ so why am I submitting it ??? But we are here now so it may as well go
+ in through the md tree.)
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWicvsAAoJEDnsnt1WYoG57kEQAI+LxlGJB4/wMs/kmTMHqXRQ
+xPgNNJmn6gs18E3+YZiD2/0bMXBKN45lsvZIhzno2Yj6StqdFCKq14hKTIQMDDHY
++CQAE2XK/4N9YLbHpMKSzFP7X7xqtsrzg/wh/MOZ0yWn+BRLVULpB9auO42LTmo/
+xmOlQ+Mw4Qv7xhT5oMLtM+sl+OC1EIOCCXRHQv+/+5LLtQX2ft8QHD9v4tJ63xnk
+c3VhI0ukZeXH6+gkiBuhV3G1HqHbob+dv+799qUoXY63v9Hyq0OAPVeamMT+gdqP
+RXtv3l7AzbMaQELX0IJ3erxn6K9q5CMND4nGyeFPY3atQwhCDJ5AaMDRvSOp+JE/
+Lz3TJI8tgZj51rgS2FCIbL97X+M5FGCyOTDt5JGZyH0mWyXeG95bwXXlzi+2UyDK
+11OZZqdCGzn2ZbT8Nc3cVbHVSGxFu8h/M0aVTga4NSNsp8AjsTshKT3J118sTEg8
+qq1d2jbimhEYy1YygfZiArODwKv4GExtThn+09GrqR+EZZJJth04/z+XzIOm9T8C
+jQGPCzdTnvVhKIwSoZJQ4H20rWazD5+HbgwN4XloHWfkp4TcqsiAggafRPLakKYu
+est1ufQRA1CsNEPfq+2b+ENslWd3MSyFcTjjQrrbJo5A7AtBFN1bIKJIoKv0KyLH
+Z/HGUGq8eL+vsLuE/zg7
+=XXK2
+-----END PGP SIGNATURE-----
+--=-=-=--
