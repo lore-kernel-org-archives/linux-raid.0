@@ -1,93 +1,94 @@
-From: NeilBrown <neilb@suse.com>
-Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry." - recovery advice?
-Date: Mon, 04 Jan 2016 13:16:14 +1100
-Message-ID: <87r3hyxf69.fsf@notabene.neil.brown.name>
-References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com> <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se> <CAF-KpgaLr-qA_RJiDYstFv-=EoHH-Ea3o1q3G3tXC4nX=Wt2XA@mail.gmail.com> <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com> <87d1u060sv.fsf@notabene.neil.brown.name> <CAF-Kpga8toqetF+g6wYbUVHKngkRB8QMTyRy39Jnxn0P6w8ouQ@mail.gmail.com> <871tad3o2q.fsf@notabene.neil.brown.name> <CAF-KpgZ=HY_HKvj5buFOKseUV0GLeOLR1m3B0EYxrYcD3R5ieA@mail.gmail.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH v2 0/2] Introduce the bulk IV mode for improving the
+ crypto engine efficiency
+Date: Mon, 4 Jan 2016 14:58:35 +0800
+Message-ID: <CAMz4kuK__1tKf=+gP2zELzFFur45eqTL78v6oTdYgYTzCvTsNw@mail.gmail.com>
+References: <cover.1450233399.git.baolin.wang@linaro.org>
+	<56711C0F.8030105@gmail.com>
+	<CAMz4kuL2b5Qad5iD3odNVh9VO6ctu_M=QE=8fbdC_+ea+5wJ5w@mail.gmail.com>
+	<56885330.9080801@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF-KpgZ=HY_HKvj5buFOKseUV0GLeOLR1m3B0EYxrYcD3R5ieA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: George Rapp <george.rapp@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <56885330.9080801@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Milan Broz <gmazyland@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, Kent Overstreet <kent.overstreet@gmail.com>, keith.busch@intel.com, tj@kernel.org, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+Hi Milan,
 
-On Sun, Dec 27 2015, George Rapp wrote:
-
-> Please find attached the output of the following command:
+On 3 January 2016 at 06:46, Milan Broz <gmazyland@gmail.com> wrote:
 >
-> # tar -c -v -z --sparse -f dev-md4-mdadm-dump.tar.gz dev-md4-mdadm-dump
+> Sorry for delay, I tried to compile it.
+> It doesn't crash now, but it also does not work.
 >
-> Thanks again for your help!
+> You usage of IV in XTS mode is not correct - it cannot just work this way,
+> you have to initialize IV after each block. And just one write not aligned
+> to your large XTS block will corrupt it.
+>
+> Did you tried to _read_ data you write to the device?
+>
+> See this test :
+>
+> # create  device with your patch
+> $ echo "test"|cryptsetup create -s 512 -c aes-xts-bulk tst /dev/sdg
+>
+> # prepare random test file
+> $ dd if=/dev/urandom of=/src.img bs=1M count=16
+>
+> # now copy the file to the plaintext device and drop caches
+> $ dd if=/src.img of=/dev/mapper/tst bs=1M count=16
+>
+> $ echo 3 > /proc/sys/vm/drop_caches
+>
+> # and verify that we are (not) reading the same data ...
+>
+> $ dd if=/dev/mapper/tst of=/dst1.img bs=1M count=16
+>
+> $ sha256sum /src.img /dst1.img
+> 5401119fa9975bbeebac58e0b2598bc87247a29e62417f9f58fe200b531602ad  /src.img
+> e9bf5efa95031fdb5adf618db141f48ed23f71b12c017b8a0cbe0a694f18b979  /dst1.img
+>
+> (I think only first page-sized block is correct, because without direct-io
+> it writes in page-sized IOs.)
+>
+>
+> ... or just try to mkfs and mount it
+> $ mkfs -t ext4  /dev/mapper/tst
+>
+> mke2fs 1.42.13 (17-May-2015)
+> Creating filesystem with 262144 4k blocks and 65536 inodes
+> ...
+>
+> $ mount /dev/mapper/tst /mnt/tst
+> mount: wrong fs type, bad option, bad superblock on /dev/mapper/tst,
+>        missing codepage or helper program, or other error
+>
+>
+> You approach simply does not work. (It will probably work for ECB mode but it is
+> unusable in real world.)
+>
+>
+> Anyway, I think that you should optimize driver, not add strange hw-dependent
+> crypto modes to dmcrypt. This is not the first crypto accelerator that is just not
+> suited for this kind of use.
 
-Thanks.
+Very grateful for your feedback. I'm sorry I didn't check much data
+correctness, mostly focus on the encryption speed. It looks like there
+are something wrong when I follow your test procedure. I will optimize
+the driver and need to be known much about XTS mode to check why it
+can not work. Thanks.
 
-If you apply the following patch to mdadm (
-   git clone git://neil.brown.name/mdadm
-   apply patch
-   make
-) and then try to assemble with --update=revert-reshape, it should
-assemble as a 5-device array with no reshape happening.
-
-I probably want more safety checks before this goes upstream, but it
-is safe enough for you.
-
-NeilBrown
-
-diff --git a/super1.c b/super1.c
-index 10e00652c4ee..efc0491fc94d 100644
---- a/super1.c
-+++ b/super1.c
-@@ -1317,6 +1317,17 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 			unsigned long long reshape_sectors;
- 			long reshape_chunk;
- 			rv = 0;
-+			/* If the reshape hasn't started, just stop it */
-+			if (sb->reshape_position == 0 &&
-+			    (__le32_to_cpu(sb->delta_disks) > 0 ||
-+			     (__le32_to_cpu(sb->delta_disks) == 0 &&
-+			      !(sb->feature_map & __cpu_to_le32(MD_FEATURE_RESHAPE_BACKWARDS))))) {
-+				sb->feature_map &= ~__cpu_to_le32(MD_FEATURE_RESHAPE_ACTIVE);
-+				sb->raid_disks = __cpu_to_le32(__le32_to_cpu(sb->raid_disks) -
-+							       __le32_to_cpu(sb->delta_disks));
-+				sb->delta_disks = 0;
-+				goto done;
-+			}
- 			/* reshape_position is a little messy.
- 			 * Its value must be a multiple of the larger
- 			 * chunk size, and of the "after" data disks.
-@@ -1363,6 +1374,7 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 				sb->new_offset = __cpu_to_le32(-offset_delta);
- 				sb->data_size = __cpu_to_le64(__le64_to_cpu(sb->data_size) - offset_delta);
- 			}
-+		done:;
- 		}
- 	} else if (strcmp(update, "_reshape_progress")==0)
- 		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
+>
+> (If it can process batch of chunks of data each with own IV, then it can work
+> with dmcrypt, but I think such optimized code should be inside crypto API,
+> not in dmcrypt.)
+>
+> Milan
 
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWidXuAAoJEDnsnt1WYoG5ou0P/iHwsuqAiyM1RrEE2NhqSaY+
-s2YmjvQIdVuTisPxXY8JT8ypUm2neg2vgFJt7XoO2UaCi6M7HMDex7dBhQZzwzXR
-zjrcNmvh52XYxz7FGqjErJx9yiYlFVYu5yBP4hOGUKLQvpkcZy95RyepJ6UVQChf
-oguCJUv/SACLrTlRVFyhHHKjtLYgvkAEfulIgaXeKhKBuq72pZ/gyvQDNdTQj3rG
-HNgRuXBhzlU88bOn83QDFfF4ynUHRBrCBA3NyUqUWXqaR+1weQwcymt3doe5EK8M
-18+lGe1cvA3OhCrroWUDwl7tAD9UzhisXE14NLK9n/TLbxLBF1In5fJf9LLZoBLN
-jDQFiVFUixJH1ieXVwIbl3k1IoNskhYlioaRRE4GpteGsxfp3Ku+q+R2RTL3oAnP
-sTELAZkPwOA6E+u5q0c+vgrm7IOvGC/Yv7+kbMLiyhgNTExYwbqmGkuFtOCG+m65
-cWWe7PzB7XLMmITs2+2N8SiQTBuGfJHtPmTprFOqQgkU0p8IjwbNdvDewH6dy9G6
-xtjdTzSXTlarcm4RJvH/KCX50r+swaK2WE+ow0FLMUH99jsF/UZ/pEgTH36n/5v2
-iFOY0F+NUCz4XHT1UbXB4yEpGA9+854k9g4k6YXhbD7dFz9ajVHUxdu4mYnSQP4B
-CUoMeOBwFKd63GLkm3BJ
-=k6p+
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Baolin.wang
+Best Regards
