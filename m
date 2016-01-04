@@ -1,113 +1,65 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: WANTED new maintainer for Linux/md (and mdadm)
-Date: Mon, 4 Jan 2016 10:24:02 -0800
-Message-ID: <20160104182402.GA1541@kernel.org>
-References: <87k2o849j5.fsf@notabene.neil.brown.name>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: best base / worst case RAID 5,6 write speeds
+Date: Mon, 4 Jan 2016 18:56:03 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FE79E5@CFWEX01.americas.cray.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+ <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+ <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+ <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+ <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+ <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+ <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+ <22128.11867.847781.946791@quad.stoffel.home>
+ <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
+ <22128.35881.182823.556362@quad.stoffel.home>
+ <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
+ <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
+ <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
+ <5672BB7A.4050808@turmel.org>
+ <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
+ <567339F0.9000209@turmel.org>
+ <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
+ <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
+ <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
+ <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
+ <CAE9DZUQoNh2uU1h4okY0Fz5wzVv6-ZTnet9tS-dNQRHsLnPvNg@mail.gmail.com>
+ <CAFx4rwQvTrUEskJxdc6CpvGu3uVYOJWEvHmMkqmNbmTgTVT0-Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87k2o849j5.fsf@notabene.neil.brown.name>
+In-Reply-To: <CAFx4rwQvTrUEskJxdc6CpvGu3uVYOJWEvHmMkqmNbmTgTVT0-Q@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, "J. Bruce Fields" <bfields@fieldses.org>, Phil Turmel <philip@turmel.org>
+To: "doug@easyco.com" <doug@easyco.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Dec 21, 2015 at 05:10:06PM +1100, NeilBrown wrote:
-> 
-> hi,
->  I became maintainer for md (Linux Software RAID) in late 2001 and on
->  the whole it has been fun and a valuable experience.  But I have been
->  losing interest in recent years (https://lwn.net/Articles/511073/) and
->  as was mentioned at the kernel summit, I would like to resign.  Some
->  years ago I managed to hand over nfsd to the excellent Bruce Fields,
->  but I do not seem to have the gift that Linus has of attracting
->  maintainers.  While there are a number of people who know quite a bit
->  about md and/or have contributed to development, there is no obvious
->  candidate for replacement maintainer - no one who has already been
->  doing significant parts of the maintainer role.
-> 
->  So I have decided to fall back on the mechanism by which I ended up
->  being maintainer in the first place.  I will create a vacuum and hope
->  someone fills it (yes: I was sucked-in....).  So as of 1st February
->  2016 I will be resigning.
-> 
->  At the kernel summit in October Linus talked about the value of
->  maintainership teams (https://lwn.net/Articles/662979/).  I think it
->  would be great if a (small) team formed to continue to oversee md
->  rather than just a single individual (or maybe the dm team could extend
->  to include md??).  If I had managed to be part of a team rather than
->  "going it alone" for so long, I might feel less tired of the whole
->  thing now.
-> 
->  I don't see it as my place to appoint that team or any individuals, or
->  even to nominate any candidates.  A very important attribute of a
->  maintainer is that they need to care about the code and the subsystem
->  and I cannot tell other people to care (or even know if they do).  It
->  is really up to individuals to volunteer.  A few people have been
->  mentioned to me in earlier less-public conversations.  Any of them may
->  well be suitable, but I would rather they named themselves if
->  interested.
-> 
->  So I'm hoping to get one or more volunteers to be maintainer:
->    - to gather and manage patches and outstanding issues,
->    - to review patches or get them reviewed
->    - to follow up bug reports and get them resolved
->    - to feed patches upstream, maybe directly to Linus,
->      maybe through some other maintainer, depending on what
->      relationships already exist or can be formed,
->    - to guide the longer term direction (saying "no" is important
->      sometimes),
->    - to care,
->  but also to be aware that maintainership takes real effort and time, as
->  does anything that is really worthwhile.
-> 
->  This all applies to mdadm as well as md (except you would ultimately
->  *be* upstream for mdadm, not needing to send it anywhere).  Even if a
->  clear team doesn't form it would be great if different people
->  maintained mdadm and md.
-> 
->  One part of the job that I have put a lot of time in to is following
->  the linux-raid@vger.kernel.org list and providing support.  This makes
->  people feel good about md and so more adventurous in using it.
->  Consequently I tend to hear about bugs and usability issues nice and
->  early (well before paying customers hit them in most cases) and that is
->  a big win.
->  In recent times I've been doing less of this and have been absolutely
->  thrilled that the gap has been more than filled by other very competent
->  community members.  Not developers particular but a number of md users
->  have been providing excellent support.  I'd particularly like to
->  high-light Phil Turmel who is very forthcoming with excellent advice,
->  but he is certainly not the only one who deserves a lot of thanks.
->  So "Thank you" to everyone who answers questions on linux-raid.
-> 
->  This would be a good place for any future maintainer to hang out to
->  receive wisdom as well as to provide support.
-> 
->  I will still be around.  I can certainly help out in some sort of
->  mentor role, and can probably be convinced to review patches and
->  comment on designs.  But I really want to head towards spending less
->  time on md (there are so many other interesting things to learn about).
-> 
->  So: if anyone is interested - please announce yourself, ask questions
->  and start doing things.  I have no clear idea about how a transition
->  will happen.  That is really up to you (plural). Take the bull by the
->  horns and start *being* a maintainer(team).  I won't get in your way
->  and I'll help where I can.
-> 
-> Thanks,
-> NeilBrown
-> 
-> P.S. I'm committed to continue to work with the raid5-journal effort
-> From Facebook and the raid1-cluster effort from SUSE and the
-> line-in-the-sand of 1st February won't affect my support for those.
-
-Hi Neil,
-
-Thanks for all the efforts! We will definitely miss you and fortunately you
-won't completely quit from MD :). I'm very interested in helping maintain MD. I
-have been working on MD for several years. My employer (facebook) supports me,
-so I have time being a maintainer too.
-
-Thanks,
-Shaohua
+SGV5IERvdWcsDQoNCkknbSB0cnlpbmcgdG8gZ2V0IHRoZSBwYXRjaCB0byB3b3JrIGFuZCBub3Qg
+aGF2aW5nIG11Y2ggbHVjay4NCg0KSSdtIGd1ZXNzaW5nIHRoYXQgeW91J3JlIHVzaW5nIHRoZSBn
+ZW5lcmljIENlbnRPUyA3IGtlcm5lbCAoMy4xMCkuICBJJ20gdXNpbmcgYSAzLjE4LjQga2VybmVs
+LCBzbyB0aGVyZSB3ZXJlIGEgZmV3IGNoYW5nZXMgSSBoYWQgdG8gbWFrZSB0byBnZXQgdGhlIHBh
+dGNoIHRvIGFwcGx5LiAgQnV0IHRoZXkgd2VyZW4ndCBzaWduaWZpY2FudCBhcyBmYXIgYXMgSSBj
+YW4gdGVsbCwgYW5kIHNob3VsZG4ndCBoYXZlIGNhdXNlZCB0aGUgRmFzdFdyaXRlIGNvZGUgdG8g
+YmUgaWdub3JlZC4NCg0KVGhlcmUgbXVzdCBiZSBhZGRpdGlvbmFsIGNoYW5nZXMgaW4gdGhlIGtl
+cm5lbCB0aGF0IGFyZSBuZWNlc3NhcnkuICBXaGVuIEkgY3JlYXRlIHRoZSBzcGVjaWFsIGNhc2Ug
+TURSYWlkLCBhbmQgdGhlbiB1c2UgdGhlIHNwZWNpYWwgY2FzZSBJTyBwYXR0ZXJuLCBJIHNlZSBv
+bmx5IHRoZSBkZWJ1ZyBtZXNzYWdlcyBpbmRpY2F0aW5nIHRoYXQgdGhlIEZhc3RXcml0ZSBjb2Rl
+IHdhcyBpZ25vcmVkLiANCg0KSSd2ZSBhZGRlZCBtb3JlIGRlYnVnZ2luZyBjb2RlIHRvIHRyeSB0
+byB1bmRlcnN0YW5kIHdoYXQncyBnb2luZyBvbi4gIEl0IHR1cm5zIG91dCB0aGF0IG5vIG1hdHRl
+ciB3aGF0IEkgZG8sIG5vIG1hdHRlciBob3cgSSBjb25maWd1cmUgdGhlIE1EUmFpZCwgYW5kIG5v
+IG1hdHRlciB3aGF0IElPIHBhdHRlcm4gSSB1c2UsIHRoZSBzaXplIG9mIHRoZSBJTyBpcyBzdWNo
+IHRoYXQgaXQgZG9lc24ndCBjb25mb3JtIHRvIHRoZSBjcml0ZXJpYSByZXF1aXJlZCB0byBjYWxs
+IEZhc3RXcml0ZS4gIEl0IHNlZW1zIHRoYXQgaW4gdGhlIDMuMTggLjQga2VybmVsLCBJTydzIGFy
+ZSBicm9rZW4gdXAgYmVmb3JlIGNhbGxpbmcgTURSYWlkJ3MgbWFrZV9yZXF1ZXN0IGZ1bmN0aW9u
+LiAgVGhlcmUgZG9lc24ndCBzZWVtIHRvIGJlIGFuIG9idmlvdXMgcmVsYXRpb25zaGlwIGJldHdl
+ZW4gdGhlIHNpemUgYmVpbmcgcGFzc2VkIGluLCBhbmQgdGhlIGNodW5rIHNpemUgdGhhdCdzIGNv
+bmZpZ3VyZWQgYnkgbWRhZG0uDQoNCkF0IGZpcnN0LCBpdCBhcHBlYXJlZCB0aGF0IGl0IHdhcyB0
+aGUgbWluaW11bSBJTyBzaXplIGJlaW5nIHVzZWQuICBCdXQgdGhlbiBJIHRyaWVkIHNldHRpbmcg
+dGhlIG1pbmltdW0gSU8gYW5kIG9wdGltYWwgSU8gdG8gdGhlIHNhbWUgdGhpbmcuICBUaGUgcmVz
+dWx0aW5nIElPJ3MgYXJlIG5vdyAxLzIgdGhlIHNpemUgb2YgdGhlIG1pbmltdW0gSU8uLi4uIHdo
+aWNoIGlzIG5vdCB0aGUgc2l6ZSBvZiB0aGUgb3B0aW1hbCBJTyAod2hpY2ggaXMgdGhlIGNodW5r
+IHNpemUgKiBudW1iZXIgb2YgZGF0YSBkaXNrcykuDQoNCkJvYiBLaWVyc2tpDQpTZW5pb3IgU3Rv
+cmFnZSBQZXJmb3JtYW5jZSBFbmdpbmVlcg0KQ3JheSBJbmMuDQozODAgSmFja3NvbiBTdHJlZXQN
+ClN1aXRlIDIxMA0KU3QuIFBhdWwsIE1OIDU1MTAxDQpUZWxlOiA2NTEtOTY3LTk1OTANCkZheDog
+IDY1MS02MDUtOTAwMQ0KQ2VsbDogNjUxLTg5MC03NDYxDQoNCg==
