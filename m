@@ -1,47 +1,34 @@
-From: Andrei Borzenkov <arvidjaar@gmail.com>
-Subject: Reading the same block via partition and non-partitioned device gives
- different content
-Date: Tue, 5 Jan 2016 11:28:23 +0300
-Message-ID: <568B7EA7.9010901@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch -next] bcache: cleanup indenting in
+ bch_btree_insert_check_key()
+Date: Tue, 5 Jan 2016 12:55:14 +0300
+Message-ID: <20160105095514.GD23619@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-bcache-owner@vger.kernel.org
+To: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Neil Brown <neilb@suse.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-[Please Cc me on reply; thank you]
+This was causing a static checker complaint because the indenting wasn't
+consistent.  Also it used spaces instead of tabs.
 
-QEMU KVM virtual machine with openSUSE Tumbleweed (kernel
-4.3.3-3-default); MD RAID1 with 1.2 metadata on /dev/vdb1 and /dev/vdc1.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-If I do
-
-mdadm /dev/mdX --fail /dev/vdb1
-mdadm /dev/mdX --add /dev/vdd1
-
-and wait for synchronization to finish and then look directly on on-disk
-suportblock, I see different content whether I read from /dev/vdd or
-from /dev/vdd1.
-
-/dev/vdd1 claims new disk is still spare (i.e. it is apparently
-immediately after adding it).
-
-The *same* superblock when read from /dev/vdd (of course with
-appropriate offset) correctly marks /dev/vdd1 as RAID member. The same
-content also seen when looking from host.
-
-I hit this when debugging problem with grub2 that scans devices for
-Linux MD (it is using the same code both at boot and run time). It
-skipped replacement disk because it believed disk was spare.
-
-Is it expected behavior? Note that if we now replace /dev/vdc1 with
-something else we have "wrong" superblock on both partitions so grub
-fails to find array completely. Fortunately this is transient state, but
-it also means it is impossible to reconfigure grub until reboot.
-Alternatively shutting down and restarting array cleats it as well.
-
-Any trick we can use to force content to be the same in this state?
-
--andrei
+diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+index 22b9e34..d493913 100644
+--- a/drivers/md/bcache/btree.c
++++ b/drivers/md/bcache/btree.c
+@@ -2163,8 +2163,8 @@ int bch_btree_insert_check_key(struct btree *b, struct btree_op *op,
+ 		rw_lock(true, b, b->level);
+ 
+ 		if (b->key.ptr[0] != btree_ptr ||
+-                   b->seq != seq + 1) {
+-                       op->lock = b->level;
++		    b->seq != seq + 1) {
++			op->lock = b->level;
+ 			goto out;
+                }
+ 	}
