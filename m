@@ -1,56 +1,35 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 2/2] raid5-cache: correctly handle stripe with enough journal space
-Date: Mon, 4 Jan 2016 16:43:07 -0800
-Message-ID: <8bafb456f68b960bebaff8b742021d565554d5d4.1451954517.git.shli@fb.com>
-References: <9ab2f48aab9ddc9aa7ac2b9b6a594a97c2d82f5f.1451954517.git.shli@fb.com>
+From: "Skoll, Jeff" <uk038853@student.uni-kassel.de>
+Subject: Charity/Donation
+Date: Tue, 05 Jan 2016 00:04:11 -0500
+Message-ID: <auto-000000159800__21654.5359035537$1451971019$gmane$org@mailadmin.uni-kassel.de>
+Reply-To: jeff.skoll@skollcharity.org
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9ab2f48aab9ddc9aa7ac2b9b6a594a97c2d82f5f.1451954517.git.shli@fb.com>
+Content-Description: Mail message body
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: Me <uk038853@student.uni-kassel.de>
 List-Id: linux-raid.ids
 
-If there are spaces in journal, we do nothing. Likely a typo merging
-recent io_unit mempool patch.
+Hi,
+My name is Jeffrey Skoll, a philanthropist and the founder of one of th=
+e largest private foundations in the world. I believe strongly in =E2=80=
+=98giving while living.=E2=80=99 I had one idea that never changed in m=
+y mind =E2=80=94 that you should use your wealth to help people and I h=
+ave decided to secretly give USD2.498 Million to a randomly selected in=
+dividual. On receipt of this email, you should count yourself as the in=
+dividual. Kindly get back to me at your earliest convenience, so I know=
+ your email address is valid.
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/raid5-cache.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Visit the web page to know more about me: http://www.theglobeandmail.co=
+m/news/national/meet-the-canadian-billionaire-whos-giving-it-all-away/a=
+rticle4209888/ or you can read an article of me on Wikipedia.
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 55a905e..d242a36 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -494,19 +494,19 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
- 	mutex_lock(&log->io_mutex);
- 	/* meta + data */
- 	reserve = (1 + write_disks) << (PAGE_SHIFT - 9);
--	if (!r5l_has_free_space(log, reserve)) {
--		spin_lock(&log->no_space_stripes_lock);
--		list_add_tail(&sh->log_list, &log->no_space_stripes);
--		spin_unlock(&log->no_space_stripes_lock);
--
--		r5l_wake_reclaim(log, reserve);
--
-+	if (r5l_has_free_space(log, reserve)) {
- 		ret = r5l_log_stripe(log, sh, data_pages, parity_pages);
- 		if (ret) {
- 			spin_lock_irq(&log->io_list_lock);
- 			list_add_tail(&sh->log_list, &log->no_mem_stripes);
- 			spin_unlock_irq(&log->io_list_lock);
- 		}
-+	} else {
-+		spin_lock(&log->no_space_stripes_lock);
-+		list_add_tail(&sh->log_list, &log->no_space_stripes);
-+		spin_unlock(&log->no_space_stripes_lock);
-+
-+		r5l_wake_reclaim(log, reserve);
- 	}
- 
- 	mutex_unlock(&log->io_mutex);
--- 
-2.4.6
-
+Regards,
+Jeffrey Skoll.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
