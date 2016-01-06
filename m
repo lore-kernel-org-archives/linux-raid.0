@@ -1,39 +1,69 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 25/35] target: set bi_op to REQ_OP
-Date: Wed, 06 Jan 2016 11:06:00 -0800
-Message-ID: <1452107160.26125.39.camel@haakon3.risingtidesystems.com>
-References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
-	 <1452027218-32303-26-git-send-email-mchristi@redhat.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/3] md: set MD_HAS_JOURNAL in correct places
+Date: Wed, 6 Jan 2016 14:37:13 -0800
+Message-ID: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <1452027218-32303-26-git-send-email-mchristi@redhat.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi Mike,
+Set MD_HAS_JOURNAL when a array is loaded or journal is initialized.
+This is to avoid the flags set too early in journal disk hotadd.
 
-On Tue, 2016-01-05 at 14:53 -0600, mchristi@redhat.com wrote:
-> From: Mike Christie <mchristi@redhat.com>
-> 
-> This patch has the target modules set the bio bi_op to a REQ_OP, and
-> rq_flag_bits to bi_rw.
-> 
-> This patch is compile tested only.
-> 
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  drivers/target/target_core_iblock.c | 38 ++++++++++++++++++++++---------------
->  drivers/target/target_core_pscsi.c  |  2 +-
->  2 files changed, 24 insertions(+), 16 deletions(-)
-> 
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/md.c          | 8 ++++----
+ drivers/md/raid5-cache.c | 1 +
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-Nice work to clean this long standing abuse.  ;)
-
-For the target/iblock bit:
-
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c0c3e6d..e896320 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1607,6 +1607,10 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 			mddev->new_chunk_sectors = mddev->chunk_sectors;
+ 		}
+ 
++		if (mddev->recovery_cp == MaxSector)
++			set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
++		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
++			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist of good event counter while assembling, except for
+ 		 * spares (which don't need an event count) */
+@@ -1653,8 +1657,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 			}
+ 			set_bit(Journal, &rdev->flags);
+ 			rdev->journal_tail = le64_to_cpu(sb->journal_tail);
+-			if (mddev->recovery_cp == MaxSector)
+-				set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
+ 			rdev->raid_disk = 0;
+ 			break;
+ 		default:
+@@ -1674,8 +1676,6 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
+ 			set_bit(WriteMostly, &rdev->flags);
+ 		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_REPLACEMENT)
+ 			set_bit(Replacement, &rdev->flags);
+-		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
+-			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+ 	} else /* MULTIPATH are always insync */
+ 		set_bit(In_sync, &rdev->flags);
+ 
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 31e0fad..16cf876 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -1242,6 +1242,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 		goto error;
+ 
+ 	rcu_assign_pointer(conf->log, log);
++	set_bit(MD_HAS_JOURNAL, &conf->mddev->flags);
+ 	return 0;
+ 
+ error:
+-- 
+2.4.6
 
