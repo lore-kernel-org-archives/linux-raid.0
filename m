@@ -1,52 +1,44 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH 2/3] MD: add journal with array suspended
-Date: Wed, 6 Jan 2016 14:37:14 -0800
-Message-ID: <4b7fbe9c04dd99e58840ccf88a7cc121ab74a2d3.1452119479.git.shli@fb.com>
-References: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 02/35] block: add REQ_OP definitions and
+	bi_op/op fields
+Date: Wed, 06 Jan 2016 18:17:01 -0500
+Message-ID: <yq1d1tei9hu.fsf@sermon.lab.mkp.net>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
+	<1452027218-32303-3-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com, neilb@suse.de
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <1452027218-32303-3-git-send-email-mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+	(mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org's message of "Tue, 5 Jan 2016 14:53:05 -0600")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-raid.ids
 
-Hot add journal disk in recovery thread context brings a lot of trouble
-as IO could be running. Unlike spare disk hot add, adding journal disk
-with array suspended makes more sense and implmentation is much easier.
+>>>>> "Mike" == mchristi  <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
 
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/md/md.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
++enum req_op {
++	REQ_OP_READ,
++	REQ_OP_WRITE		= REQ_WRITE,
++	REQ_OP_DISCARD		= REQ_DISCARD,
++	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
++};
++
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e896320..dad9a25 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2464,15 +2464,20 @@ static int add_bound_rdev(struct md_rdev *rdev)
- {
- 	struct mddev *mddev = rdev->mddev;
- 	int err = 0;
-+	bool add_journal = test_bit(Journal, &rdev->flags);
- 
--	if (!mddev->pers->hot_remove_disk) {
-+	if (!mddev->pers->hot_remove_disk || add_journal) {
- 		/* If there is hot_add_disk but no hot_remove_disk
- 		 * then added disks for geometry changes,
- 		 * and should be added immediately.
- 		 */
- 		super_types[mddev->major_version].
- 			validate_super(mddev, rdev);
-+		if (add_journal)
-+			mddev_suspend(mddev);
- 		err = mddev->pers->hot_add_disk(mddev, rdev);
-+		if (add_journal)
-+			mddev_resume(mddev);
- 		if (err) {
- 			unbind_rdev_from_array(rdev);
- 			export_rdev(rdev);
+I have been irked by the REQ_ prefix in bios since the flags were
+consolidated a while back. When I attempted to fix the READ/WRITE mess I
+used a BLK_ prefix as a result.
+
+Anyway. Just bikeshedding...
+
 -- 
-2.4.6
-
+Martin K. Petersen	Oracle Linux Engineering
