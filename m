@@ -1,13 +1,13 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/4] raid5-cache: use rcu api to access r5conf->log
-Date: Wed, 06 Jan 2016 12:04:11 +1100
-Message-ID: <87fuyby0vo.fsf@notabene.neil.brown.name>
-References: <cover.1452028077.git.shli@fb.com> <b2e460b69224288a2b7dfc66f86672551cdb9319.1452028077.git.shli@fb.com>
+Subject: Re: [PATCH 3/4] raid5-cache: handle flush request for journal hotadd
+Date: Wed, 06 Jan 2016 12:12:05 +1100
+Message-ID: <87d1tfy0ii.fsf@notabene.neil.brown.name>
+References: <cover.1452028077.git.shli@fb.com> <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b2e460b69224288a2b7dfc66f86672551cdb9319.1452028077.git.shli@fb.com>
+In-Reply-To: <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 Cc: Kernel-team@fb.com, songliubraving@fb.com
@@ -18,15 +18,21 @@ Content-Type: text/plain
 
 On Wed, Jan 06 2016, Shaohua Li wrote:
 
-> If we add journal disk to an array which isn't created with journal, IO
-> might be running in the array. We must be careful about the log checks
-> to make sure log is fully initialized, which is the job of
-> rcu_dereference(). Don't need rcu read lock protection here, as
-> hotremove only happens when there is no write requests.
+> When we hotadd journal for array which isn't created with journal, the
+> array might be running write requests. Such writes aren't protected by
+> journal yet, so we can't skip disk flush. There is no easy way to know
+> when all such writes are finished, but the time should be enough after
+> reclaim runs once.
 
-Very sensible, especially as conf->log is set using rcu_assign_ptr().
+There is an easy way to know when such writes are finished.
+Call mddev_suspend(mddev).  This is used for the more intrusive
+reconfiguration such as initiating a reshape.
+I think it would be perfectly appropriate to
+  call mddev_suspend()
+  attach the journal
+  call mddev_resume()
 
-Applied, thanks
+Thanks,
 NeilBrown
 
 --=-=-=
@@ -35,18 +41,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWjGgLAAoJEDnsnt1WYoG5FOYP/AmLfb45fUAvCD9yVzAm1bnI
-vg1adQVuLn6MLZ+NMW61d2auyXHIxtz7gyQRbIUUvWnYcgJ5gLEOEMCYHNn5z8qF
-fzM+kjX73LhTbtCRNmo4m+bBwMmFUgoGb0Hn88Y+ii/YUi/LJ9aQMBoUzmL+vj86
-1YaOOmvAGrO2tdHfMRxypQrQCMjV5CEb7fpIzUFKyJBM2TCY6J6Z01mDyI/VM8/S
-w/dMKOuKdmqiZge6aEAod7XhmCNGpJsB2nIW6ssAzD1eOH9UFDpO2BQGIwCy+bfo
-WEuWeLl4j4Y6dunL/ZYOhWHk9v5/yee5MmurVcf7QBG1ZU3r7FiGpOM/7R/PgFm/
-iAADj5OY6wGvEwuh2kl+tm0CI96iPXPWA19mT1Pi3eL5nh0CjeHiViZmQaZm2GVR
-5B45GLQpSrtDiPEYFDPgfd484A4LkDMOXCdSX8j9c1mdWmMkMfnLC1dfR8t+uCfA
-qOSpke77mqfCPeX6srALmVQU8lxL2WI8f2lt1G55IUVAkUcYjW+TSevs1NbQMout
-g08GHDFVT68S7OiRKO9m5vnCsD8iwWaxYPCqltJCiFn4FEb74gPhPOh18o+2/JqO
-Lpb9PgaX7n8EFM0Ts6IcTBHH0SkG4D9XX9uKjX1kXfgXQqsaBfwurq5B0uTfhLz9
-HaCH6UIJ1GLHqOS3oTE6
-=AQQM
+iQIcBAEBCAAGBQJWjGnlAAoJEDnsnt1WYoG5oC8P/1lxVsysOUQCqkLcSNrl7pW4
+EGi36kb4wjfHEm/2sFXQaCGMyGIabdsjGQDz8MrQ8ZTqui4UxySp5f1gKJL+oD56
+YTY4rbTfUSrBRxwonkFqBxRB0gSAw5q8lAM294gBUfDYpZr1u+17egTsQbadafip
+oPClqIthbkdEorR5ugP+84k5j1tRkDEbfaKPVwIR7QNfNjP7Yi5S/V8+s6+ChlTZ
++kyNpM8Amfcwgi4XuTa8nC9LYFOPB0uC1VsCssk6jqjLivNm608jYCmYORD6L9kD
+4rQRndQW9lvdSkvDvNZxrmv2XXDzAhepjA9Dlze8WLos51dEjsA+RQfUnF0X2LkJ
+xASRpP5M+2PFmTXxorNTgNVTbhJmWfSLFrk2PCdHu7DFdi6t3bBx6RjcD5dc9+Kk
+JdKIQN0I03hyP3Neikm22vfuEpQYcLr5k9vVh1NRr4qoQGbYgv+EyRyGXxBTlwjh
+kjsVzmCldpw6pLrE5Be8Jb8z1sfBeTxEcOuvoFtvm0AccPnlsnEzJIlgXlIHx1R9
+wF9oGtxuUTtgrPnEbdQPLctnOD73tgOsA6cn4rllqC9U+of2dE+enIo04OaS4yTO
+WWetIN3iJevFdmBVyBlXA4KBWBH6Iex/t6Q81v/x6u1mRYxvcOA4K0SusjQI51c3
+knR5WSRVeJhA0B1agBRt
+=Flf3
 -----END PGP SIGNATURE-----
 --=-=-=--
