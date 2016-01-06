@@ -1,38 +1,37 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/4] raid5-cache: handle flush request for journal hotadd
-Date: Wed, 06 Jan 2016 12:12:05 +1100
-Message-ID: <87d1tfy0ii.fsf@notabene.neil.brown.name>
-References: <cover.1452028077.git.shli@fb.com> <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com>
+Subject: Re: [PATCH] IMSM: Add support for VMD
+Date: Wed, 06 Jan 2016 12:23:31 +1100
+Message-ID: <87a8ojxzzg.fsf@notabene.neil.brown.name>
+References: <20160105160304.17913.4114.stgit@gklab-154-222.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com>
+In-Reply-To: <20160105160304.17913.4114.stgit@gklab-154-222.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com
+Cc: linux-raid@vger.kernel.org, pawel.baldysiak@intel.com, artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 
-On Wed, Jan 06 2016, Shaohua Li wrote:
+On Wed, Jan 06 2016, Pawel Baldysiak wrote:
 
-> When we hotadd journal for array which isn't created with journal, the
-> array might be running write requests. Such writes aren't protected by
-> journal yet, so we can't skip disk flush. There is no easy way to know
-> when all such writes are finished, but the time should be enough after
-> reclaim runs once.
+> The Intel Volume Management Device (VMD) is an integrated
+> endpoint on the platform's PCIe root complex that acts
+> as a host bridge to a secondary PCIe domain.
+>
+> This patch adds proper handling of NVMe devices attached to VMD domain.
+> Each VMD domain is treated as a separate controller (HBA).
+> Spanning between domains is forbidden.
+>
+> Signed-off-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
 
-There is an easy way to know when such writes are finished.
-Call mddev_suspend(mddev).  This is used for the more intrusive
-reconfiguration such as initiating a reshape.
-I think it would be perfectly appropriate to
-  call mddev_suspend()
-  attach the journal
-  call mddev_resume()
+I'm not pretending that I follow what is happening here, but I'll take
+your word for it.
 
-Thanks,
+applied, thanks.
+
 NeilBrown
 
 --=-=-=
@@ -41,18 +40,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWjGnlAAoJEDnsnt1WYoG5oC8P/1lxVsysOUQCqkLcSNrl7pW4
-EGi36kb4wjfHEm/2sFXQaCGMyGIabdsjGQDz8MrQ8ZTqui4UxySp5f1gKJL+oD56
-YTY4rbTfUSrBRxwonkFqBxRB0gSAw5q8lAM294gBUfDYpZr1u+17egTsQbadafip
-oPClqIthbkdEorR5ugP+84k5j1tRkDEbfaKPVwIR7QNfNjP7Yi5S/V8+s6+ChlTZ
-+kyNpM8Amfcwgi4XuTa8nC9LYFOPB0uC1VsCssk6jqjLivNm608jYCmYORD6L9kD
-4rQRndQW9lvdSkvDvNZxrmv2XXDzAhepjA9Dlze8WLos51dEjsA+RQfUnF0X2LkJ
-xASRpP5M+2PFmTXxorNTgNVTbhJmWfSLFrk2PCdHu7DFdi6t3bBx6RjcD5dc9+Kk
-JdKIQN0I03hyP3Neikm22vfuEpQYcLr5k9vVh1NRr4qoQGbYgv+EyRyGXxBTlwjh
-kjsVzmCldpw6pLrE5Be8Jb8z1sfBeTxEcOuvoFtvm0AccPnlsnEzJIlgXlIHx1R9
-wF9oGtxuUTtgrPnEbdQPLctnOD73tgOsA6cn4rllqC9U+of2dE+enIo04OaS4yTO
-WWetIN3iJevFdmBVyBlXA4KBWBH6Iex/t6Q81v/x6u1mRYxvcOA4K0SusjQI51c3
-knR5WSRVeJhA0B1agBRt
-=Flf3
+iQIcBAEBCAAGBQJWjGyTAAoJEDnsnt1WYoG5KU4QALiJBUV+5i6IXff482Bc0dWg
+uQJk4YVi5GjOAllLdAuiNhpGdluMIyF1ynmC3qJ1w+AXwpzxBd5cGypL6NTyh7qg
+s9Gk9gz/HyEtNlcwRFRyaptpX521zppNUMeByElcWjE3zYaPEVJF42OCJLjV7e1B
+sMb6xZbdRYcWOE5M/wpEuKo0dS1NkBIPrEf2QptNxPDVt4HGB57wzFsbL2GIGfME
+FrQ7X1Az2id0X2rF57DEawRt+19Ok7RRwyFXgEHnMBrjlnhiJyGsS8LdFMfr4s1m
+mxRxar4IvQSfPwEXmGSMKiK2hooAgs+H3zmSsBLLGCRuj70Ui8WutAi+LHzJdf6B
+ye04WhAEbcfvfXC8KKhMgAEZS2taRYfHquQPwQTT3zulSugqb2Elk0Uuan62N11V
+gvzIWHOgdpuF1j7G3Tw/iRE5CYMP+lMTzaIwRqmGyrD5u4c30b1ewkfsL5qV9cSK
+Dt/jMO3mK1pHoqljzQ16s+0At9ErWaFH6IHrBuDK2vI3KONqRI2GnOBIfxtq0IrG
+MkKnePauEwTMXHwpst81EkEBPG7rT6zCKx7J5dQ4R/y0tAga0Dm/FFeCwO5iPmlx
+LvoB5QY5iYkWPhDEoNPM/fZPBLeUGnqsZQAPk10zioApKwc3Nr71LyGTAUPjz5UJ
++yTeKl/cJ6BOt8VIQbXg
+=C2Xd
 -----END PGP SIGNATURE-----
 --=-=-=--
