@@ -1,39 +1,66 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 3/4] raid5-cache: handle flush request for journal hotadd
-Date: Tue, 5 Jan 2016 17:47:05 -0800
-Message-ID: <20160106014704.GA4056779@devbig084.prn1.facebook.com>
-References: <cover.1452028077.git.shli@fb.com>
- <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com>
- <87d1tfy0ii.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/2] raid5-cache: destroy mempool
+Date: Wed, 06 Jan 2016 12:50:19 +1100
+Message-ID: <874merxyqs.fsf@notabene.neil.brown.name>
+References: <9ab2f48aab9ddc9aa7ac2b9b6a594a97c2d82f5f.1451954517.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87d1tfy0ii.fsf@notabene.neil.brown.name>
+In-Reply-To: <9ab2f48aab9ddc9aa7ac2b9b6a594a97c2d82f5f.1451954517.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 06, 2016 at 12:12:05PM +1100, NeilBrown wrote:
-> On Wed, Jan 06 2016, Shaohua Li wrote:
-> 
-> > When we hotadd journal for array which isn't created with journal, the
-> > array might be running write requests. Such writes aren't protected by
-> > journal yet, so we can't skip disk flush. There is no easy way to know
-> > when all such writes are finished, but the time should be enough after
-> > reclaim runs once.
-> 
-> There is an easy way to know when such writes are finished.
-> Call mddev_suspend(mddev).  This is used for the more intrusive
-> reconfiguration such as initiating a reshape.
-> I think it would be perfectly appropriate to
->   call mddev_suspend()
->   attach the journal
->   call mddev_resume()
+--=-=-=
+Content-Type: text/plain
 
-hot add/remove disk is called in raid5d, we can't wait IO there.
-mddev_suspend() will wait IO. So we can't call mddev_suspend()
+On Tue, Jan 05 2016, Shaohua Li wrote:
 
-Thanks,
-Shaohua
+> io_unit mempool isn't destroied with recent changes.
+>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid5-cache.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index d992d62..55a905e 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
+> @@ -1257,6 +1257,7 @@ void r5l_exit_log(struct r5l_log *log)
+>  	md_unregister_thread(&log->reclaim_thread);
+>  	mempool_destroy(log->meta_pool);
+>  	bioset_free(log->bs);
+> +	mempool_destroy(log->io_pool);
+>  	kmem_cache_destroy(log->io_kc);
+>  	kfree(log);
+>  }
+
+Thanks!
+I've merge that into the offending patch rather than adding it as a
+separate patch.
+
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWjHLbAAoJEDnsnt1WYoG5m1gP/1TFDmcG6pcJp49fnokcwX4U
+P1AH+dr6a1YhIvIOWU3iJyOAsPYymecNoECejlhiIbc4uWOopQLuhixpgNnCFEU6
+rSX4VsBG1MQ1ulkq7IjX939i5TVM0BFPuV72mKmGBgTDYu4kSqqaeQMpEHmivx4z
+pc0qtinXW9gVxTIR92lvw3horpdWwH07uP5CJd+wudjNXat9YAvqxzkT9PQIhsYx
+gWo3Szdtz4SPVb84bzfxXrd3Bo0DPLBZmRmRgodJCzevbHF7e5oTyWp3kPwDpp0D
+kWfzX6M6xHdrfV9JsfNaL3Dka5Re5n+SZuLcH5k2Bi3lUu0L3QkFhaJnRUScK7Wb
+TuXE3FmBxWNBwUSD2Wp9yxnMQY533CHDgfEqcEzQegJOOovORSswGwXYG/ombcrb
+NCGRpDiE5FZlRgnSOYpONltrtEE6M7hZsgEEBjajBrVpEkL7OwURjnKBcKQSr3Eh
+THVqIngmzL8wXPeLyIiMRwkrNphsg8xO2bC9BJlvVJPitQg6XiicTHUYgWBEHnys
+SBnII443v6Uiw/peakKj8KsfNRZ+Pn68Q2mjXdPN5t9kb6aUQ7cy3JmgXIgLK+Q2
+fPpCU0wMq4X0A+SRE+dy3saD3c2sZJ4JKtadaNr37KPBCAqj4Z9T78cMGcvnci5g
+VSo2z9kHmS4QMY3Ukx2c
+=4jPZ
+-----END PGP SIGNATURE-----
+--=-=-=--
