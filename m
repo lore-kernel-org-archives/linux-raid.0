@@ -1,82 +1,66 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/4] raid5-cache: handle flush request for journal hotadd
-Date: Wed, 06 Jan 2016 13:07:30 +1100
-Message-ID: <87y4c3wjdp.fsf@notabene.neil.brown.name>
-References: <cover.1452028077.git.shli@fb.com> <7b8a15be93941a393a5a08232659fef9ead4610b.1452028077.git.shli@fb.com> <87d1tfy0ii.fsf@notabene.neil.brown.name> <20160106014704.GA4056779@devbig084.prn1.facebook.com>
+From: Baolin Wang <baolin.wang@linaro.org>
+Subject: Re: [PATCH v2 0/2] Introduce the bulk IV mode for improving the
+ crypto engine efficiency
+Date: Wed, 6 Jan 2016 14:49:05 +0800
+Message-ID: <CAMz4kuJMcALYAcSUB1Dvz5+FvktvB_Trwt7YkJ=OwLS2Ti2ndw@mail.gmail.com>
+References: <cover.1450233399.git.baolin.wang@linaro.org>
+	<56711C0F.8030105@gmail.com>
+	<CAMz4kuL2b5Qad5iD3odNVh9VO6ctu_M=QE=8fbdC_+ea+5wJ5w@mail.gmail.com>
+	<56885330.9080801@gmail.com>
+	<20160104201343.GQ16023@sirena.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160106014704.GA4056779@devbig084.prn1.facebook.com>
+In-Reply-To: <20160104201343.GQ16023@sirena.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-raid@vger.kernel.org, Kernel-team@fb.com, songliubraving@fb.com
+To: Mark Brown <broonie@kernel.org>
+Cc: Milan Broz <gmazyland@gmail.com>, Jens Axboe <axboe@kernel.dk>, Alasdair G Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, neilb@suse.com, dan.j.williams@intel.com, martin.petersen@oracle.com, sagig@mellanox.com, Kent Overstreet <kent.overstreet@gmail.com>, keith.busch@intel.com, tj@kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-block@vger.kernel.org, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Jan 06 2016, Shaohua Li wrote:
-
-> On Wed, Jan 06, 2016 at 12:12:05PM +1100, NeilBrown wrote:
->> On Wed, Jan 06 2016, Shaohua Li wrote:
->>=20
->> > When we hotadd journal for array which isn't created with journal, the
->> > array might be running write requests. Such writes aren't protected by
->> > journal yet, so we can't skip disk flush. There is no easy way to know
->> > when all such writes are finished, but the time should be enough after
->> > reclaim runs once.
->>=20
->> There is an easy way to know when such writes are finished.
->> Call mddev_suspend(mddev).  This is used for the more intrusive
->> reconfiguration such as initiating a reshape.
->> I think it would be perfectly appropriate to
->>   call mddev_suspend()
->>   attach the journal
->>   call mddev_resume()
+On 5 January 2016 at 04:13, Mark Brown <broonie@kernel.org> wrote:
+> On Sat, Jan 02, 2016 at 11:46:08PM +0100, Milan Broz wrote:
 >
-> hot add/remove disk is called in raid5d, we can't wait IO there.
-> mddev_suspend() will wait IO. So we can't call mddev_suspend()
+>> Anyway, I think that you should optimize driver, not add strange hw-dependent
+>> crypto modes to dmcrypt. This is not the first crypto accelerator that is just not
+>> suited for this kind of use.
+>
+>> (If it can process batch of chunks of data each with own IV, then it can work
+>> with dmcrypt, but I think such optimized code should be inside crypto API,
+>> not in dmcrypt.)
+>
+> The flip side of this is there is an awful lot of hardware out there
+> that has basically this pattern and if we can make the difference
+> between people being able to encrypt or not encrypt their storage due to
+> performance then that seems like a win.  Getting hardware changes isn't
 
-Fair point.  I wonder if it should be though.
+Yeah, Now many vendors will supply AES hardware engine to improve the
+encryption speed. Like Qualcom or Spreadtrum, they both support the
+AES engine, which can handle the IV things in engine interior. So it
+can handle bulk data with just one initial IV, which is implemented in
+the out of tree req-dm-crypt code. That is why Milan's testing is
+failed, cause there is no hardware engine to support this.
 
-Activating a spare is a very different thing to activating a journal.
-Activating a spare is just one small step on the way from being degraded
-to being optimal.
-Activating a spare is a distinct change in how the array behaves, not
-unlike adding a bitmap.
+> going to be a fast process.  From a brief look at the crypto layer it
+> does look there may be things we can do there, if only in terms of
+> factoring out the common patterns for driving the queue of operations
+> into the hardware so it's easy for drivers to do the best thing.
+>
+> One thing that occurs to me for the IV programming that has been
+> proposed for SPI by Martin Sparl (and seen good results on Raspberry PI)
+> is to insert transfers programming the crypto engine into the stream of
+> DMA operations so we can keep the hardware busy.  It won't work with
+> every SoC out there but it will work with a lot of them, it's what
+> hardware that explicitly supports this will be doing internally.  It's
+> the sort of thing that would benefit from factoring out, it's a lot of
+> hassle to implement per driver.
+>
+> The main thing the out of tree req-dm-crypt code is doing was using a
+> larger block size which does seem like a reasonable thing to allow
+> people to tune for performance tradeofffs but I undertand that's a lot
+> harder to achieve in a good way than one might hope.
 
-So I think that adding a journal should happen a lot like adding a
-bitmap.
-When you write "journal" to the 'state' file, or call ADD_NEW_DISK with
-MD_DISK_JOURNAL set, ->hot_add_disk() should be called directly, a bit
-like add_bound_rdev() does when adding a device to a 'linear' array.
 
-Having remove_and_add_spares() add a journal certainly doesn't seem like
-a good idea.
 
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWjHbiAAoJEDnsnt1WYoG5IW8QALHmzE0XDSHngWCg53bK3Ztc
-Fn1yeo8j1O/OV3XpuZX5rM3qtIngfroUjTvNE6mVsvqMCX3YmfX+HwJTFilnnDHr
-yyhip1OaEfmwA1HPCs4J60V4hg7miT0m0Ecsbs2vXZ5yYg0Nh9mEJUweZMEgB5vi
-NAy/Slzr7gC7SvJLsysTnlOv4m/SJsLKD1eefB6BiNHVBnyQZ6Hfdjymr38UHfVM
-qnrQMejdvENljcHqAnSBpkqc93gqcew01/xlQYl4oF4TGIFRuhI1f9dK5M2iotrG
-8dvVe4yShz3BPLRPd9xtYq57lMqhS3FieIcfuSm6N375zEWrjUqn6NNu8D9eB4Uh
-bFE4GEhFS9OFQ2vMV61K3KyywXIWTdA3459S5MIQ/PNwLGBrDUNtz6tuYt+xdWNu
-UeJcqKy3tPrgVj4MX0C/Cp44CyuVSGssgiuVmD7mGWf4a+R2S6jppbpSlOrjuydd
-hgnwhC5jDpnFh4Bw9RlkRaU1PaXe6jlaM7ATgLRFzFNy+E4eBs5oWxNyu+vMxMwR
-4K/fQU2slOhcxI+vmNelCagr8rNsszZJyE/0jjXNl/gG2adpDV7ZgAj0MT9E24K+
-qjG12N0T6vG2STccTqb2vWQyCWulCjeAvJBmfSuL6T7XshrtVHtQa+/QSSfUGjAK
-HZqlykZENMMabAnrYd4R
-=7A92
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Baolin.wang
+Best Regards
