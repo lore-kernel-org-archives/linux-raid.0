@@ -1,68 +1,79 @@
-From: Roman Mamedov <rm@romanrm.net>
-Subject: Re: stripe_cache_active always 0
-Date: Thu, 7 Jan 2016 22:52:43 +0500
-Message-ID: <20160107225243.74f5549b@natsu>
-References: <568DD6E6.6070107@websitemanagers.com.au>
-	<F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: {Possible Spam} RE: stripe_cache_active always 0
+Date: Thu, 07 Jan 2016 17:53:47 +0000
+Message-ID: <568EA62B.80103@mpstor.com>
+References: <568DD6E6.6070107@websitemanagers.com.au> <F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/OJvT8_gJgVL8YOkBw6ihlud"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert Kierski <rkierski@cray.com>
-Cc: Adam Goryachev <adam@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Robert Kierski <rkierski@cray.com>, Adam Goryachev <adam@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/OJvT8_gJgVL8YOkBw6ihlud
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 07/01/16 16:34, Robert Kierski wrote:
+> Adam,
+>
+> stripe_cache_active is the value to indicate how many pages are curre=
+ntly in use in the stripe cache.  I could be wrong about this... but I =
+don=E2=80=99t think you can disable the stripe cache.  You can shrink i=
+t to an unreasonable size, but the minimum you can set stripe_cache_siz=
+e to is 17 (pages).
+>
+> Having said that, it may be that your RAID isn't using the stripe cac=
+he or that you're not checking the value frequently enough to see strip=
+e cache activity.
+>
+> A file system that is properly tuned, and doing buffered IO will like=
+ly reduce the stripe cache usage.  The stripe cache is basically where =
+data gets put when the RAID is doing partial stripe IO's, calculating p=
+arity, or waiting for slow devices to complete their IO's.  It's not in=
+tended to be yet another level of cache, so it gets purged when the RAI=
+D is done with it.  So, unlike other caches that will hold onto data un=
+til there is memory pressure, the stripe cache is more likely to be emp=
+ty.
+>
+> As far as adjusting stripe_cache_size... The stripe cache is dynamica=
+lly allocated.  It won't save any RAM by decreasing stripe_cache_size. =
+ Decreasing it too much will negatively impact performance as it's more=
+ likely you'll do Read-Modify-Write's when doing partial stripe writes.
+>
+I find that tuning it a bit higher (but not too high) has a very=20
+positive impact on rebuild times (where we are therefore building=20
+stripes). I can't remember exactly the values but we were setting it to=
+=20
+256 or 512 or even 1024 while building RAID5 or 6 with positive results=
+=2E
 
-On Thu, 7 Jan 2016 16:34:36 +0000
-Robert Kierski <rkierski@cray.com> wrote:
+Regards,
+Ben.
 
-> As far as adjusting stripe_cache_size... The stripe cache is dynamically =
-allocated.  It won't save any RAM by decreasing stripe_cache_size.
+> Bob Kierski
+> Senior Storage Performance Engineer
+> Cray Inc.
+> 380 Jackson Street
+> Suite 210
+> St. Paul, MN 55101
+> Tele: 651-967-9590
+> Fax:  651-605-9001
+> Cell: 651-890-7461
+>
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD=
+,j=07=EF=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=
+=BF=BDz=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=
+=BF=BD=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ=
++=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD=
+!tml=3D
+>
 
-Since when?
-
-# echo 512 > /sys/devices/virtual/block/md0/md/stripe_cache_size
-# free
-             total       used       free     shared    buffers     cached
-Mem:      16159912   15672696     487216      12588         52   14484708
--/+ buffers/cache:    1187936   14971976
-Swap:            0          0          0
-
-# echo 32768 > /sys/devices/virtual/block/md0/md/stripe_cache_size
-# free
-             total       used       free     shared    buffers     cached
-Mem:      16159912   15957880     202032      12588         52   14214952
--/+ buffers/cache:    1742876   14417036
-Swap:            0          0          0
-
-You can see that's not the case (on kernel 4.3.3 with four-member RAID5);
-
-And it's quite easy to rapidly hit OOM issues on high-member-count arrays by
-setting stripe_cache_size to larger values (not realizing that this is *in
-pages* not kilobytes or sectors, and *per disk*).
-
-As for the original question, try checking stripe_cache_active e.g. once
-per second during heavy write load to the filesystem.
-
---=20
-With respect,
-Roman
-
---Sig_/OJvT8_gJgVL8YOkBw6ihlud
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlaOpesACgkQTLKSvz+PZwhXSgCfQKpODDROd3pNm1EEBd9cbAMt
-wbEAmwQ9Hlm0kt5aAgOyHlAuS074hRKZ
-=fv5C
------END PGP SIGNATURE-----
-
---Sig_/OJvT8_gJgVL8YOkBw6ihlud--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
