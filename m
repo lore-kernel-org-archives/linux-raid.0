@@ -1,41 +1,68 @@
-From: Robert Kierski <rkierski@cray.com>
-Subject: RE: stripe_cache_active always 0
-Date: Thu, 7 Jan 2016 16:34:36 +0000
-Message-ID: <F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
+From: Roman Mamedov <rm@romanrm.net>
+Subject: Re: stripe_cache_active always 0
+Date: Thu, 7 Jan 2016 22:52:43 +0500
+Message-ID: <20160107225243.74f5549b@natsu>
 References: <568DD6E6.6070107@websitemanagers.com.au>
+	<F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/OJvT8_gJgVL8YOkBw6ihlud"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <568DD6E6.6070107@websitemanagers.com.au>
-Content-Language: en-US
+In-Reply-To: <F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <adam@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Robert Kierski <rkierski@cray.com>
+Cc: Adam Goryachev <adam@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-QWRhbSwNCg0Kc3RyaXBlX2NhY2hlX2FjdGl2ZSBpcyB0aGUgdmFsdWUgdG8gaW5kaWNhdGUgaG93
-IG1hbnkgcGFnZXMgYXJlIGN1cnJlbnRseSBpbiB1c2UgaW4gdGhlIHN0cmlwZSBjYWNoZS4gIEkg
-Y291bGQgYmUgd3JvbmcgYWJvdXQgdGhpcy4uLiBidXQgSSBkb27igJl0IHRoaW5rIHlvdSBjYW4g
-ZGlzYWJsZSB0aGUgc3RyaXBlIGNhY2hlLiAgWW91IGNhbiBzaHJpbmsgaXQgdG8gYW4gdW5yZWFz
-b25hYmxlIHNpemUsIGJ1dCB0aGUgbWluaW11bSB5b3UgY2FuIHNldCBzdHJpcGVfY2FjaGVfc2l6
-ZSB0byBpcyAxNyAocGFnZXMpLg0KDQpIYXZpbmcgc2FpZCB0aGF0LCBpdCBtYXkgYmUgdGhhdCB5
-b3VyIFJBSUQgaXNuJ3QgdXNpbmcgdGhlIHN0cmlwZSBjYWNoZSBvciB0aGF0IHlvdSdyZSBub3Qg
-Y2hlY2tpbmcgdGhlIHZhbHVlIGZyZXF1ZW50bHkgZW5vdWdoIHRvIHNlZSBzdHJpcGUgY2FjaGUg
-YWN0aXZpdHkuDQoNCkEgZmlsZSBzeXN0ZW0gdGhhdCBpcyBwcm9wZXJseSB0dW5lZCwgYW5kIGRv
-aW5nIGJ1ZmZlcmVkIElPIHdpbGwgbGlrZWx5IHJlZHVjZSB0aGUgc3RyaXBlIGNhY2hlIHVzYWdl
-LiAgVGhlIHN0cmlwZSBjYWNoZSBpcyBiYXNpY2FsbHkgd2hlcmUgZGF0YSBnZXRzIHB1dCB3aGVu
-IHRoZSBSQUlEIGlzIGRvaW5nIHBhcnRpYWwgc3RyaXBlIElPJ3MsIGNhbGN1bGF0aW5nIHBhcml0
-eSwgb3Igd2FpdGluZyBmb3Igc2xvdyBkZXZpY2VzIHRvIGNvbXBsZXRlIHRoZWlyIElPJ3MuICBJ
-dCdzIG5vdCBpbnRlbmRlZCB0byBiZSB5ZXQgYW5vdGhlciBsZXZlbCBvZiBjYWNoZSwgc28gaXQg
-Z2V0cyBwdXJnZWQgd2hlbiB0aGUgUkFJRCBpcyBkb25lIHdpdGggaXQuICBTbywgdW5saWtlIG90
-aGVyIGNhY2hlcyB0aGF0IHdpbGwgaG9sZCBvbnRvIGRhdGEgdW50aWwgdGhlcmUgaXMgbWVtb3J5
-IHByZXNzdXJlLCB0aGUgc3RyaXBlIGNhY2hlIGlzIG1vcmUgbGlrZWx5IHRvIGJlIGVtcHR5Lg0K
-DQpBcyBmYXIgYXMgYWRqdXN0aW5nIHN0cmlwZV9jYWNoZV9zaXplLi4uIFRoZSBzdHJpcGUgY2Fj
-aGUgaXMgZHluYW1pY2FsbHkgYWxsb2NhdGVkLiAgSXQgd29uJ3Qgc2F2ZSBhbnkgUkFNIGJ5IGRl
-Y3JlYXNpbmcgc3RyaXBlX2NhY2hlX3NpemUuICBEZWNyZWFzaW5nIGl0IHRvbyBtdWNoIHdpbGwg
-bmVnYXRpdmVseSBpbXBhY3QgcGVyZm9ybWFuY2UgYXMgaXQncyBtb3JlIGxpa2VseSB5b3UnbGwg
-ZG8gUmVhZC1Nb2RpZnktV3JpdGUncyB3aGVuIGRvaW5nIHBhcnRpYWwgc3RyaXBlIHdyaXRlcy4N
-Cg0KQm9iIEtpZXJza2kNClNlbmlvciBTdG9yYWdlIFBlcmZvcm1hbmNlIEVuZ2luZWVyDQpDcmF5
-IEluYy4NCjM4MCBKYWNrc29uIFN0cmVldA0KU3VpdGUgMjEwDQpTdC4gUGF1bCwgTU4gNTUxMDEN
-ClRlbGU6IDY1MS05NjctOTU5MA0KRmF4OiAgNjUxLTYwNS05MDAxDQpDZWxsOiA2NTEtODkwLTc0
-NjENCg0K
+--Sig_/OJvT8_gJgVL8YOkBw6ihlud
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 7 Jan 2016 16:34:36 +0000
+Robert Kierski <rkierski@cray.com> wrote:
+
+> As far as adjusting stripe_cache_size... The stripe cache is dynamically =
+allocated.  It won't save any RAM by decreasing stripe_cache_size.
+
+Since when?
+
+# echo 512 > /sys/devices/virtual/block/md0/md/stripe_cache_size
+# free
+             total       used       free     shared    buffers     cached
+Mem:      16159912   15672696     487216      12588         52   14484708
+-/+ buffers/cache:    1187936   14971976
+Swap:            0          0          0
+
+# echo 32768 > /sys/devices/virtual/block/md0/md/stripe_cache_size
+# free
+             total       used       free     shared    buffers     cached
+Mem:      16159912   15957880     202032      12588         52   14214952
+-/+ buffers/cache:    1742876   14417036
+Swap:            0          0          0
+
+You can see that's not the case (on kernel 4.3.3 with four-member RAID5);
+
+And it's quite easy to rapidly hit OOM issues on high-member-count arrays by
+setting stripe_cache_size to larger values (not realizing that this is *in
+pages* not kilobytes or sectors, and *per disk*).
+
+As for the original question, try checking stripe_cache_active e.g. once
+per second during heavy write load to the filesystem.
+
+--=20
+With respect,
+Roman
+
+--Sig_/OJvT8_gJgVL8YOkBw6ihlud
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlaOpesACgkQTLKSvz+PZwhXSgCfQKpODDROd3pNm1EEBd9cbAMt
+wbEAmwQ9Hlm0kt5aAgOyHlAuS074hRKZ
+=fv5C
+-----END PGP SIGNATURE-----
+
+--Sig_/OJvT8_gJgVL8YOkBw6ihlud--
