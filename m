@@ -1,19 +1,41 @@
-From: "David Shine" <davidshine@hotkey.net.au>
-Subject: Hello linux
-Date: Thu, 7 Jan 2016 10:12:52 +0100
-Message-ID: <7716FF27-CA69-4455-89F4-3A2DE6A30F9D@hotkey.net.au>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: stripe_cache_active always 0
+Date: Thu, 7 Jan 2016 16:34:36 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FE848B@CFWEX01.americas.cray.com>
+References: <568DD6E6.6070107@websitemanagers.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <568DD6E6.6070107@websitemanagers.com.au>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux <linux-raid@vger.kernel.org>
+To: Adam Goryachev <adam@websitemanagers.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi linux
-
-http://www.livebyladybugs.com/wonderful.php?general=w1spfbe1mm531b
-
-
-David Shine
+QWRhbSwNCg0Kc3RyaXBlX2NhY2hlX2FjdGl2ZSBpcyB0aGUgdmFsdWUgdG8gaW5kaWNhdGUgaG93
+IG1hbnkgcGFnZXMgYXJlIGN1cnJlbnRseSBpbiB1c2UgaW4gdGhlIHN0cmlwZSBjYWNoZS4gIEkg
+Y291bGQgYmUgd3JvbmcgYWJvdXQgdGhpcy4uLiBidXQgSSBkb27igJl0IHRoaW5rIHlvdSBjYW4g
+ZGlzYWJsZSB0aGUgc3RyaXBlIGNhY2hlLiAgWW91IGNhbiBzaHJpbmsgaXQgdG8gYW4gdW5yZWFz
+b25hYmxlIHNpemUsIGJ1dCB0aGUgbWluaW11bSB5b3UgY2FuIHNldCBzdHJpcGVfY2FjaGVfc2l6
+ZSB0byBpcyAxNyAocGFnZXMpLg0KDQpIYXZpbmcgc2FpZCB0aGF0LCBpdCBtYXkgYmUgdGhhdCB5
+b3VyIFJBSUQgaXNuJ3QgdXNpbmcgdGhlIHN0cmlwZSBjYWNoZSBvciB0aGF0IHlvdSdyZSBub3Qg
+Y2hlY2tpbmcgdGhlIHZhbHVlIGZyZXF1ZW50bHkgZW5vdWdoIHRvIHNlZSBzdHJpcGUgY2FjaGUg
+YWN0aXZpdHkuDQoNCkEgZmlsZSBzeXN0ZW0gdGhhdCBpcyBwcm9wZXJseSB0dW5lZCwgYW5kIGRv
+aW5nIGJ1ZmZlcmVkIElPIHdpbGwgbGlrZWx5IHJlZHVjZSB0aGUgc3RyaXBlIGNhY2hlIHVzYWdl
+LiAgVGhlIHN0cmlwZSBjYWNoZSBpcyBiYXNpY2FsbHkgd2hlcmUgZGF0YSBnZXRzIHB1dCB3aGVu
+IHRoZSBSQUlEIGlzIGRvaW5nIHBhcnRpYWwgc3RyaXBlIElPJ3MsIGNhbGN1bGF0aW5nIHBhcml0
+eSwgb3Igd2FpdGluZyBmb3Igc2xvdyBkZXZpY2VzIHRvIGNvbXBsZXRlIHRoZWlyIElPJ3MuICBJ
+dCdzIG5vdCBpbnRlbmRlZCB0byBiZSB5ZXQgYW5vdGhlciBsZXZlbCBvZiBjYWNoZSwgc28gaXQg
+Z2V0cyBwdXJnZWQgd2hlbiB0aGUgUkFJRCBpcyBkb25lIHdpdGggaXQuICBTbywgdW5saWtlIG90
+aGVyIGNhY2hlcyB0aGF0IHdpbGwgaG9sZCBvbnRvIGRhdGEgdW50aWwgdGhlcmUgaXMgbWVtb3J5
+IHByZXNzdXJlLCB0aGUgc3RyaXBlIGNhY2hlIGlzIG1vcmUgbGlrZWx5IHRvIGJlIGVtcHR5Lg0K
+DQpBcyBmYXIgYXMgYWRqdXN0aW5nIHN0cmlwZV9jYWNoZV9zaXplLi4uIFRoZSBzdHJpcGUgY2Fj
+aGUgaXMgZHluYW1pY2FsbHkgYWxsb2NhdGVkLiAgSXQgd29uJ3Qgc2F2ZSBhbnkgUkFNIGJ5IGRl
+Y3JlYXNpbmcgc3RyaXBlX2NhY2hlX3NpemUuICBEZWNyZWFzaW5nIGl0IHRvbyBtdWNoIHdpbGwg
+bmVnYXRpdmVseSBpbXBhY3QgcGVyZm9ybWFuY2UgYXMgaXQncyBtb3JlIGxpa2VseSB5b3UnbGwg
+ZG8gUmVhZC1Nb2RpZnktV3JpdGUncyB3aGVuIGRvaW5nIHBhcnRpYWwgc3RyaXBlIHdyaXRlcy4N
+Cg0KQm9iIEtpZXJza2kNClNlbmlvciBTdG9yYWdlIFBlcmZvcm1hbmNlIEVuZ2luZWVyDQpDcmF5
+IEluYy4NCjM4MCBKYWNrc29uIFN0cmVldA0KU3VpdGUgMjEwDQpTdC4gUGF1bCwgTU4gNTUxMDEN
+ClRlbGU6IDY1MS05NjctOTU5MA0KRmF4OiAgNjUxLTYwNS05MDAxDQpDZWxsOiA2NTEtODkwLTc0
+NjENCg0K
