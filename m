@@ -1,139 +1,65 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] async_tx: use GFP_NOWAIT rather than GFP_IO
-Date: Thu, 07 Jan 2016 11:02:34 +1100
-Message-ID: <87k2nm9rz9.fsf@notabene.neil.brown.name>
-References: <CAFskJNhmU-N5_odOZV54x10Ku=7SSDnaMz5EtCbKddye+AGReg@mail.gmail.com> <87twn928qv.fsf@notabene.neil.brown.name> <CAPcyv4im63odabZ_gMF_ESuv=iZ7fyBYqLzXJDPe4cBRwtdG4g@mail.gmail.com> <87d1tw23jk.fsf@notabene.neil.brown.name> <CAPcyv4g=HBHn3f75gW9JKNdjYEnjxNCYEp3vjJBa_fGm7e+hJw@mail.gmail.com> <CAFskJNg9_gJ3HRMqD4N6FSue2R2W3CSz+1KwiZw1Bp6==dOp5A@mail.gmail.com> <87wprqxh5f.fsf@notabene.neil.brown.name> <CAPcyv4g6ieqx29kPE8ak7Sh2F0ksXEuz-NaYC8tBMW3Ek7ei0Q@mail.gmail.com> <20160106090811.GO2940@localhost>
+From: NeilBrown <nfbrown@novell.com>
+Subject: Re: [PATCH 1/2] imsm: use timeout when waiting for reshape progress
+Date: Thu, 07 Jan 2016 11:11:31 +1100
+Message-ID: <87h9iq9rkc.fsf@notabene.neil.brown.name>
+References: <1452010576-10733-1-git-send-email-artur.paszkiewicz@intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160106090811.GO2940@localhost>
+In-Reply-To: <1452010576-10733-1-git-send-email-artur.paszkiewicz@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: Stanislav Samsonov <slava@annapurnalabs.com>, linux-raid <linux-raid@vger.kernel.org>, "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 06 2016, Artur Paszkiewicz wrote:
 
-These async_XX functions are called from md/raid5 in an atomic
-section, between get_cpu() and put_cpu(), so they must not sleep.
-So use GFP_NOWAIT rather than GFP_IO.
+> Waiting for reshape progress is done by using select() on sync_completed
+> to block until an exception condition is signalled on the
+> filedescriptor. This happens when the attribute's value is updated by
+> the kernel, but if the array is stopped when mdadm is blocked on
+> select() this will never happen, because this attribute is then removed
+> and apparently the kernel doesn't do sysfs_notify() when removing a
+> sysfs attribute. So set a 3 second timeout for the sysfs_wait() call.
 
-Dan Williams writes: Longer term async_tx needs to be merged into md
-directly as we can allocate this unmap data statically per-stripe
-rather than per request.
+I wonder if we should fix that in the kernel somehow...
 
-Fixed: 7476bd79fc01 ("async_pq: convert to dmaengine_unmap_data")
-Cc: stable@vger.kernel.org (v3.13+)
-Reported-and-tested-by: Stanislav Samsonov <slava@annapurnalabs.com>
-Acked-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
+I've applied this patch and the following one - thanks.
 
-Thanks for taking this Vinod.
-It is currently in linux-next from my md tree, but I've just de-staged
-it so the next linux-next won't have it from me.
 NeilBrown
 
- crypto/async_tx/async_memcpy.c      | 2 +-
- crypto/async_tx/async_pq.c          | 4 ++--
- crypto/async_tx/async_raid6_recov.c | 4 ++--
- crypto/async_tx/async_xor.c         | 4 ++--
- 4 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
-index f8c0b8dbeb75..88bc8e6b2a54 100644
-=2D-- a/crypto/async_tx/async_memcpy.c
-+++ b/crypto/async_tx/async_memcpy.c
-@@ -53,7 +53,7 @@ async_memcpy(struct page *dest, struct page *src, unsigne=
-d int dest_offset,
- 	struct dmaengine_unmap_data *unmap =3D NULL;
-=20
- 	if (device)
-=2D		unmap =3D dmaengine_get_unmap_data(device->dev, 2, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(device->dev, 2, GFP_NOWAIT);
-=20
- 	if (unmap && is_dma_copy_aligned(device, src_offset, dest_offset, len)) {
- 		unsigned long dma_prep_flags =3D 0;
-diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
-index 5d355e0c2633..c0748bbd4c08 100644
-=2D-- a/crypto/async_tx/async_pq.c
-+++ b/crypto/async_tx/async_pq.c
-@@ -188,7 +188,7 @@ async_gen_syndrome(struct page **blocks, unsigned int o=
-ffset, int disks,
- 	BUG_ON(disks > 255 || !(P(blocks, disks) || Q(blocks, disks)));
-=20
- 	if (device)
-=2D		unmap =3D dmaengine_get_unmap_data(device->dev, disks, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(device->dev, disks, GFP_NOWAIT);
-=20
- 	/* XORing P/Q is only implemented in software */
- 	if (unmap && !(submit->flags & ASYNC_TX_PQ_XOR_DST) &&
-@@ -307,7 +307,7 @@ async_syndrome_val(struct page **blocks, unsigned int o=
-ffset, int disks,
- 	BUG_ON(disks < 4);
-=20
- 	if (device)
-=2D		unmap =3D dmaengine_get_unmap_data(device->dev, disks, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(device->dev, disks, GFP_NOWAIT);
-=20
- 	if (unmap && disks <=3D dma_maxpq(device, 0) &&
- 	    is_dma_pq_aligned(device, offset, 0, len)) {
-diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_ra=
-id6_recov.c
-index 934a84981495..8fab6275ea1f 100644
-=2D-- a/crypto/async_tx/async_raid6_recov.c
-+++ b/crypto/async_tx/async_raid6_recov.c
-@@ -41,7 +41,7 @@ async_sum_product(struct page *dest, struct page **srcs, =
-unsigned char *coef,
- 	u8 *a, *b, *c;
-=20
- 	if (dma)
-=2D		unmap =3D dmaengine_get_unmap_data(dma->dev, 3, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(dma->dev, 3, GFP_NOWAIT);
-=20
- 	if (unmap) {
- 		struct device *dev =3D dma->dev;
-@@ -105,7 +105,7 @@ async_mult(struct page *dest, struct page *src, u8 coef=
-, size_t len,
- 	u8 *d, *s;
-=20
- 	if (dma)
-=2D		unmap =3D dmaengine_get_unmap_data(dma->dev, 3, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(dma->dev, 3, GFP_NOWAIT);
-=20
- 	if (unmap) {
- 		dma_addr_t dma_dest[2];
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index e1bce26cd4f9..da75777f2b3f 100644
-=2D-- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -182,7 +182,7 @@ async_xor(struct page *dest, struct page **src_list, un=
-signed int offset,
- 	BUG_ON(src_cnt <=3D 1);
-=20
- 	if (device)
-=2D		unmap =3D dmaengine_get_unmap_data(device->dev, src_cnt+1, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(device->dev, src_cnt+1, GFP_NOWAIT);
-=20
- 	if (unmap && is_dma_xor_aligned(device, offset, 0, len)) {
- 		struct dma_async_tx_descriptor *tx;
-@@ -278,7 +278,7 @@ async_xor_val(struct page *dest, struct page **src_list=
-, unsigned int offset,
- 	BUG_ON(src_cnt <=3D 1);
-=20
- 	if (device)
-=2D		unmap =3D dmaengine_get_unmap_data(device->dev, src_cnt, GFP_NOIO);
-+		unmap =3D dmaengine_get_unmap_data(device->dev, src_cnt, GFP_NOWAIT);
-=20
- 	if (unmap && src_cnt <=3D device->max_xor &&
- 	    is_dma_xor_aligned(device, offset, 0, len)) {
-=2D-=20
-2.6.4
-
+>
+> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> ---
+>  super-intel.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/super-intel.c b/super-intel.c
+> index 98fe835..68cc8d6 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -10297,7 +10297,8 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int=
+ ndata)
+>=20=20
+>  	do {
+>  		char action[20];
+> -		sysfs_wait(fd, NULL);
+> +		int timeout =3D 3000;
+> +		sysfs_wait(fd, &timeout);
+>  		if (sysfs_get_str(sra, NULL, "sync_action",
+>  				  action, 20) > 0 &&
+>  				strncmp(action, "reshape", 7) !=3D 0) {
+> --=20
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -141,18 +67,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWjasaAAoJEDnsnt1WYoG5RcIQAJGJiy17UkM7sC7ejNbT6sVq
-7J9KMKaY3ci5VXuuun5HdS/Fuy8gS4E+JiIlccJuQSrlaIH4TgskdH32NQRlXP9t
-blvHQry7e8kqucvyHhplpY4OslSwxRUtyBIZbDeIjugUZt302siRqaSr1RYoABh1
-YWQIvFG1l9al8mQjeVXjAX0byN7RrCi5fM4ABhU2Iah7W1rD1q2P52LH82G8xJan
-ovcnyhErgRTiBK5QZKxmmhllz943KjLLr5E8+D23WTTlqSB1ITc2VYkOyIDyjgzQ
-CLmKZx2tdaXaD/U366vQR/604o2El/0cXbjwWHB54acIyChrLhg3IljbHOGCjt6P
-PJVUnYBCUMJ5YhhUJEU8CIzUPTGz4HkTTk41dGbOOlf2FidjHGThYQO0aOo0TFeW
-ht76MgTX3/qagb88gdtYCLaQHgYJZvhaftXAS5pRxoaTl9qOFKOBH8lFiEdf7gFH
-/7UJpZ0M/9pvnonRnQXORtp+8KPRS00ycng5u7a8wmUcG5QemQS9mWZglniIj1m9
-T2R4GitxekYDDdbpp3xNaTIQqSca4D5Foqu8L1gSv0UjaWTBFZIDYa2R/lG7/jFv
-NVNPAgvEvqT5TAe4u4XPFvYFOwBupt3FBcZTDxH63dGVvnSwl7Olsl423pHd7Fjh
-gaDmtkVoIFcwVVSCdIE4
-=I2oH
+iQIcBAEBCAAGBQJWja0zAAoJEDnsnt1WYoG5NPkP/2XDsxW3p3cELKAT1sGXtOsR
+QHhQ04n32SLvLHdOjLv/2l4SEYt8g2jXkGndRyOorhYhW7aVr0enfxsoB9lngBzU
+83IC2la3EkqxjTtK0V821ZLrdxqgAUMDz/9YUe1BQuWbXzB5L0ZKaph82ctSspbS
+ISMnybBH4ibhb3+FLKkjmdTXrITdObEJlSfzgTJX1XAJTMROtrVlZ02pw2/JfB7b
+HchqxU98sVUXf53SlUX/n2OKd1ojC4S7rPAWxhzzSgaxHH1Z5xVQDSbdWjBRBRKo
+CQ5+5Eok7BLwXO4edv2oGF7PR03OvYnuvWd1szDBgyf9WmIG2run6UPT93j3Oj3A
++PAGRCuyoxuJD6NLikcNvFsQkUHGpSiCHkBhdTNtGRsbMj3mV/85hi0g9yuhoDnE
+sYORPK7nXU5jpufnLYMc7kK4w755Es/RgBsFvA9PMPC3wCEuHgR7z+8zpGEcwb23
+Mhzh61nPS0N2ADysLlkZuks2VNA83GNpSU+26L+SP4m6K0RYxbroc8lnZNP2B4Yi
+jNHK23Xi8qRM7BV7D0mPRlpuTjurY6ja2yGddS3JH4wBqnNK7v6baXx9aksgX14r
+ntVRUxfDXrBjQrkFIVovblNahub8nug7LTk+S8uiRThDodwE9W6+NbN2SyvGqzqu
+5zYo4YA6FDPgeowFr3uA
+=EUdL
 -----END PGP SIGNATURE-----
 --=-=-=--
