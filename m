@@ -1,65 +1,62 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: [PATCH 1/2] imsm: use timeout when waiting for reshape progress
-Date: Thu, 07 Jan 2016 11:11:31 +1100
-Message-ID: <87h9iq9rkc.fsf@notabene.neil.brown.name>
-References: <1452010576-10733-1-git-send-email-artur.paszkiewicz@intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/3] md: set MD_HAS_JOURNAL in correct places
+Date: Thu, 07 Jan 2016 11:28:18 +1100
+Message-ID: <87egdu9qsd.fsf@notabene.neil.brown.name>
+References: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1452010576-10733-1-git-send-email-artur.paszkiewicz@intel.com>
+In-Reply-To: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: Kernel-team@fb.com, songliubraving@fb.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 06 2016, Artur Paszkiewicz wrote:
+On Thu, Jan 07 2016, Shaohua Li wrote:
 
-> Waiting for reshape progress is done by using select() on sync_completed
-> to block until an exception condition is signalled on the
-> filedescriptor. This happens when the attribute's value is updated by
-> the kernel, but if the array is stopped when mdadm is blocked on
-> select() this will never happen, because this attribute is then removed
-> and apparently the kernel doesn't do sysfs_notify() when removing a
-> sysfs attribute. So set a 3 second timeout for the sysfs_wait() call.
+> Set MD_HAS_JOURNAL when a array is loaded or journal is initialized.
+> This is to avoid the flags set too early in journal disk hotadd.
+>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/md.c          | 8 ++++----
+>  drivers/md/raid5-cache.c | 1 +
+>  2 files changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index c0c3e6d..e896320 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1607,6 +1607,10 @@ static int super_1_validate(struct mddev *mddev, s=
+truct md_rdev *rdev)
+>  			mddev->new_chunk_sectors =3D mddev->chunk_sectors;
+>  		}
+>=20=20
+> +		if (mddev->recovery_cp =3D=3D MaxSector)
+> +			set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
+> +		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
+> +			set_bit(MD_HAS_JOURNAL, &mddev->flags);
 
-I wonder if we should fix that in the kernel somehow...
+This looks wrong.  I don't think it is safe to set MD_JOURNAL_CLEAR if
+MD_HAS_JOURNAL is not set.
+So I rearranged the code to:
 
-I've applied this patch and the following one - thanks.
+		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL) {
+			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+			if (mddev->recovery_cp =3D=3D MaxSector)
+				set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
+		}
+
+Please say if you disagree.
+
+I've applied this and the other two patches - thanks.
 
 NeilBrown
-
->
-> Signed-off-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> ---
->  super-intel.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/super-intel.c b/super-intel.c
-> index 98fe835..68cc8d6 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -10297,7 +10297,8 @@ int wait_for_reshape_imsm(struct mdinfo *sra, int=
- ndata)
->=20=20
->  	do {
->  		char action[20];
-> -		sysfs_wait(fd, NULL);
-> +		int timeout =3D 3000;
-> +		sysfs_wait(fd, &timeout);
->  		if (sysfs_get_str(sra, NULL, "sync_action",
->  				  action, 20) > 0 &&
->  				strncmp(action, "reshape", 7) !=3D 0) {
-> --=20
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -67,18 +64,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWja0zAAoJEDnsnt1WYoG5NPkP/2XDsxW3p3cELKAT1sGXtOsR
-QHhQ04n32SLvLHdOjLv/2l4SEYt8g2jXkGndRyOorhYhW7aVr0enfxsoB9lngBzU
-83IC2la3EkqxjTtK0V821ZLrdxqgAUMDz/9YUe1BQuWbXzB5L0ZKaph82ctSspbS
-ISMnybBH4ibhb3+FLKkjmdTXrITdObEJlSfzgTJX1XAJTMROtrVlZ02pw2/JfB7b
-HchqxU98sVUXf53SlUX/n2OKd1ojC4S7rPAWxhzzSgaxHH1Z5xVQDSbdWjBRBRKo
-CQ5+5Eok7BLwXO4edv2oGF7PR03OvYnuvWd1szDBgyf9WmIG2run6UPT93j3Oj3A
-+PAGRCuyoxuJD6NLikcNvFsQkUHGpSiCHkBhdTNtGRsbMj3mV/85hi0g9yuhoDnE
-sYORPK7nXU5jpufnLYMc7kK4w755Es/RgBsFvA9PMPC3wCEuHgR7z+8zpGEcwb23
-Mhzh61nPS0N2ADysLlkZuks2VNA83GNpSU+26L+SP4m6K0RYxbroc8lnZNP2B4Yi
-jNHK23Xi8qRM7BV7D0mPRlpuTjurY6ja2yGddS3JH4wBqnNK7v6baXx9aksgX14r
-ntVRUxfDXrBjQrkFIVovblNahub8nug7LTk+S8uiRThDodwE9W6+NbN2SyvGqzqu
-5zYo4YA6FDPgeowFr3uA
-=EUdL
+iQIcBAEBCAAGBQJWjbEiAAoJEDnsnt1WYoG5y2cQAKzaAcy17l2v484QMzUbVuiJ
+tlEe09MogdQHDa5eYjnmScyRW8MZcpO3VED0t4tkVsWRm5zpKAnzDRqC9YcAqpgh
+3vbzCHPmX/cu9jNK6qtfisqLGXuQ0NCVe/ERMB9+VZ4ZVdTYpkZkl1Wlixv2/dxS
+gMyrsvEs4oVVPoAr48VdvKul4QBOJS1dz1a97ZPrxeanasVK1GQQSdOJNTMwmIJV
+eJukaxKNok7d0G4X8xmM16rZQKW7sw2lswrKYXB8PUbMFVe2zgxFQSnkiXgO9tXC
+MEIbxSl5vKISFLWYmpvEelLR7SMabe7Z5nEJk0/4Dto2RPR/ocisf+e4PhkhBmcj
+bRvSdCHNBm4xw6HebGlHBTwXboicL85UDE8IMA/+2dGsGfq2StnIaJKEUFLAcEoy
+sLbEwg3HwIFYJ3NX+U4T1shAqzgSFfmslUaFlx6ZONmPPUB5M0aGYFvAFI5pqPMh
+R6sgUMxG+jCilN/bMfhlvSPTAi+ndAIa1OWW92MHMGrM8dtshW5q8ovLY5nG2HWn
+tPpi22BCETIpTNzx6VhKuXtmmUH5x/JEhw+qYL9h20BHqryFaCf1CUoN5sezcWPS
+CGSyZnVAL4txFZY3XpdFayhLTEVe1KFJopZa8fBCU/CPuTg5awFbmt4fCj16htN1
+vT4QVCJjPcEEt9zNxYmk
+=Fvcu
 -----END PGP SIGNATURE-----
 --=-=-=--
