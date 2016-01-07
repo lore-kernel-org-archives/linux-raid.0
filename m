@@ -1,81 +1,51 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] md: set MD_HAS_JOURNAL in correct places
-Date: Thu, 07 Jan 2016 11:28:18 +1100
-Message-ID: <87egdu9qsd.fsf@notabene.neil.brown.name>
-References: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/35 v2] separate operations from flags in
+	the bio/request structs
+Date: Wed, 06 Jan 2016 20:40:09 -0500
+Message-ID: <yq14meqi2va.fsf@sermon.lab.mkp.net>
+References: <1452027218-32303-1-git-send-email-mchristi@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <55aef157bf27c1de417577f02b69944a277a0141.1452119479.git.shli@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
-Cc: Kernel-team@fb.com, songliubraving@fb.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <1452027218-32303-1-git-send-email-mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+	(mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org's message of "Tue, 5 Jan 2016 14:53:03 -0600")
+List-Unsubscribe: <http://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xfs-VZNHf3L845pBDgjK7y7TUQ@public.gmane.org, ocfs2-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Mike" == mchristi  <mchristi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
 
-On Thu, Jan 07 2016, Shaohua Li wrote:
+Mike> The following patches begin to cleanup the request->cmd_flags and
+bio-> bi_rw mess. We currently use cmd_flags to specify the operation,
+Mike> attributes and state of the request. For bi_rw we use it for
+Mike> similar info and also the priority but then also have another
+Mike> bi_flags field for state. At some point, we abused them so much we
+Mike> just made cmd_flags 64 bits, so we could add more.
 
-> Set MD_HAS_JOURNAL when a array is loaded or journal is initialized.
-> This is to avoid the flags set too early in journal disk hotadd.
->
-> Signed-off-by: Shaohua Li <shli@fb.com>
-> ---
->  drivers/md/md.c          | 8 ++++----
->  drivers/md/raid5-cache.c | 1 +
->  2 files changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index c0c3e6d..e896320 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -1607,6 +1607,10 @@ static int super_1_validate(struct mddev *mddev, s=
-truct md_rdev *rdev)
->  			mddev->new_chunk_sectors =3D mddev->chunk_sectors;
->  		}
->=20=20
-> +		if (mddev->recovery_cp =3D=3D MaxSector)
-> +			set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
-> +		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)
-> +			set_bit(MD_HAS_JOURNAL, &mddev->flags);
+Mike> The following patches seperate the operation (read, write discard,
+Mike> flush, etc) from cmd_flags/bi_rw.
 
-This looks wrong.  I don't think it is safe to set MD_JOURNAL_CLEAR if
-MD_HAS_JOURNAL is not set.
-So I rearranged the code to:
+Mike> This patchset was made against linux-next from today Jan 5 2016.
+Mike> (git tag next-20160105).
 
-		if (le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL) {
-			set_bit(MD_HAS_JOURNAL, &mddev->flags);
-			if (mddev->recovery_cp =3D=3D MaxSector)
-				set_bit(MD_JOURNAL_CLEAN, &mddev->flags);
-		}
+Very nice work. Thanks for doing this!
 
-Please say if you disagree.
+I think it's a much needed cleanup. I focused mainly on the core block,
+discard, write same and sd.c pieces and everything looks sensible to me.
 
-I've applied this and the other two patches - thanks.
+I wonder what the best approach is to move a patch set with this many
+stakeholders forward? Set a "speak now or forever hold your peace"
+review deadline?
 
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWjbEiAAoJEDnsnt1WYoG5y2cQAKzaAcy17l2v484QMzUbVuiJ
-tlEe09MogdQHDa5eYjnmScyRW8MZcpO3VED0t4tkVsWRm5zpKAnzDRqC9YcAqpgh
-3vbzCHPmX/cu9jNK6qtfisqLGXuQ0NCVe/ERMB9+VZ4ZVdTYpkZkl1Wlixv2/dxS
-gMyrsvEs4oVVPoAr48VdvKul4QBOJS1dz1a97ZPrxeanasVK1GQQSdOJNTMwmIJV
-eJukaxKNok7d0G4X8xmM16rZQKW7sw2lswrKYXB8PUbMFVe2zgxFQSnkiXgO9tXC
-MEIbxSl5vKISFLWYmpvEelLR7SMabe7Z5nEJk0/4Dto2RPR/ocisf+e4PhkhBmcj
-bRvSdCHNBm4xw6HebGlHBTwXboicL85UDE8IMA/+2dGsGfq2StnIaJKEUFLAcEoy
-sLbEwg3HwIFYJ3NX+U4T1shAqzgSFfmslUaFlx6ZONmPPUB5M0aGYFvAFI5pqPMh
-R6sgUMxG+jCilN/bMfhlvSPTAi+ndAIa1OWW92MHMGrM8dtshW5q8ovLY5nG2HWn
-tPpi22BCETIpTNzx6VhKuXtmmUH5x/JEhw+qYL9h20BHqryFaCf1CUoN5sezcWPS
-CGSyZnVAL4txFZY3XpdFayhLTEVe1KFJopZa8fBCU/CPuTg5awFbmt4fCj16htN1
-vT4QVCJjPcEEt9zNxYmk
-=Fvcu
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Martin K. Petersen	Oracle Linux Engineering
