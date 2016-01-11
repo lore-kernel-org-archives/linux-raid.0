@@ -1,127 +1,424 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: Create Lock to Eliminate RMW in RAID/456 when writing perfect stripes
-Date: Mon, 11 Jan 2016 18:44:23 +1100
-Message-ID: <87wprg8srs.fsf@notabene.neil.brown.name>
-References: <CAFx4rwR1gtLZUF6MUx71QTvw3hT5GKhsEMU2xcBpAz5wZWBUCw@mail.gmail.com> <87h9j7yn5x.fsf@notabene.neil.brown.name> <CAFx4rwQDX-Eu+b1Jv_OToUduwM_prRy_2YWp2=ptnS3UCv1c1Q@mail.gmail.com>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: Intel IMSM RAID 5 won't start
+Date: Mon, 11 Jan 2016 09:30:18 +0100
+Message-ID: <5693681A.9000602@intel.com>
+References: <CAEUPnrygMz5qs=Saw4maWOriS7bb72-+RO_CSGd_+neQPhp49g@mail.gmail.com>
+ <568A8C65.3010103@intel.com>
+ <CAEUPnrwx76fmCX8yxC7F9mjGiFN9khkgWtUaTO9WpEPB=Y84cg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwQDX-Eu+b1Jv_OToUduwM_prRy_2YWp2=ptnS3UCv1c1Q@mail.gmail.com>
+In-Reply-To: <CAEUPnrwx76fmCX8yxC7F9mjGiFN9khkgWtUaTO9WpEPB=Y84cg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com
+To: Guido D'Arezzo <gdarrezzo@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+On 01/09/2016 04:42 AM, Guido D'Arezzo wrote:
+> Thanks for your replies.
+> I copied the RAID discs to a 4 TB drive with dd and there were no err=
+ors.
+> Recreating the RAID according to your instructions, Artur, worked
+> without a problem, after which the contents of the partitions were
+> available.  The larger RAID volume, with a small boot partition and a
+> big LVM partition was mainly OK.  The ext3 and ext4 file-systems in
+> the logical volumes were all OK; those which were in use were fixed b=
+y
+> fsck.  I was unable to repair a btrfs file-system which was in use.
+> The smaller RAID volume contained LVs: several had gone and the one
+> left had a new name but as they were all swap space, it doesn't matte=
+r
+> to me.
+> The parity repair had no apparent effect apart from starting a resync=
+=2E
+>=20
+> Sorry Wols, I don't know where the loopback/overlays thing would have
+> fitted in.  Luckily I didn't need to do a (10 hour) restore from the
+> disc images.  I'm very grateful that I didn't have to reinstall or
+> restore everything.
+>=20
+> Regards
+>=20
+> Guido
 
-On Thu, Dec 31 2015, Doug Dumitru wrote:
+Hi Guido,
 
-> A new lock for RAID-4/5/6 to minimize read/modify/write operations.
->
-> The Problem:  The background thread for raid can wake up
-> asynchronously and will sometimes wake up and start processing a write
-> before the writing thread has finished updating the stripe cache
-> blocks.  If the calling thread write was a long write (longer than
-> chunk size), then the background thread will configure a raid write
-> operation that is sub-optimal resulting in extra IO operations, slower
-> performance, and higher wear on Flash storage.
->
-> The Easy Fix:  When the calling thread has a long write, it "locks"
-> the stripe number with a semaphore.  When the background thread wakes
-> up and starts working on a stripe, it locks the same lock, and then
-> immediately releases it.  This way the background thread will wait for
-> the write to fully populate the stripe caches before it start to build
-> a write request.
+That's great! I'm glad it worked and you didn't need to use the backup.
 
-The code does something a lot like this already.
-When the filesystem starts a write, it calls "blk_start_plug()"
-When it finishes it calls "blk_finish_plug()".
+Best wishes,
+Artur
 
-md/raid5 detects this plugging and when it gets a bio and attaches it to
-a "stripe_head", the stripe_head is queued on a delayed-list which is
-not processed until the blk_finish_plug() is called.
+>=20
+> On Mon, Jan 4, 2016 at 3:14 PM, Artur Paszkiewicz
+> <artur.paszkiewicz@intel.com> wrote:
+>> On 01/03/2016 08:44 PM, Guido D'Arezzo wrote:
+>>> Hi
+>>>
+>>> After 20 months trouble-free Intel IMSM RAID, I had to do a hard re=
+set
+>>> and the array has failed to start.  I don=E2=80=99t know if the fai=
+led RAID
+>>> was the cause of the problems before the reset.  The system won=E2=80=
+=99t boot
+>>> because everything is on the RAID array.  Booting from a live Fedor=
+a
+>>> USB shows no sign that the discs are broken and I was able to copy =
+1
+>>> GB off each disc with dd.  I hope someone can help me to rescue the
+>>> array.
+>>>
+>>> It is a 4 x 1 TB disc RAID 5 array.  The system was running Archlin=
+ux
+>>> and I had patched it a day or 2 before for the first time in a few
+>>> months, thought it had been rebooted more than once afterwards with=
+out
+>>> incident.
+>>>
+>>> The Intel oROM says disc 2 is =E2=80=9COffline Member=E2=80=9D and =
+3 is =E2=80=9CFailed Disk=E2=80=9D.
+>>>
+>>> -------------------------------------------------------------------=
+----
+>>> Intel(R) Rapid Storage Technology - Option ROM - 11.6.0.1702
+>>>
+>>> RAID Volumes:
+>>> ID    Name    Level        Strip    Size    Status     Bootable
+>>> O    md0    RAID5(Parity)    128KB    2.6TB    Failed    No
+>>> 1    mdl    RAID5(Parity)    128KB    94.5GB    Failed    No
+>>>
+>>> Physical Devices:
+>>> ID    Device    Model        Serial #    Size    Type/Status(Vol ID=
+)
+>>> O    WDC WD10EZEK-00K    WD-ACC1S5684189    931.5GB    Member Disk(=
+0,1)
+>>> 1    SAMSUNG HD103UJ        S13PJDAS608384    931.5GB    Member Dis=
+k(O,1)
+>>> 2    SAMSUNG HD103SJ        SZ46J9GZC04Z67    931.5GB Offline Membe=
+r
+>>> 3    SAMSUNG HD103UJ        S13PJDAS608386    931.5GB    Unknown Di=
+sk
+>>> 4    WDC WD10EZEK-08M    WD-ACC3F1681668    931.5GB    Non-RAID Dis=
+k
+>>>
+>>> -------------------------------------------------------------------=
+----
+>>>
+>>> The 2 RAID volumes were both spread across all 4 discs.  This is ho=
+w
+>>> it looks now:
+>>>
+>>> # mdadm -D /dev/md/imsm0
+>>> /dev/md/imsm0:
+>>>         Version : imsm
+>>>      Raid Level : container
+>>>   Total Devices : 1
+>>>
+>>> Working Devices : 1
+>>>
+>>>
+>>>            UUID : 76cff3f5:1a3a7a83:49fc86a8:84cf6604
+>>>   Member Arrays :
+>>>
+>>>     Number   Major   Minor   RaidDevice
+>>>
+>>>        0       8       48        -        /dev/sdd
+>>> #
+>>>
+>>> # mdadm -D /dev/md/imsm1
+>>> /dev/md/imsm1:
+>>>         Version : imsm
+>>>      Raid Level : container
+>>>   Total Devices : 3
+>>>
+>>> Working Devices : 3
+>>>
+>>>
+>>>            UUID : e8286680:de9642f4:04200a4a:acbdb566
+>>>   Member Arrays :
+>>>
+>>>     Number   Major   Minor   RaidDevice
+>>>
+>>>        0       8       16        -        /dev/sdb
+>>>        1       8       32        -        /dev/sdc
+>>>        2       8        0        -        /dev/sda
+>>> #
+>>>
+>>> # mdadm --detail-platform
+>>>  Platform : Intel(R) Matrix Storage Manager
+>>>  Version : 11.6.0.1702
+>>>  RAID Levels : raid0 raid1 raid10 raid5
+>>>  Chunk Sizes : 4k 8k 16k 32k 64k 128k
+>>>  2TB volumes : supported
+>>>  2TB disks : supported
+>>>  Max Disks : 6
+>>>  Max Volumes : 2 per array, 4 per controller
+>>>  I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+>>> #
+>>>
+>>>
+>>> # mdadm --examine /dev/sd[abcd]
+>>> /dev/sda:
+>>>           Magic : Intel Raid ISM Cfg Sig.
+>>>         Version : 1.3.00
+>>>     Orig Family : d12e9b21
+>>>          Family : d12e9b21
+>>>      Generation : 00695bbd
+>>>      Attributes : All supported
+>>>            UUID : e8286680:de9642f4:04200a4a:acbdb566
+>>>        Checksum : 8f6fe1cb correct
+>>>     MPB Sectors : 2
+>>>           Disks : 4
+>>>    RAID Devices : 2
+>>>
+>>>   Disk01 Serial : WD-WCC1S5684189
+>>>           State : active
+>>>              Id : 00000000
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> [md0]:
+>>>            UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [_U_U]
+>>>     Failed disk : 2
+>>>       This Slot : 1
+>>>      Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
+>>>    Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
+>>>   Sector Offset : 0
+>>>     Num Stripes : 7372800
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : failed
+>>>     Dirty State : clean
+>>>
+>>> [md1]:
+>>>            UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [__UU]
+>>>     Failed disk : 0
+>>>       This Slot : 2
+>>>      Array Size : 198232064 (94.52 GiB 101.49 GB)
+>>>    Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
+>>>   Sector Offset : 1887440896
+>>>     Num Stripes : 258117
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : failed
+>>>     Dirty State : clean
+>>>
+>>>   Disk00 Serial : PJDWS608386:0:0
+>>>           State : active
+>>>              Id : ffffffff
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk02 Serial : 6J9GZC04267:0:0
+>>>           State : active failed
+>>>              Id : ffffffff
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk03 Serial : S13PJDWS608384
+>>>           State : active
+>>>              Id : 00000001
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> /dev/sdb:
+>>>           Magic : Intel Raid ISM Cfg Sig.
+>>>         Version : 1.3.00
+>>>     Orig Family : d12e9b21
+>>>          Family : d12e9b21
+>>>      Generation : 00695bbd
+>>>      Attributes : All supported
+>>>            UUID : e8286680:de9642f4:04200a4a:acbdb566
+>>>        Checksum : 8f6fe1cb correct
+>>>     MPB Sectors : 2
+>>>           Disks : 4
+>>>    RAID Devices : 2
+>>>
+>>>   Disk03 Serial : S13PJDWS608384
+>>>           State : active
+>>>              Id : 00000001
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> [md0]:
+>>>            UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [_U_U]
+>>>     Failed disk : 2
+>>>       This Slot : 3
+>>>      Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
+>>>    Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
+>>>   Sector Offset : 0
+>>>     Num Stripes : 7372800
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : failed
+>>>     Dirty State : clean
+>>>
+>>> [md1]:
+>>>            UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [__UU]
+>>>     Failed disk : 0
+>>>       This Slot : 3
+>>>      Array Size : 198232064 (94.52 GiB 101.49 GB)
+>>>    Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
+>>>   Sector Offset : 1887440896
+>>>     Num Stripes : 258117
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : failed
+>>>     Dirty State : clean
+>>>
+>>>   Disk00 Serial : PJDWS608386:0:0
+>>>           State : active
+>>>              Id : ffffffff
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk01 Serial : WD-WCC1S5684189
+>>>           State : active
+>>>              Id : 00000000
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk02 Serial : 6J9GZC04267:0:0
+>>>           State : active failed
+>>>              Id : ffffffff
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> /dev/sdc:
+>>>           Magic : Intel Raid ISM Cfg Sig.
+>>>         Version : 1.3.00
+>>>     Orig Family : d12e9b21
+>>>          Family : d12e9b21
+>>>      Generation : 00695b88
+>>>      Attributes : All supported
+>>>            UUID : e8286680:de9642f4:04200a4a:acbdb566
+>>>        Checksum : a72daa29 correct
+>>>     MPB Sectors : 2
+>>>           Disks : 4
+>>>    RAID Devices : 2
+>>>
+>>>   Disk02 Serial : S246J9GZC04267
+>>>           State : active
+>>>              Id : 00000002
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> [md0]:
+>>>            UUID : d5bf7ab7:2cda417d:f0c6542f:c77d9289
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [UUUU]
+>>>     Failed disk : none
+>>>       This Slot : 2
+>>>      Array Size : 5662310400 (2700.00 GiB 2899.10 GB)
+>>>    Per Dev Size : 1887436800 (900.00 GiB 966.37 GB)
+>>>   Sector Offset : 0
+>>>     Num Stripes : 7372800
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : normal
+>>>     Dirty State : dirty
+>>>
+>>> [md1]:
+>>>            UUID : 26671da2:0d23f085:3d12dbbe:f63aad5a
+>>>      RAID Level : 5
+>>>         Members : 4
+>>>           Slots : [UUUU]
+>>>     Failed disk : none
+>>>       This Slot : 0
+>>>      Array Size : 198232064 (94.52 GiB 101.49 GB)
+>>>    Per Dev Size : 66077952 (31.51 GiB 33.83 GB)
+>>>   Sector Offset : 1887440896
+>>>     Num Stripes : 258117
+>>>      Chunk Size : 128 KiB
+>>>        Reserved : 0
+>>>   Migrate State : idle
+>>>       Map State : normal
+>>>     Dirty State : clean
+>>>
+>>>   Disk00 Serial : S13PJDWS608386
+>>>           State : active
+>>>              Id : 00000003
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk01 Serial : WD-WCC1S5684189
+>>>           State : active
+>>>              Id : 00000000
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>>   Disk03 Serial : S13PJDWS608384
+>>>           State : active
+>>>              Id : 00000001
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>>
+>>> /dev/sdd:
+>>>           Magic : Intel Raid ISM Cfg Sig.
+>>>         Version : 1.0.00
+>>>     Orig Family : c7e42747
+>>>          Family : c7e42747
+>>>      Generation : 00000000
+>>>      Attributes : All supported
+>>>            UUID : 76cff3f5:1a3a7a83:49fc86a8:84cf6604
+>>>        Checksum : 4f820c2e correct
+>>>     MPB Sectors : 1
+>>>           Disks : 1
+>>>    RAID Devices : 0
+>>>
+>>>   Disk00 Serial : S13PJDWS608386
+>>>           State :
+>>>              Id : 00000003
+>>>     Usable Size : 1953518862 (931.51 GiB 1000.20 GB)
+>>> #
+>>
+>> Hi Guido,
+>>
+>> It looks like the metadata on the drives got messed up for some reas=
+on.
+>> If you believe the drives are good, you can try recreating the array=
+s
+>> with the same layout to write fresh metadata to the drives, without
+>> overwriting the actual data. In this case it can be done like this (=
+make
+>> a backup of the drives using dd before trying it):
+>>
+>> # mdadm -Ss
+>> # mdadm -C /dev/md/imsm0 -eimsm -n4 /dev/sdd /dev/sda /dev/sdc /dev/=
+sdb -R
+>> # mdadm -C /dev/md/md0 -l5 -n4 /dev/sdd /dev/sda /dev/sdc /dev/sdb -=
+-size=3D900G
+>> --chunk=3D128 --assume-clean -R
+>> # mdadm -C /dev/md/md1 -l5 -n4 /dev/sdd /dev/sda /dev/sdc /dev/sdb -=
+-chunk=3D128
+>> --assume-clean -R
+>>
+>> Drives should be listed in the order as they appear in the output fr=
+om
+>> mdadm -E. Look at the "DiskXX Serial" lines.
+>>
+>> Then you can run fsck on the filesystems. Finally, repair any mismat=
+ched
+>> parity blocks:
+>>
+>> # echo repair > /sys/block/md126/md/sync_action
+>> # echo repair > /sys/block/md125/md/sync_action
+>>
+>> You may have to update places like fstab, bootloader config,
+>> /etc/mdadm.conf, because the array UUIDs will change.
+>>
+>> Regards,
+>> Artur
+>>
 
-So we should already not start processing a request until we have the
-whole request.  But this sometimes doesn't work.  Understanding why it
-doesn't work and what actually happens would be an important first step
-to fixing the problem.
-
-The plugging doesn't guarantee that a request will be delayed - doing
-that can too easily lead to deadlocks.  Rather it just discourages early
-processing.  If a memory shortage appears and RAID5 could free up some
-memory by processing a request earlier, it is better to do that than to
-wait indefinitely and possibly deadlock.
-It is possible that this safety-valve code is triggering too early in
-some cases.
-
->
-> The Really High Performance Fix:  If the application is well enough
-> behaved to write complete, perfect stripes contained in a single BIO
-> request, then the whole stripe cache logic can be bypassed.  This lets
-> you submit the member disk IO operations directly from the calling
-> thread.  I have this running in a patch in the field and it works
-> well, but the use case is very limited and something probably breaks
-> with more "normal" IO patterns.  I have hit 11GB/sec with RAID-5 and
-> 8GB/sec with RAID-6 this way with 24 SSDs.
-
-It would certainly be interesting to find a general solution which
-allowed full stripes to be submitted without a context switch.  It
-should be possible.  There is already code which avoids copying from the
-filesystem buffer into the stripe cache.  Detecting complete stripes and
-submitting them immediately should be possible.  Combining several
-stripe_heads into a whole stripe should be possible in many cases using
-the new stripe-batching.
-
-
->
-> Tweak-ability:  All of these changes can be exposed in /sys to allow
-> sysadmins to tune their system possibly enabling or disabling
-> features.  Most useful for early code that might have broken use
-> cases.  Then again, too many knobs sometimes just increases confusion.
->
-> Asking for Feedback:  I am happy to write "all of the above" and
-> submit it and work with the group to get it tested etc.  If this
-> interests you, please comment on how far you think I should go.  Also,
-> if there are any notes on "submission style", how and where to post
-> patches, which kernel version to patch/develop against, documentation
-> style, sign-off requirements, etc. please point me at them.
->
-
-Patches should be sent to linux-raid@vger.kernel.org
-Documentation/SubmittingPatches should describe all the required style.
-
-I think a really important first step is to make sure you understand how
-the current code is supposed to work, and why it fails sometimes.  The
-above short notes should get you started in following what should
-happens.
-
-I really don't think locks as you describe them would be part of a
-solution.  Flag bits in the stripe_heads, different queues of
-stripe_heads and different queuing disciplines might be.
-
-Thanks,
-NeilBrown
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWk11XAAoJEDnsnt1WYoG5AkQP+gKDxXfP2NavN4/6LmWMxeq2
-QW4CWvkn7w40Weo6jFiwhuQfcLv2L43ODUBaz5vqcxOQeuUjzNdymPc2QUrXhJAI
-0RWr2UAT/dXOBavmHwz/BQFdlFdY9KoWBniPSiNH0hhbRRyZ2RiyIGSTJpygHxr2
-RTjAqoy8IBBDmRjnB2jh8mRLnL+KAfdA/2BNSVeKT/SfaMoWAPNEvACW5uOWY3FJ
-z5LzaCXL83BUH69GZP/ap/lUo+XTH3KM4CZ+u2Dl99ZR5GZzfomKgDHEuFo6KD9u
-74+J2TA90KAjt8DP4kgA8RMSZI6t4gHCL5IcMRJRnNIy6pnHtYm1jHPDzovqYlVR
-ANDFa7mXyYYgF9K9Rwb+YJEabyHDY04uy/Ks76HzLXZ6A4OUGyS43gqepRro+4Gu
-0ev/fjqnGA8IFmgRJdK8oS2WyUhqW/JjcN6Vpw4XeVqp+qkZVnHO35GEM7no86t+
-12mkRtppGeSNpPNQeHsBX+OXMAOHMuX9vJfgoCnHjZjHVF+g/mjdXLyVtwm/9BFx
-MxVEtS9Z/5IfRbhauHIsMxbBWCr17y6Zzg1yzYZZ96g6gUw4Se0Rswqgt5473YtP
-dGYKU9aa0NVqepjYQWbs6aqvvvhveZIYQxYjITDqY15psLtVkOYqm/551BW9oJFQ
-Kl2crgGWYqdtgj1TggmB
-=g0Mx
------END PGP SIGNATURE-----
---=-=-=--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
