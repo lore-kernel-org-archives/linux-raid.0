@@ -1,110 +1,96 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fix wrong description in manpage
-Date: Wed, 13 Jan 2016 08:26:20 +1100
-Message-ID: <87oacq8p6r.fsf@notabene.neil.brown.name>
-References: <1452611304-14648-1-git-send-email-gqjiang@suse.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] [PATCH v2 0/2] Introduce the bulk IV mode for improving
+ the crypto engine efficiency
+Date: Tue, 12 Jan 2016 18:31:19 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1601121744400.18228@file01.intranet.prod.int.rdu2.redhat.com>
+References: <cover.1450233399.git.baolin.wang@linaro.org> <56711C0F.8030105@gmail.com> <CAMz4kuL2b5Qad5iD3odNVh9VO6ctu_M=QE=8fbdC_+ea+5wJ5w@mail.gmail.com> <56885330.9080801@gmail.com> <20160104201343.GQ16023@sirena.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1452611304-14648-1-git-send-email-gqjiang@suse.com>
-Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160104201343.GQ16023@sirena.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>, Mark Brown <broonie@kernel.org>
+Cc: Milan Broz <gmazyland@gmail.com>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, linux-raid@vger.kernel.org, martin.petersen@oracle.com, Mike Snitzer <snitzer@redhat.com>, Baolin Wang <baolin.wang@linaro.org>, linux-block@vger.kernel.org, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, sagig@mellanox.com, Arnd Bergmann <arnd@arndb.de>, tj@kernel.org, dan.j.williams@intel.com, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Jan 13 2016, Guoqing Jiang wrote:
-
-> The careless change was introduce by 'commit 7e6e839a2651
-> (mdadm: change the num of cluster node)'. Which should be
-> revert to avoid misunderstanding.
->
-> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-> ---
->  mdadm.8.in | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/mdadm.8.in b/mdadm.8.in
-> index 2844039..c2f2c95 100644
-> --- a/mdadm.8.in
-> +++ b/mdadm.8.in
-> @@ -1162,9 +1162,7 @@ is given, a random UUID is chosen.
->  The
->  .B name
->  option will change the
-> -.I name
-> -of the array as stored in the superblock and bitmap. This option only
-> -works for clustered environment.
-> +.I name.
->=20=20
->  The
->  .B nodes
-
-Thanks, that patch was messed up.
-However your patch only fixes part of the mess that was made.
-I've changed it to the following.
-
-Thanks,
-NeilBrown
 
 
-From: Guoqing Jiang <gqjiang@suse.com>
-Date: Tue, 12 Jan 2016 18:08:24 +0300
-Subject: [PATCH] Fix wrong description in manpage
+On Mon, 4 Jan 2016, Mark Brown wrote:
 
-The careless change was introduce by 'commit 7e6e839a2651
-(mdadm: change the num of cluster node)'. Which should be
-revert to avoid misunderstanding.
+> On Sat, Jan 02, 2016 at 11:46:08PM +0100, Milan Broz wrote:
+> 
+> > Anyway, I think that you should optimize driver, not add strange hw-dependent
+> > crypto modes to dmcrypt. This is not the first crypto accelerator that is just not
+> > suited for this kind of use.
+> 
+> > (If it can process batch of chunks of data each with own IV, then it can work
+> > with dmcrypt, but I think such optimized code should be inside crypto API,
+> > not in dmcrypt.)
+> 
+> The flip side of this is there is an awful lot of hardware out there
+> that has basically this pattern and if we can make the difference
+> between people being able to encrypt or not encrypt their storage due to
+> performance then that seems like a win.  Getting hardware changes isn't
+> going to be a fast process.  From a brief look at the crypto layer it
+> does look there may be things we can do there, if only in terms of
+> factoring out the common patterns for driving the queue of operations
+> into the hardware so it's easy for drivers to do the best thing.  
+> 
+> One thing that occurs to me for the IV programming that has been
+> proposed for SPI by Martin Sparl (and seen good results on Raspberry PI)
+> is to insert transfers programming the crypto engine into the stream of
+> DMA operations so we can keep the hardware busy.  It won't work with
+> every SoC out there but it will work with a lot of them, it's what
+> hardware that explicitly supports this will be doing internally.  It's
+> the sort of thing that would benefit from factoring out, it's a lot of
+> hassle to implement per driver.
+> 
+> The main thing the out of tree req-dm-crypt code is doing was using a
+> larger block size which does seem like a reasonable thing to allow
+> people to tune for performance tradeofffs but I undertand that's a lot
+> harder to achieve in a good way than one might hope.
 
-Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
-Signed-off-by: NeilBrown <neilb@suse.com>
+But as Milan pointed out, that larger block size doesn't work if you 
+process requests with different sizes - the data encrypted with one 
+request size won't match if you decrypt them with a different request 
+size.
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index 2844039584ac..97ce8dc8219b 100644
-=2D-- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1163,15 +1163,15 @@ The
- .B name
- option will change the
- .I name
-=2Dof the array as stored in the superblock and bitmap. This option only
-=2Dworks for clustered environment.
-+of the array as stored in the superblock.  This is only supported for
-+version-1 superblocks.
-=20
- The
- .B nodes
- option will change the
- .I nodes
-=2Dof the array as stored in the superblock.  This is only supported for
-=2Dversion-1 superblocks.
-+of the array as stored in the bitmap superblock. This option only
-+works for a clustered environment.
-=20
- The
- .B homehost
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+XTS with larger block could work if it were possible to use arbitrary 
+initial tweak - the function crypt() in crypto/xts.c calculates the 
+initial sector tweak by encrypting the iv:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+tw(crypto_cipher_tfm(ctx->tweak), w->iv, w->iv);
 
-iQIcBAEBCAAGBQJWlW98AAoJEDnsnt1WYoG5zSMP+wX9DuA8VXC8UIbSShBw1TGw
-16HFGg8Y3bqJdUSxZmINw2rDUk3H4Gp9NlqI+3sjkQlEzAMIRYcq3VLqc8q9C5W9
-Memaz3HgC9yaf+nFrmmH5vOKz+WSYUMmn3VZAu6zXFJbPbwzVYOWpRXA8v69hyld
-E7Pp33Cn7eQ9yNOyPtCTqjbcOJSC/crNHQjbSicx8xqIa/0urTlcQGpQKfytqcr0
-85l82/qAViNpGYe2CrffLQTldAN7k400iVF64Uthg4laxW8VtBHTGG3M/Z81ff1Z
-sZOr2oMmGfVPHxVmv3f1C31WIDkDV5asKDyig6ScmCvIWism3wSIJzwYOy3DkzuY
-8SR29JN16/uWfwgZkvGlCJ4zW/OPRb+/ZhTcu1Q1foTWX6cucOUIckD+Dwxuc8qM
-7L/Sb6cukMY9R4QMB0uwFwRDmwupGaKy+5q5QnBT+6Zj9eqgDEDoPGXCrMEhTKbz
-O9ElwftBgB7SHEhTL69NdE7a+m8IQUlm6nXWrSBVUK4M4XNO41bXKmkW15naJJWh
-n8KLYkmLcFqOILGsVUG5BLtCR3Oo4wkI3lKVbmX2JylJ3YMAArdhmUMyxeHdp6vp
-QWpS80WJeUWzAoMJ7A4bTkbOY+BodTKRO76ZpWP27A1+rg33fwfjpYyOee3OmSZT
-50GTB8DHOIg9KOZFmixt
-=/tXt
------END PGP SIGNATURE-----
---=-=-=--
+and then calculates each cipher block's tweak by multiplying the tweak by 
+a constant polynomial (alpha):
+
+gf128mul_x_ble(s.t, s.t);	(s.t is the same as w->iv)
+
+
+If we could supply the tweak directly, we could use larger sectors in 
+dm-crypt.
+
+For example, we could use 64k XTS sectors and if the user is accessing 1k 
+offset in the sector, we could calculate initial sector tweak
+	tw(crypto_cipher_tfm(ctx->tweak), w->iv, w->iv);
+and then multiply it by alpha^(1024/16) (because we are 1024 bytes into 
+the sector and xts block size is 16). That would make it possible to use 
+larger encryption requests and the data would match regardless of request 
+size.
+
+But the Linux crypto API doesn't allow this - the code that would multiply 
+the tweak after initial encryption isn't there (maybe we could get this 
+behavior by modifying ctx->tweak to point to a null cipher, but it is 
+dirty hack to poke into private crypto structures).
+
+Does the hardware encryption you are optimizing for allow setting 
+arbitrary tweaks in XTS mode? What is the specific driver you are 
+optimizing for?
+
+
+Another possibility is to use dm-crypt block size 4k and use a filesystem 
+with 4k blocksize on it (it will never send requests not aligned on 4k 
+boundary, so we could reject such requests with an error).
+
+Mikulas
