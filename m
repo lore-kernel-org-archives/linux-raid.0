@@ -1,67 +1,53 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Re: [dm-devel] [PATCH v2 0/2] Introduce the bulk IV mode for
- improving the crypto engine efficiency
-Date: Thu, 14 Jan 2016 11:35:27 +0000
-Message-ID: <20160114113527.GR6588@sirena.org.uk>
-References: <cover.1450233399.git.baolin.wang@linaro.org>
- <56711C0F.8030105@gmail.com>
- <CAMz4kuL2b5Qad5iD3odNVh9VO6ctu_M=QE=8fbdC_+ea+5wJ5w@mail.gmail.com>
- <56885330.9080801@gmail.com>
- <20160104201343.GQ16023@sirena.org.uk>
- <alpine.LRH.2.02.1601121744400.18228@file01.intranet.prod.int.rdu2.redhat.com>
- <20160112234025.GF6588@sirena.org.uk>
- <alpine.LRH.2.02.1601122111040.24452@file01.intranet.prod.int.rdu2.redhat.com>
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH RESEND] md:Check if call to thaw_bdev fails in
+	unlock_fs
+Date: Thu, 14 Jan 2016 16:05:56 -0500
+Message-ID: <1452805556-21972-1-git-send-email-xerofoify@gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="aO2SyuDEANnesPMC"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1601122111040.24452@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Milan Broz <gmazyland@gmail.com>, Jens Axboe <axboe@kernel.dk>, keith.busch@intel.com, linux-raid@vger.kernel.org, martin.petersen@oracle.com, Mike Snitzer <snitzer@redhat.com>, Baolin Wang <baolin.wang@linaro.org>, linux-block@vger.kernel.org, neilb@suse.com, LKML <linux-kernel@vger.kernel.org>, sagig@mellanox.com, Arnd Bergmann <arnd@arndb.de>, tj@kernel.org, dan.j.williams@intel.com, Kent Overstreet <kent.overstreet@gmail.com>, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: agk@redhat.com
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, neilb@suse.com, snitzer@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+This adds a check to the function unlock_fs to check if the call
+to thaw_bdev failed by returning a return code and if so print
+on the log level of KERN_CRIT that the thaw has failed on the
+passed device structure pointer's name before returnin immediately
+to this function's caller.
 
---aO2SyuDEANnesPMC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+---
+ drivers/md/dm.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-On Tue, Jan 12, 2016 at 09:13:19PM -0500, Mikulas Patocka wrote:
-> On Tue, 12 Jan 2016, Mark Brown wrote:
-
-> > This isn't targeted at a specific driver or system, it's trying to make
-> > dm-crypt better able to make use of hardware acceleration in general.
-
-> If the hardware acceleration doesn't allow to set arbitrary XTS tweak,=20
-> then this "large block" optimization on XTS can't be done at all.
-
-> So, we need to know which driver(s) you want to optimize for and how do=
-=20
-> those driver(s) handle tweak generation.
-
-Unfortunately the reality is just as I described it - we're looking for
-general improvements, not at specific devices (well, Linaro is mainly
-interested in ARM based SoCs but the range of ARM SoCs is such that that
-that doesn't really narrow things down).  It's probably better to ask if
-there exists any hardware which could use this usefully, software only
-implementations (or hardware that only does AES) at least give us
-control over supplying the tweak.
-
---aO2SyuDEANnesPMC
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJWl4f/AAoJECTWi3JdVIfQo5wH/AoKG6I1KT5tbYm+WK2ddlYP
-WWXZO2LNFy8l2WES7I7ZGeC9AT9/VBY8ldDZZhOIStlJe66GzRbyQDQqgf+dhD6O
-xXK8dYrr2AoFy6mOXL+E+9yGVB1A/8spyVpwfm9+FObf/D2Irft1GRP0KDYagYKS
-d2GM8cro/6J4UB75eeI2P11iNn9Kf3/hKNNl17q7b+j2Vk8tSCuPYB94CpoEeylf
-1crHv3Dtu8tOZmpDcHnRQ12OdTcXVy3r+oy/WqbETbYbaKYdlo9xMOt3CYDhl3it
-pnEEKKBobGKJjGnKQmRAyhSQqneQAqMD48R2/Fa4FYhIRc+nPGjIWRWTbaR/28o=
-=6L9f
------END PGP SIGNATURE-----
-
---aO2SyuDEANnesPMC--
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index ab37ae1..20ccc36 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -3152,7 +3152,11 @@ static void unlock_fs(struct mapped_device *md)
+ 	if (!test_bit(DMF_FROZEN, &md->flags))
+ 		return;
+ 
+-	thaw_bdev(md->bdev, md->frozen_sb);
++	if (!thaw_bdev(md->bdev, md->frozen_sb)) {
++		pr_crit("Thaw failed on the file device %s\n", md->name);
++		return;
++	}
++
+ 	md->frozen_sb = NULL;
+ 	clear_bit(DMF_FROZEN, &md->flags);
+ }
+-- 
+2.1.4
