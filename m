@@ -1,7 +1,7 @@
 From: Tejas Rao <raot@bnl.gov>
-Subject: Add. Sense: Data synchronization mark error
-Date: Thu, 14 Jan 2016 19:02:08 -0500
-Message-ID: <56983700.8000103@bnl.gov>
+Subject: scsi_debug support
+Date: Thu, 14 Jan 2016 19:22:05 -0500
+Message-ID: <56983BAD.9040308@bnl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,127 +10,37 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We are using linux raid on top of multipath devices (each jbod disk has 
-two paths).
+Are scsi_debug devices supported with linux raid. I cannot seem to 
+create a basic array.
 
-Usually medium erros are handled as below. See this bug for a similar 
-problem but fixed in RHEL6.
+[root@temp01 ~]# modprobe scsi_debug add_host=2 max_luns=3 num_tgts=4 
+dev_size_mb=10240
 
-https://bugzilla.redhat.com/show_bug.cgi?id=516170
+[root@temp01 ~]# lsscsi | grep -e sda -e sdb
+[8:2:0:0]    disk    IBM      ServeRAID M5110e 3.34  /dev/sdbm
+[8:2:1:0]    disk    IBM      ServeRAID M5110e 3.34  /dev/sdbn
+[52:0:0:0]   disk    Linux    scsi_debug       0004  /dev/sda
+[52:0:0:1]   disk    Linux    scsi_debug       0004  /dev/sdb
+[root@temp01 ~]# fdisk -l /dev/sda
 
-Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Unhandled sense code
-Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_SENSE
-Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Sense Key : Medium Error 
-[current] [descriptor]
-Jan 12 02:15:59  kernel: Descriptor sense data with sense descriptors 
-(in hex):
-Jan 12 02:15:59  kernel:        72 03 11 00 00 00 00 34 00 0a 80 00 00 
-00 00 01
-Jan 12 02:15:59  kernel:        cd e3 86 90 01 0a 00 00 00 00 00 00 81 
-03 01 00
-Jan 12 02:15:59  kernel:        02 06 00 00 80 00 ff 00 03 02 00 86 80 
-0e 00 00
-Jan 12 02:15:59  kernel:        00 00 00 00 00 00 00 00 00 00 00 00
-Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Add. Sense: Unrecovered 
-read error
-Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] CDB: Read(16): 88 00 00 00 
-00 01 cd e3 86 00 00 00 01 00 00 00
-Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Unhandled sense code
-Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_SENSE
-Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Sense Key : Medium Error 
-[current] [descriptor]
-Jan 12 02:16:02  kernel: Descriptor sense data with sense descriptors 
-(in hex):
-Jan 12 02:16:02  kernel:        72 03 11 00 00 00 00 34 00 0a 80 00 00 
-00 00 01
-Jan 12 02:16:02  kernel:        cd e3 86 90 01 0a 00 00 00 00 00 00 81 
-03 01 00
-Jan 12 02:16:02  kernel:        02 06 00 00 80 00 ff 00 03 02 00 86 80 
-0e 00 00
-Jan 12 02:16:02  kernel:        00 00 00 00 00 00 00 00 00 00 00 00
-Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Add. Sense: Unrecovered read 
-error
-Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] CDB: Read(16): 88 00 00 00 
-00 01 cd e3 86 90 00 00 00 70 00 00
-Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
-7749205728 on dm-22)
-Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
-7749205736 on dm-22)
-Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
-7749205744 on dm-22)
-Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
-7749205752 on dm-22)
+Disk /dev/sda: 10.7 GB, 10737418240 bytes
+255 heads, 63 sectors/track, 1305 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 32768 bytes
+Disk identifier: 0x00000000
 
-This is all fine and dandy.
+[root@temp01 ~]# mdadm --create --verbose /dev/md0 --level=0 
+--raid-devices=2 /dev/sda /dev/sdb
+mdadm: super1.x cannot open /dev/sda: Device or resource busy
+mdmon: ddf: Cannot use /dev/sda: Device or resource busy
+mdmon: Cannot use /dev/sda: It is busy
+mdadm: cannot open /dev/sda: Device or resource busy
+[root@temp01 ~]#
 
-We had a case as below and this continued repeatedly for 4 hours until I 
-logged in and manually failed both paths sdx and sdcf. - (sdx and sdcf 
-are the same drive). The filesystem running on  md3 was hung.Why did the 
-kernel/mdraid not kick the drive out?
-
-Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Unhandled sense code
-Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_SENSE
-Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Sense Key : Medium Error 
-[current] [descriptor]
-Jan 12 02:38:48 kernel: Descriptor sense data with sense descriptors (in 
-hex):
-Jan 12 02:38:48 kernel:        72 03 16 00 00 00 00 34 00 0a 80 00 00 00 
-00 01
-Jan 12 02:38:48 kernel:        d1 53 bd 98 01 0a 00 00 00 00 00 00 86 01 
-00 00
-Jan 12 02:38:48 kernel:        02 06 00 00 80 00 ff 00 03 02 00 80 80 0e 
-00 00
-Jan 12 02:38:48 kernel:        00 00 00 00 00 00 00 00 00 00 00 00
-Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Add. Sense: Data 
-synchronization mark error
-Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] CDB: Read(16): 88 00 00 00 00 
-01 d1 53 bd 98 00 00 00 68 00 00
-Jan 12 02:38:48 kernel: device-mapper: multipath: Failing path 65:112.
-Jan 12 02:38:48 multipathd: 65:112: mark as failed
-Jan 12 02:38:48 multipathd: mpathab: remaining active paths: 1
-Jan 12 02:38:52 multipathd: mpathab: sdx - directio checker reports path 
-is up
-Jan 12 02:38:52 multipathd: 65:112: reinstated
-Jan 12 02:38:52 multipathd: mpathab: remaining active paths: 2
-Jan 12 02:39:04 multipathd: 69:48: mark as failed
-Jan 12 02:39:04 multipathd: mpathab: remaining active paths: 1
-Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Unhandled sense code
-Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_SENSE
-Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Sense Key : Medium Error 
-[current] [descriptor]
-Jan 12 02:39:04 kernel: Descriptor sense data with sense descriptors (in 
-hex):
-Jan 12 02:39:04 kernel:        72 03 16 00 00 00 00 34 00 0a 80 00 00 00 
-00 01
-Jan 12 02:39:04 kernel:        d1 53 bd 98 01 0a 00 00 00 00 00 00 86 01 
-00 00
-Jan 12 02:39:04 kernel:        02 06 00 00 80 00 ff 00 03 02 00 80 80 0e 
-00 00
-Jan 12 02:39:04 kernel:        00 00 00 00 00 00 00 00 00 00 00 00
-Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Add. Sense: Data 
-synchronization mark error
-Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] CDB: Read(16): 88 00 00 00 
-00 01 d1 53 bd 98 00 00 00 68 00 00
-Jan 12 02:39:04 kernel: device-mapper: multipath: Failing path 69:48.
-Jan 12 02:39:05 multipathd: mpathab: sdcf - directio checker reports 
-path is up
-Jan 12 02:39:05 multipathd: 69:48: reinstated
-Jan 12 02:39:05 multipathd: mpathab: remaining active paths: 2
-
-
-[root@ ~]# rpm -qa | grep multi
-device-mapper-multipath-libs-0.4.9-72.el6_5.3.x86_64
-device-mapper-multipath-0.4.9-72.el6_5.3.x86_64
-[root@ ~]# uname -a
-Linux  2.6.32-431.23.3.el6.x86_64 #1 SMP Wed Jul 16 06:12:23 EDT 2014 
-x86_64 x86_64 x86_64 GNU/Linux
-
-What does "Add. Sense: Data synchronization mark error" mean?
-
-
-
-Thanks
+[root@temp01 ~]# mdadm -V
+mdadm - v3.3 - 3rd September 2013
+[root@temp01 ~]# uname -a
+Linux temp01.rcf.bnl.gov 2.6.32-573.12.1.el6.x86_64 #1 SMP Mon Nov 23 
+12:55:32 EST 2015 x86_64 x86_64 x86_64 GNU/Linux
+[root@temp01 ~]#
