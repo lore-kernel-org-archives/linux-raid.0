@@ -1,119 +1,50 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [GIT PULL REQUEST] md updates for 4.5
-Date: Fri, 15 Jan 2016 17:30:04 +1100
-Message-ID: <87fuxz5p8z.fsf@notabene.neil.brown.name>
+From: Robert Kierski <rkierski@cray.com>
+Subject: RE: best base / worst case RAID 5,6 write speeds
+Date: Fri, 15 Jan 2016 16:53:17 +0000
+Message-ID: <F7761B9B1D11B64BBB666019E9378117FEA066@CFWEX01.americas.cray.com>
+References: <CAE9DZUR=uSzYfdqFkVFdyXx+iKb1SeXxo5eX7M_nTw-fnWBwNA@mail.gmail.com>
+ <CAK2H+ed-3Z8SR20t8rpt3Fb48c3X2Jft=qZoiY9emC2nQww1xQ@mail.gmail.com>
+ <CAE9DZUQHBycc5+Z2YrJtWZRYxOUMu3pgnaEQSrsyeCZEv8vndA@mail.gmail.com>
+ <CAE9DZUT1v+CFZOs33CC+JrWcX_WHBu+WW78AynkWqJN+LLoqDA@mail.gmail.com>
+ <CAK2H+ecMvDLdYLhMtMQbP7Ygw-VohG7LGZ2n7H+LAXQ1waJK3A@mail.gmail.com>
+ <CAE9DZUSbt7Kfwd9S3K_SXY7fVRk-vq5RhrPzKs4XO8uhyfPh3Q@mail.gmail.com>
+ <CAE9DZUQxT_5L0bW5m9SZ_d2GU6sZS8k0qD=g+o112qM4V=cJkw@mail.gmail.com>
+ <22128.11867.847781.946791@quad.stoffel.home>
+ <CAE9DZURepRB3k-pBnRg2Tx8GCzAr6zCzv+LJy4mK4CDdAkBYVQ@mail.gmail.com>
+ <22128.35881.182823.556362@quad.stoffel.home>
+ <CAE9DZUQNBPNXFs69JRU0Q82TQ4RjAgpsc7voMgEzuhSZhmDjig@mail.gmail.com>
+ <CAE9DZUQqeCY__+8Fwg51PJc6zAk0J2Apm2TE3CRvxbFUf-xDKQ@mail.gmail.com>
+ <CAK2H+eeD2k4yzuvL4uF_qKycp6A=XPe8pVF_J-7Agi8Ze89PPQ@mail.gmail.com>
+ <5672BB7A.4050808@turmel.org>
+ <CAE9DZUQj2TNX4Wpk5xbaCVzEgPq2D6Co7ZDNaAy-TOaB4hwZeA@mail.gmail.com>
+ <567339F0.9000209@turmel.org>
+ <CAE9DZUS+gmgTLr_4EUgLcPCPWknoqg640mCMZX46cxXeyT6RQA@mail.gmail.com>
+ <CAE9DZUQoYtt3U5rGBAUtTuLS2N2uA80e=EcDD73fHq0qn6YH2w@mail.gmail.com>
+ <CAFx4rwT8xgwZ0OWaLLsZvhMskiwmY54MzHgnnEPaswByeRrXxQ@mail.gmail.com>
+ <CAFx4rwTUiMo=1+JXpY3P5BhZYSQC8MVYhTJfdJd7gL6r9WSAiA@mail.gmail.com>
+ <CAE9DZUQoNh2uU1h4okY0Fz5wzVv6-ZTnet9tS-dNQRHsLnPvNg@mail.gmail.com>
+ <CAFx4rwQvTrUEskJxdc6CpvGu3uVYOJWEvHmMkqmNbmTgTVT0-Q@mail.gmail.com>
+ <F7761B9B1D11B64BBB666019E9378117FE79E5@CFWEX01.americas.cray.com>
+ <CAFx4rwQ+3w3v-QmiYoQu=5aApc4KyiykF+KdtMUG4v6-fBh22g@mail.gmail.com>
+ <F7761B9B1D11B64BBB666019E9378117FE7AB1@CFWEX01.americas.cray.com>
+ <CAFx4rwSo3MNqJGNQ3wHe49F+xQ6559aZdikPL4M3+HuD6uRz-Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Deepa Dinamani <deepa.kernel@gmail.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>, Guoqing Jiang <gqjiang@suse.com>, Mike Snitzer <snitzer@redhat.com>, Roman Gushchin <klamm@yandex-team.ru>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAFx4rwSo3MNqJGNQ3wHe49F+xQ6559aZdikPL4M3+HuD6uRz-Q@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "doug@easyco.com" <doug@easyco.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-
-The following changes since commit 168309855a7d1e16db751e9c647119fe2d2dc878:
-
-  Linux 4.4-rc8 (2016-01-03 15:15:37 -0800)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md tags/md/4.5
-
-for you to fetch changes up to 1501efadc524a0c99494b576923091589a52d2a4:
-
-  md/raid: only permit hot-add of compatible integrity profiles (2016-01-14 11:49:57 +1100)
-
-----------------------------------------------------------------
-md updates for 4.5
-
-Mostly clustered-raid1 and raid5 journal updates.
-one Y2038 fix and other minor stuff.
-
-One patch removes me from the MAINTAINERS file and adds a record of
-my md maintainership to Credits.
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      md: avoid warning for 32-bit sector_t
-
-Christoph Hellwig (5):
-      raid5-cache: simplify r5l_move_io_unit_list
-      raid5-cache: free meta_page earlier
-      raid5-cache: use a bio_set
-      raid5-cache: use a mempool for the metadata block
-      raid5: allow r5l_io_unit allocations to fail
-
-Dan Williams (1):
-      md/raid: only permit hot-add of compatible integrity profiles
-
-Deepa Dinamani (1):
-      drivers: md: use ktime_get_real_seconds()
-
-Goldwyn Rodrigues (3):
-      md-cluster: Avoid the resync ping-pong
-      md-cluster: Fix the remove sequence with the new MD reload code
-      md-cluster: Allow spare devices to be marked as faulty
-
-Guoqing Jiang (8):
-      md-cluster: remove a disk asynchronously from cluster environment
-      md-cluster: append some actions when change bitmap from clustered to none
-      md-cluster: update the documentation
-      md-cluster: Defer MD reloading to mddev->thread
-      md-cluster: Protect communication with mutexes
-      md-cluster: update comments for MD_CLUSTER_SEND_LOCKED_ALREADY
-      md: update comment for md_allow_write
-      md: remove unnecesary md_new_event_inintr
-
-NeilBrown (2):
-      md: Remove 'ready' field from mddev.
-      Remove myself as MD Maintainer, and add to Credits.
-
-Roman Gushchin (1):
-      md/raid5: remove redundant check in stripe_add_to_batch_list()
-
-Shaohua Li (4):
-      raid5-cache: add journal hot add/remove support
-      md: set MD_HAS_JOURNAL in correct places
-      MD: add journal with array suspended
-      raid5-cache: handle journal hotadd in quiesce
-
- CREDITS                        |   1 +
- Documentation/md-cluster.txt   | 314 ++++++++++++++++++++++++++++++-----------
- MAINTAINERS                    |   1 -
- drivers/md/md-cluster.c        | 164 +++++++++++++++++++--
- drivers/md/md-cluster.h        |   2 +
- drivers/md/md.c                | 171 +++++++++++++---------
- drivers/md/md.h                |  11 +-
- drivers/md/multipath.c         |   6 +-
- drivers/md/raid1.c             |   6 +-
- drivers/md/raid10.c            |   6 +-
- drivers/md/raid5-cache.c       | 158 ++++++++++++++++-----
- drivers/md/raid5.c             |  36 +++--
- include/uapi/linux/raid/md_u.h |   4 +-
- 13 files changed, 649 insertions(+), 231 deletions(-)
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWmJHsAAoJEDnsnt1WYoG5bowP/iS+GiTjsNIRPtey2Rg3wfD3
-sQVSe0P3eIUxJ4vxpLa2bxyWj+QMsso27egMI4xHXjjIScZk9q79u1y1PFa2VsGN
-5/aC1dnX6jFhmVEQW1ooQ5JoHOXZbE38dqwINdN+DYnzg0yA0yIPViWEmCKgD/nB
-isy8/FkKLNVqcpTkPZIK3nswFOjF5paFA/54sl2qirJcU4Ea8pJtQsJ0szydVF31
-+jVwbzm1at2hJgcb6d5xAt3DYWGqqbnPZP9RaJWm2W7Oa4e+BFv/s1OiyJ/Venao
-jd/WLWQpkI9Tq+28qbFHQ4HoGkuLYwOYBO/WMKLD3vVgjrYLBJK3ZlxzOJguDR1I
-cblmRQNEGgYDorOBm30Z5KFxFDtDScrXFJwONSgprH5TAlr0tejwdUanEf6RbR3S
-dUZvyMn9Uekcso0cafIq74GHOO3eQqJHfjzCy3XAwxG9rrJ1MReymzVzmyACh/a1
-VjPV8YaKNBcphFwmZTgpXUABShvsGQVG2beCX7u2J5qFMCMCCVIkUWC4ZcYXY0ed
-+wZDk5yIUnGF5x4xclpAK/OKJqTM2inltEhoQlwQxPy4fnzchP3Cfsle2gjzOEiT
-H5EFtM4QtT2lt6s7JzaA7sJyDSQvbuG+jMxI88afA3T8HETXBIkEdc+La8CY52sS
-7KfbOUxLc8BYviaJKVlx
-=kxAM
------END PGP SIGNATURE-----
---=-=-=--
+SGV5IERvdWcsDQoNCkkgdHJpZWQgYXMgeW91IHN1Z2dlc3RlZC4uLiBvbmx5IHRoYXQgZGlkbid0
+IGhlbHAuICBTbyBJIGFjdHVhbGx5IGhhZCB0byBnZXQgZG93biBpbnRvIHRoZSBndXRzIHRvIGZp
+Z3VyZSBvdXQgd2hhdCB3YXMgZ29pbmcgd3JvbmcuDQoNCkl0IHR1cm5lZCBvdXQgdG8gYmUgYSBi
+dWcgaW4gdGhlIGJsb2NrIGxheWVyIG9mIHRoZSAzLjE4IGtlcm5lbCB0aGF0IHJlcXVpcmVkIGEg
+b25lIGxpbmUgY2hhbmdlLiAgV2l0aCB0aGF0IGZpeGVkLCB0aGUgRmFzdFdyaXRlIHBhdGNoIHdv
+cmtzIGxpa2UgYSBjaGFybS4NCg0KVGhhbmtzIQ0KDQpCb2IgS2llcnNraQ0KU2VuaW9yIFN0b3Jh
+Z2UgUGVyZm9ybWFuY2UgRW5naW5lZXINCkNyYXkgSW5jLg0KMzgwIEphY2tzb24gU3RyZWV0DQpT
+dWl0ZSAyMTANClN0LiBQYXVsLCBNTiA1NTEwMQ0KVGVsZTogNjUxLTk2Ny05NTkwDQpGYXg6ICA2
+NTEtNjA1LTkwMDENCkNlbGw6IDY1MS04OTAtNzQ2MQ0KDQo=
