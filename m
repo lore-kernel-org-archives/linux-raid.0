@@ -1,46 +1,70 @@
-From: Tejas Rao <raot@bnl.gov>
-Subject: scsi_debug support
-Date: Thu, 14 Jan 2016 19:22:05 -0500
-Message-ID: <56983BAD.9040308@bnl.gov>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: writeback: Stability issue (BUG) on 4.4 with writeback_percent
+Date: Fri, 15 Jan 2016 11:19:08 +0800
+Message-ID: <CACVXFVOKVusaPagOXn_5gye0h0gA9ACTuHWSzjZD8evbdsnXrQ@mail.gmail.com>
+References: <loom.20160114T081429-882@post.gmane.org>
+	<CAF1ivSY9urc58Ff6axkNrQX8hYxCZNRhAMcH6cEPyyeiBO+=MA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSY9urc58Ff6axkNrQX8hYxCZNRhAMcH6cEPyyeiBO+=MA@mail.gmail.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Ming Lin <mlin@kernel.org>
+Cc: Miu Vlad-Cosmin <miuvlad@gmail.com>, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Are scsi_debug devices supported with linux raid. I cannot seem to 
-create a basic array.
+Cc raid list.
 
-[root@temp01 ~]# modprobe scsi_debug add_host=2 max_luns=3 num_tgts=4 
-dev_size_mb=10240
+On Fri, Jan 15, 2016 at 1:51 AM, Ming Lin <mlin@kernel.org> wrote:
+> On Wed, Jan 13, 2016 at 11:22 PM, Miu Vlad-Cosmin <miuvlad@gmail.com> wrote:
+>> Hello,
+>>
+>> In a rather basic bcache setup (one cache + mdraid backing),
+>> I encounter a kernel problem related to bcache with 4.4.0.
+>>
+>> In order to trigger this bug, fill the cache with some dirty data.
+>> When there is some dirty data, wait for the bcache_writeback to
+>> start writing it to the backing device (0-3 minutes)
+>> and the BUG triggers.
+>>
+>> Please find more info here: https://bugzilla.kernel.org/show_bug.cgi?id=110771
+>>
+>> [<ffffffff815822af>] make_request+0x47f/0xca0
+>> [<ffffffff815a5d3d>] md_make_request+0xdd/0x220
+>> [<ffffffff810c53ce>] ? pick_next_task_fair+0x12e/0x450
+>> [<ffffffff81311d2e>] generic_make_request+0xce/0x1b0
+>> [<ffffffff815a1b70>] write_dirty+0x60/0xb0
+>> [<ffffffff810aafa7>] process_one_work+0x147/0x3d0
+>> [<ffffffff810ab546>] worker_thread+0x46/0x440
+>> [<ffffffff810ab500>] ? rescuer_thread+0x2d0/0x2d0
+>> [<ffffffff810ab500>] ? rescuer_thread+0x2d0/0x2d0
+>> [<ffffffff810afeb4>] kthread+0xc4/0xe0
+>> [<ffffffff810afdf0>] ? kthread_park+0x50/0x50
+>> [<ffffffff8170c85f>] ret_from_fork+0x3f/0x70
+>>
+>> A bisect shows "[578270bfbd2803dc7b0b03fbc2ac119efbc73195]
+>> block: fix segment split" as the problem.
 
-[root@temp01 ~]# lsscsi | grep -e sda -e sdb
-[8:2:0:0]    disk    IBM      ServeRAID M5110e 3.34  /dev/sdbm
-[8:2:1:0]    disk    IBM      ServeRAID M5110e 3.34  /dev/sdbn
-[52:0:0:0]   disk    Linux    scsi_debug       0004  /dev/sda
-[52:0:0:1]   disk    Linux    scsi_debug       0004  /dev/sdb
-[root@temp01 ~]# fdisk -l /dev/sda
+It is the 2nd time to report this commit as 'regression', and last time
+it is because bio bounce is after splitting. The commit itself is correct
+and the report should be false positive,  the real bug might be related
+with bio splitting.
 
-Disk /dev/sda: 10.7 GB, 10737418240 bytes
-255 heads, 63 sectors/track, 1305 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 32768 bytes
-Disk identifier: 0x00000000
+> [   83.436844] BUG: unable to handle kernel NULL pointer dereference at 0000000000000028
+> [   83.437025] IP: [<ffffffff81309ce5>] bio_trim+0x15/0xe0
 
-[root@temp01 ~]# mdadm --create --verbose /dev/md0 --level=0 
---raid-devices=2 /dev/sda /dev/sdb
-mdadm: super1.x cannot open /dev/sda: Device or resource busy
-mdmon: ddf: Cannot use /dev/sda: Device or resource busy
-mdmon: Cannot use /dev/sda: It is busy
-mdadm: cannot open /dev/sda: Device or resource busy
-[root@temp01 ~]#
+0028 should be offset of 'bio->bi_iter.bi_size', so looks 'read_bio' from
+bio_clone_mddev() is NULL?
 
-[root@temp01 ~]# mdadm -V
-mdadm - v3.3 - 3rd September 2013
-[root@temp01 ~]# uname -a
-Linux temp01.rcf.bnl.gov 2.6.32-573.12.1.el6.x86_64 #1 SMP Mon Nov 23 
-12:55:32 EST 2015 x86_64 x86_64 x86_64 GNU/Linux
-[root@temp01 ~]#
+BTW,  can some write loading trigger the bug just on raid1 without bcache?
+
+Thanks,
+
+>
+> CC Ming Lei.
+>
+>>
+>> Anyone can confirm this ?
+>>
+>> Thanks,
+>> Vlad
