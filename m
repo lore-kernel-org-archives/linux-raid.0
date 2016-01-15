@@ -1,51 +1,136 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: [PATCH V2 2/2] Add casts for the addr arg of connect and bind
-Date: Fri, 15 Jan 2016 08:37:30 +1100
-Message-ID: <87twmf6dwl.fsf@notabene.neil.brown.name>
-References: <1452753159-1527-1-git-send-email-raj.khem@gmail.com> <1452753159-1527-2-git-send-email-raj.khem@gmail.com>
+From: Tejas Rao <raot@bnl.gov>
+Subject: Add. Sense: Data synchronization mark error
+Date: Thu, 14 Jan 2016 19:02:08 -0500
+Message-ID: <56983700.8000103@bnl.gov>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1452753159-1527-2-git-send-email-raj.khem@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Khem Raj <raj.khem@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
+We are using linux raid on top of multipath devices (each jbod disk has 
+two paths).
 
-On Thu, Jan 14 2016, Khem Raj wrote:
+Usually medium erros are handled as below. See this bug for a similar 
+problem but fixed in RHEL6.
 
-> glibc allows the addr arg to connect and socket to be any of a number
-> of 'sockaddr_*' types, but musl requires 'const struct sockaddr *'
-> which is in line with open group specs.  So add casts to allow
-> compilation with musl.
->
-> Signed-off-by: Khem Raj <raj.khem@gmail.com>
+https://bugzilla.redhat.com/show_bug.cgi?id=516170
 
-Thanks a lot!  Both patches applied.
+Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Unhandled sense code
+Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Sense Key : Medium Error 
+[current] [descriptor]
+Jan 12 02:15:59  kernel: Descriptor sense data with sense descriptors 
+(in hex):
+Jan 12 02:15:59  kernel:        72 03 11 00 00 00 00 34 00 0a 80 00 00 
+00 00 01
+Jan 12 02:15:59  kernel:        cd e3 86 90 01 0a 00 00 00 00 00 00 81 
+03 01 00
+Jan 12 02:15:59  kernel:        02 06 00 00 80 00 ff 00 03 02 00 86 80 
+0e 00 00
+Jan 12 02:15:59  kernel:        00 00 00 00 00 00 00 00 00 00 00 00
+Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] Add. Sense: Unrecovered 
+read error
+Jan 12 02:15:59  kernel: sd 8:0:21:0: [sdcf] CDB: Read(16): 88 00 00 00 
+00 01 cd e3 86 00 00 00 01 00 00 00
+Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Unhandled sense code
+Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Sense Key : Medium Error 
+[current] [descriptor]
+Jan 12 02:16:02  kernel: Descriptor sense data with sense descriptors 
+(in hex):
+Jan 12 02:16:02  kernel:        72 03 11 00 00 00 00 34 00 0a 80 00 00 
+00 00 01
+Jan 12 02:16:02  kernel:        cd e3 86 90 01 0a 00 00 00 00 00 00 81 
+03 01 00
+Jan 12 02:16:02  kernel:        02 06 00 00 80 00 ff 00 03 02 00 86 80 
+0e 00 00
+Jan 12 02:16:02  kernel:        00 00 00 00 00 00 00 00 00 00 00 00
+Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] Add. Sense: Unrecovered read 
+error
+Jan 12 02:16:02  kernel: sd 7:0:21:0: [sdx] CDB: Read(16): 88 00 00 00 
+00 01 cd e3 86 90 00 00 00 70 00 00
+Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
+7749205728 on dm-22)
+Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
+7749205736 on dm-22)
+Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
+7749205744 on dm-22)
+Jan 12 02:16:03  kernel: md/raid:md3: read error corrected (8 sectors at 
+7749205752 on dm-22)
 
-NeilBrown
+This is all fine and dandy.
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
+We had a case as below and this continued repeatedly for 4 hours until I 
+logged in and manually failed both paths sdx and sdcf. - (sdx and sdcf 
+are the same drive). The filesystem running on  md3 was hung.Why did the 
+kernel/mdraid not kick the drive out?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Unhandled sense code
+Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Sense Key : Medium Error 
+[current] [descriptor]
+Jan 12 02:38:48 kernel: Descriptor sense data with sense descriptors (in 
+hex):
+Jan 12 02:38:48 kernel:        72 03 16 00 00 00 00 34 00 0a 80 00 00 00 
+00 01
+Jan 12 02:38:48 kernel:        d1 53 bd 98 01 0a 00 00 00 00 00 00 86 01 
+00 00
+Jan 12 02:38:48 kernel:        02 06 00 00 80 00 ff 00 03 02 00 80 80 0e 
+00 00
+Jan 12 02:38:48 kernel:        00 00 00 00 00 00 00 00 00 00 00 00
+Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] Add. Sense: Data 
+synchronization mark error
+Jan 12 02:38:48 kernel: sd 7:0:21:0: [sdx] CDB: Read(16): 88 00 00 00 00 
+01 d1 53 bd 98 00 00 00 68 00 00
+Jan 12 02:38:48 kernel: device-mapper: multipath: Failing path 65:112.
+Jan 12 02:38:48 multipathd: 65:112: mark as failed
+Jan 12 02:38:48 multipathd: mpathab: remaining active paths: 1
+Jan 12 02:38:52 multipathd: mpathab: sdx - directio checker reports path 
+is up
+Jan 12 02:38:52 multipathd: 65:112: reinstated
+Jan 12 02:38:52 multipathd: mpathab: remaining active paths: 2
+Jan 12 02:39:04 multipathd: 69:48: mark as failed
+Jan 12 02:39:04 multipathd: mpathab: remaining active paths: 1
+Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Unhandled sense code
+Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Result: hostbyte=DID_OK 
+driverbyte=DRIVER_SENSE
+Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Sense Key : Medium Error 
+[current] [descriptor]
+Jan 12 02:39:04 kernel: Descriptor sense data with sense descriptors (in 
+hex):
+Jan 12 02:39:04 kernel:        72 03 16 00 00 00 00 34 00 0a 80 00 00 00 
+00 01
+Jan 12 02:39:04 kernel:        d1 53 bd 98 01 0a 00 00 00 00 00 00 86 01 
+00 00
+Jan 12 02:39:04 kernel:        02 06 00 00 80 00 ff 00 03 02 00 80 80 0e 
+00 00
+Jan 12 02:39:04 kernel:        00 00 00 00 00 00 00 00 00 00 00 00
+Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] Add. Sense: Data 
+synchronization mark error
+Jan 12 02:39:04 kernel: sd 8:0:21:0: [sdcf] CDB: Read(16): 88 00 00 00 
+00 01 d1 53 bd 98 00 00 00 68 00 00
+Jan 12 02:39:04 kernel: device-mapper: multipath: Failing path 69:48.
+Jan 12 02:39:05 multipathd: mpathab: sdcf - directio checker reports 
+path is up
+Jan 12 02:39:05 multipathd: 69:48: reinstated
+Jan 12 02:39:05 multipathd: mpathab: remaining active paths: 2
 
-iQIcBAEBCAAGBQJWmBUaAAoJEDnsnt1WYoG5kx8P/1FhgymTVkFt4Lziq+P88qWI
-OgNW+8wcpt8dbEn86NyC6TEPO+f9al3qbDW3CoKTCYDub+w3lST+GDYWcDfGKGhU
-Fl6tSCW4q+Ailk/0d4WZU2nNAaSSUDniHjjIR/6As9bIKzCrbXnRav3UruBWBCIr
-wB6ADSbRLcAB1l3TAR72GgsovGscTvj76xSYVt93Ml0+0VYWjx+fVcWlTxpnis96
-nZPiKzObPWhLdNZODrGGXIt6fDqqRYqvadGS54brPT7UqSfCq8d/lHn2f4fT0MYa
-tE2uc4wtme8SttSHSTBjIQVucwn3g/YU9Qcjl7Nr3zBItQC2shtf/ESglkTiP/WN
-kD9m0As4ZUl0yxDU01nZSYjS2NstNcqA0l2r0UmYpZAe+4znpO1mF8efKVCL1T4+
-skKk2vxRztlmWQ/i3wcUiKwJS9HfgmzqXIMuk9rOc30Wjj4+ViQvdY3pxfqi0OQx
-aQ77eb7jFDohNiSuYBIY4IUwcleF+O7N0wV0YdoFJJBZZAQ4+pXd+S4bwmU88PIm
-AE4AAwWCjISGbOO+xTb9EYloHUt0JazFGvCJJZCAMEs61xxpr/E3E0AZe641mt1s
-LOdu+cjHAum9QjYN39TUDJamOXkZ8U+JQXmcg1fCcNKiM5fze7F3H5p9gHHqmrSW
-sMCb7vWphpiKlEKGoN7b
-=qOa8
------END PGP SIGNATURE-----
---=-=-=--
+
+[root@ ~]# rpm -qa | grep multi
+device-mapper-multipath-libs-0.4.9-72.el6_5.3.x86_64
+device-mapper-multipath-0.4.9-72.el6_5.3.x86_64
+[root@ ~]# uname -a
+Linux  2.6.32-431.23.3.el6.x86_64 #1 SMP Wed Jul 16 06:12:23 EDT 2014 
+x86_64 x86_64 x86_64 GNU/Linux
+
+What does "Add. Sense: Data synchronization mark error" mean?
+
+
+
+Thanks
