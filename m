@@ -1,116 +1,97 @@
-From: Mathias Mueller <raidfail@gmx.de>
-Subject: Re: broken raid level 5 array caused by user error
-Date: Mon, 18 Jan 2016 16:33:00 +0100
-Message-ID: <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
-References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
- <56426499.8000205@turmel.org>
- <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
- <564284F5.9080409@turmel.org>
- <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
- <56429326.5030405@turmel.org>
- <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
+From: =?UTF-8?B?0J/RkdGC0YAg0JEu?= <satnatantas@gmail.com>
+Subject: ICH RAID5 delisted and broken after mdadm installation
+Date: Mon, 18 Jan 2016 20:10:48 +0300
+Message-ID: <CA+Ni7jMa2TSSYbDcZ-HQTp5O42UZ==r7wJ5dikXfytHgHF7pzQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=94eb2c0b12ee9bda0105299ed542
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Phil,
+--94eb2c0b12ee9bda0105299ed542
+Content-Type: text/plain; charset=UTF-8
 
-first thanks a lot for all your help and time you already spent on me 
-and my problem. I gathered some more information and hope you can help 
-me a bit more.
+Hello guys.
 
-I found this on serverfault.com and tried to figure out my raid layout 
-using some image file that is stored on my raid for sure:
-http://serverfault.com/questions/347606/recover-raid-5-data-after-created-new-array-instead-of-re-using
+sda, sdb and sdd were a RAID5 array with 64K chunk size and were used
+in Windows and were always connected to the ICH9r controller in this
+order.
 
-this is my current device mapping:
+HDD containing the Windows (sdb) was failing, Windows crashed severly
+and I booted into Debian (from sde) to backup information (BIOS listed
+RAID5 volume correctly). I booted into Debian and installed mdadm, I
+told it that all drives are needed for boot in the process (not true
+atm).
 
-JK1100YAG64A1T -> sdc
-ML0220F30PZUVD -> sdd (this is the disk I added last)
-JK1121YAG7YDLS -> sde
-JK1170YBHYV6MD -> sdf
+After I installed mdadm no new partitions appeared in Gnome. After I
+rebooted I saw in RAID BIOS output that sda and sdb are "offline
+members" and that sdc is non-raid (it's true) and that sdd is non-raid
+(it's false). Also, no RAID volumes are detected.
 
+/dev/md/imsm0 is a link for /dev/md127 which is empty
+/dev/md/imsm1 is a link for /dev/md128 which is empty
 
-First I  tried to figure out the chunk size. I used a jpg file that was 
-stored on the raid for sure and read 8x32 Bytes with an offset of 64k 
-from that file. Than I used bgrep to search for the bytestrings on my 
-physical devices. I found five sequent byte strings on one physical 
-device, so I think the chunk sice must be bigger than 256k.
+mdadm reports that no RAID superblock information was found on sdd.
 
-Because I was pretty sure, that my chunk size is 512k, I was reading 
-5x32Byte with an offset of 512k from my jpg file, to determine the order 
-of the devices. After bgrep was done, I got the following results:
+"mdadm --assemble md0 sda sdb sdd" fails:
+>mdadm: cannot open device sda: Device or resource busy
+>mdadm: sda has no superblock - assembly aborted
 
-- Every bytestring was found 3x on my physical devices, I think it's 
-because the file is existing 3x in different folders on my raid device 
-(which is pretty certain, I know that the file is existing 2x at least)
-- sdd1 seems to have a different offset as the other physical devices, 
-it's the disk I added last after switching from debian to centos some 
-years ago
-- the following tables show at which offsets and on which physical 
-devices the five byte strings have been found:
+It outputs the same for whhichever HDD I list first - sda, sdb, sdd.
 
+Linux 2.6.32-5-amd64 #1 SMP Sun Dec 21 18:01:12 UTC 2014 x86_64 GNU/Linux
+mdadm - v3.1.4 - 31st August 2010
 
-offset          sdc1      sdd1      sde1      sdf1
----------------------------------------------------
-5400bd3000                 2
-5400cc3000                           3         1
-5400d43000       4                             5
+I won't boot into Windows before I fix this. Please give me some tips.
 
+P.S. What was I doing wrong? Except using ICH RAID (which, as I
+learned ATM does not even implies additional hardware unit and is no
+better than software RAID) and using Windows on a failing drive of
+course.
 
+--94eb2c0b12ee9bda0105299ed542
+Content-Type: application/octet-stream; name=raid_status
+Content-Disposition: attachment; filename=raid_status
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file0
 
-offset          sdc1      sdd1      sde1      sdf1
----------------------------------------------------
-87b4e52000                 3
-87b4f42000       1                             2
-87b4fc2000       5                   4
-
-
-
-offset          sdc1      sdd1      sde1      sdf1
----------------------------------------------------
-cb2d87f000                 2
-cb2d96f000                                     1
-cb2d9ef000       4                   3         5
-
-
-
-
-So I think using the last table is the easiest one to figure out the 
-partition order and the data offset between sdd1 and the other devices?
-
-
-offset          sdc1      sdd1      sde1      sdf1
----------------------------------------------------
-cb2d96f000                (2)        P         1
-cb2d9ef000       4         P         3         5
-
-If I am right, it would mean, that the order of my physical devices is 
-sdf1 sdd1 sde1 sdc1 (without knowing which one is the first partition) 
-and the offset between sdd1 and the other devices is f0000. Are my 
-assumptions correct? How can I go on with this information?
-
-Thanks a lot in advance
-
-Best regards
-
-Mathias
-
-
-
-
-
-
-
-
-
-
-
-
+c2RhOgogICAgICAgICAgTWFnaWMgOiBJbnRlbCBSYWlkIElTTSBDZmcgU2lnLgogICAgICAgIFZl
+cnNpb24gOiAxLjAuMDAKICAgIE9yaWcgRmFtaWx5IDogNjllZTU1ZGMKICAgICAgICAgRmFtaWx5
+IDogNjllZTU1ZGMKICAgICBHZW5lcmF0aW9uIDogMDAwMDAwMmYKICAgICAgICAgICBVVUlEIDog
+M2EzNWQzYmM6NzZlNzYwZmE6MTg5NjFmYjY6Nzk2MzFhMzIKICAgICAgIENoZWNrc3VtIDogM2Vj
+YWY3OGUgY29ycmVjdAogICAgTVBCIFNlY3RvcnMgOiAxCiAgICAgICAgICBEaXNrcyA6IDIKICAg
+UkFJRCBEZXZpY2VzIDogMQoKICBEaXNrMDAgU2VyaWFsIDogWjRZNzI1VkMKICAgICAgICAgIFN0
+YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDIwMDAwCiAgICBVc2FibGUgU2l6ZSA6
+IDE5NTM1MjA5MDQgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikKCltWb2x1bWVfMDAwMF06CiAgICAg
+ICAgICAgVVVJRCA6IDA1NjMwMDk3OjVjM2NhNDdkOmI5Mjc4ODM1OjAzYzI3YmFjCiAgICAgUkFJ
+RCBMZXZlbCA6IDAKICAgICAgICBNZW1iZXJzIDogMgogICAgICAgICAgU2xvdHMgOiBbVVVdCiAg
+ICAgIFRoaXMgU2xvdCA6IDAKICAgICBBcnJheSBTaXplIDogMzkwNzA0MTI4MCAoMTg2My4wMiBH
+aUIgMjAwMC40MSBHQikKICAgUGVyIERldiBTaXplIDogMTk1MzUyMDkwNCAoOTMxLjUxIEdpQiAx
+MDAwLjIwIEdCKQogIFNlY3RvciBPZmZzZXQgOiAwCiAgICBOdW0gU3RyaXBlcyA6IDE1MjYxODgw
+CiAgICAgQ2h1bmsgU2l6ZSA6IDY0IEtpQgogICAgICAgUmVzZXJ2ZWQgOiAwCiAgTWlncmF0ZSBT
+dGF0ZSA6IGlkbGUKICAgICAgTWFwIFN0YXRlIDogbm9ybWFsCiAgICBEaXJ0eSBTdGF0ZSA6IGNs
+ZWFuCgogIERpc2swMSBTZXJpYWwgOiBaNFk4MkZERQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUK
+ICAgICAgICAgICAgIElkIDogMDAwMzAwMDAKICAgIFVzYWJsZSBTaXplIDogMTk1MzUyMDkwNCAo
+OTMxLjUxIEdpQiAxMDAwLjIwIEdCKQpzZGI6CiAgICAgICAgICBNYWdpYyA6IEludGVsIFJhaWQg
+SVNNIENmZyBTaWcuCiAgICAgICAgVmVyc2lvbiA6IDEuMi4wMgogICAgT3JpZyBGYW1pbHkgOiAw
+Y2I0OWNkMwogICAgICAgICBGYW1pbHkgOiAwY2I3ZDFlZgogICAgIEdlbmVyYXRpb24gOiAwMDAx
+N2JiYQogICAgICAgICAgIFVVSUQgOiA0Yzk1ZmJkOTo5N2Y3MGFlZjpiNGQ3ZGM0MzoyYmM4MzQ1
+ZQogICAgICAgQ2hlY2tzdW0gOiA1Y2Q1OWQ5NSBjb3JyZWN0CiAgICBNUEIgU2VjdG9ycyA6IDIK
+ICAgICAgICAgIERpc2tzIDogMwogICBSQUlEIERldmljZXMgOiAxCgogIERpc2swMSBTZXJpYWwg
+OiBaNFk4MkZERQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUKICAgICAgICAgICAgIElkIDogMDAw
+MzAwMDAKICAgIFVzYWJsZSBTaXplIDogMTk1MzUyMDY1NCAoOTMxLjUxIEdpQiAxMDAwLjIwIEdC
+KQoKW1JBSUQ1XzY0S106CiAgICAgICAgICAgVVVJRCA6IGIwNDU0NzVlOjUzZTZlMDU2OjYwZWJh
+NzdkOmI4MjZkMzcwCiAgICAgUkFJRCBMZXZlbCA6IDUKICAgICAgICBNZW1iZXJzIDogMwogICAg
+ICAgICAgU2xvdHMgOiBbVVVVXQogICAgICBUaGlzIFNsb3QgOiAxCiAgICAgQXJyYXkgU2l6ZSA6
+IDM5MDcwMzUxMzYgKDE4NjMuMDIgR2lCIDIwMDAuNDAgR0IpCiAgIFBlciBEZXYgU2l6ZSA6IDE5
+NTM1MTc4MzIgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikKICBTZWN0b3IgT2Zmc2V0IDogMAogICAg
+TnVtIFN0cmlwZXMgOiAxNTI2MTg1NgogICAgIENodW5rIFNpemUgOiA2NCBLaUIKICAgICAgIFJl
+c2VydmVkIDogMAogIE1pZ3JhdGUgU3RhdGUgOiBpZGxlCiAgICAgIE1hcCBTdGF0ZSA6IG5vcm1h
+bAogICAgRGlydHkgU3RhdGUgOiBjbGVhbgoKICBEaXNrMDAgU2VyaWFsIDogWjRZNzI1VkMKICAg
+ICAgICAgIFN0YXRlIDogYWN0aXZlCiAgICAgICAgICAgICBJZCA6IDAwMDIwMDAwCiAgICBVc2Fi
+bGUgU2l6ZSA6IDE5NTM1MTg1NDEgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikKCiAgRGlzazAyIFNl
+cmlhbCA6IDlRSjgxUlRKCiAgICAgICAgICBTdGF0ZSA6IGFjdGl2ZQogICAgICAgICAgICAgSWQg
+OiAwMDA1MDAwMAogICAgVXNhYmxlIFNpemUgOiAxOTUzNTE4NTQxICg5MzEuNTEgR2lCIDEwMDAu
+MjAgR0IpCg==
+--94eb2c0b12ee9bda0105299ed542--
