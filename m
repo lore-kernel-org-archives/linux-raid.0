@@ -1,31 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/35 v3] eparate operations from flags in the
- bio/request structs
-Date: Mon, 18 Jan 2016 10:15:47 -0800
-Message-ID: <20160118181547.GA30789@infradead.org>
-References: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: broken raid level 5 array caused by user error
+Date: Mon, 18 Jan 2016 14:09:03 -0500
+Message-ID: <569D384F.6070208@turmel.org>
+References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
+ <56426499.8000205@turmel.org>
+ <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
+ <564284F5.9080409@turmel.org>
+ <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
+ <56429326.5030405@turmel.org>
+ <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
+ <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1452543693-4440-1-git-send-email-mchristi@redhat.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: mchristi@redhat.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mathias Mueller <raidfail@gmx.de>
+Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-The whole sries looks fine to me:
+Hi Mathias,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On 01/18/2016 10:33 AM, Mathias Mueller wrote:
+> Hi Phil,
+> 
+> first thanks a lot for all your help and time you already spent on me
+> and my problem. I gathered some more information and hope you can help
+> me a bit more.
 
-There are a few pieces of future work on top of this I'd rather see
-sooner than later though:
+You're welcome.
 
- - use REQ_OP_FLUSH for all empty flushes, including those at the bio
-   level.
- - merge the req->cmd_type values into req->op.  Right now that's
-   basically only a new REQ_OP_BLOCK_PC (or better REQ_OP_SCSI while
-   we're at it) and a REQ_OP_DRV_PRIV as the last value.
- - drop as many of the crazy defines based on REQ_* in fs.h (e.g.
-   (READ_SYNC, WRITE_SYNC, WRITE_ODIRECT, WRITE_FLUSH, WRITE_FUA,
-   WRITE_FLUSH_FUA, RW_MASK, RWA_MASK)
+> First I  tried to figure out the chunk size. I used a jpg file that was
+> stored on the raid for sure and read 8x32 Bytes with an offset of 64k
+> from that file. Than I used bgrep to search for the bytestrings on my
+> physical devices. I found five sequent byte strings on one physical
+> device, so I think the chunk sice must be bigger than 256k.
+
+Very interesting.  You could go one step further and compare the jpeg
+file contents in the first 1M against the locations found to determine
+where the chunks actually start and end on each device.  The final
+offset will be a chunk multiple before these boundaries.  Or do md5 sums
+of 4k blocks to reduce the amount to inspect.
+
+> If I am right, it would mean, that the order of my physical devices is
+> sdf1 sdd1 sde1 sdc1 (without knowing which one is the first partition)
+> and the offset between sdd1 and the other devices is f0000. Are my
+> assumptions correct? How can I go on with this information?
+
+This will help (and looks correct), but I don't remember what we did to
+try to find the beginning of your filesystem.  Did we search for a
+filesystem signature?  Please re-summarize that.
+
+Phil
