@@ -1,55 +1,89 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: broken raid level 5 array caused by user error
-Date: Mon, 18 Jan 2016 14:09:03 -0500
-Message-ID: <569D384F.6070208@turmel.org>
-References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
- <56426499.8000205@turmel.org>
- <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
- <564284F5.9080409@turmel.org>
- <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
- <56429326.5030405@turmel.org>
- <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
- <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Abort pending request for RAID10
+Date: Tue, 19 Jan 2016 09:55:26 +0100
+Message-ID: <1453193726-4617-1-git-send-email-hare@suse.de>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias Mueller <raidfail@gmx.de>
-Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.com>
+Cc: Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-Hi Mathias,
+RAID10 delays the write until the bitmap has been updated.
+So it really should check if the device is still working
+before sending requests, otherwise it'll happily sending
+I/O to a known faulty device.
 
-On 01/18/2016 10:33 AM, Mathias Mueller wrote:
-> Hi Phil,
-> 
-> first thanks a lot for all your help and time you already spent on me
-> and my problem. I gathered some more information and hope you can help
-> me a bit more.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/md/raid10.c | 38 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
 
-You're welcome.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index d4efed7..74369c2 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -902,12 +902,29 @@ static void flush_pending_writes(struct r10conf *conf)
+ 
+ 		while (bio) { /* submit pending writes */
+ 			struct bio *next = bio->bi_next;
++			struct r10bio *r10_bio = bio->bi_private;
++			struct md_rdev *rdev = NULL;
++			int dev, slot, repl;
+ 			bio->bi_next = NULL;
++			dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
++			if (repl)
++				rdev = conf->mirrors[dev].replacement;
++			if (!rdev) {
++				smp_rmb();
++				repl = 0;
++				rdev = conf->mirrors[dev].rdev;
++			}
+ 			if (unlikely((bio->bi_rw & REQ_DISCARD) &&
+ 			    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 				/* Just ignore it */
+ 				bio_endio(bio);
+-			else
++			else if (test_bit(Faulty, &rdev->flags)) {
++				if (test_bit(Timeout, &rdev->flags))
++					bio->bi_error = -ETIMEDOUT;
++				else
++					bio->bi_error = -EIO;
++				bio_endio(bio);
++			} else
+ 				generic_make_request(bio);
+ 			bio = next;
+ 		}
+@@ -1079,12 +1096,29 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
+ 
+ 	while (bio) { /* submit pending writes */
+ 		struct bio *next = bio->bi_next;
++		struct r10bio *r10_bio = bio->bi_private;
++		struct md_rdev *rdev = NULL;
++		int dev, slot, repl;
+ 		bio->bi_next = NULL;
++		dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
++		if (repl)
++			rdev = conf->mirrors[dev].replacement;
++		if (!rdev) {
++			smp_rmb();
++			repl = 0;
++			rdev = conf->mirrors[dev].rdev;
++		}
+ 		if (unlikely((bio->bi_rw & REQ_DISCARD) &&
+ 		    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
+ 			/* Just ignore it */
+ 			bio_endio(bio);
+-		else
++		else if (test_bit(Faulty, &rdev->flags)) {
++			if (test_bit(Timeout, &rdev->flags))
++				bio->bi_error = -ETIMEDOUT;
++			else
++				bio->bi_error = -EIO;
++			bio_endio(bio);
++		} else
+ 			generic_make_request(bio);
+ 		bio = next;
+ 	}
+-- 
+1.8.5.6
 
-> First I  tried to figure out the chunk size. I used a jpg file that was
-> stored on the raid for sure and read 8x32 Bytes with an offset of 64k
-> from that file. Than I used bgrep to search for the bytestrings on my
-> physical devices. I found five sequent byte strings on one physical
-> device, so I think the chunk sice must be bigger than 256k.
-
-Very interesting.  You could go one step further and compare the jpeg
-file contents in the first 1M against the locations found to determine
-where the chunks actually start and end on each device.  The final
-offset will be a chunk multiple before these boundaries.  Or do md5 sums
-of 4k blocks to reduce the amount to inspect.
-
-> If I am right, it would mean, that the order of my physical devices is
-> sdf1 sdd1 sde1 sdc1 (without knowing which one is the first partition)
-> and the offset between sdd1 and the other devices is f0000. Are my
-> assumptions correct? How can I go on with this information?
-
-This will help (and looks correct), but I don't remember what we did to
-try to find the beginning of your filesystem.  Did we search for a
-filesystem signature?  Please re-summarize that.
-
-Phil
