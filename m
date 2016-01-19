@@ -1,470 +1,2146 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH] Abort pending request for RAID10
-Date: Tue, 19 Jan 2016 17:05:22 +0800
-Message-ID: <201601191737.d6uDhQfR%fengguang.wu@intel.com>
-References: <1453193726-4617-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="sdtB3X0nJg68CQEu"
+From: Tommy Wang <lists@august8.net>
+Subject: Help with RAID data recovery.
+Date: Tue, 19 Jan 2016 04:17:34 -0600
+Message-ID: <76F26671-FFF1-473D-BDCE-51BA20DCBB2C@august8.net>
+Mime-Version: 1.0 (Mac OS X Mail 9.0 \(3094\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1453193726-4617-1-git-send-email-hare@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: kbuild-all@01.org, Neil Brown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, linux-raid@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I need some help recovering the data on a Synology NAS.  There are no backups of
+the data (but, you can bet there will be if I recover the data!).
 
-Hi Hannes,
+The situation:
 
-[auto build test ERROR on v4.4-rc8]
-[also build test ERROR on next-20160119]
-[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+7 drives in the NAS: 3x2TB, 2x3TB, 2x4TB.  Using Synology Hyrbid Raid (md+lvm2).
 
-url:    https://github.com/0day-ci/linux/commits/Hannes-Reinecke/Abort-pending-request-for-RAID10/20160119-165822
-config: x86_64-randconfig-x012-01180513 (attached as .config)
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=x86_64 
+I started with 4x2TB, then expanded 1 disk at a time (3TB, 3TB, 4TB, 4TB).
+While expanding with the 2nd 4TB, I experienced a failure (I was messing with
+the Synology software and it fork bombed itself) and was forced to reboot.
+Lesson: leave your system alone during any reshape.
 
-All error/warnings (new ones prefixed by >>):
+The raid layout prior to expansion of second 4TB disk:
 
-   In file included from include/asm-generic/bug.h:4:0,
-                    from arch/x86/include/asm/bug.h:35,
-                    from include/linux/bug.h:4,
-                    from include/linux/mmdebug.h:4,
-                    from include/linux/gfp.h:4,
-                    from include/linux/slab.h:14,
-                    from drivers/md/raid10.c:21:
-   drivers/md/raid10.c: In function 'flush_pending_writes':
->> drivers/md/raid10.c:884:18: error: 'Timeout' undeclared (first use in this function)
-        if (test_bit(Timeout, &rdev->flags))
-                     ^
-   include/linux/compiler.h:147:28: note: in definition of macro '__trace_if'
-     if (__builtin_constant_p((cond)) ? !!(cond) :   \
-                               ^
->> drivers/md/raid10.c:884:5: note: in expansion of macro 'if'
-        if (test_bit(Timeout, &rdev->flags))
-        ^
->> drivers/md/raid10.c:884:9: note: in expansion of macro 'test_bit'
-        if (test_bit(Timeout, &rdev->flags))
-            ^
-   drivers/md/raid10.c:884:18: note: each undeclared identifier is reported only once for each function it appears in
-        if (test_bit(Timeout, &rdev->flags))
-                     ^
-   include/linux/compiler.h:147:28: note: in definition of macro '__trace_if'
-     if (__builtin_constant_p((cond)) ? !!(cond) :   \
-                               ^
->> drivers/md/raid10.c:884:5: note: in expansion of macro 'if'
-        if (test_bit(Timeout, &rdev->flags))
-        ^
->> drivers/md/raid10.c:884:9: note: in expansion of macro 'test_bit'
-        if (test_bit(Timeout, &rdev->flags))
-            ^
-   drivers/md/raid10.c: In function 'raid10_unplug':
-   drivers/md/raid10.c:1077:17: error: 'Timeout' undeclared (first use in this function)
-       if (test_bit(Timeout, &rdev->flags))
-                    ^
-   include/linux/compiler.h:147:28: note: in definition of macro '__trace_if'
-     if (__builtin_constant_p((cond)) ? !!(cond) :   \
-                               ^
-   drivers/md/raid10.c:1077:4: note: in expansion of macro 'if'
-       if (test_bit(Timeout, &rdev->flags))
-       ^
-   drivers/md/raid10.c:1077:8: note: in expansion of macro 'test_bit'
-       if (test_bit(Timeout, &rdev->flags))
-           ^
+             sda  sdb  sdc       sde  sdf  sdg
+             2TB  4TB  3TB       3TB  2TB  2TB
+md0 (raid1): sda1 sdb1 sdc1      sde1 sdf1 sdg1 (2550 MB/partition)
+md1 (raid1): sda2 sdb2 sdc2      sde2 sdf2 sdg2 (2147 MB/partition)
+md2 (raid5): sda5 sdb5 sdc5      sde5 sdf5 sdg5 (1995 GB/partition)
+md3 (raid5):      sdb6 sdc6      sde6           (1000 GB/partition)
 
-vim +/Timeout +884 drivers/md/raid10.c
+Note, that sdb has 1 TB of unpartitioned space.
 
-   878				}
-   879				if (unlikely((bio->bi_rw & REQ_DISCARD) &&
-   880				    !blk_queue_discard(bdev_get_queue(bio->bi_bdev))))
-   881					/* Just ignore it */
-   882					bio_endio(bio);
-   883				else if (test_bit(Faulty, &rdev->flags)) {
- > 884					if (test_bit(Timeout, &rdev->flags))
-   885						bio->bi_error = -ETIMEDOUT;
-   886					else
-   887						bio->bi_error = -EIO;
+The raid layout after expansion of second 4TB disk:
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+             sda  sdb  sdc  sdd  sde  sdf  sdg
+             2TB  4TB  3TB  4TB  3TB  2TB  2TB
+md0 (raid1): sda1 sdb1 sdc1 sdd1 sde1 sdf1 sdg1 (2550 MB/partition)
+md1 (raid1): sda2 sdb2 sdc2 sdd2 sde2 sdf2 sdg2 (2147 MB/partition)
+md2 (raid5): sda5 sdb5 sdc5 sdd5 sde5 sdf5 sdg5 (1995 GB/partition)
+md3 (raid5):      sdb6 sdc6 sdd6 sde6           (1000 GB/partition)
+md4 (raid1):      sdb7      sdd7                (1000 GB/partition)
 
---sdtB3X0nJg68CQEu
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+Synology uses md0 as the system partition and md1 as swap.  md2, md3, and m4 are
+added to a single volume group (vg1000) and creates a single logical volume
+(named lv).
 
-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
-H59S4Y2OJwEA
+After rebooting, I checked mdstat:
 
---sdtB3X0nJg68CQEu--
+/proc/mdstat:
+
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] 
+    md2 : active raid5 sda5[0] sdd5[6] sdb5[5] sde5[4] sdc5[3] sdg5[2] sdf5[1]
+        11692100736 blocks super 1.2 level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+        [===========>.........]  resync = 55.2% (1076399232/1948683456) finish=208.5min speed=69700K/sec
+
+    md4 : active raid1 sdb7[0] sdd7[1]
+        976742912 blocks super 1.2 [2/2] [UU]
+
+    md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2[6]
+        2097088 blocks [12/7] [UUUUUUU_____]
+
+    md0 : active raid1 sda1[0] sdb1[5] sdc1[3] sdd1[6] sde1[4] sdf1[1] sdg1[2]
+        2490176 blocks [12/7] [UUUUUUU_____]
+
+    unused devices: <none>
+
+The above log was taken later, but I had actually rebooted it during reshape.
+It appears that md2 automatically assembled and resumed reshape and resync.  It
+also appears that md4 was successfully created.  But, where was md3?
+
+Logs from mdadm --detail and --examine are included at the bottom of this email.
+I have also included logs from parted -l, as well as /var/log/messages, and
+pertinent files from /etc/lvm/backup and /etc/lvm/archive.
+
+I let md2 complete and then left the system alone.  Unfortunately, last night I
+experienced a power failure and I have not powered it on since.
+
+In order to better understand what was going on, I created a VirtualBox VM to
+simulate the failure.  I added 3x8GB, 2x10GB, and 2x12GB disks in some random
+order to the IDE and a SATA controller on the virtual machine.
+
+After installing Synology, I expanded the disks in the same order I did for the
+NAS (8G/8G/8G + 10G + 10G + 12G + 12G), and killed power to the VM during the
+expansion of the last 12GB disk.
+
+Here is /proc/mdstat prior to expanding the last disk:
+
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+    md3 : active raid5 sdf6[2] sdd6[1] sda6[0]
+        4174720 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+    md2 : active raid5 sdg5[5] sdf5[4] sde5[3] sdd5[2] sdb5[1] sda5[0]
+        17786560 blocks super 1.2 level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+
+    md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2[6]
+        2097088 blocks [12/7] [UUUUUUU_____]
+
+    md0 : active raid1 sda1[0] sdb1[1] sdc1[2] sdd1[3] sde1[4] sdf1[5] sdg1[6]
+        2490176 blocks [12/7] [UUUUUUU_____]
+
+    unused devices: <none>
+
+For the VM, sdc was the new disk (it was present when the NAS was installed, so
+it is a member of md0 and md1; but, was not included in the initial build of the
+md2 array).  I put a watch -n 1 'cat /proc/mdstat' and started the last
+expansion:
+
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+    md4 : active raid1 sdc7[1] sda7[0]
+        2087360 blocks super 1.2 [2/2] [UU]
+
+    md3 : active raid5 sda6[0] sdf6[2] sdd6[1]
+        4174720 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+    md2 : active raid5 sdc5[6] sda5[0] sdg5[5] sdf5[4] sde5[3] sdd5[2] sdb5[1]
+        17786560 blocks super 1.2 level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+        [>....................]  reshape =  0.6% (24320/3557312) finish=4.8min speed=12160K/sec
+
+    md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2[6]
+        2097088 blocks [12/7] [UUUUUUU_____]
+
+    md0 : active raid1 sda1[0] sdb1[1] sdc1[2] sdd1[3] sde1[4] sdf1[5] sdg1[6]
+        2490176 blocks [12/7] [UUUUUUU_____]
+
+    unused devices: <none>
+
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+    md4 : active raid1 sdc7[1] sda7[0]
+        2087360 blocks super 1.2 [2/2] [UU]
+
+    md3 : active raid5 sdc6[3] sda6[0] sdf6[2] sdd6[1]
+        4174720 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+            resync=DELAYED
+
+    md2 : active raid5 sdc5[6] sda5[0] sdg5[5] sdf5[4] sde5[3] sdd5[2] sdb5[1]
+        17786560 blocks super 1.2 level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+        [>....................]  reshape =  0.8% (30080/3557312) finish=5.8min speed=10026K/sec
+
+    md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2[6]
+        2097088 blocks [12/7] [UUUUUUU_____]
+
+    md0 : active raid1 sda1[0] sdb1[1] sdc1[2] sdd1[3] sde1[4] sdf1[5] sdg1[6]
+        2490176 blocks [12/7] [UUUUUUU_____]
+
+    unused devices: <none>
+
+Notice that:
+
+* md4 was created from sdc7 and sda7
+* md3 was converted to a 4-disk raid5, but resync=DELAYED
+* md2 was converted to a 7-disk raid5 and is currently performing a reshape
+
+My guess is that Synology performed all actions against the RAID devices, but
+allowed mdadm to perform reshape/resync one device at a time.  I assume that
+Synology next continuously polls mdstat, and when finished, will perform the
+vgextend/lvextend actions.
+
+Upon powering on the VM again, I inspected mdstat again:
+
+    Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+    md4 : active raid1 sda7[0] sdc7[1]
+        2087360 blocks super 1.2 [2/2] [UU]
+
+    md2 : active raid5 sda5[0] sdc5[6] sdg5[5] sdf5[4] sde5[3] sdd5[2] sdb5[1]
+        17786560 blocks super 1.2 level 5, 64k chunk, algorithm 2 [7/7] [UUUUUUU]
+        [==>..................]  reshape = 13.7% (489056/3557312) finish=3.9min speed=13013K/sec
+
+    md1 : active raid1 sda2[0] sdb2[1] sdc2[2] sdd2[3] sde2[4] sdf2[5] sdg2[6]
+        2097088 blocks [12/7] [UUUUUUU_____]
+
+    md0 : active raid1 sda1[0] sdb1[1] sdc1[2] sdd1[3] sde1[4] sdf1[5] sdg1[6]
+        2490176 blocks [12/7] [UUUUUUU_____]
+
+    unused devices: <none>
+
+Much like my real NAS, md2 resumed reshape/resync, md3 disappeared, and md4 was
+created and is clean.
+
+At this point, I tried to reassemble md3, but got stuck because I didn't have a
+backup-file (even though the Reshape pos'n was 0).  It would just say:
+
+    mdadm: Failed to restore critical section for reshape, sorry.
+          Possibly you needed to specify the --backup-file
+
+Assuming md3 was not touched at all other than perhaps metadata for the raid
+configuration, I reasoned that I should be able to just recreate the array in
+the configuration prior to expansion.  The output mdadm -A --scan --verbose
+shows me that /dev/sd[adfc] were slots 0-3 for md3.  Assuming that the new
+partition is slot 3, I tried to re-create the array with the first 3 devices:
+
+    size=$(( $(mdadm --examine /dev/sda6 | grep Used | tr -s ' ' | cut -d' ' -f6) / 2 ))
+    mdadm --create --assume-clean --level=5 --raid-devices=3 --size=$size /dev/md3 /dev/sd[adf]6
+    vgchange -a y
+    mount /dev/vg1000/lv /mnt
+
+And, voila!  My data is there.  I ran some quick CRC-32 and SHA-1 sums on my
+test data and they all match.
+
+UPDATE:
+
+I tried re-creating the array with all four disks as well:
+
+    size=$(( $(mdadm --examine /dev/sda6 | grep Used | tr -s ' ' | cut -d' ' -f6) / 2 ))
+    mdadm --create --assume-clean --level=5 --raid-devices=4 --size=$size /dev/md3 /dev/sd[adfc]6
+    vgchange -a y
+    mount /dev/vg1000/lv /mnt
+
+This also appears to work.
+
+The main questions are:
+
+1. Can I expect to follow the same procedure to recover my data on my NAS?
+2. Is there a safer way to recover the data than re-creating the array?
+   The linux-raid wiki says that recreating the array should be the *last*
+   resort.  I have read other people ask for help with data recovery, and a
+   common response is to STOP and email this list.
+3. Does the order of the devices matter (/dev/sd[adfc]6) matter in the mdadm
+   --create command?  I am infering the order from mdadm -A --scan --verbose but
+   it appears that the array is successfully created in the right order
+   regardless of the order I pass in my arguments.
+4. Should I recover with 3-disks or 4-disks?  Both seemed to work, and the
+   4-disk variant did not list the last disk as "spare" -- it was active.
+
+I did try the other advice on the wiki (as well as other Internet sources), but
+the version of mdadm does not support --invalid-backup, nor does it support
+--update=revert-reshape.  I could not get an overlay working, as anytime I tried
+to add a disk to use as an overlay, it would completely rename the devices
+(which I read is a no-no).  I also tried booting with a rescue CD to try to get
+a newer version of mdadm, but that also renamed everything (my md devices showed
+up as /dev/md126, /dev/md127, etc).
+
+Thanks in advance!
+
+Below are logs:
+
+[parted -l]
+
+Model: ATA WDC WD20EARX-00P (scsi)
+Disk /dev/hda: 2000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  2551MB  2550MB  primary                raid
+ 2      2551MB  4699MB  2147MB  primary                raid
+ 3      4832MB  2000GB  1996GB  extended               lba
+ 5      4840MB  2000GB  1995GB  logical                raid
+
+
+Model: WDC WD20EARX-00PASB0 (scsi)
+Disk /dev/sda: 2000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  2551MB  2550MB  primary                raid
+ 2      2551MB  4699MB  2147MB  primary                raid
+ 3      4832MB  2000GB  1996GB  extended               lba
+ 5      4840MB  2000GB  1995GB  logical                raid
+
+
+Model: ATA ST4000DM000-1F21 (scsi)
+Disk /dev/sdb: 4001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system     Name  Flags
+ 1      1049kB  2551MB  2550MB  ext4                  raid
+ 2      2551MB  4699MB  2147MB  linux-swap(v1)        raid
+ 5      4840MB  2000GB  1995GB                        raid
+ 6      2000GB  3000GB  1000GB                        raid
+ 7      3000GB  4001GB  1000GB                        raid
+
+
+Model: ATA ST3000DM001-1ER1 (scsi)
+Disk /dev/sdc: 3001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system     Name  Flags
+ 1      1049kB  2551MB  2550MB  ext4                  raid
+ 2      2551MB  4699MB  2147MB  linux-swap(v1)        raid
+ 5      4840MB  2000GB  1995GB                        raid
+ 6      2000GB  3000GB  1000GB                        raid
+
+
+Model: ATA ST4000DM000-1F21 (scsi)
+Disk /dev/sdd: 4001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system     Name  Flags
+ 1      1049kB  2551MB  2550MB  ext4                  raid
+ 2      2551MB  4699MB  2147MB  linux-swap(v1)        raid
+ 5      4840MB  2000GB  1995GB                        raid
+ 6      2000GB  3000GB  1000GB                        raid
+ 7      3000GB  4001GB  1000GB                        raid
+
+
+Model: ATA ST3000DM001-1CH1 (scsi)
+Disk /dev/sde: 3001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+Disk Flags: 
+
+Number  Start   End     Size    File system     Name  Flags
+ 1      1049kB  2551MB  2550MB  ext4                  raid
+ 2      2551MB  4699MB  2147MB  linux-swap(v1)        raid
+ 5      4840MB  2000GB  1995GB                        raid
+ 6      2000GB  3000GB  1000GB                        raid
+
+
+Model: WDC WD20EARS-00S8B1 (scsi)
+Disk /dev/sdf: 2000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  2551MB  2550MB  primary                raid
+ 2      2551MB  4699MB  2147MB  primary                raid
+ 3      4832MB  2000GB  1996GB  extended               lba
+ 5      4840MB  2000GB  1995GB  logical                raid
+
+
+Model: Linux Software RAID Array (md)
+Disk /dev/md0: 2550MB
+Sector size (logical/physical): 512B/512B
+Partition Table: loop
+Disk Flags: 
+
+Number  Start  End     Size    File system  Flags
+ 1      0.00B  2550MB  2550MB  ext4
+
+
+Model: Linux Software RAID Array (md)
+Disk /dev/md1: 2147MB
+Sector size (logical/physical): 512B/512B
+Partition Table: loop
+Disk Flags: 
+
+Number  Start  End     Size    File system     Flags
+ 1      0.00B  2147MB  2147MB  linux-swap(v1)
+
+Model: Linux Software RAID Array (md)
+Disk /dev/md2: 12.0TB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags: 
+
+
+Model: Linux Software RAID Array (md)
+Disk /dev/md4: 1000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags: 
+
+Model: WDC WD20EARS-00MVWB0 (scsi)
+Disk /dev/sdg: 2000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags: 
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  2551MB  2550MB  primary                raid
+ 2      2551MB  4699MB  2147MB  primary                raid
+ 3      4832MB  2000GB  1996GB  extended               lba
+ 5      4840MB  2000GB  1995GB  logical                raid
+
+[madm --examine /dev/sd?1]
+
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f58618 - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f58632 - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     5       8       17        5      active sync   /dev/sdb1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f5863e - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       33        3      active sync   /dev/sdc1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f58654 - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       49        6      active sync   /dev/sdd1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f58660 - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       65        4      active sync   /dev/sde1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f5866a - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       81        1      active sync   /dev/sdf1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+
+    Update Time : Sun Jan 17 13:11:30 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : a6f5867c - correct
+         Events : 404046
+
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       97        2      active sync   /dev/sdg1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8       33        3      active sync   /dev/sdc1
+   4     4       8       65        4      active sync   /dev/sde1
+   5     5       8       17        5      active sync   /dev/sdb1
+   6     6       8       49        6      active sync   /dev/sdd1
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+
+[mdadm --examine /dev/sd?2]
+
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f9720367 - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        2        0      active sync   /dev/sda2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f9720379 - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       18        1      active sync   /dev/sdb2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f972038b - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       34        2      active sync   /dev/sdc2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f972039d - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       50        3      active sync   /dev/sdd2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sde2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f97203af - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       66        4      active sync   /dev/sde2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdf2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f97203c1 - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     5       8       82        5      active sync   /dev/sdf2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+/dev/sdg2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 5
+  Spare Devices : 0
+       Checksum : f97203d3 - correct
+         Events : 56
+
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       98        6      active sync   /dev/sdg2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       8       18        1      active sync   /dev/sdb2
+   2     2       8       34        2      active sync   /dev/sdc2
+   3     3       8       50        3      active sync   /dev/sdd2
+   4     4       8       66        4      active sync   /dev/sde2
+   5     5       8       82        5      active sync   /dev/sdf2
+   6     6       8       98        6      active sync   /dev/sdg2
+   7     7       0        0        7      faulty removed
+   8     8       0        0        8      faulty removed
+   9     9       0        0        9      faulty removed
+  10    10       0        0       10      faulty removed
+  11    11       0        0       11      faulty removed
+
+[mdadm --examine /dev/sd?5]
+
+/dev/sda5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 48540530:5319c3ff:053851e3:4ae0a358
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : 66a27c76 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : ef97a20f:01900be1:552d9a54:d7bf0662
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : a2340bac - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 5
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sdc5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : e60d53a3:e106cc0b:1435aa89:10876e49
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : 7d1cc779 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 3
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sdd5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 22d4e109:a3c1e226:9a7ebfe6:005d9ca3
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : b60567f0 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 6
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sde5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : a08b2485:0f2efd4e:645a20f8:16dcde68
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : 3005e6b9 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 4
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sdf5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 5d021082:54485b2c:4644bd82:454656fa
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : 2663cbc9 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+/dev/sdg5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+           Name : G530:2  (local to host G530)
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+   Raid Devices : 7
+
+ Avail Dev Size : 3897366912 (1858.41 GiB 1995.45 GB)
+     Array Size : 23384201472 (11150.46 GiB 11972.71 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 53c65dfd:49e8d483:c0fb21a3:7ccf5336
+
+    Update Time : Sun Jan 17 13:11:02 2016
+       Checksum : 558d7066 - correct
+         Events : 39119
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 2
+   Array State : AAAAAAA ('A' == active, '.' == missing)
+
+[mdadm --examine /dev/sd?6]
+
+/dev/sdb6:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 7a711117:6923feb5:189dd236:a4588ccb
+           Name : G530:3  (local to host G530)
+  Creation Time : Sun Jan 10 14:42:24 2016
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 5860457472 (2794.48 GiB 3000.55 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : cf7de3ce:9870bc53:10996640:fecad7fe
+
+  Reshape pos'n : 0
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sat Jan 16 04:00:42 2016
+       Checksum : 9ffe27fd - correct
+         Events : 2662
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 2
+   Array State : AAAA ('A' == active, '.' == missing)
+/dev/sdc6:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 7a711117:6923feb5:189dd236:a4588ccb
+           Name : G530:3  (local to host G530)
+  Creation Time : Sun Jan 10 14:42:24 2016
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 5860457472 (2794.48 GiB 3000.55 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 689fe836:76c74e90:fb6af582:1fc460b9
+
+  Reshape pos'n : 0
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sat Jan 16 04:00:42 2016
+       Checksum : 41ad6b7e - correct
+         Events : 2662
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing)
+/dev/sdd6:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 7a711117:6923feb5:189dd236:a4588ccb
+           Name : G530:3  (local to host G530)
+  Creation Time : Sun Jan 10 14:42:24 2016
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 5860457472 (2794.48 GiB 3000.55 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : bed228eb:31257f54:c2aa00d7:063375f1
+
+  Reshape pos'n : 0
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sat Jan 16 04:00:42 2016
+       Checksum : 463dab41 - correct
+         Events : 2662
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing)
+/dev/sde6:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : 7a711117:6923feb5:189dd236:a4588ccb
+           Name : G530:3  (local to host G530)
+  Creation Time : Sun Jan 10 14:42:24 2016
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 5860457472 (2794.48 GiB 3000.55 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 6a627079:cfb96d7c:4ab53bf4:c92ca522
+
+  Reshape pos'n : 0
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sat Jan 16 04:00:42 2016
+       Checksum : 4aded3d3 - correct
+         Events : 2662
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing)
+
+[mdadm --examine /dev/sd?7]
+
+/dev/sdb7:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 80224e42:05546401:c3cc4e39:177c3cb1
+           Name : G530:4  (local to host G530)
+  Creation Time : Sat Jan 16 04:00:36 2016
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 1953485824 (931.49 GiB 1000.18 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 914b86e5:34498dc9:4319a930:c8ce2e06
+
+    Update Time : Sun Jan 17 02:57:27 2016
+       Checksum : 82df11db - correct
+         Events : 2
+
+
+   Device Role : Active device 0
+   Array State : AA ('A' == active, '.' == missing)
+/dev/sdd7:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 80224e42:05546401:c3cc4e39:177c3cb1
+           Name : G530:4  (local to host G530)
+  Creation Time : Sat Jan 16 04:00:36 2016
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 1953485856 (931.49 GiB 1000.18 GB)
+     Array Size : 1953485824 (931.49 GiB 1000.18 GB)
+  Used Dev Size : 1953485824 (931.49 GiB 1000.18 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 075d1bd6:f89b5714:41c9b39a:9a8fe9a2
+
+    Update Time : Sun Jan 17 02:57:27 2016
+       Checksum : c503e6e6 - correct
+         Events : 2
+
+
+   Device Role : Active device 1
+   Array State : AA ('A' == active, '.' == missing)
+
+[mdadm --detail /dev/md[0124]
+
+/dev/md0:
+        Version : 0.90
+  Creation Time : Thu Dec 31 09:42:30 2015
+     Raid Level : raid1
+     Array Size : 2490176 (2.37 GiB 2.55 GB)
+  Used Dev Size : 2490176 (2.37 GiB 2.55 GB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 17 13:16:37 2016
+          State : clean, degraded
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : ed28b380:6ad04214:3017a5a8:c86610be
+         Events : 0.404128
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       81        1      active sync   /dev/sdf1
+       2       8       97        2      active sync   /dev/sdg1
+       3       8       33        3      active sync   /dev/sdc1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       17        5      active sync   /dev/sdb1
+       6       8       49        6      active sync   /dev/sdd1
+       7       0        0        7      removed
+       8       0        0        8      removed
+       9       0        0        9      removed
+      10       0        0       10      removed
+      11       0        0       11      removed
+/dev/md1:
+        Version : 0.90
+  Creation Time : Mon Jan 11 18:23:11 2016
+     Raid Level : raid1
+     Array Size : 2097088 (2048.28 MiB 2147.42 MB)
+  Used Dev Size : 2097088 (2048.28 MiB 2147.42 MB)
+   Raid Devices : 12
+  Total Devices : 7
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 17 13:12:28 2016
+          State : clean, degraded
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : d74ec230:ea7269c6:0d6fa14f:d3c5b4e4 (local to host G530)
+         Events : 0.56
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+       3       8       50        3      active sync   /dev/sdd2
+       4       8       66        4      active sync   /dev/sde2
+       5       8       82        5      active sync   /dev/sdf2
+       6       8       98        6      active sync   /dev/sdg2
+       7       0        0        7      removed
+       8       0        0        8      removed
+       9       0        0        9      removed
+      10       0        0       10      removed
+      11       0        0       11      removed
+/dev/md2:
+        Version : 1.2
+  Creation Time : Thu Dec 31 09:58:51 2015
+     Raid Level : raid5
+     Array Size : 11692100736 (11150.46 GiB 11972.71 GB)
+  Used Dev Size : 1948683456 (1858.41 GiB 1995.45 GB)
+   Raid Devices : 7
+  Total Devices : 7
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 17 13:16:02 2016
+          State : active, resyncing
+ Active Devices : 7
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+ Rebuild Status : 54% complete
+
+           Name : G530:2  (local to host G530)
+           UUID : ea9a241d:1482b49d:5ea11c87:e689bdf0
+         Events : 39120
+
+    Number   Major   Minor   RaidDevice State
+       0       8        5        0      active sync   /dev/sda5
+       1       8       85        1      active sync   /dev/sdf5
+       2       8      101        2      active sync   /dev/sdg5
+       3       8       37        3      active sync   /dev/sdc5
+       4       8       69        4      active sync   /dev/sde5
+       5       8       21        5      active sync   /dev/sdb5
+       6       8       53        6      active sync   /dev/sdd5
+/dev/md4:
+        Version : 1.2
+  Creation Time : Sat Jan 16 04:00:36 2016
+     Raid Level : raid1
+     Array Size : 976742912 (931.49 GiB 1000.18 GB)
+  Used Dev Size : 976742912 (931.49 GiB 1000.18 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jan 17 02:57:27 2016
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : G530:4  (local to host G530)
+           UUID : 80224e42:05546401:c3cc4e39:177c3cb1
+         Events : 2
+
+    Number   Major   Minor   RaidDevice State
+       0       8       23        0      active sync   /dev/sdb7
+       1       8       55        1      active sync   /dev/sdd7
+
+[mdadm -A --scan --verbose]
+
+mdadm: looking for devices for further assembly
+mdadm: no recogniseable superblock on 135:241
+mdadm: no recogniseable superblock on /dev/synoboot
+mdadm: no recogniseable superblock on /dev/md2
+mdadm: no recogniseable superblock on /dev/md4
+mdadm: cannot open device /dev/zram1: Device or resource busy
+mdadm: cannot open device /dev/zram0: Device or resource busy
+mdadm: cannot open device /dev/md1: Device or resource busy
+mdadm: cannot open device /dev/md0: Device or resource busy
+mdadm: cannot open device /dev/sda5: Device or resource busy
+mdadm: no recogniseable superblock on /dev/sda3
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: cannot open device /dev/sdb7: Device or resource busy
+mdadm: cannot open device /dev/sdb5: Device or resource busy
+mdadm: cannot open device /dev/sdb2: Device or resource busy
+mdadm: cannot open device /dev/sdb1: Device or resource busy
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: cannot open device /dev/sdd7: Device or resource busy
+mdadm: cannot open device /dev/sdd5: Device or resource busy
+mdadm: cannot open device /dev/sdd2: Device or resource busy
+mdadm: cannot open device /dev/sdd1: Device or resource busy
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm: cannot open device /dev/sde5: Device or resource busy
+mdadm: cannot open device /dev/sde2: Device or resource busy
+mdadm: cannot open device /dev/sde1: Device or resource busy
+mdadm: cannot open device /dev/sde: Device or resource busy
+mdadm: cannot open device /dev/sdc5: Device or resource busy
+mdadm: cannot open device /dev/sdc2: Device or resource busy
+mdadm: cannot open device /dev/sdc1: Device or resource busy
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm: cannot open device /dev/sdg5: Device or resource busy
+mdadm: no RAID superblock on /dev/sdg3
+mdadm: cannot open device /dev/sdg2: Device or resource busy
+mdadm: cannot open device /dev/sdg1: Device or resource busy
+mdadm: cannot open device /dev/sdg: Device or resource busy
+mdadm: cannot open device /dev/sdf5: Device or resource busy
+mdadm: no RAID superblock on /dev/sdf3
+mdadm: cannot open device /dev/sdf2: Device or resource busy
+mdadm: cannot open device /dev/sdf1: Device or resource busy
+mdadm: cannot open device /dev/sdf: Device or resource busy
+mdadm: /dev/md/3 exists - ignoring
+mdadm: /dev/sdb6 is identified as a member of /dev/md3, slot 2.
+mdadm: /dev/sdd6 is identified as a member of /dev/md3, slot 3.
+mdadm: /dev/sde6 is identified as a member of /dev/md3, slot 1.
+mdadm: /dev/sdc6 is identified as a member of /dev/md3, slot 0.
+mdadm:/dev/md3 has an active reshape - checking if critical section needs to be restored
+mdadm: No backup metadata on device-3
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+      Possibly you needed to specify the --backup-file
+mdadm: looking for devices for further assembly
+mdadm: no recogniseable superblock on /dev/sdg3
+mdadm: no recogniseable superblock on /dev/sdf3
+mdadm: No arrays found in config file or automatically
+
+[/var/log/messages - after reboot]
+
+Jan 16 21:10:30 G530 kernel: [   11.998218] 3ware 9000 Storage Controller device driver for Linux v2.26.02.014.
+Jan 16 21:10:30 G530 kernel: [   12.110889] md: invalid raid superblock magic on sda5
+Jan 16 21:10:30 G530 kernel: [   12.110894] md: sda5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.161769] md: invalid raid superblock magic on sdb5
+Jan 16 21:10:30 G530 kernel: [   12.161774] md: sdb5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.181722] md: invalid raid superblock magic on sdb6
+Jan 16 21:10:30 G530 kernel: [   12.181727] md: sdb6 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.200509] md: invalid raid superblock magic on sdb7
+Jan 16 21:10:30 G530 kernel: [   12.200513] md: sdb7 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.244320] md: invalid raid superblock magic on sdc5
+Jan 16 21:10:30 G530 kernel: [   12.244325] md: sdc5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.264668] md: invalid raid superblock magic on sdc6
+Jan 16 21:10:30 G530 kernel: [   12.264673] md: sdc6 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.312386] md: invalid raid superblock magic on sdd5
+Jan 16 21:10:30 G530 kernel: [   12.312391] md: sdd5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.331066] md: invalid raid superblock magic on sdd6
+Jan 16 21:10:30 G530 kernel: [   12.331070] md: sdd6 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.347779] md: invalid raid superblock magic on sdd7
+Jan 16 21:10:30 G530 kernel: [   12.347783] md: sdd7 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.381133] md: invalid raid superblock magic on sde5
+Jan 16 21:10:30 G530 kernel: [   12.381138] md: sde5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.400495] md: invalid raid superblock magic on sde6
+Jan 16 21:10:30 G530 kernel: [   12.400499] md: sde6 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.456511] md: invalid raid superblock magic on sdf5
+Jan 16 21:10:30 G530 kernel: [   12.456515] md: sdf5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.504338] md: invalid raid superblock magic on sdg5
+Jan 16 21:10:30 G530 kernel: [   12.504342] md: sdg5 does not have a valid v0.90 superblock, not importing!
+Jan 16 21:10:30 G530 kernel: [   12.504371] md: sda2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504375] md: sdb2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504379] md: sdc2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504383] md: sdd2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504387] md: sde2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504391] md: sdf2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.504395] md: sdg2 has different UUID to sda1
+Jan 16 21:10:30 G530 kernel: [   12.647433] Warning! ehci_hcd should always be loaded before uhci_hcd and ohci_hcd, not after
+Jan 16 21:10:30 G530 kernel: [   12.726663] bromolow_synobios: module license 'Synology Inc.' taints kernel.
+Jan 16 21:10:30 G530 kernel: [   12.726666] Disabling lock debugging due to kernel taint
+Jan 16 21:10:30 G530 kernel: [   12.727077] 2016-1-17 3:10:20 UTC
+Jan 16 21:10:30 G530 kernel: [   12.727083] Brand: Synology
+Jan 16 21:10:30 G530 kernel: [   12.727085] Model: DS-3615xs
+Jan 16 21:10:30 G530 kernel: [   12.727087] set group disks wakeup number to 4, spinup time deno 7
+Jan 16 21:10:30 G530 kernel: [   13.120649] Got empty serial number. Generate serial number from product.
+Jan 16 21:10:30 G530 kernel: [   13.237986] synobios: unload
+Jan 16 21:10:30 G530 kernel: [   13.380869] Got empty serial number. Generate serial number from product.
+Jan 16 21:10:30 G530 kernel: [   13.380881] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa0 
+Jan 16 21:10:30 G530 kernel: [   15.471362] Got empty serial number. Generate serial number from product.
+Jan 16 21:10:30 G530 kernel: [   15.471372] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa0 
+Jan 16 21:10:30 G530 kernel: [   15.471374] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa1 
+Jan 16 21:10:30 G530 kernel: [   16.055404] EXT4-fs (md0): synoacl module has not been loaded. Unable to mount with synoacl, vfs_mod status=-1
+Jan 16 21:10:30 G530 kernel: [   16.767872] Got empty serial number. Generate serial number from product.
+Jan 16 21:10:30 G530 kernel: [   16.767883] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa0 
+Jan 16 21:10:30 G530 kernel: [   16.767885] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa1 
+Jan 16 21:10:30 G530 kernel: [   16.767886] drivers/usb/core/hub.c (2674) Same device found. Change serial to ffffffd1ffffffb2ffffffdbffffffa2 
+Jan 16 21:10:30 G530 kernel: [   16.768045] usb 3-3.4: ep 0x81 - rounding interval to 1024 microframes, ep desc says 2040 microframes
+Jan 16 21:10:30 G530 kernel: [   18.093256] Got empty serial number. Generate serial number from product.
+Jan 16 21:10:30 G530 kernel: [   18.093392] usb 3-3.4.1: ep 0x81 - rounding interval to 64 microframes, ep desc says 80 microframes
+Jan 16 21:10:30 G530 kernel: [   18.093397] usb 3-3.4.1: ep 0x82 - rounding interval to 64 microframes, ep desc says 80 microframes
+Jan 16 21:10:30 G530 kernel: [   18.093400] usb 3-3.4.1: ep 0x83 - rounding interval to 32 microframes, ep desc says 40 microframes
+Jan 16 21:10:30 G530 kernel: [   20.844390] EXT4-fs (md0): synoacl module has not been loaded. Unable to mount with synoacl, vfs_mod status=-1
+Creating /dev/synoboot1...
+Creating /dev/synoboot2...
+Jan 16 21:10:33 G530 umount: can't umount /initrd: Invalid argument
+Jan 16 21:10:35 G530 kernel: [   27.827659] zram: module is from the staging directory, the quality is unknown, you have been warned.
+Jan 16 21:10:35 G530 [   27.916922] init: syno-auth-check main process (14182) killed by TERM signal
+Jan 16 21:10:35 G530 kernel: [   28.347530] thermal_sys: exports duplicate symbol get_thermal_instance (owned by kernel)
+insmod: can't insert '/lib/modules/thermal_sys.ko': invalid module format
+Jan 16 21:10:35 G530 kernel: [   28.396328] processor: exports duplicate symbol acpi_processor_get_bios_limit (owned by kernel)
+insmod: can't insert '/lib/modules/processor.ko': invalid module format
+insmod: can't insert '/lib/modules/aesni-intel.ko': No such device
+Jan 16 21:10:35 G530 kernel: [   28.608051] i2c_algo_bit: exports duplicate symbol i2c_bit_add_bus (owned by kernel)
+insmod: can't insert '/lib/modules/i2c-algo-bit.ko': invalid module format
+Jan 16 21:10:36 G530 kernel: [   28.741219] 2016-1-17 3:10:36 UTC
+Jan 16 21:10:36 G530 kernel: [   28.741227] Brand: Synology
+Jan 16 21:10:36 G530 kernel: [   28.741229] Model: DS-3615xs
+Jan 16 21:10:36 G530 kernel: [   28.741231] set group disks wakeup number to 4, spinup time deno 7
+Jan 16 21:10:36 G530 synonetseqadj: synonetseqadj.c:312 Error internal NIC devices 1 does not equal to internal NIC number 4
+Jan 16 21:10:37 G530 interface-catcher: eth0 (dhcp) is added
+Jan 16 21:10:37 G530 interface-catcher: lo (inet 127.0.0.1 netmask 255.0.0.0 ) is added
+Jan 16 21:10:38 G530 synonetd: net_route_table_edit.c:72 eth0 ip route del failed, instead of route
+Jan 16 21:10:39 G530 dhcp-client: started on eth0
+Jan 16 21:10:39 G530 [   31.943766] init: dhcp-client (eth0) main process (18275) killed by TERM signal
+Jan 16 21:10:39 G530 dhcp-client: stopped on eth0
+Jan 16 21:10:39 G530 dhcp-client: started on eth0
+Jan 16 21:10:39 G530 spacetool.shared: spacetool.c:1069 Try to force assemble RAID [/dev/md3]. [0x8000 raid_ioctl_info.c:55]
+Jan 16 21:10:39 G530 spacetool.shared: raid_allow_rmw_check.c:48 fopen failed: /usr/syno/etc/.rmw.md4
+Jan 16 21:10:39 G530 kernel: [   32.529366] md: md2: current auto_remap = 0
+Jan 16 21:10:39 G530 kernel: [   32.529368] md: reshape of RAID array md2
+Jan 16 21:10:39 G530 spacetool.shared: raid_allow_rmw_check.c:48 fopen failed: /usr/syno/etc/.rmw.md2
+Jan 16 21:10:40 G530 spacetool.shared: raid_allow_rmw_check.c:35 Failed to get RAID '/dev/md3' info.
+Jan 16 21:10:40 G530 spacetool.shared: raid_enable_multithread.c:42 Failed to get RAID '/dev/md3' info.
+Jan 16 21:10:40 G530 spacetool.shared: spacetool.c:1097 Fail to enable multithread of [/dev/md3]
+Jan 16 21:10:42 G530 [   34.826762] init: dhcp-client (eth0) main process (18642) killed by TERM signal
+Jan 16 21:10:42 G530 dhcp-client: stopped on eth0
+Jan 16 21:10:42 G530 dhcp-client: started on eth0
+Jan 16 21:10:44 G530 synonetd: servicecfg_internal_lib.c:355 skip reload stopping/stopped job [ddnsd][0xD300 servicectl_job_reload.c:42]
+Jan 16 21:10:45 G530 spacetool.shared: spacetool.c:2835 [Info] Old vg path: [/dev/vg1000], New vg path: [/dev/vg1000], UUID: [OJ3oNy-SLGN-RvdT-KLiG-jDs2-JbxB-4ommso]
+Jan 16 21:10:45 G530 spacetool.shared: spacetool.c:2842 [Info] Activate all VG
+Jan 16 21:10:46 G530 ddnsd: ddnsd.c:2912 DDNS Expired. UpdateAll.
+Jan 16 21:10:47 G530 spacetool.shared: lvm_vg_activate.c:23 Failed to do '/sbin/vgchange -ay /dev/vg1000'
+Jan 16 21:10:47 G530 spacetool.shared: spacetool.c:2851 Failed to activate LVM [/dev/vg1000]
+Jan 16 21:10:47 G530 spacetool.shared: spacetool.c:2896 space: [/dev/vg1000]
+Jan 16 21:10:47 G530 spacetool.shared: spacetool.c:2922 space: [/dev/vg1000], ndisk: [9]
+Jan 16 21:10:47 G530 ddnsd: ddnsd.c:1968 Success to update [all.dnsomatic.com] with IP [72.64.92.20] at [DNS-O-Matic]
+Jan 16 21:10:51 G530 spacetool.shared: space_map_file_dump.c:1440 Fail to get lv UUID: [/dev/vg1000/lv]
+Jan 16 21:10:51 G530 spacetool.shared: space_map_file_dump.c:1251 Fail to get pv expansible: [/dev/md4]
+Jan 16 21:10:51 G530 spacetool.shared: space_map_file_dump.c:1251 Fail to get pv expansible: [/dev/md2]
+Jan 16 21:10:53 G530 synovspace: virtual_space_conf_check.c:78 [INFO] "PASS" checking configuration of virtual space [FCACHE], app: [1]
+Jan 16 21:10:53 G530 synovspace: virtual_space_conf_check.c:74 [INFO] No implementation, skip checking configuration of virtual space [HA]
+Jan 16 21:10:53 G530 synovspace: virtual_space_conf_check.c:74 [INFO] No implementation, skip checking configuration of virtual space [SNAPSHOT_ORG]
+Jan 16 21:10:53 G530 synovspace: vspace_wrapper_load_all.c:76 [INFO] No virtual layer above space: [/volume1] / [/dev/vg1000/lv]
+Jan 16 21:10:54 G530 s00_synocheckfstab: system_blk_dev_readahead_set.c:36 Failed to set '/dev/vg1000/lv''s readahead to 4096d 
+Jan 16 21:10:54 G530 s00_synocheckfstab: volume_readahead_allset.c:33 Failed to set RA on [/dev/vg1000/lv]
+mount: open failed, msg:No such file or directory
+mount: mounting /dev/vg1000/lv on /volume1 failed: No such device
+mv: can't rename '/volume1/@tmp': No such file or directory
+quotacheck: Mountpoint (or device) /volume1 not found or has no quota enabled.
+quotacheck: Cannot find filesystem to check or filesystem not mounted with quota option.
+quotaon: Mountpoint (or device) /volume1 not found or has no quota enabled.
+Jan 16 21:10:54 G530 synocheckhotspare: synocheckhotspare.c:149 [INFO] No hotspare config, skip hotspare config check. [0x2000 virtual_space_layer_get.c:98]
+Jan 16 21:10:54 G530 rc.ha: ha related packages check
+Jan 16 21:10:54 G530 rc.ha: ha related packages check status 0
+Jan 16 21:10:55 G530 kernel: [   48.252145] Get empty minor:104
+Jan 16 21:10:55 G530 kernel: [   48.254034] Get empty minor:105
+Jan 16 21:10:55 G530 syno_hdd_util: Model:[WD20EARS-00MVWB0], Firmware:[51.0AB51], S/N:[WD-WMAZA4913001] in [/dev/sdg] is not ssd
+Jan 16 21:10:55 G530 syno_hdd_util: Model:[WD20EARS-00S8B1], Firmware:[80.00A80], S/N:[WD-WCAVY5659881] in [/dev/sdf] is not ssd
+Jan 16 21:10:55 G530 syno_hdd_util: Model:[ST3000DM001-1CH166], Firmware:[CC46], S/N:[Z1F3MY6N] in [/dev/sde] is not ssd
+Jan 16 21:10:55 G530 syno_hdd_util: Model:[ST4000DM000-1F2168], Firmware:[CC54], S/N:[Z303MC89] in [/dev/sdd] is not ssd
+Jan 16 21:10:55 G530 syno_hdd_util: Model:[ST3000DM001-1ER166], Firmware:[CC25], S/N:[Z500QP6V] in [/dev/sdc] is not ssd
+Jan 16 21:10:56 G530 syno_hdd_util: Model:[ST4000DM000-1F2168], Firmware:[CC54], S/N:[Z3038CR3] in [/dev/sdb] is not ssd
+Jan 16 21:10:56 G530 syno_hdd_util: Model:[WD20EARX-00PASB0], Firmware:[51.0AB51], S/N:[WD-WMAZA7147895] in [/dev/sda] is not ssd
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: anime / /volume1/anime
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: homes / /volume1/homes
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: movies / /volume1/movies
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: old backups / /volume1/old backups
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: photo / /volume1/photo
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: Plex / /volume1/Plex
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: surveillance / /volume1/surveillance
+Jan 16 21:10:56 G530 synocheckshare: synocheckshare_sync_conf.c:373 Remove Share config: tv / /volume1/tv
+Jan 16 21:10:57 G530 kernel: [   49.942850] BUG: unable to handle kernel paging request at 0000000000002ea9
+Jan 16 21:10:57 G530 kernel: [   49.942855] IP: [<ffffffff813d8af7>] syno_mv_9235_disk_led_set+0x27/0xd0
+Jan 16 21:10:57 G530 kernel: [   49.942861] PGD 2146d0067 PUD 2127c4067 PMD 0 
+Jan 16 21:10:57 G530 kernel: [   49.942864] Oops: 0000 [#1] SMP 
+Jan 16 21:10:57 G530 kernel: [   49.942941] CPU: 0 PID: 21066 Comm: scemd Tainted: P         C O 3.10.35 #1
+Jan 16 21:10:57 G530 kernel: [   49.942943] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./H77M, BIOS P1.00 03/06/2012
+Jan 16 21:10:57 G530 kernel: [   49.942945] task: ffff880213bef200 ti: ffff8801ff324000 task.ti: ffff8801ff324000
+Jan 16 21:10:57 G530 kernel: [   49.942946] RIP: 0010:[<ffffffff813d8af7>]  [<ffffffff813d8af7>] syno_mv_9235_disk_led_set+0x27/0xd0
+Jan 16 21:10:57 G530 kernel: [   49.942950] RSP: 0018:ffff8801ff327d18  EFLAGS: 00010202
+Jan 16 21:10:57 G530 kernel: [   49.942951] RAX: ffff8802127ca000 RBX: 0000000000000000 RCX: ffff8802127ca3e8
+Jan 16 21:10:57 G530 kernel: [   49.942952] RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff8802127ca000
+Jan 16 21:10:57 G530 kernel: [   49.942953] RBP: 0000000000000000 R08: ffff88020b94a3f8 R09: 0000000000000009
+Jan 16 21:10:57 G530 kernel: [   49.942955] R10: 00000000f773b430 R11: 0000000000000000 R12: ffff88020b94a3c0
+Jan 16 21:10:57 G530 kernel: [   49.942956] R13: 000000000000000b R14: 0000000000000001 R15: 0000000000000000
+Jan 16 21:10:57 G530 kernel: [   49.942957] FS:  0000000000000000(0000) GS:ffff88021f200000(0063) knlGS:00000000f4995b70
+Jan 16 21:10:57 G530 kernel: [   49.942959] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
+Jan 16 21:10:57 G530 kernel: [   49.942960] CR2: 0000000000002ea9 CR3: 000000020ba74000 CR4: 00000000000407f0
+Jan 16 21:10:57 G530 kernel: [   49.942961] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Jan 16 21:10:57 G530 kernel: [   49.942963] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Jan 16 21:10:57 G530 synousbdisk: RCClean succeeded
+Jan 16 21:10:57 G530 kernel: [   49.942964] Stack:
+Jan 16 21:10:57 G530 kernel: [   49.942965]  0000000000000007 ffffffffa0af0b98 ffffffffffffffff 00000000f4995048
+Jan 16 21:10:57 G530 kernel: [   49.942967]  ffff88020b94a3c0 ffffffffa0aed574 00000000f6f92000 ffff8801ff327de0
+Jan 16 21:10:57 G530 kernel: [   49.942969]  ffff880211505000 0000000000000008 00000000ffffff9c 00000000ffffff9c
+Jan 16 21:10:57 G530 kernel: [   49.942971] Call Trace:
+Jan 16 21:10:57 G530 kernel: [   49.942976]  [<ffffffffa0af0b98>] ? SetSCSIHostLedStatusBy9235GPIOandAHCISGPIO+0x68/0x100 [bromolow_synobios]
+Jan 16 21:10:57 G530 kernel: [   49.942980]  [<ffffffffa0aed574>] ? synobios_ioctl+0xe24/0x1060 [bromolow_synobios]
+Jan 16 21:10:57 G530 kernel: [   49.942984]  [<ffffffff8110c26c>] ? filename_lookup+0x2c/0xb0
+Jan 16 21:10:57 G530 kernel: [   49.942986]  [<ffffffff8110a464>] ? getname_flags.part.31+0x84/0x130
+Jan 16 21:10:57 G530 kernel: [   49.942989]  [<ffffffff811111c0>] ? user_path_at_empty+0xa0/0x120
+Jan 16 21:10:57 G530 kernel: [   49.942993]  [<ffffffff8116b3fb>] ? sysfs_getattr+0x4b/0x60
+Jan 16 21:10:57 G530 kernel: [   49.942995]  [<ffffffff81117b32>] ? dput+0x22/0x1b0
+Jan 16 21:10:57 G530 kernel: [   49.942999]  [<ffffffff8114c807>] ? compat_sys_ioctl+0x1e7/0x1500
+Jan 16 21:10:57 G530 kernel: [   49.943003]  [<ffffffff810348e0>] ? sys32_stat64+0x10/0x30
+Jan 16 21:10:57 G530 kernel: [   49.943007]  [<ffffffff81537a9c>] ? sysenter_dispatch+0x7/0x21
+Jan 16 21:10:57 G530 kernel: [   49.943008] Code: 1f 44 00 00 53 0f b7 ff 89 f3 e8 d5 73 f9 ff 48 85 c0 48 89 c7 0f 84 a0 00 00 00 48 8b 90 68 06 00 00 48 85 d2 0f 84 97 00 00 00 <48> 8b 82 a8 2e 00 00 8b 4a 24 48 8b 70 78 48 8b 40 20 83 c1 04 
+Jan 16 21:10:57 G530 kernel: [   49.943028] RIP  [<ffffffff813d8af7>] syno_mv_9235_disk_led_set+0x27/0xd0
+Jan 16 21:10:57 G530 kernel: [   49.943031]  RSP <ffff8801ff327d18>
+Jan 16 21:10:57 G530 kernel: [   49.943032] CR2: 0000000000002ea9
+Jan 16 21:10:57 G530 kernel: [   49.943034] ---[ end trace 64d42d5492de5895 ]---
+Jan 16 21:10:57 G530 synosata: synosata.c:71 no external sata devices granted
+Jan 16 21:10:59 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:10:59 G530 hotplugd: DEVNAME:sda
+Jan 16 21:10:59 G530 hotplugd: DEVGUID:0
+Jan 16 21:10:59 G530 hotplugd: DEVPATH:sda
+Jan 16 21:10:59 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:10:59 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:0/end_device-0:0:0/target0:0:0/0:0:0:0
+Jan 16 21:10:59 G530 synocheckshare: share_delete.c:439 Start to del homes with id 10
+Jan 16 21:11:00 G530 synocheckshare: index_index_add_ex.c:125 Indexing daemon is not running
+Jan 16 21:11:01 G530 synocheckshare: share_delete.c:439 Start to del photo with id 2
+Jan 16 21:11:02 G530 synocheckshare: share_delete.c:439 Start to del surveillance with id 9
+Jan 16 21:11:03 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sda] hotswap [add] ====
+Jan 16 21:11:03 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:03 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:03 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:03 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:03 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:03 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sda/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sda 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/syno_disk_ctl --wcache-off  /dev/sda 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sda] Model: [WD20EARX-00PASB0        ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sda] Serial number: [WD-WMAZA7147895] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sda] Firmware version: [51.0AB51] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sdb
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sdb
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:1/end_device-0:0:1/target0:0:1/0:0:1:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sdb] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sdb/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sdb 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sdb] Model: [ST4000DM000-1F2168      ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sdb] Serial number: [Z3038CR3] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sdb] Firmware version: [CC54] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sdc
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sdc
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:2/end_device-0:0:2/target0:0:2/0:0:2:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sdc] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sdc/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sdc 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sdc] Model: [ST3000DM001-1ER166      ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sdc] Serial number: [Z500QP6V] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sdc] Firmware version: [CC25] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sdd
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sdd
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:3/end_device-0:0:3/target0:0:3/0:0:3:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sdd] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sdd/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sdd 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sdd] Model: [ST4000DM000-1F2168      ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sdd] Serial number: [Z303MC89] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sdd] Firmware version: [CC54] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sde
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sde
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:4/end_device-0:0:4/target0:0:4/0:0:4:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sde] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sde/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sde 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sde] Model: [ST3000DM001-1CH166      ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sde] Serial number: [Z1F3MY6N] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sde] Firmware version: [CC46] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sdf
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sdf
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:5/end_device-0:0:5/target0:0:5/0:0:5:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sdf] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sdf/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sdf 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/syno_disk_ctl --wcache-off  /dev/sdf 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sdf] Model: [WD20EARS-00S8B1         ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sdf] Serial number: [WD-WCAVY5659881] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sdf] Firmware version: [80.00A80] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1274 ##### ACTION:add
+Jan 16 21:11:04 G530 hotplugd: DEVNAME:sdg
+Jan 16 21:11:04 G530 hotplugd: DEVGUID:0
+Jan 16 21:11:04 G530 hotplugd: DEVPATH:sdg
+Jan 16 21:11:04 G530 hotplugd: SUBSYSTEM:block
+Jan 16 21:11:04 G530 hotplugd: PHYSDEVPATH:/devices/pci0000:00/0000:00:01.0/0000:01:00.0/host0/port-0:0/expander-0:0/port-0:0:6/end_device-0:0:6/target0:0:6/0:0:6:0
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1358 ==== SATA disk [sdg] hotswap [add] ====
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_enum.c:93 failed to get enclosure head, please check enclosure firmware/hardware
+Jan 16 21:11:04 G530 hotplugd: enclosure_enum_by_valid_link.c:61 Fail to SYNOEnclosureListEnum().
+Jan 16 21:11:04 G530 hotplugd: enclosure_serialized_list_get.c:33 failed to enum enclosure lists
+Jan 16 21:11:04 G530 hotplugd: enclosure_list_cache_update.c:29 failed to get serialized enclosure list
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1363 Failed to update enclosure list cache.
+Jan 16 21:11:04 G530 hotplugd: disk_is_mv_soc_driver.c:72 Can't get sata chip name from pattern /sys/block/sdg/device/../../scsi_host/host*/proc_name
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/DiskApmSet.sh 255  /dev/sdg 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: disk/disk_config_single.c:168 apply /usr/syno/bin/syno_disk_ctl --wcache-off  /dev/sdg 1>/dev/null 2>&1
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1383 ==== SATA disk [sdg] Model: [WD20EARS-00MVWB0        ] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1384 ==== SATA disk [sdg] Serial number: [WD-WMAZA4913001] ====
+Jan 16 21:11:04 G530 hotplugd: hotplugd.c:1385 ==== SATA disk [sdg] Firmware version: [51.0AB51] ====
+Jan 16 21:11:06 G530 synocheckshare: servicecfg_internal_lib.c:355 skip reload stopping/stopped job [netatalk][0xD300 servicectl_job_reload.c:42]
+Jan 16 21:11:06 G530 synocheckshare: service_home_reload.c:91 Failed to reload 'atalk' [0xD300 servicectl_job_reload.c:42]
+Jan 16 21:11:06 G530 synocheckshare: synocheckshare.c:74 Failed to enable PGSQL [0x8300] 
+Jan 16 21:11:08 G530 root: No alive sharebin, pre-start process of php-fpm terminated
+Jan 16 21:11:08 G530 [   61.344332] init: php-fpm pre-start process (22413) terminated with status 1
+Jan 16 21:11:09 G530 kernel: [   62.229083] Get empty minor:105
+Jan 16 21:11:12 G530 S99zbootok.sh: all service finish boot up.
+Jan 16 21:11:12 G530 synofstool: fs_vol_expansible.c:36 device /dev/vg1000/lv with fs -1 not support resize.[0x0900 fs_type_get_from_disk.c:70]
+Jan 16 21:11:12 G530 servicetool: service_third_party.c:38 synoservice: start all packages ...
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 synopkg: pkgstartstop.cpp:147 Cannot start package [], version 
+Jan 16 21:11:12 G530 servicetool: service_third_party.c:57 synoservice: finish started all packages
+Jan 16 21:11:12 G530 root: == DSM finished boot up ==
+Jan 16 21:41:19 G530 synomkthumbd: synoidx_ipc_core.cpp:111 [Error] connect server: /tmp/synoindexplugind_sock
+Jan 16 21:41:19 G530 synomkthumbd: synomk_ipc.cpp:110 fail
+Jan 16 21:41:19 G530 synomkflvd: synoidx_ipc_core.cpp:111 [Error] connect server: /tmp/synoindexplugind_sock
+Jan 16 21:41:19 G530 synomkflvd: synomk_ipc.cpp:83 fail
+Jan 16 22:14:40 G530 umount: can't umount md0: No such file or directory
+
+[pvdisplay]
+
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Volume group "vg1000" not found
+  Skipping volume group vg1000
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Volume group "vg1000" not found
+  Skipping volume group vg1000
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Couldn't find device with uuid 'HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y'.
+  Couldn't find all physical volumes for volume group vg1000.
+  Volume group "vg1000" not found
+  Skipping volume group vg1000
+
+[/etc/lvm/backup/vg1000]
+
+# Generated by LVM2 version 2.02.38 (2008-06-11): Sat Jan 16 04:00:38 2016
+
+contents = "Text Format Volume Group"
+version = 1
+
+description = "Created *after* executing '/sbin/lvextend --alloc inherit /dev/vg1000/lv -l100%VG'"
+
+creation_host = "G530"	# Linux G530 3.10.35 #1 SMP Sat Dec 12 17:01:14 MSK 2015 x86_64
+creation_time = 1452938438	# Sat Jan 16 04:00:38 2016
+
+vg1000 {
+	id = "OJ3oNy-SLGN-RvdT-KLiG-jDs2-JbxB-4ommso"
+	seqno = 14
+	status = ["RESIZEABLE", "READ", "WRITE"]
+	extent_size = 8192		# 4 Megabytes
+	max_lv = 0
+	max_pv = 0
+
+	physical_volumes {
+
+		pv0 {
+			id = "8peoYO-TObT-0aOB-soTA-flZO-rySk-I9DTbB"
+			device = "/dev/md2"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 19486833408	# 9.07426 Terabytes
+			pe_start = 1152
+			pe_count = 2378763	# 9.07426 Terabytes
+		}
+
+		pv1 {
+			id = "HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y"
+			device = "/dev/md3"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 3906970496	# 1.81932 Terabytes
+			pe_start = 1152
+			pe_count = 476925	# 1.81932 Terabytes
+		}
+
+		pv2 {
+			id = "JgNxgM-8R3t-AO6s-DCRs-pR3x-Fk1z-3dyCXk"
+			device = "/dev/md4"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 1953485824	# 931.495 Gigabytes
+			pe_start = 1152
+			pe_count = 238462	# 931.492 Gigabytes
+		}
+	}
+
+	logical_volumes {
+
+		lv {
+			id = "d8HMle-nC1C-Cx9s-f6ml-d2Lm-mC3R-S1ZjfX"
+			status = ["READ", "WRITE", "VISIBLE"]
+			segment_count = 5
+
+			segment1 {
+				start_extent = 0
+				extent_count = 1427258	# 5.44456 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 0
+				]
+			}
+			segment2 {
+				start_extent = 1427258
+				extent_count = 238462	# 931.492 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 0
+				]
+			}
+			segment3 {
+				start_extent = 1665720
+				extent_count = 951505	# 3.6297 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 1427258
+				]
+			}
+			segment4 {
+				start_extent = 2617225
+				extent_count = 238463	# 931.496 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 238462
+				]
+			}
+			segment5 {
+				start_extent = 2855688
+				extent_count = 238462	# 931.492 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv2", 0
+				]
+			}
+		}
+	}
+}
+
+[/etc/lvm/archive/vg1000_* - starting with expansion of last disk]
+
+# vg1000_0012.vg
+# Generated by LVM2 version 2.02.38 (2008-06-11): Sat Jan 16 04:00:37 2016
+
+contents = "Text Format Volume Group"
+version = 1
+
+description = "Created *before* executing '/sbin/vgextend /dev/vg1000 /dev/md4'"
+
+creation_host = "G530"	# Linux G530 3.10.35 #1 SMP Sat Dec 12 17:01:14 MSK 2015 x86_64
+creation_time = 1452938437	# Sat Jan 16 04:00:37 2016
+
+vg1000 {
+	id = "OJ3oNy-SLGN-RvdT-KLiG-jDs2-JbxB-4ommso"
+	seqno = 12
+	status = ["RESIZEABLE", "READ", "WRITE"]
+	extent_size = 8192		# 4 Megabytes
+	max_lv = 0
+	max_pv = 0
+
+	physical_volumes {
+
+		pv0 {
+			id = "8peoYO-TObT-0aOB-soTA-flZO-rySk-I9DTbB"
+			device = "/dev/md2"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 19486833408	# 9.07426 Terabytes
+			pe_start = 1152
+			pe_count = 2378763	# 9.07426 Terabytes
+		}
+
+		pv1 {
+			id = "HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y"
+			device = "/dev/md3"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 3906970496	# 1.81932 Terabytes
+			pe_start = 1152
+			pe_count = 476925	# 1.81932 Terabytes
+		}
+	}
+
+	logical_volumes {
+
+		lv {
+			id = "d8HMle-nC1C-Cx9s-f6ml-d2Lm-mC3R-S1ZjfX"
+			status = ["READ", "WRITE", "VISIBLE"]
+			segment_count = 4
+
+			segment1 {
+				start_extent = 0
+				extent_count = 1427258	# 5.44456 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 0
+				]
+			}
+			segment2 {
+				start_extent = 1427258
+				extent_count = 238462	# 931.492 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 0
+				]
+			}
+			segment3 {
+				start_extent = 1665720
+				extent_count = 951505	# 3.6297 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 1427258
+				]
+			}
+			segment4 {
+				start_extent = 2617225
+				extent_count = 238463	# 931.496 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 238462
+				]
+			}
+		}
+	}
+}
+
+# vg1000_0013.vg
+# Generated by LVM2 version 2.02.38 (2008-06-11): Sat Jan 16 04:00:38 2016
+
+contents = "Text Format Volume Group"
+version = 1
+
+description = "Created *before* executing '/sbin/lvextend --alloc inherit /dev/vg1000/lv -l100%VG'"
+
+creation_host = "G530"	# Linux G530 3.10.35 #1 SMP Sat Dec 12 17:01:14 MSK 2015 x86_64
+creation_time = 1452938438	# Sat Jan 16 04:00:38 2016
+
+vg1000 {
+	id = "OJ3oNy-SLGN-RvdT-KLiG-jDs2-JbxB-4ommso"
+	seqno = 13
+	status = ["RESIZEABLE", "READ", "WRITE"]
+	extent_size = 8192		# 4 Megabytes
+	max_lv = 0
+	max_pv = 0
+
+	physical_volumes {
+
+		pv0 {
+			id = "8peoYO-TObT-0aOB-soTA-flZO-rySk-I9DTbB"
+			device = "/dev/md2"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 19486833408	# 9.07426 Terabytes
+			pe_start = 1152
+			pe_count = 2378763	# 9.07426 Terabytes
+		}
+
+		pv1 {
+			id = "HBo3L0-ZZqp-2ADK-CCSe-3IH8-mmEl-ca6y3Y"
+			device = "/dev/md3"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 3906970496	# 1.81932 Terabytes
+			pe_start = 1152
+			pe_count = 476925	# 1.81932 Terabytes
+		}
+
+		pv2 {
+			id = "JgNxgM-8R3t-AO6s-DCRs-pR3x-Fk1z-3dyCXk"
+			device = "/dev/md4"	# Hint only
+
+			status = ["ALLOCATABLE"]
+			dev_size = 1953485824	# 931.495 Gigabytes
+			pe_start = 1152
+			pe_count = 238462	# 931.492 Gigabytes
+		}
+	}
+
+	logical_volumes {
+
+		lv {
+			id = "d8HMle-nC1C-Cx9s-f6ml-d2Lm-mC3R-S1ZjfX"
+			status = ["READ", "WRITE", "VISIBLE"]
+			segment_count = 4
+
+			segment1 {
+				start_extent = 0
+				extent_count = 1427258	# 5.44456 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 0
+				]
+			}
+			segment2 {
+				start_extent = 1427258
+				extent_count = 238462	# 931.492 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 0
+				]
+			}
+			segment3 {
+				start_extent = 1665720
+				extent_count = 951505	# 3.6297 Terabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv0", 1427258
+				]
+			}
+			segment4 {
+				start_extent = 2617225
+				extent_count = 238463	# 931.496 Gigabytes
+
+				type = "striped"
+				stripe_count = 1	# linear
+
+				stripes = [
+					"pv1", 238462
+				]
+			}
+		}
+	}
+}
+
