@@ -1,54 +1,60 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wrong device name after hot-swap
-Date: Fri, 22 Jan 2016 17:27:00 -0500
-Message-ID: <56A2ACB4.6060808@turmel.org>
-References: <n7u8gr$1bv$1@ger.gmane.org>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: md failing mechanism
+Date: Fri, 22 Jan 2016 16:37:06 -0600
+Message-ID: <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
+References: <56A26E11.2090703@yandex.ru>
+	<56A28309.9080806@turmel.org>
+	<56A2A2C3.9000801@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <n7u8gr$1bv$1@ger.gmane.org>
+In-Reply-To: <56A2A2C3.9000801@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul van der Vlis <paul@vandervlis.nl>, linux-raid@vger.kernel.org
+To: Dark Penguin <darkpenguin@yandex.ru>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/22/2016 04:55 PM, Paul van der Vlis wrote:
-> Hello,
-> 
-> I want to put bigger disks into my server. What I want to do is replace
-> the first disk, rebuild the raid, replace the second disk, rebuild the
-> raid. The machine has two disks, sda and sdb.
-> 
-> But, when I replace a disk, it gets a new device name. E.g. /dev/sdb
-> becomes /dev/sdc. After a reboot it's good again, but I prefer not to
-> reboot this machine!
-> 
-> Is there a way to get the correct device name?
+On Fri, Jan 22, 2016 at 3:44 PM, Dark Penguin <darkpenguin@yandex.ru> wrote:
+> And also, now I understand why I probably "should have been scrubbing". =/
 
-No.  Device names are assigned in the order they are encountered after
-boot, and that order is not guaranteed by the kernel.  You should never
-depend on those names.
+Depending on your distribution, you may have been scrubbing all along.
+When I looked into this, I discovered that mdadm as bundled in Fedora
+(at least as of 21) already scrubs weekly:
 
-When a device name is fully disconnected, modern kernels will recycle
-the name at the next opportunity.  You must be using a hotplug-enabled
-driver.  For most motherboards, turning on "AHCI" mode in the BIOS on
-those sata ports is all you need.
+$ rpm -ql mdadm | grep /etc
+/etc/cron.d/raid-check
+/etc/libreport/events.d/mdadm_event.conf
+/etc/sysconfig/raid-check
 
-> When not:
-> Is it maybe an idea too add the wrong device name to the md-device?
-> mdadm /dev/md0 -a /dev/sdc1
-> Then replace /dev/sda what becomes /dev/sdd:
-> mdadm /dev/md0 -a /dev/sdd1
-> Then restore grub on both disks (with "--recheck" ??)
-> But what will happen after a reboot later? Will the md-device be
-> restored with the old names?
+$ cat /etc/cron.d/raid-check
+# Run system wide raid-check once a week on Sunday at 1am by default
+0 1 * * Sun root /usr/sbin/raid-check
 
-MD stores signatures in the devices it uses that identify them for later
-assembly.  It does not depend on the device name, though it is recorded
-in the superblock as a "last connected as" kind of indicator.
+Sweet!  I was pleased to discovered this when I realized I had been
+lax.  The /usr/sbin/raid-check script does scrubbing, as configured by
+/etc/sysconfig/raid-check.  I looked in /var/log/messages and indeed
+saw evidence of successful weekly scrubbing.
 
-In general, you should not rely on device names in your system
-configuration.  UUIDs and filesystem labels were implemented
-specifically to avoid this problem.
+Notice that if you have problems with timeouts, then this scrubbing
+can break your array by causing you to hit a bad sector and fail as
+Phil and others have described in several of his referenced EMails.
+But better to fail early while only one drive is bad than to discover
+this after more than one drive has problems and your data is
+irrecoverable.  I had a mirror where one drive kept falling out.  I
+now understand why.  (Weekly scrubbing + dodgy drives + no attempt to
+address the timeouts == occasional unnecessary failure.)
 
-Phil
+> As I understand, one way around this problem is to change the kernel timeout
+> to exceed the drive timeout by changing /sys/block/sd?/device/timeout to
+> something larger than the default 30, but I'd have to do that after every
+> reboot, is all that correct?
+
+I took the script from this Email:
+
+https://www.marc.info/?l=linux-raid&m=144661276420400&w=2
+
+and dropped that code in my /etc/rc.d/rc.local after verifying that my
+Linux distribution still ran that script on every startup.  YMMV.
+That solved my problem.  Good luck.
+
+             Eddie
