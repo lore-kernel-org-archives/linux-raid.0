@@ -1,56 +1,86 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: broken raid level 5 array caused by user error
-Date: Fri, 22 Jan 2016 14:13:34 -0500
-Message-ID: <56A27F5E.1000602@turmel.org>
-References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
- <56426499.8000205@turmel.org>
- <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
- <564284F5.9080409@turmel.org>
- <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
- <56429326.5030405@turmel.org>
- <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
- <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
- <569D384F.6070208@turmel.org>
- <bb6cce6b0d5bb6c653ef94e4a58388cf@pingofdeath.de>
- <569E77AF.6040906@turmel.org> <569E905D.9010606@turmel.org>
- <15c75ec959427ae31d36912854b6debd@pingofdeath.de>
- <34ad7f74bc9fdc37aab022054d8d856e@pingofdeath.de>
- <56A263F4.8020307@turmel.org>
- <9ce1b753a3839866f6ea309465e1fec2@pingofdeath.de>
+From: George Rapp <george.rapp@gmail.com>
+Subject: Re: RAID 6 "Failed to restore critical section for reshape, sorry." -
+ recovery advice?
+Date: Fri, 22 Jan 2016 14:24:59 -0500
+Message-ID: <CAF-Kpgb8W0Buy=XM0KUai_Y35xDmnTZz5Ar43UuzRpv4CSEYCQ@mail.gmail.com>
+References: <CAF-Kpgb57-LoNy=-jy76ZcE=YPABmARzfsHNitJNZyw3v2AShw@mail.gmail.com>
+ <alpine.DEB.2.02.1512100918520.20919@uplift.swm.pp.se> <CAF-KpgaLr-qA_RJiDYstFv-=EoHH-Ea3o1q3G3tXC4nX=Wt2XA@mail.gmail.com>
+ <CAF-KpgYe9Vxgcy2E5T1_9HdEM0YMfATMzN7WcjHra_EE+sOOTg@mail.gmail.com>
+ <87d1u060sv.fsf@notabene.neil.brown.name> <CAF-Kpga8toqetF+g6wYbUVHKngkRB8QMTyRy39Jnxn0P6w8ouQ@mail.gmail.com>
+ <871tad3o2q.fsf@notabene.neil.brown.name> <CAF-KpgZ=HY_HKvj5buFOKseUV0GLeOLR1m3B0EYxrYcD3R5ieA@mail.gmail.com>
+ <87r3hyxf69.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9ce1b753a3839866f6ea309465e1fec2@pingofdeath.de>
+In-Reply-To: <87r3hyxf69.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias Mueller <raidfail@gmx.de>
-Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/22/2016 12:39 PM, Mathias Mueller wrote:
-> Hi Phil,
-> 
-> you are the man! The first one is working!
+On Sun, Jan 3, 2016 at 9:16 PM, NeilBrown <neilb@suse.com> wrote:
+> On Sun, Dec 27 2015, George Rapp wrote:
+>
+> If you apply the following patch to mdadm (
+>    git clone git://neil.brown.name/mdadm
+>    apply patch
+>    make
+> ) and then try to assemble with --update=revert-reshape, it should
+> assemble as a 5-device array with no reshape happening.
+>
+> I probably want more safety checks before this goes upstream, but it
+> is safe enough for you.
+>
+> [patch snipped]
+>
 
-Ah, that's good.
+I've replied privately to Neil, but for list archive purposes, his
+patch solved my problem.
 
-> So please tell me, where does the beer delivery goes to? :)
+After applying his patch, I used the custom-build version of mdadm to
+assemble my array:
 
-Sadly, it's hard to ship beer here in the US without government involvement.
+# UUID=$(mdadm -E /dev/sdd4 | perl -ne '/Array UUID : (\S+)/ and print $1')
+# DEVICES=$(cat /proc/partitions | parallel --tagstring {5} --colsep '
++' mdadm -E /dev/{5} |grep $UUID | parallel --colsep '\t' echo
+/dev/{1})
+# ./mdadm --assemble --verbose --update=revert-reshape /dev/md4 $DEVICES
+mdadm: looking for devices for /dev/md4
+mdadm: /dev/sdd4 is identified as a member of /dev/md4, slot 0.
+mdadm: /dev/sdc4 is identified as a member of /dev/md4, slot 1.
+mdadm: /dev/sdg4 is identified as a member of /dev/md4, slot 2.
+mdadm: /dev/sdh1 is identified as a member of /dev/md4, slot 3.
+mdadm: /dev/sdi1 is identified as a member of /dev/md4, slot 5.
+mdadm: /dev/sdj1 is identified as a member of /dev/md4, slot 4.
+mdadm: device 10 in /dev/md4 has wrong state in superblock, but
+/dev/sdi1 seems ok
+mdadm: added /dev/sdc4 to /dev/md4 as 1
+mdadm: added /dev/sdg4 to /dev/md4 as 2
+mdadm: added /dev/sdh1 to /dev/md4 as 3
+mdadm: added /dev/sdj1 to /dev/md4 as 4
+mdadm: added /dev/sdi1 to /dev/md4 as 5
+mdadm: added /dev/sdd4 to /dev/md4 as 0
+mdadm: /dev/md4 has been started with 5 drives and 1 spare.
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md4 : active raid6 sdd4[0] sdi1[8](S) sdj1[7] sdh1[6] sdg4[5] sdc4[1]
+      5756723712 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5] [UUUUU]
+      bitmap: 0/15 pages [0KB], 65536KB chunk
 
-> Thank you so much, especially for so much patience with the dumbest user
-> on earth.
+For future reference, I would highly recommend executing
 
-You're welcome.  But don't put yourself down -- it was your idea to
-search for parts of a known file, after all.
+# setenforce 0
 
-> Mathias
-> 
-> PS: I'm serious with the beer or whatever you prefer
+or, if you're really paranoid, disabling SELinux completely
+- edit /etc/sysconfig/selinux and add or modify this line:
+SELINUX=disabled
+- # touch /.relabel
+- # systemctl reboot
+(and go get a cup of coffee while your filesystem gets relabeled)
 
-A modest tip via paypal would be fine, if you insist.  Or something from
-my public wishlist:
+before making any metadata changes on a RAID 6 array.
 
-http://smile.amazon.com/registry/wishlist/2EE91JWNIYSC3
-
-Phil
+Thanks again, Neil and members of the Linux-RAID community!
+-- 
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
