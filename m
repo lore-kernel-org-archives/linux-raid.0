@@ -1,64 +1,56 @@
-From: Dark Penguin <darkpenguin@yandex.ru>
-Subject: md failing mechanism
-Date: Fri, 22 Jan 2016 20:59:45 +0300
-Message-ID: <56A26E11.2090703@yandex.ru>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: broken raid level 5 array caused by user error
+Date: Fri, 22 Jan 2016 14:13:34 -0500
+Message-ID: <56A27F5E.1000602@turmel.org>
+References: <3c05d813e42324cdf95989784f6d7b17@pingofdeath.de>
+ <56426499.8000205@turmel.org>
+ <ceee2de5aba3ca77efc1146e19896b90@pingofdeath.de>
+ <564284F5.9080409@turmel.org>
+ <b0cdddd4394bbc1356980bb61ac199c3@pingofdeath.de>
+ <56429326.5030405@turmel.org>
+ <a7d58e8e4c319c320bc531b8d2bf11e7@pingofdeath.de>
+ <44d28ec402622b25c4d4d7a32a8888d9@pingofdeath.de>
+ <569D384F.6070208@turmel.org>
+ <bb6cce6b0d5bb6c653ef94e4a58388cf@pingofdeath.de>
+ <569E77AF.6040906@turmel.org> <569E905D.9010606@turmel.org>
+ <15c75ec959427ae31d36912854b6debd@pingofdeath.de>
+ <34ad7f74bc9fdc37aab022054d8d856e@pingofdeath.de>
+ <56A263F4.8020307@turmel.org>
+ <9ce1b753a3839866f6ea309465e1fec2@pingofdeath.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <9ce1b753a3839866f6ea309465e1fec2@pingofdeath.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mathias Mueller <raidfail@gmx.de>
+Cc: Linux raid <linux-raid@vger.kernel.org>, linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings,
+On 01/22/2016 12:39 PM, Mathias Mueller wrote:
+> Hi Phil,
+> 
+> you are the man! The first one is working!
 
-Recently, I've had my first drive failure in a software RAID1 on a file 
-server. And I was really surprised about exactly what happened; I always 
-thought that when md can't process a read request from one of the 
-drives, it is supposed to mark that drive as faulty and read from 
-another drive; but, for some reason, it was deliberately trying to read 
-from a faulty drive no matter what, which apparently caused Samba to 
-wait until it's finished, and so the whole server was rendered 
-inaccessible (I mean, the whole Samba).
+Ah, that's good.
 
+> So please tell me, where does the beer delivery goes to? :)
 
-What I expected:
-- A user tries to read a file via Samba.
-- Samba issues a read request to md.
-- md tries to read the file from one of the drives... the drive is 
-struggling to read a bad sector...
-- md thinks: okay, this is taking too long, production is not waiting; 
-I'll just read from another drive instead.
-- It reads from another drive successfully, and users continue their work.
-- Finally, the "bad" drive gives up on trying to read the bad sector and 
-returns an error. md marks the drive as faulty and sends an email 
-telling me to replace the drive as soon as possible.
+Sadly, it's hard to ship beer here in the US without government involvement.
 
+> Thank you so much, especially for so much patience with the dumbest user
+> on earth.
 
-What happened instead:
-- A user tries to read a file via Samba.
-- Samba issues a read request to md.
-- md tries to read the file from one of the drives... the drive is 
-struggling to read a bad sector... Samba is waiting for md, md is 
-waiting for the drive, and the drive is trying again and again to read 
-this blasted sector like its life depends on it, while users see that 
-the network folder doesn't respond anymore at all.
+You're welcome.  But don't put yourself down -- it was your idea to
+search for parts of a known file, after all.
 
-This goes on forever, until users call me, I come to investigate, see 
-Samba down, see a lot of errors in dmesg, and then I manually mark this 
-drive as faulty.
+> Mathias
+> 
+> PS: I'm serious with the beer or whatever you prefer
 
+A modest tip via paypal would be fine, if you insist.  Or something from
+my public wishlist:
 
-Now, that happened a while ago; I did not have the most recent kernel on 
-that server (I think it was 3.2 from Debian Wheezy or something a little 
-newer from the backports), but I can't try it again with a new server, 
-because I can't make a functional RAID1, write data there, and then 
-destroy some sectors and see what happens. I just want to ask, is that 
-really how it works?.. Was that supposed to happen?.. I thought the main 
-point of a RAID1 is to avoid any downtime, especially in such cases!.. 
-Or is it maybe a known issue fixed in the more recent versions, so I 
-should just update my kernels and expect different behaviour next time?..
+http://smile.amazon.com/registry/wishlist/2EE91JWNIYSC3
 
-
--- 
-darkpenguin
+Phil
