@@ -1,81 +1,54 @@
-From: Paul van der Vlis <paul@vandervlis.nl>
-Subject: Re: Wrong device name after hot-swap
-Date: Sat, 23 Jan 2016 00:15:35 +0100
-Message-ID: <n7ud6o$b1f$1@ger.gmane.org>
-References: <n7u8gr$1bv$1@ger.gmane.org> <56A2ACB4.6060808@turmel.org>
+From: Edward Kuns <eddie.kuns@gmail.com>
+Subject: Re: md failing mechanism
+Date: Fri, 22 Jan 2016 17:23:05 -0600
+Message-ID: <CACsGCyQXdwdqfKnKt73ZP_A3k91T-Hi386dhDitC7zAB6f+6Qw@mail.gmail.com>
+References: <56A26E11.2090703@yandex.ru>
+	<56A28309.9080806@turmel.org>
+	<56A2A2C3.9000801@yandex.ru>
+	<56A2AAB1.6070305@turmel.org>
+	<56A2B223.7060804@yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2ACB4.6060808@turmel.org>
+In-Reply-To: <56A2B223.7060804@yandex.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dark Penguin <darkpenguin@yandex.ru>
+Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Op 22-01-16 om 23:27 schreef Phil Turmel:
-> On 01/22/2016 04:55 PM, Paul van der Vlis wrote:
->> Hello,
->>
->> I want to put bigger disks into my server. What I want to do is replace
->> the first disk, rebuild the raid, replace the second disk, rebuild the
->> raid. The machine has two disks, sda and sdb.
->>
->> But, when I replace a disk, it gets a new device name. E.g. /dev/sdb
->> becomes /dev/sdc. After a reboot it's good again, but I prefer not to
->> reboot this machine!
->>
->> Is there a way to get the correct device name?
-> 
-> No.  Device names are assigned in the order they are encountered after
-> boot, and that order is not guaranteed by the kernel.  You should never
-> depend on those names.
-> 
-> When a device name is fully disconnected, modern kernels will recycle
-> the name at the next opportunity.  
+On Fri, Jan 22, 2016 at 4:50 PM, Dark Penguin <darkpenguin@yandex.ru> wrote:
+>> the recommended timeout for 'C' has drifted upward to 180.
+>
+> Yes, I saw this; but, is it really not possible to examine the default
+> timeout in a certain desktop drive, rather than follow rough estimates like
+> "about two of three minutes should be enough"?
 
-Correct, I see that with USB-sticks.
+When I asked something similar in
+https://www.marc.info/?l=linux-raid&m=144666581206186&w=2 the answers
+I got
 
-> You must be using a hotplug-enabled
-> driver.  For most motherboards, turning on "AHCI" mode in the BIOS on
-> those sata ports is all you need.
+https://www.marc.info/?l=linux-raid&m=144666614306348&w=2
+https://www.marc.info/?l=linux-raid&m=144666776906740&w=2
 
-I have that. I am using an Intel chipset:
+indicated that you just need the kernel timeout to be longer than the
+disk timeout.  *Anything* longer is good.  It just has to be longer.
+You want the *disk* to return a complaint.  You don't want the driver
+to time out before the disk has had the opportunity to complain.  The
+point of setting SCTERC to 7 seconds is to force the *drive* (not
+kernel) to give up quickly and complain.  That'll force a rebuild,
+rewriting the sector in question and remapping the bad sector on the
+drive with the failure.  (If I've misunderstood this hopefully someone
+much more expert will correct me!)  If you can't configure the drive
+to give up quickly on a read error, then your remaining alternative is
+to tell the kernel to wait (effectively) forever (180 sec) to allow
+the drive enough time to give up on its own.
 
-00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset
-Family SATA AHCI Controller (rev 05)
+Regarding disabling scrubbing, I'd say that even with disabled SCTERC
+(TL;DR haha) and bad default timeouts, it's still better for the array
+to fail right away when you only have a single bad sector on a single
+drive.  If you let it wait, you run the risk of developing a bad
+sector on another drive, so that when you hit the first bad sector
+through usage and the drive fails and you trigger a rebuild, you hit
+the bad sector on the other drive and *bam* you're toast.
 
->> When not:
->> Is it maybe an idea too add the wrong device name to the md-device?
->> mdadm /dev/md0 -a /dev/sdc1
->> Then replace /dev/sda what becomes /dev/sdd:
->> mdadm /dev/md0 -a /dev/sdd1
->> Then restore grub on both disks (with "--recheck" ??)
->> But what will happen after a reboot later? Will the md-device be
->> restored with the old names?
-> 
-> MD stores signatures in the devices it uses that identify them for later
-> assembly.  It does not depend on the device name, though it is recorded
-> in the superblock as a "last connected as" kind of indicator.
-
-So I can do it as described above?
-
-> In general, you should not rely on device names in your system
-> configuration.  UUIDs and filesystem labels were implemented
-> specifically to avoid this problem.
-
-So far I know I cannot configure anywhere a disk UUID or a filesytem
-label to a MD-device.
-
-It feels wrong when I add /dev/sdc1 to the raid, when the name is
-normally /dev/sdb1. But maybe it's no problem, because the device name
-is not impartant while booting from an MD-device.
-
-With regards,
-Paul van der VLis.
-
-
-
--- 
-Paul van der Vlis Linux systeembeheer Groningen
-https://www.vandervlis.nl/
-
+               Eddie
