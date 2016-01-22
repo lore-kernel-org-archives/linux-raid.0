@@ -1,60 +1,53 @@
-From: Edward Kuns <eddie.kuns@gmail.com>
+From: Dark Penguin <darkpenguin@yandex.ru>
 Subject: Re: md failing mechanism
-Date: Fri, 22 Jan 2016 16:37:06 -0600
-Message-ID: <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
-References: <56A26E11.2090703@yandex.ru>
-	<56A28309.9080806@turmel.org>
-	<56A2A2C3.9000801@yandex.ru>
+Date: Sat, 23 Jan 2016 01:50:11 +0300
+Message-ID: <56A2B223.7060804@yandex.ru>
+References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <56A2AAB1.6070305@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2A2C3.9000801@yandex.ru>
+In-Reply-To: <56A2AAB1.6070305@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 22, 2016 at 3:44 PM, Dark Penguin <darkpenguin@yandex.ru> wrote:
-> And also, now I understand why I probably "should have been scrubbing". =/
+>> C) Suffer with desktop drives without SCTERC support. They cannot be
+>> set to appropriate error timeouts. Udev or boot script assistance is
+>> needed to set a 120 second driver timeout in sysfs. They do *not* work
+>> properly with MD out of the box.
 
-Depending on your distribution, you may have been scrubbing all along.
-When I looked into this, I discovered that mdadm as bundled in Fedora
-(at least as of 21) already scrubs weekly:
+ > the recommended timeout for 'C' has drifted upward to 180.
 
-$ rpm -ql mdadm | grep /etc
-/etc/cron.d/raid-check
-/etc/libreport/events.d/mdadm_event.conf
-/etc/sysconfig/raid-check
+Yes, I saw this; but, is it really not possible to examine the default 
+timeout in a certain desktop drive, rather than follow rough estimates 
+like "about two of three minutes should be enough"?.. I wanted to make 
+sure it is indeed not possible, because that is hard to believe. Or do 
+they not have a specified timeout at all?..
 
-$ cat /etc/cron.d/raid-check
-# Run system wide raid-check once a week on Sunday at 1am by default
-0 1 * * Sun root /usr/sbin/raid-check
 
-Sweet!  I was pleased to discovered this when I realized I had been
-lax.  The /usr/sbin/raid-check script does scrubbing, as configured by
-/etc/sysconfig/raid-check.  I looked in /var/log/messages and indeed
-saw evidence of successful weekly scrubbing.
+> Since that was written, 'A' would now include almost-enterprise drives
+> with RAID ratings like the Western Digital Red family.
 
-Notice that if you have problems with timeouts, then this scrubbing
-can break your array by causing you to hit a bad sector and fail as
-Phil and others have described in several of his referenced EMails.
-But better to fail early while only one drive is bad than to discover
-this after more than one drive has problems and your data is
-irrecoverable.  I had a mirror where one drive kept falling out.  I
-now understand why.  (Weekly scrubbing + dodgy drives + no attempt to
-address the timeouts == occasional unnecessary failure.)
+Yes, I understand that; always make sure they support it.
 
-> As I understand, one way around this problem is to change the kernel timeout
-> to exceed the drive timeout by changing /sys/block/sd?/device/timeout to
-> something larger than the default 30, but I'd have to do that after every
-> reboot, is all that correct?
 
-I took the script from this Email:
+>> Still, I don't think it has anything to do with what has happened to my
+>> "small file server"...
+>
+> That's why I asked for the dmesg.  It could have been a bug.  No crisis
+> if it's lost, so long as you've accepted one of A through D above.
 
-https://www.marc.info/?l=linux-raid&m=144661276420400&w=2
+I've moved all the data to another server, disassembled this one, and 
+reused the surviving hard drive, so I'm safe, but sadly, no logs. The 
+important thing is, I've confirmed that this is not the expected 
+behaviour - I was kind of ready to hear that "that's how it is with 
+softraids, faulty drives hang your entire system like they hang Windows".
 
-and dropped that code in my /etc/rc.d/rc.local after verifying that my
-Linux distribution still ran that script on every startup.  YMMV.
-That solved my problem.  Good luck.
+I've checked all my hard drives in all my RAIDs; all of them support 
+"TL;DR" technology. They were all made before the "crippling" tendencies 
+took over, and they are mostly Hitachi, so I'm lucky.
 
-             Eddie
+
+-- 
+darkpenguin
