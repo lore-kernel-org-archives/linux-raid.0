@@ -1,46 +1,81 @@
-From: Dark Penguin <darkpenguin@yandex.ru>
-Subject: Re: md failing mechanism
-Date: Sat, 23 Jan 2016 02:07:37 +0300
-Message-ID: <56A2B639.7000902@yandex.ru>
-References: <56A26E11.2090703@yandex.ru>	<56A28309.9080806@turmel.org>	<56A2A2C3.9000801@yandex.ru> <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
+From: Paul van der Vlis <paul@vandervlis.nl>
+Subject: Re: Wrong device name after hot-swap
+Date: Sat, 23 Jan 2016 00:15:35 +0100
+Message-ID: <n7ud6o$b1f$1@ger.gmane.org>
+References: <n7u8gr$1bv$1@ger.gmane.org> <56A2ACB4.6060808@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
+In-Reply-To: <56A2ACB4.6060808@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Depending on your distribution, you may have been scrubbing all along.
+Op 22-01-16 om 23:27 schreef Phil Turmel:
+> On 01/22/2016 04:55 PM, Paul van der Vlis wrote:
+>> Hello,
+>>
+>> I want to put bigger disks into my server. What I want to do is replace
+>> the first disk, rebuild the raid, replace the second disk, rebuild the
+>> raid. The machine has two disks, sda and sdb.
+>>
+>> But, when I replace a disk, it gets a new device name. E.g. /dev/sdb
+>> becomes /dev/sdc. After a reboot it's good again, but I prefer not to
+>> reboot this machine!
+>>
+>> Is there a way to get the correct device name?
+> 
+> No.  Device names are assigned in the order they are encountered after
+> boot, and that order is not guaranteed by the kernel.  You should never
+> depend on those names.
+> 
+> When a device name is fully disconnected, modern kernels will recycle
+> the name at the next opportunity.  
 
- > Notice that if you have problems with timeouts, then this scrubbing
- > can break your array by causing you to hit a bad sector and fail as
- > Phil and others have described in several of his referenced EMails.
+Correct, I see that with USB-sticks.
 
-I remember disabling scrubbing myself. My reasons were not very... 
-bright, but now it turned out to be a it's a good thing, because with 
-TL;DR disabled by default, it could lead to that kind of bad things 
-happening, yes. I remember having one drive kicked out of an array in my 
-home storage, and since then, I've learned to use write-intent bitmaps 
-to re-add them more easily. But I'm a BAARF person, so I only have 
-mirrors; I wonder what happens if the only drive in a degraded mirror 
-fails?..
+> You must be using a hotplug-enabled
+> driver.  For most motherboards, turning on "AHCI" mode in the BIOS on
+> those sata ports is all you need.
 
+I have that. I am using an Intel chipset:
 
-> I took the script from this Email:
->
-> https://www.marc.info/?l=linux-raid&m=144661276420400&w=2
->
-> and dropped that code in my /etc/rc.d/rc.local after verifying that my
-> Linux distribution still ran that script on every startup.  YMMV.
-> That solved my problem.  Good luck.
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset
+Family SATA AHCI Controller (rev 05)
 
-I was afraid to learn that my latest pack of drives are modern enough to 
-be castrated already, but it turned out they are not. :) My anime is 
-safe with the last 5900RPM Hitachi drives available, and they do support 
-TL;DR. I wish Hitachi made more 5900RPM drives for such purposes...
+>> When not:
+>> Is it maybe an idea too add the wrong device name to the md-device?
+>> mdadm /dev/md0 -a /dev/sdc1
+>> Then replace /dev/sda what becomes /dev/sdd:
+>> mdadm /dev/md0 -a /dev/sdd1
+>> Then restore grub on both disks (with "--recheck" ??)
+>> But what will happen after a reboot later? Will the md-device be
+>> restored with the old names?
+> 
+> MD stores signatures in the devices it uses that identify them for later
+> assembly.  It does not depend on the device name, though it is recorded
+> in the superblock as a "last connected as" kind of indicator.
+
+So I can do it as described above?
+
+> In general, you should not rely on device names in your system
+> configuration.  UUIDs and filesystem labels were implemented
+> specifically to avoid this problem.
+
+So far I know I cannot configure anywhere a disk UUID or a filesytem
+label to a MD-device.
+
+It feels wrong when I add /dev/sdc1 to the raid, when the name is
+normally /dev/sdb1. But maybe it's no problem, because the device name
+is not impartant while booting from an MD-device.
+
+With regards,
+Paul van der VLis.
+
 
 
 -- 
-darkpenguin
+Paul van der Vlis Linux systeembeheer Groningen
+https://www.vandervlis.nl/
+
