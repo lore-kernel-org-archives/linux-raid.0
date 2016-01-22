@@ -1,52 +1,45 @@
 From: Dark Penguin <darkpenguin@yandex.ru>
 Subject: Re: md failing mechanism
-Date: Sat, 23 Jan 2016 01:50:11 +0300
-Message-ID: <56A2B223.7060804@yandex.ru>
-References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <56A2AAB1.6070305@turmel.org>
+Date: Sat, 23 Jan 2016 02:07:37 +0300
+Message-ID: <56A2B639.7000902@yandex.ru>
+References: <56A26E11.2090703@yandex.ru>	<56A28309.9080806@turmel.org>	<56A2A2C3.9000801@yandex.ru> <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2AAB1.6070305@turmel.org>
+In-Reply-To: <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> C) Suffer with desktop drives without SCTERC support. They cannot be
->> set to appropriate error timeouts. Udev or boot script assistance is
->> needed to set a 120 second driver timeout in sysfs. They do *not* work
->> properly with MD out of the box.
+> Depending on your distribution, you may have been scrubbing all along.
 
- > the recommended timeout for 'C' has drifted upward to 180.
+ > Notice that if you have problems with timeouts, then this scrubbing
+ > can break your array by causing you to hit a bad sector and fail as
+ > Phil and others have described in several of his referenced EMails.
 
-Yes, I saw this; but, is it really not possible to examine the default 
-timeout in a certain desktop drive, rather than follow rough estimates 
-like "about two of three minutes should be enough"?.. I wanted to make 
-sure it is indeed not possible, because that is hard to believe. Or do 
-they not have a specified timeout at all?..
-
-
-> Since that was written, 'A' would now include almost-enterprise drives
-> with RAID ratings like the Western Digital Red family.
-
-Yes, I understand that; always make sure they support it.
+I remember disabling scrubbing myself. My reasons were not very... 
+bright, but now it turned out to be a it's a good thing, because with 
+TL;DR disabled by default, it could lead to that kind of bad things 
+happening, yes. I remember having one drive kicked out of an array in my 
+home storage, and since then, I've learned to use write-intent bitmaps 
+to re-add them more easily. But I'm a BAARF person, so I only have 
+mirrors; I wonder what happens if the only drive in a degraded mirror 
+fails?..
 
 
->> Still, I don't think it has anything to do with what has happened to my
->> "small file server"...
+> I took the script from this Email:
 >
-> That's why I asked for the dmesg.  It could have been a bug.  No crisis
-> if it's lost, so long as you've accepted one of A through D above.
+> https://www.marc.info/?l=linux-raid&m=144661276420400&w=2
+>
+> and dropped that code in my /etc/rc.d/rc.local after verifying that my
+> Linux distribution still ran that script on every startup.  YMMV.
+> That solved my problem.  Good luck.
 
-I've moved all the data to another server, disassembled this one, and 
-reused the surviving hard drive, so I'm safe, but sadly, no logs. The 
-important thing is, I've confirmed that this is not the expected 
-behaviour - I was kind of ready to hear that "that's how it is with 
-softraids, faulty drives hang your entire system like they hang Windows".
-
-I've checked all my hard drives in all my RAIDs; all of them support 
-"TL;DR" technology. They were all made before the "crippling" tendencies 
-took over, and they are mostly Hitachi, so I'm lucky.
+I was afraid to learn that my latest pack of drives are modern enough to 
+be castrated already, but it turned out they are not. :) My anime is 
+safe with the last 5900RPM Hitachi drives available, and they do support 
+TL;DR. I wish Hitachi made more 5900RPM drives for such purposes...
 
 
 -- 
