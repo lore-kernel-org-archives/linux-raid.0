@@ -1,54 +1,59 @@
-From: Wols Lists <antlists@youngman.org.uk>
+From: Dark Penguin <darkpenguin@yandex.ru>
 Subject: Re: md failing mechanism
-Date: Fri, 22 Jan 2016 20:00:02 +0000
-Message-ID: <56A28A42.8060707@youngman.org.uk>
+Date: Sat, 23 Jan 2016 00:44:35 +0300
+Message-ID: <56A2A2C3.9000801@yandex.ru>
 References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <56A28309.9080806@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/01/16 19:29, Phil Turmel wrote:
-> What you've described does sound like a bug, maybe.  It also sounds
-> similar to traditional timeout mismatch caused by cheap desktop drives
-> used in a raid array.
+Oh! Thank you! I really wanted to see a reliable "what's supposed to 
+happen" sequence!
 
-man smartctl
+As for my case, those were indeed, um, "cheap desktop drives" - to be 
+precise, some 80-Gb IDE drives in a Pentium-4 machine; "it works well 
+for a small file server", I thought, oblivious to the finer details 
+about the process of failure handling... But, I also have "big" file 
+servers, so that timeout mismatch issue is something worth paying attention!
 
-smartctl -i /dev/sd-dodgy-drive
-
-If I run that on my drives I get
-
-smartctl 6.4 2015-06-04 r4109 [x86_64-linux-4.1.12-gentoo] (local build)
-Copyright (C) 2002-15, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=== START OF INFORMATION SECTION ===
-Model Family:     Seagate Barracuda 7200.14 (AF)
-Device Model:     ST3000DM001-1CH166
-Serial Number:    W1F50K0F
-LU WWN Device Id: 5 000c50 0737a98a4
-Firmware Version: CC27
-User Capacity:    3,000,592,982,016 bytes [3.00 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    7200 rpm
-Form Factor:      3.5 inches
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   ACS-2, ACS-3 T13/2161-D revision 3b
-SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 3.0 Gb/s)
-Local Time is:    Fri Jan 22 19:56:47 2016 GMT
-SMART support is: Available - device has SMART capability.
-SMART support is: Disabled
+And also, now I understand why I probably "should have been scrubbing". 
+=/ Do I understand correctly that "scrubbing" means those "monthly 
+redundancy checks" that mdadm suggests? And I suppose what it does is 
+just the same - read every sector and attempt to write it back upon 
+failure, otherwise kicking the device?
 
 
-NOTE THAT SMART SUPPORT IS DISABLED.
+So, I understand a common problem now: the read timeout on the "desktop" 
+drives is too long, which makes sense for the desktops, but not for 
+RAIDs, because the "write back attempt" fails and leads to "BOOM" and 
+kick. Enterprise-grade drives, however, offer an option to change their 
+timeout, which is called "TL;DR technology" (yes, that's how I'm going 
+to call it! Because I can't remember the acronym no matter how may times 
+I read it, and the meaning kinda fits!). And what about drives that do 
+not support it?.. Do they even have some kid of huge timeout or 
+something?.. Yesterday I've been checking one drive for bad blocks 
+(badblocks read-only test), and it took no more than two seconds per 
+block to confirm its... badness!
 
-Yes I know I'm running with dodgy drives and a dodgy config, but smart
-support should be enabled and things like ERC should be turned on. If
-they're not ...
+As I understand, one way around this problem is to change the kernel 
+timeout to exceed the drive timeout by changing 
+/sys/block/sd?/device/timeout to something larger than the default 30, 
+but I'd have to do that after every reboot, is all that correct?
 
-Cheers,
-Wol
+
+Still, I don't think it has anything to do with what has happened to my 
+"small file server"... It was the opposite; for some reason, it was not 
+kicked from the array. But, it happened a while ago, and I've destroyed 
+the array afterwards, so I can't get any more data about that incident. 
+But, I've got what I wanted: I now I know what is supposed to happen 
+when a drive in a RAID fails, and it's not what happened that time. And 
+I know I should set up proper TL;DR timeouts and scrubbing...
+
+
+-- 
+darkpenguin
