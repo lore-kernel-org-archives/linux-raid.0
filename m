@@ -1,62 +1,43 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: md failing mechanism
-Date: Fri, 22 Jan 2016 19:44:55 -0500
-Message-ID: <56A2CD07.9000804@turmel.org>
-References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org>
- <56A2A2C3.9000801@yandex.ru> <56A2BDF7.7020101@shiftmail.org>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 2/2] md-cluster: delete useless code
+Date: Fri, 22 Jan 2016 16:45:43 -0800
+Message-ID: <688b654fe7566f182d6f4fdae2c3a3242d32a179.1453509823.git.shli@fb.com>
+References: <0bc7fe7dece2c5aa4f8ed7194df27b02e0ae3142.1453509823.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2BDF7.7020101@shiftmail.org>
+In-Reply-To: <0bc7fe7dece2c5aa4f8ed7194df27b02e0ae3142.1453509823.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: James J <james.j@shiftmail.org>, Dark Penguin <darkpenguin@yandex.ru>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>, Guoqing Jiang <gqjiang@suse.com>, NeilBrown <neilb@suse.com>
 List-Id: linux-raid.ids
 
-On 01/22/2016 06:40 PM, James J wrote:
-> On 22/01/2016 22:44, Dark Penguin wrote:
->>
->> As I understand, one way around this problem is to change the kernel
->> timeout to exceed the drive timeout by changing
->> /sys/block/sd?/device/timeout to something larger than the default 30,
->> but I'd have to do that after every reboot, is all that correct?
->>
-> 
-> No, this part needs further investigation and comments from the gurus.
+page->index already considers node offset. The node_offset calculation
+in write_sb_page is useless and confusion.
 
-Yes, DP had that correct.
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: Guoqing Jiang <gqjiang@suse.com>
+Cc: NeilBrown <neilb@suse.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/bitmap.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-> With a SCSI timeout 30 secs, which is the setting you had at the time of
-> the incident AFAIU, what should have happened was that the drive should
-> have been kicked out at the 30th second, this is BEFORE it had a chance
-> to return a read failure because your desktop drive takes more than
-> 30secs to return a read failure. This was what you indeed expected but
-> it is not what has happened.
-
-His problem description doesn't perfectly match timeout mismatch.  He
-probably had a real problem that was exacerbated by his now-discovered
-timeout problem.  He no longer has the dmesg so further speculation is
-moot.  If it happens again, we can look closer.
-
-> The recommentation of raising the timeout to 120+ is for the opposite
-> purpose of what you want. It is for the case the sysadmin accepts to
-> wait a long time because he wants to prevent the kicking of the drive at
-> the first read-error (normally drives are kicked for a write error).
-> This might be wanted in order to a) defer the replacement of the drive,
-> either to perform the replacement at a more opportune time and/or in a
-> better manner such as a no-degrade replace operation, or b) because he
-> does not want to replace the drive at all: maybe he believes that the
-> error might be spurious and will not happen again and the drive is still
-> of acceptable fitness for the purpose, e.g. in a low-cost file server.
-
-No.  If you have a drive that doesn't support scterc or has it turned
-off, you *must* set a timeout longer than the drive's native timeout or
-you will have great problems.  I suggest you read the references to the
-archives I posted.
-
-Keep in mind that in a properly working array UREs are *fixed* when
-discovered by overwriting them.  This is vital to array robustness, as
-many UREs are transient (don't need relocation at all).
-
-Phil
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 4f22e91..d80cce4 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -210,10 +210,6 @@ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ 	struct block_device *bdev;
+ 	struct mddev *mddev = bitmap->mddev;
+ 	struct bitmap_storage *store = &bitmap->storage;
+-	int node_offset = 0;
+-
+-	if (mddev_is_clustered(bitmap->mddev))
+-		node_offset = bitmap->cluster_slot * store->file_pages;
+ 
+ 	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
+ 		int size = PAGE_SIZE;
+-- 
+2.4.6
 
