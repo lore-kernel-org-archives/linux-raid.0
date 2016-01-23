@@ -1,45 +1,51 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Wrong device name after hot-swap
-Date: Fri, 22 Jan 2016 19:51:24 -0500
-Message-ID: <56A2CE8C.2090500@turmel.org>
-References: <n7u8gr$1bv$1@ger.gmane.org> <56A2ACB4.6060808@turmel.org>
- <n7ud6o$b1f$1@ger.gmane.org>
+From: Dark Penguin <darkpenguin@yandex.ru>
+Subject: Re: md failing mechanism
+Date: Sat, 23 Jan 2016 13:33:39 +0300
+Message-ID: <56A35703.2020702@yandex.ru>
+References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com> <56A2B639.7000902@yandex.ru> <56A2CA93.8020806@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <n7ud6o$b1f$1@ger.gmane.org>
+In-Reply-To: <56A2CA93.8020806@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul van der Vlis <paul@vandervlis.nl>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>, Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/22/2016 06:15 PM, Paul van der Vlis wrote:
-> Op 22-01-16 om 23:27 schreef Phil Turmel:
+>> I wonder what happens if the only drive in a degraded mirror fails?..
+>
+> Or any drive in a raid5 hits an error while replacing a failed disk.
+>
+> BOOM.
 
->> MD stores signatures in the devices it uses that identify them for later
->> assembly.  It does not depend on the device name, though it is recorded
->> in the superblock as a "last connected as" kind of indicator.
-> 
-> So I can do it as described above?
+Oh... That sucks. I understand that BOOM would happen on a RAID-F, but 
+kicking the last drive doesn't seem like a very rational thing to do - 
+you would get a RAID with zero drives, which is not something anybody 
+would want in any situation!.. I thought it would get into some kind of 
+extreme panic mode so that you could at least save what you can...
 
-Yes.  Though I won't comment on grub part.  (I've stopped using it and
-am no long current.)
+Actually, it would make sense to avoid "BOOM" as much as possible; 
+instead of going into a "BOOM" mode, it should go into some kind of 
+"recovery" mode, when the array immediately turns read-only and allows 
+you to salvage as much data as you can from the faulty drive. It would 
+be especially useful in RAID5; only one faulty sector or even some other 
+stupid error without even faulty sectors should not cause total data 
+loss!.. I don't think it would be very hard to implement, or contradict 
+some important philosophy, but it would save data, jobs and lives. :)
 
->> In general, you should not rely on device names in your system
->> configuration.  UUIDs and filesystem labels were implemented
->> specifically to avoid this problem.
-> 
-> So far I know I cannot configure anywhere a disk UUID or a filesytem
-> label to a MD-device.
+Well, suppose "BOOM" happened on my RAID1, and both drives failed. 
+Naturally, not at the same time, so data differs between the drives. So 
+I have two faulty drives; is it possible (with some other recovery 
+software?) to just mount each one read-only and copy data from it?.. I 
+can live with having to copy as much data as I can from the first one 
+and try to copy the rest from the older drive. I mean, I basically have 
+the entire filesystem there! I should be able to just mount the 
+filesystem on that drive, skipping the RAID header - just fdisk the 
+drive, delete the RAID partition and create another one starting a few 
+blocks later!.. Would that not work?.. That's actually why I chose 
+RAID1; even if everything goes BOOM, I should be able to mount the 
+drives separately!..
 
-Modern udev creates /dev/disk/by-id/ and similar symlinks, but its not
-important for md.
 
-> It feels wrong when I add /dev/sdc1 to the raid, when the name is
-> normally /dev/sdb1. But maybe it's no problem, because the device name
-> is not impartant while booting from an MD-device.
-
-It's not a problem.  Unless you have specific member device names in
-mdadm.conf.  (Don't do that.)
-
-Phil
+-- 
+darkpenguin
