@@ -1,37 +1,31 @@
 From: Dark Penguin <darkpenguin@yandex.ru>
 Subject: Re: md failing mechanism
-Date: Sat, 23 Jan 2016 03:09:59 +0300
-Message-ID: <56A2C4D7.4040207@yandex.ru>
-References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com> <56A2B639.7000902@yandex.ru> <56A2BDAA.9070900@youngman.org.uk>
+Date: Sat, 23 Jan 2016 03:09:56 +0300
+Message-ID: <56A2C4D4.104@yandex.ru>
+References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <56A2AAB1.6070305@turmel.org> <56A2BCA1.6070005@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2BDAA.9070900@youngman.org.uk>
+In-Reply-To: <56A2BCA1.6070005@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> I was afraid to learn that my latest pack of drives are modern enough to
->> be castrated already, but it turned out they are not. :) My anime is
->> safe with the last 5900RPM Hitachi drives available, and they do support
->> TL;DR. I wish Hitachi made more 5900RPM drives for such purposes...
+>> Since that was written, 'A' would now include almost-enterprise drives
+>> with RAID ratings like the Western Digital Red family.  And the
+>> recommended timeout for 'C' has drifted upward to 180.
 >
-> I have a gut feel that drives of 1TB or less are "old technology" and
-> even new today are okay. It's the multi-TB drives that have been
-> castrated...
->
-> Note I said "gut feel" - don't trust what I think ... :-)
+> Almost all posts mention WD Reds. It's NOT a recommendation, but seeing
+> as I've tended to buy Seagate (note my Barracudas) I looked for the
+> Seagate equivalent. They're called NAS drives, and they cost roughly the
+> same ... just pointing this out in case people like Seagate or dislike
+> WD ... :-)
 
-I'm not sure exactly when did the "castration" started, but I have few 
-Seagate LP's 1,5 and 2 Tb, over 5 years old: they support it. But I 
-found out that they suck in terms of reliability, so I switched to 
-Hitachi. There was this 5900RPM model about four years ago, I think - I 
-believe it was almost the only low-RPM one Hitachi ever did; they 
-support it, too. And I have a 500Gb 2,5" Hitachi Travelstar bought a 
-year or two later, and even they support it! So, I guess I was right; 
-apparently, Hitachi is not into the castration business... Has anybody 
-seen any Hitachi without TL;DR ?..
+I would prefer a Seagate over a WD, but with my experience lately, I 
+don't want any more Seagates, either... I switched to Hitachi, but they 
+don't make low-speed drives anymore, and they are expensive... I wonder 
+of those Seagate NAS drives are actually anywhere near "reliable"?..
 
 
 -- 
