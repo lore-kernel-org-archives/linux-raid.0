@@ -1,44 +1,38 @@
-From: James J <james.j@shiftmail.org>
+From: Dark Penguin <darkpenguin@yandex.ru>
 Subject: Re: md failing mechanism
-Date: Sat, 23 Jan 2016 00:40:39 +0100
-Message-ID: <56A2BDF7.7020101@shiftmail.org>
-References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru>
+Date: Sat, 23 Jan 2016 03:09:59 +0300
+Message-ID: <56A2C4D7.4040207@yandex.ru>
+References: <56A26E11.2090703@yandex.ru> <56A28309.9080806@turmel.org> <56A2A2C3.9000801@yandex.ru> <CACsGCyTUBRrQgt0GiVp1R6pv-4gO44Ro7pgm4iCq+1KwWDoPsg@mail.gmail.com> <56A2B639.7000902@yandex.ru> <56A2BDAA.9070900@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A2A2C3.9000801@yandex.ru>
+In-Reply-To: <56A2BDAA.9070900@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dark Penguin <darkpenguin@yandex.ru>, linux-raid <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>, Edward Kuns <eddie.kuns@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/01/2016 22:44, Dark Penguin wrote:
+>> I was afraid to learn that my latest pack of drives are modern enough to
+>> be castrated already, but it turned out they are not. :) My anime is
+>> safe with the last 5900RPM Hitachi drives available, and they do support
+>> TL;DR. I wish Hitachi made more 5900RPM drives for such purposes...
 >
-> As I understand, one way around this problem is to change the kernel 
-> timeout to exceed the drive timeout by changing 
-> /sys/block/sd?/device/timeout to something larger than the default 30, 
-> but I'd have to do that after every reboot, is all that correct?
+> I have a gut feel that drives of 1TB or less are "old technology" and
+> even new today are okay. It's the multi-TB drives that have been
+> castrated...
 >
+> Note I said "gut feel" - don't trust what I think ... :-)
 
-No, this part needs further investigation and comments from the gurus.
+I'm not sure exactly when did the "castration" started, but I have few 
+Seagate LP's 1,5 and 2 Tb, over 5 years old: they support it. But I 
+found out that they suck in terms of reliability, so I switched to 
+Hitachi. There was this 5900RPM model about four years ago, I think - I 
+believe it was almost the only low-RPM one Hitachi ever did; they 
+support it, too. And I have a 500Gb 2,5" Hitachi Travelstar bought a 
+year or two later, and even they support it! So, I guess I was right; 
+apparently, Hitachi is not into the castration business... Has anybody 
+seen any Hitachi without TL;DR ?..
 
-With a SCSI timeout 30 secs, which is the setting you had at the time of 
-the incident AFAIU, what should have happened was that the drive should 
-have been kicked out at the 30th second, this is BEFORE it had a chance 
-to return a read failure because your desktop drive takes more than 
-30secs to return a read failure. This was what you indeed expected but 
-it is not what has happened.
 
-The recommentation of raising the timeout to 120+ is for the opposite 
-purpose of what you want. It is for the case the sysadmin accepts to 
-wait a long time because he wants to prevent the kicking of the drive at 
-the first read-error (normally drives are kicked for a write error). 
-This might be wanted in order to a) defer the replacement of the drive, 
-either to perform the replacement at a more opportune time and/or in a 
-better manner such as a no-degrade replace operation, or b) because he 
-does not want to replace the drive at all: maybe he believes that the 
-error might be spurious and will not happen again and the drive is still 
-of acceptable fitness for the purpose, e.g. in a low-cost file server.
-
-So what happened is still wrong AFAIK, in the sense of a kernel bug.
-
+-- 
+darkpenguin
