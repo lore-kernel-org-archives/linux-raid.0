@@ -1,130 +1,157 @@
-From: Chien Lee <chienlee@qnap.com>
-Subject: Re: [PATCH/RFC/RFT] md: allow resync to go faster when there is
- competing IO.
-Date: Tue, 26 Jan 2016 10:32:10 +0800
-Message-ID: <CAByoP04f6YgzhXn+55iEpg0SrVnK3mUxOuEfp-Hki_mppOBieg@mail.gmail.com>
+From: yizhan <yizhan@redhat.com>
+Subject: Re: md127 auto created when use "-B" to build a legacy array without
+ superblocks
+Date: Tue, 26 Jan 2016 16:24:01 +0800
+Message-ID: <56A72D21.20707@redhat.com>
+References: <597548646.22274436.1441628869039.JavaMail.zimbra@redhat.com>
+ <87k2r5iu0t.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87k2r5iu0t.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.com, shli@kernel.org, owner-linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
-
-Recently we find a bug about this patch (commit No. is
-ac8fa4196d205ac8fff3f8932bddbad4f16e4110 ).
-
-We know that this patch committed after Linux kernel 4.1.x is intended
-to allowing resync to go faster when there is competing IO. However,
-we find the performance of random read on syncing Raid6 will come up
-with a huge drop in this case. The following is our testing detail.
-
-The OS what we choose in our test is CentOS Linux release 7.1.1503
-(Core) and the kernel image will be replaced for testing. In our
-testing result, the 4K random read performance on syncing raid6 in
-Kernel 4.2.8 is much lower than in Kernel 3.19.8. In order to find out
-the root cause, we try to rollback this patch in Kernel 4.2.8, and we
-find the 4K random read performance on syncing Raid6 will be improved
-and go back to as what it should be in Kernel 3.19.8.
-
-Nevertheless, it seems that it will not affect some other read/write
-patterns. In our testing result, the 1M sequential read/write, 4K
-random write performance in Kernel 4.2.8 is performed almost the same
-as in Kernel 3.19.8.
-
-It seems that although this patch increases the resync speed, the
-logic of !is_mddev_idle() cause the sync request wait too short and
-reduce the chance for raid5d to handle the random read I/O.
 
 
-Following is our test environment and some testing results:
+On 10/02/2015 03:55 PM, Neil Brown wrote:
+> Yi Zhang <yizhan@redhat.com> writes:
+>
+>> Hi Neil
+>>
+>> When testing 00raid1, found the md127 auto created when use "-B" to build a legacy array without superblocks, is it reasonable?
+> This happens because udev notices a new device has appeared, looks
+> inside it, sees that it could be part of an md array, and so runs
+> "mdadm --incremental" on it.
+Hi Neil
+I tried the mdadm --incremental, but it doesn't work, below is the 
+operation.
+# mdadm -D /dev/md0
+/dev/md0:
+         Version :
+   Creation Time : Tue Jan 26 03:16:17 2016
+      Raid Level : raid1
+      Array Size : 2097152 (2.00 GiB 2.15 GB)
+   Used Dev Size : 2097152 (2.00 GiB 2.15 GB)
+    Raid Devices : 2
+   Total Devices : 2
 
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
 
-OS: CentOS Linux release 7.1.1503 (Core)
+     Number   Major   Minor   RaidDevice State
+        0       7        0        0      active sync   /dev/loop0
+        1       7        1        1      active sync   /dev/loop1
+# mdadm -D /dev/md127
+/dev/md127:
+         Version : 1.2
+      Raid Level : raid0
+   Total Devices : 1
+     Persistence : Superblock is persistent
 
-CPU: Intel(R) Xeon(R) CPU E3-1245 v3 @ 3.40GHz
+           State : inactive
 
-Processor number: 8
+            Name : 0
+            UUID : 13ada118:129135ff:686de7b7:4cb71d6d
+          Events : 17
 
-Memory: 12GB
+     Number   Major   Minor   RaidDevice
 
-fio command:
+        -       9        0        -        /dev/md0
+# mdadm -I /dev/md127
+mdadm: /dev/md127 is not part of an md array.
+# mdadm -I /dev/md0
+mdadm: cannot reopen /dev/md0: Device or resource busy.
 
-1.      (for numjobs=64):
+After I stopped md127, the md0 can be used again.
 
-fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
---runtime=180 --size=50G --name=test-read --ioengine=libaio
---numjobs=64 --iodepth=1 --group_reporting
+Thanks
+Yi
+> Sometimes we want udev to do that.  Sometimes we don't.
+> There is no easy way for udev to know what we want.
+>
+> NeilBrown
+>
+>
+>> pls check below detailed info:
+>>
+>> + mdadm -CR /dev/md0 --level=raid1 -n3 /dev/loop0 /dev/loop1 /dev/loop2
+>> mdadm: /dev/loop0 appears to contain an ext2fs file system
+>>         size=58368K  mtime=Thu Jan  1 08:00:00 1970
+>> mdadm: Note: this array has metadata at the start and
+>>      may not be suitable as a boot device.  If you plan to
+>>      store '/boot' on this device please ensure that
+>>      your boot-loader understands md/v1.x metadata, or use
+>>      --metadata=0.90
+>> mdadm: /dev/loop1 appears to contain an ext2fs file system
+>>         size=38912K  mtime=Thu Jan  1 08:00:00 1970
+>> mdadm: Defaulting to version 1.2 metadata
+>> mdadm: array /dev/md0 started.
+>> + mdadm --wait /dev/md0
+>> + cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4] [raid1]
+>> md0 : active raid1 loop2[2] loop1[1] loop0[0]
+>>        19968 blocks super 1.2 [3/3] [UUU]
+>>        
+>> unused devices: <none>
+>> + mdadm -S /dev/md0
+>> mdadm: stopped /dev/md0
+>> + mdadm -B /dev/md0 -l raid1 -n2 /dev/loop0 /dev/loop1
+>> mdadm: array /dev/md0 built and started.
+>> + sleep 2
+>> + cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4] [raid1]
+>> md127 : inactive md0[0](S)
+>>        19968 blocks super 1.2
+>>         
+>> md0 : active raid1 loop1[1] loop0[0]
+>>        20000 blocks super non-persistent [2/2] [UU]
+>>        
+>> unused devices: <none>
+>> [root@dhcp-12-171 bug]# uname -r
+>> 4.2.0
+>> [root@dhcp-12-171 bug]# mdadm -D /dev/md0
+>> /dev/md0:
+>>          Version :
+>>    Creation Time : Mon Sep  7 20:21:20 2015
+>>       Raid Level : raid1
+>>       Array Size : 20000 (19.53 MiB 20.48 MB)
+>>    Used Dev Size : 20000 (19.53 MiB 20.48 MB)
+>>     Raid Devices : 2
+>>    Total Devices : 2
+>>
+>>            State : clean
+>>   Active Devices : 2
+>> Working Devices : 2
+>>   Failed Devices : 0
+>>    Spare Devices : 0
+>>
+>>      Number   Major   Minor   RaidDevice State
+>>         0       7        0        0      active sync   /dev/loop0
+>>         1       7        1        1      active sync   /dev/loop1
+>> [root@dhcp-12-171 bug]# mdadm -D /dev/md127
+>> /dev/md127:
+>>          Version : 1.2
+>>       Raid Level : raid0
+>>    Total Devices : 1
+>>      Persistence : Superblock is persistent
+>>
+>>            State : inactive
+>>
+>>             Name : dhcp-12-171.nay.redhat.com:0  (local to host dhcp-12-171.nay.redhat.com)
+>>             UUID : 40ace956:a9dd0793:f4984d2b:8431b92b
+>>           Events : 17
+>>
+>>      Number   Major   Minor   RaidDevice
+>>
+>>         -       9        0        -        /dev/md0
+>>
+>> Best Regards,
+>>    Yi Zhang
 
-2.      (for numjobs=1):
-
-fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
---runtime=180 --size=50G --name=test-read --ioengine=libaio
---numjobs=1 --iodepth=1 --group_reporting
-
-
-
-Here are test results:
-
-
-Part I. SSD (4 x 240GB Intel SSD create Raid6(syncing))
-
-
-a.      4K Random Read, numjobs=64
-
-                                             Average Throughput    Average IOPS
-
-Kernel 3.19.8                                 715937KB/s              178984
-
-Kernel 4.2.8                                   489874KB/s              122462
-
-Kernel 4.2.8 Patch Rollback            717377KB/s              179344
-
-
-
-b.      4K Random Read, numjobs=1
-
-                                             Average Throughput    Average IOPS
-
-Kernel 3.19.8                                 32203KB/s                8051
-
-Kernel 4.2.8                                  2535.7KB/s                633
-
-Kernel 4.2.8 Patch Rollback            31861KB/s                7965
-
-
-
-
-Part II. HDD (4 x 1TB TOSHIBA HDD create Raid6(syncing))
-
-
-a.      4K Random Read, numjobs=64
-
-                                             Average Throughput    Average IOPS
-
-Kernel 3.19.8                                2976.6KB/s               744
-
-Kernel 4.2.8                                  2915.8KB/s               728
-
-Kernel 4.2.8 Patch Rollback           2973.3KB/s               743
-
-
-
-b.      4K Random Read, numjobs=1
-
-                                             Average Throughput    Average IOPS
-
-Kernel 3.19.8                                481844 B/s                 117
-
-Kernel 4.2.8                                   24718 B/s                   5
-
-Kernel 4.2.8 Patch Rollback           460090 B/s                 112
-
-
-
-Thanks,
-
--- 
-
-Chien Lee
