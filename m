@@ -1,80 +1,130 @@
-From: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: [PATCH RESEND v2 00/19] Support fuse mounts in user namespaces
-Date: Mon, 25 Jan 2016 14:36:56 -0600
-Message-ID: <20160125203656.GB10638@ubuntu-hedt>
-References: <1451930639-94331-1-git-send-email-seth.forshee@canonical.com>
- <20160125194722.GA10638@ubuntu-hedt>
- <87mvrtqvhp.fsf@x220.int.ebiederm.org>
+From: Chien Lee <chienlee@qnap.com>
+Subject: Re: [PATCH/RFC/RFT] md: allow resync to go faster when there is
+ competing IO.
+Date: Tue, 26 Jan 2016 10:32:10 +0800
+Message-ID: <CAByoP04f6YgzhXn+55iEpg0SrVnK3mUxOuEfp-Hki_mppOBieg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87mvrtqvhp.fsf@x220.int.ebiederm.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: linux-bcache@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-security-module@vger.kernel.org, selinux@tycho.nsa.gov, Alexander Viro <viro@zeniv.linux.org.uk>, Serge Hallyn <serge.hallyn@canonical.com>, Richard Weinberger <richard.weinberger@gmail.com>, Austin S Hemmelgarn <ahferroin7@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.com, shli@kernel.org, owner-linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 25, 2016 at 02:01:22PM -0600, Eric W. Biederman wrote:
-> Seth Forshee <seth.forshee@canonical.com> writes:
-> 
-> > On Mon, Jan 04, 2016 at 12:03:39PM -0600, Seth Forshee wrote:
-> >> These patches implement support for mounting filesystems in user
-> >> namespaces using fuse. They are based on the patches in the for-testing
-> >> branch of
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/ebiederm/user-namespace.git,
-> >> but I've rebased them onto 4.4-rc3. I've pushed all of this to:
-> >> 
-> >>  git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/linux.git fuse-userns
-> >> 
-> >> The patches are organized into three high-level groups.
-> >> 
-> >> Patches 1-6 are related to security, adding restrictions for
-> >> unprivileged mounts and updating the LSMs as needed. Patches 1-2
-> >> (checking inode permissions for block device mounts) may not be strictly
-> >> necessary for fuseblk mounts since fuse doesn't do any IO on the block
-> >> device in the kernel, but it still seems like a good idea to fail the
-> >> mount if the user doesn't have the required permissions for the inode
-> >> (though this is a bit misleading with fuse since the mounts are done via
-> >> a suid-root helper).
-> >> 
-> >> Patches 7-14 update most of the vfs to translate ids correctly and deal
-> >> with inodes which may have invalid user/group ids. I've omitted patches
-> >> for anything not used by fuse - quota, fs freezing, some helper
-> >> functions, etc. - but if these are wanted for the sake of completeness I
-> >> can include them.
-> >> 
-> >> Patches 15-18 update fuse to deal with mounts from non-init pid and user
-> >> namespaces and enable mounting from user namespaces.
-> >> 
-> >> Changes since v1:
-> >>  - Drop patch for FIBMAP.
-> >>  - Use current_in_userns in fuse_allow_current_process.
-> >>  - Remove checks for uid/gid validity in fuse. Intead, ids from the
-> >>    backing store which do not map into s_user_ns will result in invalid
-> >>    ids in the vfs inode. Checks in the vfs will prevent unmappable ids
-> >>    from being passed in from above.
-> >>  - Update a couple of commit messages to provide more detail about
-> >>    changes.
-> >
-> > Now that the merge window is over, I'm wondering whether it might be
-> > possible to get some feedback on these patches this cycle?
-> 
-> Definitely.  Apologies for not giving you much feedback earlier.
-> 
-> I had been hoping this was the kind of thing I could just double check
-> to be certain you weren't doing anything silly and just apply.  After my
-> last round of looking at this I realized that for me to be comfortable
-> with these patches I will have to give them very close scrutiny, and
-> check every detail.
-> 
-> Unfortunatly last cycle I had failed to budget enough time to give these
-> patches the close scrutiny they need.
-> 
-> From a high level I am still very much in favor of this approach and
-> at least getting as far as safe unprivileged fuse mounts.
-> 
-> I have one or two little things to look at and then I hope to be going
-> through your patches one by one in detail.
+Hello,
 
-Great. Thanks Eric.
+Recently we find a bug about this patch (commit No. is
+ac8fa4196d205ac8fff3f8932bddbad4f16e4110 ).
+
+We know that this patch committed after Linux kernel 4.1.x is intended
+to allowing resync to go faster when there is competing IO. However,
+we find the performance of random read on syncing Raid6 will come up
+with a huge drop in this case. The following is our testing detail.
+
+The OS what we choose in our test is CentOS Linux release 7.1.1503
+(Core) and the kernel image will be replaced for testing. In our
+testing result, the 4K random read performance on syncing raid6 in
+Kernel 4.2.8 is much lower than in Kernel 3.19.8. In order to find out
+the root cause, we try to rollback this patch in Kernel 4.2.8, and we
+find the 4K random read performance on syncing Raid6 will be improved
+and go back to as what it should be in Kernel 3.19.8.
+
+Nevertheless, it seems that it will not affect some other read/write
+patterns. In our testing result, the 1M sequential read/write, 4K
+random write performance in Kernel 4.2.8 is performed almost the same
+as in Kernel 3.19.8.
+
+It seems that although this patch increases the resync speed, the
+logic of !is_mddev_idle() cause the sync request wait too short and
+reduce the chance for raid5d to handle the random read I/O.
+
+
+Following is our test environment and some testing results:
+
+
+OS: CentOS Linux release 7.1.1503 (Core)
+
+CPU: Intel(R) Xeon(R) CPU E3-1245 v3 @ 3.40GHz
+
+Processor number: 8
+
+Memory: 12GB
+
+fio command:
+
+1.      (for numjobs=64):
+
+fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
+--runtime=180 --size=50G --name=test-read --ioengine=libaio
+--numjobs=64 --iodepth=1 --group_reporting
+
+2.      (for numjobs=1):
+
+fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
+--runtime=180 --size=50G --name=test-read --ioengine=libaio
+--numjobs=1 --iodepth=1 --group_reporting
+
+
+
+Here are test results:
+
+
+Part I. SSD (4 x 240GB Intel SSD create Raid6(syncing))
+
+
+a.      4K Random Read, numjobs=64
+
+                                             Average Throughput    Average IOPS
+
+Kernel 3.19.8                                 715937KB/s              178984
+
+Kernel 4.2.8                                   489874KB/s              122462
+
+Kernel 4.2.8 Patch Rollback            717377KB/s              179344
+
+
+
+b.      4K Random Read, numjobs=1
+
+                                             Average Throughput    Average IOPS
+
+Kernel 3.19.8                                 32203KB/s                8051
+
+Kernel 4.2.8                                  2535.7KB/s                633
+
+Kernel 4.2.8 Patch Rollback            31861KB/s                7965
+
+
+
+
+Part II. HDD (4 x 1TB TOSHIBA HDD create Raid6(syncing))
+
+
+a.      4K Random Read, numjobs=64
+
+                                             Average Throughput    Average IOPS
+
+Kernel 3.19.8                                2976.6KB/s               744
+
+Kernel 4.2.8                                  2915.8KB/s               728
+
+Kernel 4.2.8 Patch Rollback           2973.3KB/s               743
+
+
+
+b.      4K Random Read, numjobs=1
+
+                                             Average Throughput    Average IOPS
+
+Kernel 3.19.8                                481844 B/s                 117
+
+Kernel 4.2.8                                   24718 B/s                   5
+
+Kernel 4.2.8 Patch Rollback           460090 B/s                 112
+
+
+
+Thanks,
+
+-- 
+
+Chien Lee
