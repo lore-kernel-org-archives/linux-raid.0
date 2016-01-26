@@ -1,65 +1,73 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH/RFC/RFT] md: allow resync to go faster when there is
- competing IO.
-Date: Tue, 26 Jan 2016 14:52:22 -0800
-Message-ID: <20160126225222.GA29409@kernel.org>
-References: <CAByoP04f6YgzhXn+55iEpg0SrVnK3mUxOuEfp-Hki_mppOBieg@mail.gmail.com>
- <87si1k2do8.fsf@notabene.neil.brown.name>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: WANTED new maintainer for Linux/md (and mdadm)
+Date: Wed, 27 Jan 2016 10:01:16 +1100
+Message-ID: <87powo2ber.fsf@notabene.neil.brown.name>
+References: <87k2o849j5.fsf@notabene.neil.brown.name> <569F4505.6060308@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87si1k2do8.fsf@notabene.neil.brown.name>
+In-Reply-To: <569F4505.6060308@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Chien Lee <chienlee@qnap.com>, linux-raid@vger.kernel.org, owner-linux-raid@vger.kernel.org
+To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Shaohua Li <shli@kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2016 at 09:12:23AM +1100, Neil Brown wrote:
-> On Tue, Jan 26 2016, Chien Lee wrote:
-> 
-> > Hello,
-> >
-> > Recently we find a bug about this patch (commit No. is
-> > ac8fa4196d205ac8fff3f8932bddbad4f16e4110 ).
-> >
-> > We know that this patch committed after Linux kernel 4.1.x is intended
-> > to allowing resync to go faster when there is competing IO. However,
-> > we find the performance of random read on syncing Raid6 will come up
-> > with a huge drop in this case. The following is our testing detail.
-> >
-> > The OS what we choose in our test is CentOS Linux release 7.1.1503
-> > (Core) and the kernel image will be replaced for testing. In our
-> > testing result, the 4K random read performance on syncing raid6 in
-> > Kernel 4.2.8 is much lower than in Kernel 3.19.8. In order to find out
-> > the root cause, we try to rollback this patch in Kernel 4.2.8, and we
-> > find the 4K random read performance on syncing Raid6 will be improved
-> > and go back to as what it should be in Kernel 3.19.8.
-> >
-> > Nevertheless, it seems that it will not affect some other read/write
-> > patterns. In our testing result, the 1M sequential read/write, 4K
-> > random write performance in Kernel 4.2.8 is performed almost the same
-> > as in Kernel 3.19.8.
-> >
-> > It seems that although this patch increases the resync speed, the
-> > logic of !is_mddev_idle() cause the sync request wait too short and
-> > reduce the chance for raid5d to handle the random read I/O.
-> 
-> This has been raised before.
-> Can you please try the patch at the end of 
-> 
->   http://permalink.gmane.org/gmane.linux.raid/51002
-> 
-> and let me know if it makes any difference.  If it isn't sufficient I
-> will explore further.
+--=-=-=
+Content-Type: text/plain
 
-I'm curious why we don't calculate the wait time. Say the target resync speed
-is speed_min. The wait time should be:
+On Wed, Jan 20 2016, Artur Paszkiewicz wrote:
+>
+> Hi Neil,
+>
+> Thank you for your work and time spent on maintaining MD/mdadm. I would also
+> like to offer help for the emerging maintainership team. I've been working with
+> MD RAID for more than 4 years, mostly testing and developing the IMSM-related
+> parts on behalf of my employer - Intel. I realize that I was not very visible
+> on this mailing list, but I think I have a pretty good knowledge about mdadm
+> and the MD drivers. Now I have Intel's approval to take on maintaining MD RAID
+> as part of my job, not focusing primarily on IMSM. I definitely feel more
+> confident with maintaining mdadm, but I would certainly like to learn more
+> about the kernel MD stack and help with it as much as I can.
 
-(currspeed * SYNC_MARK_STEP - speed_min * SYNC_MARK_STEP) / speed_min
-= (currspeed / speed_min - 1) * SYNC_MARK_STEP
+Hi Arthur,
+ thanks for all your IMSM work over the years!  It is great that you can
+ continue contributing and do so more broadly.
 
-if SYNC_MARK_STEP is too big and sync speed has drift, we can make it smaller.
+ For the moment Jes Serensen will be co-ordinating mdadm (once I make a
+ release ... tomorrow?) and Shaohua Li will be looking after the
+ kernel/md side.  I'm sure there is plenty of room for you too though.
+ Only one person (at a time) can queue patches, but several can
+ collaborate at development and support and bug fixing and testing and
+ ....
+ I suggest you find ways to co-ordinate with them.
+
+ This:
+     https://bugzilla.kernel.org/show_bug.cgi?id=108741
+ is currently most important in my mind, but there are other things to
+ do.
 
 Thanks,
-Shaohua
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWp/q8AAoJEDnsnt1WYoG5+jYQAIegWwNUoMDNm0oyXCWiiRXI
+z8CxtFDteMlGutl2DjOwROS4HTdsasw1lAen9KSqRD5DeqyFqphsp+KrEjLBN/Yj
+z9rYJ4oJZMDWQgNzBHyGrNwCzUStf8ntUHVS+AVFQN5+RV+IgRgd+4YhnsObSUn/
+Pn/t9Vu5lnUK0fqXesEQ5gG9mqhkXnXeKSbrwPBw8GVMYrRO9ayDlIxmvyOkRGmc
+a6gLpyIAij9+13CSmxq7eiL5FIbHv9QnOOUXM8cyUCVKNVCsWEJUr2RKl1MLGG3l
+poMYfGb/pQwTvdD53lg/uy80grqoynQM0o+yfYH5b0BfIJ8ztgoOjquW7SL0x3xZ
+AMHu6eJrhp35QZ9ILrdu0WWtxpzOHS40mYAUgJXeZWYBNNJrAlaGs4MCsWIpsLGg
+SfIdzLDAcLXxHUr1dViNqP0lZTHbIj6d9glDMo1k8MWtWZWaAxWtA0v6obKZ1WOZ
+LR4qYOntV80l0cHY5XoNibSUBDoa5e7OPMtZYpeMELOQnhushyJxWxUHx5up/2Of
+/OM3hToNxOPI/BKbj+l/eNYQ6mlef1r78Tb5sG7LvVatrU9O1mPaRmDssrBIj+Ys
+++376zd7fXygJ+5vD3V/bI1HnEhg3KfmD5d9Q1auiTozObNmA8ckWCMmF6DCB7BP
+v3Ci3BOZ/U978TU3JsRu
+=jxZ+
+-----END PGP SIGNATURE-----
+--=-=-=--
