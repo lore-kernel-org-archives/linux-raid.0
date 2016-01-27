@@ -1,97 +1,173 @@
-From: Eric Valette <eric.valette@free.fr>
-Subject: Re: Problem with array raid10 array resync on 4.4.0 (keeps reyncing
- each reboot)
-Date: Wed, 27 Jan 2016 08:24:29 +0100
-Message-ID: <56A870AD.4070400@free.fr>
-References: <56A78786.10103@Free.fr> <20160126233133.GB12721@kernel.org>
-Reply-To: eric.valette@free.fr
+From: yizhan <yizhan@redhat.com>
+Subject: Re: md127 auto created when use "-B" to build a legacy array without
+ superblocks
+Date: Wed, 27 Jan 2016 17:18:59 +0800
+Message-ID: <56A88B83.7040609@redhat.com>
+References: <597548646.22274436.1441628869039.JavaMail.zimbra@redhat.com>
+ <87k2r5iu0t.fsf@notabene.neil.brown.name> <56A72D21.20707@redhat.com>
+ <87y4bc2e2m.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160126233133.GB12721@kernel.org>
+In-Reply-To: <87y4bc2e2m.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: NeilBrown <neilb@suse.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/01/2016 00:31, Shaohua Li wrote:
-> On Tue, Jan 26, 2016 at 03:49:42PM +0100, Eric Valette wrote:
->> Hi,
->>
->> My raid 10 array (5 disk with one spare) was doing a  resync after an
->> upgrade to 4.4.0 from 4.1.15. The resync progress was steady and at the end
->> the /proc/mdstat was apparently complete but when rebooting, it started
->> resycing over and over. I noticed my dmesg was totally filled with raid10
->> conf printout message so it was impossible to trace anything else.
->>
->> Did a resync test with 3.14.58 (because I knew it had worked for resync
->> before and was still available as a boot option)  and the array was
->> correctly rebuild.
->> Runs fine with 4.1.16 now.
->>
->> Please CC me as I'm not subscribed.
+
+
+On 01/27/2016 06:03 AM, NeilBrown wrote:
+> On Tue, Jan 26 2016, yizhan wrote:
 >
-> Could you please provide more info, like mdadm -D /dev/md0 in v4.4? If you run
-> a stop/reassemble, does the resync start?
+>> On 10/02/2015 03:55 PM, Neil Brown wrote:
+>>> Yi Zhang <yizhan@redhat.com> writes:
+>>>
+>>>> Hi Neil
+>>>>
+>>>> When testing 00raid1, found the md127 auto created when use "-B" to build a legacy array without superblocks, is it reasonable?
+>>> This happens because udev notices a new device has appeared, looks
+>>> inside it, sees that it could be part of an md array, and so runs
+>>> "mdadm --incremental" on it.
+>> Hi Neil
+>> I tried the mdadm --incremental, but it doesn't work, below is the
+>> operation.
+>> # mdadm -D /dev/md0
+>> /dev/md0:
+>>           Version :
+>>     Creation Time : Tue Jan 26 03:16:17 2016
+>>        Raid Level : raid1
+>>        Array Size : 2097152 (2.00 GiB 2.15 GB)
+>>     Used Dev Size : 2097152 (2.00 GiB 2.15 GB)
+>>      Raid Devices : 2
+>>     Total Devices : 2
+>>
+>>             State : clean
+>>    Active Devices : 2
+>> Working Devices : 2
+>>    Failed Devices : 0
+>>     Spare Devices : 0
+>>
+>>       Number   Major   Minor   RaidDevice State
+>>          0       7        0        0      active sync   /dev/loop0
+>>          1       7        1        1      active sync   /dev/loop1
+>> # mdadm -D /dev/md127
+>> /dev/md127:
+>>           Version : 1.2
+>>        Raid Level : raid0
+>>     Total Devices : 1
+>>       Persistence : Superblock is persistent
+>>
+>>             State : inactive
+>>
+>>              Name : 0
+>>              UUID : 13ada118:129135ff:686de7b7:4cb71d6d
+>>            Events : 17
+>>
+>>       Number   Major   Minor   RaidDevice
+>>
+>>          -       9        0        -        /dev/md0
+>> # mdadm -I /dev/md127
+>> mdadm: /dev/md127 is not part of an md array.
+>> # mdadm -I /dev/md0
+>> mdadm: cannot reopen /dev/md0: Device or resource busy.
+>>
+>> After I stopped md127, the md0 can be used again.
+> If, after stopping md127, you try
+>
+>    mdadm -I /dev/md0
+>
+> again it will start /dev/md127 again.  This is what udev does which
+> causes md127 to appear in the first place.
+>
+> NeilBrown
+Thanks Neil
+I have tried 'mdadm -I /dev/md0', the /dev/md127 start again
 
-I'm not going to retry kernel 4.4.0 on this device as I'm no more 
-confident about raid10 support with this 4.4 version.
-
-So on 4.1.16 :
-
-mdadm -D /dev/md0
-/dev/md0:
-         Version : 1.2
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 2930134016 (2794.39 GiB 3000.46 GB)
-    Raid Devices : 4
-   Total Devices : 5
-     Persistence : Superblock is persistent
-
-     Update Time : Sun Jan 24 17:15:58 2016
-           State : clean
-  Active Devices : 4
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 1
-
-          Layout : near=2
-      Chunk Size : 512K
-
-            Name : nas2:0  (local to host nas2)
-            UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-          Events : 480
- 
- 
-
-     Number   Major   Minor   RaidDevice State 
- 
-
-        0       8       17        0      active sync set-A   /dev/sdb1 
- 
-
-        1       8       33        1      active sync set-B   /dev/sdc1 
- 
-
-        2       8       49        2      active sync set-A   /dev/sdd1 
- 
-
-        3       8       65        3      active sync set-B   /dev/sde1 
- 
-
- 
- 
-
-        4       8       81        -      spare   /dev/sdf1
-
-uname -a
-Linux nas2 4.1.16 #1 SMP Sat Jan 23 19:29:59 CET 2016 x86_64 GNU/Linux
-
-And if I stop the array manually and reboot, its no more resynced with 
-this 4.1.16 kernel.
-
-
+Yi
+>
+>> Thanks
+>> Yi
+>>> Sometimes we want udev to do that.  Sometimes we don't.
+>>> There is no easy way for udev to know what we want.
+>>>
+>>> NeilBrown
+>>>
+>>>
+>>>> pls check below detailed info:
+>>>>
+>>>> + mdadm -CR /dev/md0 --level=raid1 -n3 /dev/loop0 /dev/loop1 /dev/loop2
+>>>> mdadm: /dev/loop0 appears to contain an ext2fs file system
+>>>>          size=58368K  mtime=Thu Jan  1 08:00:00 1970
+>>>> mdadm: Note: this array has metadata at the start and
+>>>>       may not be suitable as a boot device.  If you plan to
+>>>>       store '/boot' on this device please ensure that
+>>>>       your boot-loader understands md/v1.x metadata, or use
+>>>>       --metadata=0.90
+>>>> mdadm: /dev/loop1 appears to contain an ext2fs file system
+>>>>          size=38912K  mtime=Thu Jan  1 08:00:00 1970
+>>>> mdadm: Defaulting to version 1.2 metadata
+>>>> mdadm: array /dev/md0 started.
+>>>> + mdadm --wait /dev/md0
+>>>> + cat /proc/mdstat
+>>>> Personalities : [raid6] [raid5] [raid4] [raid1]
+>>>> md0 : active raid1 loop2[2] loop1[1] loop0[0]
+>>>>         19968 blocks super 1.2 [3/3] [UUU]
+>>>>         
+>>>> unused devices: <none>
+>>>> + mdadm -S /dev/md0
+>>>> mdadm: stopped /dev/md0
+>>>> + mdadm -B /dev/md0 -l raid1 -n2 /dev/loop0 /dev/loop1
+>>>> mdadm: array /dev/md0 built and started.
+>>>> + sleep 2
+>>>> + cat /proc/mdstat
+>>>> Personalities : [raid6] [raid5] [raid4] [raid1]
+>>>> md127 : inactive md0[0](S)
+>>>>         19968 blocks super 1.2
+>>>>          
+>>>> md0 : active raid1 loop1[1] loop0[0]
+>>>>         20000 blocks super non-persistent [2/2] [UU]
+>>>>         
+>>>> unused devices: <none>
+>>>> [root@dhcp-12-171 bug]# uname -r
+>>>> 4.2.0
+>>>> [root@dhcp-12-171 bug]# mdadm -D /dev/md0
+>>>> /dev/md0:
+>>>>           Version :
+>>>>     Creation Time : Mon Sep  7 20:21:20 2015
+>>>>        Raid Level : raid1
+>>>>        Array Size : 20000 (19.53 MiB 20.48 MB)
+>>>>     Used Dev Size : 20000 (19.53 MiB 20.48 MB)
+>>>>      Raid Devices : 2
+>>>>     Total Devices : 2
+>>>>
+>>>>             State : clean
+>>>>    Active Devices : 2
+>>>> Working Devices : 2
+>>>>    Failed Devices : 0
+>>>>     Spare Devices : 0
+>>>>
+>>>>       Number   Major   Minor   RaidDevice State
+>>>>          0       7        0        0      active sync   /dev/loop0
+>>>>          1       7        1        1      active sync   /dev/loop1
+>>>> [root@dhcp-12-171 bug]# mdadm -D /dev/md127
+>>>> /dev/md127:
+>>>>           Version : 1.2
+>>>>        Raid Level : raid0
+>>>>     Total Devices : 1
+>>>>       Persistence : Superblock is persistent
+>>>>
+>>>>             State : inactive
+>>>>
+>>>>              Name : dhcp-12-171.nay.redhat.com:0  (local to host dhcp-12-171.nay.redhat.com)
+>>>>              UUID : 40ace956:a9dd0793:f4984d2b:8431b92b
+>>>>            Events : 17
+>>>>
+>>>>       Number   Major   Minor   RaidDevice
+>>>>
+>>>>          -       9        0        -        /dev/md0
+>>>>
+>>>> Best Regards,
+>>>>     Yi Zhang
 
