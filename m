@@ -1,55 +1,53 @@
-From: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Subject: Re: Uneven wear on raid1 devices
-Date: Wed, 27 Jan 2016 11:18:44 +1100
-Message-ID: <56A80CE4.1090603@websitemanagers.com.au>
-References: <56A5B29E.3020708@websitemanagers.com.au>
- <20160125104027.597041a3@natsu> <56A662A3.6000402@turmel.org>
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+Subject: RAID journal, requirements?
+Date: Wed, 27 Jan 2016 01:15:20 +0100
+Message-ID: <20160127001520.GH3039@otheros>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56A662A3.6000402@turmel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>, Roman Mamedov <rm@romanrm.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/01/16 05:00, Phil Turmel wrote:
-> On 01/25/2016 12:40 AM, Roman Mamedov wrote:
->> On Mon, 25 Jan 2016 16:29:02 +1100
->> Adam Goryachev <adam@websitemanagers.com.au> wrote:
->>
->>>     9 Power_On_Hours          -O--CK   098   098   000    -    6435
->>>     9 Power_On_Hours          -O--CK   095   095   000    -    23178
->> 2nd drive has almost 4x as much power-on time than the first one. My guess
->> would be that it accumulated all that write usage back before you put it into
->> this RAID1.
-> Or you are doing "repair" scrubs when you should be doing "check"
-> scrubs.  Any operation that requires resynchronization will read from
-> the first mirror and write to the others.
+Hi,
 
-No, definitely not doing a repair scrub, so sounds like the issue was 
-just the power on hours problem.
+I am very excited about the new journaling feature for RAID in md
+and want to try it out soon.
 
->> If you want to ensure the RAID1 usage is even, record the SMART data you have
->> now, and compare to the readings you will have a month later.
-> By the way, your devices show scterc disabled.  That's bad.  You should
-> definitely use boot scripts or udev rules to enable it.
+Neil's article on LWN already gave a great overview and some hints
+about it, but I am still a little unsure about the technical
+requirements for the journal device. E.g. speed, reliability and
+size-wise. And what the implications of failing them means.
 
-Ooops, thank you for catching this, well understood how bad it is, I 
-just assumed (badly) that I was using decent drives (I always used the 
-WD enterprise black), and clearly forgot to check for this on an SSD. 
-I've enabled it now from /etc/rc.local, as well as fixing the scheduler 
-to noop on the SSD instead of cfq.
+I want to setup a small home NAS. My personal priorities are:
+Firstly, low power-per-GB as it will be solar powered and battery
+backed. Second priority is reliability. Performance is not that
+important to me.
 
-> Has sdd been getting bumped out of the array lately, and resyncing when
-> you put it back?
-No, but I wonder if this might have explained the drop from around 9 
-months ago, when I re-plugged it and it tested fine, but I asked them to 
-replace it anyway (which they did). So, I can't complain about it too much.
+My current plan: Tiny ARM-based computer (Odroid C1+: 4x USB (2.0,
+unfortunately) ports), 4x 2TB SATA HDDs (@0.7W idle, 1.7W max. each)
++ SATA-to-USB -> RAID5, microSD for OS + applications, an eMMC for
+a RAID journal. (later, once they hopefully get available in April,
+switch to the Turris Omnia which is ARM-based again but has
+mini-PCIe, too, where I would attach mini-PCIe-to-SATA adapters)
 
-Regards,
-Adam
+Is it a stupid idea to use an eMMC for the journal in the first
+place? I am unsure how quickly it would wear out. And seems like I
+do not have SMART for it either... So it would probably fail badly
+at some point. Is that an issue, can I simply replace the eMMC
+then without any data loss? Will the current code at least try a
+write-through directly to the HDDs once a journal disk throws
+errors?
 
--- 
-Adam Goryachev Website Managers www.websitemanagers.com.au
+Does MD assume that an underlying device performs some sort of wear
+leveling if necessary like SSDs do for instance - or does MD
+itself distribute writes evenly over the journaling disk?
+(Does anyone know whether eMMCs usually do some kind of wear leveling?)
+
+
+Thanks for all your work on this awesome new feature! (and special
+thanks to Neil for all the years of maintenance - it is a pitty you
+have to step down :( )
+
+Regards, Linus
