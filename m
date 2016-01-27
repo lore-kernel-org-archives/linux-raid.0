@@ -1,53 +1,93 @@
-From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
-Subject: RAID journal, requirements?
-Date: Wed, 27 Jan 2016 01:15:20 +0100
-Message-ID: <20160127001520.GH3039@otheros>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] util: fix wrong return value of cluster_get_dlmlock
+Date: Wed, 27 Jan 2016 11:44:37 +1100
+Message-ID: <87bn873l6y.fsf@notabene.neil.brown.name>
+References: <1453278085-19883-1-git-send-email-gqjiang@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1453278085-19883-1-git-send-email-gqjiang@suse.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Guoqing Jiang <gqjiang@suse.com>
 List-Id: linux-raid.ids
 
-Hi,
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I am very excited about the new journaling feature for RAID in md
-and want to try it out soon.
+On Wed, Jan 20 2016, Guoqing Jiang wrote:
 
-Neil's article on LWN already gave a great overview and some hints
-about it, but I am still a little unsure about the technical
-requirements for the journal device. E.g. speed, reliability and
-size-wise. And what the implications of failing them means.
+> Actually lksb.sb_status means that a node get the lock
+> or not instead of the return value of dlm_lock.
+>
+> Signed-off-by: Guoqing Jiang <gqjiang@suse.com>
+> ---
+>  util.c | 14 ++++----------
+>  1 file changed, 4 insertions(+), 10 deletions(-)
+>
+> diff --git a/util.c b/util.c
+> index f1b0b95..cf9572b 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -142,7 +142,7 @@ int cluster_get_dlmlock(int *lockid)
+>  	dlm_lock_res->ls =3D dlm_hooks->create_lockspace(cluster_name, O_RDWR);
+>  	if (!dlm_lock_res->ls) {
+>  		pr_err("%s failed to create lockspace\n", cluster_name);
+> -                goto out;
+> +		return -ENOMEM;
+>  	}
+>=20=20
+>  	/* Conversions need the lockid in the LKSB */
+> @@ -157,21 +157,15 @@ int cluster_get_dlmlock(int *lockid)
+>  			  dlm_lock_res, NULL, NULL);
+>  	if (ret) {
+>  		pr_err("error %d when get PW mode on lock %s\n", errno, str);
+> -                goto out;
+> +		dlm_hooks->release_lockspace(cluster_name, dlm_lock_res->ls, 1);
+> +		return ret;
+>  	}
+>=20=20
+>  	/* Wait for it to complete */
+>  	poll_for_ast(dlm_lock_res->ls);
+>  	*lockid =3D dlm_lock_res->lksb.sb_lkid;
+>=20=20
+> -	errno =3D	dlm_lock_res->lksb.sb_status;
+> -	if (errno) {
+> -		pr_err("error %d happened in ast with lock %s\n", errno, str);
+> -		goto out;
+> -	}
+> -
+> -out:
+> -	return ret;
+> +	return dlm_lock_res->lksb.sb_status;
+>  }
+>=20=20
+>  int cluster_release_dlmlock(int lockid)
+> --=20
 
-I want to setup a small home NAS. My personal priorities are:
-Firstly, low power-per-GB as it will be solar powered and battery
-backed. Second priority is reliability. Performance is not that
-important to me.
+Applied, thanks.
 
-My current plan: Tiny ARM-based computer (Odroid C1+: 4x USB (2.0,
-unfortunately) ports), 4x 2TB SATA HDDs (@0.7W idle, 1.7W max. each)
-+ SATA-to-USB -> RAID5, microSD for OS + applications, an eMMC for
-a RAID journal. (later, once they hopefully get available in April,
-switch to the Turris Omnia which is ARM-based again but has
-mini-PCIe, too, where I would attach mini-PCIe-to-SATA adapters)
+NeilBrown
 
-Is it a stupid idea to use an eMMC for the journal in the first
-place? I am unsure how quickly it would wear out. And seems like I
-do not have SMART for it either... So it would probably fail badly
-at some point. Is that an issue, can I simply replace the eMMC
-then without any data loss? Will the current code at least try a
-write-through directly to the HDDs once a journal disk throws
-errors?
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Does MD assume that an underlying device performs some sort of wear
-leveling if necessary like SSDs do for instance - or does MD
-itself distribute writes evenly over the journaling disk?
-(Does anyone know whether eMMCs usually do some kind of wear leveling?)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-
-Thanks for all your work on this awesome new feature! (and special
-thanks to Neil for all the years of maintenance - it is a pitty you
-have to step down :( )
-
-Regards, Linus
+iQIcBAEBCAAGBQJWqBL1AAoJEDnsnt1WYoG5K40P/25szTBnLJoenHy+PenzIrpi
+nahHoT53zy8VKNKIaZPubp0qGluOg1cEBKuh0IyBnhYWp0ScEwmSJt7NNQeH2BTw
+Ll5AeutZgazjjXmViHoRL/QqHmy2BN1PrV/0H4chjgcfkQfa6sURqcdGz3ZDUcHB
+1QaSTItkSMVDjGws2AmuSFvV237Vo0sWGdO9yFGv91huBQWlrwxX6JsknKTFnVpY
+eQaBimPQ+Fn5+ytfxS85SlPZswAgIU1WelIo4zyXSuNqRaFpTVENltTUJ5+rbtkL
+PRWtWsDyd+BEh3OQOBkSdXsx6SQKxEL2JfsCJG0zmhD3vNSPH3q68JP2zg4m3TUX
+OEe/McgiMgI0Y8/YpsXVp5XZlTs2Iv3Gm7w3tYKdf6/E2EaSxLIPzI122zUrmksl
+Hiz//IBVVqOW/dxoAQmit/jByLtZhWxr9LWPJMmEP2XKqodFjUzeUscoprD8YRh5
+2reiBbZg7t+pGfz4hgkbKzgS3z+1GrNuk4fzzXueIUhPD4OKnQt+j6PYRIROoRoO
+k32/Zsk6/K/lj67NlsrtIGsS68B1s4qMluLM0XhgBFGgFpoQwv9ps8DMlDH009C+
+9fhhALDKgSVK0Y+RpHncHNcoC+uKVJCbb9pr2URRRIX2UCbthcLHEjx8kZb59rmK
+E0JCJSBmo412xHIz6El3
+=kjBq
+-----END PGP SIGNATURE-----
+--=-=-=--
