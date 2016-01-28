@@ -1,35 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: reinstate dm target local ioctl support
-Date: Thu, 28 Jan 2016 15:00:22 +0100
-Message-ID: <20160128140022.GA15941@lst.de>
-References: <1453989019-24300-1-git-send-email-apw@canonical.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: deprecating /proc/mdstat (was: Re: mdadm bad blocks list)
+Date: Thu, 28 Jan 2016 10:21:02 -0800
+Message-ID: <20160128182102.GA23378@kernel.org>
+References: <56A9102D.4030304@prgmr.com>
+ <87twly1jc7.fsf@notabene.neil.brown.name>
+ <20160128124121.Horde.YKtbZL0CUYKTuEkxLcmmhQ4@www3.nde.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1453989019-24300-1-git-send-email-apw@canonical.com>
+In-Reply-To: <20160128124121.Horde.YKtbZL0CUYKTuEkxLcmmhQ4@www3.nde.ag>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andy Whitcroft <apw@canonical.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, mohan_srinivasan@yahoo.com, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>
+To: "Jens-U. Mozdzen" <jmozdzen@nde.ag>
+Cc: NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 28, 2016 at 01:50:19PM +0000, Andy Whitcroft wrote:
-> However this also removed the possibility of a dm target having targe=
-t
-> specific ioctls.  Currently this is not used by any in-tree targets b=
-ut
-> was utilised by the flashcache out-of-tree module.
->=20
-> How would we feel about carrying something like the patch below in
-> mainline to allow for such target local ioctls.
+On Thu, Jan 28, 2016 at 12:41:21PM +0100, Jens-U. Mozdzen wrote:
+> Hello Neil & *,
+> 
+> Zitat von NeilBrown <nfbrown@novell.com>:
+> >[...]
+> >I'd like to deprecate /proc/mdstat.  It is not really easy to extend.
+> 
+> while I understand that /proc/mdstat's format might be considered "frozen"
+> as in "do not confuse old scripts by new formats", I'd hate to see
+> /proc/mdstat go away without a similar replacement: calling "mdadm" (or any
+> other CLI) to gather that information is unruly expensive when all you have
+> to do is "watch cat /proc/mdstat" to manually monitor critical operations.
 
-Bad.  Because a) targets shouldn't have their own ioctls and b) your ou=
-t
-of tree modules are your problem, don't burden us w=D1=96th upstream
-workarounds for it.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That will not happen soon. Deprecating an interface takes years.
+ 
+> >I'd recommend using "mdadm" to get status of an array, or examine file
+> >in /sys.
+> 
+> If there's to be a "new mdstat" in /sys, I'd be fine with that. That would
+> help migration for those "old scripts grep'ing /proc/mdstat" you rightfully
+> care about.
+> 
+> I suggest to include a file format version information on line 1
+> "/sys/.../mdstat", that way any client parsing such an interface could
+> verify the file format first, and bail out if it doesn't support the
+> currently presented format.
+
+All the info you can get from /proc/mdstat can be found in /sys/xxx. There
+isn't a central mdstat file in sysfs entry, each sysfs entry only export single
+type info. Version info is uncessary, if we need add new info, we'd just add a
+new sysfs entry.
+
+though the /proc/mdstat will not be deprecated soon, it's highly encouraged app
+switches to /sys. sysfs entry is easy to parse. And as Neil said, /proc/mdstat
+is hard to extend, so new info will likely only appear in sysfs.
+
+Thanks,
+Shaohua
