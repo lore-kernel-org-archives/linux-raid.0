@@ -1,69 +1,267 @@
-From: Eric Valette <eric.valette@free.fr>
-Subject: Re: Problem with array raid10 array resync on 4.4.0 (keeps reyncing
- each reboot)
-Date: Thu, 28 Jan 2016 20:52:22 +0100
-Message-ID: <56AA7176.1020508@free.fr>
-References: <56A78786.10103@Free.fr> <20160126233133.GB12721@kernel.org>
- <56A870AD.4070400@free.fr> <20160128182522.GB23378@kernel.org>
-Reply-To: eric.valette@free.fr
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH/RFC/RFT] md: allow resync to go faster when there is
+ competing IO.
+Date: Thu, 28 Jan 2016 12:56:48 -0800
+Message-ID: <20160128205648.GA22191@kernel.org>
+References: <CAByoP04f6YgzhXn+55iEpg0SrVnK3mUxOuEfp-Hki_mppOBieg@mail.gmail.com>
+ <87si1k2do8.fsf@notabene.neil.brown.name>
+ <CAByoP04se9yQv_u1Kc1pXk5shtzT_udTB4v4HYaJRfc0Eh1RqA@mail.gmail.com>
+ <87wpqu1jrl.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160128182522.GB23378@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87wpqu1jrl.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>
+Cc: Chien Lee <chienlee@qnap.com>, linux-raid@vger.kernel.org, owner-linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 28/01/2016 19:25, Shaohua Li wrote:
-> On Wed, Jan 27, 2016 at 08:24:29AM +0100, Eric Valette wrote:
->> On 27/01/2016 00:31, Shaohua Li wrote:
->>> On Tue, Jan 26, 2016 at 03:49:42PM +0100, Eric Valette wrote:
->>>> Hi,
->>>>
->>>> My raid 10 array (5 disk with one spare) was doing a  resync after an
->>>> upgrade to 4.4.0 from 4.1.15. The resync progress was steady and at the end
->>>> the /proc/mdstat was apparently complete but when rebooting, it started
->>>> resycing over and over. I noticed my dmesg was totally filled with raid10
->>>> conf printout message so it was impossible to trace anything else.
->>>>
->>>> Did a resync test with 3.14.58 (because I knew it had worked for resync
->>>> before and was still available as a boot option)  and the array was
->>>> correctly rebuild.
->>>> Runs fine with 4.1.16 now.
->>>>
->>>> Please CC me as I'm not subscribed.
->>>
->>> Could you please provide more info, like mdadm -D /dev/md0 in v4.4? If you run
->>> a stop/reassemble, does the resync start?
->>
->> I'm not going to retry kernel 4.4.0 on this device as I'm no more confident
->> about raid10 support with this 4.4 version.
->
-> Thanks! I know switching to a kernel which is not working well is risky, but
-> the info from 4.1 doesn't have enough info for debuging. I also tried to
-> reproduce the issue locally, but no success. Did you have any other info which
-> could help debugging, for example special config?
+On Thu, Jan 28, 2016 at 02:10:38PM +1100, Neil Brown wrote:
+> On Wed, Jan 27 2016, Chien Lee wrote:
+> 
+> > 2016-01-27 6:12 GMT+08:00 NeilBrown <neilb@suse.com>:
+> >> On Tue, Jan 26 2016, Chien Lee wrote:
+> >>
+> >>> Hello,
+> >>>
+> >>> Recently we find a bug about this patch (commit No. is
+> >>> ac8fa4196d205ac8fff3f8932bddbad4f16e4110 ).
+> >>>
+> >>> We know that this patch committed after Linux kernel 4.1.x is intended
+> >>> to allowing resync to go faster when there is competing IO. However,
+> >>> we find the performance of random read on syncing Raid6 will come up
+> >>> with a huge drop in this case. The following is our testing detail.
+> >>>
+> >>> The OS what we choose in our test is CentOS Linux release 7.1.1503
+> >>> (Core) and the kernel image will be replaced for testing. In our
+> >>> testing result, the 4K random read performance on syncing raid6 in
+> >>> Kernel 4.2.8 is much lower than in Kernel 3.19.8. In order to find out
+> >>> the root cause, we try to rollback this patch in Kernel 4.2.8, and we
+> >>> find the 4K random read performance on syncing Raid6 will be improved
+> >>> and go back to as what it should be in Kernel 3.19.8.
+> >>>
+> >>> Nevertheless, it seems that it will not affect some other read/write
+> >>> patterns. In our testing result, the 1M sequential read/write, 4K
+> >>> random write performance in Kernel 4.2.8 is performed almost the same
+> >>> as in Kernel 3.19.8.
+> >>>
+> >>> It seems that although this patch increases the resync speed, the
+> >>> logic of !is_mddev_idle() cause the sync request wait too short and
+> >>> reduce the chance for raid5d to handle the random read I/O.
+> >>
+> >> This has been raised before.
+> >> Can you please try the patch at the end of
+> >>
+> >>   http://permalink.gmane.org/gmane.linux.raid/51002
+> >>
+> >> and let me know if it makes any difference.  If it isn't sufficient I
+> >> will explore further.
+> >>
+> >> Thanks,
+> >> NeilBrown
+> >
+> >
+> > Hello Neil,
+> >
+> > I try the patch (http://permalink.gmane.org/gmane.linux.raid/51002) in
+> > Kernel 4.2.8. Here are the test results:
+> >
+> >
+> > Part I. SSD (4 x 240GB Intel SSD create Raid6(syncing))
+> >
+> > a.  4K Random Read, numjobs=64
+> >
+> >                                    Average Throughput    Average IOPS
+> >
+> > Kernel 4.2.8 Patch             601249KB/s              150312
+> >
+> >
+> > b.  4K Random Read, numjobs=1
+> >
+> >                                    Average Throughput    Average IOPS
+> >
+> > Kernel 4.2.8 Patch             1166.4KB/s                  291
+> >
+> >
+> >
+> > Part II. HDD (4 x 1TB TOSHIBA HDD create Raid6(syncing))
+> >
+> > a.  4K Random Read, numjobs=64
+> >
+> >                                    Average Throughput    Average IOPS
+> >
+> > Kernel 4.2.8 Patch              2946.4KB/s                 736
+> >
+> >
+> > b.  4K Random Read, numjobs=1
+> >
+> >                                    Average Throughput    Average IOPS
+> >
+> > Kernel 4.2.8 Patch              119199 B/s                   28
+> >
+> >
+> > Although the performance that compare to the original Kernel 4.2.8
+> > test results is increased, the patch
+> > (http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=ac8fa4196d205ac8fff3f8932bddbad4f16e4110)
+> > rollback still has the best performance. I also observe the sync speed
+> > at numjobs=64 almost drop to the sync_speed_min, but sync speed at
+> > numjobs=1 almost keep in the original speed.
+> >
+> >>From my test results, I think this patch isn't sufficient that maybe
+> > Neil can explore further and give me some advice.
+> >
+> >
+> > Thanks,
+> > Chien Lee
+> >
+> >
+> >>>
+> >>>
+> >>> Following is our test environment and some testing results:
+> >>>
+> >>>
+> >>> OS: CentOS Linux release 7.1.1503 (Core)
+> >>>
+> >>> CPU: Intel(R) Xeon(R) CPU E3-1245 v3 @ 3.40GHz
+> >>>
+> >>> Processor number: 8
+> >>>
+> >>> Memory: 12GB
+> >>>
+> >>> fio command:
+> >>>
+> >>> 1.      (for numjobs=64):
+> >>>
+> >>> fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
+> >>> --runtime=180 --size=50G --name=test-read --ioengine=libaio
+> >>> --numjobs=64 --iodepth=1 --group_reporting
+> >>>
+> >>> 2.      (for numjobs=1):
+> >>>
+> >>> fio --filename=/dev/md2 --sync=0 --direct=0 --rw=randread --bs=4K
+> >>> --runtime=180 --size=50G --name=test-read --ioengine=libaio
+> >>> --numjobs=1 --iodepth=1 --group_reporting
+> >>>
+> >>>
+> >>>
+> >>> Here are test results:
+> >>>
+> >>>
+> >>> Part I. SSD (4 x 240GB Intel SSD create Raid6(syncing))
+> >>>
+> >>>
+> >>> a.      4K Random Read, numjobs=64
+> >>>
+> >>>                                              Average Throughput    Average IOPS
+> >>>
+> >>> Kernel 3.19.8                                 715937KB/s              178984
+> >>>
+> >>> Kernel 4.2.8                                   489874KB/s              122462
+> >>>
+> >>> Kernel 4.2.8 Patch Rollback            717377KB/s              179344
+> >>>
+> >>>
+> >>>
+> >>> b.      4K Random Read, numjobs=1
+> >>>
+> >>>                                              Average Throughput    Average IOPS
+> >>>
+> >>> Kernel 3.19.8                                 32203KB/s                8051
+> >>>
+> >>> Kernel 4.2.8                                  2535.7KB/s                633
+> >>>
+> >>> Kernel 4.2.8 Patch Rollback            31861KB/s                7965
+> >>>
+> >>>
+> >>>
+> >>>
+> >>> Part II. HDD (4 x 1TB TOSHIBA HDD create Raid6(syncing))
+> >>>
+> >>>
+> >>> a.      4K Random Read, numjobs=64
+> >>>
+> >>>                                              Average Throughput    Average IOPS
+> >>>
+> >>> Kernel 3.19.8                                2976.6KB/s               744
+> >>>
+> >>> Kernel 4.2.8                                  2915.8KB/s               728
+> >>>
+> >>> Kernel 4.2.8 Patch Rollback           2973.3KB/s               743
+> >>>
+> >>>
+> >>>
+> >>> b.      4K Random Read, numjobs=1
+> >>>
+> >>>                                              Average Throughput    Average IOPS
+> >>>
+> >>> Kernel 3.19.8                                481844 B/s                 117
+> >>>
+> >>> Kernel 4.2.8                                   24718 B/s                   5
+> >>>
+> >>> Kernel 4.2.8 Patch Rollback           460090 B/s                 112
+> >>>
+> >>>
+> >>>
+> >>> Thanks,
+> >>>
+> >>> --
+> >>>
+> >>> Chien Lee
+> 
+> Thanks for testing.
+> 
+> I'd like to suggest that these results are fairly reasonable for the
+> numjobs=64 case.  Certainly read-speed is reduced by presumably resync
+> speed is increased.
+> The numbers for numjob=1 are appalling though.  That would generally
+> affect any synchronous load.  As the synchronous load doesn't interfere
+> much with the resync load, the delays that are inserted won't be very
+> long.
+> 
+> I feel there must be an answer here -  I just cannot find it.
+> I'd like to be able to dynamically estimate the bandwidth of the array
+> and use (say) 10% of that, but I cannot think of a way to do that at all
+> reliably.
 
+Had a hack, something like this?
 
-If really needed can rebuild a 4.4 kernel and boot it. What do you mean 
-by special config? I can send you my kernel .config once rebuild 
-(oldconfig from 4.1.16)
-
-But I doubt the problem will show up now that the array is correctly 
-rebuild. From memory I used 4.4 kernel without problem for a few days, 
-until it decided to resync the array for an unknown reason (standard 
-periodic rebuild, disk block read/write error detected, other?).
-
-NB: I have a disk on the array with 56 sectors in error reported by 
-smart and noticed read error/SATA reset sequence during first array 
-rebuild sequence, but not in any later resync afterward. It did not even 
-decided to use the spare disk...
-
-Let me know how I can help debugging further...
-
--- eric
-
-
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e55e6cf..7fee8e6 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8060,12 +8060,34 @@ void md_do_sync(struct md_thread *thread)
+ 				goto repeat;
+ 			}
+ 			if (!is_mddev_idle(mddev, 0)) {
++				unsigned long start = jiffies;
++				int recov = atomic_read(&mddev->recovery_active);
++				int last_sect, new_sect;
++				int sleep_time = 0;
++
++				last_sect = (int)part_stat_read(&mddev->gendisk->part0, sectors[0]) +
++					(int)part_stat_read(&mddev->gendisk->part0, sectors[1]);
++
+ 				/*
+ 				 * Give other IO more of a chance.
+ 				 * The faster the devices, the less we wait.
+ 				 */
+ 				wait_event(mddev->recovery_wait,
+ 					   !atomic_read(&mddev->recovery_active));
++
++				new_sect = (int)part_stat_read(&mddev->gendisk->part0, sectors[0]) +
++					(int)part_stat_read(&mddev->gendisk->part0, sectors[1]);
++
++				if (recov * 10 > new_sect - last_sect)
++					sleep_time = 9 * (jiffies - start) /
++						((new_sect - last_sect) /
++						 (recov + 1) + 1);
++
++				sleep_time = jiffies_to_msecs(sleep_time);
++				if (sleep_time > 500)
++					sleep_time = 500;
++
++				msleep(sleep_time);
+ 			}
+ 		}
+ 	}
