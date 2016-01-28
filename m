@@ -1,70 +1,51 @@
-From: Sarah Newman <srn@prgmr.com>
-Subject: Re: mdadm bad blocks list
-Date: Wed, 27 Jan 2016 19:55:04 -0800
-Message-ID: <56A99118.2080508@prgmr.com>
-References: <56A9102D.4030304@prgmr.com>
- <87twly1jc7.fsf@notabene.neil.brown.name>
+From: Chien Lee <chienlee@qnap.com>
+Subject: Re: [PATCH/RFC/RFT] md: allow resync to go faster when there is
+ competing IO.
+Date: Thu, 28 Jan 2016 12:42:08 +0800
+Message-ID: <CAByoP052tnHBOdShca4AuUPgngWt8t1uKZyZiTDg9um9MfsaNQ@mail.gmail.com>
+References: <CAByoP04f6YgzhXn+55iEpg0SrVnK3mUxOuEfp-Hki_mppOBieg@mail.gmail.com>
+	<87si1k2do8.fsf@notabene.neil.brown.name>
+	<CAByoP04se9yQv_u1Kc1pXk5shtzT_udTB4v4HYaJRfc0Eh1RqA@mail.gmail.com>
+	<87wpqu1jrl.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87twly1jc7.fsf@notabene.neil.brown.name>
+In-Reply-To: <87wpqu1jrl.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, linux-raid@vger.kernel.org, shli@kernel.org, owner-linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/27/2016 07:19 PM, NeilBrown wrote:
-> On Thu, Jan 28 2016, Sarah Newman wrote:
-> 
->> I experienced the following problems with the mdadm bad blocks list:
->>
->> 1. Additions to the bad block list do not cause an email to be sent by the mdadm monitor. Expected behavior is for an email to be sent as soon as the
->> bad blocks list becomes non-empty.
-> 
-> Yes, that would be a good idea.  If you do develop patches, please post
-> them.
+>
+> Thanks for testing.
+>
+> I'd like to suggest that these results are fairly reasonable for the
+> numjobs=64 case.  Certainly read-speed is reduced by presumably resync
+> speed is increased.
+> The numbers for numjob=1 are appalling though.  That would generally
+> affect any synchronous load.  As the synchronous load doesn't interfere
+> much with the resync load, the delays that are inserted won't be very
+> long.
+>
+> I feel there must be an answer here -  I just cannot find it.
+> I'd like to be able to dynamically estimate the bandwidth of the array
+> and use (say) 10% of that, but I cannot think of a way to do that at all
+> reliably.
+>
+> I'll ponder it a bit longer.  We may need to ultimately revert that
+> patch, but not yet.
+>
+> Thanks,
+> NeilBrown
 
-Will do, but I don't have a definite time frame for it.
+Hello Neil,
 
-> 
->> 2. /proc/mdstat does not show any indication that there are bad blocks present on an md member. Specifically, the status for the raid personality
->> should show something other than "U" if the badblocks list is not empty for that member (maybe "B"?)
-> 
-> I'd like to deprecate /proc/mdstat.  It is not really easy to extend.
-> People might have programs that parse it which could break if you change
-> 'U' to 'B'.
-> I'd recommend using "mdadm" to get status of an array, or examine file
-> in /sys.
+This issue about competing between sync IO and non-sync IO is a
+trade-off question
+and need to consider deeply and widely. Thanks for your advice.
 
-If /proc/mdstat isn't going to be updated, is it going to be removed? If not and changing 'U' to 'B' isn't acceptable, then what about adding a flag
-to the device? Example
+If any progress about this, please let me know first. I'm happy that I
+can provide
+my test results for community.
 
-md0 : active raid1 sda1[1] sdb1[2](B)
-
-Where is the bad blocks list in /sys?
-
-> 
->> 3. Adding a device when there is an md member with bad blocks does not appear to trigger a rebuild, meaning there could be at least one good copy of
->> all the data but no way to get all good data on a single device without expanding the entire array.
-> 
-> Good point.  That would be quite easy to change.  Just set
-> WantReplacement if the bad block list is ever empty.
-> Not sure it is always a good idea though.  You can have a bad block on a
-> perfectly good device if the device it was recovered from has a bad
-> block.
-> You only really want to set WantReplacement automatically if a write
-> fails.  We do do that, but if you stop and restart an array the fact
-> that a write failed can be forgotten.
-
-Yes, I am quite aware there can be a bad block on a perfectly good device. But in a mirror if there are multiple perfectly good devices that each have
-bad blocks marked for whatever reason, the only way to get back to a single good device is to rebuild off of all of them. Speaking as a user, this is
-what I would want to happen.
-
-> I'm not convinced that it is harmful, though I accept that it is not perfect.
-
-Yes. You both know the current behavior of mdadm perfectly and probably didn't just experience data loss.
-
-The old behavior was to fail immediately and alert if there was a problem rather than silently accepting errors. I expect there are some people who
-think they have a good RAID, but don't, based on /proc/mdstat and lack of errors from mdadm monitor.
-
-Thanks, Sarah
+Thanks again,
+Chien Lee
