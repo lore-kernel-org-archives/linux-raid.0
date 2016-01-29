@@ -1,33 +1,41 @@
-From: Andy Whitcroft <apw@canonical.com>
-Subject: Re: reinstate dm target local ioctl support
-Date: Fri, 29 Jan 2016 14:35:58 +0000
-Message-ID: <20160129143558.GR9864@bark>
-References: <1453989019-24300-1-git-send-email-apw@canonical.com>
- <20160129135712.GA7201@agk-dp.fab.redhat.com>
+From: Adrian Palmer <adrian.palmer@seagate.com>
+Subject: [LSF/MM ATTEND][LSF/MM TOPIC] SMR/Zoned devices IO
+Date: Fri, 29 Jan 2016 14:41:09 -0700
+Message-ID: <CAKdFiL5WqKz2Pq3bAhPooO0jF_u6MY-9FFcGb-62O_atWyeqfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160129135712.GA7201@agk-dp.fab.redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, mohan_srinivasan@yahoo.com, dm-devel@redhat.com, Neil Brown <neilb@suse.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, linux-raid@ver.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 29, 2016 at 01:57:12PM +0000, Alasdair G Kergon wrote:
-> On Thu, Jan 28, 2016 at 01:50:19PM +0000, Andy Whitcroft wrote:
-> > However this also removed the possibility of a dm target having target
-> > specific ioctls.  Currently this is not used by any in-tree targets but
-> > was utilised by the flashcache out-of-tree module.
->  
-> What data is being passed in and out?
-> 
-> The method we support is passing it through DM_TARGET_MSG (as text).
-> For examples look at dm-switch.c and dm-stats.c, which handled
-> pretty large quantities of data.
-> 
-> Would that work?
+Greetings:
 
-That sounds like it has all the bits one would need indeed.  I will
-investigate that.  Thanks for the info.
+I would like to attend LSF/MM to continue discussion related to SMR.
 
--apw
+Besides the SMRFFS, we've been developing a zoned device mapper (ZDM).
+I would like to gather feedback and direction.  I can provide a quick
+explanation of the architecture.  This will enable existing software
+to work on zoned devices.  Our work will initially focus on workloads
+provided by mdraid.
+
+Also, I would like to discuss the storage of the zone information in
+the kernel.  It makes little sense for the drive to be continuously
+probed, or for each app to maintain it own, possibly un-synced, copy
+of the zone information.  I'll bring along our work and
+recommendations of a solution based on Hannes' work in this area.  I
+believe we need a common stackable interface to pass along this
+information, both up the kernel, and to userland.
+
+Lastly, we are still exploring the need for an additional elevator
+besides the no-op that orders not only by time, but also zone aware
+location.  I'll have some test results by lsf/mm that we can discuss.
+
+
+Adrian Palmer
+Firmware Engineer II
+R&D Firmware
+Seagate, Longmont Colorado
+720-684-1307
+adrian.palmer@seagate.com
