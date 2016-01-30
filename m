@@ -1,45 +1,32 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Reshape stuck immediately, backup file all nulls
-Date: Sat, 30 Jan 2016 12:09:55 -0500
-Message-ID: <56ACEE63.6070108@turmel.org>
-References: <CABRqA0i7bAB3Xca1a29u2JYOF2UaE_w1sY73se3menp+ExWWKA@mail.gmail.com>
+From: Sarah Newman <srn@prgmr.com>
+Subject: Re: mdadm bad blocks list
+Date: Sat, 30 Jan 2016 10:22:11 -0800
+Message-ID: <56ACFF53.2020402@prgmr.com>
+References: <56A9102D.4030304@prgmr.com>
+ <87twly1jc7.fsf@notabene.neil.brown.name> <56A99118.2080508@prgmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABRqA0i7bAB3Xca1a29u2JYOF2UaE_w1sY73se3menp+ExWWKA@mail.gmail.com>
+In-Reply-To: <56A99118.2080508@prgmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Bj=c3=b6rn_Augustsson?= <oggust@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Bj=C3=B6rn,
+On 01/27/2016 07:55 PM, Sarah Newman wrote:
+> On 01/27/2016 07:19 PM, NeilBrown wrote:
+>> On Thu, Jan 28 2016, Sarah Newman wrote:
+>>
+>>> I experienced the following problems with the mdadm bad blocks list:
+>>>
+>>> 1. Additions to the bad block list do not cause an email to be sent by the mdadm monitor. Expected behavior is for an email to be sent as soon as the
+>>> bad blocks list becomes non-empty.
+>>
+>> Yes, that would be a good idea.  If you do develop patches, please post
+>> them.
+> 
+> Will do, but I don't have a definite time frame for it.
 
-On 01/30/2016 07:21 AM, Bj=C3=B6rn Augustsson wrote:
+Since patches will not immediately propagate, I wrote an ansible role https://github.com/prgmrcom/ansible-role-mdadm-bad-blocks which contains the
+script https://github.com/prgmrcom/ansible-role-mdadm-bad-blocks/blob/master/files/usr/local/bin/raid-bad-blocks . Feedback welcome.
 
-> The question is, what kind of state am in now?=20
-
-The kernel is waiting for mdmon (mdadm as a background task) to step
-through the stripes.  mdmon died and the kernel will wait forever.
-
-> And how should I recover?
-> Will just adding a policy to allow access to that file, and then
-> mdadm --grow --continue /dev/md127
-> fix it?=20
-
-Probably.  Others have fixed this by disabling selinux for the reshape.
- Don't forget to specify --backup-file again on the command line.  (I
-don't use selinux myself, so I can't be more specific.)
-
-In the future, consider not using a backup file at all -- mdadm
-generally leaves enough dead space on devices to avoid the need.
-
-> Is the broken backup file going to be a problem?
-
-Shouldn't be. Report back if it is.
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
