@@ -1,210 +1,54 @@
-From: Eric Valette <eric.valette@free.fr>
-Subject: Re: Problem with array raid10 array resync on 4.4.0 (keeps reyncing
- each reboot)
-Date: Mon, 1 Feb 2016 00:00:36 +0100
-Message-ID: <56AE9214.3030206@free.fr>
-References: <56A78786.10103@Free.fr> <20160126233133.GB12721@kernel.org>
- <56A870AD.4070400@free.fr> <20160128182522.GB23378@kernel.org>
- <56AA7176.1020508@free.fr>
-Reply-To: eric.valette@free.fr
+From: George Rapp <george.rapp@gmail.com>
+Subject: Re: Reshape stuck immediately, backup file all nulls
+Date: Sun, 31 Jan 2016 20:02:47 -0500
+Message-ID: <CAF-KpgZy4+PGLGV8=x1mq+sXL8KDcGkyHsfuv6OSSxuZAwsHyw@mail.gmail.com>
+References: <CABRqA0i7bAB3Xca1a29u2JYOF2UaE_w1sY73se3menp+ExWWKA@mail.gmail.com>
+ <56ACEE63.6070108@turmel.org> <CABRqA0jXMyH+TO8Nd47DTAj8RkyFC5bpg07uhXXRb7aU-twHfA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56AA7176.1020508@free.fr>
+In-Reply-To: <CABRqA0jXMyH+TO8Nd47DTAj8RkyFC5bpg07uhXXRb7aU-twHfA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Bj=C3=B6rn_Augustsson?= <oggust@gmail.com>
+Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 28/01/2016 20:52, Eric Valette wrote:
-> On 28/01/2016 19:25, Shaohua Li wrote:
+On Sun, Jan 31, 2016 at 9:59 AM, Bj=C3=B6rn Augustsson <oggust@gmail.co=
+m> wrote:
 >
-> If really needed can rebuild a 4.4 kernel and boot it. What do you mean
-> by special config? I can send you my kernel .config once rebuild
-> (oldconfig from 4.1.16)
+> On Sat, Jan 30, 2016 at 6:09 PM, Phil Turmel <philip@turmel.org> wrot=
+e:
+> > Hi Bj=C3=B6rn,
+> >
+> > The kernel is waiting for mdmon (mdadm as a background task) to ste=
+p
+> > through the stripes.  mdmon died and the kernel will wait forever.
+>
+> OK. So I think the root cause here is that my invocation of mdadm was
+> unconfined,
+> because I was running it interactively. So it could create the backup=
+ file.
+> But the background version starts via systemd, and runs as mdadm_t, w=
+hich
+> can't read that file (because it's in /boot). And poof.
+>
+> I'll file a bug vs the fedora selinux policy for this, too.
 
-Linux nas2 4.4.1 #1 SMP Sun Jan 31 23:46:26 CET 2016 x86_64 GNU/Linux
 
+Thanks for researching the SELinux vs. mdadm conflict in Fedora that
+bit me as well (http://marc.info/?l=3Dlinux-raid&m=3D145349072305613&w=3D=
+2).
+If your Fedora selinux bug ticket makes it into general distribution,
+lots of other users will be helped.
 
-mdadm -D /dev/md0
-/dev/md0:
-         Version : 1.2
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 2930134016 (2794.39 GiB 3000.46 GB)
-    Raid Devices : 4
-   Total Devices : 5
-     Persistence : Superblock is persistent
-
-     Update Time : Sun Jan 31 23:51:44 2016
-           State : active, resyncing
-  Active Devices : 4
-Working Devices : 5
-  Failed Devices : 0
-   Spare Devices : 1
-
-          Layout : near=2
-      Chunk Size : 512K
-
-   Resync Status : 0% complete
-
-            Name : nas2:0  (local to host nas2)
-            UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-          Events : 488
-
-     Number   Major   Minor   RaidDevice State
-        0       8       17        0      active sync set-A   /dev/sdb1
-        1       8       33        1      active sync set-B   /dev/sdc1
-        2       8       49        2      active sync set-A   /dev/sdd1
-        3       8       65        3      active sync set-B   /dev/sde1
-
-        4       8       81        -      spare   /dev/sdf1
-
-So it starts again rechecking the array
-
-mdadm -E /dev/sd[b-f]1
-/dev/sdb1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-            Name : nas2:0  (local to host nas2)
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=911 sectors
-           State : active
-     Device UUID : ce9d878a:37a4f3a3:936bd905:c4ed9970
-
-     Update Time : Sun Jan 31 23:56:38 2016
-        Checksum : c92206ec - correct
-          Events : 489
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 0
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-            Name : nas2:0  (local to host nas2)
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=911 sectors
-           State : active
-     Device UUID : 8c89bdf8:4f3f8ace:c15b5634:7a874071
-
-     Update Time : Sun Jan 31 23:56:38 2016
-        Checksum : 911217a8 - correct
-          Events : 489
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 1
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdd1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-            Name : nas2:0  (local to host nas2)
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=911 sectors
-           State : active
-     Device UUID : 9c0655c3:dca7722e:8ecc1a17:fb4d9089
-
-     Update Time : Sun Jan 31 23:56:38 2016
-        Checksum : b6a6bcd3 - correct
-          Events : 489
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 2
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sde1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-            Name : nas2:0  (local to host nas2)
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=911 sectors
-           State : active
-     Device UUID : c97b767a:84d2e7e2:52557d30:51c39784
-
-     Update Time : Sun Jan 31 23:56:38 2016
-        Checksum : 36a6d284 - correct
-          Events : 489
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : Active device 3
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdf1:
-           Magic : a92b4efc
-         Version : 1.2
-     Feature Map : 0x0
-      Array UUID : 6abe1f20:90c629de:fadd8dc0:ca14c928
-            Name : nas2:0  (local to host nas2)
-   Creation Time : Wed Jun 20 23:56:59 2012
-      Raid Level : raid10
-    Raid Devices : 4
-
-  Avail Dev Size : 5860268943 (2794.39 GiB 3000.46 GB)
-      Array Size : 5860268032 (5588.79 GiB 6000.91 GB)
-   Used Dev Size : 5860268032 (2794.39 GiB 3000.46 GB)
-     Data Offset : 262144 sectors
-    Super Offset : 8 sectors
-    Unused Space : before=262064 sectors, after=911 sectors
-           State : active
-     Device UUID : 82667e81:a6158319:85e0282e:845eec1c
-
-     Update Time : Sun Jan 31 23:51:44 2016
-        Checksum : a4a259e - correct
-          Events : 488
-
-          Layout : near=2
-      Chunk Size : 512K
-
-    Device Role : spare
-    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-root@nas2:~#
-
--- eric
+George
+--=20
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
