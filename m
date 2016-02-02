@@ -1,44 +1,56 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: deprecating /proc/mdstat
-Date: Tue, 02 Feb 2016 09:33:31 -0500
-Message-ID: <wrfjwpqnxjus.fsf@redhat.com>
-References: <56A9102D.4030304@prgmr.com>
-	<87twly1jc7.fsf@notabene.neil.brown.name>
-	<20160128124121.Horde.YKtbZL0CUYKTuEkxLcmmhQ4@www3.nde.ag>
-	<20160128182102.GA23378@kernel.org>
+From: Sarah Newman <srn@prgmr.com>
+Subject: Bogus entry in mdadm bad blocks list and question about particular
+ commit
+Date: Tue, 2 Feb 2016 12:34:59 -0800
+Message-ID: <56B112F3.9010609@prgmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160128182102.GA23378@kernel.org> (Shaohua Li's message of
-	"Thu, 28 Jan 2016 10:21:02 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
-Cc: "Jens-U. Mozdzen" <jmozdzen@nde.ag>, NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Shaohua Li <shli@kernel.org> writes:
-> On Thu, Jan 28, 2016 at 12:41:21PM +0100, Jens-U. Mozdzen wrote:
->> If there's to be a "new mdstat" in /sys, I'd be fine with that. That would
->> help migration for those "old scripts grep'ing /proc/mdstat" you rightfully
->> care about.
->> 
->> I suggest to include a file format version information on line 1
->> "/sys/.../mdstat", that way any client parsing such an interface could
->> verify the file format first, and bail out if it doesn't support the
->> currently presented format.
->
-> All the info you can get from /proc/mdstat can be found in /sys/xxx. There
-> isn't a central mdstat file in sysfs entry, each sysfs entry only export single
-> type info. Version info is uncessary, if we need add new info, we'd just add a
-> new sysfs entry.
->
-> though the /proc/mdstat will not be deprecated soon, it's highly encouraged app
-> switches to /sys. sysfs entry is easy to parse. And as Neil said, /proc/mdstat
-> is hard to extend, so new info will likely only appear in sysfs.
+I added some more drives to a raid 1 last night where some devices had existing bad block entries. There was nothing of particular interest in
+/var/log/messages. Afterwards there is:
 
-I think the strong argument for /proc/mdstat is that it's easy for
-visual inspection, but should not be scripted. I certainly use it quite
-regularly, but maybe I am just old and lazy :)
+$ sudo /sbin/mdadm --examine-badblocks /dev/sdl1
+Bad-blocks on /dev/sdl1:
+   11986270392325491 for 51 sectors
 
-Cheers,
-Jes
+The total number of sectors on the drive is 3907029168.
+
+The start sector in the bad blocks list is 2a95730cea9573 in hex, I don't know if that string has any special significance or not.
+
+$ sudo /sbin/mdadm --examine /dev/sdl1
+/dev/sdl1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x8
+
+     Raid Level : raid1
+   Raid Devices : 11
+
+ Avail Dev Size : 20971368 (10.00 GiB 10.74 GB)
+     Array Size : 10485632 (10.00 GiB 10.74 GB)
+  Used Dev Size : 20971264 (10.00 GiB 10.74 GB)
+   Super Offset : 20971504 sectors
+   Unused Space : before=0 sectors, after=232 sectors
+          State : clean
+
+    Update Time : Tue Feb  2 10:50:33 2016
+  Bad Block Log : 512 entries available at offset -8 sectors - bad blocks present.
+       Checksum : 4092aabf - correct
+         Events : 143560
+
+
+   Device Role : Active device 9
+   Array State : AAAAAAAAAAA ('A' == active, '.' == missing, 'R' == replacing)
+
+The kernel is built from the Xen4CentOS 3.18.21-17 kernel, but there are no changes related to md in the code.
+
+I looked for differences in between 3.18.21 and stable 3.18.y and the only interesting thing looked like e9206476ace "md/raid1: submit_bio_wait()
+returns 0 on success". I don't think that's a smoking gun for the bogus bad blocks entry. But without that commit, mdadm with bad blocks enabled is
+completely broken if there are write errors such that successful writes are reported as errors and vice versa, is that correct?
+
+Thanks, Sarah
