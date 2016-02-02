@@ -1,63 +1,87 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: WANTED new maintainer for Linux/md (and mdadm)
-Date: Tue, 02 Feb 2016 07:19:58 -0500
-Message-ID: <wrfjoabz1ez5.fsf@redhat.com>
-References: <87k2o849j5.fsf@notabene.neil.brown.name>
-	<569F4505.6060308@intel.com> <87powo2ber.fsf@notabene.neil.brown.name>
+Subject: Re: [PATCH/mdadm] super1: Fix bblog_size accesses on big-ending machines.
+Date: Tue, 02 Feb 2016 07:20:15 -0500
+Message-ID: <wrfjk2mn1eyo.fsf@redhat.com>
+References: <87d1sl182i.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87powo2ber.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Wed, 27 Jan 2016 10:01:16 +1100")
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87d1sl182i.fsf@notabene.neil.brown.name> (NeilBrown's message of
+	"Fri, 29 Jan 2016 12:35:33 +1100")
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, linux-raid@vger.kernel.org, dm-devel@redhat.com, LKML <linux-kernel@vger.kernel.org>, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 NeilBrown <neilb@suse.com> writes:
-> On Wed, Jan 20 2016, Artur Paszkiewicz wrote:
->>
->> Hi Neil,
->>
->> Thank you for your work and time spent on maintaining MD/mdadm. I would also
->> like to offer help for the emerging maintainership team. I've been
->> working with
->> MD RAID for more than 4 years, mostly testing and developing the IMSM-related
->> parts on behalf of my employer - Intel. I realize that I was not very visible
->> on this mailing list, but I think I have a pretty good knowledge about mdadm
->> and the MD drivers. Now I have Intel's approval to take on maintaining MD RAID
->> as part of my job, not focusing primarily on IMSM. I definitely feel more
->> confident with maintaining mdadm, but I would certainly like to learn more
->> about the kernel MD stack and help with it as much as I can.
+> bblog_size is 16bit so using le32_to_cpu on it is not wise
+> and leads to errors on big-endian machines.
+> Change all such calls to use le16.
 >
-> Hi Arthur,
->  thanks for all your IMSM work over the years!  It is great that you can
->  continue contributing and do so more broadly.
+> Bug was introduced in mdadm-3.3
 >
->  For the moment Jes Serensen will be co-ordinating mdadm (once I make a
->  release ... tomorrow?) and Shaohua Li will be looking after the
->  kernel/md side.  I'm sure there is plenty of room for you too though.
->  Only one person (at a time) can queue patches, but several can
->  collaborate at development and support and bug fixing and testing and
->  ....
->  I suggest you find ways to co-ordinate with them.
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
 >
->  This:
->      https://bugzilla.kernel.org/show_bug.cgi?id=108741
->  is currently most important in my mind, but there are other things to
->  do.
+> Hi Jes,
+>  when you are ready to start queuing patches for mdadm, this will make
+>  sure you have something to work with:-)
+>
+> Thanks,
+> NeilBrown
 
-Hi Arthur,
+Applied!
 
-I have setup a git repository for mdadm here:
-git://git.kernel.org/pub/scm/utils/mdadm/mdadm.git
-
-I'll be relying heavily on your contributions in managing this now that
-Neil is leaving it to us. I'll do my best to maintain it in a similar
-manner to Neil, albeit I am probably going to screw up a lot more often.
-
-Please fire away those patches and do not be afraid to yell at me if I
-get something wrong!
-
-Cheers,
+Thanks,
 Jes
+
+>
+>  super1.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/super1.c b/super1.c
+> index 8bcaa2fe02c8..9b877e504c4b 100644
+> --- a/super1.c
+> +++ b/super1.c
+> @@ -730,12 +730,12 @@ static int copy_metadata1(struct supertype *st, int from, int to)
+>  	}
+>  
+>  	if (super.bblog_size != 0 &&
+> -	    __le32_to_cpu(super.bblog_size) <= 100 &&
+> +	    __le16_to_cpu(super.bblog_size) <= 100 &&
+>  	    super.bblog_offset != 0 &&
+>  	    (super.feature_map & __le32_to_cpu(MD_FEATURE_BAD_BLOCKS))) {
+>  		/* There is a bad block log */
+>  		unsigned long long bb_offset = sb_offset;
+> -		int bytes = __le32_to_cpu(super.bblog_size) * 512;
+> +		int bytes = __le16_to_cpu(super.bblog_size) * 512;
+>  		int written = 0;
+>  		struct align_fd afrom, ato;
+>  
+> @@ -832,7 +832,7 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
+>  	__u64 *bbl, *bbp;
+>  	int i;
+>  
+> -	if  (!sb->bblog_size || __le32_to_cpu(sb->bblog_size) > 100
+> +	if  (!sb->bblog_size || __le16_to_cpu(sb->bblog_size) > 100
+>  	     || !sb->bblog_offset){
+>  		printf("No bad-blocks list configured on %s\n", devname);
+>  		return 0;
+> @@ -843,7 +843,7 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
+>  		return 0;
+>  	}
+>  
+> -	size = __le32_to_cpu(sb->bblog_size)* 512;
+> +	size = __le16_to_cpu(sb->bblog_size)* 512;
+>  	if (posix_memalign((void**)&bbl, 4096, size) != 0) {
+>  		pr_err("could not allocate badblocks list\n");
+>  		return 0;
+> @@ -986,7 +986,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
+>  		if (sb->bblog_offset && sb->bblog_size) {
+>  			unsigned long long bbend = super_offset;
+>  			bbend += (int32_t)__le32_to_cpu(sb->bblog_offset);
+> -			bbend += __le32_to_cpu(sb->bblog_size);
+> +			bbend += __le16_to_cpu(sb->bblog_size);
+>  			if (bbend > earliest)
+>  				earliest = bbend;
+>  		}
