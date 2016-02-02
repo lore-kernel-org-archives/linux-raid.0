@@ -1,87 +1,44 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH/mdadm] super1: Fix bblog_size accesses on big-ending machines.
-Date: Tue, 02 Feb 2016 07:20:15 -0500
-Message-ID: <wrfjk2mn1eyo.fsf@redhat.com>
-References: <87d1sl182i.fsf@notabene.neil.brown.name>
+Subject: Re: deprecating /proc/mdstat
+Date: Tue, 02 Feb 2016 09:33:31 -0500
+Message-ID: <wrfjwpqnxjus.fsf@redhat.com>
+References: <56A9102D.4030304@prgmr.com>
+	<87twly1jc7.fsf@notabene.neil.brown.name>
+	<20160128124121.Horde.YKtbZL0CUYKTuEkxLcmmhQ4@www3.nde.ag>
+	<20160128182102.GA23378@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87d1sl182i.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Fri, 29 Jan 2016 12:35:33 +1100")
+In-Reply-To: <20160128182102.GA23378@kernel.org> (Shaohua Li's message of
+	"Thu, 28 Jan 2016 10:21:02 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: "Jens-U. Mozdzen" <jmozdzen@nde.ag>, NeilBrown <nfbrown@novell.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> bblog_size is 16bit so using le32_to_cpu on it is not wise
-> and leads to errors on big-endian machines.
-> Change all such calls to use le16.
+Shaohua Li <shli@kernel.org> writes:
+> On Thu, Jan 28, 2016 at 12:41:21PM +0100, Jens-U. Mozdzen wrote:
+>> If there's to be a "new mdstat" in /sys, I'd be fine with that. That would
+>> help migration for those "old scripts grep'ing /proc/mdstat" you rightfully
+>> care about.
+>> 
+>> I suggest to include a file format version information on line 1
+>> "/sys/.../mdstat", that way any client parsing such an interface could
+>> verify the file format first, and bail out if it doesn't support the
+>> currently presented format.
 >
-> Bug was introduced in mdadm-3.3
+> All the info you can get from /proc/mdstat can be found in /sys/xxx. There
+> isn't a central mdstat file in sysfs entry, each sysfs entry only export single
+> type info. Version info is uncessary, if we need add new info, we'd just add a
+> new sysfs entry.
 >
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->
-> Hi Jes,
->  when you are ready to start queuing patches for mdadm, this will make
->  sure you have something to work with:-)
->
-> Thanks,
-> NeilBrown
+> though the /proc/mdstat will not be deprecated soon, it's highly encouraged app
+> switches to /sys. sysfs entry is easy to parse. And as Neil said, /proc/mdstat
+> is hard to extend, so new info will likely only appear in sysfs.
 
-Applied!
+I think the strong argument for /proc/mdstat is that it's easy for
+visual inspection, but should not be scripted. I certainly use it quite
+regularly, but maybe I am just old and lazy :)
 
-Thanks,
+Cheers,
 Jes
-
->
->  super1.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/super1.c b/super1.c
-> index 8bcaa2fe02c8..9b877e504c4b 100644
-> --- a/super1.c
-> +++ b/super1.c
-> @@ -730,12 +730,12 @@ static int copy_metadata1(struct supertype *st, int from, int to)
->  	}
->  
->  	if (super.bblog_size != 0 &&
-> -	    __le32_to_cpu(super.bblog_size) <= 100 &&
-> +	    __le16_to_cpu(super.bblog_size) <= 100 &&
->  	    super.bblog_offset != 0 &&
->  	    (super.feature_map & __le32_to_cpu(MD_FEATURE_BAD_BLOCKS))) {
->  		/* There is a bad block log */
->  		unsigned long long bb_offset = sb_offset;
-> -		int bytes = __le32_to_cpu(super.bblog_size) * 512;
-> +		int bytes = __le16_to_cpu(super.bblog_size) * 512;
->  		int written = 0;
->  		struct align_fd afrom, ato;
->  
-> @@ -832,7 +832,7 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
->  	__u64 *bbl, *bbp;
->  	int i;
->  
-> -	if  (!sb->bblog_size || __le32_to_cpu(sb->bblog_size) > 100
-> +	if  (!sb->bblog_size || __le16_to_cpu(sb->bblog_size) > 100
->  	     || !sb->bblog_offset){
->  		printf("No bad-blocks list configured on %s\n", devname);
->  		return 0;
-> @@ -843,7 +843,7 @@ static int examine_badblocks_super1(struct supertype *st, int fd, char *devname)
->  		return 0;
->  	}
->  
-> -	size = __le32_to_cpu(sb->bblog_size)* 512;
-> +	size = __le16_to_cpu(sb->bblog_size)* 512;
->  	if (posix_memalign((void**)&bbl, 4096, size) != 0) {
->  		pr_err("could not allocate badblocks list\n");
->  		return 0;
-> @@ -986,7 +986,7 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info, char *map)
->  		if (sb->bblog_offset && sb->bblog_size) {
->  			unsigned long long bbend = super_offset;
->  			bbend += (int32_t)__le32_to_cpu(sb->bblog_offset);
-> -			bbend += __le32_to_cpu(sb->bblog_size);
-> +			bbend += __le16_to_cpu(sb->bblog_size);
->  			if (bbend > earliest)
->  				earliest = bbend;
->  		}
