@@ -1,67 +1,55 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [mdadm PATCH 1/1] Fix some type comparison problems
-Date: Wed, 03 Feb 2016 15:36:25 -0500
-Message-ID: <wrfjr3gth6pi.fsf@redhat.com>
-References: <1454477089-8166-1-git-send-email-xni@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: [GIT PULL] MD fix for 4.5-rc2
+Date: Wed, 3 Feb 2016 16:49:55 -0800
+Message-ID: <20160204004955.GA11987@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1454477089-8166-1-git-send-email-xni@redhat.com> (Xiao Ni's
-	message of "Wed, 3 Feb 2016 13:24:49 +0800")
-Sender: linux-raid-owner@vger.kernel.org
-To: Xiao Ni <xni@redhat.com>
-Cc: linux-raid@vger.kernel.org, Deepa Dinamani <deepa.kernel@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com, gayatri.kammela@intel.com, snitzer@redhat.com
 List-Id: linux-raid.ids
 
-Xiao Ni <xni@redhat.com> writes:
-> It complains when building on s390 and i686 platform.
->
-> Signed-off-by : Xiao Ni <xni@redhat.com>
-> ---
->  Monitor.c | 2 +-
->  util.c    | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/Monitor.c b/Monitor.c
-> index f19c2e5..928aa45 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -542,7 +542,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
->  		alert("NewArray", st->devname, NULL, ainfo);
->  	}
->  
-> -	if (st->utime == array.utime &&
-> +	if (st->utime == (long)array.utime &&
->  	    st->failed == array.failed_disks &&
->  	    st->working == array.working_disks &&
->  	    st->spare == array.spare_disks &&
+Hi Linus,
 
-Hi Xiao,
+As you know, Neil steps down from MD. I'm looking after it. Here are some
+patches queued. A build fix from Gayatri and several trival patches from me.
+Please pull.
 
-Thanks for the patch - I think the correct fix in Monitor.c is to change
-utime in struct state from long to unsigned int, to match the change
-Deepa Dinamani introduced in 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c
-utime is only ever derived from mdu_array_info_s, so it should be safe.
+Thanks,
+Shaohua
 
-> diff --git a/util.c b/util.c
-> index 970d484..ccbb2bc 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1288,7 +1288,7 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
->  			struct mdinfo info;
->  			st->ss->getinfo_super(st, &info, NULL);
->  			if (bestsuper == -1 ||
-> -			    besttime < info.array.ctime) {
-> +			    besttime < (time_t)info.array.ctime) {
->  				bestsuper = i;
->  				besttime = info.array.ctime;
->  			}
+----------------------------------------------------------------
+The following changes since commit b37a05c083c85c2657dca9bbe1f5d79dccf756d5:
 
-Here I think we should change the declaration of besttime from time_t to
-unsigned int, again to match the definition used in mdu_array_info_s.
+  Merge branch 'akpm' (patches from Andrew) (2016-02-03 10:10:02 -0800)
 
-That or we should change mdu_array_info_s to use time_t instead, but I
-am not sure that would be safe.
+are available in the git repository at:
 
-Cheers,
-Jes
+  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-linus
+
+for you to fetch changes up to 9ea064158f4e02e64890ee1261449b01e954e594:
+
+  Merge branch 'mymd/for-next' into mymd/for-linus (2016-02-03 15:43:59 -0800)
+
+----------------------------------------------------------------
+Gayatri Kammela (1):
+      raid6/algos.c : bug fix : Add the missing definitions to the pq.h file
+
+Shaohua Li (5):
+      MD: rename some functions
+      MD: add myself as MD maintainer
+      md-cluster: fix missing memory free
+      md-cluster: delete useless code
+      Merge branch 'mymd/for-next' into mymd/for-linus
+
+ MAINTAINERS             |  1 +
+ drivers/md/bitmap.c     |  4 ----
+ drivers/md/faulty.c     | 18 +++++++++---------
+ drivers/md/md-cluster.c |  6 +++++-
+ drivers/md/raid1.c      | 21 +++++++++++----------
+ drivers/md/raid10.c     | 20 ++++++++++----------
+ drivers/md/raid5.c      | 45 +++++++++++++++++++++++----------------------
+ include/linux/raid/pq.h |  2 ++
+ 8 files changed, 61 insertions(+), 56 deletions(-)
