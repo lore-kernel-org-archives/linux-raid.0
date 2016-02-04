@@ -1,79 +1,72 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: RAID journal, requirements?
-Date: Wed, 3 Feb 2016 17:25:05 -0800
-Message-ID: <20160204012505.GB29132@kernel.org>
-References: <20160127001520.GH3039@otheros>
+From: Deepa Dinamani <deepa.kernel@gmail.com>
+Subject: Re: [mdadm PATCH 1/1] Fix some type comparison problems
+Date: Wed, 3 Feb 2016 19:10:32 -0800
+Message-ID: <CABeXuvqUNw3-zQrdfaJD3fhGL0Tqc9zUU77sGAsfRdyH3QD9Jw@mail.gmail.com>
+References: <1454477089-8166-1-git-send-email-xni@redhat.com>
+	<wrfjr3gth6pi.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160127001520.GH3039@otheros>
+In-Reply-To: <wrfjr3gth6pi.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus =?iso-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>
-Cc: linux-raid@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2016 at 01:15:20AM +0100, Linus L=FCssing wrote:
-> Hi,
->=20
-> I am very excited about the new journaling feature for RAID in md
-> and want to try it out soon.
->=20
-> Neil's article on LWN already gave a great overview and some hints
-> about it, but I am still a little unsure about the technical
-> requirements for the journal device. E.g. speed, reliability and
-> size-wise. And what the implications of failing them means.
->=20
-> I want to setup a small home NAS. My personal priorities are:
-> Firstly, low power-per-GB as it will be solar powered and battery
-> backed. Second priority is reliability. Performance is not that
-> important to me.
->=20
-> My current plan: Tiny ARM-based computer (Odroid C1+: 4x USB (2.0,
-> unfortunately) ports), 4x 2TB SATA HDDs (@0.7W idle, 1.7W max. each)
-> + SATA-to-USB -> RAID5, microSD for OS + applications, an eMMC for
-> a RAID journal. (later, once they hopefully get available in April,
-> switch to the Turris Omnia which is ARM-based again but has
-> mini-PCIe, too, where I would attach mini-PCIe-to-SATA adapters)
->=20
-> Is it a stupid idea to use an eMMC for the journal in the first
-> place? I am unsure how quickly it would wear out. And seems like I
-> do not have SMART for it either... So it would probably fail badly
-> at some point. Is that an issue, can I simply replace the eMMC
-> then without any data loss? Will the current code at least try a
-> write-through directly to the HDDs once a journal disk throws
-> errors?
->=20
-> Does MD assume that an underlying device performs some sort of wear
-> leveling if necessary like SSDs do for instance - or does MD
-> itself distribute writes evenly over the journaling disk?
-> (Does anyone know whether eMMCs usually do some kind of wear leveling=
-?)
->=20
->=20
-> Thanks for all your work on this awesome new feature! (and special
-> thanks to Neil for all the years of maintenance - it is a pitty you
-> have to step down :( )
+On Wed, Feb 3, 2016 at 12:36 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Xiao Ni <xni@redhat.com> writes:
+>> It complains when building on s390 and i686 platform.
+>>
+>> Signed-off-by : Xiao Ni <xni@redhat.com>
+>> ---
+>>  Monitor.c | 2 +-
+>>  util.c    | 2 +-
+>>  2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Monitor.c b/Monitor.c
+>> index f19c2e5..928aa45 100644
+>> --- a/Monitor.c
+>> +++ b/Monitor.c
+>> @@ -542,7 +542,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
+>>               alert("NewArray", st->devname, NULL, ainfo);
+>>       }
+>>
+>> -     if (st->utime == array.utime &&
+>> +     if (st->utime == (long)array.utime &&
+>>           st->failed == array.failed_disks &&
+>>           st->working == array.working_disks &&
+>>           st->spare == array.spare_disks &&
+>
+> Hi Xiao,
+>
+> Thanks for the patch - I think the correct fix in Monitor.c is to change
+> utime in struct state from long to unsigned int, to match the change
+> Deepa Dinamani introduced in 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c
+> utime is only ever derived from mdu_array_info_s, so it should be safe.
+>
+>> diff --git a/util.c b/util.c
+>> index 970d484..ccbb2bc 100644
+>> --- a/util.c
+>> +++ b/util.c
+>> @@ -1288,7 +1288,7 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
+>>                       struct mdinfo info;
+>>                       st->ss->getinfo_super(st, &info, NULL);
+>>                       if (bestsuper == -1 ||
+>> -                         besttime < info.array.ctime) {
+>> +                         besttime < (time_t)info.array.ctime) {
+>>                               bestsuper = i;
+>>                               besttime = info.array.ctime;
+>>                       }
+>
+> Here I think we should change the declaration of besttime from time_t to
+> unsigned int, again to match the definition used in mdu_array_info_s.
+>
+> That or we should change mdu_array_info_s to use time_t instead, but I
+> am not sure that would be safe.
 
-The only requirement of journal is it has a block interface. But all wr=
-ite IO
-write to journal first, so there could be a lot of write to journal dep=
-ending
-on your workload. I don't know about eMMC much, but suppose it doesn't =
-have
-good wear leveling support.
+It should be changed to unsigned int.
+time_t is not long enough to hold timestamps after the year
+2038(INT_MAX) as long is 32 bits on 32 bit systems.
+It was changed to unsigned int to extend it until the year 2106.
 
-If journal is broken, your data isn't lost, as data is still stored in =
-raid
-disks. Our current policy is the array becomes read-only if journal is =
-borken,
-this might be changed if necessary though.
-
-Thanks,
-Shaohua
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Deepa
