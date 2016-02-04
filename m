@@ -1,55 +1,38 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: [GIT PULL] MD fix for 4.5-rc2
-Date: Wed, 3 Feb 2016 16:49:55 -0800
-Message-ID: <20160204004955.GA11987@kernel.org>
+Subject: Re: Problem with array raid10 array resync on 4.4.0 (keeps reyncing
+ each reboot)
+Date: Wed, 3 Feb 2016 17:17:31 -0800
+Message-ID: <20160204011731.GA29132@kernel.org>
+References: <56A78786.10103@Free.fr>
+ <20160126233133.GB12721@kernel.org>
+ <56A870AD.4070400@free.fr>
+ <20160128182522.GB23378@kernel.org>
+ <56AA7176.1020508@free.fr>
+ <56AE9214.3030206@free.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com, gayatri.kammela@intel.com, snitzer@redhat.com
+In-Reply-To: <56AE9214.3030206@free.fr>
+Sender: linux-raid-owner@vger.kernel.org
+To: Eric Valette <eric.valette@free.fr>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Linus,
+On Mon, Feb 01, 2016 at 12:00:36AM +0100, Eric Valette wrote:
+> On 28/01/2016 20:52, Eric Valette wrote:
+> >On 28/01/2016 19:25, Shaohua Li wrote:
+> >
+> >If really needed can rebuild a 4.4 kernel and boot it. What do you mean
+> >by special config? I can send you my kernel .config once rebuild
+> >(oldconfig from 4.1.16)
+> 
+> Linux nas2 4.4.1 #1 SMP Sun Jan 31 23:46:26 CET 2016 x86_64 GNU/Linux
 
-As you know, Neil steps down from MD. I'm looking after it. Here are some
-patches queued. A build fix from Gayatri and several trival patches from me.
-Please pull.
+Nothing useful. Did you try stop the array and reassemble it in 4.4 and check
+if resync runs? I can only imagine the reboot script didn't clean shutdown the
+array and trigger the issue. A stop/reassemble circle will tell us if this is
+the issue.
 
 Thanks,
 Shaohua
-
-----------------------------------------------------------------
-The following changes since commit b37a05c083c85c2657dca9bbe1f5d79dccf756d5:
-
-  Merge branch 'akpm' (patches from Andrew) (2016-02-03 10:10:02 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/shli/md.git for-linus
-
-for you to fetch changes up to 9ea064158f4e02e64890ee1261449b01e954e594:
-
-  Merge branch 'mymd/for-next' into mymd/for-linus (2016-02-03 15:43:59 -0800)
-
-----------------------------------------------------------------
-Gayatri Kammela (1):
-      raid6/algos.c : bug fix : Add the missing definitions to the pq.h file
-
-Shaohua Li (5):
-      MD: rename some functions
-      MD: add myself as MD maintainer
-      md-cluster: fix missing memory free
-      md-cluster: delete useless code
-      Merge branch 'mymd/for-next' into mymd/for-linus
-
- MAINTAINERS             |  1 +
- drivers/md/bitmap.c     |  4 ----
- drivers/md/faulty.c     | 18 +++++++++---------
- drivers/md/md-cluster.c |  6 +++++-
- drivers/md/raid1.c      | 21 +++++++++++----------
- drivers/md/raid10.c     | 20 ++++++++++----------
- drivers/md/raid5.c      | 45 +++++++++++++++++++++++----------------------
- include/linux/raid/pq.h |  2 ++
- 8 files changed, 61 insertions(+), 56 deletions(-)
