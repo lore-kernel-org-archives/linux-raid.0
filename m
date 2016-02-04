@@ -1,72 +1,48 @@
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Subject: Re: [mdadm PATCH 1/1] Fix some type comparison problems
-Date: Wed, 3 Feb 2016 19:10:32 -0800
-Message-ID: <CABeXuvqUNw3-zQrdfaJD3fhGL0Tqc9zUU77sGAsfRdyH3QD9Jw@mail.gmail.com>
-References: <1454477089-8166-1-git-send-email-xni@redhat.com>
-	<wrfjr3gth6pi.fsf@redhat.com>
+From: Eric Valette <eric.valette@free.fr>
+Subject: Re: Problem with array raid10 array resync on 4.4.0 (keeps reyncing
+ each reboot)
+Date: Thu, 4 Feb 2016 07:57:47 +0100
+Message-ID: <56B2F66B.2020102@free.fr>
+References: <56A78786.10103@Free.fr> <20160126233133.GB12721@kernel.org>
+ <56A870AD.4070400@free.fr> <20160128182522.GB23378@kernel.org>
+ <56AA7176.1020508@free.fr> <56AE9214.3030206@free.fr>
+ <20160204011731.GA29132@kernel.org>
+Reply-To: eric.valette@free.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjr3gth6pi.fsf@redhat.com>
+In-Reply-To: <20160204011731.GA29132@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Xiao Ni <xni@redhat.com>, linux-raid@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+To: Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 3, 2016 at 12:36 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Xiao Ni <xni@redhat.com> writes:
->> It complains when building on s390 and i686 platform.
+On 04/02/2016 02:17, Shaohua Li wrote:
+> On Mon, Feb 01, 2016 at 12:00:36AM +0100, Eric Valette wrote:
+>> On 28/01/2016 20:52, Eric Valette wrote:
+>>> On 28/01/2016 19:25, Shaohua Li wrote:
+>>>
+>>> If really needed can rebuild a 4.4 kernel and boot it. What do you mean
+>>> by special config? I can send you my kernel .config once rebuild
+>>> (oldconfig from 4.1.16)
 >>
->> Signed-off-by : Xiao Ni <xni@redhat.com>
->> ---
->>  Monitor.c | 2 +-
->>  util.c    | 2 +-
->>  2 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/Monitor.c b/Monitor.c
->> index f19c2e5..928aa45 100644
->> --- a/Monitor.c
->> +++ b/Monitor.c
->> @@ -542,7 +542,7 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
->>               alert("NewArray", st->devname, NULL, ainfo);
->>       }
->>
->> -     if (st->utime == array.utime &&
->> +     if (st->utime == (long)array.utime &&
->>           st->failed == array.failed_disks &&
->>           st->working == array.working_disks &&
->>           st->spare == array.spare_disks &&
+>> Linux nas2 4.4.1 #1 SMP Sun Jan 31 23:46:26 CET 2016 x86_64 GNU/Linux
 >
-> Hi Xiao,
->
-> Thanks for the patch - I think the correct fix in Monitor.c is to change
-> utime in struct state from long to unsigned int, to match the change
-> Deepa Dinamani introduced in 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c
-> utime is only ever derived from mdu_array_info_s, so it should be safe.
->
->> diff --git a/util.c b/util.c
->> index 970d484..ccbb2bc 100644
->> --- a/util.c
->> +++ b/util.c
->> @@ -1288,7 +1288,7 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
->>                       struct mdinfo info;
->>                       st->ss->getinfo_super(st, &info, NULL);
->>                       if (bestsuper == -1 ||
->> -                         besttime < info.array.ctime) {
->> +                         besttime < (time_t)info.array.ctime) {
->>                               bestsuper = i;
->>                               besttime = info.array.ctime;
->>                       }
->
-> Here I think we should change the declaration of besttime from time_t to
-> unsigned int, again to match the definition used in mdu_array_info_s.
->
-> That or we should change mdu_array_info_s to use time_t instead, but I
-> am not sure that would be safe.
+> Nothing useful. Did you try stop the array and reassemble it in 4.4 and check
+> if resync runs? I can only imagine the reboot script didn't clean shutdown the
+> array and trigger the issue. A stop/reassemble circle will tell us if this is
+> the issue.
 
-It should be changed to unsigned int.
-time_t is not long enough to hold timestamps after the year
-2038(INT_MAX) as long is 32 bits on 32 bit systems.
-It was changed to unsigned int to extend it until the year 2106.
+If the issue was in the script it would happen with all the kernel 
+version no? Si far 3.14, 3.18, 4.1 works correctly (when upgrading). 
+Only 4.4 fails.
 
--Deepa
+4.4 in fact seems to fails to boot the first time I boot it. As I have 
+no console normally, I have to shut down via power button and then it 
+resync. I can understand this behavior but not
+	1) that the resync fails each time and
+	2) that it fails to boot the first time I change for a 4.4 kernel.
+
+-- eric
+
