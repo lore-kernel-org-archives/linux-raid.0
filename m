@@ -1,8 +1,10 @@
 From: "Maxin B. John" <maxin.john@gmail.com>
-Subject: [PATCH 1/3][mdadm] util.c: include poll.h instead of sys/poll.h
-Date: Sat,  6 Feb 2016 00:28:16 +0200
-Message-ID: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
+Subject: [PATCH 2/3][mdadm] mdadm.h: bswap is already defined in uclibc
+Date: Sat,  6 Feb 2016 00:28:17 +0200
+Message-ID: <1454711298-32524-2-git-send-email-maxin.john@gmail.com>
+References: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: "Maxin B. John" <maxin.john@intel.com>
@@ -10,41 +12,51 @@ List-Id: linux-raid.ids
 
 From: "Maxin B. John" <maxin.john@intel.com>
 
-This fixes a compile warning when building with musl:
+Fixes this build error:
 
- In file included from util.c:27:0:
- |
- qemux86-64/usr/include/sys/poll.h:1:2:
- error: #warning redirecting incorrect #include <sys/poll.h> to <poll.h>
- [-Werror=cpp]
- |  #warning redirecting incorrect #include <sys/poll.h> to <poll.h>
- |   ^
+| In file included from mdadm.c:28:0:
+| mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
+|  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+|  ^
 
 Signed-off-by: Maxin B. John <maxin.john@intel.com>
 ---
- util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mdadm.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/util.c b/util.c
-index 970d484..3e6d293 100644
---- a/util.c
-+++ b/util.c
-@@ -24,7 +24,6 @@
+diff --git a/mdadm.h b/mdadm.h
+index dd02be7..230e60f 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -139,12 +139,20 @@ struct dlm_lksb {
+  * and there is no standard conversion function so... */
+ /* And dietlibc doesn't think byteswap is ok, so.. */
+ /*  #include <byteswap.h> */
++
++#ifndef bswap_16
+ #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+ 		     ((x) & 0xff00U) >> 8)
++#endif
++
++#ifndef bswap_32
+ #define bswap_32(x) (((x) & 0x000000ffU) << 24 | \
+ 		     ((x) & 0xff000000U) >> 24 | \
+ 		     ((x) & 0x0000ff00U) << 8  | \
+ 		     ((x) & 0x00ff0000U) >> 8)
++#endif
++
++#ifndef bswap_64
+ #define bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
+ 		     ((x) & 0xff00000000000000ULL) >> 56 | \
+ 		     ((x) & 0x000000000000ff00ULL) << 40 | \
+@@ -153,6 +161,7 @@ struct dlm_lksb {
+ 		     ((x) & 0x0000ff0000000000ULL) >> 24 | \
+ 		     ((x) & 0x00000000ff000000ULL) << 8 | \
+ 		     ((x) & 0x000000ff00000000ULL) >> 8)
++#endif
  
- #include	"mdadm.h"
- #include	"md_p.h"
--#include	<sys/poll.h>
- #include	<sys/socket.h>
- #include	<sys/utsname.h>
- #include	<sys/wait.h>
-@@ -32,6 +31,7 @@
- #include	<sys/resource.h>
- #include	<sys/vfs.h>
- #include	<linux/magic.h>
-+#include	<poll.h>
- #include	<ctype.h>
- #include	<dirent.h>
- #include	<signal.h>
+ #if !defined(__KLIBC__)
+ #if BYTE_ORDER == LITTLE_ENDIAN
 -- 
 2.1.4
 
