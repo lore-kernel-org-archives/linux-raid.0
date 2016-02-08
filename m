@@ -1,56 +1,58 @@
-From: "Jens-U. Mozdzen" <jmozdzen@nde.ag>
-Subject: Re: Best option for SSD caching on a md raid array?
-Date: Mon, 08 Feb 2016 16:45:27 +0100
-Message-ID: <20160208164528.Horde.B-479OtKefXcjPgYlB52n2q@www3.nde.ag>
-References: <1670804.QnHtKWfib8@nell> <56B85390.9050505@hesbynett.no>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [mdadm PATCH 1/1] Fix some type comparison problems
+Date: Mon, 08 Feb 2016 10:51:04 -0500
+Message-ID: <wrfjtwljgpzr.fsf@redhat.com>
+References: <1454721521-7118-1-git-send-email-xni@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56B85390.9050505@hesbynett.no>
-Content-Disposition: inline
+In-Reply-To: <1454721521-7118-1-git-send-email-xni@redhat.com> (Xiao Ni's
+	message of "Sat, 6 Feb 2016 09:18:41 +0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: Thomas Fjellstrom <thomas@fjellstrom.ca>, linux-raid@vger.kernel.org
+To: Xiao Ni <xni@redhat.com>
+Cc: linux-raid@vger.kernel.org, deepa.kernel@gmail.com, maxin.john@gmail.com
 List-Id: linux-raid.ids
 
-Hi *,
-
-Zitat von David Brown <david.brown@hesbynett.no>:
-> Hi,
+Xiao Ni <xni@redhat.com> writes:
+> As 26714713cd2bad9e0bf7f4669f6cc4659ceaab6c said, 32 bit signed 
+> timestamps will overflow in the year 2038. It already changed the
+> utime and ctime in struct mdu_array_info_s from int to unsigned 
+> int. So we need to change the values that compared with them to
+> unsigned int too.
 >
-> If the server is going to have reasonably long uptimes, then lots of ram
-> could easily be a better choice than an SSD caching system.
-> [...] But the key point of an SSD cache is to get fast
-> access to common data with random access patterns, since a raid array
-> will give you plenty of bandwidth for large serial accesses.  And while
-> an SSD is fast for random reads, having the data in the server's cache
-> is even faster.
+> Signed-off-by : Xiao Ni <xni@redhat.com>
+> ---
+>  Monitor.c | 2 +-
+>  util.c    | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 
-to me, the key point of SSD caching was fast (persistent) writes and  
-optimization of expensive partial writes for RAID. Using memory  
-caching helped, but keeping that much dirty data in RAM wasn't my cup  
-of tea (it's what I had before moving to bcache).
+Applied!
 
-Thomas, I decided to go the bcache route and am running two SAN/NAS  
-servers for months, serving a mix of NFS (i.e. for home directories  
-and large software compilation scenarios across multiple servers),  
-Samba (for a few SMB-dependent machines), iSCSI and Fibre Channel  
-(both via SCST) to serve various virtual disks to about 40 VMs, and a  
-vanishing amount of other services.
+Thanks,
+Jes
 
-I have not further explored the other options you name - but up to  
-now, I've been sufficiently happy with bcache to see no need to run  
-intensive compares.
-
-Mateusz named pros and cons - for bcache, the lack of maintainer got  
-somewhat resolved by others jumping in and i.e. SUSE putting an  
-up-to-date (patched) bcache version in their kernels. What I feel  
-missing in Mateusz' list is bcache's current lack of a live resizing  
-feature: Even if you live-resize the back-end storage (i.e. RAID),  
-you'll currently have to re-init the bcache device (i.e. by rebooting  
-the node) for it to recognize the changed back-end size. Not good for  
-your uptime.
-
-Regards,
-Jens
-
+> diff --git a/Monitor.c b/Monitor.c
+> index f19c2e5..6df80f9 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -33,7 +33,7 @@
+>  struct state {
+>  	char *devname;
+>  	char devnm[32];	/* to sync with mdstat info */
+> -	long utime;
+> +	unsigned int utime;
+>  	int err;
+>  	char *spare_group;
+>  	int active, working, failed, spare, raid;
+> diff --git a/util.c b/util.c
+> index 970d484..6e7d3fb 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1267,7 +1267,7 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
+>  	 */
+>  	struct superswitch  *ss;
+>  	struct supertype *st;
+> -	time_t besttime = 0;
+> +	unsigned int besttime = 0;
+>  	int bestsuper = -1;
+>  	int i;
