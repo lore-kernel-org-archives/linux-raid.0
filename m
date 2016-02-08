@@ -1,73 +1,46 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/3][mdadm] mdadm.h: bswap is already defined in uclibc
-Date: Mon, 08 Feb 2016 11:00:54 -0500
-Message-ID: <wrfjsi13dweh.fsf@redhat.com>
-References: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
-	<1454711298-32524-2-git-send-email-maxin.john@gmail.com>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Best option for SSD caching on a md raid array?
+Date: Mon, 8 Feb 2016 10:34:09 -0500
+Message-ID: <22200.46449.482559.914441@quad.stoffel.home>
+References: <1670804.QnHtKWfib8@nell>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1454711298-32524-2-git-send-email-maxin.john@gmail.com> (Maxin
-	B. John's message of "Sat, 6 Feb 2016 00:28:17 +0200")
+In-Reply-To: <1670804.QnHtKWfib8@nell>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Maxin B. John" <maxin.john@gmail.com>
-Cc: linux-raid@vger.kernel.org, "Maxin B. John" <maxin.john@intel.com>
+To: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Maxin B. John" <maxin.john@gmail.com> writes:
-> From: "Maxin B. John" <maxin.john@intel.com>
->
-> Fixes this build error:
->
-> | In file included from mdadm.c:28:0:
-> | mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
-> |  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
-> |  ^
->
-> Signed-off-by: Maxin B. John <maxin.john@intel.com>
-> ---
->  mdadm.h | 9 +++++++++
->  1 file changed, 9 insertions(+)
 
-Hi Maxin,
+Thomas> I'm planning on setting up a dual raid5 array for hosting vm's
+Thomas> off LVM, I would like to add an ssd cache to help with typical
+Thomas> server system loads, and some mixed read/write loads for game
+Thomas> servers.
 
-I am not opposed to this, but I would like to understand why you see
-these duplicate defines. What defines it in your build environment?
+Thomas> I'm wondering what the "best" route for me to go is. There's a
+Thomas> few options that I know of, like flashcache, dm-cache, and
+Thomas> bcache. The question is which of those is better suited to my
+Thomas> use case?
 
-Cheers,
-Jes
+I looked into both bcache and lvmcache and went with lvmcache because
+it made more sense to me.  But one restriction is that the cache LVs
+must be in the same VGs as the volume to cache.  So you might need to
+partition your SSD(s) and put the partitions into seperate VGs so that
+you can cache one or more LVs.
 
->
-> diff --git a/mdadm.h b/mdadm.h
-> index dd02be7..230e60f 100755
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -139,12 +139,20 @@ struct dlm_lksb {
->   * and there is no standard conversion function so... */
->  /* And dietlibc doesn't think byteswap is ok, so.. */
->  /*  #include <byteswap.h> */
-> +
-> +#ifndef bswap_16
->  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
->  		     ((x) & 0xff00U) >> 8)
-> +#endif
-> +
-> +#ifndef bswap_32
->  #define bswap_32(x) (((x) & 0x000000ffU) << 24 | \
->  		     ((x) & 0xff000000U) >> 24 | \
->  		     ((x) & 0x0000ff00U) << 8  | \
->  		     ((x) & 0x00ff0000U) >> 8)
-> +#endif
-> +
-> +#ifndef bswap_64
->  #define bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
->  		     ((x) & 0xff00000000000000ULL) >> 56 | \
->  		     ((x) & 0x000000000000ff00ULL) << 40 | \
-> @@ -153,6 +161,7 @@ struct dlm_lksb {
->  		     ((x) & 0x0000ff0000000000ULL) >> 24 | \
->  		     ((x) & 0x00000000ff000000ULL) << 8 | \
->  		     ((x) & 0x000000ff00000000ULL) >> 8)
-> +#endif
->  
->  #if !defined(__KLIBC__)
->  #if BYTE_ORDER == LITTLE_ENDIAN
+I'm using it at home to cache a RAID1 4tb VG, with a pair of mirrored
+SSDs.  I'm a big believer in mirroring, esp for critical stuff like
+this.
+
+Unfortunately, I don't have a good performance measurements of how
+much help this actually gives me.  It *feels* faster, but since I
+don't have before/after measurements, I could just have wasted a bunch
+of money.
+
+So I'd recommend lvmcache overall, since it does seem to help, but
+push for better performance metrics and measurement.  Heh, maybe it's
+time for me to start writing up lvmcachetop to help measure things.
+
+John
