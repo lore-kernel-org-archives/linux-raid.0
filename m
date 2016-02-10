@@ -1,59 +1,207 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [dm-devel] [patch] dm: check for kmalloc failure in
- dm_init_request_based_blk_mq_queue()
-Date: Tue, 9 Feb 2016 12:35:43 +0100
-Message-ID: <20160209113543.GL27969@c203.arch.suse.de>
-References: <20160209111440.GB23998@mwanda>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 2/3][mdadm] mdadm.h: bswap is already defined in uclibc
+Date: Wed, 10 Feb 2016 14:20:50 -0500
+Message-ID: <wrfjio1w74od.fsf@redhat.com>
+References: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
+	<1454711298-32524-2-git-send-email-maxin.john@gmail.com>
+	<wrfjsi13dweh.fsf@redhat.com>
+	<CAMhs6YwxytaKNJ-v9J714whBxgDxz_cQ9t8qi-wSp5Ho--vjfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160209111440.GB23998@mwanda>
+In-Reply-To: <CAMhs6YwxytaKNJ-v9J714whBxgDxz_cQ9t8qi-wSp5Ho--vjfQ@mail.gmail.com>
+	(Maxin B. John's message of "Mon, 8 Feb 2016 18:10:29 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, linux-kernel@vger.kernel.org
+To: "Maxin B. John" <maxin.john@gmail.com>
+Cc: linux-raid@vger.kernel.org, "Maxin B. John" <maxin.john@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, Feb 09, 2016 at 02:14:40PM +0300, Dan Carpenter wrote:
-> We can just return -ENOMEM if the kzalloc() fails.
->=20
-> Fixes: 41b2facaf4ba ('dm: allocate blk_mq_tag_set rather than embed i=
-n mapped_device')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->=20
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 6b7e80e..1a5f879 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -2736,6 +2736,8 @@ static int dm_init_request_based_blk_mq_queue(s=
-truct mapped_device *md,
->  	int err;
-> =20
->  	md->tag_set =3D kzalloc(sizeof(struct blk_mq_tag_set), GFP_KERNEL);
-> +	if (!md->tag_set)
-> +		return -ENOMEM;
->  	md->tag_set->ops =3D &dm_mq_ops;
->  	md->tag_set->queue_depth =3D dm_get_blk_mq_queue_depth();
->  	md->tag_set->numa_node =3D NUMA_NO_NODE;
->=20
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+"Maxin B. John" <maxin.john@gmail.com> writes:
+> Hi Jes,
+>
+> On Mon, Feb 8, 2016 at 6:00 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+>> "Maxin B. John" <maxin.john@gmail.com> writes:
+>>> From: "Maxin B. John" <maxin.john@intel.com>
+>>>
+>>> Fixes this build error:
+>>>
+>>> | In file included from mdadm.c:28:0:
+>>> | mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
+>>> |  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+>>> |  ^
+>>>
+>>> Signed-off-by: Maxin B. John <maxin.john@intel.com>
+>>> ---
+>>>  mdadm.h | 9 +++++++++
+>>>  1 file changed, 9 insertions(+)
+>>
+>> Hi Maxin,
+>>
+>> I am not opposed to this, but I would like to understand why you see
+>> these duplicate defines. What defines it in your build environment?
+>
+>
+> I get the below listed error message with uclibc builds:
 
-Good catch,
+<ship>
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> | In file included from mdadm.c:28:0:
+> | mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
+> |  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+> |  ^
+> | In file included from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/endian.h:59:0,
+> |                  from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/sys/types.h:216,
+> |                  from mdadm.h:36,
+> |                  from mdadm.c:28:
+> | /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/byteswap.h:29:0:
+> note: this is the location of the previous definition
+> |  #define bswap_16(x) __bswap_16 (x)
+> |  ^
+> | In file included from mdadm.c:28:0:
+> | mdadm.h:144:0: error: "bswap_32" redefined [-Werror]
+> |  #define bswap_32(x) (((x) & 0x000000ffU) << 24 | \
+> |  ^
+> | In file included from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/endian.h:59:0,
+> |                  from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/sys/types.h:216,
+> |                  from mdadm.h:36,
+> |                  from mdadm.c:28:
+> | /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/byteswap.h:32:0:
+> note: this is the location of the previous definition
+> |  #define bswap_32(x) __bswap_32 (x)
+> |  ^
+> | In file included from mdadm.c:28:0:
+> | mdadm.h:148:0: error: "bswap_64" redefined [-Werror]
+> |  #define bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
+> |  ^
+> | In file included from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/endian.h:59:0,
+> |                  from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/sys/types.h:216,
+> |                  from mdadm.h:36,
+> |                  from mdadm.c:28:
+> | /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/byteswap.h:36:0:
+> note: this is the location of the previous definition
+> |  # define bswap_64(x) __bswap_64 (x)
+> |  ^
+> | In file included from config.c:25:0:
+> | mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
+> |  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+> |  ^
+> | In file included from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/endian.h:59:0,
+> |                  from
+> /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/sys/types.h:216,
+> |                  from mdadm.h:36,
+> |                  from config.c:25:
+> | /home/maxin/poky/build/tmp/sysroots/qemux86-64/usr/include/byteswap.h:29:0:
+> note: this is the location of the previous definition
+> |  #define bswap_16(x) __bswap_16 (x)
+> |  ^
+> ......
+
+Maxin,
+
+I think it's actually wrong for uClibc to expose those macros with such
+a common name, but rather than picking up outside macros randomly I
+prefer to rename the mdadm ones to be sure we know what we are getting.
+
+Instead of your patch, I applied this one instead. I hope that is fine
+with you.
+
+Cheers,
+Jes
+
+From dd47b4e0c45fd72b94a9a7d0f0a5046ef9c8d97b Mon Sep 17 00:00:00 2001
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Date: Wed, 10 Feb 2016 14:15:38 -0500
+Subject: [PATCH] mdadm.h: rename bswap macros to avoid clash with uClibc
+ definitions
+
+uClibc exposes it's own version of bswap_<X> macros. Rather than
+pulling in random macros by change, rename the mdadm ones to make sure
+we know what we are getting.
+
+Reported-by: "Maxin B. John" <maxin.john@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ mdadm.h | 52 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
+
+diff --git a/mdadm.h b/mdadm.h
+index dd02be7..72888e2 100755
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -139,20 +139,20 @@ struct dlm_lksb {
+  * and there is no standard conversion function so... */
+ /* And dietlibc doesn't think byteswap is ok, so.. */
+ /*  #include <byteswap.h> */
+-#define bswap_16(x) (((x) & 0x00ffU) << 8 | \
+-		     ((x) & 0xff00U) >> 8)
+-#define bswap_32(x) (((x) & 0x000000ffU) << 24 | \
+-		     ((x) & 0xff000000U) >> 24 | \
+-		     ((x) & 0x0000ff00U) << 8  | \
+-		     ((x) & 0x00ff0000U) >> 8)
+-#define bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
+-		     ((x) & 0xff00000000000000ULL) >> 56 | \
+-		     ((x) & 0x000000000000ff00ULL) << 40 | \
+-		     ((x) & 0x00ff000000000000ULL) >> 40 | \
+-		     ((x) & 0x0000000000ff0000ULL) << 24 | \
+-		     ((x) & 0x0000ff0000000000ULL) >> 24 | \
+-		     ((x) & 0x00000000ff000000ULL) << 8 | \
+-		     ((x) & 0x000000ff00000000ULL) >> 8)
++#define __mdadm_bswap_16(x) (((x) & 0x00ffU) << 8 | \
++			     ((x) & 0xff00U) >> 8)
++#define __mdadm_bswap_32(x) (((x) & 0x000000ffU) << 24 | \
++			     ((x) & 0xff000000U) >> 24 | \
++			     ((x) & 0x0000ff00U) << 8  | \
++			     ((x) & 0x00ff0000U) >> 8)
++#define __mdadm_bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
++			     ((x) & 0xff00000000000000ULL) >> 56 | \
++			     ((x) & 0x000000000000ff00ULL) << 40 | \
++			     ((x) & 0x00ff000000000000ULL) >> 40 | \
++			     ((x) & 0x0000000000ff0000ULL) << 24 | \
++			     ((x) & 0x0000ff0000000000ULL) >> 24 | \
++			     ((x) & 0x00000000ff000000ULL) << 8 |  \
++			     ((x) & 0x000000ff00000000ULL) >> 8)
+ 
+ #if !defined(__KLIBC__)
+ #if BYTE_ORDER == LITTLE_ENDIAN
+@@ -163,19 +163,19 @@ struct dlm_lksb {
+ #define __le32_to_cpu(_x) (unsigned int)(_x)
+ #define __le64_to_cpu(_x) (unsigned long long)(_x)
+ 
+-#define	__cpu_to_be16(_x) bswap_16(_x)
+-#define __cpu_to_be32(_x) bswap_32(_x)
+-#define __cpu_to_be64(_x) bswap_64(_x)
+-#define	__be16_to_cpu(_x) bswap_16(_x)
+-#define __be32_to_cpu(_x) bswap_32(_x)
+-#define __be64_to_cpu(_x) bswap_64(_x)
++#define	__cpu_to_be16(_x) __mdadm_bswap_16(_x)
++#define __cpu_to_be32(_x) __mdadm_bswap_32(_x)
++#define __cpu_to_be64(_x) __mdadm_bswap_64(_x)
++#define	__be16_to_cpu(_x) __mdadm_bswap_16(_x)
++#define __be32_to_cpu(_x) __mdadm_bswap_32(_x)
++#define __be64_to_cpu(_x) __mdadm_bswap_64(_x)
+ #elif BYTE_ORDER == BIG_ENDIAN
+-#define	__cpu_to_le16(_x) bswap_16(_x)
+-#define __cpu_to_le32(_x) bswap_32(_x)
+-#define __cpu_to_le64(_x) bswap_64(_x)
+-#define	__le16_to_cpu(_x) bswap_16(_x)
+-#define __le32_to_cpu(_x) bswap_32(_x)
+-#define __le64_to_cpu(_x) bswap_64(_x)
++#define	__cpu_to_le16(_x) __mdadm_bswap_16(_x)
++#define __cpu_to_le32(_x) __mdadm_bswap_32(_x)
++#define __cpu_to_le64(_x) __mdadm_bswap_64(_x)
++#define	__le16_to_cpu(_x) __mdadm_bswap_16(_x)
++#define __le32_to_cpu(_x) __mdadm_bswap_32(_x)
++#define __le64_to_cpu(_x) __mdadm_bswap_64(_x)
+ 
+ #define	__cpu_to_be16(_x) (unsigned int)(_x)
+ #define __cpu_to_be32(_x) (unsigned int)(_x)
+-- 
+2.5.0
+
