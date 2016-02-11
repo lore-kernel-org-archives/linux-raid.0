@@ -1,160 +1,72 @@
-From: "Maxin B. John" <maxin.john@gmail.com>
-Subject: Re: [PATCH 2/3][mdadm] mdadm.h: bswap is already defined in uclibc
-Date: Thu, 11 Feb 2016 13:26:52 +0200
-Message-ID: <CAMhs6YyA61Mie1Ku1EpV0+z0Xe6Ft1xqFeNZix2gOLFA3rgXpA@mail.gmail.com>
-References: <1454711298-32524-1-git-send-email-maxin.john@gmail.com>
-	<1454711298-32524-2-git-send-email-maxin.john@gmail.com>
-	<wrfjsi13dweh.fsf@redhat.com>
-	<CAMhs6YwxytaKNJ-v9J714whBxgDxz_cQ9t8qi-wSp5Ho--vjfQ@mail.gmail.com>
-	<wrfjio1w74od.fsf@redhat.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: md raid5 on top of dmcrypt, or dmcrypt on top of md raid5?
+Date: Thu, 11 Feb 2016 08:29:59 -0800
+Message-ID: <20160211162959.GG13969@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjio1w74od.fsf@redhat.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org, "Maxin B. John" <maxin.john@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Jes,
+I have a 5 drive md array with dmcrypt on top, and btrfs on top of that.
+Kernel: 4.4
 
-On Wed, Feb 10, 2016 at 9:20 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> "Maxin B. John" <maxin.john@gmail.com> writes:
->> Hi Jes,
->>
->> On Mon, Feb 8, 2016 at 6:00 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->>> "Maxin B. John" <maxin.john@gmail.com> writes:
->>>> From: "Maxin B. John" <maxin.john@intel.com>
->>>>
->>>> Fixes this build error:
->>>>
->>>> | In file included from mdadm.c:28:0:
->>>> | mdadm.h:142:0: error: "bswap_16" redefined [-Werror]
->>>> |  #define bswap_16(x) (((x) & 0x00ffU) << 8 | \
->>>> |  ^
->>>>
->>>> Signed-off-by: Maxin B. John <maxin.john@intel.com>
->>>> ---
->>>>  mdadm.h | 9 +++++++++
->>>>  1 file changed, 9 insertions(+)
->>>
->>> Hi Maxin,
->>>
->>> I am not opposed to this, but I would like to understand why you see
->>> these duplicate defines. What defines it in your build environment?
->>
->>
->> I get the below listed error message with uclibc builds:
->
-<snip>
->
-> Maxin,
->
-> I think it's actually wrong for uClibc to expose those macros with such
-> a common name, but rather than picking up outside macros randomly I
-> prefer to rename the mdadm ones to be sure we know what we are getting.
+Honestly, the performance is not good, but it's hard to pin down what
+exactly is to blame (there could be performance issues with btrfs too).
+I have read that dmcrypt is supposed to be multithreaded, and that's
+been true for multiple years.
 
-That looks reasonable to me.
+I put dmcrypt on top so that doing a raid sync or rebuild does not
+involve encryption/decryption.
+But can someone confirm that indeed if I have a single md device, and 4
+CPUs, my throughput is not limited by a single CPU decrypting the
+device?
 
-> Instead of your patch, I applied this one instead. I hope that is fine
-> with you.
+And if I'm going to recreate the array (using bcache this time), is
+there a better way to recreate it to avoid performance issues?
+It is an array with many small files (filesystem backups), so lots of
+random non contiguous I/O
 
-Yes, this fix looks much better. Thank you!
+Currently, I have:
+gargamel:~# mdadm --detail /dev/md8
+/dev/md8:   
+        Version : 1.2
+  Creation Time : Sat Apr 19 23:03:59 2014
+     Raid Level : raid5
+     Array Size : 7813523456 (7451.56 GiB 8001.05 GB)
+  Used Dev Size : 1953380864 (1862.89 GiB 2000.26 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-> Cheers,
-> Jes
+  Intent Bitmap : Internal
 
-Best Regards,
-Maxin
+    Update Time : Thu Feb 11 08:26:45 2016
+          State : active 
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
->
-> From dd47b4e0c45fd72b94a9a7d0f0a5046ef9c8d97b Mon Sep 17 00:00:00 2001
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Date: Wed, 10 Feb 2016 14:15:38 -0500
-> Subject: [PATCH] mdadm.h: rename bswap macros to avoid clash with uClibc
->  definitions
->
-> uClibc exposes it's own version of bswap_<X> macros. Rather than
-> pulling in random macros by change, rename the mdadm ones to make sure
-> we know what we are getting.
->
-> Reported-by: "Maxin B. John" <maxin.john@gmail.com>
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  mdadm.h | 52 ++++++++++++++++++++++++++--------------------------
->  1 file changed, 26 insertions(+), 26 deletions(-)
->
-> diff --git a/mdadm.h b/mdadm.h
-> index dd02be7..72888e2 100755
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -139,20 +139,20 @@ struct dlm_lksb {
->   * and there is no standard conversion function so... */
->  /* And dietlibc doesn't think byteswap is ok, so.. */
->  /*  #include <byteswap.h> */
-> -#define bswap_16(x) (((x) & 0x00ffU) << 8 | \
-> -                    ((x) & 0xff00U) >> 8)
-> -#define bswap_32(x) (((x) & 0x000000ffU) << 24 | \
-> -                    ((x) & 0xff000000U) >> 24 | \
-> -                    ((x) & 0x0000ff00U) << 8  | \
-> -                    ((x) & 0x00ff0000U) >> 8)
-> -#define bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
-> -                    ((x) & 0xff00000000000000ULL) >> 56 | \
-> -                    ((x) & 0x000000000000ff00ULL) << 40 | \
-> -                    ((x) & 0x00ff000000000000ULL) >> 40 | \
-> -                    ((x) & 0x0000000000ff0000ULL) << 24 | \
-> -                    ((x) & 0x0000ff0000000000ULL) >> 24 | \
-> -                    ((x) & 0x00000000ff000000ULL) << 8 | \
-> -                    ((x) & 0x000000ff00000000ULL) >> 8)
-> +#define __mdadm_bswap_16(x) (((x) & 0x00ffU) << 8 | \
-> +                            ((x) & 0xff00U) >> 8)
-> +#define __mdadm_bswap_32(x) (((x) & 0x000000ffU) << 24 | \
-> +                            ((x) & 0xff000000U) >> 24 | \
-> +                            ((x) & 0x0000ff00U) << 8  | \
-> +                            ((x) & 0x00ff0000U) >> 8)
-> +#define __mdadm_bswap_64(x) (((x) & 0x00000000000000ffULL) << 56 | \
-> +                            ((x) & 0xff00000000000000ULL) >> 56 | \
-> +                            ((x) & 0x000000000000ff00ULL) << 40 | \
-> +                            ((x) & 0x00ff000000000000ULL) >> 40 | \
-> +                            ((x) & 0x0000000000ff0000ULL) << 24 | \
-> +                            ((x) & 0x0000ff0000000000ULL) >> 24 | \
-> +                            ((x) & 0x00000000ff000000ULL) << 8 |  \
-> +                            ((x) & 0x000000ff00000000ULL) >> 8)
->
->  #if !defined(__KLIBC__)
->  #if BYTE_ORDER == LITTLE_ENDIAN
-> @@ -163,19 +163,19 @@ struct dlm_lksb {
->  #define __le32_to_cpu(_x) (unsigned int)(_x)
->  #define __le64_to_cpu(_x) (unsigned long long)(_x)
->
-> -#define        __cpu_to_be16(_x) bswap_16(_x)
-> -#define __cpu_to_be32(_x) bswap_32(_x)
-> -#define __cpu_to_be64(_x) bswap_64(_x)
-> -#define        __be16_to_cpu(_x) bswap_16(_x)
-> -#define __be32_to_cpu(_x) bswap_32(_x)
-> -#define __be64_to_cpu(_x) bswap_64(_x)
-> +#define        __cpu_to_be16(_x) __mdadm_bswap_16(_x)
-> +#define __cpu_to_be32(_x) __mdadm_bswap_32(_x)
-> +#define __cpu_to_be64(_x) __mdadm_bswap_64(_x)
-> +#define        __be16_to_cpu(_x) __mdadm_bswap_16(_x)
-> +#define __be32_to_cpu(_x) __mdadm_bswap_32(_x)
-> +#define __be64_to_cpu(_x) __mdadm_bswap_64(_x)
->  #elif BYTE_ORDER == BIG_ENDIAN
-> -#define        __cpu_to_le16(_x) bswap_16(_x)
-> -#define __cpu_to_le32(_x) bswap_32(_x)
-> -#define __cpu_to_le64(_x) bswap_64(_x)
-> -#define        __le16_to_cpu(_x) bswap_16(_x)
-> -#define __le32_to_cpu(_x) bswap_32(_x)
-> -#define __le64_to_cpu(_x) bswap_64(_x)
-> +#define        __cpu_to_le16(_x) __mdadm_bswap_16(_x)
-> +#define __cpu_to_le32(_x) __mdadm_bswap_32(_x)
-> +#define __cpu_to_le64(_x) __mdadm_bswap_64(_x)
-> +#define        __le16_to_cpu(_x) __mdadm_bswap_16(_x)
-> +#define __le32_to_cpu(_x) __mdadm_bswap_32(_x)
-> +#define __le64_to_cpu(_x) __mdadm_bswap_64(_x)
->
->  #define        __cpu_to_be16(_x) (unsigned int)(_x)
->  #define __cpu_to_be32(_x) (unsigned int)(_x)
-> --
-> 2.5.0
->
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+gargamel:~# cryptsetup luksDump /dev/md8
+LUKS header information for /dev/md8
+
+Version:        1
+Cipher name:    aes
+Cipher mode:    xts-plain64
+Hash spec:      sha1
+Payload offset: 3072
+MK bits:        256
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
