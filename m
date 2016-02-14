@@ -1,26 +1,34 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: md raid5 on top of dmcrypt, or dmcrypt on top of md raid5?
-Date: Fri, 12 Feb 2016 14:57:02 -0500
-Message-ID: <22206.14606.181359.676881@quad.stoffel.home>
-References: <20160211162959.GG13969@merlins.org>
-	<alpine.DEB.2.02.1602121020570.11524@uplift.swm.pp.se>
-	<wrfja8n62e0c.fsf@redhat.com>
-	<20160212190700.GQ13969@merlins.org>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Questions
+Date: Sat, 13 Feb 2016 22:28:15 -0600
+Message-ID: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160212190700.GQ13969@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Greetings
 
-Marc,
+My raid 10 array was the subject of a number of exchanges on this
+board a few months ago.
+With the generous assistance of members here things were reestablished
+and have been working well. Today I had a VirtualBox VM crater and in
+the process cause other system issues. In process to clear the mess a
+number of hard stops (shutting the system off using the button on the
+case) were used. In rebooting I found that one of the drives in the
+array is no longer responding issuing a number of clicks in the boot
+up process with nothing else happening. Even though it is a RAID 10
+array the array is no longer mounted nor available. I have removed the
+faulty drive already. I have an appropriately sized drive available
+that I could place into the machine.
 
-Did you look into lvcache instead of bcache?  The problem with bcache
-is that you can't (as I understand it) remove it from a live volume,
-while you can with lvache.
+1. should I reformat the drive (to be placed into the machine)?
+2. what sequence of commands should I be using for this new drive to
+be included into the array?
+3. what sequence of commands should I use to remount the array?
 
-John
+TIA
+
+Dee
