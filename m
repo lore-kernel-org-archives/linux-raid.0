@@ -1,34 +1,44 @@
-From: d c <c866e866e@gmail.com>
-Subject: Is it possible to restore a linux raid partition?
-Date: Tue, 16 Feb 2016 17:38:10 +0100
-Message-ID: <CAM1AHSwqkRhH0WkSOEhWbs=qif_Wwtw5sKoYr0mGTh7E6nT36g@mail.gmail.com>
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when
+ stopping
+Date: Tue, 16 Feb 2016 17:58:00 +0100
+Message-ID: <56C35518.6080709@profitbricks.com>
+References: <56C3447A.3050504@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56C3447A.3050504@suse.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+On 16.02.2016 16:47, Hannes Reinecke wrote:
+> Hi Sebastian,
+> 
+> while it's true in general that a 'change' event should not be sent
+> when a device is being removed or deleted, sending a 'remove' event
+> from userspace is most definitely wrong, too.
+> 'remove' events should be generated from the kernel whenever a
+> device disappears from sysfs; it should never be generated from
+> userspace (as the device will still be present in sysfs).
 
-Here is the situation.  I need to restore some old archive files that
-were on a raid 5 that was created with a very old Fedora distribution.
+Hi Hannes,
 
-The three disks were segmented into three partitions.  Then a separate
-raid 5 was created for each of the partitions.  After a few years the
-three raids were taken down and the disks were put in a closet.
+thanks for your comment! Only few people actually stop md devices
+without rebooting. As a hotfix for running systems it is definitely the
+best solution for us at PB to do it in mdadm. Mdadm knows in this
+situation that stopping worked.
 
-Recently, I found that I needed some data that was on the 3 raids.
-But I was only able to find two of the three raid 5 disks.  The 3rd
-disk is gone forever.
+But I'm also fine with dropping the support for kernels prior to 2.6.28
+and the event sending in mdadm completely for the mainline. Sending the
+kernel patch to linux-stable is kind of useless if mdadm still sends the
+change event.
+So your vote seems to be dropping the udev event sending in mdadm and
+going for the kernel change.
 
-I mounted the two remaining disks and was able to get the files out of
-two of the three raids.
+I'll wait for other comments or votes for the preferred solution.
 
-But for the third raid, linux does not recognize one of the partitions
-on one of the disks as a raid partition.
-
-My question is it possible to repair the disk partition so that linux
-recognizes it as a raid 5 partition?
-
-thank you
+Cheers,
+Sebastian
