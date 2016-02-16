@@ -1,139 +1,82 @@
-From: Bruce Dubbs <bruce.dubbs@gmail.com>
-Subject: Re: mdadm-3.4 regression tests
-Date: Tue, 16 Feb 2016 12:24:30 -0600
-Message-ID: <56C3695E.5030508@gmail.com>
-References: <56C2AC87.7000500@gmail.com> <wrfjio1oczlj.fsf@redhat.com>
+From: o1bigtenor <o1bigtenor@gmail.com>
+Subject: Re: Questions
+Date: Tue, 16 Feb 2016 12:33:17 -0600
+Message-ID: <CAPpdf59tqGtusx5F4_qj942M=mpRf+fFM8O-9xE7L4YXTFd8NQ@mail.gmail.com>
+References: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
+	<56C0200B.8030606@websitemanagers.com.au>
+	<CAPpdf5_JBJB19B7wG5iuTt_aDZ6Zg0=kgQJtR_REU9JfDN1CxA@mail.gmail.com>
+	<AE031459-5104-437F-8353-ACF855CB02CC@websitemanagers.com.au>
+	<CAPpdf59u6SPD3=sv1XmKR09jzt6OL8TYLgOj==i3G4775fqbhg@mail.gmail.com>
+	<56C22C20.9090002@youngman.org.uk>
+	<CAPpdf5-LRMk0pcsBrp_nwmrNmPKt5jeo0_zjbH5cMZqA0+LtRQ@mail.gmail.com>
+	<56C24B9C.2070506@websitemanagers.com.au>
+	<CAPpdf598JjWbDFs93XU=Ph2EehNkw2qjXthUnGH+8cFs4N=64Q@mail.gmail.com>
+	<56C32B7E.2070204@websitemanagers.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjio1oczlj.fsf@redhat.com>
+In-Reply-To: <56C32B7E.2070204@websitemanagers.com.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Adam Goryachev <mailinglists@websitemanagers.com.au>
+Cc: Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jes Sorensen wrote:
-> Bruce Dubbs <bruce.dubbs@gmail.com> writes:
->> I have a problem when trying to document madam-3.4 for the Linux From
->> Scratch project.  The package builds fine:
+On Tue, Feb 16, 2016 at 8:00 AM, Adam Goryachev
+<mailinglists@websitemanagers.com.au> wrote:
+>snip
 >>
->> tar -xf mdadm-3.4.tar.xz
->> cd mdadm-3.4
->> make
->> make test
+>> A major reason as to why the drives are getting replaced. Back in early
+>> 2012
+>> when I setup the machine there was no obvious information that the ERC
+>> type drives were needed so I just bought vanilla drives.
+>>>
+>>> Essentially, your current disks might be fine, but if you don't have the
+>>> right settings, they could be "failing" regularly putting your data at
+>>> risk.
+>>> You should fix any issue here before you attempt to replace your drives.
 >>
->> Then when I run:
->>
->> sudo ./test --keep-going --logdir=test-logs --save-logs
->>
->> Some tests fail and one hangs forever.  I can post logs if needed.
->>
->> Please run './test' as root
->> Testing on linux-4.4.1-lfs-7.9-rc1 kernel
->> Saving logs to test-logs
->> tests/00linear... succeeded
->> tests/00multipath... succeeded
->> tests/00names... succeeded
->> tests/00raid0... succeeded
->> tests/00raid1... FAILED - see test-logs/log-00raid1 for details
->> cp: cannot stat '/var/tmp/log': No such file or directory
+>> I now have 2 long term drives which are likely still good and 2 cheap
+>> drives that
+>> are quite new but which I don't trust for long term reliability,
+>> therefore the push
+>> to change them all.
 >
-> Do you have a proper /var/tmp on that system?
-
-I'm not sure what you mean by 'proper', but I have
-
-$ ls -ld /var/tmp
-drwxrwxrwt 2 root root 4096 Feb 15 22:45 /var/tmp
-
-I'm not concerned about the missing '/var/tmp/log' because I think the 
-failure triggers a mv to test-logs/log-00raid1 and the message is the 
-result of a subsequent mv command at the end of the test execution loop.
-
-'/var/tmp/log' does exist while the test is running.
-
->> tests/00raid10... succeeded
->> tests/00raid4... succeeded
->> tests/00raid5... succeeded
->> tests/00raid6... succeeded
->> tests/01r1fail... succeeded
->> tests/01r5fail... succeeded
->> tests/01r5integ... succeeded
->> tests/01raid6integ... succeeded
->> tests/01replace...
->>
->> The failure says:
->>
->> ++ case $* in
->> ++ udevadm settle
->> +++ cat /proc/sys/dev/raid/speed_limit_max
->> ++ p=2000
->> ++ echo 20000
->> ++ case $* in
->> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -S /dev/md0
->> ++ rv=1
->> ++ case $* in
->> ++ udevadm settle
->> ++ echo 2000
->> ++ cat /var/tmp/stderr
->> ++ return 1
->> ++ mdadm -B /dev/md0 -l 1 --assume-clean -n2 /dev/loop0 /dev/loop1
->> ++ rm -f /var/tmp/stderr
->> ++ case $* in
->> ++ case $* in
->> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -B /dev/md0 -l 1 --assume-clean
->> -n2 /dev/loop0 /dev/loop1
->> ++ rv=1
->>
->> ...
->>
->> The bigger problem is that 01replace hangs forever.  Looking at my
->> process list:
->> root     16064     2  0 22:45 ?        00:00:00 [md0_raid1]
->> root     16093 16049  0 22:45 pts/1    00:00:00
->> /tmp/mdadm/mdadm-3.4/mdadm --quiet /dev/md0 --remove /dev/loop1
->>
->> The --remove operation never completes.
->>
->> $ cat /proc/mdstat
->> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [linear] [raid0]
->> md0 : active raid1 loop5[5] loop4[4](S) loop3[3] loop2[2] loop1[1](F) loop0[0]
->>        19968 blocks super 1.2 [4/4] [UUUU]
->>
->> Can someone help me figure out why the regression tests give these
->> problems.  kernel issue?  test program issue?  internal issue?
->>
->> The kernel was built with:
->>
->> CONFIG_MD_AUTODETECT=y
->> CONFIG_MD_LINEAR=m
->> CONFIG_MD_RAID0=m
->> CONFIG_MD_RAID1=y
->> CONFIG_MD_RAID10=y
->> CONFIG_MD_RAID456=y
->> # CONFIG_MD_MULTIPATH is not set
->> # CONFIG_MD_FAULTY is not set
->>
->> Are there other options needed?
->>
->> Thanks for any help.
 >
-> Nobody here have a clue what kernel you are running - giving us a
-> snippet of the .config and no detail about the kernel version is rather
-> useless.
+> Note, most drives either still support it, or else can be worked around to
+> avoid the timeout mismatch. You should do this before continue to replace
+> the drives, as you want to avoid this happening in the middle of replacing
+> drives.
+snip
+>>>
+>>> I would suggest replacing one at a time.
+>>
+>> There is no way to do them one after another copying over all four and
+>> then
+>> only needing to shut the box down once or failing that doing the process 2
+>> times
+>> necessitating only 2 shutdowns instead of 4 is there? The external USB box
+>> does have room for 2 drives at once.
+>
+>
+> Put two blank drives into the USB, replace first one, replace second one
+> (would suggest second drive as non-matching pair). Shutdown, move two new
+> drives internal, place two new drives into drive bay, and repeat for the
+> last two drives.
 
-I guess you just missed it.  The log above says:
+How do I determine exactly which are the matching pairs?
 
-Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+Raid 10 means striped and mirrored so I have 2 pairs (AIUI).
+I'm thinking its sde and sdf as a pair and then sdb and sdc as the other so if
+that's true then I would start with say sde and sdc for the first set
+and then do
+sdf and sdb for the second.
+>
+> I would suggest adding a bitmap for at least the time you are doing the
+> replacements, then if you have a failure on the USB enclosure during the 2nd
+> or 4th drive, at least the 1st or 3rd will re-sync quickly.
 
-The full config is at:
+Sorry - - - a bitmap - - - not sure what you mean?
 
-http://anduin.linuxfromscratch.org/~bdubbs/files/config-lfs-7.9-rc1
+Thanking you for your assistance.
 
-Thanks for responding.
-
-   -- Bruce
-
-
-
-
+Dee
