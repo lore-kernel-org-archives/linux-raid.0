@@ -1,68 +1,139 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device
- removal when stopping
-Date: Tue, 16 Feb 2016 19:03:51 +0100
-Message-ID: <56C36487.3060201@profitbricks.com>
-References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
- <1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
- <wrfjio1oeemz.fsf@redhat.com>
+From: Bruce Dubbs <bruce.dubbs@gmail.com>
+Subject: Re: mdadm-3.4 regression tests
+Date: Tue, 16 Feb 2016 12:24:30 -0600
+Message-ID: <56C3695E.5030508@gmail.com>
+References: <56C2AC87.7000500@gmail.com> <wrfjio1oczlj.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <wrfjio1oeemz.fsf@redhat.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfjio1oczlj.fsf@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
 To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Brassow Jonathan <jbrassow@redhat.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org, Shaohua Li <shli@kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMTYuMDIuMjAxNiAxODo0MSwgSmVzIFNvcmVuc2VuIHdyb3RlOgo+IFNlYmFzdGlhbiBQYXJz
-Y2hhdWVyIDxzZWJhc3RpYW4ucmllbWVyQHByb2ZpdGJyaWNrcy5jb20+IHdyaXRlczoKPj4gV2hl
-biBzdG9wcGluZyBhbiBNRCBkZXZpY2UsIHRoZW4gaXRzIGRldmljZSBub2RlIC9kZXYvbWRYIG1h
-eSBzdGlsbAo+PiBleGlzdCBhZnRlcndhcmRzIG9yIGl0IGlzIHJlY3JlYXRlZCBieSB1ZGV2LiBU
-aGUgbmV4dCBvcGVuKCkgY2FsbAo+PiBjYW4gbGVhZCB0byBjcmVhdGlvbiBvZiBhbiBpbm9wZXJh
-YmxlIE1EIGRldmljZS4gVGhlIHJlYXNvbiBmb3IKPj4gdGhpcyBpcyB0aGF0IGEgY2hhbmdlIGV2
-ZW50IChLT0JKX0NIQU5HRSkgaXMgYW5ub3VuY2VkIHRvIHVkZXYuCj4+IFNvIGFubm91bmNlIGEg
-cmVtb3ZhbCBldmVudCAoS09CSl9SRU1PVkUpIHRvIHVkZXYgaW5zdGVhZC4KPj4KPj4gVGhpcyBh
-bHNvIG92ZXJyaWRlcyB0aGUgY2hhbmdlIGV2ZW50IHNlbnQgYnkgdGhlIGtlcm5lbC4KPj4KPj4g
-U2lnbmVkLW9mZi1ieTogU2ViYXN0aWFuIFBhcnNjaGF1ZXIgPHNlYmFzdGlhbi5yaWVtZXJAcHJv
-Zml0YnJpY2tzLmNvbT4KPj4gLS0tCj4+ICBNYW5hZ2UuYyB8ICAgIDYgKysrLS0tCj4+ICAxIGZp
-bGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQo+Pgo+PiBkaWZmIC0t
-Z2l0IGEvTWFuYWdlLmMgYi9NYW5hZ2UuYwo+PiBpbmRleCA3ZTFiOTRiLi5iYzg5NzY0IDEwMDY0
-NAo+PiAtLS0gYS9NYW5hZ2UuYwo+PiArKysgYi9NYW5hZ2UuYwo+PiBAQCAtNDk0LDEzICs0OTQs
-MTMgQEAgZG9uZToKPj4gIAkJZ290byBvdXQ7Cj4+ICAJfQo+PiAgCS8qIHByaW9yIHRvIDIuNi4y
-OCwgS09CSl9DSEFOR0Ugd2FzIG5vdCBzZW50IHdoZW4gYW4gbWQgYXJyYXkKPj4gLQkgKiB3YXMg
-c3RvcHBlZCwgc28gV2UnbGwgZG8gaXQgaGVyZSBqdXN0IHRvIGJlIHN1cmUuICBEcm9wIGFueQo+
-PiAtCSAqIHBhcnRpdGlvbnMgYXMgd2VsbC4uLgo+PiArCSAqIHdhcyBzdG9wcGVkLCBpdCBzaG91
-bGQgYmUgS09CSl9SRU1PVkUgaW5zdGVhZCwgc28gd2Ugc2V0IHRoZQo+PiArCSAqIHJlbW92ZSBl
-dmVudCBoZXJlIGp1c3QgdG8gYmUgc3VyZS4gRHJvcCBhbnkgcGFydGl0aW9ucyBhcyB3ZWxsLi4u
-Cj4+ICAJICovCj4+ICAJaWYgKGZkID49IDApCj4+ICAJCWlvY3RsKGZkLCBCTEtSUlBBUlQsIDAp
-Owo+PiAgCWlmIChtZGkpCj4+IC0JCXN5c2ZzX3VldmVudChtZGksICJjaGFuZ2UiKTsKPj4gKwkJ
-c3lzZnNfdWV2ZW50KG1kaSwgInJlbW92ZSIpOwo+IAo+IEkgYW0gYSBsaXR0bGUgY29uY2VybmVk
-IGFib3V0IHRoaXMgY2hhbmdlLiBZb3UgYXNzdW1lIHRoZSBrZXJuZWwgYW5kCj4gbWRhZG0gd2ls
-bCBiZSB1cGRhdGVkIGluIHN5bmMsIHdoaWNoIGlzIHVubGlrZWx5IHRvIGhhcHBlbi4gSSBiZWxp
-ZXZlCj4geW91IG5lZWQgdG8gbWF0Y2ggdGhlIGtlcm5lbCB2ZXJzaW9uIGFuZCBzZW5kIHRoZSBj
-b3JyZXNwb25kaW5nIGV2ZW50Cj4gY3VycmVjdGx5IGZvciB0aGlzIHRvIHdvcmsgY29ycmVjdGx5
-PwoKVGhlIHdvcnN0IHRoaW5nIHRoYXQgY2FuIGhhcHBlbiBpcyB0aGF0IHRoZSBrZXJuZWwgc2Vu
-ZHMgdGhlIGNoYW5nZQpldmVudCBhZnRlciB0aGUgcmVtb3ZlIGV2ZW50LiBUaGVuIGl0IGlzIHRo
-ZSBjdXJyZW50IHNpdHVhdGlvbiBhZ2Fpbi4KRnJvbSBteSB0ZXN0cyBtZGFkbSBkb2VzIGVub3Vn
-aCBvdGhlciBzdHVmZiBpbiBiZXR3ZWVuLiBVZGV2IGlzIGFibGUgdG8KaGFuZGxlIHJlY2Vpdmlu
-ZyB0d28gcmVtb3ZlIGV2ZW50cyBmcm9tIG15IHRlc3RpbmcuIE11bHRpcGxlIG1kYWRtCmluc3Rh
-bmNlcyBjYW4ndCBydW4gaW4gcGFyYWxsZWwgYW55IHdheXMuIFNvIHVzZXJzcGFjZSBhcm91bmQg
-aXQgbmVlZHMKc29tZSBzZXJpYWxpemF0aW9uIGZvciBpdCBhbnkgd2F5cy4gU28gYWxzbyBzdG9w
-cGluZyBhbiBNRCBkZXZpY2UgYW5kCmFzc2VtYmxpbmcgYSBuZXcgb25lIHdpdGggdGhlIHNhbWUg
-bWlub3IgbnVtYmVyIHNob3VsZG4ndCByYWNlLgoKSSBzdGlsbCBwcmVmZXIgdGhpcyBzb2x1dGlv
-biBoZXJlLiBCdXQgaWYgeW91IGRlY2lkZSB0byBkcm9wIHRoZSB1ZGV2CmV2ZW50IHNlbmRpbmcg
-aW4gbWRhZG0sIHRoZW4gSSdtIGFsc28gZmluZSB3aXRoIHRoYXQuCgpDaGVlcnMsClNlYmFzdGlh
-bgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpzeXN0ZW1k
-LWRldmVsIG1haWxpbmcgbGlzdApzeXN0ZW1kLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpo
-dHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3N5c3RlbWQtZGV2
-ZWwK
+Jes Sorensen wrote:
+> Bruce Dubbs <bruce.dubbs@gmail.com> writes:
+>> I have a problem when trying to document madam-3.4 for the Linux From
+>> Scratch project.  The package builds fine:
+>>
+>> tar -xf mdadm-3.4.tar.xz
+>> cd mdadm-3.4
+>> make
+>> make test
+>>
+>> Then when I run:
+>>
+>> sudo ./test --keep-going --logdir=test-logs --save-logs
+>>
+>> Some tests fail and one hangs forever.  I can post logs if needed.
+>>
+>> Please run './test' as root
+>> Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+>> Saving logs to test-logs
+>> tests/00linear... succeeded
+>> tests/00multipath... succeeded
+>> tests/00names... succeeded
+>> tests/00raid0... succeeded
+>> tests/00raid1... FAILED - see test-logs/log-00raid1 for details
+>> cp: cannot stat '/var/tmp/log': No such file or directory
+>
+> Do you have a proper /var/tmp on that system?
+
+I'm not sure what you mean by 'proper', but I have
+
+$ ls -ld /var/tmp
+drwxrwxrwt 2 root root 4096 Feb 15 22:45 /var/tmp
+
+I'm not concerned about the missing '/var/tmp/log' because I think the 
+failure triggers a mv to test-logs/log-00raid1 and the message is the 
+result of a subsequent mv command at the end of the test execution loop.
+
+'/var/tmp/log' does exist while the test is running.
+
+>> tests/00raid10... succeeded
+>> tests/00raid4... succeeded
+>> tests/00raid5... succeeded
+>> tests/00raid6... succeeded
+>> tests/01r1fail... succeeded
+>> tests/01r5fail... succeeded
+>> tests/01r5integ... succeeded
+>> tests/01raid6integ... succeeded
+>> tests/01replace...
+>>
+>> The failure says:
+>>
+>> ++ case $* in
+>> ++ udevadm settle
+>> +++ cat /proc/sys/dev/raid/speed_limit_max
+>> ++ p=2000
+>> ++ echo 20000
+>> ++ case $* in
+>> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -S /dev/md0
+>> ++ rv=1
+>> ++ case $* in
+>> ++ udevadm settle
+>> ++ echo 2000
+>> ++ cat /var/tmp/stderr
+>> ++ return 1
+>> ++ mdadm -B /dev/md0 -l 1 --assume-clean -n2 /dev/loop0 /dev/loop1
+>> ++ rm -f /var/tmp/stderr
+>> ++ case $* in
+>> ++ case $* in
+>> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -B /dev/md0 -l 1 --assume-clean
+>> -n2 /dev/loop0 /dev/loop1
+>> ++ rv=1
+>>
+>> ...
+>>
+>> The bigger problem is that 01replace hangs forever.  Looking at my
+>> process list:
+>> root     16064     2  0 22:45 ?        00:00:00 [md0_raid1]
+>> root     16093 16049  0 22:45 pts/1    00:00:00
+>> /tmp/mdadm/mdadm-3.4/mdadm --quiet /dev/md0 --remove /dev/loop1
+>>
+>> The --remove operation never completes.
+>>
+>> $ cat /proc/mdstat
+>> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [linear] [raid0]
+>> md0 : active raid1 loop5[5] loop4[4](S) loop3[3] loop2[2] loop1[1](F) loop0[0]
+>>        19968 blocks super 1.2 [4/4] [UUUU]
+>>
+>> Can someone help me figure out why the regression tests give these
+>> problems.  kernel issue?  test program issue?  internal issue?
+>>
+>> The kernel was built with:
+>>
+>> CONFIG_MD_AUTODETECT=y
+>> CONFIG_MD_LINEAR=m
+>> CONFIG_MD_RAID0=m
+>> CONFIG_MD_RAID1=y
+>> CONFIG_MD_RAID10=y
+>> CONFIG_MD_RAID456=y
+>> # CONFIG_MD_MULTIPATH is not set
+>> # CONFIG_MD_FAULTY is not set
+>>
+>> Are there other options needed?
+>>
+>> Thanks for any help.
+>
+> Nobody here have a clue what kernel you are running - giving us a
+> snippet of the .config and no detail about the kernel version is rather
+> useless.
+
+I guess you just missed it.  The log above says:
+
+Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+
+The full config is at:
+
+http://anduin.linuxfromscratch.org/~bdubbs/files/config-lfs-7.9-rc1
+
+Thanks for responding.
+
+   -- Bruce
+
+
+
+
