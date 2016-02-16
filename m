@@ -1,89 +1,42 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when stopping
-Date: Tue, 16 Feb 2016 13:52:24 -0500
-Message-ID: <wrfja8n0bi8n.fsf@redhat.com>
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH 1/2] md: Inform udev about device
+	removal when stopping
+Date: Tue, 16 Feb 2016 12:05:53 -0800
+Message-ID: <20160216200553.GA13119@kernel.org>
 References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
-	<1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
-	<wrfjio1oeemz.fsf@redhat.com> <56C36487.3060201@profitbricks.com>
-	<56C36D20.6030001@suse.de>
+ <1455633877-4813-2-git-send-email-sebastian.riemer@profitbricks.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56C36D20.6030001@suse.de> (Hannes Reinecke's message of "Tue, 16
-	Feb 2016 19:40:32 +0100")
-Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, systemd-devel@freedesktop.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <1455633877-4813-2-git-send-email-sebastian.riemer@profitbricks.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Brassow Jonathan <jbrassow@redhat.com>, Jes Sorensen <Jes.Sorensen@redhat.com>, NeilBrown <neilb@suse.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
 List-Id: linux-raid.ids
 
-Hannes Reinecke <hare@suse.de> writes:
-> On 02/16/2016 07:03 PM, Sebastian Parschauer wrote:
->> On 16.02.2016 18:41, Jes Sorensen wrote:
->>> Sebastian Parschauer <sebastian.riemer@profitbricks.com> writes:
->>>> When stopping an MD device, then its device node /dev/mdX may still
->>>> exist afterwards or it is recreated by udev. The next open() call
->>>> can lead to creation of an inoperable MD device. The reason for
->>>> this is that a change event (KOBJ_CHANGE) is announced to udev.
->>>> So announce a removal event (KOBJ_REMOVE) to udev instead.
->>>>
->>>> This also overrides the change event sent by the kernel.
->>>>
->>>> Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
->>>> ---
->>>>   Manage.c |    6 +++---
->>>>   1 file changed, 3 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/Manage.c b/Manage.c
->>>> index 7e1b94b..bc89764 100644
->>>> --- a/Manage.c
->>>> +++ b/Manage.c
->>>> @@ -494,13 +494,13 @@ done:
->>>>   		goto out;
->>>>   	}
->>>>   	/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
->>>> -	 * was stopped, so We'll do it here just to be sure.  Drop any
->>>> -	 * partitions as well...
->>>> +	 * was stopped, it should be KOBJ_REMOVE instead, so we set the
->>>> +	 * remove event here just to be sure. Drop any partitions as well...
->>>>   	 */
->>>>   	if (fd >= 0)
->>>>   		ioctl(fd, BLKRRPART, 0);
->>>>   	if (mdi)
->>>> -		sysfs_uevent(mdi, "change");
->>>> +		sysfs_uevent(mdi, "remove");
->>>
->>> I am a little concerned about this change. You assume the kernel and
->>> mdadm will be updated in sync, which is unlikely to happen. I believe
->>> you need to match the kernel version and send the corresponding event
->>> currectly for this to work correctly?
->>
->> The worst thing that can happen is that the kernel sends the change
->> event after the remove event. Then it is the current situation again.
->>  From my tests mdadm does enough other stuff in between. Udev is able to
->> handle receiving two remove events from my testing. Multiple mdadm
->> instances can't run in parallel any ways. So userspace around it needs
->> some serialization for it any ways. So also stopping an MD device and
->> assembling a new one with the same minor number shouldn't race.
->>
->> I still prefer this solution here. But if you decide to drop the udev
->> event sending in mdadm, then I'm also fine with that.
->>
-> I strongly prefer removing the udev event generation altogether.
-> As this appears to be a carry-over from older kernels, it looks to me
-> as being an incomplete conversion:
-> At one point udev introduced 'ONLINE' and 'OFFLINE' events, which were
-> supposed to be used for this kind of scenario.
-> (ONLINE being a companion to 'ADD', and 'OFFLINE' being the companion
-> to 'DELETE'). However, later the 'ONLINE' got modified to 'CHANGE',
-> and the 'OFFLINE' got dropped completely.
-> Or that was the plan.
-> So it looks as if the conversion to 'CHANGE' got applied to the
-> 'OFFLINE' event, too.
-> Hence I strongly recommend to drop it completely, and let the kernel
-> or the MD module decide if and when a uevent should be send.
-
-I am totally fine with this, however we should make mdadm fail if run
-against a pre-2.6.28 kernel then.
-
-Cheers,
-Jes
+T24gVHVlLCBGZWIgMTYsIDIwMTYgYXQgMDM6NDQ6MzZQTSArMDEwMCwgU2ViYXN0aWFuIFBhcnNj
+aGF1ZXIgd3JvdGU6Cj4gV2hlbiBzdG9wcGluZyBhbiBNRCBkZXZpY2UsIHRoZW4gaXRzIGRldmlj
+ZSBub2RlIC9kZXYvbWRYIG1heSBzdGlsbAo+IGV4aXN0IGFmdGVyd2FyZHMgb3IgaXQgaXMgcmVj
+cmVhdGVkIGJ5IHVkZXYuIFRoZSBuZXh0IG9wZW4oKSBjYWxsCj4gY2FuIGxlYWQgdG8gY3JlYXRp
+b24gb2YgYW4gaW5vcGVyYWJsZSBNRCBkZXZpY2UuIFRoZSByZWFzb24gZm9yCj4gdGhpcyBpcyB0
+aGF0IGEgY2hhbmdlIGV2ZW50IChLT0JKX0NIQU5HRSkgaXMgYW5ub3VuY2VkIHRvIHVkZXYuCj4g
+U28gYW5ub3VuY2UgYSByZW1vdmFsIGV2ZW50IChLT0JKX1JFTU9WRSkgdG8gdWRldiBpbnN0ZWFk
+Lgo+IAo+IEEgY2hhbmdlIGlzIGxpa2VseSBhbHNvIHJlcXVpcmVkIGluIG1kYWRtIGJlY2F1c2Ug
+b2YgdGhlIHN1cHBvcnQKPiBmb3Iga2VybmVscyBwcmlvciB0byAyLjYuMjguCgpJIGRpZG4ndCBm
+b2xsb3cgd2h5IHdlIG5lZWQgdGhlIGNoYW5nZS4gU2hvdWxkbid0IHRoZSBLT0JKX1JFTU9WRSBl
+dmVudCBiZSBzZW50CmF1dG9tYXRpY2FsbHkgd2hlbiBnZW5kaXNrIGlzIGRlbGV0ZWQ/Cm1kZGV2
+X3B1dCgpLT5tZGRldl9kZWxheWVkX2RlbGV0ZSgpLT5tZF9mcmVlKCktPmRlbF9nZW5kaXNrKCku
+CgpUaGFua3MsClNoYW9odWEKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWlsaW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBsaXN0cy5m
+cmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9zeXN0ZW1kLWRldmVsCg==
