@@ -1,50 +1,37 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: [PATCH 2/2] Manage: Inform udev about device removal when stopping
-Date: Tue, 16 Feb 2016 15:44:37 +0100
-Message-ID: <1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
-References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
-Reply-To: linux-raid <linux-raid@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when
+ stopping
+Date: Tue, 16 Feb 2016 16:47:06 +0100
+Message-ID: <56C3447A.3050504@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Shaohua Li <shli@kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, systemd-devel@freedesktop.org
+To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When stopping an MD device, then its device node /dev/mdX may still
-exist afterwards or it is recreated by udev. The next open() call
-can lead to creation of an inoperable MD device. The reason for
-this is that a change event (KOBJ_CHANGE) is announced to udev.
-So announce a removal event (KOBJ_REMOVE) to udev instead.
+Hi Sebastian,
 
-This also overrides the change event sent by the kernel.
+while it's true in general that a 'change' event should not be sent
+when a device is being removed or deleted, sending a 'remove' event
+from userspace is most definitely wrong, too.
+'remove' events should be generated from the kernel whenever a
+device disappears from sysfs; it should never be generated from
+userspace (as the device will still be present in sysfs).
 
-Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
----
- Manage.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Cheers,
 
-diff --git a/Manage.c b/Manage.c
-index 7e1b94b..bc89764 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -494,13 +494,13 @@ done:
- 		goto out;
- 	}
- 	/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
--	 * was stopped, so We'll do it here just to be sure.  Drop any
--	 * partitions as well...
-+	 * was stopped, it should be KOBJ_REMOVE instead, so we set the
-+	 * remove event here just to be sure. Drop any partitions as well...
- 	 */
- 	if (fd >= 0)
- 		ioctl(fd, BLKRRPART, 0);
- 	if (mdi)
--		sysfs_uevent(mdi, "change");
-+		sysfs_uevent(mdi, "remove");
- 
- 	if (devnm[0] && use_udev()) {
- 		struct map_ent *mp = map_by_devnm(&map, devnm);
--- 
-1.7.9.5
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
