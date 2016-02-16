@@ -1,7 +1,7 @@
 From: o1bigtenor <o1bigtenor@gmail.com>
 Subject: Re: Questions
-Date: Tue, 16 Feb 2016 12:33:17 -0600
-Message-ID: <CAPpdf59tqGtusx5F4_qj942M=mpRf+fFM8O-9xE7L4YXTFd8NQ@mail.gmail.com>
+Date: Tue, 16 Feb 2016 12:37:27 -0600
+Message-ID: <CAPpdf5_Vmreenqc+LyH=BxK29uDYgmF1uf=zY=QG8t+L3GJiRQ@mail.gmail.com>
 References: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
 	<56C0200B.8030606@websitemanagers.com.au>
 	<CAPpdf5_JBJB19B7wG5iuTt_aDZ6Zg0=kgQJtR_REU9JfDN1CxA@mail.gmail.com>
@@ -11,72 +11,54 @@ References: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
 	<CAPpdf5-LRMk0pcsBrp_nwmrNmPKt5jeo0_zjbH5cMZqA0+LtRQ@mail.gmail.com>
 	<56C24B9C.2070506@websitemanagers.com.au>
 	<CAPpdf598JjWbDFs93XU=Ph2EehNkw2qjXthUnGH+8cFs4N=64Q@mail.gmail.com>
-	<56C32B7E.2070204@websitemanagers.com.au>
+	<56C33311.2040707@youngman.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56C32B7E.2070204@websitemanagers.com.au>
+In-Reply-To: <56C33311.2040707@youngman.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Wols Lists <antlists@youngman.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Feb 16, 2016 at 8:00 AM, Adam Goryachev
-<mailinglists@websitemanagers.com.au> wrote:
->snip
->>
->> A major reason as to why the drives are getting replaced. Back in early
->> 2012
+On Tue, Feb 16, 2016 at 8:32 AM, Wols Lists <antlists@youngman.org.uk> wrote:
+> On 16/02/16 11:46, o1bigtenor wrote:
+>> A major reason as to why the drives are getting replaced. Back in early 2012
 >> when I setup the machine there was no obvious information that the ERC
 >> type drives were needed so I just bought vanilla drives.
->>>
->>> Essentially, your current disks might be fine, but if you don't have the
->>> right settings, they could be "failing" regularly putting your data at
->>> risk.
->>> You should fix any issue here before you attempt to replace your drives.
->>
->> I now have 2 long term drives which are likely still good and 2 cheap
->> drives that
->> are quite new but which I don't trust for long term reliability,
->> therefore the push
->> to change them all.
 >
+> This is just what I've got a gut feel for, it seems to make sense of
+> what I've seen on the list ...
 >
-> Note, most drives either still support it, or else can be worked around to
-> avoid the timeout mismatch. You should do this before continue to replace
-> the drives, as you want to avoid this happening in the middle of replacing
-> drives.
-snip
->>>
->>> I would suggest replacing one at a time.
->>
->> There is no way to do them one after another copying over all four and
->> then
->> only needing to shut the box down once or failing that doing the process 2
->> times
->> necessitating only 2 shutdowns instead of 4 is there? The external USB box
->> does have room for 2 drives at once.
+> "new" drives of 2TB or more have the crippled drive firmware unless you
+> specifically buy raid.
 >
->
-> Put two blank drives into the USB, replace first one, replace second one
-> (would suggest second drive as non-matching pair). Shutdown, move two new
-> drives internal, place two new drives into drive bay, and repeat for the
-> last two drives.
+> The original release date of 1TB and less drives predates the crippling,
+> and the manufacturers haven't bothered to go back and "fix" this.
 
-How do I determine exactly which are the matching pairs?
-
-Raid 10 means striped and mirrored so I have 2 pairs (AIUI).
-I'm thinking its sde and sdf as a pair and then sdb and sdc as the other so if
-that's true then I would start with say sde and sdc for the first set
-and then do
-sdf and sdb for the second.
+I'll take your word for that but did buy NAS rated drives (just missed
+getting some
+enterprise drives which should have been even better!).
 >
-> I would suggest adding a bitmap for at least the time you are doing the
-> replacements, then if you have a failure on the USB enclosure during the 2nd
-> or 4th drive, at least the 1st or 3rd will re-sync quickly.
+> So 1TB drives - even desktop ones - seem usually to be okay. Anything
+> over that is suspect.
+>
+> Cheers,
+> Wol
+>
+> Incidentally, any reason for sticking with the same size drives? I'm
+> looking at replacing my Barracudas and might well upgrade from 3TB to
+> 4TB, just because the price difference is minimal. That's despite /home
+> only being half full even though I have a 24MP camera ...
+>
 
-Sorry - - - a bitmap - - - not sure what you mean?
+Sticking with the same size drives for a number of reasons. The price
+difference is
+minimal but it is there. In 4 years of using I'm now at 300 GB which is not that
+large compared to a 2TB array. I also am in the process of setting up
+a server which
+has 4 - 3TB drives in a raid 10 array for backup level 1.
 
-Thanking you for your assistance.
+Thanking you for your time and tips!
 
 Dee
