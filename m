@@ -1,37 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when
- stopping
-Date: Tue, 16 Feb 2016 16:47:06 +0100
-Message-ID: <56C3447A.3050504@suse.de>
+From: d c <c866e866e@gmail.com>
+Subject: Is it possible to restore a linux raid partition?
+Date: Tue, 16 Feb 2016 17:38:10 +0100
+Message-ID: <CAM1AHSwqkRhH0WkSOEhWbs=qif_Wwtw5sKoYr0mGTh7E6nT36g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Sebastian,
+Hello,
 
-while it's true in general that a 'change' event should not be sent
-when a device is being removed or deleted, sending a 'remove' event
-from userspace is most definitely wrong, too.
-'remove' events should be generated from the kernel whenever a
-device disappears from sysfs; it should never be generated from
-userspace (as the device will still be present in sysfs).
+Here is the situation.  I need to restore some old archive files that
+were on a raid 5 that was created with a very old Fedora distribution.
 
-Cheers,
+The three disks were segmented into three partitions.  Then a separate
+raid 5 was created for each of the partitions.  After a few years the
+three raids were taken down and the disks were put in a closet.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Recently, I found that I needed some data that was on the 3 raids.
+But I was only able to find two of the three raid 5 disks.  The 3rd
+disk is gone forever.
+
+I mounted the two remaining disks and was able to get the files out of
+two of the three raids.
+
+But for the third raid, linux does not recognize one of the partitions
+on one of the disks as a raid partition.
+
+My question is it possible to repair the disk partition so that linux
+recognizes it as a raid 5 partition?
+
+thank you
