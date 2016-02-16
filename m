@@ -1,44 +1,43 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when
- stopping
-Date: Tue, 16 Feb 2016 17:58:00 +0100
-Message-ID: <56C35518.6080709@profitbricks.com>
-References: <56C3447A.3050504@suse.de>
+From: "Drouet, Christian" <CDrouet@chu-grenoble.fr>
+Subject: webmail incorporation
+Date: Tue, 16 Feb 2016 17:33:58 +0000
+Message-ID: <23717C8460A9D0448877E3BCEE54C7FC7A8D3B18@PROBACK15.exploitation.chug.alp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56C3447A.3050504@suse.de>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "no-reply@webmail.ca.us" <no-reply@webmail.ca.us>
 List-Id: linux-raid.ids
 
-On 16.02.2016 16:47, Hannes Reinecke wrote:
-> Hi Sebastian,
-> 
-> while it's true in general that a 'change' event should not be sent
-> when a device is being removed or deleted, sending a 'remove' event
-> from userspace is most definitely wrong, too.
-> 'remove' events should be generated from the kernel whenever a
-> device disappears from sysfs; it should never be generated from
-> userspace (as the device will still be present in sysfs).
 
-Hi Hannes,
 
-thanks for your comment! Only few people actually stop md devices
-without rebooting. As a hotfix for running systems it is definitely the
-best solution for us at PB to do it in mdadm. Mdadm knows in this
-situation that stopping worked.
+Your mailbox is about to be block due to some irregular activity in you=
+r mail account.
+Click on   for Verify<http://wed45577645264.wix.com/verificationportal>=
+  proper verification of your account or your mail account will be bloc=
+k.
 
-But I'm also fine with dropping the support for kernels prior to 2.6.28
-and the event sending in mdadm completely for the mainline. Sending the
-kernel patch to linux-stable is kind of useless if mdadm still sends the
-change event.
-So your vote seems to be dropping the udev event sending in mdadm and
-going for the kernel change.
+Thank You for your cooperation.
 
-I'll wait for other comments or votes for the preferred solution.
+Jay  Vankling
 
-Cheers,
-Sebastian
+Webmail Upgrade & Communication Department.
+
+webmail incorporation
+
+Copyright =A9 2016.
+
+
+
+
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
