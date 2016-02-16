@@ -1,92 +1,107 @@
 From: NeilBrown <neilb@suse.com>
-Subject: Re: [PATCH 1/2] md: Inform udev about device
-	removal when stopping
-Date: Wed, 17 Feb 2016 07:43:03 +1100
-Message-ID: <8760xotmi0.fsf@notabene.neil.brown.name>
-References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
- <1455633877-4813-2-git-send-email-sebastian.riemer@profitbricks.com>
- <20160216200553.GA13119@kernel.org>
+Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when stopping
+Date: Wed, 17 Feb 2016 07:46:58 +1100
+Message-ID: <8737sstmbh.fsf@notabene.neil.brown.name>
+References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com> <1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com> <wrfjio1oeemz.fsf@redhat.com> <56C36487.3060201@profitbricks.com> <56C36D20.6030001@suse.de> <wrfja8n0bi8n.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1465514563=="
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20160216200553.GA13119@kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Brassow Jonathan <jbrassow@redhat.com>, systemd-devel@freedesktop.org
-List-Id: linux-raid.ids
-
---===============1465514563==
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <wrfja8n0bi8n.fsf@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
+List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 17 2016, Shaohua Li wrote:
+On Wed, Feb 17 2016, Jes Sorensen wrote:
 
-> On Tue, Feb 16, 2016 at 03:44:36PM +0100, Sebastian Parschauer wrote:
->> When stopping an MD device, then its device node /dev/mdX may still
->> exist afterwards or it is recreated by udev. The next open() call
->> can lead to creation of an inoperable MD device. The reason for
->> this is that a change event (KOBJ_CHANGE) is announced to udev.
->> So announce a removal event (KOBJ_REMOVE) to udev instead.
->>=20
->> A change is likely also required in mdadm because of the support
->> for kernels prior to 2.6.28.
+> Hannes Reinecke <hare@suse.de> writes:
+>> On 02/16/2016 07:03 PM, Sebastian Parschauer wrote:
+>>> On 16.02.2016 18:41, Jes Sorensen wrote:
+>>>> Sebastian Parschauer <sebastian.riemer@profitbricks.com> writes:
+>>>>> When stopping an MD device, then its device node /dev/mdX may still
+>>>>> exist afterwards or it is recreated by udev. The next open() call
+>>>>> can lead to creation of an inoperable MD device. The reason for
+>>>>> this is that a change event (KOBJ_CHANGE) is announced to udev.
+>>>>> So announce a removal event (KOBJ_REMOVE) to udev instead.
+>>>>>
+>>>>> This also overrides the change event sent by the kernel.
+>>>>>
+>>>>> Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+>>>>> ---
+>>>>>   Manage.c |    6 +++---
+>>>>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>>>>
+>>>>> diff --git a/Manage.c b/Manage.c
+>>>>> index 7e1b94b..bc89764 100644
+>>>>> --- a/Manage.c
+>>>>> +++ b/Manage.c
+>>>>> @@ -494,13 +494,13 @@ done:
+>>>>>   		goto out;
+>>>>>   	}
+>>>>>   	/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
+>>>>> -	 * was stopped, so We'll do it here just to be sure.  Drop any
+>>>>> -	 * partitions as well...
+>>>>> +	 * was stopped, it should be KOBJ_REMOVE instead, so we set the
+>>>>> +	 * remove event here just to be sure. Drop any partitions as well...
+>>>>>   	 */
+>>>>>   	if (fd >= 0)
+>>>>>   		ioctl(fd, BLKRRPART, 0);
+>>>>>   	if (mdi)
+>>>>> -		sysfs_uevent(mdi, "change");
+>>>>> +		sysfs_uevent(mdi, "remove");
+>>>>
+>>>> I am a little concerned about this change. You assume the kernel and
+>>>> mdadm will be updated in sync, which is unlikely to happen. I believe
+>>>> you need to match the kernel version and send the corresponding event
+>>>> currectly for this to work correctly?
+>>>
+>>> The worst thing that can happen is that the kernel sends the change
+>>> event after the remove event. Then it is the current situation again.
+>>>  From my tests mdadm does enough other stuff in between. Udev is able to
+>>> handle receiving two remove events from my testing. Multiple mdadm
+>>> instances can't run in parallel any ways. So userspace around it needs
+>>> some serialization for it any ways. So also stopping an MD device and
+>>> assembling a new one with the same minor number shouldn't race.
+>>>
+>>> I still prefer this solution here. But if you decide to drop the udev
+>>> event sending in mdadm, then I'm also fine with that.
+>>>
+>> I strongly prefer removing the udev event generation altogether.
+>> As this appears to be a carry-over from older kernels, it looks to me
+>> as being an incomplete conversion:
+>> At one point udev introduced 'ONLINE' and 'OFFLINE' events, which were
+>> supposed to be used for this kind of scenario.
+>> (ONLINE being a companion to 'ADD', and 'OFFLINE' being the companion
+>> to 'DELETE'). However, later the 'ONLINE' got modified to 'CHANGE',
+>> and the 'OFFLINE' got dropped completely.
+>> Or that was the plan.
+>> So it looks as if the conversion to 'CHANGE' got applied to the
+>> 'OFFLINE' event, too.
+>> Hence I strongly recommend to drop it completely, and let the kernel
+>> or the MD module decide if and when a uevent should be send.
 >
-> I didn't follow why we need the change. Shouldn't the KOBJ_REMOVE event b=
-e sent
-> automatically when gendisk is deleted?
-> mddev_put()->mddev_delayed_delete()->md_free()->del_gendisk().
+> I am totally fine with this, however we should make mdadm fail if run
+> against a pre-2.6.28 kernel then.
 >
-> Thanks,
-> Shaohua
+> Cheers,
+> Jes
 
-For a bit of context: this KOBJ_CHANGE event was added in Oct 2008
+I would suggest protecting the
 
-Commit: 934d9c23b4c7 ("md: destroy partitions and notify udev when md array=
- is stopped.")
+	if (fd >= 0)
+		ioctl(fd, BLKRRPART, 0);
+	if (mdi)
+		sysfs_uevent(mdi, "change");
 
-At the time, md devices weren't getting removed at all.
-Now they are (I figured out the locking), though they can still come
-back.
+code with
 
-There are still two stages.  The array is stopped, and then the block
-device is destroyed.  It is theoretically possible to stop the array
-without destroying the block device, though I don't think that happens
-in practice.
+   if (get_linux_version() < 2006028)
 
-So this KOBJ_CHANGE is, I think, technically correct (change from
-"active" to "inactive")  but probably isn't needed any more - not to the
-extent it was at the time.
-
-There are some annoying races with caused by udev responding (belatedly)
-to events by running programs that open s/dev/mdXX and so automatically
-re-creates the md device.
-The real problem here is not the event or the delays in udev.  It is the
-fact that opening /dev/mdXX transparently creates a device.
-
-The only way (I know of) to really avoid these races is to use named
-arrays.
-Put
-   CREATE names=3Dyes
-
-in mdadm.conf.  Then md arrays will be created by writing a name to a
-magic file in /sys.  The arrays have a minor number >=3D512 and are not
-auto-re-created if the device node is re-opened before udev unlinks it.
-
-So: the patch might be safe, and might solve a particular problem, but
-it is really just a bandaid.  The best fix is "CREATE named=3Dyes" (and
-use named like "md_home", not "md4".
+That should be completely safe - 2.6.28 and later do this (if needed).
 
 NeilBrown
 
@@ -96,31 +111,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWw4nXAAoJEDnsnt1WYoG5yw4QAJopBZUDk9c7A/CfVcBqw3je
-uFox+1XKXttl6za8TAOGomvoUXuqvlMs9pML19S4LURlXY7h6pELmb4vXaCHxG+u
-psnKirsC5aQMjBCWSoftm/TPNs0MK3o5zwQDDxZZGdJAmwP8/WymCjWaol0AsbYl
-M90Nv1yhBRF3fbMayHhbcmZdplZWBeM9x9uVG9lvNFTl6D2oSkK0hgxu2pSUtRGl
-aoDB82WcnHzEKtE+OcgpWq5HcHm+exT66wBmv3b93SSfgdX/Gdhcn/x5caI6XYnC
-h8dwN1zGZRtkjIP/U9RztnngzZkdGRVfV7FQzPjrmUoGXhMPDy5FCYtekw3PptHv
-DTqfCX+2ES4EZrDU6u/JFfewTcBxhmq7DtMN2bqUVX8Lbh00gtj+1ZLnhGXNZjw5
-0n8OTEhLnbckSlRszgTdYcwZEK2JkeI8kyiTDQStZt4o7e/pgLuZmvTy7fnMvPVf
-zUCpRttzE7QTSlNtBuicVmLf/t/o/TQMI4r0XOboRAPJhhY+MwX3ad3QUZRIXhrZ
-cA7Lf5NCfQX4Uk7+MHI/mHW9ukRMOQVCrPIPICfdKhSHr64mYTK5k1ibRItPzEwo
-X5qzbYmKCxDDu//qxzAG7jbmcC7nvCQmKT2qgtsDBeeXZkMSYEreGOBiRWGbI6X2
-Jhd8G4hzcumRNi+HtbnZ
-=5rGB
+iQIcBAEBCAAGBQJWw4rCAAoJEDnsnt1WYoG5V8MP/RXiuYa29tTwhqvaSUcJoV+A
+IhzrEfoZLnozp7jiG2t1yqvq9gFPzuolbvkt5qZO8tgGotCNn9059EcQNRzLzmbH
+WoYRSxiqIGGAfdOGMZI96tGo7tVOEa73lmKN8D80OO5VTBjuD09FquhJ/TvPW17R
+VIpHLQqwouknewLjVKoN8lfkVGMwtyNym2uFDNYbKRhG07HJxut6FuFlts7fJHNn
+Yzpg4+jOpn6kWRCZcqyi/Y+UGf6ubo1D6igTAX7+8ErnzEOkhUB7SfMJwqiE05Iq
+mgKL1Qp5X3eGxQZejcntFGFetwt2NW/vy7F/QtmPTfWmTjz8PR2KaA8LVnIVF/xw
+R9xLK2NaYS+Ukhwr758wSLgIsjwAU9EUFCyD2CcB3MPVBoatHEMjKUhI6Qy8DaXI
+MSw4tEdyUWCzU7raGsfp9QlMv42LHCuKW8C+nacgKKn+cyQCKLRCKq1GR6cE/s4x
++yV/rSptyV2JOacNlBWmckVgkMeZOW200MNO4mmAHHfDraB3gGjCbYmu5OTn9zKg
+qwNf3/kAGyBxk1uu0NOjQdva4Fjs3I+CPj8Q1k1ZEEw9v/p6crcSSw7KPKrjmeYl
+5e4gH823nErX7Sym4EadFvmN2DrclEW+LjOd1hqtPOUDD5i8wKcsDkrILzR5zYnG
+au0xjyKwBxqdAMrDgBv8
+=8mkN
 -----END PGP SIGNATURE-----
 --=-=-=--
-
---===============1465514563==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
-
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Kc3lzdGVtZC1k
-ZXZlbCBtYWlsaW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9zeXN0ZW1kLWRldmVs
-Cg==
-
---===============1465514563==--
