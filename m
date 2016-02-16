@@ -1,55 +1,113 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when stopping
-Date: Tue, 16 Feb 2016 12:41:56 -0500
-Message-ID: <wrfjio1oeemz.fsf@redhat.com>
-References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
-	<1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
+Subject: Re: mdadm-3.4 regression tests
+Date: Tue, 16 Feb 2016 12:52:08 -0500
+Message-ID: <wrfjio1oczlj.fsf@redhat.com>
+References: <56C2AC87.7000500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
-	(Sebastian Parschauer's message of "Tue, 16 Feb 2016 15:44:37 +0100")
+In-Reply-To: <56C2AC87.7000500@gmail.com> (Bruce Dubbs's message of "Mon, 15
+	Feb 2016 22:58:47 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, systemd-devel@freedesktop.org
+To: Bruce Dubbs <bruce.dubbs@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sebastian Parschauer <sebastian.riemer@profitbricks.com> writes:
-> When stopping an MD device, then its device node /dev/mdX may still
-> exist afterwards or it is recreated by udev. The next open() call
-> can lead to creation of an inoperable MD device. The reason for
-> this is that a change event (KOBJ_CHANGE) is announced to udev.
-> So announce a removal event (KOBJ_REMOVE) to udev instead.
+Bruce Dubbs <bruce.dubbs@gmail.com> writes:
+> I have a problem when trying to document madam-3.4 for the Linux From
+> Scratch project.  The package builds fine:
 >
-> This also overrides the change event sent by the kernel.
+> tar -xf mdadm-3.4.tar.xz
+> cd mdadm-3.4
+> make
+> make test
 >
-> Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-> ---
->  Manage.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> Then when I run:
 >
-> diff --git a/Manage.c b/Manage.c
-> index 7e1b94b..bc89764 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -494,13 +494,13 @@ done:
->  		goto out;
->  	}
->  	/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
-> -	 * was stopped, so We'll do it here just to be sure.  Drop any
-> -	 * partitions as well...
-> +	 * was stopped, it should be KOBJ_REMOVE instead, so we set the
-> +	 * remove event here just to be sure. Drop any partitions as well...
->  	 */
->  	if (fd >= 0)
->  		ioctl(fd, BLKRRPART, 0);
->  	if (mdi)
-> -		sysfs_uevent(mdi, "change");
-> +		sysfs_uevent(mdi, "remove");
+> sudo ./test --keep-going --logdir=test-logs --save-logs
+>
+> Some tests fail and one hangs forever.  I can post logs if needed.
+>
+> Please run './test' as root
+> Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+> Saving logs to test-logs
+> tests/00linear... succeeded
+> tests/00multipath... succeeded
+> tests/00names... succeeded
+> tests/00raid0... succeeded
+> tests/00raid1... FAILED - see test-logs/log-00raid1 for details
+> cp: cannot stat '/var/tmp/log': No such file or directory
 
-I am a little concerned about this change. You assume the kernel and
-mdadm will be updated in sync, which is unlikely to happen. I believe
-you need to match the kernel version and send the corresponding event
-currectly for this to work correctly?
+Do you have a proper /var/tmp on that system?
+
+> tests/00raid10... succeeded
+> tests/00raid4... succeeded
+> tests/00raid5... succeeded
+> tests/00raid6... succeeded
+> tests/01r1fail... succeeded
+> tests/01r5fail... succeeded
+> tests/01r5integ... succeeded
+> tests/01raid6integ... succeeded
+> tests/01replace...
+>
+> The failure says:
+>
+> ++ case $* in
+> ++ udevadm settle
+> +++ cat /proc/sys/dev/raid/speed_limit_max
+> ++ p=2000
+> ++ echo 20000
+> ++ case $* in
+> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -S /dev/md0
+> ++ rv=1
+> ++ case $* in
+> ++ udevadm settle
+> ++ echo 2000
+> ++ cat /var/tmp/stderr
+> ++ return 1
+> ++ mdadm -B /dev/md0 -l 1 --assume-clean -n2 /dev/loop0 /dev/loop1
+> ++ rm -f /var/tmp/stderr
+> ++ case $* in
+> ++ case $* in
+> ++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -B /dev/md0 -l 1 --assume-clean
+> -n2 /dev/loop0 /dev/loop1
+> ++ rv=1
+>
+> ...
+>
+> The bigger problem is that 01replace hangs forever.  Looking at my
+> process list:
+> root     16064     2  0 22:45 ?        00:00:00 [md0_raid1]
+> root     16093 16049  0 22:45 pts/1    00:00:00
+> /tmp/mdadm/mdadm-3.4/mdadm --quiet /dev/md0 --remove /dev/loop1
+>
+> The --remove operation never completes.
+>
+> $ cat /proc/mdstat
+> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [linear] [raid0]
+> md0 : active raid1 loop5[5] loop4[4](S) loop3[3] loop2[2] loop1[1](F) loop0[0]
+>       19968 blocks super 1.2 [4/4] [UUUU]
+>
+> Can someone help me figure out why the regression tests give these
+> problems.  kernel issue?  test program issue?  internal issue?
+>
+> The kernel was built with:
+>
+> CONFIG_MD_AUTODETECT=y
+> CONFIG_MD_LINEAR=m
+> CONFIG_MD_RAID0=m
+> CONFIG_MD_RAID1=y
+> CONFIG_MD_RAID10=y
+> CONFIG_MD_RAID456=y
+> # CONFIG_MD_MULTIPATH is not set
+> # CONFIG_MD_FAULTY is not set
+>
+> Are there other options needed?
+>
+> Thanks for any help.
+
+Nobody here have a clue what kernel you are running - giving us a
+snippet of the .config and no detail about the kernel version is rather
+useless.
 
 Jes
