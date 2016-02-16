@@ -1,82 +1,103 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Questions
-Date: Mon, 15 Feb 2016 22:09:04 +0000
-Message-ID: <56C24C80.1090505@youngman.org.uk>
-References: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
- <56C0200B.8030606@websitemanagers.com.au>
- <CAPpdf5_JBJB19B7wG5iuTt_aDZ6Zg0=kgQJtR_REU9JfDN1CxA@mail.gmail.com>
- <AE031459-5104-437F-8353-ACF855CB02CC@websitemanagers.com.au>
- <CAPpdf59u6SPD3=sv1XmKR09jzt6OL8TYLgOj==i3G4775fqbhg@mail.gmail.com>
- <56C22C20.9090002@youngman.org.uk>
- <CAPpdf5-LRMk0pcsBrp_nwmrNmPKt5jeo0_zjbH5cMZqA0+LtRQ@mail.gmail.com>
+From: Bruce Dubbs <bruce.dubbs@gmail.com>
+Subject: mdadm-3.4 regression tests
+Date: Mon, 15 Feb 2016 22:58:47 -0600
+Message-ID: <56C2AC87.7000500@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf5-LRMk0pcsBrp_nwmrNmPKt5jeo0_zjbH5cMZqA0+LtRQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>
-Cc: Adam Goryachev <mailinglists@websitemanagers.com.au>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15/02/16 21:01, o1bigtenor wrote:
-> I have a present working array and with to replace its components with the
-> same size but new drives (which are NAS rated). Was thinking that using
-> the fail remove and add process 4 seperate times might not be a good thing
-> but I do not know of a different option. Compounding the difficulty is
-> that there
-> are no empty hard drive slots in the machine. I do have an external USB 3.0
-> 2 drive holder that could be used.
+I have a problem when trying to document madam-3.4 for the Linux From 
+Scratch project.  The package builds fine:
 
-Does it have a spare PCI slot? That's what I was getting at - can you
-add two more sata slots? Presumably not if it's a cage, but if it's a
-computer case? As I said, a spare PCI SATA card should be dirt cheap to
-add temporary extra capacity. And does it matter if the case is open and
-the drives lying around temporarily?
-> 
-> The only suggestion in all the documents I perused was to place spare drives
-> into something like this external box and then add the drives into the array.
-> The process was not laid out and leaves me with a number of questions.
-> 
-> Is there a suggested method for replacing ALL the drives in an array (raid 10
-> in this case)?
+tar -xf mdadm-3.4.tar.xz
+cd mdadm-3.4
+make
+make test
 
-As far as I'm aware, there's just the "mdadm --replace" I mentioned -
-drive by drive. Given that it's raid 10, maybe you can just add another
-mirror then fail an old one.
+Then when I run:
 
-I'd just plug in the extra drives, run mdadm --replace, and then remove
-the old drives. Just make sure you get the right drives! And always use
-uuids so you know which drive is which!
+sudo ./test --keep-going --logdir=test-logs --save-logs
 
-Get Phil's lsdrv and it will probably give you all the drives, with
-serial numbers, etc etc. I haven't managed to run it so I can't be sure
-:-) But it's intended to give you all the stuff you need to recover an
-array so it should give you the information you need to rebuild it.
-> 
-> If I use the external box how do I do this (external box only holds 2 drives) so
-> that I can transfer the information on the drives from the array to
-> the new drives
-> and then just replace the drives 2 at a time into the machine without
-> there being
-> issues because in the information transfer the drives will be sdg and
-> sdh (AFAIK)
-> and later they will be some of sdb, sdc, sde, and/or sdf.
+Some tests fail and one hangs forever.  I can post logs if needed.
 
-That's why they now have uuids.
+Please run './test' as root
+Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+Saving logs to test-logs
+tests/00linear... succeeded
+tests/00multipath... succeeded
+tests/00names... succeeded
+tests/00raid0... succeeded
+tests/00raid1... FAILED - see test-logs/log-00raid1 for details
+cp: cannot stat '/var/tmp/log': No such file or directory
+tests/00raid10... succeeded
+tests/00raid4... succeeded
+tests/00raid5... succeeded
+tests/00raid6... succeeded
+tests/01r1fail... succeeded
+tests/01r5fail... succeeded
+tests/01r5integ... succeeded
+tests/01raid6integ... succeeded
+tests/01replace...
 
-ls /dev/disk/by-id
+The failure says:
 
-I *think* raid uses uuids internally. So swapping the drives out won't
-be a problem - the sdx names are just used as a human-readable output.
-But don't take that as gospel ... However, bear in mind that the kernel
-does NOT guarantee that a drive will get the same sdx name from one boot
-to the next. It so happens that that is the norm, but it's not
-guaranteed ... so x changing for any value of sdx shouldn't be a problem.
+++ case $* in
+++ udevadm settle
++++ cat /proc/sys/dev/raid/speed_limit_max
+++ p=2000
+++ echo 20000
+++ case $* in
+++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -S /dev/md0
+++ rv=1
+++ case $* in
+++ udevadm settle
+++ echo 2000
+++ cat /var/tmp/stderr
+++ return 1
+++ mdadm -B /dev/md0 -l 1 --assume-clean -n2 /dev/loop0 /dev/loop1
+++ rm -f /var/tmp/stderr
+++ case $* in
+++ case $* in
+++ /tmp/mdadm/mdadm-3.4/mdadm --quiet -B /dev/md0 -l 1 --assume-clean -n2 
+/dev/loop0 /dev/loop1
+++ rv=1
 
-Regardless, you should not be using sdx. Everything should be using
-uuids, my /etc/fstab is a lovely mangle with all those long uuids
-everywhere :-)
+...
 
-Cheers,
-Wol
+The bigger problem is that 01replace hangs forever.  Looking at my process 
+list:
+root     16064     2  0 22:45 ?        00:00:00 [md0_raid1]
+root     16093 16049  0 22:45 pts/1    00:00:00 /tmp/mdadm/mdadm-3.4/mdadm 
+--quiet /dev/md0 --remove /dev/loop1
+
+The --remove operation never completes.
+
+$ cat /proc/mdstat
+Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [linear] [raid0]
+md0 : active raid1 loop5[5] loop4[4](S) loop3[3] loop2[2] loop1[1](F) loop0[0]
+       19968 blocks super 1.2 [4/4] [UUUU]
+
+Can someone help me figure out why the regression tests give these 
+problems.  kernel issue?  test program issue?  internal issue?
+
+The kernel was built with:
+
+CONFIG_MD_AUTODETECT=y
+CONFIG_MD_LINEAR=m
+CONFIG_MD_RAID0=m
+CONFIG_MD_RAID1=y
+CONFIG_MD_RAID10=y
+CONFIG_MD_RAID456=y
+# CONFIG_MD_MULTIPATH is not set
+# CONFIG_MD_FAULTY is not set
+
+Are there other options needed?
+
+Thanks for any help.
+
+    -- Bruce Dubbs
+       linuxfromscratch.org
