@@ -1,48 +1,43 @@
-From: Wols Lists <antlists@youngman.org.uk>
-Subject: Re: Questions
-Date: Tue, 16 Feb 2016 14:32:49 +0000
-Message-ID: <56C33311.2040707@youngman.org.uk>
-References: <CAPpdf58O+=Re1dBe1Rmj7jb=9iJkMZZBuZfEX4S32wMXcv6uWQ@mail.gmail.com>
- <56C0200B.8030606@websitemanagers.com.au>
- <CAPpdf5_JBJB19B7wG5iuTt_aDZ6Zg0=kgQJtR_REU9JfDN1CxA@mail.gmail.com>
- <AE031459-5104-437F-8353-ACF855CB02CC@websitemanagers.com.au>
- <CAPpdf59u6SPD3=sv1XmKR09jzt6OL8TYLgOj==i3G4775fqbhg@mail.gmail.com>
- <56C22C20.9090002@youngman.org.uk>
- <CAPpdf5-LRMk0pcsBrp_nwmrNmPKt5jeo0_zjbH5cMZqA0+LtRQ@mail.gmail.com>
- <56C24B9C.2070506@websitemanagers.com.au>
- <CAPpdf598JjWbDFs93XU=Ph2EehNkw2qjXthUnGH+8cFs4N=64Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Subject: [PATCH 1/2] md: Inform udev about device removal when stopping
+Date: Tue, 16 Feb 2016 15:44:36 +0100
+Message-ID: <1455633877-4813-2-git-send-email-sebastian.riemer@profitbricks.com>
+References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
+Reply-To: linux-raid <linux-raid@vger.kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPpdf598JjWbDFs93XU=Ph2EehNkw2qjXthUnGH+8cFs4N=64Q@mail.gmail.com>
+In-Reply-To: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: o1bigtenor <o1bigtenor@gmail.com>, Adam Goryachev <mailinglists@websitemanagers.com.au>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Shaohua Li <shli@kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, systemd-devel@freedesktop.org
 List-Id: linux-raid.ids
 
-On 16/02/16 11:46, o1bigtenor wrote:
-> A major reason as to why the drives are getting replaced. Back in early 2012
-> when I setup the machine there was no obvious information that the ERC
-> type drives were needed so I just bought vanilla drives.
+When stopping an MD device, then its device node /dev/mdX may still
+exist afterwards or it is recreated by udev. The next open() call
+can lead to creation of an inoperable MD device. The reason for
+this is that a change event (KOBJ_CHANGE) is announced to udev.
+So announce a removal event (KOBJ_REMOVE) to udev instead.
 
-This is just what I've got a gut feel for, it seems to make sense of
-what I've seen on the list ...
+A change is likely also required in mdadm because of the support
+for kernels prior to 2.6.28.
 
-"new" drives of 2TB or more have the crippled drive firmware unless you
-specifically buy raid.
+Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+---
+ drivers/md/md.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The original release date of 1TB and less drives predates the crippling,
-and the manufacturers haven't bothered to go back and "fix" this.
-
-So 1TB drives - even desktop ones - seem usually to be okay. Anything
-over that is suspect.
-
-Cheers,
-Wol
-
-Incidentally, any reason for sticking with the same size drives? I'm
-looking at replacing my Barracudas and might well upgrade from 3TB to
-4TB, just because the price difference is minimal. That's despite /home
-only being half full even though I have a 24MP camera ...
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e55e6cf..ccae070 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5671,7 +5671,7 @@ static int do_md_stop(struct mddev *mddev, int mode,
+ 		export_array(mddev);
+ 
+ 		md_clean(mddev);
+-		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
++		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_REMOVE);
+ 		if (mddev->hold_active == UNTIL_STOP)
+ 			mddev->hold_active = 0;
+ 	}
+-- 
+1.7.9.5
 
