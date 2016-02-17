@@ -1,214 +1,88 @@
 From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when
- stopping
-Date: Wed, 17 Feb 2016 11:31:16 +0100
-Message-ID: <56C44BF4.8070301@profitbricks.com>
+Subject: Re: [PATCH 1/2] md: Inform udev about device removal when stopping
+Date: Wed, 17 Feb 2016 12:24:54 +0100
+Message-ID: <56C45886.7020200@profitbricks.com>
 References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
- <1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
- <wrfjio1oeemz.fsf@redhat.com> <56C36487.3060201@profitbricks.com>
- <56C36D20.6030001@suse.de> <wrfja8n0bi8n.fsf@redhat.com>
- <8737sstmbh.fsf@notabene.neil.brown.name> <wrfjmvr09uvi.fsf@redhat.com>
+ <1455633877-4813-2-git-send-email-sebastian.riemer@profitbricks.com>
+ <20160216200553.GA13119@kernel.org> <8760xotmi0.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000503020206020009090604"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <wrfjmvr09uvi.fsf@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, NeilBrown <neilb@suse.com>
-Cc: Hannes Reinecke <hare@suse.de>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
-List-Id: linux-raid.ids
-
-This is a multi-part message in MIME format.
---------------000503020206020009090604
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8760xotmi0.fsf@notabene.neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
+List-Id: linux-raid.ids
 
-On 16.02.2016 23:02, Jes Sorensen wrote:
-> NeilBrown <neilb@suse.com> writes:
->> On Wed, Feb 17 2016, Jes Sorensen wrote:
->>
->>> Hannes Reinecke <hare@suse.de> writes:
->>>> On 02/16/2016 07:03 PM, Sebastian Parschauer wrote:
->>>>> The worst thing that can happen is that the kernel sends the change
->>>>> event after the remove event. Then it is the current situation again.
->>>>>  From my tests mdadm does enough other stuff in between. Udev is able to
->>>>> handle receiving two remove events from my testing. Multiple mdadm
->>>>> instances can't run in parallel any ways. So userspace around it needs
->>>>> some serialization for it any ways. So also stopping an MD device and
->>>>> assembling a new one with the same minor number shouldn't race.
->>>>>
->>>>> I still prefer this solution here. But if you decide to drop the udev
->>>>> event sending in mdadm, then I'm also fine with that.
->>>>>
->>>> I strongly prefer removing the udev event generation altogether.
->>>> As this appears to be a carry-over from older kernels, it looks to me
->>>> as being an incomplete conversion:
->>>> At one point udev introduced 'ONLINE' and 'OFFLINE' events, which were
->>>> supposed to be used for this kind of scenario.
->>>> (ONLINE being a companion to 'ADD', and 'OFFLINE' being the companion
->>>> to 'DELETE'). However, later the 'ONLINE' got modified to 'CHANGE',
->>>> and the 'OFFLINE' got dropped completely.
->>>> Or that was the plan.
->>>> So it looks as if the conversion to 'CHANGE' got applied to the
->>>> 'OFFLINE' event, too.
->>>> Hence I strongly recommend to drop it completely, and let the kernel
->>>> or the MD module decide if and when a uevent should be send.
+On 16.02.2016 21:43, NeilBrown wrote:
+> On Wed, Feb 17 2016, Shaohua Li wrote:
+> 
+>> On Tue, Feb 16, 2016 at 03:44:36PM +0100, Sebastian Parschauer wrote:
+>>> When stopping an MD device, then its device node /dev/mdX may still
+>>> exist afterwards or it is recreated by udev. The next open() call
+>>> can lead to creation of an inoperable MD device. The reason for
+>>> this is that a change event (KOBJ_CHANGE) is announced to udev.
+>>> So announce a removal event (KOBJ_REMOVE) to udev instead.
 >>>
->>> I am totally fine with this, however we should make mdadm fail if run
->>> against a pre-2.6.28 kernel then.
->>>
->>> Cheers,
->>> Jes
+>>> A change is likely also required in mdadm because of the support
+>>> for kernels prior to 2.6.28.
 >>
->> I would suggest protecting the
+>> I didn't follow why we need the change. Shouldn't the KOBJ_REMOVE event be sent
+>> automatically when gendisk is deleted?
+>> mddev_put()->mddev_delayed_delete()->md_free()->del_gendisk().
 >>
->> 	if (fd >= 0)
->> 		ioctl(fd, BLKRRPART, 0);
->> 	if (mdi)
->> 		sysfs_uevent(mdi, "change");
->>
->> code with
->>
->>    if (get_linux_version() < 2006028)
->>
->> That should be completely safe - 2.6.28 and later do this (if needed).
+>> Thanks,
+>> Shaohua
 > 
-> Seems a better fix to me. I much prefer the duplicated events.
+> For a bit of context: this KOBJ_CHANGE event was added in Oct 2008
 > 
-> Sebastian, does this patch resolve the problem for you? If nobody
-> hollors, I will push this into mdadm.
-
-I've tested this on top of mdadm-3.4 and with vanilla kernel 4.5.0-rc3.
-The device nodes are still there. I guess this is because of the change
-event from the kernel. This confirms my former tests.
-
-Run 1, 2: one of two device nodes gone
-Run 3: both device nodes gone
-Run 4: both device nodes are there (again)
-
-It only works if the kernel sends the remove event instead of the change
-event as well. So I'm only fine with this if the kernel change gets
-accepted as well.
-
-I create two MD devices (md0 and md1) on top of LVM. Then I check if the
-creation worked, stop the devices and check the devices again. For a
-clean state afterwards, I clean up everything and check devices again in
-my script. I have 5s sleep between each action to get final states.
-
-I've attached my test script.
-
-> commit 7856fa44b8f0bc217a6bbcb5f7c51b2f03717655
-> Author: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Date:   Tue Feb 16 16:58:36 2016 -0500
+> Commit: 934d9c23b4c7 ("md: destroy partitions and notify udev when md array is stopped.")
 > 
->     Manage.c: Only issue change events for kernels older then 2.6.28
-
-Shouldn't the prefix be "Manage:" or "Manage/stop:"? Here is a typo.
-Should be "than" instead of "then" here.
-
->     
->     2.6.28+ kernels handle this themselves and issuing the event here can
->     cause a race.
->     
->     Reported-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
->     Suggested-by: NeilBrown <neilb@suse.com>
->     Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> At the time, md devices weren't getting removed at all.
+> Now they are (I figured out the locking), though they can still come
+> back.
 > 
-> diff --git a/Manage.c b/Manage.c
-> index 7e1b94b..eae96e1 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -493,14 +493,17 @@ done:
->  		rv = 1;
->  		goto out;
->  	}
-> -	/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
-> -	 * was stopped, so We'll do it here just to be sure.  Drop any
-> -	 * partitions as well...
-> -	 */
-> -	if (fd >= 0)
-> -		ioctl(fd, BLKRRPART, 0);
-> -	if (mdi)
-> -		sysfs_uevent(mdi, "change");
-> +
-> +	if (get_linux_version() < 2006028) {
-> +		/* prior to 2.6.28, KOBJ_CHANGE was not sent when an md array
-> +		 * was stopped, so We'll do it here just to be sure.  Drop any
-> +		 * partitions as well...
-> +		 */
-> +		if (fd >= 0)
-> +			ioctl(fd, BLKRRPART, 0);
-> +		if (mdi)
-> +			sysfs_uevent(mdi, "change");
-> +	}
->  
->  	if (devnm[0] && use_udev()) {
->  		struct map_ent *mp = map_by_devnm(&map, devnm);
+> There are still two stages.  The array is stopped, and then the block
+> device is destroyed.  It is theoretically possible to stop the array
+> without destroying the block device, though I don't think that happens
+> in practice.
 > 
+> So this KOBJ_CHANGE is, I think, technically correct (change from
+> "active" to "inactive")  but probably isn't needed any more - not to the
+> extent it was at the time.
+> 
+> There are some annoying races with caused by udev responding (belatedly)
+> to events by running programs that open s/dev/mdXX and so automatically
+> re-creates the md device.
+> The real problem here is not the event or the delays in udev.  It is the
+> fact that opening /dev/mdXX transparently creates a device.
+> 
+> The only way (I know of) to really avoid these races is to use named
+> arrays.
+> Put
+>    CREATE names=yes
+> 
+> in mdadm.conf.  Then md arrays will be created by writing a name to a
+> magic file in /sys.  The arrays have a minor number >=512 and are not
+> auto-re-created if the device node is re-opened before udev unlinks it.
+> 
+> So: the patch might be safe, and might solve a particular problem, but
+> it is really just a bandaid.  The best fix is "CREATE named=yes" (and
+> use named like "md_home", not "md4".
 
+Older mdadm versions like 3.2.6 have really bad scaling issues as they
+search the whole /dev directory with map_dev() for the correct device
+and we've hit further issues with the symlinks in /dev/md/. This is why
+we've decided to go for the /dev/mdX devices directly as then also the
+minor number is clear.
 
---------------000503020206020009090604
-Content-Type: text/plain; charset=UTF-8;
- name="test_mdadm_stop.sh.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="test_mdadm_stop.sh.txt"
+I remember custom commits:
+* dev_open: add parameter 'do_map_dev'
+* mdopen: don't do 'map_dev' in 'create_mddev' if devname is /dev/mdX
 
-#!/bin/bash
+I did a further test: If mdadm and the kernel don't send any uevent when
+stopping, then it also works. Might be the best solution.
 
-NUM_VOL=3D2
-
-remove_devices() {
-    for ((i=3D0;i<${NUM_VOL};i++)); do
-        rm -fv /dev/md${i}
-    done
-}
-
-check_devices() {
-    ls -l /dev/disk/by-id/md*
-    ls -d /dev/md*
-    ls -d /sys/block/md*
-    cat /proc/mdstat
-}
-
-stop_devices() {
-    for ((i=3D0;i<${NUM_VOL};i++)); do
-        mdadm --stop /dev/md${i} 2>&1
-    done
-}
-
-create_devices() {
-    for ((i=3D0;i<${NUM_VOL};i++)); do
-        mdadm --zero-superblock /dev/dm-${i}
-        mdadm -C /dev/md${i} -l 1 -n 2 -e 1.2 \
-            --run /dev/dm-${i} missing
-    done
-}
-
-####### MAIN #######
-
-create_devices
-
-sleep 5
-
-echo "=3D=3D=3D=3D CREATE CHECK =3D=3D=3D=3D"
-check_devices
-
-sleep 5
-
-stop_devices
-
-sleep 5
-
-echo "=3D=3D=3D=3D CHECK 1 =3D=3D=3D=3D"
-check_devices
-
-stop_devices
-remove_devices
-
-sleep 5
-
-echo "=3D=3D=3D=3D CHECK 2 =3D=3D=3D=3D"
-check_devices
-
---------------000503020206020009090604--
+Cheers,
+Sebastian
