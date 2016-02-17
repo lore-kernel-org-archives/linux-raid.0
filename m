@@ -1,40 +1,60 @@
-From: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Subject: [PATCH] md: Drop sending a change uevent when stopping
-Date: Wed, 17 Feb 2016 17:25:00 +0100
-Message-ID: <1455726300-20340-1-git-send-email-sebastian.riemer@profitbricks.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 2/2] Manage: Inform udev about device removal when stopping
+Date: Wed, 17 Feb 2016 12:33:08 -0500
+Message-ID: <wrfjlh6j6y3v.fsf@redhat.com>
+References: <1455633877-4813-1-git-send-email-sebastian.riemer@profitbricks.com>
+	<1455633877-4813-3-git-send-email-sebastian.riemer@profitbricks.com>
+	<wrfjio1oeemz.fsf@redhat.com> <56C36487.3060201@profitbricks.com>
+	<56C36D20.6030001@suse.de> <wrfja8n0bi8n.fsf@redhat.com>
+	<8737sstmbh.fsf@notabene.neil.brown.name> <56C41B3A.90902@suse.de>
+	<wrfj1t8ba3l7.fsf@redhat.com> <56C472C5.4010602@profitbricks.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <56C472C5.4010602@profitbricks.com> (Sebastian Parschauer's
+	message of "Wed, 17 Feb 2016 14:16:53 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, Shaohua Li <shli@kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, Hannes Reinecke <hare@suse.de>, systemd-devel@freedesktop.org
+To: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Cc: Hannes Reinecke <hare@suse.de>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>, Shaohua Li <shli@kernel.org>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
 List-Id: linux-raid.ids
 
-When stopping an MD device, then its device node /dev/mdX may still
-exist afterwards or it is recreated by udev. The next open() call
-can lead to creation of an inoperable MD device. The reason for
-this is that a change event (KOBJ_CHANGE) is sent to udev which
-races against the remove event (KOBJ_REMOVE) from md_free().
-So drop sending the change event.
+Sebastian Parschauer <sebastian.riemer@profitbricks.com> writes:
+> On 17.02.2016 14:06, Jes Sorensen wrote:
+>> Hannes Reinecke <hare@suse.de> writes:
+>>> On 02/16/2016 09:46 PM, NeilBrown wrote:
+>>>> On Wed, Feb 17 2016, Jes Sorensen wrote:
+>>>>>
+>>>>> I am totally fine with this, however we should make mdadm
+>>>>> fail if run against a pre-2.6.28 kernel then.
+>>>>>
+>>>>> Cheers, Jes
+>>>>
+>>>> I would suggest protecting the
+>>>>
+>>>> if (fd >= 0) ioctl(fd, BLKRRPART, 0); if (mdi) 
+>>>> sysfs_uevent(mdi, "change");
+>>>>
+>>>> code with
+>>>>
+>>>> if (get_linux_version() < 2006028)
+>>>>
+>>>> That should be completely safe - 2.6.28 and later do this (if
+>>>> needed).
+>>>>
+>>> +1.
+>>>
+>>> Yes, this is the best solution.
+>> 
+>> Sebastian indicates it only works if the kernel patch he submitted is
+>> applied too - should we tweak the mdadm version check to match the next
+>> upstream kernel, or stick with it as is here?
+>
+> Sorry, it also works if dropping the sending of the change event in the
+> kernel as well. This seems to be the preferred solution so far. So for
+> kernels still sending the change event, the problem is not fixed this
+> way. But your mdadm commit also doesn't make it worse.
 
-A change is likely also required in mdadm as many versions send the
-change event to udev as well.
+Since there is pretty broad agreement on this approach, I have pushed
+the fix out for mdadm.
 
-Signed-off-by: Sebastian Parschauer <sebastian.riemer@profitbricks.com>
----
- drivers/md/md.c |    1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e55e6cf..464627b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5671,7 +5671,6 @@ static int do_md_stop(struct mddev *mddev, int mode,
- 		export_array(mddev);
- 
- 		md_clean(mddev);
--		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
- 		if (mddev->hold_active == UNTIL_STOP)
- 			mddev->hold_active = 0;
- 	}
--- 
-1.7.9.5
-
+Jes
