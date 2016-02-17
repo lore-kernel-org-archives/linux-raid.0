@@ -1,54 +1,78 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH] md: Drop sending a change uevent when stopping
-Date: Wed, 17 Feb 2016 14:14:01 -0800
-Message-ID: <20160217221401.GA30809@kernel.org>
-References: <1455726300-20340-1-git-send-email-sebastian.riemer@profitbricks.com>
- <20160217181943.GA28011@kernel.org>
- <871t8brpon.fsf@notabene.neil.brown.name>
+From: Bruce Dubbs <bruce.dubbs@gmail.com>
+Subject: mdadm regression tests, slight progress
+Date: Wed, 17 Feb 2016 16:48:04 -0600
+Message-ID: <56C4F8A4.2080909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <871t8brpon.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: Sebastian Parschauer <sebastian.riemer@profitbricks.com>, linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, Hannes Reinecke <hare@suse.de>, systemd-devel@freedesktop.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 18, 2016 at 08:29:28AM +1100, Neil Brown wrote:
-> On Thu, Feb 18 2016, Shaohua Li wrote:
-> 
-> > On Wed, Feb 17, 2016 at 05:25:00PM +0100, Sebastian Parschauer wrote:
-> >> When stopping an MD device, then its device node /dev/mdX may still
-> >> exist afterwards or it is recreated by udev. The next open() call
-> >> can lead to creation of an inoperable MD device. The reason for
-> >> this is that a change event (KOBJ_CHANGE) is sent to udev which
-> >> races against the remove event (KOBJ_REMOVE) from md_free().
-> >> So drop sending the change event.
-> >> 
-> >> A change is likely also required in mdadm as many versions send the
-> >> change event to udev as well.
-> >
-> > Makes sense, it's unlikely we need the CHANGE event. Applied.
-> >
-> > Thanks,
-> > Shaohua
-> 
-> It would be worth checking, but I think that with this change, you can
-> write
->   "inactive" to /sys/block/mdXXX/md/array_state
-> and the array will become inactive, but no uevent will be generated,
-> which isn't good.
-> Maybe send the uevent that was just removed from the 'inactive' case of
-> array_state_store() instead.
+I'm still trying to figure out why some of the mdadm regression tests 
+fail.  I started looking at tests/00raid1:
 
-with 'inactive', the mode == 2, do_md_stop() doesn't send the event either, so
-the behavior isn't changed.
+# ./test --tests=00raid1
 
-> (But I still think this is just a bandaid and doesn't provide any
-> guarantees that there will be no races with udev)
+It is nice that ./test is a bash script so it is easy to do some debugging.
 
-that's correct. I'd expect races in other CHNAGE/REMOVE cases are very rare.
+The test script looks like:
 
-Thanks,
-Shaohua
+# create a simple mirror
+# test version0, version1, and no super
+# test resync and recovery.
+
+mdadm -CR $md0 -l 1 -n2 $dev0 $dev1
+check resync
+check raid1
+testdev $md0 1 $mdsize1a 64
+mdadm -S $md0
+
+# now with version-0.90 superblock, spare
+mdadm -CR $md0 -e0.90 --level=raid1 -n3 -x2 $dev0 missing missing $dev1 $dev2
+check recovery
+check raid1
+testdev $md0 1 $mdsize0 64
+mdadm -S $md0
+
+# now with no superblock
+mdadm -B $md0 -l mirror  -n2 $dev0 $dev1
+check resync
+check raid1
+testdev $md0 1 $size 1
+#### Point 1
+mdadm -S $md0
+
+# again, but with no resync
+mdadm -B $md0 -l 1 --assume-clean -n2 $dev0 $dev1
+check raid1
+check nosync
+testdev $md0 1 $size 1
+mdadm -S $md0
+exit 0
+
+What I did was add a couple of 'cat /proc/mdstat' commands where the 
+script was failing.  At Point 1 above, I got:
+
+++ cat /proc/mdstat
+Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
+md127 : inactive md0[0](S)
+       19904 blocks
+
+md0 : active raid1 loop1[1] loop0[0]
+       20000 blocks super non-persistent [2/2] [UU]
+       [==>..................]  resync = 12.5% (2688/20000) finish=0.1min 
+speed=2688K/sec
+
+
+The line with resync looked suspicious so at that point I added a 'sleep 
+10' command.  The test now passes.
+
+The full log is at 
+http://anduin.linuxfromscratch.org/~bdubbs/files/mdadm-test1.log
+
+Does anyone know what is going on to need this sleep in order for this 
+test to pass?
+
+   -- Bruce Dubbs
