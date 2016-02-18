@@ -1,96 +1,88 @@
-From: NeilBrown <neilb@suse.com>
-Subject: [PATCH] super-intel: ensure suspended region is removed when reshape completes.
-Date: Thu, 18 Feb 2016 15:53:32 +1100
-Message-ID: <871t8ar54j.fsf@notabene.neil.brown.name>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] md: Drop sending a change uevent when stopping
+Date: Thu, 18 Feb 2016 07:45:40 +0100
+Message-ID: <56C56894.8070906@suse.de>
+References: <1455726300-20340-1-git-send-email-sebastian.riemer@profitbricks.com>
+ <20160217181943.GA28011@kernel.org> <871t8brpon.fsf@notabene.neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <871t8brpon.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org, Ken Moffat <zarniwhoop@ntlworld.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+On 02/17/2016 10:29 PM, NeilBrown wrote:
+> On Thu, Feb 18 2016, Shaohua Li wrote:
+>=20
+>> On Wed, Feb 17, 2016 at 05:25:00PM +0100, Sebastian
+>> Parschauer wrote:
+>>> When stopping an MD device, then its device node /dev/mdX
+>>> may still exist afterwards or it is recreated by udev. The
+>>> next open() call can lead to creation of an inoperable MD
+>>> device. The reason for this is that a change event
+>>> (KOBJ_CHANGE) is sent to udev which races against the
+>>> remove event (KOBJ_REMOVE) from md_free(). So drop sending
+>>> the change event.
+>>>=20
+>>> A change is likely also required in mdadm as many versions
+>>> send the change event to udev as well.
+>>=20
+>> Makes sense, it's unlikely we need the CHANGE event.
+>> Applied.
+>>=20
+>> Thanks, Shaohua
+>=20
+> It would be worth checking, but I think that with this change,
+> you can write "inactive" to /sys/block/mdXXX/md/array_state and
+> the array will become inactive, but no uevent will be
+> generated, which isn't good. Maybe send the uevent that was
+> just removed from the 'inactive' case of array_state_store()
+> instead.
+>=20
+> (But I still think this is just a bandaid and doesn't provide
+> any guarantees that there will be no races with udev)
+>=20
+Thing is, _none_ of the other subsystems will ever send a uevent
+when it becomes inactive.
+(Would be pretty pointless, too, as what exactly is one supposed
+to do here?)
+The current usage has it that CHANGE events are only ever sent if
+a device becomes active.
 
-A recent commit removed a call to abort_reshape() when IMSM reshape
-completed.  An unanticipated result of this is that the suspended
-region is not cleared as it should be.
-So after a reshape, a region of the array will cause all IO to block.
+Cheers,
 
-Re-instate the required updates to suspend_{lo,hi} coped from
-abort_reshape().
-
-This is caught (sometimes) by the test suite.
-
-Also fix a couple of typos found while exploring the code.
-
-Reported-by: Ken Moffat <zarniwhoop@ntlworld.com>
-Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Fixes: 2139b03c2080 ("imsm: don't call abort_reshape() in imsm_manage_resha=
-pe()")
-Signed-off-by: NeilBrown <neilb@suse.com>
-=2D--
- super-intel.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/super-intel.c b/super-intel.c
-index 90b7b6dee5d0..80b48d0fdd47 100644
-=2D-- a/super-intel.c
-+++ b/super-intel.c
-@@ -10465,7 +10465,7 @@ int check_degradation_change(struct mdinfo *info,
-  * Function:	imsm_manage_reshape
-  * Description:	Function finds array under reshape and it manages reshape
-  *		process. It creates stripes backups (if required) and sets
-=2D *		checheckpoits.
-+ *		checkpoints.
-  * Parameters:
-  *	afd		: Backup handle (nattive) - not used
-  *	sra		: general array info
-@@ -10595,7 +10595,7 @@ static int imsm_manage_reshape(
-=20
- 		start =3D current_position * 512;
-=20
-=2D		/* allign reading start to old geometry */
-+		/* align reading start to old geometry */
- 		start_buf_shift =3D start % old_data_stripe_length;
- 		start_src =3D start - start_buf_shift;
-=20
-@@ -10700,6 +10700,9 @@ static int imsm_manage_reshape(
- 	ret_val =3D 1;
- abort:
- 	free(buf);
-+	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-+	sysfs_set_num(sra, NULL, "suspend_hi", 0);
-+	sysfs_set_num(sra, NULL, "suspend_lo", 0);
-=20
- 	return ret_val;
- }
-=2D-=20
-2.7.1
-
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
+Hannes
+- --=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWxU5MAAoJEDnsnt1WYoG5UEQQAIZkDNjVfezOcVb9fyvmEUIM
-yujG9uIWar2OIMag+/Afky5SnOiOG9qmLGtLGZjJyNsdwFo640tFJjPG8UCEjsJL
-fL97/xRp8UpZMDYAbfR7ywknNr+drQHcrmauaW599ri1RDqJw19Kqp+FyWvkD83e
-2DxdjIMUFdpHFIYb6T1rqpcleH55OIJYNQLdgYdLhRkrGqPOeLDsrcNL5Yd/06Aw
-eUe0RbrRmmbFNTaZDYb0lDl+9UrJ5NDci70ue0060WiQBOXaEc1s01TDiBD4ldyV
-1knB5AjR+9V2boPFmdnr0iuzl1h4JgK2d8bsu08do+M5gSj1riah5PbYQDZAYlHl
-xlL2l+G/wJ6SeAzw/vfLqMO5kTlc2jj509hovIEGBDUKrAblYMW1dNrzvdhV53Ar
-fG14AqPVGNGWujcQ27f5Z1ldeeqSajMQoSE0CSfUY5AeBNXUnEfAYZFlZXKmEbzv
-nviIMGQ6vpgYm/H0jO3lNsyRa5/jyvG5Xjr/wgElMOXXXFB7h0xV1/MnPqCA8kpm
-JW0YMbWVUJVJ6kcjhi0Jp6AcG87Ti6AJ4GwZmmyv7ZiN8VXlegxhToReZNNnxqZl
-u8bbKFwZl3w5iZd5UEX/95oNZdgJTwyUqMHHssS9gXLDo0vTy0sra47n2faapEmg
-4XprnoW8TcUxXPZN8993
-=L8yF
+iQIcBAEBAgAGBQJWxWiUAAoJEGz4yi9OyKjPUhUP+gJXhNTCYTbLNzR7LYcPQplY
+rqcALLhZIDt8inveiSaPVXs5F1VCQsT87qS6JtD3EBSU64eWVq0+xowxKStoyjPl
+/MaBFQs7yxJCdf5Enx0/hKPN3MYuQT2nf5EiB461mlnfxLZKUEgwKbDK6+6HqToI
+x0rtUFv4JpVDd9HFY3PNqZjGtQTMrbXMVxsBtefIiYPeyaPpYU9Zo0qM+17CmJIr
+J3JdXOjHluengKcdi1O6GDvshUiysWP/ukG/q7If4JxpomKS5ljOn5MHcCgBl/CL
+UwjUuSmZ9e5ZKyIIxU2oMAFRYqLCGX5Fw5Q90YG7UOZQ3ODbYPJfR7d61OSjomYt
+j0bME+QXkdoxOkwlG7EwSU8fG6dv4H55RxrrFcu4ZBl6TRo3jpCOCrq+kY1XapF4
+NGeY0j3vBQ4ZziMNodelg+KZaBrCSFGu+cn7uqEsrOJ+N4e7gJv28trPiPzE4Hiz
+07buvtTNEYQuqUNvR9MiuDCubnHy0imaA+3fb0orXZOllhYFAMfUVxpOsJvO/ySg
+XVSrpcm7BnU/4i6sNXJUpZdTrmWPi8kvZU9avlZFwL0CrVtdhjkoGOu20Ou7H53g
+nR3wXQWEybd8yK62lqb3g7one/JnEeVupb69aSiaJnAt7kLZE2Dcg5QVFPAXOIDU
+eqYQYG60/85zdeLcqzlM
+=3De02n
 -----END PGP SIGNATURE-----
---=-=-=--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
