@@ -1,52 +1,49 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: swiotlb buffer is full
-Date: Thu, 18 Feb 2016 20:44:19 +0100
-Message-ID: <20160218194419.E27AA384473@gemini.denx.de>
-References: <20160215122539.DC34B3811B2@gemini.denx.de> <20160216201347.GB13119@kernel.org>
+From: Bruce Dubbs <bruce.dubbs@gmail.com>
+Subject: Re: mdadm regression tests, slight progress
+Date: Thu, 18 Feb 2016 14:20:18 -0600
+Message-ID: <56C62782.7020101@gmail.com>
+References: <56C4F8A4.2080909@gmail.com> <wrfjoabdygec.fsf@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20160216201347.GB13119@kernel.org>
+In-Reply-To: <wrfjoabdygec.fsf@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Shaohua Li,
+Jes Sorensen wrote:
 
-In message <20160216201347.GB13119@kernel.org> you wrote:
+>> What I did was add a couple of 'cat /proc/mdstat' commands where the
+>> script was failing.  At Point 1 above, I got:
+>>
+>> ++ cat /proc/mdstat
+>> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
+>> md127 : inactive md0[0](S)
+>>        19904 blocks
+>>
+>> md0 : active raid1 loop1[1] loop0[0]
+>>        20000 blocks super non-persistent [2/2] [UU]
+>>        [==>..................]  resync = 12.5% (2688/20000)
+>> finish=0.1min speed=2688K/sec
+>>
+>>
+>> The line with resync looked suspicious so at that point I added a
+>> 'sleep 10' command.  The test now passes.
+>>
+>> The full log is at
+>> http://anduin.linuxfromscratch.org/~bdubbs/files/mdadm-test1.log
+>>
+>> Does anyone know what is going on to need this sleep in order for this
+>> test to pass?
 >
-> > I think it is interesting that always the same RAID array gets
-> > kicked, and always the same disk.  I cannot see any hardware
-> > problems, and a preventive replacement of the disk drive did not fix
-> > the problem.
-> 
-> this doesn't like a md problem.
+> It sounds to like the thing hangs if you try to stop the array before
+> the resync completes. That could be a race in the kernel code.
 
-I tend to agree, but so far I have not found any other test case that
-would trigger this problem.
+Thanks.  I'll try a different kernel version and report back.  The above 
+was tested with kernel version 4.2.0.
 
-> Probably a dma address leak in the driver. To verify this, you can
-> do some IO against the raw disk (sdf/sdg) and check if you see the
-> 'swiotlb buffer is full' issue.
+   -- Bruce
 
-At least sequentially reading the drive does not appear to have any
-effect; I've completely read it several times with no errors.
 
-> Did you really need iommu, eg if iommu=off works?
-
-This is a good idea; I will enable this setting next time the server
-crashed (probably next Sunday night).  but then, is  iommu=off  not
-supposed to cause a performance degradation?
-
-Best regards,
-
-Wolfgang Denk
-
--- 
-DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Some people march to the beat of a different drummer. And some people
-tango!
