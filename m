@@ -1,77 +1,85 @@
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] super-intel: ensure suspended region is removed when reshape completes.
-Date: Thu, 18 Feb 2016 14:03:58 -0500
-Message-ID: <wrfjk2m1zvq9.fsf@redhat.com>
-References: <871t8ar54j.fsf@notabene.neil.brown.name>
+Subject: Re: mdadm regression tests, slight progress
+Date: Thu, 18 Feb 2016 14:20:27 -0500
+Message-ID: <wrfjoabdygec.fsf@redhat.com>
+References: <56C4F8A4.2080909@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871t8ar54j.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Thu, 18 Feb 2016 15:53:32 +1100")
+In-Reply-To: <56C4F8A4.2080909@gmail.com> (Bruce Dubbs's message of "Wed, 17
+	Feb 2016 16:48:04 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, Ken Moffat <zarniwhoop@ntlworld.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+To: Bruce Dubbs <bruce.dubbs@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> A recent commit removed a call to abort_reshape() when IMSM reshape
-> completed.  An unanticipated result of this is that the suspended
-> region is not cleared as it should be.
-> So after a reshape, a region of the array will cause all IO to block.
+Bruce Dubbs <bruce.dubbs@gmail.com> writes:
+> I'm still trying to figure out why some of the mdadm regression tests
+> fail.  I started looking at tests/00raid1:
 >
-> Re-instate the required updates to suspend_{lo,hi} coped from
-> abort_reshape().
+> # ./test --tests=00raid1
 >
-> This is caught (sometimes) by the test suite.
+> It is nice that ./test is a bash script so it is easy to do some debugging.
 >
-> Also fix a couple of typos found while exploring the code.
+> The test script looks like:
 >
-> Reported-by: Ken Moffat <zarniwhoop@ntlworld.com>
-> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-> Fixes: 2139b03c2080 ("imsm: don't call abort_reshape() in imsm_manage_reshape()")
-> Signed-off-by: NeilBrown <neilb@suse.com>
-> ---
->  super-intel.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> # create a simple mirror
+> # test version0, version1, and no super
+> # test resync and recovery.
 >
-> diff --git a/super-intel.c b/super-intel.c
-> index 90b7b6dee5d0..80b48d0fdd47 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -10465,7 +10465,7 @@ int check_degradation_change(struct mdinfo *info,
->   * Function:	imsm_manage_reshape
->   * Description:	Function finds array under reshape and it manages reshape
->   *		process. It creates stripes backups (if required) and sets
-> - *		checheckpoits.
-> + *		checkpoints.
->   * Parameters:
->   *	afd		: Backup handle (nattive) - not used
->   *	sra		: general array info
-> @@ -10595,7 +10595,7 @@ static int imsm_manage_reshape(
->  
->  		start = current_position * 512;
->  
-> -		/* allign reading start to old geometry */
-> +		/* align reading start to old geometry */
->  		start_buf_shift = start % old_data_stripe_length;
->  		start_src = start - start_buf_shift;
->  
-> @@ -10700,6 +10700,9 @@ static int imsm_manage_reshape(
->  	ret_val = 1;
->  abort:
->  	free(buf);
-> +	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> +	sysfs_set_num(sra, NULL, "suspend_hi", 0);
-> +	sysfs_set_num(sra, NULL, "suspend_lo", 0);
->  
->  	return ret_val;
->  }
+> mdadm -CR $md0 -l 1 -n2 $dev0 $dev1
+> check resync
+> check raid1
+> testdev $md0 1 $mdsize1a 64
+> mdadm -S $md0
+>
+> # now with version-0.90 superblock, spare
+> mdadm -CR $md0 -e0.90 --level=raid1 -n3 -x2 $dev0 missing missing $dev1 $dev2
+> check recovery
+> check raid1
+> testdev $md0 1 $mdsize0 64
+> mdadm -S $md0
+>
+> # now with no superblock
+> mdadm -B $md0 -l mirror  -n2 $dev0 $dev1
+> check resync
+> check raid1
+> testdev $md0 1 $size 1
+> #### Point 1
+> mdadm -S $md0
+>
+> # again, but with no resync
+> mdadm -B $md0 -l 1 --assume-clean -n2 $dev0 $dev1
+> check raid1
+> check nosync
+> testdev $md0 1 $size 1
+> mdadm -S $md0
+> exit 0
+>
+> What I did was add a couple of 'cat /proc/mdstat' commands where the
+> script was failing.  At Point 1 above, I got:
+>
+> ++ cat /proc/mdstat
+> Personalities : [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
+> md127 : inactive md0[0](S)
+>       19904 blocks
+>
+> md0 : active raid1 loop1[1] loop0[0]
+>       20000 blocks super non-persistent [2/2] [UU]
+>       [==>..................]  resync = 12.5% (2688/20000)
+> finish=0.1min speed=2688K/sec
+>
+>
+> The line with resync looked suspicious so at that point I added a
+> 'sleep 10' command.  The test now passes.
+>
+> The full log is at
+> http://anduin.linuxfromscratch.org/~bdubbs/files/mdadm-test1.log
+>
+> Does anyone know what is going on to need this sleep in order for this
+> test to pass?
 
-This does indeed match the behavior of abort_reshape(), however looking
-through git history, I cannot find any explanation as to why the code
-sets suspend_lo twice.
+It sounds to like the thing hangs if you try to stop the array before
+the resync completes. That could be a race in the kernel code.
 
-Any chance you can enlighten me why this is necessary?
-
-Thanks,
 Jes
