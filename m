@@ -1,88 +1,108 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] md: Drop sending a change uevent when stopping
-Date: Thu, 18 Feb 2016 07:45:40 +0100
-Message-ID: <56C56894.8070906@suse.de>
-References: <1455726300-20340-1-git-send-email-sebastian.riemer@profitbricks.com>
- <20160217181943.GA28011@kernel.org> <871t8brpon.fsf@notabene.neil.brown.name>
+From: d c <c866e866e@gmail.com>
+Subject: More information on linux raid partition problem
+Date: Thu, 18 Feb 2016 17:12:11 +0100
+Message-ID: <CAM1AHSyqg=0JRt4Ju352foV2M9gjTHMW5y94Dfj-h+96mKT1Jg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871t8brpon.fsf@notabene.neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@kernel.org>, Sebastian Parschauer <sebastian.riemer@profitbricks.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Jes Sorensen <Jes.Sorensen@redhat.com>, Brassow Jonathan <jbrassow@redhat.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, systemd-devel@freedesktop.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+For anyone who can help me here is some more information on my linux
+raid partition problem.
 
-On 02/17/2016 10:29 PM, NeilBrown wrote:
-> On Thu, Feb 18 2016, Shaohua Li wrote:
->=20
->> On Wed, Feb 17, 2016 at 05:25:00PM +0100, Sebastian
->> Parschauer wrote:
->>> When stopping an MD device, then its device node /dev/mdX
->>> may still exist afterwards or it is recreated by udev. The
->>> next open() call can lead to creation of an inoperable MD
->>> device. The reason for this is that a change event
->>> (KOBJ_CHANGE) is sent to udev which races against the
->>> remove event (KOBJ_REMOVE) from md_free(). So drop sending
->>> the change event.
->>>=20
->>> A change is likely also required in mdadm as many versions
->>> send the change event to udev as well.
->>=20
->> Makes sense, it's unlikely we need the CHANGE event.
->> Applied.
->>=20
->> Thanks, Shaohua
->=20
-> It would be worth checking, but I think that with this change,
-> you can write "inactive" to /sys/block/mdXXX/md/array_state and
-> the array will become inactive, but no uevent will be
-> generated, which isn't good. Maybe send the uevent that was
-> just removed from the 'inactive' case of array_state_store()
-> instead.
->=20
-> (But I still think this is just a bandaid and doesn't provide
-> any guarantees that there will be no races with udev)
->=20
-Thing is, _none_ of the other subsystems will ever send a uevent
-when it becomes inactive.
-(Would be pretty pointless, too, as what exactly is one supposed
-to do here?)
-The current usage has it that CHANGE events are only ever sent if
-a device becomes active.
+As stated before, I only have two disks from a three disk raid 5.
 
-Cheers,
+When I try:
 
-Hannes
-- --=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+     mdadm --assemble /dev/md0 /dev/hdd2 /dev/hde2
 
-iQIcBAEBAgAGBQJWxWiUAAoJEGz4yi9OyKjPUhUP+gJXhNTCYTbLNzR7LYcPQplY
-rqcALLhZIDt8inveiSaPVXs5F1VCQsT87qS6JtD3EBSU64eWVq0+xowxKStoyjPl
-/MaBFQs7yxJCdf5Enx0/hKPN3MYuQT2nf5EiB461mlnfxLZKUEgwKbDK6+6HqToI
-x0rtUFv4JpVDd9HFY3PNqZjGtQTMrbXMVxsBtefIiYPeyaPpYU9Zo0qM+17CmJIr
-J3JdXOjHluengKcdi1O6GDvshUiysWP/ukG/q7If4JxpomKS5ljOn5MHcCgBl/CL
-UwjUuSmZ9e5ZKyIIxU2oMAFRYqLCGX5Fw5Q90YG7UOZQ3ODbYPJfR7d61OSjomYt
-j0bME+QXkdoxOkwlG7EwSU8fG6dv4H55RxrrFcu4ZBl6TRo3jpCOCrq+kY1XapF4
-NGeY0j3vBQ4ZziMNodelg+KZaBrCSFGu+cn7uqEsrOJ+N4e7gJv28trPiPzE4Hiz
-07buvtTNEYQuqUNvR9MiuDCubnHy0imaA+3fb0orXZOllhYFAMfUVxpOsJvO/ySg
-XVSrpcm7BnU/4i6sNXJUpZdTrmWPi8kvZU9avlZFwL0CrVtdhjkoGOu20Ou7H53g
-nR3wXQWEybd8yK62lqb3g7one/JnEeVupb69aSiaJnAt7kLZE2Dcg5QVFPAXOIDU
-eqYQYG60/85zdeLcqzlM
-=3De02n
------END PGP SIGNATURE-----
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I get the following error:
+
+     mdadm: cannot open device /dev/hdd2: No such file or directory
+     mdadm: /dev/hdd2 has no superblock - assembly aborted
+
+When I do a mdadm examine, I get a different number of events:
+
+     mdadm --examine /dev/sdd2 | egrep Event
+          Events : 60541
+     mdadm --examine /dev/sde2 | egrep Event
+          Events : 60544
+
+Also mdadm examine gives different States:
+
+     mdadm --examine /dev/sdd2 | egrep State
+          State : active
+     mdadm --examine /dev/sde2 | egrep State
+          State : clean
+
+But mdadm shows that their Magic and UUID numbers are the same.
+
+Can anyone give suggestions on how I can repair this?
+
+Here are the full mdadm --examine outputs:
+
+mdadm --examine  /dev/sdd2
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 1787919b:a8648f43:ae108b15:09b5fb69
+  Creation Time : Fri Jan  7 17:54:08 2005
+     Raid Level : raid5
+  Used Dev Size : 48194816 (45.96 GiB 49.35 GB)
+     Array Size : 96389632 (91.92 GiB 98.70 GB)
+   Raid Devices : 3
+  Total Devices : 2
+Preferred Minor : 126
+
+    Update Time : Tue May  1 15:55:58 2012
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : b53ef3cf - correct
+         Events : 60541
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       66        2      active sync   /dev/sde2
+
+   0     0       0        0        0      removed
+   1     1       8       50        1      active sync   /dev/sdd2
+   2     2       8       66        2      active sync   /dev/sde2
+
+mdadm --examine  /dev/sde2
+/dev/sde2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 1787919b:a8648f43:ae108b15:09b5fb69
+  Creation Time : Fri Jan  7 17:54:08 2005
+     Raid Level : raid5
+  Used Dev Size : 48194816 (45.96 GiB 49.35 GB)
+     Array Size : 96389632 (91.92 GiB 98.70 GB)
+   Raid Devices : 3
+  Total Devices : 2
+Preferred Minor : 126
+
+    Update Time : Tue May  1 15:56:20 2012
+          State : clean
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : b53fe060 - correct
+         Events : 60544
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       50        1      active sync   /dev/sdd2
+
+   0     0       0        0        0      removed
+   1     1       8       50        1      active sync   /dev/sdd2
+   2     2       0        0        2      faulty removed
