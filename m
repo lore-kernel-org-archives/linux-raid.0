@@ -1,51 +1,50 @@
-From: NeilBrown <nfbrown@novell.com>
-Subject: Re: mdadm-3.4 regression tests
-Date: Fri, 19 Feb 2016 14:25:16 +1100
-Message-ID: <8760xlpejn.fsf@notabene.neil.brown.name>
-References: <56C2AC87.7000500@gmail.com> <wrfjio1oczlj.fsf@redhat.com> <56C3695E.5030508@gmail.com>
+From: George Rapp <george.rapp@gmail.com>
+Subject: Re: More information on linux raid partition problem
+Date: Fri, 19 Feb 2016 09:40:43 -0500
+Message-ID: <CAF-KpgZSXV08qofWkWzrtJr8dG9QvZ6JDxW+wypxkijqWnsLdA@mail.gmail.com>
+References: <CAM1AHSyqg=0JRt4Ju352foV2M9gjTHMW5y94Dfj-h+96mKT1Jg@mail.gmail.com>
+ <56C5F6A4.4040205@digitallyhosted.com> <CAM1AHSwBhjcaQ5dOfu7nfYQGtwQ0RGzGuFdo6ALB44aArGPLSQ@mail.gmail.com>
+ <56C5FED9.9080001@mpstor.com> <CAM1AHSzs0T5RcYstEq-3koZ12=JPthf-XnmgH37=N=UtON9F3w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <56C3695E.5030508@gmail.com>
+In-Reply-To: <CAM1AHSzs0T5RcYstEq-3koZ12=JPthf-XnmgH37=N=UtON9F3w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bruce Dubbs <bruce.dubbs@gmail.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: d c <c866e866e@gmail.com>
+Cc: Benjamin ESTRABAUD <be@mpstor.com>, "Admin@DH" <admin@digitallyhosted.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Type: text/plain
-
-On Wed, Feb 17 2016, Bruce Dubbs wrote:
+On Thu, Feb 18, 2016 at 1:03 PM, d c <c866e866e@gmail.com> wrote:
+> Ben,
 >
-> Testing on linux-4.4.1-lfs-7.9-rc1 kernel
+> You are correct, sdd2 was tied up.  This must have been caused by my
+> experimenting on mounting md0.
+>
+> [root@server ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : inactive sdd2[2](S)
+>       48194880 blocks
+>         . . .
+>
+> I rebooted the system and now both sdd2 and sde2 show "clean" with a
+> mdadm --examine.
+>
+> But I still can not assemble the raid:
+>
+>      mdadm --assemble /dev/md0 /dev/sdd2 /dev/sde2
+>      mdadm: cannot open device /dev/sde2: Device or resource busy
+>      mdadm: /dev/sde2 has no superblock - assembly aborted
 
-4.4.1 (and 4.4.0) have a bug, fixed in 4.4.2, that probably causes this.
+Donald -
 
-Fixed by
+Try "mdadm --stop /dev/md0" before --assemble. Even though md0 is
+inactive, it still locks its component partitions.
 
-Commit: 1501efadc524 ("md/raid: only permit hot-add of compatible integrity profiles")
+I don't see /dev/sde2 in the truncated output of /proc/mdstat - is it
+possible it's being used for something else other than the md0 array?
 
-NeilBrown
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWxoscAAoJEDnsnt1WYoG5Q6cQAK6jIOnz7uM/xEUyR5KvLvdM
-0LdCjD2ImfVf230oPkKFvYrcFqgWaBSS9c8/vY6kyJ+UmrBr7GxZZGz0G/vmoOza
-vceOEPFwBsrsBNtWOAUAWXGDwbtnJj1/9Ir85vcKUusx7iFUKzebaT26wfY9t1W2
-istBZUK1udlzh3LlT2DnDaZZ9ZZ0u11am0VJl4NBRxaMeB1aFw1gGql9+Qit3IZp
-za1c5pLE6sLQtB4JfW1ADS1qOT453x8QKy2tepsha8dkIqh6jUBkeyUpET5/dllm
-Oq8MEn7X/unKNMN4gv2W0WFEiHOzV7g3HXP3vSrgIBkLc+6hbbHsyk3GkmlaNbSJ
-sQ1L8XSiTkVGYbifgG2XrwLbMdu0MkooQJzjEeykvwoLFyZ0ogHk1MXb95hqW/X7
-pIEqUwjI2TnVl4ox9WnoXLl0d5L0o9+6D/7PojWnlt75oy3x1LZ3aE4wiTYFLLmv
-knIgR0shwtl4QpC2hFcMN+/lCtjs/23FYiE7oCdXPNDo9MkLArogaUeIiYEpQtP1
-BK6dbxb7y5aoMfMTq0do/et8+t42RiRH0xNG0DhKGSo89R3ev3TdrgjmwH7nE51Z
-seexXOm6bYq8zJEoucgAYEBVoGvUQYmdvu8PQGAN6gHPws4znMYbzE0MTjenEZRi
-uiF6sCWl3g2E6kPkBeoX
-=vAc1
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+George Rapp  (Pataskala, OH) Home: george.rapp -- at -- gmail.com
+LinkedIn profile: https://www.linkedin.com/in/georgerapp
+Phone: +1 740 936 RAPP (740 936 7277)
