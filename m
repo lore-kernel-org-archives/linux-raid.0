@@ -1,101 +1,45 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] super-intel: ensure suspended region is removed when reshape completes.
-Date: Mon, 22 Feb 2016 09:53:21 -0500
-Message-ID: <wrfjk2lwbxum.fsf@redhat.com>
-References: <871t8ar54j.fsf@notabene.neil.brown.name>
-	<wrfjk2m1zvq9.fsf@redhat.com>
-	<87povtptpo.fsf@notabene.neil.brown.name>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v5 0/3] init: add support to directly boot to a mapped device
+Date: Mon, 22 Feb 2016 10:55:11 -0800
+Message-ID: <CAGXu5jJ9nUdE8u8a3EYR5uS_zOLEkmQn3M0Nsm9bkxBmMxpC9Q@mail.gmail.com>
+References: <1455992032-14594-1-git-send-email-keescook@chromium.org>
+	<20160221220839.GD16166@agk-dp.fab.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87povtptpo.fsf@notabene.neil.brown.name> (NeilBrown's message of
-	"Fri, 19 Feb 2016 08:57:39 +1100")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>
-Cc: linux-raid@vger.kernel.org, Ken Moffat <zarniwhoop@ntlworld.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <20160221220839.GD16166@agk-dp.fab.redhat.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, Dan Ehrenberg <dehrenberg@chromium.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Chen Yu <yu.c.chen@intel.com>, Vishnu Pratap Singh <vishnu.ps@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Yaowei Bai <baiyaowei@cmss.chinamobile.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Will Drewry <wad@chromium.org>, David Zeuthen <zeuthen@google.com>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.com> writes:
-> On Fri, Feb 19 2016, Jes Sorensen wrote:
->
->> NeilBrown <neilb@suse.com> writes:
->>> A recent commit removed a call to abort_reshape() when IMSM reshape
->>> completed.  An unanticipated result of this is that the suspended
->>> region is not cleared as it should be.
->>> So after a reshape, a region of the array will cause all IO to block.
->>>
->>> Re-instate the required updates to suspend_{lo,hi} coped from
->>> abort_reshape().
->>>
->>> This is caught (sometimes) by the test suite.
->>>
->>> Also fix a couple of typos found while exploring the code.
->>>
->>> Reported-by: Ken Moffat <zarniwhoop@ntlworld.com>
->>> Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->>> Fixes: 2139b03c2080 ("imsm: don't call abort_reshape() in imsm_manage_reshape()")
->>> Signed-off-by: NeilBrown <neilb@suse.com>
->>> ---
->>>  super-intel.c | 7 +++++--
->>>  1 file changed, 5 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/super-intel.c b/super-intel.c
->>> index 90b7b6dee5d0..80b48d0fdd47 100644
->>> --- a/super-intel.c
->>> +++ b/super-intel.c
->>> @@ -10465,7 +10465,7 @@ int check_degradation_change(struct mdinfo *info,
->>>   * Function:	imsm_manage_reshape
->>>   * Description:	Function finds array under reshape and it manages reshape
->>>   *		process. It creates stripes backups (if required) and sets
->>> - *		checheckpoits.
->>> + *		checkpoints.
->>>   * Parameters:
->>>   *	afd		: Backup handle (nattive) - not used
->>>   *	sra		: general array info
->>> @@ -10595,7 +10595,7 @@ static int imsm_manage_reshape(
->>>  
->>>  		start = current_position * 512;
->>>  
->>> -		/* allign reading start to old geometry */
->>> +		/* align reading start to old geometry */
->>>  		start_buf_shift = start % old_data_stripe_length;
->>>  		start_src = start - start_buf_shift;
->>>  
->>> @@ -10700,6 +10700,9 @@ static int imsm_manage_reshape(
->>>  	ret_val = 1;
->>>  abort:
->>>  	free(buf);
->>> +	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
->>> +	sysfs_set_num(sra, NULL, "suspend_hi", 0);
->>> +	sysfs_set_num(sra, NULL, "suspend_lo", 0);
->>>  
->>>  	return ret_val;
->>>  }
+On Sun, Feb 21, 2016 at 2:08 PM, Alasdair G Kergon <agk@redhat.com> wrote:
+> On Sat, Feb 20, 2016 at 10:13:49AM -0800, Kees Cook wrote:
+>> This is a resurrection of a patch series from a few years back, first
+>> brought to the dm maintainers in 2010. It creates a way to define dm
+>> devices on the kernel command line for systems that do not use an
+>> initramfs, or otherwise need a dm running before init starts.
 >>
->> This does indeed match the behavior of abort_reshape(), however looking
->> through git history, I cannot find any explanation as to why the code
->> sets suspend_lo twice.
+>> This has been used by Chrome OS for several years, and now by Brillo
+>> (and likely Android soon).
 >>
->> Any chance you can enlighten me why this is necessary?
+>> The last version was v4:
+>> https://patchwork.kernel.org/patch/104860/
+>> https://patchwork.kernel.org/patch/104861/
 >
-> This is what I never got when I was maintainer - people insisting
-> (rightly) that I explain the details...  Thanks!
->
->
-> Prior to
-> Commit: 23ddff3792f6 ("md: allow suspend_lo and suspend_hi to decrease
-> as well as increase.")
-> you could only increase suspend_{lo,hi} unless the region they covered
-> was empty.  So to reset to 0, you need to push suspend_lo up past
-> suspend_hi first.
-> So to maximize the chance of mdadm working on all kernels, we want to keep
-> doing that.
->
-> Maybe you could add that to the change comment?  Or should there be a
-> comment in abort_reshape()??
+> Inconsistencies in the terminology here can be sorted out during review,
+> and I see that you've taken on board some of my review comments from
+> 2010, but what are your responses to the rest of them?
 
-Applied with a one-line refererence to the documentation added in
-abort_reshape().
+Ah, sorry, the threads I could find were incomplete, so I wasn't able
+to find those comments that were made to Will's 2010 submission. In
+some of the cleanups I did I was very confused about "target" vs
+"table", and tried to fix that. Regardless, I'm open to fixing
+whatever is needed. :)
 
-Thanks!
-Jes
+Thanks for looking at this again!
+
+-Kees
+
+-- 
+Kees Cook
+Chrome OS & Brillo Security
