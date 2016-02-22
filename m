@@ -1,34 +1,41 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [PATCH v5 0/3] init: add support to directly boot to a mapped
-	device
-Date: Sun, 21 Feb 2016 22:08:40 +0000
-Message-ID: <20160221220839.GD16166@agk-dp.fab.redhat.com>
-References: <1455992032-14594-1-git-send-email-keescook@chromium.org>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: md raid5 on top of dmcrypt, or dmcrypt on top of md raid5?
+Date: Sun, 21 Feb 2016 16:44:36 -0800
+Message-ID: <20160222004436.GH5512@merlins.org>
+References: <20160211162959.GG13969@merlins.org>
+ <alpine.DEB.2.02.1602121020570.11524@uplift.swm.pp.se>
+ <wrfja8n62e0c.fsf@redhat.com>
+ <20160212190700.GQ13969@merlins.org>
+ <22206.14606.181359.676881@quad.stoffel.home>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1455992032-14594-1-git-send-email-keescook@chromium.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, Dan Ehrenberg <dehrenberg@chromium.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Chen Yu <yu.c.chen@intel.com>, Vishnu Pratap Singh <vishnu.ps@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Yaowei Bai <baiyaowei@cmss.chinamobile.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Will Drewry <wad@chromium.org>, David Zeuthen <zeuthen@google.com>
+In-Reply-To: <22206.14606.181359.676881@quad.stoffel.home>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 20, 2016 at 10:13:49AM -0800, Kees Cook wrote:
-> This is a resurrection of a patch series from a few years back, first
-> brought to the dm maintainers in 2010. It creates a way to define dm
-> devices on the kernel command line for systems that do not use an
-> initramfs, or otherwise need a dm running before init starts.
+On Fri, Feb 12, 2016 at 02:57:02PM -0500, John Stoffel wrote:
 > 
-> This has been used by Chrome OS for several years, and now by Brillo
-> (and likely Android soon).
+> Marc,
 > 
-> The last version was v4:
-> https://patchwork.kernel.org/patch/104860/
-> https://patchwork.kernel.org/patch/104861/
- 
-Inconsistencies in the terminology here can be sorted out during review,
-and I see that you've taken on board some of my review comments from
-2010, but what are your responses to the rest of them?
+> Did you look into lvcache instead of bcache?  The problem with bcache
+> is that you can't (as I understand it) remove it from a live volume,
+> while you can with lvache.
 
-Alasdair
+I've used LVM2 in the past, and I'm not a big fan of the extra layers
+(and back then clear slowdowns).
+To be honest, I won't be needing to remove a cache from a volume while
+it's running, so that's not too much a concern for me.
+
+I did a bit of reading on one vs the other, and dmcache seemed to have
+more users behind it and been around longer, so I went with that.
+
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
