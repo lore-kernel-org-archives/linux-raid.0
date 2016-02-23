@@ -1,45 +1,64 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v5 0/3] init: add support to directly boot to a mapped device
-Date: Mon, 22 Feb 2016 10:55:11 -0800
-Message-ID: <CAGXu5jJ9nUdE8u8a3EYR5uS_zOLEkmQn3M0Nsm9bkxBmMxpC9Q@mail.gmail.com>
-References: <1455992032-14594-1-git-send-email-keescook@chromium.org>
-	<20160221220839.GD16166@agk-dp.fab.redhat.com>
+From: Alireza Haghdoost <alireza@cs.umn.edu>
+Subject: Re: [PATCH 2/2] enable bypass raid5 journal for full stripe writes
+Date: Tue, 23 Feb 2016 10:34:05 -0600
+Message-ID: <CAB-428=d=6_mNc+2-Y965xG4TFwOFVify3Efymmu9NQBB_mxMQ@mail.gmail.com>
+References: <1455151995-240805-1-git-send-email-songliubraving@fb.com> <1455151995-240805-2-git-send-email-songliubraving@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20160221220839.GD16166@agk-dp.fab.redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, Dan Ehrenberg <dehrenberg@chromium.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Chen Yu <yu.c.chen@intel.com>, Vishnu Pratap Singh <vishnu.ps@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Yaowei Bai <baiyaowei@cmss.chinamobile.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Will Drewry <wad@chromium.org>, David Zeuthen <zeuthen@google.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1455151995-240805-2-git-send-email-songliubraving@fb.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Song Liu <songliubraving@fb.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, hch@infradead.org, kernel-team@fb.com, Tony Floeder <Tony_Floeder@dell.com>
 List-Id: linux-raid.ids
 
-On Sun, Feb 21, 2016 at 2:08 PM, Alasdair G Kergon <agk@redhat.com> wrote:
-> On Sat, Feb 20, 2016 at 10:13:49AM -0800, Kees Cook wrote:
->> This is a resurrection of a patch series from a few years back, first
->> brought to the dm maintainers in 2010. It creates a way to define dm
->> devices on the kernel command line for systems that do not use an
->> initramfs, or otherwise need a dm running before init starts.
->>
->> This has been used by Chrome OS for several years, and now by Brillo
->> (and likely Android soon).
->>
->> The last version was v4:
->> https://patchwork.kernel.org/patch/104860/
->> https://patchwork.kernel.org/patch/104861/
+On Wed, Feb 10, 2016 at 6:53 PM, Song Liu <songliubraving@fb.com> wrote:
+> Summary:
 >
-> Inconsistencies in the terminology here can be sorted out during review,
-> and I see that you've taken on board some of my review comments from
-> 2010, but what are your responses to the rest of them?
+> Resending the patch to see whether we can get another chance...
+>
+> When testing current SATA SSDs as the journal device, we have
+> seen 2 challenges: throughput of long sequential writes, and
+> SSD life time.
+>
+> To ease the burn on the SSD, we tested bypassing journal for
+> full stripe writes. We understand that bypassing journal will
+> re-introduce write hole to the md layer. However, with
+> well-designed application and file system, such write holes
+> should not result in any data loss.
 
-Ah, sorry, the threads I could find were incomplete, so I wasn't able
-to find those comments that were made to Will's 2010 submission. In
-some of the cleanups I did I was very confused about "target" vs
-"table", and tried to fix that. Regardless, I'm open to fixing
-whatever is needed. :)
+To me the probability of data-lost during a full-stripe write is more
+than partial-stripe write. I understand your motivation of doing this
+however as Neil mentioned, this trade-off and your assumption about
+the "well-designed application and file system" put a question mark on
+the general usage of MD journal.
 
-Thanks for looking at this again!
+> Our test systems have 2 RAID-6 array per server and 15 HDDs
+> per array. These 2 arrays shared 1 SSD as the journal (2
+> partitions). Btrfs is created on both array.
+>
+> For squential write benchmarks, we observe significant
+> performance gain (250MB/s per volume vs. 150M/s) from
+> bypassing journal for full stripes.
+>
+> We all performed power cycle tests on these systems while
+> running a write workload. For more than 50 power cycles,
+> we have seen zero data loss.
+>
 
--Kees
+Is it possible to share more details about your power cycle test
+procedure and data loss detection method?
 
--- 
-Kees Cook
-Chrome OS & Brillo Security
+> To configure the bypass feature:
+>
+> echo 1 > /sys/block/mdX/md/r5l_bypass_full_stripe
+>
+> and
+>
+> echo 0 > /sys/block/mdX/md/r5l_bypass_full_stripe
+>
+> For file system integrity, the code does not bypass any write
+> with REQ_FUA.
+>
+> Signed-off-by: Song Liu <songliubraving@fb.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
