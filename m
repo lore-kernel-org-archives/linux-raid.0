@@ -1,64 +1,46 @@
-From: Alireza Haghdoost <alireza@cs.umn.edu>
-Subject: Re: [PATCH 2/2] enable bypass raid5 journal for full stripe writes
-Date: Tue, 23 Feb 2016 10:34:05 -0600
-Message-ID: <CAB-428=d=6_mNc+2-Y965xG4TFwOFVify3Efymmu9NQBB_mxMQ@mail.gmail.com>
-References: <1455151995-240805-1-git-send-email-songliubraving@fb.com> <1455151995-240805-2-git-send-email-songliubraving@fb.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1455151995-240805-2-git-send-email-songliubraving@fb.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Song Liu <songliubraving@fb.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>, hch@infradead.org, kernel-team@fb.com, Tony Floeder <Tony_Floeder@dell.com>
+From: mchristi@redhat.com
+Subject: [PATCH 00/35 v4] separate operations from flags in the bio/request structs
+Date: Wed, 24 Feb 2016 13:47:37 -0600
+Message-ID: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 List-Id: linux-raid.ids
 
-On Wed, Feb 10, 2016 at 6:53 PM, Song Liu <songliubraving@fb.com> wrote:
-> Summary:
->
-> Resending the patch to see whether we can get another chance...
->
-> When testing current SATA SSDs as the journal device, we have
-> seen 2 challenges: throughput of long sequential writes, and
-> SSD life time.
->
-> To ease the burn on the SSD, we tested bypassing journal for
-> full stripe writes. We understand that bypassing journal will
-> re-introduce write hole to the md layer. However, with
-> well-designed application and file system, such write holes
-> should not result in any data loss.
+The following patches begin to cleanup the request->cmd_flags and
+bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+attributes and state of the request. For bi_rw we use it for similar
+info and also the priority but then also have another bi_flags field
+for state. At some point, we abused them so much we just made cmd_flags
+64 bits, so we could add more.
 
-To me the probability of data-lost during a full-stripe write is more
-than partial-stripe write. I understand your motivation of doing this
-however as Neil mentioned, this trade-off and your assumption about
-the "well-designed application and file system" put a question mark on
-the general usage of MD journal.
+The following patches seperate the operation (read, write discard,
+flush, etc) from cmd_flags/bi_rw.
 
-> Our test systems have 2 RAID-6 array per server and 15 HDDs
-> per array. These 2 arrays shared 1 SSD as the journal (2
-> partitions). Btrfs is created on both array.
->
-> For squential write benchmarks, we observe significant
-> performance gain (250MB/s per volume vs. 150M/s) from
-> bypassing journal for full stripes.
->
-> We all performed power cycle tests on these systems while
-> running a write workload. For more than 50 power cycles,
-> we have seen zero data loss.
->
+This patchset was made against linux-next from today Feb 24 2016
+(git tag next-20160224).
 
-Is it possible to share more details about your power cycle test
-procedure and data loss detection method?
+I put a git tree here:
+https://github.com/mikechristie/linux-kernel.git
 
-> To configure the bypass feature:
->
-> echo 1 > /sys/block/mdX/md/r5l_bypass_full_stripe
->
-> and
->
-> echo 0 > /sys/block/mdX/md/r5l_bypass_full_stripe
->
-> For file system integrity, the code does not bypass any write
-> with REQ_FUA.
->
-> Signed-off-by: Song Liu <songliubraving@fb.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
+v4:
+1. Rebased to current linux-next tree.
+
+v3:
+
+1. Used "=" instead of "|="  to setup bio bi_rw.
+2. Removed __get_request cmd_flags compat code.
+3. Merged initial dm related changes requested by Mike Snitzer.
+4. Fixed ubd kbuild errors in flush related patches.
+5. Fix 80 char col issues in several patches.
+6. Fix issue with one of the btrfs patches where it looks like I reverted
+a patch when trying to fix a merge error.
+
+v2
+
+1. Dropped arguments from submit_bio, and had callers setup
+bio.
+2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
+to REQ_PREFLUSH for make_request_fn users.
+3. Dropped bio/rq_data_dir functions, and added a op_is_write
+function instead.
