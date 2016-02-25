@@ -1,70 +1,110 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: live lock regression in raid5 reshape
-Date: Fri, 26 Feb 2016 09:01:52 +1100
-Message-ID: <87d1rkla9b.fsf@notabene.neil.brown.name>
-References: <20160225190712.GA2390@kernel.org>
+From: NeilBrown <neilb@suse.com>
+Subject: Re: [PATCH 1/2] RAID5: check_reshape() shouldn't call mddev_suspend
+Date: Fri, 26 Feb 2016 09:08:40 +1100
+Message-ID: <87a8mol9xz.fsf@notabene.neil.brown.name>
+References: <b228d35f9a8e94969d667edbcc9d7f613d706b02.1456424579.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
 	micalg=pgp-sha256; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20160225190712.GA2390@kernel.org>
+In-Reply-To: <b228d35f9a8e94969d667edbcc9d7f613d706b02.1456424579.git.shli@fb.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@kernel.org>, yuanhan.liu@linux.intel.com
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+To: Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Cc: artur.paszkiewicz@intel.com
 List-Id: linux-raid.ids
 
 --=-=-=
 Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 On Fri, Feb 26 2016, Shaohua Li wrote:
 
-> Hi,
+> check_reshape() is called from raid5d thread. raid5d thread shouldn't
+> call mddev_suspend(), because mddev_suspend() waits for all IO finish
+> but IO is handled in raid5d thread, we could easily deadlock here.
 >
-> I hit a live lock in reshape test, which is introduced by:
+> Artur,
+> It would be great if you can verify this works for your test.
 >
-> e9e4c377e2f563892c50d1d093dd55c7d518fc3d(md/raid5: per hash value and exclusive wait_for_stripe)
+> Reported-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+> Cc: NeilBrown <neilb@suse.com>
+> Signed-off-by: Shaohua Li <shli@fb.com>
+> ---
+>  drivers/md/raid5.c | 18 ++++++++++++++++++
+>  drivers/md/raid5.h |  2 ++
+>  2 files changed, 20 insertions(+)
 >
-> The problem is get_active_stripe waits on conf->wait_for_stripe[hash]. Assume
-> hash is 0. My test release stripes in this order:
-> - release all stripes with hash 0
-> - get_active_stripe still sleeps since active_stripes > max_nr_stripes * 3 / 4
-> - release all stripes with hash other than 0. active_stripes becomes 0
-> - get_active_stripe still sleeps, since nobody wakes up wait_for_stripe[0]
->
-> The system live locks. The problem is active_stripes isn't a per-hash count.
-> Revert the patch makes the lock go away.
->
-> I didn't come out a solution yet except reverting the patch. Making
-> active_stripes per-hash is a candidate, but not sure if there is thundering
-> herd problem because each hash will have less stripes. On the other hand, I'm
-> wondering if the patch makes sense now. The commit log declares the issue
-> happens with limited stripes, but now stripe count is automatically increased.
->
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index 7f770b0..c7fd070 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -2089,6 +2089,14 @@ static int resize_chunks(struct r5conf *conf, int =
+new_disks, int new_sectors)
+>  	unsigned long cpu;
+>  	int err =3D 0;
+>=20=20
+> +	/*
+> +	 * Never shrink. And mddev_suspend() could deadlock if this is called
+> +	 * from raid5d. In that case, scribble_disks and scribble_sectors
+> +	 * should equal to new_disks and new_sectors
+> +	 */
+> +	if (conf->scribble_disks >=3D new_disks &&
+> +	    conf->scribble_sectors >=3D new_sectors)
+> +		return 0;
+>  	mddev_suspend(conf->mddev);
+>  	get_online_cpus();
+>  	for_each_present_cpu(cpu) {
+> @@ -2110,6 +2118,10 @@ static int resize_chunks(struct r5conf *conf, int =
+new_disks, int new_sectors)
+>  	}
+>  	put_online_cpus();
+>  	mddev_resume(conf->mddev);
+> +	if (!err) {
+> +		conf->scribble_disks =3D new_disks;
+> +		conf->scribble_sectors =3D new_sectors;
+> +	}
+>  	return err;
+>  }
+>=20=20
+> @@ -6413,6 +6425,12 @@ static int raid5_alloc_percpu(struct r5conf *conf)
+>  	}
+>  	put_online_cpus();
+>=20=20
+> +	if (!err) {
+> +		conf->scribble_disks =3D max(conf->raid_disks,
+> +			conf->previous_raid_disks);
+> +		conf->scribble_sectors =3D max(conf->chunk_sectors,
+> +			conf->prev_chunk_sectors) / STRIPE_SECTORS;
 
-->active_stripes does seem to be the core of the problem here.
+Here we set ->scribble_sectors to a number of stripes rather than a
+number of sectors.  I think you need to remove the "/ STRIPE_SECTORS".
 
-The purpose of the comparison with max_nr_stripes*3/4 was to encourage
-requests to be handled in large batches rather than dribbling out one at
-a time.  That should encourage the creation of full stripe writes.  I
-think it does (or at least: did) help but we know it isn't perfect.
-There might be a better way.
+Otherwise:
+  Reviewed-by: NeilBrown <neilb@suse.com>
 
-If two threads are each writing full stripes of data, we would prefer
-one could allocate a full set of stripe_heads and the other one get
-nothing for a little while, rather than each get half of the number of
-stripe_heads that they need.
-
-Possibly we would could impose this restriction only on the first
-stripe_head in a stripe (i.e. the start of a chunk).  That should have
-much the same effect but wouldn't cause the problem you are seeing.
-
-Certainly backing this out is simplest (particularly if you want to send
-it to -stable).  I suspect it would be best to ultimately keep the
-hashed wait queues if we can avoid the livelock.
-
-thanks,
+Thanks,
 NeilBrown
 
+
+> +	}
+>  	return err;
+>  }
+>=20=20
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index a415e1c..ae6068d 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -510,6 +510,8 @@ struct r5conf {
+>  					      * conversions
+>  					      */
+>  	} __percpu *percpu;
+> +	int scribble_disks;
+> +	int scribble_sectors;
+>  #ifdef CONFIG_HOTPLUG_CPU
+>  	struct notifier_block	cpu_notify;
+>  #endif
+> --=20
+> 2.6.5
 
 --=-=-=
 Content-Type: application/pgp-signature; name="signature.asc"
@@ -72,18 +112,18 @@ Content-Type: application/pgp-signature; name="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBCAAGBQJWz3nQAAoJEDnsnt1WYoG5pqUP/RvMf++lsIKtXXs7GXM80uAf
-E+WHUxttsOwiK2O/DuI9HxZ//WxNEN3zh3qjHRql3TVVxsNSU5RXSqQLTJzdgKkE
-vmrefq/8BT5CWAK0Q+UXHZ3BTRvCPzLLXn0AER+ieytgkaR09Z/8IHO3SRi4GCx5
-ErenS6P95aWh53XvsQRI7pQSMxuYvzlr3MPF+86ZqgdGKg2a1se7HlrLOdBJjoIF
-vCDYvBcHInlDdg+E2JWRkDMNaEJ+UE3nDq+BWs7IBMAZUeTV5e3K/fek94rH/hLX
-WwkZWRNQG1i6tywGlTXd2XRR+oeU7Dnww5qu2dumiksc2D1DxLauw++SiHwPBiNW
-5Dw33UqQoQTdT6dr7bHc3aS3C7u8aiw7yZbBcS5/9BPBUSyhJNxv+rld4VJSFU5b
-Myf4YMDGEZ1BKpGQJq1A9utTXRdQTX8N/JNOrwQ0zlWVCYHdqOkzIK0T7c1ute9l
-svrSA9TU7R+5cdgV6jv/WH84SSWbPqSzlh597yIXsFUNP5Srpzaf6Y7xpZhucI9F
-icwjwx9AQvQ13JC5/RFHO7eiqRjy+fOd4G/Me/TEP7wtx4/wi4WeBIk47oyPPj1g
-u/VPi33SkJJYzAT1OSJIqnF+5oGag6F7IlqBRhawdg9jW+MMJaYxEC8/57dDin0E
-XYgoeGKpSPOHyY6FzRC4
-=8mFp
+iQIcBAEBCAAGBQJWz3toAAoJEDnsnt1WYoG5AysP/Rhqupr1iLlPnip2Nyqy83+G
+y02/KvTJvz2LY/cSpckn0W+sI1W0F7O0IVmohJlJ466ceV8pFz9hsNeddqs1Xuu/
+aJqroobhM4a2yo7E8KFn1BbbQwCxndN3ePGQR7M4j8sm5rxdnMb0hgQBd5nrCZGz
+TT7izaj8Q27Vigywy/9JEkYb2qNyYd3JChbZeKE5GzQE+3gLw3Tv94BbzXzLpBML
+vGZtmr4TwCXQqIKFAhGZ7l0NlgzU7U+4VeKxjpov4Zdh1fxiuSEX9JjVBQFrVP/B
+rVwESg5nTnXx+DlCiym0NutC8+W91coPj8ltPAdNkgQGiQqwRFEIfc5vesQ+ogUK
+MPqN6xhLGZGMxHJUaoxz6RMYQwzmItG+xwRN1EoTsJgfPivBifIBdXxoObfruAKu
+6uWj4jUP/Xl85qOzF9CFYDOUaGOx9BfddhsAber0HoTvKy1V7gZ4jnoTrtEkwmr1
+y0aLu4/jDn+DPMPManOH08QwUcQqyYHbOOQ0usj2zV0hbwwXLcuznWvzgAvCyI5Z
+oU7Vbk+qQIZQ4nDuFU6ZKx6JJzVngRg2y66zdPSJkEnPn9HxlglQf4frANVcINFR
+Vhrjqjlsw/RbLCxREHrna5cmzimB69Hh3byYG3Ans0PAH7E+/8HuHuEVXRvXZAt8
+LmXv1dmfnNJ+K5teAGEZ
+=1O1F
 -----END PGP SIGNATURE-----
 --=-=-=--
