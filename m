@@ -1,68 +1,86 @@
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: raid5d hangs when stopping an array during reshape
-Date: Thu, 25 Feb 2016 10:42:06 -0800
-Message-ID: <20160225184206.GA9755@kernel.org>
-References: <5683E00C.1050005@intel.com>
- <CAA9_cmc3Ps2KZ6Ry-RRb96HRJxVHg51Rbnh5ckKpfhzShDnJDg@mail.gmail.com>
- <20160225000300.GA16254@kernel.org>
- <87r3g1ljg7.fsf@notabene.neil.brown.name>
- <20160225011710.GA27642@kernel.org>
- <56CF263D.9020803@intel.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/2] RAID5: check_reshape() shouldn't call mddev_suspend
+Date: Thu, 25 Feb 2016 10:45:03 -0800
+Message-ID: <b228d35f9a8e94969d667edbcc9d7f613d706b02.1456424579.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56CF263D.9020803@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Cc: NeilBrown <neilb@suse.com>, Dan Williams <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: artur.paszkiewicz@intel.com, neilb@suse.com
 List-Id: linux-raid.ids
 
-On Thu, Feb 25, 2016 at 05:05:17PM +0100, Artur Paszkiewicz wrote:
-> On 02/25/2016 02:17 AM, Shaohua Li wrote:
-> > On Thu, Feb 25, 2016 at 11:31:04AM +1100, Neil Brown wrote:
-> >> On Thu, Feb 25 2016, Shaohua Li wrote:
-> >>
-> >>>
-> >>> As for the bug, write requests run in raid5d, mddev_suspend() waits for all IO,
-> >>> which waits for the write requests. So this is a clear deadlock. I think we
-> >>> should delete the check_reshape() in md_check_recovery(). If we change
-> >>> layout/disks/chunk_size, check_reshape() is already called. If we start an
-> >>> array, the .run() already handles new layout. There is no point
-> >>> md_check_recovery() check_reshape() again.
-> >>
-> >> Are you sure?
-> >> Did you look at the commit which added that code?
-> >> commit b4c4c7b8095298ff4ce20b40bf180ada070812d0
-> >>
-> >> When there is an IO error, reshape (or resync or recovery) will abort
-> >> and then possibly be automatically restarted.
-> > 
-> > thanks pointing out this. 
-> >> Without the check here a reshape might be attempted on an array which
-> >> has failed.  Not sure if that would be harmful, but it would certainly
-> >> be pointless.
-> >>
-> >> But you are right that this is causing the problem.
-> >> Maybe we should keep track of the size of the 'scribble' arrays and only
-> >> call resize_chunks if the size needs to change?  Similar to what
-> >> resize_stripes does.
-> > 
-> > yep, this is my first solution, but think check_reshape() is useless here
-> > later, apparently miss the restart case. I'll go this way.
-> 
-> My idea was to replace mddev_suspend()/mddev_resume() in resize_chunks()
-> with a rw lock that would prevent collisions with raid_run_ops(), since
-> scribble is used only there. But if the parity operations are executed
-> asynchronously this would also need to wait until all the submitted
-> operations have completed. Seems a bit overkill, but I came up with
-> this:
+check_reshape() is called from raid5d thread. raid5d thread shouldn't
+call mddev_suspend(), because mddev_suspend() waits for all IO finish
+but IO is handled in raid5d thread, we could easily deadlock here.
 
-Looks it should work, but it's overkill indead, especially the extra lock, we
-can replace it with srcu though. The 'track scribble array size' is much
-simpler, so I'd prefer that way. In the future, we probably should move
-resize_stripes()/resize_chunks() to .start_reshape().
-resize_stripes()/resize_chunks() sounds not qualified as .check_reshape().
+Artur,
+It would be great if you can verify this works for your test.
 
-Thanks,
-Shaohua
+Reported-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Cc: NeilBrown <neilb@suse.com>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/md/raid5.c | 18 ++++++++++++++++++
+ drivers/md/raid5.h |  2 ++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7f770b0..c7fd070 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2089,6 +2089,14 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ 	unsigned long cpu;
+ 	int err = 0;
+ 
++	/*
++	 * Never shrink. And mddev_suspend() could deadlock if this is called
++	 * from raid5d. In that case, scribble_disks and scribble_sectors
++	 * should equal to new_disks and new_sectors
++	 */
++	if (conf->scribble_disks >= new_disks &&
++	    conf->scribble_sectors >= new_sectors)
++		return 0;
+ 	mddev_suspend(conf->mddev);
+ 	get_online_cpus();
+ 	for_each_present_cpu(cpu) {
+@@ -2110,6 +2118,10 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
+ 	}
+ 	put_online_cpus();
+ 	mddev_resume(conf->mddev);
++	if (!err) {
++		conf->scribble_disks = new_disks;
++		conf->scribble_sectors = new_sectors;
++	}
+ 	return err;
+ }
+ 
+@@ -6413,6 +6425,12 @@ static int raid5_alloc_percpu(struct r5conf *conf)
+ 	}
+ 	put_online_cpus();
+ 
++	if (!err) {
++		conf->scribble_disks = max(conf->raid_disks,
++			conf->previous_raid_disks);
++		conf->scribble_sectors = max(conf->chunk_sectors,
++			conf->prev_chunk_sectors) / STRIPE_SECTORS;
++	}
+ 	return err;
+ }
+ 
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index a415e1c..ae6068d 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -510,6 +510,8 @@ struct r5conf {
+ 					      * conversions
+ 					      */
+ 	} __percpu *percpu;
++	int scribble_disks;
++	int scribble_sectors;
+ #ifdef CONFIG_HOTPLUG_CPU
+ 	struct notifier_block	cpu_notify;
+ #endif
+-- 
+2.6.5
+
