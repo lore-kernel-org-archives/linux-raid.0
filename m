@@ -1,40 +1,76 @@
 From: Shaohua Li <shli@kernel.org>
-Subject: live lock regression in raid5 reshape
-Date: Thu, 25 Feb 2016 11:07:12 -0800
-Message-ID: <20160225190712.GA2390@kernel.org>
+Subject: Re: raid5d hangs when stopping an array during reshape
+Date: Thu, 25 Feb 2016 11:17:39 -0800
+Message-ID: <20160225191739.GB2390@kernel.org>
+References: <5683E00C.1050005@intel.com>
+ <CAA9_cmc3Ps2KZ6Ry-RRb96HRJxVHg51Rbnh5ckKpfhzShDnJDg@mail.gmail.com>
+ <20160225000300.GA16254@kernel.org>
+ <87r3g1ljg7.fsf@notabene.neil.brown.name>
+ <20160225011710.GA27642@kernel.org>
+ <56CF263D.9020803@intel.com>
+ <20160225184206.GA9755@kernel.org>
+ <CAPcyv4jTrYL7ctYgZ+P_Cb=z_eN9oRR9Z0OiyUu6jS+aphm0ag@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <CAPcyv4jTrYL7ctYgZ+P_Cb=z_eN9oRR9Z0OiyUu6jS+aphm0ag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: yuanhan.liu@linux.intel.com, neilb@suse.de
-Cc: linux-raid@vger.kernel.org, artur.paszkiewicz@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Artur Paszkiewicz <artur.paszkiewicz@intel.com>, NeilBrown <neilb@suse.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Thu, Feb 25, 2016 at 10:48:45AM -0800, Dan Williams wrote:
+> On Thu, Feb 25, 2016 at 10:42 AM, Shaohua Li <shli@kernel.org> wrote:
+> > On Thu, Feb 25, 2016 at 05:05:17PM +0100, Artur Paszkiewicz wrote:
+> >> On 02/25/2016 02:17 AM, Shaohua Li wrote:
+> >> > On Thu, Feb 25, 2016 at 11:31:04AM +1100, Neil Brown wrote:
+> >> >> On Thu, Feb 25 2016, Shaohua Li wrote:
+> >> >>
+> >> >>>
+> >> >>> As for the bug, write requests run in raid5d, mddev_suspend() waits for all IO,
+> >> >>> which waits for the write requests. So this is a clear deadlock. I think we
+> >> >>> should delete the check_reshape() in md_check_recovery(). If we change
+> >> >>> layout/disks/chunk_size, check_reshape() is already called. If we start an
+> >> >>> array, the .run() already handles new layout. There is no point
+> >> >>> md_check_recovery() check_reshape() again.
+> >> >>
+> >> >> Are you sure?
+> >> >> Did you look at the commit which added that code?
+> >> >> commit b4c4c7b8095298ff4ce20b40bf180ada070812d0
+> >> >>
+> >> >> When there is an IO error, reshape (or resync or recovery) will abort
+> >> >> and then possibly be automatically restarted.
+> >> >
+> >> > thanks pointing out this.
+> >> >> Without the check here a reshape might be attempted on an array which
+> >> >> has failed.  Not sure if that would be harmful, but it would certainly
+> >> >> be pointless.
+> >> >>
+> >> >> But you are right that this is causing the problem.
+> >> >> Maybe we should keep track of the size of the 'scribble' arrays and only
+> >> >> call resize_chunks if the size needs to change?  Similar to what
+> >> >> resize_stripes does.
+> >> >
+> >> > yep, this is my first solution, but think check_reshape() is useless here
+> >> > later, apparently miss the restart case. I'll go this way.
+> >>
+> >> My idea was to replace mddev_suspend()/mddev_resume() in resize_chunks()
+> >> with a rw lock that would prevent collisions with raid_run_ops(), since
+> >> scribble is used only there. But if the parity operations are executed
+> >> asynchronously this would also need to wait until all the submitted
+> >> operations have completed. Seems a bit overkill, but I came up with
+> >> this:
+> >
+> > Looks it should work, but it's overkill indead, especially the extra lock, we
+> > can replace it with srcu though. The 'track scribble array size' is much
+> > simpler, so I'd prefer that way. In the future, we probably should move
+> > resize_stripes()/resize_chunks() to .start_reshape().
+> > resize_stripes()/resize_chunks() sounds not qualified as .check_reshape().
+> >
+> 
+> Any time any linux-raid mail mentions the raid5_run_ops infrastructure
+> I am prompted to remind that async_tx needs to die and be up leveled
+> to md directly.  The "help wanted" request is still pending.
 
-I hit a live lock in reshape test, which is introduced by:
-
-e9e4c377e2f563892c50d1d093dd55c7d518fc3d(md/raid5: per hash value and exclusive wait_for_stripe)
-
-The problem is get_active_stripe waits on conf->wait_for_stripe[hash]. Assume
-hash is 0. My test release stripes in this order:
-- release all stripes with hash 0
-- get_active_stripe still sleeps since active_stripes > max_nr_stripes * 3 / 4
-- release all stripes with hash other than 0. active_stripes becomes 0
-- get_active_stripe still sleeps, since nobody wakes up wait_for_stripe[0]
-
-The system live locks. The problem is active_stripes isn't a per-hash count.
-Revert the patch makes the lock go away.
-
-I didn't come out a solution yet except reverting the patch. Making
-active_stripes per-hash is a candidate, but not sure if there is thundering
-herd problem because each hash will have less stripes. On the other hand, I'm
-wondering if the patch makes sense now. The commit log declares the issue
-happens with limited stripes, but now stripe count is automatically increased.
-
-Yuanhan, could you please check if performance changes with the patch reverted
-in latest kernel?
-
-Thanks,
-Shaohua
+A quick search shows async_tx has another user: exofs
