@@ -1,82 +1,72 @@
-From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-Subject: Re: [PATCH 1/2] RAID5: check_reshape() shouldn't call mddev_suspend
-Date: Fri, 26 Feb 2016 11:47:58 +0100
-Message-ID: <56D02D5E.3040608@intel.com>
-References: <b228d35f9a8e94969d667edbcc9d7f613d706b02.1456424579.git.shli@fb.com>
- <87a8mol9xz.fsf@notabene.neil.brown.name>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v5 0/3] init: add support to directly boot to a mapped
+ device
+Date: Fri, 26 Feb 2016 11:53:58 -0500
+Message-ID: <20160226165358.GA26728@redhat.com>
+References: <1455992032-14594-1-git-send-email-keescook@chromium.org>
+ <20160221220839.GD16166@agk-dp.fab.redhat.com>
+ <CAGXu5jJ9nUdE8u8a3EYR5uS_zOLEkmQn3M0Nsm9bkxBmMxpC9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87a8mol9xz.fsf@notabene.neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.com>, Shaohua Li <shli@fb.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGXu5jJ9nUdE8u8a3EYR5uS_zOLEkmQn3M0Nsm9bkxBmMxpC9Q@mail.gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Alasdair Kergon <agk@redhat.com>, dm-devel@redhat.com, Jonathan Corbet <corbet@lwn.net>, Shaohua Li <shli@kernel.org>, Dan Ehrenberg <dehrenberg@chromium.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Chen Yu <yu.c.chen@intel.com>, Vishnu Pratap Singh <vishnu.ps@samsung.com>, Andrew Morton <akpm@linux-foundation.org>, Yaowei Bai <baiyaowei@cmss.chinamobile.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Will Drewry <wad@chromium.org>, David Zeuthen <zeuthen@google.com>
 List-Id: linux-raid.ids
 
-On 02/25/2016 11:08 PM, NeilBrown wrote:
-> On Fri, Feb 26 2016, Shaohua Li wrote:
+On Mon, Feb 22 2016 at  1:55pm -0500,
+Kees Cook <keescook@chromium.org> wrote:
+
+> On Sun, Feb 21, 2016 at 2:08 PM, Alasdair G Kergon <agk@redhat.com> wrote:
+> > On Sat, Feb 20, 2016 at 10:13:49AM -0800, Kees Cook wrote:
+> >> This is a resurrection of a patch series from a few years back, first
+> >> brought to the dm maintainers in 2010. It creates a way to define dm
+> >> devices on the kernel command line for systems that do not use an
+> >> initramfs, or otherwise need a dm running before init starts.
+> >>
+> >> This has been used by Chrome OS for several years, and now by Brillo
+> >> (and likely Android soon).
+> >>
+> >> The last version was v4:
+> >> https://patchwork.kernel.org/patch/104860/
+> >> https://patchwork.kernel.org/patch/104861/
+> >
+> > Inconsistencies in the terminology here can be sorted out during review,
+> > and I see that you've taken on board some of my review comments from
+> > 2010, but what are your responses to the rest of them?
 > 
->> check_reshape() is called from raid5d thread. raid5d thread shouldn't
->> call mddev_suspend(), because mddev_suspend() waits for all IO finish
->> but IO is handled in raid5d thread, we could easily deadlock here.
->>
->> Artur,
->> It would be great if you can verify this works for your test.
->>
->> Reported-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
->> Cc: NeilBrown <neilb@suse.com>
->> Signed-off-by: Shaohua Li <shli@fb.com>
->> ---
->>  drivers/md/raid5.c | 18 ++++++++++++++++++
->>  drivers/md/raid5.h |  2 ++
->>  2 files changed, 20 insertions(+)
->>
->> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->> index 7f770b0..c7fd070 100644
->> --- a/drivers/md/raid5.c
->> +++ b/drivers/md/raid5.c
->> @@ -2089,6 +2089,14 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
->>  	unsigned long cpu;
->>  	int err = 0;
->>  
->> +	/*
->> +	 * Never shrink. And mddev_suspend() could deadlock if this is called
->> +	 * from raid5d. In that case, scribble_disks and scribble_sectors
->> +	 * should equal to new_disks and new_sectors
->> +	 */
->> +	if (conf->scribble_disks >= new_disks &&
->> +	    conf->scribble_sectors >= new_sectors)
->> +		return 0;
->>  	mddev_suspend(conf->mddev);
->>  	get_online_cpus();
->>  	for_each_present_cpu(cpu) {
->> @@ -2110,6 +2118,10 @@ static int resize_chunks(struct r5conf *conf, int new_disks, int new_sectors)
->>  	}
->>  	put_online_cpus();
->>  	mddev_resume(conf->mddev);
->> +	if (!err) {
->> +		conf->scribble_disks = new_disks;
->> +		conf->scribble_sectors = new_sectors;
->> +	}
->>  	return err;
->>  }
->>  
->> @@ -6413,6 +6425,12 @@ static int raid5_alloc_percpu(struct r5conf *conf)
->>  	}
->>  	put_online_cpus();
->>  
->> +	if (!err) {
->> +		conf->scribble_disks = max(conf->raid_disks,
->> +			conf->previous_raid_disks);
->> +		conf->scribble_sectors = max(conf->chunk_sectors,
->> +			conf->prev_chunk_sectors) / STRIPE_SECTORS;
+> Ah, sorry, the threads I could find were incomplete, so I wasn't able
+> to find those comments that were made to Will's 2010 submission. In
+> some of the cleanups I did I was very confused about "target" vs
+> "table", and tried to fix that. Regardless, I'm open to fixing
+> whatever is needed. :)
 > 
-> Here we set ->scribble_sectors to a number of stripes rather than a
-> number of sectors.  I think you need to remove the "/ STRIPE_SECTORS".
+> Thanks for looking at this again!
 
-That's correct. I've tested the patch and it works well but only without
-the "/ STRIPE_SECTORS". 
+This work isn't going to fly as is.  I appreciate the effort and the
+goal (without understanding _why_) but: you're open-coding, duplicating
+and/or reinventing way too much in do_mounts_dm.c
 
-Thanks,
-Artur
+1) You first need to answer: _why_ is using a proper initramfs not
+viable?  A very simple initramfs that issues dmsetup commands, etc,
+isn't so daunting is it?  Why is it so important for the kernel to
+natively provide a dmsetup interface?  Chrome, Android, etc cannot use
+initramfs?
 
+2) If you are able to adequately justify the need for dm=:
+I'd much rather the dm= kernel commandline be a simple series of
+comma-delimited dmsetup-like commands.
+
+You'd handle each command with extremely basic parsing:
+ <dm_ioctl_cmd> <args> [, <dm_ioctl_cmd> <args>]
+(inventing a special token to denote <newline>, to support tables with
+multiple entries, rather than relying on commas and counts, etc)
+
+and you'd then have do_mounts_dm.c open /dev/mapper/control directly and
+issue proper DM ioctls rather than adding all your shim code.  This last
+bit of opening /dev/mapper/control from init needs more research -- not
+sure if doing such a thing from kernel is viable/safe/acceptable.
+
+Mike
