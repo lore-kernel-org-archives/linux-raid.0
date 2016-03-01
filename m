@@ -1,36 +1,81 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 00/35 v4] separate operations from flags in the
-	bio/request structs
-Date: Mon, 29 Feb 2016 11:30:22 -0600
-Message-ID: <56D4802E.3090507@cs.wisc.edu>
-References: <1456343292-14535-1-git-send-email-mchristi@redhat.com>
-	<20160229171339.GA17755@infradead.org>
+From: <rodman@shellport.com>
+Subject: Checkarray doesn't seem to do anything
+Date: Tue, 01 Mar 2016 14:09:44 -0700
+Message-ID: <20160301140944.0a91db92e0d9ae1e5e3fde0508678719.a71523d3be.wbe@email03.secureserver.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <20160229171339.GA17755@infradead.org>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/29/2016 11:13 AM, Christoph Hellwig wrote:
-> Any reason you've dropped my ACK for the previous version?
 
-Sorry. I think I accidentally dropped it when I rebased back over to
-linux-next. It looks like it only got stuck on the first patch. I will
-fix that up on the resend for those kbuild errors.
+Hello,
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+I have a question as it pertains to the checkarray function of Mdadm.  I
+can't actually get it to do anything.  I'm running Ubuntu 14.04.4 Server
+LTS with the latest mdadm installed.  I have a single RAID 1 mirror
+configured and working properly near as I can tell.  
+
+I can force a check if I issue "echo check >
+/sys/block/md0/md/sync_action" as root.  I can then see the status of
+the check via /proc/mdstat or using the --detail switch on mdadm itself.
+
+However, nothing happens if I type in:
+/usr/share/mdadm/checkarray -a
+or
+/usr/share/mdadm/checkarray -a /dev/mdX
+or
+/usr/share/mdadm/checkarray -as
+
+I've tried the commands as root and using sudo.  The array sits idle
+after all of the above commands.  The only thing I can actually get
+checkarray to perform is to give me the help output if I pass it -h.  I
+have attached, below, the current status of the mdadm managed array. 
+Doing some Googling I haven't been able to find anyone else that isn't
+able to use the checkarray function so I must be doing something wrong.
+
+Any ideas?
+
+Rodman Frowert
+
+
+cat /proc/mdstat shows:
+------------------
+rodman@nas:/usr/share/mdadm$ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : active raid1 sdc1[1] sdb1[0]
+      5860389696 blocks super 1.2 [2/2] [UU]
+-----------------
+
+sudo mdadm --detail /dev/md0 shows:
+------------------
+rodman@nas:/usr/share/mdadm$ sudo mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Fri Feb 26 14:07:40 2016
+     Raid Level : raid1
+     Array Size : 5860389696 (5588.90 GiB 6001.04 GB)
+  Used Dev Size : 5860389696 (5588.90 GiB 6001.04 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Mar  1 07:40:19 2016
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : nas:0  (local to host nas)
+           UUID : 4765e7df:0e1a6ad2:1321765f:a2d9f2c9
+         Events : 164
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+
+-----------------
