@@ -1,139 +1,246 @@
-From: Another Sillyname <anothersname@googlemail.com>
-Subject: Re: RAID6 Array crash during reshape.....now will not re-assemble.
-Date: Wed, 2 Mar 2016 15:59:46 +0000
-Message-ID: <CAOS+5GGX8QBo3=s+Mcj=Kd6VSmZyatfZ30NXBy8E=4WJE6z0sA@mail.gmail.com>
-References: <CAOS+5GEd4E2wzYhw0rPdrZnjK6UwAUdKCQLLTxXrdPO8d7hS7w@mail.gmail.com>
-	<56D6E883.50801@youngman.org.uk>
-	<CAOS+5GHof=F94x58SKqFojV26hGpDSLF85dFfm8Xc6M43sN6jA@mail.gmail.com>
-	<CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Checkarray doesn't seem to do anything
+Date: Wed, 2 Mar 2016 18:44:54 +0100
+Message-ID: <20160302174454.GA2567@lazy.lzy>
+References: <20160301175009.0a91db92e0d9ae1e5e3fde0508678719.a1548d3694.wbe@email03.secureserver.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAOS+5GEfQ2p0xguguKC3uXW8GYBDCxt2vk=-Ci6+nTKwkcWtdQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20160301175009.0a91db92e0d9ae1e5e3fde0508678719.a1548d3694.wbe@email03.secureserver.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: rodman@shellport.com
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've found out more info....and now have a theory.......but do not
-know how best to proceed.
+On Tue, Mar 01, 2016 at 05:50:09PM -0700, rodman@shellport.com wrote:
+> 
+> It appears this is not an Mdadm bug but is in fact kernel/dash issue as
+> you noted, Piergiorgio.
+> 
+> >From the bug tracker here: 
+> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=787950
+> 
+> "This is a kernel/dash issue. In kernel 4.0, the md sysfs implementation
+> does not work with partial reads from /sys/block/md0/md/sync_action;
+> the read syscall returns the entire contents of the file even if you
+> try to read less. Dash has an inefficient implementation which reads
+> input one byte at a time, and fails when it hits the kernel
+> misbehavior."
 
->sudo mdadm -A --scan --verbose
+Just tested:
 
-mdadm: looking for devices for further assembly
-mdadm: No super block found on /dev/sdh (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdh
-mdadm: No super block found on /dev/sdg (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdg
-mdadm: No super block found on /dev/sdf (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdf
-mdadm: No super block found on /dev/sde (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sde
-mdadm: No super block found on /dev/sdd (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdd
-mdadm: No super block found on /dev/sdc (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdc
-mdadm: No super block found on /dev/sdb (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sdb
-mdadm: No super block found on /dev/sda6 (Expected magic a92b4efc, got 00000000)
-mdadm: no RAID superblock on /dev/sda6
-mdadm: No super block found on /dev/sda5 (Expected magic a92b4efc, got 75412023)
-mdadm: no RAID superblock on /dev/sda5
-mdadm: /dev/sda4 is too small for md: size is 2 sectors.
-mdadm: no RAID superblock on /dev/sda4
-mdadm: No super block found on /dev/sda3 (Expected magic a92b4efc, got 00000401)
-mdadm: no RAID superblock on /dev/sda3
-mdadm: No super block found on /dev/sda2 (Expected magic a92b4efc, got 00000401)
-mdadm: no RAID superblock on /dev/sda2
-mdadm: No super block found on /dev/sda1 (Expected magic a92b4efc, got 0000007e)
-mdadm: no RAID superblock on /dev/sda1
-mdadm: No super block found on /dev/sda (Expected magic a92b4efc, got e71e974a)
-mdadm: no RAID superblock on /dev/sda
-mdadm: /dev/sdh1 is identified as a member of /dev/md/server187:1, slot 5.
-mdadm: /dev/sdg1 is identified as a member of /dev/md/server187:1, slot 0.
-mdadm: /dev/sdf1 is identified as a member of /dev/md/server187:1, slot 2.
-mdadm: /dev/sde1 is identified as a member of /dev/md/server187:1, slot 3.
-mdadm: /dev/sdd1 is identified as a member of /dev/md/server187:1, slot 6.
-mdadm: /dev/sdc1 is identified as a member of /dev/md/server187:1, slot 1.
-mdadm: /dev/sdb1 is identified as a member of /dev/md/server187:1, slot 4.
-mdadm: /dev/md/server187:1 has an active reshape - checking if
-critical section needs to be restored
-mdadm: Failed to find backup of critical section
-mdadm: Failed to restore critical section for reshape, sorry.
-       Possibly you needed to specify the --backup-file
-mdadm: looking for devices for further assembly
-mdadm: No arrays found in config file or automatically
+dd if=/sys/block/md0/md/sync_action bs=1 count=1
 
-As I stated in my original posting I do not know where the server187
-stuff came from when I tried the original assemble and two of the
-drives (sdg & sdh) reported as busy.
+On kernel 3.x I get "i", on kernel 4.x I get "idle"... :-)
 
-So my theory is this......
+> 
+> The work around is what you said.  Substitute bash for sh at the
+> beginning of the script.  Unfortunately that doesn't work for me as I
+> get this error when trying to run checkarray now:
+> "checkarray: E: /sys/block/md0/md/sync_action not writeable."
 
-This 30TB array has been up and active since about August 2015, fully
-functional without any major issues, except performance was sometimes
-a bit iffy.
+Well, first check the permissions with:
 
-It is possible that drives sdg and sdh were used in a temporary box in
-a different array that was only active for about 10 days, before they
-were moved to the new 30TB array that was cleanly built.  That array
-may well have been called server187 (it was a temp box so no reason to
-remember it).
+ls -l /sys/block/md0/md/sync_action
 
-When the reshape of the current array 'died' during initialisation or
-immediately thereafter, even though cat /proc/mdstat showed the
-reshape active after 12 hours it was still stuck on 0.0%.
+Then make sure you're root, otherwise it will
+not be possible to write, of course.
 
-When the machine was rebooted and the array didn't come up...is it
-possible that drives sdh and sdg still thought they were in the old
-server187 array and that is why they reported themselves busy?  I'm
-not sure why this would happen, but am just theorising.
+bye,
 
-When I tried the assemble command where it reported it was merging
-with the already existing server187 array, even though there
-wasn't/isn't a server187 array as prior to that assemble cat
-/proc/mdstat reported the offline md127 array.
+pg
 
-Somehow therefore the array names have got confused/transposed and
-that's why the backup file is now not seen as the correct one?  This
-would seem to be borne out by all the drives now seeing themselves as
-part of server187 array rather then md127 array and also the reshape
-seems to be attached to this server187 array.
+> 
+> I'll do some research to see what's that's about.  I'm glad to know its
+> not a Mdadm issue per say.
+> 
+> Rodman Frowert
+> 
+> -------- Original Message --------
+> Subject: Re: Checkarray doesn't seem to do anything
+> From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+> Date: Tue, March 01, 2016 4:25 pm
+> To: rodman@shellport.com
+> Cc: linux-raid@vger.kernel.org
+> 
+> On Tue, Mar 01, 2016 at 02:57:21PM -0700, rodman@shellport.com wrote:
+> > Thank you for that information. My kernel is 4.2.0.
+> 
+> I guess the problem is the same.
+> 
+> > 
+> > Is this it's intended behavior or is it simply a bug that has not been
+> > corrected?
+> 
+> Well, I think it is a bug.
+> I'm not sure if "dash" bug or kernel bug.
+> I suspect "dash", since "bash" works...
+> 
+> > 
+> > I only bring this up as nearly all mdadm config tutorials at some point
+> > mention the checkarray function. They also point out that checkarray is
+> > also auto configured in the cron tab (cron.d) to run once a month. But
+> > of course, if checkarray doesn't work then people may think it is
+> > running once a month when it really isn't.
+> 
+> Exactly!
+> I've some Ubuntu 14.04.x with old kernel, and one
+> with new kernel.
+> This one has a "weak" HDD in RAID (one / some blocks
+> waiting for relocation).
+> In my sytems the check occurs weekly, but it did not!
+> Tried from command line to no avail...
+> Debugging the script led to the previous result.
+> 
+> I'm not sure, maybe someone should file a bug, but I
+> have not to much faith in Ubuntu md/mdadm support.
+> In the past they were slow or no reacting, and "mdadm"
+> was always an obsolete version (like it is in 14.04.x).
+> Maybe Debian could be a better place, not sure.
+> 
+> bye,
+> 
+> pg
+> 
+> > 
+> > 
+> > Rodman Frowert -------- Original Message --------
+> > Subject: Re: Checkarray doesn't seem to do anything
+> > From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+> > Date: Tue, March 01, 2016 3:33 pm
+> > To: rodman@shellport.com
+> > Cc: linux-raid@vger.kernel.org
+> > 
+> > On Tue, Mar 01, 2016 at 02:09:44PM -0700, rodman@shellport.com wrote:
+> > > 
+> > > Hello,
+> > > 
+> > > I have a question as it pertains to the checkarray function of Mdadm.
+> > I
+> > > can't actually get it to do anything. I'm running Ubuntu 14.04.4
+> > Server
+> > > LTS with the latest mdadm installed. I have a single RAID 1 mirror
+> > > configured and working properly near as I can tell. 
+> > > 
+> > > I can force a check if I issue "echo check >
+> > > /sys/block/md0/md/sync_action" as root. I can then see the status of
+> > > the check via /proc/mdstat or using the --detail switch on mdadm
+> > itself.
+> > > 
+> > > However, nothing happens if I type in:
+> > > /usr/share/mdadm/checkarray -a
+> > > or
+> > > /usr/share/mdadm/checkarray -a /dev/mdX
+> > > or
+> > > /usr/share/mdadm/checkarray -as
+> > > 
+> > > I've tried the commands as root and using sudo. The array sits idle
+> > > after all of the above commands. The only thing I can actually get
+> > > checkarray to perform is to give me the help output if I pass it -h.
+> > I
+> > > have attached, below, the current status of the mdadm managed array. 
+> > > Doing some Googling I haven't been able to find anyone else that
+> > isn't
+> > > able to use the checkarray function so I must be doing something
+> > wrong.
+> > > 
+> > > Any ideas?
+> > 
+> > Well, yes, I've the same problem.
+> > 
+> > Ubuntu 14.04.x with kernel 3.13, "checkarray" works.
+> > Ubuntu 14.04.x with kernel 4.11 (I think), "checkarray"
+> > does not work.
+> > 
+> > The script runs with "dash" (not "bash") and it has
+> > a "read cur_status < something_from_sysfs" in order to check
+> > the array status.
+> > With kernel 3.13, the "read" returns the proper value,
+> > with kernel 4.11 (I think) the very same "read" exits
+> > the script without any message or else.
+> > 
+> > One option is to use "bash", that is change the top
+> > of the script from: #!/bin/sh to #!/bin/bash
+> > 
+> > Another is to change the "read", with a "cat", that is
+> > something like: cur_status=$( cat something_from_sysfs )
+> > 
+> > You can check yourself, there is only one "read" in
+> > the script (if I recall correctly).
+> > 
+> > Hope this helps,
+> > 
+> > bye,
+> > 
+> > pg
+> > 
+> > > 
+> > > Rodman Frowert
+> > > 
+> > 
+> > > 
+> > > cat /proc/mdstat shows:
+> > > ------------------
+> > > rodman@nas:/usr/share/mdadm$ cat /proc/mdstat
+> > > Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> > > [raid4] [raid10]
+> > > md0 : active raid1 sdc1[1] sdb1[0]
+> > > 5860389696 blocks super 1.2 [2/2] [UU]
+> > > -----------------
+> > > 
+> > > sudo mdadm --detail /dev/md0 shows:
+> > > ------------------
+> > > rodman@nas:/usr/share/mdadm$ sudo mdadm --detail /dev/md0
+> > > /dev/md0:
+> > > Version : 1.2
+> > > Creation Time : Fri Feb 26 14:07:40 2016
+> > > Raid Level : raid1
+> > > Array Size : 5860389696 (5588.90 GiB 6001.04 GB)
+> > > Used Dev Size : 5860389696 (5588.90 GiB 6001.04 GB)
+> > > Raid Devices : 2
+> > > Total Devices : 2
+> > > Persistence : Superblock is persistent
+> > > 
+> > > Update Time : Tue Mar 1 07:40:19 2016
+> > > State : clean
+> > > Active Devices : 2
+> > > Working Devices : 2
+> > > Failed Devices : 0
+> > > Spare Devices : 0
+> > > 
+> > > Name : nas:0 (local to host nas)
+> > > UUID : 4765e7df:0e1a6ad2:1321765f:a2d9f2c9
+> > > Events : 164
+> > > 
+> > > Number Major Minor RaidDevice State
+> > > 0 8 17 0 active sync /dev/sdb1
+> > > 1 8 33 1 active sync /dev/sdc1
+> > > 
+> > > -----------------
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > 
+> > -- 
+> > 
+> > piergiorgio
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> 
+> piergiorgio
 
-I still believe/hope the data is all still intact and complete,
-however I am averse to just hacking around using google to 'try
-commands' hoping I hit a solution before someone with much more
-experience casts an eye over this to give me a little guidance.
+-- 
 
-Help!!
-
-
-
-On 2 March 2016 at 13:42, Another Sillyname <anothersname@googlemail.com> wrote:
-> Kernel is latest Fedora x86_64 4.3.5-300, can't get too much newer
-> then that (latest is 4.4.x), mdadm is 3.3.4-2.
->
-> I agree that the data is likely still intact, doesn't stop me being
-> nervous till I see it though!!
->
->
->
-> On 2 March 2016 at 13:20, Wols Lists <antlists@youngman.org.uk> wrote:
->> On 02/03/16 03:46, Another Sillyname wrote:
->>> Any help and guidance would be appreciated, the drives showing clean
->>> gives me comfort that the data is likely intact and complete (crossed
->>> fingers) however I can't re-assemble the array as I keep getting the
->>> 'critical information for reshape, sorry' warning.
->>>
->>> Help???
->>
->> Someone else will chip in what to do, but this doesn't seem alarming at
->> all. Reshapes stuck at zero is a recent bug, but all the data is
->> probably safe and sound.
->>
->> Wait for one of the experts to chip in what to do, but you might find
->> mdadm --resume --invalid-backup will get it going again.
->>
->> Otherwise it's likely to be an "upgrade your kernel and mdadm" job ...
->>
->> Cheers,
->> Wol
+piergiorgio
